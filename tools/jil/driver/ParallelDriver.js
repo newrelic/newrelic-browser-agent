@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var newrelic = require('newrelic')
 const Driver = require('./Driver')
 const TestRun = require('./TestRun')
 const DeviceTest = require('./DeviceTest')
@@ -55,7 +54,6 @@ class ParallelDriver extends Driver {
         if (driver.failedTests.length > 0) {
           // re-run failed tests
           driver.runDeviceTests(driver.failedTests, (err) => {
-            newrelic.noticeError(err)
             shutdown()
           })
         } else {
@@ -149,21 +147,6 @@ class ParallelDriver extends Driver {
     }
 
     function onTestFinished (testRun, test, result) {
-      let browserSpec = testRun.browserSpec
-      var eventData = {
-        browserName: browserSpec.desired.browserName,
-        browserVersion: browserSpec.desired.version || null,
-        platformName: browserSpec.desired.platform || browserSpec.desired.platformName,
-        platformVersion: browserSpec.desired.platformVersion || null,
-        build: browserSpec.desired.build,
-        testName: test.name,
-        retry: result.retry,
-        passed: result.passed,
-        duration: result.duration,
-        remaining: getRemaining(testRun.env)
-      }
-      newrelic.recordCustomEvent('JilTest', eventData)
-
       if (result.passed) {
         runNextTest(testRun)
       } else if (result.retry === (numberOfAttempts - 1)) {
@@ -187,10 +170,6 @@ class ParallelDriver extends Driver {
       }
     }
 
-    function getRemaining (env) {
-      return getEnvTests(env).length
-    }
-
     function getEnvTests (env) {
       for (let [key, tests] of testsMap) {
         if (key === env) {
@@ -210,7 +189,7 @@ class ParallelDriver extends Driver {
       driver.output.log('# stopping asset server')
       driver.assetServer.stop()
       driver.output.finish()
-      newrelic.shutdown({ collectPendingData: true, timeout: 3000 }, cb)
+      cb()
     }
   }
 }

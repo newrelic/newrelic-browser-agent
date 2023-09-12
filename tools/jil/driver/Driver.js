@@ -5,7 +5,6 @@
 
 const path = require('path')
 const { asserters } = require('wd')
-var newrelic = require('newrelic')
 const Matcher = require('../util/browser-matcher')
 const AssetServer = require('../../testing-server/index')
 const getCaller = require('../util/get-caller')
@@ -112,12 +111,7 @@ class Driver {
 
     testRun.initialize(this.assetServer.urlFor('/'), (err) => {
       if (err) {
-        newrelic.noticeError(err)
-        // exit early if an environment is not available
-        newrelic.shutdown({ collectPendingData: true, timeout: 3000 }, function () {
-          process.exit(1)
-        })
-        return
+        process.exit(1)
       }
 
       let spec = testRun.browserSpec
@@ -198,32 +192,7 @@ class Driver {
           const handle = router.createTestHandle(id)
           let ended = false
 
-          t.on('result', function (result) {
-            if (!result.ok) {
-              var eventData = {
-                browserName: browserSpec.desired.browserName,
-                browserVersion: browserSpec.desired.version || null,
-                platformName: browserSpec.desired.platform || browserSpec.desired.platformName,
-                platformVersion: browserSpec.desired.platformVersion || null,
-                build: browserSpec.desired.build,
-                testName: name,
-                testFileName: fileName,
-                retry: (attempt - 1),
-                retryRun: isRetry,
-                name: result.name,
-                ok: result.ok,
-                operator: result.operator,
-                file: result.file || null,
-                line: result.line || null,
-                column: result.column || null,
-                functionName: result.functionName || null
-              }
-              newrelic.recordCustomEvent('JilTestResult', eventData)
-            }
-          })
-
           t.on('end', function () {
-            let endTime = Date.now()
             router.destroyTestHandle(handle.testId)
 
             let plannedOk = !t._plan || t._plan <= t.assertCount
@@ -254,22 +223,6 @@ class Driver {
 
             queued--
 
-            var eventData = {
-              browserName: browserSpec.desired.browserName,
-              browserVersion: browserSpec.desired.version || null,
-              platformName: browserSpec.desired.platform || browserSpec.desired.platformName,
-              platformVersion: browserSpec.desired.platformVersion || null,
-              build: browserSpec.desired.build,
-              testName: name,
-              testFileName: fileName,
-              retry: (attempt - 1),
-              retryRun: isRetry,
-              passed: plannedOk && allAssertsOk,
-              duration: endTime - startTime,
-              remaining: queued
-            }
-            newrelic.recordCustomEvent('JilTest', eventData)
-
             if (queued === 0) {
               process.nextTick(allDone)
             }
@@ -288,7 +241,6 @@ class Driver {
           try {
             fn(t, browser, handle)
           } catch (e) {
-            newrelic.noticeError(e)
             t.error(e)
             t.end()
           }
@@ -299,9 +251,6 @@ class Driver {
         driver.output.log('# tearing down ' + browserSpec)
         driver.closeBrowser(allOk, browser, (err) => {
           driver.output.log('# closed ' + browserSpec)
-          if (err) {
-            newrelic.noticeError(err)
-          }
           done(err)
         })
       }
@@ -346,7 +295,6 @@ class Driver {
     function onBrowserFinished (err, testRun) {
       if (err) {
         driver.output.log(`# got error while running tests (${testRun.browserSpec.toString()})`)
-        newrelic.noticeError(err)
       }
 
       running.delete(testRun)

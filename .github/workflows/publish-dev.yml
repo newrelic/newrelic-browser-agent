@@ -31,7 +31,6 @@ jobs:
     uses: ./.github/workflows/wdio-single-browser.yml
     with:
       browser-target: chrome@latest
-      build-number: main-job-${{ github.run_number }}-attempt-${{ github.run_attempt }}
       coverage: true
     secrets: inherit
 

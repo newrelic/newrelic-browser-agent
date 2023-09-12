@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var newrelic = require('newrelic')
 const wd = require('wd')
 const through = require('through')
 const { EventEmitter } = require('events')
@@ -64,7 +63,6 @@ class TestRun extends EventEmitter {
       cb(null)
     })
       .catch(err => {
-        newrelic.noticeError(err, self.browserSpec.desired)
         cb(err)
       })
   }
@@ -116,7 +114,7 @@ class TestRun extends EventEmitter {
       self.driver.output.log(`# Running test [${id}]: ${testName}`)
 
       harness.pause()
-      observeTapeTest(t, onTestFinished, onTestResult)
+      observeTapeTest(t, onTestFinished)
 
       function onTestFinished (passed) {
         self.allOk = self.allOk && (passed || attempt < numberOfAttempts)
@@ -131,28 +129,6 @@ class TestRun extends EventEmitter {
           scheduleRetry()
         }
         notifyTestFinished(passed, endTime - startTime)
-      }
-
-      function onTestResult (result) {
-        if (!result.ok) {
-          var eventData = {
-            browserName: browserSpec.desired.browserName,
-            browserVersion: browserSpec.desired.version || null,
-            platformName: browserSpec.desired.platform || browserSpec.desired.platformName,
-            platformVersion: browserSpec.desired.platformVersion || null,
-            build: browserSpec.desired.build,
-            testName: name,
-            retry: (attempt - 1),
-            name: result.name,
-            ok: result.ok,
-            operator: result.operator,
-            file: result.file || null,
-            line: result.line || null,
-            column: result.column || null,
-            functionName: result.functionName || null
-          }
-          newrelic.recordCustomEvent('JilTestResult', eventData)
-        }
       }
 
       function notifyTestFinished (passed, duration) {
@@ -174,7 +150,6 @@ class TestRun extends EventEmitter {
 
         fn(t, browser, handle)
       } catch (e) {
-        newrelic.noticeError(e)
         t.error(e)
         t.end()
       }

@@ -164,7 +164,6 @@ jobs:
     with:
       ref: 'refs/pull/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}/merge'
       browser-target: chrome@latest
-      build-number: PR${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number}}-job-${{ github.run_number }}-attempt-${{ github.run_attempt }}
       coverage: true
     secrets: inherit
 
@@ -175,7 +174,6 @@ jobs:
     uses: ./.github/workflows/wdio-all-browsers.yml
     with:
       ref: 'refs/pull/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}/merge'
-      build-number: PR${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number}}-job-${{ github.run_number }}-attempt-${{ github.run_attempt }}
     secrets: inherit
 
   jil:
@@ -185,7 +183,6 @@ jobs:
     uses: ./.github/workflows/jil-all-browsers.yml
     with:
       ref: 'refs/pull/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}/merge'
-      build-number: PR${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number}}-job-${{ github.run_number }}-attempt-${{ github.run_attempt }}
     secrets: inherit
 
   complete-status-comment-pull-request:

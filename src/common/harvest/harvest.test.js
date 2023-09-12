@@ -159,6 +159,10 @@ describe('_send', () => {
     jest.mocked(configModule.getRuntime).mockReturnValue({
       maxBytes: Infinity
     })
+    jest.mocked(configModule.getConfiguration).mockReturnValue({
+      ssl: undefined,
+      proxy: {}
+    })
 
     spec = {
       endpoint: faker.datatype.uuid(),
@@ -220,6 +224,19 @@ describe('_send', () => {
       headers: [{ key: 'content-type', value: 'text/plain' }],
       sync: undefined,
       url: expect.stringContaining(`https://${errorBeacon}/${spec.endpoint}/1/${licenseKey}?`)
+    })
+  })
+
+  test('able to use and send to proxy when defined', () => {
+    jest.mocked(configModule.getConfiguration).mockReturnValue({ proxy: { beacon: 'some_other_string' } })
+    const result = harvestInstance._send(spec)
+
+    expect(result).toEqual(true)
+    expect(submitMethod).toHaveBeenCalledWith({
+      body: JSON.stringify(spec.payload.body),
+      headers: [{ key: 'content-type', value: 'text/plain' }],
+      sync: undefined,
+      url: expect.stringContaining(`https://some_other_string/${spec.endpoint}/1/${licenseKey}?`)
     })
   })
 

@@ -7,7 +7,7 @@ import { obj as encodeObj, param as encodeParam } from '../url/encode'
 import { stringify } from '../util/stringify'
 import * as submitData from '../util/submit-data'
 import { getLocation } from '../url/location'
-import { getInfo, getConfigurationValue, getRuntime } from '../config/config'
+import { getInfo, getConfigurationValue, getRuntime, getConfiguration } from '../config/config'
 import { cleanURL } from '../url/clean-url'
 import { now } from '../timing/now'
 import { eventListenerOpts } from '../event-listener/event-listener-opts'
@@ -33,7 +33,6 @@ export class Harvest extends SharedContext {
 
     this.tooManyRequestsDelay = getConfigurationValue(this.sharedContext.agentIdentifier, 'harvest.tooManyRequestsDelay') || 60
     this.obfuscator = new Obfuscator(this.sharedContext)
-    this.getScheme = () => (getConfigurationValue(this.sharedContext.agentIdentifier, 'ssl') === false) ? 'http' : 'https'
 
     this._events = {}
   }
@@ -96,10 +95,13 @@ export class Harvest extends SharedContext {
       return false
     }
 
+    const init = getConfiguration(this.sharedContext.agentIdentifier)
+    const protocol = init.ssl === false ? 'http' : 'https'
+    const perceviedBeacon = init.proxy.beacon || info.errorBeacon
     const endpointURLPart = endpoint !== 'rum' ? `/${endpoint}` : ''
-    let url = `${this.getScheme()}://${info.errorBeacon}${endpointURLPart}/1/${info.licenseKey}`
+    let url = `${protocol}://${perceviedBeacon}${endpointURLPart}/1/${info.licenseKey}`
     if (customUrl) url = customUrl
-    if (raw) url = `${this.getScheme()}://${info.errorBeacon}/${endpoint}`
+    if (raw) url = `${protocol}://${perceviedBeacon}/${endpoint}`
 
     const baseParams = !raw && includeBaseParams ? this.baseQueryString() : ''
     let payloadParams = encodeObj(qs, agentRuntime.maxBytes)

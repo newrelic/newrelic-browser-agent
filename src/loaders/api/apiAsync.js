@@ -1,5 +1,5 @@
 import { FEATURE_NAMES } from '../features/features'
-import { getConfigurationValue, getInfo, getRuntime } from '../../common/config/config'
+import { getConfiguration, getInfo, getRuntime } from '../../common/config/config'
 import { ee } from '../../common/event-emitter/contextual-ee'
 import { handle } from '../../common/event-emitter/handle'
 import { registerHandler } from '../../common/event-emitter/register-handler'
@@ -11,8 +11,6 @@ import { CUSTOM_METRIC_CHANNEL } from '../../features/metrics/constants'
 export function setAPI (agentIdentifier) {
   var instanceEE = ee.get(agentIdentifier)
   var cycle = 0
-
-  var scheme = (getConfigurationValue(agentIdentifier, 'ssl') === false) ? 'http' : 'https'
 
   var api = {
     finished: single(finished),
@@ -66,7 +64,10 @@ export function setAPI (agentIdentifier) {
     const agentInfo = getInfo(agentIdentifier)
     if (!agentInfo.beacon) return
 
-    var url = scheme + '://' + agentInfo.beacon + '/1/' + agentInfo.licenseKey
+    const agentInit = getConfiguration(agentIdentifier)
+    const scheme = agentInit.ssl === false ? 'http' : 'https'
+    const beacon = agentInit.proxy.beacon || agentInfo.beacon
+    let url = `${scheme}://${beacon}/1/${agentInfo.licenseKey}`
 
     url += '?a=' + agentInfo.applicationID + '&'
     url += 't=' + requestName + '&'

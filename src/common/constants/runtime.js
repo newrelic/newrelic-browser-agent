@@ -48,7 +48,7 @@ export const initiallyHidden = Boolean(globalScope?.document?.visibilityState ==
 
 export const initialLocation = '' + globalScope?.location
 
-export const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+export const isiOS = /iPad|iPhone|iPod/.test(globalScope.navigator?.userAgent)
 
 /**
  * Shared Web Workers introduced in iOS 16.0+ and n/a in 15.6-
@@ -60,7 +60,7 @@ export const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
 export const iOSBelow16 = (isiOS && typeof SharedWorker === 'undefined')
 
 export const ffVersion = (() => {
-  const match = navigator.userAgent.match(/Firefox[/\s](\d+\.\d+)/)
+  const match = globalScope.navigator?.userAgent?.match(/Firefox[/\s](\d+\.\d+)/)
   if (Array.isArray(match) && match.length >= 2) {
     return +match[1]
   }
@@ -70,6 +70,6 @@ export const ffVersion = (() => {
 
 export const isIE = Boolean(isBrowserScope && window.document.documentMode) // deprecated property that only works in IE
 
-export const supportsSendBeacon = !!navigator.sendBeacon
+export const supportsSendBeacon = !!globalScope.navigator?.sendBeacon
 
 export const offset = Math.floor(globalScope?.performance?.timeOrigin || globalScope?.performance?.timing?.navigationStart || Date.now())

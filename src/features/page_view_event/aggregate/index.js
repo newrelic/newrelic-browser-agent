@@ -1,7 +1,7 @@
 import { globalScope, isBrowserScope } from '../../../common/constants/runtime'
 import { addPT, addPN } from '../../../common/timing/nav-timing'
 import { stringify } from '../../../common/util/stringify'
-import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
+import { getInfo, getRuntime } from '../../../common/config/config'
 import { Harvest } from '../../../common/harvest/harvest'
 import * as CONSTANTS from '../constants'
 import { getActivatedFeaturesFlags } from './initialized-features'
@@ -34,10 +34,6 @@ export class Aggregate extends AggregateBase {
       // worker agent build does not get TTFB values, use default 0 values
       this.sendRum()
     }
-  }
-
-  getScheme () {
-    return getConfigurationValue(this.agentIdentifier, 'ssl') === false ? 'http' : 'https'
   }
 
   sendRum () {

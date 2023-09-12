@@ -3,6 +3,9 @@ import { addToNREUM, gosCDN, gosNREUMInitializedAgents } from '../../common/wind
 import { getConfiguration, setConfiguration, setInfo, setLoaderConfig, setRuntime } from '../../common/config/config'
 import { activatedFeatures } from '../../common/util/feature-flags'
 import { isWorkerScope } from '../../common/constants/runtime'
+import { redefinePublicPath } from './public-path'
+
+let alreadySetOnce = false // the configure() function can run multiple times in agent lifecycle
 
 export function configure (agentIdentifier, opts = {}, loaderType, forceDrain) {
   // eslint-disable-next-line camelcase
@@ -26,14 +29,19 @@ export function configure (agentIdentifier, opts = {}, loaderType, forceDrain) {
   setInfo(agentIdentifier, info)
 
   const updatedInit = getConfiguration(agentIdentifier)
+  const internalTrafficList = [info.beacon, info.errorBeacon]
+  if (!alreadySetOnce) {
+    alreadySetOnce = true
+    if (updatedInit.proxy.assets) {
+      redefinePublicPath(updatedInit.proxy.assets + '/') // much like the info.beacon & init.proxy.beacon, this input should not end in a slash, but one is needed for webpack concat
+      internalTrafficList.push(updatedInit.proxy.assets)
+    }
+    if (updatedInit.proxy.beacon) internalTrafficList.push(updatedInit.proxy.beacon)
+  }
+
   runtime.denyList = [
-    ...(updatedInit.ajax?.deny_list || []),
-    ...(updatedInit.ajax?.block_internal
-      ? [
-          info.beacon,
-          info.errorBeacon
-        ]
-      : [])
+    ...(updatedInit.ajax.deny_list || []),
+    ...(updatedInit.ajax.block_internal ? internalTrafficList : [])
   ]
   setRuntime(agentIdentifier, runtime)
 

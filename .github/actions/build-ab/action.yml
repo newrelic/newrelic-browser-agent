@@ -25,10 +25,10 @@ inputs:
     required: true
   nrba_ab_app_id:
     description: 'App id to insert into the NRBA configuration for non-next loaders.'
-    required: true
+    required: false
   nrba_ab_license_key:
     description: 'License key to insert into the NRBA configuration for non-next loaders.'
-    required: true
+    required: false
   aws_access_key_id:
     description: 'AWS access key id used for authentication.'
     required: false

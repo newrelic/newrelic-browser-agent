@@ -1,4 +1,4 @@
-import { getRuntime } from '../../../common/config/config'
+import { getRuntime, getConfiguration } from '../../../common/config/config'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { FEATURE_NAME, SUPPORTABILITY_METRIC, CUSTOM_METRIC, SUPPORTABILITY_METRIC_CHANNEL, CUSTOM_METRIC_CHANNEL } from '../constants'
@@ -82,6 +82,11 @@ export class Aggregate extends AggregateBase {
     const rules = getRules(this.agentIdentifier)
     if (rules.length > 0) this.storeSupportabilityMetrics('Generic/Obfuscate/Detected')
     if (rules.length > 0 && !validateRules(rules)) this.storeSupportabilityMetrics('Generic/Obfuscate/Invalid')
+
+    // Check if proxy for either chunks or beacon is being used
+    const { proxy } = getConfiguration(this.agentIdentifier)
+    if (proxy.assets) this.storeSupportabilityMetrics('Config/AssetsUrl/Changed')
+    if (proxy.beacon) this.storeSupportabilityMetrics('Config/BeaconUrl/Changed')
   }
 
   eachSessionChecks () {

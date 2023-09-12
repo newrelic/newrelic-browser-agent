@@ -1,5 +1,4 @@
 import { getConfigurationValue } from '../../../common/config/config'
-import { drain } from '../../../common/drain/drain'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { AggregateBase } from '../../utils/aggregate-base'
@@ -13,12 +12,19 @@ export class Aggregate extends AggregateBase {
     super(agentIdentifier, aggregator, FEATURE_NAME)
 
     this.harvestTimeSeconds = getConfigurationValue(agentIdentifier, 'spa.harvestTimeSeconds') || 10
+
+    this.initialPageLoadInteraction = new InitialPageLoadInteraction(this.agentIdentifier)
+    this.initialPageLoadInteraction.on('finished', ixn => {
+      if (!ixn) return
+      this.interactionsToHarvest.push(ixn)
+      this.scheduler.scheduleHarvest(0.1)
+    })
+
     this.interactionInProgress = null
     this.interactionsToHarvest = []
     this.interactionsSent = []
 
     this.blocked = false
-    this.drained = false
 
     // const tracerEE = this.ee.get('tracer') // used to get API-driven interactions
 
@@ -28,11 +34,11 @@ export class Aggregate extends AggregateBase {
     }, { agentIdentifier, ee: this.ee })
     this.scheduler.harvest.on('events', this.onHarvestStarted.bind(this))
 
-    this.startInteraction({ isInitial: true })
-
     registerHandler('newInteraction', (timestamp, trigger, category) => this.startInteraction({ category, trigger, startedAt: timestamp }), this.featureName, this.ee)
     registerHandler('newURL', (timestamp, url, type) => this.interactionInProgress?.updateHistory(timestamp, url), this.featureName, this.ee)
     registerHandler('newDom', timestamp => this.interactionInProgress?.updateDom(timestamp), this.featureName, this.ee)
+
+    this.drain()
   }
 
   onHarvestStarted (options) {
@@ -56,10 +62,10 @@ export class Aggregate extends AggregateBase {
     }
   }
 
-  startInteraction ({ isInitial, trigger, category, startedAt }) {
+  startInteraction ({ trigger, category, startedAt }) {
+    console.log('START IXN', trigger, category, startedAt)
     this.interactionInProgress?.cancel()
-    const Ixn = isInitial ? InitialPageLoadInteraction : Interaction
-    this.interactionInProgress = new Ixn(this.agentIdentifier)
+    this.interactionInProgress = new Interaction(this.agentIdentifier)
     this.interactionInProgress.on('finished', this.completeInteraction.bind(this))
     this.interactionInProgress.on('cancelled', this.cancelInteraction.bind(this))
     if (trigger) this.interactionInProgress.trigger = trigger
@@ -76,15 +82,11 @@ export class Aggregate extends AggregateBase {
     this.interactionsToHarvest.push(ixn)
     this.interactionInProgress = null
     this.scheduler.scheduleHarvest(0.1)
-    if (!this.drained) {
-      this.drained = true
-      drain(this.agentIdentifier, this.featureName)
-    }
   }
 
   hasInteraction ({ timestamp }) {
     if (!timestamp) return { interaction: undefined }
-    const interaction = [this.interactionInProgress, ...this.interactionsToHarvest].filter(x => x).find(ixn => ixn.containsEvent(timestamp))
-    return { interaction }
+    const interactions = [this.initialPageLoadInteraction, this.interactionInProgress, ...this.interactionsToHarvest].filter(ixn => !!ixn && ixn.containsEvent(timestamp))
+    return { interactions }
   }
 }

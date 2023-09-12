@@ -19,26 +19,11 @@ export class InitialPageLoadInteraction extends Interaction {
     this.category = CATEGORY.INITIAL_PAGE_LOAD
 
     new TimeToInteractive({
-      startTimestamp: globalScope?.performance?.getEntriesByType('navigation')?.[0]?.loadEventEnd ||
-      (globalScope?.performance?.timing?.domInteractive ||
-        globalScope?.performance?.timing?.navigationStart ||
-        globalScope?.performance?.now()
-      ) - globalScope?.performance?.timeOrigin,
+      startTimestamp: globalScope?.performance?.getEntriesByType('navigation')?.[0]?.loadEventEnd || globalScope?.performance?.timing?.loadEventEnd - globalScope?.performance?.timeOrigin,
       buffered: true
     }).then(({ value }) => {
-      console.log('got tti value...', value)
       this.finish(value)
     })
-
-    // const unsub = timeToInteractive.subscribe(({ value, entries, attrs }) => {
-    //   this.finish(value)
-    //   unsub()
-    // })
-    // startTTI(globalScope?.performance?.getEntriesByType('navigation')?.[0]?.loadEventEnd ||
-    // (globalScope?.performance?.timing?.domInteractive ||
-    //   globalScope?.performance?.timing?.navigationStart ||
-    //   globalScope?.performance?.now()
-    // ) - globalScope?.performance?.timeOrigin, true)
   }
 
   get firstPaint () { return nullable(firstPaint.current.value, numeric, true) }

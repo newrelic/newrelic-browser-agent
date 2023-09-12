@@ -1,7 +1,6 @@
 import { generateUuid } from '../../../common/ids/unique-id'
 import { getAddStringContext, numeric } from '../../../common/serialize/bel-serializer'
 import { now } from '../../../common/timing/now'
-import { TYPE_IDS } from '../constants'
 
 let nodesSeen = 0
 
@@ -26,6 +25,7 @@ export class BelNode {
   set start (v) { this.#start = v }
 
   get startRaw () { return this.#start }
+  get endRaw () { return this.#end }
 
   get end () { return numeric(this.#end) }
   set end (v) { this.#end = v }
@@ -33,8 +33,8 @@ export class BelNode {
   get callbackEnd () { return numeric(this.#callbackEnd) } // do we calculate this still?
   set callbackEnd (v) { this.#callbackEnd = v }
 
-  get callbackDuration () { return this.belType === TYPE_IDS.AJAX ? numeric(this.calculatedEnd) : numeric(this.#callbackDuration) }
-  // set callbackDuration (v) { this.#callbackDuration = v }
+  get callbackDuration () { return numeric(this.#callbackDuration) }
+  set callbackDuration (v) { this.#callbackDuration = v }
 
   get nodeId () { return getAddStringContext(this.agentIdentifier)(this.#nodeId) }
 

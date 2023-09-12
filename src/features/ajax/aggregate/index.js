@@ -108,14 +108,16 @@ export class Aggregate extends AggregateBase {
 
       const spaFeature = getFeatureState({ agentIdentifier, featureName: FEATURE_NAMES.basicSpa })
       const {
-        interaction
+        interactions
       } = spaFeature?.hasInteraction?.({ timestamp: event.startTime }) || {}
 
       // if the ajax happened inside an ixn window (found a match), add it to the ixn
-      if (interaction) {
-        interaction.addChild(new AjaxNode(agentIdentifier, event, interaction.startRaw))
-        // add the ajax event back to the ajax feature queue if the ixn cancels
-        interaction.on('cancelled', () => ajaxEvents.push(event))
+      if (interactions?.length) {
+        interactions.forEach(interaction => {
+          interaction.addChild(new AjaxNode(agentIdentifier, event, interaction.startRaw))
+          // add the ajax event back to the ajax feature queue if the ixn cancels
+          interaction.on('cancelled', () => ajaxEvents.push(event)) // this needs to be fixed later to avoid duplicates
+        })
       } else {
         ajaxEvents.push(event)
       }

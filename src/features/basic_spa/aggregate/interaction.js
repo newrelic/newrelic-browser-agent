@@ -36,8 +36,8 @@ export class Interaction extends BelNode {
     this.oldURL = '' + globalScope?.location
     this.belType = TYPE_IDS.INTERACTION
 
-    this.domTimestamp = undefined
-    this.historyTimestamp = undefined
+    this.domTimestamp = 0
+    this.historyTimestamp = 0
 
     this.timer = setTimeout(() => {
       // make this interaction invalid as to not hold up any other events
@@ -47,22 +47,13 @@ export class Interaction extends BelNode {
     new TimeToInteractive({
       startTimestamp: now()
     }).then(({ value }) => {
-      console.log('got tti in ', this.#trigger, 'interaction', value)
       this.tti = value
       this.checkFinished()
     })
-
-    // const unsub = timeToInteractive.subscribe(({ value, entries, attrs }) => {
-    //   this.tti = value
-    //   console.log('got tti in ', this.#trigger, 'interaction', value)
-    //   this.checkFinished()
-    //   unsub()
-    // }, false)
-    // startTTI(now(), false)
   }
 
   get trigger () { return getAddStringContext(this.agentIdentifier)(this.#trigger) }
-  set trigger (v) { this.#trigger = v }
+  set trigger (v) { this.#trigger = v; console.log('SET TRIGGER TO', v) }
 
   get initialPageURL () { return getAddStringContext(this.agentIdentifier)(cleanURL(this.#initialPageURL, true)) }
   set initialPageURL (v) { this.#initialPageURL = v }
@@ -105,12 +96,10 @@ export class Interaction extends BelNode {
   }
 
   finish (end) {
-    console.log('FINISH', this)
     if (this.#emitted) return
     clearTimeout(this.timer)
     this.end = (end || Math.max(this.domTimestamp, this.historyTimestamp, this.tti)) - this.startRaw
-    console.log('finished...', (end || Math.max(this.domTimestamp, this.historyTimestamp, this.tti)) - this.startRaw)
-    // this.onFinished()
+    this.callbackDuration = this.#trigger === 'initialPageLoad' ? 0 : this.tti - Math.max(this.domTimestamp, this.historyTimestamp)
     for (let [evt, cbs] of this.#subscribers) {
       if (evt === 'finished') cbs.forEach(cb => cb(this))
     }

@@ -89,6 +89,16 @@ await spawnAsync(
   DEFAULT_SPAWN_OPTIONS
 )
 
+console.log('#############################')
+console.log('# Rebuilding Test Projects  #')
+console.log('#############################')
+await spawnAsync(
+  `npm${os.platform() === 'win32' ? '.cmd' : ''}`,
+  [ 'run', 'build:all' ],
+  DEFAULT_SPAWN_OPTIONS
+)
+
+
 if (args.openPullRequest) {
   console.log('#############################')
   console.log('# Pushing browser updates   #')
@@ -100,7 +110,8 @@ if (args.openPullRequest) {
       'package-lock.json',
       'tools/browsers-lists/*.json',
       'third_party_manifest.json',
-      'THIRD_PARTY_NOTICES.md'
+      'THIRD_PARTY_NOTICES.md',
+      'tools/test-builds/**/package.json'
     ],
     COMMIT_MESSAGE,
     true

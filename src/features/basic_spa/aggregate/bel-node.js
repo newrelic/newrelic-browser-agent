@@ -1,56 +1,57 @@
-import { generateUuid } from '../../../common/ids/unique-id'
-import { getAddStringContext, numeric } from '../../../common/serialize/bel-serializer'
 import { now } from '../../../common/timing/now'
 
 let nodesSeen = 0
 
 export class BelNode {
-  #id = generateUuid()
-  #belType
-  #children = []
-  #start = now()
-  #end
-  #callbackEnd = 0
-  #callbackDuration = 0
-  #nodeId = String(++nodesSeen)
+  subscribers = new Map()
+  emitted = false
+
+  belType
+  children = []
+  start = now()
+  end
+  callbackEnd = 0
+  callbackDuration = 0
+  nodeId = String(++nodesSeen)
 
   constructor (agentIdentifier) {
     this.agentIdentifier = agentIdentifier
   }
 
-  get belType () { return numeric(this.#belType) }
-  set belType (v) { this.#belType = v }
-
-  get start () { return numeric(this.#start) }
-  set start (v) { this.#start = v }
-
-  get startRaw () { return this.#start }
-  get endRaw () { return this.#end }
-
-  get end () { return numeric(this.#end) }
-  set end (v) { this.#end = v }
-
-  get callbackEnd () { return numeric(this.#callbackEnd) } // do we calculate this still?
-  set callbackEnd (v) { this.#callbackEnd = v }
-
-  get callbackDuration () { return numeric(this.#callbackDuration) }
-  set callbackDuration (v) { this.#callbackDuration = v }
-
-  get nodeId () { return getAddStringContext(this.agentIdentifier)(this.#nodeId) }
-
-  get id () { return getAddStringContext(this.agentIdentifier)(this.#id) }
-
-  get children () { return this.#children }
-
-  get calculatedEnd () { return this.#end - this.#start }
-  get calculatedCallbackEnd () { return this.calculatedEnd }
-
   containsEvent (timestamp) {
-    if (!this.#end) return this.#start <= timestamp
-    return (this.#start <= timestamp && this.#end >= timestamp)
+    if (!this.end) return this.start <= timestamp
+    return (this.start <= timestamp && this.end >= timestamp)
   }
 
   addChild (child) {
     this.children.push(child)
+  }
+
+  on (event, cb) {
+    if (typeof cb !== 'function') throw new Error('Must supply function as callback')
+    const cbs = this.subscribers.get(event) || []
+    cbs.push(cb)
+    this.subscribers.set(event, cbs)
+  }
+
+  cancel () {
+    console.log('cancelling', this)
+    this.cancelled = true
+    if (this.emitted) return
+    clearTimeout(this.timer)
+    if (this.children) this.children.forEach(child => child?.cancel())
+    for (let [evt, cbs] of this.subscribers) {
+      if (evt === 'cancelled') cbs.forEach(cb => cb(this))
+    }
+  }
+
+  validateChildren () {
+    this.children.forEach(child => {
+      if (child.start < this.start || child.end > this.end) {
+        console.log('child is invalid!', child)
+        child?.cancel()
+      } else child?.validateChildren()
+    })
+    this.children = this.children.filter(c => !c.cancelled)
   }
 }

@@ -114,9 +114,10 @@ export class Aggregate extends AggregateBase {
       // if the ajax happened inside an ixn window (found a match), add it to the ixn
       if (interactions?.length) {
         interactions.forEach(interaction => {
-          interaction.addChild(new AjaxNode(agentIdentifier, event, interaction.startRaw))
+          const node = new AjaxNode(agentIdentifier, event)
+          interaction.addChild(node)
           // add the ajax event back to the ajax feature queue if the ixn cancels
-          interaction.on('cancelled', () => ajaxEvents.push(event)) // this needs to be fixed later to avoid duplicates
+          node.on('cancelled', () => { ajaxEvents.push(event) }) // this needs to be fixed later to avoid duplicates
         })
       } else {
         ajaxEvents.push(event)

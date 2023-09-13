@@ -1,6 +1,5 @@
-// import { getInfo } from '../../../common/config/config'
 import { globalScope, initialLocation } from '../../../common/constants/runtime'
-// import { generateUuid } from '../../../common/ids/unique-id'
+import { generateUuid } from '../../../common/ids/unique-id'
 import { addCustomAttributes, getAddStringContext, nullable, numeric } from '../../../common/serialize/bel-serializer'
 import { now } from '../../../common/timing/now'
 import { TimeToInteractive } from '../../../common/timing/time-to-interactive'
@@ -13,21 +12,19 @@ import { BelNode } from './bel-node'
  * link https://github.com/newrelic/nr-querypack/blob/main/schemas/bel/7.qpschema
  **/
 export class Interaction extends BelNode {
-  #trigger
-  #initialPageURL = initialLocation
-  #oldURL = '' + globalScope?.location
-  #newURL = '' + globalScope?.location
-  #customName
-  #category
-  #queueTime
-  #appTime
-  #oldRoute
-  #newRoute
-  #previousRouteName
-  #targetRouteName
-
-  #subscribers = new Map()
-  #emitted = false
+  id = generateUuid()
+  trigger
+  initialPageURL = initialLocation
+  oldURL = '' + globalScope?.location
+  newURL = '' + globalScope?.location
+  customName
+  category
+  queueTime
+  appTime
+  oldRoute
+  newRoute
+  previousRouteName
+  targetRouteName
 
   constructor (agentIdentifier) {
     super(agentIdentifier)
@@ -52,65 +49,16 @@ export class Interaction extends BelNode {
     })
   }
 
-  get trigger () { return getAddStringContext(this.agentIdentifier)(this.#trigger) }
-  set trigger (v) { this.#trigger = v; console.log('SET TRIGGER TO', v) }
-
-  get initialPageURL () { return getAddStringContext(this.agentIdentifier)(cleanURL(this.#initialPageURL, true)) }
-  set initialPageURL (v) { this.#initialPageURL = v }
-
-  get oldURL () { return getAddStringContext(this.agentIdentifier)(cleanURL(this.#oldURL, true)) }
-  set oldURL (v) { this.#oldURL = v }
-
-  get newURL () { return getAddStringContext(this.agentIdentifier)(cleanURL(this.#newURL, true)) }
-  set newURL (v) { this.#newURL = v }
-
-  get customName () { return getAddStringContext(this.agentIdentifier)(this.#customName) }
-  set customName (v) { this.#customName = v }
-
-  get category () { return this.#category }
-  set category (v) { this.#category = v }
-
-  get queueTime () { return nullable(this.#queueTime, numeric, true) }
-  set queueTime (v) { this.#queueTime = v }
-
-  get appTime () { return nullable(this.#appTime, numeric, true) }
-  set appTime (v) { this.#appTime = v }
-
-  get oldRoute () { return nullable(this.#oldRoute, getAddStringContext(this.agentIdentifier), true) }
-  set oldRoute (v) { this.#oldRoute = v }
-
-  get newRoute () { return nullable(this.#newRoute, getAddStringContext(this.agentIdentifier), true) }
-  set newRoute (v) { this.#newRoute = v }
-
-  get previousRouteName () { return getAddStringContext(this.agentIdentifier)(this.#previousRouteName) }
-
-  get targetRouteName () { return getAddStringContext(this.agentIdentifier)(this.#targetRouteName) }
-
-  get childCount () { return numeric(this.children.length) }
-
-  on (event, cb) {
-    if (typeof cb !== 'function') throw new Error('Must supply function as callback')
-    const cbs = this.#subscribers.get(event) || []
-    cbs.push(cb)
-    this.#subscribers.set(event, cbs)
-  }
-
   finish (end) {
-    if (this.#emitted) return
+    if (this.emitted) return
     clearTimeout(this.timer)
-    this.end = (end || Math.max(this.domTimestamp, this.historyTimestamp, this.tti)) - this.startRaw
-    this.callbackDuration = this.#trigger === 'initialPageLoad' ? 0 : this.tti - Math.max(this.domTimestamp, this.historyTimestamp)
-    for (let [evt, cbs] of this.#subscribers) {
+    this.end = (end || Math.max(this.domTimestamp, this.historyTimestamp, this.tti)) - this.start
+    this.callbackDuration = this.trigger === 'initialPageLoad' ? 0 : (this.tti - Math.max(this.domTimestamp, this.historyTimestamp))
+    this.callbackEnd = this.end + this.callbackDuration
+    for (let [evt, cbs] of this.subscribers) {
       if (evt === 'finished') cbs.forEach(cb => cb(this))
     }
-  }
-
-  cancel () {
-    if (this.#emitted) return
-    clearTimeout(this.timer)
-    for (let [evt, cbs] of this.#subscribers) {
-      if (evt === 'cancelled') cbs.forEach(cb => cb(this))
-    }
+    console.log('finished...', performance.now(), this)
   }
 
   updateDom (timestamp) {
@@ -130,41 +78,44 @@ export class Interaction extends BelNode {
   }, 60)
 
   serialize () {
-    // const customAttrs = addCustomAttributes(getInfo(this.agentIdentifier).jsAttributes || {}, getAddStringContext(this.agentIdentifier), true)
+    const addString = getAddStringContext(this.agentIdentifier)
+    // const customAttrs = addCustomAttributes(getInfo(this.agentIdentifier).jsAttributes || {}, addString, true)
     const customAttrs = []
     const metadataAttrs = this.domTimestamp && this.historyTimestamp
       ? addCustomAttributes({
         domTimestamp: this.domTimestamp,
         historyTimestamp: this.historyTimestamp
-      }, getAddStringContext(this.agentIdentifier), true)
+      }, addString, true)
       : []
+
+    this.validateChildren()
+
     const childrenAndAttrs = metadataAttrs.concat(customAttrs).concat(this.children)
     const nodeList = []
     const fields = [
-      this.belType,
-      // this.childCount,
+      numeric(this.belType),
       childrenAndAttrs.length,
-      this.start,
-      this.end,
-      // this.calculatedEnd,
-      // this.callbackEnd,
-      this.end,
-      // this.calculatedEnd,
-      // this.calculatedCallbackEnd,
-      this.callbackDuration,
-      this.trigger,
-      this.initialPageURL,
-      this.oldURL,
-      this.newURL,
-      this.customName,
+      numeric(this.start), // relative to first node (this in interaction)
+      numeric(this.end), // end -- relative to start
+      numeric(this.callbackEnd), // cbEnd -- relative to start
+      numeric(this.callbackDuration), // not relative
+      addString(this.trigger),
+      addString(cleanURL(this.initialPageURL, true)),
+      addString(cleanURL(this.oldURL, true)),
+      addString(cleanURL(this.newURL, true)),
+      addString(this.customName),
       this.category,
-      this.queueTime + this.appTime + this.oldRoute + this.newRoute + this.id,
-      this.nodeId
+      nullable(this.queueTime, numeric, true) +
+      nullable(this.appTime, numeric, true) +
+      nullable(this.oldRoute, addString, true) +
+      nullable(this.newRoute, addString, true) +
+      addString(this.id),
+      addString(this.nodeId)
     ]
 
     nodeList.push(fields)
 
-    childrenAndAttrs.forEach(node => nodeList.push(node.serialize()))
+    childrenAndAttrs.forEach(node => nodeList.push(node.serialize(this.start)))
 
     return nodeList.join(';')
   }

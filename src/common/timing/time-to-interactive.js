@@ -23,6 +23,7 @@ export class TimeToInteractive {
   }
 
   cancel () {
+    clearTimeout(this.#ltTimer)
     this.#ltUnsub()
     // this.#rejector()
   }

@@ -34,11 +34,22 @@ window.NREUM={
     sa: 1
   }
 }
+
 // scripts
-{{#each scripts}}
-    // {{{this.name}}}
-    {{{this.contents}}}
+{{{nextScript}}}
+
+{{#if abScripts}}
+window.NREUM.loader_config.agentID = '{{{args.abAppId}}}'
+window.NREUM.loader_config.applicationID = '{{{args.abAppId}}}'
+window.NREUM.loader_config.licenseKey = '{{{args.abLicenseKey}}}'
+window.NREUM.info.applicationID = '{{{args.abAppId}}}'
+window.NREUM.info.licenseKey = '{{{args.abLicenseKey}}}'
+{{/if}}
+
+{{#each abScripts}}
+{{{this.contents}}}
 {{/each}}
+
 // post-script checks
 try {
   var xhr = new XMLHttpRequest()
@@ -50,15 +61,15 @@ try {
   xhr.setRequestHeader('pragma','no-cache')
 
   xhr.send(
-      JSON.stringify({
-          'query': 'query PlatformEntitlementsQuery($names: [String]!) { currentUser { id authorizedAccounts { id entitlements(filter: {names: $names}) { name __typename } __typename } __typename } }',
-          'variables': {
-              'names': [
-                  'hipaa',
-                  'fedramp'
-              ]
-          }
-      })
+    JSON.stringify({
+      'query': 'query PlatformEntitlementsQuery($names: [String]!) { currentUser { id authorizedAccounts { id entitlements(filter: {names: $names}) { name __typename } __typename } __typename } }',
+      'variables': {
+        'names': [
+          'hipaa',
+          'fedramp'
+        ]
+      }
+    })
   )
 
   xhr.addEventListener('load', function(evt){
@@ -73,7 +84,7 @@ try {
           for (var j = 0; j < ent.entitlements.length; j++){
             if (ent.entitlements[j].name === 'fedramp' || ent.entitlements[j].name === 'hipaa') canRunSr = false
           }
-        } 
+        }
       }
       if (canRunSr && newrelic && !!newrelic.start) newrelic.start('session_replay')
     } catch(e){
@@ -85,3 +96,5 @@ try {
   // we failed our mission....
   if (!!newrelic && !!newrelic.noticeError) newrelic.noticeError(err)
 }
+
+if (!!newrelic && !!newrelic.setApplicationVersion && '{{{env}}}' === 'staging') newrelic.setApplicationVersion( '' + Math.floor(Math.random() * 10) + '.' + Math.floor(Math.random() * 10) + '.' + Math.floor(Math.random() * 10) )

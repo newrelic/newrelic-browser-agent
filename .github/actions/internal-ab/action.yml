@@ -11,6 +11,12 @@ inputs:
   nrba_license_key:
     description: 'License key to insert into the NRBA configuration.'
     required: true
+  nrba_ab_app_id:
+    description: 'App id to insert into the NRBA configuration for non-next loaders.'
+    required: false
+  nrba_ab_license_key:
+    description: 'License key to insert into the NRBA configuration for non-next loaders.'
+    required: false
   nrba_current_script_url:
     description: 'URL for the script to use as the "current" version NRBA loader.'
     required: false
@@ -50,6 +56,8 @@ runs:
         nr_environment: ${{ inputs.nr_environment }}
         nrba_app_id: ${{ inputs.nrba_app_id }}
         nrba_license_key: ${{ inputs.nrba_license_key }}
+        nrba_ab_app_id: ${{ inputs.nrba_ab_app_id }}
+        nrba_ab_license_key: ${{ inputs.nrba_ab_license_key }}
         nrba_current_script_url: ${{ inputs.nrba_current_script_url }}
         nrba_next_script_url: ${{ inputs.nrba_next_script_url }}
     - name: Upload a/b script

@@ -6,26 +6,3 @@ export FORCE_COLOR=1
 
 npm run lint
 npm run test -- --onlyChanged
-
-# Include updated caniuse-lite database used by browserslist
-npx browserslist@latest --update-db
-git add package.json
-git add package-lock.json
-
-# Include fresh list of supported browsers from Sauce Labs based on defined browserslist
-npm run sauce:get-browsers
-git add tools/browsers-lists/*.json
-
-for FILE in $STAGED_FILES
-do
-  if [ "$FILE" = "package.json" ] || [ "$FILE" = "package-lock.json" ]; then
-    RUN_THIRD_PARTY=1
-    break
-  fi
-done
-
-if [ -n "$RUN_THIRD_PARTY" ]; then
-  echo "NPM package json or lock file changed, regenerating oss manifest and notices"
-  npm run third-party-updates
-  git add third_party_manifest.json THIRD_PARTY_NOTICES.md
-fi

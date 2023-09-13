@@ -1,0 +1,30 @@
+# This workflow is used to perform repository updates after a
+# production release has been created.
+
+name: Post Release Updates
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+jobs:
+  post-release-updates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+      - name: Perform updates
+        uses: ./.github/actions/post-release-updates
+        with:
+          github_login: ${{ secrets.BROWSER_GITHUB_BOT_NAME }}
+          github_token: ${{ secrets.BROWSER_GITHUB_BOT_PAT }}
+          github_email: ${{ secrets.BROWSER_GITHUB_BOT_EMAIL }}

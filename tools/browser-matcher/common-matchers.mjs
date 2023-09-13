@@ -56,6 +56,7 @@ export const notSafari = new SpecMatcher()
   .include('firefox')
   .include('ios')
   .include('android')
+  .include('ie')
 
 export const onlyChrome = new SpecMatcher()
   .include('chrome')
@@ -71,3 +72,11 @@ export const es2022Support = new SpecMatcher()
   .include('android>=114')
   .include('safari>=15.4')
   .include('ios>=15.4')
+
+export const supportsBFCache = new SpecMatcher()
+  .include('safari')
+  .include('chrome>=96')
+  // .include('edge>=89') -- not enabled by default still (current v109); user must set flag
+  .include('firefox')
+  .include('ios')
+  // .include('android>9.0') -- does not work on android 9.0 emulator (v100 Chrome) for unknown precise reason;

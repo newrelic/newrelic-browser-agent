@@ -18,11 +18,17 @@ inputs:
     required: false
     default: https://js-agent.newrelic.com/dev/nr-loader-spa.min.js
   nrba_app_id:
-    description: 'App id to insert into the NRBA configuration.'
+    description: 'App id to insert into the NRBA configuration for next loader.'
     required: true
   nrba_license_key:
-    description: 'License key to insert into the NRBA configuration.'
+    description: 'License key to insert into the NRBA configuration for next loader.'
     required: true
+  nrba_ab_app_id:
+    description: 'App id to insert into the NRBA configuration for non-next loaders.'
+    required: false
+  nrba_ab_license_key:
+    description: 'License key to insert into the NRBA configuration for non-next loaders.'
+    required: false
   aws_access_key_id:
     description: 'AWS access key id used for authentication.'
     required: false
@@ -58,6 +64,8 @@ runs:
           --next ${{ inputs.nrba_next_script_url }} \
           --app-id ${{ inputs.nrba_app_id }} \
           --license-key ${{ inputs.nrba_license_key }} \
+          --ab-app-id ${{ inputs.nrba_ab_app_id }} \
+          --ab-license-key ${{ inputs.nrba_ab_license_key }} \
           --region ${{ inputs.aws_region }} \
           --bucket ${{ inputs.aws_bucket_name || '' }} \
           --role ${{ inputs.aws_role || '' }} \

@@ -8,7 +8,6 @@ const htmlTemplate = (script) => `<html>
     {init}
     {config}
     <script src="${script}.js"></script>
-    {script-injection}
   </head>
   <body>
     <h1>This is a generic page that is instrumented by the NPM agent</h1>
@@ -21,7 +20,6 @@ const workerHtmlTemplate = `<html>
     {config}
     {worker-commands}
     <script src="worker-init.js"></script>
-    {script-injection}
   </head>
   <body>
     <h1>This is a generic page that is instrumented by the NPM agent</h1>

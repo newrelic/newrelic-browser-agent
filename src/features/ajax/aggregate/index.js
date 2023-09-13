@@ -54,6 +54,9 @@ export class Aggregate extends AggregateBase {
 
     this.drain()
 
+    const beacon = getInfo(agentIdentifier).errorBeacon
+    const proxyBeacon = agentInit.proxy.beacon
+
     function storeXhr (params, metrics, startTime, endTime, type) {
       metrics.time = startTime
 
@@ -73,7 +76,8 @@ export class Aggregate extends AggregateBase {
       if (!allAjaxIsEnabled) return
 
       if (!shouldCollectEvent(params)) {
-        if (params.hostname === getInfo(agentIdentifier).errorBeacon) {
+        if (params.hostname === beacon || (proxyBeacon && params.hostname === proxyBeacon)) {
+          // This doesn't make a distinction if the same-domain request is going to a different port or path...
           handle(SUPPORTABILITY_METRIC_CHANNEL, ['Ajax/Events/Excluded/Agent'], undefined, FEATURE_NAMES.metrics, ee)
         } else {
           handle(SUPPORTABILITY_METRIC_CHANNEL, ['Ajax/Events/Excluded/App'], undefined, FEATURE_NAMES.metrics, ee)

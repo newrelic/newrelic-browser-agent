@@ -135,15 +135,6 @@ features.setImmediate = new BrowserMatcher()
   .exclude('*', '*')
   .include('ie@>=10')
 
-// requires window.perfomance.getEntriesByType
-features.stn = new BrowserMatcher()
-  .exclude('chrome', '<6')
-  .exclude('android', '<4.4')
-  .exclude('firefox', '<35')
-  .exclude('ie', '<10')
-  .exclude('safari', '<=10.1')
-  .exclude('ios', '<=10.3') // because of https://developer.mozilla.org/en-US/docs/Web/API/Performance/getEntriesByType
-
 features.navTiming = new BrowserMatcher()
   .exclude('chrome', '<6')
   .exclude('android', '<4')
@@ -350,15 +341,6 @@ features.unhandledPromiseRejection = new BrowserMatcher()
   .include('edge', '>79')
   .include('safari', '>12')
   .include('firefox', '>69')
-
-features.bfcache = new BrowserMatcher()
-  .exclude('*')
-  .include('chrome', '>100') // included in v96+, but either not enabled by default until later or Sauce doesn't enable the flag
-  //.include('edge', '>=89') -- not enabled by default still (current v109); user must set flag
-  .include('firefox')
-  .include('safari', '>15') // -- test does not work on safari 15 for unknown precise reason;
-  .include('ios')
-  //.include('android', '>=9.0') -- does not work on android 9.0 emulator (v100 Chrome) for unknown precise reason;
 
 /* vvv--- Workers API support ---vvv
   */

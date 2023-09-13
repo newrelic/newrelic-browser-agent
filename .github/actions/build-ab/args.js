@@ -17,10 +17,16 @@ export const args = yargs(hideBin(process.argv))
   .default('next', 'https://js-agent.newrelic.com/dev/nr-loader-spa.min.js')
 
   .string('app-id')
-  .describe('Application ID to use in the environment NRBA configuration.')
+  .describe('Application ID to use in the environment NRBA configuration for the next loader.')
 
   .string('license-key')
-  .describe('License key to use in the environment NRBA configuration.')
+  .describe('License key to use in the environment NRBA configuration for the next loader.')
+
+  .string('ab-app-id')
+  .describe('Application ID to use in the environment NRBA configuration for non-next loaders.')
+
+  .string('ab-license-key')
+  .describe('License key to use in the environment NRBA configuration for non-next loaders.')
 
   .string('role')
   .describe('role', 'S3 role ARN; used when including experiments in the ab script.')

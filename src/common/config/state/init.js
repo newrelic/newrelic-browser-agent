@@ -8,6 +8,10 @@ const model = () => {
     maskInputOptions: { password: true }
   }
   return {
+    proxy: {
+      assets: undefined, // if this value is set, it will be used to overwrite the webpack asset path used to fetch assets
+      beacon: undefined // likewise for the url to which we send analytics
+    },
     privacy: { cookies_enabled: true }, // *cli - per discussion, default should be true
     ajax: { deny_list: undefined, block_internal: true, enabled: true, harvestTimeSeconds: 10, autoStart: true },
     distributed_tracing: {

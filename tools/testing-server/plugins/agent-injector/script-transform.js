@@ -7,7 +7,6 @@ const fs = require('fs')
  * Transforms requests for HTML files that contain string matchers for the injection
  * of scripts.
  *
- * {script-injection} will be replaced with base64 decoded script query parameter
  * {script} will be replaced with a script tag where the src attribute is the script query parameter
  * {tests/assets/.*} will be replaced with file contents of the given path
  */
@@ -45,26 +44,6 @@ module.exports = function (request, reply, testServer) {
           `<script type="text/javascript" src="${
             request.query.script || ''
           }"></script>`
-        )
-      }
-
-      // Replace {script-injection}
-      if (chunkString.indexOf('{script-injection}') > -1) {
-        let scriptContent = ''
-        if (testServer.config.polyfills && request.query.scriptString) { // if the test is running in IE11, the test scriptString may need Babel transpilation
-          const { Readable } = require('stream')
-          const { processScript } = require('../browser-scripts/browser-scripts-transform')
-
-          // Decode base64 string back to bytes then convert it to a stream. scriptString must not be empty.
-          const scriptStream = Readable.from(Buffer.from(request.query.scriptString, 'base64'))
-          scriptContent = await processScript(scriptStream, true)
-        } else {
-          scriptContent = Buffer.from(request.query.scriptString || '', 'base64').toString()
-        }
-
-        chunkString = chunkString.replace(
-          '{script-injection}',
-          `<script type="text/javascript">${scriptContent}</script>`
         )
       }
 

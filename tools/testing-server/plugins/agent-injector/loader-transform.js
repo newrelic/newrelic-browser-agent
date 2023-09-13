@@ -20,13 +20,14 @@ async function getLoaderContent (request, reply, testServer) {
       testServer.config.polyfills ? '-polyfills' : ''
     }.min.js`
   )
-  const loaderFileStats = await fs.promises.stat(loaderFilePath)
 
-  if (!loaderFileStats.isFile()) {
+  let file
+  try {
+    file = (await fs.promises.readFile(loaderFilePath)).toString()
+  } catch (_) {
     throw new Error(`Could not find loader file ${loaderFilePath}`)
   }
-
-  return (await fs.promises.readFile(loaderFilePath)).toString()
+  return file
 }
 
 /**

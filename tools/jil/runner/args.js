@@ -38,9 +38,6 @@ module.exports = yargs
   .describe('H', 'hostname to use for communicating with the fake router and asset server')
   .default('H', 'bam-test-1.nr-local.net')
 
-  .string('selenium-server')
-  .describe('selenium-server', 'URL of the Selenium server to run tests against, e.g. "localhost:4444"')
-
   .boolean('r')
   .alias('r', 'retry')
   .describe('r', 'set to false when running tests locally to bypass retries')
@@ -120,11 +117,6 @@ module.exports = yargs
   .alias('P', 'polyfills')
   .describe('P', 'Add Polyfills script to top of page')
 
-  .boolean('A')
-  .default('A', false)
-  .alias('A', 'all-browsers')
-  .describe('A', 'Run tests against all browsers, even unsupported ones')
-
   .boolean('D')
   .default('D', false)
   .alias('D', 'sauce-extended-debugging')
@@ -134,14 +126,3 @@ module.exports = yargs
   .alias('h', 'help')
   .wrap(Math.min(110, yargs.terminalWidth()))
   .argv
-
-function findIndexWithRegex (arr, exp) {
-  let idx = -1
-  arr.find(function (value, i) {
-    if (exp.test(value)) {
-      idx = i
-      return
-    }
-  })
-  return idx
-}

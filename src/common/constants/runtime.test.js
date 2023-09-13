@@ -106,10 +106,12 @@ test.each([
   { userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 13.4; rv:109.0) Gecko/20100101 Firefox/114.0', expected: false }
 ])('should set isiOS to $expected for $userAgent', async ({ userAgent, expected }) => {
   global.navigator.userAgent = userAgent
+  global.window = { navigator: global.navigator, document: true }
 
   const runtime = await import('./runtime')
 
   expect(runtime.isiOS).toEqual(expected)
+  delete global.window
 })
 
 test.each([
@@ -127,12 +129,14 @@ test.each([
     global.SharedWorker = class SharedWorker {}
   }
   global.navigator.userAgent = userAgent
+  global.window = { navigator: global.navigator, document: true }
 
   const runtime = await import('./runtime')
 
   delete global.SharedWorker
 
   expect(runtime.iOSBelow16).toEqual(expected)
+  delete global.window
 })
 
 test.each([
@@ -144,10 +148,12 @@ test.each([
   { userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 13.4; rv:109.0) Gecko/20100101 Firefox/114.0', expected: 114 }
 ])('should set ffVersion to $expected for $userAgent', async ({ userAgent, expected }) => {
   global.navigator.userAgent = userAgent
+  global.window = { navigator: global.navigator, document: true }
 
   const runtime = await import('./runtime')
 
   expect(runtime.ffVersion).toEqual(expected)
+  delete global.window
 })
 
 test('should set supportsSendBeacon to false', async () => {
@@ -161,8 +167,10 @@ test('should set supportsSendBeacon to false', async () => {
 
 test('should set supportsSendBeacon to true', async () => {
   global.navigator.sendBeacon = jest.fn()
+  global.window = { navigator: global.navigator, document: true }
 
   const runtime = await import('./runtime')
 
   expect(runtime.supportsSendBeacon).toEqual(true)
+  delete global.window
 })

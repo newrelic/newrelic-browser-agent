@@ -92,8 +92,8 @@
   "safari": [
     {
       "browserName": "safari",
-      "platformName": "Mac 12",
-      "platform": "Mac 12",
+      "platformName": "Mac 10.15",
+      "platform": "Mac 10.15",
       "version": "15",
       "browserVersion": "15",
       "acceptInsecureCerts": false

@@ -53,7 +53,6 @@ export class Aggregate extends AggregateBase {
       getPayload: (...args) => this.prepareHarvest(...args)
     }, this)
 
-    registerHandler('timing', (name, value, attrs) => this.addTiming(name, value, attrs), this.featureName, this.ee) // notice CLS is added to all timings via 4th param
     registerHandler('docHidden', msTimestamp => this.endCurrentSession(msTimestamp), this.featureName, this.ee)
     registerHandler('winPagehide', msTimestamp => this.recordPageUnload(msTimestamp), this.featureName, this.ee)
 

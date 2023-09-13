@@ -31,7 +31,7 @@ export class AjaxNode extends BelNode {
     this.start = ajaxEvent.startTime
     this.end = ajaxEvent.endTime
     this.callbackDuration = ajaxEvent.callbackDuration
-    this.callbackEnd = this.end + this.callbackDuration
+    this.callbackEnd = this.callbackDuration
   }
 
   serialize (startTimestamp) {

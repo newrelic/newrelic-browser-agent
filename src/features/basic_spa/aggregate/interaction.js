@@ -1,3 +1,4 @@
+import { getInfo } from '../../../common/config/config'
 import { globalScope, initialLocation } from '../../../common/constants/runtime'
 import { generateUuid } from '../../../common/ids/unique-id'
 import { addCustomAttributes, getAddStringContext, nullable, numeric } from '../../../common/serialize/bel-serializer'
@@ -54,7 +55,7 @@ export class Interaction extends BelNode {
     clearTimeout(this.timer)
     this.end = (end || Math.max(this.domTimestamp, this.historyTimestamp, this.tti)) - this.start
     this.callbackDuration = this.trigger === 'initialPageLoad' ? 0 : (this.tti - Math.max(this.domTimestamp, this.historyTimestamp))
-    this.callbackEnd = this.end + this.callbackDuration
+    this.callbackEnd = this.end - this.callbackDuration
     for (let [evt, cbs] of this.subscribers) {
       if (evt === 'finished') cbs.forEach(cb => cb(this))
     }
@@ -79,22 +80,10 @@ export class Interaction extends BelNode {
 
   serialize () {
     const addString = getAddStringContext(this.agentIdentifier)
-    // const customAttrs = addCustomAttributes(getInfo(this.agentIdentifier).jsAttributes || {}, addString, true)
-    const customAttrs = []
-    const metadataAttrs = this.domTimestamp && this.historyTimestamp
-      ? addCustomAttributes({
-        domTimestamp: this.domTimestamp,
-        historyTimestamp: this.historyTimestamp
-      }, addString, true)
-      : []
-
-    this.validateChildren()
-
-    const childrenAndAttrs = metadataAttrs.concat(customAttrs).concat(this.children)
     const nodeList = []
     const fields = [
       numeric(this.belType),
-      childrenAndAttrs.length,
+      this.children.length,
       numeric(this.start), // relative to first node (this in interaction)
       numeric(this.end), // end -- relative to start
       numeric(this.callbackEnd), // cbEnd -- relative to start
@@ -113,6 +102,19 @@ export class Interaction extends BelNode {
       addString(this.nodeId)
     ]
 
+    const customAttrs = addCustomAttributes(getInfo(this.agentIdentifier).jsAttributes || {}, addString, true)
+    // const customAttrs = []
+    const metadataAttrs = this.domTimestamp && this.historyTimestamp
+      ? addCustomAttributes({
+        domTimestamp: this.domTimestamp,
+        historyTimestamp: this.historyTimestamp
+      }, addString, true)
+      : []
+
+    this.validateChildren()
+
+    const childrenAndAttrs = metadataAttrs.concat(customAttrs).concat(this.children)
+    fields[1] = childrenAndAttrs.length
     nodeList.push(fields)
 
     childrenAndAttrs.forEach(node => nodeList.push(node.serialize(this.start)))

@@ -45,10 +45,6 @@ export class Aggregate extends AggregateBase {
     this.prepareHarvest = prepareHarvest
     this.getStoredEvents = function () { return { ajaxEvents, spaAjaxEvents } }
 
-    ee.on('interactionDiscarded', (events = []) => {
-      ajaxEvents.push(...events)
-    })
-
     const scheduler = new HarvestScheduler('events', {
       onFinished: onEventsHarvestFinished,
       getPayload: prepareHarvest

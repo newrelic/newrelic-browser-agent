@@ -35,7 +35,6 @@ export class BelNode {
   }
 
   cancel () {
-    console.log('cancelling', this)
     this.cancelled = true
     if (this.emitted) return
     clearTimeout(this.timer)
@@ -48,7 +47,6 @@ export class BelNode {
   validateChildren () {
     this.children.forEach(child => {
       if (child.start < this.start || child.end > this.end) {
-        console.log('child is invalid!', child)
         child?.cancel()
       } else child?.validateChildren()
     })

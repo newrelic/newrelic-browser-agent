@@ -36,6 +36,7 @@ export class BelNode {
 
   cancel () {
     this.cancelled = true
+    if (this.ttiTracker) this.ttiTracker?.cancel()
     if (this.emitted) return
     clearTimeout(this.timer)
     if (this.children) this.children.forEach(child => child?.cancel())

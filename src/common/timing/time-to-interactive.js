@@ -8,18 +8,23 @@ export class TimeToInteractive {
   #resolver
   #rejector
   #longTasks = 0
-  constructor ({ startTimestamp, buffered = false }) {
+
+  start ({ startTimestamp, buffered = false }) {
     this.#startTimestamp = startTimestamp
     this.#ltUnsub = longTask.subscribe(({ name, value, attrs }) => {
       this.#latestLT = attrs.ltStart + value
       this.#longTasks++
       this.#setLtTimer()
     }, buffered)
-
     return new Promise((resolve, reject) => {
       this.#resolver = resolve
       this.#rejector = reject
     })
+  }
+
+  cancel () {
+    this.#ltUnsub()
+    // this.#rejector()
   }
 
   #setLtTimer () {

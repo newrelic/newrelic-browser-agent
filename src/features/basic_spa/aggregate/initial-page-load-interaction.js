@@ -18,7 +18,7 @@ export class InitialPageLoadInteraction extends Interaction {
     this.start = 0
     this.category = CATEGORY.INITIAL_PAGE_LOAD
 
-    new TimeToInteractive({
+    this.ttiTracker = new TimeToInteractive().start({
       startTimestamp: globalScope?.performance?.getEntriesByType('navigation')?.[0]?.loadEventEnd || globalScope?.performance?.timing?.loadEventEnd - globalScope?.performance?.timeOrigin,
       buffered: true
     }).then(({ value }) => {

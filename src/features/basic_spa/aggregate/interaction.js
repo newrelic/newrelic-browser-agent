@@ -27,6 +27,8 @@ export class Interaction extends BelNode {
   previousRouteName
   targetRouteName
 
+  ttiTracker
+
   constructor (agentIdentifier) {
     super(agentIdentifier)
     if (!agentIdentifier) throw new Error('Interaction is missing core attributes')
@@ -42,7 +44,7 @@ export class Interaction extends BelNode {
       this.cancel()
     }, 30000)
 
-    new TimeToInteractive({
+    this.ttiTracker = new TimeToInteractive().start({
       startTimestamp: now()
     }).then(({ value }) => {
       this.tti = value

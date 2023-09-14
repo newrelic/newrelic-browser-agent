@@ -328,7 +328,7 @@ export class Aggregate extends AggregateBase {
   }
 
   setTimestamps (event) {
-    if (!event) return
+    if (!event || !event.timestamp) return
     if (!this.timestamp.first) this.timestamp.first = event.timestamp
     this.timestamp.last = event.timestamp
   }

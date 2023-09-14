@@ -6,3 +6,8 @@ flag_management:
       carryforward: true
     - name: integration-tests
       carryforward: true
+
+ignore:
+  - tools/**/*
+  - tests/**/*
+  - docs/**/*

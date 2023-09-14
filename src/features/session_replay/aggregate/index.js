@@ -20,6 +20,7 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { sharedChannel } from '../../../common/constants/shared-channel'
 import { obj as encodeObj } from '../../../common/url/encode'
 import { warn } from '../../../common/util/console'
+import { globalScope } from '../../../common/constants/runtime'
 
 // would be better to get this dynamically in some way
 export const RRWEB_VERSION = '2.0.0-alpha.8'
@@ -263,7 +264,8 @@ export class Aggregate extends AggregateBase {
       return this.abort()
     }
     this.clearTimestamps()
-    this.setTimestamps({ timestamp: Date.now() })
+    const now = globalScope?.performance ? getRuntime(this.agentIdentifier).offset + globalScope?.performance.now() : Date.now()
+    this.setTimestamps({ timestamp: Math.floor(now) })
     this.recording = true
     const { blockClass, ignoreClass, maskTextClass, blockSelector, maskInputOptions, maskTextSelector, maskAllInputs } = getConfigurationValue(this.agentIdentifier, 'session_replay')
     // set up rrweb configurations for maximum privacy --

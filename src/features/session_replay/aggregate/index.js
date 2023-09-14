@@ -123,8 +123,8 @@ export class Aggregate extends AggregateBase {
 
       this.waitForFlags(['sr']).then(([flagOn]) => this.initializeRecording(
         flagOn,
-        Math.random() < getConfigurationValue(this.agentIdentifier, 'session_replay.errorSampleRate'),
-        Math.random() < getConfigurationValue(this.agentIdentifier, 'session_replay.sampleRate')
+        (Math.random() * 100) < getConfigurationValue(this.agentIdentifier, 'session_replay.error_sampling_rate'),
+        (Math.random() * 100) < getConfigurationValue(this.agentIdentifier, 'session_replay.sampling_rate')
       )).then(() => sharedChannel.onReplayReady(this.mode)) // notify watchers that replay started with the mode
 
       this.drain()
@@ -263,18 +263,18 @@ export class Aggregate extends AggregateBase {
       return this.abort()
     }
     this.recording = true
-    const { blockClass, ignoreClass, maskTextClass, blockSelector, maskInputOptions, maskTextSelector, maskAllInputs } = getConfigurationValue(this.agentIdentifier, 'session_replay')
+    const { block_class, ignore_class, mask_text_class, block_selector, mask_input_options, mask_text_selector, mask_all_inputs } = getConfigurationValue(this.agentIdentifier, 'session_replay')
     // set up rrweb configurations for maximum privacy --
     // https://newrelic.atlassian.net/wiki/spaces/O11Y/pages/2792293280/2023+02+28+Browser+-+Session+Replay#Configuration-options
     const stop = recorder({
       emit: this.store.bind(this),
-      blockClass,
-      ignoreClass,
-      maskTextClass,
-      blockSelector,
-      maskInputOptions,
-      maskTextSelector,
-      maskAllInputs,
+      blockClass: block_class,
+      ignoreClass: ignore_class,
+      maskTextClass: mask_text_class,
+      blockSelector: block_selector,
+      maskInputOptions: mask_input_options,
+      maskTextSelector: mask_text_selector,
+      maskAllInputs: mask_all_inputs,
       checkoutEveryNms: CHECKOUT_MS[this.mode]
     })
 

@@ -24,7 +24,7 @@ describe.withBrowsersMatching(notIE)('Trace error mode', () => {
       body: JSON.stringify({ stn: 0, err: 1, ins: 1, spa: 1, sr: 1, loaded: 1 })
     })
 
-    getReplayOnErrorUrl = browser.testHandle.assetURL('stn/instrumented.html', config({ session_replay: { sampleRate: 0, errorSampleRate: 1 }, session_trace: { harvestTimeSeconds: 3 } }))
+    getReplayOnErrorUrl = browser.testHandle.assetURL('stn/instrumented.html', config({ session_replay: { sampling_rate: 0, error_sampling_rate: 100 }, session_trace: { harvestTimeSeconds: 3 } }))
   })
 
   function simulateErrorInBrowser () { // this is a way to throw error in WdIO / Selenium without killing the test itself
@@ -55,7 +55,7 @@ describe.withBrowsersMatching(notIE)('Trace error mode', () => {
 
   it('starts in full mode when an error happens before page load', async () => {
     let getFirstSTPayload = browser.testHandle.expectResources(5010)
-    await browser.url(await browser.testHandle.assetURL('js-error-with-error-before-page-load.html', config({ session_replay: { sampleRate: 0, errorSampleRate: 1 }, session_trace: { harvestTimeSeconds: 3 } })))
+    await browser.url(await browser.testHandle.assetURL('js-error-with-error-before-page-load.html', config({ session_replay: { sampling_rate: 0, error_sampling_rate: 100 }, session_trace: { harvestTimeSeconds: 3 } })))
     await browser.waitForAgentLoad()
     await expect(getFirstSTPayload).resolves.toBeTruthy()
     await expect(getTraceMode()).resolves.toEqual([MODE.FULL, false])
@@ -122,8 +122,8 @@ describe.withBrowsersMatching(notIE)('Trace when replay runs then is aborted', (
   const triggerReplayAbort = () => browser.execute(function () { Object.values(NREUM.initializedAgents)[0].runtime.session.reset() })
 
   ;[
-    ['does a last harvest then stops, in full mode', MODE.FULL, { sampleRate: 1, errorSampleRate: 0 }],
-    ['does not harvest anything, in error mode', MODE.ERROR, { sampleRate: 0, errorSampleRate: 1 }]
+    ['does a last harvest then stops, in full mode', MODE.FULL, { sampling_rate: 100, error_sampling_rate: 0 }],
+    ['does not harvest anything, in error mode', MODE.ERROR, { sampling_rate: 0, error_sampling_rate: 100 }]
   ].forEach(([description, supposedMode, replayConfig]) => {
     it(description, async () => {
       let url = await browser.testHandle.assetURL('stn/instrumented.html', config({ session_replay: replayConfig, session_trace: { harvestTimeSeconds: 2 } }))

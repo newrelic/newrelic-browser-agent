@@ -22,7 +22,7 @@ describe.withBrowsersMatching(notIE)('session manager state behavior', () => {
     })
 
     it('should match in error mode', async () => {
-      await browser.url(await browser.testHandle.assetURL('instrumented.html', config({ session_replay: { sampleRate: 0, errorSampleRate: 1 } })))
+      await browser.url(await browser.testHandle.assetURL('instrumented.html', config({ session_replay: { sampling_rate: 0, error_sampling_rate: 100 } })))
         .then(() => browser.waitForFeatureAggregate('session_replay'))
 
       await browser.pause(1000)
@@ -32,7 +32,7 @@ describe.withBrowsersMatching(notIE)('session manager state behavior', () => {
     })
 
     it('should match in off mode', async () => {
-      await browser.url(await browser.testHandle.assetURL('instrumented.html', config({ session_replay: { sampleRate: 0, errorSampleRate: 0 } })))
+      await browser.url(await browser.testHandle.assetURL('instrumented.html', config({ session_replay: { sampling_rate: 0, error_sampling_rate: 0 } })))
         .then(() => browser.waitForFeatureAggregate('session_replay'))
 
       await browser.pause(1000)

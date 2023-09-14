@@ -39,7 +39,7 @@ class LocalMemory {
 let sr, session
 const agentIdentifier = 'abcd'
 const info = { licenseKey: 1234, applicationID: 9876 }
-const init = { session_replay: { enabled: true, sampleRate: 1, errorSampleRate: 0 } }
+const init = { session_replay: { enabled: true, sampling_rate: 100, error_sampling_rate: 0 } }
 
 const anyQuery = {
   browser_monitoring_key: info.licenseKey,
@@ -99,14 +99,14 @@ describe('Session Replay', () => {
     })
 
     test('Session SR mode matches SR mode -- ERROR', async () => {
-      setConfiguration(agentIdentifier, { session_replay: { sampleRate: 0, errorSampleRate: 1 } })
+      setConfiguration(agentIdentifier, { session_replay: { sampling_rate: 0, error_sampling_rate: 100 } })
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)
       expect(session.state.sessionReplay).toEqual(sr.mode)
     })
 
     test('Session SR mode matches SR mode -- OFF', async () => {
-      setConfiguration(agentIdentifier, { session_replay: { sampleRate: 0, errorSampleRate: 0 } })
+      setConfiguration(agentIdentifier, { session_replay: { sampling_rate: 0, error_sampling_rate: 0 } })
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)
       expect(session.state.sessionReplay).toEqual(sr.mode)
@@ -149,28 +149,28 @@ describe('Session Replay', () => {
 
   describe('Session Replay Sample -> Mode Behaviors', () => {
     test('New Session -- Full 1 Error 1 === FULL', async () => {
-      setConfiguration(agentIdentifier, { session_replay: { errorSampleRate: 1, sampleRate: 1 } })
+      setConfiguration(agentIdentifier, { session_replay: { error_sampling_rate: 100, sampling_rate: 100 } })
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)
       expect(sr.mode).toEqual(MODE.FULL)
     })
 
     test('New Session -- Full 1 Error 0 === FULL', async () => {
-      setConfiguration(agentIdentifier, { session_replay: { errorSampleRate: 0, sampleRate: 1 } })
+      setConfiguration(agentIdentifier, { session_replay: { error_sampling_rate: 0, sampling_rate: 100 } })
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)
       expect(sr.mode).toEqual(MODE.FULL)
     })
 
     test('New Session -- Full 0 Error 1 === ERROR', async () => {
-      setConfiguration(agentIdentifier, { session_replay: { errorSampleRate: 1, sampleRate: 0 } })
+      setConfiguration(agentIdentifier, { session_replay: { error_sampling_rate: 100, sampling_rate: 0 } })
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)
       expect(sr.mode).toEqual(MODE.ERROR)
     })
 
     test('New Session -- Full 0 Error 0 === OFF', async () => {
-      setConfiguration(agentIdentifier, { session_replay: { errorSampleRate: 0, sampleRate: 0 } })
+      setConfiguration(agentIdentifier, { session_replay: { error_sampling_rate: 0, sampling_rate: 0 } })
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)
       expect(sr.mode).toEqual(MODE.OFF)
@@ -182,7 +182,7 @@ describe('Session Replay', () => {
       expect(session.isNew).toBeFalsy()
       primeSessionAndReplay(session)
       // configure to get "error" sample ---> but should inherit FULL from session manager
-      setConfiguration(agentIdentifier, { session_replay: { errorSampleRate: 1, sampleRate: 0 } })
+      setConfiguration(agentIdentifier, { session_replay: { error_sampling_rate: 100, sampling_rate: 0 } })
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)
       expect(sr.mode).toEqual(MODE.FULL)
@@ -191,7 +191,7 @@ describe('Session Replay', () => {
 
   describe('Session Replay Error Mode Behaviors', () => {
     test('An error BEFORE rrweb import starts running in FULL from beginning', async () => {
-      setConfiguration(agentIdentifier, { session_replay: { errorSampleRate: 1, sampleRate: 0 } })
+      setConfiguration(agentIdentifier, { session_replay: { error_sampling_rate: 100, sampling_rate: 0 } })
       sr.ee.emit('errorAgg')
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)
@@ -200,7 +200,7 @@ describe('Session Replay', () => {
     })
 
     test('An error AFTER rrweb import changes mode and starts harvester', async () => {
-      setConfiguration(agentIdentifier, { session_replay: { errorSampleRate: 1, sampleRate: 0 } })
+      setConfiguration(agentIdentifier, { session_replay: { error_sampling_rate: 100, sampling_rate: 0 } })
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)
       expect(sr.mode).toEqual(MODE.ERROR)

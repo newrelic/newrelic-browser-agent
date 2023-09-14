@@ -164,19 +164,19 @@ export class Aggregate extends AggregateBase {
       this.mode = MODE.FULL
     }
 
+    try {
+      // Do not change the webpackChunkName or it will break the webpack nrba-chunking plugin
+      recorder = (await import(/* webpackChunkName: "recorder" */'rrweb')).record
+    } catch (err) {
+      return this.abort()
+    }
+
     // FULL mode records AND reports from the beginning, while ERROR mode only records (but does not report).
     // ERROR mode will do this until an error is thrown, and then switch into FULL mode.
     // If an error happened in ERROR mode before we've gotten to this stage, it will have already set the mode to FULL
     if (this.mode === MODE.FULL) {
       // We only report (harvest) in FULL mode
       this.scheduler.startTimer(this.harvestTimeSeconds)
-    }
-
-    try {
-      // Do not change the webpackChunkName or it will break the webpack nrba-chunking plugin
-      recorder = (await import(/* webpackChunkName: "recorder" */'rrweb')).record
-    } catch (err) {
-      return this.abort()
     }
 
     try {
@@ -262,6 +262,8 @@ export class Aggregate extends AggregateBase {
       warn('Recording library was never imported')
       return this.abort()
     }
+    this.clearTimestamps()
+    this.setTimestamps({ timestamp: Date.now() })
     this.recording = true
     const { blockClass, ignoreClass, maskTextClass, blockSelector, maskInputOptions, maskTextSelector, maskAllInputs } = getConfigurationValue(this.agentIdentifier, 'session_replay')
     // set up rrweb configurations for maximum privacy --
@@ -286,6 +288,7 @@ export class Aggregate extends AggregateBase {
 
   /** Store a payload in the buffer (this.events).  This should be the callback to the recording lib noticing a mutation */
   store (event, isCheckout) {
+    this.setTimestamps(event)
     if (this.blocked) return
     const eventBytes = stringify(event).length
     /** The estimated size of the payload after compression */
@@ -303,7 +306,6 @@ export class Aggregate extends AggregateBase {
       this.clearBuffer()
     }
 
-    this.setTimestamps(event)
     if (event.type === 2) this.hasSnapshot = true
 
     this.events.push(event)
@@ -323,10 +325,10 @@ export class Aggregate extends AggregateBase {
     recorder.takeFullSnapshot()
   }
 
-  setTimestamps (rrwebEvent) {
-    if (!rrwebEvent) return
-    if (!this.timestamp.first) this.timestamp.first = rrwebEvent.timestamp
-    this.timestamp.last = rrwebEvent.timestamp
+  setTimestamps (event) {
+    if (!event) return
+    if (!this.timestamp.first) this.timestamp.first = event.timestamp
+    this.timestamp.last = event.timestamp
   }
 
   clearTimestamps () {

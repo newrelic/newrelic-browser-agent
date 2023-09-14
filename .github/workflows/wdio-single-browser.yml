@@ -88,12 +88,12 @@ jobs:
             ${{ inputs.additional-flags || '' }}
       - name: Find pull request
         id: pull-request-target
-        if: ${{ inputs.coverage }}
+        if: ${{ !cancelled() && inputs.coverage }}
         uses: ./.github/actions/find-pull-request
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Upload pr code coverage
-        if: ${{ inputs.coverage && steps.pull-request-target.outputs.results }}
+        if: ${{ !cancelled() && inputs.coverage && steps.pull-request-target.outputs.results }}
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -103,14 +103,14 @@ jobs:
           flags: integration-tests
           verbose: true
       - name: Upload branch code coverage
-        if: ${{ inputs.coverage && !steps.pull-request-target.outputs.results }}
+        if: ${{ !cancelled() && inputs.coverage && !steps.pull-request-target.outputs.results }}
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: integration-tests
           verbose: true
       - name: Archive code coverage results
-        if: ${{ inputs.coverage }}
+        if: ${{ !cancelled() && inputs.coverage }}
         uses: actions/upload-artifact@v3
         with:
           name: integration-code-coverage-report

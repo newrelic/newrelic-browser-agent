@@ -15,10 +15,6 @@ on:
         description: 'Which browser(s) and version(s) to target with the wdio test: chrome@latest OR chrome@* are examples'
         required: true
         type: string
-      build-number:
-        description: 'Used to associate test results reported to New Relic to the BUILD_NUMBER identifier'
-        required: true
-        type: string
       additional-flags:
         description: 'Additional flags to pass to the jil cli'
         required: false
@@ -34,10 +30,6 @@ on:
         description: 'Which browser(s) and version(s) to target with the wdio test: chrome@latest OR chrome@* are examples'
         required: true
         type: string
-      build-number:
-        description: 'Used to associate test results reported to New Relic to the BUILD_NUMBER identifier'
-        required: true
-        type: string
       additional-flags:
         description: 'Additional flags to pass to the jil cli'
         required: false
@@ -47,11 +39,9 @@ on:
         required: false
         type: string
     secrets:
-      JIL_SAUCE_LABS_USERNAME:
+      SAUCE_USERNAME:
         required: true
-      JIL_SAUCE_LABS_ACCESS_KEY:
-        required: true
-      JIL_NODE_NEW_RELIC_LICENSE_KEY:
+      SAUCE_ACCESS_KEY:
         required: true
 
 jobs:
@@ -63,11 +53,8 @@ jobs:
       run:
         shell: bash
     env:
-      BUILD_NUMBER: ${{ inputs.build-number }}
-      NEWRELIC_ENVIRONMENT: ci
-      JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
-      JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
-      NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
+      SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
+      SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
     steps:
       - uses: actions/checkout@v3
         with:

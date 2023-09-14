@@ -7,11 +7,11 @@ const process = require('process')
 let sauceConnectInstance
 
 function getSauceLabsCreds () {
-  let sauceLabsUsername = process.env.JIL_SAUCE_LABS_USERNAME
-  let sauceLabsAccessKey = process.env.JIL_SAUCE_LABS_ACCESS_KEY
+  let sauceLabsUsername = process.env.SAUCE_USERNAME
+  let sauceLabsAccessKey = process.env.SAUCE_ACCESS_KEY
 
   if (!sauceLabsUsername || !sauceLabsAccessKey) {
-    throw new Error('Did not find Sauce Labs credentials in JIL_SAUCE_LABS_USERNAME and JIL_SAUCE_LABS_ACCESS_KEY environment variables. Please set them.')
+    throw new Error('Did not find Sauce Labs credentials in SAUCE_USERNAME and SAUCE_ACCESS_KEY environment variables. Please set them.')
   }
 
   return {

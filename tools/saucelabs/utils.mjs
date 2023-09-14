@@ -8,12 +8,12 @@ import SauceLabs from 'saucelabs'
  * @return {{user: string, key: string, region: 'us'}}
  */
 export function getSauceLabsCreds () {
-  let sauceLabsUsername = process.env.JIL_SAUCE_LABS_USERNAME
-  let sauceLabsAccessKey = process.env.JIL_SAUCE_LABS_ACCESS_KEY
+  let sauceLabsUsername = process.env.SAUCE_USERNAME
+  let sauceLabsAccessKey = process.env.SAUCE_ACCESS_KEY
 
   if (!sauceLabsUsername || !sauceLabsAccessKey) {
     throw new Error(
-      'Did not find Sauce Labs credentials in JIL_SAUCE_LABS_USERNAME and JIL_SAUCE_LABS_ACCESS_KEY environment variables. Please set them.'
+      'Did not find Sauce Labs credentials in SAUCE_USERNAME and SAUCE_ACCESS_KEY environment variables. Please set them.'
     )
   }
 
@@ -50,7 +50,6 @@ export function buildSauceConnectOptions (cliArgs) {
     opts.logger = undefined
   } else if (cliArgs.verbose) {
     opts.verbose = true
-    opts.verboseDebugging = true
   }
 
   return opts

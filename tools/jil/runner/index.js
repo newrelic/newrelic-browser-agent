@@ -2,7 +2,6 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-const newrelic = require('newrelic')
 const config = require('./args')
 const path = require('path')
 const resolve = require('path').resolve
@@ -15,17 +14,12 @@ const Driver = require('../driver')
 const loadBrowser = require('../loader/loadBrowser')
 const { getSauceLabsCreds, startExternalServices, stopExternalServices } = require('../util/external-services')
 
-const buildIdentifier = getBuildIdentifier()
 const output = new Output(config)
 const testDriver = new Driver(config, output)
 
 module.exports = testDriver
 
 process.on('unhandledRejection', (reason, p) => {
-  newrelic.noticeError(reason, {
-    build: buildIdentifier,
-    'error.data': reason.data || null
-  })
   console.log('Unhandled Rejection:')
   console.log(reason)
 });
@@ -109,15 +103,6 @@ function loadFiles (testFiles, cb) {
   Promise.all(proms).then(() => {if (cb) cb()})
 }
 
-function getBuildIdentifier () {
-  let buildIdentifier = process.env.BUILD_NUMBER
-  if (!buildIdentifier) {
-    let identifier = Math.random().toString(16).slice(2)
-    buildIdentifier = `${process.env.USER}-${identifier}`
-  }
-  return buildIdentifier
-}
-
 function loadBrowsersAndRunTests () {
   let browsers = browserList(config.browsers)
   if (!browsers || browsers.length === 0) {
@@ -152,9 +137,6 @@ function loadBrowsersAndRunTests () {
     if (config.sauceExtendedDebugging && browser.allowsExtendedDebugging()) {
       desired.extendedDebugging = true // turn on JS console logs & HAR files in SauceLabs
     }
-
-    desired.build = buildIdentifier
-    desired.name = `${buildIdentifier}-${browser.toString()}`
 
     // Whether the session should accept all SSL certs by default.
     // https://github.com/SeleniumHQ/selenium/wiki/DesiredCapabilities

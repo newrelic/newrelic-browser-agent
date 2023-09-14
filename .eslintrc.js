@@ -134,6 +134,7 @@ module.exports = {
     'no-new': 'off',
     'prefer-const': 'off',
 
-    'sonarjs/cognitive-complexity': 'off'
+    'sonarjs/cognitive-complexity': 'off',
+    camelcase: 'off'
   }
 }

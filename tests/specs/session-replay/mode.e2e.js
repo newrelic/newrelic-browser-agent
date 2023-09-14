@@ -11,7 +11,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Sample Mode Validation', ()
   })
 
   it('Full 1 Error 1 === FULL', async () => {
-    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { sampleRate: 1, errorSampleRate: 1 } })))
+    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { sampling_rate: 100, error_sampling_rate: 100 } })))
       .then(() => browser.waitForSessionReplayRecording())
 
     await expect(getSR()).resolves.toEqual(expect.objectContaining({
@@ -23,7 +23,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Sample Mode Validation', ()
   })
 
   it('Full 1 Error 0 === FULL', async () => {
-    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { sampleRate: 1, errorSampleRate: 0 } })))
+    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { sampling_rate: 100, error_sampling_rate: 0 } })))
       .then(() => browser.waitForSessionReplayRecording())
 
     await expect(getSR()).resolves.toEqual(expect.objectContaining({
@@ -35,7 +35,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Sample Mode Validation', ()
   })
 
   it('Full 0 Error 1 === ERROR', async () => {
-    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { sampleRate: 0, errorSampleRate: 1 } })))
+    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { sampling_rate: 0, error_sampling_rate: 100 } })))
       .then(() => browser.waitForSessionReplayRecording())
 
     await expect(getSR()).resolves.toEqual(expect.objectContaining({
@@ -47,7 +47,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Sample Mode Validation', ()
   })
 
   it('Full 0 Error 0 === OFF', async () => {
-    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { sampleRate: 0, errorSampleRate: 0 } })))
+    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { sampling_rate: 0, error_sampling_rate: 0 } })))
       .then(() => browser.waitForFeatureAggregate('session_replay'))
 
     await expect(getSR()).resolves.toEqual(expect.objectContaining({
@@ -59,7 +59,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Sample Mode Validation', ()
   })
 
   it('ERROR (seen after init) => FULL', async () => {
-    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { sampleRate: 0, errorSampleRate: 1 } })))
+    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { sampling_rate: 0, error_sampling_rate: 100 } })))
       .then(() => browser.waitForSessionReplayRecording())
 
     await expect(getSR()).resolves.toEqual(expect.objectContaining({
@@ -82,7 +82,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Sample Mode Validation', ()
   })
 
   it('ERROR (seen before init) => FULL', async () => {
-    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { sampleRate: 0, errorSampleRate: 1 } })))
+    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { sampling_rate: 0, error_sampling_rate: 100 } })))
       .then(() => browser.execute(function () {
         newrelic.noticeError(new Error('test'))
       }))
@@ -97,7 +97,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Sample Mode Validation', ()
   })
 
   it('FULL => OFF', async () => {
-    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { sampleRate: 1, errorSampleRate: 0 } })))
+    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { sampling_rate: 100, error_sampling_rate: 0 } })))
       .then(() => browser.waitForSessionReplayRecording())
 
     await expect(getSR()).resolves.toEqual(expect.objectContaining({

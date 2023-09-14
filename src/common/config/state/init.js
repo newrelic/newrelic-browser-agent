@@ -4,8 +4,8 @@ import { getModeledObject } from './configurable'
 
 const model = () => {
   const hiddenState = {
-    blockSelector: '[data-nr-block]',
-    maskInputOptions: { password: true }
+    block_selector: '[data-nr-block]',
+    mask_input_options: { password: true }
   }
   return {
     proxy: {
@@ -40,29 +40,29 @@ const model = () => {
       autoStart: true,
       enabled: false,
       harvestTimeSeconds: 60,
-      sampleRate: 0.1,
-      errorSampleRate: 0.1,
+      sampling_rate: 50, // float from 0 - 100
+      error_sampling_rate: 50, // float from 0 - 100
       // recording config settings
-      maskTextSelector: '*',
-      maskAllInputs: true,
+      mask_text_selector: '*',
+      mask_all_inputs: true,
       // these properties only have getters because they are enforcable constants and should error if someone tries to override them
-      get blockClass () { return 'nr-block' },
-      get ignoreClass () { return 'nr-ignore' },
-      get maskTextClass () { return 'nr-mask' },
+      get block_class () { return 'nr-block' },
+      get ignore_class () { return 'nr-ignore' },
+      get mask_text_class () { return 'nr-mask' },
       // props with a getter and setter are used to extend enforcable constants with customer input
       // we must preserve data-nr-block no matter what else the customer sets
-      get blockSelector () {
-        return hiddenState.blockSelector
+      get block_selector () {
+        return hiddenState.block_selector
       },
-      set blockSelector (val) {
-        hiddenState.blockSelector += `,${val}`
+      set block_selector (val) {
+        hiddenState.block_selector += `,${val}`
       },
       // password: must always be present and true no matter what customer sets
-      get maskInputOptions () {
-        return hiddenState.maskInputOptions
+      get mask_input_options () {
+        return hiddenState.mask_input_options
       },
-      set maskInputOptions (val) {
-        hiddenState.maskInputOptions = { ...val, password: true }
+      set mask_input_options (val) {
+        hiddenState.mask_input_options = { ...val, password: true }
       }
     },
     spa: { enabled: true, harvestTimeSeconds: 10, autoStart: true }

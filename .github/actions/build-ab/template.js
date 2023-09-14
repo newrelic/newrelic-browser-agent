@@ -14,8 +14,8 @@ window.NREUM={
     },
     session_replay: {
       enabled: true,
-      sampleRate: 0.5,
-      errorSampleRate: 1,
+      sampling_rate: 50,
+      error_sampling_rate: 100,
       autoStart: false
     }
   },

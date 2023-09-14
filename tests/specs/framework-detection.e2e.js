@@ -1,4 +1,4 @@
-import { supportsFetchExtended } from '../../tools/browser-matcher/common-matchers.mjs'
+import { reliableUnload } from '../../tools/browser-matcher/common-matchers.mjs'
 
 const config = {
   init: {
@@ -8,7 +8,7 @@ const config = {
   }
 }
 
-describe.withBrowsersMatching(supportsFetchExtended)('framework detection', () => {
+describe.withBrowsersMatching(reliableUnload)('framework detection', () => {
   it('detects a page built with REACT and sends a supportability metric', async () => {
     await Promise.all([
       browser.testHandle.expectRum(),
@@ -16,7 +16,7 @@ describe.withBrowsersMatching(supportsFetchExtended)('framework detection', () =
         .then(() => browser.waitForAgentLoad())
     ])
     const [metricsResponse] = await Promise.all([
-      browser.testHandle.expectMetrics(3000),
+      browser.testHandle.expectMetrics(),
       browser.url(await browser.testHandle.assetURL('/'))
     ])
     const supportabilityMetrics = metricsResponse.request.body.sm || []
@@ -33,7 +33,7 @@ describe.withBrowsersMatching(supportsFetchExtended)('framework detection', () =
         .then(() => browser.waitForAgentLoad())
     ])
     const [metricsResponse] = await Promise.all([
-      browser.testHandle.expectMetrics(3000),
+      browser.testHandle.expectMetrics(),
       browser.url(await browser.testHandle.assetURL('/'))
     ])
     const supportabilityMetrics = metricsResponse.request.body.sm || []
@@ -50,7 +50,7 @@ describe.withBrowsersMatching(supportsFetchExtended)('framework detection', () =
         .then(() => browser.waitForAgentLoad())
     ])
     const [metricsResponse] = await Promise.all([
-      browser.testHandle.expectMetrics(3000),
+      browser.testHandle.expectMetrics(),
       browser.url(await browser.testHandle.assetURL('/'))
     ])
     const supportabilityMetrics = metricsResponse.request.body.sm

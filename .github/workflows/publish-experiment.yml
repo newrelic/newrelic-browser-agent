@@ -71,7 +71,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: lts/*
-      - name: Publish dev a/b script
+      - name: Publish a/b script
         uses: ./.github/actions/internal-ab
         with:
           nr_environment: ${{ inputs.nr_environment }}

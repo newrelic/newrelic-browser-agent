@@ -9,12 +9,12 @@ inputs:
   nr_environment:
     description: 'Target New Relic environment for the A/B script.'
     required: true
-  nrba_current_script_url:
-    description: 'URL for the script to use as the "current" version NRBA loader.'
+  nrba_released_script_url:
+    description: 'URL for the script to use as the latest released version NRBA loader.'
     required: false
     default: https://js-agent.newrelic.com/nr-loader-spa-current.min.js
-  nrba_next_script_url:
-    description: 'URL for the script to use as the "next" version NRBA loader.'
+  nrba_latest_script_url:
+    description: 'URL for the script to use as the latest unreleased version NRBA loader.'
     required: false
     default: https://js-agent.newrelic.com/dev/nr-loader-spa.min.js
   nrba_app_id:
@@ -60,8 +60,8 @@ runs:
       run: |
         node $GITHUB_ACTION_PATH/index.js \
           --environment ${{ inputs.nr_environment }} \
-          --current ${{ inputs.nrba_current_script_url }} \
-          --next ${{ inputs.nrba_next_script_url }} \
+          --released ${{ inputs.nrba_released_script_url }} \
+          --latest ${{ inputs.nrba_latest_script_url }} \
           --app-id ${{ inputs.nrba_app_id }} \
           --license-key ${{ inputs.nrba_license_key }} \
           --ab-app-id ${{ inputs.nrba_ab_app_id }} \

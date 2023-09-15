@@ -268,6 +268,8 @@ export class Aggregate extends AggregateBase {
       return this.abort()
     }
     this.clearTimestamps()
+    // set the fallbacks as early as possible
+    this.setTimestamps()
     this.recording = true
     const { block_class, ignore_class, mask_text_class, block_selector, mask_input_options, mask_text_selector, mask_all_inputs } = getConfigurationValue(this.agentIdentifier, 'session_replay')
     // set up rrweb configurations for maximum privacy --

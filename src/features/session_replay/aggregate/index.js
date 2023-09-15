@@ -20,6 +20,7 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { sharedChannel } from '../../../common/constants/shared-channel'
 import { obj as encodeObj } from '../../../common/url/encode'
 import { warn } from '../../../common/util/console'
+import { globalScope } from '../../../common/constants/runtime'
 
 // would be better to get this dynamically in some way
 export const RRWEB_VERSION = '2.0.0-alpha.8'
@@ -66,8 +67,10 @@ export class Aggregate extends AggregateBase {
     /** Payload metadata -- Should indicate that the payload being sent contains an error.  Used for query/filter purposes in UI */
     this.hasError = false
 
-    /** Payload metadata -- Should indicate when a replay blob started recording.  Resets each time a harvest occurs. */
-    this.timestamp = { first: undefined, last: undefined }
+    /** Payload metadata -- Should indicate when a replay blob started recording.  Resets each time a harvest occurs.
+     * cycle timestamps are used as fallbacks if event timestamps cannot be used
+     */
+    this.timestamp = { event: { first: undefined, last: undefined }, cycle: { first: undefined, last: undefined } }
 
     /** A value which increments with every new mutation node reported. Resets after a harvest is sent */
     this.payloadBytesEstimation = 0
@@ -164,19 +167,19 @@ export class Aggregate extends AggregateBase {
       this.mode = MODE.FULL
     }
 
+    try {
+      // Do not change the webpackChunkName or it will break the webpack nrba-chunking plugin
+      recorder = (await import(/* webpackChunkName: "recorder" */'rrweb')).record
+    } catch (err) {
+      return this.abort()
+    }
+
     // FULL mode records AND reports from the beginning, while ERROR mode only records (but does not report).
     // ERROR mode will do this until an error is thrown, and then switch into FULL mode.
     // If an error happened in ERROR mode before we've gotten to this stage, it will have already set the mode to FULL
     if (this.mode === MODE.FULL) {
       // We only report (harvest) in FULL mode
       this.scheduler.startTimer(this.harvestTimeSeconds)
-    }
-
-    try {
-      // Do not change the webpackChunkName or it will break the webpack nrba-chunking plugin
-      recorder = (await import(/* webpackChunkName: "recorder" */'rrweb')).record
-    } catch (err) {
-      return this.abort()
     }
 
     try {
@@ -213,6 +216,8 @@ export class Aggregate extends AggregateBase {
   getHarvestContents () {
     const agentRuntime = getRuntime(this.agentIdentifier)
     const info = getInfo(this.agentIdentifier)
+    const firstTimestamp = this.timestamp.event.first || this.timestamp.cycle.first
+    const lastTimestamp = this.timestamp.event.last || this.timestamp.cycle.last
     return {
       qs: {
         browser_monitoring_key: info.licenseKey,
@@ -221,9 +226,9 @@ export class Aggregate extends AggregateBase {
         protocol_version: '0',
         attributes: encodeObj({
           ...(this.shouldCompress && { content_encoding: 'gzip' }),
-          'replay.firstTimestamp': this.timestamp.first,
-          'replay.lastTimestamp': this.timestamp.last,
-          'replay.durationMs': this.timestamp.last - this.timestamp.first,
+          'replay.firstTimestamp': firstTimestamp,
+          'replay.lastTimestamp': lastTimestamp,
+          'replay.durationMs': lastTimestamp - firstTimestamp,
           agentVersion: agentRuntime.version,
           session: agentRuntime.session.state.value,
           hasSnapshot: this.hasSnapshot,
@@ -262,6 +267,9 @@ export class Aggregate extends AggregateBase {
       warn('Recording library was never imported')
       return this.abort()
     }
+    this.clearTimestamps()
+    // set the fallbacks as early as possible
+    this.setTimestamps()
     this.recording = true
     const { block_class, ignore_class, mask_text_class, block_selector, mask_input_options, mask_text_selector, mask_all_inputs } = getConfigurationValue(this.agentIdentifier, 'session_replay')
     // set up rrweb configurations for maximum privacy --
@@ -286,6 +294,7 @@ export class Aggregate extends AggregateBase {
 
   /** Store a payload in the buffer (this.events).  This should be the callback to the recording lib noticing a mutation */
   store (event, isCheckout) {
+    this.setTimestamps(event)
     if (this.blocked) return
     const eventBytes = stringify(event).length
     /** The estimated size of the payload after compression */
@@ -303,7 +312,6 @@ export class Aggregate extends AggregateBase {
       this.clearBuffer()
     }
 
-    this.setTimestamps(event)
     if (event.type === 2) this.hasSnapshot = true
 
     this.events.push(event)
@@ -323,14 +331,18 @@ export class Aggregate extends AggregateBase {
     recorder.takeFullSnapshot()
   }
 
-  setTimestamps (rrwebEvent) {
-    if (!rrwebEvent) return
-    if (!this.timestamp.first) this.timestamp.first = rrwebEvent.timestamp
-    this.timestamp.last = rrwebEvent.timestamp
+  setTimestamps (event) {
+    // fallbacks if timestamps cannot be derived from rrweb events
+    this.timestamp.cycle.last = getRuntime(this.agentIdentifier).offset + globalScope.performance.now()
+    if (!this.timestamp.cycle.first) this.timestamp.cycle.first = this.timestamp.cycle.last
+    // timestamps based on rrweb events
+    if (!event || !event.timestamp) return
+    if (!this.timestamp.event.first) this.timestamp.event.first = event.timestamp
+    this.timestamp.event.last = event.timestamp
   }
 
   clearTimestamps () {
-    this.timestamp = { first: undefined, last: undefined }
+    this.timestamp = { event: { first: undefined, last: undefined }, cycle: { first: undefined, last: undefined } }
   }
 
   /** Estimate the payload size */

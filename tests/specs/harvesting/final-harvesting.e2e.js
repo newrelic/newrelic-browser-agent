@@ -1,4 +1,5 @@
 import { supportsFetch, reliableUnload } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 describe('final harvesting', () => {
   it.withBrowsersMatching(reliableUnload)('should send final harvest when navigating away from page', async () => {
@@ -145,5 +146,34 @@ describe('final harvesting', () => {
         type: 'timing'
       })
     ]))
+  })
+
+  it.withBrowsersMatching(reliableUnload)('should not send any final harvest when RUM fails, e.g. 400 code', async () => {
+    let url = await browser.testHandle.assetURL('final-harvest.html')
+    await browser.testHandle.scheduleReply('bamServer', {
+      test: testRumRequest,
+      statusCode: 400,
+      body: ''
+    })
+
+    let rumPromise = browser.testHandle.expectRum()
+    await browser.url(url)
+    await browser.waitUntil(() => browser.execute(async function () { return await Object.values(newrelic.initializedAgents)[0]?.features.page_view_event?.onAggregateImported }), { timeout: 15000 })
+
+    // PVE feature should've fully imported and ran, with the RUM response coming back as the 400 we set. This should subsequently cause agent to not send anything else even at EoL.
+    await expect(rumPromise).resolves.toEqual(expect.objectContaining({
+      reply: {
+        statusCode: 400,
+        body: ''
+      }
+    }))
+
+    let anyFollowingReq = browser.testHandle.expect('bamServer', {
+      test: function () { return true },
+      timeout: 5000,
+      expectTimeout: true
+    })
+    await browser.url(await browser.testHandle.assetURL('/'))
+    await expect(anyFollowingReq).resolves.toBeUndefined()
   })
 })

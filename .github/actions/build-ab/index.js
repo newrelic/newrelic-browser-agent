@@ -86,7 +86,7 @@ console.log('writing', abScripts.length + 1,'scripts:', [{ name: 'next' }, ...ab
 await fs.promises.writeFile(
   outputFile,
   template({
-    args, nextScript, abScripts
+    args, nextScript, abScripts, env: args.environment
   }),
   { encoding: 'utf-8' }
 )

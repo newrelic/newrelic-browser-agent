@@ -18,6 +18,11 @@ await fs.promises.mkdir(outputDir, { recursive: true })
 
 // 1. Create the released environment script
 const releasedScriptRequest = await fetchRetry(`${args.released}?_nocache=${uuidv4()}`, { retry: 3 })
+
+if (!releasedScriptRequest.ok() || typeof releasedScriptRequest.text !== 'function') {
+  throw new Error('Could not retrieve the latest published loader script.')
+}
+
 const releasedScript = (await releasedScriptRequest.text()).replace(/\/\/# sourceMappingURL=.*?\.map/, '')
 const releasedScriptOutput = path.join(outputDir, `${args.environment}-released.js`)
 const releasedScriptTemplate = Handlebars.compile(await fs.promises.readFile(path.resolve(__dirname, './templates/released.js'), 'utf-8'))
@@ -33,6 +38,11 @@ fileList.push(releasedScriptOutput)
 if (['dev', 'staging'].includes(args.environment)) {
   // 2. Create latest environment script
   const latestScriptRequest = await fetchRetry(`${args.latest}?_nocache=${uuidv4()}`, { retry: 3 })
+
+  if (!latestScriptRequest.ok() || typeof latestScriptRequest.text !== 'function') {
+    throw new Error('Could not retrieve the latest unpublished loader script.')
+  }
+
   const latestScript = (await latestScriptRequest.text()).replace(/\/\/# sourceMappingURL=.*?\.map/, '')
   const latestScriptOutput = path.join(outputDir, `${args.environment}-latest.js`)
   const releasedScriptTemplate = Handlebars.compile(await fs.promises.readFile(path.resolve(__dirname, './templates/latest.js'), 'utf-8'))
@@ -89,8 +99,13 @@ if (['dev', 'staging'].includes(args.environment)) {
     const experimentScripts = []
     for (const experiment of experimentsList) {
       const experimentLoader = `https://js-agent.newrelic.com/${experiment}nr-loader-experimental.min.js`
-      const experimentScript = await fetchRetry(`${experimentLoader}?_nocache=${uuidv4()}`, { retry: 3 })
-      experimentScripts.push((await experimentScript.text()).replace(/\/\/# sourceMappingURL=.*?\.map/, ''))
+      const experimentScriptRequest = await fetchRetry(`${experimentLoader}?_nocache=${uuidv4()}`, { retry: 3 })
+
+      if (!experimentScriptRequest.ok || typeof experimentScriptRequest.text !== 'function') {
+        console.warn(`Could not retrieve the ${experiment} experimental loader script.`)
+      } else {
+        experimentScripts.push((await experimentScriptRequest.text()).replace(/\/\/# sourceMappingURL=.*?\.map/, ''))
+      }
     }
 
     if (experimentScripts.length === 0) {

@@ -19,7 +19,7 @@ await fs.promises.mkdir(outputDir, { recursive: true })
 // 1. Create the released environment script
 const releasedScriptRequest = await fetchRetry(`${args.released}?_nocache=${uuidv4()}`, { retry: 3 })
 
-if (!releasedScriptRequest.ok() || typeof releasedScriptRequest.text !== 'function') {
+if (!releasedScriptRequest.ok || typeof releasedScriptRequest.text !== 'function') {
   throw new Error('Could not retrieve the latest published loader script.')
 }
 
@@ -39,7 +39,7 @@ if (['dev', 'staging'].includes(args.environment)) {
   // 2. Create latest environment script
   const latestScriptRequest = await fetchRetry(`${args.latest}?_nocache=${uuidv4()}`, { retry: 3 })
 
-  if (!latestScriptRequest.ok() || typeof latestScriptRequest.text !== 'function') {
+  if (!latestScriptRequest.ok || typeof latestScriptRequest.text !== 'function') {
     throw new Error('Could not retrieve the latest unpublished loader script.')
   }
 

@@ -67,8 +67,10 @@ export class Aggregate extends AggregateBase {
     /** Payload metadata -- Should indicate that the payload being sent contains an error.  Used for query/filter purposes in UI */
     this.hasError = false
 
-    /** Payload metadata -- Should indicate when a replay blob started recording.  Resets each time a harvest occurs. */
-    this.timestamp = { first: undefined, last: undefined }
+    /** Payload metadata -- Should indicate when a replay blob started recording.  Resets each time a harvest occurs.
+     * cycle timestamps are used as fallbacks if event timestamps cannot be used
+     */
+    this.timestamp = { event: { first: undefined, last: undefined }, cycle: { first: undefined, last: undefined } }
 
     /** A value which increments with every new mutation node reported. Resets after a harvest is sent */
     this.payloadBytesEstimation = 0
@@ -214,6 +216,8 @@ export class Aggregate extends AggregateBase {
   getHarvestContents () {
     const agentRuntime = getRuntime(this.agentIdentifier)
     const info = getInfo(this.agentIdentifier)
+    const firstTimestamp = this.timestamp.event.first || this.timestamp.cycle.first
+    const lastTimestamp = this.timestamp.event.last || this.timestamp.cycle.last
     return {
       qs: {
         browser_monitoring_key: info.licenseKey,
@@ -222,9 +226,9 @@ export class Aggregate extends AggregateBase {
         protocol_version: '0',
         attributes: encodeObj({
           ...(this.shouldCompress && { content_encoding: 'gzip' }),
-          'replay.firstTimestamp': this.timestamp.first,
-          'replay.lastTimestamp': this.timestamp.last,
-          'replay.durationMs': this.timestamp.last - this.timestamp.first,
+          'replay.firstTimestamp': firstTimestamp,
+          'replay.lastTimestamp': lastTimestamp,
+          'replay.durationMs': lastTimestamp - firstTimestamp,
           agentVersion: agentRuntime.version,
           session: agentRuntime.session.state.value,
           hasSnapshot: this.hasSnapshot,
@@ -264,8 +268,6 @@ export class Aggregate extends AggregateBase {
       return this.abort()
     }
     this.clearTimestamps()
-    const now = globalScope?.performance ? getRuntime(this.agentIdentifier).offset + globalScope?.performance.now() : Date.now()
-    this.setTimestamps({ timestamp: Math.floor(now) })
     this.recording = true
     const { block_class, ignore_class, mask_text_class, block_selector, mask_input_options, mask_text_selector, mask_all_inputs } = getConfigurationValue(this.agentIdentifier, 'session_replay')
     // set up rrweb configurations for maximum privacy --
@@ -328,13 +330,17 @@ export class Aggregate extends AggregateBase {
   }
 
   setTimestamps (event) {
+    // fallbacks if timestamps cannot be derived from rrweb events
+    this.timestamp.cycle.last = getRuntime(this.agentIdentifier).offset + globalScope.performance.now()
+    if (!this.timestamp.cycle.first) this.timestamp.cycle.first = this.timestamp.cycle.last
+    // timestamps based on rrweb events
     if (!event || !event.timestamp) return
-    if (!this.timestamp.first) this.timestamp.first = event.timestamp
-    this.timestamp.last = event.timestamp
+    if (!this.timestamp.event.first) this.timestamp.event.first = event.timestamp
+    this.timestamp.event.last = event.timestamp
   }
 
   clearTimestamps () {
-    this.timestamp = { first: undefined, last: undefined }
+    this.timestamp = { event: { first: undefined, last: undefined }, cycle: { first: undefined, last: undefined } }
   }
 
   /** Estimate the payload size */

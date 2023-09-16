@@ -77,6 +77,7 @@ export class Aggregate extends AggregateBase {
     /** A value which increments with every new mutation node reported. Resets after a harvest is sent */
     this.payloadBytesEstimation = 0
 
+    /** Hold on to the last meta node, so that it can be re-inserted if the meta and snapshot nodes are broken up due to harvesting */
     this.lastMeta = undefined
 
     const shouldSetup = (
@@ -328,7 +329,10 @@ export class Aggregate extends AggregateBase {
       this.hasSnapshot = true
       // small chance that the meta event got separated from its matching snapshot across payload harvests
       // it needs to precede the snapshot, so shove it in first.
-      if (!this.hasMeta) this.events.push(this.lastMeta)
+      if (!this.hasMeta) {
+        this.events.push(this.lastMeta)
+        this.hasMeta = true
+      }
     }
 
     this.events.push(event)
@@ -340,8 +344,6 @@ export class Aggregate extends AggregateBase {
       // if we've made it to the ideal size of ~64kb before the interval timer, we should send early.
       this.scheduler.runHarvest()
     }
-
-    console.log(this.events)
   }
 
   /** force the recording lib to take a full DOM snapshot.  This needs to occur in certain cases, like visibility changes */

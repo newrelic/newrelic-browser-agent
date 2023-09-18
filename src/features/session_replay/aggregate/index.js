@@ -64,6 +64,8 @@ export class Aggregate extends AggregateBase {
      * -- When visibility changes from "hidden" -> "visible", it must capture a full snapshot for the replay to work correctly across tabs
     */
     this.hasSnapshot = false
+    /** Payload metadata -- Should indicate that the payload being sent has a meta node. The meta node should always precede a snapshot node. */
+    this.hasMeta = false
     /** Payload metadata -- Should indicate that the payload being sent contains an error.  Used for query/filter purposes in UI */
     this.hasError = false
 
@@ -74,6 +76,9 @@ export class Aggregate extends AggregateBase {
 
     /** A value which increments with every new mutation node reported. Resets after a harvest is sent */
     this.payloadBytesEstimation = 0
+
+    /** Hold on to the last meta node, so that it can be re-inserted if the meta and snapshot nodes are broken up due to harvesting */
+    this.lastMeta = undefined
 
     const shouldSetup = (
       getConfigurationValue(agentIdentifier, 'privacy.cookies_enabled') === true &&
@@ -231,6 +236,7 @@ export class Aggregate extends AggregateBase {
           'replay.durationMs': lastTimestamp - firstTimestamp,
           agentVersion: agentRuntime.version,
           session: agentRuntime.session.state.value,
+          hasMeta: this.hasMeta,
           hasSnapshot: this.hasSnapshot,
           hasError: this.hasError,
           isFirstChunk: this.isFirstChunk,
@@ -256,6 +262,7 @@ export class Aggregate extends AggregateBase {
     this.events = []
     this.isFirstChunk = false
     this.hasSnapshot = false
+    this.hasMeta = false
     this.hasError = false
     this.payloadBytesEstimation = 0
     this.clearTimestamps()
@@ -312,7 +319,21 @@ export class Aggregate extends AggregateBase {
       this.clearBuffer()
     }
 
-    if (event.type === 2) this.hasSnapshot = true
+    // meta event
+    if (event.type === 4) {
+      this.hasMeta = true
+      this.lastMeta = event
+    }
+    // snapshot event
+    if (event.type === 2) {
+      this.hasSnapshot = true
+      // small chance that the meta event got separated from its matching snapshot across payload harvests
+      // it needs to precede the snapshot, so shove it in first.
+      if (!this.hasMeta) {
+        this.events.push(this.lastMeta)
+        this.hasMeta = true
+      }
+    }
 
     this.events.push(event)
     this.payloadBytesEstimation += eventBytes

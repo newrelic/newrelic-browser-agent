@@ -80,7 +80,7 @@ jobs:
           asset_path: ${{ join(fromJson(steps.dev-s3-upload.outputs.results).*.Key, ' ') }}
 
   # Publish dev to staging NRDB
-  publish-dev-ab:
+  publish-dev-nr:
     needs: [publish-dev-to-s3]
     runs-on: ubuntu-latest
     timeout-minutes: 30

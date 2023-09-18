@@ -1,3 +1,10 @@
+// Reset config values back to released
+window.NREUM.loader_config.agentID = '{{{args.appId}}}'
+window.NREUM.loader_config.applicationID = '{{{args.appId}}}'
+window.NREUM.loader_config.licenseKey = '{{{args.licenseKey}}}'
+window.NREUM.info.applicationID = '{{{args.appId}}}'
+window.NREUM.info.licenseKey = '{{{args.licenseKey}}}'
+
 // Session replay entitlements check
 try {
   var xhr = new XMLHttpRequest()

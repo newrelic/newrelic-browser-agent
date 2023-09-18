@@ -48,10 +48,6 @@ export class Aggregate extends AggregateBase {
 
     /* It's important that CWV api, like "onLCP", is called before this scheduler is initialized. The reason is because they listen to the same
       on vis change or pagehide events, and we'd want ex. onLCP to record the timing (win the race) before we try to send "final harvest". */
-    this.scheduler = new HarvestScheduler('events', {
-      onFinished: (...args) => this.onHarvestFinished(...args),
-      getPayload: (...args) => this.prepareHarvest(...args)
-    }, this)
 
     registerHandler('docHidden', msTimestamp => this.endCurrentSession(msTimestamp), this.featureName, this.ee)
     registerHandler('winPagehide', msTimestamp => this.recordPageUnload(msTimestamp), this.featureName, this.ee)
@@ -59,7 +55,13 @@ export class Aggregate extends AggregateBase {
     const initialHarvestSeconds = getConfigurationValue(this.agentIdentifier, 'page_view_timing.initialHarvestSeconds') || 10
     const harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'page_view_timing.harvestTimeSeconds') || 30
     // send initial data sooner, then start regular
-    this.ee.on(`drain-${this.featureName}`, () => { this.scheduler.startTimer(harvestTimeSeconds, initialHarvestSeconds) })
+    this.ee.on(`drain-${this.featureName}`, () => {
+      this.scheduler = new HarvestScheduler('events', {
+        onFinished: (...args) => this.onHarvestFinished(...args),
+        getPayload: (...args) => this.prepareHarvest(...args)
+      }, this)
+      this.scheduler.startTimer(harvestTimeSeconds, initialHarvestSeconds)
+    })
 
     this.drain()
   }

@@ -37,7 +37,6 @@ describe('unload', () => {
   })
 
   test('should run onUnload callback when started', () => {
-    harvestSchedulerInstance.started = true
     harvestSchedulerInstance.opts.onUnload = jest.fn()
 
     eolSubscribeFn()
@@ -46,21 +45,11 @@ describe('unload', () => {
   })
 
   test('should run harvest when started and not aborted', () => {
-    harvestSchedulerInstance.started = true
     harvestSchedulerInstance.aborted = false
 
     eolSubscribeFn()
 
     expect(harvestSchedulerInstance.runHarvest).toHaveBeenCalledWith({ unload: true })
-  })
-
-  test('should not run harvest when not started', () => {
-    harvestSchedulerInstance.started = false
-    jest.spyOn(harvestSchedulerInstance, 'runHarvest').mockImplementation(jest.fn())
-
-    eolSubscribeFn()
-
-    expect(harvestSchedulerInstance.runHarvest).not.toHaveBeenCalled()
   })
 
   test('should not run harvest when aborted', () => {

@@ -48,7 +48,7 @@ export class HarvestScheduler extends SharedContext {
    * to send payloads while the page is still active, due to limitations on how much data can be buffered in the API at any one time.
    */
   unload () {
-    if (this.aborted || !this.started) return
+    if (this.aborted) return
     // If opts.onUnload is defined, these are special actions to execute before attempting to send the final payload.
     if (this.opts.onUnload) this.opts.onUnload()
     this.runHarvest({ unload: true })

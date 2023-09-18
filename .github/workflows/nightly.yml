@@ -71,13 +71,12 @@ jobs:
         run: npm run build:all
       - name: Run JIL Tests
         run: |
-          node --max-old-space-size=8192 ./tools/jil/bin/cli.js \
+          find ./tests/worker -regex ".*.test.js" | xargs node --max-old-space-size=8192 ./tools/jil/bin/cli.js \
             -f merged \
             -s \
             -b '*@*' \
             --concurrent 30 \
             -t 85000 \
-            ${{ runner.debug && '-v -L -D -d' || '' }} \
-            tests/worker/**/*.test.js
+            ${{ runner.debug && '-v -L -D -d' || '' }}
 
   # TODO: Need to add a job for cleaning up experiments to run nightly

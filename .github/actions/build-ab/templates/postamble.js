@@ -1,56 +1,11 @@
-// config
-window.NREUM={
-  init: {
-    distributed_tracing: {
-      enabled: true
-    },
-    ajax: {
-      deny_list: [
-        'nr-data.net',
-        'bam.nr-data.net',
-        'staging-bam.nr-data.net',
-        'bam-cell.nr-data.net'
-      ]
-    },
-    session_replay: {
-      enabled: true,
-      sampling_rate: 50,
-      error_sampling_rate: 100,
-      autoStart: false
-    }
-  },
-  loader_config: {
-    accountID: '1',
-    trustKey: '1',
-    agentID: '{{{args.appId}}}',
-    licenseKey: '{{{args.licenseKey}}}',
-    applicationID: '{{{args.appId}}}'
-  },
-  info: {
-    beacon: 'staging-bam.nr-data.net',
-    errorBeacon: 'staging-bam.nr-data.net',
-    licenseKey: '{{{args.licenseKey}}}',
-    applicationID: '{{{args.appId}}}',
-    sa: 1
-  }
-}
+// Reset config values back to released
+window.NREUM.loader_config.agentID = '{{{args.appId}}}'
+window.NREUM.loader_config.applicationID = '{{{args.appId}}}'
+window.NREUM.loader_config.licenseKey = '{{{args.licenseKey}}}'
+window.NREUM.info.applicationID = '{{{args.appId}}}'
+window.NREUM.info.licenseKey = '{{{args.licenseKey}}}'
 
-// scripts
-{{{nextScript}}}
-
-{{#if abScripts}}
-window.NREUM.loader_config.agentID = '{{{args.abAppId}}}'
-window.NREUM.loader_config.applicationID = '{{{args.abAppId}}}'
-window.NREUM.loader_config.licenseKey = '{{{args.abLicenseKey}}}'
-window.NREUM.info.applicationID = '{{{args.abAppId}}}'
-window.NREUM.info.licenseKey = '{{{args.abLicenseKey}}}'
-{{/if}}
-
-{{#each abScripts}}
-{{{this.contents}}}
-{{/each}}
-
-// post-script checks
+// Session replay entitlements check
 try {
   var xhr = new XMLHttpRequest()
   xhr.open('POST', '/graphql')
@@ -97,4 +52,4 @@ try {
   if (!!newrelic && !!newrelic.noticeError) newrelic.noticeError(err)
 }
 
-if (!!newrelic && !!newrelic.setApplicationVersion && '{{{env}}}' === 'staging') newrelic.setApplicationVersion( '' + Math.floor(Math.random() * 10) + '.' + Math.floor(Math.random() * 10) + '.' + Math.floor(Math.random() * 10) )
+if (!!newrelic && !!newrelic.setApplicationVersion && '{{{args.environment}}}' === 'staging') newrelic.setApplicationVersion( '' + Math.floor(Math.random() * 10) + '.' + Math.floor(Math.random() * 10) + '.' + Math.floor(Math.random() * 10) )

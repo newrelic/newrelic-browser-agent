@@ -79,6 +79,26 @@ jobs:
           fastly_service: js-agent.newrelic.com
           asset_path: ${{ join(fromJson(steps.dev-s3-upload.outputs.results).*.Key, ' ') }}
 
+  # Publish dev to staging NRDB
+  publish-dev-ab:
+    needs: [publish-dev-to-s3]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: main
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+      - name: Publish dev loader to nr
+        uses: ./.github/actions/nr-upload-dev
+        with:
+          nr_stage_api_key: ${{ secrets.NR_API_KEY_STAGING }}
+
   # Rebuild and publish the dev environment A/B script
   publish-dev-ab:
     needs: [publish-dev-to-s3]
@@ -102,8 +122,6 @@ jobs:
           nrba_license_key: ${{ secrets.INTERNAL_LICENSE_KEY }}
           nrba_ab_app_id: ${{ secrets.INTERNAL_AB_DEV_APPLICATION_ID }}
           nrba_ab_license_key: ${{ secrets.INTERNAL_AB_LICENSE_KEY }}
-          nrba_current_script_url: https://js-agent.newrelic.com/nr-loader-spa-current.min.js
-          nrba_next_script_url: https://js-agent.newrelic.com/dev/nr-loader-spa.min.js
           aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws_role: ${{ secrets.AWS_ROLE_ARN }}
@@ -133,8 +151,6 @@ jobs:
           nrba_license_key: ${{ secrets.INTERNAL_LICENSE_KEY }}
           nrba_ab_app_id: ${{ secrets.INTERNAL_AB_STAGING_APPLICATION_ID }}
           nrba_ab_license_key: ${{ secrets.INTERNAL_AB_LICENSE_KEY }}
-          nrba_current_script_url: https://js-agent.newrelic.com/nr-loader-spa-current.min.js
-          nrba_next_script_url: https://js-agent.newrelic.com/dev/nr-loader-spa.min.js
           aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws_role: ${{ secrets.AWS_ROLE_ARN }}

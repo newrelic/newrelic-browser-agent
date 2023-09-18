@@ -1,0 +1,22 @@
+# This composite action is used to upload a dev loader
+# to the staging environment only.
+
+name: 'NR Upload - Dev'
+
+inputs:
+  nr_stage_api_key:
+    description: 'API key to use for talking to staging RPM site to upload loaders'
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install dependencies
+      run: npm install --silent --no-progress --prefix $GITHUB_ACTION_PATH/..
+      shell: bash
+    - name: Run action script
+      id: action-script
+      run: |
+        node $GITHUB_ACTION_PATH/index.js \
+          ${{ inputs.nr_stage_api_key && format('--stage-api-key {0}', inputs.nr_stage_api_key) || '' }}
+      shell: bash

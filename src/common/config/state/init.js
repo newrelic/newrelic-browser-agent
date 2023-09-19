@@ -55,14 +55,14 @@ const model = () => {
         return hiddenState.block_selector
       },
       set block_selector (val) {
-        hiddenState.block_selector += `,${val}`
+        if (val) hiddenState.block_selector += `,${val}`
       },
       // password: must always be present and true no matter what customer sets
       get mask_input_options () {
         return hiddenState.mask_input_options
       },
       set mask_input_options (val) {
-        hiddenState.mask_input_options = { ...val, password: true }
+        if (val && typeof val === 'object') hiddenState.mask_input_options = { ...val, password: true }
       }
     },
     spa: { enabled: true, harvestTimeSeconds: 10, autoStart: true }

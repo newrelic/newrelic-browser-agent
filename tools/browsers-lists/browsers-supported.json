@@ -120,6 +120,19 @@
       "sauce:options": {
         "appiumVersion": "2.0.0"
       }
+    },
+    {
+      "browserName": "Chrome",
+      "platformName": "Android",
+      "platform": "Android",
+      "version": "13.0",
+      "device": "Android GoogleAPI Emulator",
+      "appium:deviceName": "Android GoogleAPI Emulator",
+      "appium:platformVersion": "13.0",
+      "appium:automationName": "UiAutomator2",
+      "sauce:options": {
+        "appiumVersion": "2.0.0"
+      }
     }
   ],
   "ios": [

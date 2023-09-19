@@ -99,7 +99,7 @@ jobs:
     uses: ./.github/workflows/jil-single-browser.yml
     with:
       ref: ${{ inputs.ref || github.ref }}
-      browser-target: android@<13
+      browser-target: android@<=9
       collection: unit
     secrets: inherit
 
@@ -107,7 +107,7 @@ jobs:
     uses: ./.github/workflows/jil-single-browser.yml
     with:
       ref: ${{ inputs.ref || github.ref }}
-      browser-target: android@<13
+      browser-target: android@<=9
       collection: functional
     secrets: inherit
 

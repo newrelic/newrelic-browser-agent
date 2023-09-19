@@ -236,6 +236,19 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
 
       expect(JSON.stringify(body).includes('testing')).toBeFalsy()
     })
+
+    it('block_selector: should not extend on empty string argument', async () => {
+      await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_text_selector: null, mask_all_inputs: false, block_selector: '' } })))
+        .then(() => browser.waitForAgentLoad())
+
+      const blockSelectorOutput = await browser.execute(function () {
+        return Object.values(newrelic.initializedAgents)[0].config.session_replay.block_selector
+      })
+
+      expect(blockSelectorOutput.endsWith(',')).toEqual(false)
+      expect(blockSelectorOutput.split(',').length).toEqual(1)
+      expect(blockSelectorOutput.includes('[data-nr-block]')).toEqual(true)
+    })
   })
 
   describe('mask_input_options', () => {

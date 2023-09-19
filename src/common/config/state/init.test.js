@@ -26,3 +26,33 @@ test('getConfigurationValue parses path correctly', () => {
   expect(getConfigurationValue('ab', 'page_action')).toEqual({ enabled: true, harvestTimeSeconds: 1000, autoStart: true })
   expect(getConfigurationValue('ab', 'page_action.harvestTimeSeconds')).toEqual(1000)
 })
+
+describe('property getters/setters used for validation', () => {
+  test('invalid values do not pass through', () => {
+    setConfiguration('12345', {
+      session_replay: {
+        block_selector: '[invalid selector]',
+        mask_text_selector: '[invalid selector]',
+        mask_input_options: 'select:true'
+      }
+    })
+
+    expect(getConfigurationValue('12345', 'session_replay.block_selector')).toEqual('[data-nr-block]')
+    expect(getConfigurationValue('12345', 'session_replay.mask_text_selector')).toEqual('*')
+    expect(getConfigurationValue('12345', 'session_replay.mask_input_options')).toMatchObject({ password: true, select: false })
+  })
+
+  test('valid values do pass through', () => {
+    setConfiguration('23456', {
+      session_replay: {
+        block_selector: '[block-text-test]',
+        mask_text_selector: '[mask-text-test]',
+        mask_input_options: { select: true }
+      }
+    })
+
+    expect(getConfigurationValue('23456', 'session_replay.block_selector')).toEqual('[data-nr-block],[block-text-test]')
+    expect(getConfigurationValue('23456', 'session_replay.mask_text_selector')).toEqual('[mask-text-test]')
+    expect(getConfigurationValue('23456', 'session_replay.mask_input_options')).toMatchObject({ password: true, select: true })
+  })
+})

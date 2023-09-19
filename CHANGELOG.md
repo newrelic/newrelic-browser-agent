@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.241.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.240.0...v1.241.0) (2023-09-18)
+
+
+### Features
+
+* Add SR entrypoint to NPM ahead of LP ([#714](https://github.com/newrelic/newrelic-browser-agent/issues/714)) ([4de7e9e](https://github.com/newrelic/newrelic-browser-agent/commit/4de7e9e4ecd563232f4c9a8a2f985c3307e79bf7))
+* Removing hash from chunk asset name ([#706](https://github.com/newrelic/newrelic-browser-agent/issues/706)) ([fdc2c29](https://github.com/newrelic/newrelic-browser-agent/commit/fdc2c29e2b43d691e3b613d8729b1c9615f72114))
+
+
+### Bug Fixes
+
+* Final harvest does not happen when initial RUM call fails ([#702](https://github.com/newrelic/newrelic-browser-agent/issues/702)) ([feb8726](https://github.com/newrelic/newrelic-browser-agent/commit/feb8726faba6257c2173b9e0a9aebaeee1f449a6))
+
 ## [1.240.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.239.1...v1.240.0) (2023-09-12)
 
 

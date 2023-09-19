@@ -8,7 +8,25 @@ const model = () => {
   const hiddenState = {
     mask_selector: '*',
     block_selector: '[data-nr-block]',
-    mask_input_options: { password: true }
+    mask_input_options: {
+      color: false,
+      date: false,
+      'datetime-local': false,
+      email: false,
+      month: false,
+      number: false,
+      range: false,
+      search: false,
+      tel: false,
+      text: false,
+      time: false,
+      url: false,
+      week: false,
+      // unify textarea and select element with text input
+      textarea: false,
+      select: false,
+      password: true // This will be enforced to always be true in the setter
+    }
   }
   return {
     proxy: {

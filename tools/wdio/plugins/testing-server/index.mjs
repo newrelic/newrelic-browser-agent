@@ -1,5 +1,6 @@
 import TestingServerLauncher from './launcher.mjs'
 import { TestHandleConnector } from './test-handle-connector.mjs'
+import { deserialize } from '../../../shared/serializer.js'
 
 /**
  * This is a WDIO worker plugin that provides access to the testing server via
@@ -12,10 +13,10 @@ export default class TestingServerWorker {
   #commandServerConfig
 
   beforeSession (_, capabilities) {
-    this.#assetServerConfig = JSON.parse(capabilities.assetServer)
-    this.#corsServerConfig = JSON.parse(capabilities.corsServer)
-    this.#bamServerConfig = JSON.parse(capabilities.bamServer)
-    this.#commandServerConfig = JSON.parse(capabilities.commandServer)
+    this.#assetServerConfig = deserialize(capabilities.assetServer)
+    this.#corsServerConfig = deserialize(capabilities.corsServer)
+    this.#bamServerConfig = deserialize(capabilities.bamServer)
+    this.#commandServerConfig = deserialize(capabilities.commandServer)
 
     delete capabilities.assetServer
     delete capabilities.corsServer

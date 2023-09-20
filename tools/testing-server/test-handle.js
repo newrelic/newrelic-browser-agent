@@ -18,7 +18,7 @@ const {
   testInteractionEventsRequest,
   testBlobRequest
 } = require('./utils/expect-tests')
-const SerAny = require('serialize-anything')
+const { deserialize } = require('../shared/serializer.js')
 
 /**
  * Scheduled reply options
@@ -117,7 +117,7 @@ module.exports = class TestHandle {
 
           if (typeof test === 'string') {
             // eslint-disable-next-line no-new-func
-            test = SerAny.deserialize(test)
+            test = deserialize(test)
           }
 
           if (test.call(this, request)) {
@@ -146,7 +146,7 @@ module.exports = class TestHandle {
 
           if (typeof test === 'string') {
             // eslint-disable-next-line no-new-func
-            test = SerAny.deserialize(test)
+            test = deserialize(test)
           }
 
           if (test.call(this, request)) {
@@ -210,7 +210,7 @@ module.exports = class TestHandle {
         let testName = testServerExpect.test.name
 
         if (typeof testServerExpect.test === 'string') {
-          testName = SerAny.deserialize(testServerExpect.test).name
+          testName = deserialize(testServerExpect.test).name
         }
 
         if (deferred.expectTimeout) {

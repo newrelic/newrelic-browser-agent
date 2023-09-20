@@ -6,6 +6,7 @@ const {
   loaderConfigKeys,
   loaderOnlyConfigKeys
 } = require('../../constants')
+const { deserialize } = require('../../../shared/serializer.js')
 
 /**
  * Constructs the agent config script block based on the config query and default
@@ -16,19 +17,20 @@ const {
  * @return {string}
  */
 function getConfigContent (request, reply, testServer) {
-  const queryConfig = (() => {
-    try {
-      return JSON.parse(
-        Buffer.from(request.query.config || 'e30=', 'base64').toString()
+  let queryConfig
+  try {
+    if (request.query.config) {
+      queryConfig = deserialize(
+        Buffer.from(request.query.config, 'base64').toString()
       )
-    } catch (error) {
-      testServer.config.logger.error(
-        `Invalid config query parameter for request ${request.url}`
-      )
-      testServer.config.logger.error(error)
-      return {}
     }
-  })()
+  } catch (error) {
+    testServer.config.logger.error(
+      `Invalid config query parameter for request ${request.url}`
+    )
+    testServer.config.logger.error(error)
+  }
+
   const config = {
     agent: `${testServer.assetServer.host}:${testServer.assetServer.port}/build/nr.js`,
     beacon: `${testServer.bamServer.host}:${testServer.bamServer.port}`,

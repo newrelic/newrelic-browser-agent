@@ -5,7 +5,7 @@ import url from 'url'
 import crypto from 'crypto'
 import { deepmerge } from 'deepmerge-ts'
 import { Launcher } from '@wdio/cli'
-import { serialize } from 'serialize-anything'
+import { serialize } from '../shared/serializer.js'
 import baseConfig from './config/base.conf.mjs'
 import specsConfig from './config/specs.conf.mjs'
 import sauceConfig from './config/sauce.conf.mjs'
@@ -35,7 +35,7 @@ fs.ensureDirSync(path.dirname(configFilePath))
 process.argv.splice(2)
 fs.writeFile(
   configFilePath,
-  `import { deserialize } from 'serialize-anything'\nexport const config = deserialize('${serialize(wdioConfig)}')`,
+  `import { deserialize } from '../../../tools/shared/serializer.js'\nexport const config = deserialize('${serialize(wdioConfig)}')`,
   (error) => {
     if (error) {
       console.error(error)

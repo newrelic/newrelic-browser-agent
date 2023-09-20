@@ -26,8 +26,6 @@ module.exports.loaderConfigKeys = [
 
 module.exports.loaderOnlyConfigKeys = ['accountID', 'agentID', 'trustKey']
 
-module.exports.regexReplacementRegex = /"new RegExp\('(.*?)','(.*?)'\)"/g
-
 module.exports.rumFlags = {
   stn: 1,
   err: 1,

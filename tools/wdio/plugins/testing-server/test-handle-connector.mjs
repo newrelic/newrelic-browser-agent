@@ -1,6 +1,6 @@
 import logger from '@wdio/logger'
 import fetch from 'node-fetch'
-import * as SerAny from 'serialize-anything'
+import { serialize } from '../../../shared/serializer.js'
 import { deepmerge } from 'deepmerge-ts'
 import {
   testAjaxEventsRequest, testAjaxTimeSlicesRequest, testCustomMetricsRequest, testErrorsRequest,
@@ -97,11 +97,11 @@ export class TestHandleConnector {
   async scheduleReply (serverId, scheduledReply) {
     await fetch(`${this.#commandServerBase}/test-handle/${this.#testId}/scheduleReply`, {
       method: 'POST',
-      body: JSON.stringify({
+      body: serialize({
         serverId,
-        scheduledReply: { ...scheduledReply, test: SerAny.serialize(scheduledReply.test) }
+        scheduledReply: { ...scheduledReply, test: scheduledReply.test }
       }),
-      headers: { 'content-type': 'application/json' }
+      headers: { 'content-type': 'application/serialized+json' }
     })
   }
 
@@ -112,10 +112,10 @@ export class TestHandleConnector {
   async clearScheduledReplies (serverId) {
     await fetch(`${this.#commandServerBase}/test-handle/${this.#testId}/clearScheduledReplies`, {
       method: 'POST',
-      body: JSON.stringify({
+      body: serialize({
         serverId
       }),
-      headers: { 'content-type': 'application/json' }
+      headers: { 'content-type': 'application/serialized+json' }
     })
   }
 
@@ -133,15 +133,15 @@ export class TestHandleConnector {
     const abortController = new AbortController()
     const expectRequest = fetch(`${this.#commandServerBase}/test-handle/${this.#testId}/expect`, {
       method: 'POST',
-      body: JSON.stringify({
+      body: serialize({
         serverId,
         expectOpts: {
           timeout: testServerExpect.timeout,
-          test: SerAny.serialize(testServerExpect.test),
+          test: testServerExpect.test,
           expectTimeout: testServerExpect.expectTimeout
         }
       }),
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/serialized+json' },
       signal: abortController.signal
     })
 
@@ -186,11 +186,11 @@ export class TestHandleConnector {
     query.testId = this.#testId
     const result = await fetch(`${this.#commandServerBase}/test-handle/${this.#testId}/asset-url`, {
       method: 'POST',
-      body: JSON.stringify({
+      body: serialize({
         assetFile,
-        query: SerAny.serialize(deepmerge(defaultAssetQuery, query))
+        query: deepmerge(defaultAssetQuery, query)
       }),
-      headers: { 'content-type': 'application/json' }
+      headers: { 'content-type': 'application/serialized+json' }
     })
 
     if (result.status !== 200) {

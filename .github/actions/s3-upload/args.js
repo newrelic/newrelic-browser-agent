@@ -25,9 +25,5 @@ export const args = yargs(hideBin(process.argv))
   .string('dir')
   .describe('dir', 'Bucket sub-directory name. Leave empty to upload to the root of the bucket.')
 
-  .number('asset-cache-duration')
-  .describe('asset-cache-duration', 'Set the amount of time used for the cache control header of each asset. Defaults to 2 hours.')
-  .default('asset-cache-duration', 3600)
-
   .demandOption(['bucket', 'role', 'input'])
   .argv

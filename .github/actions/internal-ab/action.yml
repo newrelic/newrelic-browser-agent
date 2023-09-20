@@ -46,7 +46,7 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - run: echo '===========================\n= Building A/B Script     =\n===========================\n'
+    - run: echo '=========================== Building A/B Script     ==========================='
       shell: bash
     - name: Build a/b script
       id: ab-build
@@ -64,7 +64,7 @@ runs:
         nrba_released_script_url: ${{ inputs.nrba_released_script_url }}
         nrba_latest_script_url: ${{ inputs.nrba_latest_script_url }}
 
-    - run: echo '===========================\n= Uploading A/B Script    =\n===========================\n'
+    - run: echo '=========================== Uploading A/B Script    ==========================='
       shell: bash
     - name: Upload a/b script
       id: ab-s3-upload
@@ -77,7 +77,7 @@ runs:
         local_dir: $GITHUB_WORKSPACE/temp
         bucket_dir: internal/
 
-    - run: echo '===========================\n= Purging Fastly Cache    =\n===========================\n'
+    - run: echo '=========================== Purging Fastly Cache    ==========================='
       shell: bash
     - name: Gather a/b purge paths
       id: ab-purge-paths
@@ -90,7 +90,7 @@ runs:
         fastly_service: js-agent.newrelic.com
         purge_path: ${{ steps.ab-purge-paths.outputs.results }}
 
-    - run: echo '===========================\n= Verifying A/B Scripts   =\n===========================\n'
+    - run: echo '=========================== Verifying A/B Scripts   ==========================='
       shell: bash
     - name: Verify a/b assets
       uses: ./.github/actions/fastly-verify

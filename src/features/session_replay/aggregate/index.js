@@ -21,6 +21,8 @@ import { sharedChannel } from '../../../common/constants/shared-channel'
 import { obj as encodeObj } from '../../../common/url/encode'
 import { warn } from '../../../common/util/console'
 import { globalScope } from '../../../common/constants/runtime'
+import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
+import { FEATURE_NAMES } from '../../../loaders/features/features'
 
 // would be better to get this dynamically in some way
 export const RRWEB_VERSION = '2.0.0-alpha.8'
@@ -309,6 +311,7 @@ export class Aggregate extends AggregateBase {
     // Vortex will block payloads at a certain size, we might as well not send.
     if (payloadSize > MAX_PAYLOAD_SIZE) {
       this.clearBuffer()
+      this.ee.emit(SUPPORTABILITY_METRIC_CHANNEL, ['SessionReplay/Too-Big/Seen'], undefined, FEATURE_NAMES.metrics, this.ee)
       return this.abort()
     }
     // Checkout events are flags by the recording lib that indicate a fullsnapshot was taken every n ms. These are important

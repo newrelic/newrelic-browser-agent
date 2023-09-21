@@ -18,7 +18,6 @@ const {
   testInteractionEventsRequest,
   testBlobRequest
 } = require('./utils/expect-tests')
-const { deserialize } = require('../shared/serializer.js')
 
 /**
  * Scheduled reply options
@@ -115,11 +114,6 @@ module.exports = class TestHandle {
         try {
           let test = scheduledReply.test
 
-          if (typeof test === 'string') {
-            // eslint-disable-next-line no-new-func
-            test = deserialize(test)
-          }
-
           if (test.call(this, request)) {
             request.scheduledReply = scheduledReply
 
@@ -143,11 +137,6 @@ module.exports = class TestHandle {
       for (const pendingExpect of pendingExpects) {
         try {
           let test = pendingExpect.test
-
-          if (typeof test === 'string') {
-            // eslint-disable-next-line no-new-func
-            test = deserialize(test)
-          }
 
           if (test.call(this, request)) {
             request.resolvingExpect = pendingExpect
@@ -208,10 +197,6 @@ module.exports = class TestHandle {
     if (testServerExpect.timeout !== false) {
       deferred.timeout = setTimeout(() => {
         let testName = testServerExpect.test.name
-
-        if (typeof testServerExpect.test === 'string') {
-          testName = deserialize(testServerExpect.test).name
-        }
 
         if (deferred.expectTimeout) {
           deferred.resolve()

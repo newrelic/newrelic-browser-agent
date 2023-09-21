@@ -61,12 +61,6 @@ export default (env) => {
         'nr-loader-spa.min': path.join(env.paths.src, 'cdn/spa.js')
       },
       plugins: [
-        new webpack.IgnorePlugin({
-          checkResource: (resource, context) => {
-            // Spa allows all feature aggs
-            return false
-          }
-        })
       ]
     }
   ]

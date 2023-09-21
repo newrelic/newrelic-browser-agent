@@ -82,7 +82,7 @@ const model = () => {
       },
       set block_selector (val) {
         if (isValidSelector(val)) hiddenState.block_selector += `,${val}`
-        else warn('An invalid session_replay.block_selector was provided and will not be used', val)
+        else if (val !== '') warn('An invalid session_replay.block_selector was provided and will not be used', val)
       },
       // password: must always be present and true no matter what customer sets
       get mask_input_options () {

@@ -52,7 +52,7 @@ describe('property getters/setters used for validation', () => {
     })
 
     expect(getConfigurationValue('23456', 'session_replay.block_selector')).toEqual('[data-nr-block],[block-text-test]')
-    expect(getConfigurationValue('23456', 'session_replay.mask_text_selector')).toEqual('[mask-text-test]')
+    expect(getConfigurationValue('23456', 'session_replay.mask_text_selector')).toEqual('[mask-text-test],[data-nr-mask]')
     expect(getConfigurationValue('23456', 'session_replay.mask_input_options')).toMatchObject({ password: true, select: true })
   })
 

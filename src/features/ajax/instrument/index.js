@@ -16,6 +16,7 @@ import { responseSizeFromXhr } from './response-size'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
+import { model } from '../model'
 
 var handlers = ['load', 'error', 'abort', 'timeout']
 var handlersLen = handlers.length
@@ -25,13 +26,13 @@ var origXHR = originals.XHR
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
-  constructor (agentIdentifier, aggregator, auto = true) {
-    super(agentIdentifier, aggregator, FEATURE_NAME, auto)
+  constructor (agentIdentifier, aggregator, auto = true, init) {
+    super(agentIdentifier, aggregator, FEATURE_NAME, { auto, init, model: model() })
 
     // Very unlikely, but in case the existing XMLHttpRequest.prototype object on the page couldn't be wrapped.
     if (!getRuntime(agentIdentifier).xhrWrappable) return
 
-    this.dt = new DT(agentIdentifier)
+    this.dt = new DT(this)
 
     this.handler = (type, args, ctx, group) => handle(type, args, ctx, group, this.ee)
 

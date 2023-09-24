@@ -2,7 +2,8 @@ import { warn } from '../util/console'
 
 const model = {
   agentIdentifier: '',
-  ee: undefined
+  ee: undefined,
+  init: {}
 }
 
 export class SharedContext {

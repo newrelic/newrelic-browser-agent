@@ -14,8 +14,8 @@ import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
 
 export class Aggregate extends AggregateBase {
   static featureName = CONSTANTS.FEATURE_NAME
-  constructor (agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator, CONSTANTS.FEATURE_NAME)
+  constructor (agentIdentifier, aggregator, opts) {
+    super(agentIdentifier, aggregator, CONSTANTS.FEATURE_NAME, opts)
 
     this.timeToFirstByte = 0
     this.firstByteToWindowLoad = 0 // our "frontend" duration

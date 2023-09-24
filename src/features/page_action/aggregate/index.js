@@ -8,17 +8,17 @@ import { stringify } from '../../../common/util/stringify'
 import { registerHandler as register } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { cleanURL } from '../../../common/url/clean-url'
-import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
+import { getInfo, getRuntime } from '../../../common/config/config'
 import { FEATURE_NAME } from '../constants'
 import { isBrowserScope } from '../../../common/constants/runtime'
 import { AggregateBase } from '../../utils/aggregate-base'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
-  constructor (agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator, FEATURE_NAME)
+  constructor (agentIdentifier, aggregator, opts) {
+    super(agentIdentifier, aggregator, FEATURE_NAME, opts)
     this.eventsPerMinute = 240
-    this.harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'page_action.harvestTimeSeconds') || getConfigurationValue(this.agentIdentifier, 'ins.harvestTimeSeconds') || 30
+    this.harvestTimeSeconds = this.init.page_action.harvestTimeSeconds
     this.eventsPerHarvest = this.eventsPerMinute * this.harvestTimeSeconds / 60
     this.referrerUrl = undefined
     this.currentEvents = undefined

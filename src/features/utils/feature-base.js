@@ -2,7 +2,7 @@ import { getRuntime } from '../../common/config/config'
 import { ee } from '../../common/event-emitter/contextual-ee'
 
 export class FeatureBase {
-  constructor (agentIdentifier, aggregator, featureName) {
+  constructor (agentIdentifier, aggregator, featureName, init = {}) {
     /** @type {string} */
     this.agentIdentifier = agentIdentifier
     /** @type {Aggregator} */
@@ -17,5 +17,7 @@ export class FeatureBase {
      * @type {boolean}
      */
     this.blocked = false
+
+    this.init = init
   }
 }

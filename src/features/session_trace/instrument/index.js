@@ -9,6 +9,7 @@ import { InstrumentBase } from '../../utils/instrument-base'
 import * as CONSTANTS from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { isBrowserScope } from '../../../common/constants/runtime'
+import { model } from '../model'
 
 const {
   BST_RESOURCE, RESOURCE, START, END, FEATURE_NAME, FN_END, FN_START, PUSH_STATE
@@ -16,8 +17,8 @@ const {
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
-  constructor (agentIdentifier, aggregator, auto = true) {
-    super(agentIdentifier, aggregator, FEATURE_NAME, auto)
+  constructor (agentIdentifier, aggregator, auto = true, init) {
+    super(agentIdentifier, aggregator, FEATURE_NAME, { auto, init, model: model() })
     if (!isBrowserScope) return // session traces not supported outside web env
 
     const thisInstrumentEE = this.ee

@@ -13,7 +13,7 @@ import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { stringify } from '../../../common/util/stringify'
 import { handle } from '../../../common/event-emitter/handle'
 import { mapOwn } from '../../../common/util/map-own'
-import { getInfo, getConfigurationValue, getRuntime } from '../../../common/config/config'
+import { getInfo, getRuntime } from '../../../common/config/config'
 import { now } from '../../../common/timing/now'
 import { globalScope } from '../../../common/constants/runtime'
 
@@ -27,8 +27,8 @@ import { AggregateBase } from '../../utils/aggregate-base'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
-  constructor (agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator, FEATURE_NAME)
+  constructor (agentIdentifier, aggregator, opts) {
+    super(agentIdentifier, aggregator, FEATURE_NAME, opts)
 
     this.stackReported = {}
     this.observedAt = {}
@@ -46,7 +46,7 @@ export class Aggregate extends AggregateBase {
     register('err', (...args) => this.storeError(...args), this.featureName, this.ee)
     register('ierr', (...args) => this.storeError(...args), this.featureName, this.ee)
 
-    const harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'jserrors.harvestTimeSeconds') || 10
+    const harvestTimeSeconds = this.init.jserrors.harvestTimeSeconds || 10
 
     const scheduler = new HarvestScheduler('jserrors', { onFinished: (...args) => this.onHarvestFinished(...args) }, this)
     scheduler.harvest.on('jserrors', (...args) => this.onHarvestStarted(...args))

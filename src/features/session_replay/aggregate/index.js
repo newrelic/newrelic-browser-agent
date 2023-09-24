@@ -40,12 +40,12 @@ const CHECKOUT_MS = { [MODE.ERROR]: 30000, [MODE.FULL]: 300000, [MODE.OFF]: 0 }
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
-  constructor (agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator, FEATURE_NAME)
+  constructor (agentIdentifier, aggregator, opts) {
+    super(agentIdentifier, aggregator, FEATURE_NAME, opts)
     /** Each page mutation or event will be stored (raw) in this array. This array will be cleared on each harvest */
     this.events = []
     /** The interval to harvest at.  This gets overridden if the size of the payload exceeds certain thresholds */
-    this.harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'session_replay.harvestTimeSeconds') || 60
+    this.harvestTimeSeconds = this.init.session_replay.harvestTimeSeconds || 60
     /** Set once the recorder has fully initialized after flag checks and sampling */
     this.initialized = false
     /** Set once an error has been detected on the page. Never unset */
@@ -83,8 +83,7 @@ export class Aggregate extends AggregateBase {
     this.lastMeta = undefined
 
     const shouldSetup = (
-      getConfigurationValue(agentIdentifier, 'privacy.cookies_enabled') === true &&
-      getConfigurationValue(agentIdentifier, 'session_trace.enabled') === true
+      this.init.privacy.cookies_enabled === true && this.init.session_trace.enabled === true
     )
 
     /** The method to stop recording. This defaults to a noop, but is overwritten once the recording library is imported and initialized */
@@ -133,8 +132,8 @@ export class Aggregate extends AggregateBase {
 
       this.waitForFlags(['sr']).then(([flagOn]) => this.initializeRecording(
         flagOn,
-        (Math.random() * 100) < getConfigurationValue(this.agentIdentifier, 'session_replay.error_sampling_rate'),
-        (Math.random() * 100) < getConfigurationValue(this.agentIdentifier, 'session_replay.sampling_rate')
+        (Math.random() * 100) < this.init.session_replay.error_sampling_rate,
+        (Math.random() * 100) < this.init.session_replay.sampling_rate
       )).then(() => sharedChannel.onReplayReady(this.mode)) // notify watchers that replay started with the mode
 
       this.drain()

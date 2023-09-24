@@ -1,16 +1,15 @@
 import { FEATURE_NAMES } from './features'
-import { getConfigurationValue } from '../../common/config/config'
 
 const featureNames = Object.values(FEATURE_NAMES)
 
-function isEnabled (name, agentIdentifier) {
-  return getConfigurationValue(agentIdentifier, `${name}.enabled`) !== false
+function isEnabled (name, init) {
+  return init?.[name]?.enabled !== false
 }
 
-export function getEnabledFeatures (agentIdentifier) {
+export function getEnabledFeatures (init) {
   const enabledFeatures = {}
   featureNames.forEach(featureName => {
-    enabledFeatures[featureName] = isEnabled(featureName, agentIdentifier)
+    enabledFeatures[featureName] = isEnabled(featureName, init)
   })
   return enabledFeatures
 }

@@ -5,7 +5,7 @@
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { parseUrl } from '../../../common/url/parse-url'
-import { getConfigurationValue, getRuntime } from '../../../common/config/config'
+import { getRuntime } from '../../../common/config/config'
 import { now } from '../../../common/timing/now'
 import { FEATURE_NAME } from '../constants'
 import { HandlerCache } from '../../utils/handler-cache'
@@ -35,20 +35,20 @@ export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   #scheduler
 
-  constructor (agentIdentifier, aggregator, argsObj) {
-    super(agentIdentifier, aggregator, FEATURE_NAME)
+  constructor (agentIdentifier, aggregator, opts) {
+    super(agentIdentifier, aggregator, FEATURE_NAME, opts)
     this.agentRuntime = getRuntime(agentIdentifier)
 
     // Very unlikely, but in case the existing XMLHttpRequest.prototype object on the page couldn't be wrapped.
     if (!this.agentRuntime.xhrWrappable) return
 
-    this.resourceObserver = argsObj?.resourceObserver // undefined if observer couldn't be created
+    this.resourceObserver = opts?.resourceObserver // undefined if observer couldn't be created
     this.ptid = ''
     this.trace = {}
     this.nodeCount = 0
     this.sentTrace = null
-    this.harvestTimeSeconds = getConfigurationValue(agentIdentifier, 'session_trace.harvestTimeSeconds') || 10
-    this.maxNodesPerHarvest = getConfigurationValue(agentIdentifier, 'session_trace.maxNodesPerHarvest') || 1000
+    this.harvestTimeSeconds = this.init.session_trace.harvestTimeSeconds || 10
+    this.maxNodesPerHarvest = this.init.session_trace.maxNodesPerHarvest || 1000
     /**
      * Standalone (mode) refers to the legacy version of ST before the idea of 'session' or the Replay feature existed.
      * It has some different behavior vs when used in tandem with replay. */
@@ -128,7 +128,7 @@ export class Aggregate extends AggregateBase {
             if (sessionEntity.state.sessionReplay === MODE.OFF) this.isStandalone = true
             controlTraceOp(mostRecentModeKnown = sessionEntity.state.sessionTraceMode)
           } else { // for new sessions, see the truth table associated with NEWRELIC-8662 wrt the new Trace behavior under session management
-            const replayMode = await getSessionReplayMode(agentIdentifier)
+            const replayMode = await getSessionReplayMode(this.agentIdentifier, this.init)
             if (replayMode === MODE.OFF) this.isStandalone = true // without SR, Traces are still subject to old harvest limits
 
             let startingMode

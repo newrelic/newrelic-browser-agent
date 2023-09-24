@@ -10,7 +10,9 @@ import { onWindowLoad } from '../../common/window/load'
 import { isBrowserScope } from '../../common/constants/runtime'
 import { warn } from '../../common/util/console'
 import { FEATURE_NAMES } from '../../loaders/features/features'
-import { getConfigurationValue, originals } from '../../common/config/config'
+import { originals } from '../../common/config/config'
+import { getModeledObject } from '../../common/config/state/configurable'
+import { model as baseModel } from '../../common/config/state/init'
 
 /**
  * Base class for instrumenting a feature.
@@ -26,8 +28,8 @@ export class InstrumentBase extends FeatureBase {
    *     of its pooled instrumentation data handled by the agent's centralized drain functionality, rather than draining
    *     immediately. Primarily useful for fine-grained control in tests.
    */
-  constructor (agentIdentifier, aggregator, featureName, auto = true) {
-    super(agentIdentifier, aggregator, featureName)
+  constructor (agentIdentifier, aggregator, featureName, { init, model = {}, auto = true }) {
+    super(agentIdentifier, aggregator, featureName, { ...getModeledObject(init, model), ...getModeledObject(init, baseModel()) })
     this.auto = auto
 
     /** @type {Function | undefined} This should be set by any derived Instrument class if it has things to do when feature fails or is killed. */
@@ -46,7 +48,8 @@ export class InstrumentBase extends FeatureBase {
     this.onAggregateImported = undefined
 
     /** used in conjunction with newrelic.start() to defer harvesting in features */
-    if (getConfigurationValue(this.agentIdentifier, `${this.featureName}.autoStart`) === false) this.auto = false
+    if (this.init[this.featureName]?.autoStart === false) this.auto = false
+    // if (getConfigurationValue(this.agentIdentifier, `${this.featureName}.autoStart`) === false) this.auto = false
     /** if the feature requires opt-in (!auto-start), it will get registered once the api has been called */
     if (this.auto) registerDrain(agentIdentifier, featureName)
   }
@@ -60,6 +63,8 @@ export class InstrumentBase extends FeatureBase {
   importAggregator (argsObjFromInstrument = {}) {
     if (this.featAggregate) return
 
+    if (!argsObjFromInstrument.init) argsObjFromInstrument.init = this.init
+    // console.log('argsObjFromInstrument', argsObjFromInstrument)
     if (!this.auto) {
       // this feature requires an opt in...
       // wait for API to be called
@@ -73,7 +78,8 @@ export class InstrumentBase extends FeatureBase {
       return
     }
 
-    const enableSessionTracking = isBrowserScope && getConfigurationValue(this.agentIdentifier, 'privacy.cookies_enabled') === true
+    // const enableSessionTracking = isBrowserScope && getConfigurationValue(this.agentIdentifier, 'privacy.cookies_enabled') === true
+    const enableSessionTracking = isBrowserScope && this.init.privacy.cookies_enabled === true
     let loadedSuccessfully
     this.onAggregateImported = new Promise(resolve => {
       loadedSuccessfully = resolve
@@ -84,7 +90,7 @@ export class InstrumentBase extends FeatureBase {
       try {
         if (enableSessionTracking) { // would require some setup before certain features start
           const { setupAgentSession } = await import(/* webpackChunkName: "session-manager" */ './agent-session')
-          session = setupAgentSession(this.agentIdentifier)
+          session = setupAgentSession(this.agentIdentifier, this.init.session)
         }
       } catch (e) {
         warn('A problem occurred when starting up session manager. This page will not start or extend any session.', e)
@@ -127,7 +133,8 @@ export class InstrumentBase extends FeatureBase {
   shouldImportAgg (featureName, session) {
     if (featureName === FEATURE_NAMES.sessionReplay) {
       if (!originals.MO) return false // Session Replay cannot work without Mutation Observer
-      if (getConfigurationValue(this.agentIdentifier, 'session_trace.enabled') === false) return false // Session Replay as of now is tightly coupled with Session Trace in the UI
+      // if (getConfigurationValue(this.agentIdentifier, 'session_trace.enabled') === false) return false // Session Replay as of now is tightly coupled with Session Trace in the UI
+      if (this.init?.session_trace.enabled === false) return false
       return !!session?.isNew || !!session?.state.sessionReplay // Session Replay should only try to run if already running from a previous page, or at the beginning of a session
     }
     return true

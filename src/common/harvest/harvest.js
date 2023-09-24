@@ -7,7 +7,7 @@ import { obj as encodeObj, param as encodeParam } from '../url/encode'
 import { stringify } from '../util/stringify'
 import * as submitData from '../util/submit-data'
 import { getLocation } from '../url/location'
-import { getInfo, getConfigurationValue, getRuntime, getConfiguration } from '../config/config'
+import { getInfo, getRuntime } from '../config/config'
 import { cleanURL } from '../url/clean-url'
 import { now } from '../timing/now'
 import { eventListenerOpts } from '../event-listener/event-listener-opts'
@@ -30,8 +30,7 @@ const warnings = {}
 export class Harvest extends SharedContext {
   constructor (parent) {
     super(parent) // gets any allowed properties from the parent and stores them in `sharedContext`
-
-    this.tooManyRequestsDelay = getConfigurationValue(this.sharedContext.agentIdentifier, 'harvest.tooManyRequestsDelay') || 60
+    this.tooManyRequestsDelay = this.sharedContext?.init.harvest.tooManyRequestsDelay || 60
     this.obfuscator = new Obfuscator(this.sharedContext)
 
     this._events = {}
@@ -95,7 +94,7 @@ export class Harvest extends SharedContext {
       return false
     }
 
-    const init = getConfiguration(this.sharedContext.agentIdentifier)
+    const init = this.sharedContext.init
     const protocol = init.ssl === false ? 'http' : 'https'
     const perceviedBeacon = init.proxy.beacon || info.errorBeacon
     const endpointURLPart = endpoint !== 'rum' ? `/${endpoint}` : ''

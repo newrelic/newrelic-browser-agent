@@ -1,4 +1,3 @@
-import { getConfigurationValue } from '../config/config'
 import { SharedContext } from '../context/shared-context'
 import { isFileProtocol } from '../url/protocol'
 import { warn } from './console'
@@ -9,7 +8,7 @@ var fileProtocolRule = {
 }
 export class Obfuscator extends SharedContext {
   shouldObfuscate () {
-    return getRules(this.sharedContext.agentIdentifier).length > 0
+    return getRules(this.sharedContext?.init?.obfuscate || [])
   }
 
   // applies all regex obfuscation rules to provided URL string and returns the result
@@ -31,9 +30,8 @@ export class Obfuscator extends SharedContext {
 }
 
 // TO DO: this function should be inside the Obfuscator class since its context relates to agentID
-export function getRules (agentIdentifier) {
+export function getRules (configRules) {
   var rules = []
-  var configRules = getConfigurationValue(agentIdentifier, 'obfuscate') || []
 
   rules = rules.concat(configRules)
 

@@ -9,11 +9,12 @@ import { now } from '../../../common/timing/now'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME } from '../constants'
 import { isBrowserScope } from '../../../common/constants/runtime'
+import { model } from '../model'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
-  constructor (agentIdentifier, aggregator, auto = true) {
-    super(agentIdentifier, aggregator, FEATURE_NAME, auto)
+  constructor (agentIdentifier, aggregator, auto = true, init) {
+    super(agentIdentifier, aggregator, FEATURE_NAME, { auto, init, model: model() })
     if (!isBrowserScope) return // CWV is irrelevant outside web context
 
     // While we try to replicate web-vital's visibilitywatcher logic in an effort to defer that library to post-pageload, this isn't perfect and doesn't consider prerendering.

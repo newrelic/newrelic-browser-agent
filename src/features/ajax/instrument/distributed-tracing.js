@@ -2,23 +2,20 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { getConfiguration, getConfigurationValue, getLoaderConfig } from '../../../common/config/config'
+import { getLoaderConfig } from '../../../common/config/config'
 import { generateSpanId, generateTraceId } from '../../../common/ids/unique-id'
 import { parseUrl } from '../../../common/url/parse-url'
 import { globalScope } from '../../../common/constants/runtime'
 import { stringify } from '../../../common/util/stringify'
+import { SharedContext } from '../../../common/context/shared-context'
 
-export class DT {
-  constructor (agentIdentifier) {
-    this.agentIdentifier = agentIdentifier
-  }
-
+export class DT extends SharedContext {
   generateTracePayload (parsedOrigin) {
     if (!this.shouldGenerateTrace(parsedOrigin)) {
       return null
     }
 
-    var loaderConfig = getLoaderConfig(this.agentIdentifier)
+    var loaderConfig = getLoaderConfig(this.sharedContext.agentIdentifier)
     if (!loaderConfig) {
       return null
     }
@@ -105,10 +102,10 @@ export class DT {
   isAllowedOrigin (parsedOrigin) {
     var allowed = false
     var dtConfig = {}
-    var dt = getConfigurationValue(this.agentIdentifier, 'distributed_tracing')
+    var dt = this.sharedContext.init.distributed_tracing
 
     if (dt) {
-      dtConfig = getConfiguration(this.agentIdentifier).distributed_tracing
+      dtConfig = this.sharedContext.init.distributed_tracing
     }
 
     if (parsedOrigin.sameOrigin) {
@@ -128,35 +125,19 @@ export class DT {
   }
 
   isDtEnabled () {
-    var dt = getConfigurationValue(this.agentIdentifier, 'distributed_tracing')
-    if (dt) {
-      return !!dt.enabled
-    }
-    return false
+    return this.sharedContext?.init?.distributed_tracing?.enabled === true
   }
 
   // exclude the newrelic header for same-origin calls
   excludeNewrelicHeader () {
-    var dt = getConfigurationValue(this.agentIdentifier, 'distributed_tracing')
-    if (dt) {
-      return !!dt.exclude_newrelic_header
-    }
-    return false
+    return this.sharedContext?.init?.distributed_tracing?.exclude_newrelic_header === true
   }
 
   useNewrelicHeaderForCors () {
-    var dt = getConfigurationValue(this.agentIdentifier, 'distributed_tracing')
-    if (dt) {
-      return dt.cors_use_newrelic_header !== false
-    }
-    return false
+    return this.sharedContext?.init?.distributed_tracing?.cors_use_newrelic_header !== false
   }
 
   useTraceContextHeadersForCors () {
-    var dt = getConfigurationValue(this.agentIdentifier, 'distributed_tracing')
-    if (dt) {
-      return !!dt.cors_use_tracecontext_headers
-    }
-    return false
+    return this.sharedContext?.init?.distributed_tracing?.cors_use_tracecontext_headers === true
   }
 }

@@ -1,4 +1,4 @@
-import { getRuntime, getConfiguration } from '../../../common/config/config'
+import { getRuntime } from '../../../common/config/config'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { FEATURE_NAME, SUPPORTABILITY_METRIC, CUSTOM_METRIC, SUPPORTABILITY_METRIC_CHANNEL, CUSTOM_METRIC_CHANNEL } from '../constants'
@@ -12,8 +12,8 @@ import { AggregateBase } from '../../utils/aggregate-base'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
-  constructor (agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator, FEATURE_NAME)
+  constructor (agentIdentifier, aggregator, opts) {
+    super(agentIdentifier, aggregator, FEATURE_NAME, opts)
     let scheduler
 
     // If RUM-call's response determines that customer lacks entitlements for the /jserror ingest endpoint, don't harvest at all.
@@ -81,12 +81,12 @@ export class Aggregate extends AggregateBase {
     }
 
     // Capture SMs to assess customer engagement with the obfuscation config
-    const rules = getRules(this.agentIdentifier)
+    const rules = getRules(this.init?.obfuscate || [])
     if (rules.length > 0) this.storeSupportabilityMetrics('Generic/Obfuscate/Detected')
     if (rules.length > 0 && !validateRules(rules)) this.storeSupportabilityMetrics('Generic/Obfuscate/Invalid')
 
     // Check if proxy for either chunks or beacon is being used
-    const { proxy } = getConfiguration(this.agentIdentifier)
+    const { proxy } = this.init
     if (proxy.assets) this.storeSupportabilityMetrics('Config/AssetsUrl/Changed')
     if (proxy.beacon) this.storeSupportabilityMetrics('Config/BeaconUrl/Changed')
   }

@@ -11,6 +11,7 @@ import { getRuntime } from '../../../common/config/config'
 import { now } from '../../../common/timing/now'
 import * as CONSTANTS from '../constants'
 import { isBrowserScope } from '../../../common/constants/runtime'
+import { model } from '../model'
 
 const {
   FEATURE_NAME, START, END, BODY, CB_END, JS_TIME, FETCH, FN_START, CB_START, FN_END
@@ -18,8 +19,8 @@ const {
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
-  constructor (agentIdentifier, aggregator, auto = true) {
-    super(agentIdentifier, aggregator, FEATURE_NAME, auto)
+  constructor (agentIdentifier, aggregator, auto = true, init) {
+    super(agentIdentifier, aggregator, FEATURE_NAME, { auto, init, model: model() })
     if (!isBrowserScope) return // SPA not supported outside web env
 
     if (!getRuntime(agentIdentifier).xhrWrappable) return

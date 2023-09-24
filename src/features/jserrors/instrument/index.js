@@ -12,14 +12,15 @@ import { globalScope } from '../../../common/constants/runtime'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
 import { stringify } from '../../../common/util/stringify'
 import { UncaughtError } from './uncaught-error'
+import { model } from '../model'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
 
   #seenErrors = new Set()
 
-  constructor (agentIdentifier, aggregator, auto = true) {
-    super(agentIdentifier, aggregator, FEATURE_NAME, auto)
+  constructor (agentIdentifier, aggregator, auto = true, init) {
+    super(agentIdentifier, aggregator, FEATURE_NAME, { auto, init, model: model() })
 
     try {
       // this try-catch can be removed when IE11 is completely unsupported & gone

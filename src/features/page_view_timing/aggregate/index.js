@@ -8,7 +8,7 @@ import { mapOwn } from '../../../common/util/map-own'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { handle } from '../../../common/event-emitter/handle'
-import { getInfo, getConfigurationValue } from '../../../common/config/config'
+import { getInfo } from '../../../common/config/config'
 import { FEATURE_NAME } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
@@ -28,8 +28,8 @@ export class Aggregate extends AggregateBase {
     this.addTiming(name, value, attrs)
   }
 
-  constructor (agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator, FEATURE_NAME)
+  constructor (agentIdentifier, aggregator, opts) {
+    super(agentIdentifier, aggregator, FEATURE_NAME, opts)
 
     this.timings = []
     this.timingsSent = []
@@ -44,7 +44,7 @@ export class Aggregate extends AggregateBase {
       this.addTiming('load', Math.round(entries[0].loadEventEnd))
     })
 
-    if (getConfigurationValue(this.agentIdentifier, 'page_view_timing.long_task') === true) longTask.subscribe(this.#handleVitalMetric)
+    if (this.init.page_view_timing.long_task === true) longTask.subscribe(this.#handleVitalMetric)
 
     /* It's important that CWV api, like "onLCP", is called before this scheduler is initialized. The reason is because they listen to the same
       on vis change or pagehide events, and we'd want ex. onLCP to record the timing (win the race) before we try to send "final harvest". */
@@ -52,8 +52,8 @@ export class Aggregate extends AggregateBase {
     registerHandler('docHidden', msTimestamp => this.endCurrentSession(msTimestamp), this.featureName, this.ee)
     registerHandler('winPagehide', msTimestamp => this.recordPageUnload(msTimestamp), this.featureName, this.ee)
 
-    const initialHarvestSeconds = getConfigurationValue(this.agentIdentifier, 'page_view_timing.initialHarvestSeconds') || 10
-    const harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'page_view_timing.harvestTimeSeconds') || 30
+    const initialHarvestSeconds = this.init.page_view_timing.initialHarvestSeconds || 10
+    const harvestTimeSeconds = this.init.page_view_timing.harvestTimeSeconds || 30
     // send initial data sooner, then start regular
     this.ee.on(`drain-${this.featureName}`, () => {
       this.scheduler = new HarvestScheduler('events', {

@@ -1,4 +1,3 @@
-import { getConfigurationValue } from '../../common/config/config'
 import { MODE } from '../../common/session/session-entity'
 import { gosNREUM } from '../../common/window/nreum'
 import { sharedChannel } from '../../common/constants/shared-channel'
@@ -10,11 +9,11 @@ import { sharedChannel } from '../../common/constants/shared-channel'
  * @param {String} agentId
  * @returns Promise that resolves to one of the values in MODE enum
  */
-export async function getSessionReplayMode (agentId) {
+export async function getSessionReplayMode (agentId, init) {
   try {
     const newrelic = gosNREUM()
     // Should be enabled by configuration and using an agent build that includes it (via checking that the instrument class was initialized).
-    if (getConfigurationValue(agentId, 'session_replay.enabled') && typeof newrelic.initializedAgents[agentId].features.session_replay === 'object') {
+    if (init?.session_replay?.enabled && typeof newrelic.initializedAgents[agentId].features.session_replay === 'object') {
       const srInitialized = await newrelic.initializedAgents[agentId].features.session_replay.onAggregateImported
       if (srInitialized) return await sharedChannel.sessionReplayInitialized // wait for replay to determine which mode it's after running its sampling logic
     }

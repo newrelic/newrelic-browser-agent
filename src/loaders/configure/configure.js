@@ -1,6 +1,6 @@
 import { setAPI, setTopLevelCallers } from '../api/api'
 import { addToNREUM, gosCDN, gosNREUMInitializedAgents } from '../../common/window/nreum'
-import { getConfiguration, setConfiguration, setInfo, setLoaderConfig, setRuntime } from '../../common/config/config'
+import { setInfo, setLoaderConfig, setRuntime } from '../../common/config/config'
 import { activatedFeatures } from '../../common/util/feature-flags'
 import { isWorkerScope } from '../../common/constants/runtime'
 import { redefinePublicPath } from './public-path'
@@ -12,13 +12,12 @@ export function configure (agentIdentifier, opts = {}, loaderType, forceDrain) {
   let { init, info, loader_config, runtime = { loaderType }, exposed = true } = opts
   const nr = gosCDN()
   if (!info) {
-    init = nr.init
     info = nr.info
     // eslint-disable-next-line camelcase
     loader_config = nr.loader_config
   }
+  if (!init) init = nr.init
 
-  setConfiguration(agentIdentifier, init || {})
   // eslint-disable-next-line camelcase
   setLoaderConfig(agentIdentifier, loader_config || {})
 
@@ -28,20 +27,19 @@ export function configure (agentIdentifier, opts = {}, loaderType, forceDrain) {
   }
   setInfo(agentIdentifier, info)
 
-  const updatedInit = getConfiguration(agentIdentifier)
   const internalTrafficList = [info.beacon, info.errorBeacon]
   if (!alreadySetOnce) {
     alreadySetOnce = true
-    if (updatedInit.proxy.assets) {
-      redefinePublicPath(updatedInit.proxy.assets + '/') // much like the info.beacon & init.proxy.beacon, this input should not end in a slash, but one is needed for webpack concat
-      internalTrafficList.push(updatedInit.proxy.assets)
+    if (init?.proxy?.assets) {
+      redefinePublicPath(init?.proxy?.assets + '/') // much like the info.beacon & init.proxy.beacon, this input should not end in a slash, but one is needed for webpack concat
+      internalTrafficList.push(init?.proxy.assets)
     }
-    if (updatedInit.proxy.beacon) internalTrafficList.push(updatedInit.proxy.beacon)
+    if (init?.proxy?.beacon) internalTrafficList.push(init?.proxy?.beacon)
   }
 
   runtime.denyList = [
-    ...(updatedInit.ajax.deny_list || []),
-    ...(updatedInit.ajax.block_internal ? internalTrafficList : [])
+    ...(init?.ajax?.deny_list || []),
+    ...(init?.ajax?.block_internal ? internalTrafficList : [])
   ]
   setRuntime(agentIdentifier, runtime)
 

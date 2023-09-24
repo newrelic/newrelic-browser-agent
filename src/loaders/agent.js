@@ -10,9 +10,8 @@ import { featurePriority, FEATURE_NAMES } from './features/features'
 import { Instrument as PageViewEvent } from '../features/page_view_event/instrument'
 // common files
 import { Aggregator } from '../common/aggregate/aggregator'
-import { gosNREUM, gosNREUMInitializedAgents } from '../common/window/nreum'
+import { gosCDN, gosNREUM, gosNREUMInitializedAgents } from '../common/window/nreum'
 import { generateRandomHexString } from '../common/ids/unique-id'
-import { getConfiguration, getInfo, getLoaderConfig, getRuntime } from '../common/config/config'
 import { warn } from '../common/util/console'
 import { stringify } from '../common/util/stringify'
 import { globalScope } from '../common/constants/runtime'
@@ -48,23 +47,15 @@ export class Agent extends AgentBase {
 
     Object.assign(this, configure(this.agentIdentifier, options, options.loaderType || 'agent'))
 
-    this.run()
+    this.run(options)
   }
 
-  get config () {
-    return {
-      info: getInfo(this.agentIdentifier),
-      init: getConfiguration(this.agentIdentifier),
-      loader_config: getLoaderConfig(this.agentIdentifier),
-      runtime: getRuntime(this.agentIdentifier)
-    }
-  }
-
-  run () {
+  run (options) {
+    const init = options.init || gosCDN().init
     const NR_FEATURES_REF_NAME = 'features'
     // Attempt to initialize all the requested features (sequentially in prio order & synchronously), with any failure aborting the whole process.
     try {
-      const enabledFeatures = getEnabledFeatures(this.agentIdentifier)
+      const enabledFeatures = getEnabledFeatures(init)
       const featuresToStart = [...this.desiredFeatures]
       featuresToStart.sort((a, b) => featurePriority[a.featureName] - featurePriority[b.featureName])
       featuresToStart.forEach(InstrumentCtor => {
@@ -73,7 +64,7 @@ export class Agent extends AgentBase {
           const dependencies = getFeatureDependencyNames(InstrumentCtor.featureName)
           const hasAllDeps = dependencies.every(x => enabledFeatures[x])
           if (!hasAllDeps) warn(`${InstrumentCtor.featureName} is enabled but one or more dependent features has been disabled (${stringify(dependencies)}). This may cause unintended consequences or missing data...`)
-          this.features[InstrumentCtor.featureName] = new InstrumentCtor(this.agentIdentifier, this.sharedAggregator)
+          this.features[InstrumentCtor.featureName] = new InstrumentCtor(this.agentIdentifier, this.sharedAggregator, true, init)
         }
       })
       gosNREUMInitializedAgents(this.agentIdentifier, this.features, NR_FEATURES_REF_NAME)

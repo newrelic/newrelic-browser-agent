@@ -44,6 +44,7 @@ export class MicroAgent extends AgentBase {
      */
     this.start = features => this.run(features)
     this.run(nonAutoFeatures.filter(featureName => getConfigurationValue(agentIdentifier, `${featureName}.autoStart`)))
+    // TODO - pipe init through micro agent
   }
 
   get config () {

@@ -10,7 +10,7 @@ import { mapOwn } from '../../../common/util/map-own'
 import { navTimingValues as navTiming } from '../../../common/timing/nav-timing'
 import { generateUuid } from '../../../common/ids/unique-id'
 import { Interaction } from './interaction'
-import { getConfigurationValue, getRuntime } from '../../../common/config/config'
+import { getRuntime } from '../../../common/config/config'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { Serializer } from './serializer'
@@ -27,8 +27,8 @@ const {
 } = CONSTANTS
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
-  constructor (agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator, FEATURE_NAME)
+  constructor (agentIdentifier, aggregator, opts) {
+    super(agentIdentifier, aggregator, FEATURE_NAME, opts)
 
     this.state = {
       initialPageURL: getRuntime(agentIdentifier).origin,
@@ -43,7 +43,7 @@ export class Aggregate extends AggregateBase {
       pageLoaded: false,
       childTime: 0,
       depth: 0,
-      harvestTimeSeconds: getConfigurationValue(agentIdentifier, 'spa.harvestTimeSeconds') || 10,
+      harvestTimeSeconds: this.init.spa.harvestTimeSeconds || 10,
       interactionsToHarvest: [],
       interactionsSent: []
     }
@@ -108,7 +108,7 @@ export class Aggregate extends AggregateBase {
       scheduler.stopTimer(true)
     }, this.featureName, baseEE)
 
-    if (!isEnabled()) return
+    if (this.init.spa.enabled === false) return
 
     state.initialPageLoad = new Interaction('initialPageLoad', 0, state.lastSeenUrl, state.lastSeenRouteName, onInteractionFinished, agentIdentifier)
     state.initialPageLoad.save = true
@@ -721,11 +721,6 @@ export class Aggregate extends AggregateBase {
       baseEE.emit('interactionSaved', [interaction])
       state.interactionsToHarvest.push(interaction)
       scheduler.scheduleHarvest(0)
-    }
-
-    function isEnabled () {
-      var enabled = getConfigurationValue(agentIdentifier, 'spa.enabled')
-      return enabled !== false
     }
 
     this.drain()

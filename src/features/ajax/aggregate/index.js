@@ -6,7 +6,7 @@ import { registerHandler as register } from '../../../common/event-emitter/regis
 import { stringify } from '../../../common/util/stringify'
 import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../../../common/serialize/bel-serializer'
 import { handle } from '../../../common/event-emitter/handle'
-import { getConfiguration, getInfo, getRuntime } from '../../../common/config/config'
+import { getInfo, getRuntime } from '../../../common/config/config'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { setDenyList, shouldCollectEvent } from '../../../common/deny-list/deny-list'
 import { FEATURE_NAME } from '../constants'
@@ -16,9 +16,9 @@ import { AggregateBase } from '../../utils/aggregate-base'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
-  constructor (agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator, FEATURE_NAME)
-    const agentInit = getConfiguration(agentIdentifier)
+  constructor (agentIdentifier, aggregator, opts) {
+    super(agentIdentifier, aggregator, FEATURE_NAME, opts)
+    const agentInit = this.init
     const allAjaxIsEnabled = agentInit.ajax.enabled !== false
 
     register('xhr', storeXhr, this.featureName, this.ee)

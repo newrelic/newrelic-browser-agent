@@ -6,8 +6,8 @@ import { gosCDN } from '../../common/window/nreum'
 import { drain } from '../../common/drain/drain'
 
 export class AggregateBase extends FeatureBase {
-  constructor (...args) {
-    super(...args)
+  constructor (agentIdentifier, aggregator, FEATURE_NAME, opts = {}) {
+    super(agentIdentifier, aggregator, FEATURE_NAME, opts.init)
     this.checkConfiguration()
   }
 

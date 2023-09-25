@@ -1,6 +1,5 @@
 const fp = require('fastify-plugin')
 const { v4: uuidV4 } = require('uuid')
-const SerAny = require('serialize-anything')
 
 /**
  * Fastify plugin to apply routes to the command server.
@@ -26,7 +25,7 @@ module.exports = fp(async function (fastify, testServer) {
     const testHandle = testServer.getTestHandle(request.params.testId)
 
     try {
-      const result = await testHandle.assetURL(request.body.assetFile, SerAny.deserialize(request.body.query))
+      const result = await testHandle.assetURL(request.body.assetFile, request.body.query)
       reply.code(200).send({
         assetURL: result
       })

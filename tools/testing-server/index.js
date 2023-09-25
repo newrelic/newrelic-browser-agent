@@ -283,6 +283,7 @@ class TestServer {
     this.#commandServer.register(require('./routes/command-apis'), this)
     this.#commandServer.register(require('./plugins/no-cache'))
     this.#commandServer.register(require('./plugins/request-logger'))
+    this.#commandServer.register(require('./plugins/deserialize-body'))
   }
 
   /**

@@ -1,5 +1,4 @@
 const path = require('path')
-const Dotenv = require('dotenv-webpack')
 const webpack = require('webpack')
 const pkg = require('../../package.json')
 

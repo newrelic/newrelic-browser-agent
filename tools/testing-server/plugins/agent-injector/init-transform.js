@@ -1,6 +1,7 @@
 const { Transform } = require('stream')
-const { regexReplacementRegex, defaultInitBlock } = require('../../constants')
+const { defaultInitBlock } = require('../../constants')
 const { deepmerge } = require('deepmerge-ts')
+const { deserialize } = require('../../../shared/serializer.js')
 
 /**
  * Constructs the agent init script block based on the init query.
@@ -10,25 +11,29 @@ const { deepmerge } = require('deepmerge-ts')
  * @return {string}
  */
 function getInitContent (request, reply, testServer) {
-  const queryInit = (() => {
-    try {
-      return JSON.parse(
-        Buffer.from(request.query.init || 'e30=', 'base64').toString()
+  let queryInit
+  try {
+    if (request.query.init) {
+      queryInit = deserialize(
+        Buffer.from(request.query.init, 'base64').toString()
       )
-    } catch (error) {
-      testServer.config.logger.error(
-        `Invalid init query parameter for request ${request.url}`
-      )
-      testServer.config.logger.error(error)
-      return {}
     }
-  })()
-
-  let initJSON = JSON.stringify(deepmerge(defaultInitBlock, queryInit))
-  if (initJSON.includes('new RegExp')) {
-    // de-serialize RegExp obj from router
-    initJSON = initJSON.replace(regexReplacementRegex, '/$1/$2')
+  } catch (error) {
+    testServer.config.logger.error(
+      `Invalid init query parameter for request ${request.url}`
+    )
+    testServer.config.logger.error(error)
   }
+
+  let initJSON = JSON.stringify(deepmerge(defaultInitBlock, queryInit || {}), (k, v) => {
+    if (v instanceof RegExp) {
+      // de-serialize RegExp obj from router
+      return `new RegExp(${v.toString()})`
+    }
+    return v
+  })
+
+  initJSON = initJSON.replace(/"new RegExp\((.*?)\)"/g, 'new RegExp($1)')
 
   return `window.NREUM||(NREUM={});NREUM.init=${initJSON};NREUM.init.ssl=false;`
 }

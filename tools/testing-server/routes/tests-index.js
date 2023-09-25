@@ -47,12 +47,10 @@ module.exports = fp(async function (fastify, testServer) {
     return urlFor(
       '/tests/assets/browser.html',
       {
-        config: Buffer.from(
-          JSON.stringify({
-            assetServerPort: testServer.assetServer.port,
-            corsServerPort: testServer.corsServer.port
-          })
-        ).toString('base64'),
+        config: {
+          assetServerPort: testServer.assetServer.port,
+          corsServerPort: testServer.corsServer.port
+        },
         script: `/${filePath}?browserify=true`
       },
       testServer

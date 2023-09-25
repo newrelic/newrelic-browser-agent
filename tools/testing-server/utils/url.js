@@ -1,4 +1,5 @@
 const { URL } = require('url')
+const { serialize } = require('../../shared/serializer.js')
 
 /**
  * Resolves the path of a file and provides a URL that can be used to load that
@@ -21,28 +22,15 @@ module.exports.urlFor = function urlFor (relativePath, query, testServer) {
   }
 
   if (Object.prototype.hasOwnProperty.call(query || {}, 'config') && typeof query.config !== 'string') {
-    query.config = Buffer.from(JSON.stringify(query.config)).toString('base64')
+    query.config = Buffer.from(serialize(query.config)).toString('base64')
   }
 
   if (Object.prototype.hasOwnProperty.call(query || {}, 'init') && typeof query.init !== 'string') {
-    query.init = Buffer.from(
-      JSON.stringify(query.init, (k, v) => {
-        if (typeof v === 'object' && v instanceof RegExp) {
-          let m = v.toString().match(/\/(.*)\/(\w*)/)
-          return `new RegExp('${m[1]}','${m[2] || ''}')` // serialize regex in a way our test server can receive it
-        }
-        return v
-      })
-    ).toString('base64')
+    query.init = Buffer.from(serialize(query.init)).toString('base64')
   }
 
-  if (
-    Object.prototype.hasOwnProperty.call(query || {}, 'workerCommands') &&
-    typeof query.workerCommands !== 'string'
-  ) {
-    query.workerCommands = Buffer.from(
-      JSON.stringify(query.workerCommands)
-    ).toString('base64')
+  if (Object.prototype.hasOwnProperty.call(query || {}, 'workerCommands') && typeof query.workerCommands !== 'string') {
+    query.workerCommands = Buffer.from(serialize(query.workerCommands)).toString('base64')
   }
 
   return new URL(

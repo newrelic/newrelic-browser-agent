@@ -25,7 +25,15 @@ function getInitContent (request, reply, testServer) {
     testServer.config.logger.error(error)
   }
 
-  let initJSON = JSON.stringify(deepmerge(defaultInitBlock, queryInit))
+  let initJSON = JSON.stringify(deepmerge(defaultInitBlock, queryInit || {}), (k, v) => {
+    if (v instanceof RegExp) {
+      // de-serialize RegExp obj from router
+      return `new RegExp(${v.toString()})`
+    }
+    return v
+  })
+
+  initJSON = initJSON.replace(/"new RegExp\((.*?)\)"/g, 'new RegExp($1)')
 
   return `window.NREUM||(NREUM={});NREUM.init=${initJSON};NREUM.init.ssl=false;`
 }

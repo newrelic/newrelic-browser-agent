@@ -24,5 +24,5 @@ new Agent({
     InstrumentPageAction,
     InstrumentErrors
   ],
-  loaderType: 'pro'
+  loaderType: 'pro-polyfills'
 })

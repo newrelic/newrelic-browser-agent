@@ -26,5 +26,5 @@ new Agent({
     InstrumentErrors,
     InstrumentSpa
   ],
-  loaderType: 'spa'
+  loaderType: 'spa-polyfills'
 })

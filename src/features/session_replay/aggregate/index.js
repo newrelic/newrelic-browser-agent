@@ -253,7 +253,7 @@ export class Aggregate extends AggregateBase {
   onHarvestFinished (result) {
     // The mutual decision for now is to stop recording and clear buffers if ingest is experiencing 429 rate limiting
     if (result.status === 429) {
-      this.abort('429')
+      this.abort('429: Too many requests')
     }
 
     if (this.blocked) this.scheduler.stopTimer(true)

@@ -35,6 +35,10 @@ on:
         description: 'Github branch ref to checkout and run tests on'
         required: false
         type: string
+      concurrency:
+        description: 'Github branch ref to checkout and run tests on'
+        required: false
+        type: string
     secrets:
       SAUCE_USERNAME:
         required: true

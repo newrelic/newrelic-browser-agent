@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.242.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.241.0...v1.242.0) (2023-09-25)
+
+
+### Features
+
+* Add messaging about Session Replay abort behavior ([#734](https://github.com/newrelic/newrelic-browser-agent/issues/734)) ([e5cd3f1](https://github.com/newrelic/newrelic-browser-agent/commit/e5cd3f18b7c3f569dc46f90f1eba40b52092e1d0))
+* Applying new cache headers to assets ([#722](https://github.com/newrelic/newrelic-browser-agent/issues/722)) ([9ab1c37](https://github.com/newrelic/newrelic-browser-agent/commit/9ab1c37783468f423ca8c1db835ea6f0bea504b3))
+
+
+### Bug Fixes
+
+* Drain event emitter even when feature fails to initialize ([#730](https://github.com/newrelic/newrelic-browser-agent/issues/730)) ([06edda5](https://github.com/newrelic/newrelic-browser-agent/commit/06edda57f963f68a928244ab6c7e8a26b056b2c3))
+* Validation of SR configurations ([#721](https://github.com/newrelic/newrelic-browser-agent/issues/721)) ([12f5ec0](https://github.com/newrelic/newrelic-browser-agent/commit/12f5ec00e3e13b3d8c2d8884de315752873e4d0e))
+
 ## [1.241.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.240.0...v1.241.0) (2023-09-18)
 
 

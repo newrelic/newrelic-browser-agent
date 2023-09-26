@@ -52,4 +52,6 @@ try {
   if (!!newrelic && !!newrelic.noticeError) newrelic.noticeError(err)
 }
 
-if (!!newrelic && !!newrelic.setApplicationVersion && '{{{args.environment}}}' === 'staging') newrelic.setApplicationVersion( '' + Math.floor(Math.random() * 10) + '.' + Math.floor(Math.random() * 10) + '.' + Math.floor(Math.random() * 10) )
+{{#if (isEnvironment args.environment 'staging')}}
+if (!!newrelic && !!newrelic.setApplicationVersion) newrelic.setApplicationVersion( '' + Math.floor(Math.random() * 10) + '.' + Math.floor(Math.random() * 10) + '.' + Math.floor(Math.random() * 10) )
+{{/if}}

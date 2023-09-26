@@ -16,7 +16,11 @@ window.NREUM={
       enabled: true,
       sampling_rate: 50,
       error_sampling_rate: 100,
-      autoStart: false
+      autoStart: false,
+      {{#if (isEnvironment args.environment 'dev' 'staging')}}
+      mask_all_inputs: false,
+      mask_text_selector: null,
+      {{/if}}
     }
   },
   loader_config: {

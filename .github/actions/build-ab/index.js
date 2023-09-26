@@ -7,7 +7,7 @@ import { S3Client, ListObjectsCommand } from '@aws-sdk/client-s3'
 import { v4 as uuidv4 } from 'uuid'
 import { args } from './args.js'
 import { fetchRetry } from '../shared-utils/fetch-retry.js'
-import Handlebars from 'handlebars'
+import Handlebars from './handlebars.js'
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
 const outputDir = path.resolve(__dirname, '../../../temp')

@@ -5,6 +5,47 @@
       "changes": [
         {
           "type": "feat",
+          "sha": "e5cd3f18b7c3f569dc46f90f1eba40b52092e1d0",
+          "message": "Add messaging about Session Replay abort behavior",
+          "issues": [
+            "734"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "06edda57f963f68a928244ab6c7e8a26b056b2c3",
+          "message": "Drain event emitter even when feature fails to initialize",
+          "issues": [
+            "730"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "9ab1c37783468f423ca8c1db835ea6f0bea504b3",
+          "message": "Applying new cache headers to assets",
+          "issues": [
+            "722"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "12f5ec00e3e13b3d8c2d8884de315752873e4d0e",
+          "message": "Validation of SR configurations",
+          "issues": [
+            "721"
+          ]
+        }
+      ],
+      "version": "1.242.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "8d3af2f3-ca08-4e45-81c1-4c6260370811",
+      "createTime": "2023-09-25T19:22:51.827Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
           "sha": "4de7e9e4ecd563232f4c9a8a2f985c3307e79bf7",
           "message": "Add SR entrypoint to NPM ahead of LP",
           "issues": [
@@ -538,5 +579,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2023-09-18T14:19:13.934Z"
+  "updateTime": "2023-09-25T19:22:51.827Z"
 }

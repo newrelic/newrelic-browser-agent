@@ -242,7 +242,7 @@ export class Aggregate extends AggregateBase {
           hasMeta: this.hasMeta,
           hasSnapshot: this.hasSnapshot,
           hasError: this.hasError,
-          isFirstChunk: !agentRuntime.session.state.sessionReplaySentFirstChunk,
+          isFirstChunk: agentRuntime.session.state.sessionReplaySentFirstChunk === false,
           decompressedBytes: this.payloadBytesEstimation,
           'nr.rrweb.version': RRWEB_VERSION
         }, MAX_PAYLOAD_SIZE - this.payloadBytesEstimation).substring(1) // remove the leading '&'

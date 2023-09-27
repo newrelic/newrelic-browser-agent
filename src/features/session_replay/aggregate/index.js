@@ -100,7 +100,11 @@ export class Aggregate extends AggregateBase {
       this.ee.on(SESSION_EVENTS.PAUSE, () => { this.stopRecording() })
       // The SessionEntity class can emit a message indicating the session was resumed (visibility change). This feature must start running again (if already running) if that occurs.
       this.ee.on(SESSION_EVENTS.RESUME, () => {
+        // if the mode changed on a different tab, it needs to update this instance to match
+        const { session } = getRuntime(this.agentIdentifier)
+        this.mode = session.state.sessionReplay
         if (!this.initialized || this.mode === MODE.OFF) return
+        if (this.mode === MODE.ERROR) this.isFirstChunk = true
         this.startRecording()
       })
 

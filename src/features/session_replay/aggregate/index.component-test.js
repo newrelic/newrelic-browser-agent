@@ -177,7 +177,7 @@ describe('Session Replay', () => {
     })
 
     test('Existing Session -- Should inherit mode from session entity and ignore samples', async () => {
-      const storage = new LocalMemory({ NRBA_SESSION: { value: 'abcdefghijklmnop', expiresAt: Date.now() + 10000, inactiveAt: Date.now() + 10000, updatedAt: Date.now(), sessionReplay: MODE.FULL, sessionTraceMode: MODE.FULL, custom: {} } })
+      const storage = new LocalMemory({ NRBA_SESSION: { value: 'abcdefghijklmnop', expiresAt: Date.now() + 10000, inactiveAt: Date.now() + 10000, updatedAt: Date.now(), sessionReplay: MODE.FULL, sessionReplaySentFirstChunk: true, sessionTraceMode: MODE.FULL, custom: {} } })
       session = new SessionEntity({ agentIdentifier, key: 'SESSION', storage })
       expect(session.isNew).toBeFalsy()
       primeSessionAndReplay(session)
@@ -235,6 +235,7 @@ describe('Session Replay', () => {
       const [harvestContents] = sr.prepareHarvest()
       expect(harvestContents.qs).toMatchObject(anyQuery)
       expect(harvestContents.qs.attributes.includes('content_encoding=gzip')).toEqual(true)
+      expect(harvestContents.qs.attributes.includes('isFirstChunk=true')).toEqual(true)
       expect(harvestContents.body).toEqual(expect.any(Uint8Array))
       expect(JSON.parse(strFromU8(gunzipSync(harvestContents.body)))).toMatchObject(expect.any(Array))
     })
@@ -256,6 +257,7 @@ describe('Session Replay', () => {
         browser_monitoring_key: info.licenseKey
       })
       expect(harvestContents.qs.attributes.includes('content_encoding')).toEqual(false)
+      expect(harvestContents.qs.attributes.includes('isFirstChunk')).toEqual(true)
       expect(harvestContents.body).toEqual(expect.any(Array))
     })
 

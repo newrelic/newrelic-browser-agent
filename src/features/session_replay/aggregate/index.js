@@ -59,8 +59,6 @@ export class Aggregate extends AggregateBase {
     /** can shut off efforts to compress the data */
     this.shouldCompress = true
 
-    /** Payload metadata -- Should indicate that the payload being sent is the first of a session */
-    this.isFirstChunk = false
     /** Payload metadata -- Should indicate that the payload being sent has a full DOM snapshot. This can happen
      * -- When the recording library begins recording, it starts by taking a DOM snapshot
      * -- When visibility changes from "hidden" -> "visible", it must capture a full snapshot for the replay to work correctly across tabs
@@ -104,7 +102,6 @@ export class Aggregate extends AggregateBase {
         const { session } = getRuntime(this.agentIdentifier)
         this.mode = session.state.sessionReplay
         if (!this.initialized || this.mode === MODE.OFF) return
-        if (this.mode === MODE.ERROR) this.isFirstChunk = true
         this.startRecording()
       })
 
@@ -127,8 +124,6 @@ export class Aggregate extends AggregateBase {
           // if the error was noticed AFTER the recorder was already imported....
           if (recorder && this.initialized) {
             this.stopRecording()
-            // not sure if this is actually needed, but just to be extra explicit
-            this.isFirstChunk = true
             this.startRecording()
             this.scheduler.startTimer(this.harvestTimeSeconds)
 
@@ -206,8 +201,6 @@ export class Aggregate extends AggregateBase {
     }
     this.startRecording()
 
-    this.isFirstChunk = !!session.isNew || this.mode === MODE.ERROR
-
     this.syncWithSessionManager({ sessionReplay: this.mode })
   }
 
@@ -222,6 +215,8 @@ export class Aggregate extends AggregateBase {
       this.scheduler.opts.gzip = false
     }
     // TODO -- Gracefully handle the buffer for retries.
+    const { session } = getRuntime(this.agentIdentifier)
+    if (!session.state.sessionReplaySentFirstChunk) this.syncWithSessionManager({ sessionReplaySentFirstChunk: true })
     this.clearBuffer()
     return [payload]
   }
@@ -247,7 +242,7 @@ export class Aggregate extends AggregateBase {
           hasMeta: this.hasMeta,
           hasSnapshot: this.hasSnapshot,
           hasError: this.hasError,
-          isFirstChunk: this.isFirstChunk,
+          isFirstChunk: !agentRuntime.session.state.sessionReplaySentFirstChunk,
           decompressedBytes: this.payloadBytesEstimation,
           'nr.rrweb.version': RRWEB_VERSION
         }, MAX_PAYLOAD_SIZE - this.payloadBytesEstimation).substring(1) // remove the leading '&'
@@ -268,8 +263,6 @@ export class Aggregate extends AggregateBase {
   /** Clears the buffer (this.events), and resets all payload metadata properties */
   clearBuffer () {
     this.events = []
-    // when running in error mode, clearBuffer gets called every x seconds, but we dont want it to wipe out the firstChunk until its sent a full payload
-    if (this.mode === MODE.FULL) this.isFirstChunk = false
     this.hasSnapshot = false
     this.hasMeta = false
     this.hasError = false

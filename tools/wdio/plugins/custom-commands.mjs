@@ -73,6 +73,7 @@ export default class CustomCommands {
               expiresAt: agentEntry[1].runtime.session.state.expiresAt,
               updatedAt: agentEntry[1].runtime.session.state.updatedAt,
               sessionReplay: agentEntry[1].runtime.session.state.sessionReplay,
+              sessionReplaySentFirstChunk: agentEntry[1].runtime.session.state.sessionReplaySentFirstChunk,
               sessionTraceMode: agentEntry[1].runtime.session.state.sessionTraceMode,
               custom: agentEntry[1].runtime.session.state.custom
             }

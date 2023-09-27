@@ -123,6 +123,8 @@ export class Aggregate extends AggregateBase {
           // if the error was noticed AFTER the recorder was already imported....
           if (recorder && this.initialized) {
             this.stopRecording()
+            // not sure if this is actually needed, but just to be extra explicit
+            this.isFirstChunk = true
             this.startRecording()
             this.scheduler.startTimer(this.harvestTimeSeconds)
 
@@ -200,7 +202,7 @@ export class Aggregate extends AggregateBase {
     }
     this.startRecording()
 
-    this.isFirstChunk = !!session.isNew
+    this.isFirstChunk = !!session.isNew || this.mode === MODE.ERROR
 
     this.syncWithSessionManager({ sessionReplay: this.mode })
   }
@@ -262,7 +264,8 @@ export class Aggregate extends AggregateBase {
   /** Clears the buffer (this.events), and resets all payload metadata properties */
   clearBuffer () {
     this.events = []
-    this.isFirstChunk = false
+    // when running in error mode, clearBuffer gets called every x seconds, but we dont want it to wipe out the firstChunk until its sent a full payload
+    if (this.mode === MODE.FULL) this.isFirstChunk = false
     this.hasSnapshot = false
     this.hasMeta = false
     this.hasError = false

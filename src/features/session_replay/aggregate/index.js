@@ -106,15 +106,14 @@ export class Aggregate extends AggregateBase {
 
       this.ee.on(SESSION_EVENTS.CROSS_TAB_UPDATE, (data) => {
         if (!this.initialized) return
-        if (data.sessionReplay === MODE.OFF) this.abort()
-        if (this.mode === MODE.ERROR && data.sessionReplay === MODE.FULL) {
+        if (this.mode !== MODE.OFF && data.sessionReplay === MODE.OFF) this.abort()
+        else if (this.mode === MODE.ERROR && data.sessionReplay === MODE.FULL) {
           this.scheduler.startTimer(this.harvestTimeSeconds)
-          if (recorder && this.initialized && globalScope?.document.visibilityState === 'visible') {
+          if (recorder && globalScope?.document.visibilityState === 'visible') {
             this.stopRecording()
             this.startRecording()
           }
-        }
-        this.mode = data.sessionReplay
+        } else this.mode = data.sessionReplay
       })
 
       // Bespoke logic for new endpoint.  This will change as downstream dependencies become solidified.

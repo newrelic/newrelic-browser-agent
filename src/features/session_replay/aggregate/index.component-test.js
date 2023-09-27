@@ -54,7 +54,7 @@ describe('Session Replay', () => {
     primeSessionAndReplay()
   })
   afterEach(async () => {
-    sr.abort()
+    sr.abort('jest test manually aborted')
     jest.clearAllMocks()
   })
 

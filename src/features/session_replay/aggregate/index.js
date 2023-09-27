@@ -104,6 +104,19 @@ export class Aggregate extends AggregateBase {
         this.startRecording()
       })
 
+      this.ee.on(SESSION_EVENTS.CROSS_TAB_UPDATE, (data) => {
+        if (!this.initialized) return
+        if (data.sessionReplay === MODE.OFF) this.abort()
+        if (this.mode === MODE.ERROR && data.sessionReplay === MODE.FULL) {
+          this.scheduler.startTimer(this.harvestTimeSeconds)
+          if (recorder && this.initialized && globalScope?.document.visibilityState === 'visible') {
+            this.stopRecording()
+            this.startRecording()
+          }
+        }
+        this.mode = data.sessionReplay
+      })
+
       // Bespoke logic for new endpoint.  This will change as downstream dependencies become solidified.
       this.scheduler = new HarvestScheduler('browser/blobs', {
         onFinished: this.onHarvestFinished.bind(this),
@@ -122,8 +135,10 @@ export class Aggregate extends AggregateBase {
           this.mode = MODE.FULL
           // if the error was noticed AFTER the recorder was already imported....
           if (recorder && this.initialized) {
-            this.stopRecording()
-            this.startRecording()
+            if (globalScope?.document.visibilityState === 'visible') {
+              this.stopRecording()
+              this.startRecording()
+            }
             this.scheduler.startTimer(this.harvestTimeSeconds)
 
             this.syncWithSessionManager({ sessionReplay: this.mode })

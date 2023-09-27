@@ -11,6 +11,7 @@ import { getModeledObject } from '../config/state/configurable'
 import { handle } from '../event-emitter/handle'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
 import { FEATURE_NAMES } from '../../loaders/features/features'
+import { windowAddEventListener } from '../event-listener/event-listener-opts'
 
 export const MODE = {
   OFF: 0,
@@ -31,7 +32,8 @@ const model = {
 export const SESSION_EVENTS = {
   PAUSE: 'session-pause',
   RESET: 'session-reset',
-  RESUME: 'session-resume'
+  RESUME: 'session-resume',
+  CROSS_TAB_UPDATE: 'session-cross-tab-update'
 }
 
 export class SessionEntity {
@@ -57,6 +59,16 @@ export class SessionEntity {
     this.ee = ee.get(agentIdentifier)
     wrapEvents(this.ee)
     this.setup(opts)
+
+    if (isBrowserScope) {
+      windowAddEventListener('storage', (event) => {
+        if (event.key === this.lookupKey) {
+          const obj = typeof event.newValue === 'string' ? JSON.parse(event.newValue) : event.newValue
+          this.sync(obj)
+          this.ee.emit(SESSION_EVENTS.CROSS_TAB_UPDATE, [this.state])
+        }
+      })
+    }
   }
 
   setup ({ value = generateRandomHexString(16), expiresMs = DEFAULT_EXPIRES_MS, inactiveMs = DEFAULT_INACTIVE_MS }) {

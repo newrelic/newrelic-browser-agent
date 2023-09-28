@@ -105,7 +105,7 @@ export class Aggregate extends AggregateBase {
       })
 
       this.ee.on(SESSION_EVENTS.UPDATE, (type, data) => {
-        if (!this.initialized || type !== SESSION_EVENT_TYPES.CROSS_TAB) return
+        if (!this.initialized || this.blocked || type !== SESSION_EVENT_TYPES.CROSS_TAB) return
         if (this.mode !== MODE.OFF && data.sessionReplay === MODE.OFF) this.abort('Session Entity was set to OFF on another tab')
         this.mode = data.sessionReplay
       })

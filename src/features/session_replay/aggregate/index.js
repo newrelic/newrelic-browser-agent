@@ -74,7 +74,7 @@ export class Aggregate extends AggregateBase {
     /** Payload metadata -- Should indicate when a replay blob started recording.  Resets each time a harvest occurs.
      * cycle timestamps are used as fallbacks if event timestamps cannot be used
      */
-    this.timestamp = { event: { first: undefined, last: undefined }, cycle: { first: undefined, last: undefined } }
+    this.cycleTimestamp = undefined
 
     /** A value which increments with every new mutation node reported. Resets after a harvest is sent */
     this.payloadBytesEstimation = 0
@@ -223,8 +223,27 @@ export class Aggregate extends AggregateBase {
   getHarvestContents () {
     const agentRuntime = getRuntime(this.agentIdentifier)
     const info = getInfo(this.agentIdentifier)
-    const firstTimestamp = this.timestamp.event.first || this.timestamp.cycle.first
-    const lastTimestamp = this.timestamp.event.last || this.timestamp.cycle.last
+
+    // do not let the last node be a meta node, since this NEEDS to precede a snapshot
+    // we will manually inject it later if we find a payload that is missing a meta node
+    const payloadEndsWithMeta = this.events[this.events.length - 1]?.type === 4
+    if (payloadEndsWithMeta) {
+      this.hasMeta = false
+      this.events = this.events.slice(0, this.events.length - 1)
+    }
+
+    // do not let the first node be a snapshot node, since this NEEDS to be preceded by a meta node
+    // we will manually inject it if this happens
+    const payloadStartsWithSnapshot = this.events[0]?.type === 4
+    if (payloadStartsWithSnapshot) {
+      this.hasMeta = true
+      this.events.unshift(this.lastMeta)
+    }
+
+    const firstEventTimestamp = this.events[0]?.timestamp
+    const lastEventTimestamp = this.events[this.events.length - 1]?.timestamp
+    const firstTimestamp = firstEventTimestamp || this.cycleTimestamp
+    const lastTimestamp = lastEventTimestamp || getRuntime(this.agentIdentifier).offset + globalScope.performance.now()
     return {
       qs: {
         browser_monitoring_key: info.licenseKey,
@@ -236,6 +255,7 @@ export class Aggregate extends AggregateBase {
           'replay.firstTimestamp': firstTimestamp,
           'replay.lastTimestamp': lastTimestamp,
           'replay.durationMs': lastTimestamp - firstTimestamp,
+          'replay.nodes': this.events.length,
           agentVersion: agentRuntime.version,
           session: agentRuntime.session.state.value,
           hasMeta: this.hasMeta,
@@ -303,7 +323,7 @@ export class Aggregate extends AggregateBase {
 
   /** Store a payload in the buffer (this.events).  This should be the callback to the recording lib noticing a mutation */
   store (event, isCheckout) {
-    this.setTimestamps(event)
+    this.setTimestamps()
     if (this.blocked) return
     const eventBytes = stringify(event).length
     /** The estimated size of the payload after compression */
@@ -330,12 +350,6 @@ export class Aggregate extends AggregateBase {
     // snapshot event
     if (event.type === 2) {
       this.hasSnapshot = true
-      // small chance that the meta event got separated from its matching snapshot across payload harvests
-      // it needs to precede the snapshot, so shove it in first.
-      if (!this.hasMeta) {
-        this.events.push(this.lastMeta)
-        this.hasMeta = true
-      }
     }
 
     this.events.push(event)
@@ -355,18 +369,13 @@ export class Aggregate extends AggregateBase {
     recorder.takeFullSnapshot()
   }
 
-  setTimestamps (event) {
+  setTimestamps () {
     // fallbacks if timestamps cannot be derived from rrweb events
-    this.timestamp.cycle.last = getRuntime(this.agentIdentifier).offset + globalScope.performance.now()
-    if (!this.timestamp.cycle.first) this.timestamp.cycle.first = this.timestamp.cycle.last
-    // timestamps based on rrweb events
-    if (!event || !event.timestamp) return
-    if (!this.timestamp.event.first) this.timestamp.event.first = event.timestamp
-    this.timestamp.event.last = event.timestamp
+    if (!this.cycleTimestamp) this.cycleTimestamp = getRuntime(this.agentIdentifier).offset + globalScope.performance.now()
   }
 
   clearTimestamps () {
-    this.timestamp = { event: { first: undefined, last: undefined }, cycle: { first: undefined, last: undefined } }
+    this.cycleTimestamp = undefined
   }
 
   /** Estimate the payload size */

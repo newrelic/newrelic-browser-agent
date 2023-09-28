@@ -1,7 +1,7 @@
 export function getAssetCacheHeader (bucketDir, assetName) {
   if (
     // Set cache time for non-released assets to 2 hours
-    ((bucketDir && bucketDir !== '/') || !bucketDir) ||
+    (bucketDir && bucketDir !== '/') ||
     // Set cache time for wildcard version assets to 2 hours
     (assetName.indexOf('.x') > -1) ||
     // Set cache time for "current" loader to 2 hours

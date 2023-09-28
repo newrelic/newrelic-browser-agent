@@ -106,7 +106,7 @@ export class Aggregate extends AggregateBase {
 
       this.ee.on(SESSION_EVENTS.CROSS_TAB_UPDATE, (data) => {
         if (!this.initialized) return
-        if (this.mode !== MODE.OFF && data.sessionReplay === MODE.OFF) this.abort()
+        if (this.mode !== MODE.OFF && data.sessionReplay === MODE.OFF) this.abort('Session Entity was set to OFF')
         else if (this.mode === MODE.ERROR && data.sessionReplay === MODE.FULL) {
           this.scheduler.startTimer(this.harvestTimeSeconds)
           if (recorder && globalScope?.document.visibilityState === 'visible') {

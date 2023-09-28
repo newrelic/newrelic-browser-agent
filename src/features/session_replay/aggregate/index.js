@@ -105,7 +105,7 @@ export class Aggregate extends AggregateBase {
       })
 
       this.ee.on(SESSION_EVENTS.UPDATE, (type, data) => {
-        if (!this.initialized || this.mode === MODE.OFF || type !== SESSION_EVENT_TYPES.CROSS_TAB) return
+        if (!this.initialized || type !== SESSION_EVENT_TYPES.CROSS_TAB) return
         if (this.mode !== MODE.OFF && data.sessionReplay === MODE.OFF) this.abort('Session Entity was set to OFF on another tab')
         this.mode = data.sessionReplay
       })
@@ -124,14 +124,13 @@ export class Aggregate extends AggregateBase {
         this.hasError = true
         this.errorNoticed = true
         // run once
-        if (this.mode === MODE.ERROR) {
+        if (this.mode === MODE.ERROR && globalScope?.document.visibilityState === 'visible') {
           this.mode = MODE.FULL
           // if the error was noticed AFTER the recorder was already imported....
           if (recorder && this.initialized) {
-            if (globalScope?.document.visibilityState === 'visible') {
-              this.stopRecording()
-              this.startRecording()
-            }
+            this.stopRecording()
+            this.startRecording()
+
             this.scheduler.startTimer(this.harvestTimeSeconds)
 
             this.syncWithSessionManager({ sessionReplay: this.mode })

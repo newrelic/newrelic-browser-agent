@@ -39,11 +39,10 @@ describe('setAPI', () => {
   test('should add expected api methods returned object', () => {
     const apiInterface = setAPI(agentId, true)
 
-    expect(Object.keys(apiInterface).length).toEqual(14)
+    expect(Object.keys(apiInterface).length).toEqual(13)
     expect(typeof apiInterface.setErrorHandler).toEqual('function')
     expect(typeof apiInterface.finished).toEqual('function')
     expect(typeof apiInterface.addToTrace).toEqual('function')
-    expect(typeof apiInterface.inlineHit).toEqual('function')
     expect(typeof apiInterface.addRelease).toEqual('function')
     expect(typeof apiInterface.addPageAction).toEqual('function')
     expect(typeof apiInterface.setCurrentRouteName).toEqual('function')
@@ -106,7 +105,6 @@ describe('setAPI', () => {
     { api: 'setErrorHandler', args: [faker.datatype.uuid(), faker.datatype.uuid()] },
     { api: 'finished', args: [faker.datatype.uuid(), faker.datatype.uuid()] },
     { api: 'addToTrace', args: [faker.datatype.uuid(), faker.datatype.uuid()] },
-    { api: 'inlineHit', args: [faker.datatype.uuid(), faker.datatype.uuid()] },
     { api: 'addRelease', args: [faker.datatype.uuid(), faker.datatype.uuid()] }
   ])('should buffer calls to async API $api before the async APIs are loaded', async ({ api, args }) => {
     jest.spyOn(windowLoadModule, 'onWindowLoad').mockImplementation(() => {})

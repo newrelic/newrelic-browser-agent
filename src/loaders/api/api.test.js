@@ -10,11 +10,10 @@ describe('setTopLevelCallers', () => {
     setTopLevelCallers()
 
     const nreum = gosCDN()
-    expect(Object.keys(nreum).length).toEqual(14)
+    expect(Object.keys(nreum).length).toEqual(13)
     expect(typeof nreum.setErrorHandler).toEqual('function')
     expect(typeof nreum.finished).toEqual('function')
     expect(typeof nreum.addToTrace).toEqual('function')
-    expect(typeof nreum.inlineHit).toEqual('function')
     expect(typeof nreum.addRelease).toEqual('function')
     expect(typeof nreum.addPageAction).toEqual('function')
     expect(typeof nreum.setCurrentRouteName).toEqual('function')

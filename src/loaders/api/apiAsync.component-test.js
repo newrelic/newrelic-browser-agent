@@ -37,7 +37,7 @@ describe('setAPI', () => {
   test('should register expected api methods as handlers on the instance event emitter', () => {
     setAPI(agentId)
 
-    expect(registerHandlerModule.registerHandler).toHaveBeenCalledTimes(5)
+    expect(registerHandlerModule.registerHandler).toHaveBeenCalledTimes(4)
     expect(registerHandlerModule.registerHandler).toHaveBeenCalledWith(
       'api-finished',
       expect.any(Function),
@@ -52,12 +52,6 @@ describe('setAPI', () => {
     )
     expect(registerHandlerModule.registerHandler).toHaveBeenCalledWith(
       'api-addToTrace',
-      expect.any(Function),
-      'api',
-      instanceEE
-    )
-    expect(registerHandlerModule.registerHandler).toHaveBeenCalledWith(
-      'api-inlineHit',
       expect.any(Function),
       'api',
       instanceEE
@@ -263,7 +257,7 @@ describe('setAPI', () => {
     beforeEach(() => {
       setAPI(agentId)
 
-      apiFn = jest.mocked(registerHandlerModule.registerHandler).mock.calls[4][1]
+      apiFn = jest.mocked(registerHandlerModule.registerHandler).mock.calls[3][1]
 
       setRuntime(agentId, { ...getRuntime(agentId), onerror: undefined })
     })

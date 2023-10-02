@@ -81,6 +81,7 @@ describe('constructor', () => {
         expiresAt: expect.any(Number),
         inactiveAt: expect.any(Number),
         sessionReplay: expect.any(Number),
+        sessionReplaySentFirstChunk: expect.any(Boolean),
         sessionTraceMode: expect.any(Number)
       })
     })
@@ -94,6 +95,7 @@ describe('constructor', () => {
       inactiveAt: expect.any(Number),
       updatedAt: expect.any(Number),
       sessionReplay: expect.any(Number),
+      sessionReplaySentFirstChunk: expect.any(Boolean),
       sessionTraceMode: expect.any(Number)
     }))
   })
@@ -108,7 +110,7 @@ describe('constructor', () => {
   test('expiresAt is the correct future timestamp - existing session', () => {
     const now = Date.now()
     jest.setSystemTime(now)
-    const existingData = new LocalMemory({ [`${PREFIX}_${key}`]: { value, expiresAt: now + 5000, inactiveAt: Infinity, updatedAt: now, sessionReplay: 0, sessionTraceMode: 0, custom: {} } })
+    const existingData = new LocalMemory({ [`${PREFIX}_${key}`]: { value, expiresAt: now + 5000, inactiveAt: Infinity, updatedAt: now, sessionReplay: 0, sessionReplaySentFirstChunk: false, sessionTraceMode: 0, custom: {} } })
     const session = new SessionEntity({ agentIdentifier, key, expiresMs: 100, storage: existingData })
     expect(session.state.expiresAt).toEqual(now + 5000)
   })
@@ -128,7 +130,7 @@ describe('constructor', () => {
   test('inactiveAt is the correct future timestamp - existing session', () => {
     const now = Date.now()
     jest.setSystemTime(now)
-    const existingData = new LocalMemory({ [`${PREFIX}_${key}`]: { value, inactiveAt: now + 5000, expiresAt: Infinity, updatedAt: now, sessionReplay: 0, sessionTraceMode: 0, custom: {} } })
+    const existingData = new LocalMemory({ [`${PREFIX}_${key}`]: { value, inactiveAt: now + 5000, expiresAt: Infinity, updatedAt: now, sessionReplay: 0, sessionReplaySentFirstChunk: false, sessionTraceMode: 0, custom: {} } })
     const session = new SessionEntity({ agentIdentifier, key, inactiveMs: 100, storage: existingData })
     expect(session.state.inactiveAt).toEqual(now + 5000)
   })
@@ -142,7 +144,7 @@ describe('constructor', () => {
     const newSession = new SessionEntity({ agentIdentifier, key, storage, expiresMs: 10 })
     expect(newSession.isNew).toBeTruthy()
 
-    const newStorage = new LocalMemory({ [`${PREFIX}_${key}`]: { value, expiresAt: Infinity, inactiveAt: Infinity, updatedAt: Date.now(), sessionReplay: 0, sessionTraceMode: 0, custom: {} } })
+    const newStorage = new LocalMemory({ [`${PREFIX}_${key}`]: { value, expiresAt: Infinity, inactiveAt: Infinity, updatedAt: Date.now(), sessionReplay: 0, sessionReplaySentFirstChunk: false, sessionTraceMode: 0, custom: {} } })
     const existingSession = new SessionEntity({ agentIdentifier, key, expiresMs: 10, storage: newStorage })
     expect(existingSession.isNew).toBeFalsy()
   })
@@ -157,6 +159,7 @@ describe('constructor', () => {
       inactiveAt: expect.any(Number),
       updatedAt: expect.any(Number),
       sessionReplay: expect.any(Number),
+      sessionReplaySentFirstChunk: expect.any(Boolean),
       sessionTraceMode: expect.any(Number)
     }))
   })
@@ -172,6 +175,7 @@ describe('constructor', () => {
       inactiveAt: expect.any(Number),
       updatedAt: expect.any(Number),
       sessionReplay: expect.any(Number),
+      sessionReplaySentFirstChunk: expect.any(Boolean),
       sessionTraceMode: expect.any(Number)
     }))
   })
@@ -187,6 +191,7 @@ describe('constructor', () => {
       inactiveAt: expect.any(Number),
       updatedAt: expect.any(Number),
       sessionReplay: expect.any(Number),
+      sessionReplaySentFirstChunk: expect.any(Boolean),
       sessionTraceMode: expect.any(Number)
     }))
   })
@@ -229,12 +234,13 @@ describe('read()', () => {
       expiresAt: expect.any(Number),
       inactiveAt: expect.any(Number),
       sessionReplay: expect.any(Number),
+      sessionReplaySentFirstChunk: expect.any(Boolean),
       sessionTraceMode: expect.any(Number)
     }))
   })
 
   test('"pre-existing" sessions get data from read()', () => {
-    const storage = new LocalMemory({ [`${PREFIX}_${key}`]: { value, expiresAt: Infinity, inactiveAt: Infinity, updatedAt: Date.now(), sessionReplay: 0, sessionTraceMode: 0, custom: {} } })
+    const storage = new LocalMemory({ [`${PREFIX}_${key}`]: { value, expiresAt: Infinity, inactiveAt: Infinity, updatedAt: Date.now(), sessionReplay: 0, sessionReplaySentFirstChunk: false, sessionTraceMode: 0, custom: {} } })
     const session = new SessionEntity({ agentIdentifier, key, storage })
     expect(session.isNew).toBeFalsy()
     expect(session.read()).toEqual(expect.objectContaining({

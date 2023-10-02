@@ -19,7 +19,7 @@ export const CUSTOM_ATTR_GROUP = 'CUSTOM/' // the subgroup items should be store
 export function setTopLevelCallers () {
   const nr = gosCDN()
   const funcs = [
-    'setErrorHandler', 'finished', 'addToTrace', 'inlineHit', 'addRelease',
+    'setErrorHandler', 'finished', 'addToTrace', 'addRelease',
     'addPageAction', 'setCurrentRouteName', 'setPageViewName', 'setCustomAttribute',
     'interaction', 'noticeError', 'setUserId', 'setApplicationVersion', 'start'
   ]
@@ -48,7 +48,6 @@ export function setAPI (agentIdentifier, forceDrain) {
     'setErrorHandler',
     'finished',
     'addToTrace',
-    'inlineHit',
     'addRelease'
   ]
 

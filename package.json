@@ -266,6 +266,6 @@
     "src",
     "LICENSE",
     "README.md",
-    "types.ts"
+    "CHANGELOG.md"
   ]
 }

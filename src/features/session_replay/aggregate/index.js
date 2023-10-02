@@ -29,6 +29,25 @@ export const RRWEB_VERSION = '2.0.0-alpha.8'
 
 export const AVG_COMPRESSION = 0.12
 
+const ABORT_REASONS = {
+  RESET: {
+    message: 'Session was reset',
+    sm: 'Reset'
+  },
+  IMPORT: {
+    message: 'Recorder failed to import',
+    sm: 'Import'
+  },
+  TOO_MANY: {
+    message: '429: Too Many Requests',
+    sm: 'Too-Many'
+  },
+  TOO_BIG: {
+    message: 'Payload was too large',
+    sm: 'Too-Big'
+  }
+}
+
 let recorder, gzipper, u8
 
 /** Vortex caps payload sizes at 1MB */
@@ -91,7 +110,7 @@ export class Aggregate extends AggregateBase {
     if (shouldSetup) {
       // The SessionEntity class can emit a message indicating the session was cleared and reset (expiry, inactivity). This feature must abort and never resume if that occurs.
       this.ee.on(SESSION_EVENTS.RESET, () => {
-        this.abort('Session Reset')
+        this.abort(ABORT_REASONS.RESET)
       })
 
       // The SessionEntity class can emit a message indicating the session was paused (visibility change). This feature must stop recording if that occurs.
@@ -179,7 +198,7 @@ export class Aggregate extends AggregateBase {
       // Do not change the webpackChunkName or it will break the webpack nrba-chunking plugin
       recorder = (await import(/* webpackChunkName: "recorder" */'rrweb')).record
     } catch (err) {
-      return this.abort('Recorder failed to import')
+      return this.abort(ABORT_REASONS.IMPORT)
     }
 
     // FULL mode records AND reports from the beginning, while ERROR mode only records (but does not report).
@@ -254,7 +273,7 @@ export class Aggregate extends AggregateBase {
   onHarvestFinished (result) {
     // The mutual decision for now is to stop recording and clear buffers if ingest is experiencing 429 rate limiting
     if (result.status === 429) {
-      this.abort('429: Too many requests')
+      this.abort(ABORT_REASONS.TOO_MANY)
     }
 
     if (this.blocked) this.scheduler.stopTimer(true)
@@ -274,7 +293,7 @@ export class Aggregate extends AggregateBase {
   startRecording () {
     if (!recorder) {
       warn('Recording library was never imported')
-      return this.abort('Recorder was never imported')
+      return this.abort(ABORT_REASONS.IMPORT)
     }
     this.clearTimestamps()
     // set the fallbacks as early as possible
@@ -312,7 +331,7 @@ export class Aggregate extends AggregateBase {
     if (payloadSize > MAX_PAYLOAD_SIZE) {
       this.clearBuffer()
       this.ee.emit(SUPPORTABILITY_METRIC_CHANNEL, ['SessionReplay/Too-Big/Seen'], undefined, FEATURE_NAMES.metrics, this.ee)
-      return this.abort('Payload too big')
+      return this.abort(ABORT_REASONS.TOO_BIG)
     }
     // Checkout events are flags by the recording lib that indicate a fullsnapshot was taken every n ms. These are important
     // to help reconstruct the replay later and must be included.  While waiting and buffering for errors to come through,
@@ -376,8 +395,9 @@ export class Aggregate extends AggregateBase {
   }
 
   /** Abort the feature, once aborted it will not resume */
-  abort (reason) {
-    warn(`SR aborted -- ${reason}`)
+  abort (reason = {}) {
+    warn(`SR aborted -- ${reason.message}`)
+    this.ee.emit(SUPPORTABILITY_METRIC_CHANNEL, [`SessionReplay/Abort/${ABORT_REASONS[reason.sm]}`])
     this.blocked = true
     this.mode = MODE.OFF
     this.stopRecording()

@@ -1,85 +1,120 @@
-import { setTopLevelCallers, setAPI } from './api'
+import { faker } from '@faker-js/faker'
+import { setTopLevelCallers } from './api'
 import { gosCDN } from '../../common/window/nreum'
 
 jest.enableAutomock()
 jest.unmock('./api')
 
 describe('setTopLevelCallers', () => {
-  beforeEach(() => {
-    delete gosCDN().initializedAgents
-  })
-
-  test('adds all api methods', () => {
+  test('should add expected api methods to global NREUM', () => {
     setTopLevelCallers()
 
-    expect(Object.keys(gosCDN()).length).toEqual(13)
+    const nreum = gosCDN()
+    expect(Object.keys(nreum).length).toEqual(13)
+    expect(typeof nreum.setErrorHandler).toEqual('function')
+    expect(typeof nreum.finished).toEqual('function')
+    expect(typeof nreum.addToTrace).toEqual('function')
+    expect(typeof nreum.addRelease).toEqual('function')
+    expect(typeof nreum.addPageAction).toEqual('function')
+    expect(typeof nreum.setCurrentRouteName).toEqual('function')
+    expect(typeof nreum.setPageViewName).toEqual('function')
+    expect(typeof nreum.setCustomAttribute).toEqual('function')
+    expect(typeof nreum.interaction).toEqual('function')
+    expect(typeof nreum.noticeError).toEqual('function')
+    expect(typeof nreum.setUserId).toEqual('function')
+    expect(typeof nreum.setApplicationVersion).toEqual('function')
+    expect(typeof nreum.start).toEqual('function')
   })
 
-  test('and runs the corresponding fn under every exposed agent', () => {
-    let newrelic = gosCDN()
-    newrelic.initializedAgents = {
-      abcd: { exposed: true, api: { noticeError: jest.fn() } },
-      efgh: { exposed: false, api: { noticeError: jest.fn() } },
-      ijkl: { exposed: true, api: { noticeError: jest.fn() } }
+  test('should forward calls to initialized and exposed agents', () => {
+    setTopLevelCallers()
+
+    const nreum = gosCDN()
+    nreum.initializedAgents = {
+      [faker.datatype.uuid()]: {
+        exposed: true,
+        api: {
+          setErrorHandler: jest.fn()
+        }
+      },
+      [faker.datatype.uuid()]: {
+        exposed: true,
+        api: {
+          setErrorHandler: jest.fn()
+        }
+      },
+      [faker.datatype.uuid()]: {
+        exposed: false,
+        api: {
+          setErrorHandler: jest.fn()
+        }
+      }
     }
 
-    const someArgs = ['wtfish', { bop: 'it' }]
-    newrelic.noticeError(...someArgs)
-    expect(newrelic.initializedAgents.abcd.api.noticeError).toHaveBeenCalledWith(...someArgs)
-    expect(newrelic.initializedAgents.efgh.api.noticeError).not.toHaveBeenCalled()
-    expect(newrelic.initializedAgents.ijkl.api.noticeError).toHaveBeenCalledWith(...someArgs)
-  })
+    const errorHandler = jest.fn()
+    nreum.setErrorHandler(errorHandler)
 
-  test('fn call returns right number of results based on running agent(s)', () => {
-    let newrelic = gosCDN()
-    newrelic.initializedAgents = {
-      abcd: { exposed: true, api: { interaction: jest.fn(() => 'duck') } }
-    }
-    let ret = newrelic.interaction()
-    expect(ret).toEqual('duck')
-
-    newrelic.initializedAgents.efgh = { exposed: true, api: { interaction: jest.fn(() => 'truck') } }
-    ret = newrelic.interaction()
-    expect(ret).toEqual(['duck', 'truck'])
-  })
-})
-
-jest.unmock('../../common/event-emitter/contextual-ee')
-jest.mock('../../common/constants/runtime', () => {
-  return {
-    __esModule: true,
-    isBrowserScope: false
-  }
-})
-
-describe('setAPI', () => {
-  test('also adds all api methods', () => {
-    let apiI = setAPI('abcd', true)
-
-    expect(Object.keys(apiI).length).toEqual(13)
-    for (const k of Object.keys(apiI)) { expect(apiI[k]).toBeInstanceOf(Function) }
-  })
-
-  test('sets up spa interaction api prototype/handle', () => {
-    let apiI = setAPI('abcd', true)
-    let interactionProto = Object.getPrototypeOf(apiI.interaction())
-
-    expect(Object.keys(interactionProto).length).toEqual(10)
-    for (const k of Object.keys(interactionProto)) { expect(interactionProto[k]).toBeInstanceOf(Function) }
-  })
-
-  test('calls asyncApi setAPI as well', async () => {
-    jest.resetModules()
-    let setApiCalled
-    let asyncSetApi = new Promise(resolve => { setApiCalled = resolve })
-    jest.doMock('./apiAsync', () => {
-      return {
-        __esModule: true,
-        setAPI: jest.fn(id => setApiCalled(id))
+    Object.values(nreum.initializedAgents).forEach(agent => {
+      if (agent.exposed) {
+        expect(agent.api.setErrorHandler).toHaveBeenCalledTimes(1)
+        expect(agent.api.setErrorHandler).toHaveBeenCalledWith(errorHandler)
+      } else {
+        expect(agent.api.setErrorHandler).not.toHaveBeenCalled()
       }
     })
+  })
 
-    setAPI('abcd', true)
-    await expect(asyncSetApi).resolves.toBe('abcd')
+  test('should return a single value when only one exposed agent returns a value', () => {
+    setTopLevelCallers()
+
+    const nreum = gosCDN()
+    const expected = faker.datatype.uuid()
+    nreum.initializedAgents = {
+      [faker.datatype.uuid()]: {
+        exposed: true,
+        api: {
+          interaction: jest.fn().mockReturnValue(expected)
+        }
+      },
+      [faker.datatype.uuid()]: {
+        exposed: false,
+        api: {
+          interaction: jest.fn().mockReturnValue(expected)
+        }
+      }
+    }
+
+    const result = nreum.interaction()
+    expect(result).toEqual(expected)
+  })
+
+  test('should return an array of values for each exposed agent that returns a value', () => {
+    setTopLevelCallers()
+
+    const nreum = gosCDN()
+    const expected = faker.datatype.uuid()
+    nreum.initializedAgents = {
+      [faker.datatype.uuid()]: {
+        exposed: true,
+        api: {
+          interaction: jest.fn().mockReturnValue(expected)
+        }
+      },
+      [faker.datatype.uuid()]: {
+        exposed: true,
+        api: {
+          interaction: jest.fn().mockReturnValue(expected)
+        }
+      },
+      [faker.datatype.uuid()]: {
+        exposed: false,
+        api: {
+          interaction: jest.fn().mockReturnValue(expected)
+        }
+      }
+    }
+
+    const result = nreum.interaction()
+    expect(result).toEqual([expected, expected])
   })
 })

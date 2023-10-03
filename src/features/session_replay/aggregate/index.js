@@ -242,10 +242,10 @@ export class Aggregate extends AggregateBase {
       this.hasMeta = !!this.events.find(x => x.type === RRWEB_EVENT_TYPES.Meta)
     }
 
-    // do not let the first node be a snapshot node, since this NEEDS to be preceded by a meta node
+    // do not let the first node be a full snapshot node, since this NEEDS to be preceded by a meta node
     // we will manually inject it if this happens
-    const payloadStartsWithSnapshot = this.events[0]?.type === RRWEB_EVENT_TYPES.FullSnapshot
-    if (payloadStartsWithSnapshot) {
+    const payloadStartsWithFullSnapshot = this.events[0]?.type === RRWEB_EVENT_TYPES.FullSnapshot
+    if (payloadStartsWithFullSnapshot) {
       this.hasMeta = true
       this.events.unshift(this.lastMeta)
     }

@@ -25,6 +25,7 @@ test('getConfigurationValue parses path correctly', () => {
   expect(getConfigurationValue('ab', '')).toBeUndefined()
   expect(getConfigurationValue('ab', 'page_action')).toEqual({ enabled: true, harvestTimeSeconds: 1000, autoStart: true })
   expect(getConfigurationValue('ab', 'page_action.harvestTimeSeconds')).toEqual(1000)
+  expect(getConfigurationValue('ab', 'page_action.dne')).toBeUndefined()
 })
 
 describe('property getters/setters used for validation', () => {

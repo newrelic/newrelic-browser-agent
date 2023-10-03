@@ -237,6 +237,7 @@ export class Aggregate extends AggregateBase {
     // we will manually inject it later if we find a payload that is missing a meta node
     const payloadEndsWithMeta = this.events[this.events.length - 1]?.type === RRWEB_EVENT_TYPES.Meta
     if (payloadEndsWithMeta) {
+      this.lastMeta = this.events[this.events.length - 1]
       this.events = this.events.slice(0, this.events.length - 1)
       this.hasMeta = !!this.events.find(x => x.type === RRWEB_EVENT_TYPES.Meta)
     }

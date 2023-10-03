@@ -81,8 +81,6 @@ export class Aggregate extends AggregateBase {
         hash = stringify([params.status, params.host, params.pathname])
       }
 
-      handle('bstXhrAgg', ['xhr', hash, params, metrics], undefined, FEATURE_NAMES.sessionTrace, ee)
-
       // store as metric
       aggregator.store('xhr', hash, params, metrics)
 
@@ -96,6 +94,8 @@ export class Aggregate extends AggregateBase {
           handle(SUPPORTABILITY_METRIC_CHANNEL, ['Ajax/Events/Excluded/App'], undefined, FEATURE_NAMES.metrics, ee)
         }
         return
+      } else {
+        handle('bstXhrAgg', ['xhr', hash, params, metrics], undefined, FEATURE_NAMES.sessionTrace, ee)
       }
 
       var xhrContext = this

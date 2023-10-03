@@ -29,6 +29,15 @@ export const RRWEB_VERSION = '2.0.0-alpha.8'
 
 export const AVG_COMPRESSION = 0.12
 
+export const RRWEB_EVENT_TYPES = {
+  DomContentLoaded: 0,
+  Load: 1,
+  FullSnapshot: 2,
+  IncrementalSnapshot: 3,
+  Meta: 4,
+  Custom: 5
+}
+
 let recorder, gzipper, u8
 
 /** Vortex caps payload sizes at 1MB */
@@ -226,15 +235,15 @@ export class Aggregate extends AggregateBase {
 
     // do not let the last node be a meta node, since this NEEDS to precede a snapshot
     // we will manually inject it later if we find a payload that is missing a meta node
-    const payloadEndsWithMeta = this.events[this.events.length - 1]?.type === 4
+    const payloadEndsWithMeta = this.events[this.events.length - 1]?.type === RRWEB_EVENT_TYPES.Meta
     if (payloadEndsWithMeta) {
-      this.hasMeta = false
       this.events = this.events.slice(0, this.events.length - 1)
+      this.hasMeta = !!this.events.find(x => x.type === RRWEB_EVENT_TYPES.Meta)
     }
 
     // do not let the first node be a snapshot node, since this NEEDS to be preceded by a meta node
     // we will manually inject it if this happens
-    const payloadStartsWithSnapshot = this.events[0]?.type === 4
+    const payloadStartsWithSnapshot = this.events[0]?.type === RRWEB_EVENT_TYPES.FullSnapshot
     if (payloadStartsWithSnapshot) {
       this.hasMeta = true
       this.events.unshift(this.lastMeta)
@@ -343,12 +352,12 @@ export class Aggregate extends AggregateBase {
     }
 
     // meta event
-    if (event.type === 4) {
+    if (event.type === RRWEB_EVENT_TYPES.Meta) {
       this.hasMeta = true
       this.lastMeta = event
     }
     // snapshot event
-    if (event.type === 2) {
+    if (event.type === RRWEB_EVENT_TYPES.FullSnapshot) {
       this.hasSnapshot = true
     }
 

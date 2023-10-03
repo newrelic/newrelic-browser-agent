@@ -94,7 +94,7 @@ testDriver.test('session trace ajax deny list', function (t, browser, router) {
       const body = result.request.body
       const harvestBody = body.res
       const loadNodes = harvestBody.filter(function (node) { return node.t === 'ajax' })
-      t.ok(loadNodes.length > 0, 'XMLHttpRequest nodes captured even with ajax deny list')
+      t.ok(loadNodes.length === 0, 'XMLHttpRequest nodes are not captured with ajax deny list')
 
       t.end()
     }).catch(fail)

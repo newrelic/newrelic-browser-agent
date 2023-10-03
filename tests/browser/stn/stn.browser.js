@@ -69,71 +69,82 @@ function runTests () {
     let fiVal = 30
     let fidVal = 8
 
+    let xhr = new XMLHttpRequest()
+    xhr.open('GET', 'https://api.publicapis.org/entries')
+    xhr.send()
+    xhr.addEventListener('load', () => setTimeout(runTests, 1000))
+
     pvtAgg.addTiming('load', 20)
     pvtAgg.addTiming('fi', fiVal, { fid: fidVal })
 
-    ee.emit('rumresp-stn', [true])
+    function runTests(){
+      ee.emit('rumresp-stn', [true])
 
-    const payload = stnAgg.takeSTNs()
+      const payload = stnAgg.takeSTNs()
 
-    let res = payload.body.res
-    let qs = payload.qs
+      let res = payload.body.res
+      let qs = payload.qs
 
-    t.ok(+qs.st > 1404952055986 && Date.now() > +qs.st, 'Start time is between recent time and now ' + qs.st)
+      console.log('res is', res)
+      const payload2 = stnAgg.takeSTNs()
+      console.log("payload 2", payload2)
 
-    t.test('stn DOMContentLoaded', function (t) {
-      let node = res.filter(function (node) { return node.n === 'DOMContentLoaded' })[0]
-      t.ok(node, 'DOMContentLoaded node created')
-      t.ok(node.s > 10, 'DOMContentLoaded node has start time ' + node.s)
-      t.equal(node.o, 'document', 'DOMContentLoaded node origin ' + node.o)
-      t.end()
-    })
-    t.test('stn document load', function (t) {
-      let node = res.filter(function (node) { return node.n === 'load' && node.o === 'document' })[0]
-      t.ok(node, 'load node created')
-      t.ok(node.s > 10, 'load node has start time ' + node.s)
-      t.equal(node.o, 'document', 'load node origin ' + node.o)
-      t.end()
-    })
-    t.test('stn ajax', function (t) {
-      let ajax = res.filter(function (node) { return node.t === 'ajax' })[0]
-      t.ok(ajax, 'ajax node created')
-      t.ok((ajax.e - ajax.s) > 1, 'Ajax has some duration')
-      t.equal(ajax.n, 'Ajax', 'Ajax name')
-      t.equal(ajax.t, 'ajax', 'Ajax type')
-      t.end()
-    })
-    t.test('stn history', function (t) {
-      let hist = res.filter(function (node) { return node.n === 'history.pushState' })[1]
-      t.ok(hist, 'hist node created')
-      t.equal(hist.s, hist.e, 'hist node has no duration')
-      t.equal(hist.n, 'history.pushState', 'hist name')
-      t.equal(hist.o, `${originalPath}#bar`, 'new path')
-      t.equal(hist.t, `${originalPath}#foo`, 'old path')
-      t.end()
-    })
-    t.test('stn pvt items', function (t) {
-      let pvtItems = res.filter(function (node) { return node.n === 'fi' || node.n === 'fid' })
-      t.ok(pvtItems.length === 2, 'all pvt items exist')
+      t.ok(+qs.st > 1404952055986 && Date.now() > +qs.st, 'Start time is between recent time and now ' + qs.st)
 
-      for (let i = 0; i < pvtItems.length; i++) {
-        let x = pvtItems[i]
-        if (x.n === 'fi') {
-          t.ok(x.o === 'document', 'FI owner is document')
-          t.ok(x.s === x.e, 'FI has no duration')
-          t.ok(x.t === 'timing', 'FI is a timing node')
+      t.test('stn DOMContentLoaded', function (t) {
+        let node = res.filter(function (node) { return node.n === 'DOMContentLoaded' })[0]
+        t.ok(node, 'DOMContentLoaded node created')
+        t.ok(node.s > 10, 'DOMContentLoaded node has start time ' + node.s)
+        t.equal(node.o, 'document', 'DOMContentLoaded node origin ' + node.o)
+        t.end()
+      })
+      t.test('stn document load', function (t) {
+        let node = res.filter(function (node) { return node.n === 'load' && node.o === 'document' })[0]
+        t.ok(node, 'load node created')
+        t.ok(node.s > 10, 'load node has start time ' + node.s)
+        t.equal(node.o, 'document', 'load node origin ' + node.o)
+        t.end()
+      })
+      t.test('stn ajax', function (t) {
+        let ajax = res.filter(function (node) { return node.t === 'ajax' })[0]
+        t.ok(ajax, 'ajax node created')
+        t.ok((ajax.e - ajax.s) > 1, 'Ajax has some duration')
+        t.equal(ajax.n, 'Ajax', 'Ajax name')
+        t.equal(ajax.t, 'ajax', 'Ajax type')
+        t.end()
+      })
+      t.test('stn history', function (t) {
+        let hist = res.filter(function (node) { return node.n === 'history.pushState' })[1]
+        t.ok(hist, 'hist node created')
+        t.equal(hist.s, hist.e, 'hist node has no duration')
+        t.equal(hist.n, 'history.pushState', 'hist name')
+        t.equal(hist.o, `${originalPath}#bar`, 'new path')
+        t.equal(hist.t, `${originalPath}#foo`, 'old path')
+        t.end()
+      })
+      t.test('stn pvt items', function (t) {
+        let pvtItems = res.filter(function (node) { return node.n === 'fi' || node.n === 'fid' })
+        t.ok(pvtItems.length === 2, 'all pvt items exist')
+
+        for (let i = 0; i < pvtItems.length; i++) {
+          let x = pvtItems[i]
+          if (x.n === 'fi') {
+            t.ok(x.o === 'document', 'FI owner is document')
+            t.ok(x.s === x.e, 'FI has no duration')
+            t.ok(x.t === 'timing', 'FI is a timing node')
+          }
+          if (x.n === 'fid') {
+            t.ok(x.o === 'document', 'FID owner is document')
+            t.ok(x.s === fiVal && x.e === fiVal + fidVal, 'FID has a duration relative to FI')
+            t.ok(x.t === 'event', 'FID is an event node')
+          }
         }
-        if (x.n === 'fid') {
-          t.ok(x.o === 'document', 'FID owner is document')
-          t.ok(x.s === fiVal && x.e === fiVal + fidVal, 'FID has a duration relative to FI')
-          t.ok(x.t === 'event', 'FID is an event node')
-        }
-      }
-      t.end()
-    })
-    let unknown = res.filter(function (n) { return n.o === 'unknown' })
-    t.equal(unknown.length, 0, 'No events with unknown origin')
+        t.end()
+      })
+      let unknown = res.filter(function (n) { return n.o === 'unknown' })
+      t.equal(unknown.length, 0, 'No events with unknown origin')
 
-    t.end()
+      t.end()
+    }
   })
 }

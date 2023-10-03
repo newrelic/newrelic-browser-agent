@@ -1,22 +1,18 @@
 import { FEATURE_NAMES } from '../features/features'
-import { getConfiguration, getInfo, getRuntime } from '../../common/config/config'
+import { getRuntime } from '../../common/config/config'
 import { ee } from '../../common/event-emitter/contextual-ee'
 import { handle } from '../../common/event-emitter/handle'
 import { registerHandler } from '../../common/event-emitter/register-handler'
 import { single } from '../../common/util/invoke'
-import * as submitData from '../../common/util/submit-data'
-import { isBrowserScope } from '../../common/constants/runtime'
 import { CUSTOM_METRIC_CHANNEL } from '../../features/metrics/constants'
 
 export function setAPI (agentIdentifier) {
   var instanceEE = ee.get(agentIdentifier)
-  var cycle = 0
 
   var api = {
     finished: single(finished),
     setErrorHandler,
     addToTrace,
-    inlineHit,
     addRelease
   }
 
@@ -45,40 +41,6 @@ export function setAPI (agentIdentifier) {
     }
 
     handle('bstApi', [report], undefined, FEATURE_NAMES.sessionTrace, instanceEE)
-  }
-
-  // NREUM.inlineHit(requestName, queueTime, appTime, totalBackEndTime, domTime, frontEndTime)
-  //
-  // requestName - the 'web page' name or service name
-  // queueTime - the amount of time spent in the app tier queue
-  // appTime - the amount of time spent in the application code
-  // totalBackEndTime - the total roundtrip time of the remote service call
-  // domTime - the time spent processing the result of the service call (or user defined)
-  // frontEndTime - the time spent rendering the result of the service call (or user defined)
-  function inlineHit (t, requestName, queueTime, appTime, totalBackEndTime, domTime, frontEndTime) {
-    if (!isBrowserScope) return
-
-    requestName = window.encodeURIComponent(requestName)
-    cycle += 1
-
-    const agentInfo = getInfo(agentIdentifier)
-    if (!agentInfo.beacon) return
-
-    const agentInit = getConfiguration(agentIdentifier)
-    const scheme = agentInit.ssl === false ? 'http' : 'https'
-    const beacon = agentInit.proxy.beacon || agentInfo.beacon
-    let url = `${scheme}://${beacon}/1/${agentInfo.licenseKey}`
-
-    url += '?a=' + agentInfo.applicationID + '&'
-    url += 't=' + requestName + '&'
-    url += 'qt=' + ~~queueTime + '&'
-    url += 'ap=' + ~~appTime + '&'
-    url += 'be=' + ~~totalBackEndTime + '&'
-    url += 'dc=' + ~~domTime + '&'
-    url += 'fe=' + ~~frontEndTime + '&'
-    url += 'c=' + cycle
-
-    submitData.xhr({ url })
   }
 
   function setErrorHandler (t, handler) {

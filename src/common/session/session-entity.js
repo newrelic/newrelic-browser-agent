@@ -25,6 +25,7 @@ const model = {
   expiresAt: 0,
   updatedAt: Date.now(),
   sessionReplay: MODE.OFF,
+  sessionReplaySentFirstChunk: false,
   sessionTraceMode: MODE.OFF,
   custom: {}
 }

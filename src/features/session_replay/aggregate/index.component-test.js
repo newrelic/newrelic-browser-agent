@@ -95,21 +95,21 @@ describe('Session Replay', () => {
       setConfiguration(agentIdentifier, { ...init })
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)
-      expect(session.state.sessionReplay).toEqual(sr.mode)
+      expect(session.state.sessionReplayMode).toEqual(sr.mode)
     })
 
     test('Session SR mode matches SR mode -- ERROR', async () => {
       setConfiguration(agentIdentifier, { session_replay: { sampling_rate: 0, error_sampling_rate: 100 } })
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)
-      expect(session.state.sessionReplay).toEqual(sr.mode)
+      expect(session.state.sessionReplayMode).toEqual(sr.mode)
     })
 
     test('Session SR mode matches SR mode -- OFF', async () => {
       setConfiguration(agentIdentifier, { session_replay: { sampling_rate: 0, error_sampling_rate: 0 } })
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)
-      expect(session.state.sessionReplay).toEqual(sr.mode)
+      expect(session.state.sessionReplayMode).toEqual(sr.mode)
     })
   })
 
@@ -177,7 +177,7 @@ describe('Session Replay', () => {
     })
 
     test('Existing Session -- Should inherit mode from session entity and ignore samples', async () => {
-      const storage = new LocalMemory({ NRBA_SESSION: { value: 'abcdefghijklmnop', expiresAt: Date.now() + 10000, inactiveAt: Date.now() + 10000, updatedAt: Date.now(), sessionReplay: MODE.FULL, sessionReplaySentFirstChunk: true, sessionTraceMode: MODE.FULL, custom: {} } })
+      const storage = new LocalMemory({ NRBA_SESSION: { value: 'abcdefghijklmnop', expiresAt: Date.now() + 10000, inactiveAt: Date.now() + 10000, updatedAt: Date.now(), sessionReplayMode: MODE.FULL, sessionReplaySentFirstChunk: true, sessionTraceMode: MODE.FULL, custom: {} } })
       session = new SessionEntity({ agentIdentifier, key: 'SESSION', storage })
       expect(session.isNew).toBeFalsy()
       primeSessionAndReplay(session)

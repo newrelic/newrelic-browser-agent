@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.243.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.242.0...v1.243.0) (2023-10-04)
+
+
+### Features
+
+* Do not report ajax nodes in session traces if in deny list ([#750](https://github.com/newrelic/newrelic-browser-agent/issues/750)) ([8106bfa](https://github.com/newrelic/newrelic-browser-agent/commit/8106bfa6fcfff13829cc1368e8e7ee85ed11480e))
+* Remove deprecated API inlineHit ([#744](https://github.com/newrelic/newrelic-browser-agent/issues/744)) ([54b42ea](https://github.com/newrelic/newrelic-browser-agent/commit/54b42eae2ae8692e5f463b7a3441e3be9e40cc5e))
+
+
+### Bug Fixes
+
+* Adjust Session Replay meta and timestamps ([#743](https://github.com/newrelic/newrelic-browser-agent/issues/743)) ([ed727c6](https://github.com/newrelic/newrelic-browser-agent/commit/ed727c65fe3029b4b9c094880b2f016db2c1cec3))
+* Re-update assets proxy to accept host URL strings ([#752](https://github.com/newrelic/newrelic-browser-agent/issues/752)) ([a7f58a3](https://github.com/newrelic/newrelic-browser-agent/commit/a7f58a3a83804d6102bb159ab2ae410e39ad884f))
+* Set Session Replay first chunk flags more reliably ([#740](https://github.com/newrelic/newrelic-browser-agent/issues/740)) ([42a15e1](https://github.com/newrelic/newrelic-browser-agent/commit/42a15e14a0f13e8b7a2b0afbaf6b30893fd701b4))
+* Tap session entity into storage api for changes across tabs ([#741](https://github.com/newrelic/newrelic-browser-agent/issues/741)) ([81bedc6](https://github.com/newrelic/newrelic-browser-agent/commit/81bedc6d4922379ad6e10a0ec7aaa72f85e253cf))
+
 ## [1.242.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.241.0...v1.242.0) (2023-09-25)
 
 

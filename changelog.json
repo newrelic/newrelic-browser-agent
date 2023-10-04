@@ -5,6 +5,63 @@
       "changes": [
         {
           "type": "feat",
+          "sha": "8106bfa6fcfff13829cc1368e8e7ee85ed11480e",
+          "message": "Do not report ajax nodes in session traces if in deny list",
+          "issues": [
+            "750"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "a7f58a3a83804d6102bb159ab2ae410e39ad884f",
+          "message": "Re-update assets proxy to accept host URL strings",
+          "issues": [
+            "752"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "ed727c65fe3029b4b9c094880b2f016db2c1cec3",
+          "message": "Adjust Session Replay meta and timestamps",
+          "issues": [
+            "743"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "81bedc6d4922379ad6e10a0ec7aaa72f85e253cf",
+          "message": "Tap session entity into storage api for changes across tabs",
+          "issues": [
+            "741"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "54b42eae2ae8692e5f463b7a3441e3be9e40cc5e",
+          "message": "Remove deprecated API inlineHit",
+          "issues": [
+            "744"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "42a15e14a0f13e8b7a2b0afbaf6b30893fd701b4",
+          "message": "Set Session Replay first chunk flags more reliably",
+          "issues": [
+            "740"
+          ]
+        }
+      ],
+      "version": "1.243.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "e46dfff0-aab4-4c2b-a70c-2ecebf399512",
+      "createTime": "2023-10-04T15:15:02.105Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
           "sha": "e5cd3f18b7c3f569dc46f90f1eba40b52092e1d0",
           "message": "Add messaging about Session Replay abort behavior",
           "issues": [
@@ -579,5 +636,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2023-09-25T19:22:51.827Z"
+  "updateTime": "2023-10-04T15:15:02.105Z"
 }

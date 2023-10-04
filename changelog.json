@@ -4,6 +4,23 @@
     {
       "changes": [
         {
+          "type": "fix",
+          "sha": "14f08aca8bf1a610984fc2303604a04910f07db6",
+          "message": "Improve Session Replay abort metric reliability",
+          "issues": [
+            "754"
+          ]
+        }
+      ],
+      "version": "1.243.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "f6ce7916-fe41-478b-91d4-530223a3c56a",
+      "createTime": "2023-10-04T19:26:02.289Z"
+    },
+    {
+      "changes": [
+        {
           "type": "feat",
           "sha": "8106bfa6fcfff13829cc1368e8e7ee85ed11480e",
           "message": "Do not report ajax nodes in session traces if in deny list",
@@ -636,5 +653,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2023-10-04T15:15:02.105Z"
+  "updateTime": "2023-10-04T19:26:02.289Z"
 }

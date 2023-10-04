@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.243.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.243.0...v1.243.1) (2023-10-04)
+
+
+### Bug Fixes
+
+* Improve Session Replay abort metric reliability ([#754](https://github.com/newrelic/newrelic-browser-agent/issues/754)) ([14f08ac](https://github.com/newrelic/newrelic-browser-agent/commit/14f08aca8bf1a610984fc2303604a04910f07db6))
+
 ## [1.243.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.242.0...v1.243.0) (2023-10-04)
 
 

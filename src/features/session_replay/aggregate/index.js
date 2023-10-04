@@ -15,7 +15,7 @@ import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { FEATURE_NAME } from '../constants'
 import { stringify } from '../../../common/util/stringify'
 import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
-import { SESSION_EVENTS, MODE } from '../../../common/session/session-entity'
+import { SESSION_EVENTS, MODE, SESSION_EVENT_TYPES } from '../../../common/session/session-entity'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { sharedChannel } from '../../../common/constants/shared-channel'
 import { obj as encodeObj } from '../../../common/url/encode'
@@ -134,6 +134,12 @@ export class Aggregate extends AggregateBase {
         this.startRecording()
       })
 
+      this.ee.on(SESSION_EVENTS.UPDATE, (type, data) => {
+        if (!this.initialized || this.blocked || type !== SESSION_EVENT_TYPES.CROSS_TAB) return
+        if (this.mode !== MODE.OFF && data.sessionReplay === MODE.OFF) this.abort('Session Entity was set to OFF on another tab')
+        this.mode = data.sessionReplay
+      })
+
       // Bespoke logic for new endpoint.  This will change as downstream dependencies become solidified.
       this.scheduler = new HarvestScheduler('browser/blobs', {
         onFinished: this.onHarvestFinished.bind(this),
@@ -148,12 +154,13 @@ export class Aggregate extends AggregateBase {
         this.hasError = true
         this.errorNoticed = true
         // run once
-        if (this.mode === MODE.ERROR) {
+        if (this.mode === MODE.ERROR && globalScope?.document.visibilityState === 'visible') {
           this.mode = MODE.FULL
           // if the error was noticed AFTER the recorder was already imported....
           if (recorder && this.initialized) {
             this.stopRecording()
             this.startRecording()
+
             this.scheduler.startTimer(this.harvestTimeSeconds)
 
             this.syncWithSessionManager({ sessionReplay: this.mode })

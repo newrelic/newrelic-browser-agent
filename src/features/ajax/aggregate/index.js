@@ -81,8 +81,6 @@ export class Aggregate extends AggregateBase {
         hash = stringify([params.status, params.host, params.pathname])
       }
 
-      handle('bstXhrAgg', ['xhr', hash, params, metrics], undefined, FEATURE_NAMES.sessionTrace, ee)
-
       // store as metric
       aggregator.store('xhr', hash, params, metrics)
 
@@ -97,6 +95,8 @@ export class Aggregate extends AggregateBase {
         }
         return
       }
+
+      handle('bstXhrAgg', ['xhr', hash, params, metrics], undefined, FEATURE_NAMES.sessionTrace, ee)
 
       var xhrContext = this
 

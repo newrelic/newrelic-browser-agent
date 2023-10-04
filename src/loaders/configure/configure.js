@@ -33,7 +33,7 @@ export function configure (agentIdentifier, opts = {}, loaderType, forceDrain) {
   if (!alreadySetOnce) {
     alreadySetOnce = true
     if (updatedInit.proxy.assets) {
-      redefinePublicPath(updatedInit.proxy.assets + '/') // much like the info.beacon & init.proxy.beacon, this input should not end in a slash, but one is needed for webpack concat
+      redefinePublicPath(updatedInit.proxy.assets)
       internalTrafficList.push(updatedInit.proxy.assets)
     }
     if (updatedInit.proxy.beacon) internalTrafficList.push(updatedInit.proxy.beacon)

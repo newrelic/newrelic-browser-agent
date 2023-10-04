@@ -95,7 +95,7 @@ export class Aggregate extends AggregateBase {
         }
         return
       }
-      
+
       handle('bstXhrAgg', ['xhr', hash, params, metrics], undefined, FEATURE_NAMES.sessionTrace, ee)
 
       var xhrContext = this

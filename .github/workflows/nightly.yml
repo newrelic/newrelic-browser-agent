@@ -79,4 +79,35 @@ jobs:
             -t 85000 \
             ${{ runner.debug && '-v -L -D -d' || '' }}
 
+  verify-ab-assets:
+    name: Verify A/B Assets
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+      - name: Verify a/b assets
+        uses: ./.github/actions/fastly-verify
+        with:
+          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
+          fastly_service: js-agent.newrelic.com
+          asset_path: |
+            internal/dev-released.js \
+            internal/dev-latest.js \
+            internal/dev-experiments.js \
+            internal/dev-postamble.js \
+            internal/staging-released.js \
+            internal/staging-latest.js \
+            internal/staging-experiments.js \
+            internal/staging-postamble.js \
+            internal/prod-released.js \
+            internal/prod-postamble.js \
+            internal/eu-prod-released.js \
+            internal/eu-prod-postamble.js
+
   # TODO: Need to add a job for cleaning up experiments to run nightly

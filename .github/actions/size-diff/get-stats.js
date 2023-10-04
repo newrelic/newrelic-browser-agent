@@ -60,7 +60,7 @@ async function getVersionedStats (version, reportSetting) {
     const statsFileRequest = await fetchRetry(`https://js-agent.newrelic.com/${statsFileName}?_nocache=${uuidv4()}`, { retry: 3 })
 
     const statsFileContent = await statsFileRequest.json()
-    return parseStatsFile(reportSetting, statsFileContent)
+    return parseStatsFile(reportSetting, statsFileContent, version)
   } catch (error) {
     console.error(error.message)
     throw new Error(`Could not retrieve stats file ${statsFileName}`)
@@ -68,16 +68,17 @@ async function getVersionedStats (version, reportSetting) {
 
 }
 
-function parseStatsFile (reportSetting, statsFileContent) {
+function parseStatsFile (reportSetting, statsFileContent, version) {
   let results = {}
   for (const assetSetting of reportSetting.assetFileNameTemplates) {
-    const assetFileName = assetSetting.fileNameTemplate.split('{{version}}')
+    const assetFileNameRegex = assetSetting.fileNameRegex(version)
+
     const assetFileStats = statsFileContent.find(stats =>
-      stats.label.startsWith(assetFileName[0]) && stats.label.endsWith(assetFileName[1])
+      assetFileNameRegex.test(stats.label)
     )
 
     if (!assetFileStats) {
-      throw new Error(`No stats exist matching pattern ${assetSetting.fileNameTemplate}.`)
+      throw new Error(`No stats exist matching pattern ${assetFileNameRegex.toString()}.`)
     }
 
     results[assetSetting.name] = {

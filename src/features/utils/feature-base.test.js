@@ -1,6 +1,5 @@
 import { faker } from '@faker-js/faker'
 import { FeatureBase } from './feature-base'
-import { getRuntime } from '../../common/config/config'
 import { ee } from '../../common/event-emitter/contextual-ee'
 
 jest.enableAutomock()
@@ -40,6 +39,5 @@ it('should set instance defaults', () => {
   expect(feature.blocked).toEqual(false)
   expect(feature.ee).toEqual(mockEE)
 
-  expect(getRuntime).toHaveBeenCalledWith(agentIdentifier)
-  expect(ee.get).toHaveBeenCalledWith(agentIdentifier, true)
+  expect(ee.get).toHaveBeenCalledWith(agentIdentifier)
 })

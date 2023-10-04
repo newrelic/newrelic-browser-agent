@@ -22,6 +22,8 @@ import { obj as encodeObj } from '../../../common/url/encode'
 import { warn } from '../../../common/util/console'
 import { globalScope } from '../../../common/constants/runtime'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
+import { handle } from '../../../common/event-emitter/handle'
+import { FEATURE_NAMES } from '../../../loaders/features/features'
 
 // would be better to get this dynamically in some way
 export const RRWEB_VERSION = '2.0.0-alpha.8'
@@ -414,7 +416,7 @@ export class Aggregate extends AggregateBase {
   /** Abort the feature, once aborted it will not resume */
   abort (reason = {}) {
     warn(`SR aborted -- ${reason.message}`)
-    this.ee.emit(SUPPORTABILITY_METRIC_CHANNEL, [`SessionReplay/Abort/${ABORT_REASONS[reason.sm]}`])
+    handle(SUPPORTABILITY_METRIC_CHANNEL, [`SessionReplay/Abort/${reason.sm}`], undefined, FEATURE_NAMES.metrics, this.ee)
     this.blocked = true
     this.mode = MODE.OFF
     this.stopRecording()

@@ -94,7 +94,9 @@ export class Aggregate extends AggregateBase {
           handle(SUPPORTABILITY_METRIC_CHANNEL, ['Ajax/Events/Excluded/App'], undefined, FEATURE_NAMES.metrics, ee)
         }
         return
-      } else handle('bstXhrAgg', ['xhr', hash, params, metrics], undefined, FEATURE_NAMES.sessionTrace, ee)
+      }
+      
+      handle('bstXhrAgg', ['xhr', hash, params, metrics], undefined, FEATURE_NAMES.sessionTrace, ee)
 
       var xhrContext = this
 

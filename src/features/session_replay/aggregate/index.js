@@ -55,6 +55,10 @@ const ABORT_REASONS = {
   TOO_BIG: {
     message: 'Payload was too large',
     sm: 'Too-Big'
+  },
+  CROSS_TAB: {
+    message: 'Session Entity was set to OFF on another tab',
+    sm: 'Cross-Tab'
   }
 }
 
@@ -136,7 +140,7 @@ export class Aggregate extends AggregateBase {
 
       this.ee.on(SESSION_EVENTS.UPDATE, (type, data) => {
         if (!this.initialized || this.blocked || type !== SESSION_EVENT_TYPES.CROSS_TAB) return
-        if (this.mode !== MODE.OFF && data.sessionReplay === MODE.OFF) this.abort('Session Entity was set to OFF on another tab')
+        if (this.mode !== MODE.OFF && data.sessionReplay === MODE.OFF) this.abort(ABORT_REASONS.CROSS_TAB)
         this.mode = data.sessionReplay
       })
 

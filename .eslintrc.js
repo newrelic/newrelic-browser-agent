@@ -15,8 +15,7 @@ module.exports = {
     // Ignore JIL code since it is being replaced with WDIO
     'tools/jil/**/*',
     'tests/browser/**/*',
-    'tests/functional/**/*',
-    'tests/worker/**/*'
+    'tests/functional/**/*'
   ],
   parser: '@babel/eslint-parser',
   parserOptions: {

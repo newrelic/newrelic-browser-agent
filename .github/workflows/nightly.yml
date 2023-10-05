@@ -50,35 +50,6 @@ jobs:
       collection: functional
     secrets: inherit
 
-  jil-workers:
-    name: JIL Test - workers
-    timeout-minutes: 60
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
-    env:
-      SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
-      SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: lts/*
-      - name: Install dependencies
-        run: npm ci
-      - name: Build agent
-        run: npm run build:all
-      - name: Run JIL Tests
-        run: |
-          find ./tests/worker -regex ".*.test.js" | xargs node --max-old-space-size=8192 ./tools/jil/bin/cli.js \
-            -f merged \
-            -s \
-            -b '*@*' \
-            --concurrent 30 \
-            -t 85000 \
-            ${{ runner.debug && '-v -L -D -d' || '' }}
-
   verify-ab-assets:
     name: Verify A/B Assets
     timeout-minutes: 60

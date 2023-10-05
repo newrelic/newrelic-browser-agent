@@ -26,9 +26,6 @@
       "loaders/micro-agent": [
         "dist/types/loaders/micro-agent.d.ts"
       ],
-      "loaders/worker-agent": [
-        "dist/types/loaders/worker-agent.d.ts"
-      ],
       "features/ajax": [
         "dist/types/features/ajax/index.d.ts"
       ],
@@ -80,11 +77,6 @@
       "types": "./dist/types/loaders/micro-agent.d.ts",
       "require": "./dist/cjs/loaders/micro-agent.js",
       "default": "./dist/esm/loaders/micro-agent.js"
-    },
-    "./loaders/worker-agent": {
-      "types": "./dist/types/loaders/worker-agent.d.ts",
-      "require": "./dist/cjs/loaders/worker-agent.js",
-      "default": "./dist/esm/loaders/worker-agent.js"
     },
     "./features/ajax": {
       "types": "./dist/types/features/ajax/index.d.ts",

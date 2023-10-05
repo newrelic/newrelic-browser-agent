@@ -332,92 +332,12 @@ features.polyfillsNeeded = new BrowserMatcher()
   .include('edge', '<=79')
   .include('safari', '<=11.3')
 
-features.workerStackSizeGeneratesError = new BrowserMatcher()
-  .exclude('firefox')
-
 features.unhandledPromiseRejection = new BrowserMatcher()
   .exclude('*')
   .include('chrome', '>49')
   .include('edge', '>79')
   .include('safari', '>12')
   .include('firefox', '>69')
-
-/* vvv--- Workers API support ---vvv
-  */
-features.workers = new BrowserMatcher([ // NOTE: module type workers have different (higher) compatibility versions, excluding IE11
-  new MatcherRule(TYPE_EXCLUDE, '*@*'),
-  new MatcherRule(TYPE_INCLUDE, 'chrome@>=4'),
-  new MatcherRule(TYPE_INCLUDE, 'edge@>=12'),
-  new MatcherRule(TYPE_INCLUDE, 'safari@>=4'),
-  new MatcherRule(TYPE_INCLUDE, 'firefox@>=3.5'),
-  new MatcherRule(TYPE_INCLUDE, 'android@>=4.4'),
-  new MatcherRule(TYPE_INCLUDE, 'ios@>=5')
-])
-features.supportESMWorkers = new BrowserMatcher([ // not avail in Firefox browsers, or Safari below 15
-  new MatcherRule(TYPE_EXCLUDE, '*@*'),
-  new MatcherRule(TYPE_INCLUDE, 'chrome@>=80'),
-  new MatcherRule(TYPE_INCLUDE, 'edge@>=80'),
-  new MatcherRule(TYPE_INCLUDE, 'safari@>=15'),
-  new MatcherRule(TYPE_INCLUDE, 'android@>=9.0'),
-  new MatcherRule(TYPE_INCLUDE, 'ios@>=15.0')
-])
-features.workersFull = features.workers.and(features.supportESMWorkers) // use this to filter versions that support both default & module
-features.nestedWorkers = new BrowserMatcher([
-  new MatcherRule(TYPE_EXCLUDE, '*@*'),
-  new MatcherRule(TYPE_INCLUDE, 'chrome@>=69'),
-  new MatcherRule(TYPE_INCLUDE, 'edge@>=69'), // specific support line for edge unclear, using chrome's since based off chromium
-  new MatcherRule(TYPE_INCLUDE, 'firefox@>=44'), // specific support line for ff unclear, using serviceWorker line
-  new MatcherRule(TYPE_INCLUDE, 'android@>=9.0') // not sure if android supports it at all? -- testing currently disabled
-  // safari & ios does not yet support nested (dedicated) workers, current v16 *cli 10/22
-])
-
-features.sharedWorkers = new BrowserMatcher([ // not avail android, or Safari below 16
-  new MatcherRule(TYPE_EXCLUDE, '*@*'),
-  new MatcherRule(TYPE_INCLUDE, 'chrome@>=4'),
-  new MatcherRule(TYPE_INCLUDE, 'edge@>=79'),
-  new MatcherRule(TYPE_INCLUDE, 'safari@>=16.0'),
-  new MatcherRule(TYPE_INCLUDE, 'firefox@>=29'),
-  new MatcherRule(TYPE_INCLUDE, 'ios@>=16.0')
-])
-features.sharedWorkersFull = features.sharedWorkers.and(features.supportESMWorkers)
-
-features.serviceWorkers = new BrowserMatcher([
-  new MatcherRule(TYPE_EXCLUDE, '*@*'),
-  new MatcherRule(TYPE_INCLUDE, 'chrome@>60'), // v60 has unexpected behavior of working on unsecured HTTP tests
-  new MatcherRule(TYPE_INCLUDE, 'edge@>=17'),
-  new MatcherRule(TYPE_INCLUDE, 'safari@>=11.1'),
-  new MatcherRule(TYPE_INCLUDE, 'firefox@>=44'),
-  new MatcherRule(TYPE_INCLUDE, 'android@>=9.0'),
-  new MatcherRule(TYPE_INCLUDE, 'ios@>=11.3')
-])
-
-/**
- * Matcher based on our browser support list
- */
-features.npmDist = new BrowserMatcher([
-  new MatcherRule(TYPE_EXCLUDE, '*@*'),
-  new MatcherRule(TYPE_INCLUDE, 'chrome@>=100'),
-  new MatcherRule(TYPE_INCLUDE, 'edge@>=100'),
-  new MatcherRule(TYPE_INCLUDE, 'firefox@>=99'),
-  new MatcherRule(TYPE_INCLUDE, 'android@>=108'),
-  new MatcherRule(TYPE_INCLUDE, 'safari@>=14.1'),
-  new MatcherRule(TYPE_INCLUDE, 'ios@>=14.0')
-])
-
-/**
- * Matcher based on ES2022 support
- * https://caniuse.com/?feats=mdn-javascript_builtins_array_at,mdn-javascript_builtins_regexp_hasindices,mdn-javascript_builtins_object_hasown,mdn-javascript_builtins_error_cause,mdn-javascript_operators_await_top_level,mdn-javascript_classes_private_class_fields,mdn-javascript_classes_private_class_methods,mdn-javascript_classes_static_class_fields,mdn-javascript_classes_static_initialization_blocks
- */
-features.npmSrc = new BrowserMatcher([
-  new MatcherRule(TYPE_EXCLUDE, '*@*'),
-  new MatcherRule(TYPE_INCLUDE, 'chrome@>94'),
-  new MatcherRule(TYPE_INCLUDE, 'edge@>=94'),
-  new MatcherRule(TYPE_INCLUDE, 'firefox@>=93'),
-  new MatcherRule(TYPE_INCLUDE, 'android@>=111'),
-  // Safari does not support static class initialization blocks but we do not currently use those
-  new MatcherRule(TYPE_INCLUDE, 'safari@>=15.4'),
-  new MatcherRule(TYPE_INCLUDE, 'ios@>=15.4')
-])
 
 /* Because safari @ 15 is giving us grief on Sauce Labs */
 features.notSafari15 = new BrowserMatcher()

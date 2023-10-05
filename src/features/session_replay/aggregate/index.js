@@ -68,8 +68,8 @@ let recorder, gzipper, u8
 export const MAX_PAYLOAD_SIZE = 1000000
 /** Unloading caps around 64kb */
 export const IDEAL_PAYLOAD_SIZE = 64000
-/** Interval between forcing new full snapshots -- 30 seconds in error mode, 5 minutes in full mode */
-const CHECKOUT_MS = { [MODE.ERROR]: 30000, [MODE.FULL]: 300000, [MODE.OFF]: 0 }
+/** Interval between forcing new full snapshots -- 15 seconds in error mode (x2), 5 minutes in full mode */
+const CHECKOUT_MS = { [MODE.ERROR]: 15000, [MODE.FULL]: 300000, [MODE.OFF]: 0 }
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -77,6 +77,8 @@ export class Aggregate extends AggregateBase {
     super(agentIdentifier, aggregator, FEATURE_NAME)
     /** Each page mutation or event will be stored (raw) in this array. This array will be cleared on each harvest */
     this.events = []
+    /** Backlog used for a 2-part sliding window to guarantee a 15-30s buffer window */
+    this.backloggedEvents = []
     /** The interval to harvest at.  This gets overridden if the size of the payload exceeds certain thresholds */
     this.harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'session_replay.harvestTimeSeconds') || 60
     /** Set once the recorder has fully initialized after flag checks and sampling */
@@ -265,6 +267,7 @@ export class Aggregate extends AggregateBase {
     const agentRuntime = getRuntime(this.agentIdentifier)
     const info = getInfo(this.agentIdentifier)
 
+    if (this.backloggedEvents.length) this.events = [...this.backloggedEvents, ...this.events]
     // do not let the last node be a meta node, since this NEEDS to precede a snapshot
     // we will manually inject it later if we find a payload that is missing a meta node
     const payloadEndsWithMeta = this.events[this.events.length - 1]?.type === RRWEB_EVENT_TYPES.Meta
@@ -323,6 +326,8 @@ export class Aggregate extends AggregateBase {
 
   /** Clears the buffer (this.events), and resets all payload metadata properties */
   clearBuffer () {
+    if (this.mode === MODE.ERROR) this.backloggedEvents = this.events
+    else this.backloggedEvents = []
     this.events = []
     this.hasSnapshot = false
     this.hasMeta = false
@@ -377,7 +382,8 @@ export class Aggregate extends AggregateBase {
     // Checkout events are flags by the recording lib that indicate a fullsnapshot was taken every n ms. These are important
     // to help reconstruct the replay later and must be included.  While waiting and buffering for errors to come through,
     // each time we see a new checkout, we can drop the old data.
-    if (this.mode === MODE.ERROR && isCheckout) {
+    // we need to check for meta because rrweb will flag it as checkout twice, once for meta, then once for snapshot
+    if (this.mode === MODE.ERROR && isCheckout && event.type === RRWEB_EVENT_TYPES.Meta) {
       // we are still waiting for an error to throw, so keep wiping the buffer over time
       this.clearBuffer()
     }

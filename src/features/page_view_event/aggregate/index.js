@@ -69,6 +69,8 @@ export class Aggregate extends AggregateBase {
       at: info.atts
     }
 
+    if (agentRuntime.session) queryParameters.fh = Number(agentRuntime.session.isNew) // "first harvest" aka RUM request or PageView event of a session
+
     let body
     if (typeof info.jsAttributes === 'object' && Object.keys(info.jsAttributes).length > 0) {
       body = { ja: info.jsAttributes }

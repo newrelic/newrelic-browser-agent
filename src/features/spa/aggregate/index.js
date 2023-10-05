@@ -20,6 +20,7 @@ import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { firstContentfulPaint } from '../../../common/vitals/first-contentful-paint'
 import { firstPaint } from '../../../common/vitals/first-paint'
+import { bundleId } from '../../../common/ids/bundle-id'
 
 const {
   FEATURE_NAME, INTERACTION_EVENTS, MAX_TIMER_BUDGET, FN_START, FN_END, CB_START, INTERACTION_API, REMAINING,
@@ -166,7 +167,7 @@ export class Aggregate extends AggregateBase {
     register(FN_START, function (args, eventSource) {
       var ev = args[0]
       var evName = ev.type
-      var eventNode = ev.__nrNode
+      var eventNode = ev[`__nrNode:${bundleId}`]
 
       if (!state.pageLoaded && evName === 'load' && eventSource === window) {
         state.pageLoaded = true
@@ -216,7 +217,7 @@ export class Aggregate extends AggregateBase {
         }
       }
 
-      ev.__nrNode = state.currentNode
+      ev[`__nrNode:${bundleId}`] = state.currentNode
     }, this.featureName, eventsEE)
 
     /**

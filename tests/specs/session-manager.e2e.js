@@ -15,6 +15,7 @@ describe('newrelic session ID', () => {
     sessionReplayMode: expect.any(Number),
     sessionReplaySentFirstChunk: expect.any(Boolean),
     sessionTraceMode: expect.any(Number),
+    traceHarvestStarted: expect.any(Boolean),
     custom: expect.any(Object)
   })
 

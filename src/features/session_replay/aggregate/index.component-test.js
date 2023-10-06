@@ -35,6 +35,17 @@ class LocalMemory {
     }
   }
 }
+const model = {
+  value: '',
+  inactiveAt: 0,
+  expiresAt: 0,
+  updatedAt: Date.now(),
+  sessionReplayMode: 0,
+  sessionReplaySentFirstChunk: false,
+  sessionTraceMode: 0,
+  traceHarvestStarted: false,
+  custom: {}
+}
 
 let sr, session
 const agentIdentifier = 'abcd'
@@ -177,7 +188,7 @@ describe('Session Replay', () => {
     })
 
     test('Existing Session -- Should inherit mode from session entity and ignore samples', async () => {
-      const storage = new LocalMemory({ NRBA_SESSION: { value: 'abcdefghijklmnop', expiresAt: Date.now() + 10000, inactiveAt: Date.now() + 10000, updatedAt: Date.now(), sessionReplayMode: MODE.FULL, sessionReplaySentFirstChunk: true, sessionTraceMode: MODE.FULL, custom: {} } })
+      const storage = new LocalMemory({ NRBA_SESSION: { ...model, value: 'abcdefghijklmnop', expiresAt: Date.now() + 10000, inactiveAt: Date.now() + 10000, sessionReplayMode: MODE.FULL, sessionReplaySentFirstChunk: true, sessionTraceMode: MODE.FULL } })
       session = new SessionEntity({ agentIdentifier, key: 'SESSION', storage })
       expect(session.isNew).toBeFalsy()
       primeSessionAndReplay(session)

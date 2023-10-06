@@ -462,6 +462,13 @@ export class Aggregate extends AggregateBase {
     this.trace = {}
     this.nodeCount = 0
 
+    let firstHarvestOfSession
+    if (this.agentRuntime.session) {
+      const isFirstPayload = !this.agentRuntime.session.state.traceHarvestStarted
+      firstHarvestOfSession = { fsh: Number(isFirstPayload) } // converted to '0' | '1'
+      if (isFirstPayload) this.agentRuntime.session.write({ traceHarvestStarted: true })
+    }
+
     return {
       qs: {
         st: this.agentRuntime.offset,
@@ -472,7 +479,8 @@ export class Aggregate extends AggregateBase {
          * so that blob parsing doesn't need to happen to support UI/API functions  */
         fts: this.agentRuntime.offset + earliestTimeStamp,
         /** n === "nodeCount" in NR1, a count of nodes in the ST payload, so that blob parsing doesn't need to happen to support UI/API functions */
-        n: stns.length // node count
+        n: stns.length, // node count
+        ...firstHarvestOfSession
       },
       body: { res: stns }
     }

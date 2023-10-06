@@ -28,6 +28,7 @@ const model = {
   sessionReplayMode: MODE.OFF,
   sessionReplaySentFirstChunk: false,
   sessionTraceMode: MODE.OFF,
+  traceHarvestStarted: false,
   custom: {}
 }
 export const SESSION_EVENTS = {

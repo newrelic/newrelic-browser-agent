@@ -22,6 +22,8 @@ import { obj as encodeObj } from '../../../common/url/encode'
 import { warn } from '../../../common/util/console'
 import { globalScope } from '../../../common/constants/runtime'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
+import { handle } from '../../../common/event-emitter/handle'
+import { FEATURE_NAMES } from '../../../loaders/features/features'
 
 // would be better to get this dynamically in some way
 export const RRWEB_VERSION = '2.0.0-alpha.8'
@@ -53,6 +55,10 @@ const ABORT_REASONS = {
   TOO_BIG: {
     message: 'Payload was too large',
     sm: 'Too-Big'
+  },
+  CROSS_TAB: {
+    message: 'Session Entity was set to OFF on another tab',
+    sm: 'Cross-Tab'
   }
 }
 
@@ -62,8 +68,8 @@ let recorder, gzipper, u8
 export const MAX_PAYLOAD_SIZE = 1000000
 /** Unloading caps around 64kb */
 export const IDEAL_PAYLOAD_SIZE = 64000
-/** Interval between forcing new full snapshots -- 30 seconds in error mode, 5 minutes in full mode */
-const CHECKOUT_MS = { [MODE.ERROR]: 30000, [MODE.FULL]: 300000, [MODE.OFF]: 0 }
+/** Interval between forcing new full snapshots -- 15 seconds in error mode (x2), 5 minutes in full mode */
+const CHECKOUT_MS = { [MODE.ERROR]: 15000, [MODE.FULL]: 300000, [MODE.OFF]: 0 }
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -71,6 +77,8 @@ export class Aggregate extends AggregateBase {
     super(agentIdentifier, aggregator, FEATURE_NAME)
     /** Each page mutation or event will be stored (raw) in this array. This array will be cleared on each harvest */
     this.events = []
+    /** Backlog used for a 2-part sliding window to guarantee a 15-30s buffer window */
+    this.backloggedEvents = []
     /** The interval to harvest at.  This gets overridden if the size of the payload exceeds certain thresholds */
     this.harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'session_replay.harvestTimeSeconds') || 60
     /** Set once the recorder has fully initialized after flag checks and sampling */
@@ -134,8 +142,8 @@ export class Aggregate extends AggregateBase {
 
       this.ee.on(SESSION_EVENTS.UPDATE, (type, data) => {
         if (!this.initialized || this.blocked || type !== SESSION_EVENT_TYPES.CROSS_TAB) return
-        if (this.mode !== MODE.OFF && data.sessionReplayMode === MODE.OFF) this.abort('Session Entity was set to OFF on another tab')
-        this.mode = data.sessionReplayMode
+        if (this.mode !== MODE.OFF && data.sessionReplayMode === MODE.OFF) this.abort(ABORT_REASONS.CROSS_TAB)
+        this.mode = data.sessionReplay
       })
 
       // Bespoke logic for new endpoint.  This will change as downstream dependencies become solidified.
@@ -259,6 +267,7 @@ export class Aggregate extends AggregateBase {
     const agentRuntime = getRuntime(this.agentIdentifier)
     const info = getInfo(this.agentIdentifier)
 
+    if (this.backloggedEvents.length) this.events = [...this.backloggedEvents, ...this.events]
     // do not let the last node be a meta node, since this NEEDS to precede a snapshot
     // we will manually inject it later if we find a payload that is missing a meta node
     const payloadEndsWithMeta = this.events[this.events.length - 1]?.type === RRWEB_EVENT_TYPES.Meta
@@ -317,6 +326,8 @@ export class Aggregate extends AggregateBase {
 
   /** Clears the buffer (this.events), and resets all payload metadata properties */
   clearBuffer () {
+    if (this.mode === MODE.ERROR) this.backloggedEvents = this.events
+    else this.backloggedEvents = []
     this.events = []
     this.hasSnapshot = false
     this.hasMeta = false
@@ -371,7 +382,8 @@ export class Aggregate extends AggregateBase {
     // Checkout events are flags by the recording lib that indicate a fullsnapshot was taken every n ms. These are important
     // to help reconstruct the replay later and must be included.  While waiting and buffering for errors to come through,
     // each time we see a new checkout, we can drop the old data.
-    if (this.mode === MODE.ERROR && isCheckout) {
+    // we need to check for meta because rrweb will flag it as checkout twice, once for meta, then once for snapshot
+    if (this.mode === MODE.ERROR && isCheckout && event.type === RRWEB_EVENT_TYPES.Meta) {
       // we are still waiting for an error to throw, so keep wiping the buffer over time
       this.clearBuffer()
     }
@@ -421,7 +433,7 @@ export class Aggregate extends AggregateBase {
   /** Abort the feature, once aborted it will not resume */
   abort (reason = {}) {
     warn(`SR aborted -- ${reason.message}`)
-    this.ee.emit(SUPPORTABILITY_METRIC_CHANNEL, [`SessionReplay/Abort/${ABORT_REASONS[reason.sm]}`])
+    handle(SUPPORTABILITY_METRIC_CHANNEL, [`SessionReplay/Abort/${reason.sm}`], undefined, FEATURE_NAMES.metrics, this.ee)
     this.blocked = true
     this.mode = MODE.OFF
     this.stopRecording()

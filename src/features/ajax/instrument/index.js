@@ -369,8 +369,8 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
 
     // pass any reserved fetch headers to the params object for processing in the bel serializer later
     if (this.opts.headers) {
+      const passReservedFetchHeadersToParams = passReservedHeadersToParams.bind(this)
       Object.entries(this.opts.headers).forEach(([key, val]) => {
-        const passReservedFetchHeadersToParams = passReservedHeadersToParams.bind(this)
         passReservedFetchHeadersToParams([key, val])
       })
     }

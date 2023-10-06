@@ -372,7 +372,6 @@ export class Aggregate extends AggregateBase {
 
   /** Store a payload in the buffer (this.events).  This should be the callback to the recording lib noticing a mutation */
   store (event, isCheckout) {
-    console.log(event)
     this.setTimestamps()
     if (this.blocked) return
     const eventBytes = stringify(event).length

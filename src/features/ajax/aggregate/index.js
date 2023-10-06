@@ -110,7 +110,8 @@ export class Aggregate extends AggregateBase {
         type,
         startTime,
         endTime,
-        callbackDuration: metrics.cbTime
+        callbackDuration: metrics.cbTime,
+        custom: params.custom
       }
 
       if (xhrContext.dt) {
@@ -221,7 +222,7 @@ export class Aggregate extends AggregateBase {
         var insert = '2,'
 
         // add custom attributes
-        var attrParts = addCustomAttributes(getInfo(agentIdentifier).jsAttributes || {}, this.addString)
+        var attrParts = addCustomAttributes({ ...(getInfo(agentIdentifier).jsAttributes || {}), ...(event.custom || {}) }, this.addString)
         fields.unshift(numeric(attrParts.length))
 
         insert += fields.join(',')

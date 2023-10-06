@@ -1,0 +1,13 @@
+const GQL_FRAMEWORKS = {
+  APOLLO: 'Apollo'
+}
+
+const GQL_OPERATION_PROPERTY_NAMES = {
+  NAME: 'operation-name',
+  ID: 'operation-id'
+}
+
+export const GQL_OPERATIONS = {
+  'X-APOLLO-OPERATION-NAME': { prop: GQL_OPERATION_PROPERTY_NAMES.NAME, framework: GQL_FRAMEWORKS.APOLLO },
+  'X-APOLLO-OPERATION-ID': { prop: GQL_OPERATION_PROPERTY_NAMES.ID, framework: GQL_FRAMEWORKS.APOLLO }
+}

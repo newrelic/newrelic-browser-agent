@@ -16,6 +16,7 @@ import { responseSizeFromXhr } from './response-size'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
+import { GQL_OPERATIONS } from './gql'
 
 var handlers = ['load', 'error', 'abort', 'timeout']
 var handlersLen = handlers.length
@@ -82,6 +83,18 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
   ee.on('fn-start', onFnStart)
   ee.on('fetch-done', onFetchDone)
 
+  // pass any reserved xhr headers that are set by `setRequestHeader` to the params object for processing in the bel serializer later
+  ee.on('setRequestHeader-xhr-start', passReservedHeadersToParams)
+
+  function passReservedHeadersToParams ([headerKey, headerVal]) {
+    this.params.custom ??= {}
+    const gqlOperation = GQL_OPERATIONS[headerKey.toUpperCase()]
+    if (gqlOperation) {
+      this.params.custom[gqlOperation.prop] = headerVal
+      this.params.custom.framework = gqlOperation.framework
+    }
+  }
+
   // Setup the context for each new xhr object
   function onNewXhr (xhr) {
     var ctx = this
@@ -93,7 +106,7 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
     ctx.xhrGuids = {}
     ctx.lastSize = null
     ctx.loadCaptureCalled = false
-    ctx.params = this.params || {}
+    ctx.params = this.params || { custom: {} }
     ctx.metrics = this.metrics || {}
 
     xhr.addEventListener('load', function (event) {
@@ -352,6 +365,14 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
       txSize: this.txSize,
       rxSize: responseSize,
       duration: now() - this.startTime
+    }
+
+    // pass any reserved fetch headers to the params object for processing in the bel serializer later
+    if (this.opts.headers) {
+      Object.entries(this.opts.headers).forEach(([key, val]) => {
+        const passReservedFetchHeadersToParams = passReservedHeadersToParams.bind(this)
+        passReservedFetchHeadersToParams([key, val])
+      })
     }
 
     handler('xhr', [this.params, metrics, this.startTime, this.endTime, 'fetch'], this, FEATURE_NAMES.ajax)

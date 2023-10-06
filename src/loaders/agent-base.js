@@ -1,8 +1,17 @@
 /* eslint-disable n/handle-callback-err */
 
 import { warn } from '../common/util/console'
+import { generateRandomHexString } from '../common/ids/unique-id'
+import { ObservationContext } from '../common/context/observation-context'
 
 export class AgentBase {
+  agentIdentifier
+  observationContext = new ObservationContext()
+
+  constructor (agentIdentifier = generateRandomHexString(16)) {
+    this.agentIdentifier = agentIdentifier
+  }
+
   /**
    * Reports a browser PageAction event along with a name and optional attributes.
    * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/addpageaction/}

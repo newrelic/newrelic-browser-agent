@@ -11,7 +11,6 @@ import { Instrument as PageViewEvent } from '../features/page_view_event/instrum
 // common files
 import { Aggregator } from '../common/aggregate/aggregator'
 import { gosNREUM, gosNREUMInitializedAgents } from '../common/window/nreum'
-import { generateRandomHexString } from '../common/ids/unique-id'
 import { getConfiguration, getInfo, getLoaderConfig, getRuntime } from '../common/config/config'
 import { warn } from '../common/util/console'
 import { stringify } from '../common/util/stringify'
@@ -26,8 +25,8 @@ import { globalScope } from '../common/constants/runtime'
  * sensitive to network load, this may result in smaller builds with slightly lower performance impact.
  */
 export class Agent extends AgentBase {
-  constructor (options, agentIdentifier = generateRandomHexString(16)) {
-    super()
+  constructor (options, agentIdentifier) {
+    super(agentIdentifier)
 
     if (!globalScope) {
       // We could not determine the runtime environment. Short-circuite the agent here
@@ -36,7 +35,6 @@ export class Agent extends AgentBase {
       return
     }
 
-    this.agentIdentifier = agentIdentifier
     this.sharedAggregator = new Aggregator({ agentIdentifier: this.agentIdentifier })
     this.features = {}
 
@@ -46,7 +44,7 @@ export class Agent extends AgentBase {
     // Future work is being planned to evaluate removing this behavior from the backend, but for now we must ensure this call is made
     this.desiredFeatures.add(PageViewEvent)
 
-    Object.assign(this, configure(this.agentIdentifier, options, options.loaderType || 'agent'))
+    Object.assign(this, configure(this.agentIdentifier, options, options.loaderType || 'agent', this.observationContext))
 
     this.run()
   }

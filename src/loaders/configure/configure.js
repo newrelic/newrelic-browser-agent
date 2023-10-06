@@ -7,7 +7,7 @@ import { redefinePublicPath } from './public-path'
 
 let alreadySetOnce = false // the configure() function can run multiple times in agent lifecycle
 
-export function configure (agentIdentifier, opts = {}, loaderType, forceDrain) {
+export function configure (agentIdentifier, opts = {}, loaderType, observationContext, forceDrain) {
   // eslint-disable-next-line camelcase
   let { init, info, loader_config, runtime = { loaderType }, exposed = true } = opts
   const nr = gosCDN()
@@ -50,6 +50,8 @@ export function configure (agentIdentifier, opts = {}, loaderType, forceDrain) {
   gosNREUMInitializedAgents(agentIdentifier, api, 'api')
   gosNREUMInitializedAgents(agentIdentifier, exposed, 'exposed')
   addToNREUM('activatedFeatures', activatedFeatures)
+
+  if (observationContext) gosNREUMInitializedAgents(agentIdentifier, observationContext, 'observationContext')
 
   return api
 }

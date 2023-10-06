@@ -3,6 +3,7 @@ import { Aggregator } from '../../../common/aggregate/aggregator'
 import { SESSION_EVENTS, SessionEntity, MODE } from '../../../common/session/session-entity'
 import { setConfiguration } from '../../../common/config/config'
 import { configure } from '../../../loaders/configure/configure'
+import { ObservationContext } from '../../../common/context/observation-context'
 
 class LocalMemory {
   constructor (initialState = {}) {
@@ -313,7 +314,8 @@ function wait (ms = 0) {
 }
 
 function primeSessionAndReplay (sess = new SessionEntity({ agentIdentifier, key: 'SESSION', storage: new LocalMemory() })) {
+  const observationContext = new ObservationContext()
   session = sess
-  configure(agentIdentifier, { info, runtime: { session }, init: {} }, 'test', true)
+  configure(agentIdentifier, { info, runtime: { session }, init: {} }, 'test', observationContext, true)
   sr = new SessionReplayAgg(agentIdentifier, new Aggregator({}))
 }

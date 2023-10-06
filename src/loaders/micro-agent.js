@@ -5,7 +5,6 @@ import { configure } from './configure/configure'
 // core files
 import { Aggregator } from '../common/aggregate/aggregator'
 import { gosNREUMInitializedAgents } from '../common/window/nreum'
-import { generateRandomHexString } from '../common/ids/unique-id'
 import { getConfiguration, getConfigurationValue, getInfo, getLoaderConfig, getRuntime } from '../common/config/config'
 import { FEATURE_NAMES } from './features/features'
 import { warn } from '../common/util/console'
@@ -28,14 +27,13 @@ export class MicroAgent extends AgentBase {
    * @param {Object} options - Specifies features and runtime configuration,
    * @param {string=} agentIdentifier - The optional unique ID of the agent.
    */
-  constructor (options, agentIdentifier = generateRandomHexString(16)) {
-    super()
+  constructor (options, agentIdentifier) {
+    super(agentIdentifier)
 
-    this.agentIdentifier = agentIdentifier
     this.sharedAggregator = new Aggregator({ agentIdentifier: this.agentIdentifier })
     this.features = {}
 
-    Object.assign(this, configure(this.agentIdentifier, { ...options, runtime: { isolatedBacklog: true } }, options.loaderType || 'micro-agent'))
+    Object.assign(this, configure(this.agentIdentifier, { ...options, runtime: { isolatedBacklog: true } }, options.loaderType || 'micro-agent', this.observationContext))
 
     /**
      * Starts a set of agent features if not running in "autoStart" mode
@@ -43,7 +41,7 @@ export class MicroAgent extends AgentBase {
      * @param {string|string[]|undefined} name The feature name(s) to start.  If no name(s) are passed, all features will be started
      */
     this.start = features => this.run(features)
-    this.run(nonAutoFeatures.filter(featureName => getConfigurationValue(agentIdentifier, `${featureName}.autoStart`)))
+    this.run(nonAutoFeatures.filter(featureName => getConfigurationValue(this.agentIdentifier, `${featureName}.autoStart`)))
   }
 
   get config () {

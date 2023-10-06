@@ -91,7 +91,7 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
     const gqlOperation = GQL_OPERATIONS[headerKey.toUpperCase()]
     if (gqlOperation) {
       this.params.custom[gqlOperation.prop] = headerVal
-      this.params.custom.framework = gqlOperation.framework
+      this.params.custom['operation-framework'] = gqlOperation.framework
     }
   }
 

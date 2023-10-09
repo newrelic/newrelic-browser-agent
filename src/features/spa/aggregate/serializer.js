@@ -42,7 +42,6 @@ export class Serializer extends SharedContext {
   }
 
   serializeInteraction (root, offset, navTiming, isRouteChange, addString, info) {
-    console.log('SERIALIZE!')
     offset = offset || 0
     var isInitialPage = root.attrs.trigger === 'initialPageLoad'
     var typeIdsByName = {
@@ -65,9 +64,6 @@ export class Serializer extends SharedContext {
       var hasNavTiming = isInitialPage && navTiming.length && typeId === 1
       var children = []
       var attrs = node.attrs
-
-      console.log('node', node, 'ATTRS!', attrs)
-
       var metrics = attrs.metrics
       var params = attrs.params
       var queueTime = info.queueTime

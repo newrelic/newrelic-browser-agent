@@ -13,6 +13,7 @@ import { FEATURE_NAME } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { AggregateBase } from '../../utils/aggregate-base'
+import { parseBatchGQL } from '../instrument/gql'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -70,7 +71,7 @@ export class Aggregate extends AggregateBase {
     const beacon = getInfo(agentIdentifier).errorBeacon
     const proxyBeacon = agentInit.proxy.beacon
 
-    function storeXhr (params, metrics, startTime, endTime, type) {
+    function storeXhr (params, metrics, startTime, endTime, type, bodyString) {
       metrics.time = startTime
 
       // send to session traces
@@ -110,8 +111,7 @@ export class Aggregate extends AggregateBase {
         type,
         startTime,
         endTime,
-        callbackDuration: metrics.cbTime,
-        custom: params.custom
+        callbackDuration: metrics.cbTime
       }
 
       if (xhrContext.dt) {
@@ -119,6 +119,8 @@ export class Aggregate extends AggregateBase {
         event.traceId = xhrContext.dt.traceId
         event.spanTimestamp = xhrContext.dt.timestamp
       }
+
+      event.gql = this.params.gql = parseBatchGQL(bodyString)
 
       // if the ajax happened inside an interaction, hold it until the interaction finishes
       if (this.spaNode) {
@@ -222,7 +224,7 @@ export class Aggregate extends AggregateBase {
         var insert = '2,'
 
         // add custom attributes
-        var attrParts = addCustomAttributes({ ...(getInfo(agentIdentifier).jsAttributes || {}), ...(event.custom || {}) }, this.addString)
+        var attrParts = addCustomAttributes({ ...(getInfo(agentIdentifier).jsAttributes || {}), ...(event.gql || {}) }, this.addString)
         fields.unshift(numeric(attrParts.length))
 
         insert += fields.join(',')

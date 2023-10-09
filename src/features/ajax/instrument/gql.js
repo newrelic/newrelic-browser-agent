@@ -1,13 +1,54 @@
-const GQL_FRAMEWORKS = {
-  APOLLO: 'Apollo'
+export function parseGQL (gql) {
+  const contents = parseGQLContents(gql)
+  if (!contents) return
+  if (typeof contents !== 'object' || !contents.query) return
+
+  const operationName = contents.operationName || 'anonymous'
+  const operationType = contents.query.split(' ')[0]
+  return {
+    operationName, // the operation name of the indiv query
+    operationType, // query, mutation, or subscription,
+    framework: 'GraphQL'
+  }
 }
 
-const GQL_OPERATION_PROPERTY_NAMES = {
-  NAME: 'operation-name',
-  ID: 'operation-id'
+export function parseBatchGQL (arrayOfGql) {
+  let contents = parseGQLContents(arrayOfGql)
+  if (!contents) return
+  if (!Array.isArray(contents)) contents = [contents]
+  const output = contents.map(operation => {
+    return parseGQL(operation)
+  })
+    .filter(x => x) // parseGQL can return undefined if not valid gql
+  if (!output.length) return
+
+  const reduction = output.reduce((acc, next) => {
+    acc.operationName.push(next.operationName)
+    acc.operationType.push(next.operationType)
+    return acc
+  }, {
+    operationName: [],
+    operationType: [],
+    framework: 'GraphQL'
+  })
+
+  return {
+    operationName: reduction.operationName.join(','), // the operation name of the indiv query -- joined by ',' for batched results
+    operationType: reduction.operationType.join(','), // query, mutation, or subscription -- joined by ',' for batched results
+    framework: 'GraphQL'
+  }
 }
 
-export const GQL_OPERATIONS = {
-  'X-APOLLO-OPERATION-NAME': { prop: GQL_OPERATION_PROPERTY_NAMES.NAME, framework: GQL_FRAMEWORKS.APOLLO },
-  'X-APOLLO-OPERATION-ID': { prop: GQL_OPERATION_PROPERTY_NAMES.ID, framework: GQL_FRAMEWORKS.APOLLO }
+export function parseGQLContents (gqlContents) {
+  let contents
+  if (typeof gqlContents !== 'string' && typeof gqlContents !== 'object') return
+  else if (typeof gqlContents === 'string') {
+    try {
+      contents = JSON.parse(gqlContents)
+    } catch {
+      // must be a JSON object
+      return
+    }
+  } else contents = gqlContents
+  return contents
 }

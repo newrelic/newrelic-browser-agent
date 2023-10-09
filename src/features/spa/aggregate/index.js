@@ -316,6 +316,8 @@ export class Aggregate extends AggregateBase {
         attrs.params = this.params
         attrs.metrics = this.metrics
 
+        console.log('XHR RESOLVEd')
+
         node.finish(this.endTime)
         if (!!this.currentNode && !!this.currentNode.interaction) this.currentNode.interaction.checkFinish()
       }
@@ -426,6 +428,8 @@ export class Aggregate extends AggregateBase {
           rxSize: this.rxSize
         }
         attrs.isFetch = true
+
+        console.log('FETCH', attrs)
 
         node.finish(this[FETCH_DONE])
       }

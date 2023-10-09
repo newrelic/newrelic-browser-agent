@@ -42,6 +42,7 @@ export class Serializer extends SharedContext {
   }
 
   serializeInteraction (root, offset, navTiming, isRouteChange, addString, info) {
+    console.log('SERIALIZE!')
     offset = offset || 0
     var isInitialPage = root.attrs.trigger === 'initialPageLoad'
     var typeIdsByName = {
@@ -64,6 +65,9 @@ export class Serializer extends SharedContext {
       var hasNavTiming = isInitialPage && navTiming.length && typeId === 1
       var children = []
       var attrs = node.attrs
+
+      console.log('node', node, 'ATTRS!', attrs)
+
       var metrics = attrs.metrics
       var params = attrs.params
       var queueTime = info.queueTime
@@ -102,7 +106,6 @@ export class Serializer extends SharedContext {
             nullable(attrs.firstPaint, numeric, true) +
             nullable(attrs.firstContentfulPaint, numeric, false)
           )
-
           var attrParts = addCustomAttributes(attrs.custom, addString)
           children = children.concat(attrParts)
           attrCount = attrParts.length
@@ -128,6 +131,11 @@ export class Serializer extends SharedContext {
             nullable(node.dt && node.dt.traceId, addString, true) +
             nullable(node.dt && node.dt.timestamp, numeric, false)
           )
+
+          // add params.gql here
+          var ajaxAttrParts = addCustomAttributes({ ...(params.gql || {}) }, addString)
+          children = children.concat(ajaxAttrParts)
+          attrCount = ajaxAttrParts.length
           break
 
         case 4:

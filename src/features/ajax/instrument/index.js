@@ -16,7 +16,6 @@ import { responseSizeFromXhr } from './response-size'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
-import { GQL_OPERATIONS } from './gql'
 
 var handlers = ['load', 'error', 'abort', 'timeout']
 var handlersLen = handlers.length
@@ -83,18 +82,6 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
   ee.on('fn-start', onFnStart)
   ee.on('fetch-done', onFetchDone)
 
-  // pass any reserved xhr headers that are set by `setRequestHeader` to the params object for processing in the bel serializer later
-  ee.on('setRequestHeader-xhr-start', passReservedHeadersToParams)
-
-  function passReservedHeadersToParams ([headerKey, headerVal]) {
-    this.params.custom ??= {}
-    const gqlOperation = GQL_OPERATIONS[headerKey.toUpperCase()]
-    if (gqlOperation) {
-      this.params.custom[gqlOperation.prop] = headerVal
-      this.params.custom['operation-framework'] = gqlOperation.framework
-    }
-  }
-
   // Setup the context for each new xhr object
   function onNewXhr (xhr) {
     var ctx = this
@@ -106,7 +93,7 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
     ctx.xhrGuids = {}
     ctx.lastSize = null
     ctx.loadCaptureCalled = false
-    ctx.params = this.params || { custom: {} }
+    ctx.params = this.params
     ctx.metrics = this.metrics || {}
 
     xhr.addEventListener('load', function (event) {
@@ -169,6 +156,8 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
     }
 
     this.startTime = now()
+
+    this.body = data
 
     this.listener = function (evt) {
       try {
@@ -342,6 +331,7 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
     var method = ('' + ((target && target instanceof origRequest && target.method) ||
       opts.method || 'GET')).toUpperCase()
     this.params.method = method
+    this.body = opts.body
 
     this.txSize = dataSize(opts.body) || 0
   }
@@ -367,15 +357,7 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
       duration: now() - this.startTime
     }
 
-    // pass any reserved fetch headers to the params object for processing in the bel serializer later
-    if (this.opts.headers) {
-      const passReservedFetchHeadersToParams = passReservedHeadersToParams.bind(this)
-      Object.entries(this.opts.headers).forEach(([key, val]) => {
-        passReservedFetchHeadersToParams([key, val])
-      })
-    }
-
-    handler('xhr', [this.params, metrics, this.startTime, this.endTime, 'fetch'], this, FEATURE_NAMES.ajax)
+    handler('xhr', [this.params, metrics, this.startTime, this.endTime, 'fetch', this.body], this, FEATURE_NAMES.ajax)
   }
 
   // Create report for XHR request that has finished

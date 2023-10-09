@@ -1,0 +1,16 @@
+{
+  "name": "browser-agent-wrapper",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "webpack --config webpack.config.js --mode=production --node-env=production"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@apollo/client": "^3.8.5",
+    "@newrelic/browser-agent": "file:../../../temp/newrelic-browser-agent-1.243.1.tgz",
+    "graphql": "^16.8.1"
+  }
+}

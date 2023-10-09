@@ -94,6 +94,7 @@ export class Aggregate extends AggregateBase {
 
   addTiming (name, value, attrs) {
     attrs = attrs || {}
+    addConnectionAttributes(attrs)
 
     // If cls was set to another value by `onCLS`, then it's supported and is attached onto any timing but is omitted until such time.
     /*
@@ -174,4 +175,14 @@ export class Aggregate extends AggregateBase {
 
     return payload
   }
+}
+
+function addConnectionAttributes (obj) {
+  var connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection // to date, both window & worker shares the same support for connection
+  if (!connection) return
+
+  if (connection.type) obj['net-type'] = connection.type
+  if (connection.effectiveType) obj['net-etype'] = connection.effectiveType
+  if (connection.rtt) obj['net-rtt'] = connection.rtt
+  if (connection.downlink) obj['net-dlink'] = connection.downlink
 }

@@ -13,8 +13,7 @@ if (isBrowserScope) {
     firstInputDelay.update({
       value: entries[0].startTime,
       entries,
-      attrs: { type: entries[0].name, fid: Math.round(value) },
-      shouldAddConnectionAttributes: true
+      attrs: { type: entries[0].name, fid: Math.round(value) }
     })
   })
 }

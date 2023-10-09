@@ -120,6 +120,7 @@ export class Aggregate extends AggregateBase {
         event.spanTimestamp = xhrContext.dt.timestamp
       }
 
+      // parsed from the AJAX body, looking for operationName param & parsing query for operationType
       event.gql = this.params.gql = parseBatchGQL(bodyString)
 
       // if the ajax happened inside an interaction, hold it until the interaction finishes
@@ -224,6 +225,7 @@ export class Aggregate extends AggregateBase {
         var insert = '2,'
 
         // add custom attributes
+        // gql decorators are added as custom attributes to alleviate need for new BEL schema
         var attrParts = addCustomAttributes({ ...(getInfo(agentIdentifier).jsAttributes || {}), ...(event.gql || {}) }, this.addString)
         fields.unshift(numeric(attrParts.length))
 

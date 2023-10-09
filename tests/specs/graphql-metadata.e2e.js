@@ -26,7 +26,7 @@ describe.withBrowsersMatching(notIE)('GraphQL metadata is appended to relevant a
         value: 'initialPageLoad'
       },
       { type: 'stringAttribute', key: 'operationType', value: 'query' },
-      { type: 'stringAttribute', key: 'framework', value: 'GraphQL' }
+      { type: 'stringAttribute', key: 'operationFramework', value: 'GraphQL' }
     ]))
 
     // operationName: `standalone` is called when we execute `window.sendGQL()` (standalone ajax)
@@ -37,7 +37,7 @@ describe.withBrowsersMatching(notIE)('GraphQL metadata is appended to relevant a
         value: 'standalone'
       },
       { type: 'stringAttribute', key: 'operationType', value: 'query' },
-      { type: 'stringAttribute', key: 'framework', value: 'GraphQL' }
+      { type: 'stringAttribute', key: 'operationFramework', value: 'GraphQL' }
     ]))
   })
 })

@@ -1,3 +1,14 @@
+/**
+ * @typedef {object} GQLMetadata
+ * @property {string} operationName Name of the operation
+ * @property {string} operationType Type of the operation
+ * @property {string} operationFramework Framework responsible for the operation
+ */
+
+/**
+ * @param {string|Object} gql The GraphQL object body sent to a GQL server
+ * @returns {GQLMetadata}
+ */
 export function parseGQL (gql) {
   const contents = parseGQLContents(gql)
   if (!contents) return
@@ -8,7 +19,7 @@ export function parseGQL (gql) {
   return {
     operationName, // the operation name of the indiv query
     operationType, // query, mutation, or subscription,
-    framework: 'GraphQL'
+    operationFramework: 'GraphQL'
   }
 }
 
@@ -29,13 +40,13 @@ export function parseBatchGQL (arrayOfGql) {
   }, {
     operationName: [],
     operationType: [],
-    framework: 'GraphQL'
+    operationFramework: 'GraphQL'
   })
 
   return {
     operationName: reduction.operationName.join(','), // the operation name of the indiv query -- joined by ',' for batched results
     operationType: reduction.operationType.join(','), // query, mutation, or subscription -- joined by ',' for batched results
-    framework: 'GraphQL'
+    operationFramework: 'GraphQL'
   }
 }
 

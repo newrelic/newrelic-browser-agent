@@ -107,7 +107,7 @@ export class Agent extends AgentBase {
    * If you are sending the same event object to New Relic as a PageAction, omit the TYPE attribute. (type is a string to describe what type of event you are marking inside of a session trace.) If included, it will override the event type and cause the PageAction event to be sent incorrectly. Instead, use the name attribute for event information.
    */
   addToTrace (customAttributes) {
-    warn('Call to agent api addToTrace failed. The page action feature is not currently initialized.')
+    warn('Call to agent api addToTrace failed. The session trace feature is not currently initialized.')
   }
 
   /**

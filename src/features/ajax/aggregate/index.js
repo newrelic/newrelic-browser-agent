@@ -13,7 +13,7 @@ import { FEATURE_NAME } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { AggregateBase } from '../../utils/aggregate-base'
-import { parseBatchGQL } from '../instrument/gql'
+import { parseBatchGQL } from './gql'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME

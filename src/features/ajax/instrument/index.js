@@ -93,7 +93,7 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
     ctx.xhrGuids = {}
     ctx.lastSize = null
     ctx.loadCaptureCalled = false
-    ctx.params = this.params
+    ctx.params = this.params || {}
     ctx.metrics = this.metrics || {}
 
     xhr.addEventListener('load', function (event) {

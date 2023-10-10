@@ -27,25 +27,21 @@ export function parseBatchGQL (arrayOfGql) {
   let contents = parseGQLContents(arrayOfGql)
   if (!contents) return
   if (!Array.isArray(contents)) contents = [contents]
-  const output = contents.map(operation => {
-    return parseGQL(operation)
-  })
-    .filter(x => x) // parseGQL can return undefined if not valid gql
-  if (!output.length) return
 
-  const reduction = output.reduce((acc, next) => {
-    acc.operationName.push(next.operationName)
-    acc.operationType.push(next.operationType)
-    return acc
-  }, {
-    operationName: [],
-    operationType: [],
-    operationFramework: 'GraphQL'
-  })
+  const opNames = []
+  const opTypes = []
+  for (let content of contents) {
+    const operation = parseGQL(content)
+    if (!operation) continue
 
+    opNames.push(operation.operationName)
+    opTypes.push(operation.operationType)
+  }
+
+  if (!opTypes.length) return
   return {
-    operationName: reduction.operationName.join(','), // the operation name of the indiv query -- joined by ',' for batched results
-    operationType: reduction.operationType.join(','), // query, mutation, or subscription -- joined by ',' for batched results
+    operationName: opNames.join(','), // the operation name of the indiv query -- joined by ',' for batched results
+    operationType: opTypes.join(','), // query, mutation, or subscription -- joined by ',' for batched results
     operationFramework: 'GraphQL'
   }
 }

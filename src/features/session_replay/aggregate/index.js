@@ -249,7 +249,10 @@ export class Aggregate extends AggregateBase {
   prepareHarvest () {
     if (this.events.length === 0 || (this.mode !== MODE.FULL && !this.blocked)) return
     const payload = this.getHarvestContents()
-
+    if (!payload.body.length) {
+      this.clearBuffer()
+      return
+    }
     if (this.shouldCompress) {
       payload.body = gzipper(u8(stringify(payload.body)))
       this.scheduler.opts.gzip = true
@@ -268,6 +271,16 @@ export class Aggregate extends AggregateBase {
     const info = getInfo(this.agentIdentifier)
 
     if (this.backloggedEvents.length) this.events = [...this.backloggedEvents, ...this.events]
+
+    // do not let the first node be a full snapshot node, since this NEEDS to be preceded by a meta node
+    // we will manually inject it if this happens
+    const payloadStartsWithFullSnapshot = this.events[0]?.type === RRWEB_EVENT_TYPES.FullSnapshot
+    if (payloadStartsWithFullSnapshot && !!this.lastMeta) {
+      this.hasMeta = true
+      this.events.unshift(this.lastMeta) // --> pushed the meta from a previous payload into newer payload... but it still has old timestamps
+      this.lastMeta = undefined
+    }
+
     // do not let the last node be a meta node, since this NEEDS to precede a snapshot
     // we will manually inject it later if we find a payload that is missing a meta node
     const payloadEndsWithMeta = this.events[this.events.length - 1]?.type === RRWEB_EVENT_TYPES.Meta
@@ -277,16 +290,8 @@ export class Aggregate extends AggregateBase {
       this.hasMeta = !!this.events.find(x => x.type === RRWEB_EVENT_TYPES.Meta)
     }
 
-    // do not let the first node be a full snapshot node, since this NEEDS to be preceded by a meta node
-    // we will manually inject it if this happens
-    const payloadStartsWithFullSnapshot = this.events[0]?.type === RRWEB_EVENT_TYPES.FullSnapshot
-    if (payloadStartsWithFullSnapshot) {
-      this.hasMeta = true
-      this.events.unshift(this.lastMeta)
-    }
-
-    const firstEventTimestamp = this.events[0]?.timestamp
-    const lastEventTimestamp = this.events[this.events.length - 1]?.timestamp
+    const firstEventTimestamp = this.events[0]?.timestamp // from rrweb node
+    const lastEventTimestamp = this.events[this.events.length - 1]?.timestamp // from rrweb node
     const firstTimestamp = firstEventTimestamp || this.cycleTimestamp
     const lastTimestamp = lastEventTimestamp || getRuntime(this.agentIdentifier).offset + globalScope.performance.now()
     return {
@@ -342,9 +347,6 @@ export class Aggregate extends AggregateBase {
       warn('Recording library was never imported')
       return this.abort(ABORT_REASONS.IMPORT)
     }
-    this.clearTimestamps()
-    // set the fallbacks as early as possible
-    this.setTimestamps()
     this.recording = true
     const { block_class, ignore_class, mask_text_class, block_selector, mask_input_options, mask_text_selector, mask_all_inputs, inline_images, inline_stylesheet, collect_fonts } = getConfigurationValue(this.agentIdentifier, 'session_replay')
     // set up rrweb configurations for maximum privacy --
@@ -394,7 +396,6 @@ export class Aggregate extends AggregateBase {
     // meta event
     if (event.type === RRWEB_EVENT_TYPES.Meta) {
       this.hasMeta = true
-      this.lastMeta = event
     }
     // snapshot event
     if (event.type === RRWEB_EVENT_TYPES.FullSnapshot) {

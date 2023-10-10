@@ -383,7 +383,7 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
     // Always send cbTime, even if no noticeable time was taken.
     metrics.cbTime = this.cbTime
 
-    handler('xhr', [params, metrics, this.startTime, this.endTime, 'xhr'], this, FEATURE_NAMES.ajax)
+    handler('xhr', [params, metrics, this.startTime, this.endTime, 'xhr', this.body], this, FEATURE_NAMES.ajax)
   }
 
   function captureXhrData (ctx, xhr) {

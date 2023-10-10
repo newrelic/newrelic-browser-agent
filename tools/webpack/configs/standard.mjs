@@ -91,24 +91,21 @@ export default (env) => {
           {
             test: /\.js$/,
             exclude: /(node_modules)/,
-            use: env.coverage
-              ? [
-                  { loader: './tools/webpack/loaders/istanbul/index.mjs' },
-                  {
-                    loader: 'babel-loader',
-                    options: {
-                      envName: 'webpack'
-                    }
-                  }
-                ]
-              : [
-                  {
-                    loader: 'babel-loader',
-                    options: {
-                      envName: 'webpack'
-                    }
-                  }
-                ]
+            use: [
+              ...(env.coverage ? [{ loader: './tools/webpack/loaders/istanbul/index.mjs' }] : []),
+              {
+                loader: 'babel-loader',
+                options: {
+                  envName: 'webpack'
+                }
+              },
+              {
+                loader: './tools/webpack/loaders/develblock/index.mjs',
+                options: {
+                  enabled: env.SUBVERSION === 'PROD'
+                }
+              }
+            ]
           }
         ]
       },

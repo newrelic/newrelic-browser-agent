@@ -47,6 +47,28 @@ export default (env) => {
     return merge(commonConfig(env, entryGroup.asyncChunkName), {
       target: 'webworker',
       entry: entryGroup.entry,
+      module: {
+        rules: [
+          {
+            test: /\.js$/,
+            exclude: /(node_modules)/,
+            use: [
+              {
+                loader: 'babel-loader',
+                options: {
+                  envName: 'webpack'
+                }
+              },
+              {
+                loader: './tools/webpack/loaders/develblock/index.mjs',
+                options: {
+                  enabled: env.SUBVERSION === 'PROD'
+                }
+              }
+            ]
+          }
+        ]
+      },
       plugins: [
         ...entryGroup.plugins,
         new BundleAnalyzerPlugin({

@@ -1,13 +1,15 @@
 const process = require('process')
+const nrbaParser = require('./tools/babel/plugins/nrba-parser')
 
 module.exports = function (api, ...args) {
   api.cache(true)
 
+  // These environment variables are set by webpack and not present for npm package builds
   if (!process.env.BUILD_VERSION) {
     process.env.BUILD_VERSION = process.env.VERSION_OVERRIDE || require('./package.json').version
   }
   if (!process.env.BUILD_ENV) {
-    process.env.BUILD_ENV = 'CDN'
+    process.env.BUILD_ENV = 'NPM'
   }
 
   const ignore = [
@@ -91,6 +93,9 @@ module.exports = function (api, ...args) {
         ]
       ],
       plugins: [
+        nrbaParser({
+          removeDevelBlocks: true
+        }),
         [
           './tools/babel/plugins/transform-import',
           {
@@ -110,6 +115,9 @@ module.exports = function (api, ...args) {
         ]
       ],
       plugins: [
+        nrbaParser({
+          removeDevelBlocks: true
+        }),
         [
           './tools/babel/plugins/transform-import',
           {

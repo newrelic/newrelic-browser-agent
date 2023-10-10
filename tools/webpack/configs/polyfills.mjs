@@ -101,6 +101,12 @@ export default (env) => {
                 envName: 'webpack-ie11'
               }
             }
+          },
+          {
+            loader: './tools/webpack/loaders/develblock/index.mjs',
+            options: {
+              enabled: env.SUBVERSION === 'PROD'
+            }
           }
         ]
       },

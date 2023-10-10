@@ -129,9 +129,11 @@ export class Serializer extends SharedContext {
           )
 
           // add params.gql here
-          var ajaxAttrParts = addCustomAttributes({ ...(params.gql || {}) }, addString)
-          children = children.concat(ajaxAttrParts)
-          attrCount = ajaxAttrParts.length
+          if (Object.keys(params?.gql || {}).length) {
+            var ajaxAttrParts = addCustomAttributes(params.gql, addString)
+            children = children.concat(ajaxAttrParts)
+            attrCount = ajaxAttrParts.length
+          }
           break
 
         case 4:

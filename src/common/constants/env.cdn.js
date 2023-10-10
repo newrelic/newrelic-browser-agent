@@ -18,3 +18,8 @@ export const BUILD_ENV = process.env.BUILD_ENV
  * Exposes the distribution method of the agent
  */
 export const DIST_METHOD = 'CDN'
+
+/**
+ * Exposes the lib version of rrweb
+ */
+export const RRWEB_VERSION = process.env.RRWEB_VERSION

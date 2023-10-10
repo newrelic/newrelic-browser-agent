@@ -24,9 +24,7 @@ import { globalScope } from '../../../common/constants/runtime'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { handle } from '../../../common/event-emitter/handle'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
-
-// would be better to get this dynamically in some way
-export const RRWEB_VERSION = '2.0.0-alpha.8'
+import { RRWEB_VERSION } from '../../../common/constants/env'
 
 export const AVG_COMPRESSION = 0.12
 

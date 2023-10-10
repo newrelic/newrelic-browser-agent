@@ -5,6 +5,12 @@
  * @property {string} operationFramework Framework responsible for the operation
  */
 
+export const GQL_TYPES = {
+  QUERY: true,
+  MUTATION: true,
+  SUBSCRIPTION: true
+}
+
 /**
  * @param {string|Object} gql The GraphQL object body sent to a GQL server
  * @returns {GQLMetadata}
@@ -12,10 +18,11 @@
 export function parseGQL (gql) {
   const contents = parseGQLContents(gql)
   if (!contents) return
-  if (typeof contents !== 'object' || !contents.query) return
+  if (typeof contents !== 'object' || !contents.query || typeof contents.query !== 'string') return
 
   const operationName = contents.operationName || 'anonymous'
-  const operationType = contents.query.split(' ')[0]
+  const operationType = contents.query.trim().split(' ')[0]
+  if (!GQL_TYPES[operationType.toUpperCase()]) return
   return {
     operationName, // the operation name of the indiv query
     operationType, // query, mutation, or subscription,

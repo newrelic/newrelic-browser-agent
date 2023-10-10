@@ -63,6 +63,9 @@ const model = () => {
       harvestTimeSeconds: 60,
       sampling_rate: 50, // float from 0 - 100
       error_sampling_rate: 50, // float from 0 - 100
+      collect_fonts: false, // serialize fonts for collection without public asset url, this is currently broken in RRWeb -- https://github.com/rrweb-io/rrweb/issues/1304.  When fixed, revisit with test cases
+      inline_images: false, // serialize images for collection without public asset url
+      inline_stylesheet: true, // serialize css for collection without public asset url
       // recording config settings
       mask_all_inputs: true,
       // this has a getter/setter to facilitate validation of the selectors

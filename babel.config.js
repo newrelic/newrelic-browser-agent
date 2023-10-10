@@ -1,14 +1,17 @@
 const process = require('process')
+const pkg = require('./package.json')
 
 module.exports = function (api, ...args) {
   api.cache(true)
 
   if (!process.env.BUILD_VERSION) {
-    process.env.BUILD_VERSION = process.env.VERSION_OVERRIDE || require('./package.json').version
+    process.env.BUILD_VERSION = process.env.VERSION_OVERRIDE || pkg.version
   }
   if (!process.env.BUILD_ENV) {
     process.env.BUILD_ENV = 'CDN'
   }
+
+  process.env.RRWEB_VERSION = pkg.dependencies.rrweb
 
   const ignore = [
     '**/*.test.js',
@@ -26,7 +29,7 @@ module.exports = function (api, ...args) {
     [
       'transform-inline-environment-variables',
       {
-        include: ['BUILD_VERSION', 'BUILD_ENV']
+        include: ['BUILD_VERSION', 'BUILD_ENV', 'RRWEB_VERSION']
       }
     ]
   ]

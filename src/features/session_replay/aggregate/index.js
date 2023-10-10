@@ -24,9 +24,7 @@ import { globalScope } from '../../../common/constants/runtime'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { handle } from '../../../common/event-emitter/handle'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
-
-// would be better to get this dynamically in some way
-export const RRWEB_VERSION = '2.0.0-alpha.8'
+import { RRWEB_VERSION } from '../../../common/constants/env'
 
 export const AVG_COMPRESSION = 0.12
 
@@ -346,7 +344,7 @@ export class Aggregate extends AggregateBase {
     // set the fallbacks as early as possible
     this.setTimestamps()
     this.recording = true
-    const { block_class, ignore_class, mask_text_class, block_selector, mask_input_options, mask_text_selector, mask_all_inputs } = getConfigurationValue(this.agentIdentifier, 'session_replay')
+    const { block_class, ignore_class, mask_text_class, block_selector, mask_input_options, mask_text_selector, mask_all_inputs, inline_images, inline_stylesheet, collect_fonts } = getConfigurationValue(this.agentIdentifier, 'session_replay')
     // set up rrweb configurations for maximum privacy --
     // https://newrelic.atlassian.net/wiki/spaces/O11Y/pages/2792293280/2023+02+28+Browser+-+Session+Replay#Configuration-options
     const stop = recorder({
@@ -358,6 +356,9 @@ export class Aggregate extends AggregateBase {
       maskInputOptions: mask_input_options,
       maskTextSelector: mask_text_selector,
       maskAllInputs: mask_all_inputs,
+      inlineImages: inline_images,
+      inlineStylesheet: inline_stylesheet,
+      collectFonts: collect_fonts,
       checkoutEveryNms: CHECKOUT_MS[this.mode]
     })
 

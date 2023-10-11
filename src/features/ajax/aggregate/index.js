@@ -121,7 +121,7 @@ export class Aggregate extends AggregateBase {
       }
 
       // parsed from the AJAX body, looking for operationName param & parsing query for operationType
-      event.gql = params.gql = parseBatchGQL(parseGQLContents(this.body)) || parseGQL(parseGQLQueryString(this.parsedOrigin.search))
+      event.gql = params.gql = parseBatchGQL(parseGQLContents(this.body)) || parseGQL(parseGQLQueryString(this?.parsedOrigin?.search))
 
       // if the ajax happened inside an interaction, hold it until the interaction finishes
       if (this.spaNode) {

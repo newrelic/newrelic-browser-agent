@@ -21,8 +21,8 @@ export function parseGQL (gql) {
   if (typeof contents !== 'object' || !contents.query || typeof contents.query !== 'string') return
 
   const operationName = contents.operationName || 'anonymous'
-  const operationType = contents.query.trim().split(' ')[0]
-  if (!GQL_TYPES[operationType.toUpperCase()]) return
+  const operationType = (contents.query.trim().match(/^[a-zA-Z]+/)?.[0] || '').toUpperCase()
+  if (!operationType || !GQL_TYPES[operationType]) return
   return {
     operationName, // the operation name of the indiv query
     operationType, // query, mutation, or subscription,

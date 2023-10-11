@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.244.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.243.1...v1.244.0) (2023-10-10)
+
+
+### Features
+
+* Add Session Replay configurations to collect inline assets ([#763](https://github.com/newrelic/newrelic-browser-agent/issues/763)) ([cef08dd](https://github.com/newrelic/newrelic-browser-agent/commit/cef08dd3f0cd99735dbc719e3c075fe83bbc6219))
+* Bump rrweb to 2.0.0.11 and make constant dynamic at build time ([#770](https://github.com/newrelic/newrelic-browser-agent/issues/770)) ([9ea84cf](https://github.com/newrelic/newrelic-browser-agent/commit/9ea84cf247b31af544e2ea7ed0873241ff82eebc))
+* Ensure 15 second minimum error buffer when possible ([#759](https://github.com/newrelic/newrelic-browser-agent/issues/759)) ([8506803](https://github.com/newrelic/newrelic-browser-agent/commit/8506803eaba27b7c603432f8ba0c909b677d3c3b))
+
+
+### Bug Fixes
+
+* Fix invalid timestamps ([#771](https://github.com/newrelic/newrelic-browser-agent/issues/771)) ([bc5a57c](https://github.com/newrelic/newrelic-browser-agent/commit/bc5a57c8c42c62c311e24b77f00dc1225a3b5873))
+* Isolate browser interaction node ([#758](https://github.com/newrelic/newrelic-browser-agent/issues/758)) ([b9e8277](https://github.com/newrelic/newrelic-browser-agent/commit/b9e82773c67d710e0f6dc1f892908afc8be004cd))
+
 ## [1.243.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.243.0...v1.243.1) (2023-10-04)
 
 

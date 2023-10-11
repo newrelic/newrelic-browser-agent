@@ -35,6 +35,39 @@ const sampleGQLQueryAnonymous = {
       }`
 }
 
+const invalidGQLQueryType = {
+  query: `invalidtype ValidName {
+        locations {
+          id
+          name
+          description
+          __typename
+        }
+      }`
+}
+
+const invalidGQLQueryName = {
+  query: `query invalidName! {
+        locations {
+          id
+          name
+          description
+          __typename
+        }
+      }`
+}
+
+const invalidGQLQueryNoType = {
+  query: `{
+        locations {
+          id
+          name
+          description
+          __typename
+        }
+      }`
+}
+
 describe('gql.js', () => {
   describe('parseGQL', () => {
     test('Accepts only GQL formatted data', () => {
@@ -47,15 +80,18 @@ describe('gql.js', () => {
       expect(parseGQL(JSON.stringify({ invalidObject: true }))).toBeUndefined()
       expect(parseGQL(true)).toBeUndefined()
       expect(parseGQL([sampleGQLQuery])).toBeUndefined() // expects a single object
+      expect(parseGQL(invalidGQLQueryType)).toBeUndefined() // will fail if type is invalid
+      expect(parseGQL(invalidGQLQueryNoType)).toBeUndefined() // will fail if type is invalid
       // valid objects
       expect(parseGQL(sampleGQLQuery)).not.toBeUndefined()
       expect(parseGQL(sampleGQLQueryAnonymous)).not.toBeUndefined()
       expect(parseGQL(sampleGQLMutation)).not.toBeUndefined()
+      expect(parseGQL(invalidGQLQueryName)).not.toBeUndefined()
       // valid json string
       expect(parseGQL(JSON.stringify(sampleGQLQuery))).not.toBeUndefined()
     })
 
-    test('Returns meta object when valid', () => {
+    test('Returns meta correctly', () => {
       const querymeta = parseGQL(sampleGQLQuery)
       expect(querymeta.operationName).toEqual(sampleGQLQuery.operationName)
       expect(querymeta.operationType).toEqual('query')
@@ -70,6 +106,17 @@ describe('gql.js', () => {
       expect(mutationmeta.operationName).toEqual(sampleGQLMutation.operationName)
       expect(mutationmeta.operationType).toEqual('mutation')
       expect(mutationmeta.operationFramework).toEqual('GraphQL')
+
+      const invalidtypemeta = parseGQL(invalidGQLQueryType)
+      expect(invalidtypemeta).toBeUndefined()
+
+      const invalidnotypemeta = parseGQL(invalidGQLQueryNoType)
+      expect(invalidnotypemeta).toBeUndefined()
+
+      const invalidnamemeta = parseGQL(invalidGQLQueryName)
+      expect(invalidnamemeta.operationName).toEqual('invalidName')
+      expect(invalidnamemeta.operationType).toEqual('query')
+      expect(invalidnamemeta.operationFramework).toEqual('GraphQL')
     })
   })
 
@@ -93,7 +140,7 @@ describe('gql.js', () => {
       expect(parseBatchGQL(JSON.stringify([sampleGQLQuery, sampleGQLQueryAnonymous, sampleGQLMutation]))).not.toBeUndefined() // expects a single object
     })
 
-    test('Returns meta object when valid', () => {
+    test('Returns meta correctly', () => {
       const querymeta = parseBatchGQL(sampleGQLQuery)
       expect(querymeta.operationName).toEqual(sampleGQLQuery.operationName)
       expect(querymeta.operationType).toEqual('query')
@@ -113,6 +160,11 @@ describe('gql.js', () => {
       expect(batchmeta.operationName).toEqual('GetLocations1,Anonymous,SetLocations1')
       expect(batchmeta.operationType).toEqual('query,query,mutation')
       expect(batchmeta.operationFramework).toEqual('GraphQL')
+
+      const batchmixedmeta = parseBatchGQL([sampleGQLQuery, invalidGQLQueryType, invalidGQLQueryNoType, invalidGQLQueryName, sampleGQLMutation])
+      expect(batchmixedmeta.operationName).toEqual('GetLocations1,invalidName,SetLocations1') // omits the invalid types, corrects the invalid name (doesnt include !)
+      expect(batchmixedmeta.operationType).toEqual('query,query,mutation')
+      expect(batchmixedmeta.operationFramework).toEqual('GraphQL')
     })
   })
 })

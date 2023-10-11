@@ -23,19 +23,21 @@ export function parseUrl (url) {
   var location = globalScope?.location
   var ret = {}
 
-  if (isBrowserScope) {
+  try {
+    urlEl = new URL(url, location.href)
+  } catch (err) {
+    if (isBrowserScope) {
     // Use an anchor dom element to resolve the url natively.
-    urlEl = document.createElement('a')
-    urlEl.href = url
-  } else {
-    try {
-      urlEl = new URL(url, location.href)
-    } catch (err) {
+      urlEl = document.createElement('a')
+      urlEl.href = url
+    } else {
       return ret
     }
   }
 
   ret.port = urlEl.port
+
+  ret.search = urlEl.search
 
   var firstSplit = urlEl.href.split('://')
 

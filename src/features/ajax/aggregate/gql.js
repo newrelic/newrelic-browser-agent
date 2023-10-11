@@ -10,7 +10,8 @@
  * @returns {GQLMetadata}
  */
 export function parseGQL (gql) {
-  const contents = parseGQLContents(gql)
+  if (!gql) return
+  const contents = gql
   if (typeof contents !== 'object' || !contents.query || typeof contents.query !== 'string') return
 
   /** parses gql query string and returns [fullmatch, type match, name match] */
@@ -26,8 +27,8 @@ export function parseGQL (gql) {
 }
 
 export function parseBatchGQL (arrayOfGql) {
-  let contents = parseGQLContents(arrayOfGql)
-  if (!contents) return
+  if (!arrayOfGql) return
+  let contents = arrayOfGql
   if (!Array.isArray(contents)) contents = [contents]
 
   const opNames = []
@@ -50,7 +51,7 @@ export function parseBatchGQL (arrayOfGql) {
 
 export function parseGQLContents (gqlContents) {
   let contents
-  if (typeof gqlContents !== 'string' && typeof gqlContents !== 'object') return
+  if (!gqlContents || (typeof gqlContents !== 'string' && typeof gqlContents !== 'object')) return
   else if (typeof gqlContents === 'string') {
     try {
       contents = JSON.parse(gqlContents)
@@ -59,5 +60,25 @@ export function parseGQLContents (gqlContents) {
       return
     }
   } else contents = gqlContents
+
+  let isValid = false
+  if (Array.isArray(contents)) isValid = contents.every(x => validateGQLObject(x))
+  else isValid = validateGQLObject(contents)
+  if (!isValid) return
+
   return contents
+}
+
+export function parseGQLQueryString (gqlQueryString) {
+  try {
+    if (!gqlQueryString || typeof gqlQueryString !== 'string') return
+    const params = new URLSearchParams(gqlQueryString)
+    return parseGQLContents(Object.fromEntries(params))
+  } catch (err) {
+    // do nothing for now?
+  }
+}
+
+function validateGQLObject (obj) {
+  return !(typeof obj !== 'object' || !obj.query || typeof obj.query !== 'string')
 }

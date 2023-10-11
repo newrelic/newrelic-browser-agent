@@ -13,7 +13,7 @@ import { FEATURE_NAME } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { AggregateBase } from '../../utils/aggregate-base'
-import { parseBatchGQL } from './gql'
+import { parseBatchGQL, parseGQL, parseGQLContents, parseGQLQueryString } from './gql'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -71,7 +71,7 @@ export class Aggregate extends AggregateBase {
     const beacon = getInfo(agentIdentifier).errorBeacon
     const proxyBeacon = agentInit.proxy.beacon
 
-    function storeXhr (params, metrics, startTime, endTime, type, bodyString) {
+    function storeXhr (params, metrics, startTime, endTime, type) {
       metrics.time = startTime
 
       // send to session traces
@@ -121,7 +121,7 @@ export class Aggregate extends AggregateBase {
       }
 
       // parsed from the AJAX body, looking for operationName param & parsing query for operationType
-      event.gql = params.gql = parseBatchGQL(bodyString)
+      event.gql = params.gql = parseBatchGQL(parseGQLContents(this.body)) || parseGQL(parseGQLQueryString(this.parsedOrigin.search))
 
       // if the ajax happened inside an interaction, hold it until the interaction finishes
       if (this.spaNode) {

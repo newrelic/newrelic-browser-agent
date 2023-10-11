@@ -5,27 +5,19 @@
  * @property {string} operationFramework Framework responsible for the operation
  */
 
-export const GQL_TYPES = {
-  query: true,
-  mutation: true,
-  subscription: true
-}
-
 /**
  * @param {string|Object} gql The GraphQL object body sent to a GQL server
  * @returns {GQLMetadata}
  */
 export function parseGQL (gql) {
   const contents = parseGQLContents(gql)
-  if (!contents) return
   if (typeof contents !== 'object' || !contents.query || typeof contents.query !== 'string') return
 
-  // const operationName = contents.operationName || 'anonymous'
-  const trimmedQuery = contents.query.trim()
-  let operationType = (trimmedQuery.match(/^[a-zA-Z]+/)?.[0] || '')
-  let operationName = contents.operationName || (trimmedQuery.match(new RegExp(`^${operationType} [a-zA-Z]+`, 'i'))?.[0] || '').replace(operationType + ' ', '') || 'Anonymous'
-  operationType = operationType?.toLowerCase()
-  if (!operationType || !GQL_TYPES[operationType]) return
+  /** parses gql query string and returns [fullmatch, type match, name match] */
+  const matches = contents.query.trim().match(/^(query|mutation|subscription)\s?(\w*)/)
+  const operationType = matches?.[1]
+  if (!operationType) return
+  const operationName = contents.operationName || matches?.[2] || 'Anonymous'
   return {
     operationName, // the operation name of the indiv query
     operationType, // query, mutation, or subscription,

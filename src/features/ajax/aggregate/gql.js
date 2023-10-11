@@ -6,9 +6,9 @@
  */
 
 export const GQL_TYPES = {
-  QUERY: true,
-  MUTATION: true,
-  SUBSCRIPTION: true
+  query: true,
+  mutation: true,
+  subscription: true
 }
 
 /**
@@ -20,8 +20,11 @@ export function parseGQL (gql) {
   if (!contents) return
   if (typeof contents !== 'object' || !contents.query || typeof contents.query !== 'string') return
 
-  const operationName = contents.operationName || 'anonymous'
-  const operationType = (contents.query.trim().match(/^[a-zA-Z]+/)?.[0] || '').toUpperCase()
+  // const operationName = contents.operationName || 'anonymous'
+  const trimmedQuery = contents.query.trim()
+  let operationType = (trimmedQuery.match(/^[a-zA-Z]+/)?.[0] || '')
+  let operationName = contents.operationName || (trimmedQuery.match(new RegExp(`^${operationType} [a-zA-Z]+`, 'i'))?.[0] || '').replace(operationType + ' ', '') || 'Anonymous'
+  operationType = operationType?.toLowerCase()
   if (!operationType || !GQL_TYPES[operationType]) return
   return {
     operationName, // the operation name of the indiv query

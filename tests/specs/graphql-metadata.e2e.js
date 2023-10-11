@@ -1,7 +1,7 @@
-import { notIE, notIOS } from '../../tools/browser-matcher/common-matchers.mjs'
+import { notIE, notMobile } from '../../tools/browser-matcher/common-matchers.mjs'
 
-// ios with saucelabs does not honor the window load to induce ajax into ixn reliably. omitting from test for now until more elegant solution is reached.
-describe.withBrowsersMatching([notIE, notIOS])('GraphQL metadata is appended to relevant ajax calls', () => {
+// ios+android with saucelabs does not honor the window load to induce ajax into ixn reliably. omitting from test for now until more elegant solution is reached.
+describe.withBrowsersMatching([notIE, notMobile])('GraphQL metadata is appended to relevant ajax calls', () => {
   it('adds GQL metadata to both standalone and interation ajax calls', async () => {
     await browser.url(await browser.testHandle.assetURL('test-builds/library-wrapper/apollo-client.html', { init: { ajax: { block_internal: false } } })) // Setup expects before loading the page
 

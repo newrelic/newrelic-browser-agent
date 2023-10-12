@@ -10,7 +10,7 @@ export class AgentBase {
    * @param {object} [attributes] JSON object with one or more key/value pairs. For example: {key:"value"}. The key is reported as its own PageAction attribute with the specified values.
    */
   addPageAction (name, attributes) {
-    warn('Call to agent api addPageAction failed. The session trace feature is not currently initialized.')
+    warn('Call to agent api addPageAction failed. The page action feature is not currently initialized.')
   }
 
   /**
@@ -90,13 +90,13 @@ export class AgentBase {
    * @param {string} id The ID or version of this release; for example, a version number, build number from your CI environment, GitHub SHA, GUID, or a hash of the contents.
    */
   addRelease (name, id) {
-    warn('Call to agent api addRelease failed. The agent is not currently initialized.')
+    warn('Call to agent api addRelease failed. The js errors feature is not currently initialized.')
   }
 
   /**
    * Starts a set of agent features if not running in "autoStart" mode
    * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/start/}
-   * @param {string|string[]|undefined} name The feature name(s) to start.  If no name(s) are passed, all features will be started
+   * @param {string|string[]} [featureNames] The name(s) of the features to start.  If no name(s) are passed, all features will be started
    */
   start (featureNames) {
     warn('Call to agent api addRelease failed. The agent is not currently initialized.')

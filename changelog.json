@@ -5,6 +5,55 @@
       "changes": [
         {
           "type": "fix",
+          "sha": "bc5a57c8c42c62c311e24b77f00dc1225a3b5873",
+          "message": "Fix invalid timestamps",
+          "issues": [
+            "771"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "9ea84cf247b31af544e2ea7ed0873241ff82eebc",
+          "message": "Bump rrweb to 2.0.0.11 and make constant dynamic at build time",
+          "issues": [
+            "770"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "cef08dd3f0cd99735dbc719e3c075fe83bbc6219",
+          "message": "Add Session Replay configurations to collect inline assets",
+          "issues": [
+            "763"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "8506803eaba27b7c603432f8ba0c909b677d3c3b",
+          "message": "Ensure 15 second minimum error buffer when possible",
+          "issues": [
+            "759"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "b9e82773c67d710e0f6dc1f892908afc8be004cd",
+          "message": "Isolate browser interaction node",
+          "issues": [
+            "758"
+          ]
+        }
+      ],
+      "version": "1.244.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "2c072d59-b0fa-42ab-8b69-0db6b6f648ca",
+      "createTime": "2023-10-10T22:36:37.655Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
           "sha": "14f08aca8bf1a610984fc2303604a04910f07db6",
           "message": "Improve Session Replay abort metric reliability",
           "issues": [
@@ -653,5 +702,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2023-10-04T19:26:02.289Z"
+  "updateTime": "2023-10-10T22:36:37.655Z"
 }

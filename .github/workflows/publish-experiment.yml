@@ -35,7 +35,7 @@ jobs:
         id: clean-branch-name
         run: echo "results=$(echo '${{ github.ref }}' | sed 's/refs\/heads\///g' | sed 's/[^[:alnum:].-]/-/g')" >> $GITHUB_OUTPUT
       - name: Build experiment
-        run: npm run cdn:build:experiment -- --env branchName='${{ steps.clean-branch-name.outputs.results }}'
+        run: npm run cdn:build:experiment -- --env branchName='${{ inputs.nr_environment }}/${{ steps.clean-branch-name.outputs.results }}'
       - name: Upload experiment
         id: s3-upload
         uses: ./.github/actions/s3-upload

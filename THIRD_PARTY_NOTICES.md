@@ -165,7 +165,7 @@ SOFTWARE.
 
 ### rrweb
 
-This product includes source derived from [rrweb](https://github.com/rrweb-io/rrweb) ([v2.0.0-alpha.8](https://github.com/rrweb-io/rrweb/tree/v2.0.0-alpha.8)), distributed under the [MIT License](https://github.com/rrweb-io/rrweb/blob/v2.0.0-alpha.8/README.md):
+This product includes source derived from [rrweb](https://github.com/rrweb-io/rrweb) ([v2.0.0-alpha.11](https://github.com/rrweb-io/rrweb/tree/v2.0.0-alpha.11)), distributed under the [MIT License](https://github.com/rrweb-io/rrweb/blob/v2.0.0-alpha.11/README.md):
 
 ```
 MIT License

@@ -67,16 +67,7 @@ export default class CustomCommands {
       const agentSessionsJSON = await browser.execute(function () {
         return JSON.stringify(Object.entries(newrelic.initializedAgents)
           .reduce(function (aggregate, agentEntry) {
-            aggregate[agentEntry[0]] = {
-              value: agentEntry[1].runtime.session.state.value,
-              inactiveAt: agentEntry[1].runtime.session.state.inactiveAt,
-              expiresAt: agentEntry[1].runtime.session.state.expiresAt,
-              updatedAt: agentEntry[1].runtime.session.state.updatedAt,
-              sessionReplayMode: agentEntry[1].runtime.session.state.sessionReplayMode,
-              sessionReplaySentFirstChunk: agentEntry[1].runtime.session.state.sessionReplaySentFirstChunk,
-              sessionTraceMode: agentEntry[1].runtime.session.state.sessionTraceMode,
-              custom: agentEntry[1].runtime.session.state.custom
-            }
+            aggregate[agentEntry[0]] = agentEntry[1].runtime.session.state
             return aggregate
           }, {}))
       })

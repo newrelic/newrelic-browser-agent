@@ -13,7 +13,7 @@ import { FEATURE_NAME } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { AggregateBase } from '../../utils/aggregate-base'
-import { parseBatchGQL, parseGQL, parseGQLContents, parseGQLQueryString } from './gql'
+import { parseGQL } from './gql'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -121,7 +121,10 @@ export class Aggregate extends AggregateBase {
       }
 
       // parsed from the AJAX body, looking for operationName param & parsing query for operationType
-      event.gql = params.gql = parseBatchGQL(parseGQLContents(this.body)) || parseGQL(parseGQLQueryString(this?.parsedOrigin?.search))
+      event.gql = params.gql = parseGQL({
+        body: this.body,
+        query: this?.parsedOrigin?.search
+      })
 
       // if the ajax happened inside an interaction, hold it until the interaction finishes
       if (this.spaNode) {

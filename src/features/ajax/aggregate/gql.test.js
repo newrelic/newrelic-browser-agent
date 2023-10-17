@@ -1,4 +1,4 @@
-import { parseGQL, parseBatchGQL, parseGQLContents, parseGQLQueryString } from './gql'
+import { parseGQL } from './gql'
 
 const sampleGQLQuery = {
   operationName: 'GetLocations1',
@@ -68,141 +68,79 @@ const invalidGQLQueryNoType = {
       }`
 }
 
-describe('gql.js', () => {
-  describe('parseGQLContents', () => {
-    expect((parseGQLContents(undefined))).toBeUndefined()
-    expect((parseGQLContents(1))).toBeUndefined()
-    expect((parseGQLContents('test'))).toBeUndefined()
-    expect((parseGQLContents(['invalid array']))).toBeUndefined()
-    expect((parseGQLContents({ invalidObject: true }))).toBeUndefined()
-    expect((parseGQLContents(JSON.stringify({ invalidObject: true })))).toBeUndefined()
-    expect((parseGQLContents(true))).toBeUndefined()
-    // valid objects (potentially with invalid keys to be detected later)
-    expect((parseGQLContents([sampleGQLQuery]))).toMatchObject([{ query: expect.any(String) }]) // expects a single object
-    expect((parseGQLContents(invalidGQLQueryType))).toEqual(expect.objectContaining({ query: expect.any(String) })) // will fail if type is invalid
-    expect((parseGQLContents(invalidGQLQueryNoType))).toEqual(expect.objectContaining({ query: expect.any(String) })) // will fail if type is invalid
-    expect((parseGQLContents(sampleGQLQuery))).toEqual(expect.objectContaining({ query: expect.any(String) }))
-    expect((parseGQLContents(sampleGQLQueryAnonymous))).toEqual(expect.objectContaining({ query: expect.any(String) }))
-    expect((parseGQLContents(sampleGQLMutation))).toEqual(expect.objectContaining({ query: expect.any(String) }))
-    expect((parseGQLContents(invalidGQLQueryName))).toEqual(expect.objectContaining({ query: expect.any(String) }))
-    // valid json string
-    expect((parseGQLContents(JSON.stringify(sampleGQLQuery)))).toEqual(expect.objectContaining({ query: expect.any(String) }))
+const blobified = new Blob([JSON.stringify(sampleGQLQuery)], { type: 'application/json' })
+
+const GQLLikeStringNoQuery = '?operationName=GetBestSellers&variables=%7B%22category%22%3A%22BOOKS%22%7D'
+const GQLLikeStringNoOperationType = '?query=GetBestSellers%28%24category%3A%20ProductCategory%29%7BbestSellers%28category%3A%20%24category%29%7Btitle%7D%7D&operationName=GetBestSellers&variables=%7B%22category%22%3A%22BOOKS%22%7D'
+const GQLLikeStringNoOperationName = '?query=query%20GetBestSellers%28%24category%3A%20ProductCategory%29%7BbestSellers%28category%3A%20%24category%29%7Btitle%7D%7D&variables=%7B%22category%22%3A%22BOOKS%22%7D'
+const GQLLikeStringAnonymous = '?query=query%28%24category%3A%20ProductCategory%29%7BbestSellers%28category%3A%20%24category%29%7Btitle%7D%7D&variables=%7B%22category%22%3A%22BOOKS%22%7D'
+const GQLString = '?query=query%20GetBestSellers%28%24category%3A%20ProductCategory%29%7BbestSellers%28category%3A%20%24category%29%7Btitle%7D%7D&operationName=GetBestSellers&variables=%7B%22category%22%3A%22BOOKS%22%7D'
+const GQLStringMutation = '?query=mutation%20GetBestSellers%28%24category%3A%20ProductCategory%29%7BbestSellers%28category%3A%20%24category%29%7Btitle%7D%7D&operationName=GetBestSellers&variables=%7B%22category%22%3A%22BOOKS%22%7D'
+
+function testMetadata (metadata, operationName, operationType) {
+  expect(metadata).toMatchObject({
+    operationName,
+    operationType,
+    operationFramework: 'GraphQL'
+  })
+}
+
+describe('parseGQL', () => {
+  // invalid bodies
+  test('invalid bodies', () => {
+    expect((parseGQL())).toBeUndefined()
+    expect((parseGQL({ }))).toBeUndefined()
+    expect((parseGQL({ body: undefined }))).toBeUndefined()
+    expect((parseGQL({ body: 1 }))).toBeUndefined()
+    expect((parseGQL({ body: 'test' }))).toBeUndefined()
+    expect((parseGQL({ body: ['invalid array'] }))).toBeUndefined()
+    expect((parseGQL({ body: { invalidObject: true } }))).toBeUndefined()
+    expect((parseGQL({ body: JSON.stringify({ invalidObject: true }) }))).toBeUndefined()
+    expect((parseGQL({ body: true }))).toBeUndefined()
+    expect(parseGQL({ body: blobified })).toBeUndefined()
+    expect(parseGQL({ body: invalidGQLQueryType })).toBeUndefined()
+    expect(parseGQL({ body: invalidGQLQueryNoType })).toBeUndefined()
   })
 
-  describe('parseGQLQueryString', () => {
-    expect((parseGQLQueryString(undefined))).toBeUndefined()
-    expect((parseGQLQueryString(1))).toBeUndefined()
-    expect((parseGQLQueryString('test'))).toBeUndefined()
-    expect((parseGQLQueryString(['invalid array']))).toBeUndefined()
-    expect((parseGQLQueryString({ invalidObject: true }))).toBeUndefined()
-    expect((parseGQLQueryString(JSON.stringify({ invalidObject: true })))).toBeUndefined()
-    expect((parseGQLQueryString(true))).toBeUndefined()
-    expect((parseGQLQueryString([sampleGQLQuery]))).toBeUndefined()
-    // GQL-like string, but has no type param
-    expect((parseGQLQueryString('?operationName=GetBestSellers&variables=%7B%22category%22%3A%22BOOKS%22%7D'))).toBeUndefined()
-    // GQL-like string, but has no operation type
-    expect((parseGQLQueryString('?query=GetBestSellers%28%24category%3A%20ProductCategory%29%7BbestSellers%28category%3A%20%24category%29%7Btitle%7D%7D&operationName=GetBestSellers&variables=%7B%22category%22%3A%22BOOKS%22%7D'))).toEqual(expect.objectContaining({ query: expect.any(String) }))
-
-    // valid strings
-    expect((parseGQLQueryString('?query=query%20GetBestSellers%28%24category%3A%20ProductCategory%29%7BbestSellers%28category%3A%20%24category%29%7Btitle%7D%7D&operationName=GetBestSellers&variables=%7B%22category%22%3A%22BOOKS%22%7D'))).toEqual(expect.objectContaining({ query: expect.any(String) }))
+  // valid bodies
+  test('valid bodies', () => {
+    testMetadata(parseGQL({ body: sampleGQLQuery }), 'GetLocations1', 'query')
+    testMetadata(parseGQL({ body: [sampleGQLQuery] }), 'GetLocations1', 'query')
+    testMetadata(parseGQL({ body: sampleGQLQueryAnonymous }), 'Anonymous', 'query')
+    testMetadata(parseGQL({ body: [sampleGQLQueryAnonymous] }), 'Anonymous', 'query')
+    testMetadata(parseGQL({ body: sampleGQLMutation }), 'SetLocations1', 'mutation')
+    testMetadata(parseGQL({ body: [sampleGQLMutation] }), 'SetLocations1', 'mutation')
+    testMetadata(parseGQL({ body: invalidGQLQueryName }), 'invalidName', 'query') // cleaned up the !
+    testMetadata(parseGQL({ body: [invalidGQLQueryName] }), 'invalidName', 'query') // cleaned up the !
+    testMetadata(parseGQL({ body: [sampleGQLQuery, sampleGQLQueryAnonymous, sampleGQLMutation] }), 'GetLocations1,Anonymous,SetLocations1', 'query,query,mutation')
+    testMetadata(parseGQL({ body: JSON.stringify(sampleGQLQuery) }), 'GetLocations1', 'query')
+    testMetadata(parseGQL({ body: JSON.stringify([sampleGQLQuery]) }), 'GetLocations1', 'query')
+  })
+  // invalid queries
+  test('invalid queries', () => {
+    expect((parseGQL({ query: undefined }))).toBeUndefined()
+    expect((parseGQL({ query: 1 }))).toBeUndefined()
+    expect((parseGQL({ query: 'test' }))).toBeUndefined()
+    expect((parseGQL({ query: ['invalid array'] }))).toBeUndefined()
+    expect((parseGQL({ query: { invalidObject: true } }))).toBeUndefined()
+    expect((parseGQL({ query: JSON.stringify({ invalidObject: true }) }))).toBeUndefined()
+    expect((parseGQL({ query: true }))).toBeUndefined()
+    expect(parseGQL({ query: blobified })).toBeUndefined()
+    expect(parseGQL({ query: invalidGQLQueryType })).toBeUndefined()
+    expect(parseGQL({ query: invalidGQLQueryNoType })).toBeUndefined()
+    expect(parseGQL({ query: GQLLikeStringNoOperationType })).toBeUndefined()
+    expect(parseGQL({ query: GQLLikeStringNoQuery })).toBeUndefined()
+  })
+  // valid queries
+  test('valid queries', () => {
+    testMetadata(parseGQL({ query: GQLLikeStringNoOperationName }), 'GetBestSellers', 'query')
+    testMetadata(parseGQL({ query: GQLLikeStringAnonymous }), 'Anonymous', 'query')
+    testMetadata(parseGQL({ query: GQLString }), 'GetBestSellers', 'query')
+    testMetadata(parseGQL({ query: GQLStringMutation }), 'GetBestSellers', 'mutation')
   })
 
-  describe('parseGQL', () => {
-    test('Accepts only GQL formatted data', () => {
-    // invalid inputs
-      expect(parseGQL(parseGQLContents(undefined))).toBeUndefined()
-      expect(parseGQL(parseGQLContents(1))).toBeUndefined()
-      expect(parseGQL(parseGQLContents('test'))).toBeUndefined()
-      expect(parseGQL(parseGQLContents(['invalid array']))).toBeUndefined()
-      expect(parseGQL(parseGQLContents({ invalidObject: true }))).toBeUndefined()
-      expect(parseGQL(parseGQLContents(JSON.stringify({ invalidObject: true })))).toBeUndefined()
-      expect(parseGQL(parseGQLContents(true))).toBeUndefined()
-      expect(parseGQL(parseGQLContents([sampleGQLQuery]))).toBeUndefined() // expects a single object
-      expect(parseGQL(parseGQLContents(invalidGQLQueryType))).toBeUndefined() // will fail if type is invalid
-      expect(parseGQL(parseGQLContents(invalidGQLQueryNoType))).toBeUndefined() // will fail if type is invalid
-      // valid objects
-      expect(parseGQL(parseGQLContents(sampleGQLQuery))).not.toBeUndefined()
-      expect(parseGQL(parseGQLContents(sampleGQLQueryAnonymous))).not.toBeUndefined()
-      expect(parseGQL(parseGQLContents(sampleGQLMutation))).not.toBeUndefined()
-      expect(parseGQL(parseGQLContents(invalidGQLQueryName))).not.toBeUndefined()
-      // valid json string
-      expect(parseGQL(parseGQLContents(JSON.stringify(sampleGQLQuery)))).not.toBeUndefined()
-    })
-
-    test('Returns meta correctly', () => {
-      const querymeta = parseGQL(parseGQLContents(sampleGQLQuery))
-      expect(querymeta.operationName).toEqual(sampleGQLQuery.operationName)
-      expect(querymeta.operationType).toEqual('query')
-      expect(querymeta.operationFramework).toEqual('GraphQL')
-
-      const anonmeta = parseGQL(parseGQLContents(sampleGQLQueryAnonymous))
-      expect(anonmeta.operationName).toEqual('Anonymous')
-      expect(anonmeta.operationType).toEqual('query')
-      expect(anonmeta.operationFramework).toEqual('GraphQL')
-
-      const mutationmeta = parseGQL(parseGQLContents(sampleGQLMutation))
-      expect(mutationmeta.operationName).toEqual(sampleGQLMutation.operationName)
-      expect(mutationmeta.operationType).toEqual('mutation')
-      expect(mutationmeta.operationFramework).toEqual('GraphQL')
-
-      const invalidtypemeta = parseGQL(parseGQLContents(invalidGQLQueryType))
-      expect(invalidtypemeta).toBeUndefined()
-
-      const invalidnotypemeta = parseGQL(parseGQLContents(invalidGQLQueryNoType))
-      expect(invalidnotypemeta).toBeUndefined()
-
-      const invalidnamemeta = parseGQL(parseGQLContents(invalidGQLQueryName))
-      expect(invalidnamemeta.operationName).toEqual('invalidName')
-      expect(invalidnamemeta.operationType).toEqual('query')
-      expect(invalidnamemeta.operationFramework).toEqual('GraphQL')
-    })
-  })
-
-  describe('parseBatchGQL', () => {
-    test('Accepts only GQL formatted data', () => {
-    // invalid inputs
-      expect(parseBatchGQL(parseGQLContents(undefined))).toBeUndefined()
-      expect(parseBatchGQL(parseGQLContents(1))).toBeUndefined()
-      expect(parseBatchGQL(parseGQLContents('test'))).toBeUndefined()
-      expect(parseBatchGQL(parseGQLContents(['invalid array']))).toBeUndefined()
-      expect(parseBatchGQL(parseGQLContents({ invalidObject: true }))).toBeUndefined()
-      expect(parseBatchGQL(parseGQLContents(JSON.stringify({ invalidObject: true })))).toBeUndefined()
-      expect(parseBatchGQL(parseGQLContents(true))).toBeUndefined()
-
-      //   // valid objects
-      expect(parseBatchGQL(parseGQLContents(sampleGQLQuery))).not.toBeUndefined()
-      expect(parseBatchGQL(parseGQLContents(sampleGQLQueryAnonymous))).not.toBeUndefined()
-      expect(parseBatchGQL(parseGQLContents(sampleGQLMutation))).not.toBeUndefined()
-      expect(parseBatchGQL(parseGQLContents([sampleGQLQuery, sampleGQLQueryAnonymous, sampleGQLMutation]))).not.toBeUndefined() // expects a single object
-      //   // valid json string
-      expect(parseBatchGQL(parseGQLContents(JSON.stringify([sampleGQLQuery, sampleGQLQueryAnonymous, sampleGQLMutation])))).not.toBeUndefined() // expects a single object
-    })
-
-    test('Returns meta correctly', () => {
-      const querymeta = parseBatchGQL(parseGQLContents(sampleGQLQuery))
-      expect(querymeta.operationName).toEqual(sampleGQLQuery.operationName)
-      expect(querymeta.operationType).toEqual('query')
-      expect(querymeta.operationFramework).toEqual('GraphQL')
-
-      const anonmeta = parseBatchGQL(parseGQLContents(sampleGQLQueryAnonymous))
-      expect(anonmeta.operationName).toEqual('Anonymous')
-      expect(anonmeta.operationType).toEqual('query')
-      expect(anonmeta.operationFramework).toEqual('GraphQL')
-
-      const mutationmeta = parseBatchGQL(parseGQLContents(sampleGQLMutation))
-      expect(mutationmeta.operationName).toEqual(sampleGQLMutation.operationName)
-      expect(mutationmeta.operationType).toEqual('mutation')
-      expect(mutationmeta.operationFramework).toEqual('GraphQL')
-
-      const batchmeta = parseBatchGQL(parseGQLContents([sampleGQLQuery, sampleGQLQueryAnonymous, sampleGQLMutation]))
-      expect(batchmeta.operationName).toEqual('GetLocations1,Anonymous,SetLocations1')
-      expect(batchmeta.operationType).toEqual('query,query,mutation')
-      expect(batchmeta.operationFramework).toEqual('GraphQL')
-
-      const batchmixedmeta = parseBatchGQL(parseGQLContents([sampleGQLQuery, invalidGQLQueryType, invalidGQLQueryNoType, invalidGQLQueryName, sampleGQLMutation]))
-      expect(batchmixedmeta.operationName).toEqual('GetLocations1,invalidName,SetLocations1') // omits the invalid types, corrects the invalid name (doesnt include !)
-      expect(batchmixedmeta.operationType).toEqual('query,query,mutation')
-      expect(batchmixedmeta.operationFramework).toEqual('GraphQL')
-    })
+  // precedence
+  test('precedence', () => {
+    testMetadata(parseGQL({ body: sampleGQLQuery, query: GQLString }), 'GetLocations1', 'query') // body valued over query
   })
 })

@@ -1,3 +1,5 @@
+import { isTrueObject } from '../../../common/util/type-check'
+
 /**
  * @typedef {object} GQLMetadata
  * @property {string} operationName Name of the operation
@@ -6,12 +8,24 @@
  */
 
 /**
+ *
+ * @param {object|string} body Ajax request body
+ * @param {string} query Ajax request query param string
+ * @returns {GQLMetadata | undefined}
+ */
+export function parseGQL ({ body, query } = {}) {
+  if (!body && !query) return
+  const gqlBody = parseBatchGQL(parseGQLContents(body))
+  if (gqlBody) return gqlBody
+  const gqlQuery = parseSingleGQL(parseGQLQueryString(query))
+  if (gqlQuery) return gqlQuery
+}
+
+/**
  * @param {string|Object} gql The GraphQL object body sent to a GQL server
  * @returns {GQLMetadata}
  */
-export function parseGQL (gql) {
-  if (!gql) return
-  const contents = gql
+function parseSingleGQL (contents) {
   if (typeof contents !== 'object' || !contents.query || typeof contents.query !== 'string') return
 
   /** parses gql query string and returns [fullmatch, type match, name match] */
@@ -26,15 +40,14 @@ export function parseGQL (gql) {
   }
 }
 
-export function parseBatchGQL (arrayOfGql) {
-  if (!arrayOfGql) return
-  let contents = arrayOfGql
+function parseBatchGQL (contents) {
+  if (!contents) return
   if (!Array.isArray(contents)) contents = [contents]
 
   const opNames = []
   const opTypes = []
   for (let content of contents) {
-    const operation = parseGQL(content)
+    const operation = parseSingleGQL(content)
     if (!operation) continue
 
     opNames.push(operation.operationName)
@@ -49,7 +62,7 @@ export function parseBatchGQL (arrayOfGql) {
   }
 }
 
-export function parseGQLContents (gqlContents) {
+function parseGQLContents (gqlContents) {
   let contents
   if (!gqlContents || (typeof gqlContents !== 'string' && typeof gqlContents !== 'object')) return
   else if (typeof gqlContents === 'string') {
@@ -60,16 +73,16 @@ export function parseGQLContents (gqlContents) {
       return
     }
   } else contents = gqlContents
-
+  if (!isTrueObject(contents) && !Array.isArray(contents)) return
   let isValid = false
-  if (Array.isArray(contents)) isValid = contents.every(x => validateGQLObject(x))
+  if (Array.isArray(contents)) isValid = contents.some(x => validateGQLObject(x))
   else isValid = validateGQLObject(contents)
   if (!isValid) return
 
   return contents
 }
 
-export function parseGQLQueryString (gqlQueryString) {
+function parseGQLQueryString (gqlQueryString) {
   try {
     if (!gqlQueryString || typeof gqlQueryString !== 'string') return
     const params = new URLSearchParams(gqlQueryString)

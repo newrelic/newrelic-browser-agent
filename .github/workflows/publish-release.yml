@@ -216,3 +216,24 @@ jobs:
           github_login: ${{ secrets.BROWSER_GITHUB_BOT_NAME }}
           github_token: ${{ secrets.BROWSER_GITHUB_BOT_PAT }}
           github_email: ${{ secrets.BROWSER_GITHUB_BOT_EMAIL }}
+
+  # Notify the release repo of the new release
+  notify-release-repo:
+    needs: [publish-prod-to-nr, publish-npm]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+      - name: Notify Release Repo
+        uses: ./.github/actions/notify-repository
+        with:
+          token: ${{ secrets.BROWSER_GITHUB_BOT_PAT }}
+          repo_owner: newrelic
+          repo_name: newrelic-browser-agent-release
+          event_type: new_release

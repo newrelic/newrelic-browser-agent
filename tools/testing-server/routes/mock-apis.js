@@ -183,16 +183,6 @@ module.exports = fp(async function (fastify, testServer) {
     stream.write('x'.repeat(10000))
     stream.end()
   })
-  fastify.get('/web-worker-agent', {
-    compress: false
-  }, async (request, reply) => {
-    const contents = await fs.readFile(
-      path.join(paths.builtAssetsDir, 'nr-loader-worker.min.js')
-    )
-    reply
-      .header('Content-Type', 'application/javascript; charset=UTF-8')
-      .send(contents)
-  })
   fastify.get('/empty404', {
     compress: false
   }, async (request, reply) => {

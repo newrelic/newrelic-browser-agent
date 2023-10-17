@@ -126,7 +126,7 @@ This stream transform looks for `{init}` in the HTML response, builds the correc
 
 #### [Worker Commands Transform](./plugins/agent-injector/worker-commands-transform.js)
 
-This stream transform looks for `{worker-commands}` in the HTML response. Integration tests for web workers can pass scripts to be injected into the HTML page via a query parameter: `?workerCommands=<base64 encoded json string>`. These worker commands should be an array of JavaScript functions serialized as a string. The worker commands are used to issue commands to a worker in order to test certain scenarios like dispatching a network call.
+This stream transform looks for `{worker-commands}` in the HTML response. Integration tests for web workers can pass scripts to be injected into the HTML page via a query parameter: `?workerCommands=<base64 encoded json string>`. These worker commands should be an array of JavaScript functions serialized as a string. The worker commands are used to issue commands to a worker in order to test certain scenarios like dispatching a network call. The test server will take care of properly serializing the functions and wrapping them so that they are self-executing when the web worker evaluates them.
 
 #### [Script Transform](./plugins/agent-injector/script-transform.js)
 

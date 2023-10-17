@@ -1,6 +1,5 @@
 export { Agent } from './loaders/agent'
 export { BrowserAgent } from './loaders/browser-agent'
-export { WorkerAgent } from './loaders/worker-agent'
 export { MicroAgent } from './loaders/micro-agent'
 
 export { Ajax } from './features/ajax'

@@ -56,12 +56,5 @@ export const reportSettings = {
       { name: 'loader', fileNameRegex: createRegExpFn('spa-polyfills', 'loader') },
       { name: 'async-chunk', fileNameRegex: createRegExpFn('spa-polyfills') }
     ]
-  },
-  worker: {
-    statsFileNameTemplate: 'nr-worker{{version}}.stats.json',
-    assetFileNameTemplates: [
-      { name: 'loader', fileNameRegex: createRegExpFn('worker', 'loader') },
-      { name: 'async-chunk', fileNameRegex: createRegExpFn('worker') }
-    ]
   }
 }

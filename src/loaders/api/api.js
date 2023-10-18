@@ -89,8 +89,8 @@ export function setAPI (agentIdentifier, forceDrain) {
       warn(`Failed to execute setCustomAttribute.\nName must be a string type, but a type of <${typeof name}> was provided.`)
       return
     }
-    if (!(['string', 'number'].includes(typeof value) || value === null)) {
-      warn(`Failed to execute setCustomAttribute.\nNon-null value must be a string or number type, but a type of <${typeof value}> was provided.`)
+    if (!(['string', 'number', 'boolean'].includes(typeof value) || value === null)) {
+      warn(`Failed to execute setCustomAttribute.\nNon-null value must be a string, number or boolean type, but a type of <${typeof value}> was provided.`)
       return
     }
     return appendJsAttribute(name, value, 'setCustomAttribute', persistAttribute)

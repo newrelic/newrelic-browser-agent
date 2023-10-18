@@ -13,6 +13,7 @@ import { FEATURE_NAME } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { AggregateBase } from '../../utils/aggregate-base'
+import { parseGQL } from './gql'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -119,6 +120,12 @@ export class Aggregate extends AggregateBase {
         event.spanTimestamp = xhrContext.dt.timestamp
       }
 
+      // parsed from the AJAX body, looking for operationName param & parsing query for operationType
+      event.gql = params.gql = parseGQL({
+        body: this.body,
+        query: this?.parsedOrigin?.search
+      })
+
       // if the ajax happened inside an interaction, hold it until the interaction finishes
       if (this.spaNode) {
         var interactionId = this.spaNode.interaction.id
@@ -221,7 +228,8 @@ export class Aggregate extends AggregateBase {
         var insert = '2,'
 
         // add custom attributes
-        var attrParts = addCustomAttributes(getInfo(agentIdentifier).jsAttributes || {}, this.addString)
+        // gql decorators are added as custom attributes to alleviate need for new BEL schema
+        var attrParts = addCustomAttributes({ ...(getInfo(agentIdentifier).jsAttributes || {}), ...(event.gql || {}) }, this.addString)
         fields.unshift(numeric(attrParts.length))
 
         insert += fields.join(',')

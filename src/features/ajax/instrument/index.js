@@ -157,6 +157,8 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
 
     this.startTime = now()
 
+    this.body = data
+
     this.listener = function (evt) {
       try {
         if (evt.type === 'abort' && !(context.loadCaptureCalled)) {
@@ -329,6 +331,7 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
     var method = ('' + ((target && target instanceof origRequest && target.method) ||
       opts.method || 'GET')).toUpperCase()
     this.params.method = method
+    this.body = opts.body
 
     this.txSize = dataSize(opts.body) || 0
   }

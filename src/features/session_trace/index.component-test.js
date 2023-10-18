@@ -47,7 +47,6 @@ describe('session trace', () => {
     let res = payload.body.res
     let qs = payload.qs
 
-    console.log(res, qs)
     expect(+qs.st).toBeGreaterThan(1404952055986)
     expect(+qs.st).toBeLessThan(Date.now())
 

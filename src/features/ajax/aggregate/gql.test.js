@@ -142,5 +142,7 @@ describe('parseGQL', () => {
   // precedence
   test('precedence', () => {
     testMetadata(parseGQL({ body: sampleGQLQuery, query: GQLString }), 'GetLocations1', 'query') // body valued over query
+    testMetadata(parseGQL({ body: invalidGQLQueryType, query: GQLString }), 'GetBestSellers', 'query') // query valued over body since body is not valid
+    testMetadata(parseGQL({ body: undefined, query: GQLString }), 'GetBestSellers', 'query') // query valued over body since body is not valid
   })
 })

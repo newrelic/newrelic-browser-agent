@@ -1,4 +1,4 @@
-import { isTrueObject } from '../../../common/util/type-check'
+import { isPureObject } from '../../../common/util/type-check'
 
 /**
  * @typedef {object} GQLMetadata
@@ -8,17 +8,22 @@ import { isTrueObject } from '../../../common/util/type-check'
  */
 
 /**
- *
+ * Parses and returns the graphql metadata from a network request. If the network
+ * request is not a graphql call, undefined will be returned.
  * @param {object|string} body Ajax request body
  * @param {string} query Ajax request query param string
  * @returns {GQLMetadata | undefined}
  */
 export function parseGQL ({ body, query } = {}) {
   if (!body && !query) return
-  const gqlBody = parseBatchGQL(parseGQLContents(body))
-  if (gqlBody) return gqlBody
-  const gqlQuery = parseSingleGQL(parseGQLQueryString(query))
-  if (gqlQuery) return gqlQuery
+  try {
+    const gqlBody = parseBatchGQL(parseGQLContents(body))
+    if (gqlBody) return gqlBody
+    const gqlQuery = parseSingleGQL(parseGQLQueryString(query))
+    if (gqlQuery) return gqlQuery
+  } catch (err) {
+    // parsing failed, return undefined
+  }
 }
 
 /**
@@ -64,32 +69,25 @@ function parseBatchGQL (contents) {
 
 function parseGQLContents (gqlContents) {
   let contents
+
   if (!gqlContents || (typeof gqlContents !== 'string' && typeof gqlContents !== 'object')) return
-  else if (typeof gqlContents === 'string') {
-    try {
-      contents = JSON.parse(gqlContents)
-    } catch {
-      // must be a JSON object
-      return
-    }
-  } else contents = gqlContents
-  if (!isTrueObject(contents) && !Array.isArray(contents)) return
+  else if (typeof gqlContents === 'string') contents = JSON.parse(gqlContents)
+  else contents = gqlContents
+
+  if (!isPureObject(contents) && !Array.isArray(contents)) return
+
   let isValid = false
   if (Array.isArray(contents)) isValid = contents.some(x => validateGQLObject(x))
   else isValid = validateGQLObject(contents)
-  if (!isValid) return
 
+  if (!isValid) return
   return contents
 }
 
 function parseGQLQueryString (gqlQueryString) {
-  try {
-    if (!gqlQueryString || typeof gqlQueryString !== 'string') return
-    const params = new URLSearchParams(gqlQueryString)
-    return parseGQLContents(Object.fromEntries(params))
-  } catch (err) {
-    // do nothing for now?
-  }
+  if (!gqlQueryString || typeof gqlQueryString !== 'string') return
+  const params = new URLSearchParams(gqlQueryString)
+  return parseGQLContents(Object.fromEntries(params))
 }
 
 function validateGQLObject (obj) {

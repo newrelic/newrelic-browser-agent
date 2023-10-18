@@ -4,6 +4,39 @@
     {
       "changes": [
         {
+          "type": "feat",
+          "sha": "d44f03384655f47c5f8a63db02f7eaac58585a86",
+          "message": "Allow boolean values in setCustomAttribute",
+          "issues": [
+            "776"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "8587afc9dbc18a52048f467c77e5ededc225eb2a",
+          "message": "Detect GraphQL operation names and types in AJAX calls",
+          "issues": [
+            "764"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "15f801b1a48c6e60f8f50f349aa382c77a073480",
+          "message": "Removing worker build",
+          "issues": [
+            "762"
+          ]
+        }
+      ],
+      "version": "1.245.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "5402b6db-cbf1-4e3e-92f4-4343655fa1da",
+      "createTime": "2023-10-18T17:12:26.391Z"
+    },
+    {
+      "changes": [
+        {
           "type": "fix",
           "sha": "bc5a57c8c42c62c311e24b77f00dc1225a3b5873",
           "message": "Fix invalid timestamps",
@@ -702,5 +735,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2023-10-10T22:36:37.655Z"
+  "updateTime": "2023-10-18T17:12:26.391Z"
 }

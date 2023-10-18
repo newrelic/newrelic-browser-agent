@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.245.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.244.0...v1.245.0) (2023-10-18)
+
+
+### Features
+
+* Allow boolean values in setCustomAttribute ([#776](https://github.com/newrelic/newrelic-browser-agent/issues/776)) ([d44f033](https://github.com/newrelic/newrelic-browser-agent/commit/d44f03384655f47c5f8a63db02f7eaac58585a86))
+* Detect GraphQL operation names and types in AJAX calls ([#764](https://github.com/newrelic/newrelic-browser-agent/issues/764)) ([8587afc](https://github.com/newrelic/newrelic-browser-agent/commit/8587afc9dbc18a52048f467c77e5ededc225eb2a))
+* Removing worker build ([#762](https://github.com/newrelic/newrelic-browser-agent/issues/762)) ([15f801b](https://github.com/newrelic/newrelic-browser-agent/commit/15f801b1a48c6e60f8f50f349aa382c77a073480))
+
 ## [1.244.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.243.1...v1.244.0) (2023-10-10)
 
 

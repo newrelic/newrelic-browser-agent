@@ -274,7 +274,7 @@ describe('setAPI', () => {
       expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('Name must be a string type'))
     })
 
-    test.each([undefined, {}, [], Symbol])('should return early and warn when value is not a string, number, or null (%s)', (value) => {
+    test.each([undefined, {}, [], Symbol('foobar')])('should return early and warn when value is not a string, number, or null (%s)', (value) => {
       const args = [faker.datatype.uuid(), value]
       apiInterface.setCustomAttribute(...args)
 

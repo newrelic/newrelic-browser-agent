@@ -274,12 +274,12 @@ describe('setAPI', () => {
       expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('Name must be a string type'))
     })
 
-    test.each([undefined, {}, []])('should return early and warn when value is not a string, number, or null (%s)', (value) => {
+    test.each([undefined, {}, [], Symbol])('should return early and warn when value is not a string, number, or null (%s)', (value) => {
       const args = [faker.datatype.uuid(), value]
       apiInterface.setCustomAttribute(...args)
 
       expect(console.warn).toHaveBeenCalledTimes(1)
-      expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('Non-null value must be a string or number type'))
+      expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('Non-null value must be a string, number or boolean type'))
     })
 
     test('should set a custom attribute with a string value', () => {
@@ -291,6 +291,13 @@ describe('setAPI', () => {
 
     test('should set a custom attribute with a number value', () => {
       const args = [faker.datatype.uuid(), faker.datatype.number()]
+      apiInterface.setCustomAttribute(...args)
+
+      expect(getInfo(agentId).jsAttributes[args[0]]).toEqual(args[1])
+    })
+
+    test('should set a custom attribute with a boolean value', () => {
+      const args = [faker.datatype.uuid(), faker.datatype.boolean()]
       apiInterface.setCustomAttribute(...args)
 
       expect(getInfo(agentId).jsAttributes[args[0]]).toEqual(args[1])

@@ -26,8 +26,6 @@ module.exports.loaderConfigKeys = [
 
 module.exports.loaderOnlyConfigKeys = ['accountID', 'agentID', 'trustKey']
 
-module.exports.regexReplacementRegex = /"new RegExp\('(.*?)','(.*?)'\)"/g
-
 module.exports.rumFlags = {
   stn: 1,
   err: 1,
@@ -53,5 +51,5 @@ module.exports.defaultInitBlock = {
   session_trace: { enabled: true, harvestTimeSeconds: 5, autoStart: true },
   spa: { enabled: true, harvestTimeSeconds: 5, autoStart: true },
   harvest: { tooManyRequestsDelay: 5 },
-  session_replay: { enabled: false, harvestTimeSeconds: 5, sampleRate: 0, errorSampleRate: 0, autoStart: true }
+  session_replay: { enabled: false, harvestTimeSeconds: 5, sampling_rate: 0, error_sampling_rate: 0, autoStart: true }
 }

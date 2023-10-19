@@ -87,7 +87,7 @@ const maxSupportedVersion = apiName => {
     // Android version 13 does not currently work with WDIO/SauceLabs and version 9 through 12 all have
     // the same version of chrome 100.
     // https://changelog.saucelabs.com/en/update-to-google-chrome-version-100-on-android-emulators
-    return 9
+    return 13
   }
 
   return 9999
@@ -171,10 +171,15 @@ function platformSelector (desiredBrowser, minVersion = 0, maxVersion = Infinity
     switch (desiredBrowser) {
       case 'iphone':
       case 'ipad':
-      case 'android':
         if (sauceBrowser.automation_backend !== 'appium') return false
         break
-        // NOTE: the following platform limitation per browser is FRAGILE -- will have to update this in the future!
+      // Android 9-12 all have Chrome 100 so there is no sense in testing all of them
+      // and JIL cannot use Android > 9.0 due to element selector errors
+      case 'android':
+        if (sauceBrowser.automation_backend !== 'appium') return false
+        if (!['9.0', '13.0'].includes(sauceBrowser.short_version)) return false
+        break
+      // NOTE: the following platform limitation per browser is FRAGILE -- will have to update this in the future!
       case 'firefox':
         if (sauceBrowser.os !== 'Windows 10') return false // we're only testing FF on Win10
         break
@@ -182,7 +187,7 @@ function platformSelector (desiredBrowser, minVersion = 0, maxVersion = Infinity
       case 'chrome':
         if (!sauceBrowser.os.startsWith('Windows 1')) return false // exclude Linux, Mac, and pre-Win10
         break
-        // 'safari' will only ever be on MacOS
+      // 'safari' will only ever be on MacOS
       case 'safari':
         if (sauceBrowser.short_version === '15' && sauceBrowser.os !== 'Mac 10.15') return false // Safari 15 has DNS issues on other versions of Mac
         if (sauceBrowser.short_version === '12' && sauceBrowser.os === 'Mac 10.13') return false // this OS+safari combo has issues with functional/XHR tests

@@ -8,13 +8,13 @@ export const args = yargs(hideBin(process.argv))
   .choices('environment', ['dev', 'staging', 'prod', 'eu-prod'])
   .describe('environment', 'Which environment are we building the a/b script for?')
 
-  .string('current')
-  .describe('current', 'current/stable build (defaults to -current)')
-  .default('current', 'https://js-agent.newrelic.com/nr-loader-spa-current.min.js')
+  .string('released')
+  .describe('released', 'current/stable build (defaults to -current)')
+  .default('released', 'https://js-agent.newrelic.com/nr-loader-spa-current.min.js')
 
-  .string('next')
-  .describe('next', 'next version to compare to stable version (defaults to /dev)')
-  .default('next', 'https://js-agent.newrelic.com/dev/nr-loader-spa.min.js')
+  .string('latest')
+  .describe('latest', 'next version to compare to stable version (defaults to /dev)')
+  .default('latest', 'https://js-agent.newrelic.com/dev/nr-loader-spa.min.js')
 
   .string('app-id')
   .describe('Application ID to use in the environment NRBA configuration for the next loader.')
@@ -39,4 +39,11 @@ export const args = yargs(hideBin(process.argv))
   .default('region', 'us-east-1')
 
   .demandOption(['environment', 'app-id', 'license-key'])
+  .check((argv) => {
+    if (['dev', 'staging'].includes(argv.environment) && (!argv.abAppId || !argv.abLicenseKey)) {
+      throw new Error(`Cannot create ${argv.environment} script without A/B app ID and license key.`)
+    }
+
+    return true
+  })
   .argv

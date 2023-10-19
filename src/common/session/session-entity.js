@@ -11,6 +11,7 @@ import { getModeledObject } from '../config/state/configurable'
 import { handle } from '../event-emitter/handle'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
 import { FEATURE_NAMES } from '../../loaders/features/features'
+import { windowAddEventListener } from '../event-listener/event-listener-opts'
 
 export const MODE = {
   OFF: 0,
@@ -25,13 +26,20 @@ const model = {
   expiresAt: 0,
   updatedAt: Date.now(),
   sessionReplay: MODE.OFF,
+  sessionReplaySentFirstChunk: false,
   sessionTraceMode: MODE.OFF,
   custom: {}
 }
 export const SESSION_EVENTS = {
   PAUSE: 'session-pause',
   RESET: 'session-reset',
-  RESUME: 'session-resume'
+  RESUME: 'session-resume',
+  UPDATE: 'session-update'
+}
+
+export const SESSION_EVENT_TYPES = {
+  SAME_TAB: 'same-tab',
+  CROSS_TAB: 'cross-tab'
 }
 
 export class SessionEntity {
@@ -57,6 +65,16 @@ export class SessionEntity {
     this.ee = ee.get(agentIdentifier)
     wrapEvents(this.ee)
     this.setup(opts)
+
+    if (isBrowserScope) {
+      windowAddEventListener('storage', (event) => {
+        if (event.key === this.lookupKey) {
+          const obj = typeof event.newValue === 'string' ? JSON.parse(event.newValue) : event.newValue
+          this.sync(obj)
+          this.ee.emit(SESSION_EVENTS.UPDATE, [SESSION_EVENT_TYPES.CROSS_TAB, this.state])
+        }
+      })
+    }
   }
 
   setup ({ value = generateRandomHexString(16), expiresMs = DEFAULT_EXPIRES_MS, inactiveMs = DEFAULT_INACTIVE_MS }) {
@@ -189,6 +207,7 @@ export class SessionEntity {
       //
       // TODO - compression would need happen here if we decide to do it
       this.storage.set(this.lookupKey, stringify(this.state))
+      this.ee.emit(SESSION_EVENTS.UPDATE, [SESSION_EVENT_TYPES.SAME_TAB, this.state])
       return data
     } catch (e) {
       // storage is inaccessible

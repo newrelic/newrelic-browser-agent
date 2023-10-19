@@ -1,5 +1,6 @@
 import logger from '@wdio/logger'
 import TestServer from '../../../testing-server/index.js'
+import { serialize } from '../../../shared/serializer.js'
 
 const log = logger('testing-server')
 
@@ -25,10 +26,10 @@ export default class TestingServerLauncher {
     log.info(`Command server started on http://${this.#testingServer.commandServer.host}:${this.#testingServer.commandServer.port}`)
 
     capabilities.forEach((capability) => {
-      capability.assetServer = JSON.stringify({ host: this.#testingServer.assetServer.host, port: this.#testingServer.assetServer.port })
-      capability.corsServer = JSON.stringify({ host: this.#testingServer.corsServer.host, port: this.#testingServer.corsServer.port })
-      capability.bamServer = JSON.stringify({ host: this.#testingServer.bamServer.host, port: this.#testingServer.bamServer.port })
-      capability.commandServer = JSON.stringify({ host: this.#testingServer.commandServer.host, port: this.#testingServer.commandServer.port })
+      capability.assetServer = serialize({ host: this.#testingServer.assetServer.host, port: this.#testingServer.assetServer.port })
+      capability.corsServer = serialize({ host: this.#testingServer.corsServer.host, port: this.#testingServer.corsServer.port })
+      capability.bamServer = serialize({ host: this.#testingServer.bamServer.host, port: this.#testingServer.bamServer.port })
+      capability.commandServer = serialize({ host: this.#testingServer.commandServer.host, port: this.#testingServer.commandServer.port })
     })
   }
 

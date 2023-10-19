@@ -100,9 +100,9 @@ describe('Trace when replay entitlement is 1 and stn is 1', () => {
   })
 
   ;[
-    ['OFF', { sampleRate: 0, errorSampleRate: 0 }],
-    ['FULL', { sampleRate: 1, errorSampleRate: 0 }],
-    ['ERR', { sampleRate: 0, errorSampleRate: 1 }]
+    ['OFF', { sampling_rate: 0, error_sampling_rate: 0 }],
+    ['FULL', { sampling_rate: 100, error_sampling_rate: 0 }],
+    ['ERR', { sampling_rate: 0, error_sampling_rate: 100 }]
   ].forEach(([replayMode, replayConfig]) => {
     it.withBrowsersMatching(notIE)(`runs in full when replay feature is present and in ${replayMode} mode`, async () => {
       const getRuntimeValues = () => browser.execute(function () {
@@ -160,14 +160,14 @@ describe.withBrowsersMatching(notIE)('Trace when replay entitlement is 1 and stn
   })
 
   it('does not run when replay is OFF', async () => {
-    await browser.url(await browser.testHandle.assetURL('stn/instrumented.html', config({ session_replay: { sampleRate: 0, errorSampleRate: 0 } })))
+    await browser.url(await browser.testHandle.assetURL('stn/instrumented.html', config({ session_replay: { sampling_rate: 0, error_sampling_rate: 0 } })))
     await browser.waitForAgentLoad()
     expect(initSTReceived).toBeUndefined()
   })
 
   ;[
-    ['FULL', { sampleRate: 1, errorSampleRate: 0 }],
-    ['ERR', { sampleRate: 0, errorSampleRate: 1 }]
+    ['FULL', { sampling_rate: 100, error_sampling_rate: 0 }],
+    ['ERR', { sampling_rate: 0, error_sampling_rate: 100 }]
   ].forEach(([replayMode, replayConfig]) => {
     it(`still runs and in the same ${replayMode} mode as replay feature that's on`, async () => {
       const urlReplayOn = await browser.testHandle.assetURL('stn/instrumented.html', config({ session_replay: replayConfig, session_trace: { harvestTimeSeconds: 2 } }))

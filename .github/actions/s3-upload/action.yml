@@ -28,9 +28,6 @@ inputs:
   bucket_dir:
     description: 'A sub directory to put the files within the S3 bucket.'
     required: false
-  asset_cache_duration:
-    description: 'Value to be set for the asset cache header.'
-    default: 3600
 
 outputs:
   results:
@@ -41,7 +38,7 @@ runs:
   using: "composite"
   steps:
     - name: Install dependencies
-      run: npm install --prefix $GITHUB_ACTION_PATH/..
+      run: npm install --silent --no-progress --prefix $GITHUB_ACTION_PATH/..
       shell: bash
     - name: Run action script
       id: action-script
@@ -54,7 +51,6 @@ runs:
           --bucket ${{ inputs.aws_bucket_name }} \
           --role ${{ inputs.aws_role }} \
           --input ${{ inputs.local_dir }} \
-          --asset-cache-duration ${{ inputs.asset_cache_duration }} \
           ${{ inputs.dry_run && '--dry' || '' }} \
           ${{ inputs.bucket_dir && format('--dir {0}', inputs.bucket_dir) || '' }}
       shell: bash

@@ -14,11 +14,12 @@
       position: absolute; right: 50px; top: 200px;
     }
   </style>
+  <link rel="stylesheet" type="text/css" href="style.css">
   {init}
   {config}
   <script>
     localStorage.clear()
-    NREUM.init.session_replay = {enabled: true, harvestTimeSeconds: 5, errorSampleRate: 0, sampleRate: 1}
+    NREUM.init.session_replay = {enabled: true, harvestTimeSeconds: 5, error_sampling_rate: 0, sampling_rate: 100, collect_fonts: true}
     NREUM.init.privacy.cookies_enabled = true
   </script>
   {loader}
@@ -26,12 +27,12 @@
 <body>
   this is a page intended to "manually" set up session replay and bypass the default "off" configs
   <hr />
-  <img class="left" src="/slowimage" />
   <hr />
   <textarea></textarea>
   <hr />
   <button onclick="moveImage()">Click</button>
   <a href="./rrweb-record.html" target="_blank">New Tab</a>
+  <img src="https://upload.wikimedia.org/wikipedia/commons/d/d7/House_of_Commons_Chamber_1.png" />
   <script>
     function moveImage(){
       document.querySelector("img").classList.toggle("left")

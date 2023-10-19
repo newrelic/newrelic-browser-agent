@@ -6,16 +6,12 @@ on:
     - cron: '0 4 * * *'
   workflow_dispatch:
 
-env:
-  BUILD_NUMBER: Nightly-job-${{ github.run_number }}-attempt-${{ github.run_attempt }}
-
 jobs:
   wdio-smoke:
     name: 'WDIO: Smoke Test'
     uses: ./.github/workflows/wdio-single-browser.yml
     with:
       browser-target: chrome@latest
-      build-number: $BUILD_NUMBER
     secrets: inherit
 
   jil-smoke-unit:
@@ -24,7 +20,6 @@ jobs:
     uses: ./.github/workflows/jil-single-browser.yml
     with:
       browser-target: chrome@latest
-      build-number: $BUILD_NUMBER
       collection: unit
     secrets: inherit
 
@@ -34,7 +29,6 @@ jobs:
     uses: ./.github/workflows/jil-single-browser.yml
     with:
       browser-target: chrome@latest
-      build-number: $BUILD_NUMBER
       collection: functional
     secrets: inherit
 
@@ -44,7 +38,6 @@ jobs:
     uses: ./.github/workflows/jil-single-browser.yml
     with:
       browser-target: chrome@latest
-      build-number: $BUILD_NUMBER
       collection: unit
     secrets: inherit
 
@@ -54,40 +47,38 @@ jobs:
     uses: ./.github/workflows/jil-single-browser.yml
     with:
       browser-target: chrome@latest
-      build-number: $BUILD_NUMBER
       collection: functional
     secrets: inherit
 
-  jil-workers:
-    name: JIL Test - workers
+  verify-ab-assets:
+    name: Verify A/B Assets
     timeout-minutes: 60
     runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
-    env:
-      NEWRELIC_ENVIRONMENT: ci
-      JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
-      JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
-      NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
           node-version: lts/*
-      - name: Install dependencies
-        run: npm ci
-      - name: Build agent
-        run: npm run build:all
-      - name: Run JIL Tests
-        run: |
-          node --max-old-space-size=8192 ./tools/jil/bin/cli.js \
-            -f merged \
-            -s \
-            -b '*@*' \
-            --concurrent 30 \
-            -t 85000 \
-            ${{ runner.debug && '-v -L -D -d' || '' }} \
-            tests/worker/**/*.test.js
+      - name: Verify a/b assets
+        uses: ./.github/actions/fastly-verify
+        with:
+          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
+          fastly_service: js-agent.newrelic.com
+          asset_path: |
+            internal/dev-released.js \
+            internal/dev-latest.js \
+            internal/dev-experiments.js \
+            internal/dev-postamble.js \
+            internal/staging-released.js \
+            internal/staging-latest.js \
+            internal/staging-experiments.js \
+            internal/staging-postamble.js \
+            internal/prod-released.js \
+            internal/prod-postamble.js \
+            internal/eu-prod-released.js \
+            internal/eu-prod-postamble.js
 
   # TODO: Need to add a job for cleaning up experiments to run nightly

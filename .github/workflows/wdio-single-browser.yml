@@ -7,10 +7,6 @@ on:
         description: 'Which browser(s) and version(s) to target with the wdio test: chrome@latest OR chrome@* are examples'
         required: true
         type: string
-      build-number:
-        description: 'Used to associate test results reported to New Relic to the BUILD_NUMBER identifier'
-        required: true
-        type: string
       additional-flags:
         description: 'Additional flags to pass to the wdio cli'
         required: false
@@ -24,10 +20,6 @@ on:
     inputs:
       browser-target:
         description: 'Which browser(s) and version(s) to target with the wdio test: chrome@latest OR chrome@* are examples'
-        required: true
-        type: string
-      build-number:
-        description: 'Used to associate test results reported to New Relic to the BUILD_NUMBER identifier'
         required: true
         type: string
       additional-flags:
@@ -44,11 +36,9 @@ on:
         required: false
         type: string
     secrets:
-      JIL_SAUCE_LABS_USERNAME:
+      SAUCE_USERNAME:
         required: true
-      JIL_SAUCE_LABS_ACCESS_KEY:
-        required: true
-      JIL_NODE_NEW_RELIC_LICENSE_KEY:
+      SAUCE_ACCESS_KEY:
         required: true
 
 jobs:
@@ -60,12 +50,8 @@ jobs:
       run:
         shell: bash
     env:
-      BUILD_NUMBER: ${{ inputs.build-number }}
-      COVERAGE: ${{ inputs.coverage }}
-      NEWRELIC_ENVIRONMENT: ci
-      JIL_SAUCE_LABS_USERNAME: ${{ secrets.JIL_SAUCE_LABS_USERNAME }}
-      JIL_SAUCE_LABS_ACCESS_KEY: ${{ secrets.JIL_SAUCE_LABS_ACCESS_KEY }}
-      NEW_RELIC_LICENSE_KEY: ${{ secrets.JIL_NODE_NEW_RELIC_LICENSE_KEY }}
+      SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
+      SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
     steps:
       - uses: actions/checkout@v3
         with:
@@ -76,10 +62,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Build agent
-        run: npm run build:all
+        run: |
+          ${{ inputs.coverage && 'COVERAGE=true' || '' }} \
+          npm run build:all
       - name: Run WDIO Tests
         run: |
-          node ./tools/wdio/bin/cli.js \
+          node --max-old-space-size=8192 ./tools/wdio/bin/cli.js \
             -s \
             -b '${{ inputs.browser-target }}' \
             --concurrent 10 \
@@ -88,12 +76,12 @@ jobs:
             ${{ inputs.additional-flags || '' }}
       - name: Find pull request
         id: pull-request-target
-        if: ${{ inputs.coverage }}
+        if: ${{ !cancelled() && inputs.coverage }}
         uses: ./.github/actions/find-pull-request
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Upload pr code coverage
-        if: ${{ inputs.coverage && steps.pull-request-target.outputs.results }}
+        if: ${{ !cancelled() && inputs.coverage && steps.pull-request-target.outputs.results }}
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -103,14 +91,14 @@ jobs:
           flags: integration-tests
           verbose: true
       - name: Upload branch code coverage
-        if: ${{ inputs.coverage && !steps.pull-request-target.outputs.results }}
+        if: ${{ !cancelled() && inputs.coverage && !steps.pull-request-target.outputs.results }}
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: integration-tests
           verbose: true
       - name: Archive code coverage results
-        if: ${{ inputs.coverage }}
+        if: ${{ !cancelled() && inputs.coverage }}
         uses: actions/upload-artifact@v3
         with:
           name: integration-code-coverage-report

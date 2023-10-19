@@ -1,8 +1,15 @@
 import fetch from 'node-fetch'
 
+/**
+ * Wraps fetch with retry capabilities.
+ * @param {string} url
+ * @param {import('node-fetch').RequestInit & { retry?: number }} options
+ * @returns {Promise<import('node-fetch').Response>}
+ */
 export async function fetchRetry (url, options) {
   let retryLimit
-  let status, statusText
+  let request
+
   if (typeof options.retry !== 'number' || options.retry <= 1) {
     retryLimit = 1
   } else {
@@ -11,21 +18,17 @@ export async function fetchRetry (url, options) {
 
   while (retryLimit >= 1) {
     try {
-      const result = await fetch(url, {
+      request = await fetch(url, {
         ...options,
         retry: undefined
       })
 
-      status = result?.status, 
-      statusText = result?.statusText
-
-      if (result?.ok) {
-        return result
+      if (request?.ok) {
+        return request
       } else {
         retryLimit--
       }
     } catch (error) {
-      errMsg = err
       if (retryLimit <= 1) {
         throw error
       }
@@ -34,5 +37,5 @@ export async function fetchRetry (url, options) {
     }
   }
 
-  return {status, statusText}
+  return request
 }

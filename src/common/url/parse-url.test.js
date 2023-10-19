@@ -11,7 +11,8 @@ const urlTests = [
       pathname: '/path/name',
       protocol: 'http',
       port: '80',
-      sameOrigin: false
+      sameOrigin: false,
+      search: '?qs=5&a=b'
     }
   },
   {
@@ -21,7 +22,8 @@ const urlTests = [
       pathname: '/path/@name',
       protocol: 'http',
       port: '8080',
-      sameOrigin: false
+      sameOrigin: false,
+      search: '?qs=5&a=b'
     }
   },
   {
@@ -31,7 +33,8 @@ const urlTests = [
       pathname: '/path/name',
       protocol: 'https',
       port: '443',
-      sameOrigin: false
+      sameOrigin: false,
+      search: '?qs=5&a=b'
     }
   },
   {
@@ -41,7 +44,8 @@ const urlTests = [
       pathname: '/path/name',
       protocol: location.protocol.split(':')[0],
       port: '80',
-      sameOrigin: true
+      sameOrigin: true,
+      search: '?qs=5&a=b'
     }
   },
   {
@@ -51,7 +55,8 @@ const urlTests = [
       pathname: '/path/name',
       protocol: location.protocol.split(':')[0],
       port: '80',
-      sameOrigin: true
+      sameOrigin: true,
+      search: '?qs=5&a=b'
     }
   },
   {
@@ -97,7 +102,36 @@ test('should cache parsed urls', async () => {
     pathname: '/',
     protocol: 'http',
     port: '80',
-    sameOrigin: false
+    sameOrigin: false,
+    search: ''
+  }
+
+  jest.spyOn(document, 'createElement')
+
+  const { parseUrl } = await import('./parse-url')
+  parseUrl(input)
+
+  expect(parseUrl(input)).toEqual(expected)
+  expect(document.createElement).toHaveBeenCalledTimes(0)
+})
+
+test('should use createElement as fallback', async () => {
+  jest.doMock('../constants/runtime', () => ({
+    __esModule: true,
+    isBrowserScope: true,
+    globalScope: global
+  }))
+
+  global.URL = jest.fn(() => { throw new Error('test') })
+
+  const input = 'http://example.com/'
+  const expected = {
+    hostname: 'example.com',
+    pathname: '/',
+    protocol: 'http',
+    port: '80',
+    sameOrigin: false,
+    search: ''
   }
 
   jest.spyOn(document, 'createElement')

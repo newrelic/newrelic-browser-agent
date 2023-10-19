@@ -6,6 +6,7 @@ import { S3Client } from '@aws-sdk/client-s3'
 import { Upload } from '@aws-sdk/lib-storage'
 import mime from 'mime-types'
 import { args } from './args.js'
+import { getAssetCacheHeader } from './asset-cache.js'
 
 const stsClient = new STSClient({ region: args.region })
 const s3Credentials = await stsClient.send(new AssumeRoleCommand({
@@ -39,7 +40,7 @@ const uploads = await Promise.all(filesToUpload
         encoding: 'utf-8'
       }),
       ContentType: mime.lookup(file.path) || 'application/javascript',
-      CacheControl: `public, max-age=${args.assetCacheDuration}`,
+      CacheControl: getAssetCacheHeader(args.dir, file.name),
     }
 
     if (typeof args.dir === 'string' && args.dir.trim() !== '') {

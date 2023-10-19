@@ -2,27 +2,16 @@ name: 'WDIO: All browsers'
 
 on:
   workflow_dispatch:
-    inputs:
-      build-number:
-        description: 'Used to associate test results reported to New Relic to the BUILD_NUMBER identifier'
-        required: true
-        type: string
   workflow_call:
     inputs:
-      build-number:
-        description: 'Used to associate test results reported to New Relic to the BUILD_NUMBER identifier'
-        required: true
-        type: string
       ref:
         description: 'Github branch ref to checkout and run tests on'
         required: false
         type: string
     secrets:
-      JIL_SAUCE_LABS_USERNAME:
+      SAUCE_USERNAME:
         required: true
-      JIL_SAUCE_LABS_ACCESS_KEY:
-        required: true
-      JIL_NODE_NEW_RELIC_LICENSE_KEY:
+      SAUCE_ACCESS_KEY:
         required: true
 
 jobs:
@@ -31,7 +20,6 @@ jobs:
     with:
       ref: ${{ inputs.ref || github.ref }}
       browser-target: chrome@*
-      build-number: ${{ inputs.build-number }}
     secrets: inherit
 
   firefox:
@@ -39,7 +27,6 @@ jobs:
     with:
       ref: ${{ inputs.ref || github.ref }}
       browser-target: firefox@*
-      build-number: ${{ inputs.build-number }}
     secrets: inherit
 
   safari:
@@ -47,7 +34,6 @@ jobs:
     with:
       ref: ${{ inputs.ref || github.ref }}
       browser-target: safari@*
-      build-number: ${{ inputs.build-number }}
     secrets: inherit
 
   edge:
@@ -55,15 +41,34 @@ jobs:
     with:
       ref: ${{ inputs.ref || github.ref }}
       browser-target: edge@*
-      build-number: ${{ inputs.build-number }}
     secrets: inherit
 
-  ios:
+  ios-15_5:
     uses: ./.github/workflows/wdio-single-browser.yml
     with:
       ref: ${{ inputs.ref || github.ref }}
-      browser-target: ios@*
-      build-number: ${{ inputs.build-number }}
+      browser-target: ios@15.5
+    secrets: inherit
+
+  ios-16_0:
+    uses: ./.github/workflows/wdio-single-browser.yml
+    with:
+      ref: ${{ inputs.ref || github.ref }}
+      browser-target: ios@16.0
+    secrets: inherit
+
+  ios-16_1:
+    uses: ./.github/workflows/wdio-single-browser.yml
+    with:
+      ref: ${{ inputs.ref || github.ref }}
+      browser-target: ios@16.1
+    secrets: inherit
+
+  ios-16_2:
+    uses: ./.github/workflows/wdio-single-browser.yml
+    with:
+      ref: ${{ inputs.ref || github.ref }}
+      browser-target: ios@16.2
     secrets: inherit
 
   android:
@@ -71,7 +76,6 @@ jobs:
     with:
       ref: ${{ inputs.ref || github.ref }}
       browser-target: android@*
-      build-number: ${{ inputs.build-number }}
     secrets: inherit
 
   ie:
@@ -79,6 +83,5 @@ jobs:
     with:
       ref: ${{ inputs.ref || github.ref }}
       browser-target: ie@11
-      build-number: ${{ inputs.build-number }}
       additional-flags: -P
     secrets: inherit

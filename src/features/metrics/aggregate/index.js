@@ -29,9 +29,11 @@ export class Aggregate extends AggregateBase {
     this.singleChecks() // checks that are run only one time, at script load
     this.eachSessionChecks() // the start of every time user engages with page
 
-    // *cli, Mar 23 - Per NR-94597, this feature should only harvest ONCE at the (potential) EoL time of the page.
-    scheduler = new HarvestScheduler('jserrors', { onUnload: () => this.unload() }, this)
-    scheduler.harvest.on('jserrors', () => ({ body: this.aggregator.take(['cm', 'sm']) }))
+    this.ee.on(`drain-${this.featureName}`, () => {
+      // *cli, Mar 23 - Per NR-94597, this feature should only harvest ONCE at the (potential) EoL time of the page.
+      scheduler = new HarvestScheduler('jserrors', { onUnload: () => this.unload() }, this)
+      scheduler.harvest.on('jserrors', () => ({ body: this.aggregator.take(['cm', 'sm']) }))
+    }) // this is needed to ensure EoL is "on" and sent
 
     this.drain()
   }

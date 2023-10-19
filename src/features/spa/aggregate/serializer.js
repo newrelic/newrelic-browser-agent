@@ -102,7 +102,6 @@ export class Serializer extends SharedContext {
             nullable(attrs.firstPaint, numeric, true) +
             nullable(attrs.firstContentfulPaint, numeric, false)
           )
-
           var attrParts = addCustomAttributes(attrs.custom, addString)
           children = children.concat(attrParts)
           attrCount = attrParts.length
@@ -128,6 +127,13 @@ export class Serializer extends SharedContext {
             nullable(node.dt && node.dt.traceId, addString, true) +
             nullable(node.dt && node.dt.timestamp, numeric, false)
           )
+
+          // add params.gql here
+          if (Object.keys(params?.gql || {}).length) {
+            var ajaxAttrParts = addCustomAttributes(params.gql, addString)
+            children = children.concat(ajaxAttrParts)
+            attrCount = ajaxAttrParts.length
+          }
           break
 
         case 4:

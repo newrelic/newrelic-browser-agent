@@ -1,5 +1,5 @@
 import { testRumRequest } from '../../../tools/testing-server/utils/expect-tests.js'
-import { config, testExpectedReplay } from './helpers'
+import { config, getSR, testExpectedReplay } from './helpers'
 import { supportsMultipleTabs, notIE, notSafari } from '../../../tools/browser-matcher/common-matchers.mjs'
 
 describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
@@ -18,7 +18,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
     const { request: page1Contents } = await browser.testHandle.expectBlob(10000)
     const { localStorage } = await browser.getAgentSessionInfo()
 
-    testExpectedReplay({ data: page1Contents, session: localStorage.value, hasError: false, hasSnapshot: true, isFirstChunk: true })
+    testExpectedReplay({ data: page1Contents, session: localStorage.value, hasError: false, hasMeta: true, hasSnapshot: true, isFirstChunk: true })
 
     await browser.enableSessionReplay()
     await browser.refresh()
@@ -26,7 +26,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
 
     const { request: page2Contents } = await browser.testHandle.expectBlob()
 
-    testExpectedReplay({ data: page2Contents, session: localStorage.value, hasError: false, hasSnapshot: true, isFirstChunk: false })
+    testExpectedReplay({ data: page2Contents, session: localStorage.value, hasError: false, hasMeta: true, hasSnapshot: true, isFirstChunk: false })
   })
 
   it('should record across same-tab page navigation', async () => {
@@ -35,7 +35,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
 
     const { localStorage } = await browser.getAgentSessionInfo()
     const { request: page1Contents } = await browser.testHandle.expectBlob(10000)
-    testExpectedReplay({ data: page1Contents, session: localStorage.value, hasError: false, hasSnapshot: true, isFirstChunk: true })
+    testExpectedReplay({ data: page1Contents, session: localStorage.value, hasError: false, hasMeta: true, hasSnapshot: true, isFirstChunk: true })
 
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
@@ -56,7 +56,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
       .then(() => browser.waitForAgentLoad())
 
     const { request: page2Contents } = await browser.testHandle.expectBlob(10000)
-    testExpectedReplay({ data: page2Contents, session: localStorage.value, hasError: false, hasSnapshot: true, isFirstChunk: false })
+    testExpectedReplay({ data: page2Contents, session: localStorage.value, hasError: false, hasMeta: true, hasSnapshot: true, isFirstChunk: false })
   })
 
   // As of 06/26/2023 test fails in Safari, though tested behavior works in a live browser (revisit in NR-138940).
@@ -67,7 +67,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
     const { request: page1Contents } = await browser.testHandle.expectBlob(10000)
     const { localStorage } = await browser.getAgentSessionInfo()
 
-    testExpectedReplay({ data: page1Contents, session: localStorage.value, hasError: false, hasSnapshot: true, isFirstChunk: true })
+    testExpectedReplay({ data: page1Contents, session: localStorage.value, hasError: false, hasMeta: true, hasSnapshot: true, isFirstChunk: true })
 
     const newTab = await browser.createWindow('tab')
     await browser.switchToWindow(newTab.handle)
@@ -77,7 +77,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
 
     const { request: page2Contents } = await browser.testHandle.expectBlob(10000)
 
-    testExpectedReplay({ data: page2Contents, session: localStorage.value, hasError: false, hasSnapshot: true, isFirstChunk: false })
+    testExpectedReplay({ data: page2Contents, session: localStorage.value, hasError: false, hasMeta: true, hasSnapshot: true, isFirstChunk: false })
 
     await browser.closeWindow()
     await browser.switchToWindow((await browser.getWindowHandles())[0])
@@ -90,7 +90,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
     const { request: page1Contents } = await browser.testHandle.expectBlob(10000)
     const { localStorage } = await browser.getAgentSessionInfo()
 
-    testExpectedReplay({ data: page1Contents, session: localStorage.value, hasError: false, hasSnapshot: true, isFirstChunk: true })
+    testExpectedReplay({ data: page1Contents, session: localStorage.value, hasError: false, hasMeta: true, hasSnapshot: true, isFirstChunk: true })
 
     await browser.execute(function () {
       Object.values(NREUM.initializedAgents)[0].runtime.session.state.sessionReplay = 0
@@ -101,5 +101,47 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
       .then(() => browser.waitForAgentLoad())
 
     await expect(browser.waitForFeatureAggregate('session_replay', 5000)).rejects.toThrow()
+  })
+
+  // As of 06/26/2023 test fails in Safari, though tested behavior works in a live browser (revisit in NR-138940).
+  it.withBrowsersMatching([supportsMultipleTabs, notSafari])('should kill active tab if killed in backgrounded tab', async () => {
+    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
+      .then(() => browser.waitForAgentLoad())
+
+    const { request: page1Contents } = await browser.testHandle.expectBlob(10000)
+    const { localStorage } = await browser.getAgentSessionInfo()
+
+    testExpectedReplay({ data: page1Contents, session: localStorage.value, hasError: false, hasMeta: true, hasSnapshot: true, isFirstChunk: true })
+
+    const newTab = await browser.createWindow('tab')
+    await browser.switchToWindow(newTab.handle)
+    await browser.enableSessionReplay()
+    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
+      .then(() => browser.waitForAgentLoad())
+
+    const { request: page2Contents } = await browser.testHandle.expectBlob(10000)
+
+    testExpectedReplay({ data: page2Contents, session: localStorage.value, hasError: false, hasMeta: true, hasSnapshot: true, isFirstChunk: false })
+
+    const page2Blocked = await browser.execute(function () {
+      try {
+        var agg = Object.values(newrelic.initializedAgents)[0].features.session_replay.featAggregate
+        agg.abort()
+        return agg.blocked
+      } catch (err) {
+        return false
+      }
+    })
+    await browser.closeWindow()
+    await browser.switchToWindow((await browser.getWindowHandles())[0])
+
+    expect(page2Blocked).toEqual(true)
+    await expect(getSR()).resolves.toEqual(expect.objectContaining({
+      events: [],
+      initialized: true,
+      recording: false,
+      mode: 0,
+      blocked: true
+    }))
   })
 })

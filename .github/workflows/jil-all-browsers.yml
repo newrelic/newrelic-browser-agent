@@ -2,27 +2,16 @@ name: 'JIL: All browsers'
 
 on:
   workflow_dispatch:
-    inputs:
-      build-number:
-        description: 'Used to associate test results reported to New Relic to the BUILD_NUMBER identifier'
-        required: true
-        type: string
   workflow_call:
     inputs:
-      build-number:
-        description: 'Used to associate test results reported to New Relic to the BUILD_NUMBER identifier'
-        required: true
-        type: string
       ref:
         description: 'Github branch ref to checkout and run tests on'
         required: false
         type: string
     secrets:
-      JIL_SAUCE_LABS_USERNAME:
+      SAUCE_USERNAME:
         required: true
-      JIL_SAUCE_LABS_ACCESS_KEY:
-        required: true
-      JIL_NODE_NEW_RELIC_LICENSE_KEY:
+      SAUCE_ACCESS_KEY:
         required: true
 
 jobs:
@@ -31,7 +20,6 @@ jobs:
     with:
       ref: ${{ inputs.ref || github.ref }}
       browser-target: chrome@*
-      build-number: ${{ inputs.build-number }}
       collection: unit
     secrets: inherit
 
@@ -40,7 +28,6 @@ jobs:
     with:
       ref: ${{ inputs.ref || github.ref }}
       browser-target: chrome@*
-      build-number: ${{ inputs.build-number }}
       collection: functional
     secrets: inherit
 
@@ -49,7 +36,6 @@ jobs:
     with:
       ref: ${{ inputs.ref || github.ref }}
       browser-target: firefox@*
-      build-number: ${{ inputs.build-number }}
       collection: unit
     secrets: inherit
 
@@ -58,7 +44,6 @@ jobs:
     with:
       ref: ${{ inputs.ref || github.ref }}
       browser-target: firefox@*
-      build-number: ${{ inputs.build-number }}
       collection: functional
     secrets: inherit
 
@@ -67,7 +52,6 @@ jobs:
     with:
       ref: ${{ inputs.ref || github.ref }}
       browser-target: safari@*
-      build-number: ${{ inputs.build-number }}
       collection: unit
     secrets: inherit
 
@@ -76,7 +60,6 @@ jobs:
     with:
       ref: ${{ inputs.ref || github.ref }}
       browser-target: safari@*
-      build-number: ${{ inputs.build-number }}
       collection: functional
     secrets: inherit
 
@@ -85,7 +68,6 @@ jobs:
     with:
       ref: ${{ inputs.ref || github.ref }}
       browser-target: edge@*
-      build-number: ${{ inputs.build-number }}
       collection: unit
     secrets: inherit
 
@@ -94,7 +76,6 @@ jobs:
     with:
       ref: ${{ inputs.ref || github.ref }}
       browser-target: edge@*
-      build-number: ${{ inputs.build-number }}
       collection: functional
     secrets: inherit
 
@@ -103,7 +84,6 @@ jobs:
     with:
       ref: ${{ inputs.ref || github.ref }}
       browser-target: ios@<16
-      build-number: ${{ inputs.build-number }}
       collection: unit
     secrets: inherit
 
@@ -112,7 +92,6 @@ jobs:
     with:
       ref: ${{ inputs.ref || github.ref }}
       browser-target: ios@<16
-      build-number: ${{ inputs.build-number }}
       collection: functional
     secrets: inherit
 
@@ -120,8 +99,7 @@ jobs:
     uses: ./.github/workflows/jil-single-browser.yml
     with:
       ref: ${{ inputs.ref || github.ref }}
-      browser-target: android@<13
-      build-number: ${{ inputs.build-number }}
+      browser-target: android@<=9
       collection: unit
     secrets: inherit
 
@@ -129,8 +107,7 @@ jobs:
     uses: ./.github/workflows/jil-single-browser.yml
     with:
       ref: ${{ inputs.ref || github.ref }}
-      browser-target: android@<13
-      build-number: ${{ inputs.build-number }}
+      browser-target: android@<=9
       collection: functional
     secrets: inherit
 
@@ -139,7 +116,6 @@ jobs:
     with:
       ref: ${{ inputs.ref || github.ref }}
       browser-target: ie@11
-      build-number: ${{ inputs.build-number }}
       collection: unit
       additional-flags: -P
     secrets: inherit
@@ -149,7 +125,6 @@ jobs:
     with:
       ref: ${{ inputs.ref || github.ref }}
       browser-target: ie@11
-      build-number: ${{ inputs.build-number }}
       collection: functional
       additional-flags: -P
     secrets: inherit

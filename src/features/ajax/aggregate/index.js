@@ -15,6 +15,7 @@ import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { getFeatureState } from '../../../common/util/feature-state'
 import { AjaxNode } from '../../basic_spa/aggregate/ajax-node'
+import { parseGQL } from './gql'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -68,8 +69,6 @@ export class Aggregate extends AggregateBase {
         hash = stringify([params.status, params.host, params.pathname])
       }
 
-      handle('bstXhrAgg', ['xhr', hash, params, metrics], undefined, FEATURE_NAMES.sessionTrace, ee)
-
       // store as metric
       aggregator.store('xhr', hash, params, metrics)
 
@@ -84,6 +83,8 @@ export class Aggregate extends AggregateBase {
         }
         return
       }
+
+      handle('bstXhrAgg', ['xhr', hash, params, metrics], undefined, FEATURE_NAMES.sessionTrace, ee)
 
       var xhrContext = this
 
@@ -105,6 +106,12 @@ export class Aggregate extends AggregateBase {
         event.traceId = xhrContext.dt.traceId
         event.spanTimestamp = xhrContext.dt.timestamp
       }
+
+      // parsed from the AJAX body, looking for operationName param & parsing query for operationType
+      event.gql = params.gql = parseGQL({
+        body: this.body,
+        query: this?.parsedOrigin?.search
+      })
 
       const spaFeature = getFeatureState({ agentIdentifier, featureName: FEATURE_NAMES.basicSpa })
       const {
@@ -219,7 +226,8 @@ export class Aggregate extends AggregateBase {
         var insert = '2,'
 
         // add custom attributes
-        var attrParts = addCustomAttributes(getInfo(agentIdentifier).jsAttributes || {}, this.addString)
+        // gql decorators are added as custom attributes to alleviate need for new BEL schema
+        var attrParts = addCustomAttributes({ ...(getInfo(agentIdentifier).jsAttributes || {}), ...(event.gql || {}) }, this.addString)
         fields.unshift(numeric(attrParts.length))
 
         insert += fields.join(',')

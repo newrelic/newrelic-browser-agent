@@ -14,7 +14,7 @@ export const RRWEB_EVENT_TYPES = {
   Custom: 5
 }
 
-export function testExpectedReplay ({ data, session, hasSnapshot, hasError, isFirstChunk, contentEncoding, decompressedBytes }) {
+export function testExpectedReplay ({ data, session, hasMeta, hasSnapshot, hasError, isFirstChunk, contentEncoding, decompressedBytes }) {
   expect(data.query).toMatchObject({
     browser_monitoring_key: expect.any(String),
     type: 'SessionReplay',
@@ -31,6 +31,7 @@ export function testExpectedReplay ({ data, session, hasSnapshot, hasError, isFi
     'replay.lastTimestamp': expect.any(Number),
     'replay.durationMs': expect.any(Number),
     session: session || expect.any(String),
+    hasMeta: hasMeta || expect.any(Boolean),
     hasSnapshot: hasSnapshot || expect.any(Boolean),
     hasError: hasError || expect.any(Boolean),
     agentVersion: expect.any(String),
@@ -66,7 +67,7 @@ export function config (initOverrides = {}) {
       loader: 'experimental',
       init: {
         privacy: { cookies_enabled: true },
-        session_replay: { enabled: true, harvestTimeSeconds: 5, sampleRate: 1, errorSampleRate: 0 }
+        session_replay: { enabled: true, harvestTimeSeconds: 5, sampling_rate: 100, error_sampling_rate: 0 }
       }
     },
     {

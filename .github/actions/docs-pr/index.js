@@ -64,14 +64,14 @@ if (categories.feat.length > 0) {
   }
 }
 if (categories.fix.length > 0) {
-  notesBody += '\n\n### Bug Fixes'
+  notesBody += '\n\n### Bug fixes'
   for (const item of categories.fix) {
     frontMatter.bugs.push(item.title)
     notesBody += `\n\n#### ${item.title}\n${item.description}`
   }
 }
 if (categories.security.length > 0) {
-  notesBody += '\n\n### Security Fixes'
+  notesBody += '\n\n### Security fixes'
   for (const item of categories.security) {
     frontMatter.security.push(item.title)
     notesBody += `\n\n#### ${item.title}\n${item.description}`

@@ -50,8 +50,8 @@ jobs:
           fastly_service: js-agent.newrelic.com
           asset_path: ${{ join(fromJson(steps.prod-s3-upload.outputs.results).*.Key, ' ') }}
 
-  # Rebuild and publish the prod environment A/B script
-  publish-prod-ab:
+  # Publish the new "current" version to s3 before the prod a/b scripts have been built
+  publish-current-to-s3:
     needs: [publish-prod-to-s3]
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -66,14 +66,50 @@ jobs:
       - name: Get version number
         id: agent-loader-version
         run: echo "results=$(cat package.json | jq -r '.version')" >> $GITHUB_OUTPUT
+      - name: Copy loaders to current
+        id: current-s3-update
+        uses: ./.github/actions/update-current
+        with:
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_role: ${{ secrets.AWS_ROLE_ARN }}
+          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
+          loader_version: ${{ steps.agent-loader-version.outputs.results }}
+      - name: Gather current purge paths
+        id: current-purge-paths
+        run: echo "results=$(echo '${{ steps.current-s3-update.outputs.results }}' | jq -j '.[].Key + " "')" >> $GITHUB_OUTPUT
+      - name: Purge current fastly cache
+        uses: ./.github/actions/fastly-purge
+        with:
+          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
+          fastly_service: js-agent.newrelic.com
+          purge_path: ${{ steps.current-purge-paths.outputs.results }}
+      - name: Verify current assets
+        uses: ./.github/actions/fastly-verify
+        with:
+          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
+          fastly_service: js-agent.newrelic.com
+          asset_path: ${{ join(fromJson(steps.current-s3-update.outputs.results).*.Key, ' ') }}
+
+  # Rebuild and publish the prod environment A/B script
+  publish-prod-ab:
+    needs: [publish-current-to-s3]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
       - name: Deploy prod a/b script
         uses: ./.github/actions/internal-ab
         with:
           nr_environment: prod
           nrba_app_id: ${{ secrets.INTERNAL_PRODUCTION_APPLICATION_ID }}
           nrba_license_key: ${{ secrets.INTERNAL_LICENSE_KEY }}
-          nrba_current_script_url: https://js-agent.newrelic.com/nr-loader-spa-current.min.js
-          nrba_next_script_url: https://js-agent.newrelic.com/nr-loader-spa-${{ steps.agent-loader-version.outputs.results }}.min.js
           aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws_role: ${{ secrets.AWS_ROLE_ARN }}
@@ -82,7 +118,7 @@ jobs:
 
   # Rebuild and publish the eu-prod environment A/B script
   publish-eu-prod-ab:
-    needs: [publish-prod-to-s3]
+    needs: [publish-current-to-s3]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     defaults:
@@ -93,17 +129,12 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: lts/*
-      - name: Get version number
-        id: agent-loader-version
-        run: echo "results=$(cat package.json | jq -r '.version')" >> $GITHUB_OUTPUT
       - name: Deploy eu-prod a/b script
         uses: ./.github/actions/internal-ab
         with:
           nr_environment: eu-prod
           nrba_app_id: ${{ secrets.INTERNAL_EU_PRODUCTION_APPLICATION_ID }}
           nrba_license_key: ${{ secrets.INTERNAL_LICENSE_KEY }}
-          nrba_current_script_url: https://js-agent.newrelic.com/nr-loader-spa-current.min.js
-          nrba_next_script_url: https://js-agent.newrelic.com/nr-loader-spa-${{ steps.agent-loader-version.outputs.results }}.min.js
           aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws_role: ${{ secrets.AWS_ROLE_ARN }}
@@ -186,9 +217,9 @@ jobs:
           github_token: ${{ secrets.BROWSER_GITHUB_BOT_PAT }}
           github_email: ${{ secrets.BROWSER_GITHUB_BOT_EMAIL }}
 
-  # Publish the new "current" version to s3 after the prod a/b scripts have been built
-  publish-current-to-s3:
-    needs: [publish-prod-ab, publish-eu-prod-ab]
+  # Notify the release repo of the new release
+  notify-release-repo:
+    needs: [publish-prod-to-nr, publish-npm]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     defaults:
@@ -199,30 +230,10 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: lts/*
-      - name: Get version number
-        id: agent-loader-version
-        run: echo "results=$(cat package.json | jq -r '.version')" >> $GITHUB_OUTPUT
-      - name: Copy loaders to current
-        id: current-s3-update
-        uses: ./.github/actions/update-current
+      - name: Notify Release Repo
+        uses: ./.github/actions/notify-repository
         with:
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_role: ${{ secrets.AWS_ROLE_ARN }}
-          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
-          loader_version: ${{ steps.agent-loader-version.outputs.results }}
-      - name: Gather current purge paths
-        id: current-purge-paths
-        run: echo "results=$(echo '${{ steps.current-s3-update.outputs.results }}' | jq -j '.[].Key + " "')" >> $GITHUB_OUTPUT
-      - name: Purge current fastly cache
-        uses: ./.github/actions/fastly-purge
-        with:
-          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
-          fastly_service: js-agent.newrelic.com
-          purge_path: ${{ steps.current-purge-paths.outputs.results }}
-      - name: Verify current assets
-        uses: ./.github/actions/fastly-verify
-        with:
-          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
-          fastly_service: js-agent.newrelic.com
-          asset_path: ${{ join(fromJson(steps.current-s3-update.outputs.results).*.Key, ' ') }}
+          token: ${{ secrets.BROWSER_GITHUB_BOT_PAT }}
+          repo_owner: newrelic
+          repo_name: newrelic-browser-agent-release
+          event_type: new_release

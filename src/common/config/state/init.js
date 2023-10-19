@@ -1,11 +1,32 @@
+import { isValidSelector } from '../../dom/query-selector'
 import { DEFAULT_EXPIRES_MS, DEFAULT_INACTIVE_MS } from '../../session/constants'
+import { warn } from '../../util/console'
 import { gosNREUMInitializedAgents } from '../../window/nreum'
 import { getModeledObject } from './configurable'
 
 const model = () => {
   const hiddenState = {
-    blockSelector: '[data-nr-block]',
-    maskInputOptions: { password: true }
+    mask_selector: '*',
+    block_selector: '[data-nr-block]',
+    mask_input_options: {
+      color: false,
+      date: false,
+      'datetime-local': false,
+      email: false,
+      month: false,
+      number: false,
+      range: false,
+      search: false,
+      tel: false,
+      text: false,
+      time: false,
+      url: false,
+      week: false,
+      // unify textarea and select element with text input
+      textarea: false,
+      select: false,
+      password: true // This will be enforced to always be true in the setter
+    }
   }
   return {
     proxy: {
@@ -40,29 +61,40 @@ const model = () => {
       autoStart: true,
       enabled: false,
       harvestTimeSeconds: 60,
-      sampleRate: 0.1,
-      errorSampleRate: 0.1,
+      sampling_rate: 50, // float from 0 - 100
+      error_sampling_rate: 50, // float from 0 - 100
+      collect_fonts: false, // serialize fonts for collection without public asset url, this is currently broken in RRWeb -- https://github.com/rrweb-io/rrweb/issues/1304.  When fixed, revisit with test cases
+      inline_images: false, // serialize images for collection without public asset url
+      inline_stylesheet: true, // serialize css for collection without public asset url
       // recording config settings
-      maskTextSelector: '*',
-      maskAllInputs: true,
+      mask_all_inputs: true,
+      // this has a getter/setter to facilitate validation of the selectors
+      get mask_text_selector () { return hiddenState.mask_selector },
+      set mask_text_selector (val) {
+        if (isValidSelector(val)) hiddenState.mask_selector = val + ',[data-nr-mask]'
+        else if (val === null) hiddenState.mask_selector = val // null is acceptable, which completely disables the behavior
+        else warn('An invalid session_replay.mask_selector was provided and will not be used', val)
+      },
       // these properties only have getters because they are enforcable constants and should error if someone tries to override them
-      get blockClass () { return 'nr-block' },
-      get ignoreClass () { return 'nr-ignore' },
-      get maskTextClass () { return 'nr-mask' },
+      get block_class () { return 'nr-block' },
+      get ignore_class () { return 'nr-ignore' },
+      get mask_text_class () { return 'nr-mask' },
       // props with a getter and setter are used to extend enforcable constants with customer input
       // we must preserve data-nr-block no matter what else the customer sets
-      get blockSelector () {
-        return hiddenState.blockSelector
+      get block_selector () {
+        return hiddenState.block_selector
       },
-      set blockSelector (val) {
-        hiddenState.blockSelector += `,${val}`
+      set block_selector (val) {
+        if (isValidSelector(val)) hiddenState.block_selector += `,${val}`
+        else if (val !== '') warn('An invalid session_replay.block_selector was provided and will not be used', val)
       },
       // password: must always be present and true no matter what customer sets
-      get maskInputOptions () {
-        return hiddenState.maskInputOptions
+      get mask_input_options () {
+        return hiddenState.mask_input_options
       },
-      set maskInputOptions (val) {
-        hiddenState.maskInputOptions = { ...val, password: true }
+      set mask_input_options (val) {
+        if (val && typeof val === 'object') hiddenState.mask_input_options = { ...val, password: true }
+        else warn('An invalid session_replay.mask_input_option was provided and will not be used', val)
       }
     },
     spa: { enabled: true, harvestTimeSeconds: 10, autoStart: true }

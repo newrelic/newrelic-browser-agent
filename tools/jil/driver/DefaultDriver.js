@@ -5,7 +5,6 @@
 
 const Driver = require('./Driver')
 const TestRun = require('./TestRun')
-var newrelic = require('newrelic')
 
 class DefaultDriver extends Driver {
   run (done) {
@@ -45,7 +44,6 @@ class DefaultDriver extends Driver {
     function onBrowserFinished (err, testRun) {
       if (err) {
         driver.output.log(`# got error while running tests (${testRun.browserSpec.toString()})`)
-        newrelic.noticeError(err)
       }
 
       running.delete(testRun)
@@ -55,7 +53,6 @@ class DefaultDriver extends Driver {
         if (driver.failedTests.length > 0) {
           // re-run failed tests
           driver.runDeviceTests(driver.failedTests, (err) => {
-            newrelic.noticeError(err)
             shutdown()
           })
         } else {
@@ -70,7 +67,7 @@ class DefaultDriver extends Driver {
       driver.output.log('# stopping asset server')
       driver.assetServer.stop()
       driver.output.finish()
-      newrelic.shutdown({ collectPendingData: true, timeout: 3000 }, done)
+      done()
     }
   }
 }

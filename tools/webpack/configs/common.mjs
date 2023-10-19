@@ -47,7 +47,7 @@ export default (env, asyncChunkName) => {
 
         return env.SUBVERSION === 'PROD' ? `[name]${env.PATH_VERSION}.js` : '[name].js'
       },
-      chunkFilename: env.SUBVERSION === 'PROD' ? `[name].[chunkhash:8]${env.PATH_VERSION}.min.js` : `[name]${env.PATH_VERSION}.min.js`,
+      chunkFilename: `[name]${env.PATH_VERSION}.min.js`,
       path: env.paths.build,
       publicPath: env.PUBLIC_PATH,
       clean: false,

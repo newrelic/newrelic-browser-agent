@@ -215,5 +215,5 @@ function copy (from, to, emitter) {
  * @returns {boolean} Whether the passed function is ineligible to be wrapped.
  */
 function notWrappable (fn) {
-  return !(fn && fn instanceof Function && fn.apply && !fn[flag])
+  return !(fn && typeof fn === 'function' && fn.apply && !fn[flag])
 }

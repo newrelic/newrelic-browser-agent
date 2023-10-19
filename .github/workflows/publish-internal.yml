@@ -1,0 +1,53 @@
+# This workflow is used to build and publish the
+# agent script loaded on our internal NR1 environments.
+
+name: Publish Internal
+
+on:
+  workflow_dispatch:
+    inputs:
+      nr_environment:
+        description: 'Target New Relic environment'
+        required: true
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+          - eu-prod
+      nrba_released_script_url:
+        description: 'URL for the script to use as the latest released version NRBA loader.'
+        required: false
+        default: https://js-agent.newrelic.com/nr-loader-spa-current.min.js
+      nrba_latest_script_url:
+        description: 'URL for the script to use as the latest unreleased version NRBA loader.'
+        required: false
+        default: https://js-agent.newrelic.com/dev/nr-loader-spa.min.js
+
+jobs:
+  publish-internal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+      - name: Deploy prod a/b script
+        uses: ./.github/actions/internal-ab
+        with:
+          nr_environment: ${{ inputs.nr_environment }}
+          nrba_released_script_url: ${{ inputs.nrba_released_script_url }}
+          nrba_latest_script_url: ${{ inputs.nrba_latest_script_url }}
+          nrba_app_id: ${{ secrets.INTERNAL_PRODUCTION_APPLICATION_ID }}
+          nrba_license_key: ${{ secrets.INTERNAL_LICENSE_KEY }}
+          nrba_ab_app_id: ${{ secrets.INTERNAL_AB_DEV_APPLICATION_ID }}
+          nrba_ab_license_key: ${{ secrets.INTERNAL_AB_LICENSE_KEY }}
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_role: ${{ secrets.AWS_ROLE_ARN }}
+          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
+          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}

@@ -1,4 +1,5 @@
 const { Transform } = require('stream')
+const { deserialize } = require('../../../shared/serializer')
 
 /**
  * Constructs the worker commands script block based on the workerCommands query.
@@ -9,14 +10,24 @@ const { Transform } = require('stream')
  */
 function getWorkerCommandsContent (request, reply, testServer) {
   if (!request.query.workerCommands) {
-    return '[]'
+    return ''
   }
 
-  const workerCommands = Buffer.from(
-    request.query.workerCommands,
-    'base64'
-  ).toString()
-  return `workerCommands=${workerCommands};`
+  const workerCommands = (deserialize(
+    Buffer.from(request.query.workerCommands, 'base64').toString()
+  ) || []).map(fn =>
+    // Worker commands are functions that need to be wrapped as a string,
+    // so they can be passed to the web worker. The string needs to be
+    // wrapped in an iife so it is self-executing when the web worker
+    // evals it.
+    `'(${
+      fn.toString()
+        .replaceAll('\'', '\\\'')
+        .replaceAll('\n', '')
+    })()'`
+  )
+
+  return `workerCommands=[${workerCommands.join(',')}]`
 }
 
 /**

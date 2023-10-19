@@ -15,8 +15,7 @@ module.exports = {
     // Ignore JIL code since it is being replaced with WDIO
     'tools/jil/**/*',
     'tests/browser/**/*',
-    'tests/functional/**/*',
-    'tests/worker/**/*'
+    'tests/functional/**/*'
   ],
   parser: '@babel/eslint-parser',
   parserOptions: {
@@ -134,6 +133,7 @@ module.exports = {
     'no-new': 'off',
     'prefer-const': 'off',
 
-    'sonarjs/cognitive-complexity': 'off'
+    'sonarjs/cognitive-complexity': 'off',
+    camelcase: 'off'
   }
 }

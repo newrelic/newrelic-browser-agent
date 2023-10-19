@@ -1,6 +1,6 @@
 {
   "name": "@newrelic/browser-agent",
-  "version": "1.240.0",
+  "version": "1.245.0",
   "private": false,
   "author": "New Relic Browser Agent Team <browser-agent@newrelic.com>",
   "description": "New Relic Browser Agent",
@@ -25,9 +25,6 @@
       ],
       "loaders/micro-agent": [
         "dist/types/loaders/micro-agent.d.ts"
-      ],
-      "loaders/worker-agent": [
-        "dist/types/loaders/worker-agent.d.ts"
       ],
       "features/ajax": [
         "dist/types/features/ajax/index.d.ts"
@@ -80,11 +77,6 @@
       "types": "./dist/types/loaders/micro-agent.d.ts",
       "require": "./dist/cjs/loaders/micro-agent.js",
       "default": "./dist/esm/loaders/micro-agent.js"
-    },
-    "./loaders/worker-agent": {
-      "types": "./dist/types/loaders/worker-agent.d.ts",
-      "require": "./dist/cjs/loaders/worker-agent.js",
-      "default": "./dist/esm/loaders/worker-agent.js"
     },
     "./features/ajax": {
       "types": "./dist/types/features/ajax/index.d.ts",
@@ -176,7 +168,7 @@
   "dependencies": {
     "core-js": "^3.26.0",
     "fflate": "^0.7.4",
-    "rrweb": "^2.0.0-alpha.8",
+    "rrweb": "2.0.0-alpha.11",
     "web-vitals": "^3.1.0"
   },
   "devDependencies": {
@@ -236,7 +228,6 @@
     "jest-extended": "^3.2.4",
     "jung": "^2.1.0",
     "just-debounce": "^1.0.0",
-    "newrelic": "^9.7.5",
     "node-fetch": "^3.3.0",
     "npm-run-all": "^4.1.5",
     "object-inspect": "^1.5.0",
@@ -267,6 +258,6 @@
     "src",
     "LICENSE",
     "README.md",
-    "types.ts"
+    "CHANGELOG.md"
   ]
 }

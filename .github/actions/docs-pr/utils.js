@@ -44,6 +44,6 @@ export async function getBrowserTargetStatement (agentVersion) {
     'Consistent with our [browser support policy](https://docs.newrelic.com/docs/browser/new-relic-browser/getting-started/compatibility-requirements-browser-monitoring/#browser-types), ' +
     `${agentVersion} of the Browser agent was built for and tested against these browsers and version ranges: ` +
     `Chrome ${min.chrome}-${max.chrome}, Edge ${min.edge}-${max.edge}, Safari ${min.safari}-${max.safari}, and Firefox ${min.firefox}-${max.firefox}. ` +
-    `For mobile devices, ${agentVersion} was built and tested for Android Chrome ${ANDROID_CHROME_VERSION} and iOS Safari ${min.ios}-${max.ios}.`
+    `For mobile devices, ${agentVersion} was built and tested for Android Chrome ${ANDROID_CHROME_VERSION}-${max.chrome} and iOS Safari ${min.ios}-${max.ios}.`
   )
 }

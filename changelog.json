@@ -5,6 +5,236 @@
       "changes": [
         {
           "type": "feat",
+          "sha": "d44f03384655f47c5f8a63db02f7eaac58585a86",
+          "message": "Allow boolean values in setCustomAttribute",
+          "issues": [
+            "776"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "8587afc9dbc18a52048f467c77e5ededc225eb2a",
+          "message": "Detect GraphQL operation names and types in AJAX calls",
+          "issues": [
+            "764"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "15f801b1a48c6e60f8f50f349aa382c77a073480",
+          "message": "Removing worker build",
+          "issues": [
+            "762"
+          ]
+        }
+      ],
+      "version": "1.245.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "5402b6db-cbf1-4e3e-92f4-4343655fa1da",
+      "createTime": "2023-10-18T17:12:26.391Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
+          "sha": "bc5a57c8c42c62c311e24b77f00dc1225a3b5873",
+          "message": "Fix invalid timestamps",
+          "issues": [
+            "771"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "9ea84cf247b31af544e2ea7ed0873241ff82eebc",
+          "message": "Bump rrweb to 2.0.0.11 and make constant dynamic at build time",
+          "issues": [
+            "770"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "cef08dd3f0cd99735dbc719e3c075fe83bbc6219",
+          "message": "Add Session Replay configurations to collect inline assets",
+          "issues": [
+            "763"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "8506803eaba27b7c603432f8ba0c909b677d3c3b",
+          "message": "Ensure 15 second minimum error buffer when possible",
+          "issues": [
+            "759"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "b9e82773c67d710e0f6dc1f892908afc8be004cd",
+          "message": "Isolate browser interaction node",
+          "issues": [
+            "758"
+          ]
+        }
+      ],
+      "version": "1.244.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "2c072d59-b0fa-42ab-8b69-0db6b6f648ca",
+      "createTime": "2023-10-10T22:36:37.655Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
+          "sha": "14f08aca8bf1a610984fc2303604a04910f07db6",
+          "message": "Improve Session Replay abort metric reliability",
+          "issues": [
+            "754"
+          ]
+        }
+      ],
+      "version": "1.243.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "f6ce7916-fe41-478b-91d4-530223a3c56a",
+      "createTime": "2023-10-04T19:26:02.289Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
+          "sha": "8106bfa6fcfff13829cc1368e8e7ee85ed11480e",
+          "message": "Do not report ajax nodes in session traces if in deny list",
+          "issues": [
+            "750"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "a7f58a3a83804d6102bb159ab2ae410e39ad884f",
+          "message": "Re-update assets proxy to accept host URL strings",
+          "issues": [
+            "752"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "ed727c65fe3029b4b9c094880b2f016db2c1cec3",
+          "message": "Adjust Session Replay meta and timestamps",
+          "issues": [
+            "743"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "81bedc6d4922379ad6e10a0ec7aaa72f85e253cf",
+          "message": "Tap session entity into storage api for changes across tabs",
+          "issues": [
+            "741"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "54b42eae2ae8692e5f463b7a3441e3be9e40cc5e",
+          "message": "Remove deprecated API inlineHit",
+          "issues": [
+            "744"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "42a15e14a0f13e8b7a2b0afbaf6b30893fd701b4",
+          "message": "Set Session Replay first chunk flags more reliably",
+          "issues": [
+            "740"
+          ]
+        }
+      ],
+      "version": "1.243.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "e46dfff0-aab4-4c2b-a70c-2ecebf399512",
+      "createTime": "2023-10-04T15:15:02.105Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
+          "sha": "e5cd3f18b7c3f569dc46f90f1eba40b52092e1d0",
+          "message": "Add messaging about Session Replay abort behavior",
+          "issues": [
+            "734"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "06edda57f963f68a928244ab6c7e8a26b056b2c3",
+          "message": "Drain event emitter even when feature fails to initialize",
+          "issues": [
+            "730"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "9ab1c37783468f423ca8c1db835ea6f0bea504b3",
+          "message": "Applying new cache headers to assets",
+          "issues": [
+            "722"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "12f5ec00e3e13b3d8c2d8884de315752873e4d0e",
+          "message": "Validation of SR configurations",
+          "issues": [
+            "721"
+          ]
+        }
+      ],
+      "version": "1.242.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "8d3af2f3-ca08-4e45-81c1-4c6260370811",
+      "createTime": "2023-09-25T19:22:51.827Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
+          "sha": "4de7e9e4ecd563232f4c9a8a2f985c3307e79bf7",
+          "message": "Add SR entrypoint to NPM ahead of LP",
+          "issues": [
+            "714"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "feb8726faba6257c2173b9e0a9aebaeee1f449a6",
+          "message": "Final harvest does not happen when initial RUM call fails",
+          "issues": [
+            "702"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "fdc2c29e2b43d691e3b613d8729b1c9615f72114",
+          "message": "Removing hash from chunk asset name",
+          "issues": [
+            "706"
+          ]
+        }
+      ],
+      "version": "1.241.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "371d8fd7-d071-467c-924a-8aa939d7d506",
+      "createTime": "2023-09-18T14:19:13.934Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
           "sha": "739e2dd8032bc92cebd238159c42e8ceb81a6b37",
           "message": "Origin of agent webpack chunks now changeable",
           "issues": [
@@ -505,5 +735,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2023-09-12T20:23:38.840Z"
+  "updateTime": "2023-10-18T17:12:26.391Z"
 }

@@ -1,9 +1,7 @@
 #!/usr/bin/env node
-const newrelic = require('newrelic')
 const TestServer = require('../../testing-server')
 
 process.on('unhandledRejection', (error, p) => {
-  newrelic.noticeError(error)
   console.error(error)
 });
 

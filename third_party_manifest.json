@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "Wed Aug 23 2023 07:36:28 GMT-0500 (Central Daylight Time)",
+  "lastUpdated": "Wed Oct 18 2023 17:46:25 GMT+0000 (Coordinated Universal Time)",
   "projectName": "New Relic Browser Agent",
   "projectUrl": "https://github.com/newrelic/newrelic-browser-agent",
   "includeOptDeps": true,
@@ -33,15 +33,15 @@
       "publisher": "Arjun Barrett",
       "email": "arjunbarrett@gmail.com"
     },
-    "rrweb@2.0.0-alpha.8": {
+    "rrweb@2.0.0-alpha.11": {
       "name": "rrweb",
-      "version": "2.0.0-alpha.8",
-      "range": "^2.0.0-alpha.7",
+      "version": "2.0.0-alpha.11",
+      "range": "2.0.0-alpha.11",
       "licenses": "MIT",
       "repoUrl": "https://github.com/rrweb-io/rrweb",
-      "versionedRepoUrl": "https://github.com/rrweb-io/rrweb/tree/v2.0.0-alpha.8",
+      "versionedRepoUrl": "https://github.com/rrweb-io/rrweb/tree/v2.0.0-alpha.11",
       "licenseFile": "node_modules/rrweb/README.md",
-      "licenseUrl": "https://github.com/rrweb-io/rrweb/blob/v2.0.0-alpha.8/README.md",
+      "licenseUrl": "https://github.com/rrweb-io/rrweb/blob/v2.0.0-alpha.11/README.md",
       "licenseTextSource": "spdx",
       "publisher": "yanzhen@smartx.com"
     },
@@ -778,19 +778,6 @@
       "licenseUrl": "https://github.com/hayes/just-debounce/blob/v1.1.0/LICENSE",
       "licenseTextSource": "file",
       "publisher": "Michael Hayes"
-    },
-    "newrelic@9.15.0": {
-      "name": "newrelic",
-      "version": "9.15.0",
-      "range": "^9.7.5",
-      "licenses": "Apache-2.0",
-      "repoUrl": "https://github.com/newrelic/node-newrelic",
-      "versionedRepoUrl": "https://github.com/newrelic/node-newrelic/tree/v9.15.0",
-      "licenseFile": "node_modules/newrelic/LICENSE",
-      "licenseUrl": "https://github.com/newrelic/node-newrelic/blob/v9.15.0/LICENSE",
-      "licenseTextSource": "file",
-      "publisher": "New Relic Node.js agent team",
-      "email": "nodejs@newrelic.com"
     },
     "node-fetch@3.3.1": {
       "name": "node-fetch",

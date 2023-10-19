@@ -3,6 +3,80 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.245.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.244.0...v1.245.0) (2023-10-18)
+
+
+### Features
+
+* Allow boolean values in setCustomAttribute ([#776](https://github.com/newrelic/newrelic-browser-agent/issues/776)) ([d44f033](https://github.com/newrelic/newrelic-browser-agent/commit/d44f03384655f47c5f8a63db02f7eaac58585a86))
+* Detect GraphQL operation names and types in AJAX calls ([#764](https://github.com/newrelic/newrelic-browser-agent/issues/764)) ([8587afc](https://github.com/newrelic/newrelic-browser-agent/commit/8587afc9dbc18a52048f467c77e5ededc225eb2a))
+* Removing worker build ([#762](https://github.com/newrelic/newrelic-browser-agent/issues/762)) ([15f801b](https://github.com/newrelic/newrelic-browser-agent/commit/15f801b1a48c6e60f8f50f349aa382c77a073480))
+
+## [1.244.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.243.1...v1.244.0) (2023-10-10)
+
+
+### Features
+
+* Add Session Replay configurations to collect inline assets ([#763](https://github.com/newrelic/newrelic-browser-agent/issues/763)) ([cef08dd](https://github.com/newrelic/newrelic-browser-agent/commit/cef08dd3f0cd99735dbc719e3c075fe83bbc6219))
+* Bump rrweb to 2.0.0.11 and make constant dynamic at build time ([#770](https://github.com/newrelic/newrelic-browser-agent/issues/770)) ([9ea84cf](https://github.com/newrelic/newrelic-browser-agent/commit/9ea84cf247b31af544e2ea7ed0873241ff82eebc))
+* Ensure 15 second minimum error buffer when possible ([#759](https://github.com/newrelic/newrelic-browser-agent/issues/759)) ([8506803](https://github.com/newrelic/newrelic-browser-agent/commit/8506803eaba27b7c603432f8ba0c909b677d3c3b))
+
+
+### Bug Fixes
+
+* Fix invalid timestamps ([#771](https://github.com/newrelic/newrelic-browser-agent/issues/771)) ([bc5a57c](https://github.com/newrelic/newrelic-browser-agent/commit/bc5a57c8c42c62c311e24b77f00dc1225a3b5873))
+* Isolate browser interaction node ([#758](https://github.com/newrelic/newrelic-browser-agent/issues/758)) ([b9e8277](https://github.com/newrelic/newrelic-browser-agent/commit/b9e82773c67d710e0f6dc1f892908afc8be004cd))
+
+## [1.243.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.243.0...v1.243.1) (2023-10-04)
+
+
+### Bug Fixes
+
+* Improve Session Replay abort metric reliability ([#754](https://github.com/newrelic/newrelic-browser-agent/issues/754)) ([14f08ac](https://github.com/newrelic/newrelic-browser-agent/commit/14f08aca8bf1a610984fc2303604a04910f07db6))
+
+## [1.243.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.242.0...v1.243.0) (2023-10-04)
+
+
+### Features
+
+* Do not report ajax nodes in session traces if in deny list ([#750](https://github.com/newrelic/newrelic-browser-agent/issues/750)) ([8106bfa](https://github.com/newrelic/newrelic-browser-agent/commit/8106bfa6fcfff13829cc1368e8e7ee85ed11480e))
+* Remove deprecated API inlineHit ([#744](https://github.com/newrelic/newrelic-browser-agent/issues/744)) ([54b42ea](https://github.com/newrelic/newrelic-browser-agent/commit/54b42eae2ae8692e5f463b7a3441e3be9e40cc5e))
+
+
+### Bug Fixes
+
+* Adjust Session Replay meta and timestamps ([#743](https://github.com/newrelic/newrelic-browser-agent/issues/743)) ([ed727c6](https://github.com/newrelic/newrelic-browser-agent/commit/ed727c65fe3029b4b9c094880b2f016db2c1cec3))
+* Re-update assets proxy to accept host URL strings ([#752](https://github.com/newrelic/newrelic-browser-agent/issues/752)) ([a7f58a3](https://github.com/newrelic/newrelic-browser-agent/commit/a7f58a3a83804d6102bb159ab2ae410e39ad884f))
+* Set Session Replay first chunk flags more reliably ([#740](https://github.com/newrelic/newrelic-browser-agent/issues/740)) ([42a15e1](https://github.com/newrelic/newrelic-browser-agent/commit/42a15e14a0f13e8b7a2b0afbaf6b30893fd701b4))
+* Tap session entity into storage api for changes across tabs ([#741](https://github.com/newrelic/newrelic-browser-agent/issues/741)) ([81bedc6](https://github.com/newrelic/newrelic-browser-agent/commit/81bedc6d4922379ad6e10a0ec7aaa72f85e253cf))
+
+## [1.242.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.241.0...v1.242.0) (2023-09-25)
+
+
+### Features
+
+* Add messaging about Session Replay abort behavior ([#734](https://github.com/newrelic/newrelic-browser-agent/issues/734)) ([e5cd3f1](https://github.com/newrelic/newrelic-browser-agent/commit/e5cd3f18b7c3f569dc46f90f1eba40b52092e1d0))
+* Applying new cache headers to assets ([#722](https://github.com/newrelic/newrelic-browser-agent/issues/722)) ([9ab1c37](https://github.com/newrelic/newrelic-browser-agent/commit/9ab1c37783468f423ca8c1db835ea6f0bea504b3))
+
+
+### Bug Fixes
+
+* Drain event emitter even when feature fails to initialize ([#730](https://github.com/newrelic/newrelic-browser-agent/issues/730)) ([06edda5](https://github.com/newrelic/newrelic-browser-agent/commit/06edda57f963f68a928244ab6c7e8a26b056b2c3))
+* Validation of SR configurations ([#721](https://github.com/newrelic/newrelic-browser-agent/issues/721)) ([12f5ec0](https://github.com/newrelic/newrelic-browser-agent/commit/12f5ec00e3e13b3d8c2d8884de315752873e4d0e))
+
+## [1.241.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.240.0...v1.241.0) (2023-09-18)
+
+
+### Features
+
+* Add SR entrypoint to NPM ahead of LP ([#714](https://github.com/newrelic/newrelic-browser-agent/issues/714)) ([4de7e9e](https://github.com/newrelic/newrelic-browser-agent/commit/4de7e9e4ecd563232f4c9a8a2f985c3307e79bf7))
+* Removing hash from chunk asset name ([#706](https://github.com/newrelic/newrelic-browser-agent/issues/706)) ([fdc2c29](https://github.com/newrelic/newrelic-browser-agent/commit/fdc2c29e2b43d691e3b613d8729b1c9615f72114))
+
+
+### Bug Fixes
+
+* Final harvest does not happen when initial RUM call fails ([#702](https://github.com/newrelic/newrelic-browser-agent/issues/702)) ([feb8726](https://github.com/newrelic/newrelic-browser-agent/commit/feb8726faba6257c2173b9e0a9aebaeee1f449a6))
+
 ## [1.240.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.239.1...v1.240.0) (2023-09-12)
 
 

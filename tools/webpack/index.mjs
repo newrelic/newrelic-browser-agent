@@ -4,7 +4,6 @@ import fs from 'fs-extra'
 import setBuildEnvironment from './env.mjs'
 import standardConfig from './configs/standard.mjs'
 import polyfillsConfig from './configs/polyfills.mjs'
-import workersConfig from './configs/workers.mjs'
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
 
@@ -62,7 +61,6 @@ export default async (env) => {
 
   return [
     ...standardConfig(env),
-    ...polyfillsConfig(env),
-    ...workersConfig(env)
+    ...polyfillsConfig(env)
   ]
 }

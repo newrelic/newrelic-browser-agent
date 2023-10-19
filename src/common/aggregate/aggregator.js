@@ -3,9 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { FEATURE_NAMES } from '../../loaders/features/features'
 import { SharedContext } from '../context/shared-context'
-import { getFeatureState } from '../util/feature-state'
 import { mapOwn } from '../util/map-own'
 
 export class Aggregator extends SharedContext {
@@ -84,35 +82,12 @@ export class Aggregator extends SharedContext {
     var hasData = false
     for (var i = 0; i < types.length; i++) {
       type = types[i]
-      results[type] = this.toArray(type, this.aggregatedData[type])
+      results[type] = Object.values(this.aggregatedData[type] || {})
 
       if (results[type].length) hasData = true
       delete this.aggregatedData[type]
     }
     return hasData ? results : null
-  }
-
-  toArray (type, obj) {
-    if (typeof obj !== 'object') return []
-
-    return mapOwn(obj, (key, value) => this.getValue(key, value, type))
-  }
-
-  getValue (key, value, type) {
-    // err type can be decorated with an interaction ID if present
-    if (type !== 'err') return value
-    const shouldHold = this.checkInteractions(value) // add an interaction ID if exists
-    if (shouldHold) return
-    return value
-  }
-
-  checkInteractions (value) {
-    const spaFeature = getFeatureState({ agentIdentifier: this.sharedContext.agentIdentifier, featureName: FEATURE_NAMES.basicSpa })
-    const { shouldHold, interactions } = spaFeature?.hasInteraction?.({ timestamp: value?.metrics?.time?.t }) || {}
-    if (shouldHold) return true
-    let browserInteractionId = interactions?.[0]?.id.replace('\'', '')
-    if (browserInteractionId) value.params.browserInteractionId = browserInteractionId
-    return false
   }
 }
 

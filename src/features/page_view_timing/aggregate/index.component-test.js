@@ -3,6 +3,7 @@ import { ee } from '../../../common/event-emitter/contextual-ee'
 import { drain } from '../../../common/drain/drain'
 import { setRuntime } from '../../../common/config/config'
 
+// Note: these callbacks fire right away unlike the real web-vitals API which are async-on-trigger
 jest.mock('web-vitals', () => ({
   __esModule: true,
   // eslint-disable-next-line
@@ -32,16 +33,18 @@ jest.mock('web-vitals', () => ({
   }))
 })
 )
+const expectedNetworkInfo = {
+  'net-type': expect.any(String),
+  'net-etype': expect.any(String),
+  'net-rtt': expect.any(Number),
+  'net-dlink': expect.any(Number)
+}
 
-let pvtAgg, cumulativeLayoutShift
+let pvtAgg
 describe('pvt aggregate tests', () => {
   beforeEach(async () => {
     const { Aggregate } = await import('.')
     setRuntime('abcd', {})
-    pvtAgg = new Aggregate('abcd', new Aggregator({ agentIdentifier: 'abcd', ee }))
-    pvtAgg.scheduler.harvest.send = jest.fn()
-    pvtAgg.prepareHarvest = jest.fn(() => ({}))
-    drain('abcd', 'feature')
 
     global.navigator.connection = {
       type: 'cellular',
@@ -49,19 +52,18 @@ describe('pvt aggregate tests', () => {
       rtt: 270,
       downlink: 700
     }
-
-    const { cumulativeLayoutShift: cls } = await import('../../../common/vitals/cumulative-layout-shift')
-    cumulativeLayoutShift = cls
+    pvtAgg = new Aggregate('abcd', new Aggregator({ agentIdentifier: 'abcd', ee }))
+    pvtAgg.scheduler.harvest.send = jest.fn()
+    pvtAgg.prepareHarvest = jest.fn(() => ({}))
+    drain('abcd', 'feature')
   })
   test('LCP event with CLS attribute', () => {
-    cumulativeLayoutShift.update({ value: 1 })
-    pvtAgg.addTiming('lcp', 1, { size: 1, startTime: 1 })
-
-    var timing = find(pvtAgg.timings, function (t) {
+    const timing = find(pvtAgg.timings, function (t) {
       return t.name === 'lcp'
     })
 
     expect(timing.attrs.cls).toEqual(1) // 'CLS value should be the one present at the time LCP happened'
+    expect(timing.attrs).toEqual(expect.objectContaining(expectedNetworkInfo))
 
     function find (arr, fn) {
       if (arr.find) {
@@ -81,6 +83,6 @@ describe('pvt aggregate tests', () => {
     expect(pvtAgg.timings.length).toBeGreaterThanOrEqual(1)
     const fiPayload = pvtAgg.timings.find(x => x.name === 'fi')
     expect(fiPayload.value).toEqual(5)
-    expect(fiPayload.attrs).toEqual(expect.objectContaining({ type: 'pointerdown', fid: 1234, cls: 1 }))
+    expect(fiPayload.attrs).toEqual(expect.objectContaining({ type: 'pointerdown', fid: 1234, cls: 1, ...expectedNetworkInfo }))
   })
 })

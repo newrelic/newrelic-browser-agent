@@ -39,6 +39,58 @@ describe('PVT aggregate', () => {
       expect(result).toEqual(true) // all events should have the set custom attribute
     })
   })
+
+  test('addConnectionAttributes', () => {
+    global.navigator.connection = {}
+    pvtAgg.addTiming('abc', 1)
+    expect(pvtAgg.timings[0].attrs).toEqual(expect.objectContaining({}))
+
+    global.navigator.connection.type = 'type'
+    pvtAgg.addTiming('abc', 1)
+    expect(pvtAgg.timings[1].attrs).toEqual(expect.objectContaining({
+      'net-type': 'type'
+    }))
+
+    global.navigator.connection.effectiveType = 'effectiveType'
+    pvtAgg.addTiming('abc', 1)
+    expect(pvtAgg.timings[2].attrs).toEqual(expect.objectContaining({
+      'net-type': 'type',
+      'net-etype': 'effectiveType'
+    }))
+
+    global.navigator.connection.rtt = 'rtt'
+    pvtAgg.addTiming('abc', 1)
+    expect(pvtAgg.timings[3].attrs).toEqual(expect.objectContaining({
+      'net-type': 'type',
+      'net-etype': 'effectiveType',
+      'net-rtt': 'rtt'
+    }))
+
+    global.navigator.connection.downlink = 'downlink'
+    pvtAgg.addTiming('abc', 1)
+    expect(pvtAgg.timings[4].attrs).toEqual(expect.objectContaining({
+      'net-type': 'type',
+      'net-etype': 'effectiveType',
+      'net-rtt': 'rtt',
+      'net-dlink': 'downlink'
+    }))
+
+    global.navigator.connection = {
+      type: 'type',
+      effectiveType: 'effectiveType',
+      rtt: 'rtt',
+      downlink: 'downlink'
+    }
+    pvtAgg.addTiming('abc', 1)
+
+    expect(pvtAgg.timings[5].attrs).toEqual(expect.objectContaining({
+      'net-type': 'type',
+      'net-etype': 'effectiveType',
+      'net-rtt': 'rtt',
+      'net-dlink': 'downlink'
+    }))
+    global.navigator.connection = {}
+  })
 })
 
 function testCases () {

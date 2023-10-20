@@ -93,7 +93,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
     testExpectedReplay({ data: page1Contents, session: localStorage.value, hasError: false, hasMeta: true, hasSnapshot: true, isFirstChunk: true })
 
     await browser.execute(function () {
-      Object.values(NREUM.initializedAgents)[0].runtime.session.state.sessionReplay = 0
+      Object.values(NREUM.initializedAgents)[0].runtime.session.state.sessionReplayMode = 0
     })
 
     await browser.enableSessionReplay()

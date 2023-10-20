@@ -16,7 +16,7 @@ describe('error payloads', () => {
       .then(() => browser.waitForFeatureAggregate('jserrors'))
 
     await browser.execute(function () {
-      Object.values(newrelic.initializedAgents)[0].runtime.session.state.sessionReplay = 1
+      Object.values(newrelic.initializedAgents)[0].runtime.session.state.sessionReplayMode = 1
       newrelic.noticeError(new Error('test'))
     })
 

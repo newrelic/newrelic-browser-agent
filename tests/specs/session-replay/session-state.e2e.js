@@ -18,7 +18,7 @@ describe.withBrowsersMatching(notIE)('session manager state behavior', () => {
       await browser.pause(1000)
       const { agentSessions } = await browser.getAgentSessionInfo()
       const sessionClass = Object.values(agentSessions)[0]
-      expect(sessionClass.sessionReplay).toEqual(MODE.FULL)
+      expect(sessionClass.sessionReplayMode).toEqual(MODE.FULL)
     })
 
     it('should match in error mode', async () => {
@@ -28,7 +28,7 @@ describe.withBrowsersMatching(notIE)('session manager state behavior', () => {
       await browser.pause(1000)
       const { agentSessions } = await browser.getAgentSessionInfo()
       const sessionClass = Object.values(agentSessions)[0]
-      expect(sessionClass.sessionReplay).toEqual(MODE.ERROR)
+      expect(sessionClass.sessionReplayMode).toEqual(MODE.ERROR)
     })
 
     it('should match in off mode', async () => {
@@ -38,7 +38,7 @@ describe.withBrowsersMatching(notIE)('session manager state behavior', () => {
       await browser.pause(1000)
       const { agentSessions } = await browser.getAgentSessionInfo()
       const sessionClass = Object.values(agentSessions)[0]
-      expect(sessionClass.sessionReplay).toEqual(MODE.OFF)
+      expect(sessionClass.sessionReplayMode).toEqual(MODE.OFF)
     })
   })
 
@@ -50,7 +50,7 @@ describe.withBrowsersMatching(notIE)('session manager state behavior', () => {
       // session has started, replay should have set mode to "FULL"
       const { agentSessions: oldSession } = await browser.getAgentSessionInfo()
       const oldSessionClass = Object.values(oldSession)[0]
-      expect(oldSessionClass.sessionReplay).toEqual(MODE.FULL)
+      expect(oldSessionClass.sessionReplayMode).toEqual(MODE.FULL)
 
       await Promise.all([
         browser.testHandle.expectBlob(),
@@ -62,7 +62,7 @@ describe.withBrowsersMatching(notIE)('session manager state behavior', () => {
       // session has ended, replay should have set mode to "OFF"
       const { agentSessions: newSession } = await browser.getAgentSessionInfo()
       const newSessionClass = Object.values(newSession)[0]
-      expect(newSessionClass.sessionReplay).toEqual(MODE.OFF)
+      expect(newSessionClass.sessionReplayMode).toEqual(MODE.OFF)
     })
   })
 

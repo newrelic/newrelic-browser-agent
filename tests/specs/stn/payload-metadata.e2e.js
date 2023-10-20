@@ -15,5 +15,29 @@ describe('STN Payload metadata checks', () => {
 
     // hr === hasReplay
     expect(resources.request.query.hr).toEqual('0')
+
+    expect(resources.request.query.fsh).toBeUndefined() // this param should not exist when session is not enabled (test default)
+  })
+
+  it('fsh is included and correctly set with session enabled', async () => {
+    const testURL = await browser.testHandle.assetURL('stn/instrumented.html', { init: { privacy: { cookies_enabled: true } } })
+
+    let stnToHarvest = browser.testHandle.expectResources()
+    await browser.url(testURL).then(() => browser.waitForAgentLoad())
+    let stn = await stnToHarvest
+
+    expect(stn.request.query.fsh).toEqual('1')
+
+    let finalStnHarvest = browser.testHandle.expectResources()
+    await browser.url(await browser.testHandle.assetURL('/'))
+    stn = await finalStnHarvest
+
+    expect(stn.request.query.fsh).toEqual('0') // basically any subsequent harvests
+
+    // Load the page again a second time within same session, and the first harvest should not have fsh = 1 this time.
+    stnToHarvest = browser.testHandle.expectResources()
+    await browser.url(testURL).then(() => browser.waitForAgentLoad())
+    stn = await stnToHarvest
+    expect(stn.request.query.fsh).toEqual('0')
   })
 })

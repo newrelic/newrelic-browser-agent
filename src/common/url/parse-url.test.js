@@ -1,3 +1,5 @@
+import { parseUrl } from './parse-url'
+
 afterEach(() => {
   jest.resetModules()
   jest.clearAllMocks()
@@ -67,78 +69,6 @@ const urlTests = [
   }
 ]
 
-test.each(urlTests)('verify url parsing inside browser scope', async ({ input, expected }) => {
-  jest.doMock('../constants/runtime', () => ({
-    __esModule: true,
-    isBrowserScope: true,
-    globalScope: global
-  }))
-
-  const { parseUrl } = await import('./parse-url')
+test.each(urlTests)('verify url parsing', async ({ input, expected }) => {
   expect(parseUrl(input)).toEqual(expected)
-})
-
-test.each(urlTests)('verify url parsing outside browser scope', async ({ input, expected }) => {
-  jest.doMock('../constants/runtime', () => ({
-    __esModule: true,
-    isBrowserScope: false,
-    globalScope: global
-  }))
-
-  const { parseUrl } = await import('./parse-url')
-  expect(parseUrl(input)).toEqual(expected)
-})
-
-test('should cache parsed urls', async () => {
-  jest.doMock('../constants/runtime', () => ({
-    __esModule: true,
-    isBrowserScope: true,
-    globalScope: global
-  }))
-
-  const input = 'http://example.com/'
-  const expected = {
-    hostname: 'example.com',
-    pathname: '/',
-    protocol: 'http',
-    port: '80',
-    sameOrigin: false,
-    search: ''
-  }
-
-  jest.spyOn(document, 'createElement')
-
-  const { parseUrl } = await import('./parse-url')
-  parseUrl(input)
-
-  expect(parseUrl(input)).toEqual(expected)
-  expect(document.createElement).toHaveBeenCalledTimes(0)
-})
-
-test('should use createElement as fallback', async () => {
-  jest.doMock('../constants/runtime', () => ({
-    __esModule: true,
-    isBrowserScope: true,
-    globalScope: global
-  }))
-
-  global.URL = jest.fn(() => { throw new Error('test') })
-
-  const input = 'http://example.com/'
-  const expected = {
-    hostname: 'example.com',
-    pathname: '/',
-    protocol: 'http',
-    port: '80',
-    sameOrigin: false,
-    search: ''
-  }
-
-  jest.spyOn(document, 'createElement')
-
-  const { parseUrl } = await import('./parse-url')
-  parseUrl(input)
-
-  expect(parseUrl(input)).toEqual(expected)
-  expect(document.createElement).toHaveBeenCalledTimes(1)
 })

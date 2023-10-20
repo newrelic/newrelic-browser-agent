@@ -51,7 +51,6 @@ export class Aggregate extends AggregateBase {
       disableSpaFix: (getConfigurationValue(agentIdentifier, 'feature_flags') || []).indexOf('disable-spa-fix') > -1
     }
 
-    console.dir(getConfigurationValue(agentIdentifier, 'feature_flags'))
 
     this.serializer = new Serializer(this)
 

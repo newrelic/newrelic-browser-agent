@@ -5,8 +5,8 @@ import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts'
 import { S3Client } from '@aws-sdk/client-s3'
 import { Upload } from '@aws-sdk/lib-storage'
 import mime from 'mime-types'
+import { getAssetCacheHeader } from '../shared-utils/asset-cache.js'
 import { args } from './args.js'
-import { getAssetCacheHeader } from './asset-cache.js'
 
 const stsClient = new STSClient({ region: args.region })
 const s3Credentials = await stsClient.send(new AssumeRoleCommand({

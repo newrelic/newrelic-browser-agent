@@ -22,9 +22,5 @@ export const args = yargs(hideBin(process.argv))
   .default('dry', false)
   .describe('dry', 'Runs the action script without actually uploading files.')
 
-  .number('asset-cache-duration')
-  .describe('asset-cache-duration', 'Set the amount of time used for the cache control header of each asset. Defaults to 2 hours.')
-  .default('asset-cache-duration', 3600)
-
   .demandOption(['bucket', 'role', 'loader-version'])
   .argv

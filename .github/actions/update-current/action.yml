@@ -48,6 +48,5 @@ runs:
           --bucket ${{ inputs.aws_bucket_name }} \
           --role ${{ inputs.aws_role }} \
           --loader-version ${{ inputs.loader_version }} \
-          --asset-cache-duration ${{ inputs.asset_cache_duration }} \
           ${{ inputs.dry_run && '--dry' || '' }}
       shell: bash

@@ -20,7 +20,6 @@ describe('STN Payload metadata checks', () => {
   })
 
   it('fsh is included and correctly set with session enabled', async () => {
-    await browser.destroyAgentSession()
     let testURL = await browser.testHandle.assetURL('stn/instrumented.html', { init: { privacy: { cookies_enabled: true } } })
 
     let stnToHarvest = browser.testHandle.expectResources()

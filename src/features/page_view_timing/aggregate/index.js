@@ -94,7 +94,7 @@ export class Aggregate extends AggregateBase {
 
   addTiming (name, value, attrs) {
     attrs = attrs || {}
-    addConnectionAttributes(attrs)
+    addConnectionAttributes(attrs) // network conditions may differ from the actual for VitalMetrics when they were captured
 
     // If cls was set to another value by `onCLS`, then it's supported and is attached onto any timing but is omitted until such time.
     /*

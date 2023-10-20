@@ -46,7 +46,9 @@ export class Aggregate extends AggregateBase {
       depth: 0,
       harvestTimeSeconds: getConfigurationValue(agentIdentifier, 'spa.harvestTimeSeconds') || 10,
       interactionsToHarvest: [],
-      interactionsSent: []
+      interactionsSent: [],
+      // The below feature flag is used to disable the SPA ajax fix for specific customers, see https://new-relic.atlassian.net/browse/NR-172169
+      disableSpaFix: (getConfigurationValue(agentIdentifier, 'feature_flags') || []).indexOf('disable-spa-fix') > -1
     }
 
     this.serializer = new Serializer(this)
@@ -279,7 +281,7 @@ export class Aggregate extends AggregateBase {
     // context is stored on the xhr and is shared with all callbacks associated
     // with the new xhr
     register('new-xhr', function () {
-      if (!state.currentNode && state.prevInteraction && !state.prevInteraction.ignored) {
+      if (!state.disableSpaFix && !state.currentNode && state.prevInteraction && !state.prevInteraction.ignored) {
         /*
          * The previous interaction was discarded before a route change. Restore the interaction
          * in case this XHR is associated with a route change.
@@ -382,7 +384,7 @@ export class Aggregate extends AggregateBase {
 
     register(FETCH_START, function (fetchArguments, dtPayload) {
       if (fetchArguments) {
-        if (!state.currentNode && state.prevInteraction && !state.prevInteraction.ignored) {
+        if (!state.disableSpaFix && !state.currentNode && state.prevInteraction && !state.prevInteraction.ignored) {
           /*
            * The previous interaction was discarded before a route change. Restore the interaction
            * in case this XHR is associated with a route change.

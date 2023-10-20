@@ -13,7 +13,8 @@ export function getModeledObject (obj, model) {
     for (let key in target) {
       if (obj[key] !== undefined) {
         try {
-          if (typeof obj[key] === 'object' && typeof model[key] === 'object') output[key] = getModeledObject(obj[key], model[key])
+          if (Array.isArray(obj[key]) && Array.isArray(model[key])) output[key] = Array.from(new Set([...obj[key], ...model[key]]))
+          else if (typeof obj[key] === 'object' && typeof model[key] === 'object') output[key] = getModeledObject(obj[key], model[key])
           else output[key] = obj[key]
         } catch (e) {
           warn('An error occurred while setting a property of a Configurable', e)

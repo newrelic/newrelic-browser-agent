@@ -29,6 +29,7 @@ const model = () => {
     }
   }
   return {
+    feature_flags: [],
     proxy: {
       assets: undefined, // if this value is set, it will be used to overwrite the webpack asset path used to fetch assets
       beacon: undefined // likewise for the url to which we send analytics

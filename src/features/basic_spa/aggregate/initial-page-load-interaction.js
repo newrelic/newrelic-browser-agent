@@ -1,11 +1,10 @@
 import { CATEGORY } from '../constants'
 import { navTimingValues } from '../../../common/timing/nav-timing'
 import { Interaction } from './interaction'
-import { globalScope, initialLocation } from '../../../common/constants/runtime'
+import { initialLocation } from '../../../common/constants/runtime'
 import { nullable, numeric } from '../../../common/serialize/bel-serializer'
 import { firstPaint } from '../../../common/vitals/first-paint'
 import { firstContentfulPaint } from '../../../common/vitals/first-contentful-paint'
-import { TimeToInteractive } from '../../../common/timing/time-to-interactive'
 
 export class InitialPageLoadInteraction extends Interaction {
   constructor (...args) {
@@ -17,13 +16,6 @@ export class InitialPageLoadInteraction extends Interaction {
     this.trigger = 'initialPageLoad'
     this.start = 0
     this.category = CATEGORY.INITIAL_PAGE_LOAD
-
-    this.ttiTracker = new TimeToInteractive().start({
-      startTimestamp: globalScope?.performance?.getEntriesByType('navigation')?.[0]?.loadEventEnd || globalScope?.performance?.timing?.loadEventEnd - globalScope?.performance?.timeOrigin,
-      buffered: true
-    }).then(({ value }) => {
-      this.finish(value)
-    })
   }
 
   get firstPaint () { return nullable(firstPaint.current.value, numeric, true) }

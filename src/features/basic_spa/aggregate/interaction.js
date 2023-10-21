@@ -3,7 +3,6 @@ import { globalScope, initialLocation } from '../../../common/constants/runtime'
 import { generateUuid } from '../../../common/ids/unique-id'
 import { addCustomAttributes, getAddStringContext, nullable, numeric } from '../../../common/serialize/bel-serializer'
 import { now } from '../../../common/timing/now'
-import { TimeToInteractive } from '../../../common/timing/time-to-interactive'
 import { cleanURL } from '../../../common/url/clean-url'
 import { debounce } from '../../../common/util/invoke'
 import { TYPE_IDS } from '../constants'
@@ -27,8 +26,6 @@ export class Interaction extends BelNode {
   previousRouteName
   targetRouteName
 
-  ttiTracker
-
   constructor (agentIdentifier) {
     super(agentIdentifier)
     if (!agentIdentifier) throw new Error('Interaction is missing core attributes')
@@ -43,13 +40,6 @@ export class Interaction extends BelNode {
       // make this interaction invalid as to not hold up any other events
       this.cancel()
     }, 30000)
-
-    this.ttiTracker = new TimeToInteractive().start({
-      startTimestamp: now()
-    }).then(({ value }) => {
-      this.tti = value
-      this.checkFinished()
-    })
   }
 
   finish (end) {

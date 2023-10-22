@@ -1,6 +1,5 @@
 export const FEATURE_NAMES = {
   ajax: 'ajax',
-  basicSpa: 'basic_spa',
   jserrors: 'jserrors',
   metrics: 'metrics',
   pageAction: 'page_action',
@@ -8,6 +7,7 @@ export const FEATURE_NAMES = {
   pageViewTiming: 'page_view_timing',
   sessionReplay: 'session_replay',
   sessionTrace: 'session_trace',
+  softNav: 'soft_navigations',
   spa: 'spa'
 }
 
@@ -25,5 +25,5 @@ export const featurePriority = {
   [FEATURE_NAMES.pageAction]: 7,
   [FEATURE_NAMES.spa]: 8,
   [FEATURE_NAMES.sessionReplay]: 9,
-  [FEATURE_NAMES.basicSpa]: 10
+  [FEATURE_NAMES.softNav]: 10
 }

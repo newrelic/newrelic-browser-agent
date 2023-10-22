@@ -32,8 +32,8 @@ export function lazyFeatureLoader (featureName, featurePart) {
         return import(/* webpackChunkName: "session_trace-aggregate" */ '../session_trace/aggregate')
       case FEATURE_NAMES.spa:
         return import(/* webpackChunkName: "spa-aggregate" */ '../spa/aggregate')
-      case FEATURE_NAMES.basicSpa:
-        return import(/* webpackChunkName: "basic-spa-aggregate" */ '../basic_spa/aggregate')
+      case FEATURE_NAMES.softNav:
+        return import(/* webpackChunkName: "basic-spa-aggregate" */ '../soft_navigations/aggregate')
       default:
         throw new Error(`Attempted to load unsupported agent feature: ${featureName} ${featurePart}`)
     }

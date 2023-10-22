@@ -14,7 +14,7 @@ import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { getFeatureState } from '../../../common/util/feature-state'
-import { AjaxNode } from '../../basic_spa/aggregate/ajax-node'
+import { AjaxNode } from '../../soft_navigations/aggregate/ajax-node'
 import { parseGQL } from './gql'
 
 export class Aggregate extends AggregateBase {
@@ -113,7 +113,7 @@ export class Aggregate extends AggregateBase {
         query: this?.parsedOrigin?.search
       })
 
-      const spaFeature = getFeatureState({ agentIdentifier, featureName: FEATURE_NAMES.basicSpa })
+      const spaFeature = getFeatureState({ agentIdentifier, featureName: FEATURE_NAMES.softNav })
       const {
         interactions
       } = spaFeature?.hasInteraction?.({ timestamp: event.startTime }) || {}

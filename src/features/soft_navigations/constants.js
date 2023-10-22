@@ -9,7 +9,7 @@ export const INTERACTION_EVENTS = [
   'change'
 ]
 
-export const FEATURE_NAME = FEATURE_NAMES.basicSpa
+export const FEATURE_NAME = FEATURE_NAMES.softNav
 
 export const CATEGORY = {
   INITIAL_PAGE_LOAD: 0,

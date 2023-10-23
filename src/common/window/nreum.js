@@ -67,27 +67,25 @@ export function gosNREUMOriginals () {
   return nr
 }
 
-export function gosNREUMInitializedAgents (id, obj, target) {
+/**
+ * Get or set the agent instance under the associated identifier on the global newrelic object.
+ * @param {String} id - agent identifier
+ * @param {Object} newAgentInstance - for SET, the agent object tied to the id
+ * @returns New or existing agent instance under newrelic.initializedAgent[id], or undefined if it does not exist for GET.
+ */
+export function gosNREUMInitializedAgents (id, newAgentInstance) {
   let nr = gosNREUM()
-  const externallySupplied = nr.initializedAgents || {}
-  const curr = externallySupplied[id] || {}
+  nr.initializedAgents = nr.initializedAgents || {}
+  let existingAgent = nr.initializedAgents[id]
+  if (existingAgent || newAgentInstance === undefined) return existingAgent // agents should only be set once upon their respective initializations for SET, and GET should grab whatever value exists
 
-  if (!Object.keys(curr).length) {
-    curr.initializedAt = {
-      ms: now(),
-      date: new Date()
-    }
+  newAgentInstance.initializedAt = {
+    ms: now(),
+    date: new Date()
   }
+  nr.initializedAgents[id] = newAgentInstance
 
-  nr.initializedAgents = {
-    ...externallySupplied,
-    [id]: {
-      ...curr,
-      [target]: obj
-    }
-  }
-
-  return nr
+  return newAgentInstance
 }
 
 export function addToNREUM (fnName, fn) {

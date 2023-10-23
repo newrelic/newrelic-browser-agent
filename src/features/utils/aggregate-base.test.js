@@ -72,7 +72,7 @@ test('should merge info, jsattributes, and runtime objects', () => {
   expect(gosCDN).toHaveBeenCalledTimes(3)
   expect(getInfo).toHaveBeenCalledWith(agentIdentifier)
   expect(getRuntime).toHaveBeenCalledWith(agentIdentifier)
-  expect(configure).toHaveBeenCalledWith(agentIdentifier, {
+  expect(configure).toHaveBeenCalledWith({ agentIdentifier }, {
     info: {
       ...mockInfo1,
       jsAttributes: {

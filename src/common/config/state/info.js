@@ -45,5 +45,6 @@ export function getInfo (id) {
 export function setInfo (id, obj) {
   if (!id) throw new Error('All info objects require an agent identifier!')
   _cache[id] = getModeledObject(obj, model)
-  gosNREUMInitializedAgents(id, _cache[id], 'info')
+  const agentInst = gosNREUMInitializedAgents(id)
+  if (agentInst) agentInst.info = _cache[id]
 }

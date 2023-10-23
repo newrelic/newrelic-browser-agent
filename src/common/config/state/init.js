@@ -114,7 +114,8 @@ export function getConfiguration (id) {
 export function setConfiguration (id, obj) {
   if (!id) throw new Error(missingAgentIdError)
   _cache[id] = getModeledObject(obj, model())
-  gosNREUMInitializedAgents(id, _cache[id], 'config')
+  const agentInst = gosNREUMInitializedAgents(id)
+  if (agentInst) agentInst.init = _cache[id]
 }
 
 export function getConfigurationValue (id, path) {

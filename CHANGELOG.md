@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.246.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.245.0...v1.246.0) (2023-10-23)
+
+
+### Features
+
+* Add network info to all page view timing events ([#768](https://github.com/newrelic/newrelic-browser-agent/issues/768)) ([757cf19](https://github.com/newrelic/newrelic-browser-agent/commit/757cf1953af471118d809414cd41297a87c89a34))
+* Replace url parsing with URL class ([#781](https://github.com/newrelic/newrelic-browser-agent/issues/781)) ([4206263](https://github.com/newrelic/newrelic-browser-agent/commit/42062638850b4b410ac75eb008120ec4a82583c1))
+
+
+### Bug Fixes
+
+* Add feature flag support for Browser Interactions ([#779](https://github.com/newrelic/newrelic-browser-agent/issues/779)) ([aa39c6c](https://github.com/newrelic/newrelic-browser-agent/commit/aa39c6cd2aeefaecd803aeb0736ad7aef8477bc4))
+* Add first harvest of session flags to RUM and Trace ([#765](https://github.com/newrelic/newrelic-browser-agent/issues/765)) ([ab2e9dd](https://github.com/newrelic/newrelic-browser-agent/commit/ab2e9dd2252143635b67ea9da4e07867ec68cd0f))
+
 ## [1.245.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.244.0...v1.245.0) (2023-10-18)
 
 

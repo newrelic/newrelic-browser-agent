@@ -26,7 +26,7 @@ describe('vital-metric', () => {
 
   test('update', () => {
     let i = 0
-    vitalMetric.update({ value: i, entries: [{ test: i + 1 }], attrs: { test: i + 2 }, shouldAddConnectionAttributes: true })
+    vitalMetric.update({ value: i, entries: [{ test: i + 1 }], attrs: { test: i + 2 } })
     expect(vitalMetric.current).toMatchObject({
       value: i,
       entries: [{ test: i + 1 }],
@@ -34,7 +34,7 @@ describe('vital-metric', () => {
     })
 
     i++
-    vitalMetric.update({ value: i, entries: [{ test: i + 1 }], attrs: { test: i + 2 }, shouldAddConnectionAttributes: true })
+    vitalMetric.update({ value: i, entries: [{ test: i + 1 }], attrs: { test: i + 2 } })
     expect(vitalMetric.current).toMatchObject({
       value: i,
       entries: [{ test: i + 1 }],
@@ -115,57 +115,5 @@ describe('vital-metric', () => {
     unsubscribe()
     vitalMetric.update({ value: 1 })
     setTimeout(done, 1000)
-  })
-
-  test('addConnectionAttributes', () => {
-    global.navigator.connection = {}
-    vitalMetric.update({ value: 1, shouldAddConnectionAttributes: true })
-    expect(vitalMetric.current.attrs).toEqual(expect.objectContaining({}))
-
-    global.navigator.connection.type = 'type'
-    vitalMetric.update({ value: 1, shouldAddConnectionAttributes: true })
-    expect(vitalMetric.current.attrs).toEqual(expect.objectContaining({
-      'net-type': 'type'
-    }))
-
-    global.navigator.connection.effectiveType = 'effectiveType'
-    vitalMetric.update({ value: 1, shouldAddConnectionAttributes: true })
-    expect(vitalMetric.current.attrs).toEqual(expect.objectContaining({
-      'net-type': 'type',
-      'net-etype': 'effectiveType'
-    }))
-
-    global.navigator.connection.rtt = 'rtt'
-    vitalMetric.update({ value: 1, shouldAddConnectionAttributes: true })
-    expect(vitalMetric.current.attrs).toEqual(expect.objectContaining({
-      'net-type': 'type',
-      'net-etype': 'effectiveType',
-      'net-rtt': 'rtt'
-    }))
-
-    global.navigator.connection.downlink = 'downlink'
-    vitalMetric.update({ value: 1, shouldAddConnectionAttributes: true })
-    expect(vitalMetric.current.attrs).toEqual(expect.objectContaining({
-      'net-type': 'type',
-      'net-etype': 'effectiveType',
-      'net-rtt': 'rtt',
-      'net-dlink': 'downlink'
-    }))
-
-    global.navigator.connection = {
-      type: 'type',
-      effectiveType: 'effectiveType',
-      rtt: 'rtt',
-      downlink: 'downlink'
-    }
-    vitalMetric.update({ value: 1, shouldAddConnectionAttributes: true })
-
-    expect(vitalMetric.current.attrs).toEqual(expect.objectContaining({
-      'net-type': 'type',
-      'net-etype': 'effectiveType',
-      'net-rtt': 'rtt',
-      'net-dlink': 'downlink'
-    }))
-    global.navigator.connection = {}
   })
 })

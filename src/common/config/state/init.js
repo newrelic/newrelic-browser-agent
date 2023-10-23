@@ -29,6 +29,7 @@ const model = () => {
     }
   }
   return {
+    feature_flags: [],
     proxy: {
       assets: undefined, // if this value is set, it will be used to overwrite the webpack asset path used to fetch assets
       beacon: undefined // likewise for the url to which we send analytics
@@ -113,7 +114,8 @@ export function getConfiguration (id) {
 export function setConfiguration (id, obj) {
   if (!id) throw new Error(missingAgentIdError)
   _cache[id] = getModeledObject(obj, model())
-  gosNREUMInitializedAgents(id, _cache[id], 'config')
+  const agentInst = gosNREUMInitializedAgents(id)
+  if (agentInst) agentInst.init = _cache[id]
 }
 
 export function getConfigurationValue (id, path) {

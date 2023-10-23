@@ -112,6 +112,7 @@ export class Aggregate extends AggregateBase {
         body: this.body,
         query: this?.parsedOrigin?.search
       })
+      if (event.gql) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Ajax/Events/GraphQL/Bytes-Added', stringify(event.gql).length], undefined, FEATURE_NAMES.metrics, ee)
 
       const spaFeature = getFeatureState({ agentIdentifier, featureName: FEATURE_NAMES.softNav })
       const {

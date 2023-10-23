@@ -22,8 +22,7 @@ if (isBrowserScope) {
           ...(!!lcpEntry.url && { elUrl: cleanURL(lcpEntry.url) }),
           ...(!!lcpEntry.element?.tagName && { elTag: lcpEntry.element.tagName })
         }
-      }),
-      shouldAddConnectionAttributes: true
+      })
     })
   })
 }

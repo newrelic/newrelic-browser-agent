@@ -8,7 +8,7 @@ export class VitalMetric {
     this.roundingMethod = typeof roundingMethod === 'function' ? roundingMethod : Math.floor
   }
 
-  update ({ value, entries = [], attrs = {}, shouldAddConnectionAttributes = false }) {
+  update ({ value, entries = [], attrs = {} }) {
     if (value < 0) return
     const state = {
       value: this.roundingMethod(value),
@@ -16,7 +16,7 @@ export class VitalMetric {
       entries,
       attrs
     }
-    if (shouldAddConnectionAttributes) addConnectionAttributes(state.attrs)
+
     this.history.push(state)
     this.#subscribers.forEach(cb => {
       try {
@@ -47,14 +47,4 @@ export class VitalMetric {
     if (this.isValid && !!buffered) this.history.forEach(state => { callback(state) })
     return () => { this.#subscribers.delete(callback) }
   }
-}
-
-function addConnectionAttributes (obj) {
-  var connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection // to date, both window & worker shares the same support for connection
-  if (!connection) return
-
-  if (connection.type) obj['net-type'] = connection.type
-  if (connection.effectiveType) obj['net-etype'] = connection.effectiveType
-  if (connection.rtt) obj['net-rtt'] = connection.rtt
-  if (connection.downlink) obj['net-dlink'] = connection.downlink
 }

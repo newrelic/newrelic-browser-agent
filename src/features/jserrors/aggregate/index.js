@@ -191,7 +191,7 @@ export class Aggregate extends AggregateBase {
       this.pageviewReported[bucketHash] = true
     }
 
-    if (agentRuntime?.session?.state?.sessionReplay) params.hasReplay = true
+    if (agentRuntime?.session?.state?.sessionReplayMode) params.hasReplay = true
     params.firstOccurrenceTimestamp = this.observedAt[bucketHash]
 
     var type = internal ? 'ierr' : 'err'

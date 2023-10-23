@@ -125,7 +125,7 @@ export class Aggregate extends AggregateBase {
           this.ee.on(SESSION_EVENTS.PAUSE, () => { mostRecentModeKnown = sessionEntity.state.sessionTraceMode })
 
           if (!sessionEntity.isNew) { // inherit the same mode as existing session's Trace
-            if (sessionEntity.state.sessionReplay === MODE.OFF) this.isStandalone = true
+            if (sessionEntity.state.sessionReplayMode === MODE.OFF) this.isStandalone = true
             controlTraceOp(mostRecentModeKnown = sessionEntity.state.sessionTraceMode)
           } else { // for new sessions, see the truth table associated with NEWRELIC-8662 wrt the new Trace behavior under session management
             const replayMode = await getSessionReplayMode(agentIdentifier)
@@ -462,6 +462,13 @@ export class Aggregate extends AggregateBase {
     this.trace = {}
     this.nodeCount = 0
 
+    let firstHarvestOfSession
+    if (this.agentRuntime.session) {
+      const isFirstPayload = !this.agentRuntime.session.state.traceHarvestStarted
+      firstHarvestOfSession = { fsh: Number(isFirstPayload) } // converted to '0' | '1'
+      if (isFirstPayload) this.agentRuntime.session.write({ traceHarvestStarted: true })
+    }
+
     return {
       qs: {
         st: this.agentRuntime.offset,
@@ -472,7 +479,8 @@ export class Aggregate extends AggregateBase {
          * so that blob parsing doesn't need to happen to support UI/API functions  */
         fts: this.agentRuntime.offset + earliestTimeStamp,
         /** n === "nodeCount" in NR1, a count of nodes in the ST payload, so that blob parsing doesn't need to happen to support UI/API functions */
-        n: stns.length // node count
+        n: stns.length, // node count
+        ...firstHarvestOfSession
       },
       body: { res: stns }
     }

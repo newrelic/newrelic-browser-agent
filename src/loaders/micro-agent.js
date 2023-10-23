@@ -35,7 +35,8 @@ export class MicroAgent extends AgentBase {
     this.sharedAggregator = new Aggregator({ agentIdentifier: this.agentIdentifier })
     this.features = {}
 
-    Object.assign(this, configure(this.agentIdentifier, { ...options, runtime: { isolatedBacklog: true } }, options.loaderType || 'micro-agent'))
+    gosNREUMInitializedAgents(this.agentIdentifier, this)
+    configure(this, { ...options, runtime: { isolatedBacklog: true } }, options.loaderType || 'micro-agent')
 
     /**
      * Starts a set of agent features if not running in "autoStart" mode
@@ -91,8 +92,7 @@ export class MicroAgent extends AgentBase {
           }
         })
       })
-      gosNREUMInitializedAgents(this.agentIdentifier, this.features, 'features')
-      return this
+      return true
     } catch (err) {
       warn('Failed to initialize instrument classes.', err)
       return false

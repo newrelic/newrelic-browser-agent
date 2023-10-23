@@ -46,7 +46,9 @@ export class Agent extends AgentBase {
     // Future work is being planned to evaluate removing this behavior from the backend, but for now we must ensure this call is made
     this.desiredFeatures.add(PageViewEvent)
 
-    Object.assign(this, configure(this.agentIdentifier, options, options.loaderType || 'agent'))
+    gosNREUMInitializedAgents(this.agentIdentifier, this) // append this agent onto the global NREUM.initializedAgents
+    // ^Currently, this needs to happen before configure() since it will add the agent to the global that's looked up by set-config functions inside there.
+    configure(this, options, options.loaderType || 'agent') // add api, exposed, and other config properties
 
     this.run()
   }
@@ -61,7 +63,6 @@ export class Agent extends AgentBase {
   }
 
   run () {
-    const NR_FEATURES_REF_NAME = 'features'
     // Attempt to initialize all the requested features (sequentially in prio order & synchronously), with any failure aborting the whole process.
     try {
       const enabledFeatures = getEnabledFeatures(this.agentIdentifier)
@@ -76,7 +77,6 @@ export class Agent extends AgentBase {
           this.features[InstrumentCtor.featureName] = new InstrumentCtor(this.agentIdentifier, this.sharedAggregator)
         }
       })
-      gosNREUMInitializedAgents(this.agentIdentifier, this.features, NR_FEATURES_REF_NAME)
     } catch (err) {
       warn('Failed to initialize all enabled instrument classes (agent aborted) -', err)
       for (const featName in this.features) { // this.features hold only features that have been instantiated
@@ -85,7 +85,7 @@ export class Agent extends AgentBase {
 
       const newrelic = gosNREUM()
       delete newrelic.initializedAgents[this.agentIdentifier]?.api // prevent further calls to agent-specific APIs (see "configure.js")
-      delete newrelic.initializedAgents[this.agentIdentifier]?.[NR_FEATURES_REF_NAME] // GC mem used internally by features
+      delete newrelic.initializedAgents[this.agentIdentifier]?.features // GC mem used internally by features
       delete this.sharedAggregator
       // Keep the initialized agent object with its configs for troubleshooting purposes.
       newrelic.ee?.abort() // set flag and clear global backlog

@@ -129,7 +129,7 @@ export class InstrumentBase extends FeatureBase {
     if (featureName === FEATURE_NAMES.sessionReplay) {
       if (!originals.MO) return false // Session Replay cannot work without Mutation Observer
       if (getConfigurationValue(this.agentIdentifier, 'session_trace.enabled') === false) return false // Session Replay as of now is tightly coupled with Session Trace in the UI
-      return !!session?.isNew || !!session?.state.sessionReplay // Session Replay should only try to run if already running from a previous page, or at the beginning of a session
+      return !!session?.isNew || !!session?.state.sessionReplayMode // Session Replay should only try to run if already running from a previous page, or at the beginning of a session
     }
     return true
   }

@@ -1,8 +1,10 @@
 import * as core from '@actions/core'
 import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts'
 import { S3Client, CopyObjectCommand } from '@aws-sdk/client-s3'
-import { args } from './args.js'
+import mime from 'mime-types'
 import { constructLoaderFileNames } from '../shared-utils/loaders.js'
+import { getAssetCacheHeader } from '../shared-utils/asset-cache.js'
+import { args } from './args.js'
 
 const stsClient = new STSClient({ region: args.region })
 const s3Credentials = await stsClient.send(new AssumeRoleCommand({
@@ -27,8 +29,10 @@ const results = await Promise.all(
         Bucket: args.bucket,
         CopySource: `${args.bucket}/${loader}`,
         Key: loader.replace(args.loaderVersion, 'current'),
-        ContentType: 'application/javascript',
-        CacheControl: `public, max-age=${args.assetCacheDuration}`,
+        ContentType: mime.lookup(loader) || 'application/javascript',
+        CacheControl: getAssetCacheHeader('/', loader),
+        MetadataDirective: 'REPLACE',
+        TaggingDirective: 'COPY'
       }
 
       const result = await s3Client.send(new CopyObjectCommand(commandOpts))

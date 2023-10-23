@@ -46,7 +46,7 @@ export class AggregateBase extends FeatureBase {
       } catch (err) {
         // do nothing
       }
-      configure(this.agentIdentifier, {
+      configure({ agentIdentifier: this.agentIdentifier }, {
         ...gosCDN(),
         info: {
           ...gosCDN().info,

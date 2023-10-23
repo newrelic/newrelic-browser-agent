@@ -1,4 +1,3 @@
-
 import canonicalFunctionName from '../../lib/canonical-function-name'
 import stringHashCode from '../../lib/string-hash-code'
 

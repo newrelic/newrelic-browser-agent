@@ -133,14 +133,14 @@ export class Aggregate extends AggregateBase {
       this.ee.on(SESSION_EVENTS.RESUME, () => {
         // if the mode changed on a different tab, it needs to update this instance to match
         const { session } = getRuntime(this.agentIdentifier)
-        this.mode = session.state.sessionReplay
+        this.mode = session.state.sessionReplayMode
         if (!this.initialized || this.mode === MODE.OFF) return
         this.startRecording()
       })
 
       this.ee.on(SESSION_EVENTS.UPDATE, (type, data) => {
         if (!this.initialized || this.blocked || type !== SESSION_EVENT_TYPES.CROSS_TAB) return
-        if (this.mode !== MODE.OFF && data.sessionReplay === MODE.OFF) this.abort(ABORT_REASONS.CROSS_TAB)
+        if (this.mode !== MODE.OFF && data.sessionReplayMode === MODE.OFF) this.abort(ABORT_REASONS.CROSS_TAB)
         this.mode = data.sessionReplay
       })
 
@@ -167,7 +167,7 @@ export class Aggregate extends AggregateBase {
 
             this.scheduler.startTimer(this.harvestTimeSeconds)
 
-            this.syncWithSessionManager({ sessionReplay: this.mode })
+            this.syncWithSessionManager({ sessionReplayMode: this.mode })
           }
         }
       }, this.featureName, this.ee)
@@ -201,7 +201,7 @@ export class Aggregate extends AggregateBase {
     // session replay samples can only be decided on the first load of a session
     // session replays can continue if already in progress
     if (!session.isNew) { // inherit the mode of the existing session
-      this.mode = session.state.sessionReplay
+      this.mode = session.state.sessionReplayMode
     } else {
       // The session is new... determine the mode the new session should start in
       if (fullSample) this.mode = MODE.FULL // full mode has precedence over error mode
@@ -241,7 +241,7 @@ export class Aggregate extends AggregateBase {
     }
     this.startRecording()
 
-    this.syncWithSessionManager({ sessionReplay: this.mode })
+    this.syncWithSessionManager({ sessionReplayMode: this.mode })
   }
 
   prepareHarvest () {
@@ -439,7 +439,7 @@ export class Aggregate extends AggregateBase {
     this.blocked = true
     this.mode = MODE.OFF
     this.stopRecording()
-    this.syncWithSessionManager({ sessionReplay: this.mode })
+    this.syncWithSessionManager({ sessionReplayMode: this.mode })
     this.clearTimestamps()
     this.ee.emit('REPLAY_ABORTED')
   }

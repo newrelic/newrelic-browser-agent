@@ -1,4 +1,3 @@
-
 import { Aggregator } from '../../../common/aggregate/aggregator'
 import { Aggregate } from '.'
 import { ee } from '../../../common/event-emitter/contextual-ee'

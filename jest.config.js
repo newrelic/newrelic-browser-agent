@@ -1,16 +1,5 @@
 const commonConfig = {
   clearMocks: true,
-  coverageDirectory: 'coverage',
-  collectCoverageFrom: [
-    'src/**/*.js',
-    '!src/**/*.test.js',
-    '!src/**/*.component-test.js',
-    '!src/index.js',
-    '!src/cdn/**/*.js',
-    '!src/features/*/index.js',
-    '!src/features/*/constants.js',
-    '!src/loaders/features/features.js'
-  ],
   modulePathIgnorePatterns: ['<rootDir>/temp'],
   testEnvironment: 'jsdom',
   transform: {
@@ -23,6 +12,17 @@ const commonConfig = {
 }
 
 module.exports = {
+  coverageDirectory: 'coverage',
+  collectCoverageFrom: [
+    'src/**/*.js',
+    '!src/**/*.test.js',
+    '!src/**/*.component-test.js',
+    '!src/index.js',
+    '!src/cdn/**/*.js',
+    '!src/features/*/index.js',
+    '!src/features/*/constants.js',
+    '!src/loaders/features/features.js'
+  ],
   projects: [
     {
       ...commonConfig,

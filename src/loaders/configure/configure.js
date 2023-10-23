@@ -35,7 +35,6 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
   const internalTrafficList = [info.beacon, info.errorBeacon]
 
   if (!alreadySetOnce) {
-    alreadySetOnce = true
     if (updatedInit.proxy.assets) {
       redefinePublicPath(updatedInit.proxy.assets)
       internalTrafficList.push(updatedInit.proxy.assets)
@@ -51,8 +50,9 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
 
   if (!alreadySetOnce) {
     setTopLevelCallers() // no need to set global APIs on newrelic obj more than once
-    agent.api = setAPI(agent.agentIdentifier, forceDrain)
-    agent.exposed = exposed
     addToNREUM('activatedFeatures', activatedFeatures)
   }
+  if (agent.api === undefined) agent.api = setAPI(agent.agentIdentifier, forceDrain)
+  if (agent.exposed === undefined) agent.exposed = exposed
+  alreadySetOnce = true
 }

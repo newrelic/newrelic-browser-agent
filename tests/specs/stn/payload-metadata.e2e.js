@@ -20,7 +20,7 @@ describe('STN Payload metadata checks', () => {
   })
 
   it('fsh is included and correctly set with session enabled', async () => {
-    const testURL = await browser.testHandle.assetURL('stn/instrumented.html', { init: { privacy: { cookies_enabled: true } } })
+    let testURL = await browser.testHandle.assetURL('stn/instrumented.html', { init: { privacy: { cookies_enabled: true } } })
 
     let stnToHarvest = browser.testHandle.expectResources()
     await browser.url(testURL).then(() => browser.waitForAgentLoad())
@@ -34,7 +34,8 @@ describe('STN Payload metadata checks', () => {
 
     expect(stn.request.query.fsh).toEqual('0') // basically any subsequent harvests
 
-    // Load the page again a second time within same session, and the first harvest should not have fsh = 1 this time.
+    // Load another page within same session, and the first harvest should not have fsh = 1 this time.
+    testURL = await browser.testHandle.assetURL('instrumented.html', { init: { privacy: { cookies_enabled: true } } })
     stnToHarvest = browser.testHandle.expectResources()
     await browser.url(testURL).then(() => browser.waitForAgentLoad())
     stn = await stnToHarvest

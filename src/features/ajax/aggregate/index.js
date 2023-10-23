@@ -126,6 +126,8 @@ export class Aggregate extends AggregateBase {
         query: this?.parsedOrigin?.search
       })
 
+      if (event.gql) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Ajax/Events/GraphQL/Bytes-Added', stringify(event.gql).length], undefined, FEATURE_NAMES.metrics, ee)
+
       // if the ajax happened inside an interaction, hold it until the interaction finishes
       if (this.spaNode) {
         var interactionId = this.spaNode.interaction.id

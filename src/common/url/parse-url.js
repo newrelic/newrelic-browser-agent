@@ -17,9 +17,9 @@ export function parseUrl (url) {
     const parsedUrl = new URL(url, location.href)
     const returnVal = {
       port: parsedUrl.port,
-      search: parsedUrl.search,
       hostname: parsedUrl.hostname,
       pathname: parsedUrl.pathname,
+      search: parsedUrl.search,
       protocol: parsedUrl.protocol.slice(0, parsedUrl.protocol.indexOf(':')),
       sameOrigin: parsedUrl.protocol === globalScope?.location?.protocol && parsedUrl.host === globalScope?.location?.host
     }

@@ -46,26 +46,26 @@ class TestServer {
 
   /**
    * Fastify asset server instance.
-   * @type module:fastify.FastifyInstance
+   * @type import('fastify').FastifyInstance
    */
   #assetServer
 
   /**
    * Fastify cors server instance.
    * This is a stripped down asset server that only has the API test routes.
-   * @type module:fastify.FastifyInstance
+   * @type import('fastify').FastifyInstance
    */
   #corsServer
 
   /**
    * Fastify bam server instance.
-   * @type module:fastify.FastifyInstance
+   * @type import('fastify').FastifyInstance
    */
   #bamServer
 
   /**
    * Fastify command server instance.
-   * @type module:fastify.FastifyInstance
+   * @type import('fastify').FastifyInstance
    */
   #commandServer
 

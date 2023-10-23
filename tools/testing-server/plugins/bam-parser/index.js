@@ -5,7 +5,7 @@ const beaconRequestsRegex = /^((\/((events)|(jserrors)|(ins)|(resources)))?\/1\/
 
 /**
  * Fastify plugin to add a custom text/plain content parser that uses querypack.
- * @param {module:fastify.FastifyInstance} fastify the fastify server instance
+ * @param {import('fastify').FastifyInstance} fastify the fastify server instance
  * @param {TestServer} testServer test server instance
  */
 module.exports = fp(async function (fastify, testServer) {

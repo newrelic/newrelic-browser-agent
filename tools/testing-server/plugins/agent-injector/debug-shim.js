@@ -32,28 +32,28 @@ module.exports = `
       origOnError(arguments)
     }
   }
-  var origLog = window.console.log
+  var origLog = window.console.log.bind(window.console)
   window.console.log = function() {
     NRDEBUG('console.log: ' + JSON.stringify(arguments))
     if (typeof origLog === 'function') {
       origLog(arguments)
     }
   }
-  var origWarn = window.console.warn
+  var origWarn = window.console.warn.bind(window.console)
   window.console.warn = function() {
     NRDEBUG('console.warn: ' + JSON.stringify(arguments))
     if (typeof origWarn === 'function') {
-      origWarn(arguments)
+      //origWarn(arguments)
     }
   }
-  var origErr = window.console.error
+  var origErr = window.console.error.bind(window.console)
   window.console.error = function() {
     NRDEBUG('console.error: ' + JSON.stringify(arguments))
     if (typeof origErr === 'function') {
       origErr(arguments)
     }
   }
-  var origTrace = window.console.trace
+  var origTrace = window.console.trace.bind(window.console)
   window.console.trace = function() {
     NRDEBUG('console.trace: ' + JSON.stringify(arguments))
     if (typeof origTrace === 'function') {

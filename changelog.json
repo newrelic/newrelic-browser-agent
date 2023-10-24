@@ -5,6 +5,47 @@
       "changes": [
         {
           "type": "feat",
+          "sha": "42062638850b4b410ac75eb008120ec4a82583c1",
+          "message": "Replace url parsing with URL class",
+          "issues": [
+            "781"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "aa39c6cd2aeefaecd803aeb0736ad7aef8477bc4",
+          "message": "Add feature flag support for Browser Interactions",
+          "issues": [
+            "779"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "757cf1953af471118d809414cd41297a87c89a34",
+          "message": "Add network info to all page view timing events",
+          "issues": [
+            "768"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "ab2e9dd2252143635b67ea9da4e07867ec68cd0f",
+          "message": "Add first harvest of session flags to RUM and Trace",
+          "issues": [
+            "765"
+          ]
+        }
+      ],
+      "version": "1.246.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "7f86a3a2-ca00-4e14-891a-82846e4ce0e0",
+      "createTime": "2023-10-23T22:23:20.010Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
           "sha": "d44f03384655f47c5f8a63db02f7eaac58585a86",
           "message": "Allow boolean values in setCustomAttribute",
           "issues": [
@@ -735,5 +776,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2023-10-18T17:12:26.391Z"
+  "updateTime": "2023-10-23T22:23:20.010Z"
 }

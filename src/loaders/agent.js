@@ -39,6 +39,7 @@ export class Agent extends AgentBase {
     this.agentIdentifier = agentIdentifier
     this.sharedAggregator = new Aggregator({ agentIdentifier: this.agentIdentifier })
     this.features = {}
+    gosNREUMInitializedAgents(agentIdentifier, this) // append this agent onto the global NREUM.initializedAgents
 
     this.desiredFeatures = new Set(options.features || []) // expected to be a list of static Instrument/InstrumentBase classes, see "spa.js" for example
     // For Now... ALL agents must make the rum call whether the page_view_event feature was enabled or not.
@@ -46,8 +47,6 @@ export class Agent extends AgentBase {
     // Future work is being planned to evaluate removing this behavior from the backend, but for now we must ensure this call is made
     this.desiredFeatures.add(PageViewEvent)
 
-    gosNREUMInitializedAgents(this.agentIdentifier, this) // append this agent onto the global NREUM.initializedAgents
-    // ^Currently, this needs to happen before configure() since it will add the agent to the global that's looked up by set-config functions inside there.
     configure(this, options, options.loaderType || 'agent') // add api, exposed, and other config properties
 
     this.run()

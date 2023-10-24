@@ -34,9 +34,10 @@ export class MicroAgent extends AgentBase {
     this.agentIdentifier = agentIdentifier
     this.sharedAggregator = new Aggregator({ agentIdentifier: this.agentIdentifier })
     this.features = {}
+    gosNREUMInitializedAgents(agentIdentifier, this)
 
-    gosNREUMInitializedAgents(this.agentIdentifier, this)
     configure(this, { ...options, runtime: { isolatedBacklog: true } }, options.loaderType || 'micro-agent')
+    Object.assign(this, this.api) // the APIs should be available at the class level for micro-agent
 
     /**
      * Starts a set of agent features if not running in "autoStart" mode

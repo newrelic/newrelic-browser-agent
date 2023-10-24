@@ -10,7 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "@apollo/client": "^3.8.5",
-    "@newrelic/browser-agent": "file:../../../temp/newrelic-browser-agent-1.245.0.tgz",
+    "@newrelic/browser-agent": "file:../../../temp/newrelic-browser-agent-1.246.0.tgz",
     "graphql": "^16.8.1"
   }
 }

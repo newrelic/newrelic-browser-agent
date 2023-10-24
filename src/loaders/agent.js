@@ -35,11 +35,11 @@ export class Agent extends AgentBase {
       warn('Failed to initial the agent. Could not determine the runtime environment.')
       return
     }
-    gosNREUMInitializedAgents(this.agentIdentifier, this) // append this agent onto the global NREUM.initializedAgents
 
     this.agentIdentifier = agentIdentifier
     this.sharedAggregator = new Aggregator({ agentIdentifier: this.agentIdentifier })
     this.features = {}
+    gosNREUMInitializedAgents(agentIdentifier, this) // append this agent onto the global NREUM.initializedAgents
 
     this.desiredFeatures = new Set(options.features || []) // expected to be a list of static Instrument/InstrumentBase classes, see "spa.js" for example
     // For Now... ALL agents must make the rum call whether the page_view_event feature was enabled or not.

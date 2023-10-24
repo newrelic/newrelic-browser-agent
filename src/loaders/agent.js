@@ -35,6 +35,7 @@ export class Agent extends AgentBase {
       warn('Failed to initial the agent. Could not determine the runtime environment.')
       return
     }
+    gosNREUMInitializedAgents(this.agentIdentifier, this) // append this agent onto the global NREUM.initializedAgents
 
     this.agentIdentifier = agentIdentifier
     this.sharedAggregator = new Aggregator({ agentIdentifier: this.agentIdentifier })
@@ -46,8 +47,6 @@ export class Agent extends AgentBase {
     // Future work is being planned to evaluate removing this behavior from the backend, but for now we must ensure this call is made
     this.desiredFeatures.add(PageViewEvent)
 
-    gosNREUMInitializedAgents(this.agentIdentifier, this) // append this agent onto the global NREUM.initializedAgents
-    // ^Currently, this needs to happen before configure() since it will add the agent to the global that's looked up by set-config functions inside there.
     configure(this, options, options.loaderType || 'agent') // add api, exposed, and other config properties
 
     this.run()

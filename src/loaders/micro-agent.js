@@ -31,11 +31,12 @@ export class MicroAgent extends AgentBase {
   constructor (options, agentIdentifier = generateRandomHexString(16)) {
     super()
 
+    gosNREUMInitializedAgents(this.agentIdentifier, this)
+
     this.agentIdentifier = agentIdentifier
     this.sharedAggregator = new Aggregator({ agentIdentifier: this.agentIdentifier })
     this.features = {}
 
-    gosNREUMInitializedAgents(this.agentIdentifier, this)
     configure(this, { ...options, runtime: { isolatedBacklog: true } }, options.loaderType || 'micro-agent')
 
     /**

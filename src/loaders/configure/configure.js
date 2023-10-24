@@ -40,6 +40,9 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
       internalTrafficList.push(updatedInit.proxy.assets)
     }
     if (updatedInit.proxy.beacon) internalTrafficList.push(updatedInit.proxy.beacon)
+
+    setTopLevelCallers() // no need to set global APIs on newrelic obj more than once
+    addToNREUM('activatedFeatures', activatedFeatures)
   }
 
   runtime.denyList = [
@@ -48,10 +51,6 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
   ]
   setRuntime(agent.agentIdentifier, runtime)
 
-  if (!alreadySetOnce) {
-    setTopLevelCallers() // no need to set global APIs on newrelic obj more than once
-    addToNREUM('activatedFeatures', activatedFeatures)
-  }
   if (agent.api === undefined) agent.api = setAPI(agent.agentIdentifier, forceDrain)
   if (agent.exposed === undefined) agent.exposed = exposed
   alreadySetOnce = true

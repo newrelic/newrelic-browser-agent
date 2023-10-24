@@ -10,26 +10,26 @@
     {init}
     {config}
     {loader}
-    <script src="../../js/vendor/jquery-3.2.1.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js" integrity="sha512-3P8rXCuGJdNZOnUx/03c1jOTnMn3rP63nBip5gOP2qmUh5YAdVAvFZ1E+QLZZbC1rtMrQb+mah3AfYW11RUrWA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   </head>
   <body>
-      <script>
-document.addEventListener('click', function () {
-  $.ajax({
-    url: '/jsonp?callback=?',
-    dataType: 'jsonp',
-    crossDomain: true
-  }).done(function(data) {
-    var el = document.createElement('p')
-    el.innerHTML = JSON.stringify(data)
-    document.body.appendChild(el)
-    window.location.hash = Math.random()
-    setTimeout(newrelic.interaction().createTracer('tacoTimer', function () {
-      window.location.hash = Math.random()
-    }), 500)
-  })
-}, false)
-      </script>
-      <p>Click me!</p>
+    <script type="text/javascript">
+      document.addEventListener('click', function () {
+        $.ajax({
+          url: '/jsonp?callback=?',
+          dataType: 'jsonp',
+          crossDomain: true
+        }).done(function(data) {
+          var el = document.createElement('p')
+          el.innerHTML = JSON.stringify(data)
+          document.body.appendChild(el)
+          window.location.hash = Math.random()
+          setTimeout(newrelic.interaction().createTracer('tacoTimer', function () {
+            window.location.hash = Math.random()
+          }), 500)
+        })
+      }, false)
+    </script>
+    <p>Click me!</p>
   </body>
 </html>

@@ -51,5 +51,6 @@ module.exports.defaultInitBlock = {
   session_trace: { enabled: true, harvestTimeSeconds: 5, autoStart: true },
   spa: { enabled: true, harvestTimeSeconds: 5, autoStart: true },
   harvest: { tooManyRequestsDelay: 5 },
-  session_replay: { enabled: false, harvestTimeSeconds: 5, sampling_rate: 0, error_sampling_rate: 0, autoStart: true }
+  session_replay: { enabled: false, harvestTimeSeconds: 5, sampling_rate: 0, error_sampling_rate: 0, autoStart: true },
+  soft_navigations: { enabled: true, harvestTimeSeconds: 5, autoStart: true }
 }

@@ -12,7 +12,6 @@ import { Instrument as PageViewEvent } from '../features/page_view_event/instrum
 import { Aggregator } from '../common/aggregate/aggregator'
 import { gosNREUM, gosNREUMInitializedAgents } from '../common/window/nreum'
 import { generateRandomHexString } from '../common/ids/unique-id'
-import { getConfiguration, getInfo, getLoaderConfig, getRuntime } from '../common/config/config'
 import { warn } from '../common/util/console'
 import { stringify } from '../common/util/stringify'
 import { globalScope } from '../common/constants/runtime'
@@ -54,10 +53,10 @@ export class Agent extends AgentBase {
 
   get config () {
     return {
-      info: getInfo(this.agentIdentifier),
-      init: getConfiguration(this.agentIdentifier),
-      loader_config: getLoaderConfig(this.agentIdentifier),
-      runtime: getRuntime(this.agentIdentifier)
+      info: this.info,
+      init: this.init,
+      loader_config: this.loader_config,
+      runtime: this.runtime
     }
   }
 
@@ -66,15 +65,19 @@ export class Agent extends AgentBase {
     try {
       const enabledFeatures = getEnabledFeatures(this.agentIdentifier)
       const featuresToStart = [...this.desiredFeatures]
+      const shouldRunSoftNavOverSpa = Boolean(featuresToStart.some(instr => instr.featureName === FEATURE_NAMES.softNav) &&
+        enabledFeatures[FEATURE_NAMES.softNav] && this.init.feature_flags.includes('soft_nav')) // if soft_navigations is allowed to run AND part of this agent build, so that we don't erroneously skip old spa
+
       featuresToStart.sort((a, b) => featurePriority[a.featureName] - featurePriority[b.featureName])
       featuresToStart.forEach(InstrumentCtor => {
-        // pageViewEvent must be enabled because RUM calls are not optional. See comment in constructor and PR 428.
-        if (enabledFeatures[InstrumentCtor.featureName] || InstrumentCtor.featureName === FEATURE_NAMES.pageViewEvent) {
-          const dependencies = getFeatureDependencyNames(InstrumentCtor.featureName)
-          const hasAllDeps = dependencies.every(x => enabledFeatures[x])
-          if (!hasAllDeps) warn(`${InstrumentCtor.featureName} is enabled but one or more dependent features has been disabled (${stringify(dependencies)}). This may cause unintended consequences or missing data...`)
-          this.features[InstrumentCtor.featureName] = new InstrumentCtor(this.agentIdentifier, this.sharedAggregator)
-        }
+        if (!enabledFeatures[InstrumentCtor.featureName] && InstrumentCtor.featureName !== FEATURE_NAMES.pageViewEvent) return // PVE is required to run even if it's marked disabled
+        if (shouldRunSoftNavOverSpa && InstrumentCtor.featName === FEATURE_NAMES.spa) return // only meaningful if BOTH soft-nav & old spa features are included in agent build, in which this would ignore old spa
+
+        const dependencies = getFeatureDependencyNames(InstrumentCtor.featureName)
+        const hasAllDeps = dependencies.every(featName => featName in this.features) // any other feature(s) this depends on should've been initialized on prior iterations by priority order
+        if (!hasAllDeps) warn(`${InstrumentCtor.featureName} is enabled but one or more dependent features has not been initialized (${stringify(dependencies)}). This may cause unintended consequences or missing data...`)
+
+        this.features[InstrumentCtor.featureName] = new InstrumentCtor(this.agentIdentifier, this.sharedAggregator)
       })
     } catch (err) {
       warn('Failed to initialize all enabled instrument classes (agent aborted) -', err)

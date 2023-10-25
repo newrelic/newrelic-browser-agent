@@ -24,6 +24,6 @@ export const featurePriority = {
   [FEATURE_NAMES.sessionTrace]: 6,
   [FEATURE_NAMES.pageAction]: 7,
   [FEATURE_NAMES.spa]: 8,
-  [FEATURE_NAMES.sessionReplay]: 9,
-  [FEATURE_NAMES.softNav]: 10
+  [FEATURE_NAMES.softNav]: 9,
+  [FEATURE_NAMES.sessionReplay]: 10
 }

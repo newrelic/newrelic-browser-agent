@@ -171,6 +171,25 @@ try{
 microAgent2.addPageAction('myData', {hello: 'world'})
 ```
 
+## Browser Agent APIs
+All Browser Agent APIs are exposed for use in two ways:
+- Via the `newrelic` window-level global object
+- At the top-level of the Agent instance
+
+Please see our [official documentation](https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/using-browser-apis/) for more information about the Browser Agent APIs.
+
+```js
+  newrelic.noticeError(...)
+  // or
+  const NrAgent = new BrowserAgent(...)
+  NrAgent.noticeError(...)
+```
+
+## Session Replay
+The Session Replay feature is currently in Limited Preview and only functional for customers participating in the early access program.  To request access, please visit [this link](https://newrelic.com/platform/session-replay-early-access). 
+
+Due to the sensitive nature of the feature, Session Replay has many configuration options, which are configurable in each browser application's *Application Settings* page on the New Relic site. These settings will only be accessible if you are participating in the limited preview. Additionally, you can control the sampling rates, obfuscation conditions and triggering rules of Session Replay.
+
 ## Supported browsers
 
 Our supported browser list can be accessed [here](https://docs.newrelic.com/docs/browser/new-relic-browser/getting-started/compatibility-requirements-browser-monitoring/#browser-types).

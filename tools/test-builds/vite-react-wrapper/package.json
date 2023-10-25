@@ -15,7 +15,6 @@
     "build": "tsc && vite build"
   },
   "devDependencies": {
-    "@types/node": "^17.0.21",
     "@types/react": "*",
     "@types/react-dom": "*",
     "@vitejs/plugin-react-swc": "3.2.0",

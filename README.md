@@ -175,6 +175,7 @@ microAgent2.addPageAction('myData', {hello: 'world'})
 All Browser Agent APIs are exposed for use in two ways:
 - Via the `newrelic` window-level global object
 - At the top-level of the Agent instance
+
 Please see our [official documentation](https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/using-browser-apis/) for more information about the Browser Agent APIs.
 
 ```js

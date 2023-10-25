@@ -1,4 +1,5 @@
 import { supportsFetch } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { extractAjaxEvents } from '../../util/xhr'
 
 describe('xhr events deny list', () => {
   it('does not capture events when blocked', async () => {
@@ -9,7 +10,7 @@ describe('xhr events deny list', () => {
     ])
 
     expect(ajaxEvents).toBeUndefined()
-    expect(interactionEvents.request.body).not.toEqual(expect.arrayContaining([
+    expect(extractAjaxEvents(interactionEvents.request.body)).not.toEqual(expect.arrayContaining([
       expect.objectContaining({
         domain: expect.stringContaining('bam-test-1.nr-local.net'),
         path: '/json',
@@ -44,7 +45,10 @@ describe('xhr events deny list', () => {
       browser.url(await browser.testHandle.assetURL('spa/ajax-deny-list.html', { init: { ajax: { block_internal: false } } }))
     ])
 
-    const events = [...ajaxEvents.request.body, ...interactionEvents.request.body]
+    const events = [
+      ...extractAjaxEvents(ajaxEvents.request.body),
+      ...extractAjaxEvents(interactionEvents.request.body)
+    ]
     expect(events).toEqual(expect.arrayContaining([
       expect.objectContaining({
         domain: expect.stringContaining('bam-test-1.nr-local.net'),

@@ -304,6 +304,7 @@ export class Aggregate extends AggregateBase {
           'replay.lastTimestamp': lastTimestamp,
           'replay.durationMs': lastTimestamp - firstTimestamp,
           'replay.nodes': this.events.length,
+          'session.durationMs': agentRuntime.session.getDuration(),
           agentVersion: agentRuntime.version,
           session: agentRuntime.session.state.value,
           hasMeta: this.hasMeta,

@@ -4,9 +4,9 @@ export class FeatureBase {
   constructor (agentIdentifier, aggregator, featureName) {
     /** @type {string} */
     this.agentIdentifier = agentIdentifier
-    /** @type {Aggregator} */
+    /** @type {import('../../common/aggregate/aggregator').Aggregator} */
     this.aggregator = aggregator
-    /** @type {ContextualEE} */
+    /** @type {import('../../common/event-emitter/contextual-ee').ee} */
     this.ee = ee.get(agentIdentifier)
     /** @type {string} */
     this.featureName = featureName

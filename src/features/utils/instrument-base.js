@@ -20,7 +20,7 @@ export class InstrumentBase extends FeatureBase {
   /**
    * Instantiate InstrumentBase.
    * @param {string} agentIdentifier - The unique ID of the instantiated agent (relative to global scope).
-   * @param {Aggregator} aggregator - The shared Aggregator that will handle batching and reporting of data.
+   * @param {import('../../common/aggregate/aggregator').Aggregator} aggregator - The shared Aggregator that will handle batching and reporting of data.
    * @param {string} featureName - The name of the feature module (used to construct file path).
    * @param {boolean} [auto=true] - Determines whether the feature should automatically register to have the draining
    *     of its pooled instrumentation data handled by the agent's centralized drain functionality, rather than draining
@@ -34,7 +34,7 @@ export class InstrumentBase extends FeatureBase {
     this.abortHandler = undefined
 
     /**
-     * @type {Class} Holds the reference to the feature's aggregate module counterpart, if and after it has been initialized. This may not be assigned until after page loads!
+     * @type {import('./aggregate-base').AggregateBase} Holds the reference to the feature's aggregate module counterpart, if and after it has been initialized. This may not be assigned until after page loads!
      * The only purpose of this for now is to expose it to the NREUM interface, as the feature's instrument instance is already exposed.
     */
     this.featAggregate = undefined
@@ -122,7 +122,7 @@ export class InstrumentBase extends FeatureBase {
   /**
  * Make a determination if an aggregate class should even be imported
  * @param {string} featureName
- * @param {SessionEntity} session
+ * @param {import('../../common/session/session-entity').SessionEntity} session
  * @returns
  */
   shouldImportAgg (featureName, session) {

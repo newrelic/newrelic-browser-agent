@@ -188,7 +188,7 @@ Please see our [official documentation](https://docs.newrelic.com/docs/browser/n
 ## Session Replay
 The Session Replay feature is currently in Limited Preview and only functional for customers participating in the early access program.  To request access, please visit [this link](https://newrelic.com/platform/session-replay-early-access). 
 
-Due to the sensitive nature of the feature, Session Replay has many configuration options, which are configurable in each browser application's *Application Settings* page on NR1. These settings will only be accessible if you are participating in the limited preview. Here, you can control the sampling rates, obfuscation conditions and triggering rules of Session Replay.
+Due to the sensitive nature of the feature, Session Replay has many configuration options, which are configurable in each browser application's *Application Settings* page on the New Relic site. These settings will only be accessible if you are participating in the limited preview. Additionally, you can control the sampling rates, obfuscation conditions and triggering rules of Session Replay.
 
 ## Supported browsers
 

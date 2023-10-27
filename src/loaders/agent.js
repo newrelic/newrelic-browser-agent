@@ -10,7 +10,7 @@ import { featurePriority, FEATURE_NAMES } from './features/features'
 import { Instrument as PageViewEvent } from '../features/page_view_event/instrument'
 // common files
 import { Aggregator } from '../common/aggregate/aggregator'
-import { gosNREUM, gosNREUMInitializedAgents } from '../common/window/nreum'
+import { gosNREUM, setNREUMInitializedAgent } from '../common/window/nreum'
 import { generateRandomHexString } from '../common/ids/unique-id'
 import { warn } from '../common/util/console'
 import { stringify } from '../common/util/stringify'
@@ -38,7 +38,7 @@ export class Agent extends AgentBase {
     this.agentIdentifier = agentIdentifier
     this.sharedAggregator = new Aggregator({ agentIdentifier: this.agentIdentifier })
     this.features = {}
-    gosNREUMInitializedAgents(agentIdentifier, this) // append this agent onto the global NREUM.initializedAgents
+    setNREUMInitializedAgent(agentIdentifier, this) // append this agent onto the global NREUM.initializedAgents
 
     this.desiredFeatures = new Set(options.features || []) // expected to be a list of static Instrument/InstrumentBase classes, see "spa.js" for example
     // For Now... ALL agents must make the rum call whether the page_view_event feature was enabled or not.

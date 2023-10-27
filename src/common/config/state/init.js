@@ -1,7 +1,7 @@
 import { isValidSelector } from '../../dom/query-selector'
 import { DEFAULT_EXPIRES_MS, DEFAULT_INACTIVE_MS } from '../../session/constants'
 import { warn } from '../../util/console'
-import { gosNREUMInitializedAgents } from '../../window/nreum'
+import { getNREUMInitializedAgent } from '../../window/nreum'
 import { getModeledObject } from './configurable'
 
 const model = () => {
@@ -115,7 +115,7 @@ export function getConfiguration (id) {
 export function setConfiguration (id, obj) {
   if (!id) throw new Error(missingAgentIdError)
   _cache[id] = getModeledObject(obj, model())
-  const agentInst = gosNREUMInitializedAgents(id)
+  const agentInst = getNREUMInitializedAgent(id)
   if (agentInst) agentInst.init = _cache[id]
 }
 

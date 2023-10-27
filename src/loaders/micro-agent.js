@@ -4,7 +4,7 @@ import { getEnabledFeatures } from './features/enabled-features'
 import { configure } from './configure/configure'
 // core files
 import { Aggregator } from '../common/aggregate/aggregator'
-import { gosNREUMInitializedAgents } from '../common/window/nreum'
+import { setNREUMInitializedAgent } from '../common/window/nreum'
 import { generateRandomHexString } from '../common/ids/unique-id'
 import { getConfiguration, getConfigurationValue, getInfo, getLoaderConfig, getRuntime } from '../common/config/config'
 import { FEATURE_NAMES } from './features/features'
@@ -34,7 +34,7 @@ export class MicroAgent extends AgentBase {
     this.agentIdentifier = agentIdentifier
     this.sharedAggregator = new Aggregator({ agentIdentifier: this.agentIdentifier })
     this.features = {}
-    gosNREUMInitializedAgents(agentIdentifier, this)
+    setNREUMInitializedAgent(agentIdentifier, this)
 
     configure(this, { ...options, runtime: { isolatedBacklog: true } }, options.loaderType || 'micro-agent')
     Object.assign(this, this.api) // the APIs should be available at the class level for micro-agent

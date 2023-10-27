@@ -1,6 +1,6 @@
 import { windowAddEventListener, documentAddEventListener } from '../event-listener/event-listener-opts'
 
-export function checkState () {
+function checkState () {
   return (typeof document === 'undefined' || document.readyState === 'complete')
 }
 

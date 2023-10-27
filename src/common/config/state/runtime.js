@@ -1,5 +1,5 @@
 import { getModeledObject } from './configurable'
-import { gosNREUMInitializedAgents } from '../../window/nreum'
+import { getNREUMInitializedAgent } from '../../window/nreum'
 import { globalScope } from '../../constants/runtime'
 import { BUILD_ENV, DIST_METHOD, VERSION } from '../../constants/env'
 
@@ -35,6 +35,6 @@ export function getRuntime (id) {
 export function setRuntime (id, obj) {
   if (!id) throw new Error('All runtime objects require an agent identifier!')
   _cache[id] = getModeledObject(obj, model)
-  const agentInst = gosNREUMInitializedAgents(id)
+  const agentInst = getNREUMInitializedAgent(id)
   if (agentInst) agentInst.runtime = _cache[id]
 }

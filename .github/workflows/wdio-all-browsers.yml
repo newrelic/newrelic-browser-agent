@@ -91,7 +91,7 @@ jobs:
     with:
       ref: ${{ inputs.ref || github.ref }}
       browser-target: ios@*
-      additional-flags: --webview tests/webview-specs/ios/**/* --timeout 300000
+      additional-flags: --webview --timeout 300000
     secrets: inherit
 
   android-webview:
@@ -99,5 +99,5 @@ jobs:
     with:
       ref: ${{ inputs.ref || github.ref }}
       browser-target: android@*
-      additional-flags: --webview tests/webview-specs/android/**/* --timeout 300000
+      additional-flags: --webview --timeout 300000
     secrets: inherit

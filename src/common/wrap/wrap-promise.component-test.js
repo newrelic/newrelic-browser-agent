@@ -32,6 +32,76 @@ test('should wrap promise constructor', async () => {
   expect(globalScope.Promise.name).toEqual('Promise')
 })
 
+describe('support ES6 extends', () => {
+  let staticUUID
+  let instanceUUID
+  let MyPromise
+  let thenCaptor
+
+  beforeEach(() => {
+    thenCaptor = jest.fn()
+    staticUUID = faker.datatype.uuid()
+    instanceUUID = faker.datatype.uuid()
+
+    MyPromise = class extends globalScope.Promise {
+      static staticUUID = staticUUID
+
+      instanceUUID = instanceUUID
+
+      then (resolve, reject) {
+        const result = super.then(resolve, reject)
+
+        thenCaptor(this, resolve, reject)
+
+        return result
+      }
+
+      myStaticInstanceUUID () {
+        return MyPromise.staticUUID
+      }
+
+      myFunc () {
+        return this.#myPrivateFunc()
+      }
+
+      #myPrivateFunc () {
+        return true
+      }
+    }
+  })
+
+  test('should contain custom class properties', async () => {
+    const instance = new MyPromise(() => {})
+
+    expect(typeof instance.myFunc).toEqual('function')
+    expect(instance.myFunc()).toEqual(true)
+  })
+
+  test('should contain static class properties', async () => {
+    expect(MyPromise.staticUUID).toEqual(staticUUID)
+
+    const instance = new MyPromise(() => {})
+
+    expect(instance.myStaticInstanceUUID()).toEqual(staticUUID)
+    expect(instance.constructor.staticUUID).toEqual(staticUUID)
+  })
+
+  test('should contain instance class properties', async () => {
+    const instance = new MyPromise(() => {})
+
+    expect(instance.instanceUUID).toEqual(instanceUUID)
+  })
+
+  test('should call instance defined then function', async () => {
+    const resolve = jest.fn()
+    const reject = jest.fn()
+    const instance = new MyPromise(() => {})
+    instance.then(resolve, reject)
+
+    expect(thenCaptor).toHaveBeenCalledWith(instance, resolve, reject)
+  })
+})
+
 describe('all', () => {
   test('should work with acceptable iterables', async () => {
     const resolveValue = faker.datatype.uuid()

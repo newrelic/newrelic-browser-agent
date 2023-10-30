@@ -54,7 +54,11 @@ export function wrapPromise (sharedEE) {
       var ctx = promiseEE.context()
       var wrappedExecutor = promiseWrapper(executor, 'executor-', ctx, null, false)
 
+      const existingInstanceDescriptors = Object.getOwnPropertyDescriptors(Object.getPrototypeOf(this))
       const newCustomPromiseInst = Reflect.construct(prevPromiseObj, [wrappedExecutor], WrappedPromise) // new Promises will use WrappedPromise.prototype as theirs prototype
+      Object.entries(existingInstanceDescriptors).forEach(([key, value]) => {
+        Object.defineProperty(newCustomPromiseInst, key, value)
+      })
 
       promiseEE.context(newCustomPromiseInst).getCtx = function () {
         return ctx

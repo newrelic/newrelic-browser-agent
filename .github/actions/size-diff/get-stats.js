@@ -29,14 +29,14 @@ async function getStats (version, reportSetting) {
     return await getDevStats(reportSetting)
   }
 
-  return getVersionedStats(version, reportSetting)
+  return getVersionedStats(`-${version}`, reportSetting)
 }
 
 async function getLocalStats (reportSetting) {
   const statsFileName = await findLocalStatsFile(reportSetting.statsFileNameTemplate)
   const statsFileContent = JSON.parse(await fs.promises.readFile(statsFileName))
 
-  return parseStatsFile(reportSetting, statsFileContent)
+  return parseStatsFile(reportSetting, statsFileContent, '(?:-[\\d\\.\\-]*?)?')
 }
 
 async function getDevStats (reportSetting) {
@@ -54,7 +54,7 @@ async function getDevStats (reportSetting) {
 }
 
 async function getVersionedStats (version, reportSetting) {
-  const statsFileName = reportSetting.statsFileNameTemplate.replace('{{version}}', `-${version}`)
+  const statsFileName = reportSetting.statsFileNameTemplate.replace('{{version}}', version)
 
   try {
     const statsFileRequest = await fetchRetry(`https://js-agent.newrelic.com/${statsFileName}?_nocache=${uuidv4()}`, { retry: 3 })
@@ -78,6 +78,8 @@ function parseStatsFile (reportSetting, statsFileContent, version) {
     )
 
     if (!assetFileStats) {
+      console.log(statsFileContent)
+      console.log(assetFileNameRegex)
       throw new Error(`No stats exist matching pattern ${assetFileNameRegex.toString()}.`)
     }
 

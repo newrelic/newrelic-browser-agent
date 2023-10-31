@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "Tue Oct 24 2023 13:50:40 GMT+0000 (Coordinated Universal Time)",
+  "lastUpdated": "Tue Oct 31 2023 15:33:11 GMT+0000 (Coordinated Universal Time)",
   "projectName": "New Relic Browser Agent",
   "projectUrl": "https://github.com/newrelic/newrelic-browser-agent",
   "includeOptDeps": true,
@@ -960,15 +960,15 @@
       "email": "sam.verschueren@gmail.com",
       "url": "https://github.com/SamVerschueren"
     },
-    "typescript@5.0.4": {
+    "typescript@5.2.2": {
       "name": "typescript",
-      "version": "5.0.4",
+      "version": "5.2.2",
       "range": "^5.0.3",
       "licenses": "Apache-2.0",
       "repoUrl": "https://github.com/Microsoft/TypeScript",
-      "versionedRepoUrl": "https://github.com/Microsoft/TypeScript/tree/v5.0.4",
+      "versionedRepoUrl": "https://github.com/Microsoft/TypeScript/tree/v5.2.2",
       "licenseFile": "node_modules/typescript/LICENSE.txt",
-      "licenseUrl": "https://github.com/Microsoft/TypeScript/blob/v5.0.4/LICENSE.txt",
+      "licenseUrl": "https://github.com/Microsoft/TypeScript/blob/v5.2.2/LICENSE.txt",
       "licenseTextSource": "file",
       "publisher": "Microsoft Corp."
     },

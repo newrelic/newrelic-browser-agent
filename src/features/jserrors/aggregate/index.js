@@ -20,6 +20,7 @@ import { globalScope } from '../../../common/constants/runtime'
 import { FEATURE_NAME } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
+import { getNREUMInitializedAgent } from '../../../common/window/nreum'
 
 /**
  * @typedef {import('./compute-stack-trace.js').StackInfo} StackInfo
@@ -193,13 +194,14 @@ export class Aggregate extends AggregateBase {
 
     var type = internal ? 'ierr' : 'err'
     var newMetrics = { time }
+    const softNavFeature = getNREUMInitializedAgent(this.agentIdentifier)?.features[FEATURE_NAMES.softNav]?.featAggregate
 
     // sr, stn and spa aggregators listen to this event - stn sends the error in its payload,
     // and spa annotates the error with interaction info
-    const msg = [type, bucketHash, params, newMetrics]
-    handle('errorAgg', msg, undefined, FEATURE_NAMES.sessionTrace, this.ee)
-    handle('errorAgg', msg, undefined, FEATURE_NAMES.spa, this.ee) // this will add a _interactionId onto params if spa is running and there's an interaction atm
-    handle('errorAgg', msg, undefined, FEATURE_NAMES.sessionReplay, this.ee)
+    const jsErrorEvent = [type, bucketHash, params, newMetrics]
+    handle('errorAgg', jsErrorEvent, undefined, FEATURE_NAMES.sessionTrace, this.ee)
+    if (!softNavFeature) handle('errorAgg', jsErrorEvent, undefined, FEATURE_NAMES.spa, this.ee) // this will add a _interactionId onto params if spa is running and there's an interaction atm
+    handle('errorAgg', jsErrorEvent, undefined, FEATURE_NAMES.sessionReplay, this.ee)
 
     // still send EE events for other features such as above, but stop this one from aggregating internal data
     if (this.blocked) return
@@ -209,11 +211,12 @@ export class Aggregate extends AggregateBase {
     mapOwn(getInfo(this.agentIdentifier).jsAttributes, setCustom)
     mapOwn(customAttributes, setCustom)
 
-    /* !!!!! TO DO: setup way for js errors to have interaction ID from basic spa !!!!!!!!! */
-    if (params._interactionId != null) {
-      // hold on to the error until the interaction finishes
+    if (softNavFeature?.currentInteractionId) { // hold onto the error until the interaction is done, eithered saved or discarded
+      this.bufferedErrorsUnderSpa[softNavFeature.currentInteractionId] ??= []
+      this.bufferedErrorsUnderSpa[softNavFeature.currentInteractionId].push([...jsErrorEvent, allCustomAttrs])
+    } else if (params._interactionId != null) { // same as above, except tailored for the way old spa does it
       this.bufferedErrorsUnderSpa[params._interactionId] = this.bufferedErrorsUnderSpa[params._interactionId] || []
-      this.bufferedErrorsUnderSpa[params._interactionId].push([type, bucketHash, params, newMetrics, allCustomAttrs])
+      this.bufferedErrorsUnderSpa[params._interactionId].push([...jsErrorEvent, allCustomAttrs])
     } else {
       const jsAttributesHash = stringHashCode(stringify(allCustomAttrs))
       const aggregateHash = bucketHash + ':' + jsAttributesHash

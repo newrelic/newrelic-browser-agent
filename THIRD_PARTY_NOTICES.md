@@ -3135,7 +3135,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ### typescript
 
-This product includes source derived from [typescript](https://github.com/Microsoft/TypeScript) ([v5.0.4](https://github.com/Microsoft/TypeScript/tree/v5.0.4)), distributed under the [Apache-2.0 License](https://github.com/Microsoft/TypeScript/blob/v5.0.4/LICENSE.txt):
+This product includes source derived from [typescript](https://github.com/Microsoft/TypeScript) ([v5.2.2](https://github.com/Microsoft/TypeScript/tree/v5.2.2)), distributed under the [Apache-2.0 License](https://github.com/Microsoft/TypeScript/blob/v5.2.2/LICENSE.txt):
 
 ```
 Apache License

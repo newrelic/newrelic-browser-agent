@@ -33,7 +33,7 @@ export class Aggregate extends AggregateBase {
     this.stackReported = {}
     this.observedAt = {}
     this.pageviewReported = {}
-    this.errorCache = {}
+    this.bufferedErrorsUnderSpa = {}
     this.currentBody = undefined
     this.errorOnPage = false
 
@@ -203,42 +203,35 @@ export class Aggregate extends AggregateBase {
 
     // still send EE events for other features such as above, but stop this one from aggregating internal data
     if (this.blocked) return
-    var att = getInfo(this.agentIdentifier).jsAttributes
+
+    // store custom attributes
+    const allCustomAttrs = {}
+    mapOwn(getInfo(this.agentIdentifier).jsAttributes, setCustom)
+    mapOwn(customAttributes, setCustom)
 
     /* !!!!! TO DO: setup way for js errors to have interaction ID from basic spa !!!!!!!!! */
     if (params._interactionId != null) {
       // hold on to the error until the interaction finishes
-      this.errorCache[params._interactionId] = this.errorCache[params._interactionId] || []
-      this.errorCache[params._interactionId].push([type, bucketHash, params, newMetrics, att, customAttributes])
+      this.bufferedErrorsUnderSpa[params._interactionId] = this.bufferedErrorsUnderSpa[params._interactionId] || []
+      this.bufferedErrorsUnderSpa[params._interactionId].push([type, bucketHash, params, newMetrics, allCustomAttrs])
     } else {
-      // store custom attributes
-      var customParams = {}
-      mapOwn(att, setCustom)
-      if (customAttributes) {
-        mapOwn(customAttributes, setCustom)
-      }
-
-      var jsAttributesHash = stringHashCode(stringify(customParams))
-      var aggregateHash = bucketHash + ':' + jsAttributesHash
-      this.aggregator.store(type, aggregateHash, params, newMetrics, customParams)
+      const jsAttributesHash = stringHashCode(stringify(allCustomAttrs))
+      const aggregateHash = bucketHash + ':' + jsAttributesHash
+      this.aggregator.store(type, aggregateHash, params, newMetrics, allCustomAttrs)
     }
 
     function setCustom (key, val) {
-      customParams[key] = (val && typeof val === 'object' ? stringify(val) : val)
+      allCustomAttrs[key] = (val && typeof val === 'object' ? stringify(val) : val)
     }
   }
 
   onInteractionDone (interaction, wasSaved) {
-    if (!this.errorCache[interaction.id] || this.blocked) return
+    if (!this.bufferedErrorsUnderSpa[interaction.id] || this.blocked) return
 
-    this.errorCache[interaction.id].forEach((item) => {
-      var customParams = {}
-      var globalCustomParams = item[4]
-      var localCustomParams = item[5]
+    this.bufferedErrorsUnderSpa[interaction.id].forEach((item) => {
+      var allCustomAttrs = item[4]
 
-      mapOwn(globalCustomParams, setCustom)
-      mapOwn(interaction.root.attrs.custom, setCustom)
-      mapOwn(localCustomParams, setCustom)
+      mapOwn(interaction.root.attrs.custom, setCustom) // tack on custom attrs from the interaction
 
       var params = item[2]
       if (wasSaved) {
@@ -249,15 +242,15 @@ export class Aggregate extends AggregateBase {
       delete params._interactionNodeId
 
       var hash = wasSaved ? item[1] + interaction.root.attrs.id : item[1]
-      var jsAttributesHash = stringHashCode(stringify(customParams))
+      var jsAttributesHash = stringHashCode(stringify(allCustomAttrs))
       var aggregateHash = hash + ':' + jsAttributesHash
 
-      this.aggregator.store(item[0], aggregateHash, params, item[3], customParams)
+      this.aggregator.store(item[0], aggregateHash, params, item[3], allCustomAttrs)
 
       function setCustom (key, val) {
-        customParams[key] = (val && typeof val === 'object' ? stringify(val) : val)
+        allCustomAttrs[key] = (val && typeof val === 'object' ? stringify(val) : val)
       }
     })
-    delete this.errorCache[interaction.id]
+    delete this.bufferedErrorsUnderSpa[interaction.id]
   }
 }

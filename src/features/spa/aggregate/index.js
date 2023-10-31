@@ -703,7 +703,7 @@ export class Aggregate extends AggregateBase {
 
     function saveInteraction (interaction) {
       if (interaction.ignored || (!interaction.save && !interaction.routeChange)) {
-        baseEE.emit('interactionDiscarded', [interaction])
+        baseEE.emit('interactionDone', [interaction, false])
         return
       }
 
@@ -721,10 +721,9 @@ export class Aggregate extends AggregateBase {
         interaction.root.attrs.firstPaint = firstPaint.current.value
         interaction.root.attrs.firstContentfulPaint = firstContentfulPaint.current.value
       }
-      baseEE.emit('interactionSaved', [interaction])
+      baseEE.emit('interactionDone', [interaction, true])
       state.interactionsToHarvest.push(interaction)
 
-      // console.log('Real spa -- ', state.interactionsToHarvest[0])
       scheduler.scheduleHarvest(0)
     }
 

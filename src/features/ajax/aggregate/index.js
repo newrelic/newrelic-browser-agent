@@ -14,7 +14,7 @@ import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { parseGQL } from './gql'
-import { gosNREUMInitializedAgents } from '../../../common/window/nreum'
+import { getNREUMInitializedAgent } from '../../../common/window/nreum'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -46,23 +46,20 @@ export class Aggregate extends AggregateBase {
     this.getStoredEvents = function () { return { ajaxEvents, spaAjaxEvents } }
 
     // --- v Used by old spa feature
-    ee.on('interactionSaved', (interaction) => {
-      if (!spaAjaxEvents[interaction.id]) return
-      // remove from the spaAjaxEvents buffer, and let spa harvest it
-      delete spaAjaxEvents[interaction.id]
-    })
-    ee.on('interactionDiscarded', (interaction) => {
+    ee.on('interactionDone', (interaction, wasSaved) => {
       if (!spaAjaxEvents[interaction.id]) return
 
-      spaAjaxEvents[interaction.id].forEach(function (item) {
+      if (wasSaved) {
+        spaAjaxEvents[interaction.id].forEach(function (item) {
         // move it from the spaAjaxEvents buffer to the ajaxEvents buffer for harvesting here
-        ajaxEvents.push(item)
-      })
+          ajaxEvents.push(item)
+        })
+      }
       delete spaAjaxEvents[interaction.id]
     })
     // --- ^
     // --- v Used by new soft nav
-    ee.on('returnEvent', event => ajaxEvents.push(event))
+    ee.on('returnAjax', event => ajaxEvents.push(event))
     // --- ^
 
     const scheduler = new HarvestScheduler('events', {
@@ -133,7 +130,7 @@ export class Aggregate extends AggregateBase {
       })
       if (event.gql) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Ajax/Events/GraphQL/Bytes-Added', stringify(event.gql).length], undefined, FEATURE_NAMES.metrics, ee)
 
-      const softNavInUse = Boolean(gosNREUMInitializedAgents(agentIdentifier)?.features[FEATURE_NAMES.softNav])
+      const softNavInUse = Boolean(getNREUMInitializedAgent(agentIdentifier)?.features[FEATURE_NAMES.softNav])
 
       if (softNavInUse) { // For newer soft nav (when running), pass the event to it for evaluation -- either part of an interaction or is given back
         handle('ajax', [event], undefined, FEATURE_NAMES.softNav, ee)

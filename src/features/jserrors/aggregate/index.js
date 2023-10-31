@@ -38,10 +38,7 @@ export class Aggregate extends AggregateBase {
     this.errorOnPage = false
 
     // this will need to change to match whatever ee we use in the instrument
-    this.ee.on('interactionSaved', (interaction) => this.onInteractionSaved(interaction))
-
-    // this will need to change to match whatever ee we use in the instrument
-    this.ee.on('interactionDiscarded', (interaction) => this.onInteractionDiscarded(interaction))
+    this.ee.on('interactionDone', (interaction, wasSaved) => this.onInteractionDone(interaction, wasSaved))
 
     register('err', (...args) => this.storeError(...args), this.featureName, this.ee)
     register('ierr', (...args) => this.storeError(...args), this.featureName, this.ee)
@@ -201,7 +198,7 @@ export class Aggregate extends AggregateBase {
     // and spa annotates the error with interaction info
     const msg = [type, bucketHash, params, newMetrics]
     handle('errorAgg', msg, undefined, FEATURE_NAMES.sessionTrace, this.ee)
-    handle('errorAgg', msg, undefined, FEATURE_NAMES.spa, this.ee)
+    handle('errorAgg', msg, undefined, FEATURE_NAMES.spa, this.ee) // this will add a _interactionId onto params if spa is running and there's an interaction atm
     handle('errorAgg', msg, undefined, FEATURE_NAMES.sessionReplay, this.ee)
 
     // still send EE events for other features such as above, but stop this one from aggregating internal data
@@ -231,7 +228,7 @@ export class Aggregate extends AggregateBase {
     }
   }
 
-  onInteractionSaved (interaction) {
+  onInteractionDone (interaction, wasSaved) {
     if (!this.errorCache[interaction.id] || this.blocked) return
 
     this.errorCache[interaction.id].forEach((item) => {
@@ -244,48 +241,18 @@ export class Aggregate extends AggregateBase {
       mapOwn(localCustomParams, setCustom)
 
       var params = item[2]
-      params.browserInteractionId = interaction.root.attrs.id
-      delete params._interactionId
-
-      if (params._interactionNodeId) {
-        params.parentNodeId = params._interactionNodeId.toString()
-        delete params._interactionNodeId
+      if (wasSaved) {
+        params.browserInteractionId = interaction.root.attrs.id
+        if (params._interactionNodeId) params.parentNodeId = params._interactionNodeId.toString()
       }
+      delete params._interactionId
+      delete params._interactionNodeId
 
-      var hash = item[1] + interaction.root.attrs.id
+      var hash = wasSaved ? item[1] + interaction.root.attrs.id : item[1]
       var jsAttributesHash = stringHashCode(stringify(customParams))
       var aggregateHash = hash + ':' + jsAttributesHash
 
       this.aggregator.store(item[0], aggregateHash, params, item[3], customParams)
-
-      function setCustom (key, val) {
-        customParams[key] = (val && typeof val === 'object' ? stringify(val) : val)
-      }
-    })
-    delete this.errorCache[interaction.id]
-  }
-
-  onInteractionDiscarded (interaction) {
-    if (!this.errorCache || !this.errorCache[interaction.id] || this.blocked) return
-
-    this.errorCache[interaction.id].forEach((item) => {
-      var customParams = {}
-      var globalCustomParams = item[4]
-      var localCustomParams = item[5]
-
-      mapOwn(globalCustomParams, setCustom)
-      mapOwn(interaction.root.attrs.custom, setCustom)
-      mapOwn(localCustomParams, setCustom)
-
-      var params = item[2]
-      delete params._interactionId
-      delete params._interactionNodeId
-
-      var hash = item[1]
-      var jsAttributesHash = stringHashCode(stringify(customParams))
-      var aggregateHash = hash + ':' + jsAttributesHash
-
-      this.aggregator.store(item[0], aggregateHash, item[2], item[3], customParams)
 
       function setCustom (key, val) {
         customParams[key] = (val && typeof val === 'object' ? stringify(val) : val)

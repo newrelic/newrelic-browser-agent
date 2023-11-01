@@ -5,7 +5,7 @@ import { addCustomAttributes, getAddStringContext, nullable, numeric } from '../
 import { now } from '../../../common/timing/now'
 import { cleanURL } from '../../../common/url/clean-url'
 import { debounce } from '../../../common/util/invoke'
-import { TYPE_IDS } from '../constants'
+import { NODE_TYPE } from '../constants'
 import { BelNode } from './bel-node'
 
 /**
@@ -31,7 +31,7 @@ export class Interaction extends BelNode {
     if (!agentIdentifier) throw new Error('Interaction is missing core attributes')
     this.initialPageURL = initialLocation
     this.oldURL = '' + globalScope?.location
-    this.belType = TYPE_IDS.INTERACTION
+    this.belType = NODE_TYPE.INTERACTION
 
     this.domTimestamp = 0
     this.historyTimestamp = 0

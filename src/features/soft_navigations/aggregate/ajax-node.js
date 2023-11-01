@@ -1,5 +1,5 @@
 import { getAddStringContext, nullable, numeric } from '../../../common/serialize/bel-serializer'
-import { TYPE_IDS } from '../constants'
+import { NODE_TYPE } from '../constants'
 import { BelNode } from './bel-node'
 
 export class AjaxNode extends BelNode {
@@ -16,7 +16,7 @@ export class AjaxNode extends BelNode {
 
   constructor (agentIdentifier, ajaxEvent) {
     super(agentIdentifier)
-    this.belType = TYPE_IDS.AJAX
+    this.belType = NODE_TYPE.AJAX
     this.method = ajaxEvent.method
     this.status = ajaxEvent.status
     this.domain = ajaxEvent.domain

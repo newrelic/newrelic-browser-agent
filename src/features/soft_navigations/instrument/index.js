@@ -6,7 +6,7 @@ import { now } from '../../../common/timing/now'
 import { debounce } from '../../../common/util/invoke'
 import { wrapEvents, wrapHistory } from '../../../common/wrap'
 import { InstrumentBase } from '../../utils/instrument-base'
-import { CATEGORY, FEATURE_NAME, INTERACTION_EVENTS } from '../constants'
+import { INTERACTION_TYPE, FEATURE_NAME, INTERACTION_TRIGGERS } from '../constants'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
@@ -30,11 +30,11 @@ export class Instrument extends InstrumentBase {
     windowAddEventListener('popstate', trackURLChange, true, this.removeOnAbort?.signal)
 
     const debouncedIxn = debounce((trigger) => {
-      handle('newInteraction', [now(), trigger, CATEGORY.ROUTE_CHANGE], undefined, this.featureName, this.ee)
+      handle('newInteraction', [now(), trigger, INTERACTION_TYPE.ROUTE_CHANGE], undefined, this.featureName, this.ee)
     }, 60, { leading: true })
 
     eventsEE.on('fn-end', (evts) => {
-      if (INTERACTION_EVENTS.includes(evts?.[0]?.type)) {
+      if (INTERACTION_TRIGGERS.includes(evts?.[0]?.type)) {
         debouncedIxn(evts?.[0]?.type)
       }
     })

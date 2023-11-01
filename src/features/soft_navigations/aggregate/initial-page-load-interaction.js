@@ -1,4 +1,4 @@
-import { CATEGORY } from '../constants'
+import { INTERACTION_TYPE } from '../constants'
 import { navTimingValues } from '../../../common/timing/nav-timing'
 import { Interaction } from './interaction'
 import { initialLocation } from '../../../common/constants/runtime'
@@ -15,7 +15,7 @@ export class InitialPageLoadInteraction extends Interaction {
     this.newURL = pageUrl
     this.trigger = 'initialPageLoad'
     this.start = 0
-    this.category = CATEGORY.INITIAL_PAGE_LOAD
+    this.category = INTERACTION_TYPE.INITIAL_PAGE_LOAD
   }
 
   get firstPaint () { return nullable(firstPaint.current.value, numeric, true) }

@@ -65,7 +65,7 @@ module.exports = function (api, ...args) {
           '@babel/preset-env', {
             useBuiltIns: 'entry',
             corejs: { version: 3.23, proposals: true },
-            loose: true,
+            loose: false,
             targets: {
               browsers: [
                 'ie >= 11' // Does not affect webpack's own runtime output; see `target` webpack config property.

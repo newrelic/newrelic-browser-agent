@@ -52,8 +52,8 @@ function ee (old, debugId) {
     aborted: false,
     isBuffering,
     debugId,
-    backlog: isolatedBacklog ? {} : old && typeof old.backlog === 'object' ? old.backlog : {}
-
+    backlog: isolatedBacklog ? {} : old && typeof old.backlog === 'object' ? old.backlog : {},
+    hasChildEmitter
   }
 
   return emitter
@@ -113,6 +113,10 @@ function ee (old, debugId) {
 
   function getOrCreate (name) {
     return (emitters[name] = emitters[name] || ee(emitter, name))
+  }
+
+  function hasChildEmitter (name) {
+    return Object.hasOwnProperty.call(emitters, name)
   }
 
   function bufferEventsByGroup (types, group) {

@@ -17,7 +17,7 @@
     window.isNewPromise = new Promise(function () {}) instanceof Promise
     window.isFetchPromise = fetch("example") instanceof Promise
 
-    async function asyncP() {}; var p = asyncP(); 
+    async function asyncP() {}; var p = asyncP();
     window.isAsyncPromise = p instanceof Promise
     </script>
 </body>

@@ -1,21 +1,7 @@
 import { faker } from '@faker-js/faker'
 import { globalScope } from '../constants/runtime'
 
-let promiseConstructorCalls
-
 beforeEach(async () => {
-  promiseConstructorCalls = []
-
-  // Proxy the global Promise to prevent the wrapping from
-  // messing with Jest internal promises
-  window.Promise = new Proxy(class extends Promise {}, {
-    construct (target, args) {
-      promiseConstructorCalls.push(args)
-
-      return Reflect.construct(target, args)
-    }
-  })
-
   ;(await import('./wrap-promise')).wrapPromise()
 })
 
@@ -27,7 +13,7 @@ test('should wrap promise constructor', async () => {
   const promiseInstance = new globalScope.Promise(jest.fn())
 
   expect(promiseInstance).toBeInstanceOf(Promise)
-  expect(promiseConstructorCalls.length).toBeGreaterThan(0)
+  expect(promiseInstance.ctx).toBeDefined()
   expect(globalScope.Promise.toString()).toMatch(/\[native code\]/)
   expect(globalScope.Promise.name).toEqual('Promise')
 })

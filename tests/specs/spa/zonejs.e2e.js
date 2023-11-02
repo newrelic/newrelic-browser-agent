@@ -64,6 +64,8 @@ describe('spa interactions with zonejs', () => {
       ])
     }))
 
+    console.log('event', event)
+
     // the counts custom attribute is an array of the number of times onreadystatechage is called
     // for each state.  state 1 and 3 may be called more than once, 2 and 4 should be called
     // exactly once

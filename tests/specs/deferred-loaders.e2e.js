@@ -1,6 +1,8 @@
 import { checkAjax, checkJsErrors, checkMetrics, checkPVT, checkPageAction, checkRum, checkSessionTrace, checkSpa } from '../util/basic-checks'
+import { notIE } from '../../tools/browser-matcher/common-matchers.mjs'
 
-describe('Deferred Loaders', () => {
+// readyState not supported in ie11
+describe.withBrowsersMatching(notIE)('Deferred Loaders', () => {
   ['defer', 'async', 'injection'].forEach(script => {
     it(`should still report if loaded by ${script}`, async () => {
       await browser.url(await browser.testHandle.assetURL('all-events.html', { script })) // Setup expects before loading the page

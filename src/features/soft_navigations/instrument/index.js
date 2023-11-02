@@ -12,41 +12,39 @@ export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
   constructor (agentIdentifier, aggregator, auto = true) {
     super(agentIdentifier, aggregator, FEATURE_NAME, auto)
-    if (!isBrowserScope) return // SPA not supported outside web env
-    try {
-      this.removeOnAbort = new AbortController()
-    } catch (e) {}
+    if (!isBrowserScope || !originals.MO) return // soft navigations is not supported outside web env or browsers without the mutation observer API
 
     const historyEE = wrapHistory(this.ee)
     const eventsEE = wrapEvents(this.ee)
 
-    const trackURLChange = (args) => handle('newURL', [now(), '' + window.location, args?.type], undefined, this.featureName, this.ee)
-
+    const trackURLChange = () => handle('newURL', [now(), '' + window.location], undefined, this.featureName, this.ee)
     historyEE.on('pushState-end', trackURLChange)
     historyEE.on('replaceState-end', trackURLChange)
 
-    windowAddEventListener('hashchange', trackURLChange, true, this.removeOnAbort?.signal)
-    windowAddEventListener('load', trackURLChange, true, this.removeOnAbort?.signal)
-    windowAddEventListener('popstate', trackURLChange, true, this.removeOnAbort?.signal)
+    try {
+      this.removeOnAbort = new AbortController()
+    } catch (e) {}
+    const trackURLChangeEvent = (evt) => handle('newURL', [evt.timestamp, '' + window.location], undefined, this.featureName, this.ee)
+    windowAddEventListener('popstate', trackURLChangeEvent, true, this.removeOnAbort?.signal)
+    windowAddEventListener('load', trackURLChangeEvent, true, this.removeOnAbort?.signal) // this is just for InitialPageLoad interactions
 
-    const debouncedIxn = debounce((trigger) => {
-      handle('newInteraction', [now(), trigger, INTERACTION_TYPE.ROUTE_CHANGE], undefined, this.featureName, this.ee)
+    const domObserver = new originals.MO((domChanges, observer) => {
+      originals.RAF(() => { // waiting for next frame is to ensure the DOM changes has happened
+        handle('newDom', [now()], undefined, this.featureName, this.ee)
+      })
+    })
+    domObserver.observe(document.documentElement || document.body, { attributes: true, childList: true, subtree: true, characterData: true })
+
+    const processUserInteraction = debounce((event) => {
+      handle('newInteraction', [event.timestamp, event.type, INTERACTION_TYPE.ROUTE_CHANGE], undefined, this.featureName, this.ee)
+      domObserver.takeRecords() // empty the un-processed DOM changes so they don't falsely mark the new user interaction as having caused changes prior to it
     }, 60, { leading: true })
 
-    eventsEE.on('fn-end', (evts) => {
-      if (INTERACTION_TRIGGERS.includes(evts?.[0]?.type)) {
-        debouncedIxn(evts?.[0]?.type)
+    eventsEE.on('fn-start', ([evt]) => { // set up a new user ixn before the callback for the triggering event executes
+      if (INTERACTION_TRIGGERS.includes(evt?.type)) {
+        processUserInteraction(evt)
       }
     })
-
-    if (originals.MO) {
-      const domObserver = new originals.MO((mutation) => {
-        requestAnimationFrame(() => {
-          handle('newDom', [now()], undefined, this.featureName, this.ee)
-        })
-      })
-      domObserver.observe(document.documentElement || document.body, { attributes: true, childList: true, subtree: true, characterData: true })
-    }
 
     this.abortHandler = this.#abort
     this.importAggregator()

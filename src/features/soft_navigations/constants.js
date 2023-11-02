@@ -2,6 +2,7 @@ import { FEATURE_NAMES } from '../../loaders/features/features'
 
 export const INTERACTION_TRIGGERS = [
   'click', // e.g. user clicks link or the page back/forward buttons
+  'keydown', // e.g. user presses left and right arrow key to switch between displayed photo gallery
   'submit' // e.g. user clicks submit butotn or presses enter while editing a form field
 ]
 

@@ -26,7 +26,7 @@ All code should follow [![js-standard-style](https://cdn.rawgit.com/feross/stand
 
 We use eslint to enforce our style.  To lint your code, you can run `npm run lint` on the
 command line.  There are plugins available for most editors (see
-[eslint's documentation](http://eslint.org/docs/user-guide/integrations#editors)
+[eslint's documentation](https://eslint.org/docs/user-guide/integrations#editors)
 for more details).
 
 ## Testing

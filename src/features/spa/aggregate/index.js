@@ -21,7 +21,7 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { firstContentfulPaint } from '../../../common/vitals/first-contentful-paint'
 import { firstPaint } from '../../../common/vitals/first-paint'
 import { bundleId } from '../../../common/ids/bundle-id'
-import { checkState } from '../../../common/window/load'
+import { loadedAsDeferred } from '../../../common/constants/runtime'
 
 const {
   FEATURE_NAME, INTERACTION_EVENTS, MAX_TIMER_BUDGET, FN_START, FN_END, CB_START, INTERACTION_API, REMAINING,
@@ -172,7 +172,7 @@ export class Aggregate extends AggregateBase {
       var evName = ev.type
       var eventNode = ev[`__nrNode:${bundleId}`]
 
-      if (!state.pageLoaded && ((evName === 'load' && eventSource === window) || checkState() === true)) {
+      if (!state.pageLoaded && ((evName === 'load' && eventSource === window) || loadedAsDeferred)) {
         state.pageLoaded = true
         // set to null so prevNode is set correctly
         this.prevNode = state.currentNode = null

@@ -5,6 +5,8 @@
  * @license Apache-2.0
  */
 
+import { checkState } from '../window/load'
+
 /**
  * Indicates if the agent is running within a normal browser window context.
  */
@@ -43,6 +45,8 @@ export const globalScope = isBrowserScope
       globalThis instanceof WorkerGlobalScope &&
       globalThis
   ))
+
+export const loadedAsDeferred = checkState() === true
 
 export const initiallyHidden = Boolean(globalScope?.document?.visibilityState === 'hidden')
 

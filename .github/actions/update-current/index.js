@@ -25,12 +25,13 @@ const s3Client = new S3Client({
 const results = await Promise.all(
   constructLoaderFileNames(args.loaderVersion)
     .map(async loader => {
+      const currentLoaderName = loader.replace(args.loaderVersion, 'current')
       const commandOpts = {
         Bucket: args.bucket,
         CopySource: `${args.bucket}/${loader}`,
-        Key: loader.replace(args.loaderVersion, 'current'),
-        ContentType: mime.lookup(loader) || 'application/javascript',
-        CacheControl: getAssetCacheHeader('/', loader),
+        Key: currentLoaderName,
+        ContentType: mime.lookup(currentLoaderName) || 'application/javascript',
+        CacheControl: getAssetCacheHeader('/', currentLoaderName),
         MetadataDirective: 'REPLACE',
         TaggingDirective: 'COPY'
       }

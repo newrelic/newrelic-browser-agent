@@ -43,7 +43,7 @@ on:
 
 jobs:
   wdio:
-    name: WDIO Test - '${{ inputs.browser-target }}'
+    name: WDIO ${{ contains(inputs.additional-flags, '--webview') && 'WebView' || '' }} Test - '${{ inputs.browser-target }}'
     timeout-minutes: 60
     runs-on: ubuntu-latest
     defaults:

@@ -54,7 +54,7 @@ const args = yargs(hideBin(process.argv))
 
   .alias('t', 'timeout')
   .describe('t', 'timeout in ms for tests and calls to the collector APIs')
-  .default('t', 32000)
+  .default('t', 85000)
 
   .boolean('d')
   .default('d', false)
@@ -89,6 +89,10 @@ const args = yargs(hideBin(process.argv))
   .boolean('coverage')
   .default('coverage', false)
   .describe('coverage', 'Collect coverage from test runs')
+
+  .boolean('webview')
+  .default('webview', false)
+  .describe('webview', 'Run webview tests')
 
   .help('h')
   .alias('h', 'help').argv

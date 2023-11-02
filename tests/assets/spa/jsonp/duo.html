@@ -12,32 +12,32 @@
     {loader}
   </head>
   <body>
-      <script>
-window.browser = {}
-document.addEventListener('click', function () {
-  doTheJsonp()
-  doTheJsonp()
-}, false)
+    <script type="text/javascript">
+      window.browser = {}
+      document.addEventListener('click', function () {
+        doTheJsonp()
+        doTheJsonp()
+      }, false)
 
-var counter = 0
-function doTheJsonp() {
-  var count = (++counter)
-  var name = 'foo_' + count
-  window.browser[name] = function (data) {
-    delete window[name]
-    var el = document.createElement('p')
-    el.innerHTML = JSON.stringify(data)
-    document.body.appendChild(el)
-    setTimeout(newrelic.interaction().createTracer('tacoTimer' + count, function () {
-      window.location.hash = Math.random()
-    }), 500)
-  }
-  var el = document.createElement('script')
-  el.src = '/jsonp?cb=browser.' + name
-  window.location.hash = Math.random()
-  window.document.body.appendChild(el)
-}
-      </script>
-      <p>Click me!</p>
+      var counter = 0
+      function doTheJsonp() {
+        var count = (++counter)
+        var name = 'foo_' + count
+        window.browser[name] = function (data) {
+          delete window[name]
+          var el = document.createElement('p')
+          el.innerHTML = JSON.stringify(data)
+          document.body.appendChild(el)
+          setTimeout(newrelic.interaction().createTracer('tacoTimer' + count, function () {
+            window.location.hash = Math.random()
+          }), 500)
+        }
+        var el = document.createElement('script')
+        el.src = '/jsonp?cb=browser.' + name
+        window.location.hash = Math.random()
+        window.document.body.appendChild(el)
+      }
+    </script>
+    <p>Click me!</p>
   </body>
 </html>

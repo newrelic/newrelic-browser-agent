@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.246.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.246.0...v1.246.1) (2023-10-31)
+
+
+### Bug Fixes
+
+* Fix missing type declarations ([#791](https://github.com/newrelic/newrelic-browser-agent/issues/791)) ([c80e8d2](https://github.com/newrelic/newrelic-browser-agent/commit/c80e8d260a8919a41ebca7bdc182937819464dc7))
+
 ## [1.246.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.245.0...v1.246.0) (2023-10-23)
 
 

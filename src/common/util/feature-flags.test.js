@@ -5,21 +5,17 @@ import * as drainModule from '../drain/drain'
 import { activateFeatures, activatedFeatures } from './feature-flags'
 import { FEATURE_NAMES } from '../../loaders/features/features'
 
-jest.mock('../event-emitter/handle')
-jest.mock('../drain/drain')
-jest.mock('../event-emitter/contextual-ee', () => ({
-  __esModule: true,
-  ee: {
-    get: jest.fn(() => ({
-      foo: `bar_${Math.random()}`
-    }))
-  }
-}))
+jest.enableAutomock()
+jest.unmock('./feature-flags')
 
 let agentIdentifier
 
 beforeEach(() => {
   agentIdentifier = faker.datatype.uuid()
+
+  eventEmitterModule.ee.get = jest.fn(() => ({
+    [faker.datatype.uuid()]: faker.datatype.uuid()
+  }))
 })
 
 afterEach(() => {
@@ -79,10 +75,8 @@ test('emits the right events when feature flag = 0', () => {
 })
 
 test('only the first activate of the same feature is respected', () => {
-  const flags = { stn: 1 }
-  activateFeatures(flags, agentIdentifier)
-  flags.stn = 0
-  activateFeatures(flags, agentIdentifier)
+  activateFeatures({ stn: 1 }, agentIdentifier)
+  activateFeatures({ stn: 0 }, agentIdentifier)
 
   const sharedEE1 = jest.mocked(eventEmitterModule.ee.get).mock.results[0].value
   const sharedEE2 = jest.mocked(eventEmitterModule.ee.get).mock.results[1].value

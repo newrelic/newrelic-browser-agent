@@ -140,20 +140,6 @@
       "browserName": "Safari",
       "platformName": "iOS",
       "platform": "iOS",
-      "version": "15.5",
-      "device": "iPhone Simulator",
-      "appium:deviceName": "iPhone Simulator",
-      "appium:platformVersion": "15.5",
-      "appium:automationName": "XCUITest",
-      "sauce:options": {
-        "appiumVersion": "2.0.0"
-      },
-      "acceptInsecureCerts": false
-    },
-    {
-      "browserName": "Safari",
-      "platformName": "iOS",
-      "platform": "iOS",
       "version": "16.0",
       "device": "iPhone Simulator",
       "appium:deviceName": "iPhone Simulator",
@@ -189,6 +175,20 @@
       "appium:automationName": "XCUITest",
       "sauce:options": {
         "appiumVersion": "2.0.0"
+      },
+      "acceptInsecureCerts": false
+    },
+    {
+      "browserName": "Safari",
+      "platformName": "iOS",
+      "platform": "iOS",
+      "version": "17.0",
+      "device": "iPhone Simulator",
+      "appium:deviceName": "iPhone Simulator",
+      "appium:platformVersion": "17.0",
+      "appium:automationName": "XCUITest",
+      "sauce:options": {
+        "appiumVersion": "2.1.3"
       },
       "acceptInsecureCerts": false
     }

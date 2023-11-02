@@ -9,7 +9,10 @@
     {init}
     {config}
     {loader}
-    <script type="text/javascript" src="../js/vendor/zone.js"></script>
+    <!--
+      Previous versions of zone.js have a bug that breaks selenium testing.
+    -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/zone.js/0.8.21/zone.min.js" integrity="sha512-9X6xU0uTdk0j8q04BPNmJxEWvXVaUm1KgK6dWpg+N7WB0VLo8g1iLyCUVWNVPsm0yjXdNgRiVbAEtclKoCvi0Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   </head>
   <body>
     <div>This page contains zone.js</div>
@@ -19,7 +22,7 @@
       xhr.onreadystatechange = function () {
         counts[xhr.readyState]++
       }
-      xhr.open('GET', '/')
+      xhr.open('GET', '/json')
       xhr.send()
       var interaction = newrelic.interaction().onEnd(function () {
         interaction.setAttribute('counts', counts)

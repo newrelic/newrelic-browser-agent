@@ -5,6 +5,7 @@
 import { ee } from '../event-emitter/contextual-ee'
 import { handle } from '../event-emitter/handle'
 import { FEATURE_NAMES } from '../../loaders/features/features'
+import { dispatchGlobalEvent } from '../dispatch/global-event'
 
 const bucketMap = {
   stn: [FEATURE_NAMES.sessionTrace],
@@ -20,19 +21,18 @@ const sentIds = new Set()
 export function activateFeatures (flags, agentIdentifier) {
   const sharedEE = ee.get(agentIdentifier)
   if (!(flags && typeof flags === 'object')) return
+  if (sentIds.has(agentIdentifier)) return
 
-  if (!sentIds.has(agentIdentifier)) {
-    Object.entries(flags).forEach(([flag, num]) => {
-      if (bucketMap[flag]) {
-        bucketMap[flag].forEach(feat => {
-          if (!num) handle('block-' + flag, [], undefined, feat, sharedEE)
-          else handle('feat-' + flag, [], undefined, feat, sharedEE)
-          handle('rumresp-' + flag, [Boolean(num)], undefined, feat, sharedEE) // this is a duplicate of feat-/block- but makes awaiting for 1 event easier than 2
-        })
-      } else if (num) handle('feat-' + flag, [], undefined, undefined, sharedEE) // not sure what other flags are overlooked, but there's a test for ones not in the map --
-      activatedFeatures[flag] = Boolean(num)
-    })
-  }
+  Object.entries(flags).forEach(([flag, num]) => {
+    if (bucketMap[flag]) {
+      bucketMap[flag].forEach(feat => {
+        if (!num) handle('block-' + flag, [], undefined, feat, sharedEE)
+        else handle('feat-' + flag, [], undefined, feat, sharedEE)
+        handle('rumresp-' + flag, [Boolean(num)], undefined, feat, sharedEE) // this is a duplicate of feat-/block- but makes awaiting for 1 event easier than 2
+      })
+    } else if (num) handle('feat-' + flag, [], undefined, undefined, sharedEE) // not sure what other flags are overlooked, but there's a test for ones not in the map --
+    activatedFeatures[flag] = Boolean(num)
+  })
 
   // Let the features waiting on their respective flags know that RUM response was received and that any missing flags are interpreted as bad entitlement / "off".
   // Hence, those features will not be hanging forever if their flags aren't included in the response.
@@ -43,6 +43,9 @@ export function activateFeatures (flags, agentIdentifier) {
     }
   })
   sentIds.add(agentIdentifier)
+
+  // let any window level subscribers know that the agent is running
+  dispatchGlobalEvent({ loaded: true, agentIdentifier })
 }
 
 export const activatedFeatures = {}

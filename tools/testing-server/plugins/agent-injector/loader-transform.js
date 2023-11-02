@@ -12,15 +12,7 @@ const { paths } = require('../../constants')
  * @param {TestServer} testServer
  * @return {Promise<string>}
  */
-async function getLoaderContent (request, reply, testServer) {
-  const loader = request.query.loader || testServer.config.loader
-  const loaderFilePath = path.join(
-    paths.builtAssetsDir,
-    `nr-loader-${loader}${
-      testServer.config.polyfills ? '-polyfills' : ''
-    }.min.js`
-  )
-
+async function getLoaderContent (loaderFilePath) {
   let file
   try {
     file = (await fs.promises.readFile(loaderFilePath)).toString()
@@ -28,6 +20,35 @@ async function getLoaderContent (request, reply, testServer) {
     throw new Error(`Could not find loader file ${loaderFilePath}`)
   }
   return file
+}
+
+function getLoaderFilePath (request, testServer, webpath) {
+  const loader = request.query.loader || testServer.config.loader
+  return path.join(
+    webpath ? '/build/' : paths.builtAssetsDir,
+    `nr-loader-${loader}${
+      testServer.config.polyfills ? '-polyfills' : ''
+    }.min.js`
+  )
+}
+
+async function getLoaderScript (scriptType, loaderFilePath) {
+  switch (scriptType) {
+    case 'defer':
+      return `<script src="${loaderFilePath}" defer></script>`
+    case 'async':
+      return `<script src="${loaderFilePath}" async></script>`
+    case 'injection':
+      return `<script type="text/javascript">
+        window.addEventListener('load', function(){
+        let script = document.createElement('script');
+        script.src = "${loaderFilePath}";
+        document.body.append(script);
+        })
+      </script>`
+    default:
+      return `<script type="text/javascript">${await getLoaderContent(loaderFilePath)}</script>`
+  }
 }
 
 /**
@@ -42,12 +63,13 @@ module.exports = function (request, reply, testServer) {
       const chunkString = chunk.toString()
 
       if (chunkString.indexOf('{loader}') > -1) {
-        const replacement = await getLoaderContent(request, reply, testServer)
+        const loaderFilePath = getLoaderFilePath(request, testServer, !!request.query?.script)
+        const loaderScript = await getLoaderScript(request.query?.script, loaderFilePath)
         done(
           null,
           chunkString.replace(
             '{loader}',
-            `<script type="text/javascript">${sslShim}${replacement}</script>`
+            `<script type="text/javascript">${sslShim}</script>${loaderScript}`
           )
         )
       } else {

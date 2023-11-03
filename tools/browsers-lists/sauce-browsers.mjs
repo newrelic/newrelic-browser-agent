@@ -73,7 +73,10 @@ const minSupportedVersion = apiName => {
       return 9
     case 'ios':
     case 'iphone':
-      return browserslistMinVersion('last 10 iOS versions')
+      // SauceLabs does not support testing iOS 15.6 or 15.7. Until the browserslist query
+      // of `last 10 iOS versions` no longer returns 15.6 and 15.7, we will pin our testing
+      // to `iOS >= 15.5`
+      return browserslistMinVersion('iOS >= 15.5')
   }
 }
 

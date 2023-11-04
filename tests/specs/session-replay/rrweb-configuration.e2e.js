@@ -242,7 +242,7 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
         .then(() => browser.waitForAgentLoad())
 
       const blockSelectorOutput = await browser.execute(function () {
-        return Object.values(newrelic.initializedAgents)[0].config.session_replay.block_selector
+        return Object.values(newrelic.initializedAgents)[0].init.session_replay.block_selector
       })
 
       expect(blockSelectorOutput.endsWith(',')).toEqual(false)

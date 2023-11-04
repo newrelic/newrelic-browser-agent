@@ -1,4 +1,4 @@
-import { gosNREUMInitializedAgents } from '../../window/nreum'
+import { getNREUMInitializedAgent } from '../../window/nreum'
 import { getModeledObject } from './configurable'
 
 const model = {
@@ -21,5 +21,6 @@ export function getLoaderConfig (id) {
 export function setLoaderConfig (id, obj) {
   if (!id) throw new Error('All loader-config objects require an agent identifier!')
   _cache[id] = getModeledObject(obj, model)
-  gosNREUMInitializedAgents(id, _cache[id], 'loader_config')
+  const agentInst = getNREUMInitializedAgent(id)
+  if (agentInst) agentInst.loader_config = _cache[id]
 }

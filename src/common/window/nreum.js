@@ -67,27 +67,24 @@ export function gosNREUMOriginals () {
   return nr
 }
 
-export function gosNREUMInitializedAgents (id, obj, target) {
+export function setNREUMInitializedAgent (id, newAgentInstance) {
   let nr = gosNREUM()
-  const externallySupplied = nr.initializedAgents || {}
-  const curr = externallySupplied[id] || {}
-
-  if (!Object.keys(curr).length) {
-    curr.initializedAt = {
-      ms: now(),
-      date: new Date()
-    }
+  nr.initializedAgents ??= {}
+  newAgentInstance.initializedAt = {
+    ms: now(),
+    date: new Date()
   }
+  nr.initializedAgents[id] = newAgentInstance
+}
 
-  nr.initializedAgents = {
-    ...externallySupplied,
-    [id]: {
-      ...curr,
-      [target]: obj
-    }
-  }
-
-  return nr
+/**
+ * Get the agent instance under the associated identifier on the global newrelic object.
+ * @see setNREUMInitializedAgents
+ * @returns Existing agent instance under newrelic.initializedAgent[id], or undefined if it does not exist.
+ */
+export function getNREUMInitializedAgent (id) {
+  let nr = gosNREUM()
+  return nr.initializedAgents?.[id]
 }
 
 export function addToNREUM (fnName, fn) {

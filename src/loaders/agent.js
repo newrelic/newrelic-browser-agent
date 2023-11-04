@@ -10,7 +10,7 @@ import { featurePriority, FEATURE_NAMES } from './features/features'
 import { Instrument as PageViewEvent } from '../features/page_view_event/instrument'
 // common files
 import { Aggregator } from '../common/aggregate/aggregator'
-import { gosNREUM, gosNREUMInitializedAgents } from '../common/window/nreum'
+import { gosNREUM, setNREUMInitializedAgent } from '../common/window/nreum'
 import { generateRandomHexString } from '../common/ids/unique-id'
 import { getConfiguration, getInfo, getLoaderConfig, getRuntime } from '../common/config/config'
 import { warn } from '../common/util/console'
@@ -39,6 +39,7 @@ export class Agent extends AgentBase {
     this.agentIdentifier = agentIdentifier
     this.sharedAggregator = new Aggregator({ agentIdentifier: this.agentIdentifier })
     this.features = {}
+    setNREUMInitializedAgent(agentIdentifier, this) // append this agent onto the global NREUM.initializedAgents
 
     this.desiredFeatures = new Set(options.features || []) // expected to be a list of static Instrument/InstrumentBase classes, see "spa.js" for example
     // For Now... ALL agents must make the rum call whether the page_view_event feature was enabled or not.
@@ -46,7 +47,7 @@ export class Agent extends AgentBase {
     // Future work is being planned to evaluate removing this behavior from the backend, but for now we must ensure this call is made
     this.desiredFeatures.add(PageViewEvent)
 
-    Object.assign(this, configure(this.agentIdentifier, options, options.loaderType || 'agent'))
+    configure(this, options, options.loaderType || 'agent') // add api, exposed, and other config properties
 
     this.run()
   }
@@ -61,7 +62,6 @@ export class Agent extends AgentBase {
   }
 
   run () {
-    const NR_FEATURES_REF_NAME = 'features'
     // Attempt to initialize all the requested features (sequentially in prio order & synchronously), with any failure aborting the whole process.
     try {
       const enabledFeatures = getEnabledFeatures(this.agentIdentifier)
@@ -76,7 +76,6 @@ export class Agent extends AgentBase {
           this.features[InstrumentCtor.featureName] = new InstrumentCtor(this.agentIdentifier, this.sharedAggregator)
         }
       })
-      gosNREUMInitializedAgents(this.agentIdentifier, this.features, NR_FEATURES_REF_NAME)
     } catch (err) {
       warn('Failed to initialize all enabled instrument classes (agent aborted) -', err)
       for (const featName in this.features) { // this.features hold only features that have been instantiated
@@ -85,7 +84,7 @@ export class Agent extends AgentBase {
 
       const newrelic = gosNREUM()
       delete newrelic.initializedAgents[this.agentIdentifier]?.api // prevent further calls to agent-specific APIs (see "configure.js")
-      delete newrelic.initializedAgents[this.agentIdentifier]?.[NR_FEATURES_REF_NAME] // GC mem used internally by features
+      delete newrelic.initializedAgents[this.agentIdentifier]?.features // GC mem used internally by features
       delete this.sharedAggregator
       // Keep the initialized agent object with its configs for troubleshooting purposes.
       newrelic.ee?.abort() // set flag and clear global backlog

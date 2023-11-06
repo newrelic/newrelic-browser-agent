@@ -20,6 +20,10 @@ module.exports = fp(async function (fastify, testServer) {
     if (!!testId && request.url.startsWith('/tests/assets') && request.url.includes('.html')) {
       reply.header('set-cookie', `test-id=${testId};path=/build/`)
     }
+
+    if (request.query.nonce) {
+      reply.header('content-security-policy', `script-src 'nonce-${request.query.nonce}'`)
+    }
   })
   fastify.addHook('onSend', (request, reply, payload, done) => {
     if (request.scheduledReply) {

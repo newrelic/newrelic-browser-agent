@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+<head>
+  <script>
+    var chunkIntegratyValues = []
+    var observer = new MutationObserver(function (mutationList) {
+      for (var i = 0; i < mutationList.length; i++) {
+        var mutation = mutationList[i]
+        if (mutation.addedNodes.length > 0) {
+          for (var j = 0; j < mutation.addedNodes.length; j++) {
+            var node = mutation.addedNodes[j]
+            if (node.localName === 'script' && node.src.indexOf('build/nr-') > 0) {
+              chunkIntegratyValues.push(node.integrity)
+            }
+          }
+        }
+      }
+    })
+    observer.observe(document.querySelector('head'), { childList: true })
+  </script>
+  <title>RUM Unit Test</title>
+  {init}
+  {config}
+  {loader}
+</head>
+<body>Instrumented</body>
+</html>

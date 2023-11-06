@@ -1,5 +1,6 @@
 import webpack from 'webpack'
 import TerserPlugin from 'terser-webpack-plugin'
+import { SubresourceIntegrityPlugin } from 'webpack-subresource-integrity'
 import NRBAChunkingPlugin from '../plugins/nrba-chunking/index.mjs'
 
 /**
@@ -52,7 +53,8 @@ export default (env, asyncChunkName) => {
       publicPath: env.PUBLIC_PATH,
       clean: false,
       chunkLoadingGlobal: `webpackChunk:NRBA-${env.VERSION}.${env.SUBVERSION}`,
-      uniqueName: `NRBA-${env.VERSION}.${env.SUBVERSION}`
+      uniqueName: `NRBA-${env.VERSION}.${env.SUBVERSION}`,
+      crossOriginLoading: 'anonymous'
     },
     plugins: [
       new webpack.SourceMapDevToolPlugin({
@@ -61,6 +63,10 @@ export default (env, asyncChunkName) => {
         moduleFilenameTemplate: 'nr-browser-agent://[namespace]/[resource-path]?[loaders]',
         publicPath: env.PUBLIC_PATH,
         append: env.SUBVERSION === 'PROD' ? false : '//# sourceMappingURL=[url]'
+      }),
+      new SubresourceIntegrityPlugin({
+        enabled: true,
+        hashFuncNames: ['sha512']
       }),
       new NRBAChunkingPlugin({
         asyncChunkName

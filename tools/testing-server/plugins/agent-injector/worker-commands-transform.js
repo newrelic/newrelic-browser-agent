@@ -39,6 +39,7 @@ module.exports = function (request, reply, testServer) {
   return new Transform({
     transform (chunk, encoding, done) {
       const chunkString = chunk.toString()
+      const nonce = request.query.nonce ? `nonce="${request.query.nonce}"` : ''
 
       if (chunkString.indexOf('{worker-commands}') > -1) {
         const replacement = getWorkerCommandsContent(
@@ -50,7 +51,7 @@ module.exports = function (request, reply, testServer) {
           null,
           chunkString.replace(
             '{worker-commands}',
-            `<script type="text/javascript">${replacement}</script>`
+            `<script type="text/javascript" ${nonce}>${replacement}</script>`
           )
         )
       } else {

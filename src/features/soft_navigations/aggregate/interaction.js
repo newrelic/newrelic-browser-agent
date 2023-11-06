@@ -60,6 +60,12 @@ export class Interaction extends BelNode {
     if (this.domTimestamp > 0 && this.historyTimestamp > 0) this.finish()
   }, 60)
 
+  on (event, cb) {
+    if (!this.eventSubscription.has(event)) throw new Error('Cannot subscribe to non pre-defined events.')
+    if (typeof cb !== 'function') throw new Error('Must supply function as callback.')
+    this.subscribers.get(event).push(cb)
+  }
+
   finish () {
     clearTimeout(this.timer)
     this.end = Math.max(this.domTimestamp, this.historyTimestamp) - this.start

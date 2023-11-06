@@ -25,19 +25,12 @@ export class BelNode {
     this.children.push(child)
   }
 
-  on (event, cb) {
-    if (typeof cb !== 'function') throw new Error('Must supply function as callback')
-    const cbs = this.subscribers.get(event) || []
-    cbs.push(cb)
-    this.subscribers.set(event, cbs)
-  }
-
-  validateChildren () {
-    this.children.forEach(child => {
-      if (child.start < this.start || child.end > this.end) {
-        child?.cancel()
-      } else child?.validateChildren()
-    })
-    this.children = this.children.filter(c => !c.cancelled)
-  }
+  // validateChildren () {
+  //   this.children.forEach(child => {
+  //     if (child.start < this.start || child.end > this.end) {
+  //       child?.cancel()
+  //     } else child?.validateChildren()
+  //   })
+  //   this.children = this.children.filter(c => !c.cancelled)
+  // }
 }

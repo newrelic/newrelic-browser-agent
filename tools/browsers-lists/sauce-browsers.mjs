@@ -41,13 +41,24 @@ const browserName = name => {
 }
 
 /**
- * Uses browserslist to deterine the minimum supported version based on a particular query.
+ * Uses browserslist to determine the minimum supported version based on a particular query.
  * @param {string} query - A {@link https://browsersl.ist|properly formatted} browserslist query.
  * @returns {number} The smallest version number of browsers matching the specified query.
  */
 const browserslistMinVersion = query => {
   const list = browserslist(query)
   const version = list[list.length - 1].split(' ')[1] // browserslist returns id version pairs like 'ios_saf 16.1'
+  return Number(version.split('-')[0]) // versions might be a range (e.g. 14.0-14.4), and we want the low end.
+}
+
+/**
+ * Uses browserslist to determine the minimum supported version based on a particular query.
+ * @param {string} query - A {@link https://browsersl.ist|properly formatted} browserslist query.
+ * @returns {number} The largest version number of browsers matching the specified query.
+ */
+const browserslistMaxVersion = query => {
+  const list = browserslist(query)
+  const version = list[0].split(' ')[1] // browserslist returns id version pairs like 'ios_saf 16.1'
   return Number(version.split('-')[0]) // versions might be a range (e.g. 14.0-14.4), and we want the low end.
 }
 
@@ -86,14 +97,21 @@ const minSupportedVersion = apiName => {
  * @returns {number} The maximum version we support of the specified browser name.
  */
 const maxSupportedVersion = apiName => {
-  if (apiName === 'android') {
-    // Android version 13 does not currently work with WDIO/SauceLabs and version 9 through 12 all have
-    // the same version of chrome 100.
-    // https://changelog.saucelabs.com/en/update-to-google-chrome-version-100-on-android-emulators
-    return 13
+  switch (apiName) {
+    case 'android':
+      // Android version 13 does not currently work with WDIO/SauceLabs and version 9 through 12 all have
+      // the same version of chrome 100.
+      // https://changelog.saucelabs.com/en/update-to-google-chrome-version-100-on-android-emulators
+      return 13
+    case 'ios':
+    case 'iphone':
+      // SauceLabs does not support testing iOS 15.6 or 15.7. Until the browserslist query
+      // of `last 10 iOS versions` no longer returns 15.6 and 15.7, we will pin our testing
+      // to `iOS >= 15.5`
+      return browserslistMaxVersion('iOS < 17.0')
+    default:
+      return 9999
   }
-
-  return 9999
 }
 
 /**

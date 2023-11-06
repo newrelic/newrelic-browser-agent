@@ -215,7 +215,7 @@ export class Aggregate extends AggregateBase {
    */
   async initializeRecording (errorSample, fullSample, ignoreSession) {
     this.initialized = true
-    if (!this.entitled) return
+    if (!this.entitled || this.recording) return
 
     const { session } = getRuntime(this.agentIdentifier)
     // if theres an existing session replay in progress, there's no need to sample, just check the entitlements response

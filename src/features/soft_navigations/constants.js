@@ -9,13 +9,19 @@ export const INTERACTION_TRIGGERS = [
 export const FEATURE_NAME = FEATURE_NAMES.softNav
 
 export const INTERACTION_TYPE = {
-  INITIAL_PAGE_LOAD: 0,
+  INITIAL_PAGE_LOAD: '',
   ROUTE_CHANGE: 1,
-  CUSTOM: 2
+  UNSPECIFIED: 2
 }
 
 export const NODE_TYPE = {
   INTERACTION: 1,
   AJAX: 2,
   CUSTOM_TRACER: 4
+}
+
+export const INTERACTION_STATUS = {
+  IP: 'in progress',
+  FIN: 'finished',
+  CAN: 'cancelled'
 }

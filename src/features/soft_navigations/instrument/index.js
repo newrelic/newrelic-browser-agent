@@ -6,7 +6,7 @@ import { now } from '../../../common/timing/now'
 import { debounce } from '../../../common/util/invoke'
 import { wrapEvents, wrapHistory } from '../../../common/wrap'
 import { InstrumentBase } from '../../utils/instrument-base'
-import { INTERACTION_TYPE, FEATURE_NAME, INTERACTION_TRIGGERS } from '../constants'
+import { FEATURE_NAME, INTERACTION_TRIGGERS } from '../constants'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
@@ -36,7 +36,7 @@ export class Instrument extends InstrumentBase {
     domObserver.observe(document.documentElement || document.body, { attributes: true, childList: true, subtree: true, characterData: true })
 
     const processUserInteraction = debounce((event) => {
-      handle('newInteraction', [event.timestamp, event.type, INTERACTION_TYPE.ROUTE_CHANGE], undefined, this.featureName, this.ee)
+      handle('newInteraction', [event.timestamp, event.type], undefined, this.featureName, this.ee)
       domObserver.takeRecords() // empty the un-processed DOM changes so they don't falsely mark the new user interaction as having caused changes prior to it
     }, 60, { leading: true })
 

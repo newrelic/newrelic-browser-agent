@@ -2,7 +2,7 @@ import { getConfigurationValue } from '../../../common/config/config'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { AggregateBase } from '../../utils/aggregate-base'
-import { INTERACTION_TYPE, FEATURE_NAME } from '../constants'
+import { FEATURE_NAME } from '../constants'
 import { InitialPageLoadInteraction } from './initial-page-load-interaction'
 import { Interaction } from './interaction'
 
@@ -34,7 +34,7 @@ export class Aggregate extends AggregateBase {
     }, { agentIdentifier, ee: this.ee })
     this.scheduler.harvest.on('events', this.onHarvestStarted.bind(this))
 
-    registerHandler('newInteraction', (timestamp, trigger, category) => this.startInteraction({ category, trigger, startedAt: timestamp }), this.featureName, this.ee)
+    registerHandler('newInteraction', (timestamp, trigger) => this.startAnInteraction({ trigger, startedAt: timestamp }), this.featureName, this.ee)
     registerHandler('newURL', (timestamp, url, type) => this.interactionInProgress?.updateHistory(timestamp, url), this.featureName, this.ee)
     registerHandler('newDom', timestamp => this.interactionInProgress?.updateDom(timestamp), this.featureName, this.ee)
 
@@ -62,15 +62,12 @@ export class Aggregate extends AggregateBase {
     }
   }
 
-  startInteraction ({ trigger, category, startedAt }) {
-    console.log('START IXN', trigger, category, startedAt)
+  startAnInteraction ({ trigger, startedAt }) {
     this.interactionInProgress?.cancel()
-    this.interactionInProgress = new Interaction(this.agentIdentifier)
+    this.interactionInProgress = new Interaction(this.agentIdentifier, startedAt)
     this.interactionInProgress.on('finished', this.completeInteraction.bind(this))
     this.interactionInProgress.on('cancelled', this.cancelInteraction.bind(this))
     if (trigger) this.interactionInProgress.trigger = trigger
-    if (category) this.interactionInProgress.category = INTERACTION_TYPE.ROUTE_CHANGE
-    if (startedAt) this.interactionInProgress.start = startedAt
   }
 
   cancelInteraction () {

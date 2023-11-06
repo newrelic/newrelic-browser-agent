@@ -3,9 +3,6 @@ import { now } from '../../../common/timing/now'
 let nodesSeen = 0
 
 export class BelNode {
-  subscribers = new Map()
-  emitted = false
-
   belType
   children = []
   start = now()
@@ -15,6 +12,7 @@ export class BelNode {
   nodeId = String(++nodesSeen)
 
   constructor (agentIdentifier) {
+    if (!agentIdentifier) throw new Error('Interaction is missing core attributes')
     this.agentIdentifier = agentIdentifier
   }
 
@@ -32,17 +30,6 @@ export class BelNode {
     const cbs = this.subscribers.get(event) || []
     cbs.push(cb)
     this.subscribers.set(event, cbs)
-  }
-
-  cancel () {
-    this.cancelled = true
-    if (this.ttiTracker) this.ttiTracker?.cancel()
-    if (this.emitted) return
-    clearTimeout(this.timer)
-    if (this.children) this.children.forEach(child => child?.cancel())
-    for (let [evt, cbs] of this.subscribers) {
-      if (evt === 'cancelled') cbs.forEach(cb => cb(this))
-    }
   }
 
   validateChildren () {

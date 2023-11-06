@@ -1,22 +1,22 @@
-import { INTERACTION_TYPE } from '../constants'
 import { navTimingValues } from '../../../common/timing/nav-timing'
 import { Interaction } from './interaction'
-import { initialLocation } from '../../../common/constants/runtime'
-import { nullable, numeric } from '../../../common/serialize/bel-serializer'
+import { numeric } from '../../../common/serialize/bel-serializer'
 import { firstPaint } from '../../../common/vitals/first-paint'
 import { firstContentfulPaint } from '../../../common/vitals/first-contentful-paint'
+import { getInfo } from '../../../common/config/config'
 
 export class InitialPageLoadInteraction extends Interaction {
-  constructor (...args) {
-    super(...args)
-    const pageUrl = initialLocation
-    this.initialPageURL = pageUrl
-    this.oldURL = pageUrl
-    this.newURL = pageUrl
+  constructor (agentIdentifier) {
+    super(agentIdentifier, 0)
+    const agentInfo = getInfo(agentIdentifier)
+
     this.trigger = 'initialPageLoad'
-    this.start = 0
-    this.category = INTERACTION_TYPE.INITIAL_PAGE_LOAD
+    this.queueTime = agentInfo.queueTime
+    this.appTime = agentInfo.applicationTime
   }
+
+  get firstPaint () { return firstPaint.current.value }
+  get firstContentfulPaint () { return firstContentfulPaint.current.value }
 
   /**
    * Build the navTiming node. This assumes the navTimingValues array in nav-timing.js has already been filled with values via the PageViewEvent feature having
@@ -51,12 +51,5 @@ export class InitialPageLoadInteraction extends Interaction {
       }
     })
     return navTimingNode
-  }
-
-  serialize () {
-    let serializedIxn = super.serialize()
-    // fp & fcp need to go in the first block of nodes, with the base node list
-    serializedIxn += `,${nullable(firstPaint.current.value, numeric, true)}${nullable(firstContentfulPaint.current.value, numeric, false)};${this.navTiming}`
-    return serializedIxn
   }
 }

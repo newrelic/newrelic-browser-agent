@@ -103,8 +103,8 @@ export class SessionEntity {
       this.expiresTimer = new Timer({
         // When the inactive timer ends, collect a SM and reset the session
         onEnd: () => {
-          this.collectSM('expired', this)
-          this.collectSM('duration', this)
+          this.collectSM('expired')
+          this.collectSM('duration')
           this.reset()
         }
       }, this.state.expiresAt - Date.now())
@@ -120,8 +120,8 @@ export class SessionEntity {
       this.inactiveTimer = new InteractionTimer({
         // When the inactive timer ends, collect a SM and reset the session
         onEnd: () => {
-          this.collectSM('inactive', this)
-          this.collectSM('duration', this)
+          this.collectSM('inactive')
+          this.collectSM('duration')
           this.reset()
         },
         // When the inactive timer refreshes, it will update the storage values with an update timestamp
@@ -172,14 +172,14 @@ export class SessionEntity {
       if (this.isInvalid(obj)) return {}
       // if the session expires, collect a SM count before resetting
       if (this.isExpired(obj.expiresAt)) {
-        this.collectSM('expired', this)
+        this.collectSM('expired')
         this.collectSM('duration', obj, true)
         return this.reset()
       }
       // if "inactive" timer is expired at "read" time -- esp. initial read -- reset
       // collect a SM count before resetting
       if (this.isExpired(obj.inactiveAt)) {
-        this.collectSM('inactive', this)
+        this.collectSM('inactive')
         this.collectSM('duration', obj, true)
         return this.reset()
       }
@@ -271,15 +271,19 @@ export class SessionEntity {
   collectSM (type, data, useUpdatedAt) {
     let value, tag
     if (type === 'duration') {
-      const startingTimestamp = data.expiresAt - data.expiresMs
-      const endingTimestamp = useUpdatedAt ? data.updatedAt : Date.now()
-      value = endingTimestamp - startingTimestamp
+      value = this.getDuration(data, useUpdatedAt)
       tag = 'Session/Duration/Ms'
     }
     if (type === 'expired') tag = 'Session/Expired/Seen'
     if (type === 'inactive') tag = 'Session/Inactive/Seen'
 
     if (tag) handle(SUPPORTABILITY_METRIC_CHANNEL, [tag, value], undefined, FEATURE_NAMES.metrics, this.ee)
+  }
+
+  getDuration (data = this.state, useUpdatedAt) {
+    const startingTimestamp = data.expiresAt - this.expiresMs
+    const endingTimestamp = !useUpdatedAt ? data.updatedAt : Date.now()
+    return endingTimestamp - startingTimestamp
   }
 
   /**

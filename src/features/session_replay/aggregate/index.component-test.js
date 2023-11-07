@@ -4,6 +4,10 @@ import { SESSION_EVENTS, SessionEntity, MODE } from '../../../common/session/ses
 import { setConfiguration } from '../../../common/config/config'
 import { configure } from '../../../loaders/configure/configure'
 
+jest.mock('../../../common/util/console', () => ({
+  warn: jest.fn()
+}))
+
 class LocalMemory {
   constructor (initialState = {}) {
     this.state = initialState
@@ -66,6 +70,7 @@ describe('Session Replay', () => {
   })
   afterEach(async () => {
     sr.abort('jest test manually aborted')
+    jest.resetAllMocks()
     jest.clearAllMocks()
   })
 
@@ -224,12 +229,19 @@ describe('Session Replay', () => {
 
   describe('Session Replay Payload Validation', () => {
     test('Payload', async () => {
+      const storage = new LocalMemory({ NRBA_SESSION: { ...model, value: 'abcdefghijklmnop', expiresAt: Date.now() + 10000, inactiveAt: Date.now() + 10000, sessionReplayMode: MODE.FULL, sessionReplaySentFirstChunk: true, sessionTraceMode: MODE.FULL } })
+      session = new SessionEntity({ agentIdentifier, key: 'SESSION', storage })
+      primeSessionAndReplay(session)
       setConfiguration(agentIdentifier, { ...init })
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)
       const harvestContents = sr.getHarvestContents()
       // query attrs
       expect(harvestContents.qs).toMatchObject(anyQuery)
+
+      expect(harvestContents.qs.attributes.includes('session.durationMs')).toEqual(true)
+      const urlParams = new URLSearchParams(harvestContents.qs.attributes)
+      expect(Number(urlParams.get('session.durationMs'))).toBeGreaterThan(0)
 
       expect(harvestContents.body).toEqual(expect.any(Array))
 
@@ -325,6 +337,6 @@ function wait (ms = 0) {
 
 function primeSessionAndReplay (sess = new SessionEntity({ agentIdentifier, key: 'SESSION', storage: new LocalMemory() })) {
   session = sess
-  configure(agentIdentifier, { info, runtime: { session }, init: {} }, 'test', true)
+  configure({ agentIdentifier }, { info, runtime: { session }, init: {} }, 'test', true)
   sr = new SessionReplayAgg(agentIdentifier, new Aggregator({}))
 }

@@ -81,6 +81,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Harvest Behavior', () => {
     expect(attr1['replay.lastTimestamp']).toBeGreaterThan(0)
     expect(attr1['replay.firstTimestamp']).toEqual(blobHarvest.body[0].timestamp)
     expect(attr1['replay.lastTimestamp']).toEqual(blobHarvest.body[blobHarvest.body.length - 1].timestamp)
+    expect(attr1['session.durationMs']).toBeGreaterThan(0)
 
     const { request: blobHarvest2 } = await browser.testHandle.expectBlob()
     expect(blobHarvest2.body.length).toBeGreaterThan(0)
@@ -89,6 +90,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Harvest Behavior', () => {
     expect(attr2['replay.lastTimestamp']).toBeGreaterThan(0)
     expect(attr2['replay.firstTimestamp']).toEqual(blobHarvest2.body[0].timestamp)
     expect(attr2['replay.lastTimestamp']).toEqual(blobHarvest2.body[blobHarvest2.body.length - 1].timestamp)
+    expect(attr2['session.durationMs']).toBeGreaterThan(0)
 
     expect(attr1['replay.firstTimestamp']).not.toEqual(attr2['replay.firstTimestamp'])
     expect(attr1['replay.lastTimestamp']).not.toEqual(attr2['replay.lastTimestamp'])

@@ -18,15 +18,15 @@
       "browserName": "chrome",
       "platformName": "Windows 11",
       "platform": "Windows 11",
-      "version": "115",
-      "browserVersion": "115"
+      "version": "116",
+      "browserVersion": "116"
     },
     {
       "browserName": "chrome",
       "platformName": "Windows 11",
       "platform": "Windows 11",
-      "version": "118",
-      "browserVersion": "118"
+      "version": "119",
+      "browserVersion": "119"
     }
   ],
   "edge": [
@@ -48,15 +48,15 @@
       "browserName": "MicrosoftEdge",
       "platformName": "Windows 11",
       "platform": "Windows 11",
-      "version": "114",
-      "browserVersion": "114"
+      "version": "115",
+      "browserVersion": "115"
     },
     {
       "browserName": "MicrosoftEdge",
       "platformName": "Windows 11",
       "platform": "Windows 11",
-      "version": "117",
-      "browserVersion": "117"
+      "version": "118",
+      "browserVersion": "118"
     }
   ],
   "firefox": [
@@ -78,15 +78,15 @@
       "browserName": "firefox",
       "platformName": "Windows 10",
       "platform": "Windows 10",
-      "version": "115",
-      "browserVersion": "115"
+      "version": "116",
+      "browserVersion": "116"
     },
     {
       "browserName": "firefox",
       "platformName": "Windows 10",
       "platform": "Windows 10",
-      "version": "118",
-      "browserVersion": "118"
+      "version": "119",
+      "browserVersion": "119"
     }
   ],
   "safari": [
@@ -140,6 +140,20 @@
       "browserName": "Safari",
       "platformName": "iOS",
       "platform": "iOS",
+      "version": "15.5",
+      "device": "iPhone Simulator",
+      "appium:deviceName": "iPhone Simulator",
+      "appium:platformVersion": "15.5",
+      "appium:automationName": "XCUITest",
+      "sauce:options": {
+        "appiumVersion": "2.0.0"
+      },
+      "acceptInsecureCerts": false
+    },
+    {
+      "browserName": "Safari",
+      "platformName": "iOS",
+      "platform": "iOS",
       "version": "16.0",
       "device": "iPhone Simulator",
       "appium:deviceName": "iPhone Simulator",
@@ -175,20 +189,6 @@
       "appium:automationName": "XCUITest",
       "sauce:options": {
         "appiumVersion": "2.0.0"
-      },
-      "acceptInsecureCerts": false
-    },
-    {
-      "browserName": "Safari",
-      "platformName": "iOS",
-      "platform": "iOS",
-      "version": "17.0",
-      "device": "iPhone Simulator",
-      "appium:deviceName": "iPhone Simulator",
-      "appium:platformVersion": "17.0",
-      "appium:automationName": "XCUITest",
-      "sauce:options": {
-        "appiumVersion": "2.1.3"
       },
       "acceptInsecureCerts": false
     }

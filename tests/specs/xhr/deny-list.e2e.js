@@ -3,13 +3,15 @@ import { extractAjaxEvents } from '../../util/xhr'
 
 describe('xhr events deny list', () => {
   it('does not capture events when blocked', async () => {
-    const [ajaxEvents, interactionEvents] = await Promise.all([
+    const [ajaxEvents1, ajaxEvents2, interactionEvents] = await Promise.all([
+      browser.testHandle.expectAjaxEvents(10000, true),
       browser.testHandle.expectAjaxEvents(10000, true),
       browser.testHandle.expectInteractionEvents(),
       browser.url(await browser.testHandle.assetURL('spa/ajax-deny-list.html', { init: { ajax: { block_internal: true } } }))
     ])
 
-    expect(ajaxEvents).toBeUndefined()
+    expect(ajaxEvents1).toBeUndefined()
+    expect(ajaxEvents2).toBeUndefined()
     expect(extractAjaxEvents(interactionEvents.request.body)).not.toEqual(expect.arrayContaining([
       expect.objectContaining({
         domain: expect.stringContaining('bam-test-1.nr-local.net'),
@@ -39,14 +41,16 @@ describe('xhr events deny list', () => {
   })
 
   it('captures events when not blocked', async () => {
-    const [ajaxEvents, interactionEvents] = await Promise.all([
+    const [ajaxEvents1, ajaxEvents2, interactionEvents] = await Promise.all([
+      browser.testHandle.expectAjaxEvents(),
       browser.testHandle.expectAjaxEvents(),
       browser.testHandle.expectInteractionEvents(),
       browser.url(await browser.testHandle.assetURL('spa/ajax-deny-list.html', { init: { ajax: { block_internal: false } } }))
     ])
 
     const events = [
-      ...extractAjaxEvents(ajaxEvents.request.body),
+      ...extractAjaxEvents(ajaxEvents1.request.body),
+      ...extractAjaxEvents(ajaxEvents2.request.body),
       ...extractAjaxEvents(interactionEvents.request.body)
     ]
     expect(events).toEqual(expect.arrayContaining([

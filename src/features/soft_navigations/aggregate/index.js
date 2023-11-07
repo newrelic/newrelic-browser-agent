@@ -34,7 +34,7 @@ export class Aggregate extends AggregateBase {
     }, { agentIdentifier, ee: this.ee })
     this.scheduler.harvest.on('events', this.onHarvestStarted.bind(this))
 
-    registerHandler('newInteraction', (timestamp, trigger) => this.startAnInteraction({ trigger, startedAt: timestamp }), this.featureName, this.ee)
+    registerHandler('newInteraction', (timestamp, trigger) => this.startAnInteraction({ eventName: trigger, startedAt: timestamp }), this.featureName, this.ee)
     registerHandler('newURL', (timestamp, url, type) => this.interactionInProgress?.updateHistory(timestamp, url), this.featureName, this.ee)
     registerHandler('newDom', timestamp => this.interactionInProgress?.updateDom(timestamp), this.featureName, this.ee)
 
@@ -62,12 +62,11 @@ export class Aggregate extends AggregateBase {
     }
   }
 
-  startAnInteraction ({ trigger, startedAt }) {
+  startAnInteraction ({ eventName, startedAt }) {
     this.interactionInProgress?.cancel()
-    this.interactionInProgress = new Interaction(this.agentIdentifier, startedAt)
+    this.interactionInProgress = new Interaction(this.agentIdentifier, eventName, startedAt)
     this.interactionInProgress.on('finished', this.completeInteraction.bind(this))
     this.interactionInProgress.on('cancelled', this.cancelInteraction.bind(this))
-    if (trigger) this.interactionInProgress.trigger = trigger
   }
 
   cancelInteraction () {

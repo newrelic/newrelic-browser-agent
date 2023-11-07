@@ -28,9 +28,10 @@ export class Interaction extends BelNode {
   /** Internal state of this interaction: in-progress, finished, or cancelled. */
   status = INTERACTION_STATUS.IP
 
-  constructor (agentIdentifier, uiEventTimestamp) {
+  constructor (agentIdentifier, uiEvent, uiEventTimestamp) {
     super(agentIdentifier)
     this.belType = NODE_TYPE.INTERACTION
+    this.trigger = uiEvent
     this.start = uiEventTimestamp
     this.domTimestamp = 0
     this.historyTimestamp = 0
@@ -92,6 +93,9 @@ export class Interaction extends BelNode {
   get navTiming () {}
 
   serialize () {
+    // Nested interaction nodes are not supported, so the passing of arguments, e.g. timestamp of parent node, doesn't make sense and is indicative of a problem.
+    if (arguments.length > 0) throw new Error('Interaction serialization should not have any arguments passed in!')
+
     const addString = getAddStringContext(this.agentIdentifier)
     const nodeList = []
     let ixnType
@@ -101,7 +105,7 @@ export class Interaction extends BelNode {
 
     const allAttachedNodes = addCustomAttributes(this.customAttributes || {}, addString) // start with all custom attributes
     if (getInfo(this.agentIdentifier).atts) allAttachedNodes.push('a,' + addString(getInfo(this.agentIdentifier).atts)) // add apm provided attributes
-    this.children.forEach(node => allAttachedNodes.push(node.serialize())) // recursively add the serialized string of every child of this (ixn) bel node
+    this.children.forEach(node => allAttachedNodes.push(node.serialize(this.start))) // recursively add the serialized string of every child of this (ixn) bel node
 
     const fields = [
       numeric(this.belType),

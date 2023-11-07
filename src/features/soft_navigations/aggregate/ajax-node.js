@@ -1,19 +1,8 @@
-import { getAddStringContext, nullable, numeric } from '../../../common/serialize/bel-serializer'
+import { addCustomAttributes, getAddStringContext, nullable, numeric } from '../../../common/serialize/bel-serializer'
 import { NODE_TYPE } from '../constants'
 import { BelNode } from './bel-node'
 
 export class AjaxNode extends BelNode {
-  method
-  status
-  domain
-  path
-  txSize // request body size
-  rxSize // response body size
-  requestedWith // isFetch (1) | isJSONP (2) | XMLHttpRequest ('')
-  spanId
-  traceId
-  spanTimestamp
-
   constructor (agentIdentifier, ajaxEvent) {
     super(agentIdentifier)
     this.belType = NODE_TYPE.AJAX
@@ -23,24 +12,28 @@ export class AjaxNode extends BelNode {
     this.path = ajaxEvent.path
     this.txSize = ajaxEvent.requestSize
     this.rxSize = ajaxEvent.responseSize
-    this.requestedWith = ajaxEvent.type === 'fetch' ? 1 : ajaxEvent.type === 'jsonp' ? 2 : '' // does this actually work?
+    this.requestedWith = ajaxEvent.type === 'fetch' ? 1 : '' // 'xhr' and 'beacon' types get the empty string
     this.spanId = ajaxEvent.spanId
     this.traceId = ajaxEvent.traceId
     this.spanTimestamp = ajaxEvent.spanTimestamp
+    this.gql = ajaxEvent.gql
 
     this.start = ajaxEvent.startTime
     this.end = ajaxEvent.endTime
-    this.callbackDuration = ajaxEvent.callbackDuration
-    this.callbackEnd = this.callbackDuration
   }
 
-  serialize (startTimestamp) {
+  serialize (parentStartTimestamp) {
     const addString = getAddStringContext(this.agentIdentifier)
     const nodeList = []
+    let allAttachedNodes = []
+
+    if (typeof this.gql === 'object') allAttachedNodes = addCustomAttributes(this.gql, addString)
+    this.children.forEach(node => allAttachedNodes.push(node.serialize(this.start)))
+
     const fields = [
       numeric(this.belType),
-      this.children.length,
-      numeric(this.start - startTimestamp), // start relative to first seen (parent interaction)
+      allAttachedNodes.length,
+      numeric(this.start - parentStartTimestamp), // start relative to first seen (parent interaction)
       numeric(this.end - this.start), // end is relative to start
       numeric(this.callbackEnd),
       numeric(this.callbackDuration),
@@ -52,12 +45,13 @@ export class AjaxNode extends BelNode {
       numeric(this.rxSize),
       this.requestedWith,
       addString(this.nodeId),
-      nullable(this.spanId, addString, true),
-      nullable(this.traceId, addString, true),
-      nullable(this.spanTimestamp, numeric, true)
+      nullable(this.spanId, addString),
+      nullable(this.traceId, addString),
+      nullable(this.spanTimestamp, numeric)
     ]
 
     nodeList.push(fields)
+    if (allAttachedNodes.length) nodeList.push(allAttachedNodes.join(';'))
 
     return nodeList.join(';')
   }

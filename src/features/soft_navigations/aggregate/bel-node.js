@@ -4,6 +4,7 @@ let nodesSeen = 0
 
 export class BelNode {
   belType
+  /** List of other BelNode derivatives. Each children should be of a subclass that implements its own 'serialize' function. */
   children = []
   start = now()
   end
@@ -24,6 +25,9 @@ export class BelNode {
   addChild (child) {
     this.children.push(child)
   }
+
+  /** Virtual fn for stringifying an instance. */
+  serialize () {}
 
   // validateChildren () {
   //   this.children.forEach(child => {

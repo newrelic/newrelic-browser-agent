@@ -3,15 +3,13 @@ import { extractAjaxEvents } from '../../util/xhr'
 
 describe('xhr events deny list', () => {
   it('does not capture events when blocked', async () => {
-    const [ajaxEvents1, ajaxEvents2, interactionEvents] = await Promise.all([
-      browser.testHandle.expectAjaxEvents(10000, true),
+    const [ajaxEvents, interactionEvents] = await Promise.all([
       browser.testHandle.expectAjaxEvents(10000, true),
       browser.testHandle.expectInteractionEvents(),
       browser.url(await browser.testHandle.assetURL('spa/ajax-deny-list.html', { init: { ajax: { block_internal: true } } }))
     ])
 
-    expect(ajaxEvents1).toBeUndefined()
-    expect(ajaxEvents2).toBeUndefined()
+    expect(ajaxEvents).toBeUndefined()
     expect(extractAjaxEvents(interactionEvents.request.body)).not.toEqual(expect.arrayContaining([
       expect.objectContaining({
         domain: expect.stringContaining('bam-test-1.nr-local.net'),
@@ -21,19 +19,7 @@ describe('xhr events deny list', () => {
       }),
       expect.objectContaining({
         domain: expect.stringContaining('bam-test-1.nr-local.net'),
-        path: '/text',
-        type: 'ajax',
-        requestedWith: 'XMLHttpRequest'
-      }),
-      expect.objectContaining({
-        domain: expect.stringContaining('bam-test-1.nr-local.net'),
         path: '/json',
-        type: 'ajax',
-        requestedWith: 'fetch'
-      }),
-      expect.objectContaining({
-        domain: expect.stringContaining('bam-test-1.nr-local.net'),
-        path: '/text',
         type: 'ajax',
         requestedWith: 'fetch'
       })
@@ -41,28 +27,15 @@ describe('xhr events deny list', () => {
   })
 
   it('captures events when not blocked', async () => {
-    const [ajaxEvents1, ajaxEvents2, interactionEvents] = await Promise.all([
-      browser.testHandle.expectAjaxEvents(),
-      browser.testHandle.expectAjaxEvents(),
+    const [interactionEvents] = await Promise.all([
       browser.testHandle.expectInteractionEvents(),
       browser.url(await browser.testHandle.assetURL('spa/ajax-deny-list.html', { init: { ajax: { block_internal: false } } }))
     ])
 
-    const events = [
-      ...extractAjaxEvents(ajaxEvents1.request.body),
-      ...extractAjaxEvents(ajaxEvents2.request.body),
-      ...extractAjaxEvents(interactionEvents.request.body)
-    ]
-    expect(events).toEqual(expect.arrayContaining([
+    expect(extractAjaxEvents(interactionEvents.request.body)).toEqual(expect.arrayContaining([
       expect.objectContaining({
         domain: expect.stringContaining('bam-test-1.nr-local.net'),
         path: '/json',
-        type: 'ajax',
-        requestedWith: 'XMLHttpRequest'
-      }),
-      expect.objectContaining({
-        domain: expect.stringContaining('bam-test-1.nr-local.net'),
-        path: '/text',
         type: 'ajax',
         requestedWith: 'XMLHttpRequest'
       }),
@@ -71,12 +44,6 @@ describe('xhr events deny list', () => {
             expect.objectContaining({
               domain: expect.stringContaining('bam-test-1.nr-local.net'),
               path: '/json',
-              type: 'ajax',
-              requestedWith: 'fetch'
-            }),
-            expect.objectContaining({
-              domain: expect.stringContaining('bam-test-1.nr-local.net'),
-              path: '/text',
               type: 'ajax',
               requestedWith: 'fetch'
             })

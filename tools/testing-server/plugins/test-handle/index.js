@@ -3,7 +3,7 @@ const { testIdFromRequest } = require('../../utils/fastify-request')
 
 /**
  * Fastify plugin to decorate the fastify instance with bam test handle methods.
- * @param {module:fastify.FastifyInstance} fastify the fastify server instance
+ * @param {import('fastify').FastifyInstance} fastify the fastify server instance
  * @param {TestServer} testServer test server instance
  */
 module.exports = fp(async function (fastify, testServer) {

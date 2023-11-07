@@ -4,7 +4,7 @@ const { rumFlags } = require('../constants')
 
 /**
  * Fastify plugin to apply routes to the bam server.
- * @param {module:fastify.FastifyInstance} fastify the fastify server instance
+ * @param {import('fastify').FastifyInstance} fastify the fastify server instance
  * @param {TestServer} testServer test server instance
  */
 module.exports = fp(async function (fastify) {

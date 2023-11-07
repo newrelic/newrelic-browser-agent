@@ -14,6 +14,7 @@ module.exports = function (request, reply, testServer) {
   return new Transform({
     async transform (chunk, encoding, done) {
       let chunkString = chunk.toString()
+      const nonce = request.query.nonce ? `nonce="${request.query.nonce}"` : ''
 
       // Replace {tests/assets/.*}
       const testScriptInjections = chunkString.matchAll(
@@ -33,7 +34,7 @@ module.exports = function (request, reply, testServer) {
         const script = (await fs.promises.readFile(scriptPath)).toString()
         chunkString = chunkString.replace(
           match[0],
-          `<script type="text/javascript">${script}</script>`
+          `<script type="text/javascript" ${nonce}>${script}</script>`
         )
       }
 
@@ -41,7 +42,7 @@ module.exports = function (request, reply, testServer) {
       if (chunkString.indexOf('{script}') > -1) {
         chunkString = chunkString.replace(
           '{script}',
-          `<script type="text/javascript" src="${
+          `<script type="text/javascript" ${nonce} src="${
             request.query.script || ''
           }"></script>`
         )

@@ -12,6 +12,7 @@ module.exports = function (request, reply, testServer) {
   return new Transform({
     async transform (chunk, encoding, done) {
       const chunkString = chunk.toString()
+      const nonce = request.query.nonce ? `nonce="${request.query.nonce}"` : ''
 
       if (
         chunkString.indexOf('{polyfills}') > -1 &&
@@ -30,7 +31,7 @@ module.exports = function (request, reply, testServer) {
           null,
           chunkString.replace(
             '{polyfills}',
-            `<script type="text/javascript">${polyfills}</script>`
+            `<script type="text/javascript" ${nonce}>${polyfills}</script>`
           )
         )
       } else if (

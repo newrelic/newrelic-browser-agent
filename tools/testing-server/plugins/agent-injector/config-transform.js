@@ -82,6 +82,7 @@ module.exports = function (request, reply, testServer) {
   return new Transform({
     transform (chunk, encoding, done) {
       const chunkString = chunk.toString()
+      const nonce = request.query.nonce ? `nonce="${request.query.nonce}"` : ''
 
       if (chunkString.indexOf('{config}') > -1) {
         const replacement = getConfigContent(request, reply, testServer)
@@ -89,7 +90,7 @@ module.exports = function (request, reply, testServer) {
           null,
           chunkString.replace(
             '{config}',
-            `<script type="text/javascript">${replacement}</script>`
+            `<script type="text/javascript" ${nonce}>${replacement}</script>`
           )
         )
       } else {

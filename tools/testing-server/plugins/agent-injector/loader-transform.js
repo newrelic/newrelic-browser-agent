@@ -40,6 +40,7 @@ module.exports = function (request, reply, testServer) {
   return new Transform({
     async transform (chunk, encoding, done) {
       const chunkString = chunk.toString()
+      const nonce = request.query.nonce ? `nonce="${request.query.nonce}"` : ''
 
       if (chunkString.indexOf('{loader}') > -1) {
         const replacement = await getLoaderContent(request, reply, testServer)
@@ -47,7 +48,7 @@ module.exports = function (request, reply, testServer) {
           null,
           chunkString.replace(
             '{loader}',
-            `<script type="text/javascript">${sslShim}${replacement}</script>`
+            `<script type="text/javascript" ${nonce}>${sslShim}${replacement}</script>`
           )
         )
       } else {

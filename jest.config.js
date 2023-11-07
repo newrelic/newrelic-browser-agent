@@ -5,7 +5,7 @@ const commonConfig = {
   transform: {
     '\\.m?[jt]sx?$': 'babel-jest'
   },
-  setupFilesAfterEnv: ['<rootDir>/tools/jest-matchers/index.mjs'],
+  setupFilesAfterEnv: ['<rootDir>/tools/jest/matchers.mjs', '<rootDir>/tools/jest/globals.mjs'],
   unmockedModulePathPatterns: [
     '@faker-js/faker'
   ]

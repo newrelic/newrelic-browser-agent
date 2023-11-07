@@ -1,4 +1,4 @@
-import '../../../jest-matchers/index.mjs'
+import '../../../jest/index.mjs'
 
 /**
  * This file is executed by mocha in each WDIO execution thread.

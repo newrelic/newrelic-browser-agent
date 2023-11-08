@@ -45,7 +45,7 @@ export function activateFeatures (flags, agentIdentifier) {
   sentIds.add(agentIdentifier)
 
   // let any window level subscribers know that the agent is running
-  dispatchGlobalEvent({ loaded: true, agentIdentifier })
+  dispatchGlobalEvent({ loaded: true })
 }
 
 export const activatedFeatures = {}

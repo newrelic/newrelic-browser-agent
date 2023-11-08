@@ -2,7 +2,7 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { registerHandler as register } from '../../../common/event-emitter/register-handler'
+import { registerHandler as register, registerHandler } from '../../../common/event-emitter/register-handler'
 import { stringify } from '../../../common/util/stringify'
 import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../../../common/serialize/bel-serializer'
 import { handle } from '../../../common/event-emitter/handle'
@@ -59,7 +59,7 @@ export class Aggregate extends AggregateBase {
     })
     // --- ^
     // --- v Used by new soft nav
-    ee.on('returnAjax', event => ajaxEvents.push(event))
+    registerHandler('returnAjax', event => ajaxEvents.push(event), this.featureName, this.ee)
     // --- ^
 
     const scheduler = new HarvestScheduler('events', {

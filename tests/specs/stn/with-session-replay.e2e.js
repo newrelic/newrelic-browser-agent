@@ -165,6 +165,21 @@ describe.withBrowsersMatching(notIE)('Trace when replay entitlement is 1 and stn
     expect(initSTReceived).toBeUndefined()
   })
 
+  it('does run when replay is OFF but API is called', async () => {
+    await browser.url(await browser.testHandle.assetURL('stn/instrumented.html', config({ session_replay: { sampling_rate: 0, error_sampling_rate: 0 } })))
+    await browser.waitForAgentLoad()
+    expect(initSTReceived).toBeUndefined()
+
+    const [realSTPayload] = await Promise.all([
+      browser.testHandle.expectResources(),
+      browser.execute(function () {
+        newrelic.recordReplay()
+      })
+    ])
+
+    expect(realSTPayload).toEqual(expect.any(Object))
+  })
+
   ;[
     ['FULL', { sampling_rate: 100, error_sampling_rate: 0 }],
     ['ERR', { sampling_rate: 0, error_sampling_rate: 100 }]

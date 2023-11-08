@@ -17,11 +17,6 @@ export class BelNode {
     this.agentIdentifier = agentIdentifier
   }
 
-  containsEvent (timestamp) {
-    if (!this.end) return this.start <= timestamp
-    return (this.start <= timestamp && this.end >= timestamp)
-  }
-
   addChild (child) {
     this.children.push(child)
   }

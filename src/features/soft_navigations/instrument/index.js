@@ -8,6 +8,12 @@ import { wrapEvents, wrapHistory } from '../../../common/wrap'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME, INTERACTION_TRIGGERS } from '../constants'
 
+/** The minimal time after a UI event for which no further events will be processed - i.e. a throttling rate to reduce spam.
+ * This also give some time for the new interaction to complete without being discarded by a subsequent UI event and wrongly attributed.
+ * This value is still subject to change and critique, as it is derived from beyond worst case time to next frame of a page.
+ */
+const UI_WAIT_INTERVAL = 1 / 10 * 1000 // assume 10 fps
+
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
   constructor (agentIdentifier, aggregator, auto = true) {
@@ -26,10 +32,9 @@ export class Instrument extends InstrumentBase {
     } catch (e) {}
     const trackURLChangeEvent = (evt) => handle('newURL', [evt.timestamp, '' + window.location], undefined, this.featureName, this.ee)
     windowAddEventListener('popstate', trackURLChangeEvent, true, this.removeOnAbort?.signal)
-    windowAddEventListener('load', trackURLChangeEvent, true, this.removeOnAbort?.signal) // this is just for InitialPageLoad interactions
 
     const domObserver = new originals.MO((domChanges, observer) => {
-      originals.RAF(() => { // waiting for next frame is to ensure the DOM changes has happened
+      originals.RAF(() => { // waiting for next frame to time when any visuals are supposedly updated
         handle('newDom', [now()], undefined, this.featureName, this.ee)
       })
     })
@@ -38,7 +43,7 @@ export class Instrument extends InstrumentBase {
     const processUserInteraction = debounce((event) => {
       handle('newInteraction', [event.timestamp, event.type], undefined, this.featureName, this.ee)
       domObserver.takeRecords() // empty the un-processed DOM changes so they don't falsely mark the new user interaction as having caused changes prior to it
-    }, 60, { leading: true })
+    }, UI_WAIT_INTERVAL, { leading: true })
 
     eventsEE.on('fn-start', ([evt]) => { // set up a new user ixn before the callback for the triggering event executes
       if (INTERACTION_TRIGGERS.includes(evt?.type)) {
@@ -46,13 +51,13 @@ export class Instrument extends InstrumentBase {
       }
     })
 
-    this.abortHandler = this.#abort
+    this.abortHandler = abort
     this.importAggregator()
-  }
 
-  /** Restoration and resource release tasks to be done if SPA loader is being aborted. Unwind changes to globals and subscription to DOM events. */
-  #abort () {
-    this.removeOnAbort?.abort()
-    this.abortHandler = undefined // weakly allow this abort op to run only once
+    function abort () {
+      this.removeOnAbort?.abort()
+      domObserver.disconnect()
+      this.abortHandler = undefined // weakly allow this abort op to run only once
+    }
   }
 }

@@ -4,7 +4,6 @@ import { generateUuid } from '../../../common/ids/unique-id'
 import { addCustomAttributes, getAddStringContext, nullable, numeric } from '../../../common/serialize/bel-serializer'
 import { now } from '../../../common/timing/now'
 import { cleanURL } from '../../../common/url/clean-url'
-import { debounce } from '../../../common/util/invoke'
 import { NODE_TYPE, INTERACTION_STATUS, INTERACTION_TYPE } from '../constants'
 import { BelNode } from './bel-node'
 
@@ -12,7 +11,7 @@ import { BelNode } from './bel-node'
  * link https://github.com/newrelic/nr-querypack/blob/main/schemas/bel/7.qpschema
  **/
 export class Interaction extends BelNode {
-  id = generateUuid()
+  id = generateUuid() // unique id that is serialized and used to link interactions with errors
   trigger
   initialPageURL = initialLocation
   oldURL = '' + globalScope?.location
@@ -27,39 +26,34 @@ export class Interaction extends BelNode {
   targetRouteName
   /** Internal state of this interaction: in-progress, finished, or cancelled. */
   status = INTERACTION_STATUS.IP
+  domTimestamp = 0
+  historyTimestamp = 0
 
   constructor (agentIdentifier, uiEvent, uiEventTimestamp) {
     super(agentIdentifier)
     this.belType = NODE_TYPE.INTERACTION
     this.trigger = uiEvent
     this.start = uiEventTimestamp
-    this.domTimestamp = 0
-    this.historyTimestamp = 0
     this.eventSubscription = new Map([
       ['finished', []],
       ['cancelled', []]
     ])
 
-    this.timer = setTimeout(() => {
-      // make this interaction invalid after 30 seconds if it's not completed
-      this.cancel()
-    }, 30000)
+    this.timer = setTimeout(() => this.cancel(), 30000) // in-progress interactions are disregarded after 30 seconds if it's not completed by then (or cancelled elsewhere)
   }
 
   updateDom (timestamp) {
     this.domTimestamp = (timestamp || now())
-    this.checkIfFinished()
   }
 
   updateHistory (timestamp, newUrl) {
     this.newURL = newUrl || '' + globalScope?.location
     this.historyTimestamp = (timestamp || now())
-    this.checkIfFinished()
   }
 
-  checkIfFinished = debounce(() => {
-    if (this.domTimestamp > 0 && this.historyTimestamp > 0) this.finish()
-  }, 60)
+  seenHistoryAndDomChange () {
+    return this.domTimestamp > 0 && this.historyTimestamp > 0
+  }
 
   on (event, cb) {
     if (!this.eventSubscription.has(event)) throw new Error('Cannot subscribe to non pre-defined events.')
@@ -85,6 +79,17 @@ export class Interaction extends BelNode {
     // Run all the callbacks listening to this interaction's potential cancellation.
     const callbacks = this.eventSubscription.get('cancelled')
     callbacks.forEach(fn => fn())
+  }
+
+  /**
+   * Given a timestamp, determine if it falls within this interaction's span, i.e. if this was the active interaction during that time.
+   * For in-progress interactions, this only compares the time with the start of span. Cancelled interactions are not considered active at all.
+   * @param {DOMHighResTimeStamp} timestamp
+   * @returns True or false boolean.
+   */
+  isActiveDuring (timestamp) {
+    if (this.status === INTERACTION_STATUS.IP) return this.start <= timestamp
+    return (this.status === INTERACTION_STATUS.FIN && this.start <= timestamp && this.end >= timestamp)
   }
 
   // Following are virtual properties overridden by a subclass:

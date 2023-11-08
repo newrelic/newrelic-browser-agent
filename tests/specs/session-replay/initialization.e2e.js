@@ -46,4 +46,12 @@ describe.withBrowsersMatching(notIE)('Session Replay Initialization', () => {
 
     await expect(browser.waitForFeatureAggregate('session_replay', 5000)).rejects.toThrow()
   })
+
+  it('should not record if rum response sr flag is 0 and then api is called', async () => {
+    await browser.testHandle.clearScheduledReplies('bamServer')
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', config()))
+      .then(() => browser.waitForAgentLoad())
+
+    await expect(browser.waitForSessionReplayRecording()).resolves.toBeUndefined()
+  })
 })

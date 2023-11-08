@@ -159,9 +159,9 @@ export class Aggregate extends AggregateBase {
         // if it has aborted or BCS returned bad entitlements, do not allow
         if (this.blocked || !this.entitled) return
         // if it isnt already (fully) initialized... initialize it
-        if (!this.initialized || (!this.recording && !recorder)) this.initializeRecording(false, true, true)
-        // its been initialized and imported the recorder but its not recording (mode === off)
-        else if (!this.recording && !!recorder) this.switchToFull()
+        if (!recorder) this.initializeRecording(false, true, true)
+        // its been initialized and imported the recorder but its not recording (mode === off || error)
+        else if (this.mode !== MODE.FULL) this.switchToFull()
         // if it gets all the way to here, that means a full session is already recording... do nothing
       }, this.featureName, this.ee)
 

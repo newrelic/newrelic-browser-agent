@@ -39,7 +39,7 @@ Before instrumenting your app using the NPM package, a Browser App should be con
 
 ## Instantiating the agent
 
-For best results, import and instantiate the `BrowserAgent` class as close to the top of the `head` element of your app's HTML output as possible. The specific location and method will vary based on your application's architecture or framework.
+For best results, import and instantiate the `BrowserAgent` class as close to the top of the `head` element of your app's HTML output as possible. The specific location and method will vary based on your application's architecture or framework. See [Library Support](#library-support) for more information.
 
 Populate the `options` parameter using configuration values found in the the *Copy/Paste JavaScript* box in your browser app's *Application settings* page in New Relic One.
 
@@ -228,6 +228,14 @@ Neither the browser agent development team nor the New Relic support teams can s
 import { Agent } from '@newrelic/browser-agent/loaders/agent'
 import { Metrics } from '@newrelic/browser-agent/src/features/metrics'
 ```
+
+## Library Support
+
+The browser agent is written to be agnostic to any JavaScript library or framework. The agent exposes a number of [API methods](https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/using-browser-apis/) that can be incorporated into libraries and frameworks. For example, export or make available the initialized agent and create a new error boundary in your react application that calls `browserAgent.noticeError()`.
+
+### Server-Side Rendering
+
+A lot of new frameworks support the concept of server-side rendering the pages of an application to improve SEO and the performance of the user experience. The browser agent must be imported and instantiated within a browser context and will not work if executed on a server or in the server context of a server-side rendered application. These frameworks typically provide support for defining code that should only be run on the client. Check your frameworks documentation for more information.
 
 ## Disclaimers
 

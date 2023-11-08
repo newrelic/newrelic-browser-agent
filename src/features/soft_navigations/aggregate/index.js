@@ -1,9 +1,12 @@
 import { getConfigurationValue } from '../../../common/config/config'
+import { handle } from '../../../common/event-emitter/handle'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
+import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
-import { FEATURE_NAME } from '../constants'
+import { FEATURE_NAME, INTERACTION_STATUS } from '../constants'
+import { AjaxNode } from './ajax-node'
 import { InitialPageLoadInteraction } from './initial-page-load-interaction'
 import { Interaction } from './interaction'
 
@@ -42,12 +45,14 @@ export class Aggregate extends AggregateBase {
     registerHandler('newInteraction', (timestamp, trigger) => this.startAnInteraction(trigger, timestamp), this.featureName, this.ee)
     registerHandler('newURL', (timestamp, url) => {
       this.interactionInProgress?.updateHistory(timestamp, url)
-      if (this.interactionInProgress?.seenHistoryAndDomChange) this.queueInteractionForHarvest()
+      if (this.interactionInProgress?.seenHistoryAndDomChange) this.interactionInProgressFinished()
     }, this.featureName, this.ee)
     registerHandler('newDom', timestamp => {
       this.interactionInProgress?.updateDom(timestamp)
-      if (this.interactionInProgress?.seenHistoryAndDomChange) this.queueInteractionForHarvest()
+      if (this.interactionInProgress?.seenHistoryAndDomChange) this.interactionInProgressFinished()
     }, this.featureName, this.ee)
+
+    registerHandler('ajax', this.#handleAjaxEvent.bind(this), this.featureName, this.ee)
 
     this.drain()
   }
@@ -78,7 +83,7 @@ export class Aggregate extends AggregateBase {
     this.interactionInProgress.on('cancelled', () => (this.interactionInProgress = null)) // since the ixn can be cancelled on its own
   }
 
-  queueInteractionForHarvest () {
+  interactionInProgressFinished () {
     this.interactionInProgress.finish()
     this.interactionsToHarvest.push(this.interactionInProgress)
     this.interactionInProgress = null
@@ -87,6 +92,7 @@ export class Aggregate extends AggregateBase {
   /**
    * Find the active interaction (current or past) for a given timestamp. Note that historic lookups mostly only go as far back as the last harvest for this feature.
    * Also, the caller should check the status of the interaction returned if found via {@link Interaction.status}, if that's pertinent.
+   * Cancelled (status) interactions are NOT returned!
    * @param {DOMHighResTimeStamp} timestamp
    * @returns An {@link Interaction} or undefined, if no active interaction was found.
    */
@@ -101,5 +107,27 @@ export class Aggregate extends AggregateBase {
       if (finishedInteraction.isActiveDuring(timestamp)) return finishedInteraction
     }
     // Time must be when no interaction is happening, so return undefined.
+  }
+
+  /**
+   * Handles or redirect ajax events based on the interaction, if any, that it's tied to.
+   * @param {Object} event see Ajax feature's storeXhr function for object definition
+   */
+  #handleAjaxEvent (event) {
+    const associatedInteraction = this.getInteractionFor(event.startTime)
+    if (!associatedInteraction) { // no interaction was happening when this ajax started, so give it back to Ajax feature for processing
+      handle('returnAjax', [event], undefined, FEATURE_NAMES.ajax, this.ee)
+    } else {
+      if (associatedInteraction.status === INTERACTION_STATUS.FIN) processAjax(event, associatedInteraction) // tack ajax onto the ixn object awaiting harvest
+      else { // same thing as above, just at a later time -- if the interaction in progress is cancelled, just send the event back to ajax feat unmodified
+        associatedInteraction.on('finished', () => processAjax(event, associatedInteraction))
+        associatedInteraction.on('cancelled', () => handle('returnAjax', [event], undefined, FEATURE_NAMES.ajax, this.ee))
+      }
+    }
+
+    function processAjax (event, parentInteraction) {
+      const newNode = new AjaxNode(event)
+      parentInteraction.addChild(newNode)
+    }
   }
 }

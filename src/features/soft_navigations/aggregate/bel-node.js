@@ -23,13 +23,4 @@ export class BelNode {
 
   /** Virtual fn for stringifying an instance. */
   serialize () {}
-
-  // validateChildren () {
-  //   this.children.forEach(child => {
-  //     if (child.start < this.start || child.end > this.end) {
-  //       child?.cancel()
-  //     } else child?.validateChildren()
-  //   })
-  //   this.children = this.children.filter(c => !c.cancelled)
-  // }
 }

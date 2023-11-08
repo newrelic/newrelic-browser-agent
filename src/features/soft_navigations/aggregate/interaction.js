@@ -62,6 +62,7 @@ export class Interaction extends BelNode {
   }
 
   finish () {
+    if (this.status !== INTERACTION_STATUS.IP) return // disallow this call if the ixn is already done aka not in-progress
     clearTimeout(this.timer)
     this.end = Math.max(this.domTimestamp, this.historyTimestamp) - this.start
     this.customAttributes = { ...getInfo(this.agentIdentifier).jsAttributes, ...this.customAttributes } // attrs specific to this interaction should have precedence over the general custom attrs
@@ -73,6 +74,7 @@ export class Interaction extends BelNode {
   }
 
   cancel () {
+    if (this.status !== INTERACTION_STATUS.IP) return // disallow this call if the ixn is already done aka not in-progress
     clearTimeout(this.timer)
     this.status = INTERACTION_STATUS.CAN
 

@@ -52,6 +52,6 @@ describe.withBrowsersMatching(notIE)('Session Replay Initialization', () => {
     await browser.url(await browser.testHandle.assetURL('instrumented.html', config()))
       .then(() => browser.waitForAgentLoad())
 
-    await expect(browser.waitForSessionReplayRecording()).resolves.toBeUndefined()
+    await expect(browser.testHandle.expectBlob(10000, true)).resolves.toBeUndefined()
   })
 })

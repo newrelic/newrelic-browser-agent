@@ -32,7 +32,7 @@ function getLoaderFilePath (request, testServer, webpath) {
   )
 }
 
-async function getLoaderScript (scriptType, loaderFilePath) {
+async function getLoaderScript (scriptType, loaderFilePath, nonce) {
   switch (scriptType) {
     case 'defer':
       return `<script src="${loaderFilePath}" defer></script>`
@@ -47,7 +47,7 @@ async function getLoaderScript (scriptType, loaderFilePath) {
         })
       </script>`
     default:
-      return `<script type="text/javascript">${await getLoaderContent(loaderFilePath)}</script>`
+      return `<script type="text/javascript" ${nonce}>${await getLoaderContent(loaderFilePath)}</script>`
   }
 }
 
@@ -65,7 +65,7 @@ module.exports = function (request, reply, testServer) {
 
       if (chunkString.indexOf('{loader}') > -1) {
         const loaderFilePath = getLoaderFilePath(request, testServer, !!request.query?.script)
-        const loaderScript = await getLoaderScript(request.query?.script, loaderFilePath)
+        const loaderScript = await getLoaderScript(request.query?.script, loaderFilePath, nonce)
         done(
           null,
           chunkString.replace(

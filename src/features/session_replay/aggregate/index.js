@@ -312,7 +312,7 @@ export class Aggregate extends AggregateBase {
           hasError: this.hasError,
           isFirstChunk: agentRuntime.session.state.sessionReplaySentFirstChunk === false,
           decompressedBytes: this.payloadBytesEstimation,
-          'nr.rrweb.version': RRWEB_VERSION
+          'rrweb.version': RRWEB_VERSION
         }, MAX_PAYLOAD_SIZE - this.payloadBytesEstimation).substring(1) // remove the leading '&'
       },
       body: this.events

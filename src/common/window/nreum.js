@@ -62,7 +62,7 @@ export function gosNREUMOriginals () {
       PR: globalScope.Promise,
       MO: globalScope.MutationObserver, // this'll be undefined if not in a web window
       FETCH: globalScope.fetch,
-      RAF: globalScope.requestAnimationFrame // this'll be undefined if not in a web window
+      RAF: globalScope.requestAnimationFrame?.bind(globalScope) // this'll be undefined if not in a web window
     }
   }
   return nr

@@ -1,7 +1,8 @@
+import { notIE } from '../../tools/browser-matcher/common-matchers.mjs'
 import { faker } from '@faker-js/faker'
 
 describe('Content Security Policy', () => {
-  it('should support a nonce script element', async () => {
+  it.withBrowsersMatching(notIE)('should support a nonce script element', async () => {
     const nonce = faker.datatype.uuid()
     await Promise.all([
       browser.testHandle.expectRum(),
@@ -18,7 +19,7 @@ describe('Content Security Policy', () => {
       return nonceValues
     })
 
-    expect(foundNonce).toEqual([nonce, nonce, nonce])
+    expect(foundNonce).toEqual([nonce, nonce, nonce, nonce])
   })
 
   it('should load async chunk with subresource integrity', async () => {

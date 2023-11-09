@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {init} {config} {loader}
+    <script>
+      window.addEventListener('newrelic', function(event) {
+        if (event.detail.loaded) {
+          var xhr = new XMLHttpRequest()
+          xhr.open('GET', '/json')
+          xhr.send()
+
+          newrelic.noticeError('test')
+
+          newrelic.addPageAction('test', { test: 1 })
+        }
+      })
+    </script>
+  </head>
+  <body>Instrumented</body>
+</html>

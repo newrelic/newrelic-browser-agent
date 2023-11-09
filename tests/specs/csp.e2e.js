@@ -18,7 +18,7 @@ describe('Content Security Policy', () => {
       return nonceValues
     })
 
-    expect(foundNonce).toEqual([nonce, nonce, nonce])
+    expect(foundNonce).toEqual([nonce, nonce, nonce, nonce])
   })
 
   it('should load async chunk with subresource integrity', async () => {

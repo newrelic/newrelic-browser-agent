@@ -35,14 +35,15 @@ function getLoaderFilePath (request, testServer, webpath) {
 async function getLoaderScript (scriptType, loaderFilePath, nonce) {
   switch (scriptType) {
     case 'defer':
-      return `<script src="${loaderFilePath}" defer></script>`
+      return `<script src="${loaderFilePath}" defer ${nonce}></script>`
     case 'async':
-      return `<script src="${loaderFilePath}" async></script>`
+      return `<script src="${loaderFilePath}" async ${nonce}></script>`
     case 'injection':
-      return `<script type="text/javascript">
+      return `<script type="text/javascript" ${nonce}>
         window.addEventListener('load', function(){
         let script = document.createElement('script');
         script.src = "${loaderFilePath}";
+        script.nonce = "${nonce}";
         document.body.append(script);
         })
       </script>`

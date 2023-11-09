@@ -71,7 +71,8 @@ export class Agent extends AgentBase {
       featuresToStart.sort((a, b) => featurePriority[a.featureName] - featurePriority[b.featureName])
       featuresToStart.forEach(InstrumentCtor => {
         if (!enabledFeatures[InstrumentCtor.featureName] && InstrumentCtor.featureName !== FEATURE_NAMES.pageViewEvent) return // PVE is required to run even if it's marked disabled
-        if (shouldRunSoftNavOverSpa && InstrumentCtor.featName === FEATURE_NAMES.spa) return // only meaningful if BOTH soft-nav & old spa features are included in agent build, in which this would ignore old spa
+        if (shouldRunSoftNavOverSpa && InstrumentCtor.featureName === FEATURE_NAMES.spa) return
+        if (!shouldRunSoftNavOverSpa && InstrumentCtor.featureName === FEATURE_NAMES.softNav) return
 
         const dependencies = getFeatureDependencyNames(InstrumentCtor.featureName)
         const hasAllDeps = dependencies.every(featName => featName in this.features) // any other feature(s) this depends on should've been initialized on prior iterations by priority order

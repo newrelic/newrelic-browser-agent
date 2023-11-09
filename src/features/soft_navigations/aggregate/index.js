@@ -27,11 +27,13 @@ export class Aggregate extends AggregateBase {
     this.scheduler.harvest.on('events', this.onHarvestStarted.bind(this))
 
     this.initialPageLoadInteraction = new InitialPageLoadInteraction(agentIdentifier)
-    // The page should've loaded at this point, with a single entry in TTFB.
-    const loadEventTime = Math.round(timeToFirstByte.current.entries[0].loadEventEnd)
-    this.initialPageLoadInteraction.finish(loadEventTime)
-    this.interactionsToHarvest.push(this.initialPageLoadInteraction)
-    this.scheduler.startTimer(harvestTimeSeconds, 1) // give buffered (ajax & jserror) events some time to settle before sending the initial page load
+    timeToFirstByte.subscribe(({ entries }) => {
+      const loadEventTime = Math.round(entries[0].loadEventEnd)
+      this.initialPageLoadInteraction.finish(loadEventTime)
+      this.interactionsToHarvest.push(this.initialPageLoadInteraction)
+      this.initialPageLoadInteraction = null
+      this.scheduler.startTimer(harvestTimeSeconds, 0.1) // give buffered (ajax & jserror) events some time to settle before sending the initial page load
+    })
 
     this.interactionInProgress = null // aside from the "page load" interaction, there can only ever be 1 ongoing at a time
 
@@ -108,6 +110,7 @@ export class Aggregate extends AggregateBase {
       const finishedInteraction = this.interactionsToHarvest[idx]
       if (finishedInteraction.isActiveDuring(timestamp)) return finishedInteraction
     }
+    if (this.initialPageLoadInteraction?.isActiveDuring(timestamp)) return this.initialPageLoadInteraction // lowest precedence and also only if it's still in-progress
     // Time must be when no interaction is happening, so return undefined.
   }
 

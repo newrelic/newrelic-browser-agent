@@ -237,7 +237,7 @@ export class Aggregate extends AggregateBase {
       Object.entries(getInfo(this.agentIdentifier).jsAttributes).forEach(([k, v]) => setCustom(k, v))
       delete params.browserInteractionId
     }
-    Object.entries(localAttrs).forEach(([k, v]) => setCustom(k, v)) // local custom attrs are applied in either case with the highest precedence
+    if (localAttrs) Object.entries(localAttrs).forEach(([k, v]) => setCustom(k, v)) // local custom attrs are applied in either case with the highest precedence
 
     const jsAttributesHash = stringHashCode(stringify(allCustomAttrs))
     const aggregateHash = bucketHash + ':' + jsAttributesHash

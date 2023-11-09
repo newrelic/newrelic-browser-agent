@@ -45,9 +45,7 @@ export class AjaxNode extends BelNode {
       numeric(this.rxSize),
       this.requestedWith,
       addString(this.nodeId),
-      nullable(this.spanId, addString),
-      nullable(this.traceId, addString),
-      nullable(this.spanTimestamp, numeric)
+      nullable(this.spanId, addString, true) + nullable(this.traceId, addString, true) + nullable(this.spanTimestamp, numeric)
     ]
 
     nodeList.push(fields)

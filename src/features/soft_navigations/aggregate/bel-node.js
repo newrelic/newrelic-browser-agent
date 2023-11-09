@@ -10,7 +10,7 @@ export class BelNode {
   end
   callbackEnd = 0
   callbackDuration = 0
-  nodeId = String(++nodesSeen)
+  nodeId = ++nodesSeen
 
   constructor (agentIdentifier) {
     if (!agentIdentifier) throw new Error('Interaction is missing core attributes')

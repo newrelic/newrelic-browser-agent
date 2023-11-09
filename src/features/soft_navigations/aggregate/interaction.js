@@ -127,14 +127,11 @@ export class Interaction extends BelNode {
       addString(cleanURL(this.newURL, true)),
       addString(this.customName),
       ixnType,
-      nullable(this.queueTime, numeric),
-      nullable(this.appTime, numeric),
-      nullable(this.oldRoute, addString),
-      nullable(this.newRoute, addString),
+      nullable(this.queueTime, numeric, true) + nullable(this.appTime, numeric, true) +
+      nullable(this.oldRoute, addString, true) + nullable(this.newRoute, addString, true) +
       addString(this.id),
       addString(this.nodeId),
-      nullable(this.firstPaint, numeric),
-      nullable(this.firstContentfulPaint, numeric)
+      nullable(this.firstPaint, numeric, true) + nullable(this.firstContentfulPaint, numeric)
     ]
 
     nodeList.push(fields)

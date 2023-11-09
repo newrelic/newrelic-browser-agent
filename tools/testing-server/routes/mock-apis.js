@@ -9,10 +9,38 @@ const { paths } = require('../constants')
 /**
  * Fastify plugin to apply routes to the asset server that are used in various
  * test cases.
- * @param {module:fastify.FastifyInstance} fastify the fastify server instance
+ * @param {import('fastify').FastifyInstance} fastify the fastify server instance
  * @param {TestServer} testServer test server instance
  */
 module.exports = fp(async function (fastify, testServer) {
+  // Proxy endpoints
+  fastify.route({
+    method: ['GET', 'POST'],
+    url: '/beacon/*',
+    onRequest: async (request, reply) => {
+      // reply.hijack()
+      request.raw.url = request.raw.url.replace('/beacon/', '/')
+      testServer.bamServer.server.routing(request.raw, reply.raw)
+      await reply
+    },
+    handler: async function (request, reply) {
+      await reply
+    }
+  })
+  fastify.route({
+    method: ['GET', 'POST'],
+    url: '/assets/*',
+    onRequest: async (request, reply) => {
+      // reply.hijack()
+      request.raw.url = request.raw.url.replace('/assets/', '/build/')
+      testServer.assetServer.server.routing(request.raw, reply.raw)
+      await reply
+    },
+    handler: async function (request, reply) {
+      await reply
+    }
+  })
+
   fastify.get('/health', async function (request, reply) {
     reply.code(204).send()
   })

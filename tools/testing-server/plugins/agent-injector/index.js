@@ -10,7 +10,7 @@ const { paths } = require('../../constants')
 /**
  * Fastify plugin to apply transformations for test HTML files for the injection
  * of the agent and other supported testing and configuration scripts.
- * @param {module:fastify.FastifyInstance} fastify the fastify server instance
+ * @param {import('fastify').FastifyInstance} fastify the fastify server instance
  * @param {TestServer} testServer test server instance
  */
 module.exports = fp(async function (fastify, testServer) {

@@ -3,7 +3,7 @@ const { v4: uuidV4 } = require('uuid')
 
 /**
  * Fastify plugin to apply routes to the command server.
- * @param {module:fastify.FastifyInstance} fastify the fastify server instance
+ * @param {import('fastify').FastifyInstance} fastify the fastify server instance
  * @param {TestServer} testServer test server instance
  */
 module.exports = fp(async function (fastify, testServer) {

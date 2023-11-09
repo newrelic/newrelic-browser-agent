@@ -8,7 +8,7 @@ const { paths } = require('../constants')
  * Fastify plugin to build out the test server index HTML file. This will list
  * out all the test HTML pages and unit tests with appropriate links for running
  * those tests.
- * @param {module:fastify.FastifyInstance} fastify the fastify server instance
+ * @param {import('fastify').FastifyInstance} fastify the fastify server instance
  * @param {TestServer} testServer test server instance
  */
 module.exports = fp(async function (fastify, testServer) {

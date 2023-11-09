@@ -2,7 +2,7 @@
 
 __webpack_require__.nc = (() => {
   try {
-    if (document.currentScript && document.currentScript.nonce) {
+    if (document && document.currentScript && document.currentScript.nonce) {
       return document.currentScript.nonce
     }
   } catch (ex) {

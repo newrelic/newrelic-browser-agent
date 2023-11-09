@@ -2,6 +2,7 @@ import { getConfigurationValue } from '../../../common/config/config'
 import { handle } from '../../../common/event-emitter/handle'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
+import { single } from '../../../common/util/invoke'
 import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
@@ -53,6 +54,7 @@ export class Aggregate extends AggregateBase {
     }, this.featureName, this.ee)
 
     registerHandler('ajax', this.#handleAjaxEvent.bind(this), this.featureName, this.ee)
+    registerHandler('jserror', this.#handleJserror.bind(this), this.featureName, this.ee)
 
     this.drain()
   }
@@ -110,7 +112,7 @@ export class Aggregate extends AggregateBase {
   }
 
   /**
-   * Handles or redirect ajax events based on the interaction, if any, that it's tied to.
+   * Handles or redirect ajax event based on the interaction, if any, that it's tied to.
    * @param {Object} event see Ajax feature's storeXhr function for object definition
    */
   #handleAjaxEvent (event) {
@@ -128,6 +130,31 @@ export class Aggregate extends AggregateBase {
     function processAjax (event, parentInteraction) {
       const newNode = new AjaxNode(event)
       parentInteraction.addChild(newNode)
+    }
+  }
+
+  /**
+   * Decorate the passed-in params obj with properties relating to any associated interaction at the time of the timestamp.
+   * @param {Object} params reference to the local var instance in Jserrors feature's storeError
+   * @param {DOMHighResTimeStamp} timestamp time the jserror occurred
+   */
+  #handleJserror (params, timestamp) {
+    const associatedInteraction = this.getInteractionFor(timestamp)
+    if (!associatedInteraction) return // do not need to decorate this jserror params
+
+    // Whether the interaction is in-progress or already finished, the id will let jserror buffer it under its index, until it gets the next step instruction.
+    params.browserInteractionId = associatedInteraction.id
+    if (associatedInteraction.status === INTERACTION_STATUS.FIN) {
+      // This information cannot be relayed back via handle() that flushes buffered errs because this is being called by a jserror's handle() per se and before the err is buffered.
+      params._softNavFinished = true // instead, signal that this err can be processed right away without needing to be buffered aka wait for an in-progress ixn
+      params._softNavAttributes = associatedInteraction.customAttributes
+    } else {
+      // These callbacks may be added multiple times for an ixn, but just a single run will deal with all jserrors associated with the interaction.
+      // As such, be cautious not to use the params object since that's tied to one specific jserror and won't affect the rest of them.
+      associatedInteraction.on('finished', single(() =>
+        handle('softNavFlush', [associatedInteraction.id, true, associatedInteraction.customAttributes], undefined, FEATURE_NAMES.jserrors, this.ee)))
+      associatedInteraction.on('cancelled', single(() =>
+        handle('softNavFlush', [associatedInteraction.id, false, undefined], undefined, FEATURE_NAMES.jserrors, this.ee))) // don't take custom attrs from cancelled ixns
     }
   }
 }

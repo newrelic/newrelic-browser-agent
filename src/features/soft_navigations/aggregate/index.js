@@ -32,16 +32,15 @@ export class Aggregate extends AggregateBase {
       this.initialPageLoadInteraction.finish(loadEventTime)
       this.interactionsToHarvest.push(this.initialPageLoadInteraction)
       this.initialPageLoadInteraction = null
-      this.scheduler.startTimer(harvestTimeSeconds, 0.1) // give buffered (ajax & jserror) events some time to settle before sending the initial page load
     })
 
     this.interactionInProgress = null // aside from the "page load" interaction, there can only ever be 1 ongoing at a time
 
     this.blocked = false
-    registerHandler('block-spa', () => { // if rum response determines that customer lacks entitlements for spa endpoint, this feature shouldn't harvest
-      this.blocked = true
-      this.scheduler.stopTimer(true)
-    }, this.featureName, this.ee)
+    this.waitForFlags(['spa']).then(([spaOn]) => {
+      if (spaOn) this.scheduler.startTimer(harvestTimeSeconds, 0)
+      else this.blocked = true // if rum response determines that customer lacks entitlements for spa endpoint, this feature shouldn't harvest
+    })
 
     // const tracerEE = this.ee.get('tracer') // used to get API-driven interactions
 

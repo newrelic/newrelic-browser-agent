@@ -151,6 +151,7 @@ export function setAPI (agentIdentifier, forceDrain) {
       var contextStore = {}
       var ixn = this
       var hasCb = typeof cb === 'function'
+      handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/createTracer/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
       handle(spaPrefix + 'tracer', [now(), name, contextStore], ixn, FEATURE_NAMES.spa, instanceEE)
       return function () {
         tracerEE.emit((hasCb ? '' : 'no-') + 'fn-start', [now(), ixn, hasCb], contextStore)

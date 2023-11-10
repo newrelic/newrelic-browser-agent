@@ -25,6 +25,7 @@ import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { handle } from '../../../common/event-emitter/handle'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { RRWEB_VERSION } from '../../../common/constants/env'
+import { now } from '../../../common/timing/now'
 
 export const AVG_COMPRESSION = 0.12
 
@@ -288,10 +289,13 @@ export class Aggregate extends AggregateBase {
       this.hasMeta = !!this.events.find(x => x.type === RRWEB_EVENT_TYPES.Meta)
     }
 
+    const agentOffset = getRuntime(this.agentIdentifier).offset
+    const relativeNow = now()
+
     const firstEventTimestamp = this.events[0]?.timestamp // from rrweb node
     const lastEventTimestamp = this.events[this.events.length - 1]?.timestamp // from rrweb node
     const firstTimestamp = firstEventTimestamp || this.cycleTimestamp
-    const lastTimestamp = lastEventTimestamp || getRuntime(this.agentIdentifier).offset + globalScope.performance.now()
+    const lastTimestamp = lastEventTimestamp || agentOffset + relativeNow
     return {
       qs: {
         browser_monitoring_key: info.licenseKey,
@@ -301,12 +305,14 @@ export class Aggregate extends AggregateBase {
         attributes: encodeObj({
           ...(this.shouldCompress && { content_encoding: 'gzip' }),
           'replay.firstTimestamp': firstTimestamp,
+          'replay.firstTimestampOffset': firstTimestamp - agentOffset,
           'replay.lastTimestamp': lastTimestamp,
           'replay.durationMs': lastTimestamp - firstTimestamp,
           'replay.nodes': this.events.length,
           'session.durationMs': agentRuntime.session.getDuration(),
           agentVersion: agentRuntime.version,
           session: agentRuntime.session.state.value,
+          rst: relativeNow,
           hasMeta: this.hasMeta,
           hasSnapshot: this.hasSnapshot,
           hasError: this.hasError,

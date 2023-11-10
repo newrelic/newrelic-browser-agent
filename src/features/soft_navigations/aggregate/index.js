@@ -122,15 +122,15 @@ export class Aggregate extends AggregateBase {
     if (!associatedInteraction) { // no interaction was happening when this ajax started, so give it back to Ajax feature for processing
       handle('returnAjax', [event], undefined, FEATURE_NAMES.ajax, this.ee)
     } else {
-      if (associatedInteraction.status === INTERACTION_STATUS.FIN) processAjax(event, associatedInteraction) // tack ajax onto the ixn object awaiting harvest
+      if (associatedInteraction.status === INTERACTION_STATUS.FIN) processAjax(this.agentIdentifier, event, associatedInteraction) // tack ajax onto the ixn object awaiting harvest
       else { // same thing as above, just at a later time -- if the interaction in progress is cancelled, just send the event back to ajax feat unmodified
-        associatedInteraction.on('finished', () => processAjax(event, associatedInteraction))
+        associatedInteraction.on('finished', () => processAjax(this.agentIdentifier, event, associatedInteraction))
         associatedInteraction.on('cancelled', () => handle('returnAjax', [event], undefined, FEATURE_NAMES.ajax, this.ee))
       }
     }
 
-    function processAjax (event, parentInteraction) {
-      const newNode = new AjaxNode(event)
+    function processAjax (agentId, event, parentInteraction) {
+      const newNode = new AjaxNode(agentId, event)
       parentInteraction.addChild(newNode)
     }
   }

@@ -58,7 +58,7 @@ export class Interaction extends BelNode {
   on (event, cb) {
     if (!this.eventSubscription.has(event)) throw new Error('Cannot subscribe to non pre-defined events.')
     if (typeof cb !== 'function') throw new Error('Must supply function as callback.')
-    this.subscribers.get(event).push(cb)
+    this.eventSubscription.get(event).push(cb)
   }
 
   finish () {

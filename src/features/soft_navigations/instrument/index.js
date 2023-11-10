@@ -41,7 +41,7 @@ export class Instrument extends InstrumentBase {
     domObserver.observe(document.documentElement || document.body, { attributes: true, childList: true, subtree: true, characterData: true })
 
     const processUserInteraction = debounce((event) => {
-      handle('newInteraction', [event.timestamp, event.type], undefined, this.featureName, this.ee)
+      handle('newInteraction', [event.timeStamp, event.type], undefined, this.featureName, this.ee)
       domObserver.takeRecords() // empty the un-processed DOM changes so they don't falsely mark the new user interaction as having caused changes prior to it
     }, UI_WAIT_INTERVAL, { leading: true })
 

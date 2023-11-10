@@ -47,11 +47,11 @@ export class Aggregate extends AggregateBase {
     registerHandler('newInteraction', (timestamp, trigger) => this.startAnInteraction(trigger, timestamp), this.featureName, this.ee)
     registerHandler('newURL', (timestamp, url) => {
       this.interactionInProgress?.updateHistory(timestamp, url)
-      if (this.interactionInProgress?.seenHistoryAndDomChange) this.interactionInProgressFinished()
+      if (this.interactionInProgress?.seenHistoryAndDomChange()) this.interactionInProgressFinished()
     }, this.featureName, this.ee)
     registerHandler('newDom', timestamp => {
       this.interactionInProgress?.updateDom(timestamp)
-      if (this.interactionInProgress?.seenHistoryAndDomChange) this.interactionInProgressFinished()
+      if (this.interactionInProgress?.seenHistoryAndDomChange()) this.interactionInProgressFinished()
     }, this.featureName, this.ee)
 
     registerHandler('ajax', this.#handleAjaxEvent.bind(this), this.featureName, this.ee)

@@ -166,7 +166,7 @@ export class Aggregate extends AggregateBase {
       }, this.featureName, this.ee)
 
       registerHandler('pauseReplay', () => {
-        this.actuallyStop(this.mode !== MODE.ERROR)
+        this.forceStop(this.mode !== MODE.ERROR)
       }, this.featureName, this.ee)
 
       // Wait for an error to be reported.  This currently is wrapped around the "Error" feature.  This is a feature-feature dependency.
@@ -457,7 +457,12 @@ export class Aggregate extends AggregateBase {
     return this.estimateCompression(this.payloadBytesEstimation + newBytes) + 1000
   }
 
-  actuallyStop (forceHarvest) {
+  /**
+   * Forces the agent into OFF mode so that changing tabs or navigating
+   * does not restart the recording. This is used when the customer calls
+   * the stopRecording API.
+   */
+  forceStop (forceHarvest) {
     if (forceHarvest) this.scheduler.runHarvest()
     this.mode = MODE.OFF
     this.stopRecording()

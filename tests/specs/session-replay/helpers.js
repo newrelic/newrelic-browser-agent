@@ -28,9 +28,11 @@ export function testExpectedReplay ({ data, session, hasMeta, hasSnapshot, hasEr
   expect(decodedObj).toMatchObject({
     ...(contentEncoding && { content_encoding: 'gzip' }),
     'replay.firstTimestamp': expect.any(Number),
+    'replay.firstTimestampOffset': expect.any(Number),
     'replay.lastTimestamp': expect.any(Number),
     'replay.durationMs': expect.any(Number),
     session: session || expect.any(String),
+    rst: expect.any(Number),
     hasMeta: hasMeta || expect.any(Boolean),
     hasSnapshot: hasSnapshot || expect.any(Boolean),
     hasError: hasError || expect.any(Boolean),

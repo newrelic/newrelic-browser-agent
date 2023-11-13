@@ -21,7 +21,7 @@ export function setTopLevelCallers () {
   const funcs = [
     'setErrorHandler', 'finished', 'addToTrace', 'addRelease',
     'addPageAction', 'setCurrentRouteName', 'setPageViewName', 'setCustomAttribute',
-    'interaction', 'noticeError', 'setUserId', 'setApplicationVersion', 'start'
+    'interaction', 'noticeError', 'setUserId', 'setApplicationVersion', 'start', 'recordReplay', 'pauseReplay'
   ]
   funcs.forEach(f => {
     nr[f] = (...args) => caller(f, ...args)
@@ -138,6 +138,16 @@ export function setAPI (agentIdentifier, forceDrain) {
     } catch (err) {
       warn('An unexpected issue occurred', err)
     }
+  }
+
+  apiInterface.recordReplay = function () {
+    handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/recordReplay/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
+    handle('recordReplay', [], undefined, FEATURE_NAMES.sessionReplay, instanceEE)
+  }
+
+  apiInterface.pauseReplay = function () {
+    handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/pauseReplay/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
+    handle('pauseReplay', [], undefined, FEATURE_NAMES.sessionReplay, instanceEE)
   }
 
   apiInterface.interaction = function () {

@@ -22,7 +22,8 @@ module.exports = fp(async function (fastify, testServer) {
     }
 
     if (request.query.nonce) {
-      reply.header('content-security-policy', `script-src 'nonce-${request.query.nonce}'`)
+      // Must have 'unsafe-eval' in case build was ran with coverage enabled
+      reply.header('content-security-policy', `script-src 'nonce-${request.query.nonce}' 'unsafe-eval'`)
     }
   })
   fastify.addHook('onSend', (request, reply, payload, done) => {

@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.247.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.246.1...v1.247.0) (2023-11-14)
+
+
+### Features
+
+* Add basic support for deferring the browser agent loader script ([#800](https://github.com/newrelic/newrelic-browser-agent/issues/800)) ([92d864c](https://github.com/newrelic/newrelic-browser-agent/commit/92d864cb12a3076fd9b623fcd411d2dc9190110c))
+* Add relative timestamps to Session Replay payloads ([#810](https://github.com/newrelic/newrelic-browser-agent/issues/810)) ([e4d1c70](https://github.com/newrelic/newrelic-browser-agent/commit/e4d1c701228e011d7c6f9d84cdc107044c69ce79))
+* Add session durationMs to Session Replay payloads ([#792](https://github.com/newrelic/newrelic-browser-agent/issues/792)) ([3dfc4d4](https://github.com/newrelic/newrelic-browser-agent/commit/3dfc4d43fa978eeec47ebf432f8741562d0dd864))
+* Enable SRI and nonce attributes for async chunks ([#805](https://github.com/newrelic/newrelic-browser-agent/issues/805)) ([fd9c3f3](https://github.com/newrelic/newrelic-browser-agent/commit/fd9c3f388f17353796ac2ebf18814353ca819dcf))
+* Expose library versions used to capture session replay data ([#809](https://github.com/newrelic/newrelic-browser-agent/issues/809)) ([bc275ee](https://github.com/newrelic/newrelic-browser-agent/commit/bc275ee20242a5208358a0a77ac75e2b7cbd11c4))
+* Session Replay API ([#803](https://github.com/newrelic/newrelic-browser-agent/issues/803)) ([12eb453](https://github.com/newrelic/newrelic-browser-agent/commit/12eb4530cfb5eb1e0a94d858485be0df40582c21))
+
 ## [1.246.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.246.0...v1.246.1) (2023-10-31)
 
 

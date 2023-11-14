@@ -292,6 +292,7 @@ export class Aggregate extends AggregateBase {
   getHarvestContents () {
     const agentRuntime = getRuntime(this.agentIdentifier)
     const info = getInfo(this.agentIdentifier)
+    const endUserId = info.jsAttributes?.['enduser.id']
 
     if (this.backloggedEvents.length) this.events = [...this.backloggedEvents, ...this.events]
 
@@ -334,6 +335,7 @@ export class Aggregate extends AggregateBase {
           'replay.durationMs': lastTimestamp - firstTimestamp,
           'replay.nodes': this.events.length,
           'session.durationMs': agentRuntime.session.getDuration(),
+          ...(endUserId && { 'enduser.id': endUserId }),
           agentVersion: agentRuntime.version,
           session: agentRuntime.session.state.value,
           rst: relativeNow,

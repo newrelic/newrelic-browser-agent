@@ -2,11 +2,10 @@
 
 __webpack_require__.nc = (() => {
   try {
-    if (document && document.currentScript && document.currentScript.nonce) {
-      return document.currentScript.nonce
-    }
+    return document?.currentScript?.nonce
   } catch (ex) {
     // Swallow error and proceed like nonce is not defined
+    // This will happen when the agent is loaded in a worker scope
   }
 
   return ''

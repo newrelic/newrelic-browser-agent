@@ -22,6 +22,23 @@ describe('Content Security Policy', () => {
     expect(foundNonce).toEqual([nonce, nonce, nonce, nonce])
   })
 
+  it.withBrowsersMatching(notIE)('should send a nonce supportability metric', async () => {
+    const nonce = faker.datatype.uuid()
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', { nonce }))
+      .then(() => browser.waitForAgentLoad())
+
+    const [unloadSupportMetricsResults] = await Promise.all([
+      browser.testHandle.expectSupportMetrics(),
+      await browser.url(await browser.testHandle.assetURL('/')) // Setup expects before navigating
+    ])
+
+    const supportabilityMetrics = unloadSupportMetricsResults.request.body.sm || []
+    expect(supportabilityMetrics).toEqual(expect.arrayContaining([{
+      params: { name: 'Generic/Runtime/Nonce/Detected' },
+      stats: { c: expect.toBeWithin(1, Infinity) }
+    }]))
+  })
+
   it('should load async chunk with subresource integrity', async () => {
     await Promise.all([
       browser.testHandle.expectRum(),

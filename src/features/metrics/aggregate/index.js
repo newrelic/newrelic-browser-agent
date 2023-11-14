@@ -58,6 +58,11 @@ export class Aggregate extends AggregateBase {
     if (loaderType) this.storeSupportabilityMetrics(`Generic/LoaderType/${loaderType}/Detected`)
     if (distMethod) this.storeSupportabilityMetrics(`Generic/DistMethod/${distMethod}/Detected`)
 
+    const nonce = document?.currentScript?.nonce
+    if (nonce && nonce !== '') {
+      this.storeSupportabilityMetrics('Generic/Runtime/Nonce/Detected')
+    }
+
     // frameworks on page
     if (isBrowserScope) {
       this.storeSupportabilityMetrics('Generic/Runtime/Browser/Detected')

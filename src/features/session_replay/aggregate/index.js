@@ -67,6 +67,8 @@ let recorder, gzipper, u8
 export const MAX_PAYLOAD_SIZE = 1000000
 /** Unloading caps around 64kb */
 export const IDEAL_PAYLOAD_SIZE = 64000
+/** Reserved room for query param attrs */
+const QUERY_PARAM_PADDING = 5000
 /** Interval between forcing new full snapshots -- 15 seconds in error mode (x2), 5 minutes in full mode */
 const CHECKOUT_MS = { [MODE.ERROR]: 15000, [MODE.FULL]: 300000, [MODE.OFF]: 0 }
 
@@ -292,6 +294,7 @@ export class Aggregate extends AggregateBase {
   getHarvestContents () {
     const agentRuntime = getRuntime(this.agentIdentifier)
     const info = getInfo(this.agentIdentifier)
+    const endUserId = info.jsAttributes?.['enduser.id']
 
     if (this.backloggedEvents.length) this.events = [...this.backloggedEvents, ...this.events]
 
@@ -327,6 +330,8 @@ export class Aggregate extends AggregateBase {
         app_id: info.applicationID,
         protocol_version: '0',
         attributes: encodeObj({
+          // this section of attributes must be controllable and stay below the query param padding limit -- see QUERY_PARAM_PADDING
+          // if not, data could be lost to truncation at time of sending, potentially breaking parsing / API behavior in NR1
           ...(this.shouldCompress && { content_encoding: 'gzip' }),
           'replay.firstTimestamp': firstTimestamp,
           'replay.firstTimestampOffset': firstTimestamp - agentOffset,
@@ -342,8 +347,11 @@ export class Aggregate extends AggregateBase {
           hasError: this.hasError,
           isFirstChunk: agentRuntime.session.state.sessionReplaySentFirstChunk === false,
           decompressedBytes: this.payloadBytesEstimation,
-          'rrweb.version': RRWEB_VERSION
-        }, MAX_PAYLOAD_SIZE - this.payloadBytesEstimation).substring(1) // remove the leading '&'
+          'rrweb.version': RRWEB_VERSION,
+          // customer-defined data should go last so that if it exceeds the query param padding limit it will be truncated instead of important attrs
+          ...(endUserId && { 'enduser.id': endUserId })
+          // The Query Param is being arbitrarily limited in length here.  It is also applied when estimating the size of the payload in getPayloadSize()
+        }, QUERY_PARAM_PADDING).substring(1) // remove the leading '&'
       },
       body: this.events
     }
@@ -459,8 +467,8 @@ export class Aggregate extends AggregateBase {
 
   /** Estimate the payload size */
   getPayloadSize (newBytes = 0) {
-    // the 1KB gives us some padding for the other metadata
-    return this.estimateCompression(this.payloadBytesEstimation + newBytes) + 1000
+    // the query param padding constant gives us some padding for the other metadata to be safely injected
+    return this.estimateCompression(this.payloadBytesEstimation + newBytes) + QUERY_PARAM_PADDING
   }
 
   /**

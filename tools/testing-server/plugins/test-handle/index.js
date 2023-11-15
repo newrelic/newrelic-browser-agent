@@ -3,7 +3,7 @@ const { testIdFromRequest } = require('../../utils/fastify-request')
 
 /**
  * Fastify plugin to decorate the fastify instance with bam test handle methods.
- * @param {module:fastify.FastifyInstance} fastify the fastify server instance
+ * @param {import('fastify').FastifyInstance} fastify the fastify server instance
  * @param {TestServer} testServer test server instance
  */
 module.exports = fp(async function (fastify, testServer) {
@@ -19,6 +19,11 @@ module.exports = fp(async function (fastify, testServer) {
     }
     if (!!testId && request.url.startsWith('/tests/assets') && request.url.includes('.html')) {
       reply.header('set-cookie', `test-id=${testId};path=/build/`)
+    }
+
+    if (request.query.nonce) {
+      // Must have 'unsafe-eval' in case build was ran with coverage enabled
+      reply.header('content-security-policy', `script-src 'nonce-${request.query.nonce}' 'unsafe-eval'`)
     }
   })
   fastify.addHook('onSend', (request, reply, payload, done) => {

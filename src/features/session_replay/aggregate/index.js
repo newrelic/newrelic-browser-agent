@@ -25,6 +25,7 @@ import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { handle } from '../../../common/event-emitter/handle'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { RRWEB_VERSION } from '../../../common/constants/env'
+import { now } from '../../../common/timing/now'
 
 export const AVG_COMPRESSION = 0.12
 
@@ -113,6 +114,9 @@ export class Aggregate extends AggregateBase {
     /** Hold on to the last meta node, so that it can be re-inserted if the meta and snapshot nodes are broken up due to harvesting */
     this.lastMeta = undefined
 
+    /** set by BCS response */
+    this.entitled = false
+
     const shouldSetup = (
       getConfigurationValue(agentIdentifier, 'privacy.cookies_enabled') === true &&
       getConfigurationValue(agentIdentifier, 'session_trace.enabled') === true
@@ -152,6 +156,20 @@ export class Aggregate extends AggregateBase {
         raw: true
       }, this)
 
+      registerHandler('recordReplay', () => {
+        // if it has aborted or BCS returned bad entitlements, do not allow
+        if (this.blocked || !this.entitled) return
+        // if it isnt already (fully) initialized... initialize it
+        if (!recorder) this.initializeRecording(false, true, true)
+        // its been initialized and imported the recorder but its not recording (mode === off || error)
+        else if (this.mode !== MODE.FULL) this.switchToFull()
+        // if it gets all the way to here, that means a full session is already recording... do nothing
+      }, this.featureName, this.ee)
+
+      registerHandler('pauseReplay', () => {
+        this.forceStop(this.mode !== MODE.ERROR)
+      }, this.featureName, this.ee)
+
       // Wait for an error to be reported.  This currently is wrapped around the "Error" feature.  This is a feature-feature dependency.
       // This was to ensure that all errors, including those on the page before load and those handled with "noticeError" are accounted for. Needs evalulation
       registerHandler('errorAgg', (e) => {
@@ -159,26 +177,32 @@ export class Aggregate extends AggregateBase {
         this.errorNoticed = true
         // run once
         if (this.mode === MODE.ERROR && globalScope?.document.visibilityState === 'visible') {
-          this.mode = MODE.FULL
-          // if the error was noticed AFTER the recorder was already imported....
-          if (recorder && this.initialized) {
-            this.stopRecording()
-            this.startRecording()
-
-            this.scheduler.startTimer(this.harvestTimeSeconds)
-
-            this.syncWithSessionManager({ sessionReplayMode: this.mode })
-          }
+          this.switchToFull()
         }
       }, this.featureName, this.ee)
 
-      this.waitForFlags(['sr']).then(([flagOn]) => this.initializeRecording(
-        flagOn,
-        (Math.random() * 100) < getConfigurationValue(this.agentIdentifier, 'session_replay.error_sampling_rate'),
-        (Math.random() * 100) < getConfigurationValue(this.agentIdentifier, 'session_replay.sampling_rate')
-      )).then(() => sharedChannel.onReplayReady(this.mode)) // notify watchers that replay started with the mode
+      this.waitForFlags(['sr']).then(([flagOn]) => {
+        this.entitled = flagOn
+        this.initializeRecording(
+          (Math.random() * 100) < getConfigurationValue(this.agentIdentifier, 'session_replay.error_sampling_rate'),
+          (Math.random() * 100) < getConfigurationValue(this.agentIdentifier, 'session_replay.sampling_rate')
+        )
+      }).then(() => sharedChannel.onReplayReady(this.mode)) // notify watchers that replay started with the mode
 
       this.drain()
+    }
+  }
+
+  switchToFull () {
+    this.mode = MODE.FULL
+    // if the error was noticed AFTER the recorder was already imported....
+    if (recorder && this.initialized) {
+      this.stopRecording()
+      this.startRecording()
+
+      this.scheduler.startTimer(this.harvestTimeSeconds)
+
+      this.syncWithSessionManager({ sessionReplayMode: this.mode })
     }
   }
 
@@ -187,11 +211,12 @@ export class Aggregate extends AggregateBase {
    * @param {boolean} entitlements - the true/false state of the "sr" flag from RUM response
    * @param {boolean} errorSample - the true/false state of the error sampling decision
    * @param {boolean} fullSample - the true/false state of the full sampling decision
+   * @param {boolean} ignoreSession - whether to force the method to ignore the session state and use just the sample flags
    * @returns {void}
    */
-  async initializeRecording (entitlements, errorSample, fullSample) {
+  async initializeRecording (errorSample, fullSample, ignoreSession) {
     this.initialized = true
-    if (!entitlements) return
+    if (!this.entitled || this.recording) return
 
     const { session } = getRuntime(this.agentIdentifier)
     // if theres an existing session replay in progress, there's no need to sample, just check the entitlements response
@@ -200,7 +225,7 @@ export class Aggregate extends AggregateBase {
     // we are not actively recording SR... DO NOT import or run the recording library
     // session replay samples can only be decided on the first load of a session
     // session replays can continue if already in progress
-    if (!session.isNew) { // inherit the mode of the existing session
+    if (!session.isNew && !ignoreSession) { // inherit the mode of the existing session
       this.mode = session.state.sessionReplayMode
     } else {
       // The session is new... determine the mode the new session should start in
@@ -288,10 +313,13 @@ export class Aggregate extends AggregateBase {
       this.hasMeta = !!this.events.find(x => x.type === RRWEB_EVENT_TYPES.Meta)
     }
 
+    const agentOffset = getRuntime(this.agentIdentifier).offset
+    const relativeNow = now()
+
     const firstEventTimestamp = this.events[0]?.timestamp // from rrweb node
     const lastEventTimestamp = this.events[this.events.length - 1]?.timestamp // from rrweb node
     const firstTimestamp = firstEventTimestamp || this.cycleTimestamp
-    const lastTimestamp = lastEventTimestamp || getRuntime(this.agentIdentifier).offset + globalScope.performance.now()
+    const lastTimestamp = lastEventTimestamp || agentOffset + relativeNow
     return {
       qs: {
         browser_monitoring_key: info.licenseKey,
@@ -301,17 +329,20 @@ export class Aggregate extends AggregateBase {
         attributes: encodeObj({
           ...(this.shouldCompress && { content_encoding: 'gzip' }),
           'replay.firstTimestamp': firstTimestamp,
+          'replay.firstTimestampOffset': firstTimestamp - agentOffset,
           'replay.lastTimestamp': lastTimestamp,
           'replay.durationMs': lastTimestamp - firstTimestamp,
           'replay.nodes': this.events.length,
+          'session.durationMs': agentRuntime.session.getDuration(),
           agentVersion: agentRuntime.version,
           session: agentRuntime.session.state.value,
+          rst: relativeNow,
           hasMeta: this.hasMeta,
           hasSnapshot: this.hasSnapshot,
           hasError: this.hasError,
           isFirstChunk: agentRuntime.session.state.sessionReplaySentFirstChunk === false,
           decompressedBytes: this.payloadBytesEstimation,
-          'nr.rrweb.version': RRWEB_VERSION
+          'rrweb.version': RRWEB_VERSION
         }, MAX_PAYLOAD_SIZE - this.payloadBytesEstimation).substring(1) // remove the leading '&'
       },
       body: this.events
@@ -430,6 +461,18 @@ export class Aggregate extends AggregateBase {
   getPayloadSize (newBytes = 0) {
     // the 1KB gives us some padding for the other metadata
     return this.estimateCompression(this.payloadBytesEstimation + newBytes) + 1000
+  }
+
+  /**
+   * Forces the agent into OFF mode so that changing tabs or navigating
+   * does not restart the recording. This is used when the customer calls
+   * the stopRecording API.
+   */
+  forceStop (forceHarvest) {
+    if (forceHarvest) this.scheduler.runHarvest()
+    this.mode = MODE.OFF
+    this.stopRecording()
+    this.syncWithSessionManager({ sessionReplayMode: this.mode })
   }
 
   /** Abort the feature, once aborted it will not resume */

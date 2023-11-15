@@ -10,7 +10,7 @@ describe('setTopLevelCallers', () => {
     setTopLevelCallers()
 
     const nreum = gosCDN()
-    expect(Object.keys(nreum).length).toEqual(13)
+    expect(Object.keys(nreum).length).toEqual(15)
     expect(typeof nreum.setErrorHandler).toEqual('function')
     expect(typeof nreum.finished).toEqual('function')
     expect(typeof nreum.addToTrace).toEqual('function')
@@ -24,6 +24,8 @@ describe('setTopLevelCallers', () => {
     expect(typeof nreum.setUserId).toEqual('function')
     expect(typeof nreum.setApplicationVersion).toEqual('function')
     expect(typeof nreum.start).toEqual('function')
+    expect(typeof nreum.recordReplay).toEqual('function')
+    expect(typeof nreum.pauseReplay).toEqual('function')
   })
 
   test('should forward calls to initialized and exposed agents', () => {

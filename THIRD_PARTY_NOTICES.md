@@ -99,6 +99,7 @@ code, the source code can be found at [https://github.com/newrelic/newrelic-brow
 * [webpack-bundle-analyzer](#webpack-bundle-analyzer)
 * [webpack-cli](#webpack-cli)
 * [webpack-stream](#webpack-stream)
+* [webpack-subresource-integrity](#webpack-subresource-integrity)
 * [webpack](#webpack)
 * [yargs](#yargs)
 
@@ -3135,7 +3136,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ### typescript
 
-This product includes source derived from [typescript](https://github.com/Microsoft/TypeScript) ([v5.0.4](https://github.com/Microsoft/TypeScript/tree/v5.0.4)), distributed under the [Apache-2.0 License](https://github.com/Microsoft/TypeScript/blob/v5.0.4/LICENSE.txt):
+This product includes source derived from [typescript](https://github.com/Microsoft/TypeScript) ([v5.2.2](https://github.com/Microsoft/TypeScript/tree/v5.2.2)), distributed under the [Apache-2.0 License](https://github.com/Microsoft/TypeScript/blob/v5.2.2/LICENSE.txt):
 
 ```
 Apache License
@@ -3347,6 +3348,36 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+```
+
+### webpack-subresource-integrity
+
+This product includes source derived from [webpack-subresource-integrity](https://github.com/waysact/webpack-subresource-integrity) ([v5.1.0](https://github.com/waysact/webpack-subresource-integrity/tree/v5.1.0)), distributed under the [MIT License](https://github.com/waysact/webpack-subresource-integrity/blob/v5.1.0/LICENSE):
+
+```
+(The MIT License)
+
+Copyright (c) 2015-present Waysact Pty Ltd
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+'Software'), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 ```
 
 ### webpack

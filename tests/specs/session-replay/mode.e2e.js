@@ -58,6 +58,81 @@ describe.withBrowsersMatching(notIE)('Session Replay Sample Mode Validation', ()
     }))
   })
 
+  it('Full 0 Error 0 === OFF, then API called === FULL', async () => {
+    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { sampling_rate: 0, error_sampling_rate: 0 } })))
+      .then(() => browser.waitForFeatureAggregate('session_replay'))
+
+    await expect(getSR()).resolves.toEqual(expect.objectContaining({
+      recording: false,
+      initialized: true,
+      events: [],
+      mode: 0
+    }))
+
+    await Promise.all([
+      browser.execute(function () {
+        newrelic.recordReplay()
+      }),
+      browser.pause(1000)
+    ])
+
+    await expect(getSR()).resolves.toEqual(expect.objectContaining({
+      recording: true,
+      initialized: true,
+      events: expect.any(Array),
+      mode: 1
+    }))
+  })
+
+  it('Full 0 Error 1 === ERROR, then API called === FULL', async () => {
+    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { sampling_rate: 0, error_sampling_rate: 100 } })))
+      .then(() => browser.waitForFeatureAggregate('session_replay')).then(() => browser.pause(1000))
+
+    await expect(getSR()).resolves.toEqual(expect.objectContaining({
+      recording: true,
+      initialized: true,
+      mode: 2
+    }))
+
+    await Promise.all([
+      browser.execute(function () {
+        newrelic.recordReplay()
+      })
+    ])
+
+    await browser.pause(1000)
+
+    await expect(getSR()).resolves.toEqual(expect.objectContaining({
+      recording: true,
+      initialized: true,
+      mode: 1
+    }))
+  })
+
+  it('Record API called before page load does not start a replay (no entitlements yet)', async () => {
+    await browser.url(await browser.testHandle.assetURL('rrweb-api-record-before-load.html', config({ session_replay: { sampling_rate: 0, error_sampling_rate: 0 } })))
+      .then(() => browser.waitForFeatureAggregate('session_replay'))
+
+    await expect(getSR()).resolves.toEqual(expect.objectContaining({
+      recording: false,
+      initialized: true,
+      events: expect.any(Array),
+      mode: 0
+    }))
+  })
+
+  it('Pause API called before page load has no effect', async () => {
+    await browser.url(await browser.testHandle.assetURL('rrweb-api-pause-before-load.html', config({ session_replay: { sampling_rate: 100, error_sampling_rate: 0 } })))
+      .then(() => browser.waitForSessionReplayRecording())
+
+    await expect(getSR()).resolves.toEqual(expect.objectContaining({
+      recording: true,
+      initialized: true,
+      events: expect.any(Array),
+      mode: 1
+    }))
+  })
+
   it('ERROR (seen after init) => FULL', async () => {
     await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { sampling_rate: 0, error_sampling_rate: 100 } })))
       .then(() => browser.waitForSessionReplayRecording())
@@ -69,9 +144,11 @@ describe.withBrowsersMatching(notIE)('Session Replay Sample Mode Validation', ()
       mode: 2
     }))
 
-    await browser.execute(function () {
-      newrelic.noticeError(new Error('test'))
-    })
+    await Promise.all([
+      browser.execute(function () {
+        newrelic.noticeError(new Error('test'))
+      }), browser.pause(1000)
+    ])
 
     await expect(getSR()).resolves.toEqual(expect.objectContaining({
       recording: true,
@@ -107,11 +184,54 @@ describe.withBrowsersMatching(notIE)('Session Replay Sample Mode Validation', ()
       mode: 1
     }))
 
-    await browser.execute(function () {
-      Object.values(NREUM.initializedAgents)[0].runtime.session.reset()
-    })
+    await Promise.all([
+      browser.execute(function () {
+        Object.values(NREUM.initializedAgents)[0].runtime.session.reset()
+      }), browser.pause(1000)
+    ])
 
     await expect(getSR()).resolves.toEqual(expect.objectContaining({
+      recording: false,
+      initialized: true,
+      events: expect.any(Array),
+      mode: 0
+    }))
+  })
+
+  it('blocked => OFF => API does not restart', async () => {
+    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { sampling_rate: 100, error_sampling_rate: 0 } })))
+      .then(() => browser.waitForSessionReplayRecording())
+
+    await expect(getSR()).resolves.toEqual(expect.objectContaining({
+      blocked: false,
+      recording: true,
+      initialized: true,
+      events: expect.any(Array),
+      mode: 1
+    }))
+
+    await Promise.all([
+      browser.execute(function () {
+        Object.values(NREUM.initializedAgents)[0].runtime.session.reset()
+      }), browser.pause(1000)
+    ])
+
+    await expect(getSR()).resolves.toEqual(expect.objectContaining({
+      blocked: true,
+      recording: false,
+      initialized: true,
+      events: expect.any(Array),
+      mode: 0
+    }))
+
+    await Promise.all([
+      browser.execute(function () {
+        newrelic.noticeError(new Error('test'))
+      }), browser.pause(1000)
+    ])
+
+    await expect(getSR()).resolves.toEqual(expect.objectContaining({
+      blocked: true,
       recording: false,
       initialized: true,
       events: expect.any(Array),

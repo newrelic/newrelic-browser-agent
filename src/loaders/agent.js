@@ -1,5 +1,6 @@
 // important side effects
 import './configure/public-path'
+import './configure/nonce'
 // loader files
 import { AgentBase } from './agent-base'
 import { getEnabledFeatures } from './features/enabled-features'

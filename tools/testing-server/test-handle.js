@@ -103,7 +103,7 @@ module.exports = class TestHandle {
   /**
    * Processes an incoming request for scheduled responses and pending expects
    * @param {'assetServer'|'bamServer'} serverId Id of the server the request was received on
-   * @param {module:fastify.FastifyInstance} fastify fastify server the request was received on
+   * @param {import('fastify').FastifyInstance} fastify fastify server the request was received on
    * @param {module:fastify.FastifyRequest} request the incoming request
    */
   processRequest (serverId, fastify, request) {

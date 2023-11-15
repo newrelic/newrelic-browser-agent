@@ -63,6 +63,25 @@ describe.withBrowsersMatching(notIE)('Trace error mode', () => {
     await expect(browser.testHandle.expectResources(5011)).resolves.toBeTruthy()
   })
 
+  it('starts in error mode but shifts to full mode if api is called', async () => {
+    let getFirstSTPayload = browser.testHandle.expectResources(5020, true)
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', config({ session_replay: { sampling_rate: 0, error_sampling_rate: 100 }, session_trace: { harvestTimeSeconds: 3 } })))
+    await browser.waitForAgentLoad()
+    // shouldnt get stn data yet
+    await expect(getFirstSTPayload).resolves.toBeFalsy()
+    await expect(getTraceMode()).resolves.toEqual([MODE.ERROR, false])
+
+    const [actualFirstSTPayload] = await Promise.all([
+      browser.testHandle.expectResources(5021),
+      browser.execute(function () {
+        newrelic.recordReplay()
+      })
+    ])
+
+    expect(actualFirstSTPayload).toEqual(expect.any(Object))
+    await expect(getTraceMode()).resolves.toEqual([MODE.FULL, false])
+  })
+
   it.withBrowsersMatching(onlyChrome)('does not capture more than the last 30 seconds when error happens', async () => {
     await getReplayOnErrorUrl.then(builtUrl => browser.url(builtUrl)).then(() => browser.waitForAgentLoad()).then(async () => {
       await browser.pause(30000)

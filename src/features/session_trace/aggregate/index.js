@@ -75,26 +75,43 @@ export class Aggregate extends AggregateBase {
       }
     }
 
+    let seenAnError = false
+    let mostRecentModeKnown
+
+    this.ee.on(SESSION_EVENTS.UPDATE, (eventType, sessionState) => {
+      // this will only have an effect if ST is NOT already in full mode
+      if (sessionState.sessionReplayMode === MODE.FULL) switchToFull()
+    })
+
+    /**
+     * The goal of switchToFull is to take external input to trigger a change from off or error to full.
+     * It will have no effect if already running in full mode.
+     * "external" input in this case means errors thrown on the page or session replay itself being triggered to run in full mode by the API, which updates the session entity.
+     */
+    const switchToFull = () => {
+      if (mostRecentModeKnown !== MODE.FULL) {
+        const prevMode = mostRecentModeKnown
+        mostRecentModeKnown = MODE.FULL
+        sessionEntity.write({ sessionTraceMode: mostRecentModeKnown })
+        this.isStandalone = false
+
+        if (prevMode === MODE.ERROR && this.#scheduler) {
+          this.trimSTNs(ERROR_MODE_SECONDS_WINDOW) // up until now, Trace would've been just buffering nodes up to max, which needs to be trimmed to last X seconds
+          this.#scheduler.runHarvest({ needResponse: true })
+        } else {
+          controlTraceOp(MODE.FULL)
+        }
+      }
+    }
+
     if (!sessionEntity) {
       // Since session manager isn't around, do the old Trace behavior of waiting for RUM response to decide feature activation.
       this.isStandalone = true
       registerHandler('rumresp-stn', (on) => controlTraceOp(on), this.featureName, this.ee)
     } else {
-      let seenAnError = false
-      let mostRecentModeKnown
       registerHandler('errorAgg', () => {
-        // Switch to full capture mode on next harvest on first exception thrown only. Only done once so that sessionTraceMode isn't constantly overwritten after decision block.
-        if (!seenAnError) {
-          seenAnError = true
-          /* If this cb executes before Trace has started, then no further action needed. But if...
-           - startTracing already ran under ERROR mode, then it will NOT have kicked off the harvest-scheduler so that needs to be done & switch mode.
-           - startTracing never ran because mode is OFF or Replay aborted or Traced turned off elsewhere OR trace already in FULL, then this should do nothing. */
-          if (sessionEntity.state.sessionTraceMode === MODE.ERROR && this.#scheduler) {
-            sessionEntity.write({ sessionTraceMode: (mostRecentModeKnown = MODE.FULL) })
-            this.trimSTNs(ERROR_MODE_SECONDS_WINDOW) // up until now, Trace would've been just buffering nodes up to max, which needs to be trimmed to last X seconds
-            this.#scheduler.runHarvest({ needResponse: true })
-          }
-        }
+        seenAnError = true
+        switchToFull()
       }, this.featureName, this.ee)
 
       const stopTracePerm = () => {

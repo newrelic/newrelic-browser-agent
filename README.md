@@ -39,7 +39,7 @@ Before instrumenting your app using the NPM package, a Browser App should be con
 
 ## Instantiating the agent
 
-For best results, import and instantiate the `BrowserAgent` class as close to the top of the `head` element of your app's HTML output as possible. The specific location and method will vary based on your application's architecture or framework.
+For best results, import and instantiate the `BrowserAgent` class as close to the top of the `head` element of your app's HTML output as possible. The specific location and method will vary based on your application's architecture or framework. See [Library Support](#library-support) for more information.
 
 Populate the `options` parameter using configuration values found in the the *Copy/Paste JavaScript* box in your browser app's *Application settings* page in New Relic One.
 
@@ -171,6 +171,25 @@ try{
 microAgent2.addPageAction('myData', {hello: 'world'})
 ```
 
+## Browser Agent APIs
+All Browser Agent APIs are exposed for use in two ways:
+- Via the `newrelic` window-level global object
+- At the top-level of the Agent instance
+
+Please see our [official documentation](https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/using-browser-apis/) for more information about the Browser Agent APIs.
+
+```js
+  newrelic.noticeError(...)
+  // or
+  const NrAgent = new BrowserAgent(...)
+  NrAgent.noticeError(...)
+```
+
+## Session Replay
+The Session Replay feature is currently in Limited Preview and only functional for customers participating in the early access program.  To request access, please visit [this link](https://newrelic.com/platform/session-replay-early-access). 
+
+Due to the sensitive nature of the feature, Session Replay has many configuration options, which are configurable in each browser application's *Application Settings* page on the New Relic site. These settings will only be accessible if you are participating in the limited preview. Additionally, you can control the sampling rates, obfuscation conditions and triggering rules of Session Replay.
+
 ## Supported browsers
 
 Our supported browser list can be accessed [here](https://docs.newrelic.com/docs/browser/new-relic-browser/getting-started/compatibility-requirements-browser-monitoring/#browser-types).
@@ -210,6 +229,14 @@ import { Agent } from '@newrelic/browser-agent/loaders/agent'
 import { Metrics } from '@newrelic/browser-agent/src/features/metrics'
 ```
 
+## Library Support
+
+The browser agent is written to be agnostic to any JavaScript library or framework. The agent exposes a number of [API methods](https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/using-browser-apis/) that can be incorporated into libraries and frameworks. For example, export or make available the initialized agent and create a new error boundary in your react application that calls `browserAgent.noticeError()`.
+
+### Server-Side Rendering
+
+A lot of new frameworks support the concept of server-side rendering the pages of an application to improve SEO and the performance of the user experience. The browser agent must be imported and instantiated within a browser context and will not work if executed on a server or in the server context of a server-side rendered application. These frameworks typically provide support for defining code that should only be run on the client. Check your frameworks documentation for more information.
+
 ## Disclaimers
 
 The session replay library shipping with this version of the browser agent is in *limited preview* and is not turned on by default. To use the feature, users will need to be part of the limited preview customer group and configure their browser application settings in the UI.
@@ -240,6 +267,6 @@ To all contributors, we thank you! Without your contribution, this project would
 
 ## License
 
-The Browser agent is licensed under the [Apache 2.0](http://apache.org/licenses/LICENSE-2.0.txt) License.
+The Browser agent is licensed under the [Apache 2.0](https://apache.org/licenses/LICENSE-2.0.txt) License.
 
 The Browser agent also uses source code from third-party libraries. Full details on which libraries are used and the terms under which they are licensed can be found in the [third-party notices document](THIRD_PARTY_NOTICES.md).

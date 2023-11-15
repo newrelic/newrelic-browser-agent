@@ -1,6 +1,6 @@
 {
   "name": "@newrelic/browser-agent",
-  "version": "1.246.0",
+  "version": "1.247.0",
   "private": false,
   "author": "New Relic Browser Agent Team <browser-agent@newrelic.com>",
   "description": "New Relic Browser Agent",
@@ -251,6 +251,7 @@
     "webpack-bundle-analyzer": "^4.7.0",
     "webpack-cli": "^4.10.0",
     "webpack-stream": "^7.0.0",
+    "webpack-subresource-integrity": "^5.1.0",
     "yargs": "^17.6.2"
   },
   "files": [

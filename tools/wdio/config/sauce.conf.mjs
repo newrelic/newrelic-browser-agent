@@ -28,6 +28,7 @@ function sauceCapabilities () {
       ...sauceBrowser,
       platform: undefined,
       version: undefined,
+      ...(args.webview ? { browserName: undefined } : {}),
       ...getMobileCapabilities(sauceBrowser),
       'sauce:options': {
         ...(sauceBrowser['sauce:options'] || {}),
@@ -40,6 +41,7 @@ function sauceCapabilities () {
 function getMobileCapabilities (sauceBrowser) {
   if (getBrowserName(sauceBrowser) === 'ios') {
     return {
+      ...(args.webview ? { 'appium:app': 'storage:filename=NRTestApp.zip' } : {}),
       device: undefined,
       acceptInsecureCerts: undefined,
       'appium:autoAcceptAlerts': true,
@@ -51,6 +53,7 @@ function getMobileCapabilities (sauceBrowser) {
 
   if (getBrowserName(sauceBrowser) === 'android') {
     return {
+      ...(args.webview ? { 'appium:app': 'storage:filename=app-debug.apk' } : {}),
       device: undefined,
       acceptInsecureCerts: undefined
     }

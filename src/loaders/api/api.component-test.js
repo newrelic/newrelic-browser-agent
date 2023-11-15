@@ -39,7 +39,7 @@ describe('setAPI', () => {
   test('should add expected api methods returned object', () => {
     const apiInterface = setAPI(agentId, true)
 
-    expect(Object.keys(apiInterface).length).toEqual(13)
+    expect(Object.keys(apiInterface).length).toEqual(15)
     expect(typeof apiInterface.setErrorHandler).toEqual('function')
     expect(typeof apiInterface.finished).toEqual('function')
     expect(typeof apiInterface.addToTrace).toEqual('function')
@@ -53,6 +53,8 @@ describe('setAPI', () => {
     expect(typeof apiInterface.setUserId).toEqual('function')
     expect(typeof apiInterface.setApplicationVersion).toEqual('function')
     expect(typeof apiInterface.start).toEqual('function')
+    expect(typeof apiInterface.recordReplay).toEqual('function')
+    expect(typeof apiInterface.pauseReplay).toEqual('function')
   })
 
   test('should register api drain when not forced', () => {

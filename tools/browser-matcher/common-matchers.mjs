@@ -68,6 +68,12 @@ export const notSafari = new SpecMatcher()
 export const onlyChrome = new SpecMatcher()
   .include('chrome')
 
+export const onlyIOS = new SpecMatcher()
+  .include('ios')
+
+export const onlyAndroid = new SpecMatcher()
+  .include('android')
+
 /**
  * Matcher based on ES2022 support
  * This is a snapshot in time and would need to be updated.

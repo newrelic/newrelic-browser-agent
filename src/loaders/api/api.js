@@ -21,7 +21,7 @@ export function setTopLevelCallers () {
   const funcs = [
     'setErrorHandler', 'finished', 'addToTrace', 'addRelease',
     'addPageAction', 'setCurrentRouteName', 'setPageViewName', 'setCustomAttribute',
-    'interaction', 'noticeError', 'setUserId', 'setApplicationVersion', 'start'
+    'interaction', 'noticeError', 'setUserId', 'setApplicationVersion', 'start', 'recordReplay', 'pauseReplay'
   ]
   funcs.forEach(f => {
     nr[f] = (...args) => caller(f, ...args)
@@ -140,6 +140,16 @@ export function setAPI (agentIdentifier, forceDrain) {
     }
   }
 
+  apiInterface.recordReplay = function () {
+    handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/recordReplay/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
+    handle('recordReplay', [], undefined, FEATURE_NAMES.sessionReplay, instanceEE)
+  }
+
+  apiInterface.pauseReplay = function () {
+    handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/pauseReplay/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
+    handle('pauseReplay', [], undefined, FEATURE_NAMES.sessionReplay, instanceEE)
+  }
+
   apiInterface.interaction = function () {
     return new InteractionHandle().get()
   }
@@ -151,6 +161,7 @@ export function setAPI (agentIdentifier, forceDrain) {
       var contextStore = {}
       var ixn = this
       var hasCb = typeof cb === 'function'
+      handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/createTracer/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
       handle(spaPrefix + 'tracer', [now(), name, contextStore], ixn, FEATURE_NAMES.spa, instanceEE)
       return function () {
         tracerEE.emit((hasCb ? '' : 'no-') + 'fn-start', [now(), ixn, hasCb], contextStore)

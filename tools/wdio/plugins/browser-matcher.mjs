@@ -40,7 +40,7 @@ export default class BrowserMatcher {
     })
 
     global.browserMatch = (matcher) => {
-      return !this.#wrapFnWithBrowserMatcher(matcher)
+      return !this.#browserMatchTest(matcher)
     }
   }
 

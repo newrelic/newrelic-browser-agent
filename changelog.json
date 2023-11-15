@@ -5,6 +5,80 @@
       "changes": [
         {
           "type": "feat",
+          "sha": "12eb4530cfb5eb1e0a94d858485be0df40582c21",
+          "message": "Session Replay API",
+          "issues": [
+            "803"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "e4d1c701228e011d7c6f9d84cdc107044c69ce79",
+          "message": "Add relative timestamps to Session Replay payloads",
+          "issues": [
+            "810"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "bc275ee20242a5208358a0a77ac75e2b7cbd11c4",
+          "message": "Expose library versions used to capture session replay data",
+          "issues": [
+            "809"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "92d864cb12a3076fd9b623fcd411d2dc9190110c",
+          "message": "Add basic support for deferring the browser agent loader script",
+          "issues": [
+            "800"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "fd9c3f388f17353796ac2ebf18814353ca819dcf",
+          "message": "Enable SRI and nonce attributes for async chunks",
+          "issues": [
+            "805"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "3dfc4d43fa978eeec47ebf432f8741562d0dd864",
+          "message": "Add session durationMs to Session Replay payloads",
+          "issues": [
+            "792"
+          ]
+        }
+      ],
+      "version": "1.247.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "f30d22cc-9a5f-41b7-9f53-4d65e889e42d",
+      "createTime": "2023-11-14T20:48:53.278Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
+          "sha": "c80e8d260a8919a41ebca7bdc182937819464dc7",
+          "message": "Fix missing type declarations",
+          "issues": [
+            "791"
+          ]
+        }
+      ],
+      "version": "1.246.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "5b3fcea2-2775-4a37-b285-bbea58380991",
+      "createTime": "2023-10-31T15:27:31.311Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
           "sha": "42062638850b4b410ac75eb008120ec4a82583c1",
           "message": "Replace url parsing with URL class",
           "issues": [
@@ -776,5 +850,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2023-10-23T22:23:20.010Z"
+  "updateTime": "2023-11-14T20:48:53.278Z"
 }

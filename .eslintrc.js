@@ -73,9 +73,10 @@ module.exports = {
       }
     },
     {
-      files: ['tests/specs/**/*'],
+      files: ['tests/specs/**/*', 'tests/webview-specs/**/*'],
       globals: {
         browser: true,
+        driver: true,
         expect: true,
         $: true,
         browserMatch: true

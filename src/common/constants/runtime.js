@@ -44,6 +44,8 @@ export const globalScope = isBrowserScope
       globalThis
   ))
 
+export const loadedAsDeferredBrowserScript = globalScope?.document?.readyState === 'complete'
+
 export const initiallyHidden = Boolean(globalScope?.document?.visibilityState === 'hidden')
 
 export const initialLocation = '' + globalScope?.location

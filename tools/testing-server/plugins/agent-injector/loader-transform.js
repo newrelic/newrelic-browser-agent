@@ -12,15 +12,7 @@ const { paths } = require('../../constants')
  * @param {TestServer} testServer
  * @return {Promise<string>}
  */
-async function getLoaderContent (request, reply, testServer) {
-  const loader = request.query.loader || testServer.config.loader
-  const loaderFilePath = path.join(
-    paths.builtAssetsDir,
-    `nr-loader-${loader}${
-      testServer.config.polyfills ? '-polyfills' : ''
-    }.min.js`
-  )
-
+async function getLoaderContent (loaderFilePath) {
   let file
   try {
     file = (await fs.promises.readFile(loaderFilePath)).toString()
@@ -28,6 +20,36 @@ async function getLoaderContent (request, reply, testServer) {
     throw new Error(`Could not find loader file ${loaderFilePath}`)
   }
   return file
+}
+
+function getLoaderFilePath (request, testServer, webpath) {
+  const loader = request.query.loader || testServer.config.loader
+  return path.join(
+    webpath ? '/build/' : paths.builtAssetsDir,
+    `nr-loader-${loader}${
+      testServer.config.polyfills ? '-polyfills' : ''
+    }.min.js`
+  )
+}
+
+async function getLoaderScript (scriptType, loaderFilePath, nonce) {
+  switch (scriptType) {
+    case 'defer':
+      return `<script src="${loaderFilePath}" defer ${nonce}></script>`
+    case 'async':
+      return `<script src="${loaderFilePath}" async ${nonce}></script>`
+    case 'injection':
+      return `<script type="text/javascript" ${nonce}>
+        window.addEventListener('load', function(){
+        let script = document.createElement('script');
+        script.src = "${loaderFilePath}";
+        script.nonce = "${nonce}";
+        document.body.append(script);
+        })
+      </script>`
+    default:
+      return `<script type="text/javascript" ${nonce}>${await getLoaderContent(loaderFilePath)}</script>`
+  }
 }
 
 /**
@@ -40,14 +62,16 @@ module.exports = function (request, reply, testServer) {
   return new Transform({
     async transform (chunk, encoding, done) {
       const chunkString = chunk.toString()
+      const nonce = request.query.nonce ? `nonce="${request.query.nonce}"` : ''
 
       if (chunkString.indexOf('{loader}') > -1) {
-        const replacement = await getLoaderContent(request, reply, testServer)
+        const loaderFilePath = getLoaderFilePath(request, testServer, !!request.query?.script)
+        const loaderScript = await getLoaderScript(request.query?.script, loaderFilePath, nonce)
         done(
           null,
           chunkString.replace(
             '{loader}',
-            `<script type="text/javascript">${sslShim}${replacement}</script>`
+            `<script type="text/javascript" ${nonce}>${sslShim}</script>${loaderScript}`
           )
         )
       } else {

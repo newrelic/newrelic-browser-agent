@@ -101,4 +101,23 @@ export class AgentBase {
   start (featureNames) {
     warn('Call to agent api addRelease failed. The agent is not currently initialized.')
   }
+
+  /**
+   * Forces a replay to record. If a replay is already actively recording, this call will be ignored.
+   * If a recording has not been started, a new one will be created. If a recording has been started, but is currently not recording, it will resume recording.
+   * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/recordReplay/}
+   */
+  recordReplay () {
+    warn('Call to agent api recordReplay failed. The agent is not currently initialized.')
+  }
+
+  /**
+   * Forces an active replay to pause recording.  If a replay is already actively recording, this call will cause the recording to pause.
+   * If a recording is not currently recording, this call will be ignored.  This API will pause both manual and automatic replays that are in progress.
+   * The only way to resume recording after manually pausing a replay is to manually record again using the recordReplay() API.
+   * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/recordReplay/}
+   */
+  pauseReplay () {
+    warn('Call to agent api pauseReplay failed. The agent is not currently initialized.')
+  }
 }

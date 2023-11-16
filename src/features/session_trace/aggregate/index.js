@@ -89,6 +89,8 @@ export class Aggregate extends AggregateBase {
      * "external" input in this case means errors thrown on the page or session replay itself being triggered to run in full mode by the API, which updates the session entity.
      */
     const switchToFull = () => {
+      if (this.agentRuntime?.session?.state?.sessionReplayMode !== MODE.FULL) return
+
       if (mostRecentModeKnown !== MODE.FULL) {
         const prevMode = mostRecentModeKnown
         mostRecentModeKnown = MODE.FULL

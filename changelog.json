@@ -4,6 +4,31 @@
     {
       "changes": [
         {
+          "type": "fix",
+          "sha": "3872c35a173f76644b663df5ca0474971451b7cf",
+          "message": "Fix issue with errors forcefully triggering session traces",
+          "issues": [
+            "819"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "8f5446d1f7679f6a5ea0ba90eb082d1d4deb0d93",
+          "message": "Report enduser.id with Session Replay",
+          "issues": [
+            "815"
+          ]
+        }
+      ],
+      "version": "1.248.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "1acefc1f-a49b-455a-a321-997ce7c49f81",
+      "createTime": "2023-11-16T17:40:46.327Z"
+    },
+    {
+      "changes": [
+        {
           "type": "feat",
           "sha": "12eb4530cfb5eb1e0a94d858485be0df40582c21",
           "message": "Session Replay API",
@@ -850,5 +875,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2023-11-14T20:48:53.278Z"
+  "updateTime": "2023-11-16T17:40:46.327Z"
 }

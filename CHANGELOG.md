@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.248.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.247.0...v1.248.0) (2023-11-16)
+
+
+### Features
+
+* Report enduser.id with Session Replay ([#815](https://github.com/newrelic/newrelic-browser-agent/issues/815)) ([8f5446d](https://github.com/newrelic/newrelic-browser-agent/commit/8f5446d1f7679f6a5ea0ba90eb082d1d4deb0d93))
+
+
+### Bug Fixes
+
+* Fix issue with errors forcefully triggering session traces ([#819](https://github.com/newrelic/newrelic-browser-agent/issues/819)) ([3872c35](https://github.com/newrelic/newrelic-browser-agent/commit/3872c35a173f76644b663df5ca0474971451b7cf))
+
 ## [1.247.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.246.1...v1.247.0) (2023-11-14)
 
 

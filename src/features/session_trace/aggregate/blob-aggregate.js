@@ -5,22 +5,26 @@
  */
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
-import { getConfigurationValue, getRuntime } from '../../../common/config/config'
+import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
 import { FEATURE_NAME } from '../constants'
 import { MODE, SESSION_EVENTS } from '../../../common/session/session-entity'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { generateRandomHexString } from '../../../common/ids/unique-id'
 import { TraceStorage } from './trace/storage'
+import { obj as encodeObj } from '../../../common/url/encode'
+import { now } from '../../../common/timing/now'
 
 const REQ_THRESHOLD_TO_SEND = 30
 const ERROR_MODE_SECONDS_WINDOW = 30 * 1000 // sliding window of nodes to track when simply monitoring (but not harvesting) in error mode
-
+/** Reserved room for query param attrs */
+const QUERY_PARAM_PADDING = 5000
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
 
   constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
     this.agentRuntime = getRuntime(agentIdentifier)
+    this.agentInfo = getInfo(agentIdentifier)
 
     // Very unlikely, but in case the existing XMLHttpRequest.prototype object on the page couldn't be wrapped.
     if (!this.agentRuntime.xhrWrappable) return
@@ -35,7 +39,7 @@ export class Aggregate extends AggregateBase {
 
     if (shouldSetup) {
       this.traceStorage = new TraceStorage(this)
-      this.waitForFlags(['stn']).then(stMode => this.initialize(stMode))
+      this.waitForFlags(['stn']).then(([stMode]) => this.initialize(stMode))
     }
   }
 
@@ -102,10 +106,10 @@ export class Aggregate extends AggregateBase {
       // Only harvest when more than some threshold of nodes are pending, after the very first harvest, with the exception of the last outgoing harvest.
       return
     }
-    if (this.mode === MODE.OFF && Object.keys(this.trace).length === 0) return
+    if (this.mode === MODE.OFF && this.traceStorage.nodeCount === 0) return
     if (this.mode === MODE.ERROR) return // Trace in this mode should never be harvesting, even on unload
 
-    const { stns, earliestTimeStamp } = this.traceStorage.takeSTNs()
+    const { stns } = this.traceStorage.takeSTNs()
     if (options.retry) {
       this.sentTrace = stns
     }
@@ -116,20 +120,31 @@ export class Aggregate extends AggregateBase {
       if (isFirstPayload) this.agentRuntime.session.write({ traceHarvestStarted: true })
     }
 
+    const hasReplay = this.agentRuntime?.session.state.sessionReplayMode === 1
+
     return {
       qs: {
-        st: this.agentRuntime.offset,
-        /** hr === "hasReplay" in NR1, standalone is always checked and processed before harvesting
-         * so a race condition between ST and SR states should not be a concern if implemented here */
-        hr: Number(!this.isStandalone),
-        /** fts === "firstTimestamp" in NR1, indicates what the earliest NODE timestamp was
-         * so that blob parsing doesn't need to happen to support UI/API functions  */
-        fts: this.agentRuntime.offset + earliestTimeStamp,
-        /** n === "nodeCount" in NR1, a count of nodes in the ST payload, so that blob parsing doesn't need to happen to support UI/API functions */
-        n: stns.length, // node count
-        ...firstHarvestOfSession
+        browser_monitoring_key: this.agentInfo.licenseKey,
+        type: 'SessionTrace',
+        app_id: this.agentInfo.applicationID,
+        protocol_version: '0',
+        attributes: encodeObj({
+        // this section of attributes must be controllable and stay below the query param padding limit -- see QUERY_PARAM_PADDING
+        // if not, data could be lost to truncation at time of sending, potentially breaking parsing / API behavior in NR1
+          'trace.firstTimestamp': this.agentRuntime.offset + this.traceStorage.earliestTimeStamp,
+          'trace.firstTimestampOffset': this.traceStorage.earliestTimeStamp,
+          'trace.lastTimestamp': this.agentRuntime.offset + this.traceStorage.latestTimeStamp,
+          'trace.lastTimestampOffset': this.traceStorage.latestTimeStamp,
+          'trace.nodeCount': stns.length,
+          rst: now(),
+          ...firstHarvestOfSession,
+          ...(hasReplay && { hasReplay })
+          // customer-defined data should go last so that if it exceeds the query param padding limit it will be truncated instead of important attrs
+          // ...(endUserId && { 'enduser.id': endUserId })
+        // The Query Param is being arbitrarily limited in length here.  It is also applied when estimating the size of the payload in getPayloadSize()
+        }, QUERY_PARAM_PADDING).substring(1) // remove the leading '&'
       },
-      body: { res: stns }
+      body: stns
     }
   }
 

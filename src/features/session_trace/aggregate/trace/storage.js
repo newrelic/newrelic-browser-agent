@@ -24,6 +24,8 @@ const toAggregate = {
 export class TraceStorage {
   nodeCount = 0
   trace = {}
+  earliestTimeStamp = Infinity
+  latestTimeStamp = 0
 
   constructor (parent) {
     this.parent = parent
@@ -40,6 +42,8 @@ export class TraceStorage {
     if (this.trace[stn.n]) this.trace[stn.n].push(stn)
     else this.trace[stn.n] = [stn]
 
+    if (stn.s < this.earliestTimeStamp) this.earliestTimeStamp = stn.s
+    if (stn.e > this.latestTimeStamp) this.latestTimeStamp = stn.e
     this.nodeCount++
   }
 
@@ -76,11 +80,7 @@ export class TraceStorage {
       this.storeResources(window.performance.getEntriesByType('resource'))
     }
 
-    let earliestTimeStamp = Infinity
     const stns = Object.entries(this.trace).flatMap(([name, listOfSTNodes]) => { // basically take the "this.trace" map-obj and concat all the list-type values
-      const oldestNodeTS = listOfSTNodes.reduce((acc, next) => (!acc || next.s < acc) ? next.s : acc, undefined)
-      if (oldestNodeTS < earliestTimeStamp) earliestTimeStamp = oldestNodeTS
-
       if (!(name in toAggregate)) return listOfSTNodes
       // Special processing for event nodes dealing with user inputs:
       const reindexByOriginFn = this.smearEvtsByOrigin(name)
@@ -92,7 +92,7 @@ export class TraceStorage {
     this.trace = {}
     this.nodeCount = 0
 
-    return { stns, earliestTimeStamp }
+    return { stns }
   }
 
   smearEvtsByOrigin (name) {

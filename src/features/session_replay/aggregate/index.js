@@ -184,15 +184,14 @@ export class Aggregate extends AggregateBase {
       }, this.featureName, this.ee)
 
       this.waitForFlags(['sr']).then(([flagOn]) => {
-        this.entitled = flagOn
+        this.entitled = !!flagOn
         this.initializeRecording(
           (Math.random() * 100) < getConfigurationValue(this.agentIdentifier, 'session_replay.error_sampling_rate'),
           (Math.random() * 100) < getConfigurationValue(this.agentIdentifier, 'session_replay.sampling_rate')
         )
       }).then(() => sharedChannel.onReplayReady(this.mode)) // notify watchers that replay started with the mode
-
-      this.drain()
     }
+    this.drain()
   }
 
   switchToFull () {

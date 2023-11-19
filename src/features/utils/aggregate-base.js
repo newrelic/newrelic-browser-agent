@@ -1,4 +1,3 @@
-import { registerHandler } from '../../common/event-emitter/register-handler'
 import { FeatureBase } from './feature-base'
 import { getInfo, isConfigured, getRuntime } from '../../common/config/config'
 import { configure } from '../../loaders/configure/configure'
@@ -20,7 +19,7 @@ export class AggregateBase extends FeatureBase {
     return Promise.all(
       flagNames.map(fName =>
         new Promise((resolve) => {
-          registerHandler(`rumresp-${fName}`, isOn => resolve(isOn), this.featureName, this.ee)
+          this.ee.on(`rumresp-${fName}`, resp => resolve(resp))
         })
       )
     )

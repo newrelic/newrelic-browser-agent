@@ -37,7 +37,7 @@ module.exports.rumFlags = {
 }
 
 module.exports.defaultInitBlock = {
-  privacy: { cookies_enabled: false },
+  privacy: { cookies_enabled: true },
   ajax: { deny_list: [], block_internal: false, enabled: true, harvestTimeSeconds: 5, autoStart: true },
   distributed_tracing: {},
   session: { domain: undefined, expiresMs: 14400000, inactiveMs: 1800000 },

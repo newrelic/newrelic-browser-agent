@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { ee } from '../event-emitter/contextual-ee'
-import { handle } from '../event-emitter/handle'
 import { FEATURE_NAMES } from '../../loaders/features/features'
 import { dispatchGlobalEvent } from '../dispatch/global-event'
 
@@ -24,13 +23,9 @@ export function activateFeatures (flags, agentIdentifier) {
   if (sentIds.has(agentIdentifier)) return
 
   Object.entries(flags).forEach(([flag, num]) => {
-    if (bucketMap[flag]) {
-      bucketMap[flag].forEach(feat => {
-        if (!num) handle('block-' + flag, [], undefined, feat, sharedEE)
-        else handle('feat-' + flag, [], undefined, feat, sharedEE)
-        handle('rumresp-' + flag, [Boolean(num)], undefined, feat, sharedEE) // this is a duplicate of feat-/block- but makes awaiting for 1 event easier than 2
-      })
-    } else if (num) handle('feat-' + flag, [], undefined, undefined, sharedEE) // not sure what other flags are overlooked, but there's a test for ones not in the map --
+    if (!num) sharedEE.emit('block-' + flag, [])
+    else sharedEE.emit('feat-' + flag, [])
+    sharedEE.emit('rumresp-' + flag, [num]) // this is a duplicate of feat-/block- but makes awaiting for 1 event easier than 2
     activatedFeatures[flag] = Boolean(num)
   })
 
@@ -38,7 +33,7 @@ export function activateFeatures (flags, agentIdentifier) {
   // Hence, those features will not be hanging forever if their flags aren't included in the response.
   Object.keys(bucketMap).forEach(flag => {
     if (activatedFeatures[flag] === undefined) {
-      bucketMap[flag]?.forEach(feat => handle('rumresp-' + flag, [false], undefined, feat, sharedEE))
+      bucketMap[flag]?.forEach(feat => sharedEE.emit('rumresp-' + flag, [false]))
       activatedFeatures[flag] = false
     }
   })

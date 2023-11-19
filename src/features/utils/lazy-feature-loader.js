@@ -30,6 +30,7 @@ export function lazyFeatureLoader (featureName, featurePart) {
         return import(/* webpackChunkName: "session_replay-aggregate" */ '../session_replay/aggregate')
       case FEATURE_NAMES.sessionTrace:
         return import(/* webpackChunkName: "session_trace-aggregate" */ '../session_trace/aggregate')
+        // return import(/* webpackChunkName: "session_trace-aggregate" */ '../session_trace/aggregate/blob-aggregate')
       case FEATURE_NAMES.spa:
         return import(/* webpackChunkName: "spa-aggregate" */ '../spa/aggregate')
       default:

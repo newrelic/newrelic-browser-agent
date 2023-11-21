@@ -37,6 +37,7 @@ module.exports.rumFlags = {
 }
 
 module.exports.defaultInitBlock = {
+  feature_flags: [],
   privacy: { cookies_enabled: false },
   ajax: { deny_list: [], block_internal: false, enabled: true, harvestTimeSeconds: 5, autoStart: true },
   distributed_tracing: {},

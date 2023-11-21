@@ -91,8 +91,12 @@ export class TraceStorage {
 
     this.trace = {}
     this.nodeCount = 0
+    const earliestTimeStamp = this.earliestTimeStamp
+    this.earliestTimeStamp = Infinity
+    const latestTimeStamp = this.latestTimeStamp
+    this.latestTimeStamp = 0
 
-    return { stns }
+    return { stns, earliestTimeStamp, latestTimeStamp }
   }
 
   smearEvtsByOrigin (name) {

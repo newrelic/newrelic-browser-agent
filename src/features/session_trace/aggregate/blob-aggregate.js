@@ -109,18 +109,16 @@ export class Aggregate extends AggregateBase {
     if (this.mode === MODE.OFF && this.traceStorage.nodeCount === 0) return
     if (this.mode === MODE.ERROR) return // Trace in this mode should never be harvesting, even on unload
 
-    const { stns } = this.traceStorage.takeSTNs()
+    const { stns, earliestTimeStamp, latestTimeStamp } = this.traceStorage.takeSTNs()
     if (options.retry) {
       this.sentTrace = stns
     }
-    let firstHarvestOfSession
-    if (this.agentRuntime.session) {
-      const isFirstPayload = !this.agentRuntime.session.state.traceHarvestStarted
-      firstHarvestOfSession = { fsh: Number(isFirstPayload) } // converted to '0' | '1'
-      if (isFirstPayload) this.agentRuntime.session.write({ traceHarvestStarted: true })
-    }
+
+    const firstSessionHarvest = this.agentRuntime.session && !this.agentRuntime.session.state.traceHarvestStarted
+    if (firstSessionHarvest) this.agentRuntime.session.write({ traceHarvestStarted: true })
 
     const hasReplay = this.agentRuntime?.session.state.sessionReplayMode === 1
+    const endUserId = this.agentInfo.jsAttributes?.['enduser.id']
 
     return {
       qs: {
@@ -131,16 +129,18 @@ export class Aggregate extends AggregateBase {
         attributes: encodeObj({
         // this section of attributes must be controllable and stay below the query param padding limit -- see QUERY_PARAM_PADDING
         // if not, data could be lost to truncation at time of sending, potentially breaking parsing / API behavior in NR1
-          'trace.firstTimestamp': this.agentRuntime.offset + this.traceStorage.earliestTimeStamp,
-          'trace.firstTimestampOffset': this.traceStorage.earliestTimeStamp,
-          'trace.lastTimestamp': this.agentRuntime.offset + this.traceStorage.latestTimeStamp,
-          'trace.lastTimestampOffset': this.traceStorage.latestTimeStamp,
+          'trace.firstTimestamp': this.agentRuntime.offset + earliestTimeStamp,
+          'trace.firstTimestampOffset': earliestTimeStamp,
+          'trace.lastTimestamp': this.agentRuntime.offset + latestTimeStamp,
+          'trace.lastTimestampOffset': latestTimeStamp,
           'trace.nodeCount': stns.length,
+          ptid: this.ptid,
+          session: this.agentRuntime?.session.state.value || '',
           rst: now(),
-          ...firstHarvestOfSession,
-          ...(hasReplay && { hasReplay })
+          ...(firstSessionHarvest && { firstSessionHarvest }),
+          ...(hasReplay && { hasReplay }),
           // customer-defined data should go last so that if it exceeds the query param padding limit it will be truncated instead of important attrs
-          // ...(endUserId && { 'enduser.id': endUserId })
+          ...(endUserId && { 'enduser.id': endUserId })
         // The Query Param is being arbitrarily limited in length here.  It is also applied when estimating the size of the payload in getPayloadSize()
         }, QUERY_PARAM_PADDING).substring(1) // remove the leading '&'
       },
@@ -150,7 +150,7 @@ export class Aggregate extends AggregateBase {
 
   onHarvestFinished (result) {
     if (result.sent && result.retry && this.sentTrace) { // merge previous trace back into buffer to retry for next harvest
-      Object.entries(this.sentTrace).forEach(([name, listOfSTNodes]) => { this.traceStorage.restoreNodes(name, listOfSTNodes) })
+      Object.entries(this.sentTrace).forEach(([name, listOfSTNodes]) => { this.traceStorage.restoreNode(name, listOfSTNodes) })
       this.sentTrace = null
     }
   }

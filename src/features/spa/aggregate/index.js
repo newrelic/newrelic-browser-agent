@@ -22,6 +22,8 @@ import { firstContentfulPaint } from '../../../common/vitals/first-contentful-pa
 import { firstPaint } from '../../../common/vitals/first-paint'
 import { bundleId } from '../../../common/ids/bundle-id'
 import { loadedAsDeferredBrowserScript } from '../../../common/constants/runtime'
+import { handle } from '../../../common/event-emitter/handle'
+import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 
 const {
   FEATURE_NAME, INTERACTION_EVENTS, MAX_TIMER_BUDGET, FN_START, FN_END, CB_START, INTERACTION_API, REMAINING,
@@ -724,6 +726,12 @@ export class Aggregate extends AggregateBase {
       }
       baseEE.emit('interactionSaved', [interaction])
       state.interactionsToHarvest.push(interaction)
+
+      let smCategory = 'RouteChange'
+      if (interaction.root?.attrs?.trigger === 'initialPageLoad') smCategory = 'InitialPageLoad'
+      else if (interaction.root?.attrs?.trigger === 'api') smCategory = 'Custom'
+      handle(SUPPORTABILITY_METRIC_CHANNEL, [`Spa/Interaction/${smCategory}/Duration/Ms`, Math.max((interaction.root?.end || 0) - (interaction.root?.start || 0), 0)], undefined, FEATURE_NAMES.metrics, baseEE)
+
       scheduler.scheduleHarvest(0)
     }
 

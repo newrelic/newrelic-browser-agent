@@ -184,6 +184,9 @@ export class Aggregate extends AggregateBase {
       }, this.featureName, this.ee)
 
       this.waitForFlags(['sr']).then(([flagOn]) => {
+        // waitForFlags now returns the raw value (0, 1) of the flag.
+        // Eventually BCS will report this as (0, 1, 2) for the appropriate mode, and report entitlements separately.
+        // This will need to be fixed to honor that when that change is made. Returning the raw flag value enables that work.
         this.entitled = !!flagOn
         this.initializeRecording(
           (Math.random() * 100) < getConfigurationValue(this.agentIdentifier, 'session_replay.error_sampling_rate'),

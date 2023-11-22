@@ -13,12 +13,13 @@ export class AggregateBase extends FeatureBase {
   /**
    * New handler for waiting for multiple flags. Useful when expecting multiple flags simultaneously (ex. stn vs sr)
    * @param {string[]} flagNames
-   * @returns
+   * @returns {Promise}
    */
   waitForFlags (flagNames = []) {
     return Promise.all(
       flagNames.map(fName =>
         new Promise((resolve) => {
+          /** Resolves with the raw value of the flag */
           this.ee.on(`rumresp-${fName}`, resp => resolve(resp))
         })
       )

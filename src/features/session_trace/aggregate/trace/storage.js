@@ -21,6 +21,7 @@ const toAggregate = {
   touching: [1000, 2000]
 }
 
+/** The purpose of this class is to manage, normalize, and retrieve ST nodes as needed without polluting the main ST modules */
 export class TraceStorage {
   nodeCount = 0
   trace = {}
@@ -75,7 +76,7 @@ export class TraceStorage {
     return prunedNodes
   }
 
-  // Used by session trace's harvester to create the payload body.
+  /** Used by session trace's harvester to create the payload body. */
   takeSTNs () {
     if (!SUPPORTS_PERFORMANCE_OBSERVER) { // if PO isn't supported, this checks resourcetiming buffer every harvest.
       this.storeResources(window.performance.getEntriesByType('resource'))

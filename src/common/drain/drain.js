@@ -26,9 +26,12 @@ export function registerDrain (agentIdentifier, group) {
   if (!registry[agentIdentifier].get(group)) registry[agentIdentifier].set(group, item)
 }
 
+/**
+ * Removes an item from the registry and immediately re-checks if the registry is ready to "drain all"
+ * @param {*} agentIdentifier - A 16 character string uniquely identifying the agent.
+ * @param {*} group - The named "bucket" to be removed from the registry
+ */
 export function deregisterDrain (agentIdentifier, group) {
-  // Here `item` captures the registered properties of a feature-group: whether it is ready for its buffered events
-  // to be drained (`staged`) and the `priority` order in which it should be drained relative to other feature groups.
   curateRegistry(agentIdentifier)
   if (registry[agentIdentifier].get(group)) registry[agentIdentifier].delete(group)
   checkCanDrainAll(agentIdentifier)
@@ -63,6 +66,7 @@ export function drain (agentIdentifier = '', featureName = 'feature') {
   checkCanDrainAll(agentIdentifier)
 }
 
+/** Checks all items in the registry to see if they have been "staged".  If ALL items are staged, it will drain all registry items (drainGroup).  It not, nothing will happen */
 function checkCanDrainAll (agentIdentifier) {
 // Only when the event-groups for all features are ready to drain (staged) do we execute the drain. This has the effect
   // that the last feature to call drain triggers drain for all features.

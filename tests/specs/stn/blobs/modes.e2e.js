@@ -32,6 +32,42 @@ describe('respects feature flags', () => {
       })])
   })
 
+  it('1, 0 == PERMANENTLY OFF', async () => {
+    await browser.destroyAgentSession()
+    await browser.testHandle.scheduleReply('bamServer', {
+      test: testRumRequest,
+      body: JSON.stringify({ stn: 1, ste: 0, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
+    })
+    let url = await browser.testHandle.assetURL('instrumented.html', stConfig())
+    await browser.url(url).then(() => browser.waitForAgentLoad())
+
+    await browser.testHandle.expectTrace(10000, true)
+
+    await Promise.all([
+      browser.testHandle.expectTrace(10000, true),
+      browser.execute(function () {
+        newrelic.recordReplay()
+      })])
+  })
+
+  it('2, 0 == PERMANENTLY OFF', async () => {
+    await browser.destroyAgentSession()
+    await browser.testHandle.scheduleReply('bamServer', {
+      test: testRumRequest,
+      body: JSON.stringify({ stn: 2, ste: 0, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
+    })
+    let url = await browser.testHandle.assetURL('instrumented.html', stConfig())
+    await browser.url(url).then(() => browser.waitForAgentLoad())
+
+    await browser.testHandle.expectTrace(10000, true)
+
+    await Promise.all([
+      browser.testHandle.expectTrace(10000, true),
+      browser.execute(function () {
+        newrelic.recordReplay()
+      })])
+  })
+
   it('0, 1 == TEMPORARILY OFF, TURNS ON IF ENTITLED (api)', async () => {
     await browser.destroyAgentSession()
     await browser.testHandle.scheduleReply('bamServer', {

@@ -1,5 +1,5 @@
 import { supportsMultipleTabs, notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
-import { RRWEB_EVENT_TYPES, config, getSR, MODE } from './helpers.js'
+import { RRWEB_EVENT_TYPES, srConfig, getSR, MODE } from './helpers.js'
 
 describe.withBrowsersMatching(notIE)('session manager state behavior', () => {
   beforeEach(async () => {
@@ -12,7 +12,7 @@ describe.withBrowsersMatching(notIE)('session manager state behavior', () => {
 
   describe('session manager mode matches session replay instance mode', () => {
     it('should match in full mode', async () => {
-      await browser.url(await browser.testHandle.assetURL('instrumented.html', config()))
+      await browser.url(await browser.testHandle.assetURL('instrumented.html', srConfig()))
         .then(() => browser.waitForFeatureAggregate('session_replay'))
 
       await browser.pause(1000)
@@ -22,7 +22,7 @@ describe.withBrowsersMatching(notIE)('session manager state behavior', () => {
     })
 
     it('should match in error mode', async () => {
-      await browser.url(await browser.testHandle.assetURL('instrumented.html', config({ session_replay: { sampling_rate: 0, error_sampling_rate: 100 } })))
+      await browser.url(await browser.testHandle.assetURL('instrumented.html', srConfig({ session_replay: { sampling_rate: 0, error_sampling_rate: 100 } })))
         .then(() => browser.waitForFeatureAggregate('session_replay'))
 
       await browser.pause(1000)
@@ -32,7 +32,7 @@ describe.withBrowsersMatching(notIE)('session manager state behavior', () => {
     })
 
     it('should match in off mode', async () => {
-      await browser.url(await browser.testHandle.assetURL('instrumented.html', config({ session_replay: { sampling_rate: 0, error_sampling_rate: 0 } })))
+      await browser.url(await browser.testHandle.assetURL('instrumented.html', srConfig({ session_replay: { sampling_rate: 0, error_sampling_rate: 0 } })))
         .then(() => browser.waitForFeatureAggregate('session_replay'))
 
       await browser.pause(1000)
@@ -44,7 +44,7 @@ describe.withBrowsersMatching(notIE)('session manager state behavior', () => {
 
   describe('When session ends', () => {
     it('should end recording and unload', async () => {
-      await browser.url(await browser.testHandle.assetURL('instrumented.html', config({ session: { expiresMs: 7500 }, session_replay: { harvestTimeSeconds: 10 } })))
+      await browser.url(await browser.testHandle.assetURL('instrumented.html', srConfig({ session: { expiresMs: 7500 }, session_replay: { harvestTimeSeconds: 10 } })))
         .then(() => browser.waitForSessionReplayRecording())
 
       // session has started, replay should have set mode to "FULL"
@@ -53,7 +53,7 @@ describe.withBrowsersMatching(notIE)('session manager state behavior', () => {
       expect(oldSessionClass.sessionReplayMode).toEqual(MODE.FULL)
 
       await Promise.all([
-        browser.testHandle.expectBlob(),
+        browser.testHandle.expectReplay(),
         browser.execute(function () {
           document.querySelector('body').click()
         })
@@ -68,7 +68,7 @@ describe.withBrowsersMatching(notIE)('session manager state behavior', () => {
 
   describe('When session resumes', () => {
     it.withBrowsersMatching(supportsMultipleTabs)('should take a full snapshot and continue recording', async () => {
-      await browser.url(await browser.testHandle.assetURL('instrumented.html', config()))
+      await browser.url(await browser.testHandle.assetURL('instrumented.html', srConfig()))
         .then(() => browser.waitForSessionReplayRecording())
 
       const { events: currentPayload } = await getSR()
@@ -80,7 +80,7 @@ describe.withBrowsersMatching(notIE)('session manager state behavior', () => {
       const newTab = await browser.createWindow('tab')
       await browser.switchToWindow(newTab.handle)
       await browser.enableSessionReplay()
-      await browser.url(await browser.testHandle.assetURL('instrumented.html', config()))
+      await browser.url(await browser.testHandle.assetURL('instrumented.html', srConfig()))
         .then(() => browser.waitForSessionReplayRecording())
 
       const { events: resumedPayload } = await getSR()
@@ -97,10 +97,10 @@ describe.withBrowsersMatching(notIE)('session manager state behavior', () => {
 
   describe('When session pauses', () => {
     it.withBrowsersMatching(supportsMultipleTabs)('should pause recording', async () => {
-      await browser.url(await browser.testHandle.assetURL('instrumented.html', config()))
+      await browser.url(await browser.testHandle.assetURL('instrumented.html', srConfig()))
         .then(() => browser.waitForAgentLoad())
 
-      await browser.testHandle.expectBlob(5000)
+      await browser.testHandle.expectReplay(5000)
 
       const newTab = await browser.createWindow('tab')
       await browser.switchToWindow(newTab.handle)
@@ -109,7 +109,7 @@ describe.withBrowsersMatching(notIE)('session manager state behavior', () => {
 
       // Waiting for the second blob should time out, indicating no second call to the BAM endpoint.
       // The wait must be longer than harvest interval.
-      await browser.testHandle.expectBlob(10000, true)
+      await browser.testHandle.expectReplay(10000, true)
       await browser.closeWindow()
       await browser.switchToWindow((await browser.getWindowHandles())[0])
     })

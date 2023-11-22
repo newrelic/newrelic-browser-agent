@@ -8,6 +8,7 @@
     <title>RUM Unit Test</title>
     {init} {config} 
     <script>
+      NREUM.init.privacy.cookies_enabled = true
       NREUM.init.feature_flags.push('session-trace-blobs')
       localStorage.clear()
     </script>

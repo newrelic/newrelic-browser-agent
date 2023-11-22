@@ -100,7 +100,7 @@ export function decodeAttributes (attributes) {
   return decodedObj
 }
 
-export function config (initOverrides = {}) {
+export function srConfig (initOverrides = {}) {
   return deepmerge(
     {
       loader: 'experimental',
@@ -123,7 +123,8 @@ export function stConfig (initOverrides = {}) {
       loader: 'experimental',
       init: {
         feature_flags: ['session-trace-blobs'],
-        privacy: { cookies_enabled: true }
+        privacy: { cookies_enabled: true },
+        session_trace: { enabled: true, harvestTimeSeconds: 5 }
       }
     },
     {

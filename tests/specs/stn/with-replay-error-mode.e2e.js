@@ -3,7 +3,7 @@
  * Right now, Trace can only be in error mode when its stn flag is 0 but replay runs in error mode.
  */
 import { testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
-import { config, MODE } from '../session-replay/helpers'
+import { srConfig, MODE } from '../session-replay/helpers'
 import { notIE, onlyChrome, supportsMultipleTabs } from '../../../tools/browser-matcher/common-matchers.mjs'
 
 const getTraceMode = () => browser.execute(function () {
@@ -24,7 +24,7 @@ describe.withBrowsersMatching(notIE)('Trace error mode', () => {
       body: JSON.stringify({ stn: 0, err: 1, ins: 1, spa: 1, sr: 1, loaded: 1 })
     })
 
-    getReplayOnErrorUrl = browser.testHandle.assetURL('stn/instrumented.html', config({ session_replay: { sampling_rate: 0, error_sampling_rate: 100 }, session_trace: { harvestTimeSeconds: 3 } }))
+    getReplayOnErrorUrl = browser.testHandle.assetURL('stn/instrumented.html', srConfig({ session_replay: { sampling_rate: 0, error_sampling_rate: 100 }, session_trace: { harvestTimeSeconds: 3 } }))
   })
 
   function simulateErrorInBrowser () { // this is a way to throw error in WdIO / Selenium without killing the test itself
@@ -55,7 +55,7 @@ describe.withBrowsersMatching(notIE)('Trace error mode', () => {
 
   it('starts in full mode when an error happens before page load', async () => {
     let getFirstSTPayload = browser.testHandle.expectResources(5010)
-    await browser.url(await browser.testHandle.assetURL('js-error-with-error-before-page-load.html', config({ session_replay: { sampling_rate: 0, error_sampling_rate: 100 }, session_trace: { harvestTimeSeconds: 3 } })))
+    await browser.url(await browser.testHandle.assetURL('js-error-with-error-before-page-load.html', srConfig({ session_replay: { sampling_rate: 0, error_sampling_rate: 100 }, session_trace: { harvestTimeSeconds: 3 } })))
     await browser.waitForAgentLoad()
     await expect(getFirstSTPayload).resolves.toBeTruthy()
     await expect(getTraceMode()).resolves.toEqual([MODE.FULL, false])
@@ -65,7 +65,7 @@ describe.withBrowsersMatching(notIE)('Trace error mode', () => {
 
   it('starts in error mode but shifts to full mode if api is called', async () => {
     let getFirstSTPayload = browser.testHandle.expectResources(5020, true)
-    await browser.url(await browser.testHandle.assetURL('instrumented.html', config({ session_replay: { sampling_rate: 0, error_sampling_rate: 100 }, session_trace: { harvestTimeSeconds: 3 } })))
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', srConfig({ session_replay: { sampling_rate: 0, error_sampling_rate: 100 }, session_trace: { harvestTimeSeconds: 3 } })))
     await browser.waitForAgentLoad()
     // shouldnt get stn data yet
     await expect(getFirstSTPayload).resolves.toBeFalsy()
@@ -145,7 +145,7 @@ describe.withBrowsersMatching(notIE)('Trace when replay runs then is aborted', (
     ['does not harvest anything, in error mode', MODE.ERROR, { sampling_rate: 0, error_sampling_rate: 100 }]
   ].forEach(([description, supposedMode, replayConfig]) => {
     it(description, async () => {
-      let url = await browser.testHandle.assetURL('stn/instrumented.html', config({ session_replay: replayConfig, session_trace: { harvestTimeSeconds: 2 } }))
+      let url = await browser.testHandle.assetURL('stn/instrumented.html', srConfig({ session_replay: replayConfig, session_trace: { harvestTimeSeconds: 2 } }))
       let getFirstSTPayload = browser.testHandle.expectResources(3000)
       await browser.url(url)
       await browser.waitForAgentLoad()

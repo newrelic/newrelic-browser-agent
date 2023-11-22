@@ -281,3 +281,31 @@ module.exports.testBlobRequest = function testBlobRequest (request) {
     return false
   }
 }
+
+module.exports.testBlobReplayRequest = function testBlobRequest (request) {
+  const url = new URL(request.url, 'resolve://')
+  if (url.pathname !== '/browser/blobs') return false
+  if (request?.query?.browser_monitoring_key !== this.testId) return false
+  if (request?.query?.type !== 'SessionReplay') return false
+  try {
+    const body = request?.body
+    const blobContents = body // JSON array
+    return !!(blobContents && Array.isArray(blobContents) && blobContents.length)
+  } catch (err) {
+    return false
+  }
+}
+
+module.exports.testBlobTraceRequest = function testBlobRequest (request) {
+  const url = new URL(request.url, 'resolve://')
+  if (url.pathname !== '/browser/blobs') return false
+  if (request?.query?.browser_monitoring_key !== this.testId) return false
+  if (request?.query?.type !== 'SessionTrace') return false
+  try {
+    const body = request?.body
+    const blobContents = body // JSON array
+    return !!(blobContents && Array.isArray(blobContents) && blobContents.length)
+  } catch (err) {
+    return false
+  }
+}

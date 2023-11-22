@@ -11,7 +11,7 @@ describe('stn retry harvesting', () => {
       })
 
       const [firstResourcesHarvest] = await Promise.all([
-        browser.testHandle.expectBlob(),
+        browser.testHandle.expectTrace(),
         browser.url(await browser.testHandle.assetURL('stn/instrumented.html', stConfig()))
       ])
 
@@ -24,7 +24,7 @@ describe('stn retry harvesting', () => {
         permanent: true
       })
 
-      const secondResourcesHarvest = await browser.testHandle.expectBlob()
+      const secondResourcesHarvest = await browser.testHandle.expectTrace()
 
       expect(firstResourcesHarvest.reply.statusCode).toEqual(statusCode)
       expect(secondResourcesHarvest.request.body).toEqual(expect.arrayContaining(firstResourcesHarvest.request.body))
@@ -41,12 +41,12 @@ describe('stn retry harvesting', () => {
       })
 
       const [firstResourcesHarvest] = await Promise.all([
-        browser.testHandle.expectBlob(),
+        browser.testHandle.expectTrace(),
         browser.url(await browser.testHandle.assetURL('stn/instrumented.html', stConfig({ privacy: { cookies_enabled: true } })))
           .then(() => browser.waitForAgentLoad())
       ])
       expect(firstResourcesHarvest.reply.statusCode).toEqual(statusCode)
-      await expect(browser.testHandle.expectBlob(10000, true)).resolves.toBeUndefined()
+      await expect(browser.testHandle.expectTrace(10000, true)).resolves.toBeUndefined()
     })
   )
 })

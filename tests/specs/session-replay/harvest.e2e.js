@@ -1,5 +1,5 @@
 import { notIE, notIOS } from '../../../tools/browser-matcher/common-matchers.mjs'
-import { config, decodeAttributes, getSR } from './helpers'
+import { srConfig, decodeAttributes, getSR } from './helpers'
 
 describe.withBrowsersMatching(notIE)('Session Replay Harvest Behavior', () => {
   beforeEach(async () => {
@@ -13,11 +13,11 @@ describe.withBrowsersMatching(notIE)('Session Replay Harvest Behavior', () => {
   it('Should harvest early if exceeds preferred size - mocked', async () => {
     const startTime = Date.now()
 
-    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { harvestTimeSeconds: 60 } })))
+    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig({ session_replay: { harvestTimeSeconds: 60 } })))
       .then(() => browser.waitForSessionReplayRecording())
 
     const [{ request: blobHarvest }] = await Promise.all([
-      browser.testHandle.expectBlob(10000),
+      browser.testHandle.expectReplay(10000),
       // preferred size = 64kb, compression estimation is 88%
       browser.execute(function () {
         Object.values(newrelic.initializedAgents)[0].features.session_replay.featAggregate.payloadBytesEstimation = 64000 / 0.12
@@ -32,7 +32,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Harvest Behavior', () => {
   it('Should abort if exceeds maximum size - mocked', async () => {
     const startTime = Date.now()
 
-    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { harvestTimeSeconds: 60 } })))
+    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig({ session_replay: { harvestTimeSeconds: 60 } })))
       .then(() => browser.waitForSessionReplayRecording())
 
     await browser.execute(function () {
@@ -51,8 +51,8 @@ describe.withBrowsersMatching(notIE)('Session Replay Harvest Behavior', () => {
 
   it.withBrowsersMatching(notIOS)('Should harvest early if exceeds preferred size - real', async () => {
     const [{ request: blobHarvest }] = await Promise.all([
-      browser.testHandle.expectBlob(),
-      browser.url(await browser.testHandle.assetURL('64kb-dom.html', config({ session_replay: { harvestTimeSeconds: 60 } })))
+      browser.testHandle.expectReplay(),
+      browser.url(await browser.testHandle.assetURL('64kb-dom.html', srConfig({ session_replay: { harvestTimeSeconds: 60 } })))
         .then(() => browser.waitForSessionReplayRecording())
     ])
 
@@ -60,7 +60,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Harvest Behavior', () => {
   })
 
   it.withBrowsersMatching(notIOS)('Should abort if exceeds maximum size - real', async () => {
-    await browser.url(await browser.testHandle.assetURL('1mb-dom.html', config({ session_replay: { harvestTimeSeconds: 60 } })))
+    await browser.url(await browser.testHandle.assetURL('1mb-dom.html', srConfig({ session_replay: { harvestTimeSeconds: 60 } })))
       .then(() => browser.waitForSessionReplayRecording())
 
     await expect(getSR()).resolves.toEqual(expect.objectContaining({
@@ -71,8 +71,8 @@ describe.withBrowsersMatching(notIE)('Session Replay Harvest Behavior', () => {
 
   it.withBrowsersMatching(notIOS)('Should set timestamps on each payload', async () => {
     const [{ request: blobHarvest }] = await Promise.all([
-      browser.testHandle.expectBlob(),
-      browser.url(await browser.testHandle.assetURL('64kb-dom.html', config({ session_replay: { harvestTimeSeconds: 5 } })))
+      browser.testHandle.expectReplay(),
+      browser.url(await browser.testHandle.assetURL('64kb-dom.html', srConfig({ session_replay: { harvestTimeSeconds: 5 } })))
     ])
 
     expect(blobHarvest.body.length).toBeGreaterThan(0)
@@ -83,7 +83,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Harvest Behavior', () => {
     expect(attr1['replay.lastTimestamp']).toEqual(blobHarvest.body[blobHarvest.body.length - 1].timestamp)
     expect(attr1['session.durationMs']).toBeGreaterThan(0)
 
-    const { request: blobHarvest2 } = await browser.testHandle.expectBlob()
+    const { request: blobHarvest2 } = await browser.testHandle.expectReplay()
     expect(blobHarvest2.body.length).toBeGreaterThan(0)
     const attr2 = decodeAttributes(blobHarvest2.query.attributes)
     expect(attr2['replay.firstTimestamp']).toBeGreaterThan(0)

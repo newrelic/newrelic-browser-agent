@@ -5,7 +5,7 @@ describe('Trace with JS error feature', () => {
     let url = await browser.testHandle.assetURL('instrumented.html', stConfig())
     await browser.url(url).then(() => browser.waitForAgentLoad())
 
-    await Promise.all([browser.testHandle.expectBlob(), browser.execute(function () {
+    await Promise.all([browser.testHandle.expectTrace(), browser.execute(function () {
       newrelic.noticeError('hello session traces i am error')
     })]).then(([{ request: { body } }]) => {
       let err = body.find(node => node.n === 'error')

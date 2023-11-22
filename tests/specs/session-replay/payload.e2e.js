@@ -1,4 +1,4 @@
-import { config, testExpectedReplay } from './helpers'
+import { srConfig, testExpectedReplay } from './helpers'
 import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
 
 describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => {
@@ -11,10 +11,10 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
   })
 
   it('should allow for gzip', async () => {
-    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
+    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
       .then(() => browser.waitForAgentLoad())
 
-    const { request: harvestContents } = await browser.testHandle.expectBlob()
+    const { request: harvestContents } = await browser.testHandle.expectReplay()
 
     expect((
       harvestContents.query.attributes.includes('content_encoding') &&
@@ -36,10 +36,10 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
       body: ''
     })
 
-    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
+    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
       .then(() => browser.waitForAgentLoad())
 
-    const { request: harvestContents } = await browser.testHandle.expectBlob()
+    const { request: harvestContents } = await browser.testHandle.expectReplay()
 
     expect((
       harvestContents.query.attributes.includes('content_encoding') ||
@@ -52,21 +52,21 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
   })
 
   it('should match expected payload - standard', async () => {
-    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
+    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
       .then(() => browser.waitForAgentLoad())
 
-    const { request: harvestContents } = await browser.testHandle.expectBlob()
+    const { request: harvestContents } = await browser.testHandle.expectReplay()
     const { localStorage } = await browser.getAgentSessionInfo()
 
     testExpectedReplay({ data: harvestContents, session: localStorage.value, hasError: false, hasMeta: true, hasSnapshot: true, isFirstChunk: true })
   })
 
   it('should match expected payload - error', async () => {
-    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
+    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
       .then(() => browser.waitForAgentLoad())
 
     const [{ request: harvestContents }] = await Promise.all([
-      browser.testHandle.expectBlob(),
+      browser.testHandle.expectReplay(),
       browser.execute(function () {
         newrelic.noticeError(new Error('test'))
       })
@@ -77,7 +77,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
   })
 
   it('should handle meta if separated', async () => {
-    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
+    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
       .then(() => browser.waitForAgentLoad())
 
     const events = await browser.execute(function () {
@@ -89,7 +89,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
     expect(events.find(x => x.type === 4)).toEqual(undefined)
 
     const [{ request: harvestContents }] = await Promise.all([
-      browser.testHandle.expectBlob(),
+      browser.testHandle.expectReplay(),
       browser.execute(function () {
         newrelic.noticeError(new Error('test'))
       })

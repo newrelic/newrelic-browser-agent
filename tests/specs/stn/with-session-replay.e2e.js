@@ -4,7 +4,7 @@
  */
 
 import { testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
-import { config, MODE } from '../session-replay/helpers'
+import { srConfig, MODE } from '../session-replay/helpers'
 import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
 
 describe('stn with session replay', () => {
@@ -115,7 +115,7 @@ describe('stn with session replay', () => {
           ]
         })
 
-        let initSTReceived = await loadPageAndGetResource(['stn/instrumented.html', config({ session_replay: replayConfig })], 3003)
+        let initSTReceived = await loadPageAndGetResource(['stn/instrumented.html', srConfig({ session_replay: replayConfig })], 3003)
         let firstPageAgentVals = await getRuntimeValues()
         expect(initSTReceived).toBeTruthy()
         expect(initSTReceived.request.query.ptid).toBeUndefined()
@@ -130,7 +130,7 @@ describe('stn with session replay', () => {
         await navigateToRootDir()
 
         // For some reason, macOS Safari (up to 16.1) would fail if we navigated back to 'urlWithoutReplay' so we go to a diff asset page instead:
-        let secondInitST = await loadPageAndGetResource(['instrumented.html', config({ session_replay: replayConfig })], 3004)
+        let secondInitST = await loadPageAndGetResource(['instrumented.html', srConfig({ session_replay: replayConfig })], 3004)
         let secondPageAgentVals = await getRuntimeValues()
         // On subsequent page load or refresh, trace should maintain FULL mode and session id.
         expect(secondInitST.request.query.s).toEqual(initSTReceived.request.query.s)
@@ -161,13 +161,13 @@ describe('stn with session replay', () => {
     })
 
     it('does not run when replay is OFF', async () => {
-      await browser.url(await browser.testHandle.assetURL('stn/instrumented.html', config({ session_replay: { sampling_rate: 0, error_sampling_rate: 0 } })))
+      await browser.url(await browser.testHandle.assetURL('stn/instrumented.html', srConfig({ session_replay: { sampling_rate: 0, error_sampling_rate: 0 } })))
       await browser.waitForAgentLoad()
       expect(initSTReceived).toBeUndefined()
     })
 
     it('does run when replay is OFF but API is called', async () => {
-      await browser.url(await browser.testHandle.assetURL('stn/instrumented.html', config({ session_replay: { sampling_rate: 0, error_sampling_rate: 0 } })))
+      await browser.url(await browser.testHandle.assetURL('stn/instrumented.html', srConfig({ session_replay: { sampling_rate: 0, error_sampling_rate: 0 } })))
       await browser.waitForAgentLoad()
       expect(initSTReceived).toBeUndefined()
 
@@ -186,7 +186,7 @@ describe('stn with session replay', () => {
       ['ERR', { sampling_rate: 0, error_sampling_rate: 100 }]
     ].forEach(([replayMode, replayConfig]) => {
       it(`still runs and in the same ${replayMode} mode as replay feature that's on`, async () => {
-        const urlReplayOn = await browser.testHandle.assetURL('stn/instrumented.html', config({ session_replay: replayConfig, session_trace: { harvestTimeSeconds: 2 } }))
+        const urlReplayOn = await browser.testHandle.assetURL('stn/instrumented.html', srConfig({ session_replay: replayConfig, session_trace: { harvestTimeSeconds: 2 } }))
         const getAssumedValues = () => browser.execute(function () {
           const agent = Object.values(newrelic.initializedAgents)[0]
           return [
@@ -217,7 +217,7 @@ describe('stn with session replay', () => {
   })
 
   it('should not trigger session trace when an error is seen and session replay mode is off', async () => {
-    const urlReplayOff = await browser.testHandle.assetURL('js-error-with-error-before-page-load.html', config({
+    const urlReplayOff = await browser.testHandle.assetURL('js-error-with-error-before-page-load.html', srConfig({
       privacy: { cookies_enabled: true },
       session_replay: { enabled: true },
       session_trace: { enabled: true, harvestTimeSeconds: 2 }

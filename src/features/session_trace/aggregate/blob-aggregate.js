@@ -13,6 +13,7 @@ import { generateRandomHexString } from '../../../common/ids/unique-id'
 import { TraceStorage } from './trace/storage'
 import { obj as encodeObj } from '../../../common/url/encode'
 import { now } from '../../../common/timing/now'
+import { deregisterDrain } from '../../../common/drain/drain'
 
 const REQ_THRESHOLD_TO_SEND = 30
 const ERROR_MODE_SECONDS_WINDOW = 30 * 1000 // sliding window of nodes to track when simply monitoring (but not harvesting) in error mode
@@ -34,34 +35,38 @@ export class Aggregate extends AggregateBase {
     this.harvestTimeSeconds = getConfigurationValue(agentIdentifier, 'session_trace.harvestTimeSeconds') || 10
     this.maxNodesPerHarvest = getConfigurationValue(agentIdentifier, 'session_trace.maxNodesPerHarvest') || 1000
     this.seenAnError = false
+    this.entitled = undefined
+    this.everHarvested = false
 
     const shouldSetup = getConfigurationValue(agentIdentifier, 'privacy.cookies_enabled') === true
 
     if (shouldSetup) {
       this.traceStorage = new TraceStorage(this)
-      this.waitForFlags(['stn']).then(([stMode]) => this.initialize(stMode))
+      this.waitForFlags(['stn', 'ste']).then(([stMode, stEntitled]) => this.initialize(stMode, stEntitled))
     }
   }
 
-  initialize (stMode, ignoreSession) {
-    if (this.blocked) return
-    this.initialized = true
+  initialize (stMode, stEntitled, ignoreSession) {
+    this.entitled ??= stEntitled
+    if (this.blocked || !this.entitled) return deregisterDrain(this.agentIdentifier, this.featureName)
+
+    // The SessionEntity class can emit a message indicating the session was cleared and reset (expiry, inactivity). This feature must abort and never resume if that occurs.
+    if (!this.initialized) {
+      this.ee.on(SESSION_EVENTS.RESET, () => {
+        this.abort()
+      })
+      this.ee.on(SESSION_EVENTS.UPDATE, (eventType, sessionState) => {
+        // this will only have an effect if ST is NOT already in full mode
+        if (this.mode !== MODE.FULL && (sessionState.sessionReplayMode === MODE.FULL || sessionState.sessionTraceMode === MODE.FULL)) this.switchToFull()
+      })
+    }
 
     /** ST/SR sampling flow in BCS - https://drive.google.com/file/d/19hwt2oft-8Hh4RrjpLqEXfpP_9wYBLcq/view?usp=sharing */
     if (!this.agentRuntime.session.isNew && !ignoreSession) this.mode = this.agentRuntime.session.state.sessionTraceMode
     else this.mode = stMode
 
-    if (this.mode === MODE.OFF) return
-
-    // The SessionEntity class can emit a message indicating the session was cleared and reset (expiry, inactivity). This feature must abort and never resume if that occurs.
-    this.ee.on(SESSION_EVENTS.RESET, () => {
-      this.abort()
-    })
-
-    this.ee.on(SESSION_EVENTS.UPDATE, (eventType, sessionState) => {
-      // this will only have an effect if ST is NOT already in full mode
-      if (sessionState.sessionReplayMode === MODE.FULL && this.mode !== MODE.FULL) this.switchToFull()
-    })
+    this.initialized = true
+    if (this.mode === MODE.OFF) return deregisterDrain(this.agentIdentifier, this.featureName)
 
     this.scheduler = new HarvestScheduler('browser/blobs', {
       onFinished: this.onHarvestFinished.bind(this),
@@ -89,11 +94,11 @@ export class Aggregate extends AggregateBase {
       this.traceStorage.storeTiming(window.performance.timing)
     }
 
-    this.drain()
-
     if (this.mode === MODE.FULL) this.startHarvesting()
 
     this.agentRuntime.session.write({ sessionTraceMode: this.mode })
+
+    if (!this.drained) this.drain()
   }
 
   startHarvesting () {
@@ -102,7 +107,7 @@ export class Aggregate extends AggregateBase {
   }
 
   prepareHarvest (options) {
-    if (this.traceStorage.nodeCount <= REQ_THRESHOLD_TO_SEND && !options.isFinalHarvest) {
+    if (this.traceStorage.nodeCount <= REQ_THRESHOLD_TO_SEND && !options.isFinalHarvest && this.everHarvested) {
       // Only harvest when more than some threshold of nodes are pending, after the very first harvest, with the exception of the last outgoing harvest.
       return
     }
@@ -120,6 +125,8 @@ export class Aggregate extends AggregateBase {
     const hasReplay = this.agentRuntime?.session.state.sessionReplayMode === 1
     const endUserId = this.agentInfo.jsAttributes?.['enduser.id']
 
+    this.everHarvested = true
+
     return {
       qs: {
         browser_monitoring_key: this.agentInfo.licenseKey,
@@ -135,7 +142,7 @@ export class Aggregate extends AggregateBase {
           'trace.lastTimestampOffset': latestTimeStamp,
           'trace.nodeCount': stns.length,
           ptid: this.ptid,
-          session: this.agentRuntime?.session.state.value || '',
+          session: `${this.agentRuntime.session.state.value}`,
           rst: now(),
           ...(firstSessionHarvest && { firstSessionHarvest }),
           ...(hasReplay && { hasReplay }),
@@ -159,10 +166,10 @@ export class Aggregate extends AggregateBase {
     if (this.mode === MODE.FULL) return
     const prevMode = this.mode
     this.mode = MODE.FULL
-    if (prevMode === MODE.OFF && this.initialized) return this.initialize([this.mode], true)
+    if (prevMode === MODE.OFF && this.initialized) return this.initialize(this.mode, this.entitled, true)
     this.agentRuntime.session.write({ sessionTraceMode: this.mode })
     if (prevMode === MODE.ERROR && this.initialized) {
-      this.trimSTNs(ERROR_MODE_SECONDS_WINDOW) // up until now, Trace would've been just buffering nodes up to max, which needs to be trimmed to last X seconds
+      this.traceStorage.trimSTNs(ERROR_MODE_SECONDS_WINDOW) // up until now, Trace would've been just buffering nodes up to max, which needs to be trimmed to last X seconds
     }
     this.startHarvesting()
   }

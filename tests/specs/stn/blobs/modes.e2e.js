@@ -3,7 +3,6 @@
  * Right now, Trace can only be in error mode when its stn flag is 0 but replay runs in error mode.
  */
 import { testRumRequest } from '../../../../tools/testing-server/utils/expect-tests'
-import { supportsMultipleTabs } from '../../../../tools/browser-matcher/common-matchers.mjs'
 import { stConfig, testExpectedTrace, MODE } from '../../util/helpers'
 
 const getTraceMode = () => browser.execute(function () {
@@ -185,7 +184,7 @@ describe('respects feature flags', () => {
     expect(request.body.find(node => node.n === 'loadEventEnd')).toBeUndefined() // that node should've been tossed out by now
   })
 
-  it('does not perform final harvest while in this mode', async () => {
+  it('does not perform final harvest while in error mode', async () => {
     await browser.destroyAgentSession()
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
@@ -198,38 +197,6 @@ describe('respects feature flags', () => {
       browser.testHandle.expectTrace(10000, true),
       browser.refresh()
     ])
-  })
-
-  it.withBrowsersMatching(supportsMultipleTabs)('catches mode transition from other pages in the session', async () => {
-    await browser.destroyAgentSession()
-    await browser.testHandle.scheduleReply('bamServer', {
-      test: testRumRequest,
-      body: JSON.stringify({ stn: 2, ste: 1, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
-    })
-    let url = await browser.testHandle.assetURL('instrumented.html', stConfig())
-    await browser.url(url).then(() => browser.waitForAgentLoad())
-
-    await getTraceMode().then(([traceMode]) => expect(traceMode).toEqual(MODE.ERROR))
-
-    // await browser.newWindow(await browser.testHandle.assetURL('instrumented.html', stConfig()), { windowName: 'Second page' })
-    const newTab = await browser.createWindow('tab')
-    await browser.switchToWindow(newTab.handle)
-    await browser.testHandle.scheduleReply('bamServer', {
-      test: testRumRequest,
-      body: JSON.stringify({ stn: 2, ste: 1, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
-    })
-    await browser.url(await browser.testHandle.assetURL('instrumented.html', stConfig()))
-      .then(() => browser.waitForAgentLoad())
-
-    await Promise.all([
-      browser.execute(function () {
-        newrelic.noticeError('test')
-      })
-    ])
-
-    await browser.closeWindow()
-    await browser.switchToWindow((await browser.getWindowHandles())[0])
-    await getTraceMode().then(([traceMode]) => expect(traceMode).toEqual(MODE.FULL))
   })
 
   it('Session ending aborts traces', async () => {
@@ -254,5 +221,32 @@ describe('respects feature flags', () => {
 
     testExpectedTrace({ data: finalHarvest })
     await getTraceMode().then(([traceMode]) => expect(traceMode).toEqual(MODE.OFF))
+  })
+
+  it('Session tracking is disabled', async () => {
+    await browser.destroyAgentSession()
+    await browser.testHandle.scheduleReply('bamServer', {
+      test: testRumRequest,
+      body: JSON.stringify({ stn: 1, ste: 1, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
+    })
+    let url = await browser.testHandle.assetURL('instrumented.html', stConfig({ privacy: { cookies_enabled: false } }))
+    await browser.url(url).then(() => browser.waitForAgentLoad())
+
+    await browser.testHandle.expectTrace(10000, true)
+  })
+
+  it('should not trigger session trace when an error is seen and mode is off', async () => {
+    await browser.destroyAgentSession()
+    await browser.testHandle.scheduleReply('bamServer', {
+      test: testRumRequest,
+      body: JSON.stringify({ stn: 0, ste: 1, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
+    })
+    let url = await browser.testHandle.assetURL('instrumented.html', stConfig())
+    await browser.url(url).then(() => browser.waitForAgentLoad())
+
+    await Promise.all([
+      browser.testHandle.expectTrace(10000, true),
+      browser.execute(function () { newrelic.noticeError() })
+    ])
   })
 })

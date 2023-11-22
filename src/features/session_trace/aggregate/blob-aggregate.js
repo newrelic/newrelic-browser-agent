@@ -141,7 +141,7 @@ export class Aggregate extends AggregateBase {
           'trace.lastTimestamp': this.agentRuntime.offset + latestTimeStamp,
           'trace.lastTimestampOffset': latestTimeStamp,
           'trace.nodeCount': stns.length,
-          ptid: this.ptid,
+          ptid: `${this.ptid}`,
           session: `${this.agentRuntime.session.state.value}`,
           rst: now(),
           ...(firstSessionHarvest && { firstSessionHarvest }),

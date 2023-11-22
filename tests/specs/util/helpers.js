@@ -53,7 +53,8 @@ export function testExpectedTrace ({
   lastTimestampOffset,
   nodeCount,
   firstSessionHarvest,
-  hasReplay
+  hasReplay,
+  session
 }) {
   expect(data.query).toMatchObject({
     browser_monitoring_key: expect.any(String),
@@ -72,7 +73,7 @@ export function testExpectedTrace ({
     'trace.lastTimestampOffset': lastTimestampOffset || expect.any(Number),
     'trace.nodeCount': nodeCount || expect.any(Number),
     ptid: expect.any(String),
-    session: expect.any(String),
+    session: session || expect.any(String),
     rst: expect.any(Number),
     // optional attrs here
     ...(firstSessionHarvest && { firstSessionHarvest }),

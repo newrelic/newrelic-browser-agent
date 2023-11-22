@@ -102,6 +102,7 @@ export default class CustomCommands {
         permanent: true,
         body: JSON.stringify({
           stn: 1,
+          ste: 1,
           err: 1,
           ins: 1,
           cap: 1,

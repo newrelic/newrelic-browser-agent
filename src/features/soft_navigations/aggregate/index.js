@@ -54,6 +54,8 @@ export class Aggregate extends AggregateBase {
       if (this.interactionInProgress?.seenHistoryAndDomChange()) this.interactionInProgressFinished()
     }, this.featureName, this.ee)
 
+    this.#registerApiHandlers()
+
     registerHandler('ajax', this.#handleAjaxEvent.bind(this), this.featureName, this.ee)
     registerHandler('jserror', this.#handleJserror.bind(this), this.featureName, this.ee)
 
@@ -158,5 +160,16 @@ export class Aggregate extends AggregateBase {
       associatedInteraction.on('cancelled', single(() =>
         handle('softNavFlush', [associatedInteraction.id, false, undefined], undefined, FEATURE_NAMES.jserrors, this.ee))) // don't take custom attrs from cancelled ixns
     }
+  }
+
+  #registerApiHandlers () {
+    const INTERACTION_API = 'api-ixn-'
+    const thisClass = this
+    registerHandler(INTERACTION_API + 'get', function (time) {
+      // In here, 'this' refers to the EventContext specific to per InteractionHandle instance spawned by each .interaction() api call.
+      // Each api call aka IH instance would therefore retain a reference to either the in-progress interaction *at the time of the call* OR a new 'api'-started interaction.
+      this.ixn = thisClass.interactionInProgress !== null ? thisClass.interactionInProgress : new Interaction(thisClass.agentIdentifier, 'api', time)
+      console.log(this)
+    }, thisClass.featureName, thisClass.ee)
   }
 }

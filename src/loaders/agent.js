@@ -47,6 +47,7 @@ export class Agent extends AgentBase {
     // Future work is being planned to evaluate removing this behavior from the backend, but for now we must ensure this call is made
     this.desiredFeatures.add(PageViewEvent)
 
+    this.runSoftNavOverSpa = [...this.desiredFeatures].some(instr => instr.featureName === FEATURE_NAMES.softNav)
     configure(this, options, options.loaderType || 'agent') // add api, exposed, and other config properties
 
     this.run()
@@ -66,14 +67,12 @@ export class Agent extends AgentBase {
     try {
       const enabledFeatures = getEnabledFeatures(this.agentIdentifier)
       const featuresToStart = [...this.desiredFeatures]
-      const shouldRunSoftNavOverSpa = Boolean(featuresToStart.some(instr => instr.featureName === FEATURE_NAMES.softNav) &&
-        enabledFeatures[FEATURE_NAMES.softNav] && this.init.feature_flags.includes('soft_nav')) // if soft_navigations is allowed to run AND part of this agent build, so that we don't erroneously skip old spa
 
       featuresToStart.sort((a, b) => featurePriority[a.featureName] - featurePriority[b.featureName])
       featuresToStart.forEach(InstrumentCtor => {
         if (!enabledFeatures[InstrumentCtor.featureName] && InstrumentCtor.featureName !== FEATURE_NAMES.pageViewEvent) return // PVE is required to run even if it's marked disabled
-        if (shouldRunSoftNavOverSpa && InstrumentCtor.featureName === FEATURE_NAMES.spa) return
-        if (!shouldRunSoftNavOverSpa && InstrumentCtor.featureName === FEATURE_NAMES.softNav) return
+        if (this.runSoftNavOverSpa && InstrumentCtor.featureName === FEATURE_NAMES.spa) return
+        if (!this.runSoftNavOverSpa && InstrumentCtor.featureName === FEATURE_NAMES.softNav) return
 
         const dependencies = getFeatureDependencyNames(InstrumentCtor.featureName)
         const hasAllDeps = dependencies.every(featName => featName in this.features) // any other feature(s) this depends on should've been initialized on prior iterations by priority order

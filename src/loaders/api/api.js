@@ -38,7 +38,7 @@ export function setTopLevelCallers () {
   }
 }
 
-export function setAPI (agentIdentifier, forceDrain) {
+export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) {
   if (!forceDrain) registerDrain(agentIdentifier, 'api')
   const apiInterface = {}
   var instanceEE = ee.get(agentIdentifier)
@@ -156,7 +156,7 @@ export function setAPI (agentIdentifier, forceDrain) {
 
   function InteractionHandle () { }
 
-  var InteractionApiProto = InteractionHandle.prototype = {
+  const InteractionApiProto = InteractionHandle.prototype = {
     createTracer: function (name, cb) {
       var contextStore = {}
       var ixn = this
@@ -181,14 +181,14 @@ export function setAPI (agentIdentifier, forceDrain) {
   }
 
   ;['actionText', 'setName', 'setAttribute', 'save', 'ignore', 'onEnd', 'getContext', 'end', 'get'].forEach(name => {
-    InteractionApiProto[name] = apiCall(spaPrefix, name, undefined, FEATURE_NAMES.spa)
+    InteractionApiProto[name] = runSoftNavOverSpa ? apiCall(spaPrefix, name, undefined, FEATURE_NAMES.softNav) : apiCall(spaPrefix, name, undefined, FEATURE_NAMES.spa)
   })
 
   function apiCall (prefix, name, notSpa, bufferGroup) {
     return function () {
       handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/' + name + '/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
       if (bufferGroup) handle(prefix + name, [now(), ...arguments], notSpa ? null : this, bufferGroup, instanceEE) // no bufferGroup means only the SM is emitted
-      return notSpa ? undefined : this
+      return notSpa ? undefined : this // returns the InteractionHandle which allows these methods to be chained
     }
   }
 

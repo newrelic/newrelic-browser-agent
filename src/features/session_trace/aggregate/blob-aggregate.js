@@ -14,6 +14,7 @@ import { TraceStorage } from './trace/storage'
 import { obj as encodeObj } from '../../../common/url/encode'
 import { now } from '../../../common/timing/now'
 import { deregisterDrain } from '../../../common/drain/drain'
+import { globalScope } from '../../../common/constants/runtime'
 
 const REQ_THRESHOLD_TO_SEND = 30
 const ERROR_MODE_SECONDS_WINDOW = 30 * 1000 // sliding window of nodes to track when simply monitoring (but not harvesting) in error mode
@@ -31,7 +32,7 @@ export class Aggregate extends AggregateBase {
     if (!this.agentRuntime.xhrWrappable) return
 
     /** The PageTrace ID generated at each hard page load */
-    this.agentRuntime.ptid = this.ptid = generateRandomHexString(8)
+    this.agentRuntime.ptid = this.ptid = generateRandomHexString(10)
     /** A buffer to hold on to harvested traces in the case that a retry must be made later */
     this.sentTrace = null
     this.harvestTimeSeconds = getConfigurationValue(agentIdentifier, 'session_trace.harvestTimeSeconds') || 10
@@ -104,9 +105,9 @@ export class Aggregate extends AggregateBase {
     }, this.featureName, this.ee)
 
     if (typeof PerformanceNavigationTiming !== 'undefined') {
-      this.traceStorage.storeTiming(window.performance.getEntriesByType('navigation')[0])
+      this.traceStorage.storeTiming(globalScope.performance?.getEntriesByType?.('navigation')[0])
     } else {
-      this.traceStorage.storeTiming(window.performance.timing)
+      this.traceStorage.storeTiming(globalScope.performance?.timing)
     }
 
     /** Only start actually harvesting if running in full mode at init time */
@@ -123,7 +124,7 @@ export class Aggregate extends AggregateBase {
   }
 
   /** Called by the harvest scheduler at harvest time to retrieve the payload.  This will only actually return a payload if running in full mode */
-  prepareHarvest (options) {
+  prepareHarvest (options = {}) {
     if (this.traceStorage.nodeCount <= REQ_THRESHOLD_TO_SEND && !options.isFinalHarvest && this.everHarvested) {
       // Only harvest when more than some threshold of nodes are pending, after the very first harvest, with the exception of the last outgoing harvest.
       return
@@ -140,8 +141,8 @@ export class Aggregate extends AggregateBase {
     const firstSessionHarvest = this.agentRuntime.session && !this.agentRuntime.session.state.traceHarvestStarted
     if (firstSessionHarvest) this.agentRuntime.session.write({ traceHarvestStarted: true })
 
-    const hasReplay = this.agentRuntime?.session.state.sessionReplayMode === 1
-    const endUserId = this.agentInfo.jsAttributes?.['enduser.id']
+    const hasReplay = this.agentRuntime.session?.state.sessionReplayMode === 1
+    const endUserId = this.agentInfo?.jsAttributes?.['enduser.id']
 
     this.everHarvested = true
 
@@ -169,7 +170,7 @@ export class Aggregate extends AggregateBase {
           'trace.lastTimestampOffset': latestTimeStamp,
           'trace.nodeCount': stns.length,
           ptid: `${this.ptid}`,
-          session: `${this.agentRuntime.session.state.value}`,
+          session: `${this.agentRuntime.session?.state.value}`,
           rst: now(),
           ...(firstSessionHarvest && { firstSessionHarvest }),
           ...(hasReplay && { hasReplay }),

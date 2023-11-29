@@ -1,10 +1,11 @@
+import { globalScope } from '../../../../common/constants/runtime'
 import { MODE } from '../../../../common/session/session-entity'
 import { now } from '../../../../common/timing/now'
 import { parseUrl } from '../../../../common/url/parse-url'
 import { TraceNode } from './node'
 
 const ERROR_MODE_SECONDS_WINDOW = 30 * 1000 // sliding window of nodes to track when simply monitoring (but not harvesting) in error mode
-const SUPPORTS_PERFORMANCE_OBSERVER = 'PerformanceObserver' in window && typeof window.PerformanceObserver === 'function'
+const SUPPORTS_PERFORMANCE_OBSERVER = 'PerformanceObserver' in globalScope && typeof globalScope.PerformanceObserver === 'function'
 
 const ignoredEvents = {
   // we find that certain events make the data too noisy to be useful
@@ -79,7 +80,7 @@ export class TraceStorage {
   /** Used by session trace's harvester to create the payload body. */
   takeSTNs () {
     if (!SUPPORTS_PERFORMANCE_OBSERVER) { // if PO isn't supported, this checks resourcetiming buffer every harvest.
-      this.storeResources(window.performance.getEntriesByType('resource'))
+      this.storeResources(globalScope.performance?.getEntriesByType?.('resource'))
     }
 
     const stns = Object.entries(this.trace).flatMap(([name, listOfSTNodes]) => { // basically take the "this.trace" map-obj and concat all the list-type values

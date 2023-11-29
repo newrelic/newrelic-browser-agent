@@ -73,12 +73,12 @@ export function generateRandomHexString (length) {
   let randomValueIndex = 0
   if (crypto && crypto.getRandomValues) {
     // eslint-disable-next-line
-    randomValueTable = crypto.getRandomValues(new Uint8Array(31))
+    randomValueTable = crypto.getRandomValues(new Uint8Array(length))
   }
 
   const chars = []
   for (var i = 0; i < length; i++) {
-    chars.push(getRandomValue(randomValueTable, ++randomValueIndex).toString(16))
+    chars.push(getRandomValue(randomValueTable, randomValueIndex++).toString(16))
   }
   return chars.join('')
 }

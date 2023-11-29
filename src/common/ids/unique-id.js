@@ -43,13 +43,14 @@ export function generateUuid () {
   let randomValueTable
   let randomValueIndex = 0
   if (crypto && crypto.getRandomValues) {
+    // For a UUID, we only need 30 characters since two characters are pre-defined
     // eslint-disable-next-line
-    randomValueTable = crypto.getRandomValues(new Uint8Array(31))
+    randomValueTable = crypto.getRandomValues(new Uint8Array(30))
   }
 
   return uuidv4Template.split('').map(templateInput => {
     if (templateInput === 'x') {
-      return getRandomValue(randomValueTable, ++randomValueIndex).toString(16)
+      return getRandomValue(randomValueTable, randomValueIndex++).toString(16)
     } else if (templateInput === 'y') {
       // this is the uuid variant per spec (8, 9, a, b)
       // % 4, then shift to get values 8-11
@@ -78,7 +79,7 @@ export function generateRandomHexString (length) {
 
   const chars = []
   for (var i = 0; i < length; i++) {
-    chars.push(getRandomValue(randomValueTable, randomValueIndex++).toString(16))
+    chars.push(getRandomValue(randomValueTable, ++randomValueIndex).toString(16))
   }
   return chars.join('')
 }

@@ -16,7 +16,7 @@ import {
 } from './constants.js'
 import { GitCliRunner } from '../shared-utils/git-cli-runner.js'
 
-const octokit = github.getOctokit(args.githubToken)
+const forksOctokit = github.getOctokit(args.nrForksGithubToken)
 
 // Get the release change log
 const versionData = JSON.parse(await fs.promises.readFile(CHANGELOG_FILE_PATH)).entries.find(
@@ -32,7 +32,7 @@ const categories = {
 }
 for (const change of versionData.changes) {
   if (categories[change.type]) {
-    const entries = await octokit.request('GET /repos/{owner}/{repo}/commits/{commit_sha}/pulls', {
+    const entries = await forksOctokit.request('GET /repos/{owner}/{repo}/commits/{commit_sha}/pulls', {
       owner: github.context.repo.owner,
       repo: github.context.repo.repo,
       commit_sha: change.sha
@@ -110,7 +110,7 @@ await fs.promises.mkdir(DOCS_FORK_CLONE_PATH, { recursive: true })
 const branchName = `add-browser-agent-${args.tag}`
 
 console.log('Syncing docs fork')
-await octokit.rest.repos.mergeUpstream({
+await forksOctokit.rest.repos.mergeUpstream({
   owner: DOCS_SITE_FORK_GITHUB_OWNER,
   repo: DOCS_SITE_FORK_GITHUB_REPO,
   branch: DOCS_SITE_REPO_BASE
@@ -118,12 +118,12 @@ await octokit.rest.repos.mergeUpstream({
 
 try {
   console.log(`Deleting remote branch ${branchName}`)
-  await octokit.rest.git.getRef({
+  await forksOctokit.rest.git.getRef({
     owner: DOCS_SITE_FORK_GITHUB_OWNER,
     repo: DOCS_SITE_FORK_GITHUB_REPO,
     ref: `heads/${branchName}`
   }) // <-- This will throw an error if the branch does not exist
-  await octokit.rest.git.deleteRef({
+  await forksOctokit.rest.git.deleteRef({
     owner: DOCS_SITE_FORK_GITHUB_OWNER,
     repo: DOCS_SITE_FORK_GITHUB_REPO,
     ref: `heads/${branchName}`
@@ -135,7 +135,7 @@ try {
     throw error
   }
 }
-const gitCliRunner = new GitCliRunner(DOCS_FORK_CLONE_PATH, args.githubLogin, args.githubToken, args.githubUserName, args.githubEmail)
+const gitCliRunner = new GitCliRunner(DOCS_FORK_CLONE_PATH, args.githubLogin, args.nrForksGithubToken, args.githubUserName, args.githubEmail)
 await gitCliRunner.clone(DOCS_SITE_FORK_GITHUB_OWNER, DOCS_SITE_FORK_GITHUB_REPO)
 await gitCliRunner.createBranch(branchName)
 
@@ -155,7 +155,8 @@ await gitCliRunner.commitFile(releaseNotesFile, `chore: Add Browser agent ${args
 await gitCliRunner.push(branchName)
 
 console.log('Opening pull request')
-await octokit.rest.pulls.create({
+const docsOctokit = github.getOctokit(args.nrDocsGithubToken)
+await docsOctokit.rest.pulls.create({
   owner: DOCS_SITE_GITHUB_OWNER,
   repo: DOCS_SITE_GITHUB_REPO,
   head: `${DOCS_SITE_FORK_GITHUB_OWNER}:${branchName}`,

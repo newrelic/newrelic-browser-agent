@@ -4,7 +4,7 @@ import { generateUuid } from '../../../common/ids/unique-id'
 import { addCustomAttributes, getAddStringContext, nullable, numeric } from '../../../common/serialize/bel-serializer'
 import { now } from '../../../common/timing/now'
 import { cleanURL } from '../../../common/url/clean-url'
-import { NODE_TYPE, INTERACTION_STATUS, INTERACTION_TYPE } from '../constants'
+import { NODE_TYPE, INTERACTION_STATUS, INTERACTION_TYPE, API_TRIGGER_NAME } from '../constants'
 import { BelNode } from './bel-node'
 
 /**
@@ -28,6 +28,7 @@ export class Interaction extends BelNode {
   status = INTERACTION_STATUS.IP
   domTimestamp = 0
   historyTimestamp = 0
+  createdByApi = false
 
   constructor (agentIdentifier, uiEvent, uiEventTimestamp) {
     super(agentIdentifier)
@@ -38,8 +39,11 @@ export class Interaction extends BelNode {
       ['finished', []],
       ['cancelled', []]
     ])
+    this.forceSave = this.forceIgnore = false
 
-    this.timer = setTimeout(() => this.cancel(), 30000) // in-progress interactions are disregarded after 30 seconds if it's not completed by then (or cancelled elsewhere)
+    // In-progress interactions are disregarded after 30 seconds if it's not completed by then (or cancelled elsewhere). Api-started interactions do not time out.
+    if (this.trigger !== API_TRIGGER_NAME) this.timer = setTimeout(() => this.cancel(), 30000)
+    else this.createdByApi = true
   }
 
   updateDom (timestamp) {
@@ -61,10 +65,11 @@ export class Interaction extends BelNode {
     this.eventSubscription.get(event).push(cb)
   }
 
-  finish () {
+  finish (customEndTime = 0) {
     if (this.status !== INTERACTION_STATUS.IP) return // disallow this call if the ixn is already done aka not in-progress
+    if (this.forceIgnore) return this.cancel() // interaction on .ignore() api call should be discarded instead
     clearTimeout(this.timer)
-    this.end = Math.max(this.domTimestamp, this.historyTimestamp) - this.start
+    this.end = Math.max(Math.max(this.domTimestamp, this.historyTimestamp, customEndTime) - this.start, 0)
     this.customAttributes = { ...getInfo(this.agentIdentifier).jsAttributes, ...this.customAttributes } // attrs specific to this interaction should have precedence over the general custom attrs
     this.status = INTERACTION_STATUS.FIN
 
@@ -75,6 +80,7 @@ export class Interaction extends BelNode {
 
   cancel () {
     if (this.status !== INTERACTION_STATUS.IP) return // disallow this call if the ixn is already done aka not in-progress
+    if (this.forceSave && !this.forceIgnore) return this.finish(now()) // when .save() api is used, the interaction is always sent UNLESS .ignore() was also called on it
     clearTimeout(this.timer)
     this.status = INTERACTION_STATUS.CAN
 

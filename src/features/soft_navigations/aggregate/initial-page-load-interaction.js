@@ -50,9 +50,4 @@ export class InitialPageLoadInteraction extends Interaction {
     })
     return navTimingNode
   }
-
-  finish (loadTimestamp) {
-    this.domTimestamp = this.historyTimestamp = loadTimestamp // base Interaction class use these fields to calculate end time
-    super.finish()
-  }
 }

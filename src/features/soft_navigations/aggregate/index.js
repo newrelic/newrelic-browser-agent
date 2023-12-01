@@ -6,7 +6,7 @@ import { single } from '../../../common/util/invoke'
 import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
-import { FEATURE_NAME, INTERACTION_STATUS } from '../constants'
+import { API_TRIGGER_NAME, FEATURE_NAME, INTERACTION_STATUS } from '../constants'
 import { AjaxNode } from './ajax-node'
 import { InitialPageLoadInteraction } from './initial-page-load-interaction'
 import { Interaction } from './interaction'
@@ -47,11 +47,11 @@ export class Aggregate extends AggregateBase {
     registerHandler('newInteraction', (timestamp, trigger) => this.startAnInteraction(trigger, timestamp), this.featureName, this.ee)
     registerHandler('newURL', (timestamp, url) => {
       this.interactionInProgress?.updateHistory(timestamp, url)
-      if (this.interactionInProgress?.seenHistoryAndDomChange()) this.interactionInProgressFinished()
+      if (this.interactionInProgress?.seenHistoryAndDomChange()) this.interactionInProgress.finish()
     }, this.featureName, this.ee)
     registerHandler('newDom', timestamp => {
       this.interactionInProgress?.updateDom(timestamp)
-      if (this.interactionInProgress?.seenHistoryAndDomChange()) this.interactionInProgressFinished()
+      if (this.interactionInProgress?.seenHistoryAndDomChange()) this.interactionInProgress.finish()
     }, this.featureName, this.ee)
 
     this.#registerApiHandlers()
@@ -82,16 +82,19 @@ export class Aggregate extends AggregateBase {
   }
 
   startAnInteraction (eventName, startedAt) { // this is throttled by instrumentation so that it isn't excessively called
+    if (this.interactionInProgress?.createdByApi) return // api-started interactions cannot be disrupted aka cancelled by UI events (this flow)
     this.interactionInProgress?.cancel()
 
     this.interactionInProgress = new Interaction(this.agentIdentifier, eventName, startedAt)
-    this.interactionInProgress.on('cancelled', () => (this.interactionInProgress = null)) // since the ixn can be cancelled on its own
+    this.haveIPResetOnClose()
   }
 
-  interactionInProgressFinished () {
-    this.interactionInProgress.finish()
-    this.interactionsToHarvest.push(this.interactionInProgress)
-    this.interactionInProgress = null
+  haveIPResetOnClose () {
+    this.interactionInProgress.on('finished', () => {
+      this.interactionsToHarvest.push(this.interactionInProgress)
+      this.interactionInProgress = null
+    })
+    this.interactionInProgress.on('cancelled', () => { this.interactionInProgress = null })
   }
 
   /**
@@ -167,9 +170,19 @@ export class Aggregate extends AggregateBase {
     const thisClass = this
     registerHandler(INTERACTION_API + 'get', function (time) {
       // In here, 'this' refers to the EventContext specific to per InteractionHandle instance spawned by each .interaction() api call.
-      // Each api call aka IH instance would therefore retain a reference to either the in-progress interaction *at the time of the call* OR a new 'api'-started interaction.
-      this.ixn = thisClass.interactionInProgress !== null ? thisClass.interactionInProgress : new Interaction(thisClass.agentIdentifier, 'api', time)
-      console.log(this)
+      // Each api call aka IH instance would therefore retain a reference to either the in-progress interaction *at the time of the call* OR a new api-started interaction.
+      if (thisClass.interactionInProgress !== null) this.associatedInteraction = thisClass.interactionInProgress
+      else {
+        // This new api-driven interaction will be the target of any subsequent .interaction() call, until it is closed by EITHER .end() OR the regular seenHistoryAndDomChange process.
+        this.associatedInteraction = thisClass.interactionInProgress = new Interaction(thisClass.agentIdentifier, API_TRIGGER_NAME, time)
+        thisClass.haveIPResetOnClose()
+      }
+    }, thisClass.featureName, thisClass.ee)
+    registerHandler(INTERACTION_API + 'save', function () {
+      this.associatedInteraction.forceSave = true
+    }, thisClass.featureName, thisClass.ee)
+    registerHandler(INTERACTION_API + 'ignore', function () {
+      this.associatedInteraction.forceIgnore = true
     }, thisClass.featureName, thisClass.ee)
   }
 }

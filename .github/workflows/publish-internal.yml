@@ -36,16 +36,43 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: lts/*
+      - name: Prepare target environment
+        id: target-environment
+        run: |
+          if [[ "${{ inputs.nr_environment }}" == "prod" ]]; then
+            echo "nrba_app_id=${{ secrets.INTERNAL_PRODUCTION_APPLICATION_ID }}" >> $GITHUB_OUTPUT
+            echo "nrba_license_key=${{ secrets.INTERNAL_LICENSE_KEY }}" >> $GITHUB_OUTPUT
+            echo "nrba_ab_app_id=" >> $GITHUB_OUTPUT
+            echo "nrba_ab_license_key=" >> $GITHUB_OUTPUT
+          elif [[ "${{ inputs.nr_environment }}" == "eu-prod" ]]; then
+            echo "nrba_app_id=${{ secrets.INTERNAL_EU_PRODUCTION_APPLICATION_ID }}" >> $GITHUB_OUTPUT
+            echo "nrba_license_key=${{ secrets.INTERNAL_LICENSE_KEY }}" >> $GITHUB_OUTPUT
+            echo "nrba_ab_app_id=" >> $GITHUB_OUTPUT
+            echo "nrba_ab_license_key=" >> $GITHUB_OUTPUT
+          elif [[ "${{ inputs.nr_environment }}" == "staging" ]]; then
+            echo "nrba_app_id=${{ secrets.INTERNAL_STAGING_APPLICATION_ID }}" >> $GITHUB_OUTPUT
+            echo "nrba_license_key=${{ secrets.INTERNAL_LICENSE_KEY }}" >> $GITHUB_OUTPUT
+            echo "nrba_ab_app_id=${{ secrets.INTERNAL_AB_STAGING_APPLICATION_ID }}" >> $GITHUB_OUTPUT
+            echo "nrba_ab_license_key=${{ secrets.INTERNAL_AB_LICENSE_KEY }}" >> $GITHUB_OUTPUT
+          elif [[ "${{ inputs.nr_environment }}" == "dev" ]]; then
+            echo "nrba_app_id=${{ secrets.INTERNAL_DEV_APPLICATION_ID }}" >> $GITHUB_OUTPUT
+            echo "nrba_license_key=${{ secrets.INTERNAL_LICENSE_KEY }}" >> $GITHUB_OUTPUT
+            echo "nrba_ab_app_id=${{ secrets.INTERNAL_AB_DEV_APPLICATION_ID }}" >> $GITHUB_OUTPUT
+            echo "nrba_ab_license_key=${{ secrets.INTERNAL_AB_LICENSE_KEY }}" >> $GITHUB_OUTPUT
+          else
+            echo "Invalid environment select"
+            exit 1
+          fi
       - name: Deploy prod a/b script
         uses: ./.github/actions/internal-ab
         with:
           nr_environment: ${{ inputs.nr_environment }}
           nrba_released_script_url: ${{ inputs.nrba_released_script_url }}
           nrba_latest_script_url: ${{ inputs.nrba_latest_script_url }}
-          nrba_app_id: ${{ secrets.INTERNAL_PRODUCTION_APPLICATION_ID }}
-          nrba_license_key: ${{ secrets.INTERNAL_LICENSE_KEY }}
-          nrba_ab_app_id: ${{ secrets.INTERNAL_AB_DEV_APPLICATION_ID }}
-          nrba_ab_license_key: ${{ secrets.INTERNAL_AB_LICENSE_KEY }}
+          nrba_app_id: ${{ steps.target-environment.outputs.nrba_app_id }}
+          nrba_license_key: ${{ steps.target-environment.outputs.nrba_license_key }}
+          nrba_ab_app_id: ${{ steps.target-environment.outputs.nrba_ab_app_id }}
+          nrba_ab_license_key: ${{ steps.target-environment.outputs.nrba_ab_license_key }}
           aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws_role: ${{ secrets.AWS_ROLE_ARN }}

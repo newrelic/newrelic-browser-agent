@@ -21,6 +21,7 @@ export const args = yargs(hideBin(process.argv))
   .boolean('dry')
   .default('dry', false)
   .describe('dry', 'Runs the action script without actually uploading files.')
+  .alias('dry', 'dry-run')
 
   .string('dir')
   .describe('dir', 'Bucket sub-directory name. Leave empty to upload to the root of the bucket.')

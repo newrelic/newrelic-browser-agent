@@ -66,4 +66,14 @@ describe('property getters/setters used for validation', () => {
 
     expect(getConfigurationValue('34567', 'session_replay.mask_text_selector')).toEqual(null)
   })
+
+  test('empty string accepted for mask_text', () => {
+    setConfiguration('34567', {
+      session_replay: {
+        mask_text_selector: ''
+      }
+    })
+
+    expect(getConfigurationValue('34567', 'session_replay.mask_text_selector')).toEqual('[data-nr-mask]')
+  })
 })

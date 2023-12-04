@@ -7,7 +7,7 @@ import { getInfo } from '../../../common/config/config'
 
 export class InitialPageLoadInteraction extends Interaction {
   constructor (agentIdentifier) {
-    super(agentIdentifier, 'initialPageLoad', 0)
+    super(agentIdentifier, 'initialPageLoad', 0, null)
     const agentInfo = getInfo(agentIdentifier)
     this.queueTime = agentInfo.queueTime
     this.appTime = agentInfo.applicationTime

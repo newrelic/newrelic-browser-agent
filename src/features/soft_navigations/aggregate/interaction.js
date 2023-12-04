@@ -18,23 +18,24 @@ export class Interaction extends BelNode {
   newURL = '' + globalScope?.location
   customName
   customAttributes = {}
+  customDataByApi = {}
   queueTime // only used by initialPageLoad interactions
   appTime // only used by initialPageLoad interactions
   oldRoute
   newRoute
-  previousRouteName
-  targetRouteName
   /** Internal state of this interaction: in-progress, finished, or cancelled. */
   status = INTERACTION_STATUS.IP
   domTimestamp = 0
   historyTimestamp = 0
   createdByApi = false
+  onDone = []
 
-  constructor (agentIdentifier, uiEvent, uiEventTimestamp) {
+  constructor (agentIdentifier, uiEvent, uiEventTimestamp, currentRouteKnown) {
     super(agentIdentifier)
     this.belType = NODE_TYPE.INTERACTION
     this.trigger = uiEvent
     this.start = uiEventTimestamp
+    this.oldRoute = currentRouteKnown
     this.eventSubscription = new Map([
       ['finished', []],
       ['cancelled', []]
@@ -66,6 +67,7 @@ export class Interaction extends BelNode {
   }
 
   done (customEndTime) {
+    this.onDone.forEach(apiProvidedCb => apiProvidedCb(this.customDataByApi)) // this interaction's .save or .ignore can still be set by these user provided callbacks for example
     if (this.forceIgnore) return this.#cancel() // .ignore() always has precedence over save actions
     else if (this.seenHistoryAndDomChange()) return this.#finish() // then this should've already finished while it was the interactionInProgress, with a natural end time
     else if (this.forceSave) return this.#finish(customEndTime || now()) // a manually saved ixn (did not fulfill conditions) must have a specified end time, if one wasn't provided

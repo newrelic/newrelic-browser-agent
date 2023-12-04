@@ -58,7 +58,6 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
   asyncApiFns.forEach(fnName => { apiInterface[fnName] = apiCall(prefix, fnName, true, 'api') })
 
   apiInterface.addPageAction = apiCall(prefix, 'addPageAction', true, FEATURE_NAMES.pageAction)
-  apiInterface.setCurrentRouteName = apiCall(prefix, 'routeName', true, FEATURE_NAMES.spa)
 
   apiInterface.setPageViewName = function (name, host) {
     if (typeof name !== 'string') return
@@ -183,6 +182,7 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
   ;['actionText', 'setName', 'setAttribute', 'save', 'ignore', 'onEnd', 'getContext', 'end', 'get'].forEach(name => {
     InteractionApiProto[name] = runSoftNavOverSpa ? apiCall(spaPrefix, name, undefined, FEATURE_NAMES.softNav) : apiCall(spaPrefix, name, undefined, FEATURE_NAMES.spa)
   })
+  apiInterface.setCurrentRouteName = runSoftNavOverSpa ? apiCall(spaPrefix, 'routeName', undefined, FEATURE_NAMES.softNav) : apiCall(prefix, 'routeName', true, FEATURE_NAMES.spa)
 
   function apiCall (prefix, name, notSpa, bufferGroup) {
     return function () {

@@ -36,6 +36,7 @@ export class Aggregate extends AggregateBase {
       this.initialPageLoadInteraction = null
     })
 
+    this.latestRouteSetByApi = null
     this.interactionInProgress = null // aside from the "page load" interaction, there can only ever be 1 ongoing at a time
 
     this.blocked = false
@@ -87,7 +88,7 @@ export class Aggregate extends AggregateBase {
     if (this.interactionInProgress?.createdByApi) return // api-started interactions cannot be disrupted aka cancelled by UI events (this flow)
     this.interactionInProgress?.done()
 
-    this.interactionInProgress = new Interaction(this.agentIdentifier, eventName, startedAt)
+    this.interactionInProgress = new Interaction(this.agentIdentifier, eventName, startedAt, this.latestRouteSetByApi)
     this.haveIPResetOnClose()
   }
 
@@ -170,13 +171,14 @@ export class Aggregate extends AggregateBase {
   #registerApiHandlers () {
     const INTERACTION_API = 'api-ixn-'
     const thisClass = this
+
     registerHandler(INTERACTION_API + 'get', function (time) {
       // In here, 'this' refers to the EventContext specific to per InteractionHandle instance spawned by each .interaction() api call.
       // Each api call aka IH instance would therefore retain a reference to either the in-progress interaction *at the time of the call* OR a new api-started interaction.
       if (thisClass.interactionInProgress !== null) this.associatedInteraction = thisClass.interactionInProgress
       else {
         // This new api-driven interaction will be the target of any subsequent .interaction() call, until it is closed by EITHER .end() OR the regular seenHistoryAndDomChange process.
-        this.associatedInteraction = thisClass.interactionInProgress = new Interaction(thisClass.agentIdentifier, API_TRIGGER_NAME, time)
+        this.associatedInteraction = thisClass.interactionInProgress = new Interaction(thisClass.agentIdentifier, API_TRIGGER_NAME, time, thisClass.latestRouteSetByApi)
         thisClass.haveIPResetOnClose()
       }
     }, thisClass.featureName, thisClass.ee)
@@ -192,6 +194,22 @@ export class Aggregate extends AggregateBase {
     }, thisClass.featureName, thisClass.ee)
     registerHandler(INTERACTION_API + 'ignore', function () {
       this.associatedInteraction.forceIgnore = true
+    }, thisClass.featureName, thisClass.ee)
+
+    registerHandler(INTERACTION_API + 'getContext', function (time, callback) {
+      if (typeof callback !== 'function') return
+      setTimeout(function () {
+        callback(this.associatedInteraction.customDataByApi)
+      }, 0)
+    }, thisClass.featureName, thisClass.ee)
+    registerHandler(INTERACTION_API + 'onEnd', function (time, callback) {
+      if (typeof callback !== 'function') return
+      this.associatedInteraction.onDone.push(callback)
+    }, thisClass.featureName, thisClass.ee)
+
+    registerHandler(INTERACTION_API + 'routeName', function (time, newRouteName) { // notice that this fn tampers with the ixn IP, not with the linked ixn
+      thisClass.latestRouteSetByApi = newRouteName
+      if (thisClass.interactionInProgress) thisClass.interactionInProgress.newRoute = newRouteName
     }, thisClass.featureName, thisClass.ee)
   }
 }

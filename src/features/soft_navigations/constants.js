@@ -18,6 +18,7 @@ export const INTERACTION_TYPE = {
 export const NODE_TYPE = {
   INTERACTION: 1,
   AJAX: 2,
+  CUSTOM_END: 3,
   CUSTOM_TRACER: 4
 }
 

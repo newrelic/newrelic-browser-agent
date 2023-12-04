@@ -42,7 +42,7 @@ export class Interaction extends BelNode {
     this.forceSave = this.forceIgnore = false
 
     // In-progress interactions are disregarded after 30 seconds if it's not completed by then (or cancelled elsewhere). Api-started interactions do not time out.
-    if (this.trigger !== API_TRIGGER_NAME) this.timer = setTimeout(() => this.cancel(), 30000)
+    if (this.trigger !== API_TRIGGER_NAME) this.timer = setTimeout(() => this.done(), 30000)
     else this.createdByApi = true
   }
 
@@ -65,9 +65,15 @@ export class Interaction extends BelNode {
     this.eventSubscription.get(event).push(cb)
   }
 
-  finish (customEndTime = 0) {
+  done (customEndTime) {
+    if (this.forceIgnore) return this.#cancel() // .ignore() always has precedence over save actions
+    else if (this.seenHistoryAndDomChange()) return this.#finish() // then this should've already finished while it was the interactionInProgress, with a natural end time
+    else if (this.forceSave) return this.#finish(customEndTime || now()) // a manually saved ixn (did not fulfill conditions) must have a specified end time, if one wasn't provided
+    else return this.#cancel()
+  }
+
+  #finish (customEndTime = 0) {
     if (this.status !== INTERACTION_STATUS.IP) return // disallow this call if the ixn is already done aka not in-progress
-    if (this.forceIgnore) return this.cancel() // interaction on .ignore() api call should be discarded instead
     clearTimeout(this.timer)
     this.end = Math.max(Math.max(this.domTimestamp, this.historyTimestamp, customEndTime) - this.start, 0)
     this.customAttributes = { ...getInfo(this.agentIdentifier).jsAttributes, ...this.customAttributes } // attrs specific to this interaction should have precedence over the general custom attrs
@@ -78,9 +84,8 @@ export class Interaction extends BelNode {
     callbacks.forEach(fn => fn())
   }
 
-  cancel () {
+  #cancel () {
     if (this.status !== INTERACTION_STATUS.IP) return // disallow this call if the ixn is already done aka not in-progress
-    if (this.forceSave && !this.forceIgnore) return this.finish(now()) // when .save() api is used, the interaction is always sent UNLESS .ignore() was also called on it
     clearTimeout(this.timer)
     this.status = INTERACTION_STATUS.CAN
 

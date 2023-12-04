@@ -8,6 +8,7 @@ import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { API_TRIGGER_NAME, FEATURE_NAME, INTERACTION_STATUS } from '../constants'
 import { AjaxNode } from './ajax-node'
+import { customEndNode } from './customEnd-node'
 import { InitialPageLoadInteraction } from './initial-page-load-interaction'
 import { Interaction } from './interaction'
 
@@ -29,7 +30,8 @@ export class Aggregate extends AggregateBase {
     this.initialPageLoadInteraction = new InitialPageLoadInteraction(agentIdentifier)
     timeToFirstByte.subscribe(({ entries }) => {
       const loadEventTime = Math.round(entries[0].loadEventEnd)
-      this.initialPageLoadInteraction.finish(loadEventTime)
+      this.initialPageLoadInteraction.forceSave = true
+      this.initialPageLoadInteraction.done(loadEventTime)
       this.interactionsToHarvest.push(this.initialPageLoadInteraction)
       this.initialPageLoadInteraction = null
     })
@@ -47,11 +49,11 @@ export class Aggregate extends AggregateBase {
     registerHandler('newInteraction', (timestamp, trigger) => this.startAnInteraction(trigger, timestamp), this.featureName, this.ee)
     registerHandler('newURL', (timestamp, url) => {
       this.interactionInProgress?.updateHistory(timestamp, url)
-      if (this.interactionInProgress?.seenHistoryAndDomChange()) this.interactionInProgress.finish()
+      if (this.interactionInProgress?.seenHistoryAndDomChange()) this.interactionInProgress.done()
     }, this.featureName, this.ee)
     registerHandler('newDom', timestamp => {
       this.interactionInProgress?.updateDom(timestamp)
-      if (this.interactionInProgress?.seenHistoryAndDomChange()) this.interactionInProgress.finish()
+      if (this.interactionInProgress?.seenHistoryAndDomChange()) this.interactionInProgress.done()
     }, this.featureName, this.ee)
 
     this.#registerApiHandlers()
@@ -83,7 +85,7 @@ export class Aggregate extends AggregateBase {
 
   startAnInteraction (eventName, startedAt) { // this is throttled by instrumentation so that it isn't excessively called
     if (this.interactionInProgress?.createdByApi) return // api-started interactions cannot be disrupted aka cancelled by UI events (this flow)
-    this.interactionInProgress?.cancel()
+    this.interactionInProgress?.done()
 
     this.interactionInProgress = new Interaction(this.agentIdentifier, eventName, startedAt)
     this.haveIPResetOnClose()
@@ -177,6 +179,13 @@ export class Aggregate extends AggregateBase {
         this.associatedInteraction = thisClass.interactionInProgress = new Interaction(thisClass.agentIdentifier, API_TRIGGER_NAME, time)
         thisClass.haveIPResetOnClose()
       }
+    }, thisClass.featureName, thisClass.ee)
+    registerHandler(INTERACTION_API + 'end', function (timeNow) {
+      this.associatedInteraction.on('finished', () => {
+        const newNode = customEndNode(thisClass.agentIdentifier, timeNow)
+        this.associatedInteraction.addChild(newNode)
+      })
+      this.associatedInteraction.done(timeNow)
     }, thisClass.featureName, thisClass.ee)
     registerHandler(INTERACTION_API + 'save', function () {
       this.associatedInteraction.forceSave = true

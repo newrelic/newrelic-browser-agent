@@ -2,6 +2,10 @@
 
 import { warn } from '../common/util/console'
 
+function warnMessage (api) {
+  return `Call to agent api ${api} failed. The agent is not currently initialized.`
+}
+
 export class AgentBase {
   /**
    * Reports a browser PageAction event along with a name and optional attributes.
@@ -10,7 +14,7 @@ export class AgentBase {
    * @param {object} [attributes] JSON object with one or more key/value pairs. For example: {key:"value"}. The key is reported as its own PageAction attribute with the specified values.
    */
   addPageAction (name, attributes) {
-    warn('Call to agent api addPageAction failed. The page action feature is not currently initialized.')
+    warn(warnMessage('addPageAction'))
   }
 
   /**
@@ -20,7 +24,7 @@ export class AgentBase {
    * @param {string} [host] Default is http://custom.transaction. Typically set host to your site's domain URI.
    */
   setPageViewName (name, host) {
-    warn('Call to agent api setPageViewName failed. The page view feature is not currently initialized.')
+    warn(warnMessage('setPageViewName'))
   }
 
   /**
@@ -31,7 +35,7 @@ export class AgentBase {
    * @param {boolean} [persist] Default false. f set to true, the name-value pair will also be set into the browser's storage API. Then on the following instrumented pages that load within the same session, the pair will be re-applied as a custom attribute.
    */
   setCustomAttribute (name, value, persist) {
-    warn('Call to agent api setCustomAttribute failed. The js errors feature is not currently initialized.')
+    warn(warnMessage('setCustomAttribute'))
   }
 
   /**
@@ -41,7 +45,7 @@ export class AgentBase {
    * @param {object} [customAttributes] An object containing name/value pairs representing custom attributes.
    */
   noticeError (error, customAttributes) {
-    warn('Call to agent api noticeError failed. The js errors feature is not currently initialized.')
+    warn(warnMessage('noticeError'))
   }
 
   /**
@@ -50,7 +54,7 @@ export class AgentBase {
    * @param {string|null} value A string identifier for the end-user, useful for tying all browser events to specific users. The value parameter does not have to be unique. If IDs should be unique, the caller is responsible for that validation. Passing a null value unsets any existing user ID.
    */
   setUserId (value) {
-    warn('Call to agent api setUserId failed. The js errors feature is not currently initialized.')
+    warn(warnMessage('setUserId'))
   }
 
   /**
@@ -62,7 +66,7 @@ export class AgentBase {
    * have to be unique. Passing a null value unsets any existing value.
    */
   setApplicationVersion (value) {
-    warn('Call to agent api setApplicationVersion failed. The agent is not currently initialized.')
+    warn(warnMessage('setApplicationVersion'))
   }
 
   /**
@@ -71,16 +75,16 @@ export class AgentBase {
    * @param {(error: Error|string) => boolean | { group: string }} callback When an error occurs, the callback is called with the error object as a parameter. The callback will be called with each error, so it is not specific to one error.
    */
   setErrorHandler (callback) {
-    warn('Call to agent api setErrorHandler failed. The js errors feature is not currently initialized.')
+    warn(warnMessage('setErrorHandler'))
   }
 
   /**
-   * Records an additional time point as "finished" in a session trace, and sends the event to New Relic.
+   * Records an additional time point as "finished" in a session trace and adds a page action.
    * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/finished/}
    * @param {number} [timeStamp] Defaults to the current time of the call. If used, this marks the time that the page is "finished" according to your own criteria.
    */
   finished (timeStamp) {
-    warn('Call to agent api finished failed. The page action feature is not currently initialized.')
+    warn(warnMessage('finished'))
   }
 
   /**
@@ -90,7 +94,7 @@ export class AgentBase {
    * @param {string} id The ID or version of this release; for example, a version number, build number from your CI environment, GitHub SHA, GUID, or a hash of the contents.
    */
   addRelease (name, id) {
-    warn('Call to agent api addRelease failed. The js errors feature is not currently initialized.')
+    warn(warnMessage('addRelease'))
   }
 
   /**
@@ -99,7 +103,7 @@ export class AgentBase {
    * @param {string|string[]} [featureNames] The name(s) of the features to start.  If no name(s) are passed, all features will be started
    */
   start (featureNames) {
-    warn('Call to agent api addRelease failed. The agent is not currently initialized.')
+    warn(warnMessage('start'))
   }
 
   /**
@@ -108,7 +112,7 @@ export class AgentBase {
    * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/recordReplay/}
    */
   recordReplay () {
-    warn('Call to agent api recordReplay failed. The agent is not currently initialized.')
+    warn(warnMessage('recordReplay'))
   }
 
   /**
@@ -118,6 +122,6 @@ export class AgentBase {
    * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/recordReplay/}
    */
   pauseReplay () {
-    warn('Call to agent api pauseReplay failed. The agent is not currently initialized.')
+    warn(warnMessage('pauseReplay'))
   }
 }

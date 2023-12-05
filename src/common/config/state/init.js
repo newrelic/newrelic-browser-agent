@@ -75,8 +75,7 @@ const model = () => {
       get mask_text_selector () { return hiddenState.mask_selector },
       set mask_text_selector (val) {
         if (isValidSelector(val)) hiddenState.mask_selector = `${val},${nrMask}`
-        else if (val === '') hiddenState.mask_selector = nrMask
-        else if (val === null) hiddenState.mask_selector = val // null is acceptable, which completely disables the behavior
+        else if (val === '' || val === null) hiddenState.mask_selector = nrMask
         else warn('An invalid session_replay.mask_selector was provided. \'*\' will be used.', val)
       },
       // these properties only have getters because they are enforcable constants and should error if someone tries to override them

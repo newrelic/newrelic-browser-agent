@@ -1,6 +1,6 @@
 import webpack from 'webpack'
 import TerserPlugin from 'terser-webpack-plugin'
-import { SubresourceIntegrityPlugin } from 'webpack-subresource-integrity'
+// import { SubresourceIntegrityPlugin } from 'webpack-subresource-integrity'
 import NRBAChunkingPlugin from '../plugins/nrba-chunking/index.mjs'
 
 /**
@@ -64,10 +64,10 @@ export default (env, asyncChunkName) => {
         publicPath: env.PUBLIC_PATH,
         append: env.SUBVERSION === 'PROD' ? false : '//# sourceMappingURL=[url]'
       }),
-      new SubresourceIntegrityPlugin({
-        enabled: true,
-        hashFuncNames: ['sha512']
-      }),
+      // new SubresourceIntegrityPlugin({
+      //   enabled: true,
+      //   hashFuncNames: ['sha512']
+      // }),
       new NRBAChunkingPlugin({
         asyncChunkName
       })

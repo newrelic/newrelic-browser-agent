@@ -14,7 +14,7 @@ export default class NRBAChunkingPlugin {
       compilation.hooks.afterChunks.tap('NRBAChunkingPlugin', (chunks) => {
         const chunkGraph = compilation.chunkGraph
         const asyncChunks = Array.from(chunks)
-          .filter(chunk => !chunk.isOnlyInitial())
+          .filter(chunk => !chunk.isOnlyInitial() || ['recorder'].includes(chunk.name))
 
         if (asyncChunks.length === 0) {
           return

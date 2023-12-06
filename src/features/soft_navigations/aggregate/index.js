@@ -207,6 +207,13 @@ export class Aggregate extends AggregateBase {
       this.associatedInteraction.onDone.push(callback)
     }, thisClass.featureName, thisClass.ee)
 
+    registerHandler(INTERACTION_API + 'setName', function (time, name, trigger) {
+      if (name) this.associatedInteraction.customName = name
+      if (trigger) this.associatedInteraction.trigger = trigger
+    }, thisClass.featureName, thisClass.ee)
+    registerHandler(INTERACTION_API + 'setAttribute', function (time, key, value) {
+      this.associatedInteraction.customAttributes[key] = value
+    }, thisClass.featureName, thisClass.ee)
     registerHandler(INTERACTION_API + 'routeName', function (time, newRouteName) { // notice that this fn tampers with the ixn IP, not with the linked ixn
       thisClass.latestRouteSetByApi = newRouteName
       if (thisClass.interactionInProgress) thisClass.interactionInProgress.newRoute = newRouteName

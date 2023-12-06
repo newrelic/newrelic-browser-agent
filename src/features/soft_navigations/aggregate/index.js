@@ -47,7 +47,7 @@ export class Aggregate extends AggregateBase {
 
     // const tracerEE = this.ee.get('tracer') // used to get API-driven interactions
 
-    registerHandler('newInteraction', (timestamp, trigger) => this.startAnInteraction(trigger, timestamp), this.featureName, this.ee)
+    registerHandler('newInteraction', (event) => this.startAnInteraction(event.type, event.timeStamp, event.target), this.featureName, this.ee)
     registerHandler('newURL', (timestamp, url) => {
       this.interactionInProgress?.updateHistory(timestamp, url)
       if (this.interactionInProgress?.seenHistoryAndDomChange()) this.interactionInProgress.done()
@@ -84,11 +84,15 @@ export class Aggregate extends AggregateBase {
     }
   }
 
-  startAnInteraction (eventName, startedAt) { // this is throttled by instrumentation so that it isn't excessively called
+  startAnInteraction (eventName, startedAt, sourceElem) { // this is throttled by instrumentation so that it isn't excessively called
     if (this.interactionInProgress?.createdByApi) return // api-started interactions cannot be disrupted aka cancelled by UI events (this flow)
     this.interactionInProgress?.done()
 
     this.interactionInProgress = new Interaction(this.agentIdentifier, eventName, startedAt, this.latestRouteSetByApi)
+    if (eventName === 'click') {
+      const sourceElemText = getActionText(sourceElem)
+      if (sourceElemText) this.interactionInProgress.customAttributes.actionText = sourceElemText
+    }
     this.haveIPResetOnClose()
   }
 
@@ -207,6 +211,9 @@ export class Aggregate extends AggregateBase {
       this.associatedInteraction.onDone.push(callback)
     }, thisClass.featureName, thisClass.ee)
 
+    registerHandler(INTERACTION_API + 'actionText', function (time, newActionText) {
+      if (newActionText) this.associatedInteraction.customAttributes.actionText = newActionText
+    }, thisClass.featureName, thisClass.ee)
     registerHandler(INTERACTION_API + 'setName', function (time, name, trigger) {
       if (name) this.associatedInteraction.customName = name
       if (trigger) this.associatedInteraction.trigger = trigger
@@ -218,5 +225,13 @@ export class Aggregate extends AggregateBase {
       thisClass.latestRouteSetByApi = newRouteName
       if (thisClass.interactionInProgress) thisClass.interactionInProgress.newRoute = newRouteName
     }, thisClass.featureName, thisClass.ee)
+  }
+}
+
+function getActionText (elem) {
+  const tagName = elem.tagName.toLowerCase()
+  const elementsOfInterest = ['a', 'button', 'input']
+  if (elementsOfInterest.includes(tagName)) {
+    return elem.title || elem.value || elem.innerText
   }
 }

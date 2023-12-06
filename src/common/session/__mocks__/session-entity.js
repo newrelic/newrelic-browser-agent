@@ -4,6 +4,12 @@ export const SESSION_EVENTS = {
   RESUME: 'session-resume'
 }
 
+export const MODE = {
+  OFF: 0,
+  FULL: 1,
+  ERROR: 2
+}
+
 export const SessionEntity = jest.fn(function () {
   this.setup = jest.fn()
   this.sync = jest.fn()

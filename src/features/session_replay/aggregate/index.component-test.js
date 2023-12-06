@@ -300,11 +300,8 @@ describe('Session Replay', () => {
       let after = 0
       const spy = jest.spyOn(sr.scheduler, 'runHarvest').mockImplementation(() => { after = Date.now() })
       setConfiguration(agentIdentifier, { ...init })
-
       sr.recorder = new Recorder(sr)
       sr.recorder.payloadBytesEstimation = IDEAL_PAYLOAD_SIZE / AVG_COMPRESSION
-      sr.recorder.startRecording()
-
       const before = Date.now()
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)

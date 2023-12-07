@@ -45,8 +45,6 @@ export class Aggregate extends AggregateBase {
       else this.blocked = true // if rum response determines that customer lacks entitlements for spa endpoint, this feature shouldn't harvest
     })
 
-    // const tracerEE = this.ee.get('tracer') // used to get API-driven interactions
-
     registerHandler('newInteraction', (event) => this.startAnInteraction(event.type, event.timeStamp, event.target), this.featureName, this.ee)
     registerHandler('newURL', (timestamp, url) => {
       this.interactionInProgress?.updateHistory(timestamp, url)
@@ -221,6 +219,7 @@ export class Aggregate extends AggregateBase {
     registerHandler(INTERACTION_API + 'setAttribute', function (time, key, value) {
       this.associatedInteraction.customAttributes[key] = value
     }, thisClass.featureName, thisClass.ee)
+
     registerHandler(INTERACTION_API + 'routeName', function (time, newRouteName) { // notice that this fn tampers with the ixn IP, not with the linked ixn
       thisClass.latestRouteSetByApi = newRouteName
       if (thisClass.interactionInProgress) thisClass.interactionInProgress.newRoute = newRouteName

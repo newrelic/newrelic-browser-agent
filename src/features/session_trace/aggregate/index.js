@@ -10,7 +10,7 @@ import { now } from '../../../common/timing/now'
 import { FEATURE_NAME } from '../constants'
 import { HandlerCache } from '../../utils/handler-cache'
 import { MODE, SESSION_EVENTS } from '../../../common/session/session-entity'
-import { getSessionReplayMode } from '../../session_replay/replay-mode'
+import { getSessionReplayMode } from '../../session_replay/shared/replay-mode'
 import { AggregateBase } from '../../utils/aggregate-base'
 
 const ignoredEvents = {

@@ -22,8 +22,8 @@ export class Instrument extends InstrumentBase {
       session = JSON.parse(localStorage.getItem('NRBA_SESSION'))
       if (session.sessionReplayMode !== MODE.OFF) {
         ;(async () => {
-          const { Recorder } = (await import(/* webpackChunkName: "recorder" */'../recorder'))
-          const recorder = new Recorder({ mode: session.sessionReplayMode, agentIdentifier: this.agentIdentifier })
+          const { Recorder } = (await import(/* webpackChunkName: "recorder" */'../shared/recorder'))
+          const recorder = new Recorder({ mode: session?.sessionReplayMode, agentIdentifier: this.agentIdentifier })
           recorder.startRecording()
           this.importAggregator({ recorder })
         })()

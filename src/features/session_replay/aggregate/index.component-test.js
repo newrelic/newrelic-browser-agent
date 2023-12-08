@@ -1,10 +1,10 @@
 import { Aggregate as SessionReplayAgg } from '.'
-import { AVG_COMPRESSION, MAX_PAYLOAD_SIZE, IDEAL_PAYLOAD_SIZE } from '../constants'
+import { AVG_COMPRESSION, IDEAL_PAYLOAD_SIZE } from '../constants'
 import { Aggregator } from '../../../common/aggregate/aggregator'
 import { SESSION_EVENTS, SessionEntity, MODE } from '../../../common/session/session-entity'
 import { setConfiguration } from '../../../common/config/config'
 import { configure } from '../../../loaders/configure/configure'
-import { Recorder } from '../recorder'
+import { Recorder } from '../shared/recorder'
 
 jest.mock('../../../common/util/console', () => ({
   warn: jest.fn()
@@ -301,7 +301,7 @@ describe('Session Replay', () => {
       const spy = jest.spyOn(sr.scheduler, 'runHarvest').mockImplementation(() => { after = Date.now() })
       setConfiguration(agentIdentifier, { ...init })
       sr.recorder = new Recorder(sr)
-      sr.recorder.payloadBytesEstimation = IDEAL_PAYLOAD_SIZE / AVG_COMPRESSION
+      sr.recorder.currentBufferTarget.payloadBytesEstimation = IDEAL_PAYLOAD_SIZE / AVG_COMPRESSION
       const before = Date.now()
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)
@@ -310,12 +310,14 @@ describe('Session Replay', () => {
     })
 
     test('Aborts if exceeds total limit', async () => {
-      const spy = jest.spyOn(sr.scheduler, 'runHarvest')
+      const spy = jest.spyOn(sr.scheduler.harvest, '_send')
       setConfiguration(agentIdentifier, { ...init })
+      sr.shouldCompress = false
       sr.recorder = new Recorder(sr)
-      sr.recorder.payloadBytesEstimation = (MAX_PAYLOAD_SIZE + 100000) / AVG_COMPRESSION
+      sr.recorder.currentBufferTarget.events = Array.from({ length: 10000001 }, () => Math.random() + '') //  fill the events array with tons of events
+      sr.recorder.currentBufferTarget.payloadBytesEstimation = sr.recorder.currentBufferTarget.events.join('').length
       sr.ee.emit('rumresp-sr', [true])
-      await wait(1)
+      await wait(100)
       expect(spy).not.toHaveBeenCalled()
       expect(sr.blocked).toEqual(true)
       expect(sr.mode).toEqual(MODE.OFF)

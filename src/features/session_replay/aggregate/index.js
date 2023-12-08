@@ -12,7 +12,7 @@
 
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
-import { ABORT_REASONS, FEATURE_NAME, QUERY_PARAM_PADDING, RRWEB_EVENT_TYPES } from '../constants'
+import { ABORT_REASONS, FEATURE_NAME, MAX_PAYLOAD_SIZE, QUERY_PARAM_PADDING, RRWEB_EVENT_TYPES } from '../constants'
 import { stringify } from '../../../common/util/stringify'
 import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
 import { SESSION_EVENTS, MODE, SESSION_EVENT_TYPES } from '../../../common/session/session-entity'
@@ -60,6 +60,7 @@ export class Aggregate extends AggregateBase {
     if (shouldSetup) {
       // The SessionEntity class can emit a message indicating the session was cleared and reset (expiry, inactivity). This feature must abort and never resume if that occurs.
       this.ee.on(SESSION_EVENTS.RESET, () => {
+        this.scheduler.runHarvest()
         this.abort(ABORT_REASONS.RESET)
       })
 
@@ -107,9 +108,9 @@ export class Aggregate extends AggregateBase {
       // This was to ensure that all errors, including those on the page before load and those handled with "noticeError" are accounted for. Needs evalulation
       registerHandler('errorAgg', (e) => {
         this.errorNoticed = true
+        if (this.recorder) this.recorder.currentBufferTarget.hasError = true
         // run once
         if (this.mode === MODE.ERROR && globalScope?.document.visibilityState === 'visible') {
-          if (this.recorder) this.recorder.hasError = true
           this.switchToFull()
         }
       }, this.featureName, this.ee)
@@ -149,17 +150,16 @@ export class Aggregate extends AggregateBase {
    * @returns {void}
    */
   async initializeRecording (errorSample, fullSample, ignoreSession) {
-    if (this.recorder?.recording && !this.initialized) this.scheduler.startTimer(this.harvestTimeSeconds)
     this.initialized = true
-    if (!this.entitled || this.recorder?.recording) return
+    if (!this.entitled) return
 
-    const { session } = getRuntime(this.agentIdentifier)
     // if theres an existing session replay in progress, there's no need to sample, just check the entitlements response
     // if not, these sample flags need to be checked
     // if this isnt the FIRST load of a session AND
     // we are not actively recording SR... DO NOT import or run the recording library
     // session replay samples can only be decided on the first load of a session
     // session replays can continue if already in progress
+    const { session } = getRuntime(this.agentIdentifier)
     if (!session.isNew && !ignoreSession) { // inherit the mode of the existing session
       this.mode = session.state.sessionReplayMode
     } else {
@@ -167,7 +167,20 @@ export class Aggregate extends AggregateBase {
       if (fullSample) this.mode = MODE.FULL // full mode has precedence over error mode
       else if (errorSample) this.mode = MODE.ERROR
       // If neither are selected, then don't record (early return)
-      else return
+      else {
+        return
+      }
+    }
+
+    if (!this.recorder) {
+      try {
+      // Do not change the webpackChunkName or it will break the webpack nrba-chunking plugin
+        const { Recorder } = (await import(/* webpackChunkName: "recorder" */'../shared/recorder'))
+        this.recorder = new Recorder(this)
+        this.recorder.currentBufferTarget.hasError = this.errorNoticed
+      } catch (err) {
+        return this.abort(ABORT_REASONS.IMPORT)
+      }
     }
 
     // If an error was noticed before the mode could be set (like in the early lifecycle of the page), immediately set to FULL mode
@@ -175,20 +188,10 @@ export class Aggregate extends AggregateBase {
       this.mode = MODE.FULL
     }
 
-    if (!this.recorder) {
-      try {
-      // Do not change the webpackChunkName or it will break the webpack nrba-chunking plugin
-        const { Recorder } = (await import(/* webpackChunkName: "recorder" */'../recorder'))
-        this.recorder = new Recorder(this)
-      } catch (err) {
-        return this.abort(ABORT_REASONS.IMPORT)
-      }
-    }
-
     // FULL mode records AND reports from the beginning, while ERROR mode only records (but does not report).
     // ERROR mode will do this until an error is thrown, and then switch into FULL mode.
     // If an error happened in ERROR mode before we've gotten to this stage, it will have already set the mode to FULL
-    if (this.mode === MODE.FULL) {
+    if (this.mode === MODE.FULL && !this.scheduler.started) {
       // We only report (harvest) in FULL mode
       this.scheduler.startTimer(this.harvestTimeSeconds)
     }
@@ -202,17 +205,17 @@ export class Aggregate extends AggregateBase {
       // compressor failed to load, but we can still record without compression as a last ditch effort
       this.shouldCompress = false
     }
-    this.recorder.startRecording()
+    if (!this.recorder.recording) this.recorder.startRecording()
 
     this.syncWithSessionManager({ sessionReplayMode: this.mode })
   }
 
   prepareHarvest () {
     if (!this.recorder) return
-    const { events } = this.recorder.getEvents()
+    const recorderEvents = this.recorder.getEvents()
     // get the event type and use that to trigger another harvest if needed
-    if (!events.length || (this.mode !== MODE.FULL && !this.blocked)) return
-    const payload = this.getHarvestContents(events)
+    if (!recorderEvents.events.length || (this.mode !== MODE.FULL) || this.blocked) return
+    const payload = this.getHarvestContents(recorderEvents)
     if (!payload.body.length) {
       this.recorder.clearBuffer()
       return
@@ -223,26 +226,30 @@ export class Aggregate extends AggregateBase {
     } else {
       this.scheduler.opts.gzip = false
     }
+    if (payload.body.length > MAX_PAYLOAD_SIZE) {
+      this.abort(ABORT_REASONS.TOO_BIG)
+      return
+    }
     // TODO -- Gracefully handle the buffer for retries.
     const { session } = getRuntime(this.agentIdentifier)
     if (!session.state.sessionReplaySentFirstChunk) this.syncWithSessionManager({ sessionReplaySentFirstChunk: true })
     this.recorder.clearBuffer()
+    if (recorderEvents.type === 'preloaded') this.scheduler.runHarvest()
     return [payload]
   }
 
-  getHarvestContents (events) {
-    events ??= this.recorder.getEvents().events
+  getHarvestContents (recorderEvents) {
+    recorderEvents ??= this.recorder.getEvents()
+    let events = recorderEvents.events
     const agentRuntime = getRuntime(this.agentIdentifier)
     const info = getInfo(this.agentIdentifier)
     const endUserId = info.jsAttributes?.['enduser.id']
-
-    // if (this.backloggedEvents.length) this.events = [...this.backloggedEvents, ...this.events]
 
     // do not let the first node be a full snapshot node, since this NEEDS to be preceded by a meta node
     // we will manually inject it if this happens
     const payloadStartsWithFullSnapshot = events?.[0]?.type === RRWEB_EVENT_TYPES.FullSnapshot
     if (payloadStartsWithFullSnapshot && !!this.recorder.lastMeta) {
-      this.recorder.hasMeta = true
+      recorderEvents.hasMeta = true
       events.unshift(this.recorder.lastMeta) // --> pushed the meta from a previous payload into newer payload... but it still has old timestamps
       this.recorder.lastMeta = undefined
     }
@@ -253,7 +260,7 @@ export class Aggregate extends AggregateBase {
     if (payloadEndsWithMeta) {
       this.recorder.lastMeta = events[events.length - 1]
       events = events.slice(0, events.length - 1)
-      this.recorder.hasMeta = !!events.find(x => x.type === RRWEB_EVENT_TYPES.Meta)
+      recorderEvents.hasMeta = !!events.find(x => x.type === RRWEB_EVENT_TYPES.Meta)
     }
 
     const agentOffset = getRuntime(this.agentIdentifier).offset
@@ -261,8 +268,9 @@ export class Aggregate extends AggregateBase {
 
     const firstEventTimestamp = events[0]?.timestamp // from rrweb node
     const lastEventTimestamp = events[events.length - 1]?.timestamp // from rrweb node
-    const firstTimestamp = firstEventTimestamp || this.recorder?.cycleTimestamp
+    const firstTimestamp = firstEventTimestamp || recorderEvents.cycleTimestamp
     const lastTimestamp = lastEventTimestamp || agentOffset + relativeNow
+
     return {
       qs: {
         browser_monitoring_key: info.licenseKey,
@@ -282,11 +290,11 @@ export class Aggregate extends AggregateBase {
           agentVersion: agentRuntime.version,
           session: agentRuntime.session.state.value,
           rst: relativeNow,
-          hasMeta: this.recorder.hasMeta,
-          hasSnapshot: this.recorder.hasSnapshot,
-          hasError: this.recorder.hasError,
+          hasMeta: recorderEvents.hasMeta || false,
+          hasSnapshot: recorderEvents.hasSnapshot || false,
+          hasError: recorderEvents.hasError || false,
           isFirstChunk: agentRuntime.session.state.sessionReplaySentFirstChunk === false,
-          decompressedBytes: this.recorder.payloadBytesEstimation,
+          decompressedBytes: recorderEvents.payloadBytesEstimation,
           'rrweb.version': RRWEB_VERSION,
           // customer-defined data should go last so that if it exceeds the query param padding limit it will be truncated instead of important attrs
           ...(endUserId && { 'enduser.id': endUserId })
@@ -328,6 +336,7 @@ export class Aggregate extends AggregateBase {
     this.syncWithSessionManager({ sessionReplayMode: this.mode })
     this.recorder?.clearTimestamps?.()
     this.ee.emit('REPLAY_ABORTED')
+    this.recorder?.clearBuffer?.()
   }
 
   syncWithSessionManager (state = {}) {

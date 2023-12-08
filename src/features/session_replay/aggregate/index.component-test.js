@@ -1,10 +1,11 @@
 import { Aggregate as SessionReplayAgg } from '.'
 import { AVG_COMPRESSION, IDEAL_PAYLOAD_SIZE } from '../constants'
 import { Aggregator } from '../../../common/aggregate/aggregator'
-import { SESSION_EVENTS, SessionEntity, MODE } from '../../../common/session/session-entity'
+import { SessionEntity } from '../../../common/session/session-entity'
 import { setConfiguration } from '../../../common/config/config'
 import { configure } from '../../../loaders/configure/configure'
 import { Recorder } from '../shared/recorder'
+import { MODE, SESSION_EVENTS } from '../../../common/session/constants'
 
 jest.mock('../../../common/util/console', () => ({
   warn: jest.fn()

@@ -1,9 +1,9 @@
 import { record as recorder } from 'rrweb'
-import { MODE } from '../../../common/session/session-entity'
 import { stringify } from '../../../common/util/stringify'
 import { AVG_COMPRESSION, CHECKOUT_MS, IDEAL_PAYLOAD_SIZE, QUERY_PARAM_PADDING, RRWEB_EVENT_TYPES } from '../constants'
 import { getConfigurationValue } from '../../../common/config/config'
 import { RecorderEvents } from './recorder-events'
+import { MODE } from '../../../common/session/constants'
 
 export class Recorder {
   /** Each page mutation or event will be stored (raw) in this array. This array will be cleared on each harvest */

@@ -9,7 +9,7 @@
  * It is not production ready, and is not intended to be imported or implemented in any build of the browser agent until
  * functionality is validated and a full user experience is curated.
  */
-import { MODE } from '../../../common/session/session-entity'
+import { MODE } from '../../../common/session/constants'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME } from '../constants'
 
@@ -23,9 +23,9 @@ export class Instrument extends InstrumentBase {
       if (session.sessionReplayMode !== MODE.OFF) {
         ;(async () => {
           const { Recorder } = (await import(/* webpackChunkName: "recorder" */'../shared/recorder'))
-          const recorder = new Recorder({ mode: session?.sessionReplayMode, agentIdentifier: this.agentIdentifier })
-          recorder.startRecording()
-          this.importAggregator({ recorder })
+          this.recorder = new Recorder({ mode: session?.sessionReplayMode, agentIdentifier: this.agentIdentifier })
+          this.recorder.startRecording()
+          this.importAggregator({ recorder: this.recorder })
         })()
       } else {
         this.importAggregator({})

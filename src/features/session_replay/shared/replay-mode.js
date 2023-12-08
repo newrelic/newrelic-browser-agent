@@ -1,7 +1,7 @@
 import { getConfigurationValue } from '../../../common/config/config'
-import { MODE } from '../../../common/session/session-entity'
 import { gosNREUM } from '../../../common/window/nreum'
 import { sharedChannel } from '../../../common/constants/shared-channel'
+import { MODE } from '../../../common/session/constants'
 
 /**
  * Figure out if the Replay feature is running (what mode it's in).

@@ -15,7 +15,6 @@ import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { ABORT_REASONS, FEATURE_NAME, MAX_PAYLOAD_SIZE, QUERY_PARAM_PADDING, RRWEB_EVENT_TYPES } from '../constants'
 import { stringify } from '../../../common/util/stringify'
 import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
-import { SESSION_EVENTS, MODE, SESSION_EVENT_TYPES } from '../../../common/session/session-entity'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { sharedChannel } from '../../../common/constants/shared-channel'
 import { obj as encodeObj } from '../../../common/url/encode'
@@ -26,6 +25,7 @@ import { handle } from '../../../common/event-emitter/handle'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { RRWEB_VERSION } from '../../../common/constants/env'
 import { now } from '../../../common/timing/now'
+import { MODE, SESSION_EVENTS, SESSION_EVENT_TYPES } from '../../../common/session/constants'
 
 let gzipper, u8
 

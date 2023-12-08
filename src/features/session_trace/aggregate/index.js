@@ -9,9 +9,9 @@ import { getConfigurationValue, getRuntime } from '../../../common/config/config
 import { now } from '../../../common/timing/now'
 import { FEATURE_NAME } from '../constants'
 import { HandlerCache } from '../../utils/handler-cache'
-import { MODE, SESSION_EVENTS } from '../../../common/session/session-entity'
 import { getSessionReplayMode } from '../../session_replay/shared/replay-mode'
 import { AggregateBase } from '../../utils/aggregate-base'
+import { MODE, SESSION_EVENTS } from '../../../common/session/constants'
 
 const ignoredEvents = {
   // we find that certain events make the data too noisy to be useful

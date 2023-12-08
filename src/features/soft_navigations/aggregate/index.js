@@ -84,7 +84,7 @@ export class Aggregate extends AggregateBase {
 
   startAnInteraction (eventName, startedAt, sourceElem) { // this is throttled by instrumentation so that it isn't excessively called
     if (this.interactionInProgress?.createdByApi) return // api-started interactions cannot be disrupted aka cancelled by UI events (this flow)
-    this.interactionInProgress?.done()
+    if (this.interactionInProgress?.done() === false) return
 
     this.interactionInProgress = new Interaction(this.agentIdentifier, eventName, startedAt, this.latestRouteSetByApi)
     if (eventName === 'click') {
@@ -174,7 +174,7 @@ export class Aggregate extends AggregateBase {
     const INTERACTION_API = 'api-ixn-'
     const thisClass = this
 
-    registerHandler(INTERACTION_API + 'get', function (time) {
+    registerHandler(INTERACTION_API + 'get', function (time, { waitForEnd }) {
       // In here, 'this' refers to the EventContext specific to per InteractionHandle instance spawned by each .interaction() api call.
       // Each api call aka IH instance would therefore retain a reference to either the in-progress interaction *at the time of the call* OR a new api-started interaction.
       if (thisClass.interactionInProgress !== null) this.associatedInteraction = thisClass.interactionInProgress
@@ -183,6 +183,7 @@ export class Aggregate extends AggregateBase {
         this.associatedInteraction = thisClass.interactionInProgress = new Interaction(thisClass.agentIdentifier, API_TRIGGER_NAME, time, thisClass.latestRouteSetByApi)
         thisClass.haveIPResetOnClose()
       }
+      if (waitForEnd === true) this.associatedInteraction.keepOpenUntilEndApi = true
     }, thisClass.featureName, thisClass.ee)
     registerHandler(INTERACTION_API + 'end', function (timeNow) {
       this.associatedInteraction.on('finished', () => {

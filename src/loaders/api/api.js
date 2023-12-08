@@ -149,8 +149,8 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
     handle('pauseReplay', [], undefined, FEATURE_NAMES.sessionReplay, instanceEE)
   }
 
-  apiInterface.interaction = function () {
-    return new InteractionHandle().get()
+  apiInterface.interaction = function (options) {
+    return new InteractionHandle().get(typeof options === 'object' ? options : {})
   }
 
   function InteractionHandle () { }

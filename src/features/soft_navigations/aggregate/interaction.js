@@ -28,6 +28,7 @@ export class Interaction extends BelNode {
   domTimestamp = 0
   historyTimestamp = 0
   createdByApi = false
+  keepOpenUntilEndApi = false
   onDone = []
 
   constructor (agentIdentifier, uiEvent, uiEventTimestamp, currentRouteKnown) {
@@ -67,11 +68,15 @@ export class Interaction extends BelNode {
   }
 
   done (customEndTime) {
+    // User could've mark this interaction--regardless UI or api started--as "don't close until .end() is called on it". Only .end provides a timestamp; the default flows do not.
+    if (this.keepOpenUntilEndApi && customEndTime === undefined) return false
     this.onDone.forEach(apiProvidedCb => apiProvidedCb(this.customDataByApi)) // this interaction's .save or .ignore can still be set by these user provided callbacks for example
-    if (this.forceIgnore) return this.#cancel() // .ignore() always has precedence over save actions
-    else if (this.seenHistoryAndDomChange()) return this.#finish() // then this should've already finished while it was the interactionInProgress, with a natural end time
-    else if (this.forceSave) return this.#finish(customEndTime || now()) // a manually saved ixn (did not fulfill conditions) must have a specified end time, if one wasn't provided
-    else return this.#cancel()
+
+    if (this.forceIgnore) this.#cancel() // .ignore() always has precedence over save actions
+    else if (this.seenHistoryAndDomChange()) this.#finish() // then this should've already finished while it was the interactionInProgress, with a natural end time
+    else if (this.forceSave) this.#finish(customEndTime || now()) // a manually saved ixn (did not fulfill conditions) must have a specified end time, if one wasn't provided
+    else this.#cancel()
+    return true
   }
 
   #finish (customEndTime = 0) {

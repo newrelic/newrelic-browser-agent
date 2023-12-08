@@ -611,7 +611,7 @@ describe('setAPI', () => {
       )
       expect(handleModule.handle).toHaveBeenCalledWith(
         'api-ixn-get',
-        [expect.toBeNumber()],
+        [expect.toBeNumber(), expect.any(Object)],
         expect.anything(),
         FEATURE_NAMES.spa,
         instanceEE

@@ -30,7 +30,7 @@ export class Instrument extends InstrumentBase {
     try {
       this.removeOnAbort = new AbortController()
     } catch (e) {}
-    const trackURLChangeEvent = (evt) => handle('newURL', [evt.timestamp, '' + window.location], undefined, this.featureName, this.ee)
+    const trackURLChangeEvent = (evt) => handle('newURL', [evt.timeStamp, '' + window.location], undefined, this.featureName, this.ee)
     windowAddEventListener('popstate', trackURLChangeEvent, true, this.removeOnAbort?.signal)
 
     const domObserver = new originals.MO((domChanges, observer) => {

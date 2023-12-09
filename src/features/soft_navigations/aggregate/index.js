@@ -8,7 +8,7 @@ import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { API_TRIGGER_NAME, FEATURE_NAME, INTERACTION_STATUS } from '../constants'
 import { AjaxNode } from './ajax-node'
-import { customEndNode } from './customEnd-node'
+import { CustomEndNode } from './customEnd-node'
 import { InitialPageLoadInteraction } from './initial-page-load-interaction'
 import { Interaction } from './interaction'
 
@@ -187,7 +187,7 @@ export class Aggregate extends AggregateBase {
     }, thisClass.featureName, thisClass.ee)
     registerHandler(INTERACTION_API + 'end', function (timeNow) {
       this.associatedInteraction.on('finished', () => {
-        const newNode = customEndNode(thisClass.agentIdentifier, timeNow)
+        const newNode = new CustomEndNode(thisClass.agentIdentifier, timeNow)
         this.associatedInteraction.addChild(newNode)
       })
       this.associatedInteraction.done(timeNow)

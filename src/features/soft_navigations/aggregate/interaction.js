@@ -137,7 +137,7 @@ export class Interaction extends BelNode {
       allAttachedNodes.length,
       numeric(this.start), // relative to first node (this in interaction)
       numeric(this.end), // end -- relative to start
-      numeric(this.callbackEnd), // cbEnd -- relative to start
+      numeric(this.callbackEnd), // cbEnd -- relative to start; not used by BrowserInteraction events
       numeric(this.callbackDuration), // not relative
       addString(this.trigger),
       addString(cleanURL(this.initialPageURL, true)),

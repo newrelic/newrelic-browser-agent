@@ -8,7 +8,6 @@ import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { API_TRIGGER_NAME, FEATURE_NAME, INTERACTION_STATUS } from '../constants'
 import { AjaxNode } from './ajax-node'
-import { CustomEndNode } from './customEnd-node'
 import { InitialPageLoadInteraction } from './initial-page-load-interaction'
 import { Interaction } from './interaction'
 
@@ -185,19 +184,9 @@ export class Aggregate extends AggregateBase {
       }
       if (waitForEnd === true) this.associatedInteraction.keepOpenUntilEndApi = true
     }, thisClass.featureName, thisClass.ee)
-    registerHandler(INTERACTION_API + 'end', function (timeNow) {
-      this.associatedInteraction.on('finished', () => {
-        const newNode = new CustomEndNode(thisClass.agentIdentifier, timeNow)
-        this.associatedInteraction.addChild(newNode)
-      })
-      this.associatedInteraction.done(timeNow)
-    }, thisClass.featureName, thisClass.ee)
-    registerHandler(INTERACTION_API + 'save', function () {
-      this.associatedInteraction.forceSave = true
-    }, thisClass.featureName, thisClass.ee)
-    registerHandler(INTERACTION_API + 'ignore', function () {
-      this.associatedInteraction.forceIgnore = true
-    }, thisClass.featureName, thisClass.ee)
+    registerHandler(INTERACTION_API + 'end', function (timeNow) { this.associatedInteraction.done(timeNow) }, thisClass.featureName, thisClass.ee)
+    registerHandler(INTERACTION_API + 'save', function () { this.associatedInteraction.forceSave = true }, thisClass.featureName, thisClass.ee)
+    registerHandler(INTERACTION_API + 'ignore', function () { this.associatedInteraction.forceIgnore = true }, thisClass.featureName, thisClass.ee)
 
     registerHandler(INTERACTION_API + 'getContext', function (time, callback) {
       if (typeof callback !== 'function') return
@@ -217,9 +206,7 @@ export class Aggregate extends AggregateBase {
       if (name) this.associatedInteraction.customName = name
       if (trigger) this.associatedInteraction.trigger = trigger
     }, thisClass.featureName, thisClass.ee)
-    registerHandler(INTERACTION_API + 'setAttribute', function (time, key, value) {
-      this.associatedInteraction.customAttributes[key] = value
-    }, thisClass.featureName, thisClass.ee)
+    registerHandler(INTERACTION_API + 'setAttribute', function (time, key, value) { this.associatedInteraction.customAttributes[key] = value }, thisClass.featureName, thisClass.ee)
 
     registerHandler(INTERACTION_API + 'routeName', function (time, newRouteName) { // notice that this fn tampers with the ixn IP, not with the linked ixn
       thisClass.latestRouteSetByApi = newRouteName

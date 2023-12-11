@@ -27,8 +27,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Harvest Behavior', () => {
   })
 
   it.withBrowsersMatching(notIOS)('Should abort if exceeds maximum size', async () => {
-    await browser.url(await browser.testHandle.assetURL('1mb-dom.html', config({ session_replay: { harvestTimeSeconds: 60 } })))
-      .then(() => browser.waitForSessionReplayBlocked())
+    await browser.url(await browser.testHandle.assetURL('1mb-dom.html', config({ session_replay: { harvestTimeSeconds: 5 } })))
 
     await browser.testHandle.expectBlob(10000, true) // should not get harvest
 

@@ -50,7 +50,7 @@ export class Recorder {
   /** Begin recording using configured recording lib */
   startRecording () {
     this.recording = true
-    const { block_class, ignore_class, mask_text_class, block_selector, mask_input_options, mask_text_selector, mask_all_inputs, inline_stylesheet, collect_fonts } = getConfigurationValue(this.parent.agentIdentifier, 'session_replay')
+    const { block_class, ignore_class, mask_text_class, block_selector, mask_input_options, mask_text_selector, mask_all_inputs, inline_stylesheet, inline_images, collect_fonts } = getConfigurationValue(this.parent.agentIdentifier, 'session_replay')
     // set up rrweb configurations for maximum privacy --
     // https://newrelic.atlassian.net/wiki/spaces/O11Y/pages/2792293280/2023+02+28+Browser+-+Session+Replay#Configuration-options
     const stop = recorder({
@@ -63,6 +63,7 @@ export class Recorder {
       maskTextSelector: mask_text_selector,
       maskAllInputs: mask_all_inputs,
       inlineStylesheet: inline_stylesheet,
+      inlineImages: inline_images,
       collectFonts: collect_fonts,
       checkoutEveryNms: CHECKOUT_MS[this.parent.mode]
     })

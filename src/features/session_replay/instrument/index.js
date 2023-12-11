@@ -21,17 +21,19 @@ export class Instrument extends InstrumentBase {
     try {
       session = JSON.parse(localStorage.getItem('NRBA_SESSION'))
       if (session.sessionReplayMode !== MODE.OFF) {
-        ;(async () => {
-          const { Recorder } = (await import(/* webpackChunkName: "recorder" */'../shared/recorder'))
-          this.recorder = new Recorder({ mode: session?.sessionReplayMode, agentIdentifier: this.agentIdentifier })
-          this.recorder.startRecording()
-          this.importAggregator({ recorder: this.recorder })
-        })()
+        this.#startRecording(session.sessionReplayMode)
       } else {
         this.importAggregator({})
       }
     } catch (err) {
       this.importAggregator({})
     }
+  }
+
+  async #startRecording (mode) {
+    const { Recorder } = (await import(/* webpackChunkName: "recorder" */'../shared/recorder'))
+    this.recorder = new Recorder({ mode, agentIdentifier: this.agentIdentifier })
+    this.recorder.startRecording()
+    this.importAggregator({ recorder: this.recorder })
   }
 }

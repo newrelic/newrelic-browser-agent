@@ -1,7 +1,6 @@
 import webpack from 'webpack'
 import TerserPlugin from 'terser-webpack-plugin'
-import { SubresourceIntegrityPlugin } from 'webpack-subresource-integrity'
-import NRBAChunkingPlugin from '../plugins/nrba-chunking/index.mjs'
+// import { SubresourceIntegrityPlugin } from 'webpack-subresource-integrity'
 
 /**
  * @typedef {import('../index.mjs').WebpackBuildOptions} WebpackBuildOptions
@@ -36,7 +35,22 @@ export default (env, asyncChunkName) => {
         chunks: 'async',
         cacheGroups: {
           defaultVendors: false,
-          default: false
+          default: false,
+          'agent-chunk': {
+            name: asyncChunkName,
+            enforce: true,
+            test: (module, { chunkGraph }) => chunkGraph.getModuleChunks(module).filter(chunk => !['recorder', 'compressor'].includes(chunk.name)).length > 0
+          },
+          recorder: {
+            name: `${asyncChunkName}-recorder`,
+            enforce: true,
+            test: (module, { chunkGraph }) => chunkGraph.getModuleChunks(module).filter(chunk => !['recorder'].includes(chunk.name)).length === 0
+          },
+          compressor: {
+            name: `${asyncChunkName}-compressor`,
+            enforce: true,
+            test: (module, { chunkGraph }) => chunkGraph.getModuleChunks(module).filter(chunk => !['compressor'].includes(chunk.name)).length === 0
+          }
         }
       }
     },
@@ -63,14 +77,11 @@ export default (env, asyncChunkName) => {
         moduleFilenameTemplate: 'nr-browser-agent://[namespace]/[resource-path]?[loaders]',
         publicPath: env.PUBLIC_PATH,
         append: env.SUBVERSION === 'PROD' ? false : '//# sourceMappingURL=[url]'
-      }),
-      new SubresourceIntegrityPlugin({
-        enabled: true,
-        hashFuncNames: ['sha512']
-      }),
-      new NRBAChunkingPlugin({
-        asyncChunkName
       })
+      // new SubresourceIntegrityPlugin({
+      //   enabled: true,
+      //   hashFuncNames: ['sha512']
+      // })
     ]
   }
 }

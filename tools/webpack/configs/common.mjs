@@ -1,6 +1,10 @@
 import webpack from 'webpack'
 import TerserPlugin from 'terser-webpack-plugin'
-// import { SubresourceIntegrityPlugin } from 'webpack-subresource-integrity'
+import NRBAPrependSemicolonPlugin from '../plugins/prepend-semicolon.mjs'
+import NRBARemoveNonAsciiPlugin from '../plugins/remove-non-ascii.mjs'
+import NRBASubresourceIntegrityPlugin from '../plugins/sri-plugin.mjs'
+import NRBALoaderApmCheckPlugin from '../plugins/loader-apm-check.mjs'
+import NRBAFuzzyLoadersPlugin from '../plugins/fuzzy-loaders.mjs'
 
 /**
  * @typedef {import('../index.mjs').WebpackBuildOptions} WebpackBuildOptions
@@ -18,6 +22,7 @@ export default (env, asyncChunkName) => {
     devtool: false,
     mode: env.SUBVERSION === 'LOCAL' ? 'development' : 'production',
     optimization: {
+      realContentHash: true,
       minimize: true,
       minimizer: [new TerserPlugin({
         include: [/\.min\.js$/, /^(?:[0-9])/],
@@ -77,11 +82,12 @@ export default (env, asyncChunkName) => {
         moduleFilenameTemplate: 'nr-browser-agent://[namespace]/[resource-path]?[loaders]',
         publicPath: env.PUBLIC_PATH,
         append: env.SUBVERSION === 'PROD' ? false : '//# sourceMappingURL=[url]'
-      })
-      // new SubresourceIntegrityPlugin({
-      //   enabled: true,
-      //   hashFuncNames: ['sha512']
-      // })
+      }),
+      new NRBAPrependSemicolonPlugin(),
+      new NRBARemoveNonAsciiPlugin(),
+      new NRBALoaderApmCheckPlugin(),
+      new NRBASubresourceIntegrityPlugin(),
+      new NRBAFuzzyLoadersPlugin()
     ]
   }
 }

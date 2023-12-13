@@ -139,14 +139,11 @@
     "cdn:build": "npm run cdn:build:prod",
     "cdn:build:local": "npm run cdn:webpack",
     "cdn:build:prod": "npm run cdn:webpack -- --env mode=prod",
-    "postcdn:build:prod": "npm run cdn:clone",
     "cdn:build:dev": "npm run cdn:webpack -- --env mode=dev",
     "cdn:build:experiment": "npm run cdn:webpack -- --env mode=experiment",
     "cdn:webpack": "npx webpack --progress --config ./tools/webpack/index.mjs",
-    "postcdn:webpack": "npm run cdn:cleanup",
     "cdn:watch": "jung -r ./src -F '.*\\.test\\.js' --run -- npm run cdn:build:local",
     "cdn:cleanup": "node ./tools/webpack/scripts/cleanup.mjs",
-    "cdn:clone": "node ./tools/webpack/scripts/clone.mjs",
     "test-server": "node ./tools/wdio/bin/server",
     "sauce:connect": "node ./tools/saucelabs/bin.mjs",
     "sauce:get-browsers": "node ./tools/browsers-lists/sauce-browsers.mjs",
@@ -251,7 +248,6 @@
     "webpack-bundle-analyzer": "^4.7.0",
     "webpack-cli": "^4.10.0",
     "webpack-stream": "^7.0.0",
-    "webpack-subresource-integrity": "^5.1.0",
     "yargs": "^17.6.2"
   },
   "files": [

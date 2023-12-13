@@ -190,9 +190,7 @@ export class Aggregate extends AggregateBase {
 
     registerHandler(INTERACTION_API + 'getContext', function (time, callback) {
       if (typeof callback !== 'function') return
-      setTimeout(function () {
-        callback(this.associatedInteraction.customDataByApi)
-      }, 0)
+      setTimeout(() => callback(this.associatedInteraction.customDataByApi), 0)
     }, thisClass.featureName, thisClass.ee)
     registerHandler(INTERACTION_API + 'onEnd', function (time, callback) {
       if (typeof callback !== 'function') return

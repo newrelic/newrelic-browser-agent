@@ -73,7 +73,7 @@ export class Interaction extends BelNode {
     this.onDone.forEach(apiProvidedCb => apiProvidedCb(this.customDataByApi)) // this interaction's .save or .ignore can still be set by these user provided callbacks for example
 
     if (this.forceIgnore) this.#cancel() // .ignore() always has precedence over save actions
-    else if (this.seenHistoryAndDomChange()) this.#finish() // then this should've already finished while it was the interactionInProgress, with a natural end time
+    else if (this.seenHistoryAndDomChange()) this.#finish(customEndTime) // then this should've already finished while it was the interactionInProgress, with a natural end time
     else if (this.forceSave) this.#finish(customEndTime || now()) // a manually saved ixn (did not fulfill conditions) must have a specified end time, if one wasn't provided
     else this.#cancel()
     return true
@@ -128,13 +128,10 @@ export class Interaction extends BelNode {
     else if (this.newURL !== this.oldURL) ixnType = INTERACTION_TYPE.ROUTE_CHANGE
     else ixnType = INTERACTION_TYPE.UNSPECIFIED
 
-    const allAttachedNodes = addCustomAttributes(this.customAttributes || {}, addString) // start with all custom attributes
-    if (getInfo(this.agentIdentifier).atts) allAttachedNodes.push('a,' + addString(getInfo(this.agentIdentifier).atts)) // add apm provided attributes
-    this.children.forEach(node => allAttachedNodes.push(node.serialize(this.start))) // recursively add the serialized string of every child of this (ixn) bel node
-
+    // IMPORTANT: The order in which addString is called matters and correlates to the order in which string shows up in the harvest payload. Do not re-order the following code.
     const fields = [
       numeric(this.belType),
-      allAttachedNodes.length,
+      0, // this will be overwritten below with number of attached nodes
       numeric(this.start), // relative to first node (this in interaction)
       numeric(this.end), // end -- relative to start
       numeric(this.callbackEnd), // cbEnd -- relative to start; not used by BrowserInteraction events
@@ -151,7 +148,11 @@ export class Interaction extends BelNode {
       addString(this.nodeId),
       nullable(this.firstPaint, numeric, true) + nullable(this.firstContentfulPaint, numeric)
     ]
+    const allAttachedNodes = addCustomAttributes(this.customAttributes || {}, addString) // start with all custom attributes
+    if (getInfo(this.agentIdentifier).atts) allAttachedNodes.push('a,' + addString(getInfo(this.agentIdentifier).atts)) // add apm provided attributes
+    this.children.forEach(node => allAttachedNodes.push(node.serialize(this.start))) // recursively add the serialized string of every child of this (ixn) bel node
 
+    fields[1] = allAttachedNodes.length
     nodeList.push(fields)
     if (allAttachedNodes.length) nodeList.push(allAttachedNodes.join(';'))
     if (this.navTiming) nodeList.push(this.navTiming)

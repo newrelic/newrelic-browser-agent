@@ -164,5 +164,6 @@ await docsOctokit.rest.pulls.create({
   base: DOCS_SITE_REPO_BASE,
   title: `Browser Agent ${args.tag} Release Notes`,
   body: 'This is an automated PR generated when the Browser agent is released. Please merge as soon as possible.',
-  draft: false
+  draft: false,
+  maintainer_can_modify: true
 })

@@ -1,8 +1,8 @@
 import { notIE } from '../../tools/browser-matcher/common-matchers.mjs'
 import { faker } from '@faker-js/faker'
 
-describe('Content Security Policy', () => {
-  it.withBrowsersMatching(notIE)('should support a nonce script element', async () => {
+describe.withBrowsersMatching(notIE)('Content Security Policy', () => {
+  it('should support a nonce script element', async () => {
     const nonce = faker.datatype.uuid()
     await Promise.all([
       browser.testHandle.expectRum(),

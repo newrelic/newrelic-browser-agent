@@ -4,15 +4,15 @@
       "browserName": "chrome",
       "platformName": "Windows 11",
       "platform": "Windows 11",
-      "version": "110",
-      "browserVersion": "110"
+      "version": "111",
+      "browserVersion": "111"
     },
     {
       "browserName": "chrome",
       "platformName": "Windows 11",
       "platform": "Windows 11",
-      "version": "113",
-      "browserVersion": "113"
+      "version": "114",
+      "browserVersion": "114"
     },
     {
       "browserName": "chrome",
@@ -34,8 +34,8 @@
       "browserName": "MicrosoftEdge",
       "platformName": "Windows 11",
       "platform": "Windows 11",
-      "version": "110",
-      "browserVersion": "110"
+      "version": "111",
+      "browserVersion": "111"
     },
     {
       "browserName": "MicrosoftEdge",
@@ -48,8 +48,8 @@
       "browserName": "MicrosoftEdge",
       "platformName": "Windows 11",
       "platform": "Windows 11",
-      "version": "115",
-      "browserVersion": "115"
+      "version": "116",
+      "browserVersion": "116"
     },
     {
       "browserName": "MicrosoftEdge",
@@ -64,15 +64,15 @@
       "browserName": "firefox",
       "platformName": "Windows 10",
       "platform": "Windows 10",
-      "version": "110",
-      "browserVersion": "110"
+      "version": "111",
+      "browserVersion": "111"
     },
     {
       "browserName": "firefox",
       "platformName": "Windows 10",
       "platform": "Windows 10",
-      "version": "113",
-      "browserVersion": "113"
+      "version": "114",
+      "browserVersion": "114"
     },
     {
       "browserName": "firefox",
@@ -92,18 +92,18 @@
   "safari": [
     {
       "browserName": "safari",
-      "platformName": "Mac 10.15",
-      "platform": "Mac 10.15",
-      "version": "15",
-      "browserVersion": "15",
+      "platformName": "Mac 13",
+      "platform": "Mac 13",
+      "version": "16",
+      "browserVersion": "16",
       "acceptInsecureCerts": false
     },
     {
       "browserName": "safari",
       "platformName": "Mac 13",
       "platform": "Mac 13",
-      "version": "16",
-      "browserVersion": "16",
+      "version": "17",
+      "browserVersion": "17",
       "acceptInsecureCerts": false
     }
   ],

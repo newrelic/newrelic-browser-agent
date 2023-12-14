@@ -59,14 +59,15 @@ describe('Content Security Policy', () => {
 
     await browser.waitUntil(
       () => browser.execute(function () {
-        return window.chunkIntegratyValues.length === 3
+        return window.chunkIntegrityValues.length === 3
       })
     )
     const foundIntegrityValues = await browser.execute(function () {
-      return window.chunkIntegratyValues
+      return window.chunkIntegrityValues
     })
 
-    expect(foundIntegrityValues.length).toEqual(3)
-    expect(foundIntegrityValues[0]).toMatch(/^sha512-[a-zA-Z0-9=/+]+$/)
+    foundIntegrityValues.forEach(hash =>
+      expect(hash).toMatch(/^sha512-[a-zA-Z0-9=/+]+$/)
+    )
   })
 })

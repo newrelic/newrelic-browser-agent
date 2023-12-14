@@ -10,8 +10,6 @@ export default class NRBASubresourceIntegrityPlugin {
   #sriHashVariableReference = 'sriHashes'
   #templatePlaceholder = '*-*-*-CHUNK-SRI-HASH'
   #hashCache = new Map()
-  #inverseHashCache = new Map()
-  #chunkAssetMap = new Map()
 
   /**
    * @param compiler {import('webpack/lib/Compiler.js').default}
@@ -85,8 +83,7 @@ export default class NRBASubresourceIntegrityPlugin {
           }
 
           const hash = this.#computeHash(asset.source())
-          this.#updateHash(file, hash)
-          this.#chunkAssetMap.set(file, chunk.id)
+          this.#hashCache.set(chunk.id, hash)
           this.#replaceAsset(compilation, file, null, hash)
         }
       })
@@ -115,11 +112,7 @@ export default class NRBASubresourceIntegrityPlugin {
            * Replace the asset source so the hash placeholder has values.
            */
           const newSource = new compilation.compiler.webpack.sources.ReplaceSource(asset, file)
-          this.#chunkAssetMap.forEach((chunkId, assetKey) => {
-            if (!this.#hashCache.has(assetKey)) {
-              return
-            }
-
+          this.#hashCache.forEach((hash, chunkId) => {
             const placeholder = `${this.#templatePlaceholder}:${chunkId}`
             if (source.indexOf(placeholder) === -1) {
               return
@@ -127,7 +120,7 @@ export default class NRBASubresourceIntegrityPlugin {
 
             const replacementStart = source.indexOf(placeholder)
             const replacementEnd = replacementStart + placeholder.length - 1
-            newSource.replace(replacementStart, replacementEnd, this.#hashCache.get(assetKey), this.#pluginName)
+            newSource.replace(replacementStart, replacementEnd, hash, this.#pluginName)
           })
 
           assets[file] = newSource
@@ -147,21 +140,6 @@ export default class NRBASubresourceIntegrityPlugin {
       .digest('base64')
 
     return `sha512-${hash}`
-  }
-
-  /**
-   * Updates the hash cache.
-   * @param assetKey {string}
-   * @param hash {string}
-   * @param [oldHash] {string}
-   */
-  #updateHash (assetKey, hash, oldHash) {
-    if (oldHash) {
-      this.#inverseHashCache.delete(oldHash)
-    }
-
-    this.#hashCache.set(assetKey, hash)
-    this.#inverseHashCache.set(hash, assetKey)
   }
 
   /**

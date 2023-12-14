@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "Thu Nov 16 2023 17:54:23 GMT+0000 (Coordinated Universal Time)",
+  "lastUpdated": "Tue Dec 12 2023 10:40:55 GMT-0600 (Central Standard Time)",
   "projectName": "New Relic Browser Agent",
   "projectUrl": "https://github.com/newrelic/newrelic-browser-agent",
   "includeOptDeps": true,
@@ -1059,19 +1059,6 @@
       "publisher": "Kyle Robinson Young",
       "email": "kyle@dontkry.com",
       "url": "http://dontkry.com"
-    },
-    "webpack-subresource-integrity@5.1.0": {
-      "name": "webpack-subresource-integrity",
-      "version": "5.1.0",
-      "range": "^5.1.0",
-      "licenses": "MIT",
-      "repoUrl": "https://github.com/waysact/webpack-subresource-integrity",
-      "versionedRepoUrl": "https://github.com/waysact/webpack-subresource-integrity/tree/v5.1.0",
-      "licenseFile": "node_modules/webpack-subresource-integrity/LICENSE",
-      "licenseUrl": "https://github.com/waysact/webpack-subresource-integrity/blob/v5.1.0/LICENSE",
-      "licenseTextSource": "file",
-      "publisher": "Julian Scheid",
-      "email": "julian@evergiving.com"
     },
     "webpack@5.84.1": {
       "name": "webpack",

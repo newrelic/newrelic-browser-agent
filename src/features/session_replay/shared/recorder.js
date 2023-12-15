@@ -76,11 +76,13 @@ export class Recorder {
 
   /** Store a payload in the buffer (this.#events).  This should be the callback to the recording lib noticing a mutation */
   store (event, isCheckout) {
+    event.__serialized = stringify(event)
+
     if (!this.parent.scheduler) this.currentBufferTarget = this.#preloaded[this.#preloaded.length - 1]
     else this.currentBufferTarget = this.#events
 
     if (this.parent.blocked) return
-    const eventBytes = stringify(event).length
+    const eventBytes = event.__serialized.length
     /** The estimated size of the payload after compression */
     const payloadSize = this.getPayloadSize(eventBytes)
     // Checkout events are flags by the recording lib that indicate a fullsnapshot was taken every n ms. These are important

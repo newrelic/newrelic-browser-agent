@@ -13,7 +13,6 @@
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { ABORT_REASONS, FEATURE_NAME, MAX_PAYLOAD_SIZE, QUERY_PARAM_PADDING, RRWEB_EVENT_TYPES } from '../constants'
-import { stringify } from '../../../common/util/stringify'
 import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { sharedChannel } from '../../../common/constants/shared-channel'
@@ -215,15 +214,20 @@ export class Aggregate extends AggregateBase {
     const recorderEvents = this.recorder.getEvents()
     // get the event type and use that to trigger another harvest if needed
     if (!recorderEvents.events.length || (this.mode !== MODE.FULL) || this.blocked) return
+
     const payload = this.getHarvestContents(recorderEvents)
+    payload.body.__serialized = `[${payload.body.map(e => e.__serialized).join(',')}]`
+    payload.body.__serialized = `[${payload.body.map(e => e.__serialized).join(',')}]`
+
     if (!payload.body.length) {
       this.recorder.clearBuffer()
       return
     }
     if (this.shouldCompress) {
-      payload.body = gzipper(u8(stringify(payload.body)))
+      payload.body = gzipper(u8(payload.body.__serialized))
       this.scheduler.opts.gzip = true
     } else {
+      payload.body = payload.body.__serialized
       this.scheduler.opts.gzip = false
     }
     if (payload.body.length > MAX_PAYLOAD_SIZE) {

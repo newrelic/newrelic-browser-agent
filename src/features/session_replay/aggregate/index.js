@@ -243,8 +243,9 @@ export class Aggregate extends AggregateBase {
      * They need to be re-injected with the anon tag to be able to have their contents read for rrweb's inline stylesheets data
      */
     const proms = []
+    const shouldInlineStylesheets = getConfigurationValue(this.agentIdentifier, 'session_replay.inline_stylesheet')
     for (let { ownerNode } of document.styleSheets) {
-      if (getConfigurationValue(this.agentIdentifier, 'session_replay.inline_stylesheet') && !parseUrl(ownerNode.href).sameOrigin && ownerNode.crossOrigin !== 'anonymous') {
+      if (shouldInlineStylesheets && !parseUrl(ownerNode.href).sameOrigin && ownerNode.crossOrigin !== 'anonymous') {
         const newStyle = ownerNode.cloneNode(ownerNode)
         proms.push(new Promise((resolve) => {
           newStyle.crossOrigin = 'anonymous'

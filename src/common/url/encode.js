@@ -67,8 +67,7 @@ export function obj (payload, maxBytes) {
 }
 
 // Constructs an HTTP parameter to add to the BAM router URL
-export function param (name, value, base = {}) {
-  if (Object.keys(base).includes(name)) return '' // we assume if feature supplied a matching qp to the base, we should honor what the feature sent over the default
+export function param (name, value) {
   if (value && typeof (value) === 'string') {
     return '&' + name + '=' + qs(value)
   }

@@ -244,7 +244,7 @@ export class Aggregate extends AggregateBase {
      */
     const proms = []
     for (let { ownerNode } of document.styleSheets) {
-      if (!parseUrl(ownerNode.href).sameOrigin && ownerNode.crossOrigin !== 'anonymous') {
+      if (getConfigurationValue(this.agentIdentifier, 'session_replay.inline_stylesheet') && !parseUrl(ownerNode.href).sameOrigin && ownerNode.crossOrigin !== 'anonymous') {
         const newStyle = ownerNode.cloneNode(ownerNode)
         proms.push(new Promise((resolve) => {
           newStyle.crossOrigin = 'anonymous'

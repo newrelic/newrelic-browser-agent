@@ -322,8 +322,8 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
       expect(!!linkNode.attributes._cssText).toEqual(false)
     })
 
-    it('inline_stylesheet true DOES NOT add inline text', async () => {
-      await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
+    it('inline_stylesheet true DOES add inline text -- even for cross-domain non anon scripts', async () => {
+      await browser.url(await browser.testHandle.assetURL('cross-domain-non-anon-stylesheet.html', config()))
         .then(() => browser.waitForFeatureAggregate('session_replay'))
 
       const { request: { body } } = await browser.testHandle.expectBlob()
@@ -331,8 +331,9 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
       const snapshotNode = body.find(x => x.type === 2)
       const htmlNode = snapshotNode.data.node.childNodes.find(x => x.tagName === 'html')
       const headNode = htmlNode.childNodes.find(x => x.tagName === 'head')
-      const linkNode = headNode.childNodes.find(x => x.tagName === 'link' && x.attributes.type === 'text/css')
-      expect(!!linkNode.attributes._cssText).toEqual(true)
+      const linkNodes = headNode.childNodes.filter(x => x.tagName === 'link' && !!x.attributes._cssText)
+      linkNodes.forEach(linkNode => expect(linkNode.attributes._cssText.length).toBeGreaterThan(0))
+      expect(linkNodes.length).toEqual(3) // 3 stylesheet links on page
     })
   })
 })

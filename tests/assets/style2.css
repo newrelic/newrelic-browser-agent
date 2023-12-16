@@ -1,0 +1,16 @@
+@font-face {
+    font-family: MyWebFont;
+    src: url('font.woff') format('woff')
+  }
+
+.test {
+    color: purple
+}
+
+#test2 {
+    color: purple    
+}
+
+body{
+    font-family: MyWebFont, sans-serif;;
+}

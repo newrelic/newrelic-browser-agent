@@ -26,6 +26,7 @@ import { handle } from '../../../common/event-emitter/handle'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { RRWEB_VERSION } from '../../../common/constants/env'
 import { now } from '../../../common/timing/now'
+import { parseUrl } from '../../../common/url/parse-url'
 
 export const AVG_COMPRESSION = 0.12
 
@@ -236,6 +237,24 @@ export class Aggregate extends AggregateBase {
       // If neither are selected, then don't record (early return)
       else return
     }
+
+    /**
+     * loop through any stylesheets that are cross-domain and dont have an anon crossOrigin policy
+     * They need to be re-injected with the anon tag to be able to have their contents read for rrweb's inline stylesheets data
+     */
+    const proms = []
+    for (let { ownerNode } of document.styleSheets) {
+      if (!parseUrl(ownerNode.href).sameOrigin && ownerNode.crossOrigin !== 'anonymous') {
+        const newStyle = ownerNode.cloneNode(ownerNode)
+        proms.push(new Promise((resolve) => {
+          newStyle.crossOrigin = 'anonymous'
+          newStyle.onload = () => { resolve() }
+          document.head.prepend(newStyle)
+          document.head.removeChild(ownerNode)
+        }))
+      }
+    }
+    await Promise.all(proms)
 
     // If an error was noticed before the mode could be set (like in the early lifecycle of the page), immediately set to FULL mode
     if (this.mode === MODE.ERROR && this.errorNoticed) {

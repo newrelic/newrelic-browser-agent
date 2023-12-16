@@ -255,6 +255,7 @@ export class Aggregate extends AggregateBase {
         }))
       }
     }
+    /** Wait for all the stylesheets to be evaluated before importing rrweb to guarantee the sheets are readable */
     await Promise.all(proms)
 
     // If an error was noticed before the mode could be set (like in the early lifecycle of the page), immediately set to FULL mode

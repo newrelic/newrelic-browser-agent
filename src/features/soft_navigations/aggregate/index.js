@@ -13,12 +13,13 @@ import { Interaction } from './interaction'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
-  constructor (agentIdentifier, aggregator) {
+  constructor (agentIdentifier, aggregator, { domObserver }) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
 
     const harvestTimeSeconds = getConfigurationValue(agentIdentifier, 'spa.harvestTimeSeconds') || 10
     this.interactionsToHarvest = []
     this.interactionsAwaitingRetry = []
+    this.domObserver = domObserver
 
     this.scheduler = new HarvestScheduler('events', {
       onFinished: this.onHarvestFinished.bind(this),
@@ -44,14 +45,15 @@ export class Aggregate extends AggregateBase {
       else this.blocked = true // if rum response determines that customer lacks entitlements for spa endpoint, this feature shouldn't harvest
     })
 
-    registerHandler('newInteraction', (event) => this.startAnInteraction(event.type, event.timeStamp, event.target), this.featureName, this.ee)
-    registerHandler('newURL', (timestamp, url) => {
-      this.interactionInProgress?.updateHistory(timestamp, url)
-      if (this.interactionInProgress?.seenHistoryAndDomChange()) this.interactionInProgress.done()
-    }, this.featureName, this.ee)
+    // By default, a complete UI driven interaction requires event -> URL change -> DOM mod in that exact order.
+    registerHandler('newUIEvent', (event) => this.startUIInteraction(event.type, event.timeStamp, event.target), this.featureName, this.ee)
+    registerHandler('newURL', (timestamp, url) => this.interactionInProgress?.updateHistory(timestamp, url), this.featureName, this.ee)
     registerHandler('newDom', timestamp => {
       this.interactionInProgress?.updateDom(timestamp)
-      if (this.interactionInProgress?.seenHistoryAndDomChange()) this.interactionInProgress.done()
+      if (this.interactionInProgress?.seenHistoryAndDomChange()) {
+        this.domObserver.disconnect() // can stop observing whenever our interaction logic completes a cycle
+        this.interactionInProgress.done()
+      }
     }, this.featureName, this.ee)
 
     this.#registerApiHandlers()
@@ -81,8 +83,8 @@ export class Aggregate extends AggregateBase {
     }
   }
 
-  startAnInteraction (eventName, startedAt, sourceElem) { // this is throttled by instrumentation so that it isn't excessively called
-    if (this.interactionInProgress?.createdByApi) return // api-started interactions cannot be disrupted aka cancelled by UI events (this flow)
+  startUIInteraction (eventName, startedAt, sourceElem) { // this is throttled by instrumentation so that it isn't excessively called
+    if (this.interactionInProgress?.createdByApi) return // api-started interactions cannot be disrupted aka cancelled by UI events (and the vice versa applies as well)
     if (this.interactionInProgress?.done() === false) return
 
     this.interactionInProgress = new Interaction(this.agentIdentifier, eventName, startedAt, this.latestRouteSetByApi)
@@ -90,6 +92,10 @@ export class Aggregate extends AggregateBase {
       const sourceElemText = getActionText(sourceElem)
       if (sourceElemText) this.interactionInProgress.customAttributes.actionText = sourceElemText
     }
+    this.interactionInProgress.cancellationTimer = setTimeout(() => {
+      this.domObserver.disconnect()
+      this.interactionInProgress.done()
+    }, 30000) // UI ixn are disregarded after 30 seconds if it's not completed by then
     this.haveIPResetOnClose()
   }
 

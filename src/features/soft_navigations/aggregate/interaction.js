@@ -30,6 +30,7 @@ export class Interaction extends BelNode {
   createdByApi = false
   keepOpenUntilEndApi = false
   onDone = []
+  cancellationTimer
 
   constructor (agentIdentifier, uiEvent, uiEventTimestamp, currentRouteKnown) {
     super(agentIdentifier)
@@ -42,10 +43,7 @@ export class Interaction extends BelNode {
       ['cancelled', []]
     ])
     this.forceSave = this.forceIgnore = false
-
-    // In-progress interactions are disregarded after 30 seconds if it's not completed by then (or cancelled elsewhere). Api-started interactions do not time out.
-    if (this.trigger !== API_TRIGGER_NAME) this.timer = setTimeout(() => this.done(), 30000)
-    else this.createdByApi = true
+    if (this.trigger === API_TRIGGER_NAME) this.createdByApi = true
   }
 
   updateDom (timestamp) {
@@ -58,7 +56,7 @@ export class Interaction extends BelNode {
   }
 
   seenHistoryAndDomChange () {
-    return this.domTimestamp > 0 && this.historyTimestamp > 0
+    return this.historyTimestamp > 0 && this.domTimestamp > this.historyTimestamp // URL must change before DOM does
   }
 
   on (event, cb) {
@@ -81,7 +79,7 @@ export class Interaction extends BelNode {
 
   #finish (customEndTime = 0) {
     if (this.status !== INTERACTION_STATUS.IP) return // disallow this call if the ixn is already done aka not in-progress
-    clearTimeout(this.timer)
+    clearTimeout(this.cancellationTimer)
     this.end = Math.max(Math.max(this.domTimestamp, this.historyTimestamp, customEndTime) - this.start, 0)
     this.customAttributes = { ...getInfo(this.agentIdentifier).jsAttributes, ...this.customAttributes } // attrs specific to this interaction should have precedence over the general custom attrs
     this.status = INTERACTION_STATUS.FIN
@@ -93,7 +91,7 @@ export class Interaction extends BelNode {
 
   #cancel () {
     if (this.status !== INTERACTION_STATUS.IP) return // disallow this call if the ixn is already done aka not in-progress
-    clearTimeout(this.timer)
+    clearTimeout(this.cancellationTimer)
     this.status = INTERACTION_STATUS.CAN
 
     // Run all the callbacks listening to this interaction's potential cancellation.
@@ -152,7 +150,7 @@ export class Interaction extends BelNode {
     if (getInfo(this.agentIdentifier).atts) allAttachedNodes.push('a,' + addString(getInfo(this.agentIdentifier).atts)) // add apm provided attributes
     this.children.forEach(node => allAttachedNodes.push(node.serialize(this.start))) // recursively add the serialized string of every child of this (ixn) bel node
 
-    fields[1] = allAttachedNodes.length
+    fields[1] = numeric(allAttachedNodes.length)
     nodeList.push(fields)
     if (allAttachedNodes.length) nodeList.push(allAttachedNodes.join(';'))
     if (this.navTiming) nodeList.push(this.navTiming)

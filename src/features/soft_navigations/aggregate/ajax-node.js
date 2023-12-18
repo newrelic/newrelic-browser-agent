@@ -25,14 +25,11 @@ export class AjaxNode extends BelNode {
   serialize (parentStartTimestamp) {
     const addString = getAddStringContext(this.agentIdentifier)
     const nodeList = []
-    let allAttachedNodes = []
 
-    if (typeof this.gql === 'object') allAttachedNodes = addCustomAttributes(this.gql, addString)
-    this.children.forEach(node => allAttachedNodes.push(node.serialize(this.start)))
-
+    // IMPORTANT: The order in which addString is called matters and correlates to the order in which string shows up in the harvest payload. Do not re-order the following code.
     const fields = [
       numeric(this.belType),
-      allAttachedNodes.length,
+      0, // this will be overwritten below with number of attached nodes
       numeric(this.start - parentStartTimestamp), // start relative to first seen (parent interaction)
       numeric(this.end - this.start), // end is relative to start
       numeric(this.callbackEnd),
@@ -47,7 +44,11 @@ export class AjaxNode extends BelNode {
       addString(this.nodeId),
       nullable(this.spanId, addString, true) + nullable(this.traceId, addString, true) + nullable(this.spanTimestamp, numeric)
     ]
+    let allAttachedNodes = []
+    if (typeof this.gql === 'object') allAttachedNodes = addCustomAttributes(this.gql, addString)
+    this.children.forEach(node => allAttachedNodes.push(node.serialize(this.start)))
 
+    fields[1] = numeric(allAttachedNodes.length)
     nodeList.push(fields)
     if (allAttachedNodes.length) nodeList.push(allAttachedNodes.join(';'))
 

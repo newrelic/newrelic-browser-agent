@@ -33,16 +33,19 @@ export class Instrument extends InstrumentBase {
     const trackURLChangeEvent = (evt) => handle('newURL', [evt.timeStamp, '' + window.location], undefined, this.featureName, this.ee)
     windowAddEventListener('popstate', trackURLChangeEvent, true, this.removeOnAbort?.signal)
 
+    let oncePerFrame = false // attempt to reduce dom noice since the observer runs very frequently with below options
     const domObserver = new originals.MO((domChanges, observer) => {
+      if (oncePerFrame) return
+      oncePerFrame = true
       originals.RAF(() => { // waiting for next frame to time when any visuals are supposedly updated
         handle('newDom', [now()], undefined, this.featureName, this.ee)
+        oncePerFrame = false
       })
     })
-    domObserver.observe(document.documentElement || document.body, { attributes: true, childList: true, subtree: true, characterData: true })
 
     const processUserInteraction = debounce((event) => {
-      handle('newInteraction', [event], undefined, this.featureName, this.ee)
-      domObserver.takeRecords() // empty the un-processed DOM changes so they don't falsely mark the new user interaction as having caused changes prior to it
+      handle('newUIEvent', [event], undefined, this.featureName, this.ee)
+      domObserver.observe(document.documentElement || document.body, { attributes: true, childList: true, subtree: true, characterData: true })
     }, UI_WAIT_INTERVAL, { leading: true })
 
     eventsEE.on('fn-start', ([evt]) => { // set up a new user ixn before the callback for the triggering event executes
@@ -52,7 +55,7 @@ export class Instrument extends InstrumentBase {
     })
 
     this.abortHandler = abort
-    this.importAggregator()
+    this.importAggregator({ domObserver })
 
     function abort () {
       this.removeOnAbort?.abort()

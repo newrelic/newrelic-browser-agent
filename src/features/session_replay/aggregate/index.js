@@ -27,6 +27,7 @@ import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { RRWEB_VERSION } from '../../../common/constants/env'
 import { now } from '../../../common/timing/now'
 import { parseUrl } from '../../../common/url/parse-url'
+import { reinjectStylesheetAsAnonymous } from '../../../common/dom/style-sheets'
 
 export const AVG_COMPRESSION = 0.12
 
@@ -243,17 +244,15 @@ export class Aggregate extends AggregateBase {
      * They need to be re-injected with the anon tag to be able to have their contents read for rrweb's inline stylesheets data
      */
     const proms = []
-    const shouldInlineStylesheets = getConfigurationValue(this.agentIdentifier, 'session_replay.inline_stylesheet')
-    for (let { ownerNode } of document.styleSheets) {
-      if (shouldInlineStylesheets && !parseUrl(ownerNode.href).sameOrigin && ownerNode.crossOrigin !== 'anonymous') {
-        const newStyle = ownerNode.cloneNode(ownerNode)
-        proms.push(new Promise((resolve) => {
-          newStyle.crossOrigin = 'anonymous'
-          newStyle.onload = () => { resolve() }
-          document.head.prepend(newStyle)
-          document.head.removeChild(ownerNode)
-        }))
+    try {
+      const shouldInlineStylesheets = getConfigurationValue(this.agentIdentifier, 'session_replay.inline_stylesheet')
+      for (let { ownerNode } of document.styleSheets) {
+        if (shouldInlineStylesheets && !parseUrl(ownerNode.href).sameOrigin && ownerNode.crossOrigin !== 'anonymous') {
+          proms.push(reinjectStylesheetAsAnonymous(ownerNode))
+        }
       }
+    } catch (err) {
+    // a script failed to reinject -- do nothing
     }
     /** Wait for all the stylesheets to be evaluated before importing rrweb to guarantee the sheets are readable */
     await Promise.all(proms)

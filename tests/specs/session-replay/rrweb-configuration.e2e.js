@@ -322,7 +322,7 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
       expect(!!linkNode.attributes._cssText).toEqual(false)
     })
 
-    it('inline_stylesheet true DOES add inline text -- even for cross-domain non anon scripts', async () => {
+    it('inline_stylesheet true DOES add inline text -- even for cross-domain non anon styles', async () => {
       await browser.url(await browser.testHandle.assetURL('cross-domain-non-anon-stylesheet.html', config()))
         .then(() => browser.waitForFeatureAggregate('session_replay'))
 
@@ -334,6 +334,23 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
       const linkNodes = headNode.childNodes.filter(x => x.tagName === 'link' && !!x.attributes._cssText)
       linkNodes.forEach(linkNode => expect(linkNode.attributes._cssText.length).toBeGreaterThan(0))
       expect(linkNodes.length).toEqual(3) // 3 stylesheet links on page
+    })
+
+    it('cross-domain non anon styles do not modify color', async () => {
+      await browser.url(await browser.testHandle.assetURL('cross-domain-non-anon-stylesheet.html', config()))
+        .then(() => browser.waitForFeatureAggregate('session_replay'))
+
+      await browser.testHandle.expectBlob()
+      const appliedColor = await browser.execute(function () {
+        var styles = getComputedStyle(document.body)
+        for (var style of styles) {
+          if (style === 'color') {
+            return styles.getPropertyValue(style)
+          }
+        }
+        return null
+      })
+      expect(appliedColor).toEqual('rgb(128, 0, 128)') // should still be purple even tho we injected the stylesheet with black again
     })
   })
 })

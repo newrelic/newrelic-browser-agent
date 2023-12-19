@@ -1,0 +1,22 @@
+<html>
+  <head>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/rrweb@latest/dist/rrweb.min.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/rrweb@latest/dist/rrweb.min.js"></script>
+  </head>
+  <body>
+    <script>
+      (async () => {
+        const params = new Proxy(new URLSearchParams(window.location.search), {
+          get: (searchParams, prop) => searchParams.get(prop),
+        });
+        const events = await fetch(`/session-replay?s=${params.s}`).then((r) => r.json());
+        console.log("events", events);
+        const replayer = new rrweb.Replayer(events);
+        replayer.play();
+      })();
+    </script>
+  </body>
+</html>

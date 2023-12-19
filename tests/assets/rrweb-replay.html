@@ -1,22 +1,10 @@
 <html>
   <head>
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/rrweb@latest/dist/rrweb.min.css"
-    />
-    <script src="https://cdn.jsdelivr.net/npm/rrweb@latest/dist/rrweb.min.js"></script>
+    <meta
+  http-equiv="Content-Security-Policy"
+  content="style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net" />
   </head>
   <body>
-    <script>
-      (async () => {
-        const params = new Proxy(new URLSearchParams(window.location.search), {
-          get: (searchParams, prop) => searchParams.get(prop),
-        });
-        const events = await fetch(`/session-replay?s=${params.s}`).then((r) => r.json());
-        console.log("events", events);
-        const replayer = new rrweb.Replayer(events);
-        replayer.play();
-      })();
-    </script>
+    <iframe width="100%" height="100%" id="myframe" src="/tests/assets/rrweb-replayer-contents.html?s=9f2f6c34cb425160" sandbox="allow-scripts allow-downloads allow-same-origin"></iframe>
   </body>
 </html>

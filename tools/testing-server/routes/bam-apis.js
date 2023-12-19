@@ -1,7 +1,7 @@
 const fp = require('fastify-plugin')
 const { v4: uuidv4 } = require('uuid')
 const { rumFlags } = require('../constants')
-const { setReplayData, decodeAttributes } = require('../utils/replay-buffer')
+const { storeReplayData } = require('../utils/replay-buffer')
 
 /**
  * Fastify plugin to apply routes to the bam server.
@@ -59,8 +59,8 @@ module.exports = fp(async function (fastify) {
         request.testHandle.incrementRequestCount(fastify.testServerId, 'blobs')
       } else {
         // running without a test handle... lets buffer it so we can replay it later
-        const s = decodeAttributes(request.query?.attributes).session
-        setReplayData(s, request.body)
+        const attributes = new URLSearchParams(request.query?.attributes)
+        storeReplayData(attributes.get('session'), attributes.get('replay.firstTimestamp'), request.body)
       }
 
       return reply.code(200).send('')

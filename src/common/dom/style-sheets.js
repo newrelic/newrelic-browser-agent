@@ -8,7 +8,6 @@ export function reinjectStylesheetAsAnonymous (ownerNode) {
   return new Promise((resolve) => {
     newStyle.crossOrigin = 'anonymous'
     newStyle.onload = () => { resolve() }
-    document.head.prepend(newStyle)
-    document.head.removeChild(ownerNode)
+    ownerNode.replaceWith(newStyle)
   })
 }

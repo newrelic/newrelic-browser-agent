@@ -12,19 +12,21 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
   })
 
   it('should record across same-tab page refresh', async () => {
-    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
-      .then(() => browser.waitForAgentLoad())
-
-    const { request: page1Contents } = await browser.testHandle.expectBlob(10000)
+    const [{ request: page1Contents }] = await Promise.all([
+      browser.testHandle.expectBlob(),
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
+        .then(() => browser.waitForAgentLoad())
+    ])
     const { localStorage } = await browser.getAgentSessionInfo()
 
     testExpectedReplay({ data: page1Contents, session: localStorage.value, hasError: false, hasMeta: true, hasSnapshot: true, isFirstChunk: true })
 
     await browser.enableSessionReplay()
-    await browser.refresh()
-      .then(() => browser.waitForAgentLoad())
-
-    const { request: page2Contents } = await browser.testHandle.expectBlob()
+    const [{ request: page2Contents }] = await Promise.all([
+      browser.testHandle.expectBlob(),
+      browser.refresh()
+        .then(() => browser.waitForAgentLoad())
+    ])
 
     testExpectedReplay({ data: page2Contents, session: localStorage.value, hasError: false, hasMeta: true, hasSnapshot: true, isFirstChunk: false })
   })

@@ -15,7 +15,8 @@
     }
   </style>
   <link rel="stylesheet" type="text/css" href="style.css">
-  <link rel="stylesheet" href="https://res.cloudinary.com/beleza-na-web/raw/upload/blz/11.102.0/main/assets/boticariostore/css/showcase.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pure/3.0.0/pure-min.css" integrity="sha512-X2yGIVwg8zeG8N4xfsidr9MqIfIE8Yz1It+w2rhUJMqxUwvbVqC5OPcyRlPKYOw/bsdJut91//NO9rSbQZIPRQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" />
   {init}
   {config}
   <script>
@@ -29,9 +30,12 @@
   this is a page intended to "manually" set up session replay and bypass the default "off" configs
   <hr />
   <hr />
-  <textarea></textarea>
+  <div class="input-group">
+    <span class="input-group-text">With textarea</span>
+    <textarea class="form-control" aria-label="With textarea"></textarea>
+  </div>
   <hr />
-  <button class=".list-group-item" onclick="moveImage()">Click</button>
+  <button class="pure-button" onclick="moveImage()">Click</button>
   <a href="./rrweb-record.html" target="_blank">New Tab</a>
   <img src="https://upload.wikimedia.org/wikipedia/commons/d/d7/House_of_Commons_Chamber_1.png" />
   <script>

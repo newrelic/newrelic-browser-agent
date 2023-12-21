@@ -35,7 +35,8 @@ export class Recorder {
       payloadBytesEstimation: this.#backloggedEvents.payloadBytesEstimation + this.#events.payloadBytesEstimation,
       hasError: this.#backloggedEvents.hasError || this.#events.hasError,
       hasMeta: this.#backloggedEvents.hasMeta || this.#events.hasMeta,
-      hasSnapshot: this.#backloggedEvents.hasSnapshot || this.#events.hasSnapshot
+      hasSnapshot: this.#backloggedEvents.hasSnapshot || this.#events.hasSnapshot,
+      incompleteSSNodes: [...this.#backloggedEvents.incompleteSSNodes, ...this.#events.incompleteSSNodes].filter(x => x)
     }
   }
 
@@ -82,6 +83,13 @@ export class Recorder {
     else this.currentBufferTarget = this.#events
 
     if (this.parent.blocked) return
+
+    const incompleteEventSSNodes = getIncompleteStylesheetNodes(event)
+    if (incompleteEventSSNodes.length) {
+      console.log(event, 'has stylesheet nodes...', incompleteEventSSNodes)
+      this.currentBufferTarget.incompleteSSNodes.push(...incompleteEventSSNodes)
+    }
+
     const eventBytes = event.__serialized.length
     /** The estimated size of the payload after compression */
     const payloadSize = this.getPayloadSize(eventBytes)
@@ -142,4 +150,19 @@ export class Recorder {
     if (this.shouldCompress) return data * AVG_COMPRESSION
     return data
   }
+}
+
+function getIncompleteStylesheetNodes (node) {
+  const traverse = () => {
+    if (node.data && ![RRWEB_EVENT_TYPES.FullSnapshot, RRWEB_EVENT_TYPES.IncrementalSnapshot].includes(node.type)) return []
+    if (node?.data) {
+      if (node.data.node) return getIncompleteStylesheetNodes(node.data.node)
+      if (node.data.adds?.length) return node.data.adds.map(n => getIncompleteStylesheetNodes(n.node))
+    //  we dont need to fetch css for removals so no need to check .removes
+    }
+    if (node?.childNodes?.length) return node.childNodes.map(n => getIncompleteStylesheetNodes(n))
+    if (node.tagName === 'link' && !node.attributes._cssText) return [node]
+    return []
+  }
+  return traverse().flat().filter(x => x)
 }

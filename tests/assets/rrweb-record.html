@@ -21,6 +21,14 @@
     localStorage.clear()
     NREUM.init.session_replay = {enabled: true, harvestTimeSeconds: 5, error_sampling_rate: 0, sampling_rate: 100, collect_fonts: true}
     NREUM.init.privacy.cookies_enabled = true
+      setTimeout(() => {
+        const css = document.createElement('link')
+        css.href = 'https://res.cloudinary.com/beleza-na-web/raw/upload/blz/11.102.0/main/assets/boticariostore/css/showcase.css'
+        css.rel = 'stylesheet'
+        css.type = 'text/css'
+        document.head.appendChild(css)
+        console.log("appended stylesheet...")
+      }, 3000)
   </script>
   {loader}
 </head>

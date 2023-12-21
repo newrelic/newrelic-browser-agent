@@ -1,9 +1,10 @@
-import { reliableUnload, supportsFetch } from '../../tools/browser-matcher/common-matchers.mjs'
+import { notIE, supportsFetch } from '../../tools/browser-matcher/common-matchers.mjs'
 
 const loaderTypes = ['rum', 'full', 'spa']
 const loaderTypesMapped = { rum: 'lite', full: 'pro', spa: 'spa' }
 
-describe.withBrowsersMatching(reliableUnload)('metrics', () => {
+// IE does not have reliable unload support
+describe.withBrowsersMatching(notIE)('metrics', () => {
   loaderTypes.forEach(lt => loaderTypeSupportabilityMetric(lt))
 
   it('should send SMs for resources seen', async () => {
@@ -189,7 +190,8 @@ describe.withBrowsersMatching(reliableUnload)('metrics', () => {
 })
 
 function loaderTypeSupportabilityMetric (loaderType) {
-  it.withBrowsersMatching([reliableUnload, supportsFetch])(`generic agent info captured for ${loaderType} loader`, async () => {
+  // IE does not have reliable unload support
+  it.withBrowsersMatching([notIE, supportsFetch])(`generic agent info captured for ${loaderType} loader`, async () => {
     await browser.url(await browser.testHandle.assetURL('instrumented.html', { loader: loaderType }))
       .then(() => browser.waitForAgentLoad())
 

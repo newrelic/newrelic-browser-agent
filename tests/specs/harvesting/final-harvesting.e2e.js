@@ -1,8 +1,9 @@
-import { supportsFetch, reliableUnload } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { supportsFetch, notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
 
-describe('final harvesting', () => {
-  it.withBrowsersMatching(reliableUnload)('should send final harvest when navigating away from page', async () => {
+// IE does not have reliable unload support
+describe.withBrowsersMatching(notIE)('final harvesting', () => {
+  it('should send final harvest when navigating away from page', async () => {
     await browser.url(await browser.testHandle.assetURL('final-harvest.html'))
       .then(() => browser.waitForAgentLoad())
 
@@ -117,7 +118,7 @@ describe('final harvesting', () => {
     expect(sendBeaconUsage).toContain('true')
   })
 
-  it.withBrowsersMatching(reliableUnload)('should not send pageHide event twice', async () => {
+  it('should not send pageHide event twice', async () => {
     await Promise.all([
       browser.testHandle.expectTimings(),
       browser.url(await browser.testHandle.assetURL('pagehide.html'))
@@ -148,7 +149,7 @@ describe('final harvesting', () => {
     ]))
   })
 
-  it.withBrowsersMatching(reliableUnload)('should not send any final harvest when RUM fails, e.g. 400 code', async () => {
+  it('should not send any final harvest when RUM fails, e.g. 400 code', async () => {
     let url = await browser.testHandle.assetURL('final-harvest.html')
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,

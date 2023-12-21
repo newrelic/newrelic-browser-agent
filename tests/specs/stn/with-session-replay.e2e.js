@@ -7,7 +7,7 @@ import { testRumRequest } from '../../../tools/testing-server/utils/expect-tests
 import { config, MODE } from '../session-replay/helpers'
 import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
 
-describe('stn with session replay', () => {
+describe.withBrowsersMatching(notIE)('stn with session replay', () => {
   [
     ['session tracking is disabled', false],
     ['session tracking enabled but replay entitlement is 0', true]

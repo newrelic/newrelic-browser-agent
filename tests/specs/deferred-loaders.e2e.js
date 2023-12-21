@@ -5,18 +5,19 @@ import { notIE } from '../../tools/browser-matcher/common-matchers.mjs'
 describe.withBrowsersMatching(notIE)('Deferred Loaders', () => {
   ['defer', 'async', 'injection'].forEach(script => {
     it(`should still report if loaded by ${script}`, async () => {
-      await browser.url(await browser.testHandle.assetURL('all-events.html', { script })) // Setup expects before loading the page
-
       const [rum, pvt, ajax, jserrors, metrics, pa, st, spa] = await Promise.all([
-        browser.testHandle.expectRum(),
-        browser.testHandle.expectTimings(),
-        browser.testHandle.expectAjaxEvents(),
-        browser.testHandle.expectErrors(),
-        browser.testHandle.expectMetrics(),
-        browser.testHandle.expectIns(),
-        browser.testHandle.expectResources(),
-        browser.testHandle.expectInteractionEvents(),
-        await browser.url(await browser.testHandle.assetURL('all-events.html', { script })) // Setup expects before loading the page
+        browser.testHandle.expectRum(), // /1
+        browser.testHandle.expectTimings(), // /events
+        browser.testHandle.expectAjaxEvents(), // /events
+        browser.testHandle.expectErrors(), // /jserrors
+        browser.testHandle.expectMetrics(), // /jserrors
+        browser.testHandle.expectIns(), // /ins
+        browser.testHandle.expectResources(), // /resources
+        browser.testHandle.expectInteractionEvents(), // /events
+        browser.url(await browser.testHandle.assetURL('all-events.html', { script }))
+          .then(() => browser.waitForAgentLoad())
+          .then(() => browser.pause(5000))
+          .then(() => browser.refresh())
       ])
 
       checkRum(rum.request)

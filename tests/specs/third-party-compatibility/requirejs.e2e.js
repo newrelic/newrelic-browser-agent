@@ -1,7 +1,8 @@
-import { reliableUnload } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
 import runTest from './run-test'
 
-describe.withBrowsersMatching(reliableUnload)('requirejs compatibility', () => {
+// IE does not have reliable unload support
+describe.withBrowsersMatching(notIE)('requirejs compatibility', () => {
   it('2.3.6', async () => {
     await runTest({
       browser,

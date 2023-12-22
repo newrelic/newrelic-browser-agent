@@ -14,7 +14,7 @@ test('should default group to "feature"', async () => {
   const { handleEE } = await import('./handle')
   const { registerHandler } = await import('./register-handler')
 
-  const eventType = faker.datatype.uuid()
+  const eventType = faker.string.uuid()
   const eventHandler = jest.fn()
 
   registerHandler(eventType, eventHandler)
@@ -30,8 +30,8 @@ test('should use the provided group', async () => {
   const { handleEE } = await import('./handle')
   const { registerHandler } = await import('./register-handler')
 
-  const eventType = faker.datatype.uuid()
-  const eventGroup = faker.datatype.uuid()
+  const eventType = faker.string.uuid()
+  const eventGroup = faker.string.uuid()
   const eventHandler = jest.fn()
 
   registerHandler(eventType, eventHandler, eventGroup)
@@ -47,8 +47,8 @@ test('should use the provided event-emitter', async () => {
   const { registerHandler } = await import('./register-handler')
 
   const scopedEE = {}
-  const eventType = faker.datatype.uuid()
-  const eventGroup = faker.datatype.uuid()
+  const eventType = faker.string.uuid()
+  const eventGroup = faker.string.uuid()
   const eventHandler = jest.fn()
 
   registerHandler(eventType, eventHandler, eventGroup, scopedEE)

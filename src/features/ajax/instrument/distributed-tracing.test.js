@@ -10,7 +10,7 @@ let agentIdentifier
 let dtInstance
 
 beforeEach(() => {
-  agentIdentifier = faker.datatype.uuid()
+  agentIdentifier = faker.string.uuid()
   dtInstance = new DT(agentIdentifier)
 
   jest.mocked(getLoaderConfig).mockReturnValue({

@@ -33,19 +33,19 @@ describe('setTopLevelCallers', () => {
 
     const nreum = gosCDN()
     nreum.initializedAgents = {
-      [faker.datatype.uuid()]: {
+      [faker.string.uuid()]: {
         exposed: true,
         api: {
           setErrorHandler: jest.fn()
         }
       },
-      [faker.datatype.uuid()]: {
+      [faker.string.uuid()]: {
         exposed: true,
         api: {
           setErrorHandler: jest.fn()
         }
       },
-      [faker.datatype.uuid()]: {
+      [faker.string.uuid()]: {
         exposed: false,
         api: {
           setErrorHandler: jest.fn()
@@ -70,15 +70,15 @@ describe('setTopLevelCallers', () => {
     setTopLevelCallers()
 
     const nreum = gosCDN()
-    const expected = faker.datatype.uuid()
+    const expected = faker.string.uuid()
     nreum.initializedAgents = {
-      [faker.datatype.uuid()]: {
+      [faker.string.uuid()]: {
         exposed: true,
         api: {
           interaction: jest.fn().mockReturnValue(expected)
         }
       },
-      [faker.datatype.uuid()]: {
+      [faker.string.uuid()]: {
         exposed: false,
         api: {
           interaction: jest.fn().mockReturnValue(expected)
@@ -94,21 +94,21 @@ describe('setTopLevelCallers', () => {
     setTopLevelCallers()
 
     const nreum = gosCDN()
-    const expected = faker.datatype.uuid()
+    const expected = faker.string.uuid()
     nreum.initializedAgents = {
-      [faker.datatype.uuid()]: {
+      [faker.string.uuid()]: {
         exposed: true,
         api: {
           interaction: jest.fn().mockReturnValue(expected)
         }
       },
-      [faker.datatype.uuid()]: {
+      [faker.string.uuid()]: {
         exposed: true,
         api: {
           interaction: jest.fn().mockReturnValue(expected)
         }
       },
-      [faker.datatype.uuid()]: {
+      [faker.string.uuid()]: {
         exposed: false,
         api: {
           interaction: jest.fn().mockReturnValue(expected)

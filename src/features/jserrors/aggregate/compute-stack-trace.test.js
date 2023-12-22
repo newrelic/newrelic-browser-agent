@@ -375,7 +375,7 @@ describe('errors that are messages only or primitives', () => {
   test('parser should get error name from name property', async () => {
     const mockError = browserErrorUtils.constructError({
       toString: '0',
-      name: faker.datatype.uuid(),
+      name: faker.string.uuid(),
       constructor: 'function Number() { [native code] }'
     })
 
@@ -394,8 +394,8 @@ describe('errors that are messages only or primitives', () => {
   test('parser should include the message property', async () => {
     const mockError = browserErrorUtils.constructError({
       toString: '0',
-      name: faker.datatype.uuid(),
-      message: faker.datatype.uuid(),
+      name: faker.string.uuid(),
+      message: faker.string.uuid(),
       constructor: 'function Number() { [native code] }'
     })
 

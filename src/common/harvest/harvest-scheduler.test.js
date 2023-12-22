@@ -68,8 +68,8 @@ describe('startTimer', () => {
   })
 
   test('should use provided delay to schedule harvest', () => {
-    const interval = faker.datatype.number({ min: 100, max: 1000 })
-    const initialDelay = faker.datatype.number({ min: 100, max: 1000 })
+    const interval = faker.number.int({ min: 100, max: 1000 })
+    const initialDelay = faker.number.int({ min: 100, max: 1000 })
 
     harvestSchedulerInstance.startTimer(interval, initialDelay)
 
@@ -79,7 +79,7 @@ describe('startTimer', () => {
   })
 
   test('should use provided interval to schedule harvest when initialDelay is null', () => {
-    const interval = faker.datatype.number({ min: 100, max: 1000 })
+    const interval = faker.number.int({ min: 100, max: 1000 })
 
     harvestSchedulerInstance.startTimer(interval, null)
 
@@ -127,9 +127,9 @@ describe('scheduleHarvest', () => {
   })
 
   test('should runHarvest after the provided delay in seconds', () => {
-    const delay = faker.datatype.number({ min: 100, max: 1000 })
+    const delay = faker.number.int({ min: 100, max: 1000 })
     const opts = {
-      [faker.datatype.uuid()]: faker.lorem.sentence()
+      [faker.string.uuid()]: faker.lorem.sentence()
     }
 
     harvestSchedulerInstance.scheduleHarvest(delay, opts)
@@ -144,10 +144,10 @@ describe('scheduleHarvest', () => {
   })
 
   test('should default delay to internal interval', () => {
-    const interval = faker.datatype.number({ min: 100, max: 1000 })
+    const interval = faker.number.int({ min: 100, max: 1000 })
     harvestSchedulerInstance.interval = interval
     const opts = {
-      [faker.datatype.uuid()]: faker.lorem.sentence()
+      [faker.string.uuid()]: faker.lorem.sentence()
     }
 
     harvestSchedulerInstance.scheduleHarvest(null, opts)
@@ -189,10 +189,10 @@ describe('runHarvest', () => {
   test.each([
     null, undefined
   ])('should use sendX for harvesting when getPayload is %s', (getPayload) => {
-    harvestSchedulerInstance.endpoint = faker.datatype.uuid()
+    harvestSchedulerInstance.endpoint = faker.string.uuid()
     harvestSchedulerInstance.opts.getPayload = getPayload
     const harvestRunOpts = {
-      [faker.datatype.uuid()]: faker.lorem.sentence()
+      [faker.string.uuid()]: faker.lorem.sentence()
     }
 
     harvestSchedulerInstance.runHarvest(harvestRunOpts)
@@ -211,16 +211,16 @@ describe('runHarvest', () => {
   test('should use send for harvesting when getPayload is defined', () => {
     const payload = {
       body: {
-        [faker.datatype.uuid()]: faker.lorem.sentence()
+        [faker.string.uuid()]: faker.lorem.sentence()
       },
       qs: {
-        [faker.datatype.uuid()]: faker.lorem.sentence()
+        [faker.string.uuid()]: faker.lorem.sentence()
       }
     }
-    harvestSchedulerInstance.endpoint = faker.datatype.uuid()
+    harvestSchedulerInstance.endpoint = faker.string.uuid()
     harvestSchedulerInstance.opts.getPayload = jest.fn().mockReturnValue(payload)
     const harvestRunOpts = {
-      [faker.datatype.uuid()]: faker.lorem.sentence()
+      [faker.string.uuid()]: faker.lorem.sentence()
     }
 
     harvestSchedulerInstance.runHarvest(harvestRunOpts)
@@ -239,17 +239,17 @@ describe('runHarvest', () => {
   test('should use _send for harvesting when opts.raw is true', () => {
     const payload = {
       body: {
-        [faker.datatype.uuid()]: faker.lorem.sentence()
+        [faker.string.uuid()]: faker.lorem.sentence()
       },
       qs: {
-        [faker.datatype.uuid()]: faker.lorem.sentence()
+        [faker.string.uuid()]: faker.lorem.sentence()
       }
     }
-    harvestSchedulerInstance.endpoint = faker.datatype.uuid()
+    harvestSchedulerInstance.endpoint = faker.string.uuid()
     harvestSchedulerInstance.opts.raw = true
     harvestSchedulerInstance.opts.getPayload = jest.fn().mockReturnValue(payload)
     const harvestRunOpts = {
-      [faker.datatype.uuid()]: faker.lorem.sentence()
+      [faker.string.uuid()]: faker.lorem.sentence()
     }
 
     harvestSchedulerInstance.runHarvest(harvestRunOpts)
@@ -279,17 +279,17 @@ describe('runHarvest', () => {
   test('should schedule the next harvest after running harvest', () => {
     const payload = {
       body: {
-        [faker.datatype.uuid()]: faker.lorem.sentence()
+        [faker.string.uuid()]: faker.lorem.sentence()
       },
       qs: {
-        [faker.datatype.uuid()]: faker.lorem.sentence()
+        [faker.string.uuid()]: faker.lorem.sentence()
       }
     }
     harvestSchedulerInstance.started = true
-    harvestSchedulerInstance.endpoint = faker.datatype.uuid()
+    harvestSchedulerInstance.endpoint = faker.string.uuid()
     harvestSchedulerInstance.opts.getPayload = jest.fn().mockReturnValue(payload)
     const harvestRunOpts = {
-      [faker.datatype.uuid()]: faker.lorem.sentence()
+      [faker.string.uuid()]: faker.lorem.sentence()
     }
 
     harvestSchedulerInstance.runHarvest(harvestRunOpts)
@@ -320,10 +320,10 @@ describe('runHarvest', () => {
 
   test('should run onHarvestFinished after harvest finishes', () => {
     const harvestRunOpts = {
-      [faker.datatype.uuid()]: faker.lorem.sentence()
+      [faker.string.uuid()]: faker.lorem.sentence()
     }
     const result = {
-      [faker.datatype.uuid()]: faker.lorem.sentence()
+      [faker.string.uuid()]: faker.lorem.sentence()
     }
 
     harvestSchedulerInstance.runHarvest(harvestRunOpts)
@@ -335,11 +335,11 @@ describe('runHarvest', () => {
 
   test('should disable retry in harvest callback when forceNoRetry is true', () => {
     const harvestRunOpts = {
-      [faker.datatype.uuid()]: faker.lorem.sentence(),
+      [faker.string.uuid()]: faker.lorem.sentence(),
       forceNoRetry: true
     }
     const result = {
-      [faker.datatype.uuid()]: faker.lorem.sentence()
+      [faker.string.uuid()]: faker.lorem.sentence()
     }
 
     harvestSchedulerInstance.runHarvest(harvestRunOpts)
@@ -362,7 +362,7 @@ describe('onHarvestFinished', () => {
   test('should call onFinished callback', () => {
     harvestSchedulerInstance.opts.onFinished = jest.fn()
     const result = {
-      [faker.datatype.uuid()]: faker.lorem.sentence()
+      [faker.string.uuid()]: faker.lorem.sentence()
     }
 
     harvestSchedulerInstance.onHarvestFinished({}, result)
@@ -374,7 +374,7 @@ describe('onHarvestFinished', () => {
     null, undefined, false
   ])('should not reschedule harvest when result.sent is %s', (sent) => {
     const result = {
-      [faker.datatype.uuid()]: faker.lorem.sentence(),
+      [faker.string.uuid()]: faker.lorem.sentence(),
       sent,
       retry: true
     }
@@ -388,7 +388,7 @@ describe('onHarvestFinished', () => {
     null, undefined, false
   ])('should not reschedule harvest when result.retry is %s', (retry) => {
     const result = {
-      [faker.datatype.uuid()]: faker.lorem.sentence(),
+      [faker.string.uuid()]: faker.lorem.sentence(),
       sent: true,
       retry
     }
@@ -400,13 +400,13 @@ describe('onHarvestFinished', () => {
 
   test('should reschedule harvest using result.delay', () => {
     const harvestOpts = {
-      [faker.datatype.uuid()]: faker.lorem.sentence()
+      [faker.string.uuid()]: faker.lorem.sentence()
     }
     const result = {
-      [faker.datatype.uuid()]: faker.lorem.sentence(),
+      [faker.string.uuid()]: faker.lorem.sentence(),
       sent: true,
       retry: true,
-      delay: faker.datatype.number({ min: 100, max: 1000 })
+      delay: faker.number.int({ min: 100, max: 1000 })
     }
 
     harvestSchedulerInstance.onHarvestFinished(harvestOpts, result)
@@ -415,12 +415,12 @@ describe('onHarvestFinished', () => {
   })
 
   test('should reschedule harvest using instance retryDelay opt', () => {
-    harvestSchedulerInstance.opts.retryDelay = faker.datatype.number({ min: 100, max: 1000 })
+    harvestSchedulerInstance.opts.retryDelay = faker.number.int({ min: 100, max: 1000 })
     const harvestOpts = {
-      [faker.datatype.uuid()]: faker.lorem.sentence()
+      [faker.string.uuid()]: faker.lorem.sentence()
     }
     const result = {
-      [faker.datatype.uuid()]: faker.lorem.sentence(),
+      [faker.string.uuid()]: faker.lorem.sentence(),
       sent: true,
       retry: true
     }
@@ -435,10 +435,10 @@ describe('onHarvestFinished', () => {
   ])('should not reschedule harvest when delay is %s and scheduler not started', (delay) => {
     harvestSchedulerInstance.opts.retryDelay = delay
     const harvestOpts = {
-      [faker.datatype.uuid()]: faker.lorem.sentence()
+      [faker.string.uuid()]: faker.lorem.sentence()
     }
     const result = {
-      [faker.datatype.uuid()]: faker.lorem.sentence(),
+      [faker.string.uuid()]: faker.lorem.sentence(),
       sent: true,
       retry: true,
       delay
@@ -455,10 +455,10 @@ describe('onHarvestFinished', () => {
     harvestSchedulerInstance.started = true
     harvestSchedulerInstance.opts.retryDelay = delay
     const harvestOpts = {
-      [faker.datatype.uuid()]: faker.lorem.sentence()
+      [faker.string.uuid()]: faker.lorem.sentence()
     }
     const result = {
-      [faker.datatype.uuid()]: faker.lorem.sentence(),
+      [faker.string.uuid()]: faker.lorem.sentence(),
       sent: true,
       retry: true,
       delay
@@ -471,14 +471,14 @@ describe('onHarvestFinished', () => {
 
   test('should clear the current timeout handle and reschedule the harvest', () => {
     const timeoutHandle = setTimeout(jest.fn(), 100000)
-    harvestSchedulerInstance.opts.retryDelay = faker.datatype.number({ min: 100, max: 1000 })
+    harvestSchedulerInstance.opts.retryDelay = faker.number.int({ min: 100, max: 1000 })
     harvestSchedulerInstance.timeoutHandle = timeoutHandle
     harvestSchedulerInstance.started = true
     const harvestOpts = {
-      [faker.datatype.uuid()]: faker.lorem.sentence()
+      [faker.string.uuid()]: faker.lorem.sentence()
     }
     const result = {
-      [faker.datatype.uuid()]: faker.lorem.sentence(),
+      [faker.string.uuid()]: faker.lorem.sentence(),
       sent: true,
       retry: true
     }

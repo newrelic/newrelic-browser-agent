@@ -180,7 +180,7 @@
     "@babel/plugin-syntax-import-assertions": "^7.23.3",
     "@babel/preset-env": "^7.23.6",
     "@babel/register": "^7.22.15",
-    "@faker-js/faker": "^7.6.0",
+    "@faker-js/faker": "^8.3.1",
     "@fastify/compress": "^6.5.0",
     "@fastify/cors": "^8.5.0",
     "@fastify/multipart": "^8.0.0",

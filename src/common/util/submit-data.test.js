@@ -105,7 +105,7 @@ describe('xhr', () => {
   })
 
   test('should use the provided headers', () => {
-    const headers = [{ key: faker.lorem.word(), value: faker.datatype.uuid() }]
+    const headers = [{ key: faker.lorem.word(), value: faker.string.uuid() }]
     submitData.xhr({ url, headers })
     const xhr = jest.mocked(global.XMLHttpRequest).mock.instances[0]
 

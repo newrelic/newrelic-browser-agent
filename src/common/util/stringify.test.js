@@ -1,49 +1,49 @@
 import { stringify } from './stringify'
+import * as eventEmitterModule from '../event-emitter/contextual-ee'
 
-var mockEmit = jest.fn()
-jest.mock('../event-emitter/contextual-ee', () => ({
-  __esModule: true,
-  get ee () {
-    return { emit: mockEmit }
-  }
-}))
+jest.enableAutomock()
+jest.unmock('./stringify')
 
-test('should return a JSON string representation of the value', () => {
-  const obj = { a: 1, b: { nested: true } }
+test('should utilize JSON.stringify to serialize input data', () => {
+  jest.spyOn(JSON, 'stringify')
+
+  const input = { a: 1, b: { nested: true } }
   const expected = '{"a":1,"b":{"nested":true}}'
 
-  const result = stringify(obj)
+  const result = stringify(input)
 
-  expect(result).toBe(expected)
+  expect(JSON.stringify).toHaveBeenCalledWith(input, expect.any(Function))
+  expect(result).toEqual(expected)
 })
 
-test('should handle circular references and exclude them from the JSON output', () => {
-  const obj = { a: 1 }
-  obj.b = obj // Create a circular reference
-  const expected = '{"a":1}'
-
-  const result = stringify(obj)
-
-  expect(result).toBe(expected)
+test.each([
+  ['array', [0, 1, 'asdf', undefined, null, 'weee'], '[0,1,"asdf",null,null,"weee"]'],
+  ['object', { a: 123, c: 'b', f: 'asdf', u: undefined, n: null }, '{"a":123,"c":"b","f":"asdf","n":null}'],
+  ['undefined', undefined, undefined],
+  ['null', null, 'null'],
+  ['number', 123, '123'],
+  ['function', function F () {}, undefined],
+  ['object w/ prototype', (() => { function F () {}; F.prototype = { a: 123 }; const obj = new F(); obj.other = 222; return obj })(), '{"other":222}'],
+  ['nested json', { stringified: stringify({ a: 123, c: 'b', f: 'asdf', u: undefined, n: null }) }, '{"stringified":"{\\"a\\":123,\\"c\\":\\"b\\",\\"f\\":\\"asdf\\",\\"n\\":null}"}']
+])('should serialize input %s properly', (_, input, expected) => {
+  expect(stringify(input)).toEqual(expected)
 })
 
-test('should handle non-object values and return their string representation', () => {
-  const value = 42
-  const expected = '42'
+test('should support serializing circular references by omitting the circular reference', () => {
+  const input = { a: 1 }
+  input.circular = input
+  input.arr = ['foo', input]
 
-  const result = stringify(value)
-
-  expect(result).toBe(expected)
+  expect(stringify(input)).toEqual('{"a":1,"arr":["foo",null]}')
 })
 
 test('should emit an "internal-error" event if an error occurs during JSON.stringify', () => {
-  const obj = { a: 1 }
-
+  jest.spyOn(eventEmitterModule.ee, 'emit')
   jest.spyOn(JSON, 'stringify').mockImplementation(() => {
     throw new Error('message')
   })
 
-  stringify(obj)
+  stringify('foo')
 
-  expect(mockEmit).toHaveBeenCalledWith('internal-error', expect.any(Array))
+  expect(eventEmitterModule.ee.emit).toHaveBeenCalledWith('internal-error', expect.any(Array))
 })

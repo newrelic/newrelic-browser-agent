@@ -35,8 +35,7 @@ export class Recorder {
       payloadBytesEstimation: this.#backloggedEvents.payloadBytesEstimation + this.#events.payloadBytesEstimation,
       hasError: this.#backloggedEvents.hasError || this.#events.hasError,
       hasMeta: this.#backloggedEvents.hasMeta || this.#events.hasMeta,
-      hasSnapshot: this.#backloggedEvents.hasSnapshot || this.#events.hasSnapshot,
-      incompleteSSNodes: [...this.#backloggedEvents.incompleteSSNodes, ...this.#events.incompleteSSNodes].filter(x => x)
+      hasSnapshot: this.#backloggedEvents.hasSnapshot || this.#events.hasSnapshot
     }
   }
 
@@ -84,12 +83,6 @@ export class Recorder {
 
     if (this.parent.blocked) return
 
-    const incompleteEventSSNodes = getIncompleteStylesheetNodes(event)
-    if (incompleteEventSSNodes.length) {
-      console.log(event, 'has stylesheet nodes...', incompleteEventSSNodes)
-      this.currentBufferTarget.incompleteSSNodes.push(...incompleteEventSSNodes)
-    }
-
     const eventBytes = event.__serialized.length
     /** The estimated size of the payload after compression */
     const payloadSize = this.getPayloadSize(eventBytes)
@@ -110,6 +103,14 @@ export class Recorder {
     if (event.type === RRWEB_EVENT_TYPES.FullSnapshot) {
       this.currentBufferTarget.hasSnapshot = true
     }
+
+    getIncompleteStylesheetNodes(event).forEach(async ({ path, node }) => {
+      fetch(node.attributes.href).then(r => r.text()).then(cssText => {
+        traverseObjectByStringPath(event, path).attributes._cssText = cssText
+        delete event.__serialized
+        event.__serialized = stringify(event)
+      })
+    })
 
     this.currentBufferTarget.add(event)
     this.currentBufferTarget.payloadBytesEstimation += eventBytes
@@ -152,17 +153,23 @@ export class Recorder {
   }
 }
 
-function getIncompleteStylesheetNodes (node) {
+function getIncompleteStylesheetNodes (node, path = '') {
   const traverse = () => {
     if (node.data && ![RRWEB_EVENT_TYPES.FullSnapshot, RRWEB_EVENT_TYPES.IncrementalSnapshot].includes(node.type)) return []
     if (node?.data) {
-      if (node.data.node) return getIncompleteStylesheetNodes(node.data.node)
-      if (node.data.adds?.length) return node.data.adds.map(n => getIncompleteStylesheetNodes(n.node))
+      if (node.data.node) return getIncompleteStylesheetNodes(node.data.node, path + '.data.node')
+      if (node.data.adds?.length) return node.data.adds.map((n, i) => getIncompleteStylesheetNodes(n.node, path + `.data.adds.${i}.node`))
     //  we dont need to fetch css for removals so no need to check .removes
     }
-    if (node?.childNodes?.length) return node.childNodes.map(n => getIncompleteStylesheetNodes(n))
-    if (node.tagName === 'link' && !node.attributes._cssText) return [node]
+    if (node?.childNodes?.length) return node.childNodes.map((n, i) => getIncompleteStylesheetNodes(n, path + `.childnodes.${i}`))
+    if (node.tagName === 'link' && !node.attributes._cssText) return [{ path, node }]
     return []
   }
   return traverse().flat().filter(x => x)
+}
+
+function traverseObjectByStringPath (obj, path) {
+  path = path.split('.')
+  for (let i = 0, len = path.length; i < len; i++) if (path[i]) obj = obj[path[i]]
+  return obj
 }

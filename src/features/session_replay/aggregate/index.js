@@ -215,12 +215,6 @@ export class Aggregate extends AggregateBase {
     // get the event type and use that to trigger another harvest if needed
     if (!recorderEvents.events.length || (this.mode !== MODE.FULL) || this.blocked) return
 
-    if (recorderEvents.incompleteSSNodes.length) {
-      for (let node of recorderEvents.incompleteSSNodes) {
-        node.test = 1
-      }
-    }
-
     const payload = this.getHarvestContents(recorderEvents)
     payload.body.__serialized = `[${payload.body.map(e => e.__serialized).join(',')}]`
 

@@ -1,7 +1,7 @@
 import { record as recorder } from 'rrweb'
 import { stringify } from '../../../common/util/stringify'
 import { AVG_COMPRESSION, CHECKOUT_MS, IDEAL_PAYLOAD_SIZE, QUERY_PARAM_PADDING, RRWEB_EVENT_TYPES } from '../constants'
-import { getConfigurationValue } from '../../../common/config/config'
+import { getConfigurationValue, originals } from '../../../common/config/config'
 import { RecorderEvents } from './recorder-events'
 import { MODE } from '../../../common/session/constants'
 
@@ -105,7 +105,7 @@ export class Recorder {
     }
 
     getIncompleteStylesheetNodes(event).forEach(async ({ path, node }) => {
-      fetch(node.attributes.href).then(r => r.text()).then(cssText => {
+      originals.FETCH.bind(window)(node.attributes.href).then(r => r.text()).then(cssText => {
         traverseObjectByStringPath(event, path).attributes._cssText = cssText
         delete event.__serialized
         event.__serialized = stringify(event)

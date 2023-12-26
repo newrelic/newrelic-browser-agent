@@ -12,7 +12,6 @@ import { BelNode } from './bel-node'
  **/
 export class Interaction extends BelNode {
   id = generateUuid() // unique id that is serialized and used to link interactions with errors
-  trigger
   initialPageURL = initialLocation
   oldURL = '' + globalScope?.location
   newURL = '' + globalScope?.location
@@ -21,7 +20,6 @@ export class Interaction extends BelNode {
   customDataByApi = {}
   queueTime // only used by initialPageLoad interactions
   appTime // only used by initialPageLoad interactions
-  oldRoute
   newRoute
   /** Internal state of this interaction: in-progress, finished, or cancelled. */
   status = INTERACTION_STATUS.IP

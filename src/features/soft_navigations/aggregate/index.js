@@ -29,7 +29,7 @@ export class Aggregate extends AggregateBase {
 
     this.initialPageLoadInteraction = new InitialPageLoadInteraction(agentIdentifier)
     timeToFirstByte.subscribe(({ entries }) => {
-      const loadEventTime = Math.round(entries[0].loadEventEnd)
+      const loadEventTime = entries[0].loadEventEnd
       this.initialPageLoadInteraction.forceSave = true
       this.initialPageLoadInteraction.done(loadEventTime)
       this.interactionsToHarvest.push(this.initialPageLoadInteraction)
@@ -67,7 +67,14 @@ export class Aggregate extends AggregateBase {
   onHarvestStarted (options) {
     if (this.interactionsToHarvest.length === 0 || this.blocked) return
 
-    const serializedIxnList = this.interactionsToHarvest.map(interaction => interaction.serialize())
+    // The payload depacker takes the first ixn of a payload (if there are multiple ixns) and positively offset the subsequent ixns timestamps by that amount.
+    // In order to accurately portray the real start & end times of the 2nd & onward ixns, we hence need to negatively offset their start timestamps with that of the 1st ixn.
+    let firstIxnStartTime = 0 // the very 1st ixn does not require any offsetting
+    const serializedIxnList = []
+    for (const interaction of this.interactionsToHarvest) {
+      serializedIxnList.push(interaction.serialize(firstIxnStartTime))
+      if (!firstIxnStartTime) firstIxnStartTime = Math.floor(interaction.start)
+    }
     const payload = `bel.7;${serializedIxnList.join(';')}`
 
     if (options.retry) this.interactionsAwaitingRetry.push(...this.interactionsToHarvest)
@@ -110,20 +117,26 @@ export class Aggregate extends AggregateBase {
   /**
    * Find the active interaction (current or past) for a given timestamp. Note that historic lookups mostly only go as far back as the last harvest for this feature.
    * Also, the caller should check the status of the interaction returned if found via {@link Interaction.status}, if that's pertinent.
-   * Cancelled (status) interactions are NOT returned!
+   * TIP: Cancelled (status) interactions are NOT returned!
+   * IMPORTANT: Finished interactions are in queue for next harvest! It's highly recommended that consumer logic be synchronous for safe reference.
    * @param {DOMHighResTimeStamp} timestamp
    * @returns An {@link Interaction} or undefined, if no active interaction was found.
    */
   getInteractionFor (timestamp) {
-    if (this.interactionInProgress?.isActiveDuring(timestamp)) return this.interactionInProgress
     /* In the sole case wherein there can be two "interactions" overlapping (initialPageLoad + regular route-change),
       the regular interaction should get precedence in being assigned the "active" interaction in regards to our one-at-a-time model.
-      Hence, in case the initialPageLoad is pending harvest, we reverse search for the latest completed interaction since iPL is always added first.
     */
-    for (let idx = this.interactionsToHarvest.length - 1; idx >= 0; idx--) {
+    if (this.interactionInProgress?.isActiveDuring(timestamp)) return this.interactionInProgress
+    let saveIxn
+    for (let idx = this.interactionsToHarvest.length - 1; idx >= 0; idx--) { // reverse search for the latest completed interaction for efficiency
       const finishedInteraction = this.interactionsToHarvest[idx]
-      if (finishedInteraction.isActiveDuring(timestamp)) return finishedInteraction
+      if (finishedInteraction.isActiveDuring(timestamp)) {
+        if (finishedInteraction.trigger !== 'initialPageLoad') return finishedInteraction
+        // It's possible that a complete interaction occurs before page is fully loaded, so we need to consider if a route-change ixn may have overlapped this iPL
+        else saveIxn = finishedInteraction
+      }
     }
+    if (saveIxn) return saveIxn // if an iPL was determined to be active and no route-change was found active for the same time, then iPL is deemed the one
     if (this.initialPageLoadInteraction?.isActiveDuring(timestamp)) return this.initialPageLoadInteraction // lowest precedence and also only if it's still in-progress
     // Time must be when no interaction is happening, so return undefined.
   }
@@ -179,7 +192,7 @@ export class Aggregate extends AggregateBase {
     const INTERACTION_API = 'api-ixn-'
     const thisClass = this
 
-    registerHandler(INTERACTION_API + 'get', function (time, { waitForEnd }) {
+    registerHandler(INTERACTION_API + 'get', function (time, { waitForEnd } = {}) {
       // In here, 'this' refers to the EventContext specific to per InteractionHandle instance spawned by each .interaction() api call.
       // Each api call aka IH instance would therefore retain a reference to either the in-progress interaction *at the time of the call* OR a new api-started interaction.
       if (thisClass.interactionInProgress !== null) this.associatedInteraction = thisClass.interactionInProgress

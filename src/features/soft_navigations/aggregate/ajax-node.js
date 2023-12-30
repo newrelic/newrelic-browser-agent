@@ -30,7 +30,7 @@ export class AjaxNode extends BelNode {
     const fields = [
       numeric(this.belType),
       0, // this will be overwritten below with number of attached nodes
-      numeric(this.start - parentStartTimestamp), // start relative to first seen (parent interaction)
+      numeric(this.start - parentStartTimestamp), // start relative to parent start (if part of first node in payload) or first parent start
       numeric(this.end - this.start), // end is relative to start
       numeric(this.callbackEnd),
       numeric(this.callbackDuration),
@@ -46,7 +46,7 @@ export class AjaxNode extends BelNode {
     ]
     let allAttachedNodes = []
     if (typeof this.gql === 'object') allAttachedNodes = addCustomAttributes(this.gql, addString)
-    this.children.forEach(node => allAttachedNodes.push(node.serialize(this.start)))
+    this.children.forEach(node => allAttachedNodes.push(node.serialize())) // no children is expected under ajax nodes at this time
 
     fields[1] = numeric(allAttachedNodes.length)
     nodeList.push(fields)

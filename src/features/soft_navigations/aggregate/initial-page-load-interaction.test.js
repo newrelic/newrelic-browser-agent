@@ -33,7 +33,8 @@ jest.mock('../../../common/util/obfuscate', () => ({
 test('InitialPageLoad serialized output is correct', () => {
   const ipl = new InitialPageLoadInteraction('abc')
   ipl.id = 'static-id'
+  ipl.end = 123.45
 
   expect(ipl.navTiming).toBe('b,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1')
-  expect(ipl.serialize()).toBe("1,,,,,,'initialPageLoad,'http://localhost/,1,1,,,cc,!!!'static-id,'1,33,66;b,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1")
+  expect(ipl.serialize(0)).toBe("1,,,3f,,,'initialPageLoad,'http://localhost/,1,1,,,cc,!!!'static-id,'1,33,66;b,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1")
 })

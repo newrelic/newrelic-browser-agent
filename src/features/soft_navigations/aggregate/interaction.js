@@ -2,7 +2,6 @@ import { getInfo } from '../../../common/config/config'
 import { globalScope, initialLocation } from '../../../common/constants/runtime'
 import { generateUuid } from '../../../common/ids/unique-id'
 import { addCustomAttributes, getAddStringContext, nullable, numeric } from '../../../common/serialize/bel-serializer'
-import { now } from '../../../common/timing/now'
 import { cleanURL } from '../../../common/url/clean-url'
 import { NODE_TYPE, INTERACTION_STATUS, INTERACTION_TYPE, API_TRIGGER_NAME } from '../constants'
 import { BelNode } from './bel-node'
@@ -45,12 +44,12 @@ export class Interaction extends BelNode {
   }
 
   updateDom (timestamp) {
-    this.domTimestamp = (timestamp || now())
+    this.domTimestamp = (timestamp || performance.now()) // default timestamp should be precise for accurate isActiveDuring calculations
   }
 
   updateHistory (timestamp, newUrl) {
     this.newURL = newUrl || '' + globalScope?.location
-    this.historyTimestamp = (timestamp || now())
+    this.historyTimestamp = (timestamp || performance.now())
   }
 
   seenHistoryAndDomChange () {
@@ -70,7 +69,7 @@ export class Interaction extends BelNode {
 
     if (this.forceIgnore) this.#cancel() // .ignore() always has precedence over save actions
     else if (this.seenHistoryAndDomChange()) this.#finish(customEndTime) // then this should've already finished while it was the interactionInProgress, with a natural end time
-    else if (this.forceSave) this.#finish(customEndTime || now()) // a manually saved ixn (did not fulfill conditions) must have a specified end time, if one wasn't provided
+    else if (this.forceSave) this.#finish(customEndTime || performance.now()) // a manually saved ixn (did not fulfill conditions) must have a specified end time, if one wasn't provided
     else this.#cancel()
     return true
   }
@@ -78,7 +77,7 @@ export class Interaction extends BelNode {
   #finish (customEndTime = 0) {
     if (this.status !== INTERACTION_STATUS.IP) return // disallow this call if the ixn is already done aka not in-progress
     clearTimeout(this.cancellationTimer)
-    this.end = Math.max(Math.max(this.domTimestamp, this.historyTimestamp, customEndTime) - this.start, 0)
+    this.end = Math.max(this.domTimestamp, this.historyTimestamp, customEndTime)
     this.customAttributes = { ...getInfo(this.agentIdentifier).jsAttributes, ...this.customAttributes } // attrs specific to this interaction should have precedence over the general custom attrs
     this.status = INTERACTION_STATUS.FIN
 
@@ -113,10 +112,7 @@ export class Interaction extends BelNode {
   get firstContentfulPaint () {}
   get navTiming () {}
 
-  serialize () {
-    // Nested interaction nodes are not supported, so the passing of arguments, e.g. timestamp of parent node, doesn't make sense and is indicative of a problem.
-    if (arguments.length > 0) throw new Error('Interaction serialization should not have any arguments passed in!')
-
+  serialize (firstStartTimeOfPayload) {
     const addString = getAddStringContext(this.agentIdentifier)
     const nodeList = []
     let ixnType
@@ -128,8 +124,8 @@ export class Interaction extends BelNode {
     const fields = [
       numeric(this.belType),
       0, // this will be overwritten below with number of attached nodes
-      numeric(this.start), // relative to first node (this in interaction)
-      numeric(this.end), // end -- relative to start
+      numeric(Math.floor(this.start - firstStartTimeOfPayload)), // relative to first node
+      numeric(Math.floor(this.end - this.start)), // end -- relative to start
       numeric(this.callbackEnd), // cbEnd -- relative to start; not used by BrowserInteraction events
       numeric(this.callbackDuration), // not relative
       addString(this.trigger),
@@ -146,7 +142,10 @@ export class Interaction extends BelNode {
     ]
     const allAttachedNodes = addCustomAttributes(this.customAttributes || {}, addString) // start with all custom attributes
     if (getInfo(this.agentIdentifier).atts) allAttachedNodes.push('a,' + addString(getInfo(this.agentIdentifier).atts)) // add apm provided attributes
-    this.children.forEach(node => allAttachedNodes.push(node.serialize(this.start))) // recursively add the serialized string of every child of this (ixn) bel node
+    /* Querypack encoder+decoder quirkiness:
+       - If first ixn node of payload is being processed, we use this node's start to offset. (firstStartTime should be 0--or undefined.)
+       - Else for subsequent ixn nodes, we use the first ixn node's start to offset. */
+    this.children.forEach(node => allAttachedNodes.push(node.serialize(firstStartTimeOfPayload || this.start))) // recursively add the serialized string of every child of this (ixn) bel node
 
     fields[1] = numeric(allAttachedNodes.length)
     nodeList.push(fields)

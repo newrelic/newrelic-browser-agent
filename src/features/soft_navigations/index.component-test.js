@@ -3,7 +3,6 @@ import { Aggregator } from '../../common/aggregate/aggregator'
 import { ee } from '../../common/event-emitter/contextual-ee'
 import { FEATURE_NAME } from './constants'
 import * as HMod from '../../common/event-emitter/handle'
-import { now } from '../../common/timing/now'
 
 let importAggregatorFn
 jest.mock('../../common/constants/runtime', () => ({
@@ -72,6 +71,9 @@ describe('soft navigations', () => {
     handleSpy.mockRestore()
   })
 
+  const _setTimeout = global.setTimeout
+  global.setTimeout = jest.fn((cb, timeout) => _setTimeout(cb, timeout === 0 ? 0 : 300)) // force cancellationTimers to trigger after 0.5 second
+
   describe('aggregate', () => {
     let executeTTFB
     jest.doMock('../../common/vitals/time-to-first-byte', () => {
@@ -82,8 +84,6 @@ describe('soft navigations', () => {
         }
       }
     })
-    const _setTimeout = global.setTimeout
-    global.setTimeout = jest.fn((cb, timeout) => _setTimeout(cb, 500)) // force cancellationTimers to trigger after 0.5 second
     let softNavInstrument, softNavAggregate
     beforeEach(async () => {
       softNavInstrument = new SoftNav('abcd', aggregator)
@@ -124,7 +124,7 @@ describe('soft navigations', () => {
 
       softNavAggregate.ee.emit('newUIEvent', [{ type: 'keydown', timeStamp: 100 }])
       expect(softNavAggregate.interactionInProgress).toBeTruthy()
-      await new Promise(resolve => _setTimeout(resolve, 501))
+      await new Promise(resolve => _setTimeout(resolve, 301))
       expect(softNavAggregate.interactionInProgress).toBeNull()
       expect(softNavAggregate.interactionsToHarvest.length).toEqual(0) // since initialPageLoad ixn hasn't closed, and we expect that UI ixn to have been cancelled
     })
@@ -177,8 +177,11 @@ describe('soft navigations', () => {
       softNavAggregate.interactionInProgress = null
       softNavAggregate.interactionsToHarvest = []
       thisCtx = softNavAggregate.ee.context()
+      delete softNavAggregate.latestRouteSetByApi
     })
-    const newrelic = { interaction: (cmd, customTime = now()) => softNavAggregate.ee.emit(INTERACTION_API + cmd, [customTime], thisCtx) }
+    const newrelic = {
+      interaction: function (cmd, customTime = performance.now(), ...args) { softNavAggregate.ee.emit(INTERACTION_API + cmd, [customTime, ...args], thisCtx); return this }
+    }
 
     test('.interaction gets current or creates new api ixn', () => {
       softNavAggregate.ee.emit('newUIEvent', [{ type: 'submit', timeStamp: 12 }])
@@ -207,13 +210,11 @@ describe('soft navigations', () => {
 
     test('.end closes interactions (by default, cancels them)', () => {
       softNavAggregate.ee.emit('newUIEvent', [{ type: 'submit', timeStamp: 12 }])
-      newrelic.interaction('get')
-      newrelic.interaction('end')
+      newrelic.interaction('get').interaction('end')
       expect(thisCtx.associatedInteraction.trigger).toEqual('submit')
       expect(thisCtx.associatedInteraction.status).toEqual('cancelled')
 
-      newrelic.interaction('get')
-      newrelic.interaction('end')
+      newrelic.interaction('get').interaction('end')
       expect(thisCtx.associatedInteraction.trigger).toEqual('api')
       expect(thisCtx.associatedInteraction.status).toEqual('cancelled')
       expect(softNavAggregate.interactionInProgress).toBeNull()
@@ -222,10 +223,140 @@ describe('soft navigations', () => {
     test('multiple .end on one ixn results in only the first taking effect', () => {
       newrelic.interaction('get')
       thisCtx.associatedInteraction.forceSave = true
-      newrelic.interaction('end', 100)
-      newrelic.interaction('end', 200)
-      newrelic.interaction('end', 300)
+      newrelic.interaction('end', 100).interaction('end', 200).interaction('end', 300)
       expect(thisCtx.associatedInteraction.end).toEqual(100)
+    })
+
+    test('.interaction with waitForEnd flag keeps ixn open until .end', () => {
+      softNavAggregate.ee.emit('newUIEvent', [{ type: 'submit', timeStamp: 12 }])
+      newrelic.interaction('get', undefined, { waitForEnd: true }) // on existing UI ixn
+      softNavAggregate.ee.emit('newURL', [23, 'example.com'])
+      softNavAggregate.ee.emit('newDom', [34])
+      expect(softNavAggregate.interactionInProgress.status).toEqual('in progress')
+      newrelic.interaction('end', 45)
+      expect(softNavAggregate.interactionInProgress).toBeNull()
+      expect(thisCtx.associatedInteraction.end).toEqual(45)
+
+      newrelic.interaction('get', 12, { waitForEnd: true }) // on new api ixn
+      softNavAggregate.ee.emit('newURL', [23, 'example.com'])
+      softNavAggregate.ee.emit('newDom', [34])
+      expect(softNavAggregate.interactionInProgress.status).toEqual('in progress')
+      newrelic.interaction('end', 50)
+      expect(softNavAggregate.interactionInProgress).toBeNull()
+      expect(thisCtx.associatedInteraction.end).toEqual(50)
+    })
+
+    test('.save forcibly harvest any would-be cancelled ixns', async () => {
+      newrelic.interaction('get').interaction('save').interaction('end', 100)
+      expect(softNavAggregate.interactionsToHarvest.length).toEqual(1)
+      expect(thisCtx.associatedInteraction.end).toEqual(100)
+
+      softNavAggregate.ee.emit('newUIEvent', [{ type: 'keydown', timeStamp: 1 }])
+      newrelic.interaction('get').interaction('save')
+      softNavAggregate.ee.emit('newUIEvent', [{ type: 'keydown', timeStamp: 10 }])
+      expect(softNavAggregate.interactionsToHarvest.length).toEqual(2)
+      expect(thisCtx.associatedInteraction.end).toBeGreaterThan(thisCtx.associatedInteraction.start) // thisCtx is still referencing the first keydown ixn
+
+      newrelic.interaction('get').interaction('save')
+      await new Promise(resolve => _setTimeout(resolve, 301))
+      expect(softNavAggregate.interactionsToHarvest.length).toEqual(3)
+    })
+
+    test('.ignore forcibly discard any would-be harvested ixns', () => {
+      softNavAggregate.ee.emit('newUIEvent', [{ type: 'submit', timeStamp: 12 }])
+      newrelic.interaction('get').interaction('ignore')
+      softNavAggregate.ee.emit('newURL', [23, 'example.com'])
+      softNavAggregate.ee.emit('newDom', [34])
+      expect(softNavAggregate.interactionInProgress).toBeNull()
+      expect(softNavAggregate.interactionsToHarvest.length).toEqual(0)
+
+      newrelic.interaction('get', undefined, { waitForEnd: true }).interaction('ignore').interaction('save') // ignore ought to override this
+      newrelic.interaction('end')
+      expect(softNavAggregate.interactionsToHarvest.length).toEqual(0)
+      expect(thisCtx.associatedInteraction.status).toEqual('cancelled')
+    })
+
+    test('.getContext stores values scoped to each ixn', async () => {
+      let hasRan = false
+      newrelic.interaction('get').interaction('getContext', undefined, privCtx => { privCtx.someVar = true })
+      newrelic.interaction('get').interaction('getContext', undefined, privCtx => {
+        expect(privCtx.someVar).toEqual(true)
+        hasRan = true
+      })
+      await new Promise(resolve => _setTimeout(resolve, 0)) // getContext runs the cb on an async timer of 0
+      expect(hasRan).toEqual(true)
+      newrelic.interaction('end')
+
+      hasRan = false
+      newrelic.interaction('get').interaction('getContext', undefined, privCtx => {
+        expect(privCtx.someVar).toBeUndefined() // two separate interactions should not share the same data store
+        hasRan = true
+      })
+      await new Promise(resolve => _setTimeout(resolve, 0))
+      expect(hasRan).toEqual(true)
+    })
+
+    test('.onEnd queues callbacks for right before ixn is done', async () => {
+      let hasRan = false
+      newrelic.interaction('get').interaction('getContext', undefined, privCtx => { privCtx.someVar = true })
+      await new Promise(resolve => _setTimeout(resolve, 0)) // wait for the someVar to be set
+      newrelic.interaction('onEnd', undefined, privCtx => {
+        expect(privCtx.someVar).toEqual(true) // should have access to the same data store as getContext
+        hasRan = true
+        newrelic.interaction('save') // should be able to force save this would-be discarded ixn
+      }).interaction('end')
+      expect(hasRan).toEqual(true)
+      expect(softNavAggregate.interactionsToHarvest.length).toEqual(1)
+
+      hasRan = false
+      newrelic.interaction('get').interaction('save').interaction('onEnd', undefined, () => {
+        hasRan = true
+        newrelic.interaction('ignore')
+      }).interaction('end')
+      expect(hasRan).toEqual(true)
+      expect(softNavAggregate.interactionsToHarvest.length).toEqual(1) // ixn was discarded
+    })
+
+    test('.setCurrentRouteName updates the targetRouteName of current ixn and is tracked for new ixn', () => {
+      const firstRoute = 'route_X'
+      const middleRoute = 'route_Y'
+      const lastRoute = 'route_Z'
+      newrelic.interaction('get') // a new ixn would start with undefined old & new routes
+      newrelic.interaction('routeName', undefined, firstRoute)
+      expect(thisCtx.associatedInteraction.oldRoute).toBeUndefined()
+      expect(thisCtx.associatedInteraction.newRoute).toEqual(firstRoute)
+      newrelic.interaction('end')
+
+      newrelic.interaction('get') // most recent route should be maintained
+      expect(thisCtx.associatedInteraction.oldRoute).toEqual(firstRoute)
+      expect(thisCtx.associatedInteraction.newRoute).toBeUndefined()
+      newrelic.interaction('routeName', undefined, middleRoute)
+      newrelic.interaction('routeName', undefined, lastRoute)
+      expect(thisCtx.associatedInteraction.oldRoute).toEqual(firstRoute)
+      expect(thisCtx.associatedInteraction.newRoute).toEqual(lastRoute)
+      newrelic.interaction('end')
+
+      newrelic.interaction('routeName', undefined, middleRoute) // setCurrentRouteName doesn't need an existing ixn to function, but the change should still carry forward
+      newrelic.interaction('get')
+      expect(thisCtx.associatedInteraction.oldRoute).toEqual(middleRoute)
+    })
+
+    test('.setName can change customName and trigger of ixn', () => {
+      newrelic.interaction('get').interaction('setName', undefined, 'quack', 'moo')
+      expect(thisCtx.associatedInteraction.customName).toEqual('quack')
+      expect(thisCtx.associatedInteraction.trigger).toEqual('moo')
+    })
+
+    test('.actionText and .setAttribute add attributes to ixn specifically', () => {
+      newrelic.interaction('get').interaction('actionText', undefined, 'title')
+      newrelic.interaction('setAttribute', undefined, 'key_1', 'value_1')
+      newrelic.interaction('setAttribute', undefined, 'key_1', 'value_2').interaction('end')
+      expect(thisCtx.associatedInteraction.customAttributes.actionText).toEqual('title')
+      expect(thisCtx.associatedInteraction.customAttributes.key_1).toEqual('value_2')
+
+      newrelic.interaction('get')
+      expect(thisCtx.associatedInteraction.customAttributes.actionText).toBeUndefined()
+      expect(thisCtx.associatedInteraction.customAttributes.key_1).toBeUndefined()
     })
 
     // This isn't just an API test; it double serves as data validation on the querypack payload output.

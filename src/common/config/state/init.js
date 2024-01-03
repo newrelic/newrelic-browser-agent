@@ -53,6 +53,7 @@ const model = () => {
     ssl: undefined,
     obfuscate: undefined,
     jserrors: { enabled: true, harvestTimeSeconds: 10, autoStart: true },
+    generic_event: { enabled: true, harvestTimeSeconds: 30, autoStart: true },
     metrics: { enabled: true, autoStart: true },
     page_action: { enabled: true, harvestTimeSeconds: 30, autoStart: true },
     page_view_event: { enabled: true, autoStart: true },

@@ -10,7 +10,7 @@ import { dispatchGlobalEvent } from '../dispatch/global-event'
 const bucketMap = {
   stn: [FEATURE_NAMES.sessionTrace],
   err: [FEATURE_NAMES.jserrors, FEATURE_NAMES.metrics],
-  ins: [FEATURE_NAMES.pageAction],
+  ins: [FEATURE_NAMES.pageAction, FEATURE_NAMES.genericEvent, FEATURE_NAMES.marksAndMeasures],
   spa: [FEATURE_NAMES.spa],
   sr: [FEATURE_NAMES.sessionReplay, FEATURE_NAMES.sessionTrace]
 }

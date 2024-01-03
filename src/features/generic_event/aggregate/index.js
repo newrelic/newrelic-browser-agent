@@ -84,8 +84,9 @@ export class Aggregate extends AggregateBase {
     }
 
     const eventAttributes = {
-      timestamp: now(),
-      timeSinceLoad: (obj.timestamp || now()) / 1000,
+      timestamp: Date.now(), // hopefully provided by reporting feature -- falls back to now
+      timestampOffset: now(), // hopefully provided by reporting feature -- falls back to now
+      timeSinceLoad: (obj.timestampOffset || now()) / 1000, // hopefully provided by reporting feature -- falls back to now
       referrerUrl: this.referrerUrl,
       currentUrl: cleanURL('' + location),
       pageUrl: cleanURL(getRuntime(this.agentIdentifier).origin),

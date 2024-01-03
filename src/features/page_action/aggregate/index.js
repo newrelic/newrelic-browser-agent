@@ -8,6 +8,7 @@ import { FEATURE_NAME } from '../constants'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { handle } from '../../../common/event-emitter/handle'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
+import { getRuntime } from '../../../common/config/config'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -32,7 +33,8 @@ export class Aggregate extends AggregateBase {
     const eventAttributes = {
       ...attributes,
       eventType: 'PageAction',
-      timestamp: t,
+      timestamp: t + getRuntime(this.agentIdentifier).offset,
+      timestampOffset: t,
       timeSinceLoad: t / 1000,
       actionName: name,
       browserWidth: window?.document?.documentElement?.clientWidth,

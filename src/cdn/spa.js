@@ -13,6 +13,7 @@ import { Instrument as InstrumentSessionTrace } from '../features/session_trace/
 import { Instrument as InstrumentSessionReplay } from '../features/session_replay/instrument'
 import { Instrument as InstrumentSpa } from '../features/spa/instrument'
 import { Instrument as InstrumentPageAction } from '../features/page_action/instrument'
+import { Instrument as InstrumentMarksAndMeasures } from '../features/marks_and_measures/instrument'
 
 new Agent({
   features: [
@@ -24,7 +25,8 @@ new Agent({
     InstrumentMetrics,
     InstrumentPageAction,
     InstrumentErrors,
-    InstrumentSpa
+    InstrumentSpa,
+    InstrumentMarksAndMeasures
   ],
   loaderType: 'spa'
 })

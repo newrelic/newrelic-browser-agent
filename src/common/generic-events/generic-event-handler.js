@@ -1,10 +1,10 @@
 import { getConfigurationValue, getInfo, getRuntime } from '../config/config'
 import { isBrowserScope } from '../constants/runtime'
 import { HarvestScheduler } from '../harvest/harvest-scheduler'
-import { now } from '../timing/now'
 import { cleanURL } from '../url/clean-url'
 import { warn } from '../util/console'
 import { stringify } from '../util/stringify'
+import { GenericEvent } from './generic-event'
 
 const referrerUrl = isBrowserScope && document.referrer ? cleanURL(document.referrer) : undefined
 
@@ -30,11 +30,9 @@ class GenericEventHandler {
       this.#instances[agentIdentifier].scheduler.startTimer(getConfigurationValue(feature.agentIdentifier, 'ins.harvestTimeSeconds'), 0)
     }
 
-    console.log(this.#instances[agentIdentifier])
-
     if (!event || !Object.keys(event).length) return
-    if (!event.eventType) {
-      warn('Invalid eventect passed to generic event aggregate. Missing "eventType".')
+    if (!(event instanceof GenericEvent)) {
+      warn('Invalid event passed to generic event handler.')
       return
     }
 
@@ -44,9 +42,7 @@ class GenericEventHandler {
     }
 
     const eventAttributes = {
-      timestamp: Date.now(), // hopefully provided by reporting feature -- falls back to now
-      timestampOffset: now(), // hopefully provided by reporting feature -- falls back to now
-      timeSinceLoad: (event.timestampOffset || now()) / 1000, // hopefully provided by reporting feature -- falls back to now
+      timeSinceLoad: (event.timestampOffset) / 1000,
       referrerUrl,
       currentUrl: cleanURL('' + location),
       pageUrl: cleanURL(getRuntime(agentIdentifier).origin),

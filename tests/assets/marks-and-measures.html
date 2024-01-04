@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {init} {config} {loader}
+    <script>
+        newrelic.addPageAction("test", {val1: 1, val2: 2})
+        performance.mark("mark1")
+        setTimeout(() => {
+            performance.mark("mark2")
+            performance.measure("measure", "mark1", "mark2")
+        }, 100)
+    </script>
+  </head>
+  <body>Instrumented</body>
+</html>

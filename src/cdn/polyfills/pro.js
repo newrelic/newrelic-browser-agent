@@ -13,6 +13,7 @@ import { Instrument as InstrumentErrors } from '../../features/jserrors/instrume
 import { Instrument as InstrumentXhr } from '../../features/ajax/instrument'
 import { Instrument as InstrumentSessionTrace } from '../../features/session_trace/instrument'
 import { Instrument as InstrumentPageAction } from '../../features/page_action/instrument'
+import { Instrument as InstrumentMarksAndMeasures } from '../../features/marks_and_measures/instrument'
 
 new Agent({
   features: [
@@ -22,7 +23,8 @@ new Agent({
     InstrumentXhr,
     InstrumentMetrics,
     InstrumentPageAction,
-    InstrumentErrors
+    InstrumentErrors,
+    InstrumentMarksAndMeasures
   ],
   loaderType: 'pro-polyfills'
 })

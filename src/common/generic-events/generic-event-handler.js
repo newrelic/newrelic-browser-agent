@@ -51,7 +51,6 @@ class GenericEventHandler {
     }
 
     this.#instances[agentIdentifier].events.push(eventAttributes)
-    console.log('added ', eventAttributes, 'to instance queue', agentIdentifier)
   }
 
   block (feature) {

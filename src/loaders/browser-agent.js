@@ -10,6 +10,7 @@ import { Instrument as InstrumentSpa } from '../features/spa/instrument'
 import { Instrument as InstrumentPageAction } from '../features/page_action/instrument'
 import { Instrument as InstrumentSessionReplay } from '../features/session_replay/instrument'
 import { Instrument as InstrumentGenericEvent } from '../features/generic_event/instrument'
+import { Instrument as InstrumentMarksAndMeasures } from '../features/marks_and_measures/instrument'
 
 /**
  * An agent class with all feature modules available. Features may be disabled and enabled via runtime configuration.
@@ -29,7 +30,8 @@ export class BrowserAgent extends Agent {
         InstrumentErrors,
         InstrumentSpa,
         InstrumentSessionReplay,
-        InstrumentGenericEvent
+        InstrumentGenericEvent,
+        InstrumentMarksAndMeasures
       ],
       loaderType: 'browser-agent'
     })

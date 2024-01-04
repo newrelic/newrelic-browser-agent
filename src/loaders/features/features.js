@@ -1,8 +1,8 @@
 export const FEATURE_NAMES = {
   ajax: 'ajax',
   jserrors: 'jserrors',
-  genericEvent: 'genericEvent',
-  marksAndMeasures: 'marksAndMeasures',
+  genericEvent: 'generic_event',
+  marksAndMeasures: 'marks_and_measures',
   metrics: 'metrics',
   pageAction: 'page_action',
   pageViewEvent: 'page_view_event',

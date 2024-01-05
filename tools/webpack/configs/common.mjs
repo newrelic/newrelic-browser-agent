@@ -1,7 +1,10 @@
 import webpack from 'webpack'
 import TerserPlugin from 'terser-webpack-plugin'
-import { SubresourceIntegrityPlugin } from 'webpack-subresource-integrity'
-import NRBAChunkingPlugin from '../plugins/nrba-chunking/index.mjs'
+import NRBAPrependSemicolonPlugin from '../plugins/prepend-semicolon.mjs'
+import NRBARemoveNonAsciiPlugin from '../plugins/remove-non-ascii.mjs'
+import NRBASubresourceIntegrityPlugin from '../plugins/sri-plugin.mjs'
+import NRBALoaderApmCheckPlugin from '../plugins/loader-apm-check.mjs'
+import NRBAFuzzyLoadersPlugin from '../plugins/fuzzy-loaders.mjs'
 
 /**
  * @typedef {import('../index.mjs').WebpackBuildOptions} WebpackBuildOptions
@@ -19,6 +22,7 @@ export default (env, asyncChunkName) => {
     devtool: false,
     mode: env.SUBVERSION === 'LOCAL' ? 'development' : 'production',
     optimization: {
+      realContentHash: true,
       minimize: true,
       minimizer: [new TerserPlugin({
         include: [/\.min\.js$/, /^(?:[0-9])/],
@@ -36,7 +40,22 @@ export default (env, asyncChunkName) => {
         chunks: 'async',
         cacheGroups: {
           defaultVendors: false,
-          default: false
+          default: false,
+          'agent-chunk': {
+            name: asyncChunkName,
+            enforce: true,
+            test: (module, { chunkGraph }) => chunkGraph.getModuleChunks(module).filter(chunk => !['recorder', 'compressor'].includes(chunk.name)).length > 0
+          },
+          recorder: {
+            name: `${asyncChunkName}-recorder`,
+            enforce: true,
+            test: (module, { chunkGraph }) => chunkGraph.getModuleChunks(module).filter(chunk => !['recorder'].includes(chunk.name)).length === 0
+          },
+          compressor: {
+            name: `${asyncChunkName}-compressor`,
+            enforce: true,
+            test: (module, { chunkGraph }) => chunkGraph.getModuleChunks(module).filter(chunk => !['compressor'].includes(chunk.name)).length === 0
+          }
         }
       }
     },
@@ -64,13 +83,11 @@ export default (env, asyncChunkName) => {
         publicPath: env.PUBLIC_PATH,
         append: env.SUBVERSION === 'PROD' ? false : '//# sourceMappingURL=[url]'
       }),
-      new SubresourceIntegrityPlugin({
-        enabled: true,
-        hashFuncNames: ['sha512']
-      }),
-      new NRBAChunkingPlugin({
-        asyncChunkName
-      })
+      new NRBAPrependSemicolonPlugin(),
+      new NRBARemoveNonAsciiPlugin(),
+      new NRBALoaderApmCheckPlugin(),
+      new NRBASubresourceIntegrityPlugin(),
+      new NRBAFuzzyLoadersPlugin()
     ]
   }
 }

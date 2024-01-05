@@ -3,6 +3,32 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.249.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.248.0...v1.249.0) (2023-12-14)
+
+
+### Features
+
+* Allow empty string for Session Replay masking value ([#831](https://github.com/newrelic/newrelic-browser-agent/issues/831)) ([34f837f](https://github.com/newrelic/newrelic-browser-agent/commit/34f837f65ab31a67b821f125e20e80d39d7790a9))
+
+
+### Bug Fixes
+
+* Fix API Warning Messages ([#830](https://github.com/newrelic/newrelic-browser-agent/issues/830)) ([2b13a0f](https://github.com/newrelic/newrelic-browser-agent/commit/2b13a0fdfad529dc1cfff43506e28473498ce8a1))
+* loader missing sub-resource integrity hashes ([#837](https://github.com/newrelic/newrelic-browser-agent/issues/837)) ([a9b6f2e](https://github.com/newrelic/newrelic-browser-agent/commit/a9b6f2e578b1684dd50f8eb491251c03eca88a12))
+* traceids not random when using `webcrypto` ([#825](https://github.com/newrelic/newrelic-browser-agent/issues/825)) ([e264acf](https://github.com/newrelic/newrelic-browser-agent/commit/e264acfbff2cacc93fae88daea70be3c1e006f90))
+
+## [1.248.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.247.0...v1.248.0) (2023-11-16)
+
+
+### Features
+
+* Report enduser.id with Session Replay ([#815](https://github.com/newrelic/newrelic-browser-agent/issues/815)) ([8f5446d](https://github.com/newrelic/newrelic-browser-agent/commit/8f5446d1f7679f6a5ea0ba90eb082d1d4deb0d93))
+
+
+### Bug Fixes
+
+* Fix issue with errors forcefully triggering session traces ([#819](https://github.com/newrelic/newrelic-browser-agent/issues/819)) ([3872c35](https://github.com/newrelic/newrelic-browser-agent/commit/3872c35a173f76644b663df5ca0474971451b7cf))
+
 ## [1.247.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.246.1...v1.247.0) (2023-11-14)
 
 

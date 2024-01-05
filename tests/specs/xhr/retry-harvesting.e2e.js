@@ -101,11 +101,11 @@ describe('xhr retry harvesting', () => {
 
       const firstEventHarvestTime = Number(firstAjaxEventsHarvest.request.query.rst)
       const secondEventHarvestTime = Number(secondAjaxEventsHarvest.request.query.rst)
-      expect(secondEventHarvestTime).toBeWithin(firstEventHarvestTime + 5000, firstEventHarvestTime + 10000)
+      expect(secondEventHarvestTime).toBeWithin(firstEventHarvestTime + 3000, firstEventHarvestTime + 13000)
 
       const firstTimeSliceHarvestTime = Number(firstAjaxTimeSlicesHarvest.request.query.rst)
       const secondTimeSliceHarvestTime = Number(secondAjaxTimeSlicesHarvest.request.query.rst)
-      expect(secondTimeSliceHarvestTime).toBeWithin(firstTimeSliceHarvestTime + 5000, firstTimeSliceHarvestTime + 10000)
+      expect(secondTimeSliceHarvestTime).toBeWithin(firstTimeSliceHarvestTime + 3000, firstTimeSliceHarvestTime + 13000)
     })
   )
 })

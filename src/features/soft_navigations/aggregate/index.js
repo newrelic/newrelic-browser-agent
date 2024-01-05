@@ -23,7 +23,8 @@ export class Aggregate extends AggregateBase {
 
     this.scheduler = new HarvestScheduler('events', {
       onFinished: this.onHarvestFinished.bind(this),
-      retryDelay: harvestTimeSeconds
+      retryDelay: harvestTimeSeconds,
+      onUnload: () => this.interactionInProgress?.done() // return any held ajax or jserr events so they can be sent with EoL harvest
     }, { agentIdentifier, ee: this.ee })
     this.scheduler.harvest.on('events', this.onHarvestStarted.bind(this))
 

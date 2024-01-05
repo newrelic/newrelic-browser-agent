@@ -19,6 +19,7 @@
     document.addEventListener('click', function () {
       setTimeout(function foo () {
         (function bar () {
+          fetch('/json')
           throw new Error('some error')
         })()
       }, 100)

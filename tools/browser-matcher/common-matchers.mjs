@@ -74,6 +74,11 @@ export const onlyIOS = new SpecMatcher()
 export const onlyAndroid = new SpecMatcher()
   .include('android')
 
+export const onlyChromium = new SpecMatcher()
+  .include('chrome')
+  .include('edge')
+  .include('android')
+
 /**
  * Matcher based on ES2022 support
  * This is a snapshot in time and would need to be updated.

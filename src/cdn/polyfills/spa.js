@@ -13,9 +13,7 @@ import { Instrument as InstrumentErrors } from '../../features/jserrors/instrume
 import { Instrument as InstrumentXhr } from '../../features/ajax/instrument'
 import { Instrument as InstrumentSessionTrace } from '../../features/session_trace/instrument'
 import { Instrument as InstrumentSpa } from '../../features/spa/instrument'
-import { Instrument as InstrumentPageAction } from '../../features/page_action/instrument'
 import { Instrument as InstrumentGenericEvent } from '../../features/generic_event/instrument'
-import { Instrument as InstrumentMarksAndMeasures } from '../../features/marks_and_measures/instrument'
 
 new Agent({
   features: [
@@ -24,11 +22,9 @@ new Agent({
     InstrumentPageViewTiming,
     InstrumentSessionTrace,
     InstrumentMetrics,
-    InstrumentPageAction,
     InstrumentErrors,
     InstrumentSpa,
-    InstrumentGenericEvent,
-    InstrumentMarksAndMeasures
+    InstrumentGenericEvent
   ],
   loaderType: 'spa-polyfills'
 })

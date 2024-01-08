@@ -12,9 +12,7 @@ import { Instrument as InstrumentErrors } from '../features/jserrors/instrument'
 import { Instrument as InstrumentXhr } from '../features/ajax/instrument'
 import { Instrument as InstrumentSessionTrace } from '../features/session_trace/instrument'
 import { Instrument as InstrumentSessionReplay } from '../features/session_replay/instrument'
-import { Instrument as InstrumentPageAction } from '../features/page_action/instrument'
 import { Instrument as InstrumentGenericEvent } from '../features/generic_event/instrument'
-import { Instrument as InstrumentMarksAndMeasures } from '../features/marks_and_measures/instrument'
 
 new Agent({
   features: [
@@ -24,10 +22,8 @@ new Agent({
     InstrumentSessionReplay,
     InstrumentXhr,
     InstrumentMetrics,
-    InstrumentPageAction,
     InstrumentErrors,
-    InstrumentGenericEvent,
-    InstrumentMarksAndMeasures
+    InstrumentGenericEvent
   ],
   loaderType: 'pro'
 })

@@ -20,12 +20,8 @@ export function lazyFeatureLoader (featureName, featurePart) {
         return import(/* webpackChunkName: "jserrors-aggregate" */ '../jserrors/aggregate')
       case FEATURE_NAMES.genericEvent:
         return import(/* webpackChunkName: "generic_event-aggregate" */ '../generic_event/aggregate')
-      case FEATURE_NAMES.marksAndMeasures:
-        return import(/* webpackChunkName: "marks_and_measures-aggregate" */ '../marks_and_measures/aggregate')
       case FEATURE_NAMES.metrics:
         return import(/* webpackChunkName: "metrics-aggregate" */ '../metrics/aggregate')
-      case FEATURE_NAMES.pageAction:
-        return import(/* webpackChunkName: "page_action-aggregate" */ '../page_action/aggregate')
       case FEATURE_NAMES.pageViewEvent:
         return import(/* webpackChunkName: "page_view_event-aggregate" */ '../page_view_event/aggregate')
       case FEATURE_NAMES.pageViewTiming:

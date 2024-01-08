@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { stringify } from '../../../common/util/stringify'
-import { registerHandler as register } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { cleanURL } from '../../../common/url/clean-url'
 import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
@@ -12,6 +11,8 @@ import { isBrowserScope } from '../../../common/constants/runtime'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { now } from '../../../common/timing/now'
 import { warn } from '../../../common/util/console'
+import { marksAndMeasures } from '../../../common/generic-events/marks-and-measures'
+import { pageActions } from '../../../common/generic-events/page-actions'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -27,10 +28,11 @@ export class Aggregate extends AggregateBase {
 
     if (isBrowserScope && document.referrer) this.referrerUrl = cleanURL(document.referrer)
 
-    register('generic-event', obj => { if (!this.blocked) this.addEvent(obj) }, this.featureName, this.ee)
-
     this.waitForFlags(['ins']).then(([enabled]) => {
       if (enabled) {
+        if (getConfigurationValue(this.agentIdentifier, 'marks_and_measures.enabled')) marksAndMeasures.subscribe(this.addEvent.bind(this), true)
+        if (getConfigurationValue(this.agentIdentifier, 'page_action.enabled')) pageActions.subscribe(this.addEvent.bind(this), true)
+
         const scheduler = new HarvestScheduler('ins', { onFinished: (...args) => this.onHarvestFinished(...args) }, this)
         scheduler.harvest.on('ins', (...args) => this.onHarvestStarted(...args))
         scheduler.startTimer(this.harvestTimeSeconds, 0)

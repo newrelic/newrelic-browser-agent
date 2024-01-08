@@ -146,19 +146,12 @@ describe('setAPI', () => {
       const args = [faker.datatype.uuid(), faker.datatype.uuid()]
       apiInterface.addPageAction(...args)
 
-      expect(handleModule.handle).toHaveBeenCalledTimes(2)
+      expect(handleModule.handle).toHaveBeenCalledTimes(1)
       expect(handleModule.handle).toHaveBeenCalledWith(
         SUPPORTABILITY_METRIC_CHANNEL,
         ['API/addPageAction/called'],
         undefined,
         FEATURE_NAMES.metrics,
-        instanceEE
-      )
-      expect(handleModule.handle).toHaveBeenCalledWith(
-        'api-addPageAction',
-        [expect.toBeNumber(), ...args],
-        null,
-        FEATURE_NAMES.pageAction,
         instanceEE
       )
     })

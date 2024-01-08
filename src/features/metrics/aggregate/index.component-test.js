@@ -22,7 +22,7 @@ jest.mock('../../../common/config/config', () => ({
   __esModule: true,
   isConfigured: jest.fn().mockReturnValue(true),
   getConfigurationValue: jest.fn().mockReturnValue(undefined),
-  getConfiguration: jest.fn().mockReturnValue({ proxy: {} }),
+  getConfiguration: jest.fn().mockReturnValue({ proxy: {}, privacy: {} }),
   getRuntime: jest.fn().mockReturnValue({})
 }))
 

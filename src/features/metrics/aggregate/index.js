@@ -90,9 +90,11 @@ export class Aggregate extends AggregateBase {
     if (rules.length > 0 && !validateRules(rules)) this.storeSupportabilityMetrics('Generic/Obfuscate/Invalid')
 
     // Check if proxy for either chunks or beacon is being used
-    const { proxy } = getConfiguration(this.agentIdentifier)
+    const { proxy, privacy } = getConfiguration(this.agentIdentifier)
     if (proxy.assets) this.storeSupportabilityMetrics('Config/AssetsUrl/Changed')
     if (proxy.beacon) this.storeSupportabilityMetrics('Config/BeaconUrl/Changed')
+
+    if (!(isBrowserScope && privacy.cookies_enabled)) this.storeSupportabilityMetrics('Config/CookiesEnabled/Disabled')
   }
 
   eachSessionChecks () {

@@ -94,7 +94,7 @@ export class Aggregate extends AggregateBase {
     if (proxy.assets) this.storeSupportabilityMetrics('Config/AssetsUrl/Changed')
     if (proxy.beacon) this.storeSupportabilityMetrics('Config/BeaconUrl/Changed')
 
-    if (!(isBrowserScope && privacy.cookies_enabled)) this.storeSupportabilityMetrics('Config/CookiesEnabled/Disabled')
+    if (!(isBrowserScope && privacy.cookies_enabled)) this.storeSupportabilityMetrics('Config/SessionTracking/Disabled')
   }
 
   eachSessionChecks () {

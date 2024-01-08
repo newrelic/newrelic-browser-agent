@@ -1,5 +1,4 @@
 import { faker } from '@faker-js/faker'
-import { browserErrorUtils } from '../../../../tools/testing-utils'
 
 const globalScopeLocation = 'https://example.com/'
 
@@ -7,6 +6,22 @@ const mockGlobalScopeLocation = (url) => {
   jest.doMock('../../../common/constants/runtime', () => ({
     initialLocation: url || globalScopeLocation
   }))
+}
+const constructError = (errorData) => {
+  const error = Object.create(new Error(errorData.message))
+
+  return new Proxy(error, {
+    get (target, prop) {
+      if (prop === 'toString') {
+        return () => errorData[prop]
+      }
+
+      return errorData[prop]
+    },
+    has (target, key) {
+      return key in target || key in errorData
+    }
+  })
 }
 
 afterEach(() => {
@@ -40,7 +55,7 @@ test('parsing should return a failure for a null error object', async () => {
 
 describe('errors with stack property', () => {
   test('should show <inline> for same-page stack string URLs but not sub-paths', async () => {
-    const mockError = browserErrorUtils.constructError({
+    const mockError = constructError({
       ...baseMockError
     })
 
@@ -58,7 +73,7 @@ describe('errors with stack property', () => {
   })
 
   test('parsed name should be unknown when name and constructor are missing', async () => {
-    const mockError = browserErrorUtils.constructError({
+    const mockError = constructError({
       ...baseMockError,
       name: null,
       constructor: null
@@ -78,7 +93,7 @@ describe('errors with stack property', () => {
     const alteredError = baseMockError
     alteredError.stack +=
       '\n    at nrWrapper (' + globalScopeLocation + '?loader=spa:60:17)'
-    const mockError = browserErrorUtils.constructError(alteredError)
+    const mockError = constructError(alteredError)
 
     mockGlobalScopeLocation()
     const { computeStackTrace } = await import('./compute-stack-trace')
@@ -96,7 +111,7 @@ describe('errors with stack property', () => {
   })
 
   test('stack should still parse when column numbers are missing', async () => {
-    const mockError = browserErrorUtils.constructError({
+    const mockError = constructError({
       ...baseMockError,
       stack:
       'RangeError: Invalid array length\n' +
@@ -137,7 +152,7 @@ describe('errors with stack property', () => {
   })
 
   test('parser can handle chrome eval stack', async () => {
-    const mockError = browserErrorUtils.constructError({
+    const mockError = constructError({
       ...baseMockError,
       stack:
         '    at foobar (eval at foobar (' + globalScopeLocation + '))'
@@ -160,7 +175,7 @@ describe('errors with stack property', () => {
   })
 
   test('parser can handle ie eval stack', async () => {
-    const mockError = browserErrorUtils.constructError({
+    const mockError = constructError({
       toString: 'TypeError: Permission denied',
       name: 'TypeError',
       constructor: '\nfunction TypeError() {\n    [native code]\n}\n',
@@ -186,7 +201,7 @@ describe('errors with stack property', () => {
   })
 
   test('parser can handle stack with anonymous function', async () => {
-    const mockError = browserErrorUtils.constructError({
+    const mockError = constructError({
       ...baseMockError,
       stack:
         'anonymous'
@@ -215,7 +230,7 @@ describe('errors without stack property and with line property', () => {
    */
   test('parsed stack should contain sourceURL and line number', async () => {
     const sourceURL = faker.internet.url()
-    const mockError = browserErrorUtils.constructError({
+    const mockError = constructError({
       ...baseMockError,
       stack: undefined,
       line: 100,
@@ -244,7 +259,7 @@ describe('errors without stack property and with line property', () => {
    */
   test('parsed stack should contain sourceURL, line number, and column number', async () => {
     const sourceURL = faker.internet.url()
-    const mockError = browserErrorUtils.constructError({
+    const mockError = constructError({
       ...baseMockError,
       line: 100,
       column: 200,
@@ -271,7 +286,7 @@ describe('errors without stack property and with line property', () => {
   })
 
   test('parsed stack should contain "evaluated code" if sourceURL property is not present', async () => {
-    const mockError = browserErrorUtils.constructError({
+    const mockError = constructError({
       ...baseMockError,
       line: 100,
       column: 200,
@@ -300,7 +315,7 @@ describe('errors without stack property and with line property', () => {
   test('should show <inline> for same-page URLs', async () => {
     const pageLocation = faker.internet.url()
     const sourceURL = pageLocation + '?abc=123'
-    const mockError = browserErrorUtils.constructError({
+    const mockError = constructError({
       ...baseMockError,
       line: 100,
       column: 200,
@@ -326,7 +341,7 @@ describe('errors without stack property and with line property', () => {
   test('should NOT show <inline> for same-domain URLs with a sub-path', async () => {
     const pageLocation = faker.internet.url()
     const sourceURL = pageLocation + '/path/to/script.js'
-    const mockError = browserErrorUtils.constructError({
+    const mockError = constructError({
       ...baseMockError,
       line: 100,
       column: 200,
@@ -355,7 +370,7 @@ describe('errors without stack property and with line property', () => {
  */
 describe('errors that are messages only or primitives', () => {
   test('parser should get error name from constructor', async () => {
-    const mockError = browserErrorUtils.constructError({
+    const mockError = constructError({
       toString: '0',
       constructor: 'function Number() { [native code] }'
     })
@@ -373,7 +388,7 @@ describe('errors that are messages only or primitives', () => {
   })
 
   test('parser should get error name from name property', async () => {
-    const mockError = browserErrorUtils.constructError({
+    const mockError = constructError({
       toString: '0',
       name: faker.datatype.uuid(),
       constructor: 'function Number() { [native code] }'
@@ -392,7 +407,7 @@ describe('errors that are messages only or primitives', () => {
   })
 
   test('parser should include the message property', async () => {
-    const mockError = browserErrorUtils.constructError({
+    const mockError = constructError({
       toString: '0',
       name: faker.datatype.uuid(),
       message: faker.datatype.uuid(),

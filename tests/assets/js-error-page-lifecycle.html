@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <script>
+      window.addEventListener('load', function () {
+        throw new Error('window load addEventListener')
+      })
+      var rscErrorFired = false
+      document.addEventListener('readystatechange', function () {
+        if (rscErrorFired) return
+        rscErrorFired = true
+        throw new Error('document readystatechange addEventListener')
+      })
+      document.addEventListener('DOMContentLoaded', function () {
+        throw new Error('document DOMContentLoaded addEventListener')
+      })
+    </script>
+    {init}
+    {config}
+    {loader}
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        setTimeout(function () {
+          throw new Error('setTimeout')
+        }, 10)
+        var interval = setInterval(function () {
+          clearInterval(interval)
+          throw new Error('setInterval')
+        })
+        window.requestAnimationFrame(function () {
+          throw new Error('requestAnimationFrame')
+        })
+
+        var xhr = new XMLHttpRequest()
+        xhr.addEventListener('load', function () {
+          throw new Error('xhr load addEventListener')
+        })
+        xhr.open('GET', '/text')
+        xhr.send()
+      })
+    </script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        if (typeof fetch !== 'undefined') {
+          fetch('https://website')
+            .catch(function () {
+              throw new Error('fetch network error')
+            })
+        }
+      })
+    </script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        if (typeof fetch !== 'undefined') {
+          fetch('/text')
+            .then(function () {
+              throw new Error('fetch response error')
+            })
+        }
+      })
+    </script>
+    <title>RUM Unit Test</title>
+  </head>
+  <body>
+    This page throws a new error at different page lifecycle stages.
+  </body>
+</html>

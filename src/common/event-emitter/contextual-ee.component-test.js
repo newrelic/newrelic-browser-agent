@@ -142,6 +142,42 @@ describe('event-emitter buffer', () => {
     expect(ee.backlog).toEqual({})
     expect(ee.isBuffering(eventType)).toEqual(false)
   })
+
+  test('it should not buffer after drain', async () => {
+    const { ee } = await import('./contextual-ee')
+    const { drain } = await import('../drain/drain')
+    const mockListener = jest.fn()
+    const eventType = faker.datatype.uuid()
+    const eventArgs = ['a', 'b', 'c']
+
+    ee.on(eventType, mockListener)
+    ee.buffer([eventType])
+    ee.emit(eventType, eventArgs)
+
+    expect(ee.backlog).toEqual(expect.objectContaining({
+      feature: [
+        expect.arrayContaining([
+          ee,
+          eventType,
+          eventArgs,
+          expect.anything()
+        ])
+      ]
+    }))
+    expect(ee.isBuffering(eventType)).toEqual(true)
+
+    drain('globalEE')
+    ee.buffer([eventType])
+    ee.emit(eventType, eventArgs)
+    ee.emit(eventType, eventArgs)
+
+    expect(ee.backlog).toEqual(expect.objectContaining({
+      feature: null
+    }))
+    expect(ee.isBuffering(eventType)).toEqual(false)
+    expect(mockListener).toHaveReturnedTimes(3)
+    expect(mockListener).toHaveBeenCalledWith(...eventArgs)
+  })
 })
 
 describe('event-emitter abort', () => {

@@ -1,4 +1,4 @@
-import { notIE, reliableUnload } from '../../tools/browser-matcher/common-matchers.mjs'
+import { notIE } from '../../tools/browser-matcher/common-matchers.mjs'
 
 describe('Using proxy servers -', () => {
   it('setting an assets url changes where agent fetches its chunks from', async () => {
@@ -28,7 +28,8 @@ describe('Using proxy servers -', () => {
       ]))
     }
 
-    if (browserMatch(reliableUnload)) {
+    // IE does not have reliable unload support
+    if (browserMatch(notIE)) {
       const [unloadSupportMetricsResults] = await Promise.all([
         browser.testHandle.expectSupportMetrics(),
         browser.url(await browser.testHandle.assetURL('/'))
@@ -67,7 +68,8 @@ describe('Using proxy servers -', () => {
       ]))
     }
 
-    if (!browserMatch(reliableUnload)) {
+    // IE does not have reliable unload support
+    if (!browserMatch(notIE)) {
       const [unloadSupportMetricsResults] = await Promise.all([
         browser.testHandle.expectSupportMetrics(),
         browser.url(await browser.testHandle.assetURL('/'))

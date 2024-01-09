@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.250.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.249.0...v1.250.0) (2024-01-09)
+
+
+### Features
+
+* Add a flag to note that a payload occurred during a replay ([#834](https://github.com/newrelic/newrelic-browser-agent/issues/834)) ([1b898c6](https://github.com/newrelic/newrelic-browser-agent/commit/1b898c61fa260bd0df644b4825ddb6d1c9b54b51))
+* Session Replay Dynamic Loading ([#832](https://github.com/newrelic/newrelic-browser-agent/issues/832)) ([1af7b89](https://github.com/newrelic/newrelic-browser-agent/commit/1af7b896ef41c8b4855ca85e2a4e40c20a8cdfb1))
+
+
+### Bug Fixes
+
+* TraceId generation regression (non-random trace ids) ([#853](https://github.com/newrelic/newrelic-browser-agent/issues/853)) ([8767f69](https://github.com/newrelic/newrelic-browser-agent/commit/8767f69122853a4099ed25f5886a91de06703c98))
+
 ## [1.249.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.248.0...v1.249.0) (2023-12-14)
 
 

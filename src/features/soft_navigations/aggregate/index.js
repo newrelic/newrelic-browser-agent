@@ -5,6 +5,7 @@ import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { single } from '../../../common/util/invoke'
 import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
+import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { API_TRIGGER_NAME, FEATURE_NAME, INTERACTION_STATUS } from '../constants'
 import { AjaxNode } from './ajax-node'
@@ -35,6 +36,8 @@ export class Aggregate extends AggregateBase {
       this.initialPageLoadInteraction.done(loadEventTime)
       this.interactionsToHarvest.push(this.initialPageLoadInteraction)
       this.initialPageLoadInteraction = null
+      // Report metric on the initial page load time
+      handle(SUPPORTABILITY_METRIC_CHANNEL, ['SoftNav/Interaction/InitialPageLoad/Duration/Ms', Math.round(loadEventTime)], undefined, FEATURE_NAMES.metrics, this.ee)
     })
 
     this.latestRouteSetByApi = null
@@ -103,14 +106,23 @@ export class Aggregate extends AggregateBase {
     this.interactionInProgress.cancellationTimer = setTimeout(() => {
       this.domObserver.disconnect()
       this.interactionInProgress.done()
+      // Report metric on frequency of cancellation due to timeout for UI ixn
+      handle(SUPPORTABILITY_METRIC_CHANNEL, ['SoftNav/Interaction/TimeOut'], undefined, FEATURE_NAMES.metrics, this.ee)
     }, 30000) // UI ixn are disregarded after 30 seconds if it's not completed by then
-    this.haveIPResetOnClose()
+    this.setClosureHandlers()
   }
 
-  haveIPResetOnClose () {
+  setClosureHandlers () {
     this.interactionInProgress.on('finished', () => {
+      const ref = this.interactionInProgress
       this.interactionsToHarvest.push(this.interactionInProgress)
       this.interactionInProgress = null
+
+      // Report metric on the ixn duration
+      handle(SUPPORTABILITY_METRIC_CHANNEL, [
+        `SoftNav/Interaction/${ref.newURL !== ref.oldURL ? 'RouteChange' : 'Custom'}/Duration/Ms`,
+        Math.round(ref.end - ref.start)
+      ], undefined, FEATURE_NAMES.metrics, this.ee)
     })
     this.interactionInProgress.on('cancelled', () => { this.interactionInProgress = null })
   }
@@ -200,7 +212,7 @@ export class Aggregate extends AggregateBase {
       else {
         // This new api-driven interaction will be the target of any subsequent .interaction() call, until it is closed by EITHER .end() OR the regular seenHistoryAndDomChange process.
         this.associatedInteraction = thisClass.interactionInProgress = new Interaction(thisClass.agentIdentifier, API_TRIGGER_NAME, time, thisClass.latestRouteSetByApi)
-        thisClass.haveIPResetOnClose()
+        thisClass.setClosureHandlers()
       }
       if (waitForEnd === true) this.associatedInteraction.keepOpenUntilEndApi = true
     }, thisClass.featureName, thisClass.ee)

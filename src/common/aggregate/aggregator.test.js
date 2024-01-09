@@ -61,6 +61,21 @@ describe('metrics are properly updated', () => {
     aggregator.storeMetric('abc', 'metric', undefined, 3)
     expect(aggregator.get('abc', 'metric')).toEqual(expectedBucketPattern)
   })
+
+  test('when using merge fn', () => {
+    const expectedBucketPattern = {
+      params: { other: 'blah' },
+      metrics: {
+        count: 5,
+        met1: { t: 8, min: 1, max: 6, sos: 35, c: 4 },
+        met2: { t: 14, min: 3, max: 7, sos: 74, c: 3 }
+      }
+    }
+    aggregator.store('abc', 'metric', { other: 'blah' }, { met1: 1, met2: 3 })
+    aggregator.merge('abc', 'metric', { count: 2, met1: { t: 2 }, met2: { t: 4 } })
+    aggregator.merge('abc', 'metric', { count: 2, met1: { t: 5, min: 3, max: 6, c: 2, sos: 30 }, met2: { t: 7 } })
+    expect(aggregator.get('abc', 'metric')).toEqual(expectedBucketPattern)
+  })
 })
 
 test('take fn gets and deletes correctly', () => {

@@ -79,7 +79,7 @@ export function generateRandomHexString (length) {
 
   const chars = []
   for (var i = 0; i < length; i++) {
-    chars.push(getRandomValue(randomValueTable, ++randomValueIndex).toString(16))
+    chars.push(getRandomValue(randomValueTable, randomValueIndex++).toString(16))
   }
   return chars.join('')
 }

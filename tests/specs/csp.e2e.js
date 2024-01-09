@@ -42,7 +42,6 @@ describe.withBrowsersMatching(notIE)('Content Security Policy', () => {
     }]))
   })
 
-
   it('should load async chunk with subresource integrity', async () => {
     await browser.enableSessionReplay()
 

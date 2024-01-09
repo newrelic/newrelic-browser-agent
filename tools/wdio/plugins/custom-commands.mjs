@@ -149,7 +149,8 @@ export default class CustomCommands {
               initializedAgent.features.session_replay &&
               initializedAgent.features.session_replay.featAggregate &&
               initializedAgent.features.session_replay.featAggregate.initialized &&
-              initializedAgent.features.session_replay.featAggregate.recording)
+              initializedAgent.features.session_replay.featAggregate.recorder &&
+              initializedAgent.features.session_replay.featAggregate.recorder.recording)
           } catch (err) {
             console.error(err)
             return false
@@ -158,6 +159,33 @@ export default class CustomCommands {
         {
           timeout: 30000,
           timeoutMsg: 'Session replay recording never started'
+        })
+    })
+
+    /**
+     * Waits for the session replay feature to initialize and then get blocked.
+     */
+    browser.addCommand('waitForSessionReplayBlocked', async function () {
+      await browser.waitForFeatureAggregate('session_replay')
+      await browser.waitUntil(
+        () => browser.execute(function () {
+          try {
+            var initializedAgent = Object.values(newrelic.initializedAgents)[0]
+            return !!(initializedAgent &&
+              initializedAgent.features &&
+              initializedAgent.features.session_replay &&
+              initializedAgent.features.session_replay.featAggregate &&
+              initializedAgent.features.session_replay.featAggregate.initialized &&
+              initializedAgent.features.session_replay.featAggregate.recorder &&
+              initializedAgent.features.session_replay.featAggregate.blocked)
+          } catch (err) {
+            console.error(err)
+            return false
+          }
+        }),
+        {
+          timeout: 30000,
+          timeoutMsg: 'Session replay recording never got blocked'
         })
     })
   }

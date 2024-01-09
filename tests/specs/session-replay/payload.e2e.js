@@ -36,10 +36,11 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
       body: ''
     })
 
-    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
-      .then(() => browser.waitForAgentLoad())
-
-    const { request: harvestContents } = await browser.testHandle.expectBlob()
+    const [{ request: harvestContents }] = await Promise.all([
+      browser.testHandle.expectBlob(),
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
+        .then(() => browser.waitForAgentLoad())
+    ])
 
     expect((
       harvestContents.query.attributes.includes('content_encoding') ||
@@ -82,8 +83,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
 
     const events = await browser.execute(function () {
       var instance = Object.values(newrelic.initializedAgents)[0]
-      instance.features.session_replay.featAggregate.events = instance.features.session_replay.featAggregate.events.filter(x => x.type !== 4)
-      return instance.features.session_replay.featAggregate.events
+      return instance.features.session_replay.featAggregate.recorder.getEvents().events.filter(x => x.type !== 4)
     })
 
     expect(events.find(x => x.type === 4)).toEqual(undefined)

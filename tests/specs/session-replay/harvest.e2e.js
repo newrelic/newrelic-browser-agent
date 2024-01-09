@@ -1,4 +1,4 @@
-import { notIE, notIOS } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { notIE, notIOS, onlyChrome } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { config, decodeAttributes, getSR } from './helpers'
 
 describe.withBrowsersMatching(notIE)('Session Replay Harvest Behavior', () => {
@@ -26,7 +26,8 @@ describe.withBrowsersMatching(notIE)('Session Replay Harvest Behavior', () => {
     expect(end - start).toBeLessThan(60000)
   })
 
-  it.withBrowsersMatching(notIOS)('Should abort if exceeds maximum size', async () => {
+  /** Some of the other browsers can crash with the way we load this massive page. need to reconsider this test at some point */
+  it.withBrowsersMatching(onlyChrome)('Should abort if exceeds maximum size', async () => {
     await browser.url(await browser.testHandle.assetURL('1mb-dom.html', config({ session_replay: { harvestTimeSeconds: 5 } })))
 
     await browser.testHandle.expectBlob(10000, true) // should not get harvest

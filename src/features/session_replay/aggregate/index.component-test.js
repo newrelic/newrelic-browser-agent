@@ -284,7 +284,7 @@ describe('Session Replay', () => {
       })
       expect(harvestContents.qs.attributes.includes('content_encoding')).toEqual(false)
       expect(harvestContents.qs.attributes.includes('isFirstChunk')).toEqual(true)
-      expect(harvestContents.body).toEqual(expect.any(String))
+      expect(harvestContents.body).toEqual(expect.any(Object))
     })
 
     test('Clears the event buffer when staged for harvesting', async () => {

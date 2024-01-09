@@ -36,10 +36,11 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
       body: ''
     })
 
-    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
-      .then(() => browser.waitForAgentLoad())
-
-    const { request: harvestContents } = await browser.testHandle.expectBlob()
+    const [{ request: harvestContents }] = await Promise.all([
+      browser.testHandle.expectBlob(),
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
+        .then(() => browser.waitForAgentLoad())
+    ])
 
     expect((
       harvestContents.query.attributes.includes('content_encoding') ||

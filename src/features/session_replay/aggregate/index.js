@@ -216,8 +216,7 @@ export class Aggregate extends AggregateBase {
     if (!recorderEvents.events.length || (this.mode !== MODE.FULL) || this.blocked) return
 
     const payload = this.getHarvestContents(recorderEvents)
-    payload.body.__serialized = `[${payload.body.map(e => e.__serialized).join(',')}]`
-    payload.body.__serialized = `[${payload.body.map(e => e.__serialized).join(',')}]`
+    payload.body.__serialized = this.shouldCompress ? `[${payload.body.map(e => e.__serialized).join(',')}]` : payload.body
 
     if (!payload.body.length) {
       this.recorder.clearBuffer()

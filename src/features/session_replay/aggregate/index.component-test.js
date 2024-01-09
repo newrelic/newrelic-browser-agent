@@ -315,7 +315,7 @@ describe('Session Replay', () => {
       setConfiguration(agentIdentifier, { ...init })
       sr.shouldCompress = false
       sr.recorder = new Recorder(sr)
-      sr.recorder.currentBufferTarget.events = Array.from({ length: 10000001 }, () => 'a') //  fill the events array with tons of events
+      Array.from({ length: 100000 }).forEach(() => sr.recorder.currentBufferTarget.add({ test: 1 })) //  fill the events array with tons of events
       sr.recorder.currentBufferTarget.payloadBytesEstimation = sr.recorder.currentBufferTarget.events.join('').length
       sr.ee.emit('rumresp-sr', [true])
       await wait(100)

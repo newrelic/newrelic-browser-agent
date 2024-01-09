@@ -25,6 +25,7 @@ import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { RRWEB_VERSION } from '../../../common/constants/env'
 import { now } from '../../../common/timing/now'
 import { MODE, SESSION_EVENTS, SESSION_EVENT_TYPES } from '../../../common/session/constants'
+import { stringify } from '../../../common/util/stringify'
 
 let gzipper, u8
 
@@ -216,20 +217,23 @@ export class Aggregate extends AggregateBase {
     if (!recorderEvents.events.length || (this.mode !== MODE.FULL) || this.blocked) return
 
     const payload = this.getHarvestContents(recorderEvents)
-    payload.body.__serialized = this.shouldCompress ? `[${payload.body.map(e => e.__serialized).join(',')}]` : payload.body
-
     if (!payload.body.length) {
       this.recorder.clearBuffer()
       return
     }
+
+    let len = 0
     if (this.shouldCompress) {
-      payload.body = gzipper(u8(payload.body.__serialized))
+      payload.body = gzipper(u8(`[${payload.body.map(e => e.__serialized).join(',')}]`))
+      len = payload.body.length
       this.scheduler.opts.gzip = true
     } else {
-      payload.body = payload.body.__serialized
+      payload.body = payload.body.map(({ __serialized, ...node }) => node)
+      len = stringify(payload.body).length
       this.scheduler.opts.gzip = false
     }
-    if (payload.body.length > MAX_PAYLOAD_SIZE) {
+
+    if (len > MAX_PAYLOAD_SIZE) {
       this.abort(ABORT_REASONS.TOO_BIG)
       return
     }

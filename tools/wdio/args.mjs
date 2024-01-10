@@ -22,7 +22,7 @@ const args = yargs(hideBin(process.argv))
 
   .string('b')
   .alias('b', 'browsers')
-  .requiresArg('b')
+  .default('b', 'chrome@latest')
   .describe(
     'b',
     'a comma seperated list of browsers with an optional semver range. (eg. chrome@>39)'
@@ -52,9 +52,14 @@ const args = yargs(hideBin(process.argv))
   .alias('r', 'retry')
   .describe('r', 'set to false when running tests locally to bypass retries')
 
+  .number('t')
   .alias('t', 'timeout')
   .describe('t', 'timeout in ms for tests and calls to the collector APIs')
   .default('t', 85000)
+
+  .number('session-timeout')
+  .describe('session-timeout', 'timout in ms for sauce labs browser session')
+  .default('session-timeout', 120000)
 
   .boolean('d')
   .default('d', false)
@@ -93,6 +98,26 @@ const args = yargs(hideBin(process.argv))
   .boolean('webview')
   .default('webview', false)
   .describe('webview', 'Run webview tests')
+
+  .middleware(argv => {
+    if (argv.webview && (!argv.browsers || argv.browsers === 'chrome@latest')) {
+      argv.browsers = argv.b = 'ios@latest,android@latest'
+    }
+  })
+
+  .check(argv => {
+    if (argv.webview && argv.coverage) {
+      return 'Arguments webview and coverage are mutually exclusive'
+    }
+    if (argv.webview && argv.polyfills) {
+      return 'Arguments webview and polyfills are mutually exclusive'
+    }
+    if (argv.coverage && argv.polyfills) {
+      return 'Arguments coverage and polyfills are mutually exclusive'
+    }
+
+    return true
+  })
 
   .help('h')
   .alias('h', 'help').argv

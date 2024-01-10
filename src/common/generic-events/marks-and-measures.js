@@ -4,22 +4,34 @@
  */
 import { EventMessenger } from './event-messenger'
 
-export const marksAndMeasures = new EventMessenger()
+class MarksAndMeasures extends EventMessenger {
+  #initialized = false
 
-const handlePerformanceObject = (list, observer) => {
-  list.getEntries().forEach(({ detail, duration, entryType, name, startTime }) => {
-    const obj = {
-      eventType: 'BrowserPerformance' + entryType.split('')[0].toUpperCase() + entryType.substr(1),
-      timestamp: startTime,
-      detail,
-      duration,
-      entryType,
-      name,
-      startTime
+  subscribe (...args) {
+    if (!this.#initialized) this.initialize()
+    super.subscribe(...args)
+  }
+
+  initialize () {
+    this.#initialized = true
+    const handlePerformanceObject = (list, observer) => {
+      list.getEntries().forEach(({ detail, duration, entryType, name, startTime }) => {
+        const obj = {
+          eventType: 'BrowserPerformance' + entryType.split('')[0].toUpperCase() + entryType.substr(1),
+          timestamp: startTime,
+          detail,
+          duration,
+          entryType,
+          entryName: name,
+          startTime
+        }
+        this.emit({ value: obj })
+      })
     }
-    marksAndMeasures.emit({ value: obj })
-  })
+    const observer = new PerformanceObserver(handlePerformanceObject)
+    observer.observe({ type: 'mark', buffered: true })
+    observer.observe({ type: 'measure', buffered: true })
+  }
 }
-const observer = new PerformanceObserver(handlePerformanceObject)
-observer.observe({ type: 'mark', buffered: true })
-observer.observe({ type: 'measure', buffered: true })
+
+export const marksAndMeasures = new MarksAndMeasures()

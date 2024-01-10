@@ -6,19 +6,21 @@
 import { offset } from '../constants/runtime'
 import { EventMessenger } from './event-messenger'
 
-export const pageActions = new EventMessenger()
-
-export function addPageAction (t, name = '', attributes = {}) {
-  pageActions.emit({
-    value: {
-      ...attributes,
-      eventType: 'PageAction',
-      timestamp: t + offset,
-      timestampOffset: t,
-      timeSinceLoad: t / 1000,
-      actionName: name,
-      browserWidth: window?.document?.documentElement?.clientWidth,
-      browserHeight: window?.document?.documentElement?.clientHeight
-    }
-  })
+class PageActions extends EventMessenger {
+  addPageAction (t, name = '', attributes = {}) {
+    this.emit({
+      value: {
+        ...attributes,
+        eventType: 'PageAction',
+        timestamp: t + offset,
+        timestampOffset: t,
+        timeSinceLoad: t / 1000,
+        actionName: name,
+        browserWidth: window?.document?.documentElement?.clientWidth,
+        browserHeight: window?.document?.documentElement?.clientHeight
+      }
+    })
+  }
 }
+
+export const pageActions = new PageActions()

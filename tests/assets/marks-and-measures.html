@@ -4,6 +4,8 @@
     {init} {config} {loader}
     <script>
         newrelic.addPageAction("test", {val1: 1, val2: 2})
+        newrelic.addPageAction("test2", {val1: 2, val2: 2})
+        newrelic.addPageAction("test3", {val1: 3, val2: 2})
         performance.mark("mark1")
         setTimeout(() => {
             performance.mark("mark2")

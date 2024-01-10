@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "Fri Dec 22 2023 15:14:23 GMT-0600 (Central Standard Time)",
+  "lastUpdated": "Wed Jan 10 2024 11:11:16 GMT-0600 (Central Standard Time)",
   "projectName": "New Relic Browser Agent",
   "projectUrl": "https://github.com/newrelic/newrelic-browser-agent",
   "includeOptDeps": true,
@@ -61,41 +61,41 @@
     }
   },
   "devDependencies": {
-    "@babel/cli@7.23.4": {
+    "@babel/cli@7.21.5": {
       "name": "@babel/cli",
-      "version": "7.23.4",
+      "version": "7.21.5",
       "range": "^7.23.4",
       "licenses": "MIT",
       "repoUrl": "https://github.com/babel/babel",
-      "versionedRepoUrl": "https://github.com/babel/babel/tree/v7.23.4",
+      "versionedRepoUrl": "https://github.com/babel/babel/tree/v7.21.5",
       "licenseFile": "node_modules/@babel/cli/LICENSE",
-      "licenseUrl": "https://github.com/babel/babel/blob/v7.23.4/LICENSE",
+      "licenseUrl": "https://github.com/babel/babel/blob/v7.21.5/LICENSE",
       "licenseTextSource": "file",
       "publisher": "The Babel Team",
       "url": "https://babel.dev/team"
     },
-    "@babel/core@7.23.6": {
+    "@babel/core@7.22.1": {
       "name": "@babel/core",
-      "version": "7.23.6",
+      "version": "7.22.1",
       "range": "^7.23.6",
       "licenses": "MIT",
       "repoUrl": "https://github.com/babel/babel",
-      "versionedRepoUrl": "https://github.com/babel/babel/tree/v7.23.6",
+      "versionedRepoUrl": "https://github.com/babel/babel/tree/v7.22.1",
       "licenseFile": "node_modules/@babel/core/LICENSE",
-      "licenseUrl": "https://github.com/babel/babel/blob/v7.23.6/LICENSE",
+      "licenseUrl": "https://github.com/babel/babel/blob/v7.22.1/LICENSE",
       "licenseTextSource": "file",
       "publisher": "The Babel Team",
       "url": "https://babel.dev/team"
     },
-    "@babel/eslint-parser@7.23.3": {
+    "@babel/eslint-parser@7.21.8": {
       "name": "@babel/eslint-parser",
-      "version": "7.23.3",
+      "version": "7.21.8",
       "range": "^7.23.3",
       "licenses": "MIT",
       "repoUrl": "https://github.com/babel/babel",
-      "versionedRepoUrl": "https://github.com/babel/babel/tree/v7.23.3",
+      "versionedRepoUrl": "https://github.com/babel/babel/tree/v7.21.8",
       "licenseFile": "node_modules/@babel/eslint-parser/LICENSE",
-      "licenseUrl": "https://github.com/babel/babel/blob/v7.23.3/LICENSE",
+      "licenseUrl": "https://github.com/babel/babel/blob/v7.21.8/LICENSE",
       "licenseTextSource": "file",
       "publisher": "The Babel Team",
       "url": "https://babel.dev/team"
@@ -165,41 +165,41 @@
       "publisher": "The Babel Team",
       "url": "https://babel.dev/team"
     },
-    "@babel/plugin-syntax-import-assertions@7.23.3": {
+    "@babel/plugin-syntax-import-assertions@7.20.0": {
       "name": "@babel/plugin-syntax-import-assertions",
-      "version": "7.23.3",
+      "version": "7.20.0",
       "range": "^7.23.3",
       "licenses": "MIT",
       "repoUrl": "https://github.com/babel/babel",
-      "versionedRepoUrl": "https://github.com/babel/babel/tree/v7.23.3",
+      "versionedRepoUrl": "https://github.com/babel/babel/tree/v7.20.0",
       "licenseFile": "node_modules/@babel/plugin-syntax-import-assertions/LICENSE",
-      "licenseUrl": "https://github.com/babel/babel/blob/v7.23.3/LICENSE",
+      "licenseUrl": "https://github.com/babel/babel/blob/v7.20.0/LICENSE",
       "licenseTextSource": "file",
       "publisher": "The Babel Team",
       "url": "https://babel.dev/team"
     },
-    "@babel/preset-env@7.23.6": {
+    "@babel/preset-env@7.22.2": {
       "name": "@babel/preset-env",
-      "version": "7.23.6",
+      "version": "7.22.2",
       "range": "^7.23.6",
       "licenses": "MIT",
       "repoUrl": "https://github.com/babel/babel",
-      "versionedRepoUrl": "https://github.com/babel/babel/tree/v7.23.6",
+      "versionedRepoUrl": "https://github.com/babel/babel/tree/v7.22.2",
       "licenseFile": "node_modules/@babel/preset-env/LICENSE",
-      "licenseUrl": "https://github.com/babel/babel/blob/v7.23.6/LICENSE",
+      "licenseUrl": "https://github.com/babel/babel/blob/v7.22.2/LICENSE",
       "licenseTextSource": "file",
       "publisher": "The Babel Team",
       "url": "https://babel.dev/team"
     },
-    "@babel/register@7.22.15": {
+    "@babel/register@7.21.0": {
       "name": "@babel/register",
-      "version": "7.22.15",
+      "version": "7.21.0",
       "range": "^7.22.15",
       "licenses": "MIT",
       "repoUrl": "https://github.com/babel/babel",
-      "versionedRepoUrl": "https://github.com/babel/babel/tree/v7.22.15",
+      "versionedRepoUrl": "https://github.com/babel/babel/tree/v7.21.0",
       "licenseFile": "node_modules/@babel/register/LICENSE",
-      "licenseUrl": "https://github.com/babel/babel/blob/v7.22.15/LICENSE",
+      "licenseUrl": "https://github.com/babel/babel/blob/v7.21.0/LICENSE",
       "licenseTextSource": "file",
       "publisher": "The Babel Team",
       "url": "https://babel.dev/team"
@@ -215,54 +215,54 @@
       "licenseUrl": "https://github.com/faker-js/faker/blob/v7.6.0/LICENSE",
       "licenseTextSource": "file"
     },
-    "@fastify/compress@6.5.0": {
+    "@fastify/compress@6.4.0": {
       "name": "@fastify/compress",
-      "version": "6.5.0",
+      "version": "6.4.0",
       "range": "^6.5.0",
       "licenses": "MIT",
       "repoUrl": "https://github.com/fastify/fastify-compress",
-      "versionedRepoUrl": "https://github.com/fastify/fastify-compress/tree/v6.5.0",
+      "versionedRepoUrl": "https://github.com/fastify/fastify-compress/tree/v6.4.0",
       "licenseFile": "node_modules/@fastify/compress/LICENSE",
-      "licenseUrl": "https://github.com/fastify/fastify-compress/blob/v6.5.0/LICENSE",
+      "licenseUrl": "https://github.com/fastify/fastify-compress/blob/v6.4.0/LICENSE",
       "licenseTextSource": "file",
       "publisher": "Tomas Della Vedova - @delvedor",
       "url": "http://delved.org"
     },
-    "@fastify/cors@8.5.0": {
+    "@fastify/cors@8.3.0": {
       "name": "@fastify/cors",
-      "version": "8.5.0",
+      "version": "8.3.0",
       "range": "^8.5.0",
       "licenses": "MIT",
       "repoUrl": "https://github.com/fastify/fastify-cors",
-      "versionedRepoUrl": "https://github.com/fastify/fastify-cors/tree/v8.5.0",
+      "versionedRepoUrl": "https://github.com/fastify/fastify-cors/tree/v8.3.0",
       "licenseFile": "node_modules/@fastify/cors/LICENSE",
-      "licenseUrl": "https://github.com/fastify/fastify-cors/blob/v8.5.0/LICENSE",
+      "licenseUrl": "https://github.com/fastify/fastify-cors/blob/v8.3.0/LICENSE",
       "licenseTextSource": "file",
       "publisher": "Tomas Della Vedova - @delvedor",
       "url": "http://delved.org"
     },
-    "@fastify/multipart@8.0.0": {
+    "@fastify/multipart@7.6.0": {
       "name": "@fastify/multipart",
-      "version": "8.0.0",
+      "version": "7.6.0",
       "range": "^8.0.0",
       "licenses": "MIT",
       "repoUrl": "https://github.com/fastify/fastify-multipart",
-      "versionedRepoUrl": "https://github.com/fastify/fastify-multipart/tree/v8.0.0",
+      "versionedRepoUrl": "https://github.com/fastify/fastify-multipart/tree/v7.6.0",
       "licenseFile": "node_modules/@fastify/multipart/LICENSE",
-      "licenseUrl": "https://github.com/fastify/fastify-multipart/blob/v8.0.0/LICENSE",
+      "licenseUrl": "https://github.com/fastify/fastify-multipart/blob/v7.6.0/LICENSE",
       "licenseTextSource": "file",
       "publisher": "Matteo Collina",
       "email": "hello@matteocollina.com"
     },
-    "@fastify/static@6.12.0": {
+    "@fastify/static@6.10.2": {
       "name": "@fastify/static",
-      "version": "6.12.0",
+      "version": "6.10.2",
       "range": "^6.12.0",
       "licenses": "MIT",
       "repoUrl": "https://github.com/fastify/fastify-static",
-      "versionedRepoUrl": "https://github.com/fastify/fastify-static/tree/v6.12.0",
+      "versionedRepoUrl": "https://github.com/fastify/fastify-static/tree/v6.10.2",
       "licenseFile": "node_modules/@fastify/static/LICENSE",
-      "licenseUrl": "https://github.com/fastify/fastify-static/blob/v6.12.0/LICENSE",
+      "licenseUrl": "https://github.com/fastify/fastify-static/blob/v6.10.2/LICENSE",
       "licenseTextSource": "file",
       "publisher": "Tommaso Allevi - @allevo"
     },
@@ -289,104 +289,104 @@
       "licenseUrl": "https://github.com/newrelic/nr-querypack/blob/v3.12.0/LICENSE",
       "licenseTextSource": "file"
     },
-    "@wdio/cli@8.27.0": {
+    "@wdio/cli@8.10.5": {
       "name": "@wdio/cli",
-      "version": "8.27.0",
+      "version": "8.10.5",
       "range": "^8.27.0",
       "licenses": "MIT",
       "repoUrl": "https://github.com/webdriverio/webdriverio",
-      "versionedRepoUrl": "https://github.com/webdriverio/webdriverio/tree/v8.27.0",
+      "versionedRepoUrl": "https://github.com/webdriverio/webdriverio/tree/v8.10.5",
       "licenseFile": "node_modules/@wdio/cli/LICENSE-MIT",
-      "licenseUrl": "https://github.com/webdriverio/webdriverio/blob/v8.27.0/LICENSE-MIT",
+      "licenseUrl": "https://github.com/webdriverio/webdriverio/blob/v8.10.5/LICENSE-MIT",
       "licenseTextSource": "file",
       "publisher": "Christian Bromann",
       "email": "mail@bromann.dev"
     },
-    "@wdio/local-runner@8.27.0": {
+    "@wdio/local-runner@8.10.5": {
       "name": "@wdio/local-runner",
-      "version": "8.27.0",
+      "version": "8.10.5",
       "range": "^8.27.0",
       "licenses": "MIT",
       "repoUrl": "https://github.com/webdriverio/webdriverio",
-      "versionedRepoUrl": "https://github.com/webdriverio/webdriverio/tree/v8.27.0",
+      "versionedRepoUrl": "https://github.com/webdriverio/webdriverio/tree/v8.10.5",
       "licenseFile": "node_modules/@wdio/local-runner/LICENSE-MIT",
-      "licenseUrl": "https://github.com/webdriverio/webdriverio/blob/v8.27.0/LICENSE-MIT",
+      "licenseUrl": "https://github.com/webdriverio/webdriverio/blob/v8.10.5/LICENSE-MIT",
       "licenseTextSource": "file",
       "publisher": "Christian Bromann",
       "email": "mail@bromann.dev"
     },
-    "@wdio/logger@8.24.12": {
+    "@wdio/logger@8.6.6": {
       "name": "@wdio/logger",
-      "version": "8.24.12",
+      "version": "8.6.6",
       "range": "^8.24.12",
       "licenses": "MIT",
       "repoUrl": "https://github.com/webdriverio/webdriverio",
-      "versionedRepoUrl": "https://github.com/webdriverio/webdriverio/tree/v8.24.12",
+      "versionedRepoUrl": "https://github.com/webdriverio/webdriverio/tree/v8.6.6",
       "licenseFile": "node_modules/@wdio/logger/LICENSE-MIT",
-      "licenseUrl": "https://github.com/webdriverio/webdriverio/blob/v8.24.12/LICENSE-MIT",
+      "licenseUrl": "https://github.com/webdriverio/webdriverio/blob/v8.6.6/LICENSE-MIT",
       "licenseTextSource": "file",
       "publisher": "Christian Bromann",
       "email": "mail@bromann.dev"
     },
-    "@wdio/mocha-framework@8.27.0": {
+    "@wdio/mocha-framework@8.10.4": {
       "name": "@wdio/mocha-framework",
-      "version": "8.27.0",
+      "version": "8.10.4",
       "range": "^8.27.0",
       "licenses": "MIT",
       "repoUrl": "https://github.com/webdriverio/webdriverio",
-      "versionedRepoUrl": "https://github.com/webdriverio/webdriverio/tree/v8.27.0",
+      "versionedRepoUrl": "https://github.com/webdriverio/webdriverio/tree/v8.10.4",
       "licenseFile": "node_modules/@wdio/mocha-framework/LICENSE-MIT",
-      "licenseUrl": "https://github.com/webdriverio/webdriverio/blob/v8.27.0/LICENSE-MIT",
+      "licenseUrl": "https://github.com/webdriverio/webdriverio/blob/v8.10.4/LICENSE-MIT",
       "licenseTextSource": "file",
       "publisher": "Christian Bromann",
       "email": "mail@bromann.dev"
     },
-    "@wdio/sauce-service@8.27.0": {
+    "@wdio/sauce-service@8.10.5": {
       "name": "@wdio/sauce-service",
-      "version": "8.27.0",
+      "version": "8.10.5",
       "range": "^8.27.0",
       "licenses": "MIT",
       "repoUrl": "https://github.com/webdriverio/webdriverio",
-      "versionedRepoUrl": "https://github.com/webdriverio/webdriverio/tree/v8.27.0",
+      "versionedRepoUrl": "https://github.com/webdriverio/webdriverio/tree/v8.10.5",
       "licenseFile": "node_modules/@wdio/sauce-service/LICENSE-MIT",
-      "licenseUrl": "https://github.com/webdriverio/webdriverio/blob/v8.27.0/LICENSE-MIT",
+      "licenseUrl": "https://github.com/webdriverio/webdriverio/blob/v8.10.5/LICENSE-MIT",
       "licenseTextSource": "file",
       "publisher": "Christian Bromann",
       "email": "mail@bromann.dev"
     },
-    "@wdio/spec-reporter@8.27.0": {
+    "@wdio/spec-reporter@8.10.5": {
       "name": "@wdio/spec-reporter",
-      "version": "8.27.0",
+      "version": "8.10.5",
       "range": "^8.27.0",
       "licenses": "MIT",
       "repoUrl": "https://github.com/webdriverio/webdriverio",
-      "versionedRepoUrl": "https://github.com/webdriverio/webdriverio/tree/v8.27.0",
+      "versionedRepoUrl": "https://github.com/webdriverio/webdriverio/tree/v8.10.5",
       "licenseFile": "node_modules/@wdio/spec-reporter/LICENSE-MIT",
-      "licenseUrl": "https://github.com/webdriverio/webdriverio/blob/v8.27.0/LICENSE-MIT",
+      "licenseUrl": "https://github.com/webdriverio/webdriverio/blob/v8.10.5/LICENSE-MIT",
       "licenseTextSource": "file",
       "publisher": "Christian Bromann",
       "email": "mail@bromann.dev"
     },
-    "babel-jest@29.7.0": {
+    "babel-jest@29.5.0": {
       "name": "babel-jest",
-      "version": "29.7.0",
+      "version": "29.5.0",
       "range": "^29.7.0",
       "licenses": "MIT",
-      "repoUrl": "https://github.com/jestjs/jest",
-      "versionedRepoUrl": "https://github.com/jestjs/jest/tree/v29.7.0",
+      "repoUrl": "https://github.com/facebook/jest",
+      "versionedRepoUrl": "https://github.com/facebook/jest/tree/v29.5.0",
       "licenseFile": "node_modules/babel-jest/LICENSE",
-      "licenseUrl": "https://github.com/jestjs/jest/blob/v29.7.0/LICENSE",
+      "licenseUrl": "https://github.com/facebook/jest/blob/v29.5.0/LICENSE",
       "licenseTextSource": "file"
     },
-    "babel-loader@9.1.3": {
+    "babel-loader@8.3.0": {
       "name": "babel-loader",
-      "version": "9.1.3",
+      "version": "8.3.0",
       "range": "^9.1.3",
       "licenses": "MIT",
       "repoUrl": "https://github.com/babel/babel-loader",
-      "versionedRepoUrl": "https://github.com/babel/babel-loader/tree/v9.1.3",
+      "versionedRepoUrl": "https://github.com/babel/babel-loader/tree/v8.3.0",
       "licenseFile": "node_modules/babel-loader/LICENSE",
-      "licenseUrl": "https://github.com/babel/babel-loader/blob/v9.1.3/LICENSE",
+      "licenseUrl": "https://github.com/babel/babel-loader/blob/v8.3.0/LICENSE",
       "licenseTextSource": "file",
       "publisher": "Luis Couto",
       "email": "hello@luiscouto.pt"
@@ -498,42 +498,42 @@
       "email": "matt@omnionline.us",
       "url": "http://omnionline.us/"
     },
-    "eslint-config-standard@17.1.0": {
+    "eslint-config-standard@17.0.0": {
       "name": "eslint-config-standard",
-      "version": "17.1.0",
+      "version": "17.0.0",
       "range": "^17.1.0",
       "licenses": "MIT",
       "repoUrl": "https://github.com/standard/eslint-config-standard",
-      "versionedRepoUrl": "https://github.com/standard/eslint-config-standard/tree/v17.1.0",
+      "versionedRepoUrl": "https://github.com/standard/eslint-config-standard/tree/v17.0.0",
       "licenseFile": "node_modules/eslint-config-standard/LICENSE",
-      "licenseUrl": "https://github.com/standard/eslint-config-standard/blob/v17.1.0/LICENSE",
+      "licenseUrl": "https://github.com/standard/eslint-config-standard/blob/v17.0.0/LICENSE",
       "licenseTextSource": "file",
       "publisher": "Feross Aboukhadijeh",
       "email": "feross@feross.org",
       "url": "https://feross.org"
     },
-    "eslint-plugin-import@2.29.1": {
+    "eslint-plugin-import@2.27.5": {
       "name": "eslint-plugin-import",
-      "version": "2.29.1",
+      "version": "2.27.5",
       "range": "^2.29.1",
       "licenses": "MIT",
       "repoUrl": "https://github.com/import-js/eslint-plugin-import",
-      "versionedRepoUrl": "https://github.com/import-js/eslint-plugin-import/tree/v2.29.1",
+      "versionedRepoUrl": "https://github.com/import-js/eslint-plugin-import/tree/v2.27.5",
       "licenseFile": "node_modules/eslint-plugin-import/LICENSE",
-      "licenseUrl": "https://github.com/import-js/eslint-plugin-import/blob/v2.29.1/LICENSE",
+      "licenseUrl": "https://github.com/import-js/eslint-plugin-import/blob/v2.27.5/LICENSE",
       "licenseTextSource": "file",
       "publisher": "Ben Mosher",
       "email": "me@benmosher.com"
     },
-    "eslint-plugin-n@16.5.0": {
+    "eslint-plugin-n@15.7.0": {
       "name": "eslint-plugin-n",
-      "version": "16.5.0",
+      "version": "15.7.0",
       "range": "^16.5.0",
       "licenses": "MIT",
       "repoUrl": "https://github.com/eslint-community/eslint-plugin-n",
-      "versionedRepoUrl": "https://github.com/eslint-community/eslint-plugin-n/tree/v16.5.0",
+      "versionedRepoUrl": "https://github.com/eslint-community/eslint-plugin-n/tree/v15.7.0",
       "licenseFile": "node_modules/eslint-plugin-n/LICENSE",
-      "licenseUrl": "https://github.com/eslint-community/eslint-plugin-n/blob/v16.5.0/LICENSE",
+      "licenseUrl": "https://github.com/eslint-community/eslint-plugin-n/blob/v15.7.0/LICENSE",
       "licenseTextSource": "file",
       "publisher": "Toru Nagashima"
     },
@@ -550,78 +550,78 @@
       "publisher": "jden",
       "email": "jason@denizac.org"
     },
-    "eslint-plugin-sonarjs@0.23.0": {
+    "eslint-plugin-sonarjs@0.19.0": {
       "name": "eslint-plugin-sonarjs",
-      "version": "0.23.0",
+      "version": "0.19.0",
       "range": "^0.23.0",
-      "licenses": "LGPL-3.0-only",
+      "licenses": "LGPL-3.0",
       "repoUrl": "https://github.com/SonarSource/eslint-plugin-sonarjs",
-      "versionedRepoUrl": "https://github.com/SonarSource/eslint-plugin-sonarjs/tree/v0.23.0",
+      "versionedRepoUrl": "https://github.com/SonarSource/eslint-plugin-sonarjs/tree/v0.19.0",
       "licenseFile": "node_modules/eslint-plugin-sonarjs/LICENSE",
-      "licenseUrl": "https://github.com/SonarSource/eslint-plugin-sonarjs/blob/v0.23.0/LICENSE",
+      "licenseUrl": "https://github.com/SonarSource/eslint-plugin-sonarjs/blob/v0.19.0/LICENSE",
       "licenseTextSource": "file"
     },
-    "eslint@8.56.0": {
+    "eslint@8.41.0": {
       "name": "eslint",
-      "version": "8.56.0",
+      "version": "8.41.0",
       "range": "^8.56.0",
       "licenses": "MIT",
       "repoUrl": "https://github.com/eslint/eslint",
-      "versionedRepoUrl": "https://github.com/eslint/eslint/tree/v8.56.0",
+      "versionedRepoUrl": "https://github.com/eslint/eslint/tree/v8.41.0",
       "licenseFile": "node_modules/eslint/LICENSE",
-      "licenseUrl": "https://github.com/eslint/eslint/blob/v8.56.0/LICENSE",
+      "licenseUrl": "https://github.com/eslint/eslint/blob/v8.41.0/LICENSE",
       "licenseTextSource": "file",
       "publisher": "Nicholas C. Zakas",
       "email": "nicholas+npm@nczconsulting.com"
     },
-    "fastify-plugin@4.5.1": {
+    "fastify-plugin@4.5.0": {
       "name": "fastify-plugin",
-      "version": "4.5.1",
+      "version": "4.5.0",
       "range": "^4.5.1",
       "licenses": "MIT",
       "repoUrl": "https://github.com/fastify/fastify-plugin",
-      "versionedRepoUrl": "https://github.com/fastify/fastify-plugin/tree/v4.5.1",
+      "versionedRepoUrl": "https://github.com/fastify/fastify-plugin/tree/v4.5.0",
       "licenseFile": "node_modules/fastify-plugin/LICENSE",
-      "licenseUrl": "https://github.com/fastify/fastify-plugin/blob/v4.5.1/LICENSE",
+      "licenseUrl": "https://github.com/fastify/fastify-plugin/blob/v4.5.0/LICENSE",
       "licenseTextSource": "file",
       "publisher": "Tomas Della Vedova - @delvedor",
       "url": "http://delved.org"
     },
-    "fastify@4.25.1": {
+    "fastify@4.17.0": {
       "name": "fastify",
-      "version": "4.25.1",
+      "version": "4.17.0",
       "range": "^4.25.1",
       "licenses": "MIT",
       "repoUrl": "https://github.com/fastify/fastify",
-      "versionedRepoUrl": "https://github.com/fastify/fastify/tree/v4.25.1",
+      "versionedRepoUrl": "https://github.com/fastify/fastify/tree/v4.17.0",
       "licenseFile": "node_modules/fastify/LICENSE",
-      "licenseUrl": "https://github.com/fastify/fastify/blob/v4.25.1/LICENSE",
+      "licenseUrl": "https://github.com/fastify/fastify/blob/v4.17.0/LICENSE",
       "licenseTextSource": "file",
       "publisher": "Matteo Collina",
       "email": "hello@matteocollina.com"
     },
-    "fs-extra@11.2.0": {
+    "fs-extra@11.1.1": {
       "name": "fs-extra",
-      "version": "11.2.0",
+      "version": "11.1.1",
       "range": "^11.2.0",
       "licenses": "MIT",
       "repoUrl": "https://github.com/jprichardson/node-fs-extra",
-      "versionedRepoUrl": "https://github.com/jprichardson/node-fs-extra/tree/v11.2.0",
+      "versionedRepoUrl": "https://github.com/jprichardson/node-fs-extra/tree/v11.1.1",
       "licenseFile": "node_modules/fs-extra/LICENSE",
-      "licenseUrl": "https://github.com/jprichardson/node-fs-extra/blob/v11.2.0/LICENSE",
+      "licenseUrl": "https://github.com/jprichardson/node-fs-extra/blob/v11.1.1/LICENSE",
       "licenseTextSource": "file",
       "publisher": "JP Richardson",
       "email": "jprichardson@gmail.com"
     },
-    "function-bind@1.1.2": {
+    "function-bind@1.1.1": {
       "name": "function-bind",
-      "version": "1.1.2",
+      "version": "1.1.1",
       "range": "^1.1.1",
       "licenses": "MIT",
       "repoUrl": "https://github.com/Raynos/function-bind",
-      "versionedRepoUrl": "https://github.com/Raynos/function-bind/tree/v1.1.2",
+      "versionedRepoUrl": "https://github.com/Raynos/function-bind/tree/v1.1.1",
       "licenseFile": "node_modules/function-bind/LICENSE",
-      "licenseUrl": "https://github.com/Raynos/function-bind/blob/v1.1.2/LICENSE",
+      "licenseUrl": "https://github.com/Raynos/function-bind/blob/v1.1.1/LICENSE",
       "licenseTextSource": "file",
       "publisher": "Raynos",
       "email": "raynos2@gmail.com"
@@ -640,15 +640,15 @@
       "email": "i@izs.me",
       "url": "https://blog.izs.me/"
     },
-    "html-webpack-plugin@5.6.0": {
+    "html-webpack-plugin@5.5.1": {
       "name": "html-webpack-plugin",
-      "version": "5.6.0",
+      "version": "5.5.1",
       "range": "^5.6.0",
       "licenses": "MIT",
       "repoUrl": "https://github.com/jantimon/html-webpack-plugin",
-      "versionedRepoUrl": "https://github.com/jantimon/html-webpack-plugin/tree/v5.6.0",
+      "versionedRepoUrl": "https://github.com/jantimon/html-webpack-plugin/tree/v5.5.1",
       "licenseFile": "node_modules/html-webpack-plugin/LICENSE",
-      "licenseUrl": "https://github.com/jantimon/html-webpack-plugin/blob/v5.6.0/LICENSE",
+      "licenseUrl": "https://github.com/jantimon/html-webpack-plugin/blob/v5.5.1/LICENSE",
       "licenseTextSource": "file",
       "publisher": "Jan Nicklas",
       "email": "j.nicklas@me.com",
@@ -667,92 +667,92 @@
       "publisher": "Typicode",
       "email": "typicode@gmail.com"
     },
-    "istanbul-lib-coverage@3.2.2": {
+    "istanbul-lib-coverage@3.2.0": {
       "name": "istanbul-lib-coverage",
-      "version": "3.2.2",
+      "version": "3.2.0",
       "range": "^3.2.2",
       "licenses": "BSD-3-Clause",
       "repoUrl": "https://github.com/istanbuljs/istanbuljs",
-      "versionedRepoUrl": "https://github.com/istanbuljs/istanbuljs/tree/v3.2.2",
+      "versionedRepoUrl": "https://github.com/istanbuljs/istanbuljs/tree/v3.2.0",
       "licenseFile": "node_modules/istanbul-lib-coverage/LICENSE",
-      "licenseUrl": "https://github.com/istanbuljs/istanbuljs/blob/v3.2.2/LICENSE",
+      "licenseUrl": "https://github.com/istanbuljs/istanbuljs/blob/v3.2.0/LICENSE",
       "licenseTextSource": "file",
       "publisher": "Krishnan Anantheswaran",
       "email": "kananthmail-github@yahoo.com"
     },
-    "istanbul-lib-instrument@6.0.1": {
+    "istanbul-lib-instrument@5.2.1": {
       "name": "istanbul-lib-instrument",
-      "version": "6.0.1",
+      "version": "5.2.1",
       "range": "^6.0.1",
       "licenses": "BSD-3-Clause",
       "repoUrl": "https://github.com/istanbuljs/istanbuljs",
-      "versionedRepoUrl": "https://github.com/istanbuljs/istanbuljs/tree/v6.0.1",
+      "versionedRepoUrl": "https://github.com/istanbuljs/istanbuljs/tree/v5.2.1",
       "licenseFile": "node_modules/istanbul-lib-instrument/LICENSE",
-      "licenseUrl": "https://github.com/istanbuljs/istanbuljs/blob/v6.0.1/LICENSE",
+      "licenseUrl": "https://github.com/istanbuljs/istanbuljs/blob/v5.2.1/LICENSE",
       "licenseTextSource": "file",
       "publisher": "Krishnan Anantheswaran",
       "email": "kananthmail-github@yahoo.com"
     },
-    "istanbul-lib-report@3.0.1": {
+    "istanbul-lib-report@3.0.0": {
       "name": "istanbul-lib-report",
-      "version": "3.0.1",
+      "version": "3.0.0",
       "range": "^3.0.1",
       "licenses": "BSD-3-Clause",
       "repoUrl": "https://github.com/istanbuljs/istanbuljs",
-      "versionedRepoUrl": "https://github.com/istanbuljs/istanbuljs/tree/v3.0.1",
+      "versionedRepoUrl": "https://github.com/istanbuljs/istanbuljs/tree/v3.0.0",
       "licenseFile": "node_modules/istanbul-lib-report/LICENSE",
-      "licenseUrl": "https://github.com/istanbuljs/istanbuljs/blob/v3.0.1/LICENSE",
+      "licenseUrl": "https://github.com/istanbuljs/istanbuljs/blob/v3.0.0/LICENSE",
       "licenseTextSource": "file",
       "publisher": "Krishnan Anantheswaran",
       "email": "kananthmail-github@yahoo.com"
     },
-    "istanbul-reports@3.1.6": {
+    "istanbul-reports@3.1.5": {
       "name": "istanbul-reports",
-      "version": "3.1.6",
+      "version": "3.1.5",
       "range": "^3.1.6",
       "licenses": "BSD-3-Clause",
       "repoUrl": "https://github.com/istanbuljs/istanbuljs",
-      "versionedRepoUrl": "https://github.com/istanbuljs/istanbuljs/tree/v3.1.6",
+      "versionedRepoUrl": "https://github.com/istanbuljs/istanbuljs/tree/v3.1.5",
       "licenseFile": "node_modules/istanbul-reports/LICENSE",
-      "licenseUrl": "https://github.com/istanbuljs/istanbuljs/blob/v3.1.6/LICENSE",
+      "licenseUrl": "https://github.com/istanbuljs/istanbuljs/blob/v3.1.5/LICENSE",
       "licenseTextSource": "file",
       "publisher": "Krishnan Anantheswaran",
       "email": "kananthmail-github@yahoo.com"
     },
-    "jest-environment-jsdom@29.7.0": {
+    "jest-environment-jsdom@29.5.0": {
       "name": "jest-environment-jsdom",
-      "version": "29.7.0",
+      "version": "29.5.0",
       "range": "29.7.0",
       "licenses": "MIT",
-      "repoUrl": "https://github.com/jestjs/jest",
-      "versionedRepoUrl": "https://github.com/jestjs/jest/tree/v29.7.0",
+      "repoUrl": "https://github.com/facebook/jest",
+      "versionedRepoUrl": "https://github.com/facebook/jest/tree/v29.5.0",
       "licenseFile": "node_modules/jest-environment-jsdom/LICENSE",
-      "licenseUrl": "https://github.com/jestjs/jest/blob/v29.7.0/LICENSE",
+      "licenseUrl": "https://github.com/facebook/jest/blob/v29.5.0/LICENSE",
       "licenseTextSource": "file"
     },
-    "jest-extended@4.0.2": {
+    "jest-extended@3.2.4": {
       "name": "jest-extended",
-      "version": "4.0.2",
+      "version": "3.2.4",
       "range": "^4.0.2",
       "licenses": "MIT",
       "repoUrl": "https://github.com/jest-community/jest-extended",
-      "versionedRepoUrl": "https://github.com/jest-community/jest-extended/tree/v4.0.2",
+      "versionedRepoUrl": "https://github.com/jest-community/jest-extended/tree/v3.2.4",
       "licenseFile": "node_modules/jest-extended/LICENSE",
-      "licenseUrl": "https://github.com/jest-community/jest-extended/blob/v4.0.2/LICENSE",
+      "licenseUrl": "https://github.com/jest-community/jest-extended/blob/v3.2.4/LICENSE",
       "licenseTextSource": "file",
       "publisher": "Matt Phillips",
       "email": "matt@mattphillips.io",
       "url": "mattphillips.io"
     },
-    "jest@29.7.0": {
+    "jest@29.5.0": {
       "name": "jest",
-      "version": "29.7.0",
+      "version": "29.5.0",
       "range": "^29.7.0",
       "licenses": "MIT",
-      "repoUrl": "https://github.com/jestjs/jest",
-      "versionedRepoUrl": "https://github.com/jestjs/jest/tree/v29.7.0",
+      "repoUrl": "https://github.com/facebook/jest",
+      "versionedRepoUrl": "https://github.com/facebook/jest/tree/v29.5.0",
       "licenseFile": "node_modules/jest/LICENSE",
-      "licenseUrl": "https://github.com/jestjs/jest/blob/v29.7.0/LICENSE",
+      "licenseUrl": "https://github.com/facebook/jest/blob/v29.5.0/LICENSE",
       "licenseTextSource": "file"
     },
     "jung@2.1.0": {
@@ -779,15 +779,15 @@
       "licenseTextSource": "file",
       "publisher": "Michael Hayes"
     },
-    "node-fetch@3.3.2": {
+    "node-fetch@3.3.1": {
       "name": "node-fetch",
-      "version": "3.3.2",
+      "version": "3.3.1",
       "range": "^3.3.2",
       "licenses": "MIT",
       "repoUrl": "https://github.com/node-fetch/node-fetch",
-      "versionedRepoUrl": "https://github.com/node-fetch/node-fetch/tree/v3.3.2",
+      "versionedRepoUrl": "https://github.com/node-fetch/node-fetch/tree/v3.3.1",
       "licenseFile": "node_modules/node-fetch/LICENSE.md",
-      "licenseUrl": "https://github.com/node-fetch/node-fetch/blob/v3.3.2/LICENSE.md",
+      "licenseUrl": "https://github.com/node-fetch/node-fetch/blob/v3.3.1/LICENSE.md",
       "licenseTextSource": "file",
       "publisher": "David Frank"
     },
@@ -856,29 +856,28 @@
       "publisher": "Roman Shtylman",
       "email": "shtylman@gmail.com"
     },
-    "saucelabs@7.4.0": {
+    "saucelabs@7.2.1": {
       "name": "saucelabs",
-      "version": "7.4.0",
+      "version": "7.2.1",
       "range": "^7.4.0",
       "licenses": "Apache-2.0",
       "repoUrl": "https://github.com/saucelabs/node-saucelabs",
-      "versionedRepoUrl": "https://github.com/saucelabs/node-saucelabs/tree/v7.4.0",
+      "versionedRepoUrl": "https://github.com/saucelabs/node-saucelabs/tree/v7.2.1",
       "licenseFile": "node_modules/saucelabs/LICENSE",
-      "licenseUrl": "https://github.com/saucelabs/node-saucelabs/blob/v7.4.0/LICENSE",
+      "licenseUrl": "https://github.com/saucelabs/node-saucelabs/blob/v7.2.1/LICENSE",
       "licenseTextSource": "file",
       "publisher": "Sauce Labs, Inc."
     },
-    "semver@7.5.4": {
+    "semver@5.7.1": {
       "name": "semver",
-      "version": "7.5.4",
+      "version": "5.7.1",
       "range": "^7.5.4",
       "licenses": "ISC",
       "repoUrl": "https://github.com/npm/node-semver",
-      "versionedRepoUrl": "https://github.com/npm/node-semver/tree/v7.5.4",
+      "versionedRepoUrl": "https://github.com/npm/node-semver/tree/v5.7.1",
       "licenseFile": "node_modules/semver/LICENSE",
-      "licenseUrl": "https://github.com/npm/node-semver/blob/v7.5.4/LICENSE",
-      "licenseTextSource": "file",
-      "publisher": "GitHub Inc."
+      "licenseUrl": "https://github.com/npm/node-semver/blob/v5.7.1/LICENSE",
+      "licenseTextSource": "file"
     },
     "serialize-anything@1.2.3": {
       "name": "serialize-anything",
@@ -947,29 +946,29 @@
       "email": "dominic.tarr@gmail.com",
       "url": "dominictarr.com"
     },
-    "tsd@0.30.0": {
+    "tsd@0.28.1": {
       "name": "tsd",
-      "version": "0.30.0",
+      "version": "0.28.1",
       "range": "^0.30.0",
       "licenses": "MIT",
-      "repoUrl": "https://github.com/tsdjs/tsd",
-      "versionedRepoUrl": "https://github.com/tsdjs/tsd/tree/v0.30.0",
+      "repoUrl": "https://github.com/SamVerschueren/tsd",
+      "versionedRepoUrl": "https://github.com/SamVerschueren/tsd/tree/v0.28.1",
       "licenseFile": "node_modules/tsd/license",
-      "licenseUrl": "https://github.com/tsdjs/tsd/blob/v0.30.0/license",
+      "licenseUrl": "https://github.com/SamVerschueren/tsd/blob/v0.28.1/license",
       "licenseTextSource": "file",
       "publisher": "Sam Verschueren",
       "email": "sam.verschueren@gmail.com",
       "url": "https://github.com/SamVerschueren"
     },
-    "typescript@5.3.3": {
+    "typescript@5.2.2": {
       "name": "typescript",
-      "version": "5.3.3",
+      "version": "5.2.2",
       "range": "^5.3.3",
       "licenses": "Apache-2.0",
       "repoUrl": "https://github.com/Microsoft/TypeScript",
-      "versionedRepoUrl": "https://github.com/Microsoft/TypeScript/tree/v5.3.3",
+      "versionedRepoUrl": "https://github.com/Microsoft/TypeScript/tree/v5.2.2",
       "licenseFile": "node_modules/typescript/LICENSE.txt",
-      "licenseUrl": "https://github.com/Microsoft/TypeScript/blob/v5.3.3/LICENSE.txt",
+      "licenseUrl": "https://github.com/Microsoft/TypeScript/blob/v5.2.2/LICENSE.txt",
       "licenseTextSource": "file",
       "publisher": "Microsoft Corp."
     },
@@ -986,26 +985,26 @@
       "publisher": "Joyent",
       "url": "http://www.joyent.com"
     },
-    "uuid@9.0.1": {
+    "uuid@9.0.0": {
       "name": "uuid",
-      "version": "9.0.1",
+      "version": "9.0.0",
       "range": "^9.0.1",
       "licenses": "MIT",
       "repoUrl": "https://github.com/uuidjs/uuid",
-      "versionedRepoUrl": "https://github.com/uuidjs/uuid/tree/v9.0.1",
+      "versionedRepoUrl": "https://github.com/uuidjs/uuid/tree/v9.0.0",
       "licenseFile": "node_modules/uuid/LICENSE.md",
-      "licenseUrl": "https://github.com/uuidjs/uuid/blob/v9.0.1/LICENSE.md",
+      "licenseUrl": "https://github.com/uuidjs/uuid/blob/v9.0.0/LICENSE.md",
       "licenseTextSource": "file"
     },
-    "wait-on@7.2.0": {
+    "wait-on@7.0.1": {
       "name": "wait-on",
-      "version": "7.2.0",
+      "version": "7.0.1",
       "range": "^7.2.0",
       "licenses": "MIT",
       "repoUrl": "https://github.com/jeffbski/wait-on",
-      "versionedRepoUrl": "https://github.com/jeffbski/wait-on/tree/v7.2.0",
+      "versionedRepoUrl": "https://github.com/jeffbski/wait-on/tree/v7.0.1",
       "licenseFile": "node_modules/wait-on/LICENSE",
-      "licenseUrl": "https://github.com/jeffbski/wait-on/blob/v7.2.0/LICENSE",
+      "licenseUrl": "https://github.com/jeffbski/wait-on/blob/v7.0.1/LICENSE",
       "licenseTextSource": "file",
       "publisher": "Jeff Barczewski",
       "email": "info@codewinds.com"
@@ -1023,28 +1022,28 @@
       "publisher": "Adam Christian",
       "email": "adam.christian@gmail.com"
     },
-    "webpack-bundle-analyzer@4.10.1": {
+    "webpack-bundle-analyzer@4.8.0": {
       "name": "webpack-bundle-analyzer",
-      "version": "4.10.1",
+      "version": "4.8.0",
       "range": "^4.10.1",
       "licenses": "MIT",
       "repoUrl": "https://github.com/webpack-contrib/webpack-bundle-analyzer",
-      "versionedRepoUrl": "https://github.com/webpack-contrib/webpack-bundle-analyzer/tree/v4.10.1",
+      "versionedRepoUrl": "https://github.com/webpack-contrib/webpack-bundle-analyzer/tree/v4.8.0",
       "licenseFile": "node_modules/webpack-bundle-analyzer/LICENSE",
-      "licenseUrl": "https://github.com/webpack-contrib/webpack-bundle-analyzer/blob/v4.10.1/LICENSE",
+      "licenseUrl": "https://github.com/webpack-contrib/webpack-bundle-analyzer/blob/v4.8.0/LICENSE",
       "licenseTextSource": "file",
       "publisher": "Yury Grunin",
       "email": "grunin.ya@ya.ru"
     },
-    "webpack-cli@5.1.4": {
+    "webpack-cli@4.10.0": {
       "name": "webpack-cli",
-      "version": "5.1.4",
+      "version": "4.10.0",
       "range": "^5.1.4",
       "licenses": "MIT",
       "repoUrl": "https://github.com/webpack/webpack-cli",
-      "versionedRepoUrl": "https://github.com/webpack/webpack-cli/tree/v5.1.4",
+      "versionedRepoUrl": "https://github.com/webpack/webpack-cli/tree/v4.10.0",
       "licenseFile": "node_modules/webpack-cli/LICENSE",
-      "licenseUrl": "https://github.com/webpack/webpack-cli/blob/v5.1.4/LICENSE",
+      "licenseUrl": "https://github.com/webpack/webpack-cli/blob/v4.10.0/LICENSE",
       "licenseTextSource": "file"
     },
     "webpack-stream@7.0.0": {
@@ -1061,15 +1060,15 @@
       "email": "kyle@dontkry.com",
       "url": "http://dontkry.com"
     },
-    "webpack@5.89.0": {
+    "webpack@5.84.1": {
       "name": "webpack",
-      "version": "5.89.0",
+      "version": "5.84.1",
       "range": "^5.89.0",
       "licenses": "MIT",
       "repoUrl": "https://github.com/webpack/webpack",
-      "versionedRepoUrl": "https://github.com/webpack/webpack/tree/v5.89.0",
+      "versionedRepoUrl": "https://github.com/webpack/webpack/tree/v5.84.1",
       "licenseFile": "node_modules/webpack/LICENSE",
-      "licenseUrl": "https://github.com/webpack/webpack/blob/v5.89.0/LICENSE",
+      "licenseUrl": "https://github.com/webpack/webpack/blob/v5.84.1/LICENSE",
       "licenseTextSource": "file",
       "publisher": "Tobias Koppers @sokra"
     },

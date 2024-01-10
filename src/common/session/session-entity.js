@@ -4,7 +4,7 @@ import { stringify } from '../util/stringify'
 import { ee } from '../event-emitter/contextual-ee'
 import { Timer } from '../timer/timer'
 import { isBrowserScope } from '../constants/runtime'
-import { DEFAULT_EXPIRES_MS, DEFAULT_INACTIVE_MS, PREFIX } from './constants'
+import { DEFAULT_EXPIRES_MS, DEFAULT_INACTIVE_MS, MODE, PREFIX, SESSION_EVENTS, SESSION_EVENT_TYPES } from './constants'
 import { InteractionTimer } from '../timer/interaction-timer'
 import { wrapEvents } from '../wrap'
 import { getModeledObject } from '../config/state/configurable'
@@ -13,11 +13,6 @@ import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
 import { FEATURE_NAMES } from '../../loaders/features/features'
 import { windowAddEventListener } from '../event-listener/event-listener-opts'
 
-export const MODE = {
-  OFF: 0,
-  FULL: 1,
-  ERROR: 2
-}
 // this is what can be stored in local storage (not enforced but probably should be)
 // these values should sync between local storage and the parent class props
 const model = {
@@ -30,17 +25,6 @@ const model = {
   sessionTraceMode: MODE.OFF,
   traceHarvestStarted: false,
   custom: {}
-}
-export const SESSION_EVENTS = {
-  PAUSE: 'session-pause',
-  RESET: 'session-reset',
-  RESUME: 'session-resume',
-  UPDATE: 'session-update'
-}
-
-export const SESSION_EVENT_TYPES = {
-  SAME_TAB: 'same-tab',
-  CROSS_TAB: 'cross-tab'
 }
 
 export class SessionEntity {

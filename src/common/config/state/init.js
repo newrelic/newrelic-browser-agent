@@ -69,7 +69,7 @@ const model = () => {
       sampling_rate: 50, // float from 0 - 100
       error_sampling_rate: 50, // float from 0 - 100
       collect_fonts: false, // serialize fonts for collection without public asset url, this is currently broken in RRWeb -- https://github.com/rrweb-io/rrweb/issues/1304.  When fixed, revisit with test cases
-      inline_images: false, // serialize images for collection without public asset url
+      inline_images: false, // serialize images for collection without public asset url -- right now this is only useful for testing as it easily generates payloads too large to be harvested
       inline_stylesheet: true, // serialize css for collection without public asset url
       // recording config settings
       mask_all_inputs: true,

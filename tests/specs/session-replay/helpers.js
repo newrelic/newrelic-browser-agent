@@ -85,9 +85,9 @@ export async function getSR () {
     try {
       var sr = Object.values(newrelic.initializedAgents)[0].features.session_replay.featAggregate
       return {
-        events: sr.events,
+        events: (sr.recorder ? sr.recorder.getEvents().events : []),
         initialized: sr.initialized,
-        recording: sr.recording,
+        recording: (sr.recorder ? sr.recorder.recording : false),
         mode: sr.mode,
         exists: true,
         blocked: sr.blocked,

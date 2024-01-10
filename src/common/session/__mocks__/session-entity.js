@@ -1,9 +1,3 @@
-export const SESSION_EVENTS = {
-  PAUSE: 'session-pause',
-  RESET: 'session-reset',
-  RESUME: 'session-resume'
-}
-
 export const SessionEntity = jest.fn(function () {
   this.setup = jest.fn()
   this.sync = jest.fn()

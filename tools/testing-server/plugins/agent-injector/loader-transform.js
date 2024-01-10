@@ -65,7 +65,7 @@ module.exports = function (request, reply, testServer) {
       const nonce = request.query.nonce ? `nonce="${request.query.nonce}"` : ''
 
       if (chunkString.indexOf('{loader}') > -1) {
-        const loaderFilePath = getLoaderFilePath(request, testServer, !!request.query?.script)
+        const loaderFilePath = getLoaderFilePath(request, testServer, ['defer', 'async', 'injection'].includes(request.query?.script))
         const loaderScript = await getLoaderScript(request.query?.script, loaderFilePath, nonce)
         done(
           null,

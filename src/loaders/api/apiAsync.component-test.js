@@ -37,7 +37,7 @@ describe('setAPI', () => {
   test('should register expected api methods as handlers on the instance event emitter', () => {
     setAPI(agentId)
 
-    expect(registerHandlerModule.registerHandler).toHaveBeenCalledTimes(4)
+    expect(registerHandlerModule.registerHandler).toHaveBeenCalledTimes(5)
     expect(registerHandlerModule.registerHandler).toHaveBeenCalledWith(
       'api-finished',
       expect.any(Function),
@@ -58,6 +58,12 @@ describe('setAPI', () => {
     )
     expect(registerHandlerModule.registerHandler).toHaveBeenCalledWith(
       'api-addRelease',
+      expect.any(Function),
+      'api',
+      instanceEE
+    )
+    expect(registerHandlerModule.registerHandler).toHaveBeenCalledWith(
+      'api-addPageAction',
       expect.any(Function),
       'api',
       instanceEE

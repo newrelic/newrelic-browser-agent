@@ -13,7 +13,6 @@ import { isBrowserScope } from '../../common/constants/runtime'
 import { warn } from '../../common/util/console'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
 import { gosCDN } from '../../common/window/nreum'
-import { pageActions } from '../../common/generic-events/page-actions'
 
 export const CUSTOM_ATTR_GROUP = 'CUSTOM/' // the subgroup items should be stored under in storage API
 
@@ -49,7 +48,8 @@ export function setAPI (agentIdentifier, forceDrain) {
     'setErrorHandler',
     'finished',
     'addToTrace',
-    'addRelease'
+    'addRelease',
+    'addPageAction'
   ]
 
   var prefix = 'api-'
@@ -58,10 +58,6 @@ export function setAPI (agentIdentifier, forceDrain) {
   // Setup stub functions that queue calls for later processing.
   asyncApiFns.forEach(fnName => { apiInterface[fnName] = apiCall(prefix, fnName, true, 'api') })
 
-  apiInterface.addPageAction = (name, attributes) => {
-    handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/addPageAction/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
-    pageActions.addPageAction(now(), name, attributes)
-  }
   apiInterface.setCurrentRouteName = apiCall(prefix, 'routeName', true, FEATURE_NAMES.spa)
 
   apiInterface.setPageViewName = function (name, host) {

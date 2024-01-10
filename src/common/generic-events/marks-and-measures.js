@@ -22,7 +22,7 @@ class MarksAndMeasures extends EventMessenger {
           detail,
           duration,
           entryType,
-          entryName: name,
+          name,
           startTime
         }
         this.emit({ value: obj })

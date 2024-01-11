@@ -4,6 +4,7 @@ import { AVG_COMPRESSION, CHECKOUT_MS, IDEAL_PAYLOAD_SIZE, QUERY_PARAM_PADDING, 
 import { getConfigurationValue } from '../../../common/config/config'
 import { RecorderEvents } from './recorder-events'
 import { MODE } from '../../../common/session/constants'
+import { stylesheetEvaluator } from './stylesheet-evaluator'
 
 export class Recorder {
   /** Each page mutation or event will be stored (raw) in this array. This array will be cleared on each harvest */
@@ -35,7 +36,8 @@ export class Recorder {
       payloadBytesEstimation: this.#backloggedEvents.payloadBytesEstimation + this.#events.payloadBytesEstimation,
       hasError: this.#backloggedEvents.hasError || this.#events.hasError,
       hasMeta: this.#backloggedEvents.hasMeta || this.#events.hasMeta,
-      hasSnapshot: this.#backloggedEvents.hasSnapshot || this.#events.hasSnapshot
+      hasSnapshot: this.#backloggedEvents.hasSnapshot || this.#events.hasSnapshot,
+      isMissingInlineCss: this.#backloggedEvents.isMissingInlineCss || this.#events.isMissingInlineCss
     }
   }
 
@@ -102,6 +104,8 @@ export class Recorder {
     if (event.type === RRWEB_EVENT_TYPES.FullSnapshot) {
       this.currentBufferTarget.hasSnapshot = true
     }
+
+    if (stylesheetEvaluator.evaluate()) this.currentBufferTarget.isMissingInlineCss = true
 
     this.currentBufferTarget.add(event)
     this.currentBufferTarget.payloadBytesEstimation += eventBytes

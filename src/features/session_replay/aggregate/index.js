@@ -278,6 +278,8 @@ export class Aggregate extends AggregateBase {
     const firstTimestamp = firstEventTimestamp || recorderEvents.cycleTimestamp
     const lastTimestamp = lastEventTimestamp || agentOffset + relativeNow
 
+    if (recorderEvents.isMissingInlineCss) handle(SUPPORTABILITY_METRIC_CHANNEL, ['SessionReplay/Node/IsMissingInlineCss'], undefined, FEATURE_NAMES.metrics, this.ee)
+
     return {
       qs: {
         browser_monitoring_key: info.licenseKey,

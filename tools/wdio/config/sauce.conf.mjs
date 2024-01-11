@@ -27,9 +27,7 @@ function sauceCapabilities () {
     .map(sauceBrowser => {
       const capability = {
         platformName: sauceBrowser.platformName,
-        'sauce:options': {
-          tunnelName: getSauceConnectTunnelName()
-        }
+        'sauce:options': {}
       }
 
       const parsedBrowserName = getBrowserName(sauceBrowser)
@@ -72,6 +70,10 @@ function sauceCapabilities () {
 
       if (typeof sauceBrowser.acceptInsecureCerts === 'boolean') {
         capability.acceptInsecureCerts = sauceBrowser.acceptInsecureCerts
+      }
+
+      if (!args.sauce) {
+        capability['sauce:options'].tunnelName = getSauceConnectTunnelName()
       }
 
       return capability

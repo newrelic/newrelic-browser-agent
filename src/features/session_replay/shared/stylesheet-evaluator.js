@@ -1,3 +1,4 @@
+import { isBrowserScope } from '../../../common/constants/runtime'
 
 class StylesheetEvaluator {
   #evaluated = new WeakSet()
@@ -7,6 +8,7 @@ class StylesheetEvaluator {
    * @returns {boolean}
    */
   evaluate () {
+    if (!isBrowserScope) return false
     for (let ss of document.styleSheets) {
       if (!this.#evaluated.has(ss)) {
         this.#evaluated.add(ss)

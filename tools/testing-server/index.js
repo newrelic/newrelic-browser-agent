@@ -212,7 +212,7 @@ class TestServer {
     this.#assetServer.register(require('@fastify/compress')) // handle gzip payloads, reply with gzip'd content
     this.#assetServer.decorate('testServerLogger', this.#logger)
     this.#assetServer.register(require('@fastify/multipart'), {
-      addToBody: true
+      attachFieldsToBody: true
     })
     this.#assetServer.register(require('@fastify/cors'), {
       origin: true,
@@ -241,7 +241,7 @@ class TestServer {
     this.#corsServer.decorate('testServerId', 'corsServer')
     this.#corsServer.decorate('testServerLogger', this.#logger)
     this.#corsServer.register(require('@fastify/multipart'), {
-      addToBody: true
+      attachFieldsToBody: true
     })
     this.#corsServer.register(require('@fastify/cors'), {
       origin: true,
@@ -261,7 +261,7 @@ class TestServer {
     this.#bamServer.register(require('@fastify/compress')) // handle gzip payloads, reply with gzip'd content
     this.#bamServer.decorate('testServerLogger', this.#logger)
     this.#bamServer.register(require('@fastify/multipart'), {
-      addToBody: true
+      attachFieldsToBody: true
     })
     this.#bamServer.register(require('@fastify/cors'), {
       origin: true,

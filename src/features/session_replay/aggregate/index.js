@@ -303,6 +303,7 @@ export class Aggregate extends AggregateBase {
           hasSnapshot: recorderEvents.hasSnapshot || false,
           hasError: recorderEvents.hasError || false,
           isFirstChunk: agentRuntime.session.state.sessionReplaySentFirstChunk === false,
+          isMissingInlineCss: recorderEvents.isMissingInlineCss,
           decompressedBytes: recorderEvents.payloadBytesEstimation,
           'rrweb.version': RRWEB_VERSION,
           // customer-defined data should go last so that if it exceeds the query param padding limit it will be truncated instead of important attrs

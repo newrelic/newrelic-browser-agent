@@ -18,7 +18,7 @@ describe('dataSize', () => {
   })
 
   test('returns byte length of ArrayBuffer object', () => {
-    const buffer = new ArrayBuffer(faker.datatype.number({ min: 10, max: 100 }))
+    const buffer = new ArrayBuffer(faker.number.int({ min: 10, max: 100 }))
     expect(dataSize(buffer)).toBe(buffer.byteLength)
   })
 
@@ -34,9 +34,9 @@ describe('dataSize', () => {
 
   test('uses stringify to get the length of an object', () => {
     const input = {
-      [faker.datatype.uuid()]: faker.lorem.sentence()
+      [faker.string.uuid()]: faker.lorem.sentence()
     }
-    const expectedSize = faker.datatype.number({ min: 1000, max: 10000 })
+    const expectedSize = faker.number.int({ min: 1000, max: 10000 })
 
     jest.spyOn(stringifyModule, 'stringify').mockReturnValue({ length: expectedSize })
 
@@ -45,7 +45,7 @@ describe('dataSize', () => {
 
   test('should not throw an exception if stringify throws an exception', () => {
     const input = {
-      [faker.datatype.uuid()]: faker.lorem.sentence()
+      [faker.string.uuid()]: faker.lorem.sentence()
     }
 
     jest.spyOn(stringifyModule, 'stringify').mockImplementation(() => { throw new Error(faker.lorem.sentence()) })

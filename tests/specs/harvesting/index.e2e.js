@@ -46,7 +46,7 @@ describe('harvesting', () => {
   })
 
   it('should include the ptid query parameter on requests after the first session trace harvest', async () => {
-    const ptid = faker.datatype.uuid()
+    const ptid = faker.string.uuid()
     browser.testHandle.scheduleReply('bamServer', {
       test: testResourcesRequest,
       body: ptid
@@ -78,7 +78,7 @@ describe('harvesting', () => {
   })
 
   it('should include the transaction name (transactionName) passed in the info block in the query parameters', async () => {
-    const transactionName = faker.datatype.uuid()
+    const transactionName = faker.string.uuid()
     const testURL = await browser.testHandle.assetURL('obfuscate-pii.html', {
       config: {
         transactionName
@@ -116,7 +116,7 @@ describe('harvesting', () => {
   })
 
   it('should include the transaction name (tNamePlain) passed in the info block in the query parameters', async () => {
-    const transactionName = faker.datatype.uuid()
+    const transactionName = faker.string.uuid()
     const testURL = await browser.testHandle.assetURL('obfuscate-pii.html', {
       config: {
         tNamePlain: transactionName
@@ -160,10 +160,10 @@ describe('harvesting', () => {
   })
 
   it('should always take the transactionName info parameter over the tNamePlan info parameter for the transaction name query parameter', async () => {
-    const transactionName = faker.datatype.uuid()
+    const transactionName = faker.string.uuid()
     const testURL = await browser.testHandle.assetURL('obfuscate-pii.html', {
       config: {
-        tNamePlain: faker.datatype.uuid(),
+        tNamePlain: faker.string.uuid(),
         transactionName
       }
     })

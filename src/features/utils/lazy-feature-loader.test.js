@@ -10,7 +10,7 @@ jest.unmock('./lazy-feature-loader')
 
 test.each(Object.keys(FEATURE_NAMES))('should import the aggregate for feature %s', async (key) => {
   const featureName = FEATURE_NAMES[key]
-  const randomId = faker.datatype.uuid()
+  const randomId = faker.string.uuid()
 
   jest.setMock(`../${featureName}/aggregate`, {
     id: randomId,
@@ -24,14 +24,14 @@ test.each(Object.keys(FEATURE_NAMES))('should import the aggregate for feature %
 })
 
 test('should throw an error when the featureName is not supported', async () => {
-  const featureName = faker.datatype.uuid()
+  const featureName = faker.string.uuid()
 
   expect(() => lazyFeatureLoader(featureName, 'aggregate')).toThrow()
 })
 
 test('should return undefined when the featurePart is not supported', async () => {
-  const featureName = faker.datatype.uuid()
-  const featurePart = faker.datatype.uuid()
+  const featureName = faker.string.uuid()
+  const featurePart = faker.string.uuid()
 
   expect(lazyFeatureLoader(featureName, featurePart)).toBeUndefined()
 })

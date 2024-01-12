@@ -5,11 +5,11 @@ let agentSession
 let mockEE
 
 beforeEach(() => {
-  agentIdentifier = faker.datatype.uuid()
-  mockEE = { [faker.datatype.uuid()]: faker.lorem.sentence() }
+  agentIdentifier = faker.string.uuid()
+  mockEE = { [faker.string.uuid()]: faker.lorem.sentence() }
   agentSession = {
     state: {
-      [faker.datatype.uuid()]: faker.lorem.sentence()
+      [faker.string.uuid()]: faker.lorem.sentence()
     }
   }
 
@@ -88,8 +88,8 @@ test('should not drain the session feature more than once', async () => {
 })
 
 test('should use the local storage class and instantiate a new session when cookies are enabled', async () => {
-  const expiresMs = faker.datatype.number()
-  const inactiveMs = faker.datatype.number()
+  const expiresMs = faker.number.int()
+  const inactiveMs = faker.number.int()
   const { getConfiguration } = await import('../../common/config/config')
   jest.mocked(getConfiguration).mockReturnValue({
     session: {
@@ -114,8 +114,8 @@ test('should use the local storage class and instantiate a new session when cook
 })
 
 test('should use the first party cookie storage class and instantiate a new session when cookies are enabled and a domain is set', async () => {
-  const expiresMs = faker.datatype.number()
-  const inactiveMs = faker.datatype.number()
+  const expiresMs = faker.number.int()
+  const inactiveMs = faker.number.int()
   const domain = faker.internet.domainName()
   const { getConfiguration } = await import('../../common/config/config')
   jest.mocked(getConfiguration).mockReturnValue({
@@ -144,14 +144,14 @@ test('should use the first party cookie storage class and instantiate a new sess
 test('should set custom session data', async () => {
   const { getInfo } = await import('../../common/config/config')
   const agentInfo = {
-    [faker.datatype.uuid()]: faker.lorem.sentence(),
+    [faker.string.uuid()]: faker.lorem.sentence(),
     jsAttributes: {
-      [faker.datatype.uuid()]: faker.lorem.sentence()
+      [faker.string.uuid()]: faker.lorem.sentence()
     }
   }
   jest.mocked(getInfo).mockReturnValue(agentInfo)
   agentSession.state.custom = {
-    [faker.datatype.uuid()]: faker.lorem.sentence()
+    [faker.string.uuid()]: faker.lorem.sentence()
   }
 
   const { setupAgentSession } = await import('./agent-session')
@@ -176,8 +176,8 @@ test('should sync custom attributes', async () => {
   agentSession.syncCustomAttribute = jest.fn()
 
   const customProps = [
-    [faker.date.recent(), faker.datatype.uuid(), faker.lorem.sentence()],
-    [faker.date.recent(), faker.datatype.uuid(), faker.lorem.sentence()]
+    [faker.date.recent(), faker.string.uuid(), faker.lorem.sentence()],
+    [faker.date.recent(), faker.string.uuid(), faker.lorem.sentence()]
   ]
 
   const { setupAgentSession } = await import('./agent-session')

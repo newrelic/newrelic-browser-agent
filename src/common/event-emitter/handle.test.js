@@ -22,10 +22,10 @@ test('it should create and use a default event-emitter', async () => {
   const { handle } = await import('./handle')
 
   const handleEE = jest.mocked(ee.get).mock.results[0].value
-  const eventType = faker.datatype.uuid()
+  const eventType = faker.string.uuid()
   const eventArgs = ['a', 'b', 'c']
   const eventContext = {}
-  const eventGroup = faker.datatype.uuid()
+  const eventGroup = faker.string.uuid()
 
   handle(eventType, eventArgs, eventContext, eventGroup)
 
@@ -42,10 +42,10 @@ test('it should use the provided scoped event-emitter', async () => {
   }
 
   const handleEE = jest.mocked(ee.get).mock.results[0].value
-  const eventType = faker.datatype.uuid()
+  const eventType = faker.string.uuid()
   const eventArgs = ['a', 'b', 'c']
   const eventContext = {}
-  const eventGroup = faker.datatype.uuid()
+  const eventGroup = faker.string.uuid()
 
   handle(eventType, eventArgs, eventContext, eventGroup, scopedEE)
 

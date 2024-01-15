@@ -14,6 +14,8 @@ export class Recorder {
   /** array of recorder events -- Will be filled only if forced harvest was triggered and harvester does not exist */
   #preloaded = [new RecorderEvents()]
 
+  #fixing = false
+
   constructor (parent) {
     /** True when actively recording, false when paused or stopped */
     this.recording = false
@@ -78,6 +80,17 @@ export class Recorder {
 
   /** Store a payload in the buffer (this.#events).  This should be the callback to the recording lib noticing a mutation */
   store (event, isCheckout) {
+    const incompletes = stylesheetEvaluator.evaluate()
+    /** Only stop ignoring data if already ignoring and a new valid snapshap is taking place (0 incompletes and we get a meta node for the snap) */
+    if (!incompletes.length && this.#fixing && event.type === RRWEB_EVENT_TYPES.Meta) this.#fixing = false
+    if (incompletes.length) {
+      /** download the incompletes' src code and then take a new snap */
+      stylesheetEvaluator.fix(incompletes).then(() => { this.takeFullSnapshot() })
+      /** Only start ignoring data if got a faulty snapshot */
+      if (event.type === RRWEB_EVENT_TYPES.FullSnapshot || event.type === RRWEB_EVENT_TYPES.Meta) this.#fixing = true
+    }
+    if (this.#fixing) return
+
     event.__serialized = stringify(event)
 
     if (!this.parent.scheduler) this.currentBufferTarget = this.#preloaded[this.#preloaded.length - 1]

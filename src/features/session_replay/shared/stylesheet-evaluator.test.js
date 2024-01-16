@@ -45,9 +45,12 @@ describe('stylesheet-evaluator', (done) => {
     class CSSStyleSheetMock {
       cssRules = {}
       rules = {}
-      replaceSync (txt) {
-        this.cssRules = { txt }
-        this.rules = { txt }
+      replace (txt) {
+        return new Promise((resolve) => {
+          this.cssRules = { txt }
+          this.rules = { txt }
+          resolve()
+        })
       }
     }
     global.CSSStyleSheet = CSSStyleSheetMock

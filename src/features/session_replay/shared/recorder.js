@@ -16,7 +16,7 @@ export class Recorder {
   #backloggedEvents = new RecorderEvents()
   /** array of recorder events -- Will be filled only if forced harvest was triggered and harvester does not exist */
   #preloaded = [new RecorderEvents()]
-
+  /** flag that if true, blocks events from being "stored".  Only set to true when a full snapshot has incomplete nodes (only stylesheets ATM) */
   #fixing = false
 
   constructor (parent) {
@@ -80,7 +80,12 @@ export class Recorder {
     }
   }
 
-  /** CHECK IF DATA MUST BE FIXED */
+  /**
+   * audit - Checks if the event node payload is missing certain attributes
+   * will forward on to the "store" method if nothing needs async fixing
+   * @param {*} event - An RRWEB event node
+   * @param {*} isCheckout - Flag indicating if the payload was triggered as a checkout
+   */
   audit (event, isCheckout) {
     const incompletes = stylesheetEvaluator.evaluate()
     /** Only stop ignoring data if already ignoring and a new valid snapshap is taking place (0 incompletes and we get a meta node for the snap) */

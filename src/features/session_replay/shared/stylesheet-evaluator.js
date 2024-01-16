@@ -7,7 +7,7 @@ class StylesheetEvaluator {
 
   /**
    * this works by checking (only ever once) each cssRules obj in the style sheets array. This will throw an error if improperly configured and return `true`. Otherwise returns `false`
-   * @returns {boolean}
+   * @returns {Object[]}
    */
   evaluate () {
     const incompletes = []
@@ -28,21 +28,39 @@ class StylesheetEvaluator {
     return incompletes
   }
 
+  /**
+   * Stages fixes for incomplete stylesheet objects supplied as input
+   * Resolves promise once all stylesheets have been fetched and overridden
+   * @param {*} incompletes
+   * @returns {Promise}
+   */
   async fix (incompletes = []) {
     incompletes.forEach(({ ss, i }) => {
-      this.#fetchProms.push(originals.FETCH.bind(window)(ss.href).then(r => r.text()).then(cssText => {
-        const cssSheet = new CSSStyleSheet()
-        cssSheet.replaceSync(cssText)
-        Object.defineProperty(document.styleSheets[i], 'cssRules', {
-          get () { return cssSheet.cssRules }
-        })
-        Object.defineProperty(document.styleSheets[i], 'rules', {
-          get () { return cssSheet.rules }
-        })
-      }))
+      this.#fetchProms.push(fetchAndOverride(document.styleSheets[i], ss.href))
     })
+    /** await-ing this outer scoped promise all allows other subsequent calls that are made while processing to also have to wait
+     * We use this Promise.all() just to know that it is done, not to process the promise contents
+    */
     await Promise.all(this.#fetchProms)
   }
+}
+
+/**
+ * Fetches stylesheet contents and overrides the target getters
+ * @param {*} target - The stylesheet object target - ex. document.styleSheets[0]
+ * @param {*} href - The asset href to fetch
+ * @returns {Promise}
+ */
+async function fetchAndOverride (target, href) {
+  const cssSheet = new CSSStyleSheet()
+  const stylesheetContents = await originals.FETCH.bind(window)(href)
+  await cssSheet.replace(await stylesheetContents.text())
+  Object.defineProperty(target, 'cssRules', {
+    get () { return cssSheet.cssRules }
+  })
+  Object.defineProperty(target, 'rules', {
+    get () { return cssSheet.rules }
+  })
 }
 
 export const stylesheetEvaluator = new StylesheetEvaluator()

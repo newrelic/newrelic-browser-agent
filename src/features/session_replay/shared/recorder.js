@@ -5,6 +5,9 @@ import { getConfigurationValue } from '../../../common/config/config'
 import { RecorderEvents } from './recorder-events'
 import { MODE } from '../../../common/session/constants'
 import { stylesheetEvaluator } from './stylesheet-evaluator'
+import { handle } from '../../../common/event-emitter/handle'
+import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
+import { FEATURE_NAMES } from '../../../loaders/features/features'
 
 export class Recorder {
   /** Each page mutation or event will be stored (raw) in this array. This array will be cleared on each harvest */
@@ -38,8 +41,7 @@ export class Recorder {
       payloadBytesEstimation: this.#backloggedEvents.payloadBytesEstimation + this.#events.payloadBytesEstimation,
       hasError: this.#backloggedEvents.hasError || this.#events.hasError,
       hasMeta: this.#backloggedEvents.hasMeta || this.#events.hasMeta,
-      hasSnapshot: this.#backloggedEvents.hasSnapshot || this.#events.hasSnapshot,
-      isMissingInlineCss: this.#backloggedEvents.isMissingInlineCss || this.#events.isMissingInlineCss
+      hasSnapshot: this.#backloggedEvents.hasSnapshot || this.#events.hasSnapshot
     }
   }
 
@@ -58,7 +60,7 @@ export class Recorder {
     // set up rrweb configurations for maximum privacy --
     // https://newrelic.atlassian.net/wiki/spaces/O11Y/pages/2792293280/2023+02+28+Browser+-+Session+Replay#Configuration-options
     const stop = recorder({
-      emit: this.store.bind(this),
+      emit: this.audit.bind(this),
       blockClass: block_class,
       ignoreClass: ignore_class,
       maskTextClass: mask_text_class,
@@ -78,19 +80,25 @@ export class Recorder {
     }
   }
 
-  /** Store a payload in the buffer (this.#events).  This should be the callback to the recording lib noticing a mutation */
-  store (event, isCheckout) {
+  /** CHECK IF DATA MUST BE FIXED */
+  audit (event, isCheckout) {
     const incompletes = stylesheetEvaluator.evaluate()
     /** Only stop ignoring data if already ignoring and a new valid snapshap is taking place (0 incompletes and we get a meta node for the snap) */
     if (!incompletes.length && this.#fixing && event.type === RRWEB_EVENT_TYPES.Meta) this.#fixing = false
     if (incompletes.length) {
+      incompletes.forEach(() => { handle(SUPPORTABILITY_METRIC_CHANNEL, ['SessionReplay/Payload/Missing-Inline-Css'], undefined, FEATURE_NAMES.metrics, this.parent.ee) })
       /** download the incompletes' src code and then take a new snap */
       stylesheetEvaluator.fix(incompletes).then(() => { this.takeFullSnapshot() })
       /** Only start ignoring data if got a faulty snapshot */
       if (event.type === RRWEB_EVENT_TYPES.FullSnapshot || event.type === RRWEB_EVENT_TYPES.Meta) this.#fixing = true
     }
-    if (this.#fixing) return
+    /** Only store the data if not being "fixed" (full snapshots that have broken css) */
+    if (!this.#fixing) this.store(event, isCheckout)
+  }
 
+  /** Store a payload in the buffer (this.#events).  This should be the callback to the recording lib noticing a mutation */
+  store (event, isCheckout) {
+    if (!event) return
     event.__serialized = stringify(event)
 
     if (!this.parent.scheduler) this.currentBufferTarget = this.#preloaded[this.#preloaded.length - 1]
@@ -117,8 +125,6 @@ export class Recorder {
     if (event.type === RRWEB_EVENT_TYPES.FullSnapshot) {
       this.currentBufferTarget.hasSnapshot = true
     }
-
-    if (stylesheetEvaluator.evaluate()) this.currentBufferTarget.isMissingInlineCss = true
 
     this.currentBufferTarget.add(event)
     this.currentBufferTarget.payloadBytesEstimation += eventBytes

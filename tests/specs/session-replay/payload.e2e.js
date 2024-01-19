@@ -98,4 +98,46 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
 
     testExpectedReplay({ data: harvestContents, session: localStorage.value, hasError: true, hasMeta: true, hasSnapshot: true, isFirstChunk: true })
   })
+
+  it('should place inlined css for cross origin stylesheets even if no crossOrigin tag', async () => {
+    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
+      .then(() => browser.waitForFeatureAggregate('session_replay'))
+
+    /** snapshot and mutation payloads */
+    const { request: { body: snapshot1 } } = await browser.testHandle.expectBlob()
+    const snapshot1Nodes = snapshot1.filter(x => x.type === 2)
+    let stylesheetNodesSeen = 0
+    snapshot1Nodes.forEach(snapshotNode => {
+      const htmlNode = snapshotNode.data.node.childNodes.find(x => x.tagName === 'html')
+      const headNode = htmlNode.childNodes.find(x => x.tagName === 'head')
+      const linkNodes = headNode.childNodes.filter(x => x.tagName === 'link')
+      console.log('linkNodes...', linkNodes.length)
+      linkNodes.forEach(linkNode => {
+        expect(!!linkNode.attributes._cssText).toEqual(true)
+        stylesheetNodesSeen++
+      })
+    })
+
+    expect(stylesheetNodesSeen).toEqual(2) // loaded 2 stylesheets as part of initial page load
+    await browser.pause(5000)
+    /** Agent should generate a new snapshot after a new "invalid" stylesheet is injected */
+    const [{ request: { body: snapshot2 } }] = await Promise.all([
+      browser.testHandle.expectBlob(),
+      browser.execute(function () {
+        document.querySelector('body').click()
+      })
+    ])
+    stylesheetNodesSeen = 0
+    const snapshot2Nodes = snapshot2.filter(x => x.type === 2)
+    snapshot2Nodes.forEach(snapshotNode => {
+      const htmlNode = snapshotNode.data.node.childNodes.find(x => x.tagName === 'html')
+      const headNode = htmlNode.childNodes.find(x => x.tagName === 'head')
+      const linkNodes = headNode.childNodes.filter(x => x.tagName === 'link')
+      linkNodes.forEach(linkNode => {
+        expect(!!linkNode.attributes._cssText).toEqual(true)
+        stylesheetNodesSeen++
+      })
+    })
+    expect(stylesheetNodesSeen).toEqual(3) // should capture both initial load and injected stylesheets (3)
+  })
 })

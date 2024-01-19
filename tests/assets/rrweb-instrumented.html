@@ -18,18 +18,25 @@
         top: 200px;
       }
     </style>
-    <link rel="stylesheet" type="text/css" href="style.css" />
+    <link rel="stylesheet" type="text/css" href="style.css" /> 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pure/3.0.0/pure-min.css" integrity="sha512-X2yGIVwg8zeG8N4xfsidr9MqIfIE8Yz1It+w2rhUJMqxUwvbVqC5OPcyRlPKYOw/bsdJut91//NO9rSbQZIPRQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     {init} {config} {loader}
     <script>
       window.wasPreloaded = false;
-        window.addEventListener("load", () => {
-          try{
+      window.addEventListener("load", () => {
+        try {
           const replayEvents = Object.values(newrelic.initializedAgents)[0].features.session_replay.recorder.getEvents();
-          window.wasPreloaded = !!replayEvents.events.length && replayEvents.type === "preloaded"
-          } catch(err){
-            // do nothing because it failed to get the recorder events -- which means they dont exist
-          }
-        });
+          window.wasPreloaded = !!replayEvents.events.length && replayEvents.type === "preloaded";
+        } catch (err) {
+          // do nothing because it failed to get the recorder events -- which means they dont exist
+        }
+      });
+      setTimeout(() => {
+        const ss = document.createElement("link");
+          ss.rel = "stylesheet";
+          ss.href = "https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css";
+          document.head.appendChild(ss);
+      }, 3000);
     </script>
   </head>
   <body>

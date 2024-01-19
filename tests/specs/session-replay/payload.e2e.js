@@ -111,7 +111,6 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
       const htmlNode = snapshotNode.data.node.childNodes.find(x => x.tagName === 'html')
       const headNode = htmlNode.childNodes.find(x => x.tagName === 'head')
       const linkNodes = headNode.childNodes.filter(x => x.tagName === 'link')
-      console.log('linkNodes...', linkNodes.length)
       linkNodes.forEach(linkNode => {
         expect(!!linkNode.attributes._cssText).toEqual(true)
         stylesheetNodesSeen++

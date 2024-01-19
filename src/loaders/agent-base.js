@@ -3,10 +3,15 @@
 import { warn } from '../common/util/console'
 
 export class AgentBase {
-  /** Tries to execute the api and enerates a generic warning message with the api name injected if unsuccessful */
-  #try (method, ...args) {
-    if (typeof this.api?.[method] !== 'function') warn(`Call to agent api ${method} failed. The agent is not currently initialized.`)
-    else this.api[method](...args)
+  /**
+   * Tries to execute the api and generates a generic warning message with the api name injected if unsuccessful
+   * @param {string} methodName
+   * @param  {...any} args
+   * @returns {any}
+   */
+  #callMethod (methodName, ...args) {
+    if (typeof this.api?.[methodName] !== 'function') warn(`Call to agent api ${methodName} failed. The agent is not currently initialized.`)
+    else return this.api[methodName](...args)
   }
 
   /**
@@ -16,7 +21,7 @@ export class AgentBase {
    * @param {object} [attributes] JSON object with one or more key/value pairs. For example: {key:"value"}. The key is reported as its own PageAction attribute with the specified values.
    */
   addPageAction (name, attributes) {
-    this.#try('addPageAction', name, attributes)
+    return this.#callMethod('addPageAction', name, attributes)
   }
 
   /**
@@ -26,7 +31,7 @@ export class AgentBase {
    * @param {string} [host] Default is http://custom.transaction. Typically set host to your site's domain URI.
    */
   setPageViewName (name, host) {
-    this.#try('setPageViewName', name, host)
+    return this.#callMethod('setPageViewName', name, host)
   }
 
   /**
@@ -37,7 +42,7 @@ export class AgentBase {
    * @param {boolean} [persist] Default false. f set to true, the name-value pair will also be set into the browser's storage API. Then on the following instrumented pages that load within the same session, the pair will be re-applied as a custom attribute.
    */
   setCustomAttribute (name, value, persist) {
-    this.#try('setCustomAttribute', name, value, persist)
+    return this.#callMethod('setCustomAttribute', name, value, persist)
   }
 
   /**
@@ -47,7 +52,7 @@ export class AgentBase {
    * @param {object} [customAttributes] An object containing name/value pairs representing custom attributes.
    */
   noticeError (error, customAttributes) {
-    this.#try('noticeError', error, customAttributes)
+    return this.#callMethod('noticeError', error, customAttributes)
   }
 
   /**
@@ -56,7 +61,7 @@ export class AgentBase {
    * @param {string|null} value A string identifier for the end-user, useful for tying all browser events to specific users. The value parameter does not have to be unique. If IDs should be unique, the caller is responsible for that validation. Passing a null value unsets any existing user ID.
    */
   setUserId (value) {
-    this.#try('setUserId', value)
+    return this.#callMethod('setUserId', value)
   }
 
   /**
@@ -68,7 +73,7 @@ export class AgentBase {
    * have to be unique. Passing a null value unsets any existing value.
    */
   setApplicationVersion (value) {
-    this.#try('setApplicationVersion', value)
+    return this.#callMethod('setApplicationVersion', value)
   }
 
   /**
@@ -77,7 +82,7 @@ export class AgentBase {
    * @param {(error: Error|string) => boolean | { group: string }} callback When an error occurs, the callback is called with the error object as a parameter. The callback will be called with each error, so it is not specific to one error.
    */
   setErrorHandler (callback) {
-    this.#try('setErrorHandler', callback)
+    return this.#callMethod('setErrorHandler', callback)
   }
 
   /**
@@ -86,7 +91,7 @@ export class AgentBase {
    * @param {number} [timeStamp] Defaults to the current time of the call. If used, this marks the time that the page is "finished" according to your own criteria.
    */
   finished (timeStamp) {
-    this.#try('finished', timeStamp)
+    return this.#callMethod('finished', timeStamp)
   }
 
   /**
@@ -96,7 +101,7 @@ export class AgentBase {
    * @param {string} id The ID or version of this release; for example, a version number, build number from your CI environment, GitHub SHA, GUID, or a hash of the contents.
    */
   addRelease (name, id) {
-    this.#try('addRelease', name, id)
+    return this.#callMethod('addRelease', name, id)
   }
 
   /**
@@ -105,7 +110,7 @@ export class AgentBase {
    * @param {string|string[]} [featureNames] The name(s) of the features to start.  If no name(s) are passed, all features will be started
    */
   start (featureNames) {
-    this.#try('start', featureNames)
+    return this.#callMethod('start', featureNames)
   }
 
   /**
@@ -114,7 +119,7 @@ export class AgentBase {
    * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/recordReplay/}
    */
   recordReplay () {
-    this.#try('recordReplay')
+    return this.#callMethod('recordReplay')
   }
 
   /**
@@ -124,6 +129,6 @@ export class AgentBase {
    * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/recordReplay/}
    */
   pauseReplay () {
-    this.#try('pauseReplay')
+    return this.#callMethod('pauseReplay')
   }
 }

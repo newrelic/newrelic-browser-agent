@@ -2,12 +2,15 @@
 
 import { warn } from '../common/util/console'
 
+/**
+ * @typedef {import('./api/interaction-types').InteractionInstance} InteractionInstance
+ */
+
 export class AgentBase {
   /**
    * Tries to execute the api and generates a generic warning message with the api name injected if unsuccessful
    * @param {string} methodName
    * @param  {...any} args
-   * @returns {any}
    */
   #callMethod (methodName, ...args) {
     if (typeof this.api?.[methodName] !== 'function') warn(`Call to agent api ${methodName} failed. The API is not currently initialized.`)

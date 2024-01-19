@@ -19,10 +19,6 @@ import { stringify } from '../common/util/stringify'
 import { globalScope } from '../common/constants/runtime'
 
 /**
- * @typedef {import('./api/interaction-types').InteractionInstance} InteractionInstance
- */
-
-/**
  * A flexible class that may be used to compose an agent from a select subset of feature modules. In applications
  * sensitive to network load, this may result in smaller builds with slightly lower performance impact.
  */

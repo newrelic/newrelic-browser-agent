@@ -10,7 +10,7 @@ export class AgentBase {
    * @returns {any}
    */
   #callMethod (methodName, ...args) {
-    if (typeof this.api?.[methodName] !== 'function') warn(`Call to agent api ${methodName} failed. The agent is not currently initialized.`)
+    if (typeof this.api?.[methodName] !== 'function') warn(`Call to agent api ${methodName} failed. The API is not currently initialized.`)
     else return this.api[methodName](...args)
   }
 
@@ -130,5 +130,40 @@ export class AgentBase {
    */
   pauseReplay () {
     return this.#callMethod('pauseReplay')
+  }
+
+  /**
+   * Adds a JavaScript object with a custom name, start time, etc. to an in-progress session trace.
+   * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/addtotrace/}
+   * @param {{name: string, start: number, end?: number, origin?: string, type?: string}} customAttributes Supply a JavaScript object with these required and optional name/value pairs:
+   *
+   * - Required name/value pairs: name, start
+   * - Optional name/value pairs: end, origin, type
+   * - Note: Does not apply to MicroAgent
+   *
+   * If you are sending the same event object to New Relic as a PageAction, omit the TYPE attribute. (type is a string to describe what type of event you are marking inside of a session trace.) If included, it will override the event type and cause the PageAction event to be sent incorrectly. Instead, use the name attribute for event information.
+   */
+  addToTrace (customAttributes) {
+    return this.#callMethod('addToTrace', customAttributes)
+  }
+
+  /**
+   * Gives SPA routes more accurate names than default names. Monitors specific routes rather than by default grouping.
+   * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/setcurrentroutename/}
+   * @param {string} name Current route name for the page.
+   *  - Note: Does not apply to MicroAgent
+   */
+  setCurrentRouteName (name) {
+    return this.#callMethod('setCurrentRouteName', name)
+  }
+
+  /**
+   * Returns a new API object that is bound to the current SPA interaction.
+   * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/interaction/}
+   * @returns {InteractionInstance} An API object that is bound to a specific BrowserInteraction event. Each time this method is called for the same BrowserInteraction, a new object is created, but it still references the same interaction.
+   *  - Note: Does not apply to MicroAgent
+  */
+  interaction () {
+    return this.#callMethod('interaction')
   }
 }

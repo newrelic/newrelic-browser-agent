@@ -23,7 +23,7 @@ describe.withBrowsersMatching(es2022Support)('basic npm agent', () => {
           browser.testHandle.expectIns(),
           browser.execute(function () {
             window.agent.noticeError('test')
-            window.agent.addPageAction('test')
+            newrelic.addPageAction('test')
           })
         ])
         expect(errorsPromise).toBeDefined()
@@ -44,7 +44,7 @@ describe.withBrowsersMatching(es2022Support)('basic npm agent', () => {
           browser.testHandle.expectIns(),
           browser.execute(function () {
             window.agent.noticeError('test')
-            window.agent.addPageAction('test')
+            newrelic.addPageAction('test')
           })
         ])
         expect(errorsPromise).toBeDefined()
@@ -65,7 +65,7 @@ describe.withBrowsersMatching(es2022Support)('basic npm agent', () => {
       browser.testHandle.expectIns(),
       browser.execute(function () {
         window.agent.noticeError('test')
-        window.agent.addPageAction('test')
+        newrelic.addPageAction('test')
       })
     ])
     expect(errorsPromise).toBeDefined()

@@ -5,11 +5,8 @@ import { warn } from '../common/util/console'
 export class AgentBase {
   /** Tries to execute the api and enerates a generic warning message with the api name injected if unsuccessful */
   #try (method, ...args) {
-    try {
-      this.api[method](...args)
-    } catch (err) {
-      warn(`Call to agent api ${method} failed. The agent is not currently initialized.`)
-    }
+    if (typeof this.api?.[method] !== 'function') warn(`Call to agent api ${method} failed. The agent is not currently initialized.`)
+    else this.api[method](...args)
   }
 
   /**

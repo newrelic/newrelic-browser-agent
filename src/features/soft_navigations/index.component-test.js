@@ -218,6 +218,7 @@ describe('soft navigations', () => {
       expect(thisCtx.associatedInteraction.trigger).toEqual('api')
       expect(thisCtx.associatedInteraction.status).toEqual('cancelled')
       expect(softNavAggregate.interactionInProgress).toBeNull()
+      expect(softNavAggregate.domObserver.cb).toBeUndefined() // observer should be disconnected with .end too
     })
 
     test('multiple .end on one ixn results in only the first taking effect', () => {

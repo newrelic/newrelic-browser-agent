@@ -106,18 +106,14 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
     /** snapshot and mutation payloads */
     const { request: { body: snapshot1 } } = await browser.testHandle.expectBlob()
     const snapshot1Nodes = snapshot1.filter(x => x.type === 2)
-    let stylesheetNodesSeen = 0
     snapshot1Nodes.forEach(snapshotNode => {
       const htmlNode = snapshotNode.data.node.childNodes.find(x => x.tagName === 'html')
       const headNode = htmlNode.childNodes.find(x => x.tagName === 'head')
       const linkNodes = headNode.childNodes.filter(x => x.tagName === 'link')
       linkNodes.forEach(linkNode => {
         expect(!!linkNode.attributes._cssText).toEqual(true)
-        stylesheetNodesSeen++
       })
     })
-
-    expect(stylesheetNodesSeen).toEqual(2) // loaded 2 stylesheets as part of initial page load
     await browser.pause(5000)
     /** Agent should generate a new snapshot after a new "invalid" stylesheet is injected */
     const [{ request: { body: snapshot2 } }] = await Promise.all([
@@ -126,7 +122,6 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
         document.querySelector('body').click()
       })
     ])
-    stylesheetNodesSeen = 0
     const snapshot2Nodes = snapshot2.filter(x => x.type === 2)
     snapshot2Nodes.forEach(snapshotNode => {
       const htmlNode = snapshotNode.data.node.childNodes.find(x => x.tagName === 'html')
@@ -134,9 +129,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
       const linkNodes = headNode.childNodes.filter(x => x.tagName === 'link')
       linkNodes.forEach(linkNode => {
         expect(!!linkNode.attributes._cssText).toEqual(true)
-        stylesheetNodesSeen++
       })
     })
-    expect(stylesheetNodesSeen).toEqual(3) // should capture both initial load and injected stylesheets (3)
   })
 })

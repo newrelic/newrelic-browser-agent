@@ -2,7 +2,7 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { registerHandler as register, registerHandler } from '../../../common/event-emitter/register-handler'
+import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { stringify } from '../../../common/util/stringify'
 import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../../../common/serialize/bel-serializer'
 import { handle } from '../../../common/event-emitter/handle'
@@ -23,7 +23,7 @@ export class Aggregate extends AggregateBase {
     const agentInit = getConfiguration(agentIdentifier)
     const allAjaxIsEnabled = agentInit.ajax.enabled !== false
 
-    register('xhr', storeXhr, this.featureName, this.ee)
+    registerHandler('xhr', storeXhr, this.featureName, this.ee)
     if (!allAjaxIsEnabled) {
       this.drain()
       return // feature will only collect timeslice metrics & ajax trace nodes if it's not fully enabled

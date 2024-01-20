@@ -17,7 +17,7 @@ export class Aggregate extends AggregateBase {
   constructor (agentIdentifier, aggregator, { domObserver }) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
 
-    const harvestTimeSeconds = getConfigurationValue(agentIdentifier, 'spa.harvestTimeSeconds') || 10
+    const harvestTimeSeconds = getConfigurationValue(agentIdentifier, 'soft_navigations.harvestTimeSeconds') || 10
     this.interactionsToHarvest = []
     this.interactionsAwaitingRetry = []
     this.domObserver = domObserver
@@ -54,10 +54,7 @@ export class Aggregate extends AggregateBase {
     registerHandler('newURL', (timestamp, url) => this.interactionInProgress?.updateHistory(timestamp, url), this.featureName, this.ee)
     registerHandler('newDom', timestamp => {
       this.interactionInProgress?.updateDom(timestamp)
-      if (this.interactionInProgress?.seenHistoryAndDomChange()) {
-        this.domObserver.disconnect() // can stop observing whenever our interaction logic completes a cycle
-        this.interactionInProgress.done()
-      }
+      if (this.interactionInProgress?.seenHistoryAndDomChange()) this.interactionInProgress.done()
     }, this.featureName, this.ee)
 
     this.#registerApiHandlers()
@@ -104,7 +101,6 @@ export class Aggregate extends AggregateBase {
       if (sourceElemText) this.interactionInProgress.customAttributes.actionText = sourceElemText
     }
     this.interactionInProgress.cancellationTimer = setTimeout(() => {
-      this.domObserver.disconnect()
       this.interactionInProgress.done()
       // Report metric on frequency of cancellation due to timeout for UI ixn
       handle(SUPPORTABILITY_METRIC_CHANNEL, ['SoftNav/Interaction/TimeOut'], undefined, FEATURE_NAMES.metrics, this.ee)
@@ -117,6 +113,7 @@ export class Aggregate extends AggregateBase {
       const ref = this.interactionInProgress
       this.interactionsToHarvest.push(this.interactionInProgress)
       this.interactionInProgress = null
+      this.domObserver.disconnect() // can stop observing whenever our interaction logic completes a cycle
 
       // Report metric on the ixn duration
       handle(SUPPORTABILITY_METRIC_CHANNEL, [
@@ -124,7 +121,10 @@ export class Aggregate extends AggregateBase {
         Math.round(ref.end - ref.start)
       ], undefined, FEATURE_NAMES.metrics, this.ee)
     })
-    this.interactionInProgress.on('cancelled', () => { this.interactionInProgress = null })
+    this.interactionInProgress.on('cancelled', () => {
+      this.interactionInProgress = null
+      this.domObserver.disconnect()
+    })
   }
 
   /**

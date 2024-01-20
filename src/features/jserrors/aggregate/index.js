@@ -248,6 +248,7 @@ export class Aggregate extends AggregateBase {
     }
   }
 
+  // TO-DO: Remove this function when old spa is taken out. #storeJserrorForHarvest handles the work with the softnav feature.
   onInteractionDone (interaction, wasSaved) {
     if (!this.bufferedErrorsUnderSpa[interaction.id] || this.blocked) return
 

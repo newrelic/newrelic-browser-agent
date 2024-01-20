@@ -3,7 +3,7 @@ import { faker } from '@faker-js/faker'
 
 describe.withBrowsersMatching(notIE)('Content Security Policy', () => {
   it('should support a nonce script element', async () => {
-    const nonce = faker.datatype.uuid()
+    const nonce = faker.string.uuid()
     await Promise.all([
       browser.testHandle.expectRum(),
       browser.url(await browser.testHandle.assetURL('instrumented.html', { nonce }))
@@ -26,7 +26,7 @@ describe.withBrowsersMatching(notIE)('Content Security Policy', () => {
   })
 
   it.withBrowsersMatching(notIE)('should send a nonce supportability metric', async () => {
-    const nonce = faker.datatype.uuid()
+    const nonce = faker.string.uuid()
     await browser.url(await browser.testHandle.assetURL('instrumented.html', { nonce }))
       .then(() => browser.waitForAgentLoad())
 

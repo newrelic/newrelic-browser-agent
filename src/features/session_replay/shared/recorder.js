@@ -109,7 +109,7 @@ export class Recorder {
     if (!event) return
     event.__serialized = stringify(event)
 
-    if (!this.parent.scheduler) this.currentBufferTarget = this.#preloaded[this.#preloaded.length - 1]
+    if (!this.parent.scheduler && this.#preloaded.length) this.currentBufferTarget = this.#preloaded[this.#preloaded.length - 1]
     else this.currentBufferTarget = this.#events
 
     if (this.parent.blocked) return

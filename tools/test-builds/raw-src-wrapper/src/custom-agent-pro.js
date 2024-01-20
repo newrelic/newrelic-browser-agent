@@ -7,7 +7,7 @@ import { PageViewEvent } from '@newrelic/browser-agent/src/features/page_view_ev
 import { PageViewTiming } from '@newrelic/browser-agent/src/features/page_view_timing'
 import { SessionTrace } from '@newrelic/browser-agent/src/features/session_trace'
 
-new Agent({
+window.agent = new Agent({
   features: [
     Ajax,
     JSErrors,

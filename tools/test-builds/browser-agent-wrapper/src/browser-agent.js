@@ -5,4 +5,4 @@ const opts = {
   init: NREUM.init
 }
 
-new BrowserAgent(opts)
+window.agent = new BrowserAgent(opts)

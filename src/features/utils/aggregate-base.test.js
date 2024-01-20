@@ -40,29 +40,29 @@ let aggregator
 let featureName
 
 beforeEach(() => {
-  agentIdentifier = faker.datatype.uuid()
+  agentIdentifier = faker.string.uuid()
   aggregator = {}
-  featureName = faker.datatype.uuid()
+  featureName = faker.string.uuid()
 })
 
 test('should merge info, jsattributes, and runtime objects', () => {
   const mockInfo1 = {
-    [faker.datatype.uuid()]: faker.lorem.sentence(),
+    [faker.string.uuid()]: faker.lorem.sentence(),
     jsAttributes: {
-      [faker.datatype.uuid()]: faker.lorem.sentence()
+      [faker.string.uuid()]: faker.lorem.sentence()
     }
   }
   jest.mocked(gosCDN).mockReturnValue({ info: mockInfo1 })
 
   const mockInfo2 = {
     jsAttributes: {
-      [faker.datatype.uuid()]: faker.lorem.sentence()
+      [faker.string.uuid()]: faker.lorem.sentence()
     }
   }
   jest.mocked(getInfo).mockReturnValue(mockInfo2)
 
   const mockRuntime = {
-    [faker.datatype.uuid()]: faker.lorem.sentence()
+    [faker.string.uuid()]: faker.lorem.sentence()
   }
   jest.mocked(getRuntime).mockReturnValue(mockRuntime)
 
@@ -97,13 +97,13 @@ test('should only configure the agent once', () => {
 })
 
 test('should resolve waitForFlags correctly based on flags', async () => {
-  const flagNames = [faker.datatype.uuid(), faker.datatype.uuid()]
+  const flagNames = [faker.string.uuid(), faker.string.uuid()]
   const aggregateBase = new AggregateBase(agentIdentifier, aggregator, featureName)
   aggregateBase.ee = {
-    [faker.datatype.uuid()]: faker.lorem.sentence()
+    [faker.string.uuid()]: faker.lorem.sentence()
   }
   aggregateBase.feature = {
-    [faker.datatype.uuid()]: faker.lorem.sentence()
+    [faker.string.uuid()]: faker.lorem.sentence()
   }
 
   const flagWait = aggregateBase.waitForFlags(flagNames)

@@ -42,7 +42,7 @@ test('should set loader type property', () => {
 
 test('should pass constructor options to agent class', () => {
   const opts = {
-    [faker.datatype.uuid()]: faker.datatype.uuid()
+    [faker.string.uuid()]: faker.string.uuid()
   }
 
   new BrowserAgent(opts)

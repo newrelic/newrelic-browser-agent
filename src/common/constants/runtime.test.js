@@ -22,9 +22,9 @@ afterEach(() => {
 
 test('should indicate agent is running in a browser scope', async () => {
   const mockedWindow = global.window = {
-    [faker.datatype.uuid()]: faker.lorem.sentence,
+    [faker.string.uuid()]: faker.lorem.sentence,
     document: {
-      [faker.datatype.uuid()]: faker.lorem.sentence
+      [faker.string.uuid()]: faker.lorem.sentence
     }
   }
 
@@ -76,9 +76,9 @@ test('should indicate agent is running in a worker scope using global self varia
 test('should store the initial page location', async () => {
   const initialLocation = faker.internet.url()
   const mockedWindow = global.window = {
-    [faker.datatype.uuid()]: faker.lorem.sentence,
+    [faker.string.uuid()]: faker.lorem.sentence,
     document: {
-      [faker.datatype.uuid()]: faker.lorem.sentence
+      [faker.string.uuid()]: faker.lorem.sentence
     },
     location: {
       href: initialLocation,

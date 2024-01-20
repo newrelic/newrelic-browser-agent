@@ -60,9 +60,9 @@ beforeEach(() => {
   jest.replaceProperty(globalScopeModule, 'isBrowserScope', true)
   jest.replaceProperty(globalScopeModule, 'isWorkerScope', false)
 
-  agentIdentifier = faker.datatype.uuid()
+  agentIdentifier = faker.string.uuid()
   aggregator = {}
-  featureName = faker.datatype.uuid()
+  featureName = faker.string.uuid()
 
   mockAggregate = jest.fn()
   jest.mocked(lazyFeatureLoader).mockResolvedValue({ Aggregate: mockAggregate })
@@ -86,7 +86,7 @@ test('should not immediately drain', () => {
 
 test('should import aggregator on window load', async () => {
   const instrument = new InstrumentBase(agentIdentifier, aggregator, featureName)
-  const aggregateArgs = { [faker.datatype.uuid()]: faker.lorem.sentence() }
+  const aggregateArgs = { [faker.string.uuid()]: faker.lorem.sentence() }
   instrument.importAggregator(aggregateArgs)
 
   const windowLoadCallback = jest.mocked(onWindowLoad).mock.calls[0][0]
@@ -102,7 +102,7 @@ test('should immediately import aggregator in worker scope', async () => {
   jest.replaceProperty(globalScopeModule, 'isWorkerScope', true)
 
   const instrument = new InstrumentBase(agentIdentifier, aggregator, featureName)
-  const aggregateArgs = { [faker.datatype.uuid()]: faker.lorem.sentence() }
+  const aggregateArgs = { [faker.string.uuid()]: faker.lorem.sentence() }
   instrument.importAggregator(aggregateArgs)
 
   // In worker scope, we cannot wait on importLater method
@@ -120,7 +120,7 @@ test('should import the session manager and replay aggregate for new session', a
   })
 
   const instrument = new InstrumentBase(agentIdentifier, aggregator, FEATURE_NAMES.sessionReplay)
-  const aggregateArgs = { [faker.datatype.uuid()]: faker.lorem.sentence() }
+  const aggregateArgs = { [faker.string.uuid()]: faker.lorem.sentence() }
   instrument.importAggregator(aggregateArgs)
 
   const windowLoadCallback = jest.mocked(onWindowLoad).mock.calls[0][0]
@@ -142,7 +142,7 @@ test('should import the session manager and replay aggregate when a recording is
   })
 
   const instrument = new InstrumentBase(agentIdentifier, aggregator, FEATURE_NAMES.sessionReplay)
-  const aggregateArgs = { [faker.datatype.uuid()]: faker.lorem.sentence() }
+  const aggregateArgs = { [faker.string.uuid()]: faker.lorem.sentence() }
   instrument.importAggregator(aggregateArgs)
 
   const windowLoadCallback = jest.mocked(onWindowLoad).mock.calls[0][0]
@@ -164,7 +164,7 @@ test('should not import session aggregate when session is not new and a recordin
   })
 
   const instrument = new InstrumentBase(agentIdentifier, aggregator, FEATURE_NAMES.sessionReplay)
-  const aggregateArgs = { [faker.datatype.uuid()]: faker.lorem.sentence() }
+  const aggregateArgs = { [faker.string.uuid()]: faker.lorem.sentence() }
   instrument.importAggregator(aggregateArgs)
 
   const windowLoadCallback = jest.mocked(onWindowLoad).mock.calls[0][0]
@@ -182,7 +182,7 @@ test('feature still imports by default even when setupAgentSession throws an err
   jest.mocked(setupAgentSession).mockImplementation(() => { throw new Error(faker.lorem.sentence()) })
 
   const instrument = new InstrumentBase(agentIdentifier, aggregator, featureName)
-  const aggregateArgs = { [faker.datatype.uuid()]: faker.lorem.sentence() }
+  const aggregateArgs = { [faker.string.uuid()]: faker.lorem.sentence() }
   instrument.abortHandler = jest.fn()
   instrument.importAggregator(aggregateArgs)
 

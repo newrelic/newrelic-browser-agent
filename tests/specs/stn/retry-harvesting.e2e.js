@@ -21,7 +21,7 @@ describe('stn retry harvesting', () => {
       await browser.pause(500)
       await browser.testHandle.clearScheduledReplies('bamServer')
 
-      const ptid = faker.datatype.uuid()
+      const ptid = faker.string.uuid()
       await browser.testHandle.scheduleReply('bamServer', {
         test: testResourcesRequest,
         permanent: true,
@@ -60,7 +60,7 @@ describe('stn retry harvesting', () => {
       // await browser.pause(500)
       // await browser.testHandle.clearScheduledReplies('bamServer')
 
-      // const ptid = faker.datatype.uuid()
+      // const ptid = faker.string.uuid()
       // await browser.testHandle.scheduleReply('bamServer', {
       //   test: testResourcesRequest,
       //   permanent: true,

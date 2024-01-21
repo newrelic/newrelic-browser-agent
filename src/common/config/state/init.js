@@ -69,7 +69,6 @@ const model = () => {
       collect_fonts: false, // serialize fonts for collection without public asset url, this is currently broken in RRWeb -- https://github.com/rrweb-io/rrweb/issues/1304.  When fixed, revisit with test cases
       inline_images: false, // serialize images for collection without public asset url -- right now this is only useful for testing as it easily generates payloads too large to be harvested
       inline_stylesheet: true, // serialize css for collection without public asset url
-      fetch_incomplete_assets: true, // if enabled, the agent will make a network fetch to get asset contents, which can be blocked due to certain element decorations such as lacking crossorigin=anonymous. Note -- This is async and can slow down sending the initial snapshot until assets are fixed.
       // recording config settings
       mask_all_inputs: true,
       // this has a getter/setter to facilitate validation of the selectors

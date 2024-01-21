@@ -28,8 +28,6 @@ export class Recorder {
 
     this.parent = parent
 
-    this.shouldAudit = getConfigurationValue(parent.agentIdentifier, 'session_replay.fetch_incomplete_assets')
-
     /** The method to stop recording. This defaults to a noop, but is overwritten once the recording library is imported and initialized */
     this.stopRecording = () => { /* no-op until set by rrweb initializer */ }
   }
@@ -89,7 +87,6 @@ export class Recorder {
    * @param {*} isCheckout - Flag indicating if the payload was triggered as a checkout
    */
   audit (event, isCheckout) {
-    if (!this.shouldAudit) return this.store(event, isCheckout)
     const incompletes = stylesheetEvaluator.evaluate()
     /** Only stop ignoring data if already ignoring and a new valid snapshap is taking place (0 incompletes and we get a meta node for the snap) */
     if (!incompletes.length && this.#fixing && event.type === RRWEB_EVENT_TYPES.Meta) this.#fixing = false

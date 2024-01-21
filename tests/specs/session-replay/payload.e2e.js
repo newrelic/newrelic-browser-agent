@@ -100,7 +100,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
   })
 
   it('should place inlined css for cross origin stylesheets even if no crossOrigin tag', async () => {
-    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
+    await browser.url(await browser.testHandle.assetURL('rrweb-invalid-stylesheet.html', config()))
       .then(() => browser.waitForFeatureAggregate('session_replay'))
 
     /** snapshot and mutation payloads */

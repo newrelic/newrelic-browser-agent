@@ -1,5 +1,5 @@
 import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
-import { config } from './helpers'
+import { config, decodeAttributes } from './helpers'
 
 describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
   beforeEach(async () => {
@@ -300,8 +300,9 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
       await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { inline_stylesheet: false } })))
         .then(() => browser.waitForFeatureAggregate('session_replay'))
 
-      const { request: { body } } = await browser.testHandle.expectBlob()
+      const { request: { body, query } } = await browser.testHandle.expectBlob()
 
+      expect(decodeAttributes(query.attributes).inlinedAllStylesheets).toEqual(false)
       const snapshotNode = body.find(x => x.type === 2)
       const htmlNode = snapshotNode.data.node.childNodes.find(x => x.tagName === 'html')
       const headNode = htmlNode.childNodes.find(x => x.tagName === 'head')
@@ -313,8 +314,9 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
       await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
         .then(() => browser.waitForFeatureAggregate('session_replay'))
 
-      const { request: { body } } = await browser.testHandle.expectBlob()
+      const { request: { body, query } } = await browser.testHandle.expectBlob()
 
+      expect(decodeAttributes(query.attributes).inlinedAllStylesheets).toEqual(false)
       const snapshotNode = body.find(x => x.type === 2)
       const htmlNode = snapshotNode.data.node.childNodes.find(x => x.tagName === 'html')
       const headNode = htmlNode.childNodes.find(x => x.tagName === 'head')

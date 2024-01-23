@@ -3,37 +3,10 @@ import { stylesheetEvaluator } from './stylesheet-evaluator'
 let stylesheet
 
 describe('stylesheet-evaluator', (done) => {
-  beforeEach(() => {
+  beforeEach(async () => {
     stylesheet = new CSSStyleSheet()
     stylesheet.href = 'https://test.com'
-  })
-  it('should evaluate stylesheets with cssRules as false', async () => {
-    prepStylesheet({
-      get () { return 'success' }
-    })
-    expect(stylesheetEvaluator.evaluate()).toEqual([])
-  })
 
-  it('should evaluate stylesheets without cssRules as true', async () => {
-    prepStylesheet({
-      get () {
-        throw new Error()
-      }
-    })
-    expect(stylesheetEvaluator.evaluate()).toEqual([{ ss: stylesheet, i: 0 }])
-  })
-
-  it('should evaluate stylesheets once', async () => {
-    prepStylesheet({
-      get () {
-        throw new Error()
-      }
-    })
-    expect(stylesheetEvaluator.evaluate()).toEqual([{ ss: stylesheet, i: 0 }])
-    expect(stylesheetEvaluator.evaluate()).toEqual([])
-  })
-
-  it('should execute fix single', async () => {
     const globalScope = await import('../../../common/config/state/originals')
     jest.replaceProperty(globalScope, 'originals', {
       FETCH: jest.fn(() =>
@@ -54,11 +27,39 @@ describe('stylesheet-evaluator', (done) => {
       }
     }
     global.CSSStyleSheet = CSSStyleSheetMock
+  })
+  it('should evaluate stylesheets with cssRules as false', async () => {
     prepStylesheet({
       get () { return 'success' }
     })
-    const proms = stylesheetEvaluator.fix([{ ss: stylesheet, i: 0 }])
-    expect(proms).toResolve()
+    expect(stylesheetEvaluator.evaluate()).toEqual(0)
+  })
+
+  it('should evaluate stylesheets without cssRules as true', async () => {
+    prepStylesheet({
+      get () {
+        throw new Error()
+      }
+    })
+    expect(stylesheetEvaluator.evaluate()).toEqual(1)
+  })
+
+  it('should evaluate stylesheets once', async () => {
+    prepStylesheet({
+      get () {
+        throw new Error()
+      }
+    })
+    expect(stylesheetEvaluator.evaluate()).toEqual(1)
+    expect(stylesheetEvaluator.evaluate()).toEqual(0)
+  })
+
+  it('should execute fix single', async () => {
+    prepStylesheet({
+      get () { return 'success' }
+    })
+    stylesheetEvaluator.evaluate()
+    await stylesheetEvaluator.fix()
     expect(document.styleSheets[0].cssRules).toEqual(stylesheet.cssRules)
   })
 
@@ -74,7 +75,7 @@ describe('stylesheet-evaluator', (done) => {
         throw new Error()
       }
     })
-    expect(stylesheetEvaluator.evaluate()).toEqual([])
+    expect(stylesheetEvaluator.evaluate()).toEqual(0)
   })
 })
 

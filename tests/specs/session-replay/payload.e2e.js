@@ -1,4 +1,4 @@
-import { config, testExpectedReplay } from './helpers'
+import { config, decodeAttributes, testExpectedReplay } from './helpers'
 import { notIE, notIOS, notSafari } from '../../../tools/browser-matcher/common-matchers.mjs'
 
 describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => {
@@ -108,8 +108,9 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
       .then(() => browser.waitForFeatureAggregate('session_replay'))
 
     /** snapshot and mutation payloads */
-    const { request: { body: snapshot1 } } = await browser.testHandle.expectSessionReplaySnapshot(10000)
+    const { request: { body: snapshot1, query: snapshot1Query } } = await browser.testHandle.expectSessionReplaySnapshot(10000)
     const snapshot1Nodes = snapshot1.filter(x => x.type === 2)
+    expect(decodeAttributes(snapshot1Query.attributes).inlinedAllStylesheets).toEqual(true)
     snapshot1Nodes.forEach(snapshotNode => {
       const htmlNode = snapshotNode.data.node.childNodes.find(x => x.tagName === 'html')
       const headNode = htmlNode.childNodes.find(x => x.tagName === 'head')
@@ -120,7 +121,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
     })
     await browser.pause(5000)
     /** Agent should generate a new snapshot after a new "invalid" stylesheet is injected */
-    const [{ request: { body: snapshot2 } }] = await Promise.all([
+    const [{ request: { body: snapshot2, query: snapshot2Query } }] = await Promise.all([
       browser.testHandle.expectSessionReplaySnapshot(10000),
       browser.execute(function () {
         var newelem = document.createElement('span')
@@ -128,6 +129,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
         document.body.appendChild(newelem)
       })
     ])
+    expect(decodeAttributes(snapshot2Query.attributes).inlinedAllStylesheets).toEqual(true)
     const snapshot2Nodes = snapshot2.filter(x => x.type === 2)
     snapshot2Nodes.forEach(snapshotNode => {
       const htmlNode = snapshotNode.data.node.childNodes.find(x => x.tagName === 'html')

@@ -41,7 +41,8 @@ export class Recorder {
       payloadBytesEstimation: this.#backloggedEvents.payloadBytesEstimation + this.#events.payloadBytesEstimation,
       hasError: this.#backloggedEvents.hasError || this.#events.hasError,
       hasMeta: this.#backloggedEvents.hasMeta || this.#events.hasMeta,
-      hasSnapshot: this.#backloggedEvents.hasSnapshot || this.#events.hasSnapshot
+      hasSnapshot: this.#backloggedEvents.hasSnapshot || this.#events.hasSnapshot,
+      inlinedAllStylesheets: this.#backloggedEvents.inlinedAllStylesheets || this.#events.inlinedAllStylesheets
     }
   }
 
@@ -92,15 +93,15 @@ export class Recorder {
       this.currentBufferTarget.inlinedAllStylesheets = false
       return this.store(event, isCheckout)
     }
-    /** An array of stylesheet objects that were blocked from accessing contents via JS */
+    /** An count of stylesheet objects that were blocked from accessing contents via JS */
     const incompletes = stylesheetEvaluator.evaluate()
     /** Only stop ignoring data if already ignoring and a new valid snapshap is taking place (0 incompletes and we get a meta node for the snap) */
-    if (!incompletes.length && this.#fixing && event.type === RRWEB_EVENT_TYPES.Meta) this.#fixing = false
-    if (incompletes.length) {
-      incompletes.forEach(() => { handle(SUPPORTABILITY_METRIC_CHANNEL, ['SessionReplay/Payload/Missing-Inline-Css'], undefined, FEATURE_NAMES.metrics, this.parent.ee) })
-      /** download the incompletes' src code and then take a new snap */
-      stylesheetEvaluator.fix(incompletes).then((results) => {
-        if (!results.every(r => r)) this.currentBufferTarget.inlinedAllStylesheets = false
+    if (!incompletes && this.#fixing && event.type === RRWEB_EVENT_TYPES.Meta) this.#fixing = false
+    if (incompletes) {
+      handle(SUPPORTABILITY_METRIC_CHANNEL, ['SessionReplay/Payload/Missing-Inline-Css', incompletes], undefined, FEATURE_NAMES.metrics, this.parent.ee)
+      /** wait for the evaluator to download/replace the incompletes' src code and then take a new snap */
+      stylesheetEvaluator.fix().then((failedToFix) => {
+        if (failedToFix) this.currentBufferTarget.inlinedAllStylesheets = false
         this.takeFullSnapshot()
       })
       /** Only start ignoring data if got a faulty snapshot */

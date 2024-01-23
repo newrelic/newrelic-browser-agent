@@ -9,13 +9,14 @@ class StylesheetEvaluator {
   * Used at harvest time to denote that all subsequent payloads are subject to this and customers should be advised to handle crossorigin decoration
   * */
   invalidStylesheetsDetected = false
+  failedToFix = false
 
   /**
-   * this works by checking (only ever once) each cssRules obj in the style sheets array. The try/catch will catch an error if the cssRules obj blocks access, triggering the module to try to "fix" the asset`
-   * @returns {Object[]}
+   * this works by checking (only ever once) each cssRules obj in the style sheets array. The try/catch will catch an error if the cssRules obj blocks access, triggering the module to try to "fix" the asset`. Returns the count of incomplete assets discovered.
+   * @returns {Number}
    */
   evaluate () {
-    const incompletes = []
+    let incompletes = 0
     if (isBrowserScope) {
       for (let i = 0; i < Object.keys(document.styleSheets).length; i++) {
         const ss = document.styleSheets[i]
@@ -25,64 +26,59 @@ class StylesheetEvaluator {
             // eslint-disable-next-line
             const temp = ss.cssRules
           } catch (err) {
-            incompletes.push({ ss, i })
+            incompletes++
+            this.#fetchProms.push(this.#fetchAndOverride(document.styleSheets[i], ss.href))
           }
         }
       }
     }
-    if (incompletes.length) this.invalidStylesheetsDetected = true
+    if (incompletes) this.invalidStylesheetsDetected = true
     return incompletes
   }
 
   /**
-   * Stages fixes for incomplete stylesheet objects supplied as input
    * Resolves promise once all stylesheets have been fetched and overridden
-   * @param {*} incompletes
    * @returns {Promise}
    */
-  async fix (incompletes = []) {
-    const currentBatch = []
-    incompletes.forEach(({ ss, i }) => {
-      currentBatch.push(fetchAndOverride(document.styleSheets[i], ss.href))
-    })
-    this.#fetchProms.push(...currentBatch)
-    /** await-ing this outer scoped promise all allows other subsequent calls that are made while processing to also have to wait
-     * We use this Promise.all() just to know that it is done, not to process the promise contents
-    */
+  async fix () {
     await Promise.all(this.#fetchProms)
-    /** This denotes if the current batch had any failures, used by the recorder to set a flag */
-    return await Promise.all(currentBatch)
+    this.#fetchProms = []
+    const failedToFix = this.failedToFix
+    this.failedToFix = false
+    return failedToFix
   }
-}
 
-/**
+  /**
  * Fetches stylesheet contents and overrides the target getters
  * @param {*} target - The stylesheet object target - ex. document.styleSheets[0]
  * @param {*} href - The asset href to fetch
  * @returns {Promise}
  */
-async function fetchAndOverride (target, href) {
-  const stylesheetContents = await originals.FETCH.bind(window)(href)
-  const stylesheetText = await stylesheetContents.text()
-  let success = false
-  try {
-    const cssSheet = new CSSStyleSheet()
-    await cssSheet.replace(stylesheetText)
-    Object.defineProperty(target, 'cssRules', {
-      get () { return cssSheet.cssRules }
-    })
-    Object.defineProperty(target, 'rules', {
-      get () { return cssSheet.rules }
-    })
-    success = true
-  } catch (err) {
-    // cant make new dynamic stylesheets, browser likely doesn't support `.replace()`...
-    // this is appended in prep of forking rrweb
-    Object.defineProperty(target, 'cssText', {
-      get () { return stylesheetText }
-    })
+  async #fetchAndOverride (target, href) {
+    const stylesheetContents = await originals.FETCH.bind(window)(href)
+    if (!stylesheetContents.ok) {
+      this.failedToFix = true
+      return
+    }
+    const stylesheetText = await stylesheetContents.text()
+    try {
+      const cssSheet = new CSSStyleSheet()
+      await cssSheet.replace(stylesheetText)
+      Object.defineProperty(target, 'cssRules', {
+        get () { return cssSheet.cssRules }
+      })
+      Object.defineProperty(target, 'rules', {
+        get () { return cssSheet.rules }
+      })
+    } catch (err) {
+      // cant make new dynamic stylesheets, browser likely doesn't support `.replace()`...
+      // this is appended in prep of forking rrweb
+      Object.defineProperty(target, 'cssText', {
+        get () { return stylesheetText }
+      })
+      this.failedToFix = true
+    }
   }
-  return success
 }
 
 export const stylesheetEvaluator = new StylesheetEvaluator()

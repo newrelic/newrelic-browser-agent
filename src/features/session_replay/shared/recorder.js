@@ -22,12 +22,12 @@ export class Recorder {
   constructor (parent) {
     /** True when actively recording, false when paused or stopped */
     this.recording = false
+    /** The pointer to the current bucket holding rrweb events */
     this.currentBufferTarget = this.#events
     /** Hold on to the last meta node, so that it can be re-inserted if the meta and snapshot nodes are broken up due to harvesting */
     this.lastMeta = false
-
+    /** The parent class that instantiated the recorder */
     this.parent = parent
-
     /** The method to stop recording. This defaults to a noop, but is overwritten once the recording library is imported and initialized */
     this.stopRecording = () => { /* no-op until set by rrweb initializer */ }
   }
@@ -87,13 +87,22 @@ export class Recorder {
    * @param {*} isCheckout - Flag indicating if the payload was triggered as a checkout
    */
   audit (event, isCheckout) {
+    /** only run the audit if inline_stylesheets is configured as on (default behavior) */
+    if (!getConfigurationValue(this.parent.agentIdentifier, 'session_replay.inline_stylesheet')) {
+      this.currentBufferTarget.inlinedAllStylesheets = false
+      return this.store(event, isCheckout)
+    }
+    /** An array of stylesheet objects that were blocked from accessing contents via JS */
     const incompletes = stylesheetEvaluator.evaluate()
     /** Only stop ignoring data if already ignoring and a new valid snapshap is taking place (0 incompletes and we get a meta node for the snap) */
     if (!incompletes.length && this.#fixing && event.type === RRWEB_EVENT_TYPES.Meta) this.#fixing = false
     if (incompletes.length) {
       incompletes.forEach(() => { handle(SUPPORTABILITY_METRIC_CHANNEL, ['SessionReplay/Payload/Missing-Inline-Css'], undefined, FEATURE_NAMES.metrics, this.parent.ee) })
       /** download the incompletes' src code and then take a new snap */
-      stylesheetEvaluator.fix(incompletes).then(() => { this.takeFullSnapshot() })
+      stylesheetEvaluator.fix(incompletes).then((results) => {
+        if (!results.every(r => r)) this.currentBufferTarget.inlinedAllStylesheets = false
+        this.takeFullSnapshot()
+      })
       /** Only start ignoring data if got a faulty snapshot */
       if (event.type === RRWEB_EVENT_TYPES.FullSnapshot || event.type === RRWEB_EVENT_TYPES.Meta) this.#fixing = true
     }

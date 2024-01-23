@@ -11,7 +11,7 @@ class StylesheetEvaluator {
   invalidStylesheetsDetected = false
 
   /**
-   * this works by checking (only ever once) each cssRules obj in the style sheets array. This will throw an error if improperly configured and return `true`. Otherwise returns `false`
+   * this works by checking (only ever once) each cssRules obj in the style sheets array. The try/catch will catch an error if the cssRules obj blocks access, triggering the module to try to "fix" the asset`
    * @returns {Object[]}
    */
   evaluate () {

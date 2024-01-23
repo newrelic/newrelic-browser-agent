@@ -52,15 +52,24 @@ class StylesheetEvaluator {
  * @returns {Promise}
  */
 async function fetchAndOverride (target, href) {
-  const cssSheet = new CSSStyleSheet()
   const stylesheetContents = await originals.FETCH.bind(window)(href)
-  await cssSheet.replace(await stylesheetContents.text())
-  Object.defineProperty(target, 'cssRules', {
-    get () { return cssSheet.cssRules }
-  })
-  Object.defineProperty(target, 'rules', {
-    get () { return cssSheet.rules }
-  })
+  const stylesheetText = await stylesheetContents.text()
+  try {
+    const cssSheet = new CSSStyleSheet()
+    await cssSheet.replace(stylesheetText)
+    Object.defineProperty(target, 'cssRules', {
+      get () { return cssSheet.cssRules }
+    })
+    Object.defineProperty(target, 'rules', {
+      get () { return cssSheet.rules }
+    })
+  } catch (err) {
+    // cant make new dynamic stylesheets...
+    // this is appended in prep of forking rrweb
+    Object.defineProperty(target, 'cssText', {
+      get () { return stylesheetText }
+    })
+  }
 }
 
 export const stylesheetEvaluator = new StylesheetEvaluator()

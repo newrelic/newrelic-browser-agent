@@ -1,5 +1,5 @@
 import { config, testExpectedReplay } from './helpers'
-import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { notIE, notIOS, notSafari } from '../../../tools/browser-matcher/common-matchers.mjs'
 
 describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => {
   beforeEach(async () => {
@@ -99,12 +99,16 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
     testExpectedReplay({ data: harvestContents, session: localStorage.value, hasError: true, hasMeta: true, hasSnapshot: true, isFirstChunk: true })
   })
 
-  it('should place inlined css for cross origin stylesheets even if no crossOrigin tag', async () => {
+  /**
+   * auto-inlining broken stylesheets does not work in safari browsers < 16.3
+   * current mitigation strategy is defined as informing customers to add `crossOrigin: anonymous` tags to cross-domain stylesheets
+  */
+  it.withBrowsersMatching([notSafari, notIOS])('should place inlined css for cross origin stylesheets even if no crossOrigin tag', async () => {
     await browser.url(await browser.testHandle.assetURL('rrweb-invalid-stylesheet.html', config()))
       .then(() => browser.waitForFeatureAggregate('session_replay'))
 
     /** snapshot and mutation payloads */
-    const { request: { body: snapshot1 } } = await browser.testHandle.expectBlob()
+    const { request: { body: snapshot1 } } = await browser.testHandle.expectSessionReplaySnapshot(10000)
     const snapshot1Nodes = snapshot1.filter(x => x.type === 2)
     snapshot1Nodes.forEach(snapshotNode => {
       const htmlNode = snapshotNode.data.node.childNodes.find(x => x.tagName === 'html')
@@ -117,9 +121,11 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
     await browser.pause(5000)
     /** Agent should generate a new snapshot after a new "invalid" stylesheet is injected */
     const [{ request: { body: snapshot2 } }] = await Promise.all([
-      browser.testHandle.expectBlob(),
+      browser.testHandle.expectSessionReplaySnapshot(10000),
       browser.execute(function () {
-        document.querySelector('body').click()
+        var newelem = document.createElement('span')
+        newelem.innerHTML = 'this is some text'
+        document.body.appendChild(newelem)
       })
     ])
     const snapshot2Nodes = snapshot2.filter(x => x.type === 2)

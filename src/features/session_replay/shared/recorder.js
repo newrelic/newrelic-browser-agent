@@ -28,6 +28,8 @@ export class Recorder {
     this.lastMeta = false
     /** The parent class that instantiated the recorder */
     this.parent = parent
+    /** Config to inform to inline stylesheet contents (true default) */
+    this.shouldInlineStylesheets = getConfigurationValue(this.parent.agentIdentifier, 'session_replay.inline_stylesheet')
     /** The method to stop recording. This defaults to a noop, but is overwritten once the recording library is imported and initialized */
     this.stopRecording = () => { /* no-op until set by rrweb initializer */ }
   }
@@ -89,7 +91,7 @@ export class Recorder {
    */
   audit (event, isCheckout) {
     /** only run the audit if inline_stylesheets is configured as on (default behavior) */
-    if (!getConfigurationValue(this.parent.agentIdentifier, 'session_replay.inline_stylesheet')) {
+    if (this.shouldInlineStylesheets) {
       this.currentBufferTarget.inlinedAllStylesheets = false
       return this.store(event, isCheckout)
     }

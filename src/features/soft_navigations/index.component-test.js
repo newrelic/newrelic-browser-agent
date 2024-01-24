@@ -22,8 +22,7 @@ jest.mock('../../common/config/config', () => ({
       constructor (callback) { this.cb = callback }
       disconnect () { this.cb = undefined }
       observe (element, initObject) { this.cb() }
-    },
-    RAF: global.requestAnimationFrame
+    }
   },
   getConfigurationValue: jest.fn(),
   isConfigured: jest.fn().mockReturnValue(true),

@@ -61,8 +61,7 @@ export function gosNREUMOriginals () {
       EV: globalScope.Event,
       PR: globalScope.Promise,
       MO: globalScope.MutationObserver, // this'll be undefined if not in a web window
-      FETCH: globalScope.fetch,
-      RAF: globalScope.requestAnimationFrame?.bind(globalScope) // this'll be undefined if not in a web window
+      FETCH: globalScope.fetch
     }
   }
   return nr

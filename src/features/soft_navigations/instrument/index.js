@@ -37,7 +37,7 @@ export class Instrument extends InstrumentBase {
     const domObserver = new originals.MO((domChanges, observer) => {
       if (oncePerFrame) return
       oncePerFrame = true
-      originals.RAF(() => { // waiting for next frame to time when any visuals are supposedly updated
+      requestAnimationFrame(() => { // waiting for next frame to time when any visuals are supposedly updated
         handle('newDom', [now()], undefined, this.featureName, this.ee)
         oncePerFrame = false
       })

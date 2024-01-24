@@ -4,6 +4,10 @@ import { AVG_COMPRESSION, CHECKOUT_MS, IDEAL_PAYLOAD_SIZE, QUERY_PARAM_PADDING, 
 import { getConfigurationValue } from '../../../common/config/config'
 import { RecorderEvents } from './recorder-events'
 import { MODE } from '../../../common/session/constants'
+import { stylesheetEvaluator } from './stylesheet-evaluator'
+import { handle } from '../../../common/event-emitter/handle'
+import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
+import { FEATURE_NAMES } from '../../../loaders/features/features'
 
 export class Recorder {
   /** Each page mutation or event will be stored (raw) in this array. This array will be cleared on each harvest */
@@ -12,16 +16,22 @@ export class Recorder {
   #backloggedEvents = new RecorderEvents()
   /** array of recorder events -- Will be filled only if forced harvest was triggered and harvester does not exist */
   #preloaded = [new RecorderEvents()]
+  /** flag that if true, blocks events from being "stored".  Only set to true when a full snapshot has incomplete nodes (only stylesheets ATM) */
+  #fixing = false
 
   constructor (parent) {
     /** True when actively recording, false when paused or stopped */
     this.recording = false
+    /** The pointer to the current bucket holding rrweb events */
     this.currentBufferTarget = this.#events
     /** Hold on to the last meta node, so that it can be re-inserted if the meta and snapshot nodes are broken up due to harvesting */
     this.lastMeta = false
-
+    /** The parent class that instantiated the recorder */
     this.parent = parent
-
+    /** Config to inform to inline stylesheet contents (true default) */
+    this.shouldInlineStylesheets = getConfigurationValue(this.parent.agentIdentifier, 'session_replay.inline_stylesheet')
+    /** A flag that can be set to false by failing conversions to stop the fetching process */
+    this.shouldFix = this.shouldInlineStylesheets
     /** The method to stop recording. This defaults to a noop, but is overwritten once the recording library is imported and initialized */
     this.stopRecording = () => { /* no-op until set by rrweb initializer */ }
   }
@@ -35,7 +45,8 @@ export class Recorder {
       payloadBytesEstimation: this.#backloggedEvents.payloadBytesEstimation + this.#events.payloadBytesEstimation,
       hasError: this.#backloggedEvents.hasError || this.#events.hasError,
       hasMeta: this.#backloggedEvents.hasMeta || this.#events.hasMeta,
-      hasSnapshot: this.#backloggedEvents.hasSnapshot || this.#events.hasSnapshot
+      hasSnapshot: this.#backloggedEvents.hasSnapshot || this.#events.hasSnapshot,
+      inlinedAllStylesheets: (!!this.#backloggedEvents.events.length && this.#backloggedEvents.inlinedAllStylesheets) || this.#events.inlinedAllStylesheets
     }
   }
 
@@ -54,7 +65,7 @@ export class Recorder {
     // set up rrweb configurations for maximum privacy --
     // https://newrelic.atlassian.net/wiki/spaces/O11Y/pages/2792293280/2023+02+28+Browser+-+Session+Replay#Configuration-options
     const stop = recorder({
-      emit: this.store.bind(this),
+      emit: this.audit.bind(this),
       blockClass: block_class,
       ignoreClass: ignore_class,
       maskTextClass: mask_text_class,
@@ -74,8 +85,42 @@ export class Recorder {
     }
   }
 
+  /**
+   * audit - Checks if the event node payload is missing certain attributes
+   * will forward on to the "store" method if nothing needs async fixing
+   * @param {*} event - An RRWEB event node
+   * @param {*} isCheckout - Flag indicating if the payload was triggered as a checkout
+   */
+  audit (event, isCheckout) {
+    /** only run the audit if inline_stylesheets is configured as on (default behavior) */
+    if (this.shouldInlineStylesheets === false || !this.shouldFix) {
+      this.currentBufferTarget.inlinedAllStylesheets = false
+      return this.store(event, isCheckout)
+    }
+    /** An count of stylesheet objects that were blocked from accessing contents via JS */
+    const incompletes = stylesheetEvaluator.evaluate()
+    /** Only stop ignoring data if already ignoring and a new valid snapshap is taking place (0 incompletes and we get a meta node for the snap) */
+    if (!incompletes && this.#fixing && event.type === RRWEB_EVENT_TYPES.Meta) this.#fixing = false
+    if (incompletes) {
+      handle(SUPPORTABILITY_METRIC_CHANNEL, ['SessionReplay/Payload/Missing-Inline-Css', incompletes], undefined, FEATURE_NAMES.metrics, this.parent.ee)
+      /** wait for the evaluator to download/replace the incompletes' src code and then take a new snap */
+      stylesheetEvaluator.fix().then((failedToFix) => {
+        if (failedToFix) {
+          this.currentBufferTarget.inlinedAllStylesheets = false
+          this.shouldFix = false
+        }
+        this.takeFullSnapshot()
+      })
+      /** Only start ignoring data if got a faulty snapshot */
+      if (event.type === RRWEB_EVENT_TYPES.FullSnapshot || event.type === RRWEB_EVENT_TYPES.Meta) this.#fixing = true
+    }
+    /** Only store the data if not being "fixed" (full snapshots that have broken css) */
+    if (!this.#fixing) this.store(event, isCheckout)
+  }
+
   /** Store a payload in the buffer (this.#events).  This should be the callback to the recording lib noticing a mutation */
   store (event, isCheckout) {
+    if (!event) return
     event.__serialized = stringify(event)
 
     if (!this.parent.scheduler && this.#preloaded.length) this.currentBufferTarget = this.#preloaded[this.#preloaded.length - 1]

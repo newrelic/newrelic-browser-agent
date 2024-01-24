@@ -26,6 +26,7 @@ import { RRWEB_VERSION } from '../../../common/constants/env'
 import { now } from '../../../common/timing/now'
 import { MODE, SESSION_EVENTS, SESSION_EVENT_TYPES } from '../../../common/session/constants'
 import { stringify } from '../../../common/util/stringify'
+import { stylesheetEvaluator } from '../shared/stylesheet-evaluator'
 
 let gzipper, u8
 
@@ -302,6 +303,8 @@ export class Aggregate extends AggregateBase {
           hasError: recorderEvents.hasError || false,
           isFirstChunk: agentRuntime.session.state.sessionReplaySentFirstChunk === false,
           decompressedBytes: recorderEvents.payloadBytesEstimation,
+          invalidStylesheetsDetected: stylesheetEvaluator.invalidStylesheetsDetected,
+          inlinedAllStylesheets: recorderEvents.inlinedAllStylesheets,
           'rrweb.version': RRWEB_VERSION,
           // customer-defined data should go last so that if it exceeds the query param padding limit it will be truncated instead of important attrs
           ...(endUserId && { 'enduser.id': endUserId })

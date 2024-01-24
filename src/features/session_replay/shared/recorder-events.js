@@ -17,6 +17,8 @@ export class RecorderEvents {
     this.hasMeta = false
     /** Payload metadata -- Should indicate that the payload being sent contains an error.  Used for query/filter purposes in UI */
     this.hasError = false
+    /** Payload metadata -- Denotes whether all stylesheet elements were able to be inlined */
+    this.inlinedAllStylesheets = true
   }
 
   add (event) {

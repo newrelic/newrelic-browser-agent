@@ -39,7 +39,8 @@ export function testExpectedReplay ({ data, session, hasMeta, hasSnapshot, hasEr
     agentVersion: expect.any(String),
     isFirstChunk: isFirstChunk || expect.any(Boolean),
     decompressedBytes: decompressedBytes || expect.any(Number),
-    'rrweb.version': expect.any(String)
+    'rrweb.version': expect.any(String),
+    inlinedAllStylesheets: expect.any(Boolean)
   })
 
   expect(data.body).toEqual(expect.any(Array))

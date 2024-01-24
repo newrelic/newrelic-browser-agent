@@ -169,31 +169,31 @@ jobs:
           loader_version: ${{ steps.agent-loader-version.outputs.results }}
 
   # Publish the loaders to nr stage
-  publish-to-nr-stage:
-    needs: [ publish-prod-to-s3 ]
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    defaults:
-      run:
-        shell: bash
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: lts/*
-      - name: Get version number
-        id: agent-loader-version
-        run: echo "results=$(cat package.json | jq -r '.version')" >> $GITHUB_OUTPUT
-      - name: Publish loader to nr
-        uses: ./.github/actions/nr-upload
-        with:
-          nr_stage_api_key: ${{ secrets.NR_API_KEY_STAGING }}
-          loader_version: ${{ steps.agent-loader-version.outputs.results }}
-          environment: stage
-      - name: Verify loaders in nr
-        uses: ./.github/actions/nr-verify
-        with:
-          loader_version: ${{ steps.agent-loader-version.outputs.results }}
+  # publish-to-nr-stage:
+  #   needs: [ publish-prod-to-s3 ]
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 30
+  #   defaults:
+  #     run:
+  #       shell: bash
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - uses: actions/setup-node@v3
+  #       with:
+  #         node-version: lts/*
+  #     - name: Get version number
+  #       id: agent-loader-version
+  #       run: echo "results=$(cat package.json | jq -r '.version')" >> $GITHUB_OUTPUT
+  #     - name: Publish loader to nr
+  #       uses: ./.github/actions/nr-upload
+  #       with:
+  #         nr_stage_api_key: ${{ secrets.NR_API_KEY_STAGING }}
+  #         loader_version: ${{ steps.agent-loader-version.outputs.results }}
+  #         environment: stage
+  #     - name: Verify loaders in nr
+  #       uses: ./.github/actions/nr-verify
+  #       with:
+  #         loader_version: ${{ steps.agent-loader-version.outputs.results }}
 
   # Publish the agent to npmjs.org
   publish-npm:

@@ -316,7 +316,7 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
 
       const { request: { body, query } } = await browser.testHandle.expectBlob()
 
-      expect(decodeAttributes(query.attributes).inlinedAllStylesheets).toEqual(false)
+      expect(decodeAttributes(query.attributes).inlinedAllStylesheets).toEqual(true)
       const snapshotNode = body.find(x => x.type === 2)
       const htmlNode = snapshotNode.data.node.childNodes.find(x => x.tagName === 'html')
       const headNode = htmlNode.childNodes.find(x => x.tagName === 'head')

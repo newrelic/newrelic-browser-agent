@@ -30,6 +30,8 @@ export class Recorder {
     this.parent = parent
     /** Config to inform to inline stylesheet contents (true default) */
     this.shouldInlineStylesheets = getConfigurationValue(this.parent.agentIdentifier, 'session_replay.inline_stylesheet')
+    /** A flag that can be set to false by failing conversions to stop the fetching process */
+    this.shouldFix = this.shouldInlineStylesheets
     /** The method to stop recording. This defaults to a noop, but is overwritten once the recording library is imported and initialized */
     this.stopRecording = () => { /* no-op until set by rrweb initializer */ }
   }
@@ -44,7 +46,7 @@ export class Recorder {
       hasError: this.#backloggedEvents.hasError || this.#events.hasError,
       hasMeta: this.#backloggedEvents.hasMeta || this.#events.hasMeta,
       hasSnapshot: this.#backloggedEvents.hasSnapshot || this.#events.hasSnapshot,
-      inlinedAllStylesheets: this.#backloggedEvents.inlinedAllStylesheets || this.#events.inlinedAllStylesheets
+      inlinedAllStylesheets: (!!this.#backloggedEvents.events.length && this.#backloggedEvents.inlinedAllStylesheets) || this.#events.inlinedAllStylesheets
     }
   }
 
@@ -91,7 +93,7 @@ export class Recorder {
    */
   audit (event, isCheckout) {
     /** only run the audit if inline_stylesheets is configured as on (default behavior) */
-    if (this.shouldInlineStylesheets) {
+    if (this.shouldInlineStylesheets === false || !this.shouldFix) {
       this.currentBufferTarget.inlinedAllStylesheets = false
       return this.store(event, isCheckout)
     }
@@ -103,7 +105,10 @@ export class Recorder {
       handle(SUPPORTABILITY_METRIC_CHANNEL, ['SessionReplay/Payload/Missing-Inline-Css', incompletes], undefined, FEATURE_NAMES.metrics, this.parent.ee)
       /** wait for the evaluator to download/replace the incompletes' src code and then take a new snap */
       stylesheetEvaluator.fix().then((failedToFix) => {
-        if (failedToFix) this.currentBufferTarget.inlinedAllStylesheets = false
+        if (failedToFix) {
+          this.currentBufferTarget.inlinedAllStylesheets = false
+          this.shouldFix = false
+        }
         this.takeFullSnapshot()
       })
       /** Only start ignoring data if got a faulty snapshot */

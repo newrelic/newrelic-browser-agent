@@ -7,7 +7,7 @@ import * as submitData from '../util/submit-data'
 import { SharedContext } from '../context/shared-context'
 import { Harvest } from './harvest'
 import { subscribeToEOL } from '../unload/eol'
-import { SESSION_EVENTS } from '../session/session-entity'
+import { SESSION_EVENTS } from '../session/constants'
 
 /**
  * Periodically invokes harvest calls and handles retries

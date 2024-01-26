@@ -19,7 +19,6 @@ module.exports = fp(async function (fastify, testServer) {
     method: ['GET', 'POST'],
     url: '/beacon/*',
     onRequest: async (request, reply) => {
-      // reply.hijack()
       request.raw.url = request.raw.url.replace('/beacon/', '/')
       testServer.bamServer.server.routing(request.raw, reply.raw)
       await reply
@@ -32,7 +31,6 @@ module.exports = fp(async function (fastify, testServer) {
     method: ['GET', 'POST'],
     url: '/assets/*',
     onRequest: async (request, reply) => {
-      // reply.hijack()
       request.raw.url = request.raw.url.replace('/assets/', '/build/')
       testServer.assetServer.server.routing(request.raw, reply.raw)
       await reply
@@ -175,9 +173,11 @@ module.exports = fp(async function (fastify, testServer) {
     compress: false
   }, async (request, reply) => {
     try {
-      assert.deepEqual(request.body, { name: 'bob', x: '5' })
+      assert.strictEqual(request.body.name.value, 'bob')
+      assert.strictEqual(request.body.x.value, '5')
       reply.send('good')
     } catch (e) {
+      console.log(e)
       reply.send('bad')
     }
   })

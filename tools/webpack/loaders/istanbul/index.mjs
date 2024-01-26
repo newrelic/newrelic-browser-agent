@@ -1,13 +1,12 @@
 import { createInstrumenter } from 'istanbul-lib-instrument'
-import loaderUtils from 'loader-utils'
-import validateOptions from 'schema-utils'
+import { validate } from 'schema-utils'
 import convert from 'convert-source-map'
 import schema from './options.json' assert { type: 'json' }
 
 export default function (source, sourceMap) {
-  const options = Object.assign({ produceSourceMap: true }, loaderUtils.getOptions(this))
+  const options = Object.assign({ produceSourceMap: true }, this.getOptions())
 
-  validateOptions(schema, options, {
+  validate(schema, options, {
     name: 'Istanbul Instrumenter Loader',
     baseDataPath: 'options'
   })

@@ -37,13 +37,11 @@ describe.withBrowsersMatching(notIE)('Session Replay Sample Mode Validation', ()
   it('Full 0 Error 1 === ERROR', async () => {
     await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { sampling_rate: 0, error_sampling_rate: 100 } })))
       .then(() => browser.waitForSessionReplayRecording())
-
-    await expect(getSR()).resolves.toEqual(expect.objectContaining({
-      recording: true,
-      initialized: true,
-      events: expect.any(Array),
-      mode: 2
-    }))
+    let sr = await getSR()
+    expect(sr.recording).toEqual(true)
+    expect(sr.initialized).toEqual(true)
+    expect(sr.events).toEqual(expect.any(Array))
+    expect(sr.mode).toEqual(2)
   })
 
   it('Full 0 Error 0 === OFF', async () => {
@@ -88,11 +86,10 @@ describe.withBrowsersMatching(notIE)('Session Replay Sample Mode Validation', ()
     await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { sampling_rate: 0, error_sampling_rate: 100 } })))
       .then(() => browser.waitForFeatureAggregate('session_replay')).then(() => browser.pause(1000))
 
-    await expect(getSR()).resolves.toEqual(expect.objectContaining({
-      recording: true,
-      initialized: true,
-      mode: 2
-    }))
+    let sr = await getSR()
+    expect(sr.recording).toEqual(true)
+    expect(sr.initialized).toEqual(true)
+    expect(sr.mode).toEqual(2)
 
     await Promise.all([
       browser.execute(function () {
@@ -102,11 +99,10 @@ describe.withBrowsersMatching(notIE)('Session Replay Sample Mode Validation', ()
 
     await browser.pause(1000)
 
-    await expect(getSR()).resolves.toEqual(expect.objectContaining({
-      recording: true,
-      initialized: true,
-      mode: 1
-    }))
+    sr = await getSR()
+    expect(sr.recording).toEqual(true)
+    expect(sr.initialized).toEqual(true)
+    expect(sr.mode).toEqual(1)
   })
 
   it('Record API called before page load does not start a replay (no entitlements yet)', async () => {

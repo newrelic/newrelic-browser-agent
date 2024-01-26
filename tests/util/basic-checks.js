@@ -9,10 +9,9 @@ export const baseQuery = expect.objectContaining({
   v: expect.any(String)
 })
 
-export function checkRum ({ query, body }) {
+export function checkRum ({ query, body }, liteAgent = false) {
   expect(query).toMatchObject({
     a: expect.any(String),
-    af: expect.any(String),
     be: expect.any(String),
     ck: expect.any(String),
     dc: expect.any(String),
@@ -24,6 +23,11 @@ export function checkRum ({ query, body }) {
     t: expect.any(String),
     v: expect.any(String)
   })
+  if (!liteAgent) {
+    expect(query).toMatchObject({
+      af: expect.any(String),
+    })
+  }
   expect(body).toEqual('')
 }
 

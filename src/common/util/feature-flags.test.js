@@ -11,10 +11,10 @@ jest.unmock('./feature-flags')
 let agentIdentifier
 
 beforeEach(() => {
-  agentIdentifier = faker.datatype.uuid()
+  agentIdentifier = faker.string.uuid()
 
   eventEmitterModule.ee.get = jest.fn(() => ({
-    [faker.datatype.uuid()]: faker.datatype.uuid()
+    [faker.string.uuid()]: faker.string.uuid()
   }))
 })
 

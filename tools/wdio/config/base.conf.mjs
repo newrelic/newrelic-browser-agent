@@ -38,7 +38,7 @@ export default function config () {
     framework: 'mocha',
     mochaOpts: {
       ui: 'bdd',
-      timeout: args.timeout,
+      timeout: args.sessionTimeout,
       retries: args.retry ? 3 : 0
     },
     autoCompileOpts: {

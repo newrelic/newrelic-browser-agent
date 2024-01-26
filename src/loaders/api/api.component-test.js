@@ -17,9 +17,9 @@ describe('setAPI', () => {
   let instanceEE
 
   beforeEach(() => {
-    agentId = faker.datatype.uuid()
-    licenseKey = faker.datatype.uuid()
-    applicationID = faker.datatype.uuid()
+    agentId = faker.string.uuid()
+    licenseKey = faker.string.uuid()
+    applicationID = faker.string.uuid()
 
     setInfo(agentId, { licenseKey, applicationID })
     setConfiguration(agentId, {})
@@ -104,10 +104,10 @@ describe('setAPI', () => {
   })
 
   test.each([
-    { api: 'setErrorHandler', args: [faker.datatype.uuid(), faker.datatype.uuid()] },
-    { api: 'finished', args: [faker.datatype.uuid(), faker.datatype.uuid()] },
-    { api: 'addToTrace', args: [faker.datatype.uuid(), faker.datatype.uuid()] },
-    { api: 'addRelease', args: [faker.datatype.uuid(), faker.datatype.uuid()] }
+    { api: 'setErrorHandler', args: [faker.string.uuid(), faker.string.uuid()] },
+    { api: 'finished', args: [faker.string.uuid(), faker.string.uuid()] },
+    { api: 'addToTrace', args: [faker.string.uuid(), faker.string.uuid()] },
+    { api: 'addRelease', args: [faker.string.uuid(), faker.string.uuid()] }
   ])('should buffer calls to async API $api before the async APIs are loaded', async ({ api, args }) => {
     jest.spyOn(windowLoadModule, 'onWindowLoad').mockImplementation(() => {})
     jest.replaceProperty(runtimeModule, 'isBrowserScope', true)
@@ -143,7 +143,7 @@ describe('setAPI', () => {
     })
 
     test('should create event emitter event for calls to API', () => {
-      const args = [faker.datatype.uuid(), faker.datatype.uuid()]
+      const args = [faker.string.uuid(), faker.string.uuid()]
       apiInterface.addPageAction(...args)
 
       expect(handleModule.handle).toHaveBeenCalledTimes(2)
@@ -173,7 +173,7 @@ describe('setAPI', () => {
     })
 
     test('should create event emitter event for calls to API', () => {
-      const args = [faker.datatype.uuid(), faker.datatype.uuid()]
+      const args = [faker.string.uuid(), faker.string.uuid()]
       apiInterface.setCurrentRouteName(...args)
 
       expect(handleModule.handle).toHaveBeenCalledTimes(2)
@@ -203,7 +203,7 @@ describe('setAPI', () => {
     })
 
     test('should only create SM event emitter event for calls to API', () => {
-      const args = [faker.datatype.uuid(), faker.datatype.uuid()]
+      const args = [faker.string.uuid(), faker.string.uuid()]
       apiInterface.setPageViewName(...args)
 
       expect(handleModule.handle).toHaveBeenCalledTimes(1)
@@ -217,7 +217,7 @@ describe('setAPI', () => {
     })
 
     test.each([null, undefined])('should return early when name is %s', (name) => {
-      const args = [name, faker.datatype.uuid()]
+      const args = [name, faker.string.uuid()]
       apiInterface.setPageViewName(...args)
 
       expect(handleModule.handle).not.toHaveBeenCalled()
@@ -225,21 +225,21 @@ describe('setAPI', () => {
     })
 
     test('should use a default host when one is not provided', () => {
-      const args = [faker.datatype.uuid()]
+      const args = [faker.string.uuid()]
       apiInterface.setPageViewName(...args)
 
       expect(getRuntime(agentId).customTransaction).toEqual(`http://custom.transaction/${args[0]}`)
     })
 
     test('should use the host provided', () => {
-      const args = [faker.datatype.uuid(), faker.datatype.uuid()]
+      const args = [faker.string.uuid(), faker.string.uuid()]
       apiInterface.setPageViewName(...args)
 
       expect(getRuntime(agentId).customTransaction).toEqual(`${args[1]}/${args[0]}`)
     })
 
     test('should not prepend name with slash when it is provided with one', () => {
-      const args = ['/' + faker.datatype.uuid()]
+      const args = ['/' + faker.string.uuid()]
       apiInterface.setPageViewName(...args)
 
       expect(getRuntime(agentId).customTransaction).toEqual(`http://custom.transaction${args[0]}`)
@@ -255,7 +255,7 @@ describe('setAPI', () => {
     })
 
     test('should only create SM event emitter event for calls to API', () => {
-      const args = [faker.datatype.uuid(), faker.datatype.uuid()]
+      const args = [faker.string.uuid(), faker.string.uuid()]
       apiInterface.setCustomAttribute(...args)
 
       expect(handleModule.handle).toHaveBeenCalledTimes(1)
@@ -269,7 +269,7 @@ describe('setAPI', () => {
     })
 
     test.each([null, undefined, {}, []])('should return early and warn when name is not a string (%s)', (name) => {
-      const args = [name, faker.datatype.uuid()]
+      const args = [name, faker.string.uuid()]
       apiInterface.setCustomAttribute(...args)
 
       expect(console.warn).toHaveBeenCalledTimes(1)
@@ -277,7 +277,7 @@ describe('setAPI', () => {
     })
 
     test.each([undefined, {}, [], Symbol('foobar')])('should return early and warn when value is not a string, number, or null (%s)', (value) => {
-      const args = [faker.datatype.uuid(), value]
+      const args = [faker.string.uuid(), value]
       apiInterface.setCustomAttribute(...args)
 
       expect(console.warn).toHaveBeenCalledTimes(1)
@@ -285,32 +285,32 @@ describe('setAPI', () => {
     })
 
     test('should set a custom attribute with a string value', () => {
-      const args = [faker.datatype.uuid(), faker.datatype.uuid()]
+      const args = [faker.string.uuid(), faker.string.uuid()]
       apiInterface.setCustomAttribute(...args)
 
       expect(getInfo(agentId).jsAttributes[args[0]]).toEqual(args[1])
     })
 
     test('should set a custom attribute with a number value', () => {
-      const args = [faker.datatype.uuid(), faker.datatype.number()]
+      const args = [faker.string.uuid(), faker.number.int()]
       apiInterface.setCustomAttribute(...args)
 
       expect(getInfo(agentId).jsAttributes[args[0]]).toEqual(args[1])
     })
 
     test('should set a custom attribute with a boolean value', () => {
-      const args = [faker.datatype.uuid(), faker.datatype.boolean()]
+      const args = [faker.string.uuid(), faker.datatype.boolean()]
       apiInterface.setCustomAttribute(...args)
 
       expect(getInfo(agentId).jsAttributes[args[0]]).toEqual(args[1])
     })
 
     test('should delete custom attribute when value is null', () => {
-      const args = [faker.datatype.uuid(), null]
+      const args = [faker.string.uuid(), null]
       setInfo(agentId, {
         ...(getInfo(agentId)),
         jsAttributes: {
-          [args[0]]: faker.datatype.uuid()
+          [args[0]]: faker.string.uuid()
         }
       })
       apiInterface.setCustomAttribute(...args)
@@ -320,9 +320,9 @@ describe('setAPI', () => {
 
     test.each([
       null,
-      faker.datatype.uuid()
+      faker.string.uuid()
     ])('should create session event emitter event when persisting value %s', (value) => {
-      const args = [faker.datatype.uuid(), value, true]
+      const args = [faker.string.uuid(), value, true]
       apiInterface.setCustomAttribute(...args)
 
       expect(handleModule.handle).toHaveBeenCalledTimes(2)
@@ -336,7 +336,7 @@ describe('setAPI', () => {
     })
 
     test('should always create session event emitter event when value is null and persistance argument is false', () => {
-      const args = [faker.datatype.uuid(), null, false]
+      const args = [faker.string.uuid(), null, false]
       apiInterface.setCustomAttribute(...args)
 
       expect(handleModule.handle).toHaveBeenCalledTimes(2)
@@ -359,7 +359,7 @@ describe('setAPI', () => {
     })
 
     test('should always persist the user id attribute', () => {
-      const args = [faker.datatype.uuid()]
+      const args = [faker.string.uuid()]
       apiInterface.setUserId(...args)
 
       expect(handleModule.handle).toHaveBeenCalledTimes(2)
@@ -388,7 +388,7 @@ describe('setAPI', () => {
     })
 
     test('should set a custom attribute with name enduser.id', () => {
-      const args = [faker.datatype.uuid()]
+      const args = [faker.string.uuid()]
       apiInterface.setUserId(...args)
 
       expect(getInfo(agentId).jsAttributes['enduser.id']).toEqual(args[0])
@@ -399,7 +399,7 @@ describe('setAPI', () => {
       setInfo(agentId, {
         ...(getInfo(agentId)),
         jsAttributes: {
-          'enduser.id': faker.datatype.uuid()
+          'enduser.id': faker.string.uuid()
         }
       })
       apiInterface.setUserId(...args)
@@ -417,7 +417,7 @@ describe('setAPI', () => {
     })
 
     test('should only create SM event emitter event for calls to API', () => {
-      const args = [faker.datatype.uuid()]
+      const args = [faker.string.uuid()]
       apiInterface.setApplicationVersion(...args)
 
       expect(handleModule.handle).toHaveBeenCalledTimes(1)
@@ -439,7 +439,7 @@ describe('setAPI', () => {
     })
 
     test('should set a custom attribute with name application.version', () => {
-      const args = [faker.datatype.uuid()]
+      const args = [faker.string.uuid()]
       apiInterface.setApplicationVersion(...args)
 
       expect(getInfo(agentId).jsAttributes['application.version']).toEqual(args[0])
@@ -450,7 +450,7 @@ describe('setAPI', () => {
       setInfo(agentId, {
         ...(getInfo(agentId)),
         jsAttributes: {
-          'application.version': faker.datatype.uuid()
+          'application.version': faker.string.uuid()
         }
       })
       apiInterface.setApplicationVersion(...args)
@@ -481,7 +481,7 @@ describe('setAPI', () => {
     })
 
     test('should create SM event emitter event for calls to API when features are undefined', () => {
-      const features = [faker.datatype.uuid()]
+      const features = [faker.string.uuid()]
       apiInterface.start(features)
 
       expect(handleModule.handle).toHaveBeenCalledTimes(1)
@@ -511,7 +511,7 @@ describe('setAPI', () => {
     })
 
     test('should return early and warn for invalid feature names', () => {
-      const badFeatureName = faker.datatype.uuid()
+      const badFeatureName = faker.string.uuid()
       apiInterface.start(badFeatureName)
 
       Object.values(FEATURE_NAMES).forEach(featureName => {
@@ -539,7 +539,7 @@ describe('setAPI', () => {
     })
 
     test('should create event emitter event for calls to API', () => {
-      const args = [faker.datatype.uuid()]
+      const args = [faker.string.uuid()]
       apiInterface.noticeError(...args)
 
       expect(handleModule.handle).toHaveBeenCalledTimes(2)
@@ -560,7 +560,7 @@ describe('setAPI', () => {
     })
 
     test('should pass the error object as is when provided', () => {
-      const args = [new Error(faker.datatype.uuid())]
+      const args = [new Error(faker.string.uuid())]
       apiInterface.noticeError(...args)
 
       expect(handleModule.handle).toHaveBeenCalledWith(
@@ -573,10 +573,10 @@ describe('setAPI', () => {
     })
 
     test('should pass the custom attributes object as is when provided', () => {
-      const args = [new Error(faker.datatype.uuid()), {
-        [faker.datatype.uuid()]: faker.datatype.uuid(),
-        [faker.datatype.uuid()]: faker.datatype.uuid(),
-        [faker.datatype.uuid()]: faker.datatype.uuid()
+      const args = [new Error(faker.string.uuid()), {
+        [faker.string.uuid()]: faker.string.uuid(),
+        [faker.string.uuid()]: faker.string.uuid(),
+        [faker.string.uuid()]: faker.string.uuid()
       }]
       apiInterface.noticeError(...args)
 
@@ -634,15 +634,15 @@ describe('setAPI', () => {
     })
 
     test.each([
-      { api: 'actionText', args: [faker.datatype.uuid(), faker.datatype.uuid()] },
-      { api: 'setName', args: [faker.datatype.uuid(), faker.datatype.uuid()] },
-      { api: 'setAttribute', args: [faker.datatype.uuid(), faker.datatype.uuid()] },
-      { api: 'save', args: [faker.datatype.uuid(), faker.datatype.uuid()] },
-      { api: 'ignore', args: [faker.datatype.uuid(), faker.datatype.uuid()] },
-      { api: 'onEnd', args: [faker.datatype.uuid(), faker.datatype.uuid()] },
-      { api: 'getContext', args: [faker.datatype.uuid(), faker.datatype.uuid()] },
-      { api: 'end', args: [faker.datatype.uuid(), faker.datatype.uuid()] },
-      { api: 'get', args: [faker.datatype.uuid(), faker.datatype.uuid()] }
+      { api: 'actionText', args: [faker.string.uuid(), faker.string.uuid()] },
+      { api: 'setName', args: [faker.string.uuid(), faker.string.uuid()] },
+      { api: 'setAttribute', args: [faker.string.uuid(), faker.string.uuid()] },
+      { api: 'save', args: [faker.string.uuid(), faker.string.uuid()] },
+      { api: 'ignore', args: [faker.string.uuid(), faker.string.uuid()] },
+      { api: 'onEnd', args: [faker.string.uuid(), faker.string.uuid()] },
+      { api: 'getContext', args: [faker.string.uuid(), faker.string.uuid()] },
+      { api: 'end', args: [faker.string.uuid(), faker.string.uuid()] },
+      { api: 'get', args: [faker.string.uuid(), faker.string.uuid()] }
     ])('interaction instance API $api should create event emitter event for calls to API', ({ api, args }) => {
       const interaction = apiInterface.interaction()
       interaction[api](...args)
@@ -674,7 +674,7 @@ describe('setAPI', () => {
       })
 
       test('should not create supportability metric event emitter event', () => {
-        const args = [faker.datatype.uuid(), jest.fn()]
+        const args = [faker.string.uuid(), jest.fn()]
         interaction.createTracer(...args)
 
         expect(handleModule.handle).not.toHaveBeenCalledWith(
@@ -694,7 +694,7 @@ describe('setAPI', () => {
       })
 
       test('should only emit single event emitter event when no callback is provided', () => {
-        const args = [faker.datatype.uuid()]
+        const args = [faker.string.uuid()]
         const tracer = interaction.createTracer(...args)
         tracer()
 
@@ -707,10 +707,10 @@ describe('setAPI', () => {
       })
 
       test('should emit start and end event emitter events when callback is provided', () => {
-        const args = [faker.datatype.uuid(), jest.fn()]
+        const args = [faker.string.uuid(), jest.fn()]
         const tracer = interaction.createTracer(...args)
 
-        const tracerArgs = [faker.datatype.uuid(), faker.datatype.uuid()]
+        const tracerArgs = [faker.string.uuid(), faker.string.uuid()]
         tracer(...tracerArgs)
 
         expect(tracerEE.emit).toHaveBeenCalledTimes(2)
@@ -730,10 +730,10 @@ describe('setAPI', () => {
 
       test('should emit error event emitter event when callback throws an error', () => {
         const testError = new Error(faker.lorem.sentence())
-        const args = [faker.datatype.uuid(), jest.fn(() => { throw testError })]
+        const args = [faker.string.uuid(), jest.fn(() => { throw testError })]
         const tracer = interaction.createTracer(...args)
 
-        const tracerArgs = [faker.datatype.uuid(), faker.datatype.uuid()]
+        const tracerArgs = [faker.string.uuid(), faker.string.uuid()]
         expect(() => tracer(...tracerArgs)).toThrow(testError)
 
         expect(tracerEE.emit).toHaveBeenCalledTimes(3)

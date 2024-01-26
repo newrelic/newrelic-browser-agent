@@ -4,6 +4,72 @@
     {
       "changes": [
         {
+          "type": "feat",
+          "sha": "69a8e00ce66c41a29f551697299246763e7ae29f",
+          "message": "Session Replay - Detect Non-Inlined Stylesheets",
+          "issues": [
+            "859"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "cd6324fb79edab77725d9c72f91d2bcb7e860f57",
+          "message": "Bubble Up API Methods to Top-Level Instance For NPM",
+          "issues": [
+            "862"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "f43b7914ec1f26f610cbaa1a513bac482a3d6534",
+          "message": "Add fallback for currentBufferTarget",
+          "issues": [
+            "861"
+          ]
+        }
+      ],
+      "version": "1.251.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "99cbc239-c1aa-465c-b245-73f23bb76b2a",
+      "createTime": "2024-01-24T22:42:30.700Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
+          "sha": "1b898c61fa260bd0df644b4825ddb6d1c9b54b51",
+          "message": "Add a flag to note that a payload occurred during a replay",
+          "issues": [
+            "834"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "1af7b896ef41c8b4855ca85e2a4e40c20a8cdfb1",
+          "message": "Session Replay Dynamic Loading",
+          "issues": [
+            "832"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "8767f69122853a4099ed25f5886a91de06703c98",
+          "message": "TraceId generation regression (non-random trace ids)",
+          "issues": [
+            "853"
+          ]
+        }
+      ],
+      "version": "1.250.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "d65f416b-0dab-4c87-9379-07e032e7f015",
+      "createTime": "2024-01-09T18:22:29.175Z"
+    },
+    {
+      "changes": [
+        {
           "type": "fix",
           "sha": "a9b6f2e578b1684dd50f8eb491251c03eca88a12",
           "message": "loader missing sub-resource integrity hashes",
@@ -916,5 +982,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2023-12-14T16:21:55.359Z"
+  "updateTime": "2024-01-24T22:42:30.700Z"
 }

@@ -15,8 +15,7 @@
     }
   </style>
   <link rel="stylesheet" type="text/css" href="style.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pure/3.0.0/pure-min.css" integrity="sha512-X2yGIVwg8zeG8N4xfsidr9MqIfIE8Yz1It+w2rhUJMqxUwvbVqC5OPcyRlPKYOw/bsdJut91//NO9rSbQZIPRQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pure/3.0.0/pure-min.css" referrerpolicy="no-referrer" />
   {init}
   {config}
   <script>
@@ -43,6 +42,13 @@
       document.querySelector("img").classList.toggle("left")
       document.querySelector("img").classList.toggle("right")
     }
+    setTimeout(() => {
+      const ss = document.createElement('link')
+      ss.rel = 'stylesheet'
+      ss.href = 'https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css'
+      document.head.appendChild(ss)
+      console.log("appended...")
+    }, 3000)
   </script>
 </body>
 </html>

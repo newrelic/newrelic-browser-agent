@@ -10,7 +10,6 @@ import { Harvest } from './harvest'
 
 jest.enableAutomock()
 jest.unmock('./harvest')
-
 let harvestInstance
 
 beforeEach(() => {
@@ -30,10 +29,10 @@ describe('sendX', () => {
   })
 
   test('should pass spec settings on to _send method', async () => {
-    const endpoint = faker.datatype.uuid()
+    const endpoint = faker.string.uuid()
     const spec = {
       endpoint,
-      [faker.datatype.uuid()]: faker.lorem.sentence()
+      [faker.string.uuid()]: faker.lorem.sentence()
     }
 
     harvestInstance.sendX(spec)
@@ -42,7 +41,7 @@ describe('sendX', () => {
   })
 
   test('should create payload with retry true', async () => {
-    const endpoint = faker.datatype.uuid()
+    const endpoint = faker.string.uuid()
     const spec = {
       endpoint,
       opts: {
@@ -59,7 +58,7 @@ describe('sendX', () => {
   test('should not use obfuscateAndSend', async () => {
     jest.mocked(harvestInstance.obfuscator.shouldObfuscate).mockReturnValue(false)
 
-    const endpoint = faker.datatype.uuid()
+    const endpoint = faker.string.uuid()
     harvestInstance.sendX({ endpoint })
 
     expect(harvestInstance._send).toHaveBeenCalledWith({
@@ -73,7 +72,7 @@ describe('sendX', () => {
   test('should use obfuscateAndSend', async () => {
     jest.mocked(harvestInstance.obfuscator.shouldObfuscate).mockReturnValue(true)
 
-    const endpoint = faker.datatype.uuid()
+    const endpoint = faker.string.uuid()
     harvestInstance.sendX({ endpoint })
 
     expect(harvestInstance.obfuscateAndSend).toHaveBeenCalledWith({
@@ -101,10 +100,10 @@ describe('send', () => {
   })
 
   test('should pass spec settings on to _send method', async () => {
-    const endpoint = faker.datatype.uuid()
+    const endpoint = faker.string.uuid()
     const spec = {
       endpoint,
-      [faker.datatype.uuid()]: faker.lorem.sentence()
+      [faker.string.uuid()]: faker.lorem.sentence()
     }
 
     harvestInstance.send(spec)
@@ -115,7 +114,7 @@ describe('send', () => {
   test('should not use obfuscateAndSend', async () => {
     jest.mocked(harvestInstance.obfuscator.shouldObfuscate).mockReturnValue(false)
 
-    const endpoint = faker.datatype.uuid()
+    const endpoint = faker.string.uuid()
     harvestInstance.send({ endpoint })
 
     expect(harvestInstance._send).toHaveBeenCalledWith({
@@ -127,7 +126,7 @@ describe('send', () => {
   test('should use obfuscateAndSend', async () => {
     jest.mocked(harvestInstance.obfuscator.shouldObfuscate).mockReturnValue(true)
 
-    const endpoint = faker.datatype.uuid()
+    const endpoint = faker.string.uuid()
     harvestInstance.send({ endpoint })
 
     expect(harvestInstance.obfuscateAndSend).toHaveBeenCalledWith({
@@ -151,7 +150,7 @@ describe('_send', () => {
 
   beforeEach(() => {
     errorBeacon = faker.internet.domainName()
-    licenseKey = faker.datatype.uuid()
+    licenseKey = faker.string.uuid()
     jest.mocked(configModule.getInfo).mockReturnValue({
       errorBeacon,
       licenseKey
@@ -165,13 +164,13 @@ describe('_send', () => {
     })
 
     spec = {
-      endpoint: faker.datatype.uuid(),
+      endpoint: faker.string.uuid(),
       payload: {
         body: {
-          [faker.datatype.uuid()]: faker.lorem.sentence()
+          [faker.string.uuid()]: faker.lorem.sentence()
         },
         qs: {
-          [faker.datatype.uuid()]: faker.lorem.sentence()
+          [faker.string.uuid()]: faker.lorem.sentence()
         }
       },
       opts: {}
@@ -362,7 +361,7 @@ describe('_send', () => {
     const xhrLoadHandler = jest.mocked(xhrAddEventListener).mock.calls[0][1]
 
     const xhrState = {
-      status: faker.datatype.uuid()
+      status: faker.string.uuid()
     }
     xhrLoadHandler.call(xhrState)
 
@@ -375,7 +374,7 @@ describe('_send', () => {
   test('should set cbFinished state retry to true with delay when xhr has 429 status', () => {
     jest.mocked(submitDataModule.getSubmitMethod).mockReturnValue(submitDataModule.xhr)
     spec.cbFinished = jest.fn()
-    harvestInstance.tooManyRequestsDelay = faker.datatype.number({ min: 100, max: 1000 })
+    harvestInstance.tooManyRequestsDelay = faker.number.int({ min: 100, max: 1000 })
 
     const result = harvestInstance._send(spec)
     const xhrAddEventListener = jest.mocked(submitDataModule.xhr).mock.results[0].value.addEventListener
@@ -432,7 +431,7 @@ describe('_send', () => {
     const xhrLoadHandler = jest.mocked(xhrAddEventListener).mock.calls[0][1]
 
     const xhrState = {
-      status: faker.datatype.uuid(),
+      status: faker.string.uuid(),
       responseText: faker.lorem.sentence()
     }
     xhrLoadHandler.call(xhrState)
@@ -456,7 +455,7 @@ describe('_send', () => {
     const xhrLoadHandler = jest.mocked(xhrAddEventListener).mock.calls[0][1]
 
     const xhrState = {
-      status: faker.datatype.uuid(),
+      status: faker.string.uuid(),
       responseText: faker.lorem.sentence()
     }
     xhrLoadHandler.call(xhrState)
@@ -516,14 +515,14 @@ describe('baseQueryString', () => {
   })
 
   test('should construct a string of base query parameters', () => {
-    const applicationID = faker.datatype.uuid()
-    const sa = faker.datatype.uuid()
+    const applicationID = faker.string.uuid()
+    const sa = faker.string.uuid()
     jest.mocked(configModule.getInfo).mockReturnValue({
       applicationID,
       sa
     })
-    const customTransaction = faker.datatype.uuid()
-    const ptid = faker.datatype.uuid()
+    const customTransaction = faker.string.uuid()
+    const ptid = faker.string.uuid()
     jest.mocked(configModule.getRuntime).mockReturnValue({
       customTransaction,
       ptid
@@ -550,7 +549,7 @@ describe('baseQueryString', () => {
   })
 
   test('should set t param to info.tNamePlain', () => {
-    const tNamePlain = faker.datatype.uuid()
+    const tNamePlain = faker.string.uuid()
     jest.mocked(configModule.getInfo).mockReturnValue({
       tNamePlain
     })
@@ -562,7 +561,7 @@ describe('baseQueryString', () => {
   })
 
   test('should set to param to info.transactionName and exclude t param', () => {
-    const transactionName = faker.datatype.uuid()
+    const transactionName = faker.string.uuid()
     jest.mocked(configModule.getInfo).mockReturnValue({
       transactionName
     })
@@ -589,7 +588,7 @@ describe('baseQueryString', () => {
   })
 
   test('should obfuscate ref', () => {
-    const obfuscatedLocation = faker.datatype.uuid()
+    const obfuscatedLocation = faker.string.uuid()
     jest.mocked(harvestInstance.obfuscator.shouldObfuscate).mockReturnValue(true)
     jest.mocked(harvestInstance.obfuscator.obfuscateString).mockReturnValue(obfuscatedLocation)
 
@@ -609,7 +608,7 @@ describe('baseQueryString', () => {
 
 describe('createPayload', () => {
   test('should return empty body and qs values when no listeners exist', () => {
-    const feature = faker.datatype.uuid()
+    const feature = faker.string.uuid()
     const results = harvestInstance.createPayload(feature)
 
     expect(results).toEqual({
@@ -619,9 +618,9 @@ describe('createPayload', () => {
   })
 
   test('should pass options to callback', () => {
-    const feature = faker.datatype.uuid()
+    const feature = faker.string.uuid()
     const options = {
-      [faker.datatype.uuid()]: faker.lorem.sentence()
+      [faker.string.uuid()]: faker.lorem.sentence()
     }
     const harvestCallback = jest.fn()
 
@@ -635,18 +634,18 @@ describe('createPayload', () => {
   })
 
   test('should aggregate the body properties of the payload', () => {
-    const feature = faker.datatype.uuid()
+    const feature = faker.string.uuid()
     const payloadA = {
       body: {
-        [faker.datatype.uuid()]: {
-          [faker.datatype.uuid()]: faker.lorem.sentence()
+        [faker.string.uuid()]: {
+          [faker.string.uuid()]: faker.lorem.sentence()
         }
       }
     }
     const payloadB = {
       body: {
-        [faker.datatype.uuid()]: {
-          [faker.datatype.uuid()]: faker.lorem.sentence()
+        [faker.string.uuid()]: {
+          [faker.string.uuid()]: faker.lorem.sentence()
         }
       }
     }
@@ -667,18 +666,18 @@ describe('createPayload', () => {
   })
 
   test('should aggregate the qs properties of the payload', () => {
-    const feature = faker.datatype.uuid()
+    const feature = faker.string.uuid()
     const payloadA = {
       qs: {
-        [faker.datatype.uuid()]: {
-          [faker.datatype.uuid()]: faker.lorem.sentence()
+        [faker.string.uuid()]: {
+          [faker.string.uuid()]: faker.lorem.sentence()
         }
       }
     }
     const payloadB = {
       qs: {
-        [faker.datatype.uuid()]: {
-          [faker.datatype.uuid()]: faker.lorem.sentence()
+        [faker.string.uuid()]: {
+          [faker.string.uuid()]: faker.lorem.sentence()
         }
       }
     }
@@ -699,30 +698,30 @@ describe('createPayload', () => {
   })
 
   test('should not deep merge the body and qs properties', () => {
-    const feature = faker.datatype.uuid()
-    const bodyProp = faker.datatype.uuid()
-    const qsProp = faker.datatype.uuid()
+    const feature = faker.string.uuid()
+    const bodyProp = faker.string.uuid()
+    const qsProp = faker.string.uuid()
     const payloadA = {
       body: {
         [bodyProp]: {
-          [faker.datatype.uuid()]: faker.lorem.sentence()
+          [faker.string.uuid()]: faker.lorem.sentence()
         }
       },
       qs: {
         [qsProp]: {
-          [faker.datatype.uuid()]: faker.lorem.sentence()
+          [faker.string.uuid()]: faker.lorem.sentence()
         }
       }
     }
     const payloadB = {
       body: {
         [bodyProp]: {
-          [faker.datatype.uuid()]: faker.lorem.sentence()
+          [faker.string.uuid()]: faker.lorem.sentence()
         }
       },
       qs: {
         [qsProp]: {
-          [faker.datatype.uuid()]: faker.lorem.sentence()
+          [faker.string.uuid()]: faker.lorem.sentence()
         }
       }
     }
@@ -745,11 +744,11 @@ describe('cleanPayload', () => {
     const payload = {
       body: {
         foo: undefined,
-        [faker.datatype.uuid()]: faker.lorem.sentence()
+        [faker.string.uuid()]: faker.lorem.sentence()
       },
       qs: {
         foo: undefined,
-        [faker.datatype.uuid()]: faker.lorem.sentence()
+        [faker.string.uuid()]: faker.lorem.sentence()
       }
     }
 
@@ -763,11 +762,11 @@ describe('cleanPayload', () => {
     const payload = {
       body: {
         foo: null,
-        [faker.datatype.uuid()]: faker.lorem.sentence()
+        [faker.string.uuid()]: faker.lorem.sentence()
       },
       qs: {
         foo: null,
-        [faker.datatype.uuid()]: faker.lorem.sentence()
+        [faker.string.uuid()]: faker.lorem.sentence()
       }
     }
 
@@ -781,11 +780,11 @@ describe('cleanPayload', () => {
     const payload = {
       body: {
         foo: '',
-        [faker.datatype.uuid()]: faker.lorem.sentence()
+        [faker.string.uuid()]: faker.lorem.sentence()
       },
       qs: {
         foo: '',
-        [faker.datatype.uuid()]: faker.lorem.sentence()
+        [faker.string.uuid()]: faker.lorem.sentence()
       }
     }
 
@@ -796,9 +795,9 @@ describe('cleanPayload', () => {
   })
 
   test.each([
-    { [faker.datatype.uuid()]: { [faker.datatype.uuid()]: faker.datatype.number({ min: 100, max: 1000 }) } },
-    { [faker.datatype.uuid()]: faker.datatype.number({ min: 100, max: 1000 }) },
-    { [faker.datatype.uuid()]: new Uint8Array(faker.datatype.number({ min: 100, max: 1000 })) }
+    { [faker.string.uuid()]: { [faker.string.uuid()]: faker.number.int({ min: 100, max: 1000 }) } },
+    { [faker.string.uuid()]: faker.number.int({ min: 100, max: 1000 }) },
+    { [faker.string.uuid()]: new Uint8Array(faker.number.int({ min: 100, max: 1000 })) }
   ])('should retain %s properties in body and qs', (input) => {
     const payload = {
       body: input,

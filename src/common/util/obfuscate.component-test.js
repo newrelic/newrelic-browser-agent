@@ -16,7 +16,7 @@ const rules = [{
 }]
 
 beforeEach(() => {
-  agentIdentifier = faker.datatype.uuid()
+  agentIdentifier = faker.string.uuid()
 })
 
 afterEach(() => {

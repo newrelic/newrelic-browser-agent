@@ -3,6 +3,32 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.251.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.250.0...v1.251.0) (2024-01-24)
+
+
+### Features
+
+* Session Replay - Detect Non-Inlined Stylesheets ([#859](https://github.com/newrelic/newrelic-browser-agent/issues/859)) ([69a8e00](https://github.com/newrelic/newrelic-browser-agent/commit/69a8e00ce66c41a29f551697299246763e7ae29f))
+
+
+### Bug Fixes
+
+* Add fallback for currentBufferTarget ([#861](https://github.com/newrelic/newrelic-browser-agent/issues/861)) ([f43b791](https://github.com/newrelic/newrelic-browser-agent/commit/f43b7914ec1f26f610cbaa1a513bac482a3d6534))
+* Bubble Up API Methods to Top-Level Instance For NPM ([#862](https://github.com/newrelic/newrelic-browser-agent/issues/862)) ([cd6324f](https://github.com/newrelic/newrelic-browser-agent/commit/cd6324fb79edab77725d9c72f91d2bcb7e860f57))
+
+## [1.250.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.249.0...v1.250.0) (2024-01-09)
+
+
+### Features
+
+* Add a flag to note that a payload occurred during a replay ([#834](https://github.com/newrelic/newrelic-browser-agent/issues/834)) ([1b898c6](https://github.com/newrelic/newrelic-browser-agent/commit/1b898c61fa260bd0df644b4825ddb6d1c9b54b51))
+* Session Replay Dynamic Loading ([#832](https://github.com/newrelic/newrelic-browser-agent/issues/832)) ([1af7b89](https://github.com/newrelic/newrelic-browser-agent/commit/1af7b896ef41c8b4855ca85e2a4e40c20a8cdfb1))
+
+
+### Bug Fixes
+
+* TraceId generation regression (non-random trace ids) ([#853](https://github.com/newrelic/newrelic-browser-agent/issues/853)) ([8767f69](https://github.com/newrelic/newrelic-browser-agent/commit/8767f69122853a4099ed25f5886a91de06703c98))
+
 ## [1.249.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.248.0...v1.249.0) (2023-12-14)
 
 

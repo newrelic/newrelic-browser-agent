@@ -22,13 +22,13 @@ let aggregator
 let featureName
 
 beforeEach(() => {
-  agentIdentifier = faker.datatype.uuid()
+  agentIdentifier = faker.string.uuid()
   aggregator = {}
-  featureName = faker.datatype.uuid()
+  featureName = faker.string.uuid()
 })
 
 it('should set instance defaults', () => {
-  const mockEE = { [faker.datatype.uuid()]: faker.lorem.sentence() }
+  const mockEE = { [faker.string.uuid()]: faker.lorem.sentence() }
   jest.mocked(ee.get).mockReturnValue(mockEE)
 
   const feature = new FeatureBase(agentIdentifier, aggregator, featureName)

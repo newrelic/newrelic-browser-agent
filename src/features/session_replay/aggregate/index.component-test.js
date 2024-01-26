@@ -273,9 +273,10 @@ describe('Session Replay', () => {
       }))
 
       setConfiguration(agentIdentifier, { ...init })
-      sr.shouldCompress = false
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)
+
+      sr.gzipper = undefined
 
       const [harvestContents] = sr.prepareHarvest()
       expect(harvestContents.qs).toMatchObject({
@@ -289,10 +290,10 @@ describe('Session Replay', () => {
 
     test('Clears the event buffer when staged for harvesting', async () => {
       setConfiguration(agentIdentifier, { ...init })
-      sr.shouldCompress = false
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)
 
+      sr.gzipper = undefined
       sr.prepareHarvest()
       expect(sr.recorder.getEvents().events.length).toEqual(0)
     })
@@ -311,9 +312,12 @@ describe('Session Replay', () => {
     })
 
     test('Aborts if exceeds total limit', async () => {
+      jest.doMock('fflate', () => ({
+        __esModule: true,
+        gzipSync: jest.fn().mockImplementation(() => { throw new Error() })
+      }))
       const spy = jest.spyOn(sr.scheduler.harvest, '_send')
       setConfiguration(agentIdentifier, { ...init })
-      sr.shouldCompress = false
       sr.recorder = new Recorder(sr)
       Array.from({ length: 100000 }).forEach(() => sr.recorder.currentBufferTarget.add({ test: 1 })) //  fill the events array with tons of events
       sr.recorder.currentBufferTarget.payloadBytesEstimation = sr.recorder.currentBufferTarget.events.join('').length

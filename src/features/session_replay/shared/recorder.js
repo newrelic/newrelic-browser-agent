@@ -184,7 +184,7 @@ export class Recorder {
    * https://staging.onenr.io/037jbJWxbjy
    * */
   estimateCompression (data) {
-    if (this.shouldCompress) return data * AVG_COMPRESSION
+    if (!!this.parent.gzipper && !!this.parent.u8) return data * AVG_COMPRESSION
     return data
   }
 }

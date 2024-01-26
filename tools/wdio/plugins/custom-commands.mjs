@@ -144,13 +144,20 @@ export default class CustomCommands {
         () => browser.execute(function () {
           try {
             var initializedAgent = Object.values(newrelic.initializedAgents)[0]
-            return !!(initializedAgent &&
+            return !!(
+              (initializedAgent &&
+              initializedAgent.features &&
+              initializedAgent.features.session_replay &&
+              initializedAgent.features.session_replay.recorder &&
+              initializedAgent.features.session_replay.recorder.recording) ||
+              (initializedAgent &&
               initializedAgent.features &&
               initializedAgent.features.session_replay &&
               initializedAgent.features.session_replay.featAggregate &&
               initializedAgent.features.session_replay.featAggregate.initialized &&
               initializedAgent.features.session_replay.featAggregate.recorder &&
               initializedAgent.features.session_replay.featAggregate.recorder.recording)
+            )
           } catch (err) {
             console.error(err)
             return false

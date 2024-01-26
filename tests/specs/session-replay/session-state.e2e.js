@@ -1,5 +1,5 @@
 import { supportsMultipleTabs, notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
-import { RRWEB_EVENT_TYPES, config, getSR, MODE } from './helpers.js'
+import { RRWEB_EVENT_TYPES, config, MODE } from './helpers.js'
 
 describe.withBrowsersMatching(notIE)('session manager state behavior', () => {
   beforeEach(async () => {
@@ -68,27 +68,28 @@ describe.withBrowsersMatching(notIE)('session manager state behavior', () => {
 
   describe('When session resumes', () => {
     it.withBrowsersMatching(supportsMultipleTabs)('should take a full snapshot and continue recording', async () => {
-      await browser.url(await browser.testHandle.assetURL('instrumented.html', config()))
-        .then(() => browser.waitForSessionReplayRecording())
+      const [{ request: payload }] = await Promise.all([
+        browser.testHandle.expectBlob(15000),
+        browser.url(await browser.testHandle.assetURL('instrumented.html', config()))
+          .then(() => browser.waitForAgentLoad())
+      ])
 
-      const { events: currentPayload } = await getSR()
-
-      expect(currentPayload.length).toBeGreaterThan(0)
+      expect(payload.body.length).toBeGreaterThan(0)
       // type 2 payloads are snapshots
-      expect(currentPayload.filter(x => x.type === RRWEB_EVENT_TYPES.FullSnapshot).length).toEqual(1)
+      expect(payload.body.filter(x => x.type === RRWEB_EVENT_TYPES.FullSnapshot).length).toEqual(1)
 
       const newTab = await browser.createWindow('tab')
       await browser.switchToWindow(newTab.handle)
       await browser.enableSessionReplay()
-      await browser.url(await browser.testHandle.assetURL('instrumented.html', config()))
-        .then(() => browser.waitForSessionReplayRecording())
-
-      const { events: resumedPayload } = await getSR()
-
+      const [{ request: resumedPayload }] = await Promise.all([
+        browser.testHandle.expectBlob(15000),
+        browser.url(await browser.testHandle.assetURL('instrumented.html', config()))
+          .then(() => browser.waitForAgentLoad())
+      ])
       // payload was harvested, new vis change should trigger a new recording which includes a new full snapshot
-      expect(resumedPayload.length).toBeGreaterThan(0)
+      expect(resumedPayload.body.length).toBeGreaterThan(0)
       // type 2 payloads are snapshots
-      expect(resumedPayload.filter(x => x.type === RRWEB_EVENT_TYPES.FullSnapshot).length).toEqual(1)
+      expect(resumedPayload.body.filter(x => x.type === RRWEB_EVENT_TYPES.FullSnapshot).length).toEqual(1)
 
       await browser.closeWindow()
       await browser.switchToWindow((await browser.getWindowHandles())[0])

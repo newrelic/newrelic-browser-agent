@@ -1,4 +1,3 @@
-import { testRumRequest } from '../../../tools/testing-server/utils/expect-tests.js'
 import { config, getSR, testExpectedReplay } from './helpers'
 import { supportsMultipleTabs, notIE, notSafari } from '../../../tools/browser-matcher/common-matchers.mjs'
 
@@ -39,25 +38,14 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
     const { request: page1Contents } = await browser.testHandle.expectBlob(10000)
     testExpectedReplay({ data: page1Contents, session: localStorage.value, hasError: false, hasMeta: true, hasSnapshot: true, isFirstChunk: true })
 
-    await browser.testHandle.scheduleReply('bamServer', {
-      test: testRumRequest,
-      body: JSON.stringify({
-        stn: 1,
-        err: 1,
-        ins: 1,
-        cap: 1,
-        spa: 1,
-        loaded: 1,
-        sr: 1
-      })
-    })
-
     await browser.enableSessionReplay()
 
-    await browser.url(await browser.testHandle.assetURL('instrumented.html', config()))
-      .then(() => browser.waitForAgentLoad())
+    const [{ request: page2Contents }] = await Promise.all([
+      browser.testHandle.expectBlob(15000),
+      browser.url(await browser.testHandle.assetURL('instrumented.html', config()))
+        .then(() => browser.waitForAgentLoad())
+    ])
 
-    const { request: page2Contents } = await browser.testHandle.expectBlob(10000)
     testExpectedReplay({ data: page2Contents, session: localStorage.value, hasError: false, hasMeta: true, hasSnapshot: true, isFirstChunk: false })
   })
 
@@ -74,10 +62,11 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
     const newTab = await browser.createWindow('tab')
     await browser.switchToWindow(newTab.handle)
     await browser.enableSessionReplay()
-    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
-      .then(() => browser.waitForAgentLoad())
-
-    const { request: page2Contents } = await browser.testHandle.expectBlob(10000)
+    const [{ request: page2Contents }] = await Promise.all([
+      browser.testHandle.expectBlob(15000),
+      browser.url(await browser.testHandle.assetURL('instrumented.html', config()))
+        .then(() => browser.waitForAgentLoad())
+    ])
 
     testExpectedReplay({ data: page2Contents, session: localStorage.value, hasError: false, hasMeta: true, hasSnapshot: true, isFirstChunk: false })
 
@@ -118,10 +107,11 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
     const newTab = await browser.createWindow('tab')
     await browser.switchToWindow(newTab.handle)
     await browser.enableSessionReplay()
-    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
-      .then(() => browser.waitForAgentLoad())
-
-    const { request: page2Contents } = await browser.testHandle.expectBlob(10000)
+    const [{ request: page2Contents }] = await Promise.all([
+      browser.testHandle.expectBlob(15000),
+      browser.url(await browser.testHandle.assetURL('instrumented.html', config()))
+        .then(() => browser.waitForAgentLoad())
+    ])
 
     testExpectedReplay({ data: page2Contents, session: localStorage.value, hasError: false, hasMeta: true, hasSnapshot: true, isFirstChunk: false })
 

@@ -55,27 +55,32 @@ class StylesheetEvaluator {
  * @returns {Promise}
  */
   async #fetchAndOverride (target, href) {
-    const stylesheetContents = await originals.FETCH.bind(window)(href)
-    if (!stylesheetContents.ok) {
-      this.failedToFix = true
-      return
-    }
-    const stylesheetText = await stylesheetContents.text()
     try {
-      const cssSheet = new CSSStyleSheet()
-      await cssSheet.replace(stylesheetText)
-      Object.defineProperty(target, 'cssRules', {
-        get () { return cssSheet.cssRules }
-      })
-      Object.defineProperty(target, 'rules', {
-        get () { return cssSheet.rules }
-      })
-    } catch (err) {
+      const stylesheetContents = await originals.FETCH.bind(window)(href)
+      if (!stylesheetContents.ok) {
+        this.failedToFix = true
+        return
+      }
+      const stylesheetText = await stylesheetContents.text()
+      try {
+        const cssSheet = new CSSStyleSheet()
+        await cssSheet.replace(stylesheetText)
+        Object.defineProperty(target, 'cssRules', {
+          get () { return cssSheet.cssRules }
+        })
+        Object.defineProperty(target, 'rules', {
+          get () { return cssSheet.rules }
+        })
+      } catch (err) {
       // cant make new dynamic stylesheets, browser likely doesn't support `.replace()`...
       // this is appended in prep of forking rrweb
-      Object.defineProperty(target, 'cssText', {
-        get () { return stylesheetText }
-      })
+        Object.defineProperty(target, 'cssText', {
+          get () { return stylesheetText }
+        })
+        this.failedToFix = true
+      }
+    } catch (err) {
+    // failed to fetch
       this.failedToFix = true
     }
   }

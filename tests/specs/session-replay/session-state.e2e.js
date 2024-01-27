@@ -1,5 +1,5 @@
 import { supportsMultipleTabs, notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
-import { RRWEB_EVENT_TYPES, config, getSR, MODE } from './helpers.js'
+import { RRWEB_EVENT_TYPES, config, MODE, testExpectedReplay } from './helpers.js'
 
 describe.withBrowsersMatching(notIE)('session manager state behavior', () => {
   beforeEach(async () => {
@@ -68,30 +68,31 @@ describe.withBrowsersMatching(notIE)('session manager state behavior', () => {
 
   describe('When session resumes', () => {
     it.withBrowsersMatching(supportsMultipleTabs)('should take a full snapshot and continue recording', async () => {
-      await browser.url(await browser.testHandle.assetURL('instrumented.html', config()))
-        .then(() => browser.waitForSessionReplayRecording())
+      const [{ request: payload }] = await Promise.all([
+        browser.testHandle.expectBlob(15000),
+        browser.url(await browser.testHandle.assetURL('instrumented.html', config()))
+          .then(() => browser.waitForAgentLoad())
+      ])
 
-      const { events: currentPayload } = await getSR()
-
-      expect(currentPayload.length).toBeGreaterThan(0)
+      expect(payload.body.length).toBeGreaterThan(0)
       // type 2 payloads are snapshots
-      expect(currentPayload.filter(x => x.type === RRWEB_EVENT_TYPES.FullSnapshot).length).toEqual(1)
+      expect(payload.body.filter(x => x.type === RRWEB_EVENT_TYPES.FullSnapshot).length).toEqual(1)
 
+      /** This should fire when the tab changes, it's easier to stage it this way before hand, and allows for the super early staging for the next expect */
+      browser.testHandle.expectBlob(15000).then(({ request: page1UnloadContents }) => {
+        testExpectedReplay({ data: page1UnloadContents, session: localStorage.value, hasError: false, hasMeta: false, hasSnapshot: false, isFirstChunk: false })
+      })
+
+      /** This is scoped out this way to guarantee we have it staged in time since preload can harvest super early, sometimes earlier than wdio can expect normally */
+      /** see next `testExpectedReplay` */
+      browser.testHandle.expectBlob(15000).then(async ({ request: page2Contents }) => {
+        testExpectedReplay({ data: page2Contents, session: localStorage.value, hasError: false, hasMeta: true, hasSnapshot: true, isFirstChunk: false })
+      })
       const newTab = await browser.createWindow('tab')
       await browser.switchToWindow(newTab.handle)
       await browser.enableSessionReplay()
       await browser.url(await browser.testHandle.assetURL('instrumented.html', config()))
         .then(() => browser.waitForSessionReplayRecording())
-
-      const { events: resumedPayload } = await getSR()
-
-      // payload was harvested, new vis change should trigger a new recording which includes a new full snapshot
-      expect(resumedPayload.length).toBeGreaterThan(0)
-      // type 2 payloads are snapshots
-      expect(resumedPayload.filter(x => x.type === RRWEB_EVENT_TYPES.FullSnapshot).length).toEqual(1)
-
-      await browser.closeWindow()
-      await browser.switchToWindow((await browser.getWindowHandles())[0])
     })
   })
 

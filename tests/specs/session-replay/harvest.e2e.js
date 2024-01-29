@@ -1,4 +1,4 @@
-import { notIE, notIOS, onlyChrome } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { notIE, notIOS, onlyChrome, supportsFetch } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { config, decodeAttributes, getSR } from './helpers'
 
 describe.withBrowsersMatching(notIE)('Session Replay Harvest Behavior', () => {
@@ -63,5 +63,31 @@ describe.withBrowsersMatching(notIE)('Session Replay Harvest Behavior', () => {
 
     expect(attr1['replay.firstTimestamp']).not.toEqual(attr2['replay.firstTimestamp'])
     expect(attr1['replay.lastTimestamp']).not.toEqual(attr2['replay.lastTimestamp'])
+  })
+
+  it.withBrowsersMatching(supportsFetch)('should use sendBeacon for unload harvests', async () => {
+    const [snapshotHarvest] = await Promise.all([
+      browser.testHandle.expectSessionReplaySnapshot(10000),
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { harvestTimeSeconds: 5 } })))
+        .then(() => browser.execute(function () {
+          const sendBeaconFn = navigator.sendBeacon.bind(navigator)
+          navigator.sendBeacon = function (url, body) {
+            sendBeaconFn.call(navigator, url + '&sendBeacon=true', body)
+          }
+        }))
+    ])
+
+    expect(snapshotHarvest).toBeTruthy()
+    await browser.execute(function () {
+      var newelem = document.createElement('span')
+      newelem.innerHTML = 'this is some text'
+      document.body.appendChild(newelem)
+    })
+
+    const [unloadRequest] = await Promise.all([
+      browser.testHandle.expectBlob(),
+      browser.url(await browser.testHandle.assetURL('/'))
+    ])
+    expect(unloadRequest.request.query.sendBeacon).toEqual('true')
   })
 })

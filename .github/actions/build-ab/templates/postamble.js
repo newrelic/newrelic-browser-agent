@@ -4,6 +4,8 @@ window.NREUM.loader_config.applicationID = '{{{args.appId}}}'
 window.NREUM.loader_config.licenseKey = '{{{args.licenseKey}}}'
 window.NREUM.info.applicationID = '{{{args.appId}}}'
 window.NREUM.info.licenseKey = '{{{args.licenseKey}}}'
+window.NREUM.init.session_replay.enabled = true
+window.NREUM.init.session_trace.enabled = true
 
 // Session replay entitlements check
 try {

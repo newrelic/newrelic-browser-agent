@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.251.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.251.0...v1.251.1) (2024-01-29)
+
+
+### Bug Fixes
+
+* Fix deferred Session Replay payloads ([#868](https://github.com/newrelic/newrelic-browser-agent/issues/868)) ([f69e4b0](https://github.com/newrelic/newrelic-browser-agent/commit/f69e4b0eba5a54f4e67316f5e6a30090cf7360cc))
+* Pass unload options to simultaneous harvests in Session Replay ([#870](https://github.com/newrelic/newrelic-browser-agent/issues/870)) ([655aa5d](https://github.com/newrelic/newrelic-browser-agent/commit/655aa5d261d03f71086d3cfc73cb72db51cb28c7))
+
 ## [1.251.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.250.0...v1.251.0) (2024-01-24)
 
 

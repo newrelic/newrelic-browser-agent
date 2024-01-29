@@ -221,7 +221,7 @@ export class Aggregate extends AggregateBase {
     }
   }
 
-  prepareHarvest () {
+  prepareHarvest ({ opts } = {}) {
     if (!this.recorder) return
     const recorderEvents = this.recorder.getEvents()
     // get the event type and use that to trigger another harvest if needed
@@ -252,7 +252,7 @@ export class Aggregate extends AggregateBase {
     const { session } = getRuntime(this.agentIdentifier)
     if (!session.state.sessionReplaySentFirstChunk) this.syncWithSessionManager({ sessionReplaySentFirstChunk: true })
     this.recorder.clearBuffer()
-    if (recorderEvents.type === 'preloaded') this.scheduler.runHarvest()
+    if (recorderEvents.type === 'preloaded') this.scheduler.runHarvest(opts)
     return [payload]
   }
 

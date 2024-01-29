@@ -4,6 +4,31 @@
     {
       "changes": [
         {
+          "type": "fix",
+          "sha": "655aa5d261d03f71086d3cfc73cb72db51cb28c7",
+          "message": "Pass unload options to simultaneous harvests in Session Replay",
+          "issues": [
+            "870"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "f69e4b0eba5a54f4e67316f5e6a30090cf7360cc",
+          "message": "Fix deferred Session Replay payloads",
+          "issues": [
+            "868"
+          ]
+        }
+      ],
+      "version": "1.251.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "aa565178-cca7-4305-96f8-f60eae560871",
+      "createTime": "2024-01-29T20:09:21.638Z"
+    },
+    {
+      "changes": [
+        {
           "type": "feat",
           "sha": "69a8e00ce66c41a29f551697299246763e7ae29f",
           "message": "Session Replay - Detect Non-Inlined Stylesheets",
@@ -982,5 +1007,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2024-01-24T22:42:30.700Z"
+  "updateTime": "2024-01-29T20:09:21.638Z"
 }

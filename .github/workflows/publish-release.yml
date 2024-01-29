@@ -167,6 +167,7 @@ jobs:
         uses: ./.github/actions/nr-verify
         with:
           loader_version: ${{ steps.agent-loader-version.outputs.results }}
+          environment: prod
 
   # Publish the loaders to nr stage
   # publish-to-nr-stage:
@@ -194,6 +195,7 @@ jobs:
   #       uses: ./.github/actions/nr-verify
   #       with:
   #         loader_version: ${{ steps.agent-loader-version.outputs.results }}
+  #         environment: stage
 
   # Publish the agent to npmjs.org
   publish-npm:

@@ -23,5 +23,4 @@ runs:
         node $GITHUB_ACTION_PATH/index.js \
           ${{ inputs.environment && format('--environment {0}', inputs.environment) || '' }} \
           --loader-version ${{ inputs.loader_version }}
-          --environment ${{ inputs.environment }}
       shell: bash

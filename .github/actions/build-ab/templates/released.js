@@ -21,6 +21,9 @@ window.NREUM={
       mask_all_inputs: false,
       mask_text_selector: null,
       {{/if}}
+    },
+    session_trace: {
+      enabled: true
     }
   },
   loader_config: {

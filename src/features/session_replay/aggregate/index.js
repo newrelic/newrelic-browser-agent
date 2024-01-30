@@ -28,8 +28,6 @@ import { MODE, SESSION_EVENTS, SESSION_EVENT_TYPES } from '../../../common/sessi
 import { stringify } from '../../../common/util/stringify'
 import { stylesheetEvaluator } from '../shared/stylesheet-evaluator'
 
-let gzipper, u8
-
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   // pass the recorder into the aggregator
@@ -41,8 +39,10 @@ export class Aggregate extends AggregateBase {
     this.initialized = false
     /** Set once the feature has been "aborted" to prevent other side-effects from continuing */
     this.blocked = false
-    /** can shut off efforts to compress the data */
-    this.shouldCompress = true
+    /** populated with the gzipper lib async */
+    this.gzipper = undefined
+    /** populated with the u8 string lib async */
+    this.u8 = undefined
     /** the mode to start in.  Defaults to off */
     const { session } = getRuntime(this.agentIdentifier)
     this.mode = session.state.sessionReplayMode || MODE.OFF
@@ -90,6 +90,12 @@ export class Aggregate extends AggregateBase {
         getPayload: this.prepareHarvest.bind(this),
         raw: true
       }, this)
+
+      if (this.recorder?.getEvents().type === 'preloaded') {
+        this.prepUtils().then(() => {
+          this.scheduler.runHarvest()
+        })
+      }
 
       registerHandler('recordReplay', () => {
         // if it has aborted or BCS returned bad entitlements, do not allow
@@ -197,21 +203,25 @@ export class Aggregate extends AggregateBase {
       this.scheduler.startTimer(this.harvestTimeSeconds)
     }
 
-    try {
-      // Do not change the webpackChunkName or it will break the webpack nrba-chunking plugin
-      const { gzipSync, strToU8 } = await import(/* webpackChunkName: "compressor" */'fflate')
-      gzipper = gzipSync
-      u8 = strToU8
-    } catch (err) {
-      // compressor failed to load, but we can still record without compression as a last ditch effort
-      this.shouldCompress = false
-    }
+    await this.prepUtils()
+
     if (!this.recorder.recording) this.recorder.startRecording()
 
     this.syncWithSessionManager({ sessionReplayMode: this.mode })
   }
 
-  prepareHarvest () {
+  async prepUtils () {
+    try {
+      // Do not change the webpackChunkName or it will break the webpack nrba-chunking plugin
+      const { gzipSync, strToU8 } = await import(/* webpackChunkName: "compressor" */'fflate')
+      this.gzipper = gzipSync
+      this.u8 = strToU8
+    } catch (err) {
+      // compressor failed to load, but we can still record without compression as a last ditch effort
+    }
+  }
+
+  prepareHarvest ({ opts } = {}) {
     if (!this.recorder) return
     const recorderEvents = this.recorder.getEvents()
     // get the event type and use that to trigger another harvest if needed
@@ -224,8 +234,8 @@ export class Aggregate extends AggregateBase {
     }
 
     let len = 0
-    if (this.shouldCompress) {
-      payload.body = gzipper(u8(`[${payload.body.map(e => e.__serialized).join(',')}]`))
+    if (!!this.gzipper && !!this.u8) {
+      payload.body = this.gzipper(this.u8(`[${payload.body.map(e => e.__serialized).join(',')}]`))
       len = payload.body.length
       this.scheduler.opts.gzip = true
     } else {
@@ -242,7 +252,7 @@ export class Aggregate extends AggregateBase {
     const { session } = getRuntime(this.agentIdentifier)
     if (!session.state.sessionReplaySentFirstChunk) this.syncWithSessionManager({ sessionReplaySentFirstChunk: true })
     this.recorder.clearBuffer()
-    if (recorderEvents.type === 'preloaded') this.scheduler.runHarvest()
+    if (recorderEvents.type === 'preloaded') this.scheduler.runHarvest(opts)
     return [payload]
   }
 
@@ -276,7 +286,7 @@ export class Aggregate extends AggregateBase {
 
     const firstEventTimestamp = events[0]?.timestamp // from rrweb node
     const lastEventTimestamp = events[events.length - 1]?.timestamp // from rrweb node
-    const firstTimestamp = firstEventTimestamp || recorderEvents.cycleTimestamp
+    const firstTimestamp = firstEventTimestamp || recorderEvents.cycleTimestamp // from rrweb node || from when the harvest cycle started
     const lastTimestamp = lastEventTimestamp || agentOffset + relativeNow
 
     return {
@@ -288,7 +298,7 @@ export class Aggregate extends AggregateBase {
         attributes: encodeObj({
           // this section of attributes must be controllable and stay below the query param padding limit -- see QUERY_PARAM_PADDING
           // if not, data could be lost to truncation at time of sending, potentially breaking parsing / API behavior in NR1
-          ...(this.shouldCompress && { content_encoding: 'gzip' }),
+          ...(!!this.gzipper && !!this.u8 && { content_encoding: 'gzip' }),
           'replay.firstTimestamp': firstTimestamp,
           'replay.firstTimestampOffset': firstTimestamp - agentOffset,
           'replay.lastTimestamp': lastTimestamp,

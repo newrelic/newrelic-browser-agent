@@ -49,9 +49,8 @@ export class Aggregate extends AggregateBase {
     ee.on('interactionDone', (interaction, wasSaved) => {
       if (!spaAjaxEvents[interaction.id]) return
 
-      if (wasSaved) {
+      if (!wasSaved) { // if the ixn was saved, then its ajax reqs are part of the payload whereas if it was discarded, it should still be harvested in the ajax feature itself
         spaAjaxEvents[interaction.id].forEach(function (item) {
-        // move it from the spaAjaxEvents buffer to the ajaxEvents buffer for harvesting here
           ajaxEvents.push(item)
         })
       }
@@ -130,7 +129,7 @@ export class Aggregate extends AggregateBase {
       })
       if (event.gql) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Ajax/Events/GraphQL/Bytes-Added', stringify(event.gql).length], undefined, FEATURE_NAMES.metrics, ee)
 
-      const softNavInUse = Boolean(getNREUMInitializedAgent(agentIdentifier)?.features[FEATURE_NAMES.softNav])
+      const softNavInUse = Boolean(getNREUMInitializedAgent(agentIdentifier)?.features?.[FEATURE_NAMES.softNav])
 
       if (softNavInUse) { // For newer soft nav (when running), pass the event to it for evaluation -- either part of an interaction or is given back
         handle('ajax', [event], undefined, FEATURE_NAMES.softNav, ee)

@@ -45,7 +45,7 @@ export class Instrument extends InstrumentBase {
 
     const processUserInteraction = debounce((event) => {
       handle('newUIEvent', [event], undefined, this.featureName, this.ee)
-      domObserver.observe(document.documentElement || document.body, { attributes: true, childList: true, subtree: true, characterData: true })
+      domObserver.observe(document.body, { attributes: true, childList: true, subtree: true, characterData: true })
     }, UI_WAIT_INTERVAL, { leading: true })
 
     eventsEE.on('fn-start', ([evt]) => { // set up a new user ixn before the callback for the triggering event executes

@@ -208,8 +208,8 @@ export class Aggregate extends AggregateBase {
     registerHandler(INTERACTION_API + 'get', function (time, { waitForEnd } = {}) {
       // In here, 'this' refers to the EventContext specific to per InteractionHandle instance spawned by each .interaction() api call.
       // Each api call aka IH instance would therefore retain a reference to either the in-progress interaction *at the time of the call* OR a new api-started interaction.
-      if (thisClass.interactionInProgress !== null) this.associatedInteraction = thisClass.interactionInProgress
-      else {
+      this.associatedInteraction = thisClass.getInteractionFor(time)
+      if (!this.associatedInteraction) {
         // This new api-driven interaction will be the target of any subsequent .interaction() call, until it is closed by EITHER .end() OR the regular seenHistoryAndDomChange process.
         this.associatedInteraction = thisClass.interactionInProgress = new Interaction(thisClass.agentIdentifier, API_TRIGGER_NAME, time, thisClass.latestRouteSetByApi)
         thisClass.setClosureHandlers()

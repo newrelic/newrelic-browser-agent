@@ -73,16 +73,16 @@ describe('soft navigations', () => {
   const _setTimeout = global.setTimeout
   global.setTimeout = jest.fn((cb, timeout) => _setTimeout(cb, timeout === 0 ? 0 : 300)) // force cancellationTimers to trigger after 0.5 second
 
-  describe('aggregate', () => {
-    let executeTTFB
-    jest.doMock('../../common/vitals/time-to-first-byte', () => {
-      return {
-        __esModule: true,
-        timeToFirstByte: {
-          subscribe: jest.fn(cb => { executeTTFB = cb })
-        }
+  let executeTTFB
+  jest.doMock('../../common/vitals/time-to-first-byte', () => {
+    return {
+      __esModule: true,
+      timeToFirstByte: {
+        subscribe: jest.fn(cb => { executeTTFB = cb })
       }
-    })
+    }
+  })
+  describe('aggregate', () => {
     let softNavInstrument, softNavAggregate
     beforeEach(async () => {
       softNavInstrument = new SoftNav('abcd', aggregator)
@@ -173,6 +173,7 @@ describe('soft navigations', () => {
       softNavAggregate = softNavInstrument.featAggregate
     })
     beforeEach(() => {
+      softNavAggregate.initialPageLoadInteraction = null
       softNavAggregate.interactionInProgress = null
       softNavAggregate.interactionsToHarvest = []
       thisCtx = softNavAggregate.ee.context()
@@ -183,15 +184,23 @@ describe('soft navigations', () => {
     }
 
     test('.interaction gets current or creates new api ixn', () => {
+      softNavAggregate.initialPageLoadInteraction = { isActiveDuring: () => true }
+      newrelic.interaction('get')
+      expect(thisCtx.associatedInteraction).toBe(softNavAggregate.initialPageLoadInteraction) // should grab the iPL if it's still open and no other ixn in progress
+
       softNavAggregate.ee.emit('newUIEvent', [{ type: 'submit', timeStamp: 12 }])
       expect(softNavAggregate.interactionInProgress).toBeTruthy()
-      newrelic.interaction('get')
+      newrelic.interaction('get') // should grab the UI ixn over the in-progress iPL
       expect(thisCtx.associatedInteraction).toBe(softNavAggregate.interactionInProgress)
 
       softNavAggregate.interactionInProgress.done()
       expect(softNavAggregate.interactionInProgress).toBeNull()
       newrelic.interaction('get')
-      expect(softNavAggregate.interactionInProgress.trigger).toEqual('api')
+      expect(thisCtx.associatedInteraction).toBe(softNavAggregate.initialPageLoadInteraction) // should fallback to the iPL once the UI ixn is over
+
+      softNavAggregate.initialPageLoadInteraction = null
+      newrelic.interaction('get')
+      expect(softNavAggregate.interactionInProgress.trigger).toEqual('api') // once iPL is over, get creates a new api ixn
       expect(softNavAggregate.interactionInProgress.cancellationTimer).toBeUndefined()
     })
 
@@ -237,13 +246,13 @@ describe('soft navigations', () => {
       expect(softNavAggregate.interactionInProgress).toBeNull()
       expect(thisCtx.associatedInteraction.end).toEqual(45)
 
-      newrelic.interaction('get', 12, { waitForEnd: true }) // on new api ixn
-      softNavAggregate.ee.emit('newURL', [23, 'example.com'])
-      softNavAggregate.ee.emit('newDom', [34])
+      newrelic.interaction('get', 50, { waitForEnd: true }) // on new api ixn
+      softNavAggregate.ee.emit('newURL', [70, 'example.com'])
+      softNavAggregate.ee.emit('newDom', [80])
       expect(softNavAggregate.interactionInProgress.status).toEqual('in progress')
-      newrelic.interaction('end', 50)
+      newrelic.interaction('end', 90)
       expect(softNavAggregate.interactionInProgress).toBeNull()
-      expect(thisCtx.associatedInteraction.end).toEqual(50)
+      expect(thisCtx.associatedInteraction.end).toEqual(90)
     })
 
     test('.save forcibly harvest any would-be cancelled ixns', async () => {
@@ -260,6 +269,16 @@ describe('soft navigations', () => {
       newrelic.interaction('get').interaction('save')
       await new Promise(resolve => _setTimeout(resolve, 301))
       expect(softNavAggregate.interactionsToHarvest.length).toEqual(3)
+    })
+
+    test('.interaction gets ixn retroactively too when processed late after ee buffer drain', () => {
+      softNavAggregate.ee.emit('newUIEvent', [{ type: 'submit', timeStamp: 0 }])
+      let timeInBtwn = performance.now()
+      newrelic.interaction('get').interaction('save').interaction('end')
+
+      expect(softNavAggregate.interactionsToHarvest.length).toEqual(1)
+      newrelic.interaction('get', timeInBtwn)
+      expect(thisCtx.associatedInteraction.trigger).toBe('submit')
     })
 
     test('.ignore forcibly discard any would-be harvested ixns', () => {

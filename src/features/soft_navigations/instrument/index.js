@@ -53,6 +53,7 @@ export class Instrument extends InstrumentBase {
         processUserInteraction(evt)
       }
     })
+    for (let eventType of INTERACTION_TRIGGERS) document.addEventListener(eventType, () => { /* no-op, this ensures the UI events are monitored by our callback above */ })
 
     this.abortHandler = abort
     this.importAggregator({ domObserver })

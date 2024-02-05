@@ -24,7 +24,8 @@ window.NREUM={
     },
     session_trace: {
       enabled: true
-    }
+    },
+    proxy: {}
   },
   loader_config: {
     accountID: '1',

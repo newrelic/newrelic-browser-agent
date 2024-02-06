@@ -143,6 +143,19 @@ describe('event-emitter buffer', () => {
     expect(ee.isBuffering(eventType)).toEqual(false)
   })
 
+  test('it should empty the backlog on abort as opposed to replacing it', async () => {
+    const { ee } = await import('./contextual-ee')
+
+    const backlog = {
+      api: ['foo', 'bar', 'baz']
+    }
+    ee.backlog = backlog
+    ee.abort()
+
+    expect(ee.backlog).toBe(backlog)
+    expect(ee.backlog).toEqual({})
+  })
+
   test('it should not buffer after drain', async () => {
     const { ee } = await import('./contextual-ee')
     const { drain } = await import('../drain/drain')

@@ -144,5 +144,11 @@ function ee (old, debugId) {
 
 function abort () {
   globalInstance.aborted = true
-  globalInstance.backlog = {}
+  // The global backlog can be referenced directly by other emitters,
+  // so we need to delete its contents as opposed to replacing it.
+  // Otherwise, these references to the old backlog would still exist
+  // and the keys will not be garbage collected.
+  Object.keys(globalInstance.backlog).forEach(key => {
+    delete globalInstance.backlog[key]
+  })
 }

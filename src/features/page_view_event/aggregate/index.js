@@ -101,7 +101,7 @@ export class Aggregate extends AggregateBase {
       payload: { qs: queryParameters, body },
       opts: { needResponse: true, sendEmptyBody: true },
       cbFinished: ({ status, responseText }) => {
-        if (status >= 400) {
+        if (status >= 400 || status === 0) {
           // Adding retry logic for the rum call will be a separate change
           this.ee.abort()
           return

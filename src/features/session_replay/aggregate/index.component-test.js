@@ -88,6 +88,7 @@ describe('Session Replay', () => {
       global.XMLHttpRequest = jest.fn().mockImplementation(xhrMockClass)
 
       setConfiguration(agentIdentifier, { ...init })
+      sr = new SessionReplayAgg(agentIdentifier, new Aggregator({}))
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)
       expect(sr.initialized).toBeTruthy()
@@ -100,6 +101,7 @@ describe('Session Replay', () => {
 
     test('When Session Is Paused/Resumed', async () => {
       setConfiguration(agentIdentifier, { ...init })
+      sr = new SessionReplayAgg(agentIdentifier, new Aggregator({}))
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)
       expect(sr.initialized).toBeTruthy()
@@ -112,6 +114,7 @@ describe('Session Replay', () => {
 
     test('Session SR mode matches SR mode -- FULL', async () => {
       setConfiguration(agentIdentifier, { ...init })
+      sr = new SessionReplayAgg(agentIdentifier, new Aggregator({}))
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)
       expect(session.state.sessionReplayMode).toEqual(sr.mode)
@@ -119,6 +122,7 @@ describe('Session Replay', () => {
 
     test('Session SR mode matches SR mode -- ERROR', async () => {
       setConfiguration(agentIdentifier, { session_replay: { sampling_rate: 0, error_sampling_rate: 100 } })
+      sr = new SessionReplayAgg(agentIdentifier, new Aggregator({}))
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)
       expect(session.state.sessionReplayMode).toEqual(sr.mode)
@@ -126,6 +130,7 @@ describe('Session Replay', () => {
 
     test('Session SR mode matches SR mode -- OFF', async () => {
       setConfiguration(agentIdentifier, { session_replay: { sampling_rate: 0, error_sampling_rate: 0 } })
+      sr = new SessionReplayAgg(agentIdentifier, new Aggregator({}))
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)
       expect(session.state.sessionReplayMode).toEqual(sr.mode)
@@ -135,6 +140,7 @@ describe('Session Replay', () => {
   describe('Session Replay Initialization Behavior', () => {
     test('Waits for SR', async () => {
       setConfiguration(agentIdentifier, { ...init })
+      sr = new SessionReplayAgg(agentIdentifier, new Aggregator({}))
       // do not emit sr flag
       await wait(1000)
       expect(sr.initialized).toEqual(false)
@@ -169,6 +175,7 @@ describe('Session Replay', () => {
   describe('Session Replay Sample -> Mode Behaviors', () => {
     test('New Session -- Full 1 Error 1 === FULL', async () => {
       setConfiguration(agentIdentifier, { session_replay: { error_sampling_rate: 100, sampling_rate: 100 } })
+      sr = new SessionReplayAgg(agentIdentifier, new Aggregator({}))
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)
       expect(sr.mode).toEqual(MODE.FULL)
@@ -176,6 +183,7 @@ describe('Session Replay', () => {
 
     test('New Session -- Full 1 Error 0 === FULL', async () => {
       setConfiguration(agentIdentifier, { session_replay: { error_sampling_rate: 0, sampling_rate: 100 } })
+      sr = new SessionReplayAgg(agentIdentifier, new Aggregator({}))
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)
       expect(sr.mode).toEqual(MODE.FULL)
@@ -183,6 +191,7 @@ describe('Session Replay', () => {
 
     test('New Session -- Full 0 Error 1 === ERROR', async () => {
       setConfiguration(agentIdentifier, { session_replay: { error_sampling_rate: 100, sampling_rate: 0 } })
+      sr = new SessionReplayAgg(agentIdentifier, new Aggregator({}))
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)
       expect(sr.mode).toEqual(MODE.ERROR)
@@ -190,6 +199,7 @@ describe('Session Replay', () => {
 
     test('New Session -- Full 0 Error 0 === OFF', async () => {
       setConfiguration(agentIdentifier, { session_replay: { error_sampling_rate: 0, sampling_rate: 0 } })
+      sr = new SessionReplayAgg(agentIdentifier, new Aggregator({}))
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)
       expect(sr.mode).toEqual(MODE.OFF)
@@ -202,6 +212,7 @@ describe('Session Replay', () => {
       primeSessionAndReplay(session)
       // configure to get "error" sample ---> but should inherit FULL from session manager
       setConfiguration(agentIdentifier, { session_replay: { error_sampling_rate: 100, sampling_rate: 0 } })
+      sr = new SessionReplayAgg(agentIdentifier, new Aggregator({}))
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)
       expect(sr.mode).toEqual(MODE.FULL)
@@ -211,6 +222,7 @@ describe('Session Replay', () => {
   describe('Session Replay Error Mode Behaviors', () => {
     test('An error BEFORE rrweb import starts running in FULL from beginning', async () => {
       setConfiguration(agentIdentifier, { session_replay: { error_sampling_rate: 100, sampling_rate: 0 } })
+      sr = new SessionReplayAgg(agentIdentifier, new Aggregator({}))
       sr.ee.emit('errorAgg')
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)
@@ -220,6 +232,7 @@ describe('Session Replay', () => {
 
     test('An error AFTER rrweb import changes mode and starts harvester', async () => {
       setConfiguration(agentIdentifier, { session_replay: { error_sampling_rate: 100, sampling_rate: 0 } })
+      sr = new SessionReplayAgg(agentIdentifier, new Aggregator({}))
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)
       expect(sr.mode).toEqual(MODE.ERROR)
@@ -236,6 +249,7 @@ describe('Session Replay', () => {
       session = new SessionEntity({ agentIdentifier, key: 'SESSION', storage })
       primeSessionAndReplay(session)
       setConfiguration(agentIdentifier, { ...init })
+      sr = new SessionReplayAgg(agentIdentifier, new Aggregator({}))
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)
       const harvestContents = sr.getHarvestContents()
@@ -256,6 +270,7 @@ describe('Session Replay', () => {
     test('Compressed payload is provided to harvester', async () => {
       const { gunzipSync, strFromU8 } = await import('fflate')
       setConfiguration(agentIdentifier, { ...init })
+      sr = new SessionReplayAgg(agentIdentifier, new Aggregator({}))
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)
       const [harvestContents] = sr.prepareHarvest()
@@ -273,6 +288,7 @@ describe('Session Replay', () => {
       }))
 
       setConfiguration(agentIdentifier, { ...init })
+      sr = new SessionReplayAgg(agentIdentifier, new Aggregator({}))
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)
 
@@ -290,6 +306,7 @@ describe('Session Replay', () => {
 
     test('Clears the event buffer when staged for harvesting', async () => {
       setConfiguration(agentIdentifier, { ...init })
+      sr = new SessionReplayAgg(agentIdentifier, new Aggregator({}))
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)
 
@@ -300,11 +317,12 @@ describe('Session Replay', () => {
 
     test('Harvests early if exceeds limit', async () => {
       let after = 0
-      const spy = jest.spyOn(sr.scheduler, 'runHarvest').mockImplementation(() => { after = Date.now() })
       setConfiguration(agentIdentifier, { ...init })
+      sr = new SessionReplayAgg(agentIdentifier, new Aggregator({}))
       sr.recorder = new Recorder(sr)
       sr.recorder.currentBufferTarget.payloadBytesEstimation = IDEAL_PAYLOAD_SIZE / AVG_COMPRESSION
       const before = Date.now()
+      const spy = jest.spyOn(sr.scheduler, 'runHarvest').mockImplementation(() => { after = Date.now() })
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)
       expect(spy).toHaveBeenCalled()
@@ -318,11 +336,12 @@ describe('Session Replay', () => {
       }))
       const spy = jest.spyOn(sr.scheduler.harvest, '_send')
       setConfiguration(agentIdentifier, { ...init })
+      sr = new SessionReplayAgg(agentIdentifier, new Aggregator({}))
       sr.recorder = new Recorder(sr)
       Array.from({ length: 100000 }).forEach(() => sr.recorder.currentBufferTarget.add({ test: 1 })) //  fill the events array with tons of events
       sr.recorder.currentBufferTarget.payloadBytesEstimation = sr.recorder.currentBufferTarget.events.join('').length
       sr.ee.emit('rumresp-sr', [true])
-      await wait(100)
+      await wait(1)
       expect(spy).not.toHaveBeenCalled()
       expect(sr.blocked).toEqual(true)
       expect(sr.mode).toEqual(MODE.OFF)
@@ -330,6 +349,7 @@ describe('Session Replay', () => {
 
     test('Aborts if 429 response', async () => {
       setConfiguration(agentIdentifier, { ...init })
+      sr = new SessionReplayAgg(agentIdentifier, new Aggregator({}))
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)
       expect(sr.mode).toEqual(MODE.FULL)
@@ -349,5 +369,4 @@ function wait (ms = 0) {
 function primeSessionAndReplay (sess = new SessionEntity({ agentIdentifier, key: 'SESSION', storage: new LocalMemory() })) {
   session = sess
   configure({ agentIdentifier }, { info, runtime: { session }, init: {} }, 'test', true)
-  sr = new SessionReplayAgg(agentIdentifier, new Aggregator({}))
 }

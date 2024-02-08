@@ -53,6 +53,8 @@ export class Aggregate extends AggregateBase {
     this.recorder = args?.recorder
     if (this.recorder) this.recorder.parent = this
 
+    handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/Enabled'], undefined, FEATURE_NAMES.metrics, this.ee)
+
     const shouldSetup = (
       getConfigurationValue(agentIdentifier, 'privacy.cookies_enabled') === true &&
       getConfigurationValue(agentIdentifier, 'session_trace.enabled') === true
@@ -122,15 +124,23 @@ export class Aggregate extends AggregateBase {
         }
       }, this.featureName, this.ee)
 
+      const errorSamplingRate = getConfigurationValue(this.agentIdentifier, 'session_replay.error_sampling_rate')
+      const samplingRate = getConfigurationValue(this.agentIdentifier, 'session_replay.sampling_rate')
+
       this.waitForFlags(['sr']).then(([flagOn]) => {
         this.entitled = flagOn
-        if (!this.entitled && this.recorder?.recording) this.recorder.abort(ABORT_REASONS.ENTITLEMENTS)
+        if (!this.entitled && this.recorder?.recording) {
+          this.recorder.abort(ABORT_REASONS.ENTITLEMENTS)
+          handle(SUPPORTABILITY_METRIC_CHANNEL, ['SessionReplay/EnabledNotEntitled/Detected'], undefined, FEATURE_NAMES.metrics, this.ee)
+        }
         this.initializeRecording(
-          (Math.random() * 100) < getConfigurationValue(this.agentIdentifier, 'session_replay.error_sampling_rate'),
-          (Math.random() * 100) < getConfigurationValue(this.agentIdentifier, 'session_replay.sampling_rate')
+          (Math.random() * 100) < errorSamplingRate,
+          (Math.random() * 100) < samplingRate
         )
       }).then(() => sharedChannel.onReplayReady(this.mode)) // notify watchers that replay started with the mode
 
+      handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/SamplingRate/Value', samplingRate], undefined, FEATURE_NAMES.metrics, this.ee)
+      handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/ErrorSamplingRate/Value', errorSamplingRate], undefined, FEATURE_NAMES.metrics, this.ee)
       this.drain()
     }
   }

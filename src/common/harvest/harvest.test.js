@@ -358,14 +358,14 @@ describe('_send', () => {
 
     const result = harvestInstance._send(spec)
     const xhrAddEventListener = jest.mocked(submitDataModule.xhr).mock.results[0].value.addEventListener
-    const xhrLoadHandler = jest.mocked(xhrAddEventListener).mock.calls[0][1]
+    const xhrLoadEndHandler = jest.mocked(xhrAddEventListener).mock.calls[0][1]
 
     const xhrState = {
       status: faker.string.uuid()
     }
-    xhrLoadHandler.call(xhrState)
+    xhrLoadEndHandler.call(xhrState)
 
-    expect(xhrAddEventListener).toHaveBeenCalledWith('load', expect.any(Function), expect.any(Object))
+    expect(xhrAddEventListener).toHaveBeenCalledWith('loadend', expect.any(Function), expect.any(Object))
     expect(result).toEqual(jest.mocked(submitDataModule.xhr).mock.results[0].value)
     expect(submitMethod).not.toHaveBeenCalled()
     expect(spec.cbFinished).toHaveBeenCalledWith({ ...xhrState, sent: true })
@@ -378,14 +378,14 @@ describe('_send', () => {
 
     const result = harvestInstance._send(spec)
     const xhrAddEventListener = jest.mocked(submitDataModule.xhr).mock.results[0].value.addEventListener
-    const xhrLoadHandler = jest.mocked(xhrAddEventListener).mock.calls[0][1]
+    const xhrLoadEndHandler = jest.mocked(xhrAddEventListener).mock.calls[0][1]
 
     const xhrState = {
       status: 429
     }
-    xhrLoadHandler.call(xhrState)
+    xhrLoadEndHandler.call(xhrState)
 
-    expect(xhrAddEventListener).toHaveBeenCalledWith('load', expect.any(Function), expect.any(Object))
+    expect(xhrAddEventListener).toHaveBeenCalledWith('loadend', expect.any(Function), expect.any(Object))
     expect(result).toEqual(jest.mocked(submitDataModule.xhr).mock.results[0].value)
     expect(submitMethod).not.toHaveBeenCalled()
     expect(spec.cbFinished).toHaveBeenCalledWith({
@@ -404,14 +404,14 @@ describe('_send', () => {
 
     const result = harvestInstance._send(spec)
     const xhrAddEventListener = jest.mocked(submitDataModule.xhr).mock.results[0].value.addEventListener
-    const xhrLoadHandler = jest.mocked(xhrAddEventListener).mock.calls[0][1]
+    const xhrLoadEndHandler = jest.mocked(xhrAddEventListener).mock.calls[0][1]
 
     const xhrState = {
       status: statusCode
     }
-    xhrLoadHandler.call(xhrState)
+    xhrLoadEndHandler.call(xhrState)
 
-    expect(xhrAddEventListener).toHaveBeenCalledWith('load', expect.any(Function), expect.any(Object))
+    expect(xhrAddEventListener).toHaveBeenCalledWith('loadend', expect.any(Function), expect.any(Object))
     expect(result).toEqual(jest.mocked(submitDataModule.xhr).mock.results[0].value)
     expect(submitMethod).not.toHaveBeenCalled()
     expect(spec.cbFinished).toHaveBeenCalledWith({
@@ -428,15 +428,15 @@ describe('_send', () => {
 
     const result = harvestInstance._send(spec)
     const xhrAddEventListener = jest.mocked(submitDataModule.xhr).mock.results[0].value.addEventListener
-    const xhrLoadHandler = jest.mocked(xhrAddEventListener).mock.calls[0][1]
+    const xhrLoadEndHandler = jest.mocked(xhrAddEventListener).mock.calls[0][1]
 
     const xhrState = {
       status: faker.string.uuid(),
       responseText: faker.lorem.sentence()
     }
-    xhrLoadHandler.call(xhrState)
+    xhrLoadEndHandler.call(xhrState)
 
-    expect(xhrAddEventListener).toHaveBeenCalledWith('load', expect.any(Function), expect.any(Object))
+    expect(xhrAddEventListener).toHaveBeenCalledWith('loadend', expect.any(Function), expect.any(Object))
     expect(result).toEqual(jest.mocked(submitDataModule.xhr).mock.results[0].value)
     expect(submitMethod).not.toHaveBeenCalled()
     expect(spec.cbFinished).toHaveBeenCalledWith({
@@ -452,21 +452,43 @@ describe('_send', () => {
 
     const result = harvestInstance._send(spec)
     const xhrAddEventListener = jest.mocked(submitDataModule.xhr).mock.results[0].value.addEventListener
-    const xhrLoadHandler = jest.mocked(xhrAddEventListener).mock.calls[0][1]
+    const xhrLoadEndHandler = jest.mocked(xhrAddEventListener).mock.calls[0][1]
 
     const xhrState = {
       status: faker.string.uuid(),
       responseText: faker.lorem.sentence()
     }
-    xhrLoadHandler.call(xhrState)
+    xhrLoadEndHandler.call(xhrState)
 
-    expect(xhrAddEventListener).toHaveBeenCalledWith('load', expect.any(Function), expect.any(Object))
+    expect(xhrAddEventListener).toHaveBeenCalledWith('loadend', expect.any(Function), expect.any(Object))
     expect(result).toEqual(jest.mocked(submitDataModule.xhr).mock.results[0].value)
     expect(submitMethod).not.toHaveBeenCalled()
     expect(spec.cbFinished).toHaveBeenCalledWith({
       ...xhrState,
       responseText: undefined,
       sent: true
+    })
+  })
+
+  test('should call cbFinished with sent false and status 0 when xhr failed locally', () => {
+    jest.mocked(submitDataModule.getSubmitMethod).mockReturnValue(submitDataModule.xhr)
+    spec.cbFinished = jest.fn()
+
+    const result = harvestInstance._send(spec)
+    const xhrAddEventListener = jest.mocked(submitDataModule.xhr).mock.results[0].value.addEventListener
+    const xhrLoadEndHandler = jest.mocked(xhrAddEventListener).mock.calls[0][1]
+
+    const xhrState = {
+      status: 0
+    }
+    xhrLoadEndHandler.call(xhrState)
+
+    expect(xhrAddEventListener).toHaveBeenCalledWith('loadend', expect.any(Function), expect.any(Object))
+    expect(result).toEqual(jest.mocked(submitDataModule.xhr).mock.results[0].value)
+    expect(submitMethod).not.toHaveBeenCalled()
+    expect(spec.cbFinished).toHaveBeenCalledWith({
+      ...xhrState,
+      sent: false
     })
   })
 })

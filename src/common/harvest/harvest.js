@@ -142,9 +142,10 @@ export class Harvest extends SharedContext {
 
     if (!opts.unload && cbFinished && submitMethod === submitData.xhr) {
       const harvestScope = this
-      result.addEventListener('load', function () {
+      result.addEventListener('loadend', function () {
         // `this` refers to the XHR object in this scope, do not change this to a fat arrow
-        const cbResult = { sent: true, status: this.status }
+        // status 0 refers to a local error, such as CORS or network failure, or a blocked request by the browser (e.g. adblocker)
+        const cbResult = { sent: this.status !== 0, status: this.status }
         if (this.status === 429) {
           cbResult.retry = true
           cbResult.delay = harvestScope.tooManyRequestsDelay

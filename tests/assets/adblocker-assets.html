@@ -1,0 +1,21 @@
+<!doctype html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+<head>
+  <title>RUM Unit Test</title>
+  {init} {config}
+
+  <script type="text/javascript">
+    // Use proxy to simulate adblock of assets
+    window.NREUM||(NREUM={});NREUM.init=NREUM.init||{};NREUM.init.proxy=NREUM.init.proxy||{};NREUM.init.proxy.assets="http://foobar"
+  </script>
+
+  {loader}
+</head>
+<body>
+This page simulates the agent assets being blocked by using a bad asset proxy setting.
+</body>
+</html>

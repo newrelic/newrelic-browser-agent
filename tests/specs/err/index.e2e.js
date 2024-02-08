@@ -45,4 +45,34 @@ describe('basic error capturing', () => {
     expect(errors.request.body.err.length).toEqual(expected.length)
     expect(errors.request.body.err).toEqual(expect.arrayContaining(expected))
   })
+
+  it('should capture file and line number for syntax errors', async () => {
+    const [errors] = await Promise.all([
+      browser.testHandle.expectErrors(),
+      browser.url(await browser.testHandle.assetURL('js-error-syntax-error.html'))
+        .then(() => browser.waitForAgentLoad())
+    ])
+
+    if (browserMatch(notIE)) {
+      expect(errors.request.body.err).toEqual(expect.arrayContaining([
+        expect.objectContaining({
+          params: expect.objectContaining({
+            stackHash: 334471736,
+            exceptionClass: 'SyntaxError',
+            stack_trace: expect.stringContaining('<inline>:18')
+          })
+        })
+      ]))
+    } else {
+      expect(errors.request.body.err).toEqual(expect.arrayContaining([
+        expect.objectContaining({
+          params: expect.objectContaining({
+            stackHash: 334471735,
+            exceptionClass: 'UncaughtError',
+            stack_trace: expect.stringContaining('<inline>:17')
+          })
+        })
+      ]))
+    }
+  })
 })

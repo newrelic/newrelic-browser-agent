@@ -61,6 +61,13 @@ describe('basic error capturing', () => {
             exceptionClass: 'SyntaxError',
             stack_trace: expect.stringContaining('<inline>:18')
           })
+        }),
+        expect.objectContaining({
+          params: expect.objectContaining({
+            stackHash: 334471761,
+            exceptionClass: 'SyntaxError',
+            stack_trace: expect.stringContaining('<inline>:22')
+          })
         })
       ]))
     } else {
@@ -70,6 +77,13 @@ describe('basic error capturing', () => {
             stackHash: 334471735,
             exceptionClass: 'UncaughtError',
             stack_trace: expect.stringContaining('<inline>:17')
+          })
+        }),
+        expect.objectContaining({
+          params: expect.objectContaining({
+            stackHash: 334471760,
+            exceptionClass: 'SyntaxError',
+            stack_trace: expect.stringContaining('<inline>:21')
           })
         })
       ]))

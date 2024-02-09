@@ -108,7 +108,7 @@ export class InstrumentBase extends FeatureBase {
         warn(`Downloading and initializing ${this.featureName} failed...`, e)
         this.abortHandler?.() // undo any important alterations made to the page
         // not supported yet but nice to do: "abort" this agent's EE for this feature specifically
-        drain(this.agentIdentifier, this.featureName)
+        drain(this.agentIdentifier, this.featureName, true)
         loadedSuccessfully(false)
       }
     }

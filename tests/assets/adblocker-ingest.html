@@ -1,0 +1,33 @@
+<!doctype html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <script type="text/javascript">
+      var xhrOpen = XMLHttpRequest.prototype.open
+      var xhrSend = XMLHttpRequest.prototype.send
+
+      var urlCache = {}
+      XMLHttpRequest.prototype.open = function () {
+        urlCache[this] = arguments[1]
+        return xhrOpen.apply(this, arguments)
+      }
+      XMLHttpRequest.prototype.send = function () {
+        var url = urlCache[this]
+        var result = xhrSend.apply(this, arguments)
+        if (/\/1\/[\w-_]*\?/.test(url)) {
+          var xhr = this
+          setTimeout(function () { xhr.abort() }, 1)
+        }
+        return result
+      }
+    </script>
+    <title>RUM Unit Test</title>
+    {init} {config} {loader}
+  </head>
+  <body>
+    This page simulates the ingest XHR calls being blocked by aborting the rum call.
+  </body>
+</html>

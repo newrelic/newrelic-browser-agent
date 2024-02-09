@@ -245,7 +245,6 @@ jobs:
           github_login: ${{ secrets.BROWSER_GITHUB_BOT_NAME }}
           github_email: ${{ secrets.BROWSER_GITHUB_BOT_EMAIL }}
           nr_docs_github_token: ${{ secrets.BROWSER_GITHUB_BOT_DOCS_PAT }}
-          nr_forks_github_token: ${{ secrets.BROWSER_GITHUB_FORKS_BOT_DOCS_PAT }}
 
   # Notify the release repo of the new release
   notify-release-repo:

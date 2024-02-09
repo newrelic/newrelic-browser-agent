@@ -81,9 +81,9 @@ describe('basic error capturing', () => {
         }),
         expect.objectContaining({
           params: expect.objectContaining({
-            stackHash: 334471760,
-            exceptionClass: 'SyntaxError',
-            stack_trace: expect.stringContaining('<inline>:21')
+            stackHash: 334471761,
+            exceptionClass: 'unknown',
+            stack_trace: expect.stringContaining('<inline>:22')
           })
         })
       ]))

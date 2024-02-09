@@ -128,7 +128,6 @@ export class Instrument extends InstrumentBase {
    * @returns {Error|UncaughtError} The error event converted to an Error object
    */
   #castErrorEvent (errorEvent) {
-    console.log(errorEvent)
     if (errorEvent.error instanceof SyntaxError && !/:\d+$/.test(errorEvent.error.stack?.trim())) {
       const error = new UncaughtError(errorEvent.message, errorEvent.filename, errorEvent.lineno, errorEvent.colno)
       error.name = SyntaxError.name

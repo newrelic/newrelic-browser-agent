@@ -396,7 +396,7 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
     if (ctx.sameOrigin) {
       var header = xhr.getResponseHeader('X-NewRelic-App-Data')
       if (header) {
-        handle(SUPPORTABILITY_METRIC, ['Ajax/CrossApplicationTracing/Header/Seen'], undefined, FEATURE_NAMES.metrics, this.ee)
+        handle(SUPPORTABILITY_METRIC, ['Ajax/CrossApplicationTracing/Header/Seen'], undefined, FEATURE_NAMES.metrics, ee)
         ctx.params.cat = header.split(', ').pop()
       }
     }

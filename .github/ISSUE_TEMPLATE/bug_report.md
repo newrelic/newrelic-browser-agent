@@ -2,7 +2,7 @@
 name: Bug report
 about: Describe a scenario in which this project behaves unexpectedly
 title: ''
-labels: bug
+labels: bug, needs-triage
 assignees: ''
 
 ---

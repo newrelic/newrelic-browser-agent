@@ -166,7 +166,12 @@ export class Recorder {
 
   /** force the recording lib to take a full DOM snapshot.  This needs to occur in certain cases, like visibility changes */
   takeFullSnapshot () {
-    recorder.takeFullSnapshot()
+    try {
+      if (!this.recording) return
+      recorder.takeFullSnapshot()
+    } catch (err) {
+      // in the off chance we think we are recording, but rrweb does not, rrweb's lib will throw an error.  This catch is just a precaution
+    }
   }
 
   clearTimestamps () {

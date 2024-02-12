@@ -9,7 +9,7 @@ class StylesheetEvaluator {
   * Used at harvest time to denote that all subsequent payloads are subject to this and customers should be advised to handle crossorigin decoration
   * */
   invalidStylesheetsDetected = false
-  failedToFix = false
+  failedToFix = 0
 
   /**
    * this works by checking (only ever once) each cssRules obj in the style sheets array. The try/catch will catch an error if the cssRules obj blocks access, triggering the module to try to "fix" the asset`. Returns the count of incomplete assets discovered.
@@ -44,7 +44,7 @@ class StylesheetEvaluator {
     await Promise.all(this.#fetchProms)
     this.#fetchProms = []
     const failedToFix = this.failedToFix
-    this.failedToFix = false
+    this.failedToFix = 0
     return failedToFix
   }
 
@@ -58,7 +58,7 @@ class StylesheetEvaluator {
     try {
       const stylesheetContents = await originals.FETCH.bind(window)(href)
       if (!stylesheetContents.ok) {
-        this.failedToFix = true
+        this.failedToFix++
         return
       }
       const stylesheetText = await stylesheetContents.text()
@@ -77,11 +77,11 @@ class StylesheetEvaluator {
         Object.defineProperty(target, 'cssText', {
           get () { return stylesheetText }
         })
-        this.failedToFix = true
+        this.failedToFix++
       }
     } catch (err) {
     // failed to fetch
-      this.failedToFix = true
+      this.failedToFix++
     }
   }
 }

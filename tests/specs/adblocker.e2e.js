@@ -1,4 +1,9 @@
-import { config } from './session-replay/helpers'
+const config = {
+  init: {
+    privacy: { cookies_enabled: true },
+    session_replay: { enabled: true, harvestTimeSeconds: 5, sampling_rate: 100, error_sampling_rate: 0 }
+  }
+}
 
 describe('adblocker', () => {
   beforeEach(async () => {
@@ -10,7 +15,7 @@ describe('adblocker', () => {
   })
 
   it('should abort the global event emitter when rum call is blocked', async () => {
-    await browser.url(await browser.testHandle.assetURL('adblocker-ingest.html', config({ session_replay: { sampling_rate: 100, error_sampling_rate: 100 } })))
+    await browser.url(await browser.testHandle.assetURL('adblocker-ingest.html', config))
 
     await browser.waitUntil(() => browser.execute(function () {
       return newrelic.ee.aborted
@@ -53,7 +58,7 @@ describe('adblocker', () => {
   })
 
   it('should drain and null out all event emitter buffers when assets fail to load', async () => {
-    await browser.url(await browser.testHandle.assetURL('adblocker-assets.html', config({ session_replay: { sampling_rate: 100, error_sampling_rate: 100 } })))
+    await browser.url(await browser.testHandle.assetURL('adblocker-assets.html', config))
 
     await browser.waitUntil(() => browser.execute(function () {
       var eeBacklogNulled = true

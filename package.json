@@ -17,6 +17,9 @@
       "src/*": [
         "dist/types/*"
       ],
+      "dist/esm/*": [
+        "dist/types/*"
+      ],
       "loaders/agent": [
         "dist/types/loaders/agent.d.ts"
       ],

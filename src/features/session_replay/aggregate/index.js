@@ -27,6 +27,7 @@ import { now } from '../../../common/timing/now'
 import { MODE, SESSION_EVENTS, SESSION_EVENT_TYPES } from '../../../common/session/constants'
 import { stringify } from '../../../common/util/stringify'
 import { stylesheetEvaluator } from '../shared/stylesheet-evaluator'
+import { hasDependentSettings } from '../shared/utils'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -55,10 +56,7 @@ export class Aggregate extends AggregateBase {
 
     handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/Enabled'], undefined, FEATURE_NAMES.metrics, this.ee)
 
-    const shouldSetup = (
-      getConfigurationValue(agentIdentifier, 'privacy.cookies_enabled') === true &&
-      getConfigurationValue(agentIdentifier, 'session_trace.enabled') === true
-    )
+    const shouldSetup = hasDependentSettings(agentIdentifier)
 
     if (shouldSetup) {
       // The SessionEntity class can emit a message indicating the session was cleared and reset (expiry, inactivity). This feature must abort and never resume if that occurs.

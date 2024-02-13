@@ -9,24 +9,37 @@
  * It is not production ready, and is not intended to be imported or implemented in any build of the browser agent until
  * functionality is validated and a full user experience is curated.
  */
+import { getConfigurationValue } from '../../../common/config/config'
 import { MODE } from '../../../common/session/constants'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME } from '../constants'
+import { hasDependentSettings } from '../shared/utils'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
   constructor (agentIdentifier, aggregator, auto = true) {
     super(agentIdentifier, aggregator, FEATURE_NAME, auto)
     try {
-      const session = JSON.parse(localStorage.getItem('NRBA_SESSION'))
-      if (session.sessionReplayMode !== MODE.OFF) {
-        this.#startRecording(session.sessionReplayMode)
+      const canPreload = this.canPreloadRecorder(this.agentIdentifier)
+      console.log(canPreload)
+      if (this.canPreloadRecorder(this.agentIdentifier)) {
+        const session = JSON.parse(localStorage.getItem('NRBA_SESSION'))
+        this.#startRecording(session?.sessionReplayMode)
       } else {
         this.importAggregator({})
       }
     } catch (err) {
       this.importAggregator({})
     }
+  }
+
+  canPreloadRecorder () {
+    /** Assume if replay is in progress... that is enough info to know the recorder can be imported */
+    const session = JSON.parse(localStorage.getItem('NRBA_SESSION'))
+    if (session?.sessionReplayMode !== MODE.OFF) return true
+
+    /** Assume if preload setting is enabled AND it has dependent settings... that is enough info to know the recorder can be imported */
+    return (getConfigurationValue(this.agentIdentifier, 'session_replay.preload') && hasDependentSettings(this.agentIdentifier))
   }
 
   async #startRecording (mode) {

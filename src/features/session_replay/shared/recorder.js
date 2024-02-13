@@ -107,8 +107,9 @@ export class Recorder {
         if (failedToFix) {
           this.currentBufferTarget.inlinedAllStylesheets = false
           this.shouldFix = false
-          handle(SUPPORTABILITY_METRIC_CHANNEL, ['SessionReplay/Payload/Missing-Inline-Css/Failed', failedToFix], undefined, FEATURE_NAMES.metrics, this.parent.ee)
-        } else handle(SUPPORTABILITY_METRIC_CHANNEL, ['SessionReplay/Payload/Missing-Inline-Css/Fixed', incompletes - failedToFix], undefined, FEATURE_NAMES.metrics, this.parent.ee)
+        }
+        handle(SUPPORTABILITY_METRIC_CHANNEL, ['SessionReplay/Payload/Missing-Inline-Css/Failed', failedToFix], undefined, FEATURE_NAMES.metrics, this.parent.ee)
+        handle(SUPPORTABILITY_METRIC_CHANNEL, ['SessionReplay/Payload/Missing-Inline-Css/Fixed', incompletes - failedToFix], undefined, FEATURE_NAMES.metrics, this.parent.ee)
         this.takeFullSnapshot()
       })
       /** Only start ignoring data if got a faulty snapshot */

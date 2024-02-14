@@ -91,12 +91,6 @@ export class Aggregate extends AggregateBase {
         raw: true
       }, this)
 
-      if (this.recorder?.getEvents().type === 'preloaded') {
-        this.prepUtils().then(() => {
-          this.scheduler.runHarvest()
-        })
-      }
-
       registerHandler('recordReplay', () => {
         // if it has aborted or BCS returned bad entitlements, do not allow
         if (this.blocked || !this.entitled) return
@@ -127,8 +121,9 @@ export class Aggregate extends AggregateBase {
       this.waitForFlags(['sr']).then(([flagOn]) => {
         this.entitled = flagOn
         if (!this.entitled && this.recorder?.recording) {
-          this.recorder.abort(ABORT_REASONS.ENTITLEMENTS)
+          this.abort(ABORT_REASONS.ENTITLEMENTS)
           handle(SUPPORTABILITY_METRIC_CHANNEL, ['SessionReplay/EnabledNotEntitled/Detected'], undefined, FEATURE_NAMES.metrics, this.ee)
+          return
         }
         this.initializeRecording(
           (Math.random() * 100) < error_sampling_rate,
@@ -193,6 +188,12 @@ export class Aggregate extends AggregateBase {
       else {
         return
       }
+    }
+
+    if (this.recorder?.getEvents().type === 'preloaded') {
+      this.prepUtils().then(() => {
+        this.scheduler.runHarvest()
+      })
     }
 
     if (!this.recorder) {
@@ -372,7 +373,7 @@ export class Aggregate extends AggregateBase {
     this.syncWithSessionManager({ sessionReplayMode: this.mode })
     this.recorder?.clearTimestamps?.()
     this.ee.emit('REPLAY_ABORTED')
-    this.recorder?.clearBuffer?.()
+    while (this.recorder?.getEvents().events.length) this.recorder?.clearBuffer?.()
   }
 
   syncWithSessionManager (state = {}) {

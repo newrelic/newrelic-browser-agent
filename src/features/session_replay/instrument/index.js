@@ -20,8 +20,8 @@ export class Instrument extends InstrumentBase {
   constructor (agentIdentifier, aggregator, auto = true) {
     super(agentIdentifier, aggregator, FEATURE_NAME, auto)
     try {
-      if (this.canPreloadRecorder(this.agentIdentifier)) {
-        const session = JSON.parse(localStorage.getItem('NRBA_SESSION'))
+      const session = JSON.parse(localStorage.getItem('NRBA_SESSION'))
+      if (this.canPreloadRecorder(session)) {
         this.#startRecording(session?.sessionReplayMode)
       } else {
         this.importAggregator({})
@@ -31,9 +31,8 @@ export class Instrument extends InstrumentBase {
     }
   }
 
-  canPreloadRecorder () {
+  canPreloadRecorder (session) {
     /** Assume if replay is in progress... that is enough info to know the recorder can be imported */
-    const session = JSON.parse(localStorage.getItem('NRBA_SESSION'))
     if (session?.sessionReplayMode === MODE.FULL || session?.sessionReplayMode === MODE.ERROR) return true
 
     /** Assume if preload setting is enabled AND it has dependent settings... that is enough info to know the recorder can be imported */

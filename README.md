@@ -24,12 +24,12 @@ $ npm install @newrelic/browser-agent --save
 $ yarn add @newrelic/browser-agent
 ```
 
-## Creating an app in New Relic One
+## Creating an app in New Relic
 
-Before instrumenting your app using the NPM package, a Browser App should be configured in New Relic One. This may be done with or without a corresponding APM agent. Once the app has been created, the Copy/Paste JavaScript code on the app's *Application settings* page will contain the configuration values needed to define options when instantiating the agent via the NPM package.
+Before instrumenting your app using the NPM package, a Browser App should be configured in New Relic. This may be done with or without a corresponding APM agent. Once the app has been created, the Copy/Paste JavaScript code on the app's *Application settings* page will contain the configuration values needed to define options when instantiating the agent via the NPM package.
 
 1. If a browser app does not already exist, create one:
-   - From the *New Relic One* navigation panel, click *Add Data*.
+   - From the *New Relic* navigation panel, click *Add Data*.
    - Select the *Browser monitoring* data source.
    - Choose the *APM* or *Copy/Paste* method.
    - Select or name your app and click *Enable*.
@@ -41,7 +41,7 @@ Before instrumenting your app using the NPM package, a Browser App should be con
 
 For best results, import and instantiate the `BrowserAgent` class as close to the top of the `head` element of your app's HTML output as possible. The specific location and method will vary based on your application's architecture or framework. See [Library Support](#library-support) for more information.
 
-Populate the `options` parameter using configuration values found in the the *Copy/Paste JavaScript* box in your browser app's *Application settings* page in New Relic One.
+Populate the `options` parameter using configuration values found in the the *Copy/Paste JavaScript* box in your browser app's *Application settings* page in New Relic.
 
 ```javascript
 import { BrowserAgent } from '@newrelic/browser-agent/loaders/browser-agent'
@@ -137,7 +137,7 @@ The examples above use the `Agent` class at their core, which is ideal for most 
 
 Using the `MicroAgent` class, it is possible to skip the "auto" instrumentation phases of the other loader types, and provide a *very small* agent designed for capturing data in a controlled manner via the API interfaces. The `MicroAgent` captures a distinct `PageView` event when instantiated, and additional `PageAction` and `JavaScriptError` events may be captured by calling the `noticeError` and `addPageAction` methods.
 
-Because it does not wrap the page-level globals in the same way as the base `Agent` class, the `MicroAgent` is not only smaller but can easily be instantiated multiple times on a single page with low overhead, with each instance configured to report to a different Browser App entity in New Relic One if desired. This accommodates specialized use cases, such as segmented UI designs (e.g., the micro front-end pattern) or applications requiring subsets of manually-handled data to be reported to different application entities.
+Because it does not wrap the page-level globals in the same way as the base `Agent` class, the `MicroAgent` is not only smaller but can easily be instantiated multiple times on a single page with low overhead, with each instance configured to report to a different Browser App entity in New Relic if desired. This accommodates specialized use cases, such as segmented UI designs (e.g., the micro front-end pattern) or applications requiring subsets of manually-handled data to be reported to different application entities.
 
 The example below illustrates how to instantiate and interact with two separate `MicroAgent` instances on one page.
 

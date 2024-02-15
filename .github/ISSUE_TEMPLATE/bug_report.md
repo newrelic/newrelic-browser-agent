@@ -26,8 +26,8 @@ assignees: ''
 
 [NOTE]: # ( Please provide specifics of the local error logs, Browser Dev Tools console, etc. Include as many of the following as possible:)
 
-* screenshots showing errors
-* page source from the page in question
+* Screenshots showing errors
+* Page source from the page in question
 * HAR file showing New Relic network payloads
 
 ## Your Environment

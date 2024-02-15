@@ -24,7 +24,7 @@ assignees: ''
 
 ## Relevant Logs / Console output
 
-[NOTE]: # ( Please provide specifics of the local error logs, Browser Dev Tools console, etc. if appropriate and possible. Include all--if possible--or any of the following:)
+[NOTE]: # ( Please provide specifics of the local error logs, Browser Dev Tools console, etc. Include as many of the following as possible:)
 
 * screenshots showing errors
 * page source from the page in question

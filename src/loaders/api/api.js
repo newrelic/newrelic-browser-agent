@@ -13,17 +13,11 @@ import { isBrowserScope } from '../../common/constants/runtime'
 import { warn } from '../../common/util/console'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
 import { gosCDN } from '../../common/window/nreum'
-
-export const CUSTOM_ATTR_GROUP = 'CUSTOM/' // the subgroup items should be stored under in storage API
+import { apiMethods, asyncApiMethods } from './api-methods'
 
 export function setTopLevelCallers () {
   const nr = gosCDN()
-  const funcs = [
-    'setErrorHandler', 'finished', 'addToTrace', 'addRelease',
-    'addPageAction', 'setCurrentRouteName', 'setPageViewName', 'setCustomAttribute',
-    'interaction', 'noticeError', 'setUserId', 'setApplicationVersion', 'start', 'recordReplay', 'pauseReplay'
-  ]
-  funcs.forEach(f => {
+  apiMethods.forEach(f => {
     nr[f] = (...args) => caller(f, ...args)
   })
 
@@ -44,18 +38,11 @@ export function setAPI (agentIdentifier, forceDrain) {
   var instanceEE = ee.get(agentIdentifier)
   var tracerEE = instanceEE.get('tracer')
 
-  var asyncApiFns = [
-    'setErrorHandler',
-    'finished',
-    'addToTrace',
-    'addRelease'
-  ]
-
   var prefix = 'api-'
   var spaPrefix = prefix + 'ixn-'
 
   // Setup stub functions that queue calls for later processing.
-  asyncApiFns.forEach(fnName => { apiInterface[fnName] = apiCall(prefix, fnName, true, 'api') })
+  asyncApiMethods.forEach(fnName => { apiInterface[fnName] = apiCall(prefix, fnName, true, 'api') })
 
   apiInterface.addPageAction = apiCall(prefix, 'addPageAction', true, FEATURE_NAMES.pageAction)
   apiInterface.setCurrentRouteName = apiCall(prefix, 'routeName', true, FEATURE_NAMES.spa)

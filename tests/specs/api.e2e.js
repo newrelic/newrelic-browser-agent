@@ -1,8 +1,38 @@
 import { notIE } from '../../tools/browser-matcher/common-matchers.mjs'
+import { apiMethods, asyncApiMethods } from '../../src/loaders/api/api-methods'
 
 describe('newrelic api', () => {
   afterEach(async () => {
     await browser.destroyAgentSession()
+  })
+
+  it('should expose api methods', async () => {
+    await browser.url(await browser.testHandle.assetURL('api/local-storage-disallowed.html')) // Setup expects before loading the page
+      .then(() => browser.waitForAgentLoad())
+
+    const globalApiMethods = await browser.execute(function () {
+      return Object.keys(window.newrelic)
+    })
+    const agentInstanceApiMethods = await browser.execute(function () {
+      function getAllPropertyNames (obj) {
+        let result = new Set()
+        while (obj) {
+          Object.getOwnPropertyNames(obj).forEach(p => result.add(p))
+          obj = Object.getPrototypeOf(obj)
+        }
+        return [...result]
+      }
+      return getAllPropertyNames(Object.values(newrelic.initializedAgents)[0])
+    })
+
+    expect(globalApiMethods).toEqual(expect.arrayContaining([
+      ...apiMethods,
+      ...asyncApiMethods
+    ]))
+    expect(agentInstanceApiMethods).toEqual(expect.arrayContaining([
+      ...apiMethods,
+      ...asyncApiMethods
+    ]))
   })
 
   it('should load when sessionStorage is not available', async () => {

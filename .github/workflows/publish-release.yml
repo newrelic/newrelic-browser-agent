@@ -141,8 +141,8 @@ jobs:
           aws_bucket_name: ${{ secrets.AWS_BUCKET }}
           fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
 
-  # Publish the loaders to nr
-  publish-prod-to-nr:
+  # Publish the loaders to nr prod
+  publish-to-nr-prod:
     needs: [publish-prod-to-s3]
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -161,12 +161,41 @@ jobs:
         uses: ./.github/actions/nr-upload
         with:
           nr_prod_api_key: ${{ secrets.NR_API_KEY_PRODUCTION }}
-          nr_stage_api_key: ${{ secrets.NR_API_KEY_STAGING }}
           loader_version: ${{ steps.agent-loader-version.outputs.results }}
+          environment: prod
       - name: Verify loaders in nr
         uses: ./.github/actions/nr-verify
         with:
           loader_version: ${{ steps.agent-loader-version.outputs.results }}
+          environment: prod
+
+  # Publish the loaders to nr stage
+  # publish-to-nr-stage:
+  #   needs: [ publish-prod-to-s3 ]
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 30
+  #   defaults:
+  #     run:
+  #       shell: bash
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - uses: actions/setup-node@v3
+  #       with:
+  #         node-version: lts/*
+  #     - name: Get version number
+  #       id: agent-loader-version
+  #       run: echo "results=$(cat package.json | jq -r '.version')" >> $GITHUB_OUTPUT
+  #     - name: Publish loader to nr
+  #       uses: ./.github/actions/nr-upload
+  #       with:
+  #         nr_stage_api_key: ${{ secrets.NR_API_KEY_STAGING }}
+  #         loader_version: ${{ steps.agent-loader-version.outputs.results }}
+  #         environment: stage
+  #     - name: Verify loaders in nr
+  #       uses: ./.github/actions/nr-verify
+  #       with:
+  #         loader_version: ${{ steps.agent-loader-version.outputs.results }}
+  #         environment: stage
 
   # Publish the agent to npmjs.org
   publish-npm:
@@ -214,12 +243,12 @@ jobs:
         with:
           tag: v${{ steps.agent-loader-version.outputs.results }}
           github_login: ${{ secrets.BROWSER_GITHUB_BOT_NAME }}
-          github_token: ${{ secrets.BROWSER_GITHUB_BOT_PAT }}
           github_email: ${{ secrets.BROWSER_GITHUB_BOT_EMAIL }}
+          nr_docs_github_token: ${{ secrets.BROWSER_GITHUB_BOT_DOCS_PAT }}
 
   # Notify the release repo of the new release
   notify-release-repo:
-    needs: [publish-prod-to-nr, publish-npm]
+    needs: [publish-to-nr-prod, publish-npm]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     defaults:
@@ -233,7 +262,7 @@ jobs:
       - name: Notify Release Repo
         uses: ./.github/actions/notify-repository
         with:
-          token: ${{ secrets.BROWSER_GITHUB_BOT_PAT }}
+          token: ${{ secrets.BROWSER_GITHUB_BOT_INTERNAL_PAT }}
           repo_owner: newrelic
           repo_name: newrelic-browser-agent-release
           event_type: new_release

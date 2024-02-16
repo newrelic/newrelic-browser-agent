@@ -36,6 +36,14 @@ const results = await Promise.all(
         TaggingDirective: 'COPY'
       }
 
+      if (args.dry) {
+        console.log('running in dry mode, file not uploaded, params:', JSON.stringify({
+            ...commandOpts,
+            Body: '[file stream]'
+        }))
+        return Promise.resolve()
+      }
+
       const result = await s3Client.send(new CopyObjectCommand(commandOpts))
       return ({
         ...result,
@@ -73,4 +81,4 @@ Output example:
 */
 
 core.setOutput('results', JSON.stringify(results))
-console.log(`Successfully copied ${results.length} files in S3`)
+console.log(`Successfully ${args.dry ? 'simulated' : ''} copy of ${results.length} files in S3`)

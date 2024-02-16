@@ -43,7 +43,7 @@ describe('scoping event-emitter', () => {
   test('it creates a new child event-emitter', async () => {
     const { ee } = await import('./contextual-ee')
 
-    const childName = faker.datatype.uuid()
+    const childName = faker.string.uuid()
     const result = ee.get(childName)
 
     expect(result).not.toEqual(mockNREUM.ee)
@@ -52,7 +52,7 @@ describe('scoping event-emitter', () => {
   })
 
   test('it creates a child event-emitter with an isolated backlog', async () => {
-    const childName = faker.random.alphaNumeric(16)
+    const childName = faker.string.alphanumeric(16)
 
     jest.doMock('../config/config', () => ({
       __esModule: true,
@@ -105,8 +105,8 @@ describe('event-emitter context', () => {
 describe('event-emitter buffer', () => {
   test('it should create a new buffer for the given group', async () => {
     const { ee } = await import('./contextual-ee')
-    const eventType = faker.datatype.uuid()
-    const group = faker.datatype.uuid()
+    const eventType = faker.string.uuid()
+    const group = faker.string.uuid()
 
     ee.buffer([eventType], group)
 
@@ -118,7 +118,7 @@ describe('event-emitter buffer', () => {
 
   test('it should default group to "feature"', async () => {
     const { ee } = await import('./contextual-ee')
-    const eventType = faker.datatype.uuid()
+    const eventType = faker.string.uuid()
 
     ee.buffer([eventType])
 
@@ -130,17 +130,66 @@ describe('event-emitter buffer', () => {
 
   test('it should not create buffer if event-emitter is aborted', async () => {
     const { ee } = await import('./contextual-ee')
-    const eventType = faker.datatype.uuid()
-    const group = faker.datatype.uuid()
+    const eventType = faker.string.uuid()
+    const group = faker.string.uuid()
 
     ee.backlog = {
       api: ['foo', 'bar', 'baz']
     }
-    ee.abort()
+    ee.aborted = true
     ee.buffer([eventType], group)
 
     expect(ee.backlog).toEqual({})
     expect(ee.isBuffering(eventType)).toEqual(false)
+  })
+
+  test('it should empty the backlog on abort as opposed to replacing it', async () => {
+    const { ee } = await import('./contextual-ee')
+
+    const backlog = {
+      api: ['foo', 'bar', 'baz']
+    }
+    ee.backlog = backlog
+    ee.aborted = true
+
+    expect(ee.backlog).toBe(backlog)
+    expect(ee.backlog).toEqual({})
+  })
+
+  test('it should not buffer after drain', async () => {
+    const { ee } = await import('./contextual-ee')
+    const { drain } = await import('../drain/drain')
+    const mockListener = jest.fn()
+    const eventType = faker.datatype.uuid()
+    const eventArgs = ['a', 'b', 'c']
+
+    ee.on(eventType, mockListener)
+    ee.buffer([eventType])
+    ee.emit(eventType, eventArgs)
+
+    expect(ee.backlog).toEqual(expect.objectContaining({
+      feature: [
+        expect.arrayContaining([
+          ee,
+          eventType,
+          eventArgs,
+          expect.anything()
+        ])
+      ]
+    }))
+    expect(ee.isBuffering(eventType)).toEqual(true)
+
+    drain('globalEE')
+    ee.buffer([eventType])
+    ee.emit(eventType, eventArgs)
+    ee.emit(eventType, eventArgs)
+
+    expect(ee.backlog).toEqual(expect.objectContaining({
+      feature: null
+    }))
+    expect(ee.isBuffering(eventType)).toEqual(false)
+    expect(mockListener).toHaveReturnedTimes(3)
+    expect(mockListener).toHaveBeenCalledWith(...eventArgs)
   })
 })
 
@@ -151,7 +200,7 @@ describe('event-emitter abort', () => {
     ee.backlog = {
       api: ['foo', 'bar', 'baz']
     }
-    ee.abort()
+    ee.aborted = true
 
     expect(ee.aborted).toEqual(true)
     expect(ee.backlog).toEqual({})
@@ -163,7 +212,7 @@ describe('event-emitter abort', () => {
     ee.backlog = {
       feature: ['foo', 'bar', 'baz']
     }
-    ee.abort()
+    ee.aborted = true
 
     expect(ee.aborted).toEqual(true)
     expect(ee.backlog).toEqual({})
@@ -174,7 +223,7 @@ describe('event-emitter emit', () => {
   test('should execute the listener', async () => {
     const { ee } = await import('./contextual-ee')
     const mockListener = jest.fn()
-    const eventType = faker.datatype.uuid()
+    const eventType = faker.string.uuid()
     const eventArgs = ['a', 'b', 'c']
 
     ee.on(eventType, mockListener)
@@ -186,7 +235,7 @@ describe('event-emitter emit', () => {
   test('should not execute the listener after removal', async () => {
     const { ee } = await import('./contextual-ee')
     const mockListener = jest.fn()
-    const eventType = faker.datatype.uuid()
+    const eventType = faker.string.uuid()
     const eventArgs = ['a', 'b', 'c']
 
     ee.on(eventType, mockListener)
@@ -200,13 +249,13 @@ describe('event-emitter emit', () => {
   test('should return early if global event-emitter is aborted', async () => {
     const { ee } = await import('./contextual-ee')
     const mockListener = jest.fn()
-    const eventType = faker.datatype.uuid()
+    const eventType = faker.string.uuid()
     const eventArgs = ['a', 'b', 'c']
 
     ee.backlog = {
       api: ['foo', 'bar', 'baz']
     }
-    ee.abort()
+    ee.aborted = true
     ee.on(eventType, mockListener)
     ee.emit(eventType, eventArgs)
 
@@ -215,15 +264,15 @@ describe('event-emitter emit', () => {
 
   test('should still emit if global event-emitter is aborted but force flag is true', async () => {
     const { ee } = await import('./contextual-ee')
-    const scopeEE = ee.get(faker.datatype.uuid())
+    const scopeEE = ee.get(faker.string.uuid())
     const mockScopeListener = jest.fn()
-    const eventType = faker.datatype.uuid()
+    const eventType = faker.string.uuid()
     const eventArgs = ['a', 'b', 'c']
 
     ee.backlog = {
       api: ['foo', 'bar', 'baz']
     }
-    ee.abort()
+    ee.aborted = true
     scopeEE.on(eventType, mockScopeListener)
     scopeEE.emit(eventType, eventArgs, {}, true)
 
@@ -232,10 +281,10 @@ describe('event-emitter emit', () => {
 
   test('should bubble the event if bubble flag is true', async () => {
     const { ee } = await import('./contextual-ee')
-    const scopeEE = ee.get(faker.datatype.uuid())
+    const scopeEE = ee.get(faker.string.uuid())
     const mockListener = jest.fn()
     const mockScopeListener = jest.fn()
-    const eventType = faker.datatype.uuid()
+    const eventType = faker.string.uuid()
     const eventArgs = ['a', 'b', 'c']
 
     ee.on(eventType, mockListener)
@@ -248,10 +297,10 @@ describe('event-emitter emit', () => {
 
   test('should not bubble the event if bubble flag is false', async () => {
     const { ee } = await import('./contextual-ee')
-    const scopeEE = ee.get(faker.datatype.uuid())
+    const scopeEE = ee.get(faker.string.uuid())
     const mockListener = jest.fn()
     const mockScopeListener = jest.fn()
-    const eventType = faker.datatype.uuid()
+    const eventType = faker.string.uuid()
     const eventArgs = ['a', 'b', 'c']
 
     ee.on(eventType, mockListener)
@@ -264,10 +313,10 @@ describe('event-emitter emit', () => {
 
   test('should buffer the event on the scoped event-emitter', async () => {
     const { ee } = await import('./contextual-ee')
-    const scopeEE = ee.get(faker.datatype.uuid())
+    const scopeEE = ee.get(faker.string.uuid())
     const mockListener = jest.fn()
     const mockScopeListener = jest.fn()
-    const eventType = faker.datatype.uuid()
+    const eventType = faker.string.uuid()
     const eventArgs = ['a', 'b', 'c']
 
     ee.on(eventType, mockListener)

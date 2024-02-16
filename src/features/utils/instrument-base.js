@@ -103,13 +103,15 @@ export class InstrumentBase extends FeatureBase {
         const { lazyFeatureLoader } = await import(/* webpackChunkName: "lazy-feature-loader" */ './lazy-feature-loader')
         const { Aggregate } = await lazyFeatureLoader(this.featureName, 'aggregate', getConfigurationValue(this.agentIdentifier, 'feature_flags'))
         this.featAggregate = new Aggregate(this.agentIdentifier, this.aggregator, argsObjFromInstrument)
+        console.log('imported featAgg', this.featureName)
         loadedSuccessfully(true)
       } catch (e) {
         warn(`Downloading and initializing ${this.featureName} failed...`, e)
         this.abortHandler?.() // undo any important alterations made to the page
         // not supported yet but nice to do: "abort" this agent's EE for this feature specifically
-        drain(this.agentIdentifier, this.featureName)
+        drain(this.agentIdentifier, this.featureName, true)
         loadedSuccessfully(false)
+        this.ee.aborted = true
       }
     }
 

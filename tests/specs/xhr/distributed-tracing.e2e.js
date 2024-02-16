@@ -124,9 +124,9 @@ describe('xhr distributed tracing', () => {
 
   beforeEach(() => {
     config = {
-      accountID: faker.datatype.hexadecimal({ length: 16, prefix: '' }),
-      agentID: faker.datatype.hexadecimal({ length: 16, prefix: '' }),
-      trustKey: faker.datatype.hexadecimal({ length: 16, prefix: '' })
+      accountID: faker.string.hexadecimal({ length: 16, prefix: '' }),
+      agentID: faker.string.hexadecimal({ length: 16, prefix: '' }),
+      trustKey: faker.string.hexadecimal({ length: 16, prefix: '' })
     }
   })
 

@@ -7,7 +7,7 @@ import * as submitData from '../util/submit-data'
 import { SharedContext } from '../context/shared-context'
 import { Harvest } from './harvest'
 import { subscribeToEOL } from '../unload/eol'
-import { SESSION_EVENTS } from '../session/session-entity'
+import { SESSION_EVENTS } from '../session/constants'
 
 /**
  * Periodically invokes harvest calls and handles retries
@@ -102,7 +102,7 @@ export class HarvestScheduler extends SharedContext {
       if (!submitMethod) return false
 
       const retry = !opts?.unload && submitMethod === submitData.xhr
-      payload = this.opts.getPayload({ retry })
+      payload = this.opts.getPayload({ retry, opts })
 
       if (!payload) {
         if (this.started) {

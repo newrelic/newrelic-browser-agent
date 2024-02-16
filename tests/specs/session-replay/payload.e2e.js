@@ -1,5 +1,5 @@
-import { srConfig, testExpectedReplay } from './helpers'
-import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { decodeAttributes, srConfig, testExpectedReplay } from '../util/helpers'
+import { notIE, notIOS, notSafari } from '../../../tools/browser-matcher/common-matchers.mjs'
 
 describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => {
   beforeEach(async () => {
@@ -36,10 +36,11 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
       body: ''
     })
 
-    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
-      .then(() => browser.waitForAgentLoad())
-
-    const { request: harvestContents } = await browser.testHandle.expectReplay()
+    const [{ request: harvestContents }] = await Promise.all([
+      browser.testHandle.expectReplay(),
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
+        .then(() => browser.waitForAgentLoad())
+    ])
 
     expect((
       harvestContents.query.attributes.includes('content_encoding') ||
@@ -82,8 +83,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
 
     const events = await browser.execute(function () {
       var instance = Object.values(newrelic.initializedAgents)[0]
-      instance.features.session_replay.featAggregate.events = instance.features.session_replay.featAggregate.events.filter(x => x.type !== 4)
-      return instance.features.session_replay.featAggregate.events
+      return instance.features.session_replay.featAggregate.recorder.getEvents().events.filter(x => x.type !== 4)
     })
 
     expect(events.find(x => x.type === 4)).toEqual(undefined)
@@ -97,5 +97,47 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
     const { localStorage } = await browser.getAgentSessionInfo()
 
     testExpectedReplay({ data: harvestContents, session: localStorage.value, hasError: true, hasMeta: true, hasSnapshot: true, isFirstChunk: true })
+  })
+
+  /**
+   * auto-inlining broken stylesheets does not work in safari browsers < 16.3
+   * current mitigation strategy is defined as informing customers to add `crossOrigin: anonymous` tags to cross-domain stylesheets
+  */
+  it.withBrowsersMatching([notSafari, notIOS])('should place inlined css for cross origin stylesheets even if no crossOrigin tag', async () => {
+    await browser.url(await browser.testHandle.assetURL('rrweb-invalid-stylesheet.html', srConfig()))
+      .then(() => browser.waitForFeatureAggregate('session_replay'))
+
+    /** snapshot and mutation payloads */
+    const { request: { body: snapshot1, query: snapshot1Query } } = await browser.testHandle.expectSessionReplaySnapshot(10000)
+    const snapshot1Nodes = snapshot1.filter(x => x.type === 2)
+    expect(decodeAttributes(snapshot1Query.attributes).inlinedAllStylesheets).toEqual(true)
+    snapshot1Nodes.forEach(snapshotNode => {
+      const htmlNode = snapshotNode.data.node.childNodes.find(x => x.tagName === 'html')
+      const headNode = htmlNode.childNodes.find(x => x.tagName === 'head')
+      const linkNodes = headNode.childNodes.filter(x => x.tagName === 'link')
+      linkNodes.forEach(linkNode => {
+        expect(!!linkNode.attributes._cssText).toEqual(true)
+      })
+    })
+    await browser.pause(5000)
+    /** Agent should generate a new snapshot after a new "invalid" stylesheet is injected */
+    const [{ request: { body: snapshot2, query: snapshot2Query } }] = await Promise.all([
+      browser.testHandle.expectSessionReplaySnapshot(10000),
+      browser.execute(function () {
+        var newelem = document.createElement('span')
+        newelem.innerHTML = 'this is some text'
+        document.body.appendChild(newelem)
+      })
+    ])
+    expect(decodeAttributes(snapshot2Query.attributes).inlinedAllStylesheets).toEqual(true)
+    const snapshot2Nodes = snapshot2.filter(x => x.type === 2)
+    snapshot2Nodes.forEach(snapshotNode => {
+      const htmlNode = snapshotNode.data.node.childNodes.find(x => x.tagName === 'html')
+      const headNode = htmlNode.childNodes.find(x => x.tagName === 'head')
+      const linkNodes = headNode.childNodes.filter(x => x.tagName === 'link')
+      linkNodes.forEach(linkNode => {
+        expect(!!linkNode.attributes._cssText).toEqual(true)
+      })
+    })
   })
 })

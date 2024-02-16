@@ -4,6 +4,203 @@
     {
       "changes": [
         {
+          "type": "feat",
+          "sha": "811ed418b74dcb8f25544da79521c384b9fd498a",
+          "message": "add types mappings for esm distribution",
+          "issues": [
+            "887"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "1fcdd8d9a20819911ba7e7350354085a57f1b187",
+          "message": "Add safe logic to snapshots",
+          "issues": [
+            "884"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "aa19a9c0737c175c011656f3da3f327dc6442f04",
+          "message": "Report config changes away from default state for UX improvement",
+          "issues": [
+            "885"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "697f13e6ea5ba0738ffd74dfd214751ab98adf8d",
+          "message": "Create more granular metrics about stylesheet fix success",
+          "issues": [
+            "882"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "d4a0f30e0ab4d8edbdb17bf4ebdf282626761045",
+          "message": "align browser reported uncaught syntax errors",
+          "issues": [
+            "881"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "f60e7f155bb95087ea4af8864b652878f08ccaff",
+          "message": "Capture Internal Metrics for Session Replay Configurations",
+          "issues": [
+            "879"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "695415b0fcaa8b41496fc6556a38ec76dd357539",
+          "message": "Fix adblock memory leak",
+          "issues": [
+            "877"
+          ]
+        }
+      ],
+      "version": "1.252.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "e8035158-8aa9-4b78-bb58-8a4cc2f132a7",
+      "createTime": "2024-02-12T16:05:18.509Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
+          "sha": "655aa5d261d03f71086d3cfc73cb72db51cb28c7",
+          "message": "Pass unload options to simultaneous harvests in Session Replay",
+          "issues": [
+            "870"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "f69e4b0eba5a54f4e67316f5e6a30090cf7360cc",
+          "message": "Fix deferred Session Replay payloads",
+          "issues": [
+            "868"
+          ]
+        }
+      ],
+      "version": "1.251.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "aa565178-cca7-4305-96f8-f60eae560871",
+      "createTime": "2024-01-29T20:09:21.638Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
+          "sha": "69a8e00ce66c41a29f551697299246763e7ae29f",
+          "message": "Session Replay - Detect Non-Inlined Stylesheets",
+          "issues": [
+            "859"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "cd6324fb79edab77725d9c72f91d2bcb7e860f57",
+          "message": "Bubble Up API Methods to Top-Level Instance For NPM",
+          "issues": [
+            "862"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "f43b7914ec1f26f610cbaa1a513bac482a3d6534",
+          "message": "Add fallback for currentBufferTarget",
+          "issues": [
+            "861"
+          ]
+        }
+      ],
+      "version": "1.251.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "99cbc239-c1aa-465c-b245-73f23bb76b2a",
+      "createTime": "2024-01-24T22:42:30.700Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
+          "sha": "1b898c61fa260bd0df644b4825ddb6d1c9b54b51",
+          "message": "Add a flag to note that a payload occurred during a replay",
+          "issues": [
+            "834"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "1af7b896ef41c8b4855ca85e2a4e40c20a8cdfb1",
+          "message": "Session Replay Dynamic Loading",
+          "issues": [
+            "832"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "8767f69122853a4099ed25f5886a91de06703c98",
+          "message": "TraceId generation regression (non-random trace ids)",
+          "issues": [
+            "853"
+          ]
+        }
+      ],
+      "version": "1.250.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "d65f416b-0dab-4c87-9379-07e032e7f015",
+      "createTime": "2024-01-09T18:22:29.175Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
+          "sha": "a9b6f2e578b1684dd50f8eb491251c03eca88a12",
+          "message": "loader missing sub-resource integrity hashes",
+          "issues": [
+            "837"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "34f837f65ab31a67b821f125e20e80d39d7790a9",
+          "message": "Allow empty string for Session Replay masking value",
+          "issues": [
+            "831"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "2b13a0fdfad529dc1cfff43506e28473498ce8a1",
+          "message": "Fix API Warning Messages",
+          "issues": [
+            "830"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "e264acfbff2cacc93fae88daea70be3c1e006f90",
+          "message": "traceids not random when using `webcrypto`",
+          "issues": [
+            "825"
+          ]
+        }
+      ],
+      "version": "1.249.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "a439b12a-8d99-496e-8b1a-36f94340e681",
+      "createTime": "2023-12-14T16:21:55.359Z"
+    },
+    {
+      "changes": [
+        {
           "type": "fix",
           "sha": "3872c35a173f76644b663df5ca0474971451b7cf",
           "message": "Fix issue with errors forcefully triggering session traces",
@@ -875,5 +1072,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2023-11-16T17:40:46.327Z"
+  "updateTime": "2024-02-12T16:05:18.509Z"
 }

@@ -51,16 +51,13 @@ export class Aggregate extends AggregateBase {
     const scheduler = new HarvestScheduler('jserrors', { onFinished: (...args) => this.onHarvestFinished(...args) }, this)
     scheduler.harvest.on('jserrors', (...args) => this.onHarvestStarted(...args))
 
-    // Don't start harvesting until "drain" for this feat has been called (which currently requires RUM response).
-    this.ee.on(`drain-${this.featureName}`, () => {
-      if (!this.blocked) scheduler.startTimer(harvestTimeSeconds) // and only if ingest will accept jserror payloads
+    this.waitForFlags(['err'], ([isOn]) => {
+      if (isOn) scheduler.startTimer(harvestTimeSeconds)
+      else {
+        this.blocked = true
+        scheduler.stopTimer()
+      }
     })
-
-    // If RUM-call's response determines that customer lacks entitlements for the /jserror ingest endpoint, don't harvest at all.
-    register('block-err', () => {
-      this.blocked = true
-      scheduler.stopTimer(true)
-    }, this.featureName, this.ee)
 
     this.drain()
   }

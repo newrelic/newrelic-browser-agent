@@ -18,7 +18,7 @@ describe('formatStackTrace', () => {
 
   test('truncates the middle of the stack lines when more than 100', () => {
     const input = Array.apply(null, Array(200))
-      .map(() => faker.datatype.uuid())
+      .map(() => faker.string.uuid())
     const expected = input.slice(0, 50).join('\n') + `\n< ...truncated ${input.length - 100} lines... >\n` + input.slice(-50).join('\n')
 
     const result = formatStackTrace(input)
@@ -30,7 +30,7 @@ describe('formatStackTrace', () => {
 describe('truncateSize', () => {
   test('should truncate stack string to max limit', () => {
     const maxSize = 65530
-    const input = faker.datatype.string(maxSize + 1)
+    const input = faker.string.sample(maxSize + 1)
 
     const result = truncateSize(input)
 

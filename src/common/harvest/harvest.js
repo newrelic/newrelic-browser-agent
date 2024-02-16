@@ -103,7 +103,7 @@ export class Harvest extends SharedContext {
     if (customUrl) url = customUrl
     if (raw) url = `${protocol}://${perceviedBeacon}/${endpoint}`
 
-    const baseParams = !raw && includeBaseParams ? this.baseQueryString() : ''
+    const baseParams = !raw && includeBaseParams ? this.baseQueryString(qs) : ''
     let payloadParams = encodeObj(qs, agentRuntime.maxBytes)
     if (!submitMethod) {
       submitMethod = submitData.getSubmitMethod({ isFinalHarvest: opts.unload })
@@ -142,9 +142,10 @@ export class Harvest extends SharedContext {
 
     if (!opts.unload && cbFinished && submitMethod === submitData.xhr) {
       const harvestScope = this
-      result.addEventListener('load', function () {
+      result.addEventListener('loadend', function () {
         // `this` refers to the XHR object in this scope, do not change this to a fat arrow
-        const cbResult = { sent: true, status: this.status }
+        // status 0 refers to a local error, such as CORS or network failure, or a blocked request by the browser (e.g. adblocker)
+        const cbResult = { sent: this.status !== 0, status: this.status }
         if (this.status === 429) {
           cbResult.retry = true
           cbResult.delay = harvestScope.tooManyRequestsDelay
@@ -163,7 +164,7 @@ export class Harvest extends SharedContext {
   }
 
   // The stuff that gets sent every time.
-  baseQueryString () {
+  baseQueryString (qs) {
     const runtime = getRuntime(this.sharedContext.agentIdentifier)
     const info = getInfo(this.sharedContext.agentIdentifier)
 
@@ -180,7 +181,8 @@ export class Harvest extends SharedContext {
       '&ck=0', // ck param DEPRECATED - still expected by backend
       '&s=' + (runtime.session?.state.value || '0'), // the 0 id encaps all untrackable and default traffic
       encodeParam('ref', ref),
-      encodeParam('ptid', (runtime.ptid ? '' + runtime.ptid : ''))
+      encodeParam('ptid', (runtime.ptid ? '' + runtime.ptid : '')),
+      encodeParam('hr', (runtime?.session?.state.sessionReplayMode === 1 ? '1' : '0'), qs) // hasReplay
     ].join(''))
   }
 

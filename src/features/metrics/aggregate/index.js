@@ -16,12 +16,6 @@ export class Aggregate extends AggregateBase {
     super(agentIdentifier, aggregator, FEATURE_NAME)
     let scheduler
 
-    // If RUM-call's response determines that customer lacks entitlements for the /jserror ingest endpoint, don't harvest at all.
-    registerHandler('block-err', () => {
-      this.blocked = true
-      if (scheduler) scheduler.aborted = true // RUM response may or may not have happened already before scheduler initialization below
-    }, this.featureName, this.ee)
-
     // Allow features external to the metrics feature to capture SMs and CMs through the event emitter
     registerHandler(SUPPORTABILITY_METRIC_CHANNEL, this.storeSupportabilityMetrics.bind(this), this.featureName, this.ee)
     registerHandler(CUSTOM_METRIC_CHANNEL, this.storeEventMetrics.bind(this), this.featureName, this.ee)
@@ -29,11 +23,15 @@ export class Aggregate extends AggregateBase {
     this.singleChecks() // checks that are run only one time, at script load
     this.eachSessionChecks() // the start of every time user engages with page
 
-    this.ee.on(`drain-${this.featureName}`, () => {
-      // *cli, Mar 23 - Per NR-94597, this feature should only harvest ONCE at the (potential) EoL time of the page.
-      scheduler = new HarvestScheduler('jserrors', { onUnload: () => this.unload() }, this)
-      scheduler.harvest.on('jserrors', () => ({ body: this.aggregator.take(['cm', 'sm']) }))
-    }) // this is needed to ensure EoL is "on" and sent
+    this.waitForFlags(['err'], ([isOn]) => {
+      if (isOn) {
+        scheduler = new HarvestScheduler('jserrors', { onUnload: () => this.unload() }, this)
+        scheduler.harvest.on('jserrors', () => ({ body: this.aggregator.take(['cm', 'sm']) }))
+      } else {
+        this.blocked = true
+        if (scheduler) scheduler.aborted = true // RUM response may or may not have happened already before scheduler initialization below
+      }
+    })
 
     this.drain()
   }
@@ -90,9 +88,11 @@ export class Aggregate extends AggregateBase {
     if (rules.length > 0 && !validateRules(rules)) this.storeSupportabilityMetrics('Generic/Obfuscate/Invalid')
 
     // Check if proxy for either chunks or beacon is being used
-    const { proxy } = getConfiguration(this.agentIdentifier)
+    const { proxy, privacy } = getConfiguration(this.agentIdentifier)
     if (proxy.assets) this.storeSupportabilityMetrics('Config/AssetsUrl/Changed')
     if (proxy.beacon) this.storeSupportabilityMetrics('Config/BeaconUrl/Changed')
+
+    if (!(isBrowserScope && privacy.cookies_enabled)) this.storeSupportabilityMetrics('Config/SessionTracking/Disabled')
   }
 
   eachSessionChecks () {
@@ -100,7 +100,7 @@ export class Aggregate extends AggregateBase {
 
     // [Temporary] Report restores from BFCache to NR1 while feature flag is in place in lieu of sending pageshow events.
     windowAddEventListener('pageshow', (evt) => {
-      if (evt.persisted) { this.storeSupportabilityMetrics('Generic/BFCache/PageRestored') }
+      if (evt?.persisted) { this.storeSupportabilityMetrics('Generic/BFCache/PageRestored') }
     })
   }
 

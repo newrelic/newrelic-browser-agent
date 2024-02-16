@@ -2,7 +2,7 @@ import fs from 'fs'
 import path from 'path'
 import * as core from '@actions/core'
 import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts'
-import { S3Client } from '@aws-sdk/client-s3'
+import { S3Client, HeadObjectCommand, NotFound } from '@aws-sdk/client-s3'
 import { Upload } from '@aws-sdk/lib-storage'
 import mime from 'mime-types'
 import { getAssetCacheHeader } from '../shared-utils/asset-cache.js'
@@ -24,23 +24,17 @@ const s3Client = new S3Client({
   }
 })
 
-const filesToUpload = (await fs.promises.readdir(args.input, { withFileTypes: true }))
+const uploadCommandParams = (await fs.promises.readdir(args.input, { withFileTypes: true }))
   .filter(file => file.isFile())
-  .map(file => ({
-    name: file.name,
-    path: path.resolve(args.input, file.name)
-  }))
-
-const uploads = await Promise.all(filesToUpload
   .map(file => {
     const params = {
       Bucket: args.bucket,
       Key: file.name,
-      Body: fs.createReadStream(file.path, {
+      Body: fs.createReadStream(path.resolve(args.input, file.name), {
         encoding: 'utf-8'
       }),
-      ContentType: mime.lookup(file.path) || 'application/javascript',
-      CacheControl: getAssetCacheHeader(args.dir, file.name),
+      ContentType: mime.lookup(file.name) || 'application/javascript',
+      CacheControl: getAssetCacheHeader(args.dir, file.name)
     }
 
     if (typeof args.dir === 'string' && args.dir.trim() !== '') {
@@ -53,6 +47,42 @@ const uploads = await Promise.all(filesToUpload
       params.Key = `${dirPath}/${params.Key}`
     }
 
+    return params
+  })
+
+const existingFiles = await Promise.all(uploadCommandParams
+  .filter(params => params.CacheControl.indexOf('max-age=31536000') > 0)
+  .map(async params => {
+    const command = new HeadObjectCommand({
+      Bucket: params.Bucket,
+      Key: params.Key
+    })
+
+    try {
+      await s3Client.send(command)
+
+      console.error(`File ${params.Key} already exists in the bucket.`)
+      return true
+    } catch (error) {
+      if (error instanceof NotFound) {
+        return false
+      }
+
+      console.error(error)
+      return true
+    }
+  })
+)
+
+if (existingFiles.includes(true) && !args.dry) {
+  console.error('Upload failed, long-term cached files already exist.')
+  process.exit(1)
+} else if (existingFiles.includes(true) && args.dry) {
+  console.warn('Upload will fail, long-term cached files already exist.')
+}
+
+const uploads = await Promise.all(uploadCommandParams
+  .map(params => {
     if (args.dry) {
       console.log('running in dry mode, file not uploaded, params:', JSON.stringify({
         ...params,
@@ -96,4 +126,4 @@ Output example:
 */
 
 core.setOutput('results', JSON.stringify(uploads))
-console.log(`Successfully uploaded ${filesToUpload.length} files to S3`)
+console.log(`Successfully uploaded ${uploadCommandParams.length} files to S3`)

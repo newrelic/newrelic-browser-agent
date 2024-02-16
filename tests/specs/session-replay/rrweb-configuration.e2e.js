@@ -1,5 +1,5 @@
 import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
-import { srConfig } from './helpers'
+import { decodeAttributes, srConfig } from '../util/helpers'
 
 describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
   beforeEach(async () => {
@@ -296,25 +296,13 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
       expect(!!imgNode.attributes.rr_dataURL).toEqual(false)
     })
 
-    it('inline_images true DOES add data url', async () => {
-      await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig({ session_replay: { inline_images: true } })))
-        .then(() => browser.waitForFeatureAggregate('session_replay'))
-
-      const { request: { body } } = await browser.testHandle.expectReplay()
-
-      const snapshotNode = body.find(x => x.type === 2)
-      const htmlNode = snapshotNode.data.node.childNodes.find(x => x.tagName === 'html')
-      const bodyNode = htmlNode.childNodes.find(x => x.tagName === 'body')
-      const imgNode = bodyNode.childNodes.find(x => x.tagName === 'img' && x.attributes.src.includes('wikimedia.org'))
-      expect(!!imgNode.attributes.rr_dataURL).toEqual(true)
-    })
-
     it('inline_stylesheet false DOES NOT add inline text', async () => {
       await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig({ session_replay: { inline_stylesheet: false } })))
         .then(() => browser.waitForFeatureAggregate('session_replay'))
 
-      const { request: { body } } = await browser.testHandle.expectReplay()
+      const { request: { body, query } } = await browser.testHandle.expectReplay()
 
+      expect(decodeAttributes(query.attributes).inlinedAllStylesheets).toEqual(false)
       const snapshotNode = body.find(x => x.type === 2)
       const htmlNode = snapshotNode.data.node.childNodes.find(x => x.tagName === 'html')
       const headNode = htmlNode.childNodes.find(x => x.tagName === 'head')
@@ -322,12 +310,13 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
       expect(!!linkNode.attributes._cssText).toEqual(false)
     })
 
-    it('inline_stylesheet true DOES NOT add inline text', async () => {
+    it('inline_stylesheet true DOES add inline text', async () => {
       await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
         .then(() => browser.waitForFeatureAggregate('session_replay'))
 
-      const { request: { body } } = await browser.testHandle.expectReplay()
+      const { request: { body, query } } = await browser.testHandle.expectReplay()
 
+      expect(decodeAttributes(query.attributes).inlinedAllStylesheets).toEqual(true)
       const snapshotNode = body.find(x => x.type === 2)
       const htmlNode = snapshotNode.data.node.childNodes.find(x => x.tagName === 'html')
       const headNode = htmlNode.childNodes.find(x => x.tagName === 'head')

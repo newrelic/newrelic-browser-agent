@@ -1,11 +1,11 @@
 import { faker } from '@faker-js/faker'
 
 export function generateUuid () {
-  return faker.datatype.uuid()
+  return faker.string.uuid()
 }
 
 export function generateRandomHexString (length) {
-  return faker.datatype.hexadecimal({ length, prefix: '' })
+  return faker.string.hexadecimal({ length, prefix: '' })
 }
 
 export function generateSpanId () {

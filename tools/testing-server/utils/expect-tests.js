@@ -309,3 +309,11 @@ module.exports.testBlobTraceRequest = function testBlobRequest (request) {
     return false
   }
 }
+
+module.exports.testSessionReplaySnapshotRequest = function testSessionReplaySnapshotRequest (request) {
+  const url = new URL(request.url, 'resolve://')
+  if (url.pathname !== '/browser/blobs') return false
+  if (request?.query?.browser_monitoring_key !== this.testId) return false
+  if (!(request?.body && Array.isArray(request.body) && request.body.length)) return false
+  return !!(request.body.filter(x => x.type === 2).length)
+}

@@ -1,22 +1,22 @@
 import fs from 'fs'
 import path from 'path'
+import url from 'url'
 import * as github from '@actions/github'
 import { args } from './args.js'
-import { cleanTitle, getBrowserTargetStatement } from './utils.js'
+import { cleanTitle, getBrowserVersions } from './utils.js'
 import {
-  DOCS_FORK_CLONE_PATH,
+  DOCS_CLONE_PATH,
   DOCS_SITE_GITHUB_OWNER,
   DOCS_SITE_GITHUB_REPO,
   DOCS_SITE_REPO_BASE,
-  DOCS_SITE_FORK_GITHUB_OWNER,
-  DOCS_SITE_FORK_GITHUB_REPO,
   CHANGELOG_FILE_PATH,
-  SUPPORT_STATEMENT,
-  RELEASE_NOTES_PATH
+  RELEASE_NOTES_PATH, ANDROID_CHROME_VERSION,
 } from './constants.js'
 import { GitCliRunner } from '../shared-utils/git-cli-runner.js'
+import Handlebars from 'handlebars'
 
-const octokit = github.getOctokit(args.githubToken)
+const octokit = github.getOctokit(args.nrDocsGithubToken)
+const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
 
 // Get the release change log
 const versionData = JSON.parse(await fs.promises.readFile(CHANGELOG_FILE_PATH)).entries.find(
@@ -30,6 +30,7 @@ const categories = {
   fix: [],
   security: []
 }
+
 for (const change of versionData.changes) {
   if (categories[change.type]) {
     const entries = await octokit.request('GET /repos/{owner}/{repo}/commits/{commit_sha}/pulls', {
@@ -51,81 +52,64 @@ for (const change of versionData.changes) {
 
 // Build out the front matter for the release doc
 const frontMatter = {
+  releaseDate,
+  version: args.tag.substr(1),
   features: [],
   bugs: [],
   security: []
 }
-let notesBody = `## ${args.tag}`
-if (categories.feat.length > 0) {
-  notesBody += '\n\n### Features'
-  for (const item of categories.feat) {
-    frontMatter.features.push(item.title)
-    notesBody += `\n\n#### ${item.title}\n${item.description}`
-  }
-}
-if (categories.fix.length > 0) {
-  notesBody += '\n\n### Bug fixes'
-  for (const item of categories.fix) {
-    frontMatter.bugs.push(item.title)
-    notesBody += `\n\n#### ${item.title}\n${item.description}`
-  }
-}
-if (categories.security.length > 0) {
-  notesBody += '\n\n### Security fixes'
-  for (const item of categories.security) {
-    frontMatter.security.push(item.title)
-    notesBody += `\n\n#### ${item.title}\n${item.description}`
+const bodyContent = {
+  version: args.tag,
+  features: [],
+  bugs: [],
+  security: [],
+  browserVersions: {
+    ...(await getBrowserVersions()),
+    androidChromeVersion : ANDROID_CHROME_VERSION
   }
 }
 
-// Compile release note markdown
-const releaseNotesFormatted = [
-  '---',
-  'subject: Browser agent',
-  `releaseDate: "${releaseDate}"`,
-  `version: ${args.tag.substr(1)}`, // remove the `v` from start of version
-  `features: ${JSON.stringify(frontMatter.features)}`,
-  `bugs: ${JSON.stringify(frontMatter.bugs)}`,
-  `security: ${JSON.stringify(frontMatter.security)}`,
-  '---',
-  '',
-  notesBody,
-  '',
-  SUPPORT_STATEMENT,
-  '',
-  await getBrowserTargetStatement(args.tag)
-].join('\n')
+for (const item of categories.feat) {
+  frontMatter.features.push(item.title)
+  bodyContent.features.push(item)
+}
+for (const item of categories.fix) {
+  frontMatter.bugs.push(item.title)
+  bodyContent.bugs.push(item)
+}
+for (const item of categories.security) {
+  frontMatter.security.push(item.title)
+  bodyContent.security.push(item)
+}
+
+frontMatter.features = JSON.stringify(frontMatter.features)
+frontMatter.bugs = JSON.stringify(frontMatter.bugs)
+frontMatter.security = JSON.stringify(frontMatter.security)
 
 console.log('Generated release notes:')
-console.log(releaseNotesFormatted)
+console.log(frontMatter)
+console.log(bodyContent)
 console.log('\n\n')
 console.log('##########################')
 console.log('# Starting git processes #')
 console.log('##########################')
 
 // Setup the directory for the docs website repo
-await fs.promises.rm(DOCS_FORK_CLONE_PATH, { force: true, recursive: true })
-await fs.promises.mkdir(DOCS_FORK_CLONE_PATH, { recursive: true })
+await fs.promises.rm(DOCS_CLONE_PATH, { force: true, recursive: true })
+await fs.promises.mkdir(DOCS_CLONE_PATH, { recursive: true })
 
 const branchName = `add-browser-agent-${args.tag}`
-
-console.log('Syncing docs fork')
-await octokit.rest.repos.mergeUpstream({
-  owner: DOCS_SITE_FORK_GITHUB_OWNER,
-  repo: DOCS_SITE_FORK_GITHUB_REPO,
-  branch: DOCS_SITE_REPO_BASE
-})
 
 try {
   console.log(`Deleting remote branch ${branchName}`)
   await octokit.rest.git.getRef({
-    owner: DOCS_SITE_FORK_GITHUB_OWNER,
-    repo: DOCS_SITE_FORK_GITHUB_REPO,
+    owner: DOCS_SITE_GITHUB_OWNER,
+    repo: DOCS_SITE_GITHUB_REPO,
     ref: `heads/${branchName}`
   }) // <-- This will throw an error if the branch does not exist
   await octokit.rest.git.deleteRef({
-    owner: DOCS_SITE_FORK_GITHUB_OWNER,
-    repo: DOCS_SITE_FORK_GITHUB_REPO,
+    owner: DOCS_SITE_GITHUB_OWNER,
+    repo: DOCS_SITE_GITHUB_REPO,
     ref: `heads/${branchName}`
   })
 } catch (error) {
@@ -135,18 +119,18 @@ try {
     throw error
   }
 }
-const gitCliRunner = new GitCliRunner(DOCS_FORK_CLONE_PATH, args.githubLogin, args.githubToken, args.githubUserName, args.githubEmail)
-await gitCliRunner.clone(DOCS_SITE_FORK_GITHUB_OWNER, DOCS_SITE_FORK_GITHUB_REPO)
+const gitCliRunner = new GitCliRunner(DOCS_CLONE_PATH, args.githubLogin, args.nrDocsGithubToken, args.githubUserName, args.githubEmail)
+await gitCliRunner.clone(DOCS_SITE_GITHUB_OWNER, DOCS_SITE_GITHUB_REPO)
 await gitCliRunner.createBranch(branchName)
 
 console.log('Writing release notes file')
 const releaseNotesFile = path.join(RELEASE_NOTES_PATH, `browser-agent-${args.tag}.mdx`)
 await fs.promises.writeFile(
   path.join(
-    DOCS_FORK_CLONE_PATH,
+    DOCS_CLONE_PATH,
     releaseNotesFile
   ),
-  releaseNotesFormatted,
+  Handlebars.compile(await fs.promises.readFile(path.resolve(__dirname, './templates/release-notes.handlebars'), 'utf-8'), { noEscape:true })({ frontMatter, bodyContent }).trim(),
   { encoding: 'utf-8' }
 )
 
@@ -158,10 +142,11 @@ console.log('Opening pull request')
 await octokit.rest.pulls.create({
   owner: DOCS_SITE_GITHUB_OWNER,
   repo: DOCS_SITE_GITHUB_REPO,
-  head: `${DOCS_SITE_FORK_GITHUB_OWNER}:${branchName}`,
-  head_repo: DOCS_SITE_FORK_GITHUB_REPO,
+  head: `${DOCS_SITE_GITHUB_OWNER}:${branchName}`,
+  head_repo: DOCS_SITE_GITHUB_REPO,
   base: DOCS_SITE_REPO_BASE,
   title: `Browser Agent ${args.tag} Release Notes`,
   body: 'This is an automated PR generated when the Browser agent is released. Please merge as soon as possible.',
-  draft: false
+  draft: false,
+  maintainer_can_modify: true
 })

@@ -15,12 +15,13 @@
     }
   </style>
   <link rel="stylesheet" type="text/css" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pure/3.0.0/pure-min.css" referrerpolicy="no-referrer" />
   {init}
   {config}
   <script>
     localStorage.clear()
     NREUM.init.feature_flags.push('session-trace-blobs')
-    NREUM.init.session_replay = {enabled: true, harvestTimeSeconds: 5, error_sampling_rate: 0, sampling_rate: 0, collect_fonts: true}
+    NREUM.init.session_replay = {enabled: true, harvestTimeSeconds: 5, error_sampling_rate: 100, sampling_rate: 0, collect_fonts: true}
     NREUM.init.privacy.cookies_enabled = true
   </script>
   {loader}
@@ -29,9 +30,12 @@
   this is a page intended to "manually" set up session replay and bypass the default "off" configs
   <hr />
   <hr />
-  <textarea></textarea>
+  <div class="input-group">
+    <span class="input-group-text">With textarea</span>
+    <textarea class="form-control" aria-label="With textarea"></textarea>
+  </div>
   <hr />
-  <button onclick="moveImage()">Click</button>
+  <button class="pure-button" onclick="moveImage()">Click</button>
   <a href="./rrweb-record.html" target="_blank">New Tab</a>
   <img src="https://upload.wikimedia.org/wikipedia/commons/d/d7/House_of_Commons_Chamber_1.png" />
   <script>
@@ -39,6 +43,13 @@
       document.querySelector("img").classList.toggle("left")
       document.querySelector("img").classList.toggle("right")
     }
+    setTimeout(() => {
+      const ss = document.createElement('link')
+      ss.rel = 'stylesheet'
+      ss.href = 'https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css'
+      document.head.appendChild(ss)
+      console.log("appended...")
+    }, 3000)
   </script>
 </body>
 </html>

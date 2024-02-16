@@ -1,5 +1,5 @@
 import { globalScope } from '../../../../common/constants/runtime'
-import { MODE } from '../../../../common/session/session-entity'
+import { MODE } from '../../../../common/session/constants'
 import { now } from '../../../../common/timing/now'
 import { parseUrl } from '../../../../common/url/parse-url'
 import { TraceNode } from './node'

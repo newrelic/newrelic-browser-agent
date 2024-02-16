@@ -48,13 +48,30 @@ function ee (old, debugId) {
     listeners,
     context,
     buffer: bufferEventsByGroup,
-    abort,
     aborted: false,
     isBuffering,
     debugId,
     backlog: isolatedBacklog ? {} : old && typeof old.backlog === 'object' ? old.backlog : {}
-
   }
+
+  Object.defineProperty(emitter, 'aborted', {
+    get: () => {
+      let aborted = emitter._aborted
+
+      if (aborted) return aborted
+      else if (old) {
+        aborted = old.aborted
+      }
+
+      return aborted
+    },
+    set: (val) => {
+      emitter._aborted = true
+      Object.keys(emitter.backlog).forEach(key => {
+        delete emitter.backlog[key]
+      })
+    }
+  })
 
   return emitter
 
@@ -140,9 +157,4 @@ function ee (old, debugId) {
   function getBuffer () {
     return emitter.backlog
   }
-}
-
-function abort () {
-  globalInstance.aborted = true
-  globalInstance.backlog = {}
 }

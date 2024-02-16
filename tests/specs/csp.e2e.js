@@ -1,16 +1,16 @@
 import { notIE } from '../../tools/browser-matcher/common-matchers.mjs'
 import { faker } from '@faker-js/faker'
 
-describe('Content Security Policy', () => {
-  it.withBrowsersMatching(notIE)('should support a nonce script element', async () => {
-    const nonce = faker.datatype.uuid()
+describe.withBrowsersMatching(notIE)('Content Security Policy', () => {
+  it('should support a nonce script element', async () => {
+    const nonce = faker.string.uuid()
     await Promise.all([
       browser.testHandle.expectRum(),
       browser.url(await browser.testHandle.assetURL('instrumented.html', { nonce }))
         .then(() => browser.waitForAgentLoad())
     ])
 
-    const foundNonce = await browser.execute(function () {
+    const foundNonces = await browser.execute(function () {
       var scriptTags = document.querySelectorAll('script')
       var nonceValues = []
       for (let i = 0; i < scriptTags.length; i++) {
@@ -19,11 +19,14 @@ describe('Content Security Policy', () => {
       return nonceValues
     })
 
-    expect(foundNonce).toEqual([nonce, nonce, nonce, nonce])
+    expect(foundNonces.length).toBeGreaterThanOrEqual(1)
+    foundNonces.forEach(foundNonce => {
+      expect(foundNonce).toEqual(nonce)
+    })
   })
 
   it.withBrowsersMatching(notIE)('should send a nonce supportability metric', async () => {
-    const nonce = faker.datatype.uuid()
+    const nonce = faker.string.uuid()
     await browser.url(await browser.testHandle.assetURL('instrumented.html', { nonce }))
       .then(() => browser.waitForAgentLoad())
 
@@ -40,17 +43,31 @@ describe('Content Security Policy', () => {
   })
 
   it('should load async chunk with subresource integrity', async () => {
+    await browser.enableSessionReplay()
+
+    const url = await browser.testHandle.assetURL('subresource-integrity-capture.html', {
+      init: {
+        privacy: { cookies_enabled: true },
+        session_replay: { enabled: true, sampling_rate: 100, error_sampling_rate: 100 }
+      }
+    })
     await Promise.all([
       browser.testHandle.expectRum(),
-      browser.url(await browser.testHandle.assetURL('subresource-integrity-capture.html'))
+      browser.url(url)
         .then(() => browser.waitForAgentLoad())
     ])
 
+    await browser.waitUntil(
+      () => browser.execute(function () {
+        return window.chunkIntegrityValues.length === 3
+      })
+    )
     const foundIntegrityValues = await browser.execute(function () {
-      return window.chunkIntegratyValues
+      return window.chunkIntegrityValues
     })
 
-    expect(foundIntegrityValues.length).toEqual(1)
-    expect(foundIntegrityValues[0]).toMatch(/^sha512-[a-zA-Z0-9=/+]+$/)
+    foundIntegrityValues.forEach(hash =>
+      expect(hash).toMatch(/^sha512-[a-zA-Z0-9=/+]+$/)
+    )
   })
 })

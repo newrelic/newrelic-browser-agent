@@ -11,9 +11,6 @@ export const args = yargs(hideBin(process.argv))
   .string('githubLogin')
   .describe('githubLogin', 'Github login associated with github authentication token')
 
-  .string('githubToken')
-  .describe('githubToken', 'Github authentication token')
-
   .string('githubUserName')
   .describe('githubUserName', 'User name associated with github login user')
   .default('githubUserName', 'Browser Agent Team')
@@ -21,5 +18,8 @@ export const args = yargs(hideBin(process.argv))
   .string('githubEmail')
   .describe('githubEmail', 'Email address associated with github login user')
 
-  .demandOption(['tag', 'githubLogin', 'githubToken', 'githubUserName', 'githubEmail'])
+  .string('nrDocsGithubToken')
+  .describe('nrDocsGithubToken', 'New Relic github org authentication token scoped to the docs repo')
+
+  .demandOption(['tag', 'githubLogin', 'githubUserName', 'githubEmail', 'nrDocsGithubToken'])
   .argv

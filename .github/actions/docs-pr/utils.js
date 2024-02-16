@@ -1,9 +1,5 @@
 import fs from 'fs'
-import path from 'path'
-import url from 'url'
-import { BROWSER_SUPPORT_LIST_FILE_PATH, ANDROID_CHROME_VERSION } from './constants.js'
-
-const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
+import { BROWSER_SUPPORT_LIST_FILE_PATH } from './constants.js'
 
 /**
  * Strips the conventional commit prefix and Jira issue suffix from a title.
@@ -20,10 +16,9 @@ export function cleanTitle (rawTitle) {
 
 /**
  * Extracts the supported browser versions from the specified JSON file and creates a support string.
- * @param {string} agentVersion The new agent version.
- * @returns {string} The formatted browser target statement.
+ * @returns {string} The min and max browser versions
  */
-export async function getBrowserTargetStatement (agentVersion) {
+export async function getBrowserVersions () {
   const browserData = JSON.parse(await fs.promises.readFile(BROWSER_SUPPORT_LIST_FILE_PATH))
 
   const min = {}
@@ -40,10 +35,5 @@ export async function getBrowserTargetStatement (agentVersion) {
     }
   }
 
-  return (
-    'Consistent with our [browser support policy](https://docs.newrelic.com/docs/browser/new-relic-browser/getting-started/compatibility-requirements-browser-monitoring/#browser-types), ' +
-    `${agentVersion} of the Browser agent was built for and tested against these browsers and version ranges: ` +
-    `Chrome ${min.chrome}-${max.chrome}, Edge ${min.edge}-${max.edge}, Safari ${min.safari}-${max.safari}, and Firefox ${min.firefox}-${max.firefox}. ` +
-    `For mobile devices, ${agentVersion} was built and tested for Android Chrome ${ANDROID_CHROME_VERSION}-${max.chrome} and iOS Safari ${min.ios}-${max.ios}.`
-  )
+  return { min, max }
 }

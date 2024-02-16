@@ -14,9 +14,9 @@ describe('setAPI', () => {
   let instanceEE
 
   beforeEach(() => {
-    agentId = faker.datatype.uuid()
-    licenseKey = faker.datatype.uuid()
-    applicationID = faker.datatype.uuid()
+    agentId = faker.string.uuid()
+    licenseKey = faker.string.uuid()
+    applicationID = faker.string.uuid()
 
     setInfo(agentId, { licenseKey, applicationID })
     setConfiguration(agentId, {})
@@ -72,7 +72,7 @@ describe('setAPI', () => {
       setAPI(agentId)
 
       apiFn = jest.mocked(registerHandlerModule.registerHandler).mock.calls[0][1]
-      offsetTime = faker.datatype.number({ min: 100, max: 200 })
+      offsetTime = faker.number.int({ min: 100, max: 200 })
 
       setRuntime(agentId, { ...getRuntime(agentId), offset: offsetTime })
     })
@@ -107,7 +107,7 @@ describe('setAPI', () => {
 
     test('should calculate time from provided time', () => {
       const time = Date.now()
-      const providedTime = faker.datatype.number({ min: 300, max: 400 })
+      const providedTime = faker.number.int({ min: 300, max: 400 })
       apiFn(time, providedTime)
 
       expect(handleModule.handle).toHaveBeenCalledTimes(3)
@@ -143,7 +143,7 @@ describe('setAPI', () => {
       setAPI(agentId)
 
       apiFn = jest.mocked(registerHandlerModule.registerHandler).mock.calls[2][1]
-      offsetTime = faker.datatype.number({ min: 100, max: 200 })
+      offsetTime = faker.number.int({ min: 100, max: 200 })
 
       setRuntime(agentId, { ...getRuntime(agentId), offset: offsetTime })
     })
@@ -153,9 +153,9 @@ describe('setAPI', () => {
       undefined,
       {},
       { name: null },
-      { name: faker.datatype.uuid() },
-      { name: faker.datatype.uuid(), start: null },
-      { name: faker.datatype.uuid(), start: 0 }
+      { name: faker.string.uuid() },
+      { name: faker.string.uuid(), start: null },
+      { name: faker.string.uuid(), start: 0 }
     ])('should return early and not create event emitter event when input event is %s', (event) => {
       const time = Date.now()
       apiFn(time, event)
@@ -166,8 +166,8 @@ describe('setAPI', () => {
     test('should create event emitter event', () => {
       const time = Date.now()
       const event = {
-        name: faker.datatype.uuid(),
-        start: faker.datatype.number({ min: 300, max: 400 })
+        name: faker.string.uuid(),
+        start: faker.number.int({ min: 300, max: 400 })
       }
       apiFn(time, event)
 
@@ -190,9 +190,9 @@ describe('setAPI', () => {
     test('should use provided end time', () => {
       const time = Date.now()
       const event = {
-        name: faker.datatype.uuid(),
-        start: faker.datatype.number({ min: 300, max: 400 }),
-        end: faker.datatype.number({ min: 500, max: 600 })
+        name: faker.string.uuid(),
+        start: faker.number.int({ min: 300, max: 400 }),
+        end: faker.number.int({ min: 500, max: 600 })
       }
       apiFn(time, event)
 
@@ -211,9 +211,9 @@ describe('setAPI', () => {
     test('should use provided origin', () => {
       const time = Date.now()
       const event = {
-        name: faker.datatype.uuid(),
-        start: faker.datatype.number({ min: 300, max: 400 }),
-        origin: faker.datatype.uuid()
+        name: faker.string.uuid(),
+        start: faker.number.int({ min: 300, max: 400 }),
+        origin: faker.string.uuid()
       }
       apiFn(time, event)
 
@@ -264,8 +264,8 @@ describe('setAPI', () => {
 
     test('should add the release to the runtime', () => {
       const time = Date.now()
-      const releaseName = faker.datatype.uuid()
-      const releaseVersion = faker.datatype.uuid()
+      const releaseName = faker.string.uuid()
+      const releaseVersion = faker.string.uuid()
 
       apiFn(time, releaseName, releaseVersion)
 
@@ -278,8 +278,8 @@ describe('setAPI', () => {
       const time = Date.now()
 
       for (let i = 0; i < 20; i++) {
-        const releaseName = faker.datatype.uuid()
-        const releaseVersion = faker.datatype.uuid()
+        const releaseName = faker.string.uuid()
+        const releaseVersion = faker.string.uuid()
         apiFn(time, releaseName, releaseVersion)
       }
 

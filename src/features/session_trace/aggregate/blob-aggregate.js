@@ -7,7 +7,6 @@ import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
 import { FEATURE_NAME } from '../constants'
-import { MODE, SESSION_EVENTS } from '../../../common/session/session-entity'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { generateRandomHexString } from '../../../common/ids/unique-id'
 import { TraceStorage } from './trace/storage'
@@ -15,6 +14,7 @@ import { obj as encodeObj } from '../../../common/url/encode'
 import { now } from '../../../common/timing/now'
 import { deregisterDrain } from '../../../common/drain/drain'
 import { globalScope } from '../../../common/constants/runtime'
+import { MODE, SESSION_EVENTS } from '../../../common/session/constants'
 
 const REQ_THRESHOLD_TO_SEND = 30
 const ERROR_MODE_SECONDS_WINDOW = 30 * 1000 // sliding window of nodes to track when simply monitoring (but not harvesting) in error mode

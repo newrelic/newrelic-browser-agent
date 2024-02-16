@@ -4,6 +4,8 @@ import { warn } from '../../util/console'
 import { getNREUMInitializedAgent } from '../../window/nreum'
 import { getModeledObject } from './configurable'
 
+const nrMask = '[data-nr-mask]'
+
 const model = () => {
   const hiddenState = {
     mask_selector: '*',
@@ -62,19 +64,19 @@ const model = () => {
       autoStart: true,
       enabled: false,
       harvestTimeSeconds: 60,
-      sampling_rate: 50, // float from 0 - 100
-      error_sampling_rate: 50, // float from 0 - 100
+      sampling_rate: 10, // float from 0 - 100
+      error_sampling_rate: 100, // float from 0 - 100
       collect_fonts: false, // serialize fonts for collection without public asset url, this is currently broken in RRWeb -- https://github.com/rrweb-io/rrweb/issues/1304.  When fixed, revisit with test cases
-      inline_images: false, // serialize images for collection without public asset url
+      inline_images: false, // serialize images for collection without public asset url -- right now this is only useful for testing as it easily generates payloads too large to be harvested
       inline_stylesheet: true, // serialize css for collection without public asset url
       // recording config settings
       mask_all_inputs: true,
       // this has a getter/setter to facilitate validation of the selectors
       get mask_text_selector () { return hiddenState.mask_selector },
       set mask_text_selector (val) {
-        if (isValidSelector(val)) hiddenState.mask_selector = val + ',[data-nr-mask]'
-        else if (val === null) hiddenState.mask_selector = val // null is acceptable, which completely disables the behavior
-        else warn('An invalid session_replay.mask_selector was provided and will not be used', val)
+        if (isValidSelector(val)) hiddenState.mask_selector = `${val},${nrMask}`
+        else if (val === '' || val === null) hiddenState.mask_selector = nrMask
+        else warn('An invalid session_replay.mask_selector was provided. \'*\' will be used.', val)
       },
       // these properties only have getters because they are enforcable constants and should error if someone tries to override them
       get block_class () { return 'nr-block' },

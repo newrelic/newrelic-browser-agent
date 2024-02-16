@@ -207,7 +207,10 @@ export function setAPI (agentIdentifier, forceDrain) {
     import(/* webpackChunkName: "async-api" */'./apiAsync').then(({ setAPI }) => {
       setAPI(agentIdentifier)
       drain(agentIdentifier, 'api')
-    }).catch(() => warn('Downloading runtime APIs failed...'))
+    }).catch(() => {
+      warn('Downloading runtime APIs failed...')
+      instanceEE.aborted = true
+    })
   }
 
   return apiInterface

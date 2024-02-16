@@ -5,6 +5,7 @@ const { PassThrough } = require('stream')
 const zlib = require('zlib')
 const assert = require('assert')
 const { paths } = require('../constants')
+const { retrieveReplayData } = require('../utils/replay-buffer')
 
 /**
  * Fastify plugin to apply routes to the asset server that are used in various
@@ -18,7 +19,6 @@ module.exports = fp(async function (fastify, testServer) {
     method: ['GET', 'POST'],
     url: '/beacon/*',
     onRequest: async (request, reply) => {
-      // reply.hijack()
       request.raw.url = request.raw.url.replace('/beacon/', '/')
       testServer.bamServer.server.routing(request.raw, reply.raw)
       await reply
@@ -31,7 +31,6 @@ module.exports = fp(async function (fastify, testServer) {
     method: ['GET', 'POST'],
     url: '/assets/*',
     onRequest: async (request, reply) => {
-      // reply.hijack()
       request.raw.url = request.raw.url.replace('/assets/', '/build/')
       testServer.assetServer.server.routing(request.raw, reply.raw)
       await reply
@@ -174,9 +173,11 @@ module.exports = fp(async function (fastify, testServer) {
     compress: false
   }, async (request, reply) => {
     try {
-      assert.deepEqual(request.body, { name: 'bob', x: '5' })
+      assert.strictEqual(request.body.name.value, 'bob')
+      assert.strictEqual(request.body.x.value, '5')
       reply.send('good')
     } catch (e) {
+      console.log(e)
       reply.send('bad')
     }
   })
@@ -220,5 +221,15 @@ module.exports = fp(async function (fastify, testServer) {
     compress: false
   }, (request, reply) => {
     reply.code(200).send('')
+  })
+  fastify.get('/session-replay', async (request, reply) => {
+    const replayData = await retrieveReplayData(request.query.sessionId)
+    if (replayData) {
+      reply.code(200)
+      return replayData
+    } else {
+      reply.code(404)
+      return ''
+    }
   })
 })

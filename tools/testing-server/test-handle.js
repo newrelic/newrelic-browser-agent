@@ -18,7 +18,8 @@ const {
   testInteractionEventsRequest,
   testBlobRequest,
   testBlobReplayRequest,
-  testBlobTraceRequest
+  testBlobTraceRequest,
+  testSessionReplaySnapshotRequest
 } = require('./utils/expect-tests')
 
 /**
@@ -417,6 +418,14 @@ module.exports = class TestHandle {
     return this.expect('bamServer', {
       timeout,
       test: testBlobTraceRequest,
+      expectTimeout
+    })
+  }
+
+  expectSessionReplaySnapshot (timeout, expectTimeout = false) {
+    return this.expect('bamServer', {
+      timeout,
+      test: testSessionReplaySnapshotRequest,
       expectTimeout
     })
   }

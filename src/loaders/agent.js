@@ -17,10 +17,7 @@ import { getConfiguration, getInfo, getLoaderConfig, getRuntime } from '../commo
 import { warn } from '../common/util/console'
 import { stringify } from '../common/util/stringify'
 import { globalScope } from '../common/constants/runtime'
-
-/**
- * @typedef {import('./api/interaction-types').InteractionInstance} InteractionInstance
- */
+import { ee } from '../common/event-emitter/contextual-ee'
 
 /**
  * A flexible class that may be used to compose an agent from a select subset of feature modules. In applications
@@ -40,6 +37,7 @@ export class Agent extends AgentBase {
     this.agentIdentifier = agentIdentifier
     this.sharedAggregator = new Aggregator({ agentIdentifier: this.agentIdentifier })
     this.features = {}
+    this.ee = ee.get(this.agentIdentifier)
     setNREUMInitializedAgent(agentIdentifier, this) // append this agent onto the global NREUM.initializedAgents
 
     this.desiredFeatures = new Set(options.features || []) // expected to be a list of static Instrument/InstrumentBase classes, see "spa.js" for example
@@ -88,43 +86,9 @@ export class Agent extends AgentBase {
       delete newrelic.initializedAgents[this.agentIdentifier]?.features // GC mem used internally by features
       delete this.sharedAggregator
       // Keep the initialized agent object with its configs for troubleshooting purposes.
-      newrelic.ee?.abort() // set flag and clear global backlog
-      delete newrelic.ee?.get(this.agentIdentifier) // clear this agent's own backlog too
+      const thisEE = newrelic.ee.get(this.agentIdentifier)
+      thisEE.aborted = true // set flag and clear backlog
       return false
     }
-  }
-
-  /* Below API methods are only available on a standard agent and not the micro agent */
-
-  /**
-   * Adds a JavaScript object with a custom name, start time, etc. to an in-progress session trace.
-   * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/addtotrace/}
-   * @param {{name: string, start: number, end?: number, origin?: string, type?: string}} customAttributes Supply a JavaScript object with these required and optional name/value pairs:
-   *
-   * - Required name/value pairs: name, start
-   * - Optional name/value pairs: end, origin, type
-   *
-   * If you are sending the same event object to New Relic as a PageAction, omit the TYPE attribute. (type is a string to describe what type of event you are marking inside of a session trace.) If included, it will override the event type and cause the PageAction event to be sent incorrectly. Instead, use the name attribute for event information.
-   */
-  addToTrace (customAttributes) {
-    warn('Call to agent api addToTrace failed. The session trace feature is not currently initialized.')
-  }
-
-  /**
-   * Gives SPA routes more accurate names than default names. Monitors specific routes rather than by default grouping.
-   * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/setcurrentroutename/}
-   * @param {string} name Current route name for the page.
-   */
-  setCurrentRouteName (name) {
-    warn('Call to agent api setCurrentRouteName failed. The spa feature is not currently initialized.')
-  }
-
-  /**
-   * Returns a new API object that is bound to the current SPA interaction.
-   * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/interaction/}
-   * @returns {InteractionInstance} An API object that is bound to a specific BrowserInteraction event. Each time this method is called for the same BrowserInteraction, a new object is created, but it still references the same interaction.
-   */
-  interaction () {
-    warn('Call to agent api interaction failed. The spa feature is not currently initialized.')
   }
 }

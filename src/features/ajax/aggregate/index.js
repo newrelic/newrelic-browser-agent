@@ -82,12 +82,16 @@ export class Aggregate extends AggregateBase {
         hash = stringify([params.status, params.host, params.pathname])
       }
 
+      var shouldCollect = shouldCollectEvent(params)
+
       // store as metric
-      aggregator.store('xhr', hash, params, metrics)
+      if (shouldCollect) {
+        aggregator.store('xhr', hash, params, metrics)
+      }
 
       if (!allAjaxIsEnabled) return
 
-      if (!shouldCollectEvent(params)) {
+      if (!shouldCollect) {
         if (params.hostname === beacon || (proxyBeacon && params.hostname === proxyBeacon)) {
           // This doesn't make a distinction if the same-domain request is going to a different port or path...
           handle(SUPPORTABILITY_METRIC_CHANNEL, ['Ajax/Events/Excluded/Agent'], undefined, FEATURE_NAMES.metrics, ee)

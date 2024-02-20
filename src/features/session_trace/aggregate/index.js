@@ -1,538 +1,217 @@
-/*
- * Copyright 2020 New Relic Corporation. All rights reserved.
- * SPDX-License-Identifier: Apache-2.0
+/**
+ * The plan with this would be to report from the old file to the old agg and this file to the
+ * blob agg until the API is solidified and shipped.  This file will be DISABLED by default.
+ * At which point the old agg will be ripped out and only the new agg will report and be renamed to "index"
  */
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
-import { parseUrl } from '../../../common/url/parse-url'
-import { getConfigurationValue, getRuntime } from '../../../common/config/config'
-import { now } from '../../../common/timing/now'
+import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
 import { FEATURE_NAME } from '../constants'
-import { HandlerCache } from '../../utils/handler-cache'
-import { getSessionReplayMode } from '../../session_replay/shared/replay-mode'
 import { AggregateBase } from '../../utils/aggregate-base'
+import { generateRandomHexString } from '../../../common/ids/unique-id'
+import { TraceStorage } from './trace/storage'
+import { obj as encodeObj } from '../../../common/url/encode'
+import { now } from '../../../common/timing/now'
+import { deregisterDrain } from '../../../common/drain/drain'
+import { globalScope } from '../../../common/constants/runtime'
 import { MODE, SESSION_EVENTS } from '../../../common/session/constants'
 
-const ignoredEvents = {
-  // we find that certain events make the data too noisy to be useful
-  global: { mouseup: true, mousedown: true },
-  // certain events are present both in the window and in PVT metrics.  PVT metrics are prefered so the window events should be ignored
-  window: { load: true, pagehide: true },
-  // when ajax instrumentation is disabled, all XMLHttpRequest events will return with origin = xhrOriginMissing and should be ignored
-  xhrOriginMissing: { ignoreAll: true }
-}
-const toAggregate = {
-  typing: [1000, 2000],
-  scrolling: [100, 1000],
-  mousing: [1000, 2000],
-  touching: [1000, 2000]
-}
-const MAX_TRACE_DURATION = 10 * 60 * 1000 // 10 minutes
 const REQ_THRESHOLD_TO_SEND = 30
 const ERROR_MODE_SECONDS_WINDOW = 30 * 1000 // sliding window of nodes to track when simply monitoring (but not harvesting) in error mode
-
+/** Reserved room for query param attrs */
+const QUERY_PARAM_PADDING = 5000
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
-  #scheduler
 
-  constructor (agentIdentifier, aggregator, argsObj) {
+  constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
     this.agentRuntime = getRuntime(agentIdentifier)
+    this.agentInfo = getInfo(agentIdentifier)
 
     // Very unlikely, but in case the existing XMLHttpRequest.prototype object on the page couldn't be wrapped.
     if (!this.agentRuntime.xhrWrappable) return
 
-    this.resourceObserver = argsObj?.resourceObserver // undefined if observer couldn't be created
-    this.ptid = ''
-    this.trace = {}
-    this.nodeCount = 0
+    /** The PageTrace ID generated at each hard page load */
+    this.agentRuntime.ptid = this.ptid = generateRandomHexString(10)
+    /** A buffer to hold on to harvested traces in the case that a retry must be made later */
     this.sentTrace = null
     this.harvestTimeSeconds = getConfigurationValue(agentIdentifier, 'session_trace.harvestTimeSeconds') || 10
     this.maxNodesPerHarvest = getConfigurationValue(agentIdentifier, 'session_trace.maxNodesPerHarvest') || 1000
-    /**
-     * Standalone (mode) refers to the legacy version of ST before the idea of 'session' or the Replay feature existed.
-     * It has some different behavior vs when used in tandem with replay. */
-    this.isStandalone = false
-    const operationalGate = new HandlerCache() // acts as a controller-intermediary that can enable or disable this feature's collection dynamically
-    const sessionEntity = this.agentRuntime.session
-    this.operationalGate = operationalGate
+    /** A flag used to maintain trace mode state at initialization time. If true at init time and sampled in error mode, it will flip to full */
+    this.errorNoticed = false
+    /** Tied to the entitlement flag response from BCS.  Will short circuit operations of the agg if false  */
+    this.entitled = undefined
+    /** A flag used to decide if the 30 node threshold should be ignored on the first harvest to ensure sending on the first payload */
+    this.everHarvested = false
+    /** Do not run if cookies_enabled is false */
+    const shouldSetup = getConfigurationValue(agentIdentifier, 'privacy.cookies_enabled') === true
 
-    /* --- The following section deals with user sessions concept & contains non-trivial control flow. --- */
-    const controlTraceOp = (traceMode) => {
-      switch (traceMode) {
-        case MODE.ERROR:
-          this.startTracing(operationalGate, true)
-          break
-        case MODE.FULL:
-        case true:
-          this.startTracing(operationalGate)
-          break
-        case MODE.OFF:
-        case false:
-        default: // this feature becomes "off" (does nothing & nothing is sent)
-          operationalGate.decide(false)
-          break
-      }
+    if (shouldSetup) {
+      /** TraceStorage is the mechanism that holds, normalizes and aggregates ST nodes.  It will be accessed and purged when harvests occur */
+      this.traceStorage = new TraceStorage(this)
+      /** This agg needs information about sampling (stn) and entitlements (ste) to make the appropriate decisions on running */
+      this.waitForFlags(['stn', 'ste']).then(([stMode, stEntitled]) => this.initialize(stMode, stEntitled))
     }
-
-    let seenAnError = false
-    let mostRecentModeKnown
-
-    this.ee.on(SESSION_EVENTS.UPDATE, (eventType, sessionState) => {
-      // this will only have an effect if ST is NOT already in full mode
-      if (sessionState.sessionReplayMode === MODE.FULL) switchToFull()
-    })
-
-    /**
-     * The goal of switchToFull is to take external input to trigger a change from off or error to full.
-     * It will have no effect if already running in full mode.
-     * "external" input in this case means errors thrown on the page or session replay itself being triggered to run in full mode by the API, which updates the session entity.
-     */
-    const switchToFull = () => {
-      if (this.agentRuntime?.session?.state?.sessionReplayMode !== MODE.FULL) return
-
-      if (mostRecentModeKnown !== MODE.FULL) {
-        const prevMode = mostRecentModeKnown
-        mostRecentModeKnown = MODE.FULL
-        sessionEntity.write({ sessionTraceMode: mostRecentModeKnown })
-        this.isStandalone = false
-
-        if (prevMode === MODE.ERROR && this.#scheduler) {
-          this.trimSTNs(ERROR_MODE_SECONDS_WINDOW) // up until now, Trace would've been just buffering nodes up to max, which needs to be trimmed to last X seconds
-          this.#scheduler.runHarvest({ needResponse: true })
-        } else {
-          controlTraceOp(MODE.FULL)
-        }
-      }
-    }
-
-    if (!sessionEntity) {
-      // Since session manager isn't around, do the old Trace behavior of waiting for RUM response to decide feature activation.
-      this.isStandalone = true
-      registerHandler('rumresp-stn', (on) => controlTraceOp(on), this.featureName, this.ee)
-    } else {
-      registerHandler('errorAgg', () => {
-        seenAnError = true
-        switchToFull()
-      }, this.featureName, this.ee)
-
-      const stopTracePerm = () => {
-        if (sessionEntity.state.sessionTraceMode !== MODE.OFF) sessionEntity.write({ sessionTraceMode: MODE.OFF })
-        operationalGate.permanentlyDecide(false)
-        if (mostRecentModeKnown === MODE.FULL) this.#scheduler?.runHarvest() // allow queued nodes (past opGate) to final harvest, unless they were buffered in other modes
-        this.#scheduler?.stopTimer(true) // the 'true' arg here will forcibly block any future call to runHarvest, so the last runHarvest above must be prior
-        this.#scheduler = null
-      }
-
-      // CAUTION: everything inside this promise runs post-load; event subscribers must be pre-load aka synchronous with constructor
-      this.waitForFlags(['stn', 'sr']).then(async ([traceOn, replayOn]) => {
-        if (!replayOn) {
-          // When sr = 0 from BCS, also do the old Trace behavior:
-          this.isStandalone = true
-          controlTraceOp(traceOn)
-        } else {
-          this.ee.on('REPLAY_ABORTED', () => stopTracePerm())
-          /* Assuming on page visible that the trace mode is updated from shared session,
-           - if trace is turned off from the other page, it should be likewise here.
-           - if trace switches to Full mode, harvest should start (prev: Error) if not already running (prev: Full). */
-          this.ee.on(SESSION_EVENTS.RESUME, () => {
-            const updatedTraceMode = sessionEntity.state.sessionTraceMode
-            if (updatedTraceMode === MODE.OFF) stopTracePerm()
-            else if (updatedTraceMode === MODE.FULL && this.#scheduler && !this.#scheduler.started) this.#scheduler.runHarvest({ needResponse: true })
-            mostRecentModeKnown = updatedTraceMode
-          })
-          this.ee.on(SESSION_EVENTS.PAUSE, () => { mostRecentModeKnown = sessionEntity.state.sessionTraceMode })
-
-          if (!sessionEntity.isNew) { // inherit the same mode as existing session's Trace
-            if (sessionEntity.state.sessionReplayMode === MODE.OFF) this.isStandalone = true
-            controlTraceOp(mostRecentModeKnown = sessionEntity.state.sessionTraceMode)
-          } else { // for new sessions, see the truth table associated with NEWRELIC-8662 wrt the new Trace behavior under session management
-            const replayMode = await getSessionReplayMode(agentIdentifier)
-            if (replayMode === MODE.OFF) this.isStandalone = true // without SR, Traces are still subject to old harvest limits
-
-            let startingMode
-            if (traceOn === true) { // CASE: both trace (entitlement+sampling) & replay (entitlement) flags are true from RUM
-              startingMode = MODE.FULL // always full capture regardless of replay sampling decisions
-            } else { // CASE: trace flag is off, BUT it must still run if replay is on (possibly)
-              // At this point, it's possible that 1 or more exception was thrown, in which case just start in full if Replay originally started in ERROR mode.
-              if (replayMode === MODE.ERROR && seenAnError) startingMode = MODE.FULL
-              else startingMode = replayMode
-            }
-            sessionEntity.write({ sessionTraceMode: (mostRecentModeKnown = startingMode) })
-            controlTraceOp(startingMode)
-          }
-        }
-      })
-    }
-    /* --- EoS --- */
-
-    // register the handlers immediately... but let the handlerCache decide if the data should actually get stored...
-    registerHandler('bst', (...args) => operationalGate.settle(() => this.storeEvent(...args)), this.featureName, this.ee)
-    registerHandler('bstResource', (...args) => operationalGate.settle(() => this.storeResources(...args)), this.featureName, this.ee)
-    registerHandler('bstHist', (...args) => operationalGate.settle(() => this.storeHist(...args)), this.featureName, this.ee)
-    registerHandler('bstXhrAgg', (...args) => operationalGate.settle(() => this.storeXhrAgg(...args)), this.featureName, this.ee)
-    registerHandler('bstApi', (...args) => operationalGate.settle(() => this.storeSTN(...args)), this.featureName, this.ee)
-    registerHandler('errorAgg', (...args) => operationalGate.settle(() => this.storeErrorAgg(...args)), this.featureName, this.ee)
-    registerHandler('pvtAdded', (...args) => operationalGate.settle(() => this.processPVT(...args)), this.featureName, this.ee)
-    this.drain()
   }
 
-  startTracing (startupBuffer, dontStartHarvestYet = false) {
-    if (typeof PerformanceNavigationTiming !== 'undefined') {
-      this.storeTiming(window.performance.getEntriesByType('navigation')[0])
-    } else {
-      this.storeTiming(window.performance.timing)
+  /** Sets up event listeners, and initializes this module to run in the correct "mode".  Can be triggered from a few places, but makes an effort to only set up listeners once */
+  initialize (stMode, stEntitled, ignoreSession) {
+    this.entitled ??= stEntitled
+    if (this.blocked || !this.entitled) return deregisterDrain(this.agentIdentifier, this.featureName)
+
+    if (!this.initialized) {
+      // The SessionEntity class can emit a message indicating the session was cleared and reset (expiry, inactivity). This feature must abort and never resume if that occurs.
+      this.ee.on(SESSION_EVENTS.RESET, () => {
+        console.log('RESET!')
+        this.scheduler.runHarvest()
+        this.abort()
+      })
+      // The SessionEntity can have updates (locally or across tabs for SR mode changes), (across tabs for ST mode changes).
+      // Those updates should be sync'd here to ensure this page also honors the mode after initialization
+      this.ee.on(SESSION_EVENTS.UPDATE, (eventType, sessionState) => {
+        // this will only have an effect if ST is NOT already in full mode
+        if (this.mode !== MODE.FULL && (sessionState.sessionReplayMode === MODE.FULL || sessionState.sessionTraceMode === MODE.FULL)) this.switchToFull()
+      })
     }
 
-    this.#scheduler = new HarvestScheduler('resources', {
-      onFinished: this.#onHarvestFinished.bind(this),
-      retryDelay: this.harvestTimeSeconds
+    /** ST/SR sampling flow in BCS - https://drive.google.com/file/d/19hwt2oft-8Hh4RrjpLqEXfpP_9wYBLcq/view?usp=sharing */
+    /** ST will run in the mode provided by BCS if the session IS NEW.  If not... it will use the state of the session entity to determine what mode to run in */
+    if (!this.agentRuntime.session.isNew && !ignoreSession) this.mode = this.agentRuntime.session.state.sessionTraceMode
+    else this.mode = stMode
+
+    this.initialized = true
+    /** If the mode is off, we do not want to hold up draining for other features, so we deregister the feature for now.
+     * If it drains later (due to a mode change), data and handlers will instantly drain instead of waiting for the registry. */
+    if (this.mode === MODE.OFF) return deregisterDrain(this.agentIdentifier, this.featureName)
+
+    this.scheduler = new HarvestScheduler('browser/blobs', {
+      onFinished: this.onHarvestFinished.bind(this),
+      retryDelay: this.harvestTimeSeconds,
+      getPayload: this.prepareHarvest.bind(this),
+      raw: true
     }, this)
-    this.#scheduler.harvest.on('resources', this.#prepareHarvest.bind(this))
-    if (dontStartHarvestYet === false) this.#scheduler.runHarvest({ needResponse: true }) // sends first stn harvest immediately
-    startupBuffer.decide(true) // signal to ALLOW & process data in EE's buffer into internal nodes queued for next harvest
-  }
 
-  #onHarvestFinished (result) {
-    if (result.sent && result.responseText && !this.ptid) { // continue interval harvest only if ptid was returned by server on the first
-      this.agentRuntime.ptid = this.ptid = result.responseText
-      this.#scheduler.startTimer(this.harvestTimeSeconds)
+    /** The handlers set up by the Inst file */
+    registerHandler('bst', (...args) => this.traceStorage.storeEvent(...args), this.featureName, this.ee)
+    registerHandler('bstResource', (...args) => this.traceStorage.storeResources(...args), this.featureName, this.ee)
+    registerHandler('bstHist', (...args) => this.traceStorage.storeHist(...args), this.featureName, this.ee)
+    registerHandler('bstXhrAgg', (...args) => this.traceStorage.storeXhrAgg(...args), this.featureName, this.ee)
+    registerHandler('bstApi', (...args) => this.traceStorage.storeSTN(...args), this.featureName, this.ee)
+    registerHandler('stn-errorAgg', (...args) => this.traceStorage.storeErrorAgg(...args), this.featureName, this.ee)
+    registerHandler('pvtAdded', (...args) => this.traceStorage.processPVT(...args), this.featureName, this.ee)
+
+    /** A separate handler for noticing errors, and switching to "full" mode if running in "error" mode */
+    registerHandler('stn-errorAgg', () => {
+      this.errorNoticed = true
+      if (this.mode === MODE.ERROR) this.switchToFull()
+    }, this.featureName, this.ee)
+
+    if (typeof PerformanceNavigationTiming !== 'undefined') {
+      this.traceStorage.storeTiming(globalScope.performance?.getEntriesByType?.('navigation')[0])
+    } else {
+      this.traceStorage.storeTiming(globalScope.performance?.timing)
     }
 
-    if (result.sent && result.retry && this.sentTrace) { // merge previous trace back into buffer to retry for next harvest
-      Object.entries(this.sentTrace).forEach(([name, listOfSTNodes]) => {
-        if (this.nodeCount >= this.maxNodesPerHarvest) return
+    /** Only start actually harvesting if running in full mode at init time */
+    if (this.mode === MODE.FULL) this.startHarvesting()
+    this.agentRuntime.session.write({ sessionTraceMode: this.mode })
+    /** drain and kick off the registerHandlers to start processing any buffered data */
+    if (!this.drained) this.drain()
+  }
 
-        this.nodeCount += listOfSTNodes.length
-        this.trace[name] = this.trace[name] ? listOfSTNodes.concat(this.trace[name]) : listOfSTNodes
-      })
+  /** This module does not auto harvest by default -- it needs to be kicked off.  Once this method is called, it will then harvest on an interval */
+  startHarvesting () {
+    this.scheduler.runHarvest({ needResponse: true })
+    this.scheduler.startTimer(this.harvestTimeSeconds)
+  }
+
+  /** Called by the harvest scheduler at harvest time to retrieve the payload.  This will only actually return a payload if running in full mode */
+  prepareHarvest (options = {}) {
+    if (this.traceStorage.nodeCount <= REQ_THRESHOLD_TO_SEND && !options.isFinalHarvest && this.everHarvested) {
+      // Only harvest when more than some threshold of nodes are pending, after the very first harvest, with the exception of the last outgoing harvest.
+      return
+    }
+    if (this.mode === MODE.OFF && this.traceStorage.nodeCount === 0) return
+    if (this.mode === MODE.ERROR) return // Trace in this mode should never be harvesting, even on unload
+
+    /** Get the ST nodes from the traceStorage buffer.  This also returns helpful metadata about the payload. */
+    const { stns, earliestTimeStamp, latestTimeStamp } = this.traceStorage.takeSTNs()
+    if (options.retry) {
+      this.sentTrace = stns
+    }
+
+    const firstSessionHarvest = this.agentRuntime.session && !this.agentRuntime.session.state.traceHarvestStarted
+    if (firstSessionHarvest) this.agentRuntime.session.write({ traceHarvestStarted: true })
+
+    const hasReplay = this.agentRuntime.session?.state.sessionReplayMode === 1
+    const endUserId = this.agentInfo?.jsAttributes?.['enduser.id']
+
+    this.everHarvested = true
+
+    /** The blob consumer expects the following and will reject if not supplied:
+     * browser_monitoring_key
+     * type
+     * app_id
+     * protocol_version
+     * attributes
+     *
+     * For data that does not fit the schema of the above, it should be url-encoded and placed into `attributes`
+     */
+    return {
+      qs: {
+        browser_monitoring_key: this.agentInfo.licenseKey,
+        type: 'SessionTrace',
+        app_id: this.agentInfo.applicationID,
+        protocol_version: '0',
+        attributes: encodeObj({
+        // this section of attributes must be controllable and stay below the query param padding limit -- see QUERY_PARAM_PADDING
+        // if not, data could be lost to truncation at time of sending, potentially breaking parsing / API behavior in NR1
+          'trace.firstTimestamp': this.agentRuntime.offset + earliestTimeStamp,
+          'trace.firstTimestampOffset': earliestTimeStamp,
+          'trace.lastTimestamp': this.agentRuntime.offset + latestTimeStamp,
+          'trace.lastTimestampOffset': latestTimeStamp,
+          'trace.nodeCount': stns.length,
+          ptid: `${this.ptid}`,
+          session: `${this.agentRuntime.session?.state.value}`,
+          rst: now(),
+          ...(firstSessionHarvest && { firstSessionHarvest }),
+          ...(hasReplay && { hasReplay }),
+          // customer-defined data should go last so that if it exceeds the query param padding limit it will be truncated instead of important attrs
+          ...(endUserId && { 'enduser.id': endUserId })
+        // The Query Param is being arbitrarily limited in length here.  It is also applied when estimating the size of the payload in getPayloadSize()
+        }, QUERY_PARAM_PADDING).substring(1) // remove the leading '&'
+      },
+      body: stns
+    }
+  }
+
+  /** When the harvest scheduler finishes, this callback is executed. It's main purpose is to determine if the payload needs to be retried
+   * and if so, it will take all data from the temporary buffer and place it back into the traceStorage module
+   */
+  onHarvestFinished (result) {
+    if (result.sent && result.retry && this.sentTrace) { // merge previous trace back into buffer to retry for next harvest
+      Object.entries(this.sentTrace).forEach(([name, listOfSTNodes]) => { this.traceStorage.restoreNode(name, listOfSTNodes) })
       this.sentTrace = null
     }
   }
 
-  #prepareHarvest (options) {
-    if (this.isStandalone) {
-      if (this.ptid && now() >= MAX_TRACE_DURATION) {
-        // Perform a final harvest once we hit or exceed the max session trace time
-        options.isFinalHarvest = true
-        this.operationalGate.permanentlyDecide(false)
-        this.#scheduler.stopTimer(true)
-      } else if (this.ptid && this.nodeCount <= REQ_THRESHOLD_TO_SEND && !options.isFinalHarvest) {
-        // Only harvest when more than some threshold of nodes are pending, after the very first harvest, with the exception of the last outgoing harvest.
-        return
-      }
-    } else {
-    //   -- *cli May '26 - Update: Not rate limiting backgrounded pages either for now.
-    //   if (this.ptid && document.visibilityState === 'hidden' && this.nodeCount <= REQ_THRESHOLD_TO_SEND) return
-
-      const currentMode = this.agentRuntime.session.state.sessionTraceMode
-      /* There could still be nodes previously collected even after Trace (w/ session mgmt) is turned off. Hence, continue to send the last batch.
-       * The intermediary controller SHOULD be already switched off so that no nodes are further queued. */
-      if (currentMode === MODE.OFF && Object.keys(this.trace).length === 0) return
-      if (currentMode === MODE.ERROR) return // Trace in this mode should never be harvesting, even on unload
+  /** Switch from "off" or "error" to full mode (if entitled) */
+  switchToFull () {
+    if (this.mode === MODE.FULL || !this.entitled) return
+    const prevMode = this.mode
+    this.mode = MODE.FULL
+    if (prevMode === MODE.OFF && this.initialized) return this.initialize(this.mode, this.entitled, true)
+    this.agentRuntime.session.write({ sessionTraceMode: this.mode })
+    if (prevMode === MODE.ERROR && this.initialized) {
+      this.traceStorage.trimSTNs(ERROR_MODE_SECONDS_WINDOW) // up until now, Trace would've been just buffering nodes up to max, which needs to be trimmed to last X seconds
     }
-
-    return this.takeSTNs(options.retry)
+    this.startHarvesting()
   }
 
-  // PageViewTiming (FEATURE) events and metrics, such as 'load', 'lcp', etc. pipes into ST here.
-  processPVT (name, value, attrs) {
-    this.storeTiming({ [name]: value })
-    if (hasFID(name, attrs)) this.storeEvent({ type: 'fid', target: 'document' }, 'document', value, value + attrs.fid)
-
-    function hasFID (name, attrs) {
-      return name === 'fi' && !!attrs && typeof attrs.fid === 'number'
-    }
-  }
-
-  // This processes the aforementioned PVT and the first navigation entry of the page.
-  storeTiming (timingEntry) {
-    if (!timingEntry) return
-
-    // loop iterates through prototype also (for FF)
-    for (let key in timingEntry) {
-      let val = timingEntry[key]
-
-      // ignore size and status type nodes that do not map to timestamp metrics
-      const lck = key.toLowerCase()
-      if (lck.indexOf('size') >= 0 || lck.indexOf('status') >= 0) continue
-
-      // ignore inherited methods, meaningless 0 values, and bogus timestamps
-      // that are in the future (Microsoft Edge seems to sometimes produce these)
-      if (!(typeof val === 'number' && val >= 0)) continue
-
-      val = Math.round(val)
-      this.storeSTN({
-        n: key,
-        s: val,
-        e: val,
-        o: 'document',
-        t: 'timing'
-      })
-    }
-  }
-
-  // Tracks the events and their listener's duration on objects wrapped by wrap-events.
-  storeEvent (currentEvent, target, start, end) {
-    if (this.shouldIgnoreEvent(currentEvent, target)) return
-
-    const evt = {
-      n: this.evtName(currentEvent.type),
-      s: start,
-      e: end,
-      t: 'event'
-    }
-
-    try {
-      // webcomponents-lite.js can trigger an exception on currentEvent.target getter because
-      // it does not check currentEvent.currentTarget before calling getRootNode() on it
-      evt.o = this.evtOrigin(currentEvent.target, target)
-    } catch (e) {
-      evt.o = this.evtOrigin(null, target)
-    }
-    this.storeSTN(evt)
-  }
-
-  shouldIgnoreEvent (event, target) {
-    const origin = this.evtOrigin(event.target, target)
-    if (event.type in ignoredEvents.global) return true
-    if (!!ignoredEvents[origin] && ignoredEvents[origin].ignoreAll) return true
-    return !!(!!ignoredEvents[origin] && event.type in ignoredEvents[origin])
-  }
-
-  evtName (type) {
-    switch (type) {
-      case 'keydown':
-      case 'keyup':
-      case 'keypress':
-        return 'typing'
-      case 'mousemove':
-      case 'mouseenter':
-      case 'mouseleave':
-      case 'mouseover':
-      case 'mouseout':
-        return 'mousing'
-      case 'scroll':
-        return 'scrolling'
-      case 'touchstart':
-      case 'touchmove':
-      case 'touchend':
-      case 'touchcancel':
-      case 'touchenter':
-      case 'touchleave':
-        return 'touching'
-      default:
-        return type
-    }
-  }
-
-  evtOrigin (t, target) {
-    let origin = 'unknown'
-
-    if (t && t instanceof XMLHttpRequest) {
-      const params = this.ee.context(t).params
-      if (!params || !params.status || !params.method || !params.host || !params.pathname) return 'xhrOriginMissing'
-      origin = params.status + ' ' + params.method + ': ' + params.host + params.pathname
-    } else if (t && typeof (t.tagName) === 'string') {
-      origin = t.tagName.toLowerCase()
-      if (t.id) origin += '#' + t.id
-      if (t.className) {
-        for (let i = 0; i < t.classList.length; i++) origin += '.' + t.classList[i]
-      }
-    }
-
-    if (origin === 'unknown') {
-      if (typeof target === 'string') origin = target
-      else if (target === document) origin = 'document'
-      else if (target === window) origin = 'window'
-      else if (target instanceof FileReader) origin = 'FileReader'
-    }
-
-    return origin
-  }
-
-  // Tracks when the window history API specified by wrap-history is used.
-  storeHist (path, old, time) {
-    const node = {
-      n: 'history.pushState',
-      s: time,
-      e: time,
-      o: path,
-      t: old
-    }
-    this.storeSTN(node)
-  }
-
-  #laststart = 0
-  // Processes all the PerformanceResourceTiming entries captured (by observer).
-  storeResources (resources) {
-    if (!resources || resources.length === 0) return
-
-    resources.forEach((currentResource) => {
-      if ((currentResource.fetchStart | 0) <= this.#laststart) return // don't recollect already-seen resources
-
-      const parsed = parseUrl(currentResource.name)
-      const res = {
-        n: currentResource.initiatorType,
-        s: currentResource.fetchStart | 0,
-        e: currentResource.responseEnd | 0,
-        o: parsed.protocol + '://' + parsed.hostname + ':' + parsed.port + parsed.pathname, // resource.name is actually a URL so it's the source
-        t: currentResource.entryType
-      }
-      this.storeSTN(res)
-    })
-
-    this.#laststart = resources[resources.length - 1].fetchStart | 0
-  }
-
-  // JavascriptError (FEATURE) events pipes into ST here.
-  storeErrorAgg (type, name, params, metrics) {
-    if (type !== 'err') return // internal errors are purposefully ignored
-    const node = {
-      n: 'error',
-      s: metrics.time,
-      e: metrics.time,
-      o: params.message,
-      t: params.stackHash
-    }
-    this.storeSTN(node)
-  }
-
-  // Ajax (FEATURE) events--XML & fetches--pipes into ST here.
-  storeXhrAgg (type, name, params, metrics) {
-    if (type !== 'xhr') return
-    const node = {
-      n: 'Ajax',
-      s: metrics.time,
-      e: metrics.time + metrics.duration,
-      o: params.status + ' ' + params.method + ': ' + params.host + params.pathname,
-      t: 'ajax'
-    }
-    this.storeSTN(node)
-  }
-
-  // Central function called by all the other store__ & addToTrace API to append a trace node.
-  storeSTN (stn) {
-    if (this.nodeCount >= this.maxNodesPerHarvest) { // limit the amount of pending data awaiting next harvest
-      if (this.isStandalone || this.agentRuntime.session.state.sessionTraceMode !== MODE.ERROR) return
-      const openedSpace = this.trimSTNs(ERROR_MODE_SECONDS_WINDOW) // but maybe we could make some space by discarding irrelevant nodes if we're in sessioned Error mode
-      if (openedSpace === 0) return
-    }
-
-    if (this.isStandalone && now() >= MAX_TRACE_DURATION) {
-      return
-    }
-
-    if (this.trace[stn.n]) this.trace[stn.n].push(stn)
-    else this.trace[stn.n] = [stn]
-
-    this.nodeCount++
-  }
-
-  /**
-   * Trim the collection of nodes awaiting harvest such that those seen outside a certain span of time are discarded.
-   * @param {number} lookbackDuration Past length of time until now for which we care about nodes, in milliseconds
-   * @returns {number} However many nodes were discarded after trimming.
-   */
-  trimSTNs (lookbackDuration) {
-    let prunedNodes = 0
-    const cutoffHighResTime = Math.max(now() - lookbackDuration, 0)
-    Object.keys(this.trace).forEach(nameCategory => {
-      const nodeList = this.trace[nameCategory]
-      /* Notice nodes are appending under their name's list as they end and are stored. This means each list is already (roughly) sorted in chronological order by end time.
-       * This isn't exact since nodes go through some processing & EE handlers chain, but it's close enough as we still capture nodes whose duration overlaps the lookback window.
-       * ASSUMPTION: all 'end' timings stored are relative to timeOrigin (DOMHighResTimeStamp) and not Unix epoch based. */
-      let cutoffIdx = nodeList.findIndex(node => cutoffHighResTime <= node.e)
-
-      if (cutoffIdx === 0) return
-      else if (cutoffIdx < 0) { // whole list falls outside lookback window and is irrelevant
-        cutoffIdx = nodeList.length
-        delete this.trace[nameCategory]
-      } else nodeList.splice(0, cutoffIdx) // chop off everything outside our window i.e. before the last <lookbackDuration> timeframe
-
-      this.nodeCount -= cutoffIdx
-      prunedNodes += cutoffIdx
-    })
-    return prunedNodes
-  }
-
-  // Used by session trace's harvester to create the payload body.
-  takeSTNs (retry) {
-    if (!this.resourceObserver) { // if PO isn't supported, this checks resourcetiming buffer every harvest.
-      this.storeResources(window.performance.getEntriesByType('resource'))
-    }
-
-    let earliestTimeStamp = Infinity
-    const stns = Object.entries(this.trace).flatMap(([name, listOfSTNodes]) => { // basically take the "this.trace" map-obj and concat all the list-type values
-      const oldestNodeTS = listOfSTNodes.reduce((acc, next) => (!acc || next.s < acc) ? next.s : acc, undefined)
-      if (oldestNodeTS < earliestTimeStamp) earliestTimeStamp = oldestNodeTS
-
-      if (!(name in toAggregate)) return listOfSTNodes
-      // Special processing for event nodes dealing with user inputs:
-      const reindexByOriginFn = this.smearEvtsByOrigin(name)
-      const partitionListByOriginMap = listOfSTNodes.sort((a, b) => a.s - b.s).reduce(reindexByOriginFn, {})
-      return Object.values(partitionListByOriginMap).flat() // join the partitions back into 1-D, now ordered by origin then start time
-    }, this)
-    if (stns.length === 0) return {}
-
-    if (retry) {
-      this.sentTrace = this.trace
-    }
-    this.trace = {}
-    this.nodeCount = 0
-
-    let firstHarvestOfSession
-    if (this.agentRuntime.session) {
-      const isFirstPayload = !this.agentRuntime.session.state.traceHarvestStarted
-      firstHarvestOfSession = { fsh: Number(isFirstPayload) } // converted to '0' | '1'
-      if (isFirstPayload) this.agentRuntime.session.write({ traceHarvestStarted: true })
-    }
-
-    return {
-      qs: {
-        st: this.agentRuntime.offset,
-        /** hr === "hasReplay" in NR1, standalone is always checked and processed before harvesting
-         * so a race condition between ST and SR states should not be a concern if implemented here */
-        hr: Number(!this.isStandalone),
-        /** fts === "firstTimestamp" in NR1, indicates what the earliest NODE timestamp was
-         * so that blob parsing doesn't need to happen to support UI/API functions  */
-        fts: this.agentRuntime.offset + earliestTimeStamp,
-        /** n === "nodeCount" in NR1, a count of nodes in the ST payload, so that blob parsing doesn't need to happen to support UI/API functions */
-        n: stns.length, // node count
-        ...firstHarvestOfSession
-      },
-      body: { res: stns }
-    }
-  }
-
-  smearEvtsByOrigin (name) {
-    const maxGap = toAggregate[name][0]
-    const maxLen = toAggregate[name][1]
-    const lastO = {}
-
-    return (byOrigin, evtNode) => {
-      let lastArr = byOrigin[evtNode.o]
-      if (!lastArr) lastArr = byOrigin[evtNode.o] = []
-
-      const last = lastO[evtNode.o]
-
-      if (name === 'scrolling' && !trivial(evtNode)) {
-        lastO[evtNode.o] = null
-        evtNode.n = 'scroll'
-        lastArr.push(evtNode)
-      } else if (last && (evtNode.s - last.s) < maxLen && last.e > (evtNode.s - maxGap)) {
-        last.e = evtNode.e
-      } else {
-        lastO[evtNode.o] = evtNode
-        lastArr.push(evtNode)
-      }
-
-      return byOrigin
-    }
-
-    function trivial (node) {
-      const limit = 4
-      return !!(node && typeof node.e === 'number' && typeof node.s === 'number' && (node.e - node.s) < limit)
-    }
+  /** Stop running for the remainder of the page lifecycle */
+  abort () {
+    this.blocked = true
+    this.mode = MODE.OFF
+    this.agentRuntime.session.write({ sessionTraceMode: this.mode })
   }
 }

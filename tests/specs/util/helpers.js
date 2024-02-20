@@ -124,7 +124,6 @@ export function stConfig (initOverrides = {}) {
     {
       loader: 'experimental',
       init: {
-        feature_flags: ['session-trace-blobs'],
         privacy: { cookies_enabled: true },
         session_trace: { enabled: true, harvestTimeSeconds: 5 }
       }

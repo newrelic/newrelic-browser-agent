@@ -103,7 +103,6 @@ export class InstrumentBase extends FeatureBase {
         const { lazyFeatureLoader } = await import(/* webpackChunkName: "lazy-feature-loader" */ './lazy-feature-loader')
         const { Aggregate } = await lazyFeatureLoader(this.featureName, 'aggregate', getConfigurationValue(this.agentIdentifier, 'feature_flags'))
         this.featAggregate = new Aggregate(this.agentIdentifier, this.aggregator, argsObjFromInstrument)
-        console.log('imported featAgg', this.featureName)
         loadedSuccessfully(true)
       } catch (e) {
         warn(`Downloading and initializing ${this.featureName} failed...`, e)

@@ -1,4 +1,3 @@
-import { testRumRequest } from '../../../tools/testing-server/utils/expect-tests.js'
 import { srConfig, getSR, testExpectedReplay } from '../util/helpers'
 import { supportsMultipleTabs, notIE, notSafari } from '../../../tools/browser-matcher/common-matchers.mjs'
 

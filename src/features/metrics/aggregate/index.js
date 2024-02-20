@@ -23,7 +23,7 @@ export class Aggregate extends AggregateBase {
     this.singleChecks() // checks that are run only one time, at script load
     this.eachSessionChecks() // the start of every time user engages with page
 
-    this.waitForFlags(['err'], ([isOn]) => {
+    this.waitForFlags(['err']).then(([isOn]) => {
       if (isOn) {
         scheduler = new HarvestScheduler('jserrors', { onUnload: () => this.unload() }, this)
         scheduler.harvest.on('jserrors', () => ({ body: this.aggregator.take(['cm', 'sm']) }))

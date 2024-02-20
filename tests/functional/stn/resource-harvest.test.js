@@ -20,7 +20,7 @@ testDriver.test('session trace resources', function (t, browser, router) {
 
   let loadPromise = browser.safeGet(assetURL).waitForFeature('loaded')
   let rumPromise = router.expectRum()
-  let resourcePromise = router.expectResources()
+  let resourcePromise = router.expectTrace()
 
   Promise.all([resourcePromise, loadPromise, rumPromise]).then(([result]) => {
     t.equal(result.reply.statusCode, 200, 'server responded with 200')
@@ -30,7 +30,7 @@ testDriver.test('session trace resources', function (t, browser, router) {
       .elementByCssSelector('body')
       .click()
 
-    resourcePromise = router.expectResources()
+    resourcePromise = router.expectTrace()
 
     return Promise.all([resourcePromise, clickPromise])
   }).then(([result]) => {
@@ -40,7 +40,7 @@ testDriver.test('session trace resources', function (t, browser, router) {
 
     t.equal(result.reply.statusCode, 200, 'server responded with 200')
 
-    const harvestBody = body.res
+    const harvestBody = body
     const resources = harvestBody.filter(function (node) { return node.t === 'resource' })
 
     t.ok(resources.length > 1, 'there is at least one resource node')

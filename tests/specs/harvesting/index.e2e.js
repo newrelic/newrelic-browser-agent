@@ -24,7 +24,7 @@ describe('harvesting', () => {
       insResults
     ] = await Promise.all([
       browser.testHandle.expectRum(),
-      browser.testHandle.expectResources(),
+      browser.testHandle.expectTrace(),
       browser.testHandle.expectInteractionEvents(),
       browser.testHandle.expectTimings(),
       browser.testHandle.expectAjaxTimeSlices(),
@@ -54,7 +54,7 @@ describe('harvesting', () => {
 
     await Promise.all([
       browser.testHandle.expectRum(),
-      browser.testHandle.expectResources(),
+      browser.testHandle.expectTrace(),
       browser.url(await browser.testHandle.assetURL('obfuscate-pii.html'))
         .then(() => browser.waitForAgentLoad())
     ])
@@ -65,7 +65,7 @@ describe('harvesting', () => {
       ajaxSliceResults,
       ajaxEventsResults
     ] = await Promise.all([
-      browser.testHandle.expectResources(),
+      browser.testHandle.expectTrace(),
       browser.testHandle.expectTimings(),
       browser.testHandle.expectAjaxTimeSlices(),
       browser.testHandle.expectAjaxEvents()
@@ -95,7 +95,7 @@ describe('harvesting', () => {
       insResults
     ] = await Promise.all([
       browser.testHandle.expectRum(),
-      browser.testHandle.expectResources(),
+      browser.testHandle.expectTrace(),
       browser.testHandle.expectInteractionEvents(),
       browser.testHandle.expectTimings(),
       browser.testHandle.expectAjaxTimeSlices(),
@@ -132,7 +132,7 @@ describe('harvesting', () => {
       insResults
     ] = await Promise.all([
       browser.testHandle.expectRum(),
-      browser.testHandle.expectResources(),
+      browser.testHandle.expectTrace(),
       browser.testHandle.expectInteractionEvents(),
       browser.testHandle.expectTimings(),
       browser.testHandle.expectAjaxTimeSlices(),
@@ -178,7 +178,7 @@ describe('harvesting', () => {
       insResults
     ] = await Promise.all([
       browser.testHandle.expectRum(),
-      browser.testHandle.expectResources(),
+      browser.testHandle.expectTrace(),
       browser.testHandle.expectInteractionEvents(),
       browser.testHandle.expectTimings(),
       browser.testHandle.expectAjaxTimeSlices(),
@@ -218,7 +218,7 @@ describe('harvesting', () => {
       ajaxEventsResults
     ] = await Promise.all([
       browser.testHandle.expectRum(),
-      browser.testHandle.expectResources(),
+      browser.testHandle.expectTrace(),
       browser.testHandle.expectInteractionEvents(),
       browser.testHandle.expectTimings(),
       browser.testHandle.expectAjaxTimeSlices(),
@@ -249,7 +249,7 @@ describe('harvesting', () => {
       ajaxEventsResults
     ] = await Promise.all([
       browser.testHandle.expectRum(),
-      browser.testHandle.expectResources(),
+      browser.testHandle.expectTrace(),
       browser.testHandle.expectInteractionEvents(),
       browser.testHandle.expectTimings(),
       browser.testHandle.expectAjaxTimeSlices(),
@@ -285,7 +285,7 @@ describe('harvesting', () => {
       ajaxEventsResults
     ] = await Promise.all([
       browser.testHandle.expectRum(),
-      browser.testHandle.expectResources(),
+      browser.testHandle.expectTrace(),
       browser.testHandle.expectInteractionEvents(),
       browser.testHandle.expectTimings(),
       browser.testHandle.expectAjaxTimeSlices(),

@@ -29,9 +29,6 @@ export function lazyFeatureLoader (featureName, featurePart, featureFlags = []) 
       case FEATURE_NAMES.sessionReplay:
         return import(/* webpackChunkName: "session_replay-aggregate" */ '../session_replay/aggregate')
       case FEATURE_NAMES.sessionTrace:
-        /** If the feature flag has been set, use the new blobs aggregate file.  This can be removed once adoption is finalized across the platform */
-        if (featureFlags.includes('session-trace-blobs')) return import(/* webpackChunkName: "session_trace_blob-aggregate" */ '../session_trace/aggregate/blob-aggregate')
-        /** default to the old aggregate file (/resources) */
         return import(/* webpackChunkName: "session_trace-aggregate" */ '../session_trace/aggregate')
       case FEATURE_NAMES.spa:
         return import(/* webpackChunkName: "spa-aggregate" */ '../spa/aggregate')

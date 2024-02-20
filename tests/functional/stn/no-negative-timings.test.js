@@ -7,11 +7,11 @@ const testDriver = require('../../../tools/jil/index')
 
 testDriver.test('posts session traces', function (t, browser, router) {
   let rumPromise = router.expectRum()
-  let resourcePromise = router.expectResources()
+  let resourcePromise = router.expectTrace()
   let loadPromise = browser.get(router.assetURL('lotsatimers.html')).waitForFeature('loaded')
 
   Promise.all([resourcePromise, rumPromise, loadPromise]).then(([{ request: { body } }]) => {
-    const stnBody = body.res
+    const stnBody = body
     t.ok(stnBody.every(x => x.s >= 0 && x.e >= 0), 'stn body contains no negative timings')
     t.end()
   }).catch(fail)

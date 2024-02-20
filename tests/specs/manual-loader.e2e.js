@@ -63,7 +63,7 @@ describe('Manual Loader', () => {
         browser.testHandle.expectErrors(),
         browser.testHandle.expectMetrics(),
         browser.testHandle.expectIns(),
-        browser.testHandle.expectResources(),
+        browser.testHandle.expectTrace(),
         browser.testHandle.expectInteractionEvents(),
         browser.execute(function () {
           newrelic.start()
@@ -91,7 +91,7 @@ describe('Manual Loader', () => {
         browser.testHandle.expectTimings(),
         browser.testHandle.expectAjaxEvents(10000, true),
         browser.testHandle.expectErrors(10000, true),
-        browser.testHandle.expectResources(),
+        browser.testHandle.expectTrace(),
         browser.testHandle.expectInteractionEvents(),
         browser.url(await browser.testHandle.assetURL('instrumented.html', {
           init: {
@@ -141,7 +141,7 @@ describe('Manual Loader', () => {
         browser.testHandle.expectTimings(),
         browser.testHandle.expectAjaxEvents(10000, true),
         browser.testHandle.expectErrors(10000, true),
-        browser.testHandle.expectResources(),
+        browser.testHandle.expectTrace(),
         browser.testHandle.expectInteractionEvents(),
         browser.url(await browser.testHandle.assetURL('instrumented.html', {
           init: {
@@ -284,7 +284,7 @@ describe('Manual Loader', () => {
 
       const [rum2, sessionTrace] = await Promise.all([
         browser.testHandle.expectRum(),
-        browser.testHandle.expectResources(),
+        browser.testHandle.expectTrace(),
         browser.execute(function () {
           newrelic.start('session_trace')
         })
@@ -393,7 +393,7 @@ function checkPageAction ({ query, body }) {
 
 function checkSessionTrace ({ query, body }) {
   expect(query).toEqual(baseQuery)
-  expect(body.res.length).toBeGreaterThanOrEqual(1)
+  expect(body.length).toBeGreaterThanOrEqual(1)
 }
 
 function checkSpa ({ query, body }) {

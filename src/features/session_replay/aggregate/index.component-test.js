@@ -223,7 +223,7 @@ describe('Session Replay', () => {
     test('An error BEFORE rrweb import starts running in FULL from beginning', async () => {
       setConfiguration(agentIdentifier, { session_replay: { error_sampling_rate: 100, sampling_rate: 0 } })
       sr = new SessionReplayAgg(agentIdentifier, new Aggregator({}))
-      sr.ee.emit('errorAgg')
+      sr.ee.emit('sr-errorAgg')
       sr.ee.emit('rumresp-sr', [true])
       await wait(1)
       expect(sr.mode).toEqual(MODE.FULL)
@@ -237,7 +237,7 @@ describe('Session Replay', () => {
       await wait(1)
       expect(sr.mode).toEqual(MODE.ERROR)
       expect(sr.scheduler.started).toEqual(false)
-      sr.ee.emit('errorAgg')
+      sr.ee.emit('sr-errorAgg')
       expect(sr.mode).toEqual(MODE.FULL)
       expect(sr.scheduler.started).toEqual(true)
     })

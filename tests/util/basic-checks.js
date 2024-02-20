@@ -78,8 +78,7 @@ export function checkPageAction ({ query, body }) {
 }
 
 export function checkSessionTrace ({ query, body }) {
-  expect(query).toEqual(baseQuery)
-  expect(body.res.length).toBeGreaterThanOrEqual(1)
+  expect(body.length).toBeGreaterThanOrEqual(1)
 }
 
 export function checkSpa ({ query, body }) {

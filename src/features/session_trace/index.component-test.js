@@ -44,7 +44,7 @@ describe('session trace', () => {
 
     traceAggregate.resourceObserver = true // so takeSTNs will skip check for performance entries
     const payload = traceInstrument.featAggregate.takeSTNs()
-    let res = payload.body.res
+    let res = payload.body
     let qs = payload.qs
 
     expect(+qs.st).toBeGreaterThan(1404952055986)

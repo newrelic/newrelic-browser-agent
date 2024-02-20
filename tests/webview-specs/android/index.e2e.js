@@ -10,7 +10,7 @@ describe.withBrowsersMatching(onlyAndroid)('android webview', () => {
     // // Setup expects and submit the url
     const [rumResult, resourcesResult, spaResult] = await Promise.all([
       driver.testHandle.expectRum(),
-      driver.testHandle.expectResources(),
+      driver.testHandle.expectTrace(),
       driver.testHandle.expectInteractionEvents(),
       addressBar.setValue(url)
     ])
@@ -24,7 +24,7 @@ describe.withBrowsersMatching(onlyAndroid)('android webview', () => {
       ref: url.slice(0, url.indexOf('?')),
       t: 'Unnamed Transaction'
     }))
-    expect(resourcesResult.request.body.res.length).toBeGreaterThanOrEqual(1)
+    expect(resourcesResult.request.body.length).toBeGreaterThanOrEqual(1)
     expect(spaResult.request.query).toEqual(expect.objectContaining({
       ref: url.slice(0, url.indexOf('?')),
       t: 'Unnamed Transaction'

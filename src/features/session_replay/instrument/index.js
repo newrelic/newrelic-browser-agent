@@ -10,7 +10,6 @@
  * functionality is validated and a full user experience is curated.
  */
 import { getConfigurationValue } from '../../../common/config/config'
-import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { MODE } from '../../../common/session/constants'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME } from '../constants'

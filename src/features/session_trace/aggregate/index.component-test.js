@@ -1,4 +1,4 @@
-import { SessionTrace } from '../'
+import { SessionTrace } from '..'
 import { testExpectedTrace } from '../../../../tests/specs/util/helpers'
 import { Aggregator } from '../../../common/aggregate/aggregator'
 import { ee } from '../../../common/event-emitter/contextual-ee'
@@ -8,9 +8,7 @@ jest.mock('../../../common/config/config', () => ({
   getConfiguration: jest.fn(),
   getConfigurationValue: jest.fn((agentId, prop) => {
     if (prop === 'privacy.cookies_enabled') return true
-    if (prop === 'feature_flags') return ['session-trace-blobs']
   }),
-  // .mockReturnValueOnce(['session-trace-blobs']).mockReturnValueOnce(true),
   getInfo: jest.fn().mockReturnValue({
     licenseKey: 'licenseKey',
     applicationID: 'applicationID'

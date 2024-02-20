@@ -30,7 +30,7 @@ describe.withBrowsersMatching(supportsFetchExtended)('obfuscate rules', () => {
     const timingsPromise = browser.testHandle.expectTimings()
     const errorsPromise = browser.testHandle.expectErrors()
     const insPromise = browser.testHandle.expectIns()
-    const resourcePromise = browser.testHandle.expectResources()
+    const resourcePromise = browser.testHandle.expectTrace()
     const rumPromise = browser.testHandle.expectRum()
 
     await browser.url(await browser.testHandle.assetURL('obfuscate-pii.html', config))

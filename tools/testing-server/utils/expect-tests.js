@@ -282,7 +282,7 @@ module.exports.testBlobRequest = function testBlobRequest (request) {
   }
 }
 
-module.exports.testBlobReplayRequest = function testBlobRequest (request) {
+module.exports.testBlobReplayRequest = function testBlobReplayRequest (request) {
   const url = new URL(request.url, 'resolve://')
   if (url.pathname !== '/browser/blobs') return false
   if (request?.query?.browser_monitoring_key !== this.testId) return false
@@ -296,7 +296,7 @@ module.exports.testBlobReplayRequest = function testBlobRequest (request) {
   }
 }
 
-module.exports.testBlobTraceRequest = function testBlobRequest (request) {
+module.exports.testBlobTraceRequest = function testBlobTraceRequest (request) {
   const url = new URL(request.url, 'resolve://')
   if (url.pathname !== '/browser/blobs') return false
   if (request?.query?.browser_monitoring_key !== this.testId) return false

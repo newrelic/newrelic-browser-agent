@@ -2,8 +2,8 @@
  * All behavior and mode transition from error mode of Trace in tandem with the replay feature is tested in here.
  * Right now, Trace can only be in error mode when its stn flag is 0 but replay runs in error mode.
  */
-import { testRumRequest } from '../../../../tools/testing-server/utils/expect-tests'
-import { stConfig, testExpectedTrace, MODE } from '../../util/helpers'
+import { testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
+import { stConfig, testExpectedTrace, MODE } from '../util/helpers'
 
 const getTraceMode = () => browser.execute(function () {
   const agent = Object.values(newrelic.initializedAgents)[0]

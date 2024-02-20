@@ -88,11 +88,11 @@ function checkCanDrainAll (agentIdentifier) {
    */
 function drainGroup (agentIdentifier, group) {
   const baseEE = agentIdentifier ? ee.get(agentIdentifier) : ee
-  const handlers = defaultRegister.handlers
+  const handlers = defaultRegister.handlers // other storage in registerHandler
   if (!baseEE.backlog || !handlers) return
 
   var bufferedEventsInGroup = baseEE.backlog[group]
-  var groupHandlers = handlers[group]
+  var groupHandlers = handlers[group] // each group in the registerHandler storage
   if (groupHandlers) {
     // We don't cache the length of the buffer while looping because events might still be added while processing.
     for (var i = 0; bufferedEventsInGroup && i < bufferedEventsInGroup.length; ++i) { // eslint-disable-line no-unmodified-loop-condition
@@ -102,7 +102,7 @@ function drainGroup (agentIdentifier, group) {
     mapOwn(groupHandlers, function (eventType, handlerRegistrationList) {
       mapOwn(handlerRegistrationList, function (i, registration) {
         // registration is an array of: [targetEE, eventHandler]
-        registration[0].on(eventType, registration[1])
+        registration[0].on(eventType, registration[1]) // drain --> gets rid of the concept of a "bucket" meaning anything
       })
     })
   }

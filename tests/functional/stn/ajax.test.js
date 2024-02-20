@@ -23,7 +23,7 @@ testDriver.test('session trace resources', function (t, browser, router) {
 
   let loadPromise = browser.safeGet(assetURL).waitForFeature('loaded')
   let rumPromise = router.expectRum()
-  let resourcePromise = router.expectResources()
+  let resourcePromise = router.expectTrace()
 
   Promise.all([resourcePromise, loadPromise, rumPromise]).then(([result]) => {
     t.equal(result.reply.statusCode, 200, 'server responded with 200')
@@ -41,7 +41,7 @@ testDriver.test('session trace resources', function (t, browser, router) {
       t.equal(result.reply.statusCode, 200, 'server responded with 200')
 
       const body = result.request.body
-      const harvestBody = body.res
+      const harvestBody = body
       const loadNodes = harvestBody.filter(function (node) { return node.t === 'event' && node.n === 'load' || node.n === 'readystatechange' })
       t.notOk(loadNodes.length > 0, 'XMLHttpRequest nodes not captured when ajax instrumentation is disabled')
 
@@ -74,7 +74,7 @@ testDriver.test('session trace ajax deny list', function (t, browser, router) {
 
   let loadPromise = browser.safeGet(assetURL).waitForFeature('loaded')
   let rumPromise = router.expectRum()
-  let resourcePromise = router.expectResources()
+  let resourcePromise = router.expectTrace()
 
   Promise.all([resourcePromise, loadPromise, rumPromise]).then(([result]) => {
     t.equal(result.reply.statusCode, 200, 'server responded with 200')
@@ -92,7 +92,7 @@ testDriver.test('session trace ajax deny list', function (t, browser, router) {
       t.equal(result.reply.statusCode, 200, 'server responded with 200')
 
       const body = result.request.body
-      const harvestBody = body.res
+      const harvestBody = body
       const loadNodes = harvestBody.filter(function (node) { return node.t === 'ajax' })
       t.ok(loadNodes.length === 0, 'XMLHttpRequest nodes are not captured with ajax deny list')
 

@@ -51,7 +51,7 @@ export class Aggregate extends AggregateBase {
     const scheduler = new HarvestScheduler('jserrors', { onFinished: (...args) => this.onHarvestFinished(...args) }, this)
     scheduler.harvest.on('jserrors', (...args) => this.onHarvestStarted(...args))
 
-    this.waitForFlags(['err'], ([isOn]) => {
+    this.waitForFlags(['err']).then(([isOn]) => {
       if (isOn) scheduler.startTimer(harvestTimeSeconds)
       else {
         this.blocked = true
@@ -197,9 +197,9 @@ export class Aggregate extends AggregateBase {
     // sr, stn and spa aggregators listen to this event - stn sends the error in its payload,
     // and spa annotates the error with interaction info
     const msg = [type, bucketHash, params, newMetrics]
-    handle('errorAgg', msg, undefined, FEATURE_NAMES.sessionTrace, this.ee)
-    handle('errorAgg', msg, undefined, FEATURE_NAMES.spa, this.ee)
-    handle('errorAgg', msg, undefined, FEATURE_NAMES.sessionReplay, this.ee)
+    handle('stn-errorAgg', msg, undefined, FEATURE_NAMES.sessionTrace, this.ee)
+    handle('spa-errorAgg', msg, undefined, FEATURE_NAMES.spa, this.ee)
+    handle('sr-errorAgg', msg, undefined, FEATURE_NAMES.sessionReplay, this.ee)
 
     // still send EE events for other features such as above, but stop this one from aggregating internal data
     if (this.blocked) return

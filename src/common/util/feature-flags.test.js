@@ -11,7 +11,7 @@ jest.unmock('./feature-flags')
 let agentIdentifier
 
 beforeEach(() => {
-  agentIdentifier = faker.datatype.uuid()
+  agentIdentifier = faker.string.uuid()
   const emitterFn = jest.fn()
   eventEmitterModule.ee.get = jest.fn(() => ({
     emit: emitterFn
@@ -54,7 +54,7 @@ test('emits the right events when feature flag = 1', () => {
   expect(sharedEE).toHaveBeenNthCalledWith(1, 'feat-stn', [])
   expect(sharedEE).toHaveBeenLastCalledWith('rumresp-sr', [1])
 
-  Object.keys(flags).forEach(flag => { flags[flag] = true })
+  Object.keys(flags).forEach(flag => { flags[flag] = 1 })
   expect(activatedFeatures).toEqual(flags)
 })
 
@@ -70,7 +70,7 @@ test('emits the right events when feature flag = 0', () => {
   expect(sharedEE).toHaveBeenNthCalledWith(1, 'block-stn', [])
   expect(sharedEE).toHaveBeenLastCalledWith('rumresp-sr', [0])
 
-  Object.keys(flags).forEach(flag => { flags[flag] = false })
+  Object.keys(flags).forEach(flag => { flags[flag] = 0 })
   expect(activatedFeatures).toEqual(flags)
 })
 

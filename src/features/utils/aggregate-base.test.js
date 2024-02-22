@@ -94,12 +94,6 @@ test('should only configure the agent once', () => {
 test('should resolve waitForFlags correctly based on flags', async () => {
   const flagNames = [faker.string.uuid(), faker.string.uuid()]
   const aggregateBase = new AggregateBase(agentIdentifier, aggregator, featureName)
-  aggregateBase.ee = {
-    [faker.string.uuid()]: faker.lorem.sentence()
-  }
-  aggregateBase.feature = {
-    [faker.string.uuid()]: faker.lorem.sentence()
-  }
 
   const flagWait = aggregateBase.waitForFlags(flagNames)
   aggregateBase.ee.emit(`rumresp-${flagNames[0]}`, [true])

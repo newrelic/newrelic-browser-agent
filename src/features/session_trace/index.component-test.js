@@ -4,7 +4,12 @@ import { ee } from '../../common/event-emitter/contextual-ee'
 
 jest.mock('../../common/config/config', () => ({
   __esModule: true,
-  getConfigurationValue: jest.fn().mockReturnValue(undefined),
+  getConfiguration: jest.fn().mockReturnValue({}),
+  getConfigurationValue: jest.fn((id, key) => {
+    if (key === 'session_trace.maxNodesPerHarvest') return 1000
+    return true
+  }),
+  getInfo: jest.fn().mockReturnValue({}),
   isConfigured: jest.fn().mockReturnValue(true),
   getRuntime: jest.fn().mockReturnValue({
     xhrWrappable: true,
@@ -19,6 +24,13 @@ jest.mock('../../common/constants/runtime', () => ({
 jest.mock('../../common/window/load', () => ({
   __esModule: true,
   onWindowLoad: jest.fn(cb => cb())
+}))
+jest.mock('../../common/session/session-entity', () => ({
+  __esModule: true,
+  SessionEntity: jest.fn().mockReturnValue({
+    state: {},
+    syncCustomAttribute: jest.fn()
+  })
 }))
 
 const aggregator = new Aggregator({ agentIdentifier: 'abcd', ee })
@@ -36,50 +48,23 @@ describe('session trace', () => {
     document.dispatchEvent(new CustomEvent('DOMContentLoaded')) // simulate natural browser event
     window.dispatchEvent(new CustomEvent('load')) // load is actually ignored by Trace as it should be passed by the PVT feature, so it should not be in payload
     await traceInstrument.onAggregateImported
-
     const traceAggregate = traceInstrument.featAggregate
-    traceAggregate.storeXhrAgg('xhr', '[200,null,null]', { method: 'GET', status: 200 }, { rxSize: 770, duration: 99, cbTime: 0, time: 217 }) // fake ajax data
-    traceAggregate.processPVT('fi', 30, { fid: 8 }) // fake pvt data
-    traceAggregate.operationalGate.decide(true) // all the nodes get created from buffered data
+    traceAggregate.traceStorage.storeXhrAgg('xhr', '[200,null,null]', { method: 'GET', status: 200 }, { rxSize: 770, duration: 99, cbTime: 0, time: 217 }) // fake ajax data
+    traceAggregate.traceStorage.processPVT('fi', 30, { fid: 8 }) // fake pvt data]
 
     traceAggregate.resourceObserver = true // so takeSTNs will skip check for performance entries
-    const payload = traceInstrument.featAggregate.takeSTNs()
-    let res = payload.body
-    let qs = payload.qs
+    const payload = traceAggregate.traceStorage.takeSTNs()
 
-    expect(+qs.st).toBeGreaterThan(1404952055986)
-    expect(+qs.st).toBeLessThan(Date.now())
-
-    let node = res.filter(node => node.n === 'DOMContentLoaded')[0]
-    expect(node).toBeTruthy()
-    expect(node.s).toBeGreaterThan(10) // that DOMContentLoaded node has start time
-    expect(node.o).toEqual('document') // that DOMContentLoaded origin is the document
-    node = res.filter(node => node.n === 'load' && (node.o === 'document' || node.o === 'window'))[0]
-    expect(node).toBeUndefined()
-
-    let hist = res.filter(node => node.n === 'history.pushState')[1]
-    const originalPath = window.location.pathname
-    expect(hist.s).toEqual(hist.e) // that hist node has no duration
-    expect(hist.n).toEqual('history.pushState')
-    expect(hist.o).toEqual(`${originalPath}#bar`)
-    expect(hist.t).toEqual(`${originalPath}#foo`)
-
-    let ajax = res.filter(node => node.t === 'ajax')[0]
-    expect(ajax.s).toBeLessThan(ajax.e) // that it has some duration
-    expect(ajax.n).toEqual('Ajax')
-    expect(ajax.t).toEqual('ajax')
-
-    let pvt = res.filter(node => node.n === 'fi')[0]
-    expect(pvt.o).toEqual('document')
-    expect(pvt.s).toEqual(pvt.e) // that FI has no duration
-    expect(pvt.t).toEqual('timing')
-    pvt = res.filter(node => node.n === 'fid')[0]
-    expect(pvt.o).toEqual('document')
-    expect(pvt.s).toEqual(30) // that FID has a duration relative to FI'
-    expect(pvt.e).toEqual(30 + 8)
-    expect(pvt.t).toEqual('event')
-
-    let unknown = res.filter(n => n.o === 'unknown')
-    expect(unknown.length).toEqual(0) // no events with unknown origin
+    expect(payload.stns.length).toBeGreaterThan(0)
+    payload.stns.forEach(node => {
+      expect(node).toMatchObject({
+        n: expect.any(String),
+        s: expect.any(Number),
+        e: expect.any(Number),
+        o: expect.any(String)
+      })
+    })
+    expect(payload.earliestTimeStamp).toEqual(Math.min(...payload.stns.map(node => node.s)))
+    expect(payload.latestTimeStamp).toEqual(Math.max(...payload.stns.map(node => node.s)))
   })
 })

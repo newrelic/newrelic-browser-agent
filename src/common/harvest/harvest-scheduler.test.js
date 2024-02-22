@@ -306,7 +306,7 @@ describe('runHarvest', () => {
 
     harvestSchedulerInstance.runHarvest({ unload })
 
-    expect(harvestSchedulerInstance.opts.getPayload).toHaveBeenCalledWith({ retry: true, opts: { unload } })
+    expect(harvestSchedulerInstance.opts.getPayload).toHaveBeenCalledWith({ unload, retry: true })
   })
 
   test('should set retry to false when submitMethod is not xhr', () => {
@@ -315,7 +315,7 @@ describe('runHarvest', () => {
 
     harvestSchedulerInstance.runHarvest({ unload: false })
 
-    expect(harvestSchedulerInstance.opts.getPayload).toHaveBeenCalledWith({ retry: false, opts: { unload: false } })
+    expect(harvestSchedulerInstance.opts.getPayload).toHaveBeenCalledWith({ unload: false, retry: false })
   })
 
   test('should run onHarvestFinished after harvest finishes', () => {

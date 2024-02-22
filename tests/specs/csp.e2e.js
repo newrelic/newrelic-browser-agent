@@ -2,6 +2,10 @@ import { notIE } from '../../tools/browser-matcher/common-matchers.mjs'
 import { faker } from '@faker-js/faker'
 
 describe.withBrowsersMatching(notIE)('Content Security Policy', () => {
+  afterEach(async () => {
+    await browser.destroyAgentSession()
+  })
+
   it('should support a nonce script element', async () => {
     const nonce = faker.string.uuid()
     await Promise.all([

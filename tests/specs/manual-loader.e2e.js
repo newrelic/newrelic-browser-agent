@@ -1,3 +1,5 @@
+import { testExpectedTrace } from './util/helpers'
+
 describe('Manual Loader', () => {
   describe('invalid params do not initialize data', () => {
     it('wrong string', async () => {
@@ -79,7 +81,7 @@ describe('Manual Loader', () => {
       checkJsErrors(jserrors.request)
       checkMetrics(metrics.request)
       checkPageAction(pa.request)
-      checkSessionTrace(st.request)
+      testExpectedTrace({ data: st.request })
       checkSpa(spa.request)
     })
   })
@@ -116,7 +118,7 @@ describe('Manual Loader', () => {
       await browser.pause(2000)
       checkRum(rum.request)
       checkPVT(pvt.request)
-      checkSessionTrace(st.request)
+      testExpectedTrace({ data: st.request })
       checkSpa(spa.request)
 
       expect(ajax).toEqual(undefined)
@@ -166,7 +168,7 @@ describe('Manual Loader', () => {
       await browser.pause(2000)
       checkRum(rum.request)
       checkPVT(pvt.request)
-      checkSessionTrace(st.request)
+      testExpectedTrace({ data: st.request })
       checkSpa(spa.request)
 
       expect(ajax).toEqual(undefined)
@@ -290,7 +292,7 @@ describe('Manual Loader', () => {
         })
       ])
       checkRum(rum2.request)
-      checkSessionTrace(sessionTrace.request)
+      testExpectedTrace({ data: sessionTrace.request })
     })
 
     it('spa', async () => {
@@ -389,11 +391,6 @@ function checkMetrics ({ query, body }) {
 function checkPageAction ({ query, body }) {
   expect(query).toEqual(baseQuery)
   expect(body.ins?.[0]?.test).toEqual(1)
-}
-
-function checkSessionTrace ({ query, body }) {
-  expect(query).toEqual(baseQuery)
-  expect(body.length).toBeGreaterThanOrEqual(1)
 }
 
 function checkSpa ({ query, body }) {

@@ -8,7 +8,6 @@ import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
 import { FEATURE_NAME } from '../constants'
 import { AggregateBase } from '../../utils/aggregate-base'
-import { generateRandomHexString } from '../../../common/ids/unique-id'
 import { TraceStorage } from './trace/storage'
 import { obj as encodeObj } from '../../../common/url/encode'
 import { now } from '../../../common/timing/now'
@@ -31,8 +30,6 @@ export class Aggregate extends AggregateBase {
     // Very unlikely, but in case the existing XMLHttpRequest.prototype object on the page couldn't be wrapped.
     if (!this.agentRuntime.xhrWrappable) return
 
-    /** The PageTrace ID generated at each hard page load */
-    this.agentRuntime.ptid = this.ptid = generateRandomHexString(10)
     /** A buffer to hold on to harvested traces in the case that a retry must be made later */
     this.sentTrace = null
     this.harvestTimeSeconds = getConfigurationValue(agentIdentifier, 'session_trace.harvestTimeSeconds') || 10
@@ -51,6 +48,8 @@ export class Aggregate extends AggregateBase {
       this.traceStorage = new TraceStorage(this)
       /** This agg needs information about sampling (stn) and entitlements (ste) to make the appropriate decisions on running */
       this.waitForFlags(['stn', 'ste']).then(([stMode, stEntitled]) => this.initialize(stMode, stEntitled))
+    } else {
+      deregisterDrain(this.agentIdentifier, this.featureName)
     }
   }
 
@@ -62,8 +61,6 @@ export class Aggregate extends AggregateBase {
     if (!this.initialized) {
       // The SessionEntity class can emit a message indicating the session was cleared and reset (expiry, inactivity). This feature must abort and never resume if that occurs.
       this.ee.on(SESSION_EVENTS.RESET, () => {
-        console.log('RESET!')
-        this.scheduler.runHarvest()
         this.abort()
       })
       // The SessionEntity can have updates (locally or across tabs for SR mode changes), (across tabs for ST mode changes).
@@ -127,7 +124,7 @@ export class Aggregate extends AggregateBase {
 
   /** Called by the harvest scheduler at harvest time to retrieve the payload.  This will only actually return a payload if running in full mode */
   prepareHarvest (options = {}) {
-    if (this.traceStorage.nodeCount <= REQ_THRESHOLD_TO_SEND && !options.isFinalHarvest && this.everHarvested) {
+    if (this.traceStorage.nodeCount <= REQ_THRESHOLD_TO_SEND && !(options.isFinalHarvest || options.forceNoRetry) && this.everHarvested) {
       // Only harvest when more than some threshold of nodes are pending, after the very first harvest, with the exception of the last outgoing harvest.
       return
     }
@@ -140,7 +137,7 @@ export class Aggregate extends AggregateBase {
       this.sentTrace = stns
     }
 
-    const firstSessionHarvest = this.agentRuntime.session && !this.agentRuntime.session.state.traceHarvestStarted
+    const firstSessionHarvest = !this.agentRuntime.session.state.traceHarvestStarted
     if (firstSessionHarvest) this.agentRuntime.session.write({ traceHarvestStarted: true })
 
     const hasReplay = this.agentRuntime.session?.state.sessionReplayMode === 1
@@ -171,7 +168,7 @@ export class Aggregate extends AggregateBase {
           'trace.lastTimestamp': this.agentRuntime.offset + latestTimeStamp,
           'trace.lastTimestampOffset': latestTimeStamp,
           'trace.nodeCount': stns.length,
-          ptid: `${this.ptid}`,
+          ptid: `${this.agentRuntime.ptid}`,
           session: `${this.agentRuntime.session?.state.value}`,
           rst: now(),
           ...(firstSessionHarvest && { firstSessionHarvest }),
@@ -213,5 +210,6 @@ export class Aggregate extends AggregateBase {
     this.blocked = true
     this.mode = MODE.OFF
     this.agentRuntime.session.write({ sessionTraceMode: this.mode })
+    this.scheduler.stopTimer()
   }
 }

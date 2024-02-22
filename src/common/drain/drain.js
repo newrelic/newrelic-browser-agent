@@ -59,7 +59,7 @@ export function drain (agentIdentifier = '', featureName = 'feature', force = fa
   // If the feature for the specified agent is not in the registry, that means the instrument file was bypassed.
   // This could happen in tests, or loaders that directly import the aggregator. In these cases it is safe to
   // drain the feature group immediately rather than waiting to drain all at once.
-  if (!agentIdentifier || !registry[agentIdentifier].get(featureName) || force) return drainGroup(featureName)
+  if (!agentIdentifier || !registry[agentIdentifier].get(featureName) || force) return drainGroup(agentIdentifier, featureName)
 
   // When `drain` is called, this feature is ready to drain (staged).
   registry[agentIdentifier].get(featureName).staged = true

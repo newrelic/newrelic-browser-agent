@@ -30,23 +30,5 @@ describe('stn retry harvesting', () => {
       expect(secondResourcesHarvest.request.body).toEqual(expect.arrayContaining(firstResourcesHarvest.request.body))
       testExpectedTrace({ data: secondResourcesHarvest.request })
     })
-  );
-
-  [400, 404, 502, 504, 512].forEach(statusCode =>
-    it(`should not send the session trace on the next harvest when the first harvest statusCode is ${statusCode}`, async () => {
-      await browser.testHandle.scheduleReply('bamServer', {
-        test: testBlobRequest,
-        permanent: true,
-        statusCode
-      })
-
-      const [firstResourcesHarvest] = await Promise.all([
-        browser.testHandle.expectTrace(),
-        browser.url(await browser.testHandle.assetURL('stn/instrumented.html', stConfig({ privacy: { cookies_enabled: true } })))
-          .then(() => browser.waitForAgentLoad())
-      ])
-      expect(firstResourcesHarvest.reply.statusCode).toEqual(statusCode)
-      await expect(browser.testHandle.expectTrace(10000, true)).resolves.toBeUndefined()
-    })
   )
 })

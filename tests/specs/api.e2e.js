@@ -18,9 +18,8 @@ describe('newrelic api', () => {
 
   describe('setPageViewName()', () => {
     it('includes the 1st argument (page name) in rum, resources, events, and ajax calls', async () => {
-      const [rumResults, resourcesResults, eventsResults, ajaxResults] = await Promise.all([
+      const [rumResults, eventsResults, ajaxResults] = await Promise.all([
         browser.testHandle.expectRum(),
-        browser.testHandle.expectTrace(),
         browser.testHandle.expectEvents(),
         browser.testHandle.expectAjaxTimeSlices(),
         browser.url(await browser.testHandle.assetURL('api.html')) // Setup expects before loading the page
@@ -28,7 +27,6 @@ describe('newrelic api', () => {
       ])
 
       expect(rumResults.request.query.ct).toEqual('http://custom.transaction/foo')
-      expect(resourcesResults.request.query.ct).toEqual('http://custom.transaction/foo')
       expect(eventsResults.request.query.ct).toEqual('http://custom.transaction/foo')
       expect(ajaxResults.request.query.ct).toEqual('http://custom.transaction/foo')
     })

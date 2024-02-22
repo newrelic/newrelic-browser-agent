@@ -26,7 +26,7 @@ export function activateFeatures (flags, agentIdentifier) {
     if (!num) sharedEE.emit('block-' + flag, [])
     else sharedEE.emit('feat-' + flag, [])
     sharedEE.emit('rumresp-' + flag, [num]) // this is a duplicate of feat-/block- but makes awaiting for 1 event easier than 2
-    activatedFeatures[flag] = Boolean(num)
+    activatedFeatures[flag] = num
   })
 
   // Let the features waiting on their respective flags know that RUM response was received and that any missing flags are interpreted as bad entitlement / "off".

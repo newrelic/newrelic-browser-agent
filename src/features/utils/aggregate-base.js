@@ -3,6 +3,7 @@ import { getInfo, isConfigured, getRuntime } from '../../common/config/config'
 import { configure } from '../../loaders/configure/configure'
 import { gosCDN } from '../../common/window/nreum'
 import { drain } from '../../common/drain/drain'
+import { activatedFeatures } from '../../common/util/feature-flags'
 
 export class AggregateBase extends FeatureBase {
   constructor (...args) {
@@ -19,8 +20,9 @@ export class AggregateBase extends FeatureBase {
     return Promise.all(
       flagNames.map(fName =>
         new Promise((resolve) => {
+          if (activatedFeatures[fName]) resolve(activatedFeatures[fName])
           /** Resolves with the raw value of the flag */
-          this.ee.on(`rumresp-${fName}`, resp => resolve(resp))
+          this.ee.on(`rumresp-${fName}`, resp => { resolve(resp) })
         })
       )
     )

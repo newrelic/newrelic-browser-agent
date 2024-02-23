@@ -106,7 +106,7 @@ export function decodeAttributes (attributes) {
 export function srConfig (initOverrides = {}) {
   return deepmerge(
     {
-      loader: 'experimental',
+      loader: 'spa',
       init: {
         privacy: { cookies_enabled: true },
         session_replay: { enabled: true, harvestTimeSeconds: 5, sampling_rate: 100, error_sampling_rate: 0 }
@@ -123,7 +123,7 @@ export function srConfig (initOverrides = {}) {
 export function stConfig (initOverrides = {}) {
   return deepmerge(
     {
-      loader: 'experimental',
+      loader: 'spa',
       init: {
         privacy: { cookies_enabled: true },
         session_trace: { enabled: true, harvestTimeSeconds: 5 }

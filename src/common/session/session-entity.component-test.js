@@ -236,25 +236,25 @@ describe('reset()', () => {
 })
 
 describe('isNew', () => {
-    test('isNew is true after the session resets by timers | true -> true', async () => {
+    test('is true after the session resets by timers | true -> true', async () => {
       const sessionInstance = new SessionEntity({ agentIdentifier, key, storage })
       expect(sessionInstance.isNew).toEqual(true)
       sessionInstance.reset() // imitate what expireMs and inactiveMs does on activation
       expect(sessionInstance.isNew).toEqual(true)
     })
-    test('isNew is true after the session resets by timers | false -> true', () => {
+    test('is true after the session resets by timers | false -> true', () => {
       storage.set(`${PREFIX}_${key}`, { ...model, value, expiresAt: Date.now() + 100000, inactiveAt: Date.now() + 100000, updatedAt: Date.now() })
       const sessionInstance = new SessionEntity({ agentIdentifier, key, storage })
       expect(sessionInstance.isNew).toEqual(false)
       sessionInstance.reset()
       expect(sessionInstance.isNew).toEqual(true)
     })
-    test('isNew is true if reset happens on initialization after time outs off-view | expiresAt', () => {
+    test('is true if reset happens on initialization after time outs off-view | expiresAt', () => {
       storage.set(`${PREFIX}_${key}`, { ...model, value, expiresAt: Date.now() - 1, inactiveAt: Date.now() + 100000, updatedAt: Date.now() })
       const sessionInstance = new SessionEntity({ agentIdentifier, key, storage })
       expect(sessionInstance.isNew).toEqual(true)
     })
-    test('isNew is true if reset happens on initialization after time outs off-view | inactiveAt', () => {
+    test('is true if reset happens on initialization after time outs off-view | inactiveAt', () => {
       storage.set(`${PREFIX}_${key}`, { ...model, value, expiresAt: Date.now() + 100000, inactiveAt: Date.now() - 1, updatedAt: Date.now() })
       const sessionInstance = new SessionEntity({ agentIdentifier, key, storage })
       expect(sessionInstance.isNew).toEqual(true)

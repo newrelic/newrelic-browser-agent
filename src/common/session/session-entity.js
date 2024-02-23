@@ -125,7 +125,9 @@ export class SessionEntity {
 
     // The fact that the session is "new" or pre-existing is used in some places in the agent.  Session Replay and Trace
     // can use this info to inform whether to trust a new sampling decision vs continue a previous tracking effort.
-    this.isNew = !Object.keys(initialRead).length
+    /* [NR-230914] 02/2024 - the logical OR assignment is used so that isNew remains 'true' if it was already set as such. This fixes the expires and inactive timestamps timing out in localStorage
+      while no page for a given domain is in-use and the session resetting upon user returning to the page as part of a fresh session. */
+    this.isNew ||= !Object.keys(initialRead).length
     // if its a "new" session, we write to storage API with the default values.  These values may change over the lifespan of the agent run.
     // we can use a modeled object here to help us know and manage what values are being used. -- see "model" above
     if (this.isNew) this.write(getModeledObject(this.state, model), true)

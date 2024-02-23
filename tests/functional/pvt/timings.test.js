@@ -304,7 +304,7 @@ function runPvtInStnTests (loader) {
       })
       .then(([{ request: resourcesResult }]) => {
         const expectedPVTItems = ['fi', 'fid', 'lcp', 'fcp', 'load', 'unload', 'pageHide']
-        const stnItems = !!resourcesResult && !!resourcesResult.body || []
+        const stnItems = !!resourcesResult && resourcesResult.body || []
         t.ok(stnItems.length, 'STN items were generated')
         const pvtInStn = stnItems.filter(x => !!expectedPVTItems.filter(y => y === x.n && x.o === 'document').length)
         t.equal(pvtInStn.length, expectedPVTItems.length, 'Expected PVT Items are present in STN payload')

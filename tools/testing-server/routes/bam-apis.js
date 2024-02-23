@@ -63,7 +63,7 @@ module.exports = fp(async function (fastify) {
         storeReplayData(attributes.get('session'), attributes.get('replay.firstTimestamp'), request.body)
       }
 
-      return reply.code(401).send('')
+      return reply.code(200).send('')
     }
   })
   fastify.route({

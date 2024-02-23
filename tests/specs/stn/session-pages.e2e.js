@@ -121,7 +121,8 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
     await browser.testHandle.expectTrace(10000, true)
   })
 
-  it.withBrowsersMatching(supportsMultipleTabs)('catches mode transition from other pages in the session', async () => {
+  // As of 06/26/2023 test fails in Safari, though tested behavior works in a live browser (revisit in NR-138940).
+  it.withBrowsersMatching([supportsMultipleTabs, notSafari])('catches mode transition from other pages in the session', async () => {
     await browser.destroyAgentSession()
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,

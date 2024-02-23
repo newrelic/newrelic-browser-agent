@@ -27,7 +27,6 @@ import { now } from '../../../common/timing/now'
 import { MODE, SESSION_EVENTS, SESSION_EVENT_TYPES } from '../../../common/session/constants'
 import { stringify } from '../../../common/util/stringify'
 import { stylesheetEvaluator } from '../shared/stylesheet-evaluator'
-import { hasDependentSettings } from '../shared/utils'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -56,94 +55,93 @@ export class Aggregate extends AggregateBase {
 
     handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/Enabled'], undefined, FEATURE_NAMES.metrics, this.ee)
 
-    const shouldSetup = hasDependentSettings(agentIdentifier)
+    // The SessionEntity class can emit a message indicating the session was cleared and reset (expiry, inactivity). This feature must abort and never resume if that occurs.
+    this.ee.on(SESSION_EVENTS.RESET, () => {
+      this.scheduler.runHarvest()
+      this.abort(ABORT_REASONS.RESET)
+    })
 
-    if (shouldSetup) {
-      // The SessionEntity class can emit a message indicating the session was cleared and reset (expiry, inactivity). This feature must abort and never resume if that occurs.
-      this.ee.on(SESSION_EVENTS.RESET, () => {
-        this.scheduler.runHarvest()
-        this.abort(ABORT_REASONS.RESET)
-      })
+    // The SessionEntity class can emit a message indicating the session was paused (visibility change). This feature must stop recording if that occurs.
+    this.ee.on(SESSION_EVENTS.PAUSE, () => { this.recorder?.stopRecording() })
+    // The SessionEntity class can emit a message indicating the session was resumed (visibility change). This feature must start running again (if already running) if that occurs.
+    this.ee.on(SESSION_EVENTS.RESUME, () => {
+      if (!this.recorder) return
+      // if the mode changed on a different tab, it needs to update this instance to match
+      const { session } = getRuntime(this.agentIdentifier)
+      this.mode = session.state.sessionReplayMode
+      if (!this.initialized || this.mode === MODE.OFF) return
+      this.recorder?.startRecording()
+    })
 
-      // The SessionEntity class can emit a message indicating the session was paused (visibility change). This feature must stop recording if that occurs.
-      this.ee.on(SESSION_EVENTS.PAUSE, () => { this.recorder?.stopRecording() })
-      // The SessionEntity class can emit a message indicating the session was resumed (visibility change). This feature must start running again (if already running) if that occurs.
-      this.ee.on(SESSION_EVENTS.RESUME, () => {
-        if (!this.recorder) return
-        // if the mode changed on a different tab, it needs to update this instance to match
-        const { session } = getRuntime(this.agentIdentifier)
-        this.mode = session.state.sessionReplayMode
-        if (!this.initialized || this.mode === MODE.OFF) return
-        this.recorder?.startRecording()
-      })
+    this.ee.on(SESSION_EVENTS.UPDATE, (type, data) => {
+      if (!this.recorder || !this.initialized || this.blocked || type !== SESSION_EVENT_TYPES.CROSS_TAB) return
+      if (this.mode !== MODE.OFF && data.sessionReplayMode === MODE.OFF) this.abort(ABORT_REASONS.CROSS_TAB)
+      this.mode = data.sessionReplay
+    })
 
-      this.ee.on(SESSION_EVENTS.UPDATE, (type, data) => {
-        if (!this.recorder || !this.initialized || this.blocked || type !== SESSION_EVENT_TYPES.CROSS_TAB) return
-        if (this.mode !== MODE.OFF && data.sessionReplayMode === MODE.OFF) this.abort(ABORT_REASONS.CROSS_TAB)
-        this.mode = data.sessionReplay
-      })
+    // Bespoke logic for blobs endpoint.
+    this.scheduler = new HarvestScheduler('browser/blobs', {
+      onFinished: this.onHarvestFinished.bind(this),
+      retryDelay: this.harvestTimeSeconds,
+      getPayload: this.prepareHarvest.bind(this),
+      raw: true
+    }, this)
 
-      // Bespoke logic for blobs endpoint.
-      this.scheduler = new HarvestScheduler('browser/blobs', {
-        onFinished: this.onHarvestFinished.bind(this),
-        retryDelay: this.harvestTimeSeconds,
-        getPayload: this.prepareHarvest.bind(this),
-        raw: true
-      }, this)
+    registerHandler('recordReplay', () => {
+      // if it has aborted or BCS returned bad entitlements, do not allow
+      if (this.blocked || !this.entitled) return
+      // if it isnt already (fully) initialized... initialize it
+      if (!this.recorder) this.initializeRecording(false, true, true)
+      // its been initialized and imported the recorder but its not recording (mode === off || error)
+      else if (this.mode !== MODE.FULL) this.switchToFull()
+      // if it gets all the way to here, that means a full session is already recording... do nothing
+    }, this.featureName, this.ee)
 
-      registerHandler('recordReplay', () => {
-        // if it has aborted or BCS returned bad entitlements, do not allow
-        if (this.blocked || !this.entitled) return
-        // if it isnt already (fully) initialized... initialize it
-        if (!this.recorder) this.initializeRecording(false, true, true)
-        // its been initialized and imported the recorder but its not recording (mode === off || error)
-        else if (this.mode !== MODE.FULL) this.switchToFull()
-        // if it gets all the way to here, that means a full session is already recording... do nothing
-      }, this.featureName, this.ee)
+    registerHandler('pauseReplay', () => {
+      this.forceStop(this.mode !== MODE.ERROR)
+    }, this.featureName, this.ee)
 
-      registerHandler('pauseReplay', () => {
-        this.forceStop(this.mode !== MODE.ERROR)
-      }, this.featureName, this.ee)
+    // Wait for an error to be reported.  This currently is wrapped around the "Error" feature.  This is a feature-feature dependency.
+    // This was to ensure that all errors, including those on the page before load and those handled with "noticeError" are accounted for. Needs evalulation
+    registerHandler('errorAgg', (e) => {
+      this.errorNoticed = true
+      if (this.recorder) this.recorder.currentBufferTarget.hasError = true
+      // run once
+      if (this.mode === MODE.ERROR && globalScope?.document.visibilityState === 'visible') {
+        this.switchToFull()
+      }
+    }, this.featureName, this.ee)
 
-      // Wait for an error to be reported.  This currently is wrapped around the "Error" feature.  This is a feature-feature dependency.
-      // This was to ensure that all errors, including those on the page before load and those handled with "noticeError" are accounted for. Needs evalulation
-      registerHandler('errorAgg', (e) => {
-        this.errorNoticed = true
-        if (this.recorder) this.recorder.currentBufferTarget.hasError = true
-        // run once
-        if (this.mode === MODE.ERROR && globalScope?.document.visibilityState === 'visible') {
-          this.switchToFull()
-        }
-      }, this.featureName, this.ee)
+    const { error_sampling_rate, sampling_rate, autoStart, block_selector, mask_text_selector, mask_all_inputs, inline_stylesheet, inline_images, collect_fonts } = getConfigurationValue(this.agentIdentifier, 'session_replay')
 
-      const { error_sampling_rate, sampling_rate, autoStart, block_selector, mask_text_selector, mask_all_inputs, inline_stylesheet, inline_images, collect_fonts } = getConfigurationValue(this.agentIdentifier, 'session_replay')
+    this.waitForFlags(['sr']).then(([flagOn]) => {
+      this.entitled = flagOn
+      if (!this.entitled && this.recorder?.recording) {
+        this.abort(ABORT_REASONS.ENTITLEMENTS)
+        handle(SUPPORTABILITY_METRIC_CHANNEL, ['SessionReplay/EnabledNotEntitled/Detected'], undefined, FEATURE_NAMES.metrics, this.ee)
+        return
+      }
+      this.initializeRecording(
+        (Math.random() * 100) < error_sampling_rate,
+        (Math.random() * 100) < sampling_rate
+      )
+    }).then(() => {
+      if (this.mode === MODE.OFF) args?.recorder?.stopRecording() // stop any conservative preload recording launched by instrument
+      sharedChannel.onReplayReady(this.mode) // notify watchers that replay started with the mode
+    })
 
-      this.waitForFlags(['sr']).then(([flagOn]) => {
-        this.entitled = flagOn
-        if (!this.entitled && this.recorder?.recording) {
-          this.abort(ABORT_REASONS.ENTITLEMENTS)
-          handle(SUPPORTABILITY_METRIC_CHANNEL, ['SessionReplay/EnabledNotEntitled/Detected'], undefined, FEATURE_NAMES.metrics, this.ee)
-          return
-        }
-        this.initializeRecording(
-          (Math.random() * 100) < error_sampling_rate,
-          (Math.random() * 100) < sampling_rate
-        )
-      }).then(() => sharedChannel.onReplayReady(this.mode)) // notify watchers that replay started with the mode
+    /** Detect if the default configs have been altered and report a SM.  This is useful to evaluate what the reasonable defaults are across a customer base over time */
+    if (!autoStart) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/AutoStart/Modified'], undefined, FEATURE_NAMES.metrics, this.ee)
+    if (collect_fonts === true) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/CollectFonts/Modified'], undefined, FEATURE_NAMES.metrics, this.ee)
+    if (inline_stylesheet !== true) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/InlineStylesheet/Modified'], undefined, FEATURE_NAMES.metrics, this.ee)
+    if (inline_images === true) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/InlineImages/Modifed'], undefined, FEATURE_NAMES.metrics, this.ee)
+    if (mask_all_inputs !== true) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/MaskAllInputs/Modified'], undefined, FEATURE_NAMES.metrics, this.ee)
+    if (block_selector !== '[data-nr-block]') handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/BlockSelector/Modified'], undefined, FEATURE_NAMES.metrics, this.ee)
+    if (mask_text_selector !== '*') handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/MaskTextSelector/Modified'], undefined, FEATURE_NAMES.metrics, this.ee)
 
-      /** Detect if the default configs have been altered and report a SM.  This is useful to evaluate what the reasonable defaults are across a customer base over time */
-      if (!autoStart) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/AutoStart/Modified'], undefined, FEATURE_NAMES.metrics, this.ee)
-      if (collect_fonts === true) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/CollectFonts/Modified'], undefined, FEATURE_NAMES.metrics, this.ee)
-      if (inline_stylesheet !== true) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/InlineStylesheet/Modified'], undefined, FEATURE_NAMES.metrics, this.ee)
-      if (inline_images === true) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/InlineImages/Modifed'], undefined, FEATURE_NAMES.metrics, this.ee)
-      if (mask_all_inputs !== true) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/MaskAllInputs/Modified'], undefined, FEATURE_NAMES.metrics, this.ee)
-      if (block_selector !== '[data-nr-block]') handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/BlockSelector/Modified'], undefined, FEATURE_NAMES.metrics, this.ee)
-      if (mask_text_selector !== '*') handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/MaskTextSelector/Modified'], undefined, FEATURE_NAMES.metrics, this.ee)
-
-      handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/SamplingRate/Value', sampling_rate], undefined, FEATURE_NAMES.metrics, this.ee)
-      handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/ErrorSamplingRate/Value', error_sampling_rate], undefined, FEATURE_NAMES.metrics, this.ee)
-      this.drain()
-    }
+    handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/SamplingRate/Value', sampling_rate], undefined, FEATURE_NAMES.metrics, this.ee)
+    handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/ErrorSamplingRate/Value', error_sampling_rate], undefined, FEATURE_NAMES.metrics, this.ee)
+    this.drain()
   }
 
   switchToFull () {

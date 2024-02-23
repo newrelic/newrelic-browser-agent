@@ -5,7 +5,9 @@ import { ee } from '../../../common/event-emitter/contextual-ee'
 
 jest.mock('../../../common/config/config', () => ({
   __esModule: true,
-  getConfiguration: jest.fn(),
+  getConfiguration: jest.fn((agentId) => {
+    return { session: {} }
+  }),
   getConfigurationValue: jest.fn((agentId, prop) => {
     if (prop === 'privacy.cookies_enabled') return true
   }),

@@ -20,10 +20,6 @@ describe.withBrowsersMatching(onlyAndroid)('android webview', () => {
       ref: url.slice(0, url.indexOf('?')),
       t: 'Unnamed Transaction'
     }))
-    expect(resourcesResult.request.query).toEqual(expect.objectContaining({
-      ref: url.slice(0, url.indexOf('?')),
-      t: 'Unnamed Transaction'
-    }))
     expect(resourcesResult.request.body.length).toBeGreaterThanOrEqual(1)
     expect(spaResult.request.query).toEqual(expect.objectContaining({
       ref: url.slice(0, url.indexOf('?')),

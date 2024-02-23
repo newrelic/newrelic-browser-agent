@@ -235,6 +235,18 @@ describe('reset()', () => {
   })
 })
 
+test('isNew is true after the session resets by timers', async () => {
+  const sessionInstance = new SessionEntity({ agentIdentifier, key, storage })
+  expect(sessionInstance.isNew).toEqual(true)
+  sessionInstance.reset() // imitate what expireMs and inactiveMs does on activation
+  expect(sessionInstance.isNew).toEqual(true)
+})
+test('isNew is true if reset happens on initialization after time outs off-view', () => {
+  storage.set(`${PREFIX}_${key}`, { ...model, value, expiresAt: Date.now() - 1, inactiveAt: Date.now() - 1, updatedAt: Date.now() })
+  const sessionInstance = new SessionEntity({ agentIdentifier, key, storage })
+  expect(sessionInstance.isNew).toEqual(true)
+})
+
 describe('read()', () => {
   test('"new" sessions get data from read()', () => {
     const newSession = new SessionEntity({ agentIdentifier, key, storage, expiresMs: 10 })

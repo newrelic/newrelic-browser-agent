@@ -48,7 +48,8 @@ export function setAPI (agentIdentifier, forceDrain) {
     'setErrorHandler',
     'finished',
     'addToTrace',
-    'addRelease'
+    'addRelease',
+    'addPageAction'
   ]
 
   var prefix = 'api-'
@@ -57,7 +58,6 @@ export function setAPI (agentIdentifier, forceDrain) {
   // Setup stub functions that queue calls for later processing.
   asyncApiFns.forEach(fnName => { apiInterface[fnName] = apiCall(prefix, fnName, true, 'api') })
 
-  apiInterface.addPageAction = apiCall(prefix, 'addPageAction', true, FEATURE_NAMES.pageAction)
   apiInterface.setCurrentRouteName = apiCall(prefix, 'routeName', true, FEATURE_NAMES.spa)
 
   apiInterface.setPageViewName = function (name, host) {

@@ -10,6 +10,7 @@ import { Harvest } from './harvest'
 
 jest.enableAutomock()
 jest.unmock('./harvest')
+
 let harvestInstance
 
 beforeEach(() => {

@@ -1,8 +1,8 @@
 export const FEATURE_NAMES = {
   ajax: 'ajax',
   jserrors: 'jserrors',
+  genericEvent: 'generic_event',
   metrics: 'metrics',
-  pageAction: 'page_action',
   pageViewEvent: 'page_view_event',
   pageViewTiming: 'page_view_timing',
   sessionReplay: 'session_replay',
@@ -23,5 +23,7 @@ export const featurePriority = {
   [FEATURE_NAMES.sessionTrace]: 6,
   [FEATURE_NAMES.pageAction]: 7,
   [FEATURE_NAMES.spa]: 8,
-  [FEATURE_NAMES.sessionReplay]: 9
+  [FEATURE_NAMES.sessionReplay]: 9,
+  [FEATURE_NAMES.genericEvent]: 10,
+  [FEATURE_NAMES.marksAndMeasures]: 11
 }

@@ -5,6 +5,7 @@ import { handle } from '../../common/event-emitter/handle'
 import { registerHandler } from '../../common/event-emitter/register-handler'
 import { single } from '../../common/util/invoke'
 import { CUSTOM_METRIC_CHANNEL } from '../../features/metrics/constants'
+import { pageActions } from '../../common/generic-events/page-actions'
 
 export function setAPI (agentIdentifier) {
   var instanceEE = ee.get(agentIdentifier)
@@ -13,7 +14,8 @@ export function setAPI (agentIdentifier) {
     finished: single(finished),
     setErrorHandler,
     addToTrace,
-    addRelease
+    addRelease,
+    addPageAction
   }
 
   // Hook all of the api functions up to the queues/stubs created in loader/api.js
@@ -21,6 +23,10 @@ export function setAPI (agentIdentifier) {
 
   // All API functions get passed the time they were called as their
   // first parameter. These functions can be called asynchronously.
+
+  function addPageAction (...args) {
+    pageActions.addPageAction(...args)
+  }
 
   function finished (t, providedTime) {
     var time = providedTime ? providedTime - getRuntime(agentIdentifier).offset : t

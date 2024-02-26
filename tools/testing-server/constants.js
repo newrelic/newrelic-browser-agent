@@ -27,14 +27,15 @@ module.exports.loaderConfigKeys = [
 module.exports.loaderOnlyConfigKeys = ['accountID', 'agentID', 'trustKey']
 
 module.exports.rumFlags = {
-  stn: 1,
-  err: 1,
-  ins: 1,
-  cap: 1,
-  spa: 1,
+  stn: 1, // session trace entitlements 0|1
+  err: 1, // err entitlements 0|1
+  ins: 1, // ins entitlements 0|1
+  cap: 1, // ?
+  spa: 1, // spa entitlements 0|1
   loaded: 1,
-  ste: 1,
-  sr: 0 // this should be off, for now, if privacy.cookie_enabled is on (default) or Traces tests will fail
+  sr: 1, // session replay entitlements 0|1
+  sts: 1, // session trace sampling 0|1|2 - off full error
+  srs: 1// session replay sampling 0|1|2 - off full error
 }
 
 module.exports.defaultInitBlock = {

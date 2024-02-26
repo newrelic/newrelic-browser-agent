@@ -52,7 +52,7 @@ describe.withBrowsersMatching(notIE)('Content Security Policy', () => {
     const url = await browser.testHandle.assetURL('subresource-integrity-capture.html', {
       init: {
         privacy: { cookies_enabled: true },
-        session_replay: { enabled: true, sampling_rate: 100, error_sampling_rate: 100 }
+        session_replay: { enabled: true }
       }
     })
     await Promise.all([

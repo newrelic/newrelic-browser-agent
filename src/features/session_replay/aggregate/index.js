@@ -53,8 +53,6 @@ export class Aggregate extends AggregateBase {
     this.recorder = args?.recorder
     if (this.recorder) this.recorder.parent = this
 
-    console.log(this.recorder)
-
     handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/Enabled'], undefined, FEATURE_NAMES.metrics, this.ee)
 
     const shouldSetup = (
@@ -118,21 +116,16 @@ export class Aggregate extends AggregateBase {
 
       const { error_sampling_rate, sampling_rate, autoStart, block_selector, mask_text_selector, mask_all_inputs, inline_stylesheet, inline_images, collect_fonts } = getConfigurationValue(this.agentIdentifier, 'session_replay')
 
-      console.log('wait for flags.')
-      this.waitForFlags(['sr']).then(([flagOn]) => {
+      this.waitForFlags(['srs', 'sr']).then(([srMode, entitled]) => {
         // waitForFlags now returns the raw value (0, 1) of the flag.
         // Eventually BCS will report this as (0, 1, 2) for the appropriate mode, and report entitlements separately.
         // This will need to be fixed to honor that when that change is made. Returning the raw flag value enables that work.
-        this.entitled = !!flagOn
-        console.log('entitled?', this.entitled)
+        this.entitled = !!entitled
         if (!this.entitled && this.recorder?.recording) {
           handle(SUPPORTABILITY_METRIC_CHANNEL, ['SessionReplay/EnabledNotEntitled/Detected'], undefined, FEATURE_NAMES.metrics, this.ee)
           this.recorder?.abort(ABORT_REASONS.ENTITLEMENTS)
         }
-        this.initializeRecording(
-          (Math.random() * 100) < error_sampling_rate,
-          (Math.random() * 100) < sampling_rate
-        )
+        this.initializeRecording(srMode)
       }).then(() => sharedChannel.onReplayReady(this.mode)) // notify watchers that replay started with the mode
 
       /** Detect if the default configs have been altered and report a SM.  This is useful to evaluate what the reasonable defaults are across a customer base over time */
@@ -171,8 +164,7 @@ export class Aggregate extends AggregateBase {
    * @param {boolean} ignoreSession - whether to force the method to ignore the session state and use just the sample flags
    * @returns {void}
    */
-  async initializeRecording (errorSample, fullSample, ignoreSession) {
-    console.log('initialize!', errorSample, fullSample)
+  async initializeRecording (srMode, ignoreSession) {
     this.initialized = true
     if (!this.entitled) return
 
@@ -187,12 +179,9 @@ export class Aggregate extends AggregateBase {
       this.mode = session.state.sessionReplayMode
     } else {
       // The session is new... determine the mode the new session should start in
-      if (fullSample) this.mode = MODE.FULL // full mode has precedence over error mode
-      else if (errorSample) this.mode = MODE.ERROR
-      // If neither are selected, then don't record (early return)
-      else {
-        return
-      }
+      this.mode = srMode
+      // If off, then don't record (early return)
+      if (this.mode === MODE.OFF) return
     }
 
     if (!this.recorder) {
@@ -210,8 +199,6 @@ export class Aggregate extends AggregateBase {
     if (this.mode === MODE.ERROR && this.errorNoticed) {
       this.mode = MODE.FULL
     }
-
-    console.log('thismode', this.mode)
 
     // FULL mode records AND reports from the beginning, while ERROR mode only records (but does not report).
     // ERROR mode will do this until an error is thrown, and then switch into FULL mode.

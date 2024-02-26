@@ -109,7 +109,7 @@ export function srConfig (initOverrides = {}) {
       loader: 'spa',
       init: {
         privacy: { cookies_enabled: true },
-        session_replay: { enabled: true, harvestTimeSeconds: 5, sampling_rate: 100, error_sampling_rate: 0 }
+        session_replay: { enabled: true, harvestTimeSeconds: 5 }
       }
     },
     {

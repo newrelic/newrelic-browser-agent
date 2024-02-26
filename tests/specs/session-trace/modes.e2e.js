@@ -17,7 +17,7 @@ describe('respects feature flags', () => {
     await browser.destroyAgentSession()
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ stn: 0, ste: 0, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
+      body: JSON.stringify({ stn: 0, sts: 0, err: 1, ins: 1, spa: 1, sr: 0, srs: 0, loaded: 1 })
     })
     let url = await browser.testHandle.assetURL('instrumented.html', stConfig())
     await browser.url(url).then(() => browser.waitForAgentLoad())
@@ -31,11 +31,11 @@ describe('respects feature flags', () => {
       })])
   })
 
-  it('1, 0 == PERMANENTLY OFF', async () => {
+  it('0, 1 == PERMANENTLY OFF', async () => {
     await browser.destroyAgentSession()
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ stn: 1, ste: 0, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
+      body: JSON.stringify({ stn: 0, sts: 1, err: 1, ins: 1, spa: 1, sr: 0, srs: 0, loaded: 1 })
     })
     let url = await browser.testHandle.assetURL('instrumented.html', stConfig())
     await browser.url(url).then(() => browser.waitForAgentLoad())
@@ -49,11 +49,11 @@ describe('respects feature flags', () => {
       })])
   })
 
-  it('2, 0 == PERMANENTLY OFF', async () => {
+  it('0, 2 == PERMANENTLY OFF', async () => {
     await browser.destroyAgentSession()
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ stn: 2, ste: 0, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
+      body: JSON.stringify({ stn: 0, sts: 2, err: 1, ins: 1, spa: 1, sr: 0, srs: 0, loaded: 1 })
     })
     let url = await browser.testHandle.assetURL('instrumented.html', stConfig())
     await browser.url(url).then(() => browser.waitForAgentLoad())
@@ -67,14 +67,15 @@ describe('respects feature flags', () => {
       })])
   })
 
-  it('0, 1 == TEMPORARILY OFF, TURNS ON IF ENTITLED (api)', async () => {
+  it('1, 0 == TEMPORARILY OFF, TURNS ON IF ENTITLED (api)', async () => {
     await browser.destroyAgentSession()
+
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ stn: 0, ste: 1, err: 1, ins: 1, spa: 1, sr: 1, loaded: 1 })
+      body: JSON.stringify({ stn: 1, sts: 0, err: 1, ins: 1, spa: 1, sr: 1, srs: 0, loaded: 1 })
     })
     let url = await browser.testHandle.assetURL('instrumented.html',
-      stConfig({ session_replay: { enabled: true, sampling_rate: 0, error_sampling_rate: 0 } })
+      stConfig({ session_replay: { enabled: true } })
     )
     await browser.url(url).then(() => browser.waitForAgentLoad())
 
@@ -93,7 +94,7 @@ describe('respects feature flags', () => {
     await browser.destroyAgentSession()
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ stn: 1, ste: 1, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
+      body: JSON.stringify({ stn: 1, sts: 1, err: 1, ins: 1, spa: 1, sr: 0, srs: 0, loaded: 1 })
     })
     let url = await browser.testHandle.assetURL('instrumented.html', stConfig())
     await browser.url(url).then(() => browser.waitForAgentLoad())
@@ -103,11 +104,11 @@ describe('respects feature flags', () => {
     testExpectedTrace({ data: request })
   })
 
-  it('2, 1 == STARTS IN ERROR, CHANGES TO FULL (noticeError)', async () => {
+  it('1, 2 == STARTS IN ERROR, CHANGES TO FULL (noticeError)', async () => {
     await browser.destroyAgentSession()
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ stn: 2, ste: 1, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
+      body: JSON.stringify({ stn: 1, sts: 2, err: 1, ins: 1, spa: 1, sr: 0, srs: 0, loaded: 1 })
     })
     let url = await browser.testHandle.assetURL('instrumented.html', stConfig())
     await browser.url(url).then(() => browser.waitForAgentLoad())
@@ -133,11 +134,11 @@ describe('respects feature flags', () => {
     testExpectedTrace({ data: request })
   })
 
-  it('2, 1 == STARTS IN ERROR, CHANGES TO FULL (thrown error)', async () => {
+  it('1, 2 == STARTS IN ERROR, CHANGES TO FULL (thrown error)', async () => {
     await browser.destroyAgentSession()
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ stn: 2, ste: 1, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
+      body: JSON.stringify({ stn: 1, sts: 2, err: 1, ins: 1, spa: 1, sr: 0, srs: 0, loaded: 1 })
     })
     let url = await browser.testHandle.assetURL('js-error-with-error-after-page-load.html', stConfig())
     await browser.url(url).then(() => browser.waitForAgentLoad())
@@ -149,11 +150,11 @@ describe('respects feature flags', () => {
     testExpectedTrace({ data: request })
   })
 
-  it('2, 1 == STARTS IN FULL MODE IF ERROR OCCURS BEFORE LOAD', async () => {
+  it('1, 2 == STARTS IN FULL MODE IF ERROR OCCURS BEFORE LOAD', async () => {
     await browser.destroyAgentSession()
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ stn: 2, ste: 1, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
+      body: JSON.stringify({ stn: 1, sts: 2, err: 1, ins: 1, spa: 1, sr: 0, srs: 0, loaded: 1 })
     })
     let url = await browser.testHandle.assetURL('js-error-with-error-before-page-load.html', stConfig())
     await browser.url(url).then(() => browser.waitForAgentLoad())
@@ -167,7 +168,7 @@ describe('respects feature flags', () => {
     await browser.destroyAgentSession()
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ stn: 2, ste: 1, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
+      body: JSON.stringify({ stn: 1, sts: 2, err: 1, ins: 1, spa: 1, sr: 0, srs: 0, loaded: 1 })
     })
     let url = await browser.testHandle.assetURL('instrumented.html', stConfig())
     await browser.url(url).then(() => browser.waitForAgentLoad())
@@ -188,7 +189,7 @@ describe('respects feature flags', () => {
     await browser.destroyAgentSession()
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ stn: 2, ste: 1, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
+      body: JSON.stringify({ stn: 1, sts: 2, err: 1, ins: 1, spa: 1, sr: 0, srs: 0, loaded: 1 })
     })
     let url = await browser.testHandle.assetURL('instrumented.html', stConfig())
     await browser.url(url).then(() => browser.waitForAgentLoad())
@@ -203,7 +204,7 @@ describe('respects feature flags', () => {
     await browser.destroyAgentSession()
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ stn: 1, ste: 1, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
+      body: JSON.stringify({ stn: 1, sts: 1, err: 1, ins: 1, spa: 1, sr: 0, srs: 0, loaded: 1 })
     })
     let url = await browser.testHandle.assetURL('instrumented.html', stConfig())
     await browser.url(url).then(() => browser.waitForAgentLoad())
@@ -227,7 +228,7 @@ describe('respects feature flags', () => {
     await browser.destroyAgentSession()
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ stn: 1, ste: 1, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
+      body: JSON.stringify({ stn: 1, sts: 1, err: 1, ins: 1, spa: 1, sr: 0, srs: 0, loaded: 1 })
     })
     let url = await browser.testHandle.assetURL('instrumented.html', stConfig({ privacy: { cookies_enabled: false } }))
     await browser.url(url).then(() => browser.waitForAgentLoad())
@@ -239,7 +240,7 @@ describe('respects feature flags', () => {
     await browser.destroyAgentSession()
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ stn: 0, ste: 1, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
+      body: JSON.stringify({ stn: 1, sts: 0, err: 1, ins: 1, spa: 1, sr: 0, srs: 0, loaded: 1 })
     })
     let url = await browser.testHandle.assetURL('instrumented.html', stConfig())
     await browser.url(url).then(() => browser.waitForAgentLoad())

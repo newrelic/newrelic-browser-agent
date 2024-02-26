@@ -1,5 +1,25 @@
 import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
 import { srConfig, getSR } from '../util/helpers'
+
+async function disqualifySR () {
+  await browser.testHandle.clearScheduledReplies('bamServer')
+  await browser.testHandle.scheduleReply('bamServer', {
+    test: testRumRequest,
+    permanent: true,
+    body: JSON.stringify({
+      stn: 1,
+      sts: 1,
+      err: 1,
+      ins: 1,
+      cap: 1,
+      spa: 1,
+      loaded: 1,
+      sr: 0,
+      srs: 0
+    })
+  })
+}
 
 describe.withBrowsersMatching(notIE)('Session Replay Initialization', () => {
   beforeEach(async () => {
@@ -11,8 +31,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Initialization', () => {
   })
 
   it('should not start recording if rum response sr flag is 0', async () => {
-    await browser.testHandle.clearScheduledReplies('bamServer')
-
+    await disqualifySR()
     const [rumResp] = await Promise.all([
       browser.testHandle.expectRum(),
       browser.url(await browser.testHandle.assetURL('instrumented.html', srConfig()))
@@ -48,7 +67,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Initialization', () => {
   })
 
   it('should not record if rum response sr flag is 0 and then api is called', async () => {
-    await browser.testHandle.clearScheduledReplies('bamServer')
+    await disqualifySR()
     await browser.url(await browser.testHandle.assetURL('instrumented.html', srConfig()))
       .then(() => browser.waitForAgentLoad())
 

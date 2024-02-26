@@ -2,16 +2,13 @@ import { supportsMultipleTabs, notIE } from '../../../tools/browser-matcher/comm
 import { RRWEB_EVENT_TYPES, srConfig, MODE, testExpectedReplay } from '../util/helpers.js'
 
 describe.withBrowsersMatching(notIE)('session manager state behavior', () => {
-  beforeEach(async () => {
-    await browser.enableSessionReplay()
-  })
-
   afterEach(async () => {
     await browser.destroyAgentSession(browser.testHandle)
   })
 
   describe('session manager mode matches session replay instance mode', () => {
     it('should match in full mode', async () => {
+      await browser.enableSessionReplay()
       await browser.url(await browser.testHandle.assetURL('instrumented.html', srConfig()))
         .then(() => browser.waitForFeatureAggregate('session_replay'))
 
@@ -22,7 +19,8 @@ describe.withBrowsersMatching(notIE)('session manager state behavior', () => {
     })
 
     it('should match in error mode', async () => {
-      await browser.url(await browser.testHandle.assetURL('instrumented.html', srConfig({ session_replay: { sampling_rate: 0, error_sampling_rate: 100 } })))
+      await browser.enableSessionReplay(0, 100)
+      await browser.url(await browser.testHandle.assetURL('instrumented.html', srConfig()))
         .then(() => browser.waitForFeatureAggregate('session_replay'))
 
       await browser.pause(1000)
@@ -32,7 +30,8 @@ describe.withBrowsersMatching(notIE)('session manager state behavior', () => {
     })
 
     it('should match in off mode', async () => {
-      await browser.url(await browser.testHandle.assetURL('instrumented.html', srConfig({ session_replay: { sampling_rate: 0, error_sampling_rate: 0 } })))
+      await browser.enableSessionReplay(0, 0)
+      await browser.url(await browser.testHandle.assetURL('instrumented.html', srConfig()))
         .then(() => browser.waitForFeatureAggregate('session_replay'))
 
       await browser.pause(1000)
@@ -44,7 +43,8 @@ describe.withBrowsersMatching(notIE)('session manager state behavior', () => {
 
   describe('When session ends', () => {
     it('should end recording and unload', async () => {
-      await browser.url(await browser.testHandle.assetURL('instrumented.html', srConfig({ session: { expiresMs: 7500 }, session_replay: { harvestTimeSeconds: 10 } })))
+      await browser.enableSessionReplay()
+      await browser.url(await browser.testHandle.assetURL('rrweb-record.html', { init: { session: { expiresMs: 7500 }, session_replay: { enabled: true } } }))
         .then(() => browser.waitForSessionReplayRecording())
 
       // session has started, replay should have set mode to "FULL"
@@ -56,6 +56,7 @@ describe.withBrowsersMatching(notIE)('session manager state behavior', () => {
         browser.testHandle.expectReplay(),
         browser.execute(function () {
           document.querySelector('body').click()
+          Object.values(newrelic.initializedAgents)[0].runtime.session.reset()
         })
       ])
 
@@ -68,6 +69,7 @@ describe.withBrowsersMatching(notIE)('session manager state behavior', () => {
 
   describe('When session resumes', () => {
     it.withBrowsersMatching(supportsMultipleTabs)('should take a full snapshot and continue recording', async () => {
+      await browser.enableSessionReplay()
       const [{ request: payload }] = await Promise.all([
         browser.testHandle.expectReplay(15000),
         browser.url(await browser.testHandle.assetURL('instrumented.html', srConfig()))
@@ -98,6 +100,7 @@ describe.withBrowsersMatching(notIE)('session manager state behavior', () => {
 
   describe('When session pauses', () => {
     it.withBrowsersMatching(supportsMultipleTabs)('should pause recording', async () => {
+      await browser.enableSessionReplay()
       await browser.url(await browser.testHandle.assetURL('instrumented.html', srConfig()))
         .then(() => browser.waitForAgentLoad())
 

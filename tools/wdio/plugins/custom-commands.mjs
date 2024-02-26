@@ -114,6 +114,29 @@ export default class CustomCommands {
     })
 
     /**
+     * Sets a permanent scheduled reply for the rum call to include the session
+     * replay flag with a value of 1 enabling the feature.
+     */
+    browser.addCommand('enableSessionReplay', async function (sampling_rate = 100, error_sampling_rate = 100) {
+      const stMode = Math.random() * 100 < sampling_rate ? 1 : Math.random() * 100 < error_sampling_rate ? 2 : 0
+      await browser.testHandle.scheduleReply('bamServer', {
+        test: testRumRequest,
+        permanent: true,
+        body: JSON.stringify({
+          stn: 1,
+          sts: 1,
+          err: 1,
+          ins: 1,
+          cap: 1,
+          spa: 1,
+          loaded: 1,
+          sr: 1,
+          srs: stMode
+        })
+      })
+    })
+
+    /**
      * Waits for a specific feature aggregate class to be loaded.
      */
     browser.addCommand('waitForFeatureAggregate', async function (feature, timeout) {

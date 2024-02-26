@@ -19,7 +19,6 @@ export class Instrument extends InstrumentBase {
   constructor (agentIdentifier, aggregator, auto = true) {
     super(agentIdentifier, aggregator, FEATURE_NAME, auto)
 
-    console.log('instrument SR')
     try {
       const session = JSON.parse(localStorage.getItem('NRBA_SESSION'))
       if (session && session.sessionReplayMode !== MODE.OFF) {
@@ -43,8 +42,7 @@ export class Instrument extends InstrumentBase {
 
   async #startRecording (mode) {
     if (this.featAggregate) {
-      console.log('has feat agg')
-      if (this.featAggregate.entitled) this.featAggregate.initializeRecording(100, 100, true)
+      if (this.featAggregate.entitled) this.featAggregate.initializeRecording(mode, true)
       /** dont need to reimport the recorder so just return if the featAgg exists */
       return
     }

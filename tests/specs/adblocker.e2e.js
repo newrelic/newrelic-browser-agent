@@ -1,15 +1,10 @@
 const config = {
   init: {
-    privacy: { cookies_enabled: true },
-    session_replay: { enabled: true, harvestTimeSeconds: 5, sampling_rate: 100, error_sampling_rate: 0 }
+    privacy: { cookies_enabled: true }
   }
 }
 
 describe('adblocker', () => {
-  beforeEach(async () => {
-    await browser.enableSessionReplay()
-  })
-
   afterEach(async () => {
     await browser.destroyAgentSession()
   })

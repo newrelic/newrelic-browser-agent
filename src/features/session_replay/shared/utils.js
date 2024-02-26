@@ -3,7 +3,6 @@ import { isBrowserScope } from '../../../common/constants/runtime'
 
 export const enableSessionTracking = (agentId) => isBrowserScope && getConfigurationValue(agentId, 'privacy.cookies_enabled') === true
 
-// to do: fix this to be a fn too sigh...
 function hasReplayPrerequisite (agentId) {
   return originals.MO && // Session Replay cannot work without Mutation Observer
   enableSessionTracking && // requires session tracking to be running (hence "session" replay...)

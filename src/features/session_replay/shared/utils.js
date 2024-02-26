@@ -1,7 +1,6 @@
 import { getConfigurationValue, originals } from '../../../common/config/config'
 import { isBrowserScope } from '../../../common/constants/runtime'
 
-// to do: fix this to be a fn because this.agentidentifier isnt
 export const enableSessionTracking = (agentId) => isBrowserScope && getConfigurationValue(agentId, 'privacy.cookies_enabled') === true
 
 // to do: fix this to be a fn too sigh...

@@ -29,6 +29,8 @@ const {
  * @property {number} statusCode response code
  * @property {string} body response body
  * @property {number} delay delay the response by a number of milliseconds
+ * @property {string[]} removeHeaders list of headers to remove from the response
+ * @property {{ key: string, value: string }[]} setHeaders list of key:value pairs to add as headers to the response
  */
 
 /**

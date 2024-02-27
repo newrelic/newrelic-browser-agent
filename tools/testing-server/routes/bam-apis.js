@@ -31,11 +31,13 @@ module.exports = fp(async function (fastify) {
       if (!request.query.jsonp) {
         return reply
           .header('content-type', 'application/json')
+          .header('Timing-Allow-Origin', request.headers.origin)
           .code(200)
           .send(JSON.stringify(rumFlags))
       } else {
         return reply
           .header('content-type', 'application/javascript')
+          .header('Timing-Allow-Origin', request.headers.origin)
           .code(200)
           .send(`${request.query.jsonp}(${JSON.stringify(rumFlags)})`)
       }

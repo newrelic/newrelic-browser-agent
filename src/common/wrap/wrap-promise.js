@@ -7,9 +7,10 @@
  * This module is used by: spa.
  */
 
-import { createWrapperWithEmitter as wrapFn, flag } from './wrap-function'
+import { createWrapperWithEmitter as wrapFn } from './wrap-function'
 import { ee as baseEE } from '../event-emitter/contextual-ee'
 import { globalScope } from '../constants/runtime'
+import { ObservationContextManager } from '../context/observation-context-manager'
 
 const wrapped = {}
 
@@ -122,7 +123,7 @@ export function wrapPromise (sharedEE) {
 
       return origFnCallWithThis
     }
-    prevPromiseObj.prototype.then[flag] = prevPromiseOrigThen
+    prevPromiseObj.prototype.then[ObservationContextManager.contextOriginalId] = prevPromiseOrigThen
 
     promiseEE.on('executor-start', function (args) {
       args[0] = promiseWrapper(args[0], 'resolve-', this, null, false)

@@ -167,7 +167,6 @@ test('should send event when removing event listener', async () => {
 
   expect(eeHandler).toHaveBeenCalledTimes(1)
 
-  console.log(Object.entries(eeHandler.mock.calls[0][0][1]))
   const originalHandler = Object.entries(eeHandler.mock.calls[0][0][1])
     .find(([key]) => key.startsWith('nr@original:'))[1]
   expect(originalHandler).toEqual(handler)

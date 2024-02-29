@@ -2,7 +2,7 @@ import { originals } from '../../../common/config/config'
 import { isBrowserScope } from '../../../common/constants/runtime'
 
 class StylesheetEvaluator {
-  #evaluated = new Set()
+  #evaluated = new WeakSet()
   #fetchProms = []
   /**
   * Flipped to true if stylesheets that cannot be natively inlined are detected by the stylesheetEvaluator class

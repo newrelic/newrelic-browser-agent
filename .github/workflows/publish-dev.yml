@@ -54,7 +54,7 @@ jobs:
       - name: Build dev
         run: npm run cdn:build:dev
       - name: Upload dev
-        id: dev-s3-upload
+        id: s3-upload
         uses: ./.github/actions/s3-upload
         with:
           aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -63,21 +63,33 @@ jobs:
           aws_bucket_name: ${{ secrets.AWS_BUCKET }}
           local_dir: $GITHUB_WORKSPACE/build
           bucket_dir: dev/
-      - name: Gather dev purge paths
+      - name: Gather cdn purge paths
         id: dev-purge-paths
-        run: echo "results=$(echo '${{ steps.dev-s3-upload.outputs.results }}' | jq -j '.[].Key + " "')" >> $GITHUB_OUTPUT
-      - name: Purge dev fastly cache
+        run: echo "results=$(echo '${{ steps.s3-upload.outputs.results }}' | jq -j '.[].Key + " "')" >> $GITHUB_OUTPUT
+      - name: Purge production cdn
         uses: ./.github/actions/fastly-purge
         with:
           fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
           fastly_service: js-agent.newrelic.com
           purge_path: ${{ steps.dev-purge-paths.outputs.results }}
-      - name: Verify dev assets
+      - name: Purge staging cdn
+        uses: ./.github/actions/fastly-purge
+        with:
+          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
+          fastly_service: staging-js-agent.newrelic.com
+          purge_path: ${{ steps.dev-purge-paths.outputs.results }}
+      - name: Verify production cdn assets
         uses: ./.github/actions/fastly-verify
         with:
           fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
           fastly_service: js-agent.newrelic.com
-          asset_path: ${{ join(fromJson(steps.dev-s3-upload.outputs.results).*.Key, ' ') }}
+          asset_path: ${{ join(fromJson(steps.s3-upload.outputs.results).*.Key, ' ') }}
+      - name: Verify staging cdn assets
+        uses: ./.github/actions/fastly-verify
+        with:
+          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
+          fastly_service: staging-js-agent.newrelic.com
+          asset_path: ${{ join(fromJson(steps.s3-upload.outputs.results).*.Key, ' ') }}
 
   # Publish dev to staging NRDB
   # publish-dev-nr:

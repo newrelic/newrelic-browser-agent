@@ -101,14 +101,15 @@ export class Recorder {
     const incompletes = stylesheetEvaluator.evaluate()
     /** Only stop ignoring data if already ignoring and a new valid snapshap is taking place (0 incompletes and we get a meta node for the snap) */
     if (!incompletes && this.#fixing && event.type === RRWEB_EVENT_TYPES.Meta) this.#fixing = false
-    if (incompletes) {
+    if (incompletes > 0) {
       /** wait for the evaluator to download/replace the incompletes' src code and then take a new snap */
       stylesheetEvaluator.fix().then((failedToFix) => {
-        if (failedToFix) {
+        if (failedToFix > 0) {
           this.currentBufferTarget.inlinedAllStylesheets = false
           this.shouldFix = false
-          handle(SUPPORTABILITY_METRIC_CHANNEL, ['SessionReplay/Payload/Missing-Inline-Css/Failed', failedToFix], undefined, FEATURE_NAMES.metrics, this.parent.ee)
-        } else handle(SUPPORTABILITY_METRIC_CHANNEL, ['SessionReplay/Payload/Missing-Inline-Css/Fixed', incompletes - failedToFix], undefined, FEATURE_NAMES.metrics, this.parent.ee)
+        }
+        handle(SUPPORTABILITY_METRIC_CHANNEL, ['SessionReplay/Payload/Missing-Inline-Css/Failed', failedToFix], undefined, FEATURE_NAMES.metrics, this.parent.ee)
+        handle(SUPPORTABILITY_METRIC_CHANNEL, ['SessionReplay/Payload/Missing-Inline-Css/Fixed', incompletes - failedToFix], undefined, FEATURE_NAMES.metrics, this.parent.ee)
         this.takeFullSnapshot()
       })
       /** Only start ignoring data if got a faulty snapshot */

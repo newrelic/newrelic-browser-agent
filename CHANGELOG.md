@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.252.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.252.0...v1.252.1) (2024-02-29)
+
+
+### Bug Fixes
+
+* Fix webpack imports in npm package ([#905](https://github.com/newrelic/newrelic-browser-agent/issues/905)) ([35810a8](https://github.com/newrelic/newrelic-browser-agent/commit/35810a895b7f61ab60ea5c24adfa49c4a3956191))
+* Page load after session timeouts don't start new session ([#899](https://github.com/newrelic/newrelic-browser-agent/issues/899)) ([5c952a0](https://github.com/newrelic/newrelic-browser-agent/commit/5c952a0a212922d84dfd7e8eb388fdbd566b6c00))
+
 ## [1.252.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.251.1...v1.252.0) (2024-02-12)
 
 

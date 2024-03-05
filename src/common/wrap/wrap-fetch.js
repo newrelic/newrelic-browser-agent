@@ -6,8 +6,9 @@
  * @file Wraps `fetch` and related methods for instrumentation.
  * This module is used by: ajax, spa.
  */
-import { ee as baseEE, contextId } from '../event-emitter/contextual-ee'
+import { ee as baseEE } from '../event-emitter/contextual-ee'
 import { globalScope } from '../constants/runtime'
+import { ObservationContextManager } from '../context/observation-context-manager'
 
 var prefix = 'fetch-'
 var bodyPrefix = prefix + 'body-'
@@ -74,7 +75,7 @@ export function wrapFetch (sharedEE) {
         // we are wrapping args in an array so we can preserve the reference
         ee.emit(prefix + 'before-start', [args], ctx)
         var dtPayload
-        if (ctx[contextId] && ctx[contextId].dt) dtPayload = ctx[contextId].dt
+        if (ctx[ObservationContextManager.contextId] && ctx[ObservationContextManager.contextId].dt) dtPayload = ctx[ObservationContextManager.contextId].dt
 
         var origPromiseFromFetch = fn.apply(this, args)
 

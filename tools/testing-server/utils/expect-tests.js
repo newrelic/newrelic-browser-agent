@@ -300,7 +300,7 @@ module.exports.testBlobTraceRequest = function testBlobTraceRequest (request) {
   const url = new URL(request.url, 'resolve://')
   if (url.pathname !== '/browser/blobs') return false
   if (request?.query?.browser_monitoring_key !== this.testId) return false
-  if (request?.query?.type !== 'SessionTrace') return false
+  if (request?.query?.type !== 'BrowserSessionChunk') return false
   try {
     const body = request?.body
     const blobContents = body // JSON array

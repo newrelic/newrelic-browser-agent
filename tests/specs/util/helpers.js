@@ -60,7 +60,7 @@ export function testExpectedTrace ({
 }) {
   expect(data.query).toMatchObject({
     browser_monitoring_key: expect.any(String),
-    type: 'SessionTrace',
+    type: 'BrowserSessionChunk',
     app_id: expect.any(String),
     protocol_version: expect.any(String),
     attributes: expect.any(String)
@@ -70,11 +70,9 @@ export function testExpectedTrace ({
 
   expect(decodedObj).toMatchObject({
     'trace.firstTimestamp': firstTimestamp || expect.any(Number),
-    'trace.firstTimestampOffset': firstTimestampOffset || expect.any(Number),
     'trace.lastTimestamp': lastTimestamp || expect.any(Number),
-    'trace.lastTimestampOffset': lastTimestampOffset || expect.any(Number),
-    'trace.nodeCount': nodeCount || expect.any(Number),
-    ptid: ptid || expect.any(String),
+    'trace.nodes': nodeCount || expect.any(Number),
+    ptid: ptid || expect.anything(),
     session: session || expect.any(String),
     rst: expect.any(Number),
     // optional attrs here

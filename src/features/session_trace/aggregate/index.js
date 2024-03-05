@@ -160,25 +160,27 @@ export class Aggregate extends AggregateBase {
     return {
       qs: {
         browser_monitoring_key: this.agentInfo.licenseKey,
-        type: 'SessionTrace',
+        type: 'BrowserSessionChunk',
         app_id: this.agentInfo.applicationID,
         protocol_version: '0',
         attributes: encodeObj({
-        // this section of attributes must be controllable and stay below the query param padding limit -- see QUERY_PARAM_PADDING
-        // if not, data could be lost to truncation at time of sending, potentially breaking parsing / API behavior in NR1
+          // this section of attributes must be controllable and stay below the query param padding limit -- see QUERY_PARAM_PADDING
+          // if not, data could be lost to truncation at time of sending, potentially breaking parsing / API behavior in NR1
+          // trace payload metadata
           'trace.firstTimestamp': this.agentRuntime.offset + earliestTimeStamp,
-          'trace.firstTimestampOffset': earliestTimeStamp,
           'trace.lastTimestamp': this.agentRuntime.offset + latestTimeStamp,
-          'trace.lastTimestampOffset': latestTimeStamp,
-          'trace.nodeCount': stns.length,
-          ptid: `${this.agentRuntime.ptid}`,
-          session: `${this.agentRuntime.session?.state.value}`,
-          rst: now(),
+          'trace.nodes': stns.length,
+          'trace.originTimestamp': this.agentRuntime.offset,
+          // other payload metadata
+          agentVersion: this.agentRuntime.version,
           ...(firstSessionHarvest && { firstSessionHarvest }),
           ...(hasReplay && { hasReplay }),
+          ptid: `${this.agentRuntime.ptid}`,
+          rst: now(),
+          session: `${this.agentRuntime.session?.state.value}`,
           // customer-defined data should go last so that if it exceeds the query param padding limit it will be truncated instead of important attrs
           ...(endUserId && { 'enduser.id': endUserId })
-        // The Query Param is being arbitrarily limited in length here.  It is also applied when estimating the size of the payload in getPayloadSize()
+          // The Query Param is being arbitrarily limited in length here.  It is also applied when estimating the size of the payload in getPayloadSize()
         }, QUERY_PARAM_PADDING).substring(1) // remove the leading '&'
       },
       body: stns

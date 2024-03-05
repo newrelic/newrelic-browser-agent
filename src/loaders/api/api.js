@@ -13,6 +13,7 @@ import { isBrowserScope } from '../../common/constants/runtime'
 import { warn } from '../../common/util/console'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
 import { gosCDN } from '../../common/window/nreum'
+import { SR_EVENT_EMITTER_TYPES } from '../../features/session_replay/constants'
 
 export const CUSTOM_ATTR_GROUP = 'CUSTOM/' // the subgroup items should be stored under in storage API
 
@@ -21,7 +22,8 @@ export function setTopLevelCallers () {
   const funcs = [
     'setErrorHandler', 'finished', 'addToTrace', 'addRelease',
     'addPageAction', 'setCurrentRouteName', 'setPageViewName', 'setCustomAttribute',
-    'interaction', 'noticeError', 'setUserId', 'setApplicationVersion', 'start', 'recordReplay', 'pauseReplay'
+    'interaction', 'noticeError', 'setUserId', 'setApplicationVersion', 'start',
+    SR_EVENT_EMITTER_TYPES.RECORD, SR_EVENT_EMITTER_TYPES.PAUSE
   ]
   funcs.forEach(f => {
     nr[f] = (...args) => caller(f, ...args)
@@ -140,14 +142,14 @@ export function setAPI (agentIdentifier, forceDrain) {
     }
   }
 
-  apiInterface.recordReplay = function () {
+  apiInterface[SR_EVENT_EMITTER_TYPES.RECORD] = function () {
     handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/recordReplay/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
-    handle('recordReplay', [], undefined, FEATURE_NAMES.sessionReplay, instanceEE)
+    handle(SR_EVENT_EMITTER_TYPES.RECORD, [], undefined, FEATURE_NAMES.sessionReplay, instanceEE)
   }
 
-  apiInterface.pauseReplay = function () {
+  apiInterface[SR_EVENT_EMITTER_TYPES.PAUSE] = function () {
     handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/pauseReplay/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
-    handle('pauseReplay', [], undefined, FEATURE_NAMES.sessionReplay, instanceEE)
+    handle(SR_EVENT_EMITTER_TYPES.PAUSE, [], undefined, FEATURE_NAMES.sessionReplay, instanceEE)
   }
 
   apiInterface.interaction = function () {

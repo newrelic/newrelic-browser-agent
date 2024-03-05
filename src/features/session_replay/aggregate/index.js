@@ -12,7 +12,7 @@
 
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
-import { ABORT_REASONS, FEATURE_NAME, MAX_PAYLOAD_SIZE, QUERY_PARAM_PADDING, RRWEB_EVENT_TYPES } from '../constants'
+import { ABORT_REASONS, FEATURE_NAME, MAX_PAYLOAD_SIZE, QUERY_PARAM_PADDING, RRWEB_EVENT_TYPES, SR_EVENT_EMITTER_TYPES } from '../constants'
 import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { sharedChannel } from '../../../common/constants/shared-channel'
@@ -87,7 +87,7 @@ export class Aggregate extends AggregateBase {
       raw: true
     }, this)
 
-    registerHandler('recordReplay', () => {
+    registerHandler(SR_EVENT_EMITTER_TYPES.RECORD, () => {
       // if it has aborted or BCS returned bad entitlements, do not allow
       if (this.blocked || !this.entitled) return
       // if it isnt already (fully) initialized... initialize it
@@ -97,7 +97,7 @@ export class Aggregate extends AggregateBase {
       // if it gets all the way to here, that means a full session is already recording... do nothing
     }, this.featureName, this.ee)
 
-    registerHandler('pauseReplay', () => {
+    registerHandler(SR_EVENT_EMITTER_TYPES.PAUSE, () => {
       this.forceStop(this.mode !== MODE.ERROR)
     }, this.featureName, this.ee)
 

@@ -33,7 +33,7 @@ Before instrumenting your app using the NPM package, a Browser App should be con
    - Select the *Browser monitoring* data source.
    - Choose the *APM* or *Copy/Paste* method.
    - Select or name your app and click *Enable*.
-2. From the navigation panel, select *Browser* to view brower apps.
+2. From the navigation panel, select *Browser* to view browser apps.
 3. Select the desired app and navigate to the *Application settings* page.
 4. From the *Copy/Paste JavaScript* box, copy the configuration values assigned to the `NREUM` object (`init`, `info`, and `loader_config`). You will use these configuration values when instantiating the agent using the NPM package.
 

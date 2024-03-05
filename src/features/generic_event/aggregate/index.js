@@ -9,7 +9,6 @@ import { getConfigurationValue, getInfo, getRuntime } from '../../../common/conf
 import { FEATURE_NAME } from '../constants'
 import { isBrowserScope } from '../../../common/constants/runtime'
 import { AggregateBase } from '../../utils/aggregate-base'
-import { now } from '../../../common/timing/now'
 import { warn } from '../../../common/util/console'
 import { marksAndMeasures } from '../../../common/generic-events/marks-and-measures'
 import { pageActions } from '../../../common/generic-events/page-actions'
@@ -19,12 +18,14 @@ export class Aggregate extends AggregateBase {
   constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
 
+    this.eventsPerHarvest = 1000
     this.harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'ins.harvestTimeSeconds') || 30
 
     this.referrerUrl = undefined
     this.currentEvents = undefined
 
     this.events = []
+    this.overflow = []
 
     if (isBrowserScope && document.referrer) this.referrerUrl = cleanURL(document.referrer)
 
@@ -33,12 +34,13 @@ export class Aggregate extends AggregateBase {
         if (getConfigurationValue(this.agentIdentifier, 'marks_and_measures.enabled')) marksAndMeasures.subscribe(this.addEvent.bind(this), true)
         if (getConfigurationValue(this.agentIdentifier, 'page_action.enabled')) pageActions.subscribe(this.addEvent.bind(this), true)
 
-        const scheduler = new HarvestScheduler('ins', { onFinished: (...args) => this.onHarvestFinished(...args) }, this)
-        scheduler.harvest.on('ins', (...args) => this.onHarvestStarted(...args))
-        scheduler.startTimer(this.harvestTimeSeconds, 0)
+        this.harvestScheduler = new HarvestScheduler('ins', { onFinished: (...args) => this.onHarvestFinished(...args) }, this)
+        this.harvestScheduler.harvest.on('ins', (...args) => this.onHarvestStarted(...args))
+        this.harvestScheduler.startTimer(this.harvestTimeSeconds, 0)
       } else {
         this.blocked = true
         this.events = []
+        this.overflow = []
       }
     })
 
@@ -47,21 +49,21 @@ export class Aggregate extends AggregateBase {
 
   onHarvestStarted (options) {
     const { userAttributes, atts } = getInfo(this.agentIdentifier)
+    const harvestEvents = this.overflow.length ? this.overflow.splice(0, Infinity) : this.events.splice(0, Infinity)
     var payload = ({
       qs: {
         ua: userAttributes,
         at: atts
       },
       body: {
-        ins: this.events
+        ins: harvestEvents
       }
     })
 
     if (options.retry) {
-      this.currentEvents = this.events
+      this.currentEvents = harvestEvents
     }
 
-    this.events = []
     return payload
   }
 
@@ -88,8 +90,6 @@ export class Aggregate extends AggregateBase {
     const eventAttributes = {
       ...(getInfo(this.agentIdentifier).jsAttributes || {}),
       timestamp: Date.now(), // hopefully provided by reporting feature -- falls back to now
-      timestampOffset: now(), // hopefully provided by reporting feature -- falls back to now
-      timeSinceLoad: (obj.timestampOffset || now()) / 1000, // hopefully provided by reporting feature -- falls back to now
       referrerUrl: this.referrerUrl,
       currentUrl: cleanURL('' + location),
       pageUrl: cleanURL(getRuntime(this.agentIdentifier).origin),
@@ -97,5 +97,10 @@ export class Aggregate extends AggregateBase {
     }
 
     this.events.push(eventAttributes)
+    // check if we've reached the harvest limit...
+    if (this.events.length >= 1000) {
+      this.overflow = [...this.overflow, ...this.events.splice(0, Infinity)]
+      this.harvestScheduler.runHarvest()
+    }
   }
 }

@@ -3,14 +3,20 @@
     <title>RUM Unit Test</title>
     {init} {config} {loader}
     <script>
+        var counter = 1
         newrelic.addPageAction("test", {val1: 1, val2: 2})
         newrelic.addPageAction("test2", {val1: 2, val2: 2})
         newrelic.addPageAction("test3", {val1: 3, val2: 2})
-        performance.mark("mark1")
-        setTimeout(() => {
-            performance.mark("mark2")
-            performance.measure("measure", "mark1", "mark2")
-        }, 100)
+        performance.mark("mark0")
+        setTimeout(setMnMs, 25, counter)
+
+        function setMnMs(counter){
+            if (counter > 1010) return
+            performance.mark("mark"+counter)
+            performance.measure("measure", "mark"+(counter-1), "mark"+counter)
+            counter++
+            setTimeout(setMnMs, 25, counter)
+        }
     </script>
   </head>
   <body>Instrumented</body>

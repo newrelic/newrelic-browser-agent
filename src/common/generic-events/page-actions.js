@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
@@ -12,8 +11,7 @@ class PageActions extends EventMessenger {
       value: {
         ...attributes,
         eventType: 'PageAction',
-        timestamp: t + offset,
-        timestampOffset: t,
+        timestamp: Math.floor(t + offset),
         timeSinceLoad: t / 1000,
         actionName: name,
         browserWidth: window?.document?.documentElement?.clientWidth,

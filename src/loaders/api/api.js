@@ -14,6 +14,7 @@ import { warn } from '../../common/util/console'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
 import { gosCDN } from '../../common/window/nreum'
 import { apiMethods, asyncApiMethods } from './api-methods'
+import { SR_EVENT_EMITTER_TYPES } from '../../features/session_replay/constants'
 
 export function setTopLevelCallers () {
   const nr = gosCDN()
@@ -127,14 +128,14 @@ export function setAPI (agentIdentifier, forceDrain) {
     }
   }
 
-  apiInterface.recordReplay = function () {
+  apiInterface[SR_EVENT_EMITTER_TYPES.RECORD] = function () {
     handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/recordReplay/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
-    handle('recordReplay', [], undefined, FEATURE_NAMES.sessionReplay, instanceEE)
+    handle(SR_EVENT_EMITTER_TYPES.RECORD, [], undefined, FEATURE_NAMES.sessionReplay, instanceEE)
   }
 
-  apiInterface.pauseReplay = function () {
+  apiInterface[SR_EVENT_EMITTER_TYPES.PAUSE] = function () {
     handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/pauseReplay/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
-    handle('pauseReplay', [], undefined, FEATURE_NAMES.sessionReplay, instanceEE)
+    handle(SR_EVENT_EMITTER_TYPES.PAUSE, [], undefined, FEATURE_NAMES.sessionReplay, instanceEE)
   }
 
   apiInterface.interaction = function () {

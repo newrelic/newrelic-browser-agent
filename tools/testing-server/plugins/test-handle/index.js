@@ -34,6 +34,16 @@ module.exports = fp(async function (fastify, testServer) {
       if (Object.prototype.hasOwnProperty.call(request.scheduledReply, 'body')) {
         payload = request.scheduledReply.body
       }
+      if (Object.prototype.hasOwnProperty.call(request.scheduledReply, 'removeHeaders')) {
+        for (const header of request.scheduledReply.removeHeaders) {
+          reply.removeHeader(header)
+        }
+      }
+      if (Object.prototype.hasOwnProperty.call(request.scheduledReply, 'setHeaders')) {
+        for (const header of request.scheduledReply.setHeaders) {
+          reply.header(header.key, header.value)
+        }
+      }
     }
 
     if (request.resolvingExpect) {

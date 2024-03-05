@@ -2,12 +2,26 @@
 
 import { warn } from '../common/util/console'
 import { SR_EVENT_EMITTER_TYPES } from '../features/session_replay/constants'
+import { ObservationContextManager } from '../common/context/observation-context-manager'
+import { generateRandomHexString } from '../common/ids/unique-id'
+import { ee } from '../common/event-emitter/contextual-ee'
 
 /**
  * @typedef {import('./api/interaction-types').InteractionInstance} InteractionInstance
  */
 
 export class AgentBase {
+  agentIdentifier
+  observationContext = new ObservationContextManager()
+
+  constructor (agentIdentifier = generateRandomHexString(16)) {
+    this.agentIdentifier = agentIdentifier
+
+    // Assign the observation context to the event emitter, so it knows how to create observation contexts
+    const eventEmitter = ee.get(agentIdentifier)
+    eventEmitter.observationContext = this.observationContext
+  }
+
   /**
    * Tries to execute the api and generates a generic warning message with the api name injected if unsuccessful
    * @param {string} methodName

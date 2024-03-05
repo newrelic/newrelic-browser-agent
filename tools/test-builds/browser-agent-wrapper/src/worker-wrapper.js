@@ -5,7 +5,7 @@ onmessage = async function (e) {
     self.NREUM = e.data.payload
 
     const { workerAgentFactory } = await import('./worker-agent')
-    workerAgentFactory(NREUM)
+    self.agent = workerAgentFactory(NREUM)
 
     self.postMessage({ type: 'ready' })
   } else if (e.data.type === 'command') {

@@ -19,15 +19,15 @@ class StylesheetEvaluator {
     let incompletes = 0
     if (isBrowserScope) {
       for (let i = 0; i < Object.keys(document.styleSheets).length; i++) {
-        const ss = document.styleSheets[i]
-        if (!this.#evaluated.has(ss)) {
-          this.#evaluated.add(ss)
+        if (!this.#evaluated.has(document.styleSheets[i])) {
+          this.#evaluated.add(document.styleSheets[i])
           try {
             // eslint-disable-next-line
-            const temp = ss.cssRules
+            const temp = document.styleSheets[i].cssRules
           } catch (err) {
+            if (!document.styleSheets[i].href) return
             incompletes++
-            this.#fetchProms.push(this.#fetchAndOverride(document.styleSheets[i], ss.href))
+            this.#fetchProms.push(this.#fetchAndOverride(document.styleSheets[i]))
           }
         }
       }
@@ -54,9 +54,10 @@ class StylesheetEvaluator {
  * @param {*} href - The asset href to fetch
  * @returns {Promise}
  */
-  async #fetchAndOverride (target, href) {
+  async #fetchAndOverride (target) {
+    if (!target?.href) return
     try {
-      const stylesheetContents = await originals.FETCH.bind(window)(href)
+      const stylesheetContents = await originals.FETCH.bind(window)(target.href)
       if (!stylesheetContents.ok) {
         this.failedToFix++
         return

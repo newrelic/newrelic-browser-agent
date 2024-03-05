@@ -15,10 +15,10 @@ export class AgentBase {
 
   constructor (agentIdentifier = generateRandomHexString(16)) {
     this.agentIdentifier = agentIdentifier
-    this.eventEmitter = ee.get(agentIdentifier)
 
-    // Assign the observation context to the event emitter so it knows how to create observation contexts
-    this.eventEmitter.observationContext = this.observationContext
+    // Assign the observation context to the event emitter, so it knows how to create observation contexts
+    const eventEmitter = ee.get(agentIdentifier)
+    eventEmitter.observationContext = this.observationContext
   }
 
   /**

@@ -11,6 +11,10 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { firstContentfulPaint } from '../../../common/vitals/first-contentful-paint'
 import { firstPaint } from '../../../common/vitals/first-paint'
 import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
+import { drain } from '../../../common/drain/drain'
+import { FEATURE_NAMES } from '../../../loaders/features/features'
+import { handle } from '../../../common/event-emitter/handle'
+import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 
 export class Aggregate extends AggregateBase {
   static featureName = CONSTANTS.FEATURE_NAME
@@ -100,10 +104,21 @@ export class Aggregate extends AggregateBase {
       endpoint: 'rum',
       payload: { qs: queryParameters, body },
       opts: { needResponse: true, sendEmptyBody: true },
-      cbFinished: ({ status, responseText }) => {
+      cbFinished: ({ status, responseText, xhr }) => {
         if (status >= 400 || status === 0) {
           // Adding retry logic for the rum call will be a separate change
           this.ee.abort()
+          return
+        }
+
+        try {
+          const observationContext = this.observationContextManager.getCreateContext(xhr)
+          this.timeKeeper.processRumRequest(xhr, observationContext.harvest?.fullUrl)
+        } catch (error) {
+          handle(SUPPORTABILITY_METRIC_CHANNEL, ['PVE/NRTime/Calculation/Failed'], undefined, FEATURE_NAMES.metrics, this.ee)
+          drain(this.agentIdentifier, FEATURE_NAMES.metrics, true)
+          this.ee.abort()
+          warn('Could not calculate New Relic server time. Agent shutting down.')
           return
         }
 

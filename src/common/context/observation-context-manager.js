@@ -13,7 +13,7 @@ export class ObservationContextManager {
   static getObservationContextByAgentIdentifier (agentIdentifier) {
     const nr = gosNREUM()
     return Object.keys(nr?.initializedAgents || {}).indexOf(agentIdentifier) > -1
-      ? nr.initializedAgents[agentIdentifier].observationContext
+      ? nr.initializedAgents[agentIdentifier].observationContextManager
       : undefined
   }
 
@@ -21,6 +21,16 @@ export class ObservationContextManager {
    * @type {WeakMap<WeakKey, {[key: string]: unknown}>}
    */
   #observationContext = new WeakMap()
+
+  /**
+   * Checks if we can observe some construct. The construct we are observing
+   * must be some type of object.
+   * @param key {unknown} The construct being observed such as an XHR instance
+   * @return {boolean} True if the construct can be observed
+   */
+  canObserve (key) {
+    return typeof key === 'object'
+  }
 
   /**
    * Returns the observation context tied to the supplied construct. If there has been

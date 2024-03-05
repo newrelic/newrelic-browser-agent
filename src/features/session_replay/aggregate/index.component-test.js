@@ -6,6 +6,8 @@ import { setConfiguration } from '../../../common/config/config'
 import { configure } from '../../../loaders/configure/configure'
 import { Recorder } from '../shared/recorder'
 import { MODE, SESSION_EVENTS } from '../../../common/session/constants'
+import { ObservationContextManager } from '../../../common/context/observation-context-manager'
+import { setNREUMInitializedAgent } from '../../../common/window/nreum'
 
 jest.mock('../../../common/util/console', () => ({
   warn: jest.fn()
@@ -349,6 +351,9 @@ function wait (ms = 0) {
 }
 
 function primeSessionAndReplay (sess = new SessionEntity({ agentIdentifier, key: 'SESSION', storage: new LocalMemory() })) {
+  const observationContextManager = new ObservationContextManager()
+  const agent = { agentIdentifier, observationContextManager }
+  setNREUMInitializedAgent(agentIdentifier, agent)
   session = sess
-  configure({ agentIdentifier }, { info, runtime: { session }, init: {} }, 'test', true)
+  configure(agent, { info, runtime: { session }, init: {} }, 'test', true)
 }

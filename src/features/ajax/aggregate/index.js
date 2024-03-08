@@ -82,10 +82,11 @@ export class Aggregate extends AggregateBase {
         hash = stringify([params.status, params.host, params.pathname])
       }
 
-      var shouldCollect = shouldCollectEvent(params)
+      const shouldCollect = shouldCollectEvent(params)
+      const ajaxMetricDenyListEnabled = agentInit.feature_flags?.includes('ajax_metrics_deny_list')
 
       // store as metric
-      if (shouldCollect) {
+      if (shouldCollect || !ajaxMetricDenyListEnabled) {
         aggregator.store('xhr', hash, params, metrics)
       }
 

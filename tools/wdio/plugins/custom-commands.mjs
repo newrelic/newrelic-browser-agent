@@ -107,7 +107,11 @@ export default class CustomCommands {
           cap: 1,
           spa: 1,
           loaded: 1,
-          sr: 1
+          sr: 1,
+          agent: {
+            browserAppId: 12334,
+            entityGuid: '214234435456'
+          }
         })
       })
     })

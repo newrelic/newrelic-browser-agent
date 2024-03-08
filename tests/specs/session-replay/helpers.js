@@ -14,11 +14,12 @@ export const RRWEB_EVENT_TYPES = {
   Custom: 5
 }
 
-export function testExpectedReplay ({ data, session, hasMeta, hasSnapshot, hasError, isFirstChunk, contentEncoding, decompressedBytes, appId }) {
+export function testExpectedReplay ({ data, session, hasMeta, hasSnapshot, hasError, isFirstChunk, contentEncoding, decompressedBytes, appId, entityGuid }) {
   expect(data.query).toMatchObject({
     browser_monitoring_key: expect.any(String),
     type: 'SessionReplay',
     app_id: appId || expect.any(String),
+    ...(entityGuid && { entity_guid: entityGuid }),
     protocol_version: expect.any(String),
     attributes: expect.any(String)
   })

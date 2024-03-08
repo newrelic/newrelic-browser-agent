@@ -109,7 +109,7 @@ export class Aggregate extends AggregateBase {
 
         try {
           const { agent, ...flags } = JSON.parse(responseText)
-          agentRuntime.rumCallMetadata = agent
+          agentRuntime.agentMetadata = agent
           activateFeatures(flags, this.agentIdentifier)
           this.drain()
         } catch (err) {

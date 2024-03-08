@@ -18,6 +18,7 @@ const model = {
   origin: '' + globalScope.location,
   ptid: undefined,
   releaseIds: {},
+  rumCallMetadata: {},
   session: undefined,
   xhrWrappable: typeof globalScope.XMLHttpRequest?.prototype?.addEventListener === 'function',
   version: VERSION,

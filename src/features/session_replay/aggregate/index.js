@@ -308,7 +308,7 @@ export class Aggregate extends AggregateBase {
       qs: {
         browser_monitoring_key: info.licenseKey,
         type: 'SessionReplay',
-        app_id: info.applicationID,
+        app_id: agentRuntime.rumCallMetadata?.browserAppId || info.applicationID,
         protocol_version: '0',
         attributes: encodeObj({
           // this section of attributes must be controllable and stay below the query param padding limit -- see QUERY_PARAM_PADDING

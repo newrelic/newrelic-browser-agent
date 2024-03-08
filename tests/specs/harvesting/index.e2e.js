@@ -35,14 +35,16 @@ describe('harvesting', () => {
         .then(() => $('a').click())
     ])
 
+    const rumResponseMetadata = JSON.parse(rumResults.reply.body).agent
+
     const expectedURL = testURL.split('?')[0]
     verifyBaseQueryParameters(rumResults.request.query, expectedURL)
-    verifyBaseQueryParameters(resourcesResults.request.query, expectedURL, 'session_trace')
-    verifyBaseQueryParameters(interactionResults.request.query, expectedURL)
-    verifyBaseQueryParameters(timingsResults.request.query, expectedURL)
-    verifyBaseQueryParameters(ajaxSliceResults.request.query, expectedURL)
-    verifyBaseQueryParameters(ajaxEventsResults.request.query, expectedURL)
-    verifyBaseQueryParameters(insResults.request.query, expectedURL)
+    verifyBaseQueryParameters(resourcesResults.request.query, expectedURL, 'session_trace', rumResponseMetadata)
+    verifyBaseQueryParameters(interactionResults.request.query, expectedURL, undefined, rumResponseMetadata)
+    verifyBaseQueryParameters(timingsResults.request.query, expectedURL, undefined, rumResponseMetadata)
+    verifyBaseQueryParameters(ajaxSliceResults.request.query, expectedURL, undefined, rumResponseMetadata)
+    verifyBaseQueryParameters(ajaxEventsResults.request.query, expectedURL, undefined, rumResponseMetadata)
+    verifyBaseQueryParameters(insResults.request.query, expectedURL, undefined, rumResponseMetadata)
   })
 
   it('should include the ptid query parameter on requests after the first session trace harvest', async () => {
@@ -318,7 +320,7 @@ describe('harvesting', () => {
   })
 })
 
-function verifyBaseQueryParameters (queryParams, expectedURL, featureName) {
+function verifyBaseQueryParameters (queryParams, expectedURL, featureName, rumResponseMetadata = {}) {
   const extraParams = {
     session_trace: {
       hr: val => expect(Boolean(val)).toEqual(expect.any(Boolean)),
@@ -326,7 +328,7 @@ function verifyBaseQueryParameters (queryParams, expectedURL, featureName) {
       n: val => expect(Number(val)).toBeGreaterThan(0) && expect(val.length).toBeGreaterThan(0)
     }
   }
-  expect(queryParams.a).toEqual('42')
+  expect(queryParams.a).toEqual(rumResponseMetadata.browserAppId?.toString() || '42')
   expect(queryParams.sa).toEqual('1')
   expect(queryParams.v).toMatch(/^\d{1,3}\.\d{1,3}\.\d{1,3}$/)
   expect(queryParams.t).toEqual('Unnamed Transaction')

@@ -170,9 +170,10 @@ export class Harvest extends SharedContext {
 
     const location = cleanURL(getLocation())
     const ref = this.obfuscator.shouldObfuscate() ? this.obfuscator.obfuscateString(location) : location
+    const appId = runtime.rumCallMetadata?.browserAppId || info.applicationID
 
     return ([
-      'a=' + info.applicationID,
+      'a=' + appId,
       encodeParam('sa', (info.sa ? '' + info.sa : '')),
       encodeParam('v', VERSION),
       transactionNameParam(info),

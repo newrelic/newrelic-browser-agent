@@ -4,6 +4,31 @@
     {
       "changes": [
         {
+          "type": "fix",
+          "sha": "35810a895b7f61ab60ea5c24adfa49c4a3956191",
+          "message": "Fix webpack imports in npm package",
+          "issues": [
+            "905"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "5c952a0a212922d84dfd7e8eb388fdbd566b6c00",
+          "message": "Page load after session timeouts don't start new session",
+          "issues": [
+            "899"
+          ]
+        }
+      ],
+      "version": "1.252.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "ad4dc65a-79da-4730-99a0-739db3296dc3",
+      "createTime": "2024-02-29T17:42:23.534Z"
+    },
+    {
+      "changes": [
+        {
           "type": "feat",
           "sha": "811ed418b74dcb8f25544da79521c384b9fd498a",
           "message": "add types mappings for esm distribution",
@@ -1072,5 +1097,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2024-02-12T16:05:18.509Z"
+  "updateTime": "2024-02-29T17:42:23.534Z"
 }

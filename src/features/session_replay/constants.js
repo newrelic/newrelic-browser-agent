@@ -3,6 +3,11 @@ import { FEATURE_NAMES } from '../../loaders/features/features'
 
 export const FEATURE_NAME = FEATURE_NAMES.sessionReplay
 
+export const SR_EVENT_EMITTER_TYPES = {
+  RECORD: 'recordReplay',
+  PAUSE: 'pauseReplay'
+}
+
 export const AVG_COMPRESSION = 0.12
 export const RRWEB_EVENT_TYPES = {
   DomContentLoaded: 0,

@@ -64,6 +64,7 @@ const model = () => {
       autoStart: true,
       enabled: false,
       harvestTimeSeconds: 60,
+      preload: false, // if true, enables the agent to load rrweb immediately instead of waiting to do so after the window.load event
       sampling_rate: 10, // float from 0 - 100
       error_sampling_rate: 100, // float from 0 - 100
       collect_fonts: false, // serialize fonts for collection without public asset url, this is currently broken in RRWeb -- https://github.com/rrweb-io/rrweb/issues/1304.  When fixed, revisit with test cases

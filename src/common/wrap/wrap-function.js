@@ -7,9 +7,7 @@
  */
 
 import { ee } from '../event-emitter/contextual-ee'
-import { bundleId } from '../ids/bundle-id'
-
-export const flag = `nr@original:${bundleId}`
+import { ObservationContextManager } from '../context/observation-context-manager'
 
 /**
  * A convenience alias of `hasOwnProperty`.
@@ -42,7 +40,7 @@ export function createWrapperWithEmitter (emitter, always) {
    * As a property on a wrapped function, contains the original function.
    * @type {string}
    */
-  wrapFn.flag = flag
+  wrapFn.flag = ObservationContextManager.contextOriginalId
 
   return wrapFn
 
@@ -61,7 +59,7 @@ export function createWrapperWithEmitter (emitter, always) {
 
     if (!prefix) prefix = ''
 
-    nrWrapper[flag] = fn
+    nrWrapper[ObservationContextManager.contextOriginalId] = fn
     copy(fn, nrWrapper, emitter)
     return nrWrapper
 
@@ -215,5 +213,5 @@ function copy (from, to, emitter) {
  * @returns {boolean} Whether the passed function is ineligible to be wrapped.
  */
 function notWrappable (fn) {
-  return !(fn && typeof fn === 'function' && fn.apply && !fn[flag])
+  return !(fn && typeof fn === 'function' && fn.apply && !fn[ObservationContextManager.contextOriginalId])
 }

@@ -96,8 +96,16 @@ export class Aggregate extends AggregateBase {
         if (params.hostname === beacon || (proxyBeacon && params.hostname === proxyBeacon)) {
           // This doesn't make a distinction if the same-domain request is going to a different port or path...
           handle(SUPPORTABILITY_METRIC_CHANNEL, ['Ajax/Events/Excluded/Agent'], undefined, FEATURE_NAMES.metrics, ee)
+
+          if (ajaxMetricDenyListEnabled) {
+            handle(SUPPORTABILITY_METRIC_CHANNEL, ['Ajax/Metrics/Excluded/Agent'], undefined, FEATURE_NAMES.metrics, ee)
+          }
         } else {
           handle(SUPPORTABILITY_METRIC_CHANNEL, ['Ajax/Events/Excluded/App'], undefined, FEATURE_NAMES.metrics, ee)
+
+          if (ajaxMetricDenyListEnabled) {
+            handle(SUPPORTABILITY_METRIC_CHANNEL, ['Ajax/Metrics/Excluded/App'], undefined, FEATURE_NAMES.metrics, ee)
+          }
         }
         return
       }

@@ -10,6 +10,19 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
     await browser.destroyAgentSession()
   })
 
+  it('should use rumResponse appId', async () => {
+    const [rumCall] = await Promise.all([
+      browser.testHandle.expectRum(),
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
+        .then(() => browser.waitForAgentLoad())
+    ])
+
+    const { request: harvestContents } = await browser.testHandle.expectBlob()
+
+    const rumResponseAppId = JSON.parse(rumCall.reply.body).agent
+    testExpectedReplay({ data: harvestContents, appId: rumResponseAppId })
+  })
+
   it('should allow for gzip', async () => {
     await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
       .then(() => browser.waitForAgentLoad())

@@ -82,17 +82,30 @@ export class Aggregate extends AggregateBase {
         hash = stringify([params.status, params.host, params.pathname])
       }
 
+      const shouldCollect = shouldCollectEvent(params)
+      const ajaxMetricDenyListEnabled = agentInit.feature_flags?.includes('ajax_metrics_deny_list')
+
       // store as metric
-      aggregator.store('xhr', hash, params, metrics)
+      if (shouldCollect || !ajaxMetricDenyListEnabled) {
+        aggregator.store('xhr', hash, params, metrics)
+      }
 
       if (!allAjaxIsEnabled) return
 
-      if (!shouldCollectEvent(params)) {
+      if (!shouldCollect) {
         if (params.hostname === beacon || (proxyBeacon && params.hostname === proxyBeacon)) {
           // This doesn't make a distinction if the same-domain request is going to a different port or path...
           handle(SUPPORTABILITY_METRIC_CHANNEL, ['Ajax/Events/Excluded/Agent'], undefined, FEATURE_NAMES.metrics, ee)
+
+          if (ajaxMetricDenyListEnabled) {
+            handle(SUPPORTABILITY_METRIC_CHANNEL, ['Ajax/Metrics/Excluded/Agent'], undefined, FEATURE_NAMES.metrics, ee)
+          }
         } else {
           handle(SUPPORTABILITY_METRIC_CHANNEL, ['Ajax/Events/Excluded/App'], undefined, FEATURE_NAMES.metrics, ee)
+
+          if (ajaxMetricDenyListEnabled) {
+            handle(SUPPORTABILITY_METRIC_CHANNEL, ['Ajax/Metrics/Excluded/App'], undefined, FEATURE_NAMES.metrics, ee)
+          }
         }
         return
       }

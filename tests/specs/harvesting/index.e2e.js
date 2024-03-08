@@ -35,11 +35,9 @@ describe('harvesting', () => {
         .then(() => $('a').click())
     ])
 
-    // const rumResponseMetadata = JSON.parse(rumResults.reply.body)
-
     const expectedURL = testURL.split('?')[0]
     verifyBaseQueryParameters(rumResults.request.query, expectedURL)
-    verifyBaseQueryParameters(resourcesResults.request.query, expectedURL)
+    verifyBaseQueryParameters(resourcesResults.request.query, expectedURL, 'session_trace')
     verifyBaseQueryParameters(interactionResults.request.query, expectedURL)
     verifyBaseQueryParameters(timingsResults.request.query, expectedURL)
     verifyBaseQueryParameters(ajaxSliceResults.request.query, expectedURL)
@@ -320,7 +318,7 @@ describe('harvesting', () => {
   })
 })
 
-function verifyBaseQueryParameters (queryParams, expectedURL, featureName, rumResponseMetadata = {}) {
+function verifyBaseQueryParameters (queryParams, expectedURL, featureName) {
   const extraParams = {
     session_trace: {
       hr: val => expect(Boolean(val)).toEqual(expect.any(Boolean)),
@@ -328,7 +326,7 @@ function verifyBaseQueryParameters (queryParams, expectedURL, featureName, rumRe
       n: val => expect(Number(val)).toBeGreaterThan(0) && expect(val.length).toBeGreaterThan(0)
     }
   }
-  expect(queryParams.a).toEqual(rumResponseMetadata.browserAppId || '42')
+  expect(queryParams.a).toEqual('42')
   expect(queryParams.sa).toEqual('1')
   expect(queryParams.v).toMatch(/^\d{1,3}\.\d{1,3}\.\d{1,3}$/)
   expect(queryParams.t).toEqual('Unnamed Transaction')

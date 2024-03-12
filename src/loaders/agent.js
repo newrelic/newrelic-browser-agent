@@ -12,7 +12,6 @@ import { Instrument as PageViewEvent } from '../features/page_view_event/instrum
 // common files
 import { Aggregator } from '../common/aggregate/aggregator'
 import { gosNREUM, setNREUMInitializedAgent } from '../common/window/nreum'
-import { getConfiguration, getInfo, getLoaderConfig, getRuntime } from '../common/config/config'
 import { warn } from '../common/util/console'
 import { stringify } from '../common/util/stringify'
 import { globalScope } from '../common/constants/runtime'

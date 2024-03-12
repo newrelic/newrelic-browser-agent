@@ -13,6 +13,7 @@ import { FEATURE_NAMES } from '../../loaders/features/features'
 jest.enableAutomock()
 jest.unmock('./instrument-base')
 jest.unmock('../../loaders/features/features')
+jest.unmock('../session_replay/shared/utils')
 jest.mock('../../common/drain/drain', () => ({
   __esModule: true,
   drain: jest.fn(),
@@ -211,6 +212,7 @@ test('no uncaught async exception is thrown when an import fails', async () => {
 
   expect(warn).toHaveBeenNthCalledWith(2, expect.stringContaining(`Downloading and initializing ${featureName} failed`), expect.any(Error))
   expect(instrument.abortHandler).toHaveBeenCalled()
+  expect(drain).toHaveBeenCalledWith(agentIdentifier, featureName, true)
   await expect(instrument.onAggregateImported).resolves.toBe(false)
   expect(mockOnError).not.toHaveBeenCalled()
 })

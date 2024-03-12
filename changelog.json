@@ -5,6 +5,96 @@
       "changes": [
         {
           "type": "fix",
+          "sha": "35810a895b7f61ab60ea5c24adfa49c4a3956191",
+          "message": "Fix webpack imports in npm package",
+          "issues": [
+            "905"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "5c952a0a212922d84dfd7e8eb388fdbd566b6c00",
+          "message": "Page load after session timeouts don't start new session",
+          "issues": [
+            "899"
+          ]
+        }
+      ],
+      "version": "1.252.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "ad4dc65a-79da-4730-99a0-739db3296dc3",
+      "createTime": "2024-02-29T17:42:23.534Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
+          "sha": "811ed418b74dcb8f25544da79521c384b9fd498a",
+          "message": "add types mappings for esm distribution",
+          "issues": [
+            "887"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "1fcdd8d9a20819911ba7e7350354085a57f1b187",
+          "message": "Add safe logic to snapshots",
+          "issues": [
+            "884"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "aa19a9c0737c175c011656f3da3f327dc6442f04",
+          "message": "Report config changes away from default state for UX improvement",
+          "issues": [
+            "885"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "697f13e6ea5ba0738ffd74dfd214751ab98adf8d",
+          "message": "Create more granular metrics about stylesheet fix success",
+          "issues": [
+            "882"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "d4a0f30e0ab4d8edbdb17bf4ebdf282626761045",
+          "message": "align browser reported uncaught syntax errors",
+          "issues": [
+            "881"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "f60e7f155bb95087ea4af8864b652878f08ccaff",
+          "message": "Capture Internal Metrics for Session Replay Configurations",
+          "issues": [
+            "879"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "695415b0fcaa8b41496fc6556a38ec76dd357539",
+          "message": "Fix adblock memory leak",
+          "issues": [
+            "877"
+          ]
+        }
+      ],
+      "version": "1.252.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "e8035158-8aa9-4b78-bb58-8a4cc2f132a7",
+      "createTime": "2024-02-12T16:05:18.509Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
           "sha": "655aa5d261d03f71086d3cfc73cb72db51cb28c7",
           "message": "Pass unload options to simultaneous harvests in Session Replay",
           "issues": [
@@ -1007,5 +1097,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2024-01-29T20:09:21.638Z"
+  "updateTime": "2024-02-29T17:42:23.534Z"
 }

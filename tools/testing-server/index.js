@@ -246,7 +246,7 @@ class TestServer {
     this.#corsServer.register(require('@fastify/cors'), {
       origin: true,
       credentials: true,
-      exposedHeaders: 'X-NewRelic-App-Data'
+      exposedHeaders: ['X-NewRelic-App-Data', 'Date']
     })
     this.#corsServer.register(require('./routes/mock-apis'), this)
     this.#corsServer.register(require('./plugins/no-cache'))
@@ -266,7 +266,7 @@ class TestServer {
     this.#bamServer.register(require('@fastify/cors'), {
       origin: true,
       credentials: true,
-      exposedHeaders: 'X-NewRelic-App-Data'
+      exposedHeaders: ['X-NewRelic-App-Data', 'Date']
     })
     this.#bamServer.register(require('./plugins/bam-parser'), this)
     this.#bamServer.register(require('./routes/bam-apis'), this)

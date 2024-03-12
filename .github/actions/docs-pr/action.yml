@@ -15,8 +15,6 @@ inputs:
     required: true
   nr_docs_github_token:
     description: 'New Relic github org authentication token scoped to the docs repo'
-  nr_forks_github_token:
-    description: 'New Relic Forks github org authentication token'
 
 runs:
   using: "composite"
@@ -31,6 +29,5 @@ runs:
           --tag ${{ inputs.tag }} \
           --github-login ${{ inputs.github_login }} \
           --github-email ${{ inputs.github_email }} \
-          --nr-docs-github-token ${{ inputs.nr_docs_github_token }} \
-          --nr-forks-github-token ${{ inputs.nr_forks_github_token }}
+          --nr-docs-github-token ${{ inputs.nr_docs_github_token }}
       shell: bash

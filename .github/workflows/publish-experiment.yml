@@ -49,12 +49,30 @@ jobs:
       - name: Gather purge paths
         id: purge-paths
         run: echo "results=$(echo '${{ steps.s3-upload.outputs.results }}' | jq -j '.[].Key | select(. | test("nr-loader-.*?\\.js$") or test(".*stats\\.json$")) + " "')" >> $GITHUB_OUTPUT
-      - name: Purge fastly cache
+      - name: Purge production cdn
         uses: ./.github/actions/fastly-purge
         with:
           fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
           fastly_service: js-agent.newrelic.com
           purge_path: ${{ steps.purge-paths.outputs.results }}
+      - name: Purge staging cdn
+        uses: ./.github/actions/fastly-purge
+        with:
+          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
+          fastly_service: staging-js-agent.newrelic.com
+          purge_path: ${{ steps.purge-paths.outputs.results }}
+      - name: Verify production cdn assets
+        uses: ./.github/actions/fastly-verify
+        with:
+          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
+          fastly_service: js-agent.newrelic.com
+          asset_path: ${{ join(fromJson(steps.s3-upload.outputs.results).*.Key, ' ') }}
+      - name: Verify staging cdn assets
+        uses: ./.github/actions/fastly-verify
+        with:
+          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
+          fastly_service: staging-js-agent.newrelic.com
+          asset_path: ${{ join(fromJson(steps.s3-upload.outputs.results).*.Key, ' ') }}
 
   # Rebuild and publish the environment A/B script
   publish-ab:

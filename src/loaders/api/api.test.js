@@ -4,6 +4,7 @@ import { gosCDN } from '../../common/window/nreum'
 
 jest.enableAutomock()
 jest.unmock('./api')
+jest.unmock('./api-methods')
 
 describe('setTopLevelCallers', () => {
   test('should add expected api methods to global NREUM', () => {

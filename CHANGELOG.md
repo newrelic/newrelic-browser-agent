@@ -3,6 +3,31 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.252.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.252.0...v1.252.1) (2024-02-29)
+
+
+### Bug Fixes
+
+* Fix webpack imports in npm package ([#905](https://github.com/newrelic/newrelic-browser-agent/issues/905)) ([35810a8](https://github.com/newrelic/newrelic-browser-agent/commit/35810a895b7f61ab60ea5c24adfa49c4a3956191))
+* Page load after session timeouts don't start new session ([#899](https://github.com/newrelic/newrelic-browser-agent/issues/899)) ([5c952a0](https://github.com/newrelic/newrelic-browser-agent/commit/5c952a0a212922d84dfd7e8eb388fdbd566b6c00))
+
+## [1.252.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.251.1...v1.252.0) (2024-02-12)
+
+
+### Features
+
+* add types mappings for esm distribution ([#887](https://github.com/newrelic/newrelic-browser-agent/issues/887)) ([811ed41](https://github.com/newrelic/newrelic-browser-agent/commit/811ed418b74dcb8f25544da79521c384b9fd498a))
+* align browser reported uncaught syntax errors ([#881](https://github.com/newrelic/newrelic-browser-agent/issues/881)) ([d4a0f30](https://github.com/newrelic/newrelic-browser-agent/commit/d4a0f30e0ab4d8edbdb17bf4ebdf282626761045))
+* Capture Internal Metrics for Session Replay Configurations ([#879](https://github.com/newrelic/newrelic-browser-agent/issues/879)) ([f60e7f1](https://github.com/newrelic/newrelic-browser-agent/commit/f60e7f155bb95087ea4af8864b652878f08ccaff))
+* Create more granular metrics about stylesheet fix success ([#882](https://github.com/newrelic/newrelic-browser-agent/issues/882)) ([697f13e](https://github.com/newrelic/newrelic-browser-agent/commit/697f13e6ea5ba0738ffd74dfd214751ab98adf8d))
+* Report config changes away from default state for UX improvement ([#885](https://github.com/newrelic/newrelic-browser-agent/issues/885)) ([aa19a9c](https://github.com/newrelic/newrelic-browser-agent/commit/aa19a9c0737c175c011656f3da3f327dc6442f04))
+
+
+### Bug Fixes
+
+* Add safe logic to snapshots ([#884](https://github.com/newrelic/newrelic-browser-agent/issues/884)) ([1fcdd8d](https://github.com/newrelic/newrelic-browser-agent/commit/1fcdd8d9a20819911ba7e7350354085a57f1b187))
+* Fix adblock memory leak ([#877](https://github.com/newrelic/newrelic-browser-agent/issues/877)) ([695415b](https://github.com/newrelic/newrelic-browser-agent/commit/695415b0fcaa8b41496fc6556a38ec76dd357539))
+
 ## [1.251.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.251.0...v1.251.1) (2024-01-29)
 
 

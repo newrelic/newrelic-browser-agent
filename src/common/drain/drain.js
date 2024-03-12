@@ -41,13 +41,14 @@ function curateRegistry (agentIdentifier) {
  * its own named group explicitly, when ready.
  * @param {string} agentIdentifier - A unique 16 character ID corresponding to an instantiated agent.
  * @param {string} featureName - A named group into which the feature's buffered events are bucketed.
+ * @param {boolean} force - Whether to force the drain to occur immediately, bypassing the registry and staging logic.
  */
-export function drain (agentIdentifier = '', featureName = 'feature') {
+export function drain (agentIdentifier = '', featureName = 'feature', force = false) {
   curateRegistry(agentIdentifier)
   // If the feature for the specified agent is not in the registry, that means the instrument file was bypassed.
   // This could happen in tests, or loaders that directly import the aggregator. In these cases it is safe to
   // drain the feature group immediately rather than waiting to drain all at once.
-  if (!agentIdentifier || !registry[agentIdentifier].get(featureName)) return drainGroup(featureName)
+  if (!agentIdentifier || !registry[agentIdentifier].get(featureName) || force) return drainGroup(featureName)
 
   // When `drain` is called, this feature is ready to drain (staged).
   registry[agentIdentifier].get(featureName).staged = true

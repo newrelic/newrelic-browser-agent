@@ -17,7 +17,7 @@ if (args.githubRef.startsWith('refs/heads/')) {
     owner: github.context.repo.owner,
     repo: github.context.repo.repo,
     state: 'open',
-    head: `${github.context.repo.owner}/${github.context.repo.repo}:${branchName}`
+    head: `${github.context.repo.owner}:${branchName}`
   })
 
   if (!Array.isArray(pullRequests) || pullRequests.length === 0) {

@@ -46,6 +46,15 @@ describe('drain', () => {
     expect(emitSpy).toHaveBeenCalledWith('drain-pumbaa', expect.anything())
   })
 
+  test('immediately drains when force is true', () => {
+    registerDrain('abcd', 'page_view_timing')
+    registerDrain('abcd', 'page_view_event')
+
+    let emitSpy = jest.spyOn(ee.get('abcd'), 'emit')
+    drain('abcd', 'page_view_event', true)
+    expect(emitSpy).toHaveBeenNthCalledWith(1, 'drain-page_view_event', expect.anything())
+  })
+
   test('defaults to "feature" group when not provided one', () => {
     let emitSpy = jest.spyOn(ee.get('abcd'), 'emit')
     drain('abcd')

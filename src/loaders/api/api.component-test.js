@@ -9,6 +9,7 @@ import * as runtimeModule from '../../common/constants/runtime'
 import * as asyncApiModule from './apiAsync'
 import * as windowLoadModule from '../../common/window/load'
 import * as handleModule from '../../common/event-emitter/handle'
+import { SR_EVENT_EMITTER_TYPES } from '../../features/session_replay/constants'
 
 describe('setAPI', () => {
   let agentId
@@ -53,8 +54,8 @@ describe('setAPI', () => {
     expect(typeof apiInterface.setUserId).toEqual('function')
     expect(typeof apiInterface.setApplicationVersion).toEqual('function')
     expect(typeof apiInterface.start).toEqual('function')
-    expect(typeof apiInterface.recordReplay).toEqual('function')
-    expect(typeof apiInterface.pauseReplay).toEqual('function')
+    expect(typeof apiInterface[SR_EVENT_EMITTER_TYPES.RECORD]).toEqual('function')
+    expect(typeof apiInterface[SR_EVENT_EMITTER_TYPES.PAUSE]).toEqual('function')
   })
 
   test('should register api drain when not forced', () => {

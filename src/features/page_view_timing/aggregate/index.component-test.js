@@ -2,6 +2,7 @@ import { Aggregator } from '../../../common/aggregate/aggregator'
 import { ee } from '../../../common/event-emitter/contextual-ee'
 import { drain } from '../../../common/drain/drain'
 import { setRuntime } from '../../../common/config/config'
+import { VITAL_NAMES } from '../../../common/vitals/constants'
 
 // Note: these callbacks fire right away unlike the real web-vitals API which are async-on-trigger
 jest.mock('web-vitals', () => ({
@@ -10,11 +11,6 @@ jest.mock('web-vitals', () => ({
   onFID: jest.fn(cb => cb({
     value: 1234,
     entries: [{ name: 'pointerdown', startTime: 5 }]
-  })),
-  // eslint-disable-next-line
-  onCLS: jest.fn((cb) => cb({
-    value: 1,
-    entries: [{ value: 1 }]
   })),
   // eslint-disable-next-line
   onFCP: jest.fn((cb) => cb({
@@ -31,8 +27,26 @@ jest.mock('web-vitals', () => ({
     value: 1,
     entries: [{ value: 1 }]
   }))
-})
-)
+}))
+const clsAttribution = {
+  largestShiftTarget: 'element',
+  largestShiftTime: 12345,
+  largestShiftValue: 0.9712,
+  loadState: 'dom-content-loaded'
+}
+jest.mock('web-vitals/attribution', () => ({
+  // eslint-disable-next-line
+  onCLS: jest.fn((cb) => cb({
+    value: 1,
+    entries: [{ value: 1 }],
+    attribution: clsAttribution
+  }))
+}))
+let triggerVisChange
+jest.mock('../../../common/window/page-visibility', () => ({
+  subscribeToVisibilityChange: jest.fn(cb => { triggerVisChange ??= cb })
+}))
+
 const expectedNetworkInfo = {
   'net-type': expect.any(String),
   'net-etype': expect.any(String),
@@ -43,6 +57,7 @@ const expectedNetworkInfo = {
 let pvtAgg
 describe('pvt aggregate tests', () => {
   beforeEach(async () => {
+    triggerVisChange = undefined
     const { Aggregate } = await import('.')
     setRuntime('abcd', {})
 
@@ -84,5 +99,16 @@ describe('pvt aggregate tests', () => {
     const fiPayload = pvtAgg.timings.find(x => x.name === 'fi')
     expect(fiPayload.value).toEqual(5)
     expect(fiPayload.attrs).toEqual(expect.objectContaining({ type: 'pointerdown', fid: 1234, cls: 1, ...expectedNetworkInfo }))
+  })
+
+  test('sends CLS node with attrs on vis change', () => {
+    let clsNode = pvtAgg.timings.find(tn => tn.name === VITAL_NAMES.CUMULATIVE_LAYOUT_SHIFT)
+    expect(clsNode).toBeUndefined()
+
+    triggerVisChange()
+    clsNode = pvtAgg.timings.find(tn => tn.name === VITAL_NAMES.CUMULATIVE_LAYOUT_SHIFT)
+    expect(clsNode).toBeTruthy()
+    expect(clsNode.attrs).toEqual(expect.objectContaining(clsAttribution))
+    expect(clsNode.attrs.cls).toBeUndefined() // cls node doesn't need cls property
   })
 })

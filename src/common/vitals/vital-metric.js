@@ -20,7 +20,7 @@ export class VitalMetric {
     this.history.push(state)
     this.#subscribers.forEach(cb => {
       try {
-        cb(this.current)
+        cb(state)
       } catch (e) {
         // ignore errors
       }

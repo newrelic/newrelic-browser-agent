@@ -16,6 +16,7 @@ describe('cls', () => {
         expect(value).toEqual(1)
         done()
       })
+      metric.update({ value: 1 })
     })
   })
   test('does NOT report if not browser scoped', (done) => {
@@ -29,6 +30,7 @@ describe('cls', () => {
         console.log('should not have reported...')
         expect(1).toEqual(2)
       })
+      metric.update({ value: 1 })
       setTimeout(done, 1000)
     })
   })
@@ -37,35 +39,18 @@ describe('cls', () => {
       __esModule: true,
       isBrowserScope: true
     }))
-    let sub1, sub2
-    getFreshCLSImport(metric => {
-      const remove1 = metric.subscribe(({ entries }) => {
-        sub1 ??= entries[0].id
-        if (sub1 === sub2) { remove1(); remove2(); done() }
-      })
-
-      const remove2 = metric.subscribe(({ entries }) => {
-        sub2 ??= entries[0].id
-        if (sub1 === sub2) { remove1(); remove2(); done() }
-      })
-    })
-  })
-  test('reports only new values', (done) => {
-    jest.doMock('../constants/runtime', () => ({
-      __esModule: true,
-      isBrowserScope: true
-    }))
-    let triggered = 0
+    let witness = 0
     getFreshCLSImport(metric => {
       metric.subscribe(({ value }) => {
-        triggered++
-        expect(value).toEqual(1)
-        expect(triggered).toEqual(1)
-        setTimeout(() => {
-          expect(triggered).toEqual(1)
-          done()
-        }, 1000)
+        expect(value).toEqual(5)
+        witness++
       })
+      metric.subscribe(({ value }) => {
+        expect(value).toEqual(5)
+        witness++
+        if (witness === 2) done()
+      })
+      metric.update({ value: 5 })
     })
   })
 })

@@ -1,4 +1,4 @@
-import { onCLS } from 'web-vitals'
+import { onCLS } from 'web-vitals/attribution'
 import { VITAL_NAMES } from './constants'
 import { VitalMetric } from './vital-metric'
 import { isBrowserScope } from '../constants/runtime'
@@ -6,8 +6,13 @@ import { isBrowserScope } from '../constants/runtime'
 export const cumulativeLayoutShift = new VitalMetric(VITAL_NAMES.CUMULATIVE_LAYOUT_SHIFT, (x) => x)
 
 if (isBrowserScope) {
-  onCLS(({ value, entries }) => {
-    if (cumulativeLayoutShift.roundingMethod(value) === cumulativeLayoutShift.current.value) return
-    cumulativeLayoutShift.update({ value, entries })
+  onCLS(({ value, attribution }) => {
+    const attrs = {
+      largestShiftTarget: attribution.largestShiftTarget,
+      largestShiftTime: attribution.largestShiftTime,
+      largestShiftValue: attribution.largestShiftValue,
+      loadState: attribution.loadState
+    }
+    cumulativeLayoutShift.update({ value, attrs })
   }, { reportAllChanges: true })
 }

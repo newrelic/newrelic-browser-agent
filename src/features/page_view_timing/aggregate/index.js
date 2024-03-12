@@ -20,6 +20,8 @@ import { interactionToNextPaint } from '../../../common/vitals/interaction-to-ne
 import { largestContentfulPaint } from '../../../common/vitals/largest-contentful-paint'
 import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
 import { longTask } from '../../../common/vitals/long-task'
+import { subscribeToVisibilityChange } from '../../../common/window/page-visibility'
+import { VITAL_NAMES } from '../../../common/vitals/constants'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -43,6 +45,7 @@ export class Aggregate extends AggregateBase {
     timeToFirstByte.subscribe(({ entries }) => {
       this.addTiming('load', Math.round(entries[0].loadEventEnd))
     })
+    subscribeToVisibilityChange(() => this.#handleVitalMetric(cumulativeLayoutShift.current), true) // so CLS node only reports on vis change rather than on every change
 
     if (getConfigurationValue(this.agentIdentifier, 'page_view_timing.long_task') === true) longTask.subscribe(this.#handleVitalMetric)
 
@@ -102,8 +105,9 @@ export class Aggregate extends AggregateBase {
     Issue: Because NR 'pageHide' was only sent once with what is considered the "final" CLS value, in the case that 'pageHide' fires before 'load' happens, we incorrectly a final CLS of 0 for that page.
     Mitigation: We've set initial CLS to null so that it's omitted from timings like 'pageHide' in that edge case. It should only be included if onCLS callback was executed at least once.
     Future: onCLS value changes should be reported directly & CLS separated into its own timing node so it's not beholden to 'pageHide' firing. It'd also be possible to report the real final CLS.
+    *cli Mar'24 update: CLS now emitted as its own timing node in addition to as-property under other nodes. The 'cls' property is unnecessary for cls nodes.
     */
-    if (cumulativeLayoutShift.current.value >= 0) {
+    if (name !== VITAL_NAMES.CUMULATIVE_LAYOUT_SHIFT && cumulativeLayoutShift.current.value >= 0) {
       attrs.cls = cumulativeLayoutShift.current.value
     }
 

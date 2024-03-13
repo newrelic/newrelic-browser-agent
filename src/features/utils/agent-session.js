@@ -5,6 +5,7 @@ import { registerHandler } from '../../common/event-emitter/register-handler'
 import { SessionEntity } from '../../common/session/session-entity'
 import { LocalStorage } from '../../common/storage/local-storage.js'
 import { FirstPartyCookies } from '../../common/storage/first-party-cookies'
+import { DEFAULT_KEY } from '../../common/session/constants'
 
 let ranOnce = 0
 export function setupAgentSession (agentIdentifier) {
@@ -20,7 +21,7 @@ export function setupAgentSession (agentIdentifier) {
 
   agentRuntime.session = new SessionEntity({
     agentIdentifier,
-    key: 'SESSION',
+    key: DEFAULT_KEY,
     storage: storageTypeInst,
     expiresMs: sessionInit?.expiresMs,
     inactiveMs: sessionInit?.inactiveMs

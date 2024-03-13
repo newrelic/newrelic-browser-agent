@@ -64,8 +64,9 @@ const model = () => {
       autoStart: true,
       enabled: false,
       harvestTimeSeconds: 60,
-      sampling_rate: 10, // float from 0 - 100 // these are only kept around right now to collect SMs on in the SR agg file
-      error_sampling_rate: 100, // float from 0 - 100 // these are only kept around right now to collect SMs on in the SR agg file
+      preload: false, // if true, enables the agent to load rrweb immediately instead of waiting to do so after the window.load event
+      sampling_rate: 10, // float from 0 - 100
+      error_sampling_rate: 100, // float from 0 - 100
       collect_fonts: false, // serialize fonts for collection without public asset url, this is currently broken in RRWeb -- https://github.com/rrweb-io/rrweb/issues/1304.  When fixed, revisit with test cases
       inline_images: false, // serialize images for collection without public asset url -- right now this is only useful for testing as it easily generates payloads too large to be harvested
       inline_stylesheet: true, // serialize css for collection without public asset url

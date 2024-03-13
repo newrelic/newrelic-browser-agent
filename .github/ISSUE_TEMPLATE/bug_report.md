@@ -24,14 +24,20 @@ assignees: ''
 
 ## Relevant Logs / Console output
 
-[NOTE]: # ( Please provide specifics of the local error logs, Browser Dev Tools console, etc. if appropriate and possible. )
+[NOTE]: # ( Please provide specifics of the local error logs, Browser Dev Tools console, etc. Include as many of the following as possible:)
+
+* Screenshots showing errors
+* Page source from the page in question
+* HAR file showing New Relic network payloads
 
 ## Your Environment
 
 [TIP]:  # ( Include as many relevant details about your environment as possible. )
 
-* ex: Browser name and version:
-* ex: Operating System and version:
+* ex: Browser name and version
+* ex: Operating System and version
+* Browser agent version involved (e.g., v1.229.0)
+* APM language and version, if applicable (e.g., Dotnet 10.2.0), and auto|manual
 
 ## Additional context
 

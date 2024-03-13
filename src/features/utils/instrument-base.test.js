@@ -13,6 +13,7 @@ import { FEATURE_NAMES } from '../../loaders/features/features'
 jest.enableAutomock()
 jest.unmock('./instrument-base')
 jest.unmock('../../loaders/features/features')
+jest.unmock('../session_replay/shared/utils')
 jest.mock('../../common/drain/drain', () => ({
   __esModule: true,
   drain: jest.fn(),

@@ -167,26 +167,6 @@ describe('Session Replay', () => {
       expect(sr.initialized).toEqual(true)
       expect(sr.recorder).toBeUndefined()
     })
-
-    test('Does not run if cookies_enabled is false', async () => {
-      setConfiguration(agentIdentifier, { ...init, privacy: { cookies_enabled: false } })
-      sr = new SessionReplayAgg(agentIdentifier, new Aggregator({}))
-      sr.ee.emit('rumresp-sr', [1])
-      sr.ee.emit('rumresp-srs', [MODE.FULL])
-      await wait(1)
-      expect(sr.initialized).toEqual(false)
-      expect(sr.recorder).toBeUndefined()
-    })
-
-    test('Does not run if session_trace is disabled', async () => {
-      setConfiguration(agentIdentifier, { ...init, session_trace: { enabled: false } })
-      sr = new SessionReplayAgg(agentIdentifier, new Aggregator({}))
-      sr.ee.emit('rumresp-sr', [1])
-      sr.ee.emit('rumresp-srs', [MODE.FULL])
-      await wait(1)
-      expect(sr.initialized).toEqual(false)
-      expect(sr.recorder).toBeUndefined()
-    })
   })
 
   describe('Session Replay Sample -> Mode Behaviors', () => {

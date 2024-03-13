@@ -97,9 +97,9 @@ module.exports = function (api, ...args) {
         [
           './tools/babel/plugins/transform-import',
           {
-            '(constants/)env$': '$1env.npm',
-            '(configure/)public-path$': '$1public-path.npm',
-            '(configure/)nonce$': '$1nonce.npm'
+            '(/constants/|^\\./)env$': '$1env.npm',
+            '(/configure/|^\\./)public-path$': '$1public-path.npm',
+            '(/configure/|^\\./)nonce$': '$1nonce.npm'
           }
         ]
       ]
@@ -117,9 +117,9 @@ module.exports = function (api, ...args) {
         [
           './tools/babel/plugins/transform-import',
           {
-            '(constants/)env$': '$1env.npm',
-            '(configure/)public-path$': '$1public-path.npm',
-            '(configure/)nonce$': '$1nonce.npm'
+            '(/constants/|^\\./)env$': '$1env.npm',
+            '(/configure/|^\\./)public-path$': '$1public-path.npm',
+            '(/configure/|^\\./)nonce$': '$1nonce.npm'
           }
         ]
       ]

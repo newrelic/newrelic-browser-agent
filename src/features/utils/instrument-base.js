@@ -10,7 +10,8 @@ import { onWindowLoad } from '../../common/window/load'
 import { isBrowserScope } from '../../common/constants/runtime'
 import { warn } from '../../common/util/console'
 import { FEATURE_NAMES } from '../../loaders/features/features'
-import { getConfigurationValue, originals } from '../../common/config/config'
+import { getConfigurationValue } from '../../common/config/config'
+import { canImportReplayAgg, enableSessionTracking } from '../session_replay/shared/utils'
 
 /**
  * Base class for instrumenting a feature.
@@ -73,7 +74,6 @@ export class InstrumentBase extends FeatureBase {
       return
     }
 
-    const enableSessionTracking = isBrowserScope && getConfigurationValue(this.agentIdentifier, 'privacy.cookies_enabled') === true
     let loadedSuccessfully
     this.onAggregateImported = new Promise(resolve => {
       loadedSuccessfully = resolve
@@ -82,12 +82,13 @@ export class InstrumentBase extends FeatureBase {
     const importLater = async () => {
       let session
       try {
-        if (enableSessionTracking) { // would require some setup before certain features start
+        if (enableSessionTracking(this.agentIdentifier)) { // would require some setup before certain features start
           const { setupAgentSession } = await import(/* webpackChunkName: "session-manager" */ './agent-session')
           session = setupAgentSession(this.agentIdentifier)
         }
       } catch (e) {
         warn('A problem occurred when starting up session manager. This page will not start or extend any session.', e)
+        if (this.featureName === FEATURE_NAMES.sessionReplay) this.abortHandler?.() // SR should stop recording if session DNE
       }
 
       /**
@@ -95,7 +96,7 @@ export class InstrumentBase extends FeatureBase {
        * it's only responsible for aborting its one specific feature, rather than all.
        */
       try {
-        if (!this.shouldImportAgg(this.featureName, session)) {
+        if (!this.#shouldImportAgg(this.featureName, session)) {
           drain(this.agentIdentifier, this.featureName)
           loadedSuccessfully(false) // aggregate module isn't loaded at all
           return
@@ -126,12 +127,8 @@ export class InstrumentBase extends FeatureBase {
  * @param {import('../../common/session/session-entity').SessionEntity} session
  * @returns
  */
-  shouldImportAgg (featureName, session) {
-    if (featureName === FEATURE_NAMES.sessionReplay) {
-      if (!originals.MO) return false // Session Replay cannot work without Mutation Observer
-      if (getConfigurationValue(this.agentIdentifier, 'session_trace.enabled') === false) return false // Session Replay as of now is tightly coupled with Session Trace in the UI
-      return !!session?.isNew || !!session?.state.sessionReplayMode // Session Replay should only try to run if already running from a previous page, or at the beginning of a session
-    }
+  #shouldImportAgg (featureName, session) {
+    if (featureName === FEATURE_NAMES.sessionReplay) return canImportReplayAgg(this.agentIdentifier, session)
     return true
   }
 }

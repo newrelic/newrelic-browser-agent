@@ -1,12 +1,27 @@
 /* eslint-disable n/handle-callback-err */
 
 import { warn } from '../common/util/console'
+import { SR_EVENT_EMITTER_TYPES } from '../features/session_replay/constants'
+import { ObservationContextManager } from '../common/context/observation-context-manager'
+import { generateRandomHexString } from '../common/ids/unique-id'
+import { ee } from '../common/event-emitter/contextual-ee'
 
 /**
  * @typedef {import('./api/interaction-types').InteractionInstance} InteractionInstance
  */
 
 export class AgentBase {
+  agentIdentifier
+  observationContext = new ObservationContextManager()
+
+  constructor (agentIdentifier = generateRandomHexString(16)) {
+    this.agentIdentifier = agentIdentifier
+
+    // Assign the observation context to the event emitter, so it knows how to create observation contexts
+    const eventEmitter = ee.get(agentIdentifier)
+    eventEmitter.observationContext = this.observationContext
+  }
+
   /**
    * Tries to execute the api and generates a generic warning message with the api name injected if unsuccessful
    * @param {string} methodName
@@ -122,17 +137,17 @@ export class AgentBase {
    * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/recordReplay/}
    */
   recordReplay () {
-    return this.#callMethod('recordReplay')
+    return this.#callMethod(SR_EVENT_EMITTER_TYPES.RECORD)
   }
 
   /**
    * Forces an active replay to pause recording.  If a replay is already actively recording, this call will cause the recording to pause.
    * If a recording is not currently recording, this call will be ignored.  This API will pause both manual and automatic replays that are in progress.
    * The only way to resume recording after manually pausing a replay is to manually record again using the recordReplay() API.
-   * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/recordReplay/}
+   * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/pauseReplay/}
    */
   pauseReplay () {
-    return this.#callMethod('pauseReplay')
+    return this.#callMethod(SR_EVENT_EMITTER_TYPES.PAUSE)
   }
 
   /**

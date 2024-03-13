@@ -101,7 +101,8 @@ const model = () => {
         else warn('An invalid session_replay.mask_input_option was provided and will not be used', val)
       }
     },
-    spa: { enabled: true, harvestTimeSeconds: 10, autoStart: true }
+    spa: { enabled: true, harvestTimeSeconds: 10, autoStart: true },
+    soft_navigations: { enabled: true, harvestTimeSeconds: 10, autoStart: true }
   }
 }
 

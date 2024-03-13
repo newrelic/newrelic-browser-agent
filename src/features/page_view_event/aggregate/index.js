@@ -112,7 +112,7 @@ export class Aggregate extends AggregateBase {
           this.drain()
         } catch (err) {
           this.ee.abort()
-          warn('RUM call failed. Agent shutting down.')
+          warn('RUM call failed. Agent shutting down.', err)
         }
       }
     })

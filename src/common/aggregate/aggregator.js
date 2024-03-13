@@ -82,7 +82,8 @@ export class Aggregator extends SharedContext {
     var hasData = false
     for (var i = 0; i < types.length; i++) {
       type = types[i]
-      results[type] = toArray(this.aggregatedData[type])
+      results[type] = Object.values(this.aggregatedData[type] || {})
+
       if (results[type].length) hasData = true
       delete this.aggregatedData[type]
     }
@@ -158,14 +159,4 @@ function createMetricObject (value) {
     sos: value * value,
     c: 1
   }
-}
-
-function toArray (obj) {
-  if (typeof obj !== 'object') return []
-
-  return mapOwn(obj, getValue)
-}
-
-function getValue (key, value) {
-  return value
 }

@@ -49,8 +49,8 @@ test('emits the right events when feature flag = 1', () => {
 
   const sharedEE = jest.mocked(eventEmitterModule.ee.get).mock.results[0].value
 
-  // each flag gets emitted to each of its mapped features, and a feat- AND a rumresp- for every emit, so (1+2+1+1+2)*2 = 14
-  expect(handleModule.handle).toHaveBeenCalledTimes(14)
+  // each flag gets emitted to each of its mapped features, and a feat- AND a rumresp- for every emit, so (1+2+1+1+2+2)*2 = 16
+  expect(handleModule.handle).toHaveBeenCalledTimes(16)
   expect(handleModule.handle).toHaveBeenNthCalledWith(1, 'feat-stn', [], undefined, FEATURE_NAMES.sessionTrace, sharedEE)
   expect(handleModule.handle).toHaveBeenLastCalledWith('rumresp-sr', [true], undefined, FEATURE_NAMES.sessionTrace, sharedEE)
 
@@ -65,8 +65,8 @@ test('emits the right events when feature flag = 0', () => {
 
   const sharedEE = jest.mocked(eventEmitterModule.ee.get).mock.results[0].value
 
-  // each flag gets emitted to each of its mapped features, and a block- AND a rumresp- for every emit, so (1+2+1+1+2)*2 = 14
-  expect(handleModule.handle).toHaveBeenCalledTimes(14)
+  // each flag gets emitted to each of its mapped features, and a block- AND a rumresp- for every emit, so (1+2+1+1+2+2)*2 = 16
+  expect(handleModule.handle).toHaveBeenCalledTimes(16)
   expect(handleModule.handle).toHaveBeenNthCalledWith(1, 'block-stn', [], undefined, FEATURE_NAMES.sessionTrace, sharedEE)
   expect(handleModule.handle).toHaveBeenLastCalledWith('rumresp-sr', [false], undefined, FEATURE_NAMES.sessionTrace, sharedEE)
 

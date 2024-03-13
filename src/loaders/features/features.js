@@ -7,6 +7,7 @@ export const FEATURE_NAMES = {
   pageViewTiming: 'page_view_timing',
   sessionReplay: 'session_replay',
   sessionTrace: 'session_trace',
+  softNav: 'soft_navigations',
   spa: 'spa'
 }
 
@@ -23,5 +24,6 @@ export const featurePriority = {
   [FEATURE_NAMES.sessionTrace]: 6,
   [FEATURE_NAMES.pageAction]: 7,
   [FEATURE_NAMES.spa]: 8,
-  [FEATURE_NAMES.sessionReplay]: 9
+  [FEATURE_NAMES.softNav]: 9,
+  [FEATURE_NAMES.sessionReplay]: 10
 }

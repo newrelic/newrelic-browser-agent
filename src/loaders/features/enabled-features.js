@@ -4,7 +4,7 @@ import { getConfigurationValue } from '../../common/config/config'
 const featureNames = Object.values(FEATURE_NAMES)
 
 function isEnabled (name, agentIdentifier) {
-  return getConfigurationValue(agentIdentifier, `${name}.enabled`) !== false
+  return getConfigurationValue(agentIdentifier, `${name}.enabled`) === true
 }
 
 export function getEnabledFeatures (agentIdentifier) {

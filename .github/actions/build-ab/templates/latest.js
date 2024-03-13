@@ -4,5 +4,6 @@ window.NREUM.loader_config.licenseKey = '{{{args.abLicenseKey}}}'
 window.NREUM.info.applicationID = '{{{args.abAppId}}}'
 window.NREUM.info.licenseKey = '{{{args.abLicenseKey}}}'
 window.NREUM.init.proxy.assets = 'https://staging-js-agent.newrelic.com/dev'
+window.NREUM.init.feature_flags = ['soft_nav','ajax_metrics_deny_list']
 
 {{{latestScript}}}

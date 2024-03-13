@@ -25,7 +25,7 @@ var RESPONSE = 'response'
 var LOAD_EVENT = 'loadEvent'
 var DOM_CONTENT_LOAD_EVENT = 'domContentLoadedEvent'
 
-export var navTimingValues = []
+export const navTimingValues = []
 
 function getPntType (type) {
   if (typeof type === 'number') return type
@@ -72,6 +72,10 @@ export function addPN (pn, v) {
   return v
 }
 
+/**
+ * By side effect, this modifies 'obj' with a mapping of the 'prop' provided to a 'value', and invalid values are not added.
+ * On the other hand, the local navTimingValues array gets the value appended if valid and 'undefined' appended if invalid, regardless.
+ */
 function handleValue (value, obj, prop, isOldApi) {
   /*
   For L2 Timing API, the value will already be a relative-to-previous-document DOMHighResTimeStamp.
@@ -85,6 +89,6 @@ function handleValue (value, obj, prop, isOldApi) {
     }
     value = Math.round(value)
     obj[prop] = value
-  }
-  navTimingValues.push(value)
+    navTimingValues.push(value)
+  } else navTimingValues.push(undefined)
 }

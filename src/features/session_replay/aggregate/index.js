@@ -87,16 +87,6 @@ export class Aggregate extends AggregateBase {
       raw: true
     }, this)
 
-    registerHandler(SR_EVENT_EMITTER_TYPES.RECORD, () => {
-      // if it has aborted or BCS returned bad entitlements, do not allow
-      if (this.blocked || !this.entitled) return
-      // if it isnt already (fully) initialized... initialize it
-      if (!this.recorder) this.initializeRecording(false, true, true)
-      // its been initialized and imported the recorder but its not recording (mode === off || error)
-      else if (this.mode !== MODE.FULL) this.switchToFull()
-      // if it gets all the way to here, that means a full session is already recording... do nothing
-    }, this.featureName, this.ee)
-
     registerHandler(SR_EVENT_EMITTER_TYPES.PAUSE, () => {
       this.forceStop(this.mode !== MODE.ERROR)
     }, this.featureName, this.ee)

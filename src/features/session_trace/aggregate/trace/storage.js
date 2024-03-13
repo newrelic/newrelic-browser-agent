@@ -37,7 +37,11 @@ export class TraceStorage {
   storeSTN (stn) {
     if (this.parent.blocked) return
     if (this.nodeCount >= this.parent.maxNodesPerHarvest) { // limit the amount of pending data awaiting next harvest
-      if (this.parent.agentRuntime.session.state.sessionTraceMode !== MODE.ERROR) return
+      if (this.parent.agentRuntime.session.state.sessionTraceMode !== MODE.ERROR) {
+        // trigger a harvest early
+        this.parent.scheduler.runHarvest({ needResponse: true })
+        return
+      }
       const openedSpace = this.trimSTNs(ERROR_MODE_SECONDS_WINDOW) // but maybe we could make some space by discarding irrelevant nodes if we're in sessioned Error mode
       if (openedSpace === 0) return
     }

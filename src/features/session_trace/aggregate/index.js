@@ -35,7 +35,7 @@ export class Aggregate extends AggregateBase {
 
     /** A buffer to hold on to harvested traces in the case that a retry must be made later */
     this.sentTrace = null
-    this.harvestTimeSeconds = getConfigurationValue(agentIdentifier, 'session_trace.harvestTimeSeconds') || 10
+    this.harvestTimeSeconds = getConfigurationValue(agentIdentifier, 'session_trace.harvestTimeSeconds') || 30
     this.maxNodesPerHarvest = getConfigurationValue(agentIdentifier, 'session_trace.maxNodesPerHarvest') || 1000
     /** A flag used to maintain trace mode state at initialization time. If true at init time and sampled in error mode, it will flip to full */
     this.errorNoticed = false

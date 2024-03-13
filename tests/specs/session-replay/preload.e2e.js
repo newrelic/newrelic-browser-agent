@@ -2,15 +2,12 @@ import { srConfig, testExpectedReplay } from '../util/helpers'
 import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
 
 describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => {
-  beforeEach(async () => {
-    await browser.enableSessionReplay()
-  })
-
   afterEach(async () => {
     await browser.destroyAgentSession()
   })
 
   it('should allow for preload if already recording', async () => {
+    await browser.enableSessionReplay()
     await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
       .then(() => browser.waitForAgentLoad())
 
@@ -30,11 +27,12 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
   })
 
   it('should allow for preload if configured', async () => {
+    await browser.enableSessionReplay()
     await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig({ session_replay: { preload: true } })))
       .then(() => browser.waitForAgentLoad())
 
     const [{ request: harvestContents }, wasPreloaded] = await Promise.all([
-      browser.testHandle.expectBlob(), // preload harvest
+      browser.testHandle.expectReplay(), // preload harvest
       browser.execute(function () {
         return window.wasPreloaded // window var set at load time which checks the SR recorder's buffer to see if populated before load
       })
@@ -45,8 +43,9 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
   })
 
   it('should NOT preload if not configured or recording', async () => {
+    await browser.enableSessionReplay()
     const [{ request: harvestContents }, wasPreloaded] = await Promise.all([
-      browser.testHandle.expectBlob(), // preload harvest
+      browser.testHandle.expectReplay(), // preload harvest
       browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig({ session_replay: { preload: false } })))
         .then(() => browser.waitForAgentLoad())
         .then(() => browser.execute(function () {
@@ -59,14 +58,15 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
   })
 
   it('should NOT harvest beginning preload data if not sampled', async () => {
-    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig({ session_replay: { preload: true, sampling_rate: 0, error_sampling_rate: 0 } })))
+    await browser.enableSessionReplay(0, 0)
+    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig({ session_replay: { preload: true } })))
       .then(() => browser.waitForAgentLoad())
 
     const [wasPreloaded] = await Promise.all([
       browser.execute(function () {
         return window.wasPreloaded // window var set at load time which checks the SR recorder's buffer to see if populated before load
       }),
-      browser.testHandle.expectBlob(10000, true) // preload harvest should not send
+      browser.testHandle.expectReplay(10000, true) // preload harvest should not send
     ])
 
     expect(wasPreloaded).toEqual(true)

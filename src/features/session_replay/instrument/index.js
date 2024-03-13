@@ -23,7 +23,7 @@ export class Instrument extends InstrumentBase {
       session = JSON.parse(localStorage.getItem(`${PREFIX}_${DEFAULT_KEY}`))
     } catch (err) { }
 
-    if (hasReplayPrerequisite()) {
+    if (hasReplayPrerequisite(agentIdentifier)) {
       this.ee.on('recordReplay', () => {
         this.#startRecording(MODE.FULL).finally(() => {
           this.importAggregator({ recorder: this.recorder })

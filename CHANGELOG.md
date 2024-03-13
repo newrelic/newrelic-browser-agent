@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.253.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.252.1...v1.253.0) (2024-03-13)
+
+
+### Features
+
+* Apply deny list to ajax metrics ([#898](https://github.com/newrelic/newrelic-browser-agent/issues/898)) ([a5c2adc](https://github.com/newrelic/newrelic-browser-agent/commit/a5c2adc0ecbe322ea9a9dcdf1ed3b072c1212415))
+* Isolate observation context per agent ([#903](https://github.com/newrelic/newrelic-browser-agent/issues/903)) ([85887c8](https://github.com/newrelic/newrelic-browser-agent/commit/85887c8e7f4241076daeeda75077e6ee710a3d00))
+* Preload the Session Replay recorder when properly configured ([#893](https://github.com/newrelic/newrelic-browser-agent/issues/893)) ([bc5ebb5](https://github.com/newrelic/newrelic-browser-agent/commit/bc5ebb5cb255fda7f2c30d5053b5a980a423c2b1))
+* Soft Navigations trial ([#808](https://github.com/newrelic/newrelic-browser-agent/issues/808)) ([7fcb627](https://github.com/newrelic/newrelic-browser-agent/commit/7fcb62791ad932cbd3b9f16a72277b42bca9a75f))
+
 ## [1.252.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.252.0...v1.252.1) (2024-02-29)
 
 

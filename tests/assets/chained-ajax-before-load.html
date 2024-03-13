@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Basic XHR test</title>
+    {init}
+    {config}
+    {loader}
+    <script type="text/javascript">
+      var xhr = new XMLHttpRequest()
+      xhr.open('GET', '/json')
+      xhr.send()
+      xhr.addEventListener('load', function () {
+        var xhr = new XMLHttpRequest()
+        xhr.open('GET', '/text')
+        xhr.addEventListener('load', function () {}, true)
+        xhr.send()
+      }, true)
+
+      if (typeof fetch === 'function') {
+        fetch('/json').then(function () {
+          fetch('/text')
+        })
+      }
+    </script>
+  </head>
+  <body>
+    This page sends an XHR after the window has loaded.
+  </body>
+</html>

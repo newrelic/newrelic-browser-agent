@@ -10,7 +10,7 @@ const bucketMap = {
   stn: [FEATURE_NAMES.sessionTrace],
   err: [FEATURE_NAMES.jserrors, FEATURE_NAMES.metrics],
   ins: [FEATURE_NAMES.pageAction],
-  spa: [FEATURE_NAMES.spa],
+  spa: [FEATURE_NAMES.spa, FEATURE_NAMES.softNav],
   sr: [FEATURE_NAMES.sessionReplay, FEATURE_NAMES.sessionTrace]
 }
 

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {init}
+    {config}
+    {loader}
+  </head>
+  <body>
+    <div>This page imitates a soft navigation on click with a url hash change and a new div element</div>
+    <script type="text/javascript">
+			let i = 0
+			document.addEventListener('click', function () {
+				window.location.hash = Math.random()
+
+        const xhr = new XMLHttpRequest()
+        xhr.open('POST', '/echo')
+        xhr.send()
+        fetch('/json')
+        newrelic.noticeError('boogie')
+
+				const elem = document.createElement('div')
+				elem.innerHTML = 'TEST' + i++
+				document.body.appendChild(elem)
+			})
+    </script>
+  </body>
+</html>

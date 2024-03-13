@@ -19,7 +19,7 @@ const model = {
   ptid: undefined,
   releaseIds: {},
   /** Agent-specific metadata found in the RUM call response. ex. entityGuid */
-  agentMetadata: {},
+  appMetadata: {},
   session: undefined,
   xhrWrappable: typeof globalScope.XMLHttpRequest?.prototype?.addEventListener === 'function',
   version: VERSION,

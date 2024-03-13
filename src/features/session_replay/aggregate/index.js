@@ -304,12 +304,13 @@ export class Aggregate extends AggregateBase {
     const firstTimestamp = firstEventTimestamp || recorderEvents.cycleTimestamp // from rrweb node || from when the harvest cycle started
     const lastTimestamp = lastEventTimestamp || agentOffset + relativeNow
 
+    const agentMetadata = agentRuntime.appMetadata?.agents?.[0] || {}
     return {
       qs: {
         browser_monitoring_key: info.licenseKey,
         type: 'SessionReplay',
-        app_id: agentRuntime.agentMetadata?.browserAppId || info.applicationID,
-        ...(agentRuntime.agentMetadata?.entityGuid && { entity_guid: agentRuntime.agentMetadata.entityGuid }),
+        app_id: info.applicationID,
+        ...(agentMetadata.entityGuid && { entity_guid: agentMetadata.entityGuid }),
         protocol_version: '0',
         attributes: encodeObj({
           // this section of attributes must be controllable and stay below the query param padding limit -- see QUERY_PARAM_PADDING

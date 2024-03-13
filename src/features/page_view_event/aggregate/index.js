@@ -108,8 +108,8 @@ export class Aggregate extends AggregateBase {
         }
 
         try {
-          const { agent, ...flags } = JSON.parse(responseText)
-          agentRuntime.agentMetadata = agent
+          const { app, ...flags } = JSON.parse(responseText)
+          agentRuntime.appMetadata = app
           activateFeatures(flags, this.agentIdentifier)
           this.drain()
         } catch (err) {

@@ -108,9 +108,10 @@ export default class CustomCommands {
           spa: 1,
           loaded: 1,
           sr: 1,
-          agent: {
-            browserAppId: 12334,
-            entityGuid: '214234435456'
+          app: {
+            agents: [
+              { entityGuid: '214234435456' }
+            ]
           }
         })
       })

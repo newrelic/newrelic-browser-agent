@@ -34,9 +34,10 @@ module.exports.rumFlags = {
   spa: 1,
   loaded: 1,
   sr: 0, // this should be off, for now, if privacy.cookie_enabled is on (default) or Traces tests will fail
-  agent: {
-    browserAppId: 12334,
-    entityGuid: '214234435456'
+  app: {
+    agents: [
+      { entityGuid: '214234435456' }
+    ]
   }
 }
 

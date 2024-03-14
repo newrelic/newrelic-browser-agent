@@ -1,4 +1,4 @@
-import { onFCP } from 'web-vitals'
+import { onFCP } from 'web-vitals/attribution'
 // eslint-disable-next-line camelcase
 import { iOSBelow16, initiallyHidden, isBrowserScope } from '../constants/runtime'
 import { VITAL_NAMES } from './constants'
@@ -23,9 +23,13 @@ if (isBrowserScope) {
     // ignore
     }
   } else {
-    onFCP(({ value, entries }) => {
+    onFCP(({ value, attribution }) => {
       if (initiallyHidden || firstContentfulPaint.isValid) return
-      firstContentfulPaint.update({ value, entries })
+      const attrs = {
+        firstByteToFCP: attribution.firstByteToFCP,
+        loadState: attribution.loadState
+      }
+      firstContentfulPaint.update({ value, attrs })
     })
   }
 }

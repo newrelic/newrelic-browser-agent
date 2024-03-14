@@ -4,17 +4,27 @@ beforeEach(() => {
   jest.clearAllMocks()
 })
 
+const fcpAttribution = {
+  firstByteToFCP: 23,
+  loadState: 'dom-interactive'
+}
 const getFreshFCPImport = async (codeToRun) => {
+  jest.doMock('web-vitals/attribution', () => ({
+    onFCP: jest.fn(cb => cb({ value: 1, attribution: fcpAttribution }))
+  }))
   const { firstContentfulPaint } = await import('./first-contentful-paint')
   codeToRun(firstContentfulPaint)
 }
 
 describe('fcp', () => {
   test('reports fcp from web-vitals', (done) => {
-    getFreshFCPImport(firstContentfulPaint => firstContentfulPaint.subscribe(({ value }) => {
-      expect(value).toEqual(1)
-      done()
-    }))
+    getFreshFCPImport(firstContentfulPaint => {
+      firstContentfulPaint.subscribe(({ value, attrs }) => {
+        expect(value).toEqual(1)
+        expect(attrs).toEqual(fcpAttribution)
+        done()
+      })
+    })
   })
 
   test('reports fcp from paintEntries if ios<16', (done) => {
@@ -88,16 +98,16 @@ describe('fcp', () => {
       __esModule: true,
       isBrowserScope: true
     }))
-    let sub1, sub2
+    let witness = 0
     getFreshFCPImport(metric => {
-      const remove1 = metric.subscribe(({ entries }) => {
-        sub1 ??= entries[0].id
-        if (sub1 === sub2) { remove1(); remove2(); done() }
+      metric.subscribe(({ value }) => {
+        expect(value).toEqual(1)
+        witness++
       })
-
-      const remove2 = metric.subscribe(({ entries }) => {
-        sub2 ??= entries[0].id
-        if (sub1 === sub2) { remove1(); remove2(); done() }
+      metric.subscribe(({ value }) => {
+        expect(value).toEqual(1)
+        witness++
+        if (witness === 2) done()
       })
     })
   })

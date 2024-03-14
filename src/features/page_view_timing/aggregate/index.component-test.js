@@ -13,11 +13,6 @@ jest.mock('web-vitals', () => ({
     entries: [{ name: 'pointerdown', startTime: 5 }]
   })),
   // eslint-disable-next-line
-  onFCP: jest.fn((cb) => cb({
-    value: 1,
-    entries: [{ value: 1 }]
-  })),
-  // eslint-disable-next-line
   onINP: jest.fn((cb) => cb({
     value: 1,
     entries: [{ value: 1 }]
@@ -37,9 +32,13 @@ const clsAttribution = {
 jest.mock('web-vitals/attribution', () => ({
   // eslint-disable-next-line
   onCLS: jest.fn((cb) => cb({
-    value: 1,
-    entries: [{ value: 1 }],
+    value: 0.111,
     attribution: clsAttribution
+  })),
+  // eslint-disable-next-line
+  onFCP: jest.fn((cb) => cb({
+    value: 1,
+    attribution: {}
   }))
 }))
 let triggerVisChange
@@ -77,7 +76,7 @@ describe('pvt aggregate tests', () => {
       return t.name === 'lcp'
     })
 
-    expect(timing.attrs.cls).toEqual(1) // 'CLS value should be the one present at the time LCP happened'
+    expect(timing.attrs.cls).toEqual(0.111) // 'CLS value should be the one present at the time LCP happened'
     expect(timing.attrs).toEqual(expect.objectContaining(expectedNetworkInfo))
 
     function find (arr, fn) {
@@ -98,7 +97,7 @@ describe('pvt aggregate tests', () => {
     expect(pvtAgg.timings.length).toBeGreaterThanOrEqual(1)
     const fiPayload = pvtAgg.timings.find(x => x.name === 'fi')
     expect(fiPayload.value).toEqual(5)
-    expect(fiPayload.attrs).toEqual(expect.objectContaining({ type: 'pointerdown', fid: 1234, cls: 1, ...expectedNetworkInfo }))
+    expect(fiPayload.attrs).toEqual(expect.objectContaining({ type: 'pointerdown', fid: 1234, cls: 0.111, ...expectedNetworkInfo }))
   })
 
   test('sends CLS node with attrs on vis change', () => {
@@ -108,6 +107,7 @@ describe('pvt aggregate tests', () => {
     triggerVisChange()
     clsNode = pvtAgg.timings.find(tn => tn.name === VITAL_NAMES.CUMULATIVE_LAYOUT_SHIFT)
     expect(clsNode).toBeTruthy()
+    expect(clsNode.value).toEqual(0.111)
     expect(clsNode.attrs).toEqual(expect.objectContaining(clsAttribution))
     expect(clsNode.attrs.cls).toBeUndefined() // cls node doesn't need cls property
   })

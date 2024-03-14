@@ -23,17 +23,12 @@ jest.mock('web-vitals', () => ({
     entries: [{ value: 1 }]
   }))
 }))
-const clsAttribution = {
-  largestShiftTarget: 'element',
-  largestShiftTime: 12345,
-  largestShiftValue: 0.9712,
-  loadState: 'dom-content-loaded'
-}
+
 jest.mock('web-vitals/attribution', () => ({
   // eslint-disable-next-line
   onCLS: jest.fn((cb) => cb({
     value: 0.111,
-    attribution: clsAttribution
+    attribution: {}
   })),
   // eslint-disable-next-line
   onFCP: jest.fn((cb) => cb({
@@ -100,7 +95,7 @@ describe('pvt aggregate tests', () => {
     expect(fiPayload.attrs).toEqual(expect.objectContaining({ type: 'pointerdown', fid: 1234, cls: 0.111, ...expectedNetworkInfo }))
   })
 
-  test('sends CLS node with attrs on vis change', () => {
+  test('sends CLS node with right val on vis change', () => {
     let clsNode = pvtAgg.timings.find(tn => tn.name === VITAL_NAMES.CUMULATIVE_LAYOUT_SHIFT)
     expect(clsNode).toBeUndefined()
 
@@ -108,7 +103,6 @@ describe('pvt aggregate tests', () => {
     clsNode = pvtAgg.timings.find(tn => tn.name === VITAL_NAMES.CUMULATIVE_LAYOUT_SHIFT)
     expect(clsNode).toBeTruthy()
     expect(clsNode.value).toEqual(0.111)
-    expect(clsNode.attrs).toEqual(expect.objectContaining(clsAttribution))
     expect(clsNode.attrs.cls).toBeUndefined() // cls node doesn't need cls property
   })
 })

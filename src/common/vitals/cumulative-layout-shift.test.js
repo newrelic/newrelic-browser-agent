@@ -4,7 +4,16 @@ afterEach(() => {
   jest.clearAllMocks()
 })
 
+const clsAttribution = {
+  largestShiftTarget: 'element',
+  largestShiftTime: 12345,
+  largestShiftValue: 0.9712,
+  loadState: 'dom-content-loaded'
+}
 const getFreshCLSImport = async (codeToRun) => {
+  jest.doMock('web-vitals/attribution', () => ({
+    onCLS: jest.fn(cb => cb({ value: 0.123, attribution: clsAttribution }))
+  }))
   const { cumulativeLayoutShift } = await import('./cumulative-layout-shift')
   codeToRun(cumulativeLayoutShift)
 }
@@ -12,11 +21,11 @@ const getFreshCLSImport = async (codeToRun) => {
 describe('cls', () => {
   test('reports cls', (done) => {
     getFreshCLSImport(metric => {
-      metric.subscribe(({ value }) => {
-        expect(value).toEqual(1)
+      metric.subscribe(({ value, attrs }) => {
+        expect(value).toEqual(0.123)
+        expect(attrs).toEqual(clsAttribution)
         done()
       })
-      metric.update({ value: 1 })
     })
   })
   test('does NOT report if not browser scoped', (done) => {
@@ -30,7 +39,6 @@ describe('cls', () => {
         console.log('should not have reported...')
         expect(1).toEqual(2)
       })
-      metric.update({ value: 1 })
       setTimeout(done, 1000)
     })
   })
@@ -42,15 +50,14 @@ describe('cls', () => {
     let witness = 0
     getFreshCLSImport(metric => {
       metric.subscribe(({ value }) => {
-        expect(value).toEqual(5)
+        expect(value).toEqual(0.123)
         witness++
       })
       metric.subscribe(({ value }) => {
-        expect(value).toEqual(5)
+        expect(value).toEqual(0.123)
         witness++
         if (witness === 2) done()
       })
-      metric.update({ value: 5 })
     })
   })
 })

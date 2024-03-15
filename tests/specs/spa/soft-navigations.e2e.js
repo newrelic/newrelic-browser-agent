@@ -146,6 +146,7 @@ describe('Soft navigations', () => {
   })
 
   // This reproduction condition only happens for chromium. I.e. safari & firefox load still fires before they let ajax finish.
+  // Also, Android 9.0- is not happy with 1mb-dom.html, so that ought to be excluded from this test.
   it.withBrowsersMatching(onlyChromium)('[NR-178375] ajax that finish before page load event should only be in iPL payload', async () => {
     let url = await browser.testHandle.assetURL('1mb-dom.html', config)
     let [iPLPayload, firstAjaxPayload] = await Promise.all([

@@ -45,7 +45,11 @@ export class Aggregate extends AggregateBase {
     timeToFirstByte.subscribe(({ entries }) => {
       this.addTiming('load', Math.round(entries[0].loadEventEnd))
     })
-    subscribeToVisibilityChange(() => this.#handleVitalMetric(cumulativeLayoutShift.current), true) // so CLS node only reports on vis change rather than on every change
+    subscribeToVisibilityChange(() => {
+      const { name, value, attrs } = cumulativeLayoutShift.current
+      if (value === undefined) return
+      this.addTiming(name, value * 1000, attrs) // downstream consumer interprets the value as ms-unit and converts it to seconds; cls score is neither and we need to negate that division
+    }, true) // so CLS node only reports on vis change rather than on every change
 
     if (getConfigurationValue(this.agentIdentifier, 'page_view_timing.long_task') === true) longTask.subscribe(this.#handleVitalMetric)
 

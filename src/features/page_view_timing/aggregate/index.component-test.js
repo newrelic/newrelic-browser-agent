@@ -8,11 +8,6 @@ import { VITAL_NAMES } from '../../../common/vitals/constants'
 jest.mock('web-vitals', () => ({
   __esModule: true,
   // eslint-disable-next-line
-  onFID: jest.fn(cb => cb({
-    value: 1234,
-    entries: [{ name: 'pointerdown', startTime: 5 }]
-  })),
-  // eslint-disable-next-line
   onINP: jest.fn((cb) => cb({
     value: 1,
     entries: [{ value: 1 }]
@@ -34,6 +29,11 @@ jest.mock('web-vitals/attribution', () => ({
   onFCP: jest.fn((cb) => cb({
     value: 1,
     attribution: {}
+  })),
+  // eslint-disable-next-line
+  onFID: jest.fn(cb => cb({
+    value: 1234,
+    attribution: { eventTime: 5, eventType: 'pointerdown' }
   }))
 }))
 let triggerVisChange
@@ -102,7 +102,7 @@ describe('pvt aggregate tests', () => {
     triggerVisChange()
     clsNode = pvtAgg.timings.find(tn => tn.name === VITAL_NAMES.CUMULATIVE_LAYOUT_SHIFT)
     expect(clsNode).toBeTruthy()
-    expect(clsNode.value).toEqual(0.111)
+    expect(clsNode.value).toEqual(111) // since cls multiply decimal by 1000 to offset consumer division by 1000
     expect(clsNode.attrs.cls).toBeUndefined() // cls node doesn't need cls property
   })
 })

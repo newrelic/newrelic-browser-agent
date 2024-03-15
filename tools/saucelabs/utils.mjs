@@ -43,8 +43,7 @@ export function buildSauceConnectOptions (cliArgs) {
     tunnelName: getSauceConnectTunnelName(),
     noSslBumpDomains: 'all',
     logger: console.log,
-    tunnelDomains: cliArgs.host || 'bam-test-1.nr-local.net',
-    proxyLocalhost: true
+    tunnelDomains: cliArgs.host || 'bam-test-1.nr-local.net'
   }
 
   if (cliArgs.quiet) {

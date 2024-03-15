@@ -6,8 +6,9 @@ import { isBrowserScope } from '../constants/runtime'
 export const cumulativeLayoutShift = new VitalMetric(VITAL_NAMES.CUMULATIVE_LAYOUT_SHIFT, (x) => x)
 
 if (isBrowserScope) {
-  onCLS(({ value, attribution }) => {
+  onCLS(({ value, attribution, id }) => {
     const attrs = {
+      metricId: id,
       largestShiftTarget: attribution.largestShiftTarget,
       largestShiftTime: attribution.largestShiftTime,
       largestShiftValue: attribution.largestShiftValue,

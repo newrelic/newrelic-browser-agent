@@ -12,7 +12,7 @@ const clsAttribution = {
 }
 const getFreshCLSImport = async (codeToRun) => {
   jest.doMock('web-vitals/attribution', () => ({
-    onCLS: jest.fn(cb => cb({ value: 0.123, attribution: clsAttribution }))
+    onCLS: jest.fn(cb => cb({ value: 0.123, attribution: clsAttribution, id: 'beepboop' }))
   }))
   const { cumulativeLayoutShift } = await import('./cumulative-layout-shift')
   codeToRun(cumulativeLayoutShift)
@@ -23,7 +23,7 @@ describe('cls', () => {
     getFreshCLSImport(metric => {
       metric.subscribe(({ value, attrs }) => {
         expect(value).toEqual(0.123)
-        expect(attrs).toEqual(clsAttribution)
+        expect(attrs).toEqual({ ...clsAttribution, metricId: 'beepboop' })
         done()
       })
     })

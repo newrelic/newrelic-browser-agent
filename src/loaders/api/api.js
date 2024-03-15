@@ -33,7 +33,7 @@ export function setTopLevelCallers () {
   }
 }
 
-export function setAPI (agentIdentifier, forceDrain) {
+export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) {
   if (!forceDrain) registerDrain(agentIdentifier, 'api')
   const apiInterface = {}
   var instanceEE = ee.get(agentIdentifier)
@@ -46,7 +46,6 @@ export function setAPI (agentIdentifier, forceDrain) {
   asyncApiMethods.forEach(fnName => { apiInterface[fnName] = apiCall(prefix, fnName, true, 'api') })
 
   apiInterface.addPageAction = apiCall(prefix, 'addPageAction', true, FEATURE_NAMES.pageAction)
-  apiInterface.setCurrentRouteName = apiCall(prefix, 'routeName', true, FEATURE_NAMES.spa)
 
   apiInterface.setPageViewName = function (name, host) {
     if (typeof name !== 'string') return
@@ -138,19 +137,20 @@ export function setAPI (agentIdentifier, forceDrain) {
     handle(SR_EVENT_EMITTER_TYPES.PAUSE, [], undefined, FEATURE_NAMES.sessionReplay, instanceEE)
   }
 
-  apiInterface.interaction = function () {
-    return new InteractionHandle().get()
+  apiInterface.interaction = function (options) {
+    return new InteractionHandle().get(typeof options === 'object' ? options : {})
   }
 
   function InteractionHandle () { }
 
-  var InteractionApiProto = InteractionHandle.prototype = {
+  const InteractionApiProto = InteractionHandle.prototype = {
     createTracer: function (name, cb) {
       var contextStore = {}
       var ixn = this
       var hasCb = typeof cb === 'function'
       handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/createTracer/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
-      handle(spaPrefix + 'tracer', [now(), name, contextStore], ixn, FEATURE_NAMES.spa, instanceEE)
+      // Soft navigations won't support Tracer nodes, but this fn should still work the same otherwise (e.g., run the orig cb).
+      if (!runSoftNavOverSpa) handle(spaPrefix + 'tracer', [now(), name, contextStore], ixn, FEATURE_NAMES.spa, instanceEE)
       return function () {
         tracerEE.emit((hasCb ? '' : 'no-') + 'fn-start', [now(), ixn, hasCb], contextStore)
         if (hasCb) {
@@ -169,14 +169,15 @@ export function setAPI (agentIdentifier, forceDrain) {
   }
 
   ;['actionText', 'setName', 'setAttribute', 'save', 'ignore', 'onEnd', 'getContext', 'end', 'get'].forEach(name => {
-    InteractionApiProto[name] = apiCall(spaPrefix, name, undefined, FEATURE_NAMES.spa)
+    InteractionApiProto[name] = apiCall(spaPrefix, name, undefined, runSoftNavOverSpa ? FEATURE_NAMES.softNav : FEATURE_NAMES.spa)
   })
+  apiInterface.setCurrentRouteName = runSoftNavOverSpa ? apiCall(spaPrefix, 'routeName', undefined, FEATURE_NAMES.softNav) : apiCall(prefix, 'routeName', true, FEATURE_NAMES.spa)
 
   function apiCall (prefix, name, notSpa, bufferGroup) {
     return function () {
       handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/' + name + '/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
       if (bufferGroup) handle(prefix + name, [now(), ...arguments], notSpa ? null : this, bufferGroup, instanceEE) // no bufferGroup means only the SM is emitted
-      return notSpa ? undefined : this
+      return notSpa ? undefined : this // returns the InteractionHandle which allows these methods to be chained
     }
   }
 

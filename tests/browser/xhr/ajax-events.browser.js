@@ -58,7 +58,7 @@ test('storeXhr for a SPA ajax request buffers in spaAjaxEvents', function (t) {
   t.ok(spaAjaxEvent.startTime === 0 && spaAjaxEvent.path === '/pathname', 'expected SPA ajax event is buffered')
 
   // clear spaAjaxEvents
-  baseEE.emit('interactionSaved', [interaction])
+  baseEE.emit('interactionDone', [interaction, true])
 
   t.end()
 })
@@ -121,7 +121,7 @@ test('on interactionDiscarded, saved SPA events are buffered in ajaxEvents', fun
   ]
 
   storeXhr.apply(context, ajaxArguments)
-  baseEE.emit('interactionDiscarded', [interaction])
+  baseEE.emit('interactionDone', [interaction, false])
 
   const events = getStoredEvents()
 

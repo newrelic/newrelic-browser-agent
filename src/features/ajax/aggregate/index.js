@@ -2,7 +2,7 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { registerHandler as register } from '../../../common/event-emitter/register-handler'
+import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { stringify } from '../../../common/util/stringify'
 import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../../../common/serialize/bel-serializer'
 import { handle } from '../../../common/event-emitter/handle'
@@ -14,6 +14,7 @@ import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { parseGQL } from './gql'
+import { getNREUMInitializedAgent } from '../../../common/window/nreum'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -22,7 +23,7 @@ export class Aggregate extends AggregateBase {
     const agentInit = getConfiguration(agentIdentifier)
     const allAjaxIsEnabled = agentInit.ajax.enabled !== false
 
-    register('xhr', storeXhr, this.featureName, this.ee)
+    registerHandler('xhr', storeXhr, this.featureName, this.ee)
     if (!allAjaxIsEnabled) {
       this.drain()
       return // feature will only collect timeslice metrics & ajax trace nodes if it's not fully enabled
@@ -44,20 +45,21 @@ export class Aggregate extends AggregateBase {
     this.prepareHarvest = prepareHarvest
     this.getStoredEvents = function () { return { ajaxEvents, spaAjaxEvents } }
 
-    ee.on('interactionSaved', (interaction) => {
-      if (!spaAjaxEvents[interaction.id]) return
-      // remove from the spaAjaxEvents buffer, and let spa harvest it
-      delete spaAjaxEvents[interaction.id]
-    })
-    ee.on('interactionDiscarded', (interaction) => {
+    // --- v Used by old spa feature
+    ee.on('interactionDone', (interaction, wasSaved) => {
       if (!spaAjaxEvents[interaction.id]) return
 
-      spaAjaxEvents[interaction.id].forEach(function (item) {
-        // move it from the spaAjaxEvents buffer to the ajaxEvents buffer for harvesting here
-        ajaxEvents.push(item)
-      })
+      if (!wasSaved) { // if the ixn was saved, then its ajax reqs are part of the payload whereas if it was discarded, it should still be harvested in the ajax feature itself
+        spaAjaxEvents[interaction.id].forEach(function (item) {
+          ajaxEvents.push(item)
+        })
+      }
       delete spaAjaxEvents[interaction.id]
     })
+    // --- ^
+    // --- v Used by new soft nav
+    registerHandler('returnAjax', event => ajaxEvents.push(event), this.featureName, this.ee)
+    // --- ^
 
     const scheduler = new HarvestScheduler('events', {
       onFinished: onEventsHarvestFinished,
@@ -138,12 +140,14 @@ export class Aggregate extends AggregateBase {
         body: this.body,
         query: this?.parsedOrigin?.search
       })
-
       if (event.gql) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Ajax/Events/GraphQL/Bytes-Added', stringify(event.gql).length], undefined, FEATURE_NAMES.metrics, ee)
 
-      // if the ajax happened inside an interaction, hold it until the interaction finishes
-      if (this.spaNode) {
-        var interactionId = this.spaNode.interaction.id
+      const softNavInUse = Boolean(getNREUMInitializedAgent(agentIdentifier)?.features?.[FEATURE_NAMES.softNav])
+
+      if (softNavInUse) { // For newer soft nav (when running), pass the event to it for evaluation -- either part of an interaction or is given back
+        handle('ajax', [event], undefined, FEATURE_NAMES.softNav, ee)
+      } else if (this.spaNode) { // For old spa (when running), if the ajax happened inside an interaction, hold it until the interaction finishes
+        const interactionId = this.spaNode.interaction.id
         spaAjaxEvents[interactionId] = spaAjaxEvents[interactionId] || []
         spaAjaxEvents[interactionId].push(event)
       } else {
@@ -222,6 +226,7 @@ export class Aggregate extends AggregateBase {
 
       for (var i = 0; i < events.length; i++) {
         var event = events[i]
+
         var fields = [
           numeric(event.startTime),
           numeric(event.endTime - event.startTime),

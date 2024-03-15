@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {init}
+    {config}
+    {loader}
+    <script type="text/javascript">
+      const xhr = new XMLHttpRequest()
+      // xhr.onreadystatechange = function(){
+      //   if (xhr.readyState === 4) console.log("xhr received")
+      // }
+      xhr.open('POST', '/echo')
+      xhr.send('123')
+			fetch('/json')
+      
+      newrelic.noticeError('ooga')
+			throw new Error('booga')
+    </script>
+  </head>
+  <body>
+    <div>This page makes couple ajax requests and throws errors before load</div>
+  </body>
+</html>

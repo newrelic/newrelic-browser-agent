@@ -706,7 +706,7 @@ export class Aggregate extends AggregateBase {
 
     function saveInteraction (interaction) {
       if (interaction.ignored || (!interaction.save && !interaction.routeChange)) {
-        baseEE.emit('interactionDiscarded', [interaction])
+        baseEE.emit('interactionDone', [interaction, false])
         return
       }
 
@@ -724,12 +724,13 @@ export class Aggregate extends AggregateBase {
         interaction.root.attrs.firstPaint = firstPaint.current.value
         interaction.root.attrs.firstContentfulPaint = firstContentfulPaint.current.value
       }
-      baseEE.emit('interactionSaved', [interaction])
+      baseEE.emit('interactionDone', [interaction, true])
       state.interactionsToHarvest.push(interaction)
 
-      let smCategory = 'RouteChange'
+      let smCategory
       if (interaction.root?.attrs?.trigger === 'initialPageLoad') smCategory = 'InitialPageLoad'
-      else if (interaction.root?.attrs?.trigger === 'api') smCategory = 'Custom'
+      else if (interaction.routeChange) smCategory = 'RouteChange'
+      else smCategory = 'Custom'
       handle(SUPPORTABILITY_METRIC_CHANNEL, [`Spa/Interaction/${smCategory}/Duration/Ms`, Math.max((interaction.root?.end || 0) - (interaction.root?.start || 0), 0)], undefined, FEATURE_NAMES.metrics, baseEE)
 
       scheduler.scheduleHarvest(0)

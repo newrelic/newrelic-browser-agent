@@ -104,7 +104,7 @@ export class Aggregate extends AggregateBase {
       endpoint: 'rum',
       payload: { qs: queryParameters, body },
       opts: { needResponse: true, sendEmptyBody: true },
-      cbFinished: ({ status, responseText, xhr }) => {
+      cbFinished: ({ status, responseText, xhr, fullUrl }) => {
         if (status >= 400 || status === 0) {
           // Adding retry logic for the rum call will be a separate change
           this.ee.abort()
@@ -112,8 +112,7 @@ export class Aggregate extends AggregateBase {
         }
 
         try {
-          const observationContext = this.observationContextManager.getCreateContext(xhr)
-          this.timeKeeper.processRumRequest(xhr, observationContext.harvest?.fullUrl)
+          this.timeKeeper.processRumRequest(xhr, fullUrl)
         } catch (error) {
           handle(SUPPORTABILITY_METRIC_CHANNEL, ['PVE/NRTime/Calculation/Failed'], undefined, FEATURE_NAMES.metrics, this.ee)
           drain(this.agentIdentifier, FEATURE_NAMES.metrics, true)

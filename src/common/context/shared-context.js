@@ -1,5 +1,4 @@
 import { warn } from '../util/console'
-import { ObservationContextManager } from './observation-context-manager'
 
 const model = {
   agentIdentifier: '',
@@ -18,7 +17,5 @@ export class SharedContext {
     } catch (err) {
       warn('An error occured while setting SharedContext', err)
     }
-
-    this.observationContextManager = ObservationContextManager.getObservationContextByAgentIdentifier(this.sharedContext.agentIdentifier)
   }
 }

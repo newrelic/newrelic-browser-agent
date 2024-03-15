@@ -2,9 +2,7 @@
 
 import { warn } from '../common/util/console'
 import { SR_EVENT_EMITTER_TYPES } from '../features/session_replay/constants'
-import { ObservationContextManager } from '../common/context/observation-context-manager'
 import { generateRandomHexString } from '../common/ids/unique-id'
-import { ee } from '../common/event-emitter/contextual-ee'
 import { TimeKeeper } from '../common/timing/time-keeper'
 
 /**
@@ -13,15 +11,10 @@ import { TimeKeeper } from '../common/timing/time-keeper'
 
 export class AgentBase {
   agentIdentifier
-  observationContextManager = new ObservationContextManager()
   timeKeeper = new TimeKeeper(this)
 
   constructor (agentIdentifier = generateRandomHexString(16)) {
     this.agentIdentifier = agentIdentifier
-
-    // Assign the observation context to the event emitter, so it knows how to create observation contexts
-    const eventEmitter = ee.get(agentIdentifier)
-    eventEmitter.observationContextManager = this.observationContextManager
   }
 
   /**

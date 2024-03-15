@@ -7,7 +7,6 @@ import { warn } from '../util/console'
 import { applyFnToProps } from '../util/traverse'
 
 import { Harvest } from './harvest'
-import { ObservationContextManager } from '../context/observation-context-manager'
 
 jest.enableAutomock()
 jest.unmock('./harvest')
@@ -15,7 +14,6 @@ let harvestInstance
 
 beforeEach(() => {
   harvestInstance = new Harvest()
-  harvestInstance.observationContextManager = new ObservationContextManager()
 })
 
 afterEach(() => {
@@ -370,7 +368,7 @@ describe('_send', () => {
     expect(xhrAddEventListener).toHaveBeenCalledWith('loadend', expect.any(Function), expect.any(Object))
     expect(result).toEqual(jest.mocked(submitDataModule.xhr).mock.results[0].value)
     expect(submitMethod).not.toHaveBeenCalled()
-    expect(spec.cbFinished).toHaveBeenCalledWith({ ...xhrState, sent: true, xhr: xhrState })
+    expect(spec.cbFinished).toHaveBeenCalledWith({ ...xhrState, sent: true, xhr: xhrState, fullUrl: expect.any(String) })
   })
 
   test('should set cbFinished state retry to true with delay when xhr has 429 status', () => {
@@ -395,7 +393,8 @@ describe('_send', () => {
       sent: true,
       retry: true,
       delay: harvestInstance.tooManyRequestsDelay,
-      xhr: xhrState
+      xhr: xhrState,
+      fullUrl: expect.any(String)
     })
   })
 
@@ -421,7 +420,8 @@ describe('_send', () => {
       ...xhrState,
       sent: true,
       retry: true,
-      xhr: xhrState
+      xhr: xhrState,
+      fullUrl: expect.any(String)
     })
   })
 
@@ -446,7 +446,8 @@ describe('_send', () => {
     expect(spec.cbFinished).toHaveBeenCalledWith({
       ...xhrState,
       sent: true,
-      xhr: xhrState
+      xhr: xhrState,
+      fullUrl: expect.any(String)
     })
   })
 
@@ -472,7 +473,8 @@ describe('_send', () => {
       ...xhrState,
       responseText: undefined,
       sent: true,
-      xhr: xhrState
+      xhr: xhrState,
+      fullUrl: expect.any(String)
     })
   })
 
@@ -495,7 +497,8 @@ describe('_send', () => {
     expect(spec.cbFinished).toHaveBeenCalledWith({
       ...xhrState,
       sent: false,
-      xhr: xhrState
+      xhr: xhrState,
+      fullUrl: expect.any(String)
     })
   })
 })

@@ -15,14 +15,12 @@ describe('newrelic api', () => {
     })
     const agentInstanceApiMethods = await browser.execute(function () {
       function getAllPropertyNames (obj) {
-        var result = new Set()
+        let result = new Set()
         while (obj) {
-          Object.getOwnPropertyNames(obj).forEach(function (p) {
-            return result.add(p)
-          })
+          Object.getOwnPropertyNames(obj).forEach(p => result.add(p))
           obj = Object.getPrototypeOf(obj)
         }
-        return Array.from(result)
+        return [...result]
       }
       return getAllPropertyNames(Object.values(newrelic.initializedAgents)[0])
     })

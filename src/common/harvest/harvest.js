@@ -140,17 +140,12 @@ export class Harvest extends SharedContext {
        Following the removal of img-element method, IE will also use sync XHR on page dismissal to ensure final analytics are sent. */
     let result = submitMethod({ url: fullUrl, body, sync: opts.unload && (isWorkerScope || isIE), headers })
 
-    if (this.observationContextManager.canObserve(result)) {
-      const observationContext = this.observationContextManager.getCreateContext(result)
-      observationContext.harvest = { fullUrl }
-    }
-
     if (!opts.unload && cbFinished && submitMethod === submitData.xhr) {
       const harvestScope = this
       result.addEventListener('loadend', function () {
         // `this` refers to the XHR object in this scope, do not change this to a fat arrow
         // status 0 refers to a local error, such as CORS or network failure, or a blocked request by the browser (e.g. adblocker)
-        const cbResult = { sent: this.status !== 0, status: this.status, xhr: this }
+        const cbResult = { sent: this.status !== 0, status: this.status, xhr: this, fullUrl }
         if (this.status === 429) {
           cbResult.retry = true
           cbResult.delay = harvestScope.tooManyRequestsDelay

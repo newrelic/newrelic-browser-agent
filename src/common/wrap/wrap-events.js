@@ -7,16 +7,16 @@
  * This module is used directly by: session_trace.
  * It is also called by -> wrapXhr <-, so see "wrap-xhr.js" for features that use this indirectly.
  */
-import { ee as baseEE } from '../event-emitter/contextual-ee'
+import { ee as baseEE, contextId } from '../event-emitter/contextual-ee'
 import { createWrapperWithEmitter as wfn } from './wrap-function'
 import { getOrSet } from '../util/get-or-set'
 import { globalScope, isBrowserScope } from '../constants/runtime'
-import { ObservationContextManager } from '../context/observation-context-manager'
 
 const wrapped = {}
 const XHR = globalScope.XMLHttpRequest
 const ADD_EVENT_LISTENER = 'addEventListener'
 const REMOVE_EVENT_LISTENER = 'removeEventListener'
+const flag = `nr@wrapped:${contextId}`
 
 /**
  * Wraps `addEventListener` and `removeEventListener` on: global scope; the prototype of `XMLHttpRequest`, and
@@ -49,7 +49,7 @@ export function wrapEvents (sharedEE) {
       return
     }
 
-    var wrapped = getOrSet(originalListener, ObservationContextManager.contextWrappedId, function () {
+    var wrapped = getOrSet(originalListener, flag, function () {
       var listener = {
         object: wrapHandleEvent,
         function: originalListener

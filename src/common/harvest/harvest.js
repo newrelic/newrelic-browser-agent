@@ -145,7 +145,7 @@ export class Harvest extends SharedContext {
       result.addEventListener('loadend', function () {
         // `this` refers to the XHR object in this scope, do not change this to a fat arrow
         // status 0 refers to a local error, such as CORS or network failure, or a blocked request by the browser (e.g. adblocker)
-        const cbResult = { sent: this.status !== 0, status: this.status }
+        const cbResult = { sent: this.status !== 0, status: this.status, xhr: this, fullUrl }
         if (this.status === 429) {
           cbResult.retry = true
           cbResult.delay = harvestScope.tooManyRequestsDelay

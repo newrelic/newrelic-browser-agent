@@ -1,4 +1,5 @@
 import { ee } from '../../common/event-emitter/contextual-ee'
+import { TimeKeeper } from '../../common/timing/time-keeper'
 
 export class FeatureBase {
   constructor (agentIdentifier, aggregator, featureName) {
@@ -16,5 +17,7 @@ export class FeatureBase {
      * @type {boolean}
      */
     this.blocked = false
+
+    this.timeKeeper = TimeKeeper.getTimeKeeperByAgentIdentifier(this.agentIdentifier)
   }
 }

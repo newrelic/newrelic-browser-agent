@@ -9,8 +9,6 @@ import { InstrumentBase } from '../../utils/instrument-base'
 import * as CONSTANTS from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { isBrowserScope } from '../../../common/constants/runtime'
-import { generateRandomHexString } from '../../../common/ids/unique-id'
-import { getRuntime } from '../../../common/config/config'
 
 const {
   BST_RESOURCE, RESOURCE, START, END, FEATURE_NAME, FN_END, FN_START, PUSH_STATE
@@ -21,10 +19,6 @@ export class Instrument extends InstrumentBase {
   constructor (agentIdentifier, aggregator, auto = true) {
     super(agentIdentifier, aggregator, FEATURE_NAME, auto)
     if (!isBrowserScope) return // session traces not supported outside web env
-
-    this.agentRuntime = getRuntime(agentIdentifier)
-    /** The PageTrace ID generated at each hard page load */
-    this.agentRuntime.ptid = this.ptid = generateRandomHexString(10)
 
     const thisInstrumentEE = this.ee
     wrapHistory(thisInstrumentEE)

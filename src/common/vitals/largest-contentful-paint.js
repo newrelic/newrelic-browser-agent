@@ -18,6 +18,7 @@ if (isBrowserScope) {
         size: lcpEntry.size,
         eid: lcpEntry.id,
         element: attribution.element,
+        timeToFirstByte: attribution.timeToFirstByte,
         resourceLoadDelay: attribution.resourceLoadDelay,
         resourceLoadTime: attribution.resourceLoadTime,
         elementRenderDelay: attribution.elementRenderDelay

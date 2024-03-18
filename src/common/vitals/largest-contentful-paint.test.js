@@ -11,6 +11,7 @@ const lcpAttribution = {
     element: { tagName: 'sometagName' }
   },
   element: '#someid',
+  timeToFirstByte: 1,
   resourceLoadDelay: 2,
   resourceLoadTime: 3,
   elementRenderDelay: 4,
@@ -29,12 +30,13 @@ describe('lcp', () => {
   test('reports lcp from web-vitals', (done) => {
     getFreshLCPImport(metric => metric.subscribe(({ value, attrs }) => {
       expect(value).toEqual(1)
-      expect(attrs).toEqual({
+      expect(attrs).toStrictEqual({
         size: lcpAttribution.lcpEntry.size,
         eid: lcpAttribution.lcpEntry.id,
         elUrl: 'http://domain.com/page', // url is cleaned so query & hash removed
         elTag: lcpAttribution.lcpEntry.element.tagName,
         element: lcpAttribution.element,
+        timeToFirstByte: lcpAttribution.timeToFirstByte,
         resourceLoadDelay: lcpAttribution.resourceLoadDelay,
         resourceLoadTime: lcpAttribution.resourceLoadTime,
         elementRenderDelay: lcpAttribution.elementRenderDelay

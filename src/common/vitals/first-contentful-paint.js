@@ -26,6 +26,7 @@ if (isBrowserScope) {
     onFCP(({ value, attribution }) => {
       if (initiallyHidden || firstContentfulPaint.isValid) return
       const attrs = {
+        timeToFirstByte: attribution.timeToFirstByte,
         firstByteToFCP: attribution.firstByteToFCP,
         loadState: attribution.loadState
       }

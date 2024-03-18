@@ -5,6 +5,7 @@ beforeEach(() => {
 })
 
 const fcpAttribution = {
+  timeToFirstByte: 12,
   firstByteToFCP: 23,
   loadState: 'dom-interactive'
 }
@@ -22,7 +23,7 @@ describe('fcp', () => {
     getFreshFCPImport(firstContentfulPaint => {
       firstContentfulPaint.subscribe(({ value, attrs }) => {
         expect(value).toEqual(1)
-        expect(attrs).toEqual(fcpAttribution)
+        expect(attrs).toStrictEqual(fcpAttribution)
         done()
       })
     })

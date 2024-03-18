@@ -61,7 +61,7 @@ describe('cls', () => {
     })
   })
 
-  test('reports more than once', () => {
+  test('reports more than once', (done) => {
     jest.doMock('../constants/runtime', () => ({
       __esModule: true,
       isBrowserScope: true
@@ -74,6 +74,7 @@ describe('cls', () => {
       })
       metric.update({ value: 0.123 })
       expect(triggered).toBeGreaterThanOrEqual(2)
+      done()
     })
   })
 })

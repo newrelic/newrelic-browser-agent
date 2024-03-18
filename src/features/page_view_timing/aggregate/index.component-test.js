@@ -5,15 +5,6 @@ import { setRuntime } from '../../../common/config/config'
 import { VITAL_NAMES } from '../../../common/vitals/constants'
 
 // Note: these callbacks fire right away unlike the real web-vitals API which are async-on-trigger
-jest.mock('web-vitals', () => ({
-  __esModule: true,
-  // eslint-disable-next-line
-  onLCP: jest.fn((cb) => cb({
-    value: 1,
-    entries: [{ value: 1 }]
-  }))
-}))
-
 jest.mock('web-vitals/attribution', () => ({
   // eslint-disable-next-line
   onCLS: jest.fn((cb) => cb({
@@ -33,6 +24,11 @@ jest.mock('web-vitals/attribution', () => ({
   // eslint-disable-next-line
   onINP: jest.fn((cb) => cb({
     value: 8,
+    attribution: {}
+  })),
+  // eslint-disable-next-line
+  onLCP: jest.fn((cb) => cb({
+    value: 1,
     attribution: {}
   }))
 }))

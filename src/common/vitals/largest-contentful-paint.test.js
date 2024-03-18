@@ -4,7 +4,22 @@ beforeEach(() => {
   jest.clearAllMocks()
 })
 
+const lcpAttribution = {
+  lcpEntry: {
+    size: 1,
+    id: 'someid',
+    element: { tagName: 'sometagName' }
+  },
+  element: '#someid',
+  resourceLoadDelay: 2,
+  resourceLoadTime: 3,
+  elementRenderDelay: 4,
+  url: 'http://domain.com/page?k1=v1#hash'
+}
 const getFreshLCPImport = async (codeToRun) => {
+  jest.doMock('web-vitals/attribution', () => ({
+    onLCP: jest.fn(cb => cb({ value: 1, attribution: lcpAttribution }))
+  }))
   const { largestContentfulPaint } = await import('./largest-contentful-paint')
   codeToRun(largestContentfulPaint)
 }
@@ -13,11 +28,15 @@ describe('lcp', () => {
   test('reports lcp from web-vitals', (done) => {
     getFreshLCPImport(metric => metric.subscribe(({ value, attrs }) => {
       expect(value).toEqual(1)
-      expect(attrs).toMatchObject({
-        size: expect.any(Number),
-        eid: expect.any(String),
-        elUrl: expect.any(String),
-        elTag: expect.any(String)
+      expect(attrs).toEqual({
+        size: lcpAttribution.lcpEntry.size,
+        eid: lcpAttribution.lcpEntry.id,
+        elUrl: 'http://domain.com/page', // url is cleaned so query & hash removed
+        elTag: lcpAttribution.lcpEntry.element.tagName,
+        element: lcpAttribution.element,
+        resourceLoadDelay: lcpAttribution.resourceLoadDelay,
+        resourceLoadTime: lcpAttribution.resourceLoadTime,
+        elementRenderDelay: lcpAttribution.elementRenderDelay
       })
       done()
     }))
@@ -59,16 +78,16 @@ describe('lcp', () => {
       __esModule: true,
       isBrowserScope: true
     }))
-    let sub1, sub2
+    let witness = 0
     getFreshLCPImport(metric => {
-      const remove1 = metric.subscribe(({ entries }) => {
-        sub1 ??= entries[0].id
-        if (sub1 === sub2) { remove1(); remove2(); done() }
+      metric.subscribe(({ value }) => {
+        expect(value).toEqual(1)
+        witness++
       })
-
-      const remove2 = metric.subscribe(({ entries }) => {
-        sub2 ??= entries[0].id
-        if (sub1 === sub2) { remove1(); remove2(); done() }
+      metric.subscribe(({ value }) => {
+        expect(value).toEqual(1)
+        witness++
+        if (witness === 2) done()
       })
     })
   })

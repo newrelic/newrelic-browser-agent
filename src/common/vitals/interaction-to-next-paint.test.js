@@ -61,7 +61,7 @@ describe('inp', () => {
     })
   })
 
-  test('reports more than once', () => {
+  test('reports more than once', (done) => {
     jest.doMock('../constants/runtime', () => ({
       __esModule: true,
       isBrowserScope: true
@@ -74,6 +74,7 @@ describe('inp', () => {
       })
       metric.update({ value: 8 })
       expect(triggered).toBeGreaterThanOrEqual(2)
+      done()
     })
   })
 })

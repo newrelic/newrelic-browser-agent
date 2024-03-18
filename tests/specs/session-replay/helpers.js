@@ -19,7 +19,6 @@ export function testExpectedReplay ({ data, session, hasMeta, hasSnapshot, hasEr
     browser_monitoring_key: expect.any(String),
     type: 'SessionReplay',
     app_id: appId || expect.any(String),
-    ...(entityGuid && { entity_guid: entityGuid }),
     protocol_version: expect.any(String),
     attributes: expect.any(String)
   })
@@ -28,6 +27,7 @@ export function testExpectedReplay ({ data, session, hasMeta, hasSnapshot, hasEr
 
   expect(decodedObj).toMatchObject({
     ...(contentEncoding && { content_encoding: 'gzip' }),
+    ...(entityGuid && { entityGuid }),
     'replay.firstTimestamp': expect.any(Number),
     'replay.firstTimestampOffset': expect.any(Number),
     'replay.lastTimestamp': expect.any(Number),

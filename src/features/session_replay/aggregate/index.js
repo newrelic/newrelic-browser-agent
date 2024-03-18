@@ -310,12 +310,12 @@ export class Aggregate extends AggregateBase {
         browser_monitoring_key: info.licenseKey,
         type: 'SessionReplay',
         app_id: info.applicationID,
-        ...(agentMetadata.entityGuid && { entity_guid: agentMetadata.entityGuid }),
         protocol_version: '0',
         attributes: encodeObj({
           // this section of attributes must be controllable and stay below the query param padding limit -- see QUERY_PARAM_PADDING
           // if not, data could be lost to truncation at time of sending, potentially breaking parsing / API behavior in NR1
           ...(!!this.gzipper && !!this.u8 && { content_encoding: 'gzip' }),
+          ...(agentMetadata.entityGuid && { entityGuid: agentMetadata.entityGuid }),
           'replay.firstTimestamp': firstTimestamp,
           'replay.firstTimestampOffset': firstTimestamp - agentOffset,
           'replay.lastTimestamp': lastTimestamp,

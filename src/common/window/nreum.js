@@ -1,4 +1,3 @@
-import { now } from '../timing/now'
 import { globalScope } from '../constants/runtime'
 
 export const defaults = {
@@ -71,7 +70,7 @@ export function setNREUMInitializedAgent (id, newAgentInstance) {
   let nr = gosNREUM()
   nr.initializedAgents ??= {}
   newAgentInstance.initializedAt = {
-    ms: now(),
+    ms: newAgentInstance.timeKeeper.now(),
     date: new Date()
   }
   nr.initializedAgents[id] = newAgentInstance

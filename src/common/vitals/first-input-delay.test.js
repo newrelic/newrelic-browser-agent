@@ -10,9 +10,10 @@ const fidAttribution = {
   eventTime: 1,
   loadState: 'loading'
 }
+let triggeronFIDCallback
 const getFreshFIDImport = async (codeToRun) => {
   jest.doMock('web-vitals/attribution', () => ({
-    onFID: jest.fn(cb => cb({ value: 100, attribution: fidAttribution }))
+    onFID: jest.fn(cb => { triggeronFIDCallback = cb; cb({ value: 100, attribution: fidAttribution }) })
   }))
   const { firstInputDelay } = await import('./first-input-delay')
   codeToRun(firstInputDelay)
@@ -87,15 +88,15 @@ describe('fid', () => {
       isBrowserScope: true
     }))
     let triggered = 0
-    getFreshFIDImport(metric => metric.subscribe(({ value }) => {
-      triggered++
-      expect(value).toEqual(1)
-      expect(triggered).toEqual(1)
-      setTimeout(() => {
+    getFreshFIDImport(metric => {
+      metric.subscribe(({ value }) => {
+        triggered++
+        expect(value).toEqual(1)
         expect(triggered).toEqual(1)
-        done()
-      }, 1000)
+      })
+      triggeronFIDCallback({ value: 'notequal1' })
+      expect(triggered).toEqual(1)
+      done()
     })
-    )
   })
 })

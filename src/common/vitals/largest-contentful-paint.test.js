@@ -16,9 +16,10 @@ const lcpAttribution = {
   elementRenderDelay: 4,
   url: 'http://domain.com/page?k1=v1#hash'
 }
+let triggeronLCPCallback
 const getFreshLCPImport = async (codeToRun) => {
   jest.doMock('web-vitals/attribution', () => ({
-    onLCP: jest.fn(cb => cb({ value: 1, attribution: lcpAttribution }))
+    onLCP: jest.fn(cb => { triggeronLCPCallback = cb; cb({ value: 1, attribution: lcpAttribution }) })
   }))
   const { largestContentfulPaint } = await import('./largest-contentful-paint')
   codeToRun(largestContentfulPaint)
@@ -99,15 +100,15 @@ describe('lcp', () => {
       isBrowserScope: true
     }))
     let triggered = 0
-    getFreshLCPImport(metric => metric.subscribe(({ value }) => {
-      triggered++
-      expect(value).toEqual(1)
-      expect(triggered).toEqual(1)
-      setTimeout(() => {
+    getFreshLCPImport(metric => {
+      metric.subscribe(({ value }) => {
+        triggered++
+        expect(value).toEqual(1)
         expect(triggered).toEqual(1)
-        done()
-      }, 1000)
+      })
+      triggeronLCPCallback({ value: 'notequal1' })
+      expect(triggered).toEqual(1)
+      done()
     })
-    )
   })
 })

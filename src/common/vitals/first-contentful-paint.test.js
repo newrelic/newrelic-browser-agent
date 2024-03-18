@@ -8,9 +8,10 @@ const fcpAttribution = {
   firstByteToFCP: 23,
   loadState: 'dom-interactive'
 }
+let triggeronFCPCallback
 const getFreshFCPImport = async (codeToRun) => {
   jest.doMock('web-vitals/attribution', () => ({
-    onFCP: jest.fn(cb => cb({ value: 1, attribution: fcpAttribution }))
+    onFCP: jest.fn(cb => { triggeronFCPCallback = cb; cb({ value: 1, attribution: fcpAttribution }) })
   }))
   const { firstContentfulPaint } = await import('./first-contentful-paint')
   codeToRun(firstContentfulPaint)
@@ -120,15 +121,15 @@ describe('fcp', () => {
       isBrowserScope: true
     }))
     let triggered = 0
-    getFreshFCPImport(firstContentfulPaint => firstContentfulPaint.subscribe(({ value }) => {
-      triggered++
-      expect(value).toEqual(1)
-      expect(triggered).toEqual(1)
-      setTimeout(() => {
+    getFreshFCPImport(firstContentfulPaint => {
+      firstContentfulPaint.subscribe(({ value }) => {
+        triggered++
+        expect(value).toEqual(1)
         expect(triggered).toEqual(1)
-        done()
-      }, 1000)
+      })
+      triggeronFCPCallback({ value: 'notequal1' })
+      expect(triggered).toEqual(1)
+      done()
     })
-    )
   })
 })

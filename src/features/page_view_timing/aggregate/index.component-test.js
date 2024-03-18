@@ -8,11 +8,6 @@ import { VITAL_NAMES } from '../../../common/vitals/constants'
 jest.mock('web-vitals', () => ({
   __esModule: true,
   // eslint-disable-next-line
-  onINP: jest.fn((cb) => cb({
-    value: 1,
-    entries: [{ value: 1 }]
-  })),
-  // eslint-disable-next-line
   onLCP: jest.fn((cb) => cb({
     value: 1,
     entries: [{ value: 1 }]
@@ -34,6 +29,11 @@ jest.mock('web-vitals/attribution', () => ({
   onFID: jest.fn(cb => cb({
     value: 1234,
     attribution: { eventTime: 5, eventType: 'pointerdown' }
+  })),
+  // eslint-disable-next-line
+  onINP: jest.fn((cb) => cb({
+    value: 8,
+    attribution: {}
   }))
 }))
 let triggerVisChange
@@ -104,5 +104,11 @@ describe('pvt aggregate tests', () => {
     expect(clsNode).toBeTruthy()
     expect(clsNode.value).toEqual(111) // since cls multiply decimal by 1000 to offset consumer division by 1000
     expect(clsNode.attrs.cls).toBeUndefined() // cls node doesn't need cls property
+  })
+  test('sends INP node with right val', () => {
+    let inpNode = pvtAgg.timings.find(tn => tn.name === VITAL_NAMES.INTERACTION_TO_NEXT_PAINT)
+    expect(inpNode).toBeTruthy()
+    expect(inpNode.value).toEqual(8)
+    expect(inpNode.attrs.cls).toEqual(0.111)
   })
 })

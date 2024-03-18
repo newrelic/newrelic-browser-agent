@@ -4,7 +4,16 @@ beforeEach(() => {
   jest.clearAllMocks()
 })
 
+const inpAttribution = {
+  eventTarget: 'html',
+  eventType: 'keydown',
+  eventTime: 100,
+  loadState: 'complete'
+}
 const getFreshINPImport = async (codeToRun) => {
+  jest.doMock('web-vitals/attribution', () => ({
+    onINP: jest.fn(cb => cb({ value: 8, attribution: inpAttribution, id: 'ruhroh' }))
+  }))
   const { interactionToNextPaint } = await import('./interaction-to-next-paint')
   codeToRun(interactionToNextPaint)
 }
@@ -12,8 +21,8 @@ const getFreshINPImport = async (codeToRun) => {
 describe('inp', () => {
   test('reports fcp from web-vitals', (done) => {
     getFreshINPImport(metric => metric.subscribe(({ value, attrs }) => {
-      expect(value).toEqual(1)
-      expect(attrs.metricId).toEqual('id')
+      expect(value).toEqual(8)
+      expect(attrs).toEqual({ ...inpAttribution, metricId: 'ruhroh' })
       done()
     }))
   })
@@ -38,21 +47,21 @@ describe('inp', () => {
       __esModule: true,
       isBrowserScope: true
     }))
-    let sub1, sub2
+    let witness = 0
     getFreshINPImport(metric => {
-      const remove1 = metric.subscribe(({ entries }) => {
-        sub1 ??= entries[0].id
-        if (sub1 === sub2) { remove1(); remove2(); done() }
+      metric.subscribe(({ value }) => {
+        expect(value).toEqual(8)
+        witness++
       })
-
-      const remove2 = metric.subscribe(({ entries }) => {
-        sub2 ??= entries[0].id
-        if (sub1 === sub2) { remove1(); remove2(); done() }
+      metric.subscribe(({ value }) => {
+        expect(value).toEqual(8)
+        witness++
+        if (witness === 2) done()
       })
     })
   })
 
-  test('reports more than once', (done) => {
+  test('reports more than once', () => {
     jest.doMock('../constants/runtime', () => ({
       __esModule: true,
       isBrowserScope: true
@@ -61,14 +70,10 @@ describe('inp', () => {
     getFreshINPImport(metric => {
       metric.subscribe(({ value }) => {
         triggered++
-        expect(value).toEqual(1)
-        expect(triggered).toEqual(1)
+        expect(value).toEqual(8)
       })
-      setTimeout(() => {
-        // the metric emits every quarter second
-        expect(triggered).toBeGreaterThanOrEqual(3)
-        done()
-      }, 1000)
+      metric.update({ value: 8 })
+      expect(triggered).toBeGreaterThanOrEqual(2)
     })
   })
 })

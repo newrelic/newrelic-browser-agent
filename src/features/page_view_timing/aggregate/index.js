@@ -20,7 +20,7 @@ import { interactionToNextPaint } from '../../../common/vitals/interaction-to-ne
 import { largestContentfulPaint } from '../../../common/vitals/largest-contentful-paint'
 import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
 import { longTask } from '../../../common/vitals/long-task'
-import { subscribeToVisibilityChange } from '../../../common/window/page-visibility'
+// import { subscribeToVisibilityChange } from '../../../common/window/page-visibility'
 import { VITAL_NAMES } from '../../../common/vitals/constants'
 
 export class Aggregate extends AggregateBase {
@@ -45,11 +45,12 @@ export class Aggregate extends AggregateBase {
     timeToFirstByte.subscribe(({ entries }) => {
       this.addTiming('load', Math.round(entries[0].loadEventEnd))
     })
-    subscribeToVisibilityChange(() => {
-      const { name, value, attrs } = cumulativeLayoutShift.current
-      if (value === undefined) return
-      this.addTiming(name, value * 1000, attrs) // downstream consumer interprets the value as ms-unit and converts it to seconds; cls score is neither and we need to negate that division
-    }, true) // so CLS node only reports on vis change rather than on every change
+    // *cli Mar'24 - CLS node won't be added until we fix the rounding problem in schema that's grounding the decimal value to 0
+    // subscribeToVisibilityChange(() => {
+    //   const { name, value, attrs } = cumulativeLayoutShift.current
+    //   if (value === undefined) return
+    //   this.addTiming(name, value * 1000, attrs) // downstream consumer interprets the value as ms-unit and converts it to seconds; cls score is neither and we need to negate that division
+    // }, true) // so CLS node only reports on vis change rather than on every change
 
     if (getConfigurationValue(this.agentIdentifier, 'page_view_timing.long_task') === true) longTask.subscribe(this.#handleVitalMetric)
 

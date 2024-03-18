@@ -97,9 +97,10 @@ describe('pvt aggregate tests', () => {
 
     triggerVisChange()
     clsNode = pvtAgg.timings.find(tn => tn.name === VITAL_NAMES.CUMULATIVE_LAYOUT_SHIFT)
-    expect(clsNode).toBeTruthy()
-    expect(clsNode.value).toEqual(111) // since cls multiply decimal by 1000 to offset consumer division by 1000
-    expect(clsNode.attrs.cls).toBeUndefined() // cls node doesn't need cls property
+    expect(clsNode).toBeUndefined()
+    // expect(clsNode).toBeTruthy()
+    // expect(clsNode.value).toEqual(111) // since cls multiply decimal by 1000 to offset consumer division by 1000
+    // expect(clsNode.attrs.cls).toBeUndefined() // cls node doesn't need cls property
   })
   test('sends INP node with right val', () => {
     let inpNode = pvtAgg.timings.find(tn => tn.name === VITAL_NAMES.INTERACTION_TO_NEXT_PAINT)

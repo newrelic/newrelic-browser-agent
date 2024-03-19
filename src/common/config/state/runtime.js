@@ -21,7 +21,8 @@ const model = {
   session: undefined,
   xhrWrappable: typeof globalScope.XMLHttpRequest?.prototype?.addEventListener === 'function',
   version: VERSION,
-  denyList: undefined
+  denyList: undefined,
+  harvestCount: 0
 }
 
 const _cache = {}

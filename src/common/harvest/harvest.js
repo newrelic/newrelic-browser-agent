@@ -160,6 +160,9 @@ export class Harvest extends SharedContext {
       }, eventListenerOpts(false))
     }
 
+    const runtime = getRuntime(this.sharedContext.agentIdentifier)
+    runtime.harvestCount++
+
     return result
   }
 

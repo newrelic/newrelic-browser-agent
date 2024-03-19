@@ -6,9 +6,11 @@
 import { gosNREUM } from '../window/nreum'
 import { getOrSet } from '../util/get-or-set'
 import { getRuntime } from '../config/config'
-import { EventContext } from '../context/event-context'
-import { ObservationContextManager } from '../context/observation-context-manager'
+import { EventContext } from './event-context'
+import { bundleId } from '../ids/bundle-id'
 
+// create a unique id to store event context data for the current agent bundle
+const contextId = `nr@context:${bundleId}`
 // create global emitter instance that can be shared among bundles
 const globalInstance = ee(undefined, 'globalEE')
 
@@ -18,7 +20,7 @@ if (!nr.ee) {
   nr.ee = globalInstance
 }
 
-export { globalInstance as ee }
+export { globalInstance as ee, contextId }
 
 function ee (old, debugId) {
   var handlers = {}
@@ -49,8 +51,8 @@ function ee (old, debugId) {
     aborted: false,
     isBuffering,
     debugId,
-    backlog: isolatedBacklog ? {} : old && typeof old.backlog === 'object' ? old.backlog : {},
-    observationContextManager: null
+    backlog: isolatedBacklog ? {} : old && typeof old.backlog === 'object' ? old.backlog : {}
+
   }
 
   Object.defineProperty(emitter, 'aborted', {
@@ -78,15 +80,9 @@ function ee (old, debugId) {
     if (contextOrStore && contextOrStore instanceof EventContext) {
       return contextOrStore
     } else if (contextOrStore) {
-      return getOrSet(contextOrStore, ObservationContextManager.contextId, () =>
-        emitter.observationContextManager
-          ? emitter.observationContextManager.getCreateContext(contextOrStore)
-          : new EventContext(ObservationContextManager.contextId)
-      )
+      return getOrSet(contextOrStore, contextId, () => new EventContext(contextId))
     } else {
-      return emitter.observationContextManager
-        ? emitter.observationContextManager.getCreateContext({})
-        : new EventContext(ObservationContextManager.contextId)
+      return new EventContext(contextId)
     }
   }
 
@@ -134,13 +130,7 @@ function ee (old, debugId) {
   }
 
   function getOrCreate (name) {
-    const newEventEmitter = (emitters[name] = emitters[name] || ee(emitter, name))
-
-    if (!newEventEmitter.observationContextManager && emitter.observationContextManager) {
-      newEventEmitter.observationContextManager = emitter.observationContextManager
-    }
-
-    return newEventEmitter
+    return (emitters[name] = emitters[name] || ee(emitter, name))
   }
 
   function bufferEventsByGroup (types, group) {

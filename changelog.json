@@ -4,6 +4,47 @@
     {
       "changes": [
         {
+          "type": "feat",
+          "sha": "7fcb62791ad932cbd3b9f16a72277b42bca9a75f",
+          "message": "Soft Navigations trial",
+          "issues": [
+            "808"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "a5c2adc0ecbe322ea9a9dcdf1ed3b072c1212415",
+          "message": "Apply deny list to ajax metrics",
+          "issues": [
+            "898"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "bc5ebb5cb255fda7f2c30d5053b5a980a423c2b1",
+          "message": "Preload the Session Replay recorder when properly configured",
+          "issues": [
+            "893"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "85887c8e7f4241076daeeda75077e6ee710a3d00",
+          "message": "Isolate observation context per agent",
+          "issues": [
+            "903"
+          ]
+        }
+      ],
+      "version": "1.253.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "6253b906-0e0d-4659-abd8-48c980facabd",
+      "createTime": "2024-03-13T16:54:47.318Z"
+    },
+    {
+      "changes": [
+        {
           "type": "fix",
           "sha": "35810a895b7f61ab60ea5c24adfa49c4a3956191",
           "message": "Fix webpack imports in npm package",
@@ -1097,5 +1138,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2024-02-29T17:42:23.534Z"
+  "updateTime": "2024-03-13T16:54:47.318Z"
 }

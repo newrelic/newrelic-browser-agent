@@ -102,10 +102,6 @@ export class Aggregate extends AggregateBase {
       }
     }, this.featureName, this.ee)
 
-    registerHandler('pauseReplay', () => {
-      this.forceStop(this.mode !== MODE.ERROR)
-    }, this.featureName, this.ee)
-
     // Wait for an error to be reported.  This currently is wrapped around the "Error" feature.  This is a feature-feature dependency.
     // This was to ensure that all errors, including those on the page before load and those handled with "noticeError" are accounted for. Needs evalulation
     registerHandler('sr-errorAgg', (e) => {
@@ -378,6 +374,7 @@ export class Aggregate extends AggregateBase {
   }
 
   syncWithSessionManager (state = {}) {
+    console.log('sync')
     const { session } = getRuntime(this.agentIdentifier)
     session.write(state)
   }

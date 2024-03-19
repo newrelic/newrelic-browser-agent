@@ -374,7 +374,6 @@ export class Aggregate extends AggregateBase {
   }
 
   syncWithSessionManager (state = {}) {
-    console.log('sync')
     const { session } = getRuntime(this.agentIdentifier)
     session.write(state)
   }

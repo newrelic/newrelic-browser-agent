@@ -30,6 +30,7 @@ export class Instrument extends InstrumentBase {
     let depth = 0
     let startHash
 
+    const timeKeeper = this.timeKeeper
     const tracerEE = this.ee.get('tracer')
     const jsonpEE = wrapJsonP(this.ee)
     const promiseEE = wrapPromise(this.ee)
@@ -81,7 +82,7 @@ export class Instrument extends InstrumentBase {
     function startTimestamp () {
       depth++
       startHash = window.location.hash
-      this[FN_START] = this.timeKeeper.now()
+      this[FN_START] = timeKeeper.now()
     }
 
     function endTimestamp () {
@@ -90,14 +91,14 @@ export class Instrument extends InstrumentBase {
         trackURLChange(0, true)
       }
 
-      var time = this.timeKeeper.now()
+      var time = timeKeeper.now()
       this[JS_TIME] = (~~this[JS_TIME]) + time - this[FN_START]
       this[FN_END] = time
     }
 
     function timestamp (ee, type) {
       ee.on(type, function () {
-        this[type] = this.timeKeeper.now()
+        this[type] = timeKeeper.now()
       })
     }
 

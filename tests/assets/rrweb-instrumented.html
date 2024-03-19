@@ -53,6 +53,10 @@
         document.querySelector("img").classList.toggle("left");
         document.querySelector("img").classList.toggle("right");
       }
+
+      setTimeout(() => {
+        newrelic.noticeError()
+      }, 15000)
     </script>
   </body>
 </html>

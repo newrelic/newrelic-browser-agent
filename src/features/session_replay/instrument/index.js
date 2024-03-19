@@ -59,8 +59,9 @@ export class Instrument extends InstrumentBase {
       /** dont need to reimport the recorder so just return if the featAgg exists */
       return
     }
+    if (this.recorder?.recording) return
     const { Recorder } = (await import(/* webpackChunkName: "recorder" */'../shared/recorder'))
-    this.recorder = new Recorder({ mode, agentIdentifier: this.agentIdentifier })
+    this.recorder ??= new Recorder({ mode, agentIdentifier: this.agentIdentifier })
     this.recorder.startRecording()
     this.abortHandler = this.recorder.stopRecording
   }

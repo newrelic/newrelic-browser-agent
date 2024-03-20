@@ -1,3 +1,4 @@
+import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { config, decodeAttributes } from './helpers'
 
 describe('errors', () => {
@@ -9,7 +10,7 @@ describe('errors', () => {
     await browser.destroyAgentSession()
   })
 
-  it('error timestamp should be contained within replay timestamp', async () => {
+  it.withBrowsersMatching(notIE)('error timestamp should be contained within replay timestamp', async () => {
     await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({
       session_replay: { error_sampling_rate: 100, sampling_rate: 0 }
     })))

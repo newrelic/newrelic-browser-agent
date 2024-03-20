@@ -172,9 +172,9 @@ export class Aggregate extends AggregateBase {
     } else {
       // The session is new... determine the mode the new session should start in
       this.mode = srMode
-      // If off, then don't record (early return)
-      if (this.mode === MODE.OFF) return
     }
+    // If off, then don't record (early return)
+    if (this.mode === MODE.OFF) return
 
     if (this.recorder?.getEvents().type === 'preloaded') {
       this.prepUtils().then(() => {

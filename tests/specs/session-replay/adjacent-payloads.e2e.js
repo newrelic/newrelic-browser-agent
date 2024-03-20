@@ -15,11 +15,15 @@ describe('errors', () => {
     })))
       .then(() => browser.waitForAgentLoad())
 
-    await browser.testHandle.expectBlob(10000, true)
+    // this issue was seen when some time had passed from agg load time and was running in error mode
+    await browser.pause(5000)
 
     const [errorPayload, blobPayload] = await Promise.all([
-      await browser.testHandle.expectErrors(15000),
-      await browser.testHandle.expectBlob(15000)
+      browser.testHandle.expectErrors(10000),
+      browser.testHandle.expectBlob(10000),
+      browser.execute(function () {
+        newrelic.noticeError(new Error('test'))
+      })
     ])
 
     const errorTimestamp = errorPayload.request.body.err[0].params.firstOccurrenceTimestamp

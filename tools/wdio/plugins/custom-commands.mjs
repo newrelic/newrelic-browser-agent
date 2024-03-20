@@ -110,7 +110,12 @@ export default class CustomCommands {
           spa: 1,
           loaded: 1,
           sr: 1,
-          srs: stMode
+          srs: stMode,
+          app: {
+            agents: [
+              { entityGuid: '214234435456' }
+            ]
+          }
         })
       })
     })

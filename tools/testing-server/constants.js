@@ -35,7 +35,12 @@ module.exports.rumFlags = {
   loaded: 1,
   sr: 1, // session replay entitlements 0|1
   sts: 1, // session trace sampling 0|1|2 - off full error
-  srs: 1// session replay sampling 0|1|2 - off full error
+  srs: 1, // session replay sampling 0|1|2 - off full error
+  app: {
+    agents: [
+      { entityGuid: '214234435456' }
+    ]
+  }
 }
 
 module.exports.defaultInitBlock = {

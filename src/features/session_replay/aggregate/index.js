@@ -303,6 +303,7 @@ export class Aggregate extends AggregateBase {
     const firstTimestamp = firstEventTimestamp || recorderEvents.cycleTimestamp // from rrweb node || from when the harvest cycle started
     const lastTimestamp = lastEventTimestamp || agentOffset + relativeNow
 
+    const agentMetadata = agentRuntime.appMetadata?.agents?.[0] || {}
     return {
       qs: {
         browser_monitoring_key: info.licenseKey,
@@ -313,6 +314,7 @@ export class Aggregate extends AggregateBase {
           // this section of attributes must be controllable and stay below the query param padding limit -- see QUERY_PARAM_PADDING
           // if not, data could be lost to truncation at time of sending, potentially breaking parsing / API behavior in NR1
           ...(!!this.gzipper && !!this.u8 && { content_encoding: 'gzip' }),
+          ...(agentMetadata.entityGuid && { entityGuid: agentMetadata.entityGuid }),
           'replay.firstTimestamp': firstTimestamp,
           'replay.firstTimestampOffset': firstTimestamp - agentOffset,
           'replay.lastTimestamp': lastTimestamp,

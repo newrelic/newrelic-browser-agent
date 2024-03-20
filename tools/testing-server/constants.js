@@ -33,7 +33,12 @@ module.exports.rumFlags = {
   cap: 1,
   spa: 1,
   loaded: 1,
-  sr: 0 // this should be off, for now, if privacy.cookie_enabled is on (default) or Traces tests will fail
+  sr: 0, // this should be off, for now, if privacy.cookie_enabled is on (default) or Traces tests will fail
+  app: {
+    agents: [
+      { entityGuid: '214234435456' }
+    ]
+  }
 }
 
 module.exports.defaultInitBlock = {

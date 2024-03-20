@@ -9,6 +9,9 @@ const defaultAgentConfig = {
 }
 module.exports.defaultAgentConfig = defaultAgentConfig
 
+const defaultEntityGuid = btoa(`${defaultAgentConfig.accountID}|BROWSER|APPLICATION|${defaultAgentConfig.applicationID}`).replace(/=/g, '')
+module.exports.defaultEntityGuid = defaultEntityGuid
+
 module.exports.paths = {
   rootDir: path.resolve(__dirname, '../../'),
   builtAssetsDir: path.resolve(__dirname, '../../build/'),
@@ -37,7 +40,7 @@ module.exports.rumFlags = {
   sr: 0, // this should be off, for now, if privacy.cookie_enabled is on (default) or Traces tests will fail
   app: {
     agents: [
-      { entityGuid: btoa(`${defaultAgentConfig.accountID}|BROWSER|APPLICATION|${defaultAgentConfig.applicationID}`).replace(/=/g, '') }
+      { entityGuid: defaultEntityGuid }
     ]
   }
 }

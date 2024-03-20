@@ -116,7 +116,10 @@ export class Aggregate extends AggregateBase {
       }
       this.initializeRecording(srMode)
     }).then(() => {
-      if (this.mode === MODE.OFF) this.recorder?.stopRecording() // stop any conservative preload recording launched by instrument
+      if (this.mode === MODE.OFF) {
+        this.recorder?.stopRecording() // stop any conservative preload recording launched by instrument
+        while (this.recorder?.getEvents().events.length) this.recorder?.clearBuffer?.()
+      }
       sharedChannel.onReplayReady(this.mode)
     }) // notify watchers that replay started with the mode
 

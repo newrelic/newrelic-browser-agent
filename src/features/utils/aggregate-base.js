@@ -17,21 +17,21 @@ export class AggregateBase extends FeatureBase {
    * @returns {Promise}
    */
   waitForFlags (flagNames = []) {
-    return Promise.all(
-      flagNames.map(fName =>
-        new Promise((resolve) => {
-          /** if the feature is already activated, resolve immediately */
-          if (activatedFeatures[this.agentIdentifier]?.[fName]) {
-            resolve(activatedFeatures[this.agentIdentifier]?.[fName])
-            return
-          }
-          /** Otherwise, wait for EE emission and resolve with the raw value of the flag */
-          this.ee.on(`rumresp-${fName}`, resp => {
-            resolve(resp)
-          })
+    return new Promise((resolve, reject) => {
+      if (activatedFeatures[this.agentIdentifier]) {
+        resolve(buildOutput(activatedFeatures[this.agentIdentifier]))
+      } else {
+        this.ee.on('rumresp', (resp = {}) => {
+          resolve(buildOutput(resp))
         })
-      )
-    )
+      }
+      function buildOutput (ref) {
+        return flagNames.map(flag => {
+          if (!ref[flag]) return 0
+          return ref[flag]
+        })
+      }
+    })
   }
 
   drain () {

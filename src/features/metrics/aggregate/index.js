@@ -55,6 +55,8 @@ export class Aggregate extends AggregateBase {
   singleChecks () {
     // report loaderType
     const { distMethod, loaderType } = getRuntime(this.agentIdentifier)
+    const { proxy, privacy, page_view_timing } = getConfiguration(this.agentIdentifier)
+
     if (loaderType) this.storeSupportabilityMetrics(`Generic/LoaderType/${loaderType}/Detected`)
     if (distMethod) this.storeSupportabilityMetrics(`Generic/DistMethod/${distMethod}/Detected`)
 
@@ -72,6 +74,9 @@ export class Aggregate extends AggregateBase {
           this.storeSupportabilityMetrics('Framework/' + framework + '/Detected')
         })
       })
+
+      if (!privacy.cookies_enabled) this.storeSupportabilityMetrics('Config/SessionTracking/Disabled')
+      if (page_view_timing.long_task) this.storeSupportabilityMetrics('Config/LongTask/Enabled')
     } else if (isWorkerScope) {
       this.storeSupportabilityMetrics('Generic/Runtime/Worker/Detected')
     } else {
@@ -90,11 +95,8 @@ export class Aggregate extends AggregateBase {
     if (rules.length > 0 && !validateRules(rules)) this.storeSupportabilityMetrics('Generic/Obfuscate/Invalid')
 
     // Check if proxy for either chunks or beacon is being used
-    const { proxy, privacy } = getConfiguration(this.agentIdentifier)
     if (proxy.assets) this.storeSupportabilityMetrics('Config/AssetsUrl/Changed')
     if (proxy.beacon) this.storeSupportabilityMetrics('Config/BeaconUrl/Changed')
-
-    if (!(isBrowserScope && privacy.cookies_enabled)) this.storeSupportabilityMetrics('Config/SessionTracking/Disabled')
   }
 
   eachSessionChecks () {

@@ -12,6 +12,7 @@ import { getConfigurationValue, getInfo, getRuntime } from '../../../common/conf
 import { FEATURE_NAME } from '../constants'
 import { isBrowserScope } from '../../../common/constants/runtime'
 import { AggregateBase } from '../../utils/aggregate-base'
+import { deregisterDrain } from '../../../common/drain/drain'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -31,17 +32,17 @@ export class Aggregate extends AggregateBase {
 
     register('api-addPageAction', (...args) => this.addPageAction(...args), this.featureName, this.ee)
 
-    this.waitForFlags(['ins']).then(([enabled]) => {
-      if (enabled) {
+    this.waitForFlags(['ins']).then(([insFlag]) => {
+      if (insFlag) {
         const scheduler = new HarvestScheduler('ins', { onFinished: (...args) => this.onHarvestFinished(...args) }, this)
         scheduler.harvest.on('ins', (...args) => this.onHarvestStarted(...args))
         scheduler.startTimer(this.harvestTimeSeconds, 0)
+        this.drain()
       } else {
-        this.blocked = true
+        this.blocked = true // if rum response determines that customer lacks entitlements for spa endpoint, this feature shouldn't harvest
+        deregisterDrain(this.agentIdentifier, this.featureName)
       }
     })
-
-    this.drain()
   }
 
   onHarvestStarted (options) {

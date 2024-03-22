@@ -1,9 +1,9 @@
-import { registerHandler } from '../../common/event-emitter/register-handler'
 import { FeatureBase } from './feature-base'
 import { getInfo, isConfigured, getRuntime } from '../../common/config/config'
 import { configure } from '../../loaders/configure/configure'
 import { gosCDN } from '../../common/window/nreum'
 import { drain } from '../../common/drain/drain'
+import { activatedFeatures } from '../../common/util/feature-flags'
 
 export class AggregateBase extends FeatureBase {
   constructor (...args) {
@@ -14,13 +14,21 @@ export class AggregateBase extends FeatureBase {
   /**
    * New handler for waiting for multiple flags. Useful when expecting multiple flags simultaneously (ex. stn vs sr)
    * @param {string[]} flagNames
-   * @returns
+   * @returns {Promise}
    */
   waitForFlags (flagNames = []) {
     return Promise.all(
       flagNames.map(fName =>
         new Promise((resolve) => {
-          registerHandler(`rumresp-${fName}`, isOn => resolve(isOn), this.featureName, this.ee)
+          /** if the feature is already activated, resolve immediately */
+          if (activatedFeatures[this.agentIdentifier]?.[fName]) {
+            resolve(activatedFeatures[this.agentIdentifier]?.[fName])
+            return
+          }
+          /** Otherwise, wait for EE emission and resolve with the raw value of the flag */
+          this.ee.on(`rumresp-${fName}`, resp => {
+            resolve(resp)
+          })
         })
       )
     )
@@ -28,6 +36,7 @@ export class AggregateBase extends FeatureBase {
 
   drain () {
     drain(this.agentIdentifier, this.featureName)
+    this.drained = true
   }
 
   /**

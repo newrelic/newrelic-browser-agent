@@ -7,14 +7,9 @@ import { gosCDN } from '../../common/window/nreum'
 
 jest.enableAutomock()
 jest.unmock('./aggregate-base')
-jest.mock('./feature-base', () => ({
-  __esModule: true,
-  FeatureBase: jest.fn(function (...args) {
-    this.agentIdentifier = args[0]
-    this.aggregator = args[1]
-    this.featureName = args[2]
-  })
-}))
+jest.unmock('./feature-base')
+jest.unmock('../../common/event-emitter/contextual-ee')
+
 jest.mock('../../common/event-emitter/register-handler', () => ({
   __esModule: true,
   registerHandler: jest.fn()
@@ -99,19 +94,11 @@ test('should only configure the agent once', () => {
 test('should resolve waitForFlags correctly based on flags', async () => {
   const flagNames = [faker.string.uuid(), faker.string.uuid()]
   const aggregateBase = new AggregateBase(agentIdentifier, aggregator, featureName)
-  aggregateBase.ee = {
-    [faker.string.uuid()]: faker.lorem.sentence()
-  }
-  aggregateBase.feature = {
-    [faker.string.uuid()]: faker.lorem.sentence()
-  }
 
   const flagWait = aggregateBase.waitForFlags(flagNames)
-  jest.mocked(registerHandler).mock.calls[0][1](true)
-  jest.mocked(registerHandler).mock.calls[1][1](false)
+  aggregateBase.ee.emit(`rumresp-${flagNames[0]}`, [true])
+  aggregateBase.ee.emit(`rumresp-${flagNames[1]}`, [false])
 
-  expect(registerHandler).toHaveBeenCalledWith(`rumresp-${flagNames[0]}`, expect.any(Function), featureName, aggregateBase.ee)
-  expect(registerHandler).toHaveBeenCalledWith(`rumresp-${flagNames[1]}`, expect.any(Function), featureName, aggregateBase.ee)
   await expect(flagWait).resolves.toEqual([true, false])
 })
 

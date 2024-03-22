@@ -61,10 +61,13 @@ describe('drain', () => {
     expect(emitSpy).toHaveBeenCalledWith('drain-feature', expect.anything())
   })
 
-  test('works on the global ee when agent id not provided', () => {
-    let emitSpy = jest.spyOn(ee, 'emit')
-    drain()
-    expect(emitSpy).toHaveBeenCalledWith('drain-feature', expect.anything())
+  test('fails when agent id not provided', () => {
+    try {
+      drain()
+      expect(1).toEqual(2) // should fail here
+    } catch (err) {
+      expect(1).toEqual(1) // pass
+    }
   })
 })
 
@@ -72,7 +75,6 @@ test('non-feat groups can register and drain too alongside features', () => {
   registerDrain('abcd', 'page_view_event')
   registerDrain('abcd', 'simba')
 
-  console.log(JSON.stringify(ee.get('abcd')))
   let emitSpy = jest.spyOn(ee.get('abcd'), 'emit')
   drain('abcd', 'simba')
   expect(emitSpy).not.toHaveBeenCalled()

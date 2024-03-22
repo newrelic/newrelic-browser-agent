@@ -3,49 +3,47 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { ee } from '../event-emitter/contextual-ee'
-import { handle } from '../event-emitter/handle'
-import { FEATURE_NAMES } from '../../loaders/features/features'
 import { dispatchGlobalEvent } from '../dispatch/global-event'
 
-const bucketMap = {
-  stn: [FEATURE_NAMES.sessionTrace],
-  err: [FEATURE_NAMES.jserrors, FEATURE_NAMES.metrics],
-  ins: [FEATURE_NAMES.pageAction],
-  spa: [FEATURE_NAMES.spa, FEATURE_NAMES.softNav],
-  sr: [FEATURE_NAMES.sessionReplay, FEATURE_NAMES.sessionTrace]
-}
+const expectedFlags = ['stn', 'err', 'ins', 'spa', 'sr']
+const noFlagFeatures = ['xhr', 'pvt']
 
 const sentIds = new Set()
 
 /** Note that this function only processes each unique flag ONCE, with the first occurrence of each flag and numeric value determining its switch on/off setting. */
 export function activateFeatures (flags, agentIdentifier) {
   const sharedEE = ee.get(agentIdentifier)
+  activatedFeatures[agentIdentifier] ??= {}
   if (!(flags && typeof flags === 'object')) return
   if (sentIds.has(agentIdentifier)) return
 
+  /** Flags returned from RUM call */
   Object.entries(flags).forEach(([flag, num]) => {
-    if (bucketMap[flag]) {
-      bucketMap[flag].forEach(feat => {
-        if (!num) handle('block-' + flag, [], undefined, feat, sharedEE)
-        else handle('feat-' + flag, [], undefined, feat, sharedEE)
-        handle('rumresp-' + flag, [Boolean(num)], undefined, feat, sharedEE) // this is a duplicate of feat-/block- but makes awaiting for 1 event easier than 2
-      })
-    } else if (num) handle('feat-' + flag, [], undefined, undefined, sharedEE) // not sure what other flags are overlooked, but there's a test for ones not in the map --
-    activatedFeatures[flag] = Boolean(num)
+    emitFlag(flag, num)
   })
 
-  // Let the features waiting on their respective flags know that RUM response was received and that any missing flags are interpreted as bad entitlement / "off".
-  // Hence, those features will not be hanging forever if their flags aren't included in the response.
-  Object.keys(bucketMap).forEach(flag => {
-    if (activatedFeatures[flag] === undefined) {
-      bucketMap[flag]?.forEach(feat => handle('rumresp-' + flag, [false], undefined, feat, sharedEE))
-      activatedFeatures[flag] = false
-    }
+  /** We gate all features behind a flag for consistency, but some features dont require entitlements before running
+   * So we make our own flags and return them as truthy for now
+  */
+  noFlagFeatures.forEach(flag => {
+    emitFlag(flag, 1)
   })
+
+  /** Any features that happen to fail to get a flag back from the RUM call would be blocking the rest of the features from operating, so return 0 by default */
+  expectedFlags.forEach(flag => {
+    emitFlag(flag, 0)
+  })
+
   sentIds.add(agentIdentifier)
 
   // let any window level subscribers know that the agent is running
   dispatchGlobalEvent({ loaded: true })
+
+  function emitFlag (flagName, value) {
+    if (activatedFeatures[agentIdentifier][flagName] !== undefined) return
+    sharedEE.emit(`rumresp-${flagName}`, [value])
+    activatedFeatures[agentIdentifier][flagName] = value
+  }
 }
 
 export const activatedFeatures = {}

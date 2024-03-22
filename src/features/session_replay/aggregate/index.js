@@ -27,6 +27,7 @@ import { now } from '../../../common/timing/now'
 import { MODE, SESSION_EVENTS, SESSION_EVENT_TYPES } from '../../../common/session/constants'
 import { stringify } from '../../../common/util/stringify'
 import { stylesheetEvaluator } from '../shared/stylesheet-evaluator'
+import { deregisterDrain } from '../../../common/drain/drain'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -104,6 +105,7 @@ export class Aggregate extends AggregateBase {
     // Wait for an error to be reported.  This currently is wrapped around the "Error" feature.  This is a feature-feature dependency.
     // This was to ensure that all errors, including those on the page before load and those handled with "noticeError" are accounted for. Needs evalulation
     registerHandler('errorAgg', (e) => {
+      console.log('errorAgg', e)
       this.errorNoticed = true
       if (this.recorder) this.recorder.currentBufferTarget.hasError = true
       // run once
@@ -119,8 +121,10 @@ export class Aggregate extends AggregateBase {
       if (!this.entitled && this.recorder?.recording) {
         this.abort(ABORT_REASONS.ENTITLEMENTS)
         handle(SUPPORTABILITY_METRIC_CHANNEL, ['SessionReplay/EnabledNotEntitled/Detected'], undefined, FEATURE_NAMES.metrics, this.ee)
+        deregisterDrain(this.agentIdentifier, this.featureName)
         return
       }
+      this.drain()
       this.initializeRecording(
         (Math.random() * 100) < error_sampling_rate,
         (Math.random() * 100) < sampling_rate
@@ -141,7 +145,6 @@ export class Aggregate extends AggregateBase {
 
     handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/SamplingRate/Value', sampling_rate], undefined, FEATURE_NAMES.metrics, this.ee)
     handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/ErrorSamplingRate/Value', error_sampling_rate], undefined, FEATURE_NAMES.metrics, this.ee)
-    this.drain()
   }
 
   switchToFull () {

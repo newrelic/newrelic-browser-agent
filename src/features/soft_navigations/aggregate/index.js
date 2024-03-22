@@ -1,4 +1,5 @@
 import { getConfigurationValue } from '../../../common/config/config'
+import { deregisterDrain } from '../../../common/drain/drain'
 import { handle } from '../../../common/event-emitter/handle'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
@@ -45,8 +46,13 @@ export class Aggregate extends AggregateBase {
 
     this.blocked = false
     this.waitForFlags(['spa']).then(([spaOn]) => {
-      if (spaOn) this.scheduler.startTimer(harvestTimeSeconds, 0)
-      else this.blocked = true // if rum response determines that customer lacks entitlements for spa endpoint, this feature shouldn't harvest
+      if (spaOn) {
+        this.drain()
+        this.scheduler.startTimer(harvestTimeSeconds, 0)
+      } else {
+        this.blocked = true // if rum response determines that customer lacks entitlements for spa endpoint, this feature shouldn't harvest
+        deregisterDrain(this.agentIdentifier, this.featureName)
+      }
     })
 
     // By default, a complete UI driven interaction requires event -> URL change -> DOM mod in that exact order.
@@ -61,8 +67,6 @@ export class Aggregate extends AggregateBase {
 
     registerHandler('ajax', this.#handleAjaxEvent.bind(this), this.featureName, this.ee)
     registerHandler('jserror', this.#handleJserror.bind(this), this.featureName, this.ee)
-
-    this.drain()
   }
 
   onHarvestStarted (options) {

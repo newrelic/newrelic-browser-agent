@@ -15,19 +15,29 @@ import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { parseGQL } from './gql'
 import { getNREUMInitializedAgent } from '../../../common/window/nreum'
+import { deregisterDrain } from '../../../common/drain/drain'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
     const agentInit = getConfiguration(agentIdentifier)
-    const allAjaxIsEnabled = agentInit.ajax.enabled !== false
 
     registerHandler('xhr', storeXhr, this.featureName, this.ee)
-    if (!allAjaxIsEnabled) {
-      this.drain()
-      return // feature will only collect timeslice metrics & ajax trace nodes if it's not fully enabled
-    }
+
+    this.waitForFlags((['xhr'])).then(([xhrFlag]) => {
+      if (xhrFlag) {
+        const scheduler = new HarvestScheduler('events', {
+          onFinished: onEventsHarvestFinished,
+          getPayload: prepareHarvest
+        }, this)
+        scheduler.startTimer(harvestTimeSeconds)
+        this.drain()
+      } else {
+        this.blocked = true // if rum response determines that customer lacks entitlements for spa endpoint, this feature shouldn't harvest
+        deregisterDrain(this.agentIdentifier, this.featureName)
+      }
+    })
 
     const denyList = getRuntime(agentIdentifier).denyList
     setDenyList(denyList)
@@ -61,15 +71,6 @@ export class Aggregate extends AggregateBase {
     registerHandler('returnAjax', event => ajaxEvents.push(event), this.featureName, this.ee)
     // --- ^
 
-    const scheduler = new HarvestScheduler('events', {
-      onFinished: onEventsHarvestFinished,
-      getPayload: prepareHarvest
-    }, this)
-
-    ee.on(`drain-${this.featureName}`, () => { scheduler.startTimer(harvestTimeSeconds) })
-
-    this.drain()
-
     const beacon = getInfo(agentIdentifier).errorBeacon
     const proxyBeacon = agentInit.proxy.beacon
 
@@ -91,8 +92,6 @@ export class Aggregate extends AggregateBase {
       if (shouldCollect || !ajaxMetricDenyListEnabled) {
         aggregator.store('xhr', hash, params, metrics)
       }
-
-      if (!allAjaxIsEnabled) return
 
       if (!shouldCollect) {
         if (params.hostname === beacon || (proxyBeacon && params.hostname === proxyBeacon)) {

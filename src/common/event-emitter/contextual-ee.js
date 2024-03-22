@@ -49,12 +49,31 @@ function ee (old, debugId) {
     context,
     buffer: bufferEventsByGroup,
     abort,
-    aborted: false,
     isBuffering,
     debugId,
-    backlog: isolatedBacklog ? {} : old && typeof old.backlog === 'object' ? old.backlog : {}
-
+    backlog: isolatedBacklog ? {} : old && typeof old.backlog === 'object' ? old.backlog : {},
+    isolatedBacklog
   }
+
+  function abort () {
+    emitter._aborted = true
+    Object.keys(emitter.backlog).forEach(key => {
+      delete emitter.backlog[key]
+    })
+  }
+
+  Object.defineProperty(emitter, 'aborted', {
+    get: () => {
+      let aborted = emitter._aborted || false
+
+      if (aborted) return aborted
+      else if (old) {
+        aborted = old.aborted
+      }
+
+      return aborted
+    }
+  })
 
   return emitter
 
@@ -140,15 +159,4 @@ function ee (old, debugId) {
   function getBuffer () {
     return emitter.backlog
   }
-}
-
-function abort () {
-  globalInstance.aborted = true
-  // The global backlog can be referenced directly by other emitters,
-  // so we need to delete its contents as opposed to replacing it.
-  // Otherwise, these references to the old backlog would still exist
-  // and the keys will not be garbage collected.
-  Object.keys(globalInstance.backlog).forEach(key => {
-    delete globalInstance.backlog[key]
-  })
 }

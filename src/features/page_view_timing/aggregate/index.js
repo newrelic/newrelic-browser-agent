@@ -20,6 +20,7 @@ import { interactionToNextPaint } from '../../../common/vitals/interaction-to-ne
 import { largestContentfulPaint } from '../../../common/vitals/largest-contentful-paint'
 import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
 import { longTask } from '../../../common/vitals/long-task'
+import { deregisterDrain } from '../../../common/drain/drain'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -35,15 +36,6 @@ export class Aggregate extends AggregateBase {
     this.timingsSent = []
     this.curSessEndRecorded = false
 
-    firstPaint.subscribe(this.#handleVitalMetric)
-    firstContentfulPaint.subscribe(this.#handleVitalMetric)
-    firstInputDelay.subscribe(this.#handleVitalMetric)
-    largestContentfulPaint.subscribe(this.#handleVitalMetric)
-    interactionToNextPaint.subscribe(this.#handleVitalMetric)
-    timeToFirstByte.subscribe(({ entries }) => {
-      this.addTiming('load', Math.round(entries[0].loadEventEnd))
-    })
-
     if (getConfigurationValue(this.agentIdentifier, 'page_view_timing.long_task') === true) longTask.subscribe(this.#handleVitalMetric)
 
     /* It's important that CWV api, like "onLCP", is called before this scheduler is initialized. The reason is because they listen to the same
@@ -54,16 +46,30 @@ export class Aggregate extends AggregateBase {
 
     const initialHarvestSeconds = getConfigurationValue(this.agentIdentifier, 'page_view_timing.initialHarvestSeconds') || 10
     const harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'page_view_timing.harvestTimeSeconds') || 30
-    // send initial data sooner, then start regular
-    this.ee.on(`drain-${this.featureName}`, () => {
-      this.scheduler = new HarvestScheduler('events', {
-        onFinished: (...args) => this.onHarvestFinished(...args),
-        getPayload: (...args) => this.prepareHarvest(...args)
-      }, this)
-      this.scheduler.startTimer(harvestTimeSeconds, initialHarvestSeconds)
-    })
 
-    this.drain()
+    this.waitForFlags((['pvt'])).then(([pvtFlag]) => {
+      if (pvtFlag) {
+        firstPaint.subscribe(this.#handleVitalMetric)
+        firstContentfulPaint.subscribe(this.#handleVitalMetric)
+        firstInputDelay.subscribe(this.#handleVitalMetric)
+        largestContentfulPaint.subscribe(this.#handleVitalMetric)
+        interactionToNextPaint.subscribe(this.#handleVitalMetric)
+        timeToFirstByte.subscribe(({ entries }) => {
+          this.addTiming('load', Math.round(entries[0].loadEventEnd))
+        })
+
+        this.scheduler = new HarvestScheduler('events', {
+          onFinished: (...args) => this.onHarvestFinished(...args),
+          getPayload: (...args) => this.prepareHarvest(...args)
+        }, this)
+        this.scheduler.startTimer(harvestTimeSeconds, initialHarvestSeconds)
+
+        this.drain()
+      } else {
+        this.blocked = true // if rum response determines that customer lacks entitlements for spa endpoint, this feature shouldn't harvest
+        deregisterDrain(this.agentIdentifier, this.featureName)
+      }
+    })
   }
 
   /**

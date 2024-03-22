@@ -24,6 +24,7 @@ import { bundleId } from '../../../common/ids/bundle-id'
 import { loadedAsDeferredBrowserScript } from '../../../common/constants/runtime'
 import { handle } from '../../../common/event-emitter/handle'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
+import { deregisterDrain } from '../../../common/drain/drain'
 
 const {
   FEATURE_NAME, INTERACTION_EVENTS, MAX_TIMER_BUDGET, FN_START, FN_END, CB_START, INTERACTION_API, REMAINING,
@@ -54,6 +55,7 @@ export class Aggregate extends AggregateBase {
       disableSpaFix: (getConfigurationValue(agentIdentifier, 'feature_flags') || []).indexOf('disable-spa-fix') > -1
     }
 
+    let scheduler
     this.serializer = new Serializer(this)
 
     const { state, serializer } = this
@@ -69,12 +71,6 @@ export class Aggregate extends AggregateBase {
     const jsonpEE = baseEE.get('jsonp')
     const xhrEE = baseEE.get('xhr')
     const tracerEE = baseEE.get('tracer')
-
-    const scheduler = new HarvestScheduler('events', {
-      onFinished: onHarvestFinished,
-      retryDelay: state.harvestTimeSeconds
-    }, { agentIdentifier, ee: baseEE })
-    scheduler.harvest.on('events', onHarvestStarted)
 
     // childTime is used when calculating exclusive time for a cb duration.
     //
@@ -108,11 +104,18 @@ export class Aggregate extends AggregateBase {
     //  | click ending:                   |   65  |    50    |        |           |           |
     // click fn-end                       |   70  |    0     |    0   |     70    |     20    |
 
-    // if rum response determines that customer lacks entitlements for spa endpoint, block it
-    register('block-spa', () => {
-      blocked = true
-      scheduler.stopTimer(true)
-    }, this.featureName, baseEE)
+    this.waitForFlags((['spa'])).then(([spaFlag]) => {
+      if (spaFlag) {
+        scheduler = this.scheduler = new HarvestScheduler('events', {
+          onFinished: onHarvestFinished,
+          retryDelay: state.harvestTimeSeconds
+        }, { agentIdentifier, ee: baseEE })
+        this.scheduler.harvest.on('events', onHarvestStarted)
+      } else {
+        this.blocked = true
+        deregisterDrain(this.agentIdentifier, this.featureName)
+      }
+    })
 
     if (!isEnabled()) return
 

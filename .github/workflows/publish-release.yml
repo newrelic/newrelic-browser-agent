@@ -18,7 +18,7 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: lts/*
       - name: Install project dependencies
@@ -72,7 +72,7 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: lts/*
       - name: Get version number
@@ -125,7 +125,7 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: lts/*
       - name: Deploy prod a/b script
@@ -150,7 +150,7 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: lts/*
       - name: Deploy eu-prod a/b script
@@ -175,7 +175,7 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: lts/*
       - name: Get version number
@@ -203,7 +203,7 @@ jobs:
   #       shell: bash
   #   steps:
   #     - uses: actions/checkout@v3
-  #     - uses: actions/setup-node@v3
+  #     - uses: actions/setup-node@v4
   #       with:
   #         node-version: lts/*
   #     - name: Get version number
@@ -233,7 +233,7 @@ jobs:
       NPM_TOKEN: ${{ secrets.BROWSER_NPM_TOKEN }}
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: lts/*
       - name: Authenticate npm
@@ -256,7 +256,7 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: lts/*
       - name: Get version number
@@ -280,7 +280,7 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: lts/*
       - name: Notify Release Repo

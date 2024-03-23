@@ -136,9 +136,7 @@ export class Aggregate extends AggregateBase {
       if (event.gql) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Ajax/Events/GraphQL/Bytes-Added', stringify(event.gql).length], undefined, FEATURE_NAMES.metrics, ee)
 
       const softNavInUse = Boolean(getNREUMInitializedAgent(agentIdentifier)?.features?.[FEATURE_NAMES.softNav])
-      console.log('softNavInUse', softNavInUse)
       if (softNavInUse) { // For newer soft nav (when running), pass the event to it for evaluation -- either part of an interaction or is given back
-        console.log('emit ajax')
         handle('ajax', [event], undefined, FEATURE_NAMES.softNav, ee)
       } else if (this.spaNode) { // For old spa (when running), if the ajax happened inside an interaction, hold it until the interaction finishes
         const interactionId = this.spaNode.interaction.id

@@ -34,7 +34,7 @@ export function registerDrain (agentIdentifier, group) {
 export function deregisterDrain (agentIdentifier, group) {
   curateRegistry(agentIdentifier)
   if (registry[agentIdentifier].get(group)) registry[agentIdentifier].delete(group)
-  checkCanDrainAll(agentIdentifier)
+  if (registry[agentIdentifier].size) checkCanDrainAll(agentIdentifier)
 }
 
 /**

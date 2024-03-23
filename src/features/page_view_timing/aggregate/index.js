@@ -20,7 +20,6 @@ import { interactionToNextPaint } from '../../../common/vitals/interaction-to-ne
 import { largestContentfulPaint } from '../../../common/vitals/largest-contentful-paint'
 import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
 import { longTask } from '../../../common/vitals/long-task'
-import { deregisterDrain } from '../../../common/drain/drain'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -47,28 +46,23 @@ export class Aggregate extends AggregateBase {
     const initialHarvestSeconds = getConfigurationValue(this.agentIdentifier, 'page_view_timing.initialHarvestSeconds') || 10
     const harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'page_view_timing.harvestTimeSeconds') || 30
 
-    this.waitForFlags((['pvt'])).then(([pvtFlag]) => {
-      if (pvtFlag) {
-        firstPaint.subscribe(this.#handleVitalMetric)
-        firstContentfulPaint.subscribe(this.#handleVitalMetric)
-        firstInputDelay.subscribe(this.#handleVitalMetric)
-        largestContentfulPaint.subscribe(this.#handleVitalMetric)
-        interactionToNextPaint.subscribe(this.#handleVitalMetric)
-        timeToFirstByte.subscribe(({ entries }) => {
-          this.addTiming('load', Math.round(entries[0].loadEventEnd))
-        })
+    this.waitForFlags(([])).then(() => {
+      firstPaint.subscribe(this.#handleVitalMetric)
+      firstContentfulPaint.subscribe(this.#handleVitalMetric)
+      firstInputDelay.subscribe(this.#handleVitalMetric)
+      largestContentfulPaint.subscribe(this.#handleVitalMetric)
+      interactionToNextPaint.subscribe(this.#handleVitalMetric)
+      timeToFirstByte.subscribe(({ entries }) => {
+        this.addTiming('load', Math.round(entries[0].loadEventEnd))
+      })
 
-        this.scheduler = new HarvestScheduler('events', {
-          onFinished: (...args) => this.onHarvestFinished(...args),
-          getPayload: (...args) => this.prepareHarvest(...args)
-        }, this)
-        this.scheduler.startTimer(harvestTimeSeconds, initialHarvestSeconds)
+      const scheduler = new HarvestScheduler('events', {
+        onFinished: (...args) => this.onHarvestFinished(...args),
+        getPayload: (...args) => this.prepareHarvest(...args)
+      }, this)
+      scheduler.startTimer(harvestTimeSeconds, initialHarvestSeconds)
 
-        this.drain()
-      } else {
-        this.blocked = true // if rum response determines that customer lacks entitlements for spa endpoint, this feature shouldn't harvest
-        deregisterDrain(this.agentIdentifier, this.featureName)
-      }
+      this.drain()
     })
   }
 

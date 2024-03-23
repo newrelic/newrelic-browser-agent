@@ -7,6 +7,9 @@ import { dispatchGlobalEvent } from '../dispatch/global-event'
 
 const sentIds = new Set()
 
+/** A map of feature flags and their values as provided by the rum call -- scoped by agent ID */
+export const activatedFeatures = {}
+
 /**
  * Sets the activatedFeatures object, dispatches the global loaded event,
  * and emits the rumresp flag to features
@@ -20,13 +23,13 @@ export function activateFeatures (flags, agentIdentifier) {
   if (!(flags && typeof flags === 'object')) return
   if (sentIds.has(agentIdentifier)) return
 
-  sharedEE.emit('rumresp', [flags])
-  activatedFeatures[agentIdentifier] = flags
+  const frozenFlags = Object.freeze(flags)
+  sharedEE.emit('rumresp', [frozenFlags])
+  activatedFeatures[agentIdentifier] = frozenFlags
+  Object.freeze(activateFeatures[agentIdentifier])
 
   sentIds.add(agentIdentifier)
 
   // let any window level subscribers know that the agent is running
   dispatchGlobalEvent({ loaded: true })
 }
-
-export const activatedFeatures = {}

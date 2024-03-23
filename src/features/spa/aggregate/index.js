@@ -111,6 +111,7 @@ export class Aggregate extends AggregateBase {
           retryDelay: state.harvestTimeSeconds
         }, { agentIdentifier, ee: baseEE })
         this.scheduler.harvest.on('events', onHarvestStarted)
+        this.drain()
       } else {
         this.blocked = true
         deregisterDrain(this.agentIdentifier, this.featureName)
@@ -743,7 +744,5 @@ export class Aggregate extends AggregateBase {
       var enabled = getConfigurationValue(agentIdentifier, 'spa.enabled')
       return enabled !== false
     }
-
-    this.drain()
   }
 }

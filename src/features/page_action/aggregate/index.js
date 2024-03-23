@@ -39,7 +39,7 @@ export class Aggregate extends AggregateBase {
         scheduler.startTimer(this.harvestTimeSeconds, 0)
         this.drain()
       } else {
-        this.blocked = true // if rum response determines that customer lacks entitlements for spa endpoint, this feature shouldn't harvest
+        this.blocked = true // if rum response determines that customer lacks entitlements for ins endpoint, this feature shouldn't harvest
         deregisterDrain(this.agentIdentifier, this.featureName)
       }
     })

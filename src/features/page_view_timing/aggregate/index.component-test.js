@@ -47,6 +47,10 @@ describe('pvt aggregate tests', () => {
       __esModule: true,
       activatedFeatures: { [agentId]: { pvt: 1 } }
     }))
+    // jest.doMock('../../../common/harvest/harvest', () => ({
+    //   __esModule: true,
+    //   send: jest.fn()
+    // }))
 
     setRuntime(agentId, {})
     const { Aggregate } = await import('.')
@@ -58,8 +62,7 @@ describe('pvt aggregate tests', () => {
       downlink: 700
     }
     pvtAgg = new Aggregate(agentId, new Aggregator({ agentIdentifier: agentId, ee }))
-    await pvtAgg.waitForFlags((['pvt']))
-    pvtAgg.scheduler.send = jest.fn(() => ({}))
+    await pvtAgg.waitForFlags(([]))
     pvtAgg.prepareHarvest = jest.fn(() => ({}))
   })
   test('LCP event with CLS attribute', () => {

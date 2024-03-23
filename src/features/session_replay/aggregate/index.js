@@ -117,10 +117,12 @@ export class Aggregate extends AggregateBase {
 
     this.waitForFlags(['sr']).then(([flagOn]) => {
       this.entitled = flagOn
-      if (!this.entitled && this.recorder?.recording) {
-        this.abort(ABORT_REASONS.ENTITLEMENTS)
-        handle(SUPPORTABILITY_METRIC_CHANNEL, ['SessionReplay/EnabledNotEntitled/Detected'], undefined, FEATURE_NAMES.metrics, this.ee)
+      if (!this.entitled) {
         deregisterDrain(this.agentIdentifier, this.featureName)
+        if (this.recorder?.recording) {
+          this.abort(ABORT_REASONS.ENTITLEMENTS)
+          handle(SUPPORTABILITY_METRIC_CHANNEL, ['SessionReplay/EnabledNotEntitled/Detected'], undefined, FEATURE_NAMES.metrics, this.ee)
+        }
         return
       }
       this.drain()

@@ -33,33 +33,39 @@ test.each([
   expect(activatedFeatures[agentIdentifier]).toEqual({})
 })
 
-const allFlags = ['stn', 'err', 'ins', 'spa', 'sr', 'xhr', 'pvt']
-
 test('emits the right events when feature flag = 1', () => {
-  const flags = {}
-  allFlags.forEach(flag => { flags[flag] = 1 })
+  const flags = {
+    stn: 1,
+    err: 1,
+    ins: 1,
+    spa: 1,
+    sr: 1
+  }
   activateFeatures(flags, agentIdentifier)
 
   const sharedEE = eventEmitterModule.ee.get(agentIdentifier).emit
 
-  expect(sharedEE).toHaveBeenCalledTimes(allFlags.length)
-  expect(sharedEE).toHaveBeenLastCalledWith('rumresp-' + allFlags[allFlags.length - 1], [1])
+  expect(sharedEE).toHaveBeenCalledTimes(1)
+  expect(sharedEE).toHaveBeenLastCalledWith('rumresp', [flags])
 
-  Object.keys(flags).forEach(flag => { flags[flag] = 1 })
   expect(activatedFeatures[agentIdentifier]).toEqual(flags)
 })
 
 test('emits the right events when feature flag = 0', () => {
-  const flags = {}
-  allFlags.forEach(flag => { flags[flag] = 0 })
+  const flags = {
+    stn: 1,
+    err: 1,
+    ins: 1,
+    spa: 1,
+    sr: 1
+  }
   activateFeatures(flags, agentIdentifier)
 
   const sharedEE = eventEmitterModule.ee.get(agentIdentifier).emit
 
-  expect(sharedEE).toHaveBeenCalledTimes(allFlags.length)
-  expect(sharedEE).toHaveBeenLastCalledWith('rumresp-' + allFlags[allFlags.length - 1], [0])
+  expect(sharedEE).toHaveBeenCalledTimes(1)
+  expect(sharedEE).toHaveBeenLastCalledWith('rumresp', [flags])
 
-  Object.keys(flags).forEach(flag => { flags[flag] = 0 })
   expect(activatedFeatures[agentIdentifier]).toEqual(flags)
 })
 
@@ -68,7 +74,7 @@ test('only the first activate of the same feature is respected', () => {
 
   const sharedEE = eventEmitterModule.ee.get(agentIdentifier).emit
 
-  expect(sharedEE).toHaveBeenNthCalledWith(1, 'rumresp-stn', [1])
+  expect(sharedEE).toHaveBeenNthCalledWith(1, 'rumresp', [{ stn: 1 }])
 
   sharedEE.mockClear()
   activateFeatures({ stn: 0 }, agentIdentifier)

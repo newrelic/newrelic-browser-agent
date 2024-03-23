@@ -21,7 +21,7 @@ const registry = {}
 export function registerDrain (agentIdentifier, group) {
   // Here `item` captures the registered properties of a feature-group: whether it is ready for its buffered events
   // to be drained (`staged`) and the `priority` order in which it should be drained relative to other feature groups.
-  const item = { staged: false, priority: featurePriority[group] || 0, drained: false }
+  const item = { staged: false, priority: featurePriority[group] || 0 }
   curateRegistry(agentIdentifier)
   if (!registry[agentIdentifier].get(group)) registry[agentIdentifier].set(group, item)
 }
@@ -77,7 +77,6 @@ function checkCanDrainAll (agentIdentifier) {
     items.forEach(([group]) => {
       registry[agentIdentifier].delete(group)
       drainGroup(agentIdentifier, group)
-      if (registry[agentIdentifier].get(group)) registry[agentIdentifier].get(group).drained = true
     })
   }
 }

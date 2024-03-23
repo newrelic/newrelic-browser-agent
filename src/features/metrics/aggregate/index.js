@@ -15,12 +15,11 @@ export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
-    let scheduler
 
     this.waitForFlags(['err']).then(([errFlag]) => {
-      // *cli, Mar 23 - Per NR-94597, this feature should only harvest ONCE at the (potential) EoL time of the page.
       if (errFlag) {
-        scheduler = new HarvestScheduler('jserrors', { onUnload: () => this.unload() }, this)
+        // *cli, Mar 23 - Per NR-94597, this feature should only harvest ONCE at the (potential) EoL time of the page.
+        const scheduler = new HarvestScheduler('jserrors', { onUnload: () => this.unload() }, this)
         // this is needed to ensure EoL is "on" and sent
         scheduler.harvest.on('jserrors', () => ({ body: this.aggregator.take(['cm', 'sm']) }))
         this.drain()

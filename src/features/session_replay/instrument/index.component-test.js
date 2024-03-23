@@ -38,6 +38,10 @@ jest.mock('../shared/recorder', () => ({
     }
   })
 }))
+jest.mock('../../../common/util/console', () => ({
+  __esModule: true,
+  warn: jest.fn()
+}))
 
 const agentIdentifier = 'abc'
 

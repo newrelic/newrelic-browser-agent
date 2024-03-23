@@ -62,12 +62,7 @@ describe('drain', () => {
   })
 
   test('fails when agent id not provided', () => {
-    try {
-      drain()
-      expect(1).toEqual(2) // should fail here
-    } catch (err) {
-      expect(1).toEqual(1) // pass
-    }
+    expect(() => drain()).toThrow()
   })
 })
 

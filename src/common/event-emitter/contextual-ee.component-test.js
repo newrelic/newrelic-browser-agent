@@ -160,7 +160,7 @@ describe('event-emitter buffer', () => {
     const { ee } = await import('./contextual-ee')
     const { drain } = await import('../drain/drain')
     const mockListener = jest.fn()
-    const eventType = faker.datatype.uuid()
+    const eventType = faker.string.uuid()
     const eventArgs = ['a', 'b', 'c']
 
     ee.on(eventType, mockListener)

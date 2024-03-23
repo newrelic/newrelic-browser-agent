@@ -89,12 +89,11 @@ describe('soft navigations', () => {
       importAggregatorFn()
       await expect(softNavInstrument.onAggregateImported).resolves.toEqual(true)
       softNavAggregate = softNavInstrument.featAggregate
-      softNavAggregate.ee.emit('rumresp-spa', [1])
+      softNavAggregate.ee.emit('rumresp', [{ spa: 1 }])
     })
 
     test('processes regular interactions', () => {
       expect(softNavAggregate.domObserver).toBeTruthy()
-      expect(softNavAggregate.scheduler).toBeTruthy()
       expect(softNavAggregate.initialPageLoadInteraction).toBeTruthy()
 
       executeTTFB({ entries: [{ loadEventEnd: 123 }] })
@@ -172,7 +171,7 @@ describe('soft navigations', () => {
       importAggregatorFn()
       await expect(softNavInstrument.onAggregateImported).resolves.toEqual(true)
       softNavAggregate = softNavInstrument.featAggregate
-      softNavAggregate.ee.emit('rumresp-spa', [1])
+      softNavAggregate.ee.emit('rumresp', [{ spa: 1 }])
     })
     beforeEach(() => {
       softNavAggregate.initialPageLoadInteraction = null

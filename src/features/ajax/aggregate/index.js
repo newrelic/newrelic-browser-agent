@@ -15,7 +15,6 @@ import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { parseGQL } from './gql'
 import { getNREUMInitializedAgent } from '../../../common/window/nreum'
-import { deregisterDrain } from '../../../common/drain/drain'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -25,18 +24,13 @@ export class Aggregate extends AggregateBase {
 
     registerHandler('xhr', storeXhr, this.featureName, this.ee)
 
-    this.waitForFlags((['xhr'])).then(([xhrFlag]) => {
-      if (xhrFlag) {
-        const scheduler = new HarvestScheduler('events', {
-          onFinished: onEventsHarvestFinished,
-          getPayload: prepareHarvest
-        }, this)
-        scheduler.startTimer(harvestTimeSeconds)
-        this.drain()
-      } else {
-        this.blocked = true // if rum response determines that customer lacks entitlements for spa endpoint, this feature shouldn't harvest
-        deregisterDrain(this.agentIdentifier, this.featureName)
-      }
+    this.waitForFlags(([])).then(() => {
+      const scheduler = new HarvestScheduler('events', {
+        onFinished: onEventsHarvestFinished,
+        getPayload: prepareHarvest
+      }, this)
+      scheduler.startTimer(harvestTimeSeconds)
+      this.drain()
     })
 
     const denyList = getRuntime(agentIdentifier).denyList
@@ -142,8 +136,9 @@ export class Aggregate extends AggregateBase {
       if (event.gql) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Ajax/Events/GraphQL/Bytes-Added', stringify(event.gql).length], undefined, FEATURE_NAMES.metrics, ee)
 
       const softNavInUse = Boolean(getNREUMInitializedAgent(agentIdentifier)?.features?.[FEATURE_NAMES.softNav])
-
+      console.log('softNavInUse', softNavInUse)
       if (softNavInUse) { // For newer soft nav (when running), pass the event to it for evaluation -- either part of an interaction or is given back
+        console.log('emit ajax')
         handle('ajax', [event], undefined, FEATURE_NAMES.softNav, ee)
       } else if (this.spaNode) { // For old spa (when running), if the ajax happened inside an interaction, hold it until the interaction finishes
         const interactionId = this.spaNode.interaction.id

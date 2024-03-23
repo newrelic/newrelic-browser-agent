@@ -36,7 +36,6 @@ export class AggregateBase extends FeatureBase {
 
   drain () {
     drain(this.agentIdentifier, this.featureName)
-    this.drained = true
   }
 
   /**

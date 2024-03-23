@@ -18,8 +18,6 @@ export class Aggregate extends AggregateBase {
   constructor (agentIdentifier, aggregator, { domObserver }) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
 
-    console.log('SOFT NAV')
-
     const harvestTimeSeconds = getConfigurationValue(agentIdentifier, 'soft_navigations.harvestTimeSeconds') || 10
     this.interactionsToHarvest = []
     this.interactionsAwaitingRetry = []
@@ -72,7 +70,6 @@ export class Aggregate extends AggregateBase {
 
   onHarvestStarted (options) {
     if (this.interactionsToHarvest.length === 0 || this.blocked) return
-    console.log('harvestStarted')
     // The payload depacker takes the first ixn of a payload (if there are multiple ixns) and positively offset the subsequent ixns timestamps by that amount.
     // In order to accurately portray the real start & end times of the 2nd & onward ixns, we hence need to negatively offset their start timestamps with that of the 1st ixn.
     let firstIxnStartTime = 0 // the very 1st ixn does not require any offsetting
@@ -164,7 +161,6 @@ export class Aggregate extends AggregateBase {
    * @param {Object} event see Ajax feature's storeXhr function for object definition
    */
   #handleAjaxEvent (event) {
-    console.log('handle ajax')
     const associatedInteraction = this.getInteractionFor(event.startTime)
     if (!associatedInteraction) { // no interaction was happening when this ajax started, so give it back to Ajax feature for processing
       handle('returnAjax', [event], undefined, FEATURE_NAMES.ajax, this.ee)
@@ -188,7 +184,6 @@ export class Aggregate extends AggregateBase {
    * @param {DOMHighResTimeStamp} timestamp time the jserror occurred
    */
   #handleJserror (params, timestamp) {
-    console.log('handleJserror...', params)
     const associatedInteraction = this.getInteractionFor(timestamp)
     if (!associatedInteraction) return // do not need to decorate this jserror params
 

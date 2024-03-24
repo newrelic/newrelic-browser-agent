@@ -11,11 +11,13 @@
  */
 import { DEFAULT_KEY, MODE, PREFIX } from '../../../common/session/constants'
 import { InstrumentBase } from '../../utils/instrument-base'
-import { FEATURE_NAME, SR_EVENT_EMITTER_TYPES } from '../constants'
+import { FEATURE_NAME } from '../constants'
 import { hasReplayPrerequisite, isPreloadAllowed } from '../shared/utils'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
+
+  #mode
   constructor (agentIdentifier, aggregator, auto = true) {
     super(agentIdentifier, aggregator, FEATURE_NAME, auto)
     let session
@@ -24,17 +26,12 @@ export class Instrument extends InstrumentBase {
     } catch (err) { }
 
     if (hasReplayPrerequisite(agentIdentifier)) {
-      this.ee.on(SR_EVENT_EMITTER_TYPES.RECORD, () => {
-        this.#startRecording(MODE.FULL).finally(() => {
-          this.importAggregator({ recorder: this.recorder })
-        })
-      })
+      this.ee.on('recordReplay', () => this.#apiStartOrRestartReplay())
     }
 
     if (this.#canPreloadRecorder(session)) {
-      this.#startRecording(session?.sessionReplayMode).finally(() => {
-        this.importAggregator({ recorder: this.recorder })
-      })
+      this.#mode = session?.sessionReplayMode
+      this.#preloadStartRecording()
     } else {
       this.importAggregator()
     }
@@ -53,16 +50,45 @@ export class Instrument extends InstrumentBase {
     }
   }
 
-  async #startRecording (mode) {
-    if (this.featAggregate) {
-      if (this.featAggregate.entitled) this.featAggregate.initializeRecording(mode, true)
-      /** dont need to reimport the recorder so just return if the featAgg exists */
-      return
+  #alreadyStarted = false
+  /**
+   * This func is use for early pre-load recording prior to replay feature (agg) being loaded onto the page. It should only setup once, including if already called and in-progress.
+   */
+  async #preloadStartRecording () {
+    if (this.#alreadyStarted) return
+    this.#alreadyStarted = true
+
+    try {
+      const { Recorder } = (await import(/* webpackChunkName: "recorder" */'../shared/recorder'))
+
+      // If startReplay() has been used by this point, we must record in full mode regardless of session preload:
+      // Note: recorder starts here with w/e the mode is at this time, but this may be changed later (see #apiStartOrRestartReplay else-case)
+      this.recorder ??= new Recorder({ mode: this.#mode, agentIdentifier: this.agentIdentifier })
+      this.recorder.startRecording()
+      this.abortHandler = this.recorder.stopRecording
+    } catch (e) {}
+    this.importAggregator({ recorder: this.recorder })
+  }
+
+  /**
+   * Called whenever startReplay API is used. That could occur any time, pre or post load.
+   */
+  #apiStartOrRestartReplay () {
+    if (this.featAggregate) { // post-load; there's possibly already an ongoing recording
+      if (!this.featAggregate.recorder?.recording && this.featAggregate.entitled) this.featAggregate.initializeRecording(MODE.FULL, true)
+      // if already recording or not entitled, don't start (again); don't importAgg again either
+    } else { // pre-load
+      this.#mode = MODE.FULL
+      this.#preloadStartRecording()
+      // There's a race here wherein either:
+      // a. Recorder has not been initialized, and we've set the enforced mode, so we're good, or;
+      // b. Record has been initialized, possibly with the "wrong" mode, so we have to correct that + restart.
+      if (this.recorder && this.recorder.parent.mode !== MODE.FULL) {
+        this.recorder.parent.mode = MODE.FULL
+        this.recorder.stopRecording()
+        this.recorder.startRecording()
+        this.abortHandler = this.recorder.stopRecording
+      }
     }
-    if (this.recorder?.recording) return
-    const { Recorder } = (await import(/* webpackChunkName: "recorder" */'../shared/recorder'))
-    this.recorder ??= new Recorder({ mode, agentIdentifier: this.agentIdentifier })
-    this.recorder.startRecording()
-    this.abortHandler = this.recorder.stopRecording
   }
 }

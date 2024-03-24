@@ -2,10 +2,11 @@ import { globalScope } from '../../../../common/constants/runtime'
 import { MODE } from '../../../../common/session/constants'
 import { now } from '../../../../common/timing/now'
 import { parseUrl } from '../../../../common/url/parse-url'
+import { MAX_NODES_PER_HARVEST } from '../../constants'
 import { TraceNode } from './node'
 
 const ERROR_MODE_SECONDS_WINDOW = 30 * 1000 // sliding window of nodes to track when simply monitoring (but not harvesting) in error mode
-const SUPPORTS_PERFORMANCE_OBSERVER = 'PerformanceObserver' in globalScope && typeof globalScope.PerformanceObserver === 'function'
+const SUPPORTS_PERFORMANCE_OBSERVER = typeof globalScope.PerformanceObserver === 'function'
 
 const ignoredEvents = {
   // we find that certain events make the data too noisy to be useful
@@ -28,6 +29,7 @@ export class TraceStorage {
   trace = {}
   earliestTimeStamp = Infinity
   latestTimeStamp = 0
+  tempStorage = []
 
   constructor (parent) {
     this.parent = parent
@@ -36,14 +38,20 @@ export class TraceStorage {
   /** Central function called by all the other store__ & addToTrace API to append a trace node. */
   storeSTN (stn) {
     if (this.parent.blocked) return
-    if (this.nodeCount >= this.parent.maxNodesPerHarvest) { // limit the amount of pending data awaiting next harvest
+    if (this.nodeCount >= MAX_NODES_PER_HARVEST) { // limit the amount of pending data awaiting next harvest
       if (this.parent.agentRuntime.session.state.sessionTraceMode !== MODE.ERROR) {
-        // trigger a harvest early
-        this.parent.scheduler.runHarvest({ needResponse: true })
+        this.tempStorage.push(stn)
+        if (!this.parent.scheduler.harvesting) {
+          // trigger a harvest early
+          this.parent.scheduler.runHarvest({ needResponse: true })
+        }
         return
       }
       const openedSpace = this.trimSTNs(ERROR_MODE_SECONDS_WINDOW) // but maybe we could make some space by discarding irrelevant nodes if we're in sessioned Error mode
       if (openedSpace === 0) return
+    }
+    while (this.tempStorage.length) {
+      this.storeSTN(this.tempStorage.shift())
     }
 
     if (this.trace[stn.n]) this.trace[stn.n].push(stn)
@@ -275,7 +283,7 @@ export class TraceStorage {
   }
 
   restoreNode (name, listOfSTNodes) {
-    if (this.nodeCount >= this.parent.maxNodesPerHarvest) return
+    if (this.nodeCount >= MAX_NODES_PER_HARVEST) return
 
     this.nodeCount += listOfSTNodes.length
     this.trace[name] = this.trace[name] ? listOfSTNodes.concat(this.trace[name]) : listOfSTNodes

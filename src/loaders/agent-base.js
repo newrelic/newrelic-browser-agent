@@ -19,7 +19,6 @@ export class AgentBase {
 
     // Assign the observation context to the event emitter, so it knows how to create observation contexts
     this.ee = ee.get(agentIdentifier)
-    this.ee.observationContext = this.observationContext
   }
 
   /**

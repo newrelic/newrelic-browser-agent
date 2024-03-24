@@ -11,7 +11,7 @@ import { FEATURE_NAMES } from '../../loaders/features/features'
  * @param featurePart Name of the feature part to load; should be either instrument or aggregate
  * @returns {Promise<InstrumentBase|FeatureBase|null>}
  */
-export function lazyFeatureLoader (featureName, featurePart, featureFlags = []) {
+export function lazyFeatureLoader (featureName, featurePart) {
   if (featurePart === 'aggregate') {
     switch (featureName) {
       case FEATURE_NAMES.ajax:

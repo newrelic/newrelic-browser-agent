@@ -102,7 +102,7 @@ export class InstrumentBase extends FeatureBase {
           return
         }
         const { lazyFeatureLoader } = await import(/* webpackChunkName: "lazy-feature-loader" */ './lazy-feature-loader')
-        const { Aggregate } = await lazyFeatureLoader(this.featureName, 'aggregate', getConfigurationValue(this.agentIdentifier, 'feature_flags'))
+        const { Aggregate } = await lazyFeatureLoader(this.featureName, 'aggregate')
         this.featAggregate = new Aggregate(this.agentIdentifier, this.aggregator, argsObjFromInstrument)
         loadedSuccessfully(true)
       } catch (e) {

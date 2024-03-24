@@ -95,7 +95,7 @@ test('should import aggregator on window load', async () => {
   await windowLoadCallback()
 
   expect(onWindowLoad).toHaveBeenCalledWith(expect.any(Function), true)
-  expect(lazyFeatureLoader).toHaveBeenCalledWith(featureName, 'aggregate', { feature_flags: [] })
+  expect(lazyFeatureLoader).toHaveBeenCalledWith(featureName, 'aggregate')
   expect(mockAggregate).toHaveBeenCalledWith(agentIdentifier, aggregator, aggregateArgs)
 })
 
@@ -112,7 +112,7 @@ test('should immediately import aggregator in worker scope', async () => {
   await new Promise(process.nextTick)
 
   expect(onWindowLoad).not.toHaveBeenCalled()
-  expect(lazyFeatureLoader).toHaveBeenCalledWith(featureName, 'aggregate', { feature_flags: [] })
+  expect(lazyFeatureLoader).toHaveBeenCalledWith(featureName, 'aggregate')
   expect(mockAggregate).toHaveBeenCalledWith(agentIdentifier, aggregator, aggregateArgs)
 })
 
@@ -131,7 +131,7 @@ test('should import the session manager and replay aggregate for new session', a
 
   expect(getConfigurationValue).toHaveBeenCalledWith(agentIdentifier, 'privacy.cookies_enabled')
   expect(setupAgentSession).toHaveBeenCalledWith(agentIdentifier)
-  expect(lazyFeatureLoader).toHaveBeenCalledWith(FEATURE_NAMES.sessionReplay, 'aggregate', true)
+  expect(lazyFeatureLoader).toHaveBeenCalledWith(FEATURE_NAMES.sessionReplay, 'aggregate')
   expect(mockAggregate).toHaveBeenCalledWith(agentIdentifier, aggregator, aggregateArgs)
 })
 
@@ -153,7 +153,7 @@ test('should import the session manager and replay aggregate when a recording is
 
   expect(getConfigurationValue).toHaveBeenCalledWith(agentIdentifier, 'privacy.cookies_enabled')
   expect(setupAgentSession).toHaveBeenCalledWith(agentIdentifier)
-  expect(lazyFeatureLoader).toHaveBeenCalledWith(FEATURE_NAMES.sessionReplay, 'aggregate', true)
+  expect(lazyFeatureLoader).toHaveBeenCalledWith(FEATURE_NAMES.sessionReplay, 'aggregate')
   expect(mockAggregate).toHaveBeenCalledWith(agentIdentifier, aggregator, aggregateArgs)
 })
 

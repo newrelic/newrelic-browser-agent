@@ -1,8 +1,3 @@
-/**
- * The plan with this would be to report from the old file to the old agg and this file to the
- * blob agg until the API is solidified and shipped.  This file will be DISABLED by default.
- * At which point the old agg will be ripped out and only the new agg will report and be renamed to "index"
- */
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
@@ -10,12 +5,10 @@ import { FEATURE_NAME } from '../constants'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { TraceStorage } from './trace/storage'
 import { obj as encodeObj } from '../../../common/url/encode'
-import { now } from '../../../common/timing/now'
 import { deregisterDrain } from '../../../common/drain/drain'
 import { globalScope } from '../../../common/constants/runtime'
 import { MODE, SESSION_EVENTS } from '../../../common/session/constants'
 
-const REQ_THRESHOLD_TO_SEND = 30
 const ERROR_MODE_SECONDS_WINDOW = 30 * 1000 // sliding window of nodes to track when simply monitoring (but not harvesting) in error mode
 /** Reserved room for query param attrs */
 const QUERY_PARAM_PADDING = 5000
@@ -36,24 +29,17 @@ export class Aggregate extends AggregateBase {
     /** A buffer to hold on to harvested traces in the case that a retry must be made later */
     this.sentTrace = null
     this.harvestTimeSeconds = getConfigurationValue(agentIdentifier, 'session_trace.harvestTimeSeconds') || 30
-    this.maxNodesPerHarvest = getConfigurationValue(agentIdentifier, 'session_trace.maxNodesPerHarvest') || 1000
-    /** A flag used to maintain trace mode state at initialization time. If true at init time and sampled in error mode, it will flip to full */
-    this.errorNoticed = false
     /** Tied to the entitlement flag response from BCS.  Will short circuit operations of the agg if false  */
     this.entitled = undefined
     /** A flag used to decide if the 30 node threshold should be ignored on the first harvest to ensure sending on the first payload */
     this.everHarvested = false
-    /** Do not run if cookies_enabled is false */
-    const shouldSetup = getConfigurationValue(agentIdentifier, 'privacy.cookies_enabled') === true
-
-    if (shouldSetup) {
-      /** TraceStorage is the mechanism that holds, normalizes and aggregates ST nodes.  It will be accessed and purged when harvests occur */
-      this.traceStorage = new TraceStorage(this)
-      /** This agg needs information about sampling (stn) and entitlements (ste) to make the appropriate decisions on running */
-      this.waitForFlags(['sts', 'stn']).then(([stMode, stEntitled]) => this.initialize(stMode, stEntitled))
-    } else {
-      deregisterDrain(this.agentIdentifier, this.featureName)
-    }
+    /** If the harvest module is harvesting */
+    this.harvesting = false
+    /** TraceStorage is the mechanism that holds, normalizes and aggregates ST nodes.  It will be accessed and purged when harvests occur */
+    this.traceStorage = new TraceStorage(this)
+    /** This agg needs information about sampling (stn) and entitlements (ste) to make the appropriate decisions on running */
+    this.waitForFlags(['sts', 'stn'])
+      .then(([stMode, stEntitled]) => this.initialize(stMode, stEntitled))
   }
 
   /** Sets up event listeners, and initializes this module to run in the correct "mode".  Can be triggered from a few places, but makes an effort to only set up listeners once */
@@ -100,12 +86,6 @@ export class Aggregate extends AggregateBase {
     registerHandler('stn-errorAgg', (...args) => this.traceStorage.storeErrorAgg(...args), this.featureName, this.ee)
     registerHandler('pvtAdded', (...args) => this.traceStorage.processPVT(...args), this.featureName, this.ee)
 
-    /** A separate handler for noticing errors, and switching to "full" mode if running in "error" mode */
-    registerHandler('stn-errorAgg', () => {
-      this.errorNoticed = true
-      if (this.mode === MODE.ERROR) this.switchToFull()
-    }, this.featureName, this.ee)
-
     if (typeof PerformanceNavigationTiming !== 'undefined') {
       this.traceStorage.storeTiming(globalScope.performance?.getEntriesByType?.('navigation')[0])
     } else {
@@ -114,23 +94,25 @@ export class Aggregate extends AggregateBase {
 
     /** Only start actually harvesting if running in full mode at init time */
     if (this.mode === MODE.FULL) this.startHarvesting()
+    else {
+      /** A separate handler for noticing errors, and switching to "full" mode if running in "error" mode */
+      registerHandler('stn-errorAgg', () => {
+        if (this.mode === MODE.ERROR) this.switchToFull()
+      }, this.featureName, this.ee)
+    }
     this.agentRuntime.session.write({ sessionTraceMode: this.mode })
-    /** drain and kick off the registerHandlers to start processing any buffered data */
-    if (!this.drained) this.drain()
+    this.drain()
   }
 
   /** This module does not auto harvest by default -- it needs to be kicked off.  Once this method is called, it will then harvest on an interval */
   startHarvesting () {
+    if (this.scheduler.started || this.scheduler.aborted) return
     this.scheduler.runHarvest({ needResponse: true })
     this.scheduler.startTimer(this.harvestTimeSeconds)
   }
 
   /** Called by the harvest scheduler at harvest time to retrieve the payload.  This will only actually return a payload if running in full mode */
   prepareHarvest (options = {}) {
-    if (this.traceStorage.nodeCount <= REQ_THRESHOLD_TO_SEND && !(options.isFinalHarvest || options.forceNoRetry) && this.everHarvested) {
-      // Only harvest when more than some threshold of nodes are pending, after the very first harvest, with the exception of the last outgoing harvest.
-      return
-    }
     if (this.mode === MODE.OFF && this.traceStorage.nodeCount === 0) return
     if (this.mode === MODE.ERROR) return // Trace in this mode should never be harvesting, even on unload
 
@@ -176,7 +158,6 @@ export class Aggregate extends AggregateBase {
           ...(firstSessionHarvest && { firstSessionHarvest }),
           ...(hasReplay && { hasReplay }),
           ptid: `${this.agentRuntime.ptid}`,
-          rst: now(),
           session: `${this.agentRuntime.session?.state.value}`,
           // customer-defined data should go last so that if it exceeds the query param padding limit it will be truncated instead of important attrs
           ...(endUserId && { 'enduser.id': endUserId })
@@ -202,9 +183,9 @@ export class Aggregate extends AggregateBase {
     if (this.mode === MODE.FULL || !this.entitled) return
     const prevMode = this.mode
     this.mode = MODE.FULL
-    if (prevMode === MODE.OFF && this.initialized) return this.initialize(this.mode, this.entitled, true)
     this.agentRuntime.session.write({ sessionTraceMode: this.mode })
-    if (prevMode === MODE.ERROR && this.initialized) {
+    if (prevMode === MODE.OFF || !this.initialized) return this.initialize(this.mode, this.entitled)
+    if (this.initialized) {
       this.traceStorage.trimSTNs(ERROR_MODE_SECONDS_WINDOW) // up until now, Trace would've been just buffering nodes up to max, which needs to be trimmed to last X seconds
     }
     this.startHarvesting()
@@ -213,8 +194,8 @@ export class Aggregate extends AggregateBase {
   /** Stop running for the remainder of the page lifecycle */
   abort () {
     this.blocked = true
+    this.scheduler.stopTimer(true)
     this.mode = MODE.OFF
     this.agentRuntime.session.write({ sessionTraceMode: this.mode })
-    this.scheduler.stopTimer()
   }
 }

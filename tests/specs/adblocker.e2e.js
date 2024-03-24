@@ -12,8 +12,8 @@ describe('adblocker', () => {
   it('should abort the global event emitter when rum call is blocked', async () => {
     await browser.url(await browser.testHandle.assetURL('adblocker-ingest.html', config))
     await browser.waitUntil(() => browser.execute(function () {
-      const agentEE = Object.values(newrelic.initializedAgents)[0].ee
-      return agentEE.aborted
+      const agentId = Object.keys(newrelic.initializedAgents)[0]
+      return newrelic.ee.get(agentId).aborted
     }), {
       timeoutMsg: 'expected global event emitter to abort'
     })
@@ -28,8 +28,9 @@ describe('adblocker', () => {
         result: true,
         errors: []
       }
+      const agentId = Object.keys(newrelic.initializedAgents)[0]
 
-      const agentEE = Object.values(newrelic.initializedAgents)[0].ee
+      const agentEE = newrelic.ee.get(agentId)
 
       Object.entries(agentEE.backlog).forEach(function (bl) {
         if (Array.isArray(bl[1]) && bl[1].length > 0) {

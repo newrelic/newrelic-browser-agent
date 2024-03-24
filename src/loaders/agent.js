@@ -86,7 +86,7 @@ export class Agent extends AgentBase {
       delete this.sharedAggregator
       // Keep the initialized agent object with its configs for troubleshooting purposes.
       const thisEE = newrelic.ee.get(this.agentIdentifier)
-      thisEE.aborted = true // set flag and clear backlog
+      thisEE.abort() // set flag and clear backlog
       return false
     }
   }

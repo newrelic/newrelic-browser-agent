@@ -34,7 +34,7 @@ export function registerDrain (agentIdentifier, group) {
 export function deregisterDrain (agentIdentifier, group) {
   curateRegistry(agentIdentifier)
   if (registry[agentIdentifier].get(group)) registry[agentIdentifier].delete(group)
-  checkCanDrainAll(agentIdentifier)
+  if (registry[agentIdentifier].size) checkCanDrainAll(agentIdentifier)
 }
 
 /**
@@ -43,7 +43,7 @@ export function deregisterDrain (agentIdentifier, group) {
  * @param {string} agentIdentifier - A 16 character string uniquely identifying an agent.
  */
 function curateRegistry (agentIdentifier) {
-  if (!agentIdentifier) return
+  if (!agentIdentifier) throw new Error('agentIdentifier required')
   if (!registry[agentIdentifier]) registry[agentIdentifier] = new Map()
 }
 
@@ -102,14 +102,11 @@ function drainGroup (agentIdentifier, group) {
     mapOwn(groupHandlers, function (eventType, handlerRegistrationList) {
       mapOwn(handlerRegistrationList, function (i, registration) {
         // registration is an array of: [targetEE, eventHandler]
-        registration[0].on(eventType, registration[1]) // drain --> gets rid of the concept of a "bucket" meaning anything
+        registration[0].on(eventType, registration[1])
       })
     })
   }
-
-  delete handlers[group]
-
-  // Keep the feature's event-group as a property of the event emitter so we know it was already created and drained.
+  if (!baseEE.isolatedBacklog) delete handlers[group]
   baseEE.backlog[group] = null
   baseEE.emit('drain-' + group, [])
 }

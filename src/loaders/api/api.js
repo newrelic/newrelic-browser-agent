@@ -198,7 +198,7 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
       drain(agentIdentifier, 'api')
     }).catch(() => {
       warn('Downloading runtime APIs failed...')
-      instanceEE.aborted = true
+      instanceEE.abort()
     })
   }
 

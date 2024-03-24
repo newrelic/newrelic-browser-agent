@@ -21,6 +21,7 @@ import { FEATURE_NAME } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { getNREUMInitializedAgent } from '../../../common/window/nreum'
+import { deregisterDrain } from '../../../common/drain/drain'
 
 /**
  * @typedef {import('./compute-stack-trace.js').StackInfo} StackInfo
@@ -48,18 +49,18 @@ export class Aggregate extends AggregateBase {
 
     const harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'jserrors.harvestTimeSeconds') || 10
 
-    const scheduler = new HarvestScheduler('jserrors', { onFinished: (...args) => this.onHarvestFinished(...args) }, this)
-    scheduler.harvest.on('jserrors', (...args) => this.onHarvestStarted(...args))
-
-    this.waitForFlags(['err']).then(([isOn]) => {
-      if (isOn) scheduler.startTimer(harvestTimeSeconds)
-      else {
-        this.blocked = true
-        scheduler.stopTimer()
+    // 0 == off, 1 == on
+    this.waitForFlags(['err']).then(([errFlag]) => {
+      if (errFlag) {
+        const scheduler = new HarvestScheduler('jserrors', { onFinished: (...args) => this.onHarvestFinished(...args) }, this)
+        scheduler.harvest.on('jserrors', (...args) => this.onHarvestStarted(...args))
+        scheduler.startTimer(harvestTimeSeconds)
+        this.drain()
+      } else {
+        this.blocked = true // if rum response determines that customer lacks entitlements for spa endpoint, this feature shouldn't harvest
+        deregisterDrain(this.agentIdentifier, this.featureName)
       }
     })
-
-    this.drain()
   }
 
   onHarvestStarted (options) {

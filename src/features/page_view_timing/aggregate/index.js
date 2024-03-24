@@ -35,15 +35,6 @@ export class Aggregate extends AggregateBase {
     this.timingsSent = []
     this.curSessEndRecorded = false
 
-    firstPaint.subscribe(this.#handleVitalMetric)
-    firstContentfulPaint.subscribe(this.#handleVitalMetric)
-    firstInputDelay.subscribe(this.#handleVitalMetric)
-    largestContentfulPaint.subscribe(this.#handleVitalMetric)
-    interactionToNextPaint.subscribe(this.#handleVitalMetric)
-    timeToFirstByte.subscribe(({ entries }) => {
-      this.addTiming('load', Math.round(entries[0].loadEventEnd))
-    })
-
     if (getConfigurationValue(this.agentIdentifier, 'page_view_timing.long_task') === true) longTask.subscribe(this.#handleVitalMetric)
 
     /* It's important that CWV api, like "onLCP", is called before this scheduler is initialized. The reason is because they listen to the same
@@ -54,16 +45,25 @@ export class Aggregate extends AggregateBase {
 
     const initialHarvestSeconds = getConfigurationValue(this.agentIdentifier, 'page_view_timing.initialHarvestSeconds') || 10
     const harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'page_view_timing.harvestTimeSeconds') || 30
-    // send initial data sooner, then start regular
-    this.ee.on(`drain-${this.featureName}`, () => {
-      this.scheduler = new HarvestScheduler('events', {
+
+    this.waitForFlags(([])).then(() => {
+      firstPaint.subscribe(this.#handleVitalMetric)
+      firstContentfulPaint.subscribe(this.#handleVitalMetric)
+      firstInputDelay.subscribe(this.#handleVitalMetric)
+      largestContentfulPaint.subscribe(this.#handleVitalMetric)
+      interactionToNextPaint.subscribe(this.#handleVitalMetric)
+      timeToFirstByte.subscribe(({ entries }) => {
+        this.addTiming('load', Math.round(entries[0].loadEventEnd))
+      })
+
+      const scheduler = new HarvestScheduler('events', {
         onFinished: (...args) => this.onHarvestFinished(...args),
         getPayload: (...args) => this.prepareHarvest(...args)
       }, this)
-      this.scheduler.startTimer(harvestTimeSeconds, initialHarvestSeconds)
-    })
+      scheduler.startTimer(harvestTimeSeconds, initialHarvestSeconds)
 
-    this.drain()
+      this.drain()
+    })
   }
 
   /**

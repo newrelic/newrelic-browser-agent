@@ -41,7 +41,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Initialization', () => {
     expect(JSON.parse(rumResp.reply.body).sr).toEqual(0)
 
     const sr = await getSR()
-    expect(sr.initialized).toEqual(true)
+    expect(sr.initialized).toEqual(false)
     expect(sr.recording).toEqual(false)
   })
 

@@ -1,6 +1,5 @@
 import { Aggregator } from '../../../common/aggregate/aggregator'
 import { ee } from '../../../common/event-emitter/contextual-ee'
-import { drain } from '../../../common/drain/drain'
 import { setRuntime } from '../../../common/config/config'
 
 // Note: these callbacks fire right away unlike the real web-vitals API which are async-on-trigger
@@ -41,10 +40,20 @@ const expectedNetworkInfo = {
 }
 
 let pvtAgg
+const agentId = 'abcd'
 describe('pvt aggregate tests', () => {
   beforeEach(async () => {
+    jest.doMock('../../../common/util/feature-flags', () => ({
+      __esModule: true,
+      activatedFeatures: { [agentId]: { pvt: 1 } }
+    }))
+    // jest.doMock('../../../common/harvest/harvest', () => ({
+    //   __esModule: true,
+    //   send: jest.fn()
+    // }))
+
+    setRuntime(agentId, {})
     const { Aggregate } = await import('.')
-    setRuntime('abcd', {})
 
     global.navigator.connection = {
       type: 'cellular',
@@ -52,10 +61,9 @@ describe('pvt aggregate tests', () => {
       rtt: 270,
       downlink: 700
     }
-    pvtAgg = new Aggregate('abcd', new Aggregator({ agentIdentifier: 'abcd', ee }))
-    pvtAgg.scheduler.harvest.send = jest.fn()
+    pvtAgg = new Aggregate(agentId, new Aggregator({ agentIdentifier: agentId, ee }))
+    await pvtAgg.waitForFlags(([]))
     pvtAgg.prepareHarvest = jest.fn(() => ({}))
-    drain('abcd', 'feature')
   })
   test('LCP event with CLS attribute', () => {
     const timing = find(pvtAgg.timings, function (t) {

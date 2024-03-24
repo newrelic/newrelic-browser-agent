@@ -136,7 +136,7 @@ describe('event-emitter buffer', () => {
     ee.backlog = {
       api: ['foo', 'bar', 'baz']
     }
-    ee.aborted = true
+    ee.abort()
     ee.buffer([eventType], group)
 
     expect(ee.backlog).toEqual({})
@@ -150,7 +150,7 @@ describe('event-emitter buffer', () => {
       api: ['foo', 'bar', 'baz']
     }
     ee.backlog = backlog
-    ee.aborted = true
+    ee.abort()
 
     expect(ee.backlog).toBe(backlog)
     expect(ee.backlog).toEqual({})
@@ -160,7 +160,7 @@ describe('event-emitter buffer', () => {
     const { ee } = await import('./contextual-ee')
     const { drain } = await import('../drain/drain')
     const mockListener = jest.fn()
-    const eventType = faker.datatype.uuid()
+    const eventType = faker.string.uuid()
     const eventArgs = ['a', 'b', 'c']
 
     ee.on(eventType, mockListener)
@@ -200,7 +200,7 @@ describe('event-emitter abort', () => {
     ee.backlog = {
       api: ['foo', 'bar', 'baz']
     }
-    ee.aborted = true
+    ee.abort()
 
     expect(ee.aborted).toEqual(true)
     expect(ee.backlog).toEqual({})
@@ -212,7 +212,7 @@ describe('event-emitter abort', () => {
     ee.backlog = {
       feature: ['foo', 'bar', 'baz']
     }
-    ee.aborted = true
+    ee.abort()
 
     expect(ee.aborted).toEqual(true)
     expect(ee.backlog).toEqual({})
@@ -255,7 +255,7 @@ describe('event-emitter emit', () => {
     ee.backlog = {
       api: ['foo', 'bar', 'baz']
     }
-    ee.aborted = true
+    ee.abort()
     ee.on(eventType, mockListener)
     ee.emit(eventType, eventArgs)
 
@@ -272,7 +272,7 @@ describe('event-emitter emit', () => {
     ee.backlog = {
       api: ['foo', 'bar', 'baz']
     }
-    ee.aborted = true
+    ee.abort()
     scopeEE.on(eventType, mockScopeListener)
     scopeEE.emit(eventType, eventArgs, {}, true)
 

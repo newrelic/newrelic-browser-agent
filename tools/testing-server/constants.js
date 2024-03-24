@@ -1,12 +1,16 @@
 const path = require('path')
 
-module.exports.defaultAgentConfig = {
+const defaultAgentConfig = {
   licenseKey: 'asdf',
   applicationID: 42,
   accountID: 123,
   agentID: 456,
   trustKey: 789
 }
+module.exports.defaultAgentConfig = defaultAgentConfig
+
+const defaultEntityGuid = btoa(`${defaultAgentConfig.accountID}|BROWSER|APPLICATION|${defaultAgentConfig.applicationID}`).replace(/=/g, '')
+module.exports.defaultEntityGuid = defaultEntityGuid
 
 module.exports.paths = {
   rootDir: path.resolve(__dirname, '../../'),
@@ -38,7 +42,7 @@ module.exports.rumFlags = {
   srs: 1, // session replay sampling 0|1|2 - off full error
   app: {
     agents: [
-      { entityGuid: '214234435456' }
+      { entityGuid: defaultEntityGuid }
     ]
   }
 }

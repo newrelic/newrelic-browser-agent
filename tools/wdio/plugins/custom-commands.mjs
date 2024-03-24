@@ -1,3 +1,4 @@
+import { rumFlags } from '../../testing-server/constants.js'
 import { testRumRequest } from '../../testing-server/utils/expect-tests.js'
 
 /**
@@ -16,7 +17,7 @@ export default class CustomCommands {
     browser.addCommand('waitForAgentLoad', async function () {
       await browser.waitUntil(
         () => browser.execute(function () {
-          return window.NREUM && window.NREUM.activatedFeatures && window.NREUM.activatedFeatures.loaded
+          return window.NREUM && window.NREUM.activatedFeatures && !!Object.values(window.NREUM.activatedFeatures)[0].loaded
         }),
         {
           timeout: 30000,
@@ -101,22 +102,7 @@ export default class CustomCommands {
       await browser.testHandle.scheduleReply('bamServer', {
         test: testRumRequest,
         permanent: true,
-        body: JSON.stringify({
-          stn: 1,
-          sts: 1,
-          err: 1,
-          ins: 1,
-          cap: 1,
-          spa: 1,
-          loaded: 1,
-          sr: 1,
-          srs: stMode,
-          app: {
-            agents: [
-              { entityGuid: '214234435456' }
-            ]
-          }
-        })
+        body: JSON.stringify({ ...rumFlags, sr: 1, sts: stMode })
       })
     })
 

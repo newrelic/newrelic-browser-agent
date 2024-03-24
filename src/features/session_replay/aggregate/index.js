@@ -27,6 +27,7 @@ import { now } from '../../../common/timing/now'
 import { MODE, SESSION_EVENTS, SESSION_EVENT_TYPES } from '../../../common/session/constants'
 import { stringify } from '../../../common/util/stringify'
 import { stylesheetEvaluator } from '../shared/stylesheet-evaluator'
+import { deregisterDrain } from '../../../common/drain/drain'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -105,15 +106,16 @@ export class Aggregate extends AggregateBase {
     const { error_sampling_rate, sampling_rate, autoStart, block_selector, mask_text_selector, mask_all_inputs, inline_stylesheet, inline_images, collect_fonts } = getConfigurationValue(this.agentIdentifier, 'session_replay')
 
     this.waitForFlags(['srs', 'sr']).then(([srMode, entitled]) => {
-      // waitForFlags now returns the raw value (0, 1) of the flag.
-      // Eventually BCS will report this as (0, 1, 2) for the appropriate mode, and report entitlements separately.
-      // This will need to be fixed to honor that when that change is made. Returning the raw flag value enables that work.
       this.entitled = !!entitled
-      if (!this.entitled && this.recorder?.recording) {
-        handle(SUPPORTABILITY_METRIC_CHANNEL, ['SessionReplay/EnabledNotEntitled/Detected'], undefined, FEATURE_NAMES.metrics, this.ee)
-        this.recorder?.abort(ABORT_REASONS.ENTITLEMENTS)
+      if (!this.entitled) {
+        deregisterDrain(this.agentIdentifier, this.featureName)
+        if (this.recorder?.recording) {
+          this.abort(ABORT_REASONS.ENTITLEMENTS)
+          handle(SUPPORTABILITY_METRIC_CHANNEL, ['SessionReplay/EnabledNotEntitled/Detected'], undefined, FEATURE_NAMES.metrics, this.ee)
+        }
         return
       }
+      this.drain()
       this.initializeRecording(srMode)
     }).then(() => {
       if (this.mode === MODE.OFF) {
@@ -134,8 +136,6 @@ export class Aggregate extends AggregateBase {
 
     handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/SamplingRate/Value', sampling_rate], undefined, FEATURE_NAMES.metrics, this.ee)
     handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/ErrorSamplingRate/Value', error_sampling_rate], undefined, FEATURE_NAMES.metrics, this.ee)
-
-    this.drain()
   }
 
   switchToFull () {

@@ -111,7 +111,7 @@ export class InstrumentBase extends FeatureBase {
         // not supported yet but nice to do: "abort" this agent's EE for this feature specifically
         drain(this.agentIdentifier, this.featureName, true)
         loadedSuccessfully(false)
-        if (this.ee) this.ee.aborted = true
+        if (this.ee) this.ee.abort()
       }
     }
 

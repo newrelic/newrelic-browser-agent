@@ -1,13 +1,15 @@
-import { srConfig, decodeAttributes } from '../util/helpers'
+import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { srConfig, decodeAttributes } from './helpers'
 
 describe('errors', () => {
   afterEach(async () => {
     await browser.destroyAgentSession()
   })
 
-  it('error timestamp should be contained within replay timestamp', async () => {
-    await browser.enableSessionReplay(0, 100)
-    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
+  it.withBrowsersMatching(notIE)('error timestamp should be contained within replay timestamp', async () => {
+    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig({
+      session_replay: { error_sampling_rate: 100, sampling_rate: 0 }
+    })))
       .then(() => browser.waitForAgentLoad())
 
     // this issue was seen when some time had passed from agg load time and was running in error mode

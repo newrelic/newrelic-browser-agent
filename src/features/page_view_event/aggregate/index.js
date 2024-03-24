@@ -107,7 +107,7 @@ export class Aggregate extends AggregateBase {
       cbFinished: ({ status, responseText, xhr, fullUrl }) => {
         if (status >= 400 || status === 0) {
           // Adding retry logic for the rum call will be a separate change
-          this.ee.aborted = true
+          this.ee.abort()
           return
         }
 
@@ -117,7 +117,7 @@ export class Aggregate extends AggregateBase {
           handle(SUPPORTABILITY_METRIC_CHANNEL, ['PVE/NRTime/Calculation/Failed'], undefined, FEATURE_NAMES.metrics, this.ee)
           drain(this.agentIdentifier, FEATURE_NAMES.metrics, true)
           this.ee.abort()
-          warn('Could not calculate New Relic server time. Agent shutting down.')
+          warn('Could not calculate New Relic server time. Agent shutting down.', error)
           return
         }
 
@@ -127,8 +127,8 @@ export class Aggregate extends AggregateBase {
           activateFeatures(flags, this.agentIdentifier)
           this.drain()
         } catch (err) {
-          this.ee.aborted = true
-          warn('RUM call failed. Agent shutting down.')
+          this.ee.abort()
+          warn('RUM call failed. Agent shutting down.', err)
         }
       }
     })

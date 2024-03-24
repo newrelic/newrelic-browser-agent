@@ -11,7 +11,7 @@
  */
 import { DEFAULT_KEY, MODE, PREFIX } from '../../../common/session/constants'
 import { InstrumentBase } from '../../utils/instrument-base'
-import { FEATURE_NAME } from '../constants'
+import { FEATURE_NAME, SR_EVENT_EMITTER_TYPES } from '../constants'
 import { hasReplayPrerequisite, isPreloadAllowed } from '../shared/utils'
 
 export class Instrument extends InstrumentBase {
@@ -24,7 +24,7 @@ export class Instrument extends InstrumentBase {
     } catch (err) { }
 
     if (hasReplayPrerequisite(agentIdentifier)) {
-      this.ee.on('recordReplay', () => {
+      this.ee.on(SR_EVENT_EMITTER_TYPES.RECORD, () => {
         this.#startRecording(MODE.FULL).finally(() => {
           this.importAggregator({ recorder: this.recorder })
         })

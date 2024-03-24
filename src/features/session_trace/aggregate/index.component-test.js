@@ -17,7 +17,6 @@ jest.mock('../../../common/config/config', () => ({
   }),
   isConfigured: jest.fn().mockReturnValue(true),
   getRuntime: jest.fn().mockReturnValue({
-    xhrWrappable: true,
     offset: Date.now(),
     session: { state: { value: 'sessionID' }, write: jest.fn() }
   })

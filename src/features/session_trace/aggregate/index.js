@@ -20,12 +20,6 @@ export class Aggregate extends AggregateBase {
     this.agentRuntime = getRuntime(agentIdentifier)
     this.agentInfo = getInfo(agentIdentifier)
 
-    // Very unlikely, but in case the existing XMLHttpRequest.prototype object on the page couldn't be wrapped.
-    if (!this.agentRuntime.xhrWrappable) {
-      deregisterDrain(this.agentIdentifier, this.featureName)
-      return
-    }
-
     /** A buffer to hold on to harvested traces in the case that a retry must be made later */
     this.sentTrace = null
     this.harvestTimeSeconds = getConfigurationValue(agentIdentifier, 'session_trace.harvestTimeSeconds') || 30

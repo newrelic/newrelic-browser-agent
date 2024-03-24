@@ -1,20 +1,14 @@
 import { faker } from '@faker-js/faker'
 import { AggregateBase } from './aggregate-base'
-import { registerHandler } from '../../common/event-emitter/register-handler'
 import { getInfo, isConfigured, getRuntime } from '../../common/config/config'
 import { configure } from '../../loaders/configure/configure'
 import { gosCDN } from '../../common/window/nreum'
 
 jest.enableAutomock()
 jest.unmock('./aggregate-base')
-jest.mock('./feature-base', () => ({
-  __esModule: true,
-  FeatureBase: jest.fn(function (...args) {
-    this.agentIdentifier = args[0]
-    this.aggregator = args[1]
-    this.featureName = args[2]
-  })
-}))
+jest.unmock('./feature-base')
+jest.unmock('../../common/event-emitter/contextual-ee')
+
 jest.mock('../../common/event-emitter/register-handler', () => ({
   __esModule: true,
   registerHandler: jest.fn()
@@ -33,6 +27,19 @@ jest.mock('../../common/window/nreum', () => ({
   __esModule: true,
   gosCDN: jest.fn().mockReturnValue({}),
   gosNREUM: jest.fn().mockReturnValue({})
+}))
+jest.mock('../../common/util/feature-flags', () => ({
+  __esModule: true,
+  activatedFeatures: {
+    abcd: {
+      abc: 0,
+      def: 1,
+      ghi: 2,
+      'not-expected0': 0,
+      'not-expected1': 1,
+      'not-expected2': 2
+    }
+  }
 }))
 
 let agentIdentifier
@@ -96,28 +103,38 @@ test('should only configure the agent once', () => {
   expect(configure).not.toHaveBeenCalled()
 })
 
-test('should resolve waitForFlags correctly based on flags', async () => {
-  const flagNames = [faker.string.uuid(), faker.string.uuid()]
+test('should resolve waitForFlags correctly based on flags with real vals', async () => {
+  const flagNames = [faker.string.uuid(), faker.string.uuid(), faker.string.uuid()]
   const aggregateBase = new AggregateBase(agentIdentifier, aggregator, featureName)
-  aggregateBase.ee = {
-    [faker.string.uuid()]: faker.lorem.sentence()
-  }
-  aggregateBase.feature = {
-    [faker.string.uuid()]: faker.lorem.sentence()
-  }
-
   const flagWait = aggregateBase.waitForFlags(flagNames)
-  jest.mocked(registerHandler).mock.calls[0][1](true)
-  jest.mocked(registerHandler).mock.calls[1][1](false)
-
-  expect(registerHandler).toHaveBeenCalledWith(`rumresp-${flagNames[0]}`, expect.any(Function), featureName, aggregateBase.ee)
-  expect(registerHandler).toHaveBeenCalledWith(`rumresp-${flagNames[1]}`, expect.any(Function), featureName, aggregateBase.ee)
-  await expect(flagWait).resolves.toEqual([true, false])
+  aggregateBase.ee.emit('rumresp', [{
+    [flagNames[0]]: 0,
+    [flagNames[1]]: 1,
+    [flagNames[2]]: 2,
+    'not-expected0': 0,
+    'not-expected1': 1,
+    'not-expected2': 2
+  }])
+  await expect(flagWait).resolves.toEqual([0, 1, 2])
 })
 
-test('should not register any handlers when flagNames is empty', async () => {
+test('should return empty array when flagNames is empty', async () => {
+  const flagNames = [faker.string.uuid(), faker.string.uuid(), faker.string.uuid()]
   const aggregateBase = new AggregateBase(agentIdentifier, aggregator, featureName)
+  const flagWait = aggregateBase.waitForFlags()
+  aggregateBase.ee.emit('rumresp', [{
+    [flagNames[0]]: 0,
+    [flagNames[1]]: 1,
+    [flagNames[2]]: 2,
+    'not-expected0': 0,
+    'not-expected1': 1,
+    'not-expected2': 2
+  }])
+  await expect(flagWait).resolves.toEqual([])
+})
 
-  await expect(aggregateBase.waitForFlags()).resolves.toEqual([])
-  expect(registerHandler).not.toHaveBeenCalled()
+test('should return activatedFeatures values when available', async () => {
+  const aggregateBase = new AggregateBase('abcd', aggregator, featureName) // 'abcd' matches the af mock at the top of this file
+  const flagWait = aggregateBase.waitForFlags()
+  await expect(flagWait).resolves.toEqual([])
 })

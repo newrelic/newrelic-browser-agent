@@ -9,18 +9,25 @@ import { onDOMContentLoaded } from '../../../common/window/load'
 import { windowAddEventListener } from '../../../common/event-listener/event-listener-opts'
 import { isBrowserScope, isWorkerScope } from '../../../common/constants/runtime'
 import { AggregateBase } from '../../utils/aggregate-base'
+import { deregisterDrain } from '../../../common/drain/drain'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
-    let scheduler
 
-    // If RUM-call's response determines that customer lacks entitlements for the /jserror ingest endpoint, don't harvest at all.
-    registerHandler('block-err', () => {
-      this.blocked = true
-      if (scheduler) scheduler.aborted = true // RUM response may or may not have happened already before scheduler initialization below
-    }, this.featureName, this.ee)
+    this.waitForFlags(['err']).then(([errFlag]) => {
+      if (errFlag) {
+        // *cli, Mar 23 - Per NR-94597, this feature should only harvest ONCE at the (potential) EoL time of the page.
+        const scheduler = new HarvestScheduler('jserrors', { onUnload: () => this.unload() }, this)
+        // this is needed to ensure EoL is "on" and sent
+        scheduler.harvest.on('jserrors', () => ({ body: this.aggregator.take(['cm', 'sm']) }))
+        this.drain()
+      } else {
+        this.blocked = true // if rum response determines that customer lacks entitlements for spa endpoint, this feature shouldn't harvest
+        deregisterDrain(this.agentIdentifier, this.featureName)
+      }
+    })
 
     // Allow features external to the metrics feature to capture SMs and CMs through the event emitter
     registerHandler(SUPPORTABILITY_METRIC_CHANNEL, this.storeSupportabilityMetrics.bind(this), this.featureName, this.ee)
@@ -28,14 +35,6 @@ export class Aggregate extends AggregateBase {
 
     this.singleChecks() // checks that are run only one time, at script load
     this.eachSessionChecks() // the start of every time user engages with page
-
-    this.ee.on(`drain-${this.featureName}`, () => {
-      // *cli, Mar 23 - Per NR-94597, this feature should only harvest ONCE at the (potential) EoL time of the page.
-      scheduler = new HarvestScheduler('jserrors', { onUnload: () => this.unload() }, this)
-      scheduler.harvest.on('jserrors', () => ({ body: this.aggregator.take(['cm', 'sm']) }))
-    }) // this is needed to ensure EoL is "on" and sent
-
-    this.drain()
   }
 
   storeSupportabilityMetrics (name, value) {

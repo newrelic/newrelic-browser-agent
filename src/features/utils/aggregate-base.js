@@ -1,9 +1,9 @@
-import { registerHandler } from '../../common/event-emitter/register-handler'
 import { FeatureBase } from './feature-base'
 import { getInfo, isConfigured, getRuntime } from '../../common/config/config'
 import { configure } from '../../loaders/configure/configure'
 import { gosCDN } from '../../common/window/nreum'
 import { drain } from '../../common/drain/drain'
+import { activatedFeatures } from '../../common/util/feature-flags'
 
 export class AggregateBase extends FeatureBase {
   constructor (...args) {
@@ -14,16 +14,24 @@ export class AggregateBase extends FeatureBase {
   /**
    * New handler for waiting for multiple flags. Useful when expecting multiple flags simultaneously (ex. stn vs sr)
    * @param {string[]} flagNames
-   * @returns
+   * @returns {Promise}
    */
   waitForFlags (flagNames = []) {
-    return Promise.all(
-      flagNames.map(fName =>
-        new Promise((resolve) => {
-          registerHandler(`rumresp-${fName}`, isOn => resolve(isOn), this.featureName, this.ee)
+    return new Promise((resolve, reject) => {
+      if (activatedFeatures[this.agentIdentifier]) {
+        resolve(buildOutput(activatedFeatures[this.agentIdentifier]))
+      } else {
+        this.ee.on('rumresp', (resp = {}) => {
+          resolve(buildOutput(resp))
         })
-      )
-    )
+      }
+      function buildOutput (ref) {
+        return flagNames.map(flag => {
+          if (!ref[flag]) return 0
+          return ref[flag]
+        })
+      }
+    })
   }
 
   drain () {

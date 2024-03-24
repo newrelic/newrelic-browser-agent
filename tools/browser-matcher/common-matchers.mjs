@@ -68,7 +68,7 @@ export const onlyAndroid = new SpecMatcher()
 export const onlyChromium = new SpecMatcher()
   .include('chrome')
   .include('edge')
-  .include('android')
+  .include('android>9.0')
 
 /**
  * Matcher based on ES2022 support
@@ -78,7 +78,7 @@ export const es2022Support = new SpecMatcher()
   .include('chrome>=94')
   .include('edge>=94')
   .include('firefox>=93')
-  .include('android>=114')
+  .include('android>=9.0')
   .include('safari>=15.4')
   .include('ios>=15.4')
 

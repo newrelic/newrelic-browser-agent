@@ -1,4 +1,5 @@
 import { getConfigurationValue } from '../../../common/config/config'
+import { deregisterDrain } from '../../../common/drain/drain'
 import { handle } from '../../../common/event-emitter/handle'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
@@ -22,13 +23,6 @@ export class Aggregate extends AggregateBase {
     this.interactionsAwaitingRetry = []
     this.domObserver = domObserver
 
-    this.scheduler = new HarvestScheduler('events', {
-      onFinished: this.onHarvestFinished.bind(this),
-      retryDelay: harvestTimeSeconds,
-      onUnload: () => this.interactionInProgress?.done() // return any held ajax or jserr events so they can be sent with EoL harvest
-    }, { agentIdentifier, ee: this.ee })
-    this.scheduler.harvest.on('events', this.onHarvestStarted.bind(this))
-
     this.initialPageLoadInteraction = new InitialPageLoadInteraction(agentIdentifier)
     timeToFirstByte.subscribe(({ entries }) => {
       const loadEventTime = entries[0].loadEventEnd
@@ -45,8 +39,19 @@ export class Aggregate extends AggregateBase {
 
     this.blocked = false
     this.waitForFlags(['spa']).then(([spaOn]) => {
-      if (spaOn) this.scheduler.startTimer(harvestTimeSeconds, 0)
-      else this.blocked = true // if rum response determines that customer lacks entitlements for spa endpoint, this feature shouldn't harvest
+      if (spaOn) {
+        this.drain()
+        const scheduler = new HarvestScheduler('events', {
+          onFinished: this.onHarvestFinished.bind(this),
+          retryDelay: harvestTimeSeconds,
+          onUnload: () => this.interactionInProgress?.done() // return any held ajax or jserr events so they can be sent with EoL harvest
+        }, { agentIdentifier, ee: this.ee })
+        scheduler.harvest.on('events', this.onHarvestStarted.bind(this))
+        scheduler.startTimer(harvestTimeSeconds, 0)
+      } else {
+        this.blocked = true // if rum response determines that customer lacks entitlements for spa endpoint, this feature shouldn't harvest
+        deregisterDrain(this.agentIdentifier, this.featureName)
+      }
     })
 
     // By default, a complete UI driven interaction requires event -> URL change -> DOM mod in that exact order.
@@ -61,13 +66,10 @@ export class Aggregate extends AggregateBase {
 
     registerHandler('ajax', this.#handleAjaxEvent.bind(this), this.featureName, this.ee)
     registerHandler('jserror', this.#handleJserror.bind(this), this.featureName, this.ee)
-
-    this.drain()
   }
 
   onHarvestStarted (options) {
     if (this.interactionsToHarvest.length === 0 || this.blocked) return
-
     // The payload depacker takes the first ixn of a payload (if there are multiple ixns) and positively offset the subsequent ixns timestamps by that amount.
     // In order to accurately portray the real start & end times of the 2nd & onward ixns, we hence need to negatively offset their start timestamps with that of the 1st ixn.
     let firstIxnStartTime = 0 // the very 1st ixn does not require any offsetting

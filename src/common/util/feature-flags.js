@@ -23,10 +23,8 @@ export function activateFeatures (flags, agentIdentifier) {
   if (!(flags && typeof flags === 'object')) return
   if (sentIds.has(agentIdentifier)) return
 
-  const frozenFlags = Object.freeze(flags)
-  sharedEE.emit('rumresp', [frozenFlags])
-  activatedFeatures[agentIdentifier] = frozenFlags
-  Object.freeze(activateFeatures[agentIdentifier])
+  sharedEE.emit('rumresp', [flags])
+  activatedFeatures[agentIdentifier] = flags
 
   sentIds.add(agentIdentifier)
 

@@ -101,6 +101,7 @@ export class InstrumentBase extends FeatureBase {
           loadedSuccessfully(false) // aggregate module isn't loaded at all
           return
         }
+        console.log('Starting feature aggregate import', this.featureName)
         const { lazyFeatureLoader } = await import(/* webpackChunkName: "lazy-feature-loader" */ './lazy-feature-loader')
         const { Aggregate } = await lazyFeatureLoader(this.featureName, 'aggregate')
         this.featAggregate = new Aggregate(this.agentIdentifier, this.aggregator, argsObjFromInstrument)

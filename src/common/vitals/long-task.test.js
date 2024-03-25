@@ -88,16 +88,16 @@ describe('lt', () => {
       __esModule: true,
       isBrowserScope: true
     }))
-    let sub1, sub2
+    let witness = 0
     getFreshLTImport(metric => {
-      const remove1 = metric.subscribe(({ entries }) => {
-        sub1 ??= entries[0].id
-        if (sub1 === sub2) { remove1(); remove2(); done() }
+      metric.subscribe(({ value }) => {
+        expect(value).toEqual(1)
+        witness++
       })
-
-      const remove2 = metric.subscribe(({ entries }) => {
-        sub2 ??= entries[0].id
-        if (sub1 === sub2) { remove1(); remove2(); done() }
+      metric.subscribe(({ value }) => {
+        expect(value).toEqual(1)
+        witness++
+        if (witness === 2) done()
       })
     })
   })

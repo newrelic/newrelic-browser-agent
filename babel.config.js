@@ -18,12 +18,6 @@ module.exports = function (api, ...args) {
     '**/*.component-test.js',
     '**/__mocks__/*.js'
   ]
-  const npmIgnore = [
-    ...ignore,
-    'src/common/config/env.cdn.js',
-    'src/loaders/configure/nonce.cdn.js',
-    'src/loaders/configure/public-path.cdn.js'
-  ]
   const presets = [
     '@babel/preset-env'
   ]
@@ -74,21 +68,37 @@ module.exports = function (api, ...args) {
       ]
     },
     'npm-cjs': {
-      ignore: npmIgnore,
+      ignore,
       presets: [
         [
           '@babel/preset-env', {
             modules: 'commonjs'
           }
         ]
+      ],
+      plugins: [
+        [
+          './tools/babel/plugins/transform-import',
+          {
+            '(/constants/|^\\./)env$': '$1env.npm'
+          }
+        ]
       ]
     },
     'npm-esm': {
-      ignore: npmIgnore,
+      ignore,
       presets: [
         [
           '@babel/preset-env', {
             modules: false
+          }
+        ]
+      ],
+      plugins: [
+        [
+          './tools/babel/plugins/transform-import',
+          {
+            '(/constants/|^\\./)env$': '$1env.npm'
           }
         ]
       ]

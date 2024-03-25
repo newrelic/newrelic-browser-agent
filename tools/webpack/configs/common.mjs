@@ -87,7 +87,16 @@ export default (env, asyncChunkName) => {
       new NRBARemoveNonAsciiPlugin(),
       new NRBALoaderApmCheckPlugin(),
       new NRBASubresourceIntegrityPlugin(),
-      new NRBAFuzzyLoadersPlugin()
+      new NRBAFuzzyLoadersPlugin(),
+      new webpack.NormalModuleReplacementPlugin(/(?:[\\/]constants)?[\\/]env/, (resource) => {
+        resource.request = resource.request.replace(/env$/, 'env.cdn')
+      }),
+      new webpack.NormalModuleReplacementPlugin(/(?:[\\/]configure)?[\\/]public-path/, (resource) => {
+        resource.request = resource.request.replace(/public-path$/, 'public-path.cdn')
+      }),
+      new webpack.NormalModuleReplacementPlugin(/(?:[\\/]configure)?[\\/]nonce/, (resource) => {
+        resource.request = resource.request.replace(/nonce$/, 'nonce.cdn')
+      })
     ]
   }
 }

@@ -54,8 +54,8 @@ export class Aggregate extends AggregateBase {
       firstInputDelay.subscribe(this.#handleVitalMetric)
       largestContentfulPaint.subscribe(this.#handleVitalMetric)
       interactionToNextPaint.subscribe(this.#handleVitalMetric)
-      timeToFirstByte.subscribe(({ entries }) => {
-        this.addTiming('load', Math.round(entries[0].loadEventEnd))
+      timeToFirstByte.subscribe(({ attrs }) => {
+        this.addTiming('load', Math.round(attrs.navigationEntry.loadEventEnd))
       })
       // *cli Mar'24 - CLS node won't be added until we fix the rounding problem in schema that's grounding the decimal value to 0
       // subscribeToVisibilityChange(() => {

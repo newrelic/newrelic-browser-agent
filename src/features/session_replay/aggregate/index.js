@@ -27,6 +27,7 @@ import { now } from '../../../common/timing/now'
 import { MODE, SESSION_EVENTS, SESSION_EVENT_TYPES } from '../../../common/session/constants'
 import { stringify } from '../../../common/util/stringify'
 import { stylesheetEvaluator } from '../shared/stylesheet-evaluator'
+import { deregisterDrain } from '../../../common/drain/drain'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -116,11 +117,15 @@ export class Aggregate extends AggregateBase {
 
     this.waitForFlags(['sr']).then(([flagOn]) => {
       this.entitled = flagOn
-      if (!this.entitled && this.recorder?.recording) {
-        this.abort(ABORT_REASONS.ENTITLEMENTS)
-        handle(SUPPORTABILITY_METRIC_CHANNEL, ['SessionReplay/EnabledNotEntitled/Detected'], undefined, FEATURE_NAMES.metrics, this.ee)
+      if (!this.entitled) {
+        deregisterDrain(this.agentIdentifier, this.featureName)
+        if (this.recorder?.recording) {
+          this.abort(ABORT_REASONS.ENTITLEMENTS)
+          handle(SUPPORTABILITY_METRIC_CHANNEL, ['SessionReplay/EnabledNotEntitled/Detected'], undefined, FEATURE_NAMES.metrics, this.ee)
+        }
         return
       }
+      this.drain()
       this.initializeRecording(
         (Math.random() * 100) < error_sampling_rate,
         (Math.random() * 100) < sampling_rate
@@ -141,7 +146,6 @@ export class Aggregate extends AggregateBase {
 
     handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/SamplingRate/Value', sampling_rate], undefined, FEATURE_NAMES.metrics, this.ee)
     handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/ErrorSamplingRate/Value', error_sampling_rate], undefined, FEATURE_NAMES.metrics, this.ee)
-    this.drain()
   }
 
   switchToFull () {
@@ -304,6 +308,7 @@ export class Aggregate extends AggregateBase {
     const firstTimestamp = firstEventTimestamp || recorderEvents.cycleTimestamp // from rrweb node || from when the harvest cycle started
     const lastTimestamp = lastEventTimestamp || agentOffset + relativeNow
 
+    const agentMetadata = agentRuntime.appMetadata?.agents?.[0] || {}
     return {
       qs: {
         browser_monitoring_key: info.licenseKey,
@@ -314,6 +319,7 @@ export class Aggregate extends AggregateBase {
           // this section of attributes must be controllable and stay below the query param padding limit -- see QUERY_PARAM_PADDING
           // if not, data could be lost to truncation at time of sending, potentially breaking parsing / API behavior in NR1
           ...(!!this.gzipper && !!this.u8 && { content_encoding: 'gzip' }),
+          ...(agentMetadata.entityGuid && { entityGuid: agentMetadata.entityGuid }),
           'replay.firstTimestamp': firstTimestamp,
           'replay.firstTimestampOffset': firstTimestamp - agentOffset,
           'replay.lastTimestamp': lastTimestamp,

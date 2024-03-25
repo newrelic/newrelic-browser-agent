@@ -27,12 +27,23 @@ export function registerDrain (agentIdentifier, group) {
 }
 
 /**
+ * Removes an item from the registry and immediately re-checks if the registry is ready to "drain all"
+ * @param {*} agentIdentifier - A 16 character string uniquely identifying the agent.
+ * @param {*} group - The named "bucket" to be removed from the registry
+ */
+export function deregisterDrain (agentIdentifier, group) {
+  curateRegistry(agentIdentifier)
+  if (registry[agentIdentifier].get(group)) registry[agentIdentifier].delete(group)
+  if (registry[agentIdentifier].size) checkCanDrainAll(agentIdentifier)
+}
+
+/**
  * Registers the specified agent with the centralized event buffer registry if it is not already registered.
  * Agents without an identifier (as in the case of some tests) will be excluded from the registry.
  * @param {string} agentIdentifier - A 16 character string uniquely identifying an agent.
  */
 function curateRegistry (agentIdentifier) {
-  if (!agentIdentifier) return
+  if (!agentIdentifier) throw new Error('agentIdentifier required')
   if (!registry[agentIdentifier]) registry[agentIdentifier] = new Map()
 }
 
@@ -48,54 +59,56 @@ export function drain (agentIdentifier = '', featureName = 'feature', force = fa
   // If the feature for the specified agent is not in the registry, that means the instrument file was bypassed.
   // This could happen in tests, or loaders that directly import the aggregator. In these cases it is safe to
   // drain the feature group immediately rather than waiting to drain all at once.
-  if (!agentIdentifier || !registry[agentIdentifier].get(featureName) || force) return drainGroup(featureName)
+  if (!agentIdentifier || !registry[agentIdentifier].get(featureName) || force) return drainGroup(agentIdentifier, featureName)
 
   // When `drain` is called, this feature is ready to drain (staged).
   registry[agentIdentifier].get(featureName).staged = true
 
-  // Only when the event-groups for all features are ready to drain (staged) do we execute the drain. This has the effect
+  checkCanDrainAll(agentIdentifier)
+}
+
+/** Checks all items in the registry to see if they have been "staged".  If ALL items are staged, it will drain all registry items (drainGroup).  It not, nothing will happen */
+function checkCanDrainAll (agentIdentifier) {
+// Only when the event-groups for all features are ready to drain (staged) do we execute the drain. This has the effect
   // that the last feature to call drain triggers drain for all features.
   const items = [...registry[agentIdentifier]]
   if (items.every(([key, values]) => values.staged)) {
     items.sort((a, b) => a[1].priority - b[1].priority)
     items.forEach(([group]) => {
       registry[agentIdentifier].delete(group)
-      drainGroup(group)
+      drainGroup(agentIdentifier, group)
     })
   }
+}
 
-  /**
+/**
    * Drains all the buffered (backlog) events for a particular feature's event-group by emitting each event to each of
    * the subscribed handlers for the group.
    * @param {*} group - The name of a particular feature's event "bucket".
    */
-  function drainGroup (group) {
-    const baseEE = agentIdentifier ? ee.get(agentIdentifier) : ee
-    const handlers = defaultRegister.handlers
-    if (!baseEE.backlog || !handlers) return
+function drainGroup (agentIdentifier, group) {
+  const baseEE = agentIdentifier ? ee.get(agentIdentifier) : ee
+  const handlers = defaultRegister.handlers // other storage in registerHandler
+  if (!baseEE.backlog || !handlers) return
 
-    var bufferedEventsInGroup = baseEE.backlog[group]
-    var groupHandlers = handlers[group]
-    if (groupHandlers) {
-      // We don't cache the length of the buffer while looping because events might still be added while processing.
-      for (var i = 0; bufferedEventsInGroup && i < bufferedEventsInGroup.length; ++i) { // eslint-disable-line no-unmodified-loop-condition
-        emitEvent(bufferedEventsInGroup[i], groupHandlers)
-      }
-
-      mapOwn(groupHandlers, function (eventType, handlerRegistrationList) {
-        mapOwn(handlerRegistrationList, function (i, registration) {
-          // registration is an array of: [targetEE, eventHandler]
-          registration[0].on(eventType, registration[1])
-        })
-      })
+  var bufferedEventsInGroup = baseEE.backlog[group]
+  var groupHandlers = handlers[group] // each group in the registerHandler storage
+  if (groupHandlers) {
+    // We don't cache the length of the buffer while looping because events might still be added while processing.
+    for (var i = 0; bufferedEventsInGroup && i < bufferedEventsInGroup.length; ++i) { // eslint-disable-line no-unmodified-loop-condition
+      emitEvent(bufferedEventsInGroup[i], groupHandlers)
     }
 
-    delete handlers[group]
-
-    // Keep the feature's event-group as a property of the event emitter so we know it was already created and drained.
-    baseEE.backlog[group] = null
-    baseEE.emit('drain-' + group, [])
+    mapOwn(groupHandlers, function (eventType, handlerRegistrationList) {
+      mapOwn(handlerRegistrationList, function (i, registration) {
+        // registration is an array of: [targetEE, eventHandler]
+        registration[0].on(eventType, registration[1])
+      })
+    })
   }
+  if (!baseEE.isolatedBacklog) delete handlers[group]
+  baseEE.backlog[group] = null
+  baseEE.emit('drain-' + group, [])
 }
 
 /**

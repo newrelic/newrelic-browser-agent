@@ -85,8 +85,8 @@ export class Agent extends AgentBase {
       delete newrelic.initializedAgents[this.agentIdentifier]?.features // GC mem used internally by features
       delete this.sharedAggregator
       // Keep the initialized agent object with its configs for troubleshooting purposes.
-      newrelic.ee?.abort() // set flag and clear global backlog
-      delete newrelic.ee?.get(this.agentIdentifier) // clear this agent's own backlog too
+      const thisEE = newrelic.ee.get(this.agentIdentifier)
+      thisEE.abort() // set flag and clear backlog
       return false
     }
   }

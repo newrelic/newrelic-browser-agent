@@ -18,10 +18,13 @@ const model = {
   origin: '' + globalScope.location,
   ptid: undefined,
   releaseIds: {},
+  /** Agent-specific metadata found in the RUM call response. ex. entityGuid */
+  appMetadata: {},
   session: undefined,
   xhrWrappable: typeof globalScope.XMLHttpRequest?.prototype?.addEventListener === 'function',
   version: VERSION,
-  denyList: undefined
+  denyList: undefined,
+  harvestCount: 0
 }
 
 const _cache = {}

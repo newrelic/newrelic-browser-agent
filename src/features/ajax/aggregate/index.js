@@ -21,13 +21,17 @@ export class Aggregate extends AggregateBase {
   constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
     const agentInit = getConfiguration(agentIdentifier)
-    const allAjaxIsEnabled = agentInit.ajax.enabled !== false
 
     registerHandler('xhr', storeXhr, this.featureName, this.ee)
-    if (!allAjaxIsEnabled) {
+
+    this.waitForFlags(([])).then(() => {
+      const scheduler = new HarvestScheduler('events', {
+        onFinished: onEventsHarvestFinished,
+        getPayload: prepareHarvest
+      }, this)
+      scheduler.startTimer(harvestTimeSeconds)
       this.drain()
-      return // feature will only collect timeslice metrics & ajax trace nodes if it's not fully enabled
-    }
+    })
 
     const denyList = getRuntime(agentIdentifier).denyList
     setDenyList(denyList)
@@ -61,15 +65,6 @@ export class Aggregate extends AggregateBase {
     registerHandler('returnAjax', event => ajaxEvents.push(event), this.featureName, this.ee)
     // --- ^
 
-    const scheduler = new HarvestScheduler('events', {
-      onFinished: onEventsHarvestFinished,
-      getPayload: prepareHarvest
-    }, this)
-
-    ee.on(`drain-${this.featureName}`, () => { scheduler.startTimer(harvestTimeSeconds) })
-
-    this.drain()
-
     const beacon = getInfo(agentIdentifier).errorBeacon
     const proxyBeacon = agentInit.proxy.beacon
 
@@ -91,8 +86,6 @@ export class Aggregate extends AggregateBase {
       if (shouldCollect || !ajaxMetricDenyListEnabled) {
         aggregator.store('xhr', hash, params, metrics)
       }
-
-      if (!allAjaxIsEnabled) return
 
       if (!shouldCollect) {
         if (params.hostname === beacon || (proxyBeacon && params.hostname === proxyBeacon)) {
@@ -143,7 +136,6 @@ export class Aggregate extends AggregateBase {
       if (event.gql) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Ajax/Events/GraphQL/Bytes-Added', stringify(event.gql).length], undefined, FEATURE_NAMES.metrics, ee)
 
       const softNavInUse = Boolean(getNREUMInitializedAgent(agentIdentifier)?.features?.[FEATURE_NAMES.softNav])
-
       if (softNavInUse) { // For newer soft nav (when running), pass the event to it for evaluation -- either part of an interaction or is given back
         handle('ajax', [event], undefined, FEATURE_NAMES.softNav, ee)
       } else if (this.spaNode) { // For old spa (when running), if the ajax happened inside an interaction, hold it until the interaction finishes

@@ -156,7 +156,8 @@ describe('_send', () => {
       licenseKey
     })
     jest.mocked(configModule.getRuntime).mockReturnValue({
-      maxBytes: Infinity
+      maxBytes: Infinity,
+      harvestCount: 0
     })
     jest.mocked(configModule.getConfiguration).mockReturnValue({
       ssl: undefined,
@@ -177,6 +178,14 @@ describe('_send', () => {
     }
     submitMethod = jest.fn().mockReturnValue(true)
     jest.mocked(submitDataModule.getSubmitMethod).mockReturnValue(submitMethod)
+  })
+
+  test('should increment harvestCount every time _send is called', () => {
+    while (configModule.getRuntime().harvestCount < 10) {
+      const prev = configModule.getRuntime().harvestCount
+      harvestInstance._send(spec)
+      expect(configModule.getRuntime().harvestCount).toEqual(prev + 1)
+    }
   })
 
   test('should return false when info.errorBeacon is not defined', () => {

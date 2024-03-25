@@ -114,7 +114,6 @@ export class Aggregate extends AggregateBase {
         try {
           this.timeKeeper.processRumRequest(xhr, fullUrl)
         } catch (error) {
-          console.log(error)
           handle(SUPPORTABILITY_METRIC_CHANNEL, ['PVE/NRTime/Calculation/Failed'], undefined, FEATURE_NAMES.metrics, this.ee)
           drain(this.agentIdentifier, FEATURE_NAMES.metrics, true)
           this.ee.abort()
@@ -123,7 +122,9 @@ export class Aggregate extends AggregateBase {
         }
 
         try {
-          activateFeatures(JSON.parse(responseText), this.agentIdentifier)
+          const { app, ...flags } = JSON.parse(responseText)
+          agentRuntime.appMetadata = app
+          activateFeatures(flags, this.agentIdentifier)
           this.drain()
         } catch (err) {
           this.ee.abort()

@@ -1,12 +1,16 @@
 const path = require('path')
 
-module.exports.defaultAgentConfig = {
+const defaultAgentConfig = {
   licenseKey: 'asdf',
   applicationID: 42,
   accountID: 123,
   agentID: 456,
   trustKey: 789
 }
+module.exports.defaultAgentConfig = defaultAgentConfig
+
+const defaultEntityGuid = btoa(`${defaultAgentConfig.accountID}|BROWSER|APPLICATION|${defaultAgentConfig.applicationID}`).replace(/=/g, '')
+module.exports.defaultEntityGuid = defaultEntityGuid
 
 module.exports.paths = {
   rootDir: path.resolve(__dirname, '../../'),
@@ -33,7 +37,12 @@ module.exports.rumFlags = {
   cap: 1,
   spa: 1,
   loaded: 1,
-  sr: 0 // this should be off, for now, if privacy.cookie_enabled is on (default) or Traces tests will fail
+  sr: 0, // this should be off, for now, if privacy.cookie_enabled is on (default) or Traces tests will fail
+  app: {
+    agents: [
+      { entityGuid: defaultEntityGuid }
+    ]
+  }
 }
 
 module.exports.defaultInitBlock = {

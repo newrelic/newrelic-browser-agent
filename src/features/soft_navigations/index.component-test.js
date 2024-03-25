@@ -89,11 +89,11 @@ describe('soft navigations', () => {
       importAggregatorFn()
       await expect(softNavInstrument.onAggregateImported).resolves.toEqual(true)
       softNavAggregate = softNavInstrument.featAggregate
+      softNavAggregate.ee.emit('rumresp', [{ spa: 1 }])
     })
 
     test('processes regular interactions', () => {
       expect(softNavAggregate.domObserver).toBeTruthy()
-      expect(softNavAggregate.scheduler).toBeTruthy()
       expect(softNavAggregate.initialPageLoadInteraction).toBeTruthy()
 
       executeTTFB({ entries: [{ loadEventEnd: 123 }] })
@@ -171,6 +171,7 @@ describe('soft navigations', () => {
       importAggregatorFn()
       await expect(softNavInstrument.onAggregateImported).resolves.toEqual(true)
       softNavAggregate = softNavInstrument.featAggregate
+      softNavAggregate.ee.emit('rumresp', [{ spa: 1 }])
     })
     beforeEach(() => {
       softNavAggregate.initialPageLoadInteraction = null
@@ -268,7 +269,8 @@ describe('soft navigations', () => {
 
       newrelic.interaction('get').interaction('save')
       await new Promise(resolve => _setTimeout(resolve, 301))
-      expect(softNavAggregate.interactionsToHarvest.length).toEqual(3)
+      /** now that we drain **after** the rumcall flags are emitted, some of the ixns try to get harvested.  just check both buckets */
+      expect(softNavAggregate.interactionsToHarvest.length + softNavAggregate.interactionsAwaitingRetry.length).toEqual(3)
     })
 
     test('.interaction gets ixn retroactively too when processed late after ee buffer drain', () => {

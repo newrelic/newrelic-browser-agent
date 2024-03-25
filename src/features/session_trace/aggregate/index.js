@@ -109,7 +109,7 @@ export class Aggregate extends AggregateBase {
     if (!sessionEntity) {
       // Since session manager isn't around, do the old Trace behavior of waiting for RUM response to decide feature activation.
       this.isStandalone = true
-      registerHandler('rumresp-stn', (on) => controlTraceOp(on), this.featureName, this.ee)
+      this.waitForFlags((['stn'])).then(([on]) => controlTraceOp(on), this.featureName, this.ee)
     } else {
       registerHandler('errorAgg', () => {
         seenAnError = true
@@ -151,7 +151,7 @@ export class Aggregate extends AggregateBase {
             if (replayMode === MODE.OFF) this.isStandalone = true // without SR, Traces are still subject to old harvest limits
 
             let startingMode
-            if (traceOn === true) { // CASE: both trace (entitlement+sampling) & replay (entitlement) flags are true from RUM
+            if (traceOn) { // CASE: both trace (entitlement+sampling) & replay (entitlement) flags are true from RUM
               startingMode = MODE.FULL // always full capture regardless of replay sampling decisions
             } else { // CASE: trace flag is off, BUT it must still run if replay is on (possibly)
               // At this point, it's possible that 1 or more exception was thrown, in which case just start in full if Replay originally started in ERROR mode.

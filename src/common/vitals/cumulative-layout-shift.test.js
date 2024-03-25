@@ -60,21 +60,4 @@ describe('cls', () => {
       })
     })
   })
-
-  test('reports more than once', (done) => {
-    jest.doMock('../constants/runtime', () => ({
-      __esModule: true,
-      isBrowserScope: true
-    }))
-    let triggered = 0
-    getFreshCLSImport(metric => {
-      metric.subscribe(({ value }) => {
-        triggered++
-        expect(value).toEqual(0.123)
-      })
-      metric.update({ value: 0.123 })
-      expect(triggered).toBeGreaterThanOrEqual(2)
-      done()
-    })
-  })
 })

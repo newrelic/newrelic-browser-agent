@@ -100,11 +100,14 @@ export class Aggregate extends AggregateBase {
     queryParameters.fp = firstPaint.current.value
     queryParameters.fcp = firstContentfulPaint.current.value
 
+    const rumStartTime = this.timeKeeper.now()
     harvester.send({
       endpoint: 'rum',
       payload: { qs: queryParameters, body },
       opts: { needResponse: true, sendEmptyBody: true },
-      cbFinished: ({ status, responseText, xhr, fullUrl }) => {
+      cbFinished: ({ status, responseText, xhr }) => {
+        const rumEndTime = this.timeKeeper.now()
+
         if (status >= 400 || status === 0) {
           // Adding retry logic for the rum call will be a separate change
           this.ee.abort()
@@ -112,7 +115,7 @@ export class Aggregate extends AggregateBase {
         }
 
         try {
-          this.timeKeeper.processRumRequest(xhr, fullUrl)
+          this.timeKeeper.processRumRequest(xhr, rumStartTime, rumEndTime)
         } catch (error) {
           handle(SUPPORTABILITY_METRIC_CHANNEL, ['PVE/NRTime/Calculation/Failed'], undefined, FEATURE_NAMES.metrics, this.ee)
           drain(this.agentIdentifier, FEATURE_NAMES.metrics, true)

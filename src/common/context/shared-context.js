@@ -1,9 +1,9 @@
 import { warn } from '../util/console'
-import { TimeKeeper } from '../timing/time-keeper'
 
 const model = {
   agentIdentifier: '',
-  ee: undefined
+  ee: undefined,
+  timeKeeper: undefined
 }
 
 export class SharedContext {
@@ -16,9 +16,7 @@ export class SharedContext {
         if (Object.keys(model).includes(key)) this.sharedContext[key] = value
       })
     } catch (err) {
-      warn('An error occured while setting SharedContext', err)
+      warn('An error occurred while setting SharedContext', err)
     }
-
-    this.timeKeeper = TimeKeeper.getTimeKeeperByAgentIdentifier(this.sharedContext.agentIdentifier)
   }
 }

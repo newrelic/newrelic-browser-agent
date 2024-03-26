@@ -179,7 +179,7 @@ export class Harvest extends SharedContext {
       encodeParam('v', VERSION),
       transactionNameParam(info),
       encodeParam('ct', runtime.customTransaction),
-      '&rst=' + this.timeKeeper.now(),
+      '&rst=' + this.sharedContext.timeKeeper.now(),
       '&ck=0', // ck param DEPRECATED - still expected by backend
       '&s=' + (runtime.session?.state.value || '0'), // the 0 id encaps all untrackable and default traffic
       encodeParam('ref', ref),

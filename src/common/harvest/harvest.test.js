@@ -14,9 +14,6 @@ let harvestInstance
 
 beforeEach(() => {
   harvestInstance = new Harvest()
-  harvestInstance.timeKeeper = {
-    now: jest.fn(() => performance.now())
-  }
 })
 
 afterEach(() => {

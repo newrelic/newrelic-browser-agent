@@ -52,7 +52,6 @@ export class Aggregate extends AggregateBase {
     this.entitled = false
 
     this.recorder = args?.recorder
-    if (this.recorder) this.recorder.parent = this
 
     handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/Enabled'], undefined, FEATURE_NAMES.metrics, this.ee)
 
@@ -196,6 +195,8 @@ export class Aggregate extends AggregateBase {
       } catch (err) {
         return this.abort(ABORT_REASONS.IMPORT)
       }
+    } else {
+      this.recorder.parent = this
     }
 
     // If an error was noticed before the mode could be set (like in the early lifecycle of the page), immediately set to FULL mode

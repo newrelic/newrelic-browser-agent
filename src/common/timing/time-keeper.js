@@ -1,5 +1,4 @@
 import { gosNREUM } from '../window/nreum'
-import { globalScope } from '../constants/runtime'
 import { getRuntime } from '../config/config'
 
 /**
@@ -41,30 +40,17 @@ export class TimeKeeper {
   /**
    * Process a rum request to calculate NR server time.
    * @param rumRequest {XMLHttpRequest} The xhr for the rum request
-   * @param rumRequestUrl {string} The full url of the rum request
+   * @param startTime {number} The start time of the RUM request
+   * @param endTime {number} The end time of the RUM request
    */
-  processRumRequest (rumRequest, rumRequestUrl) {
+  processRumRequest (rumRequest, startTime, endTime) {
     const responseDateHeader = rumRequest.getResponseHeader('Date')
     if (!responseDateHeader) {
       throw new Error('Missing date header on rum response.')
     }
 
-    const resourceEntries = globalScope.performance.getEntriesByName(rumRequestUrl, 'resource')
-    if (!Array.isArray((resourceEntries)) || resourceEntries.length === 0) {
-      throw new Error('Missing rum request performance entry.')
-    }
-
-    let medianRumOffset = 0
-    let serverOffset = 0
-    if (typeof resourceEntries[0].responseStart === 'number' && resourceEntries[0].responseStart !== 0) {
-      // Cors is enabled and we can make a more accurate calculation of NR server time
-      medianRumOffset = (resourceEntries[0].responseStart - resourceEntries[0].requestStart) / 2
-      serverOffset = Math.floor(resourceEntries[0].requestStart + medianRumOffset)
-    } else {
-      // Cors is disabled or erred, we need to use a less accurate calculation
-      medianRumOffset = (resourceEntries[0].responseEnd - resourceEntries[0].fetchStart) / 2
-      serverOffset = Math.floor(resourceEntries[0].fetchStart + medianRumOffset)
-    }
+    const medianRumOffset = (endTime - startTime) / 2
+    const serverOffset = Math.floor(startTime + medianRumOffset)
 
     // Corrected page origin time
     this.#correctedOriginTime = Math.floor(Date.parse(responseDateHeader) - serverOffset)
@@ -92,5 +78,13 @@ export class TimeKeeper {
    */
   correctAbsoluteTimestamp (timestamp) {
     return Math.floor(timestamp - this.#localTimeDiff)
+  }
+
+  /**
+   * Returns the current time offset from page origin.
+   * @return {number}
+   */
+  now () {
+    return Math.floor(performance.now())
   }
 }

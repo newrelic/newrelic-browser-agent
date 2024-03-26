@@ -26,8 +26,8 @@ export class Aggregate extends AggregateBase {
     this.firstByteToDomContent = 0 // our "dom processing" duration
 
     if (isBrowserScope) {
-      timeToFirstByte.subscribe(({ value, entries }) => {
-        const navEntry = entries[0]
+      timeToFirstByte.subscribe(({ value, attrs }) => {
+        const navEntry = attrs.navigationEntry
         this.timeToFirstByte = Math.max(value, this.timeToFirstByte)
         this.firstByteToWindowLoad = Math.max(Math.round(navEntry.loadEventEnd - this.timeToFirstByte), this.firstByteToWindowLoad) // our "frontend" duration
         this.firstByteToDomContent = Math.max(Math.round(navEntry.domContentLoadedEventEnd - this.timeToFirstByte), this.firstByteToDomContent) // our "dom processing" duration

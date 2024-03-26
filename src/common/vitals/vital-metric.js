@@ -8,19 +8,18 @@ export class VitalMetric {
     this.roundingMethod = typeof roundingMethod === 'function' ? roundingMethod : Math.floor
   }
 
-  update ({ value, entries = [], attrs = {} }) {
+  update ({ value, attrs = {} }) {
     if (value < 0) return
     const state = {
       value: this.roundingMethod(value),
       name: this.name,
-      entries,
       attrs
     }
 
     this.history.push(state)
     this.#subscribers.forEach(cb => {
       try {
-        cb(this.current)
+        cb(state)
       } catch (e) {
         // ignore errors
       }
@@ -31,7 +30,6 @@ export class VitalMetric {
     return this.history[this.history.length - 1] || {
       value: undefined,
       name: this.name,
-      entries: [],
       attrs: {}
     }
   }

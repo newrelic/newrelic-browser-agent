@@ -19,25 +19,22 @@ describe('vital-metric', () => {
     expect(vitalMetric.current).toMatchObject({
       name: 'test',
       attrs: {},
-      entries: [],
       value: undefined
     })
   })
 
   test('update', () => {
     let i = 0
-    vitalMetric.update({ value: i, entries: [{ test: i + 1 }], attrs: { test: i + 2 } })
+    vitalMetric.update({ value: i, attrs: { test: i + 2 } })
     expect(vitalMetric.current).toMatchObject({
       value: i,
-      entries: [{ test: i + 1 }],
       attrs: { test: i + 2 }
     })
 
     i++
-    vitalMetric.update({ value: i, entries: [{ test: i + 1 }], attrs: { test: i + 2 } })
+    vitalMetric.update({ value: i, attrs: { test: i + 2 } })
     expect(vitalMetric.current).toMatchObject({
       value: i,
-      entries: [{ test: i + 1 }],
       attrs: { test: i + 2 }
     })
   })
@@ -72,18 +69,18 @@ describe('vital-metric', () => {
   })
 
   test('multiple subscribers get same update when valid', (done) => {
-    let sub1, sub2
-    let stop1 = vitalMetric.subscribe(({ entries }) => {
-      sub1 ??= entries[0].id
-      if (sub1 === sub2) { stop1(); stop2(); done() }
+    let witness = 0
+    vitalMetric.subscribe(({ value }) => {
+      expect(value).toEqual(1)
+      witness++
+    })
+    vitalMetric.subscribe(({ value }) => {
+      expect(value).toEqual(1)
+      witness++
+      if (witness === 2) done()
     })
 
-    let stop2 = vitalMetric.subscribe(({ entries }) => {
-      sub2 ??= entries[0].id
-      if (sub1 === sub2) { stop1(); stop2(); done() }
-    })
-
-    vitalMetric.update({ value: 1, entries: [{ id: 'abcd' }] })
+    vitalMetric.update({ value: 1 })
   })
 
   test('subscribers do not get updates when not valid', (done) => {

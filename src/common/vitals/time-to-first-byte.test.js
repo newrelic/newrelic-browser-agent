@@ -4,7 +4,11 @@ beforeEach(() => {
   jest.clearAllMocks()
 })
 
+let triggeronTTFBCallback
 const getFreshTTFBImport = async (codeToRun) => {
+  jest.doMock('web-vitals/attribution', () => ({
+    onTTFB: jest.fn(cb => { triggeronTTFBCallback = cb; cb({ value: 1, attribution: {} }) })
+  }))
   const { timeToFirstByte } = await import('./time-to-first-byte')
   codeToRun(timeToFirstByte)
 }
@@ -104,16 +108,16 @@ describe('ttfb', () => {
       isiOS: false
     }))
     global.PerformanceNavigationTiming = jest.fn()
-    let sub1, sub2
+    let witness = 0
     getFreshTTFBImport(metric => {
-      const remove1 = metric.subscribe(({ entries }) => {
-        sub1 ??= entries[0].id
-        if (sub1 === sub2) { remove1(); remove2(); done() }
+      metric.subscribe(({ value }) => {
+        expect(value).toEqual(1)
+        witness++
       })
-
-      const remove2 = metric.subscribe(({ entries }) => {
-        sub2 ??= entries[0].id
-        if (sub1 === sub2) { remove1(); remove2(); done() }
+      metric.subscribe(({ value }) => {
+        expect(value).toEqual(1)
+        witness++
+        if (witness === 2) done()
       })
     })
   })
@@ -133,15 +137,15 @@ describe('ttfb', () => {
       isBrowserScope: true
     }))
     let triggered = 0
-    getFreshTTFBImport(metric => metric.subscribe(({ value }) => {
-      triggered++
-      expect(value).toEqual(1)
-      expect(triggered).toEqual(1)
-      setTimeout(() => {
+    getFreshTTFBImport(metric => {
+      metric.subscribe(({ value }) => {
+        triggered++
+        expect(value).toEqual(1)
         expect(triggered).toEqual(1)
-        done()
-      }, 1000)
+      })
+      triggeronTTFBCallback({ value: 'notequal1' })
+      expect(triggered).toEqual(1)
+      done()
     })
-    )
   })
 })

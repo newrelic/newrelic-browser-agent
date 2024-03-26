@@ -55,7 +55,6 @@ export class TimeKeeper {
   processRumRequest (rumRequest, startTime, endTime) {
     const responseDateHeader = rumRequest.getResponseHeader('Date')
     if (!responseDateHeader) {
-      console.log('Missing date header')
       throw new Error('Missing date header on rum response.')
     }
 
@@ -65,10 +64,6 @@ export class TimeKeeper {
     // Corrected page origin time
     this.#correctedOriginTime = Math.floor(Date.parse(responseDateHeader) - serverOffset)
     this.#localTimeDiff = this.#originTime - this.#correctedOriginTime
-    console.log('medianRumOffset', medianRumOffset)
-    console.log('serverOffset', serverOffset)
-    console.log('this.#correctedOriginTime', this.#correctedOriginTime)
-    console.log('this.#localTimeDiff', this.#localTimeDiff)
 
     if (Number.isNaN(this.#correctedOriginTime)) {
       throw new Error('Date header invalid format.')
@@ -82,7 +77,6 @@ export class TimeKeeper {
    * @returns {number} Corrected unix/epoch timestamp
    */
   convertRelativeTimestamp (relativeTime) {
-    console.log('convertRelativeTimestamp called', relativeTime)
     if (!this.#correctedOriginTime) throw new Error('InvalidState: Timing correction attempted before NR time calculated.')
     return this.#correctedOriginTime + relativeTime
   }
@@ -93,7 +87,6 @@ export class TimeKeeper {
    * @return {number} Corrected unix/epoch timestamp
    */
   correctAbsoluteTimestamp (timestamp) {
-    console.log('correctAbsoluteTimestamp called', timestamp)
     if (!this.#localTimeDiff) throw new Error('InvalidState: Timing correction attempted before NR time calculated.')
     return Math.floor(timestamp - this.#localTimeDiff)
   }

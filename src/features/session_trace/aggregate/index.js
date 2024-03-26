@@ -100,7 +100,7 @@ export class Aggregate extends AggregateBase {
 
   /** This module does not auto harvest by default -- it needs to be kicked off.  Once this method is called, it will then harvest on an interval */
   startHarvesting () {
-    if (this.scheduler.started || this.scheduler.aborted) return
+    if (this.scheduler.started || this.scheduler.aborted || this.blocked) return
     this.scheduler.runHarvest({ needResponse: true })
     this.scheduler.startTimer(this.harvestTimeSeconds)
   }
@@ -174,7 +174,7 @@ export class Aggregate extends AggregateBase {
 
   /** Switch from "off" or "error" to full mode (if entitled) */
   switchToFull () {
-    if (this.mode === MODE.FULL || !this.entitled) return
+    if (this.mode === MODE.FULL || !this.entitled || this.blocked) return
     const prevMode = this.mode
     this.mode = MODE.FULL
     this.agentRuntime.session.write({ sessionTraceMode: this.mode })

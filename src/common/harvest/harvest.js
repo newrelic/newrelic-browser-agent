@@ -16,6 +16,7 @@ import { SharedContext } from '../context/shared-context'
 import { VERSION } from '../constants/env'
 import { isWorkerScope, isIE } from '../constants/runtime'
 import { warn } from '../util/console'
+import { TimeKeeper } from '../timing/time-keeper'
 
 const warnings = {}
 
@@ -179,7 +180,7 @@ export class Harvest extends SharedContext {
       encodeParam('v', VERSION),
       transactionNameParam(info),
       encodeParam('ct', runtime.customTransaction),
-      '&rst=' + this.sharedContext.timeKeeper.now(),
+      '&rst=' + TimeKeeper.now(),
       '&ck=0', // ck param DEPRECATED - still expected by backend
       '&s=' + (runtime.session?.state.value || '0'), // the 0 id encaps all untrackable and default traffic
       encodeParam('ref', ref),

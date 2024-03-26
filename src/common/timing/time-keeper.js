@@ -37,6 +37,14 @@ export class TimeKeeper {
       : undefined
   }
 
+  /**
+   * Returns the current time offset from page origin.
+   * @return {number}
+   */
+  static now () {
+    return Math.floor(performance.now())
+  }
+
   get originTime () {
     return this.#originTime
   }
@@ -89,13 +97,5 @@ export class TimeKeeper {
   correctAbsoluteTimestamp (timestamp) {
     if (!this.#localTimeDiff) throw new Error('InvalidState: Timing correction attempted before NR time calculated.')
     return Math.floor(timestamp - this.#localTimeDiff)
-  }
-
-  /**
-   * Returns the current time offset from page origin.
-   * @return {number}
-   */
-  now () {
-    return Math.floor(performance.now())
   }
 }

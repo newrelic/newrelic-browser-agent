@@ -21,6 +21,7 @@ import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { getNREUMInitializedAgent } from '../../../common/window/nreum'
 import { deregisterDrain } from '../../../common/drain/drain'
+import { TimeKeeper } from '../../../common/timing/time-keeper'
 
 /**
  * @typedef {import('./compute-stack-trace.js').StackInfo} StackInfo
@@ -134,7 +135,7 @@ export class Aggregate extends AggregateBase {
 
   storeError (err, time, internal, customAttributes) {
     // are we in an interaction
-    time = time || this.timeKeeper.now()
+    time = time || TimeKeeper.now()
     const agentRuntime = getRuntime(this.agentIdentifier)
     let filterOutput
 

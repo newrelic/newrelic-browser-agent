@@ -17,7 +17,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
         .then(() => browser.waitForAgentLoad())
     ])
 
-    const { request: harvestContents } = await browser.testHandle.expectBlob()
+    const { request: harvestContents } = await browser.testHandle.expectReplay()
     const agentMetadata = JSON.parse(rumCall.reply.body).app
     testExpectedReplay({ data: harvestContents, entityGuid: agentMetadata.agents[0].entityGuid })
   })

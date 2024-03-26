@@ -1,5 +1,5 @@
 import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
-import { testBlobRequest } from '../../../tools/testing-server/utils/expect-tests'
+import { testBlobReplayRequest } from '../../../tools/testing-server/utils/expect-tests'
 import { srConfig, getSR } from '../util/helpers'
 
 describe.withBrowsersMatching(notIE)('Session Replay Ingest Behavior', () => {
@@ -36,7 +36,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Ingest Behavior', () => {
 
     await Promise.all([
       browser.testHandle.scheduleReply('bamServer', {
-        test: testBlobRequest,
+        test: testBlobReplayRequest,
         statusCode: 429
       }),
       browser.testHandle.expectReplay()

@@ -102,7 +102,7 @@ export default class CustomCommands {
       await browser.testHandle.scheduleReply('bamServer', {
         test: testRumRequest,
         permanent: true,
-        body: JSON.stringify({ ...rumFlags, sr: 1, sts: stMode })
+        body: JSON.stringify({ ...rumFlags, sr: 1, srs: stMode })
       })
     })
 

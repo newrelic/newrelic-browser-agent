@@ -12,7 +12,7 @@
 
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
-import { ABORT_REASONS, FEATURE_NAME, MAX_PAYLOAD_SIZE, QUERY_PARAM_PADDING, RRWEB_EVENT_TYPES, SR_EVENT_EMITTER_TYPES } from '../constants'
+import { ABORT_REASONS, FEATURE_NAME, MAX_PAYLOAD_SIZE, QUERY_PARAM_PADDING, RRWEB_EVENT_TYPES, SR_EVENT_EMITTER_TYPES, TRIGGERS } from '../constants'
 import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { sharedChannel } from '../../../common/constants/shared-channel'
@@ -170,7 +170,9 @@ export class Aggregate extends AggregateBase {
     // session replay samples can only be decided on the first load of a session
     // session replays can continue if already in progress
     const { session } = getRuntime(this.agentIdentifier)
-    if (!session.isNew && !ignoreSession) { // inherit the mode of the existing session
+    if (this.recorder?.parent.trigger === TRIGGERS.API && this.recorder?.recording) {
+      this.mode = MODE.FULL
+    } else if (!session.isNew && !ignoreSession) { // inherit the mode of the existing session
       this.mode = session.state.sessionReplayMode
     } else {
       // The session is new... determine the mode the new session should start in

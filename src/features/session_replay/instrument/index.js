@@ -11,7 +11,7 @@
  */
 import { DEFAULT_KEY, MODE, PREFIX } from '../../../common/session/constants'
 import { InstrumentBase } from '../../utils/instrument-base'
-import { FEATURE_NAME } from '../constants'
+import { FEATURE_NAME, TRIGGERS } from '../constants'
 import { hasReplayPrerequisite, isPreloadAllowed } from '../shared/utils'
 
 export class Instrument extends InstrumentBase {
@@ -54,7 +54,7 @@ export class Instrument extends InstrumentBase {
   /**
    * This func is use for early pre-load recording prior to replay feature (agg) being loaded onto the page. It should only setup once, including if already called and in-progress.
    */
-  async #preloadStartRecording () {
+  async #preloadStartRecording (trigger) {
     if (this.#alreadyStarted) return
     this.#alreadyStarted = true
 
@@ -63,7 +63,7 @@ export class Instrument extends InstrumentBase {
 
       // If startReplay() has been used by this point, we must record in full mode regardless of session preload:
       // Note: recorder starts here with w/e the mode is at this time, but this may be changed later (see #apiStartOrRestartReplay else-case)
-      this.recorder ??= new Recorder({ mode: this.#mode, agentIdentifier: this.agentIdentifier })
+      this.recorder ??= new Recorder({ mode: this.#mode, agentIdentifier: this.agentIdentifier, trigger })
       this.recorder.startRecording()
       this.abortHandler = this.recorder.stopRecording
     } catch (e) {}
@@ -75,11 +75,10 @@ export class Instrument extends InstrumentBase {
    */
   #apiStartOrRestartReplay () {
     if (this.featAggregate) { // post-load; there's possibly already an ongoing recording
-      if (!this.featAggregate.recorder?.recording && this.featAggregate.entitled) this.featAggregate.initializeRecording(MODE.FULL, true)
-      // if already recording or not entitled, don't start (again); don't importAgg again either
+      if (this.featAggregate.mode !== MODE.FULL) this.featAggregate.initializeRecording(MODE.FULL, true)
     } else { // pre-load
       this.#mode = MODE.FULL
-      this.#preloadStartRecording()
+      this.#preloadStartRecording(TRIGGERS.API)
       // There's a race here wherein either:
       // a. Recorder has not been initialized, and we've set the enforced mode, so we're good, or;
       // b. Record has been initialized, possibly with the "wrong" mode, so we have to correct that + restart.

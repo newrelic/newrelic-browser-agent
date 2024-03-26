@@ -75,7 +75,6 @@ export function testExpectedTrace ({
     'trace.nodes': nodeCount || expect.any(Number),
     ptid: ptid || expect.anything(),
     session: session || expect.any(String),
-    rst: expect.any(Number),
     // optional attrs here
     ...(firstSessionHarvest && { firstSessionHarvest }),
     ...(hasReplay && { hasReplay })

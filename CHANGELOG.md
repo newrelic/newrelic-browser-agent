@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.254.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.254.0...v1.254.1) (2024-03-26)
+
+
+### Bug Fixes
+
+* Server Timing - Remove reliance on performance API ([#930](https://github.com/newrelic/newrelic-browser-agent/issues/930)) ([250efcd](https://github.com/newrelic/newrelic-browser-agent/commit/250efcd3bf0a730adbb9d5c45be0bf2f71189664))
+
 ## [1.254.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.253.0...v1.254.0) (2024-03-25)
 
 

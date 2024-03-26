@@ -11,7 +11,8 @@ import { isBrowserScope } from '../../common/constants/runtime'
 import { warn } from '../../common/util/console'
 import { FEATURE_NAMES } from '../../loaders/features/features'
 import { getConfigurationValue } from '../../common/config/config'
-import { canImportReplayAgg, enableSessionTracking } from '../session_replay/shared/utils'
+import { canImportReplayAgg } from '../session_replay/shared/utils'
+import { enableSessionTracking } from './agent-session'
 
 /**
  * Base class for instrumenting a feature.

@@ -8,9 +8,8 @@ import { now } from '../../../common/timing/now'
 import { InstrumentBase } from '../../utils/instrument-base'
 import * as CONSTANTS from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
-import { isBrowserScope } from '../../../common/constants/runtime'
-import { getConfigurationValue } from '../../../common/config/config'
 import { deregisterDrain } from '../../../common/drain/drain'
+import { enableSessionTracking } from '../../utils/agent-session'
 
 const {
   BST_RESOURCE, RESOURCE, START, END, FEATURE_NAME, FN_END, FN_START, PUSH_STATE
@@ -20,7 +19,7 @@ export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
   constructor (agentIdentifier, aggregator, auto = true) {
     super(agentIdentifier, aggregator, FEATURE_NAME, auto)
-    const canTrackSession = isBrowserScope && getConfigurationValue(agentIdentifier, 'privacy.cookies_enabled') === true
+    const canTrackSession = enableSessionTracking(this.agentIdentifier)
     if (!canTrackSession) {
       deregisterDrain(this.agentIdentifier, this.featureName)
       return

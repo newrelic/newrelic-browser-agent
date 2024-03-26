@@ -1,4 +1,4 @@
-import { getConfiguration, getInfo, getRuntime } from '../../common/config/config'
+import { getConfiguration, getConfigurationValue, getInfo, getRuntime } from '../../common/config/config'
 import { drain } from '../../common/drain/drain'
 import { ee } from '../../common/event-emitter/contextual-ee'
 import { registerHandler } from '../../common/event-emitter/register-handler'
@@ -6,6 +6,7 @@ import { SessionEntity } from '../../common/session/session-entity'
 import { LocalStorage } from '../../common/storage/local-storage.js'
 import { FirstPartyCookies } from '../../common/storage/first-party-cookies'
 import { DEFAULT_KEY } from '../../common/session/constants'
+import { isBrowserScope } from '../../common/constants/runtime'
 
 let ranOnce = 0
 export function setupAgentSession (agentIdentifier) {
@@ -54,3 +55,5 @@ export function setupAgentSession (agentIdentifier) {
 
   return agentRuntime.session
 }
+
+export const enableSessionTracking = (agentId) => isBrowserScope && getConfigurationValue(agentId, 'privacy.cookies_enabled') === true

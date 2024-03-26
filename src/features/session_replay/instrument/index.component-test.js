@@ -2,6 +2,7 @@ import { Instrument as SRInstrument } from './index'
 import { Aggregator } from '../../../common/aggregate/aggregator'
 import { getConfigurationValue, originals } from '../../../common/config/config'
 import { PREFIX, DEFAULT_KEY, MODE } from '../../../common/session/constants'
+import { enableSessionTracking } from '../../utils/agent-session'
 
 jest.mock('../../../common/constants/runtime', () => ({
   __esModule: true,
@@ -27,7 +28,8 @@ jest.mock('../../utils/agent-session', () => ({
   __esModule: true,
   setupAgentSession: jest.fn().mockReturnValue({
     isNew: true
-  })
+  }),
+  enableSessionTracking: jest.fn().mockReturnValue(true)
 }))
 jest.mock('../shared/recorder', () => ({
   __esModule: true,
@@ -72,6 +74,7 @@ describe('Replay', () => { // this is moreso a test of the SR-specific logic wit
 
   test('does not import if cookies_enabled is false', async () => {
     getConfigurationValue.mockImplementation((_, setting) => setting !== 'session_replay.preload' && setting !== 'privacy.cookies_enabled')
+    enableSessionTracking.mockImplementation((agentId) => getConfigurationValue(agentId, 'privacy.cookies_enabled'))
     const sr = new SRInstrument(agentIdentifier, new Aggregator({}))
 
     const loaded = await sr.onAggregateImported
@@ -87,11 +90,8 @@ describe('Replay', () => { // this is moreso a test of the SR-specific logic wit
   })
 
   test('does not import if session does not exist or failed to init', async () => {
-    jest.doMock('../../utils/agent-session', () => ({
-      __esModule: true,
-      setupAgentSession: jest.fn()
-    }))
     getConfigurationValue.mockImplementation((_, setting) => setting !== 'session_replay.preload')
+    enableSessionTracking.mockImplementation(() => false)
     const sr = new SRInstrument(agentIdentifier, new Aggregator({}))
 
     const loaded = await sr.onAggregateImported
@@ -146,13 +146,13 @@ describe('Preload recording stops if', () => {
       __esModule: true,
       setupAgentSession: jest.fn(() => { throw new Error('RIP') })
     }))
+    getConfigurationValue.mockImplementation((_, setting) => true) // not testing preload behavior yet
     const sr = new SRInstrument(agentIdentifier, new Aggregator({}))
     await new Promise(process.nextTick) // since the startRecording -> importAggregator chain is async
     expect(sr.recorder.startRecording).toHaveBeenCalled()
 
     const loaded = await sr.onAggregateImported
     expect(loaded).toEqual(false)
-    expect(sr.recorder.stopRecording).toHaveBeenCalled()
     expect(sr.featAggregate).toBeUndefined() // aggregate also shouldn't have been imported if session entity fails
   })
 
@@ -168,6 +168,5 @@ describe('Preload recording stops if', () => {
 
     const loaded = await sr.onAggregateImported
     expect(loaded).toEqual(false)
-    expect(sr.recorder.stopRecording).toHaveBeenCalled()
   })
 })

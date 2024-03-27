@@ -49,8 +49,11 @@ jest.mock('./feature-base', () => ({
 }))
 jest.mock('./agent-session', () => ({
   __esModule: true,
-  setupAgentSession: jest.fn(),
-  enableSessionTracking: jest.fn(() => true)
+  setupAgentSession: jest.fn()
+}))
+jest.mock('./feature-gates', () => ({
+  __esModule: true,
+  canEnableSessionTracking: jest.fn().mockReturnValue(true)
 }))
 
 let agentIdentifier

@@ -1,9 +1,9 @@
 import { getConfigurationValue, originals } from '../../../common/config/config'
-import { enableSessionTracking } from '../../utils/agent-session'
+import { canEnableSessionTracking } from '../../utils/feature-gates'
 
 export function hasReplayPrerequisite (agentId) {
   return originals.MO && // Session Replay cannot work without Mutation Observer
-  enableSessionTracking && // requires session tracking to be running (hence "session" replay...)
+  canEnableSessionTracking(agentId) && // requires session tracking to be running (hence "session" replay...)
   getConfigurationValue(agentId, 'session_trace.enabled') === true // Session Replay as of now is tightly coupled with Session Trace in the UI
 }
 

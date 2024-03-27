@@ -9,7 +9,7 @@ import { InstrumentBase } from '../../utils/instrument-base'
 import * as CONSTANTS from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { deregisterDrain } from '../../../common/drain/drain'
-import { enableSessionTracking } from '../../utils/agent-session'
+import { canEnableSessionTracking } from '../../utils/feature-gates'
 
 const {
   BST_RESOURCE, RESOURCE, START, END, FEATURE_NAME, FN_END, FN_START, PUSH_STATE
@@ -19,7 +19,7 @@ export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
   constructor (agentIdentifier, aggregator, auto = true) {
     super(agentIdentifier, aggregator, FEATURE_NAME, auto)
-    const canTrackSession = enableSessionTracking(this.agentIdentifier)
+    const canTrackSession = canEnableSessionTracking(this.agentIdentifier)
     if (!canTrackSession) {
       deregisterDrain(this.agentIdentifier, this.featureName)
       return

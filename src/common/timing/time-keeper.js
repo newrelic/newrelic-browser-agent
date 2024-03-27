@@ -85,7 +85,7 @@ export class TimeKeeper {
    * @returns {number} Corrected unix/epoch timestamp
    */
   convertRelativeTimestamp (relativeTime) {
-    if (!this.#correctedOriginTime) throw new Error('InvalidState: Timing correction attempted before NR time calculated.')
+    if (!this.#correctedOriginTime) return this.originTime + relativeTime
     return this.#correctedOriginTime + relativeTime
   }
 
@@ -95,7 +95,7 @@ export class TimeKeeper {
    * @return {number} Corrected unix/epoch timestamp
    */
   correctAbsoluteTimestamp (timestamp) {
-    if (!this.#localTimeDiff) throw new Error('InvalidState: Timing correction attempted before NR time calculated.')
+    if (!this.#localTimeDiff) return timestamp
     return Math.floor(timestamp - this.#localTimeDiff)
   }
 }

@@ -58,7 +58,7 @@ export class Aggregate extends AggregateBase {
     let scheduler
     this.serializer = new Serializer(this)
 
-    const { state, serializer } = this
+    const { state, serializer, timeKeeper } = this
     let { blocked } = this
 
     const baseEE = ee.get(agentIdentifier) // <-- parent baseEE
@@ -308,6 +308,9 @@ export class Aggregate extends AggregateBase {
       if (node && !this.sent) {
         this.sent = true
         node.dt = this.dt
+        if (node.dt.timestamp) {
+          node.dt.timestamp = timeKeeper.correctAbsoluteTimestamp(node.dt.timestamp)
+        }
         node.jsEnd = node.start = this.startTime
         node[INTERACTION][REMAINING]++
       }

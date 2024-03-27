@@ -10,11 +10,17 @@
   {loader}
 
   <script type="text/javascript">
-    newrelic.addPageAction('foobar')
+    var xhr = new XMLHttpRequest()
+    xhr.open('GET', '/json')
+    xhr.send()
+
+    if (typeof fetch !== 'undefined') {
+      fetch('/json')
+    }
   </script>
   <title>RUM Unit Test</title>
 </head>
 <body>
-  This page adds a page action before page load.
+  This page makes an xhr call before page load.
 </body>
 </html>

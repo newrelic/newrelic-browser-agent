@@ -9,12 +9,12 @@
   {config}
   {loader}
 
-  <script>
+  <script type="text/javascript">
     throw new Error("My error")
   </script>
   <title>RUM Unit Test</title>
 </head>
 <body>
-This page throws a new error with a caught exception before the page loads
+  This page throws an uncaught exception before page load.
 </body>
 </html>

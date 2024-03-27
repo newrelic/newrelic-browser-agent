@@ -93,7 +93,7 @@ jobs:
           comment: ${{ steps.asset-size-report.outputs.results }}
           comment_tag: <!-- browser_agent asset size report -->
       - name: Archive asset size report results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: asset-size-report
           path: |

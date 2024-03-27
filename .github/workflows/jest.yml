@@ -52,7 +52,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Upload pr code coverage
         if: ${{ inputs.coverage && steps.pull-request-target.outputs.results }}
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           override_commit: ${{ fromJSON(steps.pull-request-target.outputs.results).head_sha }}
@@ -62,14 +62,14 @@ jobs:
           verbose: true
       - name: Upload branch code coverage
         if: ${{ inputs.coverage && !steps.pull-request-target.outputs.results }}
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: unit-tests
           verbose: true
       - name: Archive code coverage results
         if: ${{ inputs.coverage }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: jest-code-coverage-report
           path: coverage/

@@ -25,7 +25,7 @@ runs:
           --format terminal json markdown
       shell: bash
     - name: Archive asset size report results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: asset-size-report
         path: |

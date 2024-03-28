@@ -15,7 +15,6 @@ describe('error attributes with spa loader', () => {
         })
       ])
 
-      console.log(JSON.stringify(errorResult.request.body))
       expect(errorResult.request.body.err.length).toBe(3) // exactly 3 errors in payload
       expect(errorResult.request.body.err[0].custom.customParamKey).toBe(0)
       expect(errorResult.request.body.err[1].custom.customParamKey).toBe(1)

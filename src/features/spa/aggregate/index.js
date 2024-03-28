@@ -406,9 +406,11 @@ export class Aggregate extends AggregateBase {
 
         if (state.currentNode) {
           this[SPA_NODE] = state.currentNode.child('ajax', this[FETCH_START])
-          if (dtPayload && this[SPA_NODE]) this[SPA_NODE].dt = dtPayload
-          if (this[SPA_NODE].dt?.timestamp) {
-            this[SPA_NODE].dt.timestamp = timeKeeper.correctAbsoluteTimestamp(this[SPA_NODE].dt.timestamp)
+          if (dtPayload && this[SPA_NODE]) {
+            this[SPA_NODE].dt = dtPayload
+            if (this[SPA_NODE].dt?.timestamp) {
+              this[SPA_NODE].dt.timestamp = timeKeeper.correctAbsoluteTimestamp(this[SPA_NODE].dt.timestamp)
+            }
           }
         }
       }

@@ -4,6 +4,31 @@
     {
       "changes": [
         {
+          "type": "feat",
+          "sha": "8a4831cd1f2d32d97daa8788967b15d7f2f723d3",
+          "message": "Update agent to use new relic server time",
+          "issues": [
+            "918"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "f36acbc03c4f4d51e65431a270a008e65bb2cfff",
+          "message": "Switch web vitals library to attribution build",
+          "issues": [
+            "919"
+          ]
+        }
+      ],
+      "version": "1.255.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "54e666be-7583-41df-b71a-d394db5303e6",
+      "createTime": "2024-03-28T19:20:29.108Z"
+    },
+    {
+      "changes": [
+        {
           "type": "fix",
           "sha": "250efcd3bf0a730adbb9d5c45be0bf2f71189664",
           "message": "Server Timing - Remove reliance on performance API",
@@ -1204,5 +1229,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2024-03-26T16:08:08.500Z"
+  "updateTime": "2024-03-28T19:20:29.108Z"
 }

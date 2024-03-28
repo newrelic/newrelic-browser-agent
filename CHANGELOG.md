@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.255.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.254.1...v1.255.0) (2024-03-28)
+
+
+### Features
+
+* Switch web vitals library to attribution build ([#919](https://github.com/newrelic/newrelic-browser-agent/issues/919)) ([f36acbc](https://github.com/newrelic/newrelic-browser-agent/commit/f36acbc03c4f4d51e65431a270a008e65bb2cfff))
+* Update agent to use new relic server time ([#918](https://github.com/newrelic/newrelic-browser-agent/issues/918)) ([8a4831c](https://github.com/newrelic/newrelic-browser-agent/commit/8a4831cd1f2d32d97daa8788967b15d7f2f723d3))
+
 ## [1.254.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.254.0...v1.254.1) (2024-03-26)
 
 

@@ -98,7 +98,7 @@ describe('NR Server Time', () => {
     const ajaxEvent = interactionEvents.request.body[0].children.find(r => r.path === '/json' && r.requestedWith === 'XMLHttpRequest')
     expect(ajaxEvent.timestamp).toBeWithin(serverTime - 5000, serverTime)
 
-    if (!browserMatch(supportsFetch)) {
+    if (browserMatch(supportsFetch)) {
       const fetchEvent = interactionEvents.request.body[0].children.find(r => r.path === '/json' && r.requestedWith === 'fetch')
       expect(fetchEvent.timestamp).toBeWithin(serverTime - 5000, serverTime)
     }
@@ -141,7 +141,7 @@ describe('NR Server Time', () => {
     const ajaxEvent = ajaxEvents.request.body.find(r => r.path === '/json' && r.requestedWith === 'XMLHttpRequest')
     expect(ajaxEvent.timestamp).toBeWithin(serverTime, serverTime + 5000)
 
-    if (!browserMatch(supportsFetch)) {
+    if (browserMatch(supportsFetch)) {
       const fetchEvent = ajaxEvents.request.body.find(r => r.path === '/json' && r.requestedWith === 'fetch')
       expect(fetchEvent.timestamp).toBeWithin(serverTime, serverTime + 5000)
     }

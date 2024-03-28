@@ -20,7 +20,7 @@ import { interactionToNextPaint } from '../../../common/vitals/interaction-to-ne
 import { largestContentfulPaint } from '../../../common/vitals/largest-contentful-paint'
 import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
 import { longTask } from '../../../common/vitals/long-task'
-// import { subscribeToVisibilityChange } from '../../../common/window/page-visibility'
+import { subscribeToVisibilityChange } from '../../../common/window/page-visibility'
 import { VITAL_NAMES } from '../../../common/vitals/constants'
 
 export class Aggregate extends AggregateBase {
@@ -39,9 +39,6 @@ export class Aggregate extends AggregateBase {
 
     if (getConfigurationValue(this.agentIdentifier, 'page_view_timing.long_task') === true) longTask.subscribe(this.#handleVitalMetric)
 
-    /* It's important that CWV api, like "onLCP", is called before this scheduler is initialized. The reason is because they listen to the same
-      on vis change or pagehide events, and we'd want ex. onLCP to record the timing (win the race) before we try to send "final harvest". */
-
     registerHandler('docHidden', msTimestamp => this.endCurrentSession(msTimestamp), this.featureName, this.ee)
     registerHandler('winPagehide', msTimestamp => this.recordPageUnload(msTimestamp), this.featureName, this.ee)
 
@@ -49,6 +46,8 @@ export class Aggregate extends AggregateBase {
     const harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'page_view_timing.harvestTimeSeconds') || 30
 
     this.waitForFlags(([])).then(() => {
+      /* It's important that CWV api, like "onLCP", is called before the **scheduler** is initialized. The reason is because they listen to the same
+        on vis change or pagehide events, and we'd want ex. onLCP to record the timing (win the race) before we try to send "final harvest". */
       firstPaint.subscribe(this.#handleVitalMetric)
       firstContentfulPaint.subscribe(this.#handleVitalMetric)
       firstInputDelay.subscribe(this.#handleVitalMetric)
@@ -57,12 +56,14 @@ export class Aggregate extends AggregateBase {
       timeToFirstByte.subscribe(({ attrs }) => {
         this.addTiming('load', Math.round(attrs.navigationEntry.loadEventEnd))
       })
-      // *cli Mar'24 - CLS node won't be added until we fix the rounding problem in schema that's grounding the decimal value to 0
-      // subscribeToVisibilityChange(() => {
-      //   const { name, value, attrs } = cumulativeLayoutShift.current
-      //   if (value === undefined) return
-      //   this.addTiming(name, value * 1000, attrs) // downstream consumer interprets the value as ms-unit and converts it to seconds; cls score is neither and we need to negate that division
-      // }, true) // so CLS node only reports on vis change rather than on every change
+      subscribeToVisibilityChange(() => {
+        /* Downstream, the event consumer interprets all timing node value as ms-unit and converts it to seconds via division by 1000. CLS is unitless so this normally is a problem.
+          bel.6 schema also doesn't support decimal values, of which cls within [0,1). However, the two nicely cancels out, and we can multiply cls by 1000 to both negate the division
+          and send an integer > 1. We effectively lose some precision down to 3 decimal places for this workaround. E.g. (real) 0.749132... -> 749.132...-> 749 -> 0.749 (final) */
+        const { name, value, attrs } = cumulativeLayoutShift.current
+        if (value === undefined) return
+        this.addTiming(name, value * 1000, attrs)
+      }, true) // CLS node should only reports on vis change rather than on every change
 
       const scheduler = new HarvestScheduler('events', {
         onFinished: (...args) => this.onHarvestFinished(...args),

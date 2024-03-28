@@ -7,7 +7,7 @@ import { VITAL_NAMES } from '../../../common/vitals/constants'
 jest.mock('web-vitals/attribution', () => ({
   // eslint-disable-next-line
   onCLS: jest.fn((cb) => cb({
-    value: 0.111,
+    value: 0.1119,
     attribution: {}
   })),
   // eslint-disable-next-line
@@ -75,7 +75,7 @@ describe('pvt aggregate tests', () => {
       return t.name === 'lcp'
     })
 
-    expect(timing.attrs.cls).toEqual(0.111) // 'CLS value should be the one present at the time LCP happened'
+    expect(timing.attrs.cls).toEqual(0.1119) // 'CLS value should be the one present at the time LCP happened'
     expect(timing.attrs).toEqual(expect.objectContaining(expectedNetworkInfo))
 
     function find (arr, fn) {
@@ -96,7 +96,7 @@ describe('pvt aggregate tests', () => {
     expect(pvtAgg.timings.length).toBeGreaterThanOrEqual(1)
     const fiPayload = pvtAgg.timings.find(x => x.name === 'fi')
     expect(fiPayload.value).toEqual(5)
-    expect(fiPayload.attrs).toEqual(expect.objectContaining({ type: 'pointerdown', fid: 1234, cls: 0.111, ...expectedNetworkInfo }))
+    expect(fiPayload.attrs).toEqual(expect.objectContaining({ type: 'pointerdown', fid: 1234, cls: 0.1119, ...expectedNetworkInfo }))
   })
 
   test('sends CLS node with right val on vis change', () => {
@@ -105,15 +105,14 @@ describe('pvt aggregate tests', () => {
 
     triggerVisChange()
     clsNode = pvtAgg.timings.find(tn => tn.name === VITAL_NAMES.CUMULATIVE_LAYOUT_SHIFT)
-    expect(clsNode).toBeUndefined()
-    // expect(clsNode).toBeTruthy()
-    // expect(clsNode.value).toEqual(111) // since cls multiply decimal by 1000 to offset consumer division by 1000
-    // expect(clsNode.attrs.cls).toBeUndefined() // cls node doesn't need cls property
+    expect(clsNode).toBeTruthy()
+    expect(clsNode.value).toEqual(111.9) // since cls multiply decimal by 1000 to offset consumer division by 1000
+    expect(clsNode.attrs.cls).toBeUndefined() // cls node doesn't need cls property
   })
   test('sends INP node with right val', () => {
     let inpNode = pvtAgg.timings.find(tn => tn.name === VITAL_NAMES.INTERACTION_TO_NEXT_PAINT)
     expect(inpNode).toBeTruthy()
     expect(inpNode.value).toEqual(8)
-    expect(inpNode.attrs.cls).toEqual(0.111)
+    expect(inpNode.attrs.cls).toEqual(0.1119)
   })
 })

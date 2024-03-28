@@ -2,11 +2,11 @@ import { originals } from '../../../common/config/config'
 import { isBrowserScope } from '../../../common/constants/runtime'
 import { handle } from '../../../common/event-emitter/handle'
 import { windowAddEventListener } from '../../../common/event-listener/event-listener-opts'
-import { now } from '../../../common/timing/now'
 import { debounce } from '../../../common/util/invoke'
 import { wrapEvents, wrapHistory } from '../../../common/wrap'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME, INTERACTION_TRIGGERS } from '../constants'
+import { TimeKeeper } from '../../../common/timing/time-keeper'
 
 /** The minimal time after a UI event for which no further events will be processed - i.e. a throttling rate to reduce spam.
  * This also give some time for the new interaction to complete without being discarded by a subsequent UI event and wrongly attributed.
@@ -23,7 +23,7 @@ export class Instrument extends InstrumentBase {
     const historyEE = wrapHistory(this.ee)
     const eventsEE = wrapEvents(this.ee)
 
-    const trackURLChange = () => handle('newURL', [now(), '' + window.location], undefined, this.featureName, this.ee)
+    const trackURLChange = () => handle('newURL', [TimeKeeper.now(), '' + window.location], undefined, this.featureName, this.ee)
     historyEE.on('pushState-end', trackURLChange)
     historyEE.on('replaceState-end', trackURLChange)
 
@@ -38,7 +38,7 @@ export class Instrument extends InstrumentBase {
       if (oncePerFrame) return
       oncePerFrame = true
       requestAnimationFrame(() => { // waiting for next frame to time when any visuals are supposedly updated
-        handle('newDom', [now()], undefined, this.featureName, this.ee)
+        handle('newDom', [TimeKeeper.now()], undefined, this.featureName, this.ee)
         oncePerFrame = false
       })
     })

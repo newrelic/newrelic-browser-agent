@@ -13,7 +13,7 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
   describe('enabled', () => {
     it('enabled: true should import feature', async () => {
       await browser.url(await browser.testHandle.assetURL('instrumented.html', config()))
-        .then(() => browser.waitForFeatureAggregate('session_replay'))
+        .then(() => browser.waitForAgentLoad())
 
       const wasInitialized = await browser.execute(function () {
         return Object.values(newrelic.initializedAgents)[0].features.session_replay.featAggregate.initialized

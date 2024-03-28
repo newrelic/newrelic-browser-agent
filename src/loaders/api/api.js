@@ -6,7 +6,6 @@ import { FEATURE_NAMES } from '../features/features'
 import { getRuntime, setInfo, getInfo } from '../../common/config/config'
 import { handle } from '../../common/event-emitter/handle'
 import { ee } from '../../common/event-emitter/contextual-ee'
-import { now } from '../../common/timing/now'
 import { drain, registerDrain } from '../../common/drain/drain'
 import { onWindowLoad } from '../../common/window/load'
 import { isBrowserScope } from '../../common/constants/runtime'
@@ -15,6 +14,7 @@ import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
 import { gosCDN } from '../../common/window/nreum'
 import { apiMethods, asyncApiMethods } from './api-methods'
 import { SR_EVENT_EMITTER_TYPES } from '../../features/session_replay/constants'
+import { TimeKeeper } from '../../common/timing/time-keeper'
 
 export function setTopLevelCallers () {
   const nr = gosCDN()
@@ -150,9 +150,9 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
       var hasCb = typeof cb === 'function'
       handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/createTracer/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
       // Soft navigations won't support Tracer nodes, but this fn should still work the same otherwise (e.g., run the orig cb).
-      if (!runSoftNavOverSpa) handle(spaPrefix + 'tracer', [now(), name, contextStore], ixn, FEATURE_NAMES.spa, instanceEE)
+      if (!runSoftNavOverSpa) handle(spaPrefix + 'tracer', [TimeKeeper.now(), name, contextStore], ixn, FEATURE_NAMES.spa, instanceEE)
       return function () {
-        tracerEE.emit((hasCb ? '' : 'no-') + 'fn-start', [now(), ixn, hasCb], contextStore)
+        tracerEE.emit((hasCb ? '' : 'no-') + 'fn-start', [TimeKeeper.now(), ixn, hasCb], contextStore)
         if (hasCb) {
           try {
             return cb.apply(this, arguments)
@@ -161,7 +161,7 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
             // the error came from outside the agent, so don't swallow
             throw err
           } finally {
-            tracerEE.emit('fn-end', [now()], contextStore)
+            tracerEE.emit('fn-end', [TimeKeeper.now()], contextStore)
           }
         }
       }
@@ -176,7 +176,7 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
   function apiCall (prefix, name, notSpa, bufferGroup) {
     return function () {
       handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/' + name + '/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
-      if (bufferGroup) handle(prefix + name, [now(), ...arguments], notSpa ? null : this, bufferGroup, instanceEE) // no bufferGroup means only the SM is emitted
+      if (bufferGroup) handle(prefix + name, [TimeKeeper.now(), ...arguments], notSpa ? null : this, bufferGroup, instanceEE) // no bufferGroup means only the SM is emitted
       return notSpa ? undefined : this // returns the InteractionHandle which allows these methods to be chained
     }
   }
@@ -184,7 +184,7 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
   apiInterface.noticeError = function (err, customAttributes) {
     if (typeof err === 'string') err = new Error(err)
     handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/noticeError/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
-    handle('err', [err, now(), false, customAttributes], undefined, FEATURE_NAMES.jserrors, instanceEE)
+    handle('err', [err, TimeKeeper.now(), false, customAttributes], undefined, FEATURE_NAMES.jserrors, instanceEE)
   }
 
   // theres no window.load event on non-browser scopes, lazy load immediately

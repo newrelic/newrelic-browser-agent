@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+<head>
+  {init}
+  {config}
+  {loader}
+
+  <script type="text/javascript">
+    var xhr = new XMLHttpRequest()
+    xhr.open('GET', '/json')
+    xhr.send()
+
+    if (typeof fetch !== 'undefined') {
+      fetch('/json')
+    }
+  </script>
+  <title>RUM Unit Test</title>
+</head>
+<body>
+  This page makes an xhr call before page load.
+</body>
+</html>

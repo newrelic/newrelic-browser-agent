@@ -58,7 +58,7 @@ export class Aggregate extends AggregateBase {
     let scheduler
     this.serializer = new Serializer(this)
 
-    const { state, serializer } = this
+    const { state, serializer, timeKeeper } = this
     let { blocked } = this
 
     const baseEE = ee.get(agentIdentifier) // <-- parent baseEE
@@ -308,6 +308,9 @@ export class Aggregate extends AggregateBase {
       if (node && !this.sent) {
         this.sent = true
         node.dt = this.dt
+        if (node.dt?.timestamp) {
+          node.dt.timestamp = timeKeeper.correctAbsoluteTimestamp(node.dt.timestamp)
+        }
         node.jsEnd = node.start = this.startTime
         node[INTERACTION][REMAINING]++
       }
@@ -403,7 +406,12 @@ export class Aggregate extends AggregateBase {
 
         if (state.currentNode) {
           this[SPA_NODE] = state.currentNode.child('ajax', this[FETCH_START])
-          if (dtPayload && this[SPA_NODE]) this[SPA_NODE].dt = dtPayload
+          if (dtPayload && this[SPA_NODE]) {
+            this[SPA_NODE].dt = dtPayload
+            if (this[SPA_NODE].dt?.timestamp) {
+              this[SPA_NODE].dt.timestamp = timeKeeper.correctAbsoluteTimestamp(this[SPA_NODE].dt.timestamp)
+            }
+          }
         }
       }
     }, this.featureName, fetchEE)

@@ -4,7 +4,6 @@
  */
 
 import { handle } from '../../../common/event-emitter/handle'
-import { now } from '../../../common/timing/now'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
@@ -12,6 +11,7 @@ import { globalScope } from '../../../common/constants/runtime'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
 import { stringify } from '../../../common/util/stringify'
 import { UncaughtError } from './uncaught-error'
+import { TimeKeeper } from '../../../common/timing/time-keeper'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
@@ -31,18 +31,18 @@ export class Instrument extends InstrumentBase {
       if (!this.abortHandler || this.#seenErrors.has(error)) return
       this.#seenErrors.add(error)
 
-      handle('err', [this.#castError(error), now()], undefined, FEATURE_NAMES.jserrors, this.ee)
+      handle('err', [this.#castError(error), TimeKeeper.now()], undefined, FEATURE_NAMES.jserrors, this.ee)
     })
 
     this.ee.on('internal-error', (error) => {
       if (!this.abortHandler) return
-      handle('ierr', [this.#castError(error), now(), true], undefined, FEATURE_NAMES.jserrors, this.ee)
+      handle('ierr', [this.#castError(error), TimeKeeper.now(), true], undefined, FEATURE_NAMES.jserrors, this.ee)
     })
 
     globalScope.addEventListener('unhandledrejection', (promiseRejectionEvent) => {
       if (!this.abortHandler) return
 
-      handle('err', [this.#castPromiseRejectionEvent(promiseRejectionEvent), now(), false, { unhandledPromiseRejection: 1 }], undefined, FEATURE_NAMES.jserrors, this.ee)
+      handle('err', [this.#castPromiseRejectionEvent(promiseRejectionEvent), TimeKeeper.now(), false, { unhandledPromiseRejection: 1 }], undefined, FEATURE_NAMES.jserrors, this.ee)
     }, eventListenerOpts(false, this.removeOnAbort?.signal))
 
     globalScope.addEventListener('error', (errorEvent) => {
@@ -57,7 +57,7 @@ export class Instrument extends InstrumentBase {
         return
       }
 
-      handle('err', [this.#castErrorEvent(errorEvent), now()], undefined, FEATURE_NAMES.jserrors, this.ee)
+      handle('err', [this.#castErrorEvent(errorEvent), TimeKeeper.now()], undefined, FEATURE_NAMES.jserrors, this.ee)
     }, eventListenerOpts(false, this.removeOnAbort?.signal))
 
     this.abortHandler = this.#abort // we also use this as a flag to denote that the feature is active or on and handling errors

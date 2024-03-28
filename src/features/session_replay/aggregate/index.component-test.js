@@ -9,6 +9,7 @@ import { setNREUMInitializedAgent } from '../../../common/window/nreum'
 import { handle } from '../../../common/event-emitter/handle'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { ee } from '../../../common/event-emitter/contextual-ee'
+import { TimeKeeper } from '../../../common/timing/time-keeper'
 
 let sr, session
 
@@ -357,7 +358,8 @@ function wait (ms = 0) {
 }
 
 function primeSessionAndReplay (sess = new SessionEntity({ agentIdentifier, key: 'SESSION', storage: new LocalMemory() })) {
-  const agent = { agentIdentifier }
+  const timeKeeper = new TimeKeeper(Date.now())
+  const agent = { agentIdentifier, timeKeeper }
   setNREUMInitializedAgent(agentIdentifier, agent)
   session = sess
   configure(agent, { info, runtime: { session, isolatedBacklog: false }, init: {} }, 'test', true)

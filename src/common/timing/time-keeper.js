@@ -1,5 +1,4 @@
 import { gosNREUM } from '../window/nreum'
-import { getRuntime } from '../config/config'
 
 /**
  * Class used to adjust the timestamp of harvested data to New Relic server time. This
@@ -7,7 +6,11 @@ import { getRuntime } from '../config/config'
  * to the harvested data event offset time.
  */
 export class TimeKeeper {
-  #agent
+  /**
+   * Represents the browser origin time.
+   * @type {number}
+   */
+  #originTime
 
   /**
    * Represents the browser origin time corrected to NR server time.
@@ -22,8 +25,9 @@ export class TimeKeeper {
    */
   #localTimeDiff
 
-  constructor (agent) {
-    this.#agent = agent
+  constructor (originTime) {
+    if (!originTime) throw new Error('TimeKeeper must be supplied a browser origin time.')
+    this.#originTime = originTime
   }
 
   static getTimeKeeperByAgentIdentifier (agentIdentifier) {
@@ -33,7 +37,20 @@ export class TimeKeeper {
       : undefined
   }
 
-  get correctedPageOriginTime () {
+  /**
+   * Returns the current time offset from page origin.
+   * @return {number}
+   */
+  static now () {
+    return Math.floor(performance.now())
+  }
+
+  get originTime () {
+    return this.#originTime
+  }
+
+  get correctedOriginTime () {
+    if (!this.#correctedOriginTime) throw new Error('InvalidState: Access to correctedOriginTime attempted before NR time calculated.')
     return this.#correctedOriginTime
   }
 
@@ -54,7 +71,7 @@ export class TimeKeeper {
 
     // Corrected page origin time
     this.#correctedOriginTime = Math.floor(Date.parse(responseDateHeader) - serverOffset)
-    this.#localTimeDiff = getRuntime(this.#agent.agentIdentifier).offset - this.#correctedOriginTime
+    this.#localTimeDiff = this.#originTime - this.#correctedOriginTime
 
     if (Number.isNaN(this.#correctedOriginTime)) {
       throw new Error('Date header invalid format.')
@@ -65,9 +82,10 @@ export class TimeKeeper {
    * Converts a page origin relative time to an absolute timestamp
    * corrected to NR server time.
    * @param relativeTime {number} The relative time of the event in milliseconds
-   * @returns {number} The correct timestamp as a unix/epoch timestamp value
+   * @returns {number} Corrected unix/epoch timestamp
    */
   convertRelativeTimestamp (relativeTime) {
+    if (!this.#correctedOriginTime) return this.originTime + relativeTime
     return this.#correctedOriginTime + relativeTime
   }
 
@@ -77,14 +95,7 @@ export class TimeKeeper {
    * @return {number} Corrected unix/epoch timestamp
    */
   correctAbsoluteTimestamp (timestamp) {
+    if (!this.#localTimeDiff) return timestamp
     return Math.floor(timestamp - this.#localTimeDiff)
-  }
-
-  /**
-   * Returns the current time offset from page origin.
-   * @return {number}
-   */
-  now () {
-    return Math.floor(performance.now())
   }
 }

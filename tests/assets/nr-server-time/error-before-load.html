@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+<head>
+  {init}
+  {config}
+  {loader}
+
+  <script type="text/javascript">
+    throw new Error("My error")
+  </script>
+  <title>RUM Unit Test</title>
+</head>
+<body>
+  This page throws an uncaught exception before page load.
+</body>
+</html>

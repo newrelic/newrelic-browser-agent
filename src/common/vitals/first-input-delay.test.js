@@ -4,15 +4,29 @@ beforeEach(() => {
   jest.clearAllMocks()
 })
 
+const fidAttribution = {
+  eventTarget: 'html>body',
+  eventType: 'pointerdown',
+  eventTime: 1,
+  loadState: 'loading'
+}
+let triggeronFIDCallback
 const getFreshFIDImport = async (codeToRun) => {
+  jest.doMock('web-vitals/attribution', () => ({
+    onFID: jest.fn(cb => { triggeronFIDCallback = cb; cb({ value: 100, attribution: fidAttribution }) })
+  }))
   const { firstInputDelay } = await import('./first-input-delay')
   codeToRun(firstInputDelay)
 }
 
 describe('fid', () => {
   test('reports fcp from web-vitals', (done) => {
-    getFreshFIDImport(metric => metric.subscribe(({ value }) => {
+    getFreshFIDImport(metric => metric.subscribe(({ value, attrs }) => {
       expect(value).toEqual(1)
+      expect(attrs.type).toEqual(fidAttribution.eventType)
+      expect(attrs.fid).toEqual(100)
+      expect(attrs.eventTarget).toEqual(fidAttribution.eventTarget)
+      expect(attrs.loadState).toEqual(fidAttribution.loadState)
       done()
     }))
   })
@@ -53,16 +67,16 @@ describe('fid', () => {
       __esModule: true,
       isBrowserScope: true
     }))
-    let sub1, sub2
+    let witness = 0
     getFreshFIDImport(metric => {
-      const remove1 = metric.subscribe(({ entries }) => {
-        sub1 ??= entries[0].id
-        if (sub1 === sub2) { remove1(); remove2(); done() }
+      metric.subscribe(({ value }) => {
+        expect(value).toEqual(1)
+        witness++
       })
-
-      const remove2 = metric.subscribe(({ entries }) => {
-        sub2 ??= entries[0].id
-        if (sub1 === sub2) { remove1(); remove2(); done() }
+      metric.subscribe(({ value }) => {
+        expect(value).toEqual(1)
+        witness++
+        if (witness === 2) done()
       })
     })
   })
@@ -74,15 +88,15 @@ describe('fid', () => {
       isBrowserScope: true
     }))
     let triggered = 0
-    getFreshFIDImport(metric => metric.subscribe(({ value }) => {
-      triggered++
-      expect(value).toEqual(1)
-      expect(triggered).toEqual(1)
-      setTimeout(() => {
+    getFreshFIDImport(metric => {
+      metric.subscribe(({ value }) => {
+        triggered++
+        expect(value).toEqual(1)
         expect(triggered).toEqual(1)
-        done()
-      }, 1000)
+      })
+      triggeronFIDCallback({ value: 'notequal1' })
+      expect(triggered).toEqual(1)
+      done()
     })
-    )
   })
 })

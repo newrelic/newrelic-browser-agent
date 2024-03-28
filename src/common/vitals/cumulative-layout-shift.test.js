@@ -4,7 +4,16 @@ afterEach(() => {
   jest.clearAllMocks()
 })
 
+const clsAttribution = {
+  largestShiftTarget: 'element',
+  largestShiftTime: 12345,
+  largestShiftValue: 0.9712,
+  loadState: 'dom-content-loaded'
+}
 const getFreshCLSImport = async (codeToRun) => {
+  jest.doMock('web-vitals/attribution', () => ({
+    onCLS: jest.fn(cb => cb({ value: 0.123, attribution: clsAttribution, id: 'beepboop' }))
+  }))
   const { cumulativeLayoutShift } = await import('./cumulative-layout-shift')
   codeToRun(cumulativeLayoutShift)
 }
@@ -12,8 +21,9 @@ const getFreshCLSImport = async (codeToRun) => {
 describe('cls', () => {
   test('reports cls', (done) => {
     getFreshCLSImport(metric => {
-      metric.subscribe(({ value }) => {
-        expect(value).toEqual(1)
+      metric.subscribe(({ value, attrs }) => {
+        expect(value).toEqual(0.123)
+        expect(attrs).toEqual({ ...clsAttribution, metricId: 'beepboop' })
         done()
       })
     })
@@ -37,34 +47,16 @@ describe('cls', () => {
       __esModule: true,
       isBrowserScope: true
     }))
-    let sub1, sub2
-    getFreshCLSImport(metric => {
-      const remove1 = metric.subscribe(({ entries }) => {
-        sub1 ??= entries[0].id
-        if (sub1 === sub2) { remove1(); remove2(); done() }
-      })
-
-      const remove2 = metric.subscribe(({ entries }) => {
-        sub2 ??= entries[0].id
-        if (sub1 === sub2) { remove1(); remove2(); done() }
-      })
-    })
-  })
-  test('reports only new values', (done) => {
-    jest.doMock('../constants/runtime', () => ({
-      __esModule: true,
-      isBrowserScope: true
-    }))
-    let triggered = 0
+    let witness = 0
     getFreshCLSImport(metric => {
       metric.subscribe(({ value }) => {
-        triggered++
-        expect(value).toEqual(1)
-        expect(triggered).toEqual(1)
-        setTimeout(() => {
-          expect(triggered).toEqual(1)
-          done()
-        }, 1000)
+        expect(value).toEqual(0.123)
+        witness++
+      })
+      metric.subscribe(({ value }) => {
+        expect(value).toEqual(0.123)
+        witness++
+        if (witness === 2) done()
       })
     })
   })

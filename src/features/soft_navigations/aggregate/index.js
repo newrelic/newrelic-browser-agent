@@ -24,8 +24,8 @@ export class Aggregate extends AggregateBase {
     this.domObserver = domObserver
 
     this.initialPageLoadInteraction = new InitialPageLoadInteraction(agentIdentifier)
-    timeToFirstByte.subscribe(({ entries }) => {
-      const loadEventTime = entries[0].loadEventEnd
+    timeToFirstByte.subscribe(({ attrs }) => {
+      const loadEventTime = attrs.navigationEntry.loadEventEnd
       this.initialPageLoadInteraction.forceSave = true
       this.initialPageLoadInteraction.done(loadEventTime)
       this.interactionsToHarvest.push(this.initialPageLoadInteraction)

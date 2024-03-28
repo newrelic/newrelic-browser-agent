@@ -4,6 +4,72 @@
     {
       "changes": [
         {
+          "type": "fix",
+          "sha": "250efcd3bf0a730adbb9d5c45be0bf2f71189664",
+          "message": "Server Timing - Remove reliance on performance API",
+          "issues": [
+            "930"
+          ]
+        }
+      ],
+      "version": "1.254.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "9a9943c4-e77e-427e-811f-2693f3ff2555",
+      "createTime": "2024-03-26T16:08:08.500Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
+          "sha": "7b35238d53df97ca0183f06642601eb381aad063",
+          "message": "Remove webpack imports in npm package",
+          "issues": [
+            "925"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "ac266faea203a7edc01ddecabbfdcc13bf602081",
+          "message": "Standardize all feature behavior to wait for RUM response",
+          "issues": [
+            "927"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "d0b5b7d644b8ffc3667bf3b2521733cc7940f982",
+          "message": "maintain a harvestCount for use later with harvestId",
+          "issues": [
+            "922"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "2c99a5b11300ea9ef9ee7b5158b9d42c00693d03",
+          "message": "Add rum-response metadata handler",
+          "issues": [
+            "913"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "91b1f96efafe19f7b1b3fd4f39b9af1136b0a3a8",
+          "message": "Calculate New Relic time in the agent",
+          "issues": [
+            "911"
+          ]
+        }
+      ],
+      "version": "1.254.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "60d75830-eb12-4164-bfa2-9302a9ecf27e",
+      "createTime": "2024-03-25T16:07:51.888Z"
+    },
+    {
+      "changes": [
+        {
           "type": "feat",
           "sha": "7fcb62791ad932cbd3b9f16a72277b42bca9a75f",
           "message": "Soft Navigations trial",
@@ -1138,5 +1204,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2024-03-13T16:54:47.318Z"
+  "updateTime": "2024-03-26T16:08:08.500Z"
 }

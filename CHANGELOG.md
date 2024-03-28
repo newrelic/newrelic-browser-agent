@@ -3,6 +3,28 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.254.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.254.0...v1.254.1) (2024-03-26)
+
+
+### Bug Fixes
+
+* Server Timing - Remove reliance on performance API ([#930](https://github.com/newrelic/newrelic-browser-agent/issues/930)) ([250efcd](https://github.com/newrelic/newrelic-browser-agent/commit/250efcd3bf0a730adbb9d5c45be0bf2f71189664))
+
+## [1.254.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.253.0...v1.254.0) (2024-03-25)
+
+
+### Features
+
+* Add rum-response metadata handler ([#913](https://github.com/newrelic/newrelic-browser-agent/issues/913)) ([2c99a5b](https://github.com/newrelic/newrelic-browser-agent/commit/2c99a5b11300ea9ef9ee7b5158b9d42c00693d03))
+* Calculate New Relic time in the agent ([#911](https://github.com/newrelic/newrelic-browser-agent/issues/911)) ([91b1f96](https://github.com/newrelic/newrelic-browser-agent/commit/91b1f96efafe19f7b1b3fd4f39b9af1136b0a3a8))
+* maintain a harvestCount for use later with harvestId ([#922](https://github.com/newrelic/newrelic-browser-agent/issues/922)) ([d0b5b7d](https://github.com/newrelic/newrelic-browser-agent/commit/d0b5b7d644b8ffc3667bf3b2521733cc7940f982))
+* Standardize all feature behavior to wait for RUM response ([#927](https://github.com/newrelic/newrelic-browser-agent/issues/927)) ([ac266fa](https://github.com/newrelic/newrelic-browser-agent/commit/ac266faea203a7edc01ddecabbfdcc13bf602081))
+
+
+### Bug Fixes
+
+* Remove webpack imports in npm package ([#925](https://github.com/newrelic/newrelic-browser-agent/issues/925)) ([7b35238](https://github.com/newrelic/newrelic-browser-agent/commit/7b35238d53df97ca0183f06642601eb381aad063))
+
 ## [1.253.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.252.1...v1.253.0) (2024-03-13)
 
 

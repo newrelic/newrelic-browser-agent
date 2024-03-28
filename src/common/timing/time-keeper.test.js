@@ -1,10 +1,12 @@
 import { faker } from '@faker-js/faker'
-import { globalScope } from '../constants/runtime'
 import { TimeKeeper } from './time-keeper'
 import * as configModule from '../config/config'
 
 jest.enableAutomock()
 jest.unmock('./time-keeper')
+
+const startTime = 450
+const endTime = 600
 
 let localTime
 let serverTime
@@ -37,15 +39,7 @@ describe('processRumRequest', () => {
       getResponseHeader: jest.fn(() => (new Date(serverTime)).toUTCString())
     }
 
-    const rumRequestUrl = faker.internet.url()
-    const rumRequestPerformanceEntry = {
-      name: rumRequestUrl,
-      responseStart: 600,
-      requestStart: 450
-    }
-    globalScope.performance.getEntriesByName = jest.fn(() => [rumRequestPerformanceEntry])
-
-    timeKeeper.processRumRequest(mockRumRequest, rumRequestUrl)
+    timeKeeper.processRumRequest(mockRumRequest, startTime, endTime)
 
     expect(timeKeeper.correctedPageOriginTime).toEqual(1706213060475)
   })
@@ -57,15 +51,7 @@ describe('processRumRequest', () => {
       getResponseHeader: jest.fn(() => (new Date(serverTime)).toUTCString())
     }
 
-    const rumRequestUrl = faker.internet.url()
-    const rumRequestPerformanceEntry = {
-      name: rumRequestUrl,
-      responseStart: 600,
-      requestStart: 450
-    }
-    globalScope.performance.getEntriesByName = jest.fn(() => [rumRequestPerformanceEntry])
-
-    timeKeeper.processRumRequest(mockRumRequest, rumRequestUrl)
+    timeKeeper.processRumRequest(mockRumRequest, startTime, endTime)
 
     expect(timeKeeper.correctedPageOriginTime).toEqual(1706213055475)
   })
@@ -75,24 +61,13 @@ describe('processRumRequest', () => {
       getResponseHeader: jest.fn(() => (new Date(serverTime)).toUTCString())
     }
 
-    const rumRequestUrl = faker.internet.url()
-    const rumRequestPerformanceEntry = {
-      name: rumRequestUrl,
-      responseStart,
-      responseEnd: 600,
-      fetchStart: 450
-    }
-    globalScope.performance.getEntriesByName = jest.fn(() => [rumRequestPerformanceEntry])
-
-    timeKeeper.processRumRequest(mockRumRequest, rumRequestUrl)
+    timeKeeper.processRumRequest(mockRumRequest, startTime, endTime)
 
     expect(timeKeeper.correctedPageOriginTime).toEqual(1706213060475)
   })
 
   it.each([null, undefined])('should throw an error when rumRequest is %s', (rumRequest) => {
-    const rumRequestUrl = faker.internet.url()
-
-    expect(() => timeKeeper.processRumRequest(rumRequest, rumRequestUrl))
+    expect(() => timeKeeper.processRumRequest(rumRequest, startTime, endTime))
       .toThrowError()
   })
 
@@ -101,15 +76,7 @@ describe('processRumRequest', () => {
       getResponseHeader: jest.fn(() => dateHeader)
     }
 
-    const rumRequestUrl = faker.internet.url()
-    const rumRequestPerformanceEntry = {
-      name: rumRequestUrl,
-      responseStart: 600,
-      requestStart: 450
-    }
-    globalScope.performance.getEntriesByName = jest.fn(() => [rumRequestPerformanceEntry])
-
-    expect(() => timeKeeper.processRumRequest(mockRumRequest, rumRequestUrl))
+    expect(() => timeKeeper.processRumRequest(mockRumRequest, startTime, endTime))
       .toThrowError()
   })
 
@@ -118,53 +85,7 @@ describe('processRumRequest', () => {
       getResponseHeader: jest.fn(() => { throw new Error('test error') })
     }
 
-    const rumRequestUrl = faker.internet.url()
-    const rumRequestPerformanceEntry = {
-      name: rumRequestUrl,
-      responseStart: 600,
-      requestStart: 450
-    }
-    globalScope.performance.getEntriesByName = jest.fn(() => [rumRequestPerformanceEntry])
-
-    expect(() => timeKeeper.processRumRequest(mockRumRequest, rumRequestUrl))
-      .toThrowError()
-  })
-
-  it('should throw an error when getEntriesByName throws error', () => {
-    const mockRumRequest = {
-      getResponseHeader: jest.fn(() => (new Date(serverTime)).toUTCString())
-    }
-
-    const rumRequestUrl = faker.internet.url()
-    globalScope.performance.getEntriesByName = jest.fn(() => { throw new Error('test error') })
-
-    const timeKeeper = new TimeKeeper(mockAgent)
-
-    expect(() => timeKeeper.processRumRequest(mockRumRequest, rumRequestUrl))
-      .toThrowError()
-  })
-
-  it.each([null, undefined, {}])('should throw an error when getEntriesByName returns %s instead of an array', (performanceEntries) => {
-    const mockRumRequest = {
-      getResponseHeader: jest.fn(() => (new Date(serverTime)).toUTCString())
-    }
-
-    const rumRequestUrl = faker.internet.url()
-    globalScope.performance.getEntriesByName = jest.fn(() => performanceEntries)
-
-    expect(() => timeKeeper.processRumRequest(mockRumRequest, rumRequestUrl))
-      .toThrowError()
-  })
-
-  it('should throw an error when getEntriesByName returns an empty array', () => {
-    const mockRumRequest = {
-      getResponseHeader: jest.fn(() => (new Date(serverTime)).toUTCString())
-    }
-
-    const rumRequestUrl = faker.internet.url()
-    globalScope.performance.getEntriesByName = jest.fn(() => [])
-
-    expect(() => timeKeeper.processRumRequest(mockRumRequest, rumRequestUrl))
+    expect(() => timeKeeper.processRumRequest(mockRumRequest, startTime, endTime))
       .toThrowError()
   })
 
@@ -173,15 +94,7 @@ describe('processRumRequest', () => {
       getResponseHeader: jest.fn(() => serverTime)
     }
 
-    const rumRequestUrl = faker.internet.url()
-    const rumRequestPerformanceEntry = {
-      name: rumRequestUrl,
-      responseStart: 600,
-      requestStart: 450
-    }
-    globalScope.performance.getEntriesByName = jest.fn(() => [rumRequestPerformanceEntry])
-
-    expect(() => timeKeeper.processRumRequest(mockRumRequest, rumRequestUrl))
+    expect(() => timeKeeper.processRumRequest(mockRumRequest, startTime, endTime))
       .toThrowError()
   })
 })
@@ -192,15 +105,7 @@ describe('corrected time calculations', () => {
       getResponseHeader: jest.fn(() => (new Date(serverTime)).toUTCString())
     }
 
-    const rumRequestUrl = faker.internet.url()
-    const rumRequestPerformanceEntry = {
-      name: rumRequestUrl,
-      responseStart: 600,
-      requestStart: 450
-    }
-    globalScope.performance.getEntriesByName = jest.fn(() => [rumRequestPerformanceEntry])
-
-    timeKeeper.processRumRequest(mockRumRequest, rumRequestUrl)
+    timeKeeper.processRumRequest(mockRumRequest, startTime, endTime)
 
     const relativeTimeA = 225
     const correctedRelativeTimeA = timeKeeper.convertRelativeTimestamp(relativeTimeA)
@@ -218,15 +123,7 @@ describe('corrected time calculations', () => {
       getResponseHeader: jest.fn(() => (new Date(serverTime)).toUTCString())
     }
 
-    const rumRequestUrl = faker.internet.url()
-    const rumRequestPerformanceEntry = {
-      name: rumRequestUrl,
-      responseStart: 600,
-      requestStart: 450
-    }
-    globalScope.performance.getEntriesByName = jest.fn(() => [rumRequestPerformanceEntry])
-
-    timeKeeper.processRumRequest(mockRumRequest, rumRequestUrl)
+    timeKeeper.processRumRequest(mockRumRequest, startTime, endTime)
 
     const relativeTimeA = 225
     const correctedRelativeTimeA = timeKeeper.convertRelativeTimestamp(relativeTimeA)
@@ -242,15 +139,7 @@ describe('corrected time calculations', () => {
       getResponseHeader: jest.fn(() => (new Date(serverTime)).toUTCString())
     }
 
-    const rumRequestUrl = faker.internet.url()
-    const rumRequestPerformanceEntry = {
-      name: rumRequestUrl,
-      responseStart: 600,
-      requestStart: 450
-    }
-    globalScope.performance.getEntriesByName = jest.fn(() => [rumRequestPerformanceEntry])
-
-    timeKeeper.processRumRequest(mockRumRequest, rumRequestUrl)
+    timeKeeper.processRumRequest(mockRumRequest, startTime, endTime)
 
     const absoluteTimeA = 1706213058225
     const correctedAbsoluteTimeA = timeKeeper.correctAbsoluteTimestamp(absoluteTimeA)
@@ -268,15 +157,7 @@ describe('corrected time calculations', () => {
       getResponseHeader: jest.fn(() => (new Date(serverTime)).toUTCString())
     }
 
-    const rumRequestUrl = faker.internet.url()
-    const rumRequestPerformanceEntry = {
-      name: rumRequestUrl,
-      responseStart: 600,
-      requestStart: 450
-    }
-    globalScope.performance.getEntriesByName = jest.fn(() => [rumRequestPerformanceEntry])
-
-    timeKeeper.processRumRequest(mockRumRequest, rumRequestUrl)
+    timeKeeper.processRumRequest(mockRumRequest, startTime, endTime)
 
     const absoluteTimeA = 1706213058225
     const correctedAbsoluteTimeA = timeKeeper.correctAbsoluteTimestamp(absoluteTimeA)

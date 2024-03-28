@@ -96,7 +96,7 @@ describe('soft navigations', () => {
       expect(softNavAggregate.domObserver).toBeTruthy()
       expect(softNavAggregate.initialPageLoadInteraction).toBeTruthy()
 
-      executeTTFB({ entries: [{ loadEventEnd: 123 }] })
+      executeTTFB({ attrs: { navigationEntry: { loadEventEnd: 123 } } })
       expect(softNavAggregate.initialPageLoadInteraction).toBeNull()
       expect(softNavAggregate.interactionsToHarvest.length).toEqual(1)
 
@@ -153,7 +153,7 @@ describe('soft navigations', () => {
       const holdIxn = softNavAggregate.interactionsToHarvest.pop()
       expect(softNavAggregate.getInteractionFor(currentTime)).toBe(softNavAggregate.initialPageLoadInteraction) // cancelled (untracked) ixn not considered; falls back to iPL
 
-      executeTTFB({ entries: [{ loadEventEnd: performance.now() }] })
+      executeTTFB({ attrs: { navigationEntry: { loadEventEnd: performance.now() } } })
       expect(softNavAggregate.getInteractionFor(performance.now())).toBeUndefined() // no in progress ixn and iPL has already closed
 
       holdIxn.status = 'finished'

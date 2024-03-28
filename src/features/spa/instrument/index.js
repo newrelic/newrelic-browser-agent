@@ -7,7 +7,6 @@ import {
 } from '../../../common/wrap'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
 import { InstrumentBase } from '../../utils/instrument-base'
-import { getRuntime } from '../../../common/config/config'
 import { now } from '../../../common/timing/now'
 import * as CONSTANTS from '../constants'
 import { isBrowserScope } from '../../../common/constants/runtime'
@@ -21,8 +20,6 @@ export class Instrument extends InstrumentBase {
   constructor (agentIdentifier, aggregator, auto = true) {
     super(agentIdentifier, aggregator, FEATURE_NAME, auto)
     if (!isBrowserScope) return // SPA not supported outside web env
-
-    if (!getRuntime(agentIdentifier).xhrWrappable) return
 
     try {
       this.removeOnAbort = new AbortController()

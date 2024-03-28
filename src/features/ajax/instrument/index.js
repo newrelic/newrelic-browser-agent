@@ -2,7 +2,7 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { originals, getLoaderConfig, getRuntime } from '../../../common/config/config'
+import { originals, getLoaderConfig } from '../../../common/config/config'
 import { handle } from '../../../common/event-emitter/handle'
 import { id } from '../../../common/ids/id'
 import { ffVersion, globalScope, isBrowserScope } from '../../../common/constants/runtime'
@@ -28,9 +28,6 @@ export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
   constructor (agentIdentifier, aggregator, auto = true) {
     super(agentIdentifier, aggregator, FEATURE_NAME, auto)
-
-    // Very unlikely, but in case the existing XMLHttpRequest.prototype object on the page couldn't be wrapped.
-    if (!getRuntime(agentIdentifier).xhrWrappable) return
 
     this.dt = new DT(agentIdentifier)
 

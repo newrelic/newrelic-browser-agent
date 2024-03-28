@@ -196,8 +196,8 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
     import(/* webpackChunkName: "async-api" */'./apiAsync').then(({ setAPI }) => {
       setAPI(agentIdentifier)
       drain(agentIdentifier, 'api')
-    }).catch(() => {
-      warn('Downloading runtime APIs failed...')
+    }).catch((err) => {
+      warn('Downloading runtime APIs failed...', err)
       instanceEE.abort()
     })
   }

@@ -51,3 +51,7 @@ export const ABORT_REASONS = {
 }
 /** Reserved room for query param attrs */
 export const QUERY_PARAM_PADDING = 5000
+
+export const TRIGGERS = {
+  API: 'api'
+}

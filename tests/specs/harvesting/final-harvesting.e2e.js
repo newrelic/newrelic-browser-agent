@@ -14,7 +14,7 @@ describe.withBrowsersMatching(notIE)('final harvesting', () => {
       browser.testHandle.expectAjaxEvents(),
       browser.testHandle.expectMetrics(),
       browser.testHandle.expectErrors(),
-      browser.testHandle.expectResources()
+      browser.testHandle.expectTrace()
     ])
 
     await browser.execute(function () {
@@ -48,7 +48,7 @@ describe.withBrowsersMatching(notIE)('final harvesting', () => {
       })
     ]))
     expect(errorsResults.request.body.xhr.length).toBeGreaterThan(0)
-    expect(resourcesResults.request.body.res.length).toBeGreaterThan(0)
+    expect(resourcesResults.request.body.length).toBeGreaterThan(0)
   })
 
   it.withBrowsersMatching(supportsFetch)('should use sendBeacon for unload harvests', async () => {
@@ -63,7 +63,7 @@ describe.withBrowsersMatching(notIE)('final harvesting', () => {
       browser.testHandle.expectAjaxEvents(),
       browser.testHandle.expectMetrics(),
       browser.testHandle.expectErrors(),
-      browser.testHandle.expectResources()
+      browser.testHandle.expectTrace()
     ])
 
     await browser.execute(function () {
@@ -102,7 +102,7 @@ describe.withBrowsersMatching(notIE)('final harvesting', () => {
       })
     ]))
     expect(errorsResults.request.body.xhr.length).toBeGreaterThan(0)
-    expect(resourcesResults.request.body.res.length).toBeGreaterThan(0)
+    expect(resourcesResults.request.body.length).toBeGreaterThan(0)
 
     /*
     sendBeacon can be flakey so we check to see if at least one of the network

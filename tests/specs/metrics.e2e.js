@@ -171,22 +171,6 @@ describe.withBrowsersMatching(notIE)('metrics', () => {
       stats: { c: 1 }
     }]))
   })
-
-  it('should send SMs for session trace duration', async () => {
-    await browser.url(await browser.testHandle.assetURL('instrumented.html'))
-      .then(() => browser.waitForAgentLoad())
-
-    const [unloadSupportMetricsResults] = await Promise.all([
-      browser.testHandle.expectSupportMetrics(),
-      await browser.url(await browser.testHandle.assetURL('/')) // Setup expects before navigating
-    ])
-
-    const supportabilityMetrics = unloadSupportMetricsResults.request.body.sm
-    expect(supportabilityMetrics).toEqual(expect.arrayContaining([{
-      params: { name: 'PageSession/Feature/SessionTrace/DurationMs' },
-      stats: { t: expect.toBeWithin(1, Infinity) }
-    }]))
-  })
 })
 
 function loaderTypeSupportabilityMetric (loaderType) {

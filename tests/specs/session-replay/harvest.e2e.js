@@ -1,5 +1,5 @@
 import { notIE, notIOS, onlyChrome, supportsFetch } from '../../../tools/browser-matcher/common-matchers.mjs'
-import { config, decodeAttributes, getSR } from './helpers'
+import { srConfig, decodeAttributes, getSR } from '../util/helpers'
 
 describe.withBrowsersMatching(notIE)('Session Replay Harvest Behavior', () => {
   beforeEach(async () => {
@@ -15,8 +15,8 @@ describe.withBrowsersMatching(notIE)('Session Replay Harvest Behavior', () => {
   it.withBrowsersMatching(notIOS)('Should harvest early if exceeds preferred size', async () => {
     const start = Date.now()
     const [{ request: blobHarvest }] = await Promise.all([
-      browser.testHandle.expectBlob(),
-      browser.url(await browser.testHandle.assetURL('64kb-dom.html', config({ session_replay: { harvestTimeSeconds: 60 } })))
+      browser.testHandle.expectReplay(),
+      browser.url(await browser.testHandle.assetURL('64kb-dom.html', srConfig({ session_replay: { harvestTimeSeconds: 60 } })))
         .then(() => browser.waitForSessionReplayRecording())
     ])
 
@@ -28,9 +28,9 @@ describe.withBrowsersMatching(notIE)('Session Replay Harvest Behavior', () => {
 
   /** Some of the other browsers can crash with the way we load this massive page. need to reconsider this test at some point */
   it.withBrowsersMatching(onlyChrome)('Should abort if exceeds maximum size', async () => {
-    await browser.url(await browser.testHandle.assetURL('1mb-dom.html', config({ session_replay: { harvestTimeSeconds: 5 } })))
+    await browser.url(await browser.testHandle.assetURL('1mb-dom.html', srConfig({ session_replay: { harvestTimeSeconds: 5 } })))
 
-    await browser.testHandle.expectBlob(10000, true) // should not get harvest
+    await browser.testHandle.expectReplay(10000, true) // should not get harvest
 
     await expect(getSR()).resolves.toEqual(expect.objectContaining({
       blocked: true,
@@ -40,9 +40,9 @@ describe.withBrowsersMatching(notIE)('Session Replay Harvest Behavior', () => {
 
   it.withBrowsersMatching(notIOS)('Should set timestamps on each payload', async () => {
     const [{ request: blobHarvest }, { request: blobHarvest2 }] = await Promise.all([
-      browser.testHandle.expectBlob(),
-      browser.testHandle.expectBlob(),
-      browser.url(await browser.testHandle.assetURL('64kb-dom.html', config({ session_replay: { harvestTimeSeconds: 5 } })))
+      browser.testHandle.expectReplay(),
+      browser.testHandle.expectReplay(),
+      browser.url(await browser.testHandle.assetURL('64kb-dom.html', srConfig({ session_replay: { harvestTimeSeconds: 5 } })))
     ])
 
     expect(blobHarvest.body.length).toBeGreaterThan(0)
@@ -68,7 +68,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Harvest Behavior', () => {
   it.withBrowsersMatching(supportsFetch)('should use sendBeacon for unload harvests', async () => {
     const [snapshotHarvest] = await Promise.all([
       browser.testHandle.expectSessionReplaySnapshot(10000),
-      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { harvestTimeSeconds: 5 } })))
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig({ session_replay: { harvestTimeSeconds: 5 } })))
         .then(() => browser.execute(function () {
           const sendBeaconFn = navigator.sendBeacon.bind(navigator)
           navigator.sendBeacon = function (url, body) {
@@ -85,7 +85,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Harvest Behavior', () => {
     })
 
     const [unloadRequest] = await Promise.all([
-      browser.testHandle.expectBlob(),
+      browser.testHandle.expectReplay(),
       browser.url(await browser.testHandle.assetURL('/'))
     ])
     expect(unloadRequest.request.query.sendBeacon).toEqual('true')

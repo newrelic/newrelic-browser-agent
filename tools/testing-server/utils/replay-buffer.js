@@ -6,15 +6,12 @@ const srCacheDir = path.join(paths.rootDir, 'node_modules/.cache/session_replay'
 
 module.exports.storeReplayData = async (sessionId, firstTimestamp, srEvents) => {
   if (typeof sessionId !== 'string' || sessionId.trim().length === 0) {
-    console.warn('Could not store replay data: missing session id')
     return
   }
   if (typeof firstTimestamp !== 'string' || sessionId.trim().length === 0 || Number.isNaN(firstTimestamp)) {
-    console.warn('Could not store replay data: missing first timestamp')
     return
   }
   if (!Array.isArray(srEvents) || srEvents.length === 0) {
-    console.warn('Could not store replay data: missing events or events are empty')
     return
   }
 

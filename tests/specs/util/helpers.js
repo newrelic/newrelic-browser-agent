@@ -47,6 +47,42 @@ export function testExpectedReplay ({ data, session, hasMeta, hasSnapshot, hasEr
   expect(data.body).toEqual(expect.any(Array))
 }
 
+export function testExpectedTrace ({
+  data,
+  firstTimestamp,
+  firstTimestampOffset,
+  lastTimestamp,
+  lastTimestampOffset,
+  nodeCount,
+  firstSessionHarvest,
+  hasReplay,
+  session,
+  ptid
+}) {
+  expect(data.query).toMatchObject({
+    browser_monitoring_key: expect.any(String),
+    type: 'BrowserSessionChunk',
+    app_id: expect.any(String),
+    protocol_version: expect.any(String),
+    attributes: expect.any(String)
+  })
+
+  const decodedObj = decodeAttributes(data.query.attributes)
+
+  expect(decodedObj).toMatchObject({
+    'trace.firstTimestamp': firstTimestamp || expect.any(Number),
+    'trace.lastTimestamp': lastTimestamp || expect.any(Number),
+    'trace.nodes': nodeCount || expect.any(Number),
+    ptid: ptid || expect.anything(),
+    session: session || expect.any(String),
+    // optional attrs here
+    ...(firstSessionHarvest && { firstSessionHarvest }),
+    ...(hasReplay && { hasReplay })
+  })
+
+  expect(data.body).toEqual(expect.any(Array))
+}
+
 export function decodeAttributes (attributes) {
   const decodedObj = {}
   decodeURIComponent(attributes).split('&').forEach(x => {
@@ -65,13 +101,30 @@ export function decodeAttributes (attributes) {
   return decodedObj
 }
 
-export function config (initOverrides = {}) {
+export function srConfig (initOverrides = {}) {
   return deepmerge(
     {
-      loader: 'experimental',
+      loader: 'spa',
       init: {
         privacy: { cookies_enabled: true },
-        session_replay: { enabled: true, harvestTimeSeconds: 5, sampling_rate: 100, error_sampling_rate: 0 }
+        session_replay: { enabled: true, harvestTimeSeconds: 5 }
+      }
+    },
+    {
+      init: {
+        ...initOverrides
+      }
+    }
+  )
+}
+
+export function stConfig (initOverrides = {}) {
+  return deepmerge(
+    {
+      loader: 'spa',
+      init: {
+        privacy: { cookies_enabled: true },
+        session_trace: { enabled: true, harvestTimeSeconds: 5 }
       }
     },
     {
@@ -87,9 +140,9 @@ export async function getSR () {
     try {
       var sr = Object.values(newrelic.initializedAgents)[0].features.session_replay.featAggregate
       return {
-        events: (sr.recorder ? sr.recorder.getEvents().events : []),
+        events: (sr.recorder && sr.recorder.getEvents().events) || [],
         initialized: sr.initialized,
-        recording: (sr.recorder ? sr.recorder.recording : false),
+        recording: (sr.recorder && sr.recorder.recording) || false,
         mode: sr.mode,
         exists: true,
         blocked: sr.blocked,
@@ -102,7 +155,8 @@ export async function getSR () {
         recording: false,
         exists: false,
         mode: 0,
-        blocked: undefined
+        blocked: undefined,
+        err: JSON.stringify(err)
       }
     }
   })

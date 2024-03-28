@@ -31,7 +31,7 @@ export class HarvestScheduler extends SharedContext {
     this.started = false
     this.timeoutHandle = null
     this.aborted = false // this controls the per-interval and final harvests for the scheduler (currently per feature specific!)
-
+    this.harvesting = false
     this.harvest = new Harvest(this.sharedContext)
 
     // unload if EOL mechanism fires
@@ -82,12 +82,14 @@ export class HarvestScheduler extends SharedContext {
 
   runHarvest (opts) {
     if (this.aborted) return
+    this.harvesting = true
 
     /**
      * This is executed immediately after harvest sends the data via XHR, or if there's nothing to send. Note that this excludes on unloading / sendBeacon.
      * @param {Object} result
      */
     const cbRanAfterSend = (result) => {
+      this.harvesting = false
       if (opts?.forceNoRetry) result.retry = false // discard unsent data rather than re-queuing for next harvest attempt
       this.onHarvestFinished(opts, result)
     }
@@ -102,7 +104,7 @@ export class HarvestScheduler extends SharedContext {
       if (!submitMethod) return false
 
       const retry = !opts?.unload && submitMethod === submitData.xhr
-      payload = this.opts.getPayload({ retry, opts })
+      payload = this.opts.getPayload({ retry, ...opts })
 
       if (!payload) {
         if (this.started) {

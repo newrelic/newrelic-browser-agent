@@ -9,7 +9,7 @@ import { handle } from '../../../common/event-emitter/handle'
 import { getConfiguration, getInfo, getRuntime } from '../../../common/config/config'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { setDenyList, shouldCollectEvent } from '../../../common/deny-list/deny-list'
-import { FEATURE_NAME } from '../constants'
+import { FEATURE_NAME, MAX_PAYLOAD_SIZE } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { AggregateBase } from '../../utils/aggregate-base'
@@ -42,7 +42,6 @@ export class Aggregate extends AggregateBase {
     const ee = this.ee
 
     const harvestTimeSeconds = agentInit.ajax.harvestTimeSeconds || 10
-    const MAX_PAYLOAD_SIZE = agentInit.ajax.maxPayloadSize || 1000000
 
     // Exposes these methods to browser test files -- future TO DO: can be removed once these fns are extracted from the constructor into class func
     this.storeXhr = storeXhr
@@ -154,7 +153,7 @@ export class Aggregate extends AggregateBase {
         return null
       }
 
-      var payload = getPayload(ajaxEvents, options.maxPayloadSize || MAX_PAYLOAD_SIZE)
+      var payload = getPayload(ajaxEvents)
 
       var payloadObjs = []
       for (var i = 0; i < payload.length; i++) {
@@ -170,19 +169,18 @@ export class Aggregate extends AggregateBase {
       return payloadObjs
     }
 
-    function getPayload (events, maxPayloadSize, chunks) {
-      chunks = chunks || 1
+    function getPayload (events, chunks = 1) {
       var payload = []
       var chunkSize = events.length / chunks
       var eventChunks = splitChunks(events, chunkSize)
       var tooBig = false
       for (var i = 0; i < eventChunks.length; i++) {
         var currentChunk = eventChunks[i]
-        if (currentChunk.tooBig(maxPayloadSize)) {
+        if (currentChunk.tooBig()) {
           if (currentChunk.events.length !== 1) {
             /* if it is too big BUT it isnt length 1, we can split it down again,
              else we just want to NOT push it into payload
-             because if it's length 1 and still too big for the maxPayloadSize
+             because if it's length 1 and still too big for the MAX_PAYLOAD_SIZE
              it cant get any smaller and we dont want to recurse forever */
             tooBig = true
             break
@@ -192,7 +190,7 @@ export class Aggregate extends AggregateBase {
         }
       }
       // check if the current payload string is too big, if so then run getPayload again with more buckets
-      return tooBig ? getPayload(events, maxPayloadSize, ++chunks) : payload
+      return tooBig ? getPayload(events, ++chunks) : payload
     }
 
     function onEventsHarvestFinished (result) {
@@ -255,9 +253,8 @@ export class Aggregate extends AggregateBase {
         this.payload += insert
       }
 
-      this.tooBig = function (maxPayloadSize) {
-        maxPayloadSize = maxPayloadSize || MAX_PAYLOAD_SIZE
-        return this.payload.length * 2 > maxPayloadSize
+      this.tooBig = function () {
+        return this.payload.length * 2 > MAX_PAYLOAD_SIZE
       }
     }
   }

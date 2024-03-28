@@ -51,6 +51,10 @@ jest.mock('./agent-session', () => ({
   __esModule: true,
   setupAgentSession: jest.fn()
 }))
+jest.mock('./feature-gates', () => ({
+  __esModule: true,
+  canEnableSessionTracking: jest.fn().mockReturnValue(true)
+}))
 
 let agentIdentifier
 let aggregator
@@ -86,6 +90,7 @@ test('should not immediately drain', () => {
 })
 
 test('should import aggregator on window load', async () => {
+  jest.mocked(getConfigurationValue).mockReturnValue({ feature_flags: [] })
   const instrument = new InstrumentBase(agentIdentifier, aggregator, featureName)
   const aggregateArgs = { [faker.string.uuid()]: faker.lorem.sentence() }
   instrument.importAggregator(aggregateArgs)
@@ -99,6 +104,7 @@ test('should import aggregator on window load', async () => {
 })
 
 test('should immediately import aggregator in worker scope', async () => {
+  jest.mocked(getConfigurationValue).mockReturnValue({ feature_flags: [] })
   jest.replaceProperty(globalScopeModule, 'isBrowserScope', false)
   jest.replaceProperty(globalScopeModule, 'isWorkerScope', true)
 
@@ -127,7 +133,6 @@ test('should import the session manager and replay aggregate for new session', a
   const windowLoadCallback = jest.mocked(onWindowLoad).mock.calls[0][0]
   await windowLoadCallback()
 
-  expect(getConfigurationValue).toHaveBeenCalledWith(agentIdentifier, 'privacy.cookies_enabled')
   expect(setupAgentSession).toHaveBeenCalledWith(agentIdentifier)
   expect(lazyFeatureLoader).toHaveBeenCalledWith(FEATURE_NAMES.sessionReplay, 'aggregate')
   expect(mockAggregate).toHaveBeenCalledWith(agentIdentifier, aggregator, aggregateArgs)
@@ -149,7 +154,6 @@ test('should import the session manager and replay aggregate when a recording is
   const windowLoadCallback = jest.mocked(onWindowLoad).mock.calls[0][0]
   await windowLoadCallback()
 
-  expect(getConfigurationValue).toHaveBeenCalledWith(agentIdentifier, 'privacy.cookies_enabled')
   expect(setupAgentSession).toHaveBeenCalledWith(agentIdentifier)
   expect(lazyFeatureLoader).toHaveBeenCalledWith(FEATURE_NAMES.sessionReplay, 'aggregate')
   expect(mockAggregate).toHaveBeenCalledWith(agentIdentifier, aggregator, aggregateArgs)
@@ -171,7 +175,6 @@ test('should not import session aggregate when session is not new and a recordin
   const windowLoadCallback = jest.mocked(onWindowLoad).mock.calls[0][0]
   await windowLoadCallback()
 
-  expect(getConfigurationValue).toHaveBeenCalledWith(agentIdentifier, 'privacy.cookies_enabled')
   expect(setupAgentSession).toHaveBeenCalledWith(agentIdentifier)
   expect(drain).toHaveBeenCalledWith(agentIdentifier, FEATURE_NAMES.sessionReplay)
   expect(lazyFeatureLoader).not.toHaveBeenCalled()

@@ -1,3 +1,5 @@
+import { testExpectedTrace } from './util/helpers'
+
 describe('Manual Loader', () => {
   describe('invalid params do not initialize data', () => {
     it('wrong string', async () => {
@@ -63,7 +65,7 @@ describe('Manual Loader', () => {
         browser.testHandle.expectErrors(),
         browser.testHandle.expectMetrics(),
         browser.testHandle.expectIns(),
-        browser.testHandle.expectResources(),
+        browser.testHandle.expectTrace(),
         browser.testHandle.expectInteractionEvents(),
         browser.execute(function () {
           newrelic.start()
@@ -79,7 +81,7 @@ describe('Manual Loader', () => {
       checkJsErrors(jserrors.request)
       checkMetrics(metrics.request)
       checkPageAction(pa.request)
-      checkSessionTrace(st.request)
+      testExpectedTrace({ data: st.request })
       checkSpa(spa.request)
     })
   })
@@ -91,7 +93,7 @@ describe('Manual Loader', () => {
         browser.testHandle.expectTimings(),
         browser.testHandle.expectAjaxEvents(10000, true),
         browser.testHandle.expectErrors(10000, true),
-        browser.testHandle.expectResources(),
+        browser.testHandle.expectTrace(),
         browser.testHandle.expectInteractionEvents(),
         browser.url(await browser.testHandle.assetURL('instrumented.html', {
           init: {
@@ -116,7 +118,7 @@ describe('Manual Loader', () => {
       await browser.pause(2000)
       checkRum(rum.request)
       checkPVT(pvt.request)
-      checkSessionTrace(st.request)
+      testExpectedTrace({ data: st.request })
       checkSpa(spa.request)
 
       expect(ajax).toEqual(undefined)
@@ -141,7 +143,7 @@ describe('Manual Loader', () => {
         browser.testHandle.expectTimings(),
         browser.testHandle.expectAjaxEvents(10000, true),
         browser.testHandle.expectErrors(10000, true),
-        browser.testHandle.expectResources(),
+        browser.testHandle.expectTrace(),
         browser.testHandle.expectInteractionEvents(),
         browser.url(await browser.testHandle.assetURL('instrumented.html', {
           init: {
@@ -166,7 +168,7 @@ describe('Manual Loader', () => {
       await browser.pause(2000)
       checkRum(rum.request)
       checkPVT(pvt.request)
-      checkSessionTrace(st.request)
+      testExpectedTrace({ data: st.request })
       checkSpa(spa.request)
 
       expect(ajax).toEqual(undefined)
@@ -284,13 +286,13 @@ describe('Manual Loader', () => {
 
       const [rum2, sessionTrace] = await Promise.all([
         browser.testHandle.expectRum(),
-        browser.testHandle.expectResources(),
+        browser.testHandle.expectTrace(),
         browser.execute(function () {
           newrelic.start('session_trace')
         })
       ])
       checkRum(rum2.request)
-      checkSessionTrace(sessionTrace.request)
+      testExpectedTrace({ data: sessionTrace.request })
     })
 
     it('spa', async () => {
@@ -389,11 +391,6 @@ function checkMetrics ({ query, body }) {
 function checkPageAction ({ query, body }) {
   expect(query).toEqual(baseQuery)
   expect(body.ins?.[0]?.test).toEqual(1)
-}
-
-function checkSessionTrace ({ query, body }) {
-  expect(query).toEqual(baseQuery)
-  expect(body.res.length).toBeGreaterThanOrEqual(1)
 }
 
 function checkSpa ({ query, body }) {

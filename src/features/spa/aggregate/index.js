@@ -308,7 +308,7 @@ export class Aggregate extends AggregateBase {
       if (node && !this.sent) {
         this.sent = true
         node.dt = this.dt
-        if (node.dt.timestamp) {
+        if (node.dt?.timestamp) {
           node.dt.timestamp = timeKeeper.correctAbsoluteTimestamp(node.dt.timestamp)
         }
         node.jsEnd = node.start = this.startTime

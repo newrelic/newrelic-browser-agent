@@ -101,7 +101,7 @@ function startInteraction (onInteractionStart, afterInteractionFinish, options =
     onInteractionStart(() => { done = true })
   } else if (eventType === 'api') {
     interactionId = lastId++
-    options.handle.interaction('setAttribute', undefined, '__interactionId', interactionId)
+    options.handle.command('setAttribute', undefined, '__interactionId', interactionId)
     onInteractionStart(() => { done = true })
   } else {
     originals.ST(startFromUnwrappedTask, 100)
@@ -150,7 +150,7 @@ function startInteraction (onInteractionStart, afterInteractionFinish, options =
 
     function handleInteractionEvent (event) {
       interactionId = lastId++
-      options.newrelic.interaction('get').interaction('setAttribute', undefined, '__interactionId', interactionId)
+      options.newrelic.interaction().command('setAttribute', undefined, '__interactionId', interactionId)
       event.preventDefault()
       event.stopPropagation()
       onInteractionStart(() => { done = true })

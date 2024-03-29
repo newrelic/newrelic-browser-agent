@@ -4,6 +4,7 @@ import { ee } from '../../../common/event-emitter/contextual-ee'
 import { Spa } from '../index'
 import { now } from '../../../common/timing/now'
 import { getInfo, originals } from '../../../common/config/config'
+import { bundleId } from '../../../common/ids/bundle-id'
 
 jest.mock('../../../common/constants/runtime', () => ({
   __esModule: true,
@@ -22,7 +23,7 @@ jest.mock('../../../common/config/config', () => ({
   getInfo: jest.fn()
 }))
 
-let spaInstrument, spaAggregate, newrelic, ixn_context, mockCurrentInfo
+let spaInstrument, spaAggregate, newrelic, mockCurrentInfo
 const INTERACTION_API = 'api-ixn-'
 const agentIdentifier = 'abcdefg'
 beforeAll(async () => {
@@ -38,24 +39,32 @@ beforeAll(async () => {
   const tracerEE = spaInstrument.ee.get('tracer')
 
   newrelic = {
-    interaction: function (cmd, customTime = now(), ...args) { ixn_context = spaAggregate.ee.emit(INTERACTION_API + cmd, [customTime, ...args], ixn_context); return this },
-    createTracer: function (name, cb) {
-      const contextStore = {}; const hasCb = typeof cb === 'function'
-      spaAggregate.ee.emit(INTERACTION_API + 'tracer', [now(), name, contextStore], ixn_context)
-      return function () {
-        tracerEE.emit((hasCb ? '' : 'no-') + 'fn-start', [now(), ixn_context, hasCb], contextStore)
-        if (hasCb) {
-          try {
-            return cb.apply(this, arguments)
-          } catch (err) {
-            tracerEE.emit('fn-err', [arguments, this, err], contextStore)
-            // the error came from outside the agent, so don't swallow
-            throw err
-          } finally {
-            tracerEE.emit('fn-end', [now()], contextStore)
+    interaction: function () {
+      const newSandboxHandle = { // will have its own clean 'this' context specific to each newrelic.interaction() call
+        command: function (cmd, customTime = now(), ...args) {
+          spaAggregate.ee.emit(INTERACTION_API + cmd, [customTime, ...args], this)
+          return this // most spa APIs should return a handle obj that allows for chaining further commands
+        },
+        createTracer: function (name, cb) {
+          const contextStore = {}; const hasCb = typeof cb === 'function'
+          spaAggregate.ee.emit(INTERACTION_API + 'tracer', [now(), name, contextStore], this)
+          return function () {
+            tracerEE.emit((hasCb ? '' : 'no-') + 'fn-start', [now(), this, hasCb], contextStore)
+            if (hasCb) {
+              try {
+                return cb.apply(this, arguments)
+              } catch (err) {
+                tracerEE.emit('fn-err', [arguments, this, err], contextStore)
+                // the error came from outside the agent, so don't swallow
+                throw err
+              } finally {
+                tracerEE.emit('fn-end', [now()], contextStore)
+              }
+            }
           }
         }
       }
+      return newSandboxHandle.command('get')
     },
     setCustomAttribute: function (key, value) { mockCurrentInfo.jsAttributes[key] = value }
   }
@@ -78,7 +87,7 @@ function afterInteractionDone2 (spaAggregate, validator, resolve, interaction) {
   resolve()
 }
 
-test('simple sync api test', async () => {
+test('simple sync api test', done => {
   const validator = new helpers.InteractionValidator({
     name: 'interaction',
     attrs: {
@@ -106,29 +115,27 @@ test('simple sync api test', async () => {
     ]
   })
 
-  await new Promise(resolve => {
-    helpers.startInteraction(onInteractionStart, afterInteractionDone1.bind(null, spaAggregate, validator, resolve), { baseEE: ee.get(agentIdentifier), newrelic })
+  helpers.startInteraction(onInteractionStart, afterInteractionDone1.bind(null, spaAggregate, validator, done), { baseEE: ee.get(agentIdentifier), newrelic })
 
-    function onInteractionStart (cb) {
-      const interaction = newrelic.interaction('get').interaction('setAttribute', undefined, 'click-handler', true)
+  function onInteractionStart (cb) {
+    const interaction = newrelic.interaction().command('setAttribute', undefined, 'click-handler', true)
 
-      const val1 = interaction.createTracer('function 1', (val) => {
-        interaction.interaction('setAttribute', undefined, 'in-function-1', true)
-        expect(val).toEqual(123)
-        return val * 2
-      })(123)
+    const val1 = interaction.createTracer('function 1', (val) => {
+      interaction.command('setAttribute', undefined, 'in-function-1', true)
+      expect(val).toEqual(123)
+      return val * 2
+    })(123)
 
-      const val2 = interaction.createTracer('function 2', (val) => {
-        interaction.interaction('setAttribute', undefined, 'in-function-2', true)
-        expect(val).toEqual(456)
-        return val * 2
-      })(456)
+    const val2 = interaction.createTracer('function 2', (val) => {
+      interaction.command('setAttribute', undefined, 'in-function-2', true)
+      expect(val).toEqual(456)
+      return val * 2
+    })(456)
 
-      expect(val1).toEqual(246)
-      expect(val2).toEqual(912)
-      cb()
-    }
-  })
+    expect(val1).toEqual(246)
+    expect(val2).toEqual(912)
+    cb()
+  }
 })
 
 test('simple async api test', async () => {
@@ -154,8 +161,8 @@ test('simple async api test', async () => {
     helpers.startInteraction(onInteractionStart, afterInteractionDone1.bind(null, spaAggregate, validator, resolve), { baseEE: ee.get(agentIdentifier), newrelic })
 
     function onInteractionStart (cb) {
-      const tracer = newrelic.interaction('get').createTracer('requestAnimationFrame', function () {
-        newrelic.interaction('get').interaction('setAttribute', undefined, 'raf-cb', true)
+      const tracer = newrelic.interaction().createTracer('requestAnimationFrame', function () {
+        newrelic.interaction().command('setAttribute', undefined, 'raf-cb', true)
         return 123
       })
       requestAnimationFrame(() => {
@@ -189,11 +196,11 @@ test('async api no callback', async () => {
     helpers.startInteraction(onInteractionStart, afterInteractionDone1.bind(null, spaAggregate, validator, resolve), { baseEE: ee.get(agentIdentifier), newrelic })
 
     function onInteractionStart (cb) {
-      const asyncDone = newrelic.interaction('get').createTracer('custom-async')
+      const asyncDone = newrelic.interaction().createTracer('custom-async')
 
       originals.ST(asyncDone, 5)
       setTimeout(function () {
-        newrelic.interaction('get').interaction('setAttribute', undefined, 'setTimeout-cb', true)
+        newrelic.interaction().command('setAttribute', undefined, 'setTimeout-cb', true)
         cb()
       }, 5)
     }
@@ -201,7 +208,7 @@ test('async api no callback', async () => {
 })
 
 test('async api outside interaction', async () => {
-  const tracer = newrelic.interaction('get').createTracer('requestAnimationFrame', function (a, b, c) {
+  const tracer = newrelic.interaction().createTracer('requestAnimationFrame', function (a, b, c) {
     expect(a).toEqual(1)
     expect(b).toEqual(2)
     expect(c).toEqual(3)
@@ -217,7 +224,7 @@ test('async api outside interaction', async () => {
 })
 
 test('sync api outside interaction', async () => {
-  const returnVal = newrelic.interaction('get').createTracer('function 1', (a, b, c) => {
+  const returnVal = newrelic.interaction().createTracer('function 1', (a, b, c) => {
     expect(a).toEqual(1)
     expect(b).toEqual(2)
     expect(c).toEqual(3)
@@ -229,7 +236,7 @@ test('sync api outside interaction', async () => {
 
 test('async api outside interaction with throw', async () => {
   const expected = new Error()
-  const tracer = newrelic.interaction('get').createTracer('requestAnimationFrame', function (a, b, c) {
+  const tracer = newrelic.interaction().createTracer('requestAnimationFrame', function (a, b, c) {
     expect(a).toEqual(1)
     expect(b).toEqual(2)
     expect(c).toEqual(3)
@@ -247,7 +254,7 @@ test('sync api outside interaction with throw', async () => {
   const expected = new Error()
 
   try {
-    newrelic.interaction('get').createTracer('function 1', (a, b, c) => {
+    newrelic.interaction().createTracer('function 1', (a, b, c) => {
       expect(a).toEqual(1)
       expect(b).toEqual(2)
       expect(c).toEqual(3)
@@ -283,9 +290,9 @@ test('simple sync api test with throw', async () => {
 
     function onInteractionStart (cb) {
       try {
-        newrelic.interaction('get').createTracer('function 1', (val) => {
+        newrelic.interaction().createTracer('function 1', (val) => {
           setTimeout(() => {
-            newrelic.interaction('get').interaction('setAttribute', undefined, 'setTimeout-cb', true)
+            newrelic.interaction().command('setAttribute', undefined, 'setTimeout-cb', true)
             expect(val).toEqual(123)
             cb()
           }, 5)
@@ -322,9 +329,9 @@ test('simple async api test with throw', async () => {
     helpers.startInteraction(onInteractionStart, afterInteractionDone1.bind(null, spaAggregate, validator, resolve), { baseEE: ee.get(agentIdentifier), newrelic })
 
     function onInteractionStart (cb) {
-      const tracer = newrelic.interaction('get').createTracer('requestAnimationFrame', function () {
+      const tracer = newrelic.interaction().createTracer('requestAnimationFrame', function () {
         setTimeout(function () {
-          newrelic.interaction('get').interaction('setAttribute', undefined, 'setTimeout-cb', true)
+          newrelic.interaction().command('setAttribute', undefined, 'setTimeout-cb', true)
           cb()
         }, 5)
         throw expected
@@ -365,7 +372,7 @@ test('async api test with throw does not leave context', async () => {
     helpers.startInteraction(onInteractionStart, afterInteractionDone1.bind(null, spaAggregate, validator, resolve), { baseEE: ee.get(agentIdentifier), newrelic })
 
     function onInteractionStart (cb) {
-      const tracer = newrelic.interaction('get').createTracer('requestAnimationFrame', function () {
+      const tracer = newrelic.interaction().createTracer('requestAnimationFrame', function () {
         throw expected
       })
 
@@ -376,7 +383,7 @@ test('async api test with throw does not leave context', async () => {
           expect(err).toEqual(expected)
         }
         setTimeout(function () {
-          newrelic.interaction('get').interaction('setAttribute', undefined, 'setTimeout-cb', true)
+          newrelic.interaction().command('setAttribute', undefined, 'setTimeout-cb', true)
           cb()
         })
       }, 5)
@@ -422,11 +429,11 @@ test('simple sync api test with throw and sibling', async () => {
 
     function onInteractionStart (cb) {
       try {
-        newrelic.interaction('get').createTracer('function 1', (val) => {
+        newrelic.interaction().createTracer('function 1', (val) => {
           setTimeout(() => {
             expect(val).toEqual(123)
-            newrelic.interaction('get').interaction('setAttribute', undefined, 'nested-setTimeout-cb', true)
-            newrelic.interaction('get').createTracer('nested-child')()
+            newrelic.interaction().command('setAttribute', undefined, 'nested-setTimeout-cb', true)
+            newrelic.interaction().createTracer('nested-child')()
           })
           throw expected
         })(123)
@@ -435,8 +442,8 @@ test('simple sync api test with throw and sibling', async () => {
       }
 
       setTimeout(function () {
-        newrelic.interaction('get').interaction('setAttribute', undefined, 'sibling-setTimeout-cb', true)
-        newrelic.interaction('get').createTracer('sibling-child')()
+        newrelic.interaction().command('setAttribute', undefined, 'sibling-setTimeout-cb', true)
+        newrelic.interaction().createTracer('sibling-child')()
         cb()
       }, 5)
     }
@@ -457,9 +464,9 @@ test('end interaction', async () => {
 
     function onInteractionStart (cb) {
       setTimeout(() => {
-        setTimeout(newrelic.interaction('get').createTracer('wont-be-added'))
+        setTimeout(newrelic.interaction().createTracer('wont-be-added'))
         cb()
-        newrelic.interaction('get').interaction('end')
+        newrelic.interaction().command('end')
       }, 5)
     }
   })
@@ -479,7 +486,7 @@ test('custom interaction name', async () => {
 
     function onInteractionStart (cb) {
       setTimeout(() => {
-        newrelic.interaction('get').interaction('setName', undefined, 'salt water taffy')
+        newrelic.interaction().command('setName', undefined, 'salt water taffy')
         cb()
       }, 5)
     }
@@ -501,7 +508,7 @@ test('custom actionText', async () => {
 
   function onInteractionStart (cb) {
     setTimeout(() => {
-      newrelic.interaction('get').interaction('actionText', undefined, 'Albertosaurus')
+      newrelic.interaction().command('actionText', undefined, 'Albertosaurus')
       cb()
     }, 5)
   }
@@ -520,7 +527,7 @@ test('ignore interaction', async () => {
       setTimeout(() => {
         setTimeout(() => null)
         cb()
-        newrelic.interaction('get').interaction('ignore')
+        newrelic.interaction().command('ignore')
       }, 5)
     }
     function afterInteractionDone (interaction) {
@@ -551,11 +558,11 @@ test('custom attributes', async () => {
   await new Promise(resolve => helpers.startInteraction(onInteractionStart, afterInteractionDone2.bind(null, spaAggregate, validator, resolve), { baseEE: ee.get(agentIdentifier), newrelic }))
 
   function onInteractionStart (cb) {
-    newrelic.interaction('get').interaction('setAttribute', undefined, 'interaction-float', 123.456)
-    newrelic.interaction('get').interaction('setAttribute', undefined, 'interaction-string', '123')
-    newrelic.interaction('get').interaction('setAttribute', undefined, 'interaction-true', true)
-    newrelic.interaction('get').interaction('setAttribute', undefined, 'interaction-false', false)
-    newrelic.interaction('get').interaction('setAttribute', undefined, 'interaction-null', null)
+    newrelic.interaction().command('setAttribute', undefined, 'interaction-float', 123.456)
+    newrelic.interaction().command('setAttribute', undefined, 'interaction-string', '123')
+    newrelic.interaction().command('setAttribute', undefined, 'interaction-true', true)
+    newrelic.interaction().command('setAttribute', undefined, 'interaction-false', false)
+    newrelic.interaction().command('setAttribute', undefined, 'interaction-null', null)
     setTimeout(cb, 5)
   }
 })
@@ -574,13 +581,13 @@ test('custom attributes and interaction attributes', async () => {
     children: []
   })
 
-  newrelic.interaction('get').interaction('setAttribute', undefined, 'outside', 'true')
+  newrelic.interaction().command('setAttribute', undefined, 'outside', 'true')
   newrelic.setCustomAttribute('customOutside', 'true')
   newrelic.setCustomAttribute('override', 'false')
   await new Promise(resolve => helpers.startInteraction(onInteractionStart, afterInteractionDone2.bind(null, spaAggregate, validator, resolve), { baseEE: ee.get(agentIdentifier), newrelic }))
 
   function onInteractionStart (cb) {
-    newrelic.interaction('get').interaction('setAttribute', undefined, 'inside', 0)
+    newrelic.interaction().command('setAttribute', undefined, 'inside', 0)
     newrelic.setCustomAttribute('inside', 1)
     newrelic.setCustomAttribute('customInside', 'true')
     newrelic.setCustomAttribute('override', 'true')
@@ -609,23 +616,23 @@ test('context store and onEnd', async () => {
 
   function onInteractionStart (cb) {
     let contextStore = null
-    newrelic.interaction('get').interaction('getContext', undefined, function (ctx) {
+    newrelic.interaction().command('getContext', undefined, function (ctx) {
       contextStore = ctx
       contextStore.foo = 'bar'
     })
-    setTimeout(newrelic.interaction('get').createTracer('setTimeout', function () {
-      newrelic.interaction('get').interaction('getContext', undefined, function (ctx) {
+    setTimeout(newrelic.interaction().createTracer('setTimeout', function () {
+      newrelic.interaction().command('getContext', undefined, function (ctx) {
         expect(contextStore).toEqual(ctx) // should get right context in timeout
-        newrelic.interaction('get').interaction('getContext', undefined, function (ctx) {
-          newrelic.interaction('get').interaction('setAttribute', undefined, 'foo', ctx.foo)
+        newrelic.interaction().command('getContext', undefined, function (ctx) {
+          newrelic.interaction().command('setAttribute', undefined, 'foo', ctx.foo)
           cb()
         })
       })
     }), 5)
 
-    newrelic.interaction('get').interaction('onEnd', undefined, (ctx) => {
+    newrelic.interaction().command('onEnd', undefined, (ctx) => {
       expect(contextStore).toEqual(ctx) // should get right context on end
-      newrelic.interaction('get').interaction('setAttribute', undefined, 'otherFoo', ctx.foo)
+      newrelic.interaction().command('setAttribute', undefined, 'otherFoo', ctx.foo)
     })
   }
 })
@@ -640,7 +647,7 @@ test('save', async () => {
     helpers.startInteraction(onInteractionStart, afterInteractionDone, { baseEE: ee.get(agentIdentifier), newrelic })
 
     function onInteractionStart (cb) {
-      newrelic.interaction('get').interaction('save')
+      newrelic.interaction().command('save')
       cb()
     }
     function afterInteractionDone (interaction) {
@@ -661,8 +668,8 @@ test('save with ignore', async () => {
     helpers.startInteraction(onInteractionStart, afterInteractionDone, { baseEE: ee.get(agentIdentifier), newrelic })
 
     function onInteractionStart (cb) {
-      newrelic.interaction('get').interaction('ignore')
-      newrelic.interaction('get').interaction('save')
+      newrelic.interaction().command('ignore')
+      newrelic.interaction().command('save')
       cb()
     }
     function afterInteractionDone (interaction) {
@@ -684,8 +691,8 @@ test('save with ignore after', async () => {
     helpers.startInteraction(onInteractionStart, afterInteractionDone, { baseEE: ee.get(agentIdentifier), newrelic })
 
     function onInteractionStart (cb) {
-      newrelic.interaction('get').interaction('save')
-      newrelic.interaction('get').interaction('ignore')
+      newrelic.interaction().command('save')
+      newrelic.interaction().command('ignore')
       cb()
     }
     function afterInteractionDone (interaction) {
@@ -697,7 +704,7 @@ test('save with ignore after', async () => {
   })
 })
 
-test('interaction outside interaction', async () => {
+test('interaction outside interaction', done => {
   const validator = new helpers.InteractionValidator({
     name: 'interaction',
     attrs: {
@@ -716,196 +723,184 @@ test('interaction outside interaction', async () => {
     }]
   })
 
-  await new Promise(resolve => {
-    setTimeout(function () {
-      const interaction = newrelic.interaction('get')
+  setTimeout(function () {
+    const interaction = newrelic.interaction()
 
-      helpers.startInteraction(onInteractionStart, afterInteractionDone2.bind(null, spaAggregate, validator, resolve), {
-        baseEE: ee.get(agentIdentifier),
-        newrelic,
-        eventType: 'api',
-        handle: interaction
-      })
-    }, 0)
-
-    setTimeout(function () {
-      newrelic.interaction('get').interaction('setAttribute', undefined, 'excluded', true)
+    helpers.startInteraction(onInteractionStart, afterInteractionDone2.bind(null, spaAggregate, validator, done), {
+      baseEE: ee.get(agentIdentifier),
+      newrelic,
+      eventType: 'api',
+      handle: interaction
     })
+  }, 0)
+
+  setTimeout(function () {
+    newrelic.interaction().command('setAttribute', undefined, 'excluded', true)
   })
 
   function onInteractionStart (cb) {
-    newrelic.interaction('get').interaction('setAttribute', undefined, 'included', true)
+    newrelic.interaction().command('setAttribute', undefined, 'included', true)
     setTimeout(function () {
-      newrelic.interaction('get').interaction('setAttribute', undefined, 'delayed', true)
-      setTimeout(newrelic.interaction('get').createTracer('timeout', cb))
+      newrelic.interaction().command('setAttribute', undefined, 'delayed', true)
+      setTimeout(newrelic.interaction().createTracer('timeout', cb))
     }, 50)
   }
 })
 
-// test('interaction outside wrapped function', async () => {
+test('interaction outside wrapped function', done => {
+  const validator = new helpers.InteractionValidator({
+    name: 'interaction',
+    attrs: {
+      trigger: 'api',
+      custom: {
+        delayed: true,
+        included: true
+      }
+    },
+    children: [{
+      type: 'customTracer',
+      attrs: {
+        name: 'outer'
+      },
+      children: [{
+        type: 'customTracer',
+        attrs: {
+          name: 'timeout'
+        },
+        children: []
+      }]
+    }]
+  })
 
-//   const validator = new helpers.InteractionValidator({
-//     name: 'interaction',
-//     attrs: {
-//       trigger: 'api',
-//       custom: {
-//         delayed: true,
-//         included: true
-//       }
-//     },
-//     children: [{
-//       type: 'customTracer',
-//       attrs: {
-//         name: 'outer'
-//       },
-//       children: [{
-//         type: 'customTracer',
-//         attrs: {
-//           name: 'timeout'
-//         },
-//         children: []
-//       }]
-//     }]
-//   })
+  setTimeout[`nr@original:${bundleId}`].call(window, function () {
+    const interaction = newrelic.interaction()
 
-//   setTimeout[`nr@original:${bundleId}`].call(window, function () {
-//     var interaction = newrelic.interaction('get')
+    helpers.startInteraction(onInteractionStart, afterInteractionDone2.bind(null, spaAggregate, validator, done), {
+      baseEE: ee.get(agentIdentifier),
+      newrelic,
+      eventType: 'api',
+      handle: interaction
+    })
 
-//     await new Promise(resolve => helpers.startInteraction(onInteractionStart, afterInteractionDone2.bind(null, spaAggregate, validator, resolve), { baseEE: ee.get(agentIdentifier), newrelic,
-//       eventType: 'api',
-//       handle: interaction
-//     }) )
+    function onInteractionStart (cb) {
+      newrelic.interaction().command('setAttribute', undefined, 'alsoExcluded', true) // should not have applied,... but somehow applied
+      interaction.command('setAttribute', undefined, 'included', true)
+      setTimeout(interaction.createTracer('outer', function () {
+        newrelic.interaction().command('setAttribute', undefined, 'delayed', true)
+        setTimeout(newrelic.interaction().createTracer('timeout', cb))
+      }), 50)
+    }
+  }, 0)
 
-//     function onInteractionStart (cb) {
-//       newrelic.interaction('get').interaction('setAttribute', undefined, 'alsoExcluded', true)
-//       interaction.interaction('setAttribute', undefined, 'included', true)
-//       setTimeout(interaction.createTracer('outer', function () {
-//         newrelic.interaction('get').interaction('setAttribute', undefined, 'delayed', true)
-//         setTimeout(newrelic.interaction('get').createTracer('timeout', cb))
-//       }), 50)
-//     }
-//   }, 0)
+  setTimeout(function () {
+    newrelic.interaction().command('setAttribute', undefined, 'excluded', true)
+  })
+})
 
-//   setTimeout(function () {
-//     newrelic.interaction('get').interaction('setAttribute', undefined, 'excluded', true)
-//   })
+test('set trigger', done => {
+  const validator = new helpers.InteractionValidator({
+    name: 'interaction',
+    attrs: {
+      trigger: 'bar',
+      customName: 'foo'
+    },
+    children: [{
+      type: 'customTracer',
+      attrs: {
+        name: 'timeout'
+      },
+      children: []
+    }]
+  })
 
-// })
+  helpers.startInteraction(onInteractionStart, afterInteractionDone2.bind(null, spaAggregate, validator, done), { baseEE: ee.get(agentIdentifier), newrelic })
 
-// test('set trigger', async () => {
+  function onInteractionStart (cb) {
+    newrelic.interaction().command('setName', undefined, 'foo', 'foo')
+    setTimeout(newrelic.interaction().createTracer('timeout', function () {
+      newrelic.interaction().command('setName', undefined, null, 'bar')
+      cb()
+    }), 50)
+  }
+  setTimeout(function () {
+    newrelic.interaction().command('setAttribute', undefined, 'excluded', true)
+  })
+})
 
-//   const validator = new helpers.InteractionValidator({
-//     name: 'interaction',
-//     attrs: {
-//       trigger: 'bar',
-//       customName: 'foo'
-//     },
-//     children: [{
-//       type: 'customTracer',
-//       attrs: {
-//         name: 'timeout'
-//       },
-//       children: []
-//     }]
-//   })
+test('createTracer no name', done => {
+  const validator = new helpers.InteractionValidator({
+    name: 'interaction',
+    attrs: {
+      custom: {
+        foo: 'bar'
+      }
+    },
+    children: [{
+      type: 'customTracer',
+      attrs: {
+        name: 'timeout'
+      },
+      children: []
+    }]
+  })
 
-//   await new Promise(resolve => helpers.startInteraction(onInteractionStart, afterInteractionDone2.bind(null, spaAggregate, validator, resolve), { baseEE: ee.get(agentIdentifier), newrelic }) )
+  helpers.startInteraction(onInteractionStart, afterInteractionDone2.bind(null, spaAggregate, validator, done), { baseEE: ee.get(agentIdentifier), newrelic })
 
-//   function onInteractionStart (cb) {
-//     newrelic.interaction('get').interaction('setName', undefined, 'foo', 'foo')
-//     setTimeout(newrelic.interaction('get').createTracer('timeout', function () {
-//       newrelic.interaction('get').interaction('setName', undefined, null, 'bar')
-//       cb()
-//     }), 50)
-//   }
+  function onInteractionStart (cb) {
+    setTimeout(newrelic.interaction().createTracer(null, function () {
+      setTimeout(newrelic.interaction().createTracer('timeout', function () {
+        newrelic.interaction().command('setAttribute', undefined, 'foo', 'bar')
+        cb()
+      }))
+    }), 50)
+  }
+})
 
-//   setTimeout(function () {
-//     newrelic.interaction('get').interaction('setAttribute', undefined, 'excluded', true)
-//   })
+test('createTracer no name, no callback', done => {
+  const validator = new helpers.InteractionValidator({
+    name: 'interaction',
+    children: []
+  })
 
-// })
+  helpers.startInteraction(onInteractionStart, afterInteractionDone, { baseEE: ee.get(agentIdentifier), newrelic })
 
-// test('createTracer no name', async () => {
+  function onInteractionStart (cb) {
+    const start = now()
+    cb()
+    setTimeout[`nr@original:${bundleId}`].call(window, newrelic.interaction().createTracer(), 50)
+    newrelic.interaction().command('onEnd', undefined, function () {
+      expect(now() - start).toBeGreaterThanOrEqual(50)
+    })
+  }
 
-//   const validator = new helpers.InteractionValidator({
-//     name: 'interaction',
-//     attrs: {
-//       custom: {
-//         foo: 'bar'
-//       }
-//     },
-//     children: [{
-//       type: 'customTracer',
-//       attrs: {
-//         name: 'timeout'
-//       },
-//       children: []
-//     }]
-//   })
+  function afterInteractionDone (interaction) {
+    expect(interaction.root.end - interaction.root.start).toBeLessThan(50) // should not include duration of no name, no callback tracer
+    expect(interaction.root.end).toBeTruthy() // interaction should be finished and have an end time
+    expect(spaAggregate.state.currentNode?.id).toBeUndefined() // interaction should be null outside of async chain
+    expect(interaction.ignored).toBeFalsy() // interaction should not be ignored
+    validator.validate(interaction)
+    done()
+  }
+})
 
-//   await new Promise(resolve => helpers.startInteraction(onInteractionStart, afterInteractionDone2.bind(null, spaAggregate, validator, resolve), { baseEE: ee.get(agentIdentifier), newrelic }) )
+test('reuse handle from outside interaction', done => {
+  const validator = new helpers.InteractionValidator({
+    name: 'interaction',
+    attrs: {
+      custom: {
+        foo: 'baz'
+      }
+    },
+    children: []
+  })
+  let interactionHandle = null
 
-//   function onInteractionStart (cb) {
-//     setTimeout(newrelic.interaction('get').createTracer(null, function () {
-//       setTimeout(newrelic.interaction('get').createTracer('timeout', function () {
-//         newrelic.interaction('get').interaction('setAttribute', undefined, 'foo', 'bar')
-//         cb()
-//       }))
-//     }), 50)
-//   }
+  helpers.startInteraction(onInteractionStart, afterInteractionDone2.bind(null, spaAggregate, validator, done), { baseEE: ee.get(agentIdentifier), newrelic })
 
-// })
-
-// test('createTracer no name, no callback', async () => {
-
-//   const validator = new helpers.InteractionValidator({
-//     name: 'interaction',
-//     children: []
-//   })
-
-//   helpers.startInteraction(onInteractionStart, afterInteractionDone, { baseEE: ee.get(agentIdentifier), newrelic })
-
-//   function onInteractionStart (cb) {
-//     var start = helpers.now()
-//     cb()
-//     setTimeout[`nr@original:${bundleId}`].call(window, newrelic.interaction('get').createTracer(), 50)
-//     newrelic.interaction('get').interaction('onEnd', undefined, function () {
-//       t.ok(helpers.now() - start >= 50)
-//     })
-//   }
-
-//   function afterInteractionDone (interaction) {
-//     t.ok(interaction.root.end - interaction.root.start < 50, 'should not include duration of no name, no callback tracer')
-//     t.ok(interaction.root.end, 'interaction should be finished and have an end time')
-//     t.notok(helpers.currentNodeId(), 'interaction should be null outside of async chain')
-//     t.notok(interaction.ignored, 'interaction should not be ignored')
-//     validator.validate(t, interaction)
-//     t.end()
-//   }
-// })
-
-// test('reuse handle from outside interaction', async () => {
-
-//   const validator = new helpers.InteractionValidator({
-//     name: 'interaction',
-//     attrs: {
-//       custom: {
-//         foo: 'baz'
-//       }
-//     },
-//     children: []
-//   })
-
-//   var interactionHandle = null
-
-//   await new Promise(resolve => helpers.startInteraction(onInteractionStart, afterInteractionDone2.bind(null, spaAggregate, validator, resolve), { baseEE: ee.get(agentIdentifier), newrelic }) )
-
-//   function onInteractionStart (cb) {
-//     interactionHandle = newrelic.interaction('get')
-//     cb()
-
-//     interactionHandle.interaction('setAttribute', undefined, 'foo', 'bar')
-//     newrelic.interaction('get').interaction('setAttribute', undefined, 'foo', 'baz')
-//   }
-
-// })
+  function onInteractionStart (cb) {
+    interactionHandle = newrelic.interaction()
+    cb()
+    interactionHandle.command('setAttribute', undefined, 'foo', 'bar')
+    newrelic.interaction().command('setAttribute', undefined, 'foo', 'baz')
+  }
+})

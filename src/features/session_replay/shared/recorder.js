@@ -11,15 +11,18 @@ import { FEATURE_NAMES } from '../../../loaders/features/features'
 
 export class Recorder {
   /** Each page mutation or event will be stored (raw) in this array. This array will be cleared on each harvest */
-  #events = new RecorderEvents()
+  #events
   /** Backlog used for a 2-part sliding window to guarantee a 15-30s buffer window */
-  #backloggedEvents = new RecorderEvents()
+  #backloggedEvents
   /** array of recorder events -- Will be filled only if forced harvest was triggered and harvester does not exist */
-  #preloaded = [new RecorderEvents()]
+  #preloaded
   /** flag that if true, blocks events from being "stored".  Only set to true when a full snapshot has incomplete nodes (only stylesheets ATM) */
   #fixing = false
 
   constructor (parent) {
+    this.#events = new RecorderEvents({ canCorrectTimestamps: !!parent.timeKeeper })
+    this.#backloggedEvents = new RecorderEvents({ canCorrectTimestamps: !!parent.timeKeeper })
+    this.#preloaded = [new RecorderEvents({ canCorrectTimestamps: !!parent.timeKeeper })]
     /** True when actively recording, false when paused or stopped */
     this.recording = false
     /** The pointer to the current bucket holding rrweb events */
@@ -37,9 +40,14 @@ export class Recorder {
   }
 
   getEvents () {
-    if (this.#preloaded[0]?.events.length) return { ...this.#preloaded[0], type: 'preloaded' }
+    if (this.#preloaded[0]?.events.length) {
+      const preloadedEvents = this.returnCorrectTimestamps(this.#preloaded[0])
+      return { ...this.#preloaded[0], events: preloadedEvents, type: 'preloaded' }
+    }
+    const backloggedEvents = this.returnCorrectTimestamps(this.#backloggedEvents)
+    const events = this.returnCorrectTimestamps(this.#events)
     return {
-      events: [...this.#backloggedEvents.events, ...this.#events.events].filter(x => x),
+      events: [...backloggedEvents, ...events].filter(x => x),
       type: 'standard',
       cycleTimestamp: Math.min(this.#backloggedEvents.cycleTimestamp, this.#events.cycleTimestamp),
       payloadBytesEstimation: this.#backloggedEvents.payloadBytesEstimation + this.#events.payloadBytesEstimation,
@@ -50,12 +58,21 @@ export class Recorder {
     }
   }
 
+  returnCorrectTimestamps (events) {
+    return events.canCorrectTimestamps
+      ? events.events
+      : events.events.map(({ __serialized, timestamp, ...e }) => {
+        console.log(this.parent.timeKeeper.correctedOriginTime, '|', timestamp, '-->', this.parent.timeKeeper.correctAbsoluteTimestamp(timestamp))
+        return { timestamp: this.parent.timeKeeper.correctAbsoluteTimestamp(timestamp), ...e }
+      })
+  }
+
   /** Clears the buffer (this.#events), and resets all payload metadata properties */
   clearBuffer () {
     if (this.#preloaded[0]?.events.length) this.#preloaded.shift()
     else if (this.parent.mode === MODE.ERROR) this.#backloggedEvents = this.#events
-    else this.#backloggedEvents = new RecorderEvents()
-    this.#events = new RecorderEvents()
+    else this.#backloggedEvents = new RecorderEvents({ canCorrectTimestamps: !!this.parent.timeKeeper })
+    this.#events = new RecorderEvents({ canCorrectTimestamps: !!this.parent.timeKeeper })
   }
 
   /** Begin recording using configured recording lib */
@@ -122,12 +139,16 @@ export class Recorder {
   /** Store a payload in the buffer (this.#events).  This should be the callback to the recording lib noticing a mutation */
   store (event, isCheckout) {
     if (!event) return
-    event.__serialized = stringify(event)
 
     if (!this.parent.scheduler && this.#preloaded.length) this.currentBufferTarget = this.#preloaded[this.#preloaded.length - 1]
     else this.currentBufferTarget = this.#events
 
     if (this.parent.blocked) return
+
+    if (this.currentBufferTarget.canCorrectTimestamps) {
+      event.timestamp = this.parent.timeKeeper.correctAbsoluteTimestamp(event.timestamp)
+    }
+    event.__serialized = stringify(event)
     const eventBytes = event.__serialized.length
     /** The estimated size of the payload after compression */
     const payloadSize = this.getPayloadSize(eventBytes)
@@ -160,7 +181,7 @@ export class Recorder {
         this.parent.scheduler.runHarvest()
       } else {
         // we are still in "preload" and it triggered a "stop point".  Make a new set, which will get pointed at on next cycle
-        this.#preloaded.push(new RecorderEvents())
+        this.#preloaded.push(new RecorderEvents({ canCorrectTimestamps: !!this.parent.timeKeeper }))
       }
     }
   }

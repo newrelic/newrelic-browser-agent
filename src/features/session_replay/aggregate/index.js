@@ -254,7 +254,10 @@ export class Aggregate extends AggregateBase {
 
     let len = 0
     if (!!this.gzipper && !!this.u8) {
-      payload.body = this.gzipper(this.u8(`[${payload.body.map(e => e.__serialized).join(',')}]`))
+      payload.body = this.gzipper(this.u8(`[${payload.body.map(e => {
+        if (e.__serialized) return e.__serialized
+        return stringify(e)
+      }).join(',')}]`))
       len = payload.body.length
       this.scheduler.opts.gzip = true
     } else {
@@ -300,12 +303,12 @@ export class Aggregate extends AggregateBase {
       recorderEvents.hasMeta = !!events.find(x => x.type === RRWEB_EVENT_TYPES.Meta)
     }
 
-    const agentOffset = getRuntime(this.agentIdentifier).offset
+    const agentOffset = this.timeKeeper.correctedOriginTime
     const relativeNow = TimeKeeper.now()
 
     const firstEventTimestamp = events[0]?.timestamp // from rrweb node
     const lastEventTimestamp = events[events.length - 1]?.timestamp // from rrweb node
-    const firstTimestamp = firstEventTimestamp || recorderEvents.cycleTimestamp // from rrweb node || from when the harvest cycle started
+    const firstTimestamp = firstEventTimestamp || this.timeKeeper.correctAbsoluteTimestamp(recorderEvents.cycleTimestamp) // from rrweb node || from when the harvest cycle started
     const lastTimestamp = lastEventTimestamp || agentOffset + relativeNow
 
     const agentMetadata = agentRuntime.appMetadata?.agents?.[0] || {}

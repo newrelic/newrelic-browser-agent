@@ -1,20 +1,12 @@
-import { testRumRequest } from '../../tools/testing-server/utils/expect-tests'
 import { faker } from '@faker-js/faker'
-import { supportsFetch } from '../../tools/browser-matcher/common-matchers.mjs'
+import { notIE, supportsFetch } from '../../tools/browser-matcher/common-matchers.mjs'
+import { config, decodeAttributes } from './session-replay/helpers'
 
 describe('NR Server Time', () => {
   let serverTime
 
   beforeEach(async () => {
-    serverTime = Date.now() - (60 * 60 * 1000) // Subtract an hour to make testing easier
-
-    await browser.testHandle.scheduleReply('bamServer', {
-      test: testRumRequest,
-      permanent: true,
-      setHeaders: [
-        { key: 'Date', value: (new Date(serverTime)).toUTCString() }
-      ]
-    })
+    serverTime = await browser.mockDateResponse()
   })
 
   it('should send jserror with timestamp prior to rum date header', async () => {
@@ -43,6 +35,47 @@ describe('NR Server Time', () => {
     const error = errors.request.body.err[0]
     expect(error.params.firstOccurrenceTimestamp).toEqual(error.params.timestamp)
     expect(error.params.timestamp).toBeWithin(serverTime, serverTime + 5000)
+  })
+
+  it.withBrowsersMatching(notIE)('should send session replay with timestamp prior to rum date header', async () => {
+    await browser.destroyAgentSession()
+    await browser.testHandle.clearScheduledReplies('bamServer')
+    serverTime = await browser.mockDateResponse(true)
+    const [{ request: replayData }, { originTime, correctedOriginTime }] = await Promise.all([
+      browser.testHandle.expectBlob(),
+      browser.execute(function () {
+        var tk = Object.values(newrelic.initializedAgents)[0].timeKeeper
+        return { originTime: tk.originTime, correctedOriginTime: tk.correctedOriginTime }
+      }),
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { sampling_rate: 100, preload: true } })))
+        .then(() => browser.waitForSessionReplayRecording())
+    ])
+
+    const attrs = decodeAttributes(replayData.query.attributes)
+    const firstTimestamp = attrs['replay.firstTimestamp']
+    expect(firstTimestamp).toBeGreaterThan(correctedOriginTime)
+    expect(firstTimestamp).toBeLessThan(originTime)
+    await browser.destroyAgentSession()
+  })
+
+  it('should send session replay with timestamp after rum date header', async () => {
+    await browser.destroyAgentSession()
+    await browser.testHandle.clearScheduledReplies('bamServer')
+    serverTime = await browser.mockDateResponse(true)
+    const [{ request: replayData }, { originTime, correctedOriginTime }] = await Promise.all([
+      browser.testHandle.expectBlob(),
+      browser.execute(function () {
+        var tk = Object.values(newrelic.initializedAgents)[0].timeKeeper
+        return { originTime: tk.originTime, correctedOriginTime: tk.correctedOriginTime }
+      }),
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { sampling_rate: 100, preload: false } })))
+        .then(() => browser.waitForSessionReplayRecording())
+    ])
+    const attrs = decodeAttributes(replayData.query.attributes)
+    const firstTimestamp = attrs['replay.firstTimestamp']
+    expect(firstTimestamp).toBeGreaterThan(correctedOriginTime)
+    expect(firstTimestamp).toBeLessThan(originTime)
+    await browser.destroyAgentSession()
   })
 
   it('should send page action with timestamp before rum date header', async () => {

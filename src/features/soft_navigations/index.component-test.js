@@ -189,24 +189,7 @@ describe('soft navigations', () => {
             latestIxnCtx = softNavAggregate.ee.emit(INTERACTION_API + cmd, [customTime, ...args], this)
             return this // most spa APIs should return a handle obj that allows for chaining further commands
           }
-          // createTracer: function (name, cb) {
-          //   const contextStore = {}; const hasCb = typeof cb === 'function'
-          //   spaAggregate.ee.emit(INTERACTION_API + 'tracer', [now(), name, contextStore], this)
-          //   return function () {
-          //     tracerEE.emit((hasCb ? '' : 'no-') + 'fn-start', [now(), this, hasCb], contextStore)
-          //     if (hasCb) {
-          //       try {
-          //         return cb.apply(this, arguments)
-          //       } catch (err) {
-          //         tracerEE.emit('fn-err', [arguments, this, err], contextStore)
-          //         // the error came from outside the agent, so don't swallow
-          //         throw err
-          //       } finally {
-          //         tracerEE.emit('fn-end', [now()], contextStore)
-          //       }
-          //     }
-          //   }
-          // }
+          // No need for createTracer dummy fn tests?
         }
         return newSandboxHandle.command('get', newInteractionOpts?.customIxnCreationTime, newInteractionOpts)
       }

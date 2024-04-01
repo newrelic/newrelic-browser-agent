@@ -177,7 +177,6 @@ module.exports = fp(async function (fastify, testServer) {
       assert.strictEqual(request.body.x.value, '5')
       reply.send('good')
     } catch (e) {
-      console.log(e)
       reply.send('bad')
     }
   })

@@ -2,7 +2,7 @@ import helpers from './helpers'
 import { Aggregator } from '../../../common/aggregate/aggregator'
 import { ee } from '../../../common/event-emitter/contextual-ee'
 import { Spa } from '../index'
-import { now } from '../../../common/timing/now'
+import { TimeKeeper } from '../../../common/timing/time-keeper'
 import { getInfo, originals } from '../../../common/config/config'
 import { bundleId } from '../../../common/ids/bundle-id'
 
@@ -22,6 +22,7 @@ jest.mock('../../../common/config/config', () => ({
   isConfigured: jest.fn().mockReturnValue(true),
   getInfo: jest.fn()
 }))
+const now = TimeKeeper.now
 
 let spaInstrument, spaAggregate, newrelic, mockCurrentInfo
 const INTERACTION_API = 'api-ixn-'

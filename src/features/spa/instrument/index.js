@@ -8,9 +8,9 @@ import {
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { getRuntime } from '../../../common/config/config'
-import { now } from '../../../common/timing/now'
 import * as CONSTANTS from '../constants'
 import { isBrowserScope } from '../../../common/constants/runtime'
+import { TimeKeeper } from '../../../common/timing/time-keeper'
 
 const {
   FEATURE_NAME, START, END, BODY, CB_END, JS_TIME, FETCH, FN_START, CB_START, FN_END
@@ -82,7 +82,7 @@ export class Instrument extends InstrumentBase {
     function startTimestamp () {
       depth++
       startHash = window.location.hash
-      this[FN_START] = now()
+      this[FN_START] = TimeKeeper.now()
     }
 
     function endTimestamp () {
@@ -91,14 +91,14 @@ export class Instrument extends InstrumentBase {
         trackURLChange(0, true)
       }
 
-      var time = now()
+      var time = TimeKeeper.now()
       this[JS_TIME] = (~~this[JS_TIME]) + time - this[FN_START]
       this[FN_END] = time
     }
 
     function timestamp (ee, type) {
       ee.on(type, function () {
-        this[type] = now()
+        this[type] = TimeKeeper.now()
       })
     }
 

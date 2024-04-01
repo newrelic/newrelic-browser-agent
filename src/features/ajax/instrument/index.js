@@ -8,7 +8,6 @@ import { id } from '../../../common/ids/id'
 import { ffVersion, globalScope, isBrowserScope } from '../../../common/constants/runtime'
 import { dataSize } from '../../../common/util/data-size'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
-import { now } from '../../../common/timing/now'
 import { wrapFetch, wrapXhr } from '../../../common/wrap'
 import { parseUrl } from '../../../common/url/parse-url'
 import { DT } from './distributed-tracing'
@@ -17,6 +16,7 @@ import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { SUPPORTABILITY_METRIC } from '../../metrics/constants'
+import { TimeKeeper } from '../../../common/timing/time-keeper'
 
 var handlers = ['load', 'error', 'abort', 'timeout']
 var handlersLen = handlers.length
@@ -156,7 +156,7 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
       if (size) metrics.txSize = size
     }
 
-    this.startTime = now()
+    this.startTime = TimeKeeper.now()
 
     this.body = data
 
@@ -206,7 +206,7 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
   }
 
   function onXhrResolved () {
-    this.endTime = now()
+    this.endTime = TimeKeeper.now()
   }
 
   // Listen for load listeners to be added to xhr objects
@@ -222,12 +222,12 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
   function onFnStart (args, xhr, methodName) {
     if (xhr instanceof origXHR) {
       if (methodName === 'onload') this.onload = true
-      if ((args[0] && args[0].type) === 'load' || this.onload) this.xhrCbStart = now()
+      if ((args[0] && args[0].type) === 'load' || this.onload) this.xhrCbStart = TimeKeeper.now()
     }
   }
 
   function onFnEnd (args, xhr) {
-    if (this.xhrCbStart) ee.emit('xhr-cb-time', [now() - this.xhrCbStart, this.onload, xhr], xhr)
+    if (this.xhrCbStart) ee.emit('xhr-cb-time', [TimeKeeper.now() - this.xhrCbStart, this.onload, xhr], xhr)
   }
 
   // this event only handles DT
@@ -310,7 +310,7 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
   function onFetchStart (fetchArguments, dtPayload) {
     this.params = {}
     this.metrics = {}
-    this.startTime = now()
+    this.startTime = TimeKeeper.now()
     this.dt = dtPayload
 
     if (fetchArguments.length >= 1) this.target = fetchArguments[0]
@@ -340,7 +340,7 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
   // we capture failed call as status 0, the actual error is ignored
   // eslint-disable-next-line handle-callback-err
   function onFetchDone (_, res) {
-    this.endTime = now()
+    this.endTime = TimeKeeper.now()
     if (!this.params) {
       this.params = {}
     }
@@ -355,7 +355,7 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
     var metrics = {
       txSize: this.txSize,
       rxSize: responseSize,
-      duration: now() - this.startTime
+      duration: TimeKeeper.now() - this.startTime
     }
 
     handler('xhr', [this.params, metrics, this.startTime, this.endTime, 'fetch'], this, FEATURE_NAMES.ajax)
@@ -374,7 +374,7 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
     }
 
     if (params.aborted) return
-    metrics.duration = now() - this.startTime
+    metrics.duration = TimeKeeper.now() - this.startTime
     if (!this.loadCaptureCalled && xhr.readyState === 4) {
       captureXhrData(this, xhr)
     } else if (params.status == null) {

@@ -44,30 +44,30 @@ describe('error payloads', () => {
 
   it('simultaneous errors - should set a timestamp, tied to the FIRST error seen - noticeError', async () => {
     await browser.url(await browser.testHandle.assetURL('instrumented.html')) // Setup expects before loading the page
-      .then(() => browser.waitForFeatureAggregate('jserrors'))
+      .then(() => browser.waitForAgentLoad())
 
-    const [runtimeOffset, start, end] = await browser.execute(function () {
-      var count = 0
-      var runtimeOffset = Object.entries(newrelic.initializedAgents)[0][1].runtime.offset
+    const [relativeTimestamp, absoluteTimestamp] = await browser.execute(function () {
+      var timeKeeper = Object.values(newrelic.initializedAgents)[0].timeKeeper
       var start = performance.now()
-      while (count++ < 20) newrelic.noticeError(new Error('test'))
-      var end = performance.now()
-      return [runtimeOffset, start, end]
+      for (var i = 0; i < 20; i++) { newrelic.noticeError(new Error('test')) }
+      return [start, timeKeeper.convertRelativeTimestamp(start)]
     })
 
     const { request: { body: { err } } } = await browser.testHandle.expectErrors()
 
-    expect(err[0].params.firstOccurrenceTimestamp).toBeWithin(Math.floor(runtimeOffset + start), Math.floor(runtimeOffset + end + 10))
+    expect(relativeTimestamp).toBeWithin(err[0].metrics.time.min - 1, err[0].metrics.time.max + 1)
+    expect(err[0].params.firstOccurrenceTimestamp).toBeWithin(Math.floor(absoluteTimestamp), Math.floor(absoluteTimestamp + 100))
+    expect(err[0].params.timestamp).toBeWithin(Math.floor(absoluteTimestamp), Math.floor(absoluteTimestamp + 100))
   })
 
   it('simultaneous errors - should set a timestamp, tied to the FIRST error seen - thrown errors', async () => {
     await browser.url(await browser.testHandle.assetURL('duplicate-errors.html')) // Setup expects before loading the page
       .then(() => browser.waitForFeatureAggregate('jserrors'))
 
-    const runtimeOffset = await browser.execute(function () {
-      var runtimeOffset = Object.entries(newrelic.initializedAgents)[0][1].runtime.offset
+    const originTime = await browser.execute(function () {
+      var timeKeeper = Object.values(newrelic.initializedAgents)[0].timeKeeper
       for (var i = 0; i < 2; i++) { errorFn() }
-      return runtimeOffset
+      return timeKeeper.correctedOriginTime
     })
 
     const { request: { body: { err } } } = await browser.testHandle.expectErrors()
@@ -76,7 +76,7 @@ describe('error payloads', () => {
       return [window['error-0'], window['error-1']]
     })
 
-    expect(err[0].params.firstOccurrenceTimestamp).toBeWithin(Math.floor(runtimeOffset + firstTime), Math.floor(runtimeOffset + secondTime + 10))
+    expect(err[0].params.firstOccurrenceTimestamp).toBeWithin(Math.floor(originTime + firstTime), Math.floor(originTime + secondTime + 10))
   })
 
   it('subsequent errors - should set a timestamp, tied to the FIRST error seen - noticeError', async () => {

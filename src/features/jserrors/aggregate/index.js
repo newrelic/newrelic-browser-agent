@@ -14,7 +14,6 @@ import { stringify } from '../../../common/util/stringify'
 import { handle } from '../../../common/event-emitter/handle'
 import { mapOwn } from '../../../common/util/map-own'
 import { getInfo, getConfigurationValue, getRuntime } from '../../../common/config/config'
-import { now } from '../../../common/timing/now'
 import { globalScope } from '../../../common/constants/runtime'
 
 import { FEATURE_NAME } from '../constants'
@@ -22,6 +21,7 @@ import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { getNREUMInitializedAgent } from '../../../common/window/nreum'
 import { deregisterDrain } from '../../../common/drain/drain'
+import { TimeKeeper } from '../../../common/timing/time-keeper'
 
 /**
  * @typedef {import('./compute-stack-trace.js').StackInfo} StackInfo
@@ -135,7 +135,7 @@ export class Aggregate extends AggregateBase {
 
   storeError (err, time, internal, customAttributes) {
     // are we in an interaction
-    time = time || now()
+    time = time || TimeKeeper.now()
     const agentRuntime = getRuntime(this.agentIdentifier)
     let filterOutput
 
@@ -173,7 +173,7 @@ export class Aggregate extends AggregateBase {
     if (!this.stackReported[bucketHash]) {
       this.stackReported[bucketHash] = true
       params.stack_trace = truncateSize(stackInfo.stackString)
-      this.observedAt[bucketHash] = agentRuntime.offset + time
+      this.observedAt[bucketHash] = this.timeKeeper.convertRelativeTimestamp(time)
     } else {
       params.browser_stack_hash = stringHashCode(stackInfo.stackString)
     }
@@ -191,6 +191,7 @@ export class Aggregate extends AggregateBase {
 
     if (agentRuntime?.session?.state?.sessionReplayMode) params.hasReplay = true
     params.firstOccurrenceTimestamp = this.observedAt[bucketHash]
+    params.timestamp = this.observedAt[bucketHash]
 
     var type = internal ? 'ierr' : 'err'
     var newMetrics = { time }

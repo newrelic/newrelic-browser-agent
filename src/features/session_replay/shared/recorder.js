@@ -58,6 +58,11 @@ export class Recorder {
     }
   }
 
+  /**
+   * Returns time-corrected events. If the events were correctable from the beginning, this correction will have already been applied.
+   * @param {SessionReplayEvent[]} events The array of buffered SR nodes
+   * @returns {CorrectedSessionReplayEvent[]}
+   */
   returnCorrectTimestamps (events) {
     return events.canCorrectTimestamps
       ? events.events

@@ -24,8 +24,9 @@ beforeEach(() => {
   }
 
   jest.spyOn(configModule, 'getRuntime').mockImplementation(() => runtimeConfig)
+  window.performance.timeOrigin = Date.now()
 
-  timeKeeper = new TimeKeeper(Date.now())
+  timeKeeper = new TimeKeeper()
 })
 
 describe('processRumRequest', () => {

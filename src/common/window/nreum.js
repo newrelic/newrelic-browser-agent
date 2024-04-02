@@ -1,5 +1,5 @@
 import { globalScope } from '../constants/runtime'
-import { TimeKeeper } from '../timing/time-keeper'
+import { now } from '../timing/now'
 
 export const defaults = {
   beacon: 'bam.nr-data.net',
@@ -71,7 +71,7 @@ export function setNREUMInitializedAgent (id, newAgentInstance) {
   let nr = gosNREUM()
   nr.initializedAgents ??= {}
   newAgentInstance.initializedAt = {
-    ms: TimeKeeper.now(),
+    ms: now(),
     date: new Date()
   }
   nr.initializedAgents[id] = newAgentInstance

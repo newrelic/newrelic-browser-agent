@@ -3,8 +3,6 @@
 import { warn } from '../common/util/console'
 import { SR_EVENT_EMITTER_TYPES } from '../features/session_replay/constants'
 import { generateRandomHexString } from '../common/ids/unique-id'
-import { TimeKeeper } from '../common/timing/time-keeper'
-import { globalScope } from '../common/constants/runtime'
 
 /**
  * @typedef {import('./api/interaction-types').InteractionInstance} InteractionInstance
@@ -12,7 +10,6 @@ import { globalScope } from '../common/constants/runtime'
 
 export class AgentBase {
   agentIdentifier
-  timeKeeper = new TimeKeeper(Math.floor(globalScope?.performance?.timeOrigin || globalScope?.performance?.timing?.navigationStart || Date.now()))
 
   constructor (agentIdentifier = generateRandomHexString(16)) {
     this.agentIdentifier = agentIdentifier

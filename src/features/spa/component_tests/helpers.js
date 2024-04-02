@@ -1,5 +1,6 @@
 /* global expect */
 import { originals } from '../../../common/config/config'
+import { INTERACTION_API } from '../constants'
 
 class InteractionValidator {
   static TIMED_NODE_TYPES = [
@@ -150,7 +151,8 @@ function startInteraction (onInteractionStart, afterInteractionFinish, options =
 
     function handleInteractionEvent (event) {
       interactionId = lastId++
-      options.newrelic.interaction().command('setAttribute', undefined, '__interactionId', interactionId)
+      const ixnCtx = options.baseEE.emit(INTERACTION_API + 'get', [performance.now()])
+      options.baseEE.emit(INTERACTION_API + 'setAttribute', [performance.now(), '__interactionId', interactionId], ixnCtx)
       event.preventDefault()
       event.stopPropagation()
       onInteractionStart(() => { done = true })

@@ -5,6 +5,7 @@ import { Spa } from '../index'
 import { TimeKeeper } from '../../../common/timing/time-keeper'
 import { getInfo, originals } from '../../../common/config/config'
 import { bundleId } from '../../../common/ids/bundle-id'
+import { INTERACTION_API } from '../constants'
 
 jest.mock('../../../common/constants/runtime', () => ({
   __esModule: true,
@@ -22,11 +23,12 @@ jest.mock('../../../common/config/config', () => ({
   isConfigured: jest.fn().mockReturnValue(true),
   getInfo: jest.fn()
 }))
-const now = TimeKeeper.now
 
 let spaInstrument, spaAggregate, newrelic, mockCurrentInfo
-const INTERACTION_API = 'api-ixn-'
 const agentIdentifier = 'abcdefg'
+const now = TimeKeeper.now
+const baseEE = ee.get(agentIdentifier)
+
 beforeAll(async () => {
   mockCurrentInfo = { jsAttributes: {} }
   getInfo.mockReturnValue(mockCurrentInfo)
@@ -116,7 +118,7 @@ test('simple sync api test', done => {
     ]
   })
 
-  helpers.startInteraction(onInteractionStart, afterInteractionDone1.bind(null, spaAggregate, validator, done), { baseEE: ee.get(agentIdentifier), newrelic })
+  helpers.startInteraction(onInteractionStart, afterInteractionDone1.bind(null, spaAggregate, validator, done), { baseEE })
 
   function onInteractionStart (cb) {
     const interaction = newrelic.interaction().command('setAttribute', undefined, 'click-handler', true)
@@ -159,7 +161,7 @@ test('simple async api test', async () => {
   })
 
   await new Promise(resolve => {
-    helpers.startInteraction(onInteractionStart, afterInteractionDone1.bind(null, spaAggregate, validator, resolve), { baseEE: ee.get(agentIdentifier), newrelic })
+    helpers.startInteraction(onInteractionStart, afterInteractionDone1.bind(null, spaAggregate, validator, resolve), { baseEE })
 
     function onInteractionStart (cb) {
       const tracer = newrelic.interaction().createTracer('requestAnimationFrame', function () {
@@ -194,7 +196,7 @@ test('async api no callback', async () => {
   })
 
   await new Promise(resolve => {
-    helpers.startInteraction(onInteractionStart, afterInteractionDone1.bind(null, spaAggregate, validator, resolve), { baseEE: ee.get(agentIdentifier), newrelic })
+    helpers.startInteraction(onInteractionStart, afterInteractionDone1.bind(null, spaAggregate, validator, resolve), { baseEE })
 
     function onInteractionStart (cb) {
       const asyncDone = newrelic.interaction().createTracer('custom-async')
@@ -287,7 +289,7 @@ test('simple sync api test with throw', async () => {
   })
 
   await new Promise(resolve => {
-    helpers.startInteraction(onInteractionStart, afterInteractionDone1.bind(null, spaAggregate, validator, resolve), { baseEE: ee.get(agentIdentifier), newrelic })
+    helpers.startInteraction(onInteractionStart, afterInteractionDone1.bind(null, spaAggregate, validator, resolve), { baseEE })
 
     function onInteractionStart (cb) {
       try {
@@ -327,7 +329,7 @@ test('simple async api test with throw', async () => {
   })
 
   await new Promise(resolve => {
-    helpers.startInteraction(onInteractionStart, afterInteractionDone1.bind(null, spaAggregate, validator, resolve), { baseEE: ee.get(agentIdentifier), newrelic })
+    helpers.startInteraction(onInteractionStart, afterInteractionDone1.bind(null, spaAggregate, validator, resolve), { baseEE })
 
     function onInteractionStart (cb) {
       const tracer = newrelic.interaction().createTracer('requestAnimationFrame', function () {
@@ -370,7 +372,7 @@ test('async api test with throw does not leave context', async () => {
   })
 
   await new Promise(resolve => {
-    helpers.startInteraction(onInteractionStart, afterInteractionDone1.bind(null, spaAggregate, validator, resolve), { baseEE: ee.get(agentIdentifier), newrelic })
+    helpers.startInteraction(onInteractionStart, afterInteractionDone1.bind(null, spaAggregate, validator, resolve), { baseEE })
 
     function onInteractionStart (cb) {
       const tracer = newrelic.interaction().createTracer('requestAnimationFrame', function () {
@@ -426,7 +428,7 @@ test('simple sync api test with throw and sibling', async () => {
   })
 
   await new Promise(resolve => {
-    helpers.startInteraction(onInteractionStart, afterInteractionDone1.bind(null, spaAggregate, validator, resolve), { baseEE: ee.get(agentIdentifier), newrelic })
+    helpers.startInteraction(onInteractionStart, afterInteractionDone1.bind(null, spaAggregate, validator, resolve), { baseEE })
 
     function onInteractionStart (cb) {
       try {
@@ -461,7 +463,7 @@ test('end interaction', async () => {
   })
 
   await new Promise(resolve => {
-    helpers.startInteraction(onInteractionStart, afterInteractionDone1.bind(null, spaAggregate, validator, resolve), { baseEE: ee.get(agentIdentifier), newrelic })
+    helpers.startInteraction(onInteractionStart, afterInteractionDone1.bind(null, spaAggregate, validator, resolve), { baseEE })
 
     function onInteractionStart (cb) {
       setTimeout(() => {
@@ -483,7 +485,7 @@ test('custom interaction name', async () => {
   })
 
   await new Promise(resolve => {
-    helpers.startInteraction(onInteractionStart, afterInteractionDone1.bind(null, spaAggregate, validator, resolve), { baseEE: ee.get(agentIdentifier), newrelic })
+    helpers.startInteraction(onInteractionStart, afterInteractionDone1.bind(null, spaAggregate, validator, resolve), { baseEE })
 
     function onInteractionStart (cb) {
       setTimeout(() => {
@@ -505,7 +507,7 @@ test('custom actionText', async () => {
     children: []
   })
 
-  await new Promise(resolve => helpers.startInteraction(onInteractionStart, afterInteractionDone1.bind(null, spaAggregate, validator, resolve), { baseEE: ee.get(agentIdentifier), newrelic }))
+  await new Promise(resolve => helpers.startInteraction(onInteractionStart, afterInteractionDone1.bind(null, spaAggregate, validator, resolve), { baseEE }))
 
   function onInteractionStart (cb) {
     setTimeout(() => {
@@ -522,7 +524,7 @@ test('ignore interaction', async () => {
   })
 
   await new Promise(resolve => {
-    helpers.startInteraction(onInteractionStart, afterInteractionDone, { baseEE: ee.get(agentIdentifier), newrelic })
+    helpers.startInteraction(onInteractionStart, afterInteractionDone, { baseEE })
 
     function onInteractionStart (cb) {
       setTimeout(() => {
@@ -556,7 +558,7 @@ test('custom attributes', async () => {
     children: []
   })
 
-  await new Promise(resolve => helpers.startInteraction(onInteractionStart, afterInteractionDone2.bind(null, spaAggregate, validator, resolve), { baseEE: ee.get(agentIdentifier), newrelic }))
+  await new Promise(resolve => helpers.startInteraction(onInteractionStart, afterInteractionDone2.bind(null, spaAggregate, validator, resolve), { baseEE }))
 
   function onInteractionStart (cb) {
     newrelic.interaction().command('setAttribute', undefined, 'interaction-float', 123.456)
@@ -585,7 +587,7 @@ test('custom attributes and interaction attributes', async () => {
   newrelic.interaction().command('setAttribute', undefined, 'outside', 'true')
   newrelic.setCustomAttribute('customOutside', 'true')
   newrelic.setCustomAttribute('override', 'false')
-  await new Promise(resolve => helpers.startInteraction(onInteractionStart, afterInteractionDone2.bind(null, spaAggregate, validator, resolve), { baseEE: ee.get(agentIdentifier), newrelic }))
+  await new Promise(resolve => helpers.startInteraction(onInteractionStart, afterInteractionDone2.bind(null, spaAggregate, validator, resolve), { baseEE }))
 
   function onInteractionStart (cb) {
     newrelic.interaction().command('setAttribute', undefined, 'inside', 0)
@@ -613,7 +615,7 @@ test('context store and onEnd', async () => {
     }]
   })
 
-  await new Promise(resolve => helpers.startInteraction(onInteractionStart, afterInteractionDone2.bind(null, spaAggregate, validator, resolve), { baseEE: ee.get(agentIdentifier), newrelic }))
+  await new Promise(resolve => helpers.startInteraction(onInteractionStart, afterInteractionDone2.bind(null, spaAggregate, validator, resolve), { baseEE }))
 
   function onInteractionStart (cb) {
     let contextStore = null
@@ -645,7 +647,7 @@ test('save', async () => {
   })
 
   await new Promise(resolve => {
-    helpers.startInteraction(onInteractionStart, afterInteractionDone, { baseEE: ee.get(agentIdentifier), newrelic })
+    helpers.startInteraction(onInteractionStart, afterInteractionDone, { baseEE })
 
     function onInteractionStart (cb) {
       newrelic.interaction().command('save')
@@ -666,7 +668,7 @@ test('save with ignore', async () => {
   })
 
   await new Promise(resolve => {
-    helpers.startInteraction(onInteractionStart, afterInteractionDone, { baseEE: ee.get(agentIdentifier), newrelic })
+    helpers.startInteraction(onInteractionStart, afterInteractionDone, { baseEE })
 
     function onInteractionStart (cb) {
       newrelic.interaction().command('ignore')
@@ -689,7 +691,7 @@ test('save with ignore after', async () => {
   })
 
   await new Promise(resolve => {
-    helpers.startInteraction(onInteractionStart, afterInteractionDone, { baseEE: ee.get(agentIdentifier), newrelic })
+    helpers.startInteraction(onInteractionStart, afterInteractionDone, { baseEE })
 
     function onInteractionStart (cb) {
       newrelic.interaction().command('save')
@@ -728,8 +730,7 @@ test('interaction outside interaction', done => {
     const interaction = newrelic.interaction()
 
     helpers.startInteraction(onInteractionStart, afterInteractionDone2.bind(null, spaAggregate, validator, done), {
-      baseEE: ee.get(agentIdentifier),
-      newrelic,
+      baseEE,
       eventType: 'api',
       handle: interaction
     })
@@ -777,8 +778,7 @@ test('interaction outside wrapped function', done => {
     const interaction = newrelic.interaction()
 
     helpers.startInteraction(onInteractionStart, afterInteractionDone2.bind(null, spaAggregate, validator, done), {
-      baseEE: ee.get(agentIdentifier),
-      newrelic,
+      baseEE,
       eventType: 'api',
       handle: interaction
     })
@@ -814,7 +814,7 @@ test('set trigger', done => {
     }]
   })
 
-  helpers.startInteraction(onInteractionStart, afterInteractionDone2.bind(null, spaAggregate, validator, done), { baseEE: ee.get(agentIdentifier), newrelic })
+  helpers.startInteraction(onInteractionStart, afterInteractionDone2.bind(null, spaAggregate, validator, done), { baseEE })
 
   function onInteractionStart (cb) {
     newrelic.interaction().command('setName', undefined, 'foo', 'foo')
@@ -845,7 +845,7 @@ test('createTracer no name', done => {
     }]
   })
 
-  helpers.startInteraction(onInteractionStart, afterInteractionDone2.bind(null, spaAggregate, validator, done), { baseEE: ee.get(agentIdentifier), newrelic })
+  helpers.startInteraction(onInteractionStart, afterInteractionDone2.bind(null, spaAggregate, validator, done), { baseEE })
 
   function onInteractionStart (cb) {
     setTimeout(newrelic.interaction().createTracer(null, function () {
@@ -863,7 +863,7 @@ test('createTracer no name, no callback', done => {
     children: []
   })
 
-  helpers.startInteraction(onInteractionStart, afterInteractionDone, { baseEE: ee.get(agentIdentifier), newrelic })
+  helpers.startInteraction(onInteractionStart, afterInteractionDone, { baseEE })
 
   function onInteractionStart (cb) {
     const start = now()
@@ -896,7 +896,7 @@ test('reuse handle from outside interaction', done => {
   })
   let interactionHandle = null
 
-  helpers.startInteraction(onInteractionStart, afterInteractionDone2.bind(null, spaAggregate, validator, done), { baseEE: ee.get(agentIdentifier), newrelic })
+  helpers.startInteraction(onInteractionStart, afterInteractionDone2.bind(null, spaAggregate, validator, done), { baseEE })
 
   function onInteractionStart (cb) {
     interactionHandle = newrelic.interaction()

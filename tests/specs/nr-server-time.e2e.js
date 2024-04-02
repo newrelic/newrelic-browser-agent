@@ -11,21 +11,22 @@ describe('NR Server Time', () => {
   it('should send jserror with timestamp prior to rum date header', async () => {
     const [errors, timeKeeper] = await Promise.all([
       browser.testHandle.expectErrors(),
-      browser.getTimeKeeper(),
       browser.url(await browser.testHandle.assetURL('nr-server-time/error-before-load.html'))
         .then(() => browser.waitForAgentLoad())
+        .then(() => browser.getTimeKeeper())
     ])
 
     const error = errors.request.body.err[0]
     expect(error.params.firstOccurrenceTimestamp).toEqual(error.params.timestamp)
-    testTimeExpectations(error.params.timestamp, timeKeeper)
+    testTimeExpectations(error.params.timestamp, timeKeeper, true)
   })
 
   it('should send jserror with timestamp after rum date header', async () => {
-    await browser.url(await browser.testHandle.assetURL('instrumented.html'))
+    const timeKeeper = await browser.url(await browser.testHandle.assetURL('instrumented.html'))
       .then(() => browser.waitForAgentLoad())
+      .then(() => browser.getTimeKeeper())
 
-    const [errors, timeKeeper] = await Promise.all([
+    const [errors] = await Promise.all([
       browser.testHandle.expectErrors(),
       browser.getTimeKeeper(),
       browser.execute(function () {
@@ -35,7 +36,7 @@ describe('NR Server Time', () => {
 
     const error = errors.request.body.err[0]
     expect(error.params.firstOccurrenceTimestamp).toEqual(error.params.timestamp)
-    testTimeExpectations(error.params.timestamp, timeKeeper)
+    testTimeExpectations(error.params.timestamp, timeKeeper, false)
   })
 
   it.withBrowsersMatching(notIE)('should send session replay with timestamp prior to rum date header', async () => {
@@ -44,31 +45,31 @@ describe('NR Server Time', () => {
     serverTime = await browser.mockDateResponse(true)
     const [{ request: replayData }, timeKeeper] = await Promise.all([
       browser.testHandle.expectBlob(),
-      browser.getTimeKeeper(),
       browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { sampling_rate: 100, preload: true } })))
         .then(() => browser.waitForSessionReplayRecording())
+        .then(() => browser.getTimeKeeper())
     ])
 
     const attrs = decodeAttributes(replayData.query.attributes)
     const firstTimestamp = attrs['replay.firstTimestamp']
-    testTimeExpectations(firstTimestamp, timeKeeper)
+    testTimeExpectations(firstTimestamp, timeKeeper, true)
 
     await browser.destroyAgentSession()
   })
 
-  it('should send session replay with timestamp after rum date header', async () => {
+  it.withBrowsersMatching(notIE)('should send session replay with timestamp after rum date header', async () => {
     await browser.destroyAgentSession()
     await browser.testHandle.clearScheduledReplies('bamServer')
     serverTime = await browser.mockDateResponse(true)
     const [{ request: replayData }, timeKeeper] = await Promise.all([
       browser.testHandle.expectBlob(),
-      browser.getTimeKeeper(),
       browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { sampling_rate: 100, preload: false } })))
         .then(() => browser.waitForSessionReplayRecording())
+        .then(() => browser.getTimeKeeper())
     ])
     const attrs = decodeAttributes(replayData.query.attributes)
     const firstTimestamp = attrs['replay.firstTimestamp']
-    testTimeExpectations(firstTimestamp, timeKeeper)
+    testTimeExpectations(firstTimestamp, timeKeeper, false)
 
     await browser.destroyAgentSession()
   })
@@ -82,23 +83,23 @@ describe('NR Server Time', () => {
     ])
 
     const pageAction = pageActions.request.body.ins[0]
-    testTimeExpectations(pageAction.timestamp, timeKeeper)
+    testTimeExpectations(pageAction.timestamp, timeKeeper, true)
   })
 
   it('should send page action with timestamp after rum date header', async () => {
-    await browser.url(await browser.testHandle.assetURL('instrumented.html'))
+    const timeKeeper = await browser.url(await browser.testHandle.assetURL('instrumented.html'))
       .then(() => browser.waitForAgentLoad())
+      .then(() => browser.getTimeKeeper())
 
-    const [pageActions, timeKeeper] = await Promise.all([
+    const [pageActions] = await Promise.all([
       browser.testHandle.expectIns(),
-      browser.getTimeKeeper(),
       browser.execute(function () {
         newrelic.addPageAction('bizbaz')
       })
     ])
 
     const pageAction = pageActions.request.body.ins[0]
-    testTimeExpectations(pageAction.timestamp, timeKeeper)
+    testTimeExpectations(pageAction.timestamp, timeKeeper, false)
   })
 
   it('should send xhr with distributed tracing timestamp before rum date header', async () => {
@@ -127,11 +128,11 @@ describe('NR Server Time', () => {
     ])
 
     const ajaxEvent = interactionEvents.request.body[0].children.find(r => r.path === '/json' && r.requestedWith === 'XMLHttpRequest')
-    testTimeExpectations(ajaxEvent.timestamp, timeKeeper)
+    testTimeExpectations(ajaxEvent.timestamp, timeKeeper, true)
 
     if (browserMatch(supportsFetch)) {
       const fetchEvent = interactionEvents.request.body[0].children.find(r => r.path === '/json' && r.requestedWith === 'fetch')
-      testTimeExpectations(fetchEvent.timestamp, timeKeeper)
+      testTimeExpectations(fetchEvent.timestamp, timeKeeper, true)
     }
   })
 
@@ -153,12 +154,12 @@ describe('NR Server Time', () => {
       }
     })
 
-    await browser.url(url)
+    const timeKeeper = await browser.url(url)
       .then(() => browser.waitForAgentLoad())
+      .then(() => browser.getTimeKeeper())
 
-    const [ajaxEvents, timeKeeper] = await Promise.all([
+    const [ajaxEvents] = await Promise.all([
       browser.testHandle.expectAjaxEvents(),
-      browser.getTimeKeeper(),
       browser.execute(function () {
         var xhr = new XMLHttpRequest()
         xhr.open('GET', '/json')
@@ -171,19 +172,36 @@ describe('NR Server Time', () => {
     ])
 
     const ajaxEvent = ajaxEvents.request.body.find(r => r.path === '/json' && r.requestedWith === 'XMLHttpRequest')
-    testTimeExpectations(ajaxEvent.timestamp, timeKeeper)
+    testTimeExpectations(ajaxEvent.timestamp, timeKeeper, false)
 
     if (browserMatch(supportsFetch)) {
       const fetchEvent = ajaxEvents.request.body.find(r => r.path === '/json' && r.requestedWith === 'fetch')
-      testTimeExpectations(fetchEvent.timestamp, timeKeeper)
+      testTimeExpectations(fetchEvent.timestamp, timeKeeper, false)
     }
   })
 })
 
-function testTimeExpectations (timestamp, { correctedOriginTime, originTime }) {
-  expect(Math.abs(serverTime - originTime + 3600000)).toBeLessThan(10000) // origin time should be about an hour ahead (3600000 ms)
-  expect(Math.abs(serverTime - correctedOriginTime)).toBeLessThan(10000) // corrected origin time should roughly match the server time on our side
+/**
+ *
+ * @param {Number} timestamp The timestamp from the event
+ * @param {Object} timeKeeper The timekeeper metadata
+ * @param {Boolean} before If the timestamp should be evaluated as before or after the local stamp. (This only occurs when test cant get the actual origin times -- ex. IE11)
+ */
+function testTimeExpectations (timestamp, timeKeeper, before) {
+  const { correctedOriginTime, originTime } = (timeKeeper || {})
 
-  expect(timestamp).toBeGreaterThan(correctedOriginTime)
-  expect(timestamp).toBeLessThan(originTime)
+  if (originTime && correctedOriginTime) {
+    expect(Math.abs(serverTime - originTime + 3600000)).toBeLessThan(10000) // origin time should be about an hour ahead (3600000 ms)
+    expect(Math.abs(serverTime - correctedOriginTime)).toBeLessThan(10000) // corrected origin time should roughly match the server time on our side
+
+    expect(Math.abs(timestamp - correctedOriginTime)).toBeLessThan(10000) // should expect a reasonable tolerance (and much less than an hour)
+    expect(Math.abs(timestamp - originTime + 3600000)).toBeLessThan(10000) // should expect a reasonable tolerance (and much less than an hour)
+    expect(timestamp).toBeGreaterThan(correctedOriginTime)
+    expect(timestamp).toBeLessThan(originTime)
+  } else {
+    // fallback for IE which doesn't work well with grabbing the raw values out
+    expect(Math.abs(timestamp - serverTime)).toBeLessThan(10000) // should expect a reasonable tolerance (and much less than an hour)
+    if (before) expect(timestamp).toBeLessThan(serverTime)
+    else expect(timestamp).toBeGreaterThan(serverTime)
+  }
 }

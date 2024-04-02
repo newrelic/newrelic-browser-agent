@@ -359,6 +359,9 @@ function wait (ms = 0) {
 
 function primeSessionAndReplay (sess = new SessionEntity({ agentIdentifier, key: 'SESSION', storage: new LocalMemory() })) {
   const timeKeeper = new TimeKeeper(Date.now())
+  timeKeeper.processRumRequest({
+    getResponseHeader: jest.fn(() => (new Date()).toUTCString())
+  }, 450, 600)
   const agent = { agentIdentifier, timeKeeper }
   setNREUMInitializedAgent(agentIdentifier, agent)
   session = sess

@@ -25,6 +25,7 @@ import { loadedAsDeferredBrowserScript } from '../../../common/constants/runtime
 import { handle } from '../../../common/event-emitter/handle'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { deregisterDrain } from '../../../common/drain/drain'
+import { warn } from '../../../common/util/console'
 
 const {
   FEATURE_NAME, INTERACTION_EVENTS, MAX_TIMER_BUDGET, FN_START, FN_END, CB_START, INTERACTION_API, REMAINING,
@@ -59,7 +60,6 @@ export class Aggregate extends AggregateBase {
     this.serializer = new Serializer(this)
 
     const { state, serializer, timeKeeper } = this
-    let { blocked } = this
 
     const baseEE = ee.get(agentIdentifier) // <-- parent baseEE
     const mutationEE = baseEE.get('mutation')
@@ -106,11 +106,11 @@ export class Aggregate extends AggregateBase {
 
     this.waitForFlags((['spa'])).then(([spaFlag]) => {
       if (spaFlag) {
-        scheduler = this.scheduler = new HarvestScheduler('events', {
+        scheduler = new HarvestScheduler('events', {
           onFinished: onHarvestFinished,
           retryDelay: state.harvestTimeSeconds
         }, { agentIdentifier, ee: baseEE })
-        this.scheduler.harvest.on('events', onHarvestStarted)
+        scheduler.harvest.on('events', onHarvestStarted)
         this.drain()
       } else {
         this.blocked = true
@@ -673,8 +673,9 @@ export class Aggregate extends AggregateBase {
       setCurrentNode(null)
     }
 
+    const classThis = this
     function onHarvestStarted (options) {
-      if (state.interactionsToHarvest.length === 0 || blocked) return {}
+      if (state.interactionsToHarvest.length === 0 || classThis.blocked) return {}
       var payload = serializer.serializeMultiple(state.interactionsToHarvest, 0, navTiming)
 
       if (options.retry) {
@@ -745,7 +746,8 @@ export class Aggregate extends AggregateBase {
       else smCategory = 'Custom'
       handle(SUPPORTABILITY_METRIC_CHANNEL, [`Spa/Interaction/${smCategory}/Duration/Ms`, Math.max((interaction.root?.end || 0) - (interaction.root?.start || 0), 0)], undefined, FEATURE_NAMES.metrics, baseEE)
 
-      scheduler.scheduleHarvest(0)
+      scheduler?.scheduleHarvest(0)
+      if (!scheduler) warn('SPA scheduler is not initialized. Saved interaction is not sent!')
     }
 
     function isEnabled () {

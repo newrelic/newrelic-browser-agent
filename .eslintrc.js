@@ -69,6 +69,7 @@ module.exports = {
       },
       rules: {
         'sonarjs/no-duplicate-string': 'off', // It is not worth deduplicating strings in test code
+        'sonarjs/no-identical-functions': 'off',
         'n/no-callback-literal': 'off' // This is not NodeJS code and should not be forced to adhere to NodeJS callback parameter pattern
       }
     },

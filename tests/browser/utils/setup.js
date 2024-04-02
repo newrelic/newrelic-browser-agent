@@ -5,7 +5,7 @@ const { configure } = require('../../../src/loaders/configure/configure')
 const { TimeKeeper } = require('../../../src/common/timing/time-keeper')
 
 export function setup (agentIdentifier = (Math.random() + 1).toString(36).substring(7)) {
-  const timeKeeper = new TimeKeeper(Date.now())
+  const timeKeeper = new TimeKeeper()
   Object.defineProperty(timeKeeper, 'correctedPageOriginTime', {
     get: function () {
       return performance.now()

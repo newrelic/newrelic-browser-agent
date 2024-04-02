@@ -2,31 +2,32 @@ import { faker } from '@faker-js/faker'
 import { notIE, supportsFetch } from '../../tools/browser-matcher/common-matchers.mjs'
 import { config, decodeAttributes } from './session-replay/helpers'
 
+let serverTime
 describe('NR Server Time', () => {
-  let serverTime
-
   beforeEach(async () => {
     serverTime = await browser.mockDateResponse()
   })
 
   it('should send jserror with timestamp prior to rum date header', async () => {
-    const [errors] = await Promise.all([
+    const [errors, timeKeeper] = await Promise.all([
       browser.testHandle.expectErrors(),
+      browser.getTimeKeeper(),
       browser.url(await browser.testHandle.assetURL('nr-server-time/error-before-load.html'))
         .then(() => browser.waitForAgentLoad())
     ])
 
     const error = errors.request.body.err[0]
     expect(error.params.firstOccurrenceTimestamp).toEqual(error.params.timestamp)
-    expect(error.params.timestamp).toBeWithin(serverTime - 5000, serverTime)
+    testTimeExpectations(error.params.timestamp, timeKeeper)
   })
 
   it('should send jserror with timestamp after rum date header', async () => {
     await browser.url(await browser.testHandle.assetURL('instrumented.html'))
       .then(() => browser.waitForAgentLoad())
 
-    const [errors] = await Promise.all([
+    const [errors, timeKeeper] = await Promise.all([
       browser.testHandle.expectErrors(),
+      browser.getTimeKeeper(),
       browser.execute(function () {
         newrelic.noticeError(new Error('test error'))
       })
@@ -34,27 +35,24 @@ describe('NR Server Time', () => {
 
     const error = errors.request.body.err[0]
     expect(error.params.firstOccurrenceTimestamp).toEqual(error.params.timestamp)
-    expect(error.params.timestamp).toBeWithin(serverTime, serverTime + 5000)
+    testTimeExpectations(error.params.timestamp, timeKeeper)
   })
 
   it.withBrowsersMatching(notIE)('should send session replay with timestamp prior to rum date header', async () => {
     await browser.destroyAgentSession()
     await browser.testHandle.clearScheduledReplies('bamServer')
     serverTime = await browser.mockDateResponse(true)
-    const [{ request: replayData }, { originTime, correctedOriginTime }] = await Promise.all([
+    const [{ request: replayData }, timeKeeper] = await Promise.all([
       browser.testHandle.expectBlob(),
-      browser.execute(function () {
-        var tk = Object.values(newrelic.initializedAgents)[0].timeKeeper
-        return { originTime: tk.originTime, correctedOriginTime: tk.correctedOriginTime }
-      }),
+      browser.getTimeKeeper(),
       browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { sampling_rate: 100, preload: true } })))
         .then(() => browser.waitForSessionReplayRecording())
     ])
 
     const attrs = decodeAttributes(replayData.query.attributes)
     const firstTimestamp = attrs['replay.firstTimestamp']
-    expect(firstTimestamp).toBeGreaterThan(correctedOriginTime)
-    expect(firstTimestamp).toBeLessThan(originTime)
+    testTimeExpectations(firstTimestamp, timeKeeper)
+
     await browser.destroyAgentSession()
   })
 
@@ -62,46 +60,45 @@ describe('NR Server Time', () => {
     await browser.destroyAgentSession()
     await browser.testHandle.clearScheduledReplies('bamServer')
     serverTime = await browser.mockDateResponse(true)
-    const [{ request: replayData }, { originTime, correctedOriginTime }] = await Promise.all([
+    const [{ request: replayData }, timeKeeper] = await Promise.all([
       browser.testHandle.expectBlob(),
-      browser.execute(function () {
-        var tk = Object.values(newrelic.initializedAgents)[0].timeKeeper
-        return { originTime: tk.originTime, correctedOriginTime: tk.correctedOriginTime }
-      }),
+      browser.getTimeKeeper(),
       browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { sampling_rate: 100, preload: false } })))
         .then(() => browser.waitForSessionReplayRecording())
     ])
     const attrs = decodeAttributes(replayData.query.attributes)
     const firstTimestamp = attrs['replay.firstTimestamp']
-    expect(firstTimestamp).toBeGreaterThan(correctedOriginTime)
-    expect(firstTimestamp).toBeLessThan(originTime)
+    testTimeExpectations(firstTimestamp, timeKeeper)
+
     await browser.destroyAgentSession()
   })
 
   it('should send page action with timestamp before rum date header', async () => {
-    const [pageActions] = await Promise.all([
+    const [pageActions, timeKeeper] = await Promise.all([
       browser.testHandle.expectIns(),
       browser.url(await browser.testHandle.assetURL('nr-server-time/page-action-before-load.html'))
         .then(() => browser.waitForAgentLoad())
+        .then(() => browser.getTimeKeeper())
     ])
 
     const pageAction = pageActions.request.body.ins[0]
-    expect(pageAction.timestamp).toBeWithin(serverTime - 5000, serverTime)
+    testTimeExpectations(pageAction.timestamp, timeKeeper)
   })
 
   it('should send page action with timestamp after rum date header', async () => {
     await browser.url(await browser.testHandle.assetURL('instrumented.html'))
       .then(() => browser.waitForAgentLoad())
 
-    const [pageActions] = await Promise.all([
+    const [pageActions, timeKeeper] = await Promise.all([
       browser.testHandle.expectIns(),
+      browser.getTimeKeeper(),
       browser.execute(function () {
         newrelic.addPageAction('bizbaz')
       })
     ])
 
     const pageAction = pageActions.request.body.ins[0]
-    expect(pageAction.timestamp).toBeWithin(serverTime, serverTime + 5000)
+    testTimeExpectations(pageAction.timestamp, timeKeeper)
   })
 
   it('should send xhr with distributed tracing timestamp before rum date header', async () => {
@@ -122,18 +119,19 @@ describe('NR Server Time', () => {
       }
     })
 
-    const [interactionEvents] = await Promise.all([
+    const [interactionEvents, timeKeeper] = await Promise.all([
       browser.testHandle.expectInteractionEvents(),
       browser.url(url)
         .then(() => browser.waitForAgentLoad())
+        .then(() => browser.getTimeKeeper())
     ])
 
     const ajaxEvent = interactionEvents.request.body[0].children.find(r => r.path === '/json' && r.requestedWith === 'XMLHttpRequest')
-    expect(ajaxEvent.timestamp).toBeWithin(serverTime - 5000, serverTime)
+    testTimeExpectations(ajaxEvent.timestamp, timeKeeper)
 
     if (browserMatch(supportsFetch)) {
       const fetchEvent = interactionEvents.request.body[0].children.find(r => r.path === '/json' && r.requestedWith === 'fetch')
-      expect(fetchEvent.timestamp).toBeWithin(serverTime - 5000, serverTime)
+      testTimeExpectations(fetchEvent.timestamp, timeKeeper)
     }
   })
 
@@ -158,8 +156,9 @@ describe('NR Server Time', () => {
     await browser.url(url)
       .then(() => browser.waitForAgentLoad())
 
-    const [ajaxEvents] = await Promise.all([
+    const [ajaxEvents, timeKeeper] = await Promise.all([
       browser.testHandle.expectAjaxEvents(),
+      browser.getTimeKeeper(),
       browser.execute(function () {
         var xhr = new XMLHttpRequest()
         xhr.open('GET', '/json')
@@ -172,11 +171,19 @@ describe('NR Server Time', () => {
     ])
 
     const ajaxEvent = ajaxEvents.request.body.find(r => r.path === '/json' && r.requestedWith === 'XMLHttpRequest')
-    expect(ajaxEvent.timestamp).toBeWithin(serverTime, serverTime + 5000)
+    testTimeExpectations(ajaxEvent.timestamp, timeKeeper)
 
     if (browserMatch(supportsFetch)) {
       const fetchEvent = ajaxEvents.request.body.find(r => r.path === '/json' && r.requestedWith === 'fetch')
-      expect(fetchEvent.timestamp).toBeWithin(serverTime, serverTime + 5000)
+      testTimeExpectations(fetchEvent.timestamp, timeKeeper)
     }
   })
 })
+
+function testTimeExpectations (timestamp, { correctedOriginTime, originTime }) {
+  expect(Math.abs(serverTime - originTime + 3600000)).toBeLessThan(10000) // origin time should be about an hour ahead (3600000 ms)
+  expect(Math.abs(serverTime - correctedOriginTime)).toBeLessThan(10000) // corrected origin time should roughly match the server time on our side
+
+  expect(timestamp).toBeGreaterThan(correctedOriginTime)
+  expect(timestamp).toBeLessThan(originTime)
+}

@@ -61,10 +61,7 @@ export class Recorder {
   returnCorrectTimestamps (events) {
     return events.canCorrectTimestamps
       ? events.events
-      : events.events.map(({ __serialized, timestamp, ...e }) => {
-        console.log(this.parent.timeKeeper.correctedOriginTime, '|', timestamp, '-->', this.parent.timeKeeper.correctAbsoluteTimestamp(timestamp))
-        return { timestamp: this.parent.timeKeeper.correctAbsoluteTimestamp(timestamp), ...e }
-      })
+      : events.events.map(({ __serialized, timestamp, ...e }) => ({ timestamp: this.parent.timeKeeper.correctAbsoluteTimestamp(timestamp), ...e }))
   }
 
   /** Clears the buffer (this.#events), and resets all payload metadata properties */

@@ -68,7 +68,6 @@ export function decodeAttributes (attributes) {
 export function config (initOverrides = {}) {
   return deepmerge(
     {
-      loader: 'experimental',
       init: {
         privacy: { cookies_enabled: true },
         session_replay: { enabled: true, harvestTimeSeconds: 5, sampling_rate: 100, error_sampling_rate: 0 }

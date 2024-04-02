@@ -123,6 +123,16 @@ export default class CustomCommands {
     })
 
     /**
+     * Gets TimeKeeper properties for first agent instance
+     */
+    browser.addCommand('getTimeKeeper', async function () {
+      return browser.execute(function () {
+        var tk = Object.values(newrelic.initializedAgents)[0].timeKeeper
+        return { originTime: tk.originTime, correctedOriginTime: tk.correctedOriginTime }
+      })
+    })
+
+    /**
      * Waits for a specific feature aggregate class to be loaded.
      */
     browser.addCommand('waitForFeatureAggregate', async function (feature, timeout) {

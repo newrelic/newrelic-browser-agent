@@ -42,7 +42,7 @@ describe('NR Server Time', () => {
   it.withBrowsersMatching(notIE)('should send session replay with timestamp prior to rum date header', async () => {
     await browser.destroyAgentSession()
     await browser.testHandle.clearScheduledReplies('bamServer')
-    serverTime = await browser.mockDateResponse(true)
+    serverTime = await browser.mockDateResponse(undefined, { flags: { sr: 1 } })
     const [{ request: replayData }, timeKeeper] = await Promise.all([
       browser.testHandle.expectBlob(),
       browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { sampling_rate: 100, preload: true } })))
@@ -60,7 +60,7 @@ describe('NR Server Time', () => {
   it.withBrowsersMatching(notIE)('should send session replay with timestamp after rum date header', async () => {
     await browser.destroyAgentSession()
     await browser.testHandle.clearScheduledReplies('bamServer')
-    serverTime = await browser.mockDateResponse(true)
+    serverTime = await browser.mockDateResponse(undefined, { flags: { sr: 1 } })
     const [{ request: replayData }, timeKeeper] = await Promise.all([
       browser.testHandle.expectBlob(),
       browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { sampling_rate: 100, preload: false } })))

@@ -25,6 +25,7 @@ import { loadedAsDeferredBrowserScript } from '../../../common/constants/runtime
 import { handle } from '../../../common/event-emitter/handle'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { deregisterDrain } from '../../../common/drain/drain'
+import { warn } from '../../../common/util/console'
 
 const {
   FEATURE_NAME, INTERACTION_EVENTS, MAX_TIMER_BUDGET, FN_START, FN_END, CB_START, INTERACTION_API, REMAINING,
@@ -746,6 +747,7 @@ export class Aggregate extends AggregateBase {
       handle(SUPPORTABILITY_METRIC_CHANNEL, [`Spa/Interaction/${smCategory}/Duration/Ms`, Math.max((interaction.root?.end || 0) - (interaction.root?.start || 0), 0)], undefined, FEATURE_NAMES.metrics, baseEE)
 
       scheduler?.scheduleHarvest(0)
+      if (!scheduler) warn('SPA scheduler is not initialized. Saved interaction is not sent!')
     }
 
     function isEnabled () {

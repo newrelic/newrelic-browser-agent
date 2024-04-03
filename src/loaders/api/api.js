@@ -6,7 +6,6 @@ import { FEATURE_NAMES } from '../features/features'
 import { getRuntime, setInfo, getInfo } from '../../common/config/config'
 import { handle } from '../../common/event-emitter/handle'
 import { ee } from '../../common/event-emitter/contextual-ee'
-import { now } from '../../common/timing/now'
 import { drain, registerDrain } from '../../common/drain/drain'
 import { onWindowLoad } from '../../common/window/load'
 import { isBrowserScope } from '../../common/constants/runtime'
@@ -15,6 +14,7 @@ import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
 import { gosCDN } from '../../common/window/nreum'
 import { apiMethods, asyncApiMethods } from './api-methods'
 import { SR_EVENT_EMITTER_TYPES } from '../../features/session_replay/constants'
+import { now } from '../../common/timing/now'
 
 export function setTopLevelCallers () {
   const nr = gosCDN()

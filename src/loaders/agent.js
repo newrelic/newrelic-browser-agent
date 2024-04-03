@@ -27,7 +27,7 @@ export class Agent extends AgentBase {
     if (!globalScope) {
       // We could not determine the runtime environment. Short-circuite the agent here
       // to avoid possible exceptions later that may cause issues with customer's application.
-      warn('Failed to initial the agent. Could not determine the runtime environment.')
+      warn('Failed to initialize the agent. Could not determine the runtime environment.')
       return
     }
 

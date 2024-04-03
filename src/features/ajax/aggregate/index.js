@@ -33,7 +33,8 @@ export class Aggregate extends AggregateBase {
       this.drain()
     })
 
-    const denyList = getRuntime(agentIdentifier).denyList
+    const agentRuntime = getRuntime(agentIdentifier)
+    const denyList = agentRuntime.denyList
     setDenyList(denyList)
 
     let ajaxEvents = []
@@ -124,7 +125,7 @@ export class Aggregate extends AggregateBase {
       if (xhrContext.dt) {
         event.spanId = xhrContext.dt.spanId
         event.traceId = xhrContext.dt.traceId
-        event.spanTimestamp = xhrContext.dt.timestamp
+        event.spanTimestamp = agentRuntime.timeKeeper.correctAbsoluteTimestamp(xhrContext.dt.timestamp)
       }
 
       // parsed from the AJAX body, looking for operationName param & parsing query for operationType

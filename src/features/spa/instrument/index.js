@@ -7,9 +7,9 @@ import {
 } from '../../../common/wrap'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
 import { InstrumentBase } from '../../utils/instrument-base'
-import { now } from '../../../common/timing/now'
 import * as CONSTANTS from '../constants'
 import { isBrowserScope } from '../../../common/constants/runtime'
+import { now } from '../../../common/timing/now'
 
 const {
   FEATURE_NAME, START, END, BODY, CB_END, JS_TIME, FETCH, FN_START, CB_START, FN_END

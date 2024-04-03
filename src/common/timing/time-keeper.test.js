@@ -1,4 +1,3 @@
-import { faker } from '@faker-js/faker'
 import { TimeKeeper } from './time-keeper'
 import * as configModule from '../config/config'
 
@@ -10,7 +9,6 @@ const endTime = 600
 
 let localTime
 let serverTime
-let mockAgent
 let runtimeConfig
 let timeKeeper
 beforeEach(() => {
@@ -21,16 +19,14 @@ beforeEach(() => {
     now: localTime
   })
 
-  mockAgent = {
-    agentIdentifier: faker.string.uuid()
-  }
   runtimeConfig = {
     offset: localTime
   }
 
   jest.spyOn(configModule, 'getRuntime').mockImplementation(() => runtimeConfig)
+  window.performance.timeOrigin = Date.now()
 
-  timeKeeper = new TimeKeeper(mockAgent)
+  timeKeeper = new TimeKeeper()
 })
 
 describe('processRumRequest', () => {
@@ -41,7 +37,7 @@ describe('processRumRequest', () => {
 
     timeKeeper.processRumRequest(mockRumRequest, startTime, endTime)
 
-    expect(timeKeeper.correctedPageOriginTime).toEqual(1706213060475)
+    expect(timeKeeper.correctedOriginTime).toEqual(1706213060475)
   })
 
   it('should calculate a newer corrected page origin', () => {
@@ -53,7 +49,7 @@ describe('processRumRequest', () => {
 
     timeKeeper.processRumRequest(mockRumRequest, startTime, endTime)
 
-    expect(timeKeeper.correctedPageOriginTime).toEqual(1706213055475)
+    expect(timeKeeper.correctedOriginTime).toEqual(1706213055475)
   })
 
   it.each([undefined, null, 0])('should fallback to unprotected time values when responseStart is %s', (responseStart) => {
@@ -63,7 +59,7 @@ describe('processRumRequest', () => {
 
     timeKeeper.processRumRequest(mockRumRequest, startTime, endTime)
 
-    expect(timeKeeper.correctedPageOriginTime).toEqual(1706213060475)
+    expect(timeKeeper.correctedOriginTime).toEqual(1706213060475)
   })
 
   it.each([null, undefined])('should throw an error when rumRequest is %s', (rumRequest) => {

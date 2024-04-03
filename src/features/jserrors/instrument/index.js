@@ -4,7 +4,6 @@
  */
 
 import { handle } from '../../../common/event-emitter/handle'
-import { now } from '../../../common/timing/now'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
@@ -12,6 +11,7 @@ import { globalScope } from '../../../common/constants/runtime'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
 import { stringify } from '../../../common/util/stringify'
 import { UncaughtError } from './uncaught-error'
+import { now } from '../../../common/timing/now'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME

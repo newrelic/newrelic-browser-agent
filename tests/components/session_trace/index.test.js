@@ -1,9 +1,9 @@
-import { SessionTrace } from '..'
-import { testExpectedTrace } from '../../../../tests/specs/util/helpers'
-import { Aggregator } from '../../../common/aggregate/aggregator'
-import { ee } from '../../../common/event-emitter/contextual-ee'
+import { Instrument as SessionTrace } from '../../../src/features/session_trace/instrument'
+import { testExpectedTrace } from '../../specs/util/helpers'
+import { Aggregator } from '../../../src/common/aggregate/aggregator'
+import { ee } from '../../../src/common/event-emitter/contextual-ee'
 
-jest.mock('../../../common/config/config', () => ({
+jest.mock('../../../src/common/config/config', () => ({
   __esModule: true,
   getConfiguration: jest.fn((agentId) => {
     return { session: {} }
@@ -21,12 +21,12 @@ jest.mock('../../../common/config/config', () => ({
     session: { state: { value: 'sessionID' }, write: jest.fn() }
   })
 }))
-jest.mock('../../../common/constants/runtime', () => ({
+jest.mock('../../../src/common/constants/runtime', () => ({
   __esModule: true,
   isBrowserScope: true,
   globalScope: global
 }))
-jest.mock('../../../common/window/load', () => ({
+jest.mock('../../../src/common/window/load', () => ({
   __esModule: true,
   onWindowLoad: jest.fn(cb => cb())
 }))

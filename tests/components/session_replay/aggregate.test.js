@@ -1,15 +1,16 @@
-import { AVG_COMPRESSION, IDEAL_PAYLOAD_SIZE } from '../constants'
-import { Aggregator } from '../../../common/aggregate/aggregator'
-import { SessionEntity } from '../../../common/session/session-entity'
-import { setConfiguration } from '../../../common/config/config'
-import { configure } from '../../../loaders/configure/configure'
-import { Recorder } from '../shared/recorder'
-import { MODE, SESSION_EVENTS } from '../../../common/session/constants'
-import { setNREUMInitializedAgent } from '../../../common/window/nreum'
+import { AVG_COMPRESSION, IDEAL_PAYLOAD_SIZE } from '../../../src/features/session_replay/constants'
+import { Aggregator } from '../../../src/common/aggregate/aggregator'
+import { SessionEntity } from '../../../src/common/session/session-entity'
+import { setConfiguration } from '../../../src/common/config/config'
+import { configure } from '../../../src/loaders/configure/configure'
+import { Recorder } from '../../../src/features/session_replay/shared/recorder'
+import { MODE, SESSION_EVENTS } from '../../../src/common/session/constants'
+import { setNREUMInitializedAgent } from '../../../src/common/window/nreum'
+import { TimeKeeper } from '../../../src/common/timing/time-keeper'
 
 let sr, session
 
-jest.mock('../../../common/util/console', () => ({
+jest.mock('../../../src/common/util/console', () => ({
   warn: jest.fn()
 }))
 
@@ -71,7 +72,7 @@ const anyQuery = {
 describe('Session Replay', () => {
   beforeEach(async () => {
     agentIdentifier = (Math.random() + 1).toString(36).substring(7)
-    const { Aggregate } = await import('./')
+    const { Aggregate } = await import('../../../src/features/session_replay/aggregate')
     SessionReplayAgg = Aggregate
     primeSessionAndReplay()
   })
@@ -354,7 +355,8 @@ function wait (ms = 0) {
 }
 
 function primeSessionAndReplay (sess = new SessionEntity({ agentIdentifier, key: 'SESSION', storage: new LocalMemory() })) {
-  const agent = { agentIdentifier }
+  const timeKeeper = new TimeKeeper(Date.now())
+  const agent = { agentIdentifier, timeKeeper }
   setNREUMInitializedAgent(agentIdentifier, agent)
   session = sess
   configure(agent, { info, runtime: { session, isolatedBacklog: false }, init: {} }, 'test', true)

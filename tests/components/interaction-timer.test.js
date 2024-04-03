@@ -1,4 +1,4 @@
-import { InteractionTimer } from './interaction-timer'
+import { InteractionTimer } from '../../src/common/timer/interaction-timer'
 
 jest.useFakeTimers()
 

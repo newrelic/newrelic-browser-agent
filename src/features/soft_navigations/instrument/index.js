@@ -2,11 +2,11 @@ import { originals } from '../../../common/config/config'
 import { isBrowserScope } from '../../../common/constants/runtime'
 import { handle } from '../../../common/event-emitter/handle'
 import { windowAddEventListener } from '../../../common/event-listener/event-listener-opts'
-import { now } from '../../../common/timing/now'
 import { debounce } from '../../../common/util/invoke'
 import { wrapEvents, wrapHistory } from '../../../common/wrap'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME, INTERACTION_TRIGGERS } from '../constants'
+import { now } from '../../../common/timing/now'
 
 /** The minimal time after a UI event for which no further events will be processed - i.e. a throttling rate to reduce spam.
  * This also give some time for the new interaction to complete without being discarded by a subsequent UI event and wrongly attributed.

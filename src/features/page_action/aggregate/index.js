@@ -86,14 +86,15 @@ export class Aggregate extends AggregateBase {
       height = window.document.documentElement.clientHeight
     }
 
+    const agentRuntime = getRuntime(this.agentIdentifier)
     var defaults = {
-      timestamp: t + getRuntime(this.agentIdentifier).offset,
+      timestamp: agentRuntime.timeKeeper.convertRelativeTimestamp(t),
       timeSinceLoad: t / 1000,
       browserWidth: width,
       browserHeight: height,
       referrerUrl: this.referrerUrl,
       currentUrl: cleanURL('' + location),
-      pageUrl: cleanURL(getRuntime(this.agentIdentifier).origin),
+      pageUrl: cleanURL(agentRuntime.origin),
       eventType: 'PageAction'
     }
 

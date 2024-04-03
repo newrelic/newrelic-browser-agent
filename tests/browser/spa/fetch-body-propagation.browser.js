@@ -4,6 +4,7 @@
  */
 
 const jil = require('../../../tools/jil/driver/browser.js')
+const { now } = require('./helpers')
 
 if (process.browser) {
   let helpers = require('./helpers')
@@ -46,7 +47,6 @@ bodyMethods.forEach((bodyMethod) => {
     function onInteractionStart (cb) {
       window.fetch('/json')
         .then(function (res) {
-          const { now } = require('../../../src/common/timing/now')
           resTime = now()
           return res[bodyMethod]()
         }).then(function () {
@@ -141,7 +141,6 @@ jil.browserTest('Response.formData', function (t) {
 
   function onInteractionStart (cb) {
     window.fetch('/formdata', { method: 'POST', body: new FormData() }).then(function (res) {
-      const { now } = require('../../../src/common/timing/now')
       resTime = now()
       if (res.formData) {
         res.formData().catch(function () {

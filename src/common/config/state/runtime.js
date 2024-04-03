@@ -23,7 +23,8 @@ const model = {
   session: undefined,
   version: VERSION,
   denyList: undefined,
-  harvestCount: 0
+  harvestCount: 0,
+  timeKeeper: undefined
 }
 
 const _cache = {}

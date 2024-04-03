@@ -8,7 +8,6 @@ import { id } from '../../../common/ids/id'
 import { ffVersion, globalScope, isBrowserScope } from '../../../common/constants/runtime'
 import { dataSize } from '../../../common/util/data-size'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
-import { now } from '../../../common/timing/now'
 import { wrapFetch, wrapXhr } from '../../../common/wrap'
 import { parseUrl } from '../../../common/url/parse-url'
 import { DT } from './distributed-tracing'
@@ -17,6 +16,7 @@ import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { SUPPORTABILITY_METRIC } from '../../metrics/constants'
+import { now } from '../../../common/timing/now'
 
 var handlers = ['load', 'error', 'abort', 'timeout']
 var handlersLen = handlers.length

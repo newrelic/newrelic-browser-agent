@@ -3,6 +3,9 @@ export const SharedContext = jest.fn(function () {
     agentIdentifier: 'abcd',
     ee: {
       on: jest.fn()
+    },
+    timeKeeper: {
+      now: jest.fn(() => performance.now())
     }
   }
 })

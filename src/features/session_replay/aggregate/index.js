@@ -23,11 +23,11 @@ import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { handle } from '../../../common/event-emitter/handle'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { RRWEB_VERSION } from '../../../common/constants/env'
-import { now } from '../../../common/timing/now'
 import { MODE, SESSION_EVENTS, SESSION_EVENT_TYPES } from '../../../common/session/constants'
 import { stringify } from '../../../common/util/stringify'
 import { stylesheetEvaluator } from '../shared/stylesheet-evaluator'
 import { deregisterDrain } from '../../../common/drain/drain'
+import { now } from '../../../common/timing/now'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME

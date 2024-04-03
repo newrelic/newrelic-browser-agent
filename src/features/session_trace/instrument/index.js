@@ -4,12 +4,12 @@
  */
 import { handle } from '../../../common/event-emitter/handle'
 import { wrapHistory, wrapEvents } from '../../../common/wrap'
-import { now } from '../../../common/timing/now'
 import { InstrumentBase } from '../../utils/instrument-base'
 import * as CONSTANTS from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { deregisterDrain } from '../../../common/drain/drain'
 import { canEnableSessionTracking } from '../../utils/feature-gates'
+import { now } from '../../../common/timing/now'
 
 const {
   BST_RESOURCE, RESOURCE, START, END, FEATURE_NAME, FN_END, FN_START, PUSH_STATE

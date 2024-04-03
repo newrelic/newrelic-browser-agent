@@ -3,7 +3,6 @@
 import { warn } from '../common/util/console'
 import { SR_EVENT_EMITTER_TYPES } from '../features/session_replay/constants'
 import { generateRandomHexString } from '../common/ids/unique-id'
-import { TimeKeeper } from '../common/timing/time-keeper'
 import { ee } from '../common/event-emitter/contextual-ee'
 
 /**
@@ -12,7 +11,6 @@ import { ee } from '../common/event-emitter/contextual-ee'
 
 export class AgentBase {
   agentIdentifier
-  timeKeeper = new TimeKeeper(this)
 
   constructor (agentIdentifier = generateRandomHexString(16)) {
     this.agentIdentifier = agentIdentifier

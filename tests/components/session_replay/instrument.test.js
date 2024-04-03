@@ -1,36 +1,36 @@
-import { Instrument as SRInstrument } from './index'
-import { Aggregator } from '../../../common/aggregate/aggregator'
-import { getConfigurationValue, originals } from '../../../common/config/config'
-import { PREFIX, DEFAULT_KEY, MODE } from '../../../common/session/constants'
-import { canEnableSessionTracking } from '../../utils/feature-gates'
+import { Instrument as SRInstrument } from '../../../src/features/session_replay/instrument'
+import { Aggregator } from '../../../src/common/aggregate/aggregator'
+import { getConfigurationValue, originals } from '../../../src/common/config/config'
+import { PREFIX, DEFAULT_KEY, MODE } from '../../../src/common/session/constants'
+import { canEnableSessionTracking } from '../../../src/features/utils/feature-gates'
 
-jest.mock('../../../common/constants/runtime', () => ({
+jest.mock('../../../src/common/constants/runtime', () => ({
   __esModule: true,
   isBrowserScope: true,
   globalScope: global
 }))
-jest.mock('../../../common/window/load', () => ({
+jest.mock('../../../src/common/window/load', () => ({
   __esModule: true,
   onWindowLoad: jest.fn(cb => cb())
 }))
-jest.mock('../../../common/config/config', () => ({
+jest.mock('../../../src/common/config/config', () => ({
   __esModule: true,
   originals: {
     MO: true
   },
   getConfigurationValue: jest.fn()
 }))
-jest.mock('../aggregate', () => ({
+jest.mock('../../../src/features/session_replay/aggregate', () => ({
   __esModule: true,
   Aggregate: jest.fn()
 }))
-jest.mock('../../utils/agent-session', () => ({
+jest.mock('../../../src/features/utils/agent-session', () => ({
   __esModule: true,
   setupAgentSession: jest.fn().mockReturnValue({
     isNew: true
   })
 }))
-jest.mock('../shared/recorder', () => ({
+jest.mock('../../../src/features/session_replay/shared/recorder', () => ({
   __esModule: true,
   Recorder: jest.fn().mockImplementation(() => {
     return {
@@ -39,11 +39,11 @@ jest.mock('../shared/recorder', () => ({
     }
   })
 }))
-jest.mock('../../../common/util/console', () => ({
+jest.mock('../../../src/common/util/console', () => ({
   __esModule: true,
   warn: jest.fn()
 }))
-jest.mock('../../utils/feature-gates', () => ({
+jest.mock('../../../src/features/utils/feature-gates', () => ({
   __esModule: true,
   canEnableSessionTracking: jest.fn(() => true)
 }))
@@ -148,7 +148,7 @@ describe('Preload recording stops if', () => {
   })
 
   test('session entity fails to initialize', async () => {
-    jest.doMock('../../utils/agent-session', () => ({
+    jest.doMock('../../../src/features/utils/agent-session', () => ({
       __esModule: true,
       setupAgentSession: jest.fn(() => { throw new Error('RIP') })
     }))
@@ -164,7 +164,7 @@ describe('Preload recording stops if', () => {
 
   test('replay aggregate fails to initialize', async () => {
     let aggConstructor = jest.fn(() => { throw new Error('RIP') })
-    jest.doMock('../aggregate/index.js', () => ({
+    jest.doMock('../../../src/features/session_replay/aggregate', () => ({
       __esModule: true,
       Aggregate: aggConstructor
     }))

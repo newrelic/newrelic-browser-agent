@@ -1,11 +1,11 @@
 import { faker } from '@faker-js/faker'
-import { FEATURE_NAMES } from '../features/features'
-import { CUSTOM_METRIC_CHANNEL } from '../../features/metrics/constants'
-import { setAPI } from './apiAsync'
-import { setInfo, setConfiguration, setRuntime, getRuntime } from '../../common/config/config'
-import { ee } from '../../common/event-emitter/contextual-ee'
-import * as registerHandlerModule from '../../common/event-emitter/register-handler'
-import * as handleModule from '../../common/event-emitter/handle'
+import { FEATURE_NAMES } from '../../src/loaders/features/features'
+import { CUSTOM_METRIC_CHANNEL } from '../../src/features/metrics/constants'
+import { setAPI } from '../../src/loaders/api/apiAsync'
+import { setInfo, setConfiguration, setRuntime, getRuntime } from '../../src/common/config/config'
+import { ee } from '../../src/common/event-emitter/contextual-ee'
+import * as registerHandlerModule from '../../src/common/event-emitter/register-handler'
+import * as handleModule from '../../src/common/event-emitter/handle'
 
 describe('setAPI', () => {
   let agentId

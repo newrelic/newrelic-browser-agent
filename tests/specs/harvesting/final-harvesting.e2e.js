@@ -154,7 +154,8 @@ describe.withBrowsersMatching(notIE)('final harvesting', () => {
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
       statusCode: 400,
-      body: ''
+      body: '',
+      permanent: true
     })
 
     let rumPromise = browser.testHandle.expectRum()
@@ -163,10 +164,10 @@ describe.withBrowsersMatching(notIE)('final harvesting', () => {
 
     // PVE feature should've fully imported and ran, with the RUM response coming back as the 400 we set. This should subsequently cause agent to not send anything else even at EoL.
     await expect(rumPromise).resolves.toEqual(expect.objectContaining({
-      reply: {
+      reply: expect.objectContaining({
         statusCode: 400,
         body: ''
-      }
+      })
     }))
 
     let anyFollowingReq = browser.testHandle.expect('bamServer', {

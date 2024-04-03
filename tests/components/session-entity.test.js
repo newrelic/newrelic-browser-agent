@@ -1,5 +1,5 @@
-import { PREFIX } from './constants'
-import { SessionEntity } from './session-entity'
+import { PREFIX } from '../../src/common/session/constants'
+import { SessionEntity } from '../../src/common/session/session-entity'
 
 const agentIdentifier = 'test_agent_identifier'
 const key = 'test_key'
@@ -47,12 +47,12 @@ const model = {
   custom: {}
 }
 
-jest.mock('../timer/timer')
-jest.mock('../timer/interaction-timer')
+jest.mock('../../src/common/timer/timer')
+jest.mock('../../src/common/timer/interaction-timer')
 jest.useFakeTimers()
 
 const mockBrowserScope = jest.fn().mockImplementation(() => true)
-jest.mock('../constants/runtime', () => ({
+jest.mock('../../src/common/constants/runtime', () => ({
   __esModule: true,
   get isBrowserScope () {
     return mockBrowserScope()

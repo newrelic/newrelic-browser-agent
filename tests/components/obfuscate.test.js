@@ -1,13 +1,13 @@
 import { faker } from '@faker-js/faker'
-import * as configModule from '../config/config'
-import * as urlProtocolModule from '../url/protocol'
-import * as consolModule from './console'
-import * as obfuscateModule from './obfuscate'
+import * as configModule from '../../src/common/config/config'
+import * as urlProtocolModule from '../../src/common/url/protocol'
+import * as consolModule from '../../src/common/util/console'
+import * as obfuscateModule from '../../src/common/util/obfuscate'
 
-jest.mock('../config/config')
-jest.mock('../context/shared-context')
-jest.mock('../url/protocol')
-jest.mock('./console')
+jest.mock('../../src/common/config/config')
+jest.mock('../../src/common/context/shared-context')
+jest.mock('../../src/common/url/protocol')
+jest.mock('../../src/common/util/console')
 
 let agentIdentifier
 const rules = [{

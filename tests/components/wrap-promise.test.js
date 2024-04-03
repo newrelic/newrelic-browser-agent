@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker'
-import { globalScope } from '../constants/runtime'
+import { globalScope } from '../../src/common/constants/runtime'
 
 let promiseConstructorCalls
 
@@ -16,7 +16,7 @@ beforeEach(async () => {
     }
   })
 
-  ;(await import('./wrap-promise')).wrapPromise()
+  ;(await import('../../src/common/wrap/wrap-promise')).wrapPromise()
 })
 
 afterEach(() => {

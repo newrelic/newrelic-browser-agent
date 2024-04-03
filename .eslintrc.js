@@ -58,7 +58,7 @@ module.exports = {
       }
     },
     {
-      files: ['src/**/*.test.js', 'src/**/*.component-test.js', 'src/**/__mocks__/**/*'],
+      files: ['src/**/*.test.js', 'src/**/__mocks__/**/*', 'tests/components/**/*'],
       env: {
         browser: true,
         node: true,

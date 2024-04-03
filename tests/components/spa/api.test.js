@@ -1,18 +1,18 @@
 import helpers from './helpers'
-import { Aggregator } from '../../../common/aggregate/aggregator'
-import { ee } from '../../../common/event-emitter/contextual-ee'
-import { Spa } from '../index'
-import { getInfo, originals } from '../../../common/config/config'
-import { bundleId } from '../../../common/ids/bundle-id'
-import { INTERACTION_API } from '../constants'
-import { now } from '../../../common/timing/now'
+import { Aggregator } from '../../../src/common/aggregate/aggregator'
+import { ee } from '../../../src/common/event-emitter/contextual-ee'
+import { Spa } from '../../../src/features/spa'
+import { getInfo, originals } from '../../../src/common/config/config'
+import { bundleId } from '../../../src/common/ids/bundle-id'
+import { INTERACTION_API } from '../../../src/features/spa/constants'
+import { now } from '../../../src/common/timing/now'
 
-jest.mock('../../../common/constants/runtime', () => ({
+jest.mock('../../../src/common/constants/runtime', () => ({
   __esModule: true,
   isBrowserScope: true,
   globalScope: global
 }))
-jest.mock('../../../common/config/config', () => ({
+jest.mock('../../../src/common/config/config', () => ({
   __esModule: true,
   getConfigurationValue: jest.fn(),
   originals: {

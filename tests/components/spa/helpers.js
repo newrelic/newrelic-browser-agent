@@ -1,7 +1,7 @@
 /* global expect */
-import { originals } from '../../../common/config/config'
-import { now } from '../../../common/timing/now'
-import { INTERACTION_API } from '../constants'
+import { originals } from '../../../src/common/config/config'
+import { now } from '../../../src/common/timing/now'
+import { INTERACTION_API } from '../../../src/features/spa/constants'
 
 class InteractionValidator {
   static TIMED_NODE_TYPES = [

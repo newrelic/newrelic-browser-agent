@@ -45,13 +45,13 @@ export class Aggregate extends AggregateBase {
     /** populated with the u8 string lib async */
     this.u8 = undefined
     /** the mode to start in.  Defaults to off */
-    const { session, timeKeeper } = getRuntime(this.agentIdentifier)
+    const { session } = getRuntime(this.agentIdentifier)
     this.mode = session.state.sessionReplayMode || MODE.OFF
 
     /** set by BCS response */
     this.entitled = false
     /** set at BCS response, stored in runtime */
-    this.timeKeeper = timeKeeper
+    this.timeKeeper = undefined
 
     this.recorder = args?.recorder
     if (this.recorder) this.recorder.parent = this
@@ -181,7 +181,8 @@ export class Aggregate extends AggregateBase {
     // we are not actively recording SR... DO NOT import or run the recording library
     // session replay samples can only be decided on the first load of a session
     // session replays can continue if already in progress
-    const { session } = getRuntime(this.agentIdentifier)
+    const { session, timeKeeper } = getRuntime(this.agentIdentifier)
+    this.timeKeeper = timeKeeper
     if (!session.isNew && !ignoreSession) { // inherit the mode of the existing session
       this.mode = session.state.sessionReplayMode
     } else {

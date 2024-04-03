@@ -1,7 +1,7 @@
-import { Aggregator } from '../../../common/aggregate/aggregator'
-import { Aggregate } from '.'
-import { ee } from '../../../common/event-emitter/contextual-ee'
-import { SUPPORTABILITY_METRIC, CUSTOM_METRIC } from '../constants'
+import { Aggregator } from '../../../src/common/aggregate/aggregator'
+import { Aggregate } from '../../../src/features/metrics/aggregate'
+import { ee } from '../../../src/common/event-emitter/contextual-ee'
+import { SUPPORTABILITY_METRIC, CUSTOM_METRIC } from '../../../src/features/metrics/constants'
 
 const METRIC_NAME = 'test'
 const agg = new Aggregator({ agentIdentifier: 'abcd', ee })
@@ -18,7 +18,7 @@ const createAndStoreMetric = (value, isSupportability) => {
   method(METRIC_NAME, value)
 }
 
-jest.mock('../../../common/config/config', () => ({
+jest.mock('../../../src/common/config/config', () => ({
   __esModule: true,
   isConfigured: jest.fn().mockReturnValue(true),
   getConfigurationValue: jest.fn().mockReturnValue(undefined),

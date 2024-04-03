@@ -27,7 +27,7 @@ import { MODE, SESSION_EVENTS, SESSION_EVENT_TYPES } from '../../../common/sessi
 import { stringify } from '../../../common/util/stringify'
 import { stylesheetEvaluator } from '../shared/stylesheet-evaluator'
 import { deregisterDrain } from '../../../common/drain/drain'
-import { TimeKeeper } from '../../../common/timing/time-keeper'
+import { now } from '../../../common/timing/now'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -304,7 +304,7 @@ export class Aggregate extends AggregateBase {
     }
 
     const agentOffset = this.timeKeeper.correctedOriginTime
-    const relativeNow = TimeKeeper.now()
+    const relativeNow = now()
 
     const firstEventTimestamp = events[0]?.timestamp // from rrweb node
     const lastEventTimestamp = events[events.length - 1]?.timestamp // from rrweb node

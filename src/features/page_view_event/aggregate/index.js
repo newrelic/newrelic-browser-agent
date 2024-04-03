@@ -15,6 +15,7 @@ import { drain } from '../../../common/drain/drain'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { handle } from '../../../common/event-emitter/handle'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
+import { now } from '../../../common/timing/now'
 import { TimeKeeper } from '../../../common/timing/time-keeper'
 
 export class Aggregate extends AggregateBase {
@@ -101,13 +102,13 @@ export class Aggregate extends AggregateBase {
     queryParameters.fp = firstPaint.current.value
     queryParameters.fcp = firstContentfulPaint.current.value
 
-    const rumStartTime = TimeKeeper.now()
+    const rumStartTime = now()
     harvester.send({
       endpoint: 'rum',
       payload: { qs: queryParameters, body },
       opts: { needResponse: true, sendEmptyBody: true },
       cbFinished: ({ status, responseText, xhr }) => {
-        const rumEndTime = TimeKeeper.now()
+        const rumEndTime = now()
 
         if (status >= 400 || status === 0) {
           // Adding retry logic for the rum call will be a separate change
@@ -116,7 +117,11 @@ export class Aggregate extends AggregateBase {
         }
 
         try {
-          this.timeKeeper.processRumRequest(xhr, rumStartTime, rumEndTime)
+          const timeKeeper = new TimeKeeper()
+          timeKeeper.processRumRequest(xhr, rumStartTime, rumEndTime)
+          if (!timeKeeper.ready) throw new Error('TimeKeeper not ready')
+
+          agentRuntime.timeKeeper = timeKeeper
         } catch (error) {
           handle(SUPPORTABILITY_METRIC_CHANNEL, ['PVE/NRTime/Calculation/Failed'], undefined, FEATURE_NAMES.metrics, this.ee)
           drain(this.agentIdentifier, FEATURE_NAMES.metrics, true)

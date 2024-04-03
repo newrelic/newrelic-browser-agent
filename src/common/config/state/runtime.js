@@ -24,7 +24,8 @@ const model = {
   xhrWrappable: typeof globalScope.XMLHttpRequest?.prototype?.addEventListener === 'function',
   version: VERSION,
   denyList: undefined,
-  harvestCount: 0
+  harvestCount: 0,
+  timeKeeper: undefined
 }
 
 const _cache = {}

@@ -303,13 +303,12 @@ export class Aggregate extends AggregateBase {
       recorderEvents.hasMeta = !!events.find(x => x.type === RRWEB_EVENT_TYPES.Meta)
     }
 
-    const agentOffset = this.timeKeeper.correctedOriginTime
     const relativeNow = now()
 
     const firstEventTimestamp = events[0]?.timestamp // from rrweb node
     const lastEventTimestamp = events[events.length - 1]?.timestamp // from rrweb node
     const firstTimestamp = firstEventTimestamp || this.timeKeeper.correctAbsoluteTimestamp(recorderEvents.cycleTimestamp) // from rrweb node || from when the harvest cycle started
-    const lastTimestamp = lastEventTimestamp || agentOffset + relativeNow
+    const lastTimestamp = lastEventTimestamp || this.timeKeeper.convertRelativeTimestamp(relativeNow)
 
     const agentMetadata = agentRuntime.appMetadata?.agents?.[0] || {}
     return {

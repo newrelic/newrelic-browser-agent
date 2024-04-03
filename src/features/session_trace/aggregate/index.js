@@ -11,7 +11,7 @@ import { HandlerCache } from '../../utils/handler-cache'
 import { getSessionReplayMode } from '../../session_replay/shared/replay-mode'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { MODE, SESSION_EVENTS } from '../../../common/session/constants'
-import { TimeKeeper } from '../../../common/timing/time-keeper'
+import { now } from '../../../common/timing/now'
 
 const ignoredEvents = {
   // we find that certain events make the data too noisy to be useful
@@ -212,7 +212,7 @@ export class Aggregate extends AggregateBase {
 
   #prepareHarvest (options) {
     if (this.isStandalone) {
-      if (this.ptid && TimeKeeper.now() >= MAX_TRACE_DURATION) {
+      if (this.ptid && now() >= MAX_TRACE_DURATION) {
         // Perform a final harvest once we hit or exceed the max session trace time
         options.isFinalHarvest = true
         this.operationalGate.permanentlyDecide(false)
@@ -419,7 +419,7 @@ export class Aggregate extends AggregateBase {
       if (openedSpace === 0) return
     }
 
-    if (this.isStandalone && TimeKeeper.now() >= MAX_TRACE_DURATION) {
+    if (this.isStandalone && now() >= MAX_TRACE_DURATION) {
       return
     }
 
@@ -436,7 +436,7 @@ export class Aggregate extends AggregateBase {
    */
   trimSTNs (lookbackDuration) {
     let prunedNodes = 0
-    const cutoffHighResTime = Math.max(TimeKeeper.now() - lookbackDuration, 0)
+    const cutoffHighResTime = Math.max(now() - lookbackDuration, 0)
     Object.keys(this.trace).forEach(nameCategory => {
       const nodeList = this.trace[nameCategory]
       /* Notice nodes are appending under their name's list as they end and are stored. This means each list is already (roughly) sorted in chronological order by end time.

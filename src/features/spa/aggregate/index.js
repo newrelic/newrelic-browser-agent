@@ -36,9 +36,10 @@ export class Aggregate extends AggregateBase {
   constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
 
+    const agentRuntime = getRuntime(agentIdentifier)
     this.state = {
-      initialPageURL: getRuntime(agentIdentifier).origin,
-      lastSeenUrl: getRuntime(agentIdentifier).origin,
+      initialPageURL: agentRuntime.origin,
+      lastSeenUrl: agentRuntime.origin,
       lastSeenRouteName: null,
       timerMap: {},
       timerBudget: MAX_TIMER_BUDGET,
@@ -59,7 +60,7 @@ export class Aggregate extends AggregateBase {
     let scheduler
     this.serializer = new Serializer(this)
 
-    const { state, serializer, timeKeeper } = this
+    const { state, serializer } = this
 
     const baseEE = ee.get(agentIdentifier) // <-- parent baseEE
     const mutationEE = baseEE.get('mutation')
@@ -309,7 +310,7 @@ export class Aggregate extends AggregateBase {
         this.sent = true
         node.dt = this.dt
         if (node.dt?.timestamp) {
-          node.dt.timestamp = timeKeeper.correctAbsoluteTimestamp(node.dt.timestamp)
+          node.dt.timestamp = agentRuntime.timeKeeper.correctAbsoluteTimestamp(node.dt.timestamp)
         }
         node.jsEnd = node.start = this.startTime
         node[INTERACTION][REMAINING]++
@@ -409,7 +410,7 @@ export class Aggregate extends AggregateBase {
           if (dtPayload && this[SPA_NODE]) {
             this[SPA_NODE].dt = dtPayload
             if (this[SPA_NODE].dt?.timestamp) {
-              this[SPA_NODE].dt.timestamp = timeKeeper.correctAbsoluteTimestamp(this[SPA_NODE].dt.timestamp)
+              this[SPA_NODE].dt.timestamp = agentRuntime.timeKeeper.correctAbsoluteTimestamp(this[SPA_NODE].dt.timestamp)
             }
           }
         }

@@ -1,4 +1,4 @@
-import { gosNREUM } from '../window/nreum'
+import { globalScope } from '../constants/runtime'
 
 /**
  * Class used to adjust the timestamp of harvested data to New Relic server time. This
@@ -25,24 +25,19 @@ export class TimeKeeper {
    */
   #localTimeDiff
 
-  constructor (originTime) {
-    if (!originTime) throw new Error('TimeKeeper must be supplied a browser origin time.')
-    this.#originTime = originTime
-  }
-
-  static getTimeKeeperByAgentIdentifier (agentIdentifier) {
-    const nr = gosNREUM()
-    return Object.keys(nr?.initializedAgents || {}).indexOf(agentIdentifier) > -1
-      ? nr.initializedAgents[agentIdentifier].timeKeeper
-      : undefined
-  }
-
   /**
-   * Returns the current time offset from page origin.
-   * @return {number}
+   * Represents whether the timekeeper is in a state that it can accurately convert
+   * timestamps.
+   * @type {number}
    */
-  static now () {
-    return Math.floor(performance.now())
+  #ready = false
+
+  constructor () {
+    this.#originTime = globalScope.performance.timeOrigin || globalScope.performance.timing.navigationStart
+  }
+
+  get ready () {
+    return this.#ready
   }
 
   get originTime () {
@@ -50,7 +45,6 @@ export class TimeKeeper {
   }
 
   get correctedOriginTime () {
-    if (!this.#correctedOriginTime) throw new Error('InvalidState: Access to correctedOriginTime attempted before NR time calculated.')
     return this.#correctedOriginTime
   }
 
@@ -76,6 +70,8 @@ export class TimeKeeper {
     if (Number.isNaN(this.#correctedOriginTime)) {
       throw new Error('Date header invalid format.')
     }
+
+    this.#ready = true
   }
 
   /**
@@ -85,7 +81,6 @@ export class TimeKeeper {
    * @returns {number} Corrected unix/epoch timestamp
    */
   convertRelativeTimestamp (relativeTime) {
-    if (!this.#correctedOriginTime) return this.originTime + relativeTime
     return this.#correctedOriginTime + relativeTime
   }
 
@@ -95,7 +90,6 @@ export class TimeKeeper {
    * @return {number} Corrected unix/epoch timestamp
    */
   correctAbsoluteTimestamp (timestamp) {
-    if (!this.#localTimeDiff) return timestamp
     return Math.floor(timestamp - this.#localTimeDiff)
   }
 }

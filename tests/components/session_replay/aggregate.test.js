@@ -98,12 +98,13 @@ describe('Session Replay', () => {
 
       setConfiguration(agentIdentifier, { ...init })
       sr = new SessionReplayAgg(agentIdentifier, new Aggregator({}))
+      sr.scheduler.runHarvest = jest.fn()
       sr.ee.emit('rumresp', [{ sr: 1 }])
       await wait(1)
       expect(sr.initialized).toBeTruthy()
       expect(sr.recorder.recording).toBeTruthy()
       sr.ee.emit(SESSION_EVENTS.RESET)
-      expect(global.XMLHttpRequest).toHaveBeenCalled()
+      expect(sr.scheduler.runHarvest).toHaveBeenCalled()
       expect(sr.recorder.recording).toBeFalsy()
       expect(sr.blocked).toBeTruthy()
     })
@@ -362,8 +363,8 @@ function primeSessionAndReplay (sess = new SessionEntity({ agentIdentifier, key:
   timeKeeper.processRumRequest({
     getResponseHeader: jest.fn(() => (new Date()).toUTCString())
   }, 450, 600)
-  const agent = { agentIdentifier, timeKeeper }
+  const agent = { agentIdentifier }
   setNREUMInitializedAgent(agentIdentifier, agent)
   session = sess
-  configure(agent, { info, runtime: { session, isolatedBacklog: false }, init: {} }, 'test', true)
+  configure(agent, { info, runtime: { session, isolatedBacklog: false, timeKeeper }, init: {} }, 'test', true)
 }

@@ -45,11 +45,13 @@ export class Aggregate extends AggregateBase {
     /** populated with the u8 string lib async */
     this.u8 = undefined
     /** the mode to start in.  Defaults to off */
-    const { session } = getRuntime(this.agentIdentifier)
+    const { session, timeKeeper } = getRuntime(this.agentIdentifier)
     this.mode = session.state.sessionReplayMode || MODE.OFF
 
     /** set by BCS response */
     this.entitled = false
+    /** set at BCS response, stored in runtime */
+    this.timeKeeper = timeKeeper
 
     this.recorder = args?.recorder
     if (this.recorder) this.recorder.parent = this
@@ -241,7 +243,7 @@ export class Aggregate extends AggregateBase {
   }
 
   prepareHarvest ({ opts } = {}) {
-    if (!this.recorder) return
+    if (!this.recorder || !this.timeKeeper?.ready) return
     const recorderEvents = this.recorder.getEvents()
     // get the event type and use that to trigger another harvest if needed
     if (!recorderEvents.events.length || (this.mode !== MODE.FULL) || this.blocked) return

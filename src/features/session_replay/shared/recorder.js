@@ -20,9 +20,9 @@ export class Recorder {
   #fixing = false
 
   constructor (parent) {
-    this.#events = new RecorderEvents({ canCorrectTimestamps: !!parent.timeKeeper })
-    this.#backloggedEvents = new RecorderEvents({ canCorrectTimestamps: !!parent.timeKeeper })
-    this.#preloaded = [new RecorderEvents({ canCorrectTimestamps: !!parent.timeKeeper })]
+    this.#events = new RecorderEvents({ canCorrectTimestamps: !!parent.timeKeeper?.ready })
+    this.#backloggedEvents = new RecorderEvents({ canCorrectTimestamps: !!parent.timeKeeper?.ready })
+    this.#preloaded = [new RecorderEvents({ canCorrectTimestamps: !!parent.timeKeeper?.ready })]
     /** True when actively recording, false when paused or stopped */
     this.recording = false
     /** The pointer to the current bucket holding rrweb events */
@@ -64,6 +64,7 @@ export class Recorder {
    * @returns {CorrectedSessionReplayEvent[]}
    */
   returnCorrectTimestamps (events) {
+    if (!this.parent.timeKeeper?.ready) return events.events
     return events.canCorrectTimestamps
       ? events.events
       : events.events.map(({ __serialized, timestamp, ...e }) => ({ timestamp: this.parent.timeKeeper.correctAbsoluteTimestamp(timestamp), ...e }))
@@ -73,8 +74,8 @@ export class Recorder {
   clearBuffer () {
     if (this.#preloaded[0]?.events.length) this.#preloaded.shift()
     else if (this.parent.mode === MODE.ERROR) this.#backloggedEvents = this.#events
-    else this.#backloggedEvents = new RecorderEvents({ canCorrectTimestamps: !!this.parent.timeKeeper })
-    this.#events = new RecorderEvents({ canCorrectTimestamps: !!this.parent.timeKeeper })
+    else this.#backloggedEvents = new RecorderEvents({ canCorrectTimestamps: !!this.parent.timeKeeper?.ready })
+    this.#events = new RecorderEvents({ canCorrectTimestamps: !!this.parent.timeKeeper?.ready })
   }
 
   /** Begin recording using configured recording lib */
@@ -183,7 +184,7 @@ export class Recorder {
         this.parent.scheduler.runHarvest()
       } else {
         // we are still in "preload" and it triggered a "stop point".  Make a new set, which will get pointed at on next cycle
-        this.#preloaded.push(new RecorderEvents({ canCorrectTimestamps: !!this.parent.timeKeeper }))
+        this.#preloaded.push(new RecorderEvents({ canCorrectTimestamps: !!this.parent.timeKeeper?.ready }))
       }
     }
   }

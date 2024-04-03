@@ -21,7 +21,7 @@ import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { getNREUMInitializedAgent } from '../../../common/window/nreum'
 import { deregisterDrain } from '../../../common/drain/drain'
-import { TimeKeeper } from '../../../common/timing/time-keeper'
+import { now } from '../../../common/timing/now'
 
 /**
  * @typedef {import('./compute-stack-trace.js').StackInfo} StackInfo
@@ -135,7 +135,7 @@ export class Aggregate extends AggregateBase {
 
   storeError (err, time, internal, customAttributes) {
     // are we in an interaction
-    time = time || TimeKeeper.now()
+    time = time || now()
     const agentRuntime = getRuntime(this.agentIdentifier)
     let filterOutput
 
@@ -173,7 +173,7 @@ export class Aggregate extends AggregateBase {
     if (!this.stackReported[bucketHash]) {
       this.stackReported[bucketHash] = true
       params.stack_trace = truncateSize(stackInfo.stackString)
-      this.observedAt[bucketHash] = this.timeKeeper.convertRelativeTimestamp(time)
+      this.observedAt[bucketHash] = agentRuntime.timeKeeper.convertRelativeTimestamp(time)
     } else {
       params.browser_stack_hash = stringHashCode(stackInfo.stackString)
     }

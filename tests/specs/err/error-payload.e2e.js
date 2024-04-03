@@ -47,7 +47,7 @@ describe('error payloads', () => {
       .then(() => browser.waitForAgentLoad())
 
     const [relativeTimestamp, absoluteTimestamp] = await browser.execute(function () {
-      var timeKeeper = Object.values(newrelic.initializedAgents)[0].timeKeeper
+      var timeKeeper = Object.values(newrelic.initializedAgents)[0].config.runtime.timeKeeper
       var start = performance.now()
       for (var i = 0; i < 20; i++) { newrelic.noticeError(new Error('test')) }
       return [start, timeKeeper.convertRelativeTimestamp(start)]
@@ -62,10 +62,10 @@ describe('error payloads', () => {
 
   it('simultaneous errors - should set a timestamp, tied to the FIRST error seen - thrown errors', async () => {
     await browser.url(await browser.testHandle.assetURL('duplicate-errors.html')) // Setup expects before loading the page
-      .then(() => browser.waitForFeatureAggregate('jserrors'))
+      .then(() => browser.waitForAgentLoad())
 
     const originTime = await browser.execute(function () {
-      var timeKeeper = Object.values(newrelic.initializedAgents)[0].timeKeeper
+      var timeKeeper = Object.values(newrelic.initializedAgents)[0].config.runtime.timeKeeper
       for (var i = 0; i < 2; i++) { errorFn() }
       return timeKeeper.correctedOriginTime
     })

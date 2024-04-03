@@ -2,10 +2,10 @@ import helpers from './helpers'
 import { Aggregator } from '../../../common/aggregate/aggregator'
 import { ee } from '../../../common/event-emitter/contextual-ee'
 import { Spa } from '../index'
-import { TimeKeeper } from '../../../common/timing/time-keeper'
 import { getInfo, originals } from '../../../common/config/config'
 import { bundleId } from '../../../common/ids/bundle-id'
 import { INTERACTION_API } from '../constants'
+import { now } from '../../../common/timing/now'
 
 jest.mock('../../../common/constants/runtime', () => ({
   __esModule: true,
@@ -26,7 +26,6 @@ jest.mock('../../../common/config/config', () => ({
 
 let spaInstrument, spaAggregate, newrelic, mockCurrentInfo
 const agentIdentifier = 'abcdefg'
-const now = TimeKeeper.now
 const baseEE = ee.get(agentIdentifier)
 
 beforeAll(async () => {

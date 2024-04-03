@@ -18,7 +18,7 @@ describe('respects feature flags', () => {
     await browser.destroyAgentSession()
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ stn: 0, sts: 0, err: 1, ins: 1, spa: 1, sr: 0, srs: 0, loaded: 1 })
+      body: JSON.stringify({ st: 0, sts: 0, err: 1, ins: 1, spa: 1, sr: 0, srs: 0, loaded: 1 })
     })
     let url = await browser.testHandle.assetURL('instrumented.html', stConfig())
     await browser.url(url).then(() => browser.waitForAgentLoad())
@@ -36,7 +36,7 @@ describe('respects feature flags', () => {
     await browser.destroyAgentSession()
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ stn: 0, sts: 1, err: 1, ins: 1, spa: 1, sr: 0, srs: 0, loaded: 1 })
+      body: JSON.stringify({ st: 0, sts: 1, err: 1, ins: 1, spa: 1, sr: 0, srs: 0, loaded: 1 })
     })
     let url = await browser.testHandle.assetURL('instrumented.html', stConfig())
     await browser.url(url).then(() => browser.waitForAgentLoad())
@@ -54,7 +54,7 @@ describe('respects feature flags', () => {
     await browser.destroyAgentSession()
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ stn: 0, sts: 2, err: 1, ins: 1, spa: 1, sr: 0, srs: 0, loaded: 1 })
+      body: JSON.stringify({ st: 0, sts: 2, err: 1, ins: 1, spa: 1, sr: 0, srs: 0, loaded: 1 })
     })
     let url = await browser.testHandle.assetURL('instrumented.html', stConfig())
     await browser.url(url).then(() => browser.waitForAgentLoad())
@@ -73,7 +73,7 @@ describe('respects feature flags', () => {
 
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ stn: 1, sts: 0, err: 1, ins: 1, spa: 1, sr: 1, srs: 0, loaded: 1 })
+      body: JSON.stringify({ st: 1, sts: 0, err: 1, ins: 1, spa: 1, sr: 1, srs: 0, loaded: 1 })
     })
     let url = await browser.testHandle.assetURL('instrumented.html',
       stConfig({ session_replay: { enabled: true } })
@@ -95,7 +95,7 @@ describe('respects feature flags', () => {
     await browser.destroyAgentSession()
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ stn: 1, sts: 1, err: 1, ins: 1, spa: 1, sr: 0, srs: 0, loaded: 1 })
+      body: JSON.stringify({ st: 1, sts: 1, err: 1, ins: 1, spa: 1, sr: 0, srs: 0, loaded: 1 })
     })
     let url = await browser.testHandle.assetURL('instrumented.html', stConfig())
     await browser.url(url).then(() => browser.waitForAgentLoad())
@@ -109,7 +109,7 @@ describe('respects feature flags', () => {
     await browser.destroyAgentSession()
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ stn: 1, sts: 2, err: 1, ins: 1, spa: 1, sr: 0, srs: 0, loaded: 1 })
+      body: JSON.stringify({ st: 1, sts: 2, err: 1, ins: 1, spa: 1, sr: 0, srs: 0, loaded: 1 })
     })
     let url = await browser.testHandle.assetURL('instrumented.html', stConfig())
     await browser.url(url).then(() => browser.waitForAgentLoad())
@@ -139,7 +139,7 @@ describe('respects feature flags', () => {
     await browser.destroyAgentSession()
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ stn: 1, sts: 2, err: 1, ins: 1, spa: 1, sr: 0, srs: 0, loaded: 1 })
+      body: JSON.stringify({ st: 1, sts: 2, err: 1, ins: 1, spa: 1, sr: 0, srs: 0, loaded: 1 })
     })
     let url = await browser.testHandle.assetURL('js-error-with-error-after-page-load.html', stConfig())
     await browser.url(url).then(() => browser.waitForAgentLoad())
@@ -155,7 +155,7 @@ describe('respects feature flags', () => {
     await browser.destroyAgentSession()
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ stn: 1, sts: 2, err: 1, ins: 1, spa: 1, sr: 0, srs: 0, loaded: 1 })
+      body: JSON.stringify({ st: 1, sts: 2, err: 1, ins: 1, spa: 1, sr: 0, srs: 0, loaded: 1 })
     })
     let url = await browser.testHandle.assetURL('js-error-with-error-before-page-load.html', stConfig())
     await browser.url(url).then(() => browser.waitForAgentLoad())
@@ -169,7 +169,7 @@ describe('respects feature flags', () => {
     await browser.destroyAgentSession()
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ stn: 1, sts: 2, err: 1, ins: 1, spa: 1, sr: 0, srs: 0, loaded: 1 })
+      body: JSON.stringify({ st: 1, sts: 2, err: 1, ins: 1, spa: 1, sr: 0, srs: 0, loaded: 1 })
     })
     let url = await browser.testHandle.assetURL('instrumented.html', stConfig())
     await browser.url(url).then(() => browser.waitForAgentLoad())
@@ -190,7 +190,7 @@ describe('respects feature flags', () => {
     await browser.destroyAgentSession()
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ stn: 1, sts: 2, err: 1, ins: 1, spa: 1, sr: 0, srs: 0, loaded: 1 })
+      body: JSON.stringify({ st: 1, sts: 2, err: 1, ins: 1, spa: 1, sr: 0, srs: 0, loaded: 1 })
     })
     let url = await browser.testHandle.assetURL('instrumented.html', stConfig())
     await browser.url(url).then(() => browser.waitForAgentLoad())
@@ -205,7 +205,7 @@ describe('respects feature flags', () => {
     await browser.destroyAgentSession()
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ stn: 1, sts: 1, err: 1, ins: 1, spa: 1, sr: 0, srs: 0, loaded: 1 })
+      body: JSON.stringify({ st: 1, sts: 1, err: 1, ins: 1, spa: 1, sr: 0, srs: 0, loaded: 1 })
     })
     let url = await browser.testHandle.assetURL('instrumented.html', stConfig())
     await browser.url(url).then(() => browser.waitForAgentLoad())
@@ -229,7 +229,7 @@ describe('respects feature flags', () => {
     await browser.destroyAgentSession()
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ stn: 1, sts: 1, err: 1, ins: 1, spa: 1, sr: 0, srs: 0, loaded: 1 })
+      body: JSON.stringify({ st: 1, sts: 1, err: 1, ins: 1, spa: 1, sr: 0, srs: 0, loaded: 1 })
     })
     let url = await browser.testHandle.assetURL('instrumented.html', stConfig({ privacy: { cookies_enabled: false } }))
     await browser.url(url).then(() => browser.waitForAgentLoad())
@@ -241,7 +241,7 @@ describe('respects feature flags', () => {
     await browser.destroyAgentSession()
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ stn: 1, sts: 0, err: 1, ins: 1, spa: 1, sr: 0, srs: 0, loaded: 1 })
+      body: JSON.stringify({ st: 1, sts: 0, err: 1, ins: 1, spa: 1, sr: 0, srs: 0, loaded: 1 })
     })
     let url = await browser.testHandle.assetURL('instrumented.html', stConfig())
     await browser.url(url).then(() => browser.waitForAgentLoad())

@@ -17,7 +17,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
   it('should record across same-tab page refresh when already recording, even if sampling is 0', async () => {
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ stn: 1, sts: 1, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
+      body: JSON.stringify({ st: 1, sts: 1, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
     })
     await browser.url(await browser.testHandle.assetURL('instrumented.html', stConfig()))
       .then(() => browser.waitForAgentLoad())
@@ -29,7 +29,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
 
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ stn: 1, sts: 0, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
+      body: JSON.stringify({ st: 1, sts: 0, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
     })
     await browser.refresh()
       .then(() => browser.waitForAgentLoad())
@@ -42,7 +42,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
   it('should record across same-tab page navigation when already recording, even if sampling is 0', async () => {
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ stn: 1, sts: 1, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
+      body: JSON.stringify({ st: 1, sts: 1, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
     })
     await browser.url(await browser.testHandle.assetURL('stn/instrumented.html', stConfig()))
       .then(() => browser.waitForAgentLoad())
@@ -53,7 +53,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
 
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ stn: 1, sts: 0, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
+      body: JSON.stringify({ st: 1, sts: 0, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
     })
 
     await browser.url(await browser.testHandle.assetURL('instrumented.html', stConfig()))
@@ -67,7 +67,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
   it.withBrowsersMatching([supportsMultipleTabs, notSafari])('should record across new-tab page navigation once recording, even if sampled as 0', async () => {
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ stn: 1, sts: 1, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
+      body: JSON.stringify({ st: 1, sts: 1, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
     })
     await browser.url(await browser.testHandle.assetURL('instrumented.html', stConfig()))
       .then(() => browser.waitForAgentLoad())
@@ -79,7 +79,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
 
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ stn: 1, sts: 0, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
+      body: JSON.stringify({ st: 1, sts: 0, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
     })
     const newTab = await browser.createWindow('tab')
     await browser.switchToWindow(newTab.handle)
@@ -97,7 +97,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
   it('should not record across navigations if not active', async () => {
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ stn: 1, sts: 1, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
+      body: JSON.stringify({ st: 1, sts: 1, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
     })
     await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', stConfig()))
       .then(() => browser.waitForAgentLoad())
@@ -113,7 +113,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
 
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ stn: 1, sts: 0, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
+      body: JSON.stringify({ st: 1, sts: 0, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
     })
     await browser.refresh()
       .then(() => browser.waitForAgentLoad())
@@ -126,7 +126,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
     await browser.destroyAgentSession()
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ stn: 1, sts: 2, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
+      body: JSON.stringify({ st: 1, sts: 2, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
     })
     let url = await browser.testHandle.assetURL('instrumented.html', stConfig())
     await browser.url(url).then(() => browser.waitForAgentLoad())
@@ -138,7 +138,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
     await browser.switchToWindow(newTab.handle)
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ stn: 1, sts: 2, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
+      body: JSON.stringify({ st: 1, sts: 2, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
     })
     await browser.url(await browser.testHandle.assetURL('instrumented.html', stConfig()))
       .then(() => browser.waitForAgentLoad())

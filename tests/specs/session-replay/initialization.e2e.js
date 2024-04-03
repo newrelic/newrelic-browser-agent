@@ -8,7 +8,7 @@ async function disqualifySR () {
     test: testRumRequest,
     permanent: true,
     body: JSON.stringify({
-      stn: 1,
+      st: 1,
       sts: 1,
       err: 1,
       ins: 1,

@@ -31,8 +31,8 @@ export class Aggregate extends AggregateBase {
     this.harvesting = false
     /** TraceStorage is the mechanism that holds, normalizes and aggregates ST nodes.  It will be accessed and purged when harvests occur */
     this.traceStorage = new TraceStorage(this)
-    /** This agg needs information about sampling (stn) and entitlements (ste) to make the appropriate decisions on running */
-    this.waitForFlags(['sts', 'stn'])
+    /** This agg needs information about sampling (sts) and entitlements (st) to make the appropriate decisions on running */
+    this.waitForFlags(['sts', 'st'])
       .then(([stMode, stEntitled]) => this.initialize(stMode, stEntitled))
   }
 

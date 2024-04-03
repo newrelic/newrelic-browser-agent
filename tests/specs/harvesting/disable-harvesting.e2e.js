@@ -5,7 +5,7 @@ describe('disable harvesting', () => {
     browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
       body: `${JSON.stringify({
-        stn: 1,
+        st: 1,
         err: 0,
         ins: 1,
         cap: 1,
@@ -29,7 +29,7 @@ describe('disable harvesting', () => {
     browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
       body: `${JSON.stringify({
-        stn: 1,
+        st: 1,
         err: 1,
         ins: 1,
         cap: 1,
@@ -56,7 +56,7 @@ describe('disable harvesting', () => {
     browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
       body: `${JSON.stringify({
-        stn: 1,
+        st: 1,
         err: 1,
         ins: 0,
         cap: 1,
@@ -78,7 +78,7 @@ describe('disable harvesting', () => {
     browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
       body: `${JSON.stringify({
-        stn: 0,
+        st: 0,
         err: 1,
         ins: 1,
         cap: 1,

@@ -14,7 +14,11 @@ export class MockXhr {
   }
 
   open = jest.fn()
-  send = jest.fn()
+  onload = jest.fn()
+  send = jest.fn(() => {
+    setTimeout(this.onload, Math.floor(Math.random() * 10))
+  })
+
   setRequestHeader = jest.fn()
   addEventListener = jest.fn()
 }

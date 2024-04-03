@@ -1,5 +1,6 @@
 /* global expect */
 import { originals } from '../../../common/config/config'
+import { now } from '../../../common/timing/now'
 import { INTERACTION_API } from '../constants'
 
 class InteractionValidator {
@@ -171,6 +172,21 @@ function simulateEvent (elType, evtType) {
   el.dispatchEvent(evt)
 }
 
+/** Mock the window.newrelic global that makes avail SPA API. */
+function getNewrelicGlobal (apiEventsEE) {
+  return {
+    interaction: function () {
+      const newSandboxHandle = { // will have its own clean 'this' context specific to each newrelic.interaction() call
+        command: function (cmd, customTime = now(), ...args) {
+          apiEventsEE.emit(INTERACTION_API + cmd, [customTime, ...args], this)
+          return this // most spa APIs should return a handle obj that allows for chaining further commands
+        }
+      }
+      return newSandboxHandle.command('get')
+    }
+  }
+}
+
 export default {
-  InteractionValidator, startInteraction
+  InteractionValidator, startInteraction, getNewrelicGlobal
 }

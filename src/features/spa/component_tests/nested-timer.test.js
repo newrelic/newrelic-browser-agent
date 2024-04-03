@@ -2,8 +2,6 @@ import helpers from './helpers'
 import { Aggregator } from '../../../common/aggregate/aggregator'
 import { ee } from '../../../common/event-emitter/contextual-ee'
 import { Spa } from '../index'
-import { TimeKeeper } from '../../../common/timing/time-keeper'
-import { INTERACTION_API } from '../constants'
 
 jest.mock('../../../common/constants/runtime', () => ({
   __esModule: true,
@@ -29,18 +27,7 @@ beforeAll(async () => {
   spaAggregate = spaInstrument.featAggregate
   spaAggregate.blocked = true
   spaAggregate.drain()
-
-  newrelic = {
-    interaction: function () {
-      const newSandboxHandle = {
-        command: function (cmd, customTime = TimeKeeper.now(), ...args) {
-          spaAggregate.ee.emit(INTERACTION_API + cmd, [customTime, ...args], this)
-          return this // most spa APIs should return a handle obj that allows for chaining further commands
-        }
-      }
-      return newSandboxHandle.command('get')
-    }
-  }
+  newrelic = helpers.getNewrelicGlobal(spaAggregate.ee)
 })
 
 test('spa nested timers', done => {

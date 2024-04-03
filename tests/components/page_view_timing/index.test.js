@@ -1,7 +1,7 @@
-import { Aggregator } from '../../../common/aggregate/aggregator'
-import { ee } from '../../../common/event-emitter/contextual-ee'
-import { setRuntime } from '../../../common/config/config'
-import { VITAL_NAMES } from '../../../common/vitals/constants'
+import { Aggregator } from '../../../src/common/aggregate/aggregator'
+import { ee } from '../../../src/common/event-emitter/contextual-ee'
+import { setRuntime } from '../../../src/common/config/config'
+import { VITAL_NAMES } from '../../../src/common/vitals/constants'
 
 // Note: these callbacks fire right away unlike the real web-vitals API which are async-on-trigger
 jest.mock('web-vitals/attribution', () => ({
@@ -32,7 +32,7 @@ jest.mock('web-vitals/attribution', () => ({
   }))
 }))
 let triggerVisChange
-jest.mock('../../../common/window/page-visibility', () => ({
+jest.mock('../../../src/common/window/page-visibility', () => ({
   subscribeToVisibilityChange: jest.fn(cb => { triggerVisChange ??= cb })
 }))
 
@@ -48,7 +48,7 @@ const agentId = 'abcd'
 describe('pvt aggregate tests', () => {
   beforeEach(async () => {
     triggerVisChange = undefined
-    jest.doMock('../../../common/util/feature-flags', () => ({
+    jest.doMock('../../../src/common/util/feature-flags', () => ({
       __esModule: true,
       activatedFeatures: { [agentId]: { pvt: 1 } }
     }))
@@ -58,7 +58,7 @@ describe('pvt aggregate tests', () => {
     // }))
 
     setRuntime(agentId, {})
-    const { Aggregate } = await import('.')
+    const { Aggregate } = await import('../../../src/features/page_view_timing/aggregate')
 
     global.navigator.connection = {
       type: 'cellular',

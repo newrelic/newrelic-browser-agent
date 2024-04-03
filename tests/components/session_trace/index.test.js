@@ -1,8 +1,8 @@
-import { SessionTrace } from '.'
-import { Aggregator } from '../../common/aggregate/aggregator'
-import { ee } from '../../common/event-emitter/contextual-ee'
+import { SessionTrace } from '../../../src/features/session_trace'
+import { Aggregator } from '../../../src/common/aggregate/aggregator'
+import { ee } from '../../../src/common/event-emitter/contextual-ee'
 
-jest.mock('../../common/config/config', () => ({
+jest.mock('../../../src/common/config/config', () => ({
   __esModule: true,
   getConfigurationValue: jest.fn().mockReturnValue(undefined),
   isConfigured: jest.fn().mockReturnValue(true),
@@ -11,12 +11,12 @@ jest.mock('../../common/config/config', () => ({
     offset: Date.now()
   })
 }))
-jest.mock('../../common/constants/runtime', () => ({
+jest.mock('../../../src/common/constants/runtime', () => ({
   __esModule: true,
   isBrowserScope: true,
   globalScope: global
 }))
-jest.mock('../../common/window/load', () => ({
+jest.mock('../../../src/common/window/load', () => ({
   __esModule: true,
   onWindowLoad: jest.fn(cb => cb())
 }))

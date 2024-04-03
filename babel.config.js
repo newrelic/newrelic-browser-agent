@@ -15,7 +15,6 @@ module.exports = function (api, ...args) {
 
   const ignore = [
     '**/*.test.js',
-    '**/*.component-test.js',
     '**/__mocks__/*.js'
   ]
   const presets = [

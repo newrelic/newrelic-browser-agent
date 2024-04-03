@@ -32,7 +32,7 @@ module.exports = {
     {
       ...commonConfig,
       displayName: 'component',
-      testMatch: ['<rootDir>/src/**/?(*.)+(component-test).[tj]s?(x)']
+      testMatch: ['<rootDir>/tests/components/**/?(*.)+(test).[tj]s?(x)']
     }
   ]
 }

@@ -1,21 +1,21 @@
-import { SoftNav } from '.'
-import { Aggregator } from '../../common/aggregate/aggregator'
-import { ee } from '../../common/event-emitter/contextual-ee'
-import { FEATURE_NAME } from './constants'
-import * as HMod from '../../common/event-emitter/handle'
+import { SoftNav } from '../../../src/features/soft_navigations'
+import { Aggregator } from '../../../src/common/aggregate/aggregator'
+import { ee } from '../../../src/common/event-emitter/contextual-ee'
+import { FEATURE_NAME } from '../../../src/features/soft_navigations/constants'
+import * as HMod from '../../../src/common/event-emitter/handle'
 
 let importAggregatorFn
-jest.mock('../../common/constants/runtime', () => ({
+jest.mock('../../../src/common/constants/runtime', () => ({
   __esModule: true,
   isBrowserScope: true,
   globalScope: global,
   initialLocation: '' + global.location
 }))
-jest.mock('../../common/window/load', () => ({
+jest.mock('../../../src/common/window/load', () => ({
   __esModule: true,
   onWindowLoad: jest.fn(cb => { importAggregatorFn = cb })
 }))
-jest.mock('../../common/config/config', () => ({
+jest.mock('../../../src/common/config/config', () => ({
   __esModule: true,
   originals: {
     MO: class {
@@ -74,7 +74,7 @@ describe('soft navigations', () => {
   global.setTimeout = jest.fn((cb, timeout) => _setTimeout(cb, timeout === 0 ? 0 : 300)) // force cancellationTimers to trigger after 0.5 second
 
   let executeTTFB
-  jest.doMock('../../common/vitals/time-to-first-byte', () => {
+  jest.doMock('../../../src/common/vitals/time-to-first-byte', () => {
     return {
       __esModule: true,
       timeToFirstByte: {

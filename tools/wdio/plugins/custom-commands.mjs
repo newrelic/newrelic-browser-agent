@@ -127,8 +127,12 @@ export default class CustomCommands {
      */
     browser.addCommand('getTimeKeeper', async function () {
       return browser.execute(function () {
-        var tk = Object.values(newrelic.initializedAgents)[0].timeKeeper
-        return { originTime: tk.originTime, correctedOriginTime: tk.correctedOriginTime }
+        try {
+          var tk = Object.values(newrelic.initializedAgents)[0].timeKeeper
+          return { originTime: tk.originTime, correctedOriginTime: tk.correctedOriginTime }
+        } catch (err) {
+          return {}
+        }
       })
     })
 

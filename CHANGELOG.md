@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.255.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.254.1...v1.255.0) (2024-04-04)
+
+
+### Features
+
+* Adjust SR Timestamps to NR Server Time ([#939](https://github.com/newrelic/newrelic-browser-agent/issues/939)) ([94f0dee](https://github.com/newrelic/newrelic-browser-agent/commit/94f0deed02a8f5e9d668f3fe5a68ada86cecc439))
+* Send CLS as timing node additionally ([#935](https://github.com/newrelic/newrelic-browser-agent/issues/935)) ([88e71da](https://github.com/newrelic/newrelic-browser-agent/commit/88e71da521f1a58af28ae17fee13f648affd262a))
+* Switch web vitals library to attribution build ([#919](https://github.com/newrelic/newrelic-browser-agent/issues/919)) ([f36acbc](https://github.com/newrelic/newrelic-browser-agent/commit/f36acbc03c4f4d51e65431a270a008e65bb2cfff))
+* Update agent to use new relic server time ([#918](https://github.com/newrelic/newrelic-browser-agent/issues/918)) ([8a4831c](https://github.com/newrelic/newrelic-browser-agent/commit/8a4831cd1f2d32d97daa8788967b15d7f2f723d3))
+
 ## [1.254.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.254.0...v1.254.1) (2024-03-26)
 
 

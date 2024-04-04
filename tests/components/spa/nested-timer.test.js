@@ -3,11 +3,7 @@ import { Aggregator } from '../../../src/common/aggregate/aggregator'
 import { ee } from '../../../src/common/event-emitter/contextual-ee'
 import { Spa } from '../../../src/features/spa'
 
-jest.mock('../../../src/common/constants/runtime', () => ({
-  __esModule: true,
-  isBrowserScope: true,
-  globalScope: global
-}))
+jest.mock('../../../src/common/constants/runtime')
 jest.mock('../../../src/common/config/config', () => ({
   __esModule: true,
   getConfigurationValue: jest.fn(),

@@ -183,12 +183,6 @@ export class Aggregate extends AggregateBase {
     // If off, then don't record (early return)
     if (this.mode === MODE.OFF) return
 
-    if (this.recorder?.getEvents().type === 'preloaded') {
-      this.prepUtils().then(() => {
-        this.scheduler.runHarvest()
-      })
-    }
-
     if (!this.recorder) {
       try {
       // Do not change the webpackChunkName or it will break the webpack nrba-chunking plugin
@@ -207,12 +201,20 @@ export class Aggregate extends AggregateBase {
       this.mode = MODE.FULL
     }
 
-    // FULL mode records AND reports from the beginning, while ERROR mode only records (but does not report).
-    // ERROR mode will do this until an error is thrown, and then switch into FULL mode.
-    // If an error happened in ERROR mode before we've gotten to this stage, it will have already set the mode to FULL
-    if (this.mode === MODE.FULL && !this.scheduler.started) {
+    if (this.mode === MODE.FULL) {
+      // If theres preloaded events and we are in full mode, just harvest immediately to clear up space and for consistency
+      if (this.recorder?.getEvents().type === 'preloaded') {
+        this.prepUtils().then(() => {
+          this.scheduler.runHarvest()
+        })
+      }
+      // FULL mode records AND reports from the beginning, while ERROR mode only records (but does not report).
+      // ERROR mode will do this until an error is thrown, and then switch into FULL mode.
+      // If an error happened in ERROR mode before we've gotten to this stage, it will have already set the mode to FULL
+      if (!this.scheduler.started) {
       // We only report (harvest) in FULL mode
-      this.scheduler.startTimer(this.harvestTimeSeconds)
+        this.scheduler.startTimer(this.harvestTimeSeconds)
+      }
     }
 
     await this.prepUtils()

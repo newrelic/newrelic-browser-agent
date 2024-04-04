@@ -50,6 +50,8 @@ export class Aggregate extends AggregateBase {
 
     /** set by BCS response */
     this.entitled = false
+    /** set at BCS response, stored in runtime */
+    this.timeKeeper = undefined
 
     this.recorder = args?.recorder
     if (this.recorder) this.recorder.parent = this
@@ -179,7 +181,8 @@ export class Aggregate extends AggregateBase {
     // we are not actively recording SR... DO NOT import or run the recording library
     // session replay samples can only be decided on the first load of a session
     // session replays can continue if already in progress
-    const { session } = getRuntime(this.agentIdentifier)
+    const { session, timeKeeper } = getRuntime(this.agentIdentifier)
+    this.timeKeeper = timeKeeper
     if (!session.isNew && !ignoreSession) { // inherit the mode of the existing session
       this.mode = session.state.sessionReplayMode
     } else {
@@ -241,7 +244,7 @@ export class Aggregate extends AggregateBase {
   }
 
   prepareHarvest ({ opts } = {}) {
-    if (!this.recorder) return
+    if (!this.recorder || !this.timeKeeper?.ready) return
     const recorderEvents = this.recorder.getEvents()
     // get the event type and use that to trigger another harvest if needed
     if (!recorderEvents.events.length || (this.mode !== MODE.FULL) || this.blocked) return
@@ -254,7 +257,10 @@ export class Aggregate extends AggregateBase {
 
     let len = 0
     if (!!this.gzipper && !!this.u8) {
-      payload.body = this.gzipper(this.u8(`[${payload.body.map(e => e.__serialized).join(',')}]`))
+      payload.body = this.gzipper(this.u8(`[${payload.body.map(e => {
+        if (e.__serialized) return e.__serialized
+        return stringify(e)
+      }).join(',')}]`))
       len = payload.body.length
       this.scheduler.opts.gzip = true
     } else {
@@ -300,13 +306,12 @@ export class Aggregate extends AggregateBase {
       recorderEvents.hasMeta = !!events.find(x => x.type === RRWEB_EVENT_TYPES.Meta)
     }
 
-    const agentOffset = getRuntime(this.agentIdentifier).offset
     const relativeNow = now()
 
     const firstEventTimestamp = events[0]?.timestamp // from rrweb node
     const lastEventTimestamp = events[events.length - 1]?.timestamp // from rrweb node
-    const firstTimestamp = firstEventTimestamp || recorderEvents.cycleTimestamp // from rrweb node || from when the harvest cycle started
-    const lastTimestamp = lastEventTimestamp || agentOffset + relativeNow
+    const firstTimestamp = firstEventTimestamp || this.timeKeeper.correctAbsoluteTimestamp(recorderEvents.cycleTimestamp) // from rrweb node || from when the harvest cycle started
+    const lastTimestamp = lastEventTimestamp || this.timeKeeper.convertRelativeTimestamp(relativeNow)
 
     const agentMetadata = agentRuntime.appMetadata?.agents?.[0] || {}
     return {
@@ -315,15 +320,14 @@ export class Aggregate extends AggregateBase {
         type: 'SessionReplay',
         app_id: info.applicationID,
         protocol_version: '0',
+        timestamp: firstTimestamp,
         attributes: encodeObj({
           // this section of attributes must be controllable and stay below the query param padding limit -- see QUERY_PARAM_PADDING
           // if not, data could be lost to truncation at time of sending, potentially breaking parsing / API behavior in NR1
           ...(!!this.gzipper && !!this.u8 && { content_encoding: 'gzip' }),
           ...(agentMetadata.entityGuid && { entityGuid: agentMetadata.entityGuid }),
           'replay.firstTimestamp': firstTimestamp,
-          'replay.firstTimestampOffset': firstTimestamp - agentOffset,
           'replay.lastTimestamp': lastTimestamp,
-          'replay.durationMs': lastTimestamp - firstTimestamp,
           'replay.nodes': events.length,
           'session.durationMs': agentRuntime.session.getDuration(),
           agentVersion: agentRuntime.version,

@@ -20,6 +20,7 @@ export function testExpectedReplay ({ data, session, hasMeta, hasSnapshot, hasEr
     type: 'SessionReplay',
     app_id: appId || expect.any(String),
     protocol_version: expect.any(String),
+    timestamp: expect.any(String),
     attributes: expect.any(String)
   })
 
@@ -29,9 +30,7 @@ export function testExpectedReplay ({ data, session, hasMeta, hasSnapshot, hasEr
     ...(contentEncoding && { content_encoding: 'gzip' }),
     ...(entityGuid && { entityGuid }),
     'replay.firstTimestamp': expect.any(Number),
-    'replay.firstTimestampOffset': expect.any(Number),
     'replay.lastTimestamp': expect.any(Number),
-    'replay.durationMs': expect.any(Number),
     session: session || expect.any(String),
     rst: expect.any(Number),
     hasMeta: hasMeta || expect.any(Boolean),
@@ -68,7 +67,6 @@ export function decodeAttributes (attributes) {
 export function config (initOverrides = {}) {
   return deepmerge(
     {
-      loader: 'experimental',
       init: {
         privacy: { cookies_enabled: true },
         session_replay: { enabled: true, harvestTimeSeconds: 5, sampling_rate: 100, error_sampling_rate: 0 }

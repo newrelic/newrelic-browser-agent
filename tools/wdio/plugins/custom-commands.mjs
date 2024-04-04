@@ -106,6 +106,37 @@ export default class CustomCommands {
     })
 
     /**
+     * Sets a permanent scheduled reply for the rum call to include the session
+     * replay flag with a value of 1 enabling the feature.
+     */
+    browser.addCommand('mockDateResponse', async function (serverTime = Date.now() - (60 * 60 * 1000), opts = {}) {
+      const { flags } = opts
+      await browser.testHandle.scheduleReply('bamServer', {
+        test: testRumRequest,
+        permanent: true,
+        setHeaders: [
+          { key: 'Date', value: (new Date(serverTime)).toUTCString() }
+        ],
+        body: JSON.stringify({ ...rumFlags, ...flags })
+      })
+      return serverTime
+    })
+
+    /**
+     * Gets TimeKeeper properties for first agent instance
+     */
+    browser.addCommand('getTimeKeeper', async function () {
+      return browser.execute(function () {
+        try {
+          var tk = Object.values(newrelic.initializedAgents)[0].runtime.timeKeeper
+          return { originTime: tk.originTime, correctedOriginTime: tk.correctedOriginTime }
+        } catch (err) {
+          return {}
+        }
+      })
+    })
+
+    /**
      * Waits for a specific feature aggregate class to be loaded.
      */
     browser.addCommand('waitForFeatureAggregate', async function (feature, timeout) {

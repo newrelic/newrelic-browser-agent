@@ -11,8 +11,6 @@
   },
   "include": ["src/**/*"],
   "exclude": [
-    "**/*.test.js",
-    "**/*.component-test.js",
     "**/__mocks__/*.js",
     "src/common/config/env.cdn.js",
     "src/loaders/configure/nonce.cdn.js",

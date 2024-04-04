@@ -14,7 +14,6 @@ module.exports = function (api, ...args) {
   process.env.RRWEB_VERSION = pkg.dependencies.rrweb
 
   const ignore = [
-    '**/*.test.js',
     '**/__mocks__/*.js'
   ]
   const presets = [

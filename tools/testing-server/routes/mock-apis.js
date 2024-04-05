@@ -43,6 +43,35 @@ module.exports = fp(async function (fastify, testServer) {
   fastify.get('/health', async function (request, reply) {
     reply.code(204).send()
   })
+  fastify.route({
+    method: ['GET', 'PUT', 'POST', 'PATCH'],
+    url: '/delayed',
+    handler: function (request, reply) {
+      const delay = parseInt(request.query.delay || 500, 10)
+
+      setTimeout(() => {
+        reply.send('foobar')
+      }, delay)
+    }
+  })
+  fastify.route({
+    method: ['GET', 'PUT', 'POST', 'PATCH'],
+    url: '/streamed',
+    handler: function (request, reply) {
+      const count = parseInt(request.query.count || 5, 10)
+
+      const stream = new PassThrough()
+      reply.send(stream)
+
+      let round = 0
+      const interval = setInterval(() => {
+        round += 1
+        stream.write('x'.repeat(8192))
+
+        if (round >= count) clearInterval(interval)
+      })
+    }
+  })
   fastify.get('/slowscript', {
     compress: false
   }, (request, reply) => {
@@ -131,7 +160,7 @@ module.exports = fp(async function (fastify, testServer) {
     compress: false
   }, (request, reply) => {
     reply
-      .header('X-NewRelic-App-Data', 'foo')
+      .header('X-NewRelic-App-Data', 'bar, foo')
       .send('xhr with CAT ' + new Array(100).join('data'))
   })
   fastify.get('/xhr_no_cat', {

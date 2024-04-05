@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+<head>
+  <title>Ajax Callback Duration</title>
+  {init} {config} {loader}
+</head>
+<body>
+<div>
+  This page uses a button to initiate a fetch using a `URL` instance. When running in a spec file, setting
+  `window.disableAjaxHashChange = true` will disable  the hash route change so the
+  ajax call is fully processed by the ajax feature instead of  the SPA feature.
+</div>
+<div><button id="sendAjax">Send Ajax</button></div>
+<script>
+  window.disableAjaxHashChange = false
+  document.getElementById('sendAjax').addEventListener('click', function () {
+    var request = new Request('/json')
+    fetch(request).then(function () {
+      if (!disableAjaxHashChange) {
+        window.location.hash = Math.random()
+      }
+    })
+  })
+</script>
+</body>
+</html>

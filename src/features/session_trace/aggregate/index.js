@@ -64,6 +64,8 @@ export class Aggregate extends AggregateBase {
      * If it drains later (due to a mode change), data and handlers will instantly drain instead of waiting for the registry. */
     if (this.mode === MODE.OFF) return deregisterDrain(this.agentIdentifier, this.featureName)
 
+    this.timeKeeper ??= this.agentRuntime.timeKeeper
+
     this.scheduler = new HarvestScheduler('browser/blobs', {
       onFinished: this.onHarvestFinished.bind(this),
       retryDelay: this.harvestTimeSeconds,
@@ -107,6 +109,7 @@ export class Aggregate extends AggregateBase {
 
   /** Called by the harvest scheduler at harvest time to retrieve the payload.  This will only actually return a payload if running in full mode */
   prepareHarvest (options = {}) {
+    if (!this.timeKeeper?.ready) return // this should likely never happen, but just to be safe, we should never harvest if we cant correct time
     if (this.mode === MODE.OFF && this.traceStorage.nodeCount === 0) return
     if (this.mode === MODE.ERROR) return // Trace in this mode should never be harvesting, even on unload
 
@@ -140,16 +143,17 @@ export class Aggregate extends AggregateBase {
         type: 'BrowserSessionChunk',
         app_id: this.agentInfo.applicationID,
         protocol_version: '0',
+        timestamp: this.timeKeeper.convertRelativeTimestamp(earliestTimeStamp),
         attributes: encodeObj({
           ...(agentMetadata.entityGuid && { entityGuid: agentMetadata.entityGuid }),
           harvestId: `${this.agentRuntime.session?.state.value}_${this.agentRuntime.ptid}_${this.agentRuntime.harvestCount}`,
           // this section of attributes must be controllable and stay below the query param padding limit -- see QUERY_PARAM_PADDING
           // if not, data could be lost to truncation at time of sending, potentially breaking parsing / API behavior in NR1
           // trace payload metadata
-          'trace.firstTimestamp': this.agentRuntime.offset + earliestTimeStamp,
-          'trace.lastTimestamp': this.agentRuntime.offset + latestTimeStamp,
+          'trace.firstTimestamp': this.timeKeeper.convertRelativeTimestamp(earliestTimeStamp),
+          'trace.lastTimestamp': this.timeKeeper.convertRelativeTimestamp(latestTimeStamp),
           'trace.nodes': stns.length,
-          'trace.originTimestamp': this.agentRuntime.offset,
+          'trace.originTimestamp': this.timeKeeper.correctedOriginTime,
           // other payload metadata
           agentVersion: this.agentRuntime.version,
           ...(firstSessionHarvest && { firstSessionHarvest }),

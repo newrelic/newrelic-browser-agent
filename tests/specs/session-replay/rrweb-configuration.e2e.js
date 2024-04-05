@@ -193,7 +193,21 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
   })
 
   describe('mask fn callbacks', () => {
-    it('maskTextFn: should unmask elem', async () => {
+    it('maskTextFn: should mask un-decorated DOM elems (control test)', async () => {
+      await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_text_selector: '*', mask_all_inputs: true } })))
+        .then(() => browser.waitForAgentLoad())
+
+      const [{ request: { body } }] = await Promise.all([
+        browser.testHandle.expectBlob(10000),
+        browser.execute(function () {
+          document.querySelector('textarea#plain').value = 'testing'
+          document.querySelector('input#text-input').value = 'testing'
+        })
+      ])
+
+      expect(JSON.stringify(body).includes('testing')).toBeFalsy()
+    })
+    it('maskTextFn: should unmask text elems by class', async () => {
       await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_text_selector: 'textarea' } })))
         .then(() => browser.waitForAgentLoad())
 
@@ -201,7 +215,76 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
         browser.testHandle.expectBlob(10000),
         browser.execute(function () {
           document.querySelector('textarea#unmask-class').value = 'testing'
+        })
+      ])
+
+      expect(JSON.stringify(body).includes('testing')).toBeTruthy()
+    })
+
+    it('maskTextFn: should unmask text elems by data attr', async () => {
+      await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_text_selector: 'textarea' } })))
+        .then(() => browser.waitForAgentLoad())
+
+      const [{ request: { body } }] = await Promise.all([
+        browser.testHandle.expectBlob(10000),
+        browser.execute(function () {
           document.querySelector('textarea#unmask-data').value = 'testing'
+        })
+      ])
+
+      expect(JSON.stringify(body).includes('testing')).toBeTruthy()
+    })
+
+    it('maskTextFn: should unmask inputs by class', async () => {
+      await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_all_inputs: true } })))
+        .then(() => browser.waitForAgentLoad())
+
+      const [{ request: { body } }] = await Promise.all([
+        browser.testHandle.expectBlob(10000),
+        browser.execute(function () {
+          document.querySelector('input#unmask-class').value = 'testing'
+        })
+      ])
+
+      expect(JSON.stringify(body).includes('testing')).toBeTruthy()
+    })
+
+    it('maskTextFn: should unmask inputs by data attr', async () => {
+      await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_all_inputs: true } })))
+        .then(() => browser.waitForAgentLoad())
+
+      const [{ request: { body } }] = await Promise.all([
+        browser.testHandle.expectBlob(10000),
+        browser.execute(function () {
+          document.querySelector('input#unmask-data').value = 'testing'
+        })
+      ])
+
+      expect(JSON.stringify(body).includes('testing')).toBeTruthy()
+    })
+
+    it('maskTextFn: should NOT unmask password inputs even when included', async () => {
+      await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_text_selector: 'input' } })))
+        .then(() => browser.waitForAgentLoad())
+
+      const [{ request: { body } }] = await Promise.all([
+        browser.testHandle.expectBlob(10000),
+        browser.execute(function () {
+          document.querySelector('input#unmask-pass-input').value = 'testing'
+        })
+      ])
+
+      expect(JSON.stringify(body).includes('testing')).toBeFalsy()
+    })
+
+    it('maskTextFn: should unmask even with mask all selector ("*")', async () => {
+      await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_text_selector: '*' } })))
+        .then(() => browser.waitForAgentLoad())
+
+      const [{ request: { body } }] = await Promise.all([
+        browser.testHandle.expectBlob(10000),
+        browser.execute(function () {
+          document.querySelector('textarea#unmask-class').value = 'testing'
         })
       ])
 

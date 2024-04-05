@@ -318,6 +318,7 @@ export class Aggregate extends AggregateBase {
           // if not, data could be lost to truncation at time of sending, potentially breaking parsing / API behavior in NR1
           ...(!!this.gzipper && !!this.u8 && { content_encoding: 'gzip' }),
           ...(agentMetadata.entityGuid && { entityGuid: agentMetadata.entityGuid }),
+          harvestId: `${agentRuntime.session?.state.value}_${agentRuntime.ptid}_${agentRuntime.harvestCount}`,
           'replay.firstTimestamp': firstTimestamp,
           'replay.lastTimestamp': lastTimestamp,
           'replay.nodes': events.length,

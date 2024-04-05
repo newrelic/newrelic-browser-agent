@@ -133,6 +133,7 @@ export class Aggregate extends AggregateBase {
      *
      * For data that does not fit the schema of the above, it should be url-encoded and placed into `attributes`
      */
+    const agentMetadata = this.agentRuntime.appMetadata?.agents?.[0] || {}
     return {
       qs: {
         browser_monitoring_key: this.agentInfo.licenseKey,
@@ -140,6 +141,8 @@ export class Aggregate extends AggregateBase {
         app_id: this.agentInfo.applicationID,
         protocol_version: '0',
         attributes: encodeObj({
+          ...(agentMetadata.entityGuid && { entityGuid: agentMetadata.entityGuid }),
+          harvestId: `${this.agentRuntime.session?.state.value}_${this.agentRuntime.ptid}_${this.agentRuntime.harvestCount}`,
           // this section of attributes must be controllable and stay below the query param padding limit -- see QUERY_PARAM_PADDING
           // if not, data could be lost to truncation at time of sending, potentially breaking parsing / API behavior in NR1
           // trace payload metadata

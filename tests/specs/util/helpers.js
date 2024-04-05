@@ -14,7 +14,7 @@ export const RRWEB_EVENT_TYPES = {
   Custom: 5
 }
 
-export function testExpectedReplay ({ data, session, hasMeta, hasSnapshot, hasError, isFirstChunk, contentEncoding, decompressedBytes, appId, entityGuid }) {
+export function testExpectedReplay ({ data, session, hasMeta, hasSnapshot, hasError, isFirstChunk, contentEncoding, decompressedBytes, appId, entityGuid, harvestId }) {
   expect(data.query).toMatchObject({
     browser_monitoring_key: expect.any(String),
     type: 'SessionReplay',
@@ -29,6 +29,7 @@ export function testExpectedReplay ({ data, session, hasMeta, hasSnapshot, hasEr
   expect(decodedObj).toMatchObject({
     ...(contentEncoding && { content_encoding: 'gzip' }),
     ...(entityGuid && { entityGuid }),
+    harvestId: harvestId || expect.any(String),
     'replay.firstTimestamp': expect.any(Number),
     'replay.lastTimestamp': expect.any(Number),
     session: session || expect.any(String),
@@ -49,14 +50,14 @@ export function testExpectedReplay ({ data, session, hasMeta, hasSnapshot, hasEr
 export function testExpectedTrace ({
   data,
   firstTimestamp,
-  firstTimestampOffset,
   lastTimestamp,
-  lastTimestampOffset,
   nodeCount,
   firstSessionHarvest,
   hasReplay,
   session,
-  ptid
+  ptid,
+  harvestId,
+  entityGuid
 }) {
   expect(data.query).toMatchObject({
     browser_monitoring_key: expect.any(String),
@@ -69,6 +70,8 @@ export function testExpectedTrace ({
   const decodedObj = decodeAttributes(data.query.attributes)
 
   expect(decodedObj).toMatchObject({
+    ...(entityGuid && { entityGuid }),
+    harvestId: harvestId || expect.any(String),
     'trace.firstTimestamp': firstTimestamp || expect.any(Number),
     'trace.lastTimestamp': lastTimestamp || expect.any(Number),
     'trace.nodes': nodeCount || expect.any(Number),

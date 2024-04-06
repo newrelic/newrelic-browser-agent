@@ -99,8 +99,11 @@ export class Recorder {
       checkoutEveryNms: CHECKOUT_MS[this.parent.mode]
     })
 
+    this.parent.ee.emit('REPLAY_RUNNING', [true])
+
     this.stopRecording = () => {
       this.recording = false
+      this.parent.ee.emit('REPLAY_RUNNING', [false])
       stop()
     }
   }

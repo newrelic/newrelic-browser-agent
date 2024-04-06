@@ -31,6 +31,19 @@ import { now } from '../../../common/timing/now'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
+  #mode = MODE.OFF
+
+  get mode () {
+    return this.#mode
+  }
+
+  set mode (val) {
+    if (val !== this.#mode) {
+      this.#mode = val
+      this.syncWithSessionManager({ sessionReplayMode: this.mode })
+    }
+  }
+
   // pass the recorder into the aggregator
   constructor (agentIdentifier, aggregator, args) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
@@ -44,9 +57,6 @@ export class Aggregate extends AggregateBase {
     this.gzipper = undefined
     /** populated with the u8 string lib async */
     this.u8 = undefined
-    /** the mode to start in.  Defaults to off */
-    const { session } = getRuntime(this.agentIdentifier)
-    this.mode = session.state.sessionReplayMode || MODE.OFF
 
     /** set by BCS response */
     this.entitled = false
@@ -54,7 +64,8 @@ export class Aggregate extends AggregateBase {
     this.timeKeeper = undefined
 
     this.recorder = args?.recorder
-    if (this.recorder) this.recorder.parent = this
+    this.preloaded = !!this.recorder
+    this.errorNoticed = args?.errorNoticed || false
 
     handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/Enabled'], undefined, FEATURE_NAMES.metrics, this.ee)
 
@@ -104,17 +115,6 @@ export class Aggregate extends AggregateBase {
       this.forceStop(this.mode !== MODE.ERROR)
     }, this.featureName, this.ee)
 
-    // Wait for an error to be reported.  This currently is wrapped around the "Error" feature.  This is a feature-feature dependency.
-    // This was to ensure that all errors, including those on the page before load and those handled with "noticeError" are accounted for. Needs evalulation
-    registerHandler('errorAgg', (e) => {
-      this.errorNoticed = true
-      if (this.recorder) this.recorder.currentBufferTarget.hasError = true
-      // run once
-      if (this.mode === MODE.ERROR && globalScope?.document.visibilityState === 'visible') {
-        this.switchToFull()
-      }
-    }, this.featureName, this.ee)
-
     const { error_sampling_rate, sampling_rate, autoStart, block_selector, mask_text_selector, mask_all_inputs, inline_stylesheet, inline_images, collect_fonts } = getConfigurationValue(this.agentIdentifier, 'session_replay')
 
     this.waitForFlags(['sr']).then(([flagOn]) => {
@@ -150,6 +150,14 @@ export class Aggregate extends AggregateBase {
     handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/ErrorSamplingRate/Value', error_sampling_rate], undefined, FEATURE_NAMES.metrics, this.ee)
   }
 
+  handleError (e) {
+    if (this.recorder) this.recorder.currentBufferTarget.hasError = true
+    // run once
+    if (this.mode === MODE.ERROR && globalScope?.document.visibilityState === 'visible') {
+      this.switchToFull()
+    }
+  }
+
   switchToFull () {
     this.mode = MODE.FULL
     // if the error was noticed AFTER the recorder was already imported....
@@ -158,8 +166,6 @@ export class Aggregate extends AggregateBase {
       this.recorder.startRecording()
 
       this.scheduler.startTimer(this.harvestTimeSeconds)
-
-      this.syncWithSessionManager({ sessionReplayMode: this.mode })
     }
   }
 
@@ -210,11 +216,14 @@ export class Aggregate extends AggregateBase {
       } catch (err) {
         return this.abort(ABORT_REASONS.IMPORT)
       }
+    } else {
+      this.recorder.parent = this
     }
 
     // If an error was noticed before the mode could be set (like in the early lifecycle of the page), immediately set to FULL mode
-    if (this.mode === MODE.ERROR && this.errorNoticed) {
-      this.mode = MODE.FULL
+    if (this.mode === MODE.ERROR) {
+      if (!this.preloaded) this.ee.on('err', e => this.handleError(e))
+      if (this.errorNoticed) this.mode = MODE.FULL
     }
 
     // FULL mode records AND reports from the beginning, while ERROR mode only records (but does not report).
@@ -228,8 +237,6 @@ export class Aggregate extends AggregateBase {
     await this.prepUtils()
 
     if (!this.recorder.recording) this.recorder.startRecording()
-
-    this.syncWithSessionManager({ sessionReplayMode: this.mode })
   }
 
   async prepUtils () {
@@ -368,7 +375,6 @@ export class Aggregate extends AggregateBase {
     if (forceHarvest) this.scheduler.runHarvest()
     this.mode = MODE.OFF
     this.recorder?.stopRecording?.()
-    this.syncWithSessionManager({ sessionReplayMode: this.mode })
   }
 
   /** Abort the feature, once aborted it will not resume */
@@ -378,7 +384,6 @@ export class Aggregate extends AggregateBase {
     this.blocked = true
     this.mode = MODE.OFF
     this.recorder?.stopRecording?.()
-    this.syncWithSessionManager({ sessionReplayMode: this.mode })
     this.recorder?.clearTimestamps?.()
     this.ee.emit('REPLAY_ABORTED')
     while (this.recorder?.getEvents().events.length) this.recorder?.clearBuffer?.()

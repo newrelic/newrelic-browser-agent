@@ -38,9 +38,12 @@ export class Aggregate extends AggregateBase {
     this.bufferedErrorsUnderSpa = {}
     this.currentBody = undefined
     this.errorOnPage = false
+    this.replayAborted = false
 
     // this will need to change to match whatever ee we use in the instrument
     this.ee.on('interactionDone', (interaction, wasSaved) => this.onInteractionDone(interaction, wasSaved))
+
+    this.ee.on('REPLAY_ABORTED', () => { this.replayAborted = true })
 
     register('err', (...args) => this.storeError(...args), this.featureName, this.ee)
     register('ierr', (...args) => this.storeError(...args), this.featureName, this.ee)
@@ -133,7 +136,7 @@ export class Aggregate extends AggregateBase {
     return canonicalStackString
   }
 
-  storeError (err, time, internal, customAttributes) {
+  storeError (err, time, internal, customAttributes, hasReplay) {
     // are we in an interaction
     time = time || now()
     const agentRuntime = getRuntime(this.agentIdentifier)
@@ -189,7 +192,7 @@ export class Aggregate extends AggregateBase {
       this.pageviewReported[bucketHash] = true
     }
 
-    if (agentRuntime?.session?.state?.sessionReplayMode) params.hasReplay = true
+    if (hasReplay && !this.replayAborted) params.hasReplay = hasReplay
     params.firstOccurrenceTimestamp = this.observedAt[bucketHash]
     params.timestamp = this.observedAt[bucketHash]
 

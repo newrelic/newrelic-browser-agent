@@ -17,6 +17,7 @@ export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
 
   #seenErrors = new Set()
+  #replayRunning = false
 
   constructor (agentIdentifier, aggregator, auto = true) {
     super(agentIdentifier, aggregator, FEATURE_NAME, auto)
@@ -36,13 +37,16 @@ export class Instrument extends InstrumentBase {
 
     this.ee.on('internal-error', (error) => {
       if (!this.abortHandler) return
-      handle('ierr', [this.#castError(error), now(), true], undefined, FEATURE_NAMES.jserrors, this.ee)
+      handle('ierr', [this.#castError(error), now(), true, {}, this.#replayRunning], undefined, FEATURE_NAMES.jserrors, this.ee)
+    })
+
+    this.ee.on('REPLAY_RUNNING', (isRunning) => {
+      this.#replayRunning = isRunning
     })
 
     globalScope.addEventListener('unhandledrejection', (promiseRejectionEvent) => {
       if (!this.abortHandler) return
-
-      handle('err', [this.#castPromiseRejectionEvent(promiseRejectionEvent), now(), false, { unhandledPromiseRejection: 1 }], undefined, FEATURE_NAMES.jserrors, this.ee)
+      handle('err', [this.#castPromiseRejectionEvent(promiseRejectionEvent), now(), false, { unhandledPromiseRejection: 1 }, this.#replayRunning], undefined, FEATURE_NAMES.jserrors, this.ee)
     }, eventListenerOpts(false, this.removeOnAbort?.signal))
 
     globalScope.addEventListener('error', (errorEvent) => {
@@ -57,7 +61,7 @@ export class Instrument extends InstrumentBase {
         return
       }
 
-      handle('err', [this.#castErrorEvent(errorEvent), now()], undefined, FEATURE_NAMES.jserrors, this.ee)
+      handle('err', [this.#castErrorEvent(errorEvent), now(), false, {}, this.#replayRunning], undefined, FEATURE_NAMES.jserrors, this.ee)
     }, eventListenerOpts(false, this.removeOnAbort?.signal))
 
     this.abortHandler = this.#abort // we also use this as a flag to denote that the feature is active or on and handling errors

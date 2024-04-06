@@ -31,18 +31,7 @@ import { now } from '../../../common/timing/now'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
-  #mode = MODE.OFF
-
-  get mode () {
-    return this.#mode
-  }
-
-  set mode (val) {
-    if (val !== this.#mode) {
-      this.#mode = val
-      this.syncWithSessionManager({ sessionReplayMode: this.mode })
-    }
-  }
+  mode = MODE.OFF
 
   // pass the recorder into the aggregator
   constructor (agentIdentifier, aggregator, args) {
@@ -166,6 +155,8 @@ export class Aggregate extends AggregateBase {
       this.recorder.startRecording()
 
       this.scheduler.startTimer(this.harvestTimeSeconds)
+
+      this.syncWithSessionManager({ sessionReplayMode: this.mode })
     }
   }
 
@@ -221,10 +212,8 @@ export class Aggregate extends AggregateBase {
     }
 
     // If an error was noticed before the mode could be set (like in the early lifecycle of the page), immediately set to FULL mode
-    if (this.mode === MODE.ERROR) {
-      if (!this.preloaded) this.ee.on('err', e => this.handleError(e))
-      if (this.errorNoticed) this.mode = MODE.FULL
-    }
+    if (this.mode === MODE.ERROR && this.errorNoticed) this.mode = MODE.FULL
+    if (!this.preloaded) this.ee.on('err', e => this.handleError(e))
 
     // FULL mode records AND reports from the beginning, while ERROR mode only records (but does not report).
     // ERROR mode will do this until an error is thrown, and then switch into FULL mode.
@@ -237,6 +226,8 @@ export class Aggregate extends AggregateBase {
     await this.prepUtils()
 
     if (!this.recorder.recording) this.recorder.startRecording()
+
+    this.syncWithSessionManager({ sessionReplayMode: this.mode })
   }
 
   async prepUtils () {
@@ -375,6 +366,7 @@ export class Aggregate extends AggregateBase {
     if (forceHarvest) this.scheduler.runHarvest()
     this.mode = MODE.OFF
     this.recorder?.stopRecording?.()
+    this.syncWithSessionManager({ sessionReplayMode: this.mode })
   }
 
   /** Abort the feature, once aborted it will not resume */
@@ -384,6 +376,7 @@ export class Aggregate extends AggregateBase {
     this.blocked = true
     this.mode = MODE.OFF
     this.recorder?.stopRecording?.()
+    this.syncWithSessionManager({ sessionReplayMode: this.mode })
     this.recorder?.clearTimestamps?.()
     this.ee.emit('REPLAY_ABORTED')
     while (this.recorder?.getEvents().events.length) this.recorder?.clearBuffer?.()

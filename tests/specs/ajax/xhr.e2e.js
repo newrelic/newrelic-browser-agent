@@ -1,4 +1,4 @@
-import { onlyFirefox } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { notIE, onlyFirefox } from '../../../tools/browser-matcher/common-matchers.mjs'
 
 describe('XHR Ajax', () => {
   it('creates event and metric data for xhr', async () => {
@@ -196,7 +196,7 @@ describe('XHR Ajax', () => {
     })
   })
 
-  it('creates event and metric data for xhr using data uri', async () => {
+  it.withBrowsersMatching(notIE)('creates event and metric data for xhr using data uri', async () => {
     await browser.url(await browser.testHandle.assetURL('ajax/xhr-data-uri.html'))
       .then(() => browser.waitForAgentLoad())
 

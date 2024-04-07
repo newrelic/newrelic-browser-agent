@@ -12,6 +12,7 @@ import { eventListenerOpts } from '../../../common/event-listener/event-listener
 import { stringify } from '../../../common/util/stringify'
 import { UncaughtError } from './uncaught-error'
 import { now } from '../../../common/timing/now'
+import { SR_EVENT_EMITTER_TYPES } from '../../session_replay/constants'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
@@ -40,7 +41,7 @@ export class Instrument extends InstrumentBase {
       handle('ierr', [this.#castError(error), now(), true, {}, this.#replayRunning], undefined, FEATURE_NAMES.jserrors, this.ee)
     })
 
-    this.ee.on('REPLAY_RUNNING', (isRunning) => {
+    this.ee.on(SR_EVENT_EMITTER_TYPES.REPLAY_RUNNING, (isRunning) => {
       this.#replayRunning = isRunning
     })
 

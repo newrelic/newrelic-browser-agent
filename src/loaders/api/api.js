@@ -44,7 +44,7 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
 
   replayRunning[agentIdentifier] = MODE.OFF
 
-  instanceEE.on('REPLAY_RUNNING', (isRunning) => {
+  instanceEE.on(SR_EVENT_EMITTER_TYPES.REPLAY_RUNNING, (isRunning) => {
     replayRunning[agentIdentifier] = isRunning
   })
 
@@ -193,7 +193,7 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
   apiInterface.noticeError = function (err, customAttributes) {
     if (typeof err === 'string') err = new Error(err)
     handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/noticeError/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
-    handle('err', [err, now(), false, customAttributes, replayRunning[agentIdentifier]], undefined, FEATURE_NAMES.jserrors, instanceEE)
+    handle('err', [err, now(), false, customAttributes, !!replayRunning[agentIdentifier]], undefined, FEATURE_NAMES.jserrors, instanceEE)
   }
 
   // theres no window.load event on non-browser scopes, lazy load immediately

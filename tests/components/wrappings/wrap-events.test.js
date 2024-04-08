@@ -2,8 +2,8 @@ let runtimeModule
 let wrapFunctionModule
 
 beforeEach(async () => {
-  runtimeModule = await import('../../src/common/constants/runtime')
-  wrapFunctionModule = await import('../../src/common/wrap/wrap-function')
+  runtimeModule = await import('../../../src/common/constants/runtime')
+  wrapFunctionModule = await import('../../../src/common/wrap/wrap-function')
   const originalFnWrapper = wrapFunctionModule.createWrapperWithEmitter
   jest.spyOn(wrapFunctionModule, 'createWrapperWithEmitter').mockImplementation((...args) => {
     const result = originalFnWrapper.call(this, ...args)
@@ -26,7 +26,7 @@ test('should not wrap when getPrototypeOf is not supported', async () => {
     }
   })
 
-  ;(await import('../../src/common/wrap/wrap-events')).wrapEvents()
+  ;(await import('../../../src/common/wrap/wrap-events')).wrapEvents()
 
   const fnWrapper = jest.mocked(wrapFunctionModule.createWrapperWithEmitter).mock.results[0].value
 
@@ -38,7 +38,7 @@ test('should not wrap when getPrototypeOf is not supported', async () => {
 })
 
 test('should wrap event emitters once', async () => {
-  ;(await import('../../src/common/wrap/wrap-events')).wrapEvents()
+  ;(await import('../../../src/common/wrap/wrap-events')).wrapEvents()
 
   const fnWrapper = jest.mocked(wrapFunctionModule.createWrapperWithEmitter).mock.results[0].value
 
@@ -46,8 +46,8 @@ test('should wrap event emitters once', async () => {
 })
 
 test('should attempt to wrap three objects when getPrototypeOf is supported', async () => {
-  ;(await import('../../src/common/wrap/wrap-events')).wrapEvents()
-  ;(await import('../../src/common/wrap/wrap-events')).wrapEvents()
+  ;(await import('../../../src/common/wrap/wrap-events')).wrapEvents()
+  ;(await import('../../../src/common/wrap/wrap-events')).wrapEvents()
 
   const fnWrapper = jest.mocked(wrapFunctionModule.createWrapperWithEmitter).mock.results[0].value
 
@@ -58,7 +58,7 @@ test('should attempt to wrap three objects when getPrototypeOf is supported', as
 test('should attempt to wrap two objects when not a browser scope', async () => {
   jest.replaceProperty(runtimeModule, 'isBrowserScope', false)
 
-  ;(await import('../../src/common/wrap/wrap-events')).wrapEvents()
+  ;(await import('../../../src/common/wrap/wrap-events')).wrapEvents()
 
   const fnWrapper = jest.mocked(wrapFunctionModule.createWrapperWithEmitter).mock.results[0].value
 
@@ -76,7 +76,7 @@ test('should pass options as-is to addEventListener after wrapping', async () =>
   const handler8 = jest.fn()
   jest.spyOn(EventTarget.prototype, 'addEventListener')
 
-  ;(await import('../../src/common/wrap/wrap-events')).wrapEvents()
+  ;(await import('../../../src/common/wrap/wrap-events')).wrapEvents()
 
   const el = document.createElement('div')
   el.addEventListener('click', handler1, { capture: true })
@@ -115,7 +115,7 @@ test('should support removing event listeners after wrapping', async () => {
   jest.spyOn(EventTarget.prototype, 'addEventListener')
   jest.spyOn(EventTarget.prototype, 'removeEventListener')
 
-  ;(await import('../../src/common/wrap/wrap-events')).wrapEvents()
+  ;(await import('../../../src/common/wrap/wrap-events')).wrapEvents()
 
   const el = document.createElement('div')
   el.addEventListener('click', handler)
@@ -133,7 +133,7 @@ test('should support removing event listeners after wrapping', async () => {
 
 test('should send event when adding event listener', async () => {
   const eeHandler = jest.fn()
-  const eventsEmitter = (await import('../../src/common/wrap/wrap-events')).wrapEvents()
+  const eventsEmitter = (await import('../../../src/common/wrap/wrap-events')).wrapEvents()
   eventsEmitter.on('addEventListener-start', eeHandler)
 
   const el = document.createElement('div')
@@ -157,7 +157,7 @@ test('should send event when adding event listener', async () => {
 
 test('should send event when removing event listener', async () => {
   const eeHandler = jest.fn()
-  const eventsEmitter = (await import('../../src/common/wrap/wrap-events')).wrapEvents()
+  const eventsEmitter = (await import('../../../src/common/wrap/wrap-events')).wrapEvents()
   eventsEmitter.on('removeEventListener-start', eeHandler)
 
   const el = document.createElement('div')
@@ -174,7 +174,7 @@ test('should send event when removing event listener', async () => {
 
 test('should support listener object with handleEvent method', async () => {
   const eeHandler = jest.fn()
-  const eventsEmitter = (await import('../../src/common/wrap/wrap-events')).wrapEvents()
+  const eventsEmitter = (await import('../../../src/common/wrap/wrap-events')).wrapEvents()
   eventsEmitter.on('addEventListener-start', eeHandler)
 
   const el = document.createElement('div')

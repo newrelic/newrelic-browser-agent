@@ -1,6 +1,6 @@
 import { record as recorder } from 'rrweb'
 import { stringify } from '../../../common/util/stringify'
-import { AVG_COMPRESSION, CHECKOUT_MS, IDEAL_PAYLOAD_SIZE, QUERY_PARAM_PADDING, RRWEB_EVENT_TYPES } from '../constants'
+import { AVG_COMPRESSION, CHECKOUT_MS, IDEAL_PAYLOAD_SIZE, QUERY_PARAM_PADDING, RRWEB_EVENT_TYPES, SR_EVENT_EMITTER_TYPES } from '../constants'
 import { getConfigurationValue } from '../../../common/config/config'
 import { RecorderEvents } from './recorder-events'
 import { MODE } from '../../../common/session/constants'
@@ -99,8 +99,11 @@ export class Recorder {
       checkoutEveryNms: CHECKOUT_MS[this.parent.mode]
     })
 
+    this.parent.ee.emit(SR_EVENT_EMITTER_TYPES.REPLAY_RUNNING, [true, this.parent.mode])
+
     this.stopRecording = () => {
       this.recording = false
+      this.parent.ee.emit(SR_EVENT_EMITTER_TYPES.REPLAY_RUNNING, [false, this.parent.mode])
       stop()
     }
   }

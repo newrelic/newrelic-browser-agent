@@ -70,6 +70,9 @@ export const onlyChromium = new SpecMatcher()
   .include('edge')
   .include('android>9.0')
 
+export const onlyFirefox = new SpecMatcher()
+  .include('firefox')
+
 /**
  * Matcher based on ES2022 support
  * This is a snapshot in time and would need to be updated.

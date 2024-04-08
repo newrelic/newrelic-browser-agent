@@ -39,6 +39,7 @@ test('should not wrap when getPrototypeOf is not supported', async () => {
 
 test('should wrap event emitters once', async () => {
   ;(await import('../../../src/common/wrap/wrap-events')).wrapEvents()
+  ;(await import('../../../src/common/wrap/wrap-events')).wrapEvents()
 
   const fnWrapper = jest.mocked(wrapFunctionModule.createWrapperWithEmitter).mock.results[0].value
 
@@ -46,7 +47,6 @@ test('should wrap event emitters once', async () => {
 })
 
 test('should attempt to wrap three objects when getPrototypeOf is supported', async () => {
-  ;(await import('../../../src/common/wrap/wrap-events')).wrapEvents()
   ;(await import('../../../src/common/wrap/wrap-events')).wrapEvents()
 
   const fnWrapper = jest.mocked(wrapFunctionModule.createWrapperWithEmitter).mock.results[0].value
@@ -197,4 +197,23 @@ test('should support listener object with handleEvent method', async () => {
   el.dispatchEvent(event)
 
   expect(handler.handleEvent).toHaveBeenCalledTimes(1)
+})
+
+test('AEL on window should call through to AEL on EventTarget', async () => {
+  let target = window
+  while (!Object.prototype.hasOwnProperty.call(target, 'addEventListener')) {
+    target = Object.getPrototypeOf(target)
+  }
+  ;(await import('../../../src/common/wrap/wrap-events')).wrapEvents()
+
+  const addE = target.addEventListener
+  target.addEventListener = function (evName, handler, capture) {
+    expect(evName).toEqual('click')
+    expect(handler).toBe(clickHandler)
+    expect(capture).toEqual(true)
+  }
+  window.addEventListener('click', clickHandler, true)
+
+  target.addEventListener = addE // restore
+  function clickHandler () {}
 })

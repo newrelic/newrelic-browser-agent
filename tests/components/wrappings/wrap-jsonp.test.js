@@ -1,4 +1,5 @@
 import { wrapJsonP } from '../../../src/common/wrap/wrap-jsonp'
+import { bundleId } from '../../../src/common/ids/bundle-id'
 
 function removeListener (type, fn) {
   const handlers = this.listeners(type)
@@ -23,14 +24,34 @@ beforeAll(() => {
   window.foo = function () {}
   jsonpEE = wrapJsonP()
 })
-beforeEach(() => {
-  jest.resetModules()
-})
 validUrls.forEach((url) => {
   shouldWork(url)
 })
 invalidUrls.forEach((url) => {
   shouldNotWork(url)
+})
+describe('Wrapped Node prototype', () => {
+  test('functions are wrapped on HTMLElement', () => {
+    expect(isWrapped(HTMLElement.prototype.appendChild)).toBeTruthy()
+    expect(isWrapped(HTMLElement.prototype.insertBefore)).toBeTruthy()
+    expect(isWrapped(HTMLElement.prototype.replaceChild)).toBeTruthy()
+
+    expect(isWrapped(HTMLHeadElement.prototype.appendChild)).toBeTruthy()
+    expect(isWrapped(HTMLHeadElement.prototype.insertBefore)).toBeTruthy()
+    expect(isWrapped(HTMLHeadElement.prototype.replaceChild)).toBeTruthy()
+
+    expect(isWrapped(HTMLBodyElement.prototype.appendChild)).toBeTruthy()
+    expect(isWrapped(HTMLBodyElement.prototype.insertBefore)).toBeTruthy()
+    expect(isWrapped(HTMLBodyElement.prototype.replaceChild)).toBeTruthy()
+  })
+
+  test('new property is not added to HTMLElement', () => {
+    if (Node.prototype.appendChild) {
+      expect(Object.prototype.hasOwnProperty.call(HTMLElement.prototype, 'appendChild')).toBeFalsy()
+      expect(Object.prototype.hasOwnProperty.call(HTMLHeadElement.prototype, 'appendChild')).toBeFalsy()
+      expect(Object.prototype.hasOwnProperty.call(HTMLBodyElement.prototype, 'appendChild')).toBeFalsy()
+    }
+  })
 })
 
 function shouldWork (url) {
@@ -64,4 +85,7 @@ function shouldNotWork (url) {
     jsonpEE.removeListener('new-jsonp', listener)
     done()
   })
+}
+function isWrapped (fn) {
+  return fn && (typeof fn[`nr@original:${bundleId}`] === 'function')
 }

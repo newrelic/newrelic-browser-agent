@@ -194,6 +194,33 @@ export default class CustomCommands {
     })
 
     /**
+     * Waits for the session replay feature to initialize and start recording.
+     */
+    browser.addCommand('waitForPreloadRecorder', async function () {
+      await browser.waitForFeatureAggregate('session_replay')
+      await browser.waitUntil(
+        () => browser.execute(function () {
+          try {
+            var initializedAgent = Object.values(newrelic.initializedAgents)[0]
+            return !!(
+              (initializedAgent &&
+              initializedAgent.features &&
+              initializedAgent.features.session_replay &&
+              initializedAgent.features.session_replay.recorder &&
+              initializedAgent.features.session_replay.recorder.recording)
+            )
+          } catch (err) {
+            console.error(err)
+            return false
+          }
+        }),
+        {
+          timeout: 30000,
+          timeoutMsg: 'Session replay recording never started'
+        })
+    })
+
+    /**
      * Waits for the session replay feature to initialize and then get blocked.
      */
     browser.addCommand('waitForSessionReplayBlocked', async function () {

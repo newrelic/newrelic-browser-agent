@@ -24,6 +24,11 @@ export class Instrument extends InstrumentBase {
     } catch (err) { }
 
     if (this.#canPreloadRecorder(session)) {
+      /** If this is preloaded, set up a buffer, if not, later when sampling we will set up a .on for live events */
+      this.ee.on('err', (e) => {
+        this.errorNoticed = true
+        if (this.featAggregate) this.featAggregate.handleError()
+      })
       this.#startRecording(session?.sessionReplayMode)
     } else {
       this.importAggregator()
@@ -45,9 +50,9 @@ export class Instrument extends InstrumentBase {
 
   async #startRecording (mode) {
     const { Recorder } = (await import(/* webpackChunkName: "recorder" */'../shared/recorder'))
-    this.recorder = new Recorder({ mode, agentIdentifier: this.agentIdentifier })
+    this.recorder = new Recorder({ mode, agentIdentifier: this.agentIdentifier, ee: this.ee })
     this.recorder.startRecording()
     this.abortHandler = this.recorder.stopRecording
-    this.importAggregator({ recorder: this.recorder })
+    this.importAggregator({ recorder: this.recorder, errorNoticed: this.errorNoticed })
   }
 }

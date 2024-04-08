@@ -553,7 +553,7 @@ describe('setAPI', () => {
       )
       expect(handleModule.handle).toHaveBeenCalledWith(
         'err',
-        [expect.any(Error), expect.toBeNumber(), false, undefined],
+        [expect.any(Error), expect.toBeNumber(), false, undefined, false],
         undefined,
         FEATURE_NAMES.jserrors,
         instanceEE
@@ -566,7 +566,7 @@ describe('setAPI', () => {
 
       expect(handleModule.handle).toHaveBeenCalledWith(
         'err',
-        [args[0], expect.toBeNumber(), false, undefined],
+        [args[0], expect.toBeNumber(), false, undefined, false],
         undefined,
         FEATURE_NAMES.jserrors,
         instanceEE
@@ -583,7 +583,7 @@ describe('setAPI', () => {
 
       expect(handleModule.handle).toHaveBeenCalledWith(
         'err',
-        [args[0], expect.toBeNumber(), false, args[1]],
+        [args[0], expect.toBeNumber(), false, args[1], false],
         undefined,
         FEATURE_NAMES.jserrors,
         instanceEE

@@ -28,4 +28,37 @@ describe('spa captures interaction when', () => {
       })
     ]))
   })
+
+  it('pushstate is followed by a popstate', async () => {
+    const url = await browser.testHandle.assetURL('instrumented.html')
+    await Promise.all([
+      browser.testHandle.expectInteractionEvents(), // Discard the initial page load interaction
+      browser.url(url).then(() => browser.waitForAgentLoad())
+    ])
+
+    const [popstateIxnPayload] = await Promise.all([
+      browser.testHandle.expectInteractionEvents(),
+      browser.execute(function () {
+        window.history.pushState({}, '', '/newurl')
+        window.addEventListener('popstate', function () { setTimeout(newrelic.interaction().createTracer('timer')) })
+        window.history.back()
+      })
+    ])
+
+    const parsedUrl = new URL(url)
+    expect(popstateIxnPayload.request.body[0]).toEqual(expect.objectContaining({
+      category: 'Route change',
+      type: 'interaction',
+      trigger: 'popstate',
+      oldURL: parsedUrl.origin + '/newurl',
+      newURL: parsedUrl.origin + parsedUrl.pathname, // should be the original asset url
+      children: [
+        expect.objectContaining({
+          type: 'customTracer',
+          name: 'timer',
+          children: []
+        })
+      ]
+    }))
+  })
 })

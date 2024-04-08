@@ -83,12 +83,8 @@ export class Aggregate extends AggregateBase {
 
     if (body && body.err && body.err.length) {
       if (this.replayAborted) {
-        body.err.forEach((e, i, arr) => {
-          try {
-            delete arr[i].params.hasReplay
-          } catch (err) {
-            // do nothing
-          }
+        body.err.forEach((e) => {
+          delete e.params?.hasReplay
         })
       }
       if (!this.errorOnPage) {

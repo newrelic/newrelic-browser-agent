@@ -81,7 +81,7 @@ export class Aggregate extends AggregateBase {
       payload.qs.ri = releaseIds
     }
 
-    if (body && body.err && body.err.length && !this.errorOnPage) {
+    if (body && body.err && body.err.length) {
       if (this.replayAborted) {
         body.err.forEach((e, i, arr) => {
           try {

@@ -18,8 +18,13 @@ const invalidUrls = [
   '/jsonp?ab=1&mycallback=foo'
 ]
 
+let jsonpEE
 beforeAll(() => {
   window.foo = function () {}
+  jsonpEE = wrapJsonP()
+})
+beforeEach(() => {
+  jest.resetModules()
 })
 validUrls.forEach((url) => {
   shouldWork(url)
@@ -30,7 +35,6 @@ invalidUrls.forEach((url) => {
 
 function shouldWork (url) {
   test('jsonp works with ' + url, done => {
-    const jsonpEE = wrapJsonP()
     jsonpEE.removeListener = removeListener
 
     function listener () {
@@ -46,7 +50,6 @@ function shouldWork (url) {
 }
 function shouldNotWork (url) {
   test('jsonp does not work with ' + url, done => {
-    const jsonpEE = wrapJsonP()
     jsonpEE.removeListener = removeListener
 
     const listener = function () {

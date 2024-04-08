@@ -10,13 +10,20 @@
 </head>
 <body>
 <div>
-  This page uses a button to initiate an XHR. When running in a spec file, setting
+  This page uses a button to initiate an XHR and add an `onreadystatechange` function prior
+  to calling `send()`. The variable `window.readyStatesSeen` can be used to verify the agent
+  is wrapping the `onreadystatechange` function properly. Use `window.reset()` to reset this
+  variable. When running in a spec file, setting
   `window.disableAjaxHashChange = true` will disable the hash route change so the
   ajax call is fully processed by the ajax feature instead of the SPA feature.
 </div>
 <div><button id="sendAjax">Send Ajax</button></div>
 <script>
   window.disableAjaxHashChange = false
+  window.readyStatesSeen = []
+  window.reset = function () {
+    window.readyStatesSeen = []
+  }
   document.getElementById('sendAjax').addEventListener('click', function () {
     var xhr = new XMLHttpRequest()
     xhr.addEventListener('loadend', function () {
@@ -24,6 +31,11 @@
         window.location.hash = Math.random()
       }
     })
+    xhr.onreadystatechange = function () {
+      if (window.readyStatesSeen.indexOf(xhr.readyState) === -1) {
+        window.readyStatesSeen.push([xhr.readyState, xhr.onreadystatechange.name])
+      }
+    }
     xhr.open('GET', '/json')
     xhr.send()
   })

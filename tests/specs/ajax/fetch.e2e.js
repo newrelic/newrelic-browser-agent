@@ -354,7 +354,7 @@ describe.withBrowsersMatching(supportsFetch)('Fetch Ajax', () => {
       browser.testHandle.expectAjaxEvents(),
       browser.testHandle.expectAjaxTimeSlices(),
       browser.execute(function () {
-        fetch('/postwithhi/arraybufferxhr', {
+        fetch('/postwithhi/arraybufferfetch', {
           method: 'POST',
           headers: {
             'Content-Type': 'text/plain'
@@ -364,7 +364,7 @@ describe.withBrowsersMatching(supportsFetch)('Fetch Ajax', () => {
       })
     ])
 
-    const ajaxEvent = ajaxEventsHarvest.request.body.find(event => event.path === '/postwithhi/arraybufferxhr')
+    const ajaxEvent = ajaxEventsHarvest.request.body.find(event => event.path === '/postwithhi/arraybufferfetch')
     // Firefox is different for some reason
     if (browserMatch(onlyFirefox)) {
       expect(ajaxEvent.requestBodySize).toEqual(2)
@@ -373,13 +373,40 @@ describe.withBrowsersMatching(supportsFetch)('Fetch Ajax', () => {
     }
     expect(ajaxEvent.responseBodySize).toEqual(3)
 
-    const ajaxMetric = ajaxTimeSlicesHarvest.request.body.xhr.find(metric => metric.params.pathname === '/postwithhi/arraybufferxhr')
+    const ajaxMetric = ajaxTimeSlicesHarvest.request.body.xhr.find(metric => metric.params.pathname === '/postwithhi/arraybufferfetch')
     // Firefox is different for some reason
     if (browserMatch(onlyFirefox)) {
       expect(ajaxMetric.metrics.txSize.t).toEqual(2)
     } else {
       expect(ajaxMetric.metrics.txSize.t).toEqual(3)
     }
+    expect(ajaxMetric.metrics.rxSize.t).toEqual(3)
+  })
+
+  it('produces event and metric with correct transmit and receive size calculated when using blob', async () => {
+    await browser.url(await browser.testHandle.assetURL('instrumented.html'))
+      .then(() => browser.waitForAgentLoad())
+
+    const [ajaxEventsHarvest, ajaxTimeSlicesHarvest] = await Promise.all([
+      browser.testHandle.expectAjaxEvents(),
+      browser.testHandle.expectAjaxTimeSlices(),
+      browser.execute(function () {
+        fetch('/postwithhi/blobfetch', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'text/plain'
+          },
+          body: new Blob(['hi!'])
+        })
+      })
+    ])
+
+    const ajaxEvent = ajaxEventsHarvest.request.body.find(event => event.path === '/postwithhi/blobfetch')
+    expect(ajaxEvent.requestBodySize).toEqual(3)
+    expect(ajaxEvent.responseBodySize).toEqual(3)
+
+    const ajaxMetric = ajaxTimeSlicesHarvest.request.body.xhr.find(metric => metric.params.pathname === '/postwithhi/blobfetch')
+    expect(ajaxMetric.metrics.txSize.t).toEqual(3)
     expect(ajaxMetric.metrics.rxSize.t).toEqual(3)
   })
 

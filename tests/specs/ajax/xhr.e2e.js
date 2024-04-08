@@ -433,6 +433,31 @@ describe('XHR Ajax', () => {
     expect(ajaxMetric.metrics.rxSize.t).toEqual(3)
   })
 
+  it('produces event and metric with correct transmit and receive size calculated when using blob', async () => {
+    await browser.url(await browser.testHandle.assetURL('instrumented.html'))
+      .then(() => browser.waitForAgentLoad())
+
+    const [ajaxEventsHarvest, ajaxTimeSlicesHarvest] = await Promise.all([
+      browser.testHandle.expectAjaxEvents(),
+      browser.testHandle.expectAjaxTimeSlices(),
+      browser.execute(function () {
+        var xhr = new XMLHttpRequest()
+        xhr.open('POST', '/postwithhi/blobxhr')
+        xhr.responseType = 'blob'
+        xhr.setRequestHeader('Content-Type', 'text/plain')
+        xhr.send(new Blob(['hi!']))
+      })
+    ])
+
+    const ajaxEvent = ajaxEventsHarvest.request.body.find(event => event.path === '/postwithhi/blobxhr')
+    expect(ajaxEvent.requestBodySize).toEqual(3)
+    expect(ajaxEvent.responseBodySize).toEqual(3)
+
+    const ajaxMetric = ajaxTimeSlicesHarvest.request.body.xhr.find(metric => metric.params.pathname === '/postwithhi/blobxhr')
+    expect(ajaxMetric.metrics.txSize.t).toEqual(3)
+    expect(ajaxMetric.metrics.rxSize.t).toEqual(3)
+  })
+
   it('produces event and metric with correct transmit and receive size calculated when using form data', async () => {
     await browser.url(await browser.testHandle.assetURL('instrumented.html'))
       .then(() => browser.waitForAgentLoad())

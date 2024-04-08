@@ -82,8 +82,19 @@ export class Aggregate extends AggregateBase {
     }
 
     if (body && body.err && body.err.length && !this.errorOnPage) {
-      payload.qs.pve = '1'
-      this.errorOnPage = true
+      if (this.replayAborted) {
+        body.err.forEach((e, i, arr) => {
+          try {
+            delete arr[i].params.hasReplay
+          } catch (err) {
+            // do nothing
+          }
+        })
+      }
+      if (!this.errorOnPage) {
+        payload.qs.pve = '1'
+        this.errorOnPage = true
+      }
     }
     return payload
   }

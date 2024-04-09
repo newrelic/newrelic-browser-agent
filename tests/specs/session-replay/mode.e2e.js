@@ -155,7 +155,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Sample Mode Validation', ()
 
   it('ERROR (seen before init) => ERROR', async () => {
     await browser.url(await browser.testHandle.assetURL('rrweb-split-errors.html', config({ session_replay: { preload: false, sampling_rate: 0, error_sampling_rate: 100 } })))
-      .then(() => browser.waitForFeatureAggregate('session_replay'))
+      .then(() => browser.waitForSessionReplayRecording('session_replay'))
 
     await expect(getSR()).resolves.toMatchObject({
       recording: true,

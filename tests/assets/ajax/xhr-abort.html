@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+<head>
+  <title>Ajax Callback Duration</title>
+  {init} {config} {loader}
+</head>
+<body>
+<div>
+  This page uses a button to initiate an XHR that is aborted after 50 milliseconds. The abort
+  event handler function contains a 50 millisecond synchronous wait for testing with cbTime calculations.
+  After the XHR finishes, the hash will be updated so this page can be used for testing with and without the SPA feature.
+  When running in a spec file, setting `window.disableAjaxHashChange = true` will disable
+  the hash route change so the ajax call is fully processed by the ajax feature instead of
+  the SPA feature.
+</div>
+<div><button id="sendAjax">Send Ajax</button></div>
+<script>
+  window.disableAjaxHashChange = false
+  function wait (time) {
+    var start = new Date().getTime()
+    while (new Date().getTime() < start + time) continue
+  }
+  document.getElementById('sendAjax').addEventListener('click', function () {
+    var xhr = new XMLHttpRequest()
+    xhr.onreadystatechange = function () { wait(50) }
+    xhr.onprogress = function () { wait(50) }
+    xhr.onloadstart = function () { wait(50) }
+    xhr.onload = function () { wait(50) }
+    xhr.onloadend = function () { wait(50) }
+    xhr.onabort = function () { wait(50) }
+    xhr.addEventListener('readystatechange', function () { wait(50) })
+    xhr.addEventListener('progress', function () { wait(50) })
+    xhr.addEventListener('loadstart', function () { wait(50) })
+    xhr.addEventListener('load', function () { wait(50) })
+    xhr.addEventListener('abort', function () { wait(50) })
+    xhr.addEventListener('loadend', function () {
+      if (!disableAjaxHashChange) {
+        window.location.hash = Math.random()
+      }
+    })
+    xhr.open('GET', '/delayed?delay=5000')
+    xhr.send()
+    setTimeout(function () {
+      xhr.abort()
+    }, 200)
+  })
+</script>
+</body>
+</html>

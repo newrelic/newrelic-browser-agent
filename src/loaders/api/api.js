@@ -15,6 +15,7 @@ import { gosCDN } from '../../common/window/nreum'
 import { apiMethods, asyncApiMethods } from './api-methods'
 import { SR_EVENT_EMITTER_TYPES } from '../../features/session_replay/constants'
 import { now } from '../../common/timing/now'
+import { MODE } from '../../common/session/constants'
 
 export function setTopLevelCallers () {
   const nr = gosCDN()
@@ -33,11 +34,19 @@ export function setTopLevelCallers () {
   }
 }
 
+const replayRunning = {}
+
 export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) {
   if (!forceDrain) registerDrain(agentIdentifier, 'api')
   const apiInterface = {}
   var instanceEE = ee.get(agentIdentifier)
   var tracerEE = instanceEE.get('tracer')
+
+  replayRunning[agentIdentifier] = MODE.OFF
+
+  instanceEE.on(SR_EVENT_EMITTER_TYPES.REPLAY_RUNNING, (isRunning) => {
+    replayRunning[agentIdentifier] = isRunning
+  })
 
   var prefix = 'api-'
   var spaPrefix = prefix + 'ixn-'
@@ -184,7 +193,7 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
   apiInterface.noticeError = function (err, customAttributes) {
     if (typeof err === 'string') err = new Error(err)
     handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/noticeError/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
-    handle('err', [err, now(), false, customAttributes], undefined, FEATURE_NAMES.jserrors, instanceEE)
+    handle('err', [err, now(), false, customAttributes, !!replayRunning[agentIdentifier]], undefined, FEATURE_NAMES.jserrors, instanceEE)
   }
 
   // theres no window.load event on non-browser scopes, lazy load immediately

@@ -199,7 +199,7 @@ test('should support listener object with handleEvent method', async () => {
   expect(handler.handleEvent).toHaveBeenCalledTimes(1)
 })
 
-test('AEL on window should call through to AEL on EventTarget', async () => {
+test('calling addEventListener on window should call through to addEventListener on EventTarget', async () => {
   let target = window
   while (!Object.prototype.hasOwnProperty.call(target, 'addEventListener')) {
     target = Object.getPrototypeOf(target)

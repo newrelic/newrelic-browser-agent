@@ -1,51 +1,10 @@
 import { PREFIX } from '../../src/common/session/constants'
 import { SessionEntity } from '../../src/common/session/session-entity'
+import { LocalMemory, model } from './session-helpers'
 
 const agentIdentifier = 'test_agent_identifier'
 const key = 'test_key'
 const value = 'test_value'
-class LocalMemory {
-  constructor (initialState = {}) {
-    this.state = initialState
-  }
-
-  get (key) {
-    try {
-      return this.state[key]
-    } catch (err) {
-      // Error is ignored
-      return ''
-    }
-  }
-
-  set (key, value) {
-    try {
-      if (value === undefined || value === null) return this.remove(key)
-      this.state[key] = value
-    } catch (err) {
-      // Error is ignored
-    }
-  }
-
-  remove (key) {
-    try {
-      delete this.state[key]
-    } catch (err) {
-      // Error is ignored
-    }
-  }
-}
-const model = {
-  value: '',
-  inactiveAt: 0,
-  expiresAt: 0,
-  updatedAt: Date.now(),
-  sessionReplayMode: 0,
-  sessionReplaySentFirstChunk: false,
-  sessionTraceMode: 0,
-  traceHarvestStarted: false,
-  custom: {}
-}
 
 jest.mock('../../src/common/timer/timer')
 jest.mock('../../src/common/timer/interaction-timer')

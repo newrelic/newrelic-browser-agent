@@ -60,7 +60,6 @@ export class Aggregate extends AggregateBase {
 
     // The SessionEntity class can emit a message indicating the session was cleared and reset (expiry, inactivity). This feature must abort and never resume if that occurs.
     this.ee.on(SESSION_EVENTS.RESET, () => {
-      this.scheduler.runHarvest()
       this.abort(ABORT_REASONS.RESET)
     })
 

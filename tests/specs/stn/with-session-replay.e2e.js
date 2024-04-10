@@ -84,7 +84,7 @@ describe.withBrowsersMatching(notIE)('stn with session replay', () => {
       let initSTReceived = await loadPageAndGetResource(['stn/instrumented.html', { init: { privacy: { cookies_enabled: true }, session_replay: { enabled: false } } }], 3001)
       let firstPageAgentVals = await getTraceValues()
       expect(initSTReceived).toBeTruthy() // that is, trace should still fully run when the replay feature isn't around
-      expect(initSTReceived.request.query.ptid).toBeUndefined() // trace doesn't have ptid on first initial harvest
+      expect(initSTReceived.request.query.ptid).not.toBeUndefined() // trace has ptid on first initial harvest
       expect(firstPageAgentVals).toEqual([true, MODE.FULL, expect.any(String)])
 
       await navigateToRootDir()
@@ -94,7 +94,7 @@ describe.withBrowsersMatching(notIE)('stn with session replay', () => {
       let secondPageAgentVals = await getTraceValues()
       // On subsequent page load or refresh, trace should maintain the set mode, standalone, and same sessionid but have a new ptid corresponding to new page visit.
       expect(secondInitST.request.query.s).toEqual(initSTReceived.request.query.s)
-      expect(secondInitST.request.query.ptid).toBeUndefined()
+      expect(secondInitST.request.query.ptid).not.toBeUndefined()
       expect(secondPageAgentVals).toEqual([true, MODE.FULL, expect.any(String)]) // note it's expected & assumed that the replay mode is OFF
 
       expect(secondPageAgentVals[2]).not.toEqual(firstPageAgentVals[2]) // ptids
@@ -118,7 +118,7 @@ describe.withBrowsersMatching(notIE)('stn with session replay', () => {
         let initSTReceived = await loadPageAndGetResource(['stn/instrumented.html', config({ session_replay: replayConfig })], 3003)
         let firstPageAgentVals = await getRuntimeValues()
         expect(initSTReceived).toBeTruthy()
-        expect(initSTReceived.request.query.ptid).toBeUndefined()
+        expect(initSTReceived.request.query.ptid).not.toBeUndefined()
         if (replayMode === 'OFF') {
           expect(firstPageAgentVals).toEqual([true, MODE.FULL, true])
           expect(Number(initSTReceived.request.query.hr)).toEqual(0)
@@ -134,7 +134,7 @@ describe.withBrowsersMatching(notIE)('stn with session replay', () => {
         let secondPageAgentVals = await getRuntimeValues()
         // On subsequent page load or refresh, trace should maintain FULL mode and session id.
         expect(secondInitST.request.query.s).toEqual(initSTReceived.request.query.s)
-        expect(secondInitST.request.query.ptid).toBeUndefined() // this validates we're actually getting the 2nd page's initial res, not 1st page's unload res
+        expect(secondInitST.request.query.ptid).not.toBeUndefined() // this validates we're actually getting the 2nd page's initial res, not 1st page's unload res
         if (replayMode === 'OFF') {
           expect(secondPageAgentVals).toEqual([true, MODE.FULL, null]) // session_replay.featAggregate will be null as it's OFF and not imported on subsequent pages
           expect(Number(secondInitST.request.query.hr)).toEqual(0)

@@ -43,7 +43,7 @@ export class Aggregate extends AggregateBase {
     if (!this.agentRuntime.xhrWrappable) return
 
     this.resourceObserver = argsObj?.resourceObserver // undefined if observer couldn't be created
-    this.ptid = ''
+    this.ptid = this.agentRuntime.ptid
     this.trace = {}
     this.nodeCount = 0
     this.sentTrace = null

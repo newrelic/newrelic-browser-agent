@@ -377,7 +377,7 @@ describe('_send', () => {
     expect(xhrAddEventListener).toHaveBeenCalledWith('loadend', expect.any(Function), expect.any(Object))
     expect(result).toEqual(jest.mocked(submitDataModule.xhr).mock.results[0].value)
     expect(submitMethod).not.toHaveBeenCalled()
-    expect(spec.cbFinished).toHaveBeenCalledWith({ ...xhrState, sent: true, xhr: xhrState, fullUrl: expect.any(String) })
+    expect(spec.cbFinished).toHaveBeenCalledWith({ ...xhrState, sent: true, xhr: xhrState, failed: false, fullUrl: expect.any(String) })
   })
 
   test('should set cbFinished state retry to true with delay when xhr has 429 status', () => {
@@ -403,6 +403,7 @@ describe('_send', () => {
       retry: true,
       delay: harvestInstance.tooManyRequestsDelay,
       xhr: xhrState,
+      failed: true,
       fullUrl: expect.any(String)
     })
   })
@@ -430,6 +431,7 @@ describe('_send', () => {
       sent: true,
       retry: true,
       xhr: xhrState,
+      failed: true,
       fullUrl: expect.any(String)
     })
   })
@@ -456,6 +458,7 @@ describe('_send', () => {
       ...xhrState,
       sent: true,
       xhr: xhrState,
+      failed: false,
       fullUrl: expect.any(String)
     })
   })
@@ -483,6 +486,7 @@ describe('_send', () => {
       responseText: undefined,
       sent: true,
       xhr: xhrState,
+      failed: false,
       fullUrl: expect.any(String)
     })
   })
@@ -507,6 +511,7 @@ describe('_send', () => {
       ...xhrState,
       sent: false,
       xhr: xhrState,
+      failed: true,
       fullUrl: expect.any(String)
     })
   })

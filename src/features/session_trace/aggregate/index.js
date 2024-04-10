@@ -99,7 +99,7 @@ export class Aggregate extends AggregateBase {
 
         if (prevMode === MODE.ERROR && this.#scheduler) {
           this.trimSTNs(ERROR_MODE_SECONDS_WINDOW) // up until now, Trace would've been just buffering nodes up to max, which needs to be trimmed to last X seconds
-          this.#scheduler.runHarvest({ needResponse: true })
+          this.#scheduler.runHarvest()
         } else {
           controlTraceOp(MODE.FULL)
         }
@@ -138,7 +138,7 @@ export class Aggregate extends AggregateBase {
           this.ee.on(SESSION_EVENTS.RESUME, () => {
             const updatedTraceMode = sessionEntity.state.sessionTraceMode
             if (updatedTraceMode === MODE.OFF) stopTracePerm()
-            else if (updatedTraceMode === MODE.FULL && this.#scheduler && !this.#scheduler.started) this.#scheduler.runHarvest({ needResponse: true })
+            else if (updatedTraceMode === MODE.FULL && this.#scheduler && !this.#scheduler.started) this.#scheduler.runHarvest()
             mostRecentModeKnown = updatedTraceMode
           })
           this.ee.on(SESSION_EVENTS.PAUSE, () => { mostRecentModeKnown = sessionEntity.state.sessionTraceMode })
@@ -189,13 +189,12 @@ export class Aggregate extends AggregateBase {
       retryDelay: this.harvestTimeSeconds
     }, this)
     this.#scheduler.harvest.on('resources', this.#prepareHarvest.bind(this))
-    if (dontStartHarvestYet === false) this.#scheduler.runHarvest({ needResponse: true }) // sends first stn harvest immediately
+    if (dontStartHarvestYet === false) this.#scheduler.runHarvest() // sends first stn harvest immediately
     startupBuffer.decide(true) // signal to ALLOW & process data in EE's buffer into internal nodes queued for next harvest
   }
 
   #onHarvestFinished (result) {
-    if (result.sent && result.responseText && !this.ptid) { // continue interval harvest only if ptid was returned by server on the first
-      this.agentRuntime.ptid = this.ptid = result.responseText
+    if (result.sent && !result.failed && !this.#scheduler.started) { // continue interval harvest only after first call
       this.#scheduler.startTimer(this.harvestTimeSeconds)
     }
 

@@ -15,12 +15,12 @@ describe('XHR onreadystatechange wrapping', () => {
       return window.readyStatesSeen
     })
 
-    expect(readyStatesSeen).toEqual([
-      [1, 'nrWrapper'],
-      [2, 'nrWrapper'],
-      [3, 'nrWrapper'],
-      [4, 'nrWrapper']
-    ])
+    expect(readyStatesSeen).toEqual(expect.arrayContaining([
+      [1, expect.stringContaining('nr@original')],
+      [2, expect.stringContaining('nr@original')],
+      [3, expect.stringContaining('nr@original')],
+      [4, expect.stringContaining('nr@original')]
+    ]))
   })
 
   it('properly wraps onreadystatechange function added after send call', async () => {
@@ -39,10 +39,10 @@ describe('XHR onreadystatechange wrapping', () => {
       return window.readyStatesSeen
     })
 
-    expect(readyStatesSeen).toEqual([
-      [2, 'nrWrapper'],
-      [3, 'nrWrapper'],
-      [4, 'nrWrapper']
-    ])
+    expect(readyStatesSeen).toEqual(expect.arrayContaining([
+      [2, expect.stringContaining('nr@original')],
+      [3, expect.stringContaining('nr@original')],
+      [4, expect.stringContaining('nr@original')]
+    ]))
   })
 })

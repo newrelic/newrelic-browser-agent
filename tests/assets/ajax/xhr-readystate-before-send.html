@@ -33,7 +33,10 @@
     })
     xhr.onreadystatechange = function () {
       if (window.readyStatesSeen.indexOf(xhr.readyState) === -1) {
-        window.readyStatesSeen.push([xhr.readyState, xhr.onreadystatechange.name])
+        var nrContext = Object.keys(xhr.onreadystatechange).find(function (key) {
+          return key.indexOf('nr@original') === 0
+        })
+        window.readyStatesSeen.push([xhr.readyState, nrContext])
       }
     }
     xhr.open('GET', '/json')

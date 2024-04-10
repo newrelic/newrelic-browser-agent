@@ -253,6 +253,8 @@ export class Aggregate extends AggregateBase {
       return
     }
 
+    handle(SUPPORTABILITY_METRIC_CHANNEL, ['SessionReplay/Harvest/Attempts'], undefined, FEATURE_NAMES.metrics, this.ee)
+
     let len = 0
     if (!!this.gzipper && !!this.u8) {
       payload.body = this.gzipper(this.u8(`[${payload.body.map(e => {

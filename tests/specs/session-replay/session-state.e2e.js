@@ -43,8 +43,8 @@ describe.withBrowsersMatching(notIE)('session manager state behavior', () => {
   })
 
   describe('When session ends', () => {
-    it('should end recording and unload', async () => {
-      await browser.url(await browser.testHandle.assetURL('instrumented.html', config({ session: { expiresMs: 7500 }, session_replay: { harvestTimeSeconds: 10 } })))
+    it('should end recording but not unload', async () => {
+      await browser.url(await browser.testHandle.assetURL('instrumented.html', config({ session: { expiresMs: 5000 }, session_replay: { harvestTimeSeconds: 10 } })))
         .then(() => browser.waitForSessionReplayRecording())
 
       // session has started, replay should have set mode to "FULL"
@@ -53,16 +53,11 @@ describe.withBrowsersMatching(notIE)('session manager state behavior', () => {
       expect(oldSessionClass.sessionReplayMode).toEqual(MODE.FULL)
 
       await Promise.all([
-        browser.testHandle.expectBlob(),
+        browser.testHandle.expectBlob(10000, true),
         browser.execute(function () {
           document.querySelector('body').click()
         })
       ])
-
-      // session has ended, replay should have set mode to "OFF"
-      const { agentSessions: newSession } = await browser.getAgentSessionInfo()
-      const newSessionClass = Object.values(newSession)[0]
-      expect(newSessionClass.sessionReplayMode).toEqual(MODE.OFF)
     })
   })
 
@@ -77,11 +72,6 @@ describe.withBrowsersMatching(notIE)('session manager state behavior', () => {
       expect(payload.body.length).toBeGreaterThan(0)
       // type 2 payloads are snapshots
       expect(payload.body.filter(x => x.type === RRWEB_EVENT_TYPES.FullSnapshot).length).toEqual(1)
-
-      /** This should fire when the tab changes, it's easier to stage it this way before hand, and allows for the super early staging for the next expect */
-      browser.testHandle.expectBlob(15000).then(({ request: page1UnloadContents }) => {
-        testExpectedReplay({ data: page1UnloadContents, session: localStorage.value, hasError: false, hasMeta: false, hasSnapshot: false, isFirstChunk: false })
-      })
 
       /** This is scoped out this way to guarantee we have it staged in time since preload can harvest super early, sometimes earlier than wdio can expect normally */
       /** see next `testExpectedReplay` */

@@ -1,8 +1,12 @@
 import { InteractionTimer } from '../../src/common/timer/interaction-timer'
+import { LocalMemory, model } from './session-helpers'
+import { PREFIX } from '../../src/common/session/constants'
 
 jest.useFakeTimers()
 
 let now
+const key = 'test_key'
+const value = 'test_value'
 
 beforeEach(() => {
   now = Date.now()
@@ -133,7 +137,8 @@ describe('pause()', () => {
 
 describe('resume()', () => {
   test('resume allows the callback continue firing', () => {
-    const timer = new InteractionTimer({ onEnd: jest.fn() }, 100)
+    const storage = new LocalMemory({ [`${PREFIX}_${key}`]: { ...model, value, expiresAt: now + 5000, inactiveAt: Infinity, updatedAt: now } })
+    const timer = new InteractionTimer({ onEnd: jest.fn(), readStorage: () => storage.get(`${PREFIX}_${key}`) }, 100)
     expect(timer.onEnd).toHaveBeenCalledTimes(0)
     timer.pause()
     jest.advanceTimersByTime(150)
@@ -143,11 +148,31 @@ describe('resume()', () => {
     expect(timer.onEnd).toHaveBeenCalledTimes(1)
   })
 
-  test('resume fires the refresh callback', () => {
-    const timer = new InteractionTimer({ onEnd: jest.fn(), onRefresh: jest.fn() }, 100)
+  test('resume fires the refresh callback if session is valid', () => {
+    const storage = new LocalMemory({ [`${PREFIX}_${key}`]: { ...model, value, expiresAt: now + 5000, inactiveAt: Infinity, updatedAt: now } })
+    const timer = new InteractionTimer({ onEnd: jest.fn(), onRefresh: jest.fn(), readStorage: () => storage.get(`${PREFIX}_${key}`) }, 100)
     timer.pause()
     timer.resume()
     expect(timer.onRefresh).toHaveBeenCalledTimes(1)
+    expect(timer.onEnd).toHaveBeenCalledTimes(0)
+  })
+
+  test('resume calls onEnd if storage is already invalid on resume -- expired', () => {
+    const storage = new LocalMemory({ [`${PREFIX}_${key}`]: { ...model, value, expiresAt: now - 5000, inactiveAt: Infinity, updatedAt: now } })
+    const timer = new InteractionTimer({ onEnd: jest.fn(), onRefresh: jest.fn(), readStorage: () => storage.get(`${PREFIX}_${key}`) }, 100)
+    timer.pause()
+    timer.resume()
+    expect(timer.onRefresh).toHaveBeenCalledTimes(0)
+    expect(timer.onEnd).toHaveBeenCalledTimes(1)
+  })
+
+  test('resume calls onEnd if storage is already invalid on resume -- inactive', () => {
+    const storage = new LocalMemory({ [`${PREFIX}_${key}`]: { ...model, value, expiresAt: now + 5000, inactiveAt: now - 5000, updatedAt: now } })
+    const timer = new InteractionTimer({ onEnd: jest.fn(), onRefresh: jest.fn(), readStorage: () => storage.get(`${PREFIX}_${key}`) }, 100)
+    timer.pause()
+    timer.resume()
+    expect(timer.onRefresh).toHaveBeenCalledTimes(0)
+    expect(timer.onEnd).toHaveBeenCalledTimes(1)
   })
 })
 

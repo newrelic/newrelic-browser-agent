@@ -1,45 +1,8 @@
 /* globals errorFn, noticeErrorFn */
 
-const config = {
-  init: {
-    privacy: { cookies_enabled: true }
-  }
-}
-
 describe('error payloads', () => {
   afterEach(async () => {
     await browser.destroyAgentSession()
-  })
-
-  it('should add session replay flag if active', async () => {
-    await browser.url(await browser.testHandle.assetURL('instrumented.html', config)) // Setup expects before loading the page
-      .then(() => browser.waitForFeatureAggregate('jserrors'))
-
-    await browser.execute(function () {
-      Object.values(newrelic.initializedAgents)[0].runtime.session.state.sessionReplayMode = 1
-      newrelic.noticeError(new Error('test'))
-    })
-
-    const { request: { body: { err } } } = await browser.testHandle.expectErrors()
-
-    expect(err[0].params).toEqual(expect.objectContaining({
-      hasReplay: true
-    }))
-  })
-
-  it('should NOT add session replay flag if not active', async () => {
-    await browser.url(await browser.testHandle.assetURL('instrumented.html')) // Setup expects before loading the page
-      .then(() => browser.waitForFeatureAggregate('jserrors'))
-
-    await browser.execute(function () {
-      newrelic.noticeError(new Error('test'))
-    })
-
-    const { request: { body: { err } } } = await browser.testHandle.expectErrors()
-
-    expect(err[0].params).not.toEqual(expect.objectContaining({
-      hasReplay: true
-    }))
   })
 
   it('simultaneous errors - should set a timestamp, tied to the FIRST error seen - noticeError', async () => {

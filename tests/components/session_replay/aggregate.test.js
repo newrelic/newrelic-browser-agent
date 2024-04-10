@@ -212,14 +212,14 @@ describe('Session Replay', () => {
   })
 
   describe('Session Replay Error Mode Behaviors', () => {
-    test('An error BEFORE rrweb import starts running in FULL from beginning', async () => {
-      setConfiguration(agentIdentifier, { session_replay: { error_sampling_rate: 100, sampling_rate: 0 } })
-      handle('errorAgg', ['test1'], undefined, FEATURE_NAMES.sessionReplay, ee.get(agentIdentifier))
+    test('An error BEFORE rrweb import starts running in ERROR from beginning (when not preloaded)', async () => {
+      setConfiguration(agentIdentifier, { session_replay: { preload: false, error_sampling_rate: 100, sampling_rate: 0 } })
+      handle('err', ['test1'], undefined, FEATURE_NAMES.sessionReplay, ee.get(agentIdentifier))
       sr = new SessionReplayAgg(agentIdentifier, new Aggregator({}))
       sr.ee.emit('rumresp', [{ sr: 1 }])
       await wait(100)
-      expect(sr.mode).toEqual(MODE.FULL)
-      expect(sr.scheduler.started).toEqual(true)
+      expect(sr.mode).toEqual(MODE.ERROR)
+      expect(sr.scheduler.started).toEqual(false)
     })
 
     test('An error AFTER rrweb import changes mode and starts harvester', async () => {
@@ -229,7 +229,7 @@ describe('Session Replay', () => {
       await wait(1)
       expect(sr.mode).toEqual(MODE.ERROR)
       expect(sr.scheduler.started).toEqual(false)
-      sr.ee.emit('errorAgg', ['test2'])
+      sr.ee.emit('err', ['test2'])
       expect(sr.mode).toEqual(MODE.FULL)
       expect(sr.scheduler.started).toEqual(true)
     })

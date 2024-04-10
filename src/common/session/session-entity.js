@@ -117,7 +117,8 @@ export class SessionEntity {
           this.write(getModeledObject(this.state, model))
         },
         ee: this.ee,
-        refreshEvents: ['click', 'keydown', 'scroll']
+        refreshEvents: ['click', 'keydown', 'scroll'],
+        readStorage: () => this.storage.get(this.lookupKey)
       }, this.state.inactiveAt - Date.now())
     } else {
       this.state.inactiveAt = Infinity

@@ -20,9 +20,9 @@ export class Recorder {
   #fixing = false
 
   constructor (parent) {
-    this.#events = new RecorderEvents({ canCorrectTimestamps: !!parent.timeKeeper?.ready })
-    this.#backloggedEvents = new RecorderEvents({ canCorrectTimestamps: !!parent.timeKeeper?.ready })
-    this.#preloaded = [new RecorderEvents({ canCorrectTimestamps: !!parent.timeKeeper?.ready })]
+    this.#events = new RecorderEvents()
+    this.#backloggedEvents = new RecorderEvents()
+    this.#preloaded = [new RecorderEvents()]
     /** True when actively recording, false when paused or stopped */
     this.recording = false
     /** The pointer to the current bucket holding rrweb events */
@@ -40,14 +40,9 @@ export class Recorder {
   }
 
   getEvents () {
-    if (this.#preloaded[0]?.events.length) {
-      const preloadedEvents = this.returnCorrectTimestamps(this.#preloaded[0])
-      return { ...this.#preloaded[0], events: preloadedEvents, type: 'preloaded' }
-    }
-    const backloggedEvents = this.returnCorrectTimestamps(this.#backloggedEvents)
-    const events = this.returnCorrectTimestamps(this.#events)
+    if (this.#preloaded[0]?.events.length) return { ...this.#preloaded[0], type: 'preloaded' }
     return {
-      events: [...backloggedEvents, ...events].filter(x => x),
+      events: [...this.#backloggedEvents.events, ...this.#events.events].filter(x => x),
       type: 'standard',
       cycleTimestamp: Math.min(this.#backloggedEvents.cycleTimestamp, this.#events.cycleTimestamp),
       payloadBytesEstimation: this.#backloggedEvents.payloadBytesEstimation + this.#events.payloadBytesEstimation,
@@ -58,24 +53,12 @@ export class Recorder {
     }
   }
 
-  /**
-   * Returns time-corrected events. If the events were correctable from the beginning, this correction will have already been applied.
-   * @param {SessionReplayEvent[]} events The array of buffered SR nodes
-   * @returns {CorrectedSessionReplayEvent[]}
-   */
-  returnCorrectTimestamps (events) {
-    if (!this.parent.timeKeeper?.ready) return events.events
-    return events.canCorrectTimestamps
-      ? events.events
-      : events.events.map(({ __serialized, timestamp, ...e }) => ({ timestamp: this.parent.timeKeeper.correctAbsoluteTimestamp(timestamp), ...e }))
-  }
-
   /** Clears the buffer (this.#events), and resets all payload metadata properties */
   clearBuffer () {
     if (this.#preloaded[0]?.events.length) this.#preloaded.shift()
     else if (this.parent.mode === MODE.ERROR) this.#backloggedEvents = this.#events
-    else this.#backloggedEvents = new RecorderEvents({ canCorrectTimestamps: !!this.parent.timeKeeper?.ready })
-    this.#events = new RecorderEvents({ canCorrectTimestamps: !!this.parent.timeKeeper?.ready })
+    else this.#backloggedEvents = new RecorderEvents()
+    this.#events = new RecorderEvents()
   }
 
   /** Begin recording using configured recording lib */
@@ -157,8 +140,9 @@ export class Recorder {
 
     if (this.parent.blocked) return
 
-    if (this.currentBufferTarget.canCorrectTimestamps) {
+    if (this.parent.timeKeeper?.ready && !event.__corrected) {
       event.timestamp = this.parent.timeKeeper.correctAbsoluteTimestamp(event.timestamp)
+      event.__corrected = true
     }
     event.__serialized = stringify(event)
     const eventBytes = event.__serialized.length
@@ -193,7 +177,7 @@ export class Recorder {
         this.parent.scheduler.runHarvest()
       } else {
         // we are still in "preload" and it triggered a "stop point".  Make a new set, which will get pointed at on next cycle
-        this.#preloaded.push(new RecorderEvents({ canCorrectTimestamps: !!this.parent.timeKeeper?.ready }))
+        this.#preloaded.push(new RecorderEvents())
       }
     }
   }

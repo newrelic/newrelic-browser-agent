@@ -254,14 +254,23 @@ export class Aggregate extends AggregateBase {
 
     let len = 0
     if (!!this.gzipper && !!this.u8) {
-      payload.body = this.gzipper(this.u8(`[${payload.body.map(e => {
-        if (e.__serialized) return e.__serialized
-        return stringify(e)
+      payload.body = this.gzipper(this.u8(`[${payload.body.map(({ __serialized, ...e }) => {
+        if (e.__corrected && __serialized) return __serialized
+        const output = { ...e }
+        output.timestamp = this.timeKeeper.correctAbsoluteTimestamp(e.timestamp)
+        output.__corrected = true
+        return stringify(output)
       }).join(',')}]`))
       len = payload.body.length
       this.scheduler.opts.gzip = true
     } else {
-      payload.body = payload.body.map(({ __serialized, ...node }) => node)
+      payload.body = payload.body.map(({ __serialized, ...node }) => {
+        if (node.__corrected) return node
+        const output = { ...node }
+        output.timestamp = this.timeKeeper.correctAbsoluteTimestamp(node.timestamp)
+        output.__corrected = true
+        return output
+      })
       len = stringify(payload.body).length
       this.scheduler.opts.gzip = false
     }
@@ -305,8 +314,14 @@ export class Aggregate extends AggregateBase {
 
     const relativeNow = now()
 
-    const firstEventTimestamp = events[0]?.timestamp // from rrweb node
-    const lastEventTimestamp = events[events.length - 1]?.timestamp // from rrweb node
+    const getCorrectedTimestamp = (node) => {
+      if (!node.timestamp) return
+      if (node.__corrected) return node.timestamp
+      return this.timeKeeper.correctAbsoluteTimestamp(node.timestamp)
+    }
+
+    const firstEventTimestamp = getCorrectedTimestamp(events[0]) // from rrweb node
+    const lastEventTimestamp = getCorrectedTimestamp(events[events.length - 1]) // from rrweb node
     const firstTimestamp = firstEventTimestamp || this.timeKeeper.correctAbsoluteTimestamp(recorderEvents.cycleTimestamp) // from rrweb node || from when the harvest cycle started
     const lastTimestamp = lastEventTimestamp || this.timeKeeper.convertRelativeTimestamp(relativeNow)
 
@@ -338,6 +353,7 @@ export class Aggregate extends AggregateBase {
           invalidStylesheetsDetected: stylesheetEvaluator.invalidStylesheetsDetected,
           inlinedAllStylesheets: recorderEvents.inlinedAllStylesheets,
           'rrweb.version': RRWEB_VERSION,
+          'payload.type': recorderEvents.type,
           // customer-defined data should go last so that if it exceeds the query param padding limit it will be truncated instead of important attrs
           ...(endUserId && { 'enduser.id': endUserId })
           // The Query Param is being arbitrarily limited in length here.  It is also applied when estimating the size of the payload in getPayloadSize()

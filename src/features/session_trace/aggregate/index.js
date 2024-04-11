@@ -212,15 +212,18 @@ export class Aggregate extends AggregateBase {
 
   #prepareHarvest (options) {
     if (this.isStandalone) {
-      if (this.ptid && now() >= MAX_TRACE_DURATION) {
-        // Perform a final harvest once we hit or exceed the max session trace time
-        options.isFinalHarvest = true
-        this.operationalGate.permanentlyDecide(false)
-        this.#scheduler.stopTimer(true)
-      } else if (this.everSent && this.nodeCount <= REQ_THRESHOLD_TO_SEND && !options.isFinalHarvest) {
-        // Only harvest when more than some threshold of nodes are pending, after the very first harvest, with the exception of the last outgoing harvest.
-        return
+      if (this.#scheduler.started) {
+        if (now() >= MAX_TRACE_DURATION) {
+          // Perform a final harvest once we hit or exceed the max session trace time
+          options.isFinalHarvest = true
+          this.operationalGate.permanentlyDecide(false)
+          this.#scheduler.stopTimer(true)
+        } else if (this.nodeCount <= REQ_THRESHOLD_TO_SEND && !options.isFinalHarvest) {
+          // Only harvest when more than some threshold of nodes are pending, after the very first harvest, with the exception of the last outgoing harvest.
+          return
+        }
       }
+      // else, we must be on the very first harvest (standalone mode), so go to next square
     } else {
     //   -- *cli May '26 - Update: Not rate limiting backgrounded pages either for now.
     //   if (this.ptid && document.visibilityState === 'hidden' && this.nodeCount <= REQ_THRESHOLD_TO_SEND) return
@@ -231,7 +234,6 @@ export class Aggregate extends AggregateBase {
       if (currentMode === MODE.OFF && Object.keys(this.trace).length === 0) return
       if (currentMode === MODE.ERROR) return // Trace in this mode should never be harvesting, even on unload
     }
-    this.everSent = true
     return this.takeSTNs(options.retry)
   }
 

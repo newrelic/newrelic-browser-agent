@@ -28,6 +28,7 @@ import { stringify } from '../../../common/util/stringify'
 import { stylesheetEvaluator } from '../shared/stylesheet-evaluator'
 import { deregisterDrain } from '../../../common/drain/drain'
 import { now } from '../../../common/timing/now'
+import { buildNRMetaNode } from '../shared/utils'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -255,20 +256,22 @@ export class Aggregate extends AggregateBase {
     let len = 0
     if (!!this.gzipper && !!this.u8) {
       payload.body = this.gzipper(this.u8(`[${payload.body.map(({ __serialized, ...e }) => {
-        if (e.__corrected && __serialized) return __serialized
+        if (e.__newrelic && __serialized) return __serialized
         const output = { ...e }
-        output.timestamp = this.timeKeeper.correctAbsoluteTimestamp(e.timestamp)
-        output.__corrected = true
+        if (!output.__newrelic) {
+          output.__newrelic = buildNRMetaNode(e.timestamp, this.timeKeeper)
+          output.timestamp = this.timeKeeper.correctAbsoluteTimestamp(e.timestamp)
+        }
         return stringify(output)
       }).join(',')}]`))
       len = payload.body.length
       this.scheduler.opts.gzip = true
     } else {
       payload.body = payload.body.map(({ __serialized, ...node }) => {
-        if (node.__corrected) return node
+        if (node.__newrelic) return node
         const output = { ...node }
+        output.__newrelic = buildNRMetaNode(node.timestamp, this.timeKeeper)
         output.timestamp = this.timeKeeper.correctAbsoluteTimestamp(node.timestamp)
-        output.__corrected = true
         return output
       })
       len = stringify(payload.body).length
@@ -285,6 +288,12 @@ export class Aggregate extends AggregateBase {
     this.recorder.clearBuffer()
     if (recorderEvents.type === 'preloaded') this.scheduler.runHarvest(opts)
     return [payload]
+  }
+
+  getCorrectedTimestamp (node) {
+    if (!node.timestamp) return
+    if (node.__newrelic) return node.timestamp
+    return this.timeKeeper.correctAbsoluteTimestamp(node.timestamp)
   }
 
   getHarvestContents (recorderEvents) {
@@ -314,14 +323,8 @@ export class Aggregate extends AggregateBase {
 
     const relativeNow = now()
 
-    const getCorrectedTimestamp = (node) => {
-      if (!node.timestamp) return
-      if (node.__corrected) return node.timestamp
-      return this.timeKeeper.correctAbsoluteTimestamp(node.timestamp)
-    }
-
-    const firstEventTimestamp = getCorrectedTimestamp(events[0]) // from rrweb node
-    const lastEventTimestamp = getCorrectedTimestamp(events[events.length - 1]) // from rrweb node
+    const firstEventTimestamp = this.getCorrectedTimestamp(events[0]) // from rrweb node
+    const lastEventTimestamp = this.getCorrectedTimestamp(events[events.length - 1]) // from rrweb node
     const firstTimestamp = firstEventTimestamp || this.timeKeeper.correctAbsoluteTimestamp(recorderEvents.cycleTimestamp) // from rrweb node || from when the harvest cycle started
     const lastTimestamp = lastEventTimestamp || this.timeKeeper.convertRelativeTimestamp(relativeNow)
 

@@ -8,6 +8,7 @@ import { stylesheetEvaluator } from './stylesheet-evaluator'
 import { handle } from '../../../common/event-emitter/handle'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
+import { buildNRMetaNode } from './utils'
 
 export class Recorder {
   /** Each page mutation or event will be stored (raw) in this array. This array will be cleared on each harvest */
@@ -140,9 +141,9 @@ export class Recorder {
 
     if (this.parent.blocked) return
 
-    if (this.parent.timeKeeper?.ready && !event.__corrected) {
+    if (this.parent.timeKeeper?.ready && !event.__newrelic) {
+      event.__newrelic = buildNRMetaNode(event.timestamp, this.parent.timeKeeper)
       event.timestamp = this.parent.timeKeeper.correctAbsoluteTimestamp(event.timestamp)
-      event.__corrected = true
     }
     event.__serialized = stringify(event)
     const eventBytes = event.__serialized.length

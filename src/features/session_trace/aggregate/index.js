@@ -47,6 +47,7 @@ export class Aggregate extends AggregateBase {
     this.trace = {}
     this.nodeCount = 0
     this.sentTrace = null
+    this.everSent = false
     this.harvestTimeSeconds = getConfigurationValue(agentIdentifier, 'session_trace.harvestTimeSeconds') || 10
     this.maxNodesPerHarvest = getConfigurationValue(agentIdentifier, 'session_trace.maxNodesPerHarvest') || 1000
     /**
@@ -99,7 +100,7 @@ export class Aggregate extends AggregateBase {
 
         if (prevMode === MODE.ERROR && this.#scheduler) {
           this.trimSTNs(ERROR_MODE_SECONDS_WINDOW) // up until now, Trace would've been just buffering nodes up to max, which needs to be trimmed to last X seconds
-          this.#scheduler.runHarvest()
+          this.#scheduler.runHarvest({})
         } else {
           controlTraceOp(MODE.FULL)
         }
@@ -119,7 +120,7 @@ export class Aggregate extends AggregateBase {
       const stopTracePerm = () => {
         if (sessionEntity.state.sessionTraceMode !== MODE.OFF) sessionEntity.write({ sessionTraceMode: MODE.OFF })
         operationalGate.permanentlyDecide(false)
-        if (mostRecentModeKnown === MODE.FULL) this.#scheduler?.runHarvest() // allow queued nodes (past opGate) to final harvest, unless they were buffered in other modes
+        if (mostRecentModeKnown === MODE.FULL) this.#scheduler?.runHarvest({}) // allow queued nodes (past opGate) to final harvest, unless they were buffered in other modes
         this.#scheduler?.stopTimer(true) // the 'true' arg here will forcibly block any future call to runHarvest, so the last runHarvest above must be prior
         this.#scheduler = null
       }
@@ -138,7 +139,7 @@ export class Aggregate extends AggregateBase {
           this.ee.on(SESSION_EVENTS.RESUME, () => {
             const updatedTraceMode = sessionEntity.state.sessionTraceMode
             if (updatedTraceMode === MODE.OFF) stopTracePerm()
-            else if (updatedTraceMode === MODE.FULL && this.#scheduler && !this.#scheduler.started) this.#scheduler.runHarvest()
+            else if (updatedTraceMode === MODE.FULL && this.#scheduler && !this.#scheduler.started) this.#scheduler.runHarvest({})
             mostRecentModeKnown = updatedTraceMode
           })
           this.ee.on(SESSION_EVENTS.PAUSE, () => { mostRecentModeKnown = sessionEntity.state.sessionTraceMode })
@@ -189,7 +190,7 @@ export class Aggregate extends AggregateBase {
       retryDelay: this.harvestTimeSeconds
     }, this)
     this.#scheduler.harvest.on('resources', this.#prepareHarvest.bind(this))
-    if (dontStartHarvestYet === false) this.#scheduler.runHarvest() // sends first stn harvest immediately
+    if (dontStartHarvestYet === false) this.#scheduler.runHarvest({}) // sends first stn harvest immediately
     startupBuffer.decide(true) // signal to ALLOW & process data in EE's buffer into internal nodes queued for next harvest
   }
 
@@ -216,7 +217,7 @@ export class Aggregate extends AggregateBase {
         options.isFinalHarvest = true
         this.operationalGate.permanentlyDecide(false)
         this.#scheduler.stopTimer(true)
-      } else if (this.ptid && this.nodeCount <= REQ_THRESHOLD_TO_SEND && !options.isFinalHarvest) {
+      } else if (this.everSent && this.nodeCount <= REQ_THRESHOLD_TO_SEND && !options.isFinalHarvest) {
         // Only harvest when more than some threshold of nodes are pending, after the very first harvest, with the exception of the last outgoing harvest.
         return
       }
@@ -230,7 +231,7 @@ export class Aggregate extends AggregateBase {
       if (currentMode === MODE.OFF && Object.keys(this.trace).length === 0) return
       if (currentMode === MODE.ERROR) return // Trace in this mode should never be harvesting, even on unload
     }
-
+    this.everSent = true
     return this.takeSTNs(options.retry)
   }
 

@@ -85,6 +85,10 @@ function recordTimeKeeper () {
         newrelic.addPageAction('timeKeeper', {
           timeSincePageOrigin: testRelativeTimestamp,
           valid: true,
+          'Date.now': testAbsoluteTimestamp,
+          'global.timeOrigin': performance.timeOrigin,
+          'global.navigationStart': performance.timing.navigationStart,
+          'runtime': prodAgent.runtime,
           originTime: timeKeeper.originTime,
           correctedOriginTime: timeKeeper.correctedOriginTime,
           localTimeDiff: timeKeeper.originTime - timeKeeper.correctedOriginTime,

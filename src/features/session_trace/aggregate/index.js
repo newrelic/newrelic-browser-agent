@@ -195,7 +195,7 @@ export class Aggregate extends AggregateBase {
   }
 
   #onHarvestFinished (result) {
-    if (result.sent && !result.failed && !this.everSent) { // continue interval harvest only after first call
+    if (result.sent && !result.failed && !this.#scheduler.started) { // continue interval harvest only after first call
       this.#scheduler.startTimer(this.harvestTimeSeconds)
     }
 

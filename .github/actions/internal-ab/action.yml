@@ -77,11 +77,12 @@ runs:
         local_dir: $GITHUB_WORKSPACE/temp
         bucket_dir: internal/
 
-    - run: echo '=========================== Purging Prod Fastly Cache ==========================='
-      shell: bash
     - name: Gather a/b purge paths
       id: ab-purge-paths
       run: echo "results=$(echo '${{ steps.ab-s3-upload.outputs.results }}' | jq -j '.[].Key | select(. | test(".*?\\.js$")) + " "')" >> $GITHUB_OUTPUT
+      shell: bash
+
+    - run: echo '=========================== Purging Prod Fastly Cache ==========================='
       shell: bash
     - name: Purge a/b fastly cache
       uses: ./.github/actions/fastly-purge
@@ -91,10 +92,6 @@ runs:
         purge_path: ${{ steps.ab-purge-paths.outputs.results }}
 
     - run: echo '=========================== Purging Staging Fastly Cache ==========================='
-      shell: bash
-    - name: Gather a/b purge paths
-      id: ab-purge-paths
-      run: echo "results=$(echo '${{ steps.ab-s3-upload.outputs.results }}' | jq -j '.[].Key | select(. | test(".*?\\.js$")) + " "')" >> $GITHUB_OUTPUT
       shell: bash
     - name: Purge a/b fastly cache
       uses: ./.github/actions/fastly-purge

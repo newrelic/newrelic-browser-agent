@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.256.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.255.0...v1.256.0) (2024-04-11)
+
+
+### Features
+
+* Adjust Session Replay Error Tracking ([#951](https://github.com/newrelic/newrelic-browser-agent/issues/951)) ([91d65b5](https://github.com/newrelic/newrelic-browser-agent/commit/91d65b5b7b5b7e753a6603150fd4bb7d2543babd))
+* Allow unmasking elements with nr-unmask selectors ([#949](https://github.com/newrelic/newrelic-browser-agent/issues/949)) ([e17aa25](https://github.com/newrelic/newrelic-browser-agent/commit/e17aa25ee098115ad23a5fb9ae268a4b5769fac1))
+* Generate PTID in Agent ([#964](https://github.com/newrelic/newrelic-browser-agent/issues/964)) ([af7b676](https://github.com/newrelic/newrelic-browser-agent/commit/af7b6764f40cb1ddfb3ab2ca16d05d8e4f459f4e))
+
+
+### Bug Fixes
+
+* Resume Page Focus Now Checks Session State ([#961](https://github.com/newrelic/newrelic-browser-agent/issues/961)) ([e48af6b](https://github.com/newrelic/newrelic-browser-agent/commit/e48af6beb369daf6ddc8231daa040f0d9d204d5f))
+* stabilize timestamp corrections ([#966](https://github.com/newrelic/newrelic-browser-agent/issues/966)) ([4fbe962](https://github.com/newrelic/newrelic-browser-agent/commit/4fbe962d7b268968df96da59058e2e53c527c5eb))
+
 ## [1.255.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.254.1...v1.255.0) (2024-04-04)
 
 

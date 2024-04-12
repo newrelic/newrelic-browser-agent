@@ -14,7 +14,7 @@ test('set/getConfiguration should throw on an invalid agent id', () => {
 
 test('set/getConfiguration works correctly', () => {
   expect(() => setConfiguration(123, { jserrors: { enabled: false } })).not.toThrow() // notice setConfiguration accepts numbers
-  let cachedObj = getConfiguration('123')
+  const cachedObj = getConfiguration('123')
   expect(Object.keys(cachedObj).length).toBeGreaterThan(1)
   expect(cachedObj.jserrors.enabled).toEqual(false)
   expect(cachedObj.page_action.enabled).toEqual(true) // this should mirror default in init.js

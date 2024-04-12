@@ -55,7 +55,7 @@ function browserifyScript (scriptPath, enablePolyfills) {
           return reject(err)
         }
 
-        let content = buf.toString()
+        const content = buf.toString()
         resolve(content)
       })
   })

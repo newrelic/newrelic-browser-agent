@@ -133,7 +133,6 @@ module.exports = {
     // Disable lint rules that need code changes to re-enabled
     'no-var': 'off',
     'no-new': 'off',
-    'prefer-const': 'off',
 
     'sonarjs/cognitive-complexity': 'off',
     camelcase: 'off'

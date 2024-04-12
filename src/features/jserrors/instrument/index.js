@@ -109,7 +109,7 @@ export class Instrument extends InstrumentBase {
    * @returns {Error} An Error object with the message as the casted reason
    */
   #castPromiseRejectionEvent (promiseRejectionEvent) {
-    let prefix = 'Unhandled Promise Rejection: '
+    const prefix = 'Unhandled Promise Rejection: '
 
     if (promiseRejectionEvent?.reason instanceof Error) {
       try {

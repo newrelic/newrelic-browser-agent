@@ -38,7 +38,7 @@ export class Aggregate extends AggregateBase {
     setDenyList(denyList)
 
     let ajaxEvents = []
-    let spaAjaxEvents = {}
+    const spaAjaxEvents = {}
     let sentAjaxEvents = []
     const ee = this.ee
 

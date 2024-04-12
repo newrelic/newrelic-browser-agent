@@ -65,7 +65,7 @@ export function setDenyList (denyListConfig) {
       host = url
       pathname = ''
     }
-    let [hostname] = host.split(':')
+    const [hostname] = host.split(':')
 
     denyList.push({ hostname, pathname })
   }

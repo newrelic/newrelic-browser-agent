@@ -81,8 +81,8 @@ describe.withBrowsersMatching(notIE)('stn with session replay', () => {
         ]
       })
 
-      let initSTReceived = await loadPageAndGetResource(['stn/instrumented.html', { init: { privacy: { cookies_enabled: true }, session_replay: { enabled: false } } }], 3001)
-      let firstPageAgentVals = await getTraceValues()
+      const initSTReceived = await loadPageAndGetResource(['stn/instrumented.html', { init: { privacy: { cookies_enabled: true }, session_replay: { enabled: false } } }], 3001)
+      const firstPageAgentVals = await getTraceValues()
       expect(initSTReceived).toBeTruthy() // that is, trace should still fully run when the replay feature isn't around
       expect(initSTReceived.request.query.ptid).not.toBeUndefined() // trace has ptid on first initial harvest
       expect(firstPageAgentVals).toEqual([true, MODE.FULL, expect.any(String)])
@@ -90,8 +90,8 @@ describe.withBrowsersMatching(notIE)('stn with session replay', () => {
       await navigateToRootDir()
 
       // For some reason, macOS Safari (up to 16.1) would fail if we navigated back to 'urlWithoutReplay' so we go to a diff asset page instead:
-      let secondInitST = await loadPageAndGetResource(['instrumented.html', { init: { privacy: { cookies_enabled: true }, session_replay: { enabled: false } } }], 3002)
-      let secondPageAgentVals = await getTraceValues()
+      const secondInitST = await loadPageAndGetResource(['instrumented.html', { init: { privacy: { cookies_enabled: true }, session_replay: { enabled: false } } }], 3002)
+      const secondPageAgentVals = await getTraceValues()
       // On subsequent page load or refresh, trace should maintain the set mode, standalone, and same sessionid but have a new ptid corresponding to new page visit.
       expect(secondInitST.request.query.s).toEqual(initSTReceived.request.query.s)
       expect(secondInitST.request.query.ptid).not.toBeUndefined()
@@ -115,8 +115,8 @@ describe.withBrowsersMatching(notIE)('stn with session replay', () => {
           ]
         })
 
-        let initSTReceived = await loadPageAndGetResource(['stn/instrumented.html', config({ session_replay: replayConfig })], 3003)
-        let firstPageAgentVals = await getRuntimeValues()
+        const initSTReceived = await loadPageAndGetResource(['stn/instrumented.html', config({ session_replay: replayConfig })], 3003)
+        const firstPageAgentVals = await getRuntimeValues()
         expect(initSTReceived).toBeTruthy()
         expect(initSTReceived.request.query.ptid).not.toBeUndefined()
         if (replayMode === 'OFF') {
@@ -130,8 +130,8 @@ describe.withBrowsersMatching(notIE)('stn with session replay', () => {
         await navigateToRootDir()
 
         // For some reason, macOS Safari (up to 16.1) would fail if we navigated back to 'urlWithoutReplay' so we go to a diff asset page instead:
-        let secondInitST = await loadPageAndGetResource(['instrumented.html', config({ session_replay: replayConfig })], 3004)
-        let secondPageAgentVals = await getRuntimeValues()
+        const secondInitST = await loadPageAndGetResource(['instrumented.html', config({ session_replay: replayConfig })], 3004)
+        const secondPageAgentVals = await getRuntimeValues()
         // On subsequent page load or refresh, trace should maintain FULL mode and session id.
         expect(secondInitST.request.query.s).toEqual(initSTReceived.request.query.s)
         expect(secondInitST.request.query.ptid).not.toBeUndefined() // this validates we're actually getting the 2nd page's initial res, not 1st page's unload res

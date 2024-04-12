@@ -299,7 +299,7 @@ describe('soft navigations', () => {
 
     test('.interaction gets ixn retroactively too when processed late after ee buffer drain', () => {
       softNavAggregate.ee.emit('newUIEvent', [{ type: 'submit', timeStamp: 0 }])
-      let timeInBtwn = performance.now()
+      const timeInBtwn = performance.now()
       newrelic.interaction().command('save').command('end')
 
       expect(softNavAggregate.interactionsToHarvest.length).toEqual(1)

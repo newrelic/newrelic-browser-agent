@@ -92,7 +92,7 @@ export class HarvestScheduler extends SharedContext {
       this.onHarvestFinished(opts, result)
     }
 
-    let harvests = []
+    const harvests = []
     let submitMethod
     let payload
 

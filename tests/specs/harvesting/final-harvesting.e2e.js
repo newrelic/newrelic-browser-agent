@@ -150,7 +150,7 @@ describe.withBrowsersMatching(notIE)('final harvesting', () => {
   })
 
   it('should not send any final harvest when RUM fails, e.g. 400 code', async () => {
-    let url = await browser.testHandle.assetURL('final-harvest.html')
+    const url = await browser.testHandle.assetURL('final-harvest.html')
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
       statusCode: 400,
@@ -158,7 +158,7 @@ describe.withBrowsersMatching(notIE)('final harvesting', () => {
       permanent: true
     })
 
-    let rumPromise = browser.testHandle.expectRum()
+    const rumPromise = browser.testHandle.expectRum()
     await browser.url(url)
     await browser.waitUntil(() => browser.execute(async function () { return await Object.values(newrelic.initializedAgents)[0]?.features.page_view_event?.onAggregateImported }), { timeout: 15000 })
 
@@ -170,7 +170,7 @@ describe.withBrowsersMatching(notIE)('final harvesting', () => {
       })
     }))
 
-    let anyFollowingReq = browser.testHandle.expect('bamServer', {
+    const anyFollowingReq = browser.testHandle.expect('bamServer', {
       test: function () { return true },
       timeout: 5000,
       expectTimeout: true

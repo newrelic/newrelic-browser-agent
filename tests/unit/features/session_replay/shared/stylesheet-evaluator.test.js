@@ -85,7 +85,7 @@ function prepStylesheet (cssRules) {
     value: {
       0: stylesheet,
       [Symbol.iterator]: function * () {
-        for (let key in this) {
+        for (const key in this) {
           yield this[key] // yield [key, value] pair
         }
       }

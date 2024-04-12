@@ -110,7 +110,7 @@ describe('pvt aggregate tests', () => {
     expect(clsNode.attrs.cls).toBeUndefined() // cls node doesn't need cls property
   })
   test('sends INP node with right val', () => {
-    let inpNode = pvtAgg.timings.find(tn => tn.name === VITAL_NAMES.INTERACTION_TO_NEXT_PAINT)
+    const inpNode = pvtAgg.timings.find(tn => tn.name === VITAL_NAMES.INTERACTION_TO_NEXT_PAINT)
     expect(inpNode).toBeTruthy()
     expect(inpNode.value).toEqual(8)
     expect(inpNode.attrs.cls).toEqual(0.1119)

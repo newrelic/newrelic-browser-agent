@@ -14,7 +14,7 @@ test('set/getInfo should throw on an invalid agent id', () => {
 
 test('set/getInfo works correctly', () => {
   expect(() => setInfo(123, { beacon: 'im here' })).not.toThrow() // notice setInfo accepts numbers
-  let cachedObj = getInfo('123')
+  const cachedObj = getInfo('123')
   expect(Object.keys(cachedObj).length).toBeGreaterThan(1)
   expect(cachedObj.beacon).toEqual('im here')
   expect(cachedObj.licenseKey).toEqual(undefined) // this should mirror default in info.js

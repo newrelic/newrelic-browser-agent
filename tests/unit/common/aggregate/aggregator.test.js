@@ -6,7 +6,7 @@ beforeEach(() => {
 })
 
 test('storing and getting buckets', () => {
-  let bucket = aggregator.store('abc', '123')
+  const bucket = aggregator.store('abc', '123')
   const expectedBucketPattern = { params: {}, metrics: { count: 1 } }
   expect(bucket).toEqual(expectedBucketPattern)
   expect(aggregator.get('abc', '123')).toEqual(expectedBucketPattern)
@@ -85,7 +85,7 @@ test('take fn gets and deletes correctly', () => {
   aggregator.store('type3', 'a')
 
   expect(aggregator.take(['type0'])).toBeNull() // when type dne in aggregator
-  let obj = aggregator.take(['type1', 'type2'])
+  const obj = aggregator.take(['type1', 'type2'])
   expect(obj.type1.length).toEqual(2)
   expect(obj.type2.length).toEqual(1)
   expect(aggregator.get('type1', 'a')).toBeUndefined() // should be gone now
@@ -94,7 +94,7 @@ test('take fn gets and deletes correctly', () => {
 
 test('merge fn combines metrics correctly', () => {
   aggregator.store('abc', '123', undefined, { met1: 1, met2: 3 })
-  let bucket = aggregator.store('abc', '123', undefined, { met1: 2 })
+  const bucket = aggregator.store('abc', '123', undefined, { met1: 2 })
   const expectedMetrics = {
     count: 2,
     met1: { t: 3, min: 1, max: 2, sos: 5, c: 2 },

@@ -113,7 +113,7 @@ describe.withBrowsersMatching(es2022Support)('basic npm agent', () => {
 async function getAgentProps (variablePath) {
   return browser.execute(function (varPath) {
     function getAllPropertyNames (obj) {
-      let result = new Set()
+      const result = new Set()
       while (obj) {
         Object.getOwnPropertyNames(obj).forEach(p => result.add(p))
         obj = Object.getPrototypeOf(obj)

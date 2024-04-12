@@ -17,7 +17,7 @@ function replacePath (importPath, state) {
 
   let newPath = importPath
 
-  for (let key in state.opts) {
+  for (const key in state.opts) {
     const regex = new RegExp(key)
     if (importPath.match(regex)) {
       newPath = importPath.replace(regex, state.opts[key])

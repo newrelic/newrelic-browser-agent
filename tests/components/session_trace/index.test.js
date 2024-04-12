@@ -44,8 +44,8 @@ describe('session trace', () => {
 
     traceAggregate.resourceObserver = true // so takeSTNs will skip check for performance entries
     const payload = traceInstrument.featAggregate.takeSTNs()
-    let res = payload.body.res
-    let qs = payload.qs
+    const res = payload.body.res
+    const qs = payload.qs
 
     expect(+qs.st).toBeGreaterThan(1404952055986)
     expect(+qs.st).toBeLessThan(Date.now())
@@ -57,14 +57,14 @@ describe('session trace', () => {
     node = res.filter(node => node.n === 'load' && (node.o === 'document' || node.o === 'window'))[0]
     expect(node).toBeUndefined()
 
-    let hist = res.filter(node => node.n === 'history.pushState')[1]
+    const hist = res.filter(node => node.n === 'history.pushState')[1]
     const originalPath = window.location.pathname
     expect(hist.s).toEqual(hist.e) // that hist node has no duration
     expect(hist.n).toEqual('history.pushState')
     expect(hist.o).toEqual(`${originalPath}#bar`)
     expect(hist.t).toEqual(`${originalPath}#foo`)
 
-    let ajax = res.filter(node => node.t === 'ajax')[0]
+    const ajax = res.filter(node => node.t === 'ajax')[0]
     expect(ajax.s).toBeLessThan(ajax.e) // that it has some duration
     expect(ajax.n).toEqual('Ajax')
     expect(ajax.t).toEqual('ajax')
@@ -79,7 +79,7 @@ describe('session trace', () => {
     expect(pvt.e).toEqual(30 + 8)
     expect(pvt.t).toEqual('event')
 
-    let unknown = res.filter(n => n.o === 'unknown')
+    const unknown = res.filter(n => n.o === 'unknown')
     expect(unknown.length).toEqual(0) // no events with unknown origin
   })
 })

@@ -138,7 +138,7 @@ export class Harvest extends SharedContext {
         Because they still do permit synch XHR, the idea is that at final harvest time (worker is closing),
         we just make a BLOCKING request--trivial impact--with the remaining data as a temp fill-in for sendBeacon.
        Following the removal of img-element method, IE will also use sync XHR on page dismissal to ensure final analytics are sent. */
-    let result = submitMethod({ url: fullUrl, body, sync: opts.unload && (isWorkerScope || isIE), headers })
+    const result = submitMethod({ url: fullUrl, body, sync: opts.unload && (isWorkerScope || isIE), headers })
 
     if (!opts.unload && cbFinished && submitMethod === submitData.xhr) {
       const harvestScope = this

@@ -10,7 +10,7 @@ export function getModeledObject (obj, model) {
       Object.getOwnPropertyDescriptors(model)
     )
     const target = Object.keys(output).length === 0 ? obj : output
-    for (let key in target) {
+    for (const key in target) {
       if (obj[key] !== undefined) {
         try {
           if (Array.isArray(obj[key]) && Array.isArray(model[key])) output[key] = Array.from(new Set([...obj[key], ...model[key]]))

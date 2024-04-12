@@ -28,7 +28,7 @@ describe('STN Payload metadata checks', () => {
 
     expect(stn.request.query.fsh).toEqual('1')
 
-    let finalStnHarvest = browser.testHandle.expectResources()
+    const finalStnHarvest = browser.testHandle.expectResources()
     await browser.url(await browser.testHandle.assetURL('/'))
     stn = await finalStnHarvest
 

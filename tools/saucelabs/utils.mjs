@@ -8,8 +8,8 @@ import SauceLabs from 'saucelabs'
  * @return {{user: string, key: string, region: 'us'}}
  */
 export function getSauceLabsCreds () {
-  let sauceLabsUsername = process.env.SAUCE_USERNAME
-  let sauceLabsAccessKey = process.env.SAUCE_ACCESS_KEY
+  const sauceLabsUsername = process.env.SAUCE_USERNAME
+  const sauceLabsAccessKey = process.env.SAUCE_ACCESS_KEY
 
   if (!sauceLabsUsername || !sauceLabsAccessKey) {
     throw new Error(

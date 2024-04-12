@@ -6,13 +6,13 @@ describe('Soft navigations', () => {
   // test: does not disrupt old spa when not enabled -- this is tested via old spa tests passing by default!
 
   it('replaces old spa when flag enabled, captures ipl and route-change ixns', async () => {
-    let url = await browser.testHandle.assetURL('soft-nav-interaction-on-click.html', config)
-    let [iPLPayload] = await Promise.all([
+    const url = await browser.testHandle.assetURL('soft-nav-interaction-on-click.html', config)
+    const [iPLPayload] = await Promise.all([
       browser.testHandle.expectInteractionEvents(),
       browser.url(url).then(() => browser.waitForAgentLoad())
     ])
     if (browserMatch(notIE)) {
-      let browserResp = await browser.execute(function () {
+      const browserResp = await browser.execute(function () {
         return [
           Object.values(newrelic.initializedAgents)[0].features.spa?.featureName,
           Object.values(newrelic.initializedAgents)[0].features.soft_navigations?.featureName
@@ -24,7 +24,7 @@ describe('Soft navigations', () => {
     expect(iPLPayload.request.body.length).toEqual(1)
     expect(iPLPayload.request.body[0].category).toEqual('Initial page load')
 
-    let [routeChangePayload] = await Promise.all([browser.testHandle.expectInteractionEvents(5000), $('body').click()])
+    const [routeChangePayload] = await Promise.all([browser.testHandle.expectInteractionEvents(5000), $('body').click()])
     expect(routeChangePayload.request.body.length).toEqual(1)
     expect(routeChangePayload.request.body[0].category).toEqual('Route change')
   })
@@ -35,15 +35,15 @@ describe('Soft navigations', () => {
       body: `${JSON.stringify({ stn: 1, err: 1, ins: 1, cap: 1, spa: 0, loaded: 1 })}`
     })
 
-    let url = await browser.testHandle.assetURL('instrumented.html', config)
-    let anyIxn = browser.testHandle.expectInteractionEvents(10000, true)
+    const url = await browser.testHandle.assetURL('instrumented.html', config)
+    const anyIxn = browser.testHandle.expectInteractionEvents(10000, true)
     await browser.url(url).then(() => browser.waitForAgentLoad())
     await expect(anyIxn).resolves.toBeUndefined()
   })
 
   it('(multiple) ajax and errors are captured before page load by iPL ixn', async () => {
-    let url = await browser.testHandle.assetURL('ajax-and-errors-before-page-load.html', config)
-    let [iPLPayload, jserrorsPayload] = await Promise.all([
+    const url = await browser.testHandle.assetURL('ajax-and-errors-before-page-load.html', config)
+    const [iPLPayload, jserrorsPayload] = await Promise.all([
       browser.testHandle.expectInteractionEvents(),
       browser.testHandle.expectErrors(),
       browser.url(url).then(() => browser.waitForAgentLoad())
@@ -63,10 +63,10 @@ describe('Soft navigations', () => {
   })
 
   it('(multiple) ajax and errors are captured after page load by route-change ixn', async () => {
-    let url = await browser.testHandle.assetURL('soft-nav-interaction-on-click.html', config)
+    const url = await browser.testHandle.assetURL('soft-nav-interaction-on-click.html', config)
     await browser.url(url).then(() => browser.waitForAgentLoad())
 
-    let [routeChangeReq, jserrorsReq, ajaxReq] = await Promise.all([
+    const [routeChangeReq, jserrorsReq, ajaxReq] = await Promise.all([
       browser.testHandle.expectInteractionEvents(5000),
       browser.testHandle.expectErrors(5000),
       browser.testHandle.expectAjaxEvents(5000),
@@ -128,13 +128,13 @@ describe('Soft navigations', () => {
   })
 
   it('createTracer api functions but does not affect interactions', async () => {
-    let url = await browser.testHandle.assetURL('instrumented.html', config)
+    const url = await browser.testHandle.assetURL('instrumented.html', config)
     await browser.url(url).then(() => browser.waitForAgentLoad())
 
-    let [apiIxnPayload, tracerCbTime] = await Promise.all([
+    const [apiIxnPayload, tracerCbTime] = await Promise.all([
       browser.testHandle.expectInteractionEvents(5000),
       browser.execute(function () {
-        let wrappedCallback = newrelic.interaction().createTracer('customSegment', function myCallback () { return performance.now() })
+        const wrappedCallback = newrelic.interaction().createTracer('customSegment', function myCallback () { return performance.now() })
         newrelic.interaction().save().end() // tracer doesn't keep interaction open or affect it in any way
         return wrappedCallback() // but the callback should still be perfectly executable
       })
@@ -148,8 +148,8 @@ describe('Soft navigations', () => {
   // This reproduction condition only happens for chromium. I.e. safari & firefox load still fires before they let ajax finish.
   // Also, Android 9.0- is not happy with 1mb-dom.html, so that ought to be excluded from this test.
   it.withBrowsersMatching(onlyChromium)('[NR-178375] ajax that finish before page load event should only be in iPL payload', async () => {
-    let url = await browser.testHandle.assetURL('1mb-dom.html', config)
-    let [iPLPayload, firstAjaxPayload] = await Promise.all([
+    const url = await browser.testHandle.assetURL('1mb-dom.html', config)
+    const [iPLPayload, firstAjaxPayload] = await Promise.all([
       browser.testHandle.expectInteractionEvents(),
       browser.testHandle.expectAjaxEvents(),
       browser.url(url).then(() => browser.waitForAgentLoad())
@@ -163,8 +163,8 @@ describe('Soft navigations', () => {
   })
 
   it('[NR-178377] chained ajax requests that originate from pre-page-load are attributed properly', async () => {
-    let url = await browser.testHandle.assetURL('chained-ajax-before-load.html', config)
-    let [iPLPayload, firstAjaxPayload] = await Promise.all([
+    const url = await browser.testHandle.assetURL('chained-ajax-before-load.html', config)
+    const [iPLPayload, firstAjaxPayload] = await Promise.all([
       browser.testHandle.expectInteractionEvents(),
       browser.testHandle.expectAjaxEvents(),
       browser.url(url).then(() => browser.waitForAgentLoad())

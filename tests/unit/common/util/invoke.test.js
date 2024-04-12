@@ -4,9 +4,9 @@ jest.useFakeTimers()
 
 describe('debounce', () => {
   test('should run the supplied function after 100ms', () => {
-    let mockCallback = jest.fn()
+    const mockCallback = jest.fn()
 
-    let debouncedMethod = debounce(mockCallback, 100)
+    const debouncedMethod = debounce(mockCallback, 100)
     execFnTimes(debouncedMethod, 100)
 
     expect(mockCallback).not.toHaveBeenCalled()
@@ -16,9 +16,9 @@ describe('debounce', () => {
   })
 
   test('should rerun the supplied function when called again after 100ms', () => {
-    let mockCallback = jest.fn()
+    const mockCallback = jest.fn()
 
-    let debouncedMethod = debounce(mockCallback, 100)
+    const debouncedMethod = debounce(mockCallback, 100)
 
     execFnTimes(debouncedMethod, 100)
     jest.advanceTimersByTime(200)
@@ -29,9 +29,9 @@ describe('debounce', () => {
   })
 
   test('should run the supplied function on the first event and debounce subsequent events', () => {
-    let mockCallback = jest.fn()
+    const mockCallback = jest.fn()
 
-    let debouncedMethod = debounce(mockCallback, 100, { leading: true })
+    const debouncedMethod = debounce(mockCallback, 100, { leading: true })
 
     execFnTimes(debouncedMethod, 100)
     expect(mockCallback).toHaveBeenCalledTimes(1)
@@ -49,9 +49,9 @@ describe('debounce', () => {
 
 describe('single', () => {
   test('should run the supplied function only once', () => {
-    let mockCallback = jest.fn()
+    const mockCallback = jest.fn()
 
-    let singleMethod = single(mockCallback, 100)
+    const singleMethod = single(mockCallback, 100)
     execFnTimes(singleMethod, 100)
 
     expect(mockCallback).toHaveBeenCalledTimes(1)

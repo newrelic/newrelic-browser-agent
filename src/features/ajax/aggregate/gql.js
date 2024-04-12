@@ -51,7 +51,7 @@ function parseBatchGQL (contents) {
 
   const opNames = []
   const opTypes = []
-  for (let content of contents) {
+  for (const content of contents) {
     const operation = parseSingleGQL(content)
     if (!operation) continue
 

@@ -252,7 +252,7 @@ export class Aggregate extends AggregateBase {
     if (!timingEntry) return
 
     // loop iterates through prototype also (for FF)
-    for (let key in timingEntry) {
+    for (const key in timingEntry) {
       let val = timingEntry[key]
 
       // ignore size and status type nodes that do not map to timestamp metrics

@@ -3,7 +3,7 @@ import querypack from '@newrelic/nr-querypack'
 
 describe('Back/forward cache', () => {
   it.withBrowsersMatching(supportsBFCache)('is not blocked by agent code', async () => {
-    let url = await browser.testHandle.assetURL('instrumented.html') // this should use SPA which is full agent
+    const url = await browser.testHandle.assetURL('instrumented.html') // this should use SPA which is full agent
     await browser.url(url).then(() => browser.waitForAgentLoad())
 
     await browser.execute(function (testId) {
@@ -12,7 +12,7 @@ describe('Back/forward cache', () => {
       })
     }, browser.testHandle.testId)
 
-    let [expectedHit] = await Promise.all([
+    const [expectedHit] = await Promise.all([
       browser.testHandle.expect('assetServer', {
         test: function (request) {
           const url = new URL(request.url, 'resolve://')
@@ -28,7 +28,7 @@ describe('Back/forward cache', () => {
   it.withBrowsersMatching(notIE)('EOL events are sent appropriately', async () => {
     // all timings except "unload" event are expected to be harvested after the first time the page becomes hidden
 
-    let url = await browser.testHandle.assetURL('pagehide.html', { loader: 'rum' })
+    const url = await browser.testHandle.assetURL('pagehide.html', { loader: 'rum' })
     await browser.url(url).then(() => browser.waitForAgentLoad())
 
     let timingsListener = browser.testHandle.expectTimings(5000)

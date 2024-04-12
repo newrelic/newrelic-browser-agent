@@ -157,7 +157,7 @@ describe('Preload recording stops if', () => {
   })
 
   test('replay aggregate fails to initialize', async () => {
-    let aggConstructor = jest.fn(() => { throw new Error('RIP') })
+    const aggConstructor = jest.fn(() => { throw new Error('RIP') })
     jest.doMock('../../../src/features/session_replay/aggregate', () => ({
       __esModule: true,
       Aggregate: aggConstructor

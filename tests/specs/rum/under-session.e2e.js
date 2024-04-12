@@ -7,9 +7,9 @@ describe('RUM request', () => {
     it('is not included when session is disabled', async () => {
       const testURL = await browser.testHandle.assetURL('instrumented.html') // in test suite, the default is disabled
 
-      let rumToBeCalled = browser.testHandle.expectRum()
+      const rumToBeCalled = browser.testHandle.expectRum()
       await browser.url(testURL).then(() => browser.waitForAgentLoad())
-      let rum = await rumToBeCalled
+      const rum = await rumToBeCalled
 
       expect(rum.request.query.fsh).toBeUndefined()
     })

@@ -54,7 +54,7 @@ class InteractionValidator {
       if (expected.jsTime) expect(actual.jsTime).toBeGreaterThanOrEqual(expected.jsTime)
       if (expected.attrs) Object.entries(expected.attrs).forEach(([key, val]) => expect(actual.attrs[key]).toEqual(val))
 
-      let expectedChildCount = expected.children ? expected.children.length : 0
+      const expectedChildCount = expected.children ? expected.children.length : 0
       expect(actual.children).toBeTruthy() // node should have children
       expect(actual.type).toEqual(expected.type || expected.name)
       expect(actual.children.length).toEqual(expectedChildCount) // node should have expected number of children
@@ -97,7 +97,7 @@ let lastId = 0
 function startInteraction (onInteractionStart, afterInteractionFinish, options = {}) {
   let interactionId = null
   let done = false
-  let eventType = options.eventType || 'click'
+  const eventType = options.eventType || 'click'
 
   if (eventType === 'initialPageLoad') {
     onInteractionStart(() => { done = true })
@@ -110,8 +110,8 @@ function startInteraction (onInteractionStart, afterInteractionFinish, options =
   }
 
   options.baseEE.on('interaction', function (interaction) {
-    let id = interaction.root.attrs.custom.__interactionId
-    let isInitialPageLoad = eventType === 'initialPageLoad' && interaction.root.attrs.trigger === 'initialPageLoad'
+    const id = interaction.root.attrs.custom.__interactionId
+    const isInitialPageLoad = eventType === 'initialPageLoad' && interaction.root.attrs.trigger === 'initialPageLoad'
     if (done) {
       if (isInitialPageLoad) {
         afterInteractionFinish(interaction)
@@ -125,7 +125,7 @@ function startInteraction (onInteractionStart, afterInteractionFinish, options =
   function startFromUnwrappedTask () {
     switch (eventType) {
       case 'click': {
-        let el = options.element || document.createElement('div')
+        const el = options.element || document.createElement('div')
         // IE needs the element to be in the DOM in order to allow click events to be
         // captured against it.
         document.body.appendChild(el)
@@ -161,13 +161,13 @@ function startInteraction (onInteractionStart, afterInteractionFinish, options =
   }
 }
 function simulateClick (el, ev) {
-  let evt = new Event(ev || 'click', { bubbles: true, cancelable: false })
+  const evt = new Event(ev || 'click', { bubbles: true, cancelable: false })
   el.dispatchEvent(evt)
 }
 function simulateEvent (elType, evtType) {
-  let el = document.createElement(elType)
+  const el = document.createElement(elType)
   document.body.appendChild(el)
-  let evt = document.createEvent('Events')
+  const evt = document.createEvent('Events')
   evt.initEvent(evtType, true, false)
   el.dispatchEvent(evt)
 }

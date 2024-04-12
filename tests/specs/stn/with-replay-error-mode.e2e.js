@@ -130,7 +130,7 @@ describe.withBrowsersMatching(notIE)('Trace error mode', () => {
       .then(() => browser.waitForAgentLoad())
     await expect(getTraceMode()).resolves.toEqual([MODE.ERROR, false])
 
-    let firstPageTitle = await browser.getTitle()
+    const firstPageTitle = await browser.getTitle()
 
     const newTab = await browser.createWindow('tab')
     await browser.switchToWindow(newTab.handle)

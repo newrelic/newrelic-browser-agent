@@ -2,7 +2,7 @@ import { assertExpectedErrors } from './assertion-helper'
 
 describe('setErrorHandler API', () => {
   it('ignores errors', async () => {
-    let url = await browser.testHandle.assetURL('ignored-error.html', {
+    const url = await browser.testHandle.assetURL('ignored-error.html', {
       init: {
         page_view_timing: { enabled: false },
         metrics: { enabled: false },
@@ -10,12 +10,12 @@ describe('setErrorHandler API', () => {
       }
     })
 
-    let errors = browser.testHandle.expectErrors()
+    const errors = browser.testHandle.expectErrors()
     await browser.url(url).then(() => browser.waitUntil(() => browser.execute(function () {
       return window.errorsThrown === true
     }), { timeout: 30000 }))
 
-    let request = (await errors).request
+    const request = (await errors).request
     expect(request.query.pve).toEqual('1') // page view error reported
 
     const expectedErrors = [{
@@ -30,7 +30,7 @@ describe('setErrorHandler API', () => {
   })
 
   it('custom fingerprinting labels errors correctly', async () => {
-    let url = await browser.testHandle.assetURL('instrumented.html', {
+    const url = await browser.testHandle.assetURL('instrumented.html', {
       init: {
         page_view_timing: { enabled: false },
         metrics: { enabled: false },
@@ -38,7 +38,7 @@ describe('setErrorHandler API', () => {
       }
     })
 
-    let errors = browser.testHandle.expectErrors()
+    const errors = browser.testHandle.expectErrors()
     await browser.url(url).then(() => browser.waitForAgentLoad())
     await browser.execute(function () {
       newrelic.setErrorHandler(function (err) {
@@ -61,7 +61,7 @@ describe('setErrorHandler API', () => {
       newrelic.noticeError('boop')
     })
 
-    let request = (await errors).request
+    const request = (await errors).request
     expect(request.body.err.length).toEqual(3)
 
     const expectedMsgToGroup = {

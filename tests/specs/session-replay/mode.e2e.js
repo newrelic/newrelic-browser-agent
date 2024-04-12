@@ -37,7 +37,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Sample Mode Validation', ()
   it('Full 0 Error 1 === ERROR', async () => {
     await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { sampling_rate: 0, error_sampling_rate: 100 } })))
       .then(() => browser.waitForSessionReplayRecording())
-    let sr = await getSR()
+    const sr = await getSR()
     expect(sr.recording).toEqual(true)
     expect(sr.initialized).toEqual(true)
     expect(sr.events).toEqual(expect.any(Array))

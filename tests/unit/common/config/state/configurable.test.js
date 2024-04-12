@@ -31,7 +31,7 @@ test('empty object does not change model output', () => {
 })
 
 test('existing keys get their values changed', () => {
-  let obj = {
+  const obj = {
     sleep: false,
     repeat: {
       eat: false
@@ -52,7 +52,7 @@ test('existing keys get their values changed', () => {
 
 test('existing keys can change types too, to/from object', () => {
   // in other words, if replacement is not an object, it has no effect
-  let obj = {
+  const obj = {
     rave: {},
     repeat: 'just a sad lonely string now'
   }

@@ -23,7 +23,7 @@ module.exports = function (request, reply, testServer) {
           'ig'
         )
       )
-      for (let match of testScriptInjections) {
+      for (const match of testScriptInjections) {
         const scriptPath = path.resolve(paths.rootDir, match[1])
         const scriptFileStats = await fs.promises.stat(scriptPath)
 

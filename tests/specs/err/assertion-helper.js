@@ -14,11 +14,11 @@ function computeExpectedCanonicalStack (expectedStack) {
 export function assertExpectedErrors (actualErrors, expectedErrors, assetURL) {
   expect(actualErrors.length).toEqual(expectedErrors.length)
 
-  for (let expectedError of expectedErrors) {
-    let matchingErrors = actualErrors.filter((e) => {
+  for (const expectedError of expectedErrors) {
+    const matchingErrors = actualErrors.filter((e) => {
       return e.params.message.search(expectedError.message) !== -1
     })
-    let actualError = matchingErrors[0]
+    const actualError = matchingErrors[0]
 
     expect(actualError).toBeTruthy()
     // This is a bit hacky here, where we check if the message is
@@ -29,8 +29,8 @@ export function assertExpectedErrors (actualErrors, expectedErrors, assetURL) {
     }
 
     // Test that instrumentation is filtered out from stack traces
-    let expectedStack = expectedError.stack
-    let actualStack = actualError.params.stack_trace
+    const expectedStack = expectedError.stack
+    const actualStack = actualError.params.stack_trace
 
     expect(actualStack && actualStack.match(/nrWrapper/)).toBeFalsy() // instrumentation not filtered out
 
@@ -46,7 +46,7 @@ export function assertExpectedErrors (actualErrors, expectedErrors, assetURL) {
       console.log(actualError.params.origStackInfo)
     }
 
-    let expectedPath = new URL(assetURL).pathname
+    const expectedPath = new URL(assetURL).pathname
     expect(actualError.params.request_uri).toEqual(expectedPath) // has correct request_uri attribute
   }
 }

@@ -8,7 +8,7 @@ beforeEach(async () => {
 test('can register a feat and drain it', () => {
   registerDrain('abcd', 'page_view_event')
 
-  let emitSpy = jest.spyOn(ee.get('abcd'), 'emit')
+  const emitSpy = jest.spyOn(ee.get('abcd'), 'emit')
   drain('abcd', 'page_view_event')
   expect(emitSpy).toHaveBeenCalledWith('drain-page_view_event', expect.anything())
 })
@@ -16,7 +16,7 @@ test('can register a feat and drain it', () => {
 test('other unregistered drains do not affect feat reg & drain', () => {
   registerDrain('abcd', 'page_view_event')
 
-  let emitSpy = jest.spyOn(ee.get('abcd'), 'emit')
+  const emitSpy = jest.spyOn(ee.get('abcd'), 'emit')
   drain('abcd', 'timon')
   expect(emitSpy).toHaveBeenCalledWith('drain-timon', expect.anything())
   expect(emitSpy).not.toHaveBeenCalledWith('drain-page_view_event', expect.anything())
@@ -30,7 +30,7 @@ describe('drain', () => {
     registerDrain('abcd', 'page_view_timing')
     registerDrain('abcd', 'page_view_event')
 
-    let emitSpy = jest.spyOn(ee.get('abcd'), 'emit')
+    const emitSpy = jest.spyOn(ee.get('abcd'), 'emit')
     drain('abcd', 'page_view_event')
     expect(emitSpy).not.toHaveBeenCalled()
 
@@ -41,7 +41,7 @@ describe('drain', () => {
   })
 
   test('does not require registration for non-feat groups', () => {
-    let emitSpy = jest.spyOn(ee.get('abcd'), 'emit')
+    const emitSpy = jest.spyOn(ee.get('abcd'), 'emit')
     drain('abcd', 'pumbaa')
     expect(emitSpy).toHaveBeenCalledWith('drain-pumbaa', expect.anything())
   })
@@ -50,13 +50,13 @@ describe('drain', () => {
     registerDrain('abcd', 'page_view_timing')
     registerDrain('abcd', 'page_view_event')
 
-    let emitSpy = jest.spyOn(ee.get('abcd'), 'emit')
+    const emitSpy = jest.spyOn(ee.get('abcd'), 'emit')
     drain('abcd', 'page_view_event', true)
     expect(emitSpy).toHaveBeenNthCalledWith(1, 'drain-page_view_event', expect.anything())
   })
 
   test('defaults to "feature" group when not provided one', () => {
-    let emitSpy = jest.spyOn(ee.get('abcd'), 'emit')
+    const emitSpy = jest.spyOn(ee.get('abcd'), 'emit')
     drain('abcd')
     expect(emitSpy).toHaveBeenCalledWith('drain-feature', expect.anything())
   })
@@ -70,7 +70,7 @@ test('non-feat groups can register and drain too alongside features', () => {
   registerDrain('abcd', 'page_view_event')
   registerDrain('abcd', 'simba')
 
-  let emitSpy = jest.spyOn(ee.get('abcd'), 'emit')
+  const emitSpy = jest.spyOn(ee.get('abcd'), 'emit')
   drain('abcd', 'simba')
   expect(emitSpy).not.toHaveBeenCalled()
 

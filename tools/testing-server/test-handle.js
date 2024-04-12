@@ -115,7 +115,7 @@ module.exports = class TestHandle {
 
       for (const scheduledReply of scheduledReplies) {
         try {
-          let test = scheduledReply.test
+          const test = scheduledReply.test
 
           if (test.call(this, request)) {
             request.scheduledReply = scheduledReply
@@ -139,7 +139,7 @@ module.exports = class TestHandle {
 
       for (const pendingExpect of pendingExpects) {
         try {
-          let test = pendingExpect.test
+          const test = pendingExpect.test
 
           if (test.call(this, request)) {
             request.resolvingExpect = pendingExpect
@@ -199,7 +199,7 @@ module.exports = class TestHandle {
 
     if (testServerExpect.timeout !== false) {
       deferred.timeout = setTimeout(() => {
-        let testName = testServerExpect.test.name
+        const testName = testServerExpect.test.name
 
         if (deferred.expectTimeout) {
           deferred.resolve()
@@ -292,7 +292,7 @@ module.exports = class TestHandle {
   #createDeferred () {
     let capturedResolve
     let capturedReject
-    let promise = new Promise((resolve, reject) => {
+    const promise = new Promise((resolve, reject) => {
       capturedResolve = resolve
       capturedReject = reject
     })

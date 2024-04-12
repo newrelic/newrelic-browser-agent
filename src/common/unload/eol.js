@@ -11,7 +11,7 @@ if (isWorkerScope) {
 
   const origClose = globalScope.close
   globalScope.close = () => { // on worker's EoL signal, execute all "listeners", e.g. final harvests
-    for (let task of globalScope.cleanupTasks) {
+    for (const task of globalScope.cleanupTasks) {
       task()
     }
     origClose()

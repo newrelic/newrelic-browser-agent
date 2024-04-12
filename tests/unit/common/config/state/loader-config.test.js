@@ -14,7 +14,7 @@ test('set/getLoaderConfig should throw on an invalid agent id', () => {
 
 test('set/getLoaderConfig works correctly', () => {
   expect(() => setLoaderConfig(123, { trustKey: 1 })).not.toThrow() // notice setLoaderConfig accepts numbers
-  let cachedObj = getLoaderConfig('123')
+  const cachedObj = getLoaderConfig('123')
   expect(Object.keys(cachedObj).length).toBeGreaterThan(1)
   expect(cachedObj.trustKey).toEqual(1)
   expect(cachedObj.xpid).toBeUndefined() // this should mirror default in loader-config.js

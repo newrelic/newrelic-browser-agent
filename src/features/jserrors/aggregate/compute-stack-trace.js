@@ -163,7 +163,7 @@ function computeStackTraceFromStackProp (ex) {
  * @returns {object} The `info` object with the parsed line added.
  */
 function parseStackProp (info, line) {
-  let element = getStackElement(line)
+  const element = getStackElement(line)
 
   // This catches lines that aren't frames (like the first line stating the error).
   if (!element) {
@@ -175,7 +175,7 @@ function parseStackProp (info, line) {
   if (isNrWrapper(element.func)) info.wrapperSeen = true
   if (!info.wrapperSeen) {
     // Query strings and fragments should be removed, and URLs matching the loader's origin should be "<inline>".
-    let canonicalUrl = canonicalizeUrl(element.url)
+    const canonicalUrl = canonicalizeUrl(element.url)
     if (canonicalUrl !== element.url) {
       line = line.replace(element.url, canonicalUrl)
       element.url = canonicalUrl

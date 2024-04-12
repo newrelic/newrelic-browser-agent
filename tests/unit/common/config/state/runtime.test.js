@@ -14,7 +14,7 @@ test('set/getRuntime should throw on an invalid agent id', () => {
 
 test('set/getRuntime works correctly', () => {
   expect(() => setRuntime(123, { session: 1 })).not.toThrow() // notice setRuntime accepts numbers
-  let cachedObj = getRuntime('123')
+  const cachedObj = getRuntime('123')
   expect(Object.keys(cachedObj).length).toBeGreaterThan(1)
   expect(cachedObj.session).toEqual(1)
   expect(cachedObj.maxBytes).toEqual(30000) // this should mirror default in runtime.js

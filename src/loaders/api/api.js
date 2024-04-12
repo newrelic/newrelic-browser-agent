@@ -24,7 +24,7 @@ export function setTopLevelCallers () {
   })
 
   function caller (fnName, ...args) {
-    let returnVals = []
+    const returnVals = []
     Object.values(nr.initializedAgents).forEach(val => {
       if (val.exposed && val.api[fnName]) {
         returnVals.push(val.api[fnName](...args))

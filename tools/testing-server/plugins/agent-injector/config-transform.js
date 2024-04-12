@@ -39,7 +39,7 @@ function getConfigContent (request, reply, testServer) {
     ...queryConfig
   }
 
-  let updatedConfig = {
+  const updatedConfig = {
     info: {},
     loaderConfig: {}
   }

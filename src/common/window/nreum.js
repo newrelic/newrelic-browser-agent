@@ -15,7 +15,7 @@ export function gosNREUM () {
 }
 
 export function gosNREUMInfo () {
-  let nr = gosNREUM()
+  const nr = gosNREUM()
   const externallySupplied = nr.info || {}
 
   nr.info = {
@@ -28,7 +28,7 @@ export function gosNREUMInfo () {
 }
 
 export function gosNREUMLoaderConfig () {
-  let nr = gosNREUM()
+  const nr = gosNREUM()
   const externallySupplied = nr.loader_config || {}
 
   nr.loader_config = {
@@ -39,7 +39,7 @@ export function gosNREUMLoaderConfig () {
 }
 
 export function gosNREUMInit () {
-  let nr = gosNREUM()
+  const nr = gosNREUM()
   const externallySupplied = nr.init || {}
 
   nr.init = {
@@ -50,7 +50,7 @@ export function gosNREUMInit () {
 }
 
 export function gosNREUMOriginals () {
-  let nr = gosNREUM()
+  const nr = gosNREUM()
   if (!nr.o) {
     nr.o = {
       ST: globalScope.setTimeout,
@@ -68,7 +68,7 @@ export function gosNREUMOriginals () {
 }
 
 export function setNREUMInitializedAgent (id, newAgentInstance) {
-  let nr = gosNREUM()
+  const nr = gosNREUM()
   nr.initializedAgents ??= {}
   newAgentInstance.initializedAt = {
     ms: now(),
@@ -83,12 +83,12 @@ export function setNREUMInitializedAgent (id, newAgentInstance) {
  * @returns Existing agent instance under newrelic.initializedAgent[id], or undefined if it does not exist.
  */
 export function getNREUMInitializedAgent (id) {
-  let nr = gosNREUM()
+  const nr = gosNREUM()
   return nr.initializedAgents?.[id]
 }
 
 export function addToNREUM (fnName, fn) {
-  let nr = gosNREUM()
+  const nr = gosNREUM()
   nr[fnName] = fn
 }
 

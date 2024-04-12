@@ -17,7 +17,7 @@ describe('Using proxy servers -', () => {
     }))
 
     if (browserMatch(notIE)) {
-      let resources = await browser.execute(function () { // IE11 hates this for some reason
+      const resources = await browser.execute(function () { // IE11 hates this for some reason
         return performance.getEntriesByType('resource')
       })
 
@@ -57,7 +57,7 @@ describe('Using proxy servers -', () => {
     }))
 
     if (browserMatch(notIE)) {
-      let resources = await browser.execute(function () { // IE11 hates this for some reason
+      const resources = await browser.execute(function () { // IE11 hates this for some reason
         return performance.getEntriesByType('resource')
       })
 

@@ -46,7 +46,7 @@ describe('harvesting', () => {
     verifyBaseQueryParameters(insResults.request.query, expectedURL)
   })
 
-  it('should include the ptid query parameter on requests after the first session trace harvest', async () => {
+  it('should include the same ptid query parameter on requests', async () => {
     const [{ request: { query } }] = await Promise.all([
       browser.testHandle.expectRum(),
       browser.testHandle.expectTrace(),

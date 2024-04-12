@@ -53,17 +53,12 @@ describe.withBrowsersMatching(notIE)('session manager state behavior', () => {
       expect(oldSessionClass.sessionReplayMode).toEqual(MODE.FULL)
 
       await Promise.all([
-        browser.testHandle.expectReplay(),
+        browser.testHandle.expectReplay(10000, true),
         browser.execute(function () {
           document.querySelector('body').click()
           Object.values(newrelic.initializedAgents)[0].runtime.session.reset()
         })
       ])
-
-      // session has ended, replay should have set mode to "OFF"
-      const { agentSessions: newSession } = await browser.getAgentSessionInfo()
-      const newSessionClass = Object.values(newSession)[0]
-      expect(newSessionClass.sessionReplayMode).toEqual(MODE.OFF)
     })
   })
 
@@ -79,11 +74,6 @@ describe.withBrowsersMatching(notIE)('session manager state behavior', () => {
       expect(payload.body.length).toBeGreaterThan(0)
       // type 2 payloads are snapshots
       expect(payload.body.filter(x => x.type === RRWEB_EVENT_TYPES.FullSnapshot).length).toEqual(1)
-
-      /** This should fire when the tab changes, it's easier to stage it this way before hand, and allows for the super early staging for the next expect */
-      browser.testHandle.expectReplay(15000).then(({ request: page1UnloadContents }) => {
-        testExpectedReplay({ data: page1UnloadContents, session: localStorage.value, hasError: false, hasMeta: false, hasSnapshot: false, isFirstChunk: false })
-      })
 
       /** This is scoped out this way to guarantee we have it staged in time since preload can harvest super early, sometimes earlier than wdio can expect normally */
       /** see next `testExpectedReplay` */

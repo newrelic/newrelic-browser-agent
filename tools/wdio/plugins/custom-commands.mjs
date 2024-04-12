@@ -97,12 +97,12 @@ export default class CustomCommands {
      * Sets a permanent scheduled reply for the rum call to include the session
      * replay flag with a value of 1 enabling the feature.
      */
-    browser.addCommand('enableSessionReplay', async function (sampling_rate = 100, error_sampling_rate = 100) {
+    browser.addCommand('enableSessionReplay', async function (sampling_rate = 100, error_sampling_rate = 100, srOverride = 1) {
       const stMode = Math.random() * 100 < sampling_rate ? 1 : Math.random() * 100 < error_sampling_rate ? 2 : 0
       await browser.testHandle.scheduleReply('bamServer', {
         test: testRumRequest,
         permanent: true,
-        body: JSON.stringify({ ...rumFlags, sr: 1, srs: stMode })
+        body: JSON.stringify({ ...rumFlags, sr: srOverride, srs: stMode })
       })
     })
 
@@ -182,6 +182,33 @@ export default class CustomCommands {
               initializedAgent.features.session_replay.featAggregate.initialized &&
               initializedAgent.features.session_replay.featAggregate.recorder &&
               initializedAgent.features.session_replay.featAggregate.recorder.recording)
+            )
+          } catch (err) {
+            console.error(err)
+            return false
+          }
+        }),
+        {
+          timeout: 30000,
+          timeoutMsg: 'Session replay recording never started'
+        })
+    })
+
+    /**
+     * Waits for the session replay feature to initialize and start recording.
+     */
+    browser.addCommand('waitForPreloadRecorder', async function () {
+      await browser.waitForFeatureAggregate('session_replay')
+      await browser.waitUntil(
+        () => browser.execute(function () {
+          try {
+            var initializedAgent = Object.values(newrelic.initializedAgents)[0]
+            return !!(
+              (initializedAgent &&
+              initializedAgent.features &&
+              initializedAgent.features.session_replay &&
+              initializedAgent.features.session_replay.recorder &&
+              initializedAgent.features.session_replay.recorder.recording)
             )
           } catch (err) {
             console.error(err)

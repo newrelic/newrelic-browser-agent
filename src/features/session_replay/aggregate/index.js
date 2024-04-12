@@ -28,9 +28,12 @@ import { stringify } from '../../../common/util/stringify'
 import { stylesheetEvaluator } from '../shared/stylesheet-evaluator'
 import { deregisterDrain } from '../../../common/drain/drain'
 import { now } from '../../../common/timing/now'
+import { buildNRMetaNode } from '../shared/utils'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
+  mode = MODE.OFF
+
   // pass the recorder into the aggregator
   constructor (agentIdentifier, aggregator, args) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
@@ -44,9 +47,6 @@ export class Aggregate extends AggregateBase {
     this.gzipper = undefined
     /** populated with the u8 string lib async */
     this.u8 = undefined
-    /** the mode to start in.  Defaults to off */
-    const { session } = getRuntime(this.agentIdentifier)
-    this.mode = session.state.sessionReplayMode || MODE.OFF
 
     /** set by BCS response */
     this.entitled = false
@@ -54,12 +54,13 @@ export class Aggregate extends AggregateBase {
     this.timeKeeper = undefined
 
     this.recorder = args?.recorder
+    this.preloaded = !!this.recorder
+    this.errorNoticed = args?.errorNoticed || false
 
     handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/Enabled'], undefined, FEATURE_NAMES.metrics, this.ee)
 
     // The SessionEntity class can emit a message indicating the session was cleared and reset (expiry, inactivity). This feature must abort and never resume if that occurs.
     this.ee.on(SESSION_EVENTS.RESET, () => {
-      this.scheduler.runHarvest()
       this.abort(ABORT_REASONS.RESET)
     })
 
@@ -91,17 +92,6 @@ export class Aggregate extends AggregateBase {
 
     registerHandler(SR_EVENT_EMITTER_TYPES.PAUSE, () => {
       this.forceStop(this.mode !== MODE.ERROR)
-    }, this.featureName, this.ee)
-
-    // Wait for an error to be reported.  This currently is wrapped around the "Error" feature.  This is a feature-feature dependency.
-    // This was to ensure that all errors, including those on the page before load and those handled with "noticeError" are accounted for. Needs evalulation
-    registerHandler('sr-errorAgg', (e) => {
-      this.errorNoticed = true
-      if (this.recorder) this.recorder.currentBufferTarget.hasError = true
-      // run once
-      if (this.mode === MODE.ERROR && globalScope?.document.visibilityState === 'visible') {
-        this.switchToFull()
-      }
     }, this.featureName, this.ee)
 
     const { error_sampling_rate, sampling_rate, autoStart, block_selector, mask_text_selector, mask_all_inputs, inline_stylesheet, inline_images, collect_fonts } = getConfigurationValue(this.agentIdentifier, 'session_replay')
@@ -137,6 +127,14 @@ export class Aggregate extends AggregateBase {
 
     handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/SamplingRate/Value', sampling_rate], undefined, FEATURE_NAMES.metrics, this.ee)
     handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/ErrorSamplingRate/Value', error_sampling_rate], undefined, FEATURE_NAMES.metrics, this.ee)
+  }
+
+  handleError (e) {
+    if (this.recorder) this.recorder.currentBufferTarget.hasError = true
+    // run once
+    if (this.mode === MODE.ERROR && globalScope?.document.visibilityState === 'visible') {
+      this.switchToFull()
+    }
   }
 
   switchToFull () {
@@ -197,9 +195,8 @@ export class Aggregate extends AggregateBase {
     }
 
     // If an error was noticed before the mode could be set (like in the early lifecycle of the page), immediately set to FULL mode
-    if (this.mode === MODE.ERROR && this.errorNoticed) {
-      this.mode = MODE.FULL
-    }
+    if (this.mode === MODE.ERROR && this.errorNoticed) this.mode = MODE.FULL
+    if (!this.preloaded) this.ee.on('err', e => this.handleError(e))
 
     if (this.mode === MODE.FULL) {
       // If theres preloaded events and we are in full mode, just harvest immediately to clear up space and for consistency
@@ -247,16 +244,29 @@ export class Aggregate extends AggregateBase {
       return
     }
 
+    handle(SUPPORTABILITY_METRIC_CHANNEL, ['SessionReplay/Harvest/Attempts'], undefined, FEATURE_NAMES.metrics, this.ee)
+
     let len = 0
     if (!!this.gzipper && !!this.u8) {
-      payload.body = this.gzipper(this.u8(`[${payload.body.map(e => {
-        if (e.__serialized) return e.__serialized
-        return stringify(e)
+      payload.body = this.gzipper(this.u8(`[${payload.body.map(({ __serialized, ...e }) => {
+        if (e.__newrelic && __serialized) return __serialized
+        const output = { ...e }
+        if (!output.__newrelic) {
+          output.__newrelic = buildNRMetaNode(e.timestamp, this.timeKeeper)
+          output.timestamp = this.timeKeeper.correctAbsoluteTimestamp(e.timestamp)
+        }
+        return stringify(output)
       }).join(',')}]`))
       len = payload.body.length
       this.scheduler.opts.gzip = true
     } else {
-      payload.body = payload.body.map(({ __serialized, ...node }) => node)
+      payload.body = payload.body.map(({ __serialized, ...node }) => {
+        if (node.__newrelic) return node
+        const output = { ...node }
+        output.__newrelic = buildNRMetaNode(node.timestamp, this.timeKeeper)
+        output.timestamp = this.timeKeeper.correctAbsoluteTimestamp(node.timestamp)
+        return output
+      })
       len = stringify(payload.body).length
       this.scheduler.opts.gzip = false
     }
@@ -271,6 +281,12 @@ export class Aggregate extends AggregateBase {
     this.recorder.clearBuffer()
     if (recorderEvents.type === 'preloaded') this.scheduler.runHarvest(opts)
     return [payload]
+  }
+
+  getCorrectedTimestamp (node) {
+    if (!node.timestamp) return
+    if (node.__newrelic) return node.timestamp
+    return this.timeKeeper.correctAbsoluteTimestamp(node.timestamp)
   }
 
   getHarvestContents (recorderEvents) {
@@ -300,8 +316,8 @@ export class Aggregate extends AggregateBase {
 
     const relativeNow = now()
 
-    const firstEventTimestamp = events[0]?.timestamp // from rrweb node
-    const lastEventTimestamp = events[events.length - 1]?.timestamp // from rrweb node
+    const firstEventTimestamp = this.getCorrectedTimestamp(events[0]) // from rrweb node
+    const lastEventTimestamp = this.getCorrectedTimestamp(events[events.length - 1]) // from rrweb node
     const firstTimestamp = firstEventTimestamp || this.timeKeeper.correctAbsoluteTimestamp(recorderEvents.cycleTimestamp) // from rrweb node || from when the harvest cycle started
     const lastTimestamp = lastEventTimestamp || this.timeKeeper.convertRelativeTimestamp(relativeNow)
 
@@ -334,6 +350,7 @@ export class Aggregate extends AggregateBase {
           invalidStylesheetsDetected: stylesheetEvaluator.invalidStylesheetsDetected,
           inlinedAllStylesheets: recorderEvents.inlinedAllStylesheets,
           'rrweb.version': RRWEB_VERSION,
+          'payload.type': recorderEvents.type,
           // customer-defined data should go last so that if it exceeds the query param padding limit it will be truncated instead of important attrs
           ...(endUserId && { 'enduser.id': endUserId })
           // The Query Param is being arbitrarily limited in length here.  It is also applied when estimating the size of the payload in getPayloadSize()

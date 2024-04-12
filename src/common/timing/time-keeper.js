@@ -1,5 +1,3 @@
-import { globalScope } from '../constants/runtime'
-
 /**
  * Class used to adjust the timestamp of harvested data to New Relic server time. This
  * is done by tracking the performance timings of the RUM call and applying a calculation
@@ -33,7 +31,7 @@ export class TimeKeeper {
   #ready = false
 
   constructor () {
-    this.#originTime = globalScope.performance.timeOrigin || globalScope.performance.timing.navigationStart
+    this.#originTime = Date.now() - performance.now()
   }
 
   get ready () {

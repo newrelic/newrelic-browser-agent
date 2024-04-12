@@ -74,4 +74,4 @@ export const isIE = Boolean(isBrowserScope && window.document.documentMode) // d
 
 export const supportsSendBeacon = !!globalScope.navigator?.sendBeacon
 
-export const offset = Math.floor(globalScope?.performance?.timeOrigin || globalScope?.performance?.timing?.navigationStart || Date.now())
+export const offset = Math.floor(Date.now() - performance.now())

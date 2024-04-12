@@ -5,6 +5,96 @@
       "changes": [
         {
           "type": "fix",
+          "sha": "4fbe962d7b268968df96da59058e2e53c527c5eb",
+          "message": "stabilize timestamp corrections",
+          "issues": [
+            "966"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "af7b6764f40cb1ddfb3ab2ca16d05d8e4f459f4e",
+          "message": "Generate PTID in Agent",
+          "issues": [
+            "964"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "e48af6beb369daf6ddc8231daa040f0d9d204d5f",
+          "message": "Resume Page Focus Now Checks Session State",
+          "issues": [
+            "961"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "e17aa25ee098115ad23a5fb9ae268a4b5769fac1",
+          "message": "Allow unmasking elements with nr-unmask selectors",
+          "issues": [
+            "949"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "91d65b5b7b5b7e753a6603150fd4bb7d2543babd",
+          "message": "Adjust Session Replay Error Tracking",
+          "issues": [
+            "951"
+          ]
+        }
+      ],
+      "version": "1.256.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "f9e05065-19e0-41dd-aca5-1065134dacfb",
+      "createTime": "2024-04-11T22:46:43.005Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
+          "sha": "94f0deed02a8f5e9d668f3fe5a68ada86cecc439",
+          "message": "Adjust SR Timestamps to NR Server Time",
+          "issues": [
+            "939"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "88e71da521f1a58af28ae17fee13f648affd262a",
+          "message": "Send CLS as timing node additionally",
+          "issues": [
+            "935"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "8a4831cd1f2d32d97daa8788967b15d7f2f723d3",
+          "message": "Update agent to use new relic server time",
+          "issues": [
+            "918"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "f36acbc03c4f4d51e65431a270a008e65bb2cfff",
+          "message": "Switch web vitals library to attribution build",
+          "issues": [
+            "919"
+          ]
+        }
+      ],
+      "version": "1.255.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "ed556d68-6894-47da-9e5a-01602ef89b74",
+      "createTime": "2024-04-04T03:33:51.427Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
           "sha": "250efcd3bf0a730adbb9d5c45be0bf2f71189664",
           "message": "Server Timing - Remove reliance on performance API",
           "issues": [
@@ -1204,5 +1294,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2024-03-26T16:08:08.500Z"
+  "updateTime": "2024-04-11T22:46:43.005Z"
 }

@@ -38,9 +38,12 @@ export class Aggregate extends AggregateBase {
     this.bufferedErrorsUnderSpa = {}
     this.currentBody = undefined
     this.errorOnPage = false
+    this.replayAborted = false
 
     // this will need to change to match whatever ee we use in the instrument
     this.ee.on('interactionDone', (interaction, wasSaved) => this.onInteractionDone(interaction, wasSaved))
+
+    this.ee.on('REPLAY_ABORTED', () => { this.replayAborted = true })
 
     register('err', (...args) => this.storeError(...args), this.featureName, this.ee)
     register('ierr', (...args) => this.storeError(...args), this.featureName, this.ee)
@@ -78,9 +81,16 @@ export class Aggregate extends AggregateBase {
       payload.qs.ri = releaseIds
     }
 
-    if (body && body.err && body.err.length && !this.errorOnPage) {
-      payload.qs.pve = '1'
-      this.errorOnPage = true
+    if (body && body.err && body.err.length) {
+      if (this.replayAborted) {
+        body.err.forEach((e) => {
+          delete e.params?.hasReplay
+        })
+      }
+      if (!this.errorOnPage) {
+        payload.qs.pve = '1'
+        this.errorOnPage = true
+      }
     }
     return payload
   }
@@ -133,7 +143,7 @@ export class Aggregate extends AggregateBase {
     return canonicalStackString
   }
 
-  storeError (err, time, internal, customAttributes) {
+  storeError (err, time, internal, customAttributes, hasReplay) {
     // are we in an interaction
     time = time || now()
     const agentRuntime = getRuntime(this.agentIdentifier)
@@ -189,7 +199,7 @@ export class Aggregate extends AggregateBase {
       this.pageviewReported[bucketHash] = true
     }
 
-    if (agentRuntime?.session?.state?.sessionReplayMode) params.hasReplay = true
+    if (hasReplay && !this.replayAborted) params.hasReplay = hasReplay
     params.firstOccurrenceTimestamp = this.observedAt[bucketHash]
     params.timestamp = this.observedAt[bucketHash]
 
@@ -200,7 +210,6 @@ export class Aggregate extends AggregateBase {
     // and spa annotates the error with interaction info
     const jsErrorEvent = [type, bucketHash, params, newMetrics, customAttributes]
     handle('stn-errorAgg', jsErrorEvent, undefined, FEATURE_NAMES.sessionTrace, this.ee)
-    handle('sr-errorAgg', jsErrorEvent, undefined, FEATURE_NAMES.sessionReplay, this.ee)
 
     // still send EE events for other features such as above, but stop this one from aggregating internal data
     if (this.blocked) return

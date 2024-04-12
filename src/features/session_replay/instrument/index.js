@@ -32,6 +32,11 @@ export class Instrument extends InstrumentBase {
     if (this.#canPreloadRecorder(session)) {
       this.#mode = session?.sessionReplayMode
       this.#preloadStartRecording()
+      /** If this is preloaded, set up a buffer, if not, later when sampling we will set up a .on for live events */
+      this.ee.on('err', (e) => {
+        this.errorNoticed = true
+        if (this.featAggregate) this.featAggregate.handleError()
+      })
     } else {
       this.importAggregator()
     }
@@ -63,11 +68,11 @@ export class Instrument extends InstrumentBase {
 
       // If startReplay() has been used by this point, we must record in full mode regardless of session preload:
       // Note: recorder starts here with w/e the mode is at this time, but this may be changed later (see #apiStartOrRestartReplay else-case)
-      this.recorder ??= new Recorder({ mode: this.#mode, agentIdentifier: this.agentIdentifier, trigger })
+      this.recorder ??= new Recorder({ mode: this.#mode, agentIdentifier: this.agentIdentifier, trigger, ee: this.ee })
       this.recorder.startRecording()
       this.abortHandler = this.recorder.stopRecording
     } catch (e) {}
-    this.importAggregator({ recorder: this.recorder })
+    this.importAggregator({ recorder: this.recorder, errorNoticed: this.errorNoticed })
   }
 
   /**

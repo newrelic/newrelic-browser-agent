@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.256.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.256.0...v1.256.1) (2024-04-15)
+
+
+### Bug Fixes
+
+* Revert "Generate PTID in Agent" ([#976](https://github.com/newrelic/newrelic-browser-agent/issues/976)) ([34b317f](https://github.com/newrelic/newrelic-browser-agent/commit/34b317fe577487af56d48861b7f256ec8d644d69))
+
 ## [1.256.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.255.0...v1.256.0) (2024-04-11)
 
 

@@ -5,6 +5,23 @@
       "changes": [
         {
           "type": "fix",
+          "sha": "34b317fe577487af56d48861b7f256ec8d644d69",
+          "message": "Revert \"Generate PTID in Agent\"",
+          "issues": [
+            "976"
+          ]
+        }
+      ],
+      "version": "1.256.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "2b915c72-b20b-448c-be96-0a9fbbbdedef",
+      "createTime": "2024-04-15T13:57:06.229Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
           "sha": "4fbe962d7b268968df96da59058e2e53c527c5eb",
           "message": "stabilize timestamp corrections",
           "issues": [
@@ -1294,5 +1311,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2024-04-11T22:46:43.005Z"
+  "updateTime": "2024-04-15T13:57:06.229Z"
 }

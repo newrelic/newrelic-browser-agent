@@ -161,6 +161,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Sample Mode Validation', ()
   it('ERROR (seen before init) => ERROR', async () => {
     await browser.enableSessionReplay(0, 100)
     await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
+      .then(() => browser.waitForSessionReplayRecording('session_replay'))
 
     await expect(getSR()).resolves.toMatchObject({
       recording: true,

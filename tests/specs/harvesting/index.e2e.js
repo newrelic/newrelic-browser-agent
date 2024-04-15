@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker'
+import { testResourcesRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 describe('harvesting', () => {
   it('should include the base query parameters', async () => {
@@ -45,14 +46,18 @@ describe('harvesting', () => {
   })
 
   it('should include the ptid query parameter on requests after the first session trace harvest', async () => {
-    const [rumRequest] = await Promise.all([
+    const ptid = faker.string.uuid()
+    browser.testHandle.scheduleReply('bamServer', {
+      test: testResourcesRequest,
+      body: ptid
+    })
+
+    await Promise.all([
       browser.testHandle.expectRum(),
       browser.testHandle.expectResources(),
       browser.url(await browser.testHandle.assetURL('obfuscate-pii.html'))
         .then(() => browser.waitForAgentLoad())
     ])
-
-    const ptid = rumRequest.request.query.ptid
 
     const [
       resourcesResults,

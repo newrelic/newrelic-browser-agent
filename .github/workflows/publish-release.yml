@@ -36,7 +36,7 @@ jobs:
           local_dir: $GITHUB_WORKSPACE/build
       - name: Gather cdn purge paths
         id: purge-paths
-        run: echo "results=$(echo '${{ steps.s3-upload.outputs.results }}' | jq -j '.[].Key | select(. | test("nr-loader-.*?\\.js$") or test(".*stats\\.json$")) + " "')" >> $GITHUB_OUTPUT
+        run: echo "results=$(echo '${{ steps.s3-upload.outputs.results }}' | jq -j '.[].Key + " "')" >> $GITHUB_OUTPUT
       - name: Purge production cdn
         uses: ./.github/actions/fastly-purge
         with:

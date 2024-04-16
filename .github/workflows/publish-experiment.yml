@@ -48,7 +48,7 @@ jobs:
           bucket_dir: experiments/${{ inputs.nr_environment }}/${{ steps.clean-branch-name.outputs.results }}
       - name: Gather purge paths
         id: purge-paths
-        run: echo "results=$(echo '${{ steps.s3-upload.outputs.results }}' | jq -j '.[].Key | select(. | test("nr-loader-.*?\\.js$") or test(".*stats\\.json$")) + " "')" >> $GITHUB_OUTPUT
+        run: echo "results=$(echo '${{ steps.s3-upload.outputs.results }}' | jq -j '.[].Key + " "')" >> $GITHUB_OUTPUT
       - name: Purge production cdn
         uses: ./.github/actions/fastly-purge
         with:

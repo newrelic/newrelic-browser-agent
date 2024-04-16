@@ -13,7 +13,7 @@ describe('NR Server Time', () => {
       browser.testHandle.expectErrors(),
       browser.url(await browser.testHandle.assetURL('nr-server-time/error-before-load.html'))
         .then(() => browser.waitForAgentLoad())
-        .then(() => browser.getTimeKeeper())
+        .then(() => browser.getPageTime())
     ])
 
     const error = errors.request.body.err[0]
@@ -24,11 +24,11 @@ describe('NR Server Time', () => {
   it('should send jserror with timestamp after rum date header', async () => {
     const timeKeeper = await browser.url(await browser.testHandle.assetURL('instrumented.html'))
       .then(() => browser.waitForAgentLoad())
-      .then(() => browser.getTimeKeeper())
+      .then(() => browser.getPageTime())
 
     const [errors] = await Promise.all([
       browser.testHandle.expectErrors(),
-      browser.getTimeKeeper(),
+      browser.getPageTime(),
       browser.execute(function () {
         newrelic.noticeError(new Error('test error'))
       })
@@ -47,7 +47,7 @@ describe('NR Server Time', () => {
       browser.testHandle.expectBlob(10000),
       browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { sampling_rate: 100, preload: true } })))
         .then(() => browser.waitForSessionReplayRecording())
-        .then(() => browser.getTimeKeeper())
+        .then(() => browser.getPageTime())
     ])
 
     replayData.body.forEach(x => {
@@ -55,14 +55,14 @@ describe('NR Server Time', () => {
         originalTimestamp: expect.any(Number),
         correctedTimestamp: expect.any(Number),
         timestampDiff: expect.any(Number),
-        timeKeeperOriginTime: expect.any(Number),
-        timeKeeperCorrectedOriginTime: expect.any(Number),
-        timeKeeperDiff: expect.any(Number)
+        originTime: expect.any(Number),
+        correctedOriginTime: expect.any(Number),
+        originTimeDiff: expect.any(Number)
       })
-      expect(x.__newrelic.timestampDiff - x.__newrelic.timeKeeperDiff).toBeLessThanOrEqual(1) //  account for rounding error
+      expect(x.__newrelic.timestampDiff - x.__newrelic.originTimeDiff).toBeLessThanOrEqual(1) //  account for rounding error
       testTimeExpectations(x.__newrelic.correctedTimestamp, {
-        originTime: x.__newrelic.timeKeeperOriginTime,
-        correctedOriginTime: x.__newrelic.timeKeeperCorrectedOriginTime
+        originTime: x.__newrelic.originTime,
+        correctedOriginTime: x.__newrelic.correctedOriginTime
       }, true)
     })
     const attrs = decodeAttributes(replayData.query.attributes)
@@ -80,21 +80,21 @@ describe('NR Server Time', () => {
       browser.testHandle.expectBlob(),
       browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { sampling_rate: 100, preload: false } })))
         .then(() => browser.waitForSessionReplayRecording())
-        .then(() => browser.getTimeKeeper())
+        .then(() => browser.getPageTime())
     ])
     replayData.body.forEach(x => {
       expect(x.__newrelic).toMatchObject({
         originalTimestamp: expect.any(Number),
         correctedTimestamp: expect.any(Number),
         timestampDiff: expect.any(Number),
-        timeKeeperOriginTime: expect.any(Number),
-        timeKeeperCorrectedOriginTime: expect.any(Number),
-        timeKeeperDiff: expect.any(Number)
+        originTime: expect.any(Number),
+        correctedOriginTime: expect.any(Number),
+        originTimeDiff: expect.any(Number)
       })
-      expect(x.__newrelic.timestampDiff - x.__newrelic.timeKeeperDiff).toBeLessThanOrEqual(1) //  account for rounding error
+      expect(x.__newrelic.timestampDiff - x.__newrelic.originTimeDiff).toBeLessThanOrEqual(1) //  account for rounding error
       testTimeExpectations(x.__newrelic.correctedTimestamp, {
-        originTime: x.__newrelic.timeKeeperOriginTime,
-        correctedOriginTime: x.__newrelic.timeKeeperCorrectedOriginTime
+        originTime: x.__newrelic.originTime,
+        correctedOriginTime: x.__newrelic.correctedOriginTime
       }, true)
     })
     const attrs = decodeAttributes(replayData.query.attributes)
@@ -109,7 +109,7 @@ describe('NR Server Time', () => {
       browser.testHandle.expectIns(),
       browser.url(await browser.testHandle.assetURL('nr-server-time/page-action-before-load.html'))
         .then(() => browser.waitForAgentLoad())
-        .then(() => browser.getTimeKeeper())
+        .then(() => browser.getPageTime())
     ])
 
     const pageAction = pageActions.request.body.ins[0]
@@ -119,7 +119,7 @@ describe('NR Server Time', () => {
   it('should send page action with timestamp after rum date header', async () => {
     const timeKeeper = await browser.url(await browser.testHandle.assetURL('instrumented.html'))
       .then(() => browser.waitForAgentLoad())
-      .then(() => browser.getTimeKeeper())
+      .then(() => browser.getPageTime())
 
     const [pageActions] = await Promise.all([
       browser.testHandle.expectIns(),
@@ -154,7 +154,7 @@ describe('NR Server Time', () => {
       browser.testHandle.expectInteractionEvents(),
       browser.url(url)
         .then(() => browser.waitForAgentLoad())
-        .then(() => browser.getTimeKeeper())
+        .then(() => browser.getPageTime())
     ])
 
     const ajaxEvent = interactionEvents.request.body[0].children.find(r => r.path === '/json' && r.requestedWith === 'XMLHttpRequest')
@@ -186,7 +186,7 @@ describe('NR Server Time', () => {
 
     const timeKeeper = await browser.url(url)
       .then(() => browser.waitForAgentLoad())
-      .then(() => browser.getTimeKeeper())
+      .then(() => browser.getPageTime())
 
     const [ajaxEvents] = await Promise.all([
       browser.testHandle.expectAjaxEvents(),
@@ -217,8 +217,8 @@ describe('NR Server Time', () => {
  * @param {Object} timeKeeper The timekeeper metadata
  * @param {Boolean} before If the timestamp should be evaluated as before or after the local stamp. (This only occurs when test cant get the actual origin times -- ex. IE11)
  */
-function testTimeExpectations (timestamp, timeKeeper, before) {
-  const { correctedOriginTime, originTime } = (timeKeeper || {})
+function testTimeExpectations (timestamp, pageTimings, before) {
+  const { correctedOriginTime, originTime } = (pageTimings || {})
 
   if (originTime && correctedOriginTime) {
     expect(Math.abs(serverTime - originTime + 3600000)).toBeLessThan(10000) // origin time should be about an hour ahead (3600000 ms)

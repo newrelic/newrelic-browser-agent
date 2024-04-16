@@ -6,6 +6,7 @@ import { setInfo, setConfiguration, setRuntime, getRuntime } from '../../src/com
 import { ee } from '../../src/common/event-emitter/contextual-ee'
 import * as registerHandlerModule from '../../src/common/event-emitter/register-handler'
 import * as handleModule from '../../src/common/event-emitter/handle'
+import { originTime } from '../../src/common/constants/runtime'
 
 describe('setAPI', () => {
   let agentId
@@ -66,15 +67,13 @@ describe('setAPI', () => {
 
   describe('finished', () => {
     let apiFn
-    let offsetTime
 
     beforeEach(() => {
       setAPI(agentId)
 
       apiFn = jest.mocked(registerHandlerModule.registerHandler).mock.calls[0][1]
-      offsetTime = faker.number.int({ min: 100, max: 200 })
 
-      setRuntime(agentId, { ...getRuntime(agentId), offset: offsetTime })
+      setRuntime(agentId, { ...getRuntime(agentId) })
     })
 
     test('should create event emitter events and add to the trace', () => {
@@ -113,21 +112,21 @@ describe('setAPI', () => {
       expect(handleModule.handle).toHaveBeenCalledTimes(3)
       expect(handleModule.handle).toHaveBeenCalledWith(
         CUSTOM_METRIC_CHANNEL,
-        ['finished', { time: providedTime - offsetTime }],
+        ['finished', { time: providedTime - originTime }],
         undefined,
         FEATURE_NAMES.metrics,
         instanceEE
       )
       expect(handleModule.handle).toHaveBeenCalledWith(
         'bstApi',
-        [expect.objectContaining({ o: 'nr', s: providedTime - offsetTime })],
+        [expect.objectContaining({ o: 'nr', s: providedTime - originTime })],
         undefined,
         FEATURE_NAMES.sessionTrace,
         instanceEE
       )
       expect(handleModule.handle).toHaveBeenCalledWith(
         'api-addPageAction',
-        [providedTime - offsetTime, 'finished'],
+        [providedTime - originTime, 'finished'],
         undefined,
         FEATURE_NAMES.pageAction,
         instanceEE
@@ -137,15 +136,13 @@ describe('setAPI', () => {
 
   describe('addToTrace', () => {
     let apiFn
-    let offsetTime
 
     beforeEach(() => {
       setAPI(agentId)
 
       apiFn = jest.mocked(registerHandlerModule.registerHandler).mock.calls[2][1]
-      offsetTime = faker.number.int({ min: 100, max: 200 })
 
-      setRuntime(agentId, { ...getRuntime(agentId), offset: offsetTime })
+      setRuntime(agentId, { ...getRuntime(agentId) })
     })
 
     test.each([
@@ -176,8 +173,8 @@ describe('setAPI', () => {
         'bstApi',
         [expect.objectContaining({
           n: event.name,
-          s: event.start - offsetTime,
-          e: event.start - offsetTime,
+          s: event.start - originTime,
+          e: event.start - originTime,
           o: '',
           t: 'api'
         })],
@@ -200,7 +197,7 @@ describe('setAPI', () => {
       expect(handleModule.handle).toHaveBeenCalledWith(
         'bstApi',
         [expect.objectContaining({
-          e: event.end - offsetTime
+          e: event.end - originTime
         })],
         undefined,
         FEATURE_NAMES.sessionTrace,

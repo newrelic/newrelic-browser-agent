@@ -1,29 +1,26 @@
 import { TimeKeeper } from '../../../../src/common/timing/time-keeper'
-import * as configModule from '../../../../src/common/config/config'
+import { originTime } from '../../../../src/common/constants/runtime'
 
 jest.enableAutomock()
 jest.unmock('../../../../src/common/timing/time-keeper')
+jest.mock('../../../../src/common/constants/runtime', () => ({
+  __esModule: true,
+  originTime: 1706213058000
+}))
 
 const startTime = 450
 const endTime = 600
 
-let localTime
 let serverTime
-let runtimeConfig
 let timeKeeper
+
 beforeEach(() => {
-  localTime = 1706213058000
   serverTime = 1706213061000
 
   jest.useFakeTimers({
-    now: localTime
+    now: originTime
   })
 
-  runtimeConfig = {
-    offset: localTime
-  }
-
-  jest.spyOn(configModule, 'getRuntime').mockImplementation(() => runtimeConfig)
   window.performance.timeOrigin = Date.now()
 
   timeKeeper = new TimeKeeper()

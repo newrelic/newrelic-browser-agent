@@ -1,15 +1,11 @@
+import { originTime } from '../constants/runtime'
+
 /**
  * Class used to adjust the timestamp of harvested data to New Relic server time. This
  * is done by tracking the performance timings of the RUM call and applying a calculation
  * to the harvested data event offset time.
  */
 export class TimeKeeper {
-  /**
-   * Represents the browser origin time.
-   * @type {number}
-   */
-  #originTime
-
   /**
    * Represents the browser origin time corrected to NR server time.
    * @type {number}
@@ -30,16 +26,8 @@ export class TimeKeeper {
    */
   #ready = false
 
-  constructor () {
-    this.#originTime = Date.now() - performance.now()
-  }
-
   get ready () {
     return this.#ready
-  }
-
-  get originTime () {
-    return this.#originTime
   }
 
   get correctedOriginTime () {
@@ -63,7 +51,7 @@ export class TimeKeeper {
 
     // Corrected page origin time
     this.#correctedOriginTime = Math.floor(Date.parse(responseDateHeader) - serverOffset)
-    this.#localTimeDiff = this.#originTime - this.#correctedOriginTime
+    this.#localTimeDiff = originTime - this.#correctedOriginTime
 
     if (Number.isNaN(this.#correctedOriginTime)) {
       throw new Error('Date header invalid format.')

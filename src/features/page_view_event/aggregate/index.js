@@ -1,4 +1,4 @@
-import { globalScope, isBrowserScope } from '../../../common/constants/runtime'
+import { globalScope, isBrowserScope, originTime } from '../../../common/constants/runtime'
 import { addPT, addPN } from '../../../common/timing/nav-timing'
 import { stringify } from '../../../common/util/stringify'
 import { getInfo, getRuntime } from '../../../common/config/config'
@@ -86,13 +86,13 @@ export class Aggregate extends AggregateBase {
       if (typeof PerformanceNavigationTiming !== 'undefined') { // Navigation Timing level 2 API that replaced PerformanceTiming & PerformanceNavigation
         const navTimingEntry = globalScope?.performance?.getEntriesByType('navigation')?.[0]
         const perf = ({
-          timing: addPT(agentRuntime.offset, navTimingEntry, {}),
+          timing: addPT(originTime, navTimingEntry, {}),
           navigation: addPN(navTimingEntry, {})
         })
         queryParameters.perf = stringify(perf)
       } else if (typeof PerformanceTiming !== 'undefined') { // Safari pre-15 did not support level 2 timing
         const perf = ({
-          timing: addPT(agentRuntime.offset, globalScope.performance.timing, {}, true),
+          timing: addPT(originTime, globalScope.performance.timing, {}, true),
           navigation: addPN(globalScope.performance.navigation, {})
         })
         queryParameters.perf = stringify(perf)

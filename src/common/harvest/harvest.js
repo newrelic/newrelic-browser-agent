@@ -103,7 +103,7 @@ export class Harvest extends SharedContext {
     if (customUrl) url = customUrl
     if (raw) url = `${protocol}://${perceviedBeacon}/${endpoint}`
 
-    const baseParams = !raw && includeBaseParams ? this.baseQueryString(qs) : ''
+    const baseParams = !raw && includeBaseParams ? this.baseQueryString(qs, endpoint) : ''
     let payloadParams = encodeObj(qs, agentRuntime.maxBytes)
     if (!submitMethod) {
       submitMethod = submitData.getSubmitMethod({ isFinalHarvest: opts.unload })

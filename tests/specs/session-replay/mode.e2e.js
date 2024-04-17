@@ -249,6 +249,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Sample Mode Validation', ()
       .then(() => browser.waitForSessionReplayRecording('session_replay'))
 
     const errors = await browser.testHandle.expectErrors()
+    expect(errors.request.query.hr).toEqual(undefined)
     const errAggSet1 = errors.request.body.err[0]
     const errAggSet2 = errors.request.body.err[1]
     expect(errAggSet1.params.hasReplay).toEqual(undefined)

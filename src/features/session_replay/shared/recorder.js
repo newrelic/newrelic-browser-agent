@@ -89,8 +89,6 @@ export class Recorder {
       checkoutEveryNms: CHECKOUT_MS[this.parent.mode]
     })
 
-    this.parent.ee.emit(SR_EVENT_EMITTER_TYPES.REPLAY_RUNNING, [true, this.parent.mode])
-
     this.stopRecording = () => {
       this.recording = false
       this.parent.ee.emit(SR_EVENT_EMITTER_TYPES.REPLAY_RUNNING, [false, this.parent.mode])
@@ -141,6 +139,11 @@ export class Recorder {
 
     if (this.parent.blocked) return
 
+    if (!this.notified) {
+      this.parent.ee.emit(SR_EVENT_EMITTER_TYPES.REPLAY_RUNNING, [true, this.parent.mode])
+      this.notified = true
+    }
+
     if (this.parent.timeKeeper?.ready && !event.__newrelic) {
       event.__newrelic = buildNRMetaNode(event.timestamp, this.parent.timeKeeper)
       event.timestamp = this.parent.timeKeeper.correctAbsoluteTimestamp(event.timestamp)
@@ -172,7 +175,7 @@ export class Recorder {
 
     // We are making an effort to try to keep payloads manageable for unloading.  If they reach the unload limit before their interval,
     // it will send immediately.  This often happens on the first snapshot, which can be significantly larger than the other payloads.
-    if (payloadSize > IDEAL_PAYLOAD_SIZE && this.parent.mode !== MODE.ERROR) {
+    if (((event.type === RRWEB_EVENT_TYPES.FullSnapshot && this.currentBufferTarget.hasMeta) || payloadSize > IDEAL_PAYLOAD_SIZE) && this.parent.mode === MODE.FULL) {
       // if we've made it to the ideal size of ~64kb before the interval timer, we should send early.
       if (this.parent.scheduler) {
         this.parent.scheduler.runHarvest()

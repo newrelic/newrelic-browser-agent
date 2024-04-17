@@ -9,6 +9,7 @@
  * It is not production ready, and is not intended to be imported or implemented in any build of the browser agent until
  * functionality is validated and a full user experience is curated.
  */
+import { handle } from '../../../common/event-emitter/handle'
 import { DEFAULT_KEY, MODE, PREFIX } from '../../../common/session/constants'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME } from '../constants'
@@ -25,11 +26,12 @@ export class Instrument extends InstrumentBase {
 
     if (this.#canPreloadRecorder(session)) {
       /** If this is preloaded, set up a buffer, if not, later when sampling we will set up a .on for live events */
-      this.ee.on('err', (e) => {
-        this.errorNoticed = true
-        if (this.featAggregate) this.featAggregate.handleError()
+      this.#startRecording(session?.sessionReplayMode).then(() => {
+        this.ee.on('err', (e) => {
+          this.errorNoticed = true
+          handle('preload-errs', [e], undefined, this.featureName, this.ee)
+        })
       })
-      this.#startRecording(session?.sessionReplayMode)
     } else {
       this.importAggregator()
     }

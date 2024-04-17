@@ -104,6 +104,10 @@ export class Aggregate extends AggregateBase {
       this.forceStop(this.mode !== MODE.ERROR)
     }, this.featureName, this.ee)
 
+    registerHandler('preload-errs', e => {
+      this.handleError(e)
+    }, this.featureName, this.ee)
+
     const { error_sampling_rate, sampling_rate, autoStart, block_selector, mask_text_selector, mask_all_inputs, inline_stylesheet, inline_images, collect_fonts } = getConfigurationValue(this.agentIdentifier, 'session_replay')
 
     this.waitForFlags(['sr']).then(([flagOn]) => {
@@ -148,15 +152,15 @@ export class Aggregate extends AggregateBase {
   }
 
   switchToFull () {
+    if (!this.entitled || this.blocked) return
     this.mode = MODE.FULL
     // if the error was noticed AFTER the recorder was already imported....
     if (this.recorder && this.initialized) {
-      this.recorder.stopRecording()
-      this.recorder.startRecording()
-
+      if (!this.recorder.recording) this.recorder.startRecording()
       this.scheduler.startTimer(this.harvestTimeSeconds)
-
       this.syncWithSessionManager({ sessionReplayMode: this.mode })
+    } else {
+      this.initializeRecording(false, true, true)
     }
   }
 
@@ -213,7 +217,6 @@ export class Aggregate extends AggregateBase {
 
     // If an error was noticed before the mode could be set (like in the early lifecycle of the page), immediately set to FULL mode
     if (this.mode === MODE.ERROR && this.errorNoticed) this.mode = MODE.FULL
-    if (!this.preloaded) this.ee.on('err', e => this.handleError(e))
 
     // FULL mode records AND reports from the beginning, while ERROR mode only records (but does not report).
     // ERROR mode will do this until an error is thrown, and then switch into FULL mode.
@@ -226,6 +229,11 @@ export class Aggregate extends AggregateBase {
     await this.prepUtils()
 
     if (!this.recorder.recording) this.recorder.startRecording()
+    if (!this.preloaded) {
+      this.ee.on('err', e => {
+        this.handleError(e)
+      })
+    }
 
     this.syncWithSessionManager({ sessionReplayMode: this.mode })
   }

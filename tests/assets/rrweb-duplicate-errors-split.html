@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    <style>
+      .left {
+        position: absolute;
+        left: 50px;
+        top: 200px;
+      }
+      .right {
+        position: absolute;
+        right: 50px;
+        top: 200px;
+      }
+    </style>
+    <link rel="stylesheet" type="text/css" href="style.css" /> 
+    {init} {config} {loader}
+    <script>
+      inv = setInterval(() => {
+        if (performance.now() > 5000) clearInterval(inv)
+        newrelic.noticeError('test')
+      }, 50)
+    </script>
+    <script>
+      window.wasPreloaded = false;
+      window.addEventListener("load", () => {
+        try {
+          window.wasPreloaded = !!Object.values(newrelic.initializedAgents)[0].features.session_replay.recorder
+        } catch (err) {
+          // do nothing because it failed to get the recorder -- which inherently also means it was not preloaded
+        }
+      });
+    </script>
+  </head>
+  <body>
+    this is a page that provides several types of elements with selectors that session_replay can interact with based on how it is configured
+    <hr />
+    <hr />
+    <textarea id="plain"></textarea>
+    <textarea id="ignore" class="nr-ignore"></textarea>
+    <textarea id="block" class="nr-block"></textarea>
+    <textarea id="mask" class="nr-mask"></textarea>
+    <textarea id="nr-block" data-nr-block></textarea>
+    <textarea id="other-block" data-other-block></textarea>
+    <textarea id="unmask-class" class="nr-unmask"></textarea>
+    <textarea id="unmask-data" data-nr-unmask></textarea>
+    <input type="text" id="unmask-class" class="nr-unmask" />
+    <input type="text" id="unmask-data" data-nr-unmask />
+    <input type="password" id="unmask-pass-input" data-nr-unmask />
+    <input type="password" id="pass-input" />
+    <input type="text" id="text-input" />
+    <hr />
+    <button onclick="moveImage()">Click</button>
+    <img src="https://upload.wikimedia.org/wikipedia/commons/d/d7/House_of_Commons_Chamber_1.png" />
+    <a href="./rrweb-instrumented.html" target="_blank">New Tab</a>
+    <script>
+      function moveImage() {
+        document.querySelector("img").classList.toggle("left");
+        document.querySelector("img").classList.toggle("right");
+      }
+    </script>
+  </body>
+</html>

@@ -227,6 +227,40 @@ describe.withBrowsersMatching(notIE)('Session Replay Sample Mode Validation', ()
     expect(afterLoad.params.hasReplay).toEqual(true)
   })
 
+  it('Duplicate errors before and after init are decorated with hasReplay and timestamps correctly - FULL', async () => {
+    await browser.url(await browser.testHandle.assetURL('rrweb-duplicate-errors-split.html', config({ session_replay: { preload: false, sampling_rate: 100 }, jserrors: { harvestTimeSeconds: 10 } })))
+      .then(() => browser.waitForSessionReplayRecording('session_replay'))
+
+    const errors = await browser.testHandle.expectErrors()
+    const errAggSet1 = errors.request.body.err[0]
+    const errAggSet2 = errors.request.body.err[1]
+    expect(errAggSet1.params.hasReplay).toEqual(undefined)
+    expect(errAggSet1.metrics.count).toBeGreaterThan(1)
+    expect(errAggSet2.params.hasReplay).toEqual(true)
+    expect(errAggSet2.metrics.count).toBeGreaterThan(1)
+    expect(errAggSet1.params.timestamp).toBeLessThan(errAggSet2.params.timestamp)
+    expect(errAggSet1.metrics.time.min).toBeLessThan(errAggSet2.metrics.time.min)
+    expect(errAggSet2.metrics.time.min).toBeGreaterThan(errAggSet1.metrics.time.max)
+    expect(errAggSet1.params.stackHash).toEqual(errAggSet2.params.stackHash)
+  })
+
+  it('Duplicate errors before and after init are decorated with hasReplay and timestamps correctly - ERROR', async () => {
+    await browser.url(await browser.testHandle.assetURL('rrweb-duplicate-errors-split.html', config({ session_replay: { preload: false, sampling_rate: 0, error_sampling_rate: 100 }, jserrors: { harvestTimeSeconds: 10 } })))
+      .then(() => browser.waitForSessionReplayRecording('session_replay'))
+
+    const errors = await browser.testHandle.expectErrors()
+    const errAggSet1 = errors.request.body.err[0]
+    const errAggSet2 = errors.request.body.err[1]
+    expect(errAggSet1.params.hasReplay).toEqual(undefined)
+    expect(errAggSet1.metrics.count).toBeGreaterThan(1)
+    expect(errAggSet2.params.hasReplay).toEqual(true)
+    expect(errAggSet2.metrics.count).toBeGreaterThan(1)
+    expect(errAggSet1.params.timestamp).toBeLessThan(errAggSet2.params.timestamp)
+    expect(errAggSet1.metrics.time.min).toBeLessThan(errAggSet2.metrics.time.min)
+    expect(errAggSet2.metrics.time.min).toBeGreaterThan(errAggSet1.metrics.time.max)
+    expect(errAggSet1.params.stackHash).toEqual(errAggSet2.params.stackHash)
+  })
+
   it('FULL => OFF', async () => {
     await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { sampling_rate: 100, error_sampling_rate: 0 } })))
       .then(() => browser.waitForSessionReplayRecording())

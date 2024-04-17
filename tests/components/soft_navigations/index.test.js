@@ -73,7 +73,6 @@ describe('soft navigations', () => {
   })
 
   // const _setTimeout = global.setTimeout
-  // global.setTimeout = jest.fn((cb, timeout) => _setTimeout(cb, timeout === 0 ? 0 : 300)) // force cancellationTimers to trigger after 0.5 second
 
   let executeTTFB
   jest.doMock('../../../src/common/vitals/time-to-first-byte', () => {

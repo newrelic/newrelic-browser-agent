@@ -16,6 +16,10 @@ on:
         required: false
         type: boolean
         default: false
+      concurrency:
+        description: 'Number of threads or connections to spin up for test set'
+        default: 10
+        type: number
   workflow_call:
     inputs:
       browser-target:
@@ -70,7 +74,7 @@ jobs:
           node --max-old-space-size=8192 ./tools/wdio/bin/cli.js \
             -s \
             -b '${{ inputs.browser-target }}' \
-            --concurrent 10 \
+            --concurrent ${{ inputs.concurrency }} \
             ${{ runner.debug && '-v -L -D -d' || '' }} \
             ${{ inputs.coverage && '--coverage' || '' }} \
             ${{ inputs.additional-flags || '' }}

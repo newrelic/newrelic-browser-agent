@@ -24,6 +24,7 @@ jobs:
     with:
       ref: ${{ inputs.ref || github.ref }}
       browser-target: ${{ inputs.latest-only == true && 'chrome@latest' || 'chrome@*' }}
+      concurrency: ${{ inputs.latest-only == true && 20 || 10 }}
     secrets: inherit
 
   firefox:
@@ -31,6 +32,7 @@ jobs:
     with:
       ref: ${{ inputs.ref || github.ref }}
       browser-target: ${{ inputs.latest-only == true && 'firefox@latest' || 'firefox@*' }}
+      concurrency: ${{ inputs.latest-only == true && 20 || 10 }}
     secrets: inherit
 
   safari:
@@ -38,6 +40,7 @@ jobs:
     with:
       ref: ${{ inputs.ref || github.ref }}
       browser-target: ${{ inputs.latest-only == true && 'safari@latest' || 'safari@*' }}
+      concurrency: ${{ inputs.latest-only == true && 20 || 10 }}
     secrets: inherit
 
   edge:
@@ -45,6 +48,7 @@ jobs:
     with:
       ref: ${{ inputs.ref || github.ref }}
       browser-target: ${{ inputs.latest-only == true && 'edge@latest' || 'edge@*' }}
+      concurrency: ${{ inputs.latest-only == true && 20 || 10 }}
     secrets: inherit
 
   ios-15_5:
@@ -76,6 +80,7 @@ jobs:
     with:
       ref: ${{ inputs.ref || github.ref }}
       browser-target: ios@16.2
+      concurrency: ${{ inputs.latest-only == true && 20 || 10 }}
     secrets: inherit
 
   android:
@@ -83,6 +88,7 @@ jobs:
     with:
       ref: ${{ inputs.ref || github.ref }}
       browser-target: ${{ inputs.latest-only == true && 'android@latest' || 'android@*' }}
+      concurrency: ${{ inputs.latest-only == true && 20 || 10 }}
     secrets: inherit
 
   ie:
@@ -90,6 +96,7 @@ jobs:
     with:
       ref: ${{ inputs.ref || github.ref }}
       browser-target: ie@11
+      concurrency: ${{ inputs.latest-only == true && 20 || 10 }}
       additional-flags: -P
     secrets: inherit
 
@@ -98,6 +105,7 @@ jobs:
     with:
       ref: ${{ inputs.ref || github.ref }}
       browser-target: ${{ inputs.latest-only == true && 'ios@latest' || 'ios@*' }}
+      concurrency: ${{ inputs.latest-only == true && 20 || 10 }}
       additional-flags: --webview --timeout 300000
     secrets: inherit
 
@@ -106,5 +114,6 @@ jobs:
     with:
       ref: ${{ inputs.ref || github.ref }}
       browser-target: ${{ inputs.latest-only == true && 'android@latest' || 'android@*' }}
+      concurrency: ${{ inputs.latest-only == true && 20 || 10 }}
       additional-flags: --webview --timeout 300000
     secrets: inherit

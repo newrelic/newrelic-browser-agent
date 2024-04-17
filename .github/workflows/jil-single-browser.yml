@@ -19,6 +19,10 @@ on:
         description: 'Additional flags to pass to the jil cli'
         required: false
         type: string
+      concurrency:
+        description: 'Number of threads or connections to spin up for test set'
+        default: 5
+        type: number
   workflow_call:
     inputs:
       collection:
@@ -72,7 +76,7 @@ jobs:
             -f merged \
             -s \
             -b '${{ inputs.browser-target }}' \
-            --concurrent 5 \
+            --concurrent ${{ inputs.concurrency }} \
             --${{ inputs.collection}}-only \
             -t 85000 \
             ${{ runner.debug && '-v -L -D -d' || '' }} \

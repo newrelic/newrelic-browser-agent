@@ -64,7 +64,6 @@ export class Recorder {
 
   /** Begin recording using configured recording lib */
   startRecording () {
-    console.log('startRecording')
     this.recording = true
     const { block_class, ignore_class, mask_text_class, block_selector, mask_input_options, mask_text_selector, mask_all_inputs, inline_stylesheet, inline_images, collect_fonts } = getConfigurationValue(this.parent.agentIdentifier, 'session_replay')
     const customMasker = (text, element) => {

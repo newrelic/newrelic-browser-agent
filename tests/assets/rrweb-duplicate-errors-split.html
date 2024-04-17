@@ -21,20 +21,14 @@
     <link rel="stylesheet" type="text/css" href="style.css" /> 
     {init} {config} {loader}
     <script>
+      pre = 0, post = 0
       inv = setInterval(() => {
-        if (performance.now() > 5000) clearInterval(inv)
-        newrelic.noticeError('test')
-      }, 50)
-    </script>
-    <script>
-      window.wasPreloaded = false;
-      window.addEventListener("load", () => {
-        try {
-          window.wasPreloaded = !!Object.values(newrelic.initializedAgents)[0].features.session_replay.recorder
-        } catch (err) {
-          // do nothing because it failed to get the recorder -- which inherently also means it was not preloaded
-        }
-      });
+        console.log(pre, post)
+        // run error 500 times before load, and 500 times after load, creating a duplicate stack track for all errors
+        if (++pre >= 500 && post >= 500) clearInterval(inv)
+        newrelic.noticeError(new Error('test'))
+        if ( document.readyState === 'complete') post++
+      }, 5)
     </script>
   </head>
   <body>

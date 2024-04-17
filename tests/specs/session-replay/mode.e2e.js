@@ -232,16 +232,26 @@ describe.withBrowsersMatching(notIE)('Session Replay Sample Mode Validation', ()
       .then(() => browser.waitForSessionReplayRecording('session_replay'))
 
     const errors = await browser.testHandle.expectErrors()
-    const errAggSet1 = errors.request.body.err[0]
-    const errAggSet2 = errors.request.body.err[1]
-    expect(errAggSet1.params.hasReplay).toEqual(undefined)
-    expect(errAggSet1.metrics.count).toBeGreaterThan(1)
-    expect(errAggSet2.params.hasReplay).toEqual(true)
-    expect(errAggSet2.metrics.count).toBeGreaterThan(1)
-    expect(errAggSet1.params.timestamp).toBeLessThan(errAggSet2.params.timestamp)
-    expect(errAggSet1.metrics.time.min).toBeLessThan(errAggSet2.metrics.time.min)
-    expect(errAggSet2.metrics.time.min).toBeGreaterThan(errAggSet1.metrics.time.max)
-    expect(errAggSet1.params.stackHash).toEqual(errAggSet2.params.stackHash)
+    /** should not have hr param on jserror payloads */
+    expect(errors.request.query.hr).toEqual(undefined)
+    const hasReplaySet = errors.request.body.err.find(x => x.params.hasReplay)
+    const preReplaySet = errors.request.body.err.find(x => !x.params.hasReplay)
+    /** pre-replay init data should not have the hasReplay flag */
+    expect(preReplaySet.params.hasReplay).toEqual(undefined)
+    /** pre-replay should contain an aggregated set instead of a single value */
+    expect(preReplaySet.metrics.count).toBeGreaterThan(1)
+    /** post-replay init data should have the hasReplay flag */
+    expect(hasReplaySet.params.hasReplay).toEqual(true)
+    /** pre-replay should contain an aggregated set instead of a single value */
+    expect(hasReplaySet.metrics.count).toBeGreaterThan(1)
+    /** pre-replay should have started before post-replay */
+    expect(preReplaySet.params.timestamp).toBeLessThan(hasReplaySet.params.timestamp)
+    /** pre-replay should have started before post-replay (metrics) */
+    expect(preReplaySet.metrics.time.min).toBeLessThan(hasReplaySet.metrics.time.min)
+    /** post-replay's start time should be after pre-replay's end time (metrics) */
+    expect(hasReplaySet.metrics.time.min).toBeGreaterThan(preReplaySet.metrics.time.max)
+    /** pre-replay and post-replay should have the same stack hash, but be agg'd and reported separately */
+    expect(preReplaySet.params.stackHash).toEqual(hasReplaySet.params.stackHash)
   })
 
   it('Duplicate errors before and after init are decorated with hasReplay and timestamps correctly - ERROR', async () => {
@@ -249,17 +259,26 @@ describe.withBrowsersMatching(notIE)('Session Replay Sample Mode Validation', ()
       .then(() => browser.waitForSessionReplayRecording('session_replay'))
 
     const errors = await browser.testHandle.expectErrors()
+    /** should not have hr param on jserror payloads */
     expect(errors.request.query.hr).toEqual(undefined)
-    const errAggSet1 = errors.request.body.err[0]
-    const errAggSet2 = errors.request.body.err[1]
-    expect(errAggSet1.params.hasReplay).toEqual(undefined)
-    expect(errAggSet1.metrics.count).toBeGreaterThan(1)
-    expect(errAggSet2.params.hasReplay).toEqual(true)
-    expect(errAggSet2.metrics.count).toBeGreaterThan(1)
-    expect(errAggSet1.params.timestamp).toBeLessThan(errAggSet2.params.timestamp)
-    expect(errAggSet1.metrics.time.min).toBeLessThan(errAggSet2.metrics.time.min)
-    expect(errAggSet2.metrics.time.min).toBeGreaterThan(errAggSet1.metrics.time.max)
-    expect(errAggSet1.params.stackHash).toEqual(errAggSet2.params.stackHash)
+    const hasReplaySet = errors.request.body.err.find(x => x.params.hasReplay)
+    const preReplaySet = errors.request.body.err.find(x => !x.params.hasReplay)
+    /** pre-replay init data should not have the hasReplay flag */
+    expect(preReplaySet.params.hasReplay).toEqual(undefined)
+    /** pre-replay should contain an aggregated set instead of a single value */
+    expect(preReplaySet.metrics.count).toBeGreaterThan(1)
+    /** post-replay init data should have the hasReplay flag */
+    expect(hasReplaySet.params.hasReplay).toEqual(true)
+    /** pre-replay should contain an aggregated set instead of a single value */
+    expect(hasReplaySet.metrics.count).toBeGreaterThan(1)
+    /** pre-replay should have started before post-replay */
+    expect(preReplaySet.params.timestamp).toBeLessThan(hasReplaySet.params.timestamp)
+    /** pre-replay should have started before post-replay (metrics) */
+    expect(preReplaySet.metrics.time.min).toBeLessThan(hasReplaySet.metrics.time.min)
+    /** post-replay's start time should be after pre-replay's end time (metrics) */
+    expect(hasReplaySet.metrics.time.min).toBeGreaterThan(preReplaySet.metrics.time.max)
+    /** pre-replay and post-replay should have the same stack hash, but be agg'd and reported separately */
+    expect(preReplaySet.params.stackHash).toEqual(hasReplaySet.params.stackHash)
   })
 
   it('FULL => OFF', async () => {

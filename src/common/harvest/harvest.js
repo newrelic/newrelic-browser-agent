@@ -167,14 +167,15 @@ export class Harvest extends SharedContext {
   }
 
   // The stuff that gets sent every time.
-  baseQueryString (qs) {
+  baseQueryString (qs, endpoint) {
     const runtime = getRuntime(this.sharedContext.agentIdentifier)
     const info = getInfo(this.sharedContext.agentIdentifier)
 
     const location = cleanURL(getLocation())
     const ref = this.obfuscator.shouldObfuscate() ? this.obfuscator.obfuscateString(location) : location
+    const hr = runtime?.session?.state.sessionReplayMode === 1 && endpoint !== 'jserrors'
 
-    return ([
+    const qps = [
       'a=' + info.applicationID,
       encodeParam('sa', (info.sa ? '' + info.sa : '')),
       encodeParam('v', VERSION),
@@ -184,9 +185,10 @@ export class Harvest extends SharedContext {
       '&ck=0', // ck param DEPRECATED - still expected by backend
       '&s=' + (runtime.session?.state.value || '0'), // the 0 id encaps all untrackable and default traffic
       encodeParam('ref', ref),
-      encodeParam('ptid', (runtime.ptid ? '' + runtime.ptid : '')),
-      encodeParam('hr', (runtime?.session?.state.sessionReplayMode === 1 ? '1' : '0'), qs) // hasReplay
-    ].join(''))
+      encodeParam('ptid', (runtime.ptid ? '' + runtime.ptid : ''))
+    ]
+    if (hr) qps.push(encodeParam('hr', '1', qs))
+    return qps.join('')
   }
 
   /**

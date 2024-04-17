@@ -8,6 +8,11 @@ name: 'Pull Request Checks'
 
 on:
   workflow_dispatch:
+    inputs:
+      latest-only:
+        description: 'Run the latest version of browsers only instead of all versions'
+        default: true
+        type: boolean
   pull_request:
 
 jobs:
@@ -166,6 +171,7 @@ jobs:
     uses: ./.github/workflows/wdio-all-browsers.yml
     with:
       ref: 'refs/pull/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}/merge'
+      latest-only: ${{ inputs.latest-only }}
     secrets: inherit
 
   jil:
@@ -175,6 +181,7 @@ jobs:
     uses: ./.github/workflows/jil-all-browsers.yml
     with:
       ref: 'refs/pull/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}/merge'
+      latest-only: ${{ inputs.latest-only }}
     secrets: inherit
 
   complete-status-comment-pull-request:

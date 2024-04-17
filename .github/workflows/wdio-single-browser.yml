@@ -39,6 +39,10 @@ on:
         description: 'Github branch ref to checkout and run tests on'
         required: false
         type: string
+      concurrency:
+        description: 'Number of threads or connections to spin up for test set'
+        default: 10
+        type: number
     secrets:
       SAUCE_USERNAME:
         required: true

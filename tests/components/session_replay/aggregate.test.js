@@ -243,7 +243,9 @@ describe('Session Replay', () => {
       setConfiguration(agentIdentifier, { ...init })
       sr = new SessionReplayAgg(agentIdentifier, new Aggregator({}))
       sr.ee.emit('rumresp', [{ sr: 1 }])
+      sr.scheduler.runHarvest = jest.fn()
       await wait(1)
+      expect(sr.scheduler.runHarvest).toHaveBeenCalledTimes(1)
       const harvestContents = sr.getHarvestContents()
       // query attrs
       expect(harvestContents.qs).toMatchObject(anyQuery)
@@ -264,6 +266,7 @@ describe('Session Replay', () => {
       setConfiguration(agentIdentifier, { ...init })
       sr = new SessionReplayAgg(agentIdentifier, new Aggregator({}))
       sr.ee.emit('rumresp', [{ sr: 1 }])
+      sr.scheduler.runHarvest = jest.fn()
       await wait(1)
       const [harvestContents] = sr.prepareHarvest()
       expect(harvestContents.qs).toMatchObject(anyQuery)
@@ -282,6 +285,7 @@ describe('Session Replay', () => {
       setConfiguration(agentIdentifier, { ...init })
       sr = new SessionReplayAgg(agentIdentifier, new Aggregator({}))
       sr.ee.emit('rumresp', [{ sr: 1 }])
+      sr.scheduler.runHarvest = jest.fn()
       await wait(1)
 
       sr.gzipper = undefined

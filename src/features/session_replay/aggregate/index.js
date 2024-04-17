@@ -301,7 +301,7 @@ export class Aggregate extends AggregateBase {
   }
 
   getCorrectedTimestamp (node) {
-    if (!node.timestamp) return
+    if (!node?.timestamp) return
     if (node.__newrelic) return node.timestamp
     return this.timeKeeper.correctAbsoluteTimestamp(node.timestamp)
   }

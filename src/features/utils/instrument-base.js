@@ -68,7 +68,7 @@ export class InstrumentBase extends FeatureBase {
    * @returns void
    */
   importAggregator (argsObjFromInstrument = {}) {
-    if (this.featAggregate) return
+    if (this.featAggregate || !this.auto) return
 
     let loadedSuccessfully
     this.onAggregateImported = new Promise(resolve => {

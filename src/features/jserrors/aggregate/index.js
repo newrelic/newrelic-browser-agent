@@ -192,7 +192,7 @@ export class Aggregate extends AggregateBase {
       this.pageviewReported[bucketHash] = true
     }
 
-    if (hasReplay && !this.replayAborted) params.hasReplay = hasReplay
+    if (hasReplay) params.hasReplay = hasReplay
     params.firstOccurrenceTimestamp = this.observedAt[bucketHash]
     params.timestamp = this.observedAt[bucketHash]
 

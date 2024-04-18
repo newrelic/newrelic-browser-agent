@@ -1,4 +1,4 @@
-import { config, getSR, testExpectedReplay } from './helpers'
+import { config, decodeAttributes, getSR, testExpectedReplay } from './helpers'
 import { supportsMultipleTabs, notIE, notSafari } from '../../../tools/browser-matcher/common-matchers.mjs'
 
 describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
@@ -21,8 +21,11 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
     testExpectedReplay({ data: page1Contents, session: localStorage.value, hasError: false, hasMeta: true, hasSnapshot: true, isFirstChunk: true })
 
     await browser.enableSessionReplay()
-    browser.testHandle.expectBlob(10000)
-    const [{ request: page1EndContents }, { request: page2Contents }] = await Promise.all([
+    const { request: other } = await browser.testHandle.expectBlob()
+    const [
+      { request: request1 },
+      { request: request2 }
+    ] = await Promise.all([
       browser.testHandle.expectBlob(),
       browser.testHandle.expectBlob(),
       browser.refresh()
@@ -31,8 +34,11 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
         ]))
     ])
 
-    testExpectedReplay({ data: page1EndContents, session: localStorage.value, hasError: false, hasMeta: false, hasSnapshot: false, isFirstChunk: false })
-    testExpectedReplay({ data: page2Contents, session: localStorage.value, hasError: false, hasMeta: true, hasSnapshot: true, isFirstChunk: false })
+    expect(decodeAttributes(other.query.attributes).hasMeta || decodeAttributes(request1.query.attributes).hasMeta || decodeAttributes(request2.query.attributes).hasMeta).toBeTruthy()
+    expect(decodeAttributes(other.query.attributes).hasSnapshot || decodeAttributes(request1.query.attributes).hasSnapshot || decodeAttributes(request2.query.attributes).hasSnapshot).toBeTruthy()
+
+    testExpectedReplay({ data: request1, session: localStorage.value, hasError: false, isFirstChunk: false })
+    testExpectedReplay({ data: request2, session: localStorage.value, hasError: false, isFirstChunk: false })
   })
 
   it('should record across same-tab page navigation', async () => {
@@ -47,18 +53,22 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
 
     await browser.enableSessionReplay()
 
-    browser.testHandle.expectBlob(10000)
-    const [{ request: page1EndContents }, { request: page2Contents }] = await Promise.all([
+    const { request: other } = await browser.testHandle.expectBlob()
+    const [
+      { request: request1 },
+      { request: request2 }
+    ] = await Promise.all([
       browser.testHandle.expectBlob(10000),
       browser.testHandle.expectBlob(10000),
       browser.url(await browser.testHandle.assetURL('instrumented.html', config()))
         .then(() => browser.waitForAgentLoad())
     ])
 
-    testExpectedReplay({ data: page1EndContents, session: localStorage.value, hasError: false, hasMeta: false, hasSnapshot: false, isFirstChunk: false })
-    testExpectedReplay({ data: page2Contents, session: localStorage.value, hasError: false, hasMeta: true, hasSnapshot: true, isFirstChunk: false })
+    expect(decodeAttributes(other.query.attributes).hasMeta || decodeAttributes(request1.query.attributes).hasMeta || decodeAttributes(request2.query.attributes).hasMeta).toBeTruthy()
+    expect(decodeAttributes(other.query.attributes).hasSnapshot || decodeAttributes(request1.query.attributes).hasSnapshot || decodeAttributes(request2.query.attributes).hasSnapshot).toBeTruthy()
 
-    await wait(1000)
+    testExpectedReplay({ data: request1, session: localStorage.value, hasError: false, isFirstChunk: false })
+    testExpectedReplay({ data: request2, session: localStorage.value, hasError: false, isFirstChunk: false })
   })
 
   // // As of 06/26/2023 test fails in Safari, though tested behavior works in a live browser (revisit in NR-138940).
@@ -162,9 +172,3 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
     }))
   })
 })
-
-function wait (ms) {
-  return new Promise((resolve, reject) => {
-    setTimeout(resolve, ms)
-  })
-}

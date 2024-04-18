@@ -54,7 +54,6 @@ export class Aggregate extends AggregateBase {
     this.timeKeeper = undefined
 
     this.recorder = args?.recorder
-    this.preloaded = !!this.recorder
     this.errorNoticed = args?.errorNoticed || false
 
     handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/Enabled'], undefined, FEATURE_NAMES.metrics, this.ee)
@@ -112,7 +111,7 @@ export class Aggregate extends AggregateBase {
       this.forceStop(this.mode !== MODE.ERROR)
     }, this.featureName, this.ee)
 
-    registerHandler('preload-errs', e => {
+    registerHandler(SR_EVENT_EMITTER_TYPES.ERROR_DURING_REPLAY, e => {
       this.handleError(e)
     }, this.featureName, this.ee)
 
@@ -237,11 +236,6 @@ export class Aggregate extends AggregateBase {
     await this.prepUtils()
 
     if (!this.recorder.recording) this.recorder.startRecording()
-    if (!this.preloaded) {
-      this.ee.on('err', e => {
-        this.handleError(e)
-      })
-    }
 
     this.syncWithSessionManager({ sessionReplayMode: this.mode })
   }

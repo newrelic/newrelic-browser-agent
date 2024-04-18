@@ -6,7 +6,8 @@ export const FEATURE_NAME = FEATURE_NAMES.sessionReplay
 export const SR_EVENT_EMITTER_TYPES = {
   RECORD: 'recordReplay',
   PAUSE: 'pauseReplay',
-  REPLAY_RUNNING: 'replayRunning'
+  REPLAY_RUNNING: 'replayRunning',
+  ERROR_DURING_REPLAY: 'errorDuringReplay'
 }
 
 export const AVG_COMPRESSION = 0.12

@@ -50,7 +50,6 @@ test('initial page load timing', done => {
   }
 
   function afterInteractionDone (interaction) {
-    console.log(interaction)
     setTimeout(() => {
       expect(interaction.root.attrs.trigger).toEqual('initialPageLoad')
       expect(interaction.root.end).toBeGreaterThan(0) // interaction should be finished and have an end time

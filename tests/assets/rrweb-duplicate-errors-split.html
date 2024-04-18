@@ -23,7 +23,6 @@
     <script>
       pre = 0, post = 0
       inv = setInterval(() => {
-        console.log(pre, post)
         // run error 500 times before load, and 500 times after load, creating a duplicate stack track for all errors
         if (++pre >= 500 && post >= 500) clearInterval(inv)
         newrelic.noticeError(new Error('test'))

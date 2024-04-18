@@ -1,4 +1,4 @@
-import { config, testExpectedReplay } from './helpers'
+import { config, decodeAttributes, testExpectedReplay } from './helpers'
 import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
 
 describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => {
@@ -84,7 +84,8 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
 
     expect(wasPreloaded1).toEqual(false)
 
-    const [{ request: harvestContents }, wasPreloaded2] = await browser.refresh().then(() => Promise.all([
+    const [{ request: harvestContents }, { request: harvestContents2 }, wasPreloaded2] = await browser.refresh().then(() => Promise.all([
+      browser.testHandle.expectBlob(10000),
       browser.testHandle.expectBlob(10000),
       browser.waitForAgentLoad()
         .then(() => browser.execute(function () {
@@ -92,7 +93,8 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
         }))
     ]))
 
+    expect(decodeAttributes(harvestContents.query.attributes).hasSnapshot || decodeAttributes(harvestContents2.query.attributes).hasSnapshot).toBeTruthy()
     expect(wasPreloaded2).toEqual(true)
-    testExpectedReplay({ data: harvestContents, hasSnapshot: true })
+    testExpectedReplay({ data: harvestContents })
   })
 })

@@ -72,7 +72,7 @@ jobs:
             -f merged \
             -s \
             -b '${{ inputs.browser-target }}' \
-            --concurrent 5 \
+            --concurrent 2 \
             --${{ inputs.collection}}-only \
             -t 85000 \
             ${{ runner.debug && '-v -L -D -d' || '' }} \

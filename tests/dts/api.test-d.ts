@@ -1,7 +1,7 @@
 import { BrowserAgent } from '../../dist/types/loaders/browser-agent'
 import { MicroAgent } from '../../dist/types/loaders/micro-agent'
 import { InteractionInstance, getContext, onEnd } from '../../dist/types/loaders/api/interaction-types'
-import { expectType, expectNotType } from 'tsd'
+import { expectType } from 'tsd'
 
 // Browser Agent APIs
 const browserAgent = new BrowserAgent({})

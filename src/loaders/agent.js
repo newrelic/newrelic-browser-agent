@@ -21,6 +21,10 @@ import { globalScope } from '../common/constants/runtime'
  * sensitive to network load, this may result in smaller builds with slightly lower performance impact.
  */
 export class Agent extends AgentBase {
+  /**
+   * @param {any} options Options to initialize agent with
+   * @param {string} [agentIdentifier] Optional identifier of agent
+   */
   constructor (options, agentIdentifier) {
     super(agentIdentifier)
 

@@ -26,23 +26,20 @@ export class Instrument extends InstrumentBase {
     } catch (err) { }
 
     if (this.#canPreloadRecorder(session)) {
-      /** If this is preloaded, set up a buffer, if not, later when sampling we will set up a .on for live events */
-      this.#startRecording(session?.sessionReplayMode).then(() => {
-        this.ee.on('err', (e) => {
-          this.errorNoticed = true
-          handle('preload-errs', [e], undefined, this.featureName, this.ee)
-        })
-      })
+      this.#startRecording(session?.sessionReplayMode)
     } else {
       this.importAggregator()
     }
 
-    /** If this is preloaded, set up a buffer, if not, later when sampling we will set up a .on for live events */
+    /** If the recorder is running, we can pass error events on to the agg to help it switch to full mode later */
     this.ee.on('err', (e) => {
-      this.errorNoticed = true
-      if (this.replayRunning) handle(SR_EVENT_EMITTER_TYPES.ERROR_DURING_REPLAY, [e], undefined, this.featureName, this.ee)
+      if (this.replayRunning) {
+        this.errorNoticed = true
+        handle(SR_EVENT_EMITTER_TYPES.ERROR_DURING_REPLAY, [e], undefined, this.featureName, this.ee)
+      }
     })
 
+    /** Emitted by the recorder when it starts capturing data, used to determine if we should pass errors on to the agg */
     this.ee.on(SR_EVENT_EMITTER_TYPES.REPLAY_RUNNING, (isRunning) => {
       this.replayRunning = isRunning
     })

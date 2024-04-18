@@ -71,4 +71,28 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
 
     expect(wasPreloaded).toEqual(true)
   })
+
+  it('should continue harvesting when start called after refresh with an existing session replay', async () => {
+    const [, wasPreloaded1] = await Promise.all([
+      browser.testHandle.expectBlob(10000),
+      browser.url(await browser.testHandle.assetURL('session_replay/64kb-dom-manual-start.html', config({ session_replay: { preload: false, autoStart: false } })))
+        .then(() => browser.waitForAgentLoad())
+        .then(() => browser.execute(function () {
+          return window.wasPreloaded // window var set at load time which checks the SR recorder's buffer to see if populated before load
+        }))
+    ])
+
+    expect(wasPreloaded1).toEqual(false)
+
+    const [{ request: harvestContents }, wasPreloaded2] = await browser.refresh().then(() => Promise.all([
+      browser.testHandle.expectBlob(10000),
+      browser.waitForAgentLoad()
+        .then(() => browser.execute(function () {
+          return window.wasPreloaded // window var set at load time which checks the SR recorder's buffer to see if populated before load
+        }))
+    ]))
+
+    expect(wasPreloaded2).toEqual(true)
+    testExpectedReplay({ data: harvestContents, hasSnapshot: true })
+  })
 })

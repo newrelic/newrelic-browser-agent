@@ -50,6 +50,15 @@ export class InstrumentBase extends FeatureBase {
     if (getConfigurationValue(this.agentIdentifier, `${this.featureName}.autoStart`) === false) this.auto = false
     /** if the feature requires opt-in (!auto-start), it will get registered once the api has been called */
     if (this.auto) registerDrain(agentIdentifier, featureName)
+    else {
+      this.ee.on(`${this.featureName}-opt-in`, () => {
+        // register the feature to drain only once the API has been called, it will drain when importAggregator finishes for all the features
+        // called by the api in that cycle
+        registerDrain(this.agentIdentifier, this.featureName)
+        this.auto = true
+        this.importAggregator()
+      })
+    }
   }
 
   /**
@@ -60,19 +69,6 @@ export class InstrumentBase extends FeatureBase {
    */
   importAggregator (argsObjFromInstrument = {}) {
     if (this.featAggregate) return
-
-    if (!this.auto) {
-      // this feature requires an opt in...
-      // wait for API to be called
-      this.ee.on(`${this.featureName}-opt-in`, () => {
-        // register the feature to drain only once the API has been called, it will drain when importAggregator finishes for all the features
-        // called by the api in that cycle
-        registerDrain(this.agentIdentifier, this.featureName)
-        this.auto = true
-        this.importAggregator()
-      })
-      return
-    }
 
     let loadedSuccessfully
     this.onAggregateImported = new Promise(resolve => {

@@ -1,56 +1,17 @@
 import { faker } from '@faker-js/faker'
 import { InstrumentBase } from '../../../../src/features/utils/instrument-base'
 import { FeatureBase } from '../../../../src/features/utils/feature-base'
+import { FEATURE_NAMES } from '../../../../src/loaders/features/features'
 import { drain, registerDrain } from '../../../../src/common/drain/drain'
 import { onWindowLoad } from '../../../../src/common/window/load'
 import { lazyFeatureLoader } from '../../../../src/features/utils/lazy-feature-loader'
-import { getConfigurationValue } from '../../../../src/common/config/config'
 import { setupAgentSession } from '../../../../src/features/utils/agent-session'
 import { warn } from '../../../../src/common/util/console'
-import * as globalScopeModule from '../../../../src/common/constants/runtime'
-import { FEATURE_NAMES } from '../../../../src/loaders/features/features'
+import * as runtimeConstantsModule from '../../../../src/common/constants/runtime'
+import { enableSessionTracking } from '../../../../src/features/session_replay/shared/utils'
 
 jest.enableAutomock()
 jest.unmock('../../../../src/features/utils/instrument-base')
-jest.unmock('../../../../src/loaders/features/features')
-jest.unmock('../../../../src/features/session_replay/shared/utils')
-jest.mock('../../../../src/common/drain/drain', () => ({
-  __esModule: true,
-  drain: jest.fn(),
-  registerDrain: jest.fn()
-}))
-jest.mock('../../../../src/common/window/load', () => ({
-  __esModule: true,
-  onWindowLoad: jest.fn()
-}))
-jest.mock('../../../../src/common/constants/runtime', () => ({
-  __esModule: true,
-  isBrowserScope: undefined,
-  isWorkerScope: undefined
-}))
-jest.mock('../../../../src/common/config/config', () => ({
-  __esModule: true,
-  getConfigurationValue: jest.fn()
-}))
-jest.mock('../../../../src/common/config/config', () => ({
-  __esModule: true,
-  getConfigurationValue: jest.fn().mockReturnValue({}),
-  originals: {
-    MO: jest.fn()
-  }
-}))
-jest.mock('../../../../src/features/utils/feature-base', () => ({
-  __esModule: true,
-  FeatureBase: jest.fn(function (...args) {
-    this.agentIdentifier = args[0]
-    this.aggregator = args[1]
-    this.featureName = args[2]
-  })
-}))
-jest.mock('../../../../src/features/utils/agent-session', () => ({
-  __esModule: true,
-  setupAgentSession: jest.fn()
-}))
 
 let agentIdentifier
 let aggregator
@@ -58,8 +19,9 @@ let featureName
 let mockAggregate
 
 beforeEach(() => {
-  jest.replaceProperty(globalScopeModule, 'isBrowserScope', true)
-  jest.replaceProperty(globalScopeModule, 'isWorkerScope', false)
+  jest.replaceProperty(runtimeConstantsModule, 'isBrowserScope', true)
+  jest.replaceProperty(runtimeConstantsModule, 'isWorkerScope', false)
+  jest.mocked(enableSessionTracking).mockReturnValue(true)
 
   agentIdentifier = faker.string.uuid()
   aggregator = {}
@@ -79,10 +41,17 @@ test('should construct a new instrument', () => {
   expect(registerDrain).toHaveBeenCalledWith(agentIdentifier, featureName)
 })
 
-test('should not immediately drain', () => {
-  new InstrumentBase(agentIdentifier, aggregator, featureName, false)
+test('should wait for feature opt-in to import the aggregate', () => {
+  const instrument = new InstrumentBase(agentIdentifier, aggregator, featureName, false)
+  jest.spyOn(instrument, 'importAggregator').mockImplementation(jest.fn)
 
   expect(registerDrain).not.toHaveBeenCalled()
+
+  const optInCallback = jest.mocked(instrument.ee.on).mock.calls[0][1]
+  optInCallback()
+
+  expect(registerDrain).toHaveBeenCalledWith(agentIdentifier, featureName)
+  expect(instrument.importAggregator).toHaveBeenCalledTimes(1)
 })
 
 test('should import aggregator on window load', async () => {
@@ -99,8 +68,8 @@ test('should import aggregator on window load', async () => {
 })
 
 test('should immediately import aggregator in worker scope', async () => {
-  jest.replaceProperty(globalScopeModule, 'isBrowserScope', false)
-  jest.replaceProperty(globalScopeModule, 'isWorkerScope', true)
+  jest.replaceProperty(runtimeConstantsModule, 'isBrowserScope', false)
+  jest.replaceProperty(runtimeConstantsModule, 'isWorkerScope', true)
 
   const instrument = new InstrumentBase(agentIdentifier, aggregator, featureName)
   const aggregateArgs = { [faker.string.uuid()]: faker.lorem.sentence() }
@@ -114,72 +83,18 @@ test('should immediately import aggregator in worker scope', async () => {
   expect(mockAggregate).toHaveBeenCalledWith(agentIdentifier, aggregator, aggregateArgs)
 })
 
-test('should import the session manager and replay aggregate for new session', async () => {
-  jest.mocked(getConfigurationValue).mockReturnValue(true)
-  jest.mocked(setupAgentSession).mockReturnValue({
-    isNew: true
-  })
-
-  const instrument = new InstrumentBase(agentIdentifier, aggregator, FEATURE_NAMES.sessionReplay)
+test('should not import aggregate more than once', async () => {
+  const instrument = new InstrumentBase(agentIdentifier, aggregator, featureName)
   const aggregateArgs = { [faker.string.uuid()]: faker.lorem.sentence() }
   instrument.importAggregator(aggregateArgs)
 
   const windowLoadCallback = jest.mocked(onWindowLoad).mock.calls[0][0]
   await windowLoadCallback()
 
-  expect(getConfigurationValue).toHaveBeenCalledWith(agentIdentifier, 'privacy.cookies_enabled')
-  expect(setupAgentSession).toHaveBeenCalledWith(agentIdentifier)
-  expect(lazyFeatureLoader).toHaveBeenCalledWith(FEATURE_NAMES.sessionReplay, 'aggregate')
-  expect(mockAggregate).toHaveBeenCalledWith(agentIdentifier, aggregator, aggregateArgs)
-})
-
-test('should import the session manager and replay aggregate when a recording is active', async () => {
-  jest.mocked(getConfigurationValue).mockReturnValue(true)
-  jest.mocked(setupAgentSession).mockReturnValue({
-    isNew: false,
-    state: {
-      sessionReplayMode: 1
-    }
-  })
-
-  const instrument = new InstrumentBase(agentIdentifier, aggregator, FEATURE_NAMES.sessionReplay)
-  const aggregateArgs = { [faker.string.uuid()]: faker.lorem.sentence() }
-  instrument.importAggregator(aggregateArgs)
-
-  const windowLoadCallback = jest.mocked(onWindowLoad).mock.calls[0][0]
-  await windowLoadCallback()
-
-  expect(getConfigurationValue).toHaveBeenCalledWith(agentIdentifier, 'privacy.cookies_enabled')
-  expect(setupAgentSession).toHaveBeenCalledWith(agentIdentifier)
-  expect(lazyFeatureLoader).toHaveBeenCalledWith(FEATURE_NAMES.sessionReplay, 'aggregate')
-  expect(mockAggregate).toHaveBeenCalledWith(agentIdentifier, aggregator, aggregateArgs)
-})
-
-test('should not import session aggregate when session is not new and a recording is not active', async () => {
-  jest.mocked(getConfigurationValue).mockReturnValue(true)
-  jest.mocked(setupAgentSession).mockReturnValue({
-    isNew: false,
-    state: {
-      sessionReplayMode: 0
-    }
-  })
-
-  const instrument = new InstrumentBase(agentIdentifier, aggregator, FEATURE_NAMES.sessionReplay)
-  const aggregateArgs = { [faker.string.uuid()]: faker.lorem.sentence() }
-  instrument.importAggregator(aggregateArgs)
-
-  const windowLoadCallback = jest.mocked(onWindowLoad).mock.calls[0][0]
-  await windowLoadCallback()
-
-  expect(getConfigurationValue).toHaveBeenCalledWith(agentIdentifier, 'privacy.cookies_enabled')
-  expect(setupAgentSession).toHaveBeenCalledWith(agentIdentifier)
-  expect(drain).toHaveBeenCalledWith(agentIdentifier, FEATURE_NAMES.sessionReplay)
-  expect(lazyFeatureLoader).not.toHaveBeenCalled()
-  expect(mockAggregate).not.toHaveBeenCalled()
+  expect(mockAggregate).toHaveBeenCalledTimes(1)
 })
 
 test('feature still imports by default even when setupAgentSession throws an error', async () => {
-  jest.mocked(getConfigurationValue).mockReturnValue(true)
   jest.mocked(setupAgentSession).mockImplementation(() => { throw new Error(faker.lorem.sentence()) })
 
   const instrument = new InstrumentBase(agentIdentifier, aggregator, featureName)
@@ -190,11 +105,8 @@ test('feature still imports by default even when setupAgentSession throws an err
   const windowLoadCallback = jest.mocked(onWindowLoad).mock.calls[0][0]
   await windowLoadCallback()
 
-  expect(onWindowLoad).toHaveBeenCalledWith(expect.any(Function), true)
-  expect(instrument.abortHandler).not.toHaveBeenCalled()
-  expect(warn).toHaveBeenCalledWith(expect.stringContaining('A problem occurred when starting up session manager'), expect.any(Error))
-  expect(lazyFeatureLoader).toHaveBeenCalled()
-  expect(mockAggregate).toHaveBeenCalled()
+  expect(lazyFeatureLoader).toHaveBeenCalledWith(featureName, 'aggregate')
+  expect(mockAggregate).toHaveBeenCalledWith(agentIdentifier, aggregator, aggregateArgs)
   await expect(instrument.onAggregateImported).resolves.toBe(true)
 })
 
@@ -215,4 +127,36 @@ test('no uncaught async exception is thrown when an import fails', async () => {
   expect(drain).toHaveBeenCalledWith(agentIdentifier, featureName, true)
   await expect(instrument.onAggregateImported).resolves.toBe(false)
   expect(mockOnError).not.toHaveBeenCalled()
+})
+
+test('should not import agent-session when session tracking is disabled', async () => {
+  jest.mocked(enableSessionTracking).mockReturnValue(false)
+
+  const instrument = new InstrumentBase(agentIdentifier, aggregator, featureName)
+  const aggregateArgs = { [faker.string.uuid()]: faker.lorem.sentence() }
+  instrument.abortHandler = jest.fn()
+  instrument.importAggregator(aggregateArgs)
+
+  const windowLoadCallback = jest.mocked(onWindowLoad).mock.calls[0][0]
+  await windowLoadCallback()
+
+  expect(setupAgentSession).not.toHaveBeenCalled()
+  expect(lazyFeatureLoader).toHaveBeenCalledWith(featureName, 'aggregate')
+  expect(mockAggregate).toHaveBeenCalledWith(agentIdentifier, aggregator, aggregateArgs)
+  await expect(instrument.onAggregateImported).resolves.toBe(true)
+})
+
+test('should drain and not import agg when shouldImportAgg is false for session_replay', async () => {
+  jest.mocked(enableSessionTracking).mockReturnValue(false)
+
+  const instrument = new InstrumentBase(agentIdentifier, aggregator, FEATURE_NAMES.sessionReplay)
+  const aggregateArgs = { [faker.string.uuid()]: faker.lorem.sentence() }
+  instrument.importAggregator(aggregateArgs)
+
+  const windowLoadCallback = jest.mocked(onWindowLoad).mock.calls[0][0]
+  await windowLoadCallback()
+
+  expect(drain).toHaveBeenCalledWith(agentIdentifier, FEATURE_NAMES.sessionReplay)
+  expect(lazyFeatureLoader).not.toHaveBeenCalled()
+  expect(mockAggregate).not.toHaveBeenCalled()
 })

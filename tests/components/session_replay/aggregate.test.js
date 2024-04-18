@@ -6,7 +6,6 @@ import { configure } from '../../../src/loaders/configure/configure'
 import { Recorder } from '../../../src/features/session_replay/shared/recorder'
 import { MODE, SESSION_EVENTS } from '../../../src/common/session/constants'
 import { setNREUMInitializedAgent } from '../../../src/common/window/nreum'
-import { handle } from '../../../src/common/event-emitter/handle'
 import { FEATURE_NAMES } from '../../../src/loaders/features/features'
 import { ee } from '../../../src/common/event-emitter/contextual-ee'
 import { TimeKeeper } from '../../../src/common/timing/time-keeper'
@@ -214,7 +213,7 @@ describe('Session Replay', () => {
   describe('Session Replay Error Mode Behaviors', () => {
     test('An error BEFORE rrweb import starts running in ERROR from beginning (when not preloaded)', async () => {
       setConfiguration(agentIdentifier, { session_replay: { preload: false, error_sampling_rate: 100, sampling_rate: 0 } })
-      handle('err', ['test1'], undefined, FEATURE_NAMES.sessionReplay, ee.get(agentIdentifier))
+      ee.get(agentIdentifier).emit('errorDuringReplay', ['test1'], undefined, FEATURE_NAMES.sessionReplay, ee.get(agentIdentifier))
       sr = new SessionReplayAgg(agentIdentifier, new Aggregator({}))
       sr.ee.emit('rumresp', [{ sr: 1 }])
       await wait(100)
@@ -229,7 +228,7 @@ describe('Session Replay', () => {
       await wait(1)
       expect(sr.mode).toEqual(MODE.ERROR)
       expect(sr.scheduler.started).toEqual(false)
-      sr.ee.emit('err', ['test2'])
+      sr.ee.emit('errorDuringReplay', ['test2'])
       expect(sr.mode).toEqual(MODE.FULL)
       expect(sr.scheduler.started).toEqual(true)
     })
@@ -243,7 +242,9 @@ describe('Session Replay', () => {
       setConfiguration(agentIdentifier, { ...init })
       sr = new SessionReplayAgg(agentIdentifier, new Aggregator({}))
       sr.ee.emit('rumresp', [{ sr: 1 }])
+      sr.scheduler.runHarvest = jest.fn()
       await wait(1)
+      expect(sr.scheduler.runHarvest).toHaveBeenCalledTimes(1)
       const harvestContents = sr.getHarvestContents()
       // query attrs
       expect(harvestContents.qs).toMatchObject(anyQuery)
@@ -264,6 +265,7 @@ describe('Session Replay', () => {
       setConfiguration(agentIdentifier, { ...init })
       sr = new SessionReplayAgg(agentIdentifier, new Aggregator({}))
       sr.ee.emit('rumresp', [{ sr: 1 }])
+      sr.scheduler.runHarvest = jest.fn()
       await wait(1)
       const [harvestContents] = sr.prepareHarvest()
       expect(harvestContents.qs).toMatchObject(anyQuery)
@@ -282,6 +284,7 @@ describe('Session Replay', () => {
       setConfiguration(agentIdentifier, { ...init })
       sr = new SessionReplayAgg(agentIdentifier, new Aggregator({}))
       sr.ee.emit('rumresp', [{ sr: 1 }])
+      sr.scheduler.runHarvest = jest.fn()
       await wait(1)
 
       sr.gzipper = undefined

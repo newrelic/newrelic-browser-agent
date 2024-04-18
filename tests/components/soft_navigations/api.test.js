@@ -42,7 +42,7 @@ describe('soft navigations API', () => {
     importAggregatorFn()
     await expect(softNavInstrument.onAggregateImported).resolves.toEqual(true)
     softNavAggregate = softNavInstrument.featAggregate
-    softNavAggregate.ee.emit('rumresp', [{ spa: 1 }])
+    softNavAggregate.drain()
   })
   beforeEach(() => {
     softNavAggregate.initialPageLoadInteraction = null

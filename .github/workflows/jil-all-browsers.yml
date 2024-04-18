@@ -8,6 +8,10 @@ on:
         description: 'Github branch ref to checkout and run tests on'
         required: false
         type: string
+      latest-only:
+        description: 'Run the latest version of browsers only instead of all versions'
+        default: true
+        type: boolean
     secrets:
       SAUCE_USERNAME:
         required: true
@@ -19,7 +23,7 @@ jobs:
     uses: ./.github/workflows/jil-single-browser.yml
     with:
       ref: ${{ inputs.ref || github.ref }}
-      browser-target: chrome@*
+      browser-target: ${{ inputs.latest-only == true && 'chrome@latest' || 'chrome@*' }}
       collection: unit
     secrets: inherit
 
@@ -27,7 +31,7 @@ jobs:
     uses: ./.github/workflows/jil-single-browser.yml
     with:
       ref: ${{ inputs.ref || github.ref }}
-      browser-target: chrome@*
+      browser-target: ${{ inputs.latest-only == true && 'chrome@latest' || 'chrome@*' }}
       collection: functional
     secrets: inherit
 
@@ -35,7 +39,7 @@ jobs:
     uses: ./.github/workflows/jil-single-browser.yml
     with:
       ref: ${{ inputs.ref || github.ref }}
-      browser-target: firefox@*
+      browser-target: ${{ inputs.latest-only == true && 'firefox@latest' || 'firefox@*' }}
       collection: unit
     secrets: inherit
 
@@ -43,7 +47,7 @@ jobs:
     uses: ./.github/workflows/jil-single-browser.yml
     with:
       ref: ${{ inputs.ref || github.ref }}
-      browser-target: firefox@*
+      browser-target: ${{ inputs.latest-only == true && 'firefox@latest' || 'firefox@*' }}
       collection: functional
     secrets: inherit
 
@@ -51,7 +55,7 @@ jobs:
     uses: ./.github/workflows/jil-single-browser.yml
     with:
       ref: ${{ inputs.ref || github.ref }}
-      browser-target: safari@*
+      browser-target: ${{ inputs.latest-only == true && 'safari@latest' || 'safari@*' }}
       collection: unit
     secrets: inherit
 
@@ -59,7 +63,7 @@ jobs:
     uses: ./.github/workflows/jil-single-browser.yml
     with:
       ref: ${{ inputs.ref || github.ref }}
-      browser-target: safari@*
+      browser-target: ${{ inputs.latest-only == true && 'safari@latest' || 'safari@*' }}
       collection: functional
     secrets: inherit
 
@@ -67,7 +71,7 @@ jobs:
     uses: ./.github/workflows/jil-single-browser.yml
     with:
       ref: ${{ inputs.ref || github.ref }}
-      browser-target: edge@*
+      browser-target: ${{ inputs.latest-only == true && 'edge@latest' || 'edge@*' }}
       collection: unit
     secrets: inherit
 
@@ -75,7 +79,7 @@ jobs:
     uses: ./.github/workflows/jil-single-browser.yml
     with:
       ref: ${{ inputs.ref || github.ref }}
-      browser-target: edge@*
+      browser-target: ${{ inputs.latest-only == true && 'edge@latest' || 'edge@*' }}
       collection: functional
     secrets: inherit
 
@@ -83,7 +87,7 @@ jobs:
     uses: ./.github/workflows/jil-single-browser.yml
     with:
       ref: ${{ inputs.ref || github.ref }}
-      browser-target: ios@<16
+      browser-target: ios@15.5
       collection: unit
     secrets: inherit
 
@@ -91,7 +95,7 @@ jobs:
     uses: ./.github/workflows/jil-single-browser.yml
     with:
       ref: ${{ inputs.ref || github.ref }}
-      browser-target: ios@<16
+      browser-target: ios@15.5
       collection: functional
     secrets: inherit
 
@@ -99,7 +103,7 @@ jobs:
     uses: ./.github/workflows/jil-single-browser.yml
     with:
       ref: ${{ inputs.ref || github.ref }}
-      browser-target: android@<=9
+      browser-target: android@9.0
       collection: unit
     secrets: inherit
 
@@ -107,7 +111,7 @@ jobs:
     uses: ./.github/workflows/jil-single-browser.yml
     with:
       ref: ${{ inputs.ref || github.ref }}
-      browser-target: android@<=9
+      browser-target: android@9.0
       collection: functional
     secrets: inherit
 

@@ -8,6 +8,10 @@ on:
         description: 'Github branch ref to checkout and run tests on'
         required: false
         type: string
+      latest-only:
+        description: 'Run the latest version of browsers only instead of all versions'
+        default: true
+        type: boolean
     secrets:
       SAUCE_USERNAME:
         required: true
@@ -19,32 +23,33 @@ jobs:
     uses: ./.github/workflows/wdio-single-browser.yml
     with:
       ref: ${{ inputs.ref || github.ref }}
-      browser-target: chrome@*
+      browser-target: ${{ inputs.latest-only == true && 'chrome@latest' || 'chrome@*' }}
     secrets: inherit
 
   firefox:
     uses: ./.github/workflows/wdio-single-browser.yml
     with:
       ref: ${{ inputs.ref || github.ref }}
-      browser-target: firefox@*
+      browser-target: ${{ inputs.latest-only == true && 'firefox@latest' || 'firefox@*' }}
     secrets: inherit
 
   safari:
     uses: ./.github/workflows/wdio-single-browser.yml
     with:
       ref: ${{ inputs.ref || github.ref }}
-      browser-target: safari@*
+      browser-target: ${{ inputs.latest-only == true && 'safari@latest' || 'safari@*' }}
     secrets: inherit
 
   edge:
     uses: ./.github/workflows/wdio-single-browser.yml
     with:
       ref: ${{ inputs.ref || github.ref }}
-      browser-target: edge@*
+      browser-target: ${{ inputs.latest-only == true && 'edge@latest' || 'edge@*' }}
     secrets: inherit
 
   ios-15_5:
     uses: ./.github/workflows/wdio-single-browser.yml
+    if: ${{ !inputs.latest-only }}
     with:
       ref: ${{ inputs.ref || github.ref }}
       browser-target: ios@15.5
@@ -52,6 +57,7 @@ jobs:
 
   ios-16_0:
     uses: ./.github/workflows/wdio-single-browser.yml
+    if: ${{ !inputs.latest-only }}
     with:
       ref: ${{ inputs.ref || github.ref }}
       browser-target: ios@16.0
@@ -59,6 +65,7 @@ jobs:
 
   ios-16_1:
     uses: ./.github/workflows/wdio-single-browser.yml
+    if: ${{ !inputs.latest-only }}
     with:
       ref: ${{ inputs.ref || github.ref }}
       browser-target: ios@16.1
@@ -75,7 +82,7 @@ jobs:
     uses: ./.github/workflows/wdio-single-browser.yml
     with:
       ref: ${{ inputs.ref || github.ref }}
-      browser-target: android@*
+      browser-target: ${{ inputs.latest-only == true && 'android@latest' || 'android@*' }}
     secrets: inherit
 
   ie:
@@ -90,7 +97,7 @@ jobs:
     uses: ./.github/workflows/wdio-single-browser.yml
     with:
       ref: ${{ inputs.ref || github.ref }}
-      browser-target: ios@*
+      browser-target: ${{ inputs.latest-only == true && 'ios@latest' || 'ios@*' }}
       additional-flags: --webview --timeout 300000
     secrets: inherit
 
@@ -98,6 +105,6 @@ jobs:
     uses: ./.github/workflows/wdio-single-browser.yml
     with:
       ref: ${{ inputs.ref || github.ref }}
-      browser-target: android@*
+      browser-target: ${{ inputs.latest-only == true && 'android@latest' || 'android@*' }}
       additional-flags: --webview --timeout 300000
     secrets: inherit

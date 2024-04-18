@@ -46,12 +46,14 @@ test('should wait for feature opt-in to import the aggregate', () => {
   jest.spyOn(instrument, 'importAggregator').mockImplementation(jest.fn)
 
   expect(registerDrain).not.toHaveBeenCalled()
+  expect(instrument.auto).toEqual(false)
 
   const optInCallback = jest.mocked(instrument.ee.on).mock.calls[0][1]
   optInCallback()
 
   expect(registerDrain).toHaveBeenCalledWith(agentIdentifier, featureName)
   expect(instrument.importAggregator).toHaveBeenCalledTimes(1)
+  expect(instrument.auto).toEqual(true)
 })
 
 test('should import aggregator on window load', async () => {

@@ -38,12 +38,9 @@ export class Aggregate extends AggregateBase {
     this.bufferedErrorsUnderSpa = {}
     this.currentBody = undefined
     this.errorOnPage = false
-    this.replayAborted = false
 
     // this will need to change to match whatever ee we use in the instrument
     this.ee.on('interactionDone', (interaction, wasSaved) => this.onInteractionDone(interaction, wasSaved))
-
-    this.ee.on('REPLAY_ABORTED', () => { this.replayAborted = true })
 
     register('err', (...args) => this.storeError(...args), this.featureName, this.ee)
     register('ierr', (...args) => this.storeError(...args), this.featureName, this.ee)
@@ -82,11 +79,7 @@ export class Aggregate extends AggregateBase {
     }
 
     if (body && body.err && body.err.length) {
-      if (this.replayAborted) {
-        body.err.forEach((e) => {
-          delete e.params?.hasReplay
-        })
-      }
+      this.#runCrossFeatureChecks(body.err)
       if (!this.errorOnPage) {
         payload.qs.pve = '1'
         this.errorOnPage = true
@@ -199,7 +192,7 @@ export class Aggregate extends AggregateBase {
       this.pageviewReported[bucketHash] = true
     }
 
-    if (hasReplay && !this.replayAborted) params.hasReplay = hasReplay
+    if (hasReplay) params.hasReplay = hasReplay
     params.firstOccurrenceTimestamp = this.observedAt[bucketHash]
     params.timestamp = this.observedAt[bucketHash]
 
@@ -295,5 +288,28 @@ export class Aggregate extends AggregateBase {
       this.#storeJserrorForHarvest(jsErrorEvent, wasFinished, softNavAttrs) // this should not modify the re-used softNavAttrs contents
     )
     delete this.bufferedErrorsUnderSpa[interactionId] // wipe the list of jserrors so they aren't duplicated by another call to the same id
+  }
+
+  /**
+   * Dispatches a cross-feature communication event to allow other
+   * features to provide flags and data that can be used to mutation
+   * to the payload and to allow features to know about a feature
+   * harvest happening.
+   * @param {any[]} errors Array of errors from the payload body
+   */
+  #runCrossFeatureChecks (errors) {
+    const errorHashes = errors.map(error => error.params.stackHash)
+    const crossFeatureData = {
+      errorHashes
+    }
+    this.ee.emit(`cfc.${this.featureName}`, [crossFeatureData])
+
+    let hasReplayFlag = errors.find(err => err.params.hasReplay)
+    if (hasReplayFlag && !crossFeatureData.hasReplay) {
+      // Some errors have `hasReplay` and a replay is not being recorded
+      errors.forEach(error => {
+        delete error.params.hasReplay
+      })
+    }
   }
 }

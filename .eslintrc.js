@@ -11,6 +11,7 @@ module.exports = {
     'tests/assets/scripts/**/*',
     'tests/assets/test-builds/**/*',
     'tests/assets/modular/js-errors/js/vendor/**/*',
+    'tests/dts/**/*',
 
     // Ignore JIL code since it is being replaced with WDIO
     'tools/jil/**/*',

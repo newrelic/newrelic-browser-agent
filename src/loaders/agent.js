@@ -22,7 +22,7 @@ import { globalScope } from '../common/constants/runtime'
  */
 export class Agent extends AgentBase {
   /**
-   * @param {any} options Options to initialize agent with
+   * @param {Object} options Options to initialize agent with
    * @param {string} [agentIdentifier] Optional identifier of agent
    */
   constructor (options, agentIdentifier) {

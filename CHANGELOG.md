@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.257.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.256.1...v1.257.0) (2024-04-18)
+
+
+### Features
+
+* Decorate errors with hasReplay individually ([#983](https://github.com/newrelic/newrelic-browser-agent/issues/983)) ([b6a7a3e](https://github.com/newrelic/newrelic-browser-agent/commit/b6a7a3ebcf2a69b9cbe9888208bb62330918cdf7))
+* Session Replay preload optimizations ([#982](https://github.com/newrelic/newrelic-browser-agent/issues/982)) ([fa20693](https://github.com/newrelic/newrelic-browser-agent/commit/fa20693d746bed2fa0b8ff972e4b9bee4bbe6956))
+
+
+### Bug Fixes
+
+* Agent class type declarations ([#987](https://github.com/newrelic/newrelic-browser-agent/issues/987)) ([b682c88](https://github.com/newrelic/newrelic-browser-agent/commit/b682c880bfb149b61f6c00bf821459ea55a37ae8))
+* JSEerrors harvest hasReplay decoration ([#986](https://github.com/newrelic/newrelic-browser-agent/issues/986)) ([6dd09c5](https://github.com/newrelic/newrelic-browser-agent/commit/6dd09c505af87b3a1b08330362eca46951ea22ed))
+* Session replay preload without autoStart ([#985](https://github.com/newrelic/newrelic-browser-agent/issues/985)) ([f50351a](https://github.com/newrelic/newrelic-browser-agent/commit/f50351acb08b65b03e7f4b5530a001a80fc04ece))
+* Soft navigations memory leak on harvest ([#979](https://github.com/newrelic/newrelic-browser-agent/issues/979)) ([53bb120](https://github.com/newrelic/newrelic-browser-agent/commit/53bb1209cb66fe1a52385b2863e35a93fb29afae))
+
 ## [1.256.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.256.0...v1.256.1) (2024-04-15)
 
 

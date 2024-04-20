@@ -19,7 +19,7 @@ describe('rum retry harvesting', () => {
         insResults,
         rumResults
       ] = await Promise.all([
-        browser.testHandle.expectResources(10000, true),
+        browser.testHandle.expectTrace(10000, true),
         browser.testHandle.expectInteractionEvents(10000, true),
         browser.testHandle.expectTimings(10000, true),
         browser.testHandle.expectAjaxTimeSlices(10000, true),
@@ -44,7 +44,7 @@ describe('rum retry harvesting', () => {
       //   browser.testHandle.expectAjaxEvents(10000, true),
       //   browser.testHandle.expectMetrics(10000, true),
       //   browser.testHandle.expectErrors(10000, true),
-      //   browser.testHandle.expectResources(10000, true),
+      //   browser.testHandle.expectTrace(10000, true),
       //   browser.url(await browser.testHandle.assetURL('/'))
       // ])
 

@@ -20,7 +20,7 @@ describe.withBrowsersMatching(notIE)('Adjacent Payloads', () => {
 
       const [errorPayload, blobPayload] = await Promise.all([
         browser.testHandle.expectErrors(10000),
-        browser.testHandle.expectBlob(10000),
+        browser.testHandle.expectReplay(10000),
         browser.execute(function () {
           newrelic.noticeError(new Error('test'))
         })

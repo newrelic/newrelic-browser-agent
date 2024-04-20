@@ -15,7 +15,7 @@ describe('Manual Loader', () => {
         browser.testHandle.expectErrors(10000, true),
         browser.testHandle.expectMetrics(10000, true),
         browser.testHandle.expectIns(10000, true),
-        browser.testHandle.expectResources(10000, true),
+        browser.testHandle.expectTrace(10000, true),
         browser.testHandle.expectInteractionEvents(10000, true),
         browser.execute(function () {
           newrelic.start('INVALID')
@@ -39,7 +39,7 @@ describe('Manual Loader', () => {
         browser.testHandle.expectErrors(10000, true),
         browser.testHandle.expectMetrics(10000, true),
         browser.testHandle.expectIns(10000, true),
-        browser.testHandle.expectResources(10000, true),
+        browser.testHandle.expectTrace(10000, true),
         browser.testHandle.expectInteractionEvents(10000, true),
         browser.execute(function () {
           newrelic.start(1)

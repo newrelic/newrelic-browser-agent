@@ -88,7 +88,7 @@ describe('disable harvesting', () => {
       }`
     })
 
-    const stnPromise = browser.testHandle.expectResources(10000, true)
+    const stnPromise = browser.testHandle.expectTrace(10000, true)
 
     await browser.url(await browser.testHandle.assetURL('obfuscate-pii.html'))
       .then(() => browser.waitForAgentLoad())

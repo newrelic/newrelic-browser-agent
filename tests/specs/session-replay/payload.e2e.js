@@ -24,7 +24,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
 
   it('should allow for gzip', async () => {
     const [{ request: harvestContents }] = await Promise.all([
-      browser.testHandle.expectBlob(),
+      browser.testHandle.expectReplay(),
       browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
         .then(() => browser.waitForAgentLoad())
         .then(() => browser.execute(function () {
@@ -70,7 +70,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
 
   it('should match expected payload - standard', async () => {
     const [{ request: harvestContents }] = await Promise.all([
-      browser.testHandle.expectBlob(),
+      browser.testHandle.expectReplay(),
       browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
         .then(() => browser.waitForAgentLoad())
     ])
@@ -82,8 +82,8 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
 
   it('should match expected payload - error', async () => {
     const [{ request: harvestContents1 }, { request: harvestContents2 }] = await Promise.all([
-      browser.testHandle.expectBlob(),
-      browser.testHandle.expectBlob(),
+      browser.testHandle.expectReplay(),
+      browser.testHandle.expectReplay(),
       browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
         .then(() => browser.waitForAgentLoad())
         .then(() => browser.execute(function () {

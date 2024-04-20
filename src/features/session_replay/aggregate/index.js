@@ -54,10 +54,17 @@ export class Aggregate extends AggregateBase {
     this.timeKeeper = undefined
 
     this.recorder = args?.recorder
-    this.preloaded = !!this.recorder
     this.errorNoticed = args?.errorNoticed || false
 
     handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/Enabled'], undefined, FEATURE_NAMES.metrics, this.ee)
+
+    this.ee.on(`cfc.${FEATURE_NAMES.jserrors}`, (crossFeatureData) => {
+      crossFeatureData.hasReplay = !!(this.scheduler?.started &&
+        this.recorder &&
+        this.mode === MODE.FULL &&
+        !this.blocked &&
+        this.entitled)
+    })
 
     // The SessionEntity class can emit a message indicating the session was cleared and reset (expiry, inactivity). This feature must abort and never resume if that occurs.
     this.ee.on(SESSION_EVENTS.RESET, () => {
@@ -92,6 +99,10 @@ export class Aggregate extends AggregateBase {
 
     registerHandler(SR_EVENT_EMITTER_TYPES.PAUSE, () => {
       this.forceStop(this.mode !== MODE.ERROR)
+    }, this.featureName, this.ee)
+
+    registerHandler(SR_EVENT_EMITTER_TYPES.ERROR_DURING_REPLAY, e => {
+      this.handleError(e)
     }, this.featureName, this.ee)
 
     const { error_sampling_rate, sampling_rate, autoStart, block_selector, mask_text_selector, mask_all_inputs, inline_stylesheet, inline_images, collect_fonts } = getConfigurationValue(this.agentIdentifier, 'session_replay')
@@ -138,15 +149,15 @@ export class Aggregate extends AggregateBase {
   }
 
   switchToFull () {
+    if (!this.entitled || this.blocked) return
     this.mode = MODE.FULL
     // if the error was noticed AFTER the recorder was already imported....
     if (this.recorder && this.initialized) {
-      this.recorder.stopRecording()
-      this.recorder.startRecording()
-
+      if (!this.recorder.recording) this.recorder.startRecording()
       this.scheduler.startTimer(this.harvestTimeSeconds)
-
       this.syncWithSessionManager({ sessionReplayMode: this.mode })
+    } else {
+      this.initializeRecording(false, true, true)
     }
   }
 
@@ -196,7 +207,6 @@ export class Aggregate extends AggregateBase {
 
     // If an error was noticed before the mode could be set (like in the early lifecycle of the page), immediately set to FULL mode
     if (this.mode === MODE.ERROR && this.errorNoticed) this.mode = MODE.FULL
-    if (!this.preloaded) this.ee.on('err', e => this.handleError(e))
 
     if (this.mode === MODE.FULL) {
       // If theres preloaded events and we are in full mode, just harvest immediately to clear up space and for consistency
@@ -284,7 +294,7 @@ export class Aggregate extends AggregateBase {
   }
 
   getCorrectedTimestamp (node) {
-    if (!node.timestamp) return
+    if (!node?.timestamp) return
     if (node.__newrelic) return node.timestamp
     return this.timeKeeper.correctAbsoluteTimestamp(node.timestamp)
   }

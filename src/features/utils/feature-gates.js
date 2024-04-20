@@ -6,4 +6,6 @@ import { isBrowserScope } from '../../common/constants/runtime'
  * @param {string} agentId
  * @returns {boolean}
  */
-export const canEnableSessionTracking = (agentId) => isBrowserScope && getConfigurationValue(agentId, 'privacy.cookies_enabled') === true
+export const canEnableSessionTracking = (agentId) => {
+  return isBrowserScope && getConfigurationValue(agentId, 'privacy.cookies_enabled') === true
+}

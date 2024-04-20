@@ -5,6 +5,80 @@
       "changes": [
         {
           "type": "fix",
+          "sha": "f50351acb08b65b03e7f4b5530a001a80fc04ece",
+          "message": "Session replay preload without autoStart",
+          "issues": [
+            "985"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "fa20693d746bed2fa0b8ff972e4b9bee4bbe6956",
+          "message": "Session Replay preload optimizations",
+          "issues": [
+            "982"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "b6a7a3ebcf2a69b9cbe9888208bb62330918cdf7",
+          "message": "Decorate errors with hasReplay individually",
+          "issues": [
+            "983"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "6dd09c505af87b3a1b08330362eca46951ea22ed",
+          "message": "JSEerrors harvest hasReplay decoration",
+          "issues": [
+            "986"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "b682c880bfb149b61f6c00bf821459ea55a37ae8",
+          "message": "Agent class type declarations",
+          "issues": [
+            "987"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "53bb1209cb66fe1a52385b2863e35a93fb29afae",
+          "message": "Soft navigations memory leak on harvest",
+          "issues": [
+            "979"
+          ]
+        }
+      ],
+      "version": "1.257.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "66dfdb0d-d2a2-4273-9988-3e6c32a75902",
+      "createTime": "2024-04-18T21:49:23.136Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
+          "sha": "34b317fe577487af56d48861b7f256ec8d644d69",
+          "message": "Revert \"Generate PTID in Agent\"",
+          "issues": [
+            "976"
+          ]
+        }
+      ],
+      "version": "1.256.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "2b915c72-b20b-448c-be96-0a9fbbbdedef",
+      "createTime": "2024-04-15T13:57:06.229Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
           "sha": "4fbe962d7b268968df96da59058e2e53c527c5eb",
           "message": "stabilize timestamp corrections",
           "issues": [
@@ -1294,5 +1368,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2024-04-11T22:46:43.005Z"
+  "updateTime": "2024-04-18T21:49:23.136Z"
 }

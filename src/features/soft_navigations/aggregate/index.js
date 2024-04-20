@@ -80,7 +80,7 @@ export class Aggregate extends AggregateBase {
     }
     const payload = `bel.7;${serializedIxnList.join(';')}`
 
-    if (options.retry) this.interactionsAwaitingRetry.push(...this.interactionsToHarvest)
+    if (options.retry) this.interactionsAwaitingRetry = this.interactionsToHarvest
     this.interactionsToHarvest = []
 
     return { body: { e: payload } }
@@ -89,8 +89,8 @@ export class Aggregate extends AggregateBase {
   onHarvestFinished (result) {
     if (result.sent && result.retry && this.interactionsAwaitingRetry.length > 0) {
       this.interactionsToHarvest = [...this.interactionsAwaitingRetry, ...this.interactionsToHarvest]
-      this.interactionsAwaitingRetry = []
     }
+    this.interactionsAwaitingRetry = []
   }
 
   startUIInteraction (eventName, startedAt, sourceElem) { // this is throttled by instrumentation so that it isn't excessively called

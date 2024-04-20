@@ -9,10 +9,11 @@
  * It is not production ready, and is not intended to be imported or implemented in any build of the browser agent until
  * functionality is validated and a full user experience is curated.
  */
+import { handle } from '../../../common/event-emitter/handle'
 import { DEFAULT_KEY, MODE, PREFIX } from '../../../common/session/constants'
 import { InstrumentBase } from '../../utils/instrument-base'
-import { FEATURE_NAME, TRIGGERS } from '../constants'
 import { hasReplayPrerequisite, isPreloadAllowed } from '../shared/utils'
+import { FEATURE_NAME, SR_EVENT_EMITTER_TYPES, TRIGGERS } from '../constants'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
@@ -21,6 +22,7 @@ export class Instrument extends InstrumentBase {
   constructor (agentIdentifier, aggregator, auto = true) {
     super(agentIdentifier, aggregator, FEATURE_NAME, auto)
     let session
+    this.replayRunning = false
     try {
       session = JSON.parse(localStorage.getItem(`${PREFIX}_${DEFAULT_KEY}`))
     } catch (err) { }
@@ -32,14 +34,22 @@ export class Instrument extends InstrumentBase {
     if (this.#canPreloadRecorder(session)) {
       this.#mode = session?.sessionReplayMode
       this.#preloadStartRecording()
-      /** If this is preloaded, set up a buffer, if not, later when sampling we will set up a .on for live events */
-      this.ee.on('err', (e) => {
-        this.errorNoticed = true
-        if (this.featAggregate) this.featAggregate.handleError()
-      })
     } else {
       this.importAggregator()
     }
+
+    /** If the recorder is running, we can pass error events on to the agg to help it switch to full mode later */
+    this.ee.on('err', (e) => {
+      if (this.replayRunning) {
+        this.errorNoticed = true
+        handle(SR_EVENT_EMITTER_TYPES.ERROR_DURING_REPLAY, [e], undefined, this.featureName, this.ee)
+      }
+    })
+
+    /** Emitted by the recorder when it starts capturing data, used to determine if we should pass errors on to the agg */
+    this.ee.on(SR_EVENT_EMITTER_TYPES.REPLAY_RUNNING, (isRunning) => {
+      this.replayRunning = isRunning
+    })
   }
 
   // At this point wherein session state exists already but we haven't init SessionEntity aka verify timers.

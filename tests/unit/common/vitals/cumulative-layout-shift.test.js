@@ -10,9 +10,10 @@ const clsAttribution = {
   largestShiftValue: 0.9712,
   loadState: 'dom-content-loaded'
 }
+let mockReturnVal = 0.123
 const getFreshCLSImport = async (codeToRun) => {
   jest.doMock('web-vitals/attribution', () => ({
-    onCLS: jest.fn(cb => cb({ value: 0.123, attribution: clsAttribution, id: 'beepboop' }))
+    onCLS: jest.fn(cb => cb({ value: mockReturnVal, attribution: clsAttribution, id: 'beepboop' }))
   }))
   const { cumulativeLayoutShift } = await import('../../../../src/common/vitals/cumulative-layout-shift')
   codeToRun(cumulativeLayoutShift)
@@ -59,5 +60,25 @@ describe('cls', () => {
         if (witness === 2) done()
       })
     })
+  })
+  test('null value is not reported', done => {
+    mockReturnVal = null
+    getFreshCLSImport(metric => {
+      metric.subscribe(({ value, attrs }) => {
+        console.log('should not have reported...')
+        expect(1).toEqual(2)
+      })
+    })
+    setTimeout(done, 1000) // should not get subscribe invokation
+  })
+  test('undefined value is not reported', done => {
+    mockReturnVal = undefined
+    getFreshCLSImport(metric => {
+      metric.subscribe(({ value, attrs }) => {
+        console.log('should not have reported...')
+        expect(1).toEqual(2)
+      })
+    })
+    setTimeout(done, 1000) // should not get subscribe invokation
   })
 })

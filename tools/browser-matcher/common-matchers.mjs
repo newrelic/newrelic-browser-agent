@@ -45,7 +45,6 @@ export const notFirefox = new SpecMatcher()
   .include('safari')
   .include('chrome')
   .include('edge')
-  .include('firefox')
   .include('android')
   .include('ie')
 

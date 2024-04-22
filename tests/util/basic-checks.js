@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { notIE, notIOS, notSafari, onlyIE } from "../../tools/browser-matcher/common-matchers.mjs";
+import {notFirefox, notIE, notIOS, notSafari, onlyIE} from "../../tools/browser-matcher/common-matchers.mjs";
 
 export const baseQuery = expect.objectContaining({
   a: expect.any(String),
@@ -238,7 +238,7 @@ export function checkSpa ({ query, body }) {
     category: expect.any(String),
     id: expect.any(String),
     nodeId: expect.any(String),
-    firstPaint: browserMatch([notIE, notSafari, notIOS]) ? expect.any(Number) : null,
+    firstPaint: browserMatch([notIE, notSafari, notIOS, notFirefox]) ? expect.any(Number) : null,
     firstContentfulPaint: browserMatch(notIE) ? expect.any(Number) : null,
     navTiming: expect.any(Object)
   })

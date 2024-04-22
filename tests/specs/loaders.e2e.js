@@ -1,4 +1,4 @@
-import { checkAjax, checkJsErrors, checkMetrics, checkPVT, checkPageAction, checkRum, checkSessionTrace, checkSpa } from '../util/basic-checks'
+import { checkAjaxEvents, checkJsErrors, checkMetrics, checkPVT, checkPageAction, checkRum, checkSessionTrace, checkSpa } from '../util/basic-checks'
 import { notIE } from '../../tools/browser-matcher/common-matchers.mjs'
 
 const scriptLoadTypes = [null, 'defer', 'async', 'injection']
@@ -23,7 +23,7 @@ describe.withBrowsersMatching(notIE)('Loaders', () => {
           .then(() => browser.refresh())
       ])
 
-      checkRum(rum.request, true)
+      checkRum(rum.request, { liteAgent: true })
       checkPVT(pvt.request)
       checkMetrics(metrics.request)
     })
@@ -48,7 +48,7 @@ describe.withBrowsersMatching(notIE)('Loaders', () => {
       checkRum(rum.request)
       checkPVT(pvt.request)
       checkMetrics(metrics.request)
-      checkAjax(ajax.request)
+      checkAjaxEvents(ajax.request)
       checkJsErrors(jserrors.request)
       checkPageAction(pa.request)
       checkSessionTrace(st.request)
@@ -74,7 +74,7 @@ describe.withBrowsersMatching(notIE)('Loaders', () => {
       checkRum(rum.request)
       checkPVT(pvt.request)
       checkMetrics(metrics.request)
-      checkAjax(ajax.request)
+      checkAjaxEvents(ajax.request)
       checkJsErrors(jserrors.request)
       checkPageAction(pa.request)
       checkSessionTrace(st.request)

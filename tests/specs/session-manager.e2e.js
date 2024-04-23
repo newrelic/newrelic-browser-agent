@@ -16,7 +16,8 @@ describe('newrelic session ID', () => {
     sessionReplaySentFirstChunk: expect.any(Boolean),
     sessionTraceMode: expect.any(Number),
     traceHarvestStarted: expect.any(Boolean),
-    custom: expect.any(Object)
+    custom: expect.any(Object),
+    serverTimeDiff: expect.any(Number)
   })
 
   afterEach(async () => {

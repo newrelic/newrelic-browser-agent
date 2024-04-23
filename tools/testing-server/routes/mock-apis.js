@@ -195,8 +195,7 @@ module.exports = fp(async function (fastify, testServer) {
   fastify.get('/text', {
     compress: false
   }, (request, reply) => {
-    const length = parseInt(request.query.length || 10, 10)
-    reply.send('x'.repeat(length))
+    reply.send('abc123')
   })
   fastify.post('/formdata', {
     compress: false

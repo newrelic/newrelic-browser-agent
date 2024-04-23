@@ -41,6 +41,13 @@ export const notIOS = new SpecMatcher()
   .include('android')
   .include('ie')
 
+export const notFirefox = new SpecMatcher()
+  .include('safari')
+  .include('chrome')
+  .include('edge')
+  .include('android')
+  .include('ie')
+
 export const notMobile = new SpecMatcher()
   .include('safari')
   .include('chrome')
@@ -54,6 +61,9 @@ export const notSafari = new SpecMatcher()
   .include('firefox')
   .include('ios')
   .include('android')
+  .include('ie')
+
+export const onlyIE = new SpecMatcher()
   .include('ie')
 
 export const onlyChrome = new SpecMatcher()

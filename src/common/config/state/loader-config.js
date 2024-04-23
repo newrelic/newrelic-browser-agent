@@ -20,15 +20,7 @@ export function getLoaderConfig (id) {
 
 export function setLoaderConfig (id, obj) {
   if (!id) throw new Error('All loader-config objects require an agent identifier!')
-  _cache[id] = getModeledObject({
-    ...(_cache[id] || {}),
-    ...obj
-  }, model)
-
+  _cache[id] = getModeledObject(obj, model)
   const agentInst = getNREUMInitializedAgent(id)
-  if (agentInst && !agentInst.loader_config) {
-    Object.defineProperty(agentInst, 'loader_config', {
-      get: () => getLoaderConfig(id)
-    })
-  }
+  if (agentInst) agentInst.loader_config = _cache[id]
 }

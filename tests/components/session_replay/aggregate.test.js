@@ -372,5 +372,5 @@ function primeSessionAndReplay (sess = new SessionEntity({ agentIdentifier, key:
   timeKeeper.processRumRequest({
     getResponseHeader: jest.fn(() => (new Date()).toUTCString())
   }, 450, 600)
-  setRuntime(agentIdentifier, { timeKeeper })
+  setRuntime(agentIdentifier, { timeKeeper, session: sess })
 }

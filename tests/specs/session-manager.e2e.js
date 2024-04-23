@@ -79,12 +79,12 @@ describe('newrelic session ID', () => {
       await browser.switchToWindow(newTab.handle)
       await browser.url(await browser.testHandle.assetURL('instrumented.html', config))
         .then(() => browser.waitForAgentLoad())
-        .finally(async () => {
-          await browser.closeWindow()
-          await browser.switchToWindow((await browser.getWindowHandles())[0])
-        })
 
       const { localStorage: ls2 } = await browser.getAgentSessionInfo()
+
+      await browser.closeWindow()
+      await browser.switchToWindow((await browser.getWindowHandles())[0])
+
       expect(ls2).toEqual(anySession())
       expect(ls2.value).toEqual(ls1.value)
       expect(ls2.expiresAt).toEqual(ls1.expiresAt)

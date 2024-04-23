@@ -1,7 +1,6 @@
 import SpecMatcher from './spec-matcher.mjs'
 
 export const supportsMultipleTabs = new SpecMatcher()
-  .include('safari')
   .include('chrome')
   .include('edge')
   .include('firefox')

@@ -1,5 +1,5 @@
 import { config, testExpectedReplay } from './helpers'
-import { notIE, notSafari, supportsMultipleTabs } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { notIE, supportsMultipleTabs } from '../../../tools/browser-matcher/common-matchers.mjs'
 
 describe.withBrowsersMatching(notIE)('Session Replay Preload', () => {
   beforeEach(async () => {
@@ -10,7 +10,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Preload', () => {
     await browser.destroyAgentSession()
   })
 
-  it.withBrowsersMatching([supportsMultipleTabs, notSafari])('should preload the recorder when a session recording is already in progress', async () => {
+  it.withBrowsersMatching(supportsMultipleTabs)('should preload the recorder when a session recording is already in progress', async () => {
     const [initialSessionReplayHarvest, wasPreloaded1] = await Promise.all([
       browser.testHandle.expectBlob(),
       browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { preload: false } })))
@@ -77,7 +77,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Preload', () => {
     expect(wasPreloaded).toEqual(true)
   })
 
-  it.withBrowsersMatching([supportsMultipleTabs, notSafari])('should start harvesting when start API called before the recorder import completes', async () => {
+  it.withBrowsersMatching(supportsMultipleTabs)('should start harvesting when start API called before the recorder import completes', async () => {
     const [, wasPreloaded] = await Promise.all([
       browser.testHandle.expectBlob(10000),
       browser.url(await browser.testHandle.assetURL('session_replay/64kb-dom-manual-start.html', config({ session_replay: { preload: true, autoStart: false } })))

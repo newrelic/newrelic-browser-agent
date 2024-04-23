@@ -7,7 +7,6 @@ jest.mock('../../../src/common/config/config', () => ({
   getConfigurationValue: jest.fn().mockReturnValue(undefined),
   isConfigured: jest.fn().mockReturnValue(true),
   getRuntime: jest.fn().mockReturnValue({
-    xhrWrappable: true,
     offset: Date.now()
   })
 }))

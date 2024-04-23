@@ -34,6 +34,7 @@ export class Aggregate extends AggregateBase {
 
     this.stackReported = {}
     this.observedAt = {}
+    this.harvestObservedAt = {}
     this.pageviewReported = {}
     this.bufferedErrorsUnderSpa = {}
     this.currentBody = undefined
@@ -85,6 +86,7 @@ export class Aggregate extends AggregateBase {
         this.errorOnPage = true
       }
     }
+    this.harvestObservedAt = {}
     return payload
   }
 
@@ -194,7 +196,11 @@ export class Aggregate extends AggregateBase {
     }
 
     params.firstOccurrenceTimestamp = this.observedAt[bucketHash]
-    params.timestamp = this.observedAt[bucketHash]
+
+    if (!this.harvestObservedAt[bucketHash]) {
+      this.harvestObservedAt[bucketHash] = agentRuntime.timeKeeper.convertRelativeTimestamp(time)
+    }
+    params.timestamp = this.harvestObservedAt[bucketHash]
 
     var type = internal ? 'ierr' : 'err'
     var newMetrics = { time }

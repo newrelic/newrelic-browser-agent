@@ -11,7 +11,7 @@ jest.mock('../../../../src/loaders/features/features', () => ({
   }
 }))
 
-it('getEnabledFeatures works', () => {
+test('getEnabledFeatures works', () => {
   setConfiguration('abc', {
     jserrors: { enabled: false },
     metrics: { enabled: true },

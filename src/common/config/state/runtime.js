@@ -39,12 +39,19 @@ export function getRuntime (id) {
 
 export function setRuntime (id, obj) {
   if (!id) throw new Error('All runtime objects require an agent identifier!')
-  _cache[id] = getModeledObject(obj, model)
+  _cache[id] = getModeledObject({
+    ...(_cache[id] || {}),
+    ...obj,
+    ...readonly
+  }, {
+    ...model,
+    ...readonly
+  })
+
   const agentInst = getNREUMInitializedAgent(id)
-  if (agentInst) {
-    agentInst.runtime = {
-      ..._cache[id],
-      ...readonly
-    }
+  if (agentInst && !agentInst.runtime) {
+    Object.defineProperty(agentInst, 'runtime', {
+      get: () => getRuntime(id)
+    })
   }
 }

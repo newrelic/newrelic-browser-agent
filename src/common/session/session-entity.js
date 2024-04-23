@@ -135,6 +135,7 @@ export class SessionEntity {
     else this.sync(initialRead)
 
     this.initialized = true
+    this.ee.emit(SESSION_EVENTS.STARTED, [this.isNew])
   }
 
   // This is the actual key appended to the storage API

@@ -46,7 +46,6 @@ const model = () => {
       allowed_origins: undefined
     },
     session: {
-      domain: undefined, // used by first party cookies to set the top-level domain
       expiresMs: DEFAULT_EXPIRES_MS,
       inactiveMs: DEFAULT_INACTIVE_MS
     },
@@ -117,9 +116,17 @@ export function getConfiguration (id) {
 
 export function setConfiguration (id, obj) {
   if (!id) throw new Error(missingAgentIdError)
-  _cache[id] = getModeledObject(obj, model())
+  _cache[id] = getModeledObject({
+    ...(_cache[id] || {}),
+    ...obj
+  }, model())
+
   const agentInst = getNREUMInitializedAgent(id)
-  if (agentInst) agentInst.init = _cache[id]
+  if (agentInst && !agentInst.init) {
+    Object.defineProperty(agentInst, 'init', {
+      get: () => getConfiguration(id)
+    })
+  }
 }
 
 export function getConfigurationValue (id, path) {

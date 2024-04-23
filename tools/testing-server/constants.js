@@ -49,7 +49,7 @@ module.exports.defaultInitBlock = {
   privacy: { cookies_enabled: false },
   ajax: { deny_list: [], block_internal: false, enabled: true, harvestTimeSeconds: 5, autoStart: true },
   distributed_tracing: {},
-  session: { domain: undefined, expiresMs: 14400000, inactiveMs: 1800000 },
+  session: { expiresMs: 14400000, inactiveMs: 1800000 },
   ssl: false,
   obfuscate: undefined,
   jserrors: { enabled: true, harvestTimeSeconds: 5, autoStart: true },

@@ -44,7 +44,15 @@ export function getInfo (id) {
 
 export function setInfo (id, obj) {
   if (!id) throw new Error('All info objects require an agent identifier!')
-  _cache[id] = getModeledObject(obj, model)
+  _cache[id] = getModeledObject({
+    ...(_cache[id] || {}),
+    ...obj
+  }, model)
+
   const agentInst = getNREUMInitializedAgent(id)
-  if (agentInst) agentInst.info = _cache[id]
+  if (agentInst && !agentInst.info) {
+    Object.defineProperty(agentInst, 'info', {
+      get: () => getInfo(id)
+    })
+  }
 }

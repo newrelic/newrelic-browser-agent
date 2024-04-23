@@ -38,7 +38,7 @@ describe('enableSessionTracking', () => {
   })
 })
 
-describe.only('isPreloadAllowed', () => {
+describe('isPreloadAllowed', () => {
   beforeEach(() => {
     jest.replaceProperty(runtimeConstantsModule, 'isBrowserScope', true)
   })
@@ -67,7 +67,7 @@ describe.only('isPreloadAllowed', () => {
     expect(configModule.getConfigurationValue).not.toHaveBeenCalledWith(agentIdentifier, 'session_trace.enabled')
   })
 
-  test.only('should return false when session tracking is disabled', async () => {
+  test('should return false when session tracking is disabled', async () => {
     jest.mocked(configModule.getConfigurationValue).mockImplementation((_, path) => {
       return path !== 'privacy.cookies_enabled'
     })
@@ -102,7 +102,7 @@ describe.only('isPreloadAllowed', () => {
   })
 })
 
-describe.only('canImportReplayAgg', () => {
+describe('canImportReplayAgg', () => {
   beforeEach(() => {
     jest.mocked(configModule.getConfigurationValue).mockReturnValue(true)
     jest.mocked(configModule.getConfigurationValue).mockReturnValue(true)
@@ -151,7 +151,7 @@ describe.only('canImportReplayAgg', () => {
   })
 })
 
-describe.only('buildNRMetaNode', () => {
+describe('buildNRMetaNode', () => {
   let timekeeper
 
   beforeEach(() => {

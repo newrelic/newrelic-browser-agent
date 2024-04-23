@@ -19,3 +19,18 @@ test('set/getRuntime works correctly', () => {
   expect(cachedObj.session).toEqual(1)
   expect(cachedObj.maxBytes).toEqual(30000) // this should mirror default in runtime.js
 })
+
+test('set/getRuntime should respect readonly properties', () => {
+  setRuntime('123', {})
+  let cachedObj = getRuntime('123')
+  let cachedRuntime = {
+    ...getRuntime('123')
+  }
+
+  expect(cachedObj.buildEnv).toEqual('NPM')
+  expect(cachedObj.distMethod).toEqual('NPM')
+  expect(cachedObj.version).toEqual(expect.any(String))
+  expect(cachedObj.originTime).toEqual(expect.any(Number))
+
+  expect(getRuntime('123')).toEqual(cachedRuntime)
+})

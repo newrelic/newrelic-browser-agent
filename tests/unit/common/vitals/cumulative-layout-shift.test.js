@@ -81,4 +81,12 @@ describe('cls', () => {
     })
     setTimeout(done, 1000) // should not get subscribe invokation
   })
+  test('zero value IS reported', done => {
+   mockReturnVal = 0
+    getFreshCLSImport(metric => {
+      metric.subscribe(({ value, attrs }) => {
+        expect(value).toEqual(0)
+        done()
+      })
+    })
 })

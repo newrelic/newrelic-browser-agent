@@ -21,16 +21,18 @@ test('set/getRuntime works correctly', () => {
 })
 
 test('set/getRuntime should respect readonly properties', () => {
-  setRuntime('123', {})
+  setRuntime('123', {
+    buildEnv: 'foo',
+    distMethod: 'bar',
+    version: 'biz',
+    originTime: 'baz'
+  })
   let cachedObj = getRuntime('123')
-  let cachedRuntime = {
-    ...getRuntime('123')
-  }
 
   expect(cachedObj.buildEnv).toEqual('NPM')
   expect(cachedObj.distMethod).toEqual('NPM')
   expect(cachedObj.version).toEqual(expect.any(String))
+  expect(cachedObj.version).not.toEqual('biz')
   expect(cachedObj.originTime).toEqual(expect.any(Number))
-
-  expect(getRuntime('123')).toEqual(cachedRuntime)
+  expect(cachedObj.originTime).not.toEqual('baz')
 })

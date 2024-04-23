@@ -59,6 +59,7 @@ describe('error payloads', () => {
     const { request: { body: { err: err2 } } } = await browser.testHandle.expectErrors()
 
     expect(err2[0].params.firstOccurrenceTimestamp).toEqual(err1[0].params.firstOccurrenceTimestamp)
+    expect(err2[0].params.timestamp).not.toEqual(err1[0].params.timestamp)
   })
 
   it('subsequent errors - should set a timestamp, tied to the FIRST error seen - thrown errors', async () => {
@@ -78,5 +79,6 @@ describe('error payloads', () => {
     const { request: { body: { err: err2 } } } = await browser.testHandle.expectErrors()
 
     expect(err2[0].params.firstOccurrenceTimestamp).toEqual(err1[0].params.firstOccurrenceTimestamp)
+    expect(err2[0].params.timestamp).not.toEqual(err1[0].params.timestamp)
   })
 })

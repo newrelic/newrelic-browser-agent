@@ -19,7 +19,7 @@ jest.mock('../../../src/common/config/config', () => ({
     ST: setTimeout,
     CT: clearTimeout
   },
-  getRuntime: jest.fn().mockReturnValue({ xhrWrappable: true }),
+  getRuntime: jest.fn().mockReturnValue({}),
   isConfigured: jest.fn().mockReturnValue(true),
   getInfo: jest.fn()
 }))

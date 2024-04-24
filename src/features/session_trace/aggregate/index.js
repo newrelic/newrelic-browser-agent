@@ -38,10 +38,6 @@ export class Aggregate extends AggregateBase {
   constructor (agentIdentifier, aggregator, argsObj) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
     this.agentRuntime = getRuntime(agentIdentifier)
-
-    // Very unlikely, but in case the existing XMLHttpRequest.prototype object on the page couldn't be wrapped.
-    if (!this.agentRuntime.xhrWrappable) return
-
     this.resourceObserver = argsObj?.resourceObserver // undefined if observer couldn't be created
     this.ptid = ''
     this.trace = {}

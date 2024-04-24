@@ -14,7 +14,7 @@ export const RRWEB_EVENT_TYPES = {
   Custom: 5
 }
 
-export function testExpectedReplay ({ data, session, hasMeta, hasSnapshot, hasError, isFirstChunk, contentEncoding, decompressedBytes, appId, entityGuid }) {
+export function testExpectedReplay ({ data, session, hasMeta, hasSnapshot, hasError, isFirstChunk, contentEncoding, decompressedBytes, appId, entityGuid, harvestId }) {
   expect(data.query).toMatchObject({
     browser_monitoring_key: expect.any(String),
     type: 'SessionReplay',
@@ -29,6 +29,7 @@ export function testExpectedReplay ({ data, session, hasMeta, hasSnapshot, hasEr
   expect(decodedObj).toMatchObject({
     ...(contentEncoding && { content_encoding: 'gzip' }),
     ...(entityGuid && { entityGuid }),
+    harvestId: harvestId || expect.any(String),
     'replay.firstTimestamp': expect.any(Number),
     'replay.lastTimestamp': expect.any(Number),
     session: session || expect.any(String),

@@ -24,6 +24,7 @@ const model = {
   sessionReplaySentFirstChunk: false,
   sessionTraceMode: MODE.OFF,
   traceHarvestStarted: false,
+  serverTimeDiff: null, // set by TimeKeeper; "undefined" value will not be stringified and stored but "null" will
   custom: {}
 }
 

@@ -14,7 +14,7 @@ export class LocalMemory {
 
   set (key, value) {
     try {
-      if (value === undefined || value === null) return this.remove(key)
+      if (value === undefined) return this.remove(key)
       this.state[key] = value
     } catch (err) {
       // Error is ignored
@@ -38,5 +38,6 @@ export const model = {
   sessionReplaySentFirstChunk: false,
   sessionTraceMode: 0,
   traceHarvestStarted: false,
+  serverTimeDiff: null,
   custom: {}
 }

@@ -56,6 +56,7 @@ const model = {
   sessionReplaySentFirstChunk: false,
   sessionTraceMode: 0,
   traceHarvestStarted: false,
+  serverTimeDiff: null,
   custom: {}
 }
 let SessionReplayAgg

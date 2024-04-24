@@ -1,5 +1,5 @@
 import { config, decodeAttributes, getSR, testExpectedReplay } from './helpers'
-import { supportsMultipleTabs, notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { supportsMultipleTabs, notIE, notSafari } from '../../../tools/browser-matcher/common-matchers.mjs'
 
 describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
   beforeEach(async () => {
@@ -72,7 +72,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
   })
 
   // // As of 06/26/2023 test fails in Safari, though tested behavior works in a live browser (revisit in NR-138940).
-  it.withBrowsersMatching(supportsMultipleTabs)('should record across new-tab page navigation', async () => {
+  it.withBrowsersMatching([supportsMultipleTabs, notSafari])('should record across new-tab page navigation', async () => {
     const [{ request: page1Contents }] = await Promise.all([
       browser.testHandle.expectBlob(10000),
       browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
@@ -125,7 +125,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
   })
 
   // As of 06/26/2023 test fails in Safari, though tested behavior works in a live browser (revisit in NR-138940).
-  it.withBrowsersMatching(supportsMultipleTabs)('should kill active tab if killed in backgrounded tab', async () => {
+  it.withBrowsersMatching([supportsMultipleTabs, notSafari])('should kill active tab if killed in backgrounded tab', async () => {
     const [{ request: page1Contents }] = await Promise.all([
       browser.testHandle.expectBlob(10000),
       browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))

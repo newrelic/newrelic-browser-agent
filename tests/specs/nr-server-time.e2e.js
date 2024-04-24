@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker'
-import { notIE, supportsFetch, supportsMultipleTabs } from '../../tools/browser-matcher/common-matchers.mjs'
+import { notIE, supportsFetch, supportsMultipleTabs, notSafari } from '../../tools/browser-matcher/common-matchers.mjs'
 import { config, decodeAttributes } from './session-replay/helpers'
 
 let serverTime
@@ -306,7 +306,7 @@ describe('NR Server Time', () => {
       expect(subsequentSession.localStorage.serverTimeDiff).toEqual(initialSession.localStorage.serverTimeDiff)
     })
 
-    it.withBrowsersMatching(supportsMultipleTabs)('should store the server time diff from a cross-tab session update', async () => {
+    it.withBrowsersMatching([supportsMultipleTabs, notSafari])('should store the server time diff from a cross-tab session update', async () => {
       await browser.url(await browser.testHandle.assetURL('instrumented.html', {
         init: {
           privacy: { cookies_enabled: true }

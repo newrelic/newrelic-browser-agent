@@ -165,10 +165,9 @@ function simulateClick (el, ev) {
   el.dispatchEvent(evt)
 }
 function simulateEvent (elType, evtType) {
-  let el = document.createElement(elType)
+  const el = document.createElement(elType)
   document.body.appendChild(el)
-  let evt = document.createEvent('Events')
-  evt.initEvent(evtType, true, false)
+  const evt = new Event(evtType, { bubbles: true })
   el.dispatchEvent(evt)
 }
 

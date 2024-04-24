@@ -217,3 +217,218 @@ test('calling addEventListener on window should call through to addEventListener
   target.addEventListener = addE // restore
   function clickHandler () {}
 })
+
+describe(' ', () => {
+  let evtEE, listenerCount
+  beforeAll(async () => {
+    const { wrapEvents } = await import('../../../src/common/wrap/wrap-events')
+    evtEE = wrapEvents()
+    evtEE.on('fn-start', () => listenerCount++)
+  })
+  beforeEach(() => {
+    listenerCount = 0
+  })
+
+  describe('addEventListener', () => {
+    test('should target only the given event', () => {
+      const e = createAndAddDomElement()
+      let handlerCallCount = 0
+
+      e.addEventListener('click', () => handlerCallCount++, false)
+
+      triggerEvent(e, 'click')
+      triggerEvent(e, 'mouseup')
+
+      expect(handlerCallCount).toEqual(1)
+      expect(listenerCount).toEqual(1)
+    })
+
+    test('should not blow up with a null func', () => {
+      const e = createAndAddDomElement()
+
+      try {
+        e.addEventListener('click', null, false)
+      } catch (e) {
+        throw new Error('Caught exception')
+      }
+    })
+
+    test('allows multiple subscribers to same event on same element', () => {
+      let handler1CallCount = 0
+      let handler2CallCount = 0
+      const e = createAndAddDomElement()
+
+      e.addEventListener('click', () => handler1CallCount++, false)
+      e.addEventListener('click', () => handler2CallCount++, false)
+
+      triggerEvent(e, 'click')
+      triggerEvent(e, 'click')
+
+      expect(handler1CallCount).toEqual(2)
+      expect(handler2CallCount).toEqual(2)
+    })
+
+    test('allows object with handleEvent property', () => {
+      const e = createAndAddDomElement()
+      const clicker = new Clicker(e)
+      e.addEventListener('click', clicker, false)
+
+      triggerEvent(e, 'click')
+      expect(clicker.handlerCallCount).toEqual(1)
+      expect(listenerCount).toEqual(1)
+
+      e.removeEventListener('click', clicker, false)
+      triggerEvent(e, 'click')
+      expect(clicker.handlerCallCount).toEqual(1) // removing handler should work
+      expect(listenerCount).toEqual(1) // should not have been called again
+    })
+
+    test('allows for multiple event listeners with an object', () => {
+      const e = createAndAddDomElement()
+      const clicker = new Clicker()
+      e.addEventListener('click', clicker, false)
+      e.addEventListener('keyup', clicker, false)
+
+      triggerEvent(e, 'click')
+      triggerEvent(e, 'keyup')
+      expect(listenerCount).toEqual(2)
+      expect(clicker.handlerCallCount).toEqual(2)
+
+      e.removeEventListener('click', clicker, false)
+
+      triggerEvent(e, 'click')
+      triggerEvent(e, 'keyup')
+      expect(listenerCount).toEqual(3)
+      expect(clicker.handlerCallCount).toEqual(3)
+
+      e.removeEventListener('keyup', clicker, false)
+
+      triggerEvent(e, 'click')
+      triggerEvent(e, 'keyup')
+      expect(listenerCount).toEqual(3)
+      expect(clicker.handlerCallCount).toEqual(3)
+    })
+
+    test('allows object with handleEvent property that is mutated', () => {
+      const e = createAndAddDomElement()
+      const clicker = new Clicker(e)
+      e.addEventListener('click', clicker, false)
+
+      triggerEvent(e, 'click')
+      expect(clicker.handlerCallCount).toEqual(1)
+      expect(listenerCount).toEqual(1)
+
+      clicker.handleEvent = function (event) {
+        this.handlerCallCount += 2
+      }
+
+      triggerEvent(e, 'click')
+      expect(clicker.handlerCallCount).toEqual(3)
+      expect(listenerCount).toEqual(2)
+    })
+
+    test('allows object with handleEvent property that is originally null', () => {
+      const e = createAndAddDomElement()
+      const clicker = new ClickerNoHandle(e)
+      e.addEventListener('click', clicker, false)
+
+      triggerEvent(e, 'click')
+      expect(clicker.handlerCallCount).toEqual(0)
+
+      clicker.handleEvent = function (event) {
+        this.handlerCallCount += 2
+      }
+
+      triggerEvent(e, 'click')
+      expect(clicker.handlerCallCount).toEqual(2)
+    })
+  })
+  describe('removeEventListener', () => {
+    test('works with handleEvent property', () => {
+      const e = createAndAddDomElement()
+      const clicker = new ClickerNoHandle(e)
+      e.addEventListener('click', clicker, false)
+
+      triggerEvent(e, 'click')
+      expect(clicker.handlerCallCount).toEqual(0)
+
+      clicker.handleEvent = function (event) {
+        this.handlerCallCount += 2
+      }
+
+      triggerEvent(e, 'click')
+      expect(clicker.handlerCallCount).toEqual(2)
+      e.removeEventListener('click', clicker, false)
+      triggerEvent(e, 'click')
+      expect(clicker.handlerCallCount).toEqual(2)
+    })
+
+    test('works when same callback is passed for different events', () => {
+      let handlerCallCount = 0
+      const handler = () => handlerCallCount++
+      const e = createAndAddDomElement()
+
+      e.addEventListener('click', handler, false)
+      e.addEventListener('mouseup', handler, false)
+
+      triggerEvent(e, 'click')
+      triggerEvent(e, 'mouseup')
+      expect(handlerCallCount).toEqual(2) // should have seen handler calls for both events
+
+      e.removeEventListener('click', handler, false)
+      triggerEvent(e, 'click')
+      triggerEvent(e, 'mouseup')
+      expect(handlerCallCount).toEqual(3) // should have seen handler call for mouseup only
+
+      e.removeEventListener('mouseup', handler, false)
+      triggerEvent(e, 'click')
+      triggerEvent(e, 'mouseup')
+      expect(handlerCallCount).toEqual(3) // should have seen handler calls for neither event
+    })
+
+    test('works when same callback is passed for different elements', () => {
+      let handlerCallCount = 0
+      const handler = () => handlerCallCount++
+      const e1 = createAndAddDomElement()
+      const e2 = createAndAddDomElement()
+      const sameEvt = 'click'
+
+      e1.addEventListener(sameEvt, handler, false)
+      e2.addEventListener(sameEvt, handler, false)
+
+      triggerEvent(e1, sameEvt)
+      triggerEvent(e2, sameEvt)
+      expect(handlerCallCount).toEqual(2) // should have seen handler calls for both elements
+
+      e1.removeEventListener(sameEvt, handler, false)
+      triggerEvent(e1, sameEvt)
+      triggerEvent(e2, sameEvt)
+      expect(handlerCallCount).toEqual(3) // should have seen handler call for e2 only
+
+      e2.removeEventListener(sameEvt, handler, false)
+      triggerEvent(e1, sameEvt)
+      triggerEvent(e2, sameEvt)
+      expect(handlerCallCount).toEqual(3) // should have seen handler calls for neither element
+    })
+  })
+
+  class ClickerNoHandle {
+    constructor (el) {
+      this.handlerCallCount = 0
+    }
+  }
+  class Clicker extends ClickerNoHandle {
+    handleEvent (event) {
+      this.handlerCallCount++
+    }
+  }
+  function triggerEvent (el, eventName) {
+    const evt = new Event(eventName, { bubbles: true })
+    el.dispatchEvent(evt)
+  }
+  function createAndAddDomElement (tagName = 'div') {
+    var el = document.createElement(tagName)
+    document.body.appendChild(el)
+    return el
+  }
+})

@@ -9,7 +9,7 @@ export class VitalMetric {
   }
 
   update ({ value, attrs = {} }) {
-    if (value < 0) return
+    if (value === undefined || value === null || value < 0) return
     const state = {
       value: this.roundingMethod(value),
       name: this.name,

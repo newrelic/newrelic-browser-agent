@@ -25,10 +25,7 @@ const model = {
   session: undefined,
   denyList: undefined,
   harvestCount: 0,
-  timeKeeper: undefined,
-  get harvestId () {
-    return [this.session?.state.value, this.ptid, this.harvestCount].filter(x => x).join('_')
-  }
+  timeKeeper: undefined
 }
 
 const _cache = {}

@@ -4,6 +4,7 @@ export const DEFAULT_EXPIRES_MS = 14400000
 export const DEFAULT_INACTIVE_MS = 1800000
 
 export const SESSION_EVENTS = {
+  STARTED: 'session-started',
   PAUSE: 'session-pause',
   RESET: 'session-reset',
   RESUME: 'session-resume',

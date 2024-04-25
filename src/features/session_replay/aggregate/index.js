@@ -341,6 +341,7 @@ export class Aggregate extends AggregateBase {
     const lastTimestamp = lastEventTimestamp || this.timeKeeper.convertRelativeTimestamp(relativeNow)
 
     const agentMetadata = agentRuntime.appMetadata?.agents?.[0] || {}
+
     return {
       qs: {
         browser_monitoring_key: info.licenseKey,
@@ -353,7 +354,7 @@ export class Aggregate extends AggregateBase {
           // if not, data could be lost to truncation at time of sending, potentially breaking parsing / API behavior in NR1
           ...(!!this.gzipper && !!this.u8 && { content_encoding: 'gzip' }),
           ...(agentMetadata.entityGuid && { entityGuid: agentMetadata.entityGuid }),
-          harvestId: agentRuntime.harvestId,
+          harvestId: [agentRuntime.session?.state.value, agentRuntime.ptid, agentRuntime.harvestCount].filter(x => x).join('_'),
           'replay.firstTimestamp': firstTimestamp,
           'replay.lastTimestamp': lastTimestamp,
           'replay.nodes': events.length,

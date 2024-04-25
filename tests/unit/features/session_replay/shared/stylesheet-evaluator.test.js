@@ -28,14 +28,14 @@ describe('stylesheet-evaluator', (done) => {
     }
     global.CSSStyleSheet = CSSStyleSheetMock
   })
-  it('should evaluate stylesheets with cssRules as false', async () => {
+  test('should evaluate stylesheets with cssRules as false', async () => {
     prepStylesheet({
       get () { return 'success' }
     })
     expect(stylesheetEvaluator.evaluate()).toEqual(0)
   })
 
-  it('should evaluate stylesheets without cssRules as true', async () => {
+  test('should evaluate stylesheets without cssRules as true', async () => {
     prepStylesheet({
       get () {
         throw new Error()
@@ -44,7 +44,7 @@ describe('stylesheet-evaluator', (done) => {
     expect(stylesheetEvaluator.evaluate()).toEqual(1)
   })
 
-  it('should evaluate stylesheets once', async () => {
+  test('should evaluate stylesheets once', async () => {
     prepStylesheet({
       get () {
         throw new Error()
@@ -54,7 +54,7 @@ describe('stylesheet-evaluator', (done) => {
     expect(stylesheetEvaluator.evaluate()).toEqual(0)
   })
 
-  it('should execute fix single', async () => {
+  test('should execute fix single', async () => {
     prepStylesheet({
       get () { return 'success' }
     })
@@ -63,7 +63,7 @@ describe('stylesheet-evaluator', (done) => {
     expect(document.styleSheets[0].cssRules).toEqual(stylesheet.cssRules)
   })
 
-  it('should resolve as false if not browserScope', async () => {
+  test('should resolve as false if not browserScope', async () => {
     jest.resetModules()
     jest.doMock('../../../../../src/common/constants/runtime', () => ({
       globalScope: {},

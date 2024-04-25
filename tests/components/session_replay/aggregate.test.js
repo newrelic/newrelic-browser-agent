@@ -1,7 +1,7 @@
 import { AVG_COMPRESSION, IDEAL_PAYLOAD_SIZE } from '../../../src/features/session_replay/constants'
 import { Aggregator } from '../../../src/common/aggregate/aggregator'
 import { SessionEntity } from '../../../src/common/session/session-entity'
-import { setConfiguration } from '../../../src/common/config/config'
+import { setConfiguration, setRuntime } from '../../../src/common/config/config'
 import { configure } from '../../../src/loaders/configure/configure'
 import { Recorder } from '../../../src/features/session_replay/shared/recorder'
 import { MODE, SESSION_EVENTS } from '../../../src/common/session/constants'
@@ -56,6 +56,7 @@ const model = {
   sessionReplaySentFirstChunk: false,
   sessionTraceMode: 0,
   traceHarvestStarted: false,
+  serverTimeDiff: null,
   custom: {}
 }
 let SessionReplayAgg
@@ -78,6 +79,7 @@ describe('Session Replay', () => {
     SessionReplayAgg = Aggregate
     primeSessionAndReplay()
   })
+
   afterEach(async () => {
     sr.abort('jest test manually aborted')
     sr.ee.abort()
@@ -362,12 +364,14 @@ function wait (ms = 0) {
 }
 
 function primeSessionAndReplay (sess = new SessionEntity({ agentIdentifier, key: 'SESSION', storage: new LocalMemory() })) {
-  const timeKeeper = new TimeKeeper(Date.now())
-  timeKeeper.processRumRequest({
-    getResponseHeader: jest.fn(() => (new Date()).toUTCString())
-  }, 450, 600)
   const agent = { agentIdentifier }
   setNREUMInitializedAgent(agentIdentifier, agent)
   session = sess
-  configure(agent, { info, runtime: { session, isolatedBacklog: false, timeKeeper }, init: {} }, 'test', true)
+  configure(agent, { info, runtime: { session, isolatedBacklog: false }, init: {} }, 'test', true)
+
+  const timeKeeper = new TimeKeeper(agentIdentifier, ee.get(agentIdentifier))
+  timeKeeper.processRumRequest({
+    getResponseHeader: jest.fn(() => (new Date()).toUTCString())
+  }, 450, 600)
+  setRuntime(agentIdentifier, { timeKeeper, session: sess })
 }

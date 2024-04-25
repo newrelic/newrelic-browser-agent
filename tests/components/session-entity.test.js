@@ -219,6 +219,7 @@ describe('isNew', () => {
     expect(sessionInstance.isNew).toEqual(true)
   })
 })
+
 describe('read()', () => {
   test('"new" sessions get data from read()', () => {
     const newSession = new SessionEntity({ agentIdentifier, key, storage, expiresMs: 10 })

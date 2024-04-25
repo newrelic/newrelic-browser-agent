@@ -46,7 +46,6 @@ const model = () => {
       allowed_origins: undefined
     },
     session: {
-      domain: undefined, // used by first party cookies to set the top-level domain
       expiresMs: DEFAULT_EXPIRES_MS,
       inactiveMs: DEFAULT_INACTIVE_MS
     },

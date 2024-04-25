@@ -1,3 +1,5 @@
+jest.mock('../../../../../src/common/util/console.js')
+
 let getConfiguration, setConfiguration, getConfigurationValue
 beforeEach(async () => {
   jest.resetModules()
@@ -75,5 +77,21 @@ describe('property getters/setters used for validation', () => {
     })
 
     expect(getConfigurationValue('34567', 'session_replay.mask_text_selector')).toEqual('[data-nr-mask]')
+  })
+
+  test('props without a setter does not issue on attempted assignment', () => {
+    setConfiguration('34567', {
+      session_replay: {
+        block_class: undefined,
+        ignore_class: null,
+        mask_text_class: '',
+        mask_input_options: { select: true }
+      }
+    })
+
+    expect(getConfigurationValue('34567', 'session_replay.block_class')).toEqual('nr-block')
+    expect(getConfigurationValue('34567', 'session_replay.ignore_class')).toEqual('nr-ignore')
+    expect(getConfigurationValue('34567', 'session_replay.mask_text_class')).toEqual('nr-mask')
+    expect(getConfigurationValue('34567', 'session_replay.mask_input_options')).toMatchObject({ password: true, select: true })
   })
 })

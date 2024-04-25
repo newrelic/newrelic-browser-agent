@@ -6,14 +6,13 @@ jest.mock('../../../src/common/config/config', () => ({
   __esModule: true,
   getConfigurationValue: jest.fn().mockReturnValue(undefined),
   isConfigured: jest.fn().mockReturnValue(true),
-  getRuntime: jest.fn().mockReturnValue({
-    offset: Date.now()
-  })
+  getRuntime: jest.fn().mockReturnValue({})
 }))
 jest.mock('../../../src/common/constants/runtime', () => ({
   __esModule: true,
   isBrowserScope: true,
-  globalScope: global
+  globalScope: global,
+  originTime: Date.now()
 }))
 jest.mock('../../../src/common/window/load', () => ({
   __esModule: true,

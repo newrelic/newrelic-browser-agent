@@ -74,4 +74,9 @@ export const isIE = Boolean(isBrowserScope && window.document.documentMode) // d
 
 export const supportsSendBeacon = !!globalScope.navigator?.sendBeacon
 
-export const offset = Math.floor(Date.now() - performance.now())
+/**
+ * Represents the absolute timestamp in milliseconds that the page was loaded
+ * according to the browser's local clock.
+ * @type {number}
+ */
+export const originTime = Math.floor(Date.now() - performance.now())

@@ -88,7 +88,7 @@ describe('ttfb', () => {
           }
         }
       },
-      offset: 1,
+      originTime: 1,
       isBrowserScope: true
     }))
     global.PerformanceNavigationTiming = undefined
@@ -133,7 +133,7 @@ describe('ttfb', () => {
           }
         }
       },
-      offset: 1,
+      originTime: 1,
       isBrowserScope: true
     }))
     let triggered = 0

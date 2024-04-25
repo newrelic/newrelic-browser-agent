@@ -1,3 +1,8 @@
+import { originTime } from '../constants/runtime'
+import { ee as baseEE } from '../event-emitter/contextual-ee'
+import { getRuntime } from '../config/config'
+import { SESSION_EVENT_TYPES, SESSION_EVENTS } from '../session/constants'
+
 /**
  * Class used to adjust the timestamp of harvested data to New Relic server time. This
  * is done by tracking the performance timings of the RUM call and applying a calculation
@@ -5,10 +10,10 @@
  */
 export class TimeKeeper {
   /**
-   * Represents the browser origin time.
-   * @type {number}
+   * Pointer to the current agent session if it exists.
+   * @type {import('../session/session-entity').SessionEntity}
    */
-  #originTime
+  #session
 
   /**
    * Represents the browser origin time corrected to NR server time.
@@ -30,16 +35,23 @@ export class TimeKeeper {
    */
   #ready = false
 
-  constructor () {
-    this.#originTime = Date.now() - performance.now()
+  constructor (agentIdentifier) {
+    this.#session = getRuntime(agentIdentifier)?.session
+
+    if (this.#session) {
+      const ee = baseEE.get(agentIdentifier)
+      ee.on(SESSION_EVENTS.UPDATE, this.#processSessionUpdate.bind(this))
+      ee.on(SESSION_EVENTS.STARTED, () => {
+        if (this.#ready) {
+          this.#session.write({ serverTimeDiff: this.#localTimeDiff })
+        }
+      })
+      this.#processSessionUpdate(null, this.#session.read())
+    }
   }
 
   get ready () {
     return this.#ready
-  }
-
-  get originTime () {
-    return this.#originTime
   }
 
   get correctedOriginTime () {
@@ -53,6 +65,8 @@ export class TimeKeeper {
    * @param endTime {number} The end time of the RUM request
    */
   processRumRequest (rumRequest, startTime, endTime) {
+    if (this.#ready) return // Server time calculated from session entity
+
     const responseDateHeader = rumRequest.getResponseHeader('Date')
     if (!responseDateHeader) {
       throw new Error('Missing date header on rum response.')
@@ -63,12 +77,13 @@ export class TimeKeeper {
 
     // Corrected page origin time
     this.#correctedOriginTime = Math.floor(Date.parse(responseDateHeader) - serverOffset)
-    this.#localTimeDiff = this.#originTime - this.#correctedOriginTime
+    this.#localTimeDiff = originTime - this.#correctedOriginTime
 
     if (Number.isNaN(this.#correctedOriginTime)) {
       throw new Error('Date header invalid format.')
     }
 
+    if (this.#session) this.#session.write({ serverTimeDiff: this.#localTimeDiff })
     this.#ready = true
   }
 
@@ -89,5 +104,24 @@ export class TimeKeeper {
    */
   correctAbsoluteTimestamp (timestamp) {
     return Math.floor(timestamp - this.#localTimeDiff)
+  }
+
+  /**
+   * Processes a session entity update payload to extract the server time calculated.
+   * @param {import('../session/constants').SESSION_EVENT_TYPES | null} type
+   * @param {Object} data
+   */
+  #processSessionUpdate (type, data) {
+    if (typeof data?.serverTimeDiff !== 'number') return
+
+    if (
+      (!type && !this.#ready) || // This captures the initial read from the session entity when the timekeeper first initializes
+      type === SESSION_EVENT_TYPES.CROSS_TAB // This captures any cross-tab write of the session entity
+    ) {
+      // This captures the initial read from the session entity when the timekeeper first initializes
+      this.#localTimeDiff = data.serverTimeDiff
+      this.#correctedOriginTime = originTime - this.#localTimeDiff
+      this.#ready = true
+    }
   }
 }

@@ -1,5 +1,7 @@
 import { getModeledObject } from '../../../../../src/common/config/state/configurable'
 
+jest.mock('../../../../../src/common/util/console')
+
 test('if either params are not objects, function fails', () => {
   let result = getModeledObject(123, {})
   expect(result).toEqual(undefined)
@@ -67,7 +69,22 @@ test('existing keys can change types too, to/from object', () => {
 test('keys not in model are ignored', () => {
   expect(getModeledObject({ game: 'allnight' }, model)).toEqual(model)
 })
-
 test('but if model is empty, then keys are not ignored', () => {
   expect(getModeledObject({ game: 'allnight' }, {})).toEqual({ game: 'allnight' })
+})
+
+test('undefined and null keys in models passes through to output', () => {
+  const template = { key1: 1, key2: undefined, key3: null }
+  const output = getModeledObject({ key1: 'peepo' }, template)
+  expect(output).toEqual({ key1: 'peepo', key2: undefined, key3: null })
+})
+test('undefined key in object does not overwrite model value', () => {
+  const template = { key1: 1 }
+  const output = getModeledObject({ key1: undefined }, template)
+  expect(output).toEqual({ key1: 1 })
+})
+test('null key in object gets applied in output', () => {
+  const template = { key1: 1 }
+  const output = getModeledObject({ key1: null }, template)
+  expect(output).toEqual({ key1: null })
 })

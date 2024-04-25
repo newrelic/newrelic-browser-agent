@@ -1,5 +1,5 @@
 import { getConfigurationValue, originals } from '../../../common/config/config'
-import { isBrowserScope } from '../../../common/constants/runtime'
+import { isBrowserScope, originTime } from '../../../common/constants/runtime'
 
 export function enableSessionTracking (agentId) {
   return isBrowserScope && getConfigurationValue(agentId, 'privacy.cookies_enabled') === true
@@ -26,8 +26,8 @@ export function buildNRMetaNode (timestamp, timeKeeper) {
     originalTimestamp: timestamp,
     correctedTimestamp,
     timestampDiff: timestamp - correctedTimestamp,
-    timeKeeperOriginTime: timeKeeper.originTime,
-    timeKeeperCorrectedOriginTime: timeKeeper.correctedOriginTime,
-    timeKeeperDiff: Math.floor(timeKeeper.originTime - timeKeeper.correctedOriginTime)
+    originTime,
+    correctedOriginTime: timeKeeper.correctedOriginTime,
+    originTimeDiff: Math.floor(originTime - timeKeeper.correctedOriginTime)
   }
 }

@@ -12,6 +12,7 @@ import { getSessionReplayMode } from '../../session_replay/shared/replay-mode'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { MODE, SESSION_EVENTS } from '../../../common/session/constants'
 import { now } from '../../../common/timing/now'
+import { originTime } from '../../../common/constants/runtime'
 
 const ignoredEvents = {
   // we find that certain events make the data too noisy to be useful
@@ -486,13 +487,13 @@ export class Aggregate extends AggregateBase {
 
     return {
       qs: {
-        st: this.agentRuntime.offset,
+        st: originTime,
         /** hr === "hasReplay" in NR1, standalone is always checked and processed before harvesting
          * so a race condition between ST and SR states should not be a concern if implemented here */
         hr: Number(!this.isStandalone),
         /** fts === "firstTimestamp" in NR1, indicates what the earliest NODE timestamp was
          * so that blob parsing doesn't need to happen to support UI/API functions  */
-        fts: this.agentRuntime.offset + earliestTimeStamp,
+        fts: originTime + earliestTimeStamp,
         /** n === "nodeCount" in NR1, a count of nodes in the ST payload, so that blob parsing doesn't need to happen to support UI/API functions */
         n: stns.length, // node count
         ...firstHarvestOfSession

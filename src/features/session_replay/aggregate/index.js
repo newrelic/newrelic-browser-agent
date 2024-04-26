@@ -19,8 +19,6 @@ import { sharedChannel } from '../../../common/constants/shared-channel'
 import { obj as encodeObj } from '../../../common/url/encode'
 import { warn } from '../../../common/util/console'
 import { globalScope } from '../../../common/constants/runtime'
-import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
-import { handle } from '../../../common/event-emitter/handle'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { RRWEB_VERSION } from '../../../common/constants/env'
 import { MODE, SESSION_EVENTS, SESSION_EVENT_TYPES } from '../../../common/session/constants'
@@ -29,6 +27,7 @@ import { stylesheetEvaluator } from '../shared/stylesheet-evaluator'
 import { deregisterDrain } from '../../../common/drain/drain'
 import { now } from '../../../common/timing/now'
 import { buildNRMetaNode } from '../shared/utils'
+import { CONFIG_SESSION_REPLAY_AUTOSTART_MODIFIED, CONFIG_SESSION_REPLAY_BLOCK_SELECTOR_MODIFIED, CONFIG_SESSION_REPLAY_COLLECT_FONTS_MODIFIED, CONFIG_SESSION_REPLAY_ENABLED, CONFIG_SESSION_REPLAY_ERROR_SAMPLING_RATE_MODIFIED, CONFIG_SESSION_REPLAY_INLINE_IMAGES_MODIFIED, CONFIG_SESSION_REPLAY_INLINE_STYLESHEET_MODIFIED, CONFIG_SESSION_REPLAY_MASK_ALL_INPUTS_MODIFIED, CONFIG_SESSION_REPLAY_MASK_TEXT_SELECTOR_MODIFIED, CONFIG_SESSION_REPLAY_SAMPLING_RATE_MODIFIED, SESSION_REPLAY_ENABLED_NOT_ENTITLED_DETECTED, SESSION_REPLAY_HARVEST_ATTEMPTS, reportSupportabilityMetric } from '../../utils/supportability-metrics'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -56,7 +55,7 @@ export class Aggregate extends AggregateBase {
     this.recorder = args?.recorder
     this.errorNoticed = args?.errorNoticed || false
 
-    handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/Enabled'], undefined, FEATURE_NAMES.metrics, this.ee)
+    reportSupportabilityMetric({ name: CONFIG_SESSION_REPLAY_ENABLED }, this.agentIdentifier)
 
     this.ee.on(`cfc.${FEATURE_NAMES.jserrors}`, (crossFeatureData) => {
       crossFeatureData.hasReplay = !!(this.scheduler?.started &&
@@ -123,7 +122,7 @@ export class Aggregate extends AggregateBase {
         deregisterDrain(this.agentIdentifier, this.featureName)
         if (this.recorder?.recording) {
           this.abort(ABORT_REASONS.ENTITLEMENTS)
-          handle(SUPPORTABILITY_METRIC_CHANNEL, ['SessionReplay/EnabledNotEntitled/Detected'], undefined, FEATURE_NAMES.metrics, this.ee)
+          reportSupportabilityMetric({ name: SESSION_REPLAY_ENABLED_NOT_ENTITLED_DETECTED }, agentIdentifier)
         }
         return
       }
@@ -138,16 +137,16 @@ export class Aggregate extends AggregateBase {
     })
 
     /** Detect if the default configs have been altered and report a SM.  This is useful to evaluate what the reasonable defaults are across a customer base over time */
-    if (!autoStart) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/AutoStart/Modified'], undefined, FEATURE_NAMES.metrics, this.ee)
-    if (collect_fonts === true) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/CollectFonts/Modified'], undefined, FEATURE_NAMES.metrics, this.ee)
-    if (inline_stylesheet !== true) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/InlineStylesheet/Modified'], undefined, FEATURE_NAMES.metrics, this.ee)
-    if (inline_images === true) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/InlineImages/Modifed'], undefined, FEATURE_NAMES.metrics, this.ee)
-    if (mask_all_inputs !== true) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/MaskAllInputs/Modified'], undefined, FEATURE_NAMES.metrics, this.ee)
-    if (block_selector !== '[data-nr-block]') handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/BlockSelector/Modified'], undefined, FEATURE_NAMES.metrics, this.ee)
-    if (mask_text_selector !== '*') handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/MaskTextSelector/Modified'], undefined, FEATURE_NAMES.metrics, this.ee)
+    if (!autoStart) reportSupportabilityMetric({ name: CONFIG_SESSION_REPLAY_AUTOSTART_MODIFIED }, this.agentIdentifier)
+    if (collect_fonts === true) reportSupportabilityMetric({ name: CONFIG_SESSION_REPLAY_COLLECT_FONTS_MODIFIED }, this.agentIdentifier)
+    if (inline_stylesheet !== true) reportSupportabilityMetric({ name: CONFIG_SESSION_REPLAY_INLINE_STYLESHEET_MODIFIED }, this.agentIdentifier)
+    if (inline_images === true) reportSupportabilityMetric({ name: CONFIG_SESSION_REPLAY_INLINE_IMAGES_MODIFIED }, this.agentIdentifier)
+    if (mask_all_inputs !== true) reportSupportabilityMetric({ name: CONFIG_SESSION_REPLAY_MASK_ALL_INPUTS_MODIFIED }, this.agentIdentifier)
+    if (block_selector !== '[data-nr-block]') reportSupportabilityMetric({ name: CONFIG_SESSION_REPLAY_BLOCK_SELECTOR_MODIFIED }, this.agentIdentifier)
+    if (mask_text_selector !== '*') reportSupportabilityMetric({ name: CONFIG_SESSION_REPLAY_MASK_TEXT_SELECTOR_MODIFIED }, this.agentIdentifier)
 
-    handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/SamplingRate/Value', sampling_rate], undefined, FEATURE_NAMES.metrics, this.ee)
-    handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/ErrorSamplingRate/Value', error_sampling_rate], undefined, FEATURE_NAMES.metrics, this.ee)
+    reportSupportabilityMetric({ name: CONFIG_SESSION_REPLAY_SAMPLING_RATE_MODIFIED, value: sampling_rate }, this.agentIdentifier)
+    reportSupportabilityMetric({ name: CONFIG_SESSION_REPLAY_ERROR_SAMPLING_RATE_MODIFIED, value: error_sampling_rate }, this.agentIdentifier)
   }
 
   handleError (e) {
@@ -263,7 +262,7 @@ export class Aggregate extends AggregateBase {
       return
     }
 
-    handle(SUPPORTABILITY_METRIC_CHANNEL, ['SessionReplay/Harvest/Attempts'], undefined, FEATURE_NAMES.metrics, this.ee)
+    reportSupportabilityMetric({ name: SESSION_REPLAY_HARVEST_ATTEMPTS }, this.agentIdentifier)
 
     let len = 0
     if (!!this.gzipper && !!this.u8) {
@@ -403,7 +402,7 @@ export class Aggregate extends AggregateBase {
   /** Abort the feature, once aborted it will not resume */
   abort (reason = {}) {
     warn(`SR aborted -- ${reason.message}`)
-    handle(SUPPORTABILITY_METRIC_CHANNEL, [`SessionReplay/Abort/${reason.sm}`], undefined, FEATURE_NAMES.metrics, this.ee)
+    reportSupportabilityMetric({ name: reason.sm }, this.agentIdentifier)
     this.blocked = true
     this.mode = MODE.OFF
     this.recorder?.stopRecording?.()

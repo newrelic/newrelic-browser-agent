@@ -6,8 +6,8 @@ import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { single } from '../../../common/util/invoke'
 import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
-import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { AggregateBase } from '../../utils/aggregate-base'
+import { SOFT_NAV_INTERACTION_CUSTOM_DURATION_MS, SOFT_NAV_INTERACTION_IPL_DURATION_MS, SOFT_NAV_INTERACTION_ROUTE_CHANGE_DURATION_MS, SOFT_NAV_INTERACTION_TIME_OUT, reportSupportabilityMetric } from '../../utils/supportability-metrics'
 import { API_TRIGGER_NAME, FEATURE_NAME, INTERACTION_STATUS } from '../constants'
 import { AjaxNode } from './ajax-node'
 import { InitialPageLoadInteraction } from './initial-page-load-interaction'
@@ -31,7 +31,7 @@ export class Aggregate extends AggregateBase {
       this.interactionsToHarvest.push(this.initialPageLoadInteraction)
       this.initialPageLoadInteraction = null
       // Report metric on the initial page load time
-      handle(SUPPORTABILITY_METRIC_CHANNEL, ['SoftNav/Interaction/InitialPageLoad/Duration/Ms', Math.round(loadEventTime)], undefined, FEATURE_NAMES.metrics, this.ee)
+      reportSupportabilityMetric({ name: SOFT_NAV_INTERACTION_IPL_DURATION_MS, value: Math.round(loadEventTime) }, this.agentIdentifier)
     })
 
     this.latestRouteSetByApi = null
@@ -105,7 +105,7 @@ export class Aggregate extends AggregateBase {
     this.interactionInProgress.cancellationTimer = setTimeout(() => {
       this.interactionInProgress.done()
       // Report metric on frequency of cancellation due to timeout for UI ixn
-      handle(SUPPORTABILITY_METRIC_CHANNEL, ['SoftNav/Interaction/TimeOut'], undefined, FEATURE_NAMES.metrics, this.ee)
+      reportSupportabilityMetric({ name: SOFT_NAV_INTERACTION_TIME_OUT }, this.agentIdentifier)
     }, 30000) // UI ixn are disregarded after 30 seconds if it's not completed by then
     this.setClosureHandlers()
   }
@@ -118,10 +118,8 @@ export class Aggregate extends AggregateBase {
       this.domObserver.disconnect() // can stop observing whenever our interaction logic completes a cycle
 
       // Report metric on the ixn duration
-      handle(SUPPORTABILITY_METRIC_CHANNEL, [
-        `SoftNav/Interaction/${ref.newURL !== ref.oldURL ? 'RouteChange' : 'Custom'}/Duration/Ms`,
-        Math.round(ref.end - ref.start)
-      ], undefined, FEATURE_NAMES.metrics, this.ee)
+      const smName = ref.newURL !== ref.oldURL ? SOFT_NAV_INTERACTION_ROUTE_CHANGE_DURATION_MS : SOFT_NAV_INTERACTION_CUSTOM_DURATION_MS
+      reportSupportabilityMetric({ name: smName, value: Math.round(ref.end - ref.start) })
     })
     this.interactionInProgress.on('cancelled', () => {
       this.interactionInProgress = null

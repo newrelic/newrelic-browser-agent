@@ -1,5 +1,6 @@
 import { MODE } from '../../common/session/constants'
 import { FEATURE_NAMES } from '../../loaders/features/features'
+import { SESSION_REPLAY_ABORT_CROSS_TAB, SESSION_REPLAY_ABORT_ENTITLEMENT, SESSION_REPLAY_ABORT_IMPORT, SESSION_REPLAY_ABORT_RESET, SESSION_REPLAY_ABORT_TOO_BIG, SESSION_REPLAY_ABORT_TOO_MANY } from '../utils/supportability-metrics'
 
 export const FEATURE_NAME = FEATURE_NAMES.sessionReplay
 
@@ -28,27 +29,27 @@ export const CHECKOUT_MS = { [MODE.ERROR]: 15000, [MODE.FULL]: 300000, [MODE.OFF
 export const ABORT_REASONS = {
   RESET: {
     message: 'Session was reset',
-    sm: 'Reset'
+    sm: SESSION_REPLAY_ABORT_RESET
   },
   IMPORT: {
     message: 'Recorder failed to import',
-    sm: 'Import'
+    sm: SESSION_REPLAY_ABORT_IMPORT
   },
   TOO_MANY: {
     message: '429: Too Many Requests',
-    sm: 'Too-Many'
+    sm: SESSION_REPLAY_ABORT_TOO_MANY
   },
   TOO_BIG: {
     message: 'Payload was too large',
-    sm: 'Too-Big'
+    sm: SESSION_REPLAY_ABORT_TOO_BIG
   },
   CROSS_TAB: {
     message: 'Session Entity was set to OFF on another tab',
-    sm: 'Cross-Tab'
+    sm: SESSION_REPLAY_ABORT_CROSS_TAB
   },
   ENTITLEMENTS: {
     message: 'Session Replay is not allowed and will not be started',
-    sm: 'Entitlement'
+    sm: SESSION_REPLAY_ABORT_ENTITLEMENT
   }
 }
 /** Reserved room for query param attrs */

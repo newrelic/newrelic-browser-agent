@@ -10,12 +10,12 @@ import { drain, registerDrain } from '../../common/drain/drain'
 import { onWindowLoad } from '../../common/window/load'
 import { isBrowserScope } from '../../common/constants/runtime'
 import { warn } from '../../common/util/console'
-import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
 import { gosCDN } from '../../common/window/nreum'
-import { apiMethods, asyncApiMethods } from './api-methods'
+import { ACTION_TEXT, ADD_PAGE_ACTION, END, GET, GET_CONTEXT, IGNORE, ON_END, ROUTE_NAME, SAVE, SET_APPLICATION_VERSION, SET_ATTRIBUTE, SET_CUSTOM_ATTRIBUTE, SET_NAME, SET_PAGE_VIEW_NAME, SET_USER_ID, apiMethods, apiSMs, asyncApiMethods } from './api-methods'
 import { SR_EVENT_EMITTER_TYPES } from '../../features/session_replay/constants'
 import { now } from '../../common/timing/now'
 import { MODE } from '../../common/session/constants'
+import { API_CREATE_TRACER_CALLED, API_NOTICE_ERROR_CALLED, API_PAUSE_REPLAY_CALLED, API_RECORD_REPLAY_CALLED, API_START_DEFINED_CALLED, API_START_UNDEFINED_CALLED, reportSupportabilityMetric } from '../../features/utils/supportability-metrics'
 
 export function setTopLevelCallers () {
   const nr = gosCDN()
@@ -54,13 +54,13 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
   // Setup stub functions that queue calls for later processing.
   asyncApiMethods.forEach(fnName => { apiInterface[fnName] = apiCall(prefix, fnName, true, 'api') })
 
-  apiInterface.addPageAction = apiCall(prefix, 'addPageAction', true, FEATURE_NAMES.pageAction)
+  apiInterface.addPageAction = apiCall(prefix, ADD_PAGE_ACTION, true, FEATURE_NAMES.pageAction)
 
   apiInterface.setPageViewName = function (name, host) {
     if (typeof name !== 'string') return
     if (name.charAt(0) !== '/') name = '/' + name
     getRuntime(agentIdentifier).customTransaction = (host || 'http://custom.transaction') + name
-    return apiCall(prefix, 'setPageViewName', true)()
+    return apiCall(prefix, SET_PAGE_VIEW_NAME, true)()
   }
 
   /**
@@ -82,11 +82,11 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
   }
   apiInterface.setCustomAttribute = function (name, value, persistAttribute = false) {
     if (typeof name !== 'string') {
-      warn(`Failed to execute setCustomAttribute.\nName must be a string type, but a type of <${typeof name}> was provided.`)
+      warn(`Failed to execute ${SET_CUSTOM_ATTRIBUTE}.\nName must be a string type, but a type of <${typeof name}> was provided.`)
       return
     }
     if (!(['string', 'number', 'boolean'].includes(typeof value) || value === null)) {
-      warn(`Failed to execute setCustomAttribute.\nNon-null value must be a string, number or boolean type, but a type of <${typeof value}> was provided.`)
+      warn(`Failed to execute ${SET_CUSTOM_ATTRIBUTE}.\nNon-null value must be a string, number or boolean type, but a type of <${typeof value}> was provided.`)
       return
     }
     return appendJsAttribute(name, value, 'setCustomAttribute', persistAttribute)
@@ -101,7 +101,7 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
       warn(`Failed to execute setUserId.\nNon-null value must be a string type, but a type of <${typeof value}> was provided.`)
       return
     }
-    return appendJsAttribute('enduser.id', value, 'setUserId', true)
+    return appendJsAttribute('enduser.id', value, SET_USER_ID, true)
   }
 
   /**
@@ -111,16 +111,16 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
    */
   apiInterface.setApplicationVersion = function (value) {
     if (!(typeof value === 'string' || value === null)) {
-      warn(`Failed to execute setApplicationVersion. Expected <String | null>, but got <${typeof value}>.`)
+      warn(`Failed to execute ${SET_APPLICATION_VERSION}. Expected <String | null>, but got <${typeof value}>.`)
       return
     }
-    return appendJsAttribute('application.version', value, 'setApplicationVersion', false)
+    return appendJsAttribute('application.version', value, SET_APPLICATION_VERSION, false)
   }
 
   apiInterface.start = (features) => {
     try {
-      const smTag = !features ? 'undefined' : 'defined'
-      handle(SUPPORTABILITY_METRIC_CHANNEL, [`API/start/${smTag}/called`], undefined, FEATURE_NAMES.metrics, instanceEE)
+      const smTag = !features ? API_START_UNDEFINED_CALLED : API_START_DEFINED_CALLED
+      reportSupportabilityMetric({ name: smTag }, agentIdentifier)
       const featNames = Object.values(FEATURE_NAMES)
       if (features === undefined) features = featNames
       else {
@@ -137,12 +137,12 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
   }
 
   apiInterface[SR_EVENT_EMITTER_TYPES.RECORD] = function () {
-    handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/recordReplay/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
+    reportSupportabilityMetric({ name: API_RECORD_REPLAY_CALLED }, agentIdentifier)
     handle(SR_EVENT_EMITTER_TYPES.RECORD, [], undefined, FEATURE_NAMES.sessionReplay, instanceEE)
   }
 
   apiInterface[SR_EVENT_EMITTER_TYPES.PAUSE] = function () {
-    handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/pauseReplay/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
+    reportSupportabilityMetric({ name: API_PAUSE_REPLAY_CALLED }, agentIdentifier)
     handle(SR_EVENT_EMITTER_TYPES.PAUSE, [], undefined, FEATURE_NAMES.sessionReplay, instanceEE)
   }
 
@@ -157,7 +157,7 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
       var contextStore = {}
       var ixn = this
       var hasCb = typeof cb === 'function'
-      handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/createTracer/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
+      reportSupportabilityMetric({ name: API_CREATE_TRACER_CALLED }, agentIdentifier)
       // Soft navigations won't support Tracer nodes, but this fn should still work the same otherwise (e.g., run the orig cb).
       if (!runSoftNavOverSpa) handle(spaPrefix + 'tracer', [now(), name, contextStore], ixn, FEATURE_NAMES.spa, instanceEE)
       return function () {
@@ -177,14 +177,14 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
     }
   }
 
-  ;['actionText', 'setName', 'setAttribute', 'save', 'ignore', 'onEnd', 'getContext', 'end', 'get'].forEach(name => {
+  ;[ACTION_TEXT, SET_NAME, SET_ATTRIBUTE, SAVE, IGNORE, ON_END, GET_CONTEXT, END, GET].forEach(name => {
     InteractionApiProto[name] = apiCall(spaPrefix, name, undefined, runSoftNavOverSpa ? FEATURE_NAMES.softNav : FEATURE_NAMES.spa)
   })
-  apiInterface.setCurrentRouteName = runSoftNavOverSpa ? apiCall(spaPrefix, 'routeName', undefined, FEATURE_NAMES.softNav) : apiCall(prefix, 'routeName', true, FEATURE_NAMES.spa)
+  apiInterface.setCurrentRouteName = runSoftNavOverSpa ? apiCall(spaPrefix, ROUTE_NAME, undefined, FEATURE_NAMES.softNav) : apiCall(prefix, ROUTE_NAME, true, FEATURE_NAMES.spa)
 
   function apiCall (prefix, name, notSpa, bufferGroup) {
     return function () {
-      handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/' + name + '/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
+      reportSupportabilityMetric({ name: apiSMs[name] }, agentIdentifier)
       if (bufferGroup) handle(prefix + name, [now(), ...arguments], notSpa ? null : this, bufferGroup, instanceEE) // no bufferGroup means only the SM is emitted
       return notSpa ? undefined : this // returns the InteractionHandle which allows these methods to be chained
     }
@@ -192,7 +192,7 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
 
   apiInterface.noticeError = function (err, customAttributes) {
     if (typeof err === 'string') err = new Error(err)
-    handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/noticeError/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
+    reportSupportabilityMetric({ name: API_NOTICE_ERROR_CALLED }, agentIdentifier)
     handle('err', [err, now(), false, customAttributes, !!replayRunning[agentIdentifier]], undefined, FEATURE_NAMES.jserrors, instanceEE)
   }
 

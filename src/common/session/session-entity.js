@@ -8,10 +8,8 @@ import { DEFAULT_EXPIRES_MS, DEFAULT_INACTIVE_MS, MODE, PREFIX, SESSION_EVENTS, 
 import { InteractionTimer } from '../timer/interaction-timer'
 import { wrapEvents } from '../wrap'
 import { getModeledObject } from '../config/state/configurable'
-import { handle } from '../event-emitter/handle'
-import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
-import { FEATURE_NAMES } from '../../loaders/features/features'
 import { windowAddEventListener } from '../event-listener/event-listener-opts'
+import { SESSION_DURATION_MS, SESSION_EXPIRED_SEEN, SESSION_INACTIVE_SEEN, reportSupportabilityMetric } from '../../features/utils/supportability-metrics'
 
 // this is what can be stored in local storage (not enforced but probably should be)
 // these values should sync between local storage and the parent class props
@@ -256,15 +254,13 @@ export class SessionEntity {
   }
 
   collectSM (type, data, useUpdatedAt) {
-    let value, tag
+    let value
     if (type === 'duration') {
       value = this.getDuration(data, useUpdatedAt)
-      tag = 'Session/Duration/Ms'
+      reportSupportabilityMetric({ name: SESSION_DURATION_MS, value }, this.agentIdentifier)
     }
-    if (type === 'expired') tag = 'Session/Expired/Seen'
-    if (type === 'inactive') tag = 'Session/Inactive/Seen'
-
-    if (tag) handle(SUPPORTABILITY_METRIC_CHANNEL, [tag, value], undefined, FEATURE_NAMES.metrics, this.ee)
+    if (type === 'expired') reportSupportabilityMetric({ name: SESSION_EXPIRED_SEEN }, this.agentIdentifier)
+    else if (type === 'inactive') reportSupportabilityMetric({ name: SESSION_INACTIVE_SEEN }, this.agentIdentifier)
   }
 
   getDuration (data = this.state, useUpdatedAt) {

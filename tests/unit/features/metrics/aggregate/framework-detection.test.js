@@ -2,7 +2,8 @@ import { faker } from '@faker-js/faker'
 import { getFrameworks } from '../../../../../src/features/metrics/aggregate/framework-detection'
 
 jest.mock('../../../../../src/common/constants/runtime', () => ({
-  isBrowserScope: true
+  isBrowserScope: true,
+  globalScope: {}
 }))
 
 afterEach(() => {
@@ -14,7 +15,8 @@ test('framework detection should not happen in non-browser scope', async () => {
 
   jest.resetModules()
   jest.doMock('../../../../../src/common/constants/runtime', () => ({
-    isBrowserScope: false
+    isBrowserScope: false,
+    globalScope: {}
   }))
   const frameworkDetector = await import('../../../../../src/features/metrics/aggregate/framework-detection')
 
@@ -23,11 +25,11 @@ test('framework detection should not happen in non-browser scope', async () => {
   delete global.React
 })
 
-describe('react', () => {
+describe('Framework/React/Detected', () => {
   test('should detect react from global React property', () => {
     global.React = {}
 
-    expect(getFrameworks()).toEqual(['React'])
+    expect(getFrameworks()).toEqual(['Framework/React/Detected'])
 
     delete global.React
   })
@@ -35,7 +37,7 @@ describe('react', () => {
   test('should detect react from global ReactDOM property', () => {
     global.ReactDOM = {}
 
-    expect(getFrameworks()).toEqual(['React'])
+    expect(getFrameworks()).toEqual(['Framework/React/Detected'])
 
     delete global.ReactDOM
   })
@@ -43,7 +45,7 @@ describe('react', () => {
   test('should detect react from global ReactRedux property', () => {
     global.ReactRedux = {}
 
-    expect(getFrameworks()).toEqual(['React'])
+    expect(getFrameworks()).toEqual(['Framework/React/Detected'])
 
     delete global.ReactRedux
   })
@@ -51,13 +53,13 @@ describe('react', () => {
   test('should detect react from html [data-reactroot] property', () => {
     document.body.innerHTML = '<div data-reactroot=""></div>'
 
-    expect(getFrameworks()).toEqual(['React'])
+    expect(getFrameworks()).toEqual(['Framework/React/Detected'])
   })
 
   test('should detect react from html [data-reactid] property', () => {
     document.body.innerHTML = '<div data-reactid=""></div>'
 
-    expect(getFrameworks()).toEqual(['React'])
+    expect(getFrameworks()).toEqual(['Framework/React/Detected'])
   })
 
   test('should detect react from element _reactRootContainer property', () => {
@@ -66,7 +68,7 @@ describe('react', () => {
     document.body.innerHTML = '<html><body></body></html>'
     document.body.appendChild(element)
 
-    expect(getFrameworks()).toEqual(['React'])
+    expect(getFrameworks()).toEqual(['Framework/React/Detected'])
   })
 
   describe('nextjs', () => {
@@ -82,7 +84,7 @@ describe('react', () => {
       global.React = {}
       global.next = { version: 'test' }
 
-      expect(getFrameworks()).toEqual(['React', 'NextJS'])
+      expect(getFrameworks()).toEqual(['Framework/React/Detected', 'Framework/NextJS/Detected'])
 
       delete global.React
       delete global.next
@@ -94,7 +96,7 @@ describe('vue', () => {
   test('should detect vue from global Vue property', () => {
     global.Vue = {}
 
-    expect(getFrameworks()).toEqual(['Vue'])
+    expect(getFrameworks()).toEqual(['Framework/Vue/Detected'])
 
     delete global.Vue
   })
@@ -112,7 +114,7 @@ describe('vue', () => {
       global.Vue = {}
       global.$nuxt = { nuxt: {} }
 
-      expect(getFrameworks()).toEqual(['Vue', 'NuxtJS'])
+      expect(getFrameworks()).toEqual(['Framework/Vue/Detected', 'Framework/NuxtJS/Detected'])
 
       delete global.Vue
       delete global.$nuxt
@@ -124,7 +126,7 @@ describe('angular', () => {
   test('should detect angular from global ng property', () => {
     global.ng = {}
 
-    expect(getFrameworks()).toEqual(['Angular'])
+    expect(getFrameworks()).toEqual(['Framework/Angular/Detected'])
 
     delete global.ng
   })
@@ -132,7 +134,7 @@ describe('angular', () => {
   test('should detect angular from html [ng-version] property', () => {
     document.body.innerHTML = '<div ng-version=""></div>'
 
-    expect(getFrameworks()).toEqual(['Angular'])
+    expect(getFrameworks()).toEqual(['Framework/Angular/Detected'])
   })
 
   describe('angular universal', () => {
@@ -145,7 +147,7 @@ describe('angular', () => {
     test('should detect nuxtjs if global is set', () => {
       document.body.innerHTML = '<div ng-version="" ng-server-context=""></div>'
 
-      expect(getFrameworks()).toEqual(['Angular', 'AngularUniversal'])
+      expect(getFrameworks()).toEqual(['Framework/Angular/Detected', 'Framework/AngularUniversal/Detected'])
     })
   })
 })
@@ -154,7 +156,7 @@ describe('svelte', () => {
   test('should detect svelte from global __svelte property', () => {
     global.__svelte = {}
 
-    expect(getFrameworks()).toEqual(['Svelte'])
+    expect(getFrameworks()).toEqual(['Framework/Svelte/Detected'])
 
     delete global.__svelte
   })
@@ -172,7 +174,7 @@ describe('svelte', () => {
       global.__svelte = {}
       global.__sveltekit_4567 = {}
 
-      expect(getFrameworks()).toEqual(['Svelte', 'SvelteKit'])
+      expect(getFrameworks()).toEqual(['Framework/Svelte/Detected', 'Framework/SvelteKit/Detected'])
 
       delete global.__svelte
       delete global.__sveltekit_4567
@@ -184,7 +186,7 @@ describe('preact', () => {
   test('should detect preact from global preact property', () => {
     global.preact = {}
 
-    expect(getFrameworks()).toEqual(['Preact'])
+    expect(getFrameworks()).toEqual(['Framework/Preact/Detected'])
 
     delete global.preact
   })
@@ -200,7 +202,7 @@ describe('preact', () => {
       global.preact = {}
       document.body.innerHTML = '<script type="__PREACT_CLI_DATA__"></div>'
 
-      expect(getFrameworks()).toEqual(['Preact', 'PreactSSR'])
+      expect(getFrameworks()).toEqual(['Framework/Preact/Detected', 'Framework/PreactSSR/Detected'])
 
       delete global.preact
     })
@@ -211,7 +213,7 @@ describe('angularjs', () => {
   test('should detect angularjs from global angular property', () => {
     global.angular = {}
 
-    expect(getFrameworks()).toEqual(['AngularJS'])
+    expect(getFrameworks()).toEqual(['Framework/AngularJS/Detected'])
 
     delete global.angular
   })
@@ -219,62 +221,62 @@ describe('angularjs', () => {
   test('should detect angularjs from html .ng-binding property', () => {
     document.body.innerHTML = '<div class="ng-binding"></div>'
 
-    expect(getFrameworks()).toEqual(['AngularJS'])
+    expect(getFrameworks()).toEqual(['Framework/AngularJS/Detected'])
   })
 
   test('should detect angularjs from html [ng-app] property', () => {
     document.body.innerHTML = '<div ng-app=""></div>'
 
-    expect(getFrameworks()).toEqual(['AngularJS'])
+    expect(getFrameworks()).toEqual(['Framework/AngularJS/Detected'])
   })
 
   test('should detect angularjs from html [data-ng-app] property', () => {
     document.body.innerHTML = '<div data-ng-app=""></div>'
 
-    expect(getFrameworks()).toEqual(['AngularJS'])
+    expect(getFrameworks()).toEqual(['Framework/AngularJS/Detected'])
   })
 
   test('should detect angularjs from html [ng-controller] property', () => {
     document.body.innerHTML = '<div ng-controller=""></div>'
 
-    expect(getFrameworks()).toEqual(['AngularJS'])
+    expect(getFrameworks()).toEqual(['Framework/AngularJS/Detected'])
   })
 
   test('should detect angularjs from html [data-ng-controller] property', () => {
     document.body.innerHTML = '<div data-ng-controller=""></div>'
 
-    expect(getFrameworks()).toEqual(['AngularJS'])
+    expect(getFrameworks()).toEqual(['Framework/AngularJS/Detected'])
   })
 
   test('should detect angularjs from html [ng-repeat] property', () => {
     document.body.innerHTML = '<div ng-repeat=""></div>'
 
-    expect(getFrameworks()).toEqual(['AngularJS'])
+    expect(getFrameworks()).toEqual(['Framework/AngularJS/Detected'])
   })
 
   test('should detect angularjs from html [data-ng-repeat] property', () => {
     document.body.innerHTML = '<div data-ng-repeat=""></div>'
 
-    expect(getFrameworks()).toEqual(['AngularJS'])
+    expect(getFrameworks()).toEqual(['Framework/AngularJS/Detected'])
   })
 
   test('should detect angularjs from angular.js script element', () => {
     document.body.innerHTML = `<script src="${faker.internet.url()}/angular.js"></script>`
 
-    expect(getFrameworks()).toEqual(['AngularJS'])
+    expect(getFrameworks()).toEqual(['Framework/AngularJS/Detected'])
   })
 
   test('should detect angularjs from angular.min.js script element', () => {
     document.body.innerHTML = `<script src="${faker.internet.url()}/angular.min.js"></script>`
 
-    expect(getFrameworks()).toEqual(['AngularJS'])
+    expect(getFrameworks()).toEqual(['Framework/AngularJS/Detected'])
   })
 })
 
 test('should detect backbone from global Backbone property', () => {
   global.Backbone = {}
 
-  expect(getFrameworks()).toEqual(['Backbone'])
+  expect(getFrameworks()).toEqual(['Framework/Backbone/Detected'])
 
   delete global.Backbone
 })
@@ -282,7 +284,7 @@ test('should detect backbone from global Backbone property', () => {
 test('should detect ember from global Ember property', () => {
   global.Ember = {}
 
-  expect(getFrameworks()).toEqual(['Ember'])
+  expect(getFrameworks()).toEqual(['Framework/Ember/Detected'])
 
   delete global.Ember
 })
@@ -290,7 +292,7 @@ test('should detect ember from global Ember property', () => {
 test('should detect meteor from global Meteor property', () => {
   global.Meteor = {}
 
-  expect(getFrameworks()).toEqual(['Meteor'])
+  expect(getFrameworks()).toEqual(['Framework/Meteor/Detected'])
 
   delete global.Meteor
 })
@@ -298,7 +300,7 @@ test('should detect meteor from global Meteor property', () => {
 test('should detect zepto from global Zepto property', () => {
   global.Zepto = {}
 
-  expect(getFrameworks()).toEqual(['Zepto'])
+  expect(getFrameworks()).toEqual(['Framework/Zepto/Detected'])
 
   delete global.Zepto
 })
@@ -306,7 +308,7 @@ test('should detect zepto from global Zepto property', () => {
 test('should detect jquery from global jQuery property', () => {
   global.jQuery = {}
 
-  expect(getFrameworks()).toEqual(['Jquery'])
+  expect(getFrameworks()).toEqual(['Framework/Jquery/Detected'])
 
   delete global.jQuery
 })
@@ -314,7 +316,7 @@ test('should detect jquery from global jQuery property', () => {
 test('should detect mootools from global MooTools property', () => {
   global.MooTools = {}
 
-  expect(getFrameworks()).toEqual(['MooTools'])
+  expect(getFrameworks()).toEqual(['Framework/MooTools/Detected'])
 
   delete global.MooTools
 })
@@ -326,7 +328,7 @@ test('should detect electron from user agent', () => {
     writable: true
   })
 
-  expect(getFrameworks()).toEqual(['Electron'])
+  expect(getFrameworks()).toEqual(['Framework/Electron/Detected'])
 
   global.navigator = currentNavigator
 })

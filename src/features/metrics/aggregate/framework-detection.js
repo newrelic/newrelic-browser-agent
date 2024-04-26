@@ -1,32 +1,11 @@
 import { isBrowserScope } from '../../../common/constants/runtime'
-
-const FRAMEWORKS = {
-  REACT: 'React',
-  NEXTJS: 'NextJS',
-
-  VUE: 'Vue',
-  NUXTJS: 'NuxtJS',
-
-  ANGULAR: 'Angular',
-  ANGULARUNIVERSAL: 'AngularUniversal',
-
-  SVELTE: 'Svelte',
-  SVELTEKIT: 'SvelteKit',
-
-  PREACT: 'Preact',
-  PREACTSSR: 'PreactSSR',
-
-  ANGULARJS: 'AngularJS',
-  BACKBONE: 'Backbone',
-  EMBER: 'Ember',
-  METEOR: 'Meteor',
-  ZEPTO: 'Zepto',
-  JQUERY: 'Jquery',
-  MOOTOOLS: 'MooTools',
-  QWIK: 'Qwik',
-
-  ELECTRON: 'Electron'
-}
+import {
+  FRAMEWORK_ANGULARJS_DETECTED, FRAMEWORK_ANGULAR_DETECTED, FRAMEWORK_ANGULAR_UNIVERSAL_DETECTED, FRAMEWORK_BACKBONE_DETECTED,
+  FRAMEWORK_ELECTRON_DETECTED, FRAMEWORK_EMBER_DETECTED, FRAMEWORK_JQUERY_DETECTED, FRAMEWORK_METEOR_DETECTED,
+  FRAMEWORK_MOOTOOLS_DETECTED, FRAMEWORK_NEXTJS_DETECTED, FRAMEWORK_NUXTJS_DETECTED, FRAMEWORK_PREACTSSR_DETECTED,
+  FRAMEWORK_PREACT_DETECTED, FRAMEWORK_QWIK_DETECTED, FRAMEWORK_REACT_DETECTED, FRAMEWORK_SVELTEKIT_DETECTED,
+  FRAMEWORK_SVELTE_DETECTED, FRAMEWORK_VUE_DETECTED, FRAMEWORK_ZEPTO_DETECTED
+} from '../../utils/supportability-metrics'
 
 export function getFrameworks () {
   if (!isBrowserScope) return [] // don't bother detecting frameworks if not in the main window context
@@ -34,41 +13,41 @@ export function getFrameworks () {
   const frameworks = []
   try {
     if (detectReact()) {
-      frameworks.push(FRAMEWORKS.REACT)
+      frameworks.push(FRAMEWORK_REACT_DETECTED)
 
-      if (detectNextJS()) frameworks.push(FRAMEWORKS.NEXTJS)
+      if (detectNextJS()) frameworks.push(FRAMEWORK_NEXTJS_DETECTED)
     }
     if (detectVue()) {
-      frameworks.push(FRAMEWORKS.VUE)
+      frameworks.push(FRAMEWORK_VUE_DETECTED)
 
-      if (detectNuxtJS()) frameworks.push(FRAMEWORKS.NUXTJS)
+      if (detectNuxtJS()) frameworks.push(FRAMEWORK_NUXTJS_DETECTED)
     }
     if (detectAngular()) {
-      frameworks.push(FRAMEWORKS.ANGULAR)
+      frameworks.push(FRAMEWORK_ANGULAR_DETECTED)
 
-      if (detectAngularUniversal()) frameworks.push(FRAMEWORKS.ANGULARUNIVERSAL)
+      if (detectAngularUniversal()) frameworks.push(FRAMEWORK_ANGULAR_UNIVERSAL_DETECTED)
     }
     if (detectSvelte()) {
-      frameworks.push(FRAMEWORKS.SVELTE)
+      frameworks.push(FRAMEWORK_SVELTE_DETECTED)
 
-      if (detectSvelteKit()) frameworks.push(FRAMEWORKS.SVELTEKIT)
+      if (detectSvelteKit()) frameworks.push(FRAMEWORK_SVELTEKIT_DETECTED)
     }
     if (detectPreact()) {
-      frameworks.push(FRAMEWORKS.PREACT)
+      frameworks.push(FRAMEWORK_PREACT_DETECTED)
 
-      if (detectPreactSSR()) frameworks.push(FRAMEWORKS.PREACTSSR)
+      if (detectPreactSSR()) frameworks.push(FRAMEWORK_PREACTSSR_DETECTED)
     }
 
-    if (detectAngularJs()) frameworks.push(FRAMEWORKS.ANGULARJS)
-    if (Object.prototype.hasOwnProperty.call(window, 'Backbone')) frameworks.push(FRAMEWORKS.BACKBONE)
-    if (Object.prototype.hasOwnProperty.call(window, 'Ember')) frameworks.push(FRAMEWORKS.EMBER)
-    if (Object.prototype.hasOwnProperty.call(window, 'Meteor')) frameworks.push(FRAMEWORKS.METEOR)
-    if (Object.prototype.hasOwnProperty.call(window, 'Zepto')) frameworks.push(FRAMEWORKS.ZEPTO)
-    if (Object.prototype.hasOwnProperty.call(window, 'jQuery')) frameworks.push(FRAMEWORKS.JQUERY)
-    if (Object.prototype.hasOwnProperty.call(window, 'MooTools')) frameworks.push(FRAMEWORKS.MOOTOOLS)
-    if (Object.prototype.hasOwnProperty.call(window, 'qwikevents')) frameworks.push(FRAMEWORKS.QWIK)
+    if (detectAngularJs()) frameworks.push(FRAMEWORK_ANGULARJS_DETECTED)
+    if (Object.prototype.hasOwnProperty.call(window, 'Backbone')) frameworks.push(FRAMEWORK_BACKBONE_DETECTED)
+    if (Object.prototype.hasOwnProperty.call(window, 'Ember')) frameworks.push(FRAMEWORK_EMBER_DETECTED)
+    if (Object.prototype.hasOwnProperty.call(window, 'Meteor')) frameworks.push(FRAMEWORK_METEOR_DETECTED)
+    if (Object.prototype.hasOwnProperty.call(window, 'Zepto')) frameworks.push(FRAMEWORK_ZEPTO_DETECTED)
+    if (Object.prototype.hasOwnProperty.call(window, 'jQuery')) frameworks.push(FRAMEWORK_JQUERY_DETECTED)
+    if (Object.prototype.hasOwnProperty.call(window, 'MooTools')) frameworks.push(FRAMEWORK_MOOTOOLS_DETECTED)
+    if (Object.prototype.hasOwnProperty.call(window, 'qwikevents')) frameworks.push(FRAMEWORK_QWIK_DETECTED)
 
-    if (detectElectron()) frameworks.push(FRAMEWORKS.ELECTRON)
+    if (detectElectron()) frameworks.push(FRAMEWORK_ELECTRON_DETECTED)
   } catch (err) {
     // Possibly not supported
   }

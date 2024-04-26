@@ -22,10 +22,9 @@ import { firstContentfulPaint } from '../../../common/vitals/first-contentful-pa
 import { firstPaint } from '../../../common/vitals/first-paint'
 import { bundleId } from '../../../common/ids/bundle-id'
 import { loadedAsDeferredBrowserScript } from '../../../common/constants/runtime'
-import { handle } from '../../../common/event-emitter/handle'
-import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { deregisterDrain } from '../../../common/drain/drain'
 import { warn } from '../../../common/util/console'
+import { SPA_INTERACTION_CUSTOM_DURATION_MS, SPA_INTERACTION_IPL_DURATION_MS, SPA_INTERACTION_ROUTE_CHANGE_DURATION_MS, reportSupportabilityMetric } from '../../utils/supportability-metrics'
 
 const {
   FEATURE_NAME, INTERACTION_EVENTS, MAX_TIMER_BUDGET, FN_START, FN_END, CB_START, INTERACTION_API, REMAINING,
@@ -742,10 +741,10 @@ export class Aggregate extends AggregateBase {
       state.interactionsToHarvest.push(interaction)
 
       let smCategory
-      if (interaction.root?.attrs?.trigger === 'initialPageLoad') smCategory = 'InitialPageLoad'
-      else if (interaction.routeChange) smCategory = 'RouteChange'
-      else smCategory = 'Custom'
-      handle(SUPPORTABILITY_METRIC_CHANNEL, [`Spa/Interaction/${smCategory}/Duration/Ms`, Math.max((interaction.root?.end || 0) - (interaction.root?.start || 0), 0)], undefined, FEATURE_NAMES.metrics, baseEE)
+      if (interaction.root?.attrs?.trigger === 'initialPageLoad') smCategory = SPA_INTERACTION_IPL_DURATION_MS
+      else if (interaction.routeChange) smCategory = SPA_INTERACTION_ROUTE_CHANGE_DURATION_MS
+      else smCategory = SPA_INTERACTION_CUSTOM_DURATION_MS
+      reportSupportabilityMetric({ name: smCategory, value: Math.max((interaction.root?.end || 0) - (interaction.root?.start || 0), 0) })
 
       scheduler?.scheduleHarvest(0)
       if (!scheduler) warn('SPA scheduler is not initialized. Saved interaction is not sent!')

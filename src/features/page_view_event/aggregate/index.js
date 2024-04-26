@@ -13,10 +13,9 @@ import { firstPaint } from '../../../common/vitals/first-paint'
 import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
 import { drain } from '../../../common/drain/drain'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
-import { handle } from '../../../common/event-emitter/handle'
-import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { now } from '../../../common/timing/now'
 import { TimeKeeper } from '../../../common/timing/time-keeper'
+import { PVE_NR_TIME_CALCULATION_FAILED, reportSupportabilityMetric } from '../../utils/supportability-metrics'
 
 export class Aggregate extends AggregateBase {
   static featureName = CONSTANTS.FEATURE_NAME
@@ -123,7 +122,7 @@ export class Aggregate extends AggregateBase {
 
           agentRuntime.timeKeeper = timeKeeper
         } catch (error) {
-          handle(SUPPORTABILITY_METRIC_CHANNEL, ['PVE/NRTime/Calculation/Failed'], undefined, FEATURE_NAMES.metrics, this.ee)
+          reportSupportabilityMetric({ name: PVE_NR_TIME_CALCULATION_FAILED }, this.agentIdentifier)
           drain(this.agentIdentifier, FEATURE_NAMES.metrics, true)
           this.ee.abort()
           warn('Could not calculate New Relic server time. Agent shutting down.')

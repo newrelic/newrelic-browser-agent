@@ -11,10 +11,10 @@ import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { setDenyList, shouldCollectEvent } from '../../../common/deny-list/deny-list'
 import { FEATURE_NAME } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
-import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { parseGQL } from './gql'
 import { getNREUMInitializedAgent } from '../../../common/window/nreum'
+import { AJAX_EVENTS_EXCLUDED_AGENT, AJAX_EVENTS_EXCLUDED_APP, AJAX_EVENTS_GQL_BYTES_ADDED, AJAX_METRICS_EXCLUDED_AGENT, AJAX_METRICS_EXCLUDED_APP, reportSupportabilityMetric } from '../../utils/supportability-metrics'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -91,16 +91,16 @@ export class Aggregate extends AggregateBase {
       if (!shouldCollect) {
         if (params.hostname === beacon || (proxyBeacon && params.hostname === proxyBeacon)) {
           // This doesn't make a distinction if the same-domain request is going to a different port or path...
-          handle(SUPPORTABILITY_METRIC_CHANNEL, ['Ajax/Events/Excluded/Agent'], undefined, FEATURE_NAMES.metrics, ee)
+          reportSupportabilityMetric({ name: AJAX_EVENTS_EXCLUDED_AGENT }, agentIdentifier)
 
           if (ajaxMetricDenyListEnabled) {
-            handle(SUPPORTABILITY_METRIC_CHANNEL, ['Ajax/Metrics/Excluded/Agent'], undefined, FEATURE_NAMES.metrics, ee)
+            reportSupportabilityMetric({ name: AJAX_METRICS_EXCLUDED_AGENT }, agentIdentifier)
           }
         } else {
-          handle(SUPPORTABILITY_METRIC_CHANNEL, ['Ajax/Events/Excluded/App'], undefined, FEATURE_NAMES.metrics, ee)
+          reportSupportabilityMetric({ name: AJAX_EVENTS_EXCLUDED_APP }, agentIdentifier)
 
           if (ajaxMetricDenyListEnabled) {
-            handle(SUPPORTABILITY_METRIC_CHANNEL, ['Ajax/Metrics/Excluded/App'], undefined, FEATURE_NAMES.metrics, ee)
+            reportSupportabilityMetric({ name: AJAX_METRICS_EXCLUDED_APP }, agentIdentifier)
           }
         }
         return
@@ -134,7 +134,7 @@ export class Aggregate extends AggregateBase {
         body: this.body,
         query: this?.parsedOrigin?.search
       })
-      if (event.gql) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Ajax/Events/GraphQL/Bytes-Added', stringify(event.gql).length], undefined, FEATURE_NAMES.metrics, ee)
+      if (event.gql) reportSupportabilityMetric({ name: AJAX_EVENTS_GQL_BYTES_ADDED, value: stringify(event.gql).length }, agentIdentifier)
 
       const softNavInUse = Boolean(getNREUMInitializedAgent(agentIdentifier)?.features?.[FEATURE_NAMES.softNav])
       if (softNavInUse) { // For newer soft nav (when running), pass the event to it for evaluation -- either part of an interaction or is given back

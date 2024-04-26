@@ -15,8 +15,8 @@ import { responseSizeFromXhr } from './response-size'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
-import { SUPPORTABILITY_METRIC } from '../../metrics/constants'
 import { now } from '../../../common/timing/now'
+import { AJAX_CAT_HEADER_SEEN, reportSupportabilityMetric } from '../../utils/supportability-metrics'
 
 var handlers = ['load', 'error', 'abort', 'timeout']
 var handlersLen = handlers.length
@@ -393,7 +393,7 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
     if (ctx.sameOrigin) {
       var header = xhr.getResponseHeader('X-NewRelic-App-Data')
       if (header) {
-        handle(SUPPORTABILITY_METRIC, ['Ajax/CrossApplicationTracing/Header/Seen'], undefined, FEATURE_NAMES.metrics, ee)
+        reportSupportabilityMetric({ name: AJAX_CAT_HEADER_SEEN }, agentIdentifier)
         ctx.params.cat = header.split(', ').pop()
       }
     }

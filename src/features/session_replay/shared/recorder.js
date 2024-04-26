@@ -5,10 +5,8 @@ import { getConfigurationValue } from '../../../common/config/config'
 import { RecorderEvents } from './recorder-events'
 import { MODE } from '../../../common/session/constants'
 import { stylesheetEvaluator } from './stylesheet-evaluator'
-import { handle } from '../../../common/event-emitter/handle'
-import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
-import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { buildNRMetaNode } from './utils'
+import { SESSION_REPLAY_PAYLOAD_MISSING_INLINE_CSS_FAILED, SESSION_REPLAY_PAYLOAD_MISSING_INLINE_CSS_FIXED, reportSupportabilityMetric } from '../../utils/supportability-metrics'
 
 export class Recorder {
   /** Each page mutation or event will be stored (raw) in this array. This array will be cleared on each harvest */
@@ -119,8 +117,8 @@ export class Recorder {
           this.currentBufferTarget.inlinedAllStylesheets = false
           this.shouldFix = false
         }
-        handle(SUPPORTABILITY_METRIC_CHANNEL, ['SessionReplay/Payload/Missing-Inline-Css/Failed', failedToFix], undefined, FEATURE_NAMES.metrics, this.parent.ee)
-        handle(SUPPORTABILITY_METRIC_CHANNEL, ['SessionReplay/Payload/Missing-Inline-Css/Fixed', incompletes - failedToFix], undefined, FEATURE_NAMES.metrics, this.parent.ee)
+        reportSupportabilityMetric({ name: SESSION_REPLAY_PAYLOAD_MISSING_INLINE_CSS_FAILED, value: failedToFix }, this.parent.agentIdentifier)
+        reportSupportabilityMetric({ name: SESSION_REPLAY_PAYLOAD_MISSING_INLINE_CSS_FIXED, value: incompletes - failedToFix }, this.parent.agentIdentifier)
         this.takeFullSnapshot()
       })
       /** Only start ignoring data if got a faulty snapshot */

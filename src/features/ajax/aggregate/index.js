@@ -103,8 +103,6 @@ export class Aggregate extends AggregateBase {
 
     handle('bstXhrAgg', ['xhr', hash, params, metrics], undefined, FEATURE_NAMES.sessionTrace, this.ee) // have trace feature harvest AjaxNode
 
-    const xhrContext = this
-
     const event = {
       method: params.method,
       status: params.status,
@@ -118,10 +116,10 @@ export class Aggregate extends AggregateBase {
       callbackDuration: metrics.cbTime
     }
 
-    if (xhrContext.dt) {
-      event.spanId = xhrContext.dt.spanId
-      event.traceId = xhrContext.dt.traceId
-      event.spanTimestamp = this.#agentRuntime.timeKeeper.correctAbsoluteTimestamp(xhrContext.dt.timestamp)
+    if (ctx.dt) {
+      event.spanId = ctx.dt.spanId
+      event.traceId = ctx.dt.traceId
+      event.spanTimestamp = this.#agentRuntime.timeKeeper.correctAbsoluteTimestamp(ctx.dt.timestamp)
     }
 
     // parsed from the AJAX body, looking for operationName param & parsing query for operationType

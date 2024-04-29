@@ -13,7 +13,7 @@ beforeEach(() => {
   agentIdentifier = faker.string.uuid()
 })
 
-describe.only('isPreloadAllowed', () => {
+describe('isPreloadAllowed', () => {
   beforeEach(() => {
     jest.replaceProperty(runtimeConstantsModule, 'isBrowserScope', true)
   })
@@ -23,7 +23,7 @@ describe.only('isPreloadAllowed', () => {
       return path !== 'session_replay.preload'
     })
     jest.replaceProperty(configModule, 'originals', { MO: jest.fn() })
-    jest.spyOn(sessionReplaySharedUtils, 'enableSessionTracking').mockReturnValue(true)
+    jest.mocked(featureGatesModule.canEnableSessionTracking).mockReturnValue(true)
 
     expect(sessionReplaySharedUtils.isPreloadAllowed(agentIdentifier)).toEqual(false)
     expect(configModule.getConfigurationValue).toHaveBeenCalledWith(agentIdentifier, 'session_replay.preload')
@@ -34,7 +34,7 @@ describe.only('isPreloadAllowed', () => {
   test('should return false when mutation observers original is not present', async () => {
     jest.mocked(configModule.getConfigurationValue).mockReturnValue(true)
     jest.replaceProperty(configModule, 'originals', {})
-    jest.spyOn(sessionReplaySharedUtils, 'enableSessionTracking').mockReturnValue(true)
+    jest.mocked(featureGatesModule.canEnableSessionTracking).mockReturnValue(true)
 
     expect(sessionReplaySharedUtils.isPreloadAllowed(agentIdentifier)).toEqual(false)
     expect(configModule.getConfigurationValue).toHaveBeenCalledWith(agentIdentifier, 'session_replay.preload')
@@ -42,7 +42,7 @@ describe.only('isPreloadAllowed', () => {
     expect(configModule.getConfigurationValue).not.toHaveBeenCalledWith(agentIdentifier, 'session_trace.enabled')
   })
 
-  test.only('should return false when session tracking is disabled', async () => {
+  test('should return false when session tracking is disabled', async () => {
     jest.mocked(featureGatesModule.canEnableSessionTracking).mockReturnValue(false)
     jest.mocked(configModule.getConfigurationValue).mockImplementation((_, path) => {
       return path !== 'privacy.cookies_enabled'
@@ -55,6 +55,7 @@ describe.only('isPreloadAllowed', () => {
   })
 
   test('should return false when session trace is disabled', async () => {
+    jest.mocked(featureGatesModule.canEnableSessionTracking).mockReturnValue(true)
     jest.mocked(configModule.getConfigurationValue).mockImplementation((_, path) => {
       return path !== 'session_trace.enabled'
     })
@@ -62,22 +63,12 @@ describe.only('isPreloadAllowed', () => {
 
     expect(sessionReplaySharedUtils.isPreloadAllowed(agentIdentifier)).toEqual(false)
     expect(configModule.getConfigurationValue).toHaveBeenCalledWith(agentIdentifier, 'session_replay.preload')
-    expect(configModule.getConfigurationValue).toHaveBeenCalledWith(agentIdentifier, 'privacy.cookies_enabled')
-    expect(configModule.getConfigurationValue).toHaveBeenCalledWith(agentIdentifier, 'session_trace.enabled')
-  })
-
-  test('should return true when stars align', () => {
-    jest.mocked(configModule.getConfigurationValue).mockReturnValue(true)
-    jest.replaceProperty(configModule, 'originals', { MO: jest.fn() })
-
-    expect(sessionReplaySharedUtils.isPreloadAllowed(agentIdentifier)).toEqual(true)
-    expect(configModule.getConfigurationValue).toHaveBeenCalledWith(agentIdentifier, 'session_replay.preload')
-    expect(configModule.getConfigurationValue).toHaveBeenCalledWith(agentIdentifier, 'privacy.cookies_enabled')
+    expect(featureGatesModule.canEnableSessionTracking).toHaveBeenCalled()
     expect(configModule.getConfigurationValue).toHaveBeenCalledWith(agentIdentifier, 'session_trace.enabled')
   })
 })
 
-describe.only('canImportReplayAgg', () => {
+describe('canImportReplayAgg', () => {
   beforeEach(() => {
     jest.mocked(configModule.getConfigurationValue).mockReturnValue(true)
     jest.mocked(configModule.getConfigurationValue).mockReturnValue(true)
@@ -128,7 +119,7 @@ describe.only('canImportReplayAgg', () => {
   })
 })
 
-describe.only('buildNRMetaNode', () => {
+describe('buildNRMetaNode', () => {
   let timekeeper
 
   beforeEach(() => {

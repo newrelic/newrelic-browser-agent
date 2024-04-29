@@ -1,11 +1,6 @@
 import { wrapJsonP } from '../../../src/common/wrap/wrap-jsonp'
 import { bundleId } from '../../../src/common/ids/bundle-id'
 
-function removeListener (type, fn) {
-  const handlers = this.listeners(type)
-  var index = handlers.indexOf(fn)
-  handlers.splice(index, 1)
-}
 const validUrls = [
   '/jsonp?cb=foo',
   '/jsonp?cb=foo#abc',
@@ -56,10 +51,8 @@ describe('Wrapped Node prototype', () => {
 
 function shouldWork (url) {
   test('jsonp works with ' + url, done => {
-    jsonpEE.removeListener = removeListener
-
     function listener () {
-      jsonpEE.removeListener('new-jsonp', listener)
+      jsonpEE.removeEventListener('new-jsonp', listener)
       done()
     }
     jsonpEE.on('new-jsonp', listener)
@@ -71,8 +64,6 @@ function shouldWork (url) {
 }
 function shouldNotWork (url) {
   test('jsonp does not work with ' + url, done => {
-    jsonpEE.removeListener = removeListener
-
     const listener = function () {
       expect(true).toEqual(false) // should not have been called
     }
@@ -82,7 +73,7 @@ function shouldNotWork (url) {
     el.src = url
     window.document.body.appendChild(el)
 
-    jsonpEE.removeListener('new-jsonp', listener)
+    jsonpEE.removeEventListener('new-jsonp', listener)
     done()
   })
 }

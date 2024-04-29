@@ -126,11 +126,14 @@ export default class CustomCommands {
     /**
      * Gets TimeKeeper properties for first agent instance
      */
-    browser.addCommand('getTimeKeeper', async function () {
+    browser.addCommand('getPageTime', async function () {
       return browser.execute(function () {
         try {
-          var tk = Object.values(newrelic.initializedAgents)[0].runtime.timeKeeper
-          return { originTime: tk.originTime, correctedOriginTime: tk.correctedOriginTime }
+          var agent = Object.values(newrelic.initializedAgents)[0]
+          return {
+            originTime: agent.runtime.originTime,
+            correctedOriginTime: agent.runtime.timeKeeper.correctedOriginTime
+          }
         } catch (err) {
           return {}
         }

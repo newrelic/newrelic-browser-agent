@@ -85,6 +85,7 @@ export class Aggregate extends AggregateBase {
         this.errorOnPage = true
       }
     }
+
     return payload
   }
 
@@ -194,7 +195,7 @@ export class Aggregate extends AggregateBase {
     }
 
     params.firstOccurrenceTimestamp = this.observedAt[bucketHash]
-    params.timestamp = this.observedAt[bucketHash]
+    params.timestamp = agentRuntime.timeKeeper.convertRelativeTimestamp(time)
 
     var type = internal ? 'ierr' : 'err'
     var newMetrics = { time }

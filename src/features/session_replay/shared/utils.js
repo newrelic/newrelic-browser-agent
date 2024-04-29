@@ -1,5 +1,6 @@
 import { getConfigurationValue, originals } from '../../../common/config/config'
 import { canEnableSessionTracking } from '../../utils/feature-gates'
+import { originTime } from '../../../common/constants/runtime'
 
 export function hasReplayPrerequisite (agentId) {
   return !!originals.MO && // Session Replay cannot work without Mutation Observer
@@ -13,7 +14,6 @@ export function isPreloadAllowed (agentId) {
 
 export function canImportReplayAgg (agentId, sessionMgr) {
   if (!hasReplayPrerequisite(agentId)) return false
-  console.log('has prereq')
   return !!sessionMgr?.isNew || !!sessionMgr?.state.sessionReplayMode // Session Replay should only try to run if already running from a previous page, or at the beginning of a session
 }
 
@@ -23,8 +23,8 @@ export function buildNRMetaNode (timestamp, timeKeeper) {
     originalTimestamp: timestamp,
     correctedTimestamp,
     timestampDiff: timestamp - correctedTimestamp,
-    timeKeeperOriginTime: timeKeeper.originTime,
-    timeKeeperCorrectedOriginTime: timeKeeper.correctedOriginTime,
-    timeKeeperDiff: Math.floor(timeKeeper.originTime - timeKeeper.correctedOriginTime)
+    originTime,
+    correctedOriginTime: timeKeeper.correctedOriginTime,
+    originTimeDiff: Math.floor(originTime - timeKeeper.correctedOriginTime)
   }
 }

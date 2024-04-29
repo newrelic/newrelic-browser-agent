@@ -78,7 +78,7 @@ testDriver.test('response size', supported, function (t, browser, router) {
   var testCases = [
     {
       name: 'with request that returns content-length header',
-      responseBodySize: 10,
+      responseBodySize: 'abc123'.length,
       asset: 'spa/fetch-simple.html'
     },
     {

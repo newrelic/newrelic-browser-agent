@@ -27,7 +27,7 @@ beforeEach(() => {
   featureName = faker.string.uuid()
 })
 
-it('should set instance defaults', () => {
+test('should set instance defaults', () => {
   const mockEE = { [faker.string.uuid()]: faker.lorem.sentence() }
   jest.mocked(ee.get).mockReturnValue(mockEE)
 

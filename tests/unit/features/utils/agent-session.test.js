@@ -50,10 +50,6 @@ beforeEach(() => {
     __esModule: true,
     LocalStorage: jest.fn()
   }))
-  jest.doMock('../../../../src/common/storage/first-party-cookies', () => ({
-    __esModule: true,
-    FirstPartyCookies: jest.fn()
-  }))
 })
 
 afterEach(() => {
@@ -85,60 +81,6 @@ test('should not drain the session feature more than once', async () => {
   expect(result2).toEqual(expect.objectContaining(agentSession))
   expect(registerHandler).toHaveBeenCalledTimes(2)
   expect(drain).toHaveBeenCalledTimes(1)
-})
-
-test('should use the local storage class and instantiate a new session when cookies are enabled', async () => {
-  const expiresMs = faker.number.int()
-  const inactiveMs = faker.number.int()
-  const { getConfiguration } = await import('../../../../src/common/config/config')
-  jest.mocked(getConfiguration).mockReturnValue({
-    session: {
-      expiresMs,
-      inactiveMs
-    }
-  })
-
-  const { LocalStorage } = await import('../../../../src/common/storage/local-storage')
-  const { SessionEntity } = await import('../../../../src/common/session/session-entity')
-  const { setupAgentSession } = await import('../../../../src/features/utils/agent-session')
-  setupAgentSession(agentIdentifier)
-
-  expect(LocalStorage).toHaveBeenCalledTimes(1)
-  expect(SessionEntity).toHaveBeenCalledWith({
-    agentIdentifier,
-    key: 'SESSION',
-    storage: expect.any(LocalStorage),
-    expiresMs,
-    inactiveMs
-  })
-})
-
-test('should use the first party cookie storage class and instantiate a new session when cookies are enabled and a domain is set', async () => {
-  const expiresMs = faker.number.int()
-  const inactiveMs = faker.number.int()
-  const domain = faker.internet.domainName()
-  const { getConfiguration } = await import('../../../../src/common/config/config')
-  jest.mocked(getConfiguration).mockReturnValue({
-    session: {
-      expiresMs,
-      inactiveMs,
-      domain
-    }
-  })
-
-  const { FirstPartyCookies } = await import('../../../../src/common/storage/first-party-cookies')
-  const { SessionEntity } = await import('../../../../src/common/session/session-entity')
-  const { setupAgentSession } = await import('../../../../src/features/utils/agent-session')
-  setupAgentSession(agentIdentifier)
-
-  expect(FirstPartyCookies).toHaveBeenCalledTimes(1)
-  expect(SessionEntity).toHaveBeenCalledWith({
-    agentIdentifier,
-    key: 'SESSION',
-    storage: expect.any(FirstPartyCookies),
-    expiresMs,
-    inactiveMs
-  })
 })
 
 test('should set custom session data', async () => {

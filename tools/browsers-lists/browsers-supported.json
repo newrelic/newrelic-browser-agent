@@ -18,15 +18,15 @@
       "browserName": "chrome",
       "platformName": "Windows 11",
       "platform": "Windows 11",
-      "version": "120",
-      "browserVersion": "120"
+      "version": "121",
+      "browserVersion": "121"
     },
     {
       "browserName": "chrome",
       "platformName": "Windows 11",
       "platform": "Windows 11",
-      "version": "123",
-      "browserVersion": "123"
+      "version": "124",
+      "browserVersion": "124"
     }
   ],
   "edge": [
@@ -34,15 +34,15 @@
       "browserName": "MicrosoftEdge",
       "platformName": "Windows 11",
       "platform": "Windows 11",
-      "version": "114",
-      "browserVersion": "114"
+      "version": "115",
+      "browserVersion": "115"
     },
     {
       "browserName": "MicrosoftEdge",
       "platformName": "Windows 11",
       "platform": "Windows 11",
-      "version": "117",
-      "browserVersion": "117"
+      "version": "118",
+      "browserVersion": "118"
     },
     {
       "browserName": "MicrosoftEdge",
@@ -78,15 +78,15 @@
       "browserName": "firefox",
       "platformName": "Windows 10",
       "platform": "Windows 10",
-      "version": "121",
-      "browserVersion": "121"
+      "version": "122",
+      "browserVersion": "122"
     },
     {
       "browserName": "firefox",
       "platformName": "Windows 10",
       "platform": "Windows 10",
-      "version": "124",
-      "browserVersion": "124"
+      "version": "125",
+      "browserVersion": "125"
     }
   ],
   "safari": [

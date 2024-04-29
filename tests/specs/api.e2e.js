@@ -316,7 +316,7 @@ describe('newrelic api', () => {
         browser.testHandle.expectErrors(10000, true),
         browser.testHandle.expectMetrics(10000, true),
         browser.testHandle.expectIns(10000, true),
-        browser.testHandle.expectResources(10000, true),
+        browser.testHandle.expectTrace(10000, true),
         browser.testHandle.expectInteractionEvents(10000, true),
         browser.url(await browser.testHandle.assetURL('instrumented-manual.html'), config)
           .then(() => browser.pause(1000))
@@ -340,7 +340,7 @@ describe('newrelic api', () => {
         browser.testHandle.expectErrors(10000, true),
         browser.testHandle.expectMetrics(10000, true),
         browser.testHandle.expectIns(10000, true),
-        browser.testHandle.expectResources(10000, true),
+        browser.testHandle.expectTrace(10000, true),
         browser.testHandle.expectInteractionEvents(10000, true),
         browser.url(await browser.testHandle.assetURL('instrumented-manual.html'), config)
           .then(() => browser.pause(1000))
@@ -372,7 +372,7 @@ describe('newrelic api', () => {
         browser.testHandle.expectErrors(10000),
         browser.testHandle.expectMetrics(10000),
         browser.testHandle.expectIns(10000),
-        browser.testHandle.expectResources(10000),
+        browser.testHandle.expectTrace(10000),
         browser.testHandle.expectInteractionEvents(10000),
         browser.execute(function () {
           newrelic.start()
@@ -419,7 +419,7 @@ describe('newrelic api', () => {
         browser.testHandle.expectTimings(),
         browser.testHandle.expectAjaxEvents(10000, true),
         browser.testHandle.expectErrors(10000, true),
-        browser.testHandle.expectResources(),
+        browser.testHandle.expectTrace(),
         browser.testHandle.expectInteractionEvents(),
         browser.url(await browser.testHandle.assetURL('instrumented.html', {
           init: {

@@ -65,6 +65,11 @@ describe('Ajax aggregate', () => {
   })
 
   describe('storeXhr', () => {
+    afterEach(() => {
+      ajaxAggregate.ajaxEvents = []
+      ajaxAggregate.spaAjaxEvents = {}
+    })
+
     test('for a plain ajax request buffers in ajaxEvents', () => {
       ajaxAggregate.ee.emit('xhr', ajaxArguments, context)
 
@@ -73,8 +78,6 @@ describe('Ajax aggregate', () => {
 
       const ajaxEvent = ajaxAggregate.ajaxEvents[0]
       expect(ajaxEvent).toEqual(expect.objectContaining({ startTime: 0, path: '/pathname' }))
-
-      ajaxAggregate.ajaxEvents = [] // clear ajaxEvents buffer
     })
 
     test('for a (old) SPA ajax request buffers in spaAjaxEvents', () => {
@@ -89,8 +92,6 @@ describe('Ajax aggregate', () => {
 
       const spaAjaxEvent = interactionAjaxEvents[0]
       expect(spaAjaxEvent).toEqual(expect.objectContaining({ startTime: 0, path: '/pathname' }))
-
-      ajaxAggregate.spaAjaxEvents = {} // clear spaAjaxEvents
     })
 
     test('for ajax under soft nav does not buffer and instead pipes it', () => {
@@ -133,6 +134,10 @@ describe('Ajax aggregate', () => {
   })
 
   describe('prepareHarvest', () => {
+    afterEach(() => {
+      mockCurrentInfo.jsAttributes = {} // reset jsattributes for other tests
+    })
+
     test('correctly serializes an AjaxRequest events payload', () => {
       const expected = {
         type: 'ajax',
@@ -177,8 +182,6 @@ describe('Ajax aggregate', () => {
           expect(event).toEqual(expected) // event attributes serialized correctly
         })
       })
-
-      mockCurrentInfo.jsAttributes = {} // reset jsattributes for other tests
     })
 
     test('correctly serializes a very large AjaxRequest events payload', () => {
@@ -204,7 +207,6 @@ describe('Ajax aggregate', () => {
           validateCustomAttributeValues(expectedCustomAttributes, event.children) // Custom attributes are accounted for in chunked AJAX payloads
         })
       })
-      mockCurrentInfo.jsAttributes = {}
 
       function exceedsSizeLimit (payload) {
         return payload.length * 2 > maxPayloadSize

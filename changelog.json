@@ -4,6 +4,63 @@
     {
       "changes": [
         {
+          "type": "feat",
+          "sha": "1c3a6b963c1eb7e0792225c3a4c15b6fd8d64505",
+          "message": "Restructure AJAX Aggregate",
+          "issues": [
+            "1003"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "c487e04f46a606545c8172b6ed1c022b4dc1cac1",
+          "message": "Maintain calculated NR server time for session",
+          "issues": [
+            "980"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "aea9ac4dc791c58badc6d2efe7bdbb3c0f51a8bb",
+          "message": "Add harvestId to Session Replay payloads",
+          "issues": [
+            "1002"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "5e28fb722aa2bf08acc89066d5814e5bef862741",
+          "message": "Clean up xhrWrappable",
+          "issues": [
+            "1000"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "a518039aa61862553d546cf0e675b733a9f9bed7",
+          "message": "Prevent null CLS",
+          "issues": [
+            "993"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "97ae128934df7a74701eef001e49b0065ffe8216",
+          "message": "JSErrors timestamped per harvest",
+          "issues": [
+            "997"
+          ]
+        }
+      ],
+      "version": "1.258.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "40a35720-bffa-4038-b113-b444058d585a",
+      "createTime": "2024-04-29T19:46:40.368Z"
+    },
+    {
+      "changes": [
+        {
           "type": "fix",
           "sha": "f50351acb08b65b03e7f4b5530a001a80fc04ece",
           "message": "Session replay preload without autoStart",
@@ -1368,5 +1425,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2024-04-18T21:49:23.136Z"
+  "updateTime": "2024-04-29T19:46:40.368Z"
 }

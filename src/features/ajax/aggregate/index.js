@@ -18,24 +18,20 @@ import Chunk from './chunk'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
+  #agentInfo
   #agentRuntime
-  #beacon
-  #proxyBeacon
-  #ajaxMetricDenyListEnabled
+  #agentInit
 
   constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
 
-    this.#beacon = getInfo(agentIdentifier).errorBeacon
-
+    this.#agentInfo = getInfo(agentIdentifier)
     this.#agentRuntime = getRuntime(agentIdentifier)
-    setDenyList(this.#agentRuntime.denyList)
+    this.#agentInit = getConfiguration(agentIdentifier)
 
-    const agentInit = getConfiguration(agentIdentifier)
-    this.#proxyBeacon = agentInit.proxy?.beacon
-    this.#ajaxMetricDenyListEnabled = agentInit.feature_flags?.includes('ajax_metrics_deny_list')
-    const harvestTimeSeconds = agentInit.ajax.harvestTimeSeconds || 10
-    this.MAX_PAYLOAD_SIZE = agentInit.ajax.maxPayloadSize || 1000000
+    const harvestTimeSeconds = this.#agentInit.ajax.harvestTimeSeconds || 10
+    this.MAX_PAYLOAD_SIZE = this.#agentInit.ajax.maxPayloadSize || 1000000
+    setDenyList(this.#agentRuntime.denyList)
 
     this.ajaxEvents = []
     this.spaAjaxEvents = {}
@@ -81,22 +77,23 @@ export class Aggregate extends AggregateBase {
     }
 
     const shouldCollect = shouldCollectEvent(params)
+    const shouldOmitAjaxMetrics = this.#agentInit.feature_flags?.includes('ajax_metrics_deny_list')
 
     // store for timeslice metric (harvested by jserrors feature)
-    if (shouldCollect || !this.#ajaxMetricDenyListEnabled) {
+    if (shouldCollect || !shouldOmitAjaxMetrics) {
       this.aggregator.store('xhr', hash, params, metrics)
     }
 
     if (!shouldCollect) {
-      if (params.hostname === this.#beacon || (this.#proxyBeacon && params.hostname === this.#proxyBeacon)) {
+      if (params.hostname === this.#agentInfo.errorBeacon || (this.#agentInit.proxy?.beacon && params.hostname === this.#agentInit.proxy.beacon)) {
         // This doesn't make a distinction if the same-domain request is going to a different port or path...
         handle(SUPPORTABILITY_METRIC_CHANNEL, ['Ajax/Events/Excluded/Agent'], undefined, FEATURE_NAMES.metrics, this.ee)
 
-        if (this.#ajaxMetricDenyListEnabled) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Ajax/Metrics/Excluded/Agent'], undefined, FEATURE_NAMES.metrics, this.ee)
+        if (shouldOmitAjaxMetrics) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Ajax/Metrics/Excluded/Agent'], undefined, FEATURE_NAMES.metrics, this.ee)
       } else {
         handle(SUPPORTABILITY_METRIC_CHANNEL, ['Ajax/Events/Excluded/App'], undefined, FEATURE_NAMES.metrics, this.ee)
 
-        if (this.#ajaxMetricDenyListEnabled) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Ajax/Metrics/Excluded/App'], undefined, FEATURE_NAMES.metrics, this.ee)
+        if (shouldOmitAjaxMetrics) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Ajax/Metrics/Excluded/App'], undefined, FEATURE_NAMES.metrics, this.ee)
       }
       return // do not send this ajax as an event
     }

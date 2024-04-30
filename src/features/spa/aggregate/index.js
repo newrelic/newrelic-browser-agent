@@ -698,7 +698,7 @@ export class Aggregate extends AggregateBase {
       }
     }
 
-    baseEE.on('errorAgg', function (type, name, params, metrics) {
+    baseEE.on('spa-jserror', function (type, name, params, metrics) {
       if (!state.currentNode) return
       params._interactionId = state.currentNode.interaction.id
       // do not capture parentNodeId when in root node

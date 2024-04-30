@@ -108,7 +108,7 @@ export class Aggregate extends AggregateBase {
       this.isStandalone = true
       this.waitForFlags((['stn'])).then(([on]) => controlTraceOp(on), this.featureName, this.ee)
     } else {
-      registerHandler('errorAgg', () => {
+      registerHandler('trace-jserror', () => {
         seenAnError = true
         switchToFull()
       }, this.featureName, this.ee)
@@ -169,7 +169,7 @@ export class Aggregate extends AggregateBase {
     registerHandler('bstHist', (...args) => operationalGate.settle(() => this.storeHist(...args)), this.featureName, this.ee)
     registerHandler('bstXhrAgg', (...args) => operationalGate.settle(() => this.storeXhrAgg(...args)), this.featureName, this.ee)
     registerHandler('bstApi', (...args) => operationalGate.settle(() => this.storeSTN(...args)), this.featureName, this.ee)
-    registerHandler('errorAgg', (...args) => operationalGate.settle(() => this.storeErrorAgg(...args)), this.featureName, this.ee)
+    registerHandler('trace-jserror', (...args) => operationalGate.settle(() => this.storeErrorAgg(...args)), this.featureName, this.ee)
     registerHandler('pvtAdded', (...args) => operationalGate.settle(() => this.processPVT(...args)), this.featureName, this.ee)
     this.drain()
   }

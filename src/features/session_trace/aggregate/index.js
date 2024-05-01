@@ -44,6 +44,7 @@ export class Aggregate extends AggregateBase {
     this.trace = {}
     this.nodeCount = 0
     this.sentTrace = null
+    this.prevStoredEvents = new Set()
     this.harvestTimeSeconds = getConfigurationValue(agentIdentifier, 'session_trace.harvestTimeSeconds') || 10
     this.maxNodesPerHarvest = getConfigurationValue(agentIdentifier, 'session_trace.maxNodesPerHarvest') || 1000
     /**
@@ -208,6 +209,7 @@ export class Aggregate extends AggregateBase {
   }
 
   #prepareHarvest (options) {
+    this.prevStoredEvents.clear() // release references to past events for GC
     if (this.isStandalone) {
       if (this.ptid && now() >= MAX_TRACE_DURATION) {
         // Perform a final harvest once we hit or exceed the max session trace time
@@ -272,6 +274,8 @@ export class Aggregate extends AggregateBase {
   // Tracks the events and their listener's duration on objects wrapped by wrap-events.
   storeEvent (currentEvent, target, start, end) {
     if (this.shouldIgnoreEvent(currentEvent, target)) return
+    if (this.prevStoredEvents.has(currentEvent)) return // prevent multiple listeners of an event from creating duplicate trace nodes per occurrence
+    this.prevStoredEvents.add(currentEvent)
 
     const evt = {
       n: this.evtName(currentEvent.type),

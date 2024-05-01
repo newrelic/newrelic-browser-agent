@@ -468,66 +468,31 @@ describe('setAPI', () => {
       await new Promise(process.nextTick)
     })
 
-    test('should create SM event emitter event for calls to API when features are undefined', () => {
+    test('should create SM event emitter event for calls to API', () => {
       apiInterface.start()
 
       expect(handleModule.handle).toHaveBeenCalledTimes(1)
       expect(handleModule.handle).toHaveBeenCalledWith(
         SUPPORTABILITY_METRIC_CHANNEL,
-        ['API/start/undefined/called'],
+        ['API/start/called'],
         undefined,
         FEATURE_NAMES.metrics,
         instanceEE
       )
     })
 
-    test('should create SM event emitter event for calls to API when features are undefined', () => {
-      const features = [faker.string.uuid()]
-      apiInterface.start(features)
-
-      expect(handleModule.handle).toHaveBeenCalledTimes(1)
-      expect(handleModule.handle).toHaveBeenCalledWith(
-        SUPPORTABILITY_METRIC_CHANNEL,
-        ['API/start/defined/called'],
-        undefined,
-        FEATURE_NAMES.metrics,
-        instanceEE
-      )
-    })
-
-    test('should emit event emitter events for all features when input is undefined', () => {
+    test('should emit event to start all features (if not auto)', () => {
       apiInterface.start()
-
-      Object.values(FEATURE_NAMES).forEach(featureName => {
-        expect(instanceEE.emit).toHaveBeenCalledWith(`${featureName}-opt-in`)
-      })
+      expect(instanceEE.emit).toHaveBeenCalledWith('manual-start-all')
     })
 
-    test('should emit event emitter events for all features when input is set', () => {
-      apiInterface.start(Object.values(FEATURE_NAMES))
-
-      Object.values(FEATURE_NAMES).forEach(featureName => {
-        expect(instanceEE.emit).toHaveBeenCalledWith(`${featureName}-opt-in`)
-      })
-    })
-
-    test('should return early and warn for invalid feature names', () => {
+    test('should emit start even if some arg is passed', () => {
       const badFeatureName = faker.string.uuid()
       apiInterface.start(badFeatureName)
 
-      Object.values(FEATURE_NAMES).forEach(featureName => {
-        expect(instanceEE.emit).not.toHaveBeenCalledWith(`${featureName}-opt-in`)
-      })
-      expect(instanceEE.emit).not.toHaveBeenCalledWith(`${badFeatureName}-opt-in`)
-      expect(console.warn).toHaveBeenCalledTimes(1)
-      expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('Invalid feature name supplied'))
-    })
-
-    test('should always include page view event feature', () => {
-      apiInterface.start(['spa'])
-
-      expect(instanceEE.emit).toHaveBeenCalledWith('page_view_event-opt-in')
-      expect(instanceEE.emit).toHaveBeenCalledWith('spa-opt-in')
+      expect(instanceEE.emit).toHaveBeenCalledWith('manual-start-all')
+      expect(instanceEE.emit).not.toHaveBeenCalledWith(badFeatureName)
+      expect(console.warn).not.toHaveBeenCalled()
     })
   })
 

@@ -310,55 +310,7 @@ describe('newrelic api', () => {
       }
     }
 
-    it('should not start features when provided feature name is invalid', async () => {
-      const results = await Promise.all([
-        browser.testHandle.expectRum(10000, true),
-        browser.testHandle.expectTimings(10000, true),
-        browser.testHandle.expectAjaxEvents(10000, true),
-        browser.testHandle.expectErrors(10000, true),
-        browser.testHandle.expectMetrics(10000, true),
-        browser.testHandle.expectIns(10000, true),
-        browser.testHandle.expectResources(10000, true),
-        browser.testHandle.expectInteractionEvents(10000, true),
-        browser.url(await browser.testHandle.assetURL('instrumented-manual.html'), config)
-          .then(() => browser.pause(1000))
-          .then(() => browser.execute(function () {
-            newrelic.start('INVALID')
-            setTimeout(function () {
-              window.location.reload()
-            }, 1000)
-          }))
-          .then(() => undefined)
-      ])
-
-      expect(results).toEqual(new Array(9).fill(undefined))
-    })
-
-    it('should not start features when provided feature name is invalid type', async () => {
-      const results = await Promise.all([
-        browser.testHandle.expectRum(10000, true),
-        browser.testHandle.expectTimings(10000, true),
-        browser.testHandle.expectAjaxEvents(10000, true),
-        browser.testHandle.expectErrors(10000, true),
-        browser.testHandle.expectMetrics(10000, true),
-        browser.testHandle.expectIns(10000, true),
-        browser.testHandle.expectResources(10000, true),
-        browser.testHandle.expectInteractionEvents(10000, true),
-        browser.url(await browser.testHandle.assetURL('instrumented-manual.html'), config)
-          .then(() => browser.pause(1000))
-          .then(() => browser.execute(function () {
-            newrelic.start(1)
-            setTimeout(function () {
-              window.location.reload()
-            }, 1000)
-          }))
-          .then(() => undefined)
-      ])
-
-      expect(results).toEqual(new Array(9).fill(undefined))
-    })
-
-    it('should start all features when passed undefined', async () => {
+    it('should start all features', async () => {
       const initialLoad = await Promise.all([
         browser.testHandle.expectRum(10000, true),
         browser.url(await browser.testHandle.assetURL('instrumented-manual.html'), config)
@@ -394,20 +346,27 @@ describe('newrelic api', () => {
       checkSpa(results[7].request)
     })
 
-    it('should force start PVE when another feature is started', async () => {
+    it('starts everything if the auto features do not include PVE, and nothing should have started', async () => {
       const initialLoad = await Promise.all([
         browser.testHandle.expectRum(10000, true),
-        browser.url(await browser.testHandle.assetURL('instrumented-manual.html'), config)
-          .then(() => undefined)
+        browser.testHandle.expectErrors(10000, true),
+        browser.url(await browser.testHandle.assetURL('instrumented-manual.html', {
+          init: {
+            ...config.init,
+            jserrors: {
+              autoStart: true
+            }
+          }
+        })).then(() => undefined)
       ])
 
-      expect(initialLoad).toEqual(new Array(2).fill(undefined))
+      expect(initialLoad).toEqual(new Array(3).fill(undefined))
 
       const results = await Promise.all([
         browser.testHandle.expectRum(10000),
         browser.testHandle.expectErrors(10000),
         browser.execute(function () {
-          newrelic.start('jserrors')
+          newrelic.start()
         })
       ])
 
@@ -415,7 +374,7 @@ describe('newrelic api', () => {
       checkJsErrors(results[1].request, { messages: ['test'] })
     })
 
-    it('should start the partial list of features', async () => {
+    it('starts the rest of the features if the auto features include PVE, and those should have started', async () => {
       const results = await Promise.all([
         browser.testHandle.expectRum(),
         browser.testHandle.expectTimings(),

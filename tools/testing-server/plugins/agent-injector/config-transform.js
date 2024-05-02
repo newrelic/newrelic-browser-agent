@@ -80,7 +80,6 @@ function getConfigContent (request, reply, testServer) {
     ? `NREUM.loader_config=${loaderConfigJSON};`
     : ''
 
-  console.log(infoJSON)
   return `${sslShim}window.NREUM||(NREUM={});NREUM.info=${infoJSON};${loaderConfigAssignment}${
     testServer.config.debugShim ? debugShim : ''
   }`

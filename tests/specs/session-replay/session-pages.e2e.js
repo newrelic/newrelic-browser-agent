@@ -10,10 +10,10 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
     await browser.destroyAgentSession()
   })
 
-  it('should record across same-tab page refresh', async () => {
+  it('should record across same-tab page refresh', async function () {
     const [{ request: page1Contents }] = await Promise.all([
       browser.testHandle.expectBlob(),
-      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config(undefined, this.test)))
         .then(() => browser.waitForAgentLoad())
     ])
     const { localStorage } = await browser.getAgentSessionInfo()
@@ -41,10 +41,10 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
     testExpectedReplay({ data: request2, session: localStorage.value, hasError: false, isFirstChunk: false })
   })
 
-  it('should record across same-tab page navigation', async () => {
+  it('should record across same-tab page navigation', async function () {
     const [{ request: page1Contents }] = await Promise.all([
       browser.testHandle.expectBlob(10000),
-      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config(undefined, this.test)))
         .then(() => browser.waitForAgentLoad())
     ])
 
@@ -60,7 +60,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
     ] = await Promise.all([
       browser.testHandle.expectBlob(10000),
       browser.testHandle.expectBlob(10000),
-      browser.url(await browser.testHandle.assetURL('instrumented.html', config()))
+      browser.url(await browser.testHandle.assetURL('instrumented.html', config(undefined, this.test)))
         .then(() => browser.waitForAgentLoad())
     ])
 
@@ -72,10 +72,10 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
   })
 
   // // As of 06/26/2023 test fails in Safari, though tested behavior works in a live browser (revisit in NR-138940).
-  it.withBrowsersMatching([supportsMultipleTabs, notSafari])('should record across new-tab page navigation', async () => {
+  it.withBrowsersMatching([supportsMultipleTabs, notSafari])('should record across new-tab page navigation', async function () {
     const [{ request: page1Contents }] = await Promise.all([
       browser.testHandle.expectBlob(10000),
-      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config(undefined, this.test)))
         .then(() => browser.waitForAgentLoad())
     ])
 
@@ -98,14 +98,14 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
     await browser.enableSessionReplay()
     const newTab = await browser.createWindow('tab')
     await browser.switchToWindow(newTab.handle)
-    await browser.url(await browser.testHandle.assetURL('instrumented.html', config()))
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', config(undefined, this.test)))
       .then(() => browser.waitForSessionReplayRecording())
   })
 
-  it('should not record across navigations if not active', async () => {
+  it('should not record across navigations if not active', async function () {
     const [{ request: page1Contents }] = await Promise.all([
       browser.testHandle.expectBlob(10000),
-      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config(undefined, this.test)))
         .then(() => browser.waitForAgentLoad())
     ])
 
@@ -125,10 +125,10 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
   })
 
   // As of 06/26/2023 test fails in Safari, though tested behavior works in a live browser (revisit in NR-138940).
-  it.withBrowsersMatching([supportsMultipleTabs, notSafari])('should kill active tab if killed in backgrounded tab', async () => {
+  it.withBrowsersMatching([supportsMultipleTabs, notSafari])('should kill active tab if killed in backgrounded tab', async function () {
     const [{ request: page1Contents }] = await Promise.all([
       browser.testHandle.expectBlob(10000),
-      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config(undefined, this.test)))
         .then(() => browser.waitForAgentLoad())
     ])
 
@@ -150,7 +150,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
     await browser.enableSessionReplay()
     const newTab = await browser.createWindow('tab')
     await browser.switchToWindow(newTab.handle)
-    await browser.url(await browser.testHandle.assetURL('instrumented.html', config()))
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', config(undefined, this.test)))
       .then(() => browser.waitForSessionReplayRecording())
 
     const page2Blocked = await browser.execute(function () {

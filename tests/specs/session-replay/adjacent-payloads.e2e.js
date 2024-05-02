@@ -11,10 +11,10 @@ describe.withBrowsersMatching(notIE)('Adjacent Payloads', () => {
       await browser.destroyAgentSession()
     })
 
-    it('error timestamp should be contained within replay timestamp', async () => {
+    it('error timestamp should be contained within replay timestamp', async function () {
       await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({
         session_replay: { error_sampling_rate: 100, sampling_rate: 0 }
-      })))
+      }, this.test)))
         .then(() => browser.waitForAgentLoad())
 
       // this issue was seen when some time had passed from agg load time and was running in error mode
@@ -25,6 +25,7 @@ describe.withBrowsersMatching(notIE)('Adjacent Payloads', () => {
         browser.testHandle.expectBlob(10000),
         browser.execute(function () {
           newrelic.noticeError(new Error('test'))
+          document.querySelector('#err').classList.remove('hidden')
         })
       ])
 
@@ -34,10 +35,10 @@ describe.withBrowsersMatching(notIE)('Adjacent Payloads', () => {
       expect(errorPayload.request.body.err[0].params.hasReplay).toEqual(true)
     })
 
-    it('error should have hasReplay removed when preloaded but not autostarted', async () => {
+    it('error should have hasReplay removed when preloaded but not autostarted', async function () {
       await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({
         session_replay: { preload: true, error_sampling_rate: 0, sampling_rate: 100, autoStart: false }
-      })))
+      }, this.test)))
         .then(() => browser.waitForAgentLoad())
 
       // this issue was seen when some time had passed from agg load time and was running in error mode
@@ -47,6 +48,7 @@ describe.withBrowsersMatching(notIE)('Adjacent Payloads', () => {
         browser.testHandle.expectErrors(10000),
         browser.execute(function () {
           newrelic.noticeError(new Error('test'))
+          document.querySelector('#err').classList.remove('hidden')
         })
       ])
 

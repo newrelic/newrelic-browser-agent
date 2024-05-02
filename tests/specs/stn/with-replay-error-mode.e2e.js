@@ -33,10 +33,10 @@ describe.withBrowsersMatching(notIE)('Trace error mode', () => {
       body: JSON.stringify({ stn: 0, err: 1, ins: 1, spa: 1, sr: 1, loaded: 1 })
     })
 
-    testUrl = await browser.testHandle.assetURL('stn/instrumented.html', config({ session_replay: { sampling_rate: 0, error_sampling_rate: 100 }, session_trace: { harvestTimeSeconds: 3 } }))
+    testUrl = await browser.testHandle.assetURL('stn/instrumented.html', config({ session_replay: { sampling_rate: 0, error_sampling_rate: 100 }, session_trace: { harvestTimeSeconds: 3 } }, this.test))
   })
 
-  it('switches to full mode when an error happens after page load', async () => {
+  it('switches to full mode when an error happens after page load', async function () {
     await Promise.all([
       browser.testHandle.expectResources(10000, true),
       browser.url(testUrl)
@@ -57,8 +57,8 @@ describe.withBrowsersMatching(notIE)('Trace error mode', () => {
     await expect(browser.testHandle.expectResources(5000)).resolves.toBeTruthy() // double check there's nothing wrong with full mode interval harvest
   })
 
-  it('starts in full mode when an error happens before page load', async () => {
-    testUrl = await browser.testHandle.assetURL('js-error-with-error-before-page-load.html', config({ session_replay: { sampling_rate: 0, error_sampling_rate: 100 }, session_trace: { harvestTimeSeconds: 3 } }))
+  it('starts in full mode when an error happens before page load', async function () {
+    testUrl = await browser.testHandle.assetURL('js-error-with-error-before-page-load.html', config({ session_replay: { sampling_rate: 0, error_sampling_rate: 100 }, session_trace: { harvestTimeSeconds: 3 } }, this.test))
 
     const [resources] = await Promise.all([
       browser.testHandle.expectResources(),
@@ -71,7 +71,7 @@ describe.withBrowsersMatching(notIE)('Trace error mode', () => {
     await expect(browser.testHandle.expectResources(5000)).resolves.toBeTruthy()
   })
 
-  it('starts in error mode but shifts to full mode if api is called', async () => {
+  it('starts in error mode but shifts to full mode if api is called', async function () {
     const [firstSTPayload] = await Promise.all([
       browser.testHandle.expectResources(10000, true),
       await browser.url(testUrl)
@@ -93,7 +93,7 @@ describe.withBrowsersMatching(notIE)('Trace error mode', () => {
     await expect(getTraceMode()).resolves.toEqual([MODE.FULL, false])
   })
 
-  it('does not capture more than the last 30 seconds when error happens', async () => {
+  it('does not capture more than the last 30 seconds when error happens', async function () {
     await browser.url(testUrl)
       .then(() => browser.waitForAgentLoad())
     await browser.pause(35000)
@@ -106,7 +106,7 @@ describe.withBrowsersMatching(notIE)('Trace error mode', () => {
     expect(resources.request.body.res.find(node => node.n === 'loadEventEnd')).toBeUndefined() // that node should've been tossed out by now
   })
 
-  it('does not perform final harvest while in this mode', async () => {
+  it('does not perform final harvest while in this mode', async function () {
     let [resources] = await Promise.all([
       browser.testHandle.expectResources(10000, true),
       browser.url(testUrl)
@@ -125,7 +125,7 @@ describe.withBrowsersMatching(notIE)('Trace error mode', () => {
     expect(resources).toBeUndefined() // no harvest from either previous unload or from new existing-session load
   })
 
-  it.withBrowsersMatching(supportsMultipleTabs)('catches mode transition from other pages in the session', async () => {
+  it.withBrowsersMatching(supportsMultipleTabs)('catches mode transition from other pages in the session', async function () {
     await browser.url(testUrl)
       .then(() => browser.waitForAgentLoad())
     await expect(getTraceMode()).resolves.toEqual([MODE.ERROR, false])
@@ -159,7 +159,7 @@ describe.withBrowsersMatching(notIE)('Trace error mode', () => {
       ['does not harvest anything, in error mode', MODE.ERROR, { sampling_rate: 0, error_sampling_rate: 100 }]
     ].forEach(([description, supposedMode, replayConfig]) => {
       it(description, async () => {
-        testUrl = await browser.testHandle.assetURL('stn/instrumented.html', config({ session_replay: replayConfig, session_trace: { harvestTimeSeconds: 2 } }))
+        testUrl = await browser.testHandle.assetURL('stn/instrumented.html', config({ session_replay: replayConfig, session_trace: { harvestTimeSeconds: 2 } }, this.test))
 
         await Promise.all([
           browser.testHandle.expectResources(10000, supposedMode !== MODE.FULL),

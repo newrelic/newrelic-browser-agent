@@ -39,13 +39,13 @@ describe('NR Server Time', () => {
     testTimeExpectations(error.params.timestamp, timeKeeper, false)
   })
 
-  it.withBrowsersMatching(notIE)('should send session replay with timestamp prior to rum date header', async () => {
+  it.withBrowsersMatching(notIE)('should send session replay with timestamp prior to rum date header', async function () {
     await browser.destroyAgentSession()
     await browser.testHandle.clearScheduledReplies('bamServer')
     serverTime = await browser.mockDateResponse(undefined, { flags: { sr: 1 } })
     const [{ request: replayData }, timeKeeper] = await Promise.all([
       browser.testHandle.expectBlob(10000),
-      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { sampling_rate: 100, preload: true } })))
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { sampling_rate: 100, preload: true } }, this.test)))
         .then(() => browser.waitForSessionReplayRecording())
         .then(() => browser.getPageTime())
     ])
@@ -72,13 +72,13 @@ describe('NR Server Time', () => {
     await browser.destroyAgentSession()
   })
 
-  it.withBrowsersMatching(notIE)('should send session replay with timestamp after rum date header', async () => {
+  it.withBrowsersMatching(notIE)('should send session replay with timestamp after rum date header', async function () {
     await browser.destroyAgentSession()
     await browser.testHandle.clearScheduledReplies('bamServer')
     serverTime = await browser.mockDateResponse(undefined, { flags: { sr: 1 } })
     const [{ request: replayData }, timeKeeper] = await Promise.all([
       browser.testHandle.expectBlob(),
-      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { sampling_rate: 100, preload: false } })))
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { sampling_rate: 100, preload: false } }, this.test)))
         .then(() => browser.waitForSessionReplayRecording())
         .then(() => browser.getPageTime())
     ])

@@ -10,10 +10,10 @@ describe.withBrowsersMatching(notIE)('Session Replay Preload', () => {
     await browser.destroyAgentSession()
   })
 
-  it.withBrowsersMatching([supportsMultipleTabs, notSafari])('should preload the recorder when a session recording is already in progress', async () => {
+  it.withBrowsersMatching([supportsMultipleTabs, notSafari])('should preload the recorder when a session recording is already in progress', async function () {
     const [initialSessionReplayHarvest, wasPreloaded1] = await Promise.all([
       browser.testHandle.expectBlob(),
-      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { preload: false } })))
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { preload: false } }, this.test)))
         .then(() => browser.waitForAgentLoad())
         .then(() => browser.execute(function () {
           return window.wasPreloaded
@@ -36,10 +36,10 @@ describe.withBrowsersMatching(notIE)('Session Replay Preload', () => {
     expect(wasPreloaded).toEqual(true)
   })
 
-  it('should preload the recorder when preload is configured', async () => {
+  it('should preload the recorder when preload is configured', async function () {
     const [initialSessionReplayHarvest, wasPreloaded1] = await Promise.all([
       browser.testHandle.expectBlob(),
-      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { preload: true } })))
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { preload: true } }, this.test)))
         .then(() => browser.waitForAgentLoad())
         .then(() => browser.execute(function () {
           return window.wasPreloaded
@@ -50,10 +50,10 @@ describe.withBrowsersMatching(notIE)('Session Replay Preload', () => {
     testExpectedReplay({ data: initialSessionReplayHarvest.request, hasSnapshot: true, hasMeta: true })
   })
 
-  it('should not preload if not configured and not recording', async () => {
+  it('should not preload if not configured and not recording', async function () {
     const [initialSessionReplayHarvest, wasPreloaded1] = await Promise.all([
       browser.testHandle.expectBlob(),
-      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { preload: false } })))
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { preload: false } }, this.test)))
         .then(() => browser.waitForAgentLoad())
         .then(() => browser.execute(function () {
           return window.wasPreloaded
@@ -64,10 +64,10 @@ describe.withBrowsersMatching(notIE)('Session Replay Preload', () => {
     testExpectedReplay({ data: initialSessionReplayHarvest.request, hasSnapshot: true, hasMeta: true })
   })
 
-  it('should not harvest beginning preload data if not sampled', async () => {
+  it('should not harvest beginning preload data if not sampled', async function () {
     const [, wasPreloaded] = await Promise.all([
       browser.testHandle.expectBlob(10000, true),
-      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { preload: true, sampling_rate: 0, error_sampling_rate: 0 } })))
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { preload: true, sampling_rate: 0, error_sampling_rate: 0 } }, this.test)))
         .then(() => browser.waitForAgentLoad())
         .then(() => browser.execute(function () {
           return window.wasPreloaded
@@ -77,10 +77,10 @@ describe.withBrowsersMatching(notIE)('Session Replay Preload', () => {
     expect(wasPreloaded).toEqual(true)
   })
 
-  it.withBrowsersMatching([supportsMultipleTabs, notSafari])('should start harvesting when start API called before the recorder import completes', async () => {
+  it.withBrowsersMatching([supportsMultipleTabs, notSafari])('should start harvesting when start API called before the recorder import completes', async function () {
     const [, wasPreloaded] = await Promise.all([
       browser.testHandle.expectBlob(10000),
-      browser.url(await browser.testHandle.assetURL('session_replay/64kb-dom-manual-start.html', config({ session_replay: { preload: true, autoStart: false } })))
+      browser.url(await browser.testHandle.assetURL('session_replay/64kb-dom-manual-start.html', config({ session_replay: { preload: true, autoStart: false } }, this.test)))
         .then(() => browser.waitForAgentLoad())
         .then(() => browser.execute(function () {
           return window.wasPreloaded // window var set at load time which checks the SR recorder's buffer to see if populated before load

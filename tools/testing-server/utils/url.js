@@ -29,6 +29,10 @@ module.exports.urlFor = function urlFor (relativePath, query, testServer) {
     query.init = Buffer.from(serialize(query.init)).toString('base64')
   }
 
+  if (Object.prototype.hasOwnProperty.call(query || {}, 'info') && typeof query.info !== 'string') {
+    query.info = Buffer.from(serialize(query.info)).toString('base64')
+  }
+
   if (Object.prototype.hasOwnProperty.call(query || {}, 'workerCommands') && typeof query.workerCommands !== 'string') {
     query.workerCommands = Buffer.from(serialize(query.workerCommands)).toString('base64')
   }

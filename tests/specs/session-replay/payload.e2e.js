@@ -10,10 +10,10 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
     await browser.destroyAgentSession()
   })
 
-  it('should use rumResponse agent metadata', async () => {
+  it('should use rumResponse agent metadata', async function () {
     const [rumCall] = await Promise.all([
       browser.testHandle.expectRum(),
-      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config(undefined, this.test)))
         .then(() => browser.waitForAgentLoad())
     ])
 
@@ -22,13 +22,14 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
     testExpectedReplay({ data: harvestContents, entityGuid: agentMetadata.agents[0].entityGuid })
   })
 
-  it('should allow for gzip', async () => {
+  it('should allow for gzip', async function () {
     const [{ request: harvestContents }] = await Promise.all([
       browser.testHandle.expectBlob(),
-      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config(undefined, this.test)))
         .then(() => browser.waitForAgentLoad())
         .then(() => browser.execute(function () {
           newrelic.noticeError(new Error('test'))
+          document.querySelector('#err').classList.remove('hidden')
         }))
     ])
 
@@ -42,7 +43,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
     expect(Object.keys(harvestContents.body[0])).toEqual(expect.arrayContaining(['data', 'timestamp', 'type']))
   })
 
-  it('should allow for json', async () => {
+  it('should allow for json', async function () {
     await browser.testHandle.scheduleReply('assetServer', {
       test: function (request) {
         const url = new URL(request.url, 'resolve://')
@@ -54,7 +55,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
 
     const [{ request: harvestContents }] = await Promise.all([
       browser.testHandle.expectBlob(),
-      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config(undefined, this.test)))
         .then(() => browser.waitForAgentLoad())
     ])
 
@@ -68,10 +69,10 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
     expect(Object.keys(harvestContents.body[0])).toEqual(expect.arrayContaining(['data', 'timestamp', 'type']))
   })
 
-  it('should match expected payload - standard', async () => {
+  it('should match expected payload - standard', async function () {
     const [{ request: harvestContents }] = await Promise.all([
       browser.testHandle.expectBlob(),
-      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config(undefined, this.test)))
         .then(() => browser.waitForAgentLoad())
     ])
 
@@ -80,14 +81,15 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
     testExpectedReplay({ data: harvestContents, session: localStorage.value, hasError: false, hasMeta: true, hasSnapshot: true, isFirstChunk: true })
   })
 
-  it('should match expected payload - error', async () => {
+  it('should match expected payload - error', async function () {
     const [{ request: harvestContents1 }, { request: harvestContents2 }] = await Promise.all([
       browser.testHandle.expectBlob(),
       browser.testHandle.expectBlob(),
-      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config(undefined, this.test)))
         .then(() => browser.waitForAgentLoad())
         .then(() => browser.execute(function () {
           newrelic.noticeError(new Error('test'))
+          document.querySelector('#err').classList.remove('hidden')
         }))
     ])
     const { localStorage } = await browser.getAgentSessionInfo()
@@ -102,11 +104,11 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
    * auto-inlining broken stylesheets does not work in safari browsers < 16.3
    * current mitigation strategy is defined as informing customers to add `crossOrigin: anonymous` tags to cross-domain stylesheets
   */
-  it.withBrowsersMatching([notSafari, notIOS])('should place inlined css for cross origin stylesheets even if no crossOrigin tag', async () => {
+  it.withBrowsersMatching([notSafari, notIOS])('should place inlined css for cross origin stylesheets even if no crossOrigin tag', async function () {
     /** snapshot and mutation payloads */
     const [{ request: { body: snapshot1, query: snapshot1Query } }] = await Promise.all([
       browser.testHandle.expectSessionReplaySnapshot(10000),
-      browser.url(await browser.testHandle.assetURL('rrweb-invalid-stylesheet.html', config()))
+      browser.url(await browser.testHandle.assetURL('rrweb-invalid-stylesheet.html', config(undefined, this.test)))
         .then(() => browser.waitForFeatureAggregate('session_replay'))
     ])
     const snapshot1Nodes = snapshot1.filter(x => x.type === 2)

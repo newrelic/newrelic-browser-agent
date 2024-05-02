@@ -17,7 +17,7 @@ const { deserialize } = require('../../../shared/serializer.js')
  * @return {string}
  */
 function getConfigContent (request, reply, testServer) {
-  let queryConfig
+  let queryConfig, queryInfo
   try {
     if (request.query.config) {
       queryConfig = deserialize(
@@ -31,6 +31,19 @@ function getConfigContent (request, reply, testServer) {
     testServer.config.logger.error(error)
   }
 
+  try {
+    if (request.query.info) {
+      queryInfo = deserialize(
+        Buffer.from(request.query.info, 'base64').toString()
+      )
+    }
+  } catch (error) {
+    testServer.config.logger.error(
+      `Invalid info query parameter for request ${request.url}`
+    )
+    testServer.config.logger.error(error)
+  }
+
   const config = {
     agent: `${testServer.assetServer.host}:${testServer.assetServer.port}/build/nr.js`,
     beacon: `${testServer.bamServer.host}:${testServer.bamServer.port}`,
@@ -40,7 +53,7 @@ function getConfigContent (request, reply, testServer) {
   }
 
   let updatedConfig = {
-    info: {},
+    info: { ...queryInfo },
     loaderConfig: {}
   }
 
@@ -67,6 +80,7 @@ function getConfigContent (request, reply, testServer) {
     ? `NREUM.loader_config=${loaderConfigJSON};`
     : ''
 
+  console.log(infoJSON)
   return `${sslShim}window.NREUM||(NREUM={});NREUM.info=${infoJSON};${loaderConfigAssignment}${
     testServer.config.debugShim ? debugShim : ''
   }`

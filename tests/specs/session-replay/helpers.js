@@ -65,13 +65,23 @@ export function decodeAttributes (attributes) {
   return decodedObj
 }
 
-export function config (initOverrides = {}) {
+export function config (initOverrides = {}, test) {
   return deepmerge(
     {
       init: {
         privacy: { cookies_enabled: true },
         session_replay: { enabled: true, harvestTimeSeconds: 5, sampling_rate: 100, error_sampling_rate: 0 }
-      }
+      },
+      ...(test && {
+        info: {
+          jsAttributes: {
+            'enduser.id': test.fullTitle(),
+            testName: test.title,
+            fullTestName: test.fullTitle()
+          }
+        }
+      })
+
     },
     {
       init: {

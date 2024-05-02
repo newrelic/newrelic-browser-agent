@@ -11,8 +11,8 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
   })
 
   describe('enabled', () => {
-    it('enabled: true should import feature', async () => {
-      await browser.url(await browser.testHandle.assetURL('instrumented.html', config()))
+    it('enabled: true should import feature', async function () {
+      await browser.url(await browser.testHandle.assetURL('instrumented.html', config(undefined, this.test)))
         .then(() => browser.waitForAgentLoad())
 
       const wasInitialized = await browser.execute(function () {
@@ -22,17 +22,17 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
       expect(wasInitialized).toEqual(true)
     })
 
-    it('enabled: false should NOT import feature', async () => {
-      await browser.url(await browser.testHandle.assetURL('instrumented.html', config({ session_replay: { enabled: false } })))
+    it('enabled: false should NOT import feature', async function () {
+      await browser.url(await browser.testHandle.assetURL('instrumented.html', config({ session_replay: { enabled: false } }, this.test)))
         .then(() => browser.waitForAgentLoad())
 
       await expect(browser.waitForFeatureAggregate('session_replay', 10000)).rejects.toThrow()
     })
   })
 
-  describe('optIn', async () => {
-    it('when enabled: should only import feature after opt in', async () => {
-      await browser.url(await browser.testHandle.assetURL('instrumented.html', config({ session_replay: { autoStart: false } })))
+  describe('optIn', async function () {
+    it('when enabled: should only import feature after opt in', async function () {
+      await browser.url(await browser.testHandle.assetURL('instrumented.html', config({ session_replay: { autoStart: false } }, this.test)))
         .then(() => browser.waitForAgentLoad())
 
       let wasInitialized = await browser.execute(function () {
@@ -53,11 +53,11 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
   })
 
   describe('mask_all_inputs', () => {
-    it('mask_all_inputs: true should convert inputs to *', async () => {
+    it('mask_all_inputs: true should convert inputs to *', async function () {
       const [{ request: { body: body1 } }, { request: { body: body2 } }] = await Promise.all([
         browser.testHandle.expectBlob(10000),
         browser.testHandle.expectBlob(10000),
-        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
+        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config(undefined, this.test)))
           .then(() => browser.waitForAgentLoad())
           .then(() => browser.execute(function () {
             document.querySelector('textarea#plain').value = 'testing'
@@ -68,11 +68,11 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
       expect(`${JSON.stringify(body1)}${JSON.stringify(body2)}`.includes('testing')).toBeFalsy()
     })
 
-    it('mask_all_inputs: false should NOT convert inputs to *', async () => {
+    it('mask_all_inputs: false should NOT convert inputs to *', async function () {
       const [{ request: { body: body1 } }, { request: { body: body2 } }] = await Promise.all([
         browser.testHandle.expectBlob(10000),
         browser.testHandle.expectBlob(10000),
-        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_all_inputs: false } })))
+        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_all_inputs: false } }, this.test)))
           // .then(() => browser.waitForAgentLoad())
           .then(() => browser.execute(function () {
             document.querySelector('textarea#plain').value = 'testing'
@@ -84,22 +84,22 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
   })
 
   describe('mask_text_selector', () => {
-    it('mask_text_selector: "*" should convert all text to *', async () => {
+    it('mask_text_selector: "*" should convert all text to *', async function () {
       const [{ request: { body: body1 } }, { request: { body: body2 } }] = await Promise.all([
         browser.testHandle.expectBlob(10000),
         browser.testHandle.expectBlob(10000),
-        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_all_inputs: false } })))
+        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_all_inputs: false } }, this.test)))
           .then(() => browser.waitForAgentLoad())
       ])
 
       expect(`${JSON.stringify(body1)}${JSON.stringify(body2)}`.includes('this is a page')).toBeFalsy()
     })
 
-    it('mask_text_selector: "null" should convert NO text to "*"', async () => {
+    it('mask_text_selector: "null" should convert NO text to "*"', async function () {
       const [{ request: { body: body1 } }, { request: { body: body2 } }] = await Promise.all([
         browser.testHandle.expectBlob(10000),
         browser.testHandle.expectBlob(10000),
-        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_text_selector: null, mask_all_inputs: false } })))
+        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_text_selector: null, mask_all_inputs: false } }, this.test)))
           .then(() => browser.waitForAgentLoad())
       ])
 
@@ -108,11 +108,11 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
   })
 
   describe('ignore_class', () => {
-    it('ignore_class: nr-ignore should ignore elem', async () => {
+    it('ignore_class: nr-ignore should ignore elem', async function () {
       const [{ request: { body: body1 } }, { request: { body: body2 } }] = await Promise.all([
         browser.testHandle.expectBlob(10000),
         browser.testHandle.expectBlob(10000),
-        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_text_selector: null, mask_all_inputs: false } })))
+        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_text_selector: null, mask_all_inputs: false } }, this.test)))
           .then(() => browser.waitForAgentLoad())
           .then(() => browser.execute(function () {
             document.querySelector('textarea.nr-ignore').value = 'testing'
@@ -122,11 +122,11 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
       expect(`${JSON.stringify(body1)}${JSON.stringify(body2)}`.includes('testing')).toBeFalsy()
     })
 
-    it('ignore_class: cannot be overridden', async () => {
+    it('ignore_class: cannot be overridden', async function () {
       const [{ request: { body: body1 } }, { request: { body: body2 } }] = await Promise.all([
         browser.testHandle.expectBlob(10000),
         browser.testHandle.expectBlob(10000),
-        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_text_selector: null, mask_all_inputs: false, ignore_class: null } })))
+        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_text_selector: null, mask_all_inputs: false, ignore_class: null } }, this.test)))
           .then(() => browser.waitForAgentLoad())
           .then(() => browser.execute(function () {
             document.querySelector('textarea.nr-ignore').value = 'testing'
@@ -138,11 +138,11 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
   })
 
   describe('block_class', () => {
-    it('block_class: nr-block should block elem', async () => {
+    it('block_class: nr-block should block elem', async function () {
       const [{ request: { body: body1 } }, { request: { body: body2 } }] = await Promise.all([
         browser.testHandle.expectBlob(10000),
         browser.testHandle.expectBlob(10000),
-        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_text_selector: null, mask_all_inputs: false } })))
+        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_text_selector: null, mask_all_inputs: false } }, this.test)))
           .then(() => browser.waitForAgentLoad())
           .then(() => browser.execute(function () {
             document.querySelector('textarea.nr-block').value = 'testing'
@@ -153,11 +153,11 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
       expect(`${JSON.stringify(body1)}${JSON.stringify(body2)}`.includes('testing')).toBeFalsy()
     })
 
-    it('block_class: cannot be overridden', async () => {
+    it('block_class: cannot be overridden', async function () {
       const [{ request: { body: body1 } }, { request: { body: body2 } }] = await Promise.all([
         browser.testHandle.expectBlob(10000),
         browser.testHandle.expectBlob(10000),
-        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_text_selector: null, mask_all_inputs: false, block_class: null } })))
+        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_text_selector: null, mask_all_inputs: false, block_class: null } }, this.test)))
           .then(() => browser.waitForAgentLoad())
           .then(() => browser.execute(function () {
             document.querySelector('textarea.nr-block').value = 'testing'
@@ -170,11 +170,11 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
   })
 
   describe('mask_text_class', () => {
-    it('mask_text_class: should mask elem', async () => {
+    it('mask_text_class: should mask elem', async function () {
       const [{ request: { body: body1 } }, { request: { body: body2 } }] = await Promise.all([
         browser.testHandle.expectBlob(10000),
         browser.testHandle.expectBlob(10000),
-        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_text_selector: null } })))
+        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_text_selector: null } }, this.test)))
           .then(() => browser.waitForAgentLoad())
           .then(() => browser.execute(function () {
             document.querySelector('textarea.nr-mask').value = 'testing'
@@ -185,11 +185,11 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
       expect(`${JSON.stringify(body1)}${JSON.stringify(body2)}`.includes('testing')).toBeFalsy()
     })
 
-    it('mask_text_class: cannot be overridden', async () => {
+    it('mask_text_class: cannot be overridden', async function () {
       const [{ request: { body: body1 } }, { request: { body: body2 } }] = await Promise.all([
         browser.testHandle.expectBlob(10000),
         browser.testHandle.expectBlob(10000),
-        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_text_selector: null, mask_text_class: null } })))
+        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_text_selector: null, mask_text_class: null } }, this.test)))
           .then(() => browser.waitForAgentLoad())
           .then(() => browser.execute(function () {
             document.querySelector('textarea.nr-mask').value = 'testing'
@@ -202,11 +202,11 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
   })
 
   describe('mask fn callbacks', () => {
-    it('maskTextFn: should mask un-decorated DOM elems (control test)', async () => {
+    it('maskTextFn: should mask un-decorated DOM elems (control test)', async function () {
       const [{ request: { body: body1 } }, { request: { body: body2 } }] = await Promise.all([
         browser.testHandle.expectBlob(10000),
         browser.testHandle.expectBlob(10000),
-        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_text_selector: '*', mask_all_inputs: true } })))
+        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_text_selector: '*', mask_all_inputs: true } }, this.test)))
           .then(() => browser.waitForAgentLoad())
           .then(() => browser.execute(function () {
             document.querySelector('textarea#plain').value = 'testing'
@@ -217,11 +217,11 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
 
       expect(`${JSON.stringify(body1)}${JSON.stringify(body2)}`.includes('testing')).toBeFalsy()
     })
-    it('maskTextFn: should unmask text elems by class', async () => {
+    it('maskTextFn: should unmask text elems by class', async function () {
       const [{ request: { body: body1 } }, { request: { body: body2 } }] = await Promise.all([
         browser.testHandle.expectBlob(10000),
         browser.testHandle.expectBlob(10000),
-        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_text_selector: 'textarea' } })))
+        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_text_selector: 'textarea' } }, this.test)))
           .then(() => browser.waitForAgentLoad())
           .then(() => browser.execute(function () {
             document.querySelector('textarea#unmask-class').value = 'testing'
@@ -232,11 +232,11 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
       expect(`${JSON.stringify(body1)}${JSON.stringify(body2)}`.includes('testing')).toBeTruthy()
     })
 
-    it('maskTextFn: should unmask text elems by data attr', async () => {
+    it('maskTextFn: should unmask text elems by data attr', async function () {
       const [{ request: { body: body1 } }, { request: { body: body2 } }] = await Promise.all([
         browser.testHandle.expectBlob(10000),
         browser.testHandle.expectBlob(10000),
-        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_text_selector: 'textarea' } })))
+        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_text_selector: 'textarea' } }, this.test)))
           .then(() => browser.waitForAgentLoad())
           .then(() => browser.execute(function () {
             document.querySelector('textarea#unmask-data').value = 'testing'
@@ -247,11 +247,11 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
       expect(`${JSON.stringify(body1)}${JSON.stringify(body2)}`.includes('testing')).toBeTruthy()
     })
 
-    it('maskTextFn: should unmask inputs by class', async () => {
+    it('maskTextFn: should unmask inputs by class', async function () {
       const [{ request: { body: body1 } }, { request: { body: body2 } }] = await Promise.all([
         browser.testHandle.expectBlob(10000),
         browser.testHandle.expectBlob(10000),
-        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_all_inputs: true } })))
+        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_all_inputs: true } }, this.test)))
           .then(() => browser.waitForAgentLoad())
           .then(() => browser.execute(function () {
             document.querySelector('input#unmask-class').value = 'testing'
@@ -262,11 +262,11 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
       expect(`${JSON.stringify(body1)}${JSON.stringify(body2)}`.includes('testing')).toBeTruthy()
     })
 
-    it('maskTextFn: should unmask inputs by data attr', async () => {
+    it('maskTextFn: should unmask inputs by data attr', async function () {
       const [{ request: { body: body1 } }, { request: { body: body2 } }] = await Promise.all([
         browser.testHandle.expectBlob(10000),
         browser.testHandle.expectBlob(10000),
-        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_all_inputs: true } })))
+        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_all_inputs: true } }, this.test)))
           .then(() => browser.waitForAgentLoad())
           .then(() => browser.execute(function () {
             document.querySelector('input#unmask-data').value = 'testing'
@@ -277,11 +277,11 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
       expect(`${JSON.stringify(body1)}${JSON.stringify(body2)}`.includes('testing')).toBeTruthy()
     })
 
-    it('maskTextFn: should NOT unmask password inputs even when included', async () => {
+    it('maskTextFn: should NOT unmask password inputs even when included', async function () {
       const [{ request: { body: body1 } }, { request: { body: body2 } }] = await Promise.all([
         browser.testHandle.expectBlob(10000),
         browser.testHandle.expectBlob(10000),
-        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_text_selector: 'input' } })))
+        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_text_selector: 'input' } }, this.test)))
           .then(() => browser.waitForAgentLoad())
           .then(() => browser.execute(function () {
             document.querySelector('input#unmask-pass-input').value = 'testing'
@@ -292,11 +292,11 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
       expect(`${JSON.stringify(body1)}${JSON.stringify(body2)}`.includes('testing')).toBeFalsy()
     })
 
-    it('maskTextFn: should unmask even with mask all selector ("*")', async () => {
+    it('maskTextFn: should unmask even with mask all selector ("*")', async function () {
       const [{ request: { body: body1 } }, { request: { body: body2 } }] = await Promise.all([
         browser.testHandle.expectBlob(10000),
         browser.testHandle.expectBlob(10000),
-        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_text_selector: '*' } })))
+        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_text_selector: '*' } }, this.test)))
           .then(() => browser.waitForAgentLoad())
           .then(() => browser.execute(function () {
             document.querySelector('textarea#unmask-class').value = 'testing'
@@ -309,11 +309,11 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
   })
 
   describe('block_selector', () => {
-    it('block_selector: nr-data-block should block elem', async () => {
+    it('block_selector: nr-data-block should block elem', async function () {
       const [{ request: { body: body1 } }, { request: { body: body2 } }] = await Promise.all([
         browser.testHandle.expectBlob(10000),
         browser.testHandle.expectBlob(10000),
-        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_text_selector: null, mask_all_inputs: false } })))
+        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_text_selector: null, mask_all_inputs: false } }, this.test)))
           .then(() => browser.waitForAgentLoad())
           .then(() => browser.execute(function () {
             document.querySelector('textarea[data-nr-block]').value = 'testing'
@@ -324,11 +324,11 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
       expect(`${JSON.stringify(body1)}${JSON.stringify(body2)}`.includes('testing')).toBeFalsy()
     })
 
-    it('block_selector: only applies to specified elem', async () => {
+    it('block_selector: only applies to specified elem', async function () {
       const [{ request: { body: body1 } }, { request: { body: body2 } }] = await Promise.all([
         browser.testHandle.expectBlob(10000),
         browser.testHandle.expectBlob(10000),
-        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_text_selector: null, mask_all_inputs: false } })))
+        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_text_selector: null, mask_all_inputs: false } }, this.test)))
           .then(() => browser.waitForAgentLoad())
           .then(() => browser.execute(function () {
             document.querySelector('textarea[data-nr-block]').value = 'testing'
@@ -340,11 +340,11 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
       expect(`${JSON.stringify(body1)}${JSON.stringify(body2)}`.includes('testing')).toBeTruthy()
     })
 
-    it('block_selector: can be extended but not overridden', async () => {
+    it('block_selector: can be extended but not overridden', async function () {
       const [{ request: { body: body1 } }, { request: { body: body2 } }] = await Promise.all([
         browser.testHandle.expectBlob(10000),
         browser.testHandle.expectBlob(10000),
-        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_text_selector: null, mask_all_inputs: false, block_selector: '[data-other-block]' } })))
+        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_text_selector: null, mask_all_inputs: false, block_selector: '[data-other-block]' } }, this.test)))
           .then(() => browser.waitForAgentLoad())
           .then(() => browser.execute(function () {
             document.querySelector('textarea[data-nr-block]').value = 'testing'
@@ -356,8 +356,8 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
       expect(`${JSON.stringify(body1)}${JSON.stringify(body2)}`.includes('testing')).toBeFalsy()
     })
 
-    it('block_selector: should not extend on empty string argument', async () => {
-      await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_text_selector: null, mask_all_inputs: false, block_selector: '' } })))
+    it('block_selector: should not extend on empty string argument', async function () {
+      await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_text_selector: null, mask_all_inputs: false, block_selector: '' } }, this.test)))
         .then(() => browser.waitForAgentLoad())
 
       const blockSelectorOutput = await browser.execute(function () {
@@ -371,11 +371,11 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
   })
 
   describe('mask_input_options', () => {
-    it('mask_input_options: nr-data-block should block elem', async () => {
+    it('mask_input_options: nr-data-block should block elem', async function () {
       const [{ request: { body: body1 } }, { request: { body: body2 } }] = await Promise.all([
         browser.testHandle.expectBlob(10000),
         browser.testHandle.expectBlob(10000),
-        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_text_selector: null } })))
+        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_text_selector: null } }, this.test)))
           .then(() => browser.waitForAgentLoad())
           .then(() => browser.execute(function () {
             document.querySelector('#pass-input').value = 'testing'
@@ -386,11 +386,11 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
       expect(`${JSON.stringify(body1)}${JSON.stringify(body2)}`.includes('testing')).toBeFalsy()
     })
 
-    it('mask_input_options: can be extended but not overridden', async () => {
+    it('mask_input_options: can be extended but not overridden', async function () {
       const [{ request: { body: body1 } }, { request: { body: body2 } }] = await Promise.all([
         browser.testHandle.expectBlob(10000),
         browser.testHandle.expectBlob(10000),
-        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_text_selector: null, mask_input_options: { text: true } } })))
+        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { mask_text_selector: null, mask_input_options: { text: true } } }, this.test)))
           .then(() => browser.waitForAgentLoad())
           .then(() => browser.execute(function () {
             document.querySelector('#pass-input').value = 'testing'
@@ -404,11 +404,11 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
   })
 
   describe('inline assets', () => {
-    it('never collects inline images', async () => {
+    it('never collects inline images', async function () {
       const [{ request: { body: body1 } }, { request: { body: body2 } }] = await Promise.all([
         browser.testHandle.expectBlob(10000),
         browser.testHandle.expectBlob(10000),
-        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
+        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config(undefined, this.test)))
           .then(() => browser.waitForFeatureAggregate('session_replay'))
       ])
 
@@ -419,11 +419,11 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
       expect(!!imgNode.attributes.rr_dataURL).toEqual(false)
     })
 
-    it('inline_stylesheet false DOES NOT add inline text', async () => {
+    it('inline_stylesheet false DOES NOT add inline text', async function () {
       const [{ request: { body: body1, query: query1 } }] = await Promise.all([
         browser.testHandle.expectBlob(10000),
         browser.testHandle.expectBlob(10000),
-        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { inline_stylesheet: false } })))
+        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { inline_stylesheet: false } }, this.test)))
           .then(() => browser.waitForFeatureAggregate('session_replay'))
       ])
 
@@ -435,10 +435,10 @@ describe.withBrowsersMatching(notIE)('RRWeb Configuration', () => {
       expect(!!linkNode.attributes._cssText).toEqual(false)
     })
 
-    it('inline_stylesheet true DOES add inline text', async () => {
+    it('inline_stylesheet true DOES add inline text', async function () {
       const [{ request: { body: body1, query: query1 } }] = await Promise.all([
         browser.testHandle.expectBlob(10000),
-        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
+        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config(undefined, this.test)))
           .then(() => browser.waitForFeatureAggregate('session_replay'))
       ])
 

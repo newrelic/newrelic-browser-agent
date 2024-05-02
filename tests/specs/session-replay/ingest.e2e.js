@@ -11,8 +11,8 @@ describe.withBrowsersMatching(notIE)('Session Replay Ingest Behavior', () => {
     await browser.destroyAgentSession(browser.testHandle)
   })
 
-  it('Should empty event buffer when sending', async () => {
-    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
+  it('Should empty event buffer when sending', async function () {
+    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config(undefined, this.test)))
       .then(() => browser.waitForSessionReplayRecording())
 
     expect((await getSR()).events.length).toBeGreaterThan(0)
@@ -22,8 +22,8 @@ describe.withBrowsersMatching(notIE)('Session Replay Ingest Behavior', () => {
     expect((await getSR()).events.length).toEqual(0)
   })
 
-  it('Should stop recording if 429 response', async () => {
-    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
+  it('Should stop recording if 429 response', async function () {
+    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config(undefined, this.test)))
       .then(() => browser.waitForSessionReplayRecording())
 
     await expect(getSR()).resolves.toEqual(expect.objectContaining({

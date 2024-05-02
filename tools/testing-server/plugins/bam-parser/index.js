@@ -1,5 +1,6 @@
 const fp = require('fastify-plugin')
 const querypack = require('@newrelic/nr-querypack')
+const forwarder = require('../../utils/forwarder')
 
 const beaconRequestsRegex = /^((\/((events)|(jserrors)|(ins)|(resources)))?\/1\/)|(\/browser\/blobs)/i
 
@@ -13,6 +14,7 @@ module.exports = fp(async function (fastify, testServer) {
     'text/plain',
     { parseAs: 'string' },
     (request, body, done) => {
+      forwarder(request, body)
       if (!body || typeof body !== 'string' || body.trim().length === 0) return done(null, body)
 
       if (request.url.match(beaconRequestsRegex)) {

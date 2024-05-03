@@ -24,16 +24,14 @@ const log = logger('testing-server-connector')
  */
 export class TestHandleConnector {
   #assetServerConfig
-  #corsServerConfig
   #bamServerConfig
   #commandServerConfig
   #commandServerBase
   #testId
   #pendingExpects = new Set()
 
-  constructor (assetServerConfig, corsServerConfig, bamServerConfig, commandServerConfig) {
+  constructor (assetServerConfig, bamServerConfig, commandServerConfig) {
     this.#assetServerConfig = assetServerConfig
-    this.#corsServerConfig = corsServerConfig
     this.#bamServerConfig = bamServerConfig
     this.#commandServerConfig = commandServerConfig
     this.#commandServerBase = `http://127.0.0.1:${commandServerConfig.port}`
@@ -41,10 +39,6 @@ export class TestHandleConnector {
 
   get assetServerConfig () {
     return this.#assetServerConfig
-  }
-
-  get corsServerConfig () {
-    return this.#corsServerConfig
   }
 
   get bamServerConfig () {

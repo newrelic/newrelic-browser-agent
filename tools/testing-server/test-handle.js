@@ -274,9 +274,7 @@ module.exports = class TestHandle {
       {
         loader: 'full',
         config: {
-          licenseKey: this.#testId,
-          assetServerPort: this.testServer.assetServer.port,
-          corsServerPort: this.testServer.corsServer.port
+          licenseKey: this.#testId
         },
         script:
           '/' + path.relative(paths.rootDir, testFile) + '?browserify=true'

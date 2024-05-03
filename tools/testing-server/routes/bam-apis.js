@@ -9,9 +9,6 @@ const { storeReplayData } = require('../utils/replay-buffer')
  * @param {TestServer} testServer test server instance
  */
 module.exports = fp(async function (fastify) {
-  fastify.get('/health', async function (request, reply) {
-    reply.code(204).send()
-  })
   fastify.route({
     method: ['GET', 'POST'],
     url: '/debug',

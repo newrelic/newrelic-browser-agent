@@ -44,6 +44,7 @@ export class Aggregate extends AggregateBase {
     this.trace = {}
     this.nodeCount = 0
     this.sentTrace = null
+    this.prevStoredEvents = new Set()
     this.harvestTimeSeconds = getConfigurationValue(agentIdentifier, 'session_trace.harvestTimeSeconds') || 10
     this.maxNodesPerHarvest = getConfigurationValue(agentIdentifier, 'session_trace.maxNodesPerHarvest') || 1000
     /**
@@ -108,7 +109,7 @@ export class Aggregate extends AggregateBase {
       this.isStandalone = true
       this.waitForFlags((['stn'])).then(([on]) => controlTraceOp(on), this.featureName, this.ee)
     } else {
-      registerHandler('errorAgg', () => {
+      registerHandler('trace-jserror', () => {
         seenAnError = true
         switchToFull()
       }, this.featureName, this.ee)
@@ -169,7 +170,7 @@ export class Aggregate extends AggregateBase {
     registerHandler('bstHist', (...args) => operationalGate.settle(() => this.storeHist(...args)), this.featureName, this.ee)
     registerHandler('bstXhrAgg', (...args) => operationalGate.settle(() => this.storeXhrAgg(...args)), this.featureName, this.ee)
     registerHandler('bstApi', (...args) => operationalGate.settle(() => this.storeSTN(...args)), this.featureName, this.ee)
-    registerHandler('errorAgg', (...args) => operationalGate.settle(() => this.storeErrorAgg(...args)), this.featureName, this.ee)
+    registerHandler('trace-jserror', (...args) => operationalGate.settle(() => this.storeErrorAgg(...args)), this.featureName, this.ee)
     registerHandler('pvtAdded', (...args) => operationalGate.settle(() => this.processPVT(...args)), this.featureName, this.ee)
     this.drain()
   }
@@ -208,6 +209,7 @@ export class Aggregate extends AggregateBase {
   }
 
   #prepareHarvest (options) {
+    this.prevStoredEvents.clear() // release references to past events for GC
     if (this.isStandalone) {
       if (this.ptid && now() >= MAX_TRACE_DURATION) {
         // Perform a final harvest once we hit or exceed the max session trace time
@@ -272,6 +274,8 @@ export class Aggregate extends AggregateBase {
   // Tracks the events and their listener's duration on objects wrapped by wrap-events.
   storeEvent (currentEvent, target, start, end) {
     if (this.shouldIgnoreEvent(currentEvent, target)) return
+    if (this.prevStoredEvents.has(currentEvent)) return // prevent multiple listeners of an event from creating duplicate trace nodes per occurrence. Cleared every harvest. near-zero chance for re-duplication after clearing per harvest since the timestamps of the event are considered for uniqueness.
+    this.prevStoredEvents.add(currentEvent)
 
     const evt = {
       n: this.evtName(currentEvent.type),

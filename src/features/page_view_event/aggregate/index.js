@@ -17,11 +17,15 @@ import { handle } from '../../../common/event-emitter/handle'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { now } from '../../../common/timing/now'
 import { TimeKeeper } from '../../../common/timing/time-keeper'
+// import { onWindowLoad } from '../../../common/window/load'
+import { single } from '../../../common/util/invoke'
 
 export class Aggregate extends AggregateBase {
   static featureName = CONSTANTS.FEATURE_NAME
   constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, CONSTANTS.FEATURE_NAME)
+
+    // setTimeout(this.sendRum.bind(this), 0)
 
     this.timeToFirstByte = 0
     this.firstByteToWindowLoad = 0 // our "frontend" duration
@@ -36,13 +40,14 @@ export class Aggregate extends AggregateBase {
 
         this.sendRum()
       })
+      // setTimeout(this.sendRum.bind(this), 50)
     } else {
       // worker agent build does not get TTFB values, use default 0 values
       this.sendRum()
     }
   }
 
-  sendRum () {
+  sendRum = single(() => {
     const info = getInfo(this.agentIdentifier)
     const agentRuntime = getRuntime(this.agentIdentifier)
     const harvester = new Harvest(this)
@@ -54,6 +59,19 @@ export class Aggregate extends AggregateBase {
     // These 3 values should've been recorded after load and before this func runs. They are part of the minimum required for PageView events to be created.
     // Following PR #428, which demands that all agents send RUM call, these need to be sent even outside of the main window context where PerformanceTiming
     // or PerformanceNavigationTiming do not exists. Hence, they'll be filled in by 0s instead in, for example, worker threads that still init the PVE module.
+    // if (!timeToFirstByte.isValid) {
+    //   console.log('timeToFirstByte not valid')
+    //   this.aggregator.store('measures', 'be', { value: 0 })
+    //   this.aggregator.store('measures', 'fe', { value: 0 })
+    //   this.aggregator.store('measures', 'dc', { value: 0 })
+    // } else {
+    //   const currentTTFB = timeToFirstByte.current
+    //   this.aggregator.store('measures', 'be', { value: currentTTFB.value })
+    //
+    //   const navEntry = currentTTFB.attrs.navigationEntry
+    //   this.aggregator.store('measures', 'fe', { value: Math.max(Math.round((navEntry?.loadEventEnd || 0) - currentTTFB.value), 0) })
+    //   this.aggregator.store('measures', 'dc', { value: Math.max(Math.round((navEntry?.domContentLoadedEventEnd || 0) - currentTTFB.value), 0) })
+    // }
     this.aggregator.store('measures', 'be', { value: this.timeToFirstByte })
     this.aggregator.store('measures', 'fe', { value: this.firstByteToWindowLoad })
     this.aggregator.store('measures', 'dc', { value: this.firstByteToDomContent })
@@ -141,5 +159,5 @@ export class Aggregate extends AggregateBase {
         }
       }
     })
-  }
+  })
 }

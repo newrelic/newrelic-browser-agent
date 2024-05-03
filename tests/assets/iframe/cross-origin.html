@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+<head>
+  <title>RUM IFrame</title>
+  {init} {config}
+</head>
+<body>
+<script type="text/javascript">
+  var iframe = document.createElement('iframe')
+
+  if (!NREUM.init.ssl) {
+    iframe.src = 'http://' + NREUM.info.beacon + '/tests/assets/iframe/iframe.html'
+  } else {
+    iframe.src = 'https://' + NREUM.info.beacon + '/tests/assets/iframe/iframe.html'
+  }
+
+  var queryParams = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&')
+  for (var i = 0; i < queryParams.length; i++) {
+    if (i === 0) {
+      iframe.src += '?'
+    } else {
+      iframe.src += '&'
+    }
+
+    iframe.src += queryParams[i]
+  }
+
+  document.body.append(iframe)
+</script>
+</body>
+</html>

@@ -5,7 +5,14 @@ import { onTTFB } from 'web-vitals/attribution'
 
 export const timeToFirstByte = new VitalMetric(VITAL_NAMES.TIME_TO_FIRST_BYTE)
 
-if (isBrowserScope && typeof PerformanceNavigationTiming !== 'undefined' && !isiOS) {
+/**
+ * onTTFB is not supported in the following scenarios:
+ * - in a non-browser scope
+ * - in browsers that do not support PerformanceNavigationTiming API
+ * - in an iOS browser
+ * - cross-origin iframes specifically in firefox and safari
+ */
+if (isBrowserScope && typeof PerformanceNavigationTiming !== 'undefined' && !isiOS && window === window.parent) {
   onTTFB(({ value, attribution }) => {
     if (timeToFirstByte.isValid) return
     timeToFirstByte.update({ value, attrs: { navigationEntry: attribution.navigationEntry } })

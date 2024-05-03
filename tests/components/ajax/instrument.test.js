@@ -21,7 +21,7 @@ beforeAll(() => {
   baseEE = ajaxInstrument.ee
 })
 
-describe('Data url DOES generates telemetry for', () => {
+describe('Ajax event is not captured or buffered for data urls', () => {
   let xhrEventLogged
   beforeAll(() => { baseEE.on('xhr', monitorXhrEvent) })
   beforeEach(() => { xhrEventLogged = false })
@@ -37,7 +37,7 @@ describe('Data url DOES generates telemetry for', () => {
     xhr.onreadystatechange = function () {
       if (xhr.readyState === XMLHttpRequest.DONE) {
         setTimeout(() => { // the following has to wait for next loop so monitorXhrEvent can run
-          expect(xhrEventLogged).toEqual(true)
+          expect(xhrEventLogged).toEqual(false)
           baseEE.removeEventListener('send-xhr-start', validateIsDataProtocol)
           done()
         }, 0)
@@ -50,7 +50,7 @@ describe('Data url DOES generates telemetry for', () => {
     baseEE.on('fetch-done', validateIsDataProtocol)
 
     fetch('data:,dataUrl').then(() => {
-      expect(xhrEventLogged).toEqual(true)
+      expect(xhrEventLogged).toEqual(false)
       baseEE.removeEventListener('fetch-done', validateIsDataProtocol)
       done()
     })

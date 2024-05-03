@@ -79,7 +79,7 @@ export class Aggregate extends AggregateBase {
     registerHandler('bstHist', (...args) => this.traceStorage.storeHist(...args), this.featureName, this.ee)
     registerHandler('bstXhrAgg', (...args) => this.traceStorage.storeXhrAgg(...args), this.featureName, this.ee)
     registerHandler('bstApi', (...args) => this.traceStorage.storeSTN(...args), this.featureName, this.ee)
-    registerHandler('stn-errorAgg', (...args) => this.traceStorage.storeErrorAgg(...args), this.featureName, this.ee)
+    registerHandler('trace-jserror', (...args) => this.traceStorage.storeErrorAgg(...args), this.featureName, this.ee)
     registerHandler('pvtAdded', (...args) => this.traceStorage.processPVT(...args), this.featureName, this.ee)
 
     if (typeof PerformanceNavigationTiming !== 'undefined') {
@@ -92,7 +92,7 @@ export class Aggregate extends AggregateBase {
     if (this.mode === MODE.FULL) this.startHarvesting()
     else {
       /** A separate handler for noticing errors, and switching to "full" mode if running in "error" mode */
-      registerHandler('stn-errorAgg', () => {
+      registerHandler('trace-jserror', () => {
         if (this.mode === MODE.ERROR) this.switchToFull()
       }, this.featureName, this.ee)
     }
@@ -109,6 +109,7 @@ export class Aggregate extends AggregateBase {
 
   /** Called by the harvest scheduler at harvest time to retrieve the payload.  This will only actually return a payload if running in full mode */
   prepareHarvest (options = {}) {
+    this.traceStorage.prevStoredEvents.clear() // release references to past events for GC
     if (!this.timeKeeper?.ready) return // this should likely never happen, but just to be safe, we should never harvest if we cant correct time
     if (this.mode === MODE.OFF && this.traceStorage.nodeCount === 0) return
     if (this.mode === MODE.ERROR) return // Trace in this mode should never be harvesting, even on unload

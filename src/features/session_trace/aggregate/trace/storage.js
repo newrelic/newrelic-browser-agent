@@ -30,6 +30,7 @@ export class TraceStorage {
   earliestTimeStamp = Infinity
   latestTimeStamp = 0
   tempStorage = []
+  prevStoredEvents = new Set()
 
   constructor (parent) {
     this.parent = parent
@@ -170,6 +171,8 @@ export class TraceStorage {
   // Tracks the events and their listener's duration on objects wrapped by wrap-events.
   storeEvent (currentEvent, target, start, end) {
     if (this.shouldIgnoreEvent(currentEvent, target)) return
+    if (this.prevStoredEvents.has(currentEvent)) return // prevent multiple listeners of an event from creating duplicate trace nodes per occurrence. Cleared every harvest. near-zero chance for re-duplication after clearing per harvest since the timestamps of the event are considered for uniqueness.
+    this.prevStoredEvents.add(currentEvent)
 
     const evt = new TraceNode(this.evtName(currentEvent.type), start, end, undefined, 'event')
     try {

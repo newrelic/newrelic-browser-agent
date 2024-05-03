@@ -203,8 +203,7 @@ export class Aggregate extends AggregateBase {
     // sr, stn and spa aggregators listen to this event - stn sends the error in its payload,
     // and spa annotates the error with interaction info
     const jsErrorEvent = [type, bucketHash, params, newMetrics, customAttributes]
-    handle('stn-errorAgg', jsErrorEvent, undefined, FEATURE_NAMES.sessionTrace, this.ee)
-
+    handle('trace-jserror', jsErrorEvent, undefined, FEATURE_NAMES.sessionTrace, this.ee)
     // still send EE events for other features such as above, but stop this one from aggregating internal data
     if (this.blocked) return
 
@@ -212,7 +211,7 @@ export class Aggregate extends AggregateBase {
     // Note: the following are subject to potential race cond wherein if the other feature aren't fully initialized, it'll be treated as there being no associated interaction.
     // They each will also tack on their respective properties to the params object as part of the decision flow.
     if (softNavInUse) handle('jserror', [params, time], undefined, FEATURE_NAMES.softNav, this.ee)
-    else handle('spa-errorAgg', jsErrorEvent, undefined, FEATURE_NAMES.spa, this.ee)
+    else handle('spa-jserror', jsErrorEvent, undefined, FEATURE_NAMES.spa, this.ee)
 
     if (params.browserInteractionId && !params._softNavFinished) { // hold onto the error until the in-progress interaction is done, eithered saved or discarded
       this.bufferedErrorsUnderSpa[params.browserInteractionId] ??= []

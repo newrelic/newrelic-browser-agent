@@ -117,20 +117,10 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
     return appendJsAttribute('application.version', value, 'setApplicationVersion', false)
   }
 
-  apiInterface.start = (features) => {
+  apiInterface.start = () => {
     try {
-      const smTag = !features ? 'undefined' : 'defined'
-      handle(SUPPORTABILITY_METRIC_CHANNEL, [`API/start/${smTag}/called`], undefined, FEATURE_NAMES.metrics, instanceEE)
-      const featNames = Object.values(FEATURE_NAMES)
-      if (features === undefined) features = featNames
-      else {
-        features = Array.isArray(features) && features.length ? features : [features]
-        if (features.some(f => !featNames.includes(f))) return warn(`Invalid feature name supplied. Acceptable feature names are: ${featNames}`)
-        if (!features.includes(FEATURE_NAMES.pageViewEvent)) features.push(FEATURE_NAMES.pageViewEvent)
-      }
-      features.forEach(feature => {
-        instanceEE.emit(`${feature}-opt-in`)
-      })
+      handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/start/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
+      instanceEE.emit('manual-start-all')
     } catch (err) {
       warn('An unexpected issue occurred', err)
     }

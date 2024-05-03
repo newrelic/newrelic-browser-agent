@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.258.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.257.0...v1.258.0) (2024-04-29)
+
+
+### Features
+
+* Add harvestId to Session Replay payloads ([#1002](https://github.com/newrelic/newrelic-browser-agent/issues/1002)) ([aea9ac4](https://github.com/newrelic/newrelic-browser-agent/commit/aea9ac4dc791c58badc6d2efe7bdbb3c0f51a8bb))
+* JSErrors timestamped per harvest ([#997](https://github.com/newrelic/newrelic-browser-agent/issues/997)) ([97ae128](https://github.com/newrelic/newrelic-browser-agent/commit/97ae128934df7a74701eef001e49b0065ffe8216))
+* Maintain calculated NR server time for session ([#980](https://github.com/newrelic/newrelic-browser-agent/issues/980)) ([c487e04](https://github.com/newrelic/newrelic-browser-agent/commit/c487e04f46a606545c8172b6ed1c022b4dc1cac1))
+* Restructure AJAX Aggregate ([#1003](https://github.com/newrelic/newrelic-browser-agent/issues/1003)) ([1c3a6b9](https://github.com/newrelic/newrelic-browser-agent/commit/1c3a6b963c1eb7e0792225c3a4c15b6fd8d64505))
+
+
+### Bug Fixes
+
+* Clean up xhrWrappable ([#1000](https://github.com/newrelic/newrelic-browser-agent/issues/1000)) ([5e28fb7](https://github.com/newrelic/newrelic-browser-agent/commit/5e28fb722aa2bf08acc89066d5814e5bef862741))
+* Prevent null CLS ([#993](https://github.com/newrelic/newrelic-browser-agent/issues/993)) ([a518039](https://github.com/newrelic/newrelic-browser-agent/commit/a518039aa61862553d546cf0e675b733a9f9bed7))
+
 ## [1.257.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.256.1...v1.257.0) (2024-04-18)
 
 

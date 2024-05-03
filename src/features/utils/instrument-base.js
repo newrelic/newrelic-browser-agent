@@ -53,7 +53,7 @@ export class InstrumentBase extends FeatureBase {
     /** if the feature requires opt-in (!auto-start), it will get registered once the api has been called */
     if (this.auto) registerDrain(agentIdentifier, featureName)
     else {
-      this.ee.on(`${this.featureName}-opt-in`, single(() => {
+      this.ee.on('manual-start-all', single(() => {
         // register the feature to drain only once the API has been called, it will drain when importAggregator finishes for all the features
         // called by the api in that cycle
         registerDrain(this.agentIdentifier, this.featureName)

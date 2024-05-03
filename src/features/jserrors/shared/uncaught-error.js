@@ -1,3 +1,5 @@
+import { stringify } from '../../../common/util/stringify'
+
 /**
  * Represents an uncaught non Error type error. This class does
  * not extend the Error class to prevent an invalid stack trace
@@ -7,7 +9,7 @@
 export class UncaughtError {
   constructor (message, filename, lineno, colno) {
     this.name = 'UncaughtError'
-    this.message = message
+    this.message = typeof message === 'string' ? message : stringify(message)
     this.sourceURL = filename
     this.line = lineno
     this.column = colno

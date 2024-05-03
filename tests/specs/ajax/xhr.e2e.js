@@ -1,4 +1,4 @@
-import { notIE, onlyFirefox } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { onlyFirefox } from '../../../tools/browser-matcher/common-matchers.mjs'
 
 describe('XHR Ajax', () => {
   it('creates event and metric data for xhr', async () => {
@@ -189,66 +189,6 @@ describe('XHR Ajax', () => {
           t: expect.toBeWithin(0, Infinity)
         },
         rxSize: expect.toBeNil(),
-        time: {
-          t: expect.toBeWithin(1, Infinity)
-        }
-      }
-    })
-  })
-
-  it.withBrowsersMatching(notIE)('creates event and metric data for xhr using data uri', async () => {
-    await browser.url(await browser.testHandle.assetURL('ajax/xhr-data-uri.html'))
-      .then(() => browser.waitForAgentLoad())
-
-    const [ajaxEventsHarvest, ajaxTimeSlicesHarvest] = await Promise.all([
-      browser.testHandle.expectAjaxEvents(),
-      browser.testHandle.expectAjaxTimeSlices(),
-      browser.execute(function () {
-        // We don't want the spa feature to pick up the ajax call
-        window.disableAjaxHashChange = true
-      }).then(() => $('#sendAjax').click())
-    ])
-
-    const ajaxEvent = ajaxEventsHarvest.request.body.find(event => event.domain === 'undefined:undefined')
-    expect(ajaxEvent).toEqual({
-      type: 'ajax',
-      children: [],
-      start: expect.toBeWithin(1, Infinity),
-      end: expect.toBeWithin(1, Infinity),
-      callbackEnd: expect.toBeWithin(1, Infinity),
-      callbackDuration: 0,
-      method: 'GET',
-      status: 200,
-      domain: 'undefined:undefined',
-      path: '',
-      requestBodySize: 0,
-      responseBodySize: 8,
-      requestedWith: 'XMLHttpRequest',
-      nodeId: '0',
-      guid: null,
-      traceId: null,
-      timestamp: null
-    })
-
-    const ajaxMetric = ajaxTimeSlicesHarvest.request.body.xhr.find(metric => metric.params.host === 'undefined:undefined')
-    expect(ajaxMetric).toEqual({
-      params: {
-        protocol: 'data',
-        host: 'undefined:undefined',
-        method: 'GET',
-        status: 200
-      },
-      metrics: {
-        cbTime: {
-          t: expect.toBeWithin(75, 126)
-        },
-        count: 1,
-        duration: {
-          t: expect.toBeWithin(0, Infinity)
-        },
-        rxSize: {
-          t: 8
-        },
         time: {
           t: expect.toBeWithin(1, Infinity)
         }

@@ -7,11 +7,12 @@ import { stringify } from '../../../common/util/stringify'
  * do not use the Error class (strings, etc) to an object.
  */
 export class UncaughtError {
-  constructor (message, filename, lineno, colno) {
+  constructor (message, filename, lineno, colno, newrelic) {
     this.name = 'UncaughtError'
     this.message = typeof message === 'string' ? message : stringify(message)
     this.sourceURL = filename
     this.line = lineno
     this.column = colno
+    this.__newrelic = newrelic
   }
 }

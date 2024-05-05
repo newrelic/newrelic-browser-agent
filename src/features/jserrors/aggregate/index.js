@@ -206,6 +206,11 @@ export class Aggregate extends AggregateBase {
     // still send EE events for other features such as above, but stop this one from aggregating internal data
     if (this.blocked) return
 
+    if (err.__newrelic) {
+      params._interactionId = err.__newrelic.interactionId
+      params._interactionNodeId = err.__newrelic.interactionNodeId
+    }
+
     const softNavInUse = Boolean(getNREUMInitializedAgent(this.agentIdentifier)?.features[FEATURE_NAMES.softNav])
     // Note: the following are subject to potential race cond wherein if the other feature aren't fully initialized, it'll be treated as there being no associated interaction.
     // They each will also tack on their respective properties to the params object as part of the decision flow.

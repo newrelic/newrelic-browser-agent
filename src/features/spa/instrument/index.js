@@ -10,6 +10,7 @@ import { InstrumentBase } from '../../utils/instrument-base'
 import * as CONSTANTS from '../constants'
 import { isBrowserScope } from '../../../common/constants/runtime'
 import { now } from '../../../common/timing/now'
+import { handle } from '../../../common/event-emitter/handle'
 
 const {
   FEATURE_NAME, START, END, BODY, CB_END, JS_TIME, FETCH, FN_START, CB_START, FN_END
@@ -45,6 +46,8 @@ export class Instrument extends InstrumentBase {
     this.ee.on(FN_END, endTimestamp)
     promiseEE.on(CB_END, endTimestamp)
     jsonpEE.on(CB_END, endTimestamp)
+
+    this.ee.on('fn-err', (...args) => { if (!args[2]?.__newrelic) handle('function-err', [...args], undefined, this.featureName, this.ee) })
 
     this.ee.buffer([FN_START, FN_END, 'xhr-resolved'], this.featureName)
     eventsEE.buffer([FN_START], this.featureName)

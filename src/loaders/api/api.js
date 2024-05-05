@@ -156,9 +156,10 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
           try {
             return cb.apply(this, arguments)
           } catch (err) {
-            tracerEE.emit('fn-err', [arguments, this, err], contextStore)
+            const error = typeof err === 'string' ? new Error(err) : err
+            tracerEE.emit('fn-err', [arguments, this, error], contextStore)
             // the error came from outside the agent, so don't swallow
-            throw err
+            throw error
           } finally {
             tracerEE.emit('fn-end', [now()], contextStore)
           }

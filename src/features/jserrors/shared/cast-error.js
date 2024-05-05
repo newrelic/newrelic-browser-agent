@@ -21,7 +21,8 @@ export function castError (error) {
       error.message,
       error.filename || error.sourceURL,
       error.lineno || error.line,
-      error.colno || error.col
+      error.colno || error.col,
+      error.__newrelic
     )
   }
 

@@ -8,7 +8,7 @@ import { UncaughtError } from './uncaught-error'
    */
 export function castError (error) {
   /** Sometimes a browser can emit an error object with no stack */
-  if (error instanceof Error && !!error.stack) {
+  if (canTrustError(error)) {
     return error
   }
 
@@ -40,9 +40,7 @@ export function castPromiseRejectionEvent (promiseRejectionEvent) {
   if (promiseRejectionEvent?.reason instanceof Error) {
     try {
       promiseRejectionEvent.reason.message = prefix + promiseRejectionEvent.reason.message
-      return castError(promiseRejectionEvent.reason)
     } catch (e) {
-      return castError(promiseRejectionEvent.reason)
     }
   }
 
@@ -64,5 +62,10 @@ export function castErrorEvent (errorEvent) {
     error.name = SyntaxError.name
     return error
   }
-  return castError(errorEvent.error)
+  if (canTrustError(errorEvent.error)) return errorEvent.error
+  return castError(errorEvent.error || errorEvent)
+}
+
+function canTrustError (error) {
+  return error instanceof Error && !!error.stack
 }

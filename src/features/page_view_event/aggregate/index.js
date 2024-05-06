@@ -17,15 +17,14 @@ import { handle } from '../../../common/event-emitter/handle'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { now } from '../../../common/timing/now'
 import { TimeKeeper } from '../../../common/timing/time-keeper'
-// import { onWindowLoad } from '../../../common/window/load'
 import { single } from '../../../common/util/invoke'
+
+console.log(single)
 
 export class Aggregate extends AggregateBase {
   static featureName = CONSTANTS.FEATURE_NAME
   constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, CONSTANTS.FEATURE_NAME)
-
-    // setTimeout(this.sendRum.bind(this), 0)
 
     this.timeToFirstByte = 0
     this.firstByteToWindowLoad = 0 // our "frontend" duration
@@ -47,7 +46,7 @@ export class Aggregate extends AggregateBase {
     }
   }
 
-  sendRum = single(() => {
+  sendRum () {
     const info = getInfo(this.agentIdentifier)
     const agentRuntime = getRuntime(this.agentIdentifier)
     const harvester = new Harvest(this)
@@ -159,5 +158,5 @@ export class Aggregate extends AggregateBase {
         }
       }
     })
-  })
+  }
 }

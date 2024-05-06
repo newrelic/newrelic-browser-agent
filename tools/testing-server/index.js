@@ -190,6 +190,7 @@ class TestServer {
     this.#assetServer = fastify(this.#defaultServerConfig)
 
     this.#assetServer.decorate('testServerId', 'assetServer')
+    this.#assetServer.register(require('./plugins/cache-interceptor')) // pre-process the request to help prevent cache responses
     this.#assetServer.register(require('@fastify/compress')) // handle gzip payloads, reply with gzip'd content
     this.#assetServer.decorate('testServerLogger', this.#logger)
     this.#assetServer.register(require('@fastify/multipart'), {
@@ -203,9 +204,7 @@ class TestServer {
     this.#assetServer.register(require('@fastify/static'), {
       root: paths.rootDir,
       prefix: '/',
-      index: ['index.html'],
-      cacheControl: false,
-      etag: false
+      index: ['index.html']
     })
     this.#assetServer.register(require('./plugins/agent-injector'), this)
     this.#assetServer.register(require('./plugins/browser-scripts'), this)
@@ -220,6 +219,7 @@ class TestServer {
     this.#bamServer = fastify(this.#defaultServerConfig)
 
     this.#bamServer.decorate('testServerId', 'bamServer')
+    this.#bamServer.register(require('./plugins/cache-interceptor')) // pre-process the request to help prevent cache responses
     this.#bamServer.register(require('./plugins/compression-interceptor')) // pre-process the request to help it conform with compression standards
     this.#bamServer.register(require('@fastify/compress')) // handle gzip payloads, reply with gzip'd content
     this.#bamServer.decorate('testServerLogger', this.#logger)
@@ -234,9 +234,7 @@ class TestServer {
     this.#bamServer.register(require('@fastify/static'), {
       root: paths.rootDir,
       prefix: '/',
-      index: ['index.html'],
-      cacheControl: false,
-      etag: false
+      index: ['index.html']
     })
     this.#bamServer.register(require('./plugins/agent-injector'), this)
     this.#bamServer.register(require('./plugins/browser-scripts'), this)

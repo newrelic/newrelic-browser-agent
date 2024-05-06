@@ -42,9 +42,6 @@ describe.withBrowsersMatching(onlyIOS)('ios webview', () => {
       $('-ios predicate string: type == "XCUIElementTypeButton" AND name == "Return"').click()
     ])
 
-    console.log(rumResult)
-    console.log(resourcesResult)
-    console.log(spaResult)
     expect(rumResult.request.body).toEqual('')
     expect(rumResult.request.query).toEqual(expect.objectContaining({
       ref: url.slice(0, url.indexOf('?')),

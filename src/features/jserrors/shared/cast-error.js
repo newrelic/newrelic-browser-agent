@@ -1,4 +1,3 @@
-import { stringify } from '../../../common/util/stringify'
 import { UncaughtError } from './uncaught-error'
 
 /**
@@ -17,18 +16,8 @@ export function castError (error) {
      * The thrown value may contain a message property. If it does, try to treat the thrown
      * value as an Error-like object.
      */
-  if (typeof error?.message !== 'undefined') {
-    return new UncaughtError(
-      (typeof error.message === 'string' && error.message) || stringify(error.message),
-      error.filename || error.sourceURL,
-      error.lineno || error.line,
-      error.colno || error.col,
-      error.__newrelic
-    )
-  }
-
   return new UncaughtError(
-    (typeof error === 'string' && error) || stringify(error),
+    error?.message !== undefined ? error.message : error,
     error?.filename || error?.sourceURL,
     error?.lineno || error?.line,
     error?.colno || error?.col,

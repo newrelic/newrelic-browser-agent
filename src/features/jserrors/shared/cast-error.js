@@ -32,21 +32,20 @@ export function castError (error) {
    */
 export function castPromiseRejectionEvent (promiseRejectionEvent) {
   let prefix = 'Unhandled Promise Rejection'
-  let prepended = false
 
   if (canTrustError(promiseRejectionEvent?.reason)) {
     try {
       promiseRejectionEvent.reason.message = prefix + ': ' + promiseRejectionEvent.reason.message
-      prepended = true
+      return castError(promiseRejectionEvent.reason)
     } catch (e) {
+      return castError(promiseRejectionEvent.reason)
     }
   }
 
   if (typeof promiseRejectionEvent.reason === 'undefined') return castError(prefix)
 
   const error = castError(promiseRejectionEvent.reason)
-  if (!prepended) error.message = prefix + ': ' + error?.message
-
+  error.message = prefix + ': ' + error?.message
   return error
 }
 

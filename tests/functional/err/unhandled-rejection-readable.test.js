@@ -33,7 +33,7 @@ testDriver.test('unhandledPromiseRejections are caught and are readable', suppor
       { message: 'Unhandled Promise Rejection: {"a":1,"b":{"a":1}}', tested: false, meta: 'nested obj' },
       { message: 'Unhandled Promise Rejection: [1,2,3]', tested: false, meta: 'array' },
       { message: 'Unhandled Promise Rejection: test', tested: false, meta: 'error with message' },
-      { message: 'Cannot set property message of Error which has only a getter', tested: false, meta: 'error with no setter with message' },
+      { message: 'test', tested: false, meta: 'error with no setter with message' },
       { message: 'Unhandled Promise Rejection', tested: false, meta: 'undefined' },
       { message: 'Unhandled Promise Rejection: null', tested: false, meta: 'null' },
       { message: 'Unhandled Promise Rejection: ', tested: false, meta: 'error with no message' },

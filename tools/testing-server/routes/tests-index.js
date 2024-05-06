@@ -47,10 +47,7 @@ module.exports = fp(async function (fastify, testServer) {
     return urlFor(
       '/tests/assets/browser.html',
       {
-        config: {
-          assetServerPort: testServer.assetServer.port,
-          corsServerPort: testServer.corsServer.port
-        },
+        config: {},
         script: `/${filePath}?browserify=true`
       },
       testServer

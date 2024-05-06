@@ -8,18 +8,15 @@ import { deserialize } from '../../../shared/serializer.js'
  */
 export default class TestingServerWorker {
   #assetServerConfig
-  #corsServerConfig
   #bamServerConfig
   #commandServerConfig
 
   beforeSession (_, capabilities) {
     this.#assetServerConfig = deserialize(capabilities.assetServer)
-    this.#corsServerConfig = deserialize(capabilities.corsServer)
     this.#bamServerConfig = deserialize(capabilities.bamServer)
     this.#commandServerConfig = deserialize(capabilities.commandServer)
 
     delete capabilities.assetServer
-    delete capabilities.corsServer
     delete capabilities.bamServer
     delete capabilities.commandServer
   }
@@ -32,7 +29,6 @@ export default class TestingServerWorker {
     browser.addCommand('getTestHandle', async () => {
       const testHandle = new TestHandleConnector(
         this.#assetServerConfig,
-        this.#corsServerConfig,
         this.#bamServerConfig,
         this.#commandServerConfig
       )

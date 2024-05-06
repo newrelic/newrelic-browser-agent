@@ -755,7 +755,6 @@ export class Aggregate extends AggregateBase {
       else smCategory = 'Custom'
       handle(SUPPORTABILITY_METRIC_CHANNEL, [`Spa/Interaction/${smCategory}/Duration/Ms`, Math.max((interaction.root?.end || 0) - (interaction.root?.start || 0), 0)], undefined, FEATURE_NAMES.metrics, baseEE)
 
-      console.log('harvest an ixn', interaction)
       scheduler?.scheduleHarvest(0)
       if (!scheduler) warn('SPA scheduler is not initialized. Saved interaction is not sent!')
     }

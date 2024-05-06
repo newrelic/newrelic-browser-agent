@@ -90,7 +90,7 @@ describe('cast-error', () => {
   })
 
   describe('castPromiseRejectionEvent', () => {
-    test('handles events with an error reason', () => {
+    test('handles events with an error reason without stack', () => {
       delete err.stack
       const castedError = castPromiseRejectionEvent({ reason: err })
       expect(castedError).toMatchObject({
@@ -102,13 +102,19 @@ describe('cast-error', () => {
       })
     })
 
+    test('handles events with an error reason with stack', () => {
+      const castedError = castPromiseRejectionEvent({ reason: err })
+      expect(castedError).toBeInstanceOf(Error)
+      expect(castedError).toEqual(err)
+    })
+
     test('handles events with an error reason missing a message', () => {
       err.message = undefined
       delete err.stack
       const castedError = castPromiseRejectionEvent({ reason: err })
       expect(castedError).toMatchObject({
         name: 'UncaughtError',
-        message: 'Unhandled Promise Rejection: undefined',
+        message: 'Unhandled Promise Rejection: {"filename":"filename","lineno":"lineno","colno":"colno"}',
         sourceURL: 'filename',
         line: 'lineno',
         column: 'colno'
@@ -128,12 +134,10 @@ describe('cast-error', () => {
     })
 
     test('handles events with an undefined reason', () => {
-      err.message = undefined
-      delete err.stack
       const castedError = castPromiseRejectionEvent({ reason: undefined })
       expect(castedError).toMatchObject({
         name: 'UncaughtError',
-        message: 'Unhandled Promise Rejection: ',
+        message: 'Unhandled Promise Rejection',
         sourceURL: undefined,
         line: undefined,
         column: undefined

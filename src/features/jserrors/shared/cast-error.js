@@ -1,3 +1,4 @@
+import { stringify } from '../../../common/util/stringify'
 import { UncaughtError } from './uncaught-error'
 
 /**
@@ -18,7 +19,7 @@ export function castError (error) {
      */
   if (typeof error?.message !== 'undefined') {
     return new UncaughtError(
-      error.message,
+      (typeof error.message === 'string' && error.message) || stringify(error.message),
       error.filename || error.sourceURL,
       error.lineno || error.line,
       error.colno || error.col,
@@ -26,7 +27,13 @@ export function castError (error) {
     )
   }
 
-  return new UncaughtError(error)
+  return new UncaughtError(
+    (typeof error === 'string' && error) || stringify(error),
+    error?.filename || error?.sourceURL,
+    error?.lineno || error?.line,
+    error?.colno || error?.col,
+    error?.__newrelic
+  )
 }
 
 /**
@@ -35,11 +42,13 @@ export function castError (error) {
    * @returns {Error} An Error object with the message as the casted reason
    */
 export function castPromiseRejectionEvent (promiseRejectionEvent) {
-  let prefix = 'Unhandled Promise Rejection: '
+  let prefix = 'Unhandled Promise Rejection'
+  let prepended = false
 
-  if (promiseRejectionEvent?.reason instanceof Error) {
+  if (canTrustError(promiseRejectionEvent?.reason)) {
     try {
-      promiseRejectionEvent.reason.message = prefix + promiseRejectionEvent.reason.message
+      promiseRejectionEvent.reason.message = prefix + ': ' + promiseRejectionEvent.reason.message
+      prepended = true
     } catch (e) {
     }
   }
@@ -47,7 +56,8 @@ export function castPromiseRejectionEvent (promiseRejectionEvent) {
   if (typeof promiseRejectionEvent.reason === 'undefined') return castError(prefix)
 
   const error = castError(promiseRejectionEvent.reason)
-  error.message = prefix + error.message
+  if (!prepended) error.message = prefix + ': ' + error?.message
+
   return error
 }
 

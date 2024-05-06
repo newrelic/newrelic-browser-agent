@@ -97,6 +97,7 @@ export function createWrapperWithEmitter (emitter, always) {
         return result
       } catch (err) {
         safeEmit(prefix + 'err', [args, originalThis, err], ctx, bubble)
+
         // rethrow error so we don't effect execution by observing.
         throw err
       } finally {

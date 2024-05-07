@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.258.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.258.0...v1.258.1) (2024-05-07)
+
+
+### Bug Fixes
+
+* Exclude data url requests as captured AJAX events ([#1012](https://github.com/newrelic/newrelic-browser-agent/issues/1012)) ([2a3fa57](https://github.com/newrelic/newrelic-browser-agent/commit/2a3fa57da1f389e6eabae2c92686e25285fc6cd3))
+* Improve Error Casting ([#1014](https://github.com/newrelic/newrelic-browser-agent/issues/1014)) ([d1dd20c](https://github.com/newrelic/newrelic-browser-agent/commit/d1dd20ce526ddb697962f695fbb5915410474987))
+* Remove API start()'s features param ([#1009](https://github.com/newrelic/newrelic-browser-agent/issues/1009)) ([38a502b](https://github.com/newrelic/newrelic-browser-agent/commit/38a502b08b4735259e7f5b863b0e5e5361c075b6))
+* Run inside cross-origin iframes for firefox/safari ([#1015](https://github.com/newrelic/newrelic-browser-agent/issues/1015)) ([6a4a73d](https://github.com/newrelic/newrelic-browser-agent/commit/6a4a73d72b056177268f8619a3a3b7810a7a2c79))
+* Session trace nodes de-duplication ([#1008](https://github.com/newrelic/newrelic-browser-agent/issues/1008)) ([44f229e](https://github.com/newrelic/newrelic-browser-agent/commit/44f229e4d35cd468bfe29b1796be8031bb9c72ff))
+
 ## [1.258.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.257.0...v1.258.0) (2024-04-29)
 
 

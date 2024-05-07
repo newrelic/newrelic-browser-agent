@@ -78,7 +78,7 @@ describe('cast-error', () => {
 
     test('castErrorEvent handles other errors', () => {
       delete err.stack
-      const castedError = castErrorEvent({ error: err })
+      const castedError = castErrorEvent({ error: err, lineno: 'lineno', colno: 'colno', message: 'message', filename: 'filename' })
       expect(castedError).toMatchObject({
         name: 'UncaughtError',
         message: 'message',

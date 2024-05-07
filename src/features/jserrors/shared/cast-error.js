@@ -61,7 +61,7 @@ export function castErrorEvent (errorEvent) {
     return error
   }
   if (canTrustError(errorEvent.error)) return errorEvent.error
-  return castError(errorEvent.error || errorEvent)
+  return castError(errorEvent)
 }
 
 function canTrustError (error) {

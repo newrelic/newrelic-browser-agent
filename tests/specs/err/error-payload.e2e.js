@@ -81,4 +81,14 @@ describe('error payloads', () => {
     expect(err2[0].params.firstOccurrenceTimestamp).toEqual(err1[0].params.firstOccurrenceTimestamp)
     expect(err2[0].params.timestamp).not.toEqual(err1[0].params.timestamp)
   })
+
+  it('errors without a stack trace still get line and col when present', async () => {
+    const [{ request: { body: { err } } }] = await Promise.all([
+      browser.testHandle.expectErrors(),
+      browser.url(await browser.testHandle.assetURL('js-error-no-stack.html')) // Setup expects before loading the page
+        .then(() => browser.waitForFeatureAggregate('jserrors'))
+    ])
+
+    expect(err[0].params.stack_trace.match(/<inline>:[0-9]+:[0-9]+/).length).toEqual(1)
+  })
 })

@@ -12,6 +12,11 @@
  *
  */
 
+module.exports.testAssetRequest = function testAssetRequest (request) {
+  const url = new URL(request.url, 'resolve://')
+  return url.pathname.indexOf('.html') > -1
+}
+
 module.exports.testRumRequest = function testRumRequest (request) {
   const url = new URL(request.url, 'resolve://')
   return url.pathname === `/1/${this.testId}`

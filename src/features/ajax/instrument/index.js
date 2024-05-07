@@ -17,6 +17,7 @@ import { FEATURE_NAME } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { SUPPORTABILITY_METRIC } from '../../metrics/constants'
 import { now } from '../../../common/timing/now'
+import { hasUndefinedHostname } from '../../../common/deny-list/deny-list'
 
 var handlers = ['load', 'error', 'abort', 'timeout']
 var handlersLen = handlers.length
@@ -338,18 +339,18 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
   // eslint-disable-next-line handle-callback-err
   function onFetchDone (_, res) {
     this.endTime = now()
-    if (!this.params) {
-      this.params = {}
-    }
+    if (!this.params) this.params = {}
+    if (hasUndefinedHostname(this.params)) return // don't bother with fetch to url with no hostname
+
     this.params.status = res ? res.status : 0
 
     // convert rxSize to a number
-    var responseSize
+    let responseSize
     if (typeof this.rxSize === 'string' && this.rxSize.length > 0) {
       responseSize = +this.rxSize
     }
 
-    var metrics = {
+    const metrics = {
       txSize: this.txSize,
       rxSize: responseSize,
       duration: now() - this.startTime
@@ -360,17 +361,18 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
 
   // Create report for XHR request that has finished
   function end (xhr) {
-    var params = this.params
-    var metrics = this.metrics
-
+    const params = this.params
+    const metrics = this.metrics
     if (this.ended) return
     this.ended = true
 
-    for (var i = 0; i < handlersLen; i++) {
+    for (let i = 0; i < handlersLen; i++) {
       xhr.removeEventListener(handlers[i], this.listener, false)
     }
 
     if (params.aborted) return
+    if (hasUndefinedHostname(params)) return // don't bother with XHR of url with no hostname
+
     metrics.duration = now() - this.startTime
     if (!this.loadCaptureCalled && xhr.readyState === 4) {
       captureXhrData(this, xhr)

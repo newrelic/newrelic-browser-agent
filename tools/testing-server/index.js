@@ -51,13 +51,6 @@ class TestServer {
   #assetServer
 
   /**
-   * Fastify cors server instance.
-   * This is a stripped down asset server that only has the API test routes.
-   * @type import('fastify').FastifyInstance
-   */
-  #corsServer
-
-  /**
    * Fastify bam server instance.
    * @type import('fastify').FastifyInstance
    */
@@ -85,7 +78,6 @@ class TestServer {
     this.#logger = new TestServerLogger(config)
 
     this.#createAssetServer()
-    this.#createCorsServer()
     this.#createBamServer()
     this.#createCommandServer()
   }
@@ -97,7 +89,6 @@ class TestServer {
   async start () {
     await Promise.all([
       this.#assetServer.listen({ host: '0.0.0.0', port: this.#config.port }),
-      this.#corsServer.listen({ host: '0.0.0.0', port: 0 }),
       this.#bamServer.listen({ host: '0.0.0.0', port: 0 }),
       this.#commandServer.listen({ host: '0.0.0.0', port: 0 })
     ])
@@ -112,7 +103,6 @@ class TestServer {
   async stop () {
     await Promise.all([
       this.#assetServer.close(),
-      this.#corsServer.close(),
       this.#bamServer.close(),
       this.#commandServer.close()
     ])
@@ -126,7 +116,6 @@ class TestServer {
     await waitOn({
       resources: [
         `http-get://127.0.0.1:${this.assetServer.port}/health`,
-        `http-get://127.0.0.1:${this.corsServer.port}/health`,
         `http-get://127.0.0.1:${this.bamServer.port}/health`,
         `http-get://127.0.0.1:${this.commandServer.port}/health`
       ]
@@ -142,14 +131,6 @@ class TestServer {
       server: this.#assetServer,
       host: this.#config.host,
       port: this.#getServerPort(this.#assetServer)
-    }
-  }
-
-  get corsServer () {
-    return {
-      server: this.#corsServer,
-      host: this.#config.host,
-      port: this.#getServerPort(this.#corsServer)
     }
   }
 
@@ -209,6 +190,7 @@ class TestServer {
     this.#assetServer = fastify(this.#defaultServerConfig)
 
     this.#assetServer.decorate('testServerId', 'assetServer')
+    this.#assetServer.register(require('./plugins/cache-interceptor')) // pre-process the request to help prevent cache responses
     this.#assetServer.register(require('@fastify/compress')) // handle gzip payloads, reply with gzip'd content
     this.#assetServer.decorate('testServerLogger', this.#logger)
     this.#assetServer.register(require('@fastify/multipart'), {
@@ -222,9 +204,7 @@ class TestServer {
     this.#assetServer.register(require('@fastify/static'), {
       root: paths.rootDir,
       prefix: '/',
-      index: ['index.html'],
-      cacheControl: false,
-      etag: false
+      index: ['index.html']
     })
     this.#assetServer.register(require('./plugins/agent-injector'), this)
     this.#assetServer.register(require('./plugins/browser-scripts'), this)
@@ -235,28 +215,11 @@ class TestServer {
     this.#assetServer.register(require('./plugins/request-logger'))
   }
 
-  #createCorsServer () {
-    this.#corsServer = fastify(this.#defaultServerConfig)
-
-    this.#corsServer.decorate('testServerId', 'corsServer')
-    this.#corsServer.decorate('testServerLogger', this.#logger)
-    this.#corsServer.register(require('@fastify/multipart'), {
-      attachFieldsToBody: true
-    })
-    this.#corsServer.register(require('@fastify/cors'), {
-      origin: true,
-      credentials: true,
-      exposedHeaders: ['X-NewRelic-App-Data', 'Date']
-    })
-    this.#corsServer.register(require('./routes/mock-apis'), this)
-    this.#corsServer.register(require('./plugins/no-cache'))
-    this.#corsServer.register(require('./plugins/request-logger'))
-  }
-
   #createBamServer () {
     this.#bamServer = fastify(this.#defaultServerConfig)
 
     this.#bamServer.decorate('testServerId', 'bamServer')
+    this.#bamServer.register(require('./plugins/cache-interceptor')) // pre-process the request to help prevent cache responses
     this.#bamServer.register(require('./plugins/compression-interceptor')) // pre-process the request to help it conform with compression standards
     this.#bamServer.register(require('@fastify/compress')) // handle gzip payloads, reply with gzip'd content
     this.#bamServer.decorate('testServerLogger', this.#logger)
@@ -268,6 +231,15 @@ class TestServer {
       credentials: true,
       exposedHeaders: ['X-NewRelic-App-Data', 'Date']
     })
+    this.#bamServer.register(require('@fastify/static'), {
+      root: paths.rootDir,
+      prefix: '/',
+      index: ['index.html']
+    })
+    this.#bamServer.register(require('./plugins/agent-injector'), this)
+    this.#bamServer.register(require('./plugins/browser-scripts'), this)
+    this.#bamServer.register(require('./routes/tests-index'), this)
+    this.#bamServer.register(require('./routes/mock-apis'), this)
     this.#bamServer.register(require('./plugins/bam-parser'), this)
     this.#bamServer.register(require('./routes/bam-apis'), this)
     this.#bamServer.register(require('./plugins/test-handle'), this)

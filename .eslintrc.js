@@ -47,7 +47,7 @@ module.exports = {
     },
     {
       files: ['src/**/*.js'],
-      excludedFiles: ['*.test.js', '*.component-test.js', '__mocks__/**/*'],
+      excludedFiles: ['__mocks__/**/*'],
       env: {
         browser: true
       },
@@ -86,7 +86,7 @@ module.exports = {
       env: {
         browser: true,
         node: true,
-        jest: true
+        mocha: true
       },
       parserOptions: {
         sourceType: 'module'

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {init} {config} {loader}
+  </head>
+  <body>Instrumented
+    <script>
+      try {
+        // eslint-disable-next-line
+        undefinedFunction()
+      } catch (err) {
+        delete err.stack
+        throw err
+      }
+    </script>
+  </body>
+</html>

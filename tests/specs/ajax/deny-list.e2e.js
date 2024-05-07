@@ -75,4 +75,22 @@ describe('xhr events deny list', () => {
       })
     ]))
   })
+
+  it.withBrowsersMatching(supportsFetch)('does not capture data URLs (or events with undefined hostname) at all', async () => {
+    const url = await browser.testHandle.assetURL('instrumented.html') // has no deny list
+    await browser.url(url).then(() => browser.waitForAgentLoad())
+
+    const [ajaxEvents, ajaxMetrics] = await Promise.all([
+      browser.testHandle.expectAjaxEvents(),
+      browser.testHandle.expectAjaxTimeSlices(),
+      browser.execute(function () {
+        fetch('data:,Hello%2C%20World%21')
+      })
+    ])
+
+    const undefinedDomainEvt = ajaxEvents.request.body.find(obj => obj.domain.startsWith('undefined'))
+    expect(undefinedDomainEvt).toBeUndefined()
+    const undefinedHostMetric = ajaxMetrics.request.body.xhr.find(obj => obj.params.host.startsWith('undefined'))
+    expect(undefinedHostMetric).toBeUndefined()
+  })
 })

@@ -4,6 +4,55 @@
     {
       "changes": [
         {
+          "type": "fix",
+          "sha": "d1dd20ce526ddb697962f695fbb5915410474987",
+          "message": "Improve Error Casting",
+          "issues": [
+            "1014"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "6a4a73d72b056177268f8619a3a3b7810a7a2c79",
+          "message": "Run inside cross-origin iframes for firefox/safari",
+          "issues": [
+            "1015"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "2a3fa57da1f389e6eabae2c92686e25285fc6cd3",
+          "message": "Exclude data url requests as captured AJAX events",
+          "issues": [
+            "1012"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "44f229e4d35cd468bfe29b1796be8031bb9c72ff",
+          "message": "Session trace nodes de-duplication",
+          "issues": [
+            "1008"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "38a502b08b4735259e7f5b863b0e5e5361c075b6",
+          "message": "Remove API start()'s features param",
+          "issues": [
+            "1009"
+          ]
+        }
+      ],
+      "version": "1.258.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "2c1ee0d2-8fd5-48ea-8cfc-5d1c86919907",
+      "createTime": "2024-05-07T18:49:36.645Z"
+    },
+    {
+      "changes": [
+        {
           "type": "feat",
           "sha": "1c3a6b963c1eb7e0792225c3a4c15b6fd8d64505",
           "message": "Restructure AJAX Aggregate",
@@ -1425,5 +1474,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2024-04-29T19:46:40.368Z"
+  "updateTime": "2024-05-07T18:49:36.645Z"
 }

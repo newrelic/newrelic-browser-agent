@@ -1,3 +1,5 @@
+import { stringify } from '../../../common/util/stringify'
+
 /**
  * Represents an uncaught non Error type error. This class does
  * not extend the Error class to prevent an invalid stack trace
@@ -5,11 +7,12 @@
  * do not use the Error class (strings, etc) to an object.
  */
 export class UncaughtError {
-  constructor (message, filename, lineno, colno) {
+  constructor (message, filename, lineno, colno, newrelic) {
     this.name = 'UncaughtError'
-    this.message = message
+    this.message = typeof message === 'string' ? message : stringify(message)
     this.sourceURL = filename
     this.line = lineno
     this.column = colno
+    this.__newrelic = newrelic
   }
 }

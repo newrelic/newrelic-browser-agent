@@ -1,10 +1,13 @@
 import { onlyIOS } from '../../../tools/browser-matcher/common-matchers.mjs'
 
 describe.withBrowsersMatching(onlyIOS)('ios webview', () => {
-  it('should load the agent and send back data', async () => {
+  before(async () => {
     // Load the webview screen
     await $('-ios predicate string: name == "WebView"').click()
+    await driver.pause(5000)
+  })
 
+  it('should load the agent and send back data', async () => {
     // Load up the test page
     const url = await driver.testHandle.assetURL('instrumented.html')
     await driver.setClipboard(Buffer.from(url).toString('base64'), 'plaintext')
@@ -20,7 +23,7 @@ describe.withBrowsersMatching(onlyIOS)('ios webview', () => {
       {
         action: 'wait',
         options: {
-          ms: 200
+          ms: 500
         }
       },
       {
@@ -28,7 +31,7 @@ describe.withBrowsersMatching(onlyIOS)('ios webview', () => {
         options: {}
       }
     ])
-    await $('-ios predicate string: label == "Paste" AND name == "Paste" AND value == "Paste"')
+    await $('-ios predicate string: type == "XCUIElementTypeMenuItem" AND label == "Paste" AND name == "Paste"')
       .click()
 
     // // Setup expects and submit the url
@@ -36,7 +39,7 @@ describe.withBrowsersMatching(onlyIOS)('ios webview', () => {
       driver.testHandle.expectRum(),
       driver.testHandle.expectResources(),
       driver.testHandle.expectInteractionEvents(),
-      $('-ios predicate string: name == "Return"').click()
+      $('-ios predicate string: type == "XCUIElementTypeButton" AND name == "Return"').click()
     ])
 
     expect(rumResult.request.body).toEqual('')

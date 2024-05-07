@@ -66,7 +66,9 @@ export class Aggregate extends AggregateBase {
   }
 
   storeXhr (params, metrics, startTime, endTime, type, ctx) {
-    metrics.time = startTime
+    metrics.time = Math.floor(startTime)
+    metrics.duration = Math.floor(metrics.duration)
+    if (metrics.cbTime) metrics.cbTime = Math.floor(metrics.cbTime)
 
     // send to session traces
     let hash

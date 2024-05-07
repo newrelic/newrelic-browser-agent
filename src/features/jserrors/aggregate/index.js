@@ -198,7 +198,7 @@ export class Aggregate extends AggregateBase {
     params.timestamp = agentRuntime.timeKeeper.convertRelativeTimestamp(time)
 
     var type = internal ? 'ierr' : 'err'
-    var newMetrics = { time }
+    var newMetrics = { time: Math.floor(time) }
 
     // Trace sends the error in its payload, and both trace & replay simply listens for any error to occur.
     const jsErrorEvent = [type, bucketHash, params, newMetrics, customAttributes]

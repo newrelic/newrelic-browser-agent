@@ -2,6 +2,7 @@ import { getInfo } from '../../../common/config/config'
 import { globalScope, initialLocation } from '../../../common/constants/runtime'
 import { generateUuid } from '../../../common/ids/unique-id'
 import { addCustomAttributes, getAddStringContext, nullable, numeric } from '../../../common/serialize/bel-serializer'
+import { now } from '../../../common/timing/now'
 import { cleanURL } from '../../../common/url/clean-url'
 import { NODE_TYPE, INTERACTION_STATUS, INTERACTION_TYPE, API_TRIGGER_NAME } from '../constants'
 import { BelNode } from './bel-node'
@@ -44,12 +45,12 @@ export class Interaction extends BelNode {
   }
 
   updateDom (timestamp) {
-    this.domTimestamp = (timestamp || performance.now()) // default timestamp should be precise for accurate isActiveDuring calculations
+    this.domTimestamp = (timestamp || now()) // default timestamp should be precise for accurate isActiveDuring calculations
   }
 
   updateHistory (timestamp, newUrl) {
     this.newURL = newUrl || '' + globalScope?.location
-    this.historyTimestamp = (timestamp || performance.now())
+    this.historyTimestamp = (timestamp || now())
   }
 
   seenHistoryAndDomChange () {
@@ -69,7 +70,7 @@ export class Interaction extends BelNode {
 
     if (this.forceIgnore) this.#cancel() // .ignore() always has precedence over save actions
     else if (this.seenHistoryAndDomChange()) this.#finish(customEndTime) // then this should've already finished while it was the interactionInProgress, with a natural end time
-    else if (this.forceSave) this.#finish(customEndTime || performance.now()) // a manually saved ixn (did not fulfill conditions) must have a specified end time, if one wasn't provided
+    else if (this.forceSave) this.#finish(customEndTime || now()) // a manually saved ixn (did not fulfill conditions) must have a specified end time, if one wasn't provided
     else this.#cancel()
     return true
   }

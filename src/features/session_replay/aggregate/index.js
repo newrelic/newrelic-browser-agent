@@ -27,7 +27,7 @@ import { MODE, SESSION_EVENTS, SESSION_EVENT_TYPES } from '../../../common/sessi
 import { stringify } from '../../../common/util/stringify'
 import { stylesheetEvaluator } from '../shared/stylesheet-evaluator'
 import { deregisterDrain } from '../../../common/drain/drain'
-import { now } from '../../../common/timing/now'
+import { flooredNow } from '../../../common/timing/now'
 import { buildNRMetaNode } from '../shared/utils'
 
 export class Aggregate extends AggregateBase {
@@ -333,7 +333,7 @@ export class Aggregate extends AggregateBase {
       recorderEvents.hasMeta = !!events.find(x => x.type === RRWEB_EVENT_TYPES.Meta)
     }
 
-    const relativeNow = now()
+    const relativeNow = flooredNow()
 
     const firstEventTimestamp = this.getCorrectedTimestamp(events[0]) // from rrweb node
     const lastEventTimestamp = this.getCorrectedTimestamp(events[events.length - 1]) // from rrweb node

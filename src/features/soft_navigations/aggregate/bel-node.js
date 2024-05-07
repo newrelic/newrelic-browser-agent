@@ -1,12 +1,10 @@
-import { now } from '../../../common/timing/now'
-
 let nodesSeen = 0
 
 export class BelNode {
   belType
   /** List of other BelNode derivatives. Each children should be of a subclass that implements its own 'serialize' function. */
   children = []
-  start = now()
+  start
   end
   callbackEnd = 0
   callbackDuration = 0

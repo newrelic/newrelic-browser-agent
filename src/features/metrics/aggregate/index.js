@@ -10,6 +10,7 @@ import { windowAddEventListener } from '../../../common/event-listener/event-lis
 import { isBrowserScope, isWorkerScope } from '../../../common/constants/runtime'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { deregisterDrain } from '../../../common/drain/drain'
+import { flooredNow } from '../../../common/timing/now'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -135,7 +136,7 @@ export class Aggregate extends AggregateBase {
       // Capture SMs for session trace if active (`ptid` is set when returned by replay ingest).
       // Retain these SMs while we are working through the session_replay feature
       if (agentRuntime.ptid) {
-        this.storeSupportabilityMetrics('PageSession/Feature/SessionTrace/DurationMs', Math.round(performance.now()))
+        this.storeSupportabilityMetrics('PageSession/Feature/SessionTrace/DurationMs', flooredNow())
       }
 
       // Capture SMs for performance markers and measures to assess the usage and possible inclusion of this

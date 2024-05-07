@@ -82,6 +82,7 @@ The following features may be disabled by adding `init` entries as shown above. 
 - `metrics`
 - `page_action`
 - `page_view_timing`
+- `session_replay`
 - `session_trace`
 - `spa`
 
@@ -186,9 +187,7 @@ Please see our [official documentation](https://docs.newrelic.com/docs/browser/n
 ```
 
 ## Session Replay
-The Session Replay feature is currently in Limited Preview and only functional for customers participating in the early access program.  To request access, please visit [this link](https://newrelic.com/platform/session-replay-early-access). 
-
-Due to the sensitive nature of the feature, Session Replay has many configuration options, which are configurable in each browser application's *Application Settings* page on the New Relic site. These settings will only be accessible if you are participating in the limited preview. Additionally, you can control the sampling rates, obfuscation conditions and triggering rules of Session Replay.
+The Session Replay feature is currently in Limited Preview, but is now available for limited free use by all customers. The data collected by this feature will become generally available and billable starting May 15th, 2024. Please see the [Session Replay documentation](https://docs.newrelic.com/docs/browser/browser-monitoring/browser-pro-features/session-replay/) to get started using this new feature.
 
 ## Supported browsers
 
@@ -239,7 +238,7 @@ A lot of new frameworks support the concept of server-side rendering the pages o
 
 ## Disclaimers
 
-The session replay library shipping with this version of the browser agent is in *limited preview* and is not turned on by default. To use the feature, users will need to be part of the limited preview customer group and configure their browser application settings in the UI.
+The session replay library shipping as part of the browser agent is in *limited preview* and is not turned on by default. For information on the use of this feature, see [Session Replay](#session-replay)
 
 ## Support
 

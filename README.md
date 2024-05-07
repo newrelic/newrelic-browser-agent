@@ -238,7 +238,7 @@ A lot of new frameworks support the concept of server-side rendering the pages o
 
 ## Disclaimers
 
-The session replay library shipping as part of the browser agent is in *limited preview* and is not turned on by default. For information on the use of this feature, see [Session Replay](#session-replay)
+The session replay library shipping as part of the browser agent is not turned on by default. For information on the use of this feature, see [Session Replay](#session-replay)
 
 ## Support
 

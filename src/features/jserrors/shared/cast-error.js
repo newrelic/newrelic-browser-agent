@@ -56,7 +56,7 @@ export function castPromiseRejectionEvent (promiseRejectionEvent) {
    */
 export function castErrorEvent (errorEvent) {
   if (errorEvent.error instanceof SyntaxError && !/:\d+$/.test(errorEvent.error.stack?.trim())) {
-    const error = new UncaughtError(errorEvent.message, errorEvent.filename, errorEvent.lineno, errorEvent.colno)
+    const error = new UncaughtError(errorEvent.message, errorEvent.filename, errorEvent.lineno, errorEvent.colno, errorEvent.error.__newrelic)
     error.name = SyntaxError.name
     return error
   }

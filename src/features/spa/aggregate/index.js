@@ -709,9 +709,10 @@ export class Aggregate extends AggregateBase {
 
     register('function-err', function (args, obj, error) {
       if (!state.currentNode) return
-      error.__newrelic = { interactionId: state.currentNode.interaction.id }
+      error.__newrelic ??= {}
+      error.__newrelic[agentIdentifier] = { interactionId: state.currentNode.interaction.id }
       if (state.currentNode.type && state.currentNode.type !== 'interaction') {
-        error.__newrelic.interactionNodeId = state.currentNode.id
+        error.__newrelic[agentIdentifier].interactionNodeId = state.currentNode.id
       }
     }, this.featureName, baseEE)
 

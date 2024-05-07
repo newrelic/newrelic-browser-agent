@@ -47,7 +47,7 @@ export class Instrument extends InstrumentBase {
     promiseEE.on(CB_END, endTimestamp)
     jsonpEE.on(CB_END, endTimestamp)
 
-    this.ee.on('fn-err', (...args) => { if (!args[2]?.__newrelic) handle('function-err', [...args], undefined, this.featureName, this.ee) })
+    this.ee.on('fn-err', (...args) => { if (!args[2]?.__newrelic?.[agentIdentifier]) handle('function-err', [...args], undefined, this.featureName, this.ee) })
 
     this.ee.buffer([FN_START, FN_END, 'xhr-resolved'], this.featureName)
     eventsEE.buffer([FN_START], this.featureName)

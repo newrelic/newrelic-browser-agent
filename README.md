@@ -187,7 +187,7 @@ Please see our [official documentation](https://docs.newrelic.com/docs/browser/n
 ```
 
 ## Session Replay
-The Session Replay feature is currently in Limited Preview, but is now available for limited free use by all customers. The data collected by this feature will become generally available and billable starting May 15th, 2024. Please see the [Session Replay documentation](https://docs.newrelic.com/docs/browser/browser-monitoring/browser-pro-features/session-replay/) to get started using this new feature.
+The Session Replay feature is now available for limited free use by all customers. The data collected by this feature will become billable starting May 15th, 2024. Please see the [Session Replay documentation](https://docs.newrelic.com/docs/browser/browser-monitoring/browser-pro-features/session-replay/) to get started using this new feature.
 
 ## Supported browsers
 

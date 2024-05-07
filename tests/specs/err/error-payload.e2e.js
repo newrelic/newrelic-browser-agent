@@ -91,4 +91,13 @@ describe('error payloads', () => {
 
     expect(err[0].params.stack_trace.match(/<inline>:[0-9]+:[0-9]+/).length).toEqual(1)
   })
+
+  it('noticeError called with no arguments does not throw or capture any error', async () => {
+    await Promise.all([
+      browser.testHandle.expectErrors(10000, true), // should not harvest an error (neither the noticeError call or an error from calling the API with no arg)
+      browser.url(await browser.testHandle.assetURL('instrumented.html')) // Setup expects before loading the page
+        .then(() => browser.waitForFeatureAggregate('jserrors'))
+        .then(() => browser.execute(function () { newrelic.noticeError() }))
+    ])
+  })
 })

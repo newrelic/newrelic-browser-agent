@@ -179,7 +179,7 @@ describe('respects feature flags', () => {
     const [{ request }] = await Promise.all([
       browser.testHandle.expectTrace(),
       browser.execute(function () {
-        newrelic.noticeError()
+        newrelic.noticeError(new Error('test'))
       })
     ])
 

@@ -9,7 +9,7 @@ describe('interaction tracking works inside', () => {
     ])
 
     const [clickInteractionResults] = await Promise.all([
-      browser.testHandle.expectInteractionEvents(7000),
+      browser.testHandle.expectInteractionEvents(10000),
       $('body').click()
     ])
 
@@ -25,6 +25,42 @@ describe('interaction tracking works inside', () => {
             children: []
           })
         ]
+      })
+    ]))
+  })
+
+  it('correctly tracks create tracer interactions inside XHR ready state change', async () => {
+    await browser.url(
+      await browser.testHandle.assetURL('spa/api-tracers-xhr-readyStateChange.html')
+    ).then(() => browser.waitForAgentLoad())
+
+    const [clickInteractionResults] = await Promise.all([
+      browser.testHandle.expectInteractionEvents(10000),
+      $('body').click()
+    ])
+
+    expect(clickInteractionResults.request.body).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        category: 'Custom',
+        type: 'interaction',
+        trigger: 'click',
+        children: expect.arrayContaining([
+          expect.objectContaining({
+            type: 'ajax',
+            path: '/echo',
+            requestedWith: 'XMLHttpRequest',
+            children: expect.arrayContaining([
+              expect.objectContaining({
+                type: 'customTracer',
+                name: 'timerA'
+              }),
+              expect.objectContaining({
+                type: 'customTracer',
+                name: 'timerB'
+              })
+            ])
+          })
+        ])
       })
     ]))
   })

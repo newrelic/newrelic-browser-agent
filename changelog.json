@@ -5,6 +5,23 @@
       "changes": [
         {
           "type": "fix",
+          "sha": "c023a53c20a9f0f2472e1ba5ff78eb7210a906fa",
+          "message": "Prevent noticeError() API from running if not given an argument",
+          "issues": [
+            "1021"
+          ]
+        }
+      ],
+      "version": "1.258.2",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "45194192-79e8-46de-89a4-1802846f72ef",
+      "createTime": "2024-05-07T21:51:38.137Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
           "sha": "d1dd20ce526ddb697962f695fbb5915410474987",
           "message": "Improve Error Casting",
           "issues": [
@@ -1474,5 +1491,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2024-05-07T18:49:36.645Z"
+  "updateTime": "2024-05-07T21:51:38.137Z"
 }

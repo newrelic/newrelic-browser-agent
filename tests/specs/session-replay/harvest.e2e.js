@@ -63,6 +63,9 @@ describe.withBrowsersMatching(notIE)('Session Replay Harvest Behavior', () => {
 
     expect(attr1['replay.firstTimestamp']).not.toEqual(attr2['replay.firstTimestamp'])
     expect(attr1['replay.lastTimestamp']).not.toEqual(attr2['replay.lastTimestamp'])
+
+    expect(parseInt(blobHarvest.query.timestamp, 10)).toEqual(attr1['replay.firstTimestamp'])
+    expect(parseInt(blobHarvest2.query.timestamp, 10)).toEqual(attr2['replay.firstTimestamp'])
   })
 
   it.withBrowsersMatching(supportsFetch)('should use sendBeacon for unload harvests', async () => {

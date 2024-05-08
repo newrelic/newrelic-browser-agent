@@ -1,13 +1,10 @@
 import { getConfigurationValue, originals } from '../../../common/config/config'
-import { isBrowserScope, originTime } from '../../../common/constants/runtime'
+import { canEnableSessionTracking } from '../../utils/feature-gates'
+import { originTime } from '../../../common/constants/runtime'
 
-export function enableSessionTracking (agentId) {
-  return isBrowserScope && getConfigurationValue(agentId, 'privacy.cookies_enabled') === true
-}
-
-function hasReplayPrerequisite (agentId) {
+export function hasReplayPrerequisite (agentId) {
   return !!originals.MO && // Session Replay cannot work without Mutation Observer
-  enableSessionTracking(agentId) && // requires session tracking to be running (hence "session" replay...)
+  canEnableSessionTracking(agentId) && // requires session tracking to be running (hence "session" replay...)
   getConfigurationValue(agentId, 'session_trace.enabled') === true // Session Replay as of now is tightly coupled with Session Trace in the UI
 }
 

@@ -11,7 +11,6 @@ describe('adblocker', () => {
 
   it('should abort the global event emitter when rum call is blocked', async () => {
     await browser.url(await browser.testHandle.assetURL('adblocker-ingest.html', config))
-
     await browser.waitUntil(() => browser.execute(function () {
       const agentId = Object.keys(newrelic.initializedAgents)[0]
       return newrelic.ee.get(agentId).aborted

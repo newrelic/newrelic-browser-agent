@@ -39,7 +39,7 @@ jil.onWindowLoaded(function () {
     if (!spaAgg) spaAgg = new SpaAggregate(agentIdentifier, aggregator)
     drain(agentIdentifier, 'api')
     drain(agentIdentifier, 'feature')
-    activateFeatures({sr: 1, stn:1, spa:1, ins:1, rum:1, loaded:1}, agentIdentifier)
+    activateFeatures({sr: 1, st:1, spa:1, ins:1, rum:1, loaded:1}, agentIdentifier)
 
     aggregatorLoaded = true
     for (var i = 0; i < aggregatorLoadQueue.length; i++) {

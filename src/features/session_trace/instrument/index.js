@@ -7,7 +7,8 @@ import { wrapHistory, wrapEvents } from '../../../common/wrap'
 import { InstrumentBase } from '../../utils/instrument-base'
 import * as CONSTANTS from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
-import { isBrowserScope } from '../../../common/constants/runtime'
+import { deregisterDrain } from '../../../common/drain/drain'
+import { canEnableSessionTracking } from '../../utils/feature-gates'
 import { flooredNow } from '../../../common/timing/now'
 
 const {
@@ -18,7 +19,11 @@ export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
   constructor (agentIdentifier, aggregator, auto = true) {
     super(agentIdentifier, aggregator, FEATURE_NAME, auto)
-    if (!isBrowserScope) return // session traces not supported outside web env
+    const canTrackSession = canEnableSessionTracking(this.agentIdentifier)
+    if (!canTrackSession) {
+      deregisterDrain(this.agentIdentifier, this.featureName)
+      return
+    }
 
     const thisInstrumentEE = this.ee
     wrapHistory(thisInstrumentEE)

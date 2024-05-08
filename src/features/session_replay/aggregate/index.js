@@ -12,7 +12,7 @@
 
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
-import { ABORT_REASONS, FEATURE_NAME, MAX_PAYLOAD_SIZE, QUERY_PARAM_PADDING, RRWEB_EVENT_TYPES, SR_EVENT_EMITTER_TYPES } from '../constants'
+import { ABORT_REASONS, FEATURE_NAME, MAX_PAYLOAD_SIZE, QUERY_PARAM_PADDING, RRWEB_EVENT_TYPES, SR_EVENT_EMITTER_TYPES, TRIGGERS } from '../constants'
 import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { sharedChannel } from '../../../common/constants/shared-channel'
@@ -97,16 +97,6 @@ export class Aggregate extends AggregateBase {
       raw: true
     }, this)
 
-    registerHandler(SR_EVENT_EMITTER_TYPES.RECORD, () => {
-      // if it has aborted or BCS returned bad entitlements, do not allow
-      if (this.blocked || !this.entitled) return
-      // if it isnt already (fully) initialized... initialize it
-      if (!this.recorder) this.initializeRecording(false, true, true)
-      // its been initialized and imported the recorder but its not recording (mode === off || error)
-      else if (this.mode !== MODE.FULL) this.switchToFull()
-      // if it gets all the way to here, that means a full session is already recording... do nothing
-    }, this.featureName, this.ee)
-
     registerHandler(SR_EVENT_EMITTER_TYPES.PAUSE, () => {
       this.forceStop(this.mode !== MODE.ERROR)
     }, this.featureName, this.ee)
@@ -117,8 +107,8 @@ export class Aggregate extends AggregateBase {
 
     const { error_sampling_rate, sampling_rate, autoStart, block_selector, mask_text_selector, mask_all_inputs, inline_stylesheet, inline_images, collect_fonts } = getConfigurationValue(this.agentIdentifier, 'session_replay')
 
-    this.waitForFlags(['sr']).then(([flagOn]) => {
-      this.entitled = flagOn
+    this.waitForFlags(['srs', 'sr']).then(([srMode, entitled]) => {
+      this.entitled = !!entitled
       if (!this.entitled) {
         deregisterDrain(this.agentIdentifier, this.featureName)
         if (this.recorder?.recording) {
@@ -128,14 +118,14 @@ export class Aggregate extends AggregateBase {
         return
       }
       this.drain()
-      this.initializeRecording(
-        (Math.random() * 100) < error_sampling_rate,
-        (Math.random() * 100) < sampling_rate
-      )
+      this.initializeRecording(srMode)
     }).then(() => {
-      if (this.mode === MODE.OFF) args?.recorder?.stopRecording() // stop any conservative preload recording launched by instrument
-      sharedChannel.onReplayReady(this.mode) // notify watchers that replay started with the mode
-    })
+      if (this.mode === MODE.OFF) {
+        this.recorder?.stopRecording() // stop any conservative preload recording launched by instrument
+        while (this.recorder?.getEvents().events.length) this.recorder?.clearBuffer?.()
+      }
+      sharedChannel.onReplayReady(this.mode)
+    }) // notify watchers that replay started with the mode
 
     /** Detect if the default configs have been altered and report a SM.  This is useful to evaluate what the reasonable defaults are across a customer base over time */
     if (!autoStart) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/AutoStart/Modified'], undefined, FEATURE_NAMES.metrics, this.ee)
@@ -179,7 +169,7 @@ export class Aggregate extends AggregateBase {
    * @param {boolean} ignoreSession - whether to force the method to ignore the session state and use just the sample flags
    * @returns {void}
    */
-  async initializeRecording (errorSample, fullSample, ignoreSession) {
+  async initializeRecording (srMode, ignoreSession) {
     this.initialized = true
     if (!this.entitled) return
 
@@ -191,23 +181,16 @@ export class Aggregate extends AggregateBase {
     // session replays can continue if already in progress
     const { session, timeKeeper } = getRuntime(this.agentIdentifier)
     this.timeKeeper = timeKeeper
-    if (!session.isNew && !ignoreSession) { // inherit the mode of the existing session
+    if (this.recorder?.parent.trigger === TRIGGERS.API && this.recorder?.recording) {
+      this.mode = MODE.FULL
+    } else if (!session.isNew && !ignoreSession) { // inherit the mode of the existing session
       this.mode = session.state.sessionReplayMode
     } else {
       // The session is new... determine the mode the new session should start in
-      if (fullSample) this.mode = MODE.FULL // full mode has precedence over error mode
-      else if (errorSample) this.mode = MODE.ERROR
-      // If neither are selected, then don't record (early return)
-      else {
-        return
-      }
+      this.mode = srMode
     }
-
-    if (this.recorder?.getEvents().type === 'preloaded') {
-      this.prepUtils().then(() => {
-        this.scheduler.runHarvest()
-      })
-    }
+    // If off, then don't record (early return)
+    if (this.mode === MODE.OFF) return
 
     if (!this.recorder) {
       try {
@@ -225,12 +208,20 @@ export class Aggregate extends AggregateBase {
     // If an error was noticed before the mode could be set (like in the early lifecycle of the page), immediately set to FULL mode
     if (this.mode === MODE.ERROR && this.errorNoticed) this.mode = MODE.FULL
 
-    // FULL mode records AND reports from the beginning, while ERROR mode only records (but does not report).
-    // ERROR mode will do this until an error is thrown, and then switch into FULL mode.
-    // If an error happened in ERROR mode before we've gotten to this stage, it will have already set the mode to FULL
-    if (this.mode === MODE.FULL && !this.scheduler.started) {
+    if (this.mode === MODE.FULL) {
+      // If theres preloaded events and we are in full mode, just harvest immediately to clear up space and for consistency
+      if (this.recorder?.getEvents().type === 'preloaded') {
+        this.prepUtils().then(() => {
+          this.scheduler.runHarvest()
+        })
+      }
+      // FULL mode records AND reports from the beginning, while ERROR mode only records (but does not report).
+      // ERROR mode will do this until an error is thrown, and then switch into FULL mode.
+      // If an error happened in ERROR mode before we've gotten to this stage, it will have already set the mode to FULL
+      if (!this.scheduler.started) {
       // We only report (harvest) in FULL mode
-      this.scheduler.startTimer(this.harvestTimeSeconds)
+        this.scheduler.startTimer(this.harvestTimeSeconds)
+      }
     }
 
     await this.prepUtils()

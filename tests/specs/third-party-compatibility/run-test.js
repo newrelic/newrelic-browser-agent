@@ -8,7 +8,7 @@ export default async function runTest ({
 
   const [rumResults, resourcesResults, eventsResults, ajaxResults] = await Promise.all([
     browser.testHandle.expectRum(),
-    browser.testHandle.expectResources(),
+    browser.testHandle.expectTrace(),
     browser.testHandle.expectEvents(),
     browser.testHandle.expectAjaxTimeSlices(),
     browser.url(url) // Setup expects before loading the page
@@ -19,8 +19,8 @@ export default async function runTest ({
   expect(rumResults.request.query.a.length).toBeGreaterThan(0)
   expect(rumResults.request.query.ref).toEqual(url.split('?')[0])
 
-  expect(Array.isArray(resourcesResults.request.body.res)).toEqual(true)
-  expect(resourcesResults.request.body.res.length).toBeGreaterThan(0)
+  expect(Array.isArray(resourcesResults.request.body)).toEqual(true)
+  expect(resourcesResults.request.body.length).toBeGreaterThan(0)
 
   expect(Array.isArray(eventsResults.request.body)).toEqual(true)
   expect(eventsResults.request.body.length).toEqual(1)

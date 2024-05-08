@@ -138,6 +138,7 @@ export class Aggregate extends AggregateBase {
   }
 
   storeError (err, time, internal, customAttributes, hasReplay) {
+    if (!err) return
     // are we in an interaction
     time = time || now()
     const agentRuntime = getRuntime(this.agentIdentifier)
@@ -198,15 +199,16 @@ export class Aggregate extends AggregateBase {
     params.timestamp = agentRuntime.timeKeeper.convertRelativeTimestamp(time)
 
     var type = internal ? 'ierr' : 'err'
-    var newMetrics = { time: Math.floor(time) }
+    const newMetrics = { time: Math.floor(time) }
 
-    // Trace sends the error in its payload, and both trace & replay simply listens for any error to occur.
+    // sr, stn and spa aggregators listen to this event - stn sends the error in its payload,
+    // and spa annotates the error with interaction info
     const jsErrorEvent = [type, bucketHash, params, newMetrics, customAttributes]
     handle('trace-jserror', jsErrorEvent, undefined, FEATURE_NAMES.sessionTrace, this.ee)
     // still send EE events for other features such as above, but stop this one from aggregating internal data
     if (this.blocked) return
 
-    if (err.__newrelic?.[this.agentIdentifier]) {
+    if (err?.__newrelic?.[this.agentIdentifier]) {
       params._interactionId = err.__newrelic[this.agentIdentifier].interactionId
       params._interactionNodeId = err.__newrelic[this.agentIdentifier].interactionNodeId
     }

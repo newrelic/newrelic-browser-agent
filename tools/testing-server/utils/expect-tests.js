@@ -287,6 +287,34 @@ module.exports.testBlobRequest = function testBlobRequest (request) {
   }
 }
 
+module.exports.testBlobReplayRequest = function testBlobReplayRequest (request) {
+  const url = new URL(request.url, 'resolve://')
+  if (url.pathname !== '/browser/blobs') return false
+  if (request?.query?.browser_monitoring_key !== this.testId) return false
+  if (request?.query?.type !== 'SessionReplay') return false
+  try {
+    const body = request?.body
+    const blobContents = body // JSON array
+    return !!(blobContents && Array.isArray(blobContents) && blobContents.length)
+  } catch (err) {
+    return false
+  }
+}
+
+module.exports.testBlobTraceRequest = function testBlobTraceRequest (request) {
+  const url = new URL(request.url, 'resolve://')
+  if (url.pathname !== '/browser/blobs') return false
+  if (request?.query?.browser_monitoring_key !== this.testId) return false
+  if (request?.query?.type !== 'BrowserSessionChunk') return false
+  try {
+    const body = request?.body
+    const blobContents = body // JSON array
+    return !!(blobContents && Array.isArray(blobContents) && blobContents.length)
+  } catch (err) {
+    return false
+  }
+}
+
 module.exports.testSessionReplaySnapshotRequest = function testSessionReplaySnapshotRequest (request) {
   const url = new URL(request.url, 'resolve://')
   if (url.pathname !== '/browser/blobs') return false

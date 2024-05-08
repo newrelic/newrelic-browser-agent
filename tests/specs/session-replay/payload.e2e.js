@@ -1,4 +1,4 @@
-import { config, decodeAttributes, testExpectedReplay } from './helpers'
+import { decodeAttributes, srConfig, testExpectedReplay } from '../util/helpers'
 import { notIE, notIOS, notSafari } from '../../../tools/browser-matcher/common-matchers.mjs'
 
 describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => {
@@ -13,19 +13,19 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
   it('should use rumResponse agent metadata', async () => {
     const [rumCall] = await Promise.all([
       browser.testHandle.expectRum(),
-      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
         .then(() => browser.waitForAgentLoad())
     ])
 
-    const { request: harvestContents } = await browser.testHandle.expectBlob()
+    const { request: harvestContents } = await browser.testHandle.expectReplay()
     const agentMetadata = JSON.parse(rumCall.reply.body).app
     testExpectedReplay({ data: harvestContents, entityGuid: agentMetadata.agents[0].entityGuid })
   })
 
   it('should allow for gzip', async () => {
     const [{ request: harvestContents }] = await Promise.all([
-      browser.testHandle.expectBlob(),
-      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
+      browser.testHandle.expectReplay(),
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
         .then(() => browser.waitForAgentLoad())
         .then(() => browser.execute(function () {
           newrelic.noticeError(new Error('test'))
@@ -53,8 +53,8 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
     })
 
     const [{ request: harvestContents }] = await Promise.all([
-      browser.testHandle.expectBlob(),
-      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
+      browser.testHandle.expectReplay(),
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
         .then(() => browser.waitForAgentLoad())
     ])
 
@@ -70,8 +70,8 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
 
   it('should match expected payload - standard', async () => {
     const [{ request: harvestContents }] = await Promise.all([
-      browser.testHandle.expectBlob(),
-      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
+      browser.testHandle.expectReplay(),
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
         .then(() => browser.waitForAgentLoad())
     ])
 
@@ -82,9 +82,9 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
 
   it('should match expected payload - error', async () => {
     const [{ request: harvestContents1 }, { request: harvestContents2 }] = await Promise.all([
-      browser.testHandle.expectBlob(),
-      browser.testHandle.expectBlob(),
-      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
+      browser.testHandle.expectReplay(),
+      browser.testHandle.expectReplay(),
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
         .then(() => browser.waitForAgentLoad())
         .then(() => browser.execute(function () {
           newrelic.noticeError(new Error('test'))
@@ -106,7 +106,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
     /** snapshot and mutation payloads */
     const [{ request: { body: snapshot1, query: snapshot1Query } }] = await Promise.all([
       browser.testHandle.expectSessionReplaySnapshot(10000),
-      browser.url(await browser.testHandle.assetURL('rrweb-invalid-stylesheet.html', config()))
+      browser.url(await browser.testHandle.assetURL('rrweb-invalid-stylesheet.html', srConfig()))
         .then(() => browser.waitForFeatureAggregate('session_replay'))
     ])
     const snapshot1Nodes = snapshot1.filter(x => x.type === 2)

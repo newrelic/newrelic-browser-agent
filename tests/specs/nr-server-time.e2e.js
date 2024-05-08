@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker'
+import { srConfig, decodeAttributes } from './util/helpers'
 import { notIE, supportsFetch, supportsMultipleTabs, notSafari } from '../../tools/browser-matcher/common-matchers.mjs'
-import { config, decodeAttributes } from './session-replay/helpers'
 
 let serverTime
 describe('NR Server Time', () => {
@@ -42,10 +42,10 @@ describe('NR Server Time', () => {
   it.withBrowsersMatching(notIE)('should send session replay with timestamp prior to rum date header', async () => {
     await browser.destroyAgentSession()
     await browser.testHandle.clearScheduledReplies('bamServer')
-    serverTime = await browser.mockDateResponse(undefined, { flags: { sr: 1 } })
+    serverTime = await browser.mockDateResponse(undefined, { flags: { sr: 1, srs: 1 } })
     const [{ request: replayData }, timeKeeper] = await Promise.all([
-      browser.testHandle.expectBlob(10000),
-      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { sampling_rate: 100, preload: true } })))
+      browser.testHandle.expectReplay(),
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig({ session_replay: { preload: true } })))
         .then(() => browser.waitForSessionReplayRecording())
         .then(() => browser.getPageTime())
     ])
@@ -75,10 +75,10 @@ describe('NR Server Time', () => {
   it.withBrowsersMatching(notIE)('should send session replay with timestamp after rum date header', async () => {
     await browser.destroyAgentSession()
     await browser.testHandle.clearScheduledReplies('bamServer')
-    serverTime = await browser.mockDateResponse(undefined, { flags: { sr: 1 } })
+    serverTime = await browser.mockDateResponse(undefined, { flags: { sr: 1, srs: 1 } })
     const [{ request: replayData }, timeKeeper] = await Promise.all([
-      browser.testHandle.expectBlob(),
-      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { sampling_rate: 100, preload: false } })))
+      browser.testHandle.expectReplay(),
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig({ session_replay: { sampling_rate: 100, preload: false } })))
         .then(() => browser.waitForSessionReplayRecording())
         .then(() => browser.getPageTime())
     ])

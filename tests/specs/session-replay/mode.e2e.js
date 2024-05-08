@@ -1,17 +1,14 @@
 import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
-import { config, getSR } from './helpers'
+import { srConfig, getSR } from '../util/helpers'
 
 describe.withBrowsersMatching(notIE)('Session Replay Sample Mode Validation', () => {
-  beforeEach(async () => {
-    await browser.enableSessionReplay()
-  })
-
   afterEach(async () => {
     await browser.destroyAgentSession()
   })
 
   it('Full 1 Error 1 === FULL', async () => {
-    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { sampling_rate: 100, error_sampling_rate: 100 } })))
+    await browser.enableSessionReplay(100, 100)
+    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
       .then(() => browser.waitForSessionReplayRecording())
 
     await expect(getSR()).resolves.toMatchObject({
@@ -23,7 +20,8 @@ describe.withBrowsersMatching(notIE)('Session Replay Sample Mode Validation', ()
   })
 
   it('Full 1 Error 0 === FULL', async () => {
-    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { sampling_rate: 100, error_sampling_rate: 0 } })))
+    await browser.enableSessionReplay(100, 0)
+    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
       .then(() => browser.waitForSessionReplayRecording())
 
     await expect(getSR()).resolves.toMatchObject({
@@ -35,7 +33,8 @@ describe.withBrowsersMatching(notIE)('Session Replay Sample Mode Validation', ()
   })
 
   it('Full 0 Error 1 === ERROR', async () => {
-    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { sampling_rate: 0, error_sampling_rate: 100 } })))
+    await browser.enableSessionReplay(0, 100)
+    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
       .then(() => browser.waitForSessionReplayRecording())
     let sr = await getSR()
     expect(sr.recording).toEqual(true)
@@ -45,7 +44,8 @@ describe.withBrowsersMatching(notIE)('Session Replay Sample Mode Validation', ()
   })
 
   it('Full 0 Error 0 === OFF', async () => {
-    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { sampling_rate: 0, error_sampling_rate: 0 } })))
+    await browser.enableSessionReplay(0, 0)
+    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
       .then(() => browser.waitForFeatureAggregate('session_replay'))
 
     await expect(getSR()).resolves.toMatchObject({
@@ -57,7 +57,8 @@ describe.withBrowsersMatching(notIE)('Session Replay Sample Mode Validation', ()
   })
 
   it('Full 0 Error 0 === OFF, then API called === FULL', async () => {
-    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { sampling_rate: 0, error_sampling_rate: 0 } })))
+    await browser.enableSessionReplay(0, 0)
+    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
       .then(() => browser.waitForFeatureAggregate('session_replay'))
 
     await expect(getSR()).resolves.toMatchObject({
@@ -83,7 +84,8 @@ describe.withBrowsersMatching(notIE)('Session Replay Sample Mode Validation', ()
   })
 
   it('Full 0 Error 1 === ERROR, then API called === FULL', async () => {
-    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { sampling_rate: 0, error_sampling_rate: 100 } })))
+    await browser.enableSessionReplay(0, 100)
+    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
       .then(() => browser.waitForFeatureAggregate('session_replay')).then(() => browser.pause(1000))
 
     let sr = await getSR()
@@ -105,8 +107,9 @@ describe.withBrowsersMatching(notIE)('Session Replay Sample Mode Validation', ()
     expect(sr.mode).toEqual(1)
   })
 
-  it('Record API called before page load can trigger replay', async () => {
-    await browser.url(await browser.testHandle.assetURL('rrweb-api-record-before-load.html', config({ session_replay: { sampling_rate: 0, error_sampling_rate: 0 } })))
+  it('Record API called before page load does not start a replay (no entitlements yet)', async () => {
+    await browser.enableSessionReplay(0, 0)
+    await browser.url(await browser.testHandle.assetURL('rrweb-api-record-before-load.html', srConfig()))
       .then(() => browser.waitForFeatureAggregate('session_replay'))
 
     await browser.pause(1000)
@@ -117,7 +120,8 @@ describe.withBrowsersMatching(notIE)('Session Replay Sample Mode Validation', ()
   })
 
   it('Pause API called before page load has no effect', async () => {
-    await browser.url(await browser.testHandle.assetURL('rrweb-api-pause-before-load.html', config({ session_replay: { sampling_rate: 100, error_sampling_rate: 0 } })))
+    await browser.enableSessionReplay(100, 0)
+    await browser.url(await browser.testHandle.assetURL('rrweb-api-pause-before-load.html', srConfig()))
       .then(() => browser.waitForSessionReplayRecording())
 
     await expect(getSR()).resolves.toMatchObject({
@@ -129,7 +133,8 @@ describe.withBrowsersMatching(notIE)('Session Replay Sample Mode Validation', ()
   })
 
   it('ERROR (seen after init) => FULL', async () => {
-    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { sampling_rate: 0, error_sampling_rate: 100 } })))
+    await browser.enableSessionReplay(0, 100)
+    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
       .then(() => browser.waitForSessionReplayRecording())
 
     await expect(getSR()).resolves.toMatchObject({
@@ -154,7 +159,8 @@ describe.withBrowsersMatching(notIE)('Session Replay Sample Mode Validation', ()
   })
 
   it('ERROR (seen before init) => ERROR', async () => {
-    await browser.url(await browser.testHandle.assetURL('rrweb-split-errors.html', config({ session_replay: { preload: false, sampling_rate: 0, error_sampling_rate: 100 } })))
+    await browser.enableSessionReplay(0, 100)
+    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
       .then(() => browser.waitForSessionReplayRecording('session_replay'))
 
     await expect(getSR()).resolves.toMatchObject({
@@ -166,7 +172,8 @@ describe.withBrowsersMatching(notIE)('Session Replay Sample Mode Validation', ()
   })
 
   it('ERROR (seen before init) --> PRELOAD => (hasReplay)', async () => {
-    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { preload: true, sampling_rate: 0, error_sampling_rate: 100 } })))
+    await browser.enableSessionReplay(0, 100)
+    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig({ session_replay: { preload: true } })))
       .then(() => browser.waitForPreloadRecorder())
       .then(() => browser.execute(function () {
         newrelic.noticeError(new Error('test'))
@@ -178,7 +185,8 @@ describe.withBrowsersMatching(notIE)('Session Replay Sample Mode Validation', ()
 
   it('ERROR (seen before init) --> PRELOAD but ABORTS => (!hasReplay)', async () => {
     await browser.testHandle.clearScheduledReplies('bamServer')
-    await browser.url(await browser.testHandle.assetURL('rrweb-split-errors.html', config({ session_replay: { preload: true, sampling_rate: 0, error_sampling_rate: 100 } })))
+    await browser.enableSessionReplay(0, 100, 0)
+    await browser.url(await browser.testHandle.assetURL('rrweb-split-errors.html', srConfig({ session_replay: { preload: true } })))
       .then(() => browser.waitForAgentLoad())
     const { request: { body: err1 } } = await browser.testHandle.expectErrors()
     const beforeLoad = err1.err[0]
@@ -186,7 +194,8 @@ describe.withBrowsersMatching(notIE)('Session Replay Sample Mode Validation', ()
   })
 
   it('ERROR (seen before and after init) -- noticeError => FULL (split)', async () => {
-    await browser.url(await browser.testHandle.assetURL('rrweb-split-errors.html', config({ session_replay: { sampling_rate: 0, error_sampling_rate: 100 } })))
+    await browser.enableSessionReplay(0, 100)
+    await browser.url(await browser.testHandle.assetURL('rrweb-split-errors.html', srConfig()))
       .then(() => browser.waitForSessionReplayRecording())
 
     const { request: { body: err1 } } = await browser.testHandle.expectErrors()
@@ -206,7 +215,8 @@ describe.withBrowsersMatching(notIE)('Session Replay Sample Mode Validation', ()
   })
 
   it('ERROR (seen before and after init) -- thrown error => FULL (split)', async () => {
-    await browser.url(await browser.testHandle.assetURL('rrweb-split-errors.html', config({ session_replay: { sampling_rate: 0, error_sampling_rate: 100 } })))
+    await browser.enableSessionReplay(0, 100)
+    await browser.url(await browser.testHandle.assetURL('rrweb-split-errors.html', srConfig()))
       .then(() => browser.waitForSessionReplayRecording())
 
     const { request: { body: err1 } } = await browser.testHandle.expectErrors()
@@ -228,7 +238,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Sample Mode Validation', ()
   })
 
   it('Duplicate errors before and after init are decorated with hasReplay and timestamps correctly - FULL', async () => {
-    await browser.url(await browser.testHandle.assetURL('rrweb-duplicate-errors-split.html', config({ session_replay: { preload: false, sampling_rate: 100 }, jserrors: { harvestTimeSeconds: 10 } })))
+    await browser.url(await browser.testHandle.assetURL('rrweb-duplicate-errors-split.html', srConfig({ session_replay: { preload: false, sampling_rate: 100 }, jserrors: { harvestTimeSeconds: 10 } })))
       .then(() => browser.waitForSessionReplayRecording('session_replay'))
 
     const errors = await browser.testHandle.expectErrors()
@@ -255,7 +265,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Sample Mode Validation', ()
   })
 
   it('Duplicate errors before and after init are decorated with hasReplay and timestamps correctly - ERROR', async () => {
-    await browser.url(await browser.testHandle.assetURL('rrweb-duplicate-errors-split.html', config({ session_replay: { preload: false, sampling_rate: 0, error_sampling_rate: 100 }, jserrors: { harvestTimeSeconds: 10 } })))
+    await browser.url(await browser.testHandle.assetURL('rrweb-duplicate-errors-split.html', srConfig({ session_replay: { preload: false, sampling_rate: 0, error_sampling_rate: 100 }, jserrors: { harvestTimeSeconds: 10 } })))
       .then(() => browser.waitForSessionReplayRecording('session_replay'))
 
     const errors = await browser.testHandle.expectErrors()
@@ -282,7 +292,8 @@ describe.withBrowsersMatching(notIE)('Session Replay Sample Mode Validation', ()
   })
 
   it('FULL => OFF', async () => {
-    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { sampling_rate: 100, error_sampling_rate: 0 } })))
+    await browser.enableSessionReplay(100, 0)
+    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
       .then(() => browser.waitForSessionReplayRecording())
 
     await expect(getSR()).resolves.toMatchObject({
@@ -307,7 +318,8 @@ describe.withBrowsersMatching(notIE)('Session Replay Sample Mode Validation', ()
   })
 
   it('blocked => OFF => API does not restart', async () => {
-    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({ session_replay: { sampling_rate: 100, error_sampling_rate: 0 } })))
+    await browser.enableSessionReplay(100, 0)
+    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
       .then(() => browser.waitForSessionReplayRecording())
 
     await expect(getSR()).resolves.toMatchObject({

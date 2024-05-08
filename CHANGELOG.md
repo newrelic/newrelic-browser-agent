@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.258.2](https://github.com/newrelic/newrelic-browser-agent/compare/v1.258.1...v1.258.2) (2024-05-07)
+
+
+### Bug Fixes
+
+* Prevent noticeError() API from running if not given an argument ([#1021](https://github.com/newrelic/newrelic-browser-agent/issues/1021)) ([c023a53](https://github.com/newrelic/newrelic-browser-agent/commit/c023a53c20a9f0f2472e1ba5ff78eb7210a906fa))
+
 ## [1.258.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.258.0...v1.258.1) (2024-05-07)
 
 

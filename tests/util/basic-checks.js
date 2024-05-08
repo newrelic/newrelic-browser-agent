@@ -164,9 +164,8 @@ export function checkPageAction ({ query, body }, { specificAction, actionConten
 }
 
 export function checkSessionTrace ({ query, body }) {
-  expect(query).toEqual(baseQuery)
-  expect(body.res?.length).toBeGreaterThanOrEqual(1)
-  body.res.forEach(res => {
+  expect(body.length).toBeGreaterThanOrEqual(1)
+  body.forEach(res => {
     if (res.t === 'timing') {
       expect(res).toMatchObject({
         n: expect.any(String),

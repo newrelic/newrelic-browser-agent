@@ -97,11 +97,12 @@ export default class CustomCommands {
      * Sets a permanent scheduled reply for the rum call to include the session
      * replay flag with a value of 1 enabling the feature.
      */
-    browser.addCommand('enableSessionReplay', async function () {
+    browser.addCommand('enableSessionReplay', async function (sampling_rate = 100, error_sampling_rate = 100, srOverride = 1) {
+      const stMode = Math.random() * 100 < sampling_rate ? 1 : Math.random() * 100 < error_sampling_rate ? 2 : 0
       await browser.testHandle.scheduleReply('bamServer', {
         test: testRumRequest,
         permanent: true,
-        body: JSON.stringify({ ...rumFlags, sr: 1 })
+        body: JSON.stringify({ ...rumFlags, sr: srOverride, srs: stMode })
       })
     })
 

@@ -8,7 +8,8 @@ import { lazyFeatureLoader } from '../../../../src/features/utils/lazy-feature-l
 import { setupAgentSession } from '../../../../src/features/utils/agent-session'
 import { warn } from '../../../../src/common/util/console'
 import * as runtimeConstantsModule from '../../../../src/common/constants/runtime'
-import { enableSessionTracking } from '../../../../src/features/session_replay/shared/utils'
+import { canEnableSessionTracking } from '../../../../src/features/utils/feature-gates'
+import { getConfigurationValue } from '../../../../src/common/config/config'
 
 jest.enableAutomock()
 jest.unmock('../../../../src/features/utils/instrument-base')
@@ -21,7 +22,7 @@ let mockAggregate
 beforeEach(() => {
   jest.replaceProperty(runtimeConstantsModule, 'isBrowserScope', true)
   jest.replaceProperty(runtimeConstantsModule, 'isWorkerScope', false)
-  jest.mocked(enableSessionTracking).mockReturnValue(true)
+  jest.mocked(canEnableSessionTracking).mockReturnValue(true)
 
   agentIdentifier = faker.string.uuid()
   aggregator = {}
@@ -57,6 +58,7 @@ test('should wait for feature opt-in to import the aggregate', () => {
 })
 
 test('should import aggregator on window load', async () => {
+  jest.mocked(getConfigurationValue).mockReturnValue({ feature_flags: [] })
   const instrument = new InstrumentBase(agentIdentifier, aggregator, featureName)
   const aggregateArgs = { [faker.string.uuid()]: faker.lorem.sentence() }
   instrument.importAggregator(aggregateArgs)
@@ -124,7 +126,7 @@ test('no uncaught async exception is thrown when an import fails', async () => {
   const windowLoadCallback = jest.mocked(onWindowLoad).mock.calls[0][0]
   await windowLoadCallback()
 
-  expect(warn).toHaveBeenNthCalledWith(2, expect.stringContaining(`Downloading and initializing ${featureName} failed`), expect.any(Error))
+  expect(warn).toHaveBeenCalledWith(expect.stringContaining(`Downloading and initializing ${featureName} failed`), expect.any(Error))
   expect(instrument.abortHandler).toHaveBeenCalled()
   expect(drain).toHaveBeenCalledWith(agentIdentifier, featureName, true)
   await expect(instrument.onAggregateImported).resolves.toBe(false)
@@ -132,7 +134,7 @@ test('no uncaught async exception is thrown when an import fails', async () => {
 })
 
 test('should not import agent-session when session tracking is disabled', async () => {
-  jest.mocked(enableSessionTracking).mockReturnValue(false)
+  jest.mocked(canEnableSessionTracking).mockReturnValue(false)
 
   const instrument = new InstrumentBase(agentIdentifier, aggregator, featureName)
   const aggregateArgs = { [faker.string.uuid()]: faker.lorem.sentence() }
@@ -149,7 +151,7 @@ test('should not import agent-session when session tracking is disabled', async 
 })
 
 test('should drain and not import agg when shouldImportAgg is false for session_replay', async () => {
-  jest.mocked(enableSessionTracking).mockReturnValue(false)
+  jest.mocked(canEnableSessionTracking).mockReturnValue(false)
 
   const instrument = new InstrumentBase(agentIdentifier, aggregator, FEATURE_NAMES.sessionReplay)
   const aggregateArgs = { [faker.string.uuid()]: faker.lorem.sentence() }

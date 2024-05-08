@@ -5,7 +5,7 @@ describe('RUM request', () => {
     })
 
     it('is not included when session is disabled', async () => {
-      const testURL = await browser.testHandle.assetURL('instrumented.html') // in test suite, the default is disabled
+      const testURL = await browser.testHandle.assetURL('instrumented.html', { init: { privacy: { cookies_enabled: false } } })
 
       let rumToBeCalled = browser.testHandle.expectRum()
       await browser.url(testURL).then(() => browser.waitForAgentLoad())
@@ -15,7 +15,7 @@ describe('RUM request', () => {
     })
 
     it('is included and correctly set with session', async () => {
-      const testURL = await browser.testHandle.assetURL('instrumented.html', { init: { privacy: { cookies_enabled: true } } })
+      const testURL = await browser.testHandle.assetURL('instrumented.html')
 
       let rumToBeCalled = browser.testHandle.expectRum()
       await browser.url(testURL).then(() => browser.waitForAgentLoad())

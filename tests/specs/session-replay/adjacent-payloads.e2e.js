@@ -1,10 +1,10 @@
 import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
-import { config, decodeAttributes } from './helpers'
+import { srConfig, decodeAttributes } from '../util/helpers'
 
 describe.withBrowsersMatching(notIE)('Adjacent Payloads', () => {
   describe('JSErrors', () => {
     beforeEach(async () => {
-      await browser.enableSessionReplay()
+      await browser.enableSessionReplay(0, 100)
     })
 
     afterEach(async () => {
@@ -12,9 +12,7 @@ describe.withBrowsersMatching(notIE)('Adjacent Payloads', () => {
     })
 
     it('error timestamp should be contained within replay timestamp', async () => {
-      await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({
-        session_replay: { error_sampling_rate: 100, sampling_rate: 0 }
-      })))
+      await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
         .then(() => browser.waitForAgentLoad())
 
       // this issue was seen when some time had passed from agg load time and was running in error mode
@@ -22,7 +20,7 @@ describe.withBrowsersMatching(notIE)('Adjacent Payloads', () => {
 
       const [errorPayload, blobPayload] = await Promise.all([
         browser.testHandle.expectErrors(10000),
-        browser.testHandle.expectBlob(10000),
+        browser.testHandle.expectReplay(10000),
         browser.execute(function () {
           newrelic.noticeError(new Error('test'))
         })
@@ -35,8 +33,8 @@ describe.withBrowsersMatching(notIE)('Adjacent Payloads', () => {
     })
 
     it('error should have hasReplay removed when preloaded but not autostarted', async () => {
-      await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config({
-        session_replay: { preload: true, error_sampling_rate: 0, sampling_rate: 100, autoStart: false }
+      await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig({
+        session_replay: { preload: true, autoStart: false }
       })))
         .then(() => browser.waitForAgentLoad())
 

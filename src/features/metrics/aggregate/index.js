@@ -112,8 +112,6 @@ export class Aggregate extends AggregateBase {
       if (this.resourcesSent) return
       this.resourcesSent = true // make sure this only gets sent once
 
-      const agentRuntime = getRuntime(this.agentIdentifier)
-
       // Capture SMs around network resources using the performance API to assess
       // work to split this out from the ST nodes
       // differentiate between internal+external and ajax+non-ajax
@@ -131,12 +129,6 @@ export class Aggregate extends AggregateBase {
           else this.storeSupportabilityMetrics('Generic/Resources/Non-Ajax/External')
         }
       })
-
-      // Capture SMs for session trace if active (`ptid` is set when returned by replay ingest).
-      // Retain these SMs while we are working through the session_replay feature
-      if (agentRuntime.ptid) {
-        this.storeSupportabilityMetrics('PageSession/Feature/SessionTrace/DurationMs', Math.round(performance.now()))
-      }
 
       // Capture SMs for performance markers and measures to assess the usage and possible inclusion of this
       // data in the agent for use in NR

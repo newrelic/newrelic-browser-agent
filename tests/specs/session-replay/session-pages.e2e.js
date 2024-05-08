@@ -1,4 +1,4 @@
-import { config, decodeAttributes, getSR, testExpectedReplay } from './helpers'
+import { srConfig, getSR, testExpectedReplay, decodeAttributes } from '../util/helpers'
 import { supportsMultipleTabs, notIE, notSafari } from '../../../tools/browser-matcher/common-matchers.mjs'
 
 describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
@@ -12,8 +12,8 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
 
   it('should record across same-tab page refresh', async () => {
     const [{ request: page1Contents }] = await Promise.all([
-      browser.testHandle.expectBlob(),
-      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
+      browser.testHandle.expectReplay(10000),
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
         .then(() => browser.waitForAgentLoad())
     ])
     const { localStorage } = await browser.getAgentSessionInfo()
@@ -21,13 +21,13 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
     testExpectedReplay({ data: page1Contents, session: localStorage.value, hasError: false, hasMeta: true, hasSnapshot: true, isFirstChunk: true })
 
     await browser.enableSessionReplay()
-    const { request: other } = await browser.testHandle.expectBlob()
+    const { request: other } = await browser.testHandle.expectReplay()
     const [
       { request: request1 },
       { request: request2 }
     ] = await Promise.all([
-      browser.testHandle.expectBlob(),
-      browser.testHandle.expectBlob(),
+      browser.testHandle.expectReplay(),
+      browser.testHandle.expectReplay(),
       browser.refresh()
         .then(() => Promise.all([
           browser.waitForAgentLoad()
@@ -43,8 +43,8 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
 
   it('should record across same-tab page navigation', async () => {
     const [{ request: page1Contents }] = await Promise.all([
-      browser.testHandle.expectBlob(10000),
-      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
+      browser.testHandle.expectReplay(10000),
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
         .then(() => browser.waitForAgentLoad())
     ])
 
@@ -53,14 +53,14 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
 
     await browser.enableSessionReplay()
 
-    const { request: other } = await browser.testHandle.expectBlob()
+    const { request: other } = await browser.testHandle.expectReplay()
     const [
       { request: request1 },
       { request: request2 }
     ] = await Promise.all([
-      browser.testHandle.expectBlob(10000),
-      browser.testHandle.expectBlob(10000),
-      browser.url(await browser.testHandle.assetURL('instrumented.html', config()))
+      browser.testHandle.expectReplay(10000),
+      browser.testHandle.expectReplay(10000),
+      browser.url(await browser.testHandle.assetURL('instrumented.html', srConfig()))
         .then(() => browser.waitForAgentLoad())
     ])
 
@@ -74,38 +74,47 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
   // // As of 06/26/2023 test fails in Safari, though tested behavior works in a live browser (revisit in NR-138940).
   it.withBrowsersMatching([supportsMultipleTabs, notSafari])('should record across new-tab page navigation', async () => {
     const [{ request: page1Contents }] = await Promise.all([
-      browser.testHandle.expectBlob(10000),
-      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
+      browser.testHandle.expectReplay(10000),
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
         .then(() => browser.waitForAgentLoad())
     ])
 
     const { localStorage } = await browser.getAgentSessionInfo()
     testExpectedReplay({ data: page1Contents, session: localStorage.value, hasError: false, hasMeta: true, hasSnapshot: true, isFirstChunk: true })
 
-    /** This should fire when the tab changes, it's easier to stage it this way before hand, and allows for the super early staging for the next expect */
-    browser.testHandle.expectBlob(15000).then(({ request: page1UnloadContents }) => {
-      testExpectedReplay({ data: page1UnloadContents, session: localStorage.value, hasError: false, hasMeta: false, hasSnapshot: false, isFirstChunk: false })
-    })
+    const [{ request: page1UnloadContents }] = await Promise.all([
+      browser.testHandle.expectReplay(10000),
+      browser.execute(function () {
+        try {
+          document.querySelector('body').click()
+        } catch (err) {
+          // do nothing
+        }
+      }),
+      browser.enableSessionReplay().then(() => browser.createWindow('tab')).then((newTab) => browser.switchToWindow(newTab.handle))
+    ])
+    testExpectedReplay({ data: page1UnloadContents, session: localStorage.value, hasError: false, hasMeta: false, hasSnapshot: false, isFirstChunk: false })
 
-    /** This is scoped out this way to guarantee we have it staged in time since preload can harvest super early, sometimes earlier than wdio can expect normally */
-    /** see next `testExpectedReplay` */
-    browser.testHandle.expectBlob(15000).then(async ({ request: page2Contents }) => {
-      testExpectedReplay({ data: page2Contents, session: localStorage.value, hasError: false, hasMeta: true, hasSnapshot: true, isFirstChunk: false })
-      // await browser.closeWindow()
-      // await browser.switchToWindow((await browser.getWindowHandles())[0])
-    })
+    const [{ request: request1 }, { request: request2 }] = await Promise.all([
+      browser.testHandle.expectReplay(10000),
+      browser.testHandle.expectReplay(10000),
+      await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
+        .then(() => browser.waitForFeatureAggregate('session_replay'))
+    ])
 
-    await browser.enableSessionReplay()
-    const newTab = await browser.createWindow('tab')
-    await browser.switchToWindow(newTab.handle)
-    await browser.url(await browser.testHandle.assetURL('instrumented.html', config()))
-      .then(() => browser.waitForSessionReplayRecording())
+    expect(decodeAttributes(request1.query.attributes).hasMeta || decodeAttributes(request2.query.attributes).hasMeta).toBeTruthy()
+    expect(decodeAttributes(request1.query.attributes).hasSnapshot || decodeAttributes(request2.query.attributes).hasSnapshot).toBeTruthy()
+    testExpectedReplay({ data: request1, session: localStorage.value, hasError: false, isFirstChunk: false })
+    testExpectedReplay({ data: request2, session: localStorage.value, hasError: false, isFirstChunk: false })
+
+    await browser.closeWindow()
+    await browser.switchToWindow((await browser.getWindowHandles())[0])
   })
 
   it('should not record across navigations if not active', async () => {
     const [{ request: page1Contents }] = await Promise.all([
-      browser.testHandle.expectBlob(10000),
-      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
+      browser.testHandle.expectReplay(10000),
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
         .then(() => browser.waitForAgentLoad())
     ])
 
@@ -127,8 +136,8 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
   // As of 06/26/2023 test fails in Safari, though tested behavior works in a live browser (revisit in NR-138940).
   it.withBrowsersMatching([supportsMultipleTabs, notSafari])('should kill active tab if killed in backgrounded tab', async () => {
     const [{ request: page1Contents }] = await Promise.all([
-      browser.testHandle.expectBlob(10000),
-      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
+      browser.testHandle.expectReplay(10000),
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
         .then(() => browser.waitForAgentLoad())
     ])
 
@@ -136,22 +145,30 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
 
     testExpectedReplay({ data: page1Contents, session: localStorage.value, hasError: false, hasMeta: true, hasSnapshot: true, isFirstChunk: true })
 
-    /** This should fire when the tab changes, it's easier to stage it this way before hand, and allows for the super early staging for the next expect */
-    browser.testHandle.expectBlob(15000).then(({ request: page1UnloadContents }) => {
-      testExpectedReplay({ data: page1UnloadContents, session: localStorage.value, hasError: false, hasMeta: false, hasSnapshot: false, isFirstChunk: false })
-    })
+    const [{ request: page1UnloadContents }] = await Promise.all([
+      browser.testHandle.expectReplay(10000),
+      browser.execute(function () {
+        try {
+          document.querySelector('body').click()
+        } catch (err) {
+          // do nothing
+        }
+      }),
+      browser.enableSessionReplay().then(() => browser.createWindow('tab')).then((newTab) => browser.switchToWindow(newTab.handle))
+    ])
+    testExpectedReplay({ data: page1UnloadContents, session: localStorage.value, hasError: false, hasMeta: false, hasSnapshot: false, isFirstChunk: false })
 
-    /** This is scoped out this way to guarantee we have it staged in time since preload can harvest super early, sometimes earlier than wdio can expect normally */
-    /** see next `testExpectedReplay` */
-    browser.testHandle.expectBlob(15000).then(async ({ request: page2Contents }) => {
-      testExpectedReplay({ data: page2Contents, session: localStorage.value, hasError: false, hasMeta: true, hasSnapshot: true, isFirstChunk: false })
-    })
+    const [{ request: request1 }, { request: request2 }] = await Promise.all([
+      browser.testHandle.expectReplay(10000),
+      browser.testHandle.expectReplay(10000),
+      await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
+        .then(() => browser.waitForFeatureAggregate('session_replay'))
+    ])
 
-    await browser.enableSessionReplay()
-    const newTab = await browser.createWindow('tab')
-    await browser.switchToWindow(newTab.handle)
-    await browser.url(await browser.testHandle.assetURL('instrumented.html', config()))
-      .then(() => browser.waitForSessionReplayRecording())
+    expect(decodeAttributes(request1.query.attributes).hasMeta || decodeAttributes(request2.query.attributes).hasMeta).toBeTruthy()
+    expect(decodeAttributes(request1.query.attributes).hasSnapshot || decodeAttributes(request2.query.attributes).hasSnapshot).toBeTruthy()
+    testExpectedReplay({ data: request1, session: localStorage.value, hasError: false, isFirstChunk: false })
+    testExpectedReplay({ data: request2, session: localStorage.value, hasError: false, isFirstChunk: false })
 
     const page2Blocked = await browser.execute(function () {
       try {
@@ -163,6 +180,17 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
       }
     })
     expect(page2Blocked).toEqual(true)
+    await expect(getSR()).resolves.toEqual(expect.objectContaining({
+      events: [],
+      initialized: true,
+      recording: false,
+      mode: 0,
+      blocked: true
+    }))
+
+    await browser.closeWindow()
+    await browser.switchToWindow((await browser.getWindowHandles())[0])
+
     await expect(getSR()).resolves.toEqual(expect.objectContaining({
       events: [],
       initialized: true,

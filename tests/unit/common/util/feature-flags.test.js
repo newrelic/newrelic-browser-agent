@@ -35,7 +35,7 @@ test.each([
 
 test('emits the right events when feature flag = 1', () => {
   const flags = {
-    stn: 1,
+    st: 1,
     err: 1,
     ins: 1,
     spa: 1,
@@ -53,7 +53,7 @@ test('emits the right events when feature flag = 1', () => {
 
 test('emits the right events when feature flag = 0', () => {
   const flags = {
-    stn: 1,
+    st: 1,
     err: 1,
     ins: 1,
     spa: 1,
@@ -70,13 +70,13 @@ test('emits the right events when feature flag = 0', () => {
 })
 
 test('only the first activate of the same feature is respected', () => {
-  activateFeatures({ stn: 1 }, agentIdentifier)
+  activateFeatures({ st: 1 }, agentIdentifier)
 
   const sharedEE = eventEmitterModule.ee.get(agentIdentifier).emit
 
-  expect(sharedEE).toHaveBeenNthCalledWith(1, 'rumresp', [{ stn: 1 }])
+  expect(sharedEE).toHaveBeenNthCalledWith(1, 'rumresp', [{ st: 1 }])
 
   sharedEE.mockClear()
-  activateFeatures({ stn: 0 }, agentIdentifier)
-  expect(activatedFeatures[agentIdentifier].stn).toBeTruthy()
+  activateFeatures({ st: 0 }, agentIdentifier)
+  expect(activatedFeatures[agentIdentifier].st).toBeTruthy()
 })

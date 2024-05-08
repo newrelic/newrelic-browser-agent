@@ -51,9 +51,8 @@ describe('newrelic api', () => {
 
   describe('setPageViewName()', () => {
     it('includes the 1st argument (page name) in rum, resources, events, and ajax calls', async () => {
-      const [rumResults, resourcesResults, eventsResults, ajaxResults] = await Promise.all([
+      const [rumResults, eventsResults, ajaxResults] = await Promise.all([
         browser.testHandle.expectRum(),
-        browser.testHandle.expectResources(),
         browser.testHandle.expectEvents(),
         browser.testHandle.expectAjaxTimeSlices(),
         browser.url(await browser.testHandle.assetURL('api.html')) // Setup expects before loading the page
@@ -61,7 +60,6 @@ describe('newrelic api', () => {
       ])
 
       expect(rumResults.request.query.ct).toEqual('http://custom.transaction/foo')
-      expect(resourcesResults.request.query.ct).toEqual('http://custom.transaction/foo')
       expect(eventsResults.request.query.ct).toEqual('http://custom.transaction/foo')
       expect(ajaxResults.request.query.ct).toEqual('http://custom.transaction/foo')
     })
@@ -326,7 +324,7 @@ describe('newrelic api', () => {
         browser.testHandle.expectErrors(10000),
         browser.testHandle.expectMetrics(10000),
         browser.testHandle.expectIns(10000),
-        browser.testHandle.expectResources(10000),
+        browser.testHandle.expectTrace(10000),
         browser.testHandle.expectInteractionEvents(10000),
         browser.execute(function () {
           newrelic.start()
@@ -380,7 +378,7 @@ describe('newrelic api', () => {
         browser.testHandle.expectTimings(),
         browser.testHandle.expectAjaxEvents(10000, true),
         browser.testHandle.expectErrors(10000, true),
-        browser.testHandle.expectResources(),
+        browser.testHandle.expectTrace(),
         browser.testHandle.expectInteractionEvents(),
         browser.url(await browser.testHandle.assetURL('instrumented.html', {
           init: {

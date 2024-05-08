@@ -37,7 +37,7 @@ describe.withBrowsersMatching(onlyIOS)('ios webview', () => {
     // // Setup expects and submit the url
     const [rumResult, resourcesResult, spaResult] = await Promise.all([
       driver.testHandle.expectRum(),
-      driver.testHandle.expectResources(),
+      driver.testHandle.expectTrace(),
       driver.testHandle.expectInteractionEvents(),
       $('-ios predicate string: type == "XCUIElementTypeButton" AND name == "Return"').click()
     ])
@@ -47,11 +47,7 @@ describe.withBrowsersMatching(onlyIOS)('ios webview', () => {
       ref: url.slice(0, url.indexOf('?')),
       t: 'Unnamed Transaction'
     }))
-    expect(resourcesResult.request.query).toEqual(expect.objectContaining({
-      ref: url.slice(0, url.indexOf('?')),
-      t: 'Unnamed Transaction'
-    }))
-    expect(resourcesResult.request.body.res.length).toBeGreaterThanOrEqual(1)
+    expect(resourcesResult.request.body.length).toBeGreaterThanOrEqual(1)
     expect(spaResult.request.query).toEqual(expect.objectContaining({
       ref: url.slice(0, url.indexOf('?')),
       t: 'Unnamed Transaction'

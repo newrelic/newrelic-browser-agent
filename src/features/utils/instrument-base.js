@@ -11,7 +11,8 @@ import { isBrowserScope } from '../../common/constants/runtime'
 import { warn } from '../../common/util/console'
 import { FEATURE_NAMES } from '../../loaders/features/features'
 import { getConfigurationValue } from '../../common/config/config'
-import { canImportReplayAgg, enableSessionTracking } from '../session_replay/shared/utils'
+import { canImportReplayAgg } from '../session_replay/shared/utils'
+import { canEnableSessionTracking } from './feature-gates'
 import { single } from '../../common/util/invoke'
 
 /**
@@ -79,7 +80,7 @@ export class InstrumentBase extends FeatureBase {
     const importLater = async () => {
       let session
       try {
-        if (enableSessionTracking(this.agentIdentifier)) { // would require some setup before certain features start
+        if (canEnableSessionTracking(this.agentIdentifier)) { // would require some setup before certain features start
           const { setupAgentSession } = await import(/* webpackChunkName: "session-manager" */ './agent-session')
           session = setupAgentSession(this.agentIdentifier)
         }

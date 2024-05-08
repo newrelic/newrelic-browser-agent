@@ -1,7 +1,8 @@
 const OriginalMO = window.MutationObserver
+let mutationEE
 beforeEach(async () => {
   const { wrapMutation } = await import('../../../src/common/wrap')
-  wrapMutation()
+  mutationEE = wrapMutation()
 })
 afterEach(() => {
   jest.resetModules()
@@ -47,4 +48,21 @@ test('no issues with double-instrumentation', () => {
 
   const observer = new MutationObserver(function () {})
   expect(observer).toBeTruthy() // successfully created new double-wrapped MutationObserver instance
+})
+
+test('callbacks get passthrough args', done => {
+  const el = document.createElement('div')
+  document.body.appendChild(el)
+
+  mutationEE.on('fn-start', function (args) {
+    expect(args.length).toEqual(2)
+  })
+
+  const observer = new MutationObserver(function (mutationRecords, o) {
+    expect(mutationRecords.length).toEqual(1)
+    expect(o).toBe(observer)
+    done()
+  })
+  observer.observe(el, { attributes: true })
+  el.setAttribute('foo', 'bar')
 })

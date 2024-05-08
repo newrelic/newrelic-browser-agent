@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.259.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.258.2...v1.259.0) (2024-05-08)
+
+
+### Features
+
+* Migrate Session Traces to Use Blob Consumer with Feature Flags ([#821](https://github.com/newrelic/newrelic-browser-agent/issues/821)) ([55b0e00](https://github.com/newrelic/newrelic-browser-agent/commit/55b0e00e9d8dce6d0cdbed978a98302d40123f3d))
+
 ## [1.258.2](https://github.com/newrelic/newrelic-browser-agent/compare/v1.258.1...v1.258.2) (2024-05-07)
 
 

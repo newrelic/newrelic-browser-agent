@@ -86,7 +86,11 @@ export class Recorder {
       inlineStylesheet: inline_stylesheet,
       inlineImages: inline_images,
       collectFonts: collect_fonts,
-      checkoutEveryNms: CHECKOUT_MS[this.parent.mode]
+      checkoutEveryNms: CHECKOUT_MS[this.parent.mode],
+      errorHandler: (err) => {
+        this.parent.ee.emit('ignore-thrown-error', [err])
+        this.parent.ee.emit('internal-error', [err])
+      }
     })
 
     this.stopRecording = () => {

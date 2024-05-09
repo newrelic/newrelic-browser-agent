@@ -213,6 +213,26 @@ module.exports.testErrorsRequest = function testErrorsRequest (request) {
   }
 }
 
+module.exports.testInternalErrorsRequest = function testInternalErrorsRequest (request) {
+  const url = new URL(request.url, 'resolve://')
+  if (url.pathname !== `/jserrors/1/${this.testId}`) {
+    return false
+  }
+
+  if (Array.isArray(request?.body?.ierr) && request.body.ierr.length > 0) {
+    return true
+  }
+
+  if (request?.query?.ierr) {
+    try {
+      const internalErrors = JSON.parse(request.query.ierr)
+      return Array.isArray(internalErrors) && internalErrors.length > 0
+    } catch (error) {
+      return false
+    }
+  }
+}
+
 module.exports.testAjaxTimeSlicesRequest = function testAjaxTimeSlicesRequest (request) {
   const url = new URL(request.url, 'resolve://')
   if (url.pathname !== `/jserrors/1/${this.testId}`) {

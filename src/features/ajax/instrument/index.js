@@ -47,7 +47,7 @@ export class Instrument extends InstrumentBase {
       globalScope?.performance?.getEntriesByType('resource').forEach(resource => {
         if (resource.initiatorType in initiators && resource.responseStatus !== 0) {
           const params = { status: resource.responseStatus }
-          const metrics = { rxSize: resource.transferSize, duration: resource.duration, cbTime: 0 }
+          const metrics = { rxSize: resource.transferSize, duration: Math.floor(resource.duration), cbTime: 0 }
           addUrl(params, resource.name)
           this.handler('xhr', [params, metrics, resource.startTime, resource.responseEnd, initiators[resource.initiatorType]], undefined, FEATURE_NAMES.ajax)
         }

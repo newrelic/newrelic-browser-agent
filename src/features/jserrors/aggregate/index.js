@@ -199,7 +199,7 @@ export class Aggregate extends AggregateBase {
     params.timestamp = agentRuntime.timeKeeper.convertRelativeTimestamp(time)
 
     var type = internal ? 'ierr' : 'err'
-    const newMetrics = { time }
+    var newMetrics = { time }
 
     // sr, stn and spa aggregators listen to this event - stn sends the error in its payload,
     // and spa annotates the error with interaction info

@@ -9,7 +9,7 @@ import * as CONSTANTS from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { deregisterDrain } from '../../../common/drain/drain'
 import { canEnableSessionTracking } from '../../utils/feature-gates'
-import { flooredNow } from '../../../common/timing/now'
+import { now } from '../../../common/timing/now'
 
 const {
   BST_RESOURCE, RESOURCE, START, END, FEATURE_NAME, FN_END, FN_START, PUSH_STATE
@@ -30,16 +30,16 @@ export class Instrument extends InstrumentBase {
     this.eventsEE = wrapEvents(thisInstrumentEE)
 
     this.eventsEE.on(FN_START, function (args, target) {
-      this.bstStart = flooredNow()
+      this.bstStart = now()
     })
     this.eventsEE.on(FN_END, function (args, target) {
       // ISSUE: when target is XMLHttpRequest, nr@context should have params so we can calculate event origin
       // When ajax is disabled, this may fail without making ajax a dependency of session_trace
-      handle('bst', [args[0], target, this.bstStart, flooredNow()], undefined, FEATURE_NAMES.sessionTrace, thisInstrumentEE)
+      handle('bst', [args[0], target, this.bstStart, now()], undefined, FEATURE_NAMES.sessionTrace, thisInstrumentEE)
     })
 
     thisInstrumentEE.on(PUSH_STATE + START, function (args) {
-      this.time = flooredNow()
+      this.time = now()
       this.startPath = location.pathname + location.hash
     })
     thisInstrumentEE.on(PUSH_STATE + END, function (args) {

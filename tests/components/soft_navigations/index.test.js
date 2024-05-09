@@ -3,6 +3,7 @@ import { Aggregator } from '../../../src/common/aggregate/aggregator'
 import { ee } from '../../../src/common/event-emitter/contextual-ee'
 import { FEATURE_NAME } from '../../../src/features/soft_navigations/constants'
 import * as HMod from '../../../src/common/event-emitter/handle'
+import { now } from '../../../src/common/timing/now'
 
 jest.useFakeTimers({ doNotFake: ['performance', 'requestAnimationFrame'] })
 
@@ -137,6 +138,17 @@ describe('soft navigations', () => {
       expect(softNavAggregate.interactionInProgress.trigger).toEqual('keydown')
     })
 
+    test('double precision Event DOMHighResTimestamp (microsec) is floored to ms and isActiveDuring with now() works', () => {
+      const preciseCurrentTime = performance.now()
+      const currentTime = now() // this value is expected to be a truncated version of preciseCurrentTime, e.g. 421 ms vs 421.291 ms
+      expect(Number.isInteger(preciseCurrentTime)).toBeFalsy()
+      expect(Number.isInteger(currentTime)).toBeTruthy()
+
+      softNavAggregate.ee.emit('newUIEvent', [{ type: 'keydown', timeStamp: preciseCurrentTime }])
+      expect(softNavAggregate.interactionInProgress.isActiveDuring(currentTime)).toBeTruthy()
+      expect(Number.isInteger(softNavAggregate.interactionInProgress.start)).toBeTruthy()
+    })
+
     test('getInteractionFor grabs the right active interaction for a timestamp', () => {
       // initial page load ixn is ongoing at this point
       expect(softNavAggregate.getInteractionFor(performance.now())).toBe(softNavAggregate.initialPageLoadInteraction)
@@ -147,7 +159,7 @@ describe('soft navigations', () => {
 
       softNavAggregate.interactionInProgress.forceSave = true
       expect(softNavAggregate.interactionInProgress.done()).toEqual(true) // this would mark the ixn as finished and queued for harvest
-      expect(softNavAggregate.getInteractionFor(currentTime)).toBe(softNavAggregate.interactionsToHarvest[0]) // queued UI interaction is STILL chosen over initialPageLoad
+      expect(softNavAggregate.getInteractionFor(currentTime)).toBe(softNavAggregate.interactionsToHarvest[0]) // queued+completed UI interaction is STILL chosen over initialPageLoad
 
       softNavAggregate.interactionsToHarvest[0].status = 'cancelled'
       expect(softNavAggregate.getInteractionFor(currentTime)).toBe(softNavAggregate.initialPageLoadInteraction) // cancelled ixn not considered (even if queued--not possible atm)

@@ -70,7 +70,7 @@ export class Interaction extends BelNode {
 
     if (this.forceIgnore) this.#cancel() // .ignore() always has precedence over save actions
     else if (this.seenHistoryAndDomChange()) this.#finish(customEndTime) // then this should've already finished while it was the interactionInProgress, with a natural end time
-    else if (this.forceSave) this.#finish(customEndTime || now()) // a manually saved ixn (did not fulfill conditions) must have a specified end time, if one wasn't provided
+    else if (this.forceSave) this.#finish(customEndTime || performance.now()) // a manually saved ixn (did not fulfill conditions) must have a specified end time, if one wasn't provided
     else this.#cancel()
     return true
   }
@@ -125,8 +125,8 @@ export class Interaction extends BelNode {
     const fields = [
       numeric(this.belType),
       0, // this will be overwritten below with number of attached nodes
-      numeric(Math.floor(this.start - firstStartTimeOfPayload)), // relative to first node
-      numeric(Math.floor(this.end - this.start)), // end -- relative to start
+      numeric(this.start - firstStartTimeOfPayload), // relative to first node
+      numeric(this.end - this.start), // end -- relative to start
       numeric(this.callbackEnd), // cbEnd -- relative to start; not used by BrowserInteraction events
       numeric(this.callbackDuration), // not relative
       addString(this.trigger),

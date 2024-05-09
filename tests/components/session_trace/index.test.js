@@ -101,8 +101,6 @@ describe('session trace', () => {
   })
 
   test('tracks previously stored events and processes them once per occurrence', () => {
-    jest.useFakeTimers()
-
     document.addEventListener('visibilitychange', () => 1)
     document.addEventListener('visibilitychange', () => 2)
     document.addEventListener('visibilitychange', () => 3) // additional listeners should not generate additional nodes
@@ -118,6 +116,7 @@ describe('session trace', () => {
     jest.advanceTimersToNextTimer(1) // this will increase perf.now by the default ~20ms to imitate some time gap
     document.dispatchEvent(new Event('visibilitychange'))
     expect(traceAggregate.traceStorage.trace.visibilitychange.length).toEqual(2)
+    console.log(traceAggregate.traceStorage.trace.visibilitychange)
     expect(traceAggregate.traceStorage.trace.visibilitychange[0].s).not.toEqual(traceAggregate.traceStorage.trace.visibilitychange[1].s) // should not have same start times
     expect(traceAggregate.traceStorage.prevStoredEvents.size).toEqual(2)
 

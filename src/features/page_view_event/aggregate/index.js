@@ -26,6 +26,7 @@ export class Aggregate extends AggregateBase {
     this.timeToFirstByte = 0
     this.firstByteToWindowLoad = 0 // our "frontend" duration
     this.firstByteToDomContent = 0 // our "dom processing" duration
+    this.timeKeeper = new TimeKeeper(this.agentIdentifier)
 
     if (isBrowserScope) {
       timeToFirstByte.subscribe(({ value, attrs }) => {
@@ -102,6 +103,10 @@ export class Aggregate extends AggregateBase {
     queryParameters.fp = firstPaint.current.value
     queryParameters.fcp = firstContentfulPaint.current.value
 
+    if (this.timeKeeper?.ready) {
+      queryParameters.timestamp = this.timeKeeper.convertRelativeTimestamp(now())
+    }
+
     const rumStartTime = now()
     harvester.send({
       endpoint: 'rum',
@@ -117,11 +122,10 @@ export class Aggregate extends AggregateBase {
         }
 
         try {
-          const timeKeeper = new TimeKeeper(this.agentIdentifier)
-          timeKeeper.processRumRequest(xhr, rumStartTime, rumEndTime)
-          if (!timeKeeper.ready) throw new Error('TimeKeeper not ready')
+          this.timeKeeper.processRumRequest(xhr, rumStartTime, rumEndTime)
+          if (!this.timeKeeper.ready) throw new Error('TimeKeeper not ready')
 
-          agentRuntime.timeKeeper = timeKeeper
+          agentRuntime.timeKeeper = this.timeKeeper
         } catch (error) {
           handle(SUPPORTABILITY_METRIC_CHANNEL, ['PVE/NRTime/Calculation/Failed'], undefined, FEATURE_NAMES.metrics, this.ee)
           drain(this.agentIdentifier, FEATURE_NAMES.metrics, true)

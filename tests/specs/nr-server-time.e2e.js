@@ -8,6 +8,38 @@ describe('NR Server Time', () => {
     serverTime = await browser.mockDateResponse()
   })
 
+  afterEach(async () => {
+    await browser.destroyAgentSession()
+  })
+
+  it('should send page view event wth rst parameter and no timestamp when nr server time unknown', async () => {
+    const [rum] = await Promise.all([
+      browser.testHandle.expectRum(),
+      browser.url(await browser.testHandle.assetURL('instrumented.html'))
+        .then(() => browser.waitForAgentLoad())
+    ])
+
+    expect(parseInt(rum.request.query.rst, 10)).toBeGreaterThan(0)
+    expect(rum.request.query.timestamp).toBeUndefined()
+  })
+
+  it('should send page view event wth rst and timestamp parameter when nr server time is known', async () => {
+    await browser.url(await browser.testHandle.assetURL('instrumented.html'))
+      .then(() => browser.waitForAgentLoad())
+
+    const [rum, timeKeeper] = await Promise.all([
+      browser.testHandle.expectRum(),
+      browser.url(await browser.testHandle.assetURL('instrumented.html'))
+        .then(() => browser.waitForAgentLoad())
+        .then(() => browser.getPageTime())
+    ])
+
+    const rumTimestamp = parseInt(rum.request.query.timestamp, 10)
+    expect(parseInt(rum.request.query.rst, 10)).toBeGreaterThan(0)
+    expect(rumTimestamp).toBeGreaterThan(serverTime)
+    testTimeExpectations(rumTimestamp, timeKeeper, false)
+  })
+
   it('should send jserror with timestamp prior to rum date header', async () => {
     const [errors, timeKeeper] = await Promise.all([
       browser.testHandle.expectErrors(),
@@ -211,10 +243,6 @@ describe('NR Server Time', () => {
   })
 
   describe('session integration', () => {
-    afterEach(async () => {
-      await browser.destroyAgentSession()
-    })
-
     it('should not re-use the server time diff when session tracking is disabled', async () => {
       await browser.url(await browser.testHandle.assetURL('instrumented.html', {
         init: {

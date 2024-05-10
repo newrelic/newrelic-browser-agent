@@ -6,7 +6,6 @@
 import { handle } from '../../../common/event-emitter/handle'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME } from '../constants'
-import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { globalScope } from '../../../common/constants/runtime'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
 import { now } from '../../../common/timing/now'
@@ -28,7 +27,7 @@ export class Instrument extends InstrumentBase {
 
     this.ee.on('internal-error', (error) => {
       if (!this.abortHandler) return
-      handle('ierr', [castError(error), now(), true, {}, this.#replayRunning], undefined, FEATURE_NAMES.jserrors, this.ee)
+      handle('ierr', [castError(error), now(), true, {}, this.#replayRunning], undefined, this.featureName, this.ee)
     })
 
     this.ee.on(SR_EVENT_EMITTER_TYPES.REPLAY_RUNNING, (isRunning) => {
@@ -37,12 +36,12 @@ export class Instrument extends InstrumentBase {
 
     globalScope.addEventListener('unhandledrejection', (promiseRejectionEvent) => {
       if (!this.abortHandler) return
-      handle('err', [castPromiseRejectionEvent(promiseRejectionEvent), now(), false, { unhandledPromiseRejection: 1 }, this.#replayRunning], undefined, FEATURE_NAMES.jserrors, this.ee)
+      handle('err', [castPromiseRejectionEvent(promiseRejectionEvent), now(), false, { unhandledPromiseRejection: 1 }, this.#replayRunning], undefined, this.featureName, this.ee)
     }, eventListenerOpts(false, this.removeOnAbort?.signal))
 
     globalScope.addEventListener('error', (errorEvent) => {
       if (!this.abortHandler) return
-      handle('err', [castErrorEvent(errorEvent), now(), false, {}, this.#replayRunning], undefined, FEATURE_NAMES.jserrors, this.ee)
+      handle('err', [castErrorEvent(errorEvent), now(), false, {}, this.#replayRunning], undefined, this.featureName, this.ee)
     }, eventListenerOpts(false, this.removeOnAbort?.signal))
 
     this.abortHandler = this.#abort // we also use this as a flag to denote that the feature is active or on and handling errors

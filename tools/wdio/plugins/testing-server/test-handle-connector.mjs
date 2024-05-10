@@ -6,7 +6,9 @@ import {
   testAjaxEventsRequest, testAjaxTimeSlicesRequest, testCustomMetricsRequest, testErrorsRequest,
   testEventsRequest, testInsRequest, testInteractionEventsRequest, testMetricsRequest, testResourcesRequest,
   testRumRequest, testSupportMetricsRequest,
-  testTimingEventsRequest, testBlobRequest, testBlobReplayRequest, testBlobTraceRequest, testSessionReplaySnapshotRequest
+  testTimingEventsRequest, testBlobRequest, testBlobReplayRequest, testBlobTraceRequest, testSessionReplaySnapshotRequest,
+  testInternalErrorsRequest,
+  testAnyJseXhrRequest
 } from '../../../testing-server/utils/expect-tests.js'
 import defaultAssetQuery from './default-asset-query.mjs'
 import { getBrowserName, getBrowserVersion } from '../../../browsers-lists/utils.mjs'
@@ -265,6 +267,22 @@ export class TestHandleConnector {
     return this.expect('bamServer', {
       timeout,
       test: testErrorsRequest,
+      expectTimeout
+    })
+  }
+
+  expectAnyJseXhr (timeout, expectTimeout = false) {
+    return this.expect('bamServer', {
+      timeout,
+      test: testAnyJseXhrRequest,
+      expectTimeout
+    })
+  }
+
+  expectInternalErrors (timeout, expectTimeout = false) {
+    return this.expect('bamServer', {
+      timeout,
+      test: testInternalErrorsRequest,
       expectTimeout
     })
   }

@@ -70,10 +70,10 @@ export function checkAjaxEvents ({ query, body }, { specificPath, hasTrace } = {
     }))
 }
 
-export function checkJsErrors ({ query, body }, { messages } = {}) {
+export function checkJsErrors ({ query, body }, { messages } = {}, prop = 'err') {
   expect(query).toEqual(baseQuery)
-  expect(body.err?.length).toBeGreaterThanOrEqual(1)
-  body.err.forEach(err => {
+  expect(body[prop]?.length).toBeGreaterThanOrEqual(1)
+  body[prop].forEach(err => {
     expect(err).toMatchObject({
       custom: expect.any(Object),
       metrics: {
@@ -109,7 +109,7 @@ export function checkJsErrors ({ query, body }, { messages } = {}) {
 
 
   if (Array.isArray(messages) && messages.length > 0) {
-    messages.forEach((message, index) => expect(body.err[index].params.message).toMatch(message))
+    messages.forEach((message, index) => expect(body[prop][index].params.message).toMatch(message))
   }
 }
 

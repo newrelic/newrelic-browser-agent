@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Request obj methods</title>
+    {init}
+    {config}
+    {loader}
+  </head>
+  <body>
+    this page tests Request instance methods after a click then sends the interaction
+    <script>
+			const readDataMethods = ['arrayBuffer', 'blob', 'json', 'text']
+
+			document.addEventListener('click', function () {
+				readDataMethods.forEach(method => {
+					const requestObj = new Request('/json', { method: 'POST', body: '{}' })
+					requestObj[method]().then(() => {
+						setTimeout(newrelic.interaction().save().createTracer('timer'), 0)
+					})
+				})
+			})
+    </script>
+  </body>
+</html>

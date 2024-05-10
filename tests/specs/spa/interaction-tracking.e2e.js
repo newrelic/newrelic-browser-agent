@@ -1,8 +1,8 @@
 import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
 
-describe('interaction tracking works inside', () => {
-  it.withBrowsersMatching(notIE)('single fetch with formData', async () => {
-    const url = await browser.testHandle.assetURL('spa/fetch-formdata-onclick.html')
+describe('interaction tracking', () => {
+  it.withBrowsersMatching(notIE)('works with Request formData', async () => {
+    const url = await browser.testHandle.assetURL('spa/requestobj-formdata.html')
     await Promise.all([
       browser.testHandle.expectInteractionEvents(), // Discard the initial page load interaction
       browser.url(url).then(() => browser.waitForAgentLoad())
@@ -27,6 +27,52 @@ describe('interaction tracking works inside', () => {
         ]
       })
     ]))
+  })
+
+  it.withBrowsersMatching(notIE)('works with Request object data methods', async () => {
+    const url = await browser.testHandle.assetURL('spa/requestobj-methods.html')
+    await Promise.all([
+      browser.testHandle.expectInteractionEvents(),
+      browser.url(url).then(() => browser.waitForAgentLoad())
+    ])
+
+    const [clickInteractionResults] = await Promise.all([
+      browser.testHandle.expectInteractionEvents(10000),
+      $('body').click()
+    ])
+
+    const childrenArr = clickInteractionResults.request.body[0].children
+    expect(childrenArr.length).toEqual(4)
+    childrenArr.forEach(node => expect(node).toEqual(expect.objectContaining({
+      type: 'customTracer',
+      name: 'timer',
+      children: []
+    })))
+  })
+
+  it.withBrowsersMatching(notIE)('works with fetch Response object data methods', async () => {
+    const url = await browser.testHandle.assetURL('spa/fetch-responseobj-methods.html')
+    await Promise.all([
+      browser.testHandle.expectInteractionEvents(),
+      browser.url(url).then(() => browser.waitForAgentLoad())
+    ])
+
+    const [clickInteractionResults] = await Promise.all([
+      browser.testHandle.expectInteractionEvents(10000),
+      $('body').click()
+    ])
+
+    const ajaxNodesArr = clickInteractionResults.request.body[0].children
+    expect(ajaxNodesArr.length).toEqual(4)
+    ajaxNodesArr.forEach(ajax => expect(ajax).toEqual(expect.objectContaining({
+      path: '/json',
+      requestedWith: 'fetch',
+      children: [expect.objectContaining({
+        type: 'customTracer',
+        name: 'timer',
+        children: []
+      })]
+    })))
   })
 
   it('correctly tracks create tracer interactions inside XHR ready state change', async () => {

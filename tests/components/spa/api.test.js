@@ -4,7 +4,6 @@ import { ee } from '../../../src/common/event-emitter/contextual-ee'
 import { Spa } from '../../../src/features/spa'
 import { getInfo, originals } from '../../../src/common/config/config'
 import { bundleId } from '../../../src/common/ids/bundle-id'
-import { INTERACTION_API } from '../../../src/features/spa/constants'
 import { now } from '../../../src/common/timing/now'
 
 jest.mock('../../../src/common/constants/runtime', () => ({
@@ -38,38 +37,9 @@ beforeAll(async () => {
   spaAggregate = spaInstrument.featAggregate
   spaAggregate.blocked = true
   spaAggregate.drain()
-  const tracerEE = spaInstrument.ee.get('tracer')
 
-  newrelic = {
-    interaction: function () {
-      const newSandboxHandle = { // will have its own clean 'this' context specific to each newrelic.interaction() call
-        command: function (cmd, customTime = now(), ...args) {
-          spaAggregate.ee.emit(INTERACTION_API + cmd, [customTime, ...args], this)
-          return this // most spa APIs should return a handle obj that allows for chaining further commands
-        },
-        createTracer: function (name, cb) {
-          const contextStore = {}; const hasCb = typeof cb === 'function'
-          spaAggregate.ee.emit(INTERACTION_API + 'tracer', [now(), name, contextStore], this)
-          return function () {
-            tracerEE.emit((hasCb ? '' : 'no-') + 'fn-start', [now(), this, hasCb], contextStore)
-            if (hasCb) {
-              try {
-                return cb.apply(this, arguments)
-              } catch (err) {
-                tracerEE.emit('fn-err', [arguments, this, err], contextStore)
-                // the error came from outside the agent, so don't swallow
-                throw err
-              } finally {
-                tracerEE.emit('fn-end', [now()], contextStore)
-              }
-            }
-          }
-        }
-      }
-      return newSandboxHandle.command('get')
-    },
-    setCustomAttribute: function (key, value) { mockCurrentInfo.jsAttributes[key] = value }
-  }
+  newrelic = helpers.getNewrelicGlobal(spaAggregate.ee)
+  newrelic.setCustomAttribute = function (key, value) { mockCurrentInfo.jsAttributes[key] = value }
 })
 beforeEach(() => {
   mockCurrentInfo.jsAttributes = {}

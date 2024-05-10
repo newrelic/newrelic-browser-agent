@@ -233,6 +233,16 @@ module.exports.testInternalErrorsRequest = function testInternalErrorsRequest (r
   }
 }
 
+module.exports.testAnyJseXhrRequest = function testErrorsRequest (request) {
+  const url = new URL(request.url, 'resolve://')
+  if (url.pathname !== `/jserrors/1/${this.testId}`) {
+    return false
+  }
+
+  const bodyKeys = Object.keys(request?.body || {})
+  if (bodyKeys.some(k => request.body[k]?.length > 0)) return true
+}
+
 module.exports.testAjaxTimeSlicesRequest = function testAjaxTimeSlicesRequest (request) {
   const url = new URL(request.url, 'resolve://')
   if (url.pathname !== `/jserrors/1/${this.testId}`) {

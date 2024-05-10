@@ -88,8 +88,13 @@ export class Recorder {
       collectFonts: collect_fonts,
       checkoutEveryNms: CHECKOUT_MS[this.parent.mode],
       errorHandler: (err) => {
-        this.parent.ee.emit('ignore-thrown-error', [err])
         this.parent.ee.emit('internal-error', [err])
+        try {
+          err.__newrelic ??= { [this.parent.agentIdentifier]: { } }
+          err.__newrelic[this.parent.agentIdentifier].ignore = true
+        } catch (err) {
+          // couldnt decorate error
+        }
       }
     })
 

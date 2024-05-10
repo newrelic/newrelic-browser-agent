@@ -16,7 +16,6 @@ export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
 
   #replayRunning = false
-  #ignoredInternalErrors = new Set()
 
   constructor (agentIdentifier, aggregator, auto = true) {
     super(agentIdentifier, aggregator, FEATURE_NAME, auto)
@@ -27,14 +26,8 @@ export class Instrument extends InstrumentBase {
     } catch (e) {}
 
     this.ee.on('internal-error', (error) => {
-      /** skip the ignoreInternalErrors if they are internal */
       if (!this.abortHandler) return
       handle('ierr', [castError(error), now(), true, {}, this.#replayRunning], undefined, this.featureName, this.ee)
-    })
-
-    this.ee.on('ignore-thrown-error', (error) => {
-      console.log('ignore thrown error', error)
-      this.#ignoredInternalErrors.add(error)
     })
 
     this.ee.on(SR_EVENT_EMITTER_TYPES.REPLAY_RUNNING, (isRunning) => {
@@ -42,14 +35,12 @@ export class Instrument extends InstrumentBase {
     })
 
     globalScope.addEventListener('unhandledrejection', (promiseRejectionEvent) => {
-      if (!this.abortHandler || this.#ignoredInternalErrors.has(promiseRejectionEvent?.reason)) return
+      if (!this.abortHandler) return
       handle('err', [castPromiseRejectionEvent(promiseRejectionEvent), now(), false, { unhandledPromiseRejection: 1 }, this.#replayRunning], undefined, this.featureName, this.ee)
     }, eventListenerOpts(false, this.removeOnAbort?.signal))
 
     globalScope.addEventListener('error', (errorEvent) => {
-      console.log('saw error!', errorEvent)
-      if (!this.abortHandler || this.#ignoredInternalErrors.has(errorEvent?.error)) return
-      console.log('didnt early return :(')
+      if (!this.abortHandler) return
       handle('err', [castErrorEvent(errorEvent), now(), false, {}, this.#replayRunning], undefined, this.featureName, this.ee)
     }, eventListenerOpts(false, this.removeOnAbort?.signal))
 

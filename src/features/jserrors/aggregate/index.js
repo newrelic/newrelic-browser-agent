@@ -139,6 +139,7 @@ export class Aggregate extends AggregateBase {
 
   storeError (err, time, internal, customAttributes, hasReplay) {
     if (!err) return
+    if (!internal && err?.__newrelic?.[this.agentIdentifier]?.ignore) return
     // are we in an interaction
     time = time || now()
     const agentRuntime = getRuntime(this.agentIdentifier)

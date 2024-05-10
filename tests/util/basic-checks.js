@@ -40,7 +40,7 @@ export function checkPVT ({ query, body }) {
     attributes: expect.any(Array),
     name: x.name,
     type: expect.any(String),
-    value: expect.any(Number)
+    value: (['pageHide', 'unload'].includes(x.name) && browserMatch(onlyIE)) ? null : expect.any(Number)
   }))
 }
 

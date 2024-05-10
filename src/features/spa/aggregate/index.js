@@ -26,7 +26,6 @@ import { handle } from '../../../common/event-emitter/handle'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { deregisterDrain } from '../../../common/drain/drain'
 import { warn } from '../../../common/util/console'
-import { setErrorMetadata } from '../../../common/util/error-metadata'
 
 const {
   FEATURE_NAME, INTERACTION_EVENTS, MAX_TIMER_BUDGET, FN_START, FN_END, CB_START, INTERACTION_API, REMAINING,
@@ -710,9 +709,10 @@ export class Aggregate extends AggregateBase {
 
     register('function-err', function (args, obj, error) {
       if (!state.currentNode) return
-      setErrorMetadata({ error, property: 'interactionId', value: state.currentNode.interaction.id, agentIdentifier })
+      error.__newrelic ??= {}
+      error.__newrelic[agentIdentifier] = { interactionId: state.currentNode.interaction.id }
       if (state.currentNode.type && state.currentNode.type !== 'interaction') {
-        setErrorMetadata({ error, property: 'interactionNodeId', value: state.currentNode.id, agentIdentifier })
+        error.__newrelic[agentIdentifier].interactionNodeId = state.currentNode.id
       }
     }, this.featureName, baseEE)
 

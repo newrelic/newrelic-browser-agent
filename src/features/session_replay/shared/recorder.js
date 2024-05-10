@@ -9,7 +9,6 @@ import { handle } from '../../../common/event-emitter/handle'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { buildNRMetaNode } from './utils'
-import { setErrorMetadata } from '../../../common/util/error-metadata'
 
 export class Recorder {
   /** Each page mutation or event will be stored (raw) in this array. This array will be cleared on each harvest */
@@ -90,11 +89,7 @@ export class Recorder {
       checkoutEveryNms: CHECKOUT_MS[this.parent.mode],
       errorHandler: (err) => {
         this.parent.ee.emit('internal-error', [err])
-        try {
-          setErrorMetadata({ error: err, property: 'ignore', value: true, agentIdentifier: this.parent.agentIdentifier })
-        } catch (err) {
-          // couldnt decorate error
-        }
+        return true
       }
     })
 

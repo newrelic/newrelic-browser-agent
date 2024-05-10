@@ -11,6 +11,7 @@ import * as CONSTANTS from '../constants'
 import { isBrowserScope } from '../../../common/constants/runtime'
 import { now } from '../../../common/timing/now'
 import { handle } from '../../../common/event-emitter/handle'
+import { getErrorMetadata } from '../../../common/util/error-metadata'
 
 const {
   FEATURE_NAME, START, END, BODY, CB_END, JS_TIME, FETCH, FN_START, CB_START, FN_END
@@ -47,7 +48,7 @@ export class Instrument extends InstrumentBase {
     promiseEE.on(CB_END, endTimestamp)
     jsonpEE.on(CB_END, endTimestamp)
 
-    this.ee.on('fn-err', (...args) => { if (!args[2]?.__newrelic?.[agentIdentifier]) handle('function-err', [...args], undefined, this.featureName, this.ee) })
+    this.ee.on('fn-err', (...args) => { if (!getErrorMetadata({ error: args[2], agentIdentifier })) handle('function-err', [...args], undefined, this.featureName, this.ee) })
 
     this.ee.buffer([FN_START, FN_END, 'xhr-resolved'], this.featureName)
     eventsEE.buffer([FN_START], this.featureName)

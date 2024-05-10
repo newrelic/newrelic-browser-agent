@@ -22,6 +22,7 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { getNREUMInitializedAgent } from '../../../common/window/nreum'
 import { deregisterDrain } from '../../../common/drain/drain'
 import { now } from '../../../common/timing/now'
+import { getErrorMetadata } from '../../../common/util/error-metadata'
 
 /**
  * @typedef {import('./compute-stack-trace.js').StackInfo} StackInfo
@@ -139,7 +140,8 @@ export class Aggregate extends AggregateBase {
 
   storeError (err, time, internal, customAttributes, hasReplay) {
     if (!err) return
-    if (!internal && err?.__newrelic?.[this.agentIdentifier]?.ignore) return
+    /** If error was decorated with an ignore tag, dont capture it */
+    if (!internal && getErrorMetadata({ error: err, property: 'ignore', agentIdentifier: this.agentIdentifier })) return
     // are we in an interaction
     time = time || now()
     const agentRuntime = getRuntime(this.agentIdentifier)
@@ -208,11 +210,8 @@ export class Aggregate extends AggregateBase {
     handle('trace-jserror', jsErrorEvent, undefined, FEATURE_NAMES.sessionTrace, this.ee)
     // still send EE events for other features such as above, but stop this one from aggregating internal data
     if (this.blocked) return
-
-    if (err?.__newrelic?.[this.agentIdentifier]) {
-      params._interactionId = err.__newrelic[this.agentIdentifier].interactionId
-      params._interactionNodeId = err.__newrelic[this.agentIdentifier].interactionNodeId
-    }
+    params._interactionId = getErrorMetadata({ error: err, property: 'interactionId', agentIdentifier: this.agentIdentifier })
+    params._interactionNodeId = getErrorMetadata({ error: err, property: 'interactionNodeId', agentIdentifier: this.agentIdentifier })
 
     const softNavInUse = Boolean(getNREUMInitializedAgent(this.agentIdentifier)?.features[FEATURE_NAMES.softNav])
     // Note: the following are subject to potential race cond wherein if the other feature aren't fully initialized, it'll be treated as there being no associated interaction.

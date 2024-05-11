@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>XHR Before Load</title>
+  {init} {config} {loader}
+  <script type="text/javascript">
+    var xhr = new XMLHttpRequest()
+    xhr.open('GET', '/json')
+    xhr.send()
+  </script>
+</head>
+<body>
+<div>
+  This page initiates an XHR after the agent script and before the page load event
+  is fired. Use a non-spa agent or disable the spa feature to use this file to test
+  the ajax feature instead of the spa feature.
+</div>
+</body>
+</html>

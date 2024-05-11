@@ -217,7 +217,7 @@ export function checkSessionTrace ({ query, body }) {
   })
 }
 
-export function checkSpa ({ query, body }) {
+export function checkSpa ({ query, body }, { trigger } = {}) {
   expect(query).toEqual(baseQuery)
   expect(body.length).toBeGreaterThanOrEqual(1)
 
@@ -237,8 +237,8 @@ export function checkSpa ({ query, body }) {
     category: expect.any(String),
     id: expect.any(String),
     nodeId: expect.any(String),
-    firstPaint: browserMatch([notIE, notSafari, notIOS, notFirefox]) ? expect.any(Number) : null,
-    firstContentfulPaint: browserMatch(notIE) ? expect.any(Number) : null,
+    firstPaint: browserMatch([notIE, notSafari, notIOS, notFirefox]) && (!trigger || trigger === 'initialPageLoad') ? expect.any(Number) : null,
+    firstContentfulPaint: browserMatch(notIE) && (!trigger || trigger === 'initialPageLoad') ? expect.any(Number) : null,
     navTiming: expect.any(Object)
   })
 }

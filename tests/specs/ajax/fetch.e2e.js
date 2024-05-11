@@ -361,12 +361,12 @@ describe.withBrowsersMatching(supportsFetch)('Fetch Ajax', () => {
     const ajaxEvent = ajaxEventsHarvest.request.body.find(event => event.path === '/formdata')
     // We do not attempt to calculate txSize when FormData is used
     expect(ajaxEvent.requestBodySize).toEqual(0)
-    expect(ajaxEvent.responseBodySize).toEqual(4)
+    expect(ajaxEvent.responseBodySize).toEqual(165)
 
     const ajaxMetric = ajaxTimeSlicesHarvest.request.body.xhr.find(metric => metric.params.pathname === '/formdata')
     // We do not attempt to calculate txSize when FormData is used
     expect(ajaxMetric.metrics.txSize.t).toEqual(0)
-    expect(ajaxMetric.metrics.rxSize.t).toEqual(4)
+    expect(ajaxMetric.metrics.rxSize.t).toEqual(165)
   })
 
   it('produces event and metric with zero receive size due to the use of compression', async () => {

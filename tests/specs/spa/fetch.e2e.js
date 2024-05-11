@@ -1,4 +1,4 @@
-import { checkSpa } from '../../util/basic-checks'
+import { checkAjaxEvents, checkSpa } from '../../util/basic-checks'
 import { supportsFetch } from '../../../tools/browser-matcher/common-matchers.mjs'
 
 describe.withBrowsersMatching(supportsFetch)('Fetch SPA Interaction Tracking', () => {
@@ -295,5 +295,36 @@ describe.withBrowsersMatching(supportsFetch)('Fetch SPA Interaction Tracking', (
         ])
       })
     ])
+  })
+
+  it('creates interaction event data for fetch', async () => {
+    await browser.url(await browser.testHandle.assetURL('ajax/fetch-simple.html'))
+      .then(() => browser.waitForAgentLoad())
+
+    const [interactionEventsHarvest] = await Promise.all([
+      browser.testHandle.expectInteractionEvents(),
+      $('#sendAjax').click()
+    ])
+
+    checkAjaxEvents({ body: interactionEventsHarvest.request.body[0].children, query: interactionEventsHarvest.request.query }, { specificPath: '/json' })
+
+    const ajaxEvent = interactionEventsHarvest.request.body[0].children.find(event => event.path === '/json')
+    expect(ajaxEvent.end).toBeGreaterThanOrEqual(ajaxEvent.start)
+    expect(ajaxEvent.callbackEnd).toBeGreaterThanOrEqual(ajaxEvent.end)
+  })
+
+  it('creates interaction event data for erred fetch', async () => {
+    await browser.url(await browser.testHandle.assetURL('ajax/fetch-404.html'))
+      .then(() => browser.waitForAgentLoad())
+
+    const [interactionEventsHarvest] = await Promise.all([
+      browser.testHandle.expectInteractionEvents(),
+      $('#sendAjax').click()
+    ])
+
+    checkAjaxEvents({ body: interactionEventsHarvest.request.body[0].children, query: interactionEventsHarvest.request.query }, { specificPath: '/paththatdoesnotexist' })
+
+    const ajaxEvent = interactionEventsHarvest.request.body[0].children.find(event => event.path === '/paththatdoesnotexist')
+    expect(ajaxEvent.status).toEqual(404)
   })
 })

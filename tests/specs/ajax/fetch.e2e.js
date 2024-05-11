@@ -1,4 +1,5 @@
 import { onlyFirefox, supportsFetch } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { checkAjaxEvents, checkAjaxMetrics } from '../../util/basic-checks'
 
 describe.withBrowsersMatching(supportsFetch)('Fetch Ajax', () => {
   ;[
@@ -9,66 +10,24 @@ describe.withBrowsersMatching(supportsFetch)('Fetch Ajax', () => {
     it(`creates event and metric data for ${title}`, async () => {
       await browser.url(await browser.testHandle.assetURL(url))
         .then(() => browser.waitForAgentLoad())
+        .then(() => browser.execute(function () {
+          window.disableAjaxHashChange = true
+        }))
 
       const [ajaxEventsHarvest, ajaxTimeSlicesHarvest] = await Promise.all([
         browser.testHandle.expectAjaxEvents(),
         browser.testHandle.expectAjaxTimeSlices(),
-        browser.execute(function () {
-          // We don't want the spa feature to pick up the ajax call
-          window.disableAjaxHashChange = true
-        }).then(() => $('#sendAjax').click())
+        $('#sendAjax').click()
       ])
 
+      checkAjaxEvents(ajaxEventsHarvest.request, { specificPath: '/json' })
+      checkAjaxMetrics(ajaxTimeSlicesHarvest.request, { specificPath: '/json', isFetch: true })
+
       const ajaxEvent = ajaxEventsHarvest.request.body.find(event => event.path === '/json')
-      expect(ajaxEvent).toEqual({
-        type: 'ajax',
-        children: [],
-        start: expect.toBeWithin(1, Infinity),
-        end: expect.toBeWithin(1, Infinity),
-        callbackEnd: expect.toBeWithin(1, Infinity),
-        callbackDuration: 0,
-        method: 'GET',
-        status: 200,
-        domain: browser.testHandle.assetServerConfig.host + ':' + browser.testHandle.assetServerConfig.port,
-        path: '/json',
-        requestBodySize: 0,
-        responseBodySize: 14,
-        requestedWith: 'fetch',
-        nodeId: '0',
-        guid: null,
-        traceId: null,
-        timestamp: null
-      })
       expect(ajaxEvent.end).toBeGreaterThanOrEqual(ajaxEvent.start)
       expect(ajaxEvent.callbackEnd).toEqual(ajaxEvent.end)
 
       const ajaxMetric = ajaxTimeSlicesHarvest.request.body.xhr.find(metric => metric.params.pathname === '/json')
-      expect(ajaxMetric).toEqual({
-        params: {
-          hostname: browser.testHandle.assetServerConfig.host,
-          port: browser.testHandle.assetServerConfig.port.toString(),
-          protocol: 'http',
-          host: browser.testHandle.assetServerConfig.host + ':' + browser.testHandle.assetServerConfig.port,
-          pathname: '/json',
-          method: 'GET',
-          status: 200
-        },
-        metrics: {
-          count: 1,
-          duration: {
-            t: expect.toBeWithin(0, Infinity)
-          },
-          rxSize: {
-            t: 14
-          },
-          time: {
-            t: expect.toBeWithin(1, Infinity)
-          },
-          txSize: {
-            t: 0
-          }
-        }
-      })
 
       // Metric duration is not an exact calculation of `end - start`
       const calculatedDuration = ajaxEvent.end - ajaxEvent.start
@@ -77,127 +36,49 @@ describe.withBrowsersMatching(supportsFetch)('Fetch Ajax', () => {
   })
 
   it('creates event and metric data for erred fetch', async () => {
-    await browser.url(await browser.testHandle.assetURL('instrumented.html'))
+    await browser.url(await browser.testHandle.assetURL('ajax/fetch-404.html'))
       .then(() => browser.waitForAgentLoad())
+      .then(() => browser.execute(function () {
+        window.disableAjaxHashChange = true
+      }))
 
     const [ajaxEventsHarvest, ajaxTimeSlicesHarvest] = await Promise.all([
       browser.testHandle.expectAjaxEvents(),
       browser.testHandle.expectAjaxTimeSlices(),
-      browser.execute(function () {
-        fetch('/paththatdoesnotexist').catch(function () {})
-      })
+      $('#sendAjax').click()
     ])
 
+    checkAjaxEvents(ajaxEventsHarvest.request, { specificPath: '/paththatdoesnotexist' })
+    checkAjaxMetrics(ajaxTimeSlicesHarvest.request, { specificPath: '/paththatdoesnotexist', isFetch: true })
+
     const ajaxEvent = ajaxEventsHarvest.request.body.find(event => event.path === '/paththatdoesnotexist')
-    expect(ajaxEvent).toEqual({
-      type: 'ajax',
-      children: [],
-      start: expect.toBeWithin(1, Infinity),
-      end: expect.toBeWithin(1, Infinity),
-      callbackEnd: expect.toBeWithin(1, Infinity),
-      callbackDuration: 0,
-      method: 'GET',
-      status: 404,
-      domain: browser.testHandle.assetServerConfig.host + ':' + browser.testHandle.assetServerConfig.port,
-      path: '/paththatdoesnotexist',
-      requestBodySize: 0,
-      responseBodySize: 92,
-      requestedWith: 'fetch',
-      nodeId: '0',
-      guid: null,
-      traceId: null,
-      timestamp: null
-    })
+    expect(ajaxEvent.status).toEqual(404)
 
     const ajaxMetric = ajaxTimeSlicesHarvest.request.body.xhr.find(metric => metric.params.pathname === '/paththatdoesnotexist')
-    expect(ajaxMetric).toEqual({
-      params: {
-        hostname: browser.testHandle.assetServerConfig.host,
-        port: browser.testHandle.assetServerConfig.port.toString(),
-        protocol: 'http',
-        host: browser.testHandle.assetServerConfig.host + ':' + browser.testHandle.assetServerConfig.port,
-        pathname: '/paththatdoesnotexist',
-        method: 'GET',
-        status: 404
-      },
-      metrics: {
-        count: 1,
-        duration: {
-          t: expect.toBeWithin(0, Infinity)
-        },
-        rxSize: {
-          t: 92
-        },
-        time: {
-          t: expect.toBeWithin(1, Infinity)
-        },
-        txSize: {
-          t: 0
-        }
-      }
-    })
+    expect(ajaxMetric.params.status).toEqual(404)
   })
 
   it('creates event and metric data for fetch with network error', async () => {
-    await browser.url(await browser.testHandle.assetURL('instrumented.html'))
+    await browser.url(await browser.testHandle.assetURL('ajax/fetch-network-error.html'))
       .then(() => browser.waitForAgentLoad())
+      .then(() => browser.execute(function () {
+        window.disableAjaxHashChange = true
+      }))
 
     const [ajaxEventsHarvest, ajaxTimeSlicesHarvest] = await Promise.all([
       browser.testHandle.expectAjaxEvents(),
       browser.testHandle.expectAjaxTimeSlices(),
-      browser.execute(function () {
-        fetch('http://foobar').catch(function () {})
-      })
+      $('#sendAjax').click()
     ])
 
-    const ajaxEvent = ajaxEventsHarvest.request.body.find(event => event.path === '/')
-    expect(ajaxEvent).toEqual({
-      type: 'ajax',
-      children: [],
-      start: expect.toBeWithin(1, Infinity),
-      end: expect.toBeWithin(1, Infinity),
-      callbackEnd: expect.toBeWithin(1, Infinity),
-      callbackDuration: 0,
-      method: 'GET',
-      status: 0,
-      domain: 'foobar:80',
-      path: '/',
-      requestBodySize: 0,
-      responseBodySize: 0,
-      requestedWith: 'fetch',
-      nodeId: '0',
-      guid: null,
-      traceId: null,
-      timestamp: null
-    })
+    checkAjaxEvents(ajaxEventsHarvest.request, { specificPath: '/bizbaz' })
+    checkAjaxMetrics(ajaxTimeSlicesHarvest.request, { specificPath: '/bizbaz', isFetch: true })
 
-    const ajaxMetric = ajaxTimeSlicesHarvest.request.body.xhr.find(metric => metric.params.pathname === '/')
-    expect(ajaxMetric).toEqual({
-      params: {
-        hostname: 'foobar',
-        port: '80',
-        protocol: 'http',
-        host: 'foobar:80',
-        pathname: '/',
-        method: 'GET',
-        status: 0
-      },
-      metrics: {
-        count: 1,
-        duration: {
-          t: expect.toBeWithin(0, Infinity)
-        },
-        rxSize: {
-          c: 1
-        },
-        time: {
-          t: expect.toBeWithin(1, Infinity)
-        },
-        txSize: {
-          t: 0
-        }
-      }
-    })
+    const ajaxEvent = ajaxEventsHarvest.request.body.find(event => event.path === '/bizbaz')
+    expect(ajaxEvent.status).toEqual(0)
+
+    const ajaxMetric = ajaxTimeSlicesHarvest.request.body.xhr.find(metric => metric.params.pathname === '/bizbaz')
+    expect(ajaxMetric.params.status).toEqual(0)
   })
 
   ;[
@@ -209,14 +90,14 @@ describe.withBrowsersMatching(supportsFetch)('Fetch Ajax', () => {
     it(`does not capture fetch ${title} in metric timings`, async () => {
       await browser.url(await browser.testHandle.assetURL(url))
         .then(() => browser.waitForAgentLoad())
+        .then(() => browser.execute(function () {
+          window.disableAjaxHashChange = true
+        }))
 
       const [ajaxEventsHarvest, ajaxTimeSlicesHarvest] = await Promise.all([
         browser.testHandle.expectAjaxEvents(),
         browser.testHandle.expectAjaxTimeSlices(),
-        browser.execute(function () {
-          // We don't want the spa feature to pick up the ajax call
-          window.disableAjaxHashChange = true
-        }).then(() => $('#sendAjax').click())
+        $('#sendAjax').click()
       ])
 
       const ajaxEvent = ajaxEventsHarvest.request.body.find(event => event.path === '/json')
@@ -232,14 +113,14 @@ describe.withBrowsersMatching(supportsFetch)('Fetch Ajax', () => {
   it('produces the correct event and metric status when fetch times out or is aborted', async () => {
     await browser.url(await browser.testHandle.assetURL('ajax/fetch-timeout.html'))
       .then(() => browser.waitForAgentLoad())
+      .then(() => browser.execute(function () {
+        window.disableAjaxHashChange = true
+      }))
 
     const [ajaxEventsHarvest, ajaxTimeSlicesHarvest] = await Promise.all([
       browser.testHandle.expectAjaxEvents(),
       browser.testHandle.expectAjaxTimeSlices(),
-      browser.execute(function () {
-        // We don't want the spa feature to pick up the ajax call
-        window.disableAjaxHashChange = true
-      }).then(() => $('#sendAjax').click())
+      $('#sendAjax').click()
     ])
 
     const ajaxEvent = ajaxEventsHarvest.request.body.find(event => event.path === '/delayed')

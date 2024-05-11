@@ -1,4 +1,4 @@
-import { checkSpa } from '../../util/basic-checks'
+import { checkAjaxEvents, checkSpa } from '../../util/basic-checks'
 
 describe('XHR SPA Interaction Tracking', () => {
   it('should capture the ajax in the initial interaction when sent before load', async () => {
@@ -219,5 +219,100 @@ describe('XHR SPA Interaction Tracking', () => {
         ])
       })
     ])
+  })
+
+  it('creates interaction event data for xhr', async () => {
+    await browser.url(await browser.testHandle.assetURL('ajax/xhr-simple.html'))
+      .then(() => browser.waitForAgentLoad())
+
+    const [interactionEventsHarvest] = await Promise.all([
+      browser.testHandle.expectInteractionEvents(),
+      $('#sendAjax').click()
+    ])
+
+    checkAjaxEvents({ body: interactionEventsHarvest.request.body[0].children, query: interactionEventsHarvest.request.query }, { specificPath: '/json' })
+
+    const ajaxEvent = interactionEventsHarvest.request.body[0].children.find(event => event.path === '/json')
+    expect(ajaxEvent.end).toBeGreaterThanOrEqual(ajaxEvent.start)
+    expect(ajaxEvent.callbackEnd).toBeGreaterThanOrEqual(ajaxEvent.end)
+  })
+
+  it('creates interaction event data for erred xhr', async () => {
+    await browser.url(await browser.testHandle.assetURL('ajax/xhr-404.html'))
+      .then(() => browser.waitForAgentLoad())
+
+    const [interactionEventsHarvest] = await Promise.all([
+      browser.testHandle.expectInteractionEvents(),
+      $('#sendAjax').click()
+    ])
+
+    checkAjaxEvents({ body: interactionEventsHarvest.request.body[0].children, query: interactionEventsHarvest.request.query }, { specificPath: '/paththatdoesnotexist' })
+
+    const ajaxEvent = interactionEventsHarvest.request.body[0].children.find(event => event.path === '/paththatdoesnotexist')
+    expect(ajaxEvent.status).toEqual(404)
+  })
+
+  it('creates interaction event data for xhr with network error', async () => {
+    await browser.url(await browser.testHandle.assetURL('ajax/xhr-network-error.html'))
+      .then(() => browser.waitForAgentLoad())
+
+    const [interactionEventsHarvest] = await Promise.all([
+      browser.testHandle.expectInteractionEvents(),
+      $('#sendAjax').click()
+    ])
+
+    checkAjaxEvents({ body: interactionEventsHarvest.request.body[0].children, query: interactionEventsHarvest.request.query }, { specificPath: '/bizbaz' })
+
+    const ajaxEvent = interactionEventsHarvest.request.body[0].children.find(event => event.path === '/bizbaz')
+    expect(ajaxEvent.status).toEqual(0)
+  })
+
+  it('includes callbackDuration with spa loader', async () => {
+    await browser.url(await browser.testHandle.assetURL('ajax/xhr-callback-duration.html'))
+      .then(() => browser.waitForAgentLoad())
+
+    const [interactionEventsHarvest] = await Promise.all([
+      browser.testHandle.expectInteractionEvents(),
+      $('#sendAjax').click()
+    ])
+
+    checkAjaxEvents({ body: interactionEventsHarvest.request.body[0].children, query: interactionEventsHarvest.request.query }, { specificPath: '/json' })
+
+    const ajaxEvent = interactionEventsHarvest.request.body[0].children.find(event => event.path === '/json')
+    // Ajax event should have a callbackDuration when picked up by the SPA feature
+    expect(ajaxEvent.callbackDuration).toBeGreaterThan(0)
+  })
+
+  it('produces the correct interaction event timings when xhr times out', async () => {
+    await browser.url(await browser.testHandle.assetURL('ajax/xhr-timeout.html'))
+      .then(() => browser.waitForAgentLoad())
+
+    const [interactionEventsHarvest] = await Promise.all([
+      browser.testHandle.expectInteractionEvents(),
+      $('#sendAjax').click()
+    ])
+
+    checkAjaxEvents({ body: interactionEventsHarvest.request.body[0].children, query: interactionEventsHarvest.request.query }, { specificPath: '/delayed' })
+
+    const ajaxEvent = interactionEventsHarvest.request.body[0].children.find(event => event.path === '/delayed')
+    // Ajax event should have a callbackDuration when picked up by the SPA feature
+    expect(ajaxEvent.callbackDuration).toBeGreaterThan(0)
+    // Ajax event should have a 0 status when timed out
+    expect(ajaxEvent.status).toEqual(0)
+  })
+
+  it('produces interaction event data when xhr is aborted', async () => {
+    await browser.url(await browser.testHandle.assetURL('ajax/xhr-abort.html'))
+      .then(() => browser.waitForAgentLoad())
+
+    const [interactionEventsHarvest] = await Promise.all([
+      browser.testHandle.expectInteractionEvents(),
+      $('#sendAjax').click()
+    ])
+
+    checkAjaxEvents({ body: interactionEventsHarvest.request.body[0].children, query: interactionEventsHarvest.request.query }, { specificPath: '/delayed' })
+
+    const ajaxEvent = interactionEventsHarvest.request.body[0].children.find(event => event.path === '/delayed')
+    expect(ajaxEvent.status).toEqual(0)
   })
 })

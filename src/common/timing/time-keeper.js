@@ -67,7 +67,7 @@ export class TimeKeeper {
     this.#correctedOriginTime = Math.floor(Date.parse(responseDateHeader) - serverOffset)
     this.#localTimeDiff = originTime - this.#correctedOriginTime
 
-    if (Number.isNaN(this.#correctedOriginTime)) {
+    if (isNaN(this.#correctedOriginTime)) {
       throw new Error('Date header invalid format.')
     }
 
@@ -97,7 +97,7 @@ export class TimeKeeper {
   /** Process the session entity and use the info to set the main time calculations if present */
   processStoredDiff () {
     const storedServerTimeDiff = this.#session?.read()?.serverTimeDiff
-    if (!(isNaN(storedServerTimeDiff))) {
+    if (typeof storedServerTimeDiff === 'number' && !isNaN(storedServerTimeDiff)) {
       this.#localTimeDiff = storedServerTimeDiff
       this.#correctedOriginTime = originTime - this.#localTimeDiff
       this.#ready = true

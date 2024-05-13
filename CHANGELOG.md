@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.260.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.259.0...v1.260.0) (2024-05-13)
+
+
+### Features
+
+* Improve time stamping of page view events ([#1026](https://github.com/newrelic/newrelic-browser-agent/issues/1026)) ([67a658d](https://github.com/newrelic/newrelic-browser-agent/commit/67a658d2645b680a479175dff06a4fd95bd6086a))
+
+
+### Bug Fixes
+
+* Add internal error handler to session replay recorder ([#1029](https://github.com/newrelic/newrelic-browser-agent/issues/1029)) ([84c101c](https://github.com/newrelic/newrelic-browser-agent/commit/84c101ccbff8da207bdf215714f49b7d49941388))
+* Adjust session entity to not race between tabs ([#1032](https://github.com/newrelic/newrelic-browser-agent/issues/1032)) ([d86becf](https://github.com/newrelic/newrelic-browser-agent/commit/d86becf2fc02aa133430332aa4e4c2bc26297750))
+
 ## [1.259.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.258.2...v1.259.0) (2024-05-08)
 
 

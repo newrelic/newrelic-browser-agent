@@ -1,5 +1,5 @@
 describe('spa captures interaction when', () => {
-  it('hashchange fires after finish', async () => {
+  it('hashchange fires after XHR loads', async () => {
     const url = await browser.testHandle.assetURL('spa/hashchange-onclick.html')
     await Promise.all([
       browser.testHandle.expectInteractionEvents(), // Discard the initial page load interaction
@@ -56,6 +56,45 @@ describe('spa captures interaction when', () => {
         expect.objectContaining({
           type: 'customTracer',
           name: 'timer',
+          children: []
+        })
+      ]
+    }))
+  })
+
+  it('hashchange is followed by a popstate', async () => {
+    const url = await browser.testHandle.assetURL('instrumented.html')
+    await Promise.all([
+      browser.testHandle.expectInteractionEvents(),
+      browser.url(url).then(() => browser.waitForAgentLoad())
+    ])
+    const hashFragment = 'otherurl'
+    await Promise.all([
+      browser.testHandle.expectInteractionEvents(), // discard first hashchange interaction
+      browser.execute(function (hashFragment) {
+        window.location.hash = hashFragment
+      }, hashFragment)
+    ])
+
+    const [popstateIxnPayload] = await Promise.all([
+      browser.testHandle.expectInteractionEvents(),
+      browser.execute(function () {
+        window.addEventListener('popstate', function () { setTimeout(newrelic.interaction().createTracer('onPopstate')) })
+        window.history.back()
+      })
+    ])
+
+    const parsedUrl = new URL(url)
+    expect(popstateIxnPayload.request.body[0]).toEqual(expect.objectContaining({
+      category: 'Route change',
+      type: 'interaction',
+      trigger: 'popstate',
+      oldURL: parsedUrl.origin + parsedUrl.pathname + '#' + hashFragment,
+      newURL: parsedUrl.origin + parsedUrl.pathname, // should be the original asset url
+      children: [
+        expect.objectContaining({
+          type: 'customTracer',
+          name: 'onPopstate',
           children: []
         })
       ]

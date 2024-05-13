@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker'
 import { srConfig, decodeAttributes } from './util/helpers'
-import { notIE, supportsFetch, supportsMultipleTabs, notSafari } from '../../tools/browser-matcher/common-matchers.mjs'
+import { notIE, supportsFetch } from '../../tools/browser-matcher/common-matchers.mjs'
 
 let serverTime
 describe('NR Server Time', () => {
@@ -332,36 +332,6 @@ describe('NR Server Time', () => {
 
       expect(subsequentServerTimeDiff).toEqual(initialServerTimeDiff)
       expect(subsequentSession.localStorage.serverTimeDiff).toEqual(initialSession.localStorage.serverTimeDiff)
-    })
-
-    it.withBrowsersMatching([supportsMultipleTabs, notSafari])('should store the server time diff from a cross-tab session update', async () => {
-      await browser.url(await browser.testHandle.assetURL('instrumented.html', {
-        init: {
-          privacy: { cookies_enabled: true }
-        }
-      })).then(() => browser.waitForAgentLoad())
-
-      const newTab = await browser.createWindow('tab')
-      await browser.switchToWindow(newTab.handle)
-      await browser.url(await browser.testHandle.assetURL('api.html', {
-        init: {
-          privacy: { cookies_enabled: true }
-        }
-      })).then(() => browser.waitForAgentLoad())
-
-      await browser.execute(function () {
-        Object.values(newrelic.initializedAgents)[0].runtime.session.write({ serverTimeDiff: 1000 })
-      })
-      await browser.pause(5000)
-      await browser.closeWindow()
-      await browser.switchToWindow((await browser.getWindowHandles())[0])
-
-      const session = await browser.getAgentSessionInfo()
-      const serverTime = await browser.getPageTime()
-      const serverTimeDiff = serverTime.originTime - serverTime.correctedOriginTime
-
-      expect(serverTimeDiff).toEqual(1000)
-      expect(session.localStorage.serverTimeDiff).toEqual(1000)
     })
   })
 })

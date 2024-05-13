@@ -97,7 +97,7 @@ export class TimeKeeper {
   /** Process the session entity and use the info to set the main time calculations if present */
   processStoredDiff () {
     const storedServerTimeDiff = this.#session?.read()?.serverTimeDiff
-    if (storedServerTimeDiff) {
+    if (!(isNaN(storedServerTimeDiff))) {
       this.#localTimeDiff = storedServerTimeDiff
       this.#correctedOriginTime = originTime - this.#localTimeDiff
       this.#ready = true

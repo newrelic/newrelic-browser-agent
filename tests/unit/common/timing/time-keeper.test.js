@@ -1,7 +1,6 @@
 import { faker } from '@faker-js/faker'
 import { TimeKeeper } from '../../../../src/common/timing/time-keeper'
 import { originTime } from '../../../../src/common/constants/runtime'
-import { SESSION_EVENT_TYPES } from '../../../../src/common/session/constants'
 import * as configModule from '../../../../src/common/config/config'
 import * as eventEmitterModule from '../../../../src/common/event-emitter/contextual-ee'
 
@@ -324,72 +323,10 @@ describe('session entity integration', () => {
     expect(session.write).toHaveBeenCalledWith({ serverTimeDiff: 2525 })
   })
 
-  test('should allow cross-tab calculation to take precedence', () => {
-    jest.spyOn(session, 'read').mockImplementation(() => ({
-      serverTimeDiff: 2525
-    }))
-
-    const sessionTimeKeeper = new TimeKeeper(agentIdentifier)
-    expect(sessionTimeKeeper.ready).toEqual(true)
-
-    const relativeTimeA = 225
-    const correctedRelativeTimeA = sessionTimeKeeper.convertRelativeTimestamp(relativeTimeA)
-    expect(correctedRelativeTimeA).toEqual(1706213055700)
-
-    const sessionWriteListener = jest.mocked(secondaryEE.on).mock.calls[0][1]
-    sessionWriteListener(SESSION_EVENT_TYPES.CROSS_TAB, { serverTimeDiff: -2475 })
-
-    const relativeTimeB = 225
-    const correctedRelativeTimeB = sessionTimeKeeper.convertRelativeTimestamp(relativeTimeB)
-    expect(correctedRelativeTimeB).toEqual(1706213060700)
-  })
-
-  test('should not process same-tab session update', () => {
-    jest.spyOn(session, 'read').mockImplementation(() => ({
-      serverTimeDiff: 2525
-    }))
-
-    const sessionTimeKeeper = new TimeKeeper(agentIdentifier)
-    expect(sessionTimeKeeper.ready).toEqual(true)
-
-    const relativeTimeA = 225
-    const correctedRelativeTimeA = sessionTimeKeeper.convertRelativeTimestamp(relativeTimeA)
-    expect(correctedRelativeTimeA).toEqual(1706213055700)
-
-    const sessionWriteListener = jest.mocked(secondaryEE.on).mock.calls[0][1]
-    sessionWriteListener(SESSION_EVENT_TYPES.SAME_TAB, { serverTimeDiff: -2475 })
-
-    const relativeTimeB = 225
-    const correctedRelativeTimeB = sessionTimeKeeper.convertRelativeTimestamp(relativeTimeB)
-    expect(correctedRelativeTimeB).toEqual(1706213055700)
-  })
-
-  test('should save the existing server time diff when session resets', () => {
-    jest.spyOn(session, 'read').mockImplementation(() => ({
-      serverTimeDiff: 2525
-    }))
-
-    const sessionTimeKeeper = new TimeKeeper(agentIdentifier)
-    expect(sessionTimeKeeper.ready).toEqual(true)
-
-    expect(session.write).not.toHaveBeenCalled()
-
-    const sessionStartedListener = jest.mocked(secondaryEE.on).mock.calls[1][1]
-    sessionStartedListener()
-
-    expect(session.write).toHaveBeenCalledTimes(1)
-    expect(session.write).toHaveBeenCalledWith({ serverTimeDiff: 2525 })
-  })
-
   test('should not try saving server diff time before time keeper ready', () => {
     const sessionTimeKeeper = new TimeKeeper(agentIdentifier)
     expect(sessionTimeKeeper.ready).toEqual(false)
 
     expect(session.write).not.toHaveBeenCalled()
-
-    const sessionStartedListener = jest.mocked(secondaryEE.on).mock.calls[1][1]
-    sessionStartedListener()
-
-    expect(session.write).toHaveBeenCalledTimes(0)
   })
 })

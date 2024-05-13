@@ -64,8 +64,10 @@ export class SessionEntity {
   }
 
   setup ({ value = generateRandomHexString(16), expiresMs = DEFAULT_EXPIRES_MS, inactiveMs = DEFAULT_INACTIVE_MS }) {
+    /** Ensure that certain properties are preserved across a reset if already set */
+    const persistentAttributes = { serverTimeDiff: this.state.serverTimeDiff || model.serverTimeDiff }
     this.state = {}
-    this.sync(model)
+    this.sync({ ...model, ...persistentAttributes })
 
     // value is intended to act as the primary value of the k=v pair
     this.state.value = value

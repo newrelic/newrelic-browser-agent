@@ -120,6 +120,7 @@ describe('error payloads', () => {
         .then((elem) => elem.click())
         .then(() => browser.keys([Key.Ctrl, Key.Backspace]))
     ])
+    console.log(JSON.stringify(request))
     checkJsErrors(request, ['Cannot read properties of null (reading \'tagName\')'], 'ierr')
     expect(request.body.err).toBeUndefined()
   })

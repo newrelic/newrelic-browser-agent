@@ -55,7 +55,7 @@ describe('spa harvesting', () => {
     ).then(() => browser.waitForAgentLoad())
 
     const [interactionResults] = await Promise.all([
-      browser.testHandle.expectInteractionEvents(10000),
+      browser.testHandle.expectInteractionEvents(),
       $('#sendAjax').click()
     ])
 

@@ -1,35 +1,98 @@
 import { faker } from '@faker-js/faker'
 import { globalScope } from '../../../src/common/constants/runtime'
 
-let promiseConstructorCalls
+let promiseEE
+const originalPromise = window.Promise
 
 beforeEach(async () => {
-  promiseConstructorCalls = []
-
   // Proxy the global Promise to prevent the wrapping from
   // messing with Jest internal promises
   window.Promise = new Proxy(class extends Promise {}, {
     construct (target, args) {
-      promiseConstructorCalls.push(args)
-
       return Reflect.construct(target, args)
     }
   })
 
-  ;(await import('../../../src/common/wrap/wrap-promise')).wrapPromise()
+  promiseEE = (await import('../../../src/common/wrap/wrap-promise')).wrapPromise()
+  jest.spyOn(promiseEE, 'emit')
 })
 
 afterEach(() => {
   jest.resetModules()
+  window.Promise = originalPromise
 })
 
-test('should wrap promise constructor', async () => {
-  const promiseInstance = new globalScope.Promise(jest.fn())
+test('Can create a wrapped promise', async () => {
+  const promiseInstance = new Promise(jest.fn())
 
-  expect(promiseInstance).toBeInstanceOf(Promise)
-  expect(promiseConstructorCalls.length).toBeGreaterThan(0)
-  expect(globalScope.Promise.toString()).toMatch(/\[native code\]/)
-  expect(globalScope.Promise.name).toEqual('Promise')
+  expect(Promise).not.toBe(originalPromise) // double check we're referring to two different constructors
+  expect(promiseInstance).toBeInstanceOf(originalPromise)
+  expect(Promise.toString()).toMatch(/\[native code\]/)
+  expect(Promise.name).toEqual('Promise')
+
+  expect(promiseEE.emit.mock.calls.length).toEqual(2)
+  expect(promiseEE.emit.mock.calls[0][0]).toEqual('executor-start')
+  expect(promiseEE.emit.mock.calls[1][0]).toEqual('executor-end')
+})
+
+test('Wrapped promise has wrapped .then', async () => {
+  await new Promise((resolve, reject) => {
+    resolve()
+  }).then(() => { // onfulfilled
+    console.log(promiseEE.emit.mock.calls)
+    expect(promiseEE.emit).toHaveBeenCalledWith('resolve-end', expect.any(Array), expect.any(Object), undefined, false) // start of this cb
+    // console.log(promiseEE.emit.mock.calls)
+  }, () => { throw new Error('onrejected should not have been called') })
+
+  await new Promise((resolve, reject) => {
+    // eslint-disable-next-line prefer-promise-reject-errors
+    reject()
+  }).then(() => { throw new Error('onfulfilled should not have been called') }, () => { // onrejected
+    expect(promiseEE.emit).toHaveBeenCalledWith('resolve-end', expect.any(Array), expect.any(Object), undefined, false) // start of this cb
+  })
+})
+
+test('A promise .then is chainable', async () => {
+  expect.assertions(3)
+  await new Promise(resolve => resolve(1)).then(onfulfilledVal => {
+    expect(onfulfilledVal).toEqual(1)
+    return new Promise(resolve => resolve(2)) // value should be passed onto next then
+  }).then(onfulfilledVal => {
+    expect(onfulfilledVal).toEqual(2) // then empty return
+  }).then(onfulfilledVal => {
+    expect(onfulfilledVal).toBeUndefined()
+  })
+})
+
+test('A promise constructor exception can be caught', async () => {
+  const thrownError = new Error('123')
+  await new Promise(function (resolve, reject) {
+    throw thrownError
+  }).catch(onrejectedErr => {
+    expect(onrejectedErr).toBe(thrownError)
+  })
+})
+
+test('Rejected promise chain calls .catch and is further chainable', async () => {
+  expect.assertions(2)
+  await new Promise(resolve => resolve()).then(() => {
+    throw new Error('just because')
+  }).catch(onrejectedErr => {
+    expect(onrejectedErr.message).toEqual('just because')
+  }).then(() => {
+    expect(promiseEE.emit).not.toHaveBeenCalledWith('cb-err', expect.anything(), expect.anything(), expect.anything(), expect.anything()) // don't instrument caught error
+  })
+})
+
+describe('Promise.resolve', () => {
+  test('returns an instanceof original Promise', () => {
+    const promise = Promise.resolve()
+    const unwrapped = originalPromise.resolve()
+
+    expect(promise).toBeInstanceOf(window.Promise)
+    expect(promise).toBeInstanceOf(originalPromise)
+    expect(unwrapped).toBeInstanceOf(originalPromise)
+  })
 })
 
 describe('all', () => {

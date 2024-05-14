@@ -201,8 +201,7 @@ export class Aggregate extends AggregateBase {
     var type = internal ? 'ierr' : 'err'
     var newMetrics = { time }
 
-    // sr, stn and spa aggregators listen to this event - stn sends the error in its payload,
-    // and spa annotates the error with interaction info
+    // Trace sends the error in its payload, and both trace & replay simply listens for any error to occur.
     const jsErrorEvent = [type, bucketHash, params, newMetrics, customAttributes]
     handle('trace-jserror', jsErrorEvent, undefined, FEATURE_NAMES.sessionTrace, this.ee)
     // still send EE events for other features such as above, but stop this one from aggregating internal data

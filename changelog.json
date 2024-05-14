@@ -4,6 +4,39 @@
     {
       "changes": [
         {
+          "type": "fix",
+          "sha": "d86becf2fc02aa133430332aa4e4c2bc26297750",
+          "message": "Adjust session entity to not race between tabs",
+          "issues": [
+            "1032"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "84c101ccbff8da207bdf215714f49b7d49941388",
+          "message": "Add internal error handler to session replay recorder",
+          "issues": [
+            "1029"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "67a658d2645b680a479175dff06a4fd95bd6086a",
+          "message": "Improve time stamping of page view events",
+          "issues": [
+            "1026"
+          ]
+        }
+      ],
+      "version": "1.260.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "a1eaf856-f57f-4946-816d-6e9289d93857",
+      "createTime": "2024-05-13T20:31:22.449Z"
+    },
+    {
+      "changes": [
+        {
           "type": "feat",
           "sha": "55b0e00e9d8dce6d0cdbed978a98302d40123f3d",
           "message": "Migrate Session Traces to Use Blob Consumer with Feature Flags",
@@ -1508,5 +1541,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2024-05-08T00:58:50.911Z"
+  "updateTime": "2024-05-13T20:31:22.449Z"
 }

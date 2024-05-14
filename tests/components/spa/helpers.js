@@ -173,12 +173,31 @@ function simulateEvent (elType, evtType) {
 
 /** Mock the window.newrelic global that makes avail SPA API. */
 function getNewrelicGlobal (apiEventsEE) {
+  const tracerEE = apiEventsEE.get('tracer')
   return {
     interaction: function () {
       const newSandboxHandle = { // will have its own clean 'this' context specific to each newrelic.interaction() call
         command: function (cmd, customTime = now(), ...args) {
           apiEventsEE.emit(INTERACTION_API + cmd, [customTime, ...args], this)
           return this // most spa APIs should return a handle obj that allows for chaining further commands
+        },
+        createTracer: function (name, cb) {
+          const contextStore = {}; const hasCb = typeof cb === 'function'
+          apiEventsEE.emit(INTERACTION_API + 'tracer', [now(), name, contextStore], this)
+          return function () {
+            tracerEE.emit((hasCb ? '' : 'no-') + 'fn-start', [now(), this, hasCb], contextStore)
+            if (hasCb) {
+              try {
+                return cb.apply(this, arguments)
+              } catch (err) {
+                tracerEE.emit('fn-err', [arguments, this, err], contextStore)
+                // the error came from outside the agent, so don't swallow
+                throw err
+              } finally {
+                tracerEE.emit('fn-end', [now()], contextStore)
+              }
+            }
+          }
         }
       }
       return newSandboxHandle.command('get')

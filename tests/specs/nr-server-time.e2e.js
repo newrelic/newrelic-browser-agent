@@ -1,11 +1,43 @@
 import { faker } from '@faker-js/faker'
 import { srConfig, decodeAttributes } from './util/helpers'
-import { notIE, supportsFetch, supportsMultipleTabs, notSafari } from '../../tools/browser-matcher/common-matchers.mjs'
+import { notIE, supportsFetch } from '../../tools/browser-matcher/common-matchers.mjs'
 
 let serverTime
 describe('NR Server Time', () => {
   beforeEach(async () => {
     serverTime = await browser.mockDateResponse()
+  })
+
+  afterEach(async () => {
+    await browser.destroyAgentSession()
+  })
+
+  it('should send page view event wth rst parameter and no timestamp when nr server time unknown', async () => {
+    const [rum] = await Promise.all([
+      browser.testHandle.expectRum(),
+      browser.url(await browser.testHandle.assetURL('instrumented.html'))
+        .then(() => browser.waitForAgentLoad())
+    ])
+
+    expect(parseInt(rum.request.query.rst, 10)).toBeGreaterThan(0)
+    expect(rum.request.query.timestamp).toBeUndefined()
+  })
+
+  it('should send page view event wth rst and timestamp parameter when nr server time is known', async () => {
+    await browser.url(await browser.testHandle.assetURL('instrumented.html'))
+      .then(() => browser.waitForAgentLoad())
+
+    const [rum, timeKeeper] = await Promise.all([
+      browser.testHandle.expectRum(),
+      browser.url(await browser.testHandle.assetURL('instrumented.html'))
+        .then(() => browser.waitForAgentLoad())
+        .then(() => browser.getPageTime())
+    ])
+
+    const rumTimestamp = parseInt(rum.request.query.timestamp, 10)
+    expect(parseInt(rum.request.query.rst, 10)).toBeGreaterThan(0)
+    expect(rumTimestamp).toBeGreaterThan(serverTime)
+    testTimeExpectations(rumTimestamp, timeKeeper, false)
   })
 
   it('should send jserror with timestamp prior to rum date header', async () => {
@@ -211,10 +243,6 @@ describe('NR Server Time', () => {
   })
 
   describe('session integration', () => {
-    afterEach(async () => {
-      await browser.destroyAgentSession()
-    })
-
     it('should not re-use the server time diff when session tracking is disabled', async () => {
       await browser.url(await browser.testHandle.assetURL('instrumented.html', {
         init: {
@@ -304,36 +332,6 @@ describe('NR Server Time', () => {
 
       expect(subsequentServerTimeDiff).toEqual(initialServerTimeDiff)
       expect(subsequentSession.localStorage.serverTimeDiff).toEqual(initialSession.localStorage.serverTimeDiff)
-    })
-
-    it.withBrowsersMatching([supportsMultipleTabs, notSafari])('should store the server time diff from a cross-tab session update', async () => {
-      await browser.url(await browser.testHandle.assetURL('instrumented.html', {
-        init: {
-          privacy: { cookies_enabled: true }
-        }
-      })).then(() => browser.waitForAgentLoad())
-
-      const newTab = await browser.createWindow('tab')
-      await browser.switchToWindow(newTab.handle)
-      await browser.url(await browser.testHandle.assetURL('api.html', {
-        init: {
-          privacy: { cookies_enabled: true }
-        }
-      })).then(() => browser.waitForAgentLoad())
-
-      await browser.execute(function () {
-        Object.values(newrelic.initializedAgents)[0].runtime.session.write({ serverTimeDiff: 1000 })
-      })
-      await browser.pause(5000)
-      await browser.closeWindow()
-      await browser.switchToWindow((await browser.getWindowHandles())[0])
-
-      const session = await browser.getAgentSessionInfo()
-      const serverTime = await browser.getPageTime()
-      const serverTimeDiff = serverTime.originTime - serverTime.correctedOriginTime
-
-      expect(serverTimeDiff).toEqual(1000)
-      expect(session.localStorage.serverTimeDiff).toEqual(1000)
     })
   })
 })

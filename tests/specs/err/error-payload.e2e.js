@@ -1,5 +1,10 @@
 /* globals errorFn, noticeErrorFn */
 
+const { Key } = require('webdriverio')
+const { notIE, notSafari, notIOS, notAndroid } = require('../../../tools/browser-matcher/common-matchers.mjs')
+const { srConfig } = require('../util/helpers')
+const { checkJsErrors } = require('../../util/basic-checks')
+
 describe('error payloads', () => {
   afterEach(async () => {
     await browser.destroyAgentSession()
@@ -99,5 +104,23 @@ describe('error payloads', () => {
         .then(() => browser.waitForFeatureAggregate('jserrors'))
         .then(() => browser.execute(function () { newrelic.noticeError() }))
     ])
+  })
+
+  /**
+   * This is a specific bug observed in rrweb for specific browsers tied to contenteditable divs.
+   * This serves a purpose of checking that rrweb errors are not reported as `err`
+   * **/
+  it.withBrowsersMatching([notSafari, notAndroid, notIOS, notIE])('should collect rrweb errors only as internal errors', async () => {
+    await browser.enableSessionReplay()
+    const [{ request }] = await Promise.all([
+      browser.testHandle.expectAnyJseXhr(10000),
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
+        .then(() => browser.waitForSessionReplayRecording())
+        .then(() => $('#content-editable-div'))
+        .then((elem) => elem.click())
+        .then(() => browser.keys([Key.Ctrl, Key.Backspace]))
+    ])
+    checkJsErrors(request, ['Cannot read properties of null (reading \'tagName\')'], 'ierr')
+    expect(request.body.err).toBeUndefined()
   })
 })

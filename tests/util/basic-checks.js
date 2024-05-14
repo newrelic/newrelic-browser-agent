@@ -268,7 +268,7 @@ export function checkSessionTrace ({ query, body }) {
   })
 }
 
-export function checkSpa ({ query, body }) {
+export function checkSpa ({ query, body }, { trigger } = {}) {
   expect(query).toEqual(baseQuery)
   expect(body.length).toBeGreaterThanOrEqual(1)
 

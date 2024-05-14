@@ -1,3 +1,5 @@
+import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
+
 describe('spa captures interaction when', () => {
   it('hashchange fires after XHR loads', async () => {
     const url = await browser.testHandle.assetURL('spa/hashchange-onclick.html')
@@ -62,7 +64,7 @@ describe('spa captures interaction when', () => {
     }))
   })
 
-  it('hashchange is followed by a popstate', async () => {
+  it.withBrowsersMatching(notIE)('hashchange is followed by a popstate', async () => {
     const url = await browser.testHandle.assetURL('instrumented.html')
     await Promise.all([
       browser.testHandle.expectInteractionEvents(),
@@ -98,6 +100,37 @@ describe('spa captures interaction when', () => {
           children: []
         })
       ]
+    }))
+  })
+
+  it('hashchange in 2nd event listener', async () => {
+    const url = await browser.testHandle.assetURL('spa/hashchange-multiple-evt-cb.html')
+    await Promise.all([
+      browser.testHandle.expectInteractionEvents(),
+      browser.url(url).then(() => browser.waitForAgentLoad())
+    ])
+
+    const [clickInteractionResults] = await Promise.all([
+      browser.testHandle.expectInteractionEvents(),
+      $('#clickme').click()
+    ])
+
+    expect(clickInteractionResults.request.body[0]).toEqual(expect.objectContaining({
+      category: 'Route change',
+      type: 'interaction',
+      trigger: 'click',
+      children: expect.arrayContaining([
+        expect.objectContaining({
+          type: 'customTracer',
+          name: 'first-click',
+          children: []
+        }),
+        expect.objectContaining({
+          type: 'customTracer',
+          name: 'after-hashchange',
+          children: []
+        })
+      ])
     }))
   })
 })

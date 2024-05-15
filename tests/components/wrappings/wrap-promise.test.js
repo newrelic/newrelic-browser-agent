@@ -62,6 +62,21 @@ test('A promise .then is chainable', async () => {
   })
 })
 
+test('Promise then chains are kept separate and distinct', async () => {
+  expect.assertions(4)
+  const promise = new Promise(resolve => resolve(1))
+  promise.then(val => {
+    expect(val).toEqual(1)
+    return 2
+  }).then(val => expect(val).toEqual(2))
+  promise.then(val => {
+    expect(val).toEqual(1)
+    return 3
+  }).then(val => expect(val).toEqual(3))
+
+  await promise
+})
+
 const thrownError = new Error('123')
 test('A promise constructor exception can be caught', async () => {
   await new Promise(function (resolve, reject) {

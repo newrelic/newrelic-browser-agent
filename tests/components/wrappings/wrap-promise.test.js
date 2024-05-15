@@ -105,6 +105,15 @@ describe('Promise.resolve', () => {
   })
 })
 
+describe('Promise.reject', () => {
+  test('throws exception with given value', async () => {
+    expect(Promise.reject).toThrow()
+
+    // eslint-disable-next-line prefer-promise-reject-errors
+    Promise.reject('error msg').catch(err => expect(err).toEqual('error msg'))
+  })
+})
+
 describe('Promise.all', () => {
   test('should work with acceptable iterables', async () => {
     const resolveValue = faker.string.uuid()

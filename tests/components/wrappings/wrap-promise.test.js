@@ -1,3 +1,4 @@
+/* eslint-disable prefer-promise-reject-errors */
 import { faker } from '@faker-js/faker'
 import { globalScope } from '../../../src/common/constants/runtime'
 
@@ -45,7 +46,6 @@ test('Wrapped promise has wrapped .then', async () => {
   }, () => { throw new Error('onrejected should not have been called') })
 
   await new Promise((resolve, reject) => {
-    // eslint-disable-next-line prefer-promise-reject-errors
     reject()
   }).then(() => { throw new Error('onfulfilled should not have been called') }, () => { // onrejected
     expect(promiseEE.emit).toHaveBeenCalledWith('resolve-end', expect.any(Array), expect.any(Object), undefined, false) // start of this cb
@@ -64,9 +64,24 @@ test('A promise .then is chainable', async () => {
   })
 })
 
+const thrownError = new Error('123')
 test('A promise constructor exception can be caught', async () => {
-  const thrownError = new Error('123')
   await new Promise(function (resolve, reject) {
+    throw thrownError
+  }).catch(onrejectedErr => {
+    expect(onrejectedErr).toBe(thrownError)
+  })
+})
+test('A promise then exception can be caught', async () => {
+  await new Promise(resolve => resolve()).then(() => {
+    throw thrownError
+  }).catch(onrejectedErr => {
+    expect(onrejectedErr).toBe(thrownError)
+  })
+})
+test('A promise catch exception can also be caught', async () => {
+  await new Promise((resolve, reject) => reject()).catch(onrejectedErr => {
+    expect(onrejectedErr).toBeUndefined()
     throw thrownError
   }).catch(onrejectedErr => {
     expect(onrejectedErr).toBe(thrownError)
@@ -109,7 +124,6 @@ describe('Promise.reject', () => {
   test('throws exception with given value', async () => {
     expect(Promise.reject).toThrow()
 
-    // eslint-disable-next-line prefer-promise-reject-errors
     Promise.reject('error msg').catch(err => expect(err).toEqual('error msg'))
   })
 })

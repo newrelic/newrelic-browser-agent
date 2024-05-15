@@ -1,4 +1,4 @@
-const { onlyIE } = require('../../../tools/browser-matcher/common-matchers.mjs')
+const { onlyIE, notIE } = require('../../../tools/browser-matcher/common-matchers.mjs')
 const { assertExpectedErrors, assertErrorAttributes } = require('./assertion-helper')
 
 describe('JSE Error detection in various callbacks', () => {
@@ -175,7 +175,7 @@ describe('JSE Error detection in various callbacks', () => {
     expect(expectedErrorMessages.every(x => x.tested)).toBeTruthy()
   })
 
-  it('should report unhandledPromiseRejections that are readable', async () => {
+  it.withBrowsersMatching(notIE)('should report unhandledPromiseRejections that are readable', async () => {
     const pageUrl = await browser.testHandle.assetURL('unhandled-promise-rejection-readable.html')
     const [{ request: { body: errorBody, query: errorQuery } }] = await Promise.all([
       browser.testHandle.expectErrors(),

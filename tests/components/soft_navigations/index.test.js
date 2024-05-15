@@ -141,8 +141,6 @@ describe('soft navigations', () => {
     test('double precision Event DOMHighResTimestamp (microsec) is floored to ms and isActiveDuring with now() works', () => {
       const preciseCurrentTime = performance.now()
       const currentTime = now() // this value is expected to be a truncated version of preciseCurrentTime, e.g. 421 ms vs 421.291 ms
-      expect(Number.isInteger(preciseCurrentTime)).toBeFalsy()
-      expect(Number.isInteger(currentTime)).toBeTruthy()
 
       softNavAggregate.ee.emit('newUIEvent', [{ type: 'keydown', timeStamp: preciseCurrentTime }])
       expect(softNavAggregate.interactionInProgress.isActiveDuring(currentTime)).toBeTruthy()

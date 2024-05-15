@@ -40,9 +40,7 @@ test('Wrapped promise has wrapped .then', async () => {
   await new Promise((resolve, reject) => {
     resolve()
   }).then(() => { // onfulfilled
-    console.log(promiseEE.emit.mock.calls)
     expect(promiseEE.emit).toHaveBeenCalledWith('resolve-end', expect.any(Array), expect.any(Object), undefined, false) // start of this cb
-    // console.log(promiseEE.emit.mock.calls)
   }, () => { throw new Error('onrejected should not have been called') })
 
   await new Promise((resolve, reject) => {
@@ -129,6 +127,16 @@ describe('Promise.reject', () => {
 })
 
 describe('Promise.all', () => {
+  test('resolves with the values of each resolved promise', async () => {
+    await Promise.all([Promise.resolve(123), Promise.resolve(456)]).then(onfulfilledVal => {
+      expect(onfulfilledVal).toEqual([123, 456])
+    })
+  })
+  test('throws if any promise rejects', async () => {
+    await Promise.all([Promise.reject(123), Promise.resolve(456)]).then(() => {
+      expect(true).toEqual(false) // this should not run
+    }).catch(onrejectedVal => expect(onrejectedVal).toEqual(123))
+  })
   test('should work with acceptable iterables', async () => {
     const resolveValue = faker.string.uuid()
     const customIterable = new CustomIterable([

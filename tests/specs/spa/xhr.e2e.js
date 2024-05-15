@@ -315,4 +315,55 @@ describe('XHR SPA Interaction Tracking', () => {
     const ajaxEvent = interactionEventsHarvest.request.body[0].children.find(event => event.path === '/delayed')
     expect(ajaxEvent.status).toEqual(0)
   })
+
+  // TODO: This test should pass but the agent contains a bug https://new-relic.atlassian.net/browse/NR-270107
+  // it('produces interaction event data when xhr has bad 3rd party wrapping after agent', async () => {
+  //   await browser.url(await browser.testHandle.assetURL('ajax/xhr-bad-wrapper-after.html'))
+  //     .then(() => browser.waitForAgentLoad())
+  //
+  //   const [interactionResults] = await Promise.all([
+  //     browser.testHandle.expectInteractionEvents(),
+  //     $('#sendAjax').click()
+  //   ])
+  //
+  //   checkSpa(interactionResults.request, { trigger: 'click' })
+  //   checkAjaxEvents({ body: interactionResults.request.body[0].children, query: interactionResults.request.query }, { specificPath: '/json' })
+  // })
+
+  it('produces interaction event data when xhr is 3rd party listener patched after agent', async () => {
+    await browser.url(await browser.testHandle.assetURL('ajax/xhr-patch-listener-after.html'))
+      .then(() => browser.waitForAgentLoad())
+
+    const [interactionResults] = await Promise.all([
+      browser.testHandle.expectInteractionEvents(),
+      $('#sendAjax').click()
+    ])
+
+    checkSpa(interactionResults.request, { trigger: 'click' })
+    checkAjaxEvents({ body: interactionResults.request.body[0].children, query: interactionResults.request.query }, { specificPath: '/json' })
+
+    await expect(browser.execute(function () {
+      return window.wrapperInvoked
+    })).resolves.toEqual(true)
+  })
+
+  it('produces interaction event data for multiple simultaneous xhr and timers', async () => {
+    await browser.url(await browser.testHandle.assetURL('ajax/xhr-with-timer.html'))
+      .then(() => browser.waitForAgentLoad())
+
+    const [interactionResults] = await Promise.all([
+      browser.testHandle.expectInteractionEvents(),
+      $('#sendAjax').click()
+    ])
+
+    const ajaxCalls = interactionResults.request.body[0].children.filter(xhr =>
+      xhr.type === 'ajax' && xhr.path === '/json'
+    )
+    expect(ajaxCalls.length).toEqual(2)
+
+    const timers = interactionResults.request.body[0].children.filter(tracer =>
+      tracer.type === 'customTracer' && tracer.name === 'timer'
+    )
+    expect(timers.length).toEqual(2)
+  })
 })

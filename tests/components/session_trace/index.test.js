@@ -2,6 +2,7 @@ import { Instrument as SessionTrace } from '../../../src/features/session_trace/
 import { Aggregator } from '../../../src/common/aggregate/aggregator'
 import { ee } from '../../../src/common/event-emitter/contextual-ee'
 
+jest.mock('../../../src/features/utils/agent-session')
 jest.mock('../../../src/common/config/config', () => ({
   __esModule: true,
   getConfiguration: jest.fn((agentId) => {
@@ -100,7 +101,6 @@ describe('session trace', () => {
   })
 
   test('tracks previously stored events and processes them once per occurrence', () => {
-    jest.useFakeTimers()
     document.addEventListener('visibilitychange', () => 1)
     document.addEventListener('visibilitychange', () => 2)
     document.addEventListener('visibilitychange', () => 3) // additional listeners should not generate additional nodes
@@ -113,8 +113,9 @@ describe('session trace', () => {
     }))
     expect(traceAggregate.traceStorage.prevStoredEvents.size).toEqual(1)
 
-    jest.advanceTimersByTime(1000)
+    jest.advanceTimersToNextTimer(1) // this will increase perf.now by the default ~20ms to imitate some time gap
     document.dispatchEvent(new Event('visibilitychange'))
+    expect(traceAggregate.traceStorage.trace.visibilitychange.length).toEqual(2)
     expect(traceAggregate.traceStorage.trace.visibilitychange[0].s).not.toEqual(traceAggregate.traceStorage.trace.visibilitychange[1].s) // should not have same start times
     expect(traceAggregate.traceStorage.prevStoredEvents.size).toEqual(2)
 

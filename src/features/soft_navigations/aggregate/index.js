@@ -55,7 +55,7 @@ export class Aggregate extends AggregateBase {
     })
 
     // By default, a complete UI driven interaction requires event -> URL change -> DOM mod in that exact order.
-    registerHandler('newUIEvent', (event) => this.startUIInteraction(event.type, event.timeStamp, event.target), this.featureName, this.ee)
+    registerHandler('newUIEvent', (event) => this.startUIInteraction(event.type, Math.floor(event.timeStamp), event.target), this.featureName, this.ee)
     registerHandler('newURL', (timestamp, url) => this.interactionInProgress?.updateHistory(timestamp, url), this.featureName, this.ee)
     registerHandler('newDom', timestamp => {
       this.interactionInProgress?.updateDom(timestamp)

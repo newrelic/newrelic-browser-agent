@@ -58,7 +58,7 @@ export function checkAjaxEvents ({ query, body }, { specificPath, hasTrace } = {
       guid: hasTrace ? expect.any(String) : expect.toSatisfy(n => n === null),
       method: expect.any(String),
       nodeId: expect.any(String),
-      path: expect.any(String),
+      path: specificPath ? specificPath : expect.any(String),
       requestBodySize: expect.any(Number),
       requestedWith: expect.any(String),
       responseBodySize: expect.any(Number),
@@ -68,6 +68,57 @@ export function checkAjaxEvents ({ query, body }, { specificPath, hasTrace } = {
       traceId: hasTrace ? expect.any(String) : expect.toSatisfy(n => n === null),
       type: expect.any(String)
     }))
+}
+
+export function checkAjaxMetrics ({ query, body }, { specificPath, hasTrace, isFetch } = {}) {
+  expect(query).toEqual(baseQuery)
+  expect(body.xhr?.length).toBeGreaterThanOrEqual(1)
+  body.xhr
+    .filter(x => (!specificPath && x.param.pathname) || (specificPath && x.params.pathname === specificPath))
+    .forEach(xhr => {
+      expect(xhr).toMatchObject({
+        params: {
+          hostname: expect.any(String),
+          port: expect.any(String),
+          protocol: expect.any(String),
+          host: expect.any(String),
+          pathname: specificPath ? specificPath : expect.any(String),
+          method: expect.any(String),
+          status: expect.any(Number)
+        },
+        metrics: {
+          count: expect.toBeWithin(1, Infinity),
+          duration: {
+            t: expect.toBeWithin(0, Infinity)
+          },
+          time: {
+            t: expect.toBeWithin(0, Infinity)
+          }
+        }
+      })
+
+      if (!isFetch) {
+        expect(xhr.metrics.cbTime).toMatchObject({
+          t: expect.toBeWithin(0, Infinity)
+        })
+      }
+
+      if (xhr.metrics.rxSize && isFetch && xhr.params.status === 0) {
+        expect(xhr.metrics.rxSize).toMatchObject({
+          c: expect.toBeWithin(1, Infinity)
+        })
+      } else if (xhr.metrics.rxSize) {
+        expect(xhr.metrics.rxSize).toMatchObject({
+          t: expect.toBeWithin(0, Infinity)
+        })
+      }
+
+      if (xhr.metrics.txSize) {
+        expect(xhr.metrics.txSize).toMatchObject({
+          t: expect.toBeWithin(0, Infinity)
+        })
+      }
+    })
 }
 
 export function checkJsErrors ({ query, body }, { messages } = {}, prop = 'err') {
@@ -217,7 +268,7 @@ export function checkSessionTrace ({ query, body }) {
   })
 }
 
-export function checkSpa ({ query, body }) {
+export function checkSpa ({ query, body }, { trigger } = {}) {
   expect(query).toEqual(baseQuery)
   expect(body.length).toBeGreaterThanOrEqual(1)
 
@@ -237,8 +288,8 @@ export function checkSpa ({ query, body }) {
     category: expect.any(String),
     id: expect.any(String),
     nodeId: expect.any(String),
-    firstPaint: browserMatch([notIE, notSafari, notIOS, notFirefox]) ? expect.any(Number) : null,
-    firstContentfulPaint: browserMatch(notIE) ? expect.any(Number) : null,
+    firstPaint: browserMatch([notIE, notSafari, notIOS, notFirefox]) && (!trigger || trigger === 'initialPageLoad') ? expect.any(Number) : null,
+    firstContentfulPaint: browserMatch(notIE) && (!trigger || trigger === 'initialPageLoad') ? expect.any(Number) : null,
     navTiming: expect.any(Object)
   })
 }

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>XHR DT Same Origin</title>
+  {init} {config} {loader}
+  <script>
+    function sendAjax (isInitial) {
+      var xhr = new XMLHttpRequest()
+
+      xhr.addEventListener('loadend', function () {
+        if (!isInitial && !disableAjaxHashChange) {
+          window.location.hash = Math.random()
+        }
+      })
+      xhr.open('GET', '/dt/' + NREUM.info.licenseKey)
+      xhr.send()
+    }
+    sendAjax(true)
+  </script>
+</head>
+<body>
+<div>
+  This page initiates a XHR before page load to the asset server. A button can be used to perform the XHR
+  again. When running in a spec file, setting `window.disableAjaxHashChange = true`
+  will disable the hash route change so the ajax call is fully processed by the ajax
+  feature instead of  the SPA feature.
+</div>
+<div><button id="sendAjax">Send Ajax</button></div>
+<script>
+  window.disableAjaxHashChange = false
+  document.getElementById('sendAjax').addEventListener('click', sendAjax)
+</script>
+</body>
+</html>

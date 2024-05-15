@@ -32,7 +32,9 @@ function getLoaderFilePath (request, testServer, webpath) {
   )
 }
 
-async function getLoaderScript (scriptType, loaderFilePath, nonce) {
+async function getLoaderScript (scriptType, loaderFilePath, nonce, injectionDelay) {
+  const delay = parseInt(injectionDelay, 10)
+
   switch (scriptType) {
     case 'defer':
       return `<script src="${loaderFilePath}" defer ${nonce}></script>`
@@ -40,13 +42,17 @@ async function getLoaderScript (scriptType, loaderFilePath, nonce) {
       return `<script src="${loaderFilePath}" async ${nonce}></script>`
     case 'injection':
       return `<script type="text/javascript" ${nonce}>
-        window.addEventListener('load', function(){
+        window.addEventListener('load', function () {
         let script = document.createElement('script');
         script.src = "${loaderFilePath}";
         script.nonce = "${nonce}";
+        ${delay >= 0 ? 'setTimeout(function () {' : ''}
         document.body.append(script);
+        ${delay >= 0 ? '}, ' + injectionDelay + ');' : ''}
         })
       </script>`
+    case 'scriptTag':
+      return `<script src="${loaderFilePath}" ${nonce}></script>`
     default:
       return `<script type="text/javascript" ${nonce}>${await getLoaderContent(loaderFilePath)}</script>`
   }
@@ -65,8 +71,8 @@ module.exports = function (request, reply, testServer) {
       const nonce = request.query.nonce ? `nonce="${request.query.nonce}"` : ''
 
       if (chunkString.indexOf('{loader}') > -1) {
-        const loaderFilePath = getLoaderFilePath(request, testServer, ['defer', 'async', 'injection'].includes(request.query?.script))
-        const loaderScript = await getLoaderScript(request.query?.script, loaderFilePath, nonce)
+        const loaderFilePath = getLoaderFilePath(request, testServer, ['defer', 'async', 'injection', 'scriptTag'].includes(request.query?.script))
+        const loaderScript = await getLoaderScript(request.query?.script, loaderFilePath, nonce, request.query?.injectionDelay)
         done(
           null,
           chunkString.replace(

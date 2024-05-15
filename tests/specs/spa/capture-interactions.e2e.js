@@ -103,7 +103,7 @@ describe('spa captures interaction when', () => {
     }))
   })
 
-  it('hashchange in 2nd event listener', async () => {
+  it('Spa does not prevent the bubbling of events', async () => {
     const url = await browser.testHandle.assetURL('spa/hashchange-multiple-evt-cb.html')
     await Promise.all([
       browser.testHandle.expectInteractionEvents(),

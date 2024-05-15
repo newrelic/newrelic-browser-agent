@@ -127,7 +127,7 @@ describe('Promise.reject', () => {
 })
 
 describe('Promise.all', () => {
-  test('resolves with the values of each resolved promise', async () => {
+  test('still resolves with the values of each resolved promise', async () => {
     await Promise.all([Promise.resolve(123), Promise.resolve(456)]).then(onfulfilledVal => {
       expect(onfulfilledVal).toEqual([123, 456])
     })
@@ -162,6 +162,12 @@ describe('Promise.all', () => {
 })
 
 describe('Promise.race', () => {
+  test('still resolves with value of earliest resolved Promise', async () => {
+    const slowPromise = new Promise(resolve => setTimeout(() => resolve(123), 100))
+    await Promise.race([slowPromise, Promise.resolve(456)]).then(onfulfilledVal => {
+      expect(onfulfilledVal).toEqual(456)
+    })
+  })
   test('should work with acceptable iterables', async () => {
     jest.spyOn(globalScope.Promise, 'resolve')
 

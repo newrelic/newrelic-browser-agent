@@ -85,6 +85,16 @@ test('Rejected promise chain calls .catch and is further chainable', async () =>
 })
 
 describe('Promise.resolve', () => {
+  test('passes value', async () => {
+    let val = await Promise.resolve(10)
+    expect(val).toEqual(10)
+
+    val = await Promise.resolve(new Promise(resolve => {
+      setTimeout(() => resolve(123), 0)
+    }))
+    expect(val).toEqual(123)
+  })
+
   test('returns an instanceof original Promise', () => {
     const promise = Promise.resolve()
     const unwrapped = originalPromise.resolve()
@@ -95,7 +105,7 @@ describe('Promise.resolve', () => {
   })
 })
 
-describe('all', () => {
+describe('Promise.all', () => {
   test('should work with acceptable iterables', async () => {
     const resolveValue = faker.string.uuid()
     const customIterable = new CustomIterable([
@@ -120,7 +130,7 @@ describe('all', () => {
   })
 })
 
-describe('race', () => {
+describe('Promise.race', () => {
   test('should work with acceptable iterables', async () => {
     jest.spyOn(globalScope.Promise, 'resolve')
 

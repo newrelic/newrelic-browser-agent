@@ -5,6 +5,23 @@
       "changes": [
         {
           "type": "fix",
+          "sha": "1a87991143aa1f220ae29edbf1e8ea89598bcc44",
+          "message": "Undefined stns in blob Trace",
+          "issues": [
+            "1039"
+          ]
+        }
+      ],
+      "version": "1.260.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "5e66a251-bb9d-4068-a24a-782260906b06",
+      "createTime": "2024-05-16T17:24:06.705Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
           "sha": "d86becf2fc02aa133430332aa4e4c2bc26297750",
           "message": "Adjust session entity to not race between tabs",
           "issues": [
@@ -1541,5 +1558,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2024-05-13T20:31:22.449Z"
+  "updateTime": "2024-05-16T17:24:06.705Z"
 }

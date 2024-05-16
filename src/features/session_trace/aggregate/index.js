@@ -116,6 +116,7 @@ export class Aggregate extends AggregateBase {
 
     /** Get the ST nodes from the traceStorage buffer.  This also returns helpful metadata about the payload. */
     const { stns, earliestTimeStamp, latestTimeStamp } = this.traceStorage.takeSTNs()
+    if (!stns) return // there are no trace nodes
     if (options.retry) {
       this.sentTrace = stns
     }

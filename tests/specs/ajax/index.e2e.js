@@ -1,7 +1,8 @@
+import { supportsFetch } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { testAjaxEventsRequest, testAjaxTimeSlicesRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 describe('Basic AJAX Tests', () => {
-  it('should not delay page load for harvesting', async () => {
+  it.withBrowsersMatching(supportsFetch)('should not delay page load for harvesting', async () => {
     browser.testHandle.scheduleReply('bamServer', {
       test: testAjaxEventsRequest,
       delay: 20000,

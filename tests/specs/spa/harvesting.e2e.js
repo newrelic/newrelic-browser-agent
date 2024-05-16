@@ -1,4 +1,5 @@
 import { checkSpa } from '../../util/basic-checks'
+import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
 
 describe('spa harvesting', () => {
   it('should set correct customEnd value on multiple custom interactions', async () => {
@@ -66,7 +67,7 @@ describe('spa harvesting', () => {
     expect(ajaxNodes.length).toBeBetween(1, 129)
   })
 
-  it('hashchange fires after finish', async () => {
+  it('hashchange fires after XHR loads', async () => {
     const url = await browser.testHandle.assetURL('spa/hashchange-onclick.html')
     await Promise.all([
       browser.testHandle.expectInteractionEvents(), // Discard the initial page load interaction
@@ -126,6 +127,76 @@ describe('spa harvesting', () => {
           children: []
         })
       ]
+    }))
+  })
+
+  it.withBrowsersMatching(notIE)('hashchange is followed by a popstate', async () => {
+    const url = await browser.testHandle.assetURL('instrumented.html')
+    await Promise.all([
+      browser.testHandle.expectInteractionEvents(),
+      browser.url(url).then(() => browser.waitForAgentLoad())
+    ])
+    const hashFragment = 'otherurl'
+    await Promise.all([
+      browser.testHandle.expectInteractionEvents(), // discard first hashchange interaction
+      browser.execute(function (hashFragment) {
+        window.location.hash = hashFragment
+      }, hashFragment)
+    ])
+
+    const [popstateIxnPayload] = await Promise.all([
+      browser.testHandle.expectInteractionEvents(),
+      browser.execute(function () {
+        window.addEventListener('popstate', function () { setTimeout(newrelic.interaction().createTracer('onPopstate')) })
+        window.history.back()
+      })
+    ])
+
+    const parsedUrl = new URL(url)
+    expect(popstateIxnPayload.request.body[0]).toEqual(expect.objectContaining({
+      category: 'Route change',
+      type: 'interaction',
+      trigger: 'popstate',
+      oldURL: parsedUrl.origin + parsedUrl.pathname + '#' + hashFragment,
+      newURL: parsedUrl.origin + parsedUrl.pathname, // should be the original asset url
+      children: [
+        expect.objectContaining({
+          type: 'customTracer',
+          name: 'onPopstate',
+          children: []
+        })
+      ]
+    }))
+  })
+
+  it('Spa does not prevent the bubbling of events', async () => {
+    const url = await browser.testHandle.assetURL('spa/hashchange-multiple-evt-cb.html')
+    await Promise.all([
+      browser.testHandle.expectInteractionEvents(),
+      browser.url(url).then(() => browser.waitForAgentLoad())
+    ])
+
+    const [clickInteractionResults] = await Promise.all([
+      browser.testHandle.expectInteractionEvents(),
+      $('#clickme').click()
+    ])
+
+    expect(clickInteractionResults.request.body[0]).toEqual(expect.objectContaining({
+      category: 'Route change',
+      type: 'interaction',
+      trigger: 'click',
+      children: expect.arrayContaining([
+        expect.objectContaining({
+          type: 'customTracer',
+          name: 'first-click',
+          children: []
+        }),
+        expect.objectContaining({
+          type: 'customTracer',
+          name: 'after-hashchange',
+          children: []
+        })
+      ])
     }))
   })
 })

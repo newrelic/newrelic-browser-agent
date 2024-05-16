@@ -4,6 +4,7 @@ const fp = require('fastify-plugin')
 const { PassThrough } = require('stream')
 const zlib = require('zlib')
 const assert = require('assert')
+const FormData = require('form-data')
 const { paths } = require('../constants')
 const { retrieveReplayData } = require('../utils/replay-buffer')
 
@@ -200,13 +201,20 @@ module.exports = fp(async function (fastify, testServer) {
   fastify.post('/formdata', {
     compress: false
   }, async (request, reply) => {
+    const results = new FormData()
+
     try {
       assert.strictEqual(request.body.name.value, 'bob')
       assert.strictEqual(request.body.x.value, '5')
-      reply.send('good')
+
+      results.append('result', 'good')
     } catch (e) {
-      reply.send('bad')
+      // The api expects specific key/value pairs and returns a `bad` result otherwise
+      results.append('result', 'bad')
     }
+
+    reply.header('content-type', `multipart/form-data; boundary=${results.getBoundary()}`)
+    reply.send(results.getBuffer())
   })
   fastify.get('/slowresponse', {
     compress: false

@@ -1,6 +1,6 @@
 {
   "name": "@newrelic/browser-agent",
-  "version": "1.259.0",
+  "version": "1.260.0",
   "private": false,
   "author": "New Relic Browser Agent Team <browser-agent@newrelic.com>",
   "description": "New Relic Browser Agent",
@@ -214,6 +214,7 @@
     "eslint-plugin-sonarjs": "^0.23.0",
     "fastify": "^4.25.2",
     "fastify-plugin": "^4.5.1",
+    "form-data": "^4.0.0",
     "fs-extra": "^11.2.0",
     "function-bind": "^1.1.1",
     "glob": "^10.2.5",

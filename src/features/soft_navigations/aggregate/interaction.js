@@ -2,6 +2,7 @@ import { getInfo } from '../../../common/config/config'
 import { globalScope, initialLocation } from '../../../common/constants/runtime'
 import { generateUuid } from '../../../common/ids/unique-id'
 import { addCustomAttributes, getAddStringContext, nullable, numeric } from '../../../common/serialize/bel-serializer'
+import { now } from '../../../common/timing/now'
 import { cleanURL } from '../../../common/url/clean-url'
 import { NODE_TYPE, INTERACTION_STATUS, INTERACTION_TYPE, API_TRIGGER_NAME } from '../constants'
 import { BelNode } from './bel-node'
@@ -44,12 +45,12 @@ export class Interaction extends BelNode {
   }
 
   updateDom (timestamp) {
-    this.domTimestamp = (timestamp || performance.now()) // default timestamp should be precise for accurate isActiveDuring calculations
+    this.domTimestamp = (timestamp || now()) // default timestamp should be precise for accurate isActiveDuring calculations
   }
 
   updateHistory (timestamp, newUrl) {
     this.newURL = newUrl || '' + globalScope?.location
-    this.historyTimestamp = (timestamp || performance.now())
+    this.historyTimestamp = (timestamp || now())
   }
 
   seenHistoryAndDomChange () {
@@ -124,8 +125,8 @@ export class Interaction extends BelNode {
     const fields = [
       numeric(this.belType),
       0, // this will be overwritten below with number of attached nodes
-      numeric(Math.floor(this.start - firstStartTimeOfPayload)), // relative to first node
-      numeric(Math.floor(this.end - this.start)), // end -- relative to start
+      numeric(this.start - firstStartTimeOfPayload), // relative to first node
+      numeric(this.end - this.start), // end -- relative to start
       numeric(this.callbackEnd), // cbEnd -- relative to start; not used by BrowserInteraction events
       numeric(this.callbackDuration), // not relative
       addString(this.trigger),

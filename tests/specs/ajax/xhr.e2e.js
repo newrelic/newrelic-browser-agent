@@ -403,4 +403,62 @@ describe('XHR Ajax', () => {
       [4, expect.stringContaining('nr@original')]
     ]))
   })
+
+  it('creates event and metric data for xhr with bad 3rd party wrapping after agent', async () => {
+    await browser.url(await browser.testHandle.assetURL('ajax/xhr-bad-wrapper-after.html'))
+      .then(() => browser.waitForAgentLoad())
+      .then(() => browser.execute(function () {
+        window.disableAjaxHashChange = true
+      }))
+
+    const [ajaxEventsHarvest, ajaxTimeSlicesHarvest] = await Promise.all([
+      browser.testHandle.expectAjaxEvents(),
+      browser.testHandle.expectAjaxTimeSlices(),
+      $('#sendAjax').click()
+    ])
+
+    checkAjaxEvents(ajaxEventsHarvest.request, { specificPath: '/json' })
+    checkAjaxMetrics(ajaxTimeSlicesHarvest.request, { specificPath: '/json' })
+
+    const ajaxEvent = ajaxEventsHarvest.request.body.find(event => event.path === '/json')
+    expect(ajaxEvent.end).toBeGreaterThanOrEqual(ajaxEvent.start)
+    expect(ajaxEvent.callbackEnd).toEqual(ajaxEvent.end)
+
+    const ajaxMetric = ajaxTimeSlicesHarvest.request.body.xhr.find(metric => metric.params.pathname === '/json')
+
+    // Metric duration is not an exact calculation of `end - start`
+    const calculatedDuration = ajaxEvent.end - ajaxEvent.start
+    expect(ajaxMetric.metrics.duration.t).toBeWithin(calculatedDuration - 10, calculatedDuration + 11)
+  })
+
+  it('creates event and metric data for xhr with 3rd party listener patch after agent', async () => {
+    await browser.url(await browser.testHandle.assetURL('ajax/xhr-patch-listener-after.html'))
+      .then(() => browser.waitForAgentLoad())
+      .then(() => browser.execute(function () {
+        window.disableAjaxHashChange = true
+      }))
+
+    const [ajaxEventsHarvest, ajaxTimeSlicesHarvest] = await Promise.all([
+      browser.testHandle.expectAjaxEvents(),
+      browser.testHandle.expectAjaxTimeSlices(),
+      $('#sendAjax').click()
+    ])
+
+    checkAjaxEvents(ajaxEventsHarvest.request, { specificPath: '/json' })
+    checkAjaxMetrics(ajaxTimeSlicesHarvest.request, { specificPath: '/json' })
+
+    const ajaxEvent = ajaxEventsHarvest.request.body.find(event => event.path === '/json')
+    expect(ajaxEvent.end).toBeGreaterThanOrEqual(ajaxEvent.start)
+    expect(ajaxEvent.callbackEnd).toEqual(ajaxEvent.end)
+
+    const ajaxMetric = ajaxTimeSlicesHarvest.request.body.xhr.find(metric => metric.params.pathname === '/json')
+
+    // Metric duration is not an exact calculation of `end - start`
+    const calculatedDuration = ajaxEvent.end - ajaxEvent.start
+    expect(ajaxMetric.metrics.duration.t).toBeWithin(calculatedDuration - 10, calculatedDuration + 11)
+
+    await expect(browser.execute(function () {
+      return window.wrapperInvoked
+    })).resolves.toEqual(true)
+  })
 })

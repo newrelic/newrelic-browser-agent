@@ -1,15 +1,9 @@
 <!DOCTYPE html>
-<!--
-  Copyright 2020 New Relic Corporation.
-  PDX-License-Identifier: Apache-2.0
--->
 <html>
-  <head>
-    <title>XHR constructor runtime-patching test</title>
-    {init}
-    {config}
-    {loader}
-    <script type="text/javascript">
+<head>
+  <title>Simple XHR</title>
+  {init} {config} {loader}
+  <script>
     var wrapperInvoked = false
 
     function wrap(callback) {
@@ -34,16 +28,28 @@
       proto = Object.getPrototypeOf(proto)
     }
     patchAddEventListener(proto)
-
-    var xhrDone = false
+  </script>
+</head>
+<body>
+<div>
+  This page uses inline code to simulate a 3rd party patching of the XMLHttpRequest
+  addEventListener after the agent has loaded. This page uses a button to initiate an XHR. When
+  running in a spec file, setting `window.disableAjaxHashChange = true` will disable the
+  hash route change so the ajax call is fully processed by the ajax feature instead of the SPA feature.
+</div>
+<div><button id="sendAjax">Send Ajax</button></div>
+<script>
+  window.disableAjaxHashChange = false
+  document.getElementById('sendAjax').addEventListener('click', function () {
     var xhr = new XMLHttpRequest()
+    xhr.addEventListener('loadend', function () {
+      if (!disableAjaxHashChange) {
+        window.location.hash = Math.random()
+      }
+    })
     xhr.open('GET', '/json')
-    xhr.addEventListener('load', function () { xhrDone = true })
     xhr.send()
-    </script>
-  </head>
-  <body>
-    The inline JS on this page emulates 3rd-party code which runtime-patches
-    the EventTarget.prototype.addEventListener after our patching.
-  </body>
+  })
+</script>
+</body>
 </html>

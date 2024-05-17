@@ -16,6 +16,7 @@ export function assertExpectedErrors (actualErrors, expectedErrors, assetURL) {
 
   for (let expectedError of expectedErrors) {
     let matchingErrors = actualErrors.filter((e) => {
+      if (!expectedError.message) return !e.params.message
       return e.params.message.search(expectedError.message) !== -1
     })
     let actualError = matchingErrors[0]
@@ -49,4 +50,8 @@ export function assertExpectedErrors (actualErrors, expectedErrors, assetURL) {
     let expectedPath = new URL(assetURL).pathname
     expect(actualError.params.request_uri).toEqual(expectedPath) // has correct request_uri attribute
   }
+}
+
+export function assertErrorAttributes (query) {
+  expect(query.pve).toEqual('1')
 }

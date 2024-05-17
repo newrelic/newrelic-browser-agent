@@ -5,7 +5,6 @@
 
 const testDriver = require('../../../tools/jil/index')
 const querypack = require('@newrelic/nr-querypack')
-const { getErrorsFromResponse } = require('../err/assertion-helpers')
 
 testDriver.test('error on the initial page load', function (t, browser, router) {
   waitForPageLoadAnInitialCalls(browser, router, 'spa/errors/captured-initial-page-load.html')
@@ -372,4 +371,21 @@ function clickAndRedirect (browser, router, wait) {
 
 function leavePage (browser, router) {
   return browser.safeGet(router.assetURL('_blank.html'))
+}
+
+function getErrorsFromResponse (response) {
+  if (response.body) {
+    try {
+      var parsedBody = response.body
+      if (parsedBody.err) {
+        return parsedBody.err
+      }
+    } catch (e) {}
+  }
+  if (response.query && response.query.err) {
+    try {
+      return JSON.parse(response.query.err)
+    } catch (e) {}
+  }
+  return null
 }

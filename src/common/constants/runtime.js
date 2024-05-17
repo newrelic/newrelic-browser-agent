@@ -5,6 +5,8 @@
  * @license Apache-2.0
  */
 
+import { now } from '../timing/now'
+
 /**
  * Indicates if the agent is running within a normal browser window context.
  */
@@ -79,4 +81,4 @@ export const supportsSendBeacon = !!globalScope.navigator?.sendBeacon
  * according to the browser's local clock.
  * @type {number}
  */
-export const originTime = Math.floor(Date.now() - performance.now())
+export const originTime = Date.now() - now()

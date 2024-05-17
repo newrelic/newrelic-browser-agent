@@ -30,7 +30,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Harvest Behavior', () => {
   it.withBrowsersMatching(onlyChrome)('Should abort if exceeds maximum size', async () => {
     await browser.url(await browser.testHandle.assetURL('1mb-dom.html', srConfig({ session_replay: { harvestTimeSeconds: 5 } })))
 
-    await browser.testHandle.expectReplay(10000, true) // should not get harvest
+    await browser.testHandle.expectReplay(20000, true) // should not get harvest
 
     await expect(getSR()).resolves.toEqual(expect.objectContaining({
       blocked: true,
@@ -71,7 +71,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Harvest Behavior', () => {
   it.withBrowsersMatching(supportsFetch)('should use sendBeacon for unload harvests', async () => {
     const [snapshotHarvest] = await Promise.all([
       browser.testHandle.expectSessionReplaySnapshot(10000),
-      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig({ session_replay: { harvestTimeSeconds: 5 } })))
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig({ session_replay: { harvestTimeSeconds: 30 } })))
         .then(() => browser.execute(function () {
           const sendBeaconFn = navigator.sendBeacon.bind(navigator)
           navigator.sendBeacon = function (url, body) {

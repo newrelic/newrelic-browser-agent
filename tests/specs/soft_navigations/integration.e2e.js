@@ -117,11 +117,11 @@ describe('Soft navigations', () => {
     expect(jserrorPayload.request.body.err[0].params.browserInteractionId).toBeUndefined()
 
     url = await browser.testHandle.assetURL('/') // test page EoL on the 2nd open ixn that's holding onto events to make sure they get sent too
-    ;[ajaxPayload, jserrorPayload] = await Promise.all([
-      browser.testHandle.expectAjaxEvents(3000),
-      browser.testHandle.expectErrors(3000),
-      browser.url(url)
-    ])
+    const ajaxPayloadPromise = browser.testHandle.expectAjaxEvents(3000)
+    const jserrorPayloadPromise = browser.testHandle.expectErrors(3000)
+    await browser.pause(100)
+    await browser.url(url)
+    ;[ajaxPayload, jserrorPayload] = await Promise.all([ajaxPayloadPromise, jserrorPayloadPromise])
     expect(ajaxPayload.request.body).toEqual(expect.arrayContaining([expect.objectContaining({ path: '/json' })]))
     expect(jserrorPayload.request.body.err[0].params.message).toEqual('some error')
     expect(jserrorPayload.request.body.err[0].params.browserInteractionId).toBeUndefined()
@@ -148,7 +148,7 @@ describe('Soft navigations', () => {
   // This reproduction condition only happens for chromium. I.e. safari & firefox load still fires before they let ajax finish.
   // Also, Android 9.0- is not happy with 1mb-dom.html, so that ought to be excluded from this test.
   it.withBrowsersMatching(onlyChromium)('[NR-178375] ajax that finish before page load event should only be in iPL payload', async () => {
-    let url = await browser.testHandle.assetURL('1mb-dom.html', config)
+    let url = await browser.testHandle.assetURL('64kb-dom-preload-fetch.html', config)
     let [iPLPayload, firstAjaxPayload] = await Promise.all([
       browser.testHandle.expectInteractionEvents(),
       browser.testHandle.expectAjaxEvents(),

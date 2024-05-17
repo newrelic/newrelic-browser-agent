@@ -61,7 +61,7 @@ export class TimeKeeper {
     }
 
     const medianRumOffset = (endTime - startTime) / 2
-    const serverOffset = Math.floor(startTime + medianRumOffset)
+    const serverOffset = startTime + medianRumOffset
 
     // Corrected page origin time
     this.#correctedOriginTime = Math.floor(Date.parse(responseDateHeader) - serverOffset)
@@ -82,7 +82,7 @@ export class TimeKeeper {
    * @returns {number} Corrected unix/epoch timestamp
    */
   convertRelativeTimestamp (relativeTime) {
-    return this.#correctedOriginTime + relativeTime
+    return Math.floor(this.#correctedOriginTime + relativeTime)
   }
 
   /**

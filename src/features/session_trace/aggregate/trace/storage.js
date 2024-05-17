@@ -274,8 +274,7 @@ export class TraceStorage {
   // Ajax (FEATURE) events--XML & fetches--pipes into ST here.
   storeXhrAgg (type, name, params, metrics) {
     if (type !== 'xhr') return
-    this.storeSTN(new TraceNode('Ajax', metrics.time, metrics.time + metrics.duration, `${params.status} ${params.method}: ${params.host}${params.pathname
-    }`))
+    this.storeSTN(new TraceNode('Ajax', metrics.time, metrics.time + metrics.duration, `${params.status} ${params.method}: ${params.host}${params.pathname}`, 'ajax'))
   }
 
   restoreNode (name, listOfSTNodes) {

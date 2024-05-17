@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Simple XHR</title>
+  {init} {config} {loader}
+</head>
+<body>
+<div>
+  This page uses a button to initiate multiple XHR and setTimeout simultaneously.
+  When running in a spec file, setting
+  `window.disableAjaxHashChange = true` will disable the hash route change so the
+  ajax call is fully processed by the ajax feature instead of the SPA feature.
+</div>
+<div><button id="sendAjax">Send Ajax</button></div>
+<script>
+  window.disableAjaxHashChange = false
+
+  var callbacks = 0
+  function cbDecrement () {
+    callbacks -= 1
+    if (!disableAjaxHashChange) {
+      window.location.hash = Math.random()
+    }
+  }
+  document.getElementById('sendAjax').addEventListener('click', function () {
+    callbacks = 4
+
+    var xhr1 = new XMLHttpRequest()
+    xhr1.addEventListener('load', cbDecrement, true)
+    xhr1.open('GET', '/json')
+    xhr1.send()
+
+    var xhr2 = new XMLHttpRequest()
+    xhr2.addEventListener('load', cbDecrement, true)
+    xhr2.open('GET', '/json')
+    xhr2.send()
+
+    setTimeout(function () {
+      newrelic.interaction().createTracer('timer')()
+      cbDecrement
+    }, 10)
+    setTimeout(function () {
+      newrelic.interaction().createTracer('timer')()
+      cbDecrement
+    }, 5)
+  })
+</script>
+</body>
+</html>

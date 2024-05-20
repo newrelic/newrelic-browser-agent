@@ -9,7 +9,6 @@ import * as submitData from '../util/submit-data'
 import { getLocation } from '../url/location'
 import { getInfo, getConfigurationValue, getRuntime, getConfiguration } from '../config/config'
 import { cleanURL } from '../url/clean-url'
-import { now } from '../timing/now'
 import { eventListenerOpts } from '../event-listener/event-listener-opts'
 import { Obfuscator } from '../util/obfuscate'
 import { applyFnToProps } from '../util/traverse'
@@ -17,6 +16,7 @@ import { SharedContext } from '../context/shared-context'
 import { VERSION } from '../constants/env'
 import { isWorkerScope, isIE } from '../constants/runtime'
 import { warn } from '../util/console'
+import { now } from '../timing/now'
 
 const warnings = {}
 
@@ -103,7 +103,7 @@ export class Harvest extends SharedContext {
     if (customUrl) url = customUrl
     if (raw) url = `${protocol}://${perceviedBeacon}/${endpoint}`
 
-    const baseParams = !raw && includeBaseParams ? this.baseQueryString() : ''
+    const baseParams = !raw && includeBaseParams ? this.baseQueryString(qs, endpoint) : ''
     let payloadParams = encodeObj(qs, agentRuntime.maxBytes)
     if (!submitMethod) {
       submitMethod = submitData.getSubmitMethod({ isFinalHarvest: opts.unload })
@@ -142,9 +142,10 @@ export class Harvest extends SharedContext {
 
     if (!opts.unload && cbFinished && submitMethod === submitData.xhr) {
       const harvestScope = this
-      result.addEventListener('load', function () {
+      result.addEventListener('loadend', function () {
         // `this` refers to the XHR object in this scope, do not change this to a fat arrow
-        const cbResult = { sent: true, status: this.status }
+        // status 0 refers to a local error, such as CORS or network failure, or a blocked request by the browser (e.g. adblocker)
+        const cbResult = { sent: this.status !== 0, status: this.status, xhr: this, fullUrl }
         if (this.status === 429) {
           cbResult.retry = true
           cbResult.delay = harvestScope.tooManyRequestsDelay
@@ -159,18 +160,22 @@ export class Harvest extends SharedContext {
       }, eventListenerOpts(false))
     }
 
+    const runtime = getRuntime(this.sharedContext.agentIdentifier)
+    runtime.harvestCount++
+
     return result
   }
 
   // The stuff that gets sent every time.
-  baseQueryString () {
+  baseQueryString (qs, endpoint) {
     const runtime = getRuntime(this.sharedContext.agentIdentifier)
     const info = getInfo(this.sharedContext.agentIdentifier)
 
     const location = cleanURL(getLocation())
     const ref = this.obfuscator.shouldObfuscate() ? this.obfuscator.obfuscateString(location) : location
+    const hr = runtime?.session?.state.sessionReplayMode === 1 && endpoint !== 'jserrors'
 
-    return ([
+    const qps = [
       'a=' + info.applicationID,
       encodeParam('sa', (info.sa ? '' + info.sa : '')),
       encodeParam('v', VERSION),
@@ -181,7 +186,9 @@ export class Harvest extends SharedContext {
       '&s=' + (runtime.session?.state.value || '0'), // the 0 id encaps all untrackable and default traffic
       encodeParam('ref', ref),
       encodeParam('ptid', (runtime.ptid ? '' + runtime.ptid : ''))
-    ].join(''))
+    ]
+    if (hr) qps.push(encodeParam('hr', '1', qs))
+    return qps.join('')
   }
 
   /**

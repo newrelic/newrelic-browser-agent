@@ -11,6 +11,7 @@ import { Instrument as InstrumentErrors } from '../features/jserrors/instrument'
 import { Instrument as InstrumentXhr } from '../features/ajax/instrument'
 import { Instrument as InstrumentSessionTrace } from '../features/session_trace/instrument'
 import { Instrument as InstrumentSessionReplay } from '../features/session_replay/instrument'
+import { Instrument as InstrumentSoftNav } from '../features/soft_navigations/instrument'
 import { Instrument as InstrumentSpa } from '../features/spa/instrument'
 import { Instrument as InstrumentGenericEvent } from '../features/generic_event/instrument'
 
@@ -23,8 +24,9 @@ new Agent({
     InstrumentSessionReplay,
     InstrumentMetrics,
     InstrumentErrors,
-    InstrumentSpa,
-    InstrumentGenericEvent
+    InstrumentGenericEvent,
+    InstrumentSoftNav,
+    InstrumentSpa // either the softnav or the old spa will be used (not both), but we still need to pack both to avoid dynamic import for instrument files
   ],
   loaderType: 'spa'
 })

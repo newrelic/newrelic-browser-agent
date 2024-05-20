@@ -1,5 +1,5 @@
-import { now } from '../timing/now'
 import { globalScope } from '../constants/runtime'
+import { now } from '../timing/now'
 
 export const defaults = {
   beacon: 'bam.nr-data.net',

@@ -3,6 +3,186 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.260.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.259.0...v1.260.0) (2024-05-13)
+
+
+### Features
+
+* Improve time stamping of page view events ([#1026](https://github.com/newrelic/newrelic-browser-agent/issues/1026)) ([67a658d](https://github.com/newrelic/newrelic-browser-agent/commit/67a658d2645b680a479175dff06a4fd95bd6086a))
+
+
+### Bug Fixes
+
+* Add internal error handler to session replay recorder ([#1029](https://github.com/newrelic/newrelic-browser-agent/issues/1029)) ([84c101c](https://github.com/newrelic/newrelic-browser-agent/commit/84c101ccbff8da207bdf215714f49b7d49941388))
+* Adjust session entity to not race between tabs ([#1032](https://github.com/newrelic/newrelic-browser-agent/issues/1032)) ([d86becf](https://github.com/newrelic/newrelic-browser-agent/commit/d86becf2fc02aa133430332aa4e4c2bc26297750))
+
+## [1.259.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.258.2...v1.259.0) (2024-05-08)
+
+
+### Features
+
+* Migrate Session Traces to Use Blob Consumer with Feature Flags ([#821](https://github.com/newrelic/newrelic-browser-agent/issues/821)) ([55b0e00](https://github.com/newrelic/newrelic-browser-agent/commit/55b0e00e9d8dce6d0cdbed978a98302d40123f3d))
+
+## [1.258.2](https://github.com/newrelic/newrelic-browser-agent/compare/v1.258.1...v1.258.2) (2024-05-07)
+
+
+### Bug Fixes
+
+* Prevent noticeError() API from running if not given an argument ([#1021](https://github.com/newrelic/newrelic-browser-agent/issues/1021)) ([c023a53](https://github.com/newrelic/newrelic-browser-agent/commit/c023a53c20a9f0f2472e1ba5ff78eb7210a906fa))
+
+## [1.258.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.258.0...v1.258.1) (2024-05-07)
+
+
+### Bug Fixes
+
+* Exclude data url requests as captured AJAX events ([#1012](https://github.com/newrelic/newrelic-browser-agent/issues/1012)) ([2a3fa57](https://github.com/newrelic/newrelic-browser-agent/commit/2a3fa57da1f389e6eabae2c92686e25285fc6cd3))
+* Improve Error Casting ([#1014](https://github.com/newrelic/newrelic-browser-agent/issues/1014)) ([d1dd20c](https://github.com/newrelic/newrelic-browser-agent/commit/d1dd20ce526ddb697962f695fbb5915410474987))
+* Remove API start()'s features param ([#1009](https://github.com/newrelic/newrelic-browser-agent/issues/1009)) ([38a502b](https://github.com/newrelic/newrelic-browser-agent/commit/38a502b08b4735259e7f5b863b0e5e5361c075b6))
+* Run inside cross-origin iframes for firefox/safari ([#1015](https://github.com/newrelic/newrelic-browser-agent/issues/1015)) ([6a4a73d](https://github.com/newrelic/newrelic-browser-agent/commit/6a4a73d72b056177268f8619a3a3b7810a7a2c79))
+* Session trace nodes de-duplication ([#1008](https://github.com/newrelic/newrelic-browser-agent/issues/1008)) ([44f229e](https://github.com/newrelic/newrelic-browser-agent/commit/44f229e4d35cd468bfe29b1796be8031bb9c72ff))
+
+## [1.258.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.257.0...v1.258.0) (2024-04-29)
+
+
+### Features
+
+* Add harvestId to Session Replay payloads ([#1002](https://github.com/newrelic/newrelic-browser-agent/issues/1002)) ([aea9ac4](https://github.com/newrelic/newrelic-browser-agent/commit/aea9ac4dc791c58badc6d2efe7bdbb3c0f51a8bb))
+* JSErrors timestamped per harvest ([#997](https://github.com/newrelic/newrelic-browser-agent/issues/997)) ([97ae128](https://github.com/newrelic/newrelic-browser-agent/commit/97ae128934df7a74701eef001e49b0065ffe8216))
+* Maintain calculated NR server time for session ([#980](https://github.com/newrelic/newrelic-browser-agent/issues/980)) ([c487e04](https://github.com/newrelic/newrelic-browser-agent/commit/c487e04f46a606545c8172b6ed1c022b4dc1cac1))
+* Restructure AJAX Aggregate ([#1003](https://github.com/newrelic/newrelic-browser-agent/issues/1003)) ([1c3a6b9](https://github.com/newrelic/newrelic-browser-agent/commit/1c3a6b963c1eb7e0792225c3a4c15b6fd8d64505))
+
+
+### Bug Fixes
+
+* Clean up xhrWrappable ([#1000](https://github.com/newrelic/newrelic-browser-agent/issues/1000)) ([5e28fb7](https://github.com/newrelic/newrelic-browser-agent/commit/5e28fb722aa2bf08acc89066d5814e5bef862741))
+* Prevent null CLS ([#993](https://github.com/newrelic/newrelic-browser-agent/issues/993)) ([a518039](https://github.com/newrelic/newrelic-browser-agent/commit/a518039aa61862553d546cf0e675b733a9f9bed7))
+
+## [1.257.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.256.1...v1.257.0) (2024-04-18)
+
+
+### Features
+
+* Decorate errors with hasReplay individually ([#983](https://github.com/newrelic/newrelic-browser-agent/issues/983)) ([b6a7a3e](https://github.com/newrelic/newrelic-browser-agent/commit/b6a7a3ebcf2a69b9cbe9888208bb62330918cdf7))
+* Session Replay preload optimizations ([#982](https://github.com/newrelic/newrelic-browser-agent/issues/982)) ([fa20693](https://github.com/newrelic/newrelic-browser-agent/commit/fa20693d746bed2fa0b8ff972e4b9bee4bbe6956))
+
+
+### Bug Fixes
+
+* Agent class type declarations ([#987](https://github.com/newrelic/newrelic-browser-agent/issues/987)) ([b682c88](https://github.com/newrelic/newrelic-browser-agent/commit/b682c880bfb149b61f6c00bf821459ea55a37ae8))
+* JSEerrors harvest hasReplay decoration ([#986](https://github.com/newrelic/newrelic-browser-agent/issues/986)) ([6dd09c5](https://github.com/newrelic/newrelic-browser-agent/commit/6dd09c505af87b3a1b08330362eca46951ea22ed))
+* Session replay preload without autoStart ([#985](https://github.com/newrelic/newrelic-browser-agent/issues/985)) ([f50351a](https://github.com/newrelic/newrelic-browser-agent/commit/f50351acb08b65b03e7f4b5530a001a80fc04ece))
+* Soft navigations memory leak on harvest ([#979](https://github.com/newrelic/newrelic-browser-agent/issues/979)) ([53bb120](https://github.com/newrelic/newrelic-browser-agent/commit/53bb1209cb66fe1a52385b2863e35a93fb29afae))
+
+## [1.256.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.256.0...v1.256.1) (2024-04-15)
+
+
+### Bug Fixes
+
+* Revert "Generate PTID in Agent" ([#976](https://github.com/newrelic/newrelic-browser-agent/issues/976)) ([34b317f](https://github.com/newrelic/newrelic-browser-agent/commit/34b317fe577487af56d48861b7f256ec8d644d69))
+
+## [1.256.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.255.0...v1.256.0) (2024-04-11)
+
+
+### Features
+
+* Adjust Session Replay Error Tracking ([#951](https://github.com/newrelic/newrelic-browser-agent/issues/951)) ([91d65b5](https://github.com/newrelic/newrelic-browser-agent/commit/91d65b5b7b5b7e753a6603150fd4bb7d2543babd))
+* Allow unmasking elements with nr-unmask selectors ([#949](https://github.com/newrelic/newrelic-browser-agent/issues/949)) ([e17aa25](https://github.com/newrelic/newrelic-browser-agent/commit/e17aa25ee098115ad23a5fb9ae268a4b5769fac1))
+* Generate PTID in Agent ([#964](https://github.com/newrelic/newrelic-browser-agent/issues/964)) ([af7b676](https://github.com/newrelic/newrelic-browser-agent/commit/af7b6764f40cb1ddfb3ab2ca16d05d8e4f459f4e))
+
+
+### Bug Fixes
+
+* Resume Page Focus Now Checks Session State ([#961](https://github.com/newrelic/newrelic-browser-agent/issues/961)) ([e48af6b](https://github.com/newrelic/newrelic-browser-agent/commit/e48af6beb369daf6ddc8231daa040f0d9d204d5f))
+* stabilize timestamp corrections ([#966](https://github.com/newrelic/newrelic-browser-agent/issues/966)) ([4fbe962](https://github.com/newrelic/newrelic-browser-agent/commit/4fbe962d7b268968df96da59058e2e53c527c5eb))
+
+## [1.255.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.254.1...v1.255.0) (2024-04-04)
+
+
+### Features
+
+* Adjust SR Timestamps to NR Server Time ([#939](https://github.com/newrelic/newrelic-browser-agent/issues/939)) ([94f0dee](https://github.com/newrelic/newrelic-browser-agent/commit/94f0deed02a8f5e9d668f3fe5a68ada86cecc439))
+* Send CLS as timing node additionally ([#935](https://github.com/newrelic/newrelic-browser-agent/issues/935)) ([88e71da](https://github.com/newrelic/newrelic-browser-agent/commit/88e71da521f1a58af28ae17fee13f648affd262a))
+* Switch web vitals library to attribution build ([#919](https://github.com/newrelic/newrelic-browser-agent/issues/919)) ([f36acbc](https://github.com/newrelic/newrelic-browser-agent/commit/f36acbc03c4f4d51e65431a270a008e65bb2cfff))
+* Update agent to use new relic server time ([#918](https://github.com/newrelic/newrelic-browser-agent/issues/918)) ([8a4831c](https://github.com/newrelic/newrelic-browser-agent/commit/8a4831cd1f2d32d97daa8788967b15d7f2f723d3))
+
+## [1.254.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.254.0...v1.254.1) (2024-03-26)
+
+
+### Bug Fixes
+
+* Server Timing - Remove reliance on performance API ([#930](https://github.com/newrelic/newrelic-browser-agent/issues/930)) ([250efcd](https://github.com/newrelic/newrelic-browser-agent/commit/250efcd3bf0a730adbb9d5c45be0bf2f71189664))
+
+## [1.254.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.253.0...v1.254.0) (2024-03-25)
+
+
+### Features
+
+* Add rum-response metadata handler ([#913](https://github.com/newrelic/newrelic-browser-agent/issues/913)) ([2c99a5b](https://github.com/newrelic/newrelic-browser-agent/commit/2c99a5b11300ea9ef9ee7b5158b9d42c00693d03))
+* Calculate New Relic time in the agent ([#911](https://github.com/newrelic/newrelic-browser-agent/issues/911)) ([91b1f96](https://github.com/newrelic/newrelic-browser-agent/commit/91b1f96efafe19f7b1b3fd4f39b9af1136b0a3a8))
+* maintain a harvestCount for use later with harvestId ([#922](https://github.com/newrelic/newrelic-browser-agent/issues/922)) ([d0b5b7d](https://github.com/newrelic/newrelic-browser-agent/commit/d0b5b7d644b8ffc3667bf3b2521733cc7940f982))
+* Standardize all feature behavior to wait for RUM response ([#927](https://github.com/newrelic/newrelic-browser-agent/issues/927)) ([ac266fa](https://github.com/newrelic/newrelic-browser-agent/commit/ac266faea203a7edc01ddecabbfdcc13bf602081))
+
+
+### Bug Fixes
+
+* Remove webpack imports in npm package ([#925](https://github.com/newrelic/newrelic-browser-agent/issues/925)) ([7b35238](https://github.com/newrelic/newrelic-browser-agent/commit/7b35238d53df97ca0183f06642601eb381aad063))
+
+## [1.253.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.252.1...v1.253.0) (2024-03-13)
+
+
+### Features
+
+* Apply deny list to ajax metrics ([#898](https://github.com/newrelic/newrelic-browser-agent/issues/898)) ([a5c2adc](https://github.com/newrelic/newrelic-browser-agent/commit/a5c2adc0ecbe322ea9a9dcdf1ed3b072c1212415))
+* Isolate observation context per agent ([#903](https://github.com/newrelic/newrelic-browser-agent/issues/903)) ([85887c8](https://github.com/newrelic/newrelic-browser-agent/commit/85887c8e7f4241076daeeda75077e6ee710a3d00))
+* Preload the Session Replay recorder when properly configured ([#893](https://github.com/newrelic/newrelic-browser-agent/issues/893)) ([bc5ebb5](https://github.com/newrelic/newrelic-browser-agent/commit/bc5ebb5cb255fda7f2c30d5053b5a980a423c2b1))
+* Soft Navigations trial ([#808](https://github.com/newrelic/newrelic-browser-agent/issues/808)) ([7fcb627](https://github.com/newrelic/newrelic-browser-agent/commit/7fcb62791ad932cbd3b9f16a72277b42bca9a75f))
+
+## [1.252.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.252.0...v1.252.1) (2024-02-29)
+
+
+### Bug Fixes
+
+* Fix webpack imports in npm package ([#905](https://github.com/newrelic/newrelic-browser-agent/issues/905)) ([35810a8](https://github.com/newrelic/newrelic-browser-agent/commit/35810a895b7f61ab60ea5c24adfa49c4a3956191))
+* Page load after session timeouts don't start new session ([#899](https://github.com/newrelic/newrelic-browser-agent/issues/899)) ([5c952a0](https://github.com/newrelic/newrelic-browser-agent/commit/5c952a0a212922d84dfd7e8eb388fdbd566b6c00))
+
+## [1.252.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.251.1...v1.252.0) (2024-02-12)
+
+
+### Features
+
+* add types mappings for esm distribution ([#887](https://github.com/newrelic/newrelic-browser-agent/issues/887)) ([811ed41](https://github.com/newrelic/newrelic-browser-agent/commit/811ed418b74dcb8f25544da79521c384b9fd498a))
+* align browser reported uncaught syntax errors ([#881](https://github.com/newrelic/newrelic-browser-agent/issues/881)) ([d4a0f30](https://github.com/newrelic/newrelic-browser-agent/commit/d4a0f30e0ab4d8edbdb17bf4ebdf282626761045))
+* Capture Internal Metrics for Session Replay Configurations ([#879](https://github.com/newrelic/newrelic-browser-agent/issues/879)) ([f60e7f1](https://github.com/newrelic/newrelic-browser-agent/commit/f60e7f155bb95087ea4af8864b652878f08ccaff))
+* Create more granular metrics about stylesheet fix success ([#882](https://github.com/newrelic/newrelic-browser-agent/issues/882)) ([697f13e](https://github.com/newrelic/newrelic-browser-agent/commit/697f13e6ea5ba0738ffd74dfd214751ab98adf8d))
+* Report config changes away from default state for UX improvement ([#885](https://github.com/newrelic/newrelic-browser-agent/issues/885)) ([aa19a9c](https://github.com/newrelic/newrelic-browser-agent/commit/aa19a9c0737c175c011656f3da3f327dc6442f04))
+
+
+### Bug Fixes
+
+* Add safe logic to snapshots ([#884](https://github.com/newrelic/newrelic-browser-agent/issues/884)) ([1fcdd8d](https://github.com/newrelic/newrelic-browser-agent/commit/1fcdd8d9a20819911ba7e7350354085a57f1b187))
+* Fix adblock memory leak ([#877](https://github.com/newrelic/newrelic-browser-agent/issues/877)) ([695415b](https://github.com/newrelic/newrelic-browser-agent/commit/695415b0fcaa8b41496fc6556a38ec76dd357539))
+
+## [1.251.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.251.0...v1.251.1) (2024-01-29)
+
+
+### Bug Fixes
+
+* Fix deferred Session Replay payloads ([#868](https://github.com/newrelic/newrelic-browser-agent/issues/868)) ([f69e4b0](https://github.com/newrelic/newrelic-browser-agent/commit/f69e4b0eba5a54f4e67316f5e6a30090cf7360cc))
+* Pass unload options to simultaneous harvests in Session Replay ([#870](https://github.com/newrelic/newrelic-browser-agent/issues/870)) ([655aa5d](https://github.com/newrelic/newrelic-browser-agent/commit/655aa5d261d03f71086d3cfc73cb72db51cb28c7))
+
+## [1.251.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.250.0...v1.251.0) (2024-01-24)
+
+
+### Features
+
+* Session Replay - Detect Non-Inlined Stylesheets ([#859](https://github.com/newrelic/newrelic-browser-agent/issues/859)) ([69a8e00](https://github.com/newrelic/newrelic-browser-agent/commit/69a8e00ce66c41a29f551697299246763e7ae29f))
+
+
+### Bug Fixes
+
+* Add fallback for currentBufferTarget ([#861](https://github.com/newrelic/newrelic-browser-agent/issues/861)) ([f43b791](https://github.com/newrelic/newrelic-browser-agent/commit/f43b7914ec1f26f610cbaa1a513bac482a3d6534))
+* Bubble Up API Methods to Top-Level Instance For NPM ([#862](https://github.com/newrelic/newrelic-browser-agent/issues/862)) ([cd6324f](https://github.com/newrelic/newrelic-browser-agent/commit/cd6324fb79edab77725d9c72f91d2bcb7e860f57))
+
 ## [1.250.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.249.0...v1.250.0) (2024-01-09)
 
 

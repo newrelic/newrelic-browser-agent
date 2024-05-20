@@ -5,10 +5,10 @@
 import { handle } from '../../../common/event-emitter/handle'
 import { subscribeToVisibilityChange } from '../../../common/window/page-visibility'
 import { windowAddEventListener } from '../../../common/event-listener/event-listener-opts'
-import { now } from '../../../common/timing/now'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME } from '../constants'
 import { isBrowserScope } from '../../../common/constants/runtime'
+import { now } from '../../../common/timing/now'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME

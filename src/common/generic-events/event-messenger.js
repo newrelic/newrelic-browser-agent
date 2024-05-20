@@ -1,4 +1,3 @@
-
 export class EventMessenger {
   #subscribers = new Set()
   history = []

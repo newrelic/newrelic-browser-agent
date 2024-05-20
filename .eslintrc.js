@@ -11,6 +11,7 @@ module.exports = {
     'tests/assets/scripts/**/*',
     'tests/assets/test-builds/**/*',
     'tests/assets/modular/js-errors/js/vendor/**/*',
+    'tests/dts/**/*',
 
     // Ignore JIL code since it is being replaced with WDIO
     'tools/jil/**/*',
@@ -46,7 +47,7 @@ module.exports = {
     },
     {
       files: ['src/**/*.js'],
-      excludedFiles: ['*.test.js', '*.component-test.js', '__mocks__/**/*'],
+      excludedFiles: ['__mocks__/**/*'],
       env: {
         browser: true
       },
@@ -58,7 +59,7 @@ module.exports = {
       }
     },
     {
-      files: ['src/**/*.test.js', 'src/**/*.component-test.js', 'src/**/__mocks__/**/*'],
+      files: ['src/**/__mocks__/**/*', 'tests/unit/**/*', 'tests/components/**/*'],
       env: {
         browser: true,
         node: true,
@@ -69,6 +70,7 @@ module.exports = {
       },
       rules: {
         'sonarjs/no-duplicate-string': 'off', // It is not worth deduplicating strings in test code
+        'sonarjs/no-identical-functions': 'off',
         'n/no-callback-literal': 'off' // This is not NodeJS code and should not be forced to adhere to NodeJS callback parameter pattern
       }
     },
@@ -84,7 +86,7 @@ module.exports = {
       env: {
         browser: true,
         node: true,
-        jest: true
+        mocha: true
       },
       parserOptions: {
         sourceType: 'module'

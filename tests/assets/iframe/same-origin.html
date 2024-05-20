@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+<head>
+  <title>RUM IFrame</title>
+  {init} {config}
+</head>
+<body>
+<script type="text/javascript">
+  var iframe = document.createElement('iframe')
+  iframe.src = window.location.href.replace('iframe/same-origin.html', 'iframe/iframe.html')
+  document.body.appendChild(iframe)
+</script>
+</body>
+</html>

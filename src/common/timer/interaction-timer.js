@@ -10,6 +10,9 @@ export class InteractionTimer extends Timer {
     this.onRefresh = typeof opts.onRefresh === 'function' ? opts.onRefresh : () => { /* noop */ }
     this.onResume = typeof opts.onResume === 'function' ? opts.onResume : () => { /* noop */ }
 
+    /** used to double-check LS state at resume time */
+    this.readStorage = opts.readStorage
+
     // used by pause/resume
     this.remainingMs = undefined
 
@@ -67,8 +70,20 @@ export class InteractionTimer extends Timer {
   }
 
   resume () {
-    this.refresh()
-    this.onResume() // emit resume event after state updated
+    try {
+      const lsData = this.readStorage()
+      const obj = typeof lsData === 'string' ? JSON.parse(lsData) : lsData
+      if (isExpired(obj.expiresAt) || isExpired(obj.inactiveAt)) this.end()
+      else {
+        this.refresh()
+        this.onResume() // emit resume event after state updated
+      }
+    } catch (err) {
+      this.end()
+    }
+    function isExpired (timestamp) {
+      return Date.now() > timestamp
+    }
   }
 
   refresh (cb, ms) {

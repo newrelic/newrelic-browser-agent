@@ -1,3 +1,4 @@
+import { rumFlags } from '../../testing-server/constants.js'
 import { testRumRequest } from '../../testing-server/utils/expect-tests.js'
 
 /**
@@ -16,7 +17,7 @@ export default class CustomCommands {
     browser.addCommand('waitForAgentLoad', async function () {
       await browser.waitUntil(
         () => browser.execute(function () {
-          return window.NREUM && window.NREUM.activatedFeatures && window.NREUM.activatedFeatures.loaded
+          return window.NREUM && window.NREUM.activatedFeatures && Object.values(window.NREUM.activatedFeatures)[0] && !!Object.values(window.NREUM.activatedFeatures)[0].loaded
         }),
         {
           timeout: 30000,
@@ -96,19 +97,46 @@ export default class CustomCommands {
      * Sets a permanent scheduled reply for the rum call to include the session
      * replay flag with a value of 1 enabling the feature.
      */
-    browser.addCommand('enableSessionReplay', async function () {
+    browser.addCommand('enableSessionReplay', async function (sampling_rate = 100, error_sampling_rate = 100, srOverride = 1) {
+      const stMode = Math.random() * 100 < sampling_rate ? 1 : Math.random() * 100 < error_sampling_rate ? 2 : 0
       await browser.testHandle.scheduleReply('bamServer', {
         test: testRumRequest,
         permanent: true,
-        body: JSON.stringify({
-          stn: 1,
-          err: 1,
-          ins: 1,
-          cap: 1,
-          spa: 1,
-          loaded: 1,
-          sr: 1
-        })
+        body: JSON.stringify({ ...rumFlags, sr: srOverride, srs: stMode })
+      })
+    })
+
+    /**
+     * Sets a permanent scheduled reply for the rum call to include the session
+     * replay flag with a value of 1 enabling the feature.
+     */
+    browser.addCommand('mockDateResponse', async function (serverTime = Date.now() - (60 * 60 * 1000), opts = {}) {
+      const { flags } = opts
+      await browser.testHandle.scheduleReply('bamServer', {
+        test: testRumRequest,
+        permanent: true,
+        setHeaders: [
+          { key: 'Date', value: (new Date(serverTime)).toUTCString() }
+        ],
+        body: JSON.stringify({ ...rumFlags, ...flags })
+      })
+      return serverTime
+    })
+
+    /**
+     * Gets TimeKeeper properties for first agent instance
+     */
+    browser.addCommand('getPageTime', async function () {
+      return browser.execute(function () {
+        try {
+          var agent = Object.values(newrelic.initializedAgents)[0]
+          return {
+            originTime: agent.runtime.originTime,
+            correctedOriginTime: agent.runtime.timeKeeper.correctedOriginTime
+          }
+        } catch (err) {
+          return {}
+        }
       })
     })
 
@@ -144,13 +172,47 @@ export default class CustomCommands {
         () => browser.execute(function () {
           try {
             var initializedAgent = Object.values(newrelic.initializedAgents)[0]
-            return !!(initializedAgent &&
+            return !!(
+              (initializedAgent &&
+              initializedAgent.features &&
+              initializedAgent.features.session_replay &&
+              initializedAgent.features.session_replay.recorder &&
+              initializedAgent.features.session_replay.recorder.recording) ||
+              (initializedAgent &&
               initializedAgent.features &&
               initializedAgent.features.session_replay &&
               initializedAgent.features.session_replay.featAggregate &&
               initializedAgent.features.session_replay.featAggregate.initialized &&
               initializedAgent.features.session_replay.featAggregate.recorder &&
               initializedAgent.features.session_replay.featAggregate.recorder.recording)
+            )
+          } catch (err) {
+            console.error(err)
+            return false
+          }
+        }),
+        {
+          timeout: 30000,
+          timeoutMsg: 'Session replay recording never started'
+        })
+    })
+
+    /**
+     * Waits for the session replay feature to initialize and start recording.
+     */
+    browser.addCommand('waitForPreloadRecorder', async function () {
+      await browser.waitForFeatureAggregate('session_replay')
+      await browser.waitUntil(
+        () => browser.execute(function () {
+          try {
+            var initializedAgent = Object.values(newrelic.initializedAgents)[0]
+            return !!(
+              (initializedAgent &&
+              initializedAgent.features &&
+              initializedAgent.features.session_replay &&
+              initializedAgent.features.session_replay.recorder &&
+              initializedAgent.features.session_replay.recorder.recording)
+            )
           } catch (err) {
             console.error(err)
             return false

@@ -20,6 +20,7 @@ const timerEE = wrapTimer(baseEE)
 const { drain } = require('../../../src/common/drain/drain')
 const { mapOwn } = require('../../../src/common/util/map-own')
 const { bundleId } = require('../../../src/common/ids/bundle-id')
+const { activateFeatures } = require('../../../src/common/util/feature-flags.js')
 
 var currentNodeId = () => {
   try { return spaAgg.state.currentNode && spaAgg.state.currentNode.id }
@@ -38,6 +39,7 @@ jil.onWindowLoaded(function () {
     if (!spaAgg) spaAgg = new SpaAggregate(agentIdentifier, aggregator)
     drain(agentIdentifier, 'api')
     drain(agentIdentifier, 'feature')
+    activateFeatures({sr: 1, st:1, spa:1, ins:1, rum:1, loaded:1}, agentIdentifier)
 
     aggregatorLoaded = true
     for (var i = 0; i < aggregatorLoadQueue.length; i++) {

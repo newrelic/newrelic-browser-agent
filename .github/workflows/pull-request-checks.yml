@@ -8,6 +8,11 @@ name: 'Pull Request Checks'
 
 on:
   workflow_dispatch:
+    inputs:
+      latest-only:
+        description: 'Run the latest version of browsers only instead of all versions'
+        default: true
+        type: boolean
   pull_request:
 
 jobs:
@@ -31,10 +36,10 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: ${{ github.ref }}
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: lts/*
       - name: Install dependencies
@@ -61,10 +66,10 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: ${{ github.ref }}
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: lts/*
       - name: Install dependencies
@@ -92,14 +97,6 @@ jobs:
           pr_number: ${{ github.event.number }}
           comment: ${{ steps.asset-size-report.outputs.results }}
           comment_tag: <!-- browser_agent asset size report -->
-      - name: Archive asset size report results
-        uses: actions/upload-artifact@v3
-        with:
-          name: asset-size-report
-          path: |
-            build/size_report.*
-            build/*.stats.html
-            build/*.stats.json
 
   # Jobs for workflow_dispatch events
 
@@ -113,8 +110,8 @@ jobs:
     outputs:
       pull-request-target: ${{ steps.pull-request-target.outputs.results }}
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: lts/*
       - name: Find pull request target
@@ -135,10 +132,10 @@ jobs:
     steps:
       - name: Setup runner
         run: sudo apt update && DEBIAN_FRONTEND=noninteractive sudo apt install -y git tzdata
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: 'refs/pull/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}/merge'
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: lts/*
       - name: Get workflow time
@@ -174,6 +171,7 @@ jobs:
     uses: ./.github/workflows/wdio-all-browsers.yml
     with:
       ref: 'refs/pull/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}/merge'
+      latest-only: ${{ inputs.latest-only }}
     secrets: inherit
 
   jil:
@@ -183,6 +181,7 @@ jobs:
     uses: ./.github/workflows/jil-all-browsers.yml
     with:
       ref: 'refs/pull/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}/merge'
+      latest-only: ${{ inputs.latest-only }}
     secrets: inherit
 
   complete-status-comment-pull-request:
@@ -196,10 +195,10 @@ jobs:
     steps:
       - name: Setup container
         run: sudo apt update && DEBIAN_FRONTEND=noninteractive sudo apt install -y git tzdata
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: 'refs/pull/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}/merge'
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: lts/*
       - name: Get workflow time

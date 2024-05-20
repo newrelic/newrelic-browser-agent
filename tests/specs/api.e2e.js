@@ -1,8 +1,41 @@
 import { notIE } from '../../tools/browser-matcher/common-matchers.mjs'
+import { apiMethods, asyncApiMethods } from '../../src/loaders/api/api-methods'
+import { checkAjaxEvents, checkJsErrors, checkMetrics, checkPageAction, checkPVT, checkRum, checkSessionTrace, checkSpa } from '../util/basic-checks'
 
 describe('newrelic api', () => {
   afterEach(async () => {
     await browser.destroyAgentSession()
+  })
+
+  it('should expose api methods', async () => {
+    await browser.url(await browser.testHandle.assetURL('api/local-storage-disallowed.html')) // Setup expects before loading the page
+      .then(() => browser.waitForAgentLoad())
+
+    const globalApiMethods = await browser.execute(function () {
+      return Object.keys(window.newrelic)
+    })
+    const agentInstanceApiMethods = await browser.execute(function () {
+      function getAllPropertyNames (obj) {
+        var result = new Set()
+        while (obj) {
+          Object.getOwnPropertyNames(obj).forEach(function (p) {
+            return result.add(p)
+          })
+          obj = Object.getPrototypeOf(obj)
+        }
+        return Array.from(result)
+      }
+      return getAllPropertyNames(Object.values(newrelic.initializedAgents)[0])
+    })
+
+    expect(globalApiMethods).toEqual(expect.arrayContaining([
+      ...apiMethods,
+      ...asyncApiMethods
+    ]))
+    expect(agentInstanceApiMethods).toEqual(expect.arrayContaining([
+      ...apiMethods,
+      ...asyncApiMethods
+    ]))
   })
 
   it('should load when sessionStorage is not available', async () => {
@@ -18,9 +51,8 @@ describe('newrelic api', () => {
 
   describe('setPageViewName()', () => {
     it('includes the 1st argument (page name) in rum, resources, events, and ajax calls', async () => {
-      const [rumResults, resourcesResults, eventsResults, ajaxResults] = await Promise.all([
+      const [rumResults, eventsResults, ajaxResults] = await Promise.all([
         browser.testHandle.expectRum(),
-        browser.testHandle.expectResources(),
         browser.testHandle.expectEvents(),
         browser.testHandle.expectAjaxTimeSlices(),
         browser.url(await browser.testHandle.assetURL('api.html')) // Setup expects before loading the page
@@ -28,7 +60,6 @@ describe('newrelic api', () => {
       ])
 
       expect(rumResults.request.query.ct).toEqual('http://custom.transaction/foo')
-      expect(resourcesResults.request.query.ct).toEqual('http://custom.transaction/foo')
       expect(eventsResults.request.query.ct).toEqual('http://custom.transaction/foo')
       expect(ajaxResults.request.query.ct).toEqual('http://custom.transaction/foo')
     })
@@ -267,6 +298,124 @@ describe('newrelic api', () => {
 
       // We expect setUserId's attribute to be stored by the browser tab session, and retrieved on the next page load & agent init
       expect(rumResultAfterRefresh.request.body.ja).toEqual({ [ERRORS_INBOX_UID]: 'user123' }) // setUserId affects subsequent page loads in the same storage session
+    })
+  })
+
+  describe('start', () => {
+    const config = {
+      init: {
+        privacy: { cookies_enabled: true }
+      }
+    }
+
+    it('should start all features', async () => {
+      const initialLoad = await Promise.all([
+        browser.testHandle.expectRum(10000, true),
+        browser.url(await browser.testHandle.assetURL('instrumented-manual.html'), config)
+          .then(() => undefined)
+      ])
+
+      expect(initialLoad).toEqual(new Array(2).fill(undefined))
+
+      const results = await Promise.all([
+        browser.testHandle.expectRum(10000),
+        browser.testHandle.expectTimings(10000),
+        browser.testHandle.expectAjaxEvents(10000),
+        browser.testHandle.expectErrors(10000),
+        browser.testHandle.expectMetrics(10000),
+        browser.testHandle.expectIns(10000),
+        browser.testHandle.expectTrace(10000),
+        browser.testHandle.expectInteractionEvents(10000),
+        browser.execute(function () {
+          newrelic.start()
+          setTimeout(function () {
+            window.location.reload()
+          }, 1000)
+        })
+      ])
+
+      checkRum(results[0].request)
+      checkPVT(results[1].request)
+      checkAjaxEvents(results[2].request)
+      checkJsErrors(results[3].request, { messages: ['test'] })
+      checkMetrics(results[4].request)
+      checkPageAction(results[5].request, { specificAction: 'test', actionContents: { test: 1 } })
+      checkSessionTrace(results[6].request)
+      checkSpa(results[7].request)
+    })
+
+    it('starts everything if the auto features do not include PVE, and nothing should have started', async () => {
+      const initialLoad = await Promise.all([
+        browser.testHandle.expectRum(10000, true),
+        browser.testHandle.expectErrors(10000, true),
+        browser.url(await browser.testHandle.assetURL('instrumented-manual.html', {
+          init: {
+            ...config.init,
+            jserrors: {
+              autoStart: true
+            }
+          }
+        })).then(() => undefined)
+      ])
+
+      expect(initialLoad).toEqual(new Array(3).fill(undefined))
+
+      const results = await Promise.all([
+        browser.testHandle.expectRum(10000),
+        browser.testHandle.expectErrors(10000),
+        browser.execute(function () {
+          newrelic.start()
+        })
+      ])
+
+      checkRum(results[0].request)
+      checkJsErrors(results[1].request, { messages: ['test'] })
+    })
+
+    it('starts the rest of the features if the auto features include PVE, and those should have started', async () => {
+      const results = await Promise.all([
+        browser.testHandle.expectRum(),
+        browser.testHandle.expectTimings(),
+        browser.testHandle.expectAjaxEvents(10000, true),
+        browser.testHandle.expectErrors(10000, true),
+        browser.testHandle.expectTrace(),
+        browser.testHandle.expectInteractionEvents(),
+        browser.url(await browser.testHandle.assetURL('instrumented.html', {
+          init: {
+            ...config.init,
+            ajax: {
+              autoStart: false
+            },
+            jserrors: {
+              autoStart: false
+            }
+          }
+        })).then(() => browser.execute(function () {
+          setTimeout(function () {
+            var xhr = new XMLHttpRequest()
+            xhr.open('GET', '/json')
+            xhr.send()
+            newrelic.noticeError('test')
+          }, 1000)
+        }))
+      ])
+
+      checkRum(results[0].request)
+      checkPVT(results[1].request)
+      checkSessionTrace(results[4].request)
+      checkSpa(results[5].request)
+
+      await browser.pause(5000)
+      const subsequentResults = await Promise.all([
+        browser.testHandle.expectAjaxEvents(),
+        browser.testHandle.expectErrors(),
+        browser.execute(function () {
+          newrelic.start()
+        })
+      ])
+
+      checkAjaxEvents(subsequentResults[0].request)
+      checkJsErrors(subsequentResults[1].request)
     })
   })
 })

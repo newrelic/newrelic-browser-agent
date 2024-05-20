@@ -22,6 +22,7 @@ export function getActivatedFeaturesFlags (agentId) {
           flagArr.push('ins'); break
         case FEATURE_NAMES.sessionTrace:
           flagArr.push('stn'); break
+        case FEATURE_NAMES.softNav:
         case FEATURE_NAMES.spa:
           flagArr.push('spa'); break
       }

@@ -4,7 +4,7 @@ import { ee } from '../../common/event-emitter/contextual-ee'
 import { registerHandler } from '../../common/event-emitter/register-handler'
 import { SessionEntity } from '../../common/session/session-entity'
 import { LocalStorage } from '../../common/storage/local-storage.js'
-import { FirstPartyCookies } from '../../common/storage/first-party-cookies'
+import { DEFAULT_KEY } from '../../common/session/constants'
 
 let ranOnce = 0
 export function setupAgentSession (agentIdentifier) {
@@ -12,16 +12,11 @@ export function setupAgentSession (agentIdentifier) {
   if (ranOnce++) return agentRuntime.session
 
   const sessionInit = getConfiguration(agentIdentifier).session
-  /* Domain is a string that can be specified by customer. The only way to keep the session object across subdomains is using first party cookies.
-    This determines which storage wrapper the session manager will use to keep state. */
-  const storageTypeInst = sessionInit?.domain
-    ? new FirstPartyCookies(sessionInit.domain)
-    : new LocalStorage()
 
   agentRuntime.session = new SessionEntity({
     agentIdentifier,
-    key: 'SESSION',
-    storage: storageTypeInst,
+    key: DEFAULT_KEY,
+    storage: new LocalStorage(),
     expiresMs: sessionInit?.expiresMs,
     inactiveMs: sessionInit?.inactiveMs
   })

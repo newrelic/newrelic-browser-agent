@@ -3,7 +3,7 @@ import { Metrics } from '@newrelic/browser-agent/src/features/metrics'
 import { PageViewEvent } from '@newrelic/browser-agent/src/features/page_view_event'
 import { PageViewTiming } from '@newrelic/browser-agent/src/features/page_view_timing'
 
-new Agent({
+window.agent = new Agent({
   features: [
     Metrics,
     PageViewEvent,

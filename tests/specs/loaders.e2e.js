@@ -1,10 +1,14 @@
-import { checkAjax, checkJsErrors, checkMetrics, checkPVT, checkPageAction, checkRum, checkSessionTrace, checkSpa } from '../util/basic-checks'
+import { checkAjaxEvents, checkJsErrors, checkMetrics, checkPVT, checkPageAction, checkRum, checkSessionTrace, checkSpa } from '../util/basic-checks'
 import { notIE } from '../../tools/browser-matcher/common-matchers.mjs'
 
 const scriptLoadTypes = [null, 'defer', 'async', 'injection']
 
 // readyState not supported in ie11
 describe.withBrowsersMatching(notIE)('Loaders', () => {
+  afterEach(async () => {
+    await browser.destroyAgentSession()
+  })
+
   scriptLoadTypes.forEach(scriptLoadType => {
     it(`should report data for the lite agent when using ${!scriptLoadType ? 'embedded' : scriptLoadType}`, async () => {
       const url = await browser.testHandle.assetURL('all-events.html', { loader: 'rum', script: scriptLoadType })
@@ -15,7 +19,7 @@ describe.withBrowsersMatching(notIE)('Loaders', () => {
         browser.testHandle.expectAjaxEvents(10000, true),
         browser.testHandle.expectErrors(10000, true),
         browser.testHandle.expectIns(10000, true),
-        browser.testHandle.expectResources(10000, true),
+        browser.testHandle.expectTrace(10000, true),
         browser.testHandle.expectInteractionEvents(10000, true),
         browser.url(url)
           .then(() => browser.waitForAgentLoad())
@@ -23,7 +27,7 @@ describe.withBrowsersMatching(notIE)('Loaders', () => {
           .then(() => browser.refresh())
       ])
 
-      checkRum(rum.request, true)
+      checkRum(rum.request, { liteAgent: true })
       checkPVT(pvt.request)
       checkMetrics(metrics.request)
     })
@@ -37,7 +41,7 @@ describe.withBrowsersMatching(notIE)('Loaders', () => {
         browser.testHandle.expectAjaxEvents(),
         browser.testHandle.expectErrors(),
         browser.testHandle.expectIns(),
-        browser.testHandle.expectResources(),
+        browser.testHandle.expectTrace(),
         browser.testHandle.expectInteractionEvents(10000, true),
         browser.url(url)
           .then(() => browser.waitForAgentLoad())
@@ -48,7 +52,7 @@ describe.withBrowsersMatching(notIE)('Loaders', () => {
       checkRum(rum.request)
       checkPVT(pvt.request)
       checkMetrics(metrics.request)
-      checkAjax(ajax.request)
+      checkAjaxEvents(ajax.request)
       checkJsErrors(jserrors.request)
       checkPageAction(pa.request)
       checkSessionTrace(st.request)
@@ -63,7 +67,7 @@ describe.withBrowsersMatching(notIE)('Loaders', () => {
         browser.testHandle.expectAjaxEvents(),
         browser.testHandle.expectErrors(),
         browser.testHandle.expectIns(),
-        browser.testHandle.expectResources(),
+        browser.testHandle.expectTrace(10000),
         browser.testHandle.expectInteractionEvents(),
         browser.url(url)
           .then(() => browser.waitForAgentLoad())
@@ -74,7 +78,7 @@ describe.withBrowsersMatching(notIE)('Loaders', () => {
       checkRum(rum.request)
       checkPVT(pvt.request)
       checkMetrics(metrics.request)
-      checkAjax(ajax.request)
+      checkAjaxEvents(ajax.request)
       checkJsErrors(jserrors.request)
       checkPageAction(pa.request)
       checkSessionTrace(st.request)

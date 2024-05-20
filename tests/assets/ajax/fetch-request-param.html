@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Fetch Request Params</title>
+  {init} {config} {loader}
+</head>
+<body>
+<div>
+  This page uses a button to initiate a fetch using a `Request` instance. When running in a spec file, setting
+  `window.disableAjaxHashChange = true` will disable  the hash route change so the
+  ajax call is fully processed by the ajax feature instead of  the SPA feature.
+</div>
+<div><button id="sendAjax">Send Ajax</button></div>
+<script>
+  window.disableAjaxHashChange = false
+  document.getElementById('sendAjax').addEventListener('click', function () {
+    var request = new URL('/json', window.location)
+    fetch(request).then(function () {
+      if (!disableAjaxHashChange) {
+        window.location.hash = Math.random()
+      }
+    })
+  })
+</script>
+</body>
+</html>

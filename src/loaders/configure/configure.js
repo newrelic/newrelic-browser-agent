@@ -43,15 +43,19 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
 
     setTopLevelCallers() // no need to set global APIs on newrelic obj more than once
     addToNREUM('activatedFeatures', activatedFeatures)
+
+    // Update if soft_navigations is allowed to run AND part of this agent build, used to override old spa functions.
+    agent.runSoftNavOverSpa &&= (updatedInit.soft_navigations.enabled === true && updatedInit.feature_flags.includes('soft_nav'))
   }
 
   runtime.denyList = [
     ...(updatedInit.ajax.deny_list || []),
     ...(updatedInit.ajax.block_internal ? internalTrafficList : [])
   ]
+  runtime.ptid = agent.agentIdentifier
   setRuntime(agent.agentIdentifier, runtime)
 
-  if (agent.api === undefined) agent.api = setAPI(agent.agentIdentifier, forceDrain)
+  if (agent.api === undefined) agent.api = setAPI(agent.agentIdentifier, forceDrain, agent.runSoftNavOverSpa)
   if (agent.exposed === undefined) agent.exposed = exposed
   alreadySetOnce = true
 }

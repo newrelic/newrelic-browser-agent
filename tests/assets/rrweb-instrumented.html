@@ -18,18 +18,17 @@
         top: 200px;
       }
     </style>
-    <link rel="stylesheet" type="text/css" href="style.css" />
+    <link rel="stylesheet" type="text/css" href="style.css" /> 
     {init} {config} {loader}
     <script>
       window.wasPreloaded = false;
-        window.addEventListener("load", () => {
-          try{
-          const replayEvents = Object.values(newrelic.initializedAgents)[0].features.session_replay.recorder.getEvents();
-          window.wasPreloaded = !!replayEvents.events.length && replayEvents.type === "preloaded"
-          } catch(err){
-            // do nothing because it failed to get the recorder events -- which means they dont exist
-          }
-        });
+      window.addEventListener("load", () => {
+        try {
+          window.wasPreloaded = !!Object.values(newrelic.initializedAgents)[0].features.session_replay.recorder
+        } catch (err) {
+          // do nothing because it failed to get the recorder -- which inherently also means it was not preloaded
+        }
+      });
     </script>
   </head>
   <body>
@@ -42,9 +41,15 @@
     <textarea id="mask" class="nr-mask"></textarea>
     <textarea id="nr-block" data-nr-block></textarea>
     <textarea id="other-block" data-other-block></textarea>
+    <textarea id="unmask-class" class="nr-unmask"></textarea>
+    <textarea id="unmask-data" data-nr-unmask></textarea>
+    <input type="text" id="unmask-class" class="nr-unmask" />
+    <input type="text" id="unmask-data" data-nr-unmask />
+    <input type="password" id="unmask-pass-input" data-nr-unmask />
     <input type="password" id="pass-input" />
     <input type="text" id="text-input" />
     <hr />
+    <div id="content-editable-div" contenteditable="true">text</div>
     <button onclick="moveImage()">Click</button>
     <img src="https://upload.wikimedia.org/wikipedia/commons/d/d7/House_of_Commons_Chamber_1.png" />
     <a href="./rrweb-instrumented.html" target="_blank">New Tab</a>

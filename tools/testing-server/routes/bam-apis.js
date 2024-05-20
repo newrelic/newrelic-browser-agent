@@ -9,9 +9,6 @@ const { storeReplayData } = require('../utils/replay-buffer')
  * @param {TestServer} testServer test server instance
  */
 module.exports = fp(async function (fastify) {
-  fastify.get('/health', async function (request, reply) {
-    reply.code(204).send()
-  })
   fastify.route({
     method: ['GET', 'POST'],
     url: '/debug',
@@ -31,11 +28,13 @@ module.exports = fp(async function (fastify) {
       if (!request.query.jsonp) {
         return reply
           .header('content-type', 'application/json')
+          .header('Timing-Allow-Origin', request.headers.origin)
           .code(200)
           .send(JSON.stringify(rumFlags))
       } else {
         return reply
           .header('content-type', 'application/javascript')
+          .header('Timing-Allow-Origin', request.headers.origin)
           .code(200)
           .send(`${request.query.jsonp}(${JSON.stringify(rumFlags)})`)
       }

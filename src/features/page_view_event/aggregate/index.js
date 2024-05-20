@@ -1,4 +1,4 @@
-import { globalScope, isBrowserScope } from '../../../common/constants/runtime'
+import { globalScope, isBrowserScope, originTime } from '../../../common/constants/runtime'
 import { addPT, addPN } from '../../../common/timing/nav-timing'
 import { stringify } from '../../../common/util/stringify'
 import { getInfo, getRuntime } from '../../../common/config/config'
@@ -11,6 +11,12 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { firstContentfulPaint } from '../../../common/vitals/first-contentful-paint'
 import { firstPaint } from '../../../common/vitals/first-paint'
 import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
+import { drain } from '../../../common/drain/drain'
+import { FEATURE_NAMES } from '../../../loaders/features/features'
+import { handle } from '../../../common/event-emitter/handle'
+import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
+import { now } from '../../../common/timing/now'
+import { TimeKeeper } from '../../../common/timing/time-keeper'
 
 export class Aggregate extends AggregateBase {
   static featureName = CONSTANTS.FEATURE_NAME
@@ -20,10 +26,11 @@ export class Aggregate extends AggregateBase {
     this.timeToFirstByte = 0
     this.firstByteToWindowLoad = 0 // our "frontend" duration
     this.firstByteToDomContent = 0 // our "dom processing" duration
+    this.timeKeeper = new TimeKeeper(this.agentIdentifier)
 
     if (isBrowserScope) {
-      timeToFirstByte.subscribe(({ value, entries }) => {
-        const navEntry = entries[0]
+      timeToFirstByte.subscribe(({ value, attrs }) => {
+        const navEntry = attrs.navigationEntry
         this.timeToFirstByte = Math.max(value, this.timeToFirstByte)
         this.firstByteToWindowLoad = Math.max(Math.round(navEntry.loadEventEnd - this.timeToFirstByte), this.firstByteToWindowLoad) // our "frontend" duration
         this.firstByteToDomContent = Math.max(Math.round(navEntry.domContentLoadedEventEnd - this.timeToFirstByte), this.firstByteToDomContent) // our "dom processing" duration
@@ -80,13 +87,13 @@ export class Aggregate extends AggregateBase {
       if (typeof PerformanceNavigationTiming !== 'undefined') { // Navigation Timing level 2 API that replaced PerformanceTiming & PerformanceNavigation
         const navTimingEntry = globalScope?.performance?.getEntriesByType('navigation')?.[0]
         const perf = ({
-          timing: addPT(agentRuntime.offset, navTimingEntry, {}),
+          timing: addPT(originTime, navTimingEntry, {}),
           navigation: addPN(navTimingEntry, {})
         })
         queryParameters.perf = stringify(perf)
       } else if (typeof PerformanceTiming !== 'undefined') { // Safari pre-15 did not support level 2 timing
         const perf = ({
-          timing: addPT(agentRuntime.offset, globalScope.performance.timing, {}, true),
+          timing: addPT(originTime, globalScope.performance.timing, {}, true),
           navigation: addPN(globalScope.performance.navigation, {})
         })
         queryParameters.perf = stringify(perf)
@@ -96,23 +103,45 @@ export class Aggregate extends AggregateBase {
     queryParameters.fp = firstPaint.current.value
     queryParameters.fcp = firstContentfulPaint.current.value
 
+    if (this.timeKeeper?.ready) {
+      queryParameters.timestamp = this.timeKeeper.convertRelativeTimestamp(now())
+    }
+
+    const rumStartTime = now()
     harvester.send({
       endpoint: 'rum',
       payload: { qs: queryParameters, body },
       opts: { needResponse: true, sendEmptyBody: true },
-      cbFinished: ({ status, responseText }) => {
-        if (status >= 400) {
+      cbFinished: ({ status, responseText, xhr }) => {
+        const rumEndTime = now()
+
+        if (status >= 400 || status === 0) {
           // Adding retry logic for the rum call will be a separate change
           this.ee.abort()
           return
         }
 
         try {
-          activateFeatures(JSON.parse(responseText), this.agentIdentifier)
+          this.timeKeeper.processRumRequest(xhr, rumStartTime, rumEndTime)
+          if (!this.timeKeeper.ready) throw new Error('TimeKeeper not ready')
+
+          agentRuntime.timeKeeper = this.timeKeeper
+        } catch (error) {
+          handle(SUPPORTABILITY_METRIC_CHANNEL, ['PVE/NRTime/Calculation/Failed'], undefined, FEATURE_NAMES.metrics, this.ee)
+          drain(this.agentIdentifier, FEATURE_NAMES.metrics, true)
+          this.ee.abort()
+          warn('Could not calculate New Relic server time. Agent shutting down.', error)
+          return
+        }
+
+        try {
+          const { app, ...flags } = JSON.parse(responseText)
+          agentRuntime.appMetadata = app
+          activateFeatures(flags, this.agentIdentifier)
           this.drain()
         } catch (err) {
           this.ee.abort()
-          warn('RUM call failed. Agent shutting down.')
+          warn('RUM call failed. Agent shutting down.', err)
         }
       }
     })

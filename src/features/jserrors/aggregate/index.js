@@ -14,12 +14,14 @@ import { stringify } from '../../../common/util/stringify'
 import { handle } from '../../../common/event-emitter/handle'
 import { mapOwn } from '../../../common/util/map-own'
 import { getInfo, getConfigurationValue, getRuntime } from '../../../common/config/config'
-import { now } from '../../../common/timing/now'
 import { globalScope } from '../../../common/constants/runtime'
 
 import { FEATURE_NAME } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
+import { getNREUMInitializedAgent } from '../../../common/window/nreum'
+import { deregisterDrain } from '../../../common/drain/drain'
+import { now } from '../../../common/timing/now'
 
 /**
  * @typedef {import('./compute-stack-trace.js').StackInfo} StackInfo
@@ -33,36 +35,32 @@ export class Aggregate extends AggregateBase {
     this.stackReported = {}
     this.observedAt = {}
     this.pageviewReported = {}
-    this.errorCache = {}
+    this.bufferedErrorsUnderSpa = {}
     this.currentBody = undefined
     this.errorOnPage = false
 
     // this will need to change to match whatever ee we use in the instrument
-    this.ee.on('interactionSaved', (interaction) => this.onInteractionSaved(interaction))
-
-    // this will need to change to match whatever ee we use in the instrument
-    this.ee.on('interactionDiscarded', (interaction) => this.onInteractionDiscarded(interaction))
+    this.ee.on('interactionDone', (interaction, wasSaved) => this.onInteractionDone(interaction, wasSaved))
 
     register('err', (...args) => this.storeError(...args), this.featureName, this.ee)
     register('ierr', (...args) => this.storeError(...args), this.featureName, this.ee)
+    register('softNavFlush', (interactionId, wasFinished, softNavAttrs) =>
+      this.onSoftNavNotification(interactionId, wasFinished, softNavAttrs), this.featureName, this.ee) // when an ixn is done or cancelled
 
     const harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'jserrors.harvestTimeSeconds') || 10
 
-    const scheduler = new HarvestScheduler('jserrors', { onFinished: (...args) => this.onHarvestFinished(...args) }, this)
-    scheduler.harvest.on('jserrors', (...args) => this.onHarvestStarted(...args))
-
-    // Don't start harvesting until "drain" for this feat has been called (which currently requires RUM response).
-    this.ee.on(`drain-${this.featureName}`, () => {
-      if (!this.blocked) scheduler.startTimer(harvestTimeSeconds) // and only if ingest will accept jserror payloads
+    // 0 == off, 1 == on
+    this.waitForFlags(['err']).then(([errFlag]) => {
+      if (errFlag) {
+        const scheduler = new HarvestScheduler('jserrors', { onFinished: (...args) => this.onHarvestFinished(...args) }, this)
+        scheduler.harvest.on('jserrors', (...args) => this.onHarvestStarted(...args))
+        scheduler.startTimer(harvestTimeSeconds)
+        this.drain()
+      } else {
+        this.blocked = true // if rum response determines that customer lacks entitlements for spa endpoint, this feature shouldn't harvest
+        deregisterDrain(this.agentIdentifier, this.featureName)
+      }
     })
-
-    // If RUM-call's response determines that customer lacks entitlements for the /jserror ingest endpoint, don't harvest at all.
-    register('block-err', () => {
-      this.blocked = true
-      scheduler.stopTimer(true)
-    }, this.featureName, this.ee)
-
-    this.drain()
   }
 
   onHarvestStarted (options) {
@@ -80,10 +78,14 @@ export class Aggregate extends AggregateBase {
       payload.qs.ri = releaseIds
     }
 
-    if (body && body.err && body.err.length && !this.errorOnPage) {
-      payload.qs.pve = '1'
-      this.errorOnPage = true
+    if (body && body.err && body.err.length) {
+      this.#runCrossFeatureChecks(body.err)
+      if (!this.errorOnPage) {
+        payload.qs.pve = '1'
+        this.errorOnPage = true
+      }
     }
+
     return payload
   }
 
@@ -135,7 +137,8 @@ export class Aggregate extends AggregateBase {
     return canonicalStackString
   }
 
-  storeError (err, time, internal, customAttributes) {
+  storeError (err, time, internal, customAttributes, hasReplay) {
+    if (!err) return
     // are we in an interaction
     time = time || now()
     const agentRuntime = getRuntime(this.agentIdentifier)
@@ -164,18 +167,19 @@ export class Aggregate extends AggregateBase {
     // Do not modify the name ('errorGroup') of params without DEM approval!
     if (filterOutput?.group) params.errorGroup = filterOutput.group
 
+    if (hasReplay) params.hasReplay = hasReplay
     /**
      * The bucketHash is different from the params.stackHash because the params.stackHash is based on the canonicalized
      * stack trace and is used downstream in NR1 to attempt to group the same errors across different browsers. However,
      * the canonical stack trace excludes items like the column number increasing the hit-rate of different errors potentially
      * bucketing and ultimately resulting in the loss of data in NR1.
      */
-    var bucketHash = stringHashCode(`${stackInfo.name}_${stackInfo.message}_${stackInfo.stackString}`)
+    var bucketHash = stringHashCode(`${stackInfo.name}_${stackInfo.message}_${stackInfo.stackString}_${params.hasReplay ? 1 : 0}`)
 
     if (!this.stackReported[bucketHash]) {
       this.stackReported[bucketHash] = true
       params.stack_trace = truncateSize(stackInfo.stackString)
-      this.observedAt[bucketHash] = agentRuntime.offset + time
+      this.observedAt[bucketHash] = agentRuntime.timeKeeper.convertRelativeTimestamp(time)
     } else {
       params.browser_stack_hash = stringHashCode(stackInfo.stackString)
     }
@@ -191,104 +195,128 @@ export class Aggregate extends AggregateBase {
       this.pageviewReported[bucketHash] = true
     }
 
-    if (agentRuntime?.session?.state?.sessionReplayMode) params.hasReplay = true
     params.firstOccurrenceTimestamp = this.observedAt[bucketHash]
+    params.timestamp = agentRuntime.timeKeeper.convertRelativeTimestamp(time)
 
     var type = internal ? 'ierr' : 'err'
     var newMetrics = { time }
 
-    // sr, stn and spa aggregators listen to this event - stn sends the error in its payload,
-    // and spa annotates the error with interaction info
-    const msg = [type, bucketHash, params, newMetrics]
-    handle('errorAgg', msg, undefined, FEATURE_NAMES.sessionTrace, this.ee)
-    handle('errorAgg', msg, undefined, FEATURE_NAMES.spa, this.ee)
-    handle('errorAgg', msg, undefined, FEATURE_NAMES.sessionReplay, this.ee)
-
+    // Trace sends the error in its payload, and both trace & replay simply listens for any error to occur.
+    const jsErrorEvent = [type, bucketHash, params, newMetrics, customAttributes]
+    handle('trace-jserror', jsErrorEvent, undefined, FEATURE_NAMES.sessionTrace, this.ee)
     // still send EE events for other features such as above, but stop this one from aggregating internal data
     if (this.blocked) return
-    var att = getInfo(this.agentIdentifier).jsAttributes
-    if (params._interactionId != null) {
-      // hold on to the error until the interaction finishes
-      this.errorCache[params._interactionId] = this.errorCache[params._interactionId] || []
-      this.errorCache[params._interactionId].push([type, bucketHash, params, newMetrics, att, customAttributes])
-    } else {
-      // store custom attributes
-      var customParams = {}
-      mapOwn(att, setCustom)
-      if (customAttributes) {
-        mapOwn(customAttributes, setCustom)
-      }
 
-      var jsAttributesHash = stringHashCode(stringify(customParams))
-      var aggregateHash = bucketHash + ':' + jsAttributesHash
-      this.aggregator.store(type, aggregateHash, params, newMetrics, customParams)
+    if (err?.__newrelic?.[this.agentIdentifier]) {
+      params._interactionId = err.__newrelic[this.agentIdentifier].interactionId
+      params._interactionNodeId = err.__newrelic[this.agentIdentifier].interactionNodeId
     }
+
+    const softNavInUse = Boolean(getNREUMInitializedAgent(this.agentIdentifier)?.features[FEATURE_NAMES.softNav])
+    // Note: the following are subject to potential race cond wherein if the other feature aren't fully initialized, it'll be treated as there being no associated interaction.
+    // They each will also tack on their respective properties to the params object as part of the decision flow.
+    if (softNavInUse) handle('jserror', [params, time], undefined, FEATURE_NAMES.softNav, this.ee)
+    else handle('spa-jserror', jsErrorEvent, undefined, FEATURE_NAMES.spa, this.ee)
+
+    if (params.browserInteractionId && !params._softNavFinished) { // hold onto the error until the in-progress interaction is done, eithered saved or discarded
+      this.bufferedErrorsUnderSpa[params.browserInteractionId] ??= []
+      this.bufferedErrorsUnderSpa[params.browserInteractionId].push(jsErrorEvent)
+    } else if (params._interactionId != null) { // same as above, except tailored for the way old spa does it
+      this.bufferedErrorsUnderSpa[params._interactionId] = this.bufferedErrorsUnderSpa[params._interactionId] || []
+      this.bufferedErrorsUnderSpa[params._interactionId].push(jsErrorEvent)
+    } else {
+      // Either there is no interaction (then all these params properties will be undefined) OR there's a related soft navigation that's already completed.
+      // The old spa does not look up completed interactions at all, so there's no need to consider it.
+      this.#storeJserrorForHarvest(jsErrorEvent, params.browserInteractionId !== undefined, params._softNavAttributes)
+    }
+  }
+
+  #storeJserrorForHarvest (errorInfoArr, softNavOccurredFinished, softNavCustomAttrs = {}) {
+    let [type, bucketHash, params, newMetrics, localAttrs] = errorInfoArr
+    const allCustomAttrs = {}
+
+    if (softNavOccurredFinished) {
+      Object.entries(softNavCustomAttrs).forEach(([k, v]) => setCustom(k, v)) // when an ixn finishes, it'll include stuff in jsAttributes + attrs specific to the ixn
+      bucketHash += params.browserInteractionId
+
+      delete params._softNavAttributes // cleanup temp properties from synchronous evaluation; this is harmless when async from soft nav (properties DNE)
+      delete params._softNavFinished
+    } else { // interaction was cancelled -> error should not be associated OR there was no interaction
+      Object.entries(getInfo(this.agentIdentifier).jsAttributes).forEach(([k, v]) => setCustom(k, v))
+      delete params.browserInteractionId
+    }
+    if (localAttrs) Object.entries(localAttrs).forEach(([k, v]) => setCustom(k, v)) // local custom attrs are applied in either case with the highest precedence
+
+    const jsAttributesHash = stringHashCode(stringify(allCustomAttrs))
+    const aggregateHash = bucketHash + ':' + jsAttributesHash
+    this.aggregator.store(type, aggregateHash, params, newMetrics, allCustomAttrs)
 
     function setCustom (key, val) {
-      customParams[key] = (val && typeof val === 'object' ? stringify(val) : val)
+      allCustomAttrs[key] = (val && typeof val === 'object' ? stringify(val) : val)
     }
   }
 
-  onInteractionSaved (interaction) {
-    if (!this.errorCache[interaction.id] || this.blocked) return
+  // TO-DO: Remove this function when old spa is taken out. #storeJserrorForHarvest handles the work with the softnav feature.
+  onInteractionDone (interaction, wasSaved) {
+    if (!this.bufferedErrorsUnderSpa[interaction.id] || this.blocked) return
 
-    this.errorCache[interaction.id].forEach((item) => {
-      var customParams = {}
-      var globalCustomParams = item[4]
-      var localCustomParams = item[5]
+    this.bufferedErrorsUnderSpa[interaction.id].forEach((item) => {
+      var allCustomAttrs = {}
+      const localCustomAttrs = item[4]
 
-      mapOwn(globalCustomParams, setCustom)
-      mapOwn(interaction.root.attrs.custom, setCustom)
-      mapOwn(localCustomParams, setCustom)
-
-      var params = item[2]
-      params.browserInteractionId = interaction.root.attrs.id
-      delete params._interactionId
-
-      if (params._interactionNodeId) {
-        params.parentNodeId = params._interactionNodeId.toString()
-        delete params._interactionNodeId
-      }
-
-      var hash = item[1] + interaction.root.attrs.id
-      var jsAttributesHash = stringHashCode(stringify(customParams))
-      var aggregateHash = hash + ':' + jsAttributesHash
-
-      this.aggregator.store(item[0], aggregateHash, params, item[3], customParams)
-
-      function setCustom (key, val) {
-        customParams[key] = (val && typeof val === 'object' ? stringify(val) : val)
-      }
-    })
-    delete this.errorCache[interaction.id]
-  }
-
-  onInteractionDiscarded (interaction) {
-    if (!this.errorCache || !this.errorCache[interaction.id] || this.blocked) return
-
-    this.errorCache[interaction.id].forEach((item) => {
-      var customParams = {}
-      var globalCustomParams = item[4]
-      var localCustomParams = item[5]
-
-      mapOwn(globalCustomParams, setCustom)
-      mapOwn(interaction.root.attrs.custom, setCustom)
-      mapOwn(localCustomParams, setCustom)
+      mapOwn(interaction.root.attrs.custom, setCustom) // tack on custom attrs from the interaction
+      mapOwn(localCustomAttrs, setCustom)
 
       var params = item[2]
+      if (wasSaved) {
+        params.browserInteractionId = interaction.root.attrs.id
+        if (params._interactionNodeId) params.parentNodeId = params._interactionNodeId.toString()
+      }
       delete params._interactionId
       delete params._interactionNodeId
 
-      var hash = item[1]
-      var jsAttributesHash = stringHashCode(stringify(customParams))
+      var hash = wasSaved ? item[1] + interaction.root.attrs.id : item[1]
+      var jsAttributesHash = stringHashCode(stringify(allCustomAttrs))
       var aggregateHash = hash + ':' + jsAttributesHash
 
-      this.aggregator.store(item[0], aggregateHash, item[2], item[3], customParams)
+      this.aggregator.store(item[0], aggregateHash, params, item[3], allCustomAttrs)
 
       function setCustom (key, val) {
-        customParams[key] = (val && typeof val === 'object' ? stringify(val) : val)
+        allCustomAttrs[key] = (val && typeof val === 'object' ? stringify(val) : val)
       }
     })
-    delete this.errorCache[interaction.id]
+    delete this.bufferedErrorsUnderSpa[interaction.id]
+  }
+
+  onSoftNavNotification (interactionId, wasFinished, softNavAttrs) {
+    if (this.blocked) return
+
+    this.bufferedErrorsUnderSpa[interactionId]?.forEach(jsErrorEvent =>
+      this.#storeJserrorForHarvest(jsErrorEvent, wasFinished, softNavAttrs) // this should not modify the re-used softNavAttrs contents
+    )
+    delete this.bufferedErrorsUnderSpa[interactionId] // wipe the list of jserrors so they aren't duplicated by another call to the same id
+  }
+
+  /**
+   * Dispatches a cross-feature communication event to allow other
+   * features to provide flags and data that can be used to mutation
+   * to the payload and to allow features to know about a feature
+   * harvest happening.
+   * @param {any[]} errors Array of errors from the payload body
+   */
+  #runCrossFeatureChecks (errors) {
+    const errorHashes = errors.map(error => error.params.stackHash)
+    const crossFeatureData = {
+      errorHashes
+    }
+    this.ee.emit(`cfc.${this.featureName}`, [crossFeatureData])
+
+    let hasReplayFlag = errors.find(err => err.params.hasReplay)
+    if (hasReplayFlag && !crossFeatureData.hasReplay) {
+      // Some errors have `hasReplay` and a replay is not being recorded
+      errors.forEach(error => {
+        delete error.params.hasReplay
+      })
+    }
   }
 }

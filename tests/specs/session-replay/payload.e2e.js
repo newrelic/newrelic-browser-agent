@@ -1,5 +1,5 @@
-import { config, testExpectedReplay } from './helpers'
-import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { decodeAttributes, srConfig, testExpectedReplay } from '../util/helpers'
+import { notIE, notIOS, notSafari } from '../../../tools/browser-matcher/common-matchers.mjs'
 
 describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => {
   beforeEach(async () => {
@@ -10,11 +10,27 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
     await browser.destroyAgentSession()
   })
 
-  it('should allow for gzip', async () => {
-    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
-      .then(() => browser.waitForAgentLoad())
+  it('should use rumResponse agent metadata', async () => {
+    const [rumCall] = await Promise.all([
+      browser.testHandle.expectRum(),
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
+        .then(() => browser.waitForAgentLoad())
+    ])
 
-    const { request: harvestContents } = await browser.testHandle.expectBlob()
+    const { request: harvestContents } = await browser.testHandle.expectReplay()
+    const agentMetadata = JSON.parse(rumCall.reply.body).app
+    testExpectedReplay({ data: harvestContents, entityGuid: agentMetadata.agents[0].entityGuid })
+  })
+
+  it('should allow for gzip', async () => {
+    const [{ request: harvestContents }] = await Promise.all([
+      browser.testHandle.expectReplay(),
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
+        .then(() => browser.waitForAgentLoad())
+        .then(() => browser.execute(function () {
+          newrelic.noticeError(new Error('test'))
+        }))
+    ])
 
     expect((
       harvestContents.query.attributes.includes('content_encoding') &&
@@ -37,8 +53,8 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
     })
 
     const [{ request: harvestContents }] = await Promise.all([
-      browser.testHandle.expectBlob(),
-      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
+      browser.testHandle.expectReplay(),
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
         .then(() => browser.waitForAgentLoad())
     ])
 
@@ -53,49 +69,75 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
   })
 
   it('should match expected payload - standard', async () => {
-    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
-      .then(() => browser.waitForAgentLoad())
+    const [{ request: harvestContents }] = await Promise.all([
+      browser.testHandle.expectReplay(),
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
+        .then(() => browser.waitForAgentLoad())
+    ])
 
-    const { request: harvestContents } = await browser.testHandle.expectBlob()
     const { localStorage } = await browser.getAgentSessionInfo()
 
     testExpectedReplay({ data: harvestContents, session: localStorage.value, hasError: false, hasMeta: true, hasSnapshot: true, isFirstChunk: true })
   })
 
   it('should match expected payload - error', async () => {
-    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
-      .then(() => browser.waitForAgentLoad())
-
-    const [{ request: harvestContents }] = await Promise.all([
-      browser.testHandle.expectBlob(),
-      browser.execute(function () {
-        newrelic.noticeError(new Error('test'))
-      })
+    const [{ request: harvestContents1 }, { request: harvestContents2 }] = await Promise.all([
+      browser.testHandle.expectReplay(),
+      browser.testHandle.expectReplay(),
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
+        .then(() => browser.waitForAgentLoad())
+        .then(() => browser.execute(function () {
+          newrelic.noticeError(new Error('test'))
+        }))
     ])
     const { localStorage } = await browser.getAgentSessionInfo()
 
-    testExpectedReplay({ data: harvestContents, session: localStorage.value, hasError: true, hasMeta: true, hasSnapshot: true, isFirstChunk: true })
+    testExpectedReplay({ data: harvestContents1, session: localStorage.value, hasMeta: true, hasSnapshot: true, isFirstChunk: true })
+    testExpectedReplay({ data: harvestContents2, session: localStorage.value, hasMeta: false, hasSnapshot: false, isFirstChunk: false })
+    const hasError = decodeAttributes(harvestContents1.query.attributes).hasError || decodeAttributes(harvestContents2.query.attributes).hasError
+    expect(hasError).toBeTruthy()
   })
 
-  it('should handle meta if separated', async () => {
-    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', config()))
-      .then(() => browser.waitForAgentLoad())
-
-    const events = await browser.execute(function () {
-      var instance = Object.values(newrelic.initializedAgents)[0]
-      return instance.features.session_replay.featAggregate.recorder.getEvents().events.filter(x => x.type !== 4)
+  /**
+   * auto-inlining broken stylesheets does not work in safari browsers < 16.3
+   * current mitigation strategy is defined as informing customers to add `crossOrigin: anonymous` tags to cross-domain stylesheets
+  */
+  it.withBrowsersMatching([notSafari, notIOS])('should place inlined css for cross origin stylesheets even if no crossOrigin tag', async () => {
+    /** snapshot and mutation payloads */
+    const [{ request: { body: snapshot1, query: snapshot1Query } }] = await Promise.all([
+      browser.testHandle.expectSessionReplaySnapshot(10000),
+      browser.url(await browser.testHandle.assetURL('rrweb-invalid-stylesheet.html', srConfig()))
+        .then(() => browser.waitForFeatureAggregate('session_replay'))
+    ])
+    const snapshot1Nodes = snapshot1.filter(x => x.type === 2)
+    expect(decodeAttributes(snapshot1Query.attributes).inlinedAllStylesheets).toEqual(true)
+    snapshot1Nodes.forEach(snapshotNode => {
+      const htmlNode = snapshotNode.data.node.childNodes.find(x => x.tagName === 'html')
+      const headNode = htmlNode.childNodes.find(x => x.tagName === 'head')
+      const linkNodes = headNode.childNodes.filter(x => x.tagName === 'link')
+      linkNodes.forEach(linkNode => {
+        expect(!!linkNode.attributes._cssText).toEqual(true)
+      })
     })
-
-    expect(events.find(x => x.type === 4)).toEqual(undefined)
-
-    const [{ request: harvestContents }] = await Promise.all([
-      browser.testHandle.expectBlob(),
+    await browser.pause(5000)
+    /** Agent should generate a new snapshot after a new "invalid" stylesheet is injected */
+    const [{ request: { body: snapshot2, query: snapshot2Query } }] = await Promise.all([
+      browser.testHandle.expectSessionReplaySnapshot(10000),
       browser.execute(function () {
-        newrelic.noticeError(new Error('test'))
+        var newelem = document.createElement('span')
+        newelem.innerHTML = 'this is some text'
+        document.body.appendChild(newelem)
       })
     ])
-    const { localStorage } = await browser.getAgentSessionInfo()
-
-    testExpectedReplay({ data: harvestContents, session: localStorage.value, hasError: true, hasMeta: true, hasSnapshot: true, isFirstChunk: true })
+    expect(decodeAttributes(snapshot2Query.attributes).inlinedAllStylesheets).toEqual(true)
+    const snapshot2Nodes = snapshot2.filter(x => x.type === 2)
+    snapshot2Nodes.forEach(snapshotNode => {
+      const htmlNode = snapshotNode.data.node.childNodes.find(x => x.tagName === 'html')
+      const headNode = htmlNode.childNodes.find(x => x.tagName === 'head')
+      const linkNodes = headNode.childNodes.filter(x => x.tagName === 'link')
+      linkNodes.forEach(linkNode => {
+        expect(!!linkNode.attributes._cssText).toEqual(true)
+      })
+    })
   })
 })

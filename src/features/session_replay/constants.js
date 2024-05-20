@@ -3,6 +3,13 @@ import { FEATURE_NAMES } from '../../loaders/features/features'
 
 export const FEATURE_NAME = FEATURE_NAMES.sessionReplay
 
+export const SR_EVENT_EMITTER_TYPES = {
+  RECORD: 'recordReplay',
+  PAUSE: 'pauseReplay',
+  REPLAY_RUNNING: 'replayRunning',
+  ERROR_DURING_REPLAY: 'errorDuringReplay'
+}
+
 export const AVG_COMPRESSION = 0.12
 export const RRWEB_EVENT_TYPES = {
   DomContentLoaded: 0,
@@ -46,3 +53,7 @@ export const ABORT_REASONS = {
 }
 /** Reserved room for query param attrs */
 export const QUERY_PARAM_PADDING = 5000
+
+export const TRIGGERS = {
+  API: 'api'
+}

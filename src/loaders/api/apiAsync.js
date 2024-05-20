@@ -6,6 +6,7 @@ import { registerHandler } from '../../common/event-emitter/register-handler'
 import { single } from '../../common/util/invoke'
 import { CUSTOM_METRIC_CHANNEL } from '../../features/metrics/constants'
 import { pageActions } from '../../common/generic-events/page-actions'
+import { originTime } from '../../common/constants/runtime'
 
 export function setAPI (agentIdentifier) {
   var instanceEE = ee.get(agentIdentifier)
@@ -29,9 +30,9 @@ export function setAPI (agentIdentifier) {
   }
 
   function finished (t, providedTime) {
-    var time = providedTime ? providedTime - getRuntime(agentIdentifier).offset : t
+    var time = providedTime ? providedTime - originTime : t
     handle(CUSTOM_METRIC_CHANNEL, ['finished', { time }], undefined, FEATURE_NAMES.metrics, instanceEE)
-    addToTrace(t, { name: 'finished', start: time + getRuntime(agentIdentifier).offset, origin: 'nr' })
+    addToTrace(t, { name: 'finished', start: time + originTime, origin: 'nr' })
     handle('api-addPageAction', [time, 'finished'], undefined, FEATURE_NAMES.pageAction, instanceEE)
   }
 
@@ -40,8 +41,8 @@ export function setAPI (agentIdentifier) {
 
     var report = {
       n: evt.name,
-      s: evt.start - getRuntime(agentIdentifier).offset,
-      e: (evt.end || evt.start) - getRuntime(agentIdentifier).offset,
+      s: evt.start - originTime,
+      e: (evt.end || evt.start) - originTime,
       o: evt.origin || '',
       t: 'api'
     }

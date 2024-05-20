@@ -19,10 +19,6 @@ For JIL unit tests, the asset server uses [browserify](https://www.npmjs.com/pac
 
 The asset server also contains a number of API routes that are used in JIL test cases. See `testRoutes` in `src/asset-server.js`.
 
-### CORS Server
-
-The cors server is a subset of the asset server that only contains the `testRoutes` and is used in XHR tests within JIL unit tests.
-
 ### BAM Server
 
 The BAM server contains routes for all the ingest endpoints the agent sends collected data to.

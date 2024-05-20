@@ -24,6 +24,7 @@ const model = {
   sessionReplaySentFirstChunk: false,
   sessionTraceMode: MODE.OFF,
   traceHarvestStarted: false,
+  serverTimeDiff: null, // set by TimeKeeper; "undefined" value will not be stringified and stored but "null" will
   custom: {}
 }
 
@@ -63,8 +64,10 @@ export class SessionEntity {
   }
 
   setup ({ value = generateRandomHexString(16), expiresMs = DEFAULT_EXPIRES_MS, inactiveMs = DEFAULT_INACTIVE_MS }) {
+    /** Ensure that certain properties are preserved across a reset if already set */
+    const persistentAttributes = { serverTimeDiff: this.state.serverTimeDiff || model.serverTimeDiff }
     this.state = {}
-    this.sync(model)
+    this.sync({ ...model, ...persistentAttributes })
 
     // value is intended to act as the primary value of the k=v pair
     this.state.value = value
@@ -117,7 +120,8 @@ export class SessionEntity {
           this.write(getModeledObject(this.state, model))
         },
         ee: this.ee,
-        refreshEvents: ['click', 'keydown', 'scroll']
+        refreshEvents: ['click', 'keydown', 'scroll'],
+        readStorage: () => this.storage.get(this.lookupKey)
       }, this.state.inactiveAt - Date.now())
     } else {
       this.state.inactiveAt = Infinity
@@ -125,13 +129,16 @@ export class SessionEntity {
 
     // The fact that the session is "new" or pre-existing is used in some places in the agent.  Session Replay and Trace
     // can use this info to inform whether to trust a new sampling decision vs continue a previous tracking effort.
-    this.isNew = !Object.keys(initialRead).length
+    /* [NR-230914] 02/2024 - the logical OR assignment is used so that isNew remains 'true' if it was already set as such. This fixes the expires and inactive timestamps timing out in localStorage
+      while no page for a given domain is in-use and the session resetting upon user returning to the page as part of a fresh session. */
+    this.isNew ||= !Object.keys(initialRead).length
     // if its a "new" session, we write to storage API with the default values.  These values may change over the lifespan of the agent run.
     // we can use a modeled object here to help us know and manage what values are being used. -- see "model" above
     if (this.isNew) this.write(getModeledObject(this.state, model), true)
     else this.sync(initialRead)
 
     this.initialized = true
+    this.ee.emit(SESSION_EVENTS.STARTED, [this.isNew])
   }
 
   // This is the actual key appended to the storage API

@@ -12,7 +12,7 @@
 
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
-import { ABORT_REASONS, FEATURE_NAME, MAX_PAYLOAD_SIZE, QUERY_PARAM_PADDING, RRWEB_EVENT_TYPES } from '../constants'
+import { ABORT_REASONS, FEATURE_NAME, MAX_PAYLOAD_SIZE, QUERY_PARAM_PADDING, RRWEB_EVENT_TYPES, SR_EVENT_EMITTER_TYPES, TRIGGERS } from '../constants'
 import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { sharedChannel } from '../../../common/constants/shared-channel'
@@ -23,14 +23,17 @@ import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { handle } from '../../../common/event-emitter/handle'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { RRWEB_VERSION } from '../../../common/constants/env'
-import { now } from '../../../common/timing/now'
 import { MODE, SESSION_EVENTS, SESSION_EVENT_TYPES } from '../../../common/session/constants'
 import { stringify } from '../../../common/util/stringify'
-
-let gzipper, u8
+import { stylesheetEvaluator } from '../shared/stylesheet-evaluator'
+import { deregisterDrain } from '../../../common/drain/drain'
+import { now } from '../../../common/timing/now'
+import { buildNRMetaNode } from '../shared/utils'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
+  mode = MODE.OFF
+
   // pass the recorder into the aggregator
   constructor (agentIdentifier, aggregator, args) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
@@ -40,104 +43,121 @@ export class Aggregate extends AggregateBase {
     this.initialized = false
     /** Set once the feature has been "aborted" to prevent other side-effects from continuing */
     this.blocked = false
-    /** can shut off efforts to compress the data */
-    this.shouldCompress = true
-    /** the mode to start in.  Defaults to off */
-    const { session } = getRuntime(this.agentIdentifier)
-    this.mode = session.state.sessionReplayMode || MODE.OFF
+    /** populated with the gzipper lib async */
+    this.gzipper = undefined
+    /** populated with the u8 string lib async */
+    this.u8 = undefined
 
     /** set by BCS response */
     this.entitled = false
+    /** set at BCS response, stored in runtime */
+    this.timeKeeper = undefined
 
     this.recorder = args?.recorder
-    if (this.recorder) this.recorder.parent = this
+    this.errorNoticed = args?.errorNoticed || false
 
-    const shouldSetup = (
-      getConfigurationValue(agentIdentifier, 'privacy.cookies_enabled') === true &&
-      getConfigurationValue(agentIdentifier, 'session_trace.enabled') === true
-    )
+    handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/Enabled'], undefined, FEATURE_NAMES.metrics, this.ee)
 
-    if (shouldSetup) {
-      // The SessionEntity class can emit a message indicating the session was cleared and reset (expiry, inactivity). This feature must abort and never resume if that occurs.
-      this.ee.on(SESSION_EVENTS.RESET, () => {
-        this.scheduler.runHarvest()
-        this.abort(ABORT_REASONS.RESET)
-      })
+    this.ee.on(`cfc.${FEATURE_NAMES.jserrors}`, (crossFeatureData) => {
+      crossFeatureData.hasReplay = !!(this.scheduler?.started &&
+        this.recorder &&
+        this.mode === MODE.FULL &&
+        !this.blocked &&
+        this.entitled)
+    })
 
-      // The SessionEntity class can emit a message indicating the session was paused (visibility change). This feature must stop recording if that occurs.
-      this.ee.on(SESSION_EVENTS.PAUSE, () => { this.recorder?.stopRecording() })
-      // The SessionEntity class can emit a message indicating the session was resumed (visibility change). This feature must start running again (if already running) if that occurs.
-      this.ee.on(SESSION_EVENTS.RESUME, () => {
-        if (!this.recorder) return
-        // if the mode changed on a different tab, it needs to update this instance to match
-        const { session } = getRuntime(this.agentIdentifier)
-        this.mode = session.state.sessionReplayMode
-        if (!this.initialized || this.mode === MODE.OFF) return
-        this.recorder?.startRecording()
-      })
+    // The SessionEntity class can emit a message indicating the session was cleared and reset (expiry, inactivity). This feature must abort and never resume if that occurs.
+    this.ee.on(SESSION_EVENTS.RESET, () => {
+      this.abort(ABORT_REASONS.RESET)
+    })
 
-      this.ee.on(SESSION_EVENTS.UPDATE, (type, data) => {
-        if (!this.recorder || !this.initialized || this.blocked || type !== SESSION_EVENT_TYPES.CROSS_TAB) return
-        if (this.mode !== MODE.OFF && data.sessionReplayMode === MODE.OFF) this.abort(ABORT_REASONS.CROSS_TAB)
-        this.mode = data.sessionReplay
-      })
+    // The SessionEntity class can emit a message indicating the session was paused (visibility change). This feature must stop recording if that occurs.
+    this.ee.on(SESSION_EVENTS.PAUSE, () => { this.recorder?.stopRecording() })
+    // The SessionEntity class can emit a message indicating the session was resumed (visibility change). This feature must start running again (if already running) if that occurs.
+    this.ee.on(SESSION_EVENTS.RESUME, () => {
+      if (!this.recorder) return
+      // if the mode changed on a different tab, it needs to update this instance to match
+      const { session } = getRuntime(this.agentIdentifier)
+      this.mode = session.state.sessionReplayMode
+      if (!this.initialized || this.mode === MODE.OFF) return
+      this.recorder?.startRecording()
+    })
 
-      // Bespoke logic for blobs endpoint.
-      this.scheduler = new HarvestScheduler('browser/blobs', {
-        onFinished: this.onHarvestFinished.bind(this),
-        retryDelay: this.harvestTimeSeconds,
-        getPayload: this.prepareHarvest.bind(this),
-        raw: true
-      }, this)
+    this.ee.on(SESSION_EVENTS.UPDATE, (type, data) => {
+      if (!this.recorder || !this.initialized || this.blocked || type !== SESSION_EVENT_TYPES.CROSS_TAB) return
+      if (this.mode !== MODE.OFF && data.sessionReplayMode === MODE.OFF) this.abort(ABORT_REASONS.CROSS_TAB)
+      this.mode = data.sessionReplay
+    })
 
-      registerHandler('recordReplay', () => {
-        // if it has aborted or BCS returned bad entitlements, do not allow
-        if (this.blocked || !this.entitled) return
-        // if it isnt already (fully) initialized... initialize it
-        if (!this.recorder) this.initializeRecording(false, true, true)
-        // its been initialized and imported the recorder but its not recording (mode === off || error)
-        else if (this.mode !== MODE.FULL) this.switchToFull()
-        // if it gets all the way to here, that means a full session is already recording... do nothing
-      }, this.featureName, this.ee)
+    // Bespoke logic for blobs endpoint.
+    this.scheduler = new HarvestScheduler('browser/blobs', {
+      onFinished: this.onHarvestFinished.bind(this),
+      retryDelay: this.harvestTimeSeconds,
+      getPayload: this.prepareHarvest.bind(this),
+      raw: true
+    }, this)
 
-      registerHandler('pauseReplay', () => {
-        this.forceStop(this.mode !== MODE.ERROR)
-      }, this.featureName, this.ee)
+    registerHandler(SR_EVENT_EMITTER_TYPES.PAUSE, () => {
+      this.forceStop(this.mode !== MODE.ERROR)
+    }, this.featureName, this.ee)
 
-      // Wait for an error to be reported.  This currently is wrapped around the "Error" feature.  This is a feature-feature dependency.
-      // This was to ensure that all errors, including those on the page before load and those handled with "noticeError" are accounted for. Needs evalulation
-      registerHandler('errorAgg', (e) => {
-        this.errorNoticed = true
-        if (this.recorder) this.recorder.currentBufferTarget.hasError = true
-        // run once
-        if (this.mode === MODE.ERROR && globalScope?.document.visibilityState === 'visible') {
-          this.switchToFull()
+    registerHandler(SR_EVENT_EMITTER_TYPES.ERROR_DURING_REPLAY, e => {
+      this.handleError(e)
+    }, this.featureName, this.ee)
+
+    const { error_sampling_rate, sampling_rate, autoStart, block_selector, mask_text_selector, mask_all_inputs, inline_stylesheet, inline_images, collect_fonts } = getConfigurationValue(this.agentIdentifier, 'session_replay')
+
+    this.waitForFlags(['srs', 'sr']).then(([srMode, entitled]) => {
+      this.entitled = !!entitled
+      if (!this.entitled) {
+        deregisterDrain(this.agentIdentifier, this.featureName)
+        if (this.recorder?.recording) {
+          this.abort(ABORT_REASONS.ENTITLEMENTS)
+          handle(SUPPORTABILITY_METRIC_CHANNEL, ['SessionReplay/EnabledNotEntitled/Detected'], undefined, FEATURE_NAMES.metrics, this.ee)
         }
-      }, this.featureName, this.ee)
-
-      this.waitForFlags(['sr']).then(([flagOn]) => {
-        this.entitled = flagOn
-        if (!this.entitled && this.recorder?.recording) this.recorder.abort(ABORT_REASONS.ENTITLEMENTS)
-        this.initializeRecording(
-          (Math.random() * 100) < getConfigurationValue(this.agentIdentifier, 'session_replay.error_sampling_rate'),
-          (Math.random() * 100) < getConfigurationValue(this.agentIdentifier, 'session_replay.sampling_rate')
-        )
-      }).then(() => sharedChannel.onReplayReady(this.mode)) // notify watchers that replay started with the mode
-
+        return
+      }
       this.drain()
+      this.initializeRecording(srMode)
+    }).then(() => {
+      if (this.mode === MODE.OFF) {
+        this.recorder?.stopRecording() // stop any conservative preload recording launched by instrument
+        while (this.recorder?.getEvents().events.length) this.recorder?.clearBuffer?.()
+      }
+      sharedChannel.onReplayReady(this.mode)
+    }) // notify watchers that replay started with the mode
+
+    /** Detect if the default configs have been altered and report a SM.  This is useful to evaluate what the reasonable defaults are across a customer base over time */
+    if (!autoStart) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/AutoStart/Modified'], undefined, FEATURE_NAMES.metrics, this.ee)
+    if (collect_fonts === true) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/CollectFonts/Modified'], undefined, FEATURE_NAMES.metrics, this.ee)
+    if (inline_stylesheet !== true) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/InlineStylesheet/Modified'], undefined, FEATURE_NAMES.metrics, this.ee)
+    if (inline_images === true) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/InlineImages/Modifed'], undefined, FEATURE_NAMES.metrics, this.ee)
+    if (mask_all_inputs !== true) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/MaskAllInputs/Modified'], undefined, FEATURE_NAMES.metrics, this.ee)
+    if (block_selector !== '[data-nr-block]') handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/BlockSelector/Modified'], undefined, FEATURE_NAMES.metrics, this.ee)
+    if (mask_text_selector !== '*') handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/MaskTextSelector/Modified'], undefined, FEATURE_NAMES.metrics, this.ee)
+
+    handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/SamplingRate/Value', sampling_rate], undefined, FEATURE_NAMES.metrics, this.ee)
+    handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/ErrorSamplingRate/Value', error_sampling_rate], undefined, FEATURE_NAMES.metrics, this.ee)
+  }
+
+  handleError (e) {
+    if (this.recorder) this.recorder.currentBufferTarget.hasError = true
+    // run once
+    if (this.mode === MODE.ERROR && globalScope?.document.visibilityState === 'visible') {
+      this.switchToFull()
     }
   }
 
   switchToFull () {
+    if (!this.entitled || this.blocked) return
     this.mode = MODE.FULL
     // if the error was noticed AFTER the recorder was already imported....
     if (this.recorder && this.initialized) {
-      this.recorder.stopRecording()
-      this.recorder.startRecording()
-
+      if (!this.recorder.recording) this.recorder.startRecording()
       this.scheduler.startTimer(this.harvestTimeSeconds)
-
       this.syncWithSessionManager({ sessionReplayMode: this.mode })
+    } else {
+      this.initializeRecording(false, true, true)
     }
   }
 
@@ -149,7 +169,7 @@ export class Aggregate extends AggregateBase {
    * @param {boolean} ignoreSession - whether to force the method to ignore the session state and use just the sample flags
    * @returns {void}
    */
-  async initializeRecording (errorSample, fullSample, ignoreSession) {
+  async initializeRecording (srMode, ignoreSession) {
     this.initialized = true
     if (!this.entitled) return
 
@@ -159,18 +179,18 @@ export class Aggregate extends AggregateBase {
     // we are not actively recording SR... DO NOT import or run the recording library
     // session replay samples can only be decided on the first load of a session
     // session replays can continue if already in progress
-    const { session } = getRuntime(this.agentIdentifier)
-    if (!session.isNew && !ignoreSession) { // inherit the mode of the existing session
+    const { session, timeKeeper } = getRuntime(this.agentIdentifier)
+    this.timeKeeper = timeKeeper
+    if (this.recorder?.parent.trigger === TRIGGERS.API && this.recorder?.recording) {
+      this.mode = MODE.FULL
+    } else if (!session.isNew && !ignoreSession) { // inherit the mode of the existing session
       this.mode = session.state.sessionReplayMode
     } else {
       // The session is new... determine the mode the new session should start in
-      if (fullSample) this.mode = MODE.FULL // full mode has precedence over error mode
-      else if (errorSample) this.mode = MODE.ERROR
-      // If neither are selected, then don't record (early return)
-      else {
-        return
-      }
+      this.mode = srMode
     }
+    // If off, then don't record (early return)
+    if (this.mode === MODE.OFF) return
 
     if (!this.recorder) {
       try {
@@ -181,37 +201,49 @@ export class Aggregate extends AggregateBase {
       } catch (err) {
         return this.abort(ABORT_REASONS.IMPORT)
       }
+    } else {
+      this.recorder.parent = this
     }
 
     // If an error was noticed before the mode could be set (like in the early lifecycle of the page), immediately set to FULL mode
-    if (this.mode === MODE.ERROR && this.errorNoticed) {
-      this.mode = MODE.FULL
-    }
+    if (this.mode === MODE.ERROR && this.errorNoticed) this.mode = MODE.FULL
 
-    // FULL mode records AND reports from the beginning, while ERROR mode only records (but does not report).
-    // ERROR mode will do this until an error is thrown, and then switch into FULL mode.
-    // If an error happened in ERROR mode before we've gotten to this stage, it will have already set the mode to FULL
-    if (this.mode === MODE.FULL && !this.scheduler.started) {
+    if (this.mode === MODE.FULL) {
+      // If theres preloaded events and we are in full mode, just harvest immediately to clear up space and for consistency
+      if (this.recorder?.getEvents().type === 'preloaded') {
+        this.prepUtils().then(() => {
+          this.scheduler.runHarvest()
+        })
+      }
+      // FULL mode records AND reports from the beginning, while ERROR mode only records (but does not report).
+      // ERROR mode will do this until an error is thrown, and then switch into FULL mode.
+      // If an error happened in ERROR mode before we've gotten to this stage, it will have already set the mode to FULL
+      if (!this.scheduler.started) {
       // We only report (harvest) in FULL mode
-      this.scheduler.startTimer(this.harvestTimeSeconds)
+        this.scheduler.startTimer(this.harvestTimeSeconds)
+      }
     }
 
-    try {
-      // Do not change the webpackChunkName or it will break the webpack nrba-chunking plugin
-      const { gzipSync, strToU8 } = await import(/* webpackChunkName: "compressor" */'fflate')
-      gzipper = gzipSync
-      u8 = strToU8
-    } catch (err) {
-      // compressor failed to load, but we can still record without compression as a last ditch effort
-      this.shouldCompress = false
-    }
+    await this.prepUtils()
+
     if (!this.recorder.recording) this.recorder.startRecording()
 
     this.syncWithSessionManager({ sessionReplayMode: this.mode })
   }
 
-  prepareHarvest () {
-    if (!this.recorder) return
+  async prepUtils () {
+    try {
+      // Do not change the webpackChunkName or it will break the webpack nrba-chunking plugin
+      const { gzipSync, strToU8 } = await import(/* webpackChunkName: "compressor" */'fflate')
+      this.gzipper = gzipSync
+      this.u8 = strToU8
+    } catch (err) {
+      // compressor failed to load, but we can still record without compression as a last ditch effort
+    }
+  }
+
+  prepareHarvest ({ opts } = {}) {
+    if (!this.recorder || !this.timeKeeper?.ready) return
     const recorderEvents = this.recorder.getEvents()
     // get the event type and use that to trigger another harvest if needed
     if (!recorderEvents.events.length || (this.mode !== MODE.FULL) || this.blocked) return
@@ -222,13 +254,29 @@ export class Aggregate extends AggregateBase {
       return
     }
 
+    handle(SUPPORTABILITY_METRIC_CHANNEL, ['SessionReplay/Harvest/Attempts'], undefined, FEATURE_NAMES.metrics, this.ee)
+
     let len = 0
-    if (this.shouldCompress) {
-      payload.body = gzipper(u8(`[${payload.body.map(e => e.__serialized).join(',')}]`))
+    if (!!this.gzipper && !!this.u8) {
+      payload.body = this.gzipper(this.u8(`[${payload.body.map(({ __serialized, ...e }) => {
+        if (e.__newrelic && __serialized) return __serialized
+        const output = { ...e }
+        if (!output.__newrelic) {
+          output.__newrelic = buildNRMetaNode(e.timestamp, this.timeKeeper)
+          output.timestamp = this.timeKeeper.correctAbsoluteTimestamp(e.timestamp)
+        }
+        return stringify(output)
+      }).join(',')}]`))
       len = payload.body.length
       this.scheduler.opts.gzip = true
     } else {
-      payload.body = payload.body.map(({ __serialized, ...node }) => node)
+      payload.body = payload.body.map(({ __serialized, ...node }) => {
+        if (node.__newrelic) return node
+        const output = { ...node }
+        output.__newrelic = buildNRMetaNode(node.timestamp, this.timeKeeper)
+        output.timestamp = this.timeKeeper.correctAbsoluteTimestamp(node.timestamp)
+        return output
+      })
       len = stringify(payload.body).length
       this.scheduler.opts.gzip = false
     }
@@ -241,8 +289,14 @@ export class Aggregate extends AggregateBase {
     const { session } = getRuntime(this.agentIdentifier)
     if (!session.state.sessionReplaySentFirstChunk) this.syncWithSessionManager({ sessionReplaySentFirstChunk: true })
     this.recorder.clearBuffer()
-    if (recorderEvents.type === 'preloaded') this.scheduler.runHarvest()
+    if (recorderEvents.type === 'preloaded') this.scheduler.runHarvest(opts)
     return [payload]
+  }
+
+  getCorrectedTimestamp (node) {
+    if (!node?.timestamp) return
+    if (node.__newrelic) return node.timestamp
+    return this.timeKeeper.correctAbsoluteTimestamp(node.timestamp)
   }
 
   getHarvestContents (recorderEvents) {
@@ -270,13 +324,14 @@ export class Aggregate extends AggregateBase {
       recorderEvents.hasMeta = !!events.find(x => x.type === RRWEB_EVENT_TYPES.Meta)
     }
 
-    const agentOffset = getRuntime(this.agentIdentifier).offset
     const relativeNow = now()
 
-    const firstEventTimestamp = events[0]?.timestamp // from rrweb node
-    const lastEventTimestamp = events[events.length - 1]?.timestamp // from rrweb node
-    const firstTimestamp = firstEventTimestamp || recorderEvents.cycleTimestamp
-    const lastTimestamp = lastEventTimestamp || agentOffset + relativeNow
+    const firstEventTimestamp = this.getCorrectedTimestamp(events[0]) // from rrweb node
+    const lastEventTimestamp = this.getCorrectedTimestamp(events[events.length - 1]) // from rrweb node
+    const firstTimestamp = firstEventTimestamp || this.timeKeeper.correctAbsoluteTimestamp(recorderEvents.cycleTimestamp) // from rrweb node || from when the harvest cycle started
+    const lastTimestamp = lastEventTimestamp || this.timeKeeper.convertRelativeTimestamp(relativeNow)
+
+    const agentMetadata = agentRuntime.appMetadata?.agents?.[0] || {}
 
     return {
       qs: {
@@ -284,14 +339,15 @@ export class Aggregate extends AggregateBase {
         type: 'SessionReplay',
         app_id: info.applicationID,
         protocol_version: '0',
+        timestamp: firstTimestamp,
         attributes: encodeObj({
           // this section of attributes must be controllable and stay below the query param padding limit -- see QUERY_PARAM_PADDING
           // if not, data could be lost to truncation at time of sending, potentially breaking parsing / API behavior in NR1
-          ...(this.shouldCompress && { content_encoding: 'gzip' }),
+          ...(!!this.gzipper && !!this.u8 && { content_encoding: 'gzip' }),
+          ...(agentMetadata.entityGuid && { entityGuid: agentMetadata.entityGuid }),
+          harvestId: [agentRuntime.session?.state.value, agentRuntime.ptid, agentRuntime.harvestCount].filter(x => x).join('_'),
           'replay.firstTimestamp': firstTimestamp,
-          'replay.firstTimestampOffset': firstTimestamp - agentOffset,
           'replay.lastTimestamp': lastTimestamp,
-          'replay.durationMs': lastTimestamp - firstTimestamp,
           'replay.nodes': events.length,
           'session.durationMs': agentRuntime.session.getDuration(),
           agentVersion: agentRuntime.version,
@@ -302,7 +358,10 @@ export class Aggregate extends AggregateBase {
           hasError: recorderEvents.hasError || false,
           isFirstChunk: agentRuntime.session.state.sessionReplaySentFirstChunk === false,
           decompressedBytes: recorderEvents.payloadBytesEstimation,
+          invalidStylesheetsDetected: stylesheetEvaluator.invalidStylesheetsDetected,
+          inlinedAllStylesheets: recorderEvents.inlinedAllStylesheets,
           'rrweb.version': RRWEB_VERSION,
+          'payload.type': recorderEvents.type,
           // customer-defined data should go last so that if it exceeds the query param padding limit it will be truncated instead of important attrs
           ...(endUserId && { 'enduser.id': endUserId })
           // The Query Param is being arbitrarily limited in length here.  It is also applied when estimating the size of the payload in getPayloadSize()
@@ -343,7 +402,7 @@ export class Aggregate extends AggregateBase {
     this.syncWithSessionManager({ sessionReplayMode: this.mode })
     this.recorder?.clearTimestamps?.()
     this.ee.emit('REPLAY_ABORTED')
-    this.recorder?.clearBuffer?.()
+    while (this.recorder?.getEvents().events.length) this.recorder?.clearBuffer?.()
   }
 
   syncWithSessionManager (state = {}) {

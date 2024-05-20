@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker'
-import { testResourcesRequest } from '../../../tools/testing-server/utils/expect-tests'
+import { testExpectedTrace } from '../util/helpers'
 
 describe('harvesting', () => {
   it('should include the base query parameters', async () => {
@@ -24,7 +24,7 @@ describe('harvesting', () => {
       insResults
     ] = await Promise.all([
       browser.testHandle.expectRum(),
-      browser.testHandle.expectResources(),
+      browser.testHandle.expectTrace(),
       browser.testHandle.expectInteractionEvents(),
       browser.testHandle.expectTimings(),
       browser.testHandle.expectAjaxTimeSlices(),
@@ -37,7 +37,8 @@ describe('harvesting', () => {
 
     const expectedURL = testURL.split('?')[0]
     verifyBaseQueryParameters(rumResults.request.query, expectedURL)
-    verifyBaseQueryParameters(resourcesResults.request.query, expectedURL, 'session_trace')
+    // verifyBaseQueryParameters(resourcesResults.request.query, expectedURL, 'session_trace')
+    testExpectedTrace({ data: resourcesResults.request })
     verifyBaseQueryParameters(interactionResults.request.query, expectedURL)
     verifyBaseQueryParameters(timingsResults.request.query, expectedURL)
     verifyBaseQueryParameters(ajaxSliceResults.request.query, expectedURL)
@@ -45,19 +46,15 @@ describe('harvesting', () => {
     verifyBaseQueryParameters(insResults.request.query, expectedURL)
   })
 
-  it('should include the ptid query parameter on requests after the first session trace harvest', async () => {
-    const ptid = faker.datatype.uuid()
-    browser.testHandle.scheduleReply('bamServer', {
-      test: testResourcesRequest,
-      body: ptid
-    })
-
-    await Promise.all([
+  it('should include the same ptid query parameter on requests', async () => {
+    const [{ request: { query } }] = await Promise.all([
       browser.testHandle.expectRum(),
-      browser.testHandle.expectResources(),
+      browser.testHandle.expectTrace(),
       browser.url(await browser.testHandle.assetURL('obfuscate-pii.html'))
         .then(() => browser.waitForAgentLoad())
     ])
+
+    const ptid = query.ptid
 
     const [
       resourcesResults,
@@ -65,7 +62,7 @@ describe('harvesting', () => {
       ajaxSliceResults,
       ajaxEventsResults
     ] = await Promise.all([
-      browser.testHandle.expectResources(),
+      browser.testHandle.expectTrace(),
       browser.testHandle.expectTimings(),
       browser.testHandle.expectAjaxTimeSlices(),
       browser.testHandle.expectAjaxEvents()
@@ -74,11 +71,11 @@ describe('harvesting', () => {
     expect(timingsResults.request.query.ptid).toEqual(ptid)
     expect(ajaxSliceResults.request.query.ptid).toEqual(ptid)
     expect(ajaxEventsResults.request.query.ptid).toEqual(ptid)
-    expect(resourcesResults.request.query.ptid).toEqual(ptid)
+    testExpectedTrace({ data: resourcesResults.request, ptid })
   })
 
   it('should include the transaction name (transactionName) passed in the info block in the query parameters', async () => {
-    const transactionName = faker.datatype.uuid()
+    const transactionName = faker.string.uuid()
     const testURL = await browser.testHandle.assetURL('obfuscate-pii.html', {
       config: {
         transactionName
@@ -87,7 +84,6 @@ describe('harvesting', () => {
 
     const [
       rumResults,
-      resourcesResults,
       interactionResults,
       timingsResults,
       ajaxSliceResults,
@@ -95,7 +91,6 @@ describe('harvesting', () => {
       insResults
     ] = await Promise.all([
       browser.testHandle.expectRum(),
-      browser.testHandle.expectResources(),
       browser.testHandle.expectInteractionEvents(),
       browser.testHandle.expectTimings(),
       browser.testHandle.expectAjaxTimeSlices(),
@@ -107,7 +102,6 @@ describe('harvesting', () => {
     ])
 
     expect(rumResults.request.query.to).toEqual(transactionName)
-    expect(resourcesResults.request.query.to).toEqual(transactionName)
     expect(interactionResults.request.query.to).toEqual(transactionName)
     expect(timingsResults.request.query.to).toEqual(transactionName)
     expect(ajaxSliceResults.request.query.to).toEqual(transactionName)
@@ -116,7 +110,7 @@ describe('harvesting', () => {
   })
 
   it('should include the transaction name (tNamePlain) passed in the info block in the query parameters', async () => {
-    const transactionName = faker.datatype.uuid()
+    const transactionName = faker.string.uuid()
     const testURL = await browser.testHandle.assetURL('obfuscate-pii.html', {
       config: {
         tNamePlain: transactionName
@@ -124,7 +118,6 @@ describe('harvesting', () => {
     })
     const [
       rumResults,
-      resourcesResults,
       interactionResults,
       timingsResults,
       ajaxSliceResults,
@@ -132,7 +125,6 @@ describe('harvesting', () => {
       insResults
     ] = await Promise.all([
       browser.testHandle.expectRum(),
-      browser.testHandle.expectResources(),
       browser.testHandle.expectInteractionEvents(),
       browser.testHandle.expectTimings(),
       browser.testHandle.expectAjaxTimeSlices(),
@@ -145,8 +137,6 @@ describe('harvesting', () => {
 
     expect(rumResults.request.query.t).toEqual(transactionName)
     expect(rumResults.request.query.to).toBeUndefined()
-    expect(resourcesResults.request.query.t).toEqual(transactionName)
-    expect(resourcesResults.request.query.to).toBeUndefined()
     expect(interactionResults.request.query.t).toEqual(transactionName)
     expect(interactionResults.request.query.to).toBeUndefined()
     expect(timingsResults.request.query.t).toEqual(transactionName)
@@ -160,17 +150,16 @@ describe('harvesting', () => {
   })
 
   it('should always take the transactionName info parameter over the tNamePlan info parameter for the transaction name query parameter', async () => {
-    const transactionName = faker.datatype.uuid()
+    const transactionName = faker.string.uuid()
     const testURL = await browser.testHandle.assetURL('obfuscate-pii.html', {
       config: {
-        tNamePlain: faker.datatype.uuid(),
+        tNamePlain: faker.string.uuid(),
         transactionName
       }
     })
 
     const [
       rumResults,
-      resourcesResults,
       interactionResults,
       timingsResults,
       ajaxSliceResults,
@@ -178,7 +167,6 @@ describe('harvesting', () => {
       insResults
     ] = await Promise.all([
       browser.testHandle.expectRum(),
-      browser.testHandle.expectResources(),
       browser.testHandle.expectInteractionEvents(),
       browser.testHandle.expectTimings(),
       browser.testHandle.expectAjaxTimeSlices(),
@@ -191,8 +179,6 @@ describe('harvesting', () => {
 
     expect(rumResults.request.query.to).toEqual(transactionName)
     expect(rumResults.request.query.t).toBeUndefined()
-    expect(resourcesResults.request.query.to).toEqual(transactionName)
-    expect(resourcesResults.request.query.t).toBeUndefined()
     expect(interactionResults.request.query.to).toEqual(transactionName)
     expect(interactionResults.request.query.t).toBeUndefined()
     expect(timingsResults.request.query.to).toEqual(transactionName)
@@ -211,14 +197,12 @@ describe('harvesting', () => {
 
     const [
       rumResults,
-      resourcesResults,
       interactionResults,
       timingsResults,
       ajaxSliceResults,
       ajaxEventsResults
     ] = await Promise.all([
       browser.testHandle.expectRum(),
-      browser.testHandle.expectResources(),
       browser.testHandle.expectInteractionEvents(),
       browser.testHandle.expectTimings(),
       browser.testHandle.expectAjaxTimeSlices(),
@@ -229,7 +213,6 @@ describe('harvesting', () => {
 
     const expectedURL = redirectURL.split('?')[0]
     expect(rumResults.request.query.ref).toEqual(expectedURL)
-    expect(resourcesResults.request.query.ref).toEqual(expectedURL)
     expect(interactionResults.request.query.ref).toEqual(expectedURL)
     expect(timingsResults.request.query.ref).toEqual(expectedURL)
     expect(ajaxSliceResults.request.query.ref).toEqual(expectedURL)
@@ -242,14 +225,12 @@ describe('harvesting', () => {
 
     const [
       rumResults,
-      resourcesResults,
       interactionResults,
       timingsResults,
       ajaxSliceResults,
       ajaxEventsResults
     ] = await Promise.all([
       browser.testHandle.expectRum(),
-      browser.testHandle.expectResources(),
       browser.testHandle.expectInteractionEvents(),
       browser.testHandle.expectTimings(),
       browser.testHandle.expectAjaxTimeSlices(),
@@ -260,7 +241,6 @@ describe('harvesting', () => {
 
     const expectedURL = redirectURL.split('?')[0]
     expect(rumResults.request.query.ref).toEqual(expectedURL)
-    expect(resourcesResults.request.query.ref).toEqual(expectedURL)
     expect(interactionResults.request.query.ref).toEqual(expectedURL)
     expect(timingsResults.request.query.ref).toEqual(expectedURL)
     expect(ajaxSliceResults.request.query.ref).toEqual(expectedURL)
@@ -278,14 +258,12 @@ describe('harvesting', () => {
 
     const [
       rumResults,
-      resourcesResults,
       interactionResults,
       timingsResults,
       ajaxSliceResults,
       ajaxEventsResults
     ] = await Promise.all([
       browser.testHandle.expectRum(),
-      browser.testHandle.expectResources(),
       browser.testHandle.expectInteractionEvents(),
       browser.testHandle.expectTimings(),
       browser.testHandle.expectAjaxTimeSlices(),
@@ -295,7 +273,6 @@ describe('harvesting', () => {
     ])
 
     expect(rumResults.request.query.s).toEqual('0')
-    expect(resourcesResults.request.query.s).toEqual('0')
     expect(interactionResults.request.query.s).toEqual('0')
     expect(timingsResults.request.query.s).toEqual('0')
     expect(ajaxSliceResults.request.query.s).toEqual('0')

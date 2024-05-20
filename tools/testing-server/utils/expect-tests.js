@@ -12,6 +12,11 @@
  *
  */
 
+module.exports.testAssetRequest = function testAssetRequest (request) {
+  const url = new URL(request.url, 'resolve://')
+  return url.pathname.indexOf('.html') > -1
+}
+
 module.exports.testRumRequest = function testRumRequest (request) {
   const url = new URL(request.url, 'resolve://')
   return url.pathname === `/1/${this.testId}`
@@ -208,6 +213,36 @@ module.exports.testErrorsRequest = function testErrorsRequest (request) {
   }
 }
 
+module.exports.testInternalErrorsRequest = function testInternalErrorsRequest (request) {
+  const url = new URL(request.url, 'resolve://')
+  if (url.pathname !== `/jserrors/1/${this.testId}`) {
+    return false
+  }
+
+  if (Array.isArray(request?.body?.ierr) && request.body.ierr.length > 0) {
+    return true
+  }
+
+  if (request?.query?.ierr) {
+    try {
+      const internalErrors = JSON.parse(request.query.ierr)
+      return Array.isArray(internalErrors) && internalErrors.length > 0
+    } catch (error) {
+      return false
+    }
+  }
+}
+
+module.exports.testAnyJseXhrRequest = function testErrorsRequest (request) {
+  const url = new URL(request.url, 'resolve://')
+  if (url.pathname !== `/jserrors/1/${this.testId}`) {
+    return false
+  }
+
+  const bodyKeys = Object.keys(request?.body || {})
+  if (bodyKeys.some(k => request.body[k]?.length > 0)) return true
+}
+
 module.exports.testAjaxTimeSlicesRequest = function testAjaxTimeSlicesRequest (request) {
   const url = new URL(request.url, 'resolve://')
   if (url.pathname !== `/jserrors/1/${this.testId}`) {
@@ -280,4 +315,40 @@ module.exports.testBlobRequest = function testBlobRequest (request) {
   } catch (err) {
     return false
   }
+}
+
+module.exports.testBlobReplayRequest = function testBlobReplayRequest (request) {
+  const url = new URL(request.url, 'resolve://')
+  if (url.pathname !== '/browser/blobs') return false
+  if (request?.query?.browser_monitoring_key !== this.testId) return false
+  if (request?.query?.type !== 'SessionReplay') return false
+  try {
+    const body = request?.body
+    const blobContents = body // JSON array
+    return !!(blobContents && Array.isArray(blobContents) && blobContents.length)
+  } catch (err) {
+    return false
+  }
+}
+
+module.exports.testBlobTraceRequest = function testBlobTraceRequest (request) {
+  const url = new URL(request.url, 'resolve://')
+  if (url.pathname !== '/browser/blobs') return false
+  if (request?.query?.browser_monitoring_key !== this.testId) return false
+  if (request?.query?.type !== 'BrowserSessionChunk') return false
+  try {
+    const body = request?.body
+    const blobContents = body // JSON array
+    return !!(blobContents && Array.isArray(blobContents) && blobContents.length)
+  } catch (err) {
+    return false
+  }
+}
+
+module.exports.testSessionReplaySnapshotRequest = function testSessionReplaySnapshotRequest (request) {
+  const url = new URL(request.url, 'resolve://')
+  if (url.pathname !== '/browser/blobs') return false
+  if (request?.query?.browser_monitoring_key !== this.testId) return false
+  if (!(request?.body && Array.isArray(request.body) && request.body.length)) return false
+  return !!(request.body.filter(x => x.type === 2).length)
 }

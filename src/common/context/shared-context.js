@@ -15,7 +15,7 @@ export class SharedContext {
         if (Object.keys(model).includes(key)) this.sharedContext[key] = value
       })
     } catch (err) {
-      warn('An error occured while setting SharedContext', err)
+      warn('An error occurred while setting SharedContext', err)
     }
   }
 }

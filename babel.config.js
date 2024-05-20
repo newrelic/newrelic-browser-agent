@@ -14,8 +14,6 @@ module.exports = function (api, ...args) {
   process.env.RRWEB_VERSION = pkg.dependencies.rrweb
 
   const ignore = [
-    '**/*.test.js',
-    '**/*.component-test.js',
     '**/__mocks__/*.js'
   ]
   const presets = [
@@ -45,15 +43,7 @@ module.exports = function (api, ...args) {
       ]
     },
     webpack: {
-      ignore,
-      plugins: [
-        [
-          './tools/babel/plugins/transform-import',
-          {
-            '(constants/)env$': '$1env.cdn'
-          }
-        ]
-      ]
+      ignore
     },
     'webpack-ie11': {
       ignore,
@@ -73,15 +63,6 @@ module.exports = function (api, ...args) {
             }
           }
         ]
-      ],
-      plugins: [
-        [
-          './tools/babel/plugins/transform-import',
-          {
-            '(constants/)env$': '$1env.cdn',
-            'polyfill-detection$': 'polyfill-detection.es5'
-          }
-        ]
       ]
     },
     'npm-cjs': {
@@ -97,9 +78,7 @@ module.exports = function (api, ...args) {
         [
           './tools/babel/plugins/transform-import',
           {
-            '(constants/)env$': '$1env.npm',
-            '(configure/)public-path$': '$1public-path.npm',
-            '(configure/)nonce$': '$1nonce.npm'
+            '(/constants/|^\\./)env$': '$1env.npm'
           }
         ]
       ]
@@ -117,9 +96,7 @@ module.exports = function (api, ...args) {
         [
           './tools/babel/plugins/transform-import',
           {
-            '(constants/)env$': '$1env.npm',
-            '(configure/)public-path$': '$1public-path.npm',
-            '(configure/)nonce$': '$1nonce.npm'
+            '(/constants/|^\\./)env$': '$1env.npm'
           }
         ]
       ]

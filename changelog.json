@@ -4,6 +4,598 @@
     {
       "changes": [
         {
+          "type": "fix",
+          "sha": "d86becf2fc02aa133430332aa4e4c2bc26297750",
+          "message": "Adjust session entity to not race between tabs",
+          "issues": [
+            "1032"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "84c101ccbff8da207bdf215714f49b7d49941388",
+          "message": "Add internal error handler to session replay recorder",
+          "issues": [
+            "1029"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "67a658d2645b680a479175dff06a4fd95bd6086a",
+          "message": "Improve time stamping of page view events",
+          "issues": [
+            "1026"
+          ]
+        }
+      ],
+      "version": "1.260.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "a1eaf856-f57f-4946-816d-6e9289d93857",
+      "createTime": "2024-05-13T20:31:22.449Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
+          "sha": "55b0e00e9d8dce6d0cdbed978a98302d40123f3d",
+          "message": "Migrate Session Traces to Use Blob Consumer with Feature Flags",
+          "issues": [
+            "821"
+          ]
+        }
+      ],
+      "version": "1.259.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "c501588a-a61a-4f4b-9a73-567bc2cc230d",
+      "createTime": "2024-05-08T00:58:50.911Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
+          "sha": "c023a53c20a9f0f2472e1ba5ff78eb7210a906fa",
+          "message": "Prevent noticeError() API from running if not given an argument",
+          "issues": [
+            "1021"
+          ]
+        }
+      ],
+      "version": "1.258.2",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "45194192-79e8-46de-89a4-1802846f72ef",
+      "createTime": "2024-05-07T21:51:38.137Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
+          "sha": "d1dd20ce526ddb697962f695fbb5915410474987",
+          "message": "Improve Error Casting",
+          "issues": [
+            "1014"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "6a4a73d72b056177268f8619a3a3b7810a7a2c79",
+          "message": "Run inside cross-origin iframes for firefox/safari",
+          "issues": [
+            "1015"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "2a3fa57da1f389e6eabae2c92686e25285fc6cd3",
+          "message": "Exclude data url requests as captured AJAX events",
+          "issues": [
+            "1012"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "44f229e4d35cd468bfe29b1796be8031bb9c72ff",
+          "message": "Session trace nodes de-duplication",
+          "issues": [
+            "1008"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "38a502b08b4735259e7f5b863b0e5e5361c075b6",
+          "message": "Remove API start()'s features param",
+          "issues": [
+            "1009"
+          ]
+        }
+      ],
+      "version": "1.258.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "2c1ee0d2-8fd5-48ea-8cfc-5d1c86919907",
+      "createTime": "2024-05-07T18:49:36.645Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
+          "sha": "1c3a6b963c1eb7e0792225c3a4c15b6fd8d64505",
+          "message": "Restructure AJAX Aggregate",
+          "issues": [
+            "1003"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "c487e04f46a606545c8172b6ed1c022b4dc1cac1",
+          "message": "Maintain calculated NR server time for session",
+          "issues": [
+            "980"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "aea9ac4dc791c58badc6d2efe7bdbb3c0f51a8bb",
+          "message": "Add harvestId to Session Replay payloads",
+          "issues": [
+            "1002"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "5e28fb722aa2bf08acc89066d5814e5bef862741",
+          "message": "Clean up xhrWrappable",
+          "issues": [
+            "1000"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "a518039aa61862553d546cf0e675b733a9f9bed7",
+          "message": "Prevent null CLS",
+          "issues": [
+            "993"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "97ae128934df7a74701eef001e49b0065ffe8216",
+          "message": "JSErrors timestamped per harvest",
+          "issues": [
+            "997"
+          ]
+        }
+      ],
+      "version": "1.258.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "40a35720-bffa-4038-b113-b444058d585a",
+      "createTime": "2024-04-29T19:46:40.368Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
+          "sha": "f50351acb08b65b03e7f4b5530a001a80fc04ece",
+          "message": "Session replay preload without autoStart",
+          "issues": [
+            "985"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "fa20693d746bed2fa0b8ff972e4b9bee4bbe6956",
+          "message": "Session Replay preload optimizations",
+          "issues": [
+            "982"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "b6a7a3ebcf2a69b9cbe9888208bb62330918cdf7",
+          "message": "Decorate errors with hasReplay individually",
+          "issues": [
+            "983"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "6dd09c505af87b3a1b08330362eca46951ea22ed",
+          "message": "JSEerrors harvest hasReplay decoration",
+          "issues": [
+            "986"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "b682c880bfb149b61f6c00bf821459ea55a37ae8",
+          "message": "Agent class type declarations",
+          "issues": [
+            "987"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "53bb1209cb66fe1a52385b2863e35a93fb29afae",
+          "message": "Soft navigations memory leak on harvest",
+          "issues": [
+            "979"
+          ]
+        }
+      ],
+      "version": "1.257.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "66dfdb0d-d2a2-4273-9988-3e6c32a75902",
+      "createTime": "2024-04-18T21:49:23.136Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
+          "sha": "34b317fe577487af56d48861b7f256ec8d644d69",
+          "message": "Revert \"Generate PTID in Agent\"",
+          "issues": [
+            "976"
+          ]
+        }
+      ],
+      "version": "1.256.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "2b915c72-b20b-448c-be96-0a9fbbbdedef",
+      "createTime": "2024-04-15T13:57:06.229Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
+          "sha": "4fbe962d7b268968df96da59058e2e53c527c5eb",
+          "message": "stabilize timestamp corrections",
+          "issues": [
+            "966"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "af7b6764f40cb1ddfb3ab2ca16d05d8e4f459f4e",
+          "message": "Generate PTID in Agent",
+          "issues": [
+            "964"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "e48af6beb369daf6ddc8231daa040f0d9d204d5f",
+          "message": "Resume Page Focus Now Checks Session State",
+          "issues": [
+            "961"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "e17aa25ee098115ad23a5fb9ae268a4b5769fac1",
+          "message": "Allow unmasking elements with nr-unmask selectors",
+          "issues": [
+            "949"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "91d65b5b7b5b7e753a6603150fd4bb7d2543babd",
+          "message": "Adjust Session Replay Error Tracking",
+          "issues": [
+            "951"
+          ]
+        }
+      ],
+      "version": "1.256.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "f9e05065-19e0-41dd-aca5-1065134dacfb",
+      "createTime": "2024-04-11T22:46:43.005Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
+          "sha": "94f0deed02a8f5e9d668f3fe5a68ada86cecc439",
+          "message": "Adjust SR Timestamps to NR Server Time",
+          "issues": [
+            "939"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "88e71da521f1a58af28ae17fee13f648affd262a",
+          "message": "Send CLS as timing node additionally",
+          "issues": [
+            "935"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "8a4831cd1f2d32d97daa8788967b15d7f2f723d3",
+          "message": "Update agent to use new relic server time",
+          "issues": [
+            "918"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "f36acbc03c4f4d51e65431a270a008e65bb2cfff",
+          "message": "Switch web vitals library to attribution build",
+          "issues": [
+            "919"
+          ]
+        }
+      ],
+      "version": "1.255.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "ed556d68-6894-47da-9e5a-01602ef89b74",
+      "createTime": "2024-04-04T03:33:51.427Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
+          "sha": "250efcd3bf0a730adbb9d5c45be0bf2f71189664",
+          "message": "Server Timing - Remove reliance on performance API",
+          "issues": [
+            "930"
+          ]
+        }
+      ],
+      "version": "1.254.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "9a9943c4-e77e-427e-811f-2693f3ff2555",
+      "createTime": "2024-03-26T16:08:08.500Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
+          "sha": "7b35238d53df97ca0183f06642601eb381aad063",
+          "message": "Remove webpack imports in npm package",
+          "issues": [
+            "925"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "ac266faea203a7edc01ddecabbfdcc13bf602081",
+          "message": "Standardize all feature behavior to wait for RUM response",
+          "issues": [
+            "927"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "d0b5b7d644b8ffc3667bf3b2521733cc7940f982",
+          "message": "maintain a harvestCount for use later with harvestId",
+          "issues": [
+            "922"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "2c99a5b11300ea9ef9ee7b5158b9d42c00693d03",
+          "message": "Add rum-response metadata handler",
+          "issues": [
+            "913"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "91b1f96efafe19f7b1b3fd4f39b9af1136b0a3a8",
+          "message": "Calculate New Relic time in the agent",
+          "issues": [
+            "911"
+          ]
+        }
+      ],
+      "version": "1.254.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "60d75830-eb12-4164-bfa2-9302a9ecf27e",
+      "createTime": "2024-03-25T16:07:51.888Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
+          "sha": "7fcb62791ad932cbd3b9f16a72277b42bca9a75f",
+          "message": "Soft Navigations trial",
+          "issues": [
+            "808"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "a5c2adc0ecbe322ea9a9dcdf1ed3b072c1212415",
+          "message": "Apply deny list to ajax metrics",
+          "issues": [
+            "898"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "bc5ebb5cb255fda7f2c30d5053b5a980a423c2b1",
+          "message": "Preload the Session Replay recorder when properly configured",
+          "issues": [
+            "893"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "85887c8e7f4241076daeeda75077e6ee710a3d00",
+          "message": "Isolate observation context per agent",
+          "issues": [
+            "903"
+          ]
+        }
+      ],
+      "version": "1.253.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "6253b906-0e0d-4659-abd8-48c980facabd",
+      "createTime": "2024-03-13T16:54:47.318Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
+          "sha": "35810a895b7f61ab60ea5c24adfa49c4a3956191",
+          "message": "Fix webpack imports in npm package",
+          "issues": [
+            "905"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "5c952a0a212922d84dfd7e8eb388fdbd566b6c00",
+          "message": "Page load after session timeouts don't start new session",
+          "issues": [
+            "899"
+          ]
+        }
+      ],
+      "version": "1.252.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "ad4dc65a-79da-4730-99a0-739db3296dc3",
+      "createTime": "2024-02-29T17:42:23.534Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
+          "sha": "811ed418b74dcb8f25544da79521c384b9fd498a",
+          "message": "add types mappings for esm distribution",
+          "issues": [
+            "887"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "1fcdd8d9a20819911ba7e7350354085a57f1b187",
+          "message": "Add safe logic to snapshots",
+          "issues": [
+            "884"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "aa19a9c0737c175c011656f3da3f327dc6442f04",
+          "message": "Report config changes away from default state for UX improvement",
+          "issues": [
+            "885"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "697f13e6ea5ba0738ffd74dfd214751ab98adf8d",
+          "message": "Create more granular metrics about stylesheet fix success",
+          "issues": [
+            "882"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "d4a0f30e0ab4d8edbdb17bf4ebdf282626761045",
+          "message": "align browser reported uncaught syntax errors",
+          "issues": [
+            "881"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "f60e7f155bb95087ea4af8864b652878f08ccaff",
+          "message": "Capture Internal Metrics for Session Replay Configurations",
+          "issues": [
+            "879"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "695415b0fcaa8b41496fc6556a38ec76dd357539",
+          "message": "Fix adblock memory leak",
+          "issues": [
+            "877"
+          ]
+        }
+      ],
+      "version": "1.252.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "e8035158-8aa9-4b78-bb58-8a4cc2f132a7",
+      "createTime": "2024-02-12T16:05:18.509Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
+          "sha": "655aa5d261d03f71086d3cfc73cb72db51cb28c7",
+          "message": "Pass unload options to simultaneous harvests in Session Replay",
+          "issues": [
+            "870"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "f69e4b0eba5a54f4e67316f5e6a30090cf7360cc",
+          "message": "Fix deferred Session Replay payloads",
+          "issues": [
+            "868"
+          ]
+        }
+      ],
+      "version": "1.251.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "aa565178-cca7-4305-96f8-f60eae560871",
+      "createTime": "2024-01-29T20:09:21.638Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
+          "sha": "69a8e00ce66c41a29f551697299246763e7ae29f",
+          "message": "Session Replay - Detect Non-Inlined Stylesheets",
+          "issues": [
+            "859"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "cd6324fb79edab77725d9c72f91d2bcb7e860f57",
+          "message": "Bubble Up API Methods to Top-Level Instance For NPM",
+          "issues": [
+            "862"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "f43b7914ec1f26f610cbaa1a513bac482a3d6534",
+          "message": "Add fallback for currentBufferTarget",
+          "issues": [
+            "861"
+          ]
+        }
+      ],
+      "version": "1.251.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "99cbc239-c1aa-465c-b245-73f23bb76b2a",
+      "createTime": "2024-01-24T22:42:30.700Z"
+    },
+    {
+      "changes": [
+        {
           "type": "feat",
           "sha": "1b898c61fa260bd0df644b4825ddb6d1c9b54b51",
           "message": "Add a flag to note that a payload occurred during a replay",
@@ -949,5 +1541,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2024-01-09T18:22:29.175Z"
+  "updateTime": "2024-05-13T20:31:22.449Z"
 }

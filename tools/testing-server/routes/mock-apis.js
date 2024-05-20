@@ -4,6 +4,7 @@ const fp = require('fastify-plugin')
 const { PassThrough } = require('stream')
 const zlib = require('zlib')
 const assert = require('assert')
+const FormData = require('form-data')
 const { paths } = require('../constants')
 const { retrieveReplayData } = require('../utils/replay-buffer')
 
@@ -19,7 +20,6 @@ module.exports = fp(async function (fastify, testServer) {
     method: ['GET', 'POST'],
     url: '/beacon/*',
     onRequest: async (request, reply) => {
-      // reply.hijack()
       request.raw.url = request.raw.url.replace('/beacon/', '/')
       testServer.bamServer.server.routing(request.raw, reply.raw)
       await reply
@@ -32,7 +32,6 @@ module.exports = fp(async function (fastify, testServer) {
     method: ['GET', 'POST'],
     url: '/assets/*',
     onRequest: async (request, reply) => {
-      // reply.hijack()
       request.raw.url = request.raw.url.replace('/assets/', '/build/')
       testServer.assetServer.server.routing(request.raw, reply.raw)
       await reply
@@ -44,6 +43,35 @@ module.exports = fp(async function (fastify, testServer) {
 
   fastify.get('/health', async function (request, reply) {
     reply.code(204).send()
+  })
+  fastify.route({
+    method: ['GET', 'PUT', 'POST', 'PATCH'],
+    url: '/delayed',
+    handler: function (request, reply) {
+      const delay = parseInt(request.query.delay || 500, 10)
+
+      setTimeout(() => {
+        reply.send('foobar')
+      }, delay)
+    }
+  })
+  fastify.route({
+    method: ['GET', 'PUT', 'POST', 'PATCH'],
+    url: '/streamed',
+    handler: function (request, reply) {
+      const count = parseInt(request.query.count || 5, 10)
+
+      const stream = new PassThrough()
+      reply.send(stream)
+
+      let round = 0
+      const interval = setInterval(() => {
+        round += 1
+        stream.write('x'.repeat(8192))
+
+        if (round >= count) clearInterval(interval)
+      })
+    }
   })
   fastify.get('/slowscript', {
     compress: false
@@ -133,7 +161,7 @@ module.exports = fp(async function (fastify, testServer) {
     compress: false
   }, (request, reply) => {
     reply
-      .header('X-NewRelic-App-Data', 'foo')
+      .header('X-NewRelic-App-Data', 'bar, foo')
       .send('xhr with CAT ' + new Array(100).join('data'))
   })
   fastify.get('/xhr_no_cat', {
@@ -168,18 +196,25 @@ module.exports = fp(async function (fastify, testServer) {
   fastify.get('/text', {
     compress: false
   }, (request, reply) => {
-    const length = parseInt(request.query.length || 10, 10)
-    reply.send('x'.repeat(length))
+    reply.send('abc123')
   })
   fastify.post('/formdata', {
     compress: false
   }, async (request, reply) => {
+    const results = new FormData()
+
     try {
-      assert.deepEqual(request.body, { name: 'bob', x: '5' })
-      reply.send('good')
+      assert.strictEqual(request.body.name.value, 'bob')
+      assert.strictEqual(request.body.x.value, '5')
+
+      results.append('result', 'good')
     } catch (e) {
-      reply.send('bad')
+      // The api expects specific key/value pairs and returns a `bad` result otherwise
+      results.append('result', 'bad')
     }
+
+    reply.header('content-type', `multipart/form-data; boundary=${results.getBoundary()}`)
+    reply.send(results.getBuffer())
   })
   fastify.get('/slowresponse', {
     compress: false

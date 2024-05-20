@@ -20,6 +20,8 @@ import { interactionToNextPaint } from '../../../common/vitals/interaction-to-ne
 import { largestContentfulPaint } from '../../../common/vitals/largest-contentful-paint'
 import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
 import { longTask } from '../../../common/vitals/long-task'
+import { subscribeToVisibilityChange } from '../../../common/window/page-visibility'
+import { VITAL_NAMES } from '../../../common/vitals/constants'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -35,35 +37,42 @@ export class Aggregate extends AggregateBase {
     this.timingsSent = []
     this.curSessEndRecorded = false
 
-    firstPaint.subscribe(this.#handleVitalMetric)
-    firstContentfulPaint.subscribe(this.#handleVitalMetric)
-    firstInputDelay.subscribe(this.#handleVitalMetric)
-    largestContentfulPaint.subscribe(this.#handleVitalMetric)
-    interactionToNextPaint.subscribe(this.#handleVitalMetric)
-    timeToFirstByte.subscribe(({ entries }) => {
-      this.addTiming('load', Math.round(entries[0].loadEventEnd))
-    })
-
     if (getConfigurationValue(this.agentIdentifier, 'page_view_timing.long_task') === true) longTask.subscribe(this.#handleVitalMetric)
-
-    /* It's important that CWV api, like "onLCP", is called before this scheduler is initialized. The reason is because they listen to the same
-      on vis change or pagehide events, and we'd want ex. onLCP to record the timing (win the race) before we try to send "final harvest". */
 
     registerHandler('docHidden', msTimestamp => this.endCurrentSession(msTimestamp), this.featureName, this.ee)
     registerHandler('winPagehide', msTimestamp => this.recordPageUnload(msTimestamp), this.featureName, this.ee)
 
     const initialHarvestSeconds = getConfigurationValue(this.agentIdentifier, 'page_view_timing.initialHarvestSeconds') || 10
     const harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'page_view_timing.harvestTimeSeconds') || 30
-    // send initial data sooner, then start regular
-    this.ee.on(`drain-${this.featureName}`, () => {
-      this.scheduler = new HarvestScheduler('events', {
+
+    this.waitForFlags(([])).then(() => {
+      /* It's important that CWV api, like "onLCP", is called before the **scheduler** is initialized. The reason is because they listen to the same
+        on vis change or pagehide events, and we'd want ex. onLCP to record the timing (win the race) before we try to send "final harvest". */
+      firstPaint.subscribe(this.#handleVitalMetric)
+      firstContentfulPaint.subscribe(this.#handleVitalMetric)
+      firstInputDelay.subscribe(this.#handleVitalMetric)
+      largestContentfulPaint.subscribe(this.#handleVitalMetric)
+      interactionToNextPaint.subscribe(this.#handleVitalMetric)
+      timeToFirstByte.subscribe(({ attrs }) => {
+        this.addTiming('load', Math.round(attrs.navigationEntry.loadEventEnd))
+      })
+      subscribeToVisibilityChange(() => {
+        /* Downstream, the event consumer interprets all timing node value as ms-unit and converts it to seconds via division by 1000. CLS is unitless so this normally is a problem.
+          bel.6 schema also doesn't support decimal values, of which cls within [0,1). However, the two nicely cancels out, and we can multiply cls by 1000 to both negate the division
+          and send an integer > 1. We effectively lose some precision down to 3 decimal places for this workaround. E.g. (real) 0.749132... -> 749.132...-> 749 -> 0.749 (final) */
+        const { name, value, attrs } = cumulativeLayoutShift.current
+        if (value === undefined) return
+        this.addTiming(name, value * 1000, attrs)
+      }, true) // CLS node should only reports on vis change rather than on every change
+
+      const scheduler = new HarvestScheduler('events', {
         onFinished: (...args) => this.onHarvestFinished(...args),
         getPayload: (...args) => this.prepareHarvest(...args)
       }, this)
-      this.scheduler.startTimer(harvestTimeSeconds, initialHarvestSeconds)
-    })
+      scheduler.startTimer(harvestTimeSeconds, initialHarvestSeconds)
 
-    this.drain()
+      this.drain()
+    })
   }
 
   /**
@@ -102,8 +111,9 @@ export class Aggregate extends AggregateBase {
     Issue: Because NR 'pageHide' was only sent once with what is considered the "final" CLS value, in the case that 'pageHide' fires before 'load' happens, we incorrectly a final CLS of 0 for that page.
     Mitigation: We've set initial CLS to null so that it's omitted from timings like 'pageHide' in that edge case. It should only be included if onCLS callback was executed at least once.
     Future: onCLS value changes should be reported directly & CLS separated into its own timing node so it's not beholden to 'pageHide' firing. It'd also be possible to report the real final CLS.
+    *cli Mar'24 update: CLS now emitted as its own timing node in addition to as-property under other nodes. The 'cls' property is unnecessary for cls nodes.
     */
-    if (cumulativeLayoutShift.current.value >= 0) {
+    if (name !== VITAL_NAMES.CUMULATIVE_LAYOUT_SHIFT && cumulativeLayoutShift.current.value >= 0) {
       attrs.cls = cumulativeLayoutShift.current.value
     }
 

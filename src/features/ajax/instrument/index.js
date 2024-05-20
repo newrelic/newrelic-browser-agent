@@ -2,13 +2,12 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { originals, getLoaderConfig, getRuntime } from '../../../common/config/config'
+import { originals, getLoaderConfig } from '../../../common/config/config'
 import { handle } from '../../../common/event-emitter/handle'
 import { id } from '../../../common/ids/id'
 import { ffVersion, globalScope, isBrowserScope } from '../../../common/constants/runtime'
 import { dataSize } from '../../../common/util/data-size'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
-import { now } from '../../../common/timing/now'
 import { wrapFetch, wrapXhr } from '../../../common/wrap'
 import { parseUrl } from '../../../common/url/parse-url'
 import { DT } from './distributed-tracing'
@@ -16,6 +15,9 @@ import { responseSizeFromXhr } from './response-size'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
+import { SUPPORTABILITY_METRIC } from '../../metrics/constants'
+import { now } from '../../../common/timing/now'
+import { hasUndefinedHostname } from '../../../common/deny-list/deny-list'
 
 var handlers = ['load', 'error', 'abort', 'timeout']
 var handlersLen = handlers.length
@@ -27,9 +29,6 @@ export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
   constructor (agentIdentifier, aggregator, auto = true) {
     super(agentIdentifier, aggregator, FEATURE_NAME, auto)
-
-    // Very unlikely, but in case the existing XMLHttpRequest.prototype object on the page couldn't be wrapped.
-    if (!getRuntime(agentIdentifier).xhrWrappable) return
 
     this.dt = new DT(agentIdentifier)
 
@@ -340,18 +339,18 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
   // eslint-disable-next-line handle-callback-err
   function onFetchDone (_, res) {
     this.endTime = now()
-    if (!this.params) {
-      this.params = {}
-    }
+    if (!this.params) this.params = {}
+    if (hasUndefinedHostname(this.params)) return // don't bother with fetch to url with no hostname
+
     this.params.status = res ? res.status : 0
 
     // convert rxSize to a number
-    var responseSize
+    let responseSize
     if (typeof this.rxSize === 'string' && this.rxSize.length > 0) {
       responseSize = +this.rxSize
     }
 
-    var metrics = {
+    const metrics = {
       txSize: this.txSize,
       rxSize: responseSize,
       duration: now() - this.startTime
@@ -362,17 +361,18 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
 
   // Create report for XHR request that has finished
   function end (xhr) {
-    var params = this.params
-    var metrics = this.metrics
-
+    const params = this.params
+    const metrics = this.metrics
     if (this.ended) return
     this.ended = true
 
-    for (var i = 0; i < handlersLen; i++) {
+    for (let i = 0; i < handlersLen; i++) {
       xhr.removeEventListener(handlers[i], this.listener, false)
     }
 
     if (params.aborted) return
+    if (hasUndefinedHostname(params)) return // don't bother with XHR of url with no hostname
+
     metrics.duration = now() - this.startTime
     if (!this.loadCaptureCalled && xhr.readyState === 4) {
       captureXhrData(this, xhr)
@@ -395,6 +395,7 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
     if (ctx.sameOrigin) {
       var header = xhr.getResponseHeader('X-NewRelic-App-Data')
       if (header) {
+        handle(SUPPORTABILITY_METRIC, ['Ajax/CrossApplicationTracing/Header/Seen'], undefined, FEATURE_NAMES.metrics, ee)
         ctx.params.cat = header.split(', ').pop()
       }
     }

@@ -16,7 +16,12 @@ const {
   testAjaxTimeSlicesRequest,
   testResourcesRequest,
   testInteractionEventsRequest,
-  testBlobRequest
+  testBlobRequest,
+  testBlobReplayRequest,
+  testBlobTraceRequest,
+  testSessionReplaySnapshotRequest,
+  testInternalErrorsRequest,
+  testAnyJseXhrRequest
 } = require('./utils/expect-tests')
 
 /**
@@ -28,6 +33,8 @@ const {
  * @property {number} statusCode response code
  * @property {string} body response body
  * @property {number} delay delay the response by a number of milliseconds
+ * @property {string[]} removeHeaders list of headers to remove from the response
+ * @property {{ key: string, value: string }[]} setHeaders list of key:value pairs to add as headers to the response
  */
 
 /**
@@ -271,9 +278,7 @@ module.exports = class TestHandle {
       {
         loader: 'full',
         config: {
-          licenseKey: this.#testId,
-          assetServerPort: this.testServer.assetServer.port,
-          corsServerPort: this.testServer.corsServer.port
+          licenseKey: this.#testId
         },
         script:
           '/' + path.relative(paths.rootDir, testFile) + '?browserify=true'
@@ -371,6 +376,22 @@ module.exports = class TestHandle {
     })
   }
 
+  expectInternalErrors (timeout, expectTimeout = false) {
+    return this.expect('bamServer', {
+      timeout,
+      test: testInternalErrorsRequest,
+      expectTimeout
+    })
+  }
+
+  expectAnyJseXhr (timeout, expectTimeout = false) {
+    return this.expect('bamServer', {
+      timeout,
+      test: testAnyJseXhrRequest,
+      expectTimeout
+    })
+  }
+
   expectAjaxTimeSlices (timeout, expectTimeout = false) {
     return this.expect('bamServer', {
       timeout,
@@ -399,6 +420,30 @@ module.exports = class TestHandle {
     return this.expect('bamServer', {
       timeout,
       test: testBlobRequest,
+      expectTimeout
+    })
+  }
+
+  expectReplay (timeout, expectTimeout = false) {
+    return this.expect('bamServer', {
+      timeout,
+      test: testBlobReplayRequest,
+      expectTimeout
+    })
+  }
+
+  expectTrace (timeout, expectTimeout = false) {
+    return this.expect('bamServer', {
+      timeout,
+      test: testBlobTraceRequest,
+      expectTimeout
+    })
+  }
+
+  expectSessionReplaySnapshot (timeout, expectTimeout = false) {
+    return this.expect('bamServer', {
+      timeout,
+      test: testSessionReplaySnapshotRequest,
       expectTimeout
     })
   }

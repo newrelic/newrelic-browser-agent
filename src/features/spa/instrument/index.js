@@ -7,10 +7,10 @@ import {
 } from '../../../common/wrap'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
 import { InstrumentBase } from '../../utils/instrument-base'
-import { getRuntime } from '../../../common/config/config'
-import { now } from '../../../common/timing/now'
 import * as CONSTANTS from '../constants'
 import { isBrowserScope } from '../../../common/constants/runtime'
+import { now } from '../../../common/timing/now'
+import { handle } from '../../../common/event-emitter/handle'
 
 const {
   FEATURE_NAME, START, END, BODY, CB_END, JS_TIME, FETCH, FN_START, CB_START, FN_END
@@ -21,8 +21,6 @@ export class Instrument extends InstrumentBase {
   constructor (agentIdentifier, aggregator, auto = true) {
     super(agentIdentifier, aggregator, FEATURE_NAME, auto)
     if (!isBrowserScope) return // SPA not supported outside web env
-
-    if (!getRuntime(agentIdentifier).xhrWrappable) return
 
     try {
       this.removeOnAbort = new AbortController()
@@ -48,6 +46,8 @@ export class Instrument extends InstrumentBase {
     this.ee.on(FN_END, endTimestamp)
     promiseEE.on(CB_END, endTimestamp)
     jsonpEE.on(CB_END, endTimestamp)
+
+    this.ee.on('fn-err', (...args) => { if (!args[2]?.__newrelic?.[agentIdentifier]) handle('function-err', [...args], undefined, this.featureName, this.ee) })
 
     this.ee.buffer([FN_START, FN_END, 'xhr-resolved'], this.featureName)
     eventsEE.buffer([FN_START], this.featureName)

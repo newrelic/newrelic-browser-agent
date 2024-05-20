@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+<head>
+  <title>RUM Unit Test</title>
+  {init} {config} {loader}
+</head>
+<body>
+This page throws an uncaught SyntaxError exception
+
+<!-- Fail with syntax error -->
+<script>
+  -
+</script>
+
+<!-- Fail with an eval syntax error -->
+<script>
+  eval('-')
+</script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Simple XHR</title>
+  {init} {config} {loader}
+</head>
+<body>
+<div>
+  This page uses a button to initiate an XHR that will result in a network error. When running in a spec file, setting
+  `window.disableAjaxHashChange = true` will disable the hash route change so the
+  ajax call is fully processed by the ajax feature instead of the SPA feature.
+</div>
+<div><button id="sendAjax">Send Ajax</button></div>
+<script>
+  window.disableAjaxHashChange = false
+  document.getElementById('sendAjax').addEventListener('click', function () {
+    var xhr = new XMLHttpRequest()
+    xhr.addEventListener('loadend', function () {
+      if (!disableAjaxHashChange) {
+        window.location.hash = Math.random()
+      }
+    })
+    xhr.open('GET', 'http://foobar/bizbaz')
+    xhr.send()
+  })
+</script>
+</body>
+</html>

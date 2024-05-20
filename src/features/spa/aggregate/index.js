@@ -24,6 +24,8 @@ import { bundleId } from '../../../common/ids/bundle-id'
 import { loadedAsDeferredBrowserScript } from '../../../common/constants/runtime'
 import { handle } from '../../../common/event-emitter/handle'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
+import { deregisterDrain } from '../../../common/drain/drain'
+import { warn } from '../../../common/util/console'
 
 const {
   FEATURE_NAME, INTERACTION_EVENTS, MAX_TIMER_BUDGET, FN_START, FN_END, CB_START, INTERACTION_API, REMAINING,
@@ -34,9 +36,10 @@ export class Aggregate extends AggregateBase {
   constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
 
+    const agentRuntime = getRuntime(agentIdentifier)
     this.state = {
-      initialPageURL: getRuntime(agentIdentifier).origin,
-      lastSeenUrl: getRuntime(agentIdentifier).origin,
+      initialPageURL: agentRuntime.origin,
+      lastSeenUrl: agentRuntime.origin,
       lastSeenRouteName: null,
       timerMap: {},
       timerBudget: MAX_TIMER_BUDGET,
@@ -54,10 +57,10 @@ export class Aggregate extends AggregateBase {
       disableSpaFix: (getConfigurationValue(agentIdentifier, 'feature_flags') || []).indexOf('disable-spa-fix') > -1
     }
 
+    let scheduler
     this.serializer = new Serializer(this)
 
     const { state, serializer } = this
-    let { blocked } = this
 
     const baseEE = ee.get(agentIdentifier) // <-- parent baseEE
     const mutationEE = baseEE.get('mutation')
@@ -69,12 +72,6 @@ export class Aggregate extends AggregateBase {
     const jsonpEE = baseEE.get('jsonp')
     const xhrEE = baseEE.get('xhr')
     const tracerEE = baseEE.get('tracer')
-
-    const scheduler = new HarvestScheduler('events', {
-      onFinished: onHarvestFinished,
-      retryDelay: state.harvestTimeSeconds
-    }, { agentIdentifier, ee: baseEE })
-    scheduler.harvest.on('events', onHarvestStarted)
 
     // childTime is used when calculating exclusive time for a cb duration.
     //
@@ -108,11 +105,19 @@ export class Aggregate extends AggregateBase {
     //  | click ending:                   |   65  |    50    |        |           |           |
     // click fn-end                       |   70  |    0     |    0   |     70    |     20    |
 
-    // if rum response determines that customer lacks entitlements for spa endpoint, block it
-    register('block-spa', () => {
-      blocked = true
-      scheduler.stopTimer(true)
-    }, this.featureName, baseEE)
+    this.waitForFlags((['spa'])).then(([spaFlag]) => {
+      if (spaFlag) {
+        scheduler = new HarvestScheduler('events', {
+          onFinished: onHarvestFinished,
+          retryDelay: state.harvestTimeSeconds
+        }, { agentIdentifier, ee: baseEE })
+        scheduler.harvest.on('events', onHarvestStarted)
+        this.drain()
+      } else {
+        this.blocked = true
+        deregisterDrain(this.agentIdentifier, this.featureName)
+      }
+    })
 
     if (!isEnabled()) return
 
@@ -304,6 +309,9 @@ export class Aggregate extends AggregateBase {
       if (node && !this.sent) {
         this.sent = true
         node.dt = this.dt
+        if (node.dt?.timestamp) {
+          node.dt.timestamp = agentRuntime.timeKeeper.correctAbsoluteTimestamp(node.dt.timestamp)
+        }
         node.jsEnd = node.start = this.startTime
         node[INTERACTION][REMAINING]++
       }
@@ -399,7 +407,12 @@ export class Aggregate extends AggregateBase {
 
         if (state.currentNode) {
           this[SPA_NODE] = state.currentNode.child('ajax', this[FETCH_START])
-          if (dtPayload && this[SPA_NODE]) this[SPA_NODE].dt = dtPayload
+          if (dtPayload && this[SPA_NODE]) {
+            this[SPA_NODE].dt = dtPayload
+            if (this[SPA_NODE].dt?.timestamp) {
+              this[SPA_NODE].dt.timestamp = agentRuntime.timeKeeper.correctAbsoluteTimestamp(this[SPA_NODE].dt.timestamp)
+            }
+          }
         }
       }
     }, this.featureName, fetchEE)
@@ -661,8 +674,9 @@ export class Aggregate extends AggregateBase {
       setCurrentNode(null)
     }
 
+    const classThis = this
     function onHarvestStarted (options) {
-      if (state.interactionsToHarvest.length === 0 || blocked) return {}
+      if (state.interactionsToHarvest.length === 0 || classThis.blocked) return {}
       var payload = serializer.serializeMultiple(state.interactionsToHarvest, 0, navTiming)
 
       if (options.retry) {
@@ -684,7 +698,7 @@ export class Aggregate extends AggregateBase {
       }
     }
 
-    baseEE.on('errorAgg', function (type, name, params, metrics) {
+    baseEE.on('spa-jserror', function (type, name, params, metrics) {
       if (!state.currentNode) return
       params._interactionId = state.currentNode.interaction.id
       // do not capture parentNodeId when in root node
@@ -692,6 +706,15 @@ export class Aggregate extends AggregateBase {
         params._interactionNodeId = state.currentNode.id
       }
     })
+
+    register('function-err', function (args, obj, error) {
+      if (!state.currentNode) return
+      error.__newrelic ??= {}
+      error.__newrelic[agentIdentifier] = { interactionId: state.currentNode.interaction.id }
+      if (state.currentNode.type && state.currentNode.type !== 'interaction') {
+        error.__newrelic[agentIdentifier].interactionNodeId = state.currentNode.id
+      }
+    }, this.featureName, baseEE)
 
     baseEE.on('interaction', saveInteraction)
 
@@ -706,7 +729,7 @@ export class Aggregate extends AggregateBase {
 
     function saveInteraction (interaction) {
       if (interaction.ignored || (!interaction.save && !interaction.routeChange)) {
-        baseEE.emit('interactionDiscarded', [interaction])
+        baseEE.emit('interactionDone', [interaction, false])
         return
       }
 
@@ -724,22 +747,22 @@ export class Aggregate extends AggregateBase {
         interaction.root.attrs.firstPaint = firstPaint.current.value
         interaction.root.attrs.firstContentfulPaint = firstContentfulPaint.current.value
       }
-      baseEE.emit('interactionSaved', [interaction])
+      baseEE.emit('interactionDone', [interaction, true])
       state.interactionsToHarvest.push(interaction)
 
-      let smCategory = 'RouteChange'
+      let smCategory
       if (interaction.root?.attrs?.trigger === 'initialPageLoad') smCategory = 'InitialPageLoad'
-      else if (interaction.root?.attrs?.trigger === 'api') smCategory = 'Custom'
+      else if (interaction.routeChange) smCategory = 'RouteChange'
+      else smCategory = 'Custom'
       handle(SUPPORTABILITY_METRIC_CHANNEL, [`Spa/Interaction/${smCategory}/Duration/Ms`, Math.max((interaction.root?.end || 0) - (interaction.root?.start || 0), 0)], undefined, FEATURE_NAMES.metrics, baseEE)
 
-      scheduler.scheduleHarvest(0)
+      scheduler?.scheduleHarvest(0)
+      if (!scheduler) warn('SPA scheduler is not initialized. Saved interaction is not sent!')
     }
 
     function isEnabled () {
       var enabled = getConfigurationValue(agentIdentifier, 'spa.enabled')
       return enabled !== false
     }
-
-    this.drain()
   }
 }

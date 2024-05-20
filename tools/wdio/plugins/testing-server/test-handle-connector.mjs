@@ -6,7 +6,9 @@ import {
   testAjaxEventsRequest, testAjaxTimeSlicesRequest, testCustomMetricsRequest, testErrorsRequest,
   testEventsRequest, testInsRequest, testInteractionEventsRequest, testMetricsRequest, testResourcesRequest,
   testRumRequest, testSupportMetricsRequest,
-  testTimingEventsRequest, testBlobRequest
+  testTimingEventsRequest, testBlobRequest, testBlobReplayRequest, testBlobTraceRequest, testSessionReplaySnapshotRequest,
+  testInternalErrorsRequest,
+  testAnyJseXhrRequest
 } from '../../../testing-server/utils/expect-tests.js'
 import defaultAssetQuery from './default-asset-query.mjs'
 import { getBrowserName, getBrowserVersion } from '../../../browsers-lists/utils.mjs'
@@ -24,16 +26,14 @@ const log = logger('testing-server-connector')
  */
 export class TestHandleConnector {
   #assetServerConfig
-  #corsServerConfig
   #bamServerConfig
   #commandServerConfig
   #commandServerBase
   #testId
   #pendingExpects = new Set()
 
-  constructor (assetServerConfig, corsServerConfig, bamServerConfig, commandServerConfig) {
+  constructor (assetServerConfig, bamServerConfig, commandServerConfig) {
     this.#assetServerConfig = assetServerConfig
-    this.#corsServerConfig = corsServerConfig
     this.#bamServerConfig = bamServerConfig
     this.#commandServerConfig = commandServerConfig
     this.#commandServerBase = `http://127.0.0.1:${commandServerConfig.port}`
@@ -41,10 +41,6 @@ export class TestHandleConnector {
 
   get assetServerConfig () {
     return this.#assetServerConfig
-  }
-
-  get corsServerConfig () {
-    return this.#corsServerConfig
   }
 
   get bamServerConfig () {
@@ -275,6 +271,22 @@ export class TestHandleConnector {
     })
   }
 
+  expectAnyJseXhr (timeout, expectTimeout = false) {
+    return this.expect('bamServer', {
+      timeout,
+      test: testAnyJseXhrRequest,
+      expectTimeout
+    })
+  }
+
+  expectInternalErrors (timeout, expectTimeout = false) {
+    return this.expect('bamServer', {
+      timeout,
+      test: testInternalErrorsRequest,
+      expectTimeout
+    })
+  }
+
   expectAjaxTimeSlices (timeout, expectTimeout = false) {
     return this.expect('bamServer', {
       timeout,
@@ -303,6 +315,30 @@ export class TestHandleConnector {
     return this.expect('bamServer', {
       timeout,
       test: testBlobRequest,
+      expectTimeout
+    })
+  }
+
+  expectReplay (timeout, expectTimeout = false) {
+    return this.expect('bamServer', {
+      timeout,
+      test: testBlobReplayRequest,
+      expectTimeout
+    })
+  }
+
+  expectTrace (timeout, expectTimeout = false) {
+    return this.expect('bamServer', {
+      timeout,
+      test: testBlobTraceRequest,
+      expectTimeout
+    })
+  }
+
+  expectSessionReplaySnapshot (timeout, expectTimeout = false) {
+    return this.expect('bamServer', {
+      timeout,
+      test: testSessionReplaySnapshotRequest,
       expectTimeout
     })
   }

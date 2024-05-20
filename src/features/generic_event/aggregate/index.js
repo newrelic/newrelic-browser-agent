@@ -98,7 +98,7 @@ export class Aggregate extends AggregateBase {
 
     this.events.push(eventAttributes)
     // check if we've reached the harvest limit...
-    if (this.events.length >= 1000) {
+    if (this.events.length >= this.eventsPerHarvest) {
       this.overflow = [...this.overflow, ...this.events.splice(0, Infinity)]
       this.harvestScheduler.runHarvest()
     }

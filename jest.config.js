@@ -15,8 +15,6 @@ module.exports = {
   coverageDirectory: 'coverage',
   collectCoverageFrom: [
     'src/**/*.js',
-    '!src/**/*.test.js',
-    '!src/**/*.component-test.js',
     '!src/index.js',
     '!src/cdn/**/*.js',
     '!src/features/*/index.js',
@@ -27,12 +25,12 @@ module.exports = {
     {
       ...commonConfig,
       displayName: 'unit',
-      testMatch: ['<rootDir>/src/**/?(*.)+(test).[tj]s?(x)']
+      testMatch: ['<rootDir>/tests/unit/**/?(*.)+(test).[tj]s?(x)']
     },
     {
       ...commonConfig,
       displayName: 'component',
-      testMatch: ['<rootDir>/src/**/?(*.)+(component-test).[tj]s?(x)']
+      testMatch: ['<rootDir>/tests/components/**/?(*.)+(test).[tj]s?(x)']
     }
   ]
 }

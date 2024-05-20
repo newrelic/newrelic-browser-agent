@@ -1,4 +1,4 @@
-import { supportsMultipleTabs } from '../../tools/browser-matcher/common-matchers.mjs'
+import { notSafari, supportsMultipleTabs } from '../../tools/browser-matcher/common-matchers.mjs'
 
 const config = {
   init: {
@@ -16,7 +16,8 @@ describe('newrelic session ID', () => {
     sessionReplaySentFirstChunk: expect.any(Boolean),
     sessionTraceMode: expect.any(Number),
     traceHarvestStarted: expect.any(Boolean),
-    custom: expect.any(Object)
+    custom: expect.any(Object),
+    serverTimeDiff: expect.any(Number)
   })
 
   afterEach(async () => {
@@ -67,7 +68,7 @@ describe('newrelic session ID', () => {
       expect(ls2.expiresAt).toEqual(ls1.expiresAt)
     })
 
-    it.withBrowsersMatching(supportsMultipleTabs)('should keep a session id across page loads - Multi tab navigation', async () => {
+    it.withBrowsersMatching([supportsMultipleTabs, notSafari])('should keep a session id across page loads - Multi tab navigation', async () => {
       await browser.url(await browser.testHandle.assetURL('session-entity.html', config))
         .then(() => browser.waitForAgentLoad())
 
@@ -78,12 +79,12 @@ describe('newrelic session ID', () => {
       await browser.switchToWindow(newTab.handle)
       await browser.url(await browser.testHandle.assetURL('instrumented.html', config))
         .then(() => browser.waitForAgentLoad())
-        .finally(async () => {
-          await browser.closeWindow()
-          await browser.switchToWindow((await browser.getWindowHandles())[0])
-        })
 
       const { localStorage: ls2 } = await browser.getAgentSessionInfo()
+
+      await browser.closeWindow()
+      await browser.switchToWindow((await browser.getWindowHandles())[0])
+
       expect(ls2).toEqual(anySession())
       expect(ls2.value).toEqual(ls1.value)
       expect(ls2.expiresAt).toEqual(ls1.expiresAt)

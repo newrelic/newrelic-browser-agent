@@ -19,7 +19,6 @@ process.on('unhandledRejection', (error, p) => {
   const hostname = args.host
 
   console.log(`asset server: http://${hostname}:${server.assetServer.port}`)
-  console.log(`cors server: http://${hostname}:${server.corsServer.port}`)
   console.log(`bam server: http://${hostname}:${server.bamServer.port}`)
   console.log(`command server: http://${hostname}:${server.commandServer.port}`)
 
@@ -27,7 +26,6 @@ process.on('unhandledRejection', (error, p) => {
     try {
       process.send({
         assetServer: { hostname, port: server.assetServer.port },
-        corsServer: { hostname, port: server.corsServer.port },
         bamServer: { hostname, port: server.bamServer.port },
         commandServer: { hostname, port: server.commandServer.port }
       })

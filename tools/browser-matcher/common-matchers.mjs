@@ -41,6 +41,21 @@ export const notIOS = new SpecMatcher()
   .include('android')
   .include('ie')
 
+export const notAndroid = new SpecMatcher()
+  .include('safari')
+  .include('chrome')
+  .include('edge')
+  .include('firefox')
+  .include('ios')
+  .include('ie')
+
+export const notFirefox = new SpecMatcher()
+  .include('safari')
+  .include('chrome')
+  .include('edge')
+  .include('android')
+  .include('ie')
+
 export const notMobile = new SpecMatcher()
   .include('safari')
   .include('chrome')
@@ -56,6 +71,9 @@ export const notSafari = new SpecMatcher()
   .include('android')
   .include('ie')
 
+export const onlyIE = new SpecMatcher()
+  .include('ie')
+
 export const onlyChrome = new SpecMatcher()
   .include('chrome')
 
@@ -65,6 +83,14 @@ export const onlyIOS = new SpecMatcher()
 export const onlyAndroid = new SpecMatcher()
   .include('android')
 
+export const onlyChromium = new SpecMatcher()
+  .include('chrome')
+  .include('edge')
+  .include('android>9.0')
+
+export const onlyFirefox = new SpecMatcher()
+  .include('firefox')
+
 /**
  * Matcher based on ES2022 support
  * This is a snapshot in time and would need to be updated.
@@ -73,7 +99,7 @@ export const es2022Support = new SpecMatcher()
   .include('chrome>=94')
   .include('edge>=94')
   .include('firefox>=93')
-  .include('android>=114')
+  .include('android>=9.0')
   .include('safari>=15.4')
   .include('ios>=15.4')
 

@@ -25,8 +25,8 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: lts/*
       - name: Install project dependencies
@@ -48,13 +48,31 @@ jobs:
           bucket_dir: experiments/${{ inputs.nr_environment }}/${{ steps.clean-branch-name.outputs.results }}
       - name: Gather purge paths
         id: purge-paths
-        run: echo "results=$(echo '${{ steps.s3-upload.outputs.results }}' | jq -j '.[].Key | select(. | test("nr-loader-.*?\\.js$") or test(".*stats\\.json$")) + " "')" >> $GITHUB_OUTPUT
-      - name: Purge fastly cache
+        run: echo "results=$(echo '${{ steps.s3-upload.outputs.results }}' | jq -j '.[].Key + " "')" >> $GITHUB_OUTPUT
+      - name: Purge production cdn
         uses: ./.github/actions/fastly-purge
         with:
           fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
           fastly_service: js-agent.newrelic.com
           purge_path: ${{ steps.purge-paths.outputs.results }}
+      - name: Purge staging cdn
+        uses: ./.github/actions/fastly-purge
+        with:
+          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
+          fastly_service: staging-js-agent.newrelic.com
+          purge_path: ${{ steps.purge-paths.outputs.results }}
+      - name: Verify production cdn assets
+        uses: ./.github/actions/fastly-verify
+        with:
+          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
+          fastly_service: js-agent.newrelic.com
+          asset_path: ${{ join(fromJson(steps.s3-upload.outputs.results).*.Key, ' ') }}
+      - name: Verify staging cdn assets
+        uses: ./.github/actions/fastly-verify
+        with:
+          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
+          fastly_service: staging-js-agent.newrelic.com
+          asset_path: ${{ join(fromJson(steps.s3-upload.outputs.results).*.Key, ' ') }}
 
   # Rebuild and publish the environment A/B script
   publish-ab:
@@ -65,10 +83,8 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v3
-        with:
-          ref: main
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: lts/*
       - name: Publish a/b script

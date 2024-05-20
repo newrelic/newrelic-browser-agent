@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>XHR ReadyStateChange After Send</title>
+  {init} {config} {loader}
+</head>
+<body>
+<div>
+  This page uses a button to initiate an XHR and add an `onreadystatechange` function after
+  calling `send()`. The variable `window.readyStatesSeen` can be used to verify the agent
+  is wrapping the `onreadystatechange` function properly. Use `window.reset()` to reset this
+  variable. When running in a spec file, setting
+  `window.disableAjaxHashChange = true` will disable the hash route change so the
+  ajax call is fully processed by the ajax feature instead of the SPA feature.
+</div>
+<div><button id="sendAjax">Send Ajax</button></div>
+<script>
+  window.disableAjaxHashChange = false
+  window.readyStatesSeen = []
+  window.reset = function () {
+    window.readyStatesSeen = []
+  }
+  document.getElementById('sendAjax').addEventListener('click', function () {
+    var xhr = new XMLHttpRequest()
+    xhr.addEventListener('loadend', function () {
+      if (!disableAjaxHashChange) {
+        window.location.hash = Math.random()
+      }
+    })
+    xhr.open('GET', '/json')
+    xhr.send()
+
+    xhr.onreadystatechange = function () {
+      if (window.readyStatesSeen.indexOf(xhr.readyState) === -1) {
+        var nrContext = Object.keys(xhr.onreadystatechange).find(function (key) {
+          return key.indexOf('nr@original') === 0
+        })
+        window.readyStatesSeen.push([xhr.readyState, nrContext])
+      }
+    }
+  })
+</script>
+</body>
+</html>

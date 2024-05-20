@@ -21,8 +21,5 @@ export const args = yargs(hideBin(process.argv))
   .string('nrDocsGithubToken')
   .describe('nrDocsGithubToken', 'New Relic github org authentication token scoped to the docs repo')
 
-  .string('nrForksGithubToken')
-  .describe('nrForksGithubToken', 'New Relic Forks github org authentication token')
-
-  .demandOption(['tag', 'githubLogin', 'githubUserName', 'githubEmail', 'nrDocsGithubToken', 'nrForksGithubToken'])
+  .demandOption(['tag', 'githubLogin', 'githubUserName', 'githubEmail', 'nrDocsGithubToken'])
   .argv

@@ -10,14 +10,9 @@ var denyList = []
  * @returns {boolean} `true` if request does not match any entries of {@link denyList|deny list}; else `false`
  */
 export function shouldCollectEvent (params) {
-  if (denyList.length === 0) {
-    return true
-  }
+  if (hasUndefinedHostname(params)) return false
 
-  // XHR requests with an undefined hostname (e.g., data URLs) should not be collected.
-  if (params.hostname === undefined) {
-    return false
-  }
+  if (denyList.length === 0) return true
 
   for (var i = 0; i < denyList.length; i++) {
     var parsed = denyList[i]
@@ -33,6 +28,10 @@ export function shouldCollectEvent (params) {
   }
 
   return true
+}
+
+export function hasUndefinedHostname (params) {
+  return (params.hostname === undefined) // requests with an undefined hostname (e.g., data URLs) should not be collected.
 }
 
 /**

@@ -21,13 +21,11 @@ export default class TestingServerLauncher {
     await this.#testingServer.start()
 
     log.info(`Asset server started on http://${this.#testingServer.assetServer.host}:${this.#testingServer.assetServer.port}`)
-    log.info(`CORS server started on http://${this.#testingServer.corsServer.host}:${this.#testingServer.corsServer.port}`)
     log.info(`BAM server started on http://${this.#testingServer.bamServer.host}:${this.#testingServer.bamServer.port}`)
     log.info(`Command server started on http://${this.#testingServer.commandServer.host}:${this.#testingServer.commandServer.port}`)
 
     capabilities.forEach((capability) => {
       capability.assetServer = serialize({ host: this.#testingServer.assetServer.host, port: this.#testingServer.assetServer.port })
-      capability.corsServer = serialize({ host: this.#testingServer.corsServer.host, port: this.#testingServer.corsServer.port })
       capability.bamServer = serialize({ host: this.#testingServer.bamServer.host, port: this.#testingServer.bamServer.port })
       capability.commandServer = serialize({ host: this.#testingServer.commandServer.host, port: this.#testingServer.commandServer.port })
     })

@@ -12,8 +12,10 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { warn } from '../../../common/util/console'
 import { marksAndMeasures } from '../../../common/generic-events/marks-and-measures'
 import { pageActions } from '../../../common/generic-events/page-actions'
+import { now } from '../../../common/timing/now'
 
 export class Aggregate extends AggregateBase {
+  #agentRuntime
   static featureName = FEATURE_NAME
   constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
@@ -26,6 +28,8 @@ export class Aggregate extends AggregateBase {
 
     this.events = []
     this.overflow = []
+
+    this.#agentRuntime = getRuntime(this.agentIdentifier)
 
     if (isBrowserScope && document.referrer) this.referrerUrl = cleanURL(document.referrer)
 
@@ -83,20 +87,27 @@ export class Aggregate extends AggregateBase {
     }
 
     for (let key in obj) {
-      const val = obj[key]
+      let val = obj[key]
+      if (key === 'timestamp') val = this.#agentRuntime.timeKeeper.correctAbsoluteTimestamp(val)
       obj[key] = (val && typeof val === 'object' ? stringify(val) : val)
     }
 
     const eventAttributes = {
+      /** Agent-level custom attributes */
       ...(getInfo(this.agentIdentifier).jsAttributes || {}),
-      timestamp: Date.now(), // hopefully provided by reporting feature -- falls back to now
+      /** Common attributes shared on all generic events */
       referrerUrl: this.referrerUrl,
       currentUrl: cleanURL('' + location),
       pageUrl: cleanURL(getRuntime(this.agentIdentifier).origin),
+      /** Event-specific attributes take precedence over everything else */
       ...obj
     }
 
+    /** should have been provided by reporting feature -- but falls back to now if not */
+    eventAttributes.timestamp ??= this.#agentRuntime.timeKeeper.convertRelativeTimestamp(now())
+
     this.events.push(eventAttributes)
+
     // check if we've reached the harvest limit...
     if (this.events.length >= this.eventsPerHarvest) {
       this.overflow = [...this.overflow, ...this.events.splice(0, Infinity)]

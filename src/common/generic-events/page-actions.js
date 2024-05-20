@@ -2,7 +2,7 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { offset } from '../constants/runtime'
+import { originTime } from '../constants/runtime'
 import { EventMessenger } from './event-messenger'
 
 class PageActions extends EventMessenger {
@@ -11,7 +11,7 @@ class PageActions extends EventMessenger {
       value: {
         ...attributes,
         eventType: 'PageAction',
-        timestamp: Math.floor(t + offset),
+        timestamp: t + originTime,
         timeSinceLoad: t / 1000,
         actionName: name,
         browserWidth: window?.document?.documentElement?.clientWidth,

@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "Mon May 13 2024 21:55:47 GMT+0000 (Coordinated Universal Time)",
+  "lastUpdated": "Mon May 20 2024 17:44:31 GMT+0000 (Coordinated Universal Time)",
   "projectName": "New Relic Browser Agent",
   "projectUrl": "https://github.com/newrelic/newrelic-browser-agent",
   "includeOptDeps": true,
@@ -599,6 +599,20 @@
       "licenseTextSource": "file",
       "publisher": "Matteo Collina",
       "email": "hello@matteocollina.com"
+    },
+    "form-data@4.0.0": {
+      "name": "form-data",
+      "version": "4.0.0",
+      "range": "^4.0.0",
+      "licenses": "MIT",
+      "repoUrl": "https://github.com/form-data/form-data",
+      "versionedRepoUrl": "https://github.com/form-data/form-data/tree/v4.0.0",
+      "licenseFile": "node_modules/form-data/License",
+      "licenseUrl": "https://github.com/form-data/form-data/blob/v4.0.0/License",
+      "licenseTextSource": "file",
+      "publisher": "Felix Geisendörfer",
+      "email": "felix@debuggable.com",
+      "url": "http://debuggable.com/"
     },
     "fs-extra@11.2.0": {
       "name": "fs-extra",

@@ -259,7 +259,6 @@ describe('Promise prototype .then', () => {
         newrelic.interaction().command('setAttribute', undefined, 'foo', 1)
         expect(val).toBe(thrownError)
         setTimeout(newrelic.interaction().createTracer('timer', function () {
-          // window.location.hash = '#' + Math.random()
           cb()
         }))
       })

@@ -148,7 +148,6 @@ describe('Promise prototype .then', () => {
       }).then(val => {
         setTimeout(newrelic.interaction().createTracer('timer', function () {
           expect(val).toEqual(10)
-          // window.location.hash = '#' + Math.random()
           cb()
         }))
       })

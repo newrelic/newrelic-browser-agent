@@ -411,7 +411,6 @@ describe('Promise prototype .catch', () => {
       }).catch(function (val) {
         expect(val).toBe(thrownError)
         setTimeout(newrelic.interaction().createTracer('timer', function () {
-          // window.location.hash = '#' + Math.random()
           cb()
         }))
       })

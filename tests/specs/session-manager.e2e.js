@@ -95,7 +95,7 @@ describe('newrelic session ID', () => {
         .then(() => browser.waitForAgentLoad())
 
       const { request: { query } } = await browser.testHandle.expectErrors()
-      expect(query.s).not.toEqual(0)
+      expect(query.s).not.toEqual('0')
       expect(query.s).toBeTruthy()
     })
   })

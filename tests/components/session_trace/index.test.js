@@ -17,7 +17,7 @@ jest.mock('../../../src/common/config/config', () => ({
   }),
   isConfigured: jest.fn().mockReturnValue(true),
   getRuntime: jest.fn().mockReturnValue({
-    session: { state: { value: 'sessionID' }, write: jest.fn() },
+    session: { state: { value: 'sessionID', sessionTraceMode: 1 }, write: jest.fn() },
     timeKeeper: { ready: true, correctedOriginTime: 0, convertRelativeTimestamp: jest.fn() }
   })
 }))
@@ -100,7 +100,7 @@ describe('session trace', () => {
     const spy = jest.spyOn(traceAggregate.traceStorage, 'takeSTNs')
     let payload
     expect(() => (payload = traceAggregate.prepareHarvest())).not.toThrow()
-    expect(spy).toHaveBeenCalled()
+    expect(spy).not.toHaveBeenCalled() // returns early before trying to take from agg if there's no nodes to take
     expect(payload).toBeUndefined()
     spy.mockRestore()
   })

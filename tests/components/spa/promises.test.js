@@ -310,7 +310,6 @@ describe('Promise prototype .then', () => {
         expect(val).toEqual(5)
         expect(spaAggregate.state.currentNode?.id).toEqual(rootId)
         setTimeout(newrelic.interaction().createTracer('timer', function () {
-          // window.location.hash = '#' + Math.random()
           cb()
         }))
       })

@@ -380,7 +380,6 @@ describe('Promise prototype .catch', () => {
       }).catch(function validate (val) {
         expect(val).toEqual(123)
         setTimeout(newrelic.interaction().createTracer('timer', function () {
-          // window.location.hash = '#' + Math.random()
           cb()
         }))
       })

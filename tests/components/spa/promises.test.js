@@ -33,8 +33,6 @@ beforeAll(async () => {
   spaInstrument = new Spa(agentIdentifier, aggregator)
   await expect(spaInstrument.onAggregateImported).resolves.toEqual(true)
   spaAggregate = spaInstrument.featAggregate
-  // spaAggregate.ee.emit('rumresp', [{ spa: 1 }]) -- this is going to execute the original spa waitforflags callback immediately
-  // await spaAggregate.waitForFlags(['spa']) -- can't await for flags against since RUM never set activatedFeatures for real
   newrelic = helpers.getNewrelicGlobal(spaAggregate.ee)
 })
 

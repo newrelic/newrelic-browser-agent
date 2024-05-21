@@ -117,7 +117,6 @@ describe('Promise base', () => {
       }).catch(val => {
         setTimeout(newrelic.interaction().createTracer('timer', function () {
           expect(val).toBe(thrownError)
-          // window.location.hash = '#' + Math.random()
           cb()
         }))
       })

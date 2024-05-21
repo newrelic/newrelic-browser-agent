@@ -11,7 +11,7 @@ export const baseQuery = expect.objectContaining({
   v: expect.any(String)
 })
 
-export function checkRum ({ query, body }, { liteAgent } = {}) {
+export function checkRumQuery ({ query }, { liteAgent } = {}) {
   expect(query).toMatchObject({
     a: expect.any(String),
     be: expect.any(String),
@@ -23,14 +23,23 @@ export function checkRum ({ query, body }, { liteAgent } = {}) {
     rst: expect.any(String),
     s: expect.any(String),
     t: expect.any(String),
-    v: expect.any(String)
+    v: expect.any(String),
   })
   if (!liteAgent) {
     expect(query).toMatchObject({
       af: expect.any(String),
     })
   }
+}
+
+export function checkRumBody({body}){
   expect(body).toEqual('')
+}
+
+export function checkRumPerf({ query, body }) {
+  const perf = JSON.parse(query.perf)
+  expect(!!(perf.timing && perf.navigation)).toEqual(true)
+  Object.values(perf.timing).forEach(val => expect(val).toBeGreaterThanOrEqual(0))
 }
 
 export function checkPVT ({ query, body }) {

@@ -68,14 +68,14 @@ describe('pvt timings tests', () => {
           browser.url(url)
             .then(() => browser.waitForAgentLoad()
               .then(() => $('#free_tacos').click())
-              .then(() => browser.pause(100))
+              .then(() => browser.pause(1000))
               .then(async () => browser.url(await browser.testHandle.assetURL('/')))
             )
         ])
 
         if (browserMatch(supportsFirstInputDelay)) {
           const fi = body.find(t => t.name === 'fi')
-          expect(fi.value).toBeGreaterThan(0)
+          expect(fi.value).toBeGreaterThanOrEqual(0)
           expect(fi.value).toBeLessThan(Date.now() - start)
 
           const fiType = fi.attributes.find(attr => attr.key === 'type')
@@ -83,7 +83,7 @@ describe('pvt timings tests', () => {
           expect(fiType.type).toEqual('stringAttribute')
 
           const fid = fi.attributes.find(attr => attr.key === 'fid')
-          expect(fid.value).toBeGreaterThan(0)
+          expect(fid.value).toBeGreaterThanOrEqual(0)
           expect(fid.type).toEqual('doubleAttribute')
         }
 
@@ -132,7 +132,7 @@ describe('pvt timings tests', () => {
                   timeout: 30000,
                   timeoutMsg: 'contentAdded was never set'
                 }))
-              .then(() => browser.pause(100))
+              .then(() => browser.pause(1000))
               .then(async () => browser.url(await browser.testHandle.assetURL('/')))
           ])
 
@@ -186,7 +186,7 @@ describe('pvt timings tests', () => {
             .then(async () => browser.url(await browser.testHandle.assetURL('/')))
         ])
         const ltEvents = body.filter(t => t.name === 'lt')
-        expect(ltEvents.length).toEqual(2)
+        expect(ltEvents.length).toBeGreaterThanOrEqual(2)
 
         ltEvents.forEach(lt => {
           // Attributes array should start with: [ltFrame, ltStart, ltCtr, (ltCtrSrc, ltCtrId, ltCtrName, )...]

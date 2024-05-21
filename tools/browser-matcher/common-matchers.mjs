@@ -112,33 +112,36 @@ export const supportsBFCache = new SpecMatcher()
   // .include('android>9.0') -- does not work on android 9.0 emulator (v100 Chrome) for unknown precise reason;
 
 export const supportsFirstPaint = new SpecMatcher()
-  .include('chrome', '>=60')
-  .include('edge', '>=79')
+  .include('chrome>=60')
+  .include('edge>=79')
   .include('android')
 
-export const supportsFirstContentfulPaint = supportsFirstPaint
-  .include('firefox', '>=84')
-  .include('safari', '>15') // this should be >= 14.1 but safari 15 on Sauce hates FCP, and it destroys the other tests on the same thread too...
-  .include('ios', '>=14.5') // -- *cli Mar'23 - FYI there's a bug associated with paint observer for version < 16, see ios-version.js
+export const supportsFirstContentfulPaint = new SpecMatcher()
+  .include('chrome>=60')
+  .include('edge>=79')
+  .include('android')
+  .include('firefox>=84')
+  .include('safari>15') // this should be >= 14.1 but safari 15 on Sauce hates FCP, and it destroys the other tests on the same thread too...
+  .include('ios>=14.5') // -- *cli Mar'23 - FYI there's a bug associated with paint observer for version < 16, see ios-version.js
 
 export const supportsFirstInputDelay = new SpecMatcher()
-  .include('chrome', '>=76')
-  .include('edge', '>=79')
-  .include('firefox', '>=89')
+  .include('chrome>=76')
+  .include('edge>=79')
+  .include('firefox>=89')
   .include('android')
 
 export const supportsLargestContentfulPaint = new SpecMatcher()
-  .include('chrome', '>=77')
-  .include('edge', '>=79')
+  .include('chrome>=77')
+  .include('edge>=79')
   .include('android')
 
 export const supportsInteractionToNextPaint = new SpecMatcher()
-  .include('chrome', '>=96')
-  .include('edge', '>=96')
-  .include('android', '>=9.0')
+  .include('chrome>=96')
+  .include('edge>=96')
+  .include('android>=9.0')
 
 export const supportsLongTaskTiming = new SpecMatcher()
-  .include('chrome', '>=58')
-  .include('edge', '>=79')
+  .include('chrome>=58')
+  .include('edge>=79')
 
 export const supportsCumulativeLayoutShift = supportsLargestContentfulPaint

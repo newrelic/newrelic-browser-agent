@@ -48,11 +48,13 @@ export class Aggregate extends AggregateBase {
       this.sessionId = this.agentRuntime.session?.state.value
       // The SessionEntity class can emit a message indicating the session was cleared and reset (expiry, inactivity). This feature must abort and never resume if that occurs.
       this.ee.on(SESSION_EVENTS.RESET, () => {
+        if (this.blocked) return
         this.abort()
       })
       // The SessionEntity can have updates (locally or across tabs for SR mode changes), (across tabs for ST mode changes).
       // Those updates should be sync'd here to ensure this page also honors the mode after initialization
       this.ee.on(SESSION_EVENTS.UPDATE, (eventType, sessionState) => {
+        if (this.blocked) return
         // this will only have an effect if ST is NOT already in full mode
         if (this.mode !== MODE.FULL && (sessionState.sessionReplayMode === MODE.FULL || sessionState.sessionTraceMode === MODE.FULL)) this.switchToFull()
         // if another page's session entity has expired, or another page has transitioned to off and this one hasn't... we can just abort straight away here

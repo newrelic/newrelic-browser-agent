@@ -58,7 +58,7 @@ export class Aggregate extends AggregateBase {
         // this will only have an effect if ST is NOT already in full mode
         if (this.mode !== MODE.FULL && (sessionState.sessionReplayMode === MODE.FULL || sessionState.sessionTraceMode === MODE.FULL)) this.switchToFull()
         // if another page's session entity has expired, or another page has transitioned to off and this one hasn't... we can just abort straight away here
-        if (this.sessionId !== sessionState.value || (this.mode !== MODE.OFF && sessionState.sessionTraceMode === MODE.OFF)) this.abort()
+        if (this.sessionId !== sessionState.value || (eventType === 'cross-tab' && this.mode !== MODE.OFF && sessionState.sessionTraceMode === MODE.OFF)) this.abort()
       })
     }
 

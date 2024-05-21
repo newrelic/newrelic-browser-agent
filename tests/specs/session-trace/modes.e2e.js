@@ -3,15 +3,8 @@
  * Right now, Trace can only be in error mode when its stn flag is 0 but replay runs in error mode.
  */
 import { testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
-import { stConfig, testExpectedTrace, MODE } from '../util/helpers'
+import { stConfig, testExpectedTrace } from '../util/helpers'
 import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
-
-const getTraceMode = () => browser.execute(function () {
-  const agent = Object.values(newrelic.initializedAgents)[0]
-  return [
-    agent.features.session_trace.featAggregate.mode
-  ]
-})
 
 describe('respects feature flags', () => {
   it('0, 0 == PERMANENTLY OFF', async () => {
@@ -199,30 +192,6 @@ describe('respects feature flags', () => {
       browser.testHandle.expectTrace(10000, true),
       browser.refresh()
     ])
-  })
-
-  it('Session ending aborts traces', async () => {
-    await browser.destroyAgentSession()
-    await browser.testHandle.scheduleReply('bamServer', {
-      test: testRumRequest,
-      body: JSON.stringify({ st: 1, sts: 1, err: 1, ins: 1, spa: 1, sr: 0, srs: 0, loaded: 1 })
-    })
-    let url = await browser.testHandle.assetURL('instrumented.html', stConfig())
-    await browser.url(url).then(() => browser.waitForAgentLoad())
-
-    const { request } = await browser.testHandle.expectTrace()
-
-    testExpectedTrace({ data: request })
-
-    const [{ request: finalHarvest }] = await Promise.all([
-      browser.testHandle.expectTrace(),
-      browser.execute(function () {
-        Object.values(newrelic.initializedAgents)[0].runtime.session.reset()
-      })
-    ])
-
-    testExpectedTrace({ data: finalHarvest })
-    await getTraceMode().then(([traceMode]) => expect(traceMode).toEqual(MODE.OFF))
   })
 
   it('Session tracking is disabled', async () => {

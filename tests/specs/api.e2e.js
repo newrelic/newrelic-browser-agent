@@ -1,6 +1,6 @@
 import { notIE } from '../../tools/browser-matcher/common-matchers.mjs'
 import { apiMethods, asyncApiMethods } from '../../src/loaders/api/api-methods'
-import { checkAjaxEvents, checkJsErrors, checkMetrics, checkPageAction, checkPVT, checkRum, checkSessionTrace, checkSpa } from '../util/basic-checks'
+import { checkAjaxEvents, checkJsErrors, checkMetrics, checkPageAction, checkPVT, checkRumBody, checkRumQuery, checkSessionTrace, checkSpa } from '../util/basic-checks'
 
 describe('newrelic api', () => {
   afterEach(async () => {
@@ -334,7 +334,8 @@ describe('newrelic api', () => {
         })
       ])
 
-      checkRum(results[0].request)
+      checkRumQuery(results[0].request)
+      checkRumBody(results[0].request)
       checkPVT(results[1].request)
       checkAjaxEvents(results[2].request)
       checkJsErrors(results[3].request, { messages: ['test'] })
@@ -368,7 +369,8 @@ describe('newrelic api', () => {
         })
       ])
 
-      checkRum(results[0].request)
+      checkRumQuery(results[0].request)
+      checkRumBody(results[0].request)
       checkJsErrors(results[1].request, { messages: ['test'] })
     })
 
@@ -400,7 +402,8 @@ describe('newrelic api', () => {
         }))
       ])
 
-      checkRum(results[0].request)
+      checkRumQuery(results[0].request)
+      checkRumBody(results[0].request)
       checkPVT(results[1].request)
       checkSessionTrace(results[4].request)
       checkSpa(results[5].request)

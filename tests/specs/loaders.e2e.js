@@ -1,4 +1,4 @@
-import { checkAjaxEvents, checkJsErrors, checkMetrics, checkPVT, checkPageAction, checkRum, checkSessionTrace, checkSpa } from '../util/basic-checks'
+import { checkAjaxEvents, checkJsErrors, checkMetrics, checkPVT, checkPageAction, checkRumBody, checkRumQuery, checkSessionTrace, checkSpa } from '../util/basic-checks'
 import { notIE } from '../../tools/browser-matcher/common-matchers.mjs'
 
 const scriptLoadTypes = [null, 'defer', 'async', 'injection']
@@ -27,7 +27,8 @@ describe.withBrowsersMatching(notIE)('Loaders', () => {
           .then(() => browser.refresh())
       ])
 
-      checkRum(rum.request, { liteAgent: true })
+      checkRumQuery(rum.request, { liteAgent: true })
+      checkRumBody(rum.request, { liteAgent: true })
       checkPVT(pvt.request)
       checkMetrics(metrics.request)
     })
@@ -49,7 +50,8 @@ describe.withBrowsersMatching(notIE)('Loaders', () => {
           .then(() => browser.refresh())
       ])
 
-      checkRum(rum.request)
+      checkRumQuery(rum.request)
+      checkRumBody(rum.request)
       checkPVT(pvt.request)
       checkMetrics(metrics.request)
       checkAjaxEvents(ajax.request)
@@ -75,7 +77,8 @@ describe.withBrowsersMatching(notIE)('Loaders', () => {
           .then(() => browser.refresh())
       ])
 
-      checkRum(rum.request)
+      checkRumQuery(rum.request)
+      checkRumBody(rum.request)
       checkPVT(pvt.request)
       checkMetrics(metrics.request)
       checkAjaxEvents(ajax.request)

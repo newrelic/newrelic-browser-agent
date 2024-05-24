@@ -14,7 +14,8 @@ describe.withBrowsersMatching(notIE)('final harvesting', () => {
       browser.testHandle.expectAjaxEvents(),
       browser.testHandle.expectMetrics(),
       browser.testHandle.expectErrors(),
-      browser.testHandle.expectTrace()
+      browser.testHandle.expectTrace(),
+      browser.testHandle.expectIns()
     ])
 
     await browser.execute(function () {
@@ -24,7 +25,7 @@ describe.withBrowsersMatching(notIE)('final harvesting', () => {
 
     await browser.url(await browser.testHandle.assetURL('/'))
 
-    const [timingsResults, ajaxEventsResults, metricsResults, errorsResults, resourcesResults] = await finalHarvest
+    const [timingsResults, ajaxEventsResults, metricsResults, errorsResults, resourcesResults, pageActionResults] = await finalHarvest
 
     expect(timingsResults.request.body).toEqual(expect.arrayContaining([
       expect.objectContaining({
@@ -49,6 +50,8 @@ describe.withBrowsersMatching(notIE)('final harvesting', () => {
     ]))
     expect(errorsResults.request.body.xhr.length).toBeGreaterThan(0)
     expect(resourcesResults.request.body.length).toBeGreaterThan(0)
+
+    expect(pageActionResults.request.body.ins.length).toBeGreaterThan(0)
   })
 
   it.withBrowsersMatching(supportsFetch)('should use sendBeacon for unload harvests', async () => {
@@ -63,7 +66,8 @@ describe.withBrowsersMatching(notIE)('final harvesting', () => {
       browser.testHandle.expectAjaxEvents(),
       browser.testHandle.expectMetrics(),
       browser.testHandle.expectErrors(),
-      browser.testHandle.expectTrace()
+      browser.testHandle.expectTrace(),
+      browser.testHandle.expectIns()
     ])
 
     await browser.execute(function () {
@@ -78,7 +82,7 @@ describe.withBrowsersMatching(notIE)('final harvesting', () => {
 
     await browser.url(await browser.testHandle.assetURL('/'))
 
-    const [timingsResults, ajaxEventsResults, metricsResults, errorsResults, resourcesResults] = await finalHarvest
+    const [timingsResults, ajaxEventsResults, metricsResults, errorsResults, resourcesResults, pageActionResults] = await finalHarvest
 
     expect(timingsResults.request.body).toEqual(expect.arrayContaining([
       expect.objectContaining({
@@ -104,6 +108,10 @@ describe.withBrowsersMatching(notIE)('final harvesting', () => {
     expect(errorsResults.request.body.xhr.length).toBeGreaterThan(0)
     expect(resourcesResults.request.body.length).toBeGreaterThan(0)
 
+    expect(pageActionResults.request.body).toMatchObject({
+      ins: [{ actionName: 'DummyEvent', free: 'tacos' }]
+    })
+
     /*
     sendBeacon can be flakey so we check to see if at least one of the network
     calls used sendBeacon
@@ -113,7 +121,8 @@ describe.withBrowsersMatching(notIE)('final harvesting', () => {
       ajaxEventsResults.request.query.sendBeacon,
       metricsResults.request.query.sendBeacon,
       errorsResults.request.query.sendBeacon,
-      resourcesResults.request.query.sendBeacon
+      resourcesResults.request.query.sendBeacon,
+      pageActionResults.request.query.sendBeacon
     ]
     expect(sendBeaconUsage).toContain('true')
   })

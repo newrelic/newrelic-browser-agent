@@ -3,7 +3,7 @@ import { warn } from '../util/console'
 import { stringify } from '../util/stringify'
 import { ee } from '../event-emitter/contextual-ee'
 import { Timer } from '../timer/timer'
-import { isBrowserScope } from '../constants/runtime'
+import { globalScope, isBrowserScope } from '../constants/runtime'
 import { DEFAULT_EXPIRES_MS, DEFAULT_INACTIVE_MS, MODE, PREFIX, SESSION_EVENTS, SESSION_EVENT_TYPES } from './constants'
 import { InteractionTimer } from '../timer/interaction-timer'
 import { wrapEvents } from '../wrap'
@@ -54,6 +54,9 @@ export class SessionEntity {
 
     if (isBrowserScope) {
       windowAddEventListener('storage', (event) => {
+        /** Do not emit session storage events for IE11, because IE11 is unable to determine
+         * if the event was spawned on the current page or an adjacent page */
+        if (globalScope.navigator.userAgent.toLowerCase().includes('trident')) return
         if (event.key === this.lookupKey) {
           const obj = typeof event.newValue === 'string' ? JSON.parse(event.newValue) : event.newValue
           this.sync(obj)

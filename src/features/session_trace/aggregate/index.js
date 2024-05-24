@@ -49,7 +49,7 @@ export class Aggregate extends AggregateBase {
       // The SessionEntity class can emit a message indicating the session was cleared and reset (expiry, inactivity). This feature must abort and never resume if that occurs.
       this.ee.on(SESSION_EVENTS.RESET, () => {
         if (this.blocked) return
-        this.abort()
+        this.abort(1)
       })
       // The SessionEntity can have updates (locally or across tabs for SR mode changes), (across tabs for ST mode changes).
       // Those updates should be sync'd here to ensure this page also honors the mode after initialization
@@ -58,7 +58,7 @@ export class Aggregate extends AggregateBase {
         // this will only have an effect if ST is NOT already in full mode
         if (this.mode !== MODE.FULL && (sessionState.sessionReplayMode === MODE.FULL || sessionState.sessionTraceMode === MODE.FULL)) this.switchToFull()
         // if another page's session entity has expired, or another page has transitioned to off and this one hasn't... we can just abort straight away here
-        if (this.sessionId !== sessionState.value || (eventType === 'cross-tab' && this.mode !== MODE.OFF && sessionState.sessionTraceMode === MODE.OFF)) this.abort()
+        if (this.sessionId !== sessionState.value || (eventType === 'cross-tab' && this.scheduler.started && sessionState.sessionTraceMode === MODE.OFF)) this.abort(2)
       })
     }
 
@@ -109,6 +109,7 @@ export class Aggregate extends AggregateBase {
 
   /** This module does not auto harvest by default -- it needs to be kicked off.  Once this method is called, it will then harvest on an interval */
   startHarvesting () {
+    console.log('start harvesting')
     if (this.scheduler.started || this.blocked) return
     this.scheduler.runHarvest()
     this.scheduler.startTimer(this.harvestTimeSeconds)
@@ -119,7 +120,7 @@ export class Aggregate extends AggregateBase {
     this.traceStorage.prevStoredEvents.clear() // release references to past events for GC
     if (!this.timeKeeper?.ready) return // this should likely never happen, but just to be safe, we should never harvest if we cant correct time
     if (this.blocked || this.mode !== MODE.FULL || this.traceStorage.nodeCount === 0) return
-    if (this.sessionId !== this.agentRuntime.session?.state.value || this.ptid !== this.agentRuntime.ptid) return this.abort() // if something unexpected happened and we somehow still got to the point of harvesting after a session identifier changed, we should force-exit instead of harvesting
+    if (this.sessionId !== this.agentRuntime.session?.state.value || this.ptid !== this.agentRuntime.ptid) return this.abort(3) // if something unexpected happened and we somehow still got to the point of harvesting after a session identifier changed, we should force-exit instead of harvesting
     /** Get the ST nodes from the traceStorage buffer.  This also returns helpful metadata about the payload. */
     const { stns, earliestTimeStamp, latestTimeStamp } = this.traceStorage.takeSTNs()
     if (!stns) return // there are no trace nodes
@@ -201,7 +202,8 @@ export class Aggregate extends AggregateBase {
   }
 
   /** Stop running for the remainder of the page lifecycle */
-  abort () {
+  abort (reason) {
+    console.log('abort', reason)
     this.blocked = true
     this.mode = MODE.OFF
     this.agentRuntime.session.write({ sessionTraceMode: this.mode })

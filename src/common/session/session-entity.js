@@ -52,12 +52,13 @@ export class SessionEntity {
     wrapEvents(this.ee)
     this.setup(opts)
 
-    if (isBrowserScope) {
+    /**
+     * Do not emit session storage events for IE11, because IE11 is unable to determine
+     * if the event was spawned on the current page or an adjacent page, and the behavior tied
+     * to storage events is critical to apply only to cross-tab behavior
+     * */
+    if (isBrowserScope && !isIE) {
       windowAddEventListener('storage', (event) => {
-        /** Do not emit session storage events for IE11, because IE11 is unable to determine
-         * if the event was spawned on the current page or an adjacent page, and the behavior tied
-         * to storage events is critical to apply only to cross-tab behavior */
-        if (isIE) return
         if (event.key === this.lookupKey) {
           const obj = typeof event.newValue === 'string' ? JSON.parse(event.newValue) : event.newValue
           this.sync(obj)

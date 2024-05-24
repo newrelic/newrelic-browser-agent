@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.260.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.260.0...v1.260.1) (2024-05-16)
+
+
+### Bug Fixes
+
+* Undefined stns in blob Trace ([#1039](https://github.com/newrelic/newrelic-browser-agent/issues/1039)) ([1a87991](https://github.com/newrelic/newrelic-browser-agent/commit/1a87991143aa1f220ae29edbf1e8ea89598bcc44))
+
 ## [1.260.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.259.0...v1.260.0) (2024-05-13)
 
 

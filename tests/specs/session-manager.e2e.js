@@ -89,6 +89,15 @@ describe('newrelic session ID', () => {
       expect(ls2.value).toEqual(ls1.value)
       expect(ls2.expiresAt).toEqual(ls1.expiresAt)
     })
+
+    it('Session exists when config is set after loader', async () => {
+      await browser.url(await browser.testHandle.assetURL('custom-attribute-race-condition.html', config))
+        .then(() => browser.waitForAgentLoad())
+
+      const { request: { query } } = await browser.testHandle.expectErrors()
+      expect(query.s).not.toEqual('0')
+      expect(query.s).toBeTruthy()
+    })
   })
 
   describe('session expirations', () => {

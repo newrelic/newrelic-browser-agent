@@ -57,8 +57,6 @@ describe('session trace', () => {
 
     document.dispatchEvent(new CustomEvent('DOMContentLoaded')) // simulate natural browser event
     window.dispatchEvent(new CustomEvent('load')) // load is actually ignored by Trace as it should be passed by the PVT feature, so it should not be in payload
-    ee.get('abcd').emit('rumresp-st', [1])
-    ee.get('abcd').emit('rumresp-sts', [1])
     traceAggregate.traceStorage.storeXhrAgg('xhr', '[200,null,null]', { method: 'GET', status: 200 }, { rxSize: 770, duration: 99, cbTime: 0, time: 217 }) // fake ajax data
     traceAggregate.traceStorage.processPVT('fi', 30, { fid: 8 }) // fake pvt data
 

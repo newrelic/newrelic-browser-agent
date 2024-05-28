@@ -11,11 +11,11 @@ import { ee as baseEE } from '../event-emitter/contextual-ee'
 import { createWrapperWithEmitter as wfn } from './wrap-function'
 
 /**
- * Wraps the global `setTimeout`, `setImmediate`, `setInterval`, `clearTimeout`, and `clearImmediate` functions to emit
- * events on start, end, and error, in the context of a new event emitter scoped only to timer functions. Also wraps
- * the callbacks of `setTimeout` and `setInterval`.
+ * Wraps a supplied function and adds emitter events under the `-wrap-logger-` prefix
  * @param {Object} sharedEE - The shared event emitter on which a new scoped event emitter will be based.
- * @returns {Object} Scoped event emitter with a debug ID of `timer`.
+ * @param {Object} parent - The parent object housing the logger function
+ * @param {string} loggerFn - The name of the function in the parent object to wrap
+ * @returns {Object} Scoped event emitter with a debug ID of `logger`.
  */
 // eslint-disable-next-line
 export function wrapLogger(sharedEE, parent, loggerFn) {
@@ -31,7 +31,7 @@ export function wrapLogger(sharedEE, parent, loggerFn) {
  * features shared the same group in the event, to isolate events between features. It will likely be revisited.
  * @param {Object} sharedEE - Optional event emitter on which to base the scoped emitter.
  *     Uses `ee` on the global scope if undefined).
- * @returns {Object} Scoped event emitter with a debug ID of 'timer'.
+ * @returns {Object} Scoped event emitter with a debug ID of 'logger'.
  */
 export function scopedEE (sharedEE) {
   return (sharedEE || baseEE).get('logger')

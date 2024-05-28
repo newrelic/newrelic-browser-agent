@@ -7,8 +7,8 @@ import { Instrument as InstrumentErrors } from '../../../src/features/jserrors/i
 import { Instrument as InstrumentXhr } from '../../../src/features/ajax/instrument'
 import { Instrument as InstrumentSessionTrace } from '../../../src/features/session_trace/instrument'
 import { Instrument as InstrumentSpa } from '../../../src/features/spa/instrument'
-import { Instrument as InstrumentPageAction } from '../../../src/features/page_action/instrument'
 import { Instrument as InstrumentSessionReplay } from '../../../src/features/session_replay/instrument'
+import { Instrument as InstrumentGenericEvent } from '../../../src/features/generic_event/instrument'
 import * as agentModule from '../../../src/loaders/agent'
 
 jest.enableAutomock()
@@ -24,18 +24,11 @@ test('should create a new agent with all features', () => {
       InstrumentPageViewTiming,
       InstrumentSessionTrace,
       InstrumentMetrics,
-      InstrumentPageAction,
       InstrumentErrors,
       InstrumentSpa,
-      InstrumentSessionReplay
-    ]
-  }))
-})
-
-test('should set loader type property', () => {
-  new BrowserAgent()
-
-  expect(agentModule.Agent).toHaveBeenLastCalledWith(expect.objectContaining({
+      InstrumentSessionReplay,
+      InstrumentGenericEvent
+    ],
     loaderType: 'browser-agent'
   }))
 })

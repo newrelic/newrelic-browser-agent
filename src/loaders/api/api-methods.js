@@ -8,5 +8,5 @@ export const apiMethods = [
 ]
 
 export const asyncApiMethods = [
-  'setErrorHandler', 'finished', 'addToTrace', 'addRelease'
+  'setErrorHandler', 'finished', 'addToTrace', 'addRelease', 'addPageAction'
 ]

@@ -16,6 +16,8 @@ import { apiMethods, asyncApiMethods, logApiMethods } from './api-methods'
 import { SR_EVENT_EMITTER_TYPES } from '../../features/session_replay/constants'
 import { now } from '../../common/timing/now'
 import { MODE } from '../../common/session/constants'
+import { wrapLogger } from '../../common/wrap/wrap-logger'
+import { stringify } from '../../common/util/stringify'
 
 export function setTopLevelCallers () {
   const nr = gosCDN()
@@ -57,16 +59,24 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
    * @param {{[key: string]: *}} context
    * @param {string} level
    */
-  function log (message, context, level = 'info') {
-    handle(SUPPORTABILITY_METRIC_CHANNEL, [`API/log${level}/called`], undefined, FEATURE_NAMES.metrics, instanceEE)
-    handle('log', [now(), message, context, level], undefined, FEATURE_NAMES.logging, instanceEE)
+  function log (message, customAttributes, level = 'info') {
+    handle(SUPPORTABILITY_METRIC_CHANNEL, [`API/logging/${level}/called`], undefined, FEATURE_NAMES.metrics, instanceEE)
+    handle('log', [now(), message, customAttributes, level], undefined, FEATURE_NAMES.logging, instanceEE)
   }
 
   logApiMethods.forEach((method) => {
-    apiInterface[method] = function (message, context) {
-      log(message, context, method.toLowerCase().replace('log', ''))
+    apiInterface[method] = function (message, customAttributes = {}) {
+      log(message, customAttributes, method.toLowerCase().replace('log', ''))
     }
   })
+
+  apiInterface.wrapLogger = (parent, functionName, level = 'info', customAttributes = {}) => {
+    wrapLogger(instanceEE, parent, functionName)
+
+    instanceEE.on(`${functionName}-wrap-logger-end`, (args) => {
+      log(args.map(arg => typeof arg === 'string' ? arg : stringify(arg)).join(' '), customAttributes, level)
+    })
+  }
 
   // Setup stub functions that queue calls for later processing.
   asyncApiMethods.forEach(fnName => { apiInterface[fnName] = apiCall(prefix, fnName, true, 'api') })

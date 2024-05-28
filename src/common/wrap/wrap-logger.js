@@ -1,0 +1,38 @@
+/*
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+/**
+ * @file Wraps native timeout and interval methods for instrumentation.
+ * This module is used by: jserrors, spa.
+ */
+
+import { ee as baseEE } from '../event-emitter/contextual-ee'
+import { createWrapperWithEmitter as wfn } from './wrap-function'
+
+/**
+ * Wraps the global `setTimeout`, `setImmediate`, `setInterval`, `clearTimeout`, and `clearImmediate` functions to emit
+ * events on start, end, and error, in the context of a new event emitter scoped only to timer functions. Also wraps
+ * the callbacks of `setTimeout` and `setInterval`.
+ * @param {Object} sharedEE - The shared event emitter on which a new scoped event emitter will be based.
+ * @returns {Object} Scoped event emitter with a debug ID of `timer`.
+ */
+// eslint-disable-next-line
+export function wrapLogger(sharedEE, parent, loggerFn) {
+  const ee = scopedEE(sharedEE)
+  var wrapFn = wfn(ee)
+
+  wrapFn.inPlace(parent, [loggerFn], `${loggerFn}-wrap-logger-`)
+  return ee
+}
+
+/**
+ * Returns an event emitter scoped specifically for the `logger` context. This scoping is a remnant from when all the
+ * features shared the same group in the event, to isolate events between features. It will likely be revisited.
+ * @param {Object} sharedEE - Optional event emitter on which to base the scoped emitter.
+ *     Uses `ee` on the global scope if undefined).
+ * @returns {Object} Scoped event emitter with a debug ID of 'timer'.
+ */
+export function scopedEE (sharedEE) {
+  return (sharedEE || baseEE).get('logger')
+}

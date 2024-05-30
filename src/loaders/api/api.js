@@ -12,7 +12,7 @@ import { isBrowserScope } from '../../common/constants/runtime'
 import { warn } from '../../common/util/console'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
 import { gosCDN } from '../../common/window/nreum'
-import { apiMethods, asyncApiMethods } from './api-methods'
+import { apiMethods, asyncApiMethods, logApiMethods } from './api-methods'
 import { SR_EVENT_EMITTER_TYPES } from '../../features/session_replay/constants'
 import { now } from '../../common/timing/now'
 import { MODE } from '../../common/session/constants'
@@ -50,6 +50,23 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
 
   var prefix = 'api-'
   var spaPrefix = prefix + 'ixn-'
+
+  /**
+   *
+   * @param {string} message
+   * @param {{[key: string]: *}} context
+   * @param {string} level
+   */
+  function log (message, context, level = 'info') {
+    handle(SUPPORTABILITY_METRIC_CHANNEL, [`API/log${level}/called`], undefined, FEATURE_NAMES.metrics, instanceEE)
+    handle('log', [now(), message, context, level], undefined, FEATURE_NAMES.logging, instanceEE)
+  }
+
+  logApiMethods.forEach((method) => {
+    apiInterface[method] = function (message, context) {
+      log(message, context, method.toLowerCase().replace('log', ''))
+    }
+  })
 
   // Setup stub functions that queue calls for later processing.
   asyncApiMethods.forEach(fnName => { apiInterface[fnName] = apiCall(prefix, fnName, true, 'api') })

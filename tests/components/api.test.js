@@ -10,6 +10,7 @@ import * as asyncApiModule from '../../src/loaders/api/apiAsync'
 import * as windowLoadModule from '../../src/common/window/load'
 import * as handleModule from '../../src/common/event-emitter/handle'
 import { SR_EVENT_EMITTER_TYPES } from '../../src/features/session_replay/constants'
+import { logApiMethods } from '../../src/loaders/api/api-methods'
 
 describe('setAPI', () => {
   let agentId
@@ -40,7 +41,7 @@ describe('setAPI', () => {
   test('should add expected api methods returned object', () => {
     const apiInterface = setAPI(agentId, true)
 
-    expect(Object.keys(apiInterface).length).toEqual(15)
+    expect(Object.keys(apiInterface).length).toEqual(20)
     expect(typeof apiInterface.setErrorHandler).toEqual('function')
     expect(typeof apiInterface.finished).toEqual('function')
     expect(typeof apiInterface.addToTrace).toEqual('function')
@@ -56,6 +57,11 @@ describe('setAPI', () => {
     expect(typeof apiInterface.start).toEqual('function')
     expect(typeof apiInterface[SR_EVENT_EMITTER_TYPES.RECORD]).toEqual('function')
     expect(typeof apiInterface[SR_EVENT_EMITTER_TYPES.PAUSE]).toEqual('function')
+    expect(typeof apiInterface.logError).toEqual('function')
+    expect(typeof apiInterface.logInfo).toEqual('function')
+    expect(typeof apiInterface.logWarn).toEqual('function')
+    expect(typeof apiInterface.logDebug).toEqual('function')
+    expect(typeof apiInterface.logTrace).toEqual('function')
   })
 
   test('should register api drain when not forced', () => {
@@ -553,6 +559,40 @@ describe('setAPI', () => {
         FEATURE_NAMES.jserrors,
         instanceEE
       )
+    })
+  })
+
+  describe('logging', () => {
+    logApiMethods.forEach(logMethod => {
+      describe(logMethod, () => {
+        let apiInterface
+
+        beforeEach(async () => {
+          apiInterface = setAPI(agentId, true)
+          await new Promise(process.nextTick)
+        })
+
+        test('should create event emitter event for calls to API', () => {
+          const args = [faker.string.uuid(), { [faker.string.uuid()]: faker.string.uuid() }]
+          apiInterface[logMethod](...args)
+
+          expect(handleModule.handle).toHaveBeenCalledTimes(2)
+
+          const firstEmit = handleModule.handle.mock.calls[0]
+          expect(firstEmit[0]).toEqual(SUPPORTABILITY_METRIC_CHANNEL)
+          expect(firstEmit[1]).toEqual([`API/${logMethod.toLowerCase()}/called`])
+          expect(firstEmit[2]).toBeUndefined()
+          expect(firstEmit[3]).toEqual(FEATURE_NAMES.metrics)
+          expect(firstEmit[4]).toEqual(instanceEE)
+
+          const secondEmit = handleModule.handle.mock.calls[1]
+          expect(secondEmit[0]).toEqual('log')
+          expect(secondEmit[1]).toEqual([expect.any(Number), ...args, logMethod.toLowerCase().replace('log', '')])
+          expect(secondEmit[2]).toBeUndefined()
+          expect(secondEmit[3]).toEqual(FEATURE_NAMES.logging)
+          expect(secondEmit[4]).toEqual(instanceEE)
+        })
+      })
     })
   })
 

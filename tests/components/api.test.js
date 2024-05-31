@@ -605,16 +605,16 @@ describe('setAPI', () => {
       })
 
       test('should emit events for calls by wrapped function - specified', () => {
+        const randomMethodName = faker.string.uuid()
         const myLoggerPackage = {
-          myObservedLogger: jest.fn(),
-          myUnobservedLogger: jest.fn()
+          [randomMethodName]: jest.fn()
         }
-        apiInterface.wrapLogger(myLoggerPackage, 'myObservedLogger', 'warn', { myCustomAttr: 1 })
+        apiInterface.wrapLogger(myLoggerPackage, randomMethodName, 'warn', { myCustomAttr: 1 })
 
         /** emits data for observed fn */
-        myLoggerPackage.myObservedLogger('test1')
+        myLoggerPackage[randomMethodName]('test1')
 
-        expect(myLoggerPackage.myObservedLogger).toHaveBeenCalled()
+        expect(myLoggerPackage[randomMethodName]).toHaveBeenCalled()
         expect(handleModule.handle).toHaveBeenCalledTimes(2)
 
         const firstEmit = handleModule.handle.mock.calls[0]
@@ -633,16 +633,16 @@ describe('setAPI', () => {
       })
 
       test('should emit events with concat string for multiple args', () => {
+        const randomMethodName = faker.string.uuid()
         const myLoggerPackage = {
-          myObservedLogger: jest.fn(),
-          myUnobservedLogger: jest.fn()
+          [randomMethodName]: jest.fn()
         }
-        apiInterface.wrapLogger(myLoggerPackage, 'myObservedLogger')
+        apiInterface.wrapLogger(myLoggerPackage, randomMethodName)
 
         /** emits data for observed fn */
-        myLoggerPackage.myObservedLogger('test1', { test2: 2 }, ['test3'], true, 1)
+        myLoggerPackage[randomMethodName]('test1', { test2: 2 }, ['test3'], true, 1)
 
-        expect(myLoggerPackage.myObservedLogger).toHaveBeenCalled()
+        expect(myLoggerPackage[randomMethodName]).toHaveBeenCalled()
         expect(handleModule.handle).toHaveBeenCalledTimes(2)
 
         const firstEmit = handleModule.handle.mock.calls[0]
@@ -654,23 +654,39 @@ describe('setAPI', () => {
 
         const secondEmit = handleModule.handle.mock.calls[1]
         expect(secondEmit[0]).toEqual('log')
-        expect(secondEmit[1]).toEqual([expect.any(Number), 'test1 {"test2":2} ["test3"] true 1', {}, 'info']) // specified
+        expect(secondEmit[1]).toEqual([expect.any(Number), 'test1', { 'wrappedFn.args': '[{"test2":2},["test3"],true,1]' }, 'info']) // specified
         expect(secondEmit[2]).toBeUndefined()
         expect(secondEmit[3]).toEqual(FEATURE_NAMES.logging)
         expect(secondEmit[4]).toEqual(instanceEE)
       })
 
       test('wrapped function should still behave as intended', () => {
+        const randomMethodName = faker.string.uuid()
         const myLoggerPackage = {
-          myObservedLogger: jest.fn((arg1) => `${arg1} returned`)
+          [randomMethodName]: jest.fn((arg) => arg + ' returned')
         }
-        apiInterface.wrapLogger(myLoggerPackage, 'myObservedLogger')
+        apiInterface.wrapLogger(myLoggerPackage, randomMethodName)
 
         /** emits data for observed fn */
-        const output = myLoggerPackage.myObservedLogger('test1')
+        const output = myLoggerPackage[randomMethodName]('test1')
 
-        expect(myLoggerPackage.myObservedLogger).toHaveBeenCalled()
+        expect(myLoggerPackage[randomMethodName]).toHaveBeenCalled()
         expect(output).toEqual('test1 returned')
+      })
+
+      test('should not emit events for same method twice', () => {
+        const distinctMethodName = 'distinctMethodName'
+        const myLoggerPackage = {
+          [distinctMethodName]: jest.fn()
+        }
+        apiInterface.wrapLogger(myLoggerPackage, distinctMethodName)
+
+        myLoggerPackage[distinctMethodName]('test1')
+        expect(myLoggerPackage[distinctMethodName]).toHaveBeenCalledTimes(1)
+
+        /** Wrap again... BUT it should only emit an event once still */
+        apiInterface.wrapLogger(myLoggerPackage, distinctMethodName)
+        expect(myLoggerPackage[distinctMethodName]).toHaveBeenCalledTimes(1)
       })
     })
 

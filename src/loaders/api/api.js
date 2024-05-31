@@ -37,6 +37,7 @@ export function setTopLevelCallers () {
 }
 
 const replayRunning = {}
+const wrappedLoggers = new Set()
 
 export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) {
   if (!forceDrain) registerDrain(agentIdentifier, 'api')
@@ -72,10 +73,15 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
 
   apiInterface.wrapLogger = (parent, functionName, level = 'info', customAttributes = {}) => {
     wrapLogger(instanceEE, parent, functionName)
-
-    instanceEE.on(`${functionName}-wrap-logger-end`, (args) => {
-      log(args.map(arg => typeof arg === 'string' ? arg : stringify(arg)).join(' '), customAttributes, level)
-    })
+    if (!wrappedLoggers.has({ parent, functionName })) {
+      wrappedLoggers.add({ parent, functionName })
+      instanceEE.on(`${functionName}-wrap-logger-end`, ([message, ...args]) => {
+        log(message, {
+          ...(!!args.length && { 'wrappedFn.args': stringify(args) }),
+          ...customAttributes
+        }, level)
+      })
+    }
   }
 
   // Setup stub functions that queue calls for later processing.

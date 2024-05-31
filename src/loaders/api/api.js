@@ -73,8 +73,8 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
 
   apiInterface.wrapLogger = (parent, functionName, level = 'info', customAttributes = {}) => {
     wrapLogger(instanceEE, parent, functionName)
-    if (!wrappedLoggers.has({ parent, functionName })) {
-      wrappedLoggers.add({ parent, functionName })
+    if (!wrappedLoggers.has(parent[functionName])) {
+      wrappedLoggers.add(parent[functionName])
       instanceEE.on(`${functionName}-wrap-logger-end`, ([message, ...args]) => {
         log(message, {
           ...(!!args.length && { 'wrappedFn.args': stringify(args) }),

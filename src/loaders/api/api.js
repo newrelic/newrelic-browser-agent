@@ -72,6 +72,7 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
   })
 
   apiInterface.wrapLogger = (parent, functionName, level = 'info', customAttributes = {}) => {
+    if (!(typeof parent === 'object' && typeof functionName === 'string')) return
     wrapLogger(instanceEE, parent, functionName)
     if (!wrappedLoggers.has(parent[functionName])) {
       wrappedLoggers.add(parent[functionName])

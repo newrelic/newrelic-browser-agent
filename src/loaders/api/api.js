@@ -16,6 +16,7 @@ import { apiMethods, asyncApiMethods, logApiMethods } from './api-methods'
 import { SR_EVENT_EMITTER_TYPES } from '../../features/session_replay/constants'
 import { now } from '../../common/timing/now'
 import { MODE } from '../../common/session/constants'
+import { LOGGING_EVENT_EMITTER_TYPES, LOG_LEVELS } from '../../features/logging/constants'
 
 export function setTopLevelCallers () {
   const nr = gosCDN()
@@ -57,7 +58,7 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
    * @param {{[key: string]: *}} context
    * @param {string} level
    */
-  function log (message, context, level = 'info') {
+  function log (message, context, level = LOG_LEVELS.INFO, channel = LOGGING_EVENT_EMITTER_TYPES.API) {
     handle(SUPPORTABILITY_METRIC_CHANNEL, [`API/log${level}/called`], undefined, FEATURE_NAMES.metrics, instanceEE)
     handle('log', [now(), message, context, level], undefined, FEATURE_NAMES.logging, instanceEE)
   }

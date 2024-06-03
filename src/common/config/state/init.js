@@ -1,3 +1,4 @@
+import { LOG_LEVELS } from '../../../features/logging/constants'
 import { isValidSelector } from '../../dom/query-selector'
 import { DEFAULT_EXPIRES_MS, DEFAULT_INACTIVE_MS } from '../../session/constants'
 import { warn } from '../../util/console'
@@ -42,7 +43,7 @@ const model = () => {
     feature_flags: [],
     harvest: { tooManyRequestsDelay: 60 },
     jserrors: { enabled: true, harvestTimeSeconds: 10, autoStart: true },
-    logging: { enabled: true, harvestTimeSeconds: 30, autoStart: true, level: 'info' },
+    logging: { enabled: true, harvestTimeSeconds: 30, autoStart: true, level: LOG_LEVELS.INFO },
     metrics: { enabled: true, autoStart: true },
     obfuscate: undefined,
     page_action: { enabled: true, harvestTimeSeconds: 30, autoStart: true },

@@ -1,7 +1,7 @@
 import { parseSpecString, equationIsTrue } from '../browser-matcher/spec-parser.mjs'
 
-export default function browsersList (deskSpecsMap, mobileSpecsMap, spec = 'chrome@latest-2') { // latest-2 is the most stable release and what we test by default
-  return spec.split(',') // other example spec str: '*', '*@*', 'safari@*', '*@latest-2', 'firefox@100,edge>=100'
+export default function browsersList (deskSpecsMap, mobileSpecsMap, spec = 'chrome@latest') {
+  return spec.split(',') // other example spec str: '*', '*@*', 'safari@*', '*@latest-5', 'firefox@100,edge>=100'
     .flatMap(specString => {
       let { browserName, specOperator, browserVersion } = parseSpecString(specString)
 
@@ -14,7 +14,7 @@ export default function browsersList (deskSpecsMap, mobileSpecsMap, spec = 'chro
         const latestXSpecs = Object.entries(deskSpecsMap).reduce((finalList, [browserName, versionSpecs]) => {
           const latestVersionSpec = versionSpecs[0]
           if (browserName !== 'safari') latestVersionSpec.browserVersion = browserVersion // want to get the 'latest-#' of chrome,ff,edge
-          // else: Safari doesn't support latest-# slugs, so we'll always get the most recent of it regardless '*@latest-2' or '*@latest' or '*@latest-5'
+          // else: Safari doesn't support latest-# slugs, so we'll always get the most recent of it regardless '*@latest' or '*@latest-5'
 
           finalList.push(latestVersionSpec)
           return finalList

@@ -79,6 +79,7 @@ console.log('Updating SauceLabs browsers lists')
 await spawnAsync(
   `npm${os.platform() === 'win32' ? '.cmd' : ''}`,
   [ 'run', 'sauce:get-browsers' ],
+  ['run', 'lt:update-browsers'],
   DEFAULT_SPAWN_OPTIONS
 )
 

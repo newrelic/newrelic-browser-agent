@@ -1,4 +1,4 @@
-import { parseSpecString, SPEC_OPERATOR } from './spec-parser.mjs'
+import { parseSpecString, equationIsTrue } from './spec-parser.mjs'
 import latestBrowserVersions from '../browsers-lists/lt-desktop-latest-vers.json' assert { type: 'json' }
 
 /**
@@ -75,19 +75,6 @@ export default class MatcherRule {
     }
     if (!Number.isFinite(desiredNumVersion)) throw new Error('Encountered desired spec with unsupported version format: ' + browserVersion)
 
-    switch (this.#specOperator) {
-      case SPEC_OPERATOR.AT:
-        return desiredNumVersion === ruleNumericVersion
-      case SPEC_OPERATOR.GT:
-        return desiredNumVersion > ruleNumericVersion
-      case SPEC_OPERATOR.LT:
-        return desiredNumVersion < ruleNumericVersion
-      case SPEC_OPERATOR.GTE:
-        return desiredNumVersion >= ruleNumericVersion
-      case SPEC_OPERATOR.LTE:
-        return desiredNumVersion <= ruleNumericVersion
-      default:
-        return false
-    }
+    return equationIsTrue(desiredNumVersion, this.#specOperator, ruleNumericVersion)
   }
 }

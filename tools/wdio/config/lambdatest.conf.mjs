@@ -1,7 +1,8 @@
 import url from 'url'
 import path from 'path'
 import child_process from 'child_process'
-import browsersSupported from '../../browsers-lists/lt-desktop-supported.json' assert { type: 'json' }
+import desktopBrowsers from '../../browsers-lists/lt-desktop-supported.json' assert { type: 'json' }
+import mobileBrowsers from '../../browsers-lists/lt-mobile-supported.json' assert { type: 'json' }
 import browsersPolyfill from '../../browsers-lists/lt-polyfill.json' assert { type: 'json' }
 import browsersList from '../../browsers-lists/lt-browsers-list.mjs'
 import args from '../args.mjs'
@@ -17,10 +18,12 @@ const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
  * @returns An object defining platform capabilities to be requested of SauceLabs.
  */
 function lambdaTestCapabilities () {
-  let browsers = browsersSupported
-
+  let supportedDesktop, supportedMobile
   if (args.polyfills) {
-    browsers = browsersPolyfill
+    supportedDesktop = browsersPolyfill // just IE11
+  } else {
+    supportedDesktop = desktopBrowsers
+    supportedMobile = mobileBrowsers
   }
 
   let revision
@@ -31,24 +34,27 @@ function lambdaTestCapabilities () {
     revision = '¯\\_(ツ)_/¯'
   }
 
-  return browsersList(browsers, args.browsers)
+  return browsersList(supportedDesktop, supportedMobile, args.browsers)
     .map(testBrowser => {
-      const capability = {
+      const capabilities = {
         'LT:Options': {
           tunnel: true,
-          selenium_version: '4.0.0',
           w3c: true,
-          build: `Browser Agent: ${testBrowser.browserName} ${testBrowser.browserVersion} ${testBrowser.platformName} [${revision}]`
+          build: `Browser Agent: ${testBrowser.browserName || testBrowser.device_name} ${testBrowser.browserVersion || testBrowser.version} ${testBrowser.platformName} [${revision}]`
         }
       }
 
       const parsedBrowserName = getBrowserName(testBrowser)
-      if (parsedBrowserName !== 'ios' && parsedBrowserName !== 'android') {
-        capability.browserName = testBrowser.browserName
-        capability.browserVersion = testBrowser.browserVersion
-        capability['LT:Options'].platformName = testBrowser.platformName
+      if (parsedBrowserName !== 'ios' && parsedBrowserName !== 'android') { // the 4 desktop browsers
+        capabilities.browserName = testBrowser.browserName
+        capabilities.browserVersion = testBrowser.browserVersion
+        capabilities['LT:Options'].selenium_version = '4.0.0'
+      } else {
+        capabilities['LT:Options'].deviceName = testBrowser.device_name
+        capabilities['LT:Options'].platformVersion = testBrowser.version
       }
-      return capability
+      capabilities['LT:Options'].platformName = testBrowser.platformName
+      return capabilities
     })
 }
 

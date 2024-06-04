@@ -1,4 +1,4 @@
-export const SPEC_OPERATOR = {
+const SPEC_OPERATOR = {
   AT: '@',
   LT: '<',
   GT: '>',
@@ -31,5 +31,22 @@ export function parseSpecString (spec) {
     specOperator,
     browserVersion,
     platform
+  }
+}
+
+export function equationIsTrue (lhs, operator, rhs) {
+  switch (operator) {
+    case SPEC_OPERATOR.AT:
+      return lhs === rhs
+    case SPEC_OPERATOR.GT:
+      return lhs > rhs
+    case SPEC_OPERATOR.LT:
+      return lhs < rhs
+    case SPEC_OPERATOR.GTE:
+      return lhs >= rhs
+    case SPEC_OPERATOR.LTE:
+      return lhs <= rhs
+    default:
+      return false
   }
 }

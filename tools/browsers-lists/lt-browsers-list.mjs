@@ -1,44 +1,59 @@
-import { parseSpecString } from '../browser-matcher/spec-parser.mjs'
+import { parseSpecString, equationIsTrue } from '../browser-matcher/spec-parser.mjs'
 
-export default function browsersList (browsersList, spec = 'chrome@latest-2') { // latest-2 is the most stable release and what we test by default
+export default function browsersList (deskSpecsMap, mobileSpecsMap, spec = 'chrome@latest-2') { // latest-2 is the most stable release and what we test by default
   return spec.split(',') // other example spec str: '*', '*@*', 'safari@*', '*@latest-2', 'firefox@100,edge>=100'
     .flatMap(specString => {
       let { browserName, specOperator, browserVersion } = parseSpecString(specString)
 
       if (browserName === '*') {
-        const allSpecs = Object.values(browsersList).flat()
-        if (!specOperator || !browserVersion || browserVersion === '*') return allSpecs // we'll allow '*@' to also mean '*@*'
+        if (!specOperator || !browserVersion || browserVersion === '*') {
+          return Object.values(deskSpecsMap).flat().concat(Object.values(mobileSpecsMap).flat()) // we'll allow '*@' to also mean '*@*'
+        }
         if (!browserVersion.startsWith('latest')) return [] // '*>=125' unsupported since not all browser follow the same numeric versioning
 
-        const latestSafari = allSpecs.find(spec => spec.browserName === 'Safari')
-        const latestXSpecs = allSpecs.filter(spec => spec.browserVersion === 'latest-2').map(spec => {
-          spec.browserVersion = browserVersion // get the 'latest-#' of every browser except Safari
-          return spec
+        const latestXSpecs = Object.entries(deskSpecsMap).reduce((finalList, [browserName, versionSpecs]) => {
+          const latestVersionSpec = versionSpecs[0]
+          if (browserName !== 'safari') latestVersionSpec.browserVersion = browserVersion // want to get the 'latest-#' of chrome,ff,edge
+          // else: Safari doesn't support latest-# slugs, so we'll always get the most recent of it regardless '*@latest-2' or '*@latest' or '*@latest-5'
+
+          finalList.push(latestVersionSpec)
+          return finalList
+        }, [])
+
+        Object.values(mobileSpecsMap).forEach(versionSpecs => {
+          const latestVersionIdx = versionSpecs.length - 1
+          const desiredVersionIdx = Math.max(0, latestVersionIdx - (Number(browserVersion.split('-')[1]) || 0)) // 'latest-50' will pick the lowest version avail
+          latestXSpecs.push(versionSpecs[desiredVersionIdx])
         })
-        latestXSpecs.push(latestSafari) // Safari doesn't support latest-# slugs, so we'll always get the most recent of it regardless '*@latest-2' or '*@latest' or '*@latest-5'
 
         return latestXSpecs
       } else { // specific browser requested
-        if (!browsersList[browserName]) return [] // invalid browserName
-        const presetVersionSpecs = Array.from(browsersList[browserName])
+        if (!deskSpecsMap[browserName] && !mobileSpecsMap[browserName]) return [] // invalid browserName
+        const versionSpecs = deskSpecsMap[browserName] || mobileSpecsMap[browserName]
 
-        if (!specOperator) return presetVersionSpecs // e.g. 'safari' same as 'safari@*'
+        if (!specOperator) return versionSpecs // e.g. 'safari' same as 'safari@*'
         if (!browserVersion) return [] // e.g. 'safari@' is invalid
-        if (browserVersion === '*' || specOperator !== '@') {
-          // We don't have a way to deal with comparison ops (<=, etc.)--or the need to do so--on fuzzy versions (latest-X, macOS XYZ) in lambdatest-supported.json ATM.
-          // Hence, non-@ operators will be treated as grabbing all preset versions, similar to specifying '*'.
-          return presetVersionSpecs
-        }
+        if (browserVersion === '*') return versionSpecs
 
         // For a valid browserName and browserVersion string format (under '@' oper), we'll pass it to LT to handle. This lets 'chrome@100' or 'chrome@latest-20' be accepted.
-        const ontheflySpec = { ...presetVersionSpecs[0] }
-        ontheflySpec.browserVersion = browserVersion
-        // eslint-disable-next-line sonarjs/no-collapsible-if
-        if (ontheflySpec.browserName === 'Safari') {
-          if (!browserVersion.startsWith('latest')) delete ontheflySpec.platformName // LT will find the most appropriate macOS based on numeric version
-          // else, macOS version defaults to the first entry in our json safari list which should be the lastest macOS
+        if (deskSpecsMap[browserName]) {
+          if (specOperator !== '@') return versionSpecs // logic with comparison ops (<=, etc.) on fuzzy versions (latest-#) is more trouble than it's worth ATM, so non-@ operators will be treated like '*'
+
+          const customDeskSpec = { ...versionSpecs[0] }
+          customDeskSpec.browserVersion = browserVersion
+          // eslint-disable-next-line sonarjs/no-collapsible-if
+          if (customDeskSpec.browserName === 'Safari') {
+            if (!browserVersion.startsWith('latest')) delete customDeskSpec.platformName // LT will find the most appropriate macOS based on numeric version
+            // else, macOS version defaults to the first entry in our json safari list which should be the lastest macOS
+          }
+          return customDeskSpec
+        } else {
+          const desiredRuleVersion = Number(browserVersion)
+          if (Number.isFinite(desiredRuleVersion)) return versionSpecs.filter(spec => equationIsTrue(Number(spec.version), specOperator, desiredRuleVersion))
+
+          if (specOperator === '@' && browserVersion === 'latest') return versionSpecs[versionSpecs.length - 1]
+          else return [] // only 'mobile@latest' is supported if version is not numeric; '16.0.3', 'latest-3', and specific version not in json is not supported
         }
-        return ontheflySpec
       }
     })
 }

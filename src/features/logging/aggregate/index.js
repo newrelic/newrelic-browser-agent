@@ -13,6 +13,7 @@ export class Aggregate extends AggregateBase {
     this.agentRuntime = getRuntime(this.agentIdentifier)
 
     this.waitForFlags([]).then(() => {
+      /** emitted by instrument class (wrapped loggers) or the api methods directly */
       registerHandler(LOGGING_EVENT_EMITTER_TYPES.LOG, this.handleLog.bind(this), this.featureName, this.ee)
       this.drain()
     })

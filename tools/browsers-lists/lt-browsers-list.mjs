@@ -50,7 +50,7 @@ export default function browsersList (deskSpecsMap, mobileSpecsMap, spec = 'chro
           const desiredRuleVersion = Number(browserVersion)
           if (Number.isFinite(desiredRuleVersion)) return versionSpecs.filter(spec => equationIsTrue(Number(spec.version), specOperator, desiredRuleVersion))
 
-          if (specOperator === '@' && browserVersion === 'latest') return versionSpecs[versionSpecs.length - 1]
+          if (specOperator === '@' && browserVersion === 'latest') return versionSpecs[0]
           else return [] // only 'mobile@latest' is supported if version is not numeric; '16.0.3', 'latest-3', and specific version not in json is not supported
         }
       }

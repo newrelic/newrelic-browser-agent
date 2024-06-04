@@ -68,6 +68,7 @@ export default class MatcherRule {
     const ruleNumericVersion = Number(this.#browserVersion) // 'someString', '125.0.623' are not accepted
     if (!Number.isFinite(ruleNumericVersion)) throw new Error('Encountered spec rule with unsupported version format: ' + this.#specString)
     let desiredNumVersion
+    browserVersion = browserVersion.toString() // need to typecast any number for string ops
     if (browserVersion.startsWith('latest')) {
       desiredNumVersion = Number(latestBrowserVersions[browserName]) - (browserVersion.split('-')[1] || 0) // converts vers string like 'latest-10' into an actual number
     } else {

@@ -56,9 +56,10 @@ function updateMobileVersions (mobilePlatforms) {
   // iOS versions should already be sorted in descending; the built list should also be in desc order.
   const latestiOSVersion = Number(iosDevices[0].version)
   const testediOSVersions = [
-    iosDevices.find(spec => (spec.version = Number(spec.version)) === latestiOSVersion),
-    iosDevices.findLast(spec => (spec.version = Number(spec.version)) >= MIN_SUPPORTED_IOS)
+    iosDevices.find(spec => Number(spec.version) === latestiOSVersion),
+    iosDevices.findLast(spec => Number(spec.version) >= MIN_SUPPORTED_IOS)
   ]
+  testediOSVersions.forEach(ltFormatSpec => { ltFormatSpec.platformName = 'ios' })
   testedMobileVersionsJson.ios = testediOSVersions
 
   const versionIndexedSpecs = {}
@@ -71,6 +72,7 @@ function updateMobileVersions (mobilePlatforms) {
     versionIndexedSpecs[ascOrderVersions.pop()][0], // grab first device spec off latest version
     versionIndexedSpecs[MIN_SUPPORTED_ANDROID][0]
   ]
+  testedAndroidVersions.forEach(ltFormatSpec => { ltFormatSpec.platformName = 'android' })
   testedMobileVersionsJson.android = testedAndroidVersions
 
   return testedMobileVersionsJson

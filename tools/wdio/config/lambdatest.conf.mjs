@@ -3,7 +3,7 @@ import path from 'path'
 import child_process from 'child_process'
 import browsersSupported from '../../browsers-lists/lt-desktop-supported.json' assert { type: 'json' }
 import browsersPolyfill from '../../browsers-lists/lt-polyfill.json' assert { type: 'json' }
-import browsersList from '../../browsers-lists/browsers-list.mjs'
+import browsersList from '../../browsers-lists/lt-browsers-list.mjs'
 import args from '../args.mjs'
 import { getBrowserName } from '../../browsers-lists/utils.mjs'
 

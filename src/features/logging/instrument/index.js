@@ -12,7 +12,7 @@ export class Instrument extends InstrumentBase {
     /** emitted by wrap-logger function */
     this.ee.on('wrap-logger-end', function handleLog ([message, ...args]) {
       const { level } = this
-      bufferLog(instanceEE, message, { ...(!!args.length && { 'wrappedFn.args': stringify(args) }) }, level)
+      bufferLog(instanceEE, message, { ...(!!args.length && { customAttributes: stringify(args) }) }, level)
     })
     this.importAggregator()
   }

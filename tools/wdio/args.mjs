@@ -22,7 +22,6 @@ const args = yargs(hideBin(process.argv))
 
   .string('b')
   .alias('b', 'browsers')
-  .default('b', 'chrome@latest')
   .describe(
     'b',
     'a comma seperated list of browsers with an optional semver range. (eg. chrome@>39)'

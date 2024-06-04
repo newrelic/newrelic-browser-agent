@@ -1,8 +1,8 @@
 import url from 'url'
 import path from 'path'
 import child_process from 'child_process'
-import browsersSupported from '../../browsers-lists/browsers-supported.json' assert { type: 'json' }
-import browsersPolyfill from '../../browsers-lists/browsers-polyfill.json' assert { type: 'json' }
+import browsersSupported from '../../browsers-lists/lt-desktop-supported.json' assert { type: 'json' }
+import browsersPolyfill from '../../browsers-lists/lt-polyfill.json' assert { type: 'json' }
 import browsersList from '../../browsers-lists/browsers-list.mjs'
 import args from '../args.mjs'
 import { getBrowserName } from '../../browsers-lists/utils.mjs'
@@ -38,7 +38,7 @@ function lambdaTestCapabilities () {
           tunnel: true,
           selenium_version: '4.0.0',
           w3c: true,
-          build: `Browser Agent: ${testBrowser.browserName[0].toUpperCase()}${testBrowser.browserName.slice(1)} ${testBrowser.browserVersion} - ${testBrowser.platformName} [${revision}]`
+          build: `Browser Agent: ${testBrowser.browserName} ${testBrowser.browserVersion} ${testBrowser.platformName} [${revision}]`
         }
       }
 
@@ -47,17 +47,7 @@ function lambdaTestCapabilities () {
         capability.browserName = testBrowser.browserName
         capability.browserVersion = testBrowser.browserVersion
         capability['LT:Options'].platformName = testBrowser.platformName
-
-        if (parsedBrowserName === 'safari') {
-          if (testBrowser.browserVersion === '17') {
-            capability['LT:Options'].platformName = 'macOS Sonoma'
-          }
-          if (testBrowser.browserVersion === '16') {
-            capability['LT:Options'].platformName = 'macOS Ventura'
-          }
-        }
       }
-
       return capability
     })
 }

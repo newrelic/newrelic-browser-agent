@@ -20,8 +20,11 @@ export const SPEC_OPERATOR = {
 export function parseSpecString (spec) {
   // Drop the platformName if it exists
   const [browserInfo, platform] = spec.split('/')
-  const [specOperator] = browserInfo.match(/(@|<=|>=|<|>)/) || []
-  const [browserName, browserVersion] = browserInfo.split(specOperator)
+  const specOperator = browserInfo.match(/(@|<=|>=|<|>)/)?.[0]
+  let [browserName, browserVersion] = browserInfo.split(specOperator)
+  // Ex of allowed version str: '*', '123', '16.5', '127.0.5183.123', 'latest', 'latest-1', 'latest-23'
+  // Ex of disallowed version str: 'gibberishtext', 'latest-0' --> cast to undefined
+  if (!(/^(\*|[\d.]+|latest(-[1-9]\d*)?)$/.test(browserVersion))) browserVersion = undefined
 
   return {
     browserName,

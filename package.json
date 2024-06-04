@@ -35,6 +35,9 @@
       "features/jserrors": [
         "dist/types/features/jserrors/index.d.ts"
       ],
+      "features/logging": [
+        "dist/types/features/logging/index.d.ts"
+      ],
       "features/metrics": [
         "dist/types/features/metrics/index.d.ts"
       ],
@@ -90,6 +93,11 @@
       "types": "./dist/types/features/jserrors/index.d.ts",
       "require": "./dist/cjs/features/jserrors/index.js",
       "default": "./dist/esm/features/jserrors/index.js"
+    },
+    "./features/logging": {
+      "types": "./dist/types/features/logging/index.d.ts",
+      "require": "./dist/cjs/features/logging/index.js",
+      "default": "./dist/esm/features/logging/index.js"
     },
     "./features/metrics": {
       "types": "./dist/types/features/metrics/index.d.ts",

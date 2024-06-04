@@ -29,7 +29,8 @@ module.exports = function (api, ...args) {
       {
         include: ['BUILD_VERSION', 'BUILD_ENV', 'RRWEB_VERSION']
       }
-    ]
+    ],
+    '@babel/plugin-syntax-import-assertions'
   ]
   const env = {
     test: {

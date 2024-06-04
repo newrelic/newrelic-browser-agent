@@ -5,10 +5,10 @@ import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { LOGGING_EVENT_EMITTER_TYPES } from '../constants'
 
 /**
-   *
-   * @param {string} message
-   * @param {{[key: string]: *}} context
-   * @param {string} level
+   * @param {ContextualEE} ee - The contextual ee tied to the instance
+   * @param {string} message - the log message string
+   * @param {{[key: string]: *}} customAttributes - The log's custom attributes if any
+   * @param {enum} level - the log level enum
    */
 export function bufferLog (ee, message, customAttributes, level = 'info') {
   handle(SUPPORTABILITY_METRIC_CHANNEL, [`API/logging/${level}/called`], undefined, FEATURE_NAMES.metrics, ee)

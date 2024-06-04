@@ -20,6 +20,7 @@ import { Instrument as InstrumentSessionReplay } from '../features/session_repla
 // import { Instrument as InstrumentSpa } from '../features/spa/instrument'
 import { Instrument as InstrumentSoftNav } from '../features/soft_navigations/instrument'
 import { Instrument as InstrumentPageAction } from '../features/page_action/instrument'
+import { Instrument as InstrumentLogs } from '../features/logging/instrument'
 
 new Agent({
   features: [
@@ -31,6 +32,7 @@ new Agent({
     InstrumentMetrics,
     InstrumentPageAction,
     InstrumentErrors,
+    InstrumentLogs,
     // InstrumentSpa,
     InstrumentSoftNav
   ],

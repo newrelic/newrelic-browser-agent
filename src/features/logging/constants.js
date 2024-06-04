@@ -1,3 +1,5 @@
+import { FEATURE_NAMES } from '../../loaders/features/features'
+
 export const LOG_LEVELS = {
   ERROR: 'error',
   WARN: 'warn',
@@ -7,6 +9,7 @@ export const LOG_LEVELS = {
 }
 
 export const LOGGING_EVENT_EMITTER_TYPES = {
-  API: 'logging_api',
-  API_WRAPPED: 'logging_api_wrapped'
+  LOG: 'log'
 }
+
+export const FEATURE_NAME = FEATURE_NAMES.logging

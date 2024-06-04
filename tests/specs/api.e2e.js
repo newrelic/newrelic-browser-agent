@@ -25,7 +25,7 @@ describe('newrelic api', () => {
         }
         return Array.from(result)
       }
-      return getAllPropertyNames(Object.values(newrelic.initializedAgents)[0])
+      return getAllPropertyNames(Object.values(newrelic.initializedAgents)[0].api)
     })
 
     expect(globalApiMethods).toEqual(expect.arrayContaining([

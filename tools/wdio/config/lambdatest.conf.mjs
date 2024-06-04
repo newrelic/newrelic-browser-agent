@@ -34,6 +34,10 @@ function lambdaTestCapabilities () {
     revision = '¯\\_(ツ)_/¯'
   }
 
+  const processed = browsersList(supportedDesktop, supportedMobile, args.browsers)
+  processed.forEach(testBrowser => console.log(testBrowser))
+  throw new Error('stop here')
+
   return browsersList(supportedDesktop, supportedMobile, args.browsers)
     .map(testBrowser => {
       const capabilities = {
@@ -49,11 +53,12 @@ function lambdaTestCapabilities () {
         capabilities.browserName = testBrowser.browserName
         capabilities.browserVersion = testBrowser.browserVersion
         capabilities['LT:Options'].selenium_version = '4.0.0'
+        capabilities['LT:Options'].platformName = testBrowser.platformName
       } else {
         capabilities['LT:Options'].deviceName = testBrowser.device_name
         capabilities['LT:Options'].platformVersion = testBrowser.version
+        capabilities['LT:Options'].platformName = parsedBrowserName
       }
-      capabilities['LT:Options'].platformName = testBrowser.platformName
       return capabilities
     })
 }

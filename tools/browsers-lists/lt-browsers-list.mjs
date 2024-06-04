@@ -9,7 +9,7 @@ export default function browsersList (deskSpecsMap, mobileSpecsMap, spec = 'chro
         if (!specOperator || !browserVersion || browserVersion === '*') {
           return Object.values(deskSpecsMap).flat().concat(Object.values(mobileSpecsMap).flat()) // we'll allow '*@' to also mean '*@*'
         }
-        if (!browserVersion.startsWith('latest')) return [] // '*>=125' unsupported since not all browser follow the same numeric versioning
+        if (!browserVersion.startsWith('latest') || specOperator !== '@') return [] // '*>=125' unsupported since not all browser follow the same numeric versioning
 
         const latestXSpecs = Object.entries(deskSpecsMap).reduce((finalList, [browserName, versionSpecs]) => {
           const latestVersionSpec = versionSpecs[0]
@@ -20,9 +20,8 @@ export default function browsersList (deskSpecsMap, mobileSpecsMap, spec = 'chro
           return finalList
         }, [])
 
-        Object.values(mobileSpecsMap).forEach(versionSpecs => {
-          const latestVersionIdx = versionSpecs.length - 1
-          const desiredVersionIdx = Math.max(0, latestVersionIdx - (Number(browserVersion.split('-')[1]) || 0)) // 'latest-50' will pick the lowest version avail
+        Object.values(mobileSpecsMap).forEach(versionSpecs => { // Assume: mobile-supported.json lists in descending order
+          const desiredVersionIdx = Math.min(versionSpecs.length - 1, Number(browserVersion.split('-')[1]) || 0) // 'latest-50' will pick the lowest version avail
           latestXSpecs.push(versionSpecs[desiredVersionIdx])
         })
 

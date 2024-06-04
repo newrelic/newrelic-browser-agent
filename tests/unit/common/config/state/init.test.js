@@ -60,7 +60,7 @@ test('init props exist and return expected defaults', () => {
   expect(config.logging).toEqual({
     autoStart: true,
     enabled: true,
-    harvestTimeSeconds: 30,
+    harvestTimeSeconds: 10,
     level: 'info'
   })
   expect(config.metrics).toEqual({

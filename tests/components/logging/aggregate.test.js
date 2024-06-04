@@ -30,7 +30,7 @@ describe('logging aggregate component tests', () => {
   describe('class setup', () => {
     it('should have expected public properties', () => {
       const loggingAgg = new LoggingAggregate(agentIdentifier, new Aggregator({}))
-      expect(Object.keys(loggingAgg)).toEqual(['agentIdentifier', 'aggregator', 'ee', 'featureName', 'blocked', 'bufferedLogs', 'outgoingLogs'])
+      expect(Object.keys(loggingAgg)).toEqual(['agentIdentifier', 'aggregator', 'ee', 'featureName', 'blocked', 'bufferedLogs', 'outgoingLogs', 'harvestTimeSeconds'])
     })
 
     it('should wait for flags', async () => {
@@ -57,25 +57,28 @@ describe('logging aggregate component tests', () => {
       )
       expect(loggingAgg.bufferedLogs[0]).toEqual(expectedLog)
 
-      expect(loggingAgg.preparePayload()).toEqual({
-        common: {
-          attributes: {
-            entityGuid: 'testEntityGuid',
-            session: {
-              id: session.state.value, // The session ID that we generate and keep across page loads
-              hasReplay: false, // True if a session replay recording is running
-              hasTrace: false, // True if a session trace recording is running
-              pageTraceId: agentIdentifier // The trace ID if a session trace is recording
-            },
-            agent: {
-              appId: 9876, // Application ID from info object
-              standalone: 0, // Whether the app is C+P or APM injected
-              version: expect.any(String), // the browser agent version
-              distribution: expect.any(String) // How is the agent being loaded on the page
+      expect(loggingAgg.prepareHarvest()).toEqual({
+        qs: { browser_monitoring_key: 1234 },
+        body: {
+          common: {
+            attributes: {
+              entityGuid: 'testEntityGuid',
+              session: {
+                id: session.state.value, // The session ID that we generate and keep across page loads
+                hasReplay: false, // True if a session replay recording is running
+                hasTrace: false, // True if a session trace recording is running
+                pageTraceId: agentIdentifier // The trace ID if a session trace is recording
+              },
+              agent: {
+                appId: 9876, // Application ID from info object
+                standalone: 0, // Whether the app is C+P or APM injected
+                version: expect.any(String), // the browser agent version
+                distribution: expect.any(String) // How is the agent being loaded on the page
+              }
             }
-          }
-        },
-        logs: [expectedLog]
+          },
+          logs: [expectedLog]
+        }
       })
     })
 

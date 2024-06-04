@@ -203,7 +203,6 @@ export class Aggregate extends AggregateBase {
 
   /** Stop running for the remainder of the page lifecycle */
   abort (reason) {
-    console.log('abort', reason)
     this.blocked = true
     this.mode = MODE.OFF
     this.agentRuntime.session.write({ sessionTraceMode: this.mode })

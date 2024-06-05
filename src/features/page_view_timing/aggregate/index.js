@@ -42,7 +42,6 @@ export class Aggregate extends AggregateBase {
     registerHandler('docHidden', msTimestamp => this.endCurrentSession(msTimestamp), this.featureName, this.ee)
     registerHandler('winPagehide', msTimestamp => this.recordPageUnload(msTimestamp), this.featureName, this.ee)
 
-    const initialHarvestSeconds = getConfigurationValue(this.agentIdentifier, 'page_view_timing.initialHarvestSeconds') || 10
     const harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'page_view_timing.harvestTimeSeconds') || 30
 
     this.waitForFlags(([])).then(() => {
@@ -69,7 +68,7 @@ export class Aggregate extends AggregateBase {
         onFinished: (...args) => this.onHarvestFinished(...args),
         getPayload: (...args) => this.prepareHarvest(...args)
       }, this)
-      scheduler.startTimer(harvestTimeSeconds, initialHarvestSeconds)
+      scheduler.startTimer(harvestTimeSeconds)
 
       this.drain()
     })

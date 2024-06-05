@@ -12,7 +12,6 @@ describe('pvt harvesting', () => {
         init: {
           page_view_timing: {
             enabled: true,
-            initialHarvestSeconds: 2,
             harvestTimeSeconds: 2
           },
           harvest: {
@@ -44,7 +43,6 @@ describe('pvt harvesting', () => {
         init: {
           page_view_timing: {
             enabled: true,
-            initialHarvestSeconds: 2,
             harvestTimeSeconds: 2
           },
           harvest: {

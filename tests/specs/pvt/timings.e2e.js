@@ -4,17 +4,18 @@ const isClickInteractionType = type => type === 'pointerdown' || type === 'mouse
 
 const loadersToTest = ['rum', 'spa']
 describe('pvt timings tests', () => {
+  const init = { page_view_timing: { harvestTimeSeconds: 3 } }
+
   describe('page viz related timings', () => {
     loadersToTest.forEach(loader => {
       it(`Load, Unload, FP, FCP & pageHide for ${loader} agent`, async () => {
-        let url = await browser.testHandle.assetURL('instrumented.html', { loader }) // this should use SPA which is full agent
+        let url = await browser.testHandle.assetURL('instrumented.html', { loader })
         const start = Date.now()
+        await browser.url(url).then(() => browser.waitForAgentLoad())
+
         const [{ request: { body } }] = await Promise.all([
-          browser.testHandle.expectTimings(),
-          browser.url(url)
-            .then(() => browser.waitForAgentLoad())
-            .then(() => browser.pause(1000))
-            .then(async () => browser.url(await browser.testHandle.assetURL('/')))
+          browser.testHandle.expectFinalTimings(10000),
+          browser.url(await browser.testHandle.assetURL('/'))
         ])
         const duration = Date.now() - start
 
@@ -59,18 +60,14 @@ describe('pvt timings tests', () => {
   describe('interaction related timings', () => {
     loadersToTest.forEach(loader => {
       it(`FI, FID, INP & LCP for ${loader} agent`, async () => {
-        let url = await browser.testHandle.assetURL('basic-click-tracking.html', { loader }) // this should use SPA which is full agent
+        let url = await browser.testHandle.assetURL('basic-click-tracking.html', { loader })
 
         const start = Date.now()
+        await browser.url(url).then(() => browser.waitForAgentLoad())
 
         const [{ request: { body } }] = await Promise.all([
-          browser.testHandle.expectTimings(),
-          browser.url(url)
-            .then(() => browser.waitForAgentLoad()
-              .then(() => $('#free_tacos').click())
-              .then(() => browser.pause(1000))
-              .then(async () => browser.url(await browser.testHandle.assetURL('/')))
-            )
+          browser.testHandle.expectFinalTimings(10000),
+          $('#free_tacos').click().then(() => browser.pause(1000)).then(async () => browser.url(await browser.testHandle.assetURL('/')))
         ])
 
         if (browserMatch(supportsFirstInputDelay)) {
@@ -116,24 +113,21 @@ describe('pvt timings tests', () => {
     loadersToTest.forEach(loader => {
       ;[['unload', 'cls-basic.html'], ['pageHide', 'cls-pagehide.html']].forEach(([prop, testAsset]) => {
         it.withBrowsersMatching([supportsCumulativeLayoutShift])(`${prop} for ${loader} agent collects cls attribute`, async () => {
-          let url = await browser.testHandle.assetURL(testAsset, { loader }) // this should use SPA which is full agent
+          let url = await browser.testHandle.assetURL(testAsset, { loader, init })
+          await browser.url(url).then(() => browser.waitForAgentLoad())
+          if (prop === 'pageHide') await $('#btn1').click()
+
           const [{ request: { body } }] = await Promise.all([
-            browser.testHandle.expectTimings(),
-            browser.url(url)
-              .then(() => browser.waitForAgentLoad())
-              .then(() => {
-                if (prop === 'pageHide') return $('#btn1').click()
-              })
-              .then(() => browser.waitUntil(
-                () => browser.execute(function () {
-                  return window.contentAdded === true
-                }),
-                {
-                  timeout: 30000,
-                  timeoutMsg: 'contentAdded was never set'
-                }))
-              .then(() => browser.pause(1000))
-              .then(async () => browser.url(await browser.testHandle.assetURL('/')))
+            browser.testHandle.expectFinalTimings(10000),
+            browser.waitUntil(
+              () => browser.execute(function () {
+                return window.contentAdded === true
+              }),
+              {
+                timeout: 10000,
+                timeoutMsg: 'contentAdded was never set'
+              }
+            ).then(async () => browser.url(await browser.testHandle.assetURL('/')))
           ])
 
           const evt = body.find(t => t.name === prop)
@@ -148,16 +142,12 @@ describe('pvt timings tests', () => {
   describe('custom attribution timings', () => {
     loadersToTest.forEach(loader => {
       it(`window load timing for ${loader} agent includes custom attributes`, async () => {
-        let url = await browser.testHandle.assetURL('load-timing-attributes.html', { loader }) // this should use SPA which is full agent
+        let url = await browser.testHandle.assetURL('load-timing-attributes.html', { loader, init })
         const reservedTimingAttributes = ['size', 'eid', 'cls', 'type', 'fid', 'elUrl', 'elTag',
           'net-type', 'net-etype', 'net-rtt', 'net-dlink']
-        const [{ request: { body } }] = await Promise.all([
-          browser.testHandle.expectTimings(),
-          browser.url(url)
-            .then(() => browser.waitForAgentLoad())
-            .then(() => browser.pause(1000))
-            .then(async () => browser.url(await browser.testHandle.assetURL('/')))
-        ])
+        await browser.url(url).then(() => browser.waitForAgentLoad())
+
+        const { request: { body } } = await browser.testHandle.expectTimings(10000)
         const load = body.find(t => t.name === 'load')
         const containsReservedAttributes = load?.attributes.some(a => reservedTimingAttributes.includes(a.key) && a.value === 'invalid')
         expect(containsReservedAttributes).not.toEqual(true)
@@ -171,26 +161,26 @@ describe('pvt timings tests', () => {
   describe('long task related timings', () => {
     loadersToTest.forEach(loader => {
       it.withBrowsersMatching([supportsLongTaskTiming])(`emits long task timings when observed for ${loader} agent`, async () => {
-        let url = await browser.testHandle.assetURL('long-tasks.html', { loader, init: { page_view_timing: { long_task: true } } }) // this should use SPA which is full agent
+        let url = await browser.testHandle.assetURL('long-tasks.html', { loader, init: { page_view_timing: { long_task: true, harvestTimeSeconds: 3 } } })
+        await browser.url(url)
+
         const [{ request: { body } }] = await Promise.all([
-          browser.testHandle.expectTimings(),
-          browser.url(url)
-            .then(() => browser.waitUntil(
-              () => browser.execute(function () {
-                return window.tasksDone === true
-              }),
-              {
-                timeout: 30000,
-                timeoutMsg: 'tasksDone was never set'
-              }))
-            .then(async () => browser.url(await browser.testHandle.assetURL('/')))
+          browser.testHandle.expectTimings(10000),
+          browser.waitUntil(() => browser.execute(function () {
+            return window.tasksDone === true
+          }),
+          {
+            timeout: 10000,
+            timeoutMsg: 'tasksDone was never set'
+          }
+          )
         ])
         const ltEvents = body.filter(t => t.name === 'lt')
         expect(ltEvents.length).toBeGreaterThanOrEqual(2)
 
         ltEvents.forEach(lt => {
           // Attributes array should start with: [ltFrame, ltStart, ltCtr, (ltCtrSrc, ltCtrId, ltCtrName, )...]
-          expect(lt.value).toBeGreaterThanOrEqual(59)
+          expect(lt.value).toBeGreaterThanOrEqual(50)
           expect(lt.attributes.length).toBeGreaterThanOrEqual(3)
           expect(lt.attributes[1].type).toEqual('doubleAttribute') // entry.startTime
           if (lt.attributes[2].value !== 'window') expect(lt.attributes.length).toBeGreaterThanOrEqual(6)

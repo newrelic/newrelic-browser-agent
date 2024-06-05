@@ -8,12 +8,12 @@
     <title>Logs API Post Load</title>
     {init} {config} {loader}
     <script>
-      const loggers = {
-        logInfo: (message, attr) => {},
-        logDebug: (message, attr) => {},
-        logTrace: (message, attr) => {},
-        logError: (message, attr) => {},
-        logWarn: (message, attr) => {},
+      var loggers = {
+        logInfo: function(message, attr){},
+        logDebug: function(message, attr){},
+        logTrace: function(message, attr){},
+        logError: function(message, attr){},
+        logWarn: function(message, attr){},
       }
       
       newrelic.wrapLogger(loggers, 'logInfo', 'info')

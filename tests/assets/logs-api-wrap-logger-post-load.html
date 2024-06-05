@@ -10,14 +10,14 @@
   </head>
   <body>Logs API Post Load
     <script>
-      const loggers = {
-        logInfo: (message, attr) => {},
-        logDebug: (message, attr) => {},
-        logTrace: (message, attr) => {},
-        logError: (message, attr) => {},
-        logWarn: (message, attr) => {},
+      var loggers = {
+        logInfo: function(message, attr){},
+        logDebug: function(message, attr){},
+        logTrace: function(message, attr){},
+        logError: function(message, attr){},
+        logWarn: function(message, attr){},
       }
-
+      
       newrelic.wrapLogger(loggers, 'logInfo', 'info')
       newrelic.wrapLogger(loggers, 'logDebug', 'debug')
       newrelic.wrapLogger(loggers, 'logTrace', 'trace')
@@ -30,5 +30,4 @@
       loggers.logError('error', {test: 1})
       loggers.logWarn('warn', {test: 1})
     </script>
-  </body>
 </html>

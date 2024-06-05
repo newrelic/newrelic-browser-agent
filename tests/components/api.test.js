@@ -666,7 +666,7 @@ describe('setAPI', () => {
     logApiMethods.forEach(logMethod => {
       describe(logMethod, () => {
         test('should create event emitter event for calls to API', () => {
-          const args = [faker.string.uuid(), { [faker.string.uuid()]: faker.string.uuid() }]
+          const args = ['message', { test: 1 }]
           apiInterface[logMethod](...args)
 
           expect(handleModule.handle).toHaveBeenCalledTimes(2)
@@ -680,7 +680,7 @@ describe('setAPI', () => {
 
           const secondEmit = handleModule.handle.mock.calls[1]
           expect(secondEmit[0]).toEqual('log')
-          expect(secondEmit[1]).toEqual([expect.any(Number), ...args, logMethod.toLowerCase().replace('log', '')])
+          expect(secondEmit[1]).toEqual([expect.any(Number), args[0], JSON.stringify([args[1]]), logMethod.toLowerCase().replace('log', '')])
           expect(secondEmit[2]).toBeUndefined()
           expect(secondEmit[3]).toEqual(FEATURE_NAMES.logging)
           expect(secondEmit[4]).toEqual(instanceEE)

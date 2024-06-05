@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>Logs API Pre Load</title>
+    {init} {config} {loader}
+    <script>
+      newrelic.logInfo('info', {test: 1})
+      newrelic.logDebug('debug', {test: 1})
+      newrelic.logTrace('trace', {test: 1})
+      newrelic.logError('error', {test: 1})
+      newrelic.logWarn('warn', {test: 1})
+    </script>
+  </head>
+  <body>Logs API Pre Load</body>
+</html>

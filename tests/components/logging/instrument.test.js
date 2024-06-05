@@ -40,7 +40,7 @@ describe('logging instrument component tests', () => {
     wrapLogger(loggingInstrument.ee, myLoggerSuite, 'myTestLogger', 'error')
     expect(utils.bufferLog).toHaveBeenCalledTimes(0)
     myLoggerSuite.myTestLogger('message', { args: 1 })
-    expect(utils.bufferLog).toHaveBeenCalledWith(loggingInstrument.ee, 'message', { customAttributes: '[{"args":1}]' }, 'error')
+    expect(utils.bufferLog).toHaveBeenCalledWith(loggingInstrument.ee, 'message', [{ args: 1 }], 'error')
   })
 })
 

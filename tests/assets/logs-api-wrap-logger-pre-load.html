@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>Logs API Post Load</title>
+    {init} {config} {loader}
+    <script>
+      const loggers = {
+        logInfo: (message, attr) => {},
+        logDebug: (message, attr) => {},
+        logTrace: (message, attr) => {},
+        logError: (message, attr) => {},
+        logWarn: (message, attr) => {},
+      }
+      
+      newrelic.wrapLogger(loggers, 'logInfo', 'info')
+      newrelic.wrapLogger(loggers, 'logDebug', 'debug')
+      newrelic.wrapLogger(loggers, 'logTrace', 'trace')
+      newrelic.wrapLogger(loggers, 'logError', 'error')
+      newrelic.wrapLogger(loggers, 'logWarn', 'warn')
+      
+      loggers.logInfo('info', {test: 1})
+      loggers.logDebug('debug', {test: 1})
+      loggers.logTrace('trace', {test: 1})
+      loggers.logError('error', {test: 1})
+      loggers.logWarn('warn', {test: 1})
+    </script>
+  </head>
+  <body>Logs API Post Load
+  </body>
+</html>

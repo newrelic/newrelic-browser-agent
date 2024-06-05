@@ -56,7 +56,7 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
 
   logApiMethods.forEach((method) => {
     apiInterface[method] = function (message, customAttributes = {}) {
-      bufferLog(instanceEE, message, customAttributes, method.toLowerCase().replace('log', ''))
+      bufferLog(instanceEE, message, [customAttributes], method.toLowerCase().replace('log', ''))
     }
   })
 

@@ -29,7 +29,7 @@ export class Aggregate extends AggregateBase {
         getPayload: this.prepareHarvest.bind(this),
         raw: true
       }, this)
-      this.scheduler.startTimer(this.harvestTimeSeconds, 0)
+      this.scheduler.startTimer(this.harvestTimeSeconds)
       /** emitted by instrument class (wrapped loggers) or the api methods directly */
       registerHandler(LOGGING_EVENT_EMITTER_TYPES.LOG, this.handleLog.bind(this), this.featureName, this.ee)
       this.drain()
@@ -49,7 +49,7 @@ export class Aggregate extends AggregateBase {
   }
 
   prepareHarvest () {
-    if (!this.bufferedLogs.length || this.blocked) return
+    if (this.blocked || !(this.bufferedLogs.length || this.outgoingLogs.length)) return
     this.outgoingLogs.push(...this.bufferedLogs.splice(0))
     return {
       qs: {

@@ -14,7 +14,7 @@ describe('pvt timings tests', () => {
         await browser.url(url).then(() => browser.waitForAgentLoad())
 
         const [{ request: { body } }] = await Promise.all([
-          browser.testHandle.expectFinalTimings(10000),
+          browserMatch(supportsCumulativeLayoutShift) ? browser.testHandle.expectFinalTimings(10000) : browser.testHandle.expectTimings(10000),
           browser.url(await browser.testHandle.assetURL('/'))
         ])
         const duration = Date.now() - start
@@ -66,7 +66,7 @@ describe('pvt timings tests', () => {
         await browser.url(url).then(() => browser.waitForAgentLoad())
 
         const [{ request: { body } }] = await Promise.all([
-          browser.testHandle.expectFinalTimings(10000),
+          browserMatch(supportsCumulativeLayoutShift) ? browser.testHandle.expectFinalTimings(10000) : browser.testHandle.expectTimings(10000),
           $('#free_tacos').click().then(() => browser.pause(1000)).then(async () => browser.url(await browser.testHandle.assetURL('/')))
         ])
 

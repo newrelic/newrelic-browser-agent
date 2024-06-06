@@ -1,6 +1,6 @@
 import { parseSpecString, equationIsTrue } from '../browser-matcher/spec-parser.mjs'
 
-export default function browsersList (deskSpecsMap, mobileSpecsMap, spec = 'chrome@latest') {
+export default function browsersList (deskSpecsMap, mobileSpecsMap = {}, spec = 'chrome@latest') {
   return spec.split(',') // other example spec str: '*', '*@*', 'safari@*', '*@latest-5', 'firefox@100,edge>=100'
     .flatMap(specString => {
       let { browserName, specOperator, browserVersion } = parseSpecString(specString)

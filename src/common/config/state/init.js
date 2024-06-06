@@ -31,12 +31,6 @@ const model = () => {
     }
   }
   return {
-    feature_flags: [],
-    proxy: {
-      assets: undefined, // if this value is set, it will be used to overwrite the webpack asset path used to fetch assets
-      beacon: undefined // likewise for the url to which we send analytics
-    },
-    privacy: { cookies_enabled: true }, // *cli - per discussion, default should be true
     ajax: { deny_list: undefined, block_internal: true, enabled: true, harvestTimeSeconds: 10, autoStart: true },
     distributed_tracing: {
       enabled: undefined,
@@ -45,19 +39,24 @@ const model = () => {
       cors_use_tracecontext_headers: undefined,
       allowed_origins: undefined
     },
+    feature_flags: [],
+    harvest: { tooManyRequestsDelay: 60 },
+    jserrors: { enabled: true, harvestTimeSeconds: 10, autoStart: true },
+    logging: { enabled: true, harvestTimeSeconds: 30, autoStart: true, level: 'info' },
+    metrics: { enabled: true, autoStart: true },
+    obfuscate: undefined,
+    page_action: { enabled: true, harvestTimeSeconds: 30, autoStart: true },
+    page_view_event: { enabled: true, autoStart: true },
+    page_view_timing: { enabled: true, harvestTimeSeconds: 30, long_task: false, autoStart: true },
+    privacy: { cookies_enabled: true }, // *cli - per discussion, default should be true
+    proxy: {
+      assets: undefined, // if this value is set, it will be used to overwrite the webpack asset path used to fetch assets
+      beacon: undefined // likewise for the url to which we send analytics
+    },
     session: {
       expiresMs: DEFAULT_EXPIRES_MS,
       inactiveMs: DEFAULT_INACTIVE_MS
     },
-    ssl: undefined,
-    obfuscate: undefined,
-    jserrors: { enabled: true, harvestTimeSeconds: 10, autoStart: true },
-    metrics: { enabled: true, autoStart: true },
-    page_action: { enabled: true, harvestTimeSeconds: 30, autoStart: true },
-    page_view_event: { enabled: true, autoStart: true },
-    page_view_timing: { enabled: true, harvestTimeSeconds: 30, long_task: false, autoStart: true },
-    session_trace: { enabled: true, harvestTimeSeconds: 10, autoStart: true },
-    harvest: { tooManyRequestsDelay: 60 },
     session_replay: {
       // feature settings
       autoStart: true,
@@ -100,8 +99,10 @@ const model = () => {
         else warn('An invalid session_replay.mask_input_option was provided and will not be used', val)
       }
     },
+    session_trace: { enabled: true, harvestTimeSeconds: 10, autoStart: true },
+    soft_navigations: { enabled: true, harvestTimeSeconds: 10, autoStart: true },
     spa: { enabled: true, harvestTimeSeconds: 10, autoStart: true },
-    soft_navigations: { enabled: true, harvestTimeSeconds: 10, autoStart: true }
+    ssl: undefined
   }
 }
 

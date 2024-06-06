@@ -1,8 +1,11 @@
 import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
+import { handle } from '../../../common/event-emitter/handle'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
+import { warn } from '../../../common/util/console'
+import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { AggregateBase } from '../../utils/aggregate-base'
-import { FEATURE_NAME, LOGGING_EVENT_EMITTER_TYPES } from '../constants'
+import { FEATURE_NAME, LOGGING_EVENT_EMITTER_TYPES, MAX_PAYLOAD_SIZE } from '../constants'
 import { Log } from '../shared/log'
 
 export class Aggregate extends AggregateBase {
@@ -16,6 +19,8 @@ export class Aggregate extends AggregateBase {
     this.bufferedLogs = []
     /** held logs during sending, for retries */
     this.outgoingLogs = []
+    /** the estimated bytes of log data waiting to be sent -- triggers a harvest if adding a new log will exceed limit  */
+    this.estimatedBytes = 0
 
     this.#agentRuntime = getRuntime(this.agentIdentifier)
     this.#agentInfo = getInfo(this.agentIdentifier)
@@ -38,19 +43,30 @@ export class Aggregate extends AggregateBase {
 
   handleLog (timestamp, message, attributes, level) {
     if (this.blocked) return
-    this.bufferedLogs.push(
-      new Log(
-        this.#agentRuntime.timeKeeper.convertRelativeTimestamp(timestamp),
-        message,
-        attributes,
-        level
-      )
+    const log = new Log(
+      this.#agentRuntime.timeKeeper.convertRelativeTimestamp(timestamp),
+      message,
+      attributes,
+      level
     )
+    const logBytes = log.message.length + log.attributes.length + log.logType.length + log.session.url.length + 10 // timestamp == 10 chars
+    if (logBytes > MAX_PAYLOAD_SIZE) {
+      handle(SUPPORTABILITY_METRIC_CHANNEL, ['Logging/Harvest/Failed/Seen'])
+      return warn(`failed to log: > ${MAX_PAYLOAD_SIZE} bytes`, log.message.slice(0, 25) + '...')
+    }
+
+    if (this.estimatedBytes + logBytes >= MAX_PAYLOAD_SIZE) {
+      handle(SUPPORTABILITY_METRIC_CHANNEL, ['Logging/Harvest/Early/Seen'])
+      this.scheduler.runHarvest({})
+    }
+    this.estimatedBytes += logBytes
+    this.bufferedLogs.push(log)
   }
 
   prepareHarvest () {
     if (this.blocked || !(this.bufferedLogs.length || this.outgoingLogs.length)) return
     this.outgoingLogs.push(...this.bufferedLogs.splice(0))
+    this.estimatedBytes = 0
     return {
       qs: {
         browser_monitoring_key: this.#agentInfo.licenseKey

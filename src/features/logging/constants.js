@@ -13,3 +13,5 @@ export const LOGGING_EVENT_EMITTER_TYPES = {
 }
 
 export const FEATURE_NAME = FEATURE_NAMES.logging
+
+export const MAX_PAYLOAD_SIZE = 1000000

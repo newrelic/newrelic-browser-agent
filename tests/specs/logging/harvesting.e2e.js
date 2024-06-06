@@ -1,4 +1,5 @@
 import { testLogsRequest } from '../../../tools/testing-server/utils/expect-tests'
+import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
 
 describe('logging harvesting', () => {
   describe('logging harvests', () => {
@@ -26,40 +27,44 @@ describe('logging harvesting', () => {
       logs: expectedLogs
     }
 
-    it('should harvest expected logs - API pre load', async () => {
-      const [{ request: { body } }] = await Promise.all([
-        browser.testHandle.expectLogs(),
-        browser.url(await browser.testHandle.assetURL('logs-api-pre-load.html'))
-      ])
+    ;['api', 'api-wrap-logger'].forEach(type => {
+      it(`should harvest expected logs - ${type} pre load`, async () => {
+        const [{ request: { body } }] = await Promise.all([
+          browser.testHandle.expectLogs(),
+          browser.url(await browser.testHandle.assetURL(`logs-${type}-pre-load.html`))
+        ])
 
-      expect(JSON.parse(body)).toEqual(expectedPayload)
-    })
+        expect(JSON.parse(body)).toEqual(expectedPayload)
+      })
 
-    it('should harvest expected logs - API post load', async () => {
-      const [{ request: { body } }] = await Promise.all([
-        browser.testHandle.expectLogs(),
-        browser.url(await browser.testHandle.assetURL('logs-api-post-load.html'))
-      ])
+      it(`should harvest expected logs - ${type} post load`, async () => {
+        const [{ request: { body } }] = await Promise.all([
+          browser.testHandle.expectLogs(),
+          browser.url(await browser.testHandle.assetURL(`logs-${type}-post-load.html`))
+        ])
 
-      expect(JSON.parse(body)).toEqual(expectedPayload)
-    })
+        expect(JSON.parse(body)).toEqual(expectedPayload)
+      })
 
-    it('should harvest expected logs - API wrap logger pre load', async () => {
-      const [{ request: { body } }] = await Promise.all([
-        browser.testHandle.expectLogs(),
-        browser.url(await browser.testHandle.assetURL('logs-api-wrap-logger-pre-load.html'))
-      ])
+      /** method used here to generate long logs is not supported by IE */
+      it.withBrowsersMatching([notIE])(`should harvest early if reaching limit - ${type}`, async () => {
+        let now = Date.now(); let then
+        await Promise.all([
+          browser.testHandle.expectLogs().then(() => { then = Date.now() }),
+          browser.url(await browser.testHandle.assetURL(`logs-${type}-harvest-early.html`, { init: { logging: { harvestTimeSeconds: 10 } } }))
+        ])
 
-      expect(JSON.parse(body)).toEqual(expectedPayload)
-    })
+        expect(then - now).toBeLessThan(10000)
+      })
 
-    it('should harvest expected logs - API wrap logger post load', async () => {
-      const [{ request: { body } }] = await Promise.all([
-        browser.testHandle.expectLogs(),
-        browser.url(await browser.testHandle.assetURL('logs-api-wrap-logger-post-load.html'))
-      ])
-
-      expect(JSON.parse(body)).toEqual(expectedPayload)
+      /** method used here to generate long logs is not supported by IE */
+      it.withBrowsersMatching([notIE])(`should ignore log if too large - ${type}`, async () => {
+        const [{ request: { body } }] = await Promise.all([
+          browser.testHandle.expectLogs(),
+          browser.url(await browser.testHandle.assetURL(`logs-${type}-too-large.html`))
+        ])
+        expect(JSON.parse(body)).toEqual(expectedPayload) // should not contain the '...xxxxx...' payload in it
+      })
     })
   })
 

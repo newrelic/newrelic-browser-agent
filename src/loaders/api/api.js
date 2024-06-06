@@ -16,7 +16,7 @@ import { apiMethods, asyncApiMethods, logApiMethods } from './api-methods'
 import { SR_EVENT_EMITTER_TYPES } from '../../features/session_replay/constants'
 import { now } from '../../common/timing/now'
 import { MODE } from '../../common/session/constants'
-import { LOG_LEVELS } from '../../features/logging/constants'
+import { LOG_LEVELS, MAX_PAYLOAD_SIZE } from '../../features/logging/constants'
 import { bufferLog } from '../../features/logging/shared/utils'
 import { wrapLogger } from '../../common/wrap/wrap-logger'
 
@@ -56,6 +56,7 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
 
   logApiMethods.forEach((method) => {
     apiInterface[method] = function (message, customAttributes = {}) {
+      if (message.length > MAX_PAYLOAD_SIZE) return warn(`ignored log: > ${MAX_PAYLOAD_SIZE} bytes`, message.slice(0, 25) + '...')
       bufferLog(instanceEE, message, [customAttributes], method.toLowerCase().replace('log', ''))
     }
   })

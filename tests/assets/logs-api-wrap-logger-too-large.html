@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>Logs API Post Load</title>
+    {init} {config} {loader}
+  </head>
+  <body>Logs API Post Load
+    <script>
+      var loggers = {
+        logInfo: function(message, attr){},
+        logDebug: function(message, attr){},
+        logTrace: function(message, attr){},
+        logError: function(message, attr){},
+        logWarn: function(message, attr){},
+      }
+      
+      newrelic.wrapLogger(loggers, 'logInfo', 'info')
+      newrelic.wrapLogger(loggers, 'logDebug', 'debug')
+      newrelic.wrapLogger(loggers, 'logTrace', 'trace')
+      newrelic.wrapLogger(loggers, 'logError', 'error')
+      newrelic.wrapLogger(loggers, 'logWarn', 'warn')
+      
+      loggers.logInfo('x'.repeat(1024*1024), {test: 1}) // too big
+      loggers.logInfo('info', {test: 1})
+      loggers.logDebug('debug', {test: 1})
+      loggers.logTrace('trace', {test: 1})
+      loggers.logError('error', {test: 1})
+      loggers.logWarn('warn', {test: 1})
+      // harvest should not have the '...xxxxx...' payload in it
+    </script>
+  </body>
+</html>

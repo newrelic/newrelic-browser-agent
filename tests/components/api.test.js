@@ -686,6 +686,14 @@ describe('setAPI', () => {
           expect(secondEmit[4]).toEqual(instanceEE)
         })
       })
+
+      test('should short circuit if message is too large', () => {
+        const tooLongMessage = 'x'.repeat(1024 * 1024)
+        apiInterface[logMethod](tooLongMessage)
+
+        expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('New Relic: ignored log: > 1000000 bytes', 'x'.repeat(25) + '...'))
+        expect(handleModule.handle).toHaveBeenCalledTimes(0)
+      })
     })
   })
 

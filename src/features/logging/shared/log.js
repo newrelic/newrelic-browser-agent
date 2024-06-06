@@ -6,7 +6,7 @@ export class Log {
    *
    * @param {number} timestamp - Unix timestamp
    * @param {string} message - message string
-   * @param {{[key: string]: *}} attributes - other attributes
+   * @param {string} attributes - other attributes, stringified
    * @param {enum} level - Log level
    */
   constructor (timestamp, message, attributes, level) {

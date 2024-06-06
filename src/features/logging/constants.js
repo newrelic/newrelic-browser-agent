@@ -8,8 +8,6 @@ export const LOG_LEVELS = {
   TRACE: 'trace'
 }
 
-export const LOGGING_EVENT_EMITTER_TYPES = {
-  LOG: 'log'
-}
+export const LOGGING_EVENT_EMITTER_CHANNEL = 'log'
 
 export const FEATURE_NAME = FEATURE_NAMES.logging

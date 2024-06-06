@@ -38,6 +38,7 @@ export function setTopLevelCallers () {
 }
 
 const replayRunning = {}
+const LOGGING_FAILURE_MESSAGE = 'Failed to wrap: '
 
 export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) {
   if (!forceDrain) registerDrain(agentIdentifier, 'api')
@@ -61,9 +62,8 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
   })
 
   apiInterface.wrapLogger = (parent, functionName, level = LOG_LEVELS.INFO) => {
-    const failureMessage = 'Failed to wrap: '
-    if (!(typeof parent === 'object' && !!parent && typeof functionName === 'string' && !!functionName)) return warn(failureMessage + 'invalid parent or function')
-    if (!Object.values(LOG_LEVELS).includes(level)) return warn(failureMessage + 'invalid log level', LOG_LEVELS)
+    if (!(typeof parent === 'object' && !!parent && typeof functionName === 'string' && !!functionName)) return warn(LOGGING_FAILURE_MESSAGE + 'invalid parent or function')
+    if (!Object.values(LOG_LEVELS).includes(level)) return warn(LOGGING_FAILURE_MESSAGE + 'invalid log level', LOG_LEVELS)
     wrapLogger(instanceEE, parent, functionName, level)
   }
 

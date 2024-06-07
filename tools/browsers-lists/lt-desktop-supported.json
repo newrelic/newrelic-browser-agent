@@ -1,0 +1,54 @@
+{
+  "chrome": [
+    {
+      "browserName": "Chrome",
+      "platformName": "Windows 11",
+      "browserVersion": "latest",
+			"comment": "latest will get the stable version"
+    },
+		{
+      "browserName": "Chrome",
+      "platformName": "Windows 11",
+      "browserVersion": "latest-10",
+			"comment": "since we support last 10 (stable) versions"
+    }
+  ],
+  "edge": [
+    {
+      "browserName": "MicrosoftEdge",
+      "platformName": "Windows 11",
+      "browserVersion": "latest"
+    },
+		{
+      "browserName": "MicrosoftEdge",
+      "platformName": "Windows 11",
+      "browserVersion": "latest-10"
+    }
+  ],
+  "firefox": [
+    {
+      "browserName": "Firefox",
+      "platformName": "Windows 11",
+      "browserVersion": "latest"
+    },
+		{
+      "browserName": "Firefox",
+      "platformName": "Windows 11",
+      "browserVersion": "latest-10"
+    }
+  ],
+  "safari": [
+    {
+      "browserName": "Safari",
+      "platformName": "macOS Sonoma",
+      "browserVersion": "latest",
+			"comment": "mOS version 14 aka Sonoma will only have safari 17 on LT"
+    },
+    {
+      "browserName": "Safari",
+      "platformName": "macOS Ventura",
+      "browserVersion": "latest",
+			"comment": "mOS version 13 aka Ventura will only have safari 16 on LT"
+    }
+  ]
+}

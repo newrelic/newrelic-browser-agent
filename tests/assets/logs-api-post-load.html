@@ -10,11 +10,11 @@
   </head>
   <body>Logs API Post Load
     <script>
-      newrelic.logInfo('info', {test: 1})
-      newrelic.logDebug('debug', {test: 1})
-      newrelic.logTrace('trace', {test: 1})
-      newrelic.logError('error', {test: 1})
-      newrelic.logWarn('warn', {test: 1})
+      newrelic.log('info', {test: 1}, 'info')
+      newrelic.log('debug', {test: 1}, 'debug')
+      newrelic.log('trace', {test: 1}, 'trace')
+      newrelic.log('error', {test: 1}, 'error')
+      newrelic.log('warn', {test: 1}, 'warn')
     </script>
   </body>
 </html>

@@ -5,7 +5,7 @@ import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { warn } from '../../../common/util/console'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { AggregateBase } from '../../utils/aggregate-base'
-import { FEATURE_NAME, LOGGING_EVENT_EMITTER_TYPES, MAX_PAYLOAD_SIZE } from '../constants'
+import { FEATURE_NAME, LOGGING_EVENT_EMITTER_CHANNEL, MAX_PAYLOAD_SIZE } from '../constants'
 import { Log } from '../shared/log'
 
 export class Aggregate extends AggregateBase {
@@ -34,9 +34,9 @@ export class Aggregate extends AggregateBase {
         getPayload: this.prepareHarvest.bind(this),
         raw: true
       }, this)
-      this.scheduler.startTimer(this.harvestTimeSeconds)
+      this.scheduler.startTimer(this.harvestTimeSeconds, 0)
       /** emitted by instrument class (wrapped loggers) or the api methods directly */
-      registerHandler(LOGGING_EVENT_EMITTER_TYPES.LOG, this.handleLog.bind(this), this.featureName, this.ee)
+      registerHandler(LOGGING_EVENT_EMITTER_CHANNEL, this.handleLog.bind(this), this.featureName, this.ee)
       this.drain()
     })
   }
@@ -74,12 +74,12 @@ export class Aggregate extends AggregateBase {
       body: {
         common: {
           attributes: {
-            entityGuid: (this.#agentRuntime.appMetadata?.agents?.[0] || {}).entityGuid,
+            entityGuid: this.#agentRuntime.appMetadata?.agents?.[0]?.entityGuid,
             session: {
               id: this.#agentRuntime?.session?.state.value || '0', // The session ID that we generate and keep across page loads
               hasReplay: this.#agentRuntime?.session?.state.sessionReplayMode === 1, // True if a session replay recording is running
               hasTrace: this.#agentRuntime?.session?.state.sessionTraceMode === 1, // True if a session trace recording is running
-              pageTraceId: this.#agentRuntime.ptid // The trace ID if a session trace is recording
+              pageTraceId: this.#agentRuntime.ptid // The page's trace ID (equiv to agent id)
             },
             agent: {
               appId: this.#agentInfo.applicationID, // Application ID from info object

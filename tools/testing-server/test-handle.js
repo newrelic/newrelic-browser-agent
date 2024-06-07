@@ -254,16 +254,18 @@ module.exports = class TestHandle {
     if (assetFile.slice(-1) === '/') relativePath += '/'
     return urlFor(
       relativePath,
-      deepmerge(
-        {
-          loader: 'full',
-          config: {
-            licenseKey: this.#testId
+      assetFile === '/'
+        ? undefined
+        : deepmerge(
+          {
+            loader: 'full',
+            config: {
+              licenseKey: this.#testId
+            },
+            init: { ajax: { block_internal: false } }
           },
-          init: { ajax: { block_internal: false } }
-        },
-        query
-      ),
+          query
+        ),
       this.#testServer
     )
   }

@@ -29,7 +29,7 @@ export class Aggregate extends AggregateBase {
         getPayload: this.prepareHarvest.bind(this),
         raw: true
       }, this)
-      this.scheduler.startTimer(this.harvestTimeSeconds)
+      this.scheduler.startTimer(this.harvestTimeSeconds, 0)
       /** emitted by instrument class (wrapped loggers) or the api methods directly */
       registerHandler(LOGGING_EVENT_EMITTER_CHANNEL, this.handleLog.bind(this), this.featureName, this.ee)
       this.drain()

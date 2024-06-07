@@ -1,4 +1,5 @@
-import { parseSpecString, SPEC_OPERATOR } from './spec-parser.mjs'
+import { parseSpecString, equationIsTrue } from './spec-parser.mjs'
+import latestBrowserVersions from '../browsers-lists/lt-desktop-latest-vers.json' assert { type: 'json' }
 
 /**
  * Represents a browser matching rule of the defined type
@@ -64,19 +65,17 @@ export default class MatcherRule {
       return true
     }
 
-    switch (this.#specOperator) {
-      case SPEC_OPERATOR.AT:
-        return Number(browserVersion) === Number(this.#browserVersion)
-      case SPEC_OPERATOR.GT:
-        return Number(browserVersion) > Number(this.#browserVersion)
-      case SPEC_OPERATOR.LT:
-        return Number(browserVersion) < Number(this.#browserVersion)
-      case SPEC_OPERATOR.GTE:
-        return Number(browserVersion) >= Number(this.#browserVersion)
-      case SPEC_OPERATOR.LTE:
-        return Number(browserVersion) <= Number(this.#browserVersion)
-      default:
-        return false
+    const ruleNumericVersion = Number(this.#browserVersion) // 'someString', '125.0.623' are not accepted
+    if (!Number.isFinite(ruleNumericVersion)) throw new Error('Encountered spec rule with unsupported version format: ' + this.#specString)
+    let desiredNumVersion
+    browserVersion = browserVersion.toString() // need to typecast any number for string ops
+    if (browserVersion.startsWith('latest')) {
+      desiredNumVersion = Number(latestBrowserVersions[browserName]) - (browserVersion.split('-')[1] || 0) // converts vers string like 'latest-10' into an actual number
+    } else {
+      desiredNumVersion = Number(browserVersion.split('.', 2).join('.')) // converts vers string like '125.9.551.12' into simply 125.9 as we only care about major.minor vers
     }
+    if (!Number.isFinite(desiredNumVersion)) throw new Error('Encountered desired spec with unsupported version format: ' + browserVersion)
+
+    return equationIsTrue(desiredNumVersion, this.#specOperator, ruleNumericVersion)
   }
 }

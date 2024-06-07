@@ -223,6 +223,24 @@ export class TestHandleConnector {
     })
   }
 
+  expectFinalTimings (timeout, expectTimeout = false) {
+    return Promise.all([ // EoL harvest can actually happen twice on navigation away -- typically when there's an CLS update/node
+      this.expect('bamServer', {
+        timeout,
+        test: testTimingEventsRequest,
+        expectTimeout
+      }),
+      this.expect('bamServer', {
+        timeout,
+        test: testTimingEventsRequest,
+        expectTimeout
+      })
+    ]).then(([firstHarvest, secondHarvest]) => {
+      firstHarvest.request.body.push(...secondHarvest.request.body)
+      return firstHarvest
+    })
+  }
+
   expectAjaxEvents (timeout, expectTimeout = false) {
     return this.expect('bamServer', {
       timeout,

@@ -10,7 +10,6 @@ import * as asyncApiModule from '../../src/loaders/api/apiAsync'
 import * as windowLoadModule from '../../src/common/window/load'
 import * as handleModule from '../../src/common/event-emitter/handle'
 import { SR_EVENT_EMITTER_TYPES } from '../../src/features/session_replay/constants'
-import { logApiMethods } from '../../src/loaders/api/api-methods'
 
 describe('setAPI', () => {
   let agentId
@@ -41,7 +40,7 @@ describe('setAPI', () => {
   test('should add expected api methods returned object', () => {
     const apiInterface = setAPI(agentId, true)
 
-    expect(Object.keys(apiInterface).length).toEqual(21)
+    expect(Object.keys(apiInterface).length).toEqual(17)
     expect(typeof apiInterface.setErrorHandler).toEqual('function')
     expect(typeof apiInterface.finished).toEqual('function')
     expect(typeof apiInterface.addToTrace).toEqual('function')
@@ -57,11 +56,7 @@ describe('setAPI', () => {
     expect(typeof apiInterface.start).toEqual('function')
     expect(typeof apiInterface[SR_EVENT_EMITTER_TYPES.RECORD]).toEqual('function')
     expect(typeof apiInterface[SR_EVENT_EMITTER_TYPES.PAUSE]).toEqual('function')
-    expect(typeof apiInterface.logError).toEqual('function')
-    expect(typeof apiInterface.logInfo).toEqual('function')
-    expect(typeof apiInterface.logWarn).toEqual('function')
-    expect(typeof apiInterface.logDebug).toEqual('function')
-    expect(typeof apiInterface.logTrace).toEqual('function')
+    expect(typeof apiInterface.log).toEqual('function')
     expect(typeof apiInterface.wrapLogger).toEqual('function')
   })
 
@@ -663,11 +658,11 @@ describe('setAPI', () => {
       })
     })
 
-    logApiMethods.forEach(logMethod => {
+    ;['error', 'trace', 'info', 'debug', 'info'].forEach(logMethod => {
       describe(logMethod, () => {
         test('should create event emitter event for calls to API', () => {
-          const args = ['message', { test: 1 }]
-          apiInterface[logMethod](...args)
+          const args = ['message', { test: 1 }, logMethod]
+          apiInterface.log(...args)
 
           expect(handleModule.handle).toHaveBeenCalledTimes(2)
 

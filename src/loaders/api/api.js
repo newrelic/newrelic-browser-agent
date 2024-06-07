@@ -12,7 +12,7 @@ import { isBrowserScope } from '../../common/constants/runtime'
 import { warn } from '../../common/util/console'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
 import { gosCDN } from '../../common/window/nreum'
-import { apiMethods, asyncApiMethods, logApiMethods } from './api-methods'
+import { apiMethods, asyncApiMethods } from './api-methods'
 import { SR_EVENT_EMITTER_TYPES } from '../../features/session_replay/constants'
 import { now } from '../../common/timing/now'
 import { MODE } from '../../common/session/constants'
@@ -55,11 +55,9 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
   var prefix = 'api-'
   var spaPrefix = prefix + 'ixn-'
 
-  logApiMethods.forEach((method) => {
-    apiInterface[method] = function (message, customAttributes = {}) {
-      bufferLog(instanceEE, message, [customAttributes], method.toLowerCase().replace('log', ''))
-    }
-  })
+  apiInterface.log = function (message, customAttributes = {}, level = LOG_LEVELS.INFO) {
+    bufferLog(instanceEE, message, [customAttributes], level)
+  }
 
   apiInterface.wrapLogger = (parent, functionName, level = LOG_LEVELS.INFO) => {
     if (!(typeof parent === 'object' && !!parent && typeof functionName === 'string' && !!functionName)) return warn(LOGGING_FAILURE_MESSAGE + 'invalid parent or function')

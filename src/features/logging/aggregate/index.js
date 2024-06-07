@@ -58,7 +58,7 @@ export class Aggregate extends AggregateBase {
       body: {
         common: {
           attributes: {
-          entityGuid: this.#agentRuntime.appMetadata?.agents?.[0]?.entityGuid,
+            entityGuid: this.#agentRuntime.appMetadata?.agents?.[0]?.entityGuid,
             session: {
               id: this.#agentRuntime?.session?.state.value || '0', // The session ID that we generate and keep across page loads
               hasReplay: this.#agentRuntime?.session?.state.sessionReplayMode === 1, // True if a session replay recording is running

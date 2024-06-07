@@ -40,7 +40,6 @@ export function setTopLevelCallers () {
 const replayRunning = {}
 const LOGGING_FAILURE_MESSAGE = 'Failed to wrap: '
 
-
 export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) {
   if (!forceDrain) registerDrain(agentIdentifier, 'api')
   const apiInterface = {}

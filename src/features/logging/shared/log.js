@@ -13,6 +13,7 @@ export class Log {
   /** @type {Object<{url: string}>} The session level attributes of the log event */
   session
 
+  /**
    * @param {number} timestamp - Unix timestamp
    * @param {string} message - message string
    * @param {{[key: string]: *}} attributes - other attributes

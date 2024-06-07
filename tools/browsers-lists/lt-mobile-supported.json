@@ -1,0 +1,26 @@
+{
+  "ios": [
+    {
+      "device_name": "iPad (9th generation)",
+      "version": "17.2",
+      "platformName": "ios"
+    },
+    {
+      "device_name": "iPhone 14 Pro Max",
+      "version": "16.0",
+      "platformName": "ios"
+    }
+  ],
+  "android": [
+    {
+      "device_name": "Pixel 4",
+      "version": "14",
+      "platformName": "android"
+    },
+    {
+      "device_name": "Oppo A9",
+      "version": "9",
+      "platformName": "android"
+    }
+  ]
+}

@@ -6,7 +6,8 @@ import { LocalMemory } from '../session-helpers'
 import { ee } from '../../../src/common/event-emitter/contextual-ee'
 import { setRuntime } from '../../../src/common/config/config'
 import { Aggregator } from '../../../src/common/aggregate/aggregator'
-import { LOGGING_EVENT_EMITTER_TYPES } from '../../../src/features/logging/constants'
+import { LOGGING_EVENT_EMITTER_CHANNEL } from '../../../src/features/logging/constants'
+
 import { Log } from '../../../src/features/logging/shared/log'
 
 jest.mock('../../../src/common/util/console', () => ({
@@ -48,7 +49,8 @@ describe('logging aggregate component tests', () => {
       const loggingAgg = new LoggingAggregate(agentIdentifier, new Aggregator({}))
       loggingAgg.ee.emit('rumresp', {})
       await wait(1)
-      loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_TYPES.LOG, [1234, 'test message', { myAttributes: 1 }, 'error'])
+      loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', { myAttributes: 1 }, 'error'])
+
       const expectedLog = new Log(
         timeKeeper.convertRelativeTimestamp(1234),
         'test message',
@@ -67,7 +69,7 @@ describe('logging aggregate component tests', () => {
                 id: session.state.value, // The session ID that we generate and keep across page loads
                 hasReplay: false, // True if a session replay recording is running
                 hasTrace: false, // True if a session trace recording is running
-                pageTraceId: agentIdentifier // The trace ID if a session trace is recording
+                pageTraceId: agentIdentifier // The trace ID
               },
               agent: {
                 appId: 9876, // Application ID from info object
@@ -86,7 +88,7 @@ describe('logging aggregate component tests', () => {
       const loggingAgg = new LoggingAggregate(agentIdentifier, new Aggregator({}))
       loggingAgg.ee.emit('rumresp', {})
       await wait(1)
-      loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_TYPES.LOG, [1234, 'test message', { myAttributes: 1 }, 'error'])
+      loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', { myAttributes: 1 }, 'error'])
       expect(loggingAgg.bufferedLogs[0]).toEqual(new Log(
         timeKeeper.convertRelativeTimestamp(1234),
         'test message',

@@ -158,6 +158,7 @@
     "test-server": "node ./tools/wdio/bin/server",
     "sauce:connect": "node ./tools/saucelabs/bin.mjs",
     "sauce:get-browsers": "node ./tools/browsers-lists/sauce-browsers.mjs",
+    "lt:update-browsers": "node ./tools/browsers-lists/lt-update-supported.mjs",
     "tools:test-builds": "npm --prefix ./tools/test-builds run build-all",
     "third-party-updates": "oss third-party manifest --includeOptDeps && oss third-party notices --includeOptDeps",
     "prepare": "husky install",

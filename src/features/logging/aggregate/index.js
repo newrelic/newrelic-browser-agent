@@ -2,7 +2,7 @@ import { getConfigurationValue, getInfo, getRuntime } from '../../../common/conf
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { AggregateBase } from '../../utils/aggregate-base'
-import { FEATURE_NAME, LOGGING_EVENT_EMITTER_TYPES } from '../constants'
+import { FEATURE_NAME, LOGGING_EVENT_EMITTER_CHANNEL } from '../constants'
 import { Log } from '../shared/log'
 
 export class Aggregate extends AggregateBase {
@@ -31,7 +31,7 @@ export class Aggregate extends AggregateBase {
       }, this)
       this.scheduler.startTimer(this.harvestTimeSeconds)
       /** emitted by instrument class (wrapped loggers) or the api methods directly */
-      registerHandler(LOGGING_EVENT_EMITTER_TYPES.LOG, this.handleLog.bind(this), this.featureName, this.ee)
+      registerHandler(LOGGING_EVENT_EMITTER_CHANNEL, this.handleLog.bind(this), this.featureName, this.ee)
       this.drain()
     })
   }
@@ -58,7 +58,7 @@ export class Aggregate extends AggregateBase {
       body: {
         common: {
           attributes: {
-            entityGuid: (this.#agentRuntime.appMetadata?.agents?.[0] || {}).entityGuid,
+          entityGuid: this.#agentRuntime.appMetadata?.agents?.[0]?.entityGuid,
             session: {
               id: this.#agentRuntime?.session?.state.value || '0', // The session ID that we generate and keep across page loads
               hasReplay: this.#agentRuntime?.session?.state.sessionReplayMode === 1, // True if a session replay recording is running

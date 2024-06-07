@@ -1,4 +1,4 @@
-import { supportsBFCache, notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { supportsBFCache, notIE, supportsCumulativeLayoutShift } from '../../../tools/browser-matcher/common-matchers.mjs'
 import querypack from '@newrelic/nr-querypack'
 
 describe('Back/forward cache', () => {
@@ -45,7 +45,7 @@ describe('Back/forward cache', () => {
     let ulNode = phTimings.find(t => t.name === 'unload')
     expect(ulNode).toBeUndefined() // vis hidden doesn't emit unload event
 
-    timingsListener = browser.testHandle.expectTimings(7000)
+    timingsListener = browserMatch(supportsCumulativeLayoutShift) ? browser.testHandle.expectFinalTimings(7000) : browser.testHandle.expectTimings(7000)
     await browser.url(await browser.testHandle.assetURL('/'))
     pvtPayload = (await timingsListener).request
 

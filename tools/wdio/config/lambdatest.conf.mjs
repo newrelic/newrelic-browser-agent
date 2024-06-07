@@ -1,9 +1,10 @@
 import url from 'url'
 import path from 'path'
 import child_process from 'child_process'
-import browsersSupported from '../../browsers-lists/browsers-supported.json' assert { type: 'json' }
-import browsersPolyfill from '../../browsers-lists/browsers-polyfill.json' assert { type: 'json' }
-import browsersList from '../../browsers-lists/browsers-list.mjs'
+import desktopBrowsers from '../../browsers-lists/lt-desktop-supported.json' assert { type: 'json' }
+import mobileBrowsers from '../../browsers-lists/lt-mobile-supported.json' assert { type: 'json' }
+import browsersPolyfill from '../../browsers-lists/lt-polyfill.json' assert { type: 'json' }
+import browsersList from '../../browsers-lists/lt-browsers-list.mjs'
 import args from '../args.mjs'
 import { getBrowserName } from '../../browsers-lists/utils.mjs'
 
@@ -17,10 +18,12 @@ const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
  * @returns An object defining platform capabilities to be requested of SauceLabs.
  */
 function lambdaTestCapabilities () {
-  let browsers = browsersSupported
-
+  let supportedDesktop, supportedMobile
   if (args.polyfills) {
-    browsers = browsersPolyfill
+    supportedDesktop = browsersPolyfill // just IE11
+  } else {
+    supportedDesktop = desktopBrowsers
+    supportedMobile = mobileBrowsers
   }
 
   let revision
@@ -31,34 +34,28 @@ function lambdaTestCapabilities () {
     revision = '¯\\_(ツ)_/¯'
   }
 
-  return browsersList(browsers, args.browsers)
+  return browsersList(supportedDesktop, supportedMobile, args.browsers)
     .map(testBrowser => {
-      const capability = {
+      const capabilities = {
         'LT:Options': {
           tunnel: true,
-          selenium_version: '4.0.0',
           w3c: true,
-          build: `Browser Agent: ${testBrowser.browserName[0].toUpperCase()}${testBrowser.browserName.slice(1)} ${testBrowser.browserVersion} - ${testBrowser.platformName} [${revision}]`
+          console: true,
+          build: `Browser Agent: ${testBrowser.browserName || testBrowser.device_name} ${testBrowser.browserVersion || testBrowser.version} ${testBrowser.platformName} [${revision}]`
         }
       }
 
       const parsedBrowserName = getBrowserName(testBrowser)
-      if (parsedBrowserName !== 'ios' && parsedBrowserName !== 'android') {
-        capability.browserName = testBrowser.browserName
-        capability.browserVersion = testBrowser.browserVersion
-        capability['LT:Options'].platformName = testBrowser.platformName
-
-        if (parsedBrowserName === 'safari') {
-          if (testBrowser.browserVersion === '17') {
-            capability['LT:Options'].platformName = 'macOS Sonoma'
-          }
-          if (testBrowser.browserVersion === '16') {
-            capability['LT:Options'].platformName = 'macOS Ventura'
-          }
-        }
+      if (parsedBrowserName !== 'ios' && parsedBrowserName !== 'android') { // the 4 desktop browsers
+        capabilities.browserName = testBrowser.browserName
+        capabilities.browserVersion = testBrowser.browserVersion
+        capabilities['LT:Options'].selenium_version = '4.0.0'
+      } else {
+        capabilities['LT:Options'].deviceName = testBrowser.device_name
+        capabilities['LT:Options'].platformVersion = testBrowser.version
       }
-
-      return capability
+      capabilities['LT:Options'].platformName = testBrowser.platformName
+      return capabilities
     })
 }
 

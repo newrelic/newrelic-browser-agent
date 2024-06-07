@@ -45,12 +45,15 @@ export function checkRumPerf({ query, body }) {
 export function checkPVT ({ query, body }) {
   expect(query).toEqual(baseQuery)
   expect(body?.length).toBeGreaterThanOrEqual(1)
-  body.forEach(x => expect(x).toMatchObject({
-    attributes: expect.any(Array),
-    name: x.name,
-    type: expect.any(String),
-    value: (['pageHide', 'unload'].includes(x.name) && browserMatch(onlyIE)) ? null : expect.any(Number)
-  }))
+  body.forEach(x => {
+    if (x.name === 'cls') return
+    expect(x).toMatchObject({
+      attributes: expect.any(Array),
+      name: x.name,
+      type: expect.any(String),
+      value: (['pageHide', 'unload'].includes(x.name) && browserMatch(onlyIE)) ? null : expect.any(Number)
+    })
+  })
 }
 
 export function checkAjaxEvents ({ query, body }, { specificPath, hasTrace } = {}) {

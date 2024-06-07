@@ -9,6 +9,7 @@ import { setNREUMInitializedAgent } from '../../../src/common/window/nreum'
 import { FEATURE_NAMES } from '../../../src/loaders/features/features'
 import { ee } from '../../../src/common/event-emitter/contextual-ee'
 import { TimeKeeper } from '../../../src/common/timing/time-keeper'
+import { LocalMemory } from '../session-helpers'
 
 let sr, session
 
@@ -16,37 +17,6 @@ jest.mock('../../../src/common/util/console', () => ({
   warn: jest.fn()
 }))
 
-class LocalMemory {
-  constructor (initialState = {}) {
-    this.state = initialState
-  }
-
-  get (key) {
-    try {
-      return this.state[key]
-    } catch (err) {
-      // Error is ignored
-      return ''
-    }
-  }
-
-  set (key, value) {
-    try {
-      if (value === undefined || value === null) return this.remove(key)
-      this.state[key] = value
-    } catch (err) {
-      // Error is ignored
-    }
-  }
-
-  remove (key) {
-    try {
-      delete this.state[key]
-    } catch (err) {
-      // Error is ignored
-    }
-  }
-}
 const model = {
   value: '',
   inactiveAt: 0,

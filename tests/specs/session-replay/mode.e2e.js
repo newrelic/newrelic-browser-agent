@@ -119,7 +119,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Sample Mode Validation', ()
     })
   })
 
-  it('Pause API called before page load has no effect', async () => {
+  it('Pause API called before page load stops the replay', async () => {
     await browser.enableSessionReplay(100, 0)
     await browser.url(await browser.testHandle.assetURL('rrweb-api-pause-before-load.html', srConfig()))
       .then(() => browser.waitForSessionReplayRecording())
@@ -128,7 +128,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Sample Mode Validation', ()
       recording: true,
       initialized: true,
       events: expect.any(Array),
-      mode: 1
+      mode: 0
     })
   })
 

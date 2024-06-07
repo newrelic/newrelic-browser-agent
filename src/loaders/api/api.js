@@ -16,8 +16,9 @@ import { apiMethods, asyncApiMethods, logApiMethods } from './api-methods'
 import { SR_EVENT_EMITTER_TYPES } from '../../features/session_replay/constants'
 import { now } from '../../common/timing/now'
 import { MODE } from '../../common/session/constants'
+import { LOG_LEVELS } from '../../features/logging/constants'
+import { bufferLog } from '../../features/logging/shared/utils'
 import { wrapLogger } from '../../common/wrap/wrap-logger'
-import { stringify } from '../../common/util/stringify'
 
 export function setTopLevelCallers () {
   const nr = gosCDN()
@@ -37,7 +38,7 @@ export function setTopLevelCallers () {
 }
 
 const replayRunning = {}
-const wrappedLoggers = new Set()
+const LOGGING_FAILURE_MESSAGE = 'Failed to wrap: '
 
 export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) {
   if (!forceDrain) registerDrain(agentIdentifier, 'api')
@@ -54,35 +55,16 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
   var prefix = 'api-'
   var spaPrefix = prefix + 'ixn-'
 
-  /**
-   *
-   * @param {string} message
-   * @param {{[key: string]: *}} context
-   * @param {string} level
-   */
-  function log (message, customAttributes, level = 'info') {
-    handle(SUPPORTABILITY_METRIC_CHANNEL, [`API/logging/${level}/called`], undefined, FEATURE_NAMES.metrics, instanceEE)
-    handle('log', [now(), message, customAttributes, level], undefined, FEATURE_NAMES.logging, instanceEE)
-  }
-
   logApiMethods.forEach((method) => {
     apiInterface[method] = function (message, customAttributes = {}) {
-      log(message, customAttributes, method.toLowerCase().replace('log', ''))
+      bufferLog(instanceEE, message, customAttributes, method.toLowerCase().replace('log', ''))
     }
   })
 
-  apiInterface.wrapLogger = (parent, functionName, level = 'info', customAttributes = {}) => {
-    if (!(typeof parent === 'object' && typeof functionName === 'string')) return
-    wrapLogger(instanceEE, parent, functionName)
-    if (!wrappedLoggers.has(parent[functionName])) {
-      wrappedLoggers.add(parent[functionName])
-      instanceEE.on(`${functionName}-wrap-logger-end`, ([message, ...args]) => {
-        log(message, {
-          ...(!!args.length && { 'wrappedFn.args': stringify(args) }),
-          ...customAttributes
-        }, level)
-      })
-    }
+  apiInterface.wrapLogger = (parent, functionName, level = LOG_LEVELS.INFO) => {
+    if (!(typeof parent === 'object' && !!parent && typeof functionName === 'string' && !!functionName)) return warn(LOGGING_FAILURE_MESSAGE + 'invalid parent or function')
+    if (!Object.values(LOG_LEVELS).includes(level)) return warn(LOGGING_FAILURE_MESSAGE + 'invalid log level', LOG_LEVELS)
+    wrapLogger(instanceEE, parent, functionName, level)
   }
 
   // Setup stub functions that queue calls for later processing.

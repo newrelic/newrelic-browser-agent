@@ -7,7 +7,8 @@
  * This module is used by: jserrors, spa.
  */
 
-import { ee as baseEE } from '../event-emitter/contextual-ee'
+import { ee as baseEE, contextId } from '../event-emitter/contextual-ee'
+import { EventContext } from '../event-emitter/event-context'
 import { createWrapperWithEmitter as wfn } from './wrap-function'
 
 /**
@@ -18,11 +19,13 @@ import { createWrapperWithEmitter as wfn } from './wrap-function'
  * @returns {Object} Scoped event emitter with a debug ID of `logger`.
  */
 // eslint-disable-next-line
-export function wrapLogger(sharedEE, parent, loggerFn) {
+export function wrapLogger(sharedEE, parent, loggerFn, level) {
   const ee = scopedEE(sharedEE)
   var wrapFn = wfn(ee)
 
-  wrapFn.inPlace(parent, [loggerFn], `${loggerFn}-wrap-logger-`)
+  const ctx = new EventContext(contextId)
+  ctx.level = level
+  wrapFn.inPlace(parent, [loggerFn], 'wrap-logger-', ctx)
   return ee
 }
 

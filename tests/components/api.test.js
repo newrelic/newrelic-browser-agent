@@ -581,27 +581,18 @@ describe('setAPI', () => {
         myLoggerPackage.myObservedLogger('test1')
 
         expect(myLoggerPackage.myObservedLogger).toHaveBeenCalled()
-        expect(handleModule.handle).toHaveBeenCalledTimes(2)
+        expect(instanceEE.emit).toHaveBeenCalledTimes(3) // drain, start, end
 
-        const firstEmit = handleModule.handle.mock.calls[0]
-        expect(firstEmit[0]).toEqual(SUPPORTABILITY_METRIC_CHANNEL)
-        expect(firstEmit[1]).toEqual(['API/logging/info/called']) // defaults to info
-        expect(firstEmit[2]).toBeUndefined()
-        expect(firstEmit[3]).toEqual(FEATURE_NAMES.metrics)
-        expect(firstEmit[4]).toEqual(instanceEE)
-
-        const secondEmit = handleModule.handle.mock.calls[1]
-        expect(secondEmit[0]).toEqual('log')
-        expect(secondEmit[1]).toEqual([expect.any(Number), 'test1', {}, 'info']) // defaults to {}
-        expect(secondEmit[2]).toBeUndefined()
-        expect(secondEmit[3]).toEqual(FEATURE_NAMES.logging)
-        expect(secondEmit[4]).toEqual(instanceEE)
+        const endEmit = instanceEE.emit.mock.calls[2]
+        expect(endEmit[0]).toEqual('wrap-logger-end')
+        expect(endEmit[1][0]).toEqual(['test1'])
+        expect(endEmit[2].level).toEqual('info')
 
         /** does NOT emit data for observed fn */
         myLoggerPackage.myUnobservedLogger('test1')
 
         expect(myLoggerPackage.myUnobservedLogger).toHaveBeenCalled()
-        expect(handleModule.handle).toHaveBeenCalledTimes(2) // still at 2 from last call
+        expect(instanceEE.emit).toHaveBeenCalledTimes(3) // still at 3 from last call
       })
 
       test('should emit events for calls by wrapped function - specified', () => {
@@ -609,27 +600,18 @@ describe('setAPI', () => {
         const myLoggerPackage = {
           [randomMethodName]: jest.fn()
         }
-        apiInterface.wrapLogger(myLoggerPackage, randomMethodName, 'warn', { myCustomAttr: 1 })
+        apiInterface.wrapLogger(myLoggerPackage, randomMethodName, 'warn')
 
         /** emits data for observed fn */
         myLoggerPackage[randomMethodName]('test1')
 
         expect(myLoggerPackage[randomMethodName]).toHaveBeenCalled()
-        expect(handleModule.handle).toHaveBeenCalledTimes(2)
+        expect(instanceEE.emit).toHaveBeenCalledTimes(3) // drain, start, end
 
-        const firstEmit = handleModule.handle.mock.calls[0]
-        expect(firstEmit[0]).toEqual(SUPPORTABILITY_METRIC_CHANNEL)
-        expect(firstEmit[1]).toEqual(['API/logging/warn/called']) // specified
-        expect(firstEmit[2]).toBeUndefined()
-        expect(firstEmit[3]).toEqual(FEATURE_NAMES.metrics)
-        expect(firstEmit[4]).toEqual(instanceEE)
-
-        const secondEmit = handleModule.handle.mock.calls[1]
-        expect(secondEmit[0]).toEqual('log')
-        expect(secondEmit[1]).toEqual([expect.any(Number), 'test1', { myCustomAttr: 1 }, 'warn']) // specified
-        expect(secondEmit[2]).toBeUndefined()
-        expect(secondEmit[3]).toEqual(FEATURE_NAMES.logging)
-        expect(secondEmit[4]).toEqual(instanceEE)
+        const endEmit = instanceEE.emit.mock.calls[2]
+        expect(endEmit[0]).toEqual('wrap-logger-end')
+        expect(endEmit[1][0]).toEqual(['test1'])
+        expect(endEmit[2].level).toEqual('warn')
       })
 
       test('should emit events with concat string for multiple args', () => {
@@ -643,21 +625,12 @@ describe('setAPI', () => {
         myLoggerPackage[randomMethodName]('test1', { test2: 2 }, ['test3'], true, 1)
 
         expect(myLoggerPackage[randomMethodName]).toHaveBeenCalled()
-        expect(handleModule.handle).toHaveBeenCalledTimes(2)
+        expect(instanceEE.emit).toHaveBeenCalledTimes(3) // drain, start, end
 
-        const firstEmit = handleModule.handle.mock.calls[0]
-        expect(firstEmit[0]).toEqual(SUPPORTABILITY_METRIC_CHANNEL)
-        expect(firstEmit[1]).toEqual(['API/logging/info/called']) // specified
-        expect(firstEmit[2]).toBeUndefined()
-        expect(firstEmit[3]).toEqual(FEATURE_NAMES.metrics)
-        expect(firstEmit[4]).toEqual(instanceEE)
-
-        const secondEmit = handleModule.handle.mock.calls[1]
-        expect(secondEmit[0]).toEqual('log')
-        expect(secondEmit[1]).toEqual([expect.any(Number), 'test1', { 'wrappedFn.args': '[{"test2":2},["test3"],true,1]' }, 'info']) // specified
-        expect(secondEmit[2]).toBeUndefined()
-        expect(secondEmit[3]).toEqual(FEATURE_NAMES.logging)
-        expect(secondEmit[4]).toEqual(instanceEE)
+        const endEmit = instanceEE.emit.mock.calls[2]
+        expect(endEmit[0]).toEqual('wrap-logger-end')
+        expect(endEmit[1][0]).toEqual(['test1', { test2: 2 }, ['test3'], true, 1])
+        expect(endEmit[2].level).toEqual('info')
       })
 
       test('wrapped function should still behave as intended', () => {

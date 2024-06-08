@@ -20,7 +20,7 @@ describe('Basic AJAX Tests', () => {
         window.disableAjaxHashChange = true
       }))
 
-    await $('#sendAjax').click()
+    await browser.execute(function () { document.querySelector('#sendAjax').click() })
     await browser.pause(5000)
 
     const start = performance.now()

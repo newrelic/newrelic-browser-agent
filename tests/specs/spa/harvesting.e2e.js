@@ -57,7 +57,7 @@ describe('spa harvesting', () => {
 
     const [interactionResults] = await Promise.all([
       browser.testHandle.expectInteractionEvents(),
-      $('#sendAjax').click()
+      browser.execute(function () { document.querySelector('#sendAjax').click() })
     ])
 
     checkSpa(interactionResults.request, { trigger: 'click' })
@@ -76,7 +76,7 @@ describe('spa harvesting', () => {
 
     const [clickInteractionResults] = await Promise.all([
       browser.testHandle.expectInteractionEvents(),
-      $('body').click()
+      browser.execute(function () { document.querySelector('body').click() })
     ])
 
     expect(clickInteractionResults.request.body).toEqual(expect.arrayContaining([
@@ -178,7 +178,7 @@ describe('spa harvesting', () => {
 
     const [clickInteractionResults] = await Promise.all([
       browser.testHandle.expectInteractionEvents(),
-      $('#clickme').click()
+      browser.execute(function () { document.querySelector('#clickme').click() })
     ])
 
     expect(clickInteractionResults.request.body[0]).toEqual(expect.objectContaining({

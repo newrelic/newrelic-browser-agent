@@ -67,7 +67,9 @@ describe('pvt timings tests', () => {
 
         const [{ request: { body } }] = await Promise.all([
           browserMatch(supportsCumulativeLayoutShift) ? browser.testHandle.expectFinalTimings(10000) : browser.testHandle.expectTimings(10000),
-          $('#free_tacos').click().then(() => browser.pause(1000)).then(async () => browser.url(await browser.testHandle.assetURL('/')))
+          browser.execute(function () { document.querySelector('#free_tacos').click() })
+            .then(() => browser.pause(1000))
+            .then(async () => browser.url(await browser.testHandle.assetURL('/')))
         ])
 
         if (browserMatch(supportsFirstInputDelay)) {
@@ -115,7 +117,7 @@ describe('pvt timings tests', () => {
         it.withBrowsersMatching([supportsCumulativeLayoutShift])(`${prop} for ${loader} agent collects cls attribute`, async () => {
           let url = await browser.testHandle.assetURL(testAsset, { loader, init })
           await browser.url(url).then(() => browser.waitForAgentLoad())
-          if (prop === 'pageHide') await $('#btn1').click()
+          if (prop === 'pageHide') await browser.execute(function () { document.querySelector('#btn1').click() })
 
           const [{ request: { body } }] = await Promise.all([
             browser.testHandle.expectFinalTimings(10000),

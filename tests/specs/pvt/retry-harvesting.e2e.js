@@ -58,7 +58,7 @@ describe('pvt harvesting', () => {
       await browser.testHandle.clearScheduledReplies('bamServer')
       const [secondTimingsHarvest] = await Promise.all([
         browser.testHandle.expectTimings(),
-        $('body').click()
+        browser.execute(function () { document.querySelector('body').click() })
           .then(() => browser.url(url).then(() => browser.waitForAgentLoad()))
       ])
 

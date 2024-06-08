@@ -33,7 +33,7 @@ describe('Back/forward cache', () => {
 
     let timingsListener = browser.testHandle.expectTimings(5000)
     // 1) Make an interaction and simulate visibilitychange to trigger our "pagehide" logic after loading, after which we expect "final" harvest to occur.
-    $('#btn1').click()
+    browser.execute(function () { document.querySelector('#btn1').click() })
     let pvtPayload = (await timingsListener).request
 
     // 2) Verify PageViewTimings sent sufficient expected timing events, then trigger our "unload" logic.

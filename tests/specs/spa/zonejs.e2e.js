@@ -20,7 +20,7 @@ describe('spa interactions with zonejs', () => {
 
     const [clickInteractionResults] = await Promise.all([
       browser.testHandle.expectInteractionEvents(),
-      $('body').click()
+      browser.execute(function () { document.querySelector('body').click() })
     ])
 
     expect(clickInteractionResults.request.body).toEqual(expect.arrayContaining([

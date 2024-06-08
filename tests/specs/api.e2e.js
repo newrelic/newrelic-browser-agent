@@ -317,7 +317,7 @@ describe('newrelic api', () => {
 
       expect(initialLoad).toEqual(new Array(2).fill(undefined))
 
-      const results = await Promise.all([
+      const resultsPromise = Promise.all([
         browser.testHandle.expectRum(10000),
         browser.testHandle.expectTimings(10000),
         browser.testHandle.expectAjaxEvents(10000),
@@ -325,24 +325,29 @@ describe('newrelic api', () => {
         browser.testHandle.expectMetrics(10000),
         browser.testHandle.expectIns(10000),
         browser.testHandle.expectTrace(10000),
-        browser.testHandle.expectInteractionEvents(10000),
-        browser.execute(function () {
-          newrelic.start()
-          setTimeout(function () {
-            window.location.reload()
-          }, 1000)
-        })
+        browser.testHandle.expectInteractionEvents(10000)
       ])
 
-      checkRumQuery(results[0].request)
-      checkRumBody(results[0].request)
-      checkPVT(results[1].request)
-      checkAjaxEvents(results[2].request)
-      checkJsErrors(results[3].request, { messages: ['test'] })
-      checkMetrics(results[4].request)
-      checkPageAction(results[5].request, { specificAction: 'test', actionContents: { test: 1 } })
-      checkSessionTrace(results[6].request)
-      checkSpa(results[7].request)
+      await browser.pause(1000)
+
+      await browser.execute(function () {
+        newrelic.start()
+        setTimeout(function () {
+          window.location.reload()
+        }, 1000)
+      })
+
+      resultsPromise.then(results => {
+        checkRumQuery(results[0].request)
+        checkRumBody(results[0].request)
+        checkPVT(results[1].request)
+        checkAjaxEvents(results[2].request)
+        checkJsErrors(results[3].request, { messages: ['test'] })
+        checkMetrics(results[4].request)
+        checkPageAction(results[5].request, { specificAction: 'test', actionContents: { test: 1 } })
+        checkSessionTrace(results[6].request)
+        checkSpa(results[7].request)
+      })
     })
 
     it('starts everything if the auto features do not include PVE, and nothing should have started', async () => {
@@ -361,17 +366,22 @@ describe('newrelic api', () => {
 
       expect(initialLoad).toEqual(new Array(3).fill(undefined))
 
-      const results = await Promise.all([
+      const resultsPromise = Promise.all([
         browser.testHandle.expectRum(10000),
-        browser.testHandle.expectErrors(10000),
-        browser.execute(function () {
-          newrelic.start()
-        })
+        browser.testHandle.expectErrors(10000)
       ])
 
-      checkRumQuery(results[0].request)
-      checkRumBody(results[0].request)
-      checkJsErrors(results[1].request, { messages: ['test'] })
+      await browser.pause(1000)
+
+      await browser.execute(function () {
+        newrelic.start()
+      })
+
+      resultsPromise.then(results => {
+        checkRumQuery(results[0].request)
+        checkRumBody(results[0].request)
+        checkJsErrors(results[1].request, { messages: ['test'] })
+      })
     })
 
     it('starts the rest of the features if the auto features include PVE, and those should have started', async () => {

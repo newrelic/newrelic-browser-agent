@@ -136,7 +136,7 @@ describe.withBrowsersMatching(notIE)('final harvesting', () => {
 
     await Promise.all([
       browser.testHandle.expectTimings(),
-      $('#btn1').click()
+      browser.execute(function () { document.querySelector('#btn1').click() })
     ])
 
     const [unloadTimings] = await Promise.all([

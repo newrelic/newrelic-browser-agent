@@ -46,7 +46,7 @@ describe('XHR SPA Interaction Tracking', () => {
 
     const [interactionResults] = await Promise.all([
       browser.testHandle.expectInteractionEvents(10000),
-      $('#sendAjax').click()
+      browser.execute(function () { document.querySelector('#sendAjax').click() })
     ])
 
     checkSpa(interactionResults.request, { trigger: 'click' })
@@ -111,7 +111,7 @@ describe('XHR SPA Interaction Tracking', () => {
 
     const [interactionResults] = await Promise.all([
       browser.testHandle.expectInteractionEvents(10000),
-      $('#sendAjax').click()
+      browser.execute(function () { document.querySelector('#sendAjax').click() })
     ])
 
     checkSpa(interactionResults.request, { trigger: 'click' })
@@ -140,7 +140,7 @@ describe('XHR SPA Interaction Tracking', () => {
 
     const [interactionResults] = await Promise.all([
       browser.testHandle.expectInteractionEvents(10000),
-      $('#sendAjax').click()
+      browser.execute(function () { document.querySelector('#sendAjax').click() })
     ])
 
     checkSpa(interactionResults.request, { trigger: 'click' })
@@ -161,7 +161,7 @@ describe('XHR SPA Interaction Tracking', () => {
 
     const [interactionResults] = await Promise.all([
       browser.testHandle.expectInteractionEvents(10000),
-      $('#sendAjax').click()
+      browser.execute(function () { document.querySelector('#sendAjax').click() })
     ])
 
     checkSpa(interactionResults.request, { trigger: 'click' })
@@ -227,7 +227,7 @@ describe('XHR SPA Interaction Tracking', () => {
 
     const [interactionEventsHarvest] = await Promise.all([
       browser.testHandle.expectInteractionEvents(),
-      $('#sendAjax').click()
+      browser.execute(function () { document.querySelector('#sendAjax').click() })
     ])
 
     checkAjaxEvents({ body: interactionEventsHarvest.request.body[0].children, query: interactionEventsHarvest.request.query }, { specificPath: '/json' })
@@ -243,7 +243,7 @@ describe('XHR SPA Interaction Tracking', () => {
 
     const [interactionEventsHarvest] = await Promise.all([
       browser.testHandle.expectInteractionEvents(),
-      $('#sendAjax').click()
+      browser.execute(function () { document.querySelector('#sendAjax').click() })
     ])
 
     checkAjaxEvents({ body: interactionEventsHarvest.request.body[0].children, query: interactionEventsHarvest.request.query }, { specificPath: '/paththatdoesnotexist' })
@@ -258,7 +258,7 @@ describe('XHR SPA Interaction Tracking', () => {
 
     const [interactionEventsHarvest] = await Promise.all([
       browser.testHandle.expectInteractionEvents(),
-      $('#sendAjax').click()
+      browser.execute(function () { document.querySelector('#sendAjax').click() })
     ])
 
     checkAjaxEvents({ body: interactionEventsHarvest.request.body[0].children, query: interactionEventsHarvest.request.query }, { specificPath: '/bizbaz' })
@@ -273,7 +273,7 @@ describe('XHR SPA Interaction Tracking', () => {
 
     const [interactionEventsHarvest] = await Promise.all([
       browser.testHandle.expectInteractionEvents(),
-      $('#sendAjax').click()
+      browser.execute(function () { document.querySelector('#sendAjax').click() })
     ])
 
     checkAjaxEvents({ body: interactionEventsHarvest.request.body[0].children, query: interactionEventsHarvest.request.query }, { specificPath: '/json' })
@@ -289,7 +289,7 @@ describe('XHR SPA Interaction Tracking', () => {
 
     const [interactionEventsHarvest] = await Promise.all([
       browser.testHandle.expectInteractionEvents(),
-      $('#sendAjax').click()
+      browser.execute(function () { document.querySelector('#sendAjax').click() })
     ])
 
     checkAjaxEvents({ body: interactionEventsHarvest.request.body[0].children, query: interactionEventsHarvest.request.query }, { specificPath: '/delayed' })
@@ -307,7 +307,7 @@ describe('XHR SPA Interaction Tracking', () => {
 
     const [interactionEventsHarvest] = await Promise.all([
       browser.testHandle.expectInteractionEvents(),
-      $('#sendAjax').click()
+      browser.execute(function () { document.querySelector('#sendAjax').click() })
     ])
 
     checkAjaxEvents({ body: interactionEventsHarvest.request.body[0].children, query: interactionEventsHarvest.request.query }, { specificPath: '/delayed' })
@@ -323,7 +323,7 @@ describe('XHR SPA Interaction Tracking', () => {
   //
   //   const [interactionResults] = await Promise.all([
   //     browser.testHandle.expectInteractionEvents(),
-  //     $('#sendAjax').click()
+  //     browser.execute(function(){document.querySelector('#sendAjax').click()})
   //   ])
   //
   //   checkSpa(interactionResults.request, { trigger: 'click' })
@@ -336,7 +336,7 @@ describe('XHR SPA Interaction Tracking', () => {
 
     const [interactionResults] = await Promise.all([
       browser.testHandle.expectInteractionEvents(),
-      $('#sendAjax').click()
+      browser.execute(function () { document.querySelector('#sendAjax').click() })
     ])
 
     checkSpa(interactionResults.request, { trigger: 'click' })
@@ -353,7 +353,7 @@ describe('XHR SPA Interaction Tracking', () => {
 
     const [interactionResults] = await Promise.all([
       browser.testHandle.expectInteractionEvents(),
-      $('#sendAjax').click()
+      browser.execute(function () { document.querySelector('#sendAjax').click() })
     ])
 
     const ajaxCalls = interactionResults.request.body[0].children.filter(xhr =>

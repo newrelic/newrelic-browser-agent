@@ -32,7 +32,7 @@ describe('harvesting', () => {
       browser.testHandle.expectIns(),
       browser.url(testURL)
         .then(() => browser.waitForAgentLoad())
-        .then(() => $('a').click())
+        .then(() => browser.execute(function () { document.querySelector('a').click() }))
     ])
 
     const expectedURL = testURL.split('?')[0]
@@ -98,7 +98,7 @@ describe('harvesting', () => {
       browser.testHandle.expectIns(),
       browser.url(testURL)
         .then(() => browser.waitForAgentLoad())
-        .then(() => $('a').click())
+        .then(() => browser.execute(function () { document.querySelector('a').click() }))
     ])
 
     expect(rumResults.request.query.to).toEqual(transactionName)
@@ -132,7 +132,7 @@ describe('harvesting', () => {
       browser.testHandle.expectIns(),
       browser.url(testURL)
         .then(() => browser.waitForAgentLoad())
-        .then(() => $('a').click())
+        .then(() => browser.execute(function () { document.querySelector('a').click() }))
     ])
 
     expect(rumResults.request.query.t).toEqual(transactionName)
@@ -174,7 +174,7 @@ describe('harvesting', () => {
       browser.testHandle.expectIns(),
       browser.url(testURL)
         .then(() => browser.waitForAgentLoad())
-        .then(() => $('a').click())
+        .then(() => browser.execute(function () { document.querySelector('a').click() }))
     ])
 
     expect(rumResults.request.query.to).toEqual(transactionName)

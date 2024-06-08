@@ -14,7 +14,7 @@ describe('jsonp ajax events', () => {
 
     const [interactionEvents] = await Promise.all([
       browser.testHandle.expectInteractionEvents(),
-      $('body').click()
+      browser.execute(function () { document.querySelector('body').click() })
     ])
 
     const events = extractAjaxEvents(interactionEvents.request.body)
@@ -75,7 +75,7 @@ describe('jsonp ajax events', () => {
 
     const [interactionEvents] = await Promise.all([
       browser.testHandle.expectInteractionEvents(),
-      $('body').click()
+      browser.execute(function () { document.querySelector('body').click() })
     ])
 
     const events = extractAjaxEvents(interactionEvents.request.body)
@@ -122,7 +122,7 @@ describe('jsonp ajax events', () => {
 
     const [interactionEvents] = await Promise.all([
       browser.testHandle.expectInteractionEvents(),
-      $('body').click()
+      browser.execute(function () { document.querySelector('body').click() })
     ])
 
     const events = extractAjaxEvents(interactionEvents.request.body)
@@ -149,7 +149,7 @@ describe('jsonp ajax events', () => {
 
     const [interactionEvents] = await Promise.all([
       browser.testHandle.expectInteractionEvents(),
-      $('body').click()
+      browser.execute(function () { document.querySelector('body').click() })
     ])
 
     const events = extractAjaxEvents(interactionEvents.request.body)
@@ -176,7 +176,7 @@ describe('jsonp ajax events', () => {
 
     const [interactionEvents] = await Promise.all([
       browser.testHandle.expectInteractionEvents(),
-      $('body').click()
+      browser.execute(function () { document.querySelector('body').click() })
     ])
 
     const event = extractAjaxEvents(interactionEvents.request.body)

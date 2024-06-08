@@ -112,16 +112,18 @@ describe('error payloads', () => {
    * **/
   it.withBrowsersMatching([notSafari, notAndroid, notIOS, notIE])('should collect rrweb errors only as internal errors', async () => {
     await browser.enableSessionReplay()
-    const [{ request }] = await Promise.all([
-      browser.testHandle.expectAnyJseXhr(10000),
+    const timeSlicePayload = browser.testHandle.expectAnyJseXhr(10000)
+    await browser.pause(500)
+    await Promise.all([
       browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
         .then(() => browser.waitForSessionReplayRecording())
-        .then(() => $('#content-editable-div'))
-        .then((elem) => elem.click())
+        .then(() => browser.execute(function () { document.querySelector('#content-editable-div').click() }))
         .then(() => browser.keys([Key.Ctrl, Key.Backspace]))
     ])
 
-    checkJsErrors(request, ['Cannot read properties of null (reading \'tagName\')'], 'ierr')
-    expect(request.body.err).toBeUndefined()
+    timeSlicePayload.then((request) => {
+      checkJsErrors(request, ['Cannot read properties of null (reading \'tagName\')'], 'ierr')
+      expect(request.body.err).toBeUndefined()
+    })
   })
 })

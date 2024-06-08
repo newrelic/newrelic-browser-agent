@@ -17,7 +17,7 @@ describe.withBrowsersMatching(supportsFetch)('Fetch Ajax', () => {
       const [ajaxEventsHarvest, ajaxTimeSlicesHarvest] = await Promise.all([
         browser.testHandle.expectAjaxEvents(),
         browser.testHandle.expectAjaxTimeSlices(),
-        $('#sendAjax').click()
+        browser.execute(function () { document.querySelector('#sendAjax').click() })
       ])
 
       checkAjaxEvents(ajaxEventsHarvest.request, { specificPath: '/json' })
@@ -45,7 +45,7 @@ describe.withBrowsersMatching(supportsFetch)('Fetch Ajax', () => {
     const [ajaxEventsHarvest, ajaxTimeSlicesHarvest] = await Promise.all([
       browser.testHandle.expectAjaxEvents(),
       browser.testHandle.expectAjaxTimeSlices(),
-      $('#sendAjax').click()
+      browser.execute(function () { document.querySelector('#sendAjax').click() })
     ])
 
     checkAjaxEvents(ajaxEventsHarvest.request, { specificPath: '/paththatdoesnotexist' })
@@ -68,7 +68,7 @@ describe.withBrowsersMatching(supportsFetch)('Fetch Ajax', () => {
     const [ajaxEventsHarvest, ajaxTimeSlicesHarvest] = await Promise.all([
       browser.testHandle.expectAjaxEvents(),
       browser.testHandle.expectAjaxTimeSlices(),
-      $('#sendAjax').click()
+      browser.execute(function () { document.querySelector('#sendAjax').click() })
     ])
 
     checkAjaxEvents(ajaxEventsHarvest.request, { specificPath: '/bizbaz' })
@@ -97,7 +97,7 @@ describe.withBrowsersMatching(supportsFetch)('Fetch Ajax', () => {
       const [ajaxEventsHarvest, ajaxTimeSlicesHarvest] = await Promise.all([
         browser.testHandle.expectAjaxEvents(),
         browser.testHandle.expectAjaxTimeSlices(),
-        $('#sendAjax').click()
+        browser.execute(function () { document.querySelector('#sendAjax').click() })
       ])
 
       const ajaxEvent = ajaxEventsHarvest.request.body.find(event => event.path === '/json')
@@ -120,7 +120,7 @@ describe.withBrowsersMatching(supportsFetch)('Fetch Ajax', () => {
     const [ajaxEventsHarvest, ajaxTimeSlicesHarvest] = await Promise.all([
       browser.testHandle.expectAjaxEvents(),
       browser.testHandle.expectAjaxTimeSlices(),
-      $('#sendAjax').click()
+      browser.execute(function () { document.querySelector('#sendAjax').click() })
     ])
 
     const ajaxEvent = ajaxEventsHarvest.request.body.find(event => event.path === '/delayed')

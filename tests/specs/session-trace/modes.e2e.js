@@ -139,7 +139,7 @@ describe('respects feature flags', () => {
 
     const [{ request }] = await Promise.all([
       browser.testHandle.expectTrace(),
-      $('#trigger').click()
+      browser.execute(function () { document.querySelector('#trigger').click() })
     ])
     testExpectedTrace({ data: request })
   })

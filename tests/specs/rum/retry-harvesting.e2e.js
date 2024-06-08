@@ -27,7 +27,9 @@ describe('rum retry harvesting', () => {
         browser.testHandle.expectIns(10000, true),
         browser.testHandle.expectRum(),
         browser.url(await browser.testHandle.assetURL('obfuscate-pii.html'))
-          .then(() => $('a').click())
+          .then(() => browser.execute(function () {
+            document.querySelector('a').click()
+          }))
       ])
 
       // Uncomment this code to reproduce the issue described in https://issues.newrelic.com/browse/NEWRELIC-9348

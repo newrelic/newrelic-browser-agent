@@ -1,5 +1,5 @@
 /* eslint-disable */
-import {notFirefox, notIE, notIOS, notSafari, onlyIE} from "../../tools/browser-matcher/common-matchers.mjs";
+import {onlyAndroid, onlyIE, supportsFirstPaint, supportsFirstContentfulPaint} from "../../tools/browser-matcher/common-matchers.mjs";
 
 export const baseQuery = expect.objectContaining({
   a: expect.any(String),
@@ -286,7 +286,7 @@ export function checkSpa ({ query, body }, { trigger } = {}) {
 
   const interaction = body.find(b => b.type === 'interaction')
   expect(interaction).toBeDefined()
-  expect(interaction).toMatchObject({
+  expect(interaction).toEqual(expect.objectContaining({
     type: "interaction",
     children: expect.any(Array),
     start: expect.any(Number),
@@ -300,8 +300,14 @@ export function checkSpa ({ query, body }, { trigger } = {}) {
     category: expect.any(String),
     id: expect.any(String),
     nodeId: expect.any(String),
-    firstPaint: browserMatch([notIE, notSafari, notIOS, notFirefox]) && (!trigger || trigger === 'initialPageLoad') ? expect.any(Number) : null,
-    firstContentfulPaint: browserMatch(notIE) && (!trigger || trigger === 'initialPageLoad') ? expect.any(Number) : null,
     navTiming: expect.any(Object)
-  })
+  }))
+  // *cli Jun'24 - LambdaTest's Android Chrome arbitrarily have paint timing in spa tests checking IPL depending on some race condition.
+  // Sometimes they are present (Number) and sometimes not (null). It's too unreliable for tests so their check is excluded.
+  if (!browserMatch(onlyAndroid)) {
+    expect(interaction).toEqual(expect.objectContaining({
+      firstPaint: browserMatch(supportsFirstPaint) && (!trigger || trigger === 'initialPageLoad') ? expect.any(Number) : null,
+      firstContentfulPaint: browserMatch(supportsFirstContentfulPaint) && (!trigger || trigger === 'initialPageLoad') ? expect.any(Number) : null
+    }))
+  }
 }

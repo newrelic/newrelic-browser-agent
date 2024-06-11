@@ -1,5 +1,6 @@
 import { checkSpa } from '../../util/basic-checks'
 import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { browserClick } from '../util/helpers'
 
 describe('spa harvesting', () => {
   it('should set correct customEnd value on multiple custom interactions', async () => {
@@ -57,7 +58,7 @@ describe('spa harvesting', () => {
 
     const [interactionResults] = await Promise.all([
       browser.testHandle.expectInteractionEvents(),
-      browser.execute(function () { document.querySelector('#sendAjax').click() })
+      browserClick('#sendAjax')
     ])
 
     checkSpa(interactionResults.request, { trigger: 'click' })
@@ -76,7 +77,7 @@ describe('spa harvesting', () => {
 
     const [clickInteractionResults] = await Promise.all([
       browser.testHandle.expectInteractionEvents(),
-      browser.execute(function () { document.querySelector('body').click() })
+      browserClick('body')
     ])
 
     expect(clickInteractionResults.request.body).toEqual(expect.arrayContaining([
@@ -178,7 +179,7 @@ describe('spa harvesting', () => {
 
     const [clickInteractionResults] = await Promise.all([
       browser.testHandle.expectInteractionEvents(),
-      browser.execute(function () { document.querySelector('#clickme').click() })
+      browserClick('#clickme')
     ])
 
     expect(clickInteractionResults.request.body[0]).toEqual(expect.objectContaining({

@@ -1,5 +1,6 @@
 import { onlyFirefox } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { checkAjaxEvents, checkAjaxMetrics } from '../../util/basic-checks'
+import { browserClick } from '../util/helpers'
 
 describe('XHR Ajax', () => {
   it('creates event and metric data for xhr', async () => {
@@ -15,7 +16,7 @@ describe('XHR Ajax', () => {
     ])
 
     await browser.pause(500)
-    await browser.execute(function () { document.querySelector('#sendAjax').click() })
+    await browserClick('#sendAjax')
 
     expects.then(([ajaxEventsHarvest, ajaxTimeSlicesHarvest]) => {
       checkAjaxEvents(ajaxEventsHarvest.request, { specificPath: '/json' })
@@ -46,7 +47,7 @@ describe('XHR Ajax', () => {
     ])
 
     await browser.pause(500)
-    await browser.execute(function () { document.querySelector('#sendAjax').click() })
+    await browserClick('#sendAjax')
 
     expects.then(([ajaxEventsHarvest, ajaxTimeSlicesHarvest]) => {
       checkAjaxEvents(ajaxEventsHarvest.request, { specificPath: '/paththatdoesnotexist' })
@@ -73,7 +74,7 @@ describe('XHR Ajax', () => {
     ])
 
     await browser.pause(500)
-    await browser.execute(function () { document.querySelector('#sendAjax').click() })
+    await browserClick('#sendAjax')
 
     expects.then(([ajaxEventsHarvest, ajaxTimeSlicesHarvest]) => {
       checkAjaxEvents(ajaxEventsHarvest.request, { specificPath: '/bizbaz' })
@@ -100,7 +101,7 @@ describe('XHR Ajax', () => {
     ])
 
     await browser.pause(500)
-    await browser.execute(function () { document.querySelector('#sendAjax').click() })
+    await browserClick('#sendAjax')
 
     expects.then(([ajaxEventsHarvest, ajaxTimeSlicesHarvest]) => {
       checkAjaxEvents(ajaxEventsHarvest.request, { specificPath: '/json' })
@@ -129,7 +130,7 @@ describe('XHR Ajax', () => {
     ])
 
     await browser.pause(500)
-    await browser.execute(function () { document.querySelector('#sendAjax').click() })
+    await browserClick('#sendAjax')
 
     expects.then(([ajaxEventsHarvest, ajaxTimeSlicesHarvest]) => {
       checkAjaxEvents(ajaxEventsHarvest.request, { specificPath: '/delayed' })
@@ -162,7 +163,7 @@ describe('XHR Ajax', () => {
     ])
 
     await browser.pause(500)
-    await browser.execute(function () { document.querySelector('#sendAjax').click() })
+    await browserClick('#sendAjax')
 
     expects.then(([ajaxEventsHarvest, ajaxTimeSlicesHarvest]) => {
       const ajaxEvent = ajaxEventsHarvest.request.body.find(event => event.path === '/delayed')
@@ -426,7 +427,7 @@ describe('XHR Ajax', () => {
 
     const ajaxRequest = browser.testHandle.expectAjaxEvents()
 
-    await browser.execute(function () { document.querySelector('#sendAjax').click() })
+    await browserClick('#sendAjax')
 
     const readyStatesSeen = await browser.execute(function () {
       return window.readyStatesSeen
@@ -451,7 +452,7 @@ describe('XHR Ajax', () => {
 
     const ajaxRequest = browser.testHandle.expectAjaxEvents()
 
-    await browser.execute(function () { document.querySelector('#sendAjax').click() })
+    await browserClick('#sendAjax')
 
     const readyStatesSeen = await browser.execute(function () {
       return window.readyStatesSeen
@@ -479,7 +480,7 @@ describe('XHR Ajax', () => {
     ])
 
     await browser.pause(500)
-    await browser.execute(function () { document.querySelector('#sendAjax').click() })
+    await browserClick('#sendAjax')
 
     expects.then(([ajaxEventsHarvest, ajaxTimeSlicesHarvest]) => {
       checkAjaxEvents(ajaxEventsHarvest.request, { specificPath: '/json' })
@@ -510,7 +511,7 @@ describe('XHR Ajax', () => {
     ])
 
     await browser.pause(500)
-    await browser.execute(function () { document.querySelector('#sendAjax').click() })
+    await browserClick('#sendAjax')
 
     expects.then(async ([ajaxEventsHarvest, ajaxTimeSlicesHarvest]) => {
       checkAjaxEvents(ajaxEventsHarvest.request, { specificPath: '/json' })

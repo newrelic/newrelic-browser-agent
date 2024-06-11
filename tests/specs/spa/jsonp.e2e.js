@@ -1,4 +1,5 @@
 import { extractAjaxEvents } from '../../util/xhr'
+import { browserClick } from '../util/helpers'
 
 describe('jsonp ajax events', () => {
   [
@@ -14,7 +15,7 @@ describe('jsonp ajax events', () => {
 
     const [interactionEvents] = await Promise.all([
       browser.testHandle.expectInteractionEvents(),
-      browser.execute(function () { document.querySelector('body').click() })
+      browserClick('body')
     ])
 
     const events = extractAjaxEvents(interactionEvents.request.body)
@@ -75,7 +76,7 @@ describe('jsonp ajax events', () => {
 
     const [interactionEvents] = await Promise.all([
       browser.testHandle.expectInteractionEvents(),
-      browser.execute(function () { document.querySelector('body').click() })
+      browserClick('body')
     ])
 
     const events = extractAjaxEvents(interactionEvents.request.body)
@@ -122,7 +123,7 @@ describe('jsonp ajax events', () => {
 
     const [interactionEvents] = await Promise.all([
       browser.testHandle.expectInteractionEvents(),
-      browser.execute(function () { document.querySelector('body').click() })
+      browserClick('body')
     ])
 
     const events = extractAjaxEvents(interactionEvents.request.body)
@@ -149,7 +150,7 @@ describe('jsonp ajax events', () => {
 
     const [interactionEvents] = await Promise.all([
       browser.testHandle.expectInteractionEvents(),
-      browser.execute(function () { document.querySelector('body').click() })
+      browserClick('body')
     ])
 
     const events = extractAjaxEvents(interactionEvents.request.body)
@@ -176,7 +177,7 @@ describe('jsonp ajax events', () => {
 
     const [interactionEvents] = await Promise.all([
       browser.testHandle.expectInteractionEvents(),
-      browser.execute(function () { document.querySelector('body').click() })
+      browserClick('body')
     ])
 
     const event = extractAjaxEvents(interactionEvents.request.body)

@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker'
-import { testExpectedTrace } from '../util/helpers'
+import { browserClick, testExpectedTrace } from '../util/helpers'
 
 describe('harvesting', () => {
   it('should include the base query parameters', async () => {
@@ -32,7 +32,7 @@ describe('harvesting', () => {
       browser.testHandle.expectIns(),
       browser.url(testURL)
         .then(() => browser.waitForAgentLoad())
-        .then(() => browser.execute(function () { document.querySelector('a').click() }))
+        .then(() => browserClick('a'))
     ])
 
     const expectedURL = testURL.split('?')[0]
@@ -98,7 +98,7 @@ describe('harvesting', () => {
       browser.testHandle.expectIns(),
       browser.url(testURL)
         .then(() => browser.waitForAgentLoad())
-        .then(() => browser.execute(function () { document.querySelector('a').click() }))
+        .then(() => browserClick('a'))
     ])
 
     expect(rumResults.request.query.to).toEqual(transactionName)
@@ -132,7 +132,7 @@ describe('harvesting', () => {
       browser.testHandle.expectIns(),
       browser.url(testURL)
         .then(() => browser.waitForAgentLoad())
-        .then(() => browser.execute(function () { document.querySelector('a').click() }))
+        .then(() => browserClick('a'))
     ])
 
     expect(rumResults.request.query.t).toEqual(transactionName)
@@ -174,7 +174,7 @@ describe('harvesting', () => {
       browser.testHandle.expectIns(),
       browser.url(testURL)
         .then(() => browser.waitForAgentLoad())
-        .then(() => browser.execute(function () { document.querySelector('a').click() }))
+        .then(() => browserClick('a'))
     ])
 
     expect(rumResults.request.query.to).toEqual(transactionName)

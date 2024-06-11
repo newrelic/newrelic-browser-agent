@@ -1,4 +1,4 @@
-import { srConfig, getSR, testExpectedReplay, decodeAttributes } from '../util/helpers'
+import { srConfig, getSR, testExpectedReplay, decodeAttributes, browserClick } from '../util/helpers'
 import { supportsMultipleTabs, notIE, notSafari } from '../../../tools/browser-matcher/common-matchers.mjs'
 
 describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
@@ -86,7 +86,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
       browser.testHandle.expectReplay(10000),
       browser.execute(function () {
         try {
-          document.querySelector('body').click()
+          browserClick('body')
         } catch (err) {
           // do nothing
         }
@@ -149,7 +149,7 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
       browser.testHandle.expectReplay(10000),
       browser.execute(function () {
         try {
-          document.querySelector('body').click()
+          browserClick('body')
         } catch (err) {
           // do nothing
         }

@@ -1,6 +1,6 @@
 import { testRumRequest } from '../../../tools/testing-server/utils/expect-tests.js'
 import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
-import { stConfig } from '../util/helpers.js'
+import { browserClick, stConfig } from '../util/helpers.js'
 
 describe('Trace nodes', () => {
   beforeEach(async () => {
@@ -19,7 +19,7 @@ describe('Trace nodes', () => {
       for (let i = 0; i < 10; i++) storedEvents.add(i) // artificially add "events" since the counter is otherwise unreliable
     })
     const resPromise = browser.testHandle.expectTrace()
-    browser.execute(function () { document.querySelector('#btn1').click() }) // since the agent has multiple listeners on vischange, this is a good example of often duplicated event
+    browserClick('#btn1') // since the agent has multiple listeners on vischange, this is a good example of often duplicated event
     const { request } = await resPromise
 
     const vischangeEvts = request.body.filter(node => node.t === 'event' && node.n === 'visibilitychange')
@@ -38,7 +38,7 @@ describe('Trace nodes', () => {
 
     const url = await browser.testHandle.assetURL('pagehide.html', stConfig())
     await browser.url(url).then(() => browser.waitForAgentLoad())
-    await browser.execute(function () { document.querySelector('#btn1').click() })
+    await browserClick('#btn1')
     const numTrackedEvents = await browser.execute(getEventsSetSize)
     expect(numTrackedEvents).toEqual(0)
   })
@@ -99,7 +99,7 @@ describe('Trace nodes', () => {
     const countTimings = {}
     request.body.filter(node => node.t === 'timing').forEach(node => (countTimings[node.n] = ++countTimings[node.n] || 1))
 
-    ;[{ request }] = await Promise.all([browser.testHandle.expectTrace(), browser.execute(function () { document.querySelector('body').click() })]) // click to trigger FI & LCP timings
+    ;[{ request }] = await Promise.all([browser.testHandle.expectTrace(), browserClick('body')]) // click to trigger FI & LCP timings
     request.body.filter(node => node.t === 'timing').forEach(node => (countTimings[node.n] = ++countTimings[node.n] || 1))
 
     expect(Object.values(countTimings).some(count => count > 1)).toBeFalsy()

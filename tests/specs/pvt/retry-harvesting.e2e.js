@@ -1,4 +1,5 @@
 import { testTimingEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
+import { browserClick } from '../util/helpers'
 
 describe('pvt harvesting', () => {
   ;[408, 429, 500, 503].forEach(statusCode => {
@@ -58,7 +59,7 @@ describe('pvt harvesting', () => {
       await browser.testHandle.clearScheduledReplies('bamServer')
       const [secondTimingsHarvest] = await Promise.all([
         browser.testHandle.expectTimings(),
-        browser.execute(function () { document.querySelector('body').click() })
+        browserClick('body')
           .then(() => browser.url(url).then(() => browser.waitForAgentLoad()))
       ])
 

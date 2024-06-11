@@ -124,6 +124,7 @@ export class TestHandleConnector {
    * @returns {Promise<*>} Promise to await for the server request
    */
   async expect (serverId, testServerExpect) {
+    if (testServerExpect.timePeriod) return this.expectOverTimePeriod(serverId, testServerExpect)
     await this.ready()
 
     const abortController = new AbortController()
@@ -171,6 +172,43 @@ export class TestHandleConnector {
   }
 
   /**
+      * Calls back to the testing server endlessly to create an expect for a specific server with a given test
+   * function until a time limit is reached. It returns an array of the response payloads. The test can await the network call(s) to resolve or reject to know if the expected
+   * request was received.
+   * @param {'assetServer'|'bamServer'} serverId Id of the server the request will be received on
+   * @param {TestServerExpect} testServerExpect The expect options to apply to the server request
+   * @returns {Promise<*[]>} Promise to await for the server request
+   */
+  expectOverTimePeriod (serverId, testServerExpect) {
+    return new Promise((resolve, reject) => {
+      let done = false
+      const data = []
+      const waitForExpect = async (data = []) => {
+        if (done) return // time's up, dont continue (race)
+        if (data.length >= testServerExpect.expectedPayloadCount) return // got as many payloads as we expected already... dont continue
+        const expectedData = await this.expect(serverId, testServerExpect)
+        if (!expectedData) return // expect timed out, dont continue
+        if (data.length >= testServerExpect.expectedPayloadCount) return // got as many payloads as we expected already (may have happened async from above check)... dont continue
+        data.push(expectedData)
+        await waitForExpect(data)
+      }
+      const finish = () => {
+        if (!this.done) {
+          this.done = true
+          resolve(data)
+        }
+      }
+      setTimeout(finish, testServerExpect.timePeriod)
+      delete testServerExpect.timePeriod
+      /** set up two expect listeners to make sure theres no sequential race pattern */
+      Promise.all([
+        waitForExpect(data),
+        waitForExpect(data)
+      ]).then(finish)
+    })
+  }
+
+  /**
    * Calls back to the testing server to create a URL for a specific test asset file
    * within the context of a test handle.
    * @param {string} assetFile the path of the asset to load relative to the repository root
@@ -199,165 +237,183 @@ export class TestHandleConnector {
 
   /* ***** BAM Expect Shortcut Methods ***** */
 
-  expectRum (timeout, expectTimeout = false) {
+  expectRum (timeout, expectTimeout = false, timePeriod = undefined, expectedPayloadCount = Infinity) {
     return this.expect('bamServer', {
       timeout,
       test: testRumRequest,
-      expectTimeout
+      expectTimeout,
+      timePeriod,
+      expectedPayloadCount
     })
   }
 
-  expectEvents (timeout, expectTimeout = false) {
+  expectEvents (timeout, expectTimeout = false, timePeriod = undefined, expectedPayloadCount = Infinity) {
     return this.expect('bamServer', {
       timeout,
       test: testEventsRequest,
-      expectTimeout
+      expectTimeout,
+      timePeriod,
+      expectedPayloadCount
     })
   }
 
-  expectTimings (timeout, expectTimeout = false) {
+  expectTimings (timeout, expectTimeout = false, timePeriod = undefined, expectedPayloadCount = Infinity) {
     return this.expect('bamServer', {
       timeout,
       test: testTimingEventsRequest,
-      expectTimeout
+      expectTimeout,
+      timePeriod,
+      expectedPayloadCount
     })
   }
 
-  expectFinalTimings (timeout, expectTimeout = false) {
-    return Promise.all([ // EoL harvest can actually happen twice on navigation away -- typically when there's an CLS update/node
-      this.expect('bamServer', {
-        timeout,
-        test: testTimingEventsRequest,
-        expectTimeout
-      }),
-      this.expect('bamServer', {
-        timeout,
-        test: testTimingEventsRequest,
-        expectTimeout
-      })
-    ]).then(([firstHarvest, secondHarvest]) => {
-      firstHarvest.request.body.push(...secondHarvest.request.body)
-      return firstHarvest
-    })
-  }
-
-  expectAjaxEvents (timeout, expectTimeout = false) {
+  expectAjaxEvents (timeout, expectTimeout = false, timePeriod = undefined, expectedPayloadCount = Infinity) {
     return this.expect('bamServer', {
       timeout,
       test: testAjaxEventsRequest,
-      expectTimeout
+      expectTimeout,
+      timePeriod,
+      expectedPayloadCount
     })
   }
 
-  expectInteractionEvents (timeout, expectTimeout = false) {
+  expectInteractionEvents (timeout, expectTimeout = false, timePeriod = undefined, expectedPayloadCount = Infinity) {
     return this.expect('bamServer', {
       timeout,
       test: testInteractionEventsRequest,
-      expectTimeout
+      expectTimeout,
+      timePeriod,
+      expectedPayloadCount
     })
   }
 
-  expectMetrics (timeout, expectTimeout = false) {
+  expectMetrics (timeout, expectTimeout = false, timePeriod = undefined, expectedPayloadCount = Infinity) {
     return this.expect('bamServer', {
       timeout,
       test: testMetricsRequest,
-      expectTimeout
+      expectTimeout,
+      timePeriod,
+      expectedPayloadCount
     })
   }
 
-  expectSupportMetrics (timeout, expectTimeout = false) {
+  expectSupportMetrics (timeout, expectTimeout = false, timePeriod = undefined, expectedPayloadCount = Infinity) {
     return this.expect('bamServer', {
       timeout,
       test: testSupportMetricsRequest,
-      expectTimeout
+      expectTimeout,
+      timePeriod,
+      expectedPayloadCount
     })
   }
 
-  expectCustomMetrics (timeout, expectTimeout = false) {
+  expectCustomMetrics (timeout, expectTimeout = false, timePeriod = undefined, expectedPayloadCount = Infinity) {
     return this.expect('bamServer', {
       timeout,
       test: testCustomMetricsRequest,
-      expectTimeout
+      expectTimeout,
+      timePeriod,
+      expectedPayloadCount
     })
   }
 
-  expectErrors (timeout, expectTimeout = false) {
+  expectErrors (timeout, expectTimeout = false, timePeriod = undefined, expectedPayloadCount = Infinity) {
     return this.expect('bamServer', {
       timeout,
       test: testErrorsRequest,
-      expectTimeout
+      expectTimeout,
+      timePeriod,
+      expectedPayloadCount
     })
   }
 
-  expectAnyJseXhr (timeout, expectTimeout = false) {
+  expectAnyJseXhr (timeout, expectTimeout = false, timePeriod = undefined, expectedPayloadCount = Infinity) {
     return this.expect('bamServer', {
       timeout,
       test: testAnyJseXhrRequest,
-      expectTimeout
+      expectTimeout,
+      timePeriod,
+      expectedPayloadCount
     })
   }
 
-  expectInternalErrors (timeout, expectTimeout = false) {
+  expectInternalErrors (timeout, expectTimeout = false, timePeriod = undefined, expectedPayloadCount = Infinity) {
     return this.expect('bamServer', {
       timeout,
       test: testInternalErrorsRequest,
-      expectTimeout
+      expectTimeout,
+      timePeriod,
+      expectedPayloadCount
     })
   }
 
-  expectAjaxTimeSlices (timeout, expectTimeout = false) {
+  expectAjaxTimeSlices (timeout, expectTimeout = false, timePeriod = undefined, expectedPayloadCount = Infinity) {
     return this.expect('bamServer', {
       timeout,
       test: testAjaxTimeSlicesRequest,
-      expectTimeout
+      expectTimeout,
+      timePeriod,
+      expectedPayloadCount
     })
   }
 
-  expectIns (timeout, expectTimeout = false) {
+  expectIns (timeout, expectTimeout = false, timePeriod = undefined, expectedPayloadCount = Infinity) {
     return this.expect('bamServer', {
       timeout,
       test: testInsRequest,
-      expectTimeout
+      expectTimeout,
+      timePeriod,
+      expectedPayloadCount
     })
   }
 
-  expectResources (timeout, expectTimeout = false) {
+  expectResources (timeout, expectTimeout = false, timePeriod = undefined, expectedPayloadCount = Infinity) {
     return this.expect('bamServer', {
       timeout,
       test: testResourcesRequest,
-      expectTimeout
+      expectTimeout,
+      timePeriod,
+      expectedPayloadCount
     })
   }
 
-  expectBlob (timeout, expectTimeout = false) {
+  expectBlob (timeout, expectTimeout = false, timePeriod = undefined, expectedPayloadCount = Infinity) {
     return this.expect('bamServer', {
       timeout,
       test: testBlobRequest,
-      expectTimeout
+      expectTimeout,
+      timePeriod,
+      expectedPayloadCount
     })
   }
 
-  expectReplay (timeout, expectTimeout = false) {
+  expectReplay (timeout, expectTimeout = false, timePeriod = undefined, expectedPayloadCount = Infinity) {
     return this.expect('bamServer', {
       timeout,
       test: testBlobReplayRequest,
-      expectTimeout
+      expectTimeout,
+      timePeriod,
+      expectedPayloadCount
     })
   }
 
-  expectTrace (timeout, expectTimeout = false) {
+  expectTrace (timeout, expectTimeout = false, timePeriod = undefined, expectedPayloadCount = Infinity) {
     return this.expect('bamServer', {
       timeout,
       test: testBlobTraceRequest,
-      expectTimeout
+      expectTimeout,
+      timePeriod,
+      expectedPayloadCount
     })
   }
 
-  expectSessionReplaySnapshot (timeout, expectTimeout = false) {
+  expectSessionReplaySnapshot (timeout, expectTimeout = false, timePeriod = undefined, expectedPayloadCount = Infinity) {
     return this.expect('bamServer', {
       timeout,
       test: testSessionReplaySnapshotRequest,
-      expectTimeout
+      expectTimeout,
+      timePeriod,
+      expectedPayloadCount
     })
   }
 }

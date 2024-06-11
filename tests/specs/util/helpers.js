@@ -14,6 +14,32 @@ export const RRWEB_EVENT_TYPES = {
   Custom: 5
 }
 
+export async function browserClick (selector) {
+  let output
+  try {
+    output = await $(selector).click()
+  } catch (err) {
+    // $(...) didnt work, ie can be flaky with this in LT
+    // try again the older way, which is flaky in its own ways
+    // (PVTs sometimes do not get triggered with this method)
+    output = await browser.execute(function () {
+      var elem = document.querySelector(selector)
+      elem.click()
+    })
+  }
+  return output
+}
+
+export function mergeBatchedRequestBodies (batchedRequests = []) {
+  return batchedRequests.reduce(
+    (prev, curr) => {
+      prev.push(...curr.request.body)
+      return prev
+    },
+    []
+  )
+}
+
 export function testExpectedReplay ({ data, session, hasMeta, hasSnapshot, hasError, isFirstChunk, contentEncoding, decompressedBytes, appId, entityGuid, harvestId }) {
   expect(data.query).toMatchObject({
     browser_monitoring_key: expect.any(String),

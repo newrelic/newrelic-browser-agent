@@ -1,4 +1,5 @@
 import { supportsCumulativeLayoutShift, supportsFirstContentfulPaint, supportsFirstInputDelay, supportsFirstPaint, supportsInteractionToNextPaint, supportsLargestContentfulPaint, supportsLongTaskTiming } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { browserClick, mergeBatchedRequestBodies } from '../util/helpers'
 
 const isClickInteractionType = type => type === 'pointerdown' || type === 'mousedown' || type === 'click'
 
@@ -11,12 +12,12 @@ describe('pvt timings tests', () => {
       it(`Load, Unload, FP, FCP & pageHide for ${loader} agent`, async () => {
         let url = await browser.testHandle.assetURL('instrumented.html', { loader })
         const start = Date.now()
+        const expects = browser.testHandle.expectTimings(15000, false, 10000)
         await browser.url(url).then(() => browser.waitForAgentLoad())
 
-        const [{ request: { body } }] = await Promise.all([
-          browserMatch(supportsCumulativeLayoutShift) ? browser.testHandle.expectFinalTimings(10000) : browser.testHandle.expectTimings(10000),
-          browser.url(await browser.testHandle.assetURL('/'))
-        ])
+        await browser.url(await browser.testHandle.assetURL('/'))
+
+        const body = mergeBatchedRequestBodies(await expects)
         const duration = Date.now() - start
 
         if (browserMatch(supportsFirstPaint)) {
@@ -63,14 +64,14 @@ describe('pvt timings tests', () => {
         let url = await browser.testHandle.assetURL('basic-click-tracking.html', { loader })
 
         const start = Date.now()
+        const expects = browser.testHandle.expectTimings(15000, false, 10000)
         await browser.url(url).then(() => browser.waitForAgentLoad())
 
-        const [{ request: { body } }] = await Promise.all([
-          browserMatch(supportsCumulativeLayoutShift) ? browser.testHandle.expectFinalTimings(10000) : browser.testHandle.expectTimings(10000),
-          browser.execute(function () { document.querySelector('#free_tacos').click() })
-            .then(() => browser.pause(1000))
-            .then(async () => browser.url(await browser.testHandle.assetURL('/')))
-        ])
+        await browserClick('#free_tacos')
+          .then(() => browser.pause(1000))
+          .then(async () => browser.url(await browser.testHandle.assetURL('/')))
+
+        const body = mergeBatchedRequestBodies(await expects)
 
         if (browserMatch(supportsFirstInputDelay)) {
           const fi = body.find(t => t.name === 'fi')
@@ -116,11 +117,11 @@ describe('pvt timings tests', () => {
       ;[['unload', 'cls-basic.html'], ['pageHide', 'cls-pagehide.html']].forEach(([prop, testAsset]) => {
         it.withBrowsersMatching([supportsCumulativeLayoutShift])(`${prop} for ${loader} agent collects cls attribute`, async () => {
           let url = await browser.testHandle.assetURL(testAsset, { loader, init })
+          const expects = browser.testHandle.expectTimings(15000, false, 10000)
           await browser.url(url).then(() => browser.waitForAgentLoad())
-          if (prop === 'pageHide') await browser.execute(function () { document.querySelector('#btn1').click() })
+          if (prop === 'pageHide') await browserClick('#btn1')
 
-          const [{ request: { body } }] = await Promise.all([
-            browser.testHandle.expectFinalTimings(10000),
+          await Promise.all([
             browser.waitUntil(
               () => browser.execute(function () {
                 return window.contentAdded === true
@@ -131,6 +132,8 @@ describe('pvt timings tests', () => {
               }
             ).then(async () => browser.url(await browser.testHandle.assetURL('/')))
           ])
+
+          const body = mergeBatchedRequestBodies(await expects)
 
           const evt = body.find(t => t.name === prop)
           const cls = evt.attributes.find(a => a.key === 'cls')

@@ -2,7 +2,7 @@
 
 const { Key } = require('webdriverio')
 const { notIE, notSafari, notIOS, notAndroid } = require('../../../tools/browser-matcher/common-matchers.mjs')
-const { srConfig } = require('../util/helpers')
+const { srConfig, browserClick } = require('../util/helpers')
 const { checkJsErrors } = require('../../util/basic-checks')
 
 describe('error payloads', () => {
@@ -117,7 +117,7 @@ describe('error payloads', () => {
     await Promise.all([
       browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
         .then(() => browser.waitForSessionReplayRecording())
-        .then(() => browser.execute(function () { document.querySelector('#content-editable-div').click() }))
+        .then(() => browserClick('#content-editable-div'))
         .then(() => browser.keys([Key.Ctrl, Key.Backspace]))
     ])
 

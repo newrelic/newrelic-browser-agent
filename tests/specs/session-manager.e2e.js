@@ -1,4 +1,5 @@
 import { notSafari, supportsMultipleTabs } from '../../tools/browser-matcher/common-matchers.mjs'
+import { browserClick } from './util/helpers'
 
 const config = {
   init: {
@@ -178,10 +179,9 @@ describe('newrelic session ID', () => {
       expect(agentSessionInfo.localStorage.value).toEqual(expect.stringMatching(/^[a-zA-Z0-9]{16,}$/))
       expect(agentSessionInfo.localStorage.inactiveAt).toEqual(expect.any(Number))
 
-      const refreshedAt = await browser.execute(function () {
-        document.querySelector('body').click()
+      const refreshedAt = await browserClick('body').then(() => browser.execute(function () {
         return Date.now()
-      })
+      }))
       await browser.pause(500)
       const refreshedAgentSessionInfo = await browser.getAgentSessionInfo()
 
@@ -208,10 +208,10 @@ describe('newrelic session ID', () => {
       expect(agentSessionInfo.localStorage.value).toEqual(expect.stringMatching(/^[a-zA-Z0-9]{16,}$/))
       expect(agentSessionInfo.localStorage.inactiveAt).toEqual(expect.any(Number))
 
-      const refreshedAt = await browser.execute(function () {
-        document.querySelector('body').click()
-        return Date.now()
-      })
+      const refreshedAt = await browserClick('body')
+        .then(() => browser.execute(function () {
+          return Date.now()
+        }))
       await browser.url(await browser.testHandle.assetURL('fetch.html', config))
         .then(() => browser.waitForAgentLoad())
       const refreshedAgentSessionInfo = await browser.getAgentSessionInfo()

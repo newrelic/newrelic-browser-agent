@@ -1,5 +1,7 @@
 /* globals triggerError */
 
+const { browserClick } = require('../util/helpers')
+
 describe('error attributes with spa loader', () => {
   describe('custom attributes', () => {
     it('sets multiple custom attributes after page load with multiple JS errors occurring after page load', async () => {
@@ -145,9 +147,10 @@ describe('error attributes with spa loader', () => {
 
       const [errorResult] = await Promise.all([
         browser.testHandle.expectErrors(),
-        browser.execute(function () {
-          document.getElementById('trigger').click()
-          setTimeout(function () { location.reload() }, 100) // IE needs a little time before the refresh.
+        browserClick('#trigger').then(() => {
+          browser.execute(function () {
+            setTimeout(function () { location.reload() }, 100) // IE needs a little time before the refresh.
+          })
         })
       ])
 
@@ -161,10 +164,9 @@ describe('error attributes with spa loader', () => {
 
       const [errorResult] = await Promise.all([
         browser.testHandle.expectErrors(),
-        browser.execute(function () {
-          document.getElementById('trigger').click()
+        browserClick('#trigger').then(() => browser.execute(function () {
           setTimeout(function () { location.reload() }, 100) // IE needs a little time before the refresh.
-        })
+        }))
       ])
 
       expect(errorResult.request.body.err.length).toBe(3) // exactly 3 errors in payload
@@ -179,10 +181,9 @@ describe('error attributes with spa loader', () => {
 
       const [errorResult] = await Promise.all([
         browser.testHandle.expectErrors(),
-        browser.execute(function () {
-          document.getElementById('trigger').click()
+        browserClick('#trigger').then(() => browser.execute(function () {
           setTimeout(function () { location.reload() }, 100) // IE needs a little time before the refresh.
-        })
+        }))
       ])
 
       expect(errorResult.request.body.err.length).toBe(1) // exactly 1 error in payload
@@ -239,10 +240,9 @@ describe('error attributes with spa loader', () => {
 
       const [errorResult] = await Promise.all([
         browser.testHandle.expectErrors(),
-        browser.execute(function () {
-          document.getElementById('trigger').click()
+        browserClick('#trigger').then(() => browser.execute(function () {
           setTimeout(function () { location.reload() }, 100) // IE needs a little time before the refresh.
-        })
+        }))
       ])
 
       expect(errorResult.request.body.err.length).toBe(1) // exactly 1 error in payload

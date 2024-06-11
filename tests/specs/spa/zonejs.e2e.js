@@ -1,3 +1,5 @@
+const { browserClick } = require('../util/helpers')
+
 describe('spa interactions with zonejs', () => {
   it('should capture spa interactions with zonejs present', async () => {
     const url = await browser.testHandle.assetURL('spa/zonejs.html')
@@ -20,7 +22,7 @@ describe('spa interactions with zonejs', () => {
 
     const [clickInteractionResults] = await Promise.all([
       browser.testHandle.expectInteractionEvents(),
-      browser.execute(function () { document.querySelector('body').click() })
+      browserClick('body')
     ])
 
     expect(clickInteractionResults.request.body).toEqual(expect.arrayContaining([

@@ -3,7 +3,7 @@
  * Right now, Trace can only be in error mode when its stn flag is 0 but replay runs in error mode.
  */
 import { testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
-import { stConfig, testExpectedTrace } from '../util/helpers'
+import { browserClick, stConfig, testExpectedTrace } from '../util/helpers'
 import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
 
 describe('respects feature flags', () => {
@@ -139,7 +139,7 @@ describe('respects feature flags', () => {
 
     const [{ request }] = await Promise.all([
       browser.testHandle.expectTrace(),
-      browser.execute(function () { document.querySelector('#trigger').click() })
+      browserClick('#trigger')
     ])
     testExpectedTrace({ data: request })
   })

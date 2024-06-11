@@ -1,5 +1,6 @@
 import { testRumRequest } from '../../../tools/testing-server/utils/expect-tests.js'
 import { notSafari, onlyChromium, notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { browserClick } from '../util/helpers.js'
 
 describe('Soft navigations', () => {
   const config = { loader: 'spa', init: { feature_flags: ['soft_nav'] } }
@@ -24,7 +25,10 @@ describe('Soft navigations', () => {
     expect(iPLPayload.request.body.length).toEqual(1)
     expect(iPLPayload.request.body[0].category).toEqual('Initial page load')
 
-    let [routeChangePayload] = await Promise.all([browser.testHandle.expectInteractionEvents(5000), browser.execute(function () { document.querySelector('body').click() })])
+    let [routeChangePayload] = await Promise.all([
+      browser.testHandle.expectInteractionEvents(5000),
+      browser.pause(1000).then(() => browserClick('body'))
+    ])
     expect(routeChangePayload.request.body.length).toEqual(1)
     expect(routeChangePayload.request.body[0].category).toEqual('Route change')
   })
@@ -70,7 +74,7 @@ describe('Soft navigations', () => {
       browser.testHandle.expectInteractionEvents(5000),
       browser.testHandle.expectErrors(5000),
       browser.testHandle.expectAjaxEvents(5000),
-      browser.execute(function () { document.querySelector('body').click() })
+      browser.pause(1000).then(() => browserClick('body'))
     ])
     expect(routeChangeReq.request.body.length).toEqual(1)
     const rcIxn = routeChangeReq.request.body[0]
@@ -104,13 +108,13 @@ describe('Soft navigations', () => {
     await Promise.all([
       browser.testHandle.expectInteractionEvents(5000, true),
       browser.testHandle.expectErrors(5000, true),
-      browser.execute(function () { document.querySelector('body').click() }) // the fetch and error spawned should be buffered rather than harvested while the ixn is open
+      browser.pause(1000).then(() => browserClick('body')) // the fetch and error spawned should be buffered rather than harvested while the ixn is open
     ])
 
     let [ajaxPayload, jserrorPayload] = await Promise.all([
       browser.testHandle.expectAjaxEvents(5000), // the fetch should now come out of the ajax feature payload, no longer as part of an ixn
       browser.testHandle.expectErrors(5000),
-      browser.execute(function () { document.querySelector('body').click() }) // this is going to open a new (2nd) ixn & cancel the previous pending ixn, so we expect those buffered events to now flow
+      browser.pause(1000).then(() => browserClick('body')) // this is going to open a new (2nd) ixn & cancel the previous pending ixn, so we expect those buffered events to now flow
     ])
     expect(ajaxPayload.request.body).toEqual(expect.arrayContaining([expect.objectContaining({ path: '/json' })]))
     expect(jserrorPayload.request.body.err[0].params.message).toEqual('some error')

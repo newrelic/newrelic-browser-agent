@@ -1,5 +1,5 @@
 import { supportsMultipleTabs, notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
-import { RRWEB_EVENT_TYPES, srConfig, MODE, testExpectedReplay } from '../util/helpers.js'
+import { RRWEB_EVENT_TYPES, srConfig, MODE, testExpectedReplay, browserClick } from '../util/helpers.js'
 
 describe.withBrowsersMatching(notIE)('session manager state behavior', () => {
   afterEach(async () => {
@@ -54,10 +54,11 @@ describe.withBrowsersMatching(notIE)('session manager state behavior', () => {
 
       await Promise.all([
         browser.testHandle.expectReplay(10000, true),
-        browser.execute(function () {
-          document.querySelector('body').click()
-          Object.values(newrelic.initializedAgents)[0].runtime.session.reset()
-        })
+        browserClick('body').then(() =>
+          browser.execute(function () {
+            Object.values(newrelic.initializedAgents)[0].runtime.session.reset()
+          })
+        )
       ])
     })
   })

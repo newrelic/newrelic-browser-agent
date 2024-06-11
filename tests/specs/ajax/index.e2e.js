@@ -1,5 +1,6 @@
 import { supportsFetch } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { testAjaxEventsRequest, testAjaxTimeSlicesRequest } from '../../../tools/testing-server/utils/expect-tests'
+import { browserClick } from '../util/helpers'
 
 describe('Basic AJAX Tests', () => {
   it.withBrowsersMatching(supportsFetch)('should not delay page load for harvesting', async () => {
@@ -20,7 +21,7 @@ describe('Basic AJAX Tests', () => {
         window.disableAjaxHashChange = true
       }))
 
-    await browser.execute(function () { document.querySelector('#sendAjax').click() })
+    await browserClick('#sendAjax')
     await browser.pause(5000)
 
     const start = performance.now()

@@ -1,5 +1,6 @@
-import { supportsBFCache, notIE, supportsCumulativeLayoutShift } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { supportsBFCache, notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
 import querypack from '@newrelic/nr-querypack'
+import { browserClick, mergeBatchedRequestBodies } from '../util/helpers'
 
 describe('Back/forward cache', () => {
   it.withBrowsersMatching(supportsBFCache)('is not blocked by agent code', async () => {
@@ -33,7 +34,7 @@ describe('Back/forward cache', () => {
 
     let timingsListener = browser.testHandle.expectTimings(5000)
     // 1) Make an interaction and simulate visibilitychange to trigger our "pagehide" logic after loading, after which we expect "final" harvest to occur.
-    browser.execute(function () { document.querySelector('#btn1').click() })
+    browserClick('#btn1')
     let pvtPayload = (await timingsListener).request
 
     // 2) Verify PageViewTimings sent sufficient expected timing events, then trigger our "unload" logic.
@@ -45,12 +46,13 @@ describe('Back/forward cache', () => {
     let ulNode = phTimings.find(t => t.name === 'unload')
     expect(ulNode).toBeUndefined() // vis hidden doesn't emit unload event
 
-    timingsListener = browserMatch(supportsCumulativeLayoutShift) ? browser.testHandle.expectFinalTimings(7000) : browser.testHandle.expectTimings(7000)
+    // timingsListener = browserMatch(supportsCumulativeLayoutShift) ? browser.testHandle.expectFinalTimings(7000) : browser.testHandle.expectTimings(7000)
+    timingsListener = browser.testHandle.expectTimings(7000, false, 5000)
     await browser.url(await browser.testHandle.assetURL('/'))
-    pvtPayload = (await timingsListener).request
 
     // 3) Verify PVTs aren't sent again but unload event is; (TEMPORARY) pageHide event should not be sent again
-    const ulTimings = pvtPayload?.body?.length ? pvtPayload.body : querypack.decode(pvtPayload.query.e)
+    // const ulTimings = pvtPayload?.body?.length ? pvtPayload.body : querypack.decode(pvtPayload.query.e)
+    const ulTimings = mergeBatchedRequestBodies(await timingsListener)
     expect(ulTimings.length).toBeGreaterThan(0) // "unload" & ongoing CWV lib metrics like INP--if supported--should be harvested here
 
     ulNode = ulTimings.find(t => t.name === 'unload')

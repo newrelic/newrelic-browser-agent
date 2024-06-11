@@ -1,4 +1,5 @@
 import { notIE, notIOS, notSafari } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { browserClick } from '../util/helpers'
 import runTest from './run-test'
 
 // iOS Appium hates the use of canvas
@@ -12,7 +13,7 @@ describe.withBrowsersMatching([notIE, notIOS, notSafari])('jspdf compatibility',
       afterLoadCallback: async () => {
         const [errorsResults] = await Promise.all([
           browser.testHandle.expectErrors(10000, true),
-          browser.execute(function () { document.querySelector('body').click() }) // Setup expects before interacting with page
+          browserClick('body') // Setup expects before interacting with page
         ])
         expect(errorsResults).not.toBeDefined()
 

@@ -1,4 +1,4 @@
-import { testExpectedTrace } from '../util/helpers'
+import { browserClick, testExpectedTrace } from '../util/helpers'
 
 describe('AJAX', () => {
   afterEach(async () => {
@@ -14,9 +14,7 @@ describe('AJAX', () => {
 
     const [{ request }] = await Promise.all([
       browser.testHandle.expectTrace(10000),
-      browser.execute(function () {
-        document.querySelector('#trigger').click()
-      })
+      browserClick('#trigger')
     ])
     testExpectedTrace({ data: request })
     const loadNodes = request.body.filter(function (node) { return (node.t === 'event' && node.n === 'load') || node.n === 'readystatechange' })
@@ -41,9 +39,7 @@ describe('AJAX', () => {
 
     const [{ request }] = await Promise.all([
       browser.testHandle.expectTrace(10000),
-      browser.execute(function () {
-        document.querySelector('#trigger').click()
-      })
+      browserClick('#trigger')
     ])
     testExpectedTrace({ data: request })
     const loadNodes = request.body.filter(function (node) { return node.t === 'ajax' })

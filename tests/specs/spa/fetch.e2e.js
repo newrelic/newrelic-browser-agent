@@ -1,5 +1,6 @@
 import { checkAjaxEvents, checkSpa } from '../../util/basic-checks'
 import { supportsFetch } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { browserClick } from '../util/helpers'
 
 describe.withBrowsersMatching(supportsFetch)('Fetch SPA Interaction Tracking', () => {
   it('should capture the ajax in the initial interaction when sent before page load', async () => {
@@ -47,7 +48,7 @@ describe.withBrowsersMatching(supportsFetch)('Fetch SPA Interaction Tracking', (
 
     const [interactionResults] = await Promise.all([
       browser.testHandle.expectInteractionEvents(10000),
-      browser.execute(function () { document.querySelector('#sendAjax').click() })
+      browserClick('#sendAjax')
     ])
 
     checkSpa(interactionResults.request, { trigger: 'click' })
@@ -112,7 +113,7 @@ describe.withBrowsersMatching(supportsFetch)('Fetch SPA Interaction Tracking', (
 
     const [interactionResults] = await Promise.all([
       browser.testHandle.expectInteractionEvents(10000),
-      browser.execute(function () { document.querySelector('#sendAjax').click() })
+      browserClick('#sendAjax')
     ])
 
     checkSpa(interactionResults.request, { trigger: 'click' })
@@ -142,7 +143,7 @@ describe.withBrowsersMatching(supportsFetch)('Fetch SPA Interaction Tracking', (
     const [, eventResults] = await Promise.all([
       browser.testHandle.expectInteractionEvents(10000, true),
       browser.testHandle.expectEvents(10000),
-      browser.execute(function () { document.querySelector('#sendAjax').click() })
+      browserClick('#sendAjax')
     ])
 
     expect(eventResults.request.body).toEqual(expect.arrayContaining([
@@ -159,7 +160,7 @@ describe.withBrowsersMatching(supportsFetch)('Fetch SPA Interaction Tracking', (
 
     const [interactionResults] = await Promise.all([
       browser.testHandle.expectInteractionEvents(10000),
-      browser.execute(function () { document.querySelector('#sendAjax').click() })
+      browserClick('#sendAjax')
     ])
 
     checkSpa(interactionResults.request, { trigger: 'click' })
@@ -209,7 +210,7 @@ describe.withBrowsersMatching(supportsFetch)('Fetch SPA Interaction Tracking', (
     await browser.execute(function () {
       window.clearResults()
     })
-    await browser.execute(function () { document.querySelector('#sendAjax').click() })
+    await browserClick('#sendAjax')
     await browser.waitUntil(
       () => browser.execute(function () {
         return window.checkRunning === false
@@ -248,7 +249,7 @@ describe.withBrowsersMatching(supportsFetch)('Fetch SPA Interaction Tracking', (
     await browser.execute(function () {
       window.clearResults()
     })
-    await browser.execute(function () { document.querySelector('#sendAjax').click() })
+    await browserClick('#sendAjax')
     await browser.waitUntil(
       () => browser.execute(function () {
         return window.checkRunning === false
@@ -303,7 +304,7 @@ describe.withBrowsersMatching(supportsFetch)('Fetch SPA Interaction Tracking', (
 
     const [interactionEventsHarvest] = await Promise.all([
       browser.testHandle.expectInteractionEvents(),
-      browser.execute(function () { document.querySelector('#sendAjax').click() })
+      browserClick('#sendAjax')
     ])
 
     checkAjaxEvents({ body: interactionEventsHarvest.request.body[0].children, query: interactionEventsHarvest.request.query }, { specificPath: '/json' })
@@ -319,7 +320,7 @@ describe.withBrowsersMatching(supportsFetch)('Fetch SPA Interaction Tracking', (
 
     const [interactionEventsHarvest] = await Promise.all([
       browser.testHandle.expectInteractionEvents(),
-      browser.execute(function () { document.querySelector('#sendAjax').click() })
+      browserClick('#sendAjax')
     ])
 
     checkAjaxEvents({ body: interactionEventsHarvest.request.body[0].children, query: interactionEventsHarvest.request.query }, { specificPath: '/paththatdoesnotexist' })

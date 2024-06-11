@@ -1,5 +1,6 @@
 import { supportsFetch, notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
+import { browserClick } from '../util/helpers'
 
 // IE does not have reliable unload support
 describe.withBrowsersMatching(notIE)('final harvesting', () => {
@@ -136,7 +137,7 @@ describe.withBrowsersMatching(notIE)('final harvesting', () => {
 
     await Promise.all([
       browser.testHandle.expectTimings(),
-      browser.execute(function () { document.querySelector('#btn1').click() })
+      browserClick('#btn1')
     ])
 
     const [unloadTimings] = await Promise.all([

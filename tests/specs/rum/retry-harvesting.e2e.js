@@ -1,4 +1,5 @@
 import { testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
+import { browserClick } from '../util/helpers'
 
 describe('rum retry harvesting', () => {
   [400, 404, 408, 429, 500, 502, 503, 504, 512].forEach(statusCode => {
@@ -10,6 +11,18 @@ describe('rum retry harvesting', () => {
         body: ''
       })
 
+      const expects = Promise.all([
+        browser.testHandle.expectTrace(10000, true),
+        browser.testHandle.expectInteractionEvents(10000, true),
+        browser.testHandle.expectTimings(10000, true),
+        browser.testHandle.expectAjaxTimeSlices(10000, true),
+        browser.testHandle.expectAjaxEvents(10000, true),
+        browser.testHandle.expectIns(10000, true),
+        browser.testHandle.expectRum()
+      ])
+      await browser.url(await browser.testHandle.assetURL('obfuscate-pii.html'))
+      await browserClick('a')
+
       const [
         resourcesResults,
         interactionResults,
@@ -18,38 +31,7 @@ describe('rum retry harvesting', () => {
         ajaxEventsResults,
         insResults,
         rumResults
-      ] = await Promise.all([
-        browser.testHandle.expectTrace(10000, true),
-        browser.testHandle.expectInteractionEvents(10000, true),
-        browser.testHandle.expectTimings(10000, true),
-        browser.testHandle.expectAjaxTimeSlices(10000, true),
-        browser.testHandle.expectAjaxEvents(10000, true),
-        browser.testHandle.expectIns(10000, true),
-        browser.testHandle.expectRum(),
-        browser.url(await browser.testHandle.assetURL('obfuscate-pii.html'))
-          .then(() => browser.execute(function () {
-            document.querySelector('a').click()
-          }))
-      ])
-
-      // Uncomment this code to reproduce the issue described in https://issues.newrelic.com/browse/NEWRELIC-9348
-      // Leave uncommented once that ticket is worked
-      // await browser.pause(500)
-
-      // await browser.execute(function () {
-      //   newrelic.noticeError(new Error('hippo hangry'))
-      //   newrelic.addPageAction('DummyEvent', { free: 'tacos' })
-      // })
-
-      // await Promise.all([
-      //   browser.testHandle.expectTimings(10000, true),
-      //   browser.testHandle.expectAjaxEvents(10000, true),
-      //   browser.testHandle.expectMetrics(10000, true),
-      //   browser.testHandle.expectErrors(10000, true),
-      //   browser.testHandle.expectTrace(10000, true),
-      //   browser.url(await browser.testHandle.assetURL('/'))
-      // ])
-
+      ] = await expects
       expect(rumResults.reply.statusCode).toEqual(statusCode)
       expect(resourcesResults).toBeUndefined()
       expect(interactionResults).toBeUndefined()

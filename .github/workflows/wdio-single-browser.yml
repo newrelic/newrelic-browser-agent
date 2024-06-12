@@ -68,7 +68,7 @@ jobs:
       - name: Run WDIO Tests
         run: |
           node --max-old-space-size=8192 ./tools/wdio/bin/cli.js \
-            -s \
+            --lt \
             -b '${{ inputs.browser-target }}' \
             --concurrent 10 \
             ${{ runner.debug && '-v -L -D -d' || '' }} \

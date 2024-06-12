@@ -16,5 +16,6 @@ export function bufferLog (ee, message, customAttributes = {}, level = 'info') {
 }
 
 export function isValidLogLevel (level) {
+  if (typeof level !== 'string') return false
   return Object.values(LOG_LEVELS).some(logLevel => logLevel.toLowerCase() === level.toLowerCase())
 }

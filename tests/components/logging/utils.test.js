@@ -1,5 +1,5 @@
 import { ee } from '../../../src/common/event-emitter/contextual-ee'
-import { bufferLog } from '../../../src/features/logging/shared/utils'
+import { bufferLog, isValidLogLevel } from '../../../src/features/logging/shared/utils'
 import * as handleModule from '../../../src/common/event-emitter/handle'
 
 const agentIdentifier = 'abcd'
@@ -28,6 +28,18 @@ describe('logging utils component tests', () => {
       expect(handleModule.handle.mock.calls[0][1]).toEqual(['API/logging/error/called'])
       expect(handleModule.handle.mock.calls[1][0]).toEqual('log')
       expect(handleModule.handle.mock.calls[1][1]).toEqual([expect.any(Number), 'testMessage', { test1: 1, test2: true, test3: { nested: true } }, 'error'])
+    })
+  })
+
+  describe('isValidLogLevel', () => {
+    test('should detect valid and invalid log levels', () => {
+      const validLogLevels = ['info', 'trace', 'debug', 'warn', 'error']
+      const validLogLevelsCasing = ['INFO', 'tRaCe']
+      const invalidLogLevels = ['', 'bad', true, false, {}, []]
+
+      expect(validLogLevels.every(level => isValidLogLevel(level))).toEqual(true)
+      expect(validLogLevelsCasing.every(level => isValidLogLevel(level))).toEqual(true)
+      expect(invalidLogLevels.every(level => !isValidLogLevel(level))).toEqual(true)
     })
   })
 })

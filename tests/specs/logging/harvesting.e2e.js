@@ -3,9 +3,11 @@ import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
 
 describe('logging harvesting', () => {
   describe('logging harvests', () => {
+    const pageUrl = expect.any(String)
     const customAttributes = { test: 1 }
+    const attributes = { ...customAttributes, pageUrl }
     const expectedLogs = ['info', 'debug', 'trace', 'error', 'warn'].map(level => ({
-      logType: level, message: level, session: { url: expect.any(String) }, timestamp: expect.any(Number), attributes: customAttributes
+      logType: level, message: level, timestamp: expect.any(Number), attributes
     }))
     const expectedPayload = {
       common: {

@@ -6,12 +6,10 @@ export class Log {
   timestamp
   /** @type {string} the log message */
   message
-  /** @type {string} the stringified object of attributes (could be args[] from wrapped logger) */
+  /** @type {object} the object of attributes to be parsed by logging ingest into top-level properties */
   attributes
   /** @type {'error'|'trace'|'debug'|'info'|'warn'} the log type of the log */
   logType
-  /** @type {Object<{url: string}>} The session level attributes of the log event */
-  session
 
   /**
    * @param {number} timestamp - Unix timestamp
@@ -23,10 +21,7 @@ export class Log {
     /** @type {long} */
     this.timestamp = timestamp
     this.message = message
-    this.attributes = attributes
+    this.attributes = { ...attributes, pageUrl: cleanURL('' + globalScope.location) }
     this.logType = level
-    this.session = {
-      url: cleanURL('' + globalScope.location)
-    }
   }
 }

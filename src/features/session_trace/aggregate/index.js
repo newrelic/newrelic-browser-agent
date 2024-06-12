@@ -109,7 +109,6 @@ export class Aggregate extends AggregateBase {
 
   /** This module does not auto harvest by default -- it needs to be kicked off.  Once this method is called, it will then harvest on an interval */
   startHarvesting () {
-    console.log('start harvesting')
     if (this.scheduler.started || this.blocked) return
     this.scheduler.runHarvest()
     this.scheduler.startTimer(this.harvestTimeSeconds)

@@ -9,9 +9,8 @@ export class Instrument extends InstrumentBase {
 
     const instanceEE = this.ee
     /** emitted by wrap-logger function */
-    this.ee.on('wrap-logger-end', function handleLog ([message, ...args]) {
-      const { level } = this
-      const customAttributes = args.length ? args : [{}]
+    this.ee.on('wrap-logger-end', function handleLog ([message]) {
+      const { level, customAttributes } = this
       bufferLog(instanceEE, message, customAttributes, level)
     })
     this.importAggregator()

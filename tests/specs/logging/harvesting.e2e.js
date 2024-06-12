@@ -3,25 +3,21 @@ import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
 
 describe('logging harvesting', () => {
   describe('logging harvests', () => {
-    const customAttributes = '[{"test":1}]'
+    const customAttributes = { test: 1 }
     const expectedLogs = ['info', 'debug', 'trace', 'error', 'warn'].map(level => ({
       logType: level, message: level, session: { url: expect.any(String) }, timestamp: expect.any(Number), attributes: customAttributes
     }))
     const expectedPayload = {
       common: {
         attributes: {
-          agent: {
-            appId: 42,
-            distribution: expect.any(String),
-            version: expect.any(String)
-          },
+          appId: 42,
+          agentVersion: expect.any(String),
           entityGuid: expect.any(String),
-          session: {
-            hasReplay: false,
-            hasTrace: true,
-            id: expect.any(String),
-            pageTraceId: expect.any(String)
-          }
+          hasReplay: false,
+          hasTrace: true,
+          standalone: false,
+          session: expect.any(String),
+          ptid: expect.any(String)
         }
       },
       logs: expectedLogs
@@ -30,7 +26,7 @@ describe('logging harvesting', () => {
     ;['api', 'api-wrap-logger'].forEach(type => {
       it(`should harvest expected logs - ${type} pre load`, async () => {
         const [{ request: { body } }] = await Promise.all([
-          browser.testHandle.expectLogs(),
+          browser.testHandle.expectLogs(10000),
           browser.url(await browser.testHandle.assetURL(`logs-${type}-pre-load.html`))
         ])
 
@@ -39,7 +35,7 @@ describe('logging harvesting', () => {
 
       it(`should harvest expected logs - ${type} post load`, async () => {
         const [{ request: { body } }] = await Promise.all([
-          browser.testHandle.expectLogs(),
+          browser.testHandle.expectLogs(10000),
           browser.url(await browser.testHandle.assetURL(`logs-${type}-post-load.html`))
         ])
 
@@ -50,7 +46,7 @@ describe('logging harvesting', () => {
       it.withBrowsersMatching([notIE])(`should harvest early if reaching limit - ${type}`, async () => {
         let now = Date.now(); let then
         await Promise.all([
-          browser.testHandle.expectLogs().then(() => { then = Date.now() }),
+          browser.testHandle.expectLogs(10000).then(() => { then = Date.now() }),
           browser.url(await browser.testHandle.assetURL(`logs-${type}-harvest-early.html`, { init: { logging: { harvestTimeSeconds: 10 } } }))
         ])
 
@@ -60,7 +56,7 @@ describe('logging harvesting', () => {
       /** method used here to generate long logs is not supported by IE */
       it.withBrowsersMatching([notIE])(`should ignore log if too large - ${type}`, async () => {
         const [{ request: { body } }] = await Promise.all([
-          browser.testHandle.expectLogs(),
+          browser.testHandle.expectLogs(10000),
           browser.url(await browser.testHandle.assetURL(`logs-${type}-too-large.html`))
         ])
         expect(JSON.parse(body)).toEqual(expectedPayload) // should not contain the '...xxxxx...' payload in it
@@ -78,7 +74,7 @@ describe('logging harvesting', () => {
         })
 
         const [firstLogsHarvest] = await Promise.all([
-          browser.testHandle.expectLogs(),
+          browser.testHandle.expectLogs(10000),
           browser.url(await browser.testHandle.assetURL('logs-api-post-load.html'))
         ])
 
@@ -91,7 +87,7 @@ describe('logging harvesting', () => {
           permanent: true
         })
 
-        const secondLogsHarvest = await browser.testHandle.expectLogs()
+        const secondLogsHarvest = await browser.testHandle.expectLogs(10000)
 
         expect(firstLogsHarvest.reply.statusCode).toEqual(statusCode)
         expect(secondLogsHarvest.request.body).toEqual(firstLogsHarvest.request.body)

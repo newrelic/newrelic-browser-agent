@@ -3,9 +3,10 @@ import { handle } from '../../../common/event-emitter/handle'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { warn } from '../../../common/util/console'
+import { stringify } from '../../../common/util/stringify'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { AggregateBase } from '../../utils/aggregate-base'
-import { FEATURE_NAME, LOGGING_EVENT_EMITTER_CHANNEL, MAX_PAYLOAD_SIZE } from '../constants'
+import { FEATURE_NAME, LOGGING_EVENT_EMITTER_CHANNEL, LOGGING_IGNORED, MAX_PAYLOAD_SIZE } from '../constants'
 import { Log } from '../shared/log'
 
 export class Aggregate extends AggregateBase {
@@ -49,14 +50,14 @@ export class Aggregate extends AggregateBase {
       attributes,
       level
     )
-    const logBytes = log.message.length + log.attributes.length + log.logType.length + log.session.url.length + 10 // timestamp == 10 chars
+    const logBytes = log.message.length + stringify(log.attributes).length + log.logType.length + log.session.url.length + 10 // timestamp == 10 chars
     if (logBytes > MAX_PAYLOAD_SIZE) {
-      handle(SUPPORTABILITY_METRIC_CHANNEL, ['Logging/Harvest/Failed/Seen'])
-      return warn(`failed to log: > ${MAX_PAYLOAD_SIZE} bytes`, log.message.slice(0, 25) + '...')
+      handle(SUPPORTABILITY_METRIC_CHANNEL, ['Logging/Harvest/Failed/Seen', logBytes])
+      return warn(LOGGING_IGNORED + '> ' + MAX_PAYLOAD_SIZE + ' bytes', log.message.slice(0, 25) + '...')
     }
 
     if (this.estimatedBytes + logBytes >= MAX_PAYLOAD_SIZE) {
-      handle(SUPPORTABILITY_METRIC_CHANNEL, ['Logging/Harvest/Early/Seen'])
+      handle(SUPPORTABILITY_METRIC_CHANNEL, ['Logging/Harvest/Early/Seen', this.estimatedBytes + logBytes])
       this.scheduler.runHarvest({})
     }
     this.estimatedBytes += logBytes
@@ -75,18 +76,13 @@ export class Aggregate extends AggregateBase {
         common: {
           attributes: {
             entityGuid: this.#agentRuntime.appMetadata?.agents?.[0]?.entityGuid,
-            session: {
-              id: this.#agentRuntime?.session?.state.value || '0', // The session ID that we generate and keep across page loads
-              hasReplay: this.#agentRuntime?.session?.state.sessionReplayMode === 1, // True if a session replay recording is running
-              hasTrace: this.#agentRuntime?.session?.state.sessionTraceMode === 1, // True if a session trace recording is running
-              pageTraceId: this.#agentRuntime.ptid // The page's trace ID (equiv to agent id)
-            },
-            agent: {
-              appId: this.#agentInfo.applicationID, // Application ID from info object
-              standalone: this.#agentInfo.sa, // Whether the app is C+P or APM injected
-              version: this.#agentRuntime.version, // the browser agent version
-              distribution: this.#agentRuntime.distMethod // How is the agent being loaded on the page
-            }
+            session: this.#agentRuntime?.session?.state.value || '0', // The session ID that we generate and keep across page loads
+            hasReplay: this.#agentRuntime?.session?.state.sessionReplayMode === 1, // True if a session replay recording is running
+            hasTrace: this.#agentRuntime?.session?.state.sessionTraceMode === 1, // True if a session trace recording is running
+            ptid: this.#agentRuntime.ptid,
+            appId: this.#agentInfo.applicationID, // Application ID from info object,
+            standalone: Boolean(this.#agentInfo.sa),
+            agentVersion: this.#agentRuntime.version
           }
         },
         logs: this.outgoingLogs

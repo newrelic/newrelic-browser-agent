@@ -595,7 +595,7 @@ describe('setAPI', () => {
         const myLoggerPackage = {
           [randomMethodName]: jest.fn()
         }
-        apiInterface.wrapLogger(myLoggerPackage, randomMethodName, 'warn')
+        apiInterface.wrapLogger(myLoggerPackage, randomMethodName, {}, 'warn')
 
         /** emits data for observed fn */
         myLoggerPackage[randomMethodName]('test1')
@@ -675,7 +675,7 @@ describe('setAPI', () => {
 
           const secondEmit = handleModule.handle.mock.calls[1]
           expect(secondEmit[0]).toEqual('log')
-          expect(secondEmit[1]).toEqual([expect.any(Number), args[0], JSON.stringify([args[1]]), logMethod.toLowerCase().replace('log', '')])
+          expect(secondEmit[1]).toEqual([expect.any(Number), args[0], args[1], logMethod.toLowerCase().replace('log', '')])
           expect(secondEmit[2]).toBeUndefined()
           expect(secondEmit[3]).toEqual(FEATURE_NAMES.logging)
           expect(secondEmit[4]).toEqual(instanceEE)
@@ -725,7 +725,7 @@ describe('setAPI', () => {
 
         const secondEmit = handleModule.handle.mock.calls[1]
         expect(secondEmit[0]).toEqual('log')
-        expect(secondEmit[1]).toEqual([expect.any(Number), 'message', JSON.stringify([{}]), 'debug'])
+        expect(secondEmit[1]).toEqual([expect.any(Number), 'message', {}, 'debug'])
       })
     })
   })

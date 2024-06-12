@@ -11,6 +11,7 @@ import { ee as baseEE, contextId } from '../event-emitter/contextual-ee'
 import { EventContext } from '../event-emitter/event-context'
 import { createWrapperWithEmitter as wfn } from './wrap-function'
 
+const contexts = {}
 /**
  * Wraps a supplied function and adds emitter events under the `-wrap-logger-` prefix
  * @param {Object} sharedEE - The shared event emitter on which a new scoped event emitter will be based.
@@ -19,13 +20,18 @@ import { createWrapperWithEmitter as wfn } from './wrap-function'
  * @returns {Object} Scoped event emitter with a debug ID of `logger`.
  */
 // eslint-disable-next-line
-export function wrapLogger(sharedEE, parent, loggerFn, level) {
+export function wrapLogger(sharedEE, parent, loggerFn, context) {
   const ee = scopedEE(sharedEE)
   var wrapFn = wfn(ee)
 
   const ctx = new EventContext(contextId)
-  ctx.level = level
-  wrapFn.inPlace(parent, [loggerFn], 'wrap-logger-', ctx)
+  ctx.level = context.level
+  ctx.customAttributes = context.customAttributes
+
+  contexts[sharedEE.debugId] ??= { [parent]: new Map() }
+  contexts[sharedEE.debugId][parent].set(loggerFn, ctx)
+
+  wrapFn.inPlace(parent, [loggerFn], 'wrap-logger-', () => contexts[sharedEE.debugId][parent].get(loggerFn))
   return ee
 }
 

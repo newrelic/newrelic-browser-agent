@@ -13,8 +13,8 @@
       const longMessage = 'x'.repeat(800*800)
       /** the combination of the two large messages pushes it past the MAX_PAYLOAD_SIZE, 
        * causing the first valid one to get harvested before buffering the second one **/
-      newrelic.logInfo(longMessage, {test: 1}) 
-      newrelic.logInfo(longMessage, {test: 1})
+      newrelic.log(longMessage, {test: 1}) 
+      newrelic.log(longMessage, {test: 1})
     </script>
   </body>
 </html>

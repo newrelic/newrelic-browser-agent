@@ -10,12 +10,12 @@
   </head>
   <body>Logs API Post Load
     <script>
-      newrelic.logInfo('x'.repeat(1024*1024), {test: 1}) // too big
-      newrelic.logInfo('info', {test: 1})
-      newrelic.logDebug('debug', {test: 1})
-      newrelic.logTrace('trace', {test: 1})
-      newrelic.logError('error', {test: 1})
-      newrelic.logWarn('warn', {test: 1})
+      newrelic.log('x'.repeat(1024*1024), {test: 1}, 'info') // too big
+      newrelic.log('info', {test: 1}, 'info')
+      newrelic.log('debug', {test: 1}, 'debug')
+      newrelic.log('trace', {test: 1}, 'trace')
+      newrelic.log('error', {test: 1}, 'error')
+      newrelic.log('warn', {test: 1}, 'warn')
       // harvest should not have the '...xxxxx...' payload in it
     </script>
   </body>

@@ -11,25 +11,26 @@
   <body>Logs API Post Load
     <script>
       var loggers = {
-        logInfo: function(message, attr){},
-        logDebug: function(message, attr){},
-        logTrace: function(message, attr){},
-        logError: function(message, attr){},
-        logWarn: function(message, attr){},
+        logInfo: function(message, otherArg){}, // other args are ignored
+        logDebug: function(message, otherArg){}, // other args are ignored
+        logTrace: function(message, otherArg){}, // other args are ignored
+        logError: function(message, otherArg){}, // other args are ignored
+        logWarn: function(message, otherArg){}, // other args are ignored
       }
       
-      newrelic.wrapLogger(loggers, 'logInfo', 'info')
-      newrelic.wrapLogger(loggers, 'logDebug', 'debug')
-      newrelic.wrapLogger(loggers, 'logTrace', 'trace')
-      newrelic.wrapLogger(loggers, 'logError', 'error')
-      newrelic.wrapLogger(loggers, 'logWarn', 'warn')
+      newrelic.wrapLogger(loggers, 'logInfo', {test:1}, 'info')
+      newrelic.wrapLogger(loggers, 'logDebug', {test:1}, 'debug')
+      newrelic.wrapLogger(loggers, 'logTrace', {test:1}, 'trace')
+      newrelic.wrapLogger(loggers, 'logError', {test:1}, 'error')
+      newrelic.wrapLogger(loggers, 'logWarn', {test:1}, 'warn')
       
-      loggers.logInfo('x'.repeat(1024*1024), {test: 1}) // too big
-      loggers.logInfo('info', {test: 1})
-      loggers.logDebug('debug', {test: 1})
-      loggers.logTrace('trace', {test: 1})
-      loggers.logError('error', {test: 1})
-      loggers.logWarn('warn', {test: 1})
+      loggers.logInfo('x'.repeat(1024*1024), {test: 2}) // too big
+      loggers.logInfo('info', {test: 2}) // other args are ignored
+      loggers.logDebug('debug', {test: 2}) // other args are ignored
+      loggers.logTrace('trace', {test: 2}) // other args are ignored
+      loggers.logError('error', {test: 2}) // other args are ignored
+      loggers.logWarn('warn', {test: 2}) // other args are ignored
+      
       // harvest should not have the '...xxxxx...' payload in it
     </script>
   </body>

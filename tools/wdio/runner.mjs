@@ -25,6 +25,7 @@ const wdioConfig = deepmerge(
   specsConfig(),
   args.lt ? lambdaTestConfig() : sauceConfig()
 )
+console.log(wdioConfig)
 const configFilePath = path.join(
   path.resolve(__dirname, '../../node_modules/.cache/wdio'),
   `wdio.conf_${crypto.randomBytes(16).toString('hex')}.mjs`

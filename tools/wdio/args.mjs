@@ -15,11 +15,6 @@ const args = yargs(hideBin(process.argv))
   .alias('L', 'log-requests')
   .describe('l', 'if true, prints data about requests to the test server')
 
-  .boolean('D')
-  .default('D', false)
-  .alias('D', 'sauce-extended-debugging')
-  .describe('D', 'Run tests with sauce labs extended debugging enabled')
-
   .string('b')
   .alias('b', 'browsers')
   .describe(
@@ -92,8 +87,8 @@ const args = yargs(hideBin(process.argv))
 
   .boolean('D')
   .default('D', false)
-  .alias('D', 'sauce-extended-debugging')
-  .describe('D', 'Run tests with sauce labs extended debugging enabled')
+  .alias('D', 'extended-debugging')
+  .describe('D', 'Run tests with LambdaTest extended debugging enabled')
 
   .boolean('coverage')
   .default('coverage', false)

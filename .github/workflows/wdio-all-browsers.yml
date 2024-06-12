@@ -13,9 +13,9 @@ on:
         default: true
         type: boolean
     secrets:
-      SAUCE_USERNAME:
+      LAMBDA_USERNAME:
         required: true
-      SAUCE_ACCESS_KEY:
+      LAMBDA_ACCESS_KEY:
         required: true
 
 jobs:

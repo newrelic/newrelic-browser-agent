@@ -25,7 +25,7 @@ export class Aggregate extends AggregateBase {
     this.#agentRuntime = getRuntime(this.agentIdentifier)
     this.#agentInfo = getInfo(this.agentIdentifier)
 
-    this.harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'logging.harvestTimeSeconds') || 10
+    this.harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'logging.harvestTimeSeconds')
 
     this.waitForFlags([]).then(() => {
       this.scheduler = new HarvestScheduler('browser/logs', {
@@ -95,7 +95,7 @@ export class Aggregate extends AggregateBase {
   }
 
   onHarvestFinished (result) {
-    if (result.sent && !result.retry) this.outgoingLogs = []
+    if (!result.retry) this.outgoingLogs = []
   }
 
   abort () {

@@ -42,6 +42,21 @@ describe('logging instrument component tests', () => {
     myLoggerSuite.myTestLogger('message', { args: 1 })
     expect(utils.bufferLog).toHaveBeenCalledWith(loggingInstrument.ee, 'message', [{ args: 1 }], 'error')
   })
+
+  it('should subscribe to wrap-logger events with multiple arguments and buffer them', async () => {
+    const onCalls = instanceEE.on.mock.calls.length
+    const loggingInstrument = new LoggingInstrument(agentIdentifier, new Aggregator({}))
+    expect(instanceEE.on).toHaveBeenCalledTimes(onCalls + 1)
+    expect(instanceEE.on.mock.calls[instanceEE.on.mock.calls.length - 1]).toEqual(expect.arrayContaining(['wrap-logger-end']))
+
+    const myLoggerSuite = {
+      myTestLogger: jest.fn()
+    }
+    wrapLogger(loggingInstrument.ee, myLoggerSuite, 'myTestLogger', 'error')
+    expect(utils.bufferLog).toHaveBeenCalledTimes(0)
+    myLoggerSuite.myTestLogger('message', { args: 1 }, { secondArg: 2 })
+    expect(utils.bufferLog).toHaveBeenCalledWith(loggingInstrument.ee, 'message', [{ args: 1 }, { secondArg: 2 }], 'error')
+  })
 })
 
 function primeTest (sess = new SessionEntity({ agentIdentifier, key: 'SESSION', storage: new LocalMemory() })) {

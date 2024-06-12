@@ -16,8 +16,8 @@ import { apiMethods, asyncApiMethods } from './api-methods'
 import { SR_EVENT_EMITTER_TYPES } from '../../features/session_replay/constants'
 import { now } from '../../common/timing/now'
 import { MODE } from '../../common/session/constants'
-import { LOG_LEVELS, MAX_PAYLOAD_SIZE } from '../../features/logging/constants'
-import { bufferLog } from '../../features/logging/shared/utils'
+import { LOGGING_FAILURE_MESSAGE, LOGGING_IGNORED, LOGGING_LEVEL_FAILURE_MESSAGE, LOG_LEVELS, MAX_PAYLOAD_SIZE } from '../../features/logging/constants'
+import { bufferLog, isValidLogLevel } from '../../features/logging/shared/utils'
 import { wrapLogger } from '../../common/wrap/wrap-logger'
 
 export function setTopLevelCallers () {
@@ -38,7 +38,6 @@ export function setTopLevelCallers () {
 }
 
 const replayRunning = {}
-const LOGGING_FAILURE_MESSAGE = 'Failed to wrap: '
 
 export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) {
   if (!forceDrain) registerDrain(agentIdentifier, 'api')
@@ -56,13 +55,15 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
   var spaPrefix = prefix + 'ixn-'
 
   apiInterface.log = function (message, customAttributes = {}, level = LOG_LEVELS.INFO) {
-    if (message.length > MAX_PAYLOAD_SIZE) return warn(`ignored log: > ${MAX_PAYLOAD_SIZE} bytes`, message.slice(0, 25) + '...')
+    if (typeof message !== 'string' || !message) return warn(LOGGING_IGNORED + 'invalid message')
+    if (!isValidLogLevel(level)) return warn(LOGGING_LEVEL_FAILURE_MESSAGE + level, LOG_LEVELS)
+    if (message.length > MAX_PAYLOAD_SIZE) return warn(LOGGING_IGNORED + '> ' + MAX_PAYLOAD_SIZE + ' bytes: ', message.slice(0, 25) + '...')
     bufferLog(instanceEE, message, [customAttributes], level)
   }
 
   apiInterface.wrapLogger = (parent, functionName, level = LOG_LEVELS.INFO) => {
     if (!(typeof parent === 'object' && !!parent && typeof functionName === 'string' && !!functionName)) return warn(LOGGING_FAILURE_MESSAGE + 'invalid parent or function')
-    if (!Object.values(LOG_LEVELS).includes(level)) return warn(LOGGING_FAILURE_MESSAGE + 'invalid log level', LOG_LEVELS)
+    if (!isValidLogLevel(level)) return warn(LOGGING_FAILURE_MESSAGE + LOGGING_LEVEL_FAILURE_MESSAGE + level, LOG_LEVELS)
     wrapLogger(instanceEE, parent, functionName, level)
   }
 

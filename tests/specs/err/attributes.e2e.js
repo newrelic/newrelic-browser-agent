@@ -8,15 +8,15 @@ describe('error attributes with spa loader', () => {
       await browser.url(await browser.testHandle.assetURL('js-error-with-custom-attribute.html'))
         .then(() => browser.waitForAgentLoad())
 
-      const [errorResult] = await Promise.all([
-        browser.testHandle.expectErrors(),
+      const errorExpect = browser.testHandle.expectErrors()
+      await Promise.all([
         browser.execute(function () {
           triggerError()
           triggerError()
           triggerError()
         })
       ])
-
+      const errorResult = await errorExpect
       expect(errorResult.request.body.err.length).toBe(3) // exactly 3 errors in payload
       expect(errorResult.request.body.err[0].custom.customParamKey).toBe(0)
       expect(errorResult.request.body.err[1].custom.customParamKey).toBe(1)
@@ -27,10 +27,11 @@ describe('error attributes with spa loader', () => {
       await browser.url(await browser.testHandle.assetURL('js-error-with-error-before-page-load.html'))
         .then(() => browser.waitForAgentLoad())
 
-      const [errorResult] = await Promise.all([
-        browser.testHandle.expectErrors(),
-        browser.refresh()
-      ])
+      const errorExpect = browser.testHandle.expectErrors()
+      await browser.pause(1000)
+      await browserClick('#trigger').then(() => browser.pause(1000)).then(() => browser.refresh())
+
+      const errorResult = await errorExpect
 
       expect(errorResult.request.body.err.length).toBe(1)
       expect(errorResult.request.body.err[0].custom.customParamKey).toBe(0)
@@ -40,10 +41,11 @@ describe('error attributes with spa loader', () => {
       await browser.url(await browser.testHandle.assetURL('custom-attribute-race-condition.html'))
         .then(() => browser.waitForAgentLoad())
 
-      const [errorResult] = await Promise.all([
-        browser.testHandle.expectErrors(),
-        browser.refresh()
-      ])
+      const errorExpect = browser.testHandle.expectErrors()
+      await browser.pause(1000)
+      await browserClick('#trigger').then(() => browser.pause(1000)).then(() => browser.refresh())
+
+      const errorResult = await errorExpect
 
       expect(errorResult.request.body.err[0].custom.customParamKey).toBe(0)
     })
@@ -52,10 +54,11 @@ describe('error attributes with spa loader', () => {
       await browser.url(await browser.testHandle.assetURL('pre-existing-custom-attribute-race-condition.html'))
         .then(() => browser.waitForAgentLoad())
 
-      const [errorResult] = await Promise.all([
-        browser.testHandle.expectErrors(),
-        browser.refresh()
-      ])
+      const errorExpect = browser.testHandle.expectErrors()
+      await browser.pause(1000)
+      await browserClick('#trigger').then(() => browser.pause(1000)).then(() => browser.refresh())
+
+      const errorResult = await errorExpect
 
       expect(errorResult.request.body.err[0].custom.customParamKey).toBe(0)
       expect(errorResult.request.body.err[0].custom.hi).toBe('mom')
@@ -65,10 +68,11 @@ describe('error attributes with spa loader', () => {
       await browser.url(await browser.testHandle.assetURL('pre-existing-custom-attribute-race-condition-precedence.html'))
         .then(() => browser.waitForAgentLoad())
 
-      const [errorResult] = await Promise.all([
-        browser.testHandle.expectErrors(),
-        browser.refresh()
-      ])
+      const errorExpect = browser.testHandle.expectErrors()
+      await browser.pause(1000)
+      await browserClick('#trigger').then(() => browser.pause(1000)).then(() => browser.refresh())
+
+      const errorResult = await errorExpect
 
       expect(errorResult.request.body.err[0].custom.customParamKey).toBe(0)
     })
@@ -77,18 +81,18 @@ describe('error attributes with spa loader', () => {
       await browser.url(await browser.testHandle.assetURL('js-error-with-error-after-page-load.html'))
         .then(() => browser.waitForAgentLoad())
 
-      const [errorResult] = await Promise.all([
-        browser.testHandle.expectErrors(),
-        browser.execute(function () {
-          // Using setTimeout asks each command to wait for the event loop to pick it up from the message queue rather
-          // than executing direcly as a synchronous frame on the stack. This plays better with our api calls, which
-          // use an event emitter architecture.
-          setTimeout(triggerError, 0)
-          setTimeout(triggerError, 0)
-          setTimeout(triggerError, 0)
-          setTimeout(function () { location.reload() }, 0)
-        })
-      ])
+      const errorExpect = browser.testHandle.expectErrors
+      await browser.execute(function () {
+        // Using setTimeout asks each command to wait for the event loop to pick it up from the message queue rather
+        // than executing direcly as a synchronous frame on the stack. This plays better with our api calls, which
+        // use an event emitter architecture.
+        setTimeout(triggerError, 0)
+        setTimeout(triggerError, 0)
+        setTimeout(triggerError, 0)
+        setTimeout(function () { location.reload() }, 0)
+      })
+
+      const errorResult = await errorExpect
 
       expect(errorResult.request.body.err.length).toBe(1) // exactly 1 error in payload
       expect(errorResult.request.body.err[0].custom.customParamKey).toBe(2)
@@ -99,10 +103,11 @@ describe('error attributes with spa loader', () => {
       await browser.url(await browser.testHandle.assetURL('js-error-noticeerror-with-custom-attributes.html'))
         .then(() => browser.waitForAgentLoad())
 
-      const [errorResult] = await Promise.all([
-        browser.testHandle.expectErrors(),
-        browser.refresh()
-      ])
+      const errorExpect = browser.testHandle.expectErrors()
+      await browser.pause(1000)
+      await browserClick('#trigger').then(() => browser.pause(1000)).then(() => browser.refresh())
+
+      const errorResult = await errorExpect
 
       expect(errorResult.request.body.err.length).toBe(1) // exactly 1 error in payload
       expect(errorResult.request.body.err[0].custom.custom1).toBe('val1')
@@ -115,10 +120,11 @@ describe('error attributes with spa loader', () => {
       await browser.url(await browser.testHandle.assetURL('js-error-set-attribute-before-load.html'))
         .then(() => browser.waitForAgentLoad())
 
-      const [errorResult] = await Promise.all([
-        browser.testHandle.expectErrors(),
-        browser.refresh()
-      ])
+      const errorExpect = browser.testHandle.expectErrors()
+      await browser.pause(1000)
+      await browserClick('#trigger').then(() => browser.pause(1000)).then(() => browser.refresh())
+
+      const errorResult = await errorExpect
 
       expect(errorResult.request.body.err.length).toBe(1) // exactly 1 error in payload
       expect(errorResult.request.body.err[0].custom.customParamKey).toBe(1)
@@ -128,10 +134,11 @@ describe('error attributes with spa loader', () => {
       await browser.url(await browser.testHandle.assetURL('js-error-multiple-set-attribute-before-load.html'))
         .then(() => browser.waitForAgentLoad())
 
-      const [errorResult] = await Promise.all([
-        browser.testHandle.expectErrors(),
-        browser.refresh()
-      ])
+      const errorExpect = browser.testHandle.expectErrors()
+      await browser.pause(1000)
+      await browserClick('#trigger').then(() => browser.pause(1000)).then(() => browser.refresh())
+
+      const errorResult = await errorExpect
 
       expect(errorResult.request.body.err.length).toBe(3) // exactly 3 errors in payload
       expect(errorResult.request.body.err[0].custom.customParamKey).toBe(3)
@@ -145,14 +152,11 @@ describe('error attributes with spa loader', () => {
       await browser.url(await browser.testHandle.assetURL('js-error-set-attribute-on-click.html'))
         .then(() => browser.waitForAgentLoad())
 
-      const [errorResult] = await Promise.all([
-        browser.testHandle.expectErrors(),
-        browserClick('#trigger').then(() => {
-          browser.execute(function () {
-            setTimeout(function () { location.reload() }, 100) // IE needs a little time before the refresh.
-          })
-        })
-      ])
+      const errorExpect = browser.testHandle.expectErrors()
+      await browser.pause(1000)
+      await browserClick('#trigger').then(() => browser.pause(1000)).then(() => browser.refresh())
+
+      const errorResult = await errorExpect
 
       expect(errorResult.request.body.err.length).toBe(1) // exactly 1 error in payload
       expect(errorResult.request.body.err[0].custom.customParamKey).toBe(1)
@@ -162,12 +166,11 @@ describe('error attributes with spa loader', () => {
       await browser.url(await browser.testHandle.assetURL('js-error-multiple-set-attribute-on-click.html'))
         .then(() => browser.waitForAgentLoad())
 
-      const [errorResult] = await Promise.all([
-        browser.testHandle.expectErrors(),
-        browserClick('#trigger').then(() => browser.execute(function () {
-          setTimeout(function () { location.reload() }, 100) // IE needs a little time before the refresh.
-        }))
-      ])
+      const errorExpect = browser.testHandle.expectErrors()
+      await browser.pause(1000)
+      await browserClick('#trigger').then(() => browser.pause(1000)).then(() => browser.refresh())
+
+      const errorResult = await errorExpect
 
       expect(errorResult.request.body.err.length).toBe(3) // exactly 3 errors in payload
       expect(errorResult.request.body.err[0].custom.customParamKey).toBe(3)
@@ -179,13 +182,11 @@ describe('error attributes with spa loader', () => {
       await browser.url(await browser.testHandle.assetURL('js-error-set-attribute-on-discarded.html'))
         .then(() => browser.waitForAgentLoad())
 
-      const [errorResult] = await Promise.all([
-        browser.testHandle.expectErrors(),
-        browserClick('#trigger').then(() => browser.execute(function () {
-          setTimeout(function () { location.reload() }, 100) // IE needs a little time before the refresh.
-        }))
-      ])
+      const errorExpect = browser.testHandle.expectErrors()
+      await browser.pause(1000)
+      await browserClick('#trigger').then(() => browser.pause(1000)).then(() => browser.refresh())
 
+      const errorResult = await errorExpect
       expect(errorResult.request.body.err.length).toBe(1) // exactly 1 error in payload
       expect(errorResult.request.body.err[0].custom.customParamKey).toBe(1)
     })
@@ -196,10 +197,10 @@ describe('error attributes with spa loader', () => {
       await browser.url(await browser.testHandle.assetURL('js-error-global-and-interaction-attributes-on-same-error.html'))
         .then(() => browser.waitForAgentLoad())
 
-      const [errorResult] = await Promise.all([
-        browser.testHandle.expectErrors(),
-        browser.refresh()
-      ])
+      const errorExpect = browser.testHandle.expectErrors()
+      await browser.refresh()
+
+      const errorResult = await errorExpect
 
       expect(errorResult.request.body.err.length).toBe(1) // exactly 1 error in payload
       expect(errorResult.request.body.err[0].custom.globalKey).toBe(1)
@@ -212,10 +213,10 @@ describe('error attributes with spa loader', () => {
       await browser.url(await browser.testHandle.assetURL('js-error-attribute-precedence.html'))
         .then(() => browser.waitForAgentLoad())
 
-      const [errorResult] = await Promise.all([
-        browser.testHandle.expectErrors(),
-        browser.refresh()
-      ])
+      const errorExpect = browser.testHandle.expectErrors()
+      await browser.refresh()
+
+      const errorResult = await errorExpect
 
       expect(errorResult.request.body.err.length).toBe(1) // exactly 1 error in payload
       expect(errorResult.request.body.err[0].custom.localKey).toBe(2) // first error should have value from setAttribute
@@ -225,11 +226,10 @@ describe('error attributes with spa loader', () => {
       await browser.url(await browser.testHandle.assetURL('js-error-noticeerror-precedence.html'))
         .then(() => browser.waitForAgentLoad())
 
-      const [errorResult] = await Promise.all([
-        browser.testHandle.expectErrors(),
-        browser.refresh()
-      ])
+      const errorExpect = browser.testHandle.expectErrors()
+      await browser.refresh()
 
+      const errorResult = await errorExpect
       expect(errorResult.request.body.err.length).toBe(1) // exactly 1 error in payload
       expect(errorResult.request.body.err[0].custom.custom1).toBe('val2') // error should have value from noticeError
     })
@@ -238,13 +238,13 @@ describe('error attributes with spa loader', () => {
       await browser.url(await browser.testHandle.assetURL('js-error-noticeerror-precedence-discarded.html'))
         .then(() => browser.waitForAgentLoad())
 
-      const [errorResult] = await Promise.all([
-        browser.testHandle.expectErrors(),
-        browserClick('#trigger').then(() => browser.execute(function () {
-          setTimeout(function () { location.reload() }, 100) // IE needs a little time before the refresh.
-        }))
-      ])
+      const errorExpect = browser.testHandle.expectErrors()
+      await browser.pause(1000)
+      await browserClick('#trigger').then(() => browser.execute(function () {
+        setTimeout(function () { location.reload() }, 1000) // IE needs a little time before the refresh.
+      }))
 
+      const errorResult = await errorExpect
       expect(errorResult.request.body.err.length).toBe(1) // exactly 1 error in payload
       expect(errorResult.request.body.err[0].custom.custom1).toBe('val1') // error should have value from noticeError
     })

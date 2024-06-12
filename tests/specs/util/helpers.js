@@ -17,15 +17,21 @@ export const RRWEB_EVENT_TYPES = {
 export async function browserClick (selector) {
   let output
   try {
+    console.log('try')
     output = await $(selector).click()
   } catch (err) {
-    // $(...) didnt work, ie can be flaky with this in LT
-    // try again the older way, which is flaky in its own ways
-    // (PVTs sometimes do not get triggered with this method)
-    output = await browser.execute(function () {
-      var elem = document.querySelector(selector)
-      elem.click()
-    })
+    try {
+      console.log('catch', err)
+      // $(...) didnt work, ie can be flaky with this in LT
+      // try again the older way, which is flaky in its own ways
+      // (PVTs sometimes do not get triggered with this method)
+      output = await browser.execute(function (selector) {
+        var elem = document.querySelector(selector)
+        elem.click()
+      }, selector)
+    } catch (e) {
+      console.log('second catch', e)
+    }
   }
   return output
 }

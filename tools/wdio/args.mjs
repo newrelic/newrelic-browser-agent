@@ -85,6 +85,11 @@ const args = yargs(hideBin(process.argv))
   .alias('P', 'polyfills')
   .describe('P', 'inject polyfills and polyfill loaders into test pages')
 
+  .boolean('T')
+  .default('T', false)
+  .alias('T', 'tunnel')
+  .describe('T', 'Launch LambdaTest tunnel for this test run using process.env credentials')
+
   .boolean('D')
   .default('D', false)
   .alias('D', 'sauce-extended-debugging')

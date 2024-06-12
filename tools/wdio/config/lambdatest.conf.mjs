@@ -13,9 +13,9 @@ const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
 /**
  * Generates an array of "desired capabilities" objects for spinning up instances in LambdaTest for each of the
  * available browser-platform combos that match the pattern provided in the command-line args.
- * @see {@link https://saucelabs.com/products/platform-configurator}
+ * @see {@link https://www.lambdatest.com/capabilities-generator/}
  *
- * @returns An object defining platform capabilities to be requested of SauceLabs.
+ * @returns An object defining platform capabilities to be requested of LambdaTest.
  */
 function lambdaTestCapabilities () {
   let supportedDesktop, supportedMobile
@@ -61,14 +61,14 @@ function lambdaTestCapabilities () {
 
 export default function config () {
   return {
-    user: process.env.LT_USERNAME,
-    key: process.env.LT_ACCESS_KEY,
+    user: process.env.LT_USERNAME || process.env.LAMBDA_USERNAME,
+    key: process.env.LT_ACCESS_KEY || process.env.LAMBDA_ACCESS_KEY,
     capabilities: lambdaTestCapabilities(),
     services: [
       [
         'lambdatest',
         {
-          tunnel: true,
+          tunnel: args.tunnel,
           sessionNameFormat: (config, capabilities, suiteTitle, testTitle) => suiteTitle,
           lambdatestOpts: {
             // allowHosts: args.host || 'bam-test-1.nr-local.net',

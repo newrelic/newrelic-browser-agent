@@ -44,7 +44,7 @@ function lambdaTestCapabilities () {
           ...(args.extendedDebugging
             ? {
                 console: true
-                // network: true
+                // network: true -- test failing (bam server doesn't get network request) when enabled; LT investigating
               }
             : null)
         }

@@ -68,7 +68,7 @@ export default function config () {
       [
         'lambdatest',
         {
-          tunnel: true,
+          tunnel: args.tunnel,
           sessionNameFormat: (config, capabilities, suiteTitle, testTitle) => suiteTitle,
           lambdatestOpts: {
             // allowHosts: args.host || 'bam-test-1.nr-local.net',

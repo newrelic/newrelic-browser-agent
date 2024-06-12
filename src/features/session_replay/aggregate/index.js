@@ -282,7 +282,7 @@ export class Aggregate extends AggregateBase {
     }
 
     if (len > MAX_PAYLOAD_SIZE) {
-      this.abort(ABORT_REASONS.TOO_BIG)
+      this.abort(ABORT_REASONS.TOO_BIG, len)
       return
     }
     // TODO -- Gracefully handle the buffer for retries.
@@ -393,9 +393,9 @@ export class Aggregate extends AggregateBase {
   }
 
   /** Abort the feature, once aborted it will not resume */
-  abort (reason = {}) {
+  abort (reason = {}, data) {
     warn(`SR aborted -- ${reason.message}`)
-    handle(SUPPORTABILITY_METRIC_CHANNEL, [`SessionReplay/Abort/${reason.sm}`], undefined, FEATURE_NAMES.metrics, this.ee)
+    handle(SUPPORTABILITY_METRIC_CHANNEL, [`SessionReplay/Abort/${reason.sm}`, data], undefined, FEATURE_NAMES.metrics, this.ee)
     this.blocked = true
     this.mode = MODE.OFF
     this.recorder?.stopRecording?.()

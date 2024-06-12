@@ -14,7 +14,7 @@ export class Log {
   /**
    * @param {number} timestamp - Unix timestamp
    * @param {string} message - message string
-   * @param {string} attributes - other attributes, stringified
+   * @param {object} attributes - other log event attributes
    * @param {enum} level - Log level
    */
   constructor (timestamp, message, attributes, level) {

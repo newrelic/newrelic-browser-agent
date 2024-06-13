@@ -36,9 +36,9 @@ on:
         required: false
         type: string
     secrets:
-      SAUCE_USERNAME:
+      LAMBDA_USERNAME:
         required: true
-      SAUCE_ACCESS_KEY:
+      LAMBDA_ACCESS_KEY:
         required: true
 
 jobs:
@@ -50,8 +50,8 @@ jobs:
       run:
         shell: bash
     env:
-      SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
-      SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
+      LAMBDA_USERNAME: ${{ secrets.LAMBDA_USERNAME }}
+      LAMBDA_ACCESS_KEY: ${{ secrets.LAMBDA_ACCESS_KEY }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -68,7 +68,7 @@ jobs:
       - name: Run WDIO Tests
         run: |
           node --max-old-space-size=8192 ./tools/wdio/bin/cli.js \
-            -s \
+            --lt -T \
             -b '${{ inputs.browser-target }}' \
             --concurrent 10 \
             ${{ runner.debug && '-v -L -D -d' || '' }} \

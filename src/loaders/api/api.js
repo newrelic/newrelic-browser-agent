@@ -82,7 +82,7 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
   /**
    * Attach the key-value attribute onto agent payloads. All browser events in NR will be affected.
    * @param {string} key
-   * @param {string|number|null} value - null indicates the key should be removed or erased
+   * @param {string|number|boolean|null} value - null indicates the key should be removed or erased
    * @param {string} apiName
    * @param {boolean} addToBrowserStorage - whether this attribute should be stored in browser storage API and retrieved by the next agent context or initialization
    * @returns @see apiCall

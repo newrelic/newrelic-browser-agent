@@ -40,8 +40,13 @@ function lambdaTestCapabilities () {
         'LT:Options': {
           tunnel: true,
           w3c: true,
-          console: true,
-          build: `Browser Agent: ${testBrowser.browserName || testBrowser.device_name} ${testBrowser.browserVersion || testBrowser.version} ${testBrowser.platformName} [${revision}]`
+          build: `Browser Agent: ${testBrowser.browserName || testBrowser.device_name} ${testBrowser.browserVersion || testBrowser.version} ${testBrowser.platformName} [${revision}]`,
+          ...(args.extendedDebugging
+            ? {
+                console: true
+                // network: true -- test failing (bam server doesn't get network request) when enabled; LT investigating
+              }
+            : null)
         }
       }
 

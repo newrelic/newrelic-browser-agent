@@ -11,7 +11,6 @@ import { ee as baseEE, contextId } from '../event-emitter/contextual-ee'
 import { EventContext } from '../event-emitter/event-context'
 import { createWrapperWithEmitter as wfn } from './wrap-function'
 
-const contexts = {}
 /**
  * Wraps a supplied function and adds emitter events under the `-wrap-logger-` prefix
  * @param {Object} sharedEE - The shared event emitter on which a new scoped event emitter will be based.
@@ -23,7 +22,6 @@ const contexts = {}
 export function wrapLogger(sharedEE, parent, loggerFn, context) {
   const ee = scopedEE(sharedEE)
   const wrapFn = wfn(ee)
-  const agentIdentifier = sharedEE.debugId
 
   /**
    * This section allows us to pass an over-writable context along through the event emitter
@@ -33,12 +31,11 @@ export function wrapLogger(sharedEE, parent, loggerFn, context) {
   const ctx = new EventContext(contextId)
   ctx.level = context.level
   ctx.customAttributes = context.customAttributes
+  parent[loggerFn].__nrContext = ctx
 
-  contexts[agentIdentifier] ??= { [parent]: new Map() }
-  contexts[agentIdentifier][parent].set(loggerFn, ctx)
-  /** */
+  /** observe calls to <loggerFn> and emit events prefixed with `wrap-logger-` */
+  wrapFn.inPlace(parent, [loggerFn], 'wrap-logger-', () => parent[loggerFn].__nrContext)
 
-  wrapFn.inPlace(parent, [loggerFn], 'wrap-logger-', () => contexts[sharedEE.debugId][parent].get(loggerFn))
   return ee
 }
 

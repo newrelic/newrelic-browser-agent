@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>Logs API Post Load</title>
+    {init} {config} {loader}
+  </head>
+  <body>Logs API Post Load
+    <script>
+      var loggers = {
+        logInfo: function(message, otherArg){}, // other args are ignored
+        logDebug: function(message, otherArg){}, // other args are ignored
+        logTrace: function(message, otherArg){}, // other args are ignored
+        logError: function(message, otherArg){}, // other args are ignored
+        logWarn: function(message, otherArg){}, // other args are ignored
+      }
+      
+      newrelic.wrapLogger(loggers, 'logInfo', {test:1}, 'info')
+      newrelic.wrapLogger(loggers, 'logDebug', {test:1}, 'debug')
+      newrelic.wrapLogger(loggers, 'logTrace', {test:1}, 'trace')
+      newrelic.wrapLogger(loggers, 'logError', {test:1}, 'error')
+      newrelic.wrapLogger(loggers, 'logWarn', {test:1}, 'warn')
+      
+      loggers.logInfo('info', {test: 2}) // other args are ignored
+      loggers.logDebug('debug', {test: 2}) // other args are ignored
+      loggers.logTrace('trace', {test: 2}) // other args are ignored
+      loggers.logError('error', {test: 2}) // other args are ignored
+      loggers.logWarn('warn', {test: 2}) // other args are ignored
+    </script>
+</html>

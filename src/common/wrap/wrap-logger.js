@@ -19,13 +19,23 @@ import { createWrapperWithEmitter as wfn } from './wrap-function'
  * @returns {Object} Scoped event emitter with a debug ID of `logger`.
  */
 // eslint-disable-next-line
-export function wrapLogger(sharedEE, parent, loggerFn, level) {
+export function wrapLogger(sharedEE, parent, loggerFn, context) {
   const ee = scopedEE(sharedEE)
-  var wrapFn = wfn(ee)
+  const wrapFn = wfn(ee)
 
+  /**
+   * This section allows us to pass an over-writable context along through the event emitter
+   * so that subsequent calls to `newrelic.wrapLogger` `WILL NOT` re-wrap (emit twice), but `WILL` overwrite the
+   * context object which contains the custom attributes and log level
+  */
   const ctx = new EventContext(contextId)
-  ctx.level = level
-  wrapFn.inPlace(parent, [loggerFn], 'wrap-logger-', ctx)
+  ctx.level = context.level
+  ctx.customAttributes = context.customAttributes
+  parent[loggerFn].__nrContext = ctx
+
+  /** observe calls to <loggerFn> and emit events prefixed with `wrap-logger-` */
+  wrapFn.inPlace(parent, [loggerFn], 'wrap-logger-', () => parent[loggerFn].__nrContext)
+
   return ee
 }
 

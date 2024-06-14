@@ -43,7 +43,7 @@ const model = () => {
     feature_flags: [],
     harvest: { tooManyRequestsDelay: 60 },
     jserrors: { enabled: true, harvestTimeSeconds: 10, autoStart: true },
-    logging: { enabled: true, harvestTimeSeconds: 30, autoStart: true, level: LOG_LEVELS.INFO },
+    logging: { enabled: true, harvestTimeSeconds: 10, autoStart: true, level: LOG_LEVELS.INFO },
     metrics: { enabled: true, autoStart: true },
     obfuscate: undefined,
     page_action: { enabled: true, harvestTimeSeconds: 30, autoStart: true },

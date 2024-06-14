@@ -7,7 +7,10 @@ import { ee } from '../../../src/common/event-emitter/contextual-ee'
 import { setRuntime } from '../../../src/common/config/config'
 import { Aggregator } from '../../../src/common/aggregate/aggregator'
 import { LOGGING_EVENT_EMITTER_CHANNEL } from '../../../src/features/logging/constants'
+
 import { Log } from '../../../src/features/logging/shared/log'
+import { warn } from '../../../src/common/util/console'
+import * as handleModule from '../../../src/common/event-emitter/handle'
 
 jest.mock('../../../src/common/util/console', () => ({
   warn: jest.fn()
@@ -16,6 +19,7 @@ jest.mock('../../../src/common/util/console', () => ({
 let agentIdentifier, LoggingAggregate, session, timeKeeper
 describe('logging aggregate component tests', () => {
   beforeEach(async () => {
+    jest.spyOn(handleModule, 'handle')
     agentIdentifier = (Math.random() + 1).toString(36).substring(7)
     const { Aggregate } = await import('../../../src/features/logging/aggregate')
     LoggingAggregate = Aggregate
@@ -30,7 +34,17 @@ describe('logging aggregate component tests', () => {
   describe('class setup', () => {
     it('should have expected public properties', () => {
       const loggingAgg = new LoggingAggregate(agentIdentifier, new Aggregator({}))
-      expect(Object.keys(loggingAgg)).toEqual(['agentIdentifier', 'aggregator', 'ee', 'featureName', 'blocked', 'bufferedLogs', 'outgoingLogs'])
+      expect(Object.keys(loggingAgg)).toEqual(expect.arrayContaining([
+        'agentIdentifier',
+        'aggregator',
+        'ee',
+        'featureName',
+        'blocked',
+        'bufferedLogs',
+        'outgoingLogs',
+        'harvestTimeSeconds',
+        'estimatedBytes'
+      ]))
     })
 
     it('should wait for flags', async () => {
@@ -49,6 +63,7 @@ describe('logging aggregate component tests', () => {
       loggingAgg.ee.emit('rumresp', {})
       await wait(1)
       loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', { myAttributes: 1 }, 'error'])
+
       const expectedLog = new Log(
         timeKeeper.convertRelativeTimestamp(1234),
         'test message',
@@ -57,25 +72,23 @@ describe('logging aggregate component tests', () => {
       )
       expect(loggingAgg.bufferedLogs[0]).toEqual(expectedLog)
 
-      expect(loggingAgg.preparePayload()).toEqual({
-        common: {
-          attributes: {
-            entityGuid: 'testEntityGuid',
-            session: {
-              id: session.state.value, // The session ID that we generate and keep across page loads
-              hasReplay: false, // True if a session replay recording is running
-              hasTrace: false, // True if a session trace recording is running
-              pageTraceId: agentIdentifier // The trace ID if a session trace is recording
-            },
-            agent: {
-              appId: 9876, // Application ID from info object
-              standalone: 0, // Whether the app is C+P or APM injected
-              version: expect.any(String), // the browser agent version
-              distribution: expect.any(String) // How is the agent being loaded on the page
+      expect(loggingAgg.prepareHarvest()).toEqual({
+        qs: { browser_monitoring_key: 1234 },
+        body: {
+          common: {
+            attributes: {
+              entityGuid: 'testEntityGuid',
+              session: session.state.value,
+              hasReplay: false,
+              hasTrace: false,
+              ptid: agentIdentifier,
+              appId: 9876,
+              standalone: false,
+              agentVersion: expect.any(String)
             }
-          }
-        },
-        logs: [expectedLog]
+          },
+          logs: [expectedLog]
+        }
       })
     })
 
@@ -90,6 +103,33 @@ describe('logging aggregate component tests', () => {
         { myAttributes: 1 },
         'error'
       ))
+    })
+
+    it('short circuits if log is too big', async () => {
+      const loggingAgg = new LoggingAggregate(agentIdentifier, new Aggregator({}))
+      loggingAgg.ee.emit('rumresp', {})
+      await wait(1)
+      loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'x'.repeat(1024 * 1024), { myAttributes: 1 }, 'error'])
+      expect(handleModule.handle).toHaveBeenCalledWith('storeSupportabilityMetrics', ['Logging/Harvest/Failed/Seen', expect.any(Number)])
+      expect(handleModule.handle).toHaveBeenCalledTimes(1)
+      expect(warn).toHaveBeenCalledWith('ignored log: > 1000000 bytes', 'xxxxxxxxxxxxxxxxxxxxxxxxx...')
+      loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'short message, long attrs', { myAttributes: 'x'.repeat(1024 * 1024) }, 'error'])
+      expect(handleModule.handle).toHaveBeenCalledWith('storeSupportabilityMetrics', ['Logging/Harvest/Failed/Seen', expect.any(Number)])
+      expect(handleModule.handle).toHaveBeenCalledTimes(2)
+      expect(warn).toHaveBeenCalledWith('ignored log: > 1000000 bytes', 'short message, long attrs...')
+    })
+
+    it('can harvest early', async () => {
+      const loggingAgg = new LoggingAggregate(agentIdentifier, new Aggregator({}))
+      loggingAgg.ee.emit('rumresp', {})
+      await wait(1)
+      jest.spyOn(loggingAgg.scheduler, 'runHarvest')
+      loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'x'.repeat(800 * 800), { myAttributes: 1 }, 'error']) // almost too big
+      expect(handleModule.handle).toHaveBeenCalledTimes(0)
+      loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'x'.repeat(800 * 800), { myAttributes: 1 }, 'error']) // almost too big
+      expect(handleModule.handle).toHaveBeenCalledTimes(1)
+      expect(handleModule.handle).toHaveBeenCalledWith('storeSupportabilityMetrics', ['Logging/Harvest/Early/Seen', expect.any(Number)])
+      expect(loggingAgg.scheduler.runHarvest).toHaveBeenCalled()
     })
   })
 })

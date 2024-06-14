@@ -55,6 +55,7 @@ module.exports.defaultInitBlock = {
   session: { expiresMs: 14400000, inactiveMs: 1800000 },
   ssl: false,
   obfuscate: undefined,
+  logging: { enabled: true, harvestTimeSeconds: 5, autoStart: true },
   jserrors: { enabled: true, harvestTimeSeconds: 5, autoStart: true },
   metrics: { enabled: true, autoStart: true },
   page_action: { enabled: true, harvestTimeSeconds: 5, autoStart: true },

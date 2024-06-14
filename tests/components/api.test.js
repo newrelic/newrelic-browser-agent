@@ -10,7 +10,6 @@ import * as asyncApiModule from '../../src/loaders/api/apiAsync'
 import * as windowLoadModule from '../../src/common/window/load'
 import * as handleModule from '../../src/common/event-emitter/handle'
 import { SR_EVENT_EMITTER_TYPES } from '../../src/features/session_replay/constants'
-import { logApiMethods } from '../../src/loaders/api/api-methods'
 
 describe('setAPI', () => {
   let agentId
@@ -41,7 +40,7 @@ describe('setAPI', () => {
   test('should add expected api methods returned object', () => {
     const apiInterface = setAPI(agentId, true)
 
-    expect(Object.keys(apiInterface).length).toEqual(21)
+    expect(Object.keys(apiInterface).length).toEqual(17)
     expect(typeof apiInterface.setErrorHandler).toEqual('function')
     expect(typeof apiInterface.finished).toEqual('function')
     expect(typeof apiInterface.addToTrace).toEqual('function')
@@ -57,11 +56,7 @@ describe('setAPI', () => {
     expect(typeof apiInterface.start).toEqual('function')
     expect(typeof apiInterface[SR_EVENT_EMITTER_TYPES.RECORD]).toEqual('function')
     expect(typeof apiInterface[SR_EVENT_EMITTER_TYPES.PAUSE]).toEqual('function')
-    expect(typeof apiInterface.logError).toEqual('function')
-    expect(typeof apiInterface.logInfo).toEqual('function')
-    expect(typeof apiInterface.logWarn).toEqual('function')
-    expect(typeof apiInterface.logDebug).toEqual('function')
-    expect(typeof apiInterface.logTrace).toEqual('function')
+    expect(typeof apiInterface.log).toEqual('function')
     expect(typeof apiInterface.wrapLogger).toEqual('function')
   })
 
@@ -600,7 +595,7 @@ describe('setAPI', () => {
         const myLoggerPackage = {
           [randomMethodName]: jest.fn()
         }
-        apiInterface.wrapLogger(myLoggerPackage, randomMethodName, 'warn')
+        apiInterface.wrapLogger(myLoggerPackage, randomMethodName, {}, 'warn')
 
         /** emits data for observed fn */
         myLoggerPackage[randomMethodName]('test1')
@@ -663,11 +658,11 @@ describe('setAPI', () => {
       })
     })
 
-    logApiMethods.forEach(logMethod => {
+    ;['error', 'trace', 'info', 'debug', 'info'].forEach(logMethod => {
       describe(logMethod, () => {
         test('should create event emitter event for calls to API', () => {
-          const args = [faker.string.uuid(), { [faker.string.uuid()]: faker.string.uuid() }]
-          apiInterface[logMethod](...args)
+          const args = ['message', { test: 1 }, logMethod]
+          apiInterface.log(...args)
 
           expect(handleModule.handle).toHaveBeenCalledTimes(2)
 
@@ -680,11 +675,57 @@ describe('setAPI', () => {
 
           const secondEmit = handleModule.handle.mock.calls[1]
           expect(secondEmit[0]).toEqual('log')
-          expect(secondEmit[1]).toEqual([expect.any(Number), ...args, logMethod.toLowerCase().replace('log', '')])
+          expect(secondEmit[1]).toEqual([expect.any(Number), args[0], args[1], logMethod.toLowerCase().replace('log', '')])
           expect(secondEmit[2]).toBeUndefined()
           expect(secondEmit[3]).toEqual(FEATURE_NAMES.logging)
           expect(secondEmit[4]).toEqual(instanceEE)
         })
+      })
+
+      test('should short circuit if message is too large', () => {
+        const tooLongMessage = 'x'.repeat(1024 * 1024)
+        apiInterface.log(tooLongMessage, {}, logMethod)
+
+        expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('New Relic: ignored log: > 1000000 bytes', 'x'.repeat(25) + '...'))
+        expect(handleModule.handle).toHaveBeenCalledTimes(0)
+      })
+
+      test('should short circuit if message is falsy', () => {
+        const falsyMessage = ''
+        apiInterface.log(falsyMessage, {}, logMethod)
+
+        expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('New Relic: ignored log: invalid message'))
+        expect(handleModule.handle).toHaveBeenCalledTimes(0)
+      })
+
+      test('should short circuit if message is not a string', () => {
+        ;[1, true, {}, []].forEach((nonStringMessage) => {
+          apiInterface.log(nonStringMessage, {}, logMethod)
+
+          expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('New Relic: ignored log: invalid message'))
+          expect(handleModule.handle).toHaveBeenCalledTimes(0)
+        })
+      })
+
+      test('should short circuit if log level is invalid', () => {
+        apiInterface.log('message', {}, 'BAD_LEVEL')
+
+        expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('New Relic: invalid log level: BAD_LEVEL'))
+        expect(handleModule.handle).toHaveBeenCalledTimes(0)
+      })
+
+      test('should work if log level is valid but wrong case', () => {
+        apiInterface.log('message', {}, 'DeBuG')
+
+        expect(handleModule.handle).toHaveBeenCalledTimes(2)
+
+        const firstEmit = handleModule.handle.mock.calls[0]
+        expect(firstEmit[0]).toEqual(SUPPORTABILITY_METRIC_CHANNEL)
+        expect(firstEmit[1]).toEqual(['API/logging/debug/called'])
+
+        const secondEmit = handleModule.handle.mock.calls[1]
+        expect(secondEmit[0]).toEqual('log')
+        expect(secondEmit[1]).toEqual([expect.any(Number), 'message', {}, 'debug'])
       })
     })
   })

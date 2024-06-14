@@ -1,4 +1,3 @@
-import { stringify } from '../../../common/util/stringify'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME } from '../constants'
 import { bufferLog } from '../shared/utils'
@@ -10,9 +9,9 @@ export class Instrument extends InstrumentBase {
 
     const instanceEE = this.ee
     /** emitted by wrap-logger function */
-    this.ee.on('wrap-logger-end', function handleLog ([message, ...args]) {
-      const { level } = this
-      bufferLog(instanceEE, message, { ...(!!args.length && { customAttributes: stringify(args) }) }, level)
+    this.ee.on('wrap-logger-end', function handleLog ([message]) {
+      const { level, customAttributes } = this
+      bufferLog(instanceEE, message, customAttributes, level)
     })
     this.importAggregator()
   }

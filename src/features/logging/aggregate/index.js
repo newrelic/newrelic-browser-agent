@@ -98,9 +98,4 @@ export class Aggregate extends AggregateBase {
   onHarvestFinished (result) {
     if (!result.retry) this.outgoingLogs = []
   }
-
-  abort () {
-    this.blocked = true
-    this.scheduler.stopTimer()
-  }
 }

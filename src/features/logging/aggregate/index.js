@@ -75,7 +75,7 @@ export class Aggregate extends AggregateBase {
       qs: {
         browser_monitoring_key: this.#agentInfo.licenseKey
       },
-      body: {
+      body: [{
         common: {
           /** Attributes in the `common` section are added to `all` logs generated in the payload */
           attributes: {
@@ -91,7 +91,7 @@ export class Aggregate extends AggregateBase {
         },
         /** logs section contains individual unique log entries */
         logs: this.outgoingLogs
-      }
+      }]
     }
   }
 

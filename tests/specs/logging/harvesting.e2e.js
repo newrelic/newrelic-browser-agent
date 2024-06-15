@@ -9,7 +9,7 @@ describe('logging harvesting', () => {
     const expectedLogs = ['info', 'debug', 'trace', 'error', 'warn'].map(level => ({
       logType: level, message: level, timestamp: expect.any(Number), attributes
     }))
-    const expectedPayload = {
+    const expectedPayload = [{
       common: {
         attributes: {
           appId: 42,
@@ -23,7 +23,7 @@ describe('logging harvesting', () => {
         }
       },
       logs: expectedLogs
-    }
+    }]
 
     ;['api', 'api-wrap-logger'].forEach(type => {
       it(`should harvest expected logs - ${type} pre load`, async () => {

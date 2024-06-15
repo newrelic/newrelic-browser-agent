@@ -74,7 +74,7 @@ describe('logging aggregate component tests', () => {
 
       expect(loggingAgg.prepareHarvest()).toEqual({
         qs: { browser_monitoring_key: 1234 },
-        body: {
+        body: [{
           common: {
             attributes: {
               entityGuid: 'testEntityGuid',
@@ -88,7 +88,7 @@ describe('logging aggregate component tests', () => {
             }
           },
           logs: [expectedLog]
-        }
+        }]
       })
     })
 

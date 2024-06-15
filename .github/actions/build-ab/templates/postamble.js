@@ -56,5 +56,6 @@ try {
 }
 
 {{#if (isEnvironment args.environment 'staging')}}
+if (!!newrelic && !!newrelic.wrapLogger) newrelic.wrapLogger(console, 'log', {wrappedFn: 'console.log'})
 if (!!newrelic && !!newrelic.setApplicationVersion) newrelic.setApplicationVersion( '' + Math.floor(Math.random() * 10) + '.' + Math.floor(Math.random() * 10) + '.' + Math.floor(Math.random() * 10) )
 {{/if}}

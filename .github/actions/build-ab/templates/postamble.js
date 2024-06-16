@@ -56,8 +56,17 @@ try {
 }
 
 {{#if (isEnvironment args.environment 'staging')}}
-if (!!newrelic && !!newrelic.log) newrelic.log('NRBA postamble executed', undefined, 'info')
-  if (!!newrelic && !!newrelic.log) newrelic.log(new Error('NRBA test error'), undefined, 'error')
-if (!!newrelic && !!newrelic.wrapLogger) newrelic.wrapLogger(console, 'log', {wrappedFn: 'console.log'})
+if (!!newrelic && !!newrelic.log) {
+  newrelic.log('NRBA postamble executed', undefined, 'info')
+  newrelic.log(new Error('NRBA test error'), undefined, 'error')
+}
+if (!!newrelic && !!newrelic.wrapLogger) {
+  newrelic.wrapLogger(console, 'log', {wrappedFn: 'console.log'})
+  newrelic.wrapLogger(console, 'error', {wrappedFn: 'console.error'}, 'error')
+  newrelic.wrapLogger(console, 'trace', {wrappedFn: 'console.trace'}, 'trace')
+  newrelic.wrapLogger(console, 'warn', {wrappedFn: 'console.warn'}, 'warn')
+  newrelic.wrapLogger(console, 'info', {wrappedFn: 'console.info'}, 'info')
+  newrelic.wrapLogger(console, 'debug', {wrappedFn: 'console.debug'}, 'debug')
+}
 if (!!newrelic && !!newrelic.setApplicationVersion) newrelic.setApplicationVersion( '' + Math.floor(Math.random() * 10) + '.' + Math.floor(Math.random() * 10) + '.' + Math.floor(Math.random() * 10) )
 {{/if}}

@@ -56,6 +56,8 @@ try {
 }
 
 {{#if (isEnvironment args.environment 'staging')}}
+if (!!newrelic && !!newrelic.log) newrelic.log('NRBA postamble executed', undefined, 'info')
+  if (!!newrelic && !!newrelic.log) newrelic.log(new Error('NRBA test error'), undefined, 'error')
 if (!!newrelic && !!newrelic.wrapLogger) newrelic.wrapLogger(console, 'log', {wrappedFn: 'console.log'})
 if (!!newrelic && !!newrelic.setApplicationVersion) newrelic.setApplicationVersion( '' + Math.floor(Math.random() * 10) + '.' + Math.floor(Math.random() * 10) + '.' + Math.floor(Math.random() * 10) )
 {{/if}}

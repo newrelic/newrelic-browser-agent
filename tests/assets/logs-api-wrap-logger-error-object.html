@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>Logs API Error Object</title>
+    {init} {config} {loader}
+    <script>
+      var loggers = {
+        logErrorObject: function(message, attr){}
+      }
+      
+      newrelic.wrapLogger(loggers, 'logErrorObject', {}, 'error')
+
+      loggers.logErrorObject(new Error('test'))
+    </script>
+  </head>
+  <body>Logs API Error Object</body>
+</html>

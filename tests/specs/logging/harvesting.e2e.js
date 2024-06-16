@@ -64,6 +64,15 @@ describe('logging harvesting', () => {
         expect(JSON.parse(body)).toEqual(expectedPayload) // should not contain the '...xxxxx...' payload in it
       })
     })
+
+    it('should harvest error object logs', async () => {
+      const [{ request: { body } }] = await Promise.all([
+        browser.testHandle.expectLogs(10000),
+        browser.url(await browser.testHandle.assetURL('logs-api-wrap-logger-error-object.html'))
+      ])
+
+      expect(JSON.parse(body)[0].logs[0].message).toEqual('Error: test')
+    })
   })
 
   describe('logging retry harvests', () => {

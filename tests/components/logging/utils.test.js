@@ -19,6 +19,24 @@ describe('logging utils component tests', () => {
         expect(handleModule.handle.mock.calls[currIdx][1]).toEqual(['API/logging/info/called'])
         expect(handleModule.handle.mock.calls[currIdx + 1][0]).toEqual('log')
         expect(handleModule.handle.mock.calls[currIdx + 1][1]).toEqual([expect.any(Number), JSON.stringify(message), {}, 'info'])
+        // method should not cast to '' or '{}'
+        expect(handleModule.handle.mock.calls[currIdx + 1][1][1]).not.toEqual('')
+        expect(handleModule.handle.mock.calls[currIdx + 1][1][1]).not.toEqual('{}')
+        expect(handleModule.handle.mock.calls[currIdx + 1][1][1]).not.toEqual('[object Object]')
+      })
+    })
+    it('should buffer logs with non-stringify-able message', () => {
+      ;[new Error('test'), new SyntaxError('test'), Symbol('test')].forEach((message, idx) => {
+        const currIdx = idx * 2
+        bufferLog(ee.get(agentIdentifier), message)
+        expect(handleModule.handle.mock.calls[currIdx][0]).toEqual('storeSupportabilityMetrics')
+        expect(handleModule.handle.mock.calls[currIdx][1]).toEqual(['API/logging/info/called'])
+        expect(handleModule.handle.mock.calls[currIdx + 1][0]).toEqual('log')
+        expect(handleModule.handle.mock.calls[currIdx + 1][1]).toEqual([expect.any(Number), String(message), {}, 'info'])
+        // method should not cast to '' or '{}'
+        expect(handleModule.handle.mock.calls[currIdx + 1][1][1]).not.toEqual('')
+        expect(handleModule.handle.mock.calls[currIdx + 1][1][1]).not.toEqual('{}')
+        expect(handleModule.handle.mock.calls[currIdx + 1][1][1]).not.toEqual(JSON.stringify(message))
       })
     })
     it('should buffer logs with message only', () => {

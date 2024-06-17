@@ -8,11 +8,11 @@
     <title>Logs API Pre Load</title>
     {init} {config} {loader}
     <script>
-      newrelic.log('info', {test: 1}, 'info')
-      newrelic.log('debug', {test: 1}, 'debug')
-      newrelic.log('trace', {test: 1}, 'trace')
-      newrelic.log('error', {test: 1}, 'error')
-      newrelic.log('warn', {test: 1}, 'warn')
+      newrelic.log("info", { customAttributes: { test: 1 }, level: "info" });
+      newrelic.log("debug", { customAttributes: { test: 1 }, level: "debug" });
+      newrelic.log("trace", { customAttributes: { test: 1 }, level: "trace" });
+      newrelic.log("error", { customAttributes: { test: 1 }, level: "error" });
+      newrelic.log("warn", { customAttributes: { test: 1 }, level: "warn" });
     </script>
   </head>
   <body>Logs API Pre Load</body>

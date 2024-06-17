@@ -186,11 +186,10 @@ export class AgentBase {
    * Capture a log message with an `info` logLevel.
    * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/loginfo/}
    * @param {string} message String to be captured as log message
-   * @param {object=} customAttributes Object of custom attributes, defaults to `{}` if not assigned
-   * @param {'error'|'debug'|'info'|'trace'|'warn'=} level The logLevel to assign to the captured log. Defaults to 'info' if not assigned.
+   * @param {{customAttributes?: object, level?: 'error'|'debug'|'info'|'trace'|'warn'}} options customAttributes defaults to `{}` if not assigned, level defaults to `info` if not assigned.
   */
-  log (message, customAttributes, level) {
-    return this.#callMethod('logInfo', message, customAttributes, level)
+  log (message, options) {
+    return this.#callMethod('logInfo', message, options)
   }
 
   /**
@@ -198,10 +197,9 @@ export class AgentBase {
    * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/wraplogger/}
    * @param {Object} parent The parent object containing the logger method
    * @param {string} functionName The property name of the function in the parent object to be wrapped
-   * @param {object=} customAttributes Object of custom attributes, defaults to `{}` if not assigned
-   * @param {'error'|'debug'|'info'|'trace'|'warn'=} level The logLevel to assign to logs captured from the function. Defaults to 'info' if not assigned.
+   * @param {{customAttributes?: object, level?: 'error'|'debug'|'info'|'trace'|'warn'}} options customAttributes defaults to `{}` if not assigned, level defaults to `info` if not assigned.
   */
-  wrapLogger (parent, functionName, customAttributes, level) {
-    return this.#callMethod('wrapLogger', parent, functionName, customAttributes, level)
+  wrapLogger (parent, functionName, options) {
+    return this.#callMethod('wrapLogger', parent, functionName, options)
   }
 }

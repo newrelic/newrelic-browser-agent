@@ -54,14 +54,16 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
   var prefix = 'api-'
   var spaPrefix = prefix + 'ixn-'
 
-  apiInterface.log = function (message, customAttributes = {}, level = LOG_LEVELS.INFO) {
+  apiInterface.log = function (message, { customAttributes = {}, level = LOG_LEVELS.INFO } = {}) {
+    if (!customAttributes || typeof customAttributes !== 'object') customAttributes = {}
     if (typeof message !== 'string' || !message) return warn(LOGGING_IGNORED + 'invalid message')
     if (!isValidLogLevel(level)) return warn(LOGGING_LEVEL_FAILURE_MESSAGE + level, LOG_LEVELS)
     if (message.length > MAX_PAYLOAD_SIZE) return warn(LOGGING_IGNORED + '> ' + MAX_PAYLOAD_SIZE + ' bytes: ', message.slice(0, 25) + '...')
     bufferLog(instanceEE, message, customAttributes, level.toLowerCase())
   }
 
-  apiInterface.wrapLogger = (parent, functionName, customAttributes = {}, level = LOG_LEVELS.INFO) => {
+  apiInterface.wrapLogger = (parent, functionName, { customAttributes = {}, level = LOG_LEVELS.INFO } = {}) => {
+    if (!customAttributes || typeof customAttributes !== 'object') customAttributes = {}
     if (!(typeof parent === 'object' && !!parent && typeof functionName === 'string' && !!functionName && typeof parent[functionName] === 'function' && typeof customAttributes === 'object')) return warn(LOGGING_FAILURE_MESSAGE + 'invalid argument(s)')
     if (!isValidLogLevel(level)) return warn(LOGGING_FAILURE_MESSAGE + LOGGING_LEVEL_FAILURE_MESSAGE + level, LOG_LEVELS)
     wrapLogger(instanceEE, parent, functionName, { customAttributes, level: level.toLowerCase() })

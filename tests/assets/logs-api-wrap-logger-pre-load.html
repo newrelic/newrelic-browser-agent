@@ -16,11 +16,11 @@
         logWarn: function(message, otherArg){}, // other args are ignored
       }
       
-      newrelic.wrapLogger(loggers, 'logInfo', {test:1}, 'info')
-      newrelic.wrapLogger(loggers, 'logDebug', {test:1}, 'debug')
-      newrelic.wrapLogger(loggers, 'logTrace', {test:1}, 'trace')
-      newrelic.wrapLogger(loggers, 'logError', {test:1}, 'error')
-      newrelic.wrapLogger(loggers, 'logWarn', {test:1}, 'warn')
+      newrelic.wrapLogger(loggers, 'logInfo', { customAttributes: { test: 1 }, level: "info" })
+      newrelic.wrapLogger(loggers, 'logDebug', { customAttributes: { test: 1 }, level: "debug" })
+      newrelic.wrapLogger(loggers, 'logTrace', { customAttributes: { test: 1 }, level: "trace" })
+      newrelic.wrapLogger(loggers, 'logError', { customAttributes: { test: 1 }, level: "error" })
+      newrelic.wrapLogger(loggers, 'logWarn', { customAttributes: { test: 1 }, level: "warn" })
       
       loggers.logInfo('info', {test: 2}) // other args are ignored
       loggers.logDebug('debug', {test: 2}) // other args are ignored

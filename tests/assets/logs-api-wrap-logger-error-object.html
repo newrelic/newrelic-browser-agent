@@ -12,7 +12,7 @@
         logErrorObject: function(message, attr){}
       }
       
-      newrelic.wrapLogger(loggers, 'logErrorObject', {}, 'error')
+      newrelic.wrapLogger(loggers, 'logErrorObject', { level: "error" })
 
       loggers.logErrorObject(new Error('test'))
     </script>

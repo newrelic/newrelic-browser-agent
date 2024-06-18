@@ -595,7 +595,7 @@ describe('setAPI', () => {
         const myLoggerPackage = {
           [randomMethodName]: jest.fn()
         }
-        apiInterface.wrapLogger(myLoggerPackage, randomMethodName, {}, 'warn')
+        apiInterface.wrapLogger(myLoggerPackage, randomMethodName, { level: 'warn' })
 
         /** emits data for observed fn */
         myLoggerPackage[randomMethodName]('test1')
@@ -661,7 +661,7 @@ describe('setAPI', () => {
     ;['error', 'trace', 'info', 'debug', 'info'].forEach(logMethod => {
       describe(logMethod, () => {
         test('should create event emitter event for calls to API', () => {
-          const args = ['message', { test: 1 }, logMethod]
+          const args = ['message', { customAttributes: { test: 1 }, level: logMethod }]
           apiInterface.log(...args)
 
           expect(handleModule.handle).toHaveBeenCalledTimes(2)
@@ -675,58 +675,77 @@ describe('setAPI', () => {
 
           const secondEmit = handleModule.handle.mock.calls[1]
           expect(secondEmit[0]).toEqual('log')
-          expect(secondEmit[1]).toEqual([expect.any(Number), args[0], args[1], logMethod.toLowerCase().replace('log', '')])
+          expect(secondEmit[1]).toEqual([expect.any(Number), args[0], args[1].customAttributes, logMethod.toLowerCase().replace('log', '')])
           expect(secondEmit[2]).toBeUndefined()
           expect(secondEmit[3]).toEqual(FEATURE_NAMES.logging)
           expect(secondEmit[4]).toEqual(instanceEE)
         })
-      })
 
-      test('should short circuit if message is too large', () => {
-        const tooLongMessage = 'x'.repeat(1024 * 1024)
-        apiInterface.log(tooLongMessage, {}, logMethod)
+        test('should short circuit if message is too large', () => {
+          const tooLongMessage = 'x'.repeat(1024 * 1024)
+          apiInterface.log(tooLongMessage, {}, logMethod)
 
-        expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('New Relic: ignored log: > 1000000 bytes', 'x'.repeat(25) + '...'))
-        expect(handleModule.handle).toHaveBeenCalledTimes(0)
-      })
+          expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('New Relic: ignored log: > 1000000 bytes', 'x'.repeat(25) + '...'))
+          expect(handleModule.handle).toHaveBeenCalledTimes(0)
+        })
 
-      test('should short circuit if message is falsy', () => {
-        const falsyMessage = ''
-        apiInterface.log(falsyMessage, {}, logMethod)
-
-        expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('New Relic: ignored log: invalid message'))
-        expect(handleModule.handle).toHaveBeenCalledTimes(0)
-      })
-
-      test('should short circuit if message is not a string', () => {
-        ;[1, true, {}, []].forEach((nonStringMessage) => {
-          apiInterface.log(nonStringMessage, {}, logMethod)
+        test('should short circuit if message is falsy', () => {
+          const falsyMessage = ''
+          apiInterface.log(falsyMessage, {}, logMethod)
 
           expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('New Relic: ignored log: invalid message'))
           expect(handleModule.handle).toHaveBeenCalledTimes(0)
         })
+
+        test('should short circuit if message is not a string', () => {
+          ;[1, true, {}, []].forEach((nonStringMessage) => {
+            apiInterface.log(nonStringMessage, {}, logMethod)
+
+            expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('New Relic: ignored log: invalid message'))
+            expect(handleModule.handle).toHaveBeenCalledTimes(0)
+          })
+        })
       })
+    })
 
-      test('should short circuit if log level is invalid', () => {
-        apiInterface.log('message', {}, 'BAD_LEVEL')
+    test('should short circuit if log level is invalid', () => {
+      apiInterface.log('message', { level: 'BAD_LEVEL' })
 
-        expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('New Relic: invalid log level: BAD_LEVEL'))
-        expect(handleModule.handle).toHaveBeenCalledTimes(0)
-      })
+      expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('New Relic: invalid log level: BAD_LEVEL'))
+      expect(handleModule.handle).toHaveBeenCalledTimes(0)
+    })
 
-      test('should work if log level is valid but wrong case', () => {
-        apiInterface.log('message', {}, 'DeBuG')
-
-        expect(handleModule.handle).toHaveBeenCalledTimes(2)
-
+    test('invalid custom attribute types', () => {
+      ;[1, true, [], Symbol('test')].forEach(customAttributes => {
+        apiInterface.log('message', { customAttributes })
         const firstEmit = handleModule.handle.mock.calls[0]
         expect(firstEmit[0]).toEqual(SUPPORTABILITY_METRIC_CHANNEL)
-        expect(firstEmit[1]).toEqual(['API/logging/debug/called'])
+        expect(firstEmit[1]).toEqual(['API/logging/info/called'])
+        expect(firstEmit[2]).toBeUndefined()
+        expect(firstEmit[3]).toEqual(FEATURE_NAMES.metrics)
+        expect(firstEmit[4]).toEqual(instanceEE)
 
         const secondEmit = handleModule.handle.mock.calls[1]
         expect(secondEmit[0]).toEqual('log')
-        expect(secondEmit[1]).toEqual([expect.any(Number), 'message', {}, 'debug'])
+        expect(secondEmit[1]).toEqual([expect.any(Number), 'message', {}, 'info'])
+        expect(secondEmit[2]).toBeUndefined()
+        expect(secondEmit[3]).toEqual(FEATURE_NAMES.logging)
+        expect(secondEmit[4]).toEqual(instanceEE)
       })
+    })
+
+    test('should work if log level is valid but wrong case', () => {
+      apiInterface.log('message', { customAttributes: {}, level: 'DeBuG' })
+
+      expect(handleModule.handle).toHaveBeenCalledTimes(2)
+
+      const firstEmit = handleModule.handle.mock.calls[0]
+      expect(firstEmit[0]).toEqual(SUPPORTABILITY_METRIC_CHANNEL)
+      expect(firstEmit[1]).toEqual(['API/logging/debug/called'])
+
+      const secondEmit = handleModule.handle.mock.calls[1]
+      expect(secondEmit[0]).toEqual('log')
+      expect(secondEmit[1]).toEqual([expect.any(Number), 'message', {}, 'debug'])
     })
   })
 

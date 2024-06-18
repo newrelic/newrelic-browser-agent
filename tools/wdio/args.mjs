@@ -98,9 +98,9 @@ const args = yargs(hideBin(process.argv))
   .default('webview', false)
   .describe('webview', 'Run webview tests')
 
-  .boolean('lt')
-  .default('lt', false)
-  .describe('lt', 'Run with lambda test')
+  .boolean('sl')
+  .default('sl', false)
+  .describe('sl', 'Run with sauce labs')
 
   .middleware(argv => {
     if (argv.webview && (!argv.browsers || argv.browsers === 'chrome@latest')) {

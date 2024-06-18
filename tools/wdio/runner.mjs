@@ -23,7 +23,7 @@ const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
 const wdioConfig = deepmerge(
   baseConfig(),
   specsConfig(),
-  args.lt ? lambdaTestConfig() : sauceConfig()
+  args.sl ? sauceConfig() : lambdaTestConfig()
 )
 const configFilePath = path.join(
   path.resolve(__dirname, '../../node_modules/.cache/wdio'),

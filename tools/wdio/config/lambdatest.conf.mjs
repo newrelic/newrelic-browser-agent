@@ -38,7 +38,6 @@ function lambdaTestCapabilities () {
     .map(testBrowser => {
       const capabilities = {
         'LT:Options': {
-          tunnel: true,
           w3c: true,
           build: `Browser Agent: ${testBrowser.browserName || testBrowser.device_name} ${testBrowser.browserVersion || testBrowser.version} ${testBrowser.platformName} [${revision}]`,
           ...(args.extendedDebugging

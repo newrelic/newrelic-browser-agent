@@ -57,6 +57,16 @@ function lambdaTestCapabilities () {
       } else {
         capabilities['LT:Options'].deviceName = testBrowser.device_name
         capabilities['LT:Options'].platformVersion = testBrowser.version
+        if (args.webview) { // btw, LT has different capabilities array for mobile app automation!
+          // Note: Since their available devices for app differs, we'll let default pick apply.
+          // Caution: LT does not support android@9 for app; we should only be testing webview for latest ios & android.
+          capabilities['LT:Options'].deviceName = '.*'
+          capabilities['LT:Options'].isRealMobile = false
+          // Note: LT expires app every 60 days, so the .zip/.apk needs to be re-uploaded then and these url updated to point to new url.
+          // Important: ensure the uploaded apps are set to "team" visibility.
+          if (parsedBrowserName === 'android') capabilities['LT:Options'].app = 'lt://APP10160352241718733717577609'
+          else /* === 'ios' */ capabilities['LT:Options'].app = 'lt://APP10160352241718734672953481'
+        }
       }
       capabilities['LT:Options'].platformName = testBrowser.platformName
       return capabilities
@@ -64,7 +74,7 @@ function lambdaTestCapabilities () {
 }
 
 export default function config () {
-  return {
+  const config = {
     user: process.env.LT_USERNAME || process.env.LAMBDA_USERNAME,
     key: process.env.LT_ACCESS_KEY || process.env.LAMBDA_ACCESS_KEY,
     capabilities: lambdaTestCapabilities(),
@@ -82,4 +92,9 @@ export default function config () {
       ]
     ]
   }
+  if (args.webview) { // LT app automation requires these to be specified
+    config.hostname = 'mobile-hub.lambdatest.com'
+    config.path = '/wd/hub'
+  }
+  return config
 }

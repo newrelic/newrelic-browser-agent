@@ -35,6 +35,11 @@ on:
         description: 'Github branch ref to checkout and run tests on'
         required: false
         type: string
+      concurrency:
+        description: 'The number of test runner threads to spawn for a run'
+        required: false
+        type: number
+        default: 10
     secrets:
       LAMBDA_USERNAME:
         required: true
@@ -70,7 +75,7 @@ jobs:
           node --max-old-space-size=8192 ./tools/wdio/bin/cli.js \
             -T \
             -b '${{ inputs.browser-target }}' \
-            --concurrent 10 \
+            --concurrent ${{ inputs.concurrency }} \
             ${{ runner.debug && '-v -L -D -d' || '' }} \
             ${{ inputs.coverage && '--coverage' || '' }} \
             ${{ inputs.additional-flags || '' }}

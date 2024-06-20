@@ -122,20 +122,12 @@ npm run build:all
 
 ### Running the test suite
 
-To run all tests on a specific browser/platform, you can either run on Saucelabs or point the testing framework to your own Selenium server.
-
-To run tests on Saucelabs, you will need your own Saucelabs account. Export your Saucelabs username and access key in these environment variables - SAUCE_USERNAME, SAUCE_ACCESS_KEY. After that you can use the following command to run tests on a specific browser. Note that the browser/platform needs to be defined in this [matrix file](tools/jil/util/browsers.json).
+To run tests on LambdaTest, you will need your own LambdaTest account. Export your LambdaTest username and access key in these environment variables - LT_USERNAME, LT_ACCESS_KEY. After that you can use the following command to run tests on a specific browser. Note that the browser/platform needs to be defined in this [matrix file](tools/jil/util/browsers.json).
 
 Here is an example of running all tests on the latest version of Chrome.
 
 ```
-npm run test -- -s -b chrome@latest
-```
-
-Here is an example of using your own Selenium server:
-
-```
-npm run test -- -b chrome@latest --selenium-server=localhost:4444
+npm run wdio -- -T -b chrome@latest
 ```
 
 ### Supported Browsers

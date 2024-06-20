@@ -4,37 +4,13 @@ We utilize [WDIO](https://webdriver.io/) for the purposes of writing integration
 
 **Note** the team is in the process of migrating our integration tests from an in-house tool called JIL to WDIO. This doc will cover WDIO only.
 
-## Running Tests - SauceLabs
+## Running Tests - LambdaTest
 
-To run the integration tests with SauceLabs, you must have two environment variables set: `SAUCE_USERNAME` and `SAUCE_ACCESS_KEY`. You can find more information about these variables [here](https://docs.saucelabs.com/basics/environment-variables/).
+To run the integration tests with SauceLabs, you must have two environment variables set: `LT_USERNAME` and `LT_ACCESS_KEY`. You can find more information about these variables [here](https://www.lambdatest.com/support/docs/using-environment-variables-for-authentication-credentials/).
 
-The integration tests will also need to be able to communicate to a mock BAM (data collection) server running on the local machine. This is accomplished with a SauceLabs [tunnel](https://docs.saucelabs.com/secure-connections/sauce-connect/setup-configuration/basic-setup/). The tunnel can be started separately from the integration tests allowing multiple test runs to use the same tunnel and speeding up the test execution. To start the tunnel from the project, make sure all the project dependencies are installed and execute `npm run sauce:connect`.
+The integration tests will also need to be able to communicate to a mock BAM (data collection) server running on the local machine. This is accomplished with a UnderPass [tunnel](https://www.lambdatest.com/support/docs/underpass-tunnel-application/). The tunnel can be started separately from the integration tests allowing multiple test runs to use the same tunnel and speeding up the test execution.
 
-To run all the integration tests against the latest version of Chrome in SauceLabs, execute `npm run wdio`. To run just a specific test, you can pass the path of the test file to the test command like so: `npm run wdio -- tests/specs/test.e2e.js`. Additional terminal options are listed below.
-
-## Running Tests - Selenium
-
-If you do not have access to a SauceLabs account, you can execute the integration tests against a local standalone instance of Selenium or a Selenium Grid you have access to. The below instructions will cover just a local Selenium instance using Docker. This will require that you have Docker installed and can get access to the Docker Hub for community images.
-
-To get started, execute one of the below commands to get a Selenium instance running. Be sure to use the command that matches your local CPU architecture. The x86 images will not work on a Mac with an ARM processor.
-
-```bash
-# Mac Silicon (ARM) - Chrome
-docker run -d -it -p 4444:4444 -p 7900:7900 --shm-size 2g --add-host=bam-test-1.nr-local.net:host-gateway seleniarm/standalone-chromium:latest
-# Mac Silicon (ARM) - Firefox
-docker run -d -it -p 4444:4444 -p 7900:7900 --shm-size 2g --add-host=bam-test-1.nr-local.net:host-gateway seleniarm/standalone-firefox:latest
-
-# Intel Silicon (x86) - Chrome
-docker run -d -it -p 4444:4444 -p 7900:7900 --shm-size 2g --add-host=bam-test-1.nr-local.net:host-gateway selenium/standalone-chromium:latest
-# Intel Silicon (x86) - Firefox
-docker run -d -it -p 4444:4444 -p 7900:7900 --shm-size 2g --add-host=bam-test-1.nr-local.net:host-gateway selenium/standalone-firefox:latest
-```
-
-**Links**: [x86](https://github.com/SeleniumHQ/docker-selenium) || [ARM](https://github.com/seleniumhq-community/docker-seleniarm)
-
-Once the local Selenium instance is running, you can execute `npm run wdio -- --selenium -b 'chrome'` or `npm run wdio -- --selenium -b 'firefox'` to start running the tests. If you would like to watch the browser as the tests execute, access the Selenium VNC server [here](http://localhost:7900/?autoconnect=1&resize=scale&password=secret).
-
-To run the tests against a remote Selenium instance, such as a Selenium Grid service, use the `--selenium-host <host>` and `--selenium-port <port>` arguments.
+To run all the integration tests against the latest version of Chrome in LambdaTest, execute `npm run wdio`. To run just a specific test, you can pass the path of the test file to the test command like so: `npm run wdio -- tests/specs/test.e2e.js`. Additional terminal options are listed below.
 
 ## WDIO CLI
 

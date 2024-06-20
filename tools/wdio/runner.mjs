@@ -8,9 +8,7 @@ import { Launcher } from '@wdio/cli'
 import { serialize } from '../shared/serializer.js'
 import baseConfig from './config/base.conf.mjs'
 import specsConfig from './config/specs.conf.mjs'
-import sauceConfig from './config/sauce.conf.mjs'
 import lambdaTestConfig from './config/lambdatest.conf.mjs'
-import args from './args.mjs'
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
 
 /**
@@ -23,7 +21,7 @@ const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
 const wdioConfig = deepmerge(
   baseConfig(),
   specsConfig(),
-  args.sl ? sauceConfig() : lambdaTestConfig()
+  lambdaTestConfig()
 )
 const configFilePath = path.join(
   path.resolve(__dirname, '../../node_modules/.cache/wdio'),

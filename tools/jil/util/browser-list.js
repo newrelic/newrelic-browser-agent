@@ -3,14 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const browsersPolyfill = require('../../browsers-lists/browsers-polyfill.json')
-const browsersSupported = require('../../browsers-lists/browsers-supported.json')
+const browsersPolyfill = require('../../browsers-lists/lt-polyfill.json')
+const browsersDesktopSupported = require('../../browsers-lists/lt-desktop-supported.json')
+const browsersMobileSupported = require('../../browsers-lists/lt-mobile-supported.json')
 const semver = require('semver')
 const BrowserMatcher = require('./browser-matcher')
 var config = require('../runner/args')
 
 // list of pre-defined browsers = require(test matrix
-var allowedBrowsers = config.polyfills ? browsersPolyfill : browsersSupported
+var allowedBrowsers = config.polyfills
+  ? browsersPolyfill
+  : { ...browsersSupported, ...browsersMobileSupported };
 const latestVersStringRe = /latest(?:-[1-9])?$/
 
 if (config.polyfills) {

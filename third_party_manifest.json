@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "Fri Jun 21 2024 09:36:27 GMT-0500 (Central Daylight Time)",
+  "lastUpdated": "Fri Jun 21 2024 09:58:59 GMT-0500 (Central Daylight Time)",
   "projectName": "New Relic Browser Agent",
   "projectUrl": "https://github.com/newrelic/newrelic-browser-agent",
   "includeOptDeps": true,
@@ -846,20 +846,6 @@
       "licenseFile": "node_modules/webpack-cli/LICENSE",
       "licenseUrl": "https://github.com/webpack/webpack-cli/blob/v5.1.4/LICENSE",
       "licenseTextSource": "file"
-    },
-    "webpack-stream@7.0.0": {
-      "name": "webpack-stream",
-      "version": "7.0.0",
-      "range": "^7.0.0",
-      "licenses": "MIT",
-      "repoUrl": "https://github.com/shama/webpack-stream",
-      "versionedRepoUrl": "https://github.com/shama/webpack-stream/tree/v7.0.0",
-      "licenseFile": "node_modules/webpack-stream/readme.md",
-      "licenseUrl": "https://github.com/shama/webpack-stream/blob/v7.0.0/readme.md",
-      "licenseTextSource": "spdx",
-      "publisher": "Kyle Robinson Young",
-      "email": "kyle@dontkry.com",
-      "url": "http://dontkry.com"
     },
     "webpack@5.92.1": {
       "name": "webpack",

@@ -8,11 +8,12 @@ describe.withBrowsersMatching(notIE)('Content Security Policy', () => {
 
   it('should support a nonce script element', async () => {
     const nonce = faker.string.uuid()
-    const rumExpect = await browser.testHandle.expectRum()
-    await browser.url(await browser.testHandle.assetURL('instrumented.html', { nonce }))
-      .then(() => browser.waitForAgentLoad())
+    await Promise.all([
+      browser.testHandle.expectRum(),
+      browser.url(await browser.testHandle.assetURL('instrumented.html', { nonce }))
+        .then(() => browser.waitForAgentLoad())
+    ])
 
-    await rumExpect.resolves()
     const foundNonces = await browser.execute(function () {
       var scriptTags = document.querySelectorAll('script')
       var nonceValues = []

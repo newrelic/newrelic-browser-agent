@@ -38,6 +38,7 @@ function lambdaTestCapabilities () {
     .map(testBrowser => {
       const capabilities = {
         'LT:Options': {
+          tunnel: true, // this is always needed as true to prevent conn refusal errors in tests regardless if using underpass (app) tunnel or new on-the-fly tunnel
           w3c: true,
           build: `Browser Agent: ${testBrowser.browserName || testBrowser.device_name} ${testBrowser.browserVersion || testBrowser.version} ${testBrowser.platformName} [${revision}]`,
           ...(args.extendedDebugging

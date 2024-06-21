@@ -7,7 +7,7 @@ const fp = require('fastify-plugin')
 module.exports = fp(async function (fastify) {
   fastify.addHook('onSend', (request, reply, response, done) => {
     if (!request.url.startsWith('/debug') && !request.url.startsWith('/health')) {
-      fastify.testServerLogger.logNetworkRequest(request, reply)
+      fastify.testServerLogger.logNetworkRequest(fastify, request, reply)
     }
 
     done(null, response)

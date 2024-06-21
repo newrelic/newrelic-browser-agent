@@ -2,7 +2,6 @@ const path = require('path')
 const { Transform } = require('stream')
 const { paths } = require('../../constants')
 const fse = require('fs-extra')
-const { processScript } = require('../browser-scripts/browser-scripts-transform')
 
 /**
  * Transforms requests for HTML files that contain the \{polyfills\} string with the
@@ -23,9 +22,6 @@ module.exports = function (request, reply, testServer) {
           polyfills = await fse.readFile(path.resolve(paths.rootDir, 'build/nr-polyfills.min.js'))
         } catch (err) {
           console.log(err)
-          polyfills = await processScript(
-            path.resolve(paths.rootDir, 'src/cdn/polyfills.js')
-          )
         }
         done(
           null,

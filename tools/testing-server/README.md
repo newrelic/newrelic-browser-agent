@@ -4,7 +4,7 @@ This directory contains the code to start the servers used for local testing of 
 
 ## Usage
 
-The servers are currently started and used via the JIL CLI. The below commands can be used to start the server.
+The below commands can be used to start the server.
 
 ```bash
 # To start the test server in standalone mode
@@ -13,9 +13,7 @@ npm run test-server
 
 ### Asset Server
 
-The asset server is used to serve the test assets and JIL unit tests from `tests/assets` and `tests/browser`. Additionally, the server will serve static files from the `build/` directory. By default, when started, the server is accessible via http://bam-test-1.nr-local.net:3333
-
-For JIL unit tests, the asset server uses [browserify](https://www.npmjs.com/package/browserify) and [babelify](https://www.npmjs.com/package/babelify) to compile the test and source code on the fly when requested.
+The asset server is used to serve the test assets and JIL unit tests from `tests/assets`. Additionally, the server will serve static files from the `build/` directory. By default, when started, the server is accessible via http://bam-test-1.nr-local.net:3333
 
 The asset server also contains a number of API routes that are used in JIL test cases. See `testRoutes` in `src/asset-server.js`.
 
@@ -25,7 +23,7 @@ The BAM server contains routes for all the ingest endpoints the agent sends coll
 
 ## Test Handles
 
-The test server exposes methods to create and destroy test handles. Test handles allow integration tests to create scheduled replies for the asset or BAM server as well as "expect"-ing XHR calls to those servers. JIL automatically takes care of creating a test handle for each test, passing that handle to the test, and destroying the test handle once the test completes. Each test handle is uniquely identified by a `testId` that is also used by the agent as the license key.
+The test server exposes methods to create and destroy test handles. Test handles allow integration tests to create scheduled replies for the asset or BAM server as well as "expect"-ing XHR calls to those servers. WDIO automatically takes care of creating a test handle for each test, passing that handle to the test, and destroying the test handle once the test completes. Each test handle is uniquely identified by a `testId` that is also used by the agent as the license key.
 
 Each of the servers, upon receiving a request, will attempt to find a test handle for the request by extracting the `testId` from the query parameters or from the URL via regex. If a test handle is found, the request will be handed to the test handle for processing before the server is allowed to process the request. If the test handle has any pending replies or expects that match the request, they will be registered to the request for the server to consume once it processes the request.
 
@@ -110,7 +108,7 @@ The agent inject plugin utilizes the `onSend` hook of fastify to modify outgoing
 
 #### [Loader Transform](./plugins/agent-injector/loader-transform.js) 
 
-This stream transform looks for `{loader}` in the HTML response, determines which loader to inject, and injects a script tag containing the compiled loader. The loader is pulled from the `/build/` directory and requires that the project be built before the server is started. The determination of the loader used defaults to what is provided to the JIL CLI `-l | --loader` flag (default of `full`). A query parameter can be used (`?loader=spa`) when requesting an HTML asset to override the loader. The polyfill loader can be used in two ways: through the JIL CLI `-P true` flag or by setting the query parameter to a polyfill loader `?loader=spa-polyfill`.
+This stream transform looks for `{loader}` in the HTML response, determines which loader to inject, and injects a script tag containing the compiled loader. The loader is pulled from the `/build/` directory and requires that the project be built before the server is started. The determination of the loader used defaults to what is provided to the WDIO CLI `-l | --loader` flag (default of `spa`). A query parameter can be used (`?loader=spa`) when requesting an HTML asset to override the loader. The polyfill loader can be used in two ways: through the WDIO CLI `-P` flag or by setting the query parameter to a polyfill loader `?loader=spa-polyfill`.
 
 #### [Config Transform](./plugins/agent-injector/config-transform.js)
 
@@ -130,7 +128,7 @@ This stream transform looks for `{script}` in the HTML response and replaces it 
 
 #### [Polyfills Transform](./plugins/agent-injector/polyfills-transform.js)
 
-This stream transform looks for `{polyfills}` in the HTML response and replaces it with a script tag containing the agent polyfills. This is only done when the JIL CLI `-P` flag is used to enable polyfills. This is useful for JIL unit tests where the full agent, including polyfills, is not loaded but polyfills are still needed for unit testing IE11. The transform uses browserify and babelify to transpile the `cdn/agent-loader/polyfills/polyfills.js` file.
+This stream transform looks for `{polyfills}` in the HTML response and replaces it with a script tag containing the agent polyfills. This is only done when the WDIO CLI `-P` flag is used to enable polyfills. The transform uses browserify and babelify to transpile the `cdn/agent-loader/polyfills/polyfills.js` file.
 
 ### BAM Parser
 

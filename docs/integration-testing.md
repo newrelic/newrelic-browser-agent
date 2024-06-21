@@ -2,8 +2,6 @@
 
 We utilize [WDIO](https://webdriver.io/) for the purposes of writing integration tests. Integration tests are meant to test a loaded and running agent within a webpage. Typically, we are testing certain user interactions or customer code execution patterns to see how the agent responds and what it reports to a mock BAM server. This documentation will go into details on how the team expects these tests to be written, best practices, and general DOs and DON'Ts.
 
-**Note** the team is in the process of migrating our integration tests from an in-house tool called JIL to WDIO. This doc will cover WDIO only.
-
 ## Running Tests - LambdaTest
 
 To run the integration tests with SauceLabs, you must have two environment variables set: `LT_USERNAME` and `LT_ACCESS_KEY`. You can find more information about these variables [here](https://www.lambdatest.com/support/docs/using-environment-variables-for-authentication-credentials/).

@@ -34,7 +34,7 @@ for more details).
 All changes to the Agent should include test coverage, and each PR must pass
 all tests against all browsers in LambdaTest locally before being merged.
 
-We run tests on a variety of browsers and platforms to ensure that the agent runs safely for all users. We use LambdaTest, and the test matrix is defined [here](tools/jil/util/browsers.json).
+We run tests on a variety of browsers and platforms to ensure that the agent runs safely for all users. We use LambdaTest.
 
 When you first submit your PR, the tests will not be run automatically. After we review the PR, we will add a label that will trigger the full-matrix testing.
 

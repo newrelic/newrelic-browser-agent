@@ -43,17 +43,11 @@ code, the source code can be found at [https://github.com/newrelic/newrelic-brow
 * [@wdio/local-runner](#wdiolocal-runner)
 * [@wdio/logger](#wdiologger)
 * [@wdio/mocha-framework](#wdiomocha-framework)
-* [@wdio/sauce-service](#wdiosauce-service)
 * [@wdio/spec-reporter](#wdiospec-reporter)
 * [babel-jest](#babel-jest)
 * [babel-loader](#babel-loader)
 * [babel-plugin-transform-inline-environment-variables](#babel-plugin-transform-inline-environment-variables)
-* [babelify](#babelify)
-* [browserify](#browserify)
-* [charm](#charm)
-* [concat-stream](#concat-stream)
 * [deepmerge-ts](#deepmerge-ts)
-* [defined](#defined)
 * [dotenv-webpack](#dotenv-webpack)
 * [eslint-config-standard](#eslint-config-standard)
 * [eslint-plugin-import](#eslint-plugin-import)
@@ -65,7 +59,6 @@ code, the source code can be found at [https://github.com/newrelic/newrelic-brow
 * [fastify](#fastify)
 * [form-data](#form-data)
 * [fs-extra](#fs-extra)
-* [function-bind](#function-bind)
 * [glob](#glob)
 * [html-webpack-plugin](#html-webpack-plugin)
 * [husky](#husky)
@@ -77,29 +70,19 @@ code, the source code can be found at [https://github.com/newrelic/newrelic-brow
 * [jest-extended](#jest-extended)
 * [jest](#jest)
 * [jung](#jung)
-* [just-debounce](#just-debounce)
 * [node-fetch](#node-fetch)
 * [npm-run-all](#npm-run-all)
-* [object-inspect](#object-inspect)
-* [path-browserify](#path-browserify)
-* [preprocessify](#preprocessify)
-* [process](#process)
-* [saucelabs](#saucelabs)
 * [semver](#semver)
 * [serialize-anything](#serialize-anything)
-* [stream-browserify](#stream-browserify)
-* [tap-parser](#tap-parser)
-* [tape](#tape)
-* [through](#through)
+* [terser-webpack-plugin](#terser-webpack-plugin)
 * [tsd](#tsd)
 * [typescript](#typescript)
 * [util](#util)
 * [uuid](#uuid)
 * [wait-on](#wait-on)
-* [wd](#wd)
+* [wdio-lambdatest-service](#wdio-lambdatest-service)
 * [webpack-bundle-analyzer](#webpack-bundle-analyzer)
 * [webpack-cli](#webpack-cli)
-* [webpack-stream](#webpack-stream)
 * [webpack](#webpack)
 * [yargs](#yargs)
 
@@ -111,10 +94,10 @@ code, the source code can be found at [https://github.com/newrelic/newrelic-brow
 
 ### core-js
 
-This product includes source derived from [core-js](https://github.com/zloirock/core-js) ([v3.35.0](https://github.com/zloirock/core-js/tree/v3.35.0)), distributed under the [MIT License](https://github.com/zloirock/core-js/blob/v3.35.0/LICENSE):
+This product includes source derived from [core-js](https://github.com/zloirock/core-js) ([v3.37.1](https://github.com/zloirock/core-js/tree/v3.37.1)), distributed under the [MIT License](https://github.com/zloirock/core-js/blob/v3.37.1/LICENSE):
 
 ```
-Copyright (c) 2014-2023 Denis Pushkarev
+Copyright (c) 2014-2024 Denis Pushkarev
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -182,7 +165,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ### web-vitals
 
-This product includes source derived from [web-vitals](https://github.com/GoogleChrome/web-vitals) ([v3.5.1](https://github.com/GoogleChrome/web-vitals/tree/v3.5.1)), distributed under the [Apache-2.0 License](https://github.com/GoogleChrome/web-vitals/blob/v3.5.1/LICENSE):
+This product includes source derived from [web-vitals](https://github.com/GoogleChrome/web-vitals) ([v3.5.2](https://github.com/GoogleChrome/web-vitals/tree/v3.5.2)), distributed under the [Apache-2.0 License](https://github.com/GoogleChrome/web-vitals/blob/v3.5.2/LICENSE):
 
 ```
 
@@ -395,7 +378,7 @@ This product includes source derived from [web-vitals](https://github.com/Google
 
 ### @babel/cli
 
-This product includes source derived from [@babel/cli](https://github.com/babel/babel) ([v7.23.4](https://github.com/babel/babel/tree/v7.23.4)), distributed under the [MIT License](https://github.com/babel/babel/blob/v7.23.4/LICENSE):
+This product includes source derived from [@babel/cli](https://github.com/babel/babel) ([v7.24.7](https://github.com/babel/babel/tree/v7.24.7)), distributed under the [MIT License](https://github.com/babel/babel/blob/v7.24.7/LICENSE):
 
 ```
 MIT License
@@ -425,7 +408,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### @babel/core
 
-This product includes source derived from [@babel/core](https://github.com/babel/babel) ([v7.23.7](https://github.com/babel/babel/tree/v7.23.7)), distributed under the [MIT License](https://github.com/babel/babel/blob/v7.23.7/LICENSE):
+This product includes source derived from [@babel/core](https://github.com/babel/babel) ([v7.24.7](https://github.com/babel/babel/tree/v7.24.7)), distributed under the [MIT License](https://github.com/babel/babel/blob/v7.24.7/LICENSE):
 
 ```
 MIT License
@@ -455,7 +438,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### @babel/eslint-parser
 
-This product includes source derived from [@babel/eslint-parser](https://github.com/babel/babel) ([v7.23.3](https://github.com/babel/babel/tree/v7.23.3)), distributed under the [MIT License](https://github.com/babel/babel/blob/v7.23.3/LICENSE):
+This product includes source derived from [@babel/eslint-parser](https://github.com/babel/babel) ([v7.24.7](https://github.com/babel/babel/tree/v7.24.7)), distributed under the [MIT License](https://github.com/babel/babel/blob/v7.24.7/LICENSE):
 
 ```
 MIT License
@@ -635,7 +618,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### @babel/plugin-syntax-import-assertions
 
-This product includes source derived from [@babel/plugin-syntax-import-assertions](https://github.com/babel/babel) ([v7.23.3](https://github.com/babel/babel/tree/v7.23.3)), distributed under the [MIT License](https://github.com/babel/babel/blob/v7.23.3/LICENSE):
+This product includes source derived from [@babel/plugin-syntax-import-assertions](https://github.com/babel/babel) ([v7.24.7](https://github.com/babel/babel/tree/v7.24.7)), distributed under the [MIT License](https://github.com/babel/babel/blob/v7.24.7/LICENSE):
 
 ```
 MIT License
@@ -665,7 +648,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### @babel/preset-env
 
-This product includes source derived from [@babel/preset-env](https://github.com/babel/babel) ([v7.23.8](https://github.com/babel/babel/tree/v7.23.8)), distributed under the [MIT License](https://github.com/babel/babel/blob/v7.23.8/LICENSE):
+This product includes source derived from [@babel/preset-env](https://github.com/babel/babel) ([v7.24.7](https://github.com/babel/babel/tree/v7.24.7)), distributed under the [MIT License](https://github.com/babel/babel/blob/v7.24.7/LICENSE):
 
 ```
 MIT License
@@ -695,7 +678,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### @babel/register
 
-This product includes source derived from [@babel/register](https://github.com/babel/babel) ([v7.23.7](https://github.com/babel/babel/tree/v7.23.7)), distributed under the [MIT License](https://github.com/babel/babel/blob/v7.23.7/LICENSE):
+This product includes source derived from [@babel/register](https://github.com/babel/babel) ([v7.24.6](https://github.com/babel/babel/tree/v7.24.6)), distributed under the [MIT License](https://github.com/babel/babel/blob/v7.24.6/LICENSE):
 
 ```
 MIT License
@@ -725,10 +708,10 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### @faker-js/faker
 
-This product includes source derived from [@faker-js/faker](https://github.com/faker-js/faker) ([v8.3.1](https://github.com/faker-js/faker/tree/v8.3.1)), distributed under the [MIT License](https://github.com/faker-js/faker/blob/v8.3.1/LICENSE):
+This product includes source derived from [@faker-js/faker](https://github.com/faker-js/faker) ([v8.4.1](https://github.com/faker-js/faker/tree/v8.4.1)), distributed under the [MIT License](https://github.com/faker-js/faker/blob/v8.4.1/LICENSE):
 
 ```
-Faker - Copyright (c) 2022-2023
+Faker - Copyright (c) 2022-2024
 
 This software consists of voluntary contributions made by many individuals.
 For exact contribution history, see the revision history
@@ -852,7 +835,7 @@ SOFTWARE.
 
 ### @fastify/multipart
 
-This product includes source derived from [@fastify/multipart](https://github.com/fastify/fastify-multipart) ([v8.1.0](https://github.com/fastify/fastify-multipart/tree/v8.1.0)), distributed under the [MIT License](https://github.com/fastify/fastify-multipart/blob/v8.1.0/LICENSE):
+This product includes source derived from [@fastify/multipart](https://github.com/fastify/fastify-multipart) ([v8.3.0](https://github.com/fastify/fastify-multipart/tree/v8.3.0)), distributed under the [MIT License](https://github.com/fastify/fastify-multipart/blob/v8.3.0/LICENSE):
 
 ```
 MIT License
@@ -1327,7 +1310,7 @@ This product includes source derived from [@newrelic/nr-querypack](https://githu
 
 ### @wdio/cli
 
-This product includes source derived from [@wdio/cli](https://github.com/webdriverio/webdriverio) ([v8.27.2](https://github.com/webdriverio/webdriverio/tree/v8.27.2)), distributed under the [MIT License](https://github.com/webdriverio/webdriverio/blob/v8.27.2/LICENSE-MIT):
+This product includes source derived from [@wdio/cli](https://github.com/webdriverio/webdriverio) ([v8.39.0](https://github.com/webdriverio/webdriverio/tree/v8.39.0)), distributed under the [MIT License](https://github.com/webdriverio/webdriverio/blob/v8.39.0/LICENSE-MIT):
 
 ```
 Copyright (c) OpenJS Foundation and other contributors
@@ -1355,7 +1338,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### @wdio/local-runner
 
-This product includes source derived from [@wdio/local-runner](https://github.com/webdriverio/webdriverio) ([v8.27.2](https://github.com/webdriverio/webdriverio/tree/v8.27.2)), distributed under the [MIT License](https://github.com/webdriverio/webdriverio/blob/v8.27.2/LICENSE-MIT):
+This product includes source derived from [@wdio/local-runner](https://github.com/webdriverio/webdriverio) ([v8.39.0](https://github.com/webdriverio/webdriverio/tree/v8.39.0)), distributed under the [MIT License](https://github.com/webdriverio/webdriverio/blob/v8.39.0/LICENSE-MIT):
 
 ```
 Copyright (c) OpenJS Foundation and other contributors
@@ -1383,7 +1366,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### @wdio/logger
 
-This product includes source derived from [@wdio/logger](https://github.com/webdriverio/webdriverio) ([v8.24.12](https://github.com/webdriverio/webdriverio/tree/v8.24.12)), distributed under the [MIT License](https://github.com/webdriverio/webdriverio/blob/v8.24.12/LICENSE-MIT):
+This product includes source derived from [@wdio/logger](https://github.com/webdriverio/webdriverio) ([v8.38.0](https://github.com/webdriverio/webdriverio/tree/v8.38.0)), distributed under the [MIT License](https://github.com/webdriverio/webdriverio/blob/v8.38.0/LICENSE-MIT):
 
 ```
 Copyright (c) OpenJS Foundation and other contributors
@@ -1411,35 +1394,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### @wdio/mocha-framework
 
-This product includes source derived from [@wdio/mocha-framework](https://github.com/webdriverio/webdriverio) ([v8.27.2](https://github.com/webdriverio/webdriverio/tree/v8.27.2)), distributed under the [MIT License](https://github.com/webdriverio/webdriverio/blob/v8.27.2/LICENSE-MIT):
-
-```
-Copyright (c) OpenJS Foundation and other contributors
-
-Permission is hereby granted, free of charge, to any person obtaining
-a copy of this software and associated documentation files (the
-'Software'), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
-
-The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-```
-
-### @wdio/sauce-service
-
-This product includes source derived from [@wdio/sauce-service](https://github.com/webdriverio/webdriverio) ([v8.27.2](https://github.com/webdriverio/webdriverio/tree/v8.27.2)), distributed under the [MIT License](https://github.com/webdriverio/webdriverio/blob/v8.27.2/LICENSE-MIT):
+This product includes source derived from [@wdio/mocha-framework](https://github.com/webdriverio/webdriverio) ([v8.39.0](https://github.com/webdriverio/webdriverio/tree/v8.39.0)), distributed under the [MIT License](https://github.com/webdriverio/webdriverio/blob/v8.39.0/LICENSE-MIT):
 
 ```
 Copyright (c) OpenJS Foundation and other contributors
@@ -1467,7 +1422,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### @wdio/spec-reporter
 
-This product includes source derived from [@wdio/spec-reporter](https://github.com/webdriverio/webdriverio) ([v8.27.2](https://github.com/webdriverio/webdriverio/tree/v8.27.2)), distributed under the [MIT License](https://github.com/webdriverio/webdriverio/blob/v8.27.2/LICENSE-MIT):
+This product includes source derived from [@wdio/spec-reporter](https://github.com/webdriverio/webdriverio) ([v8.39.0](https://github.com/webdriverio/webdriverio/tree/v8.39.0)), distributed under the [MIT License](https://github.com/webdriverio/webdriverio/blob/v8.39.0/LICENSE-MIT):
 
 ```
 Copyright (c) OpenJS Foundation and other contributors
@@ -1582,154 +1537,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ```
 
-### babelify
-
-This product includes source derived from [babelify](https://github.com/babel/babelify) ([v10.0.0](https://github.com/babel/babelify/tree/v10.0.0)), distributed under the [MIT License](https://github.com/babel/babelify/blob/v10.0.0/LICENSE):
-
-```
-Copyright (c) 2015 Sebastian McKenzie
-
-MIT License
-
-Permission is hereby granted, free of charge, to any person obtaining
-a copy of this software and associated documentation files (the
-"Software"), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
-
-The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-```
-
-### browserify
-
-This product includes source derived from [browserify](https://github.com/substack/node-browserify) ([v13.3.0](https://github.com/substack/node-browserify/tree/v13.3.0)), distributed under the [MIT License](https://github.com/substack/node-browserify/blob/v13.3.0/LICENSE):
-
-```
-Some pieces from builtins/ taken from node core under this license:
-
-----
-
-Copyright Joyent, Inc. and other Node contributors.
-
-Permission is hereby granted, free of charge, to any person obtaining a
-copy of this software and associated documentation files (the
-"Software"), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Software, and to permit
-persons to whom the Software is furnished to do so, subject to the
-following conditions:
-
-The above copyright notice and this permission notice shall be included
-in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-----
-
-buffer_ieee754.js has this license in it:
-
-----
-
-Copyright (c) 2008-2015, Fair Oaks Labs, Inc.
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
- * Redistributions of source code must retain the above copyright notice,
-   this list of conditions and the following disclaimer.
-
- * Redistributions in binary form must reproduce the above copyright notice,
-   this list of conditions and the following disclaimer in the documentation
-   and/or other materials provided with the distribution.
-
- * Neither the name of Fair Oaks Labs, Inc. nor the names of its contributors
-   may be used to endorse or promote products derived from this software
-   without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
-LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-POSSIBILITY OF SUCH DAMAGE.
-
-Modifications to writeIEEE754 to support negative zeroes made by Brian White
-
-----
-
-```
-
-### charm
-
-This product includes source derived from [charm](https://github.com/substack/node-charm) ([v1.0.2](https://github.com/substack/node-charm/tree/v1.0.2)), distributed under the [MIT License](https://github.com/substack/node-charm/blob/v1.0.2/README.markdown):
-
-```
-MIT License
-
-Copyright (c) <year> <copyright holders>
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-```
-
-### concat-stream
-
-This product includes source derived from [concat-stream](https://github.com/maxogden/concat-stream) ([v1.6.2](https://github.com/maxogden/concat-stream/tree/v1.6.2)), distributed under the [MIT License](https://github.com/maxogden/concat-stream/blob/v1.6.2/LICENSE):
-
-```
-The MIT License
-
-Copyright (c) 2013 Max Ogden
-
-Permission is hereby granted, free of charge, 
-to any person obtaining a copy of this software and 
-associated documentation files (the "Software"), to 
-deal in the Software without restriction, including 
-without limitation the rights to use, copy, modify, 
-merge, publish, distribute, sublicense, and/or sell 
-copies of the Software, and to permit persons to whom 
-the Software is furnished to do so, 
-subject to the following conditions:
-
-The above copyright notice and this permission notice 
-shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES 
-OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
-IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR 
-ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, 
-TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-```
-
 ### deepmerge-ts
 
 This product includes source derived from [deepmerge-ts](https://github.com/RebeccaStevens/deepmerge-ts) ([v5.1.0](https://github.com/RebeccaStevens/deepmerge-ts/tree/v5.1.0)), distributed under the [BSD-3-Clause License](https://github.com/RebeccaStevens/deepmerge-ts/blob/v5.1.0/LICENSE):
@@ -1767,35 +1574,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ```
 
-### defined
-
-This product includes source derived from [defined](https://github.com/inspect-js/defined) ([v1.0.1](https://github.com/inspect-js/defined/tree/v1.0.1)), distributed under the [MIT License](https://github.com/inspect-js/defined/blob/v1.0.1/LICENSE):
-
-```
-This software is released under the MIT license:
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
-the Software, and to permit persons to whom the Software is furnished to do so,
-subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-```
-
 ### dotenv-webpack
 
-This product includes source derived from [dotenv-webpack](https://github.com/mrsteele/dotenv-webpack) ([v8.0.1](https://github.com/mrsteele/dotenv-webpack/tree/v8.0.1)), distributed under the [MIT License](https://github.com/mrsteele/dotenv-webpack/blob/v8.0.1/LICENSE):
+This product includes source derived from [dotenv-webpack](https://github.com/mrsteele/dotenv-webpack) ([v8.1.0](https://github.com/mrsteele/dotenv-webpack/tree/v8.1.0)), distributed under the [MIT License](https://github.com/mrsteele/dotenv-webpack/blob/v8.1.0/LICENSE):
 
 ```
 MIT License
@@ -1912,7 +1693,7 @@ SOFTWARE.
 
 ### eslint-plugin-promise
 
-This product includes source derived from [eslint-plugin-promise](https://github.com/eslint-community/eslint-plugin-promise) ([v6.1.1](https://github.com/eslint-community/eslint-plugin-promise/tree/v6.1.1)), distributed under the [ISC License](https://github.com/eslint-community/eslint-plugin-promise/blob/v6.1.1/LICENSE.md):
+This product includes source derived from [eslint-plugin-promise](https://github.com/eslint-community/eslint-plugin-promise) ([v6.2.0](https://github.com/eslint-community/eslint-plugin-promise/tree/v6.2.0)), distributed under the [ISC License](https://github.com/eslint-community/eslint-plugin-promise/blob/v6.2.0/LICENSE.md):
 
 ```
 Copyright (c) 2020, Jamund Ferguson
@@ -2106,7 +1887,7 @@ Library.
 
 ### eslint
 
-This product includes source derived from [eslint](https://github.com/eslint/eslint) ([v8.56.0](https://github.com/eslint/eslint/tree/v8.56.0)), distributed under the [MIT License](https://github.com/eslint/eslint/blob/v8.56.0/LICENSE):
+This product includes source derived from [eslint](https://github.com/eslint/eslint) ([v8.57.0](https://github.com/eslint/eslint/tree/v8.57.0)), distributed under the [MIT License](https://github.com/eslint/eslint/blob/v8.57.0/LICENSE):
 
 ```
 Copyright OpenJS Foundation and other contributors, <www.openjsf.org>
@@ -2162,12 +1943,12 @@ SOFTWARE.
 
 ### fastify
 
-This product includes source derived from [fastify](https://github.com/fastify/fastify) ([v4.25.2](https://github.com/fastify/fastify/tree/v4.25.2)), distributed under the [MIT License](https://github.com/fastify/fastify/blob/v4.25.2/LICENSE):
+This product includes source derived from [fastify](https://github.com/fastify/fastify) ([v4.28.0](https://github.com/fastify/fastify/tree/v4.28.0)), distributed under the [MIT License](https://github.com/fastify/fastify/blob/v4.28.0/LICENSE):
 
 ```
 MIT License
 
-Copyright (c) 2016-2023 The Fastify Team
+Copyright (c) 2016-2024 The Fastify Team
 
 The Fastify team members are listed at https://github.com/fastify/fastify#team
 and in the README file.
@@ -2242,37 +2023,9 @@ OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHE
 
 ```
 
-### function-bind
-
-This product includes source derived from [function-bind](https://github.com/Raynos/function-bind) ([v1.1.2](https://github.com/Raynos/function-bind/tree/v1.1.2)), distributed under the [MIT License](https://github.com/Raynos/function-bind/blob/v1.1.2/LICENSE):
-
-```
-Copyright (c) 2013 Raynos.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-
-
-```
-
 ### glob
 
-This product includes source derived from [glob](https://github.com/isaacs/node-glob) ([v10.3.10](https://github.com/isaacs/node-glob/tree/v10.3.10)), distributed under the [ISC License](https://github.com/isaacs/node-glob/blob/v10.3.10/LICENSE):
+This product includes source derived from [glob](https://github.com/isaacs/node-glob) ([v10.4.2](https://github.com/isaacs/node-glob/tree/v10.4.2)), distributed under the [ISC License](https://github.com/isaacs/node-glob/blob/v10.4.2/LICENSE):
 
 ```
 The ISC License
@@ -2384,7 +2137,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ### istanbul-lib-instrument
 
-This product includes source derived from [istanbul-lib-instrument](https://github.com/istanbuljs/istanbuljs) ([v6.0.1](https://github.com/istanbuljs/istanbuljs/tree/v6.0.1)), distributed under the [BSD-3-Clause License](https://github.com/istanbuljs/istanbuljs/blob/v6.0.1/LICENSE):
+This product includes source derived from [istanbul-lib-instrument](https://github.com/istanbuljs/istanbuljs) ([v6.0.2](https://github.com/istanbuljs/istanbuljs/tree/v6.0.2)), distributed under the [BSD-3-Clause License](https://github.com/istanbuljs/istanbuljs/blob/v6.0.2/LICENSE):
 
 ```
 Copyright 2012-2015 Yahoo! Inc.
@@ -2448,7 +2201,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ### istanbul-reports
 
-This product includes source derived from [istanbul-reports](https://github.com/istanbuljs/istanbuljs) ([v3.1.6](https://github.com/istanbuljs/istanbuljs/tree/v3.1.6)), distributed under the [BSD-3-Clause License](https://github.com/istanbuljs/istanbuljs/blob/v3.1.6/LICENSE):
+This product includes source derived from [istanbul-reports](https://github.com/istanbuljs/istanbuljs) ([v3.1.7](https://github.com/istanbuljs/istanbuljs/tree/v3.1.7)), distributed under the [BSD-3-Clause License](https://github.com/istanbuljs/istanbuljs/blob/v3.1.7/LICENSE):
 
 ```
 Copyright 2012-2015 Yahoo! Inc.
@@ -2594,34 +2347,6 @@ THE SOFTWARE.
 
 ```
 
-### just-debounce
-
-This product includes source derived from [just-debounce](https://github.com/hayes/just-debounce) ([v1.1.0](https://github.com/hayes/just-debounce/tree/v1.1.0)), distributed under the [MIT License](https://github.com/hayes/just-debounce/blob/v1.1.0/LICENSE):
-
-```
-The MIT License (MIT)
-
-Copyright (c) 2014 Michael Hayes
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
-
 ### node-fetch
 
 This product includes source derived from [node-fetch](https://github.com/node-fetch/node-fetch) ([v3.3.2](https://github.com/node-fetch/node-fetch/tree/v3.3.2)), distributed under the [MIT License](https://github.com/node-fetch/node-fetch/blob/v3.3.2/LICENSE.md):
@@ -2682,326 +2407,9 @@ SOFTWARE.
 
 ```
 
-### object-inspect
-
-This product includes source derived from [object-inspect](https://github.com/inspect-js/object-inspect) ([v1.13.1](https://github.com/inspect-js/object-inspect/tree/v1.13.1)), distributed under the [MIT License](https://github.com/inspect-js/object-inspect/blob/v1.13.1/LICENSE):
-
-```
-MIT License
-
-Copyright (c) 2013 James Halliday
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-```
-
-### path-browserify
-
-This product includes source derived from [path-browserify](https://github.com/browserify/path-browserify) ([v1.0.1](https://github.com/browserify/path-browserify/tree/v1.0.1)), distributed under the [MIT License](https://github.com/browserify/path-browserify/blob/v1.0.1/LICENSE):
-
-```
-MIT License
-
-Copyright (c) 2013 James Halliday
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
-the Software, and to permit persons to whom the Software is furnished to do so,
-subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-```
-
-### preprocessify
-
-This product includes source derived from [preprocessify](https://github.com/bibliolabs/preprocessify) ([v0.0.6](https://github.com/bibliolabs/preprocessify/tree/v0.0.6)), distributed under the [ISC License](https://github.com/bibliolabs/preprocessify/blob/v0.0.6/LICENSE):
-
-```
-Copyright (c) 2014, Evan Muller <>
-
-Permission to use, copy, modify, and/or distribute this software for any
-purpose with or without fee is hereby granted, provided that the above
-copyright notice and this permission notice appear in all copies.
-
-THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-
-```
-
-### process
-
-This product includes source derived from [process](https://github.com/shtylman/node-process) ([v0.11.10](https://github.com/shtylman/node-process/tree/v0.11.10)), distributed under the [MIT License](https://github.com/shtylman/node-process/blob/v0.11.10/LICENSE):
-
-```
-(The MIT License)
-
-Copyright (c) 2013 Roman Shtylman <shtylman@gmail.com>
-
-Permission is hereby granted, free of charge, to any person obtaining
-a copy of this software and associated documentation files (the
-'Software'), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
-
-The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-```
-
-### saucelabs
-
-This product includes source derived from [saucelabs](https://github.com/saucelabs/node-saucelabs) ([v7.5.0](https://github.com/saucelabs/node-saucelabs/tree/v7.5.0)), distributed under the [Apache-2.0 License](https://github.com/saucelabs/node-saucelabs/blob/v7.5.0/LICENSE):
-
-```
-Apache License
-Version 2.0, January 2004
-http://www.apache.org/licenses/
-
-TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
-
-1. Definitions.
-
-"License" shall mean the terms and conditions for use, reproduction,
-and distribution as defined by Sections 1 through 9 of this document.
-
-"Licensor" shall mean the copyright owner or entity authorized by
-the copyright owner that is granting the License.
-
-"Legal Entity" shall mean the union of the acting entity and all
-other entities that control, are controlled by, or are under common
-control with that entity. For the purposes of this definition,
-"control" means (i) the power, direct or indirect, to cause the
-direction or management of such entity, whether by contract or
-otherwise, or (ii) ownership of fifty percent (50%) or more of the
-outstanding shares, or (iii) beneficial ownership of such entity.
-
-"You" (or "Your") shall mean an individual or Legal Entity
-exercising permissions granted by this License.
-
-"Source" form shall mean the preferred form for making modifications,
-including but not limited to software source code, documentation
-source, and configuration files.
-
-"Object" form shall mean any form resulting from mechanical
-transformation or translation of a Source form, including but
-not limited to compiled object code, generated documentation,
-and conversions to other media types.
-
-"Work" shall mean the work of authorship, whether in Source or
-Object form, made available under the License, as indicated by a
-copyright notice that is included in or attached to the work
-(an example is provided in the Appendix below).
-
-"Derivative Works" shall mean any work, whether in Source or Object
-form, that is based on (or derived from) the Work and for which the
-editorial revisions, annotations, elaborations, or other modifications
-represent, as a whole, an original work of authorship. For the purposes
-of this License, Derivative Works shall not include works that remain
-separable from, or merely link (or bind by name) to the interfaces of,
-the Work and Derivative Works thereof.
-
-"Contribution" shall mean any work of authorship, including
-the original version of the Work and any modifications or additions
-to that Work or Derivative Works thereof, that is intentionally
-submitted to Licensor for inclusion in the Work by the copyright owner
-or by an individual or Legal Entity authorized to submit on behalf of
-the copyright owner. For the purposes of this definition, "submitted"
-means any form of electronic, verbal, or written communication sent
-to the Licensor or its representatives, including but not limited to
-communication on electronic mailing lists, source code control systems,
-and issue tracking systems that are managed by, or on behalf of, the
-Licensor for the purpose of discussing and improving the Work, but
-excluding communication that is conspicuously marked or otherwise
-designated in writing by the copyright owner as "Not a Contribution."
-
-"Contributor" shall mean Licensor and any individual or Legal Entity
-on behalf of whom a Contribution has been received by Licensor and
-subsequently incorporated within the Work.
-
-2. Grant of Copyright License. Subject to the terms and conditions of
-this License, each Contributor hereby grants to You a perpetual,
-worldwide, non-exclusive, no-charge, royalty-free, irrevocable
-copyright license to reproduce, prepare Derivative Works of,
-publicly display, publicly perform, sublicense, and distribute the
-Work and such Derivative Works in Source or Object form.
-
-3. Grant of Patent License. Subject to the terms and conditions of
-this License, each Contributor hereby grants to You a perpetual,
-worldwide, non-exclusive, no-charge, royalty-free, irrevocable
-(except as stated in this section) patent license to make, have made,
-use, offer to sell, sell, import, and otherwise transfer the Work,
-where such license applies only to those patent claims licensable
-by such Contributor that are necessarily infringed by their
-Contribution(s) alone or by combination of their Contribution(s)
-with the Work to which such Contribution(s) was submitted. If You
-institute patent litigation against any entity (including a
-cross-claim or counterclaim in a lawsuit) alleging that the Work
-or a Contribution incorporated within the Work constitutes direct
-or contributory patent infringement, then any patent licenses
-granted to You under this License for that Work shall terminate
-as of the date such litigation is filed.
-
-4. Redistribution. You may reproduce and distribute copies of the
-Work or Derivative Works thereof in any medium, with or without
-modifications, and in Source or Object form, provided that You
-meet the following conditions:
-
-(a) You must give any other recipients of the Work or
-Derivative Works a copy of this License; and
-
-(b) You must cause any modified files to carry prominent notices
-stating that You changed the files; and
-
-(c) You must retain, in the Source form of any Derivative Works
-that You distribute, all copyright, patent, trademark, and
-attribution notices from the Source form of the Work,
-excluding those notices that do not pertain to any part of
-the Derivative Works; and
-
-(d) If the Work includes a "NOTICE" text file as part of its
-distribution, then any Derivative Works that You distribute must
-include a readable copy of the attribution notices contained
-within such NOTICE file, excluding those notices that do not
-pertain to any part of the Derivative Works, in at least one
-of the following places: within a NOTICE text file distributed
-as part of the Derivative Works; within the Source form or
-documentation, if provided along with the Derivative Works; or,
-within a display generated by the Derivative Works, if and
-wherever such third-party notices normally appear. The contents
-of the NOTICE file are for informational purposes only and
-do not modify the License. You may add Your own attribution
-notices within Derivative Works that You distribute, alongside
-or as an addendum to the NOTICE text from the Work, provided
-that such additional attribution notices cannot be construed
-as modifying the License.
-
-You may add Your own copyright statement to Your modifications and
-may provide additional or different license terms and conditions
-for use, reproduction, or distribution of Your modifications, or
-for any such Derivative Works as a whole, provided Your use,
-reproduction, and distribution of the Work otherwise complies with
-the conditions stated in this License.
-
-5. Submission of Contributions. Unless You explicitly state otherwise,
-any Contribution intentionally submitted for inclusion in the Work
-by You to the Licensor shall be under the terms and conditions of
-this License, without any additional terms or conditions.
-Notwithstanding the above, nothing herein shall supersede or modify
-the terms of any separate license agreement you may have executed
-with Licensor regarding such Contributions.
-
-6. Trademarks. This License does not grant permission to use the trade
-names, trademarks, service marks, or product names of the Licensor,
-except as required for reasonable and customary use in describing the
-origin of the Work and reproducing the content of the NOTICE file.
-
-7. Disclaimer of Warranty. Unless required by applicable law or
-agreed to in writing, Licensor provides the Work (and each
-Contributor provides its Contributions) on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
-implied, including, without limitation, any warranties or conditions
-of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
-PARTICULAR PURPOSE. You are solely responsible for determining the
-appropriateness of using or redistributing the Work and assume any
-risks associated with Your exercise of permissions under this License.
-
-8. Limitation of Liability. In no event and under no legal theory,
-whether in tort (including negligence), contract, or otherwise,
-unless required by applicable law (such as deliberate and grossly
-negligent acts) or agreed to in writing, shall any Contributor be
-liable to You for damages, including any direct, indirect, special,
-incidental, or consequential damages of any character arising as a
-result of this License or out of the use or inability to use the
-Work (including but not limited to damages for loss of goodwill,
-work stoppage, computer failure or malfunction, or any and all
-other commercial damages or losses), even if such Contributor
-has been advised of the possibility of such damages.
-
-9. Accepting Warranty or Additional Liability. While redistributing
-the Work or Derivative Works thereof, You may choose to offer,
-and charge a fee for, acceptance of support, warranty, indemnity,
-or other liability obligations and/or rights consistent with this
-License. However, in accepting such obligations, You may act only
-on Your own behalf and on Your sole responsibility, not on behalf
-of any other Contributor, and only if You agree to indemnify,
-defend, and hold each Contributor harmless for any liability
-incurred by, or claims asserted against, such Contributor by reason
-of your accepting any such warranty or additional liability.
-
-END OF TERMS AND CONDITIONS
-
-APPENDIX: How to apply the Apache License to your work.
-
-To apply the Apache License to your work, attach the following
-boilerplate notice, with the fields enclosed by brackets "[]"
-replaced with your own identifying information. (Don't include
-the brackets!)  The text should be enclosed in the appropriate
-comment syntax for the file format. We also recommend that a
-file or class name and description of purpose be included on the
-same "printed page" as the copyright notice for easier
-identification within third-party archives.
-
-Copyright 2021 Sauce Labs
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
-```
-
 ### semver
 
-This product includes source derived from [semver](https://github.com/npm/node-semver) ([v7.5.4](https://github.com/npm/node-semver/tree/v7.5.4)), distributed under the [ISC License](https://github.com/npm/node-semver/blob/v7.5.4/LICENSE):
+This product includes source derived from [semver](https://github.com/npm/node-semver) ([v7.6.2](https://github.com/npm/node-semver/tree/v7.6.2)), distributed under the [ISC License](https://github.com/npm/node-semver/blob/v7.6.2/LICENSE):
 
 ```
 The ISC License
@@ -3038,115 +2446,37 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ```
 
-### stream-browserify
+### terser-webpack-plugin
 
-This product includes source derived from [stream-browserify](https://github.com/browserify/stream-browserify) ([v3.0.0](https://github.com/browserify/stream-browserify/tree/v3.0.0)), distributed under the [MIT License](https://github.com/browserify/stream-browserify/blob/v3.0.0/LICENSE):
-
-```
-MIT License
-
-Copyright (c) James Halliday
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
-the Software, and to permit persons to whom the Software is furnished to do so,
-subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+This product includes source derived from [terser-webpack-plugin](https://github.com/webpack-contrib/terser-webpack-plugin) ([v5.3.10](https://github.com/webpack-contrib/terser-webpack-plugin/tree/v5.3.10)), distributed under the [MIT License](https://github.com/webpack-contrib/terser-webpack-plugin/blob/v5.3.10/LICENSE):
 
 ```
+Copyright JS Foundation and other contributors
 
-### tap-parser
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+'Software'), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
 
-This product includes source derived from [tap-parser](https://github.com/substack/tap-parser) ([v1.3.2](https://github.com/substack/tap-parser/tree/v1.3.2)), distributed under the [MIT License](https://github.com/substack/tap-parser/blob/v1.3.2/LICENSE):
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
 
-```
-This software is released under the MIT license:
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
-the Software, and to permit persons to whom the Software is furnished to do so,
-subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-```
-
-### tape
-
-This product includes source derived from [tape](https://github.com/ljharb/tape) ([v4.17.0](https://github.com/ljharb/tape/tree/v4.17.0)), distributed under the [MIT License](https://github.com/ljharb/tape/blob/v4.17.0/LICENSE):
-
-```
-MIT License
-
-Copyright (c) 2012 James Halliday
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-```
-
-### through
-
-This product includes source derived from [through](https://github.com/dominictarr/through) ([v2.3.8](https://github.com/dominictarr/through/tree/v2.3.8)), distributed under the [MIT License](https://github.com/dominictarr/through/blob/v2.3.8/LICENSE.APACHE2):
-
-```
-Apache License, Version 2.0
-
-Copyright (c) 2011 Dominic Tarr
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ```
 
 ### tsd
 
-This product includes source derived from [tsd](https://github.com/tsdjs/tsd) ([v0.30.3](https://github.com/tsdjs/tsd/tree/v0.30.3)), distributed under the [MIT License](https://github.com/tsdjs/tsd/blob/v0.30.3/license):
+This product includes source derived from [tsd](https://github.com/tsdjs/tsd) ([v0.30.7](https://github.com/tsdjs/tsd/tree/v0.30.7)), distributed under the [MIT License](https://github.com/tsdjs/tsd/blob/v0.30.7/license):
 
 ```
 MIT License
@@ -3163,7 +2493,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ### typescript
 
-This product includes source derived from [typescript](https://github.com/Microsoft/TypeScript) ([v5.3.3](https://github.com/Microsoft/TypeScript/tree/v5.3.3)), distributed under the [Apache-2.0 License](https://github.com/Microsoft/TypeScript/blob/v5.3.3/LICENSE.txt):
+This product includes source derived from [typescript](https://github.com/Microsoft/TypeScript) ([v5.5.2](https://github.com/Microsoft/TypeScript/tree/v5.5.2)), distributed under the [Apache-2.0 License](https://github.com/Microsoft/TypeScript/blob/v5.5.2/LICENSE.txt):
 
 ```
 Apache License
@@ -3283,32 +2613,25 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ```
 
-### wd
+### wdio-lambdatest-service
 
-This product includes source derived from [wd](https://github.com/admc/wd) ([v1.14.0](https://github.com/admc/wd/tree/v1.14.0)), distributed under the [Apache-2.0 License](https://github.com/admc/wd/blob/v1.14.0/LICENSE.APACHE2):
+This product includes source derived from [wdio-lambdatest-service](https://github.com/LambdaTest/wdio-lambdatest-service) ([v2.1.3](https://github.com/LambdaTest/wdio-lambdatest-service/tree/v2.1.3)), distributed under the [MIT License](https://github.com/LambdaTest/wdio-lambdatest-service/blob/v2.1.3/README.md):
 
 ```
-Apache License, Version 2.0
+MIT License
 
-Copyright (c) 2012 Sauce Labs
+Copyright (c) <year> <copyright holders>
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ```
 
 ### webpack-bundle-analyzer
 
-This product includes source derived from [webpack-bundle-analyzer](https://github.com/webpack-contrib/webpack-bundle-analyzer) ([v4.10.1](https://github.com/webpack-contrib/webpack-bundle-analyzer/tree/v4.10.1)), distributed under the [MIT License](https://github.com/webpack-contrib/webpack-bundle-analyzer/blob/v4.10.1/LICENSE):
+This product includes source derived from [webpack-bundle-analyzer](https://github.com/webpack-contrib/webpack-bundle-analyzer) ([v4.10.2](https://github.com/webpack-contrib/webpack-bundle-analyzer/tree/v4.10.2)), distributed under the [MIT License](https://github.com/webpack-contrib/webpack-bundle-analyzer/blob/v4.10.2/LICENSE):
 
 ```
 Copyright JS Foundation and other contributors
@@ -3361,25 +2684,9 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ```
 
-### webpack-stream
-
-This product includes source derived from [webpack-stream](https://github.com/shama/webpack-stream) ([v7.0.0](https://github.com/shama/webpack-stream/tree/v7.0.0)), distributed under the [MIT License](https://github.com/shama/webpack-stream/blob/v7.0.0/readme.md):
-
-```
-MIT License
-
-Copyright (c) <year> <copyright holders>
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-```
-
 ### webpack
 
-This product includes source derived from [webpack](https://github.com/webpack/webpack) ([v5.89.0](https://github.com/webpack/webpack/tree/v5.89.0)), distributed under the [MIT License](https://github.com/webpack/webpack/blob/v5.89.0/LICENSE):
+This product includes source derived from [webpack](https://github.com/webpack/webpack) ([v5.92.1](https://github.com/webpack/webpack/tree/v5.92.1)), distributed under the [MIT License](https://github.com/webpack/webpack/blob/v5.92.1/LICENSE):
 
 ```
 Copyright JS Foundation and other contributors

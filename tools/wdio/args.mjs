@@ -27,10 +27,6 @@ const args = yargs(hideBin(process.argv))
   .alias('concurrent', 'concurrency')
   .describe('concurrent', 'number of browser sessions to run concurrently')
 
-  .boolean('s')
-  .alias('s', 'sauce')
-  .describe('s', 'launch sauce before running tests')
-
   .string('H')
   .default('H', 'bam-test-1.nr-local.net')
   .alias('H', 'host')
@@ -52,7 +48,7 @@ const args = yargs(hideBin(process.argv))
   .default('t', 85000)
 
   .number('session-timeout')
-  .describe('session-timeout', 'timout in ms for sauce labs browser session')
+  .describe('session-timeout', 'timout in ms for LambdaTest browser session')
   .default('session-timeout', 120000)
 
   .boolean('d')
@@ -97,10 +93,6 @@ const args = yargs(hideBin(process.argv))
   .boolean('webview')
   .default('webview', false)
   .describe('webview', 'Run webview tests')
-
-  .boolean('sl')
-  .default('sl', false)
-  .describe('sl', 'Run with sauce labs')
 
   .middleware(argv => {
     if (argv.webview && (!argv.browsers || argv.browsers === 'chrome@latest')) {

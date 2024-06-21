@@ -107,8 +107,7 @@ See the sections below for details about local and PR testing.
 
 ### Installing
 
-The Browser agent uses a tool called the JavaScript Integration test Loader (`jil`) to run
-tests (located in `/tools/jil`).
+The Browser agent uses [webdriverio](https://webdriver.io/) (located in `/tools/wdio`) to run tests.
 
 _Before running tests locally, be sure to [install and build](#building) from the root directory to ensure all dependencies are loaded and the application is properly built._
 
@@ -122,54 +121,46 @@ npm run build:all
 
 ### Running the test suite
 
-To run all tests on a specific browser/platform, you can either run on Saucelabs or point the testing framework to your own Selenium server.
-
-To run tests on Saucelabs, you will need your own Saucelabs account. Export your Saucelabs username and access key in these environment variables - SAUCE_USERNAME, SAUCE_ACCESS_KEY. After that you can use the following command to run tests on a specific browser. Note that the browser/platform needs to be defined in this [matrix file](tools/jil/util/browsers.json).
+To run tests on LambdaTest, you will need your own LambdaTest account. Export your LambdaTest username and access key in these environment variables - LT_USERNAME, LT_ACCESS_KEY. After that you can use the following command to run tests on a specific browser. Note that the browser/platform needs to be defined in this [matrix file](tools/jil/util/browsers.json).
 
 Here is an example of running all tests on the latest version of Chrome.
 
 ```
-npm run test -- -s -b chrome@latest
-```
-
-Here is an example of using your own Selenium server:
-
-```
-npm run test -- -b chrome@latest --selenium-server=localhost:4444
+npm run wdio -- -T -b chrome@latest
 ```
 
 ### Supported Browsers
 
-- The browser agent is tested against this [list of browsers and environments](./tools/jil/util/browsers-supported.json). Use of the browser agent with untested browsers may lead to unexpected results.
+- The browser agent is tested against the list of browsers found in `/tools/browsers-lists`. Use of the browser agent with untested browsers may lead to unexpected results.
 
 **Important Notes:**
 
-- `jil` does not handle building the agent automatically;
+- `wdio` does not handle building the agent automatically;
   either run `npm run build:all` after each change, or use `npm run watch` to automatically rebuild on each change.
 - To pass arguments to the testing suite using `npm run test` you must separate your arguments from the npm script using an empty `--` parameter as was exemplified above.
 
 ### Running a single test
 
-To run a single test in isolation, pass the path to `jil`:
+To run a single test in isolation, pass the path to `wdio`:
 
 ```
-npm run test -- tests/functional/api.test.js
+npm run wdio -- tests/specs/api.test.js
 ```
 
 ### Debugging tests
 
-To debug a unit test (`/tests/browser`) or the asset under test in a unit or functional test (`/tests/assets`), run the command below:
+To debug the asset under test in a functional test (`/tests/assets`), run the command below:
 
 ```
 npm run test-server
 ```
 
-Running this command starts a server, available at http://localhost:3333, with a list of all available unit tests and test HTML pages with the Browser agent installed. Select a unit test from the list to run the test itself in your browser, or select an asset from the list to debug.
+Running this command starts a server, available at http://bam-test-1.nr-local.net:3333, with a list of all available unit tests and test HTML pages with the Browser agent installed. Select a unit test from the list to run the test itself in your browser, or select an asset from the list to debug.
 
-**Important**: When running `jil-server` be sure to tell HTML files which Browser agent type you want by adding a `?loader=spa` to the `querystring`. Here's an example:
+When running the test server, you can to tell HTML files which Browser agent type you want by adding a `?loader=spa` to the `querystring`. Here's an example:
 
 ```
-http://localhost:3333/tests/assets/spa/fetch.html?loader=spa
+http://bam-test-1.nr-local.net:3333/tests/assets/spa/fetch.html?loader=spa
 ```
 
 | Agent type    | querystring name |

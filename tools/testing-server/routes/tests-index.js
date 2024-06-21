@@ -1,7 +1,6 @@
 const path = require('path')
 const fp = require('fastify-plugin')
 const getFiles = require('../utils/get-files')
-const { urlFor } = require('../utils/url')
 const { paths } = require('../constants')
 
 /**
@@ -28,29 +27,9 @@ module.exports = fp(async function (fastify, testServer) {
         }
       }
 
-      for await (const file of getFiles(paths.testsBrowserDir)) {
-        if (file.endsWith('.browser.js')) {
-          const filePath = path.relative(paths.rootDir, file)
-          response += `<li><a href="${browserTestTarget(
-            filePath
-          )}">${filePath}</a></li>\n`
-        }
-      }
-
       response += '</ul></body><html>'
     }
 
     reply.code(200).type('text/html; charset=UTF-8').send(response)
   })
-
-  function browserTestTarget (filePath) {
-    return urlFor(
-      '/tests/assets/browser.html',
-      {
-        config: {},
-        script: `/${filePath}?browserify=true`
-      },
-      testServer
-    )
-  }
 })

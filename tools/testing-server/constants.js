@@ -16,8 +16,7 @@ module.exports.paths = {
   rootDir: path.resolve(__dirname, '../../'),
   builtAssetsDir: path.resolve(__dirname, '../../build/'),
   testsRootDir: path.resolve(__dirname, '../../tests/'),
-  testsAssetsDir: path.resolve(__dirname, '../../tests/assets/'),
-  testsBrowserDir: path.resolve(__dirname, '../../tests/browser/')
+  testsAssetsDir: path.resolve(__dirname, '../../tests/assets/')
 }
 
 module.exports.loaderConfigKeys = [

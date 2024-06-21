@@ -3,27 +3,6 @@ const { paths } = require('./constants')
 const { urlFor } = require('./utils/url')
 const path = require('path')
 const { deepmerge } = require('deepmerge-ts')
-const {
-  testRumRequest,
-  testEventsRequest,
-  testTimingEventsRequest,
-  testAjaxEventsRequest,
-  testMetricsRequest,
-  testCustomMetricsRequest,
-  testSupportMetricsRequest,
-  testErrorsRequest,
-  testInsRequest,
-  testAjaxTimeSlicesRequest,
-  testResourcesRequest,
-  testInteractionEventsRequest,
-  testBlobRequest,
-  testBlobReplayRequest,
-  testBlobTraceRequest,
-  testSessionReplaySnapshotRequest,
-  testInternalErrorsRequest,
-  testAnyJseXhrRequest,
-  testLogsRequest
-} = require('./utils/expect-tests')
 
 /**
  * Scheduled reply options
@@ -94,10 +73,6 @@ module.exports = class TestHandle {
   constructor (testServer, testId) {
     this.#testServer = testServer
     this.#testId = testId || uuidV4()
-  }
-
-  get testServer () {
-    return this.#testServer
   }
 
   get testId () {
@@ -271,26 +246,6 @@ module.exports = class TestHandle {
   }
 
   /**
-   * Constructs a unit test URL based on the current test handle
-   * @param {string} testFile Relative path of the test file from the root of the project
-   * @returns {string} The URL that can be used to execute the unit test
-   */
-  urlForBrowserTest (testFile) {
-    return urlFor(
-      '/tests/assets/browser.html',
-      {
-        loader: 'full',
-        config: {
-          licenseKey: this.#testId
-        },
-        script:
-          '/' + path.relative(paths.rootDir, testFile) + '?browserify=true'
-      },
-      this.#testServer
-    )
-  }
-
-  /**
    * Creates a basic deferred object
    * @returns {Deferred}
    */
@@ -303,159 +258,5 @@ module.exports = class TestHandle {
     })
 
     return { promise, resolve: capturedResolve, reject: capturedReject }
-  }
-
-  /* ***** BAM Expect Shortcut Methods (remove after removing jil) ***** */
-
-  expectRum (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testRumRequest,
-      expectTimeout
-    })
-  }
-
-  expectEvents (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testEventsRequest,
-      expectTimeout
-    })
-  }
-
-  expectTimings (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testTimingEventsRequest,
-      expectTimeout
-    })
-  }
-
-  expectAjaxEvents (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testAjaxEventsRequest,
-      expectTimeout
-    })
-  }
-
-  expectInteractionEvents (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testInteractionEventsRequest,
-      expectTimeout
-    })
-  }
-
-  expectMetrics (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testMetricsRequest,
-      expectTimeout
-    })
-  }
-
-  expectSupportMetrics (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testSupportMetricsRequest,
-      expectTimeout
-    })
-  }
-
-  expectCustomMetrics (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testCustomMetricsRequest,
-      expectTimeout
-    })
-  }
-
-  expectErrors (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testErrorsRequest,
-      expectTimeout
-    })
-  }
-
-  expectInternalErrors (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testInternalErrorsRequest,
-      expectTimeout
-    })
-  }
-
-  expectAnyJseXhr (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testAnyJseXhrRequest,
-      expectTimeout
-    })
-  }
-
-  expectAjaxTimeSlices (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testAjaxTimeSlicesRequest,
-      expectTimeout
-    })
-  }
-
-  expectIns (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testInsRequest,
-      expectTimeout
-    })
-  }
-
-  expectResources (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testResourcesRequest,
-      expectTimeout
-    })
-  }
-
-  expectLogs (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testLogsRequest,
-      expectTimeout
-    })
-  }
-
-  expectBlob (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testBlobRequest,
-      expectTimeout
-    })
-  }
-
-  expectReplay (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testBlobReplayRequest,
-      expectTimeout
-    })
-  }
-
-  expectTrace (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testBlobTraceRequest,
-      expectTimeout
-    })
-  }
-
-  expectSessionReplaySnapshot (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testSessionReplaySnapshotRequest,
-      expectTimeout
-    })
   }
 }

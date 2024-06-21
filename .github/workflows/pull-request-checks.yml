@@ -174,20 +174,10 @@ jobs:
       latest-only: ${{ inputs.latest-only }}
     secrets: inherit
 
-  jil:
-    name: JIL
-    if: github.event_name == 'workflow_dispatch'
-    needs: [find-pull-request]
-    uses: ./.github/workflows/jil-all-browsers.yml
-    with:
-      ref: 'refs/pull/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}/merge'
-      latest-only: ${{ inputs.latest-only }}
-    secrets: inherit
-
   complete-status-comment-pull-request:
     name: Comment pull request
     if: always() && github.event_name == 'workflow_dispatch' && needs.find-pull-request.result == 'success'
-    needs: [find-pull-request,wdio-coverage,wdio,jil]
+    needs: [find-pull-request,wdio-coverage,wdio]
     runs-on: ubuntu-latest
     defaults:
       run:

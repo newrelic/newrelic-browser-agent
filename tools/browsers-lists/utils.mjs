@@ -19,9 +19,5 @@ export function getBrowserName (capabilities) {
 }
 
 export function getBrowserVersion (capabilities) {
-  if (['ios', 'android'].includes(capabilities.platformName?.toLowerCase())) {
-    return capabilities['appium:platformVersion']
-  }
-
   return capabilities.browserVersion || capabilities['LT:Options']?.platformVersion
 }

@@ -45,7 +45,8 @@ function lambdaTestCapabilities () {
                 console: true
                 // network: true -- test failing (bam server doesn't get network request) when enabled; LT investigating
               }
-            : null)
+            : null),
+          platformName: testBrowser.platformName
         }
       }
 
@@ -58,7 +59,6 @@ function lambdaTestCapabilities () {
         capabilities['LT:Options'].deviceName = testBrowser.device_name
         capabilities['LT:Options'].platformVersion = testBrowser.version
       }
-      capabilities['LT:Options'].platformName = testBrowser.platformName
       return capabilities
     })
 }

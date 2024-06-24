@@ -118,7 +118,7 @@ export function createWrapperWithEmitter (emitter, always) {
    * @param {boolean} [bubble=false] If `true`, emitted events should also bubble up to the old emitter upon which
    * the `emitter` in the current scope was based (if it defines one).
    */
-  function inPlace (obj, methods, prefix, getContext, bubble, unwrapPrevious) {
+  function inPlace (obj, methods, prefix, getContext, bubble) {
     if (!prefix) prefix = ''
 
     // If prefix starts with '-' set this boolean to add the method name to the prefix before passing each one to wrap.
@@ -126,9 +126,6 @@ export function createWrapperWithEmitter (emitter, always) {
 
     for (let i = 0; i < methods.length; i++) {
       const method = methods[i]
-
-      if (unwrapPrevious && obj[method][flag] && typeof obj[method][flag] === 'function') obj[method] = obj[method][flag]
-
       const fn = obj[method]
 
       // Unless fn is both wrappable and unwrapped, bail so we don't add extra properties with undefined values.

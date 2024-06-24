@@ -33,7 +33,7 @@ export function wrapLogger(sharedEE, parent, loggerFn, context) {
   ctx.customAttributes = context.customAttributes
 
   /** observe calls to <loggerFn> and emit events prefixed with `wrap-logger-` */
-  wrapFn.inPlace(parent, [loggerFn], 'wrap-logger-', ctx, undefined, true)
+  wrapFn.inPlace(parent, [loggerFn], 'wrap-logger-', ctx)
 
   return ee
 }

@@ -74,20 +74,20 @@ describe('logging harvesting', () => {
       expect(JSON.parse(body)[0].logs[0].message).toEqual('Error: test')
     })
 
-    it('should allow for re-wrapping and 3rd party wrapping', async () => {
+    it.withBrowsersMatching(notIE)('should allow for re-wrapping and 3rd party wrapping', async () => {
       const [{ request: { body } }] = await Promise.all([
         browser.testHandle.expectLogs(10000),
         browser.url(await browser.testHandle.assetURL('logs-api-wrap-logger-rewrapped.html'))
       ])
       const logs = JSON.parse(body)[0].logs
       // should not duplicate after re-wrapping,
-      // if it did we would see 1 + 2 + 3 = 6 logs here
+      // if it did we would see 1 + 2 + 2 = 5 logs here
       // we would also see multiple test2 or test3 messages show up
       expect(logs.length).toEqual(3)
-      // original wrapping context (info)
+      // original wrapping context (warn)
       expect(logs[0].message).toEqual('test1')
-      expect(logs[0].logType).toEqual('info')
-      // should allow re-wrapping to change the context (warn)
+      expect(logs[0].logType).toEqual('warn')
+      // should not re-wrap, meaning the logType should not change, but the message should here
       expect(logs[1].message).toEqual('test2')
       expect(logs[1].logType).toEqual('warn')
       // should allow a 3rd party to wrap the function and not affect the context (warn)

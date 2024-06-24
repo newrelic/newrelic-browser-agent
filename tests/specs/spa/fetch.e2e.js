@@ -327,4 +327,23 @@ describe.withBrowsersMatching(supportsFetch)('Fetch SPA Interaction Tracking', (
     const ajaxEvent = interactionEventsHarvest.request.body[0].children.find(event => event.path === '/paththatdoesnotexist')
     expect(ajaxEvent.status).toEqual(404)
   })
+
+  it('only captures pre-load ajax calls in the spa payload', async () => {
+    const [interactionResults, eventsResults] = await Promise.all([
+      browser.testHandle.expectInteractionEvents(),
+      browser.testHandle.expectAjaxEvents(),
+      browser.url(await browser.testHandle.assetURL('ajax/fetch-before-load.html'))
+        .then(() => browser.waitForAgentLoad())
+    ])
+
+    const spaAjaxCalls = interactionResults.request.body[0].children.filter(xhr =>
+      xhr.type === 'ajax' && xhr.path === '/json'
+    )
+    expect(spaAjaxCalls.length).toEqual(1)
+
+    const eventsAjaxCalls = eventsResults.request.body.filter(xhr =>
+      xhr.type === 'ajax' && xhr.path === '/json'
+    )
+    expect(eventsAjaxCalls.length).toEqual(0)
+  })
 })

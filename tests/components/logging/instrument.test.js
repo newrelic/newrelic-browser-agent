@@ -43,7 +43,7 @@ describe('logging instrument component tests', () => {
     expect(utils.bufferLog).toHaveBeenCalledWith(loggingInstrument.ee, 'message', { args: 1 }, 'error')
   })
 
-  it('should get latest context from wrapLogger', async () => {
+  it('wrapLogger should not re-wrap or overwrite context if called more than once', async () => {
     const onCalls = instanceEE.on.mock.calls.length
     const loggingInstrument = new LoggingInstrument(agentIdentifier, new Aggregator({}))
     expect(instanceEE.on).toHaveBeenCalledTimes(onCalls + 1)
@@ -56,10 +56,10 @@ describe('logging instrument component tests', () => {
     expect(utils.bufferLog).toHaveBeenCalledTimes(0)
     myLoggerSuite.myTestLogger('message', { args: 2 })
     expect(utils.bufferLog).toHaveBeenCalledWith(loggingInstrument.ee, 'message', { args: 1 }, 'error') // ignores args: 2
-    /** re-wrap the logger with a NEW context, new events should get that context now */
+    /** re-wrap the logger with a NEW context, new events should NOT get that context because the wrapper should early-exit */
     wrapLogger(loggingInstrument.ee, myLoggerSuite, 'myTestLogger', { customAttributes: { args: 'abc' }, level: 'info' })
     myLoggerSuite.myTestLogger('message', { args: 2 })
-    expect(utils.bufferLog).toHaveBeenCalledWith(loggingInstrument.ee, 'message', { args: 'abc' }, 'info')
+    expect(utils.bufferLog).toHaveBeenCalledWith(loggingInstrument.ee, 'message', { args: 1 }, 'error')
   })
 })
 

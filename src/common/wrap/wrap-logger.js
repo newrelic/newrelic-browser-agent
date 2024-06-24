@@ -24,17 +24,15 @@ export function wrapLogger(sharedEE, parent, loggerFn, context) {
   const wrapFn = wfn(ee)
 
   /**
-   * This section allows us to pass an over-writable context along through the event emitter
-   * so that subsequent calls to `newrelic.wrapLogger` `WILL NOT` re-wrap (emit twice), but `WILL` overwrite the
-   * context object which contains the custom attributes and log level
+   * This section contains the context that will be shared across all invoked calls of the wrapped function,
+   * which will be used to decorate the log data later at agg time
   */
   const ctx = new EventContext(contextId)
   ctx.level = context.level
   ctx.customAttributes = context.customAttributes
-  parent[loggerFn].__nrContext = ctx
 
   /** observe calls to <loggerFn> and emit events prefixed with `wrap-logger-` */
-  wrapFn.inPlace(parent, [loggerFn], 'wrap-logger-', () => parent[loggerFn].__nrContext)
+  wrapFn.inPlace(parent, [loggerFn], 'wrap-logger-', ctx)
 
   return ee
 }

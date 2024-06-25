@@ -43,8 +43,8 @@ function lambdaTestCapabilities () {
           build: `Browser Agent: ${testBrowser.browserName || testBrowser.device_name} ${testBrowser.browserVersion || testBrowser.version} ${testBrowser.platformName} [${revision}]`,
           ...(args.extendedDebugging
             ? {
-                console: true
-                // network: true -- test failing (bam server doesn't get network request) when enabled; LT investigating
+                console: true,
+                network: true
               }
             : null),
           platformName: testBrowser.platformName
@@ -86,7 +86,7 @@ export default function config () {
           tunnel: args.tunnel,
           sessionNameFormat: (config, capabilities, suiteTitle, testTitle) => suiteTitle,
           lambdatestOpts: {
-            // allowHosts: args.host || 'bam-test-1.nr-local.net',
+            allowHosts: args.host || 'bam-test-1.nr-local.net',
             logFile: path.resolve(__dirname, '../../../.lambdatest')
           }
         }

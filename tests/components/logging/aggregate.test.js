@@ -77,7 +77,7 @@ describe('logging aggregate component tests', () => {
         body: [{
           common: {
             attributes: {
-              entityGuid: 'testEntityGuid',
+              'entity.guid': 'testEntityGuid',
               session: session.state.value,
               hasReplay: false,
               hasTrace: false,
@@ -109,11 +109,11 @@ describe('logging aggregate component tests', () => {
       const loggingAgg = new LoggingAggregate(agentIdentifier, new Aggregator({}))
       loggingAgg.ee.emit('rumresp', {})
       await wait(1)
-      loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'x'.repeat(1024 * 1024), { myAttributes: 1 }, 'error'])
+      loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'x'.repeat(1024 * 1024), { myAttributes: 1 }, 'ERROR'])
       expect(handleModule.handle).toHaveBeenCalledWith('storeSupportabilityMetrics', ['Logging/Harvest/Failed/Seen', expect.any(Number)])
       expect(handleModule.handle).toHaveBeenCalledTimes(1)
       expect(warn).toHaveBeenCalledWith('ignored log: > 1000000 bytes', 'xxxxxxxxxxxxxxxxxxxxxxxxx...')
-      loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'short message, long attrs', { myAttributes: 'x'.repeat(1024 * 1024) }, 'error'])
+      loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'short message, long attrs', { myAttributes: 'x'.repeat(1024 * 1024) }, 'ERROR'])
       expect(handleModule.handle).toHaveBeenCalledWith('storeSupportabilityMetrics', ['Logging/Harvest/Failed/Seen', expect.any(Number)])
       expect(handleModule.handle).toHaveBeenCalledTimes(2)
       expect(warn).toHaveBeenCalledWith('ignored log: > 1000000 bytes', 'short message, long attrs...')
@@ -124,9 +124,9 @@ describe('logging aggregate component tests', () => {
       loggingAgg.ee.emit('rumresp', {})
       await wait(1)
       jest.spyOn(loggingAgg.scheduler, 'runHarvest')
-      loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'x'.repeat(800 * 800), { myAttributes: 1 }, 'error']) // almost too big
+      loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'x'.repeat(800 * 800), { myAttributes: 1 }, 'ERROR']) // almost too big
       expect(handleModule.handle).toHaveBeenCalledTimes(0)
-      loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'x'.repeat(800 * 800), { myAttributes: 1 }, 'error']) // almost too big
+      loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'x'.repeat(800 * 800), { myAttributes: 1 }, 'ERROR']) // almost too big
       expect(handleModule.handle).toHaveBeenCalledTimes(1)
       expect(handleModule.handle).toHaveBeenCalledWith('storeSupportabilityMetrics', ['Logging/Harvest/Early/Seen', expect.any(Number)])
       expect(loggingAgg.scheduler.runHarvest).toHaveBeenCalled()

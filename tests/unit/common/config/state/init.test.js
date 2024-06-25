@@ -61,7 +61,7 @@ test('init props exist and return expected defaults', () => {
     autoStart: true,
     enabled: true,
     harvestTimeSeconds: 10,
-    level: 'info'
+    level: 'INFO'
   })
   expect(config.metrics).toEqual({
     autoStart: true,

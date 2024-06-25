@@ -574,7 +574,7 @@ export class Aggregate extends AggregateBase {
       var interaction = this.ixn
       var node = activeNodeFor(interaction)
       setCurrentNode(null)
-      node.child('customEnd', timestamp).finish(timestamp)
+      node.child('customEnd', timestamp)?.finish(timestamp)
       interaction.finish()
     }, this.featureName, baseEE)
 

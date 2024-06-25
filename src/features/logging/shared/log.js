@@ -1,5 +1,6 @@
 import { globalScope } from '../../../common/constants/runtime'
 import { cleanURL } from '../../../common/url/clean-url'
+import { LOG_LEVELS } from '../constants'
 
 export class Log {
   /** @type {long} the unix timestamp of the log event */
@@ -8,8 +9,8 @@ export class Log {
   message
   /** @type {object} the object of attributes to be parsed by logging ingest into top-level properties */
   attributes
-  /** @type {'error'|'trace'|'debug'|'info'|'warn'} the log type of the log */
-  logType
+  /** @type {'ERROR'|'TRACE'|'DEBUG'|'INFO'|'WARN'} the log type of the log */
+  level
 
   /**
    * @param {number} timestamp - Unix timestamp
@@ -17,11 +18,11 @@ export class Log {
    * @param {object} attributes - other log event attributes
    * @param {enum} level - Log level
    */
-  constructor (timestamp, message, attributes, level) {
+  constructor (timestamp, message, attributes = {}, level = LOG_LEVELS.INFO) {
     /** @type {long} */
     this.timestamp = timestamp
     this.message = message
     this.attributes = { ...attributes, pageUrl: cleanURL('' + globalScope.location) }
-    this.logType = level
+    this.level = level.toUpperCase()
   }
 }

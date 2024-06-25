@@ -1,11 +1,11 @@
 import { FEATURE_NAMES } from '../../loaders/features/features'
 
 export const LOG_LEVELS = {
-  ERROR: 'error',
-  WARN: 'warn',
-  INFO: 'info',
-  DEBUG: 'debug',
-  TRACE: 'trace'
+  ERROR: 'ERROR',
+  WARN: 'WARN',
+  INFO: 'INFO',
+  DEBUG: 'DEBUG',
+  TRACE: 'TRACE'
 }
 
 export const LOGGING_EVENT_EMITTER_CHANNEL = 'log'

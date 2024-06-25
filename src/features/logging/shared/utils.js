@@ -12,7 +12,7 @@ import { LOGGING_EVENT_EMITTER_CHANNEL, LOG_LEVELS } from '../constants'
    * @param {{[key: string]: *}} customAttributes - The log's custom attributes if any
    * @param {enum} level - the log level enum
    */
-export function bufferLog (ee, message, customAttributes = {}, level = 'info') {
+export function bufferLog (ee, message, customAttributes = {}, level = LOG_LEVELS.INFO) {
   try {
     if (typeof message !== 'string') {
       const stringified = stringify(message)
@@ -28,7 +28,7 @@ export function bufferLog (ee, message, customAttributes = {}, level = 'info') {
     warn('could not cast log message to string', message)
     return
   }
-  handle(SUPPORTABILITY_METRIC_CHANNEL, [`API/logging/${level}/called`], undefined, FEATURE_NAMES.metrics, ee)
+  handle(SUPPORTABILITY_METRIC_CHANNEL, [`API/logging/${level.toLowerCase()}/called`], undefined, FEATURE_NAMES.metrics, ee)
   handle(LOGGING_EVENT_EMITTER_CHANNEL, [now(), message, customAttributes, level], undefined, FEATURE_NAMES.logging, ee)
 }
 
@@ -39,5 +39,5 @@ export function bufferLog (ee, message, customAttributes = {}, level = 'info') {
  */
 export function isValidLogLevel (level) {
   if (typeof level !== 'string') return false
-  return Object.values(LOG_LEVELS).some(logLevel => logLevel.toLowerCase() === level.toLowerCase())
+  return Object.values(LOG_LEVELS).some(logLevel => logLevel.toUpperCase() === level.toUpperCase())
 }

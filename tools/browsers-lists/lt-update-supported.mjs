@@ -37,6 +37,7 @@ function updateLatestVersions (deskPlatforms) {
   const safaris = macOSes.map(p => p.browsers.find(spec => spec.browser_name === 'Safari'))
   safaris.sort((a, b) => Number(a.version) - Number(b.version))
   latestVersionsJson.safari = Number(safaris.pop().version)
+  latestVersionsJson.safari_min = Math.floor(browserslistMinVersion('last 10 Safari versions'))
 
   return latestVersionsJson
 }

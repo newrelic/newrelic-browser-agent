@@ -15,10 +15,7 @@ export const CHANGELOG_FILE_PATH = path.resolve(
   CHANGELOG_FILE_NAME
 )
 
-export const BROWSER_SUPPORT_LIST_FILE_PATH = path.resolve(
-  __dirname,
-  '../../../tools/browsers-lists/browsers-supported.json'
-)
+export const BROWSER_LASTEST_VERSIONS_FILE_PATH = path.resolve(__dirname, '../../../tools/browsers-lists/lt-desktop-latest-vers.json')
+export const MOBILE_VERSIONS_FILE_PATH = path.resolve(__dirname, '../../../tools/browsers-lists/lt-mobile-supported.json')
 
-export const ANDROID_CHROME_VERSION = 100 // for browser target statement; SauceLabs only offers one Android Chrome version
 export const RELEASE_NOTES_PATH = 'src/content/docs/release-notes/new-relic-browser-release-notes/browser-agent-release-notes'

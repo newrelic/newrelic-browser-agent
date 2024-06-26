@@ -2,5 +2,6 @@
   "chrome": 125,
   "edge": 126,
   "firefox": 126,
-  "safari": 17
+  "safari": 17,
+  "safari_min": 16
 }

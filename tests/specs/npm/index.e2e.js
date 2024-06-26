@@ -91,6 +91,34 @@ describe.withBrowsersMatching(es2022Support)('basic npm agent', () => {
     expect(errorsPromise).toBeDefined()
     expect(pageActionPromise).toBeDefined()
   })
+
+  it('vite-react-wrapper should not break agent when session manager cannot be imported', async () => {
+    await browser.destroyAgentSession()
+    await browser.testHandle.scheduleReply('assetServer', {
+      test: function (request) {
+        const url = new URL(request.url, 'resolve://')
+        return (url.pathname.includes('agent-session'))
+      },
+      permanent: true,
+      statusCode: 500,
+      body: ''
+    })
+
+    const [ajaxPromise] = await Promise.all([
+      browser.testHandle.expectAjaxTimeSlices(),
+      browser.url(await browser.testHandle.assetURL('test-builds/vite-react-wrapper/index.html'))
+    ])
+    expect(ajaxPromise.request.body.xhr).toBeDefined()
+
+    const agentSession = await browser.getAgentSessionInfo()
+    Object.values(agentSession.agentSessions).forEach(val =>
+      expect(val).toEqual({})
+    )
+    Object.values(agentSession.agentSessionInstances).forEach(val =>
+      expect(val).toEqual({})
+    )
+    expect(agentSession.localStorage).toEqual({})
+  })
 })
 
 async function getAgentProps (variablePath) {

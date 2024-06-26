@@ -1,1 +1,3 @@
-export const setupAgentSession = jest.fn()
+export const setupAgentSession = jest.fn(() => {
+  return {}
+})

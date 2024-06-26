@@ -1,5 +1,5 @@
 import fs from 'fs'
-import { BROWSER_LASTEST_VERSIONS_FILE_PATH } from './constants.js'
+import { BROWSER_LASTEST_VERSIONS_FILE_PATH, MOBILE_VERSIONS_FILE_PATH } from './constants.js'
 
 /**
  * Strips the conventional commit prefix and Jira issue suffix from a title.

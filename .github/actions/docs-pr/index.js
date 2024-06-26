@@ -64,7 +64,7 @@ const bodyContent = {
   bugs: [],
   security: [],
   browserVersions: {
-    ...getBrowserVersions()
+    ...(await getBrowserVersions())
   }
 }
 

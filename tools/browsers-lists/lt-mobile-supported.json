@@ -6,19 +6,19 @@
       "platformName": "ios"
     },
     {
-      "device_name": "iPhone 14 Pro Max",
+      "device_name": "iPhone SE (3rd generation)",
       "version": "16.0",
       "platformName": "ios"
     }
   ],
   "android": [
     {
-      "device_name": "Pixel 4",
+      "device_name": "ASUS ZenFone 8",
       "version": "14",
       "platformName": "android"
     },
     {
-      "device_name": "Oppo A9",
+      "device_name": "Galaxy S10",
       "version": "9",
       "platformName": "android"
     }

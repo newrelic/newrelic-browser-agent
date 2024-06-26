@@ -1,5 +1,5 @@
 import fs from 'fs'
-import { BROWSER_SUPPORT_LIST_FILE_PATH } from './constants.js'
+import { BROWSER_LASTEST_VERSIONS_FILE_PATH, MOBILE_VERSIONS_FILE_PATH } from './constants.js'
 
 /**
  * Strips the conventional commit prefix and Jira issue suffix from a title.
@@ -19,20 +19,25 @@ export function cleanTitle (rawTitle) {
  * @returns {string} The min and max browser versions
  */
 export async function getBrowserVersions () {
-  const browserData = JSON.parse(await fs.promises.readFile(BROWSER_SUPPORT_LIST_FILE_PATH))
+  const lastVersions = JSON.parse(await fs.promises.readFile(BROWSER_LASTEST_VERSIONS_FILE_PATH))
+  const mobileVersions = JSON.parse(await fs.promises.readFile(MOBILE_VERSIONS_FILE_PATH))
 
   const min = {}
   const max = {}
 
-  for (let browser in browserData) {
-    const browserVersions = browserData[browser]
-    min[browser] = Infinity
-    max[browser] = -Infinity
-    for (let browserVersion of browserVersions) {
-      const versionNumber = Number(browserVersion.version)
-      min[browser] = min[browser] > versionNumber ? versionNumber : min[browser]
-      max[browser] = max[browser] < versionNumber ? versionNumber : max[browser]
-    }
+  for (let browser in lastVersions) {
+    if (browser === 'safari_min') continue // only do 'safari' not both
+    const curVersion = lastVersions[browser]
+    max[browser] = Number(curVersion)
+    // chromium & ff follows major versioning releases, while safari doesn't
+    if (browser === 'safari') min[browser] = Number(lastVersions['safari_min'])
+    else min[browser] = max[browser] - 10
+  }
+
+  for (let mobile in mobileVersions) {
+    const specsArray = mobileVersions[mobile]
+    max[mobile] = Number(specsArray[0].version)
+    min[mobile] = Number(specsArray[1].version)
   }
 
   return { min, max }

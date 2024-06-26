@@ -19,6 +19,7 @@ module.exports = fp(async function (fastify, testServer) {
     }
     if (!!testId && request.url.startsWith('/tests/assets') && request.url.includes('.html')) {
       reply.header('set-cookie', `test-id=${testId};path=/build/`)
+      reply.header('set-cookie', `test-id=${testId};path=/tests/assets/`)
     }
 
     if (request.query.nonce) {

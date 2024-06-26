@@ -5,6 +5,87 @@
       "changes": [
         {
           "type": "fix",
+          "sha": "df874f72c1a7668098c855eea718b1d0ceda7a7c",
+          "message": "Reading finish of null in SPA",
+          "issues": [
+            "1085"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "9f95b339248d7597ce489546e9f04d68053fe7d1",
+          "message": "dedup pre-load ajax requests",
+          "issues": [
+            "1081"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "8fbd25a6de3e5c48869f9cae564d86cf36cc364c",
+          "message": "Pass logging API args as object for better extensibility",
+          "issues": [
+            "1074"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "9a9fad5fe10536e72d5b55374363f727b6ae0c43",
+          "message": "Logging feature harvesting and optimizations",
+          "issues": [
+            "1064"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "c573e330ea5e7dd97e7293b0f95785cb738cf3f2",
+          "message": "Create logging feature",
+          "issues": [
+            "1059"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "3c4ea262b30b48afc434f8ccdce867b1a5acb874",
+          "message": "Add Logging Configurations",
+          "issues": [
+            "1058"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "3713d73716f24c9bfb4154a664c2696296f7150e",
+          "message": "Add wrapLogger API method for wrapping 3rd party loggers",
+          "issues": [
+            "1054"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "face4457f2ec29699b610cb096864ee3a16aafdc",
+          "message": "Add Logging API entry points and central handler",
+          "issues": [
+            "1052"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "bec022b57ffa2cb23353272b667727f631e76b63",
+          "message": "Prevent session reset triggers from harvesting session trace data",
+          "issues": [
+            "1050"
+          ]
+        }
+      ],
+      "version": "1.261.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "a8b98773-474e-45a2-860a-76461aee8c28",
+      "createTime": "2024-06-26T00:19:05.838Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
           "sha": "1a87991143aa1f220ae29edbf1e8ea89598bcc44",
           "message": "Undefined stns in blob Trace",
           "issues": [
@@ -1558,5 +1639,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2024-05-16T17:24:06.705Z"
+  "updateTime": "2024-06-26T00:19:05.838Z"
 }

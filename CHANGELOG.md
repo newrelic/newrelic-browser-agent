@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.261.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.261.0...v1.261.1) (2024-06-26)
+
+
+### Bug Fixes
+
+* Unhandled promise rejection for session import ([#1088](https://github.com/newrelic/newrelic-browser-agent/issues/1088)) ([03efcf3](https://github.com/newrelic/newrelic-browser-agent/commit/03efcf36656ac883c4431829fda1bad6445373a1))
+
 ## [1.261.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.260.1...v1.261.0) (2024-06-26)
 
 

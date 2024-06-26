@@ -5,6 +5,23 @@
       "changes": [
         {
           "type": "fix",
+          "sha": "03efcf36656ac883c4431829fda1bad6445373a1",
+          "message": "Unhandled promise rejection for session import",
+          "issues": [
+            "1088"
+          ]
+        }
+      ],
+      "version": "1.261.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "6177a260-bb27-4ad1-a807-bcd0c0663e67",
+      "createTime": "2024-06-26T17:41:16.023Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
           "sha": "df874f72c1a7668098c855eea718b1d0ceda7a7c",
           "message": "Reading finish of null in SPA",
           "issues": [
@@ -1639,5 +1656,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2024-06-26T00:19:05.838Z"
+  "updateTime": "2024-06-26T17:41:16.023Z"
 }

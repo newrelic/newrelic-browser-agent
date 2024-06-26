@@ -17,7 +17,7 @@ export class AggregateBase extends FeatureBase {
    * @returns {Promise}
    */
   waitForFlags (flagNames = []) {
-    return new Promise((resolve, reject) => {
+    const flagsPromise = new Promise((resolve, reject) => {
       if (activatedFeatures[this.agentIdentifier]) {
         resolve(buildOutput(activatedFeatures[this.agentIdentifier]))
       } else {
@@ -31,6 +31,9 @@ export class AggregateBase extends FeatureBase {
           return ref[flag]
         })
       }
+    })
+    return flagsPromise.catch(err => {
+      this.ee.emit('internal-error', [err])
     })
   }
 

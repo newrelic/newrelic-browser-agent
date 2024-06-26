@@ -5,7 +5,8 @@ export const FeatureBase = jest.fn(function (agentIdentifier, aggregator, featur
 
   this.ee = {
     abort: jest.fn(),
-    on: jest.fn()
+    on: jest.fn(),
+    emit: jest.fn()
   }
   this.blocked = false
 })

@@ -581,7 +581,7 @@ describe('setAPI', () => {
         const endEmit = instanceEE.emit.mock.calls[2]
         expect(endEmit[0]).toEqual('wrap-logger-end')
         expect(endEmit[1][0]).toEqual(['test1'])
-        expect(endEmit[2].level).toEqual('info')
+        expect(endEmit[2].level).toEqual('INFO')
 
         /** does NOT emit data for observed fn */
         myLoggerPackage.myUnobservedLogger('test1')
@@ -606,7 +606,7 @@ describe('setAPI', () => {
         const endEmit = instanceEE.emit.mock.calls[2]
         expect(endEmit[0]).toEqual('wrap-logger-end')
         expect(endEmit[1][0]).toEqual(['test1'])
-        expect(endEmit[2].level).toEqual('warn')
+        expect(endEmit[2].level).toEqual('WARN')
       })
 
       test('should emit events with concat string for multiple args', () => {
@@ -625,7 +625,7 @@ describe('setAPI', () => {
         const endEmit = instanceEE.emit.mock.calls[2]
         expect(endEmit[0]).toEqual('wrap-logger-end')
         expect(endEmit[1][0]).toEqual(['test1', { test2: 2 }, ['test3'], true, 1])
-        expect(endEmit[2].level).toEqual('info')
+        expect(endEmit[2].level).toEqual('INFO')
       })
 
       test('wrapped function should still behave as intended', () => {
@@ -675,7 +675,7 @@ describe('setAPI', () => {
 
           const secondEmit = handleModule.handle.mock.calls[1]
           expect(secondEmit[0]).toEqual('log')
-          expect(secondEmit[1]).toEqual([expect.any(Number), args[0], args[1].customAttributes, logMethod.toLowerCase().replace('log', '')])
+          expect(secondEmit[1]).toEqual([expect.any(Number), args[0], args[1].customAttributes, logMethod.toUpperCase().replace('log', '')])
           expect(secondEmit[2]).toBeUndefined()
           expect(secondEmit[3]).toEqual(FEATURE_NAMES.logging)
           expect(secondEmit[4]).toEqual(instanceEE)
@@ -727,7 +727,7 @@ describe('setAPI', () => {
 
         const secondEmit = handleModule.handle.mock.calls[1]
         expect(secondEmit[0]).toEqual('log')
-        expect(secondEmit[1]).toEqual([expect.any(Number), 'message', {}, 'info'])
+        expect(secondEmit[1]).toEqual([expect.any(Number), 'message', {}, 'INFO'])
         expect(secondEmit[2]).toBeUndefined()
         expect(secondEmit[3]).toEqual(FEATURE_NAMES.logging)
         expect(secondEmit[4]).toEqual(instanceEE)
@@ -745,7 +745,7 @@ describe('setAPI', () => {
 
       const secondEmit = handleModule.handle.mock.calls[1]
       expect(secondEmit[0]).toEqual('log')
-      expect(secondEmit[1]).toEqual([expect.any(Number), 'message', {}, 'debug'])
+      expect(secondEmit[1]).toEqual([expect.any(Number), 'message', {}, 'DEBUG'])
     })
   })
 

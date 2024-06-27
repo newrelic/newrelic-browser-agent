@@ -51,7 +51,7 @@ export class Aggregate extends AggregateBase {
       attributes,
       level
     )
-    const logBytes = log.message.length + stringify(log.attributes).length + log.logType.length + 10 // timestamp == 10 chars
+    const logBytes = log.message.length + stringify(log.attributes).length + log.level.length + 10 // timestamp == 10 chars
     if (logBytes > MAX_PAYLOAD_SIZE) {
       handle(SUPPORTABILITY_METRIC_CHANNEL, ['Logging/Harvest/Failed/Seen', logBytes])
       return warn(LOGGING_IGNORED + '> ' + MAX_PAYLOAD_SIZE + ' bytes', log.message.slice(0, 25) + '...')
@@ -79,7 +79,7 @@ export class Aggregate extends AggregateBase {
         common: {
           /** Attributes in the `common` section are added to `all` logs generated in the payload */
           attributes: {
-            entityGuid: this.#agentRuntime.appMetadata?.agents?.[0]?.entityGuid, // browser entity guid as provided from RUM response
+            'entity.guid': this.#agentRuntime.appMetadata?.agents?.[0]?.entityGuid, // browser entity guid as provided from RUM response
             session: this.#agentRuntime?.session?.state.value || '0', // The session ID that we generate and keep across page loads
             hasReplay: this.#agentRuntime?.session?.state.sessionReplayMode === 1, // True if a session replay recording is running
             hasTrace: this.#agentRuntime?.session?.state.sessionTraceMode === 1, // True if a session trace recording is running

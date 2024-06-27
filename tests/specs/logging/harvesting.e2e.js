@@ -6,15 +6,15 @@ describe('logging harvesting', () => {
     const pageUrl = expect.any(String)
     const customAttributes = { test: 1 }
     const attributes = { ...customAttributes, pageUrl }
-    const expectedLogs = ['info', 'debug', 'trace', 'error', 'warn'].map(level => ({
-      logType: level, message: level, timestamp: expect.any(Number), attributes
+    const expectedLogs = ['INFO', 'DEBUG', 'TRACE', 'ERROR', 'WARN'].map(level => ({
+      level, message: level.toLowerCase(), timestamp: expect.any(Number), attributes
     }))
     const expectedPayload = [{
       common: {
         attributes: {
           appId: 42,
           agentVersion: expect.any(String),
-          entityGuid: expect.any(String),
+          'entity.guid': expect.any(String),
           hasReplay: false,
           hasTrace: true,
           standalone: false,
@@ -86,13 +86,13 @@ describe('logging harvesting', () => {
       expect(logs.length).toEqual(3)
       // original wrapping context (warn)
       expect(logs[0].message).toEqual('test1')
-      expect(logs[0].logType).toEqual('warn')
-      // should not re-wrap, meaning the logType should not change, but the message should here
+      expect(logs[0].level).toEqual('WARN')
+      // should not re-wrap, meaning the level should not change, but the message should here
       expect(logs[1].message).toEqual('test2')
-      expect(logs[1].logType).toEqual('warn')
+      expect(logs[1].level).toEqual('WARN')
       // should allow a 3rd party to wrap the function and not affect the context (warn)
       expect(logs[2].message).toEqual('test3')
-      expect(logs[2].logType).toEqual('warn')
+      expect(logs[2].level).toEqual('WARN')
     })
   })
 

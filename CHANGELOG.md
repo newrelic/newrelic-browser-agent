@@ -3,6 +3,32 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.261.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.261.0...v1.261.1) (2024-06-26)
+
+
+### Bug Fixes
+
+* Unhandled promise rejection for session import ([#1088](https://github.com/newrelic/newrelic-browser-agent/issues/1088)) ([03efcf3](https://github.com/newrelic/newrelic-browser-agent/commit/03efcf36656ac883c4431829fda1bad6445373a1))
+
+## [1.261.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.260.1...v1.261.0) (2024-06-26)
+
+
+### Features
+
+* Add Logging API entry points and central handler ([#1052](https://github.com/newrelic/newrelic-browser-agent/issues/1052)) ([face445](https://github.com/newrelic/newrelic-browser-agent/commit/face4457f2ec29699b610cb096864ee3a16aafdc))
+* Add Logging Configurations ([#1058](https://github.com/newrelic/newrelic-browser-agent/issues/1058)) ([3c4ea26](https://github.com/newrelic/newrelic-browser-agent/commit/3c4ea262b30b48afc434f8ccdce867b1a5acb874))
+* Add wrapLogger API method for wrapping 3rd party loggers ([#1054](https://github.com/newrelic/newrelic-browser-agent/issues/1054)) ([3713d73](https://github.com/newrelic/newrelic-browser-agent/commit/3713d73716f24c9bfb4154a664c2696296f7150e))
+* Create logging feature ([#1059](https://github.com/newrelic/newrelic-browser-agent/issues/1059)) ([c573e33](https://github.com/newrelic/newrelic-browser-agent/commit/c573e330ea5e7dd97e7293b0f95785cb738cf3f2))
+* Logging feature harvesting and optimizations ([#1064](https://github.com/newrelic/newrelic-browser-agent/issues/1064)) ([9a9fad5](https://github.com/newrelic/newrelic-browser-agent/commit/9a9fad5fe10536e72d5b55374363f727b6ae0c43))
+* Pass logging API args as object for better extensibility ([#1074](https://github.com/newrelic/newrelic-browser-agent/issues/1074)) ([8fbd25a](https://github.com/newrelic/newrelic-browser-agent/commit/8fbd25a6de3e5c48869f9cae564d86cf36cc364c))
+
+
+### Bug Fixes
+
+* dedup pre-load ajax requests ([#1081](https://github.com/newrelic/newrelic-browser-agent/issues/1081)) ([9f95b33](https://github.com/newrelic/newrelic-browser-agent/commit/9f95b339248d7597ce489546e9f04d68053fe7d1))
+* Prevent session reset triggers from harvesting session trace data ([#1050](https://github.com/newrelic/newrelic-browser-agent/issues/1050)) ([bec022b](https://github.com/newrelic/newrelic-browser-agent/commit/bec022b57ffa2cb23353272b667727f631e76b63))
+* Reading finish of null in SPA ([#1085](https://github.com/newrelic/newrelic-browser-agent/issues/1085)) ([df874f7](https://github.com/newrelic/newrelic-browser-agent/commit/df874f72c1a7668098c855eea718b1d0ceda7a7c))
+
 ## [1.260.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.260.0...v1.260.1) (2024-05-16)
 
 

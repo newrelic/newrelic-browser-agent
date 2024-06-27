@@ -9,6 +9,8 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 ### Logging
 <!--- Logging harvest was too big to send --->
 * Logging/Harvest/Failed/Seen
+<!--- Logging harvest was sent before the interval elapsed --->
+* Logging/Harvest/Early/Seen
 
 ### Session
 <!--- Session has ended due to max time limit reached --->
@@ -249,10 +251,6 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 * API/end/called
 <!--- newrelic.Interaction.get() was called --->
 * API/get/called
-<!--- newrelic.log() was called --->
-* API/log/called
-<!--- newrelic.wrapLogger() was called --->
-* API/wrapLogger/called
 <!--- Logging level error was observed --->
 * API/logging/error/called
 <!--- Logging level trace was observed --->

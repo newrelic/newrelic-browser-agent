@@ -38,9 +38,9 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 
 ### Generic
 <!--- Generic Agent Loader Was Initialized (NPM) --->
-* Generic/LoaderType/Agent/Detected
+* Generic/LoaderType/agent/Detected
 <!--- Browser Agent Loader Was Initialized (NPM) --->
-* Generic/LoaderType/browser-Agent/Detected
+* Generic/LoaderType/browser-agent/Detected
 <!--- Experimental Loader Was Initialized --->
 * Generic/LoaderType/experimental/Detected
 <!--- Lite Agent Loader Was Initialized --->
@@ -48,13 +48,13 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 <!--- Pro Agent Loader Was Initialized --->
 * Generic/LoaderType/pro/Detected
 <!--- Spa Agent Loader Was Initialized --->
-* Generic/LoaderType/Spa/Detected
+* Generic/LoaderType/spa/Detected
 <!--- Lite (Polyfilled) Agent Loader Was Initialized --->
 * Generic/LoaderType/lite-polyfills/Detected
 <!--- Pro (Polyfilled) Agent Loader Was Initialized --->
 * Generic/LoaderType/pro-polyfills/Detected
 <!--- Spa (Polyfilled) Agent Loader Was Initialized --->
-* Generic/LoaderType/Spa-polyfills/Detected
+* Generic/LoaderType/spa-polyfills/Detected
 <!--- CDN Distribution Method was Ininitialized --->
 * Generic/DistMethod/CDN/Detected
 <!--- NPM Distribution Method was Ininitialized --->

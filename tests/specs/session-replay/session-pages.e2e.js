@@ -111,28 +111,6 @@ describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
     await browser.switchToWindow((await browser.getWindowHandles())[0])
   })
 
-  it('should not record across navigations if not active', async () => {
-    const [{ request: page1Contents }] = await Promise.all([
-      browser.testHandle.expectReplay(10000),
-      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
-        .then(() => browser.waitForAgentLoad())
-    ])
-
-    const { localStorage } = await browser.getAgentSessionInfo()
-
-    testExpectedReplay({ data: page1Contents, session: localStorage.value, hasError: false, hasMeta: true, hasSnapshot: true, isFirstChunk: true })
-
-    await browser.execute(function () {
-      Object.values(NREUM.initializedAgents)[0].runtime.session.state.sessionReplayMode = 0
-    })
-
-    await browser.enableSessionReplay()
-    await browser.refresh()
-      .then(() => browser.waitForAgentLoad())
-
-    await expect(browser.waitForFeatureAggregate('session_replay', 5000)).rejects.toThrow()
-  })
-
   // As of 06/26/2023 test fails in Safari, though tested behavior works in a live browser (revisit in NR-138940).
   it.withBrowsersMatching([supportsMultipleTabs, notSafari])('should kill active tab if killed in backgrounded tab', async () => {
     const [{ request: page1Contents }] = await Promise.all([

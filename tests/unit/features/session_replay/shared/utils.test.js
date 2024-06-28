@@ -68,55 +68,13 @@ describe('isPreloadAllowed', () => {
   })
 })
 
-describe('canImportReplayAgg', () => {
-  beforeEach(() => {
-    jest.mocked(configModule.getConfigurationValue).mockReturnValue(true)
-    jest.mocked(configModule.getConfigurationValue).mockReturnValue(true)
-  })
+test('hasReplayPrerequisite should return false when replay prerequisites are not present', async () => {
+  jest.mocked(configModule.getConfigurationValue).mockReturnValue(true)
+  jest.mocked(configModule.getConfigurationValue).mockReturnValue(true)
 
-  test('should return false when replay prerequisites are not present', async () => {
-    jest.replaceProperty(configModule, 'originals', {})
-    const sessionManager = {
-      isNew: true
-    }
+  jest.replaceProperty(configModule, 'originals', {})
 
-    expect(sessionReplaySharedUtils.canImportReplayAgg(agentIdentifier, sessionManager)).toEqual(false)
-  })
-
-  test('should return true when session is new', async () => {
-    jest.mocked(featureGatesModule.canEnableSessionTracking).mockReturnValue(true)
-    jest.replaceProperty(configModule, 'originals', { MO: jest.fn() })
-    const sessionManager = {
-      isNew: true
-    }
-
-    expect(sessionReplaySharedUtils.canImportReplayAgg(agentIdentifier, sessionManager)).toEqual(true)
-  })
-
-  test('should return true when replay already recording', async () => {
-    jest.mocked(featureGatesModule.canEnableSessionTracking).mockReturnValue(true)
-    jest.replaceProperty(configModule, 'originals', { MO: jest.fn() })
-    const sessionManager = {
-      isNew: false,
-      state: {
-        sessionReplayMode: 1
-      }
-    }
-
-    expect(sessionReplaySharedUtils.canImportReplayAgg(agentIdentifier, sessionManager)).toEqual(true)
-  })
-
-  test('should return false when session is not new and a replay is not already recording', async () => {
-    jest.replaceProperty(configModule, 'originals', { MO: jest.fn() })
-    const sessionManager = {
-      isNew: false,
-      state: {
-        sessionReplayMode: 0
-      }
-    }
-
-    expect(sessionReplaySharedUtils.canImportReplayAgg(agentIdentifier, sessionManager)).toEqual(false)
-  })
+  expect(sessionReplaySharedUtils.hasReplayPrerequisite(agentIdentifier)).toEqual(false)
 })
 
 describe('buildNRMetaNode', () => {

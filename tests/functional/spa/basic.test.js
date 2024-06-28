@@ -194,7 +194,7 @@ testDriver.test('promise wrapper should support instanceof comparison', notIE, f
         t.notOk(err, 'should not get an error')
         t.ok(res, 'static Promise methods return is instanceof global Promise')
       })
-      await browser.safeEval('window.isFetchPromise', (err, res) => {
+    await browser.safeEval('window.isFetchPromise', (err, res) => {
         t.notOk(err, 'should not get an error')
         t.ok(res, 'fetch returned promise is an instance of global Promise')
       })

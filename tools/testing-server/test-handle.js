@@ -250,18 +250,21 @@ module.exports = class TestHandle {
    * requests allowing tests to check which BAM APIs or assets were requested, how many times, and
    * wait for some expectation within the capture to pause testing.
    * @param {'assetServer'|'bamServer'} serverId Id of the server the request will be received on
-   * @param {import('./network-capture').NetworkCaptureOptions} networkCaptureOptions The options to apply
+   * @param {import('./network-capture').NetworkCaptureOptions[]} networkCaptureOptions The options to apply
    * to the server request to verify if the request should be captured
    * @returns {import('./network-capture')} The ID of the network capture
    */
-  createNetworkCapture (serverId, networkCaptureOptions) {
+  createNetworkCaptures (serverId, networkCaptureOptions) {
     if (!this.#networkCaptures.has(serverId)) {
       this.#networkCaptures.set(serverId, new Map())
     }
 
-    const networkCapture = new NetworkCapture(this, networkCaptureOptions)
-    this.#networkCaptures.get(serverId).set(networkCapture.instanceId, networkCapture)
-    return networkCapture
+    return networkCaptureOptions
+      .map(options => {
+        const networkCapture = new NetworkCapture(this, options)
+        this.#networkCaptures.get(serverId).set(networkCapture.instanceId, networkCapture)
+        return networkCapture.instanceId
+      })
   }
 
   /**

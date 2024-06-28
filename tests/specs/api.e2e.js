@@ -52,11 +52,12 @@ describe('newrelic api', () => {
 
   describe('setPageViewName()', () => {
     it('includes the 1st argument (page name) in rum, resources, events, and ajax calls', async () => {
-      const [rumCapture, eventsCapture, ajaxCapture] = await Promise.all([
-        browser.testHandle.createNetworkCapture('bamServer', { test: testRumRequest }),
-        browser.testHandle.createNetworkCapture('bamServer', { test: testEventsRequest }),
-        browser.testHandle.createNetworkCapture('bamServer', { test: testAjaxTimeSlicesRequest })
-      ])
+      const [rumCapture, eventsCapture, ajaxCapture] =
+        await browser.testHandle.createNetworkCaptures('bamServer', [
+          { test: testRumRequest },
+          { test: testEventsRequest },
+          { test: testAjaxTimeSlicesRequest }
+        ])
 
       const [rumResults, eventsResults, ajaxResults] = await Promise.all([
         rumCapture.waitForResult({ count: 1 }),
@@ -76,7 +77,7 @@ describe('newrelic api', () => {
       await browser.url(await browser.testHandle.assetURL('api.html'))
         .then(() => browser.waitForAgentLoad())
 
-      const customMetricsCapture = await browser.testHandle.createNetworkCapture('bamServer', {
+      const customMetricsCapture = await browser.testHandle.createNetworkCaptures('bamServer', {
         test: testCustomMetricsRequest
       })
       const [unloadCustomMetricsResults] = await Promise.all([
@@ -95,12 +96,12 @@ describe('newrelic api', () => {
 
     // IE does not have reliable unload support
     it.withBrowsersMatching(notIE)('includes the optional 2nd argument for host in metrics call on unload', async () => {
+      const customMetricsCapture = await browser.testHandle.createNetworkCaptures('bamServer', {
+        test: testCustomMetricsRequest
+      })
       await browser.url(await browser.testHandle.assetURL('api2.html'))
         .then(() => browser.waitForAgentLoad())
 
-      const customMetricsCapture = await browser.testHandle.createNetworkCapture('bamServer', {
-        test: testCustomMetricsRequest
-      })
       const [unloadCustomMetricsResults] = await Promise.all([
         customMetricsCapture.waitForResult({ count: 1 }),
         await browser.url(await browser.testHandle.assetURL('/')) // Setup expects before navigating
@@ -118,7 +119,7 @@ describe('newrelic api', () => {
 
   describe('noticeError()', () => {
     it('takes an error object', async () => {
-      const errorsCapture = await browser.testHandle.createNetworkCapture('bamServer', { test: testErrorsRequest })
+      const errorsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testErrorsRequest })
 
       const [errorsResults] = await Promise.all([
         errorsCapture.waitForResult({ count: 1 }),
@@ -137,7 +138,7 @@ describe('newrelic api', () => {
     })
 
     it('takes a string', async () => {
-      const errorsCapture = await browser.testHandle.createNetworkCapture('bamServer', { test: testErrorsRequest })
+      const errorsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testErrorsRequest })
 
       const [errorsResults] = await Promise.all([
         errorsCapture.waitForResult({ count: 1 }),
@@ -158,7 +159,7 @@ describe('newrelic api', () => {
 
   describe('finished()', () => {
     it('records a PageAction when called before RUM message', async () => {
-      const insCapture = await browser.testHandle.createNetworkCapture('bamServer', { test: testInsRequest })
+      const insCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testInsRequest })
 
       const [insResult] = await Promise.all([
         insCapture.waitForResult({ count: 1 }),
@@ -175,7 +176,7 @@ describe('newrelic api', () => {
 
   describe('release()', () => {
     it('adds releases to jserrors', async () => {
-      const errorsCapture = await browser.testHandle.createNetworkCapture('bamServer', { test: testErrorsRequest })
+      const errorsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testErrorsRequest })
 
       const [errorsResult] = await Promise.all([
         errorsCapture.waitForResult({ count: 1 }),
@@ -187,7 +188,7 @@ describe('newrelic api', () => {
     })
 
     it('limits releases to jserrors', async () => {
-      const errorsCapture = await browser.testHandle.createNetworkCapture('bamServer', { test: testErrorsRequest })
+      const errorsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testErrorsRequest })
 
       const [errorsResult] = await Promise.all([
         errorsCapture.waitForResult({ count: 1 }),
@@ -210,7 +211,7 @@ describe('newrelic api', () => {
     })
 
     it('limits size in jserrors payload', async () => {
-      const errorsCapture = await browser.testHandle.createNetworkCapture('bamServer', { test: testErrorsRequest })
+      const errorsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testErrorsRequest })
 
       const [errorsResult] = await Promise.all([
         errorsCapture.waitForResult({ count: 1 }),
@@ -225,7 +226,7 @@ describe('newrelic api', () => {
     })
 
     it('does not set ri query param if release() is not called', async () => {
-      const errorsCapture = await browser.testHandle.createNetworkCapture('bamServer', { test: testErrorsRequest })
+      const errorsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testErrorsRequest })
 
       const [errorsResult] = await Promise.all([
         errorsCapture.waitForResult({ count: 1 }),
@@ -239,7 +240,7 @@ describe('newrelic api', () => {
 
   describe('setCustomAttribute()', () => {
     it('persists attribute onto subsequent page loads until unset', async () => {
-      const rumCapture = await browser.testHandle.createNetworkCapture('bamServer', { test: testRumRequest })
+      const rumCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testRumRequest })
       const testUrl = await browser.testHandle.assetURL('api/custom-attribute.html', {
         init: {
           privacy: { cookies_enabled: true }
@@ -286,10 +287,11 @@ describe('newrelic api', () => {
     const ERRORS_INBOX_UID = 'enduser.id' // this key should not be changed without consulting EI team on the data flow
 
     it('adds correct (persisted) attribute to payloads', async () => {
-      const [rumCapture, errorsCapture] = await Promise.all([
-        browser.testHandle.createNetworkCapture('bamServer', { test: testRumRequest }),
-        browser.testHandle.createNetworkCapture('bamServer', { test: testErrorsRequest })
-      ])
+      const [rumCapture, errorsCapture] =
+        await browser.testHandle.createNetworkCaptures('bamServer', [
+          { test: testRumRequest },
+          { test: testErrorsRequest }
+        ])
       await browser.url(await browser.testHandle.assetURL('instrumented.html', {
         init: {
           privacy: { cookies_enabled: true }
@@ -340,16 +342,17 @@ describe('newrelic api', () => {
     }
 
     it('should start all features', async () => {
-      const [rumCapture, timingsCapture, ajaxEventsCapture, errorsCapture, metricsCapture, insCapture, traceCapture, interactionCapture] = await Promise.all([
-        browser.testHandle.createNetworkCapture('bamServer', { test: testRumRequest }),
-        browser.testHandle.createNetworkCapture('bamServer', { test: testTimingEventsRequest }),
-        browser.testHandle.createNetworkCapture('bamServer', { test: testAjaxEventsRequest }),
-        browser.testHandle.createNetworkCapture('bamServer', { test: testErrorsRequest }),
-        browser.testHandle.createNetworkCapture('bamServer', { test: testMetricsRequest }),
-        browser.testHandle.createNetworkCapture('bamServer', { test: testInsRequest }),
-        browser.testHandle.createNetworkCapture('bamServer', { test: testBlobTraceRequest }),
-        browser.testHandle.createNetworkCapture('bamServer', { test: testInteractionEventsRequest })
-      ])
+      const [rumCapture, timingsCapture, ajaxEventsCapture, errorsCapture, metricsCapture, insCapture, traceCapture, interactionCapture] =
+        await browser.testHandle.createNetworkCaptures('bamServer', [
+          { test: testRumRequest },
+          { test: testTimingEventsRequest },
+          { test: testAjaxEventsRequest },
+          { test: testErrorsRequest },
+          { test: testMetricsRequest },
+          { test: testInsRequest },
+          { test: testBlobTraceRequest },
+          { test: testInteractionEventsRequest }
+        ])
 
       const initialLoad = await Promise.all([
         rumCapture.waitForResult({ timeout: 10000 }),
@@ -389,8 +392,8 @@ describe('newrelic api', () => {
 
     it('starts everything if the auto features do not include PVE, and nothing should have started', async () => {
       const [rumCapture, errorsCapture] = await Promise.all([
-        browser.testHandle.createNetworkCapture('bamServer', { test: testRumRequest }),
-        browser.testHandle.createNetworkCapture('bamServer', { test: testErrorsRequest })
+        browser.testHandle.createNetworkCaptures('bamServer', { test: testRumRequest }),
+        browser.testHandle.createNetworkCaptures('bamServer', { test: testErrorsRequest })
       ])
 
       const initialLoad = await Promise.all([
@@ -422,14 +425,15 @@ describe('newrelic api', () => {
     })
 
     it('starts the rest of the features if the auto features include PVE, and those should have started', async () => {
-      const [rumCapture, timingsCapture, ajaxEventsCapture, errorsCapture, traceCapture, interactionCapture] = await Promise.all([
-        browser.testHandle.createNetworkCapture('bamServer', { test: testRumRequest }),
-        browser.testHandle.createNetworkCapture('bamServer', { test: testTimingEventsRequest }),
-        browser.testHandle.createNetworkCapture('bamServer', { test: testAjaxEventsRequest }),
-        browser.testHandle.createNetworkCapture('bamServer', { test: testErrorsRequest }),
-        browser.testHandle.createNetworkCapture('bamServer', { test: testBlobTraceRequest }),
-        browser.testHandle.createNetworkCapture('bamServer', { test: testInteractionEventsRequest })
-      ])
+      const [rumCapture, timingsCapture, ajaxEventsCapture, errorsCapture, traceCapture, interactionCapture] =
+        await browser.testHandle.createNetworkCaptures('bamServer', [
+          { test: testRumRequest },
+          { test: testTimingEventsRequest },
+          { test: testAjaxEventsRequest },
+          { test: testErrorsRequest },
+          { test: testBlobTraceRequest },
+          { test: testInteractionEventsRequest }
+        ])
 
       const results = await Promise.all([
         rumCapture.waitForResult({ count: 1 }),

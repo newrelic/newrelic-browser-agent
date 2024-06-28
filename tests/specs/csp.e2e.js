@@ -28,13 +28,13 @@ describe.withBrowsersMatching(notIE)('Content Security Policy', () => {
   })
 
   it.withBrowsersMatching(notIE)('should send a nonce supportability metric', async () => {
+    const supportMetricsCapture = await browser.testHandle.createNetworkCaptures('bamServer', {
+      test: testSupportMetricsRequest
+    })
     const nonce = faker.string.uuid()
     await browser.url(await browser.testHandle.assetURL('instrumented.html', { nonce }))
       .then(() => browser.waitForAgentLoad())
 
-    const supportMetricsCapture = await browser.testHandle.createNetworkCapture('bamServer', {
-      test: testSupportMetricsRequest
-    })
     const [unloadSupportMetricsResults] = await Promise.all([
       supportMetricsCapture.waitForResult({ count: 1 }),
       await browser.url(await browser.testHandle.assetURL('/')) // Setup expects before navigating

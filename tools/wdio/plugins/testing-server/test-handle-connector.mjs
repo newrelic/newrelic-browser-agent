@@ -60,8 +60,14 @@ export class TestHandleConnector {
   async ready () {
     if (!this.#testId) {
       const result = await fetch(`${this.#commandServerBase}/test-handle`)
-      this.#testId = (await result.json()).testId
-      log.info(`Test ID: ${this.#testId}`)
+
+      if (result.status !== 200) {
+        log.error(`Scheduling reply failed with status code ${result.status}`, await result.json(), result.error)
+        throw new Error('Scheduling reply failed with an unknown result')
+      } else {
+        this.#testId = (await result.json()).testId
+        log.info(`Test ID: ${this.#testId}`)
+      }
     }
   }
 
@@ -124,7 +130,7 @@ export class TestHandleConnector {
    * @param {ScheduledReply} scheduledReply The reply options to apply to the server request
    */
   async scheduleReply (serverId, scheduledReply) {
-    await fetch(`${this.#commandServerBase}/test-handle/${this.#testId}/scheduleReply`, {
+    const result = await fetch(`${this.#commandServerBase}/test-handle/${this.#testId}/scheduleReply`, {
       method: 'POST',
       body: serialize({
         serverId,
@@ -132,6 +138,11 @@ export class TestHandleConnector {
       }),
       headers: { 'content-type': 'application/serialized+json' }
     })
+
+    if (result.status !== 200) {
+      log.error(`Scheduling reply failed with status code ${result.status}`, await result.json(), result.error)
+      throw new Error('Scheduling reply failed with an unknown result')
+    }
   }
 
   /**
@@ -139,13 +150,18 @@ export class TestHandleConnector {
    * @param {'assetServer'|'bamServer'} serverId Id of the server the request will be received on
    */
   async clearScheduledReplies (serverId) {
-    await fetch(`${this.#commandServerBase}/test-handle/${this.#testId}/clearScheduledReplies`, {
+    const result = await fetch(`${this.#commandServerBase}/test-handle/${this.#testId}/clearScheduledReplies`, {
       method: 'POST',
       body: serialize({
         serverId
       }),
       headers: { 'content-type': 'application/serialized+json' }
     })
+
+    if (result.status !== 200) {
+      log.error(`Clearing scheduled reply failed with status code ${result.status}`, await result.json(), result.error)
+      throw new Error('Clearing scheduled reply failed with an unknown result')
+    }
   }
 
   // Network Captures logic
@@ -155,15 +171,37 @@ export class TestHandleConnector {
    * requests allowing tests to check which BAM APIs or assets were requested, how many times, and
    * wait for some expectation within the capture to pause testing.
    * @param {'assetServer'|'bamServer'} serverId Id of the server the request will be received on
-   * @param {import('../../../testing-server/network-capture').NetworkCaptureOptions} networkCaptureOptions The options to apply
+   * @param {import('../../../testing-server/network-capture').NetworkCaptureOptions|import('../../../testing-server/network-capture').NetworkCaptureOptions[]} networkCaptureOptions The options to apply
    * to the server request to verify if the request should be captured
-   * @returns {import('./network-capture-connector.mjs').NetworkCaptureConnector} The network capture connector instance with the
+   * @returns {import('./network-capture-connector.mjs').NetworkCaptureConnector|import('./network-capture-connector.mjs').NetworkCaptureConnector[]} The network capture connector instance with the
    * remaining APIs for interfacing with the network capture on the test server
    */
-  async createNetworkCapture (serverId, networkCaptureOptions) {
-    const networkCapture = new NetworkCaptureConnector(this, serverId, networkCaptureOptions)
-    await networkCapture.ready()
-    return networkCapture
+  async createNetworkCaptures (serverId, networkCaptureOptions) {
+    const result = await fetch(`${this.#commandServerBase}/test-handle/${this.#testId}/network-capture/${serverId}`, {
+      method: 'POST',
+      body: serialize(
+        Array.isArray(networkCaptureOptions)
+          ? networkCaptureOptions
+          : [networkCaptureOptions]
+      ),
+      headers: { 'content-type': 'application/serialized+json' }
+    })
+
+    if (result.status !== 200) {
+      log.error(`Creating network capture(s) failed with status code ${result.status}`, await result.json(), result.error)
+      throw new Error('Creating network capture(s) failed with an unknown result')
+    } else {
+      const networkCaptureIds = await result.json()
+      log.info(`Network Capture ID(s): ${networkCaptureIds}`)
+
+      if (!Array.isArray(networkCaptureOptions)) {
+        return new NetworkCaptureConnector(this, serverId, networkCaptureIds[0])
+      } else {
+        return networkCaptureIds.map(id =>
+          new NetworkCaptureConnector(this, serverId, id)
+        )
+      }
+    }
   }
 
   // Deprecated Expects logic

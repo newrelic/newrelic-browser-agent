@@ -88,9 +88,6 @@ module.exports = class NetworkCapture {
       throw new Error('Options must be supplied when creating a network capture.')
     }
     if (typeof options.test !== 'function') {
-      throw new Error('A testHandle must be supplied in the network capture options.')
-    }
-    if (typeof options.test !== 'function') {
       throw new Error('A test function must be supplied in the network capture options.')
     }
 

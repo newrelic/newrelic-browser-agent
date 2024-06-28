@@ -73,8 +73,8 @@ module.exports = fp(async function (fastify, testServer) {
     const testHandle = testServer.getTestHandle(request.params.testId)
 
     try {
-      const networkCapture = testHandle.createNetworkCapture(request.params.serverId, request.body)
-      reply.code(200).send({ captureId: networkCapture.instanceId })
+      const networkCaptures = testHandle.createNetworkCaptures(request.params.serverId, request.body)
+      reply.code(200).send(networkCaptures)
     } catch (e) {
       reply.code(400).send(e)
     }

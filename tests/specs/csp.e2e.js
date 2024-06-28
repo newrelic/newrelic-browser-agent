@@ -36,7 +36,7 @@ describe.withBrowsersMatching(notIE)('Content Security Policy', () => {
       .then(() => browser.waitForAgentLoad())
 
     const [unloadSupportMetricsResults] = await Promise.all([
-      supportMetricsCapture.waitForResult({ count: 1 }),
+      supportMetricsCapture.waitForResult({ totalCount: 1 }),
       await browser.url(await browser.testHandle.assetURL('/')) // Setup expects before navigating
     ])
 

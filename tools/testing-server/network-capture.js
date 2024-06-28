@@ -33,11 +33,11 @@ const crypto = require('crypto')
  * Conditions to pause execution based on requests being captured.
  * @typedef {object} NetworkCaptureWaitConditions
  * @property {number} timeout a predefined time to wait before continuing execution
- * @property {number} count a predefined number of requests to wait on before continuing execution
- * @example If both timeout and count are supplied, when the timeout is reached, the pause will end regardless
- * of the number of network captures and the supplied count condition.
- * @example If both timeout and count are supplied, when the count of network captures reached the supplied
- * count condition, the pause will end regardless of the timeout.
+ * @property {number} totalCount a predefined number of requests to wait on before continuing execution
+ * @example If both timeout and totalCount are supplied, when the timeout is reached, the pause will end regardless
+ * of the number of network captures and the supplied totalCount condition.
+ * @example If both timeout and totalCount are supplied, when the totalCount of network captures reached the supplied
+ * totalCount condition, the pause will end regardless of the timeout.
  */
 
 /**
@@ -212,7 +212,7 @@ module.exports = class NetworkCapture {
      */
     const deferred = { promise, resolve: capturedResolve, reject: capturedReject }
     deferred.checkWaitConditions = () => {
-      if (typeof waitConditions.count === 'number' && this.#captureCache.size >= waitConditions.count) {
+      if (typeof waitConditions.totalCount === 'number' && this.#captureCache.size >= waitConditions.totalCount) {
         capturedResolve(this.captures)
       }
     }

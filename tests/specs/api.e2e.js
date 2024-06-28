@@ -60,9 +60,9 @@ describe('newrelic api', () => {
         ])
 
       const [rumResults, eventsResults, ajaxResults] = await Promise.all([
-        rumCapture.waitForResult({ count: 1 }),
-        eventsCapture.waitForResult({ count: 1 }),
-        ajaxCapture.waitForResult({ count: 1 }),
+        rumCapture.waitForResult({ totalCount: 1 }),
+        eventsCapture.waitForResult({ totalCount: 1 }),
+        ajaxCapture.waitForResult({ totalCount: 1 }),
         browser.url(await browser.testHandle.assetURL('api.html')) // Setup expects before loading the page
           .then(() => browser.waitForAgentLoad())
       ])
@@ -81,7 +81,7 @@ describe('newrelic api', () => {
         test: testCustomMetricsRequest
       })
       const [unloadCustomMetricsResults] = await Promise.all([
-        customMetricsCapture.waitForResult({ count: 1 }),
+        customMetricsCapture.waitForResult({ totalCount: 1 }),
         await browser.url(await browser.testHandle.assetURL('/')) // Setup expects before navigating
       ])
 
@@ -103,7 +103,7 @@ describe('newrelic api', () => {
         .then(() => browser.waitForAgentLoad())
 
       const [unloadCustomMetricsResults] = await Promise.all([
-        customMetricsCapture.waitForResult({ count: 1 }),
+        customMetricsCapture.waitForResult({ totalCount: 1 }),
         await browser.url(await browser.testHandle.assetURL('/')) // Setup expects before navigating
       ])
 
@@ -122,7 +122,7 @@ describe('newrelic api', () => {
       const errorsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testErrorsRequest })
 
       const [errorsResults] = await Promise.all([
-        errorsCapture.waitForResult({ count: 1 }),
+        errorsCapture.waitForResult({ totalCount: 1 }),
         browser.url(await browser.testHandle.assetURL('api.html')) // Setup expects before loading the page
           .then(() => browser.waitForAgentLoad())
       ])
@@ -141,7 +141,7 @@ describe('newrelic api', () => {
       const errorsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testErrorsRequest })
 
       const [errorsResults] = await Promise.all([
-        errorsCapture.waitForResult({ count: 1 }),
+        errorsCapture.waitForResult({ totalCount: 1 }),
         browser.url(await browser.testHandle.assetURL('api/noticeError.html')) // Setup expects before loading the page
           .then(() => browser.waitForAgentLoad())
       ])
@@ -162,7 +162,7 @@ describe('newrelic api', () => {
       const insCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testInsRequest })
 
       const [insResult] = await Promise.all([
-        insCapture.waitForResult({ count: 1 }),
+        insCapture.waitForResult({ totalCount: 1 }),
         browser.url(await browser.testHandle.assetURL('api/finished.html'))
           .then(() => browser.waitForAgentLoad())
       ])
@@ -179,7 +179,7 @@ describe('newrelic api', () => {
       const errorsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testErrorsRequest })
 
       const [errorsResult] = await Promise.all([
-        errorsCapture.waitForResult({ count: 1 }),
+        errorsCapture.waitForResult({ totalCount: 1 }),
         browser.url(await browser.testHandle.assetURL('api/release.html'))
           .then(() => browser.waitForAgentLoad())
       ])
@@ -191,7 +191,7 @@ describe('newrelic api', () => {
       const errorsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testErrorsRequest })
 
       const [errorsResult] = await Promise.all([
-        errorsCapture.waitForResult({ count: 1 }),
+        errorsCapture.waitForResult({ totalCount: 1 }),
         browser.url(await browser.testHandle.assetURL('api/release-too-many.html'))
           .then(() => browser.waitForAgentLoad())
       ])
@@ -214,7 +214,7 @@ describe('newrelic api', () => {
       const errorsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testErrorsRequest })
 
       const [errorsResult] = await Promise.all([
-        errorsCapture.waitForResult({ count: 1 }),
+        errorsCapture.waitForResult({ totalCount: 1 }),
         browser.url(await browser.testHandle.assetURL('api/release-too-long.html'))
           .then(() => browser.waitForAgentLoad())
       ])
@@ -229,7 +229,7 @@ describe('newrelic api', () => {
       const errorsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testErrorsRequest })
 
       const [errorsResult] = await Promise.all([
-        errorsCapture.waitForResult({ count: 1 }),
+        errorsCapture.waitForResult({ totalCount: 1 }),
         browser.url(await browser.testHandle.assetURL('api/no-release.html'))
           .then(() => browser.waitForAgentLoad())
       ])
@@ -248,7 +248,7 @@ describe('newrelic api', () => {
       })
 
       const [rumResult] = await Promise.all([
-        rumCapture.waitForResult({ count: 1 }),
+        rumCapture.waitForResult({ totalCount: 1 }),
         browser.url(testUrl)
           .then(() => browser.waitForAgentLoad())
       ])
@@ -262,7 +262,7 @@ describe('newrelic api', () => {
       })
 
       const [rumResultAfterNavigate] = await Promise.all([
-        rumCapture.waitForResult({ count: 2 }),
+        rumCapture.waitForResult({ totalCount: 2 }),
         browser.url(subsequentTestUrl)
           .then(() => browser.waitForAgentLoad())
       ])
@@ -274,7 +274,7 @@ describe('newrelic api', () => {
       })
 
       const [rumResultAfterUnset] = await Promise.all([
-        rumCapture.waitForResult({ count: 3 }),
+        rumCapture.waitForResult({ totalCount: 3 }),
         browser.url(subsequentTestUrl)
           .then(() => browser.waitForAgentLoad())
       ])
@@ -300,7 +300,7 @@ describe('newrelic api', () => {
         .then(() => browser.waitForAgentLoad())
 
       const [firstErrorsResult] = await Promise.all([
-        errorsCapture.waitForResult({ count: 1 }),
+        errorsCapture.waitForResult({ totalCount: 1 }),
         browser.execute(function () {
           newrelic.setUserId(456)
           newrelic.setUserId({ foo: 'bar' })
@@ -312,7 +312,7 @@ describe('newrelic api', () => {
       expect(firstErrorsResult[0].request.body.err[0].custom[ERRORS_INBOX_UID]).not.toBeDefined() // Invalid data type (non-string) does not set user id
 
       const [secondErrorsResult] = await Promise.all([
-        errorsCapture.waitForResult({ count: 2 }),
+        errorsCapture.waitForResult({ totalCount: 2 }),
         browser.execute(function () {
           newrelic.setUserId('user123')
           newrelic.setUserId()
@@ -325,7 +325,7 @@ describe('newrelic api', () => {
       expect(secondErrorsResult[1].request.body.err[0].custom[ERRORS_INBOX_UID]).toBe('user123') // Correct enduser.id custom attr on error
 
       const [rumResultAfterRefresh] = await Promise.all([
-        rumCapture.waitForResult({ count: 2 }),
+        rumCapture.waitForResult({ totalCount: 2 }),
         browser.refresh()
       ])
 
@@ -363,14 +363,14 @@ describe('newrelic api', () => {
       expect(initialLoad).toEqual([[], undefined])
 
       const results = await Promise.all([
-        rumCapture.waitForResult({ count: 1 }),
-        timingsCapture.waitForResult({ count: 1 }),
-        ajaxEventsCapture.waitForResult({ count: 1 }),
-        errorsCapture.waitForResult({ count: 1 }),
-        metricsCapture.waitForResult({ count: 1 }),
-        insCapture.waitForResult({ count: 1 }),
-        traceCapture.waitForResult({ count: 1 }),
-        interactionCapture.waitForResult({ count: 1 }),
+        rumCapture.waitForResult({ totalCount: 1 }),
+        timingsCapture.waitForResult({ totalCount: 1 }),
+        ajaxEventsCapture.waitForResult({ totalCount: 1 }),
+        errorsCapture.waitForResult({ totalCount: 1 }),
+        metricsCapture.waitForResult({ totalCount: 1 }),
+        insCapture.waitForResult({ totalCount: 1 }),
+        traceCapture.waitForResult({ totalCount: 1 }),
+        interactionCapture.waitForResult({ totalCount: 1 }),
         browser.execute(function () {
           newrelic.start()
           setTimeout(function () {
@@ -412,8 +412,8 @@ describe('newrelic api', () => {
       expect(initialLoad).toEqual([[], [], undefined])
 
       const results = await Promise.all([
-        rumCapture.waitForResult({ count: 1 }),
-        errorsCapture.waitForResult({ count: 1 }),
+        rumCapture.waitForResult({ totalCount: 1 }),
+        errorsCapture.waitForResult({ totalCount: 1 }),
         browser.execute(function () {
           newrelic.start()
         })
@@ -436,12 +436,12 @@ describe('newrelic api', () => {
         ])
 
       const results = await Promise.all([
-        rumCapture.waitForResult({ count: 1 }),
-        timingsCapture.waitForResult({ count: 1 }),
+        rumCapture.waitForResult({ totalCount: 1 }),
+        timingsCapture.waitForResult({ totalCount: 1 }),
         ajaxEventsCapture.waitForResult({ timeout: 10000 }),
         errorsCapture.waitForResult({ timeout: 10000 }),
-        traceCapture.waitForResult({ count: 1 }),
-        interactionCapture.waitForResult({ count: 1 }),
+        traceCapture.waitForResult({ totalCount: 1 }),
+        interactionCapture.waitForResult({ totalCount: 1 }),
         browser.url(await browser.testHandle.assetURL('instrumented.html', {
           init: {
             ...config.init,
@@ -470,8 +470,8 @@ describe('newrelic api', () => {
 
       await browser.pause(5000)
       const subsequentResults = await Promise.all([
-        ajaxEventsCapture.waitForResult({ count: 1 }),
-        errorsCapture.waitForResult({ count: 1 }),
+        ajaxEventsCapture.waitForResult({ totalCount: 1 }),
+        errorsCapture.waitForResult({ totalCount: 1 }),
         browser.execute(function () {
           newrelic.start()
         })

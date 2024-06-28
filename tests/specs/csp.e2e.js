@@ -1,5 +1,6 @@
 import { notIE } from '../../tools/browser-matcher/common-matchers.mjs'
 import { faker } from '@faker-js/faker'
+import { testSupportMetricsRequest } from '../../tools/testing-server/utils/expect-tests'
 
 describe.withBrowsersMatching(notIE)('Content Security Policy', () => {
   afterEach(async () => {
@@ -8,11 +9,8 @@ describe.withBrowsersMatching(notIE)('Content Security Policy', () => {
 
   it('should support a nonce script element', async () => {
     const nonce = faker.string.uuid()
-    await Promise.all([
-      browser.testHandle.expectRum(),
-      browser.url(await browser.testHandle.assetURL('instrumented.html', { nonce }))
-        .then(() => browser.waitForAgentLoad())
-    ])
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', { nonce }))
+      .then(() => browser.waitForAgentLoad())
 
     const foundNonces = await browser.execute(function () {
       var scriptTags = document.querySelectorAll('script')
@@ -34,12 +32,15 @@ describe.withBrowsersMatching(notIE)('Content Security Policy', () => {
     await browser.url(await browser.testHandle.assetURL('instrumented.html', { nonce }))
       .then(() => browser.waitForAgentLoad())
 
+    const supportMetricsCapture = await browser.testHandle.createNetworkCapture('bamServer', {
+      test: testSupportMetricsRequest
+    })
     const [unloadSupportMetricsResults] = await Promise.all([
-      browser.testHandle.expectSupportMetrics(),
+      supportMetricsCapture.waitForResult({ count: 1 }),
       await browser.url(await browser.testHandle.assetURL('/')) // Setup expects before navigating
     ])
 
-    const supportabilityMetrics = unloadSupportMetricsResults.request.body.sm || []
+    const supportabilityMetrics = unloadSupportMetricsResults[0].request.body.sm || []
     expect(supportabilityMetrics).toEqual(expect.arrayContaining([{
       params: { name: 'Generic/Runtime/Nonce/Detected' },
       stats: { c: expect.toBeWithin(1, Infinity) }
@@ -49,17 +50,12 @@ describe.withBrowsersMatching(notIE)('Content Security Policy', () => {
   it('should load async chunk with subresource integrity', async () => {
     await browser.enableSessionReplay()
 
-    const url = await browser.testHandle.assetURL('subresource-integrity-capture.html', {
+    await browser.url(await browser.testHandle.assetURL('subresource-integrity-capture.html', {
       init: {
         privacy: { cookies_enabled: true },
         session_replay: { enabled: true }
       }
-    })
-    await Promise.all([
-      browser.testHandle.expectRum(),
-      browser.url(url)
-        .then(() => browser.waitForAgentLoad())
-    ])
+    })).then(() => browser.waitForAgentLoad())
 
     await browser.waitUntil(
       () => browser.execute(function () {

@@ -21,32 +21,17 @@ module.exports = fp(async function (fastify) {
     method: ['GET', 'POST'],
     url: '/1/:testId',
     handler: async function (request, reply) {
-      if (request.testHandle) {
-        request.testHandle.incrementRequestCount(fastify.testServerId, 'rum')
-      }
-
-      if (!request.query.jsonp) {
-        return reply
-          .header('content-type', 'application/json')
-          .header('Timing-Allow-Origin', request.headers.origin)
-          .code(200)
-          .send(JSON.stringify(rumFlags))
-      } else {
-        return reply
-          .header('content-type', 'application/javascript')
-          .header('Timing-Allow-Origin', request.headers.origin)
-          .code(200)
-          .send(`${request.query.jsonp}(${JSON.stringify(rumFlags)})`)
-      }
+      return reply
+        .header('content-type', 'application/json')
+        .header('Timing-Allow-Origin', request.headers.origin)
+        .code(200)
+        .send(JSON.stringify(rumFlags))
     }
   })
   fastify.route({
     method: ['GET', 'POST'],
     url: '/events/1/:testId',
     handler: async function (request, reply) {
-      if (request.testHandle) {
-        request.testHandle.incrementRequestCount(fastify.testServerId, 'events')
-      }
       return reply.code(200).send('')
     }
   })
@@ -54,9 +39,7 @@ module.exports = fp(async function (fastify) {
     method: ['POST'],
     url: '/browser/blobs',
     handler: async function (request, reply) {
-      if (request.testHandle) {
-        request.testHandle.incrementRequestCount(fastify.testServerId, 'blobs')
-      } else {
+      if (!request.testHandle) {
         // running without a test handle... lets buffer it so we can replay it later
         const attributes = new URLSearchParams(request.query?.attributes)
         storeReplayData(attributes.get('session'), attributes.get('replay.firstTimestamp'), request.body)
@@ -69,10 +52,6 @@ module.exports = fp(async function (fastify) {
     method: ['POST'],
     url: '/browser/logs',
     handler: async function (request, reply) {
-      if (request.testHandle) {
-        request.testHandle.incrementRequestCount(fastify.testServerId, 'logs')
-      }
-
       return reply.code(200).send('')
     }
   })
@@ -80,10 +59,6 @@ module.exports = fp(async function (fastify) {
     method: ['GET', 'POST'],
     url: '/jserrors/1/:testId',
     handler: async function (request, reply) {
-      if (request.testHandle) {
-        request.testHandle.incrementRequestCount(fastify.testServerId, 'jserrors')
-      }
-
       return reply.code(200).send('')
     }
   })
@@ -91,10 +66,6 @@ module.exports = fp(async function (fastify) {
     method: ['GET', 'POST'],
     url: '/ins/1/:testId',
     handler: async function (request, reply) {
-      if (request.testHandle) {
-        request.testHandle.incrementRequestCount(fastify.testServerId, 'ins')
-      }
-
       return reply.code(200).send('')
     }
   })
@@ -102,10 +73,6 @@ module.exports = fp(async function (fastify) {
     method: ['GET', 'POST'],
     url: '/resources/1/:testId',
     handler: async function (request, reply) {
-      if (request.testHandle) {
-        request.testHandle.incrementRequestCount(fastify.testServerId, 'resources')
-      }
-
       // This endpoint must reply with some text in the body or further resource harvests will be disabled
       return reply.code(200).send(uuidv4())
     }

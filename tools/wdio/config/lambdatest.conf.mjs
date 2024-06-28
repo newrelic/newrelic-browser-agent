@@ -59,6 +59,7 @@ function lambdaTestCapabilities () {
       } else {
         capabilities['LT:Options'].deviceName = testBrowser.device_name
         capabilities['LT:Options'].platformVersion = testBrowser.version
+        capabilities['LT:Options'].appiumVersion = '2.6.0'
         if (args.webview) { // btw, LT has different capabilities array for mobile app automation!
           // Note: Since their available devices for app differs, we'll let default pick apply.
           // Caution: LT does not support android@9 for app; we should only be testing webview for latest ios & android.
@@ -66,8 +67,15 @@ function lambdaTestCapabilities () {
           capabilities['LT:Options'].isRealMobile = false
           // Note: LT expires app every 60 days, so the .zip/.apk needs to be re-uploaded then and these url updated to point to new url.
           // Important: ensure the uploaded apps are set to "team" visibility.
-          if (parsedBrowserName === 'android') capabilities['LT:Options'].app = 'lt://APP10160352241718733717577609'
-          else /* === 'ios' */ capabilities['LT:Options'].app = 'lt://APP10160352241718734672953481'
+          if (parsedBrowserName === 'android') {
+            capabilities['appium:platformName'] = 'android'
+            capabilities['LT:Options'].app = 'lt://APP10160352241718733717577609'
+          } else /* === 'ios' */ {
+            capabilities['appium:platformName'] = 'ios'
+            capabilities['LT:Options'].app = 'lt://APP10160352241718734672953481'
+          }
+        } else {
+          capabilities['appium:platformName'] = testBrowser.device_name
         }
       }
       return capabilities
@@ -86,7 +94,7 @@ export default function config () {
           tunnel: args.tunnel,
           sessionNameFormat: (config, capabilities, suiteTitle, testTitle) => suiteTitle,
           lambdatestOpts: {
-            // allowHosts: args.host || 'bam-test-1.nr-local.net',
+            allowHosts: args.host || 'bam-test-1.nr-local.net',
             logFile: path.resolve(__dirname, '../../../.lambdatest')
           }
         }

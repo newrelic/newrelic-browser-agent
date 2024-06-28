@@ -13,6 +13,7 @@ import {
 } from '../../../testing-server/utils/expect-tests.js'
 import defaultAssetQuery from './default-asset-query.mjs'
 import { getBrowserName, getBrowserVersion } from '../../../browsers-lists/utils.mjs'
+import { NetworkCaptureConnector } from './network-capture-connector.mjs'
 
 const log = logger('testing-server-connector')
 
@@ -48,8 +49,8 @@ export class TestHandleConnector {
     return this.#bamServerConfig
   }
 
-  get commandServerConfig () {
-    return this.#commandServerConfig
+  get commandServerBase () {
+    return this.#commandServerBase
   }
 
   get testId () {
@@ -64,8 +65,14 @@ export class TestHandleConnector {
     }
   }
 
+  /**
+   * Destroy all memory references to allow for garbage collection.
+   * @returns {void}
+   */
   async destroy () {
     this.#pendingExpects.forEach(pendingExpect => pendingExpect.abortController.abort())
+    this.#pendingExpects.clear()
+    this.#pendingExpects = null
 
     if (this.#testId) {
       await fetch(`${this.#commandServerBase}/test-handle/${this.#testId}`, {
@@ -73,18 +80,43 @@ export class TestHandleConnector {
       })
       this.#testId = undefined
     }
+
+    this.#assetServerConfig = null
+    this.#bamServerConfig = null
+    this.#commandServerConfig = null
+    this.#commandServerBase = null
   }
 
+  // Test Asset URL Construction logic
+
   /**
-   * Retrieves information about the number and type of requests the testing server
-   * has seen.
+   * Calls back to the testing server to create a URL for a specific test asset file
+   * within the context of a test handle.
+   * @param {string} assetFile the path of the asset to load relative to the repository root
+   * @param {object} query key/value pairs of query parameters to apply to the asset url
+   * @returns {Promise<string>}
    */
-  async getRequestCounts () {
-    const result = await fetch(`${this.#commandServerBase}/test-handle/${this.#testId}/requestCounts`, {
-      method: 'POST'
+  async assetURL (assetFile, query = {}) {
+    await this.ready()
+    query.testId = this.#testId
+    const result = await fetch(`${this.#commandServerBase}/test-handle/${this.#testId}/asset-url`, {
+      method: 'POST',
+      body: serialize({
+        assetFile,
+        query: deepmerge(defaultAssetQuery, query)
+      }),
+      headers: { 'content-type': 'application/serialized+json' }
     })
-    return await result.json()
+
+    if (result.status !== 200) {
+      log.error(`Asset URL retrieval failed with status code ${result.status}`, await result.json(), result.error)
+      throw new Error('Asset URL retrieval failed with an unknown result')
+    } else {
+      return (await result.json()).assetURL
+    }
   }
+
+  // Scheduled Replys logic
 
   /**
    * Schedules a reply to a server request
@@ -115,6 +147,26 @@ export class TestHandleConnector {
       headers: { 'content-type': 'application/serialized+json' }
     })
   }
+
+  // Network Captures logic
+
+  /**
+   * Creates a network capture instance for the specified server that will capture matching network
+   * requests allowing tests to check which BAM APIs or assets were requested, how many times, and
+   * wait for some expectation within the capture to pause testing.
+   * @param {'assetServer'|'bamServer'} serverId Id of the server the request will be received on
+   * @param {import('../../../testing-server/network-capture').NetworkCaptureOptions} networkCaptureOptions The options to apply
+   * to the server request to verify if the request should be captured
+   * @returns {import('./network-capture-connector.mjs').NetworkCaptureConnector} The network capture connector instance with the
+   * remaining APIs for interfacing with the network capture on the test server
+   */
+  async createNetworkCapture (serverId, networkCaptureOptions) {
+    const networkCapture = new NetworkCaptureConnector(this, serverId, networkCaptureOptions)
+    await networkCapture.ready()
+    return networkCapture
+  }
+
+  // Deprecated Expects logic
 
   /**
    * Calls back to the testing server to create an expect for a specific server with a given test
@@ -168,33 +220,6 @@ export class TestHandleConnector {
       }
     } finally {
       this.#pendingExpects.delete(pendingExpect)
-    }
-  }
-
-  /**
-   * Calls back to the testing server to create a URL for a specific test asset file
-   * within the context of a test handle.
-   * @param {string} assetFile the path of the asset to load relative to the repository root
-   * @param {object} query key/value pairs of query parameters to apply to the asset url
-   * @returns {Promise<string>}
-   */
-  async assetURL (assetFile, query = {}) {
-    await this.ready()
-    query.testId = this.#testId
-    const result = await fetch(`${this.#commandServerBase}/test-handle/${this.#testId}/asset-url`, {
-      method: 'POST',
-      body: serialize({
-        assetFile,
-        query: deepmerge(defaultAssetQuery, query)
-      }),
-      headers: { 'content-type': 'application/serialized+json' }
-    })
-
-    if (result.status !== 200) {
-      log.error(`Asset URL retrieval failed with status code ${result.status}`, await result.json(), result.error)
-      throw new Error('Asset URL retrieval failed with an unknown result')
-    } else {
-      return (await result.json()).assetURL
     }
   }
 

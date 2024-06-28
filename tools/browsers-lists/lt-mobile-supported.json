@@ -1,24 +1,24 @@
 {
   "ios": [
     {
-      "device_name": "iPad (9th generation)",
+      "device_name": "iPhone 15",
       "version": "17.2",
       "platformName": "ios"
     },
     {
-      "device_name": "iPhone SE (3rd generation)",
+      "device_name": "iPhone 11",
       "version": "16.0",
       "platformName": "ios"
     }
   ],
   "android": [
     {
-      "device_name": "ASUS ZenFone 8",
+      "device_name": "Pixel 7",
       "version": "14",
       "platformName": "android"
     },
     {
-      "device_name": "Galaxy S10",
+      "device_name": "Pixel 3",
       "version": "9",
       "platformName": "android"
     }

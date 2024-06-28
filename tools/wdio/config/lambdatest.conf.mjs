@@ -59,7 +59,6 @@ function lambdaTestCapabilities () {
       } else {
         capabilities['LT:Options'].deviceName = testBrowser.device_name
         capabilities['LT:Options'].platformVersion = testBrowser.version
-        capabilities['LT:Options'].appiumVersion = '2.6.0'
         if (args.webview) { // btw, LT has different capabilities array for mobile app automation!
           // Note: Since their available devices for app differs, we'll let default pick apply.
           // Caution: LT does not support android@9 for app; we should only be testing webview for latest ios & android.
@@ -76,6 +75,12 @@ function lambdaTestCapabilities () {
           }
         } else {
           capabilities['appium:platformName'] = testBrowser.device_name
+
+          if (parsedBrowserName === 'android') {
+            capabilities['LT:Options'].appiumVersion = '1.22.3'
+          } else /* === ios */ {
+            capabilities['LT:Options'].appiumVersion = '2.6.0'
+          }
         }
       }
       return capabilities

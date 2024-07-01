@@ -156,6 +156,7 @@ class TestServer {
   }
 
   destroyTestHandle (testId) {
+    this.#testHandles.get(testId).destroy()
     this.#testHandles.delete(testId)
   }
 

@@ -51,7 +51,15 @@ function updateMobileVersions (mobilePlatforms) {
   const testedMobileVersionsJson = {}
 
   const iosDevices = mobilePlatforms.find(p => p.platform === 'ios')?.devices
+    .filter(device => /^iPhone \d{2,}$/.test(device.device_name))
+    .sort((deviceA, deviceB) =>
+      Number.parseInt(deviceB.device_name.match(/^iPhone (\d{2,})$/)[1]) - Number.parseInt(deviceA.device_name.match(/^iPhone (\d{2,})$/)[1])
+    )
   const androidDevices = mobilePlatforms.find(p => p.platform === 'android')?.devices
+    .filter(device => /^Pixel \d{1,}$/.test(device.device_name))
+    .sort((deviceA, deviceB) =>
+      Number.parseInt(deviceB.device_name.match(/^Pixel (\d{1,})$/)[1]) - Number.parseInt(deviceA.device_name.match(/^Pixel (\d{1,})$/)[1])
+    )
   if (!iosDevices || !androidDevices) throw new Error('iOS or Android mobile could not be found in API response.')
 
   // iOS versions should already be sorted in descending; the built list should also be in desc order.

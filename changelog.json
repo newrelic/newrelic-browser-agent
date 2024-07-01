@@ -5,6 +5,23 @@
       "changes": [
         {
           "type": "fix",
+          "sha": "cecddbebc445dabcf3ce48c1fc88311198be6d0a",
+          "message": "recordReplay will restart replays on same session page loads",
+          "issues": [
+            "1093"
+          ]
+        }
+      ],
+      "version": "1.261.2",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "dddb9ca2-7c2b-41b8-a9f8-4e7e3424b441",
+      "createTime": "2024-07-01T20:14:02.304Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
           "sha": "03efcf36656ac883c4431829fda1bad6445373a1",
           "message": "Unhandled promise rejection for session import",
           "issues": [
@@ -1656,5 +1673,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2024-06-26T17:41:16.023Z"
+  "updateTime": "2024-07-01T20:14:02.304Z"
 }

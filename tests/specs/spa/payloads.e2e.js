@@ -247,20 +247,18 @@ describe('attribution tests', () => {
       ])
       let interactionTree = IPL[0]
       expect(interactionTree.trigger).toEqual('initialPageLoad')
-      // Root
+
       var interactionId = interactionTree.id
       var interactionNodeId = interactionTree.nodeId
       expect(interactionId).not.toEqual(null)
       expect(interactionNodeId).not.toEqual(null)
 
-      // Tracer
       var interactionChildren = interactionTree.children
       expect(interactionChildren.length).toEqual(2)
       var tracer = interactionChildren[0]
       expect(tracer.type).toEqual('customTracer')
       expect(tracer.nodeId).not.toEqual(null)
 
-      // Error
       var error = errorBody.err[0]
       expect(error.params.message).toEqual('initial page load error')
       expect(error.params.browserInteractionId).toEqual(interactionId)// 'should have the correct interaction id')
@@ -287,13 +285,11 @@ describe('attribution tests', () => {
 
       expect(errorBody.err.length).toEqual(1)
 
-      // Root
       var interactionId = interactionTree.id
       var interactionNodeId = interactionTree.nodeId
       expect(interactionId).not.toEqual(null)
       expect(interactionNodeId).not.toEqual(null)
 
-      // Error
       var error = errorBody.err[0]
       expect(error.params.message).toEqual('some error')
       expect(error.params.browserInteractionId).toEqual(interactionId)// 'should have the correct interaction id')
@@ -321,18 +317,166 @@ describe('attribution tests', () => {
 
       expect(errorBody.err.length).toEqual(1)
 
-      // Root
       var interactionId = interactionTree.id
-      var interactionNodeId = interactionTree.nodeId
+      var interactionNodeId = interactionTree.children[0].nodeId
       expect(interactionId).not.toEqual(null)
       expect(interactionNodeId).not.toEqual(null)
 
-      // Error
       var error = errorBody.err[0]
       expect(error.params.message).toEqual('some error')
       expect(error.params.browserInteractionId).toEqual(interactionId)// 'should have the correct interaction id')
       expect(error.params.parentNodeId).toEqual(interactionNodeId)
       expect(error.metrics.count).toEqual(1)
+    })
+
+    it('captures error in tracer callback fn', async () => {
+      const [browserIxnsCapture, errorsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+        { test: testInteractionEventsRequest },
+        { test: testErrorsRequest }
+      ])
+
+      const [ixns, [{ request: { body: errorBody } }]] = await Promise.all([
+        browserIxnsCapture.waitForResult({ totalCount: 2 }),
+        errorsCapture.waitForResult({ totalCount: 1 }),
+        await browser.url(
+          await browser.testHandle.assetURL('spa/errors/captured-custom.html')
+        )
+          .then(() => browser.waitForAgentLoad())
+          .then(() => $('body').click())
+      ])
+
+      const interactionTree = ixns.find(x => x.request.body[0].trigger !== 'initialPageLoad').request.body[0]
+
+      expect(errorBody.err.length).toEqual(1)
+
+      var interactionId = interactionTree.id
+      var interactionNodeId = interactionTree.children[0].nodeId
+      expect(interactionId).not.toEqual(null)
+      expect(interactionNodeId).not.toEqual(null)
+
+      var error = errorBody.err[0]
+      expect(error.params.message).toEqual('some error')
+      expect(error.params.browserInteractionId).toEqual(interactionId)// 'should have the correct interaction id')
+      expect(error.params.parentNodeId).toEqual(interactionNodeId)
+      expect(error.metrics.count).toEqual(1)
+    })
+
+    it('captures string error in tracer callback fn', async () => {
+      const [browserIxnsCapture, errorsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+        { test: testInteractionEventsRequest },
+        { test: testErrorsRequest }
+      ])
+
+      const [ixns, [{ request: { body: errorBody } }]] = await Promise.all([
+        browserIxnsCapture.waitForResult({ totalCount: 2 }),
+        errorsCapture.waitForResult({ totalCount: 1 }),
+        await browser.url(
+          await browser.testHandle.assetURL('spa/errors/captured-custom-string.html')
+        )
+          .then(() => browser.waitForAgentLoad())
+          .then(() => $('body').click())
+      ])
+
+      const interactionTree = ixns.find(x => x.request.body[0].trigger !== 'initialPageLoad').request.body[0]
+
+      expect(errorBody.err.length).toEqual(1)
+
+      var interactionId = interactionTree.id
+      var interactionNodeId = interactionTree.children[0].nodeId
+      expect(interactionId).not.toEqual(null)
+      expect(interactionNodeId).not.toEqual(null)
+
+      var error = errorBody.err[0]
+      expect(error.params.message).toEqual('some error')
+      expect(error.params.browserInteractionId).toEqual(interactionId)// 'should have the correct interaction id')
+      expect(error.params.parentNodeId).toEqual(interactionNodeId)
+      expect(error.metrics.count).toEqual(1)
+    })
+
+    it('still handles errors in discarded SPA interactions', async () => {
+      const [errorsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+        { test: testErrorsRequest }
+      ])
+
+      const [[{ request: { body: errorBody } }]] = await Promise.all([
+        errorsCapture.waitForResult({ totalCount: 1 }),
+        await browser.url(
+          await browser.testHandle.assetURL('spa/errors/discarded-interaction.html')
+        )
+          .then(() => browser.waitForAgentLoad())
+          .then(() => $('body').click())
+      ])
+
+      expect(errorBody.err.length).toEqual(1)
+
+      var error = errorBody.err[0]
+      expect(error.params.message).toEqual('some error')
+      expect(error.params.browserInteractionId).not.toBeTruthy()
+      expect(error.params.parentNodeId).not.toBeTruthy()
+      expect(error.metrics.count).toEqual(1)
+    })
+
+    it('still captures errors outside of interactions', async () => {
+      const [errorsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+        { test: testErrorsRequest }
+      ])
+
+      const [[{ request: { body: errorBody } }]] = await Promise.all([
+        errorsCapture.waitForResult({ totalCount: 1 }),
+        await browser.url(
+          await browser.testHandle.assetURL('spa/errors/captured-nointeraction.html')
+        )
+          .then(() => browser.waitForAgentLoad())
+          .then(() => $('body').click())
+      ])
+
+      expect(errorBody.err.length).toEqual(1)
+
+      var error = errorBody.err[0]
+      expect(error.params.message).toEqual('some error')
+      expect(error.params.browserInteractionId).not.toBeTruthy()
+      expect(error.params.parentNodeId).not.toBeTruthy()
+      expect(error.metrics.count).toEqual(1)
+    })
+
+    it('captures same error in multiple interactions', async () => {
+      const [browserIxnsCapture, errorsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+        { test: testInteractionEventsRequest },
+        { test: testErrorsRequest }
+      ])
+
+      const [ixns, [{ request: { body: errorBody } }]] = await Promise.all([
+        browserIxnsCapture.waitForResult({ totalCount: 3 }),
+        errorsCapture.waitForResult({ totalCount: 1 }),
+        await browser.url(
+          await browser.testHandle.assetURL('spa/errors/captured-custom.html')
+        )
+          .then(() => browser.waitForAgentLoad())
+          .then(() => $('body').click())
+          .then(() => browser.pause(1000))
+          .then(() => $('body').click())
+      ])
+
+      const interactionTrees = ixns.filter(x => x.request.body[0].trigger !== 'initialPageLoad')
+
+      const ixn1 = interactionTrees[0].request.body[0]
+      const ixn2 = interactionTrees[1].request.body[0]
+
+      var interactionId = ixn1.id
+      var interactionNodeId = ixn1.children[0].nodeId
+      expect(interactionId).not.toEqual(null)
+      expect(interactionNodeId).not.toEqual(null)
+
+      var interactionId2 = ixn2.id
+      var interactionNodeId2 = ixn2.children[0].nodeId
+      expect(interactionId2).not.toEqual(null)
+      expect(interactionNodeId2).not.toEqual(null)
+
+      expect(errorBody.err.length).toEqual(2)
+      var error1 = errorBody.err[0]
+      var error2 = errorBody.err[1]
+      expect(error1.params.browserInteractionId).toEqual(interactionId)// 'should have the correct interaction id')
+      expect(error2.params.browserInteractionId).toEqual(interactionId2)// 'should have the correct interaction id')
     })
   })
 })

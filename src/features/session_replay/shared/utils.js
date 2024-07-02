@@ -12,11 +12,6 @@ export function isPreloadAllowed (agentId) {
   return getConfigurationValue(agentId, 'session_replay.preload') === true && hasReplayPrerequisite(agentId)
 }
 
-export function canImportReplayAgg (agentId, sessionMgr) {
-  if (!hasReplayPrerequisite(agentId)) return false
-  return !!sessionMgr?.isNew || !!sessionMgr?.state.sessionReplayMode // Session Replay should only try to run if already running from a previous page, or at the beginning of a session
-}
-
 export function buildNRMetaNode (timestamp, timeKeeper) {
   const correctedTimestamp = timeKeeper.correctAbsoluteTimestamp(timestamp)
   return {

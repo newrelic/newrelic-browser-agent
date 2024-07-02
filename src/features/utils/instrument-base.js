@@ -11,7 +11,7 @@ import { isBrowserScope } from '../../common/constants/runtime'
 import { warn } from '../../common/util/console'
 import { FEATURE_NAMES } from '../../loaders/features/features'
 import { getConfigurationValue } from '../../common/config/config'
-import { canImportReplayAgg } from '../session_replay/shared/utils'
+import { hasReplayPrerequisite } from '../session_replay/shared/utils'
 import { canEnableSessionTracking } from './feature-gates'
 import { single } from '../../common/util/invoke'
 
@@ -127,7 +127,13 @@ export class InstrumentBase extends FeatureBase {
  * @returns
  */
   #shouldImportAgg (featureName, session) {
-    if (featureName === FEATURE_NAMES.sessionReplay) return canImportReplayAgg(this.agentIdentifier, session)
-    return !(featureName === FEATURE_NAMES.sessionTrace && !session)
+    switch (featureName) {
+      case FEATURE_NAMES.sessionReplay: // the session manager must be initialized successfully for Replay & Trace features
+        return hasReplayPrerequisite(this.agentIdentifier) && !!session
+      case FEATURE_NAMES.sessionTrace:
+        return !!session
+      default:
+        return true
+    }
   }
 }

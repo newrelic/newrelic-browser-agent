@@ -43,6 +43,9 @@ module.exports = fp(async function (fastify, testServer) {
       reply.code(400).send(e)
     }
   })
+
+  // Scheduled Replays APIs
+
   fastify.post('/test-handle/:testId/scheduleReply', async function (request, reply) {
     const testHandle = testServer.getTestHandle(request.params.testId)
 
@@ -63,13 +66,55 @@ module.exports = fp(async function (fastify, testServer) {
       reply.code(400).send(e)
     }
   })
-  fastify.post('/test-handle/:testId/requestCounts', async function (request, reply) {
+
+  // Network Captures APIs
+
+  fastify.post('/test-handle/:testId/network-capture/:serverId', async function (request, reply) {
     const testHandle = testServer.getTestHandle(request.params.testId)
 
     try {
-      reply.code(200).send(
-        testHandle.requestCounts
-      )
+      const networkCaptures = testHandle.createNetworkCaptures(request.params.serverId, request.body)
+      reply.code(200).send(networkCaptures)
+    } catch (e) {
+      reply.code(400).send(e)
+    }
+  })
+  fastify.get('/test-handle/:testId/network-capture/:serverId/:captureId', async function (request, reply) {
+    const testHandle = testServer.getTestHandle(request.params.testId)
+
+    try {
+      const networkCaptureCache = testHandle.getNetworkCaptureCache(request.params.serverId, request.params.captureId)
+      reply.code(200).send(networkCaptureCache)
+    } catch (e) {
+      reply.code(400).send(e)
+    }
+  })
+  fastify.put('/test-handle/:testId/network-capture/:serverId/:captureId/clear', async function (request, reply) {
+    const testHandle = testServer.getTestHandle(request.params.testId)
+
+    try {
+      testHandle.clearNetworkCaptureCache(request.params.serverId, request.params.captureId)
+      reply.code(204).send()
+    } catch (e) {
+      reply.code(400).send(e)
+    }
+  })
+  fastify.delete('/test-handle/:testId/network-capture/:serverId/:captureId', async function (request, reply) {
+    const testHandle = testServer.getTestHandle(request.params.testId)
+
+    try {
+      testHandle.destroyNetworkCapture(request.params.serverId, request.params.captureId)
+      reply.code(204).send()
+    } catch (e) {
+      reply.code(400).send(e)
+    }
+  })
+  fastify.post('/test-handle/:testId/network-capture/:serverId/:captureId/await', async function (request, reply) {
+    const testHandle = testServer.getTestHandle(request.params.testId)
+
+    try {
+      const networkCaptureCache = await testHandle.awaitNetworkCapture(request.params.serverId, request.params.captureId, request.body)
+      reply.code(200).send(networkCaptureCache)
     } catch (e) {
       reply.code(400).send(e)
     }

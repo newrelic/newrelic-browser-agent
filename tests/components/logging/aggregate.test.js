@@ -112,26 +112,99 @@ describe('logging aggregate component tests', () => {
       loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'x'.repeat(1024 * 1024), { myAttributes: 1 }, 'ERROR'])
       expect(handleModule.handle).toHaveBeenCalledWith('storeSupportabilityMetrics', ['Logging/Harvest/Failed/Seen', expect.any(Number)])
       expect(handleModule.handle).toHaveBeenCalledTimes(1)
-      expect(warn).toHaveBeenCalledWith('ignored log: > 1000000 bytes', 'xxxxxxxxxxxxxxxxxxxxxxxxx...')
+      expect(warn).toHaveBeenCalledWith('ignored log: > 1000000 bytes: ', 'xxxxxxxxxxxxxxxxxxxxxxxxx...')
       loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'short message, long attrs', { myAttributes: 'x'.repeat(1024 * 1024) }, 'ERROR'])
       expect(handleModule.handle).toHaveBeenCalledWith('storeSupportabilityMetrics', ['Logging/Harvest/Failed/Seen', expect.any(Number)])
       expect(handleModule.handle).toHaveBeenCalledTimes(2)
-      expect(warn).toHaveBeenCalledWith('ignored log: > 1000000 bytes', 'short message, long attrs...')
+      expect(warn).toHaveBeenCalledWith('ignored log: > 1000000 bytes: ', 'short message, long attrs...')
     })
 
-    it('can harvest early', async () => {
+    it('should short circuit if message is falsy', async () => {
       const loggingAgg = new LoggingAggregate(agentIdentifier, new Aggregator({}))
       loggingAgg.ee.emit('rumresp', {})
       await wait(1)
-      jest.spyOn(loggingAgg.scheduler, 'runHarvest')
-      loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'x'.repeat(800 * 800), { myAttributes: 1 }, 'ERROR']) // almost too big
-      expect(handleModule.handle).toHaveBeenCalledTimes(0)
-      loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'x'.repeat(800 * 800), { myAttributes: 1 }, 'ERROR']) // almost too big
-      expect(handleModule.handle).toHaveBeenCalledTimes(1)
-      expect(handleModule.handle).toHaveBeenCalledWith('storeSupportabilityMetrics', ['Logging/Harvest/Early/Seen', expect.any(Number)])
-      expect(loggingAgg.scheduler.runHarvest).toHaveBeenCalled()
+      loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, '', { myAttributes: 1 }, 'ERROR'])
+
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining('ignored log: invalid message'))
+    })
+
+    it('should short circuit if log level is invalid', async () => {
+      const loggingAgg = new LoggingAggregate(agentIdentifier, new Aggregator({}))
+      loggingAgg.ee.emit('rumresp', {})
+      await wait(1)
+      loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, '', { myAttributes: 1 }, 'BAD_LEVEL'])
+
+      expect(warn).toHaveBeenCalledWith('invalid log level: BAD_LEVEL', ['ERROR', 'WARN', 'INFO', 'DEBUG', 'TRACE'])
+    })
+
+    it('invalid custom attributes', async () => {
+      const expected = new Log(
+        timeKeeper.convertRelativeTimestamp(1234),
+        'test message',
+        { },
+        'error'
+      )
+      const loggingAgg = new LoggingAggregate(agentIdentifier, new Aggregator({}))
+      loggingAgg.ee.emit('rumresp', {})
+      await wait(1)
+
+      loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', [], 'ERROR'])
+      expect(loggingAgg.bufferedLogs.pop()).toEqual(expected)
+
+      loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', true, 'ERROR'])
+      expect(loggingAgg.bufferedLogs.pop()).toEqual(expected)
+
+      loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', 1, 'ERROR'])
+      expect(loggingAgg.bufferedLogs.pop()).toEqual(expected)
+
+      loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', 'string', 'ERROR'])
+      expect(loggingAgg.bufferedLogs.pop()).toEqual(expected)
+    })
+
+    it('should work if log level is valid but wrong case', async () => {
+      const expected = new Log(
+        timeKeeper.convertRelativeTimestamp(1234),
+        'test message',
+        { },
+        'error'
+      )
+      const loggingAgg = new LoggingAggregate(agentIdentifier, new Aggregator({}))
+      loggingAgg.ee.emit('rumresp', {})
+      await wait(1)
+
+      loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', {}, 'ErRoR'])
+      expect(loggingAgg.bufferedLogs.pop()).toEqual(expected)
+    })
+
+    it('should buffer logs with non-stringify-able message', async () => {
+      const loggingAgg = new LoggingAggregate(agentIdentifier, new Aggregator({}))
+      loggingAgg.ee.emit('rumresp', {})
+      await wait(1)
+
+      loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, new Error('test'), {}, 'error'])
+      expect(loggingAgg.bufferedLogs.pop().message).toEqual('Error: test')
+
+      loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, new SyntaxError('test'), {}, 'error'])
+      expect(loggingAgg.bufferedLogs.pop().message).toEqual('SyntaxError: test')
+
+      loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, Symbol('test'), {}, 'error'])
+      expect(loggingAgg.bufferedLogs.pop().message).toEqual('Symbol(test)')
     })
   })
+
+  it('can harvest early', async () => {
+    const loggingAgg = new LoggingAggregate(agentIdentifier, new Aggregator({}))
+    loggingAgg.ee.emit('rumresp', {})
+    await wait(1)
+    jest.spyOn(loggingAgg.scheduler, 'runHarvest')
+    loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'x'.repeat(800 * 800), { myAttributes: 1 }, 'ERROR']) // almost too big
+    expect(handleModule.handle).toHaveBeenCalledTimes(0)
+    loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'x'.repeat(800 * 800), { myAttributes: 1 }, 'ERROR']) // almost too big
+    expect(handleModule.handle).toHaveBeenCalledTimes(1)
+    expect(handleModule.handle).toHaveBeenCalledWith('storeSupportabilityMetrics', ['Logging/Harvest/Early/Seen', expect.any(Number)])
+    expect(loggingAgg.scheduler.runHarvest).toHaveBeenCalled()
+  })
+  // })
 })
 
 function wait (ms = 0) {

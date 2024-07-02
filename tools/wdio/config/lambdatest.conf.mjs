@@ -76,11 +76,12 @@ function lambdaTestCapabilities () {
         } else {
           capabilities['appium:platformName'] = testBrowser.device_name
 
-          if (parsedBrowserName === 'android') {
-            capabilities['LT:Options'].appiumVersion = '1.22.3'
-          } else /* === ios */ {
-            capabilities['LT:Options'].appiumVersion = '2.6.0'
-          }
+          // Feature request open with LT to support appium 2.x on android and ios
+          // if (parsedBrowserName === 'android') {
+          //   capabilities['LT:Options'].appiumVersion = '1.22.3'
+          // } else /* === ios */ {
+          //   capabilities['LT:Options'].appiumVersion = '2.6.0'
+          // }
         }
       }
       return capabilities

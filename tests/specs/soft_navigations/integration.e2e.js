@@ -32,7 +32,7 @@ describe('Soft navigations', () => {
   it('does not harvest when spa is blocked by rum response', async () => {
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: `${JSON.stringify({ st: 1, err: 1, ins: 1, cap: 1, spa: 0, loaded: 1 })}`
+      body: `${JSON.stringify({ st: 1, err: 1, ins: 1, spa: 0, loaded: 1 })}`
     })
 
     let url = await browser.testHandle.assetURL('instrumented.html', config)

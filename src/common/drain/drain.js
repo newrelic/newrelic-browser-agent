@@ -32,8 +32,9 @@ export function registerDrain (agentIdentifier, group) {
  * @param {*} group - The named "bucket" to be removed from the registry
  */
 export function deregisterDrain (agentIdentifier, group) {
-  curateRegistry(agentIdentifier)
+  if (!agentIdentifier || !registry[agentIdentifier]) return
   if (registry[agentIdentifier].get(group)) registry[agentIdentifier].delete(group)
+  drainGroup(agentIdentifier, group, false)
   if (registry[agentIdentifier].size) checkCanDrainAll(agentIdentifier)
 }
 
@@ -86,29 +87,33 @@ function checkCanDrainAll (agentIdentifier) {
    * the subscribed handlers for the group.
    * @param {*} group - The name of a particular feature's event "bucket".
    */
-function drainGroup (agentIdentifier, group) {
+function drainGroup (agentIdentifier, group, activateGroup = true) {
   const baseEE = agentIdentifier ? ee.get(agentIdentifier) : ee
   const handlers = defaultRegister.handlers // other storage in registerHandler
   if (!baseEE.backlog || !handlers) return
 
-  var bufferedEventsInGroup = baseEE.backlog[group]
-  var groupHandlers = handlers[group] // each group in the registerHandler storage
-  if (groupHandlers) {
-    // We don't cache the length of the buffer while looping because events might still be added while processing.
-    for (var i = 0; bufferedEventsInGroup && i < bufferedEventsInGroup.length; ++i) { // eslint-disable-line no-unmodified-loop-condition
-      emitEvent(bufferedEventsInGroup[i], groupHandlers)
-    }
+  // Only activated features being drained should run queued listeners on buffered events. Deactivated features only need to release memory.
+  if (activateGroup) {
+    const bufferedEventsInGroup = baseEE.backlog[group]
+    const groupHandlers = handlers[group] // each group in the registerHandler storage
+    if (groupHandlers) {
+      // We don't cache the length of the buffer while looping because events might still be added while processing.
+      for (let i = 0; bufferedEventsInGroup && i < bufferedEventsInGroup.length; ++i) { // eslint-disable-line no-unmodified-loop-condition
+        emitEvent(bufferedEventsInGroup[i], groupHandlers)
+      }
 
-    mapOwn(groupHandlers, function (eventType, handlerRegistrationList) {
-      mapOwn(handlerRegistrationList, function (i, registration) {
-        // registration is an array of: [targetEE, eventHandler]
-        registration[0].on(eventType, registration[1])
+      mapOwn(groupHandlers, function (eventType, handlerRegistrationList) {
+        mapOwn(handlerRegistrationList, function (i, registration) {
+          // registration is an array of: [targetEE, eventHandler]
+          registration[0].on(eventType, registration[1])
+        })
       })
-    })
+    }
   }
+
   if (!baseEE.isolatedBacklog) delete handlers[group]
   baseEE.backlog[group] = null
-  baseEE.emit('drain-' + group, [])
+  baseEE.emit('drain-' + group, []) // exists purely for a unit test
 }
 
 /**

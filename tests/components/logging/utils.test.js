@@ -18,25 +18,11 @@ describe('logging utils component tests', () => {
         expect(handleModule.handle.mock.calls[currIdx][0]).toEqual('storeSupportabilityMetrics')
         expect(handleModule.handle.mock.calls[currIdx][1]).toEqual(['API/logging/info/called'])
         expect(handleModule.handle.mock.calls[currIdx + 1][0]).toEqual('log')
-        expect(handleModule.handle.mock.calls[currIdx + 1][1]).toEqual([expect.any(Number), JSON.stringify(message), {}, 'INFO'])
+        expect(handleModule.handle.mock.calls[currIdx + 1][1]).toEqual([expect.any(Number), message, {}, 'INFO'])
         // method should not cast to '' or '{}'
         expect(handleModule.handle.mock.calls[currIdx + 1][1][1]).not.toEqual('')
         expect(handleModule.handle.mock.calls[currIdx + 1][1][1]).not.toEqual('{}')
         expect(handleModule.handle.mock.calls[currIdx + 1][1][1]).not.toEqual('[object Object]')
-      })
-    })
-    it('should buffer logs with non-stringify-able message', () => {
-      ;[new Error('test'), new SyntaxError('test'), Symbol('test')].forEach((message, idx) => {
-        const currIdx = idx * 2
-        bufferLog(ee.get(agentIdentifier), message)
-        expect(handleModule.handle.mock.calls[currIdx][0]).toEqual('storeSupportabilityMetrics')
-        expect(handleModule.handle.mock.calls[currIdx][1]).toEqual(['API/logging/info/called'])
-        expect(handleModule.handle.mock.calls[currIdx + 1][0]).toEqual('log')
-        expect(handleModule.handle.mock.calls[currIdx + 1][1]).toEqual([expect.any(Number), String(message), {}, 'INFO'])
-        // method should not cast to '' or '{}'
-        expect(handleModule.handle.mock.calls[currIdx + 1][1][1]).not.toEqual('')
-        expect(handleModule.handle.mock.calls[currIdx + 1][1][1]).not.toEqual('{}')
-        expect(handleModule.handle.mock.calls[currIdx + 1][1][1]).not.toEqual(JSON.stringify(message))
       })
     })
     it('should buffer logs with message only', () => {
@@ -64,12 +50,13 @@ describe('logging utils component tests', () => {
 
   describe('isValidLogLevel', () => {
     test('should detect valid and invalid log levels', () => {
-      const validLogLevels = ['info', 'trace', 'debug', 'warn', 'error']
-      const validLogLevelsCasing = ['INFO', 'tRaCe']
+      const logLevels = ['info', 'trace', 'debug', 'warn', 'error']
       const invalidLogLevels = ['', 'bad', true, false, {}, []]
 
-      expect(validLogLevels.every(level => isValidLogLevel(level))).toEqual(true)
-      expect(validLogLevelsCasing.every(level => isValidLogLevel(level))).toEqual(true)
+      // must be case-changed to upper first
+      expect(logLevels.every(level => isValidLogLevel(level))).toEqual(false)
+      // this should pass since it is case changed
+      expect(logLevels.map(x => x.toUpperCase()).every(level => isValidLogLevel(level))).toEqual(true)
       expect(invalidLogLevels.every(level => !isValidLogLevel(level))).toEqual(true)
     })
   })

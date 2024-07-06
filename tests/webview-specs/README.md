@@ -1,6 +1,6 @@
 # WebView Specs
 
-These spec files are meant to be ran against a test mobile application containing a webview. The app used is owned by the mobile teams. Below are build instructions if we ever need to update the app in SauceLabs.
+These spec files are meant to be ran against a test mobile application containing a webview. The app used is owned by the mobile teams. Below are build instructions if we ever need to update the app in LambdaTest.
 
 The apps are stored here under `assets` for posterity.
 
@@ -21,7 +21,7 @@ You may also want to use the SauceLabs specific [Appium inspector app](https://g
   - You may need to install the 15.5 iOS sdk
 - CD into `nrba-build/Build/Products/Release-iphonesimulator`
 - Run `zip -r NRTestApp.zip NRTestApp.app`
-- You can now open this directory in Finder and drag/drop the zip into the App Management screen of sauce labs
+- You can now open this directory in Finder and drag/drop the zip into the Real Time -> Virtual Mobile screen of LambdaTest
 
 ## Building Android App
 
@@ -35,4 +35,4 @@ You may also want to use the SauceLabs specific [Appium inspector app](https://g
 - Open `settings.gradle` and change the app name to `nr-test-app`
 - Open `app/src/main/res/values/strings.xml` and change the name of the app to `NRTestApp`
 - Open the `build` menu and select build APKs
-- Open finder to the location of the APK file and drag/drop the zip into the App Management screen of sauce labs
+- Open finder to the location of the APK file and drag/drop the zip into the Real Time -> Virtual Mobile screen of LambdaTest

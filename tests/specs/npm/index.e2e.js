@@ -54,38 +54,21 @@ describe.withBrowsersMatching(es2022Support)('basic npm agent', () => {
     })
 
     if (testBuild !== 'worker-agent') {
-      it(`dist/${testBuild} exposes the correct API methods`, async () => {
-        await browser.url(await browser.testHandle.assetURL(`test-builds/browser-agent-wrapper/${testBuild}.html`))
+      ;[['dist', 'browser-agent-wrapper'], ['src', 'raw-src-wrapper']].forEach(([type, wrapper]) => {
+        it(`${type}/${testBuild} exposes the correct API methods`, async () => {
+          await browser.url(await browser.testHandle.assetURL(`test-builds/${wrapper}/${testBuild}.html`))
 
-        const agentProps = await getAgentProps('window.agent')
-        const agentApiProps = await getAgentProps('window.agent.api')
+          const NREUMProps = await getAgentProps('NREUM')
+          const newrelicProps = await getAgentProps('newrelic')
+          const agentApiProps = await getAgentProps('window.agent.api')
 
-        expect(agentProps).toEqual(expect.arrayContaining([
-          ...apiMethods,
-          ...asyncApiMethods
-        ]))
-
-        expect(agentApiProps).toEqual(expect.arrayContaining([
-          ...apiMethods,
-          ...asyncApiMethods
-        ]))
-      })
-
-      it(`src/${testBuild} exposes the correct API methods`, async () => {
-        await browser.url(await browser.testHandle.assetURL(`test-builds/raw-src-wrapper/${testBuild}.html`))
-
-        const agentProps = await getAgentProps('window.agent')
-        const agentApiProps = await getAgentProps('window.agent.api')
-
-        expect(agentProps).toEqual(expect.arrayContaining([
-          ...apiMethods,
-          ...asyncApiMethods
-        ]))
-
-        expect(agentApiProps).toEqual(expect.arrayContaining([
-          ...apiMethods,
-          ...asyncApiMethods
-        ]))
+          ;[NREUMProps, newrelicProps, agentApiProps].forEach(keys => {
+            expect(keys).toEqual(expect.arrayContaining([
+              ...apiMethods,
+              ...asyncApiMethods
+            ]))
+          })
+        })
       })
     }
   })
@@ -107,6 +90,34 @@ describe.withBrowsersMatching(es2022Support)('basic npm agent', () => {
     ])
     expect(errorsPromise).toBeDefined()
     expect(pageActionPromise).toBeDefined()
+  })
+
+  it('vite-react-wrapper should not break agent when session manager cannot be imported', async () => {
+    await browser.destroyAgentSession()
+    await browser.testHandle.scheduleReply('assetServer', {
+      test: function (request) {
+        const url = new URL(request.url, 'resolve://')
+        return (url.pathname.includes('agent-session'))
+      },
+      permanent: true,
+      statusCode: 500,
+      body: ''
+    })
+
+    const [ajaxPromise] = await Promise.all([
+      browser.testHandle.expectAjaxTimeSlices(),
+      browser.url(await browser.testHandle.assetURL('test-builds/vite-react-wrapper/index.html'))
+    ])
+    expect(ajaxPromise.request.body.xhr).toBeDefined()
+
+    const agentSession = await browser.getAgentSessionInfo()
+    Object.values(agentSession.agentSessions).forEach(val =>
+      expect(val).toEqual({})
+    )
+    Object.values(agentSession.agentSessionInstances).forEach(val =>
+      expect(val).toEqual({})
+    )
+    expect(agentSession.localStorage).toEqual({})
   })
 })
 

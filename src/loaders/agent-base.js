@@ -53,8 +53,8 @@ export class AgentBase {
    * Adds a user-defined attribute name and value to subsequent events on the page.
    * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/setcustomattribute/}
    * @param {string} name Name of the attribute. Appears as column in the PageView event. It will also appear as a column in the PageAction event if you are using it.
-   * @param {string|number|null} value Value of the attribute. Appears as the value in the named attribute column in the PageView event. It will appear as a column in the PageAction event if you are using it. Custom attribute values cannot be complex objects, only simple types such as Strings and Integers.
-   * @param {boolean} [persist] Default false. f set to true, the name-value pair will also be set into the browser's storage API. Then on the following instrumented pages that load within the same session, the pair will be re-applied as a custom attribute.
+   * @param {string|number|boolean|null} value Value of the attribute. Appears as the value in the named attribute column in the PageView event. It will appear as a column in the PageAction event if you are using it. Custom attribute values cannot be complex objects, only simple types such as Strings, Integers and Booleans. Passing a null value unsets any existing attribute of the same name.
+   * @param {boolean} [persist] Default false. If set to true, the name-value pair will also be set into the browser's storage API. Then on the following instrumented pages that load within the same session, the pair will be re-applied as a custom attribute.
    */
   setCustomAttribute (name, value, persist) {
     return this.#callMethod('setCustomAttribute', name, value, persist)
@@ -180,5 +180,26 @@ export class AgentBase {
   */
   interaction () {
     return this.#callMethod('interaction')
+  }
+
+  /**
+   * Capture a single log.
+   * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/loginfo/}
+   * @param {string} message String to be captured as log message
+   * @param {{customAttributes?: object, level?: 'ERROR'|'TRACE'|'DEBUG'|'INFO'|'WARN'}} [options] customAttributes defaults to `{}` if not assigned, level defaults to `info` if not assigned.
+  */
+  log (message, options) {
+    return this.#callMethod('logInfo', message, options)
+  }
+
+  /**
+   * Wrap a logger function to capture a log each time the function is invoked with the message and arguments passed
+   * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/wraplogger/}
+   * @param {object} parent The parent object containing the logger method
+   * @param {string} functionName The property name of the function in the parent object to be wrapped
+   * @param {{customAttributes?: object, level?: 'ERROR'|'TRACE'|'DEBUG'|'INFO'|'WARN'}} [options] customAttributes defaults to `{}` if not assigned, level defaults to `info` if not assigned.
+  */
+  wrapLogger (parent, functionName, options) {
+    return this.#callMethod('wrapLogger', parent, functionName, options)
   }
 }

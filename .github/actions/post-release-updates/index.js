@@ -75,10 +75,10 @@ await spawnAsync(
   DEFAULT_SPAWN_OPTIONS
 )
 
-console.log('Updating SauceLabs browsers lists')
+console.log('Updating LambdaTest browsers lists')
 await spawnAsync(
   `npm${os.platform() === 'win32' ? '.cmd' : ''}`,
-  [ 'run', 'sauce:get-browsers' ],
+  ['run', 'lt:update-browsers'],
   DEFAULT_SPAWN_OPTIONS
 )
 

@@ -1,6 +1,7 @@
 import { notIE } from '../../tools/browser-matcher/common-matchers.mjs'
 import { apiMethods, asyncApiMethods } from '../../src/loaders/api/api-methods'
-import { checkAjaxEvents, checkJsErrors, checkMetrics, checkPageAction, checkPVT, checkRum, checkSessionTrace, checkSpa } from '../util/basic-checks'
+import { checkAjaxEvents, checkJsErrors, checkMetrics, checkPageAction, checkPVT, checkRumBody, checkRumQuery, checkSessionTrace, checkSpa } from '../util/basic-checks'
+import { testAjaxEventsRequest, testAjaxTimeSlicesRequest, testBlobTraceRequest, testCustomMetricsRequest, testErrorsRequest, testEventsRequest, testInsRequest, testInteractionEventsRequest, testMetricsRequest, testRumRequest, testTimingEventsRequest } from '../../tools/testing-server/utils/expect-tests'
 
 describe('newrelic api', () => {
   afterEach(async () => {
@@ -25,7 +26,7 @@ describe('newrelic api', () => {
         }
         return Array.from(result)
       }
-      return getAllPropertyNames(Object.values(newrelic.initializedAgents)[0])
+      return getAllPropertyNames(Object.values(newrelic.initializedAgents)[0].api)
     })
 
     expect(globalApiMethods).toEqual(expect.arrayContaining([
@@ -51,17 +52,24 @@ describe('newrelic api', () => {
 
   describe('setPageViewName()', () => {
     it('includes the 1st argument (page name) in rum, resources, events, and ajax calls', async () => {
+      const [rumCapture, eventsCapture, ajaxCapture] =
+        await browser.testHandle.createNetworkCaptures('bamServer', [
+          { test: testRumRequest },
+          { test: testEventsRequest },
+          { test: testAjaxTimeSlicesRequest }
+        ])
+
       const [rumResults, eventsResults, ajaxResults] = await Promise.all([
-        browser.testHandle.expectRum(),
-        browser.testHandle.expectEvents(),
-        browser.testHandle.expectAjaxTimeSlices(),
+        rumCapture.waitForResult({ totalCount: 1 }),
+        eventsCapture.waitForResult({ totalCount: 1 }),
+        ajaxCapture.waitForResult({ totalCount: 1 }),
         browser.url(await browser.testHandle.assetURL('api.html')) // Setup expects before loading the page
           .then(() => browser.waitForAgentLoad())
       ])
 
-      expect(rumResults.request.query.ct).toEqual('http://custom.transaction/foo')
-      expect(eventsResults.request.query.ct).toEqual('http://custom.transaction/foo')
-      expect(ajaxResults.request.query.ct).toEqual('http://custom.transaction/foo')
+      expect(rumResults[0].request.query.ct).toEqual('http://custom.transaction/foo')
+      expect(eventsResults[0].request.query.ct).toEqual('http://custom.transaction/foo')
+      expect(ajaxResults[0].request.query.ct).toEqual('http://custom.transaction/foo')
     })
 
     // IE does not have reliable unload support
@@ -69,35 +77,41 @@ describe('newrelic api', () => {
       await browser.url(await browser.testHandle.assetURL('api.html'))
         .then(() => browser.waitForAgentLoad())
 
+      const customMetricsCapture = await browser.testHandle.createNetworkCaptures('bamServer', {
+        test: testCustomMetricsRequest
+      })
       const [unloadCustomMetricsResults] = await Promise.all([
-        browser.testHandle.expectCustomMetrics(),
-        await browser.url(await browser.testHandle.assetURL('/'))
+        customMetricsCapture.waitForResult({ totalCount: 1 }),
+        await browser.url(await browser.testHandle.assetURL('/')) // Setup expects before navigating
       ])
 
-      expect(unloadCustomMetricsResults.request.query.ct).toEqual('http://custom.transaction/foo')
-      expect(Array.isArray(unloadCustomMetricsResults.request.body.cm)).toEqual(true)
-      expect(unloadCustomMetricsResults.request.body.cm.length).toBeGreaterThan(0)
+      expect(unloadCustomMetricsResults[0].request.query.ct).toEqual('http://custom.transaction/foo')
+      expect(Array.isArray(unloadCustomMetricsResults[0].request.body.cm)).toEqual(true)
+      expect(unloadCustomMetricsResults[0].request.body.cm.length).toBeGreaterThan(0)
 
-      const time = unloadCustomMetricsResults.request.body.cm[0].metrics?.time?.t
+      const time = unloadCustomMetricsResults[0].request.body.cm[0].metrics?.time?.t
       expect(typeof time).toEqual('number')
       expect(time).toBeGreaterThan(0)
     })
 
     // IE does not have reliable unload support
     it.withBrowsersMatching(notIE)('includes the optional 2nd argument for host in metrics call on unload', async () => {
+      const customMetricsCapture = await browser.testHandle.createNetworkCaptures('bamServer', {
+        test: testCustomMetricsRequest
+      })
       await browser.url(await browser.testHandle.assetURL('api2.html'))
         .then(() => browser.waitForAgentLoad())
 
       const [unloadCustomMetricsResults] = await Promise.all([
-        browser.testHandle.expectCustomMetrics(),
-        await browser.url(await browser.testHandle.assetURL('/'))
+        customMetricsCapture.waitForResult({ totalCount: 1 }),
+        await browser.url(await browser.testHandle.assetURL('/')) // Setup expects before navigating
       ])
 
-      expect(unloadCustomMetricsResults.request.query.ct).toEqual('http://bar.baz/foo')
-      expect(Array.isArray(unloadCustomMetricsResults.request.body.cm)).toEqual(true)
-      expect(unloadCustomMetricsResults.request.body.cm.length).toBeGreaterThan(0)
+      expect(unloadCustomMetricsResults[0].request.query.ct).toEqual('http://bar.baz/foo')
+      expect(Array.isArray(unloadCustomMetricsResults[0].request.body.cm)).toEqual(true)
+      expect(unloadCustomMetricsResults[0].request.body.cm.length).toBeGreaterThan(0)
 
-      const time = unloadCustomMetricsResults.request.body.cm[0].metrics?.time?.t
+      const time = unloadCustomMetricsResults[0].request.body.cm[0].metrics?.time?.t
       expect(typeof time).toEqual('number')
       expect(time).toBeGreaterThan(0)
     })
@@ -105,16 +119,18 @@ describe('newrelic api', () => {
 
   describe('noticeError()', () => {
     it('takes an error object', async () => {
+      const errorsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testErrorsRequest })
+
       const [errorsResults] = await Promise.all([
-        browser.testHandle.expectErrors(),
+        errorsCapture.waitForResult({ totalCount: 1 }),
         browser.url(await browser.testHandle.assetURL('api.html')) // Setup expects before loading the page
           .then(() => browser.waitForAgentLoad())
       ])
 
-      expect(Array.isArray(errorsResults.request.body.err)).toEqual(true)
-      expect(errorsResults.request.body.err.length).toBeGreaterThan(0)
+      expect(Array.isArray(errorsResults[0].request.body.err)).toEqual(true)
+      expect(errorsResults[0].request.body.err.length).toBeGreaterThan(0)
 
-      const params = errorsResults.request.body.err[0].params
+      const params = errorsResults[0].request.body.err[0].params
 
       expect(params).toBeDefined()
       expect(params.exceptionClass).toEqual('Error')
@@ -122,16 +138,18 @@ describe('newrelic api', () => {
     })
 
     it('takes a string', async () => {
+      const errorsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testErrorsRequest })
+
       const [errorsResults] = await Promise.all([
-        browser.testHandle.expectErrors(),
+        errorsCapture.waitForResult({ totalCount: 1 }),
         browser.url(await browser.testHandle.assetURL('api/noticeError.html')) // Setup expects before loading the page
           .then(() => browser.waitForAgentLoad())
       ])
 
-      expect(Array.isArray(errorsResults.request.body.err)).toEqual(true)
-      expect(errorsResults.request.body.err.length).toBeGreaterThan(0)
+      expect(Array.isArray(errorsResults[0].request.body.err)).toEqual(true)
+      expect(errorsResults[0].request.body.err.length).toBeGreaterThan(0)
 
-      const params = errorsResults.request.body.err[0].params
+      const params = errorsResults[0].request.body.err[0].params
 
       expect(params).toBeDefined()
       expect(params.exceptionClass).toEqual('Error')
@@ -141,14 +159,15 @@ describe('newrelic api', () => {
 
   describe('finished()', () => {
     it('records a PageAction when called before RUM message', async () => {
+      const insCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testInsRequest })
+
       const [insResult] = await Promise.all([
-        browser.testHandle.expectIns(),
-        browser.testHandle.expectRum(),
+        insCapture.waitForResult({ totalCount: 1 }),
         browser.url(await browser.testHandle.assetURL('api/finished.html'))
           .then(() => browser.waitForAgentLoad())
       ])
 
-      const pageActions = insResult.request.body.ins
+      const pageActions = insResult[0].request.body.ins
       expect(pageActions).toBeDefined()
       expect(pageActions.length).toEqual(1) // exactly 1 PageAction was submitted
       expect(pageActions[0].actionName).toEqual('finished') // PageAction has actionName = finished
@@ -157,23 +176,27 @@ describe('newrelic api', () => {
 
   describe('release()', () => {
     it('adds releases to jserrors', async () => {
+      const errorsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testErrorsRequest })
+
       const [errorsResult] = await Promise.all([
-        browser.testHandle.expectErrors(),
+        errorsCapture.waitForResult({ totalCount: 1 }),
         browser.url(await browser.testHandle.assetURL('api/release.html'))
           .then(() => browser.waitForAgentLoad())
       ])
 
-      expect(errorsResult.request.query.ri).toEqual('{"example":"123","other":"456"}')
+      expect(errorsResult[0].request.query.ri).toEqual('{"example":"123","other":"456"}')
     })
 
     it('limits releases to jserrors', async () => {
+      const errorsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testErrorsRequest })
+
       const [errorsResult] = await Promise.all([
-        browser.testHandle.expectErrors(),
+        errorsCapture.waitForResult({ totalCount: 1 }),
         browser.url(await browser.testHandle.assetURL('api/release-too-many.html'))
           .then(() => browser.waitForAgentLoad())
       ])
 
-      expect(JSON.parse(errorsResult.request.query.ri)).toEqual({
+      expect(JSON.parse(errorsResult[0].request.query.ri)).toEqual({
         one: '1',
         two: '2',
         three: '3',
@@ -188,31 +211,36 @@ describe('newrelic api', () => {
     })
 
     it('limits size in jserrors payload', async () => {
+      const errorsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testErrorsRequest })
+
       const [errorsResult] = await Promise.all([
-        browser.testHandle.expectErrors(),
+        errorsCapture.waitForResult({ totalCount: 1 }),
         browser.url(await browser.testHandle.assetURL('api/release-too-long.html'))
           .then(() => browser.waitForAgentLoad())
       ])
 
-      const queryRi = JSON.parse(errorsResult.request.query.ri)
+      const queryRi = JSON.parse(errorsResult[0].request.query.ri)
       expect(queryRi.one).toEqual('201')
       expect(queryRi.three).toMatch(/y{99}x{100}q/)
       expect(Object.keys(queryRi).find(element => element.match(/y{99}x{100}q/))).toBeTruthy()
     })
 
     it('does not set ri query param if release() is not called', async () => {
+      const errorsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testErrorsRequest })
+
       const [errorsResult] = await Promise.all([
-        browser.testHandle.expectErrors(),
+        errorsCapture.waitForResult({ totalCount: 1 }),
         browser.url(await browser.testHandle.assetURL('api/no-release.html'))
           .then(() => browser.waitForAgentLoad())
       ])
 
-      expect(errorsResult.request.query).not.toHaveProperty('ri')
+      expect(errorsResult[0].request.query).not.toHaveProperty('ri')
     })
   })
 
   describe('setCustomAttribute()', () => {
     it('persists attribute onto subsequent page loads until unset', async () => {
+      const rumCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testRumRequest })
       const testUrl = await browser.testHandle.assetURL('api/custom-attribute.html', {
         init: {
           privacy: { cookies_enabled: true }
@@ -220,12 +248,12 @@ describe('newrelic api', () => {
       })
 
       const [rumResult] = await Promise.all([
-        browser.testHandle.expectRum(),
+        rumCapture.waitForResult({ totalCount: 1 }),
         browser.url(testUrl)
           .then(() => browser.waitForAgentLoad())
       ])
 
-      expect(rumResult.request.body.ja).toEqual({ testing: 123 }) // initial page load has custom attribute
+      expect(rumResult[0].request.body.ja).toEqual({ testing: 123 }) // initial page load has custom attribute
 
       const subsequentTestUrl = await browser.testHandle.assetURL('instrumented.html', {
         init: {
@@ -234,24 +262,24 @@ describe('newrelic api', () => {
       })
 
       const [rumResultAfterNavigate] = await Promise.all([
-        browser.testHandle.expectRum(),
+        rumCapture.waitForResult({ totalCount: 2 }),
         browser.url(subsequentTestUrl)
           .then(() => browser.waitForAgentLoad())
       ])
 
-      expect(rumResultAfterNavigate.request.body.ja).toEqual({ testing: 123 }) // 2nd page load still has custom attribute from storage
+      expect(rumResultAfterNavigate[1].request.body.ja).toEqual({ testing: 123 }) // 2nd page load still has custom attribute from storage
 
       await browser.execute(function () {
         newrelic.setCustomAttribute('testing', null)
       })
 
       const [rumResultAfterUnset] = await Promise.all([
-        browser.testHandle.expectRum(),
+        rumCapture.waitForResult({ totalCount: 3 }),
         browser.url(subsequentTestUrl)
           .then(() => browser.waitForAgentLoad())
       ])
 
-      expect(rumResultAfterUnset.request.body).not.toHaveProperty('ja') // 3rd page load does not retain custom attribute after unsetting (set to null)
+      expect(rumResultAfterUnset[2].request.body).not.toHaveProperty('ja') // 3rd page load does not retain custom attribute after unsetting (set to null)
     })
   })
 
@@ -259,6 +287,11 @@ describe('newrelic api', () => {
     const ERRORS_INBOX_UID = 'enduser.id' // this key should not be changed without consulting EI team on the data flow
 
     it('adds correct (persisted) attribute to payloads', async () => {
+      const [rumCapture, errorsCapture] =
+        await browser.testHandle.createNetworkCaptures('bamServer', [
+          { test: testRumRequest },
+          { test: testErrorsRequest }
+        ])
       await browser.url(await browser.testHandle.assetURL('instrumented.html', {
         init: {
           privacy: { cookies_enabled: true }
@@ -267,7 +300,7 @@ describe('newrelic api', () => {
         .then(() => browser.waitForAgentLoad())
 
       const [firstErrorsResult] = await Promise.all([
-        browser.testHandle.expectErrors(),
+        errorsCapture.waitForResult({ totalCount: 1 }),
         browser.execute(function () {
           newrelic.setUserId(456)
           newrelic.setUserId({ foo: 'bar' })
@@ -275,11 +308,11 @@ describe('newrelic api', () => {
         })
       ])
 
-      expect(firstErrorsResult.request.body.err[0]).toHaveProperty('custom')
-      expect(firstErrorsResult.request.body.err[0].custom[ERRORS_INBOX_UID]).not.toBeDefined() // Invalid data type (non-string) does not set user id
+      expect(firstErrorsResult[0].request.body.err[0]).toHaveProperty('custom')
+      expect(firstErrorsResult[0].request.body.err[0].custom[ERRORS_INBOX_UID]).not.toBeDefined() // Invalid data type (non-string) does not set user id
 
       const [secondErrorsResult] = await Promise.all([
-        browser.testHandle.expectErrors(),
+        errorsCapture.waitForResult({ totalCount: 2 }),
         browser.execute(function () {
           newrelic.setUserId('user123')
           newrelic.setUserId()
@@ -287,17 +320,17 @@ describe('newrelic api', () => {
         })
       ])
 
-      expect(secondErrorsResult.request.body.err[0]).toHaveProperty('custom')
-      expect(secondErrorsResult.request.body.err[0].custom[ERRORS_INBOX_UID]).toBeDefined()
-      expect(secondErrorsResult.request.body.err[0].custom[ERRORS_INBOX_UID]).toBe('user123') // Correct enduser.id custom attr on error
+      expect(secondErrorsResult[1].request.body.err[0]).toHaveProperty('custom')
+      expect(secondErrorsResult[1].request.body.err[0].custom[ERRORS_INBOX_UID]).toBeDefined()
+      expect(secondErrorsResult[1].request.body.err[0].custom[ERRORS_INBOX_UID]).toBe('user123') // Correct enduser.id custom attr on error
 
       const [rumResultAfterRefresh] = await Promise.all([
-        browser.testHandle.expectRum(),
+        rumCapture.waitForResult({ totalCount: 2 }),
         browser.refresh()
       ])
 
       // We expect setUserId's attribute to be stored by the browser tab session, and retrieved on the next page load & agent init
-      expect(rumResultAfterRefresh.request.body.ja).toEqual({ [ERRORS_INBOX_UID]: 'user123' }) // setUserId affects subsequent page loads in the same storage session
+      expect(rumResultAfterRefresh[1].request.body.ja).toEqual({ [ERRORS_INBOX_UID]: 'user123' }) // setUserId affects subsequent page loads in the same storage session
     })
   })
 
@@ -309,23 +342,35 @@ describe('newrelic api', () => {
     }
 
     it('should start all features', async () => {
+      const [rumCapture, timingsCapture, ajaxEventsCapture, errorsCapture, metricsCapture, insCapture, traceCapture, interactionCapture] =
+        await browser.testHandle.createNetworkCaptures('bamServer', [
+          { test: testRumRequest },
+          { test: testTimingEventsRequest },
+          { test: testAjaxEventsRequest },
+          { test: testErrorsRequest },
+          { test: testMetricsRequest },
+          { test: testInsRequest },
+          { test: testBlobTraceRequest },
+          { test: testInteractionEventsRequest }
+        ])
+
       const initialLoad = await Promise.all([
-        browser.testHandle.expectRum(10000, true),
+        rumCapture.waitForResult({ timeout: 10000 }),
         browser.url(await browser.testHandle.assetURL('instrumented-manual.html'), config)
           .then(() => undefined)
       ])
 
-      expect(initialLoad).toEqual(new Array(2).fill(undefined))
+      expect(initialLoad).toEqual([[], undefined])
 
       const results = await Promise.all([
-        browser.testHandle.expectRum(10000),
-        browser.testHandle.expectTimings(10000),
-        browser.testHandle.expectAjaxEvents(10000),
-        browser.testHandle.expectErrors(10000),
-        browser.testHandle.expectMetrics(10000),
-        browser.testHandle.expectIns(10000),
-        browser.testHandle.expectTrace(10000),
-        browser.testHandle.expectInteractionEvents(10000),
+        rumCapture.waitForResult({ totalCount: 1 }),
+        timingsCapture.waitForResult({ totalCount: 1 }),
+        ajaxEventsCapture.waitForResult({ totalCount: 1 }),
+        errorsCapture.waitForResult({ totalCount: 1 }),
+        metricsCapture.waitForResult({ totalCount: 1 }),
+        insCapture.waitForResult({ totalCount: 1 }),
+        traceCapture.waitForResult({ totalCount: 1 }),
+        interactionCapture.waitForResult({ totalCount: 1 }),
         browser.execute(function () {
           newrelic.start()
           setTimeout(function () {
@@ -334,20 +379,26 @@ describe('newrelic api', () => {
         })
       ])
 
-      checkRum(results[0].request)
-      checkPVT(results[1].request)
-      checkAjaxEvents(results[2].request)
-      checkJsErrors(results[3].request, { messages: ['test'] })
-      checkMetrics(results[4].request)
-      checkPageAction(results[5].request, { specificAction: 'test', actionContents: { test: 1 } })
-      checkSessionTrace(results[6].request)
-      checkSpa(results[7].request)
+      checkRumQuery(results[0][0].request)
+      checkRumBody(results[0][0].request)
+      checkPVT(results[1][0].request)
+      checkAjaxEvents(results[2][0].request)
+      checkJsErrors(results[3][0].request, { messages: ['test'] })
+      checkMetrics(results[4][0].request)
+      checkPageAction(results[5][0].request, { specificAction: 'test', actionContents: { test: 1 } })
+      checkSessionTrace(results[6][0].request)
+      checkSpa(results[7][0].request)
     })
 
     it('starts everything if the auto features do not include PVE, and nothing should have started', async () => {
+      const [rumCapture, errorsCapture] = await Promise.all([
+        browser.testHandle.createNetworkCaptures('bamServer', { test: testRumRequest }),
+        browser.testHandle.createNetworkCaptures('bamServer', { test: testErrorsRequest })
+      ])
+
       const initialLoad = await Promise.all([
-        browser.testHandle.expectRum(10000, true),
-        browser.testHandle.expectErrors(10000, true),
+        rumCapture.waitForResult({ timeout: 10000 }),
+        errorsCapture.waitForResult({ timeout: 10000 }),
         browser.url(await browser.testHandle.assetURL('instrumented-manual.html', {
           init: {
             ...config.init,
@@ -358,28 +409,39 @@ describe('newrelic api', () => {
         })).then(() => undefined)
       ])
 
-      expect(initialLoad).toEqual(new Array(3).fill(undefined))
+      expect(initialLoad).toEqual([[], [], undefined])
 
       const results = await Promise.all([
-        browser.testHandle.expectRum(10000),
-        browser.testHandle.expectErrors(10000),
+        rumCapture.waitForResult({ totalCount: 1 }),
+        errorsCapture.waitForResult({ totalCount: 1 }),
         browser.execute(function () {
           newrelic.start()
         })
       ])
 
-      checkRum(results[0].request)
-      checkJsErrors(results[1].request, { messages: ['test'] })
+      checkRumQuery(results[0][0].request)
+      checkRumBody(results[0][0].request)
+      checkJsErrors(results[1][0].request, { messages: ['test'] })
     })
 
     it('starts the rest of the features if the auto features include PVE, and those should have started', async () => {
+      const [rumCapture, timingsCapture, ajaxEventsCapture, errorsCapture, traceCapture, interactionCapture] =
+        await browser.testHandle.createNetworkCaptures('bamServer', [
+          { test: testRumRequest },
+          { test: testTimingEventsRequest },
+          { test: testAjaxEventsRequest },
+          { test: testErrorsRequest },
+          { test: testBlobTraceRequest },
+          { test: testInteractionEventsRequest }
+        ])
+
       const results = await Promise.all([
-        browser.testHandle.expectRum(),
-        browser.testHandle.expectTimings(),
-        browser.testHandle.expectAjaxEvents(10000, true),
-        browser.testHandle.expectErrors(10000, true),
-        browser.testHandle.expectTrace(),
-        browser.testHandle.expectInteractionEvents(),
+        rumCapture.waitForResult({ totalCount: 1 }),
+        timingsCapture.waitForResult({ totalCount: 1 }),
+        ajaxEventsCapture.waitForResult({ timeout: 10000 }),
+        errorsCapture.waitForResult({ timeout: 10000 }),
+        traceCapture.waitForResult({ totalCount: 1 }),
+        interactionCapture.waitForResult({ totalCount: 1 }),
         browser.url(await browser.testHandle.assetURL('instrumented.html', {
           init: {
             ...config.init,
@@ -400,22 +462,23 @@ describe('newrelic api', () => {
         }))
       ])
 
-      checkRum(results[0].request)
-      checkPVT(results[1].request)
-      checkSessionTrace(results[4].request)
-      checkSpa(results[5].request)
+      checkRumQuery(results[0][0].request)
+      checkRumBody(results[0][0].request)
+      checkPVT(results[1][0].request)
+      checkSessionTrace(results[4][0].request)
+      checkSpa(results[5][0].request)
 
       await browser.pause(5000)
       const subsequentResults = await Promise.all([
-        browser.testHandle.expectAjaxEvents(),
-        browser.testHandle.expectErrors(),
+        ajaxEventsCapture.waitForResult({ totalCount: 1 }),
+        errorsCapture.waitForResult({ totalCount: 1 }),
         browser.execute(function () {
           newrelic.start()
         })
       ])
 
-      checkAjaxEvents(subsequentResults[0].request)
-      checkJsErrors(subsequentResults[1].request)
+      checkAjaxEvents(subsequentResults[0][0].request)
+      checkJsErrors(subsequentResults[1][0].request)
     })
   })
 })

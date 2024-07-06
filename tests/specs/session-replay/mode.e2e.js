@@ -107,31 +107,6 @@ describe.withBrowsersMatching(notIE)('Session Replay Sample Mode Validation', ()
     expect(sr.mode).toEqual(1)
   })
 
-  it('Record API called before page load does not start a replay (no entitlements yet)', async () => {
-    await browser.enableSessionReplay(0, 0)
-    await browser.url(await browser.testHandle.assetURL('rrweb-api-record-before-load.html', srConfig()))
-      .then(() => browser.waitForFeatureAggregate('session_replay'))
-
-    await browser.pause(1000)
-    await expect(getSR()).resolves.toMatchObject({
-      initialized: true,
-      mode: 1
-    })
-  })
-
-  it('Pause API called before page load has no effect', async () => {
-    await browser.enableSessionReplay(100, 0)
-    await browser.url(await browser.testHandle.assetURL('rrweb-api-pause-before-load.html', srConfig()))
-      .then(() => browser.waitForSessionReplayRecording())
-
-    await expect(getSR()).resolves.toMatchObject({
-      recording: true,
-      initialized: true,
-      events: expect.any(Array),
-      mode: 1
-    })
-  })
-
   it('ERROR (seen after init) => FULL', async () => {
     await browser.enableSessionReplay(0, 100)
     await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))

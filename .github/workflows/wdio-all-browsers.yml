@@ -13,9 +13,9 @@ on:
         default: true
         type: boolean
     secrets:
-      SAUCE_USERNAME:
+      LAMBDA_USERNAME:
         required: true
-      SAUCE_ACCESS_KEY:
+      LAMBDA_ACCESS_KEY:
         required: true
 
 jobs:
@@ -47,36 +47,12 @@ jobs:
       browser-target: ${{ inputs.latest-only == true && 'edge@latest' || 'edge@*' }}
     secrets: inherit
 
-  ios-15_5:
-    uses: ./.github/workflows/wdio-single-browser.yml
-    if: ${{ !inputs.latest-only }}
-    with:
-      ref: ${{ inputs.ref || github.ref }}
-      browser-target: ios@15.5
-    secrets: inherit
-
-  ios-16_0:
-    uses: ./.github/workflows/wdio-single-browser.yml
-    if: ${{ !inputs.latest-only }}
-    with:
-      ref: ${{ inputs.ref || github.ref }}
-      browser-target: ios@16.0
-    secrets: inherit
-
-  ios-16_1:
-    uses: ./.github/workflows/wdio-single-browser.yml
-    if: ${{ !inputs.latest-only }}
-    with:
-      ref: ${{ inputs.ref || github.ref }}
-      browser-target: ios@16.1
-    secrets: inherit
-
-  ios-16_2:
-    uses: ./.github/workflows/wdio-single-browser.yml
-    with:
-      ref: ${{ inputs.ref || github.ref }}
-      browser-target: ios@16.2
-    secrets: inherit
+  # ios:
+  #   uses: ./.github/workflows/wdio-single-browser.yml
+  #   with:
+  #     ref: ${{ inputs.ref || github.ref }}
+  #     browser-target: ${{ inputs.latest-only == true && 'ios@latest' || 'ios@*' }}
+  #   secrets: inherit
 
   android:
     uses: ./.github/workflows/wdio-single-browser.yml
@@ -97,14 +73,16 @@ jobs:
     uses: ./.github/workflows/wdio-single-browser.yml
     with:
       ref: ${{ inputs.ref || github.ref }}
-      browser-target: ${{ inputs.latest-only == true && 'ios@latest' || 'ios@*' }}
+      browser-target: 'ios@latest'
       additional-flags: --webview --timeout 300000
+      concurrency: 2
     secrets: inherit
 
   android-webview:
     uses: ./.github/workflows/wdio-single-browser.yml
     with:
       ref: ${{ inputs.ref || github.ref }}
-      browser-target: ${{ inputs.latest-only == true && 'android@latest' || 'android@*' }}
+      browser-target: 'android@latest'
       additional-flags: --webview --timeout 300000
+      concurrency: 2
     secrets: inherit

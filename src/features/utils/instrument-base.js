@@ -11,7 +11,7 @@ import { isBrowserScope } from '../../common/constants/runtime'
 import { warn } from '../../common/util/console'
 import { FEATURE_NAMES } from '../../loaders/features/features'
 import { getConfigurationValue } from '../../common/config/config'
-import { canImportReplayAgg } from '../session_replay/shared/utils'
+import { hasReplayPrerequisite } from '../session_replay/shared/utils'
 import { canEnableSessionTracking } from './feature-gates'
 import { single } from '../../common/util/invoke'
 
@@ -86,6 +86,7 @@ export class InstrumentBase extends FeatureBase {
         }
       } catch (e) {
         warn('A problem occurred when starting up session manager. This page will not start or extend any session.', e)
+        this.ee.emit('internal-error', [e])
         if (this.featureName === FEATURE_NAMES.sessionReplay) this.abortHandler?.() // SR should stop recording if session DNE
       }
 
@@ -126,7 +127,13 @@ export class InstrumentBase extends FeatureBase {
  * @returns
  */
   #shouldImportAgg (featureName, session) {
-    if (featureName === FEATURE_NAMES.sessionReplay) return canImportReplayAgg(this.agentIdentifier, session)
-    return true
+    switch (featureName) {
+      case FEATURE_NAMES.sessionReplay: // the session manager must be initialized successfully for Replay & Trace features
+        return hasReplayPrerequisite(this.agentIdentifier) && !!session
+      case FEATURE_NAMES.sessionTrace:
+        return !!session
+      default:
+        return true
+    }
   }
 }

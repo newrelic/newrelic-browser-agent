@@ -3,26 +3,7 @@ const { paths } = require('./constants')
 const { urlFor } = require('./utils/url')
 const path = require('path')
 const { deepmerge } = require('deepmerge-ts')
-const {
-  testRumRequest,
-  testEventsRequest,
-  testTimingEventsRequest,
-  testAjaxEventsRequest,
-  testMetricsRequest,
-  testCustomMetricsRequest,
-  testSupportMetricsRequest,
-  testErrorsRequest,
-  testInsRequest,
-  testAjaxTimeSlicesRequest,
-  testResourcesRequest,
-  testInteractionEventsRequest,
-  testBlobRequest,
-  testBlobReplayRequest,
-  testBlobTraceRequest,
-  testSessionReplaySnapshotRequest,
-  testInternalErrorsRequest,
-  testAnyJseXhrRequest
-} = require('./utils/expect-tests')
+const NetworkCapture = require('./network-capture')
 
 /**
  * Scheduled reply options
@@ -46,6 +27,7 @@ const {
  * be resolved
  * @property {boolean} expectTimeout boolean indicating if the expect is expected to timeout; useful when you want to expect
  * that a certain network call does not happen
+ * @deprecated
  */
 
 /**
@@ -60,6 +42,7 @@ const {
  * jserrors BAM endpoint where multiple types of data are reported.
  * @property {boolean} expectTimeout boolean indicating if the expect is expected to timeout; useful when you want to expect
  * that a certain network call does not happen
+ * @deprecated
  */
 
 module.exports = class TestHandle {
@@ -86,34 +69,63 @@ module.exports = class TestHandle {
   #pendingExpects = new Map()
 
   /**
-   * Tracks the count of request accesses keyed to a server id {'assetServer'|'bamServer'}
+   * List of network capture instances keyed to a server id {'assetServer'|'bamServer'}
+   * @type {Map<string, Map<string, import('./network-capture')>>}
    */
-  #requestCounts = {}
+  #networkCaptures = new Map()
 
   constructor (testServer, testId) {
     this.#testServer = testServer
     this.#testId = testId || uuidV4()
   }
 
-  get testServer () {
-    return this.#testServer
-  }
-
   get testId () {
     return this.#testId
   }
 
-  get requestCounts () {
-    return this.#requestCounts
+  /**
+   * Destroy all memory references to allow for garbage collection.
+   * @returns {void}
+   */
+  destroy () {
+    this.#scheduledReplies.clear()
+    this.#scheduledReplies = null
+
+    for (const pendingExpectSet of this.#pendingExpects.values()) {
+      for (const pendingExpect of pendingExpectSet) {
+        if (pendingExpect.timeout) {
+          clearTimeout(pendingExpect.timeout)
+        }
+        if (pendingExpect.promise) {
+          pendingExpect.reject('Expect destroyed before resolving')
+        }
+      }
+      pendingExpectSet.clear()
+    }
+    this.#pendingExpects.clear()
+    this.#pendingExpects = null
+
+    for (const networkCaptureMap of this.#networkCaptures.values()) {
+      for (const networkCapture of networkCaptureMap.values()) {
+        networkCapture.destroy()
+      }
+      networkCaptureMap.clear()
+    }
+    this.#networkCaptures.clear()
+    this.#networkCaptures = null
+
+    this.#testServer = null
+    this.#testId = null
   }
 
   /**
    * Processes an incoming request for scheduled responses and pending expects
    * @param {'assetServer'|'bamServer'} serverId Id of the server the request was received on
    * @param {import('fastify').FastifyInstance} fastify fastify server the request was received on
-   * @param {module:fastify.FastifyRequest} request the incoming request
+   * @param {import('fastify').FastifyRequest} request the incoming request
    */
   processRequest (serverId, fastify, request) {
+    // Scheduled Replys logic
     if (this.#scheduledReplies.has(serverId)) {
       const scheduledReplies = this.#scheduledReplies.get(serverId)
 
@@ -138,6 +150,7 @@ module.exports = class TestHandle {
       }
     }
 
+    // Deprecated Expects logic
     if (this.#pendingExpects.has(serverId)) {
       const pendingExpects = this.#pendingExpects.get(serverId)
 
@@ -158,7 +171,56 @@ module.exports = class TestHandle {
         }
       }
     }
+
+    // Network Captures logic
+    if (this.#networkCaptures.has(serverId)) {
+      const networkCaptures = this.#networkCaptures.get(serverId)
+
+      for (const networkCapture of networkCaptures.values()) {
+        try {
+          if (networkCapture.test(request)) {
+            request.networkCaptures.add(networkCapture)
+          }
+        } catch (e) {
+          fastify.log.error(e)
+        }
+      }
+    }
   }
+
+  // Test Asset URL Construction logic
+
+  /**
+   * Constructs a URL for a test asset relative to the current testId
+   * @param {string} assetFile - A path to a file or a directory containing an index.html file.
+   * @param {object} query
+   * @returns {string}
+   */
+  assetURL (assetFile, query = {}) {
+    let relativePath = path.relative(
+      paths.rootDir,
+      path.resolve(paths.testsAssetsDir, assetFile)
+    )
+    if (assetFile.slice(-1) === '/') relativePath += '/'
+    return urlFor(
+      relativePath,
+      assetFile === '/'
+        ? undefined
+        : deepmerge(
+          {
+            loader: 'full',
+            config: {
+              licenseKey: this.#testId
+            },
+            init: { ajax: { block_internal: false } }
+          },
+          query
+        ),
+      this.#testServer
+    )
+  }
+
+  // Scheduled Replys logic
 
   /**
    * Schedules a reply to a server request
@@ -181,12 +243,108 @@ module.exports = class TestHandle {
     this.#scheduledReplies.set(serverId, new Set())
   }
 
+  // Network Captures logic
+
+  /**
+   * Creates a network capture instance for the specified server that will capture matching network
+   * requests allowing tests to check which BAM APIs or assets were requested, how many times, and
+   * wait for some expectation within the capture to pause testing.
+   * @param {'assetServer'|'bamServer'} serverId Id of the server the request will be received on
+   * @param {import('./network-capture').NetworkCaptureOptions[]} networkCaptureOptions The options to apply
+   * to the server request to verify if the request should be captured
+   * @returns {import('./network-capture')} The ID of the network capture
+   */
+  createNetworkCaptures (serverId, networkCaptureOptions) {
+    if (!this.#networkCaptures.has(serverId)) {
+      this.#networkCaptures.set(serverId, new Map())
+    }
+
+    return networkCaptureOptions
+      .map(options => {
+        const networkCapture = new NetworkCapture(this, options)
+        this.#networkCaptures.get(serverId).set(networkCapture.instanceId, networkCapture)
+        return networkCapture.instanceId
+      })
+  }
+
+  /**
+   * Verifies the network capture exists for the supplied server id and returns the network captures
+   * current cache of captures as an array of serialized data.
+   * @param {'assetServer'|'bamServer'} serverId Id of the server the network capture was created for
+   * @param {string} captureId The unique id of the network capture
+   * @returns {import('./network-capture').SerializedNetworkCapture[]} Array of serialized network captures
+   */
+  getNetworkCaptureCache (serverId, captureId) {
+    const networkCaptures = this.#networkCaptures.get(serverId)
+
+    if (!networkCaptures || !networkCaptures.has(captureId)) {
+      return []
+    }
+
+    return networkCaptures.get(captureId).captures
+  }
+
+  /**
+   * Verifies the network capture exists for the supplied server id and clears it's current network capture cache.
+   * @param {'assetServer'|'bamServer'} serverId Id of the server the network capture was created for
+   * @param {string} captureId The unique id of the network capture
+   * @returns {void}
+   */
+  clearNetworkCaptureCache (serverId, captureId) {
+    const networkCaptures = this.#networkCaptures.get(serverId)
+
+    if (!networkCaptures || !networkCaptures.has(captureId)) {
+      return
+    }
+
+    networkCaptures.get(captureId).clear()
+  }
+
+  /**
+   * Verifies the network capture exists for the supplied server id and destroys it.
+   * @param {'assetServer'|'bamServer'} serverId Id of the server the network capture was created for
+   * @param {string} captureId The unique id of the network capture
+   * @returns {void}
+   */
+  destroyNetworkCapture (serverId, captureId) {
+    const networkCaptures = this.#networkCaptures.get(serverId)
+
+    if (!networkCaptures || !networkCaptures.has(captureId)) {
+      return
+    }
+
+    networkCaptures.get(captureId).destroy()
+    networkCaptures.delete(captureId)
+  }
+
+  /**
+   * Verifies the network capture exists for the supplied server id and returns the network captures
+   * current cache of captures as an array of serialized data.
+   * @param {'assetServer'|'bamServer'} serverId Id of the server the network capture was created for
+   * @param {string} captureId The unique id of the network capture
+   * @param {import('./network-capture').NetworkCaptureWaitConditions} waitConditions Conditions to pause execution
+   * @returns {Promise<import('./network-capture').SerializedNetworkCapture[]>} A promise that will resolve
+   * with an array of serialized network captures once the wait conditions are met.
+   */
+  awaitNetworkCapture (serverId, captureId, waitConditions) {
+    const networkCaptures = this.#networkCaptures.get(serverId)
+
+    if (!networkCaptures || !networkCaptures.has(captureId)) {
+      return []
+    }
+
+    return networkCaptures.get(captureId).waitFor(waitConditions)
+  }
+
+  // Deprecated Expects logic
+
   /**
    * Creates a deferred object that will resolve when a specific server request is seen or reject
    * when a timeout is met
    * @param {'assetServer'|'bamServer'} serverId Id of the server the request will be received on
    * @param {TestServerExpect} testServerExpect The expect options to apply to the server request
    * @returns {Promise<*>} Promise to await for the server request
+   * @deprecated
    */
   expect (serverId, testServerExpect) {
     if (!this.#pendingExpects.has(serverId)) {
@@ -222,74 +380,9 @@ module.exports = class TestHandle {
   }
 
   /**
-   * Increments the request access counter for a specific server and route
-   * @param {string} serverId Server id used to identify which of the test servers the request was received
-   * @param {string} routeId Route id used to identify which of the routes the request was received
-   */
-  incrementRequestCount (serverId, routeId) {
-    if (!this.#requestCounts[serverId]) {
-      this.#requestCounts[serverId] = {}
-    }
-
-    const serverRequestCount = this.#requestCounts[serverId]
-    if (!serverRequestCount[routeId]) {
-      serverRequestCount[routeId] = 1
-    } else {
-      serverRequestCount[routeId] = serverRequestCount[routeId] + 1
-    }
-  }
-
-  /**
-   * Constructs a URL for a test asset relative to the current testId
-   * @param {string} assetFile - A path to a file or a directory containing an index.html file.
-   * @param {object} query
-   * @returns {string}
-   */
-  assetURL (assetFile, query = {}) {
-    let relativePath = path.relative(
-      paths.rootDir,
-      path.resolve(paths.testsAssetsDir, assetFile)
-    )
-    if (assetFile.slice(-1) === '/') relativePath += '/'
-    return urlFor(
-      relativePath,
-      deepmerge(
-        {
-          loader: 'full',
-          config: {
-            licenseKey: this.#testId
-          },
-          init: { ajax: { block_internal: false } }
-        },
-        query
-      ),
-      this.#testServer
-    )
-  }
-
-  /**
-   * Constructs a unit test URL based on the current test handle
-   * @param {string} testFile Relative path of the test file from the root of the project
-   * @returns {string} The URL that can be used to execute the unit test
-   */
-  urlForBrowserTest (testFile) {
-    return urlFor(
-      '/tests/assets/browser.html',
-      {
-        loader: 'full',
-        config: {
-          licenseKey: this.#testId
-        },
-        script:
-          '/' + path.relative(paths.rootDir, testFile) + '?browserify=true'
-      },
-      this.#testServer
-    )
-  }
-
-  /**
    * Creates a basic deferred object
    * @returns {Deferred}
+   * @deprecated
    */
   #createDeferred () {
     let capturedResolve
@@ -300,151 +393,5 @@ module.exports = class TestHandle {
     })
 
     return { promise, resolve: capturedResolve, reject: capturedReject }
-  }
-
-  /* ***** BAM Expect Shortcut Methods (remove after removing jil) ***** */
-
-  expectRum (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testRumRequest,
-      expectTimeout
-    })
-  }
-
-  expectEvents (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testEventsRequest,
-      expectTimeout
-    })
-  }
-
-  expectTimings (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testTimingEventsRequest,
-      expectTimeout
-    })
-  }
-
-  expectAjaxEvents (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testAjaxEventsRequest,
-      expectTimeout
-    })
-  }
-
-  expectInteractionEvents (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testInteractionEventsRequest,
-      expectTimeout
-    })
-  }
-
-  expectMetrics (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testMetricsRequest,
-      expectTimeout
-    })
-  }
-
-  expectSupportMetrics (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testSupportMetricsRequest,
-      expectTimeout
-    })
-  }
-
-  expectCustomMetrics (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testCustomMetricsRequest,
-      expectTimeout
-    })
-  }
-
-  expectErrors (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testErrorsRequest,
-      expectTimeout
-    })
-  }
-
-  expectInternalErrors (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testInternalErrorsRequest,
-      expectTimeout
-    })
-  }
-
-  expectAnyJseXhr (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testAnyJseXhrRequest,
-      expectTimeout
-    })
-  }
-
-  expectAjaxTimeSlices (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testAjaxTimeSlicesRequest,
-      expectTimeout
-    })
-  }
-
-  expectIns (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testInsRequest,
-      expectTimeout
-    })
-  }
-
-  expectResources (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testResourcesRequest,
-      expectTimeout
-    })
-  }
-
-  expectBlob (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testBlobRequest,
-      expectTimeout
-    })
-  }
-
-  expectReplay (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testBlobReplayRequest,
-      expectTimeout
-    })
-  }
-
-  expectTrace (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testBlobTraceRequest,
-      expectTimeout
-    })
-  }
-
-  expectSessionReplaySnapshot (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testSessionReplaySnapshotRequest,
-      expectTimeout
-    })
   }
 }

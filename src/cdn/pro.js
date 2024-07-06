@@ -13,6 +13,7 @@ import { Instrument as InstrumentXhr } from '../features/ajax/instrument'
 import { Instrument as InstrumentSessionTrace } from '../features/session_trace/instrument'
 import { Instrument as InstrumentSessionReplay } from '../features/session_replay/instrument'
 import { Instrument as InstrumentGenericEvent } from '../features/generic_event/instrument'
+import { Instrument as InstrumentLogs } from '../features/logging/instrument'
 
 new Agent({
   features: [
@@ -24,6 +25,7 @@ new Agent({
     InstrumentMetrics,
     InstrumentErrors,
     InstrumentGenericEvent
+    InstrumentLogs
   ],
   loaderType: 'pro'
 })

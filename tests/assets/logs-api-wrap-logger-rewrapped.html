@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>Logs API Error Object</title>
+    {init} {config} {loader}
+    <script>
+      var loggers = {
+        log: function(message, attr){}
+      }
+      
+      newrelic.wrapLogger(loggers, 'log', { level: "warn" })
+      loggers.log('test1')
+      // should capture event with `warn` level
+
+      newrelic.wrapLogger(loggers, 'log', { level: "debug" })
+      loggers.log('test2')
+      // should capture another event, ignoring the `debug` level and harvesting with `warn`
+      // should NOT duplicate the log events (ie, capture 2 logs for this one call)
+
+      var orig = loggers.log
+      loggers.log = (...args) => {console.log('wrapped again by 3rd party'); orig(...args)} 
+      loggers.log('test3')
+      // should capture another event, and still have the `warn` level even though the parent context was changed
+    </script>
+  </head>
+  <body>Logs API Error Object</body>
+</html>

@@ -16,6 +16,9 @@ import { apiMethods, asyncApiMethods } from './api-methods'
 import { SR_EVENT_EMITTER_TYPES } from '../../features/session_replay/constants'
 import { now } from '../../common/timing/now'
 import { MODE } from '../../common/session/constants'
+import { LOG_LEVELS } from '../../features/logging/constants'
+import { bufferLog } from '../../features/logging/shared/utils'
+import { wrapLogger } from '../../common/wrap/wrap-logger'
 
 export function setTopLevelCallers () {
   const nr = gosCDN()
@@ -51,6 +54,14 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
   var prefix = 'api-'
   var spaPrefix = prefix + 'ixn-'
 
+  apiInterface.log = function (message, { customAttributes = {}, level = LOG_LEVELS.INFO } = {}) {
+    bufferLog(instanceEE, message, customAttributes, level)
+  }
+
+  apiInterface.wrapLogger = (parent, functionName, { customAttributes = {}, level = LOG_LEVELS.INFO } = {}) => {
+    wrapLogger(instanceEE, parent, functionName, { customAttributes, level })
+  }
+
   // Setup stub functions that queue calls for later processing.
   asyncApiMethods.forEach(fnName => { apiInterface[fnName] = apiCall(prefix, fnName, true, 'api') })
 
@@ -64,7 +75,7 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
   /**
    * Attach the key-value attribute onto agent payloads. All browser events in NR will be affected.
    * @param {string} key
-   * @param {string|number|null} value - null indicates the key should be removed or erased
+   * @param {string|number|boolean|null} value - null indicates the key should be removed or erased
    * @param {string} apiName
    * @param {boolean} addToBrowserStorage - whether this attribute should be stored in browser storage API and retrieved by the next agent context or initialization
    * @returns @see apiCall

@@ -42,15 +42,23 @@ export class Aggregate extends AggregateBase {
     if (this.blocked || !this.entitled) return deregisterDrain(this.agentIdentifier, this.featureName)
 
     if (!this.initialized) {
+      this.initialized = true
+      /** Store session identifiers at initialization time to be cross-checked later at harvest time for session changes that are subject to race conditions */
+      this.ptid = this.agentRuntime.ptid
+      this.sessionId = this.agentRuntime.session?.state.value
       // The SessionEntity class can emit a message indicating the session was cleared and reset (expiry, inactivity). This feature must abort and never resume if that occurs.
       this.ee.on(SESSION_EVENTS.RESET, () => {
-        this.abort()
+        if (this.blocked) return
+        this.abort(1)
       })
       // The SessionEntity can have updates (locally or across tabs for SR mode changes), (across tabs for ST mode changes).
       // Those updates should be sync'd here to ensure this page also honors the mode after initialization
       this.ee.on(SESSION_EVENTS.UPDATE, (eventType, sessionState) => {
+        if (this.blocked) return
         // this will only have an effect if ST is NOT already in full mode
         if (this.mode !== MODE.FULL && (sessionState.sessionReplayMode === MODE.FULL || sessionState.sessionTraceMode === MODE.FULL)) this.switchToFull()
+        // if another page's session entity has expired, or another page has transitioned to off and this one hasn't... we can just abort straight away here
+        if (this.sessionId !== sessionState.value || (eventType === 'cross-tab' && this.scheduler?.started && sessionState.sessionTraceMode === MODE.OFF)) this.abort(2)
       })
     }
 
@@ -59,7 +67,6 @@ export class Aggregate extends AggregateBase {
     if (!this.agentRuntime.session.isNew && !ignoreSession) this.mode = this.agentRuntime.session.state.sessionTraceMode
     else this.mode = stMode
 
-    this.initialized = true
     /** If the mode is off, we do not want to hold up draining for other features, so we deregister the feature for now.
      * If it drains later (due to a mode change), data and handlers will instantly drain instead of waiting for the registry. */
     if (this.mode === MODE.OFF) return deregisterDrain(this.agentIdentifier, this.featureName)
@@ -111,9 +118,8 @@ export class Aggregate extends AggregateBase {
   prepareHarvest (options = {}) {
     this.traceStorage.prevStoredEvents.clear() // release references to past events for GC
     if (!this.timeKeeper?.ready) return // this should likely never happen, but just to be safe, we should never harvest if we cant correct time
-    if (this.mode === MODE.OFF && this.traceStorage.nodeCount === 0) return
-    if (this.mode === MODE.ERROR) return // Trace in this mode should never be harvesting, even on unload
-
+    if (this.blocked || this.mode !== MODE.FULL || this.traceStorage.nodeCount === 0) return
+    if (this.sessionId !== this.agentRuntime.session?.state.value || this.ptid !== this.agentRuntime.ptid) return this.abort(3) // if something unexpected happened and we somehow still got to the point of harvesting after a session identifier changed, we should force-exit instead of harvesting
     /** Get the ST nodes from the traceStorage buffer.  This also returns helpful metadata about the payload. */
     const { stns, earliestTimeStamp, latestTimeStamp } = this.traceStorage.takeSTNs()
     if (!stns) return // there are no trace nodes
@@ -160,8 +166,8 @@ export class Aggregate extends AggregateBase {
           agentVersion: this.agentRuntime.version,
           ...(firstSessionHarvest && { firstSessionHarvest }),
           ...(hasReplay && { hasReplay }),
-          ptid: `${this.agentRuntime.ptid}`,
-          session: `${this.agentRuntime.session?.state.value}`,
+          ptid: `${this.ptid}`,
+          session: `${this.sessionId}`,
           // customer-defined data should go last so that if it exceeds the query param padding limit it will be truncated instead of important attrs
           ...(endUserId && { 'enduser.id': endUserId })
           // The Query Param is being arbitrarily limited in length here.  It is also applied when estimating the size of the payload in getPayloadSize()
@@ -195,7 +201,7 @@ export class Aggregate extends AggregateBase {
   }
 
   /** Stop running for the remainder of the page lifecycle */
-  abort () {
+  abort (reason) {
     this.blocked = true
     this.mode = MODE.OFF
     this.agentRuntime.session.write({ sessionTraceMode: this.mode })

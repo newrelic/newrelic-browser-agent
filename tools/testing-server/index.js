@@ -1,5 +1,4 @@
 const fastify = require('fastify')
-const { urlFor } = require('./utils/url')
 const waitOn = require('wait-on')
 const { paths } = require('./constants')
 const TestHandle = require('./test-handle')
@@ -157,33 +156,12 @@ class TestServer {
   }
 
   destroyTestHandle (testId) {
+    this.#testHandles.get(testId).destroy()
     this.#testHandles.delete(testId)
   }
 
   getTestHandle (testId) {
     return this.#testHandles.get(testId)
-  }
-
-  /**
-   * Backwards compatibility with JIL
-   * @deprecated
-   */
-  get router () {
-    return {
-      handle: (testId) => {
-        return this.createTestHandle(testId)
-      },
-      createTestHandle: this.createTestHandle.bind(this),
-      destroyTestHandle: this.destroyTestHandle.bind(this)
-    }
-  }
-
-  /**
-   * Backwards compatibility with JIL
-   * @deprecated
-   */
-  urlFor (relativePath, options) {
-    return urlFor(relativePath, options, this)
   }
 
   #createAssetServer () {
@@ -207,7 +185,6 @@ class TestServer {
       index: ['index.html']
     })
     this.#assetServer.register(require('./plugins/agent-injector'), this)
-    this.#assetServer.register(require('./plugins/browser-scripts'), this)
     this.#assetServer.register(require('./routes/tests-index'), this)
     this.#assetServer.register(require('./routes/mock-apis'), this)
     this.#assetServer.register(require('./plugins/test-handle'), this)
@@ -237,7 +214,6 @@ class TestServer {
       index: ['index.html']
     })
     this.#bamServer.register(require('./plugins/agent-injector'), this)
-    this.#bamServer.register(require('./plugins/browser-scripts'), this)
     this.#bamServer.register(require('./routes/tests-index'), this)
     this.#bamServer.register(require('./routes/mock-apis'), this)
     this.#bamServer.register(require('./plugins/bam-parser'), this)

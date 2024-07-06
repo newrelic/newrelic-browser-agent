@@ -10,7 +10,7 @@ import {
   DOCS_SITE_GITHUB_REPO,
   DOCS_SITE_REPO_BASE,
   CHANGELOG_FILE_PATH,
-  RELEASE_NOTES_PATH, ANDROID_CHROME_VERSION,
+  RELEASE_NOTES_PATH,
 } from './constants.js'
 import { GitCliRunner } from '../shared-utils/git-cli-runner.js'
 import Handlebars from 'handlebars'
@@ -64,8 +64,7 @@ const bodyContent = {
   bugs: [],
   security: [],
   browserVersions: {
-    ...(await getBrowserVersions()),
-    androidChromeVersion : ANDROID_CHROME_VERSION
+    ...(await getBrowserVersions())
   }
 }
 

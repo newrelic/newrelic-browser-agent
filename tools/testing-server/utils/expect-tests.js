@@ -352,3 +352,15 @@ module.exports.testSessionReplaySnapshotRequest = function testSessionReplaySnap
   if (!(request?.body && Array.isArray(request.body) && request.body.length)) return false
   return !!(request.body.filter(x => x.type === 2).length)
 }
+
+module.exports.testLogsRequest = function testLogsRequest (request) {
+  const url = new URL(request.url, 'resolve://')
+  if (url.pathname !== '/browser/logs') return false
+  if (request?.query?.browser_monitoring_key !== this.testId) return false
+
+  try {
+    return !!request?.body
+  } catch (err) {
+    return false
+  }
+}

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>Logs API Post Load</title>
+    {init} {config} {loader}
+  </head>
+  <body>Logs API Post Load
+    <script>
+      var loggers = {
+        logInfo: function(message, attr){}
+      }
+      
+      newrelic.wrapLogger(loggers, 'logInfo', { customAttributes: { test: 1 }, level: "info" })
+
+      const longMessage = 'x'.repeat(800*800)
+      /** the combination of the two large messages pushes it past the MAX_PAYLOAD_SIZE, 
+       * causing the first valid one to get harvested before buffering the second one **/
+      loggers.logInfo(longMessage) 
+      loggers.logInfo(longMessage)
+      // harvest should not have the '...xxxxx...' payload in it
+    </script>
+  </body>
+</html>

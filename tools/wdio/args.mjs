@@ -15,14 +15,8 @@ const args = yargs(hideBin(process.argv))
   .alias('L', 'log-requests')
   .describe('l', 'if true, prints data about requests to the test server')
 
-  .boolean('D')
-  .default('D', false)
-  .alias('D', 'sauce-extended-debugging')
-  .describe('D', 'Run tests with sauce labs extended debugging enabled')
-
   .string('b')
   .alias('b', 'browsers')
-  .default('b', 'chrome@latest')
   .describe(
     'b',
     'a comma seperated list of browsers with an optional semver range. (eg. chrome@>39)'
@@ -32,10 +26,6 @@ const args = yargs(hideBin(process.argv))
   .default('concurrent', 1)
   .alias('concurrent', 'concurrency')
   .describe('concurrent', 'number of browser sessions to run concurrently')
-
-  .boolean('s')
-  .alias('s', 'sauce')
-  .describe('s', 'launch sauce before running tests')
 
   .string('H')
   .default('H', 'bam-test-1.nr-local.net')
@@ -58,7 +48,7 @@ const args = yargs(hideBin(process.argv))
   .default('t', 85000)
 
   .number('session-timeout')
-  .describe('session-timeout', 'timout in ms for sauce labs browser session')
+  .describe('session-timeout', 'timout in ms for LambdaTest browser session')
   .default('session-timeout', 120000)
 
   .boolean('d')
@@ -86,10 +76,15 @@ const args = yargs(hideBin(process.argv))
   .alias('P', 'polyfills')
   .describe('P', 'inject polyfills and polyfill loaders into test pages')
 
+  .boolean('T')
+  .default('T', false)
+  .alias('T', 'tunnel')
+  .describe('T', 'Launch LambdaTest tunnel for this test run using process.env credentials')
+
   .boolean('D')
   .default('D', false)
-  .alias('D', 'sauce-extended-debugging')
-  .describe('D', 'Run tests with sauce labs extended debugging enabled')
+  .alias('D', 'extended-debugging')
+  .describe('D', 'Run tests with LambdaTest extended debugging enabled')
 
   .boolean('coverage')
   .default('coverage', false)

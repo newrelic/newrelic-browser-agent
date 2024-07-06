@@ -16,8 +16,7 @@ module.exports.paths = {
   rootDir: path.resolve(__dirname, '../../'),
   builtAssetsDir: path.resolve(__dirname, '../../build/'),
   testsRootDir: path.resolve(__dirname, '../../tests/'),
-  testsAssetsDir: path.resolve(__dirname, '../../tests/assets/'),
-  testsBrowserDir: path.resolve(__dirname, '../../tests/browser/')
+  testsAssetsDir: path.resolve(__dirname, '../../tests/assets/')
 }
 
 module.exports.loaderConfigKeys = [
@@ -31,12 +30,12 @@ module.exports.loaderConfigKeys = [
 module.exports.loaderOnlyConfigKeys = ['accountID', 'agentID', 'trustKey']
 
 module.exports.rumFlags = {
+  loaded: 1, // Used internally to signal the tests that the agent has loaded
+
   st: 1, // session trace entitlements 0|1
   err: 1, // err entitlements 0|1
   ins: 1, // ins entitlements 0|1
-  cap: 1, // ?
   spa: 1, // spa entitlements 0|1
-  loaded: 1,
   sr: 1, // session replay entitlements 0|1
   sts: 1, // session trace sampling 0|1|2 - off full error
   srs: 1, // session replay sampling 0|1|2 - off full error
@@ -55,6 +54,7 @@ module.exports.defaultInitBlock = {
   session: { expiresMs: 14400000, inactiveMs: 1800000 },
   ssl: false,
   obfuscate: undefined,
+  logging: { enabled: true, harvestTimeSeconds: 5, autoStart: true },
   jserrors: { enabled: true, harvestTimeSeconds: 5, autoStart: true },
   generic_event: { enabled: true, harvestTimeSeconds: 5, autoStart: true },
   marks_and_measures: { enabled: true },

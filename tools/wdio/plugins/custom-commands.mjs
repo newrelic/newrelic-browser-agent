@@ -68,7 +68,11 @@ export default class CustomCommands {
       const agentSessionsJSON = await browser.execute(function () {
         return JSON.stringify(Object.entries(newrelic.initializedAgents)
           .reduce(function (aggregate, agentEntry) {
-            aggregate[agentEntry[0]] = agentEntry[1].runtime.session.state
+            if (agentEntry[1].runtime.session) {
+              aggregate[agentEntry[0]] = agentEntry[1].runtime.session.state
+            } else {
+              aggregate[agentEntry[0]] = {}
+            }
             return aggregate
           }, {}))
       })
@@ -76,10 +80,14 @@ export default class CustomCommands {
       const agentSessionInstances = await browser.execute(function () {
         return Object.entries(newrelic.initializedAgents)
           .reduce(function (aggregate, agentEntry) {
-            aggregate[agentEntry[0]] = {
-              key: agentEntry[1].runtime.session.key,
-              isNew: agentEntry[1].runtime.session.isNew,
-              initialized: agentEntry[1].runtime.session.initialized
+            if (agentEntry[1].runtime.session) {
+              aggregate[agentEntry[0]] = {
+                key: agentEntry[1].runtime.session.key,
+                isNew: agentEntry[1].runtime.session.isNew,
+                initialized: agentEntry[1].runtime.session.initialized
+              }
+            } else {
+              aggregate[agentEntry[0]] = {}
             }
             return aggregate
           }, {})

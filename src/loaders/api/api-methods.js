@@ -4,7 +4,7 @@ export const apiMethods = [
   'setErrorHandler', 'finished', 'addToTrace', 'addRelease',
   'addPageAction', 'setCurrentRouteName', 'setPageViewName', 'setCustomAttribute',
   'interaction', 'noticeError', 'setUserId', 'setApplicationVersion', 'start',
-  SR_EVENT_EMITTER_TYPES.RECORD, SR_EVENT_EMITTER_TYPES.PAUSE
+  SR_EVENT_EMITTER_TYPES.RECORD, SR_EVENT_EMITTER_TYPES.PAUSE, 'log', 'wrapLogger'
 ]
 
 export const asyncApiMethods = [

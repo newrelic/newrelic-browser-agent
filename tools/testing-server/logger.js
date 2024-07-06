@@ -14,9 +14,15 @@ class TestServerLogger {
     }
   }
 
-  logNetworkRequest (request, reply) {
+  logNetworkRequest (fastify, request, reply) {
     if (this.#config.logRequests) {
       this.#parentLogger.info(`${request.server.testServerId} -> ${request.method} ${request.url} ${reply.statusCode}`)
+
+      if (fastify.testServerId === 'bamServer') {
+        this.#parentLogger.info(JSON.stringify(request.body))
+      } else if (fastify.testServerId === 'commandServer') {
+        this.#parentLogger.info(request.body)
+      }
     }
   }
 

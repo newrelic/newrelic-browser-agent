@@ -9,7 +9,11 @@ const { testIdFromRequest } = require('../../utils/fastify-request')
 module.exports = fp(async function (fastify, testServer) {
   fastify.decorateRequest('scheduledReply', null)
   fastify.decorateRequest('resolvingExpect', null)
+  fastify.decorateRequest('networkCaptures', null)
   fastify.decorateRequest('testHandle', null)
+  fastify.addHook('onRequest', async (request) => {
+    request.networkCaptures = new Set()
+  })
   fastify.addHook('preHandler', async (request, reply) => {
     const testId = testIdFromRequest(request)
     const testHandle = testServer.getTestHandle(testId)
@@ -19,6 +23,7 @@ module.exports = fp(async function (fastify, testServer) {
     }
     if (!!testId && request.url.startsWith('/tests/assets') && request.url.includes('.html')) {
       reply.header('set-cookie', `test-id=${testId};path=/build/`)
+      reply.header('set-cookie', `test-id=${testId};path=/tests/assets/`)
     }
 
     if (request.query.nonce) {
@@ -61,12 +66,16 @@ module.exports = fp(async function (fastify, testServer) {
         reply: {
           statusCode: reply.statusCode,
           headers: reply.getHeaders(),
-          body: request.url.startsWith('/tests/assets')
-            ? 'HTML asset content'
+          body: request.url.startsWith('/tests/assets/') || request.url.startsWith('/build/')
+            ? 'Asset content'
             : payload
         }
       })
     }
+
+    request.networkCaptures?.forEach(networkCapture => {
+      networkCapture.capture(request, reply)
+    })
 
     if (request.scheduledReply && request.scheduledReply.delay) {
       setTimeout(() => done(null, payload), request.scheduledReply.delay)

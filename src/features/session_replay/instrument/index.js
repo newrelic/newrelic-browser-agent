@@ -28,7 +28,7 @@ export class Instrument extends InstrumentBase {
     } catch (err) { }
 
     if (hasReplayPrerequisite(agentIdentifier)) {
-      this.ee.on('recordReplay', () => this.#apiStartOrRestartReplay())
+      this.ee.on(SR_EVENT_EMITTER_TYPES.RECORD, () => this.#apiStartOrRestartReplay())
     }
 
     if (this.#canPreloadRecorder(session)) {

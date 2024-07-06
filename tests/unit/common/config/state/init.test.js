@@ -29,6 +29,123 @@ test('getConfigurationValue parses path correctly', () => {
   expect(getConfigurationValue('ab', 'page_action.dne')).toBeUndefined()
 })
 
+test('init props exist and return expected defaults', () => {
+  setConfiguration('34567', {})
+  const config = getConfiguration('34567')
+  expect(Object.keys(config).length).toEqual(19)
+  expect(config.ajax).toEqual({
+    autoStart: true,
+    block_internal: true,
+    deny_list: undefined,
+    enabled: true,
+    harvestTimeSeconds: 10
+  })
+  expect(config.distributed_tracing).toEqual({
+    allowed_origins: undefined,
+    cors_use_newrelic_header: undefined,
+    cors_use_tracecontext_headers: undefined,
+    enabled: undefined,
+    exclude_newrelic_header: undefined
+  })
+  expect(config.feature_flags).toEqual([])
+  expect(config.harvest).toEqual({
+    tooManyRequestsDelay: 60
+  })
+  expect(config.jserrors).toEqual({
+    autoStart: true,
+    enabled: true,
+    harvestTimeSeconds: 10
+  })
+  expect(config.logging).toEqual({
+    autoStart: true,
+    enabled: true,
+    harvestTimeSeconds: 10,
+    level: 'INFO'
+  })
+  expect(config.metrics).toEqual({
+    autoStart: true,
+    enabled: true
+  })
+  expect(config.obfuscate).toEqual(undefined)
+  expect(config.page_action).toEqual({
+    autoStart: true,
+    enabled: true,
+    harvestTimeSeconds: 30
+  })
+  expect(config.page_view_event).toEqual({
+    autoStart: true,
+    enabled: true
+  })
+  expect(config.page_view_timing).toEqual({
+    autoStart: true,
+    enabled: true,
+    harvestTimeSeconds: 30,
+    long_task: false
+  })
+  expect(config.privacy).toEqual({
+    cookies_enabled: true
+  })
+  expect(config.proxy).toEqual({
+    assets: undefined,
+    beacon: undefined
+  })
+  expect(config.session).toEqual({
+    expiresMs: 14400000,
+    inactiveMs: 1800000
+  })
+  expect(config.session_replay).toEqual({
+    autoStart: true,
+    block_class: 'nr-block',
+    block_selector: '[data-nr-block]',
+    collect_fonts: false,
+    enabled: false,
+    error_sampling_rate: 100,
+    harvestTimeSeconds: 60,
+    ignore_class: 'nr-ignore',
+    inline_images: false,
+    inline_stylesheet: true,
+    mask_all_inputs: true,
+    mask_input_options: {
+      color: false,
+      date: false,
+      'datetime-local': false,
+      email: false,
+      month: false,
+      number: false,
+      password: true,
+      range: false,
+      search: false,
+      select: false,
+      tel: false,
+      text: false,
+      textarea: false,
+      time: false,
+      url: false,
+      week: false
+    },
+    mask_text_class: 'nr-mask',
+    mask_text_selector: '*',
+    preload: false,
+    sampling_rate: 10
+  })
+  expect(config.session_trace).toEqual({
+    autoStart: true,
+    enabled: true,
+    harvestTimeSeconds: 10
+  })
+  expect(config.soft_navigations).toEqual({
+    autoStart: true,
+    enabled: true,
+    harvestTimeSeconds: 10
+  })
+  expect(config.spa).toEqual({
+    autoStart: true,
+    enabled: true,
+    harvestTimeSeconds: 10
+  })
+  expect(config.ssl).toEqual(undefined)
+})
+
 describe('property getters/setters used for validation', () => {
   test('invalid values do not pass through', () => {
     setConfiguration('12345', {

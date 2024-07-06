@@ -316,20 +316,6 @@ describe('XHR SPA Interaction Tracking', () => {
     expect(ajaxEvent.status).toEqual(0)
   })
 
-  // TODO: This test should pass but the agent contains a bug https://new-relic.atlassian.net/browse/NR-270107
-  // it('produces interaction event data when xhr has bad 3rd party wrapping after agent', async () => {
-  //   await browser.url(await browser.testHandle.assetURL('ajax/xhr-bad-wrapper-after.html'))
-  //     .then(() => browser.waitForAgentLoad())
-  //
-  //   const [interactionResults] = await Promise.all([
-  //     browser.testHandle.expectInteractionEvents(),
-  //     $('#sendAjax').click()
-  //   ])
-  //
-  //   checkSpa(interactionResults.request, { trigger: 'click' })
-  //   checkAjaxEvents({ body: interactionResults.request.body[0].children, query: interactionResults.request.query }, { specificPath: '/json' })
-  // })
-
   it('produces interaction event data when xhr is 3rd party listener patched after agent', async () => {
     await browser.url(await browser.testHandle.assetURL('ajax/xhr-patch-listener-after.html'))
       .then(() => browser.waitForAgentLoad())
@@ -365,5 +351,24 @@ describe('XHR SPA Interaction Tracking', () => {
       tracer.type === 'customTracer' && tracer.name === 'timer'
     )
     expect(timers.length).toEqual(2)
+  })
+
+  it('only captures pre-load ajax calls in the spa payload', async () => {
+    const [interactionResults, eventsResults] = await Promise.all([
+      browser.testHandle.expectInteractionEvents(),
+      browser.testHandle.expectAjaxEvents(),
+      browser.url(await browser.testHandle.assetURL('ajax/xhr-before-load.html'))
+        .then(() => browser.waitForAgentLoad())
+    ])
+
+    const spaAjaxCalls = interactionResults.request.body[0].children.filter(xhr =>
+      xhr.type === 'ajax' && xhr.path === '/json'
+    )
+    expect(spaAjaxCalls.length).toEqual(1)
+
+    const eventsAjaxCalls = eventsResults.request.body.filter(xhr =>
+      xhr.type === 'ajax' && xhr.path === '/json'
+    )
+    expect(eventsAjaxCalls.length).toEqual(0)
   })
 })

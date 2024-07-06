@@ -1,0 +1,26 @@
+{
+  "ios": [
+    {
+      "device_name": "iPhone 15",
+      "version": "17.5",
+      "platformName": "ios"
+    },
+    {
+      "device_name": "iPhone 11",
+      "version": "16.0",
+      "platformName": "ios"
+    }
+  ],
+  "android": [
+    {
+      "device_name": "Pixel 7",
+      "version": "14",
+      "platformName": "android"
+    },
+    {
+      "device_name": "Pixel 3",
+      "version": "9",
+      "platformName": "android"
+    }
+  ]
+}

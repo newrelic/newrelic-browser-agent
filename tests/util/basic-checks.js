@@ -1,5 +1,5 @@
 /* eslint-disable */
-import {notFirefox, notIE, notIOS, notSafari, onlyIE} from "../../tools/browser-matcher/common-matchers.mjs";
+import {onlyAndroid, onlyIE, supportsFirstPaint, supportsFirstContentfulPaint} from "../../tools/browser-matcher/common-matchers.mjs";
 
 export const baseQuery = expect.objectContaining({
   a: expect.any(String),
@@ -11,7 +11,7 @@ export const baseQuery = expect.objectContaining({
   v: expect.any(String)
 })
 
-export function checkRum ({ query, body }, { liteAgent } = {}) {
+export function checkRumQuery ({ query }, { liteAgent } = {}) {
   expect(query).toMatchObject({
     a: expect.any(String),
     be: expect.any(String),
@@ -23,25 +23,37 @@ export function checkRum ({ query, body }, { liteAgent } = {}) {
     rst: expect.any(String),
     s: expect.any(String),
     t: expect.any(String),
-    v: expect.any(String)
+    v: expect.any(String),
   })
   if (!liteAgent) {
     expect(query).toMatchObject({
       af: expect.any(String),
     })
   }
+}
+
+export function checkRumBody({body}){
   expect(body).toEqual('')
+}
+
+export function checkRumPerf({ query, body }) {
+  const perf = JSON.parse(query.perf)
+  expect(!!(perf.timing && perf.navigation)).toEqual(true)
+  Object.values(perf.timing).forEach(val => expect(val).toBeGreaterThanOrEqual(0))
 }
 
 export function checkPVT ({ query, body }) {
   expect(query).toEqual(baseQuery)
   expect(body?.length).toBeGreaterThanOrEqual(1)
-  body.forEach(x => expect(x).toMatchObject({
-    attributes: expect.any(Array),
-    name: x.name,
-    type: expect.any(String),
-    value: (['pageHide', 'unload'].includes(x.name) && browserMatch(onlyIE)) ? null : expect.any(Number)
-  }))
+  body.forEach(x => {
+    if (x.name === 'cls') return
+    expect(x).toMatchObject({
+      attributes: expect.any(Array),
+      name: x.name,
+      type: expect.any(String),
+      value: (['pageHide', 'unload'].includes(x.name) && browserMatch(onlyIE)) ? null : expect.any(Number)
+    })
+  })
 }
 
 export function checkAjaxEvents ({ query, body }, { specificPath, hasTrace } = {}) {
@@ -274,7 +286,7 @@ export function checkSpa ({ query, body }, { trigger } = {}) {
 
   const interaction = body.find(b => b.type === 'interaction')
   expect(interaction).toBeDefined()
-  expect(interaction).toMatchObject({
+  expect(interaction).toEqual(expect.objectContaining({
     type: "interaction",
     children: expect.any(Array),
     start: expect.any(Number),
@@ -288,8 +300,14 @@ export function checkSpa ({ query, body }, { trigger } = {}) {
     category: expect.any(String),
     id: expect.any(String),
     nodeId: expect.any(String),
-    firstPaint: browserMatch([notIE, notSafari, notIOS, notFirefox]) && (!trigger || trigger === 'initialPageLoad') ? expect.any(Number) : null,
-    firstContentfulPaint: browserMatch(notIE) && (!trigger || trigger === 'initialPageLoad') ? expect.any(Number) : null,
     navTiming: expect.any(Object)
-  })
+  }))
+  // *cli Jun'24 - LambdaTest's Android Chrome arbitrarily have paint timing in spa tests checking IPL depending on some race condition.
+  // Sometimes they are present (Number) and sometimes not (null). It's too unreliable for tests so their check is excluded.
+  if (!browserMatch(onlyAndroid)) {
+    expect(interaction).toEqual(expect.objectContaining({
+      firstPaint: browserMatch(supportsFirstPaint) && (!trigger || trigger === 'initialPageLoad') ? expect.any(Number) : null,
+      firstContentfulPaint: browserMatch(supportsFirstContentfulPaint) && (!trigger || trigger === 'initialPageLoad') ? expect.any(Number) : null
+    }))
+  }
 }

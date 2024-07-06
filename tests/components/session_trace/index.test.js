@@ -17,7 +17,7 @@ jest.mock('../../../src/common/config/config', () => ({
   }),
   isConfigured: jest.fn().mockReturnValue(true),
   getRuntime: jest.fn().mockReturnValue({
-    session: { state: { value: 'sessionID' }, write: jest.fn() },
+    session: { state: { value: 'sessionID', sessionTraceMode: 1 }, write: jest.fn() },
     timeKeeper: { ready: true, correctedOriginTime: 0, convertRelativeTimestamp: jest.fn() }
   })
 }))
@@ -57,8 +57,6 @@ describe('session trace', () => {
 
     document.dispatchEvent(new CustomEvent('DOMContentLoaded')) // simulate natural browser event
     window.dispatchEvent(new CustomEvent('load')) // load is actually ignored by Trace as it should be passed by the PVT feature, so it should not be in payload
-    ee.get('abcd').emit('rumresp-st', [1])
-    ee.get('abcd').emit('rumresp-sts', [1])
     traceAggregate.traceStorage.storeXhrAgg('xhr', '[200,null,null]', { method: 'GET', status: 200 }, { rxSize: 770, duration: 99, cbTime: 0, time: 217 }) // fake ajax data
     traceAggregate.traceStorage.processPVT('fi', 30, { fid: 8 }) // fake pvt data
 
@@ -102,7 +100,7 @@ describe('session trace', () => {
     const spy = jest.spyOn(traceAggregate.traceStorage, 'takeSTNs')
     let payload
     expect(() => (payload = traceAggregate.prepareHarvest())).not.toThrow()
-    expect(spy).toHaveBeenCalled()
+    expect(spy).not.toHaveBeenCalled() // returns early before trying to take from agg if there's no nodes to take
     expect(payload).toBeUndefined()
     spy.mockRestore()
   })

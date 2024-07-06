@@ -10,7 +10,7 @@ var denyList = []
  * @returns {boolean} `true` if request does not match any entries of {@link denyList|deny list}; else `false`
  */
 export function shouldCollectEvent (params) {
-  if (hasUndefinedHostname(params)) return false
+  if (!params || hasUndefinedHostname(params)) return false
 
   if (denyList.length === 0) return true
 

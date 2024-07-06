@@ -35,10 +35,15 @@ on:
         description: 'Github branch ref to checkout and run tests on'
         required: false
         type: string
+      concurrency:
+        description: 'The number of test runner threads to spawn for a run'
+        required: false
+        type: number
+        default: 10
     secrets:
-      SAUCE_USERNAME:
+      LAMBDA_USERNAME:
         required: true
-      SAUCE_ACCESS_KEY:
+      LAMBDA_ACCESS_KEY:
         required: true
 
 jobs:
@@ -50,8 +55,8 @@ jobs:
       run:
         shell: bash
     env:
-      SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
-      SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
+      LAMBDA_USERNAME: ${{ secrets.LAMBDA_USERNAME }}
+      LAMBDA_ACCESS_KEY: ${{ secrets.LAMBDA_ACCESS_KEY }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -68,9 +73,9 @@ jobs:
       - name: Run WDIO Tests
         run: |
           node --max-old-space-size=8192 ./tools/wdio/bin/cli.js \
-            -s \
+            -T \
             -b '${{ inputs.browser-target }}' \
-            --concurrent 10 \
+            --concurrent ${{ inputs.concurrency }} \
             ${{ runner.debug && '-v -L -D -d' || '' }} \
             ${{ inputs.coverage && '--coverage' || '' }} \
             ${{ inputs.additional-flags || '' }}

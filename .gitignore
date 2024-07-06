@@ -28,3 +28,4 @@ packages/browser-agent-core/cjs
 /temp
 tests/assets/test-builds/**/*
 tests/assets/scripts/**/*
+/.lambdatest

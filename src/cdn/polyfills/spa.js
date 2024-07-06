@@ -14,6 +14,7 @@ import { Instrument as InstrumentXhr } from '../../features/ajax/instrument'
 import { Instrument as InstrumentSessionTrace } from '../../features/session_trace/instrument'
 import { Instrument as InstrumentSpa } from '../../features/spa/instrument'
 import { Instrument as InstrumentGenericEvent } from '../../features/generic_event/instrument'
+import { Instrument as InstrumentLogs } from '../../features/logging/instrument'
 
 new Agent({
   features: [
@@ -25,6 +26,7 @@ new Agent({
     InstrumentErrors,
     InstrumentSpa,
     InstrumentGenericEvent
+    InstrumentLogs
   ],
   loaderType: 'spa-polyfills'
 })

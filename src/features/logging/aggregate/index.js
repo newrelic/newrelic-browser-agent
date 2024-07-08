@@ -6,8 +6,9 @@ import { warn } from '../../../common/util/console'
 import { stringify } from '../../../common/util/stringify'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { AggregateBase } from '../../utils/aggregate-base'
-import { FEATURE_NAME, LOGGING_EVENT_EMITTER_CHANNEL, LOGGING_IGNORED, MAX_PAYLOAD_SIZE } from '../constants'
+import { FEATURE_NAME, LOGGING_EVENT_EMITTER_CHANNEL, LOGGING_IGNORED, LOGGING_LEVEL_FAILURE_MESSAGE, LOG_LEVELS, MAX_PAYLOAD_SIZE } from '../constants'
 import { Log } from '../shared/log'
+import { isValidLogLevel } from '../shared/utils'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -43,8 +44,34 @@ export class Aggregate extends AggregateBase {
     })
   }
 
-  handleLog (timestamp, message, attributes, level) {
+  handleLog (timestamp, message, attributes = {}, level = LOG_LEVELS.INFO) {
     if (this.blocked) return
+
+    if (!attributes || typeof attributes !== 'object') attributes = {}
+    if (typeof level === 'string') level = level.toUpperCase()
+    if (!isValidLogLevel(level)) return warn(LOGGING_LEVEL_FAILURE_MESSAGE + level, Object.values(LOG_LEVELS))
+
+    try {
+      if (typeof message !== 'string') {
+        const stringified = stringify(message)
+        /**
+           * Error instances convert to `{}` when stringified
+           * Symbol converts to '' when stringified
+           * other cases tbd
+           * */
+        if (!!stringified && stringified !== '{}') message = stringified
+        else message = String(message)
+      }
+    } catch (err) {
+      warn('could not cast log message to string', message)
+      return
+    }
+    if (typeof message !== 'string' || !message) return warn(LOGGING_IGNORED + 'invalid message')
+    if (message.length > MAX_PAYLOAD_SIZE) {
+      handle(SUPPORTABILITY_METRIC_CHANNEL, ['Logging/Harvest/Failed/Seen', message.length])
+      return warn(LOGGING_IGNORED + '> ' + MAX_PAYLOAD_SIZE + ' bytes: ', message.slice(0, 25) + '...')
+    }
+
     const log = new Log(
       this.#agentRuntime.timeKeeper.convertRelativeTimestamp(timestamp),
       message,
@@ -54,7 +81,7 @@ export class Aggregate extends AggregateBase {
     const logBytes = log.message.length + stringify(log.attributes).length + log.level.length + 10 // timestamp == 10 chars
     if (logBytes > MAX_PAYLOAD_SIZE) {
       handle(SUPPORTABILITY_METRIC_CHANNEL, ['Logging/Harvest/Failed/Seen', logBytes])
-      return warn(LOGGING_IGNORED + '> ' + MAX_PAYLOAD_SIZE + ' bytes', log.message.slice(0, 25) + '...')
+      return warn(LOGGING_IGNORED + '> ' + MAX_PAYLOAD_SIZE + ' bytes: ', log.message.slice(0, 25) + '...')
     }
 
     if (this.estimatedBytes + logBytes >= MAX_PAYLOAD_SIZE) {

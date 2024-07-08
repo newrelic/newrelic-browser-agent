@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.261.2](https://github.com/newrelic/newrelic-browser-agent/compare/v1.261.1...v1.261.2) (2024-07-01)
+
+
+### Bug Fixes
+
+* recordReplay will restart replays on same session page loads ([#1093](https://github.com/newrelic/newrelic-browser-agent/issues/1093)) ([cecddbe](https://github.com/newrelic/newrelic-browser-agent/commit/cecddbebc445dabcf3ce48c1fc88311198be6d0a))
+
 ## [1.261.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.261.0...v1.261.1) (2024-06-26)
 
 

@@ -205,6 +205,6 @@ export class Aggregate extends AggregateBase {
     this.blocked = true
     this.mode = MODE.OFF
     this.agentRuntime.session.write({ sessionTraceMode: this.mode })
-    this.scheduler.stopTimer()
+    this.scheduler?.stopTimer()
   }
 }

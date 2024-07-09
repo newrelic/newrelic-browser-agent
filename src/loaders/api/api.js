@@ -29,7 +29,9 @@ export function setTopLevelCallers () {
   function caller (fnName, ...args) {
     let returnVals = []
     Object.values(nr.initializedAgents).forEach(val => {
-      if (val.exposed && val.api[fnName]) {
+      if (!val || !val.api) {
+        warn(`Call to api '${fnName}' made before agent fully initialized.`)
+      } else if (val.exposed && val.api[fnName]) {
         returnVals.push(val.api[fnName](...args))
       }
     })

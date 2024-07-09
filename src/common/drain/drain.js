@@ -113,7 +113,7 @@ function drainGroup (agentIdentifier, group, activateGroup = true) {
 
   if (!baseEE.isolatedBacklog) delete handlers[group]
   baseEE.backlog[group] = null
-  baseEE.emit('drain-' + group, []) // exists purely for a unit test
+  baseEE.emit('drain-' + group, []) // TODO: Code exists purely for a unit test and needs to be refined
 }
 
 /**

@@ -33,7 +33,7 @@
     document.addEventListener('click', function () {
       window.location.hash = Math.random()      
       for (var i = 0; i <= 128; i++) {
-        fetch('/echo')
+        fetch('/echo', {method: 'POST'})
       }
     }, false)
     </script>

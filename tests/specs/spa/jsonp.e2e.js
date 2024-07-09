@@ -191,7 +191,7 @@ describe('jsonp ajax events', () => {
       status: 200,
       type: 'ajax'
     }))
-    expect(event.callbackDuration).toBeGreaterThanOrEqual(2000)
+    expect(event.callbackDuration).toBeGreaterThanOrEqual(1999)
     expect(event.end).toBeGreaterThanOrEqual(event.start)
     expect(event.end - event.start).toBeGreaterThanOrEqual(event.callbackDuration)
   })

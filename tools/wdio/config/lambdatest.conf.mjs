@@ -80,8 +80,10 @@ function lambdaTestCapabilities () {
           // if (parsedBrowserName === 'android') {
           //   capabilities['LT:Options'].appiumVersion = '1.22.3'
           // } else /* === ios */ {
-          //   capabilities['LT:Options'].appiumVersion = '2.6.0'
-          // }
+          if (parsedBrowserName === 'ios') {
+            capabilities['LT:Options'].appiumVersion = '2.6.0'
+            // capabilities['LT:Options'].xcuitestVersion = '7.15.3'
+          }
         }
       }
       return capabilities

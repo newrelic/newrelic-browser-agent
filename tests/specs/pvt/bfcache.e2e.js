@@ -12,16 +12,15 @@ describe('Back/forward cache', () => {
       })
     }, browser.testHandle.testId)
 
-    let [expectedHit] = await Promise.all([
-      browser.testHandle.expect('assetServer', {
-        test: function (request) {
-          const url = new URL(request.url, 'resolve://')
-          return url.pathname === '/echo'
-        }
-      }),
-      browser.url(await browser.testHandle.assetURL('/'))
-    ])
-
+    const echoPromise = browser.testHandle.expect('assetServer', {
+      test: function (request) {
+        const url = new URL(request.url, 'resolve://')
+        return url.pathname === '/echo'
+      }
+    })
+    url = await browser.testHandle.assetURL('/')
+    await browser.url(url)
+    const expectedHit = await echoPromise
     expect(expectedHit.request.query.persisted).toEqual('true')
   })
 

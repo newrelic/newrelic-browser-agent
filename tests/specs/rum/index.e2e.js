@@ -19,12 +19,10 @@ const loader_config = {
 describe('basic pve capturing', () => {
   ['same-origin', 'cross-origin'].forEach(page => {
     it(`should send rum when ${page} page loads in an iframe`, async () => {
-      const [
-        rumResults
-      ] = await Promise.all([
-        browser.testHandle.expectRum(),
-        browser.url(await browser.testHandle.assetURL(`iframe/${page}.html`))
-      ])
+      const rumPromise = browser.testHandle.expectRum()
+      await browser.pause(1000)
+      await browser.url(await browser.testHandle.assetURL(`iframe/${page}.html`))
+      const rumResults = await rumPromise
 
       checkRumQuery(rumResults.request)
       checkRumBody(rumResults.request)
@@ -32,18 +30,14 @@ describe('basic pve capturing', () => {
   })
 
   it('should capture page load timings', async () => {
+    const rumPromise = browser.testHandle.expectRum()
     await browser.testHandle.scheduleReply('assetServer', {
       test: testAssetRequest,
       permanent: false,
       delay: 500
     })
-
-    const [
-      rumResults
-    ] = await Promise.all([
-      browser.testHandle.expectRum(),
-      browser.url(await browser.testHandle.assetURL('64kb-dom.html'))
-    ])
+    await browser.url(await browser.testHandle.assetURL('64kb-dom.html'))
+    const rumResults = await rumPromise
 
     checkRumQuery(rumResults.request)
     checkRumBody(rumResults.request)
@@ -54,12 +48,10 @@ describe('basic pve capturing', () => {
 
   /** equivalent to former no-body.test.js */
   it('reports RUM with no body', async () => {
-    const [
-      rumResults
-    ] = await Promise.all([
-      browser.testHandle.expectRum(),
-      browser.url(await browser.testHandle.assetURL('no-body.html', { config: { account: loader_config.account } }))
-    ])
+    const rumPromise = browser.testHandle.expectRum()
+    await browser.pause(500)
+    await browser.url(await browser.testHandle.assetURL('no-body.html', { config: { account: loader_config.account } }))
+    const rumResults = await rumPromise
 
     checkRumQuery(rumResults.request)
     detailedCheckRum(rumResults.request, { query: { ac: 'test_account' }, body: { ja: { no: 'body' } } })
@@ -67,12 +59,10 @@ describe('basic pve capturing', () => {
 
   /** equivalent to former paint-timing.test.js */
   it.withBrowsersMatching([supportsFirstPaint, supportsFirstContentfulPaint])('reports paint timings', async () => {
-    const [
-      rumResults
-    ] = await Promise.all([
-      browser.testHandle.expectRum(),
-      browser.url(await browser.testHandle.assetURL('instrumented.html', { config: { account: loader_config.account } }))
-    ])
+    const rumPromise = browser.testHandle.expectRum()
+    await browser.pause(500)
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', { config: { account: loader_config.account } }))
+    const rumResults = await rumPromise
 
     expect(Number(rumResults.request.query.fp)).toBeGreaterThan(0)
     expect(Number(rumResults.request.query.fcp)).toBeGreaterThan(0)
@@ -80,10 +70,10 @@ describe('basic pve capturing', () => {
 
   /** equivalent to former unconfigured-on-load.test.js */
   it('should not receive RUM call if not configured', async () => {
-    await Promise.all([
-      browser.testHandle.expectRum(10000, true),
-      browser.url(await browser.testHandle.assetURL('unconfigured-on-load.html'))
-    ])
+    const rumPromise = browser.testHandle.expectRum(10000, true)
+    await browser.pause(500)
+    await browser.url(await browser.testHandle.assetURL('unconfigured-on-load.html'))
+    await rumPromise
   })
 })
 
@@ -105,12 +95,10 @@ describe('APM Decorations', () => {
       },
       body: { ja: { foo: 'bar' } }
     }
-    const [
-      rumResults
-    ] = await Promise.all([
-      browser.testHandle.expectRum(),
-      browser.url(await browser.testHandle.assetURL('rum-data.html', { config: loader_config }))
-    ])
+    const rumPromise = browser.testHandle.expectRum()
+    await browser.pause(500)
+    await browser.url(await browser.testHandle.assetURL('rum-data.html', { config: loader_config }))
+    const rumResults = await rumPromise
     detailedCheckRum(rumResults.request, expected) // equivalent to former data.test.js
     checkRumPerf(rumResults.request) // equivalent to former nav-timing.test.js, former perf.test.js
     expect(+rumResults.request.query.dc).toBeGreaterThanOrEqual(0)
@@ -119,12 +107,10 @@ describe('APM Decorations', () => {
 
   /** equivalent to former transaction-name.test.js */
   it('should report a transactionName without a tNamePlain', async () => {
-    const [
-      rumResults
-    ] = await Promise.all([
-      browser.testHandle.expectRum(),
-      browser.url(await browser.testHandle.assetURL('instrumented.html', { config: { transactionName: 'abc' } }))
-    ])
+    const rumPromise = browser.testHandle.expectRum()
+    await browser.pause(500)
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', { config: { transactionName: 'abc' } }))
+    const rumResults = await rumPromise
 
     expect(rumResults.request.query.to).toEqual('abc') // has correct obfuscated transactionName
     expect(rumResults.request.query.t).toBeUndefined() // tNamePlain excluded
@@ -132,12 +118,10 @@ describe('APM Decorations', () => {
 
   /** equivalent to former transaction-name.test.js */
   it('should report a tNamePlain without a transactionName', async () => {
-    const [
-      rumResults
-    ] = await Promise.all([
-      browser.testHandle.expectRum(),
-      browser.url(await browser.testHandle.assetURL('instrumented.html', { config: { tNamePlain: 'abc' } }))
-    ])
+    const rumPromise = browser.testHandle.expectRum()
+    await browser.pause(500)
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', { config: { tNamePlain: 'abc' } }))
+    const rumResults = await rumPromise
 
     expect(rumResults.request.query.t).toEqual('abc') // has correct tNamePlain
     expect(rumResults.request.query.to).toBeUndefined() // transactionName excluded
@@ -145,12 +129,10 @@ describe('APM Decorations', () => {
 
   /** equivalent to former transaction-name.test.js */
   it('should honor transactionName if both tNamePlain and transactionName are supplied', async () => {
-    const [
-      rumResults
-    ] = await Promise.all([
-      browser.testHandle.expectRum(),
-      browser.url(await browser.testHandle.assetURL('instrumented.html', { config: { transactionName: 'abc', tNamePlain: 'def' } }))
-    ])
+    const rumPromise = browser.testHandle.expectRum()
+    await browser.pause(500)
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', { config: { transactionName: 'abc', tNamePlain: 'def' } }))
+    const rumResults = await rumPromise
 
     expect(rumResults.request.query.to).toEqual('abc') // should honor obfuscated if both are defined
     expect(rumResults.request.query.t).toBeUndefined() // tNamePlain excluded

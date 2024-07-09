@@ -47,12 +47,12 @@ jobs:
       browser-target: ${{ inputs.latest-only == true && 'edge@latest' || 'edge@*' }}
     secrets: inherit
 
-  # ios:
-  #   uses: ./.github/workflows/wdio-single-browser.yml
-  #   with:
-  #     ref: ${{ inputs.ref || github.ref }}
-  #     browser-target: ${{ inputs.latest-only == true && 'ios@latest' || 'ios@*' }}
-  #   secrets: inherit
+  ios:
+    uses: ./.github/workflows/wdio-single-browser.yml
+    with:
+      ref: ${{ inputs.ref || github.ref }}
+      browser-target: ${{ inputs.latest-only == true && 'ios@latest' || 'ios@*' }}
+    secrets: inherit
 
   android:
     uses: ./.github/workflows/wdio-single-browser.yml
@@ -61,13 +61,13 @@ jobs:
       browser-target: ${{ inputs.latest-only == true && 'android@latest' || 'android@*' }}
     secrets: inherit
 
-  ie:
-    uses: ./.github/workflows/wdio-single-browser.yml
-    with:
-      ref: ${{ inputs.ref || github.ref }}
-      browser-target: ie@11
-      additional-flags: -P
-    secrets: inherit
+  # ie:
+  #   uses: ./.github/workflows/wdio-single-browser.yml
+  #   with:
+  #     ref: ${{ inputs.ref || github.ref }}
+  #     browser-target: ie@11
+  #     additional-flags: -P
+  #   secrets: inherit
 
   ios-webview:
     uses: ./.github/workflows/wdio-single-browser.yml

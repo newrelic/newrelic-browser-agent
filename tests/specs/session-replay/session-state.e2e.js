@@ -85,6 +85,9 @@ describe.withBrowsersMatching(notIE)('session manager state behavior', () => {
       await browser.enableSessionReplay()
       await browser.url(await browser.testHandle.assetURL('instrumented.html', srConfig()))
         .then(() => browser.waitForSessionReplayRecording())
+
+      await browser.closeWindow()
+      await browser.switchToWindow((await browser.getWindowHandles())[0])
     })
   })
 

@@ -12,7 +12,6 @@ async function disqualifySR () {
       sts: 1,
       err: 1,
       ins: 1,
-      cap: 1,
       spa: 1,
       loaded: 1,
       sr: 0,

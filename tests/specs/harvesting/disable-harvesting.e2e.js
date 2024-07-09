@@ -8,7 +8,6 @@ describe('disable harvesting', () => {
         st: 1,
         err: 0,
         ins: 1,
-        cap: 1,
         spa: 1,
         loaded: 1
       })
@@ -32,7 +31,6 @@ describe('disable harvesting', () => {
         st: 1,
         err: 1,
         ins: 1,
-        cap: 1,
         spa: 0,
         loaded: 1
       })
@@ -59,7 +57,6 @@ describe('disable harvesting', () => {
         st: 1,
         err: 1,
         ins: 0,
-        cap: 1,
         spa: 1,
         loaded: 1
       })
@@ -81,7 +78,6 @@ describe('disable harvesting', () => {
         st: 0,
         err: 1,
         ins: 1,
-        cap: 1,
         spa: 1,
         loaded: 1
       })

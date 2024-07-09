@@ -1,8 +1,9 @@
-let registerDrain, drain, ee
+let registerDrain, drain, deregisterDrain, ee, registerHandler
 beforeEach(async () => {
   jest.resetModules()
-  ;({ registerDrain, drain } = await import('../../../../src/common/drain/drain'))
+  ;({ registerDrain, drain, deregisterDrain } = await import('../../../../src/common/drain/drain'))
   ;({ ee } = await import('../../../../src/common/event-emitter/contextual-ee'))
+  ;({ registerHandler } = await import('../../../../src/common/event-emitter/register-handler'))
 })
 
 test('can register a feat and drain it', () => {
@@ -23,6 +24,15 @@ test('other unregistered drains do not affect feat reg & drain', () => {
 
   drain('abcd', 'page_view_event')
   expect(emitSpy).toHaveBeenCalledWith('drain-page_view_event', expect.anything())
+})
+
+test('unregistering groups clears their handlers from the buffering system', () => {
+  registerDrain('abcd', 'pumbaa')
+  registerHandler('tusks', () => {}, 'pumbaa', ee)
+  expect(registerHandler.handlers.pumbaa).toEqual({ tusks: expect.anything() })
+
+  deregisterDrain('abcd', 'pumbaa')
+  expect(registerHandler.handlers.pumbaa).toBeUndefined()
 })
 
 describe('drain', () => {

@@ -33,7 +33,7 @@ describe('Trace nodes', () => {
     await browser.testHandle.clearScheduledReplies('bamServer')
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ st: 0, sts: 0, sr: 0, err: 1, ins: 1, cap: 1, spa: 0, loaded: 1 })
+      body: JSON.stringify({ st: 0, sts: 0, sr: 0, err: 1, ins: 1, spa: 0, loaded: 1 })
     })
 
     const url = await browser.testHandle.assetURL('pagehide.html', stConfig())

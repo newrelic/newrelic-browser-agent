@@ -5,6 +5,47 @@
       "changes": [
         {
           "type": "fix",
+          "sha": "5eb91646314b5a225a1a902ecb0b58b57b5ee74f",
+          "message": "Release backlog memory when features are blocked by RUM",
+          "issues": [
+            "1102"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "5022134783152e7eebbd54608eda5a09e8fe0ebb",
+          "message": "address call to stopTimer on undefined scheduler",
+          "issues": [
+            "1104"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "3d815a3988583911322541007bd5e176a5bba4c1",
+          "message": "safeguard api calls",
+          "issues": [
+            "1103"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "83d7d1ed1863772e5515d128d0710cb456dafafd",
+          "message": "logging bundle optimization",
+          "issues": [
+            "1089"
+          ]
+        }
+      ],
+      "version": "1.262.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "836133e7-c3ff-4def-872f-c913448bb4f5",
+      "createTime": "2024-07-09T18:45:37.701Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
           "sha": "cecddbebc445dabcf3ce48c1fc88311198be6d0a",
           "message": "recordReplay will restart replays on same session page loads",
           "issues": [
@@ -1673,5 +1714,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2024-07-01T20:14:02.304Z"
+  "updateTime": "2024-07-09T18:45:37.701Z"
 }

@@ -251,26 +251,26 @@ describe.withBrowsersMatching(supportsFetch)('Fetch Ajax', () => {
   })
 
   // *cli 6/6/24 -- LambdaTest have problem with this. Despite header being empty and correct, running headers.get('content-length') on any of their desktop browsers
-  //    yields the arbitrary value of '45', which caused our responseBodySize check to fail... maybe it'll be fixed someday?
-  // it('produces event and metric with zero receive size due to the use of compression', async () => {
-  //   await browser.url(await browser.testHandle.assetURL('instrumented.html'))
-  //     .then(() => browser.waitForAgentLoad())
+  //    yields the arbitrary value of '45', which caused our responseBodySize check to fail... *fixed as of 7/9/24
+  it('produces event and metric with zero receive size due to the use of compression', async () => {
+    await browser.url(await browser.testHandle.assetURL('instrumented.html'))
+      .then(() => browser.waitForAgentLoad())
 
-  //   const [ajaxEventsHarvest, ajaxTimeSlicesHarvest] = await Promise.all([
-  //     browser.testHandle.expectAjaxEvents(),
-  //     browser.testHandle.expectAjaxTimeSlices(),
-  //     browser.execute(function () {
-  //       fetch('/gzipped')
-  //     })
-  //   ])
+    const [ajaxEventsHarvest, ajaxTimeSlicesHarvest] = await Promise.all([
+      browser.testHandle.expectAjaxEvents(),
+      browser.testHandle.expectAjaxTimeSlices(),
+      browser.execute(function () {
+        fetch('/gzipped')
+      })
+    ])
 
-  //   const ajaxEvent = ajaxEventsHarvest.request.body.find(event => event.path === '/gzipped')
-  //   expect(ajaxEvent.responseBodySize).toEqual(0)
+    const ajaxEvent = ajaxEventsHarvest.request.body.find(event => event.path === '/gzipped')
+    expect(ajaxEvent.responseBodySize).toEqual(0)
 
-  //   const ajaxMetric = ajaxTimeSlicesHarvest.request.body.xhr.find(metric => metric.params.pathname === '/gzipped')
-  //   expect(ajaxMetric.metrics.rxSize.t).toBeUndefined()
-  //   expect(ajaxMetric.metrics.rxSize.c).toEqual(1)
-  // })
+    const ajaxMetric = ajaxTimeSlicesHarvest.request.body.xhr.find(metric => metric.params.pathname === '/gzipped')
+    expect(ajaxMetric.metrics.rxSize.t).toBeUndefined()
+    expect(ajaxMetric.metrics.rxSize.c).toEqual(1)
+  })
 
   it('produces event and metric with zero receive size due to the use of chunked payload', async () => {
     await browser.url(await browser.testHandle.assetURL('instrumented.html'))

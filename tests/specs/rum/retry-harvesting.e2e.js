@@ -10,6 +10,17 @@ describe('rum retry harvesting', () => {
         body: ''
       })
 
+      const allPayloads = Promise.all([
+        browser.testHandle.expectTrace(10000, true),
+        browser.testHandle.expectInteractionEvents(10000, true),
+        browser.testHandle.expectTimings(10000, true),
+        browser.testHandle.expectAjaxTimeSlices(10000, true),
+        browser.testHandle.expectAjaxEvents(10000, true),
+        browser.testHandle.expectIns(10000, true),
+        browser.testHandle.expectRum()
+      ])
+      await browser.pause(500)
+      await browser.url(await browser.testHandle.assetURL('obfuscate-pii.html')).then(() => $('a').click())
       const [
         resourcesResults,
         interactionResults,
@@ -18,17 +29,7 @@ describe('rum retry harvesting', () => {
         ajaxEventsResults,
         insResults,
         rumResults
-      ] = await Promise.all([
-        browser.testHandle.expectTrace(10000, true),
-        browser.testHandle.expectInteractionEvents(10000, true),
-        browser.testHandle.expectTimings(10000, true),
-        browser.testHandle.expectAjaxTimeSlices(10000, true),
-        browser.testHandle.expectAjaxEvents(10000, true),
-        browser.testHandle.expectIns(10000, true),
-        browser.testHandle.expectRum(),
-        browser.url(await browser.testHandle.assetURL('obfuscate-pii.html'))
-          .then(() => $('a').click())
-      ])
+      ] = await allPayloads
 
       // Uncomment this code to reproduce the issue described in https://issues.newrelic.com/browse/NEWRELIC-9348
       // Leave uncommented once that ticket is worked

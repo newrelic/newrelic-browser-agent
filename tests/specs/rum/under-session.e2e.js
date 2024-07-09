@@ -8,6 +8,7 @@ describe('RUM request', () => {
       const testURL = await browser.testHandle.assetURL('instrumented.html', { init: { privacy: { cookies_enabled: false } } })
 
       let rumToBeCalled = browser.testHandle.expectRum()
+      await browser.pause(500)
       await browser.url(testURL).then(() => browser.waitForAgentLoad())
       let rum = await rumToBeCalled
 

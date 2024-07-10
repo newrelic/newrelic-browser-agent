@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.262.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.261.2...v1.262.0) (2024-07-09)
+
+
+### Features
+
+* logging bundle optimization ([#1089](https://github.com/newrelic/newrelic-browser-agent/issues/1089)) ([83d7d1e](https://github.com/newrelic/newrelic-browser-agent/commit/83d7d1ed1863772e5515d128d0710cb456dafafd))
+
+
+### Bug Fixes
+
+* address call to stopTimer on undefined scheduler ([#1104](https://github.com/newrelic/newrelic-browser-agent/issues/1104)) ([5022134](https://github.com/newrelic/newrelic-browser-agent/commit/5022134783152e7eebbd54608eda5a09e8fe0ebb))
+* Release backlog memory when features are blocked by RUM ([#1102](https://github.com/newrelic/newrelic-browser-agent/issues/1102)) ([5eb9164](https://github.com/newrelic/newrelic-browser-agent/commit/5eb91646314b5a225a1a902ecb0b58b57b5ee74f))
+* safeguard api calls ([#1103](https://github.com/newrelic/newrelic-browser-agent/issues/1103)) ([3d815a3](https://github.com/newrelic/newrelic-browser-agent/commit/3d815a3988583911322541007bd5e176a5bba4c1))
+
 ## [1.261.2](https://github.com/newrelic/newrelic-browser-agent/compare/v1.261.1...v1.261.2) (2024-07-01)
 
 

@@ -33,6 +33,7 @@ export class TestHandleConnector {
   #commandServerBase
   #testId
   #pendingExpects = new Set()
+  #networkCaptures = new Set()
 
   constructor (assetServerConfig, bamServerConfig, commandServerConfig) {
     this.#assetServerConfig = assetServerConfig
@@ -51,6 +52,10 @@ export class TestHandleConnector {
 
   get commandServerBase () {
     return this.#commandServerBase
+  }
+
+  get networkCaptures () {
+    return Array.from(this.#networkCaptures)
   }
 
   get testId () {
@@ -91,6 +96,9 @@ export class TestHandleConnector {
     this.#bamServerConfig = null
     this.#commandServerConfig = null
     this.#commandServerBase = null
+
+    this.#networkCaptures.clear()
+    this.#networkCaptures = null
   }
 
   // Test Asset URL Construction logic
@@ -195,11 +203,15 @@ export class TestHandleConnector {
       log.info(`Network Capture ID(s): ${networkCaptureIds}`)
 
       if (!Array.isArray(networkCaptureOptions)) {
-        return new NetworkCaptureConnector(this, serverId, networkCaptureIds[0])
+        const networkCapture = new NetworkCaptureConnector(this, serverId, networkCaptureIds[0])
+        this.#networkCaptures.add(networkCapture)
+        return networkCapture
       } else {
-        return networkCaptureIds.map(id =>
-          new NetworkCaptureConnector(this, serverId, id)
-        )
+        return networkCaptureIds.map(id => {
+          const networkCapture = new NetworkCaptureConnector(this, serverId, id)
+          this.#networkCaptures.add(networkCapture)
+          return networkCapture
+        })
       }
     }
   }

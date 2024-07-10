@@ -2,6 +2,7 @@ import { faker } from '@faker-js/faker'
 import { supportsFetch } from '../../../tools/browser-matcher/common-matchers.mjs'
 
 const assetServerTraceTest = function (request) {
+  if (request.method !== 'GET') return
   const url = new URL(request.url, 'resolve://')
   return url.pathname === `/dt/${this.testId}`
 }
@@ -122,7 +123,7 @@ const fetchScenarios = [
 describe('xhr distributed tracing', () => {
   let config
 
-  beforeEach(() => {
+  beforeEach(async () => {
     config = {
       accountID: faker.string.hexadecimal({ length: 16, prefix: '' }),
       agentID: faker.string.hexadecimal({ length: 16, prefix: '' }),
@@ -138,6 +139,7 @@ describe('xhr distributed tracing', () => {
         targetAsset = 'spa/dt/xhr-dt-crossorigin-load.html'
         targetServer = 'bamServer'
       }
+      const ajaxCapture = await browser.testHandle.createNetworkCaptures(targetServer, { test: assetServerTraceTest })
 
       if (testCase.addRouterToAllowedOrigins) {
         testCase.configuration.allowed_origins.push(
@@ -146,7 +148,7 @@ describe('xhr distributed tracing', () => {
       }
 
       const [ajaxRequest] = await Promise.all([
-        browser.testHandle.expect(targetServer, { test: assetServerTraceTest }),
+        ajaxCapture.waitForResult({ totalCount: 1 }),
         browser.url(await browser.testHandle.assetURL(targetAsset, {
           config,
           injectUpdatedLoaderConfig: true,
@@ -156,7 +158,7 @@ describe('xhr distributed tracing', () => {
         }))
       ])
 
-      const ajaxRequestHeaders = ajaxRequest.request.headers
+      const ajaxRequestHeaders = ajaxRequest[0].request.headers
       validateTraceHeaders(ajaxRequestHeaders, config, testCase.newrelicHeader, testCase.traceContextHeaders)
     })
   })
@@ -171,6 +173,7 @@ describe('xhr distributed tracing', () => {
             targetAsset = fetchScenario.crossOriginFile
             targetServer = 'bamServer'
           }
+          const ajaxCapture = await browser.testHandle.createNetworkCaptures(targetServer, { test: assetServerTraceTest })
 
           if (testCase.addRouterToAllowedOrigins) {
             testCase.configuration.allowed_origins.push(
@@ -179,7 +182,7 @@ describe('xhr distributed tracing', () => {
           }
 
           const [ajaxRequest] = await Promise.all([
-            browser.testHandle.expect(targetServer, { test: assetServerTraceTest }),
+            ajaxCapture.waitForResult({ totalCount: 1 }),
             browser.url(await browser.testHandle.assetURL(targetAsset, {
               config,
               injectUpdatedLoaderConfig: true,
@@ -189,7 +192,7 @@ describe('xhr distributed tracing', () => {
             }))
           ])
 
-          const ajaxRequestHeaders = ajaxRequest.request.headers
+          const ajaxRequestHeaders = ajaxRequest[0].request.headers
           validateTraceHeaders(ajaxRequestHeaders, config, testCase.newrelicHeader, testCase.traceContextHeaders)
         })
       })
@@ -208,10 +211,10 @@ describe('xhr distributed tracing', () => {
           const url = new URL(request.url, 'resolve://')
           return url.pathname === '/tests/assets/spa/dt/fetch-dt-sameorigin-load-empty-string.html'
         }
+        const ajaxCapture = await browser.testHandle.createNetworkCaptures('assetServer', { test: assetAjaxTest })
 
-        const [, ajaxRequest] = await Promise.all([
-          browser.testHandle.expect('assetServer', { test: assetAjaxTest }), // This first one will be the actual asset getting loaded by the browser
-          browser.testHandle.expect('assetServer', { test: assetAjaxTest }), // This second one will be the ajax call back to the same asset file
+        const [ajaxRequest] = await Promise.all([
+          ajaxCapture.waitForResult({ totalCount: 2 }),
           browser.url(await browser.testHandle.assetURL('spa/dt/fetch-dt-sameorigin-load-empty-string.html', {
             config,
             injectUpdatedLoaderConfig: true,
@@ -221,7 +224,7 @@ describe('xhr distributed tracing', () => {
           }))
         ])
 
-        const ajaxRequestHeaders = ajaxRequest.request.headers
+        const ajaxRequestHeaders = ajaxRequest[1].request.headers
         validateTraceHeaders(ajaxRequestHeaders, config, testCase.newrelicHeader, testCase.traceContextHeaders)
       })
     })

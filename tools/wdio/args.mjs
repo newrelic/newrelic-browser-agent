@@ -67,11 +67,6 @@ const args = yargs(hideBin(process.argv))
   .alias('l', 'loader')
   .describe('l', 'default loader to inject into test pages')
 
-  .boolean('q')
-  .default('q', false)
-  .alias('q', 'quiet')
-  .describe('q', 'dont output to stdout')
-
   .boolean('P')
   .alias('P', 'polyfills')
   .describe('P', 'inject polyfills and polyfill loaders into test pages')

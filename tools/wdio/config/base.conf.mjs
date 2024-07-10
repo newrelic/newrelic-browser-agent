@@ -14,18 +14,25 @@ export default function config () {
       if (args.verbose) {
         return 'debug'
       }
-      if (args.logRequests || args.debugShim) {
-        return 'info'
-      }
-      if (args.silent) {
-        return 'silent'
-      }
       return 'error'
     })(),
+    logLevels: {
+      'test-logger': 'debug',
+      ...(() => {
+        if (args.logRequests || args.debugShim) {
+          return {
+            'testing-server': 'debug',
+            'testing-server-connector': 'debug',
+            'network-capture-connector': 'debug'
+          }
+        } else return {}
+      })()
+    },
     waitforTimeout: 10000,
     connectionRetryTimeout: 120000,
     connectionRetryCount: 3,
     services: [
+      path.resolve(__dirname, '../plugins/test-logger.mjs'),
       path.resolve(__dirname, '../plugins/mocha-globals/index.mjs'),
       path.resolve(__dirname, '../plugins/browser-matcher.mjs'),
       path.resolve(__dirname, '../plugins/custom-commands.mjs'),
@@ -38,7 +45,7 @@ export default function config () {
     framework: 'mocha',
     mochaOpts: {
       ui: 'bdd',
-      timeout: args.sessionTimeout,
+      timeout: args.timeout,
       retries: args.retry ? 3 : 0
     },
     autoCompileOpts: {

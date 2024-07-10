@@ -1,8 +1,13 @@
 import { testAjaxEventsRequest, testAjaxTimeSlicesRequest } from '../../../tools/testing-server/utils/expect-tests'
+import { checkAjaxEvents, checkAjaxMetrics } from '../../util/basic-checks'
 
 describe('xhr retry harvesting', () => {
-  [408, 429, 500, 503].forEach(statusCode =>
-    it(`should send the ajax event and time slice on the next harvest when the first harvest statusCode is ${statusCode}`, async () => {
+  ;[408, 429, 500, 503].forEach(statusCode =>
+    it(`should send the ajax event and metric on the next harvest when the first harvest statusCode is ${statusCode}`, async () => {
+      const [ajaxEventsCapture, ajaxMetricsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+        { test: testAjaxEventsRequest },
+        { test: testAjaxTimeSlicesRequest }
+      ])
       await browser.testHandle.scheduleReply('bamServer', {
         test: testAjaxEventsRequest,
         permanent: true,
@@ -14,9 +19,9 @@ describe('xhr retry harvesting', () => {
         statusCode
       })
 
-      const [firstAjaxEventsHarvest, firstAjaxTimeSlicesHarvest] = await Promise.all([
-        browser.testHandle.expectAjaxEvents(),
-        browser.testHandle.expectAjaxTimeSlices(),
+      const [firstAjaxEventsHarvest, firstAjaxMetricsHarvest] = await Promise.all([
+        ajaxEventsCapture.waitForResult({ totalCount: 2 }),
+        ajaxMetricsCapture.waitForResult({ totalCount: 2 }),
         browser.url(await browser.testHandle.assetURL('instrumented.html'))
           .then(() => browser.waitForAgentLoad())
           .then(() => browser.execute(function () {
@@ -30,9 +35,9 @@ describe('xhr retry harvesting', () => {
       await browser.pause(500)
       await browser.testHandle.clearScheduledReplies('bamServer')
 
-      const [secondAjaxEventsHarvest, secondAjaxTimeSlicesHarvest] = await Promise.all([
-        browser.testHandle.expectAjaxEvents(),
-        browser.testHandle.expectAjaxTimeSlices(),
+      const [secondAjaxEventsHarvest, secondAjaxMetricsHarvest] = await Promise.all([
+        ajaxEventsCapture.waitForResult({ timeout: 5000 }),
+        ajaxMetricsCapture.waitForResult({ timeout: 5000 }),
         browser.execute(function () {
           var xhr = new XMLHttpRequest()
           xhr.open('GET', '/text')
@@ -40,19 +45,39 @@ describe('xhr retry harvesting', () => {
         })
       ])
 
-      expect(firstAjaxEventsHarvest.reply.statusCode).toEqual(statusCode)
-      expect(firstAjaxTimeSlicesHarvest.reply.statusCode).toEqual(statusCode)
+      firstAjaxEventsHarvest.forEach(harvest => {
+        expect(harvest.reply.statusCode).toEqual(statusCode)
+      })
+      firstAjaxMetricsHarvest.forEach(harvest => {
+        expect(harvest.reply.statusCode).toEqual(statusCode)
+      })
 
-      const firstTimeSlice = firstAjaxTimeSlicesHarvest.request.body.xhr.find(x => x.params.pathname === '/json')
-      expect(secondAjaxTimeSlicesHarvest.request.body.xhr).toEqual(expect.arrayContaining([firstTimeSlice]))
+      const firstAjaxEventData = firstAjaxEventsHarvest
+        .flatMap(harvest => harvest.request.body)
+        .find(xhr => xhr.path === '/json')
+      const successfulAjaxEventHarvest = secondAjaxEventsHarvest
+        .find(harvest => harvest.reply.statusCode !== statusCode)
+      checkAjaxEvents(successfulAjaxEventHarvest.request, { specificPath: '/json' })
+      checkAjaxEvents(successfulAjaxEventHarvest.request, { specificPath: '/text' })
+      expect(successfulAjaxEventHarvest.request.body).toEqual(expect.arrayContaining([firstAjaxEventData]))
 
-      const firstEvent = firstAjaxEventsHarvest.request.body.find(x => x.path === '/json')
-      expect(secondAjaxEventsHarvest.request.body).toEqual(expect.arrayContaining([firstEvent]))
+      const firstAjaxMetricData = firstAjaxMetricsHarvest
+        .flatMap(harvest => harvest.request.body.xhr)
+        .find(xhr => xhr.params.pathname === '/json')
+      const successfulAjaxMetricsHarvest = secondAjaxMetricsHarvest
+        .find(harvest => harvest.reply.statusCode !== statusCode)
+      checkAjaxMetrics(successfulAjaxMetricsHarvest.request, { specificPath: '/json' })
+      checkAjaxMetrics(successfulAjaxMetricsHarvest.request, { specificPath: '/text' })
+      expect(successfulAjaxMetricsHarvest.request.body.xhr).toEqual(expect.arrayContaining([firstAjaxMetricData]))
     })
-  );
+  )
 
-  [400, 404, 502, 504, 512].forEach(statusCode =>
-    it(`should not send the ajax event and time slice on the next harvest when the first harvest statusCode is ${statusCode}`, async () => {
+  ;[400, 404, 502, 504, 512].forEach(statusCode =>
+    it(`should not send the ajax event and metric on the next harvest when the first harvest statusCode is ${statusCode}`, async () => {
+      const [ajaxEventsCapture, ajaxMetricsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+        { test: testAjaxEventsRequest },
+        { test: testAjaxTimeSlicesRequest }
+      ])
       await browser.testHandle.scheduleReply('bamServer', {
         test: testAjaxEventsRequest,
         permanent: true,
@@ -64,9 +89,9 @@ describe('xhr retry harvesting', () => {
         statusCode
       })
 
-      const [firstAjaxEventsHarvest, firstAjaxTimeSlicesHarvest] = await Promise.all([
-        browser.testHandle.expectAjaxEvents(),
-        browser.testHandle.expectAjaxTimeSlices(),
+      const [firstAjaxEventsHarvest, firstAjaxMetricsHarvest] = await Promise.all([
+        ajaxEventsCapture.waitForResult({ totalCount: 2 }),
+        ajaxMetricsCapture.waitForResult({ totalCount: 2 }),
         browser.url(await browser.testHandle.assetURL('instrumented.html'))
           .then(() => browser.waitForAgentLoad())
           .then(() => browser.execute(function () {
@@ -80,9 +105,9 @@ describe('xhr retry harvesting', () => {
       await browser.pause(500)
       await browser.testHandle.clearScheduledReplies('bamServer')
 
-      const [secondAjaxEventsHarvest, secondAjaxTimeSlicesHarvest] = await Promise.all([
-        browser.testHandle.expectAjaxEvents(),
-        browser.testHandle.expectAjaxTimeSlices(),
+      const [secondAjaxEventsHarvest, secondAjaxMetricsHarvest] = await Promise.all([
+        ajaxEventsCapture.waitForResult({ timeout: 5000 }),
+        ajaxMetricsCapture.waitForResult({ timeout: 5000 }),
         browser.execute(function () {
           var xhr = new XMLHttpRequest()
           xhr.open('GET', '/text')
@@ -90,22 +115,29 @@ describe('xhr retry harvesting', () => {
         })
       ])
 
-      expect(firstAjaxEventsHarvest.reply.statusCode).toEqual(statusCode)
-      expect(firstAjaxTimeSlicesHarvest.reply.statusCode).toEqual(statusCode)
+      firstAjaxEventsHarvest.forEach(harvest => {
+        expect(harvest.reply.statusCode).toEqual(statusCode)
+      })
+      firstAjaxMetricsHarvest.forEach(harvest => {
+        expect(harvest.reply.statusCode).toEqual(statusCode)
+      })
 
-      const firstTimeSlice = firstAjaxTimeSlicesHarvest.request.body.xhr.find(x => x.params.pathname === '/json')
-      expect(secondAjaxTimeSlicesHarvest.request.body.xhr).not.toEqual(expect.arrayContaining([firstTimeSlice]))
+      const firstAjaxEventData = firstAjaxEventsHarvest
+        .flatMap(harvest => harvest.request.body)
+        .find(xhr => xhr.path === '/json')
+      const successfulAjaxEventHarvest = secondAjaxEventsHarvest
+        .find(harvest => harvest.reply.statusCode !== statusCode)
+      checkAjaxEvents(successfulAjaxEventHarvest.request, { specificPath: '/text' })
+      expect(successfulAjaxEventHarvest.request.body).not.toEqual(expect.arrayContaining([firstAjaxEventData]))
 
-      const firstEvent = firstAjaxEventsHarvest.request.body.find(x => x.path === '/json')
-      expect(secondAjaxEventsHarvest.request.body).not.toEqual(expect.arrayContaining([firstEvent]))
-
-      const firstEventHarvestTime = Number(firstAjaxEventsHarvest.request.query.rst)
-      const secondEventHarvestTime = Number(secondAjaxEventsHarvest.request.query.rst)
-      expect(secondEventHarvestTime).toBeWithin(firstEventHarvestTime + 3000, firstEventHarvestTime + 13000)
-
-      const firstTimeSliceHarvestTime = Number(firstAjaxTimeSlicesHarvest.request.query.rst)
-      const secondTimeSliceHarvestTime = Number(secondAjaxTimeSlicesHarvest.request.query.rst)
-      expect(secondTimeSliceHarvestTime).toBeWithin(firstTimeSliceHarvestTime + 3000, firstTimeSliceHarvestTime + 13000)
+      const firstAjaxMetricData = firstAjaxMetricsHarvest
+        .flatMap(harvest => harvest.request.body.xhr)
+        .find(xhr => xhr.params.pathname === '/json')
+      const successfulAjaxMetricsHarvest = secondAjaxMetricsHarvest
+        .find(harvest => harvest.reply.statusCode !== statusCode)
+      checkAjaxMetrics(successfulAjaxMetricsHarvest.request, { specificPath: '/json' })
+      checkAjaxMetrics(successfulAjaxMetricsHarvest.request, { specificPath: '/text' })
+      expect(successfulAjaxMetricsHarvest.request.body.xhr).not.toEqual(expect.arrayContaining([firstAjaxMetricData]))
     })
   )
 })

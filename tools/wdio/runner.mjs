@@ -9,6 +9,7 @@ import { serialize } from '../shared/serializer.js'
 import baseConfig from './config/base.conf.mjs'
 import specsConfig from './config/specs.conf.mjs'
 import lambdaTestConfig from './config/lambdatest.conf.mjs'
+import args from './args.mjs'
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
 
 /**
@@ -28,11 +29,12 @@ const configFilePath = path.join(
   `wdio.conf_${crypto.randomBytes(16).toString('hex')}.mjs`
 )
 
-if (['trace', 'debug', 'info'].indexOf(wdioConfig.logLevel) > -1) {
+if (args.verbose) {
   console.log(`Writing wdio config file to ${configFilePath}`)
 }
 
-fs.ensureDirSync(path.dirname(configFilePath))
+// Clean output directories
+fs.emptyDirSync(path.dirname(configFilePath))
 
 // Clear the CLI params before starting wdio so they are not passed to worker processes
 process.argv.splice(2)

@@ -1,7 +1,18 @@
 import { onlyFirefox } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { checkAjaxEvents, checkAjaxMetrics } from '../../util/basic-checks'
+import { testAjaxEventsRequest, testAjaxTimeSlicesRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 describe('XHR Ajax', () => {
+  let ajaxEventsCapture
+  let ajaxMetricsCapture
+
+  beforeEach(async () => {
+    [ajaxEventsCapture, ajaxMetricsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+      { test: testAjaxEventsRequest },
+      { test: testAjaxTimeSlicesRequest }
+    ])
+  })
+
   it('creates event and metric data for xhr', async () => {
     await browser.url(await browser.testHandle.assetURL('ajax/xhr-simple.html'))
       .then(() => browser.waitForAgentLoad())
@@ -9,20 +20,28 @@ describe('XHR Ajax', () => {
         window.disableAjaxHashChange = true
       }))
 
-    const [ajaxEventsHarvest, ajaxTimeSlicesHarvest] = await Promise.all([
-      browser.testHandle.expectAjaxEvents(),
-      browser.testHandle.expectAjaxTimeSlices(),
+    const [ajaxEventsHarvest, ajaxMetricsHarvest] = await Promise.all([
+      ajaxEventsCapture.waitForResult({ timeout: 10000 }),
+      ajaxMetricsCapture.waitForResult({ timeout: 10000 }),
       $('#sendAjax').click()
     ])
 
-    checkAjaxEvents(ajaxEventsHarvest.request, { specificPath: '/json' })
-    checkAjaxMetrics(ajaxTimeSlicesHarvest.request, { specificPath: '/json' })
+    ajaxEventsHarvest.forEach(harvest =>
+      checkAjaxEvents(harvest.request, { specificPath: '/json' })
+    )
+    ajaxMetricsHarvest.forEach(harvest =>
+      checkAjaxMetrics(harvest.request, { specificPath: '/json', isFetch: true })
+    )
 
-    const ajaxEvent = ajaxEventsHarvest.request.body.find(event => event.path === '/json')
+    const ajaxEvent = ajaxEventsHarvest
+      .flatMap(harvest => harvest.request.body)
+      .find(event => event.path === '/json')
     expect(ajaxEvent.end).toBeGreaterThanOrEqual(ajaxEvent.start)
     expect(ajaxEvent.callbackEnd).toEqual(ajaxEvent.end)
 
-    const ajaxMetric = ajaxTimeSlicesHarvest.request.body.xhr.find(metric => metric.params.pathname === '/json')
+    const ajaxMetric = ajaxMetricsHarvest
+      .flatMap(harvest => harvest.request.body.xhr)
+      .find(metric => metric.params.pathname === '/json')
 
     // Metric duration is not an exact calculation of `end - start`
     const calculatedDuration = ajaxEvent.end - ajaxEvent.start
@@ -36,19 +55,27 @@ describe('XHR Ajax', () => {
         window.disableAjaxHashChange = true
       }))
 
-    const [ajaxEventsHarvest, ajaxTimeSlicesHarvest] = await Promise.all([
-      browser.testHandle.expectAjaxEvents(),
-      browser.testHandle.expectAjaxTimeSlices(),
+    const [ajaxEventsHarvest, ajaxMetricsHarvest] = await Promise.all([
+      ajaxEventsCapture.waitForResult({ timeout: 10000 }),
+      ajaxMetricsCapture.waitForResult({ timeout: 10000 }),
       $('#sendAjax').click()
     ])
 
-    checkAjaxEvents(ajaxEventsHarvest.request, { specificPath: '/paththatdoesnotexist' })
-    checkAjaxMetrics(ajaxTimeSlicesHarvest.request, { specificPath: '/paththatdoesnotexist' })
+    ajaxEventsHarvest.forEach(harvest =>
+      checkAjaxEvents(harvest.request, { specificPath: '/paththatdoesnotexist' })
+    )
+    ajaxMetricsHarvest.forEach(harvest =>
+      checkAjaxMetrics(harvest.request, { specificPath: '/paththatdoesnotexist', isFetch: true })
+    )
 
-    const ajaxEvent = ajaxEventsHarvest.request.body.find(event => event.path === '/paththatdoesnotexist')
+    const ajaxEvent = ajaxEventsHarvest
+      .flatMap(harvest => harvest.request.body)
+      .find(event => event.path === '/paththatdoesnotexist')
     expect(ajaxEvent.status).toEqual(404)
 
-    const ajaxMetric = ajaxTimeSlicesHarvest.request.body.xhr.find(metric => metric.params.pathname === '/paththatdoesnotexist')
+    const ajaxMetric = ajaxMetricsHarvest
+      .flatMap(harvest => harvest.request.body.xhr)
+      .find(metric => metric.params.pathname === '/paththatdoesnotexist')
     expect(ajaxMetric.params.status).toEqual(404)
   })
 
@@ -59,19 +86,27 @@ describe('XHR Ajax', () => {
         window.disableAjaxHashChange = true
       }))
 
-    const [ajaxEventsHarvest, ajaxTimeSlicesHarvest] = await Promise.all([
-      browser.testHandle.expectAjaxEvents(),
-      browser.testHandle.expectAjaxTimeSlices(),
+    const [ajaxEventsHarvest, ajaxMetricsHarvest] = await Promise.all([
+      ajaxEventsCapture.waitForResult({ timeout: 10000 }),
+      ajaxMetricsCapture.waitForResult({ timeout: 10000 }),
       $('#sendAjax').click()
     ])
 
-    checkAjaxEvents(ajaxEventsHarvest.request, { specificPath: '/bizbaz' })
-    checkAjaxMetrics(ajaxTimeSlicesHarvest.request, { specificPath: '/bizbaz' })
+    ajaxEventsHarvest.forEach(harvest =>
+      checkAjaxEvents(harvest.request, { specificPath: '/bizbaz' })
+    )
+    ajaxMetricsHarvest.forEach(harvest =>
+      checkAjaxMetrics(harvest.request, { specificPath: '/bizbaz', isFetch: true })
+    )
 
-    const ajaxEvent = ajaxEventsHarvest.request.body.find(event => event.path === '/bizbaz')
+    const ajaxEvent = ajaxEventsHarvest
+      .flatMap(harvest => harvest.request.body)
+      .find(event => event.path === '/bizbaz')
     expect(ajaxEvent.status).toEqual(0)
 
-    const ajaxMetric = ajaxTimeSlicesHarvest.request.body.xhr.find(metric => metric.params.pathname === '/bizbaz')
+    const ajaxMetric = ajaxMetricsHarvest
+      .flatMap(harvest => harvest.request.body.xhr)
+      .find(metric => metric.params.pathname === '/bizbaz')
     expect(ajaxMetric.params.status).toEqual(0)
   })
 
@@ -82,20 +117,28 @@ describe('XHR Ajax', () => {
         window.disableAjaxHashChange = true
       }))
 
-    const [ajaxEventsHarvest, ajaxTimeSlicesHarvest] = await Promise.all([
-      browser.testHandle.expectAjaxEvents(),
-      browser.testHandle.expectAjaxTimeSlices(),
+    const [ajaxEventsHarvest, ajaxMetricsHarvest] = await Promise.all([
+      ajaxEventsCapture.waitForResult({ timeout: 10000 }),
+      ajaxMetricsCapture.waitForResult({ timeout: 10000 }),
       $('#sendAjax').click()
     ])
 
-    checkAjaxEvents(ajaxEventsHarvest.request, { specificPath: '/json' })
-    checkAjaxMetrics(ajaxTimeSlicesHarvest.request, { specificPath: '/json' })
+    ajaxEventsHarvest.forEach(harvest =>
+      checkAjaxEvents(harvest.request, { specificPath: '/bizbaz' })
+    )
+    ajaxMetricsHarvest.forEach(harvest =>
+      checkAjaxMetrics(harvest.request, { specificPath: '/bizbaz', isFetch: true })
+    )
 
-    const ajaxEvent = ajaxEventsHarvest.request.body.find(event => event.path === '/json')
+    const ajaxEvent = ajaxEventsHarvest
+      .flatMap(harvest => harvest.request.body)
+      .find(event => event.path === '/json')
     // Ajax event should have a 0 callbackDuration when not picked up by the SPA feature
     expect(ajaxEvent.callbackDuration).toEqual(0)
 
-    const ajaxMetric = ajaxTimeSlicesHarvest.request.body.xhr.find(metric => metric.params.pathname === '/json')
+    const ajaxMetric = ajaxMetricsHarvest
+      .flatMap(harvest => harvest.request.body.xhr)
+      .find(metric => metric.params.pathname === '/json')
     // Callback duration can be flaky, but we are expecting around 100 milliseconds
     expect(ajaxMetric.metrics.cbTime.t).toBeWithin(75, 126)
   })
@@ -107,22 +150,23 @@ describe('XHR Ajax', () => {
         window.disableAjaxHashChange = true
       }))
 
-    const [ajaxEventsHarvest, ajaxTimeSlicesHarvest] = await Promise.all([
-      browser.testHandle.expectAjaxEvents(),
-      browser.testHandle.expectAjaxTimeSlices(),
+    const [ajaxEventsHarvest, ajaxMetricsHarvest] = await Promise.all([
+      ajaxEventsCapture.waitForResult({ timeout: 10000 }),
+      ajaxMetricsCapture.waitForResult({ timeout: 10000 }),
       $('#sendAjax').click()
     ])
 
-    checkAjaxEvents(ajaxEventsHarvest.request, { specificPath: '/delayed' })
-    checkAjaxMetrics(ajaxTimeSlicesHarvest.request, { specificPath: '/delayed' })
-
-    const ajaxEvent = ajaxEventsHarvest.request.body.find(event => event.path === '/delayed')
+    const ajaxEvent = ajaxEventsHarvest
+      .flatMap(harvest => harvest.request.body)
+      .find(event => event.path === '/delayed')
     // Ajax event should have a 0 callbackDuration when not picked up by the SPA feature
     expect(ajaxEvent.callbackDuration).toEqual(0)
     // Ajax event should have a 0 status when timed out
     expect(ajaxEvent.status).toEqual(0)
 
-    const ajaxMetric = ajaxTimeSlicesHarvest.request.body.xhr.find(metric => metric.params.pathname === '/delayed')
+    const ajaxMetric = ajaxMetricsHarvest
+      .flatMap(harvest => harvest.request.body.xhr)
+      .find(metric => metric.params.pathname === '/delayed')
     // Callback duration should be 0 since the xhr timed out and the load handlers should not have ran
     expect(ajaxMetric.metrics.cbTime.t).toEqual(0)
     // Ajax metric should have a 0 status when timed out
@@ -136,16 +180,20 @@ describe('XHR Ajax', () => {
         window.disableAjaxHashChange = true
       }))
 
-    const [ajaxEventsHarvest, ajaxTimeSlicesHarvest] = await Promise.all([
-      browser.testHandle.expectAjaxEvents(),
-      browser.testHandle.expectAjaxTimeSlices(),
+    const [ajaxEventsHarvest, ajaxMetricsHarvest] = await Promise.all([
+      ajaxEventsCapture.waitForResult({ timeout: 10000 }),
+      ajaxMetricsCapture.waitForResult({ timeout: 10000 }),
       $('#sendAjax').click()
     ])
 
-    const ajaxEvent = ajaxEventsHarvest.request.body.find(event => event.path === '/delayed')
+    const ajaxEvent = ajaxEventsHarvest
+      .flatMap(harvest => harvest.request.body)
+      .find(event => event.path === '/delayed')
     expect(ajaxEvent).toBeUndefined()
 
-    const ajaxMetric = ajaxTimeSlicesHarvest.request.body.xhr.find(metric => metric.params.pathname === '/delayed')
+    const ajaxMetric = ajaxMetricsHarvest
+      .flatMap(harvest => harvest.request.body.xhr)
+      .find(metric => metric.params.pathname === '/delayed')
     expect(ajaxMetric).toBeUndefined()
   })
 
@@ -153,9 +201,9 @@ describe('XHR Ajax', () => {
     await browser.url(await browser.testHandle.assetURL('instrumented.html'))
       .then(() => browser.waitForAgentLoad())
 
-    const [ajaxEventsHarvest, ajaxTimeSlicesHarvest] = await Promise.all([
-      browser.testHandle.expectAjaxEvents(),
-      browser.testHandle.expectAjaxTimeSlices(),
+    const [ajaxEventsHarvest, ajaxMetricsHarvest] = await Promise.all([
+      ajaxEventsCapture.waitForResult({ timeout: 10000 }),
+      ajaxMetricsCapture.waitForResult({ timeout: 10000 }),
       browser.execute(function () {
         var xhr = new XMLHttpRequest()
         xhr.open('POST', '/echo')
@@ -163,14 +211,22 @@ describe('XHR Ajax', () => {
       })
     ])
 
-    checkAjaxEvents(ajaxEventsHarvest.request, { specificPath: '/echo' })
-    checkAjaxMetrics(ajaxTimeSlicesHarvest.request, { specificPath: '/echo' })
+    ajaxEventsHarvest.forEach(harvest =>
+      checkAjaxEvents(harvest.request, { specificPath: '/echo' })
+    )
+    ajaxMetricsHarvest.forEach(harvest =>
+      checkAjaxMetrics(harvest.request, { specificPath: '/echo', isFetch: true })
+    )
 
-    const ajaxEvent = ajaxEventsHarvest.request.body.find(event => event.path === '/echo')
+    const ajaxEvent = ajaxEventsHarvest
+      .flatMap(harvest => harvest.request.body)
+      .find(event => event.path === '/echo')
     expect(ajaxEvent.requestBodySize).toEqual(13)
     expect(ajaxEvent.responseBodySize).toEqual(13)
 
-    const ajaxMetric = ajaxTimeSlicesHarvest.request.body.xhr.find(metric => metric.params.pathname === '/echo')
+    const ajaxMetric = ajaxMetricsHarvest
+      .flatMap(harvest => harvest.request.body.xhr)
+      .find(metric => metric.params.pathname === '/echo')
     expect(ajaxMetric.metrics.txSize.t).toEqual(13)
     expect(ajaxMetric.metrics.rxSize.t).toEqual(13)
   })
@@ -179,8 +235,8 @@ describe('XHR Ajax', () => {
     await browser.url(await browser.testHandle.assetURL('instrumented.html'))
       .then(() => browser.waitForAgentLoad())
 
-    const [ajaxTimeSlicesHarvest] = await Promise.all([
-      browser.testHandle.expectAjaxTimeSlices(),
+    const [ajaxMetricsHarvest] = await Promise.all([
+      ajaxMetricsCapture.waitForResult({ timeout: 10000 }),
       browser.execute(function () {
         var xhr = new XMLHttpRequest()
         xhr.open('GET', '/xhr_with_cat/1')
@@ -188,7 +244,9 @@ describe('XHR Ajax', () => {
       })
     ])
 
-    const ajaxMetric = ajaxTimeSlicesHarvest.request.body.xhr.find(metric => metric.params.pathname === '/xhr_with_cat/1')
+    const ajaxMetric = ajaxMetricsHarvest
+      .flatMap(harvest => harvest.request.body.xhr)
+      .find(metric => metric.params.pathname === '/xhr_with_cat/1')
     expect(ajaxMetric.params.cat).toEqual('foo')
   })
 
@@ -196,8 +254,8 @@ describe('XHR Ajax', () => {
     await browser.url(await browser.testHandle.assetURL('instrumented.html'))
       .then(() => browser.waitForAgentLoad())
 
-    const [ajaxTimeSlicesHarvest] = await Promise.all([
-      browser.testHandle.expectAjaxTimeSlices(),
+    const [ajaxMetricsHarvest] = await Promise.all([
+      ajaxMetricsCapture.waitForResult({ timeout: 10000 }),
       browser.execute(function (host, port) {
         var xhr = new XMLHttpRequest()
         xhr.open('GET', 'http://' + host + ':' + port + '/xhr_with_cat/1')
@@ -205,7 +263,9 @@ describe('XHR Ajax', () => {
       }, browser.testHandle.bamServerConfig.host, browser.testHandle.bamServerConfig.port)
     ])
 
-    const ajaxMetric = ajaxTimeSlicesHarvest.request.body.xhr.find(metric => metric.params.pathname === '/xhr_with_cat/1')
+    const ajaxMetric = ajaxMetricsHarvest
+      .flatMap(harvest => harvest.request.body.xhr)
+      .find(metric => metric.params.pathname === '/xhr_with_cat/1')
     expect(ajaxMetric.params.cat).toBeUndefined()
   })
 
@@ -213,8 +273,8 @@ describe('XHR Ajax', () => {
     await browser.url(await browser.testHandle.assetURL('instrumented.html'))
       .then(() => browser.waitForAgentLoad())
 
-    const [ajaxTimeSlicesHarvest] = await Promise.all([
-      browser.testHandle.expectAjaxTimeSlices(),
+    const [ajaxMetricsHarvest] = await Promise.all([
+      ajaxMetricsCapture.waitForResult({ timeout: 10000 }),
       browser.execute(function () {
         var xhr = new XMLHttpRequest()
         xhr.open('GET', '/xhr_no_cat')
@@ -222,7 +282,9 @@ describe('XHR Ajax', () => {
       })
     ])
 
-    const ajaxMetric = ajaxTimeSlicesHarvest.request.body.xhr.find(metric => metric.params.pathname === '/xhr_no_cat')
+    const ajaxMetric = ajaxMetricsHarvest
+      .flatMap(harvest => harvest.request.body.xhr)
+      .find(metric => metric.params.pathname === '/xhr_no_cat')
     expect(ajaxMetric.params.cat).toBeUndefined()
   })
 
@@ -230,9 +292,9 @@ describe('XHR Ajax', () => {
     await browser.url(await browser.testHandle.assetURL('instrumented.html'))
       .then(() => browser.waitForAgentLoad())
 
-    const [ajaxEventsHarvest, ajaxTimeSlicesHarvest] = await Promise.all([
-      browser.testHandle.expectAjaxEvents(),
-      browser.testHandle.expectAjaxTimeSlices(),
+    const [ajaxEventsHarvest, ajaxMetricsHarvest] = await Promise.all([
+      ajaxEventsCapture.waitForResult({ timeout: 10000 }),
+      ajaxMetricsCapture.waitForResult({ timeout: 10000 }),
       browser.execute(function () {
         var xhr = new XMLHttpRequest()
         xhr.open('POST', '/postwithhi/arraybufferxhr')
@@ -242,7 +304,9 @@ describe('XHR Ajax', () => {
       })
     ])
 
-    const ajaxEvent = ajaxEventsHarvest.request.body.find(event => event.path === '/postwithhi/arraybufferxhr')
+    const ajaxEvent = ajaxEventsHarvest
+      .flatMap(harvest => harvest.request.body)
+      .find(event => event.path === '/postwithhi/arraybufferxhr')
     // Firefox is different for some reason
     if (browserMatch(onlyFirefox)) {
       expect(ajaxEvent.requestBodySize).toEqual(2)
@@ -251,7 +315,9 @@ describe('XHR Ajax', () => {
     }
     expect(ajaxEvent.responseBodySize).toEqual(3)
 
-    const ajaxMetric = ajaxTimeSlicesHarvest.request.body.xhr.find(metric => metric.params.pathname === '/postwithhi/arraybufferxhr')
+    const ajaxMetric = ajaxMetricsHarvest
+      .flatMap(harvest => harvest.request.body.xhr)
+      .find(metric => metric.params.pathname === '/postwithhi/arraybufferxhr')
     // Firefox is different for some reason
     if (browserMatch(onlyFirefox)) {
       expect(ajaxMetric.metrics.txSize.t).toEqual(2)
@@ -265,9 +331,9 @@ describe('XHR Ajax', () => {
     await browser.url(await browser.testHandle.assetURL('instrumented.html'))
       .then(() => browser.waitForAgentLoad())
 
-    const [ajaxEventsHarvest, ajaxTimeSlicesHarvest] = await Promise.all([
-      browser.testHandle.expectAjaxEvents(),
-      browser.testHandle.expectAjaxTimeSlices(),
+    const [ajaxEventsHarvest, ajaxMetricsHarvest] = await Promise.all([
+      ajaxEventsCapture.waitForResult({ timeout: 10000 }),
+      ajaxMetricsCapture.waitForResult({ timeout: 10000 }),
       browser.execute(function () {
         var xhr = new XMLHttpRequest()
         xhr.open('POST', '/postwithhi/blobxhr')
@@ -277,11 +343,15 @@ describe('XHR Ajax', () => {
       })
     ])
 
-    const ajaxEvent = ajaxEventsHarvest.request.body.find(event => event.path === '/postwithhi/blobxhr')
+    const ajaxEvent = ajaxEventsHarvest
+      .flatMap(harvest => harvest.request.body)
+      .find(event => event.path === '/postwithhi/blobxhr')
     expect(ajaxEvent.requestBodySize).toEqual(3)
     expect(ajaxEvent.responseBodySize).toEqual(3)
 
-    const ajaxMetric = ajaxTimeSlicesHarvest.request.body.xhr.find(metric => metric.params.pathname === '/postwithhi/blobxhr')
+    const ajaxMetric = ajaxMetricsHarvest
+      .flatMap(harvest => harvest.request.body.xhr)
+      .find(metric => metric.params.pathname === '/postwithhi/blobxhr')
     expect(ajaxMetric.metrics.txSize.t).toEqual(3)
     expect(ajaxMetric.metrics.rxSize.t).toEqual(3)
   })
@@ -290,9 +360,9 @@ describe('XHR Ajax', () => {
     await browser.url(await browser.testHandle.assetURL('instrumented.html'))
       .then(() => browser.waitForAgentLoad())
 
-    const [ajaxEventsHarvest, ajaxTimeSlicesHarvest] = await Promise.all([
-      browser.testHandle.expectAjaxEvents(),
-      browser.testHandle.expectAjaxTimeSlices(),
+    const [ajaxEventsHarvest, ajaxMetricsHarvest] = await Promise.all([
+      ajaxEventsCapture.waitForResult({ timeout: 10000 }),
+      ajaxMetricsCapture.waitForResult({ timeout: 10000 }),
       browser.execute(function () {
         var data = new FormData()
         data.append('name', 'bob')
@@ -304,12 +374,16 @@ describe('XHR Ajax', () => {
       })
     ])
 
-    const ajaxEvent = ajaxEventsHarvest.request.body.find(event => event.path === '/formdata')
+    const ajaxEvent = ajaxEventsHarvest
+      .flatMap(harvest => harvest.request.body)
+      .find(event => event.path === '/formdata')
     // We do not attempt to calculate txSize when FormData is used
     expect(ajaxEvent.requestBodySize).toEqual(0)
     expect(ajaxEvent.responseBodySize).toEqual(165)
 
-    const ajaxMetric = ajaxTimeSlicesHarvest.request.body.xhr.find(metric => metric.params.pathname === '/formdata')
+    const ajaxMetric = ajaxMetricsHarvest
+      .flatMap(harvest => harvest.request.body.xhr)
+      .find(metric => metric.params.pathname === '/formdata')
     // We do not attempt to calculate txSize when FormData is used
     expect(ajaxMetric.metrics.txSize).toBeUndefined()
     expect(ajaxMetric.metrics.rxSize.t).toEqual(165)
@@ -319,9 +393,9 @@ describe('XHR Ajax', () => {
     await browser.url(await browser.testHandle.assetURL('instrumented.html'))
       .then(() => browser.waitForAgentLoad())
 
-    const [ajaxEventsHarvest, ajaxTimeSlicesHarvest] = await Promise.all([
-      browser.testHandle.expectAjaxEvents(),
-      browser.testHandle.expectAjaxTimeSlices(),
+    const [ajaxEventsHarvest, ajaxMetricsHarvest] = await Promise.all([
+      ajaxEventsCapture.waitForResult({ timeout: 10000 }),
+      ajaxMetricsCapture.waitForResult({ timeout: 10000 }),
       browser.execute(function () {
         var xhr = new XMLHttpRequest()
         xhr.open('GET', '/gzipped')
@@ -329,10 +403,14 @@ describe('XHR Ajax', () => {
       })
     ])
 
-    const ajaxEvent = ajaxEventsHarvest.request.body.find(event => event.path === '/gzipped')
+    const ajaxEvent = ajaxEventsHarvest
+      .flatMap(harvest => harvest.request.body)
+      .find(event => event.path === '/gzipped')
     expect(ajaxEvent.responseBodySize).toEqual(10000)
 
-    const ajaxMetric = ajaxTimeSlicesHarvest.request.body.xhr.find(metric => metric.params.pathname === '/gzipped')
+    const ajaxMetric = ajaxMetricsHarvest
+      .flatMap(harvest => harvest.request.body.xhr)
+      .find(metric => metric.params.pathname === '/gzipped')
     expect(ajaxMetric.metrics.rxSize.t).toEqual(10000)
   })
 
@@ -340,9 +418,9 @@ describe('XHR Ajax', () => {
     await browser.url(await browser.testHandle.assetURL('instrumented.html'))
       .then(() => browser.waitForAgentLoad())
 
-    const [ajaxEventsHarvest, ajaxTimeSlicesHarvest] = await Promise.all([
-      browser.testHandle.expectAjaxEvents(),
-      browser.testHandle.expectAjaxTimeSlices(),
+    const [ajaxEventsHarvest, ajaxMetricsHarvest] = await Promise.all([
+      ajaxEventsCapture.waitForResult({ timeout: 10000 }),
+      ajaxMetricsCapture.waitForResult({ timeout: 10000 }),
       browser.execute(function () {
         var xhr = new XMLHttpRequest()
         xhr.open('GET', '/chunked')
@@ -350,10 +428,14 @@ describe('XHR Ajax', () => {
       })
     ])
 
-    const ajaxEvent = ajaxEventsHarvest.request.body.find(event => event.path === '/chunked')
+    const ajaxEvent = ajaxEventsHarvest
+      .flatMap(harvest => harvest.request.body)
+      .find(event => event.path === '/chunked')
     expect(ajaxEvent.responseBodySize).toEqual(10000)
 
-    const ajaxMetric = ajaxTimeSlicesHarvest.request.body.xhr.find(metric => metric.params.pathname === '/chunked')
+    const ajaxMetric = ajaxMetricsHarvest
+      .flatMap(harvest => harvest.request.body.xhr)
+      .find(metric => metric.params.pathname === '/chunked')
     expect(ajaxMetric.metrics.rxSize.t).toEqual(10000)
   })
 
@@ -365,7 +447,7 @@ describe('XHR Ajax', () => {
       }))
 
     await Promise.all([
-      browser.testHandle.expectAjaxEvents(),
+      ajaxEventsCapture.waitForResult({ timeout: 10000 }),
       $('#sendAjax').click()
     ])
 
@@ -389,7 +471,7 @@ describe('XHR Ajax', () => {
       }))
 
     await Promise.all([
-      browser.testHandle.expectAjaxEvents(),
+      ajaxEventsCapture.waitForResult({ timeout: 10000 }),
       $('#sendAjax').click()
     ])
 
@@ -411,21 +493,28 @@ describe('XHR Ajax', () => {
         window.disableAjaxHashChange = true
       }))
 
-    const [ajaxEventsHarvest, ajaxTimeSlicesHarvest] = await Promise.all([
-      browser.testHandle.expectAjaxEvents(),
-      browser.testHandle.expectAjaxTimeSlices(),
+    const [ajaxEventsHarvest, ajaxMetricsHarvest] = await Promise.all([
+      ajaxEventsCapture.waitForResult({ timeout: 10000 }),
+      ajaxMetricsCapture.waitForResult({ timeout: 10000 }),
       $('#sendAjax').click()
     ])
 
-    checkAjaxEvents(ajaxEventsHarvest.request, { specificPath: '/json' })
-    checkAjaxMetrics(ajaxTimeSlicesHarvest.request, { specificPath: '/json' })
+    ajaxEventsHarvest.forEach(harvest =>
+      checkAjaxEvents(harvest.request, { specificPath: '/json' })
+    )
+    ajaxMetricsHarvest.forEach(harvest =>
+      checkAjaxMetrics(harvest.request, { specificPath: '/json', isFetch: true })
+    )
 
-    const ajaxEvent = ajaxEventsHarvest.request.body.find(event => event.path === '/json')
+    const ajaxEvent = ajaxEventsHarvest
+      .flatMap(harvest => harvest.request.body)
+      .find(event => event.path === '/json')
     expect(ajaxEvent.end).toBeGreaterThanOrEqual(ajaxEvent.start)
     expect(ajaxEvent.callbackEnd).toEqual(ajaxEvent.end)
 
-    const ajaxMetric = ajaxTimeSlicesHarvest.request.body.xhr.find(metric => metric.params.pathname === '/json')
-
+    const ajaxMetric = ajaxMetricsHarvest
+      .flatMap(harvest => harvest.request.body.xhr)
+      .find(metric => metric.params.pathname === '/json')
     // Metric duration is not an exact calculation of `end - start`
     const calculatedDuration = ajaxEvent.end - ajaxEvent.start
     expect(ajaxMetric.metrics.duration.t).toBeWithin(calculatedDuration - 10, calculatedDuration + 11)
@@ -438,21 +527,28 @@ describe('XHR Ajax', () => {
         window.disableAjaxHashChange = true
       }))
 
-    const [ajaxEventsHarvest, ajaxTimeSlicesHarvest] = await Promise.all([
-      browser.testHandle.expectAjaxEvents(),
-      browser.testHandle.expectAjaxTimeSlices(),
+    const [ajaxEventsHarvest, ajaxMetricsHarvest] = await Promise.all([
+      ajaxEventsCapture.waitForResult({ timeout: 10000 }),
+      ajaxMetricsCapture.waitForResult({ timeout: 10000 }),
       $('#sendAjax').click()
     ])
 
-    checkAjaxEvents(ajaxEventsHarvest.request, { specificPath: '/json' })
-    checkAjaxMetrics(ajaxTimeSlicesHarvest.request, { specificPath: '/json' })
+    ajaxEventsHarvest.forEach(harvest =>
+      checkAjaxEvents(harvest.request, { specificPath: '/json' })
+    )
+    ajaxMetricsHarvest.forEach(harvest =>
+      checkAjaxMetrics(harvest.request, { specificPath: '/json', isFetch: true })
+    )
 
-    const ajaxEvent = ajaxEventsHarvest.request.body.find(event => event.path === '/json')
+    const ajaxEvent = ajaxEventsHarvest
+      .flatMap(harvest => harvest.request.body)
+      .find(event => event.path === '/json')
     expect(ajaxEvent.end).toBeGreaterThanOrEqual(ajaxEvent.start)
     expect(ajaxEvent.callbackEnd).toEqual(ajaxEvent.end)
 
-    const ajaxMetric = ajaxTimeSlicesHarvest.request.body.xhr.find(metric => metric.params.pathname === '/json')
-
+    const ajaxMetric = ajaxMetricsHarvest
+      .flatMap(harvest => harvest.request.body.xhr)
+      .find(metric => metric.params.pathname === '/json')
     // Metric duration is not an exact calculation of `end - start`
     const calculatedDuration = ajaxEvent.end - ajaxEvent.start
     expect(ajaxMetric.metrics.duration.t).toBeWithin(calculatedDuration - 10, calculatedDuration + 11)

@@ -152,14 +152,6 @@ module.exports = class NetworkCapture {
   }
 
   /**
-   * Clears the cached of network captures.
-   * @returns {void}
-   */
-  clear () {
-    this.#captureCache = new Set()
-  }
-
-  /**
    * Destroy all memory references to allow for garbage collection.
    * @returns {void}
    */
@@ -169,7 +161,7 @@ module.exports = class NetworkCapture {
         clearTimeout(deferred.timeout)
       }
       if (deferred.promise) {
-        deferred.reject('Waiting network capture destroyed before resolving')
+        deferred.reject(new Error('Waiting network capture destroyed before resolving'))
       }
     }
     this.#deferredCache.clear()

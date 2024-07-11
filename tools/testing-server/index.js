@@ -177,7 +177,9 @@ class TestServer {
     this.#assetServer.register(require('@fastify/cors'), {
       origin: true,
       credentials: true,
-      exposedHeaders: 'X-NewRelic-App-Data'
+      exposedHeaders: ['X-NewRelic-App-Data', 'Date'],
+      preflightContinue: true,
+      cacheControl: 'no-cache, must-revalidate, proxy-revalidate'
     })
     this.#assetServer.register(require('@fastify/static'), {
       root: paths.rootDir,
@@ -206,7 +208,9 @@ class TestServer {
     this.#bamServer.register(require('@fastify/cors'), {
       origin: true,
       credentials: true,
-      exposedHeaders: ['X-NewRelic-App-Data', 'Date']
+      exposedHeaders: ['X-NewRelic-App-Data', 'Date'],
+      preflightContinue: true,
+      cacheControl: 'no-cache, must-revalidate, proxy-revalidate'
     })
     this.#bamServer.register(require('@fastify/static'), {
       root: paths.rootDir,

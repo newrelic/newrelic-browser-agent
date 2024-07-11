@@ -27,7 +27,9 @@ class TestServerLogger {
   }
 
   logDebugShimMessage (request) {
-    this.#parentLogger.info(`DEBUG [${request.query.testId}](${request.query.ix}): ${request.query.m}`)
+    if (this.#config.debugShim) {
+      this.#parentLogger.info(`DEBUG [${request.query.testId}](${request.query.ix}): ${request.query.m}`)
+    }
   }
 }
 

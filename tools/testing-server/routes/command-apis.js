@@ -89,16 +89,6 @@ module.exports = fp(async function (fastify, testServer) {
       reply.code(400).send(e)
     }
   })
-  fastify.put('/test-handle/:testId/network-capture/:serverId/:captureId/clear', async function (request, reply) {
-    const testHandle = testServer.getTestHandle(request.params.testId)
-
-    try {
-      testHandle.clearNetworkCaptureCache(request.params.serverId, request.params.captureId)
-      reply.code(204).send()
-    } catch (e) {
-      reply.code(400).send(e)
-    }
-  })
   fastify.delete('/test-handle/:testId/network-capture/:serverId/:captureId', async function (request, reply) {
     const testHandle = testServer.getTestHandle(request.params.testId)
 

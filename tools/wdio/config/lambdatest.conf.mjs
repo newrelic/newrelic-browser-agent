@@ -41,10 +41,12 @@ function lambdaTestCapabilities () {
           tunnel: true, // this is always needed as true to prevent conn refusal errors in tests regardless if using underpass (app) tunnel or new on-the-fly tunnel
           w3c: true,
           build: `Browser Agent: ${testBrowser.browserName || testBrowser.device_name} ${testBrowser.browserVersion || testBrowser.version} ${testBrowser.platformName} [${revision}]`,
+          idleTimeout: Math.floor(args.sessionTimeout / 1000),
           ...(args.extendedDebugging
             ? {
-                console: true
-                // network: true -- test failing (bam server doesn't get network request) when enabled; LT investigating
+                console: true,
+                network: true,
+                terminal: true
               }
             : null),
           platformName: testBrowser.platformName
@@ -55,7 +57,7 @@ function lambdaTestCapabilities () {
       if (parsedBrowserName !== 'ios' && parsedBrowserName !== 'android') { // the 4 desktop browsers
         capabilities.browserName = testBrowser.browserName
         capabilities.browserVersion = testBrowser.browserVersion
-        capabilities['LT:Options'].selenium_version = '4.0.0'
+        capabilities['LT:Options'].selenium_version = '4.22.0'
       } else {
         capabilities['LT:Options'].deviceName = testBrowser.device_name
         capabilities['LT:Options'].platformVersion = testBrowser.version
@@ -75,15 +77,7 @@ function lambdaTestCapabilities () {
           }
         } else {
           capabilities['appium:platformName'] = testBrowser.device_name
-
-          // Feature request open with LT to support appium 2.x on android and ios
-          // if (parsedBrowserName === 'android') {
-          //   capabilities['LT:Options'].appiumVersion = '1.22.3'
-          // } else /* === ios */ {
-          if (parsedBrowserName === 'ios') {
-            capabilities['LT:Options'].appiumVersion = '2.6.0'
-            // capabilities['LT:Options'].xcuitestVersion = '7.15.3'
-          }
+          capabilities['LT:Options'].appiumVersion = '2.6.0'
         }
       }
       return capabilities
@@ -102,8 +96,9 @@ export default function config () {
           tunnel: args.tunnel,
           sessionNameFormat: (config, capabilities, suiteTitle, testTitle) => suiteTitle,
           lambdatestOpts: {
-            allowHosts: args.host || 'bam-test-1.nr-local.net',
-            logFile: path.resolve(__dirname, '../../../.lambdatest')
+            // allowHosts: args.host || 'bam-test-1.nr-local.net', // @phousley LT `allowHost` has issues with CORs in firefox
+            logFile: path.resolve(__dirname, '../../../.lambdatest'),
+            verbose: true
           }
         }
       ]

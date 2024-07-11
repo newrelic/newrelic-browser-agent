@@ -1,9 +1,16 @@
 import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { testErrorsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 describe('basic error capturing', () => {
+  let errorsCapture
+
+  beforeEach(async () => {
+    errorsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testErrorsRequest })
+  })
+
   it('should capture errors at various page lifecycle stages and events', async () => {
     const [errors] = await Promise.all([
-      browser.testHandle.expectErrors(),
+      errorsCapture.waitForResult({ totalCount: 1 }),
       browser.url(await browser.testHandle.assetURL('js-error-page-lifecycle.html'))
         .then(() => browser.waitForAgentLoad())
     ])
@@ -42,19 +49,19 @@ describe('basic error capturing', () => {
       ])
     }
 
-    expect(errors.request.body.err.length).toEqual(expected.length)
-    expect(errors.request.body.err).toEqual(expect.arrayContaining(expected))
+    expect(errors[0].request.body.err.length).toEqual(expected.length)
+    expect(errors[0].request.body.err).toEqual(expect.arrayContaining(expected))
   })
 
   it('should capture file and line number for syntax errors', async () => {
     const [errors] = await Promise.all([
-      browser.testHandle.expectErrors(),
+      errorsCapture.waitForResult({ totalCount: 1 }),
       browser.url(await browser.testHandle.assetURL('js-error-syntax-error.html'))
         .then(() => browser.waitForAgentLoad())
     ])
 
     if (browserMatch(notIE)) {
-      expect(errors.request.body.err).toEqual(expect.arrayContaining([
+      expect(errors[0].request.body.err).toEqual(expect.arrayContaining([
         expect.objectContaining({
           params: expect.objectContaining({
             stackHash: 334471736,
@@ -71,7 +78,7 @@ describe('basic error capturing', () => {
         })
       ]))
     } else {
-      expect(errors.request.body.err).toEqual(expect.arrayContaining([
+      expect(errors[0].request.body.err).toEqual(expect.arrayContaining([
         expect.objectContaining({
           params: expect.objectContaining({
             stackHash: 334471735,

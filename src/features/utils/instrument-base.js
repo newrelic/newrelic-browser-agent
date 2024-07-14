@@ -85,7 +85,7 @@ export class InstrumentBase extends FeatureBase {
           session = setupAgentSession(this.agentIdentifier)
         }
       } catch (e) {
-        warn('A problem occurred when starting up session manager. This page will not start or extend any session.', e)
+        warn(20, e)
         this.ee.emit('internal-error', [e])
         if (this.featureName === FEATURE_NAMES.sessionReplay) this.abortHandler?.() // SR should stop recording if session DNE
       }
@@ -105,7 +105,7 @@ export class InstrumentBase extends FeatureBase {
         this.featAggregate = new Aggregate(this.agentIdentifier, this.aggregator, argsObjFromInstrument)
         loadedSuccessfully(true)
       } catch (e) {
-        warn(`Downloading and initializing ${this.featureName} failed...`, e)
+        warn(34, e)
         this.abortHandler?.() // undo any important alterations made to the page
         // not supported yet but nice to do: "abort" this agent's EE for this feature specifically
         drain(this.agentIdentifier, this.featureName, true)

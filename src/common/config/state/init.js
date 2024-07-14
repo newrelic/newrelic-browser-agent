@@ -76,7 +76,7 @@ const model = () => {
       set mask_text_selector (val) {
         if (isValidSelector(val)) hiddenState.mask_selector = `${val},${nrMask}`
         else if (val === '' || val === null) hiddenState.mask_selector = nrMask
-        else warn('An invalid session_replay.mask_selector was provided. \'*\' will be used.', val)
+        else warn(5, val)
       },
       // these properties only have getters because they are enforcable constants and should error if someone tries to override them
       get block_class () { return 'nr-block' },
@@ -89,7 +89,7 @@ const model = () => {
       },
       set block_selector (val) {
         if (isValidSelector(val)) hiddenState.block_selector += `,${val}`
-        else if (val !== '') warn('An invalid session_replay.block_selector was provided and will not be used', val)
+        else if (val !== '') warn(6, val)
       },
       // password: must always be present and true no matter what customer sets
       get mask_input_options () {
@@ -97,7 +97,7 @@ const model = () => {
       },
       set mask_input_options (val) {
         if (val && typeof val === 'object') hiddenState.mask_input_options = { ...val, password: true }
-        else warn('An invalid session_replay.mask_input_option was provided and will not be used', val)
+        else warn(7, val)
       }
     },
     session_trace: { enabled: true, harvestTimeSeconds: 10, autoStart: true },

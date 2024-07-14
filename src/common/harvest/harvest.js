@@ -122,7 +122,7 @@ export class Harvest extends SharedContext {
         body = stringify(body)
       }
       /** Warn --once per endpoint-- if the agent tries to send large payloads */
-      if (body.length > 750000 && (warnings[endpoint] = (warnings?.[endpoint] || 0) + 1) === 1) warn(`The Browser Agent is attempting to send a very large payload to /${endpoint}. This is usually tied to large amounts of custom attributes. Please check your configurations.`)
+      if (body.length > 750000 && (warnings[endpoint] = (warnings?.[endpoint] || 0) + 1) === 1) warn(28, endpoint)
     }
 
     if (!body || body.length === 0 || body === '{}' || body === '[]') {

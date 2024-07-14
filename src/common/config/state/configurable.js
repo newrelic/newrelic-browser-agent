@@ -2,8 +2,8 @@ import { warn } from '../../util/console'
 
 export function getModeledObject (obj, model) {
   try {
-    if (!obj || typeof obj !== 'object') return warn('Setting a Configurable requires an object as input')
-    if (!model || typeof model !== 'object') return warn('Setting a Configurable requires a model to set its initial properties')
+    if (!obj || typeof obj !== 'object') return warn(3)
+    if (!model || typeof model !== 'object') return warn(4)
     // allow getters and setters to pass from model to target
     const output = Object.create(
       Object.getPrototypeOf(model),
@@ -19,11 +19,11 @@ export function getModeledObject (obj, model) {
         else if (typeof obj[key] === 'object' && typeof model[key] === 'object') output[key] = getModeledObject(obj[key], model[key])
         else output[key] = obj[key]
       } catch (e) {
-        warn('An error occurred while setting a property of a Configurable', e)
+        warn(1, e)
       }
     }
     return output
   } catch (err) {
-    warn('An error occured while setting a Configurable', err)
+    warn(2, err)
   }
 }

@@ -30,7 +30,7 @@ export function setTopLevelCallers () {
     let returnVals = []
     Object.values(nr.initializedAgents).forEach(val => {
       if (!val || !val.api) {
-        warn(`Call to api '${fnName}' made before agent fully initialized.`)
+        warn(38, fnName)
       } else if (val.exposed && val.api[fnName]) {
         returnVals.push(val.api[fnName](...args))
       }
@@ -95,11 +95,11 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
   }
   apiInterface.setCustomAttribute = function (name, value, persistAttribute = false) {
     if (typeof name !== 'string') {
-      warn(`Failed to execute setCustomAttribute.\nName must be a string type, but a type of <${typeof name}> was provided.`)
+      warn(39, typeof name)
       return
     }
     if (!(['string', 'number', 'boolean'].includes(typeof value) || value === null)) {
-      warn(`Failed to execute setCustomAttribute.\nNon-null value must be a string, number or boolean type, but a type of <${typeof value}> was provided.`)
+      warn(40, typeof name)
       return
     }
     return appendJsAttribute(name, value, 'setCustomAttribute', persistAttribute)
@@ -111,7 +111,7 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
    */
   apiInterface.setUserId = function (value) {
     if (!(typeof value === 'string' || value === null)) {
-      warn(`Failed to execute setUserId.\nNon-null value must be a string type, but a type of <${typeof value}> was provided.`)
+      warn(41, typeof name)
       return
     }
     return appendJsAttribute('enduser.id', value, 'setUserId', true)
@@ -124,7 +124,7 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
    */
   apiInterface.setApplicationVersion = function (value) {
     if (!(typeof value === 'string' || value === null)) {
-      warn(`Failed to execute setApplicationVersion. Expected <String | null>, but got <${typeof value}>.`)
+      warn(42, typeof value)
       return
     }
     return appendJsAttribute('application.version', value, 'setApplicationVersion', false)
@@ -135,7 +135,7 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
       handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/start/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
       instanceEE.emit('manual-start-all')
     } catch (err) {
-      warn('An unexpected issue occurred', err)
+      warn(23, err)
     }
   }
 
@@ -210,7 +210,7 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
       setAPI(agentIdentifier)
       drain(agentIdentifier, 'api')
     }).catch((err) => {
-      warn('Downloading runtime APIs failed...', err)
+      warn(27, err)
       instanceEE.abort()
     })
   }

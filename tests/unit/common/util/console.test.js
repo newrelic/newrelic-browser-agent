@@ -1,7 +1,7 @@
 import { warn } from '../../../../src/common/util/console'
 
 beforeEach(() => {
-  console.warn = jest.fn()
+  console.debug = jest.fn()
 })
 
 afterEach(() => {
@@ -9,26 +9,26 @@ afterEach(() => {
 })
 
 describe('warn', () => {
-  test('should not call console.warn if it is not a function', () => {
+  test('should not call console.debug if it is not a function', () => {
     const spy = jest.spyOn(console, 'warn')
-    console.warn = undefined
+    console.debug = undefined
     warn('test message')
     expect(spy).not.toHaveBeenCalled()
   })
 
-  test('should call console.warn with a prefixed message', () => {
-    warn('test message')
-    expect(console.warn).toHaveBeenCalledWith('New Relic: test message')
+  test('should call console.debug with a prefixed message', () => {
+    warn(1000)
+    expect(console.debug).toHaveBeenCalledWith('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/warning-codes.md#1000')
   })
 
-  test('should call console.warn with secondary argument if provided', () => {
+  test('should call console.debug with secondary argument if provided', () => {
     const secondary = 'secondary value'
     warn('test message', secondary)
-    expect(console.warn).toHaveBeenCalledWith(secondary)
+    expect(console.debug).toHaveBeenCalledWith(secondary)
   })
 
-  test('should not call console.warn with secondary argument if not provided', () => {
+  test('should not call console.debug with secondary argument if not provided', () => {
     warn('test message')
-    expect(console.warn).toHaveBeenCalledTimes(1)
+    expect(console.debug).toHaveBeenCalledTimes(1)
   })
 })

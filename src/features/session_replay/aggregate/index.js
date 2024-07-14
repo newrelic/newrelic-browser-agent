@@ -394,7 +394,7 @@ export class Aggregate extends AggregateBase {
 
   /** Abort the feature, once aborted it will not resume */
   abort (reason = {}, data) {
-    warn(`SR aborted -- ${reason.message}`)
+    warn(33, reason.message)
     handle(SUPPORTABILITY_METRIC_CHANNEL, [`SessionReplay/Abort/${reason.sm}`, data], undefined, FEATURE_NAMES.metrics, this.ee)
     this.blocked = true
     this.mode = MODE.OFF

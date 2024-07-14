@@ -7,7 +7,6 @@
  * This module is used by: jserrors, spa.
  */
 
-import { LOGGING_FAILURE_MESSAGE } from '../../features/logging/constants'
 import { ee as baseEE, contextId } from '../event-emitter/contextual-ee'
 import { EventContext } from '../event-emitter/event-context'
 import { warn } from '../util/console'
@@ -22,7 +21,7 @@ import { createWrapperWithEmitter as wfn } from './wrap-function'
  */
 // eslint-disable-next-line
 export function wrapLogger(sharedEE, parent, loggerFn, context) {
-  if (!(typeof parent === 'object' && !!parent && typeof loggerFn === 'string' && !!loggerFn && typeof parent[loggerFn] === 'function')) return warn(LOGGING_FAILURE_MESSAGE + 'invalid argument(s)')
+  if (!(typeof parent === 'object' && !!parent && typeof loggerFn === 'string' && !!loggerFn && typeof parent[loggerFn] === 'function')) return warn(29)
   const ee = scopedEE(sharedEE)
   const wrapFn = wfn(ee)
 

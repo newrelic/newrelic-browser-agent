@@ -26,7 +26,7 @@ describe('setAPI', () => {
     setConfiguration(agentId, {})
     setRuntime(agentId, {})
 
-    console.warn = jest.fn()
+    console.debug = jest.fn()
     jest.spyOn(handleModule, 'handle')
 
     instanceEE = ee.get(agentId)
@@ -275,16 +275,16 @@ describe('setAPI', () => {
       const args = [name, faker.string.uuid()]
       apiInterface.setCustomAttribute(...args)
 
-      expect(console.warn).toHaveBeenCalledTimes(1)
-      expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('Name must be a string type'))
+      expect(console.debug).toHaveBeenCalledTimes(2)
+      expect(console.debug).toHaveBeenCalledWith(expect.stringContaining('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/warning-codes.md#39'))
     })
 
     test.each([undefined, {}, [], Symbol('foobar')])('should return early and warn when value is not a string, number, or null (%s)', (value) => {
       const args = [faker.string.uuid(), value]
       apiInterface.setCustomAttribute(...args)
 
-      expect(console.warn).toHaveBeenCalledTimes(1)
-      expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('Non-null value must be a string, number or boolean type'))
+      expect(console.debug).toHaveBeenCalledTimes(2)
+      expect(console.debug).toHaveBeenCalledWith(expect.stringContaining('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/warning-codes.md#40'))
     })
 
     test('should set a custom attribute with a string value', () => {
@@ -386,8 +386,8 @@ describe('setAPI', () => {
       const args = [value]
       apiInterface.setUserId(...args)
 
-      expect(console.warn).toHaveBeenCalledTimes(1)
-      expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('Non-null value must be a string type'))
+      expect(console.debug).toHaveBeenCalledTimes(2)
+      expect(console.debug).toHaveBeenCalledWith(expect.stringContaining('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/warning-codes.md#41'))
     })
 
     test('should set a custom attribute with name enduser.id', () => {
@@ -437,8 +437,8 @@ describe('setAPI', () => {
       const args = [value]
       apiInterface.setApplicationVersion(...args)
 
-      expect(console.warn).toHaveBeenCalledTimes(1)
-      expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('Expected <String | null>'))
+      expect(console.debug).toHaveBeenCalledTimes(2)
+      expect(console.debug).toHaveBeenCalledWith(expect.stringContaining('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/warning-codes.md#42'))
     })
 
     test('should set a custom attribute with name application.version', () => {
@@ -494,7 +494,7 @@ describe('setAPI', () => {
 
       expect(instanceEE.emit).toHaveBeenCalledWith('manual-start-all')
       expect(instanceEE.emit).not.toHaveBeenCalledWith(badFeatureName)
-      expect(console.warn).not.toHaveBeenCalled()
+      expect(console.debug).not.toHaveBeenCalled()
     })
   })
 

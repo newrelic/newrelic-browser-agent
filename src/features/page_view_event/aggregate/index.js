@@ -130,7 +130,7 @@ export class Aggregate extends AggregateBase {
           handle(SUPPORTABILITY_METRIC_CHANNEL, ['PVE/NRTime/Calculation/Failed'], undefined, FEATURE_NAMES.metrics, this.ee)
           drain(this.agentIdentifier, FEATURE_NAMES.metrics, true)
           this.ee.abort()
-          warn('Could not calculate New Relic server time. Agent shutting down.', error)
+          warn(17, error)
           return
         }
 
@@ -141,7 +141,7 @@ export class Aggregate extends AggregateBase {
           this.drain()
         } catch (err) {
           this.ee.abort()
-          warn('RUM call failed. Agent shutting down.', err)
+          warn(18, err)
         }
       }
     })

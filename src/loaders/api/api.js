@@ -57,10 +57,12 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
   var spaPrefix = prefix + 'ixn-'
 
   apiInterface.log = function (message, { customAttributes = {}, level = LOG_LEVELS.INFO } = {}) {
+    handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/log/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
     bufferLog(instanceEE, message, customAttributes, level)
   }
 
   apiInterface.wrapLogger = (parent, functionName, { customAttributes = {}, level = LOG_LEVELS.INFO } = {}) => {
+    handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/wrapLogger/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
     wrapLogger(instanceEE, parent, functionName, { customAttributes, level })
   }
 

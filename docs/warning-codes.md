@@ -5,7 +5,7 @@
 `An error occurred while setting a property of a Configurable`
 ### 2
 `An error occured while setting a Configurable`
-    ### 3
+### 3
 `Setting a Configurable requires an object as input`
 ### 4
 `Setting a Configurable requires a model to set its initial properties`

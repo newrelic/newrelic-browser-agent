@@ -99,7 +99,7 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
       return
     }
     if (!(['string', 'number', 'boolean'].includes(typeof value) || value === null)) {
-      warn(40, typeof name)
+      warn(40, typeof value)
       return
     }
     return appendJsAttribute(name, value, 'setCustomAttribute', persistAttribute)
@@ -111,7 +111,7 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
    */
   apiInterface.setUserId = function (value) {
     if (!(typeof value === 'string' || value === null)) {
-      warn(41, typeof name)
+      warn(41, typeof value)
       return
     }
     return appendJsAttribute('enduser.id', value, 'setUserId', true)

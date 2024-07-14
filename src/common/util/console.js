@@ -6,6 +6,5 @@
  */
 export function warn (code, secondary) {
   if (typeof console.debug !== 'function') return
-  console.debug(`New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/warning-codes.md#${code}`)
-  if (secondary) console.debug(secondary)
+  console.debug(`New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/warning-codes.md#${code}`, secondary)
 }

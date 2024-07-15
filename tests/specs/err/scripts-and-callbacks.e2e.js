@@ -1,11 +1,18 @@
 const { onlyIE, notIE } = require('../../../tools/browser-matcher/common-matchers.mjs')
 const { assertExpectedErrors, assertErrorAttributes } = require('./assertion-helper')
+const { testErrorsRequest } = require('../../../tools/testing-server/utils/expect-tests')
 
 describe('JSE Error detection in various callbacks', () => {
+  let errorsCapture
+
+  beforeEach(async () => {
+    errorsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testErrorsRequest })
+  })
+
   it('should report errors from event listener callbacks', async () => {
     const eventListenersURL = await browser.testHandle.assetURL('event-listener-error.html')
-    const [{ request: { body: errorBody } }] = await Promise.all([
-      browser.testHandle.expectErrors(),
+    const [[{ request: { body: errorBody } }]] = await Promise.all([
+      errorsCapture.waitForResult({ totalCount: 1 }),
       browser.url(eventListenersURL)
         .then(() => browser.waitForAgentLoad())
     ])
@@ -39,8 +46,8 @@ describe('JSE Error detection in various callbacks', () => {
 
   it('should report uncaught errors from external scripts', async () => {
     const pageUrl = await browser.testHandle.assetURL('external-uncaught-error.html')
-    const [{ request: { body: errorBody, query: errorQuery } }] = await Promise.all([
-      browser.testHandle.expectErrors(),
+    const [[{ request: { body: errorBody, query: errorQuery } }]] = await Promise.all([
+      errorsCapture.waitForResult({ totalCount: 1 }),
       browser.url(pageUrl)
         .then(() => browser.waitForAgentLoad())
     ])
@@ -51,8 +58,8 @@ describe('JSE Error detection in various callbacks', () => {
 
   it('should report uncaught errors from inline scripts', async () => {
     const pageUrl = await browser.testHandle.assetURL('inline-uncaught-error.html')
-    const [{ request: { body: errorBody, query: errorQuery } }] = await Promise.all([
-      browser.testHandle.expectErrors(),
+    const [[{ request: { body: errorBody, query: errorQuery } }]] = await Promise.all([
+      errorsCapture.waitForResult({ totalCount: 1 }),
       browser.url(pageUrl)
         .then(() => browser.waitForAgentLoad())
     ])
@@ -63,8 +70,8 @@ describe('JSE Error detection in various callbacks', () => {
 
   it.withBrowsersMatching(onlyIE)('should report errors from setImmediate callbacks', async () => {
     const pageUrl = await browser.testHandle.assetURL('set-immediate-error.html')
-    const [{ request: { body: errorBody } }] = await Promise.all([
-      browser.testHandle.expectErrors(),
+    const [[{ request: { body: errorBody } }]] = await Promise.all([
+      errorsCapture.waitForResult({ totalCount: 1 }),
       browser.url(pageUrl)
         .then(() => browser.waitForAgentLoad())
         .then(() => browser.waitUntil(
@@ -92,8 +99,8 @@ describe('JSE Error detection in various callbacks', () => {
 
   it('should report errors from setInterval callbacks', async () => {
     const pageUrl = await browser.testHandle.assetURL('set-interval-error.html')
-    const [{ request: { body: errorBody } }] = await Promise.all([
-      browser.testHandle.expectErrors(),
+    const [[{ request: { body: errorBody } }]] = await Promise.all([
+      errorsCapture.waitForResult({ totalCount: 1 }),
       browser.url(pageUrl)
         .then(() => browser.waitForAgentLoad())
         .then(() => browser.waitUntil(
@@ -121,8 +128,8 @@ describe('JSE Error detection in various callbacks', () => {
 
   it('should report errors from setTimeout callbacks', async () => {
     const pageUrl = await browser.testHandle.assetURL('set-timeout-error.html')
-    const [{ request: { body: errorBody } }] = await Promise.all([
-      browser.testHandle.expectErrors(),
+    const [[{ request: { body: errorBody } }]] = await Promise.all([
+      errorsCapture.waitForResult({ totalCount: 1 }),
       browser.url(pageUrl)
         .then(() => browser.waitForAgentLoad())
         .then(() => browser.waitUntil(
@@ -151,8 +158,8 @@ describe('JSE Error detection in various callbacks', () => {
 
   it('should report uncaught errors in callbacks', async () => {
     const pageUrl = await browser.testHandle.assetURL('uncaught.html')
-    const [{ request: { body: errorBody } }] = await Promise.all([
-      browser.testHandle.expectErrors(),
+    const [[{ request: { body: errorBody } }]] = await Promise.all([
+      errorsCapture.waitForResult({ totalCount: 1 }),
       browser.url(pageUrl)
         .then(() => browser.waitForAgentLoad())
     ])
@@ -177,8 +184,8 @@ describe('JSE Error detection in various callbacks', () => {
 
   it.withBrowsersMatching(notIE)('should report unhandledPromiseRejections that are readable', async () => {
     const pageUrl = await browser.testHandle.assetURL('unhandled-promise-rejection-readable.html')
-    const [{ request: { body: errorBody, query: errorQuery } }] = await Promise.all([
-      browser.testHandle.expectErrors(),
+    const [[{ request: { body: errorBody, query: errorQuery } }]] = await Promise.all([
+      errorsCapture.waitForResult({ totalCount: 1 }),
       browser.url(pageUrl)
         .then(() => browser.waitForAgentLoad())
     ])
@@ -211,8 +218,8 @@ describe('JSE Error detection in various callbacks', () => {
 
   it('should report errors from XHR callbacks', async () => {
     const pageUrl = await browser.testHandle.assetURL('xhr-error.html')
-    const [{ request: { body: errorBody, query: errorQuery } }] = await Promise.all([
-      browser.testHandle.expectErrors(),
+    const [[{ request: { body: errorBody, query: errorQuery } }]] = await Promise.all([
+      errorsCapture.waitForResult({ totalCount: 1 }),
       browser.url(pageUrl)
         .then(() => browser.waitForAgentLoad())
     ])

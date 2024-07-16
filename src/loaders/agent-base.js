@@ -25,7 +25,7 @@ export class AgentBase {
    * @param  {...any} args
    */
   #callMethod (methodName, ...args) {
-    if (typeof this.api?.[methodName] !== 'function') warn(`Call to agent api ${methodName} failed. The API is not currently initialized.`)
+    if (typeof this.api?.[methodName] !== 'function') warn(35, methodName)
     else return this.api[methodName](...args)
   }
 

@@ -56,7 +56,7 @@ export function wrapXhr (sharedEE) {
       ee.emit('new-xhr', [xhr], context)
       xhr.addEventListener(READY_STATE_CHANGE, wrapXHR(context), eventListenerOpts(false))
     } catch (e) {
-      warn('An error occurred while intercepting XHR', e)
+      warn(15, e)
       try {
         ee.emit('internal-error', [e])
       } catch (err) {

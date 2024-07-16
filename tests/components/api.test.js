@@ -26,7 +26,7 @@ describe('setAPI', () => {
     setConfiguration(agentId, {})
     setRuntime(agentId, {})
 
-    console.warn = jest.fn()
+    console.debug = jest.fn()
     jest.spyOn(handleModule, 'handle')
 
     instanceEE = ee.get(agentId)
@@ -275,16 +275,16 @@ describe('setAPI', () => {
       const args = [name, faker.string.uuid()]
       apiInterface.setCustomAttribute(...args)
 
-      expect(console.warn).toHaveBeenCalledTimes(1)
-      expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('Name must be a string type'))
+      expect(console.debug).toHaveBeenCalledTimes(1)
+      expect(console.debug).toHaveBeenCalledWith(expect.stringContaining('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/warning-codes.md#39'), typeof name)
     })
 
     test.each([undefined, {}, [], Symbol('foobar')])('should return early and warn when value is not a string, number, or null (%s)', (value) => {
       const args = [faker.string.uuid(), value]
       apiInterface.setCustomAttribute(...args)
 
-      expect(console.warn).toHaveBeenCalledTimes(1)
-      expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('Non-null value must be a string, number or boolean type'))
+      expect(console.debug).toHaveBeenCalledTimes(1)
+      expect(console.debug).toHaveBeenCalledWith(expect.stringContaining('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/warning-codes.md#40'), typeof value)
     })
 
     test('should set a custom attribute with a string value', () => {
@@ -386,8 +386,8 @@ describe('setAPI', () => {
       const args = [value]
       apiInterface.setUserId(...args)
 
-      expect(console.warn).toHaveBeenCalledTimes(1)
-      expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('Non-null value must be a string type'))
+      expect(console.debug).toHaveBeenCalledTimes(1)
+      expect(console.debug).toHaveBeenCalledWith(expect.stringContaining('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/warning-codes.md#41'), typeof value)
     })
 
     test('should set a custom attribute with name enduser.id', () => {
@@ -437,8 +437,8 @@ describe('setAPI', () => {
       const args = [value]
       apiInterface.setApplicationVersion(...args)
 
-      expect(console.warn).toHaveBeenCalledTimes(1)
-      expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('Expected <String | null>'))
+      expect(console.debug).toHaveBeenCalledTimes(1)
+      expect(console.debug).toHaveBeenCalledWith(expect.stringContaining('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/warning-codes.md#42'), typeof value)
     })
 
     test('should set a custom attribute with name application.version', () => {
@@ -494,7 +494,7 @@ describe('setAPI', () => {
 
       expect(instanceEE.emit).toHaveBeenCalledWith('manual-start-all')
       expect(instanceEE.emit).not.toHaveBeenCalledWith(badFeatureName)
-      expect(console.warn).not.toHaveBeenCalled()
+      expect(console.debug).not.toHaveBeenCalled()
     })
   })
 
@@ -576,9 +576,9 @@ describe('setAPI', () => {
         myLoggerPackage.myObservedLogger('test1')
 
         expect(myLoggerPackage.myObservedLogger).toHaveBeenCalled()
-        expect(instanceEE.emit).toHaveBeenCalledTimes(3) // drain, start, end
+        expect(instanceEE.emit).toHaveBeenCalledTimes(4) // drain, start, end, SM
 
-        const endEmit = instanceEE.emit.mock.calls[2]
+        const endEmit = instanceEE.emit.mock.calls[3]
         expect(endEmit[0]).toEqual('wrap-logger-end')
         expect(endEmit[1][0]).toEqual(['test1'])
         expect(endEmit[2].level).toEqual('INFO')
@@ -587,7 +587,7 @@ describe('setAPI', () => {
         myLoggerPackage.myUnobservedLogger('test1')
 
         expect(myLoggerPackage.myUnobservedLogger).toHaveBeenCalled()
-        expect(instanceEE.emit).toHaveBeenCalledTimes(3) // still at 3 from last call
+        expect(instanceEE.emit).toHaveBeenCalledTimes(4) // still at 4 from last call
       })
 
       test('should emit events for calls by wrapped function - specified', () => {
@@ -601,9 +601,9 @@ describe('setAPI', () => {
         myLoggerPackage[randomMethodName]('test1')
 
         expect(myLoggerPackage[randomMethodName]).toHaveBeenCalled()
-        expect(instanceEE.emit).toHaveBeenCalledTimes(3) // drain, start, end
+        expect(instanceEE.emit).toHaveBeenCalledTimes(4) // drain, start, end, SM
 
-        const endEmit = instanceEE.emit.mock.calls[2]
+        const endEmit = instanceEE.emit.mock.calls[3]
         expect(endEmit[0]).toEqual('wrap-logger-end')
         expect(endEmit[1][0]).toEqual(['test1'])
         expect(endEmit[2].level).toEqual('warn')
@@ -620,9 +620,9 @@ describe('setAPI', () => {
         myLoggerPackage[randomMethodName]('test1', { test2: 2 }, ['test3'], true, 1)
 
         expect(myLoggerPackage[randomMethodName]).toHaveBeenCalled()
-        expect(instanceEE.emit).toHaveBeenCalledTimes(3) // drain, start, end
+        expect(instanceEE.emit).toHaveBeenCalledTimes(4) // drain, start, end, SM
 
-        const endEmit = instanceEE.emit.mock.calls[2]
+        const endEmit = instanceEE.emit.mock.calls[3]
         expect(endEmit[0]).toEqual('wrap-logger-end')
         expect(endEmit[1][0]).toEqual(['test1', { test2: 2 }, ['test3'], true, 1])
         expect(endEmit[2].level).toEqual('INFO')
@@ -664,21 +664,28 @@ describe('setAPI', () => {
           const args = ['message', { customAttributes: { test: 1 }, level: logMethod }]
           apiInterface.log(...args)
 
-          expect(handleModule.handle).toHaveBeenCalledTimes(2)
+          expect(handleModule.handle).toHaveBeenCalledTimes(3)
 
           const firstEmit = handleModule.handle.mock.calls[0]
           expect(firstEmit[0]).toEqual(SUPPORTABILITY_METRIC_CHANNEL)
-          expect(firstEmit[1]).toEqual([`API/logging/${logMethod.toLowerCase().replace('log', '')}/called`])
+          expect(firstEmit[1]).toEqual(['API/log/called'])
           expect(firstEmit[2]).toBeUndefined()
           expect(firstEmit[3]).toEqual(FEATURE_NAMES.metrics)
           expect(firstEmit[4]).toEqual(instanceEE)
 
           const secondEmit = handleModule.handle.mock.calls[1]
-          expect(secondEmit[0]).toEqual('log')
-          expect(secondEmit[1]).toEqual([expect.any(Number), args[0], args[1].customAttributes, logMethod.replace('log', '')])
+          expect(secondEmit[0]).toEqual(SUPPORTABILITY_METRIC_CHANNEL)
+          expect(secondEmit[1]).toEqual([`API/logging/${logMethod.toLowerCase().replace('log', '')}/called`])
           expect(secondEmit[2]).toBeUndefined()
-          expect(secondEmit[3]).toEqual(FEATURE_NAMES.logging)
+          expect(secondEmit[3]).toEqual(FEATURE_NAMES.metrics)
           expect(secondEmit[4]).toEqual(instanceEE)
+
+          const thirdEmit = handleModule.handle.mock.calls[2]
+          expect(thirdEmit[0]).toEqual('log')
+          expect(thirdEmit[1]).toEqual([expect.any(Number), args[0], args[1].customAttributes, logMethod.replace('log', '')])
+          expect(thirdEmit[2]).toBeUndefined()
+          expect(thirdEmit[3]).toEqual(FEATURE_NAMES.logging)
+          expect(thirdEmit[4]).toEqual(instanceEE)
         })
       })
     })

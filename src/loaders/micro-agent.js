@@ -61,11 +61,11 @@ export class MicroAgent extends AgentBase {
       if (features === undefined) features = featNames
       else {
         features = Array.isArray(features) && features.length ? features : [features]
-        if (features.some(f => !featNames.includes(f))) return warn(`Invalid feature name supplied. Acceptable feature names are: ${featNames}`)
+        if (features.some(f => !featNames.includes(f))) return warn(37, featNames)
         if (!features.includes(FEATURE_NAMES.pageViewEvent)) features.push(FEATURE_NAMES.pageViewEvent)
       }
     } catch (err) {
-      warn('An unexpected issue occurred', err)
+      warn(23, err)
     }
 
     try {
@@ -75,7 +75,7 @@ export class MicroAgent extends AgentBase {
         // a biproduct of doing this is that the "session manager" is automatically handled through importing this feature
         this.features.page_view_event = new PVE(this.agentIdentifier, this.sharedAggregator)
       } catch (err) {
-        warn('Something prevented the agent from instrumenting.', err)
+        warn(24, err)
       }
 
       onWindowLoad(() => {
@@ -87,13 +87,13 @@ export class MicroAgent extends AgentBase {
             }).then(({ Aggregate }) => {
               this.features[f] = new Aggregate(this.agentIdentifier, this.sharedAggregator)
             }).catch(err =>
-              warn('Something prevented the agent from being downloaded.', err))
+              warn(25, err))
           }
         })
       })
       return true
     } catch (err) {
-      warn('Failed to initialize instrument classes.', err)
+      warn(26, err)
       return false
     }
   }

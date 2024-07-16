@@ -318,7 +318,7 @@ describe('_send', () => {
     const result = harvestInstance._send(spec)
 
     expect(result).toEqual(true)
-    expect(warn).toHaveBeenCalledWith(expect.stringContaining('The Browser Agent is attempting to send a very large payload'))
+    expect(warn).toHaveBeenCalledWith(28, expect.any(String))
     expect(warn).toHaveBeenCalledTimes(1)
 
     const result2 = harvestInstance._send(spec)

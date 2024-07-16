@@ -13,7 +13,6 @@ import { Instrument as PageViewEvent } from '../features/page_view_event/instrum
 import { Aggregator } from '../common/aggregate/aggregator'
 import { gosNREUM, setNREUMInitializedAgent } from '../common/window/nreum'
 import { warn } from '../common/util/console'
-import { stringify } from '../common/util/stringify'
 import { globalScope } from '../common/constants/runtime'
 
 /**
@@ -31,7 +30,7 @@ export class Agent extends AgentBase {
     if (!globalScope) {
       // We could not determine the runtime environment. Short-circuite the agent here
       // to avoid possible exceptions later that may cause issues with customer's application.
-      warn('Failed to initialize the agent. Could not determine the runtime environment.')
+      warn(21)
       return
     }
 
@@ -74,12 +73,12 @@ export class Agent extends AgentBase {
 
         const dependencies = getFeatureDependencyNames(InstrumentCtor.featureName)
         const hasAllDeps = dependencies.every(featName => featName in this.features) // any other feature(s) this depends on should've been initialized on prior iterations by priority order
-        if (!hasAllDeps) warn(`${InstrumentCtor.featureName} is enabled but one or more dependent features has not been initialized (${stringify(dependencies)}). This may cause unintended consequences or missing data...`)
+        if (!hasAllDeps) warn(36, InstrumentCtor.featureName)
 
         this.features[InstrumentCtor.featureName] = new InstrumentCtor(this.agentIdentifier, this.sharedAggregator)
       })
     } catch (err) {
-      warn('Failed to initialize all enabled instrument classes (agent aborted) -', err)
+      warn(22, err)
       for (const featName in this.features) { // this.features hold only features that have been instantiated
         this.features[featName].abortHandler?.()
       }

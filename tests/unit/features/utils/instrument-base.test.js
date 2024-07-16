@@ -126,7 +126,7 @@ test('no uncaught async exception is thrown when an import fails', async () => {
   const windowLoadCallback = jest.mocked(onWindowLoad).mock.calls[0][0]
   await windowLoadCallback()
 
-  expect(warn).toHaveBeenCalledWith(expect.stringContaining(`Downloading and initializing ${featureName} failed`), expect.any(Error))
+  expect(warn).toHaveBeenCalledWith(34, expect.any(Error))
   expect(instrument.abortHandler).toHaveBeenCalled()
   expect(drain).toHaveBeenCalledWith(agentIdentifier, featureName, true)
   await expect(instrument.onAggregateImported).resolves.toBe(false)

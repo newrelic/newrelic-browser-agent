@@ -124,6 +124,6 @@ describe('session trace', () => {
       expect(traceAggregate.traceStorage.trace.visibilitychange[0].s).not.toEqual(traceAggregate.traceStorage.trace.visibilitychange[1].s) // should not have same start times
       expect(traceAggregate.traceStorage.prevStoredEvents.size).toEqual(2)
       done()
-    }, 1)
+    }, 100)
   })
 })

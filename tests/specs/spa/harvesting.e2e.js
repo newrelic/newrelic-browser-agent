@@ -1,5 +1,6 @@
 import { checkSpa } from '../../util/basic-checks'
 import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { testInteractionEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 describe('spa harvesting', () => {
   it('should set correct customEnd value on multiple custom interactions', async () => {
@@ -167,6 +168,19 @@ describe('spa harvesting', () => {
         })
       ]
     }))
+  })
+
+  it('hashchange during page load', async () => {
+    const browserIxnsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testInteractionEventsRequest })
+    const url = await browser.testHandle.assetURL('spa/hashchange-during-page-load.html')
+
+    const [ixns] = await Promise.all([
+      browserIxnsCapture.waitForResult({ totalCount: 1 }),
+      browser.url(url).then(() => browser.waitForAgentLoad())
+    ])
+    const interactionTree = ixns[0].request.body[0]
+    expect(interactionTree.trigger).toEqual('initialPageLoad')
+    expect(interactionTree.newURL).not.toEqual(interactionTree.oldURL)
   })
 
   it('Spa does not prevent the bubbling of events', async () => {

@@ -47,7 +47,7 @@ function updateLatestVersions (deskPlatforms) {
  */
 function updateMobileVersions (mobilePlatforms) {
   const MIN_SUPPORTED_IOS = Math.floor(browserslistMinVersion('last 10 iOS versions')) // LT ios versions don't align exactly with browserlist
-  const MIN_SUPPORTED_ANDROID = 9.0 // LT should have at least 1 android 9 spec
+  // const MIN_SUPPORTED_ANDROID = 13.0
   const testedMobileVersionsJson = {}
 
   const iosDevices = mobilePlatforms.find(p => p.platform === 'ios')?.devices
@@ -78,8 +78,8 @@ function updateMobileVersions (mobilePlatforms) {
   })
   const ascOrderVersions = Object.keys(versionIndexedSpecs).map(verStr => Number(verStr)).sort((a, b) => a - b)
   const testedAndroidVersions = [
-    versionIndexedSpecs[ascOrderVersions.pop()][0], // grab first device spec off latest version
-    versionIndexedSpecs[MIN_SUPPORTED_ANDROID][0]
+    versionIndexedSpecs[ascOrderVersions.pop()][0] // grab first device spec off latest version
+    // versionIndexedSpecs[MIN_SUPPORTED_ANDROID][0]
   ]
   testedAndroidVersions.forEach(ltFormatSpec => { ltFormatSpec.platformName = 'android' })
   testedMobileVersionsJson.android = testedAndroidVersions

@@ -49,16 +49,16 @@ export function validateRules (rules) {
   var invalidRegexDetected = false
   for (var i = 0; i < rules.length; i++) {
     if (!('regex' in rules[i])) {
-      warn('An obfuscation replacement rule was detected missing a "regex" value.')
+      warn(12)
       invalidRegexDetected = true
     } else if (typeof rules[i].regex !== 'string' && !(rules[i].regex instanceof RegExp)) {
-      warn('An obfuscation replacement rule contains a "regex" value with an invalid type (must be a string or RegExp)')
+      warn(13)
       invalidRegexDetected = true
     }
 
     var replacement = rules[i].replacement
     if (replacement && typeof replacement !== 'string') {
-      warn('An obfuscation replacement rule contains a "replacement" value with an invalid type (must be a string)')
+      warn(14)
       invalidReplacementDetected = true
     }
   }

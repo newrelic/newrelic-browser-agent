@@ -182,7 +182,7 @@ export class SessionEntity {
 
       return obj
     } catch (e) {
-      warn('Failed to read from storage API', e)
+      warn(10, e)
       // storage is inaccessible
       return {}
     }
@@ -208,7 +208,7 @@ export class SessionEntity {
       return data
     } catch (e) {
       // storage is inaccessible
-      warn('Failed to write to the storage API', e)
+      warn(11, e)
       return null
     }
   }

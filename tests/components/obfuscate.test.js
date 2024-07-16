@@ -139,9 +139,7 @@ describe('validateRules', () => {
     }]
 
     expect(obfuscateModule.validateRules(newRules)).toEqual(false)
-    expect(consolModule.warn).toHaveBeenCalledWith(expect.stringContaining(
-      'contains a "regex" value with an invalid type'
-    ))
+    expect(consolModule.warn).toHaveBeenCalledWith(13)
   })
 
   test('should warn about a missing regex with value', () => {
@@ -150,9 +148,7 @@ describe('validateRules', () => {
     }]
 
     expect(obfuscateModule.validateRules(newRules)).toEqual(false)
-    expect(consolModule.warn).toHaveBeenCalledWith(expect.stringContaining(
-      'missing a "regex" value'
-    ))
+    expect(consolModule.warn).toHaveBeenCalledWith(12)
   })
 
   test.each([
@@ -166,8 +162,6 @@ describe('validateRules', () => {
     }]
 
     expect(obfuscateModule.validateRules(newRules)).toEqual(false)
-    expect(consolModule.warn).toHaveBeenCalledWith(expect.stringContaining(
-      'contains a "replacement" value with an invalid type'
-    ))
+    expect(consolModule.warn).toHaveBeenCalledWith(14)
   })
 })

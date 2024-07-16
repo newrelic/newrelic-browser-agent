@@ -112,11 +112,11 @@ describe('logging aggregate component tests', () => {
       loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'x'.repeat(1024 * 1024), { myAttributes: 1 }, 'ERROR'])
       expect(handleModule.handle).toHaveBeenCalledWith('storeSupportabilityMetrics', ['Logging/Harvest/Failed/Seen', expect.any(Number)])
       expect(handleModule.handle).toHaveBeenCalledTimes(1)
-      expect(warn).toHaveBeenCalledWith('ignored log: > 1000000 bytes: ', 'xxxxxxxxxxxxxxxxxxxxxxxxx...')
+      expect(warn).toHaveBeenCalledWith(31, 'xxxxxxxxxxxxxxxxxxxxxxxxx...')
       loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'short message, long attrs', { myAttributes: 'x'.repeat(1024 * 1024) }, 'ERROR'])
       expect(handleModule.handle).toHaveBeenCalledWith('storeSupportabilityMetrics', ['Logging/Harvest/Failed/Seen', expect.any(Number)])
       expect(handleModule.handle).toHaveBeenCalledTimes(2)
-      expect(warn).toHaveBeenCalledWith('ignored log: > 1000000 bytes: ', 'short message, long attrs...')
+      expect(warn).toHaveBeenCalledWith(31, 'short message, long attrs...')
     })
 
     it('should short circuit if message is falsy', async () => {
@@ -125,7 +125,7 @@ describe('logging aggregate component tests', () => {
       await wait(1)
       loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, '', { myAttributes: 1 }, 'ERROR'])
 
-      expect(warn).toHaveBeenCalledWith(expect.stringContaining('ignored log: invalid message'))
+      expect(warn).toHaveBeenCalledWith(32)
     })
 
     it('should short circuit if log level is invalid', async () => {
@@ -134,7 +134,7 @@ describe('logging aggregate component tests', () => {
       await wait(1)
       loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, '', { myAttributes: 1 }, 'BAD_LEVEL'])
 
-      expect(warn).toHaveBeenCalledWith('invalid log level: BAD_LEVEL', ['ERROR', 'WARN', 'INFO', 'DEBUG', 'TRACE'])
+      expect(warn).toHaveBeenCalledWith(30, 'BAD_LEVEL')
     })
 
     it('invalid custom attributes', async () => {

@@ -183,6 +183,24 @@ describe('spa harvesting', () => {
     expect(interactionTree.newURL).not.toEqual(interactionTree.oldURL)
   })
 
+  it('sends interactions even if end() is called before the window load event', async () => {
+    const browserIxnsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testInteractionEventsRequest })
+    const url = await browser.testHandle.assetURL('spa/initial-page-load-with-end-interaction.html')
+
+    const [ixns] = await Promise.all([
+      browserIxnsCapture.waitForResult({ totalCount: 1 }),
+      browser.url(url).then(() => browser.waitForAgentLoad())
+    ])
+
+    const ipl = ixns[0].request.body[0]
+    expect(ipl).toEqual(expect.objectContaining({
+      trigger: 'initialPageLoad',
+      children: [expect.objectContaining({
+        type: 'customEnd'
+      })]
+    }))
+  })
+
   it('Spa does not prevent the bubbling of events', async () => {
     const url = await browser.testHandle.assetURL('spa/hashchange-multiple-evt-cb.html')
     await Promise.all([

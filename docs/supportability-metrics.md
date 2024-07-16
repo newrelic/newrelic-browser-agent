@@ -261,3 +261,7 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 * API/logging/debug/called
 <!--- Logging level warn was observed --->
 * API/logging/warn/called
+<!--- newrelic.log() was called --->
+* API/log/called
+<!--- newrelic.wrapLogger() was called --->
+* API/wrapLogger/called

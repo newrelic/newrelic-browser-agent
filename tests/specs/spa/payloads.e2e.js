@@ -1,3 +1,4 @@
+import { supportsFirstPaint, supportsFirstContentfulPaint } from '../../../tools/browser-matcher/common-matchers.mjs'
 const { testInteractionEventsRequest, testErrorsRequest } = require('../../../tools/testing-server/utils/expect-tests')
 const now = require('../../lib/now')
 
@@ -199,6 +200,28 @@ describe('attribution tests', () => {
       let estimatedInteractionTimestamp = interactionTree.start + fixup
       expect(estimatedInteractionTimestamp).toBeGreaterThan(testStartTime) //, 'estimated ixn start after test start')
       expect(estimatedInteractionTimestamp).toBeLessThan(receiptTime) //, 'estimated ixn start before receipt time')
+    })
+
+    it('contains nav and paint timings based on category', async () => {
+      const browserIxnsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testInteractionEventsRequest })
+      const url = await browser.testHandle.assetURL('spa/xhr.html')
+      await browser.url(url).then(() => browser.waitForAgentLoad())
+      $('body').click()
+
+      const ixns = await browserIxnsCapture.waitForResult({ totalCount: 2 })
+      const [{ request: { body: [ipl] } }, { request: { body: [rc] } }] = ixns
+
+      expect(ipl.trigger).toEqual('initialPageLoad')
+      expect(ipl.navTiming).toEqual(expect.any(Object))
+      if (browserMatch(supportsFirstPaint)) expect(ipl.firstPaint).toBeGreaterThan(0)
+      else expect(ipl.firstPaint).toBeNull()
+      if (browserMatch(supportsFirstContentfulPaint)) expect(ipl.firstContentfulPaint).toBeGreaterThan(0)
+      else expect(ipl.firstContentfulPaint).toBeNull()
+
+      expect(rc.category).toEqual('Route change')
+      expect(rc.navTiming).toBeNull()
+      expect(rc.firstPaint).toBeNull()
+      expect(rc.firstContentfulPaint).toBeNull()
     })
 
     it('child nodes in SPA interaction does not exceed set limit', async () => {

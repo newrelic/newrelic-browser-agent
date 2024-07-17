@@ -1,12 +1,15 @@
-import url from 'url'
-import path from 'path'
-import child_process from 'child_process'
-import desktopBrowsers from '../../browsers-lists/lt-desktop-supported.json' assert { type: 'json' }
-import mobileBrowsers from '../../browsers-lists/lt-mobile-supported.json' assert { type: 'json' }
-import browsersPolyfill from '../../browsers-lists/lt-polyfill.json' assert { type: 'json' }
+import module from 'node:module'
+import url from 'node:url'
+import path from 'node:path'
+import child_process from 'node:child_process'
 import browsersList from '../../browsers-lists/lt-browsers-list.mjs'
 import args from '../args.mjs'
 import { getBrowserName } from '../../browsers-lists/utils.mjs'
+
+const require = module.createRequire(import.meta.url)
+const desktopBrowsers = require('../../browsers-lists/lt-desktop-supported.json')
+const mobileBrowsers = require('../../browsers-lists/lt-mobile-supported.json')
+const browsersPolyfill = require('../../browsers-lists/lt-polyfill.json')
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
 

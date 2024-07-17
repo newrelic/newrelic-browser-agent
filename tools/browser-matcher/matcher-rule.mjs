@@ -1,5 +1,8 @@
+import module from 'node:module'
 import { parseSpecString, equationIsTrue } from './spec-parser.mjs'
-import latestBrowserVersions from '../browsers-lists/lt-desktop-latest-vers.json' assert { type: 'json' }
+
+const require = module.createRequire(import.meta.url)
+const latestBrowserVersions = require('../browsers-lists/lt-desktop-latest-vers.json')
 
 /**
  * Represents a browser matching rule of the defined type

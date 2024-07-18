@@ -47,7 +47,6 @@ function updateLatestVersions (deskPlatforms) {
  */
 function updateMobileVersions (mobilePlatforms) {
   const MIN_SUPPORTED_IOS = Math.floor(browserslistMinVersion('last 10 iOS versions')) // LT ios versions don't align exactly with browserlist
-  // const MIN_SUPPORTED_ANDROID = 13.0
   const testedMobileVersionsJson = {}
 
   const iosDevices = mobilePlatforms.find(p => p.platform === 'ios')?.devices

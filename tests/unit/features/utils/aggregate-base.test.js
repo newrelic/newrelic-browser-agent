@@ -114,10 +114,13 @@ test('should early return with warning if missing global info props', () => {
   jest.mocked(isConfigured).mockReturnValue(false)
 
   jest.mocked(gosCDN).mockReturnValue({})
-  new AggregateBase(agentIdentifier, aggregator, featureName)
+  const aggBase = new AggregateBase(agentIdentifier, aggregator, featureName)
 
   expect(warn).toHaveBeenCalledWith(43)
   expect(configure).not.toHaveBeenCalled()
+
+  expect(aggBase.ee.aborted).toEqual(true)
+  expect(aggBase.ee.backlog).toEqual({})
 })
 
 test('should resolve waitForFlags correctly based on flags with real vals', async () => {

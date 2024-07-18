@@ -4,6 +4,7 @@ import { configure } from '../../loaders/configure/configure'
 import { gosCDN } from '../../common/window/nreum'
 import { drain } from '../../common/drain/drain'
 import { activatedFeatures } from '../../common/util/feature-flags'
+import { warn } from '../../common/util/console'
 
 export class AggregateBase extends FeatureBase {
   constructor (...args) {
@@ -49,7 +50,9 @@ export class AggregateBase extends FeatureBase {
   checkConfiguration () {
     // NOTE: This check has to happen at aggregator load time
     if (!isConfigured(this.agentIdentifier)) {
-      let jsAttributes = { ...gosCDN().info?.jsAttributes }
+      const cdn = gosCDN()
+      if (!cdn.info?.licenseKey || !cdn.info?.applicationID) return warn(43)
+      let jsAttributes = { ...cdn.info?.jsAttributes }
       try {
         jsAttributes = {
           ...jsAttributes,
@@ -59,9 +62,9 @@ export class AggregateBase extends FeatureBase {
         // do nothing
       }
       configure({ agentIdentifier: this.agentIdentifier }, {
-        ...gosCDN(),
+        ...cdn,
         info: {
-          ...gosCDN().info,
+          ...cdn.info,
           jsAttributes
         },
         runtime: getRuntime(this.agentIdentifier)

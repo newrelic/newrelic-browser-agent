@@ -16,11 +16,6 @@
       "device_name": "Pixel 7",
       "version": "14",
       "platformName": "android"
-    },
-    {
-      "device_name": "Pixel 3",
-      "version": "9",
-      "platformName": "android"
     }
   ]
 }

@@ -1,3 +1,5 @@
+import { testInteractionEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
+
 describe('behavior tests', () => {
   describe('addEventListener', () => {
     it('overwriting strict window.addEventListener does not break agent', async () => {
@@ -31,5 +33,17 @@ describe('behavior tests', () => {
         timeoutMsg: 'Conditions never passed'
       })
     })
+  })
+
+  it('SPA captures ixn even with incorrect setTimeout arg', async () => {
+    const browserIxnsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testInteractionEventsRequest })
+    const url = await browser.testHandle.assetURL('spa/incorrect-timer.html')
+
+    await browser.url(url).then(() => browser.waitForAgentLoad())
+    $('body').click()
+
+    const ixns = await browserIxnsCapture.waitForResult({ totalCount: 2 })
+    const clickIxn = ixns[1].request.body[0]
+    expect(clickIxn.category).toEqual('Route change')
   })
 })

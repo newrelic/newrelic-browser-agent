@@ -114,12 +114,12 @@ export const supportsBFCache = new SpecMatcher()
 export const supportsFirstPaint = new SpecMatcher()
   .include('chrome>=60')
   .include('edge>=79')
-  // .include('android>=9.0') -- LT simulated chromium android does not appear to support PerformancePaintTiming
+  .include('android>=9.0')
 
 export const supportsFirstContentfulPaint = new SpecMatcher()
   .include('chrome>=60')
   .include('edge>=79')
-  // .include('android>=9.0') -- LT simulated chromium android does not appear to support PerformancePaintTiming
+  .include('android>=9.0')
   .include('firefox>=84')
   .include('safari>15') // this should be >= 14.1 but safari 15 on Sauce hates FCP, and it destroys the other tests on the same thread too...
   .include('ios>=14.5') // -- *cli Mar'23 - FYI there's a bug associated with paint observer for version < 16, see ios-version.js

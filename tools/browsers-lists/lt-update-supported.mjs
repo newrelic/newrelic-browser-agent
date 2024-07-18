@@ -79,7 +79,6 @@ function updateMobileVersions (mobilePlatforms) {
   const ascOrderVersions = Object.keys(versionIndexedSpecs).map(verStr => Number(verStr)).sort((a, b) => a - b)
   const testedAndroidVersions = [
     versionIndexedSpecs[ascOrderVersions.pop()][0] // grab first device spec off latest version
-    // versionIndexedSpecs[MIN_SUPPORTED_ANDROID][0]
   ]
   testedAndroidVersions.forEach(ltFormatSpec => { ltFormatSpec.platformName = 'android' })
   testedMobileVersionsJson.android = testedAndroidVersions

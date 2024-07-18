@@ -140,4 +140,14 @@ describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => 
       })
     })
   })
+
+  it.withBrowsersMatching([notSafari, notIOS])('should NOT place inlined css for cross origin stylesheets when fix_stylesheets is false', async () => {
+    /** snapshot and mutation payloads */
+    const [{ request: { query: snapshot1Query } }] = await Promise.all([
+      browser.testHandle.expectSessionReplaySnapshot(10000),
+      browser.url(await browser.testHandle.assetURL('rrweb-invalid-stylesheet.html', srConfig({ session_replay: { fix_stylesheets: false, enabled: true, harvestTimeSeconds: 5 } })))
+        .then(() => browser.waitForFeatureAggregate('session_replay'))
+    ])
+    expect(decodeAttributes(snapshot1Query.attributes).inlinedAllStylesheets).toEqual(false)
+  })
 })

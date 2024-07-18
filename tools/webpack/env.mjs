@@ -1,6 +1,7 @@
-/* eslint-disable no-case-declarations */
-import packageJSON from '../../package.json' assert { type: 'json' }
-import process from 'process'
+import module from 'node:module'
+import process from 'node:process'
+
+const require = module.createRequire(import.meta.url)
 
 /**
  * @typedef {import('./index.mjs').WebpackBuildOptions} WebpackBuildOptions
@@ -16,7 +17,7 @@ import process from 'process'
  */
 export default async (env) => {
   let VERSION, PATH_VERSION, SUBVERSION, PUBLIC_PATH
-  VERSION = packageJSON.version
+  VERSION = require('../../package.json').version
 
   switch ((env.mode || '').toString().toLocaleLowerCase()) {
     case 'prod':
@@ -33,6 +34,7 @@ export default async (env) => {
       VERSION = `${VERSION}-dev`
       break
     case 'experiment':
+      // eslint-disable-next-line no-case-declarations
       const branchName = env.branchName || 'experiment'
       PATH_VERSION = ''
       SUBVERSION = branchName

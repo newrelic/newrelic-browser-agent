@@ -1,7 +1,10 @@
+import module from 'node:module'
 import { createInstrumenter } from 'istanbul-lib-instrument'
 import { validate } from 'schema-utils'
 import convert from 'convert-source-map'
-import schema from './options.json' assert { type: 'json' }
+
+const require = module.createRequire(import.meta.url)
+const schema = require('./options.json')
 
 export default function (source, sourceMap) {
   const options = Object.assign({ produceSourceMap: true }, this.getOptions())

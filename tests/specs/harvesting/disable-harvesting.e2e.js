@@ -91,4 +91,21 @@ describe('disable harvesting', () => {
 
     await expect(stnPromise).resolves.toEqual(undefined)
   })
+
+  ;['app-id', 'license-key'].forEach(name => {
+    ;['before', 'after'].forEach(loadState => {
+      it(`should disable all harvesting and abort if ${name} is absent (${loadState})`, async () => {
+        const rumPromise = browser.testHandle.expectRum(10000, true)
+
+        await browser.url(await browser.testHandle.assetURL(`no-${name}-${loadState}.html`))
+
+        await expect(rumPromise).resolves.toEqual(undefined)
+
+        const eeBacklog = await browser.execute(function () {
+          return newrelic.ee.backlog
+        })
+        expect(eeBacklog).toEqual({})
+      })
+    })
+  })
 })

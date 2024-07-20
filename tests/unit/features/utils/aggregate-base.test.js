@@ -3,7 +3,6 @@ import { AggregateBase } from '../../../../src/features/utils/aggregate-base'
 import { getInfo, isConfigured, getRuntime } from '../../../../src/common/config/config'
 import { configure } from '../../../../src/loaders/configure/configure'
 import { gosCDN } from '../../../../src/common/window/nreum'
-import { warn } from '../../../../src/common/util/console'
 
 jest.enableAutomock()
 jest.unmock('../../../../src/features/utils/aggregate-base')
@@ -108,19 +107,6 @@ test('should only configure the agent once', () => {
   expect(getInfo).not.toHaveBeenCalled()
   expect(getRuntime).not.toHaveBeenCalled()
   expect(configure).not.toHaveBeenCalled()
-})
-
-test('should early return with warning if missing global info props', () => {
-  jest.mocked(isConfigured).mockReturnValue(false)
-
-  jest.mocked(gosCDN).mockReturnValue({})
-  const aggBase = new AggregateBase(agentIdentifier, aggregator, featureName)
-
-  expect(warn).toHaveBeenCalledWith(43)
-  expect(configure).not.toHaveBeenCalled()
-
-  expect(aggBase.ee.aborted).toEqual(true)
-  expect(aggBase.ee.backlog).toEqual({})
 })
 
 test('should resolve waitForFlags correctly based on flags with real vals', async () => {

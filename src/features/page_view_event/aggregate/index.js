@@ -1,7 +1,7 @@
 import { globalScope, isBrowserScope, originTime } from '../../../common/constants/runtime'
 import { addPT, addPN } from '../../../common/timing/nav-timing'
 import { stringify } from '../../../common/util/stringify'
-import { getInfo, getRuntime } from '../../../common/config/config'
+import { getInfo, getRuntime, isConfigured } from '../../../common/config/config'
 import { Harvest } from '../../../common/harvest/harvest'
 import * as CONSTANTS from '../constants'
 import { getActivatedFeaturesFlags } from './initialized-features'
@@ -28,6 +28,11 @@ export class Aggregate extends AggregateBase {
     this.firstByteToDomContent = 0 // our "dom processing" duration
     this.timeKeeper = new TimeKeeper(this.agentIdentifier)
 
+    if (!isConfigured(agentIdentifier)) {
+      this.ee.abort()
+      return warn(43)
+    }
+
     if (isBrowserScope) {
       timeToFirstByte.subscribe(({ value, attrs }) => {
         const navEntry = attrs.navigationEntry
@@ -48,7 +53,6 @@ export class Aggregate extends AggregateBase {
     const agentRuntime = getRuntime(this.agentIdentifier)
     const harvester = new Harvest(this)
 
-    if (!info.beacon) return
     if (info.queueTime) this.aggregator.store('measures', 'qt', { value: info.queueTime })
     if (info.applicationTime) this.aggregator.store('measures', 'ap', { value: info.applicationTime })
 

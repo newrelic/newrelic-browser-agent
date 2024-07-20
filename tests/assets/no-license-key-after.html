@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {init}
+    {loader}
+    {config}
+    <script>
+      delete NREUM.info.licenseKey
+    </script>
+  </head>
+  <body>Instrumented</body>
+</html>

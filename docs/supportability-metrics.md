@@ -87,6 +87,8 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 * Generic/Resources/Ajax/External
 <!--- A resource timing API Non-Ajax (other assets like scripts, etc) event was observed that does NOT match the Agent beacon --->
 * Generic/Resources/Non-Ajax/External
+<!--- A <video> element was added to the DOM, should have a total count as part of the metric --->
+* Generic/VideoElement/Added
 
 ### Frameworks
 <!--- React was Detected --->

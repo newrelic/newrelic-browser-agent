@@ -161,7 +161,7 @@ module.exports = class NetworkCapture {
         clearTimeout(deferred.timeout)
       }
       if (deferred.promise) {
-        deferred.reject(new Error('Waiting network capture destroyed before resolving'))
+        deferred.reject(new Error(`Waiting network capture destroyed before resolving: ${this.#test.name}`))
       }
     }
     this.#deferredCache.clear()

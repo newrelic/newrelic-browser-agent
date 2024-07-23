@@ -1,77 +1,88 @@
 import { faker } from '@faker-js/faker'
 import { testExpectedTrace } from '../util/helpers'
+import { testAjaxEventsRequest, testAjaxTimeSlicesRequest, testBlobTraceRequest, testErrorsRequest, testInsRequest, testInteractionEventsRequest, testRumRequest, testTimingEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 describe('harvesting', () => {
+  let rumCapture
+  let timingEventsCapture
+  let ajaxEventsCapture
+  let ajaxMetricsCapture
+  let traceCapture
+  let insightsCapture
+  let interactionEventsCapture
+  let errorMetricsCapture
+
+  beforeEach(async () => {
+    [rumCapture, timingEventsCapture, ajaxEventsCapture, ajaxMetricsCapture, traceCapture, insightsCapture, interactionEventsCapture, errorMetricsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+      { test: testRumRequest },
+      { test: testTimingEventsRequest },
+      { test: testAjaxEventsRequest },
+      { test: testAjaxTimeSlicesRequest },
+      { test: testBlobTraceRequest },
+      { test: testInsRequest },
+      { test: testInteractionEventsRequest },
+      { test: testErrorsRequest }
+    ])
+  })
+
   it('should include the base query parameters', async () => {
     const testURL = await browser.testHandle.assetURL('obfuscate-pii.html', {
       config: {
         sa: 1
-      },
-      init: {
-        privacy: {
-          cookies_enabled: true
-        }
       }
     })
 
     const [
-      rumResults,
-      resourcesResults,
-      interactionResults,
-      timingsResults,
-      ajaxSliceResults,
-      ajaxEventsResults,
-      insResults
+      rumHarvests,
+      timingEventsHarvests,
+      ajaxEventsHarvests,
+      ajaxMetricsHarvests,
+      insightsHarvests,
+      interactionEventsHarvests
     ] = await Promise.all([
-      browser.testHandle.expectRum(),
-      browser.testHandle.expectTrace(),
-      browser.testHandle.expectInteractionEvents(),
-      browser.testHandle.expectTimings(),
-      browser.testHandle.expectAjaxTimeSlices(),
-      browser.testHandle.expectAjaxEvents(),
-      browser.testHandle.expectIns(),
+      rumCapture.waitForResult({ totalCount: 1 }),
+      timingEventsCapture.waitForResult({ totalCount: 1 }),
+      ajaxEventsCapture.waitForResult({ totalCount: 1 }),
+      ajaxMetricsCapture.waitForResult({ totalCount: 1 }),
+      insightsCapture.waitForResult({ totalCount: 1 }),
+      interactionEventsCapture.waitForResult({ totalCount: 1 }),
       browser.url(testURL)
         .then(() => browser.waitForAgentLoad())
         .then(() => $('a').click())
     ])
 
     const expectedURL = testURL.split('?')[0]
-    verifyBaseQueryParameters(rumResults.request.query, expectedURL)
-    // verifyBaseQueryParameters(resourcesResults.request.query, expectedURL, 'session_trace')
-    testExpectedTrace({ data: resourcesResults.request })
-    verifyBaseQueryParameters(interactionResults.request.query, expectedURL)
-    verifyBaseQueryParameters(timingsResults.request.query, expectedURL)
-    verifyBaseQueryParameters(ajaxSliceResults.request.query, expectedURL)
-    verifyBaseQueryParameters(ajaxEventsResults.request.query, expectedURL)
-    verifyBaseQueryParameters(insResults.request.query, expectedURL)
+    rumHarvests.forEach(harvest => verifyBaseQueryParameters(harvest.request.query, expectedURL))
+    timingEventsHarvests.forEach(harvest => verifyBaseQueryParameters(harvest.request.query, expectedURL))
+    ajaxEventsHarvests.forEach(harvest => verifyBaseQueryParameters(harvest.request.query, expectedURL))
+    ajaxMetricsHarvests.forEach(harvest => verifyBaseQueryParameters(harvest.request.query, expectedURL))
+    insightsHarvests.forEach(harvest => verifyBaseQueryParameters(harvest.request.query, expectedURL))
+    interactionEventsHarvests.forEach(harvest => verifyBaseQueryParameters(harvest.request.query, expectedURL))
   })
 
   it('should include the same ptid query parameter on requests', async () => {
-    const [{ request: { query } }] = await Promise.all([
-      browser.testHandle.expectRum(),
-      browser.testHandle.expectTrace(),
-      browser.url(await browser.testHandle.assetURL('obfuscate-pii.html'))
-        .then(() => browser.waitForAgentLoad())
-    ])
-
-    const ptid = query.ptid
+    await browser.url(await browser.testHandle.assetURL('obfuscate-pii.html'))
+      .then(() => browser.waitForAgentLoad())
 
     const [
-      resourcesResults,
-      timingsResults,
-      ajaxSliceResults,
-      ajaxEventsResults
+      rumHarvests,
+      timingEventsHarvests,
+      ajaxEventsHarvests,
+      ajaxMetricsHarvests,
+      traceHarvests
     ] = await Promise.all([
-      browser.testHandle.expectTrace(),
-      browser.testHandle.expectTimings(),
-      browser.testHandle.expectAjaxTimeSlices(),
-      browser.testHandle.expectAjaxEvents()
+      rumCapture.waitForResult({ totalCount: 1 }),
+      timingEventsCapture.waitForResult({ totalCount: 1 }),
+      ajaxEventsCapture.waitForResult({ totalCount: 1 }),
+      ajaxMetricsCapture.waitForResult({ totalCount: 1 }),
+      traceCapture.waitForResult({ totalCount: 1 })
     ])
 
-    expect(timingsResults.request.query.ptid).toEqual(ptid)
-    expect(ajaxSliceResults.request.query.ptid).toEqual(ptid)
-    expect(ajaxEventsResults.request.query.ptid).toEqual(ptid)
-    testExpectedTrace({ data: resourcesResults.request, ptid })
+    const ptid = rumHarvests[0].request.query.ptid
+    timingEventsHarvests.forEach(harvest => expect(harvest.request.query.ptid).toEqual(ptid))
+    ajaxEventsHarvests.forEach(harvest => expect(harvest.request.query.ptid).toEqual(ptid))
+    ajaxMetricsHarvests.forEach(harvest => expect(harvest.request.query.ptid).toEqual(ptid))
+    traceHarvests.forEach(harvest => testExpectedTrace({ data: harvest.request, ptid }))
   })
 
   it('should include the transaction name (transactionName) passed in the info block in the query parameters', async () => {
@@ -83,30 +94,30 @@ describe('harvesting', () => {
     })
 
     const [
-      rumResults,
-      interactionResults,
-      timingsResults,
-      ajaxSliceResults,
-      ajaxEventsResults,
-      insResults
+      rumHarvests,
+      timingEventsHarvests,
+      ajaxEventsHarvests,
+      ajaxMetricsHarvests,
+      insightsHarvests,
+      interactionEventsHarvests
     ] = await Promise.all([
-      browser.testHandle.expectRum(),
-      browser.testHandle.expectInteractionEvents(),
-      browser.testHandle.expectTimings(),
-      browser.testHandle.expectAjaxTimeSlices(),
-      browser.testHandle.expectAjaxEvents(),
-      browser.testHandle.expectIns(),
+      rumCapture.waitForResult({ totalCount: 1 }),
+      timingEventsCapture.waitForResult({ totalCount: 1 }),
+      ajaxEventsCapture.waitForResult({ totalCount: 1 }),
+      ajaxMetricsCapture.waitForResult({ totalCount: 1 }),
+      insightsCapture.waitForResult({ totalCount: 1 }),
+      interactionEventsCapture.waitForResult({ totalCount: 1 }),
       browser.url(testURL)
         .then(() => browser.waitForAgentLoad())
         .then(() => $('a').click())
     ])
 
-    expect(rumResults.request.query.to).toEqual(transactionName)
-    expect(interactionResults.request.query.to).toEqual(transactionName)
-    expect(timingsResults.request.query.to).toEqual(transactionName)
-    expect(ajaxSliceResults.request.query.to).toEqual(transactionName)
-    expect(ajaxEventsResults.request.query.to).toEqual(transactionName)
-    expect(insResults.request.query.to).toEqual(transactionName)
+    rumHarvests.forEach(harvest => expect(harvest.request.query.to).toEqual(transactionName))
+    timingEventsHarvests.forEach(harvest => expect(harvest.request.query.to).toEqual(transactionName))
+    ajaxEventsHarvests.forEach(harvest => expect(harvest.request.query.to).toEqual(transactionName))
+    ajaxMetricsHarvests.forEach(harvest => expect(harvest.request.query.to).toEqual(transactionName))
+    insightsHarvests.forEach(harvest => expect(harvest.request.query.to).toEqual(transactionName))
+    interactionEventsHarvests.forEach(harvest => expect(harvest.request.query.to).toEqual(transactionName))
   })
 
   it('should include the transaction name (tNamePlain) passed in the info block in the query parameters', async () => {
@@ -116,37 +127,50 @@ describe('harvesting', () => {
         tNamePlain: transactionName
       }
     })
+
     const [
-      rumResults,
-      interactionResults,
-      timingsResults,
-      ajaxSliceResults,
-      ajaxEventsResults,
-      insResults
+      rumHarvests,
+      timingEventsHarvests,
+      ajaxEventsHarvests,
+      ajaxMetricsHarvests,
+      insightsHarvests,
+      interactionEventsHarvests
     ] = await Promise.all([
-      browser.testHandle.expectRum(),
-      browser.testHandle.expectInteractionEvents(),
-      browser.testHandle.expectTimings(),
-      browser.testHandle.expectAjaxTimeSlices(),
-      browser.testHandle.expectAjaxEvents(),
-      browser.testHandle.expectIns(),
+      rumCapture.waitForResult({ totalCount: 1 }),
+      timingEventsCapture.waitForResult({ totalCount: 1 }),
+      ajaxEventsCapture.waitForResult({ totalCount: 1 }),
+      ajaxMetricsCapture.waitForResult({ totalCount: 1 }),
+      insightsCapture.waitForResult({ totalCount: 1 }),
+      interactionEventsCapture.waitForResult({ totalCount: 1 }),
       browser.url(testURL)
         .then(() => browser.waitForAgentLoad())
         .then(() => $('a').click())
     ])
 
-    expect(rumResults.request.query.t).toEqual(transactionName)
-    expect(rumResults.request.query.to).toBeUndefined()
-    expect(interactionResults.request.query.t).toEqual(transactionName)
-    expect(interactionResults.request.query.to).toBeUndefined()
-    expect(timingsResults.request.query.t).toEqual(transactionName)
-    expect(timingsResults.request.query.to).toBeUndefined()
-    expect(ajaxSliceResults.request.query.t).toEqual(transactionName)
-    expect(ajaxSliceResults.request.query.to).toBeUndefined()
-    expect(ajaxEventsResults.request.query.t).toEqual(transactionName)
-    expect(ajaxEventsResults.request.query.to).toBeUndefined()
-    expect(insResults.request.query.t).toEqual(transactionName)
-    expect(insResults.request.query.to).toBeUndefined()
+    rumHarvests.forEach(harvest => {
+      expect(harvest.request.query.t).toEqual(transactionName)
+      expect(harvest.request.query.to).toBeUndefined()
+    })
+    timingEventsHarvests.forEach(harvest => {
+      expect(harvest.request.query.t).toEqual(transactionName)
+      expect(harvest.request.query.to).toBeUndefined()
+    })
+    ajaxEventsHarvests.forEach(harvest => {
+      expect(harvest.request.query.t).toEqual(transactionName)
+      expect(harvest.request.query.to).toBeUndefined()
+    })
+    ajaxMetricsHarvests.forEach(harvest => {
+      expect(harvest.request.query.t).toEqual(transactionName)
+      expect(harvest.request.query.to).toBeUndefined()
+    })
+    insightsHarvests.forEach(harvest => {
+      expect(harvest.request.query.t).toEqual(transactionName)
+      expect(harvest.request.query.to).toBeUndefined()
+    })
+    interactionEventsHarvests.forEach(harvest => {
+      expect(harvest.request.query.t).toEqual(transactionName)
+      expect(harvest.request.query.to).toBeUndefined()
+    })
   })
 
   it('should always take the transactionName info parameter over the tNamePlan info parameter for the transaction name query parameter', async () => {
@@ -159,36 +183,48 @@ describe('harvesting', () => {
     })
 
     const [
-      rumResults,
-      interactionResults,
-      timingsResults,
-      ajaxSliceResults,
-      ajaxEventsResults,
-      insResults
+      rumHarvests,
+      timingEventsHarvests,
+      ajaxEventsHarvests,
+      ajaxMetricsHarvests,
+      insightsHarvests,
+      interactionEventsHarvests
     ] = await Promise.all([
-      browser.testHandle.expectRum(),
-      browser.testHandle.expectInteractionEvents(),
-      browser.testHandle.expectTimings(),
-      browser.testHandle.expectAjaxTimeSlices(),
-      browser.testHandle.expectAjaxEvents(),
-      browser.testHandle.expectIns(),
+      rumCapture.waitForResult({ totalCount: 1 }),
+      timingEventsCapture.waitForResult({ totalCount: 1 }),
+      ajaxEventsCapture.waitForResult({ totalCount: 1 }),
+      ajaxMetricsCapture.waitForResult({ totalCount: 1 }),
+      insightsCapture.waitForResult({ totalCount: 1 }),
+      interactionEventsCapture.waitForResult({ totalCount: 1 }),
       browser.url(testURL)
         .then(() => browser.waitForAgentLoad())
         .then(() => $('a').click())
     ])
 
-    expect(rumResults.request.query.to).toEqual(transactionName)
-    expect(rumResults.request.query.t).toBeUndefined()
-    expect(interactionResults.request.query.to).toEqual(transactionName)
-    expect(interactionResults.request.query.t).toBeUndefined()
-    expect(timingsResults.request.query.to).toEqual(transactionName)
-    expect(timingsResults.request.query.t).toBeUndefined()
-    expect(ajaxSliceResults.request.query.to).toEqual(transactionName)
-    expect(ajaxSliceResults.request.query.t).toBeUndefined()
-    expect(ajaxEventsResults.request.query.to).toEqual(transactionName)
-    expect(ajaxEventsResults.request.query.t).toBeUndefined()
-    expect(insResults.request.query.to).toEqual(transactionName)
-    expect(insResults.request.query.t).toBeUndefined()
+    rumHarvests.forEach(harvest => {
+      expect(harvest.request.query.t).toBeUndefined()
+      expect(harvest.request.query.to).toEqual(transactionName)
+    })
+    timingEventsHarvests.forEach(harvest => {
+      expect(harvest.request.query.t).toBeUndefined()
+      expect(harvest.request.query.to).toEqual(transactionName)
+    })
+    ajaxEventsHarvests.forEach(harvest => {
+      expect(harvest.request.query.t).toBeUndefined()
+      expect(harvest.request.query.to).toEqual(transactionName)
+    })
+    ajaxMetricsHarvests.forEach(harvest => {
+      expect(harvest.request.query.t).toBeUndefined()
+      expect(harvest.request.query.to).toEqual(transactionName)
+    })
+    insightsHarvests.forEach(harvest => {
+      expect(harvest.request.query.t).toBeUndefined()
+      expect(harvest.request.query.to).toEqual(transactionName)
+    })
+    interactionEventsHarvests.forEach(harvest => {
+      expect(harvest.request.query.t).toBeUndefined()
+      expect(harvest.request.query.to).toEqual(transactionName)
+    })
   })
 
   it('should update the ref query parameter when url is changes using pushState during load', async () => {
@@ -196,27 +232,27 @@ describe('harvesting', () => {
     const redirectURL = await browser.testHandle.assetURL('instrumented.html')
 
     const [
-      rumResults,
-      interactionResults,
-      timingsResults,
-      ajaxSliceResults,
-      ajaxEventsResults
+      rumHarvests,
+      timingEventsHarvests,
+      ajaxEventsHarvests,
+      ajaxMetricsHarvests,
+      interactionEventsHarvests
     ] = await Promise.all([
-      browser.testHandle.expectRum(),
-      browser.testHandle.expectInteractionEvents(),
-      browser.testHandle.expectTimings(),
-      browser.testHandle.expectAjaxTimeSlices(),
-      browser.testHandle.expectAjaxEvents(),
+      rumCapture.waitForResult({ totalCount: 1 }),
+      timingEventsCapture.waitForResult({ totalCount: 1 }),
+      ajaxEventsCapture.waitForResult({ totalCount: 1 }),
+      ajaxMetricsCapture.waitForResult({ totalCount: 1 }),
+      interactionEventsCapture.waitForResult({ totalCount: 1 }),
       browser.url(originalURL)
         .then(() => browser.waitForAgentLoad())
     ])
 
     const expectedURL = redirectURL.split('?')[0]
-    expect(rumResults.request.query.ref).toEqual(expectedURL)
-    expect(interactionResults.request.query.ref).toEqual(expectedURL)
-    expect(timingsResults.request.query.ref).toEqual(expectedURL)
-    expect(ajaxSliceResults.request.query.ref).toEqual(expectedURL)
-    expect(ajaxEventsResults.request.query.ref).toEqual(expectedURL)
+    rumHarvests.forEach(harvest => expect(harvest.request.query.ref).toEqual(expectedURL))
+    timingEventsHarvests.forEach(harvest => expect(harvest.request.query.ref).toEqual(expectedURL))
+    ajaxEventsHarvests.forEach(harvest => expect(harvest.request.query.ref).toEqual(expectedURL))
+    ajaxMetricsHarvests.forEach(harvest => expect(harvest.request.query.ref).toEqual(expectedURL))
+    interactionEventsHarvests.forEach(harvest => expect(harvest.request.query.ref).toEqual(expectedURL))
   })
 
   it('should update the ref query parameter when url is changes using replaceState during load', async () => {
@@ -224,27 +260,27 @@ describe('harvesting', () => {
     const redirectURL = await browser.testHandle.assetURL('instrumented.html')
 
     const [
-      rumResults,
-      interactionResults,
-      timingsResults,
-      ajaxSliceResults,
-      ajaxEventsResults
+      rumHarvests,
+      timingEventsHarvests,
+      ajaxEventsHarvests,
+      ajaxMetricsHarvests,
+      interactionEventsHarvests
     ] = await Promise.all([
-      browser.testHandle.expectRum(),
-      browser.testHandle.expectInteractionEvents(),
-      browser.testHandle.expectTimings(),
-      browser.testHandle.expectAjaxTimeSlices(),
-      browser.testHandle.expectAjaxEvents(),
+      rumCapture.waitForResult({ totalCount: 1 }),
+      timingEventsCapture.waitForResult({ totalCount: 1 }),
+      ajaxEventsCapture.waitForResult({ totalCount: 1 }),
+      ajaxMetricsCapture.waitForResult({ totalCount: 1 }),
+      interactionEventsCapture.waitForResult({ totalCount: 1 }),
       browser.url(originalURL)
         .then(() => browser.waitForAgentLoad())
     ])
 
     const expectedURL = redirectURL.split('?')[0]
-    expect(rumResults.request.query.ref).toEqual(expectedURL)
-    expect(interactionResults.request.query.ref).toEqual(expectedURL)
-    expect(timingsResults.request.query.ref).toEqual(expectedURL)
-    expect(ajaxSliceResults.request.query.ref).toEqual(expectedURL)
-    expect(ajaxEventsResults.request.query.ref).toEqual(expectedURL)
+    rumHarvests.forEach(harvest => expect(harvest.request.query.ref).toEqual(expectedURL))
+    timingEventsHarvests.forEach(harvest => expect(harvest.request.query.ref).toEqual(expectedURL))
+    ajaxEventsHarvests.forEach(harvest => expect(harvest.request.query.ref).toEqual(expectedURL))
+    ajaxMetricsHarvests.forEach(harvest => expect(harvest.request.query.ref).toEqual(expectedURL))
+    interactionEventsHarvests.forEach(harvest => expect(harvest.request.query.ref).toEqual(expectedURL))
   })
 
   it('should set session query parameter to 0 when cookies_enabled is false', async () => {
@@ -257,52 +293,45 @@ describe('harvesting', () => {
     })
 
     const [
-      rumResults,
-      interactionResults,
-      timingsResults,
-      ajaxSliceResults,
-      ajaxEventsResults
+      rumHarvests,
+      timingEventsHarvests,
+      ajaxEventsHarvests,
+      ajaxMetricsHarvests,
+      interactionEventsHarvests
     ] = await Promise.all([
-      browser.testHandle.expectRum(),
-      browser.testHandle.expectInteractionEvents(),
-      browser.testHandle.expectTimings(),
-      browser.testHandle.expectAjaxTimeSlices(),
-      browser.testHandle.expectAjaxEvents(),
+      rumCapture.waitForResult({ totalCount: 1 }),
+      timingEventsCapture.waitForResult({ totalCount: 1 }),
+      ajaxEventsCapture.waitForResult({ totalCount: 1 }),
+      ajaxMetricsCapture.waitForResult({ totalCount: 1 }),
+      interactionEventsCapture.waitForResult({ totalCount: 1 }),
       browser.url(testURL)
         .then(() => browser.waitForAgentLoad())
     ])
 
-    expect(rumResults.request.query.s).toEqual('0')
-    expect(interactionResults.request.query.s).toEqual('0')
-    expect(timingsResults.request.query.s).toEqual('0')
-    expect(ajaxSliceResults.request.query.s).toEqual('0')
-    expect(ajaxEventsResults.request.query.s).toEqual('0')
+    rumHarvests.forEach(harvest => expect(harvest.request.query.s).toEqual('0'))
+    timingEventsHarvests.forEach(harvest => expect(harvest.request.query.s).toEqual('0'))
+    ajaxEventsHarvests.forEach(harvest => expect(harvest.request.query.s).toEqual('0'))
+    ajaxMetricsHarvests.forEach(harvest => expect(harvest.request.query.s).toEqual('0'))
+    interactionEventsHarvests.forEach(harvest => expect(harvest.request.query.s).toEqual('0'))
   })
 
   it('should not harvest features when there is no data', async () => {
     const [
-      errorsResults,
-      insResults
+      insightsHarvests,
+      errorMetricsHarvests
     ] = await Promise.all([
-      browser.testHandle.expectErrors(10000, true),
-      browser.testHandle.expectIns(10000, true),
+      insightsCapture.waitForResult({ timeout: 10000 }),
+      errorMetricsCapture.waitForResult({ timeout: 10000 }),
       browser.url(await browser.testHandle.assetURL('instrumented.html'))
         .then(() => browser.waitForAgentLoad())
     ])
 
-    expect(errorsResults).toBeUndefined()
-    expect(insResults).toBeUndefined()
+    expect(insightsHarvests).toEqual([])
+    expect(errorMetricsHarvests).toEqual([])
   })
 })
 
-function verifyBaseQueryParameters (queryParams, expectedURL, featureName) {
-  const extraParams = {
-    session_trace: {
-      hr: val => expect(Boolean(val)).toEqual(expect.any(Boolean)),
-      fts: val => expect(Number(val)).toBeGreaterThanOrEqual(0) && expect(val.length).toBeGreaterThan(0),
-      n: val => expect(Number(val)).toBeGreaterThan(0) && expect(val.length).toBeGreaterThan(0)
-    }
-  }
+function verifyBaseQueryParameters (queryParams, expectedURL) {
   expect(queryParams.a).toEqual('42')
   expect(queryParams.sa).toEqual('1')
   expect(queryParams.v).toMatch(/^\d{1,3}\.\d{1,3}\.\d{1,3}$/)
@@ -310,10 +339,4 @@ function verifyBaseQueryParameters (queryParams, expectedURL, featureName) {
   expect(queryParams.rst).toMatch(/^\d{1,5}$/)
   expect(queryParams.s).toMatch(/^[A-F\d]{16}$/i)
   expect(queryParams.ref).toEqual(expectedURL)
-
-  if (featureName && extraParams[featureName]) {
-    Object.entries(extraParams[featureName]).forEach(([key, test]) => {
-      test(queryParams[key])
-    })
-  }
 }

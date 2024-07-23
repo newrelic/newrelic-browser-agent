@@ -2,6 +2,7 @@ import helpers from './helpers'
 import { Aggregator } from '../../../src/common/aggregate/aggregator'
 import { ee } from '../../../src/common/event-emitter/contextual-ee'
 import { Spa } from '../../../src/features/spa'
+import { MockXhr } from '../../../tools/jest/helpers/mock-xhr'
 
 jest.mock('../../../src/common/constants/runtime')
 jest.mock('../../../src/common/config/config', () => ({
@@ -26,17 +27,18 @@ beforeAll(async () => {
   newrelic = helpers.getNewrelicGlobal(spaAggregate.ee)
 })
 
-describe('SPA instrumentation', () => {
+describe('SPA timers tracking', () => {
   beforeEach(() => {
     newrelic.interaction().command('end') // delete any pending ixn in-between tests on the SPA singleton
   })
 
-  test('allows clearTimeout to function', done => {
+  test('clearTimeout ends setTimeout tracking', done => {
     const validator = new helpers.InteractionValidator({
       name: 'interaction',
       children: []
     })
 
+    expect(spaAggregate.state.currentNode?.id).toBeFalsy()
     helpers.startInteraction(onInteractionStart, afterInteractionDone, { baseEE: ee.get(agentIdentifier) })
 
     function onInteractionStart (cb) {
@@ -49,6 +51,33 @@ describe('SPA instrumentation', () => {
       }, 10)
 
       setTimeout(cb, 100)
+    }
+
+    function afterInteractionDone (interaction) {
+      expect(interaction.root.end).toBeGreaterThan(0) // interaction should be finished and have an end time
+      expect(spaAggregate.state.currentNode?.id).toBeFalsy() // interaction should be null outside of async chain
+      validator.validate(interaction)
+      done()
+    }
+  })
+
+  test('clearTimeout still works inside callback', done => {
+    const validator = new helpers.InteractionValidator({
+      name: 'interaction',
+      children: []
+    })
+
+    expect(spaAggregate.state.currentNode?.id).toBeFalsy()
+    helpers.startInteraction(onInteractionStart, afterInteractionDone, { baseEE: ee.get(agentIdentifier) })
+
+    function onInteractionStart (cb) {
+      new Promise(() => {
+        let t = setTimeout(() => {
+          expect(true).toEqual(false) // cancelled timer should never fire
+        })
+        clearTimeout(t)
+        cb()
+      })
     }
 
     function afterInteractionDone (interaction) {

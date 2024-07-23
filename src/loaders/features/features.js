@@ -1,5 +1,6 @@
 export const FEATURE_NAMES = {
   ajax: 'ajax',
+  genericEvents: 'generic_events',
   jserrors: 'jserrors',
   logging: 'logging',
   metrics: 'metrics',
@@ -27,5 +28,6 @@ export const featurePriority = {
   [FEATURE_NAMES.pageAction]: 8,
   [FEATURE_NAMES.softNav]: 9,
   [FEATURE_NAMES.sessionReplay]: 10,
-  [FEATURE_NAMES.logging]: 11
+  [FEATURE_NAMES.logging]: 11,
+  [FEATURE_NAMES.genericEvents]: 12
 }

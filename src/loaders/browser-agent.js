@@ -9,6 +9,8 @@ import { Instrument as InstrumentSessionTrace } from '../features/session_trace/
 import { Instrument as InstrumentSpa } from '../features/spa/instrument'
 import { Instrument as InstrumentPageAction } from '../features/page_action/instrument'
 import { Instrument as InstrumentSessionReplay } from '../features/session_replay/instrument'
+import { Instrument as InstrumentGenericEvents } from '../features/generic_events/instrument'
+import { Instrument as InstrumentLogs } from '../features/logging/instrument'
 
 /**
  * An agent class with all feature modules available. Features may be disabled and enabled via runtime configuration.
@@ -27,7 +29,9 @@ export class BrowserAgent extends Agent {
         InstrumentPageAction,
         InstrumentErrors,
         InstrumentSpa,
-        InstrumentSessionReplay
+        InstrumentSessionReplay,
+        InstrumentGenericEvents,
+        InstrumentLogs
       ],
       loaderType: 'browser-agent'
     })

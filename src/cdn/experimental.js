@@ -17,9 +17,9 @@ import { Instrument as InstrumentErrors } from '../features/jserrors/instrument'
 import { Instrument as InstrumentXhr } from '../features/ajax/instrument'
 import { Instrument as InstrumentSessionTrace } from '../features/session_trace/instrument'
 import { Instrument as InstrumentSessionReplay } from '../features/session_replay/instrument'
+import { Instrument as InstrumentGenericEvents } from '../features/generic_events/instrument'
 // import { Instrument as InstrumentSpa } from '../features/spa/instrument'
 import { Instrument as InstrumentSoftNav } from '../features/soft_navigations/instrument'
-import { Instrument as InstrumentPageAction } from '../features/page_action/instrument'
 import { Instrument as InstrumentLogs } from '../features/logging/instrument'
 
 new Agent({
@@ -30,8 +30,8 @@ new Agent({
     InstrumentSessionTrace,
     InstrumentSessionReplay,
     InstrumentMetrics,
-    InstrumentPageAction,
     InstrumentErrors,
+    InstrumentGenericEvents,
     InstrumentLogs,
     // InstrumentSpa,
     InstrumentSoftNav

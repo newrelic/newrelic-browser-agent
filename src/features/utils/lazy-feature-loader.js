@@ -18,6 +18,8 @@ export function lazyFeatureLoader (featureName, featurePart) {
         return import(/* webpackChunkName: "ajax-aggregate" */ '../ajax/aggregate')
       case FEATURE_NAMES.jserrors:
         return import(/* webpackChunkName: "jserrors-aggregate" */ '../jserrors/aggregate')
+      case FEATURE_NAMES.genericEvents:
+        return import(/* webpackChunkName: "generic_events-aggregate" */ '../generic_events/aggregate')
       case FEATURE_NAMES.logging:
         return import(/* webpackChunkName: "logging-aggregate" */ '../logging/aggregate')
       case FEATURE_NAMES.metrics:

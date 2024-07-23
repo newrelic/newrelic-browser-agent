@@ -2,7 +2,6 @@ import helpers from './helpers'
 import { Aggregator } from '../../../src/common/aggregate/aggregator'
 import { ee } from '../../../src/common/event-emitter/contextual-ee'
 import { Spa } from '../../../src/features/spa'
-import { MockXhr } from '../../../tools/jest/helpers/mock-xhr'
 
 jest.mock('../../../src/common/constants/runtime')
 jest.mock('../../../src/common/config/config', () => ({

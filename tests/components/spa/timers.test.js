@@ -38,7 +38,7 @@ describe('SPA timers tracking', () => {
     })
 
     expect(spaAggregate.state.currentNode?.id).toBeFalsy()
-    helpers.startInteraction(onInteractionStart, afterInteractionDone, { baseEE: ee.get(agentIdentifier) })
+    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, spaAggregate, validator, done), { baseEE: ee.get(agentIdentifier) })
 
     function onInteractionStart (cb) {
       // cancel timer1 after 5ms so that it never fires, do this first to avoid race conditions
@@ -51,13 +51,6 @@ describe('SPA timers tracking', () => {
 
       setTimeout(cb, 100)
     }
-
-    function afterInteractionDone (interaction) {
-      expect(interaction.root.end).toBeGreaterThan(0) // interaction should be finished and have an end time
-      expect(spaAggregate.state.currentNode?.id).toBeFalsy() // interaction should be null outside of async chain
-      validator.validate(interaction)
-      done()
-    }
   })
 
   test('clearTimeout still works inside callback', done => {
@@ -67,7 +60,7 @@ describe('SPA timers tracking', () => {
     })
 
     expect(spaAggregate.state.currentNode?.id).toBeFalsy()
-    helpers.startInteraction(onInteractionStart, afterInteractionDone, { baseEE: ee.get(agentIdentifier) })
+    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, spaAggregate, validator, done), { baseEE: ee.get(agentIdentifier) })
 
     function onInteractionStart (cb) {
       new Promise(() => {
@@ -78,12 +71,92 @@ describe('SPA timers tracking', () => {
         cb()
       })
     }
+  })
 
-    function afterInteractionDone (interaction) {
-      expect(interaction.root.end).toBeGreaterThan(0) // interaction should be finished and have an end time
-      expect(spaAggregate.state.currentNode?.id).toBeFalsy() // interaction should be null outside of async chain
-      validator.validate(interaction)
-      done()
+  test('callback is timed', done => {
+    const validator = new helpers.InteractionValidator({
+      name: 'interaction',
+      jsTime: 50,
+      children: [{
+        type: 'customTracer',
+        attrs: {
+          name: 'timer'
+        },
+        jsTime: 100,
+        children: []
+      }]
+    })
+
+    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, spaAggregate, validator, done), { baseEE: ee.get(agentIdentifier) })
+
+    function onInteractionStart (cb) {
+      setTimeout(() => newrelic.interaction().createTracer('timer', () => {
+        blockFor(100)
+        cb()
+      })(), 100)
+      blockFor(50)
+    }
+  })
+
+  test('callback is timed through multiple callback tasks', done => {
+    const validator = new helpers.InteractionValidator({
+      name: 'interaction',
+      jsTime: 50,
+      children: [{
+        type: 'customTracer',
+        attrs: {
+          name: 'timer'
+        },
+        jsTime: 200,
+        children: []
+      }]
+    })
+
+    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, spaAggregate, validator, done), { baseEE: ee.get(agentIdentifier) })
+
+    function onInteractionStart (cb) {
+      setTimeout(() => newrelic.interaction().createTracer('timer', () => {
+        setTimeout(() => {
+          blockFor(100)
+        }, 0)
+        setTimeout(() => {
+          blockFor(100)
+          cb()
+        }, 1)
+      })(), 0)
+      blockFor(50)
+    }
+  })
+
+  test('callback is timed for microtasks too', done => {
+    const validator = new helpers.InteractionValidator({
+      name: 'interaction',
+      jsTime: 150,
+      children: []
+    })
+
+    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, spaAggregate, validator, done), { baseEE: ee.get(agentIdentifier) })
+
+    function onInteractionStart (cb) {
+      Promise.resolve().then(function () {
+        blockFor(100)
+        cb()
+      })
+      blockFor(50)
     }
   })
 })
+
+function afterInteractionDone (spaAggregate, validator, done, interaction) {
+  expect(interaction.root.end).toBeGreaterThan(0) // interaction should be finished and have an end time
+  expect(spaAggregate.state.currentNode?.id).toBeFalsy() // interaction should be null outside of async chain
+  validator.validate(interaction)
+  done()
+}
+
+function blockFor (ms) {
+  const start = performance.now()
+  let data = 0
+  // eslint-disable-next-line no-unused-vars
+  while (performance.now() - start <= ms) data ^= start
+}

@@ -85,3 +85,5 @@
 `Failed to execute setUserId. Non-null value must be a string type.`
 ### 42
 `Failed to execute setApplicationVersion. Expected <String | null>`
+### 43
+`Agent not configured properly.`

@@ -1,6 +1,6 @@
 import { Aggregator } from '../../../src/common/aggregate/aggregator'
 import { ee } from '../../../src/common/event-emitter/contextual-ee'
-import { setRuntime } from '../../../src/common/config/config'
+import { setConfiguration, setInfo, setRuntime } from '../../../src/common/config/config'
 import { VITAL_NAMES } from '../../../src/common/vitals/constants'
 
 // Note: these callbacks fire right away unlike the real web-vitals API which are async-on-trigger
@@ -52,11 +52,9 @@ describe('pvt aggregate tests', () => {
       __esModule: true,
       activatedFeatures: { [agentId]: { pvt: 1 } }
     }))
-    // jest.doMock('../../../common/harvest/harvest', () => ({
-    //   __esModule: true,
-    //   send: jest.fn()
-    // }))
 
+    setInfo(agentId, { licenseKey: 'licenseKey', applicationID: 'applicationID' })
+    setConfiguration(agentId, {})
     setRuntime(agentId, {})
     const { Aggregate } = await import('../../../src/features/page_view_timing/aggregate')
 

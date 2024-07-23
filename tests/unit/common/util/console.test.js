@@ -18,13 +18,13 @@ describe('warn', () => {
 
   test('should call console.debug with a prefixed message', () => {
     warn(1000)
-    expect(console.debug).toHaveBeenCalledWith('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/warning-codes.md#1000', undefined)
+    expect(console.debug).toHaveBeenCalledWith('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#1000', undefined)
   })
 
   test('should call console.debug with secondary argument if provided', () => {
     const secondary = 'secondary value'
     warn(123, secondary)
-    expect(console.debug).toHaveBeenCalledWith('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/warning-codes.md#123', secondary)
+    expect(console.debug).toHaveBeenCalledWith('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#123', secondary)
   })
 
   test('should not call console.debug with secondary argument if not provided', () => {

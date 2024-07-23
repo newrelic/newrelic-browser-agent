@@ -276,7 +276,7 @@ describe('setAPI', () => {
       apiInterface.setCustomAttribute(...args)
 
       expect(console.debug).toHaveBeenCalledTimes(1)
-      expect(console.debug).toHaveBeenCalledWith(expect.stringContaining('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/warning-codes.md#39'), typeof name)
+      expect(console.debug).toHaveBeenCalledWith(expect.stringContaining('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#39'), typeof name)
     })
 
     test.each([undefined, {}, [], Symbol('foobar')])('should return early and warn when value is not a string, number, or null (%s)', (value) => {
@@ -284,7 +284,7 @@ describe('setAPI', () => {
       apiInterface.setCustomAttribute(...args)
 
       expect(console.debug).toHaveBeenCalledTimes(1)
-      expect(console.debug).toHaveBeenCalledWith(expect.stringContaining('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/warning-codes.md#40'), typeof value)
+      expect(console.debug).toHaveBeenCalledWith(expect.stringContaining('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#40'), typeof value)
     })
 
     test('should set a custom attribute with a string value', () => {
@@ -387,7 +387,7 @@ describe('setAPI', () => {
       apiInterface.setUserId(...args)
 
       expect(console.debug).toHaveBeenCalledTimes(1)
-      expect(console.debug).toHaveBeenCalledWith(expect.stringContaining('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/warning-codes.md#41'), typeof value)
+      expect(console.debug).toHaveBeenCalledWith(expect.stringContaining('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#41'), typeof value)
     })
 
     test('should set a custom attribute with name enduser.id', () => {
@@ -438,7 +438,7 @@ describe('setAPI', () => {
       apiInterface.setApplicationVersion(...args)
 
       expect(console.debug).toHaveBeenCalledTimes(1)
-      expect(console.debug).toHaveBeenCalledWith(expect.stringContaining('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/warning-codes.md#42'), typeof value)
+      expect(console.debug).toHaveBeenCalledWith(expect.stringContaining('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#42'), typeof value)
     })
 
     test('should set a custom attribute with name application.version', () => {

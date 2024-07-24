@@ -12,7 +12,7 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { warn } from '../../../common/util/console'
 import { now } from '../../../common/timing/now'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
-import { handlePageAction } from './sources/page-actions'
+import { formatPageAction } from './formatters/page-actions'
 import { deregisterDrain } from '../../../common/drain/drain'
 
 export class Aggregate extends AggregateBase {
@@ -38,10 +38,12 @@ export class Aggregate extends AggregateBase {
       if (!ins) {
         this.blocked = true
         deregisterDrain(this.agentIdentifier, this.featureName)
+        return
       }
 
-      // handle page actions and other generic events here
-      registerHandler('api-addPageAction', (...args) => handlePageAction(...args, this.addEvent.bind(this)), this.featureName, this.ee)
+      const pageActionHandler = formatPageAction(this.addEvent.bind(this))
+
+      registerHandler('api-addPageAction', pageActionHandler, this.featureName, this.ee)
 
       this.harvestScheduler = new HarvestScheduler('ins', { onFinished: (...args) => this.onHarvestFinished(...args) }, this)
       this.harvestScheduler.harvest.on('ins', (...args) => this.onHarvestStarted(...args))
@@ -95,14 +97,14 @@ export class Aggregate extends AggregateBase {
     }
 
     const eventAttributes = {
-      /** Agent-level custom attributes */
-      ...(getInfo(this.agentIdentifier).jsAttributes || {}),
       /** Common attributes shared on all generic events */
       referrerUrl: this.referrerUrl,
       currentUrl: cleanURL('' + location),
       pageUrl: cleanURL(getRuntime(this.agentIdentifier).origin),
       /** Event-specific attributes take precedence over everything else */
-      ...obj
+      ...obj,
+      /** Agent-level custom attributes */
+      ...(getInfo(this.agentIdentifier).jsAttributes || {})
     }
 
     /** should have been provided by reporting feature -- but falls back to now if not */

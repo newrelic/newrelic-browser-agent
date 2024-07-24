@@ -13,6 +13,7 @@ import { warn } from '../../../common/util/console'
 import { now } from '../../../common/timing/now'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { handlePageAction } from './sources/page-actions'
+import { deregisterDrain } from '../../../common/drain/drain'
 
 export class Aggregate extends AggregateBase {
   #agentRuntime
@@ -24,7 +25,7 @@ export class Aggregate extends AggregateBase {
     this.harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'generic_events.harvestTimeSeconds')
 
     this.referrerUrl = undefined
-    this.currentEvents = undefined
+    this.currentEvents = []
 
     this.events = []
     this.overflow = []
@@ -34,15 +35,18 @@ export class Aggregate extends AggregateBase {
     if (isBrowserScope && document.referrer) this.referrerUrl = cleanURL(document.referrer)
 
     this.waitForFlags(['ins']).then(([ins]) => {
-      if (ins) {
-        // handle page actions and other generic events here
-        console.log('got ins flag')
-        registerHandler('api-addPageAction', (...args) => handlePageAction(...args, this.addEvent.bind(this)), this.featureName, this.ee)
-
-        this.harvestScheduler = new HarvestScheduler('ins', { onFinished: (...args) => this.onHarvestFinished(...args) }, this)
-        this.harvestScheduler.harvest.on('ins', (...args) => this.onHarvestStarted(...args))
-        this.harvestScheduler.startTimer(this.harvestTimeSeconds, 0)
+      if (!ins) {
+        this.blocked = true
+        deregisterDrain(this.agentIdentifier, this.featureName)
       }
+
+      // handle page actions and other generic events here
+      registerHandler('api-addPageAction', (...args) => handlePageAction(...args, this.addEvent.bind(this)), this.featureName, this.ee)
+
+      this.harvestScheduler = new HarvestScheduler('ins', { onFinished: (...args) => this.onHarvestFinished(...args) }, this)
+      this.harvestScheduler.harvest.on('ins', (...args) => this.onHarvestStarted(...args))
+      this.harvestScheduler.startTimer(this.harvestTimeSeconds, 0)
+
       this.drain()
     })
   }
@@ -68,9 +72,9 @@ export class Aggregate extends AggregateBase {
   }
 
   onHarvestFinished (result) {
-    if (result && result.sent && result.retry && this.currentEvents) {
-      this.events = this.events.concat(this.currentEvents)
-      this.currentEvents = null
+    if (result && result.sent && result.retry && this.currentEvents.length) {
+      this.events = this.currentEvents.concat(this.events)
+      this.currentEvents = []
     }
   }
 

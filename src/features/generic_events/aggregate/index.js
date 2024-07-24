@@ -36,6 +36,7 @@ export class Aggregate extends AggregateBase {
       if (!ins) {
         this.blocked = true
         deregisterDrain(this.agentIdentifier, this.featureName)
+        return
       }
 
       // handle page actions and other generic events here

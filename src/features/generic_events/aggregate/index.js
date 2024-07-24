@@ -23,7 +23,7 @@ export class Aggregate extends AggregateBase {
     this.harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'generic_events.harvestTimeSeconds')
 
     this.referrerUrl = undefined
-    this.currentEvents = undefined
+    this.currentEvents = []
 
     this.events = []
     this.overflow = []
@@ -68,7 +68,7 @@ export class Aggregate extends AggregateBase {
   }
 
   onHarvestFinished (result) {
-    if (result && result.sent && result.retry && this.currentEvents) {
+    if (result && result.sent && result.retry && this.currentEvents.length) {
       this.events = this.currentEvents.concat(this.events)
       this.currentEvents = null
     }

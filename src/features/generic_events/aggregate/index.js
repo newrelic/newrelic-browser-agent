@@ -69,7 +69,7 @@ export class Aggregate extends AggregateBase {
 
   onHarvestFinished (result) {
     if (result && result.sent && result.retry && this.currentEvents) {
-      this.events = this.events.concat(this.currentEvents)
+      this.events = this.currentEvents.concat(this.events)
       this.currentEvents = null
     }
   }

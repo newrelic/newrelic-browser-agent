@@ -146,7 +146,7 @@ describe('SPA timers tracking', () => {
     }
   })
 
-  test('timer cutoff', done => {
+  test('setTimeout cutoff', done => {
     const validator = new helpers.InteractionValidator({
       name: 'interaction',
       attrs: {
@@ -184,6 +184,41 @@ describe('SPA timers tracking', () => {
           newrelic.interaction().command('setAttribute', undefined, 'included', true)
         }, 1)
       }, 0)
+    }
+  })
+
+  test('multiple setTimeout', done => {
+    const validator = new helpers.InteractionValidator({
+      name: 'interaction',
+      children: [{
+        type: 'customTracer',
+        attrs: {
+          name: 'timer'
+        },
+        children: [{
+          type: 'customTracer',
+          attrs: {
+            name: 'timer'
+          },
+          children: []
+        }]
+      }, {
+        type: 'customTracer',
+        attrs: {
+          name: 'timer'
+        },
+        children: []
+      }]
+    })
+
+    expect(spaAggregate.state.currentNode?.id).toBeFalsy()
+    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, spaAggregate, validator, done), { baseEE: ee.get(agentIdentifier) })
+
+    function onInteractionStart (cb) {
+      setTimeout(newrelic.interaction().createTracer('timer', function () {
+        setTimeout(newrelic.interaction().createTracer('timer', cb))
+      }))
+      setTimeout(newrelic.interaction().createTracer('timer', function () {}))
     }
   })
 })

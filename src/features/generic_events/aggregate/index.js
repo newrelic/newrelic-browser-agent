@@ -11,6 +11,7 @@ import { isBrowserScope } from '../../../common/constants/runtime'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { warn } from '../../../common/util/console'
 import { now } from '../../../common/timing/now'
+import { deregisterDrain } from '../../../common/drain/drain'
 
 export class Aggregate extends AggregateBase {
   #agentRuntime
@@ -32,12 +33,16 @@ export class Aggregate extends AggregateBase {
     if (isBrowserScope && document.referrer) this.referrerUrl = cleanURL(document.referrer)
 
     this.waitForFlags(['ins']).then(([ins]) => {
-      if (ins) {
-        // handle page actions and other generic events here
-        this.harvestScheduler = new HarvestScheduler('ins', { onFinished: (...args) => this.onHarvestFinished(...args) }, this)
-        this.harvestScheduler.harvest.on('ins', (...args) => this.onHarvestStarted(...args))
-        // this.harvestScheduler.startTimer(this.harvestTimeSeconds, 0)
+      if (!ins) {
+        this.blocked = true
+        deregisterDrain(this.agentIdentifier, this.featureName)
       }
+
+      // handle page actions and other generic events here
+      this.harvestScheduler = new HarvestScheduler('ins', { onFinished: (...args) => this.onHarvestFinished(...args) }, this)
+      this.harvestScheduler.harvest.on('ins', (...args) => this.onHarvestStarted(...args))
+      // this.harvestScheduler.startTimer(this.harvestTimeSeconds, 0)
+
       this.drain()
     })
   }

@@ -2,7 +2,7 @@ import { FeatureBase } from './feature-base'
 import { getInfo, isConfigured, getRuntime } from '../../common/config/config'
 import { configure } from '../../loaders/configure/configure'
 import { gosCDN } from '../../common/window/nreum'
-import { drain } from '../../common/drain/drain'
+import { deregisterDrain, drain } from '../../common/drain/drain'
 import { activatedFeatures } from '../../common/util/feature-flags'
 
 export class AggregateBase extends FeatureBase {
@@ -34,6 +34,8 @@ export class AggregateBase extends FeatureBase {
     })
     return flagsPromise.catch(err => {
       this.ee.emit('internal-error', [err])
+      this.blocked = true
+      deregisterDrain(this.agentIdentifier, this.featureName)
     })
   }
 

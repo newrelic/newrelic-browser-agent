@@ -145,6 +145,47 @@ describe('SPA timers tracking', () => {
       blockFor(50)
     }
   })
+
+  test('timer cutoff', done => {
+    const validator = new helpers.InteractionValidator({
+      name: 'interaction',
+      attrs: {
+        custom: {
+          outer: true,
+          included: true,
+          custom: true
+        }
+      },
+      children: [{
+        type: 'customTracer',
+        children: [],
+        attrs: {
+          name: 'custom-long-timer'
+        }
+      }]
+    })
+
+    expect(spaAggregate.state.currentNode?.id).toBeFalsy()
+    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, spaAggregate, validator, done), { baseEE: ee.get(agentIdentifier) })
+
+    function onInteractionStart (cb) {
+      setTimeout(function () {
+        newrelic.interaction().command('setAttribute', undefined, 'outer', true)
+        setTimeout(function () {
+          newrelic.interaction().command('setAttribute', undefined, 'excluded', true)
+        }, 999)
+
+        setTimeout(newrelic.interaction().createTracer('custom-long-timer', function () {
+          newrelic.interaction().command('setAttribute', undefined, 'custom', true)
+          cb()
+        }), 10)
+
+        setTimeout(function () {
+          newrelic.interaction().command('setAttribute', undefined, 'included', true)
+        }, 1)
+      }, 0)
+    }
+  })
 })
 
 function afterInteractionDone (spaAggregate, validator, done, interaction) {

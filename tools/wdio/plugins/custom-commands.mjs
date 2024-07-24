@@ -115,8 +115,8 @@ export default class CustomCommands {
     })
 
     /**
-     * Sets a permanent scheduled reply for the rum call to include the session
-     * replay flag with a value of 1 enabling the feature.
+     * Sets a permanent scheduled reply for the rum call to define the Date header
+     * to a specific value. Default is to set the header to one hour in the past.
      */
     browser.addCommand('mockDateResponse', async function (serverTime = Date.now() - (60 * 60 * 1000), opts = {}) {
       const { flags } = opts

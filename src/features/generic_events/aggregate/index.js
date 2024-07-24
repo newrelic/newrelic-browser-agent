@@ -11,6 +11,8 @@ import { isBrowserScope } from '../../../common/constants/runtime'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { warn } from '../../../common/util/console'
 import { now } from '../../../common/timing/now'
+import { registerHandler } from '../../../common/event-emitter/register-handler'
+import { handlePageAction } from './sources/page-actions'
 
 export class Aggregate extends AggregateBase {
   #agentRuntime
@@ -34,9 +36,12 @@ export class Aggregate extends AggregateBase {
     this.waitForFlags(['ins']).then(([ins]) => {
       if (ins) {
         // handle page actions and other generic events here
+        console.log('got ins flag')
+        registerHandler('api-addPageAction', (...args) => handlePageAction(...args, this.addEvent.bind(this)), this.featureName, this.ee)
+
         this.harvestScheduler = new HarvestScheduler('ins', { onFinished: (...args) => this.onHarvestFinished(...args) }, this)
         this.harvestScheduler.harvest.on('ins', (...args) => this.onHarvestStarted(...args))
-        // this.harvestScheduler.startTimer(this.harvestTimeSeconds, 0)
+        this.harvestScheduler.startTimer(this.harvestTimeSeconds, 0)
       }
       this.drain()
     })
@@ -76,6 +81,8 @@ export class Aggregate extends AggregateBase {
       warn('Invalid object passed to generic event aggregate. Missing "eventType".')
       return
     }
+
+    console.log('addEvent...', obj)
 
     for (let key in obj) {
       let val = obj[key]

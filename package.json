@@ -44,6 +44,9 @@
       "features/page_action": [
         "dist/types/features/page_action/index.d.ts"
       ],
+      "features/generic_events": [
+        "dist/types/features/generic_events/index.d.ts"
+      ],
       "features/page_view_event": [
         "dist/types/features/page_view_event/index.d.ts"
       ],
@@ -52,6 +55,9 @@
       ],
       "features/session_trace": [
         "dist/types/features/session_trace/index.d.ts"
+      ],
+      "features/session_replay": [
+        "dist/types/features/session_replay/index.d.ts"
       ],
       "features/spa": [
         "dist/types/features/spa/index.d.ts"
@@ -110,9 +116,9 @@
       "default": "./dist/esm/features/metrics/index.js"
     },
     "./features/page_action": {
-      "types": "./dist/types/features/page_action/index.d.ts",
-      "require": "./dist/cjs/features/page_action/index.js",
-      "default": "./dist/esm/features/page_action/index.js"
+      "types": "./dist/types/features/generic_events/index.d.ts",
+      "require": "./dist/cjs/features/generic_events/index.js",
+      "default": "./dist/esm/features/generic_events/index.js"
     },
     "./features/page_view_event": {
       "types": "./dist/types/features/page_view_event/index.d.ts",

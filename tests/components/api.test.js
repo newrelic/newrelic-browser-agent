@@ -161,7 +161,7 @@ describe('setAPI', () => {
         'api-addPageAction',
         [expect.toBeNumber(), ...args],
         null,
-        FEATURE_NAMES.pageAction,
+        FEATURE_NAMES.genericEvents,
         instanceEE
       )
     })

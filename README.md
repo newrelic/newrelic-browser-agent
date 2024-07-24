@@ -78,6 +78,7 @@ const options = {
 The following features may be disabled by adding `init` entries as shown above. Note that the `page_view_event` feature may not be disabled.
 
 - `ajax`
+- `generic_events`
 - `jserrors`
 - `metrics`
 - `page_action`

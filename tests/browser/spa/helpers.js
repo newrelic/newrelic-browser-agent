@@ -34,8 +34,8 @@ var afterLoad = false
 jil.onWindowLoaded(function () {
   afterLoad = true
   originalSetTimeout(function () {
-    const { Aggregate: InsAggregate } = require('../../../src/features/page_action/aggregate/index')
-    new InsAggregate(agentIdentifier, aggregator)
+    const { Aggregate: GenericEventsAggregate } = require('../../../src/features/generic_events/aggregate/index')
+    new GenericEventsAggregate(agentIdentifier, aggregator)
     if (!spaAgg) spaAgg = new SpaAggregate(agentIdentifier, aggregator)
     drain(agentIdentifier, 'api')
     drain(agentIdentifier, 'feature')

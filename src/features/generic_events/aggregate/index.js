@@ -88,8 +88,6 @@ export class Aggregate extends AggregateBase {
       return
     }
 
-    console.log('addEvent...', obj)
-
     for (let key in obj) {
       let val = obj[key]
       if (key === 'timestamp') val = this.#agentRuntime.timeKeeper.correctAbsoluteTimestamp(val)

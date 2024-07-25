@@ -108,7 +108,6 @@ function drainGroup (agentIdentifier, group, activateGroup = true) {
           registration[0].on(eventType, registration[1])
         })
       })
-      console.log('drained', group)
     }
   }
 

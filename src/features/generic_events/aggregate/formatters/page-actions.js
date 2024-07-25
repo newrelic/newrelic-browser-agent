@@ -1,4 +1,4 @@
-import { originTime } from '../../../../common/constants/runtime'
+import { isBrowserScope, originTime } from '../../../../common/constants/runtime'
 
 /**
  * HOF that returns a function that rormats incoming page action data to align to expected shape
@@ -13,8 +13,10 @@ export function formatPageAction (handler) {
       timestamp: timestamp + originTime,
       timeSinceLoad: timestamp / 1000,
       actionName: name,
-      browserWidth: window?.document?.documentElement?.clientWidth,
-      browserHeight: window?.document?.documentElement?.clientHeight
+      ...(isBrowserScope && {
+        browserWidth: window.document.documentElement?.clientWidth,
+        browserHeight: window.document.documentElement?.clientHeight
+      })
     })
   }
 }

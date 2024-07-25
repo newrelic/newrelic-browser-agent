@@ -3,7 +3,6 @@
 import { warn } from '../common/util/console'
 import { SR_EVENT_EMITTER_TYPES } from '../features/session_replay/constants'
 import { generateRandomHexString } from '../common/ids/unique-id'
-import { ee } from '../common/event-emitter/contextual-ee'
 
 /**
  * @typedef {import('./api/interaction-types').InteractionInstance} InteractionInstance
@@ -14,9 +13,6 @@ export class AgentBase {
 
   constructor (agentIdentifier = generateRandomHexString(16)) {
     this.agentIdentifier = agentIdentifier
-
-    // Assign the observation context to the event emitter, so it knows how to create observation contexts
-    this.ee = ee.get(agentIdentifier)
   }
 
   /**

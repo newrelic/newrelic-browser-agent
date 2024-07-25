@@ -110,6 +110,7 @@ function startInteraction (onInteractionStart, afterInteractionFinish, options =
   }
 
   options.baseEE.on('interaction', function (interaction) {
+    console.log('got ixn in test')
     let id = interaction.root.attrs.custom.__interactionId
     let isInitialPageLoad = eventType === 'initialPageLoad' && interaction.root.attrs.trigger === 'initialPageLoad'
     if (done) {

@@ -4,6 +4,7 @@ import { getConfiguration, setConfiguration, setInfo, setLoaderConfig, setRuntim
 import { activatedFeatures } from '../../common/util/feature-flags'
 import { isWorkerScope } from '../../common/constants/runtime'
 import { redefinePublicPath } from './public-path'
+import { ee } from '../../common/event-emitter/contextual-ee'
 
 let alreadySetOnce = false // the configure() function can run multiple times in agent lifecycle
 
@@ -12,7 +13,8 @@ let alreadySetOnce = false // the configure() function can run multiple times in
  */
 export function configure (agent, opts = {}, loaderType, forceDrain) {
   // eslint-disable-next-line camelcase
-  let { init, info, loader_config, runtime = { loaderType }, exposed = true } = opts
+  let { init, info, loader_config, runtime = {}, exposed = true } = opts
+  runtime.loaderType = loaderType
   const nr = gosCDN()
   if (!info) {
     init = nr.init
@@ -54,6 +56,8 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
   ]
   runtime.ptid = agent.agentIdentifier
   setRuntime(agent.agentIdentifier, runtime)
+
+  agent.ee = ee.get(agent.agentIdentifier)
 
   if (agent.api === undefined) agent.api = setAPI(agent.agentIdentifier, forceDrain, agent.runSoftNavOverSpa)
   if (agent.exposed === undefined) agent.exposed = exposed

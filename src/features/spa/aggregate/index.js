@@ -36,6 +36,7 @@ export class Aggregate extends AggregateBase {
   constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
 
+    console.log('spa agg running ')
     const agentRuntime = getRuntime(agentIdentifier)
     this.state = {
       initialPageURL: agentRuntime.origin,
@@ -128,6 +129,8 @@ export class Aggregate extends AggregateBase {
     // ensure that checkFinish calls are safe during initialPageLoad
     state.initialPageLoad[REMAINING]++
 
+    console.log(state.initialPageLoad)
+
     register(FN_START, callbackStart, this.featureName, baseEE)
     register(CB_START, callbackStart, this.featureName, promiseEE)
 
@@ -175,6 +178,7 @@ export class Aggregate extends AggregateBase {
     }
 
     register(FN_START, function (args, eventSource) {
+      console.log('got FN_START')
       var ev = args[0]
       var evName = ev.type
       var eventNode = ev[`__nrNode:${bundleId}`]
@@ -728,6 +732,7 @@ export class Aggregate extends AggregateBase {
     }
 
     function saveInteraction (interaction) {
+      console.log('SAVE IXN')
       if (interaction.ignored || (!interaction.save && !interaction.routeChange)) {
         baseEE.emit('interactionDone', [interaction, false])
         return

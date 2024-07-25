@@ -18,8 +18,8 @@ export function defaultRegister (type, handler, group, ee) {
 function registerWithSpecificEmitter (ee, handlers, type, handler, group) {
   if (!group) group = 'feature'
   if (!ee) ee = handleEE
-
-  var groupHandlers = handlers[group] = handlers[group] || {}
+  handlers[ee.debugId] ??= {}
+  var groupHandlers = handlers[ee.debugId][group] ??= {}
   var list = groupHandlers[type] = groupHandlers[type] || []
   list.push([ee, handler])
 }

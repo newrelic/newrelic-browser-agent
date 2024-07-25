@@ -156,16 +156,16 @@ describe('event-emitter buffer', () => {
     expect(ee.backlog).toEqual({})
   })
 
-  test('it should not buffer after drain', async () => {
+  test('buffered data should not emit until drain', async () => {
     const { ee } = await import('../../src/common/event-emitter/contextual-ee')
     const { drain } = await import('../../src/common/drain/drain')
+    const { handle } = await import('../../src/common/event-emitter/handle')
+    const { registerHandler } = await import('../../src/common/event-emitter/register-handler')
     const mockListener = jest.fn()
     const eventType = faker.string.uuid()
     const eventArgs = ['a', 'b', 'c']
 
-    ee.on(eventType, mockListener)
-    ee.buffer([eventType])
-    ee.emit(eventType, eventArgs)
+    handle(eventType, eventArgs, undefined, undefined, ee)
 
     expect(ee.backlog).toEqual(expect.objectContaining({
       feature: [
@@ -178,11 +178,13 @@ describe('event-emitter buffer', () => {
       ]
     }))
     expect(ee.isBuffering(eventType)).toEqual(true)
+    expect(mockListener).toHaveReturnedTimes(0) // wont return until drain is called
 
+    registerHandler(eventType, mockListener, undefined, ee)
     drain('globalEE')
-    ee.buffer([eventType])
-    ee.emit(eventType, eventArgs)
-    ee.emit(eventType, eventArgs)
+
+    handle(eventType, eventArgs, undefined, undefined, ee)
+    handle(eventType, eventArgs, undefined, undefined, ee)
 
     expect(ee.backlog).toEqual(expect.objectContaining({
       feature: null

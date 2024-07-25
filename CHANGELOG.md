@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.263.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.262.0...v1.263.0) (2024-07-25)
+
+
+### Features
+
+* Optimize bundle size with warning codes ([#1111](https://github.com/newrelic/newrelic-browser-agent/issues/1111)) ([6ab7d2b](https://github.com/newrelic/newrelic-browser-agent/commit/6ab7d2bee5053fc75c0d20c6257afea5cf16d76d))
+* Shut down agent if improperly configured ([#1116](https://github.com/newrelic/newrelic-browser-agent/issues/1116)) ([edc20d4](https://github.com/newrelic/newrelic-browser-agent/commit/edc20d4f81d1c0662f3f244240cc968b1f3870c9))
+
+
+### Bug Fixes
+
+* Prevent agent using invalid date header ([#1122](https://github.com/newrelic/newrelic-browser-agent/issues/1122)) ([6851c1b](https://github.com/newrelic/newrelic-browser-agent/commit/6851c1b1733c513ab4de119e875593a418e51b93))
+
 ## [1.262.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.261.2...v1.262.0) (2024-07-09)
 
 

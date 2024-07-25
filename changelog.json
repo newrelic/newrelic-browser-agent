@@ -5,6 +5,39 @@
       "changes": [
         {
           "type": "fix",
+          "sha": "6851c1b1733c513ab4de119e875593a418e51b93",
+          "message": "Prevent agent using invalid date header",
+          "issues": [
+            "1122"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "edc20d4f81d1c0662f3f244240cc968b1f3870c9",
+          "message": "Shut down agent if improperly configured",
+          "issues": [
+            "1116"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "6ab7d2bee5053fc75c0d20c6257afea5cf16d76d",
+          "message": "Optimize bundle size with warning codes",
+          "issues": [
+            "1111"
+          ]
+        }
+      ],
+      "version": "1.263.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "6339db1f-0ec1-4ffd-99df-15474035477c",
+      "createTime": "2024-07-25T22:11:54.827Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
           "sha": "5eb91646314b5a225a1a902ecb0b58b57b5ee74f",
           "message": "Release backlog memory when features are blocked by RUM",
           "issues": [
@@ -1714,5 +1747,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2024-07-09T18:45:37.701Z"
+  "updateTime": "2024-07-25T22:11:54.827Z"
 }

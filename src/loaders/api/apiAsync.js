@@ -27,7 +27,7 @@ export function setAPI (agentIdentifier) {
     var time = providedTime ? providedTime - originTime : t
     handle(CUSTOM_METRIC_CHANNEL, ['finished', { time }], undefined, FEATURE_NAMES.metrics, instanceEE)
     addToTrace(t, { name: 'finished', start: time + originTime, origin: 'nr' })
-    handle('api-addPageAction', [time, 'finished'], undefined, FEATURE_NAMES.pageAction, instanceEE)
+    handle('api-addPageAction', [time, 'finished'], undefined, FEATURE_NAMES.genericEvents, instanceEE)
   }
 
   function addToTrace (t, evt) {

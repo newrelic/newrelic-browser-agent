@@ -1,34 +1,27 @@
-/*
- * Copyright 2020 New Relic Corporation. All rights reserved.
- * SPDX-License-Identifier: Apache-2.0
- */
+/* eslint-disable no-void */
+import * as qp from '@newrelic/nr-querypack'
+import { Serializer } from '../../../src/features/spa/aggregate/serializer'
+import { Interaction } from '../../../src/features/spa/aggregate/interaction'
+const { getInfo } = require('../../../src/common/config/config')
 
-const jil = require('../../../tools/jil/driver/browser.js')
-const matcher = require('../../../tools/jil/util/browser-matcher')
-const { setup } = require('../utils/setup')
-const { getInfo, setInfo } = require('../../../src/common/config/config')
-
-const setupData = setup()
-const { baseEE, agentIdentifier, aggregator } = setupData
-
-// TO DO(?) - this file doesn't run correctly if it's cleaned up under pull #243, i.e. remove `matcher` and `supported`
-let supported = matcher.withFeature('wrappableAddEventListener')
-var qp = require('@newrelic/nr-querypack')
-let testCases = require('@newrelic/nr-querypack/examples/all.json').filter((testCase) => {
+const testCases = require('@newrelic/nr-querypack/examples/all.json').filter((testCase) => {
   return testCase.schema.name === 'bel' &&
     testCase.schema.version === 7 &&
     JSON.parse(testCase.json).length === 1
 })
+let mockInfo = {}
+jest.mock('../../../src/common/config/config', () => ({
+  getConfigurationValue: jest.fn(),
+  originals: { ST: setTimeout, CT: clearTimeout },
+  getInfo: jest.fn(() => mockInfo),
+  setInfo: jest.fn((_id, newInfo) => { mockInfo = newInfo }),
+  getRuntime: jest.fn().mockReturnValue({ origin: 'localhost' })
+}))
 
-if (process.browser) {
-  var { Serializer } = require('../../../src/features/spa/aggregate/serializer')
-  var { Interaction } = require('../../../src/features/spa/aggregate/interaction')
+const agentIdentifier = 'abcdefg'
+const serializer = new Serializer({ agentIdentifier })
 
-  var serializer = new Serializer({ agentIdentifier })
-  setInfo(agentIdentifier, {})
-}
-
-var fieldPropMap = {
+const fieldPropMap = {
   start: 'start',
   end: 'end',
   children: 'children',
@@ -38,30 +31,30 @@ var fieldPropMap = {
   responseBodySize: 'rxSize'
 }
 
-_forEach(testCases, function (testCase) {
-  jil.browserTest('spa interaction serializer ' + testCase.name, supported, function (t) {
-    runTest(testCase, t)
+testCases.forEach(testCase => {
+  test('spa serializer ' + testCase.name, () => {
+    runTest(testCase)
   })
 })
 
-jil.browserTest('spa interaction serializer attributes', supported, function (t) {
-  let interaction = new Interaction('click', 1459358524622, 'http://example.com/', undefined, undefined, agentIdentifier)
-  interaction.root.attrs.custom['undefined'] = void 0
-  interaction.root.attrs.custom['function'] = function foo (bar) {
+test('spa serializer attributes', () => {
+  const interaction = new Interaction('click', 1459358524622, 'http://example.com/', undefined, undefined, agentIdentifier)
+  interaction.root.attrs.custom.undefined = void 0
+  interaction.root.attrs.custom.function = function foo (bar) {
     return 123
   }
 
-  var decoded = qp.decode(serializer.serializeSingle(interaction.root))[0]
-  var attrs = decoded.children.reduce((map, attr) => {
+  const decoded = qp.decode(serializer.serializeSingle(interaction.root))[0]
+  const attrs = decoded.children.reduce((map, attr) => {
     map[attr.key] = attr
     return map
   }, {})
 
   // Firefox inserts a "use strict"; as the first line of our test function, so
   // strip it out if present for comparison purposes.
-  attrs['function']['value'] = attrs['function']['value'].replace(/"use strict";\n\n/, '')
+  attrs.function.value = attrs.function.value.replace(/"use strict";\n\n/, '')
 
-  t.deepEqual(attrs, {
+  expect(attrs).toEqual({
     undefined: {
       key: 'undefined',
       type: 'nullAttribute'
@@ -71,56 +64,50 @@ jil.browserTest('spa interaction serializer attributes', supported, function (t)
       type: 'stringAttribute',
       value: 'function foo(bar) {\n    return 123;\n  }'
     }
-  }, 'should have expected attributes')
-  t.end()
-}, 'attributes should be correct')
+  })
+})
 
-jil.browserTest('spa interaction serializer attributes', supported, function (t) {
-  let interaction = new Interaction('click', 1459358524622, 'http://example.com/', undefined, undefined, agentIdentifier)
+test('spa interaction serializer attributes', () => {
+  const interaction = new Interaction('click', 1459358524622, 'http://example.com/', undefined, undefined, agentIdentifier)
 
-  for (var i = 1; i < 100; ++i) {
+  for (let i = 1; i < 100; ++i) {
     interaction.root.attrs.custom['attr ' + i] = i
   }
 
-  var decoded = qp.decode(serializer.serializeSingle(interaction.root, 0, interaction.root.attrs.trigger === 'initialPageLoad'))[0]
-  var attrs = decoded.children.reduce((map, attr) => {
+  const decoded = qp.decode(serializer.serializeSingle(interaction.root, 0, interaction.root.attrs.trigger === 'initialPageLoad'))[0]
+  const attrs = decoded.children.reduce((map, attr) => {
     map[attr.key] = attr
     return map
   }, {})
 
-  t.equal(Object.keys(attrs).length, 64, 'should only have 64 attributes')
-  t.end()
-}, 'attributes should be limited')
-
-jil.browserTest('spa interaction serializer with undefined string values', supported, function (t) {
-  var interaction = new Interaction('click', 1459358524622, 'http://domain/path', undefined, undefined, agentIdentifier)
-  let decoded = qp.decode(serializer.serializeSingle(interaction.root))
-  t.equal(decoded[0].customName, null, 'customName (which was undefined originally) should have default value')
-  t.end()
+  expect(Object.keys(attrs).length).toEqual(64)
 })
 
-jil.browserTest('serializing multiple interactions', supported, function (t) {
-  var ixn = new Interaction('initialPageLoad', 0, 'http://some-domain', undefined, undefined, agentIdentifier)
+test('spa interaction serializer with undefined string values', () => {
+  const interaction = new Interaction('click', 1459358524622, 'http://domain/path', undefined, undefined, agentIdentifier)
+  const decoded = qp.decode(serializer.serializeSingle(interaction.root))
+  expect(decoded[0].customName).toBeNull()
+})
+
+test('serializing multiple interactions', () => {
+  const ixn = new Interaction('initialPageLoad', 0, 'http://some-domain', undefined, undefined, agentIdentifier)
   addAjaxNode(ixn.root)
 
-  var ixn2 = new Interaction('click', 0, 'http://some-domain', undefined, undefined, agentIdentifier)
+  const ixn2 = new Interaction('click', 0, 'http://some-domain', undefined, undefined, agentIdentifier)
   ixn2.routeChange = true
   addAjaxNode(ixn2.root)
 
-  var serialized = serializer.serializeMultiple([ixn, ixn2], 0, [])
-  let decoded = qp.decode(serialized)
+  const serialized = serializer.serializeMultiple([ixn, ixn2], 0, [])
+  const decoded = qp.decode(serialized)
 
-  t.equal(decoded.length, 2, 'there are two root nodes')
-  t.equal(decoded[0].type, 'interaction')
-  t.equal(decoded[0].children.length, 1, 'first interaction has one child node')
-  t.equal(decoded[1].type, 'interaction')
-  t.equal(decoded[1].children.length, 1, 'second interaction has one child node')
-
-  t.ok(true)
-  t.end()
+  expect(decoded.length).toEqual(2)
+  expect(decoded[0].type).toEqual('interaction')
+  expect(decoded[0].children.length).toEqual(1)
+  expect(decoded[1].type).toEqual('interaction')
+  expect(decoded[1].children.length).toEqual(1)
 
   function addAjaxNode (parentNode) {
-    var ajaxNode = parentNode.child('ajax', null, null, true)
+    const ajaxNode = parentNode.child('ajax', null, null, true)
     ajaxNode.attrs.params = {}
     ajaxNode.attrs.metrics = {}
     ajaxNode.finish(100)
@@ -128,29 +115,22 @@ jil.browserTest('serializing multiple interactions', supported, function (t) {
   }
 })
 
-function runTest (testCase, t) {
-  if (!window.JSON) {
-    t.skip('skipping querypack test in browser that does not support JSON')
-    t.end()
-    return
-  }
-
-  var schema = testCase.schema
-  var inputJSON = JSON.parse(testCase.json)
-  var navTiming = []
-  var offset = 0
+function runTest (testCase) {
+  const schema = testCase.schema
+  const inputJSON = JSON.parse(testCase.json)
+  const navTiming = []
+  let offset = 0
 
   delete getInfo(agentIdentifier).atts
 
-  _forEach(inputJSON, function (root) {
+  inputJSON.forEach(function (root) {
     offset = root.start
     mungeInput(root, schema)
   })
 
-  var result = serializer.serializeSingle(inputJSON[0], 0, navTiming, inputJSON[0].attrs.category === 'Route change')
+  const result = serializer.serializeSingle(inputJSON[0], 0, navTiming, inputJSON[0].attrs.category === 'Route change')
 
-  t.equal(result, testCase.querypack, 'agent serializer should produce same output as reference encoder')
-  t.end()
+  expect(result).toEqual(testCase.querypack) // agent serializer should produce same output as reference encoder
 
   // Transform the flat JSON input data from the Querypack repo into the object format
   // produced by the agent.
@@ -165,22 +145,19 @@ function runTest (testCase, t) {
 
     const info = getInfo(agentIdentifier)
 
-    var typesByName = {}
-    _forEach(schema.nodeTypes, function (type) {
-      typesByName[type.type] = type
-    })
+    const typesByName = {}
+    schema.nodeTypes.forEach(type => (typesByName[type.type] = type))
 
     eachNode(root, function (node) {
-      var fields = getAllFields(node.type, typesByName)
+      const fields = getAllFields(node.type, typesByName)
       node.attrs = {
         metrics: {},
         params: {}
       }
-      node
 
-      _forEach(fields, function (fieldSpec) {
-        var prop = fieldPropMap[fieldSpec.name]
-        var value = node[fieldSpec.name]
+      fields.forEach(function (fieldSpec) {
+        const prop = fieldPropMap[fieldSpec.name]
+        const value = node[fieldSpec.name]
 
         if (fieldSpec.name === 'requestBodySize') {
           node.attrs.metrics[prop] = value
@@ -276,9 +253,7 @@ function runTest (testCase, t) {
   function eachNode (tree, cb) {
     cb(tree)
     if (!tree.children) return
-    _forEach(tree.children, function (child) {
-      eachNode(child, cb)
-    })
+    tree.children.forEach(child => eachNode(child, cb))
   }
 }
 
@@ -286,7 +261,7 @@ function handleAttributes (node) {
   var allChildren = node.children
   node.children = []
 
-  _forEach(allChildren, function (child) {
+  allChildren.forEach(function (child) {
     switch (child.type) {
       case 'doubleAttribute':
       case 'stringAttribute':
@@ -302,7 +277,7 @@ function handleAttributes (node) {
         node.attrs.custom[child.key] = null
         break
       case 'apmAttributes':
-        info.atts = child.obfuscatedAttributes
+        getInfo(agentIdentifier).atts = child.obfuscatedAttributes
         break
       case 'elementData':
         node.attrs.elementData = child
@@ -321,14 +296,8 @@ function handleAttributes (node) {
   })
 }
 
-function _forEach (list, cb) {
-  for (var i = 0; i < list.length; i++) {
-    cb(list[i])
-  }
-}
-
 function getAllFields (type, typesByName) {
-  var current = typesByName[type]
+  const current = typesByName[type]
   if (!current.extends) return current.fields
   return getAllFields(current.extends, typesByName).concat(current.fields)
 }

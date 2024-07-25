@@ -96,6 +96,18 @@ export class Aggregate extends AggregateBase {
     // Check if proxy for either chunks or beacon is being used
     if (proxy.assets) this.storeSupportabilityMetrics('Config/AssetsUrl/Changed')
     if (proxy.beacon) this.storeSupportabilityMetrics('Config/BeaconUrl/Changed')
+
+    if (isBrowserScope && window.MutationObserver) {
+      this.storeSupportabilityMetrics('Generic/VideoElement/Added', window.document.querySelectorAll('video').length)
+      const mo = new MutationObserver(records => {
+        records.forEach(record => {
+          record.addedNodes.forEach(addedNode => {
+            if (addedNode instanceof HTMLVideoElement) { this.storeSupportabilityMetrics('Generic/VideoElement/Added', 1) }
+          })
+        })
+      })
+      mo.observe(window.document.body, { childList: true, subtree: true })
+    }
   }
 
   eachSessionChecks () {

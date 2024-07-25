@@ -88,11 +88,9 @@ function checkCanDrainAll (agentIdentifier) {
    * @param {*} group - The name of a particular feature's event "bucket".
    */
 function drainGroup (agentIdentifier, group, activateGroup = true) {
-  console.log('drain pre')
   const baseEE = agentIdentifier ? ee.get(agentIdentifier) : ee
-  const handlers = defaultRegister.handlers[agentIdentifier] // other storage in registerHandler
+  const handlers = defaultRegister.handlers// other storage in registerHandler
   if (baseEE.aborted || !baseEE.backlog || !handlers) return
-  console.log('drain post')
 
   // Only activated features being drained should run queued listeners on buffered events. Deactivated features only need to release memory.
   if (activateGroup) {

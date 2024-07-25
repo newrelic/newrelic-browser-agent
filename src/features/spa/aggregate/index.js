@@ -178,7 +178,6 @@ export class Aggregate extends AggregateBase {
     }
 
     register(FN_START, function (args, eventSource) {
-      console.log('got FN_START')
       var ev = args[0]
       var evName = ev.type
       var eventNode = ev[`__nrNode:${bundleId}`]

@@ -19,7 +19,7 @@ test('should default group to "feature"', async () => {
 
   registerHandler(eventType, eventHandler)
 
-  expect(registerHandler.handlers[handleEE.debugId].feature).toEqual(expect.objectContaining({
+  expect(registerHandler.handlers.feature).toEqual(expect.objectContaining({
     [eventType]: [expect.arrayContaining([
       handleEE, eventHandler
     ])]
@@ -36,7 +36,7 @@ test('should use the provided group', async () => {
 
   registerHandler(eventType, eventHandler, eventGroup)
 
-  expect(registerHandler.handlers[handleEE.debugId][eventGroup]).toEqual(expect.objectContaining({
+  expect(registerHandler.handlers[eventGroup]).toEqual(expect.objectContaining({
     [eventType]: [expect.arrayContaining([
       handleEE, eventHandler
     ])]
@@ -46,14 +46,14 @@ test('should use the provided group', async () => {
 test('should use the provided event-emitter', async () => {
   const { registerHandler } = await import('../../../../src/common/event-emitter/register-handler')
 
-  const scopedEE = { debugId: 'abcd' }
+  const scopedEE = {}
   const eventType = faker.string.uuid()
   const eventGroup = faker.string.uuid()
   const eventHandler = jest.fn()
 
   registerHandler(eventType, eventHandler, eventGroup, scopedEE)
 
-  expect(registerHandler.handlers.abcd[eventGroup]).toEqual(expect.objectContaining({
+  expect(registerHandler.handlers[eventGroup]).toEqual(expect.objectContaining({
     [eventType]: [expect.arrayContaining([
       scopedEE, eventHandler
     ])]

@@ -90,7 +90,7 @@ describe('SPA captures', () => {
     helpers.startInteraction(cb => cb(), afterInteractionDone.bind(null, spaAggregate, validator, done), { baseEE: ee.get(agentIdentifier), element: el })
   })
 
-  ;['keypress', 'keyup', 'keydown'].forEach(eventType => {
+  ;['keypress', 'keyup', 'keydown', 'change'].forEach(eventType => {
     test(`${eventType}`, done => {
       const validator = new helpers.InteractionValidator({
         attrs: { trigger: eventType },

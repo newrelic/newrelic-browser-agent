@@ -28,6 +28,10 @@ jest.mock('../../../../src/common/window/nreum', () => ({
   gosCDN: jest.fn().mockReturnValue({}),
   gosNREUM: jest.fn().mockReturnValue({})
 }))
+jest.mock('../../../../src/common/util/console', () => ({
+  __esModule: true,
+  warn: jest.fn()
+}))
 jest.mock('../../../../src/common/util/feature-flags', () => ({
   __esModule: true,
   activatedFeatures: {
@@ -57,7 +61,9 @@ test('should merge info, jsattributes, and runtime objects', () => {
     [faker.string.uuid()]: faker.lorem.sentence(),
     jsAttributes: {
       [faker.string.uuid()]: faker.lorem.sentence()
-    }
+    },
+    licenseKey: faker.string.uuid(),
+    applicationID: faker.string.uuid()
   }
   jest.mocked(gosCDN).mockReturnValue({ info: mockInfo1 })
 
@@ -76,7 +82,7 @@ test('should merge info, jsattributes, and runtime objects', () => {
   new AggregateBase(agentIdentifier, aggregator, featureName)
 
   expect(isConfigured).toHaveBeenCalledWith(agentIdentifier)
-  expect(gosCDN).toHaveBeenCalledTimes(3)
+  expect(gosCDN).toHaveBeenCalledTimes(1)
   expect(getInfo).toHaveBeenCalledWith(agentIdentifier)
   expect(getRuntime).toHaveBeenCalledWith(agentIdentifier)
   expect(configure).toHaveBeenCalledWith({ agentIdentifier }, {

@@ -1,114 +1,137 @@
 import { supportsFetch, notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
-import { testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
+import { testAjaxEventsRequest, testBlobTraceRequest, testErrorsRequest, testInsRequest, testMetricsRequest, testRumRequest, testTimingEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 // IE does not have reliable unload support
 describe.withBrowsersMatching(notIE)('final harvesting', () => {
+  let timingEventsCapture
+  let ajaxEventsCapture
+  let metricsCapture
+  let errorsCapture
+  let traceCapture
+  let insightsCapture
+
+  beforeEach(async () => {
+    [timingEventsCapture, ajaxEventsCapture, metricsCapture, errorsCapture, traceCapture, insightsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+      { test: testTimingEventsRequest },
+      { test: testAjaxEventsRequest },
+      { test: testMetricsRequest },
+      { test: testErrorsRequest },
+      { test: testBlobTraceRequest },
+      { test: testInsRequest }
+    ])
+  })
+
   it('should send final harvest when navigating away from page', async () => {
     await browser.url(await browser.testHandle.assetURL('final-harvest.html'))
       .then(() => browser.waitForAgentLoad())
 
-    await browser.pause(500)
-
-    const finalHarvest = Promise.all([
-      browser.testHandle.expectTimings(),
-      browser.testHandle.expectAjaxEvents(),
-      browser.testHandle.expectMetrics(),
-      browser.testHandle.expectErrors(),
-      browser.testHandle.expectTrace(),
-      browser.testHandle.expectIns()
+    const [timingEventsHarvests, ajaxEventsHarvests, metricsHarvests, errorsHarvests, traceHarvests, insightsHarvests] = await Promise.all([
+      timingEventsCapture.waitForResult({ timeout: 5000 }),
+      ajaxEventsCapture.waitForResult({ timeout: 5000 }),
+      metricsCapture.waitForResult({ timeout: 5000 }),
+      errorsCapture.waitForResult({ timeout: 5000 }),
+      traceCapture.waitForResult({ timeout: 5000 }),
+      insightsCapture.waitForResult({ timeout: 5000 }),
+      browser.execute(function () {
+        newrelic.noticeError(new Error('hippo hangry'))
+        newrelic.addPageAction('DummyEvent', { free: 'tacos' })
+      }).then(async () => browser.url(await browser.testHandle.assetURL('/')))
     ])
 
-    await browser.execute(function () {
-      newrelic.noticeError(new Error('hippo hangry'))
-      newrelic.addPageAction('DummyEvent', { free: 'tacos' })
-    })
+    // Timing does a double harvest on unload so we need to merge the requests
+    const timingEventsFinalHarvest = timingEventsHarvests
+      .flatMap(harvest => harvest.request.body)
+    const [ajaxEventsFinalHarvest, metricsFinalHarvest, errorsFinalHarvest, traceFinalHarvest, insightsFinalHarvest] = [
+      ajaxEventsHarvests[ajaxEventsHarvests.length - 1],
+      metricsHarvests[metricsHarvests.length - 1],
+      errorsHarvests[errorsHarvests.length - 1],
+      traceHarvests[traceHarvests.length - 1],
+      insightsHarvests[insightsHarvests.length - 1]
+    ]
 
-    await browser.url(await browser.testHandle.assetURL('/'))
-
-    const [timingsResults, ajaxEventsResults, metricsResults, errorsResults, resourcesResults, pageActionResults] = await finalHarvest
-
-    expect(timingsResults.request.body).toEqual(expect.arrayContaining([
+    expect(timingEventsFinalHarvest).toEqual(expect.arrayContaining([
       expect.objectContaining({
         name: 'unload',
         type: 'timing'
       })
     ]))
-    expect(timingsResults.request.body).toEqual(expect.arrayContaining([
+    expect(timingEventsFinalHarvest).toEqual(expect.arrayContaining([
       expect.objectContaining({
         name: 'pageHide',
         type: 'timing'
       })
     ]))
-    expect(ajaxEventsResults.request.body.length).toBeGreaterThan(0)
-    expect(metricsResults.request.body.sm.length).toBeGreaterThan(0)
-    expect(errorsResults.request.body.err).toEqual(expect.arrayContaining([
+    expect(ajaxEventsFinalHarvest.request.body.length).toBeGreaterThan(0)
+    expect(metricsFinalHarvest.request.body.sm.length).toBeGreaterThan(0)
+    expect(errorsFinalHarvest.request.body.err).toEqual(expect.arrayContaining([
       expect.objectContaining({
         params: expect.objectContaining({
           message: 'hippo hangry'
         })
       })
     ]))
-    expect(errorsResults.request.body.xhr.length).toBeGreaterThan(0)
-    expect(resourcesResults.request.body.length).toBeGreaterThan(0)
-
-    expect(pageActionResults.request.body.ins.length).toBeGreaterThan(0)
+    expect(errorsFinalHarvest.request.body.xhr.length).toBeGreaterThan(0)
+    expect(traceFinalHarvest.request.body.length).toBeGreaterThan(0)
+    expect(insightsFinalHarvest.request.body.ins.length).toBeGreaterThan(0)
   })
 
   it.withBrowsersMatching(supportsFetch)('should use sendBeacon for unload harvests', async () => {
-    await Promise.all([
-      browser.testHandle.expectTimings(),
-      browser.url(await browser.testHandle.assetURL('final-harvest.html'))
-        .then(() => browser.waitForAgentLoad())
+    await browser.url(await browser.testHandle.assetURL('final-harvest.html'))
+      .then(() => browser.waitForAgentLoad())
+
+    const [timingEventsHarvests, ajaxEventsHarvests, metricsHarvests, errorsHarvests, traceHarvests, insightsHarvests] = await Promise.all([
+      timingEventsCapture.waitForResult({ timeout: 5000 }),
+      ajaxEventsCapture.waitForResult({ timeout: 5000 }),
+      metricsCapture.waitForResult({ timeout: 5000 }),
+      errorsCapture.waitForResult({ timeout: 5000 }),
+      traceCapture.waitForResult({ timeout: 5000 }),
+      insightsCapture.waitForResult({ timeout: 5000 }),
+      browser.execute(function () {
+        newrelic.noticeError(new Error('hippo hangry'))
+        newrelic.addPageAction('DummyEvent', { free: 'tacos' })
+
+        var sendBeaconFn = navigator.sendBeacon.bind(navigator)
+        navigator.sendBeacon = function (url, body) {
+          sendBeaconFn.call(navigator, url + '&sendBeacon=true', body)
+        }
+      }).then(async () => browser.url(await browser.testHandle.assetURL('/')))
     ])
 
-    const finalHarvest = Promise.all([
-      browser.testHandle.expectTimings(),
-      browser.testHandle.expectAjaxEvents(),
-      browser.testHandle.expectMetrics(),
-      browser.testHandle.expectErrors(),
-      browser.testHandle.expectTrace(),
-      browser.testHandle.expectIns()
-    ])
+    // Timing does a double harvest on unload so we need to merge the requests
+    const timingEventsFinalHarvest = timingEventsHarvests
+      .flatMap(harvest => harvest.request.body)
+    const [ajaxEventsFinalHarvest, metricsFinalHarvest, errorsFinalHarvest, traceFinalHarvest, insightsFinalHarvest] = [
+      ajaxEventsHarvests[ajaxEventsHarvests.length - 1],
+      metricsHarvests[metricsHarvests.length - 1],
+      errorsHarvests[errorsHarvests.length - 1],
+      traceHarvests[traceHarvests.length - 1],
+      insightsHarvests[insightsHarvests.length - 1]
+    ]
 
-    await browser.execute(function () {
-      newrelic.noticeError(new Error('hippo hangry'))
-      newrelic.addPageAction('DummyEvent', { free: 'tacos' })
-
-      const sendBeaconFn = navigator.sendBeacon.bind(navigator)
-      navigator.sendBeacon = function (url, body) {
-        sendBeaconFn.call(navigator, url + '&sendBeacon=true', body)
-      }
-    })
-
-    await browser.url(await browser.testHandle.assetURL('/'))
-
-    const [timingsResults, ajaxEventsResults, metricsResults, errorsResults, resourcesResults, pageActionResults] = await finalHarvest
-
-    expect(timingsResults.request.body).toEqual(expect.arrayContaining([
+    expect(timingEventsFinalHarvest).toEqual(expect.arrayContaining([
       expect.objectContaining({
         name: 'unload',
         type: 'timing'
       })
     ]))
-    expect(timingsResults.request.body).toEqual(expect.arrayContaining([
+    expect(timingEventsFinalHarvest).toEqual(expect.arrayContaining([
       expect.objectContaining({
         name: 'pageHide',
         type: 'timing'
       })
     ]))
-    expect(ajaxEventsResults.request.body.length).toBeGreaterThan(0)
-    expect(metricsResults.request.body.sm.length).toBeGreaterThan(0)
-    expect(errorsResults.request.body.err).toEqual(expect.arrayContaining([
+    expect(ajaxEventsFinalHarvest.request.body.length).toBeGreaterThan(0)
+    expect(metricsFinalHarvest.request.body.sm.length).toBeGreaterThan(0)
+    expect(errorsFinalHarvest.request.body.err).toEqual(expect.arrayContaining([
       expect.objectContaining({
         params: expect.objectContaining({
           message: 'hippo hangry'
         })
       })
     ]))
-    expect(errorsResults.request.body.xhr.length).toBeGreaterThan(0)
-    expect(resourcesResults.request.body.length).toBeGreaterThan(0)
-
-    expect(pageActionResults.request.body).toMatchObject({
+    expect(errorsFinalHarvest.request.body.xhr.length).toBeGreaterThan(0)
+    expect(traceFinalHarvest.request.body.length).toBeGreaterThan(0)
+    expect(insightsFinalHarvest.request.body).toMatchObject({
       ins: [{ actionName: 'DummyEvent', free: 'tacos' }]
     })
 
@@ -117,49 +140,44 @@ describe.withBrowsersMatching(notIE)('final harvesting', () => {
     calls used sendBeacon
     */
     const sendBeaconUsage = [
-      timingsResults.request.query.sendBeacon,
-      ajaxEventsResults.request.query.sendBeacon,
-      metricsResults.request.query.sendBeacon,
-      errorsResults.request.query.sendBeacon,
-      resourcesResults.request.query.sendBeacon,
-      pageActionResults.request.query.sendBeacon
+      timingEventsHarvests[timingEventsHarvests.length - 1].request.query.sendBeacon,
+      ajaxEventsFinalHarvest.request.query.sendBeacon,
+      metricsFinalHarvest.request.query.sendBeacon,
+      errorsFinalHarvest.request.query.sendBeacon,
+      traceFinalHarvest.request.query.sendBeacon,
+      insightsFinalHarvest.request.query.sendBeacon
     ]
     expect(sendBeaconUsage).toContain('true')
   })
 
   it('should not send pageHide event twice', async () => {
-    await Promise.all([
-      browser.testHandle.expectTimings(),
-      browser.url(await browser.testHandle.assetURL('pagehide.html'))
-        .then(() => browser.waitForAgentLoad())
-    ])
+    await browser.url(await browser.testHandle.assetURL('pagehide.html'))
+      .then(() => browser.waitForAgentLoad())
 
     await Promise.all([
-      browser.testHandle.expectTimings(),
+      timingEventsCapture.waitForResult({ timeout: 5000 }),
       $('#btn1').click()
     ])
 
-    const [unloadTimings] = await Promise.all([
-      browser.testHandle.expectTimings(),
+    const [timingEventsHarvests] = await Promise.all([
+      timingEventsCapture.waitForResult({ timeout: 5000 }),
       browser.url(await browser.testHandle.assetURL('/'))
     ])
 
-    expect(unloadTimings.request.body).toEqual(expect.arrayContaining([
-      expect.objectContaining({
-        name: 'unload',
-        type: 'timing'
-      })
-    ]))
-    expect(unloadTimings.request.body).not.toEqual(expect.arrayContaining([
-      expect.objectContaining({
-        name: 'pageHide',
-        type: 'timing'
-      })
-    ]))
+    const pageHideTimingEvents = timingEventsHarvests
+      .flatMap(harvest => harvest.request.body)
+      .filter(event => event.name === 'pageHide')
+
+    expect(pageHideTimingEvents.length).toEqual(1)
   })
 
   it('should not send any final harvest when RUM fails, e.g. 400 code', async () => {
-    let url = await browser.testHandle.assetURL('final-harvest.html')
+    // Capture all BAM requests
+    const bamCapture = await browser.testHandle.createNetworkCaptures('bamServer', {
+      test: function () {
+        return true
+      }
+    })
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
       statusCode: 400,
@@ -167,24 +185,23 @@ describe.withBrowsersMatching(notIE)('final harvesting', () => {
       permanent: true
     })
 
-    let rumPromise = browser.testHandle.expectRum()
-    await browser.url(url)
-    await browser.waitUntil(() => browser.execute(async function () { return await Object.values(newrelic.initializedAgents)[0]?.features.page_view_event?.onAggregateImported }), { timeout: 15000 })
+    const [bamHarvests] = await Promise.all([
+      bamCapture.waitForResult({ timeout: 10000 }),
+      browser.url(await browser.testHandle.assetURL('final-harvest.html'))
+        .then(() => browser.waitUntil(
+          () => browser.execute(function () {
+            return Object.values(newrelic.initializedAgents)[0]?.ee.aborted
+          }),
+          15000
+        ))
+        .then(() => browser.pause(1000))
+        .then(async () => browser.url(await browser.testHandle.assetURL('/')))
+    ])
 
-    // PVE feature should've fully imported and ran, with the RUM response coming back as the 400 we set. This should subsequently cause agent to not send anything else even at EoL.
-    await expect(rumPromise).resolves.toEqual(expect.objectContaining({
-      reply: expect.objectContaining({
-        statusCode: 400,
-        body: ''
-      })
+    expect(bamHarvests.length).toEqual(1)
+    expect(bamHarvests[0].reply).toEqual(expect.objectContaining({
+      statusCode: 400,
+      body: ''
     }))
-
-    let anyFollowingReq = browser.testHandle.expect('bamServer', {
-      test: function () { return true },
-      timeout: 5000,
-      expectTimeout: true
-    })
-    await browser.url(await browser.testHandle.assetURL('/'))
-    await expect(anyFollowingReq).resolves.toBeUndefined()
   })
 })

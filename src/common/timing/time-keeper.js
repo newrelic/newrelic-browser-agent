@@ -1,6 +1,8 @@
 import { originTime } from '../constants/runtime'
 import { getRuntime } from '../config/config'
 
+const rfc2616Regex = /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), ([0-3][0-9]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) ([0-9]{4}) ([01][0-9]|2[0-3])(:[0-5][0-9]){2} GMT$/
+
 /**
  * Class used to adjust the timestamp of harvested data to New Relic server time. This
  * is done by tracking the performance timings of the RUM call and applying a calculation
@@ -29,7 +31,7 @@ export class TimeKeeper {
   /**
    * Represents whether the timekeeper is in a state that it can accurately convert
    * timestamps.
-   * @type {number}
+   * @type {boolean}
    */
   #ready = false
 
@@ -46,6 +48,10 @@ export class TimeKeeper {
     return this.#correctedOriginTime
   }
 
+  get localTimeDiff () {
+    return this.#localTimeDiff
+  }
+
   /**
    * Process a rum request to calculate NR server time.
    * @param rumRequest {XMLHttpRequest} The xhr for the rum request
@@ -53,11 +59,15 @@ export class TimeKeeper {
    * @param endTime {number} The end time of the RUM request
    */
   processRumRequest (rumRequest, startTime, endTime) {
-    this.processStoredDiff()
+    this.processStoredDiff() // Check session entity for stored time diff
     if (this.#ready) return // Server time calculated from session entity
+
     const responseDateHeader = rumRequest.getResponseHeader('Date')
     if (!responseDateHeader) {
       throw new Error('Missing date header on rum response.')
+    }
+    if (!rfc2616Regex.test(responseDateHeader)) {
+      throw new Error('Date header invalid format.')
     }
 
     const medianRumOffset = (endTime - startTime) / 2
@@ -96,6 +106,8 @@ export class TimeKeeper {
 
   /** Process the session entity and use the info to set the main time calculations if present */
   processStoredDiff () {
+    if (this.#ready) return // Time diff has already been calculated
+
     const storedServerTimeDiff = this.#session?.read()?.serverTimeDiff
     if (typeof storedServerTimeDiff === 'number' && !isNaN(storedServerTimeDiff)) {
       this.#localTimeDiff = storedServerTimeDiff

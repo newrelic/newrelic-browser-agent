@@ -87,6 +87,8 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 * Generic/Resources/Ajax/External
 <!--- A resource timing API Non-Ajax (other assets like scripts, etc) event was observed that does NOT match the Agent beacon --->
 * Generic/Resources/Non-Ajax/External
+<!--- A <video> element was added to the DOM, should have a total count as part of the metric --->
+* Generic/VideoElement/Added
 
 ### Frameworks
 <!--- React was Detected --->
@@ -161,6 +163,14 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 ### Features
 <!--- The time manager Failed to calculate a valid time from the Page View Event response --->
 * PVE/NRTime/Calculation/Failed
+* <!--- The time manager Failed to calculate a valid time from the Page View Event response because the Date header did not meet RFC2616 format --->
+* PVE/NRTime/Calculation/InvalidFormat
+* <!--- The time manager calculated a local user time difference of 12 hours or more --->
+* PVE/NRTime/Calculation/DiffExceed12Hrs
+* <!--- The time manager calculated a local user time difference of 6 hours or more but less than 12 hours --->
+* PVE/NRTime/Calculation/DiffExceed6Hrs
+* <!--- The time manager calculated a local user time difference of 1 hour or more but less than 6 hours --->
+* PVE/NRTime/Calculation/DiffExceed1Hrs
 <!--- SessionReplay was Enabled but the RUM response indicated it was not entitled to run --->
 * SessionReplay/EnabledNotEntitled/Detected
 <!--- SessionReplay attempted to harvest data --->

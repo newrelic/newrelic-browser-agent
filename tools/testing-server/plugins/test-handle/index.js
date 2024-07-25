@@ -74,7 +74,7 @@ module.exports = fp(async function (fastify, testServer) {
     }
 
     request.networkCaptures?.forEach(networkCapture => {
-      networkCapture.capture(request, reply)
+      networkCapture.capture(request, reply, payload)
     })
 
     if (request.scheduledReply && request.scheduledReply.delay) {

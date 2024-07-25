@@ -1,7 +1,7 @@
 import { globalScope, isBrowserScope, originTime } from '../../../common/constants/runtime'
 import { addPT, addPN } from '../../../common/timing/nav-timing'
 import { stringify } from '../../../common/util/stringify'
-import { getInfo, getRuntime } from '../../../common/config/config'
+import { getInfo, getRuntime, isConfigured } from '../../../common/config/config'
 import { Harvest } from '../../../common/harvest/harvest'
 import * as CONSTANTS from '../constants'
 import { getActivatedFeaturesFlags } from './initialized-features'
@@ -28,6 +28,11 @@ export class Aggregate extends AggregateBase {
     this.firstByteToDomContent = 0 // our "dom processing" duration
     this.timeKeeper = new TimeKeeper(this.agentIdentifier)
 
+    if (!isConfigured(agentIdentifier)) {
+      this.ee.abort()
+      return warn(43)
+    }
+
     if (isBrowserScope) {
       timeToFirstByte.subscribe(({ value, attrs }) => {
         const navEntry = attrs.navigationEntry
@@ -48,7 +53,6 @@ export class Aggregate extends AggregateBase {
     const agentRuntime = getRuntime(this.agentIdentifier)
     const harvester = new Harvest(this)
 
-    if (!info.beacon) return
     if (info.queueTime) this.aggregator.store('measures', 'qt', { value: info.queueTime })
     if (info.applicationTime) this.aggregator.store('measures', 'ap', { value: info.applicationTime })
 
@@ -126,8 +130,21 @@ export class Aggregate extends AggregateBase {
           if (!this.timeKeeper.ready) throw new Error('TimeKeeper not ready')
 
           agentRuntime.timeKeeper = this.timeKeeper
+
+          // Check if the time diff is such that we need to capture a supportability metric
+          if (this.timeKeeper.localTimeDiff >= 12 * 60 * 60 * 1000) {
+            handle(SUPPORTABILITY_METRIC_CHANNEL, ['PVE/NRTime/Calculation/DiffExceed12Hrs'], undefined, FEATURE_NAMES.metrics, this.ee)
+          } else if (this.timeKeeper.localTimeDiff >= 6 * 60 * 60 * 1000) {
+            handle(SUPPORTABILITY_METRIC_CHANNEL, ['PVE/NRTime/Calculation/DiffExceed6Hrs'], undefined, FEATURE_NAMES.metrics, this.ee)
+          } else if (this.timeKeeper.localTimeDiff >= 60 * 60 * 1000) {
+            handle(SUPPORTABILITY_METRIC_CHANNEL, ['PVE/NRTime/Calculation/DiffExceed1Hrs'], undefined, FEATURE_NAMES.metrics, this.ee)
+          }
         } catch (error) {
-          handle(SUPPORTABILITY_METRIC_CHANNEL, ['PVE/NRTime/Calculation/Failed'], undefined, FEATURE_NAMES.metrics, this.ee)
+          if (error?.message?.indexOf('invalid format') > 0) {
+            handle(SUPPORTABILITY_METRIC_CHANNEL, ['PVE/NRTime/Calculation/InvalidFormat'], undefined, FEATURE_NAMES.metrics, this.ee)
+          } else {
+            handle(SUPPORTABILITY_METRIC_CHANNEL, ['PVE/NRTime/Calculation/Failed'], undefined, FEATURE_NAMES.metrics, this.ee)
+          }
           drain(this.agentIdentifier, FEATURE_NAMES.metrics, true)
           this.ee.abort()
           warn(17, error)

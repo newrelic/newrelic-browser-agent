@@ -49,7 +49,8 @@ export class AggregateBase extends FeatureBase {
   checkConfiguration () {
     // NOTE: This check has to happen at aggregator load time
     if (!isConfigured(this.agentIdentifier)) {
-      let jsAttributes = { ...gosCDN().info?.jsAttributes }
+      const cdn = gosCDN()
+      let jsAttributes = { ...cdn.info?.jsAttributes }
       try {
         jsAttributes = {
           ...jsAttributes,
@@ -59,9 +60,9 @@ export class AggregateBase extends FeatureBase {
         // do nothing
       }
       configure({ agentIdentifier: this.agentIdentifier }, {
-        ...gosCDN(),
+        ...cdn,
         info: {
-          ...gosCDN().info,
+          ...cdn.info,
           jsAttributes
         },
         runtime: getRuntime(this.agentIdentifier)

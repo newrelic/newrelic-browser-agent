@@ -81,7 +81,6 @@ The following features may be disabled by adding `init` entries as shown above. 
 - `generic_events`
 - `jserrors`
 - `metrics`
-- `page_action`
 - `page_view_timing`
 - `session_replay`
 - `session_trace`
@@ -126,7 +125,7 @@ The following feature modules are available for inclusion in the `features` arra
 import { Ajax } from '@newrelic/browser-agent/features/ajax';
 import { JSErrors } from '@newrelic/browser-agent/features/jserrors';
 import { Metrics } from '@newrelic/browser-agent/features/metrics';
-import { PageAction } from '@newrelic/browser-agent/features/page_action';
+import { GenericEvents } from '@newrelic/browser-agent/features/generic_events';
 import { PageViewEvent } from '@newrelic/browser-agent/features/page_view_event';
 import { PageViewTiming } from '@newrelic/browser-agent/features/page_view_timing';
 import { SessionTrace } from '@newrelic/browser-agent/features/session_trace';

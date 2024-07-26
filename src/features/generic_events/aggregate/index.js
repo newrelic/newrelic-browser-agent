@@ -41,9 +41,10 @@ export class Aggregate extends AggregateBase {
         return
       }
 
-      const pageActionHandler = formatPageAction(this.addEvent.bind(this))
-
-      registerHandler('api-addPageAction', pageActionHandler, this.featureName, this.ee)
+      if (getConfigurationValue(this.agentIdentifier, 'page_action.enabled')) {
+        const pageActionHandler = formatPageAction(this.addEvent.bind(this))
+        registerHandler('api-addPageAction', pageActionHandler, this.featureName, this.ee)
+      }
 
       this.harvestScheduler = new HarvestScheduler('ins', { onFinished: (...args) => this.onHarvestFinished(...args) }, this)
       this.harvestScheduler.harvest.on('ins', (...args) => this.onHarvestStarted(...args))

@@ -4,7 +4,6 @@
  */
 
 import { SharedContext } from '../context/shared-context'
-import { mapOwn } from '../util/map-own'
 
 export class Aggregator extends SharedContext {
   constructor (parent) {
@@ -34,7 +33,7 @@ export class Aggregator extends SharedContext {
     oldMetrics.count += metrics.count
 
     // iterate through each new metric and merge
-    mapOwn(metrics, function (key, value) {
+    Object.keys(metrics || {}).forEach((key) => {
       // count is a special case handled above
       if (key === 'count') return
 
@@ -94,7 +93,7 @@ export class Aggregator extends SharedContext {
 function aggregateMetrics (newMetrics, oldMetrics) {
   if (!oldMetrics) oldMetrics = { count: 0 }
   oldMetrics.count += 1
-  mapOwn(newMetrics, function (key, value) {
+  Object.entries(newMetrics || {}).forEach(([key, value]) => {
     oldMetrics[key] = updateMetric(value, oldMetrics[key])
   })
   return oldMetrics

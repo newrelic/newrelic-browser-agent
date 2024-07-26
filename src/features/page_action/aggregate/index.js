@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { mapOwn } from '../../../common/util/map-own'
 import { stringify } from '../../../common/util/stringify'
 import { registerHandler as register } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
@@ -98,16 +97,16 @@ export class Aggregate extends AggregateBase {
       eventType: 'PageAction'
     }
 
-    mapOwn(defaults, set)
-    mapOwn(getInfo(this.agentIdentifier).jsAttributes, set)
+    Object.entries(defaults || {}).forEach(set)
+    Object.entries(getInfo(this.agentIdentifier).jsAttributes || {}).forEach(set)
     if (attributes && typeof attributes === 'object') {
-      mapOwn(attributes, set)
+      Object.entries(attributes).forEach(set)
     }
     eventAttributes.actionName = name || ''
 
     this.events.push(eventAttributes)
 
-    function set (key, val) {
+    function set ([key, val]) {
       eventAttributes[key] = (val && typeof val === 'object' ? stringify(val) : val)
     }
   }

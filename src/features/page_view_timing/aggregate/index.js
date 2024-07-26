@@ -4,7 +4,6 @@
  */
 
 import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../../../common/serialize/bel-serializer'
-import { mapOwn } from '../../../common/util/map-own'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { handle } from '../../../common/event-emitter/handle'
@@ -138,7 +137,7 @@ export class Aggregate extends AggregateBase {
 
     var reservedAttributes = ['size', 'eid', 'cls', 'type', 'fid', 'elTag', 'elUrl', 'net-type',
       'net-etype', 'net-rtt', 'net-dlink']
-    mapOwn(customAttributes, function (key, val) {
+    Object.entries(customAttributes || {}).forEach(([key, val]) => {
       if (reservedAttributes.indexOf(key) < 0) {
         timingAttributes[key] = val
       }

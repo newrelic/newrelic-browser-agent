@@ -12,7 +12,6 @@ import { registerHandler as register } from '../../../common/event-emitter/regis
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { stringify } from '../../../common/util/stringify'
 import { handle } from '../../../common/event-emitter/handle'
-import { mapOwn } from '../../../common/util/map-own'
 import { getInfo, getConfigurationValue, getRuntime } from '../../../common/config/config'
 import { globalScope } from '../../../common/constants/runtime'
 
@@ -91,7 +90,7 @@ export class Aggregate extends AggregateBase {
 
   onHarvestFinished (result) {
     if (result.retry && this.currentBody) {
-      mapOwn(this.currentBody, (key, value) => {
+      Object.entries(this.currentBody || {}).forEach(([key, value]) => {
         for (var i = 0; i < value.length; i++) {
           var bucket = value[i]
           var name = this.getBucketName(key, bucket.params, bucket.custom)
@@ -264,8 +263,8 @@ export class Aggregate extends AggregateBase {
       var allCustomAttrs = {}
       const localCustomAttrs = item[4]
 
-      mapOwn(interaction.root.attrs.custom, setCustom) // tack on custom attrs from the interaction
-      mapOwn(localCustomAttrs, setCustom)
+      Object.entries(interaction.root.attrs.custom || {}).forEach(setCustom) // tack on custom attrs from the interaction
+      Object.entries(localCustomAttrs || {}).forEach(setCustom)
 
       var params = item[2]
       if (wasSaved) {
@@ -281,7 +280,7 @@ export class Aggregate extends AggregateBase {
 
       this.aggregator.store(item[0], aggregateHash, params, item[3], allCustomAttrs)
 
-      function setCustom (key, val) {
+      function setCustom ([key, val]) {
         allCustomAttrs[key] = (val && typeof val === 'object' ? stringify(val) : val)
       }
     })

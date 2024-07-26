@@ -4,7 +4,6 @@
  */
 
 import { getInfo, getRuntime, originals } from '../../../common/config/config'
-import { mapOwn } from '../../../common/util/map-own'
 import { ee } from '../../../common/event-emitter/contextual-ee'
 import { InteractionNode } from './interaction-node'
 
@@ -101,7 +100,7 @@ InteractionPrototype.finish = function finishInteraction () {
     this.onFinished(this)
   }
 
-  mapOwn(getInfo(interaction.agentIdentifier).jsAttributes, function (attr, value) {
+  Object.entries(getInfo(interaction.agentIdentifier).jsAttributes || {}).forEach(([attr, value]) => {
     if (!(attr in customAttrs)) customAttrs[attr] = value
   })
 

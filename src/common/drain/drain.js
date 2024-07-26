@@ -4,7 +4,6 @@
  */
 
 import { ee } from '../event-emitter/contextual-ee'
-import { mapOwn } from '../util/map-own'
 import { registerHandler as defaultRegister } from '../event-emitter/register-handler'
 import { featurePriority } from '../../loaders/features/features'
 
@@ -102,8 +101,8 @@ function drainGroup (agentIdentifier, group, activateGroup = true) {
         emitEvent(bufferedEventsInGroup[i], groupHandlers)
       }
 
-      mapOwn(groupHandlers, function (eventType, handlerRegistrationList) {
-        mapOwn(handlerRegistrationList, function (i, registration) {
+      Object.entries(groupHandlers).forEach(([eventType, handlerRegistrationList]) => {
+        Object.values(handlerRegistrationList || {}).forEach((registration) => {
           // registration is an array of: [targetEE, eventHandler]
           registration[0].on(eventType, registration[1])
         })
@@ -125,7 +124,7 @@ function drainGroup (agentIdentifier, group, activateGroup = true) {
  */
 function emitEvent (evt, groupHandlers) {
   var type = evt[1]
-  mapOwn(groupHandlers[type], function (i, registration) {
+  Object.values(groupHandlers[type] || {}).forEach((registration) => {
     var sourceEE = evt[0]
     var ee = registration[0]
     if (ee === sourceEE) {

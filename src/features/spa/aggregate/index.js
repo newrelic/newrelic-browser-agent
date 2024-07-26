@@ -6,7 +6,6 @@
 import { registerHandler as register } from '../../../common/event-emitter/register-handler'
 import { parseUrl } from '../../../common/url/parse-url'
 import { shouldCollectEvent } from '../../../common/deny-list/deny-list'
-import { mapOwn } from '../../../common/util/map-own'
 import { navTimingValues as navTiming } from '../../../common/timing/nav-timing'
 import { generateUuid } from '../../../common/ids/unique-id'
 import { Interaction } from './interaction'
@@ -668,7 +667,7 @@ export class Aggregate extends AggregateBase {
 
       // make sure that newrelic[INTERACTION]() works in end handler
       state.currentNode = root
-      mapOwn(interaction.handlers, function (i, cb) {
+      Object.values(interaction.handlers || {}).forEach(function (cb) {
         cb(attrs.store)
       })
       setCurrentNode(null)

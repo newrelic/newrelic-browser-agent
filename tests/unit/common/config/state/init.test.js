@@ -33,7 +33,7 @@ test('getConfigurationValue parses path correctly', () => {
 test('init props exist and return expected defaults', () => {
   setConfiguration('34567', {})
   const config = getConfiguration('34567')
-  expect(Object.keys(config).length).toEqual(19)
+  expect(Object.keys(config).length).toEqual(20)
   expect(config.ajax).toEqual({
     autoStart: true,
     block_internal: true,
@@ -47,6 +47,11 @@ test('init props exist and return expected defaults', () => {
     cors_use_tracecontext_headers: undefined,
     enabled: undefined,
     exclude_newrelic_header: undefined
+  })
+  expect(config.generic_events).toEqual({
+    autoStart: true,
+    enabled: true,
+    harvestTimeSeconds: 10
   })
   expect(config.feature_flags).toEqual([])
   expect(config.harvest).toEqual({

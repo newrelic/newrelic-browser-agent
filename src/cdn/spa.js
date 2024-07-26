@@ -14,6 +14,7 @@ import { Instrument as InstrumentSessionReplay } from '../features/session_repla
 import { Instrument as InstrumentSoftNav } from '../features/soft_navigations/instrument'
 import { Instrument as InstrumentSpa } from '../features/spa/instrument'
 import { Instrument as InstrumentPageAction } from '../features/page_action/instrument'
+import { Instrument as InstrumentGenericEvents } from '../features/generic_events/instrument'
 import { Instrument as InstrumentLogs } from '../features/logging/instrument'
 
 new Agent({
@@ -26,6 +27,7 @@ new Agent({
     InstrumentMetrics,
     InstrumentPageAction,
     InstrumentErrors,
+    InstrumentGenericEvents,
     InstrumentLogs,
     InstrumentSoftNav,
     InstrumentSpa // either the softnav or the old spa will be used (not both), but we still need to pack both to avoid dynamic import for instrument files

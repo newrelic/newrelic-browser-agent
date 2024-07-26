@@ -44,6 +44,9 @@
       "features/page_action": [
         "dist/types/features/page_action/index.d.ts"
       ],
+      "features/generic_events": [
+        "dist/types/features/generic_events/index.d.ts"
+      ],
       "features/page_view_event": [
         "dist/types/features/page_view_event/index.d.ts"
       ],
@@ -52,6 +55,9 @@
       ],
       "features/session_trace": [
         "dist/types/features/session_trace/index.d.ts"
+      ],
+      "features/session_replay": [
+        "dist/types/features/session_replay/index.d.ts"
       ],
       "features/spa": [
         "dist/types/features/spa/index.d.ts"
@@ -89,6 +95,11 @@
       "require": "./dist/cjs/features/ajax/index.js",
       "default": "./dist/esm/features/ajax/index.js"
     },
+    "./features/generic_events": {
+      "types": "./dist/types/features/generic_events/index.d.ts",
+      "require": "./dist/cjs/features/generic_events/index.js",
+      "default": "./dist/esm/features/generic_events/index.js"
+    },
     "./features/jserrors": {
       "types": "./dist/types/features/jserrors/index.d.ts",
       "require": "./dist/cjs/features/jserrors/index.js",
@@ -119,10 +130,20 @@
       "require": "./dist/cjs/features/page_view_timing/index.js",
       "default": "./dist/esm/features/page_view_timing/index.js"
     },
+    "./features/session_replay": {
+      "types": "./dist/types/features/session_replay/index.d.ts",
+      "require": "./dist/cjs/features/session_replay/index.js",
+      "default": "./dist/esm/features/session_replay/index.js"
+    },
     "./features/session_trace": {
       "types": "./dist/types/features/session_trace/index.d.ts",
       "require": "./dist/cjs/features/session_trace/index.js",
       "default": "./dist/esm/features/session_trace/index.js"
+    },
+    "./features/soft_navigations": {
+      "types": "./dist/types/features/soft_navigations/index.d.ts",
+      "require": "./dist/cjs/features/soft_navigations/index.js",
+      "default": "./dist/esm/features/soft_navigations/index.js"
     },
     "./features/spa": {
       "types": "./dist/types/features/spa/index.d.ts",

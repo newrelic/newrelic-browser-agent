@@ -4,6 +4,8 @@ export { MicroAgent } from './loaders/micro-agent'
 
 export { Ajax } from './features/ajax'
 export { JSErrors } from './features/jserrors'
+export { GenericEvents } from './features/generic_events'
+export { Logging } from './features/logging'
 export { Metrics } from './features/metrics'
 export { PageAction } from './features/page_action'
 export { PageViewEvent } from './features/page_view_event'

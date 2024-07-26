@@ -46,23 +46,26 @@ module.exports.rumFlags = {
   }
 }
 
+const enabled = true; const autoStart = true; const harvestTimeSeconds = 5
+const enabledFeature = { enabled, autoStart, harvestTimeSeconds }
 module.exports.defaultInitBlock = {
-  feature_flags: [],
-  privacy: { cookies_enabled: true },
-  ajax: { deny_list: [], block_internal: false, enabled: true, harvestTimeSeconds: 5, autoStart: true },
+  ajax: { deny_list: [], block_internal: false, ...enabledFeature },
   distributed_tracing: {},
-  session: { expiresMs: 14400000, inactiveMs: 1800000 },
-  ssl: false,
-  obfuscate: undefined,
-  logging: { enabled: true, harvestTimeSeconds: 5, autoStart: true },
-  jserrors: { enabled: true, harvestTimeSeconds: 5, autoStart: true },
-  metrics: { enabled: true, autoStart: true },
-  page_action: { enabled: true, harvestTimeSeconds: 5, autoStart: true },
-  page_view_event: { enabled: true, autoStart: true },
-  page_view_timing: { enabled: true, harvestTimeSeconds: 5, long_task: false, autoStart: true },
-  session_trace: { enabled: true, harvestTimeSeconds: 5, autoStart: true },
-  spa: { enabled: true, harvestTimeSeconds: 5, autoStart: true },
+  feature_flags: [],
+  generic_events: enabledFeature,
   harvest: { tooManyRequestsDelay: 5 },
-  session_replay: { enabled: false, harvestTimeSeconds: 5, sampling_rate: 0, error_sampling_rate: 0, autoStart: true },
-  soft_navigations: { enabled: true, harvestTimeSeconds: 5, autoStart: true }
+  jserrors: enabledFeature,
+  logging: enabledFeature,
+  metrics: { enabled, autoStart },
+  obfuscate: undefined,
+  page_action: enabledFeature,
+  page_view_event: { enabled, autoStart },
+  page_view_timing: enabledFeature,
+  privacy: { cookies_enabled: true },
+  session: { expiresMs: 14400000, inactiveMs: 1800000 },
+  session_replay: { enabled: false, harvestTimeSeconds, sampling_rate: 0, error_sampling_rate: 0, autoStart },
+  session_trace: enabledFeature,
+  ssl: false,
+  soft_navigations: enabledFeature,
+  spa: enabledFeature
 }

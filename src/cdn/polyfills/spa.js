@@ -14,6 +14,7 @@ import { Instrument as InstrumentXhr } from '../../features/ajax/instrument'
 import { Instrument as InstrumentSessionTrace } from '../../features/session_trace/instrument'
 import { Instrument as InstrumentSpa } from '../../features/spa/instrument'
 import { Instrument as InstrumentPageAction } from '../../features/page_action/instrument'
+import { Instrument as InstrumentGenericEvents } from '../../features/generic_events/instrument'
 import { Instrument as InstrumentLogs } from '../../features/logging/instrument'
 
 new Agent({
@@ -25,6 +26,7 @@ new Agent({
     InstrumentMetrics,
     InstrumentPageAction,
     InstrumentErrors,
+    InstrumentGenericEvents,
     InstrumentLogs,
     InstrumentSpa
   ],

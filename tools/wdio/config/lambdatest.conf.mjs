@@ -80,7 +80,6 @@ function lambdaTestCapabilities () {
           }
         } else {
           capabilities['appium:platformName'] = testBrowser.device_name
-          capabilities['LT:Options'].appiumVersion = '2.6.0'
         }
       }
       return capabilities

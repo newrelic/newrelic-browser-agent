@@ -180,7 +180,6 @@ export class Serializer extends SharedContext {
         // get all navTiming values except navigationStart
         // (since its the same as interaction.start)
         // and limit to just the first 20 values we know about
-        console.log(navTiming.slice(1, 21))
         Object.values(navTiming.slice(1, 21) || {}).forEach((v) => {
           if (v !== undefined) {
             navTimingNode += seperator + numeric(v - prev)

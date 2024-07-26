@@ -78,7 +78,7 @@ describe('SPA captures', () => {
       setTimeout(newrelic.interaction().createTracer('timer', function () {}))
     })
     el.addEventListener('click', () => {
-      const deadline = performance.now() + 1000
+      const deadline = performance.now() + 100
       let x = 0
       while (performance.now() <= deadline) { x++ }
       // do something with x to prevent the loop from being optimized out

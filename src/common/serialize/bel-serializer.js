@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { mapOwn } from '../util/map-own'
 import { stringify } from '../util/stringify'
 import { Obfuscator } from '../util/obfuscate'
 
@@ -47,7 +46,7 @@ export function getAddStringContext (agentIdentifier) {
 export function addCustomAttributes (attrs, addString) {
   var attrParts = []
 
-  mapOwn(attrs, function (key, val) {
+  Object.entries(attrs || {}).forEach(([key, val]) => {
     if (attrParts.length >= MAX_ATTRIBUTES) return
     var type = 5
     var serializedValue

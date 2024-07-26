@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { mapOwn } from '../util/map-own'
 import { stringify } from '../util/stringify'
 
 // Characters that are safe in a qs, but get encoded.
@@ -16,7 +15,7 @@ var charMap = {
   '%3B': ';'
 }
 
-var charList = mapOwn(charMap, function (k) { return k })
+var charList = Object.keys(charMap)
 var safeEncoded = new RegExp(charList.join('|'), 'g')
 
 function real (c) {
@@ -43,7 +42,7 @@ export function obj (payload, maxBytes) {
   var total = 0
   var result = ''
 
-  mapOwn(payload, function (feature, dataArray) {
+  Object.entries(payload || {}).forEach(([feature, dataArray]) => {
     var intermediate = []
     var next
     var i

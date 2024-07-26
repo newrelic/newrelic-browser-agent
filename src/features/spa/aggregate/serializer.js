@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { cleanURL } from '../../../common/url/clean-url'
-import { mapOwn } from '../../../common/util/map-own'
 import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../../../common/serialize/bel-serializer'
 import { SharedContext } from '../../../common/context/shared-context'
 import { getInfo } from '../../../common/config/config'
@@ -181,7 +180,7 @@ export class Serializer extends SharedContext {
         // get all navTiming values except navigationStart
         // (since its the same as interaction.start)
         // and limit to just the first 20 values we know about
-        mapOwn(navTiming.slice(1, 21), function (i, v) {
+        Object.values(navTiming.slice(1, 21) || {}).forEach((v) => {
           if (v !== undefined) {
             navTimingNode += seperator + numeric(v - prev)
             seperator = ','

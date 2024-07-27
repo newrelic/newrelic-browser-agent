@@ -61,7 +61,8 @@ describe('soft navigations API', () => {
         // No need for createTracer dummy fn tests?
       }
       return newSandboxHandle.command('get', newInteractionOpts?.customIxnCreationTime, newInteractionOpts)
-    }
+    },
+    setCurrentRouteName: function (routeName) { softNavAggregate.ee.emit(INTERACTION_API + 'routeName', [performance.now(), routeName], this) }
   }
 
   test('.interaction gets current or creates new api ixn', () => {
@@ -237,7 +238,7 @@ describe('soft navigations API', () => {
     const middleRoute = 'route_Y'
     const lastRoute = 'route_Z'
     let newIxn = newrelic.interaction() // a new ixn would start with undefined old & new routes
-    newIxn.command('routeName', undefined, firstRoute)
+    newrelic.setCurrentRouteName(firstRoute)
     expect(latestIxnCtx.associatedInteraction.oldRoute).toBeUndefined()
     expect(latestIxnCtx.associatedInteraction.newRoute).toEqual(firstRoute)
     newIxn.command('end')
@@ -245,13 +246,13 @@ describe('soft navigations API', () => {
     newIxn = newrelic.interaction() // most recent route should be maintained
     expect(latestIxnCtx.associatedInteraction.oldRoute).toEqual(firstRoute)
     expect(latestIxnCtx.associatedInteraction.newRoute).toBeUndefined()
-    newIxn.command('routeName', undefined, middleRoute)
-    newIxn.command('routeName', undefined, lastRoute)
+    newrelic.setCurrentRouteName(middleRoute)
+    newrelic.setCurrentRouteName(lastRoute)
     expect(latestIxnCtx.associatedInteraction.oldRoute).toEqual(firstRoute)
     expect(latestIxnCtx.associatedInteraction.newRoute).toEqual(lastRoute)
     newIxn.command('end')
 
-    newIxn.command('routeName', undefined, middleRoute) // setCurrentRouteName doesn't need an existing ixn to function, but the change should still carry forward
+    newrelic.setCurrentRouteName(middleRoute) // setCurrentRouteName doesn't need an existing ixn to function, but the change should still carry forward
     newrelic.interaction()
     expect(latestIxnCtx.associatedInteraction.oldRoute).toEqual(middleRoute)
   })

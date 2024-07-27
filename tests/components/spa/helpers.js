@@ -201,6 +201,10 @@ function getNewrelicGlobal (apiEventsEE) {
         }
       }
       return newSandboxHandle.command('get')
+    },
+    setCurrentRouteName: function (name) {
+      apiEventsEE.emit('api-routeName', [now(), name], this)
+      // this fn returns nothing
     }
   }
 }

@@ -444,6 +444,33 @@ test('end interaction', async () => {
   })
 })
 
+test('node is not restored for ended interaction', done => {
+  helpers.startInteraction(onInteractionStart, afterInteractionDone, { baseEE, eventType: 'click' })
+
+  function onInteractionStart (cb) {
+    expect(spaAggregate.state.currentNode?.id).toBeTruthy() // should be inside an interaction at the beginning
+
+    setTimeout(function () {
+      expect(spaAggregate.state.currentNode?.id).toBeTruthy() // should be inside an interaction in timeout 1
+      newrelic.interaction().command('end')
+    }, 1)
+    // even though the setTimeout callback is associated with the interaction,
+    // at the time it is called, the interaction node should not be restored
+    // since it runs after the interaction has already finished
+    setTimeout(function () {
+      expect(spaAggregate.state.currentNode?.id).toBeFalsy() // should not be inside an interaction in timeout 2
+    }, 100)
+
+    cb()
+  }
+
+  function afterInteractionDone (interaction) {
+    expect(interaction.root.end).toBeTruthy() // interaction should be finished and have an end time
+    expect(spaAggregate.state.currentNode?.id).toBeFalsy() // interaction should be null outside of async chain'
+    done()
+  }
+})
+
 test('custom interaction name', async () => {
   const validator = new helpers.InteractionValidator({
     name: 'interaction',

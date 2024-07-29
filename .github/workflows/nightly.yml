@@ -53,30 +53,26 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 'lts/*'
-      - name: Get agent EoL from nerd-graph
-        id: agent-releases
-        run: |
-          response=$(curl -X POST https://api.newrelic.com/graphql \
-            -H 'Content-Type: application/json' \
-            -H 'API-Key: ${{ secrets.NR_API_KEY_PRODUCTION }}' \
-            -d '{ "query":  "{\n  docs {\n    agentReleases(agentName: BROWSER) {\n      eolDate\n      version\n    }\n  }\n}" }')
-          eol_table=$(echo "$response" | jq -r '.data.docs.agentReleases | map({(.version): .eolDate}) | add | tostring') # this is a map of version string to EoL date in yyyy-mm-dd format
-          echo $eol_table
-          echo "----"
-          echo "eol_table=$eol_table" >> $GITHUB_ENV
       - name: Authenticate with npm
         run: npm config set "//registry.npmjs.org/:_authToken" "${{ secrets.BROWSER_NPM_TOKEN }}"
       - name: Deprecate old versions
         run: |
+          # Get agent EoL table from NRQL
+          response=$(curl -X POST https://api.newrelic.com/graphql \
+            -H 'Content-Type: application/json' \
+            -H 'API-Key: ${{ secrets.NR_API_KEY_PRODUCTION }}' \
+            -d '{ "query":  "{\n  docs {\n    agentReleases(agentName: BROWSER) {\n      eolDate\n      version\n    }\n  }\n}" }')
+          eol_table=$(echo "$response" | jq -r '.data.docs.agentReleases | map({(.version): .eolDate}) | add') # this is a map of version string to EoL date in yyyy-mm-dd format
+          echo "Fetched EoL table from NRDB."
+
           # Fetch package metadata from npm registry
           package_name="@newrelic/browser-agent"
           metadata=$(curl -s "https://registry.npmjs.org/$package_name")
-          echo "Fetched metadata."
+          echo "Fetched agent releases metadata from NPM."
 
           # Parse versions and their publication dates
           today=$(date +%Y-%m-%d)
           versions=$(echo "$metadata" | jq -r '.versions | keys[]') # this list is pre-sorted from oldest to newest
-          eol_table="${{ env.eol_table }}"
           echo "EoL Table from previous step: $eol_table"
           for version in $versions; do
             eol_date=$(echo "$eol_table" | jq -r --arg version "$version" '.[$version]')

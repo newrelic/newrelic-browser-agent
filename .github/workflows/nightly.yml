@@ -53,32 +53,44 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 'lts/*'
+      - name: Get agent EoL from nerd-graph
+        id: agent-releases
+        run: |
+          response=$(curl -X POST https://api.newrelic.com/graphql \
+            -H 'Content-Type: application/json' \
+            -H 'API-Key: ${{ secrets.NR_API_KEY_PRODUCTION }}' \
+            -d '{ "query":  "{\n  docs {\n    agentReleases(agentName: BROWSER) {\n      eolDate\n      version\n    }\n  }\n}" }')
+          eol_table=$(echo "$response" | jq -r '.data.docs.agentReleases | map({(.version): .eolDate}) | add') # this is a map of version string to EoL date in yyyy-mm-dd format
+          echo "::set-output name=eol_table::$eol_table"
       - name: Authenticate with npm
         run: npm config set "//registry.npmjs.org/:_authToken" "${{ secrets.BROWSER_NPM_TOKEN }}"
       - name: Deprecate old versions
         run: |
-          # Calculate date 1 year ago from today
-          one_year_ago=$(date -d "-1 year" +%Y-%m-%d)
-          
           # Fetch package metadata from npm registry
           package_name="@newrelic/browser-agent"
           metadata=$(curl -s "https://registry.npmjs.org/$package_name")
           echo "Fetched metadata."
 
           # Parse versions and their publication dates
+          today=$(date +%Y-%m-%d)
           versions=$(echo "$metadata" | jq -r '.versions | keys[]') # this list is pre-sorted from oldest to newest
           for version in $versions; do
-            publish_date=$(echo "$metadata" | jq -r ".time[\"$version\"]")
+            eol_date=$(echo "$eol_table" | jq -r --arg version "$version" '.[$version]')
+            if [[ "$eol_date" == "null" ]]; then
+              echo "No EoL date found for version $version. Skipping..."
+              continue
+            fi
+
             deprecation_message=$(echo "$metadata" | jq -r ".versions[\"$version\"].deprecated")
-            if [[ "$publish_date" < "$one_year_ago" ]]; then
+            if [[ "$eol_date" <= "$today" ]]; then
               if [[ $deprecation_message == "null" ]]; then
-                echo "Deprecating version $version published $publish_date..."
+                echo "Deprecating version $version no longer supported as of $eol_date..."
                 npm deprecate "$package_name@$version" "This version is no longer supported."
               else
                 echo "Version $version is already deprecated."
               fi
             else
-              break # rest of the versions should be within the time window
+              break # rest of the ascending versions should be within their support window
             fi
           done
 

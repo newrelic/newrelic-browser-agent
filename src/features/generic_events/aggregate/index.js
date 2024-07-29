@@ -14,6 +14,7 @@ import { now } from '../../../common/timing/now'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { formatPageAction } from './formatters/page-actions'
 import { deregisterDrain } from '../../../common/drain/drain'
+import { wrapVideoPlayer } from '../../../common/wrap'
 
 export class Aggregate extends AggregateBase {
   #agentRuntime
@@ -44,6 +45,24 @@ export class Aggregate extends AggregateBase {
       if (getConfigurationValue(this.agentIdentifier, 'page_action.enabled')) {
         const pageActionHandler = formatPageAction(this.addEvent.bind(this))
         registerHandler('api-addPageAction', pageActionHandler, this.featureName, this.ee)
+      }
+
+      const pageActionHandler = formatPageAction(this.addEvent.bind(this))
+      this.ee.on('video-player', pageActionHandler)
+      /** observe video players */
+      if (isBrowserScope && window.MutationObserver) {
+        console.log(window.document.querySelectorAll('video'))
+        for (const videoPlayer of window.document.querySelectorAll('video')) {
+          wrapVideoPlayer(this.ee, videoPlayer)
+        }
+        const mo = new MutationObserver(records => {
+          records.forEach(record => {
+            record.addedNodes.forEach(addedNode => {
+              if (addedNode instanceof HTMLVideoElement) { wrapVideoPlayer(this.ee, addedNode) }
+            })
+          })
+        })
+        mo.observe(window.document.body, { childList: true, subtree: true })
       }
 
       this.harvestScheduler = new HarvestScheduler('ins', { onFinished: (...args) => this.onHarvestFinished(...args) }, this)

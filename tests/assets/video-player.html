@@ -22,52 +22,52 @@
     </div>
 
     <script>
-      function observeVideo(video){
-      video.addEventListener('play', evt => {
-        console.log("play...", Date.now(), evt)
-      })
-      video.addEventListener('pause', evt => {
-        console.log("pause...", Date.now(), evt)
-      })
-      video.addEventListener('playing', evt => {
-        console.log("resume (playing)...", Date.now(), evt)
-      })
-      video.addEventListener('ended', evt => {
-        console.log("end (ended)...", Date.now(), evt)
-      })
-      video.addEventListener('stalled', evt => {
-        console.log("stall (stalled)...", evt)
-      })
-      video.addEventListener('seeking', evt => {
-        console.log("seek (seeking)...", evt)
-      })
-      video.addEventListener('volumechange', evt => {
-        console.log("volume (volumechange)...", evt)
-      })
-      video.addEventListener('waiting', evt => {
-        console.log("buffer (waiting)...", evt)
-      })
-      console.log("observing video", video)
-    }
+    //   function observeVideo(video){
+    //   video.addEventListener('play', evt => {
+    //     console.log("play...", Date.now(), evt)
+    //   })
+    //   video.addEventListener('pause', evt => {
+    //     console.log("pause...", Date.now(), evt)
+    //   })
+    //   video.addEventListener('playing', evt => {
+    //     console.log("resume (playing)...", Date.now(), evt)
+    //   })
+    //   video.addEventListener('ended', evt => {
+    //     console.log("end (ended)...", Date.now(), evt)
+    //   })
+    //   video.addEventListener('stalled', evt => {
+    //     console.log("stall (stalled)...", evt)
+    //   })
+    //   video.addEventListener('seeking', evt => {
+    //     console.log("seek (seeking)...", evt)
+    //   })
+    //   video.addEventListener('volumechange', evt => {
+    //     console.log("volume (volumechange)...", evt)
+    //   })
+    //   video.addEventListener('waiting', evt => {
+    //     console.log("buffer (waiting)...", evt)
+    //   })
+    //   console.log("observing video", video)
+    // }
      
-    observeVideo(document.querySelector('video'))
+    // observeVideo(document.querySelector('video'))
 
       setTimeout(() => {
         const clone = document.querySelector('video').cloneNode(true)
         document.querySelector('#div3').appendChild(clone)
       }, 3000)
 
-      const mo = new MutationObserver(records => {
-        records.forEach(record => {
-          record.addedNodes.forEach(addedNode => {
-            if (addedNode instanceof HTMLVideoElement){
-              console.log("video element added!", addedNode)
-              observeVideo(addedNode)
-            }
-          })
-        })
-      })
-      mo.observe(document.body, {childList: true, subtree: true})
+    //   const mo = new MutationObserver(records => {
+    //     records.forEach(record => {
+    //       record.addedNodes.forEach(addedNode => {
+    //         if (addedNode instanceof HTMLVideoElement){
+    //           console.log("video element added!", addedNode)
+    //           observeVideo(addedNode)
+    //         }
+    //       })
+    //     })
+    //   })
+    //   mo.observe(document.body, {childList: true, subtree: true})
     </script>
   </body>
 </html>

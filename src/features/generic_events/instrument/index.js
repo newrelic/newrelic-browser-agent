@@ -16,7 +16,8 @@ export class Instrument extends InstrumentBase {
       // other future generic event source configs to go here, like M&Ms, PageResouce, etc.
     ]
     /** If any of the sources are active, import the aggregator. otherwise deregister */
-    if (genericEventSourceConfigs.some(x => x)) this.importAggregator()
-    else deregisterDrain(this.agentIdentifier, this.featureName)
+    if (genericEventSourceConfigs.some(x => x)) {
+      this.importAggregator()
+    } else deregisterDrain(this.agentIdentifier, this.featureName)
   }
 }

@@ -60,10 +60,10 @@ jobs:
             -H 'Content-Type: application/json' \
             -H 'API-Key: ${{ secrets.NR_API_KEY_PRODUCTION }}' \
             -d '{ "query":  "{\n  docs {\n    agentReleases(agentName: BROWSER) {\n      eolDate\n      version\n    }\n  }\n}" }')
-          eol_table=$(echo "$response" | jq -r '.data.docs.agentReleases | map({(.version): .eolDate}) | add') # this is a map of version string to EoL date in yyyy-mm-dd format
+          eol_table=$(echo "$response" | jq -r '.data.docs.agentReleases | map({(.version): .eolDate}) | add | tostring') # this is a map of version string to EoL date in yyyy-mm-dd format
           echo $eol_table
           echo "----"
-          echo "eol_table=$(echo $eol_table | jq -c .)" >> $GITHUB_ENV
+          echo "eol_table=$eol_table" >> $GITHUB_ENV
       - name: Authenticate with npm
         run: npm config set "//registry.npmjs.org/:_authToken" "${{ secrets.BROWSER_NPM_TOKEN }}"
       - name: Deprecate old versions

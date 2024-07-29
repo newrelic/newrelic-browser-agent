@@ -56,6 +56,7 @@ jobs:
       - name: Authenticate with npm
         run: npm config set "//registry.npmjs.org/:_authToken" "${{ secrets.BROWSER_NPM_TOKEN }}"
       - name: Deprecate old versions
+        shell: bash
         run: |
           # Get agent EoL table from NRQL
           response=$(curl -X POST https://api.newrelic.com/graphql \
@@ -81,6 +82,8 @@ jobs:
             fi
 
             deprecation_message=$(echo "$metadata" | jq -r ".versions[\"$version\"].deprecated")
+            echo $eol_date
+            echo $today
             if [[ "$eol_date" <= "$today" ]]; then
               if [ "$deprecation_message" = "null" ]; then
                 echo "Deprecating version $version no longer supported as of $eol_date..."

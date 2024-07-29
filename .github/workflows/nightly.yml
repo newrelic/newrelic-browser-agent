@@ -54,7 +54,7 @@ jobs:
         with:
           node-version: 'lts/*'
       - name: Authenticate with npm
-        run: npm config set "//registry.npmjs.org/:_authToken" "${{ secrets.NPM_TOKEN }}"
+        run: npm config set "//registry.npmjs.org/:_authToken" "${{ secrets.BROWSER_NPM_TOKEN }}"
       - name: Deprecate old versions
         run: |
           # Calculate date 1 year ago from today

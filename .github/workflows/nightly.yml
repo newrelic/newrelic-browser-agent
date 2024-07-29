@@ -61,7 +61,7 @@ jobs:
             -H 'API-Key: ${{ secrets.NR_API_KEY_PRODUCTION }}' \
             -d '{ "query":  "{\n  docs {\n    agentReleases(agentName: BROWSER) {\n      eolDate\n      version\n    }\n  }\n}" }')
           eol_table=$(echo "$response" | jq -r '.data.docs.agentReleases | map({(.version): .eolDate}) | add') # this is a map of version string to EoL date in yyyy-mm-dd format
-          echo "eol_table=$eol_table" >> $GITHUB_ENV
+          echo "::set-output name=eol_table::$eol_table"
       - name: Authenticate with npm
         run: npm config set "//registry.npmjs.org/:_authToken" "${{ secrets.BROWSER_NPM_TOKEN }}"
       - name: Deprecate old versions
@@ -75,7 +75,7 @@ jobs:
           today=$(date +%Y-%m-%d)
           versions=$(echo "$metadata" | jq -r '.versions | keys[]') # this list is pre-sorted from oldest to newest
           for version in $versions; do
-            eol_date=$(echo "${{ env.eol_table }}" | jq -r --arg version "$version" '.[$version]')
+            eol_date=$(echo "${{ steps.agent-releases.outputs.eol_table }}" | jq -r --arg version "$version" '.[$version]')
             if [ "$eol_date" = "null" ]; then
               echo "No EoL date found for version $version. Skipping..."
               continue

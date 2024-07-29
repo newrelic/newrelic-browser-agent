@@ -42,7 +42,7 @@ describe('SPA captures', () => {
       children: []
     })
 
-    helpers.startInteraction(onInteractionStart, afterInteractionDone, { baseEE: ee.get(agentIdentifier) })
+    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, spaAggregate, validator, done), { baseEE: ee.get(agentIdentifier) })
 
     function onInteractionStart (cb) {
       setTimeout(() => {
@@ -51,13 +51,6 @@ describe('SPA captures', () => {
           cb()
         })
       })
-    }
-
-    function afterInteractionDone (interaction) {
-      expect(interaction.root.end).toBeGreaterThan(0) // interaction should be finished and have an end time
-      expect(spaAggregate.state.currentNode?.id).toBeFalsy() // interaction should be null outside of async chain
-      validator.validate(interaction)
-      done()
     }
   })
 
@@ -85,7 +78,7 @@ describe('SPA captures', () => {
       setTimeout(newrelic.interaction().createTracer('timer', function () {}))
     })
     el.addEventListener('click', () => {
-      const deadline = performance.now() + 1000
+      const deadline = performance.now() + 100
       let x = 0
       while (performance.now() <= deadline) { x++ }
       // do something with x to prevent the loop from being optimized out
@@ -94,17 +87,36 @@ describe('SPA captures', () => {
       div.innerHTML = x
       setTimeout(newrelic.interaction().createTracer('timer', function () {}))
     })
-    helpers.startInteraction(onInteractionStart, afterInteractionDone, { baseEE: ee.get(agentIdentifier), element: el })
+    helpers.startInteraction(cb => cb(), afterInteractionDone.bind(null, spaAggregate, validator, done), { baseEE: ee.get(agentIdentifier), element: el })
+  })
 
-    function onInteractionStart (cb) {
-      cb()
-    }
+  ;['keypress', 'keyup', 'keydown', 'change'].forEach(eventType => {
+    test(`${eventType}`, done => {
+      const validator = new helpers.InteractionValidator({
+        attrs: { trigger: eventType },
+        name: 'interaction',
+        children: [{
+          type: 'customTracer',
+          attrs: {
+            name: 'timer'
+          },
+          children: []
+        }]
+      })
 
-    function afterInteractionDone (interaction) {
-      expect(interaction.root.end).toBeGreaterThan(0) // interaction should be finished and have an end time
-      expect(spaAggregate.state.currentNode?.id).toBeFalsy() // interaction should be null outside of async chain
-      validator.validate(interaction)
-      done()
-    }
+      expect(spaAggregate.state.currentNode?.id).toBeFalsy()
+      helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, spaAggregate, validator, done), { baseEE: ee.get(agentIdentifier), eventType })
+
+      function onInteractionStart (cb) {
+        setTimeout(newrelic.interaction().createTracer('timer', cb), 0)
+      }
+    })
   })
 })
+
+function afterInteractionDone (spaAggregate, validator, done, interaction) {
+  expect(interaction.root.end).toBeGreaterThan(0) // interaction should be finished and have an end time
+  expect(spaAggregate.state.currentNode?.id).toBeFalsy() // interaction should be null outside of async chain
+  validator.validate(interaction)
+  done()
+}

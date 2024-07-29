@@ -73,7 +73,7 @@ jobs:
             if [[ "$publish_date" < "$one_year_ago" ]]; then
               if [[ $deprecation_message == "null" ]]; then
                 echo "Deprecating version $version published $publish_date..."
-                npm deprecate "$package_name@$version" "This version is no longer supported" --verbose
+                npm deprecate "$package_name@$version" "This version is no longer supported."
               else
                 echo "Version $version is already deprecated."
               fi

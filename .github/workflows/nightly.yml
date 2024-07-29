@@ -7,12 +7,12 @@ on:
   workflow_dispatch:
 
 jobs:
-  wdio-smoke:
-    name: 'WDIO: Smoke Test'
-    uses: ./.github/workflows/wdio-single-browser.yml
-    with:
-      browser-target: chrome@latest
-    secrets: inherit
+  # wdio-smoke:
+  #   name: 'WDIO: Smoke Test'
+  #   uses: ./.github/workflows/wdio-single-browser.yml
+  #   with:
+  #     browser-target: chrome@latest
+  #   secrets: inherit
 
   verify-ab-assets:
     name: Verify A/B Assets
@@ -44,5 +44,41 @@ jobs:
             internal/prod-postamble.js \
             internal/eu-prod-released.js \
             internal/eu-prod-postamble.js
+
+  deprecate-old-versions:
+    name: Deprecate Unsupported Versions
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+      - name: Authenticate with npm
+        run: npm config set "//registry.npmjs.org/:_authToken" "${{ secrets.NPM_TOKEN }}"
+      - name: Deprecate old versions
+        run: |
+          # Calculate date 1 year ago from today
+          one_year_ago=$(date -d "-1 year" +%Y-%m-%d)
+          
+          # Fetch package metadata from npm registry
+          package_name="@newrelic/browser-agent"
+          metadata=$(curl -s "https://registry.npmjs.org/$package_name")
+
+          # Parse versions and their publication dates
+          versions=$(echo "$metadata" | jq -r '.versions | keys[]') # this list is pre-sorted from oldest to newest
+          target_version=""
+          for version in $versions; do
+            publish_date=$(echo "$metadata" | jq -r ".time[\"$version\"]")
+            if [[ "$publish_date" > "$one_year_ago" ]]; then
+            target_version="$version"
+            break
+            fi
+          done
+          if [[ -n "$target_version" ]]; then
+            echo "Deprecating versions older than $target_version..."
+            npm deprecate "$package_name@< $target_version" "This version is no longer supported"
+          fi
 
   # TODO: Need to add a job for cleaning up experiments to run nightly

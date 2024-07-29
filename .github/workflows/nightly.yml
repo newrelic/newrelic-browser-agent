@@ -63,7 +63,7 @@ jobs:
           eol_table=$(echo "$response" | jq -r '.data.docs.agentReleases | map({(.version): .eolDate}) | add') # this is a map of version string to EoL date in yyyy-mm-dd format
           echo $eol_table
           echo "----"
-          echo "::set-output name=eol_table::$eol_table"
+          echo "EOL_TABLE=$eol_table" >> $GITHUB_OUTPUT
       - name: Authenticate with npm
         run: npm config set "//registry.npmjs.org/:_authToken" "${{ secrets.BROWSER_NPM_TOKEN }}"
       - name: Deprecate old versions
@@ -76,7 +76,7 @@ jobs:
           # Parse versions and their publication dates
           today=$(date +%Y-%m-%d)
           versions=$(echo "$metadata" | jq -r '.versions | keys[]') # this list is pre-sorted from oldest to newest
-          eol_table='${{ steps.agent-releases.outputs.eol_table }}'
+          eol_table="${{ steps.agent-releases.outputs.eol_table }}"
           echo "EoL Table from previous step: $eol_table"
           for version in $versions; do
             eol_date=$(echo "$eol_table" | jq -r --arg version "$version" '.[$version]')

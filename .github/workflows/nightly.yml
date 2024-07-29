@@ -73,10 +73,8 @@ jobs:
           # Parse versions and their publication dates
           today=$(date +%Y-%m-%d)
           versions=$(echo "$metadata" | jq -r '.versions | keys[]') # this list is pre-sorted from oldest to newest
-          echo "EoL Table from previous step: $eol_table"
           for version in $versions; do
             eol_date=$(echo "$eol_table" | jq -r --arg version "$version" '.[$version]')
-            echo $eol_date
             if [ "$eol_date" = "null" ]; then
               echo "No EoL date found for version $version. Skipping..."
               continue

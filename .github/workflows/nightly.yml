@@ -65,7 +65,7 @@ jobs:
           # Fetch package metadata from npm registry
           package_name="@newrelic/browser-agent"
           metadata=$(curl -s "https://registry.npmjs.org/$package_name")
-          echo "Fetched metadata: $metadata"
+          echo "Fetched metadata."
 
           # Parse versions and their publication dates
           versions=$(echo "$metadata" | jq -r '.versions | keys[]') # this list is pre-sorted from oldest to newest

@@ -76,7 +76,7 @@ jobs:
           versions=$(echo "$metadata" | jq -r '.versions | keys[]') # this list is pre-sorted from oldest to newest
           for version in $versions; do
             eol_date=$(echo "${{ steps.agent-releases.outputs.eol_table }}" | jq -r --arg version "$version" '.[$version]')
-            if [[ "$eol_date" == "null" ]]; then
+            if [ "$eol_date" = "null" ]; then
               echo "No EoL date found for version $version. Skipping..."
               continue
             fi

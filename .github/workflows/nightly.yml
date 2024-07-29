@@ -78,7 +78,9 @@ jobs:
           done
           if [[ -n "$target_version" ]]; then
             echo "Deprecating versions older than $target_version..."
-            npm deprecate "$package_name@< $target_version" "This version is no longer supported"
+            npm deprecate "$package_name@<$target_version" "This version is no longer supported"
+          else
+            echo "No target version (oldest within past year) found. Something's wrong."
           fi
 
   # TODO: Need to add a job for cleaning up experiments to run nightly

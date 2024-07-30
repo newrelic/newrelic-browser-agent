@@ -7,12 +7,12 @@ on:
   workflow_dispatch:
 
 jobs:
-  # wdio-smoke:
-  #   name: 'WDIO: Smoke Test'
-  #   uses: ./.github/workflows/wdio-single-browser.yml
-  #   with:
-  #     browser-target: chrome@latest
-  #   secrets: inherit
+  wdio-smoke:
+    name: 'WDIO: Smoke Test'
+    uses: ./.github/workflows/wdio-single-browser.yml
+    with:
+      browser-target: chrome@latest
+    secrets: inherit
 
   verify-ab-assets:
     name: Verify A/B Assets

@@ -12,7 +12,6 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { warn } from '../../../common/util/console'
 import { now } from '../../../common/timing/now'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
-import { formatPageAction } from './formatters/page-actions'
 import { deregisterDrain } from '../../../common/drain/drain'
 
 export class Aggregate extends AggregateBase {
@@ -42,8 +41,19 @@ export class Aggregate extends AggregateBase {
       }
 
       if (getConfigurationValue(this.agentIdentifier, 'page_action.enabled')) {
-        const pageActionHandler = formatPageAction(this.addEvent.bind(this))
-        registerHandler('api-addPageAction', pageActionHandler, this.featureName, this.ee)
+        registerHandler('api-addPageAction', (timestamp, name, attributes) => {
+          this.addEvent({
+            ...attributes,
+            eventType: 'PageAction',
+            timestamp: this.#agentRuntime.timeKeeper.convertRelativeTimestamp(timestamp),
+            timeSinceLoad: timestamp / 1000,
+            actionName: name,
+            ...(isBrowserScope && {
+              browserWidth: window.document.documentElement?.clientWidth,
+              browserHeight: window.document.documentElement?.clientHeight
+            })
+          })
+        }, this.featureName, this.ee)
       }
 
       this.harvestScheduler = new HarvestScheduler('ins', { onFinished: (...args) => this.onHarvestFinished(...args) }, this)
@@ -100,10 +110,10 @@ export class Aggregate extends AggregateBase {
       referrerUrl: this.referrerUrl,
       currentUrl: cleanURL('' + location),
       pageUrl: cleanURL(getRuntime(this.agentIdentifier).origin),
-      /** Event-specific attributes take precedence over everything else */
-      ...obj,
       /** Agent-level custom attributes */
-      ...(getInfo(this.agentIdentifier).jsAttributes || {})
+      ...(getInfo(this.agentIdentifier).jsAttributes || {}),
+      /** Event-specific attributes take precedence over everything else */
+      ...obj
     }
 
     /** should have been provided by reporting feature -- but falls back to now if not */

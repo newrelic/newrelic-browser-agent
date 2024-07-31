@@ -6,7 +6,8 @@ const testBuilds = [
   'custom-agent-lite',
   'custom-agent-pro',
   'custom-agent-spa',
-  'worker-agent'
+  'worker-agent',
+  'custom-agent-pro-deprecated-features'
 ]
 
 describe.withBrowsersMatching(es2022Support)('basic npm agent', () => {

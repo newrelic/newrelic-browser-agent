@@ -4,6 +4,7 @@ export const FEATURE_NAMES = {
   jserrors: 'jserrors',
   logging: 'logging',
   metrics: 'metrics',
+  pageAction: 'page_action',
   pageViewEvent: 'page_view_event',
   pageViewTiming: 'page_view_timing',
   sessionReplay: 'session_replay',

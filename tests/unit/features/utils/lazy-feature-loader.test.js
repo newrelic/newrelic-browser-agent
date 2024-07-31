@@ -8,9 +8,16 @@ jest.enableAutomock()
 jest.unmock('../../../../src/loaders/features/features')
 jest.unmock('../../../../src/features/utils/lazy-feature-loader')
 
+const randomIds = {}
+const featureRedirects = {
+  [FEATURE_NAMES.pageAction]: FEATURE_NAMES.genericEvents
+}
+
 test.each(Object.keys(FEATURE_NAMES))('should import the aggregate for feature %s', async (key) => {
-  const featureName = FEATURE_NAMES[key]
-  const randomId = faker.string.uuid()
+  const featureName = featureRedirects[FEATURE_NAMES[key]] || FEATURE_NAMES[key] // deprecated page_actions redirects to use generic events, otherwise use provided key
+  /** since both generic events and page actions now use the same mocked agg, the randomId should be buffered/referenced here instead of overwriting */
+  const randomId = randomIds[featureName] || faker.string.uuid()
+  randomIds[featureName] ??= randomId
 
   jest.setMock(`../../../../src/features/${featureName}/aggregate`, {
     id: randomId,

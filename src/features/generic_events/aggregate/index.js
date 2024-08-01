@@ -101,7 +101,6 @@ export class Aggregate extends AggregateBase {
 
     for (let key in obj) {
       let val = obj[key]
-      if (key === 'timestamp') val = this.#agentRuntime.timeKeeper.correctAbsoluteTimestamp(val)
       obj[key] = (val && typeof val === 'object' ? stringify(val) : val)
     }
 

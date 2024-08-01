@@ -48,6 +48,8 @@ export class Aggregate extends AggregateBase {
             timestamp: this.#agentRuntime.timeKeeper.convertRelativeTimestamp(timestamp),
             timeSinceLoad: timestamp / 1000,
             actionName: name,
+            referrerUrl: this.referrerUrl,
+            currentUrl: cleanURL('' + location),
             ...(isBrowserScope && {
               browserWidth: window.document.documentElement?.clientWidth,
               browserHeight: window.document.documentElement?.clientHeight
@@ -104,19 +106,21 @@ export class Aggregate extends AggregateBase {
       obj[key] = (val && typeof val === 'object' ? stringify(val) : val)
     }
 
-    const eventAttributes = {
-      /** Common attributes shared on all generic events */
-      referrerUrl: this.referrerUrl,
-      currentUrl: cleanURL('' + location),
-      pageUrl: cleanURL(getRuntime(this.agentIdentifier).origin),
-      /** Agent-level custom attributes */
-      ...(getInfo(this.agentIdentifier).jsAttributes || {}),
-      /** Event-specific attributes take precedence over everything else */
-      ...obj
+    const defaultEventAttributes = {
+      /** should be overridden by the event-specific attributes, but just in case -- set it to now() */
+      timestamp: this.#agentRuntime.timeKeeper.convertRelativeTimestamp(now()),
+      /** all generic events require a pageUrl */
+      pageUrl: cleanURL(getRuntime(this.agentIdentifier).origin)
     }
 
-    /** should have been provided by reporting feature -- but falls back to now if not */
-    eventAttributes.timestamp ??= this.#agentRuntime.timeKeeper.convertRelativeTimestamp(now())
+    const eventAttributes = {
+      /** Agent-level custom attributes */
+      ...(getInfo(this.agentIdentifier).jsAttributes || {}),
+      /** Fallbacks for required properties in-case the event did not supply them, should take precedence over agent-level custom attrs */
+      ...defaultEventAttributes,
+      /** Event-specific attributes take precedence over agent-level custom attributes and fallbacks */
+      ...obj
+    }
 
     this.events.push(eventAttributes)
 

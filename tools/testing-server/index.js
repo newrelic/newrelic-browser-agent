@@ -14,7 +14,6 @@ const TestServerLogger = require('./logger')
  * @property {TestingServerLogger} logger logger to pass to the testing servers and plugins
  * @property {string} loader default loader to use when not specified
  * @property {boolean} debugShim indicates if the debug shim should be injected into HTML assets
- * @property {boolean} polyfills indicates if polyfills should be used for the agent
  */
 
 /**

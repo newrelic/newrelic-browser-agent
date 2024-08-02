@@ -7,9 +7,8 @@ import args from '../args.mjs'
 import { getBrowserName } from '../../browsers-lists/utils.mjs'
 
 const require = module.createRequire(import.meta.url)
-const desktopBrowsers = require('../../browsers-lists/lt-desktop-supported.json')
-const mobileBrowsers = require('../../browsers-lists/lt-mobile-supported.json')
-const browsersPolyfill = require('../../browsers-lists/lt-polyfill.json')
+const supportedDesktop = require('../../browsers-lists/lt-desktop-supported.json')
+const supportedMobile = require('../../browsers-lists/lt-mobile-supported.json')
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
 
@@ -21,14 +20,6 @@ const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
  * @returns An object defining platform capabilities to be requested of LambdaTest.
  */
 function lambdaTestCapabilities () {
-  let supportedDesktop, supportedMobile
-  if (args.polyfills) {
-    supportedDesktop = browsersPolyfill // just IE11
-  } else {
-    supportedDesktop = desktopBrowsers
-    supportedMobile = mobileBrowsers
-  }
-
   let revision
   try {
     revision = child_process.execSync('git rev-parse --short HEAD').toString().trim()

@@ -1,7 +1,7 @@
-import { supportsMultipleTabs, notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { supportsMultipleTabs } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { RRWEB_EVENT_TYPES, srConfig, MODE, testExpectedReplay } from '../util/helpers.js'
 
-describe.withBrowsersMatching(notIE)('session manager state behavior', () => {
+describe('session manager state behavior', () => {
   afterEach(async () => {
     await browser.destroyAgentSession(browser.testHandle)
   })

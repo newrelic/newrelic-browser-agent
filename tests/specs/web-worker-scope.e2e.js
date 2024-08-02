@@ -1,9 +1,4 @@
-import { notIE } from '../../tools/browser-matcher/common-matchers.mjs'
-
-// These tests utilize an npm build of the agent and cannot run in IE
-// because that build is not designed to support IE.
-
-describe.withBrowsersMatching(notIE)('web worker scope', () => {
+describe('web worker scope', () => {
   it('should capture XHR events and metrics', async () => {
     const [events, metrics] = await Promise.all([
       browser.testHandle.expectAjaxEvents(),

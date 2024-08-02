@@ -126,8 +126,6 @@ function startInteraction (onInteractionStart, afterInteractionFinish, options =
     switch (eventType) {
       case 'click': {
         let el = options.element || document.createElement('div')
-        // IE needs the element to be in the DOM in order to allow click events to be
-        // captured against it.
         document.body.appendChild(el)
         el.addEventListener('click', handleInteractionEvent)
         simulateClick(el)

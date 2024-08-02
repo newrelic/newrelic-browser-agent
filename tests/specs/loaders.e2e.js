@@ -1,10 +1,8 @@
 import { checkAjaxEvents, checkJsErrors, checkMetrics, checkPVT, checkPageAction, checkRumBody, checkRumQuery, checkSessionTrace, checkSpa } from '../util/basic-checks'
-import { notIE } from '../../tools/browser-matcher/common-matchers.mjs'
 
 const scriptLoadTypes = [null, 'defer', 'async', 'injection']
 
-// readyState not supported in ie11
-describe.withBrowsersMatching(notIE)('Loaders', () => {
+describe('Loaders', () => {
   afterEach(async () => {
     await browser.destroyAgentSession()
   })

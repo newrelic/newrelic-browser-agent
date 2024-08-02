@@ -1,7 +1,7 @@
-import { notIE, notSafari, supportsMultipleTabs } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { notSafari, supportsMultipleTabs } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { srConfig, testExpectedReplay } from '../util/helpers'
 
-describe.withBrowsersMatching(notIE)('Session Replay Preload', () => {
+describe('Session Replay Preload', () => {
   beforeEach(async () => {
     await browser.enableSessionReplay()
   })

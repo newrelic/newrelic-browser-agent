@@ -1,9 +1,6 @@
-import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { testErrorsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
-// IE11 actually does bucket these cases, so these tests will fail. Because the cases are niche, we exclude IE11.
-
-describe.withBrowsersMatching(notIE)('error bucketing', () => {
+describe('error bucketing', () => {
   let errorsCapture
 
   beforeEach(async () => {

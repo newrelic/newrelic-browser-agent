@@ -8,12 +8,6 @@ const SPEC_OPERATOR = {
 
 /**
  * Parses a browser spec string into it's constituent parts.
- * @example
- * // return { browserName: 'ie', operator: '@', browserVersion: 11', platformName: 'windows' }
- * parseSpecString('ie@11/windows')
- * @example
- * // throws an error because `#` is not a valid operator
- * parseSpecString('ie#11/windows')
  * @param {string} spec A string representing a browser spec
  * @returns {object} The parsed spec
  */

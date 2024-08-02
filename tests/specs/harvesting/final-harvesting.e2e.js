@@ -1,8 +1,7 @@
-import { supportsFetch, notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { supportsFetch } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { testAjaxEventsRequest, testBlobTraceRequest, testErrorsRequest, testInsRequest, testMetricsRequest, testRumRequest, testTimingEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
-// IE does not have reliable unload support
-describe.withBrowsersMatching(notIE)('final harvesting', () => {
+describe('final harvesting', () => {
   let timingEventsCapture
   let ajaxEventsCapture
   let metricsCapture

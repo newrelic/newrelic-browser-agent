@@ -1,5 +1,5 @@
 import { testRumRequest } from '../../../tools/testing-server/utils/expect-tests.js'
-import { supportsMultipleTabs, notIE, notSafari } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { supportsMultipleTabs, notSafari } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { testExpectedTrace, stConfig, MODE } from '../util/helpers.js'
 
 const getTraceMode = () => browser.execute(function () {
@@ -9,7 +9,7 @@ const getTraceMode = () => browser.execute(function () {
   ]
 })
 
-describe.withBrowsersMatching(notIE)('Session Replay Across Pages', () => {
+describe('Session Replay Across Pages', () => {
   afterEach(async () => {
     await browser.destroyAgentSession()
   })

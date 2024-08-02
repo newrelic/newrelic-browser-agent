@@ -1,7 +1,7 @@
-import { notIE, notIOS, onlyChrome, supportsFetch } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { notIOS, onlyChrome, supportsFetch } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { srConfig, decodeAttributes, getSR } from '../util/helpers'
 
-describe.withBrowsersMatching(notIE)('Session Replay Harvest Behavior', () => {
+describe('Session Replay Harvest Behavior', () => {
   beforeEach(async () => {
     await browser.enableSessionReplay()
   })

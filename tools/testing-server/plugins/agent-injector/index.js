@@ -4,7 +4,6 @@ const applyConfigTransformer = require('./config-transform')
 const applyInitTransform = require('./init-transform')
 const applyWorkerCommandsTransform = require('./worker-commands-transform')
 const applyScriptTransform = require('./script-transform')
-const applyPolyfillsTransform = require('./polyfills-transform')
 const { paths } = require('../../constants')
 
 /**
@@ -27,7 +26,6 @@ module.exports = fp(async function (fastify, testServer) {
         .pipe(applyInitTransform(request, reply, testServer))
         .pipe(applyWorkerCommandsTransform(request, reply, testServer))
         .pipe(applyScriptTransform(request, reply, testServer))
-        .pipe(applyPolyfillsTransform(request, reply, testServer))
     }
 
     reply.removeHeader('content-length')

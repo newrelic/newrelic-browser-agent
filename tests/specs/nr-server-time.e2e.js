@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker'
 import { srConfig, decodeAttributes } from './util/helpers'
-import { notIE, supportsFetch } from '../../tools/browser-matcher/common-matchers.mjs'
+import { supportsFetch } from '../../tools/browser-matcher/common-matchers.mjs'
 import { testAjaxEventsRequest, testBlobReplayRequest, testErrorsRequest, testInsRequest, testInteractionEventsRequest, testRumRequest, testSupportMetricsRequest } from '../../tools/testing-server/utils/expect-tests'
 
 let serverTime
@@ -76,7 +76,7 @@ describe('NR Server Time', () => {
     testTimeExpectations(error.params.timestamp, timeKeeper, false)
   })
 
-  it.withBrowsersMatching(notIE)('should send session replay with timestamp prior to rum date header', async () => {
+  it('should send session replay with timestamp prior to rum date header', async () => {
     const sessionReplayCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testBlobReplayRequest })
     await browser.destroyAgentSession()
     await browser.testHandle.clearScheduledReplies('bamServer')
@@ -111,7 +111,7 @@ describe('NR Server Time', () => {
     await browser.destroyAgentSession()
   })
 
-  it.withBrowsersMatching(notIE)('should send session replay with timestamp after rum date header', async () => {
+  it('should send session replay with timestamp after rum date header', async () => {
     const sessionReplayCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testBlobReplayRequest })
     await browser.destroyAgentSession()
     await browser.testHandle.clearScheduledReplies('bamServer')
@@ -425,19 +425,12 @@ describe('NR Server Time', () => {
 function testTimeExpectations (timestamp, pageTimings, before) {
   const { correctedOriginTime, originTime } = (pageTimings || {})
 
-  if (originTime && correctedOriginTime) {
-    expect(Math.abs(serverTime - originTime + 3600000)).toBeLessThan(10000) // origin time should be about an hour ahead (3600000 ms)
-    expect(Math.abs(serverTime - correctedOriginTime)).toBeLessThan(10000) // corrected origin time should roughly match the server time on our side
-    expect(Math.abs(correctedOriginTime - originTime + 3600000)).toBeLessThan(10000)
+  expect(Math.abs(serverTime - originTime + 3600000)).toBeLessThan(10000) // origin time should be about an hour ahead (3600000 ms)
+  expect(Math.abs(serverTime - correctedOriginTime)).toBeLessThan(10000) // corrected origin time should roughly match the server time on our side
+  expect(Math.abs(correctedOriginTime - originTime + 3600000)).toBeLessThan(10000)
 
-    expect(Math.abs(timestamp - correctedOriginTime)).toBeLessThan(10000) // should expect a reasonable tolerance (and much less than an hour)
-    expect(Math.abs(timestamp - originTime + 3600000)).toBeLessThan(10000) // should expect a reasonable tolerance (and much less than an hour)
-    expect(timestamp).toBeGreaterThan(correctedOriginTime)
-    expect(timestamp).toBeLessThan(originTime)
-  } else {
-    // fallback for IE which doesn't work well with grabbing the raw values out
-    expect(Math.abs(timestamp - serverTime)).toBeLessThan(10000) // should expect a reasonable tolerance (and much less than an hour)
-    if (before) expect(timestamp).toBeLessThan(serverTime)
-    else expect(timestamp).toBeGreaterThan(serverTime)
-  }
+  expect(Math.abs(timestamp - correctedOriginTime)).toBeLessThan(10000) // should expect a reasonable tolerance (and much less than an hour)
+  expect(Math.abs(timestamp - originTime + 3600000)).toBeLessThan(10000) // should expect a reasonable tolerance (and much less than an hour)
+  expect(timestamp).toBeGreaterThan(correctedOriginTime)
+  expect(timestamp).toBeLessThan(originTime)
 }

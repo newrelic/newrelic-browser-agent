@@ -19,7 +19,7 @@
     document.addEventListener('click', function () {
       setTimeout(function foo () {
         (function bar () {
-          if (typeof fetch !== 'undefined') fetch('/json') // because IE sucks
+          fetch('/json')
           throw new Error('some error')
         })()
       }, 100)

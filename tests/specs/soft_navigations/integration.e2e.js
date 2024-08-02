@@ -1,5 +1,5 @@
 import { testRumRequest } from '../../../tools/testing-server/utils/expect-tests.js'
-import { notSafari, onlyChromium, notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { notSafari, onlyChromium } from '../../../tools/browser-matcher/common-matchers.mjs'
 
 describe('Soft navigations', () => {
   const config = { loader: 'spa', init: { feature_flags: ['soft_nav'] } }
@@ -11,15 +11,14 @@ describe('Soft navigations', () => {
       browser.testHandle.expectInteractionEvents(),
       browser.url(url).then(() => browser.waitForAgentLoad())
     ])
-    if (browserMatch(notIE)) {
-      let browserResp = await browser.execute(function () {
-        return [
-          Object.values(newrelic.initializedAgents)[0].features.spa?.featureName,
-          Object.values(newrelic.initializedAgents)[0].features.soft_navigations?.featureName
-        ]
-      })
-      expect(browserResp).toEqual([null, 'soft_navigations'])
-    }
+
+    let browserResp = await browser.execute(function () {
+      return [
+        Object.values(newrelic.initializedAgents)[0].features.spa?.featureName,
+        Object.values(newrelic.initializedAgents)[0].features.soft_navigations?.featureName
+      ]
+    })
+    expect(browserResp).toEqual([null, 'soft_navigations'])
 
     expect(iPLPayload.request.body.length).toEqual(1)
     expect(iPLPayload.request.body[0].category).toEqual('Initial page load')
@@ -55,11 +54,11 @@ describe('Soft navigations', () => {
     expect(ajaxArr.length).toEqual(2)
     expect(ajaxArr).toEqual(expect.arrayContaining([
       expect.objectContaining({ path: '/echo', requestedWith: 'XMLHttpRequest' }),
-      ...browserMatch(notIE) ? [expect.objectContaining({ path: '/json', requestedWith: 'fetch' })] : []
+      expect.objectContaining({ path: '/json', requestedWith: 'fetch' })
     ]))
-    expect(errorsArr.length).toEqual(browserMatch(notIE) ? 2 : 1)
+    expect(errorsArr.length).toEqual(2)
     expect(errorsArr[0].params.browserInteractionId).toEqual(iplIxn.id)
-    if (browserMatch(notIE)) expect(errorsArr[1].params.browserInteractionId).toEqual(iplIxn.id)
+    expect(errorsArr[1].params.browserInteractionId).toEqual(iplIxn.id)
   })
 
   it('(multiple) ajax and errors are captured after page load by route-change ixn', async () => {
@@ -79,25 +78,25 @@ describe('Soft navigations', () => {
 
     const expectedAjax = expect.arrayContaining([
       expect.objectContaining({ path: '/echo', requestedWith: 'XMLHttpRequest' }),
-      ...browserMatch(notIE) ? [expect.objectContaining({ path: '/json', requestedWith: 'fetch' })] : []
+      expect.objectContaining({ path: '/json', requestedWith: 'fetch' })
     ])
     /* For whatever odd reason, desktop Safari on SauceLabs has a Event's timeStamp that is epoch. That property in actuality on Safari, and other browsers, is correctly
     a DOMHighResTimestamp relative to timeOrigin. It being epoch in tests breaks active interaction seeking logic (and the data itself) as the start time is much larger than
     the end time, so the ajax and jserror becomes disassociated from the interaction. */
     expect(errorsArr.length).toEqual(1)
     if (browserMatch(notSafari)) {
-      expect(ixnAjaxArr.length).toEqual(browserMatch(notIE) ? 2 : 1)
+      expect(ixnAjaxArr.length).toEqual(2)
       expect(ixnAjaxArr).toEqual(expectedAjax)
       expect(errorsArr[0].params.browserInteractionId).toEqual(rcIxn.id)
     } else {
       expect(ajaxReq.request.body).toEqual(expectedAjax)
       expect(errorsArr[0].params.browserInteractionId).toBeUndefined()
     }
-    if (browserMatch(notIE)) expect(errorsArr[0].params.message).toEqual('boogie') // IE will throw a fetch undefined error instead
+    expect(errorsArr[0].params.message).toEqual('boogie')
   })
 
   // See comment in previous test about SL safari's problem with route-change ixn timestamp; we can't simulate one with ajax or errors attached, so this test is irrelevant.
-  it.withBrowsersMatching([notSafari, notIE])('ajax and jserror tied to discarded ixns are not lost', async () => {
+  it.withBrowsersMatching(notSafari)('ajax and jserror tied to discarded ixns are not lost', async () => {
     let url = await browser.testHandle.assetURL('spa/errors/discarded-interaction.html', config)
     await browser.url(url).then(() => browser.waitForAgentLoad())
 
@@ -174,11 +173,11 @@ describe('Soft navigations', () => {
 
     expect(iplIxnAjaxArr).toEqual(expect.arrayContaining([ // these requests started before page load, so they belong with IPL ixn
       expect.objectContaining({ path: '/json', requestedWith: 'XMLHttpRequest' }),
-      ...browserMatch(notIE) ? [expect.objectContaining({ path: '/json', requestedWith: 'fetch' })] : []
+      expect.objectContaining({ path: '/json', requestedWith: 'fetch' })
     ]))
     expect(ajaxFeatArr).toEqual(expect.arrayContaining([ // these chained requests occur after page load, so they're handled by the ajax feature
       expect.objectContaining({ path: '/text', requestedWith: 'XMLHttpRequest' }),
-      ...browserMatch(notIE) ? [expect.objectContaining({ path: '/text', requestedWith: 'fetch' })] : []
+      expect.objectContaining({ path: '/text', requestedWith: 'fetch' })
     ]))
   })
 })

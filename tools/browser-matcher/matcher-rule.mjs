@@ -14,15 +14,6 @@ export default class MatcherRule {
 
   /**
    * Create a new match rule
-   * @example
-   * // return true if the secondary spec is any version of ie
-   * new MatcherRule(MATCHER_TYPE.INCLUDE, 'ie@*')
-   * @example
-   * // return true if the secondary spec is not any version of ie
-   * new MatcherRule(MATCHER_TYPE.EXCLUDE, 'ie@*')
-   * @example
-   * // return true if the secondary spec is any version of ie > 9
-   * new MatcherRule(MATCHER_TYPE.INCLUDE, 'ie>9')
    * @param {string} spec The base browser spec string to compare against
    */
   constructor (specString) {

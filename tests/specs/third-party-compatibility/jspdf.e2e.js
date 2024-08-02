@@ -1,10 +1,9 @@
-import { notIE, notIOS, notSafari } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { notIOS, notSafari } from '../../../tools/browser-matcher/common-matchers.mjs'
 import runTest from './run-test'
 
 // iOS Appium hates the use of canvas
 // As of 06/26/2023 test fails in Safari, though tested behavior works in a live browser (revisit in NR-138940).
-// IE does not have reliable unload support
-describe.withBrowsersMatching([notIE, notIOS, notSafari])('jspdf compatibility', () => {
+describe.withBrowsersMatching([notIOS, notSafari])('jspdf compatibility', () => {
   it('2.5.1', async () => {
     await runTest({
       browser,

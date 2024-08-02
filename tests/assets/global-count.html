@@ -73,7 +73,6 @@
     {config}
     {loader}
     <script>
-      // Old ie doesn't get anything new in postGlobals
       for (testVarI in window) postGlobals.push(testVarI)
       while (testVarI = postGlobals.pop()) {
         for (testVarJ = 0; testVarJ < preGlobals.length; testVarJ++) {
@@ -83,8 +82,6 @@
         flag = false
       }
 
-      // For old IE: add any single letter global variables, most likely
-      // thing to leak after minification.
       for (testVarI in mangledVars) if (window[testVarI] !== undefined) added.push(testVarI)
 
     </script>

@@ -1,5 +1,4 @@
 import { checkSpa } from '../../util/basic-checks'
-import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { testInteractionEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 describe('spa harvesting', () => {
@@ -131,7 +130,7 @@ describe('spa harvesting', () => {
     }))
   })
 
-  it.withBrowsersMatching(notIE)('hashchange is followed by a popstate', async () => {
+  it('hashchange is followed by a popstate', async () => {
     const url = await browser.testHandle.assetURL('instrumented.html')
     await Promise.all([
       browser.testHandle.expectInteractionEvents(),

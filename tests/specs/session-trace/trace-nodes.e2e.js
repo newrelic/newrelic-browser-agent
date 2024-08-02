@@ -1,5 +1,4 @@
 import { testRumRequest } from '../../../tools/testing-server/utils/expect-tests.js'
-import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { stConfig } from '../util/helpers.js'
 
 describe('Trace nodes', () => {
@@ -10,7 +9,7 @@ describe('Trace nodes', () => {
     })
   })
 
-  it.withBrowsersMatching(notIE)('are not duplicated for events', async () => {
+  it('are not duplicated for events', async () => {
     const url = await browser.testHandle.assetURL('pagehide.html', stConfig())
     await browser.url(url).then(() => browser.waitForAgentLoad())
 
@@ -29,7 +28,8 @@ describe('Trace nodes', () => {
     const trackedEventsPostHarvest = await browser.execute(getEventsSetSize)
     expect(trackedEventsPostHarvest).toBeLessThan(10)
   })
-  it.withBrowsersMatching(notIE)('are not stored for events when trace is not on', async () => {
+
+  it('are not stored for events when trace is not on', async () => {
     await browser.testHandle.clearScheduledReplies('bamServer')
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
@@ -42,11 +42,12 @@ describe('Trace nodes', () => {
     const numTrackedEvents = await browser.execute(getEventsSetSize)
     expect(numTrackedEvents).toEqual(0)
   })
+
   function getEventsSetSize () {
     return Object.values(newrelic.initializedAgents)[0].features.session_trace.featAggregate.traceStorage.prevStoredEvents.size
   }
 
-  it.withBrowsersMatching(notIE)('are not duplicated for resources', async () => {
+  it('are not duplicated for resources', async () => {
     const url = await browser.testHandle.assetURL('instrumented.html', stConfig())
     await browser.url(url).then(() => browser.waitForAgentLoad())
 
@@ -68,7 +69,7 @@ describe('Trace nodes', () => {
     })
   })
 
-  it.withBrowsersMatching(notIE)('are created and not duplicated for ajax', async () => {
+  it('are created and not duplicated for ajax', async () => {
     const url = await browser.testHandle.assetURL('fetch.html', stConfig())
     await browser.url(url).then(() => browser.waitForAgentLoad())
 

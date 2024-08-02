@@ -91,6 +91,7 @@ export default function config () {
     user: process.env.LT_USERNAME || process.env.LAMBDA_USERNAME,
     key: process.env.LT_ACCESS_KEY || process.env.LAMBDA_ACCESS_KEY,
     capabilities: lambdaTestCapabilities(),
+    ltErrorRemark: true,
     services: [
       [
         'lambdatest',

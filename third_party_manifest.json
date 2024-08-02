@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "Thu Jul 25 2024 23:28:05 GMT+0000 (Coordinated Universal Time)",
+  "lastUpdated": "Thu Aug 01 2024 08:33:10 GMT-0500 (Central Daylight Time)",
   "projectName": "New Relic Browser Agent",
   "projectUrl": "https://github.com/newrelic/newrelic-browser-agent",
   "includeOptDeps": true,
@@ -61,41 +61,41 @@
     }
   },
   "devDependencies": {
-    "@babel/cli@7.24.7": {
+    "@babel/cli@7.24.8": {
       "name": "@babel/cli",
-      "version": "7.24.7",
+      "version": "7.24.8",
       "range": "^7.23.4",
       "licenses": "MIT",
       "repoUrl": "https://github.com/babel/babel",
-      "versionedRepoUrl": "https://github.com/babel/babel/tree/v7.24.7",
+      "versionedRepoUrl": "https://github.com/babel/babel/tree/v7.24.8",
       "licenseFile": "node_modules/@babel/cli/LICENSE",
-      "licenseUrl": "https://github.com/babel/babel/blob/v7.24.7/LICENSE",
+      "licenseUrl": "https://github.com/babel/babel/blob/v7.24.8/LICENSE",
       "licenseTextSource": "file",
       "publisher": "The Babel Team",
       "url": "https://babel.dev/team"
     },
-    "@babel/core@7.24.7": {
+    "@babel/core@7.25.2": {
       "name": "@babel/core",
-      "version": "7.24.7",
+      "version": "7.25.2",
       "range": "^7.23.7",
       "licenses": "MIT",
       "repoUrl": "https://github.com/babel/babel",
-      "versionedRepoUrl": "https://github.com/babel/babel/tree/v7.24.7",
+      "versionedRepoUrl": "https://github.com/babel/babel/tree/v7.25.2",
       "licenseFile": "node_modules/@babel/core/LICENSE",
-      "licenseUrl": "https://github.com/babel/babel/blob/v7.24.7/LICENSE",
+      "licenseUrl": "https://github.com/babel/babel/blob/v7.25.2/LICENSE",
       "licenseTextSource": "file",
       "publisher": "The Babel Team",
       "url": "https://babel.dev/team"
     },
-    "@babel/eslint-parser@7.24.7": {
+    "@babel/eslint-parser@7.25.1": {
       "name": "@babel/eslint-parser",
-      "version": "7.24.7",
+      "version": "7.25.1",
       "range": "^7.23.3",
       "licenses": "MIT",
       "repoUrl": "https://github.com/babel/babel",
-      "versionedRepoUrl": "https://github.com/babel/babel/tree/v7.24.7",
+      "versionedRepoUrl": "https://github.com/babel/babel/tree/v7.25.1",
       "licenseFile": "node_modules/@babel/eslint-parser/LICENSE",
-      "licenseUrl": "https://github.com/babel/babel/blob/v7.24.7/LICENSE",
+      "licenseUrl": "https://github.com/babel/babel/blob/v7.25.1/LICENSE",
       "licenseTextSource": "file",
       "publisher": "The Babel Team",
       "url": "https://babel.dev/team"
@@ -178,15 +178,15 @@
       "publisher": "The Babel Team",
       "url": "https://babel.dev/team"
     },
-    "@babel/preset-env@7.24.7": {
+    "@babel/preset-env@7.25.3": {
       "name": "@babel/preset-env",
-      "version": "7.24.7",
+      "version": "7.25.3",
       "range": "^7.23.8",
       "licenses": "MIT",
       "repoUrl": "https://github.com/babel/babel",
-      "versionedRepoUrl": "https://github.com/babel/babel/tree/v7.24.7",
+      "versionedRepoUrl": "https://github.com/babel/babel/tree/v7.25.3",
       "licenseFile": "node_modules/@babel/preset-env/LICENSE",
-      "licenseUrl": "https://github.com/babel/babel/blob/v7.24.7/LICENSE",
+      "licenseUrl": "https://github.com/babel/babel/blob/v7.25.3/LICENSE",
       "licenseTextSource": "file",
       "publisher": "The Babel Team",
       "url": "https://babel.dev/team"
@@ -289,28 +289,28 @@
       "licenseUrl": "https://github.com/newrelic/nr-querypack/blob/v3.12.0/LICENSE",
       "licenseTextSource": "file"
     },
-    "@wdio/cli@8.39.0": {
+    "@wdio/cli@8.39.1": {
       "name": "@wdio/cli",
-      "version": "8.39.0",
+      "version": "8.39.1",
       "range": "^8.27.0",
       "licenses": "MIT",
       "repoUrl": "https://github.com/webdriverio/webdriverio",
-      "versionedRepoUrl": "https://github.com/webdriverio/webdriverio/tree/v8.39.0",
+      "versionedRepoUrl": "https://github.com/webdriverio/webdriverio/tree/v8.39.1",
       "licenseFile": "node_modules/@wdio/cli/LICENSE-MIT",
-      "licenseUrl": "https://github.com/webdriverio/webdriverio/blob/v8.39.0/LICENSE-MIT",
+      "licenseUrl": "https://github.com/webdriverio/webdriverio/blob/v8.39.1/LICENSE-MIT",
       "licenseTextSource": "file",
       "publisher": "Christian Bromann",
       "email": "mail@bromann.dev"
     },
-    "@wdio/local-runner@8.39.0": {
+    "@wdio/local-runner@8.39.1": {
       "name": "@wdio/local-runner",
-      "version": "8.39.0",
+      "version": "8.39.1",
       "range": "^8.27.0",
       "licenses": "MIT",
       "repoUrl": "https://github.com/webdriverio/webdriverio",
-      "versionedRepoUrl": "https://github.com/webdriverio/webdriverio/tree/v8.39.0",
+      "versionedRepoUrl": "https://github.com/webdriverio/webdriverio/tree/v8.39.1",
       "licenseFile": "node_modules/@wdio/local-runner/LICENSE-MIT",
-      "licenseUrl": "https://github.com/webdriverio/webdriverio/blob/v8.39.0/LICENSE-MIT",
+      "licenseUrl": "https://github.com/webdriverio/webdriverio/blob/v8.39.1/LICENSE-MIT",
       "licenseTextSource": "file",
       "publisher": "Christian Bromann",
       "email": "mail@bromann.dev"
@@ -456,15 +456,15 @@
       "licenseTextSource": "file",
       "publisher": "Toru Nagashima"
     },
-    "eslint-plugin-promise@6.2.0": {
+    "eslint-plugin-promise@6.6.0": {
       "name": "eslint-plugin-promise",
-      "version": "6.2.0",
+      "version": "6.6.0",
       "range": "^6.1.1",
       "licenses": "ISC",
       "repoUrl": "https://github.com/eslint-community/eslint-plugin-promise",
-      "versionedRepoUrl": "https://github.com/eslint-community/eslint-plugin-promise/tree/v6.2.0",
+      "versionedRepoUrl": "https://github.com/eslint-community/eslint-plugin-promise/tree/v6.6.0",
       "licenseFile": "node_modules/eslint-plugin-promise/LICENSE.md",
-      "licenseUrl": "https://github.com/eslint-community/eslint-plugin-promise/blob/v6.2.0/LICENSE.md",
+      "licenseUrl": "https://github.com/eslint-community/eslint-plugin-promise/blob/v6.6.0/LICENSE.md",
       "licenseTextSource": "file",
       "publisher": "jden",
       "email": "jason@denizac.org"
@@ -506,15 +506,15 @@
       "publisher": "Tomas Della Vedova - @delvedor",
       "url": "http://delved.org"
     },
-    "fastify@4.28.0": {
+    "fastify@4.28.1": {
       "name": "fastify",
-      "version": "4.28.0",
+      "version": "4.28.1",
       "range": "^4.25.2",
       "licenses": "MIT",
       "repoUrl": "https://github.com/fastify/fastify",
-      "versionedRepoUrl": "https://github.com/fastify/fastify/tree/v4.28.0",
+      "versionedRepoUrl": "https://github.com/fastify/fastify/tree/v4.28.1",
       "licenseFile": "node_modules/fastify/LICENSE",
-      "licenseUrl": "https://github.com/fastify/fastify/blob/v4.28.0/LICENSE",
+      "licenseUrl": "https://github.com/fastify/fastify/blob/v4.28.1/LICENSE",
       "licenseTextSource": "file",
       "publisher": "Matteo Collina",
       "email": "hello@matteocollina.com"
@@ -546,15 +546,15 @@
       "publisher": "JP Richardson",
       "email": "jprichardson@gmail.com"
     },
-    "glob@10.4.2": {
+    "glob@10.4.5": {
       "name": "glob",
-      "version": "10.4.2",
+      "version": "10.4.5",
       "range": "^10.4.2",
       "licenses": "ISC",
       "repoUrl": "https://github.com/isaacs/node-glob",
-      "versionedRepoUrl": "https://github.com/isaacs/node-glob/tree/v10.4.2",
+      "versionedRepoUrl": "https://github.com/isaacs/node-glob/tree/v10.4.5",
       "licenseFile": "node_modules/glob/LICENSE",
-      "licenseUrl": "https://github.com/isaacs/node-glob/blob/v10.4.2/LICENSE",
+      "licenseUrl": "https://github.com/isaacs/node-glob/blob/v10.4.5/LICENSE",
       "licenseTextSource": "file",
       "publisher": "Isaac Z. Schlueter",
       "email": "i@izs.me",
@@ -600,15 +600,15 @@
       "publisher": "Krishnan Anantheswaran",
       "email": "kananthmail-github@yahoo.com"
     },
-    "istanbul-lib-instrument@6.0.2": {
+    "istanbul-lib-instrument@6.0.3": {
       "name": "istanbul-lib-instrument",
-      "version": "6.0.2",
+      "version": "6.0.3",
       "range": "^6.0.1",
       "licenses": "BSD-3-Clause",
       "repoUrl": "https://github.com/istanbuljs/istanbuljs",
-      "versionedRepoUrl": "https://github.com/istanbuljs/istanbuljs/tree/v6.0.2",
+      "versionedRepoUrl": "https://github.com/istanbuljs/istanbuljs/tree/v6.0.3",
       "licenseFile": "node_modules/istanbul-lib-instrument/LICENSE",
-      "licenseUrl": "https://github.com/istanbuljs/istanbuljs/blob/v6.0.2/LICENSE",
+      "licenseUrl": "https://github.com/istanbuljs/istanbuljs/blob/v6.0.3/LICENSE",
       "licenseTextSource": "file",
       "publisher": "Krishnan Anantheswaran",
       "email": "kananthmail-github@yahoo.com"
@@ -711,15 +711,15 @@
       "licenseTextSource": "file",
       "publisher": "Toru Nagashima"
     },
-    "semver@7.6.2": {
+    "semver@7.6.3": {
       "name": "semver",
-      "version": "7.6.2",
+      "version": "7.6.3",
       "range": "^7.5.4",
       "licenses": "ISC",
       "repoUrl": "https://github.com/npm/node-semver",
-      "versionedRepoUrl": "https://github.com/npm/node-semver/tree/v7.6.2",
+      "versionedRepoUrl": "https://github.com/npm/node-semver/tree/v7.6.3",
       "licenseFile": "node_modules/semver/LICENSE",
-      "licenseUrl": "https://github.com/npm/node-semver/blob/v7.6.2/LICENSE",
+      "licenseUrl": "https://github.com/npm/node-semver/blob/v7.6.3/LICENSE",
       "licenseTextSource": "file",
       "publisher": "GitHub Inc."
     },
@@ -761,15 +761,15 @@
       "email": "sam.verschueren@gmail.com",
       "url": "https://github.com/SamVerschueren"
     },
-    "typescript@5.5.2": {
+    "typescript@5.5.4": {
       "name": "typescript",
-      "version": "5.5.2",
+      "version": "5.5.4",
       "range": "^5.3.3",
       "licenses": "Apache-2.0",
       "repoUrl": "https://github.com/Microsoft/TypeScript",
-      "versionedRepoUrl": "https://github.com/Microsoft/TypeScript/tree/v5.5.2",
+      "versionedRepoUrl": "https://github.com/Microsoft/TypeScript/tree/v5.5.4",
       "licenseFile": "node_modules/typescript/LICENSE.txt",
-      "licenseUrl": "https://github.com/Microsoft/TypeScript/blob/v5.5.2/LICENSE.txt",
+      "licenseUrl": "https://github.com/Microsoft/TypeScript/blob/v5.5.4/LICENSE.txt",
       "licenseTextSource": "file",
       "publisher": "Microsoft Corp."
     },
@@ -810,15 +810,15 @@
       "publisher": "Jeff Barczewski",
       "email": "info@codewinds.com"
     },
-    "wdio-lambdatest-service@2.1.3": {
+    "wdio-lambdatest-service@3.0.0": {
       "name": "wdio-lambdatest-service",
-      "version": "2.1.3",
-      "range": "^2.1.3",
+      "version": "3.0.0",
+      "range": "^3.0.0",
       "licenses": "MIT",
       "repoUrl": "https://github.com/LambdaTest/wdio-lambdatest-service",
-      "versionedRepoUrl": "https://github.com/LambdaTest/wdio-lambdatest-service/tree/v2.1.3",
+      "versionedRepoUrl": "https://github.com/LambdaTest/wdio-lambdatest-service/tree/v3.0.0",
       "licenseFile": "node_modules/wdio-lambdatest-service/README.md",
-      "licenseUrl": "https://github.com/LambdaTest/wdio-lambdatest-service/blob/v2.1.3/README.md",
+      "licenseUrl": "https://github.com/LambdaTest/wdio-lambdatest-service/blob/v3.0.0/README.md",
       "licenseTextSource": "spdx",
       "publisher": "LambdaTest",
       "email": "keys@lambdatest.com"
@@ -847,15 +847,15 @@
       "licenseUrl": "https://github.com/webpack/webpack-cli/blob/v5.1.4/LICENSE",
       "licenseTextSource": "file"
     },
-    "webpack@5.92.1": {
+    "webpack@5.93.0": {
       "name": "webpack",
-      "version": "5.92.1",
+      "version": "5.93.0",
       "range": "^5.89.0",
       "licenses": "MIT",
       "repoUrl": "https://github.com/webpack/webpack",
-      "versionedRepoUrl": "https://github.com/webpack/webpack/tree/v5.92.1",
+      "versionedRepoUrl": "https://github.com/webpack/webpack/tree/v5.93.0",
       "licenseFile": "node_modules/webpack/LICENSE",
-      "licenseUrl": "https://github.com/webpack/webpack/blob/v5.92.1/LICENSE",
+      "licenseUrl": "https://github.com/webpack/webpack/blob/v5.93.0/LICENSE",
       "licenseTextSource": "file",
       "publisher": "Tobias Koppers @sokra"
     },

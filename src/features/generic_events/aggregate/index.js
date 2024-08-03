@@ -23,15 +23,13 @@ export class Aggregate extends AggregateBase {
     this.eventsPerHarvest = 1000
     this.harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'generic_events.harvestTimeSeconds')
 
-    this.referrerUrl = undefined
+    this.referrerUrl = (isBrowserScope && document.referrer) ? cleanURL(document.referrer) : undefined
     this.currentEvents = []
 
     this.events = []
     this.overflow = []
 
     this.#agentRuntime = getRuntime(this.agentIdentifier)
-
-    if (isBrowserScope && document.referrer) this.referrerUrl = cleanURL(document.referrer)
 
     this.waitForFlags(['ins']).then(([ins]) => {
       if (!ins) {
@@ -97,7 +95,7 @@ export class Aggregate extends AggregateBase {
   addEvent (obj = {}) {
     if (!obj || !Object.keys(obj).length) return
     if (!obj.eventType) {
-      warn('Invalid object passed to generic event aggregate. Missing "eventType".')
+      warn(44)
       return
     }
 

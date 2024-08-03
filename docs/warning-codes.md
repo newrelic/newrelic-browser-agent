@@ -87,3 +87,5 @@
 `Failed to execute setApplicationVersion. Expected <String | null>`
 ### 43
 `Agent not configured properly.`
+### 44
+`Invalid object passed to generic event aggregate. Missing "eventType".`

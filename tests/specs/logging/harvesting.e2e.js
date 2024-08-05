@@ -1,6 +1,12 @@
 import { testLogsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 describe('logging harvesting', () => {
+  let logsCapture
+
+  beforeEach(async () => {
+    logsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testLogsRequest })
+  })
+
   describe('logging harvests', () => {
     const pageUrl = expect.any(String)
     const customAttributes = { test: 1 }
@@ -26,8 +32,8 @@ describe('logging harvesting', () => {
 
     ;['api', 'api-wrap-logger'].forEach(type => {
       it(`should harvest expected logs - ${type} pre load`, async () => {
-        const [{ request: { body } }] = await Promise.all([
-          browser.testHandle.expectLogs(10000),
+        const [[{ request: { body } }]] = await Promise.all([
+          logsCapture.waitForResult({ totalCount: 1 }),
           browser.url(await browser.testHandle.assetURL(`logs-${type}-pre-load.html`))
         ])
 
@@ -35,8 +41,8 @@ describe('logging harvesting', () => {
       })
 
       it(`should harvest expected logs - ${type} post load`, async () => {
-        const [{ request: { body } }] = await Promise.all([
-          browser.testHandle.expectLogs(10000),
+        const [[{ request: { body } }]] = await Promise.all([
+          logsCapture.waitForResult({ totalCount: 1 }),
           browser.url(await browser.testHandle.assetURL(`logs-${type}-post-load.html`))
         ])
 
@@ -46,7 +52,7 @@ describe('logging harvesting', () => {
       it(`should harvest early if reaching limit - ${type}`, async () => {
         let now = Date.now(); let then
         await Promise.all([
-          browser.testHandle.expectLogs(10000).then(() => { then = Date.now() }),
+          logsCapture.waitForResult({ totalCount: 1 }).then(() => { then = Date.now() }),
           browser.url(await browser.testHandle.assetURL(`logs-${type}-harvest-early.html`, { init: { logging: { harvestTimeSeconds: 10 } } }))
         ])
 
@@ -54,8 +60,8 @@ describe('logging harvesting', () => {
       })
 
       it(`should ignore log if too large - ${type}`, async () => {
-        const [{ request: { body } }] = await Promise.all([
-          browser.testHandle.expectLogs(10000),
+        const [[{ request: { body } }]] = await Promise.all([
+          logsCapture.waitForResult({ totalCount: 1 }),
           browser.url(await browser.testHandle.assetURL(`logs-${type}-too-large.html`))
         ])
         expect(JSON.parse(body)).toEqual(expectedPayload) // should not contain the '...xxxxx...' payload in it
@@ -63,8 +69,8 @@ describe('logging harvesting', () => {
     })
 
     it('should harvest error object logs', async () => {
-      const [{ request: { body } }] = await Promise.all([
-        browser.testHandle.expectLogs(10000),
+      const [[{ request: { body } }]] = await Promise.all([
+        logsCapture.waitForResult({ totalCount: 1 }),
         browser.url(await browser.testHandle.assetURL('logs-api-wrap-logger-error-object.html'))
       ])
 
@@ -72,8 +78,8 @@ describe('logging harvesting', () => {
     })
 
     it('should allow for re-wrapping and 3rd party wrapping', async () => {
-      const [{ request: { body } }] = await Promise.all([
-        browser.testHandle.expectLogs(10000),
+      const [[{ request: { body } }]] = await Promise.all([
+        logsCapture.waitForResult({ totalCount: 1 }),
         browser.url(await browser.testHandle.assetURL('logs-api-wrap-logger-rewrapped.html'))
       ])
       const logs = JSON.parse(body)[0].logs
@@ -103,7 +109,7 @@ describe('logging harvesting', () => {
         })
 
         const [firstLogsHarvest] = await Promise.all([
-          browser.testHandle.expectLogs(10000),
+          logsCapture.waitForResult({ totalCount: 1 }),
           browser.url(await browser.testHandle.assetURL('logs-api-post-load.html'))
         ])
 
@@ -116,10 +122,10 @@ describe('logging harvesting', () => {
           permanent: true
         })
 
-        const secondLogsHarvest = await browser.testHandle.expectLogs(10000)
+        const secondLogsHarvest = await logsCapture.waitForResult({ totalCount: 2 })
 
-        expect(firstLogsHarvest.reply.statusCode).toEqual(statusCode)
-        expect(secondLogsHarvest.request.body).toEqual(firstLogsHarvest.request.body)
+        expect(firstLogsHarvest[0].reply.statusCode).toEqual(statusCode)
+        expect(secondLogsHarvest[1].request.body).toEqual(firstLogsHarvest[0].request.body)
       })
     )
   })

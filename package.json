@@ -191,7 +191,6 @@
     "url": "https://github.com/newrelic/newrelic-browser-agent.git"
   },
   "dependencies": {
-    "core-js": "^3.26.0",
     "fflate": "^0.7.4",
     "rrweb": "2.0.0-alpha.12",
     "web-vitals": "^3.1.0"

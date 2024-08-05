@@ -1,7 +1,13 @@
 import { testInsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 describe('ins retry harvesting', () => {
-  [408, 429, 500, 503].forEach(statusCode =>
+  let insightsCapture
+
+  beforeEach(async () => {
+    insightsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testInsRequest })
+  })
+
+  ;[408, 429, 500, 503].forEach(statusCode =>
     it(`should send the page action on the next harvest when the first harvest statusCode is ${statusCode}`, async () => {
       await browser.testHandle.scheduleReply('bamServer', {
         test: testInsRequest,
@@ -10,7 +16,7 @@ describe('ins retry harvesting', () => {
       })
 
       const [firstPageActionsHarvest] = await Promise.all([
-        browser.testHandle.expectIns(),
+        insightsCapture.waitForResult({ totalCount: 1 }),
         browser.url(await browser.testHandle.assetURL('instrumented.html'))
           .then(() => browser.waitForAgentLoad())
           .then(() => browser.execute(function () {
@@ -23,14 +29,14 @@ describe('ins retry harvesting', () => {
       await browser.testHandle.clearScheduledReplies('bamServer')
 
       const [secondPageActionsHarvest] = await Promise.all([
-        browser.testHandle.expectIns(),
+        insightsCapture.waitForResult({ totalCount: 2 }),
         browser.execute(function () {
           newrelic.addPageAction('DummyEvent2', { free: 'more tacos' })
         })
       ])
 
-      expect(firstPageActionsHarvest.reply.statusCode).toEqual(statusCode)
-      expect(secondPageActionsHarvest.request.body.ins).toEqual(expect.arrayContaining(firstPageActionsHarvest.request.body.ins))
+      expect(firstPageActionsHarvest[0].reply.statusCode).toEqual(statusCode)
+      expect(secondPageActionsHarvest[1].request.body.ins).toEqual(expect.arrayContaining(firstPageActionsHarvest[0].request.body.ins))
     })
   );
 
@@ -43,7 +49,7 @@ describe('ins retry harvesting', () => {
       })
 
       const [firstPageActionsHarvest] = await Promise.all([
-        browser.testHandle.expectIns(),
+        insightsCapture.waitForResult({ totalCount: 1 }),
         browser.url(await browser.testHandle.assetURL('instrumented.html'))
           .then(() => browser.waitForAgentLoad())
           .then(() => browser.execute(function () {
@@ -56,14 +62,14 @@ describe('ins retry harvesting', () => {
       await browser.testHandle.clearScheduledReplies('bamServer')
 
       const [secondPageActionsHarvest] = await Promise.all([
-        browser.testHandle.expectIns(),
+        insightsCapture.waitForResult({ totalCount: 2 }),
         browser.execute(function () {
           newrelic.addPageAction('DummyEvent2', { free: 'more tacos' })
         })
       ])
 
-      expect(firstPageActionsHarvest.reply.statusCode).toEqual(statusCode)
-      expect(secondPageActionsHarvest.request.body.ins).not.toEqual(expect.arrayContaining(firstPageActionsHarvest.request.body.ins))
+      expect(firstPageActionsHarvest[0].reply.statusCode).toEqual(statusCode)
+      expect(secondPageActionsHarvest[1].request.body.ins).not.toEqual(expect.arrayContaining(firstPageActionsHarvest[0].request.body.ins))
     })
   )
 })

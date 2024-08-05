@@ -20,7 +20,6 @@ export function getSubmitMethod ({ isFinalHarvest = false } = {}) {
   return isFinalHarvest && isBrowserScope && supportsSendBeacon
     // Use sendBeacon for final harvest
     ? beacon
-    // Only IE does not support sendBeacon for final harvest
     // If not final harvest, or not browserScope, always use xhr post
     : xhr
 }

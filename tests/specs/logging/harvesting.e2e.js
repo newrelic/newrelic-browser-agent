@@ -1,5 +1,4 @@
 import { testLogsRequest } from '../../../tools/testing-server/utils/expect-tests'
-import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
 
 describe('logging harvesting', () => {
   describe('logging harvests', () => {
@@ -44,8 +43,7 @@ describe('logging harvesting', () => {
         expect(JSON.parse(body)).toEqual(expectedPayload)
       })
 
-      /** method used here to generate long logs is not supported by IE */
-      it.withBrowsersMatching([notIE])(`should harvest early if reaching limit - ${type}`, async () => {
+      it(`should harvest early if reaching limit - ${type}`, async () => {
         let now = Date.now(); let then
         await Promise.all([
           browser.testHandle.expectLogs(10000).then(() => { then = Date.now() }),
@@ -55,8 +53,7 @@ describe('logging harvesting', () => {
         expect(then - now).toBeLessThan(10000)
       })
 
-      /** method used here to generate long logs is not supported by IE */
-      it.withBrowsersMatching([notIE])(`should ignore log if too large - ${type}`, async () => {
+      it(`should ignore log if too large - ${type}`, async () => {
         const [{ request: { body } }] = await Promise.all([
           browser.testHandle.expectLogs(10000),
           browser.url(await browser.testHandle.assetURL(`logs-${type}-too-large.html`))
@@ -74,7 +71,7 @@ describe('logging harvesting', () => {
       expect(JSON.parse(body)[0].logs[0].message).toEqual('Error: test')
     })
 
-    it.withBrowsersMatching(notIE)('should allow for re-wrapping and 3rd party wrapping', async () => {
+    it('should allow for re-wrapping and 3rd party wrapping', async () => {
       const [{ request: { body } }] = await Promise.all([
         browser.testHandle.expectLogs(10000),
         browser.url(await browser.testHandle.assetURL('logs-api-wrap-logger-rewrapped.html'))

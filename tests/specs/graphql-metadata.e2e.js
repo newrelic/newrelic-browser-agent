@@ -1,7 +1,7 @@
-import { notIE, notMobile } from '../../tools/browser-matcher/common-matchers.mjs'
+import { notMobile } from '../../tools/browser-matcher/common-matchers.mjs'
 
 // ios+android with saucelabs does not honor the window load to induce ajax into ixn reliably. omitting from test for now until more elegant solution is reached.
-describe.withBrowsersMatching([notIE, notMobile])('GraphQL metadata is appended to relevant ajax calls', () => {
+describe.withBrowsersMatching(notMobile)('GraphQL metadata is appended to relevant ajax calls', () => {
   it('adds GQL metadata to both standalone and interation ajax calls', async () => {
     const [ixnEvents] = await Promise.all([
       browser.testHandle.expectInteractionEvents(),

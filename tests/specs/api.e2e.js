@@ -1,4 +1,3 @@
-import { notIE } from '../../tools/browser-matcher/common-matchers.mjs'
 import { apiMethods, asyncApiMethods } from '../../src/loaders/api/api-methods'
 import { checkAjaxEvents, checkJsErrors, checkMetrics, checkPageAction, checkPVT, checkRumBody, checkRumQuery, checkSessionTrace, checkSpa } from '../util/basic-checks'
 import { testAjaxEventsRequest, testAjaxTimeSlicesRequest, testBlobTraceRequest, testCustomMetricsRequest, testErrorsRequest, testEventsRequest, testInsRequest, testInteractionEventsRequest, testMetricsRequest, testRumRequest, testTimingEventsRequest } from '../../tools/testing-server/utils/expect-tests'
@@ -72,8 +71,7 @@ describe('newrelic api', () => {
       expect(ajaxResults[0].request.query.ct).toEqual('http://custom.transaction/foo')
     })
 
-    // IE does not have reliable unload support
-    it.withBrowsersMatching(notIE)('includes the 1st argument (page name) in metrics call on unload', async () => {
+    it('includes the 1st argument (page name) in metrics call on unload', async () => {
       await browser.url(await browser.testHandle.assetURL('api.html'))
         .then(() => browser.waitForAgentLoad())
 
@@ -94,8 +92,7 @@ describe('newrelic api', () => {
       expect(time).toBeGreaterThan(0)
     })
 
-    // IE does not have reliable unload support
-    it.withBrowsersMatching(notIE)('includes the optional 2nd argument for host in metrics call on unload', async () => {
+    it('includes the optional 2nd argument for host in metrics call on unload', async () => {
       const customMetricsCapture = await browser.testHandle.createNetworkCaptures('bamServer', {
         test: testCustomMetricsRequest
       })

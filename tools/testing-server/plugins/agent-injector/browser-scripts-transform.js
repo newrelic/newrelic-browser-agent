@@ -4,19 +4,19 @@ const preprocessify = require('preprocessify')
 const fse = require('fs-extra')
 const path = require('path')
 
-async function processScript (scriptPath, enablePolyfills) {
+async function processScript (scriptPath) {
   if (!scriptPath) return ''
   try {
     const reRoutedPath = 'tests/assets/scripts/tests' + scriptPath.split('/tests').pop()
     const prebuiltFile = await fse.readFile(path.join(process.cwd(), reRoutedPath))
     if (prebuiltFile) return prebuiltFile
-    return browserifyScript(scriptPath, enablePolyfills)
+    return browserifyScript(scriptPath)
   } catch (err) {
-    return browserifyScript(scriptPath, enablePolyfills)
+    return browserifyScript(scriptPath)
   }
 }
 
-function browserifyScript (scriptPath, enablePolyfills) {
+function browserifyScript (scriptPath) {
   return new Promise((resolve, reject) => {
     browserify(scriptPath)
       .transform('babelify', {
@@ -27,16 +27,14 @@ function browserifyScript (scriptPath, enablePolyfills) {
             {
               loose: true,
               targets: {
-                browsers: enablePolyfills
-                  ? ['ie >= 11']
-                  : [
-                      'last 10 Chrome versions',
-                      'last 10 Safari versions',
-                      'last 10 Firefox versions',
-                      'last 10 Edge versions',
-                      'last 10 ChromeAndroid versions',
-                      'last 10 iOS versions'
-                    ]
+                browsers: [
+                  'last 10 Chrome versions',
+                  'last 10 Safari versions',
+                  'last 10 Firefox versions',
+                  'last 10 Edge versions',
+                  'last 10 ChromeAndroid versions',
+                  'last 10 iOS versions'
+                ]
               }
             }
           ]
@@ -68,8 +66,7 @@ module.exports = function (scriptPath, testServer) {
   return new Transform({
     async transform (chunk, encoding, done) {
       const transformedScript = await processScript(
-        scriptPath,
-        testServer.config.polyfills
+        scriptPath
       )
       done(null, transformedScript)
     }

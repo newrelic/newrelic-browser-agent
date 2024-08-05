@@ -1,4 +1,3 @@
-import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { testErrorsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 describe('basic error capturing', () => {
@@ -38,16 +37,15 @@ describe('basic error capturing', () => {
         params: expect.objectContaining({ message: 'xhr load addEventListener' })
       })
     ]
-    if (browserMatch(notIE)) {
-      expected.push(...[
-        expect.objectContaining({
-          params: expect.objectContaining({ message: 'Unhandled Promise Rejection: fetch network error' })
-        }),
-        expect.objectContaining({
-          params: expect.objectContaining({ message: 'Unhandled Promise Rejection: fetch response error' })
-        })
-      ])
-    }
+
+    expected.push(...[
+      expect.objectContaining({
+        params: expect.objectContaining({ message: 'Unhandled Promise Rejection: fetch network error' })
+      }),
+      expect.objectContaining({
+        params: expect.objectContaining({ message: 'Unhandled Promise Rejection: fetch response error' })
+      })
+    ])
 
     expect(errors[0].request.body.err.length).toEqual(expected.length)
     expect(errors[0].request.body.err).toEqual(expect.arrayContaining(expected))
@@ -60,40 +58,21 @@ describe('basic error capturing', () => {
         .then(() => browser.waitForAgentLoad())
     ])
 
-    if (browserMatch(notIE)) {
-      expect(errors[0].request.body.err).toEqual(expect.arrayContaining([
-        expect.objectContaining({
-          params: expect.objectContaining({
-            stackHash: 334471736,
-            exceptionClass: 'SyntaxError',
-            stack_trace: expect.stringContaining('<inline>:18')
-          })
-        }),
-        expect.objectContaining({
-          params: expect.objectContaining({
-            stackHash: 334471761,
-            exceptionClass: 'SyntaxError',
-            stack_trace: expect.stringContaining('<inline>:22')
-          })
+    expect(errors[0].request.body.err).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        params: expect.objectContaining({
+          stackHash: 334471736,
+          exceptionClass: 'SyntaxError',
+          stack_trace: expect.stringContaining('<inline>:18')
         })
-      ]))
-    } else {
-      expect(errors[0].request.body.err).toEqual(expect.arrayContaining([
-        expect.objectContaining({
-          params: expect.objectContaining({
-            stackHash: 334471735,
-            exceptionClass: 'UncaughtError',
-            stack_trace: expect.stringContaining('<inline>:17')
-          })
-        }),
-        expect.objectContaining({
-          params: expect.objectContaining({
-            stackHash: 334471761,
-            exceptionClass: 'unknown',
-            stack_trace: expect.stringContaining('<inline>:22')
-          })
+      }),
+      expect.objectContaining({
+        params: expect.objectContaining({
+          stackHash: 334471761,
+          exceptionClass: 'SyntaxError',
+          stack_trace: expect.stringContaining('<inline>:22')
         })
-      ]))
-    }
+      })
+    ]))
   })
 })

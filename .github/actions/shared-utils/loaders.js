@@ -3,9 +3,7 @@ export const loaderTypes = ['rum', 'full', 'spa']
 export function constructLoaderFileNames (loaderVersion) {
   return loaderTypes.map(type => [
     `nr-loader-${type}-${loaderVersion}.min.js`,
-    `nr-loader-${type}-polyfills-${loaderVersion}.min.js`,
     `nr-loader-${type}-${loaderVersion}.js`,
-    `nr-loader-${type}-polyfills-${loaderVersion}.js`
   ]).flat()
 }
 

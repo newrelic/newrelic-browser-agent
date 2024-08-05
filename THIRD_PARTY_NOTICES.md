@@ -14,7 +14,6 @@ code, the source code can be found at [https://github.com/newrelic/newrelic-brow
 
 **[dependencies](#dependencies)**
 
-* [core-js](#core-js)
 * [fflate](#fflate)
 * [rrweb](#rrweb)
 * [web-vitals](#web-vitals)
@@ -29,7 +28,6 @@ code, the source code can be found at [https://github.com/newrelic/newrelic-brow
 * [@babel/plugin-proposal-nullish-coalescing-operator](#babelplugin-proposal-nullish-coalescing-operator)
 * [@babel/plugin-proposal-optional-chaining](#babelplugin-proposal-optional-chaining)
 * [@babel/plugin-proposal-private-methods](#babelplugin-proposal-private-methods)
-* [@babel/plugin-syntax-import-assertions](#babelplugin-syntax-import-assertions)
 * [@babel/preset-env](#babelpreset-env)
 * [@babel/register](#babelregister)
 * [@faker-js/faker](#faker-jsfaker)
@@ -91,33 +89,6 @@ code, the source code can be found at [https://github.com/newrelic/newrelic-brow
 
 
 ## dependencies
-
-### core-js
-
-This product includes source derived from [core-js](https://github.com/zloirock/core-js) ([v3.37.1](https://github.com/zloirock/core-js/tree/v3.37.1)), distributed under the [MIT License](https://github.com/zloirock/core-js/blob/v3.37.1/LICENSE):
-
-```
-Copyright (c) 2014-2024 Denis Pushkarev
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-
-```
 
 ### fflate
 
@@ -589,36 +560,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ### @babel/plugin-proposal-private-methods
 
 This product includes source derived from [@babel/plugin-proposal-private-methods](https://github.com/babel/babel) ([v7.18.6](https://github.com/babel/babel/tree/v7.18.6)), distributed under the [MIT License](https://github.com/babel/babel/blob/v7.18.6/LICENSE):
-
-```
-MIT License
-
-Copyright (c) 2014-present Sebastian McKenzie and other contributors
-
-Permission is hereby granted, free of charge, to any person obtaining
-a copy of this software and associated documentation files (the
-"Software"), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
-
-The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-```
-
-### @babel/plugin-syntax-import-assertions
-
-This product includes source derived from [@babel/plugin-syntax-import-assertions](https://github.com/babel/babel) ([v7.24.7](https://github.com/babel/babel/tree/v7.24.7)), distributed under the [MIT License](https://github.com/babel/babel/blob/v7.24.7/LICENSE):
 
 ```
 MIT License

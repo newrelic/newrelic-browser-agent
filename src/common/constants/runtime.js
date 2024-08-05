@@ -72,8 +72,6 @@ export const ffVersion = (() => {
   return 0
 })()
 
-export const isIE = Boolean(isBrowserScope && window.document.documentMode) // deprecated property that only works in IE
-
 export const supportsSendBeacon = !!globalScope.navigator?.sendBeacon
 
 /**

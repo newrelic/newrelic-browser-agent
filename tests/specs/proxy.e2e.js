@@ -1,5 +1,3 @@
-import { notIE } from '../../tools/browser-matcher/common-matchers.mjs'
-
 describe('Using proxy servers -', () => {
   it('setting an assets url changes where agent fetches its chunks from', async () => {
     const { host, port } = browser.testHandle.assetServerConfig
@@ -16,29 +14,24 @@ describe('Using proxy servers -', () => {
       ref: url.slice(0, url.indexOf('?'))
     }))
 
-    if (browserMatch(notIE)) {
-      let resources = await browser.execute(function () { // IE11 hates this for some reason
-        return performance.getEntriesByType('resource')
+    let resources = await browser.execute(function () { // IE11 hates this for some reason
+      return performance.getEntriesByType('resource')
+    })
+
+    expect(resources).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        name: expect.stringContaining(assetServerChangedUrl)
       })
+    ]))
 
-      expect(resources).toEqual(expect.arrayContaining([
-        expect.objectContaining({
-          name: expect.stringContaining(assetServerChangedUrl)
-        })
-      ]))
-    }
+    const [unloadSupportMetricsResults] = await Promise.all([
+      browser.testHandle.expectSupportMetrics(),
+      browser.url(await browser.testHandle.assetURL('/'))
+    ])
 
-    // IE does not have reliable unload support
-    if (browserMatch(notIE)) {
-      const [unloadSupportMetricsResults] = await Promise.all([
-        browser.testHandle.expectSupportMetrics(),
-        browser.url(await browser.testHandle.assetURL('/'))
-      ])
-
-      expect(unloadSupportMetricsResults.request.body.sm).toEqual(expect.arrayContaining([
-        { params: { name: 'Config/AssetsUrl/Changed' }, stats: { c: 1 } }
-      ]))
-    }
+    expect(unloadSupportMetricsResults.request.body.sm).toEqual(expect.arrayContaining([
+      { params: { name: 'Config/AssetsUrl/Changed' }, stats: { c: 1 } }
+    ]))
   })
 
   it('setting a beacon url changes RUM call destination', async () => {
@@ -56,28 +49,23 @@ describe('Using proxy servers -', () => {
       ref: url.slice(0, url.indexOf('?'))
     }))
 
-    if (browserMatch(notIE)) {
-      let resources = await browser.execute(function () { // IE11 hates this for some reason
-        return performance.getEntriesByType('resource')
+    let resources = await browser.execute(function () { // IE11 hates this for some reason
+      return performance.getEntriesByType('resource')
+    })
+
+    expect(resources).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        name: expect.stringContaining(beaconServerChangedUrl)
       })
+    ]))
 
-      expect(resources).toEqual(expect.arrayContaining([
-        expect.objectContaining({
-          name: expect.stringContaining(beaconServerChangedUrl)
-        })
-      ]))
-    }
+    const [unloadSupportMetricsResults] = await Promise.all([
+      browser.testHandle.expectSupportMetrics(),
+      browser.url(await browser.testHandle.assetURL('/'))
+    ])
 
-    // IE does not have reliable unload support
-    if (!browserMatch(notIE)) {
-      const [unloadSupportMetricsResults] = await Promise.all([
-        browser.testHandle.expectSupportMetrics(),
-        browser.url(await browser.testHandle.assetURL('/'))
-      ])
-
-      expect(unloadSupportMetricsResults.request.body.sm).toEqual(expect.arrayContaining([
-        { params: { name: 'Config/BeaconUrl/Changed' }, stats: { c: 1 } }
-      ]))
-    }
+    expect(unloadSupportMetricsResults.request.body.sm).toEqual(expect.arrayContaining([
+      { params: { name: 'Config/BeaconUrl/Changed' }, stats: { c: 1 } }
+    ]))
   })
 })

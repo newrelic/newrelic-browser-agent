@@ -35,26 +35,5 @@ export const reportSettings = {
       { name: 'loader', fileNameRegex: createRegExpFn('spa', 'loader') },
       { name: 'async-chunk', fileNameRegex: createRegExpFn('spa') }
     ]
-  },
-  'lite-polyfills': {
-    statsFileNameTemplate: 'nr-rum-polyfills{{version}}.stats.json',
-    assetFileNameTemplates: [
-      { name: 'loader', fileNameRegex: createRegExpFn('rum-polyfills', 'loader') },
-      { name: 'async-chunk', fileNameRegex: createRegExpFn('rum-polyfills') }
-    ]
-  },
-  'pro-polyfills': {
-    statsFileNameTemplate: 'nr-full-polyfills{{version}}.stats.json',
-    assetFileNameTemplates: [
-      { name: 'loader', fileNameRegex: createRegExpFn('full-polyfills', 'loader') },
-      { name: 'async-chunk', fileNameRegex: createRegExpFn('full-polyfills') }
-    ]
-  },
-  'spa-polyfills': {
-    statsFileNameTemplate: 'nr-spa-polyfills{{version}}.stats.json',
-    assetFileNameTemplates: [
-      { name: 'loader', fileNameRegex: createRegExpFn('spa-polyfills', 'loader') },
-      { name: 'async-chunk', fileNameRegex: createRegExpFn('spa-polyfills') }
-    ]
   }
 }

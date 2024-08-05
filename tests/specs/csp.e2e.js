@@ -1,8 +1,7 @@
-import { notIE } from '../../tools/browser-matcher/common-matchers.mjs'
 import { faker } from '@faker-js/faker'
 import { testSupportMetricsRequest } from '../../tools/testing-server/utils/expect-tests'
 
-describe.withBrowsersMatching(notIE)('Content Security Policy', () => {
+describe('Content Security Policy', () => {
   afterEach(async () => {
     await browser.destroyAgentSession()
   })
@@ -27,7 +26,7 @@ describe.withBrowsersMatching(notIE)('Content Security Policy', () => {
     })
   })
 
-  it.withBrowsersMatching(notIE)('should send a nonce supportability metric', async () => {
+  it('should send a nonce supportability metric', async () => {
     const supportMetricsCapture = await browser.testHandle.createNetworkCaptures('bamServer', {
       test: testSupportMetricsRequest
     })

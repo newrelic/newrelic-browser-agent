@@ -29,8 +29,7 @@ module.exports = function (api, ...args) {
       {
         include: ['BUILD_VERSION', 'BUILD_ENV', 'RRWEB_VERSION']
       }
-    ],
-    '@babel/plugin-syntax-import-assertions'
+    ]
   ]
   const env = {
     test: {
@@ -45,26 +44,6 @@ module.exports = function (api, ...args) {
     },
     webpack: {
       ignore
-    },
-    'webpack-ie11': {
-      ignore,
-      assumptions: {
-        iterableIsArray: false
-      },
-      presets: [
-        [
-          '@babel/preset-env', {
-            useBuiltIns: 'entry',
-            corejs: { version: 3.23, proposals: true },
-            loose: true,
-            targets: {
-              browsers: [
-                'ie >= 11' // Does not affect webpack's own runtime output; see `target` webpack config property.
-              ]
-            }
-          }
-        ]
-      ]
     },
     'npm-cjs': {
       ignore,

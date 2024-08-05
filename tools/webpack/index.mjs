@@ -3,7 +3,6 @@ import url from 'url'
 import fs from 'fs-extra'
 import setBuildEnvironment from './env.mjs'
 import standardConfig from './configs/standard.mjs'
-import polyfillsConfig from './configs/polyfills.mjs'
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
 
@@ -60,7 +59,6 @@ export default async (env) => {
   await fs.emptyDir(env.paths.build)
 
   return [
-    ...standardConfig(env),
-    ...polyfillsConfig(env)
+    ...standardConfig(env)
   ]
 }

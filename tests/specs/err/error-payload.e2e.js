@@ -1,7 +1,7 @@
 /* globals errorFn, noticeErrorFn */
 
 const { Key } = require('webdriverio')
-const { notIE, notSafari, notIOS, notAndroid } = require('../../../tools/browser-matcher/common-matchers.mjs')
+const { notSafari, notIOS, notAndroid } = require('../../../tools/browser-matcher/common-matchers.mjs')
 const { srConfig } = require('../util/helpers')
 const { checkJsErrors } = require('../../util/basic-checks')
 const { testErrorsRequest, testAnyJseXhrRequest } = require('../../../tools/testing-server/utils/expect-tests')
@@ -133,7 +133,7 @@ describe('error payloads', () => {
    * This is a specific bug observed in rrweb for specific browsers tied to contenteditable divs.
    * This serves a purpose of checking that rrweb errors are not reported as `err`
    * **/
-  it.withBrowsersMatching([notSafari, notAndroid, notIOS, notIE])('should collect rrweb errors only as internal errors', async () => {
+  it.withBrowsersMatching([notSafari, notAndroid, notIOS])('should collect rrweb errors only as internal errors', async () => {
     const anyJseXhrCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testAnyJseXhrRequest })
     await browser.enableSessionReplay()
     const [[{ request }]] = await Promise.all([

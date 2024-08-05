@@ -1,7 +1,7 @@
 import { decodeAttributes, srConfig, testExpectedReplay } from '../util/helpers'
-import { notIE, notIOS, notSafari } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { notIOS, notSafari } from '../../../tools/browser-matcher/common-matchers.mjs'
 
-describe.withBrowsersMatching(notIE)('Session Replay Payload Validation', () => {
+describe('Session Replay Payload Validation', () => {
   beforeEach(async () => {
     await browser.enableSessionReplay()
   })

@@ -1,7 +1,6 @@
-import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { srConfig, getSR } from '../util/helpers'
 
-describe.withBrowsersMatching(notIE)('Replay API', () => {
+describe('Replay API', () => {
   afterEach(async () => {
     await browser.destroyAgentSession()
   })

@@ -67,10 +67,6 @@ const args = yargs(hideBin(process.argv))
   .alias('l', 'loader')
   .describe('l', 'default loader to inject into test pages')
 
-  .boolean('P')
-  .alias('P', 'polyfills')
-  .describe('P', 'inject polyfills and polyfill loaders into test pages')
-
   .boolean('T')
   .default('T', false)
   .alias('T', 'tunnel')
@@ -98,12 +94,6 @@ const args = yargs(hideBin(process.argv))
   .check(argv => {
     if (argv.webview && argv.coverage) {
       return 'Arguments webview and coverage are mutually exclusive'
-    }
-    if (argv.webview && argv.polyfills) {
-      return 'Arguments webview and polyfills are mutually exclusive'
-    }
-    if (argv.coverage && argv.polyfills) {
-      return 'Arguments coverage and polyfills are mutually exclusive'
     }
 
     return true

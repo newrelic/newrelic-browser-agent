@@ -1,4 +1,4 @@
-import { supportsBFCache, notIE, supportsCumulativeLayoutShift } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { supportsBFCache, supportsCumulativeLayoutShift } from '../../../tools/browser-matcher/common-matchers.mjs'
 import querypack from '@newrelic/nr-querypack'
 
 describe('Back/forward cache', () => {
@@ -24,7 +24,7 @@ describe('Back/forward cache', () => {
     expect(expectedHit.request.query.persisted).toEqual('true')
   })
 
-  it.withBrowsersMatching(notIE)('EOL events are sent appropriately', async () => {
+  it('EOL events are sent appropriately', async () => {
     // all timings except "unload" event are expected to be harvested after the first time the page becomes hidden
 
     let url = await browser.testHandle.assetURL('pagehide.html', { loader: 'rum' })

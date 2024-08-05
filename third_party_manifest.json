@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "Mon Aug 05 2024 10:12:45 GMT-0500 (Central Daylight Time)",
+  "lastUpdated": "Mon Aug 05 2024 13:41:44 GMT-0500 (Central Daylight Time)",
   "projectName": "New Relic Browser Agent",
   "projectUrl": "https://github.com/newrelic/newrelic-browser-agent",
   "includeOptDeps": true,
@@ -262,28 +262,28 @@
       "licenseUrl": "https://github.com/newrelic/nr-querypack/blob/v3.12.0/LICENSE",
       "licenseTextSource": "file"
     },
-    "@wdio/cli@8.39.1": {
+    "@wdio/cli@8.40.0": {
       "name": "@wdio/cli",
-      "version": "8.39.1",
+      "version": "8.40.0",
       "range": "^8.27.0",
       "licenses": "MIT",
       "repoUrl": "https://github.com/webdriverio/webdriverio",
-      "versionedRepoUrl": "https://github.com/webdriverio/webdriverio/tree/v8.39.1",
+      "versionedRepoUrl": "https://github.com/webdriverio/webdriverio/tree/v8.40.0",
       "licenseFile": "node_modules/@wdio/cli/LICENSE-MIT",
-      "licenseUrl": "https://github.com/webdriverio/webdriverio/blob/v8.39.1/LICENSE-MIT",
+      "licenseUrl": "https://github.com/webdriverio/webdriverio/blob/v8.40.0/LICENSE-MIT",
       "licenseTextSource": "file",
       "publisher": "Christian Bromann",
       "email": "mail@bromann.dev"
     },
-    "@wdio/local-runner@8.39.1": {
+    "@wdio/local-runner@8.40.0": {
       "name": "@wdio/local-runner",
-      "version": "8.39.1",
+      "version": "8.40.0",
       "range": "^8.27.0",
       "licenses": "MIT",
       "repoUrl": "https://github.com/webdriverio/webdriverio",
-      "versionedRepoUrl": "https://github.com/webdriverio/webdriverio/tree/v8.39.1",
+      "versionedRepoUrl": "https://github.com/webdriverio/webdriverio/tree/v8.40.0",
       "licenseFile": "node_modules/@wdio/local-runner/LICENSE-MIT",
-      "licenseUrl": "https://github.com/webdriverio/webdriverio/blob/v8.39.1/LICENSE-MIT",
+      "licenseUrl": "https://github.com/webdriverio/webdriverio/blob/v8.40.0/LICENSE-MIT",
       "licenseTextSource": "file",
       "publisher": "Christian Bromann",
       "email": "mail@bromann.dev"
@@ -301,15 +301,15 @@
       "publisher": "Christian Bromann",
       "email": "mail@bromann.dev"
     },
-    "@wdio/mocha-framework@8.39.0": {
+    "@wdio/mocha-framework@8.40.0": {
       "name": "@wdio/mocha-framework",
-      "version": "8.39.0",
+      "version": "8.40.0",
       "range": "^8.27.0",
       "licenses": "MIT",
       "repoUrl": "https://github.com/webdriverio/webdriverio",
-      "versionedRepoUrl": "https://github.com/webdriverio/webdriverio/tree/v8.39.0",
+      "versionedRepoUrl": "https://github.com/webdriverio/webdriverio/tree/v8.40.0",
       "licenseFile": "node_modules/@wdio/mocha-framework/LICENSE-MIT",
-      "licenseUrl": "https://github.com/webdriverio/webdriverio/blob/v8.39.0/LICENSE-MIT",
+      "licenseUrl": "https://github.com/webdriverio/webdriverio/blob/v8.40.0/LICENSE-MIT",
       "licenseTextSource": "file",
       "publisher": "Christian Bromann",
       "email": "mail@bromann.dev"

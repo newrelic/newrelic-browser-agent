@@ -4,6 +4,9 @@ export const FEATURE_NAMES = {
   jserrors: 'jserrors',
   logging: 'logging',
   metrics: 'metrics',
+  /**
+   * @deprecated This feature has been replaced by Generic Events. Use/Import `GenericEvents` instead. This wrapper will be removed in a future release
+   */
   pageAction: 'page_action',
   pageViewEvent: 'page_view_event',
   pageViewTiming: 'page_view_timing',
@@ -25,9 +28,8 @@ export const featurePriority = {
   [FEATURE_NAMES.spa]: 5,
   [FEATURE_NAMES.ajax]: 6,
   [FEATURE_NAMES.sessionTrace]: 7,
-  [FEATURE_NAMES.pageAction]: 8,
-  [FEATURE_NAMES.softNav]: 9,
-  [FEATURE_NAMES.sessionReplay]: 10,
-  [FEATURE_NAMES.logging]: 11,
-  [FEATURE_NAMES.genericEvents]: 12
+  [FEATURE_NAMES.softNav]: 8,
+  [FEATURE_NAMES.sessionReplay]: 9,
+  [FEATURE_NAMES.logging]: 10,
+  [FEATURE_NAMES.genericEvents]: 11
 }

@@ -19,15 +19,15 @@ test('set/getConfiguration works correctly', () => {
   let cachedObj = getConfiguration('123')
   expect(Object.keys(cachedObj).length).toBeGreaterThan(1)
   expect(cachedObj.jserrors.enabled).toEqual(false)
-  expect(cachedObj.page_action.enabled).toEqual(true) // this should mirror default in init.js
+  expect(cachedObj.generic_events.enabled).toEqual(true) // this should mirror default in init.js
 })
 
 test('getConfigurationValue parses path correctly', () => {
-  setConfiguration('ab', { page_action: { harvestTimeSeconds: 1000 } })
+  setConfiguration('ab', { generic_events: { harvestTimeSeconds: 1000 } })
   expect(getConfigurationValue('ab', '')).toBeUndefined()
-  expect(getConfigurationValue('ab', 'page_action')).toEqual({ enabled: true, harvestTimeSeconds: 1000, autoStart: true })
-  expect(getConfigurationValue('ab', 'page_action.harvestTimeSeconds')).toEqual(1000)
-  expect(getConfigurationValue('ab', 'page_action.dne')).toBeUndefined()
+  expect(getConfigurationValue('ab', 'generic_events')).toEqual({ enabled: true, harvestTimeSeconds: 1000, autoStart: true })
+  expect(getConfigurationValue('ab', 'generic_events.harvestTimeSeconds')).toEqual(1000)
+  expect(getConfigurationValue('ab', 'generic_events.dne')).toBeUndefined()
 })
 
 test('init props exist and return expected defaults', () => {
@@ -51,7 +51,7 @@ test('init props exist and return expected defaults', () => {
   expect(config.generic_events).toEqual({
     autoStart: true,
     enabled: true,
-    harvestTimeSeconds: 10
+    harvestTimeSeconds: 30
   })
   expect(config.feature_flags).toEqual([])
   expect(config.harvest).toEqual({
@@ -74,9 +74,7 @@ test('init props exist and return expected defaults', () => {
   })
   expect(config.obfuscate).toEqual(undefined)
   expect(config.page_action).toEqual({
-    autoStart: true,
-    enabled: true,
-    harvestTimeSeconds: 30
+    enabled: true
   })
   expect(config.page_view_event).toEqual({
     autoStart: true,

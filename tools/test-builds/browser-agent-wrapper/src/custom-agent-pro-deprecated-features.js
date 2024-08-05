@@ -1,6 +1,6 @@
 import { Agent } from '@newrelic/browser-agent/loaders/agent'
 import { Ajax } from '@newrelic/browser-agent/features/ajax'
-import { GenericEvents } from '@newrelic/browser-agent/features/generic_events'
+import { PageAction } from '@newrelic/browser-agent/features/page_action'
 import { JSErrors } from '@newrelic/browser-agent/features/jserrors'
 import { Metrics } from '@newrelic/browser-agent/features/metrics'
 import { PageViewEvent } from '@newrelic/browser-agent/features/page_view_event'
@@ -11,7 +11,7 @@ import { SessionReplay } from '@newrelic/browser-agent/features/session_replay'
 window.agent = new Agent({
   features: [
     Ajax,
-    GenericEvents,
+    PageAction, // PageAction is now deprecated in favor of GenericEvents, BUT the loader should still work if this is the entry point
     JSErrors,
     Metrics,
     PageViewEvent,

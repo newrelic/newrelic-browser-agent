@@ -69,7 +69,7 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
   // Setup stub functions that queue calls for later processing.
   asyncApiMethods.forEach(fnName => { apiInterface[fnName] = apiCall(prefix, fnName, true, 'api') })
 
-  apiInterface.addPageAction = apiCall(prefix, 'addPageAction', true, FEATURE_NAMES.pageAction)
+  apiInterface.addPageAction = apiCall(prefix, 'addPageAction', true, FEATURE_NAMES.genericEvents)
 
   apiInterface.setPageViewName = function (name, host) {
     if (typeof name !== 'string') return

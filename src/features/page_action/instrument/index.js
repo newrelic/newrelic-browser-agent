@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { InstrumentBase } from '../../utils/instrument-base'
-import { FEATURE_NAME } from '../constants'
+import { GenericEvents } from '../../generic_events'
 
-export class Instrument extends InstrumentBase {
-  static featureName = FEATURE_NAME
+/**
+ * @deprecated This feature has been replaced by Generic Events. Use/Import `GenericEvents` instead. This wrapper will be removed in a future release
+ */
+export class Instrument extends GenericEvents {
   constructor (agentIdentifier, aggregator, auto = true) {
-    super(agentIdentifier, aggregator, FEATURE_NAME, auto)
-    this.importAggregator()
+    super(agentIdentifier, aggregator, auto)
   }
 }

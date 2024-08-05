@@ -2,6 +2,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { getConfigurationValue } from '../../../common/config/config'
+import { deregisterDrain } from '../../../common/drain/drain'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME } from '../constants'
 
@@ -9,6 +11,12 @@ export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
   constructor (agentIdentifier, aggregator, auto = true) {
     super(agentIdentifier, aggregator, FEATURE_NAME, auto)
-    this.importAggregator()
+    const genericEventSourceConfigs = [
+      getConfigurationValue(this.agentIdentifier, 'page_action.enabled')
+      // other future generic event source configs to go here, like M&Ms, PageResouce, etc.
+    ]
+    /** If any of the sources are active, import the aggregator. otherwise deregister */
+    if (genericEventSourceConfigs.some(x => x)) this.importAggregator()
+    else deregisterDrain(this.agentIdentifier, this.featureName)
   }
 }

@@ -41,13 +41,13 @@ const model = () => {
       allowed_origins: undefined
     },
     feature_flags: [],
-    generic_events: { enabled: true, harvestTimeSeconds: 10, autoStart: true },
+    generic_events: { enabled: true, harvestTimeSeconds: 30, autoStart: true },
     harvest: { tooManyRequestsDelay: 60 },
     jserrors: { enabled: true, harvestTimeSeconds: 10, autoStart: true },
     logging: { enabled: true, harvestTimeSeconds: 10, autoStart: true, level: LOG_LEVELS.INFO },
     metrics: { enabled: true, autoStart: true },
     obfuscate: undefined,
-    page_action: { enabled: true, harvestTimeSeconds: 30, autoStart: true },
+    page_action: { enabled: true },
     page_view_event: { enabled: true, autoStart: true },
     page_view_timing: { enabled: true, harvestTimeSeconds: 30, long_task: false, autoStart: true },
     privacy: { cookies_enabled: true }, // *cli - per discussion, default should be true

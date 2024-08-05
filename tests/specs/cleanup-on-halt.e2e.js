@@ -22,7 +22,7 @@ describe('Memory leaks', () => {
       ajax: 0, // ajax does not rely on any flags anyways so it's always drained
       jserrors: 0,
       metrics: 0,
-      page_action: 0,
+      generic_events: 0,
       page_view_event: 0, // no handler
       page_view_timing: 0, // does not rely on any flags
       session_trace: 0,

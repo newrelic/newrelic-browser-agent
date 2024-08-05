@@ -18,7 +18,7 @@ export function getActivatedFeaturesFlags (agentId) {
           flagArr.push('xhr'); break
         case FEATURE_NAMES.jserrors:
           flagArr.push('err'); break
-        case FEATURE_NAMES.pageAction:
+        case FEATURE_NAMES.genericEvents:
           flagArr.push('ins'); break
         case FEATURE_NAMES.sessionTrace:
           flagArr.push('stn'); break

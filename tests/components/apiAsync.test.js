@@ -99,7 +99,7 @@ describe('setAPI', () => {
         'api-addPageAction',
         [time, 'finished'],
         undefined,
-        FEATURE_NAMES.pageAction,
+        FEATURE_NAMES.genericEvents,
         instanceEE
       )
     })
@@ -128,7 +128,7 @@ describe('setAPI', () => {
         'api-addPageAction',
         [providedTime - originTime, 'finished'],
         undefined,
-        FEATURE_NAMES.pageAction,
+        FEATURE_NAMES.genericEvents,
         instanceEE
       )
     })

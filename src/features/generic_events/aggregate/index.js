@@ -13,6 +13,7 @@ import { warn } from '../../../common/util/console'
 import { now } from '../../../common/timing/now'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { deregisterDrain } from '../../../common/drain/drain'
+import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 
 export class Aggregate extends AggregateBase {
   #agentRuntime
@@ -124,6 +125,7 @@ export class Aggregate extends AggregateBase {
 
     // check if we've reached the harvest limit...
     if (this.events.length >= this.eventsPerHarvest) {
+      this.ee.emit(SUPPORTABILITY_METRIC_CHANNEL, ['GenericEvents/Harvest/Max/Seen'])
       this.overflow = [...this.overflow, ...this.events.splice(0, Infinity)]
       this.harvestScheduler.runHarvest()
     }

@@ -1,13 +1,20 @@
 const now = require('../../lib/now.js')
+const { testInsRequest, testErrorsRequest } = require('../../../tools/testing-server/utils/expect-tests')
 
 describe('ins harvesting', () => {
+  let insightsCapture
+
+  beforeEach(async () => {
+    insightsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testInsRequest })
+  })
+
   it('should submit PageActions', async () => {
     const testUrl = await browser.testHandle.assetURL('instrumented.html')
     await browser.url(testUrl)
       .then(() => browser.waitForAgentLoad())
 
-    const [{ request: { body: { ins: pageActionsHarvest }, query } }] = await Promise.all([
-      browser.testHandle.expectIns(),
+    const [[{ request: { body: { ins: pageActionsHarvest }, query } }]] = await Promise.all([
+      insightsCapture.waitForResult({ totalCount: 1 }),
       browser.execute(function () {
         newrelic.addPageAction('DummyEvent', { free: 'tacos' })
       })
@@ -31,8 +38,8 @@ describe('ins harvesting', () => {
     await browser.url(testUrl)
       .then(() => browser.waitForAgentLoad())
 
-    const [{ request: { body: { ins: pageActionsHarvest } } }] = await Promise.all([
-      browser.testHandle.expectIns(),
+    const [[{ request: { body: { ins: pageActionsHarvest } } }]] = await Promise.all([
+      insightsCapture.waitForResult({ totalCount: 1 }),
       browser.execute(function () {
         newrelic.setCustomAttribute('browserHeight', 705)
         newrelic.setCustomAttribute('eventType', 'globalPageAction')
@@ -52,19 +59,21 @@ describe('ins harvesting', () => {
   })
 
   it('NEWRELIC-9370: should not throw an exception when calling addPageAction with window.location before navigating', async () => {
+    const errorsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testErrorsRequest })
     const testUrl = await browser.testHandle.assetURL('api/addPageAction-unload.html')
     await browser.url(testUrl)
       .then(() => browser.waitForAgentLoad())
 
-    const [pageActionsHarvest] = await Promise.all([
-      browser.testHandle.expectIns(),
-      browser.testHandle.expectErrors(10000, true),
+    const [insightsHarvests, errorsHarvests] = await Promise.all([
+      insightsCapture.waitForResult({ totalCount: 1 }),
+      errorsCapture.waitForResult({ timeout: 10000 }),
       browser.execute(function () {
         window.triggerPageActionNavigation()
       })
     ])
 
-    expect((await pageActionsHarvest).request.body.ins).toEqual(expect.arrayContaining([
+    expect(errorsHarvests).toEqual([])
+    expect(insightsHarvests[0].request.body.ins).toEqual(expect.arrayContaining([
       expect.objectContaining({
         actionName: 'pageaction',
         href: testUrl

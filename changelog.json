@@ -14,7 +14,7 @@
         {
           "type": "feat",
           "sha": "63ab04fa9b2a0c347e175c9174f563e73767933b",
-          "message": "Create generic events feature",
+          "message": "Create generic events feature with 1,000 event limit",
           "issues": [
             "1121"
           ]

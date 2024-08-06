@@ -1251,7 +1251,7 @@ This product includes source derived from [@newrelic/nr-querypack](https://githu
 
 ### @wdio/cli
 
-This product includes source derived from [@wdio/cli](https://github.com/webdriverio/webdriverio) ([v8.39.1](https://github.com/webdriverio/webdriverio/tree/v8.39.1)), distributed under the [MIT License](https://github.com/webdriverio/webdriverio/blob/v8.39.1/LICENSE-MIT):
+This product includes source derived from [@wdio/cli](https://github.com/webdriverio/webdriverio) ([v8.40.0](https://github.com/webdriverio/webdriverio/tree/v8.40.0)), distributed under the [MIT License](https://github.com/webdriverio/webdriverio/blob/v8.40.0/LICENSE-MIT):
 
 ```
 Copyright (c) OpenJS Foundation and other contributors
@@ -1279,7 +1279,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### @wdio/local-runner
 
-This product includes source derived from [@wdio/local-runner](https://github.com/webdriverio/webdriverio) ([v8.39.1](https://github.com/webdriverio/webdriverio/tree/v8.39.1)), distributed under the [MIT License](https://github.com/webdriverio/webdriverio/blob/v8.39.1/LICENSE-MIT):
+This product includes source derived from [@wdio/local-runner](https://github.com/webdriverio/webdriverio) ([v8.40.0](https://github.com/webdriverio/webdriverio/tree/v8.40.0)), distributed under the [MIT License](https://github.com/webdriverio/webdriverio/blob/v8.40.0/LICENSE-MIT):
 
 ```
 Copyright (c) OpenJS Foundation and other contributors
@@ -1335,7 +1335,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### @wdio/mocha-framework
 
-This product includes source derived from [@wdio/mocha-framework](https://github.com/webdriverio/webdriverio) ([v8.39.0](https://github.com/webdriverio/webdriverio/tree/v8.39.0)), distributed under the [MIT License](https://github.com/webdriverio/webdriverio/blob/v8.39.0/LICENSE-MIT):
+This product includes source derived from [@wdio/mocha-framework](https://github.com/webdriverio/webdriverio) ([v8.40.0](https://github.com/webdriverio/webdriverio/tree/v8.40.0)), distributed under the [MIT License](https://github.com/webdriverio/webdriverio/blob/v8.40.0/LICENSE-MIT):
 
 ```
 Copyright (c) OpenJS Foundation and other contributors

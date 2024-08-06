@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.264.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.263.0...v1.264.0) (2024-08-06)
+
+
+### Features
+
+* Create generic events feature ([#1121](https://github.com/newrelic/newrelic-browser-agent/issues/1121)) ([63ab04f](https://github.com/newrelic/newrelic-browser-agent/commit/63ab04fa9b2a0c347e175c9174f563e73767933b))
+* Report Page Actions with Generic Events Feature ([#1124](https://github.com/newrelic/newrelic-browser-agent/issues/1124)) ([0d52acf](https://github.com/newrelic/newrelic-browser-agent/commit/0d52acf9eaa9a2c170459f03e9edad25375f4c1c))
+
 ## [1.263.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.262.0...v1.263.0) (2024-07-25)
 
 

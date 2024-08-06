@@ -4,6 +4,31 @@
     {
       "changes": [
         {
+          "type": "feat",
+          "sha": "0d52acf9eaa9a2c170459f03e9edad25375f4c1c",
+          "message": "Report Page Actions with Generic Events Feature",
+          "issues": [
+            "1124"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "63ab04fa9b2a0c347e175c9174f563e73767933b",
+          "message": "Create generic events feature",
+          "issues": [
+            "1121"
+          ]
+        }
+      ],
+      "version": "1.264.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "86e7f2ce-5706-4ad3-9960-006dd3295df3",
+      "createTime": "2024-08-06T16:11:11.937Z"
+    },
+    {
+      "changes": [
+        {
           "type": "fix",
           "sha": "6851c1b1733c513ab4de119e875593a418e51b93",
           "message": "Prevent agent using invalid date header",
@@ -1747,5 +1772,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2024-07-25T22:11:54.827Z"
+  "updateTime": "2024-08-06T16:11:11.937Z"
 }

@@ -1,5 +1,6 @@
 import { es2022Support } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { apiMethods, asyncApiMethods } from '../../../src/loaders/api/api-methods'
+import { testAjaxTimeSlicesRequest, testErrorsRequest, testInsRequest, testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 const testBuilds = [
   'browser-agent',
@@ -11,46 +12,58 @@ const testBuilds = [
 ]
 
 describe.withBrowsersMatching(es2022Support)('basic npm agent', () => {
+  let rumCapture
+  let errorsCapture
+  let insightsCapture
+
+  beforeEach(async () => {
+    [rumCapture, errorsCapture, insightsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+      { test: testRumRequest },
+      { test: testErrorsRequest },
+      { test: testInsRequest }
+    ])
+  })
+
   testBuilds.forEach(testBuild => {
     it(`dist/${testBuild} sends basic calls`, async () => {
-      const [rumPromise] = await Promise.all([
-        browser.testHandle.expectRum(),
+      const [rumHarvests] = await Promise.all([
+        rumCapture.waitForResult({ totalCount: 1 }),
         browser.url(await browser.testHandle.assetURL(`test-builds/browser-agent-wrapper/${testBuild}.html`))
       ])
-      expect(rumPromise).toBeDefined()
+      expect(rumHarvests[0]).toBeDefined()
 
       if (!testBuild.includes('worker') && !testBuild.includes('lite')) {
-        const [errorsPromise, pageActionPromise] = await Promise.all([
-          browser.testHandle.expectErrors(),
-          browser.testHandle.expectIns(),
+        const [errorsHarvests, insightsHarvests] = await Promise.all([
+          errorsCapture.waitForResult({ totalCount: 1 }),
+          insightsCapture.waitForResult({ totalCount: 1 }),
           browser.execute(function () {
             window.agent.noticeError('test')
             newrelic.addPageAction('test')
           })
         ])
-        expect(errorsPromise).toBeDefined()
-        expect(pageActionPromise).toBeDefined()
+        expect(errorsHarvests[0]).toBeDefined()
+        expect(insightsHarvests[0]).toBeDefined()
       }
     })
 
     it(`src/${testBuild} sends basic calls`, async () => {
-      const [rumPromise] = await Promise.all([
-        browser.testHandle.expectRum(),
+      const [rumHarvests] = await Promise.all([
+        rumCapture.waitForResult({ totalCount: 1 }),
         browser.url(await browser.testHandle.assetURL(`test-builds/raw-src-wrapper/${testBuild}.html`))
       ])
-      expect(rumPromise).toBeDefined()
+      expect(rumHarvests[0]).toBeDefined()
 
       if (!testBuild.includes('worker') && !testBuild.includes('lite')) {
-        const [errorsPromise, pageActionPromise] = await Promise.all([
-          browser.testHandle.expectErrors(),
-          browser.testHandle.expectIns(),
+        const [errorsHarvests, insightsHarvests] = await Promise.all([
+          errorsCapture.waitForResult({ totalCount: 1 }),
+          insightsCapture.waitForResult({ totalCount: 1 }),
           browser.execute(function () {
             window.agent.noticeError('test')
             newrelic.addPageAction('test')
           })
         ])
-        expect(errorsPromise).toBeDefined()
-        expect(pageActionPromise).toBeDefined()
+        expect(errorsHarvests[0]).toBeDefined()
+        expect(insightsHarvests[0]).toBeDefined()
       }
     })
 
@@ -75,22 +88,22 @@ describe.withBrowsersMatching(es2022Support)('basic npm agent', () => {
   })
 
   it('vite-react-wrapper sends basic calls', async () => {
-    const [rumPromise] = await Promise.all([
-      browser.testHandle.expectRum(),
+    const [rumHarvests] = await Promise.all([
+      rumCapture.waitForResult({ totalCount: 1 }),
       browser.url(await browser.testHandle.assetURL('test-builds/vite-react-wrapper/index.html'))
     ])
-    expect(rumPromise).toBeDefined()
+    expect(rumHarvests[0]).toBeDefined()
 
-    const [errorsPromise, pageActionPromise] = await Promise.all([
-      browser.testHandle.expectErrors(),
-      browser.testHandle.expectIns(),
+    const [errorsHarvests, insightsHarvests] = await Promise.all([
+      errorsCapture.waitForResult({ totalCount: 1 }),
+      insightsCapture.waitForResult({ totalCount: 1 }),
       browser.execute(function () {
         window.agent.noticeError('test')
         newrelic.addPageAction('test')
       })
     ])
-    expect(errorsPromise).toBeDefined()
-    expect(pageActionPromise).toBeDefined()
+    expect(errorsHarvests[0]).toBeDefined()
+    expect(insightsHarvests[0]).toBeDefined()
   })
 
   it('vite-react-wrapper should not break agent when session manager cannot be imported', async () => {
@@ -104,12 +117,13 @@ describe.withBrowsersMatching(es2022Support)('basic npm agent', () => {
       statusCode: 500,
       body: ''
     })
+    const ajaxCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testAjaxTimeSlicesRequest })
 
-    const [ajaxPromise] = await Promise.all([
-      browser.testHandle.expectAjaxTimeSlices(),
+    const [ajaxHarvests] = await Promise.all([
+      ajaxCapture.waitForResult({ totalCount: 1 }),
       browser.url(await browser.testHandle.assetURL('test-builds/vite-react-wrapper/index.html'))
     ])
-    expect(ajaxPromise.request.body.xhr).toBeDefined()
+    expect(ajaxHarvests[0].request.body.xhr).toBeDefined()
 
     const agentSession = await browser.getAgentSessionInfo()
     Object.values(agentSession.agentSessions).forEach(val =>

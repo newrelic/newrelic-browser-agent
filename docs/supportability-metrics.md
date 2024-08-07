@@ -25,8 +25,6 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 * Session/Duration/Ms
 <!--- Capture SM when session tracking (trace, replay, and manager) could not be started due to missing PerformanceNavigationTiming API. --->
 * Session/Disabled/MissingPerformanceNavigationTiming/Seen
-<!--- Capture SMs for Session trace if active (ptid is setwhen returned byReplay ingest). Retain these SMs while we are working through the Session_replay Feature --->
-* PageSession/Feature/SessionTrace/Duration/Ms
 
 ### AJAX
 <!--- Ajax Events were Excluded because they matched the Agent beacon --->

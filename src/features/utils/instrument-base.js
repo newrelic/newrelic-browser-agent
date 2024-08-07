@@ -14,6 +14,8 @@ import { getConfigurationValue } from '../../common/config/config'
 import { hasReplayPrerequisite } from '../session_replay/shared/utils'
 import { canEnableSessionTracking } from './feature-gates'
 import { single } from '../../common/util/invoke'
+import { handle } from '../../common/event-emitter/handle'
+import { SUPPORTABILITY_METRIC_CHANNEL } from '../metrics/constants'
 
 /**
  * Base class for instrumenting a feature.
@@ -77,12 +79,18 @@ export class InstrumentBase extends FeatureBase {
       loadedSuccessfully = resolve
     })
 
+    const performanceNavigationTimingSupportabilityMetric = single(() => {
+      handle(SUPPORTABILITY_METRIC_CHANNEL, ['Session/Disabled/MissingPerformanceNavigationTiming/Seen'], undefined, FEATURE_NAMES.metrics, this.ee)
+    })
+
     const importLater = async () => {
       let session
       try {
         if (canEnableSessionTracking(this.agentIdentifier)) { // would require some setup before certain features start
           const { setupAgentSession } = await import(/* webpackChunkName: "session-manager" */ './agent-session')
           session = setupAgentSession(this.agentIdentifier)
+        } else if (typeof PerformanceNavigationTiming === 'undefined') {
+          performanceNavigationTimingSupportabilityMetric()
         }
       } catch (e) {
         warn(20, e)

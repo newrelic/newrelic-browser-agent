@@ -31,17 +31,23 @@ jest.mock('../../../src/common/window/load', () => ({
   __esModule: true,
   onWindowLoad: jest.fn(cb => cb())
 }))
+jest.mock('../../../src/features/utils/feature-gates', () => ({
+  __esModule: true,
+  canEnableSessionTracking: jest.fn(() => true)
+}))
 
 const aggregator = new Aggregator({ agentIdentifier: 'abcd', ee })
 
 describe('session trace', () => {
   let traceInstrument, traceAggregate
+
   beforeAll(async () => {
     traceInstrument = new SessionTrace('abcd', aggregator)
     await traceInstrument.onAggregateImported
     traceAggregate = traceInstrument.featAggregate
     traceAggregate.ee.emit('rumresp', [{ st: 1, sts: 1 }])
   })
+
   beforeEach(() => {
     traceAggregate.traceStorage.trace = {}
     traceAggregate.sentTrace = null

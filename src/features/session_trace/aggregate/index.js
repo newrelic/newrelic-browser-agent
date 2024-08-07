@@ -89,11 +89,7 @@ export class Aggregate extends AggregateBase {
     registerHandler('trace-jserror', (...args) => this.traceStorage.storeErrorAgg(...args), this.featureName, this.ee)
     registerHandler('pvtAdded', (...args) => this.traceStorage.processPVT(...args), this.featureName, this.ee)
 
-    if (typeof PerformanceNavigationTiming !== 'undefined') {
-      this.traceStorage.storeTiming(globalScope.performance?.getEntriesByType?.('navigation')[0])
-    } else {
-      this.traceStorage.storeTiming(globalScope.performance?.timing)
-    }
+    this.traceStorage.storeTiming(globalScope.performance?.getEntriesByType?.('navigation')[0])
 
     /** Only start actually harvesting if running in full mode at init time */
     if (this.mode === MODE.FULL) this.startHarvesting()

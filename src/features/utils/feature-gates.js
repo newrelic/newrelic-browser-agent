@@ -7,5 +7,5 @@ import { isBrowserScope } from '../../common/constants/runtime'
  * @returns {boolean}
  */
 export const canEnableSessionTracking = (agentId) => {
-  return isBrowserScope && getConfigurationValue(agentId, 'privacy.cookies_enabled') === true
+  return isBrowserScope && getConfigurationValue(agentId, 'privacy.cookies_enabled') === true && typeof PerformanceNavigationTiming !== 'undefined'
 }

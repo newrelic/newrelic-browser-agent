@@ -1,41 +1,54 @@
 import { supportsCumulativeLayoutShift, supportsFirstContentfulPaint, supportsFirstInputDelay, supportsFirstPaint, supportsInteractionToNextPaint, supportsLargestContentfulPaint, supportsLongTaskTiming } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { testTimingEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 const isClickInteractionType = type => type === 'pointerdown' || type === 'mousedown' || type === 'click'
-
 const loadersToTest = ['rum', 'spa']
+const init = { page_view_timing: { harvestTimeSeconds: 3 } }
+
 describe('pvt timings tests', () => {
-  const init = { page_view_timing: { harvestTimeSeconds: 3 } }
+  let timingsCapture
+
+  beforeEach(async () => {
+    timingsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testTimingEventsRequest })
+  })
 
   describe('page viz related timings', () => {
     loadersToTest.forEach(loader => {
       it(`Load, Unload, FP, FCP & pageHide for ${loader} agent`, async () => {
-        let url = await browser.testHandle.assetURL('instrumented.html', { loader })
         const start = Date.now()
-        await browser.url(url).then(() => browser.waitForAgentLoad())
+        await browser.url(
+          await browser.testHandle.assetURL('instrumented.html', { loader })
+        ).then(() => browser.waitForAgentLoad())
 
-        const [{ request: { body } }] = await Promise.all([
-          browserMatch(supportsCumulativeLayoutShift) ? browser.testHandle.expectFinalTimings(10000) : browser.testHandle.expectTimings(10000),
+        let duration
+        const [timingsHarvests] = await Promise.all([
+          timingsCapture.waitForResult({ timeout: 10000 }),
           browser.url(await browser.testHandle.assetURL('/'))
+            .then(() => { duration = Date.now() - start })
         ])
-        const duration = Date.now() - start
 
         if (browserMatch(supportsFirstPaint)) {
-          const fp = body.find(t => t.name === 'fp')
+          const fp = timingsHarvests.find(harvest => harvest.request.body.find(t => t.name === 'fp'))
+            ?.request.body.find(timing => timing.name === 'fp')
           expect(fp.value).toBeGreaterThan(0)
         }
 
         if (browserMatch(supportsFirstContentfulPaint)) {
-          const fcp = body.find(t => t.name === 'fcp')
+          const fcp = timingsHarvests.find(harvest => harvest.request.body.find(t => t.name === 'fcp'))
+            ?.request.body.find(timing => timing.name === 'fcp')
           expect(fcp.value).toBeGreaterThan(0)
         }
 
-        const load = body.find(t => t.name === 'load')
+        const load = timingsHarvests.find(harvest => harvest.request.body.find(t => t.name === 'load'))
+          ?.request.body.find(timing => timing.name === 'load')
         expect(load?.value).toBeBetween(0, duration)
 
-        const unload = body.find(t => t.name === 'unload')
+        const unload = timingsHarvests.find(harvest => harvest.request.body.find(t => t.name === 'unload'))
+          ?.request.body.find(timing => timing.name === 'unload')
         expect(unload?.value).toBeBetween(0, duration)
 
-        const pageHide = body.find(t => t.name === 'pageHide')
+        const pageHide = timingsHarvests.find(harvest => harvest.request.body.find(t => t.name === 'pageHide'))
+          ?.request.body.find(timing => timing.name === 'pageHide')
         expect(pageHide?.value).toBeBetween(0, duration)
 
         if (browserMatch(supportsCumulativeLayoutShift)) {
@@ -46,12 +59,12 @@ describe('pvt timings tests', () => {
 
       it.withBrowsersMatching([supportsLargestContentfulPaint])(`LCP is not collected on hidden pages for ${loader} agent`, async () => {
         let url = await browser.testHandle.assetURL('pagehide-beforeload.html', { loader }) // this should use SPA which is full agent
-        const [{ request: { body } }] = await Promise.all([
-          browser.testHandle.expectTimings(),
+        const [timingsHarvests] = await Promise.all([
+          timingsCapture.waitForResult({ totalCount: 1 }),
           browser.url(url)
             .then(() => browser.waitForAgentLoad())
         ])
-        const lcp = body.find(t => t.name === 'lcp')
+        const lcp = timingsHarvests[0].request.body.find(t => t.name === 'lcp')
         expect(lcp).toBeUndefined()
       })
     })
@@ -60,18 +73,21 @@ describe('pvt timings tests', () => {
   describe('interaction related timings', () => {
     loadersToTest.forEach(loader => {
       it(`FI, FID, INP & LCP for ${loader} agent`, async () => {
-        let url = await browser.testHandle.assetURL('basic-click-tracking.html', { loader })
-
         const start = Date.now()
-        await browser.url(url).then(() => browser.waitForAgentLoad())
+        await browser.url(
+          await browser.testHandle.assetURL('basic-click-tracking.html', { loader })
+        ).then(() => browser.waitForAgentLoad())
 
-        const [{ request: { body } }] = await Promise.all([
-          browserMatch(supportsCumulativeLayoutShift) ? browser.testHandle.expectFinalTimings(10000) : browser.testHandle.expectTimings(10000),
-          $('#free_tacos').click().then(() => browser.pause(1000)).then(async () => browser.url(await browser.testHandle.assetURL('/')))
+        const [timingsHarvests] = await Promise.all([
+          timingsCapture.waitForResult({ timeout: 10000 }),
+          $('#free_tacos').click()
+            .then(() => browser.pause(1000))
+            .then(async () => browser.url(await browser.testHandle.assetURL('/')))
         ])
 
         if (browserMatch(supportsFirstInputDelay)) {
-          const fi = body.find(t => t.name === 'fi')
+          const fi = timingsHarvests.find(harvest => harvest.request.body.find(t => t.name === 'fi'))
+            ?.request.body.find(timing => timing.name === 'fi')
           expect(fi.value).toBeGreaterThanOrEqual(0)
           expect(fi.value).toBeLessThan(Date.now() - start)
 
@@ -85,7 +101,8 @@ describe('pvt timings tests', () => {
         }
 
         if (browserMatch(supportsLargestContentfulPaint)) {
-          const lcp = body.find(t => t.name === 'lcp')
+          const lcp = timingsHarvests.find(harvest => harvest.request.body.find(t => t.name === 'lcp'))
+            ?.request.body.find(timing => timing.name === 'lcp')
           expect(lcp && lcp.value > 0).toEqual(true)
 
           const eid = lcp.attributes.find(attr => attr.key === 'eid')
@@ -102,7 +119,8 @@ describe('pvt timings tests', () => {
         }
 
         if (browserMatch(supportsInteractionToNextPaint)) {
-          const inp = body.find(t => t.name === 'inp')
+          const inp = timingsHarvests.find(harvest => harvest.request.body.find(t => t.name === 'inp'))
+            ?.request.body.find(timing => timing.name === 'inp')
           expect(inp?.value).toBeBetween(0, Date.now() - start)
         }
       })
@@ -111,14 +129,15 @@ describe('pvt timings tests', () => {
 
   describe('layout shift related timings', () => {
     loadersToTest.forEach(loader => {
-      ;[['unload', 'cls-basic.html'], ['pageHide', 'cls-pagehide.html']].forEach(([prop, testAsset]) => {
+      [['unload', 'cls-basic.html'], ['pageHide', 'cls-pagehide.html']].forEach(([prop, testAsset]) => {
         it.withBrowsersMatching([supportsCumulativeLayoutShift])(`${prop} for ${loader} agent collects cls attribute`, async () => {
-          let url = await browser.testHandle.assetURL(testAsset, { loader, init })
-          await browser.url(url).then(() => browser.waitForAgentLoad())
+          await browser.url(
+            await browser.testHandle.assetURL(testAsset, { loader, init })
+          ).then(() => browser.waitForAgentLoad())
           if (prop === 'pageHide') await $('#btn1').click()
 
-          const [{ request: { body } }] = await Promise.all([
-            browser.testHandle.expectFinalTimings(10000),
+          const [timingsHarvests] = await Promise.all([
+            timingsCapture.waitForResult({ timeout: 10000 }),
             browser.waitUntil(
               () => browser.execute(function () {
                 return window.contentAdded === true
@@ -130,7 +149,8 @@ describe('pvt timings tests', () => {
             ).then(async () => browser.url(await browser.testHandle.assetURL('/')))
           ])
 
-          const evt = body.find(t => t.name === prop)
+          const evt = timingsHarvests.find(harvest => harvest.request.body.find(t => t.name === prop))
+            ?.request.body.find(timing => timing.name === prop)
           const cls = evt.attributes.find(a => a.key === 'cls')
           expect(cls?.value).toBeGreaterThan(0)
           expect(cls?.type).toEqual('doubleAttribute')
@@ -145,10 +165,14 @@ describe('pvt timings tests', () => {
         let url = await browser.testHandle.assetURL('load-timing-attributes.html', { loader, init })
         const reservedTimingAttributes = ['size', 'eid', 'cls', 'type', 'fid', 'elUrl', 'elTag',
           'net-type', 'net-etype', 'net-rtt', 'net-dlink']
-        await browser.url(url).then(() => browser.waitForAgentLoad())
 
-        const { request: { body } } = await browser.testHandle.expectTimings(10000)
-        const load = body.find(t => t.name === 'load')
+        const [timingsHarvests] = await Promise.all([
+          timingsCapture.waitForResult({ timeout: 10000 }),
+          browser.url(url).then(() => browser.waitForAgentLoad())
+        ])
+
+        const load = timingsHarvests.find(harvest => harvest.request.body.find(t => t.name === 'load'))
+          ?.request.body.find(timing => timing.name === 'load')
         const containsReservedAttributes = load?.attributes.some(a => reservedTimingAttributes.includes(a.key) && a.value === 'invalid')
         expect(containsReservedAttributes).not.toEqual(true)
 
@@ -161,11 +185,12 @@ describe('pvt timings tests', () => {
   describe('long task related timings', () => {
     loadersToTest.forEach(loader => {
       it.withBrowsersMatching([supportsLongTaskTiming])(`emits long task timings when observed for ${loader} agent`, async () => {
-        let url = await browser.testHandle.assetURL('long-tasks.html', { loader, init: { page_view_timing: { long_task: true, harvestTimeSeconds: 3 } } })
-        await browser.url(url)
+        await browser.url(
+          await browser.testHandle.assetURL('long-tasks.html', { loader, init: { page_view_timing: { long_task: true, harvestTimeSeconds: 3 } } })
+        )
 
-        const [{ request: { body } }] = await Promise.all([
-          browser.testHandle.expectTimings(10000),
+        const [timingsHarvests] = await Promise.all([
+          timingsCapture.waitForResult({ timeout: 10000 }),
           browser.waitUntil(() => browser.execute(function () {
             return window.tasksDone === true
           }),
@@ -175,7 +200,9 @@ describe('pvt timings tests', () => {
           }
           )
         ])
-        const ltEvents = body.filter(t => t.name === 'lt')
+        const ltEvents = timingsHarvests
+          .flatMap(harvest => harvest.request.body)
+          .filter(timing => timing.name === 'lt')
         expect(ltEvents.length).toBeGreaterThanOrEqual(2)
 
         ltEvents.forEach(lt => {

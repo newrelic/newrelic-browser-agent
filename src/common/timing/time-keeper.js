@@ -95,6 +95,10 @@ export class TimeKeeper {
     return Math.floor(this.#correctedOriginTime + relativeTime)
   }
 
+  convertAbsoluteTimestamp (timestamp) {
+    return Math.floor(this.correctAbsoluteTimestamp(timestamp) - this.#correctedOriginTime)
+  }
+
   /**
    * Corrects an event timestamp to NR server time.
    * @param timestamp {number} The unix/epoch timestamp of the event with milliseconds

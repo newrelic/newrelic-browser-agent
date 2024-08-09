@@ -26,9 +26,7 @@ function getLoaderFilePath (request, testServer, webpath) {
   const loader = request.query.loader || testServer.config.loader
   return path.join(
     webpath ? '/build/' : paths.builtAssetsDir,
-    `nr-loader-${loader}${
-      testServer.config.polyfills ? '-polyfills' : ''
-    }.min.js`
+    `nr-loader-${loader}.min.js`
   )
 }
 
@@ -61,8 +59,7 @@ async function getLoaderScript (scriptType, loaderFilePath, nonce, injectionDela
 /**
  * Transforms requests for HTML files that contain the \{loader\} string with the
  * built loader JS. By default, the full loader will be used but can be overriden
- * by passing the loader query param. If polyfills are enabled via CLI, the polyfill
- * version of the loader will be injected instead.
+ * by passing the loader query param.
  */
 module.exports = function (request, reply, testServer) {
   return new Transform({

@@ -51,7 +51,7 @@ test('init props exist and return expected defaults', () => {
   expect(config.generic_events).toEqual({
     autoStart: true,
     enabled: true,
-    harvestTimeSeconds: 10
+    harvestTimeSeconds: 30
   })
   expect(config.feature_flags).toEqual([])
   expect(config.harvest).toEqual({

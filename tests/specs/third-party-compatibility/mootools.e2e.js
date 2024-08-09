@@ -1,8 +1,6 @@
-import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
 import runTest from './run-test'
 
-// IE does not have reliable unload support
-describe.withBrowsersMatching(notIE)('mootools compatibility', () => {
+describe('mootools compatibility', () => {
   it('1.6.0-nocompat', async () => {
     await runTest({
       browser,

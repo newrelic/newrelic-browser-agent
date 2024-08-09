@@ -3,7 +3,7 @@ import { warn } from '../util/console'
 import { stringify } from '../util/stringify'
 import { ee } from '../event-emitter/contextual-ee'
 import { Timer } from '../timer/timer'
-import { isBrowserScope, isIE } from '../constants/runtime'
+import { isBrowserScope } from '../constants/runtime'
 import { DEFAULT_EXPIRES_MS, DEFAULT_INACTIVE_MS, MODE, PREFIX, SESSION_EVENTS, SESSION_EVENT_TYPES } from './constants'
 import { InteractionTimer } from '../timer/interaction-timer'
 import { wrapEvents } from '../wrap'
@@ -57,7 +57,7 @@ export class SessionEntity {
      * if the event was spawned on the current page or an adjacent page, and the behavior tied
      * to storage events is critical to apply only to cross-tab behavior
      * */
-    if (isBrowserScope && !isIE) {
+    if (isBrowserScope) {
       windowAddEventListener('storage', (event) => {
         if (event.key === this.lookupKey) {
           const obj = typeof event.newValue === 'string' ? JSON.parse(event.newValue) : event.newValue

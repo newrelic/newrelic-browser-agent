@@ -1,5 +1,5 @@
 /* eslint-disable */
-import {onlyAndroid, onlyIE, supportsFirstPaint, supportsFirstContentfulPaint} from "../../tools/browser-matcher/common-matchers.mjs";
+import {onlyAndroid, supportsFirstPaint, supportsFirstContentfulPaint} from "../../tools/browser-matcher/common-matchers.mjs";
 
 export const baseQuery = expect.objectContaining({
   a: expect.any(String),
@@ -51,7 +51,7 @@ export function checkPVT ({ query, body }) {
       attributes: expect.any(Array),
       name: x.name,
       type: expect.any(String),
-      value: (['pageHide', 'unload'].includes(x.name) && browserMatch(onlyIE)) ? null : expect.any(Number)
+      value: expect.any(Number)
     })
   })
 }

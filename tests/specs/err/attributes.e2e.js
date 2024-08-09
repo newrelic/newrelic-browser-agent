@@ -155,7 +155,7 @@ describe('error attributes with spa loader', () => {
         errorsCapture.waitForResult({ totalCount: 1 }),
         browser.execute(function () {
           document.getElementById('trigger').click()
-          setTimeout(function () { location.reload() }, 100) // IE needs a little time before the refresh.
+          location.reload()
         })
       ])
 
@@ -171,7 +171,7 @@ describe('error attributes with spa loader', () => {
         errorsCapture.waitForResult({ totalCount: 1 }),
         browser.execute(function () {
           document.getElementById('trigger').click()
-          setTimeout(function () { location.reload() }, 100) // IE needs a little time before the refresh.
+          location.reload()
         })
       ])
 
@@ -189,7 +189,7 @@ describe('error attributes with spa loader', () => {
         errorsCapture.waitForResult({ totalCount: 1 }),
         browser.execute(function () {
           document.getElementById('trigger').click()
-          setTimeout(function () { location.reload() }, 100) // IE needs a little time before the refresh.
+          location.reload()
         })
       ])
 
@@ -249,7 +249,7 @@ describe('error attributes with spa loader', () => {
         errorsCapture.waitForResult({ totalCount: 1 }),
         browser.execute(function () {
           document.getElementById('trigger').click()
-          setTimeout(function () { location.reload() }, 100) // IE needs a little time before the refresh.
+          location.reload()
         })
       ])
 

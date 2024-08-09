@@ -1,4 +1,3 @@
-const { onlyIE, notIE } = require('../../../tools/browser-matcher/common-matchers.mjs')
 const { assertExpectedErrors, assertErrorAttributes } = require('./assertion-helper')
 const { testErrorsRequest } = require('../../../tools/testing-server/utils/expect-tests')
 
@@ -66,35 +65,6 @@ describe('JSE Error detection in various callbacks', () => {
     expect(errorBody.err.length).toEqual(1)
     let stackTrace = errorBody.err[0].params.stack_trace
     expect(stackTrace.indexOf(errorQuery)).toEqual(-1)
-  })
-
-  it.withBrowsersMatching(onlyIE)('should report errors from setImmediate callbacks', async () => {
-    const pageUrl = await browser.testHandle.assetURL('set-immediate-error.html')
-    const [[{ request: { body: errorBody } }]] = await Promise.all([
-      errorsCapture.waitForResult({ totalCount: 1 }),
-      browser.url(pageUrl)
-        .then(() => browser.waitForAgentLoad())
-        .then(() => browser.waitUntil(
-          () => browser.execute(function () {
-            return window.setImmediateFired
-          }),
-          {
-            timeout: 30000,
-            timeoutMsg: 'window.setImmediateFired was never set'
-          }))
-    ])
-
-    const expectedErrors = [
-      {
-        message: 'immediate callback',
-        stack: [{
-          u: pageUrl,
-          l: 10
-        }]
-      }
-    ]
-
-    assertExpectedErrors(errorBody.err, expectedErrors, pageUrl)
   })
 
   it('should report errors from setInterval callbacks', async () => {
@@ -182,7 +152,7 @@ describe('JSE Error detection in various callbacks', () => {
     expect(expectedErrorMessages.every(x => x.tested)).toBeTruthy()
   })
 
-  it.withBrowsersMatching(notIE)('should report unhandledPromiseRejections that are readable', async () => {
+  it('should report unhandledPromiseRejections that are readable', async () => {
     const pageUrl = await browser.testHandle.assetURL('unhandled-promise-rejection-readable.html')
     const [[{ request: { body: errorBody, query: errorQuery } }]] = await Promise.all([
       errorsCapture.waitForResult({ totalCount: 1 }),

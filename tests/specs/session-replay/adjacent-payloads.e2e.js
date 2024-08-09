@@ -1,7 +1,6 @@
-import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { srConfig, decodeAttributes } from '../util/helpers'
 
-describe.withBrowsersMatching(notIE)('Adjacent Payloads', () => {
+describe('Adjacent Payloads', () => {
   describe('JSErrors', () => {
     beforeEach(async () => {
       await browser.enableSessionReplay(0, 100)

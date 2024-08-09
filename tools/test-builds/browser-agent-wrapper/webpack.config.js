@@ -34,6 +34,7 @@ const config = [
       'browser-agent': './src/browser-agent.js',
       'custom-agent-lite': './src/custom-agent-lite.js',
       'custom-agent-pro': './src/custom-agent-pro.js',
+      'custom-agent-pro-deprecated-features': './src/custom-agent-pro-deprecated-features.js',
       'custom-agent-spa': './src/custom-agent-spa.js',
       'micro-agent': './src/micro-agent.js',
       // worker init script
@@ -96,6 +97,12 @@ const config = [
         minify: false,
         inject: false,
         templateContent: htmlTemplate('custom-agent-pro')
+      }),
+      new HtmlWebpackPlugin({
+        filename: 'custom-agent-pro-deprecated-features.html',
+        minify: false,
+        inject: false,
+        templateContent: htmlTemplate('custom-agent-pro-deprecated-features')
       }),
       new HtmlWebpackPlugin({
         filename: 'custom-agent-spa.html',

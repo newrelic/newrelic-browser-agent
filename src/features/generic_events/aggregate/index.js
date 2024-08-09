@@ -12,8 +12,8 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { warn } from '../../../common/util/console'
 import { now } from '../../../common/timing/now'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
-import { formatPageAction } from './formatters/page-actions'
 import { deregisterDrain } from '../../../common/drain/drain'
+import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { wrapVideoPlayer } from '../../../common/wrap'
 
 export class Aggregate extends AggregateBase {
@@ -25,15 +25,13 @@ export class Aggregate extends AggregateBase {
     this.eventsPerHarvest = 1000
     this.harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'generic_events.harvestTimeSeconds')
 
-    this.referrerUrl = undefined
+    this.referrerUrl = (isBrowserScope && document.referrer) ? cleanURL(document.referrer) : undefined
     this.currentEvents = []
 
     this.events = []
     this.overflow = []
 
     this.#agentRuntime = getRuntime(this.agentIdentifier)
-
-    if (isBrowserScope && document.referrer) this.referrerUrl = cleanURL(document.referrer)
 
     this.waitForFlags(['ins']).then(([ins]) => {
       if (!ins) {
@@ -43,13 +41,23 @@ export class Aggregate extends AggregateBase {
       }
 
       if (getConfigurationValue(this.agentIdentifier, 'page_action.enabled')) {
-        const pageActionHandler = formatPageAction(this.addEvent.bind(this))
-        registerHandler('api-addPageAction', pageActionHandler, this.featureName, this.ee)
+        registerHandler('api-addPageAction', (timestamp, name, attributes) => {
+          this.addEvent({
+            ...attributes,
+            eventType: 'PageAction',
+            timestamp: this.#agentRuntime.timeKeeper.convertRelativeTimestamp(timestamp),
+            timeSinceLoad: timestamp / 1000,
+            actionName: name,
+            referrerUrl: this.referrerUrl,
+            currentUrl: cleanURL('' + location),
+            ...(isBrowserScope && {
+              browserWidth: window.document.documentElement?.clientWidth,
+              browserHeight: window.document.documentElement?.clientHeight
+            })
+          })
+        }, this.featureName, this.ee)
       }
 
-      const pageActionHandler = formatPageAction(this.addEvent.bind(this))
-      this.ee.on('video-player', pageActionHandler)
-      /** observe video players */
       if (isBrowserScope && window.MutationObserver) {
         console.log(window.document.querySelectorAll('video'))
         for (const videoPlayer of window.document.querySelectorAll('video')) {
@@ -104,34 +112,36 @@ export class Aggregate extends AggregateBase {
   addEvent (obj = {}) {
     if (!obj || !Object.keys(obj).length) return
     if (!obj.eventType) {
-      warn('Invalid object passed to generic event aggregate. Missing "eventType".')
+      warn(44)
       return
     }
 
     for (let key in obj) {
       let val = obj[key]
-      if (key === 'timestamp') val = this.#agentRuntime.timeKeeper.correctAbsoluteTimestamp(val)
       obj[key] = (val && typeof val === 'object' ? stringify(val) : val)
     }
 
-    const eventAttributes = {
-      /** Common attributes shared on all generic events */
-      referrerUrl: this.referrerUrl,
-      currentUrl: cleanURL('' + location),
-      pageUrl: cleanURL(getRuntime(this.agentIdentifier).origin),
-      /** Event-specific attributes take precedence over everything else */
-      ...obj,
-      /** Agent-level custom attributes */
-      ...(getInfo(this.agentIdentifier).jsAttributes || {})
+    const defaultEventAttributes = {
+      /** should be overridden by the event-specific attributes, but just in case -- set it to now() */
+      timestamp: this.#agentRuntime.timeKeeper.convertRelativeTimestamp(now()),
+      /** all generic events require a pageUrl */
+      pageUrl: cleanURL(getRuntime(this.agentIdentifier).origin)
     }
 
-    /** should have been provided by reporting feature -- but falls back to now if not */
-    eventAttributes.timestamp ??= this.#agentRuntime.timeKeeper.convertRelativeTimestamp(now())
+    const eventAttributes = {
+      /** Agent-level custom attributes */
+      ...(getInfo(this.agentIdentifier).jsAttributes || {}),
+      /** Fallbacks for required properties in-case the event did not supply them, should take precedence over agent-level custom attrs */
+      ...defaultEventAttributes,
+      /** Event-specific attributes take precedence over agent-level custom attributes and fallbacks */
+      ...obj
+    }
 
     this.events.push(eventAttributes)
 
     // check if we've reached the harvest limit...
     if (this.events.length >= this.eventsPerHarvest) {
+      this.ee.emit(SUPPORTABILITY_METRIC_CHANNEL, ['GenericEvents/Harvest/Max/Seen'])
       this.overflow = [...this.overflow, ...this.events.splice(0, Infinity)]
       this.harvestScheduler.runHarvest()
     }

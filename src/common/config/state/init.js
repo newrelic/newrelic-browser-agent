@@ -41,7 +41,7 @@ const model = () => {
       allowed_origins: undefined
     },
     feature_flags: [],
-    generic_events: { enabled: true, harvestTimeSeconds: 10, autoStart: true },
+    generic_events: { enabled: true, harvestTimeSeconds: 30, autoStart: true },
     harvest: { tooManyRequestsDelay: 60 },
     jserrors: { enabled: true, harvestTimeSeconds: 10, autoStart: true },
     logging: { enabled: true, harvestTimeSeconds: 10, autoStart: true, level: LOG_LEVELS.INFO },

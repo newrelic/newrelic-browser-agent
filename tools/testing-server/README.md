@@ -108,7 +108,7 @@ The agent inject plugin utilizes the `onSend` hook of fastify to modify outgoing
 
 #### [Loader Transform](./plugins/agent-injector/loader-transform.js) 
 
-This stream transform looks for `{loader}` in the HTML response, determines which loader to inject, and injects a script tag containing the compiled loader. The loader is pulled from the `/build/` directory and requires that the project be built before the server is started. The determination of the loader used defaults to what is provided to the WDIO CLI `-l | --loader` flag (default of `spa`). A query parameter can be used (`?loader=spa`) when requesting an HTML asset to override the loader. The polyfill loader can be used in two ways: through the WDIO CLI `-P` flag or by setting the query parameter to a polyfill loader `?loader=spa-polyfill`.
+This stream transform looks for `{loader}` in the HTML response, determines which loader to inject, and injects a script tag containing the compiled loader. The loader is pulled from the `/build/` directory and requires that the project be built before the server is started. The determination of the loader used defaults to what is provided to the WDIO CLI `-l | --loader` flag (default of `spa`). A query parameter can be used (`?loader=spa`) when requesting an HTML asset to override the loader.
 
 #### [Config Transform](./plugins/agent-injector/config-transform.js)
 
@@ -126,17 +126,13 @@ This stream transform looks for `{worker-commands}` in the HTML response. Integr
 
 This stream transform looks for `{script}` in the HTML response and replaces it with a script tag containing a `src` attribute equal to the script query parameter. Additionally, the transform looks for similar replacement areas that contain a path to a static file in the `tests/assets` directory of the repository; `{tests/assets/js/internal/modular/index.js}`. These parts of the HTML will be replaced with a script tag containing the content of the target file.
 
-#### [Polyfills Transform](./plugins/agent-injector/polyfills-transform.js)
-
-This stream transform looks for `{polyfills}` in the HTML response and replaces it with a script tag containing the agent polyfills. This is only done when the WDIO CLI `-P` flag is used to enable polyfills. The transform uses browserify and babelify to transpile the `cdn/agent-loader/polyfills/polyfills.js` file.
-
 ### BAM Parser
 
 The BAM parser plugin hooks into the fastify content parsing to support pre-parsing of querypack body payloads. The body of each request that has a content type of `text/plain` is checked to see if it starts with `bel.`. When it does, the body is transformed using [@newrelic/nr-querypack](https://github.com/newrelic/nr-querypack). This allows routes and plugins that later operate on the request body to do so without the need to first parse it.
 
 ### Browser-Scripts
 
-The browser-scripts plugin utilizes the `onSend` hook of fastify to modify outgoing test JavaScript assets. When the request URL is for an asset found in `/tests/browser/`, the file will first check the test assets for pre-built browser-test js files. If not found, the test source code will be passed through browserify and babelify along with the JIL CLI `-P` polyfills flag. The output provided should be transpilled JavaScript code including the browser test assets.
+The browser-scripts plugin utilizes the `onSend` hook of fastify to modify outgoing test JavaScript assets. When the request URL is for an asset found in `/tests/browser/`, the file will first check the test assets for pre-built browser-test js files. If not found, the test source code will be passed through browserify and babelify. The output provided should be transpilled JavaScript code including the browser test assets.
 
 ### No Cache
 

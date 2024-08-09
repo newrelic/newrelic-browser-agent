@@ -1,8 +1,7 @@
-import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { testBlobReplayRequest } from '../../../tools/testing-server/utils/expect-tests'
 import { srConfig, getSR } from '../util/helpers'
 
-describe.withBrowsersMatching(notIE)('Session Replay Ingest Behavior', () => {
+describe('Session Replay Ingest Behavior', () => {
   beforeEach(async () => {
     await browser.enableSessionReplay()
   })

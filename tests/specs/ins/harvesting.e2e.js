@@ -1,13 +1,20 @@
 const now = require('../../lib/now.js')
+const { testInsRequest, testErrorsRequest } = require('../../../tools/testing-server/utils/expect-tests')
 
 describe('ins harvesting', () => {
+  let insightsCapture
+
+  beforeEach(async () => {
+    insightsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testInsRequest })
+  })
+
   it('should submit PageActions', async () => {
     const testUrl = await browser.testHandle.assetURL('instrumented.html')
     await browser.url(testUrl)
       .then(() => browser.waitForAgentLoad())
 
-    const [{ request: { body: { ins: pageActionsHarvest }, query } }] = await Promise.all([
-      browser.testHandle.expectIns(),
+    const [[{ request: { body: { ins: pageActionsHarvest }, query } }]] = await Promise.all([
+      insightsCapture.waitForResult({ totalCount: 1 }),
       browser.execute(function () {
         newrelic.addPageAction('DummyEvent', { free: 'tacos' })
       })
@@ -31,11 +38,13 @@ describe('ins harvesting', () => {
     await browser.url(testUrl)
       .then(() => browser.waitForAgentLoad())
 
-    const [{ request: { body: { ins: pageActionsHarvest } } }] = await Promise.all([
-      browser.testHandle.expectIns(),
+    const [[{ request: { body: { ins: pageActionsHarvest } } }]] = await Promise.all([
+      insightsCapture.waitForResult({ totalCount: 1 }),
       browser.execute(function () {
         newrelic.setCustomAttribute('browserHeight', 705)
-        newrelic.addPageAction('MyEvent', { referrerUrl: 'http://test.com', foo: { bar: 'baz' } })
+        newrelic.setCustomAttribute('eventType', 'globalPageAction')
+        newrelic.setCustomAttribute('globalCustomAttribute', 12345)
+        newrelic.addPageAction('MyEvent', { referrerUrl: 'http://test.com', localCustomAttribute: { bar: 'baz' }, eventType: 'localPageAction' })
       })
     ])
 
@@ -43,26 +52,28 @@ describe('ins harvesting', () => {
 
     let event = pageActionsHarvest[0]
     expect(event.actionName).toEqual('MyEvent')
-    expect(event.eventType).toEqual('PageAction') //, 'defaults has correct precedence')
-    expect(event.browserHeight).toEqual(705) //, 'att has correct precedence')
-    expect(event.referrerUrl).toEqual('http://test.com') //, 'attributes has correct precedence')
-    expect(event.foo).toEqual('{"bar":"baz"}') //, 'custom member of attributes passed through')
+    expect(event.eventType).toEqual('PageAction') //, 'pageAction should not be overwritable (globalPageAction, localPageAction)
+    expect(event.browserHeight).not.toEqual(705) //, 'browser height should not be overwritable'
+    expect(event.globalCustomAttribute).toEqual(12345) //, 'global custom attributes passed through')
+    expect(event.localCustomAttribute).toEqual('{"bar":"baz"}') //, 'local custom attributes passed through')
   })
 
   it('NEWRELIC-9370: should not throw an exception when calling addPageAction with window.location before navigating', async () => {
+    const errorsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testErrorsRequest })
     const testUrl = await browser.testHandle.assetURL('api/addPageAction-unload.html')
     await browser.url(testUrl)
       .then(() => browser.waitForAgentLoad())
 
-    const [pageActionsHarvest] = await Promise.all([
-      browser.testHandle.expectIns(),
-      browser.testHandle.expectErrors(10000, true),
+    const [insightsHarvests, errorsHarvests] = await Promise.all([
+      insightsCapture.waitForResult({ totalCount: 1 }),
+      errorsCapture.waitForResult({ timeout: 10000 }),
       browser.execute(function () {
         window.triggerPageActionNavigation()
       })
     ])
 
-    expect((await pageActionsHarvest).request.body.ins).toEqual(expect.arrayContaining([
+    expect(errorsHarvests).toEqual([])
+    expect(insightsHarvests[0].request.body.ins).toEqual(expect.arrayContaining([
       expect.objectContaining({
         actionName: 'pageaction',
         href: testUrl

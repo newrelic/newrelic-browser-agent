@@ -4,7 +4,6 @@
  */
 import { testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
 import { stConfig, testExpectedTrace } from '../util/helpers'
-import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
 
 describe('respects feature flags', () => {
   it('0, 0 == PERMANENTLY OFF', async () => {
@@ -61,7 +60,7 @@ describe('respects feature flags', () => {
       })])
   })
 
-  it.withBrowsersMatching(notIE)('1, 0 == TEMPORARILY OFF, TURNS ON IF ENTITLED (api)', async () => {
+  it('1, 0 == TEMPORARILY OFF, TURNS ON IF ENTITLED (api)', async () => {
     await browser.destroyAgentSession()
 
     await browser.testHandle.scheduleReply('bamServer', {

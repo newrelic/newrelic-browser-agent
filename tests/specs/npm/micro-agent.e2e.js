@@ -1,9 +1,14 @@
 /* globals MicroAgent */
 
-import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { testErrorsRequest, testInsRequest, testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
 
-describe.withBrowsersMatching(notIE)('micro-agent', () => {
+describe('micro-agent', () => {
   it('Smoke Test - Can send distinct payloads of all relevant data types to 2 distinct app IDs', async () => {
+    const [rumCapture, errorsCapture, insightsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+      { test: testRumRequest },
+      { test: testErrorsRequest },
+      { test: testInsRequest }
+    ])
     await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/micro-agent.html'))
 
     await browser.execute(function () {
@@ -26,19 +31,10 @@ describe.withBrowsersMatching(notIE)('micro-agent', () => {
       window.agent1.addPageAction('1', { val: 1 })
       window.agent2.addPageAction('2', { val: 2 })
     })
-    const [rumCalls, errCalls, paCalls] = await Promise.all([
-      Promise.all([
-        browser.testHandle.expectRum(5000),
-        browser.testHandle.expectRum(5000)
-      ]),
-      Promise.all([
-        browser.testHandle.expectErrors(10000),
-        browser.testHandle.expectErrors(10000)
-      ]),
-      Promise.all([
-        browser.testHandle.expectIns(10000),
-        browser.testHandle.expectIns(10000)
-      ])
+    const [rumHarvests, errorsHarvests, insightsHarvests] = await Promise.all([
+      rumCapture.waitForResult({ totalCount: 2 }),
+      errorsCapture.waitForResult({ totalCount: 2 }),
+      insightsCapture.waitForResult({ totalCount: 2 })
     ])
 
     // these props will get set to true once a test has matched it
@@ -52,17 +48,17 @@ describe.withBrowsersMatching(notIE)('micro-agent', () => {
     // each type of test should check that:
     // each payload exists once per appId
     // each payload should have internal attributes matching it to the right appId
-    rumCalls.forEach(({ request: { query, body } }) => {
+    rumHarvests.forEach(({ request: { query, body } }) => {
       expect(ranOnce(query.a, 'rum')).toEqual(true)
       expect(payloadMatchesAppId(query.a, body.ja.customAttr)).toEqual(true)
     })
 
-    errCalls.forEach(({ request: { query, body } }) => {
+    errorsHarvests.forEach(({ request: { query, body } }) => {
       expect(ranOnce(query.a, 'err')).toEqual(true)
       expect(payloadMatchesAppId(query.a, body.err[0].params.message)).toEqual(true)
     })
 
-    paCalls.forEach(({ request: { query, body } }) => {
+    insightsHarvests.forEach(({ request: { query, body } }) => {
       expect(ranOnce(query.a, 'pa')).toEqual(true)
       const data = body.ins[0]
       expect(payloadMatchesAppId(query.a, data.val, data.actionName, data.customAttr)).toEqual(true)

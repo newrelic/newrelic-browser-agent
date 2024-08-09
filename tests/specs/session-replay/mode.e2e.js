@@ -1,7 +1,6 @@
-import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { srConfig, getSR } from '../util/helpers'
 
-describe.withBrowsersMatching(notIE)('Session Replay Sample Mode Validation', () => {
+describe('Session Replay Sample Mode Validation', () => {
   afterEach(async () => {
     await browser.destroyAgentSession()
   })

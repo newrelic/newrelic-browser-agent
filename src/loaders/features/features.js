@@ -4,6 +4,10 @@ export const FEATURE_NAMES = {
   jserrors: 'jserrors',
   logging: 'logging',
   metrics: 'metrics',
+  /**
+   * @deprecated This feature has been replaced by Generic Events. Use/Import `GenericEvents` instead. This wrapper will be removed in a future release
+   */
+  pageAction: 'page_action',
   pageViewEvent: 'page_view_event',
   pageViewTiming: 'page_view_timing',
   sessionReplay: 'session_replay',

@@ -1,4 +1,3 @@
-import { notIE } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
 import { srConfig, getSR } from '../util/helpers'
 
@@ -20,7 +19,7 @@ async function disqualifySR () {
   })
 }
 
-describe.withBrowsersMatching(notIE)('Session Replay Initialization', () => {
+describe('Session Replay Initialization', () => {
   beforeEach(async () => {
     await browser.enableSessionReplay()
   })

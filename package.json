@@ -116,9 +116,9 @@
       "default": "./dist/esm/features/metrics/index.js"
     },
     "./features/page_action": {
-      "types": "./dist/types/features/generic_events/index.d.ts",
-      "require": "./dist/cjs/features/generic_events/index.js",
-      "default": "./dist/esm/features/generic_events/index.js"
+      "types": "./dist/types/features/page_action/index.d.ts",
+      "require": "./dist/cjs/features/page_action/index.js",
+      "default": "./dist/esm/features/page_action/index.js"
     },
     "./features/page_view_event": {
       "types": "./dist/types/features/page_view_event/index.d.ts",

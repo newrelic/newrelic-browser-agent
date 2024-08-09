@@ -21,40 +21,43 @@ import { generateRandomHexString } from '../ids/unique-id'
 export function wrapVideoPlayer(sharedEE, video) {
   const ee = scopedEE(sharedEE)
   const videoPlayerId = generateRandomHexString(6)
-  const emitter = (eventName) => ee.emit('video-player', [performance.now(), eventName, { videoPlayerId }])
+  const emitter = (eventName, evt) => {
+    const eventSource = evt.target.currentSrc
+    ee.emit('video-player', [performance.now(), eventName, { videoPlayerId, eventSource }])
+  }
 
   console.log('wrap', video)
   video.addEventListener('play', evt => {
-    console.log('play...', Date.now(), evt)
-    emitter('play')
+    console.log('play...')
+    emitter('play', evt)
   })
   video.addEventListener('pause', evt => {
-    console.log('pause...', Date.now(), evt)
-    emitter('pause')
+    console.log('pause...')
+    emitter('pause', evt)
   })
   video.addEventListener('playing', evt => {
-    console.log('resume (playing)...', Date.now(), evt)
-    emitter('resume')
+    console.log('resume (playing)...')
+    emitter('resume', evt)
   })
   video.addEventListener('ended', evt => {
-    console.log('end (ended)...', Date.now(), evt)
-    emitter('end')
+    console.log('end (ended)...')
+    emitter('end', evt)
   })
   video.addEventListener('stalled', evt => {
-    console.log('stall (stalled)...', evt)
-    emitter('stall')
+    console.log('stall (stalled)...')
+    emitter('stall', evt)
   })
   video.addEventListener('seeking', evt => {
-    console.log('seek (seeking)...', evt)
-    emitter('seek')
+    console.log('seek (seeking)...')
+    emitter('seek', evt)
   })
   video.addEventListener('volumechange', evt => {
-    console.log('volume (volumechange)...', evt)
-    emitter('volume')
+    console.log('volume (volumechange)...')
+    emitter('volume', evt)
   })
   video.addEventListener('waiting', evt => {
-    console.log('buffer (waiting)...', evt)
-    emitter('buffer')
+    console.log('buffer (waiting)...')
+    emitter('buffer', evt)
   })
   console.log('observing video', video)
   return ee

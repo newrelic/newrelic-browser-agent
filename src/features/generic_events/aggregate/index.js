@@ -62,10 +62,9 @@ export class Aggregate extends AggregateBase {
         this.ee.on('video-player', (timestamp, name, attributes) => {
           this.addEvent({
             ...attributes,
-            eventType: 'VideoPlayer',
-            timestamp: this.#agentRuntime.timeKeeper.convertRelativeTimestamp(timestamp),
-            referrerUrl: this.referrerUrl,
-            currentUrl: cleanURL('' + location)
+            eventType: 'BrowserVideo',
+            type: name,
+            timestamp: this.#agentRuntime.timeKeeper.convertRelativeTimestamp(timestamp)
           })
         })
         console.log(window.document.querySelectorAll('video'))

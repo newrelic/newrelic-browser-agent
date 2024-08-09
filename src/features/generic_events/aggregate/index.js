@@ -59,6 +59,15 @@ export class Aggregate extends AggregateBase {
       }
 
       if (isBrowserScope && window.MutationObserver) {
+        this.ee.on('video-player', (timestamp, name, attributes) => {
+          this.addEvent({
+            ...attributes,
+            eventType: 'VideoPlayer',
+            timestamp: this.#agentRuntime.timeKeeper.convertRelativeTimestamp(timestamp),
+            referrerUrl: this.referrerUrl,
+            currentUrl: cleanURL('' + location)
+          })
+        })
         console.log(window.document.querySelectorAll('video'))
         for (const videoPlayer of window.document.querySelectorAll('video')) {
           wrapVideoPlayer(this.ee, videoPlayer)

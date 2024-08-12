@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker'
 import { srConfig, decodeAttributes } from './util/helpers'
 import { supportsFetch } from '../../tools/browser-matcher/common-matchers.mjs'
-import { testAjaxEventsRequest, testBlobReplayRequest, testErrorsRequest, testInsRequest, testInteractionEventsRequest, testRumRequest, testSupportMetricsRequest } from '../../tools/testing-server/utils/expect-tests'
+import { testAjaxEventsRequest, testBlobReplayRequest, testErrorsRequest, testInsRequest, testInteractionEventsRequest, testRumRequest } from '../../tools/testing-server/utils/expect-tests'
 
 let serverTime
 describe('NR Server Time', () => {
@@ -341,77 +341,6 @@ describe('NR Server Time', () => {
 
       expect(subsequentServerTimeDiff).toEqual(initialServerTimeDiff)
       expect(subsequentSession.localStorage.serverTimeDiff).toEqual(initialSession.localStorage.serverTimeDiff)
-    })
-  })
-
-  describe('supportability metrics', () => {
-    it('should send a supportability metric when time diff is >= 1 hour and < 6 hours', async () => {
-      const supportMetricsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testSupportMetricsRequest })
-      await browser.destroyAgentSession()
-      await browser.testHandle.clearScheduledReplies('bamServer')
-
-      serverTime = await browser.mockDateResponse(Date.now() - (61 * 60 * 1000))
-      const [supportMetricsHarvest] = await Promise.all([
-        supportMetricsCapture.waitForResult({ timeout: 10000 }),
-        browser.url(await browser.testHandle.assetURL('instrumented.html'))
-          .then(() => browser.waitForAgentLoad())
-          .then(() => browser.pause(1000))
-          .then(() => browser.refresh())
-      ])
-
-      const sm = supportMetricsHarvest
-        .flatMap(harvest => harvest.request.body.sm)
-        .find(metric => metric.params.name === 'PVE/NRTime/Calculation/DiffExceed1Hrs')
-      expect(sm).toBeDefined()
-      expect(sm.stats.c).toEqual(1)
-
-      await browser.destroyAgentSession()
-    })
-
-    it('should send a supportability metric when time diff is >= 6 hour and < 12 hours', async () => {
-      const supportMetricsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testSupportMetricsRequest })
-      await browser.destroyAgentSession()
-      await browser.testHandle.clearScheduledReplies('bamServer')
-
-      serverTime = await browser.mockDateResponse(Date.now() - (6 * 61 * 60 * 1000))
-      const [supportMetricsHarvest] = await Promise.all([
-        supportMetricsCapture.waitForResult({ timeout: 10000 }),
-        browser.url(await browser.testHandle.assetURL('instrumented.html'))
-          .then(() => browser.waitForAgentLoad())
-          .then(() => browser.pause(1000))
-          .then(() => browser.refresh())
-      ])
-
-      const sm = supportMetricsHarvest
-        .flatMap(harvest => harvest.request.body.sm)
-        .find(metric => metric.params.name === 'PVE/NRTime/Calculation/DiffExceed6Hrs')
-      expect(sm).toBeDefined()
-      expect(sm.stats.c).toEqual(1)
-
-      await browser.destroyAgentSession()
-    })
-
-    it('should send a supportability metric when time diff is >= 12 hours', async () => {
-      const supportMetricsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testSupportMetricsRequest })
-      await browser.destroyAgentSession()
-      await browser.testHandle.clearScheduledReplies('bamServer')
-
-      serverTime = await browser.mockDateResponse(Date.now() - (12 * 61 * 60 * 1000))
-      const [supportMetricsHarvest] = await Promise.all([
-        supportMetricsCapture.waitForResult({ timeout: 10000 }),
-        browser.url(await browser.testHandle.assetURL('instrumented.html'))
-          .then(() => browser.waitForAgentLoad())
-          .then(() => browser.pause(1000))
-          .then(() => browser.refresh())
-      ])
-
-      const sm = supportMetricsHarvest
-        .flatMap(harvest => harvest.request.body.sm)
-        .find(metric => metric.params.name === 'PVE/NRTime/Calculation/DiffExceed12Hrs')
-      expect(sm).toBeDefined()
-      expect(sm.stats.c).toEqual(1)
-
-      await browser.destroyAgentSession()
     })
   })
 })

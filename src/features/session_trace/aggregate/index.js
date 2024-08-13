@@ -8,6 +8,7 @@ import { obj as encodeObj } from '../../../common/url/encode'
 import { deregisterDrain } from '../../../common/drain/drain'
 import { globalScope } from '../../../common/constants/runtime'
 import { MODE, SESSION_EVENTS } from '../../../common/session/constants'
+import { applyFnToProps } from '../../../common/util/traverse'
 
 const ERROR_MODE_SECONDS_WINDOW = 30 * 1000 // sliding window of nodes to track when simply monitoring (but not harvesting) in error mode
 /** Reserved room for query param attrs */
@@ -145,7 +146,7 @@ export class Aggregate extends AggregateBase {
      * For data that does not fit the schema of the above, it should be url-encoded and placed into `attributes`
      */
     const agentMetadata = this.agentRuntime.appMetadata?.agents?.[0] || {}
-    return {
+    const payload = {
       qs: {
         browser_monitoring_key: this.agentInfo.licenseKey,
         type: 'BrowserSessionChunk',
@@ -174,6 +175,12 @@ export class Aggregate extends AggregateBase {
         }, QUERY_PARAM_PADDING).substring(1) // remove the leading '&'
       },
       body: stns
+    }
+
+    if (this.scheduler.harvest.obfuscator.shouldObfuscate()) {
+      return applyFnToProps(payload, (...args) => this.scheduler.harvest.obfuscator.obfuscateString(...args), 'string', ['e'])
+    } else {
+      return payload
     }
   }
 

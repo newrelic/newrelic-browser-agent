@@ -180,12 +180,12 @@ export class AgentBase {
 
   /**
    * Capture a single log.
-   * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/loginfo/}
+   * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/log/}
    * @param {string} message String to be captured as log message
    * @param {{customAttributes?: object, level?: 'ERROR'|'TRACE'|'DEBUG'|'INFO'|'WARN'}} [options] customAttributes defaults to `{}` if not assigned, level defaults to `info` if not assigned.
   */
   log (message, options) {
-    return this.#callMethod('logInfo', message, options)
+    return this.#callMethod('log', message, options)
   }
 
   /**

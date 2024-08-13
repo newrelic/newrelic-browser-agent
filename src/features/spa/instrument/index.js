@@ -2,9 +2,13 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
 */
-import {
-  wrapMutation, wrapPromise, wrapHistory, wrapTimer, wrapFetch, wrapXhr, wrapJsonP
-} from '../../../common/wrap'
+import { wrapMutation } from '../../../common/wrap/wrap-mutation'
+import { wrapPromise } from '../../../common/wrap/wrap-promise'
+import { wrapHistory } from '../../../common/wrap/wrap-history'
+import { wrapTimer } from '../../../common/wrap/wrap-timer'
+import { wrapFetch } from '../../../common/wrap/wrap-fetch'
+import { wrapXhr } from '../../../common/wrap/wrap-xhr'
+import { wrapJsonP } from '../../../common/wrap/wrap-jsonp'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
 import { InstrumentBase } from '../../utils/instrument-base'
 import * as CONSTANTS from '../constants'

@@ -14,7 +14,7 @@ import { now } from '../../../common/timing/now'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { deregisterDrain } from '../../../common/drain/drain'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
-import { wrapVideoPlayer } from '../../../common/wrap'
+import { wrapVideoPlayer } from '../../../common/wrap/wrap-video-player'
 
 export class Aggregate extends AggregateBase {
   #agentRuntime

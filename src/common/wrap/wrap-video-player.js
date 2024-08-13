@@ -9,6 +9,7 @@
 
 import { ee as baseEE } from '../event-emitter/contextual-ee'
 import { generateRandomHexString } from '../ids/unique-id'
+import { debounce } from '../util/invoke'
 
 /**
  * Wraps a supplied function and adds emitter events under the `-wrap-logger-` prefix
@@ -47,13 +48,13 @@ export function wrapVideoPlayer(sharedEE, video) {
     console.log('stall (stalled)...')
     emitter('stall', evt)
   })
-  video.addEventListener('seeking', evt => {
-    console.log('seek (seeking)...')
+  video.addEventListener('seeked', evt => {
+    console.log('seek (seeked)...')
     emitter('seek', evt)
   })
   video.addEventListener('volumechange', evt => {
     console.log('volume (volumechange)...')
-    emitter('volume', evt)
+    debounce(() => emitter('volume', evt), 100, { leading: true })
   })
   video.addEventListener('waiting', evt => {
     console.log('buffer (waiting)...')

@@ -10,8 +10,7 @@ import { wrapMutation } from './wrap-mutation'
 import { wrapPromise } from './wrap-promise'
 import { wrapTimer } from './wrap-timer'
 import { wrapXhr } from './wrap-xhr'
-import { wrapVideoPlayer } from './wrap-video-player'
 
 export {
-  wrapEvents, wrapFetch, wrapHistory, wrapJsonP, wrapMutation, wrapPromise, wrapTimer, wrapXhr, wrapVideoPlayer
+  wrapEvents, wrapFetch, wrapHistory, wrapJsonP, wrapMutation, wrapPromise, wrapTimer, wrapXhr
 }

@@ -155,7 +155,9 @@ export class Aggregate extends AggregateBase {
       }
     }
     this.timings = []
-    return { body: { e: payload } }
+    return {
+      body: { e: payload }
+    }
   }
 
   // serialize array of timing data

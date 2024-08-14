@@ -56,6 +56,10 @@ beforeEach(() => {
   featureName = faker.string.uuid()
 })
 
+afterEach(() => {
+  jest.clearAllMocks()
+})
+
 test('should merge info, jsattributes, and runtime objects', () => {
   const mockInfo1 = {
     [faker.string.uuid()]: faker.lorem.sentence(),
@@ -105,7 +109,7 @@ test('should only configure the agent once', () => {
   expect(isConfigured).toHaveBeenCalledWith(agentIdentifier)
   expect(gosCDN).not.toHaveBeenCalled()
   expect(getInfo).not.toHaveBeenCalled()
-  expect(getRuntime).not.toHaveBeenCalled()
+  expect(getRuntime).toHaveBeenCalledTimes(2)
   expect(configure).not.toHaveBeenCalled()
 })
 

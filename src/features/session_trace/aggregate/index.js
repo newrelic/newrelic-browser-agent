@@ -146,7 +146,7 @@ export class Aggregate extends AggregateBase {
      * For data that does not fit the schema of the above, it should be url-encoded and placed into `attributes`
      */
     const agentMetadata = this.agentRuntime.appMetadata?.agents?.[0] || {}
-    const payload = {
+    return {
       qs: {
         browser_monitoring_key: this.agentInfo.licenseKey,
         type: 'BrowserSessionChunk',
@@ -170,17 +170,11 @@ export class Aggregate extends AggregateBase {
           ptid: `${this.ptid}`,
           session: `${this.sessionId}`,
           // customer-defined data should go last so that if it exceeds the query param padding limit it will be truncated instead of important attrs
-          ...(endUserId && { 'enduser.id': endUserId })
+          ...(endUserId && { 'enduser.id': this.obfuscator.obfuscateString(endUserId) })
           // The Query Param is being arbitrarily limited in length here.  It is also applied when estimating the size of the payload in getPayloadSize()
         }, QUERY_PARAM_PADDING).substring(1) // remove the leading '&'
       },
-      body: stns
-    }
-
-    if (this.scheduler.harvest.obfuscator.shouldObfuscate()) {
-      return applyFnToProps(payload, (...args) => this.scheduler.harvest.obfuscator.obfuscateString(...args), 'string', ['e'])
-    } else {
-      return payload
+      body: applyFnToProps(stns, this.obfuscator.obfuscateString.bind(this.obfuscator), 'string')
     }
   }
 

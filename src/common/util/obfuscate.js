@@ -1,67 +1,111 @@
 import { getConfigurationValue } from '../config/config'
-import { SharedContext } from '../context/shared-context'
 import { isFileProtocol } from '../url/protocol'
 import { warn } from './console'
 
-var fileProtocolRule = {
-  regex: /^file:\/\/(.*)/,
-  replacement: atob('ZmlsZTovL09CRlVTQ0FURUQ=')
-}
-export class Obfuscator extends SharedContext {
-  shouldObfuscate () {
-    return getRules(this.sharedContext.agentIdentifier).length > 0
+/**
+ * Represents an obfuscation rule that can be applied to harvested payloads
+ * @typedef {object} ObfuscationRule
+ * @property {string|RegExp} regex The regular expression to match against in the payload
+ * @property {string} [replacement] The string to replace the matched regex with
+ */
+
+/**
+ * Represents an obfuscation rule validation state
+ * @typedef {object} ObfuscationRuleValidation
+ * @property {ObfuscationRule} rule The original rule validated
+ * @property {boolean} isValid Whether the rule is valid
+ * @property {object} errors Validation errors
+ * @property {boolean} errors.regexMissingDetected Whether the regex is missing
+ * @property {boolean} errors.invalidRegexDetected Whether the regex is invalid
+ * @property {boolean} errors.invalidReplacementDetected Whether the replacement is invalid
+ */
+
+export class Obfuscator {
+  /**
+   * @type {ObfuscationRuleValidation[]}
+   */
+  #ruleValidationCache
+
+  constructor (agentIdentifier) {
+    this.#ruleValidationCache = Obfuscator.getRuleValidationCache(agentIdentifier)
+    Obfuscator.logObfuscationRuleErrors(this.#ruleValidationCache)
   }
 
-  // applies all regex obfuscation rules to provided URL string and returns the result
-  obfuscateString (string) {
-    // if string is empty string, null or not a string, return unmodified
-    if (!string || typeof string !== 'string') return string
-
-    var rules = getRules(this.sharedContext.agentIdentifier)
-    var obfuscated = string
-
-    // apply every rule to URL string
-    for (var i = 0; i < rules.length; i++) {
-      var regex = rules[i].regex
-      var replacement = rules[i].replacement || '*'
-      obfuscated = obfuscated.replace(regex, replacement)
-    }
-    return obfuscated
-  }
-}
-
-// TO DO: this function should be inside the Obfuscator class since its context relates to agentID
-export function getRules (agentIdentifier) {
-  var rules = []
-  var configRules = getConfigurationValue(agentIdentifier, 'obfuscate') || []
-
-  rules = rules.concat(configRules)
-
-  if (isFileProtocol()) rules.push(fileProtocolRule)
-  // could add additional runtime/environment-specific rules here
-
-  return rules
-}
-
-// takes array of rule objects, logs warning and returns false if any portion of rule is invalid
-export function validateRules (rules) {
-  var invalidReplacementDetected = false
-  var invalidRegexDetected = false
-  for (var i = 0; i < rules.length; i++) {
-    if (!('regex' in rules[i])) {
-      warn(12)
-      invalidRegexDetected = true
-    } else if (typeof rules[i].regex !== 'string' && !(rules[i].regex instanceof RegExp)) {
-      warn(13)
-      invalidRegexDetected = true
-    }
-
-    var replacement = rules[i].replacement
-    if (replacement && typeof replacement !== 'string') {
-      warn(14)
-      invalidReplacementDetected = true
-    }
+  get ruleValidationCache () {
+    return this.#ruleValidationCache
   }
 
-  return !invalidReplacementDetected && !invalidRegexDetected
+  /**
+   * Applies all valid obfuscation rules to the provided input string
+   * @param {string} input String to obfuscate
+   * @returns {string}
+   */
+  obfuscateString (input) {
+    // if input is not of type string or is an empty string, short-circuit
+    if (typeof input !== 'string' || input.trim().length === 0) return input
+
+    return this.#ruleValidationCache
+      .filter(ruleValidation => ruleValidation.isValid)
+      .reduce((input, ruleValidation) => {
+        const { rule } = ruleValidation
+        return input.replace(rule.regex, rule.replacement || '*')
+      }, input)
+  }
+
+  /**
+   * Returns an array of obfuscation rules to be applied to harvested payloads
+   * @param {string} agentIdentifier The agent identifier to get rules for
+   * @returns {ObfuscationRuleValidation[]} The array of rules or validation states
+   */
+  static getRuleValidationCache (agentIdentifier) {
+    /**
+     * @type {ObfuscationRule[]}
+     */
+    let rules = getConfigurationValue(agentIdentifier, 'obfuscate') || []
+    if (isFileProtocol()) {
+      rules.push({
+        regex: /^file:\/\/(.*)/,
+        replacement: atob('ZmlsZTovL09CRlVTQ0FURUQ=')
+      })
+    }
+
+    return rules.map(rule => Obfuscator.validateObfuscationRule(rule))
+  }
+
+  /**
+   * Validates an obfuscation rule and provides errors if any are found.
+   * @param {ObfuscationRule} rule The rule to validate
+   * @returns {ObfuscationRuleValidation} The validation state of the rule
+   */
+  static validateObfuscationRule (rule) {
+    const regexMissingDetected = Boolean(rule.regex === undefined)
+    const invalidRegexDetected = Boolean(rule.regex !== undefined && typeof rule.regex !== 'string' && !(rule.regex instanceof RegExp))
+    const invalidReplacementDetected = Boolean(rule.replacement && typeof rule.replacement !== 'string')
+
+    return {
+      rule,
+      isValid: !regexMissingDetected && !invalidRegexDetected && !invalidReplacementDetected,
+      errors: {
+        regexMissingDetected,
+        invalidRegexDetected,
+        invalidReplacementDetected
+      }
+    }
+  }
+
+  /**
+   * Logs any obfuscation rule errors to the console. This is called when an obfuscator
+   * instance is created.
+   * @param {ObfuscationRuleValidation[]} ruleValidationCache The cache of rule validation states
+   */
+  static logObfuscationRuleErrors (ruleValidationCache) {
+    for (const ruleValidation of ruleValidationCache) {
+      const { rule, isValid, errors } = ruleValidation
+      if (isValid) continue
+
+      if (errors.regexMissingDetected) warn(12, rule)
+      else if (errors.invalidRegexDetected) warn(13, rule)
+      if (errors.invalidReplacementDetected) warn(14, rule)
+    }
+  }
 }

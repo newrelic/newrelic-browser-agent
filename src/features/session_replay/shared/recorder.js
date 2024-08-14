@@ -93,7 +93,8 @@ export class Recorder {
         this.parent.ee.emit('internal-error', [err])
         /** returning true informs rrweb to swallow the error instead of throwing it to the window */
         return true
-      }
+      },
+      recordAfter: 'DOMContentLoaded'
     })
 
     this.stopRecording = () => {

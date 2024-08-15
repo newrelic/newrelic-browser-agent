@@ -9,6 +9,7 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { FEATURE_NAME, LOGGING_EVENT_EMITTER_CHANNEL, LOG_LEVELS, MAX_PAYLOAD_SIZE } from '../constants'
 import { Log } from '../shared/log'
 import { isValidLogLevel } from '../shared/utils'
+import { applyFnToProps } from '../../../common/util/traverse'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -117,7 +118,10 @@ export class Aggregate extends AggregateBase {
           }
         },
         /** logs section contains individual unique log entries */
-        logs: this.outgoingLogs
+        logs: applyFnToProps(
+          this.outgoingLogs,
+          this.obfuscator.obfuscateString.bind(this.obfuscator), 'string'
+        )
       }]
     }
   }

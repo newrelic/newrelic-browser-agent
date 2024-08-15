@@ -13,6 +13,7 @@ import { firstPaint } from '../../../common/vitals/first-paint'
 import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
 import { now } from '../../../common/timing/now'
 import { TimeKeeper } from '../../../common/timing/time-keeper'
+import { applyFnToProps } from '../../../common/util/traverse'
 
 export class Aggregate extends AggregateBase {
   static featureName = CONSTANTS.FEATURE_NAME
@@ -80,7 +81,7 @@ export class Aggregate extends AggregateBase {
 
     let body
     if (typeof info.jsAttributes === 'object' && Object.keys(info.jsAttributes).length > 0) {
-      body = { ja: info.jsAttributes }
+      body = applyFnToProps({ ja: info.jsAttributes }, this.obfuscator.obfuscateString.bind(this.obfuscator), 'string')
     }
 
     if (globalScope.performance) {

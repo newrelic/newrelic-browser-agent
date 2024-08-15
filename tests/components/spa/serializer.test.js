@@ -2,7 +2,8 @@
 import * as qp from '@newrelic/nr-querypack'
 import { Serializer } from '../../../src/features/spa/aggregate/serializer'
 import { Interaction } from '../../../src/features/spa/aggregate/interaction'
-const { getInfo } = require('../../../src/common/config/config')
+import * as configModule from '../../../src/common/config/config'
+import { Obfuscator } from '../../../src/common/util/obfuscate'
 
 const testCases = require('@newrelic/nr-querypack/examples/all.json').filter((testCase) => {
   return testCase.schema.name === 'bel' &&
@@ -15,7 +16,7 @@ jest.mock('../../../src/common/config/config', () => ({
   originals: { ST: setTimeout, CT: clearTimeout },
   getInfo: jest.fn(() => mockInfo),
   setInfo: jest.fn((_id, newInfo) => { mockInfo = newInfo }),
-  getRuntime: jest.fn().mockReturnValue({ origin: 'localhost' })
+  getRuntime: jest.fn()
 }))
 
 const agentIdentifier = 'abcdefg'
@@ -30,6 +31,13 @@ const fieldPropMap = {
   requestBodySize: 'txSize',
   responseBodySize: 'rxSize'
 }
+
+beforeEach(() => {
+  jest.mocked(configModule.getRuntime).mockReturnValue({
+    origin: 'localhost',
+    obfuscator: new Obfuscator(agentIdentifier)
+  })
+})
 
 testCases.forEach(testCase => {
   test('spa serializer ' + testCase.name, () => {
@@ -121,7 +129,7 @@ function runTest (testCase) {
   const navTiming = []
   let offset = 0
 
-  delete getInfo(agentIdentifier).atts
+  delete configModule.getInfo(agentIdentifier).atts
 
   inputJSON.forEach(function (root) {
     offset = root.start
@@ -143,7 +151,7 @@ function runTest (testCase) {
       }
     }
 
-    const info = getInfo(agentIdentifier)
+    const info = configModule.getInfo(agentIdentifier)
 
     const typesByName = {}
     schema.nodeTypes.forEach(type => (typesByName[type.type] = type))
@@ -277,7 +285,7 @@ function handleAttributes (node) {
         node.attrs.custom[child.key] = null
         break
       case 'apmAttributes':
-        getInfo(agentIdentifier).atts = child.obfuscatedAttributes
+        configModule.getInfo(agentIdentifier).atts = child.obfuscatedAttributes
         break
       case 'elementData':
         node.attrs.elementData = child

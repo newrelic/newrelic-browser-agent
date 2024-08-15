@@ -8,6 +8,7 @@ import { obj as encodeObj } from '../../../common/url/encode'
 import { deregisterDrain } from '../../../common/drain/drain'
 import { globalScope } from '../../../common/constants/runtime'
 import { MODE, SESSION_EVENTS } from '../../../common/session/constants'
+import { applyFnToProps } from '../../../common/util/traverse'
 
 const ERROR_MODE_SECONDS_WINDOW = 30 * 1000 // sliding window of nodes to track when simply monitoring (but not harvesting) in error mode
 /** Reserved room for query param attrs */
@@ -169,11 +170,11 @@ export class Aggregate extends AggregateBase {
           ptid: `${this.ptid}`,
           session: `${this.sessionId}`,
           // customer-defined data should go last so that if it exceeds the query param padding limit it will be truncated instead of important attrs
-          ...(endUserId && { 'enduser.id': endUserId })
+          ...(endUserId && { 'enduser.id': this.obfuscator.obfuscateString(endUserId) })
           // The Query Param is being arbitrarily limited in length here.  It is also applied when estimating the size of the payload in getPayloadSize()
         }, QUERY_PARAM_PADDING).substring(1) // remove the leading '&'
       },
-      body: stns
+      body: applyFnToProps(stns, this.obfuscator.obfuscateString.bind(this.obfuscator), 'string')
     }
   }
 

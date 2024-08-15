@@ -1,5 +1,7 @@
 import { Interaction } from '../../../../../src/features/soft_navigations/aggregate/interaction'
 import { INTERACTION_STATUS } from '../../../../../src/features/soft_navigations/constants'
+import * as configModule from '../../../../../src/common/config/config'
+import { Obfuscator } from '../../../../../src/common/util/obfuscate'
 
 jest.mock('../../../../../src/common/config/config', () => ({
   __esModule: true,
@@ -9,8 +11,16 @@ jest.mock('../../../../../src/common/config/config', () => ({
       key2: 'value2'
     },
     atts: 'apm_attributes_string'
-  })
+  }),
+  getConfigurationValue: jest.fn(),
+  getRuntime: jest.fn()
 }))
+
+beforeEach(() => {
+  jest.mocked(configModule.getRuntime).mockReturnValue({
+    obfuscator: new Obfuscator('abcd')
+  })
+})
 
 test('Interaction node creation is correct', () => {
   const ixn = new Interaction('abcd', 'click', 1234)
@@ -146,15 +156,23 @@ describe('Interaction when done', () => {
   })
 })
 
-jest.mock('../../../../../src/common/util/obfuscate', () => ({
-  __esModule: true,
-  Obfuscator: jest.fn(() => ({
-    shouldObfuscate: jest.fn().mockReturnValue(false)
-  }))
-}))
 test('Interaction serialize output is correct', () => {
-  jest.resetModules()
-  const { Interaction } = require('../../../../../src/features/soft_navigations/aggregate/interaction') // reset so we get a reliable node ID of 1
+  jest.resetModules() // reset so we get a reliable node ID of 1
+  jest.doMock('../../../../../src/common/config/config', () => ({
+    __esModule: true,
+    getInfo: jest.fn().mockReturnValue({
+      jsAttributes: {
+        key1: 'value1',
+        key2: 'value2'
+      },
+      atts: 'apm_attributes_string'
+    }),
+    getConfigurationValue: jest.fn(),
+    getRuntime: jest.fn().mockReturnValue({
+      obfuscator: new Obfuscator('abcd')
+    })
+  }))
+  const { Interaction } = require('../../../../../src/features/soft_navigations/aggregate/interaction')
   const ixn = new Interaction('abcd', 'submit', 1234, 'this_route')
   ixn.id = 'static-id'
   ixn.forceSave = true

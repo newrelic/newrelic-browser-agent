@@ -90,7 +90,6 @@ export default function config () {
           tunnel: args.tunnel,
           sessionNameFormat: (config, capabilities, suiteTitle, testTitle) => suiteTitle,
           lambdatestOpts: {
-            // allowHosts: args.host || 'bam-test-1.nr-local.net', // @phousley LT `allowHost` has issues with CORs in firefox
             logFile: path.resolve(__dirname, '../../../.lambdatest'),
             verbose: true
           }

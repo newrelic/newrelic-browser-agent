@@ -108,3 +108,9 @@ jobs:
         with:
           name: integration-code-coverage-report
           path: coverage-e2e/
+      - name: Archive wdio tunnel logs
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.browser-target }}-wdio-tunnel-logs
+          path: .lambdatest

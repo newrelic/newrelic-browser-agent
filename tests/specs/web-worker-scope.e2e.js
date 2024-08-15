@@ -1,7 +1,15 @@
+import { testAjaxEventsRequest, testAjaxTimeSlicesRequest, testInsRequest } from '../../tools/testing-server/utils/expect-tests'
+
 describe('web worker scope', () => {
   it('should capture XHR events and metrics', async () => {
-    const [events, metrics] = await Promise.all([
-      browser.testHandle.expectAjaxEvents(),
+    const [ajaxEventsCapture, ajaxMetricsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+      { test: testAjaxEventsRequest },
+      { test: testAjaxTimeSlicesRequest }
+    ])
+
+    const [[events], [metrics]] = await Promise.all([
+      ajaxEventsCapture.waitForResult({ totalCount: 1 }),
+      ajaxMetricsCapture.waitForResult({ totalCount: 1 }),
       browser.testHandle.expectAjaxTimeSlices(),
       browser.url(
         await browser.testHandle.assetURL(
@@ -39,9 +47,14 @@ describe('web worker scope', () => {
   })
 
   it('should capture fetch events', async () => {
-    const [events, metrics] = await Promise.all([
-      browser.testHandle.expectAjaxEvents(),
-      browser.testHandle.expectAjaxTimeSlices(),
+    const [ajaxEventsCapture, ajaxMetricsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+      { test: testAjaxEventsRequest },
+      { test: testAjaxTimeSlicesRequest }
+    ])
+
+    const [[events], [metrics]] = await Promise.all([
+      ajaxEventsCapture.waitForResult({ totalCount: 1 }),
+      ajaxMetricsCapture.waitForResult({ totalCount: 1 }),
       browser.url(
         await browser.testHandle.assetURL(
           'test-builds/browser-agent-wrapper/worker-agent.html',
@@ -76,8 +89,10 @@ describe('web worker scope', () => {
   })
 
   it('should capture error metrics', async () => {
-    const [metrics] = await Promise.all([
-      browser.testHandle.expectErrors(),
+    const ajaxMetricsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testAjaxTimeSlicesRequest })
+
+    const [[metrics]] = await Promise.all([
+      ajaxMetricsCapture.waitForResult({ totalCount: 1 }),
       browser.url(
         await browser.testHandle.assetURL(
           'test-builds/browser-agent-wrapper/worker-agent.html',
@@ -106,8 +121,10 @@ describe('web worker scope', () => {
   })
 
   it('should capture page action events', async () => {
-    const [events] = await Promise.all([
-      browser.testHandle.expectIns(),
+    const insightsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testInsRequest })
+
+    const [[events]] = await Promise.all([
+      insightsCapture.waitForResult({ totalCount: 1 }),
       browser.url(
         await browser.testHandle.assetURL(
           'test-builds/browser-agent-wrapper/worker-agent.html',

@@ -1,5 +1,5 @@
 import { supportsFetchExtended } from '../../tools/browser-matcher/common-matchers.mjs'
-import { testAjaxEventsRequest, testBlobTraceRequest, testErrorsRequest, testInsRequest, testInteractionEventsRequest, testRumRequest, testTimingEventsRequest } from '../../tools/testing-server/utils/expect-tests'
+import { testAjaxEventsRequest, testBlobTraceRequest, testErrorsRequest, testInsRequest, testInteractionEventsRequest, testLogsRequest, testRumRequest, testTimingEventsRequest } from '../../tools/testing-server/utils/expect-tests'
 
 const config = {
   init: {
@@ -32,21 +32,23 @@ describe.withBrowsersMatching(supportsFetchExtended)('obfuscate rules', () => {
   let insightsCapture
   let tracesCapture
   let interactionEventsCapture
+  let logsCapture
 
   beforeEach(async () => {
-    [rumCapture, timingEventsCapture, ajaxEventsCapture, errorsCapture, insightsCapture, tracesCapture, interactionEventsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+    [rumCapture, timingEventsCapture, ajaxEventsCapture, errorsCapture, insightsCapture, tracesCapture, interactionEventsCapture, logsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
       { test: testRumRequest },
       { test: testTimingEventsRequest },
       { test: testAjaxEventsRequest },
       { test: testErrorsRequest },
       { test: testInsRequest },
       { test: testBlobTraceRequest },
-      { test: testInteractionEventsRequest }
+      { test: testInteractionEventsRequest },
+      { test: testLogsRequest }
     ])
   })
 
   it('should apply to all payloads', async () => {
-    const [rumHarvests, timingEventsHarvests, ajaxEventsHarvests, errorsHarvests, insightsHarvests, tracesHarvests, interactionEventsHarvests] = await Promise.all([
+    const [rumHarvests, timingEventsHarvests, ajaxEventsHarvests, errorsHarvests, insightsHarvests, tracesHarvests, interactionEventsHarvests, logsHarvests] = await Promise.all([
       rumCapture.waitForResult({ timeout: 10000 }),
       timingEventsCapture.waitForResult({ timeout: 10000 }),
       ajaxEventsCapture.waitForResult({ timeout: 10000 }),
@@ -54,30 +56,42 @@ describe.withBrowsersMatching(supportsFetchExtended)('obfuscate rules', () => {
       insightsCapture.waitForResult({ timeout: 10000 }),
       tracesCapture.waitForResult({ timeout: 10000 }),
       interactionEventsCapture.waitForResult({ timeout: 10000 }),
+      logsCapture.waitForResult({ timeout: 10000 }),
       browser.url(await browser.testHandle.assetURL('obfuscate-pii.html', config))
         .then(() => browser.waitForAgentLoad())
     ])
 
+    expect(rumHarvests.length).toBeGreaterThan(0)
     rumHarvests.forEach(harvest => checkPayload(harvest.request.query))
+    expect(timingEventsHarvests.length).toBeGreaterThan(0)
     timingEventsHarvests.forEach(harvest => {
       checkPayload(harvest.request.body)
       checkPayload(harvest.request.query)
     })
+    expect(ajaxEventsHarvests.length).toBeGreaterThan(0)
     ajaxEventsHarvests.forEach(harvest => checkPayload(harvest.request.body))
+    expect(errorsHarvests.length).toBeGreaterThan(0)
     errorsHarvests.forEach(harvest => {
       checkPayload(harvest.request.body)
       checkPayload(harvest.request.query)
     })
+    expect(insightsHarvests.length).toBeGreaterThan(0)
     insightsHarvests.forEach(harvest => {
       checkPayload(harvest.request.body)
       checkPayload(harvest.request.query)
     })
+    expect(tracesHarvests.length).toBeGreaterThan(0)
     tracesHarvests.forEach(harvest => {
-      console.log(JSON.stringify(harvest.request.body))
       checkPayload(harvest.request.body)
       checkPayload(harvest.request.query)
     })
+    expect(interactionEventsHarvests.length).toBeGreaterThan(0)
     interactionEventsHarvests.forEach(harvest => {
+      checkPayload(harvest.request.body)
+      checkPayload(harvest.request.query)
+    })
+    expect(logsHarvests.length).toBeGreaterThan(0)
+    logsHarvests.forEach(harvest => {
       checkPayload(harvest.request.body)
       checkPayload(harvest.request.query)
     })

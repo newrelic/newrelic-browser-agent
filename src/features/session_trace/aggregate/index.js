@@ -93,7 +93,7 @@ export class Aggregate extends AggregateBase {
     if (typeof PerformanceNavigationTiming !== 'undefined') {
       this.traceStorage.storeTiming(globalScope.performance?.getEntriesByType?.('navigation')[0])
     } else {
-      this.traceStorage.storeTiming(globalScope.performance?.timing)
+      this.traceStorage.storeTiming(globalScope.performance?.timing, true)
     }
 
     /** Only start actually harvesting if running in full mode at init time */

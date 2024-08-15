@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker'
 import { srConfig, decodeAttributes } from './util/helpers'
 import { supportsFetch } from '../../tools/browser-matcher/common-matchers.mjs'
-import { testAjaxEventsRequest, testBlobReplayRequest, testErrorsRequest, testInsRequest, testInteractionEventsRequest, testRumRequest, testSupportMetricsRequest } from '../../tools/testing-server/utils/expect-tests'
+import { testAjaxEventsRequest, testBlobReplayRequest, testBlobTraceRequest, testErrorsRequest, testInsRequest, testInteractionEventsRequest, testLogsRequest, testRumRequest, testSupportMetricsRequest, testTimingEventsRequest } from '../../tools/testing-server/utils/expect-tests'
 
 let serverTime
 describe('NR Server Time', () => {
@@ -255,6 +255,87 @@ describe('NR Server Time', () => {
     }
   })
 
+  it('should send all payloads with floored absolute timestamps', async () => {
+    const [rumCapture, timingEventsCapture, ajaxEventsCapture, errorsCapture, insightsCapture, tracesCapture, interactionEventsCapture, logsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+      { test: testRumRequest },
+      { test: testTimingEventsRequest },
+      { test: testAjaxEventsRequest },
+      { test: testErrorsRequest },
+      { test: testInsRequest },
+      { test: testBlobTraceRequest },
+      { test: testInteractionEventsRequest },
+      { test: testLogsRequest }
+    ])
+
+    const url = await browser.testHandle.assetURL('all-events.html', {
+      config: {
+        accountID: faker.string.hexadecimal({ length: 16, prefix: '' }),
+        agentID: faker.string.hexadecimal({ length: 16, prefix: '' }),
+        trustKey: faker.string.hexadecimal({ length: 16, prefix: '' })
+      },
+      injectUpdatedLoaderConfig: true,
+      init: {
+        distributed_tracing: {
+          enabled: true,
+          cors_use_newrelic_header: true,
+          cors_use_tracecontext_headers: true,
+          allowed_origins: [
+            'http://' + browser.testHandle.assetServerConfig.host + ':' + browser.testHandle.assetServerConfig.port,
+            'http://' + browser.testHandle.bamServerConfig.host + ':' + browser.testHandle.bamServerConfig.port
+          ]
+        }
+      }
+    })
+
+    const [rumHarvests, timingEventsHarvests, ajaxEventsHarvests, errorsHarvests, insightsHarvests, tracesHarvests, interactionEventsHarvests, logsHarvests] = await Promise.all([
+      rumCapture.waitForResult({ timeout: 10000 }),
+      timingEventsCapture.waitForResult({ timeout: 10000 }),
+      ajaxEventsCapture.waitForResult({ timeout: 10000 }),
+      errorsCapture.waitForResult({ timeout: 10000 }),
+      insightsCapture.waitForResult({ timeout: 10000 }),
+      tracesCapture.waitForResult({ timeout: 10000 }),
+      interactionEventsCapture.waitForResult({ timeout: 10000 }),
+      logsCapture.waitForResult({ timeout: 10000 }),
+      browser.url(url)
+        .then(() => browser.waitForAgentLoad())
+    ])
+
+    expect(rumHarvests.length).toBeGreaterThan(0)
+    rumHarvests.forEach(harvest => checkTimestampsFlooredAbsolute(harvest.request.query))
+    expect(timingEventsHarvests.length).toBeGreaterThan(0)
+    timingEventsHarvests.forEach(harvest => {
+      checkTimestampsFlooredAbsolute(harvest.request.body)
+      checkTimestampsFlooredAbsolute(harvest.request.query)
+    })
+    expect(ajaxEventsHarvests.length).toBeGreaterThan(0)
+    ajaxEventsHarvests.forEach(harvest => checkTimestampsFlooredAbsolute(harvest.request.body))
+    expect(errorsHarvests.length).toBeGreaterThan(0)
+    errorsHarvests.forEach(harvest => {
+      checkTimestampsFlooredAbsolute(harvest.request.body)
+      checkTimestampsFlooredAbsolute(harvest.request.query)
+    })
+    expect(insightsHarvests.length).toBeGreaterThan(0)
+    insightsHarvests.forEach(harvest => {
+      checkTimestampsFlooredAbsolute(harvest.request.body)
+      checkTimestampsFlooredAbsolute(harvest.request.query)
+    })
+    expect(tracesHarvests.length).toBeGreaterThan(0)
+    tracesHarvests.forEach(harvest => {
+      checkTimestampsFlooredAbsolute(harvest.request.body)
+      checkTimestampsFlooredAbsolute(harvest.request.query)
+    })
+    expect(interactionEventsHarvests.length).toBeGreaterThan(0)
+    interactionEventsHarvests.forEach(harvest => {
+      checkTimestampsFlooredAbsolute(harvest.request.body)
+      checkTimestampsFlooredAbsolute(harvest.request.query)
+    })
+    expect(logsHarvests.length).toBeGreaterThan(0)
+    logsHarvests.forEach(harvest => {
+      checkTimestampsFlooredAbsolute(harvest.request.body)
+      checkTimestampsFlooredAbsolute(harvest.request.query)
+    })
+  })
+
   describe('session integration', () => {
     it('should not re-use the server time diff when session tracking is disabled', async () => {
       const url = await browser.testHandle.assetURL('instrumented.html', {
@@ -425,6 +506,8 @@ describe('NR Server Time', () => {
 function testTimeExpectations (timestamp, pageTimings, before) {
   const { correctedOriginTime, originTime } = (pageTimings || {})
 
+  expect(timestamp.toString()).toMatch(/^\d{13}$/)
+
   expect(Math.abs(serverTime - originTime + 3600000)).toBeLessThan(10000) // origin time should be about an hour ahead (3600000 ms)
   expect(Math.abs(serverTime - correctedOriginTime)).toBeLessThan(10000) // corrected origin time should roughly match the server time on our side
   expect(Math.abs(correctedOriginTime - originTime + 3600000)).toBeLessThan(10000)
@@ -433,4 +516,14 @@ function testTimeExpectations (timestamp, pageTimings, before) {
   expect(Math.abs(timestamp - originTime + 3600000)).toBeLessThan(10000) // should expect a reasonable tolerance (and much less than an hour)
   expect(timestamp).toBeGreaterThan(correctedOriginTime)
   expect(timestamp).toBeLessThan(originTime)
+}
+
+function checkTimestampsFlooredAbsolute (payload) {
+  Object.entries(payload || {}).forEach(([key, value]) => {
+    if (key === 'timestamp' || (typeof value !== 'undefined' && value !== null && /^\d{13}/.test(value.toString()))) {
+      expect(value.toString()).toMatch(/^\d{13}$/)
+    } else if (typeof value === 'object') {
+      checkTimestampsFlooredAbsolute(value)
+    }
+  })
 }

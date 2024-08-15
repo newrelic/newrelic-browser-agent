@@ -18,7 +18,7 @@ describe('error payloads', () => {
   })
 
   it('simultaneous errors - should set a timestamp, tied to the FIRST error seen - noticeError', async () => {
-    const [errorsResults, [relativeTimestamp, absoluteTimestamp]] = await Promise.all([
+    const [errorsResults, [relativeTimestamp, correctedAbsoluteTimestamp]] = await Promise.all([
       errorsCapture.waitForResult({ totalCount: 1 }),
       browser.url(await browser.testHandle.assetURL('instrumented.html')) // Setup expects before loading the page
         .then(() => browser.waitForAgentLoad())
@@ -26,15 +26,20 @@ describe('error payloads', () => {
           var timeKeeper = Object.values(newrelic.initializedAgents)[0].config.runtime.timeKeeper
           var start = performance.now()
           for (var i = 0; i < 20; i++) { newrelic.noticeError(new Error('test')) }
-          return [start, timeKeeper.convertRelativeTimestamp(start)]
+          return [
+            start,
+            timeKeeper.correctAbsoluteTimestamp(
+              timeKeeper.convertRelativeTimestamp(start)
+            )
+          ]
         }))
     ])
 
     const { request: { body: { err } } } = errorsResults[0]
 
     expect(relativeTimestamp).toBeWithin(err[0].metrics.time.min - 1, err[0].metrics.time.max + 1)
-    expect(err[0].params.firstOccurrenceTimestamp).toBeWithin(Math.floor(absoluteTimestamp), Math.floor(absoluteTimestamp + 100))
-    expect(err[0].params.timestamp).toBeWithin(Math.floor(absoluteTimestamp), Math.floor(absoluteTimestamp + 100))
+    expect(err[0].params.firstOccurrenceTimestamp).toBeWithin(Math.floor(correctedAbsoluteTimestamp), Math.floor(correctedAbsoluteTimestamp + 100))
+    expect(err[0].params.timestamp).toBeWithin(Math.floor(correctedAbsoluteTimestamp), Math.floor(correctedAbsoluteTimestamp + 100))
   })
 
   it('simultaneous errors - should set a timestamp, tied to the FIRST error seen - thrown errors', async () => {

@@ -6,7 +6,14 @@ describe('mootools compatibility', () => {
       browser,
       testAsset: 'third-party-compatibility/mootools/1.6.0-nocompat.html',
       afterLoadCallback: async () => {
+        /**
+         * This starts the process of a JSONP request on the page
+         */
         await browser.execute(function () { window.run() })
+
+        /**
+         * This ensures the JSONP request resolved correctly.
+         */
         await browser.waitUntil(
           () => browser.execute(function () {
             return !!window.success

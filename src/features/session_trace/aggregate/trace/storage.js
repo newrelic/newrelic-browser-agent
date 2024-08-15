@@ -166,9 +166,7 @@ export class TraceStorage {
       val = Math.round(val)
       if (this.parent.timeKeeper && this.parent.timeKeeper.ready && isAbsoluteTimestamp) {
         val = this.parent.timeKeeper.convertAbsoluteTimestamp(
-          Math.floor(this.parent.timeKeeper.correctAbsoluteTimestamp(
-            this.parent.timeKeeper.correctAbsoluteTimestamp(val)
-          ))
+          Math.floor(this.parent.timeKeeper.correctAbsoluteTimestamp(val))
         )
       }
       this.storeSTN(new TraceNode(key, val, val, 'document', 'timing'))

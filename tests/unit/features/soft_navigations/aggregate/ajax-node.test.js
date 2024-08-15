@@ -1,4 +1,9 @@
-import { AjaxNode } from '../../../../../src/features/soft_navigations/aggregate/ajax-node'
+import { Obfuscator } from '../../../../../src/common/util/obfuscate'
+
+jest.enableAutomock()
+jest.unmock('../../../../../src/features/soft_navigations/aggregate/ajax-node')
+jest.unmock('../../../../../src/features/soft_navigations/aggregate/bel-node')
+jest.unmock('../../../../../src/common/serialize/bel-serializer')
 
 const someAgentId = 'abcd'
 const someAjaxEvent = {
@@ -21,6 +26,21 @@ const someAjaxEvent = {
     operationFramework: 'GraphQL'
   }
 }
+
+let AjaxNode
+
+beforeEach(() => {
+  jest.resetModules()
+  jest.doMock('../../../../../src/common/config/config', () => ({
+    __esModule: true,
+    getConfiguration: jest.fn(),
+    getRuntime: jest.fn().mockReturnValue({
+      obfuscator: new Obfuscator(someAgentId)
+    })
+  }))
+
+  AjaxNode = require('../../../../../src/features/soft_navigations/aggregate/ajax-node').AjaxNode
+})
 
 test('Ajax node creation is correct', () => {
   const ajn = new AjaxNode(someAgentId, someAjaxEvent)
@@ -46,18 +66,7 @@ test('Ajax node creation is correct', () => {
   }))
 })
 
-// Ajax nodes not expected to have children, skipping test for it
-
-jest.mock('../../../../../src/common/util/obfuscate', () => ({
-  __esModule: true,
-  Obfuscator: jest.fn(() => ({
-    shouldObfuscate: jest.fn().mockReturnValue(false)
-  }))
-}))
-
 test('Ajax serialize output is correct', () => {
-  jest.resetModules()
-  const { AjaxNode } = require('../../../../../src/features/soft_navigations/aggregate/ajax-node')
   const ajn = new AjaxNode(someAgentId, someAjaxEvent)
 
   expect(ajn.nodeId).toEqual(1)

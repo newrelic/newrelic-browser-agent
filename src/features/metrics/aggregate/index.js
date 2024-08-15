@@ -4,7 +4,6 @@ import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { FEATURE_NAME, SUPPORTABILITY_METRIC, CUSTOM_METRIC, SUPPORTABILITY_METRIC_CHANNEL, CUSTOM_METRIC_CHANNEL } from '../constants'
 import { getFrameworks } from './framework-detection'
 import { isFileProtocol } from '../../../common/url/protocol'
-import { getRules, validateRules } from '../../../common/util/obfuscate'
 import { onDOMContentLoaded } from '../../../common/window/load'
 import { windowAddEventListener } from '../../../common/event-listener/event-listener-opts'
 import { isBrowserScope, isWorkerScope } from '../../../common/constants/runtime'
@@ -89,9 +88,11 @@ export class Aggregate extends AggregateBase {
     }
 
     // Capture SMs to assess customer engagement with the obfuscation config
-    const rules = getRules(this.agentIdentifier)
-    if (rules.length > 0) this.storeSupportabilityMetrics('Generic/Obfuscate/Detected')
-    if (rules.length > 0 && !validateRules(rules)) this.storeSupportabilityMetrics('Generic/Obfuscate/Invalid')
+    const ruleValidations = this.obfuscator.ruleValidationCache
+    if (ruleValidations.length > 0) {
+      this.storeSupportabilityMetrics('Generic/Obfuscate/Detected')
+      if (ruleValidations.filter(ruleValidation => !ruleValidation.isValid).length > 0) this.storeSupportabilityMetrics('Generic/Obfuscate/Invalid')
+    }
 
     // Check if proxy for either chunks or beacon is being used
     if (proxy.assets) this.storeSupportabilityMetrics('Config/AssetsUrl/Changed')

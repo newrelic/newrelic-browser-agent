@@ -1,11 +1,15 @@
 import { InitialPageLoadInteraction } from '../../../../../src/features/soft_navigations/aggregate/initial-page-load-interaction'
+import * as configModule from '../../../../../src/common/config/config'
+import { Obfuscator } from '../../../../../src/common/util/obfuscate'
 
 jest.mock('../../../../../src/common/config/config', () => ({
   __esModule: true,
   getInfo: jest.fn().mockReturnValue({
     queueTime: 444,
     appTime: 888
-  })
+  }),
+  getConfigurationValue: jest.fn(),
+  getRuntime: jest.fn()
 }))
 jest.mock('../../../../../src/common/vitals/first-paint', () => ({
   __esModule: true,
@@ -23,12 +27,12 @@ jest.mock('../../../../../src/common/timing/nav-timing', () => ({
   __esModule: true,
   navTimingValues: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 333]
 }))
-jest.mock('../../../../../src/common/util/obfuscate', () => ({
-  __esModule: true,
-  Obfuscator: jest.fn(() => ({
-    shouldObfuscate: jest.fn().mockReturnValue(false)
-  }))
-}))
+
+beforeEach(() => {
+  jest.mocked(configModule.getRuntime).mockReturnValue({
+    obfuscator: new Obfuscator('abcd')
+  })
+})
 
 test('InitialPageLoad serialized output is correct', () => {
   const ipl = new InitialPageLoadInteraction('abc')

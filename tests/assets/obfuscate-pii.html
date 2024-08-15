@@ -46,25 +46,27 @@
         harvestTimeSeconds: 2
       }
     }
-    
+
   </script> -->
   {config}
   {loader}
   <script type="text/javascript">
     setTimeout(function () {
       fetch('/json')
-      throw new Error('example')
       document.getElementById("btn").click()
+      throw new Error('example pii')
     }, 100)
   </script>
   <script>
-    newrelic.addPageAction('pageaction')
+    newrelic.addPageAction('pageaction with pii')
     newrelic.setCustomAttribute('customAttribute', 'customAttribute')
+    newrelic.setCustomAttribute('customPiiAttribute', 'customPiiAttribute pii')
+    newrelic.log('log with pii')
   </script>
 </head>
 
 <body>
-  <a id="btn" href="#test">Click Me</a>
+  <a id="btn" href="#test-pii">Click Me</a>
 </body>
 
 </html>

@@ -4,11 +4,13 @@ import { configure } from '../../loaders/configure/configure'
 import { gosCDN } from '../../common/window/nreum'
 import { deregisterDrain, drain } from '../../common/drain/drain'
 import { activatedFeatures } from '../../common/util/feature-flags'
+import { Obfuscator } from '../../common/util/obfuscate'
 
 export class AggregateBase extends FeatureBase {
   constructor (...args) {
     super(...args)
     this.checkConfiguration()
+    this.obfuscator = getRuntime(this.agentIdentifier).obfuscator
   }
 
   /**
@@ -69,6 +71,11 @@ export class AggregateBase extends FeatureBase {
         },
         runtime: getRuntime(this.agentIdentifier)
       })
+    }
+
+    const runtime = getRuntime(this.agentIdentifier)
+    if (!runtime.obfuscator) {
+      runtime.obfuscator = new Obfuscator(this.agentIdentifier)
     }
   }
 }

@@ -72,8 +72,13 @@ export class Agent extends AgentBase {
         if (!this.runSoftNavOverSpa && InstrumentCtor.featureName === FEATURE_NAMES.softNav) return
 
         const dependencies = getFeatureDependencyNames(InstrumentCtor.featureName)
-        const hasAllDeps = dependencies.every(featName => featName in this.features) // any other feature(s) this depends on should've been initialized on prior iterations by priority order
-        if (!hasAllDeps) warn(36, InstrumentCtor.featureName)
+        const missingDependencies = dependencies.filter(featName => !(featName in this.features)) // any other feature(s) this depends on should've been initialized on prior iterations by priority order
+        if (missingDependencies.length > 0) {
+          warn(36, {
+            targetFeature: InstrumentCtor.featureName,
+            missingDependencies
+          })
+        }
 
         this.features[InstrumentCtor.featureName] = new InstrumentCtor(this.agentIdentifier, this.sharedAggregator)
       })

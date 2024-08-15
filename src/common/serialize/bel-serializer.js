@@ -4,7 +4,7 @@
  */
 
 import { stringify } from '../util/stringify'
-import { Obfuscator } from '../util/obfuscate'
+import { getRuntime } from '../config/config'
 
 var hasOwnProp = Object.prototype.hasOwnProperty
 var MAX_ATTRIBUTES = 64
@@ -23,17 +23,15 @@ export function numeric (n, noDefault) {
 }
 
 export function getAddStringContext (agentIdentifier) {
-  // eslint-disable-next-line
-  var stringTable = Object.hasOwnProperty('create') ? Object.create(null) : {}
-  var stringTableIdx = 0
+  let stringTableIdx = 0
+  const stringTable = Object.prototype.hasOwnProperty.call(Object, 'create') ? Object.create(null) : {}
+  const obfuscator = getRuntime(agentIdentifier).obfuscator
 
   return addString
 
   function addString (str) {
     if (typeof str === 'undefined' || str === '') return ''
-    var obfuscator = new Obfuscator({ agentIdentifier })
-    str = String(str)
-    if (obfuscator.shouldObfuscate()) str = obfuscator.obfuscateString(str)
+    str = obfuscator.obfuscateString(String(str))
     if (hasOwnProp.call(stringTable, str)) {
       return numeric(stringTable[str], true)
     } else {

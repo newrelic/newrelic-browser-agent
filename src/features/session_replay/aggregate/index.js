@@ -368,7 +368,7 @@ export class Aggregate extends AggregateBase {
           'rrweb.version': RRWEB_VERSION,
           'payload.type': recorderEvents.type,
           // customer-defined data should go last so that if it exceeds the query param padding limit it will be truncated instead of important attrs
-          ...(endUserId && { 'enduser.id': endUserId })
+          ...(endUserId && { 'enduser.id': this.obfuscator.obfuscateString(endUserId) })
           // The Query Param is being arbitrarily limited in length here.  It is also applied when estimating the size of the payload in getPayloadSize()
         }, QUERY_PARAM_PADDING).substring(1) // remove the leading '&'
       },

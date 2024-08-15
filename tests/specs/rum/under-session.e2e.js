@@ -1,34 +1,44 @@
-describe('RUM request', () => {
-  describe('fh flag', () => {
-    afterEach(async () => {
-      await browser.destroyAgentSession(browser.testHandle)
-    })
+import { testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
 
-    it('is not included when session is disabled', async () => {
-      const testURL = await browser.testHandle.assetURL('instrumented.html', { init: { privacy: { cookies_enabled: false } } })
+describe('RUM request under session', () => {
+  let rumCapture
 
-      let rumToBeCalled = browser.testHandle.expectRum()
-      await browser.pause(500)
-      await browser.url(testURL).then(() => browser.waitForAgentLoad())
-      let rum = await rumToBeCalled
+  beforeEach(async () => {
+    rumCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testRumRequest })
+  })
 
-      expect(rum.request.query.fsh).toBeUndefined()
-    })
+  afterEach(async () => {
+    await browser.destroyAgentSession(browser.testHandle)
+  })
 
-    it('is included and correctly set with session', async () => {
-      const testURL = await browser.testHandle.assetURL('instrumented.html')
+  it('is not included when session is disabled', async () => {
+    const [[rumHarvest]] = await Promise.all([
+      rumCapture.waitForResult({ totalCount: 1 }),
+      browser.url(
+        await browser.testHandle.assetURL('instrumented.html', { init: { privacy: { cookies_enabled: false } } })
+      ).then(() => browser.waitForAgentLoad())
+    ])
 
-      let rumToBeCalled = browser.testHandle.expectRum()
-      await browser.url(testURL).then(() => browser.waitForAgentLoad())
-      let rum = await rumToBeCalled
+    expect(rumHarvest.request.query.fsh).toBeUndefined()
+  })
 
-      expect(rum.request.query.fsh).toEqual('1') // for the first page load of a session
+  it('is included and correctly set with session', async () => {
+    let [rumHarvests] = await Promise.all([
+      rumCapture.waitForResult({ totalCount: 1 }),
+      browser.url(
+        await browser.testHandle.assetURL('instrumented.html')
+      ).then(() => browser.waitForAgentLoad())
+    ])
 
-      rumToBeCalled = browser.testHandle.expectRum()
-      await browser.refresh()
-      rum = await rumToBeCalled
+    expect(rumHarvests[0].request.query.fsh).toEqual('1') // for the first page load of a session
 
-      expect(rum.request.query.fsh).toEqual('0') // for subsequent page loads of the same session
-    })
+    ;[rumHarvests] = await Promise.all([
+      rumCapture.waitForResult({ totalCount: 2 }),
+      browser.url(
+        await browser.testHandle.assetURL('instrumented.html')
+      ).then(() => browser.waitForAgentLoad())
+    ])
+
+    expect(rumHarvests[1].request.query.fsh).toEqual('0') // for subsequent page loads of the same session
   })
 })

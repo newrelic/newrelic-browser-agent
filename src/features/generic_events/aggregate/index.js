@@ -14,6 +14,7 @@ import { now } from '../../../common/timing/now'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { deregisterDrain } from '../../../common/drain/drain'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
+import { applyFnToProps } from '../../../common/util/traverse'
 
 export class Aggregate extends AggregateBase {
   #agentRuntime
@@ -75,9 +76,10 @@ export class Aggregate extends AggregateBase {
         ua: userAttributes,
         at: atts
       },
-      body: {
-        ins: harvestEvents
-      }
+      body: applyFnToProps(
+        { ins: harvestEvents },
+        this.obfuscator.obfuscateString.bind(this.obfuscator), 'string'
+      )
     })
 
     if (options.retry) {

@@ -11,12 +11,9 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { firstContentfulPaint } from '../../../common/vitals/first-contentful-paint'
 import { firstPaint } from '../../../common/vitals/first-paint'
 import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
-import { drain } from '../../../common/drain/drain'
-import { FEATURE_NAMES } from '../../../loaders/features/features'
-import { handle } from '../../../common/event-emitter/handle'
-import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { now } from '../../../common/timing/now'
 import { TimeKeeper } from '../../../common/timing/time-keeper'
+import { applyFnToProps } from '../../../common/util/traverse'
 
 export class Aggregate extends AggregateBase {
   static featureName = CONSTANTS.FEATURE_NAME
@@ -84,7 +81,7 @@ export class Aggregate extends AggregateBase {
 
     let body
     if (typeof info.jsAttributes === 'object' && Object.keys(info.jsAttributes).length > 0) {
-      body = { ja: info.jsAttributes }
+      body = applyFnToProps({ ja: info.jsAttributes }, this.obfuscator.obfuscateString.bind(this.obfuscator), 'string')
     }
 
     if (globalScope.performance) {
@@ -132,22 +129,7 @@ export class Aggregate extends AggregateBase {
           if (!this.timeKeeper.ready) throw new Error('TimeKeeper not ready')
 
           agentRuntime.timeKeeper = this.timeKeeper
-
-          // Check if the time diff is such that we need to capture a supportability metric
-          if (this.timeKeeper.localTimeDiff >= 12 * 60 * 60 * 1000) {
-            handle(SUPPORTABILITY_METRIC_CHANNEL, ['PVE/NRTime/Calculation/DiffExceed12Hrs'], undefined, FEATURE_NAMES.metrics, this.ee)
-          } else if (this.timeKeeper.localTimeDiff >= 6 * 60 * 60 * 1000) {
-            handle(SUPPORTABILITY_METRIC_CHANNEL, ['PVE/NRTime/Calculation/DiffExceed6Hrs'], undefined, FEATURE_NAMES.metrics, this.ee)
-          } else if (this.timeKeeper.localTimeDiff >= 60 * 60 * 1000) {
-            handle(SUPPORTABILITY_METRIC_CHANNEL, ['PVE/NRTime/Calculation/DiffExceed1Hrs'], undefined, FEATURE_NAMES.metrics, this.ee)
-          }
         } catch (error) {
-          if (error?.message?.indexOf('invalid format') > 0) {
-            handle(SUPPORTABILITY_METRIC_CHANNEL, ['PVE/NRTime/Calculation/InvalidFormat'], undefined, FEATURE_NAMES.metrics, this.ee)
-          } else {
-            handle(SUPPORTABILITY_METRIC_CHANNEL, ['PVE/NRTime/Calculation/Failed'], undefined, FEATURE_NAMES.metrics, this.ee)
-          }
-          drain(this.agentIdentifier, FEATURE_NAMES.metrics, true)
           this.ee.abort()
           warn(17, error)
           return

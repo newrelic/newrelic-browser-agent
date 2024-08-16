@@ -53,7 +53,7 @@ export class Aggregate extends AggregateBase {
   singleChecks () {
     // report loaderType
     const { distMethod, loaderType } = getRuntime(this.agentIdentifier)
-    const { proxy, privacy, page_view_timing } = getConfiguration(this.agentIdentifier)
+    const { proxy, privacy } = getConfiguration(this.agentIdentifier)
 
     if (loaderType) this.storeSupportabilityMetrics(`Generic/LoaderType/${loaderType}/Detected`)
     if (distMethod) this.storeSupportabilityMetrics(`Generic/DistMethod/${distMethod}/Detected`)
@@ -74,7 +74,6 @@ export class Aggregate extends AggregateBase {
       })
 
       if (!privacy.cookies_enabled) this.storeSupportabilityMetrics('Config/SessionTracking/Disabled')
-      if (page_view_timing.long_task) this.storeSupportabilityMetrics('Config/LongTask/Enabled')
     } else if (isWorkerScope) {
       this.storeSupportabilityMetrics('Generic/Runtime/Worker/Detected')
     } else {

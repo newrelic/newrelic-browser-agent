@@ -25,7 +25,8 @@ const model = {
   session: undefined,
   denyList: undefined,
   harvestCount: 0,
-  timeKeeper: undefined
+  timeKeeper: undefined,
+  obfuscator: undefined
 }
 
 const _cache = {}

@@ -4,6 +4,8 @@ import { ee } from '../../../src/common/event-emitter/contextual-ee'
 import { FEATURE_NAME } from '../../../src/features/soft_navigations/constants'
 import * as HMod from '../../../src/common/event-emitter/handle'
 import { now } from '../../../src/common/timing/now'
+import { Obfuscator } from '../../../src/common/util/obfuscate'
+import * as configModule from '../../../src/common/config/config'
 
 jest.useFakeTimers({ doNotFake: ['performance', 'requestAnimationFrame'] })
 
@@ -29,15 +31,16 @@ jest.mock('../../../src/common/config/config', () => ({
   },
   getConfigurationValue: jest.fn(),
   isConfigured: jest.fn().mockReturnValue(true),
-  getInfo: jest.fn().mockReturnValue({})
+  getInfo: jest.fn().mockReturnValue({}),
+  getRuntime: jest.fn()
 }))
 const aggregator = new Aggregator({ agentIdentifier: 'abcd', ee })
 
-describe('soft navigations', () => {
-  beforeEach(() => {
-    jest.resetModules()
-  })
+beforeEach(() => {
+  jest.mocked(configModule.getRuntime).mockReturnValue({ obfuscator: new Obfuscator() })
+})
 
+describe('soft navigations', () => {
   test('instrument detects heuristic steps', async () => {
     const handleSpy = jest.spyOn(HMod, 'handle').mockImplementation(() => {})
     new SoftNav('abcd', aggregator)

@@ -21,6 +21,7 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { getNREUMInitializedAgent } from '../../../common/window/nreum'
 import { deregisterDrain } from '../../../common/drain/drain'
 import { now } from '../../../common/timing/now'
+import { applyFnToProps } from '../../../common/util/traverse'
 
 /**
  * @typedef {import('./compute-stack-trace.js').StackInfo} StackInfo
@@ -64,7 +65,10 @@ export class Aggregate extends AggregateBase {
 
   onHarvestStarted (options) {
     // this gets rid of dependency in AJAX module
-    var body = this.aggregator.take(['err', 'ierr', 'xhr'])
+    var body = applyFnToProps(
+      this.aggregator.take(['err', 'ierr', 'xhr']),
+      this.obfuscator.obfuscateString.bind(this.obfuscator), 'string'
+    )
 
     if (options.retry) {
       this.currentBody = body

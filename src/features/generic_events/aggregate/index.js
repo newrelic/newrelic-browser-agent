@@ -15,6 +15,7 @@ import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { deregisterDrain } from '../../../common/drain/drain'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { EventBuffer } from './event-buffer'
+import { applyFnToProps } from '../../../common/util/traverse'
 
 export class Aggregate extends AggregateBase {
   #agentRuntime
@@ -107,9 +108,10 @@ export class Aggregate extends AggregateBase {
         ua: userAttributes,
         at: atts
       },
-      body: {
-        ins: this.events.buffer
-      }
+      body: applyFnToProps(
+        { ins: this.events.buffer },
+        this.obfuscator.obfuscateString.bind(this.obfuscator), 'string'
+      )
     })
 
     if (options.retry) this.retryEvents = this.events

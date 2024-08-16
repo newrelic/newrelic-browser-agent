@@ -4,8 +4,7 @@ import * as encodeModule from '../../../../src/common/url/encode'
 import * as submitDataModule from '../../../../src/common/util/submit-data'
 import * as configModule from '../../../../src/common/config/config'
 import { warn } from '../../../../src/common/util/console'
-import { applyFnToProps } from '../../../../src/common/util/traverse'
-
+import { Obfuscator } from '../../../../src/common/util/obfuscate'
 import { Harvest } from '../../../../src/common/harvest/harvest'
 
 jest.enableAutomock()
@@ -13,6 +12,12 @@ jest.unmock('../../../../src/common/harvest/harvest')
 let harvestInstance
 
 beforeEach(() => {
+  jest.mocked(configModule.getRuntime).mockReturnValue({
+    maxBytes: Infinity,
+    harvestCount: 0,
+    obfuscator: new Obfuscator()
+  })
+
   harvestInstance = new Harvest()
 })
 
@@ -24,7 +29,6 @@ describe('sendX', () => {
   beforeEach(() => {
     jest.mocked(submitDataModule.getSubmitMethod).mockReturnValue(jest.fn())
     jest.spyOn(harvestInstance, '_send').mockImplementation(jest.fn())
-    jest.spyOn(harvestInstance, 'obfuscateAndSend').mockImplementation(jest.fn())
     jest.spyOn(harvestInstance, 'createPayload').mockReturnValue({})
   })
 
@@ -55,34 +59,6 @@ describe('sendX', () => {
     expect(harvestInstance.createPayload).toHaveBeenCalledWith(spec.endpoint, { retry: true, isFinalHarvest: false })
   })
 
-  test('should not use obfuscateAndSend', async () => {
-    jest.mocked(harvestInstance.obfuscator.shouldObfuscate).mockReturnValue(false)
-
-    const endpoint = faker.string.uuid()
-    harvestInstance.sendX({ endpoint })
-
-    expect(harvestInstance._send).toHaveBeenCalledWith({
-      endpoint,
-      payload: {},
-      submitMethod: expect.any(Function)
-    })
-    expect(harvestInstance.obfuscateAndSend).not.toHaveBeenCalled()
-  })
-
-  test('should use obfuscateAndSend', async () => {
-    jest.mocked(harvestInstance.obfuscator.shouldObfuscate).mockReturnValue(true)
-
-    const endpoint = faker.string.uuid()
-    harvestInstance.sendX({ endpoint })
-
-    expect(harvestInstance.obfuscateAndSend).toHaveBeenCalledWith({
-      endpoint,
-      payload: {},
-      submitMethod: expect.any(Function)
-    })
-    expect(harvestInstance._send).not.toHaveBeenCalled()
-  })
-
   test.each([undefined, {}])('should still call _send when spec is %s', async (spec) => {
     harvestInstance.sendX(spec)
 
@@ -96,7 +72,6 @@ describe('sendX', () => {
 describe('send', () => {
   beforeEach(() => {
     jest.spyOn(harvestInstance, '_send').mockImplementation(jest.fn())
-    jest.spyOn(harvestInstance, 'obfuscateAndSend').mockImplementation(jest.fn())
   })
 
   test('should pass spec settings on to _send method', async () => {
@@ -109,30 +84,6 @@ describe('send', () => {
     harvestInstance.send(spec)
 
     expect(harvestInstance._send).toHaveBeenCalledWith(spec)
-  })
-
-  test('should not use obfuscateAndSend', async () => {
-    jest.mocked(harvestInstance.obfuscator.shouldObfuscate).mockReturnValue(false)
-
-    const endpoint = faker.string.uuid()
-    harvestInstance.send({ endpoint })
-
-    expect(harvestInstance._send).toHaveBeenCalledWith({
-      endpoint
-    })
-    expect(harvestInstance.obfuscateAndSend).not.toHaveBeenCalled()
-  })
-
-  test('should use obfuscateAndSend', async () => {
-    jest.mocked(harvestInstance.obfuscator.shouldObfuscate).mockReturnValue(true)
-
-    const endpoint = faker.string.uuid()
-    harvestInstance.send({ endpoint })
-
-    expect(harvestInstance.obfuscateAndSend).toHaveBeenCalledWith({
-      endpoint
-    })
-    expect(harvestInstance._send).not.toHaveBeenCalled()
   })
 
   test.each([undefined, {}])('should still call _send when spec is %s', async (spec) => {
@@ -512,43 +463,6 @@ describe('_send', () => {
   })
 })
 
-describe('obfuscateAndSend', () => {
-  beforeEach(() => {
-    jest.spyOn(harvestInstance, '_send').mockImplementation(jest.fn())
-  })
-
-  test('should apply obfuscation to payload', () => {
-    const payload = {
-      body: {
-        foo: faker.lorem.sentence()
-      },
-      qs: {
-        foo: faker.lorem.sentence()
-      }
-    }
-
-    harvestInstance.obfuscateAndSend({ payload })
-
-    expect(applyFnToProps).toHaveBeenCalledWith(payload, expect.any(Function), 'string', ['e'])
-    expect(harvestInstance.obfuscator.obfuscateString).toHaveBeenCalledWith(payload)
-  })
-
-  test('should still call _send when spec is undefined', () => {
-    harvestInstance.obfuscateAndSend()
-
-    expect(harvestInstance._send).toHaveBeenCalled()
-  })
-
-  test.each([
-    null,
-    undefined
-  ])('should still call _send when payload is %s', (payload) => {
-    harvestInstance.obfuscateAndSend({ payload })
-
-    expect(harvestInstance._send).toHaveBeenCalled()
-  })
-})
-
 describe('baseQueryString', () => {
   beforeEach(() => {
     jest.mocked(configModule.getInfo).mockReturnValue({})
@@ -630,7 +544,6 @@ describe('baseQueryString', () => {
 
   test('should obfuscate ref', () => {
     const obfuscatedLocation = faker.string.uuid()
-    jest.mocked(harvestInstance.obfuscator.shouldObfuscate).mockReturnValue(true)
     jest.mocked(harvestInstance.obfuscator.obfuscateString).mockReturnValue(obfuscatedLocation)
 
     const results = harvestInstance.baseQueryString()

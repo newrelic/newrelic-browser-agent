@@ -1,4 +1,5 @@
 import { supportsFetchExtended } from '../../tools/browser-matcher/common-matchers.mjs'
+import { testAjaxEventsRequest, testBlobTraceRequest, testErrorsRequest, testInsRequest, testInteractionEventsRequest, testLogsRequest, testRumRequest, testTimingEventsRequest } from '../../tools/testing-server/utils/expect-tests'
 
 const config = {
   init: {
@@ -24,49 +25,76 @@ const config = {
 }
 
 describe.withBrowsersMatching(supportsFetchExtended)('obfuscate rules', () => {
+  let rumCapture
+  let timingEventsCapture
+  let ajaxEventsCapture
+  let errorsCapture
+  let insightsCapture
+  let tracesCapture
+  let interactionEventsCapture
+  let logsCapture
+
+  beforeEach(async () => {
+    [rumCapture, timingEventsCapture, ajaxEventsCapture, errorsCapture, insightsCapture, tracesCapture, interactionEventsCapture, logsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+      { test: testRumRequest },
+      { test: testTimingEventsRequest },
+      { test: testAjaxEventsRequest },
+      { test: testErrorsRequest },
+      { test: testInsRequest },
+      { test: testBlobTraceRequest },
+      { test: testInteractionEventsRequest },
+      { test: testLogsRequest }
+    ])
+  })
+
   it('should apply to all payloads', async () => {
-    const spaPromise = browser.testHandle.expectEvents()
-    const ajaxPromise = browser.testHandle.expectAjaxEvents()
-    const timingsPromise = browser.testHandle.expectTimings()
-    const errorsPromise = browser.testHandle.expectErrors()
-    const insPromise = browser.testHandle.expectIns()
-    const resourcePromise = browser.testHandle.expectTrace()
-    const rumPromise = browser.testHandle.expectRum()
-
-    await browser.url(await browser.testHandle.assetURL('obfuscate-pii.html', config))
-    await browser.waitForAgentLoad()
-
-    const [
-      { request: ajaxResponse },
-      { request: errorsResponse },
-      { request: insResponse },
-      { request: resourceResponse },
-      { request: spaResponse },
-      { request: timingsResponse },
-      { request: rumResponse }
-    ] = await Promise.all([
-      ajaxPromise,
-      errorsPromise,
-      insPromise,
-      resourcePromise,
-      spaPromise,
-      timingsPromise,
-      rumPromise
+    const [rumHarvests, timingEventsHarvests, ajaxEventsHarvests, errorsHarvests, insightsHarvests, tracesHarvests, interactionEventsHarvests, logsHarvests] = await Promise.all([
+      rumCapture.waitForResult({ timeout: 10000 }),
+      timingEventsCapture.waitForResult({ timeout: 10000 }),
+      ajaxEventsCapture.waitForResult({ timeout: 10000 }),
+      errorsCapture.waitForResult({ timeout: 10000 }),
+      insightsCapture.waitForResult({ timeout: 10000 }),
+      tracesCapture.waitForResult({ timeout: 10000 }),
+      interactionEventsCapture.waitForResult({ timeout: 10000 }),
+      logsCapture.waitForResult({ timeout: 10000 }),
+      browser.url(await browser.testHandle.assetURL('obfuscate-pii.html', config))
+        .then(() => browser.waitForAgentLoad())
     ])
 
-    checkPayload(ajaxResponse.body)
-    checkPayload(errorsResponse.body)
-    checkPayload(insResponse.body)
-    checkPayload(resourceResponse.body)
-    checkPayload(spaResponse.body)
-    checkPayload(timingsResponse.body)
-    checkPayload(rumResponse.query) // see harvest.sendRum
-    // See harvest.baseQueryString
-    checkPayload(errorsResponse.query)
-    checkPayload(insResponse.query)
-    checkPayload(resourceResponse.query)
-    checkPayload(spaResponse.query)
-    checkPayload(timingsResponse.query)
+    expect(rumHarvests.length).toBeGreaterThan(0)
+    rumHarvests.forEach(harvest => checkPayload(harvest.request.query))
+    expect(timingEventsHarvests.length).toBeGreaterThan(0)
+    timingEventsHarvests.forEach(harvest => {
+      checkPayload(harvest.request.body)
+      checkPayload(harvest.request.query)
+    })
+    expect(ajaxEventsHarvests.length).toBeGreaterThan(0)
+    ajaxEventsHarvests.forEach(harvest => checkPayload(harvest.request.body))
+    expect(errorsHarvests.length).toBeGreaterThan(0)
+    errorsHarvests.forEach(harvest => {
+      checkPayload(harvest.request.body)
+      checkPayload(harvest.request.query)
+    })
+    expect(insightsHarvests.length).toBeGreaterThan(0)
+    insightsHarvests.forEach(harvest => {
+      checkPayload(harvest.request.body)
+      checkPayload(harvest.request.query)
+    })
+    expect(tracesHarvests.length).toBeGreaterThan(0)
+    tracesHarvests.forEach(harvest => {
+      checkPayload(harvest.request.body)
+      checkPayload(harvest.request.query)
+    })
+    expect(interactionEventsHarvests.length).toBeGreaterThan(0)
+    interactionEventsHarvests.forEach(harvest => {
+      checkPayload(harvest.request.body)
+      checkPayload(harvest.request.query)
+    })
+    expect(logsHarvests.length).toBeGreaterThan(0)
+    logsHarvests.forEach(harvest => {
+      checkPayload(harvest.request.body)
+      checkPayload(harvest.request.query)
+    })
   })
 })
 

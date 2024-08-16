@@ -1,10 +1,7 @@
 export const Obfuscator = jest.fn(function () {
-  this.sharedContext = {
-    agentIdentifier: 'abcd'
-  }
-
-  this.shouldObfuscate = jest.fn(() => false)
-  this.obfuscateString = jest.fn((input) => input)
+  this.ruleValidationCache = []
+  this.obfuscateString = jest.fn(input => input)
 })
-export const getRules = jest.fn(() => ([]))
-export const validateRules = jest.fn(() => true)
+
+Obfuscator.prototype.validateObfuscationRule = jest.fn(rule => true)
+Obfuscator.prototype.getRuleValidationCache = jest.fn(agentIdentifier => [])

@@ -10,8 +10,6 @@ import { getLocation } from '../url/location'
 import { getInfo, getConfigurationValue, getRuntime, getConfiguration } from '../config/config'
 import { cleanURL } from '../url/clean-url'
 import { eventListenerOpts } from '../event-listener/event-listener-opts'
-import { Obfuscator } from '../util/obfuscate'
-import { applyFnToProps } from '../util/traverse'
 import { SharedContext } from '../context/shared-context'
 import { VERSION } from '../constants/env'
 import { isWorkerScope } from '../constants/runtime'
@@ -32,7 +30,7 @@ export class Harvest extends SharedContext {
     super(parent) // gets any allowed properties from the parent and stores them in `sharedContext`
 
     this.tooManyRequestsDelay = getConfigurationValue(this.sharedContext.agentIdentifier, 'harvest.tooManyRequestsDelay') || 60
-    this.obfuscator = new Obfuscator(this.sharedContext)
+    this.obfuscator = getRuntime(this.sharedContext.agentIdentifier).obfuscator
 
     this._events = {}
   }
@@ -50,7 +48,7 @@ export class Harvest extends SharedContext {
       isFinalHarvest: spec.opts?.unload === true
     }
     const payload = this.createPayload(spec.endpoint, options)
-    const caller = this.obfuscator.shouldObfuscate() ? this.obfuscateAndSend.bind(this) : this._send.bind(this)
+    const caller = this._send.bind(this)
     return caller({ ...spec, payload, submitMethod })
   }
 
@@ -59,19 +57,9 @@ export class Harvest extends SharedContext {
    * @param {NetworkSendSpec} spec Specification for sending data
    */
   send (spec = {}) {
-    const caller = this.obfuscator.shouldObfuscate() ? this.obfuscateAndSend.bind(this) : this._send.bind(this)
+    const caller = this._send.bind(this)
 
     return caller(spec)
-  }
-
-  /**
-   * Apply obfuscation rules to the payload and then initial the harvest network call.
-   * @param {NetworkSendSpec} spec Specification for sending data
-   */
-  obfuscateAndSend (spec = {}) {
-    const { payload = {} } = spec
-    applyFnToProps(payload, (...args) => this.obfuscator.obfuscateString(...args), 'string', ['e'])
-    return this._send({ ...spec, payload })
   }
 
   /**
@@ -171,8 +159,7 @@ export class Harvest extends SharedContext {
     const runtime = getRuntime(this.sharedContext.agentIdentifier)
     const info = getInfo(this.sharedContext.agentIdentifier)
 
-    const location = cleanURL(getLocation())
-    const ref = this.obfuscator.shouldObfuscate() ? this.obfuscator.obfuscateString(location) : location
+    const ref = this.obfuscator.obfuscateString(cleanURL(getLocation()))
     const hr = runtime?.session?.state.sessionReplayMode === 1 && endpoint !== 'jserrors'
 
     const qps = [

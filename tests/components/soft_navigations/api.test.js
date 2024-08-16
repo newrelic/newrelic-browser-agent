@@ -1,6 +1,8 @@
 import { SoftNav } from '../../../src/features/soft_navigations'
 import { Aggregator } from '../../../src/common/aggregate/aggregator'
 import { ee } from '../../../src/common/event-emitter/contextual-ee'
+import * as configModule from '../../../src/common/config/config'
+import { Obfuscator } from '../../../src/common/util/obfuscate'
 
 let importAggregatorFn
 jest.mock('../../../src/common/constants/runtime', () => ({
@@ -24,7 +26,8 @@ jest.mock('../../../src/common/config/config', () => ({
   },
   getConfigurationValue: jest.fn(),
   isConfigured: jest.fn().mockReturnValue(true),
-  getInfo: jest.fn().mockReturnValue({})
+  getInfo: jest.fn().mockReturnValue({}),
+  getRuntime: jest.fn()
 }))
 const aggregator = new Aggregator({ agentIdentifier: 'abcd', ee })
 
@@ -38,6 +41,7 @@ describe('soft navigations API', () => {
   let latestIxnCtx
 
   beforeAll(async () => {
+    jest.mocked(configModule.getRuntime).mockReturnValue({ obfuscator: new Obfuscator() })
     softNavInstrument = new SoftNav('ab', aggregator)
     importAggregatorFn()
     await expect(softNavInstrument.onAggregateImported).resolves.toEqual(true)

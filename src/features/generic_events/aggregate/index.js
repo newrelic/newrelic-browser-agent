@@ -6,7 +6,7 @@ import { stringify } from '../../../common/util/stringify'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { cleanURL } from '../../../common/url/clean-url'
 import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
-import { FEATURE_NAME } from '../constants'
+import { FEATURE_NAME, IDEAL_PAYLOAD_SIZE } from '../constants'
 import { isBrowserScope } from '../../../common/constants/runtime'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { warn } from '../../../common/util/console'
@@ -14,6 +14,7 @@ import { now } from '../../../common/timing/now'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { deregisterDrain } from '../../../common/drain/drain'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
+import { EventBuffer } from './event-buffer'
 
 export class Aggregate extends AggregateBase {
   #agentRuntime
@@ -25,10 +26,9 @@ export class Aggregate extends AggregateBase {
     this.harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'generic_events.harvestTimeSeconds')
 
     this.referrerUrl = (isBrowserScope && document.referrer) ? cleanURL(document.referrer) : undefined
-    this.currentEvents = []
 
-    this.events = []
-    this.overflow = []
+    this.events = new EventBuffer()
+    this.retryEvents = new EventBuffer()
 
     this.#agentRuntime = getRuntime(this.agentIdentifier)
 
@@ -65,33 +65,6 @@ export class Aggregate extends AggregateBase {
     })
   }
 
-  onHarvestStarted (options) {
-    const { userAttributes, atts } = getInfo(this.agentIdentifier)
-    const harvestEvents = this.overflow.length ? this.overflow.splice(0, Infinity) : this.events.splice(0, Infinity)
-    var payload = ({
-      qs: {
-        ua: userAttributes,
-        at: atts
-      },
-      body: {
-        ins: harvestEvents
-      }
-    })
-
-    if (options.retry) {
-      this.currentEvents = harvestEvents
-    }
-
-    return payload
-  }
-
-  onHarvestFinished (result) {
-    if (result && result.sent && result.retry && this.currentEvents.length) {
-      this.events = this.currentEvents.concat(this.events)
-      this.currentEvents = []
-    }
-  }
-
   // WARNING: Insights times are in seconds. EXCEPT timestamp, which is in ms.
   addEvent (obj = {}) {
     if (!obj || !Object.keys(obj).length) return
@@ -121,12 +94,41 @@ export class Aggregate extends AggregateBase {
       ...obj
     }
 
-    this.events.push(eventAttributes)
+    this.events.add(eventAttributes)
 
-    // check if we've reached the harvest limit...
-    if (this.events.length >= this.eventsPerHarvest) {
+    this.checkEventLimits()
+  }
+
+  onHarvestStarted (options) {
+    const { userAttributes, atts } = getInfo(this.agentIdentifier)
+    if (!this.events.isValid()) return
+    var payload = ({
+      qs: {
+        ua: userAttributes,
+        at: atts
+      },
+      body: {
+        ins: this.events.buffer
+      }
+    })
+
+    if (options.retry) this.retryEvents = this.events
+    this.events = new EventBuffer()
+
+    return payload
+  }
+
+  onHarvestFinished (result) {
+    if (result && result?.sent && result?.retry && this.retryEvents.isValid()) {
+      this.events.merge(this.retryEvents, true)
+      this.retryEvents = new EventBuffer()
+    }
+  }
+
+  checkEventLimits () {
+    // check if we've reached any harvest limits...
+    if (this.events.bytes > IDEAL_PAYLOAD_SIZE) {
       this.ee.emit(SUPPORTABILITY_METRIC_CHANNEL, ['GenericEvents/Harvest/Max/Seen'])
-      this.overflow = [...this.overflow, ...this.events.splice(0, Infinity)]
       this.harvestScheduler.runHarvest()
     }
   }

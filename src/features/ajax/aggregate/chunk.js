@@ -47,7 +47,6 @@ export default class Chunk {
       this.payload += insert
     }
 
-    console.log('MAX PAYLOAD SIZE?', MAX_PAYLOAD_SIZE)
     this.tooBig = this.payload.length * 2 > MAX_PAYLOAD_SIZE
   }
 }

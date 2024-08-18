@@ -6,10 +6,11 @@ import { warn } from '../../../common/util/console'
 import { stringify } from '../../../common/util/stringify'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { AggregateBase } from '../../utils/aggregate-base'
-import { FEATURE_NAME, LOGGING_EVENT_EMITTER_CHANNEL, LOG_LEVELS, MAX_PAYLOAD_SIZE } from '../constants'
+import { FEATURE_NAME, LOGGING_EVENT_EMITTER_CHANNEL, LOG_LEVELS } from '../constants'
 import { Log } from '../shared/log'
 import { isValidLogLevel } from '../shared/utils'
 import { applyFnToProps } from '../../../common/util/traverse'
+import { MAX_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME

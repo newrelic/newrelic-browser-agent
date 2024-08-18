@@ -19,10 +19,6 @@ export const RRWEB_EVENT_TYPES = {
   Meta: 4,
   Custom: 5
 }
-/** Vortex caps payload sizes at 1MB */
-export const MAX_PAYLOAD_SIZE = 1000000
-/** Unloading caps around 64kb */
-export const IDEAL_PAYLOAD_SIZE = 64000
 /** Interval between forcing new full snapshots -- 15 seconds in error mode (x2), 5 minutes in full mode */
 export const CHECKOUT_MS = { [MODE.ERROR]: 15000, [MODE.FULL]: 300000, [MODE.OFF]: 0 }
 export const ABORT_REASONS = {

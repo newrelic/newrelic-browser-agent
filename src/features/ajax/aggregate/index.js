@@ -30,7 +30,6 @@ export class Aggregate extends AggregateBase {
     this.#agentInit = getConfiguration(agentIdentifier)
 
     const harvestTimeSeconds = this.#agentInit.ajax.harvestTimeSeconds || 10
-    this.MAX_PAYLOAD_SIZE = this.#agentInit.ajax.maxPayloadSize || 1000000
     setDenyList(this.#agentRuntime.denyList)
 
     this.ajaxEvents = []

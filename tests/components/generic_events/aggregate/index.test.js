@@ -3,7 +3,7 @@ import { Aggregator } from '../../../../src/common/aggregate/aggregator'
 import { getConfiguration, getInfo, setInfo, setRuntime } from '../../../../src/common/config/config'
 import { TimeKeeper } from '../../../../src/common/timing/time-keeper'
 import { configure } from '../../../../src/loaders/configure/configure'
-import { EventBuffer } from '../../../../src/features/generic_events/aggregate/event-buffer'
+import { EventBuffer } from '../../../../src/features/utils/event-buffer'
 
 const agentId = 'abcd'
 const referrerUrl = 'https://test.com'

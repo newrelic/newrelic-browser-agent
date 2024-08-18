@@ -1,4 +1,4 @@
-import { AVG_COMPRESSION, IDEAL_PAYLOAD_SIZE } from '../../../src/features/session_replay/constants'
+import { AVG_COMPRESSION } from '../../../src/features/session_replay/constants'
 import { Aggregator } from '../../../src/common/aggregate/aggregator'
 import { SessionEntity } from '../../../src/common/session/session-entity'
 import { setConfiguration, setRuntime } from '../../../src/common/config/config'
@@ -10,6 +10,7 @@ import { FEATURE_NAMES } from '../../../src/loaders/features/features'
 import { ee } from '../../../src/common/event-emitter/contextual-ee'
 import { TimeKeeper } from '../../../src/common/timing/time-keeper'
 import { LocalMemory } from '../session-helpers'
+import { IDEAL_PAYLOAD_SIZE } from '../../../src/common/constants/agent-constants'
 
 let sr, session
 
@@ -287,7 +288,7 @@ describe('Session Replay', () => {
       setConfiguration(agentIdentifier, { ...init })
       sr = new SessionReplayAgg(agentIdentifier, new Aggregator({}))
       sr.recorder = new Recorder(sr)
-      sr.recorder.currentBufferTarget.payloadBytesEstimation = IDEAL_PAYLOAD_SIZE / AVG_COMPRESSION
+      sr.recorder.currentBufferTarget.add({ x: 'x'.repeat(IDEAL_PAYLOAD_SIZE / AVG_COMPRESSION) })
       const before = Date.now()
       const spy = jest.spyOn(sr.scheduler, 'runHarvest').mockImplementation(() => { after = Date.now() })
       sr.ee.emit('rumresp', [{ sr: 1, srs: MODE.FULL }])
@@ -306,7 +307,7 @@ describe('Session Replay', () => {
       sr = new SessionReplayAgg(agentIdentifier, new Aggregator({}))
       sr.recorder = new Recorder(sr)
       Array.from({ length: 100000 }).forEach(() => sr.recorder.currentBufferTarget.add({ test: 1 })) //  fill the events array with tons of events
-      sr.recorder.currentBufferTarget.payloadBytesEstimation = sr.recorder.currentBufferTarget.events.join('').length
+      // sr.recorder.currentBufferTarget.payloadBytesEstimation = sr.recorder.currentBufferTarget.events.join('').length
       sr.ee.emit('rumresp', [{ sr: 1, srs: MODE.FULL }])
       await wait(1)
       expect(spy).not.toHaveBeenCalled()

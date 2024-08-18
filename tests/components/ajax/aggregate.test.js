@@ -4,6 +4,7 @@ import { FEATURE_NAMES } from '../../../src/loaders/features/features'
 import { getNREUMInitializedAgent } from '../../../src/common/window/nreum'
 import { getInfo } from '../../../src/common/config/config'
 import * as hMod from '../../../src/common/event-emitter/handle'
+import * as agentConstants from '../../../src/common/constants/agent-constants'
 import qp from '@newrelic/nr-querypack'
 
 window.fetch = jest.fn(() => Promise.resolve())
@@ -62,6 +63,7 @@ describe('Ajax aggregate', () => {
   ]
   beforeEach(() => {
     context = ajaxAggregate.ee.context({})
+    jest.replaceProperty(agentConstants, 'MAX_PAYLOAD_SIZE', 1000000)
   })
 
   describe('storeXhr', () => {
@@ -195,7 +197,7 @@ describe('Ajax aggregate', () => {
       }
       mockCurrentInfo.jsAttributes = expectedCustomAttributes
 
-      const maxPayloadSize = (ajaxAggregate.MAX_PAYLOAD_SIZE = 500)
+      jest.replaceProperty(agentConstants, 'MAX_PAYLOAD_SIZE', 500)
       const serializedPayload = ajaxAggregate.prepareHarvest({ retry: false })
       const decodedEvents = serializedPayload.map(sp => qp.decode(sp.body.e))
 
@@ -209,14 +211,14 @@ describe('Ajax aggregate', () => {
       })
 
       function exceedsSizeLimit (payload) {
-        return payload.length * 2 > maxPayloadSize
+        return payload.length * 2 > 500
       }
     })
 
     test('correctly exits if maxPayload is too small', () => {
       for (let callNo = 0; callNo < 10; callNo++) ajaxAggregate.ee.emit('xhr', ajaxArguments, context)
 
-      ajaxAggregate.MAX_PAYLOAD_SIZE = 10 // this is too small for any AJAX payload to fit in
+      jest.replaceProperty(agentConstants, 'MAX_PAYLOAD_SIZE', 10) // this is too small for any AJAX payload to fit in
       const serializedPayload = ajaxAggregate.prepareHarvest({ retry: false })
       expect(serializedPayload.length).toEqual(0) // payload that are each too small for limit will be dropped
     })

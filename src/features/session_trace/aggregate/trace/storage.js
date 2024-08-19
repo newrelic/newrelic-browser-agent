@@ -148,7 +148,7 @@ export class TraceStorage {
     }
   }
 
-  storeTiming (timingEntry) {
+  storeTiming (timingEntry, isAbsoluteTimestamp = false) {
     if (!timingEntry) return
 
     // loop iterates through prototype also (for FF)
@@ -164,6 +164,11 @@ export class TraceStorage {
       if (!(typeof val === 'number' && val >= 0)) continue
 
       val = Math.round(val)
+      if (this.parent.timeKeeper && this.parent.timeKeeper.ready && isAbsoluteTimestamp) {
+        val = this.parent.timeKeeper.convertAbsoluteTimestamp(
+          Math.floor(this.parent.timeKeeper.correctAbsoluteTimestamp(val))
+        )
+      }
       this.storeSTN(new TraceNode(key, val, val, 'document', 'timing'))
     }
   }

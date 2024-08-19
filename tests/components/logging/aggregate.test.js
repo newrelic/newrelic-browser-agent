@@ -65,7 +65,9 @@ describe('logging aggregate component tests', () => {
       loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', { myAttributes: 1 }, 'error'])
 
       const expectedLog = new Log(
-        timeKeeper.convertRelativeTimestamp(1234),
+        Math.floor(timeKeeper.correctAbsoluteTimestamp(
+          timeKeeper.convertRelativeTimestamp(1234)
+        )),
         'test message',
         { myAttributes: 1 },
         'error'
@@ -98,7 +100,9 @@ describe('logging aggregate component tests', () => {
       await wait(1)
       loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', { myAttributes: 1 }, 'error'])
       expect(loggingAgg.bufferedLogs[0]).toEqual(new Log(
-        timeKeeper.convertRelativeTimestamp(1234),
+        Math.floor(timeKeeper.correctAbsoluteTimestamp(
+          timeKeeper.convertRelativeTimestamp(1234)
+        )),
         'test message',
         { myAttributes: 1 },
         'error'
@@ -139,7 +143,9 @@ describe('logging aggregate component tests', () => {
 
     it('invalid custom attributes', async () => {
       const expected = new Log(
-        timeKeeper.convertRelativeTimestamp(1234),
+        Math.floor(timeKeeper.correctAbsoluteTimestamp(
+          timeKeeper.convertRelativeTimestamp(1234)
+        )),
         'test message',
         { },
         'error'
@@ -163,7 +169,9 @@ describe('logging aggregate component tests', () => {
 
     it('should work if log level is valid but wrong case', async () => {
       const expected = new Log(
-        timeKeeper.convertRelativeTimestamp(1234),
+        Math.floor(timeKeeper.correctAbsoluteTimestamp(
+          timeKeeper.convertRelativeTimestamp(1234)
+        )),
         'test message',
         { },
         'error'

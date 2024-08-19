@@ -74,7 +74,9 @@ export class Aggregate extends AggregateBase {
     }
 
     const log = new Log(
-      this.#agentRuntime.timeKeeper.convertRelativeTimestamp(timestamp),
+      Math.floor(this.#agentRuntime.timeKeeper.correctAbsoluteTimestamp(
+        this.#agentRuntime.timeKeeper.convertRelativeTimestamp(timestamp)
+      )),
       message,
       attributes,
       level

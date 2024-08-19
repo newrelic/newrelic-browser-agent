@@ -1,6 +1,7 @@
 import { Instrument as SessionTrace } from '../../../src/features/session_trace/instrument'
 import { Aggregator } from '../../../src/common/aggregate/aggregator'
 import { ee } from '../../../src/common/event-emitter/contextual-ee'
+import { TimeKeeper } from '../../../src/common/timing/__mocks__/time-keeper'
 
 jest.mock('../../../src/features/utils/agent-session')
 jest.mock('../../../src/common/config/config', () => ({
@@ -40,6 +41,7 @@ describe('session trace', () => {
     traceInstrument = new SessionTrace('abcd', aggregator)
     await traceInstrument.onAggregateImported
     traceAggregate = traceInstrument.featAggregate
+    traceAggregate.timeKeeper = new TimeKeeper('abcd')
     traceAggregate.ee.emit('rumresp', [{ st: 1, sts: 1 }])
   })
   beforeEach(() => {

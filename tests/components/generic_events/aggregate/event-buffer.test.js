@@ -1,4 +1,4 @@
-import { EventBuffer } from '../../../../src/features/generic_events/aggregate/event-buffer'
+import { EventBuffer } from '../../../../src/features/utils/event-buffer'
 
 let eventBuffer
 describe('EventBuffer', () => {
@@ -136,11 +136,11 @@ describe('EventBuffer', () => {
 
   describe('hasData', () => {
     it('should return false if no events', () => {
-      eventBuffer.bytes = 100
+      jest.spyOn(eventBuffer, 'bytes', 'get').mockReturnValue(100)
       expect(eventBuffer.hasData).toEqual(false)
     })
     it('should return false if no bytes', () => {
-      eventBuffer.buffer.push({ test: 1 })
+      jest.spyOn(eventBuffer, 'buffer', 'get').mockReturnValue({ test: 1 })
       expect(eventBuffer.hasData).toEqual(false)
     })
     it('should return true if has a valid event and size', () => {
@@ -151,15 +151,15 @@ describe('EventBuffer', () => {
 
   describe('canMerge', () => {
     it('should return false if would be too big', () => {
-      eventBuffer.bytes = 999999
+      jest.spyOn(eventBuffer, 'bytes', 'get').mockReturnValue(999999)
       expect(eventBuffer.canMerge(1)).toEqual(false)
     })
     it('should return false if no size provided', () => {
-      eventBuffer.buffer.push({ test: 1 })
+      eventBuffer.add({ test: 1 })
       expect(eventBuffer.canMerge()).toEqual(false)
     })
     it('should return false if size is not a number', () => {
-      eventBuffer.buffer.push({ test: 1 })
+      eventBuffer.add({ test: 1 })
       expect(eventBuffer.canMerge('test')).toEqual(false)
       expect(eventBuffer.canMerge(false)).toEqual(false)
       expect(eventBuffer.canMerge(['test'])).toEqual(false)

@@ -93,8 +93,8 @@ export class Aggregate extends AggregateBase {
     this.bufferedLogs.add(log)
   }
 
-  prepareHarvest (options) {
-    if (this.blocked || !this.bufferedLogs.isValid()) return
+  prepareHarvest (options = {}) {
+    if (this.blocked || !this.bufferedLogs.hasData) return
     /** populate outgoing array while also clearing main buffer */
     this.estimatedBytes = 0
     /** see https://source.datanerd.us/agents/rum-specs/blob/main/browser/Log for logging spec */

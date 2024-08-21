@@ -69,7 +69,7 @@ describe('pvt aggregate tests', () => {
     pvtAgg.prepareHarvest = jest.fn(() => ({}))
   })
   test('LCP event with CLS attribute', () => {
-    const timing = find(pvtAgg.timings, function (t) {
+    const timing = find(pvtAgg.timings.buffer, function (t) {
       return t.name === 'lcp'
     })
 
@@ -91,24 +91,24 @@ describe('pvt aggregate tests', () => {
   })
 
   test('sends expected FI attributes when available', () => {
-    expect(pvtAgg.timings.length).toBeGreaterThanOrEqual(1)
-    const fiPayload = pvtAgg.timings.find(x => x.name === 'fi')
+    expect(pvtAgg.timings.hasData).toEqual(true)
+    const fiPayload = pvtAgg.timings.buffer.find(x => x.name === 'fi')
     expect(fiPayload.value).toEqual(5)
     expect(fiPayload.attrs).toEqual(expect.objectContaining({ type: 'pointerdown', fid: 1234, cls: 0.1119, ...expectedNetworkInfo }))
   })
 
   test('sends CLS node with right val on vis change', () => {
-    let clsNode = pvtAgg.timings.find(tn => tn.name === VITAL_NAMES.CUMULATIVE_LAYOUT_SHIFT)
+    let clsNode = pvtAgg.timings.buffer.find(tn => tn.name === VITAL_NAMES.CUMULATIVE_LAYOUT_SHIFT)
     expect(clsNode).toBeUndefined()
 
     triggerVisChange()
-    clsNode = pvtAgg.timings.find(tn => tn.name === VITAL_NAMES.CUMULATIVE_LAYOUT_SHIFT)
+    clsNode = pvtAgg.timings.buffer.find(tn => tn.name === VITAL_NAMES.CUMULATIVE_LAYOUT_SHIFT)
     expect(clsNode).toBeTruthy()
     expect(clsNode.value).toEqual(111.9) // since cls multiply decimal by 1000 to offset consumer division by 1000
     expect(clsNode.attrs.cls).toBeUndefined() // cls node doesn't need cls property
   })
   test('sends INP node with right val', () => {
-    let inpNode = pvtAgg.timings.find(tn => tn.name === VITAL_NAMES.INTERACTION_TO_NEXT_PAINT)
+    let inpNode = pvtAgg.timings.buffer.find(tn => tn.name === VITAL_NAMES.INTERACTION_TO_NEXT_PAINT)
     expect(inpNode).toBeTruthy()
     expect(inpNode.value).toEqual(8)
     expect(inpNode.attrs.cls).toEqual(0.1119)

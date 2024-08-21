@@ -50,6 +50,14 @@ export class EventBuffer {
   }
 
   /**
+   * Returns a boolean indicating whether the current size and buffer contain valid data
+   * @returns {boolean}
+   */
+  get hasData () {
+    return this.buffer.length > 0 && this.bytes > 0
+  }
+
+  /**
    * Adds an event object to the buffer while tallying size
    * @param {Object} event the event object to add to the buffer
    * @returns {EventBuffer} returns the event buffer for chaining
@@ -91,18 +99,10 @@ export class EventBuffer {
    * @returns {EventBuffer} returns the event buffer for chaining
    */
   merge (eventBuffer, prepend = false) {
-    if (!this.canMerge(eventBuffer.#bytes)) return
+    if (!this.canMerge(eventBuffer.bytes)) return
     this.#buffer = prepend ? [...eventBuffer.buffer, ...this.#buffer] : [...this.#buffer, ...eventBuffer.buffer]
     this.#bytes += eventBuffer.#bytes
     return this
-  }
-
-  /**
-   * Returns a boolean indicating whether the current size and buffer contain valid data
-   * @returns {boolean}
-   */
-  isValid () {
-    return this.#buffer.length > 0 && this.#bytes > 0
   }
 
   /**
@@ -111,6 +111,6 @@ export class EventBuffer {
    * @returns {boolean}
    */
   canMerge (size) {
-    return this.#bytes + (size || Infinity) < this.maxPayloadSize
+    return this.bytes + (size || Infinity) < this.maxPayloadSize
   }
 }

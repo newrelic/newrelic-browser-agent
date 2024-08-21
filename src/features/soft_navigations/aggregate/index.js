@@ -8,6 +8,7 @@ import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { AggregateBase } from '../../utils/aggregate-base'
+import { EventBuffer } from '../../utils/event-buffer'
 import { API_TRIGGER_NAME, FEATURE_NAME, INTERACTION_STATUS } from '../constants'
 import { AjaxNode } from './ajax-node'
 import { InitialPageLoadInteraction } from './initial-page-load-interaction'
@@ -19,8 +20,7 @@ export class Aggregate extends AggregateBase {
     super(agentIdentifier, aggregator, FEATURE_NAME)
 
     const harvestTimeSeconds = getConfigurationValue(agentIdentifier, 'soft_navigations.harvestTimeSeconds') || 10
-    this.interactionsToHarvest = []
-    this.interactionsAwaitingRetry = []
+    this.interactionsToHarvest = new EventBuffer()
     this.domObserver = domObserver
 
     this.initialPageLoadInteraction = new InitialPageLoadInteraction(agentIdentifier)
@@ -28,7 +28,7 @@ export class Aggregate extends AggregateBase {
       const loadEventTime = attrs.navigationEntry.loadEventEnd
       this.initialPageLoadInteraction.forceSave = true
       this.initialPageLoadInteraction.done(loadEventTime)
-      this.interactionsToHarvest.push(this.initialPageLoadInteraction)
+      this.interactionsToHarvest.add(this.initialPageLoadInteraction)
       this.initialPageLoadInteraction = null
       // Report metric on the initial page load time
       handle(SUPPORTABILITY_METRIC_CHANNEL, ['SoftNav/Interaction/InitialPageLoad/Duration/Ms', Math.round(loadEventTime)], undefined, FEATURE_NAMES.metrics, this.ee)
@@ -69,28 +69,26 @@ export class Aggregate extends AggregateBase {
   }
 
   onHarvestStarted (options) {
-    if (this.interactionsToHarvest.length === 0 || this.blocked) return
+    if (!this.interactionsToHarvest.hasData || this.blocked) return
     // The payload depacker takes the first ixn of a payload (if there are multiple ixns) and positively offset the subsequent ixns timestamps by that amount.
     // In order to accurately portray the real start & end times of the 2nd & onward ixns, we hence need to negatively offset their start timestamps with that of the 1st ixn.
     let firstIxnStartTime = 0 // the very 1st ixn does not require any offsetting
     const serializedIxnList = []
-    for (const interaction of this.interactionsToHarvest) {
+    for (const interaction of this.interactionsToHarvest.buffer) {
       serializedIxnList.push(interaction.serialize(firstIxnStartTime))
       if (!firstIxnStartTime) firstIxnStartTime = Math.floor(interaction.start)
     }
     const payload = `bel.7;${serializedIxnList.join(';')}`
 
-    if (options.retry) this.interactionsAwaitingRetry = this.interactionsToHarvest
-    this.interactionsToHarvest = []
+    if (options.retry) this.interactionsToHarvest.hold()
+    else this.interactionsToHarvest.clear()
 
     return { body: { e: payload } }
   }
 
   onHarvestFinished (result) {
-    if (result.sent && result.retry && this.interactionsAwaitingRetry.length > 0) {
-      this.interactionsToHarvest = [...this.interactionsAwaitingRetry, ...this.interactionsToHarvest]
-    }
-    this.interactionsAwaitingRetry = []
+    if (result.sent && result.retry && this.interactionsToHarvest.held.hasData) this.interactionsToHarvest.unhold()
+    else this.interactionsToHarvest.held.clear()
   }
 
   startUIInteraction (eventName, startedAt, sourceElem) { // this is throttled by instrumentation so that it isn't excessively called
@@ -113,7 +111,7 @@ export class Aggregate extends AggregateBase {
   setClosureHandlers () {
     this.interactionInProgress.on('finished', () => {
       const ref = this.interactionInProgress
-      this.interactionsToHarvest.push(this.interactionInProgress)
+      this.interactionsToHarvest.add(this.interactionInProgress)
       this.interactionInProgress = null
       this.domObserver.disconnect() // can stop observing whenever our interaction logic completes a cycle
 
@@ -143,8 +141,8 @@ export class Aggregate extends AggregateBase {
     */
     if (this.interactionInProgress?.isActiveDuring(timestamp)) return this.interactionInProgress
     let saveIxn
-    for (let idx = this.interactionsToHarvest.length - 1; idx >= 0; idx--) { // reverse search for the latest completed interaction for efficiency
-      const finishedInteraction = this.interactionsToHarvest[idx]
+    for (let idx = this.interactionsToHarvest.buffer.length - 1; idx >= 0; idx--) { // reverse search for the latest completed interaction for efficiency
+      const finishedInteraction = this.interactionsToHarvest.buffer[idx]
       if (finishedInteraction.isActiveDuring(timestamp)) {
         if (finishedInteraction.trigger !== 'initialPageLoad') return finishedInteraction
         // It's possible that a complete interaction occurs before page is fully loaded, so we need to consider if a route-change ixn may have overlapped this iPL

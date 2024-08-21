@@ -39,10 +39,10 @@ export class Aggregate extends AggregateBase {
 
     // --- v Used by old spa feature
     this.ee.on('interactionDone', (interaction, wasSaved) => {
-      if (!this.spaAjaxEvents[interaction.id]) return
+      if (!this.spaAjaxEvents[interaction.id]?.hasData) return
 
       if (!wasSaved) { // if the ixn was saved, then its ajax reqs are part of the payload whereas if it was discarded, it should still be harvested in the ajax feature itself
-        this.spaAjaxEvents[interaction.id].forEach((item) => this.ajaxEvents.add(item))
+        this.ajaxEvents.merge(this.spaAjaxEvents[interaction.id])
       }
       delete this.spaAjaxEvents[interaction.id]
     })
@@ -130,8 +130,8 @@ export class Aggregate extends AggregateBase {
       handle('ajax', [event], undefined, FEATURE_NAMES.softNav, this.ee)
     } else if (ctx.spaNode) { // For old spa (when running), if the ajax happened inside an interaction, hold it until the interaction finishes
       const interactionId = ctx.spaNode.interaction.id
-      this.spaAjaxEvents[interactionId] = this.spaAjaxEvents[interactionId] || []
-      this.spaAjaxEvents[interactionId].push(event)
+      this.spaAjaxEvents[interactionId] ??= new EventBuffer()
+      this.spaAjaxEvents[interactionId].add(event)
     } else {
       this.ajaxEvents.add(event)
     }
@@ -153,7 +153,7 @@ export class Aggregate extends AggregateBase {
   }
 
   onEventsHarvestFinished (result) {
-    if (result.retry && this.ajaxEvents.held.isValid) this.ajaxEvents.unhold()
+    if (result.retry && this.ajaxEvents.held.hasData) this.ajaxEvents.unhold()
     else this.ajaxEvents.held.clear()
   }
 

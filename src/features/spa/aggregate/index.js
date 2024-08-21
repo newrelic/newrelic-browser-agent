@@ -25,6 +25,7 @@ import { handle } from '../../../common/event-emitter/handle'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { deregisterDrain } from '../../../common/drain/drain'
 import { warn } from '../../../common/util/console'
+import { EventBuffer } from '../../utils/event-buffer'
 
 const {
   FEATURE_NAME, INTERACTION_EVENTS, MAX_TIMER_BUDGET, FN_START, FN_END, CB_START, INTERACTION_API, REMAINING,
@@ -50,8 +51,7 @@ export class Aggregate extends AggregateBase {
       childTime: 0,
       depth: 0,
       harvestTimeSeconds: getConfigurationValue(agentIdentifier, 'spa.harvestTimeSeconds') || 10,
-      interactionsToHarvest: [],
-      interactionsSent: [],
+      interactionsToHarvest: new EventBuffer(),
       // The below feature flag is used to disable the SPA ajax fix for specific customers, see https://new-relic.atlassian.net/browse/NR-172169
       disableSpaFix: (getConfigurationValue(agentIdentifier, 'feature_flags') || []).indexOf('disable-spa-fix') > -1
     }
@@ -675,26 +675,18 @@ export class Aggregate extends AggregateBase {
 
     const classThis = this
     function onHarvestStarted (options) {
-      if (state.interactionsToHarvest.length === 0 || classThis.blocked) return {}
-      var payload = serializer.serializeMultiple(state.interactionsToHarvest, 0, navTiming)
+      if (!state.interactionsToHarvest.hasData || classThis.blocked) return {}
+      var payload = serializer.serializeMultiple(state.interactionsToHarvest.buffer, 0, navTiming)
 
-      if (options.retry) {
-        state.interactionsToHarvest.forEach(function (interaction) {
-          state.interactionsSent.push(interaction)
-        })
-      }
-      state.interactionsToHarvest = []
+      if (options.retry) state.interactionsToHarvest.hold()
+      else state.interactionsToHarvest.clear()
 
       return { body: { e: payload } }
     }
 
     function onHarvestFinished (result) {
-      if (result.sent && result.retry && state.interactionsSent.length > 0) {
-        state.interactionsSent.forEach(function (interaction) {
-          state.interactionsToHarvest.unshift(interaction)
-        })
-        state.interactionsSent = []
-      }
+      if (result.sent && result.retry && state.interactionsToHarvest.held.hasData) state.interactionsToHarvest.unhold()
+      else state.interactionsToHarvest.held.clear()
     }
 
     baseEE.on('spa-jserror', function (type, name, params, metrics) {
@@ -747,7 +739,7 @@ export class Aggregate extends AggregateBase {
         interaction.root.attrs.firstContentfulPaint = firstContentfulPaint.current.value
       }
       baseEE.emit('interactionDone', [interaction, true])
-      state.interactionsToHarvest.push(interaction)
+      state.interactionsToHarvest.add(interaction)
 
       let smCategory
       if (interaction.root?.attrs?.trigger === 'initialPageLoad') smCategory = 'InitialPageLoad'

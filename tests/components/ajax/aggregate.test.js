@@ -6,6 +6,7 @@ import { getInfo } from '../../../src/common/config/config'
 import * as hMod from '../../../src/common/event-emitter/handle'
 import * as agentConstants from '../../../src/common/constants/agent-constants'
 import qp from '@newrelic/nr-querypack'
+import { EventBuffer } from '../../../src/features/utils/event-buffer'
 
 window.fetch = jest.fn(() => Promise.resolve())
 window.Request = jest.fn()
@@ -68,17 +69,17 @@ describe('Ajax aggregate', () => {
 
   describe('storeXhr', () => {
     afterEach(() => {
-      ajaxAggregate.ajaxEvents = []
+      ajaxAggregate.ajaxEvents = new EventBuffer()
       ajaxAggregate.spaAjaxEvents = {}
     })
 
     test('for a plain ajax request buffers in ajaxEvents', () => {
       ajaxAggregate.ee.emit('xhr', ajaxArguments, context)
 
-      expect(ajaxAggregate.ajaxEvents.length).toEqual(1) // non-SPA ajax requests are buffered in ajaxEvents
+      expect(ajaxAggregate.ajaxEvents.buffer.length).toEqual(1) // non-SPA ajax requests are buffered in ajaxEvents
       expect(Object.keys(ajaxAggregate.spaAjaxEvents).length).toEqual(0)
 
-      const ajaxEvent = ajaxAggregate.ajaxEvents[0]
+      const ajaxEvent = ajaxAggregate.ajaxEvents.buffer[0]
       expect(ajaxEvent).toEqual(expect.objectContaining({ startTime: 0, path: '/pathname' }))
     })
 
@@ -89,10 +90,10 @@ describe('Ajax aggregate', () => {
       ajaxAggregate.ee.emit('xhr', ajaxArguments, context)
 
       const interactionAjaxEvents = ajaxAggregate.spaAjaxEvents[interaction.id]
-      expect(interactionAjaxEvents.length).toEqual(1) // SPA ajax requests are buffered in spaAjaxEvents and under its interaction id
-      expect(ajaxAggregate.ajaxEvents.length).toEqual(0)
+      expect(interactionAjaxEvents.buffer.length).toEqual(1) // SPA ajax requests are buffered in spaAjaxEvents and under its interaction id
+      expect(ajaxAggregate.ajaxEvents.buffer.length).toEqual(0)
 
-      const spaAjaxEvent = interactionAjaxEvents[0]
+      const spaAjaxEvent = interactionAjaxEvents.buffer[0]
       expect(spaAjaxEvent).toEqual(expect.objectContaining({ startTime: 0, path: '/pathname' }))
     })
 
@@ -101,7 +102,7 @@ describe('Ajax aggregate', () => {
 
       ajaxAggregate.ee.emit('xhr', ajaxArguments, context)
 
-      expect(ajaxAggregate.ajaxEvents.length).toEqual(0)
+      expect(ajaxAggregate.ajaxEvents.buffer.length).toEqual(0)
       expect(Object.keys(ajaxAggregate.spaAjaxEvents).length).toEqual(0)
       expect(hMod.handle).toHaveBeenLastCalledWith('ajax', [expect.objectContaining({ startTime: 0, path: '/pathname' })],
         undefined, FEATURE_NAMES.softNav, expect.any(Object))
@@ -118,9 +119,9 @@ describe('Ajax aggregate', () => {
     ajaxAggregate.ee.emit('interactionDone', [interaction, false])
 
     expect(ajaxAggregate.spaAjaxEvents[interaction.id]).toBeUndefined() // no interactions in SPA under interaction 0
-    expect(ajaxAggregate.ajaxEvents.length).toEqual(1)
+    expect(ajaxAggregate.ajaxEvents.buffer.length).toEqual(1)
 
-    ajaxAggregate.ajaxEvents = []
+    ajaxAggregate.ajaxEvents = new EventBuffer()
   })
   test('on returnAjax from soft nav, event is re-routed back into ajaxEvents', () => {
     softNavInUse = true
@@ -129,8 +130,8 @@ describe('Ajax aggregate', () => {
     const event = hMod.handle.mock.lastCall[1][0]
     ajaxAggregate.ee.emit('returnAjax', [event], context)
 
-    expect(ajaxAggregate.ajaxEvents.length).toEqual(1)
-    expect(ajaxAggregate.ajaxEvents[0]).toEqual(expect.objectContaining({ startTime: 0, path: '/pathname' }))
+    expect(ajaxAggregate.ajaxEvents.buffer.length).toEqual(1)
+    expect(ajaxAggregate.ajaxEvents.buffer[0]).toEqual(expect.objectContaining({ startTime: 0, path: '/pathname' }))
 
     softNavInUse = false
   })

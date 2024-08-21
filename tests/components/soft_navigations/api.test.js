@@ -3,6 +3,7 @@ import { Aggregator } from '../../../src/common/aggregate/aggregator'
 import { ee } from '../../../src/common/event-emitter/contextual-ee'
 import * as configModule from '../../../src/common/config/config'
 import { Obfuscator } from '../../../src/common/util/obfuscate'
+import { EventBuffer } from '../../../src/features/utils/event-buffer'
 
 let importAggregatorFn
 jest.mock('../../../src/common/constants/runtime', () => ({
@@ -51,7 +52,7 @@ describe('soft navigations API', () => {
   beforeEach(() => {
     softNavAggregate.initialPageLoadInteraction = null
     softNavAggregate.interactionInProgress = null
-    softNavAggregate.interactionsToHarvest = []
+    softNavAggregate.interactionsToHarvest = new EventBuffer()
     delete softNavAggregate.latestRouteSetByApi
   })
 
@@ -156,19 +157,19 @@ describe('soft navigations API', () => {
 
   test('.save forcibly harvest any would-be cancelled ixns', async () => {
     newrelic.interaction().command('save').command('end', 100)
-    expect(softNavAggregate.interactionsToHarvest.length).toEqual(1)
+    expect(softNavAggregate.interactionsToHarvest.buffer.length).toEqual(1)
     expect(latestIxnCtx.associatedInteraction.end).toEqual(100)
 
     softNavAggregate.ee.emit('newUIEvent', [{ type: 'keydown', timeStamp: 1 }])
     newrelic.interaction().command('save')
     softNavAggregate.ee.emit('newUIEvent', [{ type: 'keydown', timeStamp: 10 }])
-    expect(softNavAggregate.interactionsToHarvest.length).toEqual(2)
+    expect(softNavAggregate.interactionsToHarvest.buffer.length).toEqual(2)
     expect(latestIxnCtx.associatedInteraction.end).toBeGreaterThan(latestIxnCtx.associatedInteraction.start) // thisCtx is still referencing the first keydown ixn
 
     newrelic.interaction().command('save')
     await new Promise(resolve => _setTimeout(resolve, 301))
     /** now that we drain **after** the rumcall flags are emitted, some of the ixns try to get harvested.  just check both buckets */
-    expect(softNavAggregate.interactionsToHarvest.length + softNavAggregate.interactionsAwaitingRetry.length).toEqual(3)
+    expect(softNavAggregate.interactionsToHarvest.buffer.length + softNavAggregate.interactionsToHarvest.held.buffer.length).toEqual(3)
   })
 
   test('.interaction gets ixn retroactively too when processed late after ee buffer drain', () => {
@@ -176,7 +177,7 @@ describe('soft navigations API', () => {
     let timeInBtwn = performance.now()
     newrelic.interaction().command('save').command('end')
 
-    expect(softNavAggregate.interactionsToHarvest.length).toEqual(1)
+    expect(softNavAggregate.interactionsToHarvest.buffer.length).toEqual(1)
     newrelic.interaction({ customIxnCreationTime: timeInBtwn })
     expect(latestIxnCtx.associatedInteraction.trigger).toBe('submit')
   })
@@ -187,11 +188,11 @@ describe('soft navigations API', () => {
     softNavAggregate.ee.emit('newURL', [23, 'example.com'])
     softNavAggregate.ee.emit('newDom', [34])
     expect(softNavAggregate.interactionInProgress).toBeNull()
-    expect(softNavAggregate.interactionsToHarvest.length).toEqual(0)
+    expect(softNavAggregate.interactionsToHarvest.buffer.length).toEqual(0)
 
     const newIxn = newrelic.interaction({ waitForEnd: true }).command('ignore').command('save') // ignore ought to override this
     newIxn.command('end')
-    expect(softNavAggregate.interactionsToHarvest.length).toEqual(0)
+    expect(softNavAggregate.interactionsToHarvest.buffer.length).toEqual(0)
     expect(latestIxnCtx.associatedInteraction.status).toEqual('cancelled')
   })
 
@@ -225,7 +226,7 @@ describe('soft navigations API', () => {
       newIxn1.command('save') // should be able to force save this would-be discarded ixn
     }).command('end')
     expect(hasRan).toEqual(true)
-    expect(softNavAggregate.interactionsToHarvest.length).toEqual(1)
+    expect(softNavAggregate.interactionsToHarvest.buffer.length).toEqual(1)
 
     hasRan = false
     const newIxn2 = newrelic.interaction().command('save')
@@ -234,7 +235,7 @@ describe('soft navigations API', () => {
       newIxn2.command('ignore')
     }).command('end')
     expect(hasRan).toEqual(true)
-    expect(softNavAggregate.interactionsToHarvest.length).toEqual(1) // ixn was discarded
+    expect(softNavAggregate.interactionsToHarvest.buffer.length).toEqual(1) // ixn was discarded
   })
 
   test('.setCurrentRouteName updates the targetRouteName of current ixn and is tracked for new ixn', () => {
@@ -299,7 +300,7 @@ describe('soft navigations API', () => {
     latestIxnCtx.associatedInteraction.forceSave = true
     newIxn.command('end', 1000)
 
-    expect(softNavAggregate.interactionsToHarvest.length).toEqual(3)
+    expect(softNavAggregate.interactionsToHarvest.buffer.length).toEqual(3)
     // WARN: Double check decoded output & behavior or any introduced bugs before changing the follow line's static string.
     expect(softNavAggregate.onHarvestStarted({}).body.e).toEqual("bel.7;1,,2s,2s,,,'api,'http://localhost/,1,1,,2,!!!!'some_id,'1,!!;;1,,5k,5k,,,'api,'http://localhost/,1,1,,2,!!!!'some_other_id,'2,!!;;1,,go,8c,,,'api,'http://localhost/,1,1,,2,!!!!'some_another_id,'3,!!;")
   })
@@ -324,7 +325,7 @@ describe('soft navigations API', () => {
     latestIxnCtx.associatedInteraction.children[0].nodeId = 5
     softNavAggregate.ee.emit('ajax', [{ startTime: 12, endTime: 13 }])
     latestIxnCtx.associatedInteraction.children[1].nodeId = 6
-    expect(softNavAggregate.interactionsToHarvest.length).toEqual(2)
+    expect(softNavAggregate.interactionsToHarvest.buffer.length).toEqual(2)
     // WARN: Double check decoded output & behavior or any introduced bugs before changing the follow line's static string.
     expect(softNavAggregate.onHarvestStarted({}).body.e).toEqual("bel.7;1,2,1,3,,,'api,'http://localhost/,1,1,,2,!!!!'some_id,'1,!!;2,,1,3,,,,,,,,,,'2,!!!;2,,2,3,,,,,,,,,,'3,!!!;;1,2,9,4,,,'api,'http://localhost/,1,1,,2,!!!!'some_other_id,'4,!!;2,,a,1,,,,,,,,,,'5,!!!;2,,b,1,,,,,,,,,,'6,!!!;")
   })

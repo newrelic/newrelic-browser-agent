@@ -36,8 +36,7 @@ describe('Generic Events aggregate', () => {
       eventsPerHarvest: 1000,
       harvestTimeSeconds: 30,
       referrerUrl: 'https://test.com',
-      events: new EventBuffer(),
-      retryEvents: new EventBuffer()
+      events: new EventBuffer()
     })
   })
 

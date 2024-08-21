@@ -30,7 +30,6 @@ export class Aggregate extends AggregateBase {
     this.referrerUrl = (isBrowserScope && document.referrer) ? cleanURL(document.referrer) : undefined
 
     this.events = new EventBuffer()
-    this.retryEvents = new EventBuffer()
 
     this.#agentRuntime = getRuntime(this.agentIdentifier)
 

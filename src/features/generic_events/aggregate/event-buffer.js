@@ -15,13 +15,21 @@ export class EventBuffer {
   }
 
   /**
+   * Returns a boolean indicating whether the size and buffer contain valid data
+   * @returns {boolean}
+   */
+  get hasData () {
+    return this.buffer.length > 0 && this.bytes > 0
+  }
+
+  /**
    * Adds an event object to the buffer while tallying size
    * @param {Object} event the event object to add to the buffer
    * @returns {EventBuffer} returns the event buffer for chaining
    */
   add (event) {
     const size = stringify(event).length
-    if (!this.canMerge(size)) return
+    if (!this.canMerge(size)) return this
     this.buffer.push(event)
     this.bytes += size
     return this
@@ -38,14 +46,6 @@ export class EventBuffer {
     this.buffer = prepend ? [...eventBuffer.buffer, ...this.buffer] : [...this.buffer, ...eventBuffer.buffer]
     this.bytes = this.bytes + eventBuffer.bytes
     return this
-  }
-
-  /**
-   * Returns a boolean indicating whether the size and buffer contain valid data
-   * @returns {boolean}
-   */
-  isValid () {
-    return this.buffer.length > 0 && this.bytes > 0
   }
 
   /**

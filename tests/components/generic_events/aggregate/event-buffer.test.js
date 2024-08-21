@@ -134,18 +134,18 @@ describe('EventBuffer', () => {
     })
   })
 
-  describe('isValid', () => {
+  describe('hasData', () => {
     it('should return false if no events', () => {
       eventBuffer.bytes = 100
-      expect(eventBuffer.isValid()).toEqual(false)
+      expect(eventBuffer.hasData).toEqual(false)
     })
     it('should return false if no bytes', () => {
       eventBuffer.buffer.push({ test: 1 })
-      expect(eventBuffer.isValid()).toEqual(false)
+      expect(eventBuffer.hasData).toEqual(false)
     })
     it('should return true if has a valid event and size', () => {
       eventBuffer.add({ test: 1 })
-      expect(eventBuffer.isValid()).toEqual(true)
+      expect(eventBuffer.hasData).toEqual(true)
     })
   })
 

@@ -115,17 +115,13 @@ export class Aggregate extends AggregateBase {
       )
     })
 
-    if (options.retry) this.retryEvents = this.events
-    this.events = new EventBuffer()
-
+    if (options.retry) this.events.hold()
     return payload
   }
 
   onHarvestFinished (result) {
-    if (result && result?.sent && result?.retry && this.retryEvents.isValid()) {
-      this.events.merge(this.retryEvents, true)
-      this.retryEvents = new EventBuffer()
-    }
+    if (result && result?.sent && result?.retry && this.events.held.isValid()) this.events.unhold()
+    else this.events.held.clear()
   }
 
   checkEventLimits () {

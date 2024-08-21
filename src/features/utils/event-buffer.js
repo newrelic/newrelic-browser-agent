@@ -9,13 +9,15 @@ import { MAX_PAYLOAD_SIZE } from '../../common/constants/agent-constants'
  */
 
 /**
- * A container that holds, evaluates, and merges event objects
+ * A container that holds, evaluates, and merges event objects for harvesting
  */
 export class EventBuffer {
   /** @type {Object[]} */
   #buffer = []
   /** @type {number} */
   #bytes = 0
+  /** @type {EventBuffer} */
+  #held
 
   /**
    *
@@ -40,13 +42,21 @@ export class EventBuffer {
   }
 
   /**
+   * held is another event buffer
+   */
+  get held () {
+    this.#held ??= new EventBuffer(this.maxPayloadSize)
+    return this.#held
+  }
+
+  /**
    * Adds an event object to the buffer while tallying size
    * @param {Object} event the event object to add to the buffer
    * @returns {EventBuffer} returns the event buffer for chaining
    */
   add (event) {
     const size = stringify(event).length
-    if (!this.canMerge(size)) return
+    if (!this.canMerge(size)) return this
     this.#buffer.push(event)
     this.#bytes += size
     return this
@@ -59,6 +69,18 @@ export class EventBuffer {
   clear () {
     this.#bytes = 0
     this.#buffer = []
+    return this
+  }
+
+  hold () {
+    this.held.merge(this)
+    this.clear()
+    return this
+  }
+
+  unhold () {
+    this.merge(this.held, true)
+    this.held.clear()
     return this
   }
 

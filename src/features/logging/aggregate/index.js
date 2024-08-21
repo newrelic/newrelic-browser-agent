@@ -11,6 +11,7 @@ import { Log } from '../shared/log'
 import { isValidLogLevel } from '../shared/utils'
 import { applyFnToProps } from '../../../common/util/traverse'
 import { MAX_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
+import { EventBuffer } from '../../utils/event-buffer'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -20,9 +21,7 @@ export class Aggregate extends AggregateBase {
     super(agentIdentifier, aggregator, FEATURE_NAME)
 
     /** held logs before sending */
-    this.bufferedLogs = []
-    /** held logs during sending, for retries */
-    this.outgoingLogs = []
+    this.bufferedLogs = new EventBuffer()
     /** the estimated bytes of log data waiting to be sent -- triggers a harvest if adding a new log will exceed limit  */
     this.estimatedBytes = 0
 
@@ -91,16 +90,15 @@ export class Aggregate extends AggregateBase {
       this.scheduler.runHarvest({})
     }
     this.estimatedBytes += logBytes
-    this.bufferedLogs.push(log)
+    this.bufferedLogs.add(log)
   }
 
-  prepareHarvest () {
-    if (this.blocked || !(this.bufferedLogs.length || this.outgoingLogs.length)) return
+  prepareHarvest (options) {
+    if (this.blocked || !this.bufferedLogs.isValid()) return
     /** populate outgoing array while also clearing main buffer */
-    this.outgoingLogs.push(...this.bufferedLogs.splice(0))
     this.estimatedBytes = 0
     /** see https://source.datanerd.us/agents/rum-specs/blob/main/browser/Log for logging spec */
-    return {
+    const payload = {
       qs: {
         browser_monitoring_key: this.#agentInfo.licenseKey
       },
@@ -120,14 +118,20 @@ export class Aggregate extends AggregateBase {
         },
         /** logs section contains individual unique log entries */
         logs: applyFnToProps(
-          this.outgoingLogs,
+          this.bufferedLogs.buffer,
           this.obfuscator.obfuscateString.bind(this.obfuscator), 'string'
         )
       }]
     }
+
+    if (options.retry) this.bufferedLogs.hold()
+    else this.bufferedLogs.clear()
+
+    return payload
   }
 
   onHarvestFinished (result) {
-    if (!result.retry) this.outgoingLogs = []
+    if (!result.retry) this.bufferedLogs.unhold()
+    else this.bufferedLogs.held.clear()
   }
 }

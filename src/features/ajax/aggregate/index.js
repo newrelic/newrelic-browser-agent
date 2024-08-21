@@ -15,6 +15,7 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { parseGQL } from './gql'
 import { getNREUMInitializedAgent } from '../../../common/window/nreum'
 import Chunk from './chunk'
+import { EventBuffer } from '../../utils/event-buffer'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -32,9 +33,8 @@ export class Aggregate extends AggregateBase {
     const harvestTimeSeconds = this.#agentInit.ajax.harvestTimeSeconds || 10
     setDenyList(this.#agentRuntime.denyList)
 
-    this.ajaxEvents = []
+    this.ajaxEvents = new EventBuffer()
     this.spaAjaxEvents = {}
-    this.sentAjaxEvents = []
     const classThis = this
 
     // --- v Used by old spa feature
@@ -42,13 +42,13 @@ export class Aggregate extends AggregateBase {
       if (!this.spaAjaxEvents[interaction.id]) return
 
       if (!wasSaved) { // if the ixn was saved, then its ajax reqs are part of the payload whereas if it was discarded, it should still be harvested in the ajax feature itself
-        this.spaAjaxEvents[interaction.id].forEach((item) => this.ajaxEvents.push(item))
+        this.spaAjaxEvents[interaction.id].forEach((item) => this.ajaxEvents.add(item))
       }
       delete this.spaAjaxEvents[interaction.id]
     })
     // --- ^
     // --- v Used by new soft nav
-    registerHandler('returnAjax', event => this.ajaxEvents.push(event), this.featureName, this.ee)
+    registerHandler('returnAjax', event => this.ajaxEvents.add(event), this.featureName, this.ee)
     // --- ^
     registerHandler('xhr', function () { // the EE-drain system not only switches "this" but also passes a new EventContext with info. Should consider platform refactor to another system which passes a mutable context around separately and predictably to avoid problems like this.
       classThis.storeXhr(...arguments, this) // this switches the context back to the class instance while passing the NR context as an argument -- see "ctx" in storeXhr
@@ -133,30 +133,28 @@ export class Aggregate extends AggregateBase {
       this.spaAjaxEvents[interactionId] = this.spaAjaxEvents[interactionId] || []
       this.spaAjaxEvents[interactionId].push(event)
     } else {
-      this.ajaxEvents.push(event)
+      this.ajaxEvents.add(event)
     }
   }
 
   prepareHarvest (options) {
     options = options || {}
-    if (this.ajaxEvents.length === 0) return null
+    if (this.ajaxEvents.buffer.length === 0) return null
 
-    const payload = this.#getPayload(this.ajaxEvents)
+    const payload = this.#getPayload(this.ajaxEvents.buffer)
     const payloadObjs = []
 
     for (let i = 0; i < payload.length; i++) payloadObjs.push({ body: { e: payload[i] } })
 
-    if (options.retry) this.sentAjaxEvents = this.ajaxEvents
-    this.ajaxEvents = []
+    if (options.retry) this.ajaxEvents.hold()
+    else this.ajaxEvents.clear()
 
     return payloadObjs
   }
 
   onEventsHarvestFinished (result) {
-    if (result.retry && this.sentAjaxEvents.length > 0) {
-      this.ajaxEvents.unshift(...this.sentAjaxEvents)
-      this.sentAjaxEvents = []
-    }
+    if (result.retry && this.ajaxEvents.held.isValid) this.ajaxEvents.unhold()
+    else this.ajaxEvents.held.clear()
   }
 
   #getPayload (events, numberOfChunks) {

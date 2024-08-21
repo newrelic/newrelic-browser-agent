@@ -103,7 +103,7 @@ export class Aggregate extends AggregateBase {
 
   onHarvestStarted (options) {
     const { userAttributes, atts } = getInfo(this.agentIdentifier)
-    if (!this.events.isValid()) return
+    if (!this.events.hasData) return
     var payload = ({
       qs: {
         ua: userAttributes,
@@ -120,7 +120,7 @@ export class Aggregate extends AggregateBase {
   }
 
   onHarvestFinished (result) {
-    if (result && result?.sent && result?.retry && this.events.held.isValid()) this.events.unhold()
+    if (result && result?.sent && result?.retry && this.events.held.hasData) this.events.unhold()
     else this.events.held.clear()
   }
 

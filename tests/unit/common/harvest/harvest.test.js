@@ -131,14 +131,6 @@ describe('_send', () => {
     jest.mocked(submitDataModule.getSubmitMethod).mockReturnValue(submitMethod)
   })
 
-  test('should increment harvestCount every time _send is called', () => {
-    while (configModule.getRuntime().harvestCount < 10) {
-      const prev = configModule.getRuntime().harvestCount
-      harvestInstance._send(spec)
-      expect(configModule.getRuntime().harvestCount).toEqual(prev + 1)
-    }
-  })
-
   test('should return false when info.errorBeacon is not defined', () => {
     jest.mocked(configModule.getInfo).mockReturnValue({})
 

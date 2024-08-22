@@ -1,4 +1,4 @@
-import { notSafari, supportsMultipleTabs } from '../../tools/browser-matcher/common-matchers.mjs'
+import { supportsMultiTabSessions } from '../../tools/browser-matcher/common-matchers.mjs'
 import { testErrorsRequest } from '../../tools/testing-server/utils/expect-tests'
 
 const config = {
@@ -69,7 +69,7 @@ describe('newrelic session ID', () => {
       expect(ls2.expiresAt).toEqual(ls1.expiresAt)
     })
 
-    it.withBrowsersMatching([supportsMultipleTabs, notSafari])('should keep a session id across page loads - Multi tab navigation', async () => {
+    it.withBrowsersMatching(supportsMultiTabSessions)('should keep a session id across page loads - Multi tab navigation', async () => {
       await browser.url(await browser.testHandle.assetURL('session-entity.html', config))
         .then(() => browser.waitForAgentLoad())
 

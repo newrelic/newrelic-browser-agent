@@ -87,21 +87,31 @@ export class TimeKeeper {
 
   /**
    * Converts a page origin relative time to an absolute timestamp
-   * corrected to NR server time.
+   * using the user's local clock.
    * @param relativeTime {number} The relative time of the event in milliseconds
    * @returns {number} Corrected unix/epoch timestamp
    */
   convertRelativeTimestamp (relativeTime) {
-    return Math.floor(this.#correctedOriginTime + relativeTime)
+    return originTime + relativeTime
   }
 
   /**
-   * Corrects an event timestamp to NR server time.
+   * Converts an absolute timestamp to a relative timestamp using the
+   * user's local clock.
+   * @param timestamp
+   * @returns {number}
+   */
+  convertAbsoluteTimestamp (timestamp) {
+    return timestamp - originTime
+  }
+
+  /**
+   * Corrects an absolute timestamp to NR server time.
    * @param timestamp {number} The unix/epoch timestamp of the event with milliseconds
    * @return {number} Corrected unix/epoch timestamp
    */
   correctAbsoluteTimestamp (timestamp) {
-    return Math.floor(timestamp - this.#localTimeDiff)
+    return timestamp - this.#localTimeDiff
   }
 
   /** Process the session entity and use the info to set the main time calculations if present */

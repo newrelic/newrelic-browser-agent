@@ -45,7 +45,9 @@ export class Aggregate extends AggregateBase {
           this.addEvent({
             ...attributes,
             eventType: 'PageAction',
-            timestamp: this.#agentRuntime.timeKeeper.convertRelativeTimestamp(timestamp),
+            timestamp: Math.floor(this.#agentRuntime.timeKeeper.correctAbsoluteTimestamp(
+              this.#agentRuntime.timeKeeper.convertRelativeTimestamp(timestamp)
+            )),
             timeSinceLoad: timestamp / 1000,
             actionName: name,
             referrerUrl: this.referrerUrl,
@@ -81,7 +83,9 @@ export class Aggregate extends AggregateBase {
 
     const defaultEventAttributes = {
       /** should be overridden by the event-specific attributes, but just in case -- set it to now() */
-      timestamp: this.#agentRuntime.timeKeeper.convertRelativeTimestamp(now()),
+      timestamp: Math.floor(this.#agentRuntime.timeKeeper.correctAbsoluteTimestamp(
+        this.#agentRuntime.timeKeeper.convertRelativeTimestamp(now())
+      )),
       /** all generic events require a pageUrl */
       pageUrl: cleanURL(getRuntime(this.agentIdentifier).origin)
     }

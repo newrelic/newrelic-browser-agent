@@ -18,7 +18,7 @@ export class AjaxNode extends BelNode {
     this.spanTimestamp = ajaxEvent.spanTimestamp
     this.gql = ajaxEvent.gql
 
-    this.start = ajaxEvent.startTime
+    this.start = ajaxEvent.startTime // 5000 --- 5500 --> 10500
     this.end = ajaxEvent.endTime
   }
 

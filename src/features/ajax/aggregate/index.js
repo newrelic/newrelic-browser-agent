@@ -115,7 +115,9 @@ export class Aggregate extends AggregateBase {
     if (ctx.dt) {
       event.spanId = ctx.dt.spanId
       event.traceId = ctx.dt.traceId
-      event.spanTimestamp = this.#agentRuntime.timeKeeper.correctAbsoluteTimestamp(ctx.dt.timestamp)
+      event.spanTimestamp = Math.floor(
+        this.#agentRuntime.timeKeeper.correctAbsoluteTimestamp(ctx.dt.timestamp)
+      )
     }
 
     // parsed from the AJAX body, looking for operationName param & parsing query for operationType

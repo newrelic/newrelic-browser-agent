@@ -86,7 +86,9 @@ describe('Generic Events aggregate', () => {
       genericEventsAgg.ee.emit('api-addPageAction', [relativeTimestamp, name, { foo: 'bar' }])
       expect(genericEventsAgg.events.buffer[0]).toMatchObject({
         eventType: 'PageAction',
-        timestamp: timeKeeper.convertRelativeTimestamp(relativeTimestamp),
+        timestamp: Math.floor(timeKeeper.correctAbsoluteTimestamp(
+          timeKeeper.convertRelativeTimestamp(relativeTimestamp)
+        )),
         timeSinceLoad: relativeTimestamp / 1000,
         actionName: name,
         referrerUrl,

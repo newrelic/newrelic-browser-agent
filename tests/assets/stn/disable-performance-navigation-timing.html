@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script>
+    OriginalPerformanceNavigationTiming = PerformanceNavigationTiming
+    PerformanceNavigationTiming = undefined
+  </script>
+  <title>Disable PerformanceNavigationTiming API</title>
+  {init} {config} {loader}
+</head>
+<body>
+<div>
+  This page contains a script that overrides the global PerformanceNavigationTiming API to prevent it from being
+  usable by the session trace feature. This simulates some browsers where that API is not available.
+</div>
+</body>
+</html>

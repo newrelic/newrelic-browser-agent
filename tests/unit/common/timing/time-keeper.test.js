@@ -80,6 +80,7 @@ describe('processRumRequest', () => {
   test.each([null, undefined])('should throw an error when rumRequest is %s', (rumRequest) => {
     expect(() => timeKeeper.processRumRequest(rumRequest, startTime, endTime))
       .toThrowError()
+    expect(timeKeeper.ready).toEqual(false)
   })
 
   test.each([null, undefined])('should throw an error when date header is %s', (dateHeader) => {
@@ -89,6 +90,7 @@ describe('processRumRequest', () => {
 
     expect(() => timeKeeper.processRumRequest(mockRumRequest, startTime, endTime))
       .toThrowError()
+    expect(timeKeeper.ready).toEqual(false)
   })
 
   test('should throw an error when date header retrieval throws an error', () => {
@@ -98,6 +100,7 @@ describe('processRumRequest', () => {
 
     expect(() => timeKeeper.processRumRequest(mockRumRequest, startTime, endTime))
       .toThrowError()
+    expect(timeKeeper.ready).toEqual(false)
   })
 
   test('should throw an error when correctedOriginTime is NaN', () => {
@@ -107,11 +110,22 @@ describe('processRumRequest', () => {
 
     expect(() => timeKeeper.processRumRequest(mockRumRequest, startTime, endTime))
       .toThrowError()
+    expect(timeKeeper.ready).toEqual(false)
+  })
+
+  it('should throw an error when date header is invalid format', () => {
+    const mockRumRequest = {
+      getResponseHeader: jest.fn(() => (new Date()).toISOString().slice(0, -5))
+    }
+
+    expect(() => timeKeeper.processRumRequest(mockRumRequest, startTime, endTime))
+      .toThrowError()
+    expect(timeKeeper.ready).toEqual(false)
   })
 })
 
-describe('corrected time calculations', () => {
-  test('should convert a relative time to a corrected timestamp - local behind server', () => {
+describe('convertRelativeTimestamp', () => {
+  test('should convert a relative time to an absolute timestamp - local behind server', () => {
     const mockRumRequest = {
       getResponseHeader: jest.fn(() => (new Date(serverTime)).toUTCString())
     }
@@ -119,15 +133,15 @@ describe('corrected time calculations', () => {
     timeKeeper.processRumRequest(mockRumRequest, startTime, endTime)
 
     const relativeTimeA = 225
-    const correctedRelativeTimeA = timeKeeper.convertRelativeTimestamp(relativeTimeA)
-    expect(correctedRelativeTimeA).toEqual(1706213060700)
+    const convertedAbsoluteTimeA = timeKeeper.convertRelativeTimestamp(relativeTimeA)
+    expect(convertedAbsoluteTimeA).toEqual(1706213058225)
 
     const relativeTimeB = 1325
-    const correctedRelativeTimeB = timeKeeper.convertRelativeTimestamp(relativeTimeB)
-    expect(correctedRelativeTimeB).toEqual(1706213061800)
+    const convertedAbsoluteTimeB = timeKeeper.convertRelativeTimestamp(relativeTimeB)
+    expect(convertedAbsoluteTimeB).toEqual(1706213059325)
   })
 
-  test('should convert a relative time to a corrected timestamp - local ahead server', () => {
+  test('should convert a relative time to an absolute timestamp - local ahead server', () => {
     serverTime = 1706213056000
 
     const mockRumRequest = {
@@ -137,14 +151,52 @@ describe('corrected time calculations', () => {
     timeKeeper.processRumRequest(mockRumRequest, startTime, endTime)
 
     const relativeTimeA = 225
-    const correctedRelativeTimeA = timeKeeper.convertRelativeTimestamp(relativeTimeA)
-    expect(correctedRelativeTimeA).toEqual(1706213055700)
+    const convertedAbsoluteTimeA = timeKeeper.convertRelativeTimestamp(relativeTimeA)
+    expect(convertedAbsoluteTimeA).toEqual(1706213058225)
 
     const relativeTimeB = 1325
-    const correctedRelativeTimeB = timeKeeper.convertRelativeTimestamp(relativeTimeB)
-    expect(correctedRelativeTimeB).toEqual(1706213056800)
+    const convertedAbsoluteTimeB = timeKeeper.convertRelativeTimestamp(relativeTimeB)
+    expect(convertedAbsoluteTimeB).toEqual(1706213059325)
+  })
+})
+
+describe('convertAbsoluteTimestamp', () => {
+  test('should convert an absolute timestamp to a relative timestamp - local behind server', () => {
+    const mockRumRequest = {
+      getResponseHeader: jest.fn(() => (new Date(serverTime)).toUTCString())
+    }
+
+    timeKeeper.processRumRequest(mockRumRequest, startTime, endTime)
+
+    const absoluteTimeA = 1706213058225
+    const convertedRelativeTimeA = timeKeeper.convertAbsoluteTimestamp(absoluteTimeA)
+    expect(convertedRelativeTimeA).toEqual(225)
+
+    const absoluteTimeB = 1706213059325
+    const convertedAbsoluteTimeB = timeKeeper.convertAbsoluteTimestamp(absoluteTimeB)
+    expect(convertedAbsoluteTimeB).toEqual(1325)
   })
 
+  test('should convert an absolute timestamp to a relative timestamp - local ahead server', () => {
+    serverTime = 1706213056000
+
+    const mockRumRequest = {
+      getResponseHeader: jest.fn(() => (new Date(serverTime)).toUTCString())
+    }
+
+    timeKeeper.processRumRequest(mockRumRequest, startTime, endTime)
+
+    const absoluteTimeA = 1706213058225
+    const convertedRelativeTimeA = timeKeeper.convertAbsoluteTimestamp(absoluteTimeA)
+    expect(convertedRelativeTimeA).toEqual(225)
+
+    const absoluteTimeB = 1706213059325
+    const convertedAbsoluteTimeB = timeKeeper.convertAbsoluteTimestamp(absoluteTimeB)
+    expect(convertedAbsoluteTimeB).toEqual(1325)
+  })
+})
+
+describe('correctAbsoluteTimestamp', () => {
   test('should correct an absolute timestamp - local behind server', () => {
     const mockRumRequest = {
       getResponseHeader: jest.fn(() => (new Date(serverTime)).toUTCString())

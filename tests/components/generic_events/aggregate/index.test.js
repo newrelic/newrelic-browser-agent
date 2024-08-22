@@ -3,6 +3,7 @@ import { Aggregator } from '../../../../src/common/aggregate/aggregator'
 import { getConfiguration, getInfo, setInfo, setRuntime } from '../../../../src/common/config/config'
 import { TimeKeeper } from '../../../../src/common/timing/time-keeper'
 import { configure } from '../../../../src/loaders/configure/configure'
+import { EventBuffer } from '../../../../src/features/generic_events/aggregate/event-buffer'
 
 const agentId = 'abcd'
 const referrerUrl = 'https://test.com'
@@ -35,9 +36,8 @@ describe('Generic Events aggregate', () => {
       eventsPerHarvest: 1000,
       harvestTimeSeconds: 30,
       referrerUrl: 'https://test.com',
-      currentEvents: [],
-      events: [],
-      overflow: []
+      events: new EventBuffer(),
+      retryEvents: new EventBuffer()
     })
   })
 
@@ -63,22 +63,15 @@ describe('Generic Events aggregate', () => {
     expect(console.debug).toHaveBeenCalledWith('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#44', undefined)
   })
 
-  it('should only buffer 1000 events at a time', async () => {
+  it('should only buffer 64kb of events at a time', async () => {
     genericEventsAgg.ee.emit('rumresp', [{ ins: 1 }])
     await wait(100)
     genericEventsAgg.harvestScheduler.runHarvest = jest.fn()
-    for (let i = 1; i < 1000; i++) {
-      genericEventsAgg.addEvent({ name: i, eventType: 'test' })
-    }
+    genericEventsAgg.addEvent({ name: 'test', eventType: 'x'.repeat(63000) })
 
     expect(genericEventsAgg.harvestScheduler.runHarvest).not.toHaveBeenCalled()
-    genericEventsAgg.addEvent({ name: 1000, eventType: 'test' })
+    genericEventsAgg.addEvent({ name: 1000, eventType: 'x'.repeat(1000) })
     expect(genericEventsAgg.harvestScheduler.runHarvest).toHaveBeenCalled()
-    expect(genericEventsAgg.events.length).toEqual(0) // 1000 - 1000 == 0
-    for (let i = 1; i < 11; i++) {
-      genericEventsAgg.addEvent({ name: i, eventType: 'test' })
-    }
-    expect(genericEventsAgg.events.length).toEqual(10) // 0 + 10 == 10
   })
 
   describe('page_actions', () => {
@@ -92,7 +85,7 @@ describe('Generic Events aggregate', () => {
       const name = 'name'
       setInfo(agentId, { ...getInfo(agentId), jsAttributes: { globalFoo: 'globalBar' } })
       genericEventsAgg.ee.emit('api-addPageAction', [relativeTimestamp, name, { foo: 'bar' }])
-      expect(genericEventsAgg.events[0]).toMatchObject({
+      expect(genericEventsAgg.events.buffer[0]).toMatchObject({
         eventType: 'PageAction',
         timestamp: Math.floor(timeKeeper.correctAbsoluteTimestamp(
           timeKeeper.convertRelativeTimestamp(relativeTimestamp)
@@ -114,7 +107,7 @@ describe('Generic Events aggregate', () => {
       const relativeTimestamp = Math.random() * 1000
       const name = 'name'
       genericEventsAgg.ee.emit('api-addPageAction', [relativeTimestamp, name, { eventType: 'BetterPageAction', timestamp: 'BetterTimestamp' }])
-      expect(genericEventsAgg.events[0]).toMatchObject({
+      expect(genericEventsAgg.events.buffer[0]).toMatchObject({
         eventType: 'PageAction',
         timestamp: expect.any(Number)
       })
@@ -125,7 +118,7 @@ describe('Generic Events aggregate', () => {
       const name = 'name'
       setInfo(agentId, { ...getInfo(agentId), jsAttributes: { eventType: 'BetterPageAction', timestamp: 'BetterTimestamp' } })
       genericEventsAgg.ee.emit('api-addPageAction', [relativeTimestamp, name, {}])
-      expect(genericEventsAgg.events[0]).toMatchObject({
+      expect(genericEventsAgg.events.buffer[0]).toMatchObject({
         eventType: 'PageAction',
         timestamp: expect.any(Number)
       })

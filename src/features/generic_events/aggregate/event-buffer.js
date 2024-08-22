@@ -42,7 +42,7 @@ export class EventBuffer {
    * @returns {EventBuffer} returns the event buffer for chaining
    */
   merge (eventBuffer, prepend = false) {
-    if (!this.canMerge(eventBuffer.bytes)) return
+    if (!this.canMerge(eventBuffer.bytes)) return this
     this.buffer = prepend ? [...eventBuffer.buffer, ...this.buffer] : [...this.buffer, ...eventBuffer.buffer]
     this.bytes = this.bytes + eventBuffer.bytes
     return this

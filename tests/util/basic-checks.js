@@ -258,7 +258,7 @@ export function checkSessionTrace ({ query, body }) {
         s: expect.any(Number),
         e: expect.any(Number),
         o: expect.any(String),
-        t: expect.any(String)
+        t: expect.any(Number)
       })
     } else if (res.n === 'Ajax') {
       expect(res).toMatchObject({

@@ -1,10 +1,16 @@
 import { notMobile } from '../../tools/browser-matcher/common-matchers.mjs'
+import { testAjaxEventsRequest, testInteractionEventsRequest } from '../../tools/testing-server/utils/expect-tests'
 
 // ios+android with saucelabs does not honor the window load to induce ajax into ixn reliably. omitting from test for now until more elegant solution is reached.
 describe.withBrowsersMatching(notMobile)('GraphQL metadata is appended to relevant ajax calls', () => {
   it('adds GQL metadata to both standalone and interation ajax calls', async () => {
-    const [ixnEvents] = await Promise.all([
-      browser.testHandle.expectInteractionEvents(),
+    const [transactionEventsCapture, ajaxEventsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+      { test: testInteractionEventsRequest },
+      { test: testAjaxEventsRequest }
+    ])
+
+    const [transactionEventsHarvests] = await Promise.all([
+      transactionEventsCapture.waitForResult({ totalCount: 1 }),
       await browser.url(
         await browser.testHandle.assetURL(
           'test-builds/library-wrapper/apollo-client.html',
@@ -12,14 +18,14 @@ describe.withBrowsersMatching(notMobile)('GraphQL metadata is appended to releva
       )
     ])
 
-    const [ajaxEvents] = await Promise.all([
-      browser.testHandle.expectAjaxEvents(),
+    const [ajaxEventsHarvests] = await Promise.all([
+      ajaxEventsCapture.waitForResult({ timeout: 10000 }),
       browser.execute(function () {
         window.sendGQL()
       })])
 
     // operationName: `initialPageLoad` is called during page load (page load browser ixn)
-    expect(ixnEvents.request.body).toEqual(expect.arrayContaining([expect.objectContaining({
+    expect(transactionEventsHarvests[0].request.body).toEqual(expect.arrayContaining([expect.objectContaining({
       type: 'interaction',
       trigger: 'initialPageLoad',
       children: expect.arrayContaining([expect.objectContaining({
@@ -38,7 +44,10 @@ describe.withBrowsersMatching(notMobile)('GraphQL metadata is appended to releva
     })]))
 
     // operationName: `standalone` is called when we execute `window.sendGQL()` (standalone ajax)
-    expect(ajaxEvents.request.body).toEqual(expect.arrayContaining([expect.objectContaining({
+    const gqlHarvest = ajaxEventsHarvests.find(harvest =>
+      harvest.request.body.some(event => event.children.some(child => child.key === 'operationName' && child.value === 'standalone'))
+    )
+    expect(gqlHarvest.request.body).toEqual(expect.arrayContaining([expect.objectContaining({
       type: 'ajax',
       domain: 'flyby-router-demo.herokuapp.com:443',
       children: expect.arrayContaining([

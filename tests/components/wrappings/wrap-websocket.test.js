@@ -60,31 +60,31 @@ describe('wrap-websocket', () => {
 
     expect(events.length).toEqual(0)
 
-    const expectedTimestamps = [expect.any(Number), expect.any(Number)]
+    const expectedBaseData = [expect.any(Number), expect.any(Number), true]
 
     const ws = await prepWS()
-    expect(events[expectedLength - 1]).toEqual([...expectedTimestamps])
+    expect(events[expectedLength - 1]).toEqual([...expectedBaseData])
     expect(emitSpy).toHaveBeenCalledTimes(expectedLength)
-    expect(emitSpy).toHaveBeenCalledWith('websocket-new', [...expectedTimestamps])
+    expect(emitSpy).toHaveBeenCalledWith('websocket-new', [...expectedBaseData])
 
     ws.send('test')
-    expect(events[expectedLength - 1]).toEqual([...expectedTimestamps, 'test'])
+    expect(events[expectedLength - 1]).toEqual([...expectedBaseData, 'test'])
     expect(emitSpy).toHaveBeenCalledTimes(expectedLength)
     expect(emitSpy.mock.calls[emitSpy.mock.calls.length - 1][0]).toEqual('websocket-send')
 
     ws.close()
-    expect(events[expectedLength - 1]).toEqual([...expectedTimestamps])
+    expect(events[expectedLength - 1]).toEqual([...expectedBaseData])
 
     const messageEvent = new Event('message')
     messageEvent.data = 'this is a test'
     ws.dispatchEvent(messageEvent)
-    expect(events[expectedLength - 1][2]).toMatchObject({ event: { data: 'this is a test' }, eventType: 'message' })
+    expect(events[expectedLength - 1][3]).toMatchObject({ event: { data: 'this is a test' }, eventType: 'message' })
     expect(emitSpy).toHaveBeenCalledTimes(expectedLength)
     expect(emitSpy.mock.calls[emitSpy.mock.calls.length - 1][0]).toEqual('websocket-addEventListener')
 
     ws.dispatchEvent(new Event('open'))
     expect(events[expectedLength - 1]).toEqual(expect.arrayContaining([
-      ...expectedTimestamps,
+      ...expectedBaseData,
       expect.objectContaining({ eventType: 'open' })
     ]))
     expect(emitSpy).toHaveBeenCalledTimes(expectedLength)
@@ -92,7 +92,7 @@ describe('wrap-websocket', () => {
 
     ws.dispatchEvent(new Event('error'))
     expect(events[expectedLength - 1]).toEqual(expect.arrayContaining([
-      ...expectedTimestamps,
+      ...expectedBaseData,
       expect.objectContaining({ eventType: 'error' })
     ]))
     expect(emitSpy).toHaveBeenCalledTimes(expectedLength)
@@ -101,7 +101,7 @@ describe('wrap-websocket', () => {
     ws.dispatchEvent(new Event('unsupported'))
     /** should have not changed */
     expect(events[expectedLength - 1]).toEqual(expect.arrayContaining([
-      ...expectedTimestamps,
+      ...expectedBaseData,
       expect.objectContaining({ eventType: 'error' })
     ]))
     expect(emitSpy).toHaveBeenCalledTimes(expectedLength)

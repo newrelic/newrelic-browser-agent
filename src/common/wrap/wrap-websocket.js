@@ -1,6 +1,7 @@
 import { globalScope } from '../constants/runtime'
 import { originals } from '../config/state/originals'
 import { now } from '../timing/now'
+import { checkState } from '../window/load'
 
 export const WEBSOCKET_TAG = 'websocket-'
 export const ADD_EVENT_LISTENER_TAG = 'addEventListener'
@@ -15,7 +16,8 @@ export function wrapWebSocket (sharedEE) {
     const createdAt = now()
     return function (message, ...data) {
       const timestamp = data[0]?.timeStamp || now()
-      sharedEE.emit(WEBSOCKET_TAG + message, [timestamp, timestamp - createdAt, ...data])
+      const isLoaded = checkState()
+      sharedEE.emit(WEBSOCKET_TAG + message, [timestamp, timestamp - createdAt, isLoaded, ...data])
     }
   }
 

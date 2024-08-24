@@ -7,24 +7,41 @@
   <head>
     <title>RUM Unit Test</title>
     {init} {config} {loader}
+    <script>
+      // preload socket
+      window.bamServer = NREUM.info.beacon
+        window.preLoadSocket = new WebSocket(`ws://${bamServer}/websocket?loaded=pre`)
+
+        // Connection opened
+        preLoadSocket.addEventListener("open", (event) => {
+            preLoadSocket.send("PRELOAD!");
+        });
+
+        // Listen for messages
+        preLoadSocket.addEventListener("message", (event) => {
+            console.log("Message from server ", event.data);
+            preLoadSocket.close()
+        });
+    </script>
   </head>
   <body>Instrumented
 
     <script>
-        const bamServer = NREUM.info.beacon
-        const socket = new WebSocket(`ws://${bamServer}/websocket`)
+      window.addEventListener('load', () => {
+      // postload socket
+        window.postLoadSocket = new WebSocket(`ws://${bamServer}/websocket?loaded=post`)
 
         // Connection opened
-        socket.addEventListener("open", (event) => {
-            console.log("send...")
-            socket.send("Hello Server!");
+        postLoadSocket.addEventListener("open", (event) => {
+            postLoadSocket.send("POSTLOAD!");
         });
 
         // Listen for messages
-        socket.addEventListener("message", (event) => {
+        postLoadSocket.addEventListener("message", (event) => {
             console.log("Message from server ", event.data);
-            if (event.data === `hi - close - We saw you on the server`) socket.close()
+            postLoadSocket.close()
         });
+      })
     </script>
   </body>
 </html>

@@ -4,11 +4,8 @@
  */
 /**
  * @file Primes the Session Replay feature for lazy loading.
- *
- * NOTE: This code is under development and dormant. It will not download to instrumented pages or record any data.
- * It is not production ready, and is not intended to be imported or implemented in any build of the browser agent until
- * functionality is validated and a full user experience is curated.
  */
+
 import { handle } from '../../../common/event-emitter/handle'
 import { DEFAULT_KEY, MODE, PREFIX } from '../../../common/session/constants'
 import { InstrumentBase } from '../../utils/instrument-base'
@@ -106,3 +103,5 @@ export class Instrument extends InstrumentBase {
     }
   }
 }
+
+export const SessionReplay = Instrument

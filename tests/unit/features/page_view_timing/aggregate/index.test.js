@@ -2,14 +2,20 @@ import * as qp from '@newrelic/nr-querypack'
 import { ee } from '../../../../../src/common/event-emitter/contextual-ee'
 import { Aggregator } from '../../../../../src/common/aggregate/aggregator'
 import { Aggregate } from '../../../../../src/features/page_view_timing/aggregate'
-import { getInfo } from '../../../../../src/common/config/config'
+import { getInfo } from '../../../../../src/common/config/info'
 
-jest.mock('../../../../../src/common/config/config', () => ({
+jest.mock('../../../../../src/common/config/info', () => ({
   __esModule: true,
-  getConfigurationValue: jest.fn().mockReturnValue(undefined),
-  isConfigured: jest.fn().mockReturnValue(true),
-  getRuntime: jest.fn().mockReturnValue({}),
-  getInfo: jest.fn()
+  getInfo: jest.fn(),
+  isValid: jest.fn().mockReturnValue(true)
+}))
+jest.mock('../../../../../src/common/config/init', () => ({
+  __esModule: true,
+  getConfigurationValue: jest.fn().mockReturnValue(undefined)
+}))
+jest.mock('../../../../../src/common/config/runtime', () => ({
+  __esModule: true,
+  getRuntime: jest.fn().mockReturnValue({})
 }))
 
 const pvtAgg = new Aggregate('abcd', new Aggregator({ agentIdentifier: 'abcd', ee }))

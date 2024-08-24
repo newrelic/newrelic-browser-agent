@@ -1,4 +1,4 @@
-import { getConfigurationValue } from '../../common/config/config'
+import { getConfigurationValue } from '../../common/config/init'
 import { isBrowserScope } from '../../common/constants/runtime'
 
 /**

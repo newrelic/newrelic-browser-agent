@@ -2,13 +2,15 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { originals, getLoaderConfig } from '../../../common/config/config'
+import { gosNREUMOriginals } from '../../../common/window/nreum'
+import { getLoaderConfig } from '../../../common/config/loader-config'
 import { handle } from '../../../common/event-emitter/handle'
 import { id } from '../../../common/ids/id'
 import { ffVersion, globalScope, isBrowserScope } from '../../../common/constants/runtime'
 import { dataSize } from '../../../common/util/data-size'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
-import { wrapFetch, wrapXhr } from '../../../common/wrap'
+import { wrapXhr } from '../../../common/wrap/wrap-xhr'
+import { wrapFetch } from '../../../common/wrap/wrap-fetch'
 import { parseUrl } from '../../../common/url/parse-url'
 import { DT } from './distributed-tracing'
 import { responseSizeFromXhr } from './response-size'
@@ -22,8 +24,8 @@ import { hasUndefinedHostname } from '../../../common/deny-list/deny-list'
 var handlers = ['load', 'error', 'abort', 'timeout']
 var handlersLen = handlers.length
 
-var origRequest = originals.REQ
-var origXHR = originals.XHR
+var origRequest = gosNREUMOriginals().o.REQ
+var origXHR = gosNREUMOriginals().o.XHR
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
@@ -374,7 +376,7 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
     if (hasUndefinedHostname(params)) return // don't bother with XHR of url with no hostname
 
     metrics.duration = now() - this.startTime
-    if (!this.loadCaptureCalled && xhr.readyState === 4) {
+    if (!this.loadCazptureCalled && xhr.readyState === 4) {
       captureXhrData(this, xhr)
     } else if (params.status == null) {
       params.status = 0
@@ -416,3 +418,5 @@ function addUrl (ctx, url) {
   ctx.parsedOrigin = parsed
   ctx.sameOrigin = parsed.sameOrigin
 }
+
+export const Ajax = Instrument

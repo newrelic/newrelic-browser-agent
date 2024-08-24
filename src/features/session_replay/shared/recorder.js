@@ -1,7 +1,7 @@
 import { record as recorder } from 'rrweb'
 import { stringify } from '../../../common/util/stringify'
 import { AVG_COMPRESSION, CHECKOUT_MS, IDEAL_PAYLOAD_SIZE, QUERY_PARAM_PADDING, RRWEB_EVENT_TYPES, SR_EVENT_EMITTER_TYPES } from '../constants'
-import { getConfigurationValue } from '../../../common/config/config'
+import { getConfigurationValue } from '../../../common/config/init'
 import { RecorderEvents } from './recorder-events'
 import { MODE } from '../../../common/session/constants'
 import { stylesheetEvaluator } from './stylesheet-evaluator'

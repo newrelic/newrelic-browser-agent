@@ -4,7 +4,7 @@
  */
 
 import { stringify } from '../util/stringify'
-import { getRuntime } from '../config/config'
+import { getRuntime } from '../config/runtime'
 
 var hasOwnProp = Object.prototype.hasOwnProperty
 var MAX_ATTRIBUTES = 64

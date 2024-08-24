@@ -4,7 +4,7 @@ import { ee } from '../../../../src/common/event-emitter/contextual-ee'
 
 jest.enableAutomock()
 jest.unmock('../../../../src/features/utils/feature-base')
-jest.mock('../../../../src/common/config/config', () => ({
+jest.mock('../../../../src/common/config/runtime', () => ({
   __esModule: true,
   getRuntime: jest.fn().mockReturnValue({
     isolatedBacklog: true

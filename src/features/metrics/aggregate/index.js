@@ -99,7 +99,8 @@ export class Aggregate extends AggregateBase {
     if (proxy.beacon) this.storeSupportabilityMetrics('Config/BeaconUrl/Changed')
 
     if (isBrowserScope && window.MutationObserver) {
-      this.storeSupportabilityMetrics('Generic/VideoElement/Added', window.document.querySelectorAll('video').length)
+      const preExistingVideos = window.document.querySelectorAll('video').length
+      if (preExistingVideos) this.storeSupportabilityMetrics('Generic/VideoElement/Added', preExistingVideos)
       const mo = new MutationObserver(records => {
         records.forEach(record => {
           record.addedNodes.forEach(addedNode => {
@@ -148,8 +149,8 @@ export class Aggregate extends AggregateBase {
       if (typeof performance !== 'undefined') {
         const markers = performance.getEntriesByType('mark')
         const measures = performance.getEntriesByType('measure')
-        this.storeSupportabilityMetrics('Generic/Performance/Mark/Seen', markers.length)
-        this.storeSupportabilityMetrics('Generic/Performance/Measure/Seen', measures.length)
+        if (markers.length) this.storeSupportabilityMetrics('Generic/Performance/Mark/Seen', markers.length)
+        if (measures.length) this.storeSupportabilityMetrics('Generic/Performance/Measure/Seen', measures.length)
       }
     } catch (e) {
       // do nothing

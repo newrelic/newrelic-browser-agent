@@ -7,6 +7,36 @@ Supportability metrics are intended to be used to give internal value through an
 A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service called Angler aggregates metrics against known labels once per hour and reports a new event with the aggregation findings to a dedicated account.
 
 ### Logging
+<!--- WebSocket new class was made, ms from page origin --->
+* WebSocket/New/Ms
+<!--- WebSocket new class was made, ms from class init --->
+* WebSocket/New/MsSinceClassInit
+* <!--- WebSocket send class was made, ms from page origin --->
+* WebSocket/Send/Ms
+<!--- WebSocket send method called, ms from class init --->
+* WebSocket/Send/MsSinceClassInit
+<!--- WebSocket send method called, bytes from argument --->
+* WebSocket/Message/Bytes
+* <!--- WebSocket close method called, ms from page origin --->
+* WebSocket/Close/Ms
+<!--- WebSocket close method called, ms from class init --->
+* WebSocket/Close/MsSinceClassInit
+* <!--- WebSocket message event was received, ms from page origin --->
+* WebSocket/Message/Ms
+<!--- WebSocket message event was received, ms from class init --->
+* WebSocket/Message/MsSinceClassInit
+<!--- WebSocket message event was received, bytes from event.data --->
+* WebSocket/Message/Bytes
+* <!--- WebSocket message event was received, ms from page origin --->
+* WebSocket/Error/Ms
+<!--- WebSocket error event was received, ms from class init --->
+* WebSocket/Error/MsSinceClassInit
+* * <!--- WebSocket open event was received, ms from page origin --->
+* WebSocket/Open/Ms
+<!--- WebSocket open event was received, ms from class init --->
+* WebSocket/Open/MsSinceClassInit
+
+### WebSockets
 <!--- Logging harvest was too big to send --->
 * Logging/Harvest/Failed/Seen
 <!--- Logging harvest was sent before the interval elapsed --->

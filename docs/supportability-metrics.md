@@ -6,7 +6,7 @@ Supportability metrics are intended to be used to give internal value through an
 ## How
 A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service called Angler aggregates metrics against known labels once per hour and reports a new event with the aggregation findings to a dedicated account.
 
-### Logging
+### WebSockets
 <!--- WebSocket new class was made before the page loaded, ms from page origin --->
 * WebSocket/New/PreLoad/Ms
 <!--- WebSocket new class was made before the page loaded, ms from class init --->
@@ -69,7 +69,7 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 <!--- WebSocket open event was received after the page loaded, ms from class init --->
 * WebSocket/Open/PostLoad/MsSinceClassInit
 
-### WebSockets
+### Logging
 <!--- Logging harvest was too big to send --->
 * Logging/Harvest/Failed/Seen
 <!--- Logging harvest was sent before the interval elapsed --->

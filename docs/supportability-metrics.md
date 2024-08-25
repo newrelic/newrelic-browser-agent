@@ -30,13 +30,22 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 * WebSocket/Send/PostLoad/Bytes
 
 <!--- WebSocket close method was called before the page loaded, ms from page origin --->
-* WebSocket/Close/PreLoad/Ms
+* WebSocket/Close-Method/PreLoad/Ms
 <!--- WebSocket close method was called before the page loaded, ms from class init --->
-* WebSocket/Close/Preload/MsSinceClassInit
+* WebSocket/Close-Method/Preload/MsSinceClassInit
 <!--- WebSocket close method was called after the page loaded, ms from page origin --->
-* WebSocket/Close/PostLoad/Ms
+* WebSocket/Close-Method/PostLoad/Ms
 <!--- WebSocket close method was called after the page loaded, ms from class init --->
-* WebSocket/Close/PostLoad/MsSinceClassInit
+* WebSocket/Close-Method/PostLoad/MsSinceClassInit
+  
+<!--- WebSocket close event was received before the page loaded, ms from page origin --->
+* WebSocket/Close-Event/PreLoad/Ms
+<!--- WebSocket close event was received before the page loaded, ms from class init --->
+* WebSocket/Close-Event/Preload/MsSinceClassInit
+<!--- WebSocket close event was received after the page loaded, ms from page origin --->
+* WebSocket/Close-Event/PostLoad/Ms
+<!--- WebSocket close event was received after the page loaded, ms from class init --->
+* WebSocket/Close-Event/PostLoad/MsSinceClassInit
   
 <!--- WebSocket message event was received before the page loaded, ms from page origin --->
 * WebSocket/Message/PreLoad/Ms

@@ -30,7 +30,7 @@ export function wrapWebSocket (sharedEE) {
     const report = reporter()
     report('new')
 
-    const events = ['message', 'error', 'open'] // could also watch the "close" AEL if we wanted to, but we are already watching the static method
+    const events = ['message', 'error', 'open', 'close'] // could also watch the "close" AEL if we wanted to, but we are already watching the static method
     /** add event listeners */
     events.forEach(evt => {
       ws.addEventListener(evt, function (e) {

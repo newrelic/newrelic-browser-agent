@@ -10,18 +10,18 @@
     <script>
       // preload socket
       window.bamServer = NREUM.info.beacon
-        window.preLoadSocket = new WebSocket(`ws://${bamServer}/websocket?loaded=pre`)
+      window.preLoadSocket = new WebSocket(`ws://${bamServer}/websocket?loaded=pre`)
 
-        // Connection opened
-        preLoadSocket.addEventListener("open", (event) => {
-            preLoadSocket.send("PRELOAD!");
-        });
+      // Connection opened
+      preLoadSocket.addEventListener("open", (event) => {
+          preLoadSocket.send("PRELOAD!");
+      });
 
-        // Listen for messages
-        preLoadSocket.addEventListener("message", (event) => {
-            console.log("Message from server ", event.data);
-            preLoadSocket.close()
-        });
+      // Listen for messages
+      preLoadSocket.addEventListener("message", (event) => {
+          console.log("Message from server ", event.data);
+          preLoadSocket.close()
+      });
     </script>
   </head>
   <body>Instrumented

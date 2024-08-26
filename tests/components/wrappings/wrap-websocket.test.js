@@ -60,7 +60,7 @@ describe('wrap-websocket', () => {
 
     expect(events.length).toEqual(0)
 
-    const expectedBaseData = [expect.any(Number), expect.any(Number), true]
+    const expectedBaseData = [expect.any(Number), expect.any(Number), true, expect.any(String)]
 
     const ws = await prepWS()
     expect(events[expectedLength - 1]).toEqual([...expectedBaseData])
@@ -78,7 +78,7 @@ describe('wrap-websocket', () => {
     const messageEvent = new Event('message')
     messageEvent.data = 'this is a test'
     ws.dispatchEvent(messageEvent)
-    expect(events[expectedLength - 1][3]).toMatchObject({ event: { data: 'this is a test' }, eventType: 'message' })
+    expect(events[expectedLength - 1][4]).toMatchObject({ event: { data: 'this is a test' }, eventType: 'message' })
     expect(emitSpy).toHaveBeenCalledTimes(expectedLength)
     expect(emitSpy.mock.calls[emitSpy.mock.calls.length - 1][0]).toEqual('websocket-addEventListener')
 

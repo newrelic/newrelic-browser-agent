@@ -34,12 +34,6 @@ export class Aggregate extends AggregateBase {
     registerHandler(SUPPORTABILITY_METRIC_CHANNEL, this.storeSupportabilityMetrics.bind(this), this.featureName, this.ee)
     registerHandler(CUSTOM_METRIC_CHANNEL, this.storeEventMetrics.bind(this), this.featureName, this.ee)
 
-    WATCHABLE_WEB_SOCKET_EVENTS.forEach(tag => {
-      registerHandler('buffered-' + WEBSOCKET_TAG + tag, (...args) => {
-        handleWebsocketEvents(this.storeSupportabilityMetrics.bind(this), tag, ...args)
-      }, this.featureName, this.ee)
-    })
-
     this.singleChecks() // checks that are run only one time, at script load
     this.eachSessionChecks() // the start of every time user engages with page
   }
@@ -118,6 +112,12 @@ export class Aggregate extends AggregateBase {
       })
       mo.observe(window.document.body, { childList: true, subtree: true })
     }
+
+    WATCHABLE_WEB_SOCKET_EVENTS.forEach(tag => {
+      registerHandler('buffered-' + WEBSOCKET_TAG + tag, (...args) => {
+        handleWebsocketEvents(this.storeSupportabilityMetrics.bind(this), tag, ...args)
+      }, this.featureName, this.ee)
+    })
   }
 
   eachSessionChecks () {

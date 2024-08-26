@@ -2,6 +2,7 @@ import { globalScope } from '../constants/runtime'
 import { originals } from '../config/state/originals'
 import { now } from '../timing/now'
 import { checkState } from '../window/load'
+import { generateRandomHexString } from '../ids/unique-id'
 
 export const WEBSOCKET_TAG = 'websocket-'
 export const ADD_EVENT_LISTENER_TAG = 'addEventListener'
@@ -12,12 +13,12 @@ export function wrapWebSocket (sharedEE) {
   if (wrapped[sharedEE.debugId]++) return sharedEE
   if (!originals.WS) return sharedEE
 
-  function reporter () {
+  function reporter (socketId) {
     const createdAt = now()
     return function (message, ...data) {
       const timestamp = data[0]?.timeStamp || now()
       const isLoaded = checkState()
-      sharedEE.emit(WEBSOCKET_TAG + message, [timestamp, timestamp - createdAt, isLoaded, ...data])
+      sharedEE.emit(WEBSOCKET_TAG + message, [timestamp, timestamp - createdAt, isLoaded, socketId, ...data])
     }
   }
 
@@ -27,7 +28,8 @@ export function wrapWebSocket (sharedEE) {
 
   function WrappedWebSocket () {
     const ws = new originals.WS(...arguments)
-    const report = reporter()
+    const socketId = generateRandomHexString(6)
+    const report = reporter(socketId)
     report('new')
 
     const events = ['message', 'error', 'open', 'close'] // could also watch the "close" AEL if we wanted to, but we are already watching the static method

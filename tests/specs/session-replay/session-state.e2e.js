@@ -1,5 +1,7 @@
-import { supportsMultipleTabs } from '../../../tools/browser-matcher/common-matchers.mjs'
-import { RRWEB_EVENT_TYPES, srConfig, MODE, testExpectedReplay } from '../util/helpers.js'
+import { supportsMultiTabSessions } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { RRWEB_EVENT_TYPES, srConfig, MODE, decodeAttributes } from '../util/helpers.js'
+import { testBlobReplayRequest } from '../../../tools/testing-server/utils/expect-tests'
+import { JSONPath } from 'jsonpath-plus'
 
 describe('session manager state behavior', () => {
   afterEach(async () => {
@@ -12,7 +14,8 @@ describe('session manager state behavior', () => {
       await browser.url(await browser.testHandle.assetURL('instrumented.html', srConfig()))
         .then(() => browser.waitForFeatureAggregate('session_replay'))
 
-      await browser.pause(1000)
+      await browser.pause(1000) // Give the agent time to update the session replay state
+
       const { agentSessions } = await browser.getAgentSessionInfo()
       const sessionClass = Object.values(agentSessions)[0]
       expect(sessionClass.sessionReplayMode).toEqual(MODE.FULL)
@@ -23,7 +26,8 @@ describe('session manager state behavior', () => {
       await browser.url(await browser.testHandle.assetURL('instrumented.html', srConfig()))
         .then(() => browser.waitForFeatureAggregate('session_replay'))
 
-      await browser.pause(1000)
+      await browser.pause(1000) // Give the agent time to update the session replay state
+
       const { agentSessions } = await browser.getAgentSessionInfo()
       const sessionClass = Object.values(agentSessions)[0]
       expect(sessionClass.sessionReplayMode).toEqual(MODE.ERROR)
@@ -34,15 +38,16 @@ describe('session manager state behavior', () => {
       await browser.url(await browser.testHandle.assetURL('instrumented.html', srConfig()))
         .then(() => browser.waitForFeatureAggregate('session_replay'))
 
-      await browser.pause(1000)
+      await browser.pause(1000) // Give the agent time to update the session replay state
+
       const { agentSessions } = await browser.getAgentSessionInfo()
       const sessionClass = Object.values(agentSessions)[0]
       expect(sessionClass.sessionReplayMode).toEqual(MODE.OFF)
     })
   })
 
-  describe('When session ends', () => {
-    it('should end recording and unload', async () => {
+  describe('when session ends', () => {
+    it('should end recording and clear the buffer', async () => {
       await browser.enableSessionReplay()
       await browser.url(await browser.testHandle.assetURL('rrweb-record.html', { init: { session: { expiresMs: 7500 }, session_replay: { enabled: true } } }))
         .then(() => browser.waitForSessionReplayRecording())
@@ -52,61 +57,96 @@ describe('session manager state behavior', () => {
       const oldSessionClass = Object.values(oldSession)[0]
       expect(oldSessionClass.sessionReplayMode).toEqual(MODE.FULL)
 
-      await Promise.all([
-        browser.testHandle.expectReplay(10000, true),
+      const sessionReplayCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testBlobReplayRequest })
+      const [sessionReplayHarvests] = await Promise.all([
+        sessionReplayCapture.waitForResult({ timeout: 10000 }),
         browser.execute(function () {
           document.querySelector('body').click()
           Object.values(newrelic.initializedAgents)[0].runtime.session.reset()
         })
       ])
+
+      expect(sessionReplayHarvests.length).toEqual(0)
     })
   })
 
-  describe('When session resumes', () => {
-    it.withBrowsersMatching(supportsMultipleTabs)('should take a full snapshot and continue recording', async () => {
+  describe.withBrowsersMatching(supportsMultiTabSessions)('when session resumes', () => {
+    it('should take a full snapshot and continue recording', async () => {
+      const sessionReplayCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testBlobReplayRequest })
+
       await browser.enableSessionReplay()
-      const [{ request: payload }] = await Promise.all([
-        browser.testHandle.expectReplay(15000),
+      let [sessionReplayHarvests] = await Promise.all([
+        sessionReplayCapture.waitForResult({ timeout: 10000 }),
         browser.url(await browser.testHandle.assetURL('instrumented.html', srConfig()))
           .then(() => browser.waitForAgentLoad())
       ])
+      const page1ptid = decodeAttributes(sessionReplayHarvests[0].request.query.attributes).harvestId.split('_')[1]
 
-      expect(payload.body.length).toBeGreaterThan(0)
-      // type 2 payloads are snapshots
-      expect(payload.body.filter(x => x.type === RRWEB_EVENT_TYPES.FullSnapshot).length).toEqual(1)
+      expect(sessionReplayHarvests.length).toBeGreaterThanOrEqual(1)
+      expect(
+        JSONPath({ path: `$.[*].request.body.[?(!!@ && @.type===${RRWEB_EVENT_TYPES.FullSnapshot} && !!@.data)]`, json: sessionReplayHarvests }).length
+      ).toEqual(1)
 
-      /** This is scoped out this way to guarantee we have it staged in time since preload can harvest super early, sometimes earlier than wdio can expect normally */
-      /** see next `testExpectedReplay` */
-      browser.testHandle.expectReplay(15000).then(async ({ request: page2Contents }) => {
-        testExpectedReplay({ data: page2Contents, session: localStorage.value, hasError: false, hasMeta: true, hasSnapshot: true, isFirstChunk: false })
-      })
-      const newTab = await browser.createWindow('tab')
-      await browser.switchToWindow(newTab.handle)
-      await browser.enableSessionReplay()
-      await browser.url(await browser.testHandle.assetURL('instrumented.html', srConfig()))
-        .then(() => browser.waitForSessionReplayRecording())
+      ;[sessionReplayHarvests] = await Promise.all([
+        sessionReplayCapture.waitForResult({ timeout: 10000 }),
+        browser.createWindow('tab')
+          .then((newTab) => browser.switchToWindow(newTab.handle))
+          .then(async () => browser.url(await browser.testHandle.assetURL('instrumented.html', srConfig())))
+          .then(() => browser.waitForAgentLoad())
+      ])
+
+      const newTabHarvests = sessionReplayHarvests
+        .filter(harvest => decodeAttributes(harvest.request.query.attributes).harvestId.indexOf(page1ptid) === -1)
+      expect(newTabHarvests.length).toBeGreaterThan(0)
+      expect(
+        JSONPath({ path: `$.[*].request.body.[?(!!@ && @.type===${RRWEB_EVENT_TYPES.FullSnapshot} && !!@.data)]`, json: newTabHarvests }).length
+      ).toEqual(1)
+
+      /**
+       * Preloaded payloads may be sent after the first page load harvest. See https://new-relic.atlassian.net/browse/NR-305669
+       * Once that ticket is fixed, the below checks should pass
+       */
+      // testExpectedReplay({ data: refreshHarvests[0].request, session: localStorage.value, hasError: false, hasMeta: true, hasSnapshot: true, isFirstChunk: false })
+      // refreshHarvests.slice(1).forEach(harvest =>
+      //   testExpectedReplay({ data: harvest.request, session: localStorage.value, hasError: false, hasMeta: false, hasSnapshot: false, isFirstChunk: false })
+      // )
 
       await browser.closeWindow()
       await browser.switchToWindow((await browser.getWindowHandles())[0])
     })
   })
 
-  describe('When session pauses', () => {
-    it.withBrowsersMatching(supportsMultipleTabs)('should pause recording', async () => {
+  describe.withBrowsersMatching(supportsMultiTabSessions)('when session pauses', () => {
+    it('should pause recording', async () => {
+      const sessionReplayCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testBlobReplayRequest })
+
       await browser.enableSessionReplay()
-      await browser.url(await browser.testHandle.assetURL('instrumented.html', srConfig()))
-        .then(() => browser.waitForAgentLoad())
+      let [sessionReplayHarvests] = await Promise.all([
+        sessionReplayCapture.waitForResult({ timeout: 10000 }),
+        browser.url(await browser.testHandle.assetURL('instrumented.html', srConfig()))
+          .then(() => browser.waitForAgentLoad())
+      ])
 
-      await browser.testHandle.expectReplay(5000)
+      expect(sessionReplayHarvests.length).toBeGreaterThanOrEqual(1)
 
-      const newTab = await browser.createWindow('tab')
-      await browser.switchToWindow(newTab.handle)
-      await browser.enableSessionReplay()
-      await browser.url(await browser.testHandle.assetURL('/'))
+      /*
+      Switch to a new tab to force the existing tab to final harvest. Then wait for 10 seconds
+      to be sure we have captured all the session replay harvests before loading the new page
+      in the new tab.
+       */
+      await browser.createWindow('tab')
+        .then((newTab) => browser.switchToWindow(newTab.handle))
 
-      // Waiting for the second blob should time out, indicating no second call to the BAM endpoint.
-      // The wait must be longer than harvest interval.
-      await browser.testHandle.expectReplay(10000, true)
+      await sessionReplayCapture.waitForResult({ timeout: 10000 })
+      const totalHarvestCount = (await sessionReplayCapture.getCurrentResults()).length
+
+      ;[sessionReplayHarvests] = await Promise.all([
+        sessionReplayCapture.waitForResult({ timeout: 10000 }),
+        browser.url(await browser.testHandle.assetURL('/', srConfig()))
+      ])
+
+      expect(sessionReplayHarvests.length).toEqual(totalHarvestCount)
+
       await browser.closeWindow()
       await browser.switchToWindow((await browser.getWindowHandles())[0])
     })

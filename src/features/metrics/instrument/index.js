@@ -10,7 +10,9 @@ export class Instrument extends InstrumentBase {
     wrapWebSocket(this.ee)
 
     WATCHABLE_WEB_SOCKET_EVENTS.forEach((suffix) => {
-      this.ee.on(WEBSOCKET_TAG + suffix, (...args) => { handle('buffered-' + WEBSOCKET_TAG + suffix, [...args], undefined, this.featureName, this.ee) })
+      this.ee.on(WEBSOCKET_TAG + suffix, (...args) => {
+        handle('buffered-' + WEBSOCKET_TAG + suffix, [...args], undefined, this.featureName, this.ee)
+      })
     })
 
     this.importAggregator()

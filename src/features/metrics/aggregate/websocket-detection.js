@@ -2,6 +2,16 @@ import { dataSize } from '../../../common/util/data-size'
 import { toTitleCase } from '../../../common/util/text'
 import { ADD_EVENT_LISTENER_TAG } from '../../../common/wrap/wrap-websocket'
 
+/**
+ * A SM handler for web socket events, which converts them to a shape suitable for SMs and reports them.
+ * @param {Function} reporter a function that reports data as a supportability metric
+ * @param {string} tag the unique tag to assign to the sm
+ * @param {number} timestamp ms from page origin
+ * @param {number} timeSinceInit ms from class init
+ * @param {boolean} isLoaded whether the even was observed before the page load event
+ * @param {string} socketId a unique id assigned to the observed socket
+ * @param {*} data the data reported alongside the socket event
+ */
 export function handleWebsocketEvents (reporter, tag, timestamp, timeSinceInit, isLoaded, socketId, data) {
   // socketId is unused in the SMs
   const useDataType = tag === ADD_EVENT_LISTENER_TAG

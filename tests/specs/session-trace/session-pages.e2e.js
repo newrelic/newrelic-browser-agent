@@ -1,6 +1,6 @@
-import { testRumRequest } from '../../../tools/testing-server/utils/expect-tests.js'
-import { supportsMultipleTabs, notSafari } from '../../../tools/browser-matcher/common-matchers.mjs'
-import { testExpectedTrace, stConfig, MODE } from '../util/helpers.js'
+import { testBlobTraceRequest, testRumRequest } from '../../../tools/testing-server/utils/expect-tests.js'
+import { supportsMultiTabSessions } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { testExpectedTrace, stConfig, MODE, decodeAttributes } from '../util/helpers.js'
 
 const getTraceMode = () => browser.execute(function () {
   const agent = Object.values(newrelic.initializedAgents)[0]
@@ -10,6 +10,12 @@ const getTraceMode = () => browser.execute(function () {
 })
 
 describe('Session Replay Across Pages', () => {
+  let sessionTraceCapture
+
+  beforeEach(async () => {
+    sessionTraceCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testBlobTraceRequest })
+  })
+
   afterEach(async () => {
     await browser.destroyAgentSession()
   })
@@ -19,24 +25,35 @@ describe('Session Replay Across Pages', () => {
       test: testRumRequest,
       body: JSON.stringify({ st: 1, sts: 1, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
     })
-    await browser.url(await browser.testHandle.assetURL('instrumented.html', stConfig()))
-      .then(() => browser.waitForAgentLoad())
 
-    const { request: page1Contents } = await browser.testHandle.expectTrace(10000)
+    let [sessionTraceHarvests] = await Promise.all([
+      sessionTraceCapture.waitForResult({ timeout: 10000 }),
+      browser.url(await browser.testHandle.assetURL('instrumented.html', stConfig()))
+        .then(() => browser.waitForAgentLoad())
+    ])
     const { localStorage } = await browser.getAgentSessionInfo()
+    const page1ptid = decodeAttributes(sessionTraceHarvests[0].request.query.attributes).harvestId.split('_')[1]
 
-    testExpectedTrace({ data: page1Contents, session: localStorage.value })
+    sessionTraceHarvests.forEach(harvest => testExpectedTrace({ data: harvest.request, session: localStorage.value }))
 
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
       body: JSON.stringify({ st: 1, sts: 0, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
     })
-    await browser.refresh()
-      .then(() => browser.waitForAgentLoad())
 
-    const { request: page2Contents } = await browser.testHandle.expectTrace()
+    ;[sessionTraceHarvests] = await Promise.all([
+      sessionTraceCapture.waitForResult({ timeout: 10000 }),
+      browser.url(await browser.testHandle.assetURL('instrumented.html', stConfig()))
+        .then(() => browser.waitForAgentLoad())
+    ])
 
-    testExpectedTrace({ data: page2Contents, session: localStorage.value })
+    const refreshHarvests = sessionTraceHarvests
+      .filter(harvest => decodeAttributes(harvest.request.query.attributes).harvestId.indexOf(page1ptid) === -1)
+    expect(refreshHarvests.length).toBeGreaterThan(0)
+    testExpectedTrace({ data: refreshHarvests[0].request, session: localStorage.value, hasError: false, hasMeta: true, hasSnapshot: true, isFirstChunk: false })
+    refreshHarvests.slice(1).forEach(harvest =>
+      testExpectedTrace({ data: harvest.request, session: localStorage.value, hasError: false, hasMeta: false, hasSnapshot: false, isFirstChunk: false })
+    )
   })
 
   it('should record across same-tab page navigation when already recording, even if sampling is 0', async () => {
@@ -44,51 +61,73 @@ describe('Session Replay Across Pages', () => {
       test: testRumRequest,
       body: JSON.stringify({ st: 1, sts: 1, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
     })
-    await browser.url(await browser.testHandle.assetURL('stn/instrumented.html', stConfig()))
-      .then(() => browser.waitForAgentLoad())
 
+    let [sessionTraceHarvests] = await Promise.all([
+      sessionTraceCapture.waitForResult({ timeout: 10000 }),
+      browser.url(await browser.testHandle.assetURL('stn/instrumented.html', stConfig()))
+        .then(() => browser.waitForAgentLoad())
+    ])
     const { localStorage } = await browser.getAgentSessionInfo()
-    const { request: page1Contents } = await browser.testHandle.expectTrace(10000)
-    testExpectedTrace({ data: page1Contents, session: localStorage.value })
+    const page1ptid = decodeAttributes(sessionTraceHarvests[0].request.query.attributes).harvestId.split('_')[1]
+
+    sessionTraceHarvests.forEach(harvest => testExpectedTrace({ data: harvest.request, session: localStorage.value }))
 
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
       body: JSON.stringify({ st: 1, sts: 0, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
     })
 
-    await browser.url(await browser.testHandle.assetURL('instrumented.html', stConfig()))
-      .then(() => browser.waitForAgentLoad())
+    ;[sessionTraceHarvests] = await Promise.all([
+      sessionTraceCapture.waitForResult({ timeout: 10000 }),
+      browser.url(await browser.testHandle.assetURL('instrumented.html', stConfig()))
+        .then(() => browser.waitForAgentLoad())
+    ])
 
-    const { request: page2Contents } = await browser.testHandle.expectTrace(10000)
-    testExpectedTrace({ data: page2Contents, session: localStorage.value, hasError: false, hasMeta: true, hasSnapshot: true, isFirstChunk: false })
+    const navigationHarvests = sessionTraceHarvests
+      .filter(harvest => decodeAttributes(harvest.request.query.attributes).harvestId.indexOf(page1ptid) === -1)
+    expect(navigationHarvests.length).toBeGreaterThan(0)
+    testExpectedTrace({ data: navigationHarvests[0].request, session: localStorage.value, hasError: false, hasMeta: true, hasSnapshot: true, isFirstChunk: false })
+    navigationHarvests.slice(1).forEach(harvest =>
+      testExpectedTrace({ data: harvest.request, session: localStorage.value, hasError: false, hasMeta: false, hasSnapshot: false, isFirstChunk: false })
+    )
   })
 
-  //   // As of 06/26/2023 test fails in Safari, though tested behavior works in a live browser (revisit in NR-138940).
-  it.withBrowsersMatching([supportsMultipleTabs, notSafari])('should record across new-tab page navigation once recording, even if sampled as 0', async () => {
+  it.withBrowsersMatching(supportsMultiTabSessions)('should record across new-tab page navigation once recording, even if sampled as 0', async () => {
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
       body: JSON.stringify({ st: 1, sts: 1, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
     })
-    await browser.url(await browser.testHandle.assetURL('instrumented.html', stConfig()))
-      .then(() => browser.waitForAgentLoad())
 
-    const { request: page1Contents } = await browser.testHandle.expectTrace(10000)
+    let [sessionTraceHarvests] = await Promise.all([
+      sessionTraceCapture.waitForResult({ timeout: 10000 }),
+      browser.url(await browser.testHandle.assetURL('instrumented.html', stConfig()))
+        .then(() => browser.waitForAgentLoad())
+    ])
     const { localStorage } = await browser.getAgentSessionInfo()
+    const page1ptid = decodeAttributes(sessionTraceHarvests[0].request.query.attributes).harvestId.split('_')[1]
 
-    testExpectedTrace({ data: page1Contents, session: localStorage.value })
+    sessionTraceHarvests.forEach(harvest => testExpectedTrace({ data: harvest.request, session: localStorage.value }))
 
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
       body: JSON.stringify({ st: 1, sts: 0, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
     })
-    const newTab = await browser.createWindow('tab')
-    await browser.switchToWindow(newTab.handle)
-    await browser.url(await browser.testHandle.assetURL('instrumented.html', stConfig()))
-      .then(() => browser.waitForAgentLoad())
 
-    const { request: page2Contents } = await browser.testHandle.expectTrace(10000)
+    ;[sessionTraceHarvests] = await Promise.all([
+      sessionTraceCapture.waitForResult({ timeout: 10000 }),
+      browser.createWindow('tab')
+        .then((newTab) => browser.switchToWindow(newTab.handle))
+        .then(async () => browser.url(await browser.testHandle.assetURL('instrumented.html', stConfig())))
+        .then(() => browser.waitForAgentLoad())
+    ])
 
-    testExpectedTrace({ data: page2Contents, session: localStorage.value })
+    const newTabHarvests = sessionTraceHarvests
+      .filter(harvest => decodeAttributes(harvest.request.query.attributes).harvestId.indexOf(page1ptid) === -1)
+    expect(newTabHarvests.length).toBeGreaterThan(0)
+    testExpectedTrace({ data: newTabHarvests[0].request, session: localStorage.value, hasError: false, hasMeta: true, hasSnapshot: true, isFirstChunk: false })
+    newTabHarvests.slice(1).forEach(harvest =>
+      testExpectedTrace({ data: harvest.request, session: localStorage.value, hasError: false, hasMeta: false, hasSnapshot: false, isFirstChunk: false })
+    )
 
     await browser.closeWindow()
     await browser.switchToWindow((await browser.getWindowHandles())[0])
@@ -99,26 +138,34 @@ describe('Session Replay Across Pages', () => {
       test: testRumRequest,
       body: JSON.stringify({ st: 1, sts: 1, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
     })
-    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', stConfig()))
-      .then(() => browser.waitForAgentLoad())
 
-    const { request: page1Contents } = await browser.testHandle.expectTrace(10000)
+    let [sessionTraceHarvests] = await Promise.all([
+      sessionTraceCapture.waitForResult({ timeout: 10000 }),
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', stConfig()))
+        .then(() => browser.waitForAgentLoad())
+    ])
     const { localStorage } = await browser.getAgentSessionInfo()
+    const page1ptid = decodeAttributes(sessionTraceHarvests[0].request.query.attributes).harvestId.split('_')[1]
 
-    testExpectedTrace({ data: page1Contents, session: localStorage.value })
+    sessionTraceHarvests.forEach(harvest => testExpectedTrace({ data: harvest.request, session: localStorage.value }))
 
     await browser.execute(function () {
       Object.values(NREUM.initializedAgents)[0].runtime.session.state.sessionTraceMode = 0
     })
-
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
       body: JSON.stringify({ st: 1, sts: 0, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
     })
-    await browser.refresh()
-      .then(() => browser.waitForAgentLoad())
 
-    await browser.testHandle.expectTrace(10000, true)
+    ;[sessionTraceHarvests] = await Promise.all([
+      sessionTraceCapture.waitForResult({ timeout: 10000 }),
+      browser.refresh()
+        .then(() => browser.waitForAgentLoad())
+    ])
+
+    const refreshHarvests = sessionTraceHarvests
+      .filter(harvest => decodeAttributes(harvest.request.query.attributes).harvestId.indexOf(page1ptid) === -1)
+    expect(refreshHarvests.length).toEqual(0)
   })
 
   it('should not report harvest if sessionId changes', async () => {
@@ -126,20 +173,31 @@ describe('Session Replay Across Pages', () => {
       test: testRumRequest,
       body: JSON.stringify({ st: 1, sts: 1, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
     })
-    await browser.url(await browser.testHandle.assetURL('instrumented.html', stConfig()))
-      .then(() => browser.waitForAgentLoad())
 
-    const { request: page1Contents } = await browser.testHandle.expectTrace(10000)
-    const { localStorage: { value: session } } = await browser.getAgentSessionInfo()
+    let [sessionTraceHarvests] = await Promise.all([
+      sessionTraceCapture.waitForResult({ timeout: 10000 }),
+      browser.url(await browser.testHandle.assetURL('instrumented.html', stConfig()))
+        .then(() => browser.waitForAgentLoad())
+    ])
+    const { localStorage } = await browser.getAgentSessionInfo()
 
-    testExpectedTrace({ data: page1Contents, session })
+    sessionTraceHarvests.forEach(harvest => testExpectedTrace({ data: harvest.request, session: localStorage.value }))
 
-    await Promise.all([
-      browser.testHandle.expectTrace(10000, true), // should not harvest again if the session id changes mid-lifecycle
+    await browser.testHandle.scheduleReply('bamServer', {
+      test: testRumRequest,
+      body: JSON.stringify({ st: 1, sts: 0, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
+    })
+
+    ;[sessionTraceHarvests] = await Promise.all([
+      sessionTraceCapture.waitForResult({ timeout: 10000 }),
       browser.execute(function () {
         Object.values(NREUM.initializedAgents)[0].runtime.session.state.value = 'session_id_changed'
       })
     ])
+
+    const newSessionHarvests = sessionTraceHarvests
+      .filter(harvest => decodeAttributes(harvest.request.query.attributes).session !== localStorage.value)
+    expect(newSessionHarvests.length).toEqual(0)
   })
 
   it('should not report harvest if session resets', async () => {
@@ -147,80 +205,124 @@ describe('Session Replay Across Pages', () => {
       test: testRumRequest,
       body: JSON.stringify({ st: 1, sts: 1, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
     })
-    await browser.url(await browser.testHandle.assetURL('instrumented.html', stConfig()))
-      .then(() => browser.waitForAgentLoad())
 
-    const { request: page1Contents } = await browser.testHandle.expectTrace(10000)
-    const { localStorage: { value: session } } = await browser.getAgentSessionInfo()
+    let [sessionTraceHarvests] = await Promise.all([
+      sessionTraceCapture.waitForResult({ timeout: 10000 }),
+      browser.url(await browser.testHandle.assetURL('instrumented.html', stConfig()))
+        .then(() => browser.waitForAgentLoad())
+    ])
+    const { localStorage } = await browser.getAgentSessionInfo()
 
-    testExpectedTrace({ data: page1Contents, session })
+    sessionTraceHarvests.forEach(harvest => testExpectedTrace({ data: harvest.request, session: localStorage.value }))
 
-    await Promise.all([
-      browser.testHandle.expectTrace(10000, true), // should not harvest again if the session id changes mid-lifecycle
+    await browser.testHandle.scheduleReply('bamServer', {
+      test: testRumRequest,
+      body: JSON.stringify({ st: 1, sts: 0, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
+    })
+
+    ;[sessionTraceHarvests] = await Promise.all([
+      sessionTraceCapture.waitForResult({ timeout: 10000 }),
       browser.execute(function () {
         Object.values(NREUM.initializedAgents)[0].runtime.session.reset()
       })
     ])
+
+    const newSessionHarvests = sessionTraceHarvests
+      .filter(harvest => decodeAttributes(harvest.request.query.attributes).session !== localStorage.value)
+    expect(newSessionHarvests.length).toEqual(0)
   })
 
-  // As of 06/26/2023 test fails in Safari, though tested behavior works in a live browser (revisit in NR-138940).
-  it.withBrowsersMatching([supportsMultipleTabs, notSafari])('should not report harvest if session resets on another page', async () => {
-    await browser.destroyAgentSession()
+  it.withBrowsersMatching(supportsMultiTabSessions)('should not report harvest if session resets on another page', async () => {
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
       body: JSON.stringify({ st: 1, sts: 1, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
     })
-    let url = await browser.testHandle.assetURL('instrumented.html', stConfig())
-    await browser.url(url).then(() => browser.waitForAgentLoad())
-    await browser.testHandle.expectTrace(10000)
-    // got a payload, now open a new tab and reset the session in tab B
-    const newTab = await browser.createWindow('tab')
-    await browser.switchToWindow(newTab.handle)
+
+    let [sessionTraceHarvests] = await Promise.all([
+      sessionTraceCapture.waitForResult({ timeout: 10000 }),
+      browser.url(await browser.testHandle.assetURL('instrumented.html', stConfig()))
+        .then(() => browser.waitForAgentLoad())
+    ])
+    const { localStorage } = await browser.getAgentSessionInfo()
+
+    sessionTraceHarvests.forEach(harvest => testExpectedTrace({ data: harvest.request, session: localStorage.value }))
+
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
       body: JSON.stringify({ st: 1, sts: 1, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
     })
-    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', stConfig()))
-      .then(() => browser.waitForAgentLoad())
 
-    await browser.resetAgentSession()
-
-    // go back to tab A and see if we get another harvest
-    await browser.closeWindow()
-    await browser.switchToWindow((await browser.getWindowHandles())[0])
-    await browser.testHandle.expectTrace(10000, true)
-  })
-
-  // As of 06/26/2023 test fails in Safari, though tested behavior works in a live browser (revisit in NR-138940).
-  it.withBrowsersMatching([supportsMultipleTabs, notSafari])('catches mode transition from other pages in the session', async () => {
-    await browser.destroyAgentSession()
-    await browser.testHandle.scheduleReply('bamServer', {
-      test: testRumRequest,
-      body: JSON.stringify({ st: 1, sts: 2, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
-    })
-    let url = await browser.testHandle.assetURL('instrumented.html', stConfig())
-    await browser.url(url).then(() => browser.waitForAgentLoad())
-
-    await getTraceMode().then(([traceMode]) => expect(traceMode).toEqual(MODE.ERROR))
-
-    // await browser.newWindow(await browser.testHandle.assetURL('instrumented.html', stConfig()), { windowName: 'Second page' })
-    const newTab = await browser.createWindow('tab')
-    await browser.switchToWindow(newTab.handle)
-    await browser.testHandle.scheduleReply('bamServer', {
-      test: testRumRequest,
-      body: JSON.stringify({ st: 1, sts: 2, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
-    })
-    await browser.url(await browser.testHandle.assetURL('instrumented.html', stConfig()))
-      .then(() => browser.waitForAgentLoad())
-
-    await Promise.all([
-      browser.execute(function () {
-        newrelic.noticeError('test')
-      })
+    ;[sessionTraceHarvests] = await Promise.all([
+      sessionTraceCapture.waitForResult({ timeout: 15000 }),
+      browser.createWindow('tab')
+        .then((newTab) => browser.switchToWindow(newTab.handle))
+        .then(async () => browser.url(await browser.testHandle.assetURL('instrumented.html', stConfig())))
+        .then(() => browser.waitForAgentLoad())
+        .then(() => browser.execute(function () {
+          Object.values(NREUM.initializedAgents)[0].runtime.session.reset()
+        }))
     ])
 
-    await browser.closeWindow()
-    await browser.switchToWindow((await browser.getWindowHandles())[0])
+    let newSessionHarvests = sessionTraceHarvests
+      .filter(harvest => decodeAttributes(harvest.request.query.attributes).session !== localStorage.value)
+    expect(newSessionHarvests.length).toEqual(0)
+
+    ;[sessionTraceHarvests] = await Promise.all([
+      sessionTraceCapture.waitForResult({ timeout: 10000 }),
+      browser.closeWindow()
+        .then(async (newTab) => browser.switchToWindow((await browser.getWindowHandles())[0]))
+    ])
+
+    newSessionHarvests = sessionTraceHarvests
+      .filter(harvest => decodeAttributes(harvest.request.query.attributes).session !== localStorage.value)
+    expect(newSessionHarvests.length).toEqual(0)
+  })
+
+  it.withBrowsersMatching(supportsMultiTabSessions)('catches mode transition from other pages in the session', async () => {
+    await browser.testHandle.scheduleReply('bamServer', {
+      test: testRumRequest,
+      body: JSON.stringify({ st: 1, sts: 2, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
+    })
+
+    let [sessionTraceHarvests] = await Promise.all([
+      sessionTraceCapture.waitForResult({ timeout: 10000 }),
+      browser.url(await browser.testHandle.assetURL('instrumented.html', stConfig()))
+        .then(() => browser.waitForAgentLoad())
+    ])
+
+    expect(sessionTraceHarvests.length).toEqual(0)
+    await getTraceMode().then(([traceMode]) => expect(traceMode).toEqual(MODE.ERROR))
+
+    await browser.testHandle.scheduleReply('bamServer', {
+      test: testRumRequest,
+      body: JSON.stringify({ st: 1, sts: 2, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
+    })
+
+    ;[sessionTraceHarvests] = await Promise.all([
+      sessionTraceCapture.waitForResult({ timeout: 15000 }),
+      browser.createWindow('tab')
+        .then((newTab) => browser.switchToWindow(newTab.handle))
+        .then(async () => browser.url(await browser.testHandle.assetURL('instrumented.html', stConfig())))
+        .then(() => browser.waitForAgentLoad())
+        .then(() => browser.execute(function () {
+          newrelic.noticeError('test')
+        }))
+    ])
+    const { localStorage } = await browser.getAgentSessionInfo()
+    const page2ptid = decodeAttributes(sessionTraceHarvests[0].request.query.attributes).harvestId.split('_')[1]
+
+    sessionTraceHarvests.forEach(harvest => testExpectedTrace({ data: harvest.request, session: localStorage.value }))
+
+    ;[sessionTraceHarvests] = await Promise.all([
+      sessionTraceCapture.waitForResult({ timeout: 10000 }),
+      browser.closeWindow()
+        .then(async (newTab) => browser.switchToWindow((await browser.getWindowHandles())[0]))
+    ])
+
     await getTraceMode().then(([traceMode]) => expect(traceMode).toEqual(MODE.FULL))
+    const page1Harvests = sessionTraceHarvests
+      .filter(harvest => decodeAttributes(harvest.request.query.attributes).harvestId.indexOf(page2ptid) === -1)
+    expect(page1Harvests.length).toBeGreaterThan(0)
+    page1Harvests.forEach(harvest => testExpectedTrace({ data: harvest.request, session: localStorage.value }))
   })
 })

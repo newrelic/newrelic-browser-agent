@@ -103,7 +103,7 @@ export class Aggregate extends AggregateBase {
       const preExistingVideos = window.document.querySelectorAll('video').length
       if (preExistingVideos) this.storeSupportabilityMetrics('Generic/VideoElement/Added', preExistingVideos)
       const preExistingIframes = window.document.querySelectorAll('iframe').length
-      if (preExistingIframes.length) this.storeSupportabilityMetrics('Generic/IFrame/Added', preExistingIframes.length)
+      if (preExistingIframes) this.storeSupportabilityMetrics('Generic/IFrame/Added', preExistingIframes)
       const mo = new MutationObserver(records => {
         records.forEach(record => {
           record.addedNodes.forEach(addedNode => {

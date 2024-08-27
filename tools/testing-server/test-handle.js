@@ -8,6 +8,7 @@ const NetworkCapture = require('./network-capture')
 /**
  * Scheduled reply options
  * @typedef {object} ScheduledReply
+ * @property {string} [id] unique identifier for the scheduled reply, can be used to clear the reply
  * @property {Function|string} test function that takes the fastify request object and returns true if the scheduled
  * response should be applied
  * @property {boolean} permanent indicates if the reply should be left in place
@@ -233,6 +234,24 @@ module.exports = class TestHandle {
     }
 
     this.#scheduledReplies.get(serverId).add(scheduledReply)
+  }
+
+  /**
+   * Deletes one or more scheduled replies for the given server by the scheduled reply test function name.
+   * @param {'assetServer'|'bamServer'} serverId Id of the server the request will be received on
+   * @param {ScheduledReply} scheduledReply The reply options to apply to the server request, only needs to include
+   * the test function
+   */
+  clearScheduledReply (serverId, scheduledReply) {
+    if (!this.#scheduledReplies.has(serverId)) {
+      return
+    }
+
+    this.#scheduledReplies.get(serverId).forEach(reply => {
+      if (scheduledReply.test.name === reply.test.name) {
+        this.#scheduledReplies.get(serverId).delete(reply)
+      }
+    })
   }
 
   /**

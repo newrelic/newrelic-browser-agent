@@ -2,7 +2,10 @@ import { testBlobReplayRequest } from '../../../tools/testing-server/utils/expec
 import { srConfig, getSR } from '../util/helpers'
 
 describe('Session Replay Ingest Behavior', () => {
+  let sessionReplaysCapture
+
   beforeEach(async () => {
+    sessionReplaysCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testBlobReplayRequest })
     await browser.enableSessionReplay()
   })
 
@@ -10,18 +13,18 @@ describe('Session Replay Ingest Behavior', () => {
     await browser.destroyAgentSession(browser.testHandle)
   })
 
-  it('Should empty event buffer when sending', async () => {
+  it('should empty event buffer when sending', async () => {
     await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
       .then(() => browser.waitForSessionReplayRecording())
 
     expect((await getSR()).events.length).toBeGreaterThan(0)
 
-    await browser.testHandle.expectReplay()
+    await sessionReplaysCapture.waitForResult({ totalCount: 2 })
 
     expect((await getSR()).events.length).toEqual(0)
   })
 
-  it('Should stop recording if 429 response', async () => {
+  it('should stop recording if 429 response', async () => {
     await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
       .then(() => browser.waitForSessionReplayRecording())
 
@@ -38,7 +41,7 @@ describe('Session Replay Ingest Behavior', () => {
         test: testBlobReplayRequest,
         statusCode: 429
       }),
-      browser.testHandle.expectReplay()
+      sessionReplaysCapture.waitForResult({ timeout: 10000 })
     ])
 
     await expect(getSR()).resolves.toEqual(expect.objectContaining({

@@ -30,17 +30,18 @@ describe('Session Replay Initialization', () => {
 
   it('should not start recording if rum response sr flag is 0', async () => {
     await disqualifySR()
-    const [rumResp] = await Promise.all([
-      browser.testHandle.expectRum(),
+    const rumCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testRumRequest })
+    const [rumHarvests] = await Promise.all([
+      rumCapture.waitForResult({ totalCount: 1 }),
       browser.url(await browser.testHandle.assetURL('instrumented.html', srConfig()))
         .then(() => browser.waitForFeatureAggregate('session_replay'))
     ])
 
-    expect(JSON.parse(rumResp.reply.body).sr).toEqual(0)
-
-    const sr = await getSR()
-    expect(sr.initialized).toEqual(false)
-    expect(sr.recording).toEqual(false)
+    expect(JSON.parse(rumHarvests[0].reply.body).sr).toEqual(0)
+    await expect(getSR()).resolves.toEqual(expect.objectContaining({
+      initialized: false,
+      recording: false
+    }))
   })
 
   it('should start recording if rum response sr flag is 1', async () => {

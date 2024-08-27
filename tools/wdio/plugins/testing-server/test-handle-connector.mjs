@@ -142,7 +142,7 @@ export class TestHandleConnector {
       method: 'POST',
       body: serialize({
         serverId,
-        scheduledReply: { ...scheduledReply, test: scheduledReply.test }
+        scheduledReply
       }),
       headers: { 'content-type': 'application/serialized+json' }
     })
@@ -150,6 +150,28 @@ export class TestHandleConnector {
     if (result.status !== 200) {
       log.error(`Scheduling reply failed with status code ${result.status}`, await result.json(), result.error)
       throw new Error('Scheduling reply failed with an unknown result')
+    }
+  }
+
+  /**
+   * Deletes one or more scheduled replies for the given server by the scheduled reply test function name.
+   * @param {'assetServer'|'bamServer'} serverId Id of the server the request will be received on
+   * @param {ScheduledReply} scheduledReply The reply options to apply to the server request, only needs to include
+   * the test function
+   */
+  async clearScheduledReply (serverId, scheduledReply) {
+    const result = await fetch(`${this.#commandServerBase}/test-handle/${this.#testId}/scheduleReply`, {
+      method: 'DELETE',
+      body: serialize({
+        serverId,
+        scheduledReply
+      }),
+      headers: { 'content-type': 'application/serialized+json' }
+    })
+
+    if (result.status !== 200) {
+      log.error(`Deleting scheduled reply failed with status code ${result.status}`, await result.json(), result.error)
+      throw new Error('Deleting scheduled reply failed with an unknown result')
     }
   }
 

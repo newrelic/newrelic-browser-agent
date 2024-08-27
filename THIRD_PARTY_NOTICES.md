@@ -67,6 +67,7 @@ code, the source code can be found at [https://github.com/newrelic/newrelic-brow
 * [jest-environment-jsdom](#jest-environment-jsdom)
 * [jest-extended](#jest-extended)
 * [jest](#jest)
+* [jsonpath-plus](#jsonpath-plus)
 * [jung](#jung)
 * [node-fetch](#node-fetch)
 * [npm-run-all](#npm-run-all)
@@ -2259,6 +2260,36 @@ SOFTWARE.
 
 ```
 
+### jsonpath-plus
+
+This product includes source derived from [jsonpath-plus](https://github.com/s3u/JSONPath) ([v9.0.0](https://github.com/s3u/JSONPath/tree/v9.0.0)), distributed under the [MIT License](https://github.com/s3u/JSONPath/blob/v9.0.0/LICENSE):
+
+```
+MIT License
+
+Copyright (c) 2011-2019 Stefan Goessner, Subbu Allamaraju, Mike Brevoort,
+Robert Krahn, Brett Zamir, Richard Schneider
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+```
+
 ### jung
 
 This product includes source derived from [jung](https://github.com/jarofghosts/jung) ([v2.1.0](https://github.com/jarofghosts/jung/tree/v2.1.0)), distributed under the [MIT License](https://github.com/jarofghosts/jung/blob/v2.1.0/LICENSE):
@@ -2556,7 +2587,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ### wdio-lambdatest-service
 
-This product includes source derived from [wdio-lambdatest-service](https://github.com/LambdaTest/wdio-lambdatest-service) ([v3.0.0](https://github.com/LambdaTest/wdio-lambdatest-service/tree/v3.0.0)), distributed under the [MIT License](https://github.com/LambdaTest/wdio-lambdatest-service/blob/v3.0.0/README.md):
+This product includes source derived from [wdio-lambdatest-service](https://github.com/LambdaTest/wdio-lambdatest-service) ([v3.0.1](https://github.com/LambdaTest/wdio-lambdatest-service/tree/v3.0.1)), distributed under the [MIT License](https://github.com/LambdaTest/wdio-lambdatest-service/blob/v3.0.1/README.md):
 
 ```
 MIT License

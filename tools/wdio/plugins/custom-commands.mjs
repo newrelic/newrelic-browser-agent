@@ -107,6 +107,7 @@ export default class CustomCommands {
      */
     browser.addCommand('enableSessionReplay', async function (sampling_rate = 100, error_sampling_rate = 100, srOverride = 1) {
       const stMode = Math.random() * 100 < sampling_rate ? 1 : Math.random() * 100 < error_sampling_rate ? 2 : 0
+      await browser.testHandle.clearScheduledReply('bamServer', { test: testRumRequest })
       await browser.testHandle.scheduleReply('bamServer', {
         test: testRumRequest,
         permanent: true,

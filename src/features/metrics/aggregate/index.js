@@ -99,11 +99,16 @@ export class Aggregate extends AggregateBase {
     if (proxy.beacon) this.storeSupportabilityMetrics('Config/BeaconUrl/Changed')
 
     if (isBrowserScope && window.MutationObserver) {
-      this.storeSupportabilityMetrics('Generic/VideoElement/Added', window.document.querySelectorAll('video').length)
+      if (window.self !== window.top) { this.storeSupportabilityMetrics('Generic/Runtime/IFrame/Detected') }
+      const preExistingVideos = window.document.querySelectorAll('video').length
+      if (preExistingVideos) this.storeSupportabilityMetrics('Generic/VideoElement/Added', preExistingVideos)
+      const preExistingIframes = window.document.querySelectorAll('iframe').length
+      if (preExistingIframes.length) this.storeSupportabilityMetrics('Generic/IFrame/Added', preExistingIframes.length)
       const mo = new MutationObserver(records => {
         records.forEach(record => {
           record.addedNodes.forEach(addedNode => {
             if (addedNode instanceof HTMLVideoElement) { this.storeSupportabilityMetrics('Generic/VideoElement/Added', 1) }
+            if (addedNode instanceof HTMLIFrameElement) { this.storeSupportabilityMetrics('Generic/IFrame/Added', 1) }
           })
         })
       })

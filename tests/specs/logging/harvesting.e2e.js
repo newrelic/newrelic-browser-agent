@@ -77,6 +77,20 @@ describe('logging harvesting', () => {
       expect(JSON.parse(body)[0].logs[0].message).toEqual('Error: test')
     })
 
+    it('should not double harvest on navigation logs', async () => {
+      const [logsRequests] = await Promise.all([
+        logsCapture.waitForResult({ timeout: 15000 }),
+        browser.url(await browser.testHandle.assetURL('logs-redirect.html'))
+      ])
+
+      // 1 harvest
+      expect(logsRequests.length).toEqual(1)
+      const parsedBody = JSON.parse(logsRequests[0].request.body)
+      // 1 log in the 1 harvest
+      expect(parsedBody[0].logs.length).toEqual(1)
+      expect(parsedBody[0].logs[0].message).toEqual('redirect to https://gmail.com')
+    })
+
     it('should allow for re-wrapping and 3rd party wrapping', async () => {
       const [[{ request: { body } }]] = await Promise.all([
         logsCapture.waitForResult({ totalCount: 1 }),

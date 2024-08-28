@@ -40,10 +40,9 @@ describe('logging aggregate component tests', () => {
         'ee',
         'featureName',
         'blocked',
+        'obfuscator',
         'bufferedLogs',
-        'outgoingLogs',
-        'harvestTimeSeconds',
-        'estimatedBytes'
+        'harvestTimeSeconds'
       ]))
     })
 
@@ -72,7 +71,7 @@ describe('logging aggregate component tests', () => {
         { myAttributes: 1 },
         'error'
       )
-      expect(loggingAgg.bufferedLogs[0]).toEqual(expectedLog)
+      expect(loggingAgg.bufferedLogs.buffer[0]).toEqual(expectedLog)
 
       expect(loggingAgg.prepareHarvest()).toEqual({
         qs: { browser_monitoring_key: 1234 },
@@ -99,7 +98,7 @@ describe('logging aggregate component tests', () => {
       loggingAgg.ee.emit('rumresp', {})
       await wait(1)
       loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', { myAttributes: 1 }, 'error'])
-      expect(loggingAgg.bufferedLogs[0]).toEqual(new Log(
+      expect(loggingAgg.bufferedLogs.buffer[0]).toEqual(new Log(
         Math.floor(timeKeeper.correctAbsoluteTimestamp(
           timeKeeper.convertRelativeTimestamp(1234)
         )),
@@ -154,17 +153,18 @@ describe('logging aggregate component tests', () => {
       loggingAgg.ee.emit('rumresp', {})
       await wait(1)
 
+      const logs = loggingAgg.bufferedLogs.buffer
       loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', [], 'ERROR'])
-      expect(loggingAgg.bufferedLogs.pop()).toEqual(expected)
+      expect(logs.pop()).toEqual(expected)
 
       loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', true, 'ERROR'])
-      expect(loggingAgg.bufferedLogs.pop()).toEqual(expected)
+      expect(logs.pop()).toEqual(expected)
 
       loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', 1, 'ERROR'])
-      expect(loggingAgg.bufferedLogs.pop()).toEqual(expected)
+      expect(logs.pop()).toEqual(expected)
 
       loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', 'string', 'ERROR'])
-      expect(loggingAgg.bufferedLogs.pop()).toEqual(expected)
+      expect(logs.pop()).toEqual(expected)
     })
 
     it('should work if log level is valid but wrong case', async () => {
@@ -181,7 +181,7 @@ describe('logging aggregate component tests', () => {
       await wait(1)
 
       loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', {}, 'ErRoR'])
-      expect(loggingAgg.bufferedLogs.pop()).toEqual(expected)
+      expect(loggingAgg.bufferedLogs.buffer[0]).toEqual(expected)
     })
 
     it('should buffer logs with non-stringify-able message', async () => {
@@ -189,14 +189,15 @@ describe('logging aggregate component tests', () => {
       loggingAgg.ee.emit('rumresp', {})
       await wait(1)
 
+      const logs = loggingAgg.bufferedLogs.buffer
       loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, new Error('test'), {}, 'error'])
-      expect(loggingAgg.bufferedLogs.pop().message).toEqual('Error: test')
+      expect(logs.pop().message).toEqual('Error: test')
 
       loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, new SyntaxError('test'), {}, 'error'])
-      expect(loggingAgg.bufferedLogs.pop().message).toEqual('SyntaxError: test')
+      expect(logs.pop().message).toEqual('SyntaxError: test')
 
       loggingAgg.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, Symbol('test'), {}, 'error'])
-      expect(loggingAgg.bufferedLogs.pop().message).toEqual('Symbol(test)')
+      expect(logs.pop().message).toEqual('Symbol(test)')
     })
   })
 

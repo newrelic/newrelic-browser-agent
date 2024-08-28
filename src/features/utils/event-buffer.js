@@ -80,12 +80,22 @@ export class EventBuffer {
     return this
   }
 
+  /**
+   * Hold the buffer data in a new (child) EventBuffer (.held) to unblock the main buffer.
+   * This action clears the main buffer
+   * @returns {EventBuffer}
+   */
   hold () {
     this.held.merge(this)
     this.clear()
     return this
   }
 
+  /**
+   * Prepend the held EventBuffer (.held) back into the main buffer
+   * This action clears the held buffer
+   * @returns {EventBuffer}
+   */
   unhold () {
     this.merge(this.held, true)
     this.held.clear()
@@ -99,7 +109,7 @@ export class EventBuffer {
    * @returns {EventBuffer} returns the event buffer for chaining
    */
   merge (eventBuffer, prepend = false) {
-    if (!this.canMerge(eventBuffer.bytes)) return
+    if (!this.canMerge(eventBuffer.bytes)) return this
     this.#buffer = prepend ? [...eventBuffer.buffer, ...this.#buffer] : [...this.#buffer, ...eventBuffer.buffer]
     this.#bytes += eventBuffer.#bytes
     return this

@@ -1,14 +1,16 @@
-import { originals } from '../../../common/config/config'
+import { gosNREUMOriginals } from '../../../common/window/nreum'
 import { isBrowserScope } from '../../../common/constants/runtime'
 import { handle } from '../../../common/event-emitter/handle'
 import { windowAddEventListener } from '../../../common/event-listener/event-listener-opts'
 import { debounce } from '../../../common/util/invoke'
-import { wrapEvents, wrapHistory } from '../../../common/wrap'
+import { wrapEvents } from '../../../common/wrap/wrap-events'
+import { wrapHistory } from '../../../common/wrap/wrap-history'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME, INTERACTION_TRIGGERS } from '../constants'
 import { now } from '../../../common/timing/now'
 
-/** The minimal time after a UI event for which no further events will be processed - i.e. a throttling rate to reduce spam.
+/**
+ * The minimal time after a UI event for which no further events will be processed - i.e. a throttling rate to reduce spam.
  * This also give some time for the new interaction to complete without being discarded by a subsequent UI event and wrongly attributed.
  * This value is still subject to change and critique, as it is derived from beyond worst case time to next frame of a page.
  */
@@ -18,7 +20,7 @@ export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
   constructor (agentIdentifier, aggregator, auto = true) {
     super(agentIdentifier, aggregator, FEATURE_NAME, auto)
-    if (!isBrowserScope || !originals.MO) return // soft navigations is not supported outside web env or browsers without the mutation observer API
+    if (!isBrowserScope || !gosNREUMOriginals().o.MO) return // soft navigations is not supported outside web env or browsers without the mutation observer API
 
     const historyEE = wrapHistory(this.ee)
     const eventsEE = wrapEvents(this.ee)
@@ -34,7 +36,7 @@ export class Instrument extends InstrumentBase {
     windowAddEventListener('popstate', trackURLChangeEvent, true, this.removeOnAbort?.signal)
 
     let oncePerFrame = false // attempt to reduce dom noice since the observer runs very frequently with below options
-    const domObserver = new originals.MO((domChanges, observer) => {
+    const domObserver = new (gosNREUMOriginals().o).MO((domChanges, observer) => {
       if (oncePerFrame) return
       oncePerFrame = true
       requestAnimationFrame(() => { // waiting for next frame to time when any visuals are supposedly updated
@@ -65,3 +67,5 @@ export class Instrument extends InstrumentBase {
     }
   }
 }
+
+export const SoftNav = Instrument

@@ -1,4 +1,6 @@
-import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
+import { getInfo } from '../../../common/config/info'
+import { getConfigurationValue } from '../../../common/config/init'
+import { getRuntime } from '../../../common/config/runtime'
 import { handle } from '../../../common/event-emitter/handle'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'

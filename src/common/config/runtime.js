@@ -1,7 +1,7 @@
 import { getModeledObject } from './configurable'
-import { getNREUMInitializedAgent } from '../../window/nreum'
-import { globalScope, originTime } from '../../constants/runtime'
-import { BUILD_ENV, DIST_METHOD, VERSION } from '../../constants/env'
+import { getNREUMInitializedAgent } from '../window/nreum'
+import { globalScope, originTime } from '../constants/runtime'
+import { BUILD_ENV, DIST_METHOD, VERSION } from '../constants/env'
 
 /**
  * Module level count of harvests. This property will auto-increment each time it is accessed.

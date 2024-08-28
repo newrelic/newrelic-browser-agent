@@ -1,4 +1,7 @@
-import { MockXhr } from './helpers/mock-xhr.js'
-
 global.__webpack_require__ = {}
-global.MockXhr = MockXhr
+
+if (typeof window !== 'undefined') {
+  window.fetch = jest.fn(() => Promise.resolve())
+  window.Request = jest.fn()
+  window.Response = jest.fn()
+}

@@ -1,7 +1,7 @@
 let getLoaderConfig, setLoaderConfig
 beforeEach(async () => {
   jest.resetModules()
-  ;({ getLoaderConfig, setLoaderConfig } = await import('../../../../../src/common/config/state/loader-config.js'))
+  ;({ getLoaderConfig, setLoaderConfig } = await import('../../../../src/common/config/loader-config.js'))
 })
 
 test('set/getLoaderConfig should throw on an invalid agent id', () => {

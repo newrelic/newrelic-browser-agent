@@ -1,5 +1,5 @@
 import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../../../common/serialize/bel-serializer'
-import { getInfo } from '../../../common/config/config'
+import { getInfo } from '../../../common/config/info'
 
 export default class Chunk {
   constructor (events, aggregateInstance) {

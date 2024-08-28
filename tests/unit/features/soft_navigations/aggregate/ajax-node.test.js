@@ -31,9 +31,12 @@ let AjaxNode
 
 beforeEach(() => {
   jest.resetModules()
-  jest.doMock('../../../../../src/common/config/config', () => ({
+  jest.doMock('../../../../../src/common/config/init', () => ({
     __esModule: true,
-    getConfiguration: jest.fn(),
+    getConfiguration: jest.fn()
+  }))
+  jest.doMock('../../../../../src/common/config/runtime', () => ({
+    __esModule: true,
     getRuntime: jest.fn().mockReturnValue({
       obfuscator: new Obfuscator(someAgentId)
     })

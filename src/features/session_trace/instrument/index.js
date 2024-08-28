@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { handle } from '../../../common/event-emitter/handle'
-import { wrapHistory, wrapEvents } from '../../../common/wrap'
+import { wrapHistory } from '../../../common/wrap/wrap-history'
+import { wrapEvents } from '../../../common/wrap/wrap-events'
 import { InstrumentBase } from '../../utils/instrument-base'
 import * as CONSTANTS from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
@@ -61,3 +62,5 @@ export class Instrument extends InstrumentBase {
     this.importAggregator({ resourceObserver: observer })
   }
 }
+
+export const SessionTrace = Instrument

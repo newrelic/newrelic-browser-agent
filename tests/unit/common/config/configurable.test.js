@@ -1,6 +1,6 @@
-import { getModeledObject } from '../../../../../src/common/config/state/configurable'
+import { getModeledObject } from '../../../../src/common/config/configurable'
 
-jest.mock('../../../../../src/common/util/console')
+jest.mock('../../../../src/common/util/console')
 
 test('if either params are not objects, function fails', () => {
   let result = getModeledObject(123, {})

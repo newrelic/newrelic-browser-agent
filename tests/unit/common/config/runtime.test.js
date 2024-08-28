@@ -1,7 +1,7 @@
 let getRuntime, setRuntime
 beforeEach(async () => {
   jest.resetModules()
-  ;({ getRuntime, setRuntime } = await import('../../../../../src/common/config/state/runtime.js'))
+  ;({ getRuntime, setRuntime } = await import('../../../../src/common/config/runtime.js'))
 })
 
 test('set/getRuntime should throw on an invalid agent id', () => {

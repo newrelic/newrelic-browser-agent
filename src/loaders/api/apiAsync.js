@@ -1,5 +1,5 @@
 import { FEATURE_NAMES } from '../features/features'
-import { getRuntime } from '../../common/config/config'
+import { getRuntime } from '../../common/config/runtime'
 import { ee } from '../../common/event-emitter/contextual-ee'
 import { handle } from '../../common/event-emitter/handle'
 import { registerHandler } from '../../common/event-emitter/register-handler'

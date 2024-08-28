@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker'
 import { TimeKeeper } from '../../../../src/common/timing/time-keeper'
 import { originTime } from '../../../../src/common/constants/runtime'
-import * as configModule from '../../../../src/common/config/config'
+import * as runtimeModule from '../../../../src/common/config/runtime'
 import * as eventEmitterModule from '../../../../src/common/event-emitter/contextual-ee'
 
 jest.enableAutomock()
@@ -34,7 +34,7 @@ beforeEach(() => {
   jest.useFakeTimers({
     now: originTime
   })
-  jest.spyOn(configModule, 'getRuntime').mockImplementation(() => ({
+  jest.spyOn(runtimeModule, 'getRuntime').mockImplementation(() => ({
     session
   }))
   jest.spyOn(eventEmitterModule.ee, 'get').mockReturnValue(eventEmitter)

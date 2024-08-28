@@ -10,7 +10,7 @@ import { onWindowLoad } from '../../common/window/load'
 import { isBrowserScope } from '../../common/constants/runtime'
 import { warn } from '../../common/util/console'
 import { FEATURE_NAMES } from '../../loaders/features/features'
-import { getConfigurationValue } from '../../common/config/config'
+import { getConfigurationValue } from '../../common/config/init'
 import { hasReplayPrerequisite } from '../session_replay/shared/utils'
 import { canEnableSessionTracking } from './feature-gates'
 import { single } from '../../common/util/invoke'
@@ -45,6 +45,7 @@ export class InstrumentBase extends FeatureBase {
     /**
      * @type {Promise} Assigned immediately after @see importAggregator runs. Serves as a signal for when the inner async fn finishes execution. Useful for features to await
      * one another if there are inter-features dependencies.
+     * TODO: This is only used for the SPA feature component tests and should be refactored out.
     */
     this.onAggregateImported = undefined
 

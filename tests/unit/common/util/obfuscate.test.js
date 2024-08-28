@@ -1,10 +1,10 @@
 import { faker } from '@faker-js/faker'
 import { Obfuscator } from '../../../../src/common/util/obfuscate'
-import * as configModule from '../../../../src/common/config/config'
+import * as initModule from '../../../../src/common/config/init'
 import * as urlProtocolModule from '../../../../src/common/url/protocol'
 import * as consoleModule from '../../../../src/common/util/console'
 
-jest.mock('../../../../src/common/config/config')
+jest.mock('../../../../src/common/config/init')
 jest.mock('../../../../src/common/context/shared-context')
 jest.mock('../../../../src/common/url/protocol')
 jest.mock('../../../../src/common/util/console')
@@ -25,7 +25,7 @@ afterEach(() => {
 
 describe('obfuscateString', () => {
   test('obfuscateString returns the input when there are no rules', () => {
-    jest.spyOn(configModule, 'getConfigurationValue').mockReturnValue([])
+    jest.spyOn(initModule, 'getConfigurationValue').mockReturnValue([])
 
     const input = faker.lorem.sentence()
     const obfuscator = new Obfuscator()
@@ -35,7 +35,7 @@ describe('obfuscateString', () => {
   })
 
   test('obfuscateString applies obfuscation rules to input', () => {
-    jest.spyOn(configModule, 'getConfigurationValue').mockReturnValue(rules)
+    jest.spyOn(initModule, 'getConfigurationValue').mockReturnValue(rules)
 
     const input = 'pii'
     const obfuscator = new Obfuscator()
@@ -49,7 +49,7 @@ describe('obfuscateString', () => {
       regex: rules[0].regex
     }]
 
-    jest.spyOn(configModule, 'getConfigurationValue').mockReturnValue(newRules)
+    jest.spyOn(initModule, 'getConfigurationValue').mockReturnValue(newRules)
 
     const input = 'pii'
     const obfuscator = new Obfuscator()
@@ -64,7 +64,7 @@ describe('obfuscateString', () => {
     '',
     123
   ])('obfuscateString returns the input it is %s', (input) => {
-    jest.spyOn(configModule, 'getConfigurationValue').mockReturnValue(rules)
+    jest.spyOn(initModule, 'getConfigurationValue').mockReturnValue(rules)
 
     const obfuscator = new Obfuscator()
     obfuscator.sharedContext = { agentIdentifier }
@@ -75,7 +75,7 @@ describe('obfuscateString', () => {
 
 describe('getRuleValidationCache', () => {
   test('should return configured rules with validation information', () => {
-    jest.spyOn(configModule, 'getConfigurationValue').mockReturnValue(rules)
+    jest.spyOn(initModule, 'getConfigurationValue').mockReturnValue(rules)
 
     expect(Obfuscator.getRuleValidationCache(agentIdentifier)).toEqual([
       {
@@ -91,7 +91,7 @@ describe('getRuleValidationCache', () => {
   })
 
   test('should include the file protocol obfuscation', () => {
-    jest.spyOn(configModule, 'getConfigurationValue').mockReturnValue(rules)
+    jest.spyOn(initModule, 'getConfigurationValue').mockReturnValue(rules)
     jest.spyOn(urlProtocolModule, 'isFileProtocol').mockReturnValue(rules)
 
     expect(Obfuscator.getRuleValidationCache(agentIdentifier)).toEqual(expect.arrayContaining([{
@@ -112,7 +112,7 @@ describe('getRuleValidationCache', () => {
     null,
     undefined
   ])('should return an empty array when obfuscation rules are %s', (input) => {
-    jest.spyOn(configModule, 'getConfigurationValue').mockReturnValue(input)
+    jest.spyOn(initModule, 'getConfigurationValue').mockReturnValue(input)
 
     expect(Obfuscator.getRuleValidationCache(agentIdentifier)).toEqual([])
   })

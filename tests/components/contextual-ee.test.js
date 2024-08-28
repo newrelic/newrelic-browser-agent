@@ -12,7 +12,7 @@ beforeEach(() => {
     gosNREUM: jest.fn(() => mockNREUM)
   }))
 
-  jest.doMock('../../src/common/config/config', () => ({
+  jest.doMock('../../src/common/config/runtime', () => ({
     __esModule: true,
     getRuntime: jest.fn(() => runtime)
   }))
@@ -54,7 +54,7 @@ describe('scoping event-emitter', () => {
   test('it creates a child event-emitter with an isolated backlog', async () => {
     const childName = faker.string.alphanumeric(16)
 
-    jest.doMock('../../src/common/config/config', () => ({
+    jest.doMock('../../src/common/config/runtime', () => ({
       __esModule: true,
       getRuntime: jest.fn(id => {
         if (id === childName) {

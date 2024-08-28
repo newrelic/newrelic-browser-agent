@@ -1,7 +1,7 @@
 const OriginalMO = window.MutationObserver
 let mutationEE
 beforeEach(async () => {
-  const { wrapMutation } = await import('../../../src/common/wrap')
+  const { wrapMutation } = await import('../../../src/common/wrap/wrap-mutation')
   mutationEE = wrapMutation()
 })
 afterEach(() => {

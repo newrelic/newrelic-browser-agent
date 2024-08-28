@@ -2,18 +2,32 @@ import { Interaction } from '../../../src/features/spa/aggregate/interaction'
 
 let mockClearTimeoutCalls = 0; let mockSetTimeoutCalls = 0; let mockExecuteTimeoutCallback = true
 
-jest.mock('../../../src/common/config/config', () => ({
-  getConfigurationValue: jest.fn(),
-  originals: {
-    ST: function (cb) {
-      mockSetTimeoutCalls++
-      if (mockExecuteTimeoutCallback) cb()
-      return mockSetTimeoutCalls
-    },
-    CT: function () { mockClearTimeoutCalls++ }
-  },
-  getInfo: jest.fn().mockReturnValue({}),
+jest.mock('../../../src/common/constants/runtime')
+jest.mock('../../../src/common/config/info', () => ({
+  __esModule: true,
+  getInfo: jest.fn().mockReturnValue({})
+}))
+jest.mock('../../../src/common/config/init', () => ({
+  __esModule: true,
+  getConfigurationValue: jest.fn()
+}))
+jest.mock('../../../src/common/config/runtime', () => ({
+  __esModule: true,
   getRuntime: jest.fn().mockReturnValue({ origin: 'localhost' })
+}))
+jest.mock('../../../src/common/window/nreum', () => ({
+  __esModule: true,
+  gosNREUM: jest.fn().mockReturnValue({}),
+  gosNREUMOriginals: jest.fn().mockReturnValue({
+    o: {
+      ST: function (cb) {
+        mockSetTimeoutCalls++
+        if (mockExecuteTimeoutCallback) cb()
+        return mockSetTimeoutCalls
+      },
+      CT: function () { mockClearTimeoutCalls++ }
+    }
+  })
 }))
 
 const agentIdentifier = 'abcdefg'

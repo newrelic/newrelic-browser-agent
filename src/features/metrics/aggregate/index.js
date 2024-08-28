@@ -1,4 +1,5 @@
-import { getRuntime, getConfiguration } from '../../../common/config/config'
+import { getConfiguration } from '../../../common/config/init'
+import { getRuntime } from '../../../common/config/runtime'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { FEATURE_NAME, SUPPORTABILITY_METRIC, CUSTOM_METRIC, SUPPORTABILITY_METRIC_CHANNEL, CUSTOM_METRIC_CHANNEL } from '../constants'

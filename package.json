@@ -30,37 +30,37 @@
         "dist/types/loaders/micro-agent.d.ts"
       ],
       "features/ajax": [
-        "dist/types/features/ajax/index.d.ts"
+        "dist/types/features/ajax/instrument/index.d.ts"
       ],
       "features/jserrors": [
-        "dist/types/features/jserrors/index.d.ts"
+        "dist/types/features/jserrors/instrument/index.d.ts"
       ],
       "features/logging": [
-        "dist/types/features/logging/index.d.ts"
+        "dist/types/features/logging/instrument/index.d.ts"
       ],
       "features/metrics": [
-        "dist/types/features/metrics/index.d.ts"
+        "dist/types/features/metrics/instrument/index.d.ts"
       ],
       "features/page_action": [
-        "dist/types/features/page_action/index.d.ts"
+        "dist/types/features/page_action/instrument/index.d.ts"
       ],
       "features/generic_events": [
-        "dist/types/features/generic_events/index.d.ts"
+        "dist/types/features/generic_events/instrument/index.d.ts"
       ],
       "features/page_view_event": [
-        "dist/types/features/page_view_event/index.d.ts"
+        "dist/types/features/page_view_event/instrument/index.d.ts"
       ],
       "features/page_view_timing": [
-        "dist/types/features/page_view_timing/index.d.ts"
+        "dist/types/features/page_view_timing/instrument/index.d.ts"
       ],
       "features/session_trace": [
-        "dist/types/features/session_trace/index.d.ts"
+        "dist/types/features/session_trace/instrument/index.d.ts"
       ],
       "features/session_replay": [
-        "dist/types/features/session_replay/index.d.ts"
+        "dist/types/features/session_replay/instrument/index.d.ts"
       ],
       "features/spa": [
-        "dist/types/features/spa/index.d.ts"
+        "dist/types/features/spa/instrument/index.d.ts"
       ]
     }
   },
@@ -91,64 +91,64 @@
       "default": "./dist/esm/loaders/micro-agent.js"
     },
     "./features/ajax": {
-      "types": "./dist/types/features/ajax/index.d.ts",
-      "require": "./dist/cjs/features/ajax/index.js",
-      "default": "./dist/esm/features/ajax/index.js"
+      "types": "./dist/types/features/ajax/instrument/index.d.ts",
+      "require": "./dist/cjs/features/ajax/instrument/index.js",
+      "default": "./dist/esm/features/ajax/instrument/index.js"
     },
     "./features/generic_events": {
-      "types": "./dist/types/features/generic_events/index.d.ts",
-      "require": "./dist/cjs/features/generic_events/index.js",
-      "default": "./dist/esm/features/generic_events/index.js"
+      "types": "./dist/types/features/generic_events/instrument/index.d.ts",
+      "require": "./dist/cjs/features/generic_events/instrument/index.js",
+      "default": "./dist/esm/features/generic_events/instrument/index.js"
     },
     "./features/jserrors": {
-      "types": "./dist/types/features/jserrors/index.d.ts",
-      "require": "./dist/cjs/features/jserrors/index.js",
-      "default": "./dist/esm/features/jserrors/index.js"
+      "types": "./dist/types/features/jserrors/instrument/index.d.ts",
+      "require": "./dist/cjs/features/jserrors/instrument/index.js",
+      "default": "./dist/esm/features/jserrors/instrument/index.js"
     },
     "./features/logging": {
-      "types": "./dist/types/features/logging/index.d.ts",
-      "require": "./dist/cjs/features/logging/index.js",
-      "default": "./dist/esm/features/logging/index.js"
+      "types": "./dist/types/features/logging/instrument/index.d.ts",
+      "require": "./dist/cjs/features/logging/instrument/index.js",
+      "default": "./dist/esm/features/logging/instrument/index.js"
     },
     "./features/metrics": {
-      "types": "./dist/types/features/metrics/index.d.ts",
-      "require": "./dist/cjs/features/metrics/index.js",
-      "default": "./dist/esm/features/metrics/index.js"
+      "types": "./dist/types/features/metrics/instrument/index.d.ts",
+      "require": "./dist/cjs/features/metrics/instrument/index.js",
+      "default": "./dist/esm/features/metrics/instrument/index.js"
     },
     "./features/page_action": {
-      "types": "./dist/types/features/page_action/index.d.ts",
-      "require": "./dist/cjs/features/page_action/index.js",
-      "default": "./dist/esm/features/page_action/index.js"
+      "types": "./dist/types/features/page_action/instrument/index.d.ts",
+      "require": "./dist/cjs/features/page_action/instrument/index.js",
+      "default": "./dist/esm/features/page_action/instrument/index.js"
     },
     "./features/page_view_event": {
-      "types": "./dist/types/features/page_view_event/index.d.ts",
-      "require": "./dist/cjs/features/page_view_event/index.js",
-      "default": "./dist/esm/features/page_view_event/index.js"
+      "types": "./dist/types/features/page_view_event/instrument/index.d.ts",
+      "require": "./dist/cjs/features/page_view_event/instrument/index.js",
+      "default": "./dist/esm/features/page_view_event/instrument/index.js"
     },
     "./features/page_view_timing": {
-      "types": "./dist/types/features/page_view_timing/index.d.ts",
-      "require": "./dist/cjs/features/page_view_timing/index.js",
-      "default": "./dist/esm/features/page_view_timing/index.js"
+      "types": "./dist/types/features/page_view_timing/instrument/index.d.ts",
+      "require": "./dist/cjs/features/page_view_timing/instrument/index.js",
+      "default": "./dist/esm/features/page_view_timing/instrument/index.js"
     },
     "./features/session_replay": {
-      "types": "./dist/types/features/session_replay/index.d.ts",
-      "require": "./dist/cjs/features/session_replay/index.js",
-      "default": "./dist/esm/features/session_replay/index.js"
+      "types": "./dist/types/features/session_replay/instrument/index.d.ts",
+      "require": "./dist/cjs/features/session_replay/instrument/index.js",
+      "default": "./dist/esm/features/session_replay/instrument/index.js"
     },
     "./features/session_trace": {
-      "types": "./dist/types/features/session_trace/index.d.ts",
-      "require": "./dist/cjs/features/session_trace/index.js",
-      "default": "./dist/esm/features/session_trace/index.js"
+      "types": "./dist/types/features/session_trace/instrument/index.d.ts",
+      "require": "./dist/cjs/features/session_trace/instrument/index.js",
+      "default": "./dist/esm/features/session_trace/instrument/index.js"
     },
     "./features/soft_navigations": {
-      "types": "./dist/types/features/soft_navigations/index.d.ts",
-      "require": "./dist/cjs/features/soft_navigations/index.js",
-      "default": "./dist/esm/features/soft_navigations/index.js"
+      "types": "./dist/types/features/soft_navigations/instrument/index.d.ts",
+      "require": "./dist/cjs/features/soft_navigations/instrument/index.js",
+      "default": "./dist/esm/features/soft_navigations/instrument/index.js"
     },
     "./features/spa": {
-      "types": "./dist/types/features/spa/index.d.ts",
-      "require": "./dist/cjs/features/spa/index.js",
-      "default": "./dist/esm/features/spa/index.js"
+      "types": "./dist/types/features/spa/instrument/index.d.ts",
+      "require": "./dist/cjs/features/spa/instrument/index.js",
+      "default": "./dist/esm/features/spa/instrument/index.js"
     }
   },
   "engines": {

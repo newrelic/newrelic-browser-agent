@@ -22,5 +22,5 @@ export function bufferLog (ee, message, customAttributes = {}, level = LOG_LEVEL
  */
 export function isValidLogLevel (level) {
   if (typeof level !== 'string') return false
-  return Object.values(LOG_LEVELS).some(logLevel => logLevel === level)
+  return Object.values(LOG_LEVELS).some(logLevel => logLevel === level.toUpperCase().trim())
 }

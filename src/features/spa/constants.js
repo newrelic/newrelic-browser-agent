@@ -1,4 +1,4 @@
-import { originals } from '../../common/config/config'
+import { gosNREUMOriginals } from '../../common/window/nreum'
 import { FEATURE_NAMES } from '../../loaders/features/features'
 
 export const FEATURE_NAME = FEATURE_NAMES.spa
@@ -25,7 +25,7 @@ export const FETCH_DONE = 'fetch-done'
 export const FETCH_BODY = 'fetch-body-'
 export const JSONP_END = 'jsonp-end'
 
-export const originalSetTimeout = originals.ST
+export const originalSetTimeout = gosNREUMOriginals().o.ST
 
 export const START = '-start'
 export const END = '-end'

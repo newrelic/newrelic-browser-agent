@@ -1,30 +1,17 @@
 import { PREFIX } from '../../src/common/session/constants'
 import { SessionEntity } from '../../src/common/session/session-entity'
 import { LocalMemory, model } from './session-helpers'
+import * as runtimeModule from '../../src/common/constants/runtime'
+
+jest.useFakeTimers()
 
 const agentIdentifier = 'test_agent_identifier'
 const key = 'test_key'
 const value = 'test_value'
 
-jest.mock('../../src/common/timer/timer')
-jest.mock('../../src/common/timer/interaction-timer')
-jest.useFakeTimers()
-
-const mockBrowserScope = jest.fn().mockImplementation(() => true)
-jest.mock('../../src/common/constants/runtime', () => ({
-  __esModule: true,
-  get isBrowserScope () {
-    return mockBrowserScope()
-  },
-  get globalScope () {
-    return global.window
-  }
-}))
-
 let storage
 beforeEach(() => {
-  jest.restoreAllMocks()
-  mockBrowserScope.mockReturnValue(true)
+  jest.replaceProperty(runtimeModule, 'isBrowserScope', true)
   storage = new LocalMemory()
 })
 
@@ -340,7 +327,7 @@ describe('syncCustomAttribute()', () => {
   })
 
   test('Only runs in browser scope', () => {
-    mockBrowserScope.mockReturnValue(false)
+    jest.replaceProperty(runtimeModule, 'isBrowserScope', false)
     const session = new SessionEntity({ agentIdentifier, key, storage })
     session.syncCustomAttribute('test', 1)
     expect(session.read().custom?.test).toEqual(undefined)

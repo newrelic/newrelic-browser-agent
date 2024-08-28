@@ -1,7 +1,8 @@
 import { globalScope, isBrowserScope, originTime } from '../../../common/constants/runtime'
 import { addPT, addPN } from '../../../common/timing/nav-timing'
 import { stringify } from '../../../common/util/stringify'
-import { getInfo, getRuntime, isConfigured } from '../../../common/config/config'
+import { getInfo, isValid } from '../../../common/config/info'
+import { getRuntime } from '../../../common/config/runtime'
 import { Harvest } from '../../../common/harvest/harvest'
 import * as CONSTANTS from '../constants'
 import { getActivatedFeaturesFlags } from './initialized-features'
@@ -25,7 +26,7 @@ export class Aggregate extends AggregateBase {
     this.firstByteToDomContent = 0 // our "dom processing" duration
     this.timeKeeper = new TimeKeeper(this.agentIdentifier)
 
-    if (!isConfigured(agentIdentifier)) {
+    if (!isValid(agentIdentifier)) {
       this.ee.abort()
       return warn(43)
     }

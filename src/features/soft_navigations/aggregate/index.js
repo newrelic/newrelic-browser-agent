@@ -1,4 +1,4 @@
-import { getConfigurationValue } from '../../../common/config/config'
+import { getConfigurationValue } from '../../../common/config/init'
 import { deregisterDrain } from '../../../common/drain/drain'
 import { handle } from '../../../common/event-emitter/handle'
 import { registerHandler } from '../../../common/event-emitter/register-handler'

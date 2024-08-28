@@ -5,7 +5,7 @@
 import { cleanURL } from '../../../common/url/clean-url'
 import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../../../common/serialize/bel-serializer'
 import { SharedContext } from '../../../common/context/shared-context'
-import { getInfo } from '../../../common/config/config'
+import { getInfo } from '../../../common/config/info'
 
 export class Serializer extends SharedContext {
   constructor (parent) {

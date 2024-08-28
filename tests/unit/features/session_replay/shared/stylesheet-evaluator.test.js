@@ -7,14 +7,18 @@ describe('stylesheet-evaluator', (done) => {
     stylesheet = new CSSStyleSheet()
     stylesheet.href = 'https://test.com'
 
-    const globalScope = await import('../../../../../src/common/config/state/originals')
-    jest.replaceProperty(globalScope, 'originals', {
-      FETCH: jest.fn(() =>
-        Promise.resolve({
-          text: () => Promise.resolve('myCssText{width:1}')
-        })
-      )
-    })
+    jest.doMock('../../../../../src/common/window/nreum', () => ({
+      __esModule: true,
+      gosNREUMOriginals: jest.fn(() => ({
+        o: {
+          FETCH: jest.fn(() =>
+            Promise.resolve({
+              text: () => Promise.resolve('myCssText{width:1}')
+            })
+          )
+        }
+      }))
+    }))
     class CSSStyleSheetMock {
       cssRules = {}
       rules = {}
@@ -28,6 +32,7 @@ describe('stylesheet-evaluator', (done) => {
     }
     global.CSSStyleSheet = CSSStyleSheetMock
   })
+
   test('should evaluate stylesheets with cssRules as false', async () => {
     prepStylesheet({
       get () { return 'success' }

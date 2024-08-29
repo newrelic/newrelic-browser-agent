@@ -7,76 +7,43 @@ Supportability metrics are intended to be used to give internal value through an
 A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service called Angler aggregates metrics against known labels once per hour and reports a new event with the aggregation findings to a dedicated account.
 
 ### WebSockets
-<!--- WebSocket new class was made before the page loaded, ms from page origin --->
-* WebSocket/New/PreLoad/Ms
-<!--- WebSocket new class was made before the page loaded, ms from class init --->
-* WebSocket/New/Preload/MsSinceClassInit
-<!--- WebSocket new class was made after the page loaded, ms from page origin --->
-* WebSocket/New/PostLoad/Ms
-<!--- WebSocket new class was made after the page loaded, ms from class init --->
-* WebSocket/New/PostLoad/MsSinceClassInit
+<!--- WebSocket new class was made, ms from page origin --->
+* WebSocket/New/Ms
+<!--- WebSocket new class was made, ms from class init --->
+* WebSocket/New/MsSinceClassInit
 
-<!--- WebSocket send method was called before the page loaded, ms from page origin --->
-* WebSocket/Send/PreLoad/Ms
-<!--- WebSocket send method was called before the page loaded, ms from class init --->
-* WebSocket/Send/Preload/MsSinceClassInit
-<!--- WebSocket send method was called before the page loaded, bytes from args --->
-* WebSocket/Send/Preload/Bytes
-<!--- WebSocket send method was called after the page loaded, ms from page origin --->
-* WebSocket/Send/PostLoad/Ms
-<!--- WebSocket send method was called after the page loaded, ms from class init --->
-* WebSocket/Send/PostLoad/MsSinceClassInit
-<!--- WebSocket send method was called after the page loaded, bytes from args --->
-* WebSocket/Send/PostLoad/Bytes
+<!--- WebSocket send method was called, ms from page origin --->
+* WebSocket/Send/Ms
+<!--- WebSocket send method was called, ms from class init --->
+* WebSocket/Send/MsSinceClassInit
+<!--- WebSocket send method was called, bytes from args --->
+* WebSocket/Send/Bytes
 
-<!--- WebSocket close method was called before the page loaded, ms from page origin --->
-* WebSocket/Close-Method/PreLoad/Ms
-<!--- WebSocket close method was called before the page loaded, ms from class init --->
-* WebSocket/Close-Method/Preload/MsSinceClassInit
-<!--- WebSocket close method was called after the page loaded, ms from page origin --->
-* WebSocket/Close-Method/PostLoad/Ms
-<!--- WebSocket close method was called after the page loaded, ms from class init --->
-* WebSocket/Close-Method/PostLoad/MsSinceClassInit
+<!--- WebSocket was cleanly closed, ms from page origin --->
+* WebSocket/Close-Clean/Ms
+<!--- WebSocket was cleanly closed, ms from class init --->
+* WebSocket/Close-Clean/MsSinceClassInit
+<!--- WebSocket was uncleanly closed, ms from page origin --->
+* WebSocket/Close-Dirty/Ms
+<!--- WebSocket was uncleanly closed, ms from class init --->
+* WebSocket/Close-Dirty/MsSinceClassInit
   
-<!--- WebSocket close event was received before the page loaded, ms from page origin --->
-* WebSocket/Close-Event/PreLoad/Ms
-<!--- WebSocket close event was received before the page loaded, ms from class init --->
-* WebSocket/Close-Event/Preload/MsSinceClassInit
-<!--- WebSocket close event was received after the page loaded, ms from page origin --->
-* WebSocket/Close-Event/PostLoad/Ms
-<!--- WebSocket close event was received after the page loaded, ms from class init --->
-* WebSocket/Close-Event/PostLoad/MsSinceClassInit
+<!--- WebSocket message event was received, ms from page origin --->
+* WebSocket/Message/Ms
+<!--- WebSocket message event was received, ms from class init --->
+* WebSocket/Message/MsSinceClassInit
+<!--- WebSocket message event was received, bytes from args --->
+* WebSocket/Message/Bytes
   
-<!--- WebSocket message event was received before the page loaded, ms from page origin --->
-* WebSocket/Message/PreLoad/Ms
-<!--- WebSocket message event was received before the page loaded, ms from class init --->
-* WebSocket/Message/Preload/MsSinceClassInit
-<!--- WebSocket message event was received before the page loaded, bytes from args --->
-* WebSocket/Message/Preload/Bytes
-<!--- WebSocket message event was received after the page loaded, ms from page origin --->
-* WebSocket/Message/PostLoad/Ms
-<!--- WebSocket message event was received after the page loaded, ms from class init --->
-* WebSocket/Message/PostLoad/MsSinceClassInit
-<!--- WebSocket message event was received after the page loaded, bytes from event.data --->
-* WebSocket/Message/PostLoad/Bytes
+<!--- WebSocket error event was received, ms from page origin --->
+* WebSocket/Error/Ms
+<!--- WebSocket error event was received, ms from class init --->
+* WebSocket/Error/MsSinceClassInit
   
-<!--- WebSocket error event was received before the page loaded, ms from page origin --->
-* WebSocket/Error/PreLoad/Ms
-<!--- WebSocket error event was received before the page loaded, ms from class init --->
-* WebSocket/Error/Preload/MsSinceClassInit
-<!--- WebSocket error event was received after the page loaded, ms from page origin --->
-* WebSocket/Error/PostLoad/Ms
-<!--- WebSocket error event was received after the page loaded, ms from class init --->
-* WebSocket/Error/PostLoad/MsSinceClassInit
-  
-<!--- WebSocket open event was received before the page loaded, ms from page origin --->
-* WebSocket/Open/PreLoad/Ms
-<!--- WebSocket open event was received before the page loaded, ms from class init --->
-* WebSocket/Open/Preload/MsSinceClassInit
-<!--- WebSocket open event was received after the page loaded, ms from page origin --->
-* WebSocket/Open/PostLoad/Ms
-<!--- WebSocket open event was received after the page loaded, ms from class init --->
-* WebSocket/Open/PostLoad/MsSinceClassInit
+<!--- WebSocket open event was received, ms from page origin --->
+* WebSocket/Open/Ms
+<!--- WebSocket open event was received, ms from class init --->
+* WebSocket/Open/MsSinceClassInit
 
 ### Logging
 <!--- Logging harvest was too big to send --->

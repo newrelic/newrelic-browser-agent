@@ -16,13 +16,16 @@ export function handleWebsocketEvents (reporter, tag, timestamp, timeSinceInit, 
   // socketId is unused in the SMs
   const useDataType = tag === ADD_EVENT_LISTENER_TAG
   let metricTag = toTitleCase(useDataType ? data.eventType : tag)
-  if (metricTag === 'Close') metricTag += (useDataType ? '-Event' : '-Method')
+  if (metricTag === 'Close') {
+    if (data?.event.code === 1000 || data?.event.wasClean) metricTag += '-Clean'
+    else metricTag += '-Dirty'
+  }
   const bytes = (metricTag === 'Message' && dataSize(data?.event?.data)) || (metricTag === 'Send' && dataSize(data))
-  reporter(buildSMTag(metricTag, 'Ms', isLoaded), timestamp)
-  reporter(buildSMTag(metricTag, 'MsSinceClassInit', isLoaded), timeSinceInit)
-  if (bytes) reporter(buildSMTag(metricTag, 'Bytes', isLoaded), bytes)
+  reporter(buildSMTag(metricTag, 'Ms'), timestamp)
+  reporter(buildSMTag(metricTag, 'MsSinceClassInit'), timeSinceInit)
+  if (bytes) reporter(buildSMTag(metricTag, 'Bytes'), bytes)
 }
 
-function buildSMTag (tag, category, isLoaded) {
-  return 'WebSocket/' + tag + '/' + (isLoaded ? 'PostLoad' : 'PreLoad') + '/' + category
+function buildSMTag (tag, category) {
+  return 'WebSocket/' + tag + '/' + category
 }

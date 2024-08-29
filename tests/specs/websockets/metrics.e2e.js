@@ -11,30 +11,20 @@ describe('WebSocket supportability metrics', () => {
 
     const [sms] = await supportabilityMetricsRequest.waitForResult({ totalCount: 1 })
     const smPayload = sms.request.body.sm
-    const preLoadSMs = ['New']
-    const postLoadSMs = ['Open', 'Send', 'Message', 'Close-Method', 'Close-Event']
-    preLoadSMs.forEach(expectedSm => {
-      const ms = smPayload.find(sm => sm.params.name === `WebSocket/${expectedSm}/PreLoad/Ms`)
-      const msSinceClassInit = smPayload.find(sm => sm.params.name === `WebSocket/${expectedSm}/PreLoad/MsSinceClassInit`)
+    const smTags = ['New', 'Open', 'Send', 'Message', 'Close-Clean']
 
-      expect(ms).toBeTruthy()
-      expect(ms.stats.t).toBeGreaterThan(0)
-
-      expect(msSinceClassInit).toBeTruthy()
-      expect(msSinceClassInit.stats.t).toBeLessThanOrEqual(1) // shouldnt take more than 1 ms to call `new`
-    })
-
-    postLoadSMs.forEach(expectedSm => {
-      const ms = smPayload.find(sm => sm.params.name === `WebSocket/${expectedSm}/PostLoad/Ms`)
-      const msSinceClassInit = smPayload.find(sm => sm.params.name === `WebSocket/${expectedSm}/PostLoad/MsSinceClassInit`)
-      const bytes = smPayload.find(sm => sm.params.name === `WebSocket/${expectedSm}/PostLoad/Bytes`)
+    smTags.forEach(expectedSm => {
+      const ms = smPayload.find(sm => sm.params.name === `WebSocket/${expectedSm}/Ms`)
+      const msSinceClassInit = smPayload.find(sm => sm.params.name === `WebSocket/${expectedSm}/MsSinceClassInit`)
+      const bytes = smPayload.find(sm => sm.params.name === `WebSocket/${expectedSm}/Bytes`)
 
       expect(ms).toBeTruthy()
       expect(ms.stats.t).toBeGreaterThan(0)
       expect(ms.stats.c).toEqual(2)
 
       expect(msSinceClassInit).toBeTruthy()
-      expect(msSinceClassInit.stats.t).toBeGreaterThan(0)
+      if (expectedSm === 'New') expect(msSinceClassInit.stats.t).toBeLessThanOrEqual(1)
+      else expect(msSinceClassInit.stats.t).toBeGreaterThan(0)
       expect(msSinceClassInit.stats.c).toEqual(2)
 
       if (['Send', 'Message'].includes(expectedSm)) {

@@ -10,7 +10,8 @@ describe('wrap-websocket', () => {
   it('should mutate global to match same properties as original', async () => {
     const ws = await prepWS()
     expect(WebSocket.name).toEqual('WebSocket')
-    expect(Object.keys(ws)).toEqual(['send', 'close'])
+    expect(typeof ws.send).toEqual('function')
+    expect(typeof ws.close).toEqual('function')
     expect(ws.send.name).toEqual('send')
     expect(ws.close.name).toEqual('close')
     expect(typeof ws.addEventListener).toEqual('function')
@@ -73,7 +74,7 @@ describe('wrap-websocket', () => {
     expect(emitSpy.mock.calls[emitSpy.mock.calls.length - 1][0]).toEqual('websocket-send')
 
     ws.close()
-    expect(events[expectedLength - 1]).toEqual([...expectedBaseData])
+    expect(events[expectedLength - 1]).toEqual([...expectedBaseData, 'test']) // close method is not observed directly, only by its event
 
     const messageEvent = new Event('message')
     messageEvent.data = 'this is a test'

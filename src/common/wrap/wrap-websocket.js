@@ -32,7 +32,7 @@ export function wrapWebSocket (sharedEE) {
     const report = reporter(socketId)
     report('new')
 
-    const events = ['message', 'error', 'open', 'close'] // could also watch the "close" AEL if we wanted to, but we are already watching the static method
+    const events = ['message', 'error', 'open', 'close']
     /** add event listeners */
     events.forEach(evt => {
       ws.addEventListener(evt, function (e) {
@@ -42,8 +42,8 @@ export function wrapWebSocket (sharedEE) {
 
     /** could also observe the on-events for runtime processing, but not implemented yet */
 
-    /** observe the static methods */
-    ;['send', 'close'].forEach(wrapStaticProperty)
+    /** observe the static method send, but noteably not close, as that is currently observed with the event listener */
+    ;['send'].forEach(wrapStaticProperty)
 
     function wrapStaticProperty (prop) {
       const originalProp = ws[prop]

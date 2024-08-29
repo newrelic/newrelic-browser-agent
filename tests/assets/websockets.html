@@ -20,7 +20,7 @@
       // Listen for messages
       preLoadSocket.addEventListener("message", (event) => {
           console.log("Message from server ", event.data);
-          preLoadSocket.close()
+          preLoadSocket.close() // clean by flag
       });
     </script>
   </head>
@@ -39,7 +39,7 @@
         // Listen for messages
         postLoadSocket.addEventListener("message", (event) => {
             console.log("Message from server ", event.data);
-            postLoadSocket.close()
+            postLoadSocket.close(1000) // clean by code and flag
         });
       })
     </script>

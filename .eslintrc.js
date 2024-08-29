@@ -54,7 +54,7 @@ module.exports = {
         sourceType: 'module'
       },
       rules: {
-        'no-console': ['error', { allow: ['debug'] }],
+        'no-console': ['error'],
         'n/no-callback-literal': 'off' // This is not NodeJS code and should not be forced to adhere to NodeJS callback parameter pattern
       }
     },

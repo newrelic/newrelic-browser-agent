@@ -23,11 +23,7 @@ code, the source code can be found at [https://github.com/newrelic/newrelic-brow
 * [@babel/cli](#babelcli)
 * [@babel/core](#babelcore)
 * [@babel/eslint-parser](#babeleslint-parser)
-* [@babel/plugin-proposal-class-properties](#babelplugin-proposal-class-properties)
-* [@babel/plugin-proposal-logical-assignment-operators](#babelplugin-proposal-logical-assignment-operators)
-* [@babel/plugin-proposal-nullish-coalescing-operator](#babelplugin-proposal-nullish-coalescing-operator)
-* [@babel/plugin-proposal-optional-chaining](#babelplugin-proposal-optional-chaining)
-* [@babel/plugin-proposal-private-methods](#babelplugin-proposal-private-methods)
+* [@babel/plugin-transform-template-literals](#babelplugin-transform-template-literals)
 * [@babel/preset-env](#babelpreset-env)
 * [@babel/register](#babelregister)
 * [@faker-js/faker](#faker-jsfaker)
@@ -67,15 +63,14 @@ code, the source code can be found at [https://github.com/newrelic/newrelic-brow
 * [jest-environment-jsdom](#jest-environment-jsdom)
 * [jest-extended](#jest-extended)
 * [jest](#jest)
+* [jsonpath-plus](#jsonpath-plus)
 * [jung](#jung)
 * [node-fetch](#node-fetch)
 * [npm-run-all](#npm-run-all)
-* [semver](#semver)
 * [serialize-anything](#serialize-anything)
 * [terser-webpack-plugin](#terser-webpack-plugin)
 * [tsd](#tsd)
 * [typescript](#typescript)
-* [util](#util)
 * [uuid](#uuid)
 * [wait-on](#wait-on)
 * [wdio-lambdatest-service](#wdio-lambdatest-service)
@@ -349,7 +344,7 @@ This product includes source derived from [web-vitals](https://github.com/Google
 
 ### @babel/cli
 
-This product includes source derived from [@babel/cli](https://github.com/babel/babel) ([v7.24.8](https://github.com/babel/babel/tree/v7.24.8)), distributed under the [MIT License](https://github.com/babel/babel/blob/v7.24.8/LICENSE):
+This product includes source derived from [@babel/cli](https://github.com/babel/babel) ([v7.25.6](https://github.com/babel/babel/tree/v7.25.6)), distributed under the [MIT License](https://github.com/babel/babel/blob/v7.25.6/LICENSE):
 
 ```
 MIT License
@@ -437,129 +432,9 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ```
 
-### @babel/plugin-proposal-class-properties
+### @babel/plugin-transform-template-literals
 
-This product includes source derived from [@babel/plugin-proposal-class-properties](https://github.com/babel/babel) ([v7.18.6](https://github.com/babel/babel/tree/v7.18.6)), distributed under the [MIT License](https://github.com/babel/babel/blob/v7.18.6/LICENSE):
-
-```
-MIT License
-
-Copyright (c) 2014-present Sebastian McKenzie and other contributors
-
-Permission is hereby granted, free of charge, to any person obtaining
-a copy of this software and associated documentation files (the
-"Software"), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
-
-The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-```
-
-### @babel/plugin-proposal-logical-assignment-operators
-
-This product includes source derived from [@babel/plugin-proposal-logical-assignment-operators](https://github.com/babel/babel) ([v7.20.7](https://github.com/babel/babel/tree/v7.20.7)), distributed under the [MIT License](https://github.com/babel/babel/blob/v7.20.7/LICENSE):
-
-```
-MIT License
-
-Copyright (c) 2014-present Sebastian McKenzie and other contributors
-
-Permission is hereby granted, free of charge, to any person obtaining
-a copy of this software and associated documentation files (the
-"Software"), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
-
-The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-```
-
-### @babel/plugin-proposal-nullish-coalescing-operator
-
-This product includes source derived from [@babel/plugin-proposal-nullish-coalescing-operator](https://github.com/babel/babel) ([v7.18.6](https://github.com/babel/babel/tree/v7.18.6)), distributed under the [MIT License](https://github.com/babel/babel/blob/v7.18.6/LICENSE):
-
-```
-MIT License
-
-Copyright (c) 2014-present Sebastian McKenzie and other contributors
-
-Permission is hereby granted, free of charge, to any person obtaining
-a copy of this software and associated documentation files (the
-"Software"), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
-
-The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-```
-
-### @babel/plugin-proposal-optional-chaining
-
-This product includes source derived from [@babel/plugin-proposal-optional-chaining](https://github.com/babel/babel) ([v7.21.0](https://github.com/babel/babel/tree/v7.21.0)), distributed under the [MIT License](https://github.com/babel/babel/blob/v7.21.0/LICENSE):
-
-```
-MIT License
-
-Copyright (c) 2014-present Sebastian McKenzie and other contributors
-
-Permission is hereby granted, free of charge, to any person obtaining
-a copy of this software and associated documentation files (the
-"Software"), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
-
-The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-```
-
-### @babel/plugin-proposal-private-methods
-
-This product includes source derived from [@babel/plugin-proposal-private-methods](https://github.com/babel/babel) ([v7.18.6](https://github.com/babel/babel/tree/v7.18.6)), distributed under the [MIT License](https://github.com/babel/babel/blob/v7.18.6/LICENSE):
+This product includes source derived from [@babel/plugin-transform-template-literals](https://github.com/babel/babel) ([v7.24.7](https://github.com/babel/babel/tree/v7.24.7)), distributed under the [MIT License](https://github.com/babel/babel/blob/v7.24.7/LICENSE):
 
 ```
 MIT License
@@ -589,7 +464,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### @babel/preset-env
 
-This product includes source derived from [@babel/preset-env](https://github.com/babel/babel) ([v7.25.3](https://github.com/babel/babel/tree/v7.25.3)), distributed under the [MIT License](https://github.com/babel/babel/blob/v7.25.3/LICENSE):
+This product includes source derived from [@babel/preset-env](https://github.com/babel/babel) ([v7.25.4](https://github.com/babel/babel/tree/v7.25.4)), distributed under the [MIT License](https://github.com/babel/babel/blob/v7.25.4/LICENSE):
 
 ```
 MIT License
@@ -1251,7 +1126,7 @@ This product includes source derived from [@newrelic/nr-querypack](https://githu
 
 ### @wdio/cli
 
-This product includes source derived from [@wdio/cli](https://github.com/webdriverio/webdriverio) ([v8.40.0](https://github.com/webdriverio/webdriverio/tree/v8.40.0)), distributed under the [MIT License](https://github.com/webdriverio/webdriverio/blob/v8.40.0/LICENSE-MIT):
+This product includes source derived from [@wdio/cli](https://github.com/webdriverio/webdriverio) ([v8.40.5](https://github.com/webdriverio/webdriverio/tree/v8.40.5)), distributed under the [MIT License](https://github.com/webdriverio/webdriverio/blob/v8.40.5/LICENSE-MIT):
 
 ```
 Copyright (c) OpenJS Foundation and other contributors
@@ -1279,7 +1154,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### @wdio/local-runner
 
-This product includes source derived from [@wdio/local-runner](https://github.com/webdriverio/webdriverio) ([v8.40.0](https://github.com/webdriverio/webdriverio/tree/v8.40.0)), distributed under the [MIT License](https://github.com/webdriverio/webdriverio/blob/v8.40.0/LICENSE-MIT):
+This product includes source derived from [@wdio/local-runner](https://github.com/webdriverio/webdriverio) ([v8.40.5](https://github.com/webdriverio/webdriverio/tree/v8.40.5)), distributed under the [MIT License](https://github.com/webdriverio/webdriverio/blob/v8.40.5/LICENSE-MIT):
 
 ```
 Copyright (c) OpenJS Foundation and other contributors
@@ -1335,7 +1210,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### @wdio/mocha-framework
 
-This product includes source derived from [@wdio/mocha-framework](https://github.com/webdriverio/webdriverio) ([v8.40.0](https://github.com/webdriverio/webdriverio/tree/v8.40.0)), distributed under the [MIT License](https://github.com/webdriverio/webdriverio/blob/v8.40.0/LICENSE-MIT):
+This product includes source derived from [@wdio/mocha-framework](https://github.com/webdriverio/webdriverio) ([v8.40.3](https://github.com/webdriverio/webdriverio/tree/v8.40.3)), distributed under the [MIT License](https://github.com/webdriverio/webdriverio/blob/v8.40.3/LICENSE-MIT):
 
 ```
 Copyright (c) OpenJS Foundation and other contributors
@@ -1363,7 +1238,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### @wdio/spec-reporter
 
-This product includes source derived from [@wdio/spec-reporter](https://github.com/webdriverio/webdriverio) ([v8.39.0](https://github.com/webdriverio/webdriverio/tree/v8.39.0)), distributed under the [MIT License](https://github.com/webdriverio/webdriverio/blob/v8.39.0/LICENSE-MIT):
+This product includes source derived from [@wdio/spec-reporter](https://github.com/webdriverio/webdriverio) ([v8.40.3](https://github.com/webdriverio/webdriverio/tree/v8.40.3)), distributed under the [MIT License](https://github.com/webdriverio/webdriverio/blob/v8.40.3/LICENSE-MIT):
 
 ```
 Copyright (c) OpenJS Foundation and other contributors
@@ -1966,7 +1841,7 @@ OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHE
 
 ### glob
 
-This product includes source derived from [glob](https://github.com/isaacs/node-glob) ([v10.4.5](https://github.com/isaacs/node-glob/tree/v10.4.5)), distributed under the [ISC License](https://github.com/isaacs/node-glob/blob/v10.4.5/LICENSE):
+This product includes source derived from [glob](https://github.com/isaacs/node-glob) ([v11.0.0](https://github.com/isaacs/node-glob/tree/v11.0.0)), distributed under the [ISC License](https://github.com/isaacs/node-glob/blob/v11.0.0/LICENSE):
 
 ```
 The ISC License
@@ -2259,6 +2134,36 @@ SOFTWARE.
 
 ```
 
+### jsonpath-plus
+
+This product includes source derived from [jsonpath-plus](https://github.com/s3u/JSONPath) ([v9.0.0](https://github.com/s3u/JSONPath/tree/v9.0.0)), distributed under the [MIT License](https://github.com/s3u/JSONPath/blob/v9.0.0/LICENSE):
+
+```
+MIT License
+
+Copyright (c) 2011-2019 Stefan Goessner, Subbu Allamaraju, Mike Brevoort,
+Robert Krahn, Brett Zamir, Richard Schneider
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+```
+
 ### jung
 
 This product includes source derived from [jung](https://github.com/jarofghosts/jung) ([v2.1.0](https://github.com/jarofghosts/jung/tree/v2.1.0)), distributed under the [MIT License](https://github.com/jarofghosts/jung/blob/v2.1.0/LICENSE):
@@ -2345,29 +2250,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-
-```
-
-### semver
-
-This product includes source derived from [semver](https://github.com/npm/node-semver) ([v7.6.3](https://github.com/npm/node-semver/tree/v7.6.3)), distributed under the [ISC License](https://github.com/npm/node-semver/blob/v7.6.3/LICENSE):
-
-```
-The ISC License
-
-Copyright (c) Isaac Z. Schlueter and Contributors
-
-Permission to use, copy, modify, and/or distribute this software for any
-purpose with or without fee is hereby granted, provided that the above
-copyright notice and this permission notice appear in all copies.
-
-THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
-IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 ```
 
@@ -2495,35 +2377,9 @@ END OF TERMS AND CONDITIONS
 
 ```
 
-### util
-
-This product includes source derived from [util](https://github.com/browserify/node-util) ([v0.12.5](https://github.com/browserify/node-util/tree/v0.12.5)), distributed under the [MIT License](https://github.com/browserify/node-util/blob/v0.12.5/LICENSE):
-
-```
-Copyright Joyent, Inc. and other Node contributors. All rights reserved.
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to
-deal in the Software without restriction, including without limitation the
-rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-sell copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
-IN THE SOFTWARE.
-
-```
-
 ### uuid
 
-This product includes source derived from [uuid](https://github.com/uuidjs/uuid) ([v9.0.1](https://github.com/uuidjs/uuid/tree/v9.0.1)), distributed under the [MIT License](https://github.com/uuidjs/uuid/blob/v9.0.1/LICENSE.md):
+This product includes source derived from [uuid](https://github.com/uuidjs/uuid) ([v10.0.0](https://github.com/uuidjs/uuid/tree/v10.0.0)), distributed under the [MIT License](https://github.com/uuidjs/uuid/blob/v10.0.0/LICENSE.md):
 
 ```
 The MIT License (MIT)
@@ -2540,7 +2396,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ### wait-on
 
-This product includes source derived from [wait-on](https://github.com/jeffbski/wait-on) ([v7.2.0](https://github.com/jeffbski/wait-on/tree/v7.2.0)), distributed under the [MIT License](https://github.com/jeffbski/wait-on/blob/v7.2.0/LICENSE):
+This product includes source derived from [wait-on](https://github.com/jeffbski/wait-on) ([v8.0.0](https://github.com/jeffbski/wait-on/tree/v8.0.0)), distributed under the [MIT License](https://github.com/jeffbski/wait-on/blob/v8.0.0/LICENSE):
 
 ```
 The MIT License (MIT)
@@ -2556,7 +2412,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ### wdio-lambdatest-service
 
-This product includes source derived from [wdio-lambdatest-service](https://github.com/LambdaTest/wdio-lambdatest-service) ([v3.0.0](https://github.com/LambdaTest/wdio-lambdatest-service/tree/v3.0.0)), distributed under the [MIT License](https://github.com/LambdaTest/wdio-lambdatest-service/blob/v3.0.0/README.md):
+This product includes source derived from [wdio-lambdatest-service](https://github.com/LambdaTest/wdio-lambdatest-service) ([v3.0.1](https://github.com/LambdaTest/wdio-lambdatest-service/tree/v3.0.1)), distributed under the [MIT License](https://github.com/LambdaTest/wdio-lambdatest-service/blob/v3.0.1/README.md):
 
 ```
 MIT License
@@ -2627,7 +2483,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### webpack
 
-This product includes source derived from [webpack](https://github.com/webpack/webpack) ([v5.93.0](https://github.com/webpack/webpack/tree/v5.93.0)), distributed under the [MIT License](https://github.com/webpack/webpack/blob/v5.93.0/LICENSE):
+This product includes source derived from [webpack](https://github.com/webpack/webpack) ([v5.94.0](https://github.com/webpack/webpack/tree/v5.94.0)), distributed under the [MIT License](https://github.com/webpack/webpack/blob/v5.94.0/LICENSE):
 
 ```
 Copyright JS Foundation and other contributors

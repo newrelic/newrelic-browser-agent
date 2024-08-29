@@ -1,5 +1,6 @@
 import { FeatureBase } from './feature-base'
-import { getInfo, isConfigured, getRuntime } from '../../common/config/config'
+import { getInfo, isValid } from '../../common/config/info'
+import { getRuntime } from '../../common/config/runtime'
 import { configure } from '../../loaders/configure/configure'
 import { gosCDN } from '../../common/window/nreum'
 import { deregisterDrain, drain } from '../../common/drain/drain'
@@ -52,7 +53,7 @@ export class AggregateBase extends FeatureBase {
    */
   checkConfiguration () {
     // NOTE: This check has to happen at aggregator load time
-    if (!isConfigured(this.agentIdentifier)) {
+    if (!isValid(this.agentIdentifier)) {
       const cdn = gosCDN()
       let jsAttributes = { ...cdn.info?.jsAttributes }
       try {

@@ -1,4 +1,4 @@
-import { warn } from '../../util/console'
+import { warn } from '../util/console'
 
 export function getModeledObject (obj, model) {
   try {

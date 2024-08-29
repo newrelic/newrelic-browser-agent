@@ -3,7 +3,7 @@ import { Interaction } from './interaction'
 import { numeric } from '../../../common/serialize/bel-serializer'
 import { firstPaint } from '../../../common/vitals/first-paint'
 import { firstContentfulPaint } from '../../../common/vitals/first-contentful-paint'
-import { getInfo } from '../../../common/config/config'
+import { getInfo } from '../../../common/config/info'
 
 export class InitialPageLoadInteraction extends Interaction {
   constructor (agentIdentifier) {

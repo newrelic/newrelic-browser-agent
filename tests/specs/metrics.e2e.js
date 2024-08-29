@@ -1,21 +1,52 @@
 import { supportsFetch } from '../../tools/browser-matcher/common-matchers.mjs'
+import { testCustomMetricsRequest, testSupportMetricsRequest } from '../../tools/testing-server/utils/expect-tests'
 
 const loaderTypes = ['rum', 'full', 'spa']
 const loaderTypesMapped = { rum: 'lite', full: 'pro', spa: 'spa' }
 
 describe('metrics', () => {
-  loaderTypes.forEach(lt => loaderTypeSupportabilityMetric(lt))
+  let supportabilityMetricsCapture
+
+  beforeEach(async () => {
+    supportabilityMetricsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testSupportMetricsRequest })
+  })
+
+  loaderTypes.forEach(loaderType => {
+    it.withBrowsersMatching(supportsFetch)(`generic agent info captured for ${loaderType} loader`, async () => {
+      await browser.url(await browser.testHandle.assetURL('instrumented.html', { loader: loaderType }))
+        .then(() => browser.waitForAgentLoad())
+
+      const [supportabilityMetricsHarvests] = await Promise.all([
+        supportabilityMetricsCapture.waitForResult({ totalCount: 1 }),
+        await browser.url(await browser.testHandle.assetURL('/')) // Setup expects before navigating
+      ])
+
+      const supportabilityMetrics = supportabilityMetricsHarvests[0].request.body.sm
+      expect(supportabilityMetrics).toEqual(expect.arrayContaining([{
+        params: { name: expect.stringContaining('Generic/DistMethod/') },
+        stats: { c: 1 }
+      }]))
+      expect(supportabilityMetrics).toEqual(expect.arrayContaining([{
+        params: { name: `Generic/LoaderType/${loaderTypesMapped[loaderType]}/Detected` },
+        stats: { c: 1 }
+      }]))
+      expect(supportabilityMetrics).toEqual(expect.arrayContaining([{
+        params: { name: 'Generic/Runtime/Browser/Detected' },
+        stats: { c: 1 }
+      }]))
+    })
+  })
 
   it('should send SMs for resources seen', async () => {
     await browser.url(await browser.testHandle.assetURL('resources.html'))
       .then(() => browser.waitForAgentLoad())
 
-    const [unloadSupportMetricsResults] = await Promise.all([
-      browser.testHandle.expectSupportMetrics(),
+    const [supportabilityMetricsHarvests] = await Promise.all([
+      supportabilityMetricsCapture.waitForResult({ totalCount: 1 }),
       await browser.url(await browser.testHandle.assetURL('/')) // Setup expects before navigating
     ])
 
-    const supportabilityMetrics = unloadSupportMetricsResults.request.body.sm || []
+    const supportabilityMetrics = supportabilityMetricsHarvests[0].request.body.sm
     expect(supportabilityMetrics).toEqual(expect.arrayContaining([{
       params: { name: 'Generic/Resources/Non-Ajax/Internal' },
       stats: { c: expect.toBeWithin(1, Infinity) }
@@ -35,15 +66,17 @@ describe('metrics', () => {
   })
 
   it('should send CMs and SMs when calling agent api methods', async () => {
+    const customMetricsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testCustomMetricsRequest })
     await browser.url(await browser.testHandle.assetURL('api/customMetrics.html'))
       .then(() => browser.waitForAgentLoad())
 
-    const [unloadMetricsResults] = await Promise.all([
-      browser.testHandle.expectMetrics(),
+    const [supportabilityMetricsHarvests, customMetricsHarvests] = await Promise.all([
+      supportabilityMetricsCapture.waitForResult({ totalCount: 1 }),
+      customMetricsCapture.waitForResult({ totalCount: 1 }),
       await browser.url(await browser.testHandle.assetURL('/')) // Setup expects before navigating
     ])
 
-    const customMetrics = unloadMetricsResults.request.body.cm || []
+    const customMetrics = customMetricsHarvests[0].request.body.cm || []
     expect(customMetrics).toEqual(expect.arrayContaining([{
       params: { name: 'finished' },
       metrics: {
@@ -52,7 +85,7 @@ describe('metrics', () => {
       }
     }]))
 
-    const supportabilityMetrics = unloadMetricsResults.request.body.sm || []
+    const supportabilityMetrics = supportabilityMetricsHarvests[0].request.body.sm
     expect(supportabilityMetrics).toEqual(expect.arrayContaining([{
       params: { name: 'API/noticeError/called' },
       stats: { c: expect.toBeWithin(1, Infinity) }
@@ -95,12 +128,12 @@ describe('metrics', () => {
     await browser.url(await browser.testHandle.assetURL('obfuscate-pii-valid.html'))
       .then(() => browser.waitForAgentLoad())
 
-    const [unloadSupportMetricsResults] = await Promise.all([
-      browser.testHandle.expectSupportMetrics(),
+    const [supportabilityMetricsHarvests] = await Promise.all([
+      supportabilityMetricsCapture.waitForResult({ totalCount: 1 }),
       await browser.url(await browser.testHandle.assetURL('/')) // Setup expects before navigating
     ])
 
-    const supportabilityMetrics = unloadSupportMetricsResults.request.body.sm || []
+    const supportabilityMetrics = supportabilityMetricsHarvests[0].request.body.sm
     expect(supportabilityMetrics).toEqual(expect.arrayContaining([{
       params: { name: 'Generic/Obfuscate/Detected' },
       stats: { c: 1 }
@@ -115,12 +148,12 @@ describe('metrics', () => {
     await browser.url(await browser.testHandle.assetURL('obfuscate-pii-invalid-regex-type.html'))
       .then(() => browser.waitForAgentLoad())
 
-    const [unloadSupportMetricsResults] = await Promise.all([
-      browser.testHandle.expectSupportMetrics(),
+    const [supportabilityMetricsHarvests] = await Promise.all([
+      supportabilityMetricsCapture.waitForResult({ totalCount: 1 }),
       await browser.url(await browser.testHandle.assetURL('/')) // Setup expects before navigating
     ])
 
-    const supportabilityMetrics = unloadSupportMetricsResults.request.body.sm || []
+    const supportabilityMetrics = supportabilityMetricsHarvests[0].request.body.sm
     expect(supportabilityMetrics).toEqual(expect.arrayContaining([{
       params: { name: 'Generic/Obfuscate/Detected' },
       stats: { c: 1 }
@@ -135,12 +168,12 @@ describe('metrics', () => {
     await browser.url(await browser.testHandle.assetURL('obfuscate-pii-invalid-regex-undefined.html'))
       .then(() => browser.waitForAgentLoad())
 
-    const [unloadSupportMetricsResults] = await Promise.all([
-      browser.testHandle.expectSupportMetrics(),
+    const [supportabilityMetricsHarvests] = await Promise.all([
+      supportabilityMetricsCapture.waitForResult({ totalCount: 1 }),
       await browser.url(await browser.testHandle.assetURL('/')) // Setup expects before navigating
     ])
 
-    const supportabilityMetrics = unloadSupportMetricsResults.request.body.sm || []
+    const supportabilityMetrics = supportabilityMetricsHarvests[0].request.body.sm
     expect(supportabilityMetrics).toEqual(expect.arrayContaining([{
       params: { name: 'Generic/Obfuscate/Detected' },
       stats: { c: 1 }
@@ -155,12 +188,12 @@ describe('metrics', () => {
     await browser.url(await browser.testHandle.assetURL('obfuscate-pii-invalid-replacement-type.html'))
       .then(() => browser.waitForAgentLoad())
 
-    const [unloadSupportMetricsResults] = await Promise.all([
-      browser.testHandle.expectSupportMetrics(),
+    const [supportabilityMetricsHarvests] = await Promise.all([
+      supportabilityMetricsCapture.waitForResult({ totalCount: 1 }),
       await browser.url(await browser.testHandle.assetURL('/')) // Setup expects before navigating
     ])
 
-    const supportabilityMetrics = unloadSupportMetricsResults.request.body.sm || []
+    const supportabilityMetrics = supportabilityMetricsHarvests[0].request.body.sm
     expect(supportabilityMetrics).toEqual(expect.arrayContaining([{
       params: { name: 'Generic/Obfuscate/Detected' },
       stats: { c: 1 }
@@ -171,29 +204,3 @@ describe('metrics', () => {
     }]))
   })
 })
-
-function loaderTypeSupportabilityMetric (loaderType) {
-  it.withBrowsersMatching(supportsFetch)(`generic agent info captured for ${loaderType} loader`, async () => {
-    await browser.url(await browser.testHandle.assetURL('instrumented.html', { loader: loaderType }))
-      .then(() => browser.waitForAgentLoad())
-
-    const [unloadSupportMetricsResults] = await Promise.all([
-      browser.testHandle.expectSupportMetrics(),
-      await browser.url(await browser.testHandle.assetURL('/')) // Setup expects before navigating
-    ])
-
-    const supportabilityMetrics = unloadSupportMetricsResults.request.body.sm
-    expect(supportabilityMetrics).toEqual(expect.arrayContaining([{
-      params: { name: expect.stringContaining('Generic/DistMethod/') },
-      stats: { c: 1 }
-    }]))
-    expect(supportabilityMetrics).toEqual(expect.arrayContaining([{
-      params: { name: `Generic/LoaderType/${loaderTypesMapped[loaderType]}/Detected` },
-      stats: { c: 1 }
-    }]))
-    expect(supportabilityMetrics).toEqual(expect.arrayContaining([{
-      params: { name: 'Generic/Runtime/Browser/Detected' },
-      stats: { c: 1 }
-    }]))
-  })
-}

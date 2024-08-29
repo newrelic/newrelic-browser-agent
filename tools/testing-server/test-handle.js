@@ -8,6 +8,7 @@ const NetworkCapture = require('./network-capture')
 /**
  * Scheduled reply options
  * @typedef {object} ScheduledReply
+ * @property {string} [id] unique identifier for the scheduled reply, can be used to clear the reply
  * @property {Function|string} test function that takes the fastify request object and returns true if the scheduled
  * response should be applied
  * @property {boolean} permanent indicates if the reply should be left in place
@@ -16,33 +17,6 @@ const NetworkCapture = require('./network-capture')
  * @property {number} delay delay the response by a number of milliseconds
  * @property {string[]} removeHeaders list of headers to remove from the response
  * @property {{ key: string, value: string }[]} setHeaders list of key:value pairs to add as headers to the response
- */
-
-/**
- * Test server expect options
- * @typedef {object} TestServerExpect
- * @property {false|number|null|undefined} timeout time in milliseconds to timeout and reject the expect or false if the
- * timeout should not be applied
- * @property {Function|string} test function that takes the fastify request object and returns true if the expect should
- * be resolved
- * @property {boolean} expectTimeout boolean indicating if the expect is expected to timeout; useful when you want to expect
- * that a certain network call does not happen
- * @deprecated
- */
-
-/**
- * Deferred object
- * @typedef {object} Deferred
- * @property {Promise<any>} promise the underlying promise of the deferred object
- * @property {Function} resolve the resolve function of the deferred object
- * @property {Function} reject the reject function of the deferred object
- * @property {NodeJS.Timeout} [timeout] the pending timeout for the deferred object
- * @property {Function} [test] optional test function that takes the request and
- * returns a boolean indicating if the request matches. This is useful for the
- * jserrors BAM endpoint where multiple types of data are reported.
- * @property {boolean} expectTimeout boolean indicating if the expect is expected to timeout; useful when you want to expect
- * that a certain network call does not happen
- * @deprecated
  */
 
 module.exports = class TestHandle {
@@ -61,12 +35,6 @@ module.exports = class TestHandle {
    * @type {Map<string, Set<ScheduledReply>>}
    */
   #scheduledReplies = new Map()
-
-  /**
-   * List of pending expects keyed to a server id {'assetServer'|'bamServer'}
-   * @type {Map<string, Set<Deferred>>}
-   */
-  #pendingExpects = new Map()
 
   /**
    * List of network capture instances keyed to a server id {'assetServer'|'bamServer'}
@@ -90,20 +58,6 @@ module.exports = class TestHandle {
   destroy () {
     this.#scheduledReplies.clear()
     this.#scheduledReplies = null
-
-    for (const pendingExpectSet of this.#pendingExpects.values()) {
-      for (const pendingExpect of pendingExpectSet) {
-        if (pendingExpect.timeout) {
-          clearTimeout(pendingExpect.timeout)
-        }
-        if (pendingExpect.promise) {
-          pendingExpect.reject('Expect destroyed before resolving')
-        }
-      }
-      pendingExpectSet.clear()
-    }
-    this.#pendingExpects.clear()
-    this.#pendingExpects = null
 
     for (const networkCaptureMap of this.#networkCaptures.values()) {
       for (const networkCapture of networkCaptureMap.values()) {
@@ -146,28 +100,6 @@ module.exports = class TestHandle {
           if (!scheduledReply.permanent) {
             scheduledReplies.delete(scheduledReply)
           }
-        }
-      }
-    }
-
-    // Deprecated Expects logic
-    if (this.#pendingExpects.has(serverId)) {
-      const pendingExpects = this.#pendingExpects.get(serverId)
-
-      for (const pendingExpect of pendingExpects) {
-        try {
-          let test = pendingExpect.test
-
-          if (test.call(this, request)) {
-            request.resolvingExpect = pendingExpect
-            clearTimeout(pendingExpect.timeout)
-            pendingExpects.delete(pendingExpect)
-            break
-          }
-        } catch (e) {
-          fastify.log.error(e)
-          pendingExpect.reject(e)
-          pendingExpects.delete(pendingExpect)
         }
       }
     }
@@ -233,6 +165,24 @@ module.exports = class TestHandle {
     }
 
     this.#scheduledReplies.get(serverId).add(scheduledReply)
+  }
+
+  /**
+   * Deletes one or more scheduled replies for the given server by the scheduled reply test function name.
+   * @param {'assetServer'|'bamServer'} serverId Id of the server the request will be received on
+   * @param {ScheduledReply} scheduledReply The reply options to apply to the server request, only needs to include
+   * the test function
+   */
+  clearScheduledReply (serverId, scheduledReply) {
+    if (!this.#scheduledReplies.has(serverId)) {
+      return
+    }
+
+    this.#scheduledReplies.get(serverId).forEach(reply => {
+      if (scheduledReply.test.name === reply.test.name) {
+        this.#scheduledReplies.get(serverId).delete(reply)
+      }
+    })
   }
 
   /**
@@ -334,64 +284,5 @@ module.exports = class TestHandle {
     }
 
     return networkCaptures.get(captureId).waitFor(waitConditions)
-  }
-
-  // Deprecated Expects logic
-
-  /**
-   * Creates a deferred object that will resolve when a specific server request is seen or reject
-   * when a timeout is met
-   * @param {'assetServer'|'bamServer'} serverId Id of the server the request will be received on
-   * @param {TestServerExpect} testServerExpect The expect options to apply to the server request
-   * @returns {Promise<*>} Promise to await for the server request
-   * @deprecated
-   */
-  expect (serverId, testServerExpect) {
-    if (!this.#pendingExpects.has(serverId)) {
-      this.#pendingExpects.set(serverId, new Set())
-    }
-
-    if (!testServerExpect.test) {
-      return Promise.reject(new Error('A test function must be provided.'))
-    }
-
-    const deferred = this.#createDeferred()
-    deferred.test = testServerExpect.test
-    deferred.expectTimeout = testServerExpect.expectTimeout
-
-    if (testServerExpect.timeout !== false) {
-      deferred.timeout = setTimeout(() => {
-        let testName = testServerExpect.test.name
-
-        if (deferred.expectTimeout) {
-          deferred.resolve()
-        } else {
-          deferred.reject(new Error(
-            `Expect ${testName} for ${serverId} timed out after ${testServerExpect.timeout || this.#testServer.config.timeout}ms for test ${this.#testId}`
-          ))
-        }
-        this.#pendingExpects.get(serverId).delete(deferred)
-      }, testServerExpect.timeout || this.#testServer.config.timeout)
-    }
-
-    this.#pendingExpects.get(serverId).add(deferred)
-
-    return deferred.promise
-  }
-
-  /**
-   * Creates a basic deferred object
-   * @returns {Deferred}
-   * @deprecated
-   */
-  #createDeferred () {
-    let capturedResolve
-    let capturedReject
-    let promise = new Promise((resolve, reject) => {
-      capturedResolve = resolve
-      capturedReject = reject
-    })
-
-    return { promise, resolve: capturedResolve, reject: capturedReject }
   }
 }

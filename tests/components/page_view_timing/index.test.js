@@ -1,6 +1,8 @@
 import { Aggregator } from '../../../src/common/aggregate/aggregator'
 import { ee } from '../../../src/common/event-emitter/contextual-ee'
-import { setConfiguration, setInfo, setRuntime } from '../../../src/common/config/config'
+import { setConfiguration } from '../../../src/common/config/init'
+import { setInfo } from '../../../src/common/config/info'
+import { setRuntime } from '../../../src/common/config/runtime'
 import { VITAL_NAMES } from '../../../src/common/vitals/constants'
 
 // Note: these callbacks fire right away unlike the real web-vitals API which are async-on-trigger

@@ -36,3 +36,16 @@ You may also want to use the SauceLabs specific [Appium inspector app](https://g
 - Open `app/src/main/res/values/strings.xml` and change the name of the app to `NRTestApp`
 - Open the `build` menu and select build APKs
 - Open finder to the location of the APK file and drag/drop the zip into the Real Time -> Virtual Mobile screen of LambdaTest
+
+## Uploading App to LambdaTest
+
+The webview apps we upload to lambdatest are automatically deleted by LT after 60 days and you have to re-upload the app.
+
+1. Open https://app.lambdatest.com/console/realtime/app
+1. Click the tab for the OS you want (iOS or Android)
+1. Click the filter hamburger and select “Team”
+1. Check if our app is present (won’t be after 60 days)
+1. Click the upload button
+1. Select the app you want to upload, they exist in the repo at tests/webview-specs/assets
+1. Click the gear icon for the uploaded app and change the visibility to “Team”
+1. Copy the new App Id and update tools/wdio/config/lambdatest.conf.mjs

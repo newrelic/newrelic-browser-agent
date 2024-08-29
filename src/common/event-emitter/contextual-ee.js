@@ -5,7 +5,7 @@
 
 import { gosNREUM } from '../window/nreum'
 import { getOrSet } from '../util/get-or-set'
-import { getRuntime } from '../config/config'
+import { getRuntime } from '../config/runtime'
 import { EventContext } from './event-context'
 import { bundleId } from '../ids/bundle-id'
 

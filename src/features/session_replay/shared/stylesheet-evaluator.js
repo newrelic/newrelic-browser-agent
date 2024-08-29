@@ -1,4 +1,4 @@
-import { originals } from '../../../common/config/config'
+import { gosNREUMOriginals } from '../../../common/window/nreum'
 import { isBrowserScope } from '../../../common/constants/runtime'
 
 class StylesheetEvaluator {
@@ -57,7 +57,7 @@ class StylesheetEvaluator {
   async #fetchAndOverride (target) {
     if (!target?.href) return
     try {
-      const stylesheetContents = await originals.FETCH.bind(window)(target.href)
+      const stylesheetContents = await gosNREUMOriginals().o.FETCH.bind(window)(target.href)
       if (!stylesheetContents.ok) {
         this.failedToFix++
         return

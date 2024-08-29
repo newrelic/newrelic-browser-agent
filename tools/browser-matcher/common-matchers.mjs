@@ -1,7 +1,23 @@
 import SpecMatcher from './spec-matcher.mjs'
 
+/**
+ * iOS and Android do not support the creating of multiple tabs.
+ * @type {SpecMatcher}
+ */
 export const supportsMultipleTabs = new SpecMatcher()
   .include('safari')
+  .include('chrome')
+  .include('edge')
+  .include('firefox')
+
+/**
+ * The safari webdriver by design treats each window and tab as a private browsing context. This
+ * means that localStorage is not shared between tabs and windows. iOS and Android do not support
+ * the creating of multiple tabs.
+ * @see https://developer.apple.com/documentation/webkit/about_webdriver_for_safari#2957219
+ * @type {SpecMatcher}
+ */
+export const supportsMultiTabSessions = new SpecMatcher()
   .include('chrome')
   .include('edge')
   .include('firefox')
@@ -24,6 +40,18 @@ export const supportsFetchExtended = new SpecMatcher()
   .include('firefox>=40')
   .include('ios>=11.3')
   .include('android')
+
+/**
+ * auto-inlining broken stylesheets does not work in safari browsers < 16.3
+ * current mitigation strategy is defined as informing customers to add `crossOrigin: anonymous` tags to cross-domain stylesheets
+ */
+export const supportsInliningCrossOriginStylesheets = new SpecMatcher()
+  .include('chrome')
+  .include('edge')
+  .include('firefox')
+  .include('android')
+  .include('safari>=16.3')
+  .include('ios>=16.3')
 
 export const notIOS = new SpecMatcher()
   .include('safari')

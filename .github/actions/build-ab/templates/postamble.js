@@ -12,15 +12,14 @@ window.NREUM.init.session_trace.enabled = true
 try {
   var xhr = new XMLHttpRequest()
   xhr.open('POST', '/graphql')
-  xhr.setRequestHeader('authority', '${entitlementsEndpoints[environment]}')
   xhr.setRequestHeader('cache-control','no-cache')
   xhr.setRequestHeader('content-type', 'application/json; charset=utf-8')
-  xhr.setRequestHeader('newrelic-requesting-services','platform|nr1-ui')
+  xhr.setRequestHeader('newrelic-requesting-services','browser-agent')
   xhr.setRequestHeader('pragma','no-cache')
 
   xhr.send(
     JSON.stringify({
-      'query': 'query PlatformEntitlementsQuery($names: [String]!) { currentUser { id authorizedAccounts { id entitlements(filter: {names: $names}) { name __typename } __typename } __typename } }',
+      'query': 'query BrowserSessionReplayUserEntitlementsQuery($names: [String]!) { currentUser { id authorizedAccounts { id entitlements(filter: {names: $names}) { name __typename } __typename } __typename } }',
       'variables': {
         'names': [
           'hipaa',

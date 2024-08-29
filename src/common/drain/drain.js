@@ -6,6 +6,7 @@
 import { ee } from '../event-emitter/contextual-ee'
 import { registerHandler as defaultRegister } from '../event-emitter/register-handler'
 import { featurePriority } from '../../loaders/features/features'
+import { EventContext } from '../event-emitter/event-context'
 
 const registry = {}
 
@@ -103,8 +104,10 @@ function drainGroup (agentIdentifier, group, activateGroup = true) {
 
       Object.entries(groupHandlers).forEach(([eventType, handlerRegistrationList]) => {
         Object.values(handlerRegistrationList || {}).forEach((registration) => {
-          // registration is an array of: [targetEE, eventHandler]
-          registration[0].on(eventType, registration[1])
+          // registration *should* be an array of: [targetEE, eventHandler]
+          // certain browser polyfills of .values and .entries pass the prototype methods into the callback,
+          // which breaks this assumption and throws errors. So we make sure here that we only call .on() if its an actual NR EE
+          if (registration[0]?.on && registration[0]?.context() instanceof EventContext) registration[0].on(eventType, registration[1])
         })
       })
     }

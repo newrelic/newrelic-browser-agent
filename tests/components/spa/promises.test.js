@@ -7,16 +7,18 @@ import { Spa } from '../../../src/features/spa'
 const agentIdentifier = 'abcdefg'
 
 jest.mock('../../../src/common/constants/runtime')
-jest.mock('../../../src/common/config/config', () => ({
+jest.mock('../../../src/common/config/info', () => ({
   __esModule: true,
-  getConfigurationValue: jest.fn(),
-  originals: {
-    ST: setTimeout,
-    CT: clearTimeout
-  },
-  getRuntime: jest.fn().mockReturnValue({}),
-  isConfigured: jest.fn().mockReturnValue(true),
-  getInfo: jest.fn().mockReturnValue({ jsAttributes: {} })
+  getInfo: jest.fn().mockReturnValue({ jsAttributes: {} }),
+  isValid: jest.fn().mockReturnValue(true)
+}))
+jest.mock('../../../src/common/config/init', () => ({
+  __esModule: true,
+  getConfigurationValue: jest.fn()
+}))
+jest.mock('../../../src/common/config/runtime', () => ({
+  __esModule: true,
+  getRuntime: jest.fn().mockReturnValue({})
 }))
 jest.mock('../../../src/common/harvest/harvest-scheduler', () => ({
   HarvestScheduler: jest.fn().mockImplementation(() => {

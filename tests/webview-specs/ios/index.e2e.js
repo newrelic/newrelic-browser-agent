@@ -1,4 +1,5 @@
 import { onlyIOS } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { testBlobTraceRequest, testInteractionEventsRequest, testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 describe.withBrowsersMatching(onlyIOS)('ios webview', () => {
   before(async () => {
@@ -8,6 +9,12 @@ describe.withBrowsersMatching(onlyIOS)('ios webview', () => {
   })
 
   it('should load the agent and send back data', async () => {
+    const [rumCapture, sessionTraceCapture, interactionsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+      { test: testRumRequest },
+      { test: testBlobTraceRequest },
+      { test: testInteractionEventsRequest }
+    ])
+
     // Load up the test page
     const url = await driver.testHandle.assetURL('instrumented.html')
     await driver.setClipboard(Buffer.from(url).toString('base64'), 'plaintext')
@@ -35,24 +42,24 @@ describe.withBrowsersMatching(onlyIOS)('ios webview', () => {
       .click()
 
     // // Setup expects and submit the url
-    const [rumResult, resourcesResult, spaResult] = await Promise.all([
-      driver.testHandle.expectRum(),
-      driver.testHandle.expectTrace(),
-      driver.testHandle.expectInteractionEvents(),
+    const [rumHarvests, sessionTraceHarvests, interactionHarvests] = await Promise.all([
+      rumCapture.waitForResult({ totalCount: 1 }),
+      sessionTraceCapture.waitForResult({ totalCount: 1 }),
+      interactionsCapture.waitForResult({ totalCount: 1 }),
       $('-ios predicate string: type == "XCUIElementTypeButton" AND name == "Return"').click()
     ])
 
-    expect(rumResult.request.body).toEqual('')
-    expect(rumResult.request.query).toEqual(expect.objectContaining({
+    expect(rumHarvests[0].request.body).toEqual('')
+    expect(rumHarvests[0].request.query).toEqual(expect.objectContaining({
       ref: url.slice(0, url.indexOf('?')),
       t: 'Unnamed Transaction'
     }))
-    expect(resourcesResult.request.body.length).toBeGreaterThanOrEqual(1)
-    expect(spaResult.request.query).toEqual(expect.objectContaining({
+    expect(sessionTraceHarvests[0].request.body.length).toBeGreaterThanOrEqual(1)
+    expect(interactionHarvests[0].request.query).toEqual(expect.objectContaining({
       ref: url.slice(0, url.indexOf('?')),
       t: 'Unnamed Transaction'
     }))
-    expect(spaResult.request.body).toEqual(expect.arrayContaining([
+    expect(interactionHarvests[0].request.body).toEqual(expect.arrayContaining([
       expect.objectContaining({
         category: 'Initial page load',
         type: 'interaction',

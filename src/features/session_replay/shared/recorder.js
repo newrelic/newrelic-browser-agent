@@ -1,7 +1,7 @@
 import { record as recorder } from 'rrweb'
 import { stringify } from '../../../common/util/stringify'
 import { AVG_COMPRESSION, CHECKOUT_MS, QUERY_PARAM_PADDING, RRWEB_EVENT_TYPES, SR_EVENT_EMITTER_TYPES } from '../constants'
-import { getConfigurationValue } from '../../../common/config/config'
+import { getConfigurationValue } from '../../../common/config/init'
 import { RecorderEvents } from './recorder-events'
 import { MODE } from '../../../common/session/constants'
 import { stylesheetEvaluator } from './stylesheet-evaluator'
@@ -42,7 +42,7 @@ export class Recorder {
   }
 
   getEvents () {
-    if (this.#preloaded[0]?.events.length) return { ...this.#preloaded[0], type: 'preloaded' }
+    if (this.#preloaded[0]?.hasData) return { ...this.#preloaded[0], type: 'preloaded' }
     return {
       events: [...this.#backloggedEvents.events, ...this.#events.events].filter(x => x),
       type: 'standard',
@@ -94,7 +94,8 @@ export class Recorder {
         this.parent.ee.emit('internal-error', [err])
         /** returning true informs rrweb to swallow the error instead of throwing it to the window */
         return true
-      }
+      },
+      recordAfter: 'DOMContentLoaded'
     })
 
     this.stopRecording = () => {
@@ -177,7 +178,6 @@ export class Recorder {
     if (event.type === RRWEB_EVENT_TYPES.FullSnapshot) {
       this.currentBufferTarget.hasSnapshot = true
     }
-
     this.currentBufferTarget.add(event)
 
     // We are making an effort to try to keep payloads manageable for unloading.  If they reach the unload limit before their interval,

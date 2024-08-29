@@ -1,4 +1,3 @@
-const now = require('../../lib/now.js')
 const { testInsRequest, testErrorsRequest } = require('../../../tools/testing-server/utils/expect-tests')
 
 describe('ins harvesting', () => {
@@ -24,7 +23,7 @@ describe('ins harvesting', () => {
     let event = pageActionsHarvest[0]
     expect(event.actionName).toEqual('DummyEvent')
     expect(event.free).toEqual('tacos')
-    let receiptTime = now()
+    let receiptTime = Date.now()
     let relativeHarvestTime = query.rst
     let estimatedPageLoad = receiptTime - relativeHarvestTime
     let eventTimeSinceLoad = event.timeSinceLoad * 1000

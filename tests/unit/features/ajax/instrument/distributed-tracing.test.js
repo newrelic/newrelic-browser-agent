@@ -1,6 +1,7 @@
 import { faker } from '@faker-js/faker'
 import { DT } from '../../../../../src/features/ajax/instrument/distributed-tracing'
-import { getLoaderConfig, getConfiguration, getConfigurationValue } from '../../../../../src/common/config/config'
+import { getConfiguration, getConfigurationValue } from '../../../../../src/common/config/init'
+import { getLoaderConfig } from '../../../../../src/common/config/loader-config'
 import * as runtimeModule from '../../../../../src/common/constants/runtime'
 
 jest.enableAutomock()

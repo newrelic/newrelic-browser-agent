@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {init} {config} {loader}
+  </head>
+  <body>
+    Logs captured immediately followed by a redirect
+
+    <script>
+    window.addEventListener('load', () => setTimeout(() => redirectTo('https://gmail.com'), 500))
+      function redirectTo(url) {
+        window.newrelic.log(`redirect to ${url}`);
+        window.open(url, "_blank");
+      }
+    </script>
+  </body>
+</html>

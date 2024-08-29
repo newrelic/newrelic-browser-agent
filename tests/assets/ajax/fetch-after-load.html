@@ -10,8 +10,10 @@
   spa feature, the fetch should still be processed by the ajax feature.
 </div>
 <script type="text/javascript">
-  document.addEventListener('load', function () {
-    fetch('/json')
+  window.addEventListener('load', function () {
+    setTimeout(() => {
+      fetch('/json')
+    }, 1000)
   })
 </script>
 </body>

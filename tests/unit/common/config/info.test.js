@@ -1,7 +1,7 @@
 let isValid, getInfo, setInfo
 beforeEach(async () => {
   jest.resetModules()
-  ;({ isValid, getInfo, setInfo } = await import('../../../../../src/common/config/state/info.js'))
+  ;({ isValid, getInfo, setInfo } = await import('../../../../src/common/config/info.js'))
 })
 
 test('set/getInfo should throw on an invalid agent id', () => {

@@ -1,7 +1,7 @@
 let getRuntime, setRuntime
 beforeEach(async () => {
   jest.resetModules()
-  ;({ getRuntime, setRuntime } = await import('../../../../../src/common/config/state/runtime.js'))
+  ;({ getRuntime, setRuntime } = await import('../../../../src/common/config/runtime.js'))
 })
 
 test('set/getRuntime should throw on an invalid agent id', () => {
@@ -35,4 +35,16 @@ test('set/getRuntime should respect readonly properties', () => {
   expect(cachedObj.version).not.toEqual('biz')
   expect(cachedObj.originTime).toEqual(expect.any(Number))
   expect(cachedObj.originTime).not.toEqual('baz')
+})
+
+test('accessing harvestCount should increment it', () => {
+  setRuntime('123', {
+    buildEnv: 'foo',
+    distMethod: 'bar',
+    version: 'biz',
+    originTime: 'baz'
+  })
+  let cachedObj = getRuntime('123')
+
+  expect(cachedObj.harvestCount).not.toEqual(cachedObj.harvestCount)
 })

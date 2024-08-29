@@ -1,14 +1,20 @@
 import { InitialPageLoadInteraction } from '../../../../../src/features/soft_navigations/aggregate/initial-page-load-interaction'
-import * as configModule from '../../../../../src/common/config/config'
+import * as runtimeModule from '../../../../../src/common/config/runtime'
 import { Obfuscator } from '../../../../../src/common/util/obfuscate'
 
-jest.mock('../../../../../src/common/config/config', () => ({
+jest.mock('../../../../../src/common/config/info', () => ({
   __esModule: true,
   getInfo: jest.fn().mockReturnValue({
     queueTime: 444,
     appTime: 888
-  }),
-  getConfigurationValue: jest.fn(),
+  })
+}))
+jest.mock('../../../../../src/common/config/init', () => ({
+  __esModule: true,
+  getConfigurationValue: jest.fn()
+}))
+jest.mock('../../../../../src/common/config/runtime', () => ({
+  __esModule: true,
   getRuntime: jest.fn()
 }))
 jest.mock('../../../../../src/common/vitals/first-paint', () => ({
@@ -29,7 +35,7 @@ jest.mock('../../../../../src/common/timing/nav-timing', () => ({
 }))
 
 beforeEach(() => {
-  jest.mocked(configModule.getRuntime).mockReturnValue({
+  jest.mocked(runtimeModule.getRuntime).mockReturnValue({
     obfuscator: new Obfuscator('abcd')
   })
 })

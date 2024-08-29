@@ -4,16 +4,14 @@
  */
 /**
  * @file Records, aggregates, and harvests session replay data.
- *
- * NOTE: This code is under development and dormant. It will not download to instrumented pages or record any data.
- * It is not production ready, and is not intended to be imported or implemented in any build of the browser agent until
- * functionality is validated and a full user experience is curated.
  */
 
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { ABORT_REASONS, FEATURE_NAME, QUERY_PARAM_PADDING, RRWEB_EVENT_TYPES, SR_EVENT_EMITTER_TYPES, TRIGGERS } from '../constants'
-import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
+import { getInfo } from '../../../common/config/info'
+import { getConfigurationValue } from '../../../common/config/init'
+import { getRuntime } from '../../../common/config/runtime'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { sharedChannel } from '../../../common/constants/shared-channel'
 import { obj as encodeObj } from '../../../common/url/encode'

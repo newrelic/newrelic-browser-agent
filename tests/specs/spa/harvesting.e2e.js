@@ -1,22 +1,23 @@
 import { checkSpa } from '../../util/basic-checks'
 import { testInteractionEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
+import { JSONPath } from 'jsonpath-plus'
 
 describe('spa harvesting', () => {
-  it('should set correct customEnd value on multiple custom interactions', async () => {
-    // interaction3 will eventually be harvested so we need to capture two harvests here
+  let interactionsCapture
 
-    const [interactionResults1, interactionResults2] = await Promise.all([
-      browser.testHandle.expectInteractionEvents(),
-      browser.testHandle.expectInteractionEvents(),
+  beforeEach(async () => {
+    interactionsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testInteractionEventsRequest })
+  })
+
+  it('should set correct customEnd value on multiple custom interactions', async () => {
+    const [interactionHarvests] = await Promise.all([
+      interactionsCapture.waitForResult({ timeout: 10000 }),
       browser.url(await browser.testHandle.assetURL('spa/multiple-custom-interactions.html'))
     ])
 
-    const interactions = [
-      ...interactionResults1.request.body,
-      ...interactionResults2.request.body
-    ]
-    expect(interactions.length).toEqual(4)
-    expect(interactions).toEqual(expect.arrayContaining([
+    const customInteractions = JSONPath({ path: '$.[*].request.body.[?(!!@ && @.customName)]', json: interactionHarvests })
+    expect(customInteractions.length).toEqual(4)
+    expect(customInteractions).toEqual(expect.arrayContaining([
       expect.objectContaining({
         customName: 'interaction1',
         children: expect.arrayContaining([expect.objectContaining({
@@ -42,7 +43,7 @@ describe('spa harvesting', () => {
         })])
       })
     ]))
-    interactions
+    customInteractions
       .filter(interaction => ['interaction1', 'interaction2', 'interaction4'].includes(interaction.customName))
       .forEach(interaction => {
         const customEndTime = interaction.children.find(child => child.type === 'customEnd')
@@ -51,17 +52,20 @@ describe('spa harvesting', () => {
   })
 
   it('should not exceed 128 child nodes', async () => {
-    await browser.url(
-      await browser.testHandle.assetURL('spa/max-nodes.html')
-    ).then(() => browser.waitForAgentLoad())
+    await Promise.all([
+      interactionsCapture.waitForResult({ totalCount: 1 }),
+      browser.url(await browser.testHandle.assetURL('spa/max-nodes.html'))
+        .then(() => browser.waitForAgentLoad())
+    ])
 
-    const [interactionResults] = await Promise.all([
-      browser.testHandle.expectInteractionEvents(),
+    const [interactionHarvests] = await Promise.all([
+      interactionsCapture.waitForResult({ timeout: 20000 }), // It can take a bit of time to get all the XHRs resolved
       $('#sendAjax').click()
     ])
 
-    checkSpa(interactionResults.request, { trigger: 'click' })
-    const ajaxNodes = interactionResults.request.body[0].children.filter(node =>
+    expect(interactionHarvests.length).toEqual(2)
+    checkSpa(interactionHarvests[1].request, { trigger: 'click' })
+    const ajaxNodes = interactionHarvests[1].request.body[0].children.filter(node =>
       node.type === 'ajax' && node.path === '/json'
     )
     expect(ajaxNodes.length).toBeBetween(1, 129)
@@ -70,16 +74,17 @@ describe('spa harvesting', () => {
   it('hashchange fires after XHR loads', async () => {
     const url = await browser.testHandle.assetURL('spa/hashchange-onclick.html')
     await Promise.all([
-      browser.testHandle.expectInteractionEvents(), // Discard the initial page load interaction
+      interactionsCapture.waitForResult({ totalCount: 1 }),
       browser.url(url).then(() => browser.waitForAgentLoad())
     ])
 
-    const [clickInteractionResults] = await Promise.all([
-      browser.testHandle.expectInteractionEvents(),
+    const [interactionHarvests] = await Promise.all([
+      interactionsCapture.waitForResult({ timeout: 10000 }),
       $('body').click()
     ])
 
-    expect(clickInteractionResults.request.body).toEqual(expect.arrayContaining([
+    expect(interactionHarvests.length).toEqual(2)
+    expect(interactionHarvests[1].request.body).toEqual(expect.arrayContaining([
       expect.objectContaining({
         category: 'Route change',
         type: 'interaction',
@@ -100,12 +105,12 @@ describe('spa harvesting', () => {
   it('pushstate is followed by a popstate', async () => {
     const url = await browser.testHandle.assetURL('instrumented.html')
     await Promise.all([
-      browser.testHandle.expectInteractionEvents(), // Discard the initial page load interaction
+      interactionsCapture.waitForResult({ totalCount: 1 }),
       browser.url(url).then(() => browser.waitForAgentLoad())
     ])
 
-    const [popstateIxnPayload] = await Promise.all([
-      browser.testHandle.expectInteractionEvents(),
+    const [interactionHarvests] = await Promise.all([
+      interactionsCapture.waitForResult({ timeout: 10000 }),
       browser.execute(function () {
         window.history.pushState({}, '', '/newurl')
         window.addEventListener('popstate', function () { setTimeout(newrelic.interaction().createTracer('timer')) })
@@ -114,7 +119,8 @@ describe('spa harvesting', () => {
     ])
 
     const parsedUrl = new URL(url)
-    expect(popstateIxnPayload.request.body[0]).toEqual(expect.objectContaining({
+    expect(interactionHarvests.length).toEqual(2)
+    expect(interactionHarvests[1].request.body[0]).toEqual(expect.objectContaining({
       category: 'Route change',
       type: 'interaction',
       trigger: 'popstate',
@@ -133,19 +139,20 @@ describe('spa harvesting', () => {
   it('hashchange is followed by a popstate', async () => {
     const url = await browser.testHandle.assetURL('instrumented.html')
     await Promise.all([
-      browser.testHandle.expectInteractionEvents(),
+      interactionsCapture.waitForResult({ totalCount: 1 }),
       browser.url(url).then(() => browser.waitForAgentLoad())
     ])
+
     const hashFragment = 'otherurl'
     await Promise.all([
-      browser.testHandle.expectInteractionEvents(), // discard first hashchange interaction
+      interactionsCapture.waitForResult({ totalCount: 2 }),
       browser.execute(function (hashFragment) {
         window.location.hash = hashFragment
       }, hashFragment)
     ])
 
-    const [popstateIxnPayload] = await Promise.all([
-      browser.testHandle.expectInteractionEvents(),
+    const [interactionHarvests] = await Promise.all([
+      interactionsCapture.waitForResult({ timeout: 10000 }),
       browser.execute(function () {
         window.addEventListener('popstate', function () { setTimeout(newrelic.interaction().createTracer('onPopstate')) })
         window.history.back()
@@ -153,7 +160,8 @@ describe('spa harvesting', () => {
     ])
 
     const parsedUrl = new URL(url)
-    expect(popstateIxnPayload.request.body[0]).toEqual(expect.objectContaining({
+    expect(interactionHarvests.length).toEqual(3)
+    expect(interactionHarvests[2].request.body[0]).toEqual(expect.objectContaining({
       category: 'Route change',
       type: 'interaction',
       trigger: 'popstate',
@@ -170,28 +178,25 @@ describe('spa harvesting', () => {
   })
 
   it('hashchange during page load', async () => {
-    const browserIxnsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testInteractionEventsRequest })
-    const url = await browser.testHandle.assetURL('spa/hashchange-during-page-load.html')
-
-    const [ixns] = await Promise.all([
-      browserIxnsCapture.waitForResult({ totalCount: 1 }),
-      browser.url(url).then(() => browser.waitForAgentLoad())
+    const [interactionHarvests] = await Promise.all([
+      interactionsCapture.waitForResult({ totalCount: 1 }),
+      browser.url(await browser.testHandle.assetURL('spa/hashchange-during-page-load.html'))
+        .then(() => browser.waitForAgentLoad())
     ])
-    const interactionTree = ixns[0].request.body[0]
+
+    const interactionTree = interactionHarvests[0].request.body[0]
     expect(interactionTree.trigger).toEqual('initialPageLoad')
     expect(interactionTree.newURL).not.toEqual(interactionTree.oldURL)
   })
 
   it('sends interactions even if end() is called before the window load event', async () => {
-    const browserIxnsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testInteractionEventsRequest })
-    const url = await browser.testHandle.assetURL('spa/initial-page-load-with-end-interaction.html')
-
-    const [ixns] = await Promise.all([
-      browserIxnsCapture.waitForResult({ totalCount: 1 }),
-      browser.url(url).then(() => browser.waitForAgentLoad())
+    const [interactionHarvests] = await Promise.all([
+      interactionsCapture.waitForResult({ totalCount: 1 }),
+      browser.url(await browser.testHandle.assetURL('spa/initial-page-load-with-end-interaction.html'))
+        .then(() => browser.waitForAgentLoad())
     ])
 
-    const ipl = ixns[0].request.body[0]
+    const ipl = interactionHarvests[0].request.body[0]
     expect(ipl).toEqual(expect.objectContaining({
       trigger: 'initialPageLoad',
       children: [expect.objectContaining({
@@ -201,18 +206,19 @@ describe('spa harvesting', () => {
   })
 
   it('Spa does not prevent the bubbling of events', async () => {
-    const url = await browser.testHandle.assetURL('spa/hashchange-multiple-evt-cb.html')
     await Promise.all([
-      browser.testHandle.expectInteractionEvents(),
-      browser.url(url).then(() => browser.waitForAgentLoad())
+      interactionsCapture.waitForResult({ totalCount: 1 }),
+      browser.url(await browser.testHandle.assetURL('spa/hashchange-multiple-evt-cb.html'))
+        .then(() => browser.waitForAgentLoad())
     ])
 
-    const [clickInteractionResults] = await Promise.all([
-      browser.testHandle.expectInteractionEvents(),
+    const [interactionHarvests] = await Promise.all([
+      interactionsCapture.waitForResult({ timeout: 10000 }),
       $('#clickme').click()
     ])
 
-    expect(clickInteractionResults.request.body[0]).toEqual(expect.objectContaining({
+    expect(interactionHarvests.length).toEqual(2)
+    expect(interactionHarvests[1].request.body[0]).toEqual(expect.objectContaining({
       category: 'Route change',
       type: 'interaction',
       trigger: 'click',

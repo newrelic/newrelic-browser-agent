@@ -1,4 +1,4 @@
-import { getConfigurationValue } from '../config/config'
+import { getConfigurationValue } from '../config/init'
 import { isFileProtocol } from '../url/protocol'
 import { warn } from './console'
 

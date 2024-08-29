@@ -2,7 +2,9 @@ import { faker } from '@faker-js/faker'
 
 import * as encodeModule from '../../../../src/common/url/encode'
 import * as submitDataModule from '../../../../src/common/util/submit-data'
-import * as configModule from '../../../../src/common/config/config'
+import * as infoModule from '../../../../src/common/config/info'
+import * as initModule from '../../../../src/common/config/init'
+import * as runtimeModule from '../../../../src/common/config/runtime'
 import { warn } from '../../../../src/common/util/console'
 import { Obfuscator } from '../../../../src/common/util/obfuscate'
 import { Harvest } from '../../../../src/common/harvest/harvest'
@@ -12,7 +14,7 @@ jest.unmock('../../../../src/common/harvest/harvest')
 let harvestInstance
 
 beforeEach(() => {
-  jest.mocked(configModule.getRuntime).mockReturnValue({
+  jest.mocked(runtimeModule.getRuntime).mockReturnValue({
     maxBytes: Infinity,
     harvestCount: 0,
     obfuscator: new Obfuscator()
@@ -102,15 +104,15 @@ describe('_send', () => {
   beforeEach(() => {
     errorBeacon = faker.internet.domainName()
     licenseKey = faker.string.uuid()
-    jest.mocked(configModule.getInfo).mockReturnValue({
+    jest.mocked(infoModule.getInfo).mockReturnValue({
       errorBeacon,
       licenseKey
     })
-    jest.mocked(configModule.getRuntime).mockReturnValue({
+    jest.mocked(runtimeModule.getRuntime).mockReturnValue({
       maxBytes: Infinity,
       harvestCount: 0
     })
-    jest.mocked(configModule.getConfiguration).mockReturnValue({
+    jest.mocked(initModule.getConfiguration).mockReturnValue({
       ssl: undefined,
       proxy: {}
     })
@@ -131,16 +133,8 @@ describe('_send', () => {
     jest.mocked(submitDataModule.getSubmitMethod).mockReturnValue(submitMethod)
   })
 
-  test('should increment harvestCount every time _send is called', () => {
-    while (configModule.getRuntime().harvestCount < 10) {
-      const prev = configModule.getRuntime().harvestCount
-      harvestInstance._send(spec)
-      expect(configModule.getRuntime().harvestCount).toEqual(prev + 1)
-    }
-  })
-
   test('should return false when info.errorBeacon is not defined', () => {
-    jest.mocked(configModule.getInfo).mockReturnValue({})
+    jest.mocked(infoModule.getInfo).mockReturnValue({})
 
     const result = harvestInstance._send(spec)
 
@@ -187,7 +181,7 @@ describe('_send', () => {
   })
 
   test('able to use and send to proxy when defined', () => {
-    jest.mocked(configModule.getConfiguration).mockReturnValue({ proxy: { beacon: 'some_other_string' } })
+    jest.mocked(initModule.getConfiguration).mockReturnValue({ proxy: { beacon: 'some_other_string' } })
     const result = harvestInstance._send(spec)
 
     expect(result).toEqual(true)
@@ -465,20 +459,20 @@ describe('_send', () => {
 
 describe('baseQueryString', () => {
   beforeEach(() => {
-    jest.mocked(configModule.getInfo).mockReturnValue({})
-    jest.mocked(configModule.getRuntime).mockReturnValue({})
+    jest.mocked(infoModule.getInfo).mockReturnValue({})
+    jest.mocked(runtimeModule.getRuntime).mockReturnValue({})
   })
 
   test('should construct a string of base query parameters', () => {
     const applicationID = faker.string.uuid()
     const sa = faker.string.uuid()
-    jest.mocked(configModule.getInfo).mockReturnValue({
+    jest.mocked(infoModule.getInfo).mockReturnValue({
       applicationID,
       sa
     })
     const customTransaction = faker.string.uuid()
     const ptid = faker.string.uuid()
-    jest.mocked(configModule.getRuntime).mockReturnValue({
+    jest.mocked(runtimeModule.getRuntime).mockReturnValue({
       customTransaction,
       ptid
     })
@@ -505,7 +499,7 @@ describe('baseQueryString', () => {
 
   test('should set t param to info.tNamePlain', () => {
     const tNamePlain = faker.string.uuid()
-    jest.mocked(configModule.getInfo).mockReturnValue({
+    jest.mocked(infoModule.getInfo).mockReturnValue({
       tNamePlain
     })
 
@@ -517,7 +511,7 @@ describe('baseQueryString', () => {
 
   test('should set to param to info.transactionName and exclude t param', () => {
     const transactionName = faker.string.uuid()
-    jest.mocked(configModule.getInfo).mockReturnValue({
+    jest.mocked(infoModule.getInfo).mockReturnValue({
       transactionName
     })
 

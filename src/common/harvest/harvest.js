@@ -7,7 +7,9 @@ import { obj as encodeObj, param as encodeParam } from '../url/encode'
 import { stringify } from '../util/stringify'
 import * as submitData from '../util/submit-data'
 import { getLocation } from '../url/location'
-import { getInfo, getConfigurationValue, getRuntime, getConfiguration } from '../config/config'
+import { getInfo } from '../config/info'
+import { getConfigurationValue, getConfiguration } from '../config/init'
+import { getRuntime } from '../config/runtime'
 import { cleanURL } from '../url/clean-url'
 import { eventListenerOpts } from '../event-listener/event-listener-opts'
 import { SharedContext } from '../context/shared-context'
@@ -147,9 +149,6 @@ export class Harvest extends SharedContext {
         cbFinished(cbResult)
       }, eventListenerOpts(false))
     }
-
-    const runtime = getRuntime(this.sharedContext.agentIdentifier)
-    runtime.harvestCount++
 
     return result
   }

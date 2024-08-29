@@ -2,7 +2,7 @@ import { EventBuffer } from '../../utils/event-buffer'
 
 export class RecorderEvents {
   /** The buffer to hold recorder event nodes */
-  #events = new EventBuffer()
+  #events = new EventBuffer(Infinity)
   /** Payload metadata -- Should indicate when a replay blob started recording.  Resets each time a harvest occurs.
      * cycle timestamps are used as fallbacks if event timestamps cannot be used
      */

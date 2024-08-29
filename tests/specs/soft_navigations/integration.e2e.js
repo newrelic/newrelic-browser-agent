@@ -1,18 +1,28 @@
-import { testRumRequest } from '../../../tools/testing-server/utils/expect-tests.js'
+import { JSONPath } from 'jsonpath-plus'
+import { testAjaxEventsRequest, testErrorsRequest, testInteractionEventsRequest, testRumRequest } from '../../../tools/testing-server/utils/expect-tests.js'
 import { notSafari, onlyChromium } from '../../../tools/browser-matcher/common-matchers.mjs'
 
+// test: does not disrupt old spa when not enabled -- this is tested via old spa tests passing by default!
 describe('Soft navigations', () => {
   const config = { loader: 'spa', init: { feature_flags: ['soft_nav'] } }
-  // test: does not disrupt old spa when not enabled -- this is tested via old spa tests passing by default!
+  let interactionsCapture, errorsCapture, ajaxEventsCapture
+
+  beforeEach(async () => {
+    [interactionsCapture, errorsCapture, ajaxEventsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+      { test: testInteractionEventsRequest },
+      { test: testErrorsRequest },
+      { test: testAjaxEventsRequest }
+    ])
+  })
 
   it('replaces old spa when flag enabled, captures ipl and route-change ixns', async () => {
-    let url = await browser.testHandle.assetURL('soft-nav-interaction-on-click.html', config)
-    let [iPLPayload] = await Promise.all([
-      browser.testHandle.expectInteractionEvents(),
-      browser.url(url).then(() => browser.waitForAgentLoad())
+    let [interactionsHarvests] = await Promise.all([
+      interactionsCapture.waitForResult({ totalCount: 1 }),
+      browser.url(await browser.testHandle.assetURL('soft-nav-interaction-on-click.html', config))
+        .then(() => browser.waitForAgentLoad())
     ])
 
-    let browserResp = await browser.execute(function () {
+    const browserResp = await browser.execute(function () {
       return [
         Object.values(newrelic.initializedAgents)[0].features.spa?.featureName,
         Object.values(newrelic.initializedAgents)[0].features.soft_navigations?.featureName
@@ -20,12 +30,15 @@ describe('Soft navigations', () => {
     })
     expect(browserResp).toEqual([null, 'soft_navigations'])
 
-    expect(iPLPayload.request.body.length).toEqual(1)
-    expect(iPLPayload.request.body[0].category).toEqual('Initial page load')
+    expect(interactionsHarvests[0].request.body.length).toEqual(1)
+    expect(interactionsHarvests[0].request.body[0].category).toEqual('Initial page load')
 
-    let [routeChangePayload] = await Promise.all([browser.testHandle.expectInteractionEvents(5000), $('body').click()])
-    expect(routeChangePayload.request.body.length).toEqual(1)
-    expect(routeChangePayload.request.body[0].category).toEqual('Route change')
+    ;[interactionsHarvests] = await Promise.all([
+      interactionsCapture.waitForResult({ totalCount: 2 }),
+      $('body').click()]
+    )
+    expect(interactionsHarvests[1].request.body.length).toEqual(1)
+    expect(interactionsHarvests[1].request.body[0].category).toEqual('Route change')
   })
 
   it('does not harvest when spa is blocked by rum response', async () => {
@@ -34,22 +47,26 @@ describe('Soft navigations', () => {
       body: `${JSON.stringify({ st: 1, err: 1, ins: 1, spa: 0, loaded: 1 })}`
     })
 
-    let url = await browser.testHandle.assetURL('instrumented.html', config)
-    let anyIxn = browser.testHandle.expectInteractionEvents(10000, true)
-    await browser.url(url).then(() => browser.waitForAgentLoad())
-    await expect(anyIxn).resolves.toBeUndefined()
+    const [interactionsHarvests] = await Promise.all([
+      interactionsCapture.waitForResult({ timeout: 10000 }),
+      browser.url(await browser.testHandle.assetURL('soft-nav-interaction-on-click.html', config))
+        .then(() => browser.waitForAgentLoad())
+        .then(() => $('body').click())
+    ])
+
+    expect(interactionsHarvests.length).toEqual(0)
   })
 
   it('(multiple) ajax and errors are captured before page load by iPL ixn', async () => {
-    let url = await browser.testHandle.assetURL('ajax-and-errors-before-page-load.html', config)
-    let [iPLPayload, jserrorsPayload] = await Promise.all([
-      browser.testHandle.expectInteractionEvents(),
-      browser.testHandle.expectErrors(),
-      browser.url(url).then(() => browser.waitForAgentLoad())
+    const [interactionsHarvests, errorsHarvests] = await Promise.all([
+      interactionsCapture.waitForResult({ totalCount: 1 }),
+      errorsCapture.waitForResult({ totalCount: 1 }),
+      browser.url(await browser.testHandle.assetURL('ajax-and-errors-before-page-load.html', config))
+        .then(() => browser.waitForAgentLoad())
     ])
-    const iplIxn = iPLPayload.request.body[0]
+    const iplIxn = interactionsHarvests[0].request.body[0]
     const ajaxArr = iplIxn.children
-    const errorsArr = jserrorsPayload.request.body.err
+    const errorsArr = errorsHarvests[0].request.body.err
 
     expect(ajaxArr.length).toEqual(2)
     expect(ajaxArr).toEqual(expect.arrayContaining([
@@ -62,19 +79,23 @@ describe('Soft navigations', () => {
   })
 
   it('(multiple) ajax and errors are captured after page load by route-change ixn', async () => {
-    let url = await browser.testHandle.assetURL('soft-nav-interaction-on-click.html', config)
-    await browser.url(url).then(() => browser.waitForAgentLoad())
+    await Promise.all([
+      interactionsCapture.waitForResult({ totalCount: 1 }),
+      browser.url(await browser.testHandle.assetURL('soft-nav-interaction-on-click.html', config))
+        .then(() => browser.waitForAgentLoad())
+    ])
 
-    let [routeChangeReq, jserrorsReq, ajaxReq] = await Promise.all([
-      browser.testHandle.expectInteractionEvents(5000),
-      browser.testHandle.expectErrors(5000),
-      browser.testHandle.expectAjaxEvents(5000),
+    const [interactionHarvests, errorsHarvests, ajaxEventsHarvests] = await Promise.all([
+      interactionsCapture.waitForResult({ totalCount: 2 }),
+      errorsCapture.waitForResult({ timeout: 5000 }),
+      ajaxEventsCapture.waitForResult({ timeout: 5000 }),
       $('body').click()
     ])
-    expect(routeChangeReq.request.body.length).toEqual(1)
-    const rcIxn = routeChangeReq.request.body[0]
+
+    expect(interactionHarvests[1].request.body.length).toEqual(1)
+    const rcIxn = interactionHarvests[1].request.body[0]
     const ixnAjaxArr = rcIxn.children
-    const errorsArr = jserrorsReq.request.body.err
+    const errorsArr = errorsHarvests[errorsHarvests.length - 1].request.body.err
 
     const expectedAjax = expect.arrayContaining([
       expect.objectContaining({ path: '/echo', requestedWith: 'XMLHttpRequest' }),
@@ -89,7 +110,7 @@ describe('Soft navigations', () => {
       expect(ixnAjaxArr).toEqual(expectedAjax)
       expect(errorsArr[0].params.browserInteractionId).toEqual(rcIxn.id)
     } else {
-      expect(ajaxReq.request.body).toEqual(expectedAjax)
+      expect(ajaxEventsHarvests[ajaxEventsHarvests.length - 1].request.body).toEqual(expectedAjax)
       expect(errorsArr[0].params.browserInteractionId).toBeUndefined()
     }
     expect(errorsArr[0].params.message).toEqual('boogie')
@@ -97,49 +118,62 @@ describe('Soft navigations', () => {
 
   // See comment in previous test about SL safari's problem with route-change ixn timestamp; we can't simulate one with ajax or errors attached, so this test is irrelevant.
   it.withBrowsersMatching(notSafari)('ajax and jserror tied to discarded ixns are not lost', async () => {
-    let url = await browser.testHandle.assetURL('spa/errors/discarded-interaction.html', config)
-    await browser.url(url).then(() => browser.waitForAgentLoad())
+    await Promise.all([
+      interactionsCapture.waitForResult({ totalCount: 1 }),
+      browser.url(await browser.testHandle.assetURL('spa/errors/discarded-interaction.html', config))
+        .then(() => browser.waitForAgentLoad())
+    ])
 
     await Promise.all([
-      browser.testHandle.expectInteractionEvents(5000, true),
-      browser.testHandle.expectErrors(5000, true),
+      interactionsCapture.waitForResult({ timeout: 5000 }),
+      errorsCapture.waitForResult({ timeout: 5000 }),
       $('body').click() // the fetch and error spawned should be buffered rather than harvested while the ixn is open
     ])
 
-    let [ajaxPayload, jserrorPayload] = await Promise.all([
-      browser.testHandle.expectAjaxEvents(5000), // the fetch should now come out of the ajax feature payload, no longer as part of an ixn
-      browser.testHandle.expectErrors(5000),
+    let [errorsHarvests, ajaxEventsHarvests] = await Promise.all([
+      errorsCapture.waitForResult({ timeout: 5000 }),
+      ajaxEventsCapture.waitForResult({ timeout: 5000 }), // the fetch should now come out of the ajax feature payload, no longer as part of an ixn
       $('body').click() // this is going to open a new (2nd) ixn & cancel the previous pending ixn, so we expect those buffered events to now flow
     ])
-    expect(ajaxPayload.request.body).toEqual(expect.arrayContaining([expect.objectContaining({ path: '/json' })]))
-    expect(jserrorPayload.request.body.err[0].params.message).toEqual('some error')
-    expect(jserrorPayload.request.body.err[0].params.browserInteractionId).toBeUndefined()
 
-    url = await browser.testHandle.assetURL('/') // test page EoL on the 2nd open ixn that's holding onto events to make sure they get sent too
-    const ajaxPayloadPromise = browser.testHandle.expectAjaxEvents(3000)
-    const jserrorPayloadPromise = browser.testHandle.expectErrors(3000)
-    await browser.pause(100)
-    await browser.url(url)
-    ;[ajaxPayload, jserrorPayload] = await Promise.all([ajaxPayloadPromise, jserrorPayloadPromise])
-    expect(ajaxPayload.request.body).toEqual(expect.arrayContaining([expect.objectContaining({ path: '/json' })]))
-    expect(jserrorPayload.request.body.err[0].params.message).toEqual('some error')
-    expect(jserrorPayload.request.body.err[0].params.browserInteractionId).toBeUndefined()
+    let jsonXHR = JSONPath({ path: '$.[*].request.body.[?(!!@ && @.path===\'/json\')]', json: ajaxEventsHarvests })
+    expect(jsonXHR.length).toEqual(1)
+
+    let errors = JSONPath({ path: '$.[*].request.body.err.[?(!!@ && @.params && @.params.message && @.params.message===\'some error\')]', json: errorsHarvests })
+    expect(errors.length).toEqual(1)
+    expect(errors[0].params.browserInteractionId).toBeUndefined()
+
+    ;[errorsHarvests, ajaxEventsHarvests] = await Promise.all([
+      errorsCapture.waitForResult({ timeout: 5000 }),
+      ajaxEventsCapture.waitForResult({ timeout: 5000 }),
+      browser.url(await browser.testHandle.assetURL('/'))
+    ])
+
+    jsonXHR = JSONPath({ path: '$.[*].request.body.[?(!!@ && @.path && @.path===\'/json\')]', json: ajaxEventsHarvests })
+    expect(jsonXHR.length).toEqual(2)
+
+    errors = JSONPath({ path: '$.[*].request.body.err.[?(!!@ && @.params && @.params.message && @.params.message===\'some error\')]', json: errorsHarvests })
+    expect(errors.length).toEqual(2)
+    expect(errors[1].params.browserInteractionId).toBeUndefined()
   })
 
   it('createTracer api functions but does not affect interactions', async () => {
-    let url = await browser.testHandle.assetURL('instrumented.html', config)
-    await browser.url(url).then(() => browser.waitForAgentLoad())
+    await Promise.all([
+      interactionsCapture.waitForResult({ totalCount: 1 }),
+      browser.url(await browser.testHandle.assetURL('instrumented.html', config))
+        .then(() => browser.waitForAgentLoad())
+    ])
 
-    let [apiIxnPayload, tracerCbTime] = await Promise.all([
-      browser.testHandle.expectInteractionEvents(5000),
+    let [interactionHarvests, tracerCbTime] = await Promise.all([
+      interactionsCapture.waitForResult({ totalCount: 2 }),
       browser.execute(function () {
         let wrappedCallback = newrelic.interaction().createTracer('customSegment', function myCallback () { return performance.now() })
         newrelic.interaction().save().end() // tracer doesn't keep interaction open or affect it in any way
         return wrappedCallback() // but the callback should still be perfectly executable
       })
     ])
-    const apiIxn = apiIxnPayload.request.body[0]
 
+    const apiIxn = interactionHarvests[1].request.body[0]
     expect([apiIxn.trigger, apiIxn.category]).toEqual(['api', 'Custom'])
     expect(apiIxn.end).toBeLessThanOrEqual(tracerCbTime)
   })
@@ -147,35 +181,37 @@ describe('Soft navigations', () => {
   // This reproduction condition only happens for chromium. I.e. safari & firefox load still fires before they let ajax finish.
   // Also, Android 9.0- is not happy with 1mb-dom.html, so that ought to be excluded from this test.
   it.withBrowsersMatching(onlyChromium)('[NR-178375] ajax that finish before page load event should only be in iPL payload', async () => {
-    let url = await browser.testHandle.assetURL('64kb-dom-preload-fetch.html', config)
-    let [iPLPayload, firstAjaxPayload] = await Promise.all([
-      browser.testHandle.expectInteractionEvents(),
-      browser.testHandle.expectAjaxEvents(),
-      browser.url(url).then(() => browser.waitForAgentLoad())
+    const [interactionHarvests, ajaxEventsHarvests] = await Promise.all([
+      interactionsCapture.waitForResult({ totalCount: 1 }),
+      ajaxEventsCapture.waitForResult({ timeout: 10000 }),
+      browser.url(await browser.testHandle.assetURL('64kb-dom-preload-fetch.html', config))
+        .then(() => browser.waitForAgentLoad())
     ])
-    const iplIxn = iPLPayload.request.body[0]
-    const fetchNode = iplIxn.children.find(ajaxNode => ajaxNode.path === '/json')
 
-    expect(fetchNode).not.toBeUndefined()
-    expect(fetchNode.end).toBeLessThan(iplIxn.end) // the request should've wrapped up well before page load event fired
-    expect(firstAjaxPayload.request.body).not.toEqual(expect.arrayContaining([expect.objectContaining({ path: '/json' })])) // request should not be recorded by ajax feature as well
+    const iplAjax = JSONPath({ path: '$.[*].request.body.[?(!!@ && @.path===\'/json\')]', json: interactionHarvests })
+    const ajaxEvents = JSONPath({ path: '$.[*].request.body.[?(!!@ && @.path===\'/json\')]', json: ajaxEventsHarvests })
+    expect(iplAjax.length).toEqual(1)
+    expect(ajaxEvents.length).toEqual(0) // request should not be recorded by ajax feature as well
+    expect(iplAjax[0].end).toBeLessThan(interactionHarvests[0].request.body[0].end) // the request should've wrapped up well before page load event fired
   })
 
   it('[NR-178377] chained ajax requests that originate from pre-page-load are attributed properly', async () => {
-    let url = await browser.testHandle.assetURL('chained-ajax-before-load.html', config)
-    let [iPLPayload, firstAjaxPayload] = await Promise.all([
-      browser.testHandle.expectInteractionEvents(),
-      browser.testHandle.expectAjaxEvents(),
-      browser.url(url).then(() => browser.waitForAgentLoad())
+    let [interactionHarvests, ajaxEventsHarvests] = await Promise.all([
+      interactionsCapture.waitForResult({ totalCount: 1 }),
+      ajaxEventsCapture.waitForResult({ timeout: 10000 }),
+      browser.url(await browser.testHandle.assetURL('chained-ajax-before-load.html', config))
+        .then(() => browser.waitForAgentLoad())
     ])
-    const iplIxnAjaxArr = iPLPayload.request.body[0].children
-    const ajaxFeatArr = firstAjaxPayload.request.body
 
-    expect(iplIxnAjaxArr).toEqual(expect.arrayContaining([ // these requests started before page load, so they belong with IPL ixn
+    expect(
+      JSONPath({ path: '$.[*].request.body.[?(!!@ && @.path===\'/json\')]', json: interactionHarvests })
+    ).toEqual(expect.arrayContaining([ // these requests started before page load, so they belong with IPL ixn
       expect.objectContaining({ path: '/json', requestedWith: 'XMLHttpRequest' }),
       expect.objectContaining({ path: '/json', requestedWith: 'fetch' })
     ]))
-    expect(ajaxFeatArr).toEqual(expect.arrayContaining([ // these chained requests occur after page load, so they're handled by the ajax feature
+    expect(
+      JSONPath({ path: '$.[*].request.body.[?(!!@ && @.path===\'/text\')]', json: ajaxEventsHarvests })
+    ).toEqual(expect.arrayContaining([ // these requests started before page load, so they belong with IPL ixn
       expect.objectContaining({ path: '/text', requestedWith: 'XMLHttpRequest' }),
       expect.objectContaining({ path: '/text', requestedWith: 'fetch' })
     ]))

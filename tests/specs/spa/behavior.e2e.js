@@ -36,14 +36,15 @@ describe('behavior tests', () => {
   })
 
   it('SPA captures ixn even with incorrect setTimeout arg', async () => {
-    const browserIxnsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testInteractionEventsRequest })
-    const url = await browser.testHandle.assetURL('spa/incorrect-timer.html')
+    const interactionsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testInteractionEventsRequest })
 
-    await browser.url(url).then(() => browser.waitForAgentLoad())
-    $('body').click()
+    const [interactionHarvests] = await Promise.all([
+      interactionsCapture.waitForResult({ totalCount: 2 }),
+      browser.url(await browser.testHandle.assetURL('spa/incorrect-timer.html'))
+        .then(() => browser.waitForAgentLoad())
+        .then(() => $('body').click())
+    ])
 
-    const ixns = await browserIxnsCapture.waitForResult({ totalCount: 2 })
-    const clickIxn = ixns[1].request.body[0]
-    expect(clickIxn.category).toEqual('Route change')
+    expect(interactionHarvests[1].request.body[0].category).toEqual('Route change')
   })
 })

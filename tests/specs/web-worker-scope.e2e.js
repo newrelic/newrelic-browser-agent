@@ -10,7 +10,6 @@ describe('web worker scope', () => {
     const [[events], [metrics]] = await Promise.all([
       ajaxEventsCapture.waitForResult({ totalCount: 1 }),
       ajaxMetricsCapture.waitForResult({ totalCount: 1 }),
-      browser.testHandle.expectAjaxTimeSlices(),
       browser.url(
         await browser.testHandle.assetURL(
           'test-builds/browser-agent-wrapper/worker-agent.html',

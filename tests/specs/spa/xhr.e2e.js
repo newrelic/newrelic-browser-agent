@@ -1,16 +1,24 @@
 import { checkAjaxEvents, checkSpa } from '../../util/basic-checks'
+import { testAjaxEventsRequest, testInteractionEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
+import { JSONPath } from 'jsonpath-plus'
 
 describe('XHR SPA Interaction Tracking', () => {
+  let interactionsCapture
+
+  beforeEach(async () => {
+    interactionsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testInteractionEventsRequest })
+  })
+
   it('should capture the ajax in the initial interaction when sent before load', async () => {
-    const [interactionResults] = await Promise.all([
-      browser.testHandle.expectInteractionEvents(10000),
+    const [interactionsHarvests] = await Promise.all([
+      interactionsCapture.waitForResult({ totalCount: 1 }),
       await browser.url(
         await browser.testHandle.assetURL('ajax/xhr-before-load.html')
       ).then(() => browser.waitForAgentLoad())
     ])
 
-    checkSpa(interactionResults.request)
-    expect(interactionResults.request.body).toEqual([
+    checkSpa(interactionsHarvests[0].request)
+    expect(interactionsHarvests[0].request.body).toEqual([
       expect.objectContaining({
         category: 'Initial page load',
         type: 'interaction',
@@ -44,13 +52,13 @@ describe('XHR SPA Interaction Tracking', () => {
       await browser.testHandle.assetURL('ajax/xhr-simple.html')
     ).then(() => browser.waitForAgentLoad())
 
-    const [interactionResults] = await Promise.all([
-      browser.testHandle.expectInteractionEvents(10000),
+    const [interactionsHarvests] = await Promise.all([
+      interactionsCapture.waitForResult({ timeout: 10000 }),
       $('#sendAjax').click()
     ])
 
-    checkSpa(interactionResults.request, { trigger: 'click' })
-    expect(interactionResults.request.body).toEqual([
+    checkSpa(interactionsHarvests[1].request, { trigger: 'click' })
+    expect(interactionsHarvests[1].request.body).toEqual([
       expect.objectContaining({
         category: 'Route change',
         type: 'interaction',
@@ -80,15 +88,15 @@ describe('XHR SPA Interaction Tracking', () => {
   })
 
   it('should not capture the ajax in the initial interaction when sent after load', async () => {
-    const [interactionResults] = await Promise.all([
-      browser.testHandle.expectInteractionEvents(10000),
+    const [interactionsHarvests] = await Promise.all([
+      interactionsCapture.waitForResult({ totalCount: 1 }),
       await browser.url(
         await browser.testHandle.assetURL('ajax/xhr-after-load.html')
       ).then(() => browser.waitForAgentLoad())
     ])
 
-    checkSpa(interactionResults.request)
-    expect(interactionResults.request.body).toEqual([
+    checkSpa(interactionsHarvests[0].request)
+    expect(interactionsHarvests[0].request.body).toEqual([
       expect.objectContaining({
         category: 'Initial page load',
         type: 'interaction',
@@ -109,13 +117,13 @@ describe('XHR SPA Interaction Tracking', () => {
       await browser.testHandle.assetURL('ajax/xhr-post.html')
     ).then(() => browser.waitForAgentLoad())
 
-    const [interactionResults] = await Promise.all([
-      browser.testHandle.expectInteractionEvents(10000),
+    const [interactionsHarvests] = await Promise.all([
+      interactionsCapture.waitForResult({ timeout: 10000 }),
       $('#sendAjax').click()
     ])
 
-    checkSpa(interactionResults.request, { trigger: 'click' })
-    expect(interactionResults.request.body).toEqual([
+    checkSpa(interactionsHarvests[1].request, { trigger: 'click' })
+    expect(interactionsHarvests[1].request.body).toEqual([
       expect.objectContaining({
         category: 'Route change',
         type: 'interaction',
@@ -138,13 +146,13 @@ describe('XHR SPA Interaction Tracking', () => {
       await browser.testHandle.assetURL('ajax/xhr-no-send.html')
     ).then(() => browser.waitForAgentLoad())
 
-    const [interactionResults] = await Promise.all([
-      browser.testHandle.expectInteractionEvents(10000),
+    const [interactionsHarvests] = await Promise.all([
+      interactionsCapture.waitForResult({ timeout: 10000 }),
       $('#sendAjax').click()
     ])
 
-    checkSpa(interactionResults.request, { trigger: 'click' })
-    expect(interactionResults.request.body).toEqual(expect.arrayContaining([
+    checkSpa(interactionsHarvests[1].request, { trigger: 'click' })
+    expect(interactionsHarvests[1].request.body).toEqual(expect.arrayContaining([
       expect.objectContaining({
         category: 'Route change',
         type: 'interaction',
@@ -159,13 +167,13 @@ describe('XHR SPA Interaction Tracking', () => {
       await browser.testHandle.assetURL('ajax/xhr-nested.html')
     ).then(() => browser.waitForAgentLoad())
 
-    const [interactionResults] = await Promise.all([
-      browser.testHandle.expectInteractionEvents(10000),
+    const [interactionsHarvests] = await Promise.all([
+      interactionsCapture.waitForResult({ timeout: 10000 }),
       $('#sendAjax').click()
     ])
 
-    checkSpa(interactionResults.request, { trigger: 'click' })
-    expect(interactionResults.request.body).toEqual(expect.arrayContaining([
+    checkSpa(interactionsHarvests[1].request, { trigger: 'click' })
+    expect(interactionsHarvests[1].request.body).toEqual(expect.arrayContaining([
       expect.objectContaining({
         category: 'Route change',
         type: 'interaction',
@@ -189,8 +197,8 @@ describe('XHR SPA Interaction Tracking', () => {
   })
 
   it('should capture distributed tracing properties', async () => {
-    const [interactionResults] = await Promise.all([
-      browser.testHandle.expectInteractionEvents(10000),
+    const [interactionsHarvests] = await Promise.all([
+      interactionsCapture.waitForResult({ totalCount: 1 }),
       await browser.url(
         await browser.testHandle.assetURL('distributed_tracing/xhr-sameorigin.html', {
           init: {
@@ -201,8 +209,9 @@ describe('XHR SPA Interaction Tracking', () => {
       ).then(() => browser.waitForAgentLoad())
     ])
 
-    checkSpa(interactionResults.request)
-    expect(interactionResults.request.body).toEqual([
+    console.log(JSON.stringify(interactionsHarvests))
+    checkSpa(interactionsHarvests[0].request)
+    expect(interactionsHarvests[0].request.body).toEqual([
       expect.objectContaining({
         category: 'Initial page load',
         type: 'interaction',
@@ -225,14 +234,14 @@ describe('XHR SPA Interaction Tracking', () => {
     await browser.url(await browser.testHandle.assetURL('ajax/xhr-simple.html'))
       .then(() => browser.waitForAgentLoad())
 
-    const [interactionEventsHarvest] = await Promise.all([
-      browser.testHandle.expectInteractionEvents(),
+    const [interactionsHarvests] = await Promise.all([
+      interactionsCapture.waitForResult({ timeout: 10000 }),
       $('#sendAjax').click()
     ])
 
-    checkAjaxEvents({ body: interactionEventsHarvest.request.body[0].children, query: interactionEventsHarvest.request.query }, { specificPath: '/json' })
+    checkAjaxEvents({ body: interactionsHarvests[1].request.body[0].children, query: interactionsHarvests[1].request.query }, { specificPath: '/json' })
 
-    const ajaxEvent = interactionEventsHarvest.request.body[0].children.find(event => event.path === '/json')
+    const ajaxEvent = interactionsHarvests[1].request.body[0].children.find(event => event.path === '/json')
     expect(ajaxEvent.end).toBeGreaterThanOrEqual(ajaxEvent.start)
     expect(ajaxEvent.callbackEnd).toBeGreaterThanOrEqual(ajaxEvent.end)
   })
@@ -241,14 +250,14 @@ describe('XHR SPA Interaction Tracking', () => {
     await browser.url(await browser.testHandle.assetURL('ajax/xhr-404.html'))
       .then(() => browser.waitForAgentLoad())
 
-    const [interactionEventsHarvest] = await Promise.all([
-      browser.testHandle.expectInteractionEvents(),
+    const [interactionsHarvests] = await Promise.all([
+      interactionsCapture.waitForResult({ timeout: 10000 }),
       $('#sendAjax').click()
     ])
 
-    checkAjaxEvents({ body: interactionEventsHarvest.request.body[0].children, query: interactionEventsHarvest.request.query }, { specificPath: '/paththatdoesnotexist' })
+    checkAjaxEvents({ body: interactionsHarvests[1].request.body[0].children, query: interactionsHarvests[1].request.query }, { specificPath: '/paththatdoesnotexist' })
 
-    const ajaxEvent = interactionEventsHarvest.request.body[0].children.find(event => event.path === '/paththatdoesnotexist')
+    const ajaxEvent = interactionsHarvests[1].request.body[0].children.find(event => event.path === '/paththatdoesnotexist')
     expect(ajaxEvent.status).toEqual(404)
   })
 
@@ -256,14 +265,14 @@ describe('XHR SPA Interaction Tracking', () => {
     await browser.url(await browser.testHandle.assetURL('ajax/xhr-network-error.html'))
       .then(() => browser.waitForAgentLoad())
 
-    const [interactionEventsHarvest] = await Promise.all([
-      browser.testHandle.expectInteractionEvents(),
+    const [interactionsHarvests] = await Promise.all([
+      interactionsCapture.waitForResult({ timeout: 10000 }),
       $('#sendAjax').click()
     ])
 
-    checkAjaxEvents({ body: interactionEventsHarvest.request.body[0].children, query: interactionEventsHarvest.request.query }, { specificPath: '/bizbaz' })
+    checkAjaxEvents({ body: interactionsHarvests[1].request.body[0].children, query: interactionsHarvests[1].request.query }, { specificPath: '/bizbaz' })
 
-    const ajaxEvent = interactionEventsHarvest.request.body[0].children.find(event => event.path === '/bizbaz')
+    const ajaxEvent = interactionsHarvests[1].request.body[0].children.find(event => event.path === '/bizbaz')
     expect(ajaxEvent.status).toEqual(0)
   })
 
@@ -271,14 +280,14 @@ describe('XHR SPA Interaction Tracking', () => {
     await browser.url(await browser.testHandle.assetURL('ajax/xhr-callback-duration.html'))
       .then(() => browser.waitForAgentLoad())
 
-    const [interactionEventsHarvest] = await Promise.all([
-      browser.testHandle.expectInteractionEvents(),
+    const [interactionsHarvests] = await Promise.all([
+      interactionsCapture.waitForResult({ timeout: 10000 }),
       $('#sendAjax').click()
     ])
 
-    checkAjaxEvents({ body: interactionEventsHarvest.request.body[0].children, query: interactionEventsHarvest.request.query }, { specificPath: '/json' })
+    checkAjaxEvents({ body: interactionsHarvests[1].request.body[0].children, query: interactionsHarvests[1].request.query }, { specificPath: '/json' })
 
-    const ajaxEvent = interactionEventsHarvest.request.body[0].children.find(event => event.path === '/json')
+    const ajaxEvent = interactionsHarvests[1].request.body[0].children.find(event => event.path === '/json')
     // Ajax event should have a callbackDuration when picked up by the SPA feature
     expect(ajaxEvent.callbackDuration).toBeGreaterThan(0)
   })
@@ -287,14 +296,14 @@ describe('XHR SPA Interaction Tracking', () => {
     await browser.url(await browser.testHandle.assetURL('ajax/xhr-timeout.html'))
       .then(() => browser.waitForAgentLoad())
 
-    const [interactionEventsHarvest] = await Promise.all([
-      browser.testHandle.expectInteractionEvents(),
+    const [interactionsHarvests] = await Promise.all([
+      interactionsCapture.waitForResult({ timeout: 10000 }),
       $('#sendAjax').click()
     ])
 
-    checkAjaxEvents({ body: interactionEventsHarvest.request.body[0].children, query: interactionEventsHarvest.request.query }, { specificPath: '/delayed' })
+    checkAjaxEvents({ body: interactionsHarvests[1].request.body[0].children, query: interactionsHarvests[1].request.query }, { specificPath: '/delayed' })
 
-    const ajaxEvent = interactionEventsHarvest.request.body[0].children.find(event => event.path === '/delayed')
+    const ajaxEvent = interactionsHarvests[1].request.body[0].children.find(event => event.path === '/delayed')
     // Ajax event should have a callbackDuration when picked up by the SPA feature
     expect(ajaxEvent.callbackDuration).toBeGreaterThan(0)
     // Ajax event should have a 0 status when timed out
@@ -305,14 +314,14 @@ describe('XHR SPA Interaction Tracking', () => {
     await browser.url(await browser.testHandle.assetURL('ajax/xhr-abort.html'))
       .then(() => browser.waitForAgentLoad())
 
-    const [interactionEventsHarvest] = await Promise.all([
-      browser.testHandle.expectInteractionEvents(),
+    const [interactionsHarvests] = await Promise.all([
+      interactionsCapture.waitForResult({ timeout: 10000 }),
       $('#sendAjax').click()
     ])
 
-    checkAjaxEvents({ body: interactionEventsHarvest.request.body[0].children, query: interactionEventsHarvest.request.query }, { specificPath: '/delayed' })
+    checkAjaxEvents({ body: interactionsHarvests[1].request.body[0].children, query: interactionsHarvests[1].request.query }, { specificPath: '/delayed' })
 
-    const ajaxEvent = interactionEventsHarvest.request.body[0].children.find(event => event.path === '/delayed')
+    const ajaxEvent = interactionsHarvests[1].request.body[0].children.find(event => event.path === '/delayed')
     expect(ajaxEvent.status).toEqual(0)
   })
 
@@ -320,13 +329,13 @@ describe('XHR SPA Interaction Tracking', () => {
     await browser.url(await browser.testHandle.assetURL('ajax/xhr-patch-listener-after.html'))
       .then(() => browser.waitForAgentLoad())
 
-    const [interactionResults] = await Promise.all([
-      browser.testHandle.expectInteractionEvents(),
+    const [interactionsHarvests] = await Promise.all([
+      interactionsCapture.waitForResult({ timeout: 10000 }),
       $('#sendAjax').click()
     ])
 
-    checkSpa(interactionResults.request, { trigger: 'click' })
-    checkAjaxEvents({ body: interactionResults.request.body[0].children, query: interactionResults.request.query }, { specificPath: '/json' })
+    checkSpa(interactionsHarvests[1].request, { trigger: 'click' })
+    checkAjaxEvents({ body: interactionsHarvests[1].request.body[0].children, query: interactionsHarvests[1].request.query }, { specificPath: '/json' })
 
     await expect(browser.execute(function () {
       return window.wrapperInvoked
@@ -337,38 +346,35 @@ describe('XHR SPA Interaction Tracking', () => {
     await browser.url(await browser.testHandle.assetURL('ajax/xhr-with-timer.html'))
       .then(() => browser.waitForAgentLoad())
 
-    const [interactionResults] = await Promise.all([
-      browser.testHandle.expectInteractionEvents(),
+    const [interactionsHarvests] = await Promise.all([
+      interactionsCapture.waitForResult({ timeout: 10000 }),
       $('#sendAjax').click()
     ])
 
-    const ajaxCalls = interactionResults.request.body[0].children.filter(xhr =>
+    const ajaxCalls = interactionsHarvests[1].request.body[0].children.filter(xhr =>
       xhr.type === 'ajax' && xhr.path === '/json'
     )
     expect(ajaxCalls.length).toEqual(2)
 
-    const timers = interactionResults.request.body[0].children.filter(tracer =>
+    const timers = interactionsHarvests[1].request.body[0].children.filter(tracer =>
       tracer.type === 'customTracer' && tracer.name === 'timer'
     )
     expect(timers.length).toEqual(2)
   })
 
   it('only captures pre-load ajax calls in the spa payload', async () => {
+    const ajaxEventsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testAjaxEventsRequest })
     const [interactionResults, eventsResults] = await Promise.all([
-      browser.testHandle.expectInteractionEvents(),
-      browser.testHandle.expectAjaxEvents(),
+      interactionsCapture.waitForResult({ totalCount: 1 }),
+      ajaxEventsCapture.waitForResult({ timeout: 10000 }),
       browser.url(await browser.testHandle.assetURL('ajax/xhr-before-load.html'))
         .then(() => browser.waitForAgentLoad())
     ])
 
-    const spaAjaxCalls = interactionResults.request.body[0].children.filter(xhr =>
-      xhr.type === 'ajax' && xhr.path === '/json'
-    )
+    const spaAjaxCalls = JSONPath({ path: '$.[*].request.body.[?(!!@ && @.type===\'ajax\' && @.path===\'/json\')]', json: interactionResults })
     expect(spaAjaxCalls.length).toEqual(1)
 
-    const eventsAjaxCalls = eventsResults.request.body.filter(xhr =>
-      xhr.type === 'ajax' && xhr.path === '/json'
-    )
+    const eventsAjaxCalls = JSONPath({ path: '$.[*].request.body.[?(!!@ && @.type===\'ajax\' && @.path===\'/json\')]', json: eventsResults })
     expect(eventsAjaxCalls.length).toEqual(0)
   })
 })

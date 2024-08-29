@@ -1,8 +1,13 @@
 import { testInteractionEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 describe('lazy loaded scripts', () => {
+  let interactionsCapture
+
+  beforeEach(async () => {
+    interactionsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testInteractionEventsRequest })
+  })
+
   it('interactions wait for external scripts to complete', async () => {
-    const browserIxnsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testInteractionEventsRequest })
     const url = await browser.testHandle.assetURL('spa/external-scripts/lazy-loaded-script.html')
 
     await browser.url(url).then(() => browser.waitForAgentLoad())
@@ -11,7 +16,7 @@ describe('lazy loaded scripts', () => {
       () => browser.execute(function () { return window.globalCallbackDone === true }),
       { timeout: 5000 }
     )
-    const ixns = await browserIxnsCapture.waitForResult({ totalCount: 2 })
+    const ixns = await interactionsCapture.waitForResult({ totalCount: 2 })
     const clickIxn = ixns[1].request.body[0]
     expect(clickIxn.callbackDuration).toBeGreaterThan(0)
     const duration = clickIxn.end - clickIxn.start
@@ -20,13 +25,12 @@ describe('lazy loaded scripts', () => {
   })
 
   it('ajax call in lazy script extends interaction', async () => {
-    const browserIxnsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testInteractionEventsRequest })
     const url = await browser.testHandle.assetURL('spa/external-scripts/script-with-ajax.html')
 
     await browser.url(url).then(() => browser.waitForAgentLoad())
     $('body').click()
 
-    const ixns = await browserIxnsCapture.waitForResult({ totalCount: 2 })
+    const ixns = await interactionsCapture.waitForResult({ totalCount: 2 })
     const clickIxn = ixns[1].request.body[0]
 
     expect(clickIxn.children.length).toEqual(1)
@@ -35,13 +39,12 @@ describe('lazy loaded scripts', () => {
   })
 
   it('errored script', async () => {
-    const browserIxnsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testInteractionEventsRequest })
     const url = await browser.testHandle.assetURL('spa/external-scripts/aborted-script.html')
 
     await browser.url(url).then(() => browser.waitForAgentLoad())
     $('body').click()
 
-    const ixns = await browserIxnsCapture.waitForResult({ totalCount: 2 })
+    const ixns = await interactionsCapture.waitForResult({ totalCount: 2 })
     const clickIxn = ixns[1].request.body[0]
 
     const duration = clickIxn.end - clickIxn.start

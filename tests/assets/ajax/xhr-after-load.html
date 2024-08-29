@@ -10,10 +10,12 @@
   spa feature, the XHR should still be processed by the ajax feature.
 </div>
 <script type="text/javascript">
-  document.addEventListener('load', function () {
-    var xhr = new XMLHttpRequest()
-    xhr.open('/json')
-    xhr.send()
+  window.addEventListener('load', function () {
+    setTimeout(() => {
+      var xhr = new XMLHttpRequest()
+      xhr.open('/json')
+      xhr.send()
+    }, 1000)
   })
 </script>
 </body>

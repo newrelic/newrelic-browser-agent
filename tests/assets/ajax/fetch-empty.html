@@ -14,7 +14,7 @@
 <script>
   window.disableAjaxHashChange = false
   document.getElementById('sendAjax').addEventListener('click', function () {
-    fetch().then(function () {
+    fetch().catch(function () {
       if (!disableAjaxHashChange) {
         window.location.hash = Math.random()
       }

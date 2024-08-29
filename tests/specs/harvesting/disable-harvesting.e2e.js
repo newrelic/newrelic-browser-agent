@@ -102,11 +102,14 @@ describe('disable harvesting', () => {
   ;['app-id', 'license-key'].forEach(name => {
     ;['before', 'after'].forEach(loadState => {
       it(`should disable all harvesting and abort if ${name} is absent (${loadState})`, async () => {
-        const rumPromise = browser.testHandle.expectRum(10000, true)
+        const rumCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testRumRequest })
 
-        await browser.url(await browser.testHandle.assetURL(`no-${name}-${loadState}.html`))
+        const [rumHarvests] = await Promise.all([
+          rumCapture.waitForResult({ timeout: 10000 }),
+          browser.url(await browser.testHandle.assetURL(`no-${name}-${loadState}.html`))
+        ])
 
-        await expect(rumPromise).resolves.toEqual(undefined)
+        expect(rumHarvests.length).toEqual(0)
 
         const eeBacklog = await browser.execute(function () {
           return newrelic.ee.backlog

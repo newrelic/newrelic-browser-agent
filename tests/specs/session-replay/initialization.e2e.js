@@ -1,4 +1,4 @@
-import { testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
+import { testBlobReplayRequest, testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
 import { srConfig, getSR } from '../util/helpers'
 
 async function disqualifySR () {
@@ -67,9 +67,13 @@ describe('Session Replay Initialization', () => {
 
   it('should not record if rum response sr flag is 0 and then api is called', async () => {
     await disqualifySR()
-    await browser.url(await browser.testHandle.assetURL('instrumented.html', srConfig()))
-      .then(() => browser.waitForAgentLoad())
+    const sessionReplayCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testBlobReplayRequest })
+    const [sessionReplayHarvests] = await Promise.all([
+      sessionReplayCapture.waitForResult({ timeout: 10000 }),
+      browser.url(await browser.testHandle.assetURL('instrumented.html', srConfig()))
+        .then(() => browser.waitForAgentLoad())
+    ])
 
-    await expect(browser.testHandle.expectReplay(10000, true)).resolves.toBeUndefined()
+    expect(sessionReplayHarvests.length).toEqual(0)
   })
 })

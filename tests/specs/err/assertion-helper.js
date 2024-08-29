@@ -1,5 +1,23 @@
-import canonicalFunctionName from '../../lib/canonical-function-name'
-import stringHashCode from '../../lib/string-hash-code'
+const canonicalFunctionNameRe = /([a-z0-9]+)$/i
+function canonicalFunctionName (orig) {
+  if (!orig) return
+
+  let match = orig.match(canonicalFunctionNameRe)
+  if (match) return match[1]
+}
+
+function stringHashCode (string) {
+  let hash = 0
+  let charVal
+
+  if (!string || !string.length) return hash
+  for (let i = 0; i < string.length; i++) {
+    charVal = string.charCodeAt(i)
+    hash = ((hash << 5) - hash) + charVal
+    hash = hash | 0 // Convert to 32bit integer
+  }
+  return hash
+}
 
 function computeExpectedCanonicalStack (expectedStack) {
   return expectedStack.map((frame) => {

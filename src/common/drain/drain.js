@@ -107,7 +107,6 @@ function drainGroup (agentIdentifier, group, activateGroup = true) {
           // registration *should* be an array of: [targetEE, eventHandler]
           // certain browser polyfills of .values and .entries pass the prototype methods into the callback,
           // which breaks this assumption and throws errors. So we make sure here that we only call .on() if its an actual NR EE
-          console.log(registration[0])
           if (registration[0]?.on && registration[0]?.context() instanceof EventContext) registration[0].on(eventType, registration[1])
         })
       })

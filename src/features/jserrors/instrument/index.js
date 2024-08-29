@@ -54,3 +54,5 @@ export class Instrument extends InstrumentBase {
     this.abortHandler = undefined // weakly allow this abort op to run only once
   }
 }
+
+export const JSErrors = Instrument

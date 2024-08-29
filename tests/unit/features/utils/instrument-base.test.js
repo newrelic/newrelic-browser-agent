@@ -9,7 +9,7 @@ import { setupAgentSession } from '../../../../src/features/utils/agent-session'
 import { warn } from '../../../../src/common/util/console'
 import * as runtimeConstantsModule from '../../../../src/common/constants/runtime'
 import { canEnableSessionTracking } from '../../../../src/features/utils/feature-gates'
-import { getConfigurationValue } from '../../../../src/common/config/config'
+import { getConfigurationValue } from '../../../../src/common/config/init'
 
 jest.enableAutomock()
 jest.unmock('../../../../src/features/utils/instrument-base')
@@ -105,13 +105,14 @@ test('feature still imports by default even when setupAgentSession throws an err
   const aggregateArgs = { [faker.string.uuid()]: faker.lorem.sentence() }
   instrument.abortHandler = jest.fn()
   instrument.importAggregator(aggregateArgs)
+  expect(instrument.featAggregate).toBeUndefined()
 
   const windowLoadCallback = jest.mocked(onWindowLoad).mock.calls[0][0]
   await windowLoadCallback()
 
   expect(lazyFeatureLoader).toHaveBeenCalledWith(featureName, 'aggregate')
   expect(mockAggregate).toHaveBeenCalledWith(agentIdentifier, aggregator, aggregateArgs)
-  await expect(instrument.onAggregateImported).resolves.toBe(true)
+  expect(instrument.featAggregate).toBeDefined()
 })
 
 test('no uncaught async exception is thrown when an import fails', async () => {
@@ -122,6 +123,7 @@ test('no uncaught async exception is thrown when an import fails', async () => {
   const instrument = new InstrumentBase(agentIdentifier, aggregator, featureName)
   instrument.abortHandler = jest.fn()
   instrument.importAggregator()
+  expect(instrument.featAggregate).toBeUndefined()
 
   const windowLoadCallback = jest.mocked(onWindowLoad).mock.calls[0][0]
   await windowLoadCallback()
@@ -129,7 +131,7 @@ test('no uncaught async exception is thrown when an import fails', async () => {
   expect(warn).toHaveBeenCalledWith(34, expect.any(Error))
   expect(instrument.abortHandler).toHaveBeenCalled()
   expect(drain).toHaveBeenCalledWith(agentIdentifier, featureName, true)
-  await expect(instrument.onAggregateImported).resolves.toBe(false)
+  expect(instrument.featAggregate).toBeUndefined()
   expect(mockOnError).not.toHaveBeenCalled()
 })
 
@@ -140,6 +142,7 @@ test('should not import agent-session when session tracking is disabled', async 
   const aggregateArgs = { [faker.string.uuid()]: faker.lorem.sentence() }
   instrument.abortHandler = jest.fn()
   instrument.importAggregator(aggregateArgs)
+  expect(instrument.featAggregate).toBeUndefined()
 
   const windowLoadCallback = jest.mocked(onWindowLoad).mock.calls[0][0]
   await windowLoadCallback()
@@ -147,7 +150,7 @@ test('should not import agent-session when session tracking is disabled', async 
   expect(setupAgentSession).not.toHaveBeenCalled()
   expect(lazyFeatureLoader).toHaveBeenCalledWith(featureName, 'aggregate')
   expect(mockAggregate).toHaveBeenCalledWith(agentIdentifier, aggregator, aggregateArgs)
-  await expect(instrument.onAggregateImported).resolves.toBe(true)
+  expect(instrument.featAggregate).toBeDefined()
 })
 
 test('should drain and not import agg when shouldImportAgg is false for session_replay', async () => {

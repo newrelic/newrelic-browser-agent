@@ -110,6 +110,8 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 * Generic/Runtime/Unknown/Detected
 <!--- Agent script element was decorated with nonce attribute --->
 * Generic/Runtime/Nonce/Detected
+* <!--- Agent running in an IFrame was Detected --->
+* Generic/Runtime/IFrame/Detected
 <!--- Agent is running in a local file --->
 * Generic/FileProtocol/Detected
 <!--- Obfuscation rules were Detected --->
@@ -132,6 +134,8 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 * Generic/Resources/Non-Ajax/External
 <!--- A <video> element was added to the DOM, should have a total count as part of the metric --->
 * Generic/VideoElement/Added
+<!--- A <iframe> element was added to the DOM, should have a total count as part of the metric --->
+* Generic/IFrame/Added
 
 ### Frameworks
 <!--- React was Detected --->

@@ -1,61 +1,47 @@
-import { ee } from '../../../src/common/event-emitter/contextual-ee'
-import { Aggregator } from '../../../src/common/aggregate/aggregator'
+import * as handleModule from '../../../src/common/event-emitter/handle'
+import { setupAgent } from '../setup-agent'
+import { Instrument as Ajax } from '../../../src/features/ajax/instrument'
+import { FEATURE_NAMES } from '../../../src/loaders/features/features'
 
-window.fetch = jest.fn(() => Promise.resolve())
-window.Request = jest.fn()
-window.Response = jest.fn()
-const { Ajax } = require('../../../src/features/ajax') // don't hoist this up with ES6 import
+let agentSetup
 
-jest.mock('../../../src/common/constants/runtime')
-jest.mock('../../../src/common/config/config', () => ({
-  __esModule: true,
-  originals: { REQ: jest.fn(), XHR: global.XMLHttpRequest },
-  getConfigurationValue: jest.fn(),
-  getLoaderConfig: jest.fn().mockReturnValue({})
-}))
-const agentIdentifier = 'abcdefg'
-let baseEE
+beforeAll(async () => {
+  jest.spyOn(handleModule, 'handle')
 
-beforeAll(() => {
-  const ajaxInstrument = new Ajax(agentIdentifier, new Aggregator({ agentIdentifier, ee }), false)
-  baseEE = ajaxInstrument.ee
+  agentSetup = setupAgent()
 })
 
-describe('Ajax event is not captured or buffered for data urls', () => {
-  let xhrEventLogged
-  beforeAll(() => { baseEE.on('xhr', monitorXhrEvent) })
-  beforeEach(() => { xhrEventLogged = false })
-  afterAll(() => { baseEE.removeEventListener('xhr', monitorXhrEvent) })
+let ajaxInstrument
 
-  test('XMLHttpRequest', done => {
-    expect.assertions(2)
-    baseEE.on('send-xhr-start', validateIsDataProtocol)
+beforeEach(async () => {
+  jest.spyOn(handleModule, 'handle')
 
+  ajaxInstrument = new Ajax(agentSetup.agentIdentifier, agentSetup.aggregator)
+  jest.spyOn(ajaxInstrument.ee, 'emit')
+})
+
+afterEach(() => {
+  jest.clearAllMocks()
+})
+
+describe('ajax event is not captured or buffered for data urls', () => {
+  test('XMLHttpRequest', () => {
     const xhr = new XMLHttpRequest()
     xhr.open('GET', 'data:,dataUrl')
-
-    xhr.onreadystatechange = function () {
-      if (xhr.readyState === XMLHttpRequest.DONE) {
-        setTimeout(() => { // the following has to wait for next loop so monitorXhrEvent can run
-          expect(xhrEventLogged).toEqual(false)
-          baseEE.removeEventListener('send-xhr-start', validateIsDataProtocol)
-          done()
-        }, 0)
-      }
-    }
     xhr.send()
-  })
-  test('fetch', done => {
-    expect.assertions(2)
-    baseEE.on('fetch-done', validateIsDataProtocol)
 
-    fetch('data:,dataUrl').then(() => {
-      expect(xhrEventLogged).toEqual(false)
-      baseEE.removeEventListener('fetch-done', validateIsDataProtocol)
-      done()
-    })
+    const xhrContext = jest.mocked(ajaxInstrument.ee.emit).mock.calls
+      .find(call => call[0] === 'new-xhr' && call[1][0] === xhr)[2]
+    expect(xhrContext.params.protocol).toEqual('data')
+    expect(handleModule.handle).not.toHaveBeenCalledWith('xhr', expect.any(Array), xhrContext, FEATURE_NAMES.ajax)
   })
 
-  function validateIsDataProtocol (args, xhr) { expect(this.params.protocol).toEqual('data') }
-  function monitorXhrEvent (params, metrics, start) { xhrEventLogged = true }
+  test('fetch', async () => {
+    await fetch('data:,dataUrl')
+
+    const fetchContext = jest.mocked(ajaxInstrument.ee.emit).mock.calls
+      .find(call => call[0] === 'fetch-done')[2]
+    expect(fetchContext.params.protocol).toEqual('data')
+    expect(handleModule.handle).not.toHaveBeenCalledWith('xhr', expect.any(Array), fetchContext, FEATURE_NAMES.ajax)
+  })
 })

@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { getConfigurationValue } from '../../../common/config/config'
+import { getConfigurationValue } from '../../../common/config/init'
 import { deregisterDrain } from '../../../common/drain/drain'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME } from '../constants'
@@ -20,3 +20,5 @@ export class Instrument extends InstrumentBase {
     else deregisterDrain(this.agentIdentifier, this.featureName)
   }
 }
+
+export const GenericEvents = Instrument

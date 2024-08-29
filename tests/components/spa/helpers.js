@@ -1,7 +1,7 @@
 /* global expect */
-import { originals } from '../../../src/common/config/config'
 import { now } from '../../../src/common/timing/now'
 import { INTERACTION_API } from '../../../src/features/spa/constants'
+import { gosNREUMOriginals } from '../../../src/common/window/nreum'
 
 class InteractionValidator {
   static TIMED_NODE_TYPES = [
@@ -106,7 +106,7 @@ function startInteraction (onInteractionStart, afterInteractionFinish, options =
     options.handle.command('setAttribute', undefined, '__interactionId', interactionId)
     onInteractionStart(() => { done = true })
   } else {
-    originals.ST(startFromUnwrappedTask, 100)
+    gosNREUMOriginals().o.ST(startFromUnwrappedTask, 100)
   }
 
   options.baseEE.on('interaction', function (interaction) {

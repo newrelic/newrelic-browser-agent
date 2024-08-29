@@ -25,3 +25,5 @@ export class Instrument extends InstrumentBase {
     this.importAggregator()
   }
 }
+
+export const PageViewTiming = Instrument

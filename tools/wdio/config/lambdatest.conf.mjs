@@ -79,6 +79,10 @@ function lambdaTestCapabilities () {
 
 export default function config () {
   const config = {
+    protocol: 'https',
+    hostname: 'hub.lambdatest.com',
+    path: '/wd/hub',
+    port: 443,
     user: process.env.LT_USERNAME || process.env.LAMBDA_USERNAME,
     key: process.env.LT_ACCESS_KEY || process.env.LAMBDA_ACCESS_KEY,
     capabilities: lambdaTestCapabilities(),
@@ -97,9 +101,9 @@ export default function config () {
       ]
     ]
   }
-  if (args.webview) { // LT app automation requires these to be specified
+  if (args.webview) {
+    // LT app automation requires a different hostname
     config.hostname = 'mobile-hub.lambdatest.com'
-    config.path = '/wd/hub'
   }
   return config
 }

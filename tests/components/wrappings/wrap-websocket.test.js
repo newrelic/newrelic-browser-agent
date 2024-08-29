@@ -1,11 +1,14 @@
 import { ee } from '../../../src/common/event-emitter/contextual-ee'
-import { originals } from '../../../src/common/config/config'
+import * as nreumModule from '../../../src/common/window/nreum'
 
 const origWebSocket = WebSocket
 describe('wrap-websocket', () => {
   beforeEach(() => {
     global.WebSocket = origWebSocket
-    originals.WS = origWebSocket
+    jest.spyOn(nreumModule, 'gosNREUMOriginals').mockImplementation(() => ({ o: { WS: origWebSocket } }))
+  })
+  afterEach(() => {
+    jest.clearAllMocks()
   })
   it('should mutate global to match same properties as original', async () => {
     const ws = await prepWS()
@@ -29,7 +32,7 @@ describe('wrap-websocket', () => {
   })
 
   it('should not run if no WS global', async () => {
-    delete originals.WS
+    jest.spyOn(nreumModule, 'gosNREUMOriginals').mockImplementation(() => ({ o: { WS: undefined } }))
     await prepWS()
     expect(new WebSocket('ws://foo.com/websocket') instanceof origWebSocket).toEqual(true)
   })

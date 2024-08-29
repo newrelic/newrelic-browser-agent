@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker'
 import * as runtimeConstantsModule from '../../../../src/common/constants/runtime'
-import * as configModule from '../../../../src/common/config/config'
+import * as initModule from '../../../../src/common/config/init'
 import { canEnableSessionTracking } from '../../../../src/features/utils/feature-gates'
 
 jest.enableAutomock()
@@ -15,25 +15,25 @@ beforeEach(() => {
 describe('enableSessionTracking', () => {
   test('should return false when not browser scope', async () => {
     jest.replaceProperty(runtimeConstantsModule, 'isBrowserScope', false)
-    jest.mocked(configModule.getConfigurationValue).mockReturnValue(true)
+    jest.mocked(initModule.getConfigurationValue).mockReturnValue(true)
 
     expect(canEnableSessionTracking(agentIdentifier)).toEqual(false)
-    expect(configModule.getConfigurationValue).not.toHaveBeenCalled()
+    expect(initModule.getConfigurationValue).not.toHaveBeenCalled()
   })
 
   test('should return false when session tracking disabled', async () => {
     jest.replaceProperty(runtimeConstantsModule, 'isBrowserScope', true)
-    jest.mocked(configModule.getConfigurationValue).mockReturnValue(false)
+    jest.mocked(initModule.getConfigurationValue).mockReturnValue(false)
 
     expect(canEnableSessionTracking(agentIdentifier)).toEqual(false)
-    expect(configModule.getConfigurationValue).toHaveBeenCalledWith(agentIdentifier, 'privacy.cookies_enabled')
+    expect(initModule.getConfigurationValue).toHaveBeenCalledWith(agentIdentifier, 'privacy.cookies_enabled')
   })
 
   test('should return true when stars align', () => {
     jest.replaceProperty(runtimeConstantsModule, 'isBrowserScope', true)
-    jest.mocked(configModule.getConfigurationValue).mockReturnValue(true)
+    jest.mocked(initModule.getConfigurationValue).mockReturnValue(true)
 
     expect(canEnableSessionTracking(agentIdentifier)).toEqual(true)
-    expect(configModule.getConfigurationValue).toHaveBeenCalledWith(agentIdentifier, 'privacy.cookies_enabled')
+    expect(initModule.getConfigurationValue).toHaveBeenCalledWith(agentIdentifier, 'privacy.cookies_enabled')
   })
 })

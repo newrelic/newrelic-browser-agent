@@ -12,7 +12,9 @@ import { registerHandler as register } from '../../../common/event-emitter/regis
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { stringify } from '../../../common/util/stringify'
 import { handle } from '../../../common/event-emitter/handle'
-import { getInfo, getConfigurationValue, getRuntime } from '../../../common/config/config'
+import { getInfo } from '../../../common/config/info'
+import { getConfigurationValue } from '../../../common/config/init'
+import { getRuntime } from '../../../common/config/runtime'
 import { globalScope } from '../../../common/constants/runtime'
 
 import { FEATURE_NAME } from '../constants'

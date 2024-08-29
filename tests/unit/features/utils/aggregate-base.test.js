@@ -1,6 +1,7 @@
 import { faker } from '@faker-js/faker'
 import { AggregateBase } from '../../../../src/features/utils/aggregate-base'
-import { getInfo, isConfigured, getRuntime } from '../../../../src/common/config/config'
+import { getInfo, isValid } from '../../../../src/common/config/info'
+import { getRuntime } from '../../../../src/common/config/runtime'
 import { configure } from '../../../../src/loaders/configure/configure'
 import { gosCDN } from '../../../../src/common/window/nreum'
 
@@ -13,10 +14,13 @@ jest.mock('../../../../src/common/event-emitter/register-handler', () => ({
   __esModule: true,
   registerHandler: jest.fn()
 }))
-jest.mock('../../../../src/common/config/config', () => ({
+jest.mock('../../../../src/common/config/info', () => ({
   __esModule: true,
   getInfo: jest.fn(),
-  isConfigured: jest.fn().mockReturnValue(false),
+  isValid: jest.fn().mockReturnValue(false)
+}))
+jest.mock('../../../../src/common/config/runtime', () => ({
+  __esModule: true,
   getRuntime: jest.fn()
 }))
 jest.mock('../../../../src/loaders/configure/configure', () => ({
@@ -85,7 +89,7 @@ test('should merge info, jsattributes, and runtime objects', () => {
 
   new AggregateBase(agentIdentifier, aggregator, featureName)
 
-  expect(isConfigured).toHaveBeenCalledWith(agentIdentifier)
+  expect(isValid).toHaveBeenCalledWith(agentIdentifier)
   expect(gosCDN).toHaveBeenCalledTimes(1)
   expect(getInfo).toHaveBeenCalledWith(agentIdentifier)
   expect(getRuntime).toHaveBeenCalledWith(agentIdentifier)
@@ -102,11 +106,11 @@ test('should merge info, jsattributes, and runtime objects', () => {
 })
 
 test('should only configure the agent once', () => {
-  jest.mocked(isConfigured).mockReturnValue(true)
+  jest.mocked(isValid).mockReturnValue(true)
 
   new AggregateBase(agentIdentifier, aggregator, featureName)
 
-  expect(isConfigured).toHaveBeenCalledWith(agentIdentifier)
+  expect(isValid).toHaveBeenCalledWith(agentIdentifier)
   expect(gosCDN).not.toHaveBeenCalled()
   expect(getInfo).not.toHaveBeenCalled()
   expect(getRuntime).toHaveBeenCalledTimes(2)

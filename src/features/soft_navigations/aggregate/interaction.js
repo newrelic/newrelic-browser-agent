@@ -1,4 +1,4 @@
-import { getInfo } from '../../../common/config/config'
+import { getInfo } from '../../../common/config/info'
 import { globalScope, initialLocation } from '../../../common/constants/runtime'
 import { generateUuid } from '../../../common/ids/unique-id'
 import { addCustomAttributes, getAddStringContext, nullable, numeric } from '../../../common/serialize/bel-serializer'

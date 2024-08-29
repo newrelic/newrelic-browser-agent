@@ -1,5 +1,5 @@
 import { FEATURE_NAMES } from './features'
-import { getConfigurationValue } from '../../common/config/config'
+import { getConfigurationValue } from '../../common/config/init'
 
 const featureNames = Object.values(FEATURE_NAMES)
 

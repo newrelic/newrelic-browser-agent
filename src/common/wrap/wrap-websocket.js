@@ -1,8 +1,8 @@
 import { globalScope } from '../constants/runtime'
-import { originals } from '../config/state/originals'
 import { now } from '../timing/now'
 import { checkState } from '../window/load'
 import { generateRandomHexString } from '../ids/unique-id'
+import { gosNREUMOriginals } from '../window/nreum'
 
 export const WEBSOCKET_TAG = 'websocket-'
 export const ADD_EVENT_LISTENER_TAG = 'addEventListener'
@@ -11,6 +11,7 @@ const wrapped = {}
 
 export function wrapWebSocket (sharedEE) {
   if (wrapped[sharedEE.debugId]++) return sharedEE
+  const originals = gosNREUMOriginals().o
   if (!originals.WS) return sharedEE
 
   function reporter (socketId) {

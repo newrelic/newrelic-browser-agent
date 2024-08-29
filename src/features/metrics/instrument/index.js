@@ -18,3 +18,5 @@ export class Instrument extends InstrumentBase {
     this.importAggregator()
   }
 }
+
+export const Metrics = Instrument

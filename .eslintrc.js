@@ -19,12 +19,7 @@ module.exports = {
   ],
   parser: '@babel/eslint-parser',
   parserOptions: {
-    requireConfigFile: false,
-    babelOptions: {
-      plugins: [
-        '@babel/plugin-syntax-import-assertions'
-      ]
-    }
+    requireConfigFile: false
   },
   env: {
     es2022: true
@@ -54,6 +49,7 @@ module.exports = {
         sourceType: 'module'
       },
       rules: {
+        'no-console': ['error'],
         'n/no-callback-literal': 'off' // This is not NodeJS code and should not be forced to adhere to NodeJS callback parameter pattern
       }
     },

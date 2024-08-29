@@ -1,4 +1,5 @@
-import { getRuntime, getConfiguration } from '../../../common/config/config'
+import { getConfiguration } from '../../../common/config/init'
+import { getRuntime } from '../../../common/config/runtime'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { FEATURE_NAME, SUPPORTABILITY_METRIC, CUSTOM_METRIC, SUPPORTABILITY_METRIC_CHANNEL, CUSTOM_METRIC_CHANNEL, WATCHABLE_WEB_SOCKET_EVENTS } from '../constants'
@@ -101,12 +102,16 @@ export class Aggregate extends AggregateBase {
     if (proxy.beacon) this.storeSupportabilityMetrics('Config/BeaconUrl/Changed')
 
     if (isBrowserScope && window.MutationObserver) {
+      if (window.self !== window.top) { this.storeSupportabilityMetrics('Generic/Runtime/IFrame/Detected') }
       const preExistingVideos = window.document.querySelectorAll('video').length
       if (preExistingVideos) this.storeSupportabilityMetrics('Generic/VideoElement/Added', preExistingVideos)
+      const preExistingIframes = window.document.querySelectorAll('iframe').length
+      if (preExistingIframes) this.storeSupportabilityMetrics('Generic/IFrame/Added', preExistingIframes)
       const mo = new MutationObserver(records => {
         records.forEach(record => {
           record.addedNodes.forEach(addedNode => {
             if (addedNode instanceof HTMLVideoElement) { this.storeSupportabilityMetrics('Generic/VideoElement/Added', 1) }
+            if (addedNode instanceof HTMLIFrameElement) { this.storeSupportabilityMetrics('Generic/IFrame/Added', 1) }
           })
         })
       })

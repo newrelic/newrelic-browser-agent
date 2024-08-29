@@ -3,12 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { getInfo, getRuntime, originals } from '../../../common/config/config'
+import { getInfo } from '../../../common/config/info'
+import { getRuntime } from '../../../common/config/runtime'
+import { gosNREUMOriginals } from '../../../common/window/nreum'
 import { ee } from '../../../common/event-emitter/contextual-ee'
 import { InteractionNode } from './interaction-node'
 
-var originalSetTimeout = originals.ST
-var originalClearTimeout = originals.CT
+var originalSetTimeout = gosNREUMOriginals().o.ST
+var originalClearTimeout = gosNREUMOriginals().o.CT
 
 var lastId = {}
 

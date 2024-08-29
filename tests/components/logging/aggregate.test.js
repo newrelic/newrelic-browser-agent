@@ -40,9 +40,7 @@ describe('class setup', () => {
       'featureName',
       'blocked',
       'bufferedLogs',
-      'outgoingLogs',
-      'harvestTimeSeconds',
-      'estimatedBytes'
+      'harvestTimeSeconds'
     ]))
   })
 
@@ -72,7 +70,7 @@ describe('payloads', () => {
       { myAttributes: 1 },
       'error'
     )
-    expect(loggingAggregate.bufferedLogs[0]).toEqual(expectedLog)
+    expect(loggingAggregate.bufferedLogs.buffer[0]).toEqual(expectedLog)
 
     expect(loggingAggregate.prepareHarvest()).toEqual({
       qs: { browser_monitoring_key: info.licenseKey },
@@ -97,7 +95,7 @@ describe('payloads', () => {
   test('prepares payload as expected', async () => {
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', { myAttributes: 1 }, 'error'])
 
-    expect(loggingAggregate.bufferedLogs[0]).toEqual(new Log(
+    expect(loggingAggregate.bufferedLogs.buffer[0]).toEqual(new Log(
       Math.floor(runtime.timeKeeper.correctAbsoluteTimestamp(
         runtime.timeKeeper.convertRelativeTimestamp(1234)
       )),
@@ -142,17 +140,19 @@ describe('payloads', () => {
       'error'
     )
 
+    const logs = loggingAggregate.bufferedLogs.buffer
+
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', [], 'ERROR'])
-    expect(loggingAggregate.bufferedLogs.pop()).toEqual(expected)
+    expect(logs.pop()).toEqual(expected)
 
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', true, 'ERROR'])
-    expect(loggingAggregate.bufferedLogs.pop()).toEqual(expected)
+    expect(logs.pop()).toEqual(expected)
 
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', 1, 'ERROR'])
-    expect(loggingAggregate.bufferedLogs.pop()).toEqual(expected)
+    expect(logs.pop()).toEqual(expected)
 
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', 'string', 'ERROR'])
-    expect(loggingAggregate.bufferedLogs.pop()).toEqual(expected)
+    expect(logs.pop()).toEqual(expected)
   })
 
   test('should work if log level is valid but wrong case', async () => {
@@ -166,18 +166,19 @@ describe('payloads', () => {
     )
 
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', {}, 'ErRoR'])
-    expect(loggingAggregate.bufferedLogs.pop()).toEqual(expected)
+    expect(loggingAggregate.bufferedLogs.buffer[0]).toEqual(expected)
   })
 
   test('should buffer logs with non-stringify-able message', async () => {
+    const logs = loggingAggregate.bufferedLogs.buffer
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, new Error('test'), {}, 'error'])
-    expect(loggingAggregate.bufferedLogs.pop().message).toEqual('Error: test')
+    expect(logs.pop().message).toEqual('Error: test')
 
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, new SyntaxError('test'), {}, 'error'])
-    expect(loggingAggregate.bufferedLogs.pop().message).toEqual('SyntaxError: test')
+    expect(logs.pop().message).toEqual('SyntaxError: test')
 
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, Symbol('test'), {}, 'error'])
-    expect(loggingAggregate.bufferedLogs.pop().message).toEqual('Symbol(test)')
+    expect(logs.pop().message).toEqual('Symbol(test)')
   })
 })
 

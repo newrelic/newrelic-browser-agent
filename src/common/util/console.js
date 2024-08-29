@@ -1,3 +1,5 @@
+/* eslint no-console: ["error", { allow: ["debug"] }] */
+
 /**
  * A helper method to warn to the console with New Relic: decoration
  * @param {string} message The primary message to warn

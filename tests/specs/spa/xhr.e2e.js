@@ -209,7 +209,6 @@ describe('XHR SPA Interaction Tracking', () => {
       ).then(() => browser.waitForAgentLoad())
     ])
 
-    console.log(JSON.stringify(interactionsHarvests))
     checkSpa(interactionsHarvests[0].request)
     expect(interactionsHarvests[0].request.body).toEqual([
       expect.objectContaining({

@@ -1,7 +1,10 @@
+const { notIOS, notSafari } = require('../../../tools/browser-matcher/common-matchers.mjs')
 const { testSupportMetricsRequest } = require('../../../tools/testing-server/utils/expect-tests')
 
 describe('WebSocket supportability metrics', () => {
-  it('should capture expected SMs', async () => {
+  /** Safari and iOS safari are blocked from connecting to the websocket protocol on LT, which throws socket errors instead of connecting and capturing the expected payloads.
+   *  validated that this works locally for these envs */
+  it.withBrowsersMatching([notSafari, notIOS])('should capture expected SMs', async () => {
     const supportabilityMetricsRequest = await browser.testHandle.createNetworkCaptures('bamServer', { test: testSupportMetricsRequest })
     const url = await browser.testHandle.assetURL('websockets.html')
 

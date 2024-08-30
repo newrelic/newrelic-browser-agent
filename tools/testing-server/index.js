@@ -197,6 +197,7 @@ class TestServer {
     this.#bamServer = fastify(this.#defaultServerConfig)
 
     this.#bamServer.decorate('testServerId', 'bamServer')
+    this.#bamServer.register(require('@fastify/websocket'))
     this.#bamServer.register(require('./plugins/cache-interceptor')) // pre-process the request to help prevent cache responses
     this.#bamServer.register(require('./plugins/compression-interceptor')) // pre-process the request to help it conform with compression standards
     this.#bamServer.register(require('@fastify/compress')) // handle gzip payloads, reply with gzip'd content

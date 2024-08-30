@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {init} {config} {loader}
+    <script>
+      // preload socket
+      window.bamServer = NREUM.info.beacon
+      window.preLoadSocket = new WebSocket(`ws://${bamServer}/websocket?loaded=pre`)
+
+      // Connection opened
+      preLoadSocket.addEventListener("open", (event) => {
+          preLoadSocket.send("PRELOAD!");
+      });
+
+      // Listen for messages
+      preLoadSocket.addEventListener("message", (event) => {
+          console.log("Message from server ", event.data);
+          preLoadSocket.close() // clean by flag
+      });
+    </script>
+  </head>
+  <body>Instrumented
+
+    <script>
+      window.addEventListener('load', () => {
+      // postload socket
+        window.postLoadSocket = new WebSocket(`ws://${bamServer}/websocket?loaded=post`)
+
+        // Connection opened
+        postLoadSocket.addEventListener("open", (event) => {
+            postLoadSocket.send("POSTLOAD!");
+        });
+
+        // Listen for messages
+        postLoadSocket.addEventListener("message", (event) => {
+            console.log("Message from server ", event.data);
+            postLoadSocket.close(1000) // clean by code and flag
+        });
+      })
+    </script>
+  </body>
+</html>

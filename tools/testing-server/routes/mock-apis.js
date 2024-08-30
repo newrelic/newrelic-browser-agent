@@ -267,4 +267,12 @@ module.exports = fp(async function (fastify, testServer) {
       return ''
     }
   })
+  fastify.get('/websocket', {
+    websocket: true
+  }, (socket, req) => {
+    socket.on('message', message => {
+      // message.toString() === 'hi from client'
+      socket.send(`hi - ${message} - We saw you on the server`)
+    })
+  })
 })

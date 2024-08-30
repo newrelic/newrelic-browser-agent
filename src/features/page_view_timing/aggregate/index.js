@@ -22,6 +22,7 @@ import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
 import { longTask } from '../../../common/vitals/long-task'
 import { subscribeToVisibilityChange } from '../../../common/window/page-visibility'
 import { VITAL_NAMES } from '../../../common/vitals/constants'
+import { EventBuffer } from '../../utils/event-buffer'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -33,8 +34,7 @@ export class Aggregate extends AggregateBase {
   constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
 
-    this.timings = []
-    this.timingsSent = []
+    this.timings = new EventBuffer()
     this.curSessEndRecorded = false
 
     if (getConfigurationValue(this.agentIdentifier, 'page_view_timing.long_task') === true) longTask.subscribe(this.#handleVitalMetric)
@@ -116,7 +116,7 @@ export class Aggregate extends AggregateBase {
       attrs.cls = cumulativeLayoutShift.current.value
     }
 
-    this.timings.push({
+    this.timings.add({
       name,
       value,
       attrs
@@ -126,10 +126,8 @@ export class Aggregate extends AggregateBase {
   }
 
   onHarvestFinished (result) {
-    if (result.retry && this.timingsSent.length > 0) {
-      this.timings.unshift(...this.timingsSent)
-      this.timingsSent = []
-    }
+    if (result.retry && this.timings.held.hasData) this.timings.unhold()
+    else this.timings.held.clear()
   }
 
   appendGlobalCustomAttributes (timing) {
@@ -147,15 +145,12 @@ export class Aggregate extends AggregateBase {
 
   // serialize and return current timing data, clear and save current data for retry
   prepareHarvest (options) {
-    if (this.timings.length === 0) return
+    if (!this.timings.hasData) return
 
-    var payload = this.getPayload(this.timings)
-    if (options.retry) {
-      for (var i = 0; i < this.timings.length; i++) {
-        this.timingsSent.push(this.timings[i])
-      }
-    }
-    this.timings = []
+    var payload = this.getPayload(this.timings.buffer)
+    if (options.retry) this.timings.hold()
+    else this.timings.clear()
+
     return {
       body: { e: payload }
     }

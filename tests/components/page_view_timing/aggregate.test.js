@@ -69,7 +69,7 @@ const expectedNetworkInfo = {
 }
 
 test('LCP event with CLS attribute', () => {
-  const timing = find(timingsAggregate.timings, function (t) {
+  const timing = find(timingsAggregate.timings.buffer, function (t) {
     return t.name === 'lcp'
   })
 
@@ -91,26 +91,26 @@ test('LCP event with CLS attribute', () => {
 })
 
 test('sends expected FI attributes when available', () => {
-  expect(timingsAggregate.timings.length).toBeGreaterThanOrEqual(1)
-  const fiPayload = timingsAggregate.timings.find(x => x.name === 'fi')
+  expect(timingsAggregate.timings.buffer.length).toBeGreaterThanOrEqual(1)
+  const fiPayload = timingsAggregate.timings.buffer.find(x => x.name === 'fi')
   expect(fiPayload.value).toEqual(5)
   expect(fiPayload.attrs).toEqual(expect.objectContaining({ type: 'pointerdown', fid: 1234, cls: 0.1119, ...expectedNetworkInfo }))
 })
 
 test('sends CLS node with right val on vis change', () => {
-  let clsNode = timingsAggregate.timings.find(tn => tn.name === VITAL_NAMES.CUMULATIVE_LAYOUT_SHIFT)
+  let clsNode = timingsAggregate.timings.buffer.find(tn => tn.name === VITAL_NAMES.CUMULATIVE_LAYOUT_SHIFT)
   expect(clsNode).toBeUndefined()
 
   pageVisibilityModule.subscribeToVisibilityChange.mock.calls[1][0]()
 
-  clsNode = timingsAggregate.timings.find(tn => tn.name === VITAL_NAMES.CUMULATIVE_LAYOUT_SHIFT)
+  clsNode = timingsAggregate.timings.buffer.find(tn => tn.name === VITAL_NAMES.CUMULATIVE_LAYOUT_SHIFT)
   expect(clsNode).toBeTruthy()
   expect(clsNode.value).toEqual(111.9) // since cls multiply decimal by 1000 to offset consumer division by 1000
   expect(clsNode.attrs.cls).toBeUndefined() // cls node doesn't need cls property
 })
 
 test('sends INP node with right val', () => {
-  let inpNode = timingsAggregate.timings.find(tn => tn.name === VITAL_NAMES.INTERACTION_TO_NEXT_PAINT)
+  let inpNode = timingsAggregate.timings.buffer.find(tn => tn.name === VITAL_NAMES.INTERACTION_TO_NEXT_PAINT)
   expect(inpNode).toBeTruthy()
   expect(inpNode.value).toEqual(8)
   expect(inpNode.attrs.cls).toEqual(0.1119)

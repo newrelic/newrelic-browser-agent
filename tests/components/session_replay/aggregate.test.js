@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker'
-import { IDEAL_PAYLOAD_SIZE, MAX_PAYLOAD_SIZE, SR_EVENT_EMITTER_TYPES } from '../../../src/features/session_replay/constants'
+import { IDEAL_PAYLOAD_SIZE, SR_EVENT_EMITTER_TYPES } from '../../../src/features/session_replay/constants'
 import { MODE, SESSION_EVENTS } from '../../../src/common/session/constants'
 import { FEATURE_NAMES } from '../../../src/loaders/features/features'
 import { ee } from '../../../src/common/event-emitter/contextual-ee'
@@ -8,6 +8,7 @@ import { Instrument as SessionReplay } from '../../../src/features/session_repla
 import * as consoleModule from '../../../src/common/util/console'
 import { getRuntime } from '../../../src/common/config/runtime'
 import { getInfo } from '../../../src/common/config/info'
+import { MAX_PAYLOAD_SIZE } from '../../../src/common/constants/agent-constants'
 
 let agentSetup
 

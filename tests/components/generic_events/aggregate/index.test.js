@@ -1,6 +1,6 @@
+import { EventBuffer } from '../../../../src/features/utils/event-buffer'
 import { Instrument as GenericEvents } from '../../../../src/features/generic_events/instrument'
 import { getInfo } from '../../../../src/common/config/info'
-import { EventBuffer } from '../../../../src/features/generic_events/aggregate/event-buffer'
 import { resetAgent, setupAgent } from '../../setup-agent'
 import { getConfiguration } from '../../../../src/common/config/init'
 import { getRuntime } from '../../../../src/common/config/runtime'
@@ -29,8 +29,7 @@ test('should use default values', () => {
     eventsPerHarvest: 1000,
     harvestTimeSeconds: 30,
     referrerUrl: 'https://test.com',
-    events: new EventBuffer(),
-    retryEvents: new EventBuffer()
+    events: new EventBuffer()
   })
 })
 

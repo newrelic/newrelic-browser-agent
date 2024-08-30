@@ -8,7 +8,7 @@ import { cleanURL } from '../../../common/url/clean-url'
 import { getInfo } from '../../../common/config/info'
 import { getConfigurationValue } from '../../../common/config/init'
 import { getRuntime } from '../../../common/config/runtime'
-import { FEATURE_NAME, IDEAL_PAYLOAD_SIZE } from '../constants'
+import { FEATURE_NAME } from '../constants'
 import { isBrowserScope } from '../../../common/constants/runtime'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { warn } from '../../../common/util/console'
@@ -16,8 +16,9 @@ import { now } from '../../../common/timing/now'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { deregisterDrain } from '../../../common/drain/drain'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
-import { EventBuffer } from './event-buffer'
+import { EventBuffer } from '../../utils/event-buffer'
 import { applyFnToProps } from '../../../common/util/traverse'
+import { IDEAL_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
 
 export class Aggregate extends AggregateBase {
   #agentRuntime
@@ -31,7 +32,6 @@ export class Aggregate extends AggregateBase {
     this.referrerUrl = (isBrowserScope && document.referrer) ? cleanURL(document.referrer) : undefined
 
     this.events = new EventBuffer()
-    this.retryEvents = new EventBuffer()
 
     this.#agentRuntime = getRuntime(this.agentIdentifier)
 
@@ -120,17 +120,13 @@ export class Aggregate extends AggregateBase {
       )
     })
 
-    if (options.retry) this.retryEvents = this.events
-    this.events = new EventBuffer()
-
+    if (options.retry) this.events.hold()
     return payload
   }
 
   onHarvestFinished (result) {
-    if (result && result?.sent && result?.retry && this.retryEvents.hasData) {
-      this.events.merge(this.retryEvents, true)
-      this.retryEvents = new EventBuffer()
-    }
+    if (result && result?.sent && result?.retry && this.events.held.hasData) this.events.unhold()
+    else this.events.held.clear()
   }
 
   checkEventLimits () {

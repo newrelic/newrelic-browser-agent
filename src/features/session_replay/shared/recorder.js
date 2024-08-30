@@ -42,7 +42,14 @@ export class Recorder {
   }
 
   getEvents () {
-    if (this.#preloaded[0]?.hasData) return { ...this.#preloaded[0], type: 'preloaded' }
+    if (this.#preloaded[0]?.events.length) {
+      return {
+        ...this.#preloaded[0],
+        events: this.#preloaded[0].events,
+        payloadBytesEstimation: this.#preloaded[0].payloadBytesEstimation,
+        type: 'preloaded'
+      }
+    }
     return {
       events: [...this.#backloggedEvents.events, ...this.#events.events].filter(x => x),
       type: 'standard',

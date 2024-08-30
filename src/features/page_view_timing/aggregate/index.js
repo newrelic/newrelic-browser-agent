@@ -147,7 +147,7 @@ export class Aggregate extends AggregateBase {
   prepareHarvest (options) {
     if (!this.timings.hasData) return
 
-    var payload = this.getPayload(this.timings)
+    var payload = this.getPayload(this.timings.buffer)
     if (options.retry) this.timings.hold()
     else this.timings.clear()
 

@@ -37,7 +37,7 @@ export async function getBrowserVersions () {
   for (let mobile in mobileVersions) {
     const specsArray = mobileVersions[mobile]
     max[mobile] = Number(specsArray[0].version)
-    min[mobile] = Number(specsArray[1].version)
+    min[mobile] = specsArray[1] ? Number(specsArray[1].version) : max[mobile]
   }
 
   return { min, max }

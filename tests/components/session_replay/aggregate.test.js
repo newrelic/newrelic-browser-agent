@@ -22,7 +22,7 @@ beforeEach(async () => {
   document.body.innerHTML = `<span>${faker.lorem.paragraph()}</span>`
   jest.spyOn(consoleModule, 'warn').mockImplementation(() => {})
 
-  const sessionReplayInstrument = new SessionReplay(agentSetup.agentIdentifier, agentSetup.aggregator)
+  const sessionReplayInstrument = new SessionReplay(agentSetup.agentIdentifier, { aggregator: agentSetup.aggregator, eventManager: agentSetup.eventManager })
   await new Promise(process.nextTick)
   sessionReplayAggregate = sessionReplayInstrument.featAggregate
 
@@ -154,7 +154,7 @@ describe('Session Replay Sample -> Mode Behaviors', () => {
     await new Promise(process.nextTick)
     session.isNew = false
 
-    const sessionReplayInstrument = new SessionReplay(agentSetup.agentIdentifier, agentSetup.aggregator)
+    const sessionReplayInstrument = new SessionReplay(agentSetup.agentIdentifier, { aggregator: agentSetup.aggregator, eventManager: agentSetup.eventManager })
     await new Promise(process.nextTick)
     const newSessionReplayAggregate = sessionReplayInstrument.featAggregate
 
@@ -169,7 +169,7 @@ describe('Session Replay Error Mode Behaviors', () => {
   test('an error BEFORE rrweb import starts running in ERROR from beginning (when not preloaded)', async () => {
     ee.get(agentSetup.agentIdentifier).emit(SR_EVENT_EMITTER_TYPES.ERROR_DURING_REPLAY, ['test1'], undefined, FEATURE_NAMES.sessionReplay, ee.get(agentSetup.agentIdentifier))
 
-    const sessionReplayInstrument = new SessionReplay(agentSetup.agentIdentifier, agentSetup.aggregator)
+    const sessionReplayInstrument = new SessionReplay(agentSetup.agentIdentifier, { aggregator: agentSetup.aggregator, eventManager: agentSetup.eventManager })
     await new Promise(process.nextTick)
     const newSessionReplayAggregate = sessionReplayInstrument.featAggregate
 

@@ -2,6 +2,7 @@ import helpers from './helpers'
 import { Aggregator } from '../../../src/common/aggregate/aggregator'
 import { ee } from '../../../src/common/event-emitter/contextual-ee'
 import { Spa } from '../../../src/features/spa'
+import { EventManager } from '../../../src/features/utils/event-manager'
 
 jest.mock('../../../src/common/constants/runtime')
 jest.mock('../../../src/common/config/info', () => ({
@@ -23,7 +24,8 @@ const agentIdentifier = 'abcdefg'
 
 beforeAll(async () => {
   const aggregator = new Aggregator({ agentIdentifier, ee })
-  spaInstrument = new Spa(agentIdentifier, aggregator)
+  const eventManager = new EventManager()
+  spaInstrument = new Spa(agentIdentifier, { aggregator, eventManager })
   await expect(spaInstrument.onAggregateImported).resolves.toEqual(true)
   spaAggregate = spaInstrument.featAggregate
   spaAggregate.blocked = true

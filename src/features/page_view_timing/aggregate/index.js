@@ -22,7 +22,6 @@ import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
 import { longTask } from '../../../common/vitals/long-task'
 import { subscribeToVisibilityChange } from '../../../common/window/page-visibility'
 import { VITAL_NAMES } from '../../../common/vitals/constants'
-import { EventBuffer } from '../../utils/event-buffer'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -31,10 +30,9 @@ export class Aggregate extends AggregateBase {
     this.addTiming(name, value, attrs)
   }
 
-  constructor (agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator, FEATURE_NAME)
+  constructor (agentIdentifier, { aggregator, eventManager }) {
+    super(agentIdentifier, { aggregator, eventManager }, FEATURE_NAME)
 
-    this.timings = new EventBuffer()
     this.curSessEndRecorded = false
 
     if (getConfigurationValue(this.agentIdentifier, 'page_view_timing.long_task') === true) longTask.subscribe(this.#handleVitalMetric)
@@ -116,7 +114,7 @@ export class Aggregate extends AggregateBase {
       attrs.cls = cumulativeLayoutShift.current.value
     }
 
-    this.timings.add({
+    this.events.add({
       name,
       value,
       attrs
@@ -126,8 +124,8 @@ export class Aggregate extends AggregateBase {
   }
 
   onHarvestFinished (result) {
-    if (result.retry && this.timings.held.hasData) this.timings.unhold()
-    else this.timings.held.clear()
+    if (result.retry && this.events.held.hasData) this.events.unhold()
+    else this.events.held.clear()
   }
 
   appendGlobalCustomAttributes (timing) {
@@ -145,11 +143,11 @@ export class Aggregate extends AggregateBase {
 
   // serialize and return current timing data, clear and save current data for retry
   prepareHarvest (options) {
-    if (!this.timings.hasData) return
+    if (!this.events.hasData) return
 
-    var payload = this.getPayload(this.timings.buffer)
-    if (options.retry) this.timings.hold()
-    else this.timings.clear()
+    var payload = this.getPayload(this.events.buffer)
+    if (options.retry) this.events.hold()
+    else this.events.clear()
 
     return {
       body: { e: payload }

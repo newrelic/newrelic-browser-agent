@@ -25,8 +25,8 @@ export class Aggregate extends AggregateBase {
   #agentRuntime
   #agentInit
 
-  constructor (agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator, FEATURE_NAME)
+  constructor (agentIdentifier, { aggregator, eventManager }) {
+    super(agentIdentifier, { aggregator, eventManager }, FEATURE_NAME)
 
     this.#agentInfo = getInfo(agentIdentifier)
     this.#agentRuntime = getRuntime(agentIdentifier)
@@ -35,7 +35,6 @@ export class Aggregate extends AggregateBase {
     const harvestTimeSeconds = this.#agentInit.ajax.harvestTimeSeconds || 10
     setDenyList(this.#agentRuntime.denyList)
 
-    this.ajaxEvents = new EventBuffer()
     this.spaAjaxEvents = {}
     const classThis = this
 
@@ -44,13 +43,13 @@ export class Aggregate extends AggregateBase {
       if (!this.spaAjaxEvents[interaction.id]?.hasData) return
 
       if (!wasSaved) { // if the ixn was saved, then its ajax reqs are part of the payload whereas if it was discarded, it should still be harvested in the ajax feature itself
-        this.ajaxEvents.merge(this.spaAjaxEvents[interaction.id])
+        this.events.merge(this.spaAjaxEvents[interaction.id])
       }
       delete this.spaAjaxEvents[interaction.id]
     })
     // --- ^
     // --- v Used by new soft nav
-    registerHandler('returnAjax', event => this.ajaxEvents.add(event), this.featureName, this.ee)
+    registerHandler('returnAjax', event => this.events.add(event), this.featureName, this.ee)
     // --- ^
     registerHandler('xhr', function () { // the EE-drain system not only switches "this" but also passes a new EventContext with info. Should consider platform refactor to another system which passes a mutable context around separately and predictably to avoid problems like this.
       classThis.storeXhr(...arguments, this) // this switches the context back to the class instance while passing the NR context as an argument -- see "ctx" in storeXhr
@@ -137,28 +136,28 @@ export class Aggregate extends AggregateBase {
       this.spaAjaxEvents[interactionId] ??= new EventBuffer()
       this.spaAjaxEvents[interactionId].add(event)
     } else {
-      this.ajaxEvents.add(event)
+      this.events.add(event)
     }
   }
 
   prepareHarvest (options) {
     options = options || {}
-    if (this.ajaxEvents.buffer.length === 0) return null
+    if (this.events.buffer.length === 0) return null
 
-    const payload = this.#getPayload(this.ajaxEvents.buffer)
+    const payload = this.#getPayload(this.events.buffer)
     const payloadObjs = []
 
     for (let i = 0; i < payload.length; i++) payloadObjs.push({ body: { e: payload[i] } })
 
-    if (options.retry) this.ajaxEvents.hold()
-    else this.ajaxEvents.clear()
+    if (options.retry) this.events.hold()
+    else this.events.clear()
 
     return payloadObjs
   }
 
   onEventsHarvestFinished (result) {
-    if (result.retry && this.ajaxEvents.held.hasData) this.ajaxEvents.unhold()
-    else this.ajaxEvents.held.clear()
+    if (result.retry && this.events.held.hasData) this.events.unhold()
+    else this.events.held.clear()
   }
 
   #getPayload (events, numberOfChunks) {

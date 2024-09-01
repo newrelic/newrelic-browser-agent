@@ -9,8 +9,8 @@ import { FEATURE_NAME } from '../constants'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
-  constructor (agentIdentifier, aggregator, auto = true) {
-    super(agentIdentifier, aggregator, FEATURE_NAME, auto)
+  constructor (agentIdentifier, { aggregator, eventManager }, auto = true) {
+    super(agentIdentifier, { aggregator, eventManager }, FEATURE_NAME, auto)
     const genericEventSourceConfigs = [
       getConfigurationValue(this.agentIdentifier, 'page_action.enabled')
       // other future generic event source configs to go here, like M&Ms, PageResouce, etc.

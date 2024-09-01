@@ -3,6 +3,7 @@ import { ee } from '../../../src/common/event-emitter/contextual-ee'
 import { Spa } from '../../../src/features/spa'
 import { registerHandler } from '../../../src/common/event-emitter/register-handler'
 import { drain } from '../../../src/common/drain/drain'
+import { EventManager } from '../../../src/features/utils/event-manager'
 
 jest.mock('../../../src/common/constants/runtime')
 jest.mock('../../../src/common/config/info', () => ({
@@ -24,7 +25,8 @@ const agentIdentifier = 'abcdefg'
 
 beforeAll(async () => {
   const aggregator = new Aggregator({ agentIdentifier, ee })
-  spaInstrument = new Spa(agentIdentifier, aggregator, false)
+  const eventManager = new EventManager()
+  spaInstrument = new Spa(agentIdentifier, { aggregator, eventManager }, false)
 })
 
 describe('SPA instrument', () => {

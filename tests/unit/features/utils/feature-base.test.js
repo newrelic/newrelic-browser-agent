@@ -19,11 +19,15 @@ jest.mock('../../../../src/common/event-emitter/contextual-ee', () => ({
 
 let agentIdentifier
 let aggregator
+let eventManager
 let featureName
 
 beforeEach(() => {
   agentIdentifier = faker.string.uuid()
   aggregator = {}
+  eventManager = {
+    createBuffer: jest.fn()
+  }
   featureName = faker.string.uuid()
 })
 
@@ -31,7 +35,7 @@ test('should set instance defaults', () => {
   const mockEE = { [faker.string.uuid()]: faker.lorem.sentence() }
   jest.mocked(ee.get).mockReturnValue(mockEE)
 
-  const feature = new FeatureBase(agentIdentifier, aggregator, featureName)
+  const feature = new FeatureBase(agentIdentifier, { aggregator, eventManager }, featureName)
 
   expect(feature.agentIdentifier).toEqual(agentIdentifier)
   expect(feature.aggregator).toEqual(aggregator)

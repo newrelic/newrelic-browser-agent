@@ -6,6 +6,7 @@ import { getInfo } from '../../../src/common/config/info'
 import { bundleId } from '../../../src/common/ids/bundle-id'
 import { now } from '../../../src/common/timing/now'
 import { gosNREUMOriginals } from '../../../src/common/window/nreum'
+import { EventManager } from '../../../src/features/utils/event-manager'
 
 jest.mock('../../../src/common/constants/runtime')
 jest.mock('../../../src/common/config/info', () => ({
@@ -31,7 +32,8 @@ beforeAll(async () => {
   getInfo.mockReturnValue(mockCurrentInfo)
 
   const aggregator = new Aggregator({ agentIdentifier, ee })
-  spaInstrument = new Spa(agentIdentifier, aggregator)
+  const eventManager = new EventManager()
+  spaInstrument = new Spa(agentIdentifier, { aggregator, eventManager })
   await expect(spaInstrument.onAggregateImported).resolves.toEqual(true)
   spaAggregate = spaInstrument.featAggregate
   spaAggregate.blocked = true

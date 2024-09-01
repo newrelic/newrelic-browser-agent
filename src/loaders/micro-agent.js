@@ -13,6 +13,7 @@ import { FEATURE_NAMES } from './features/features'
 import { warn } from '../common/util/console'
 import { onWindowLoad } from '../common/window/load'
 import { AgentBase } from './agent-base'
+import { EventManager } from '../features/utils/event-manager'
 
 const nonAutoFeatures = [
   FEATURE_NAMES.jserrors,
@@ -34,6 +35,7 @@ export class MicroAgent extends AgentBase {
     super(agentIdentifier)
 
     this.sharedAggregator = new Aggregator({ agentIdentifier: this.agentIdentifier })
+    this.eventManager = new EventManager()
     this.features = {}
     setNREUMInitializedAgent(this.agentIdentifier, this)
 
@@ -76,7 +78,7 @@ export class MicroAgent extends AgentBase {
 
       try {
         // a biproduct of doing this is that the "session manager" is automatically handled through importing this feature
-        this.features.page_view_event = new PVE(this.agentIdentifier, this.sharedAggregator)
+        this.features.page_view_event = new PVE(this.agentIdentifier, { aggregator: this.sharedAggregator, eventManager: this.eventManager })
       } catch (err) {
         warn(24, err)
       }

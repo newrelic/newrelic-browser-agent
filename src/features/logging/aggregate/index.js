@@ -13,17 +13,16 @@ import { Log } from '../shared/log'
 import { isValidLogLevel } from '../shared/utils'
 import { applyFnToProps } from '../../../common/util/traverse'
 import { MAX_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
-import { EventBuffer } from '../../utils/event-buffer'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   #agentRuntime
   #agentInfo
-  constructor (agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator, FEATURE_NAME)
+  constructor (agentIdentifier, { aggregator, eventManager }) {
+    super(agentIdentifier, { aggregator, eventManager }, FEATURE_NAME)
 
     /** held logs before sending */
-    this.bufferedLogs = new EventBuffer()
+    // this.events = new EventBuffer()
 
     this.#agentRuntime = getRuntime(this.agentIdentifier)
     this.#agentInfo = getInfo(this.agentIdentifier)
@@ -79,11 +78,11 @@ export class Aggregate extends AggregateBase {
     )
     const logBytes = log.message.length + stringify(log.attributes).length + log.level.length + 10 // timestamp == 10 chars
 
-    if (!this.bufferedLogs.canMerge(logBytes)) {
-      if (this.bufferedLogs.hasData) {
-        handle(SUPPORTABILITY_METRIC_CHANNEL, ['Logging/Harvest/Early/Seen', this.bufferedLogs.bytes + logBytes])
+    if (!this.events.canMerge(logBytes)) {
+      if (this.events.hasData) {
+        handle(SUPPORTABILITY_METRIC_CHANNEL, ['Logging/Harvest/Early/Seen', this.events.bytes + logBytes])
         this.scheduler.runHarvest({})
-        if (logBytes < MAX_PAYLOAD_SIZE) this.bufferedLogs.add(log)
+        if (logBytes < MAX_PAYLOAD_SIZE) this.events.add(log)
       } else {
         handle(SUPPORTABILITY_METRIC_CHANNEL, ['Logging/Harvest/Failed/Seen', logBytes])
         warn(31, log.message.slice(0, 25) + '...')
@@ -91,11 +90,11 @@ export class Aggregate extends AggregateBase {
       return
     }
 
-    this.bufferedLogs.add(log)
+    this.events.add(log)
   }
 
   prepareHarvest (options = {}) {
-    if (this.blocked || !this.bufferedLogs.hasData) return
+    if (this.blocked || !this.events.hasData) return
     /** see https://source.datanerd.us/agents/rum-specs/blob/main/browser/Log for logging spec */
     const payload = {
       qs: {
@@ -117,20 +116,20 @@ export class Aggregate extends AggregateBase {
         },
         /** logs section contains individual unique log entries */
         logs: applyFnToProps(
-          this.bufferedLogs.buffer,
+          this.events.buffer,
           this.obfuscator.obfuscateString.bind(this.obfuscator), 'string'
         )
       }]
     }
 
-    if (options.retry) this.bufferedLogs.hold()
-    else this.bufferedLogs.clear()
+    if (options.retry) this.events.hold()
+    else this.events.clear()
 
     return payload
   }
 
   onHarvestFinished (result) {
-    if (result.retry) this.bufferedLogs.unhold()
-    else this.bufferedLogs.held.clear()
+    if (result.retry) this.events.unhold()
+    else this.events.held.clear()
   }
 }

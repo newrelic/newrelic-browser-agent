@@ -21,7 +21,7 @@ beforeEach(async () => {
   jest.spyOn(handleModule, 'handle')
   jest.spyOn(consoleModule, 'warn').mockImplementation(() => {})
 
-  const loggingInstrument = new Logging(agentSetup.agentIdentifier, agentSetup.aggregator)
+  const loggingInstrument = new Logging(agentSetup.agentIdentifier, { aggregator: agentSetup.aggregator, eventManager: agentSetup.eventManager })
   await new Promise(process.nextTick)
   loggingAggregate = loggingInstrument.featAggregate
 })
@@ -39,7 +39,8 @@ describe('class setup', () => {
       'ee',
       'featureName',
       'blocked',
-      'bufferedLogs',
+      'eventManager',
+      'events',
       'harvestTimeSeconds'
     ]))
   })
@@ -70,7 +71,7 @@ describe('payloads', () => {
       { myAttributes: 1 },
       'error'
     )
-    expect(loggingAggregate.bufferedLogs.buffer[0]).toEqual(expectedLog)
+    expect(loggingAggregate.events.buffer[0]).toEqual(expectedLog)
 
     expect(loggingAggregate.prepareHarvest()).toEqual({
       qs: { browser_monitoring_key: info.licenseKey },
@@ -95,7 +96,7 @@ describe('payloads', () => {
   test('prepares payload as expected', async () => {
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', { myAttributes: 1 }, 'error'])
 
-    expect(loggingAggregate.bufferedLogs.buffer[0]).toEqual(new Log(
+    expect(loggingAggregate.events.buffer[0]).toEqual(new Log(
       Math.floor(runtime.timeKeeper.correctAbsoluteTimestamp(
         runtime.timeKeeper.convertRelativeTimestamp(1234)
       )),
@@ -140,7 +141,7 @@ describe('payloads', () => {
       'error'
     )
 
-    const logs = loggingAggregate.bufferedLogs.buffer
+    const logs = loggingAggregate.events.buffer
 
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', [], 'ERROR'])
     expect(logs.pop()).toEqual(expected)
@@ -166,11 +167,11 @@ describe('payloads', () => {
     )
 
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', {}, 'ErRoR'])
-    expect(loggingAggregate.bufferedLogs.buffer[0]).toEqual(expected)
+    expect(loggingAggregate.events.buffer[0]).toEqual(expected)
   })
 
   test('should buffer logs with non-stringify-able message', async () => {
-    const logs = loggingAggregate.bufferedLogs.buffer
+    const logs = loggingAggregate.events.buffer
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, new Error('test'), {}, 'error'])
     expect(logs.pop().message).toEqual('Error: test')
 

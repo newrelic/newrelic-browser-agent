@@ -26,7 +26,6 @@ import { handle } from '../../../common/event-emitter/handle'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { deregisterDrain } from '../../../common/drain/drain'
 import { warn } from '../../../common/util/console'
-import { EventBuffer } from '../../utils/event-buffer'
 
 const {
   FEATURE_NAME, INTERACTION_EVENTS, MAX_TIMER_BUDGET, FN_START, FN_END, CB_START, INTERACTION_API, REMAINING,
@@ -34,8 +33,8 @@ const {
 } = CONSTANTS
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
-  constructor (agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator, FEATURE_NAME)
+  constructor (agentIdentifier, { aggregator, eventManager }) {
+    super(agentIdentifier, { aggregator, eventManager }, FEATURE_NAME)
 
     const agentRuntime = getRuntime(agentIdentifier)
     this.state = {
@@ -52,7 +51,7 @@ export class Aggregate extends AggregateBase {
       childTime: 0,
       depth: 0,
       harvestTimeSeconds: getConfigurationValue(agentIdentifier, 'spa.harvestTimeSeconds') || 10,
-      interactionsToHarvest: new EventBuffer(),
+      interactionsToHarvest: this.events,
       // The below feature flag is used to disable the SPA ajax fix for specific customers, see https://new-relic.atlassian.net/browse/NR-172169
       disableSpaFix: (getConfigurationValue(agentIdentifier, 'feature_flags') || []).indexOf('disable-spa-fix') > -1
     }

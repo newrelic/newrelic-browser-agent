@@ -8,7 +8,8 @@ const commonConfig = {
   setupFilesAfterEnv: ['<rootDir>/tools/jest/matchers.mjs', '<rootDir>/tools/jest/globals.mjs'],
   unmockedModulePathPatterns: [
     '@faker-js/faker'
-  ]
+  ],
+  roots: ['<rootDir>/tests']
 }
 
 module.exports = {

@@ -12,7 +12,7 @@ beforeAll(async () => {
 let metricsAggregate, metricName
 
 beforeEach(async () => {
-  const metricsInstrument = new Metrics(agentSetup.agentIdentifier, agentSetup.aggregator)
+  const metricsInstrument = new Metrics(agentSetup.agentIdentifier, { aggregator: agentSetup.aggregator, eventManager: agentSetup.eventManager })
   await new Promise(process.nextTick)
   metricsAggregate = metricsInstrument.featAggregate
 

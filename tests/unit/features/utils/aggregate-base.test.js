@@ -52,11 +52,15 @@ jest.mock('../../../../src/common/util/feature-flags', () => ({
 
 let agentIdentifier
 let aggregator
+let eventManager
 let featureName
 
 beforeEach(() => {
   agentIdentifier = faker.string.uuid()
   aggregator = {}
+  eventManager = {
+    createBuffer: jest.fn()
+  }
   featureName = faker.string.uuid()
 })
 
@@ -87,7 +91,7 @@ test('should merge info, jsattributes, and runtime objects', () => {
   }
   jest.mocked(getRuntime).mockReturnValue(mockRuntime)
 
-  new AggregateBase(agentIdentifier, aggregator, featureName)
+  new AggregateBase(agentIdentifier, { aggregator, eventManager }, featureName)
 
   expect(isValid).toHaveBeenCalledWith(agentIdentifier)
   expect(gosCDN).toHaveBeenCalledTimes(1)
@@ -108,7 +112,7 @@ test('should merge info, jsattributes, and runtime objects', () => {
 test('should only configure the agent once', () => {
   jest.mocked(isValid).mockReturnValue(true)
 
-  new AggregateBase(agentIdentifier, aggregator, featureName)
+  new AggregateBase(agentIdentifier, { aggregator, eventManager }, featureName)
 
   expect(isValid).toHaveBeenCalledWith(agentIdentifier)
   expect(gosCDN).not.toHaveBeenCalled()
@@ -119,7 +123,7 @@ test('should only configure the agent once', () => {
 
 test('should resolve waitForFlags correctly based on flags with real vals', async () => {
   const flagNames = [faker.string.uuid(), faker.string.uuid(), faker.string.uuid()]
-  const aggregateBase = new AggregateBase(agentIdentifier, aggregator, featureName)
+  const aggregateBase = new AggregateBase(agentIdentifier, { aggregator, eventManager }, featureName)
   const flagWait = aggregateBase.waitForFlags(flagNames)
   aggregateBase.ee.emit('rumresp', [{
     [flagNames[0]]: 0,
@@ -134,7 +138,7 @@ test('should resolve waitForFlags correctly based on flags with real vals', asyn
 
 test('should return empty array when flagNames is empty', async () => {
   const flagNames = [faker.string.uuid(), faker.string.uuid(), faker.string.uuid()]
-  const aggregateBase = new AggregateBase(agentIdentifier, aggregator, featureName)
+  const aggregateBase = new AggregateBase(agentIdentifier, { aggregator, eventManager }, featureName)
   const flagWait = aggregateBase.waitForFlags()
   aggregateBase.ee.emit('rumresp', [{
     [flagNames[0]]: 0,
@@ -148,7 +152,7 @@ test('should return empty array when flagNames is empty', async () => {
 })
 
 test('should return activatedFeatures values when available', async () => {
-  const aggregateBase = new AggregateBase('abcd', aggregator, featureName) // 'abcd' matches the af mock at the top of this file
+  const aggregateBase = new AggregateBase('abcd', { aggregator, eventManager }, featureName) // 'abcd' matches the af mock at the top of this file
   const flagWait = aggregateBase.waitForFlags()
   await expect(flagWait).resolves.toEqual([])
 })

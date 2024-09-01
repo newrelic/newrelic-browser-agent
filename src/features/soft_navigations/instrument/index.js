@@ -18,8 +18,8 @@ const UI_WAIT_INTERVAL = 1 / 10 * 1000 // assume 10 fps
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
-  constructor (agentIdentifier, aggregator, auto = true) {
-    super(agentIdentifier, aggregator, FEATURE_NAME, auto)
+  constructor (agentIdentifier, { aggregator, eventManager }, auto = true) {
+    super(agentIdentifier, { aggregator, eventManager }, FEATURE_NAME, auto)
     if (!isBrowserScope || !gosNREUMOriginals().o.MO) return // soft navigations is not supported outside web env or browsers without the mutation observer API
 
     const historyEE = wrapHistory(this.ee)

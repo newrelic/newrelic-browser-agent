@@ -37,7 +37,7 @@ let ajaxAggregate, context
 beforeEach(async () => {
   jest.spyOn(handleModule, 'handle')
 
-  const ajaxInstrument = new Ajax(agentSetup.agentIdentifier, agentSetup.aggregator)
+  const ajaxInstrument = new Ajax(agentSetup.agentIdentifier, { aggregator: agentSetup.aggregator, eventManager: agentSetup.eventManager })
   await new Promise(process.nextTick)
   ajaxAggregate = ajaxInstrument.featAggregate
   ajaxAggregate.drain()
@@ -62,7 +62,7 @@ test('on interactionDiscarded, saved (old) SPA events are put back in ajaxEvents
   ajaxAggregate.ee.emit('interactionDone', [interaction, false])
 
   expect(ajaxAggregate.spaAjaxEvents[interaction.id]).toBeUndefined() // no interactions in SPA under interaction 0
-  expect(ajaxAggregate.ajaxEvents.buffer.length).toEqual(1)
+  expect(ajaxAggregate.events.buffer.length).toEqual(1)
 })
 
 test('on returnAjax from soft nav, event is re-routed back into ajaxEvents', () => {
@@ -74,18 +74,18 @@ test('on returnAjax from soft nav, event is re-routed back into ajaxEvents', () 
   const event = jest.mocked(handleModule.handle).mock.lastCall[1][0]
   ajaxAggregate.ee.emit('returnAjax', [event], context)
 
-  expect(ajaxAggregate.ajaxEvents.buffer.length).toEqual(1)
-  expect(ajaxAggregate.ajaxEvents.buffer[0]).toEqual(expect.objectContaining({ startTime: 0, path: '/pathname' }))
+  expect(ajaxAggregate.events.buffer.length).toEqual(1)
+  expect(ajaxAggregate.events.buffer[0]).toEqual(expect.objectContaining({ startTime: 0, path: '/pathname' }))
 })
 
 describe('storeXhr', () => {
   test('for a plain ajax request buffers in ajaxEvents', () => {
     ajaxAggregate.ee.emit('xhr', ajaxArguments, context)
 
-    expect(ajaxAggregate.ajaxEvents.buffer.length).toEqual(1) // non-SPA ajax requests are buffered in ajaxEvents
+    expect(ajaxAggregate.events.buffer.length).toEqual(1) // non-SPA ajax requests are buffered in ajaxEvents
     expect(Object.keys(ajaxAggregate.spaAjaxEvents).length).toEqual(0)
 
-    const ajaxEvent = ajaxAggregate.ajaxEvents.buffer[0]
+    const ajaxEvent = ajaxAggregate.events.buffer[0]
     expect(ajaxEvent).toEqual(expect.objectContaining({ startTime: 0, path: '/pathname' }))
   })
 
@@ -97,7 +97,7 @@ describe('storeXhr', () => {
 
     const interactionAjaxEvents = ajaxAggregate.spaAjaxEvents[interaction.id]
     expect(interactionAjaxEvents.buffer.length).toEqual(1) // SPA ajax requests are buffered in spaAjaxEvents and under its interaction id
-    expect(ajaxAggregate.ajaxEvents.buffer.length).toEqual(0)
+    expect(ajaxAggregate.events.buffer.length).toEqual(0)
 
     const spaAjaxEvent = interactionAjaxEvents.buffer[0]
     expect(spaAjaxEvent).toEqual(expect.objectContaining({ startTime: 0, path: '/pathname' }))
@@ -110,7 +110,7 @@ describe('storeXhr', () => {
 
     ajaxAggregate.ee.emit('xhr', ajaxArguments, context)
 
-    expect(ajaxAggregate.ajaxEvents.buffer.length).toEqual(0)
+    expect(ajaxAggregate.events.buffer.length).toEqual(0)
     expect(Object.keys(ajaxAggregate.spaAjaxEvents).length).toEqual(0)
     expect(handleModule.handle).toHaveBeenLastCalledWith(
       'ajax',

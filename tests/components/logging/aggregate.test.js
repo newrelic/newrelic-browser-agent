@@ -21,7 +21,7 @@ beforeEach(async () => {
   jest.spyOn(handleModule, 'handle')
   jest.spyOn(consoleModule, 'warn').mockImplementation(() => {})
 
-  const loggingInstrument = new Logging(agentSetup.agentIdentifier, { aggregator: agentSetup.aggregator, eventManager: agentSetup.eventManager })
+  const loggingInstrument = new Logging(agentSetup.agentIdentifier, agentSetup.aggregator)
   await new Promise(process.nextTick)
   loggingAggregate = loggingInstrument.featAggregate
 })

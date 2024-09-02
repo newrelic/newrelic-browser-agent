@@ -26,7 +26,7 @@ beforeAll(() => {
 let softNavAggregate
 
 beforeEach(async () => {
-  const softNavInstrument = new SoftNav(agentSetup.agentIdentifier, { aggregator: agentSetup.aggregator, eventManager: agentSetup.eventManager })
+  const softNavInstrument = new SoftNav(agentSetup.agentIdentifier, agentSetup.aggregator)
   await new Promise(process.nextTick)
   softNavAggregate = softNavInstrument.featAggregate
 

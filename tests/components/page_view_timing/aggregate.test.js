@@ -50,7 +50,7 @@ let timingsAggregate
 beforeEach(async () => {
   jest.spyOn(pageVisibilityModule, 'subscribeToVisibilityChange')
 
-  const timingsInstrument = new Timings(agentSetup.agentIdentifier, { aggregator: agentSetup.aggregator, eventManager: agentSetup.eventManager })
+  const timingsInstrument = new Timings(agentSetup.agentIdentifier, agentSetup.aggregator)
   await new Promise(process.nextTick)
   timingsAggregate = timingsInstrument.featAggregate
   timingsAggregate.ee.emit('rumresp', {})

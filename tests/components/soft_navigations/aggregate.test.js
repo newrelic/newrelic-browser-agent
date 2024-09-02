@@ -21,7 +21,7 @@ let softNavAggregate
 beforeEach(async () => {
   jest.spyOn(ttfbModule.timeToFirstByte, 'subscribe')
 
-  const softNavInstrument = new SoftNav(agentSetup.agentIdentifier, { aggregator: agentSetup.aggregator, eventManager: agentSetup.eventManager })
+  const softNavInstrument = new SoftNav(agentSetup.agentIdentifier, agentSetup.aggregator)
   await new Promise(process.nextTick)
   softNavAggregate = softNavInstrument.featAggregate
 

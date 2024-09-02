@@ -30,8 +30,8 @@ export class Aggregate extends AggregateBase {
     this.addTiming(name, value, attrs)
   }
 
-  constructor (agentIdentifier, { aggregator, eventManager }) {
-    super(agentIdentifier, { aggregator, eventManager }, FEATURE_NAME)
+  constructor (agentIdentifier, aggregator) {
+    super(agentIdentifier, aggregator, FEATURE_NAME)
 
     this.curSessEndRecorded = false
 

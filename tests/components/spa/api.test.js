@@ -7,6 +7,7 @@ import { bundleId } from '../../../src/common/ids/bundle-id'
 import { now } from '../../../src/common/timing/now'
 import { gosNREUMOriginals } from '../../../src/common/window/nreum'
 import { EventManager } from '../../../src/features/utils/event-manager'
+import * as runtimeModule from '../../../src/common/config/runtime'
 
 jest.mock('../../../src/common/constants/runtime')
 jest.mock('../../../src/common/config/info', () => ({
@@ -18,9 +19,9 @@ jest.mock('../../../src/common/config/init', () => ({
   __esModule: true,
   getConfigurationValue: jest.fn()
 }))
-jest.mock('../../../src/common/config/runtime', () => ({
-  __esModule: true,
-  getRuntime: jest.fn().mockReturnValue({})
+jest.spyOn(runtimeModule, 'getRuntime').mockImplementation(() => ({
+  isolatedBacklog: true,
+  eventManager: new EventManager()
 }))
 
 let spaInstrument, spaAggregate, newrelic, mockCurrentInfo
@@ -32,8 +33,7 @@ beforeAll(async () => {
   getInfo.mockReturnValue(mockCurrentInfo)
 
   const aggregator = new Aggregator({ agentIdentifier, ee })
-  const eventManager = new EventManager()
-  spaInstrument = new Spa(agentIdentifier, { aggregator, eventManager })
+  spaInstrument = new Spa(agentIdentifier, aggregator)
   await expect(spaInstrument.onAggregateImported).resolves.toEqual(true)
   spaAggregate = spaInstrument.featAggregate
   spaAggregate.blocked = true

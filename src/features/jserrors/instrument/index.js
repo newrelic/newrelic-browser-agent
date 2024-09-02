@@ -17,8 +17,8 @@ export class Instrument extends InstrumentBase {
 
   #replayRunning = false
 
-  constructor (agentIdentifier, { aggregator, eventManager }, auto = true) {
-    super(agentIdentifier, { aggregator, eventManager }, FEATURE_NAME, auto)
+  constructor (agentIdentifier, aggregator, auto = true) {
+    super(agentIdentifier, aggregator, FEATURE_NAME, auto)
 
     try {
       // this try-catch can be removed when IE11 is completely unsupported & gone

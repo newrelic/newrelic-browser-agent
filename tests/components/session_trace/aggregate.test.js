@@ -11,7 +11,7 @@ beforeAll(() => {
 let sessionTraceAggregate
 
 beforeEach(async () => {
-  const sessionTraceInstrument = new SessionTrace(agentSetup.agentIdentifier, { aggregator: agentSetup.aggregator, eventManager: agentSetup.eventManager })
+  const sessionTraceInstrument = new SessionTrace(agentSetup.agentIdentifier, agentSetup.aggregator)
   await new Promise(process.nextTick)
   sessionTraceAggregate = sessionTraceInstrument.featAggregate
 

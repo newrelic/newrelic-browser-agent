@@ -16,7 +16,7 @@ let loggingInstrument
 beforeEach(async () => {
   jest.spyOn(loggingUtilsModule, 'bufferLog')
 
-  loggingInstrument = new Logging(agentSetup.agentIdentifier, { aggregator: agentSetup.aggregator, eventManager: agentSetup.eventManager })
+  loggingInstrument = new Logging(agentSetup.agentIdentifier, agentSetup.aggregator)
 })
 
 test('should subscribe to wrap-logger events and buffer them', async () => {

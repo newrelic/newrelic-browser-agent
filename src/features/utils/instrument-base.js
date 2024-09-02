@@ -29,8 +29,8 @@ export class InstrumentBase extends FeatureBase {
    *     of its pooled instrumentation data handled by the agent's centralized drain functionality, rather than draining
    *     immediately. Primarily useful for fine-grained control in tests.
    */
-  constructor (agentIdentifier, { aggregator, eventManager }, featureName, auto = true) {
-    super(agentIdentifier, { aggregator, eventManager }, featureName)
+  constructor (agentIdentifier, aggregator, featureName, auto = true) {
+    super(agentIdentifier, aggregator, featureName)
     this.auto = auto
 
     /** @type {Function | undefined} This should be set by any derived Instrument class if it has things to do when feature fails or is killed. */
@@ -103,7 +103,7 @@ export class InstrumentBase extends FeatureBase {
         }
         const { lazyFeatureLoader } = await import(/* webpackChunkName: "lazy-feature-loader" */ './lazy-feature-loader')
         const { Aggregate } = await lazyFeatureLoader(this.featureName, 'aggregate')
-        this.featAggregate = new Aggregate(this.agentIdentifier, { aggregator: this.aggregator, eventManager: this.eventManager }, argsObjFromInstrument)
+        this.featAggregate = new Aggregate(this.agentIdentifier, this.aggregator, argsObjFromInstrument)
         loadedSuccessfully(true)
       } catch (e) {
         warn(34, e)

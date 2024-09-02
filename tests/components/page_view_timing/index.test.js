@@ -4,7 +4,6 @@ import { setConfiguration } from '../../../src/common/config/init'
 import { setInfo } from '../../../src/common/config/info'
 import { setRuntime } from '../../../src/common/config/runtime'
 import { VITAL_NAMES } from '../../../src/common/vitals/constants'
-import { EventManager } from '../../../src/features/utils/event-manager'
 
 // Note: these callbacks fire right away unlike the real web-vitals API which are async-on-trigger
 jest.mock('web-vitals/attribution', () => ({
@@ -58,7 +57,7 @@ describe('pvt aggregate tests', () => {
 
     setInfo(agentId, { licenseKey: 'licenseKey', applicationID: 'applicationID' })
     setConfiguration(agentId, {})
-    setRuntime(agentId, {})
+    setRuntime(agentId, { })
     const { Aggregate } = await import('../../../src/features/page_view_timing/aggregate')
 
     global.navigator.connection = {
@@ -67,7 +66,7 @@ describe('pvt aggregate tests', () => {
       rtt: 270,
       downlink: 700
     }
-    pvtAgg = new Aggregate(agentId, { aggregator: new Aggregator({ agentIdentifier: agentId, ee }), eventManager: new EventManager() })
+    pvtAgg = new Aggregate(agentId, new Aggregator({ agentIdentifier: agentId, ee }))
     await pvtAgg.waitForFlags(([]))
     pvtAgg.prepareHarvest = jest.fn(() => ({}))
   })

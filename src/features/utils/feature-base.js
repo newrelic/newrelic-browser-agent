@@ -1,7 +1,7 @@
 import { ee } from '../../common/event-emitter/contextual-ee'
 
 export class FeatureBase {
-  constructor (agentIdentifier, { aggregator, eventManager }, featureName) {
+  constructor (agentIdentifier, aggregator, featureName) {
     /** @type {string} */
     this.agentIdentifier = agentIdentifier
     /** @type {import('../../common/aggregate/aggregator').Aggregator} */
@@ -16,8 +16,5 @@ export class FeatureBase {
      * @type {boolean}
      */
     this.blocked = false
-    /** EventBuffer */
-    this.eventManager = eventManager
-    this.events = this.eventManager.createBuffer(this.featureName)
   }
 }

@@ -4,6 +4,7 @@ import { Spa } from '../../../src/features/spa'
 import { registerHandler } from '../../../src/common/event-emitter/register-handler'
 import { drain } from '../../../src/common/drain/drain'
 import { EventManager } from '../../../src/features/utils/event-manager'
+import * as runtimeModule from '../../../src/common/config/runtime'
 
 jest.mock('../../../src/common/constants/runtime')
 jest.mock('../../../src/common/config/info', () => ({
@@ -15,9 +16,9 @@ jest.mock('../../../src/common/config/init', () => ({
   __esModule: true,
   getConfigurationValue: jest.fn()
 }))
-jest.mock('../../../src/common/config/runtime', () => ({
-  __esModule: true,
-  getRuntime: jest.fn().mockReturnValue({})
+
+jest.spyOn(runtimeModule, 'getRuntime').mockImplementation(() => ({
+  eventManager: new EventManager()
 }))
 
 let spaInstrument
@@ -25,8 +26,7 @@ const agentIdentifier = 'abcdefg'
 
 beforeAll(async () => {
   const aggregator = new Aggregator({ agentIdentifier, ee })
-  const eventManager = new EventManager()
-  spaInstrument = new Spa(agentIdentifier, { aggregator, eventManager }, false)
+  spaInstrument = new Spa(agentIdentifier, aggregator, false)
 })
 
 describe('SPA instrument', () => {

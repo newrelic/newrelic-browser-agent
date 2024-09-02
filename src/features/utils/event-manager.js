@@ -13,7 +13,7 @@ export class EventManager {
   }
 
   createBuffer (feature, maxPayloadSize) {
-    this.buffers[feature] ??= new EventBuffer(maxPayloadSize)
+    this.#buffers[feature] ??= new EventBuffer(maxPayloadSize)
     return this.#buffers[feature]
   }
 }

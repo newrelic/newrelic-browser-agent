@@ -29,8 +29,8 @@ var origXHR = gosNREUMOriginals().o.XHR
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
-  constructor (agentIdentifier, { aggregator, eventManager }, auto = true) {
-    super(agentIdentifier, { aggregator, eventManager }, FEATURE_NAME, auto)
+  constructor (agentIdentifier, aggregator, auto = true) {
+    super(agentIdentifier, aggregator, FEATURE_NAME, auto)
 
     this.dt = new DT(agentIdentifier)
 

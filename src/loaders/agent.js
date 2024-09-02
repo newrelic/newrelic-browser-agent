@@ -14,7 +14,6 @@ import { Aggregator } from '../common/aggregate/aggregator'
 import { gosNREUM, setNREUMInitializedAgent } from '../common/window/nreum'
 import { warn } from '../common/util/console'
 import { globalScope } from '../common/constants/runtime'
-import { EventManager } from '../features/utils/event-manager'
 
 /**
  * A flexible class that may be used to compose an agent from a select subset of feature modules. In applications
@@ -36,7 +35,6 @@ export class Agent extends AgentBase {
     }
 
     this.sharedAggregator = new Aggregator({ agentIdentifier: this.agentIdentifier })
-    this.eventManager = new EventManager()
     this.features = {}
     setNREUMInitializedAgent(this.agentIdentifier, this) // append this agent onto the global NREUM.initializedAgents
 
@@ -82,7 +80,7 @@ export class Agent extends AgentBase {
           })
         }
 
-        this.features[InstrumentCtor.featureName] = new InstrumentCtor(this.agentIdentifier, { aggregator: this.sharedAggregator, eventManager: this.eventManager })
+        this.features[InstrumentCtor.featureName] = new InstrumentCtor(this.agentIdentifier, this.sharedAggregator)
       })
     } catch (err) {
       warn(22, err)

@@ -20,7 +20,7 @@ beforeAll(() => {
 
 beforeEach(async () => {
   jest.spyOn(handleModule, 'handle')
-  new SoftNav(agentSetup.agentIdentifier, { aggregator: agentSetup.aggregator, eventManager: agentSetup.eventManager })
+  new SoftNav(agentSetup.agentIdentifier, agentSetup.aggregator)
 })
 
 afterEach(() => {

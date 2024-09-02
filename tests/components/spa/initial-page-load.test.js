@@ -3,6 +3,7 @@ import { Aggregator } from '../../../src/common/aggregate/aggregator'
 import { ee } from '../../../src/common/event-emitter/contextual-ee'
 import { Spa } from '../../../src/features/spa'
 import { EventManager } from '../../../src/features/utils/event-manager'
+import * as runtimeModule from '../../../src/common/config/runtime'
 
 jest.mock('../../../src/common/constants/runtime')
 jest.mock('../../../src/common/config/info', () => ({
@@ -14,9 +15,8 @@ jest.mock('../../../src/common/config/init', () => ({
   __esModule: true,
   getConfigurationValue: jest.fn()
 }))
-jest.mock('../../../src/common/config/runtime', () => ({
-  __esModule: true,
-  getRuntime: jest.fn().mockReturnValue({})
+jest.spyOn(runtimeModule, 'getRuntime').mockImplementation(() => ({
+  eventManager: new EventManager()
 }))
 
 let spaInstrument, spaAggregate, newrelic
@@ -24,8 +24,7 @@ const agentIdentifier = 'abcdefg'
 
 beforeAll(async () => {
   const aggregator = new Aggregator({ agentIdentifier, ee })
-  const eventManager = new EventManager()
-  spaInstrument = new Spa(agentIdentifier, { aggregator, eventManager })
+  spaInstrument = new Spa(agentIdentifier, aggregator)
   await expect(spaInstrument.onAggregateImported).resolves.toEqual(true)
   spaAggregate = spaInstrument.featAggregate
   spaAggregate.blocked = true

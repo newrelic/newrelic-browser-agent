@@ -37,7 +37,7 @@ let ajaxAggregate, context
 beforeEach(async () => {
   jest.spyOn(handleModule, 'handle')
 
-  const ajaxInstrument = new Ajax(agentSetup.agentIdentifier, { aggregator: agentSetup.aggregator, eventManager: agentSetup.eventManager })
+  const ajaxInstrument = new Ajax(agentSetup.agentIdentifier, agentSetup.aggregator)
   await new Promise(process.nextTick)
   ajaxAggregate = ajaxInstrument.featAggregate
   ajaxAggregate.drain()

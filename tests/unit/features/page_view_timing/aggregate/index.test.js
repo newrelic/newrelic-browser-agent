@@ -4,6 +4,8 @@ import { Aggregator } from '../../../../../src/common/aggregate/aggregator'
 import { Aggregate } from '../../../../../src/features/page_view_timing/aggregate'
 import { getInfo } from '../../../../../src/common/config/info'
 import { EventManager } from '../../../../../src/features/utils/event-manager'
+import * as runtimeModule from '../../../../../src/common/config/runtime'
+import { Obfuscator } from '../../../../../src/common/util/obfuscate'
 
 jest.mock('../../../../../src/common/config/info', () => ({
   __esModule: true,
@@ -14,12 +16,13 @@ jest.mock('../../../../../src/common/config/init', () => ({
   __esModule: true,
   getConfigurationValue: jest.fn().mockReturnValue(undefined)
 }))
-jest.mock('../../../../../src/common/config/runtime', () => ({
-  __esModule: true,
-  getRuntime: jest.fn().mockReturnValue({})
+
+jest.spyOn(runtimeModule, 'getRuntime').mockImplementation(() => ({
+  eventManager: new EventManager(),
+  obfuscator: new Obfuscator('abcd')
 }))
 
-const pvtAgg = new Aggregate('abcd', { aggregator: new Aggregator({ agentIdentifier: 'abcd', ee }), eventManager: new EventManager() })
+const pvtAgg = new Aggregate('abcd', new Aggregator({ agentIdentifier: 'abcd', ee }))
 
 describe('PVT aggregate', () => {
   test('serializer default attributes', () => {

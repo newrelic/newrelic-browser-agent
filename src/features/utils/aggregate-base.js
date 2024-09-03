@@ -6,6 +6,7 @@ import { gosCDN } from '../../common/window/nreum'
 import { deregisterDrain, drain } from '../../common/drain/drain'
 import { activatedFeatures } from '../../common/util/feature-flags'
 import { Obfuscator } from '../../common/util/obfuscate'
+import { EventBuffer } from './event-buffer'
 
 export class AggregateBase extends FeatureBase {
   constructor (...args) {
@@ -14,8 +15,7 @@ export class AggregateBase extends FeatureBase {
     const agentRuntime = getRuntime(this.agentIdentifier)
     this.obfuscator = agentRuntime.obfuscator
 
-    this.eventManager = agentRuntime.eventManager
-    this.events = this.eventManager.createBuffer(this.featureName)
+    this.events = agentRuntime.eventManager[this.featureName] ??= new EventBuffer()
   }
 
   /**

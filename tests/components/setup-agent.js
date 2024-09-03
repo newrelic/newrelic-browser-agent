@@ -6,6 +6,7 @@ import { Aggregator } from '../../src/common/aggregate/aggregator'
 import { TimeKeeper } from '../../src/common/timing/time-keeper'
 import { getRuntime } from '../../src/common/config/runtime'
 import { setupAgentSession } from '../../src/features/utils/agent-session'
+import { EventBuffer } from '../../src/features/utils/event-buffer'
 
 /**
  * Sets up a new agent for component testing. This should be called only
@@ -58,7 +59,7 @@ export function setupAgent ({ agentOverrides = {}, info = {}, init = {}, loaderC
     }, 450, 600)
   }
 
-  return { agentIdentifier, aggregator: fakeAgent.sharedAggregator, eventManager: fakeAgent.eventManager }
+  return { agentIdentifier, aggregator: fakeAgent.sharedAggregator }
 }
 
 export function resetAgent (agentIdentifier) {
@@ -85,7 +86,7 @@ export function resetAggregator (agentIdentifier) {
 
 export function resetEventManager (agentIdentifier) {
   const agent = getNREUMInitializedAgent(agentIdentifier)
-  agent.runtime.eventManager.reset()
+  for (const featureName in agent.runtime.eventManager.buffers) agent.runtime.eventManager.buffers[featureName] = new EventBuffer()
 }
 
 export function resetSession (agentIdentifier) {

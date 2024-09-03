@@ -14,8 +14,7 @@ export class AggregateBase extends FeatureBase {
     this.checkConfiguration()
     const agentRuntime = getRuntime(this.agentIdentifier)
     this.obfuscator = agentRuntime.obfuscator
-
-    this.events = agentRuntime.eventManager[this.featureName] ??= new EventBuffer()
+    this.events = agentRuntime.eventManager.buffers[this.featureName] ??= new EventBuffer()
   }
 
   /**

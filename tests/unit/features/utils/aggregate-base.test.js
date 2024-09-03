@@ -4,7 +4,6 @@ import { getInfo, isValid } from '../../../../src/common/config/info'
 import { getRuntime } from '../../../../src/common/config/runtime'
 import { configure } from '../../../../src/loaders/configure/configure'
 import { gosCDN } from '../../../../src/common/window/nreum'
-import { EventManager } from '../../../../src/features/utils/event-manager'
 import * as runtimeModule from '../../../../src/common/config/runtime'
 
 jest.enableAutomock()
@@ -22,9 +21,6 @@ jest.mock('../../../../src/common/config/info', () => ({
   isValid: jest.fn().mockReturnValue(false)
 }))
 
-jest.spyOn(runtimeModule, 'getRuntime').mockImplementation(() => ({
-  eventManager: new EventManager()
-}))
 jest.mock('../../../../src/loaders/configure/configure', () => ({
   __esModule: true,
   configure: jest.fn()
@@ -57,6 +53,9 @@ let aggregator
 let featureName
 
 beforeEach(() => {
+  jest.spyOn(runtimeModule, 'getRuntime').mockImplementation(() => ({
+    eventManager: { buffers: [] }
+  }))
   agentIdentifier = faker.string.uuid()
   aggregator = {}
   featureName = faker.string.uuid()
@@ -84,12 +83,6 @@ test('should merge info, jsattributes, and runtime objects', () => {
   }
   jest.mocked(getInfo).mockReturnValue(mockInfo2)
 
-  const mockRuntime = {
-    [faker.string.uuid()]: faker.lorem.sentence(),
-    eventManager: new EventManager()
-  }
-  jest.mocked(getRuntime).mockReturnValue(mockRuntime)
-
   new AggregateBase(agentIdentifier, aggregator, featureName)
 
   expect(isValid).toHaveBeenCalledWith(agentIdentifier)
@@ -104,7 +97,11 @@ test('should merge info, jsattributes, and runtime objects', () => {
         ...mockInfo2.jsAttributes
       }
     },
-    runtime: mockRuntime
+    runtime: {
+      eventManager: {
+        buffers: []
+      }
+    }
   })
 })
 

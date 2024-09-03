@@ -39,7 +39,6 @@ describe('class setup', () => {
       'ee',
       'featureName',
       'blocked',
-      'eventManager',
       'events',
       'harvestTimeSeconds'
     ]))

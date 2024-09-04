@@ -5,6 +5,95 @@
       "changes": [
         {
           "type": "feat",
+          "sha": "d070a4315df35ace82e20b8b2c69044bf8504c92",
+          "message": "Standardize Feature Buffering Behavior",
+          "issues": [
+            "1155"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "7b4ab87ae28450cc97f6a84f3176e0c9f8698d76",
+          "message": "Add WebSocket wrapper and supportability metrics",
+          "issues": [
+            "1159"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "52bb08880215c40abf080a2bf1c80a29c7ad3324",
+          "message": "fix duplicative log payloads on unload",
+          "issues": [
+            "1166"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "187d31fe0fd95e75907742a7c49779683a6b040c",
+          "message": "Ensure drain target is a valid event emitter before subscribing",
+          "issues": [
+            "1167"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "84bd29981675660d8f47a0f49235005e7be11947",
+          "message": "Configure Session Replay to wait for DOMContentLoaded",
+          "issues": [
+            "1164"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "2e29a6e3c9d7a6a099b73aff59682a1e38008072",
+          "message": "removing internal barrel exports",
+          "issues": [
+            "1158"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "65d9d11172df4a3abe750c3d110b53ad65ae4319",
+          "message": "add payload size evaluation to generic events feature",
+          "issues": [
+            "1152"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "378b1fb49ca5732e0c1b704920143b966102cfb6",
+          "message": "relative timestamps in session trace",
+          "issues": [
+            "1142"
+          ]
+        },
+        {
+          "type": "security",
+          "sha": "fbc6f9d31a33515e05d70e190c9c8da198fa4415",
+          "message": "apply obfuscation rules to session trace",
+          "issues": [
+            "1149"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "bf2e98056c2ad214421918fb4938a08b6213590e",
+          "message": "Updated Logging API function",
+          "issues": [
+            "1147"
+          ]
+        }
+      ],
+      "version": "1.265.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "2a276212-2e3e-4434-b211-a6f78c092373",
+      "createTime": "2024-08-30T23:16:16.885Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
           "sha": "0d52acf9eaa9a2c170459f03e9edad25375f4c1c",
           "message": "Report Page Actions with Generic Events Feature",
           "issues": [
@@ -1772,5 +1861,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2024-08-06T16:11:11.937Z"
+  "updateTime": "2024-08-30T23:16:16.885Z"
 }

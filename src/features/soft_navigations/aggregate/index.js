@@ -15,8 +15,8 @@ import { Interaction } from './interaction'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
-  constructor (agentIdentifier, aggregator, { domObserver }) {
-    super(agentIdentifier, aggregator, FEATURE_NAME)
+  constructor (agentIdentifier, { domObserver }) {
+    super(agentIdentifier, FEATURE_NAME)
 
     const harvestTimeSeconds = getConfigurationValue(agentIdentifier, 'soft_navigations.harvestTimeSeconds') || 10
     this.domObserver = domObserver

@@ -17,16 +17,14 @@ jest.mock('../../../src/common/config/init', () => ({
   getConfigurationValue: jest.fn()
 }))
 
-jest.spyOn(runtimeModule, 'getRuntime').mockImplementation(() => ({
-  eventManager: new EventManager()
-}))
-
 let spaInstrument
 const agentIdentifier = 'abcdefg'
 
 beforeAll(async () => {
-  const aggregator = new Aggregator({ agentIdentifier, ee })
-  spaInstrument = new Spa(agentIdentifier, aggregator, false)
+  jest.spyOn(runtimeModule, 'getRuntime').mockImplementation(() => ({
+    eventManager: new EventManager()
+  }))
+  spaInstrument = new Spa(agentIdentifier, false)
 })
 
 describe('SPA instrument', () => {

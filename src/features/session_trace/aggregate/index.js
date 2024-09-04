@@ -18,8 +18,8 @@ const QUERY_PARAM_PADDING = 5000
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
 
-  constructor (agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator, FEATURE_NAME)
+  constructor (agentIdentifier) {
+    super(agentIdentifier, FEATURE_NAME)
     this.agentRuntime = getRuntime(agentIdentifier)
     this.agentInfo = getInfo(agentIdentifier)
 

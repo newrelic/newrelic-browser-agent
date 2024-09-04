@@ -16,8 +16,8 @@ export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
 
   #mode
-  constructor (agentIdentifier, aggregator, auto = true) {
-    super(agentIdentifier, aggregator, FEATURE_NAME, auto)
+  constructor (agentIdentifier, auto = true) {
+    super(agentIdentifier, FEATURE_NAME, auto)
     let session
     this.replayRunning = false
     try {

@@ -5,6 +5,8 @@ import { getRuntime } from '../../../../src/common/config/runtime'
 import { configure } from '../../../../src/loaders/configure/configure'
 import { gosCDN } from '../../../../src/common/window/nreum'
 import * as runtimeModule from '../../../../src/common/config/runtime'
+import { Obfuscator } from '../../../../src/common/util/obfuscate'
+import { Aggregator } from '../../../../src/common/aggregate/aggregator'
 
 jest.enableAutomock()
 jest.unmock('../../../../src/features/utils/aggregate-base')
@@ -49,15 +51,19 @@ jest.mock('../../../../src/common/util/feature-flags', () => ({
 }))
 
 let agentIdentifier
-let aggregator
 let featureName
+let aggregator
+let obfuscator
 
 beforeEach(() => {
+  aggregator = new Aggregator({ agentIdentifier })
+  obfuscator = new Obfuscator({ agentIdentifier: 'abcd' })
   jest.spyOn(runtimeModule, 'getRuntime').mockImplementation(() => ({
-    eventManager: { buffers: [] }
+    eventManager: { buffers: [] },
+    obfuscator,
+    aggregator
   }))
   agentIdentifier = faker.string.uuid()
-  aggregator = {}
   featureName = faker.string.uuid()
 })
 
@@ -83,7 +89,7 @@ test('should merge info, jsattributes, and runtime objects', () => {
   }
   jest.mocked(getInfo).mockReturnValue(mockInfo2)
 
-  new AggregateBase(agentIdentifier, aggregator, featureName)
+  new AggregateBase(agentIdentifier, featureName)
 
   expect(isValid).toHaveBeenCalledWith(agentIdentifier)
   expect(gosCDN).toHaveBeenCalledTimes(1)
@@ -98,6 +104,8 @@ test('should merge info, jsattributes, and runtime objects', () => {
       }
     },
     runtime: {
+      aggregator,
+      obfuscator,
       eventManager: {
         buffers: []
       }
@@ -108,7 +116,7 @@ test('should merge info, jsattributes, and runtime objects', () => {
 test('should only configure the agent once', () => {
   jest.mocked(isValid).mockReturnValue(true)
 
-  new AggregateBase(agentIdentifier, aggregator, featureName)
+  new AggregateBase(agentIdentifier, featureName)
 
   expect(isValid).toHaveBeenCalledWith(agentIdentifier)
   expect(gosCDN).not.toHaveBeenCalled()
@@ -119,7 +127,7 @@ test('should only configure the agent once', () => {
 
 test('should resolve waitForFlags correctly based on flags with real vals', async () => {
   const flagNames = [faker.string.uuid(), faker.string.uuid(), faker.string.uuid()]
-  const aggregateBase = new AggregateBase(agentIdentifier, aggregator, featureName)
+  const aggregateBase = new AggregateBase(agentIdentifier, featureName)
   const flagWait = aggregateBase.waitForFlags(flagNames)
   aggregateBase.ee.emit('rumresp', [{
     [flagNames[0]]: 0,
@@ -134,7 +142,7 @@ test('should resolve waitForFlags correctly based on flags with real vals', asyn
 
 test('should return empty array when flagNames is empty', async () => {
   const flagNames = [faker.string.uuid(), faker.string.uuid(), faker.string.uuid()]
-  const aggregateBase = new AggregateBase(agentIdentifier, aggregator, featureName)
+  const aggregateBase = new AggregateBase(agentIdentifier, featureName)
   const flagWait = aggregateBase.waitForFlags()
   aggregateBase.ee.emit('rumresp', [{
     [flagNames[0]]: 0,
@@ -148,7 +156,7 @@ test('should return empty array when flagNames is empty', async () => {
 })
 
 test('should return activatedFeatures values when available', async () => {
-  const aggregateBase = new AggregateBase('abcd', aggregator, featureName) // 'abcd' matches the af mock at the top of this file
+  const aggregateBase = new AggregateBase('abcd', featureName) // 'abcd' matches the af mock at the top of this file
   const flagWait = aggregateBase.waitForFlags()
   await expect(flagWait).resolves.toEqual([])
 })

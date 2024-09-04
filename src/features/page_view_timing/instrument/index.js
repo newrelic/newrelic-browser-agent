@@ -12,8 +12,8 @@ import { now } from '../../../common/timing/now'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
-  constructor (agentIdentifier, aggregator, auto = true) {
-    super(agentIdentifier, aggregator, FEATURE_NAME, auto)
+  constructor (agentIdentifier, auto = true) {
+    super(agentIdentifier, FEATURE_NAME, auto)
     if (!isBrowserScope) return // CWV is irrelevant outside web context
 
     // While we try to replicate web-vital's visibilitywatcher logic in an effort to defer that library to post-pageload, this isn't perfect and doesn't consider prerendering.

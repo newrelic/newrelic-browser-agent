@@ -33,7 +33,8 @@ const model = {
   denyList: undefined,
   timeKeeper: undefined,
   obfuscator: undefined,
-  eventManager: new EventManager()
+  eventManager: new EventManager(),
+  aggregator: undefined // set at configure() time
 }
 
 const _cache = {}

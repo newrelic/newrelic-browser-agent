@@ -18,11 +18,12 @@ jest.mock('../../../../../src/common/config/init', () => ({
 }))
 
 jest.spyOn(runtimeModule, 'getRuntime').mockImplementation(() => ({
-  eventManager: new EventManager(),
-  obfuscator: new Obfuscator('abcd')
+  eventManager: { buffers: [] },
+  obfuscator: new Obfuscator({ agentIdentifier: 'abcd' }),
+  aggregator: new Aggregator({ agentIdentifier: 'abcd' })
 }))
 
-const pvtAgg = new Aggregate('abcd', new Aggregator({ agentIdentifier: 'abcd', ee }))
+const pvtAgg = new Aggregate('abcd')
 
 describe('PVT aggregate', () => {
   test('serializer default attributes', () => {

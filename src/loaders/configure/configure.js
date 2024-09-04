@@ -8,6 +8,7 @@ import { activatedFeatures } from '../../common/util/feature-flags'
 import { isWorkerScope } from '../../common/constants/runtime'
 import { redefinePublicPath } from './public-path'
 import { ee } from '../../common/event-emitter/contextual-ee'
+import { Aggregator } from '../../common/aggregate/aggregator'
 
 let alreadySetOnce = false // the configure() function can run multiple times in agent lifecycle
 
@@ -58,6 +59,7 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
     ...(updatedInit.ajax.block_internal ? internalTrafficList : [])
   ]
   runtime.ptid = agent.agentIdentifier
+  runtime.aggregator = new Aggregator({ agentIdentifier: agent.agentIdentifier })
   setRuntime(agent.agentIdentifier, runtime)
 
   agent.ee = ee.get(agent.agentIdentifier)

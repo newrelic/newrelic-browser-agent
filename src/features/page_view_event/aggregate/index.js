@@ -18,8 +18,8 @@ import { applyFnToProps } from '../../../common/util/traverse'
 
 export class Aggregate extends AggregateBase {
   static featureName = CONSTANTS.FEATURE_NAME
-  constructor (agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator, CONSTANTS.FEATURE_NAME)
+  constructor (agentIdentifier) {
+    super(agentIdentifier, CONSTANTS.FEATURE_NAME)
 
     this.timeToFirstByte = 0
     this.firstByteToWindowLoad = 0 // our "frontend" duration

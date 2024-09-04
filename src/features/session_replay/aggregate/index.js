@@ -34,8 +34,8 @@ export class Aggregate extends AggregateBase {
   mode = MODE.OFF
 
   // pass the recorder into the aggregator
-  constructor (agentIdentifier, aggregator, args) {
-    super(agentIdentifier, aggregator, FEATURE_NAME)
+  constructor (agentIdentifier, args) {
+    super(agentIdentifier, FEATURE_NAME)
     /** The interval to harvest at.  This gets overridden if the size of the payload exceeds certain thresholds */
     this.harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'session_replay.harvestTimeSeconds') || 60
     /** Set once the recorder has fully initialized after flag checks and sampling */

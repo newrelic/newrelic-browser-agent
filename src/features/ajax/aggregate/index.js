@@ -25,8 +25,8 @@ export class Aggregate extends AggregateBase {
   #agentRuntime
   #agentInit
 
-  constructor (agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator, FEATURE_NAME)
+  constructor (agentIdentifier) {
+    super(agentIdentifier, FEATURE_NAME)
 
     this.#agentInfo = getInfo(agentIdentifier)
     this.#agentRuntime = getRuntime(agentIdentifier)

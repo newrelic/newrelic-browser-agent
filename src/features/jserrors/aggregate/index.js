@@ -31,8 +31,8 @@ import { applyFnToProps } from '../../../common/util/traverse'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
-  constructor (agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator, FEATURE_NAME)
+  constructor (agentIdentifier) {
+    super(agentIdentifier, FEATURE_NAME)
 
     this.stackReported = {}
     this.observedAt = {}

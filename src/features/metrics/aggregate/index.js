@@ -15,8 +15,10 @@ import { handleWebsocketEvents } from './websocket-detection'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
-  constructor (agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator, FEATURE_NAME)
+  constructor (agentIdentifier) {
+    super(agentIdentifier, FEATURE_NAME)
+
+    console.log(this.aggregator)
 
     this.waitForFlags(['err']).then(([errFlag]) => {
       if (errFlag) {

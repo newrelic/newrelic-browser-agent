@@ -18,8 +18,8 @@ export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   #agentRuntime
   #agentInfo
-  constructor (agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator, FEATURE_NAME)
+  constructor (agentIdentifier) {
+    super(agentIdentifier, FEATURE_NAME)
 
     /** held logs before sending */
     // this.events = new EventBuffer()

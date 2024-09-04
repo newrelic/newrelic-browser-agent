@@ -3,7 +3,6 @@ import { Instrument as PVE } from '../features/page_view_event/instrument'
 import { getEnabledFeatures } from './features/enabled-features'
 import { configure } from './configure/configure'
 // core files
-import { Aggregator } from '../common/aggregate/aggregator'
 import { setNREUMInitializedAgent } from '../common/window/nreum'
 import { getInfo } from '../common/config/info'
 import { getConfiguration, getConfigurationValue } from '../common/config/init'
@@ -33,7 +32,6 @@ export class MicroAgent extends AgentBase {
   constructor (options, agentIdentifier) {
     super(agentIdentifier)
 
-    this.sharedAggregator = new Aggregator({ agentIdentifier: this.agentIdentifier })
     this.features = {}
     setNREUMInitializedAgent(this.agentIdentifier, this)
 

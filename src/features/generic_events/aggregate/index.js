@@ -22,8 +22,8 @@ import { IDEAL_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
 export class Aggregate extends AggregateBase {
   #agentRuntime
   static featureName = FEATURE_NAME
-  constructor (agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator, FEATURE_NAME)
+  constructor (agentIdentifier) {
+    super(agentIdentifier, FEATURE_NAME)
 
     this.eventsPerHarvest = 1000
     this.harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'generic_events.harvestTimeSeconds')

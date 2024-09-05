@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "Thu Aug 29 2024 11:03:24 GMT-0500 (Central Daylight Time)",
+  "lastUpdated": "Wed Sep 04 2024 17:40:41 GMT+0000 (Coordinated Universal Time)",
   "projectName": "New Relic Browser Agent",
   "projectUrl": "https://github.com/newrelic/newrelic-browser-agent",
   "includeOptDeps": true,
@@ -186,6 +186,19 @@
       "licenseUrl": "https://github.com/fastify/fastify-static/blob/v6.12.0/LICENSE",
       "licenseTextSource": "file",
       "publisher": "Tommaso Allevi - @allevo"
+    },
+    "@fastify/websocket@10.0.1": {
+      "name": "@fastify/websocket",
+      "version": "10.0.1",
+      "range": "^10.0.1",
+      "licenses": "MIT",
+      "repoUrl": "https://github.com/fastify/fastify-websocket",
+      "versionedRepoUrl": "https://github.com/fastify/fastify-websocket/tree/v10.0.1",
+      "licenseFile": "node_modules/@fastify/websocket/LICENSE",
+      "licenseUrl": "https://github.com/fastify/fastify-websocket/blob/v10.0.1/LICENSE",
+      "licenseTextSource": "file",
+      "publisher": "Matteo Collina",
+      "email": "hello@matteocollina.com"
     },
     "@newrelic/newrelic-oss-cli@0.1.2": {
       "name": "@newrelic/newrelic-oss-cli",

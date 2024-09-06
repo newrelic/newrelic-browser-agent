@@ -4,6 +4,23 @@
     {
       "changes": [
         {
+          "type": "fix",
+          "sha": "5f8a0c42fbade8f6f81471439ecc8999b1556290",
+          "message": "Disable websocket wrapping",
+          "issues": [
+            "1176"
+          ]
+        }
+      ],
+      "version": "1.265.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "cf8e1b91-1d49-44c6-a338-4c431e4a60c7",
+      "createTime": "2024-09-06T15:15:02.825Z"
+    },
+    {
+      "changes": [
+        {
           "type": "feat",
           "sha": "d070a4315df35ace82e20b8b2c69044bf8504c92",
           "message": "Standardize Feature Buffering Behavior",
@@ -1861,5 +1878,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2024-08-30T23:16:16.885Z"
+  "updateTime": "2024-09-06T15:15:02.825Z"
 }

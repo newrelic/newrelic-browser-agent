@@ -61,6 +61,8 @@ export class TimeKeeper {
     this.processStoredDiff() // Check session entity for stored time diff
     if (this.#ready) return // Server time calculated from session entity
 
+    if (!nrServerTime) throw new Error('nrServerTime not found')
+
     const medianRumOffset = (endTime - startTime) / 2
     const serverOffset = startTime + medianRumOffset
 
@@ -69,7 +71,7 @@ export class TimeKeeper {
     this.#localTimeDiff = originTime - this.#correctedOriginTime
 
     if (isNaN(this.#correctedOriginTime)) {
-      throw new Error('invalid correctedOriginTime.')
+      throw new Error('invalid correctedOriginTime')
     }
 
     this.#session?.write({ serverTimeDiff: this.#localTimeDiff })

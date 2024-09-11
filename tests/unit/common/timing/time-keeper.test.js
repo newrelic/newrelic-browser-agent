@@ -46,11 +46,7 @@ beforeEach(() => {
 
 describe('processRumRequest', () => {
   test('should calculate an older corrected page origin - body', () => {
-    const mockRumRequest = {
-      getResponseHeader: jest.fn(() => (new Date(serverTime)).toUTCString())
-    }
-
-    timeKeeper.processRumRequest(mockRumRequest, startTime, endTime, (new Date(serverTime)) - 0)
+    timeKeeper.processRumRequest({}, startTime, endTime, (new Date(serverTime)) - 0)
 
     expect(timeKeeper.correctedOriginTime).toEqual(1706213060475)
   })
@@ -58,20 +54,12 @@ describe('processRumRequest', () => {
   test('should calculate a newer corrected page origin - body', () => {
     serverTime = 1706213056000
 
-    const mockRumRequest = {
-      getResponseHeader: jest.fn(() => (new Date(serverTime)).toUTCString())
-    }
-
-    timeKeeper.processRumRequest(mockRumRequest, startTime, endTime, (new Date(serverTime)) - 0)
+    timeKeeper.processRumRequest({}, startTime, endTime, (new Date(serverTime)) - 0)
 
     expect(timeKeeper.correctedOriginTime).toEqual(1706213055475)
   })
   test('should calculate an older corrected page origin - header', () => {
-    const mockRumRequest = {
-      getResponseHeader: jest.fn(() => (new Date(serverTime)).toUTCString())
-    }
-
-    timeKeeper.processRumRequest(mockRumRequest, startTime, endTime)
+    timeKeeper.processRumRequest({}, startTime, endTime, new Date(serverTime) - 0)
 
     expect(timeKeeper.correctedOriginTime).toEqual(1706213060475)
   })
@@ -79,21 +67,13 @@ describe('processRumRequest', () => {
   test('should calculate a newer corrected page origin - header', () => {
     serverTime = 1706213056000
 
-    const mockRumRequest = {
-      getResponseHeader: jest.fn(() => (new Date(serverTime)).toUTCString())
-    }
-
-    timeKeeper.processRumRequest(mockRumRequest, startTime, endTime)
+    timeKeeper.processRumRequest({}, startTime, endTime, new Date(serverTime) - 0)
 
     expect(timeKeeper.correctedOriginTime).toEqual(1706213055475)
   })
 
   test.each([undefined, null, 0])('should fallback to unprotected time values when responseStart is %s', (responseStart) => {
-    const mockRumRequest = {
-      getResponseHeader: jest.fn(() => (new Date(serverTime)).toUTCString())
-    }
-
-    timeKeeper.processRumRequest(mockRumRequest, startTime, endTime)
+    timeKeeper.processRumRequest({}, startTime, endTime, new Date(serverTime) - 0)
 
     expect(timeKeeper.correctedOriginTime).toEqual(1706213060475)
   })
@@ -104,42 +84,8 @@ describe('processRumRequest', () => {
     expect(timeKeeper.ready).toEqual(false)
   })
 
-  test.each([null, undefined])('should throw an error when date header is %s and no timestamp in body', (dateHeader) => {
-    const mockRumRequest = {
-      getResponseHeader: jest.fn(() => dateHeader)
-    }
-
-    expect(() => timeKeeper.processRumRequest(mockRumRequest, startTime, endTime))
-      .toThrowError()
-    expect(timeKeeper.ready).toEqual(false)
-  })
-
-  test('should throw an error when date header retrieval throws an error', () => {
-    const mockRumRequest = {
-      getResponseHeader: jest.fn(() => { throw new Error('test error') })
-    }
-
-    expect(() => timeKeeper.processRumRequest(mockRumRequest, startTime, endTime))
-      .toThrowError()
-    expect(timeKeeper.ready).toEqual(false)
-  })
-
   test('should throw an error when correctedOriginTime is NaN', () => {
-    const mockRumRequest = {
-      getResponseHeader: jest.fn(() => serverTime)
-    }
-
-    expect(() => timeKeeper.processRumRequest(mockRumRequest, startTime, endTime))
-      .toThrowError()
-    expect(timeKeeper.ready).toEqual(false)
-  })
-
-  it('should throw an error when date header is invalid format', () => {
-    const mockRumRequest = {
-      getResponseHeader: jest.fn(() => (new Date()).toISOString().slice(0, -5))
-    }
-
-    expect(() => timeKeeper.processRumRequest(mockRumRequest, startTime, endTime))
+    expect(() => timeKeeper.processRumRequest({}, startTime, endTime, 'bad'))
       .toThrowError()
     expect(timeKeeper.ready).toEqual(false)
   })
@@ -147,11 +93,7 @@ describe('processRumRequest', () => {
 
 describe('convertRelativeTimestamp', () => {
   test('should convert a relative time to an absolute timestamp - local behind server', () => {
-    const mockRumRequest = {
-      getResponseHeader: jest.fn(() => (new Date(serverTime)).toUTCString())
-    }
-
-    timeKeeper.processRumRequest(mockRumRequest, startTime, endTime)
+    timeKeeper.processRumRequest({}, startTime, endTime, new Date(serverTime) - 0)
 
     const relativeTimeA = 225
     const convertedAbsoluteTimeA = timeKeeper.convertRelativeTimestamp(relativeTimeA)
@@ -165,11 +107,7 @@ describe('convertRelativeTimestamp', () => {
   test('should convert a relative time to an absolute timestamp - local ahead server', () => {
     serverTime = 1706213056000
 
-    const mockRumRequest = {
-      getResponseHeader: jest.fn(() => (new Date(serverTime)).toUTCString())
-    }
-
-    timeKeeper.processRumRequest(mockRumRequest, startTime, endTime)
+    timeKeeper.processRumRequest({}, startTime, endTime, new Date(serverTime) - 0)
 
     const relativeTimeA = 225
     const convertedAbsoluteTimeA = timeKeeper.convertRelativeTimestamp(relativeTimeA)
@@ -183,11 +121,7 @@ describe('convertRelativeTimestamp', () => {
 
 describe('convertAbsoluteTimestamp', () => {
   test('should convert an absolute timestamp to a relative timestamp - local behind server', () => {
-    const mockRumRequest = {
-      getResponseHeader: jest.fn(() => (new Date(serverTime)).toUTCString())
-    }
-
-    timeKeeper.processRumRequest(mockRumRequest, startTime, endTime)
+    timeKeeper.processRumRequest({}, startTime, endTime, new Date(serverTime) - 0)
 
     const absoluteTimeA = 1706213058225
     const convertedRelativeTimeA = timeKeeper.convertAbsoluteTimestamp(absoluteTimeA)
@@ -201,11 +135,7 @@ describe('convertAbsoluteTimestamp', () => {
   test('should convert an absolute timestamp to a relative timestamp - local ahead server', () => {
     serverTime = 1706213056000
 
-    const mockRumRequest = {
-      getResponseHeader: jest.fn(() => (new Date(serverTime)).toUTCString())
-    }
-
-    timeKeeper.processRumRequest(mockRumRequest, startTime, endTime)
+    timeKeeper.processRumRequest({}, startTime, endTime, new Date(serverTime) - 0)
 
     const absoluteTimeA = 1706213058225
     const convertedRelativeTimeA = timeKeeper.convertAbsoluteTimestamp(absoluteTimeA)
@@ -219,11 +149,7 @@ describe('convertAbsoluteTimestamp', () => {
 
 describe('correctAbsoluteTimestamp', () => {
   test('should correct an absolute timestamp - local behind server', () => {
-    const mockRumRequest = {
-      getResponseHeader: jest.fn(() => (new Date(serverTime)).toUTCString())
-    }
-
-    timeKeeper.processRumRequest(mockRumRequest, startTime, endTime)
+    timeKeeper.processRumRequest({}, startTime, endTime, new Date(serverTime) - 0)
 
     const absoluteTimeA = 1706213058225
     const correctedAbsoluteTimeA = timeKeeper.correctAbsoluteTimestamp(absoluteTimeA)
@@ -237,11 +163,7 @@ describe('correctAbsoluteTimestamp', () => {
   test('should correct an absolute timestamp - local ahead server', () => {
     serverTime = 1706213056000
 
-    const mockRumRequest = {
-      getResponseHeader: jest.fn(() => (new Date(serverTime)).toUTCString())
-    }
-
-    timeKeeper.processRumRequest(mockRumRequest, startTime, endTime)
+    timeKeeper.processRumRequest({}, startTime, endTime, new Date(serverTime) - 0)
 
     const absoluteTimeA = 1706213058225
     const correctedAbsoluteTimeA = timeKeeper.correctAbsoluteTimestamp(absoluteTimeA)
@@ -269,14 +191,10 @@ describe('session entity integration', () => {
       serverTimeDiff: -2475
     }))
 
-    const mockRumRequest = {
-      getResponseHeader: jest.fn(() => (new Date(serverTime)).toUTCString())
-    }
-
     const sessionTimeKeeper = new TimeKeeper(agentIdentifier)
     expect(sessionTimeKeeper.ready).toEqual(true)
 
-    timeKeeper.processRumRequest(mockRumRequest, startTime, endTime)
+    timeKeeper.processRumRequest({}, startTime, endTime, new Date(serverTime) - 0)
 
     const relativeTimeA = 225
     expect(sessionTimeKeeper.convertRelativeTimestamp(relativeTimeA)).toEqual(timeKeeper.convertRelativeTimestamp(relativeTimeA))
@@ -291,14 +209,10 @@ describe('session entity integration', () => {
     }))
     serverTime = 1706213056000
 
-    const mockRumRequest = {
-      getResponseHeader: jest.fn(() => (new Date(serverTime)).toUTCString())
-    }
-
     const sessionTimeKeeper = new TimeKeeper(agentIdentifier)
     expect(sessionTimeKeeper.ready).toEqual(true)
 
-    timeKeeper.processRumRequest(mockRumRequest, startTime, endTime)
+    timeKeeper.processRumRequest({}, startTime, endTime, new Date(serverTime) - 0)
 
     const relativeTimeA = 225
     expect(sessionTimeKeeper.convertRelativeTimestamp(relativeTimeA)).toEqual(timeKeeper.convertRelativeTimestamp(relativeTimeA))
@@ -312,14 +226,10 @@ describe('session entity integration', () => {
       serverTimeDiff: -2475
     }))
 
-    const mockRumRequest = {
-      getResponseHeader: jest.fn(() => (new Date(serverTime)).toUTCString())
-    }
-
     const sessionTimeKeeper = new TimeKeeper(agentIdentifier)
     expect(sessionTimeKeeper.ready).toEqual(true)
 
-    timeKeeper.processRumRequest(mockRumRequest, startTime, endTime)
+    timeKeeper.processRumRequest({}, startTime, endTime, new Date(serverTime) - 0)
 
     const absoluteTimeA = 1706213058225
     expect(sessionTimeKeeper.correctAbsoluteTimestamp(absoluteTimeA)).toEqual(timeKeeper.correctAbsoluteTimestamp(absoluteTimeA))
@@ -334,14 +244,10 @@ describe('session entity integration', () => {
     }))
     serverTime = 1706213056000
 
-    const mockRumRequest = {
-      getResponseHeader: jest.fn(() => (new Date(serverTime)).toUTCString())
-    }
-
     const sessionTimeKeeper = new TimeKeeper(agentIdentifier)
     expect(sessionTimeKeeper.ready).toEqual(true)
 
-    timeKeeper.processRumRequest(mockRumRequest, startTime, endTime)
+    timeKeeper.processRumRequest({}, startTime, endTime, new Date(serverTime) - 0)
 
     const absoluteTimeA = 1706213058225
     expect(sessionTimeKeeper.correctAbsoluteTimestamp(absoluteTimeA)).toEqual(timeKeeper.correctAbsoluteTimestamp(absoluteTimeA))
@@ -355,27 +261,20 @@ describe('session entity integration', () => {
       serverTimeDiff: 2525
     }))
 
-    const mockRumRequest = {
-      getResponseHeader: jest.fn(() => (new Date(serverTime)).toUTCString())
-    }
+    const sessionWriteSpy = jest.spyOn(session, 'write')
 
     const sessionTimeKeeper = new TimeKeeper(agentIdentifier)
     expect(sessionTimeKeeper.ready).toEqual(true)
 
-    sessionTimeKeeper.processRumRequest(mockRumRequest, startTime, endTime)
-
-    expect(mockRumRequest.getResponseHeader).not.toHaveBeenCalled()
+    sessionTimeKeeper.processRumRequest({}, startTime, endTime, new Date(serverTime) - 0)
+    expect(sessionWriteSpy).not.toHaveBeenCalledWith({ serverTimeDiff: expect.any(Number) })
   })
 
   test('should write the calculated server time diff to the session - local behind server', () => {
-    const mockRumRequest = {
-      getResponseHeader: jest.fn(() => (new Date(serverTime)).toUTCString())
-    }
-
     const sessionTimeKeeper = new TimeKeeper(agentIdentifier)
     expect(sessionTimeKeeper.ready).toEqual(false)
 
-    sessionTimeKeeper.processRumRequest(mockRumRequest, startTime, endTime)
+    sessionTimeKeeper.processRumRequest({}, startTime, endTime, new Date(serverTime) - 0)
     expect(sessionTimeKeeper.ready).toEqual(true)
 
     expect(session.write).toHaveBeenCalledWith({ serverTimeDiff: -2475 })
@@ -383,14 +282,11 @@ describe('session entity integration', () => {
 
   test('should write the calculated server time diff to the session - local ahead server', () => {
     serverTime = 1706213056000
-    const mockRumRequest = {
-      getResponseHeader: jest.fn(() => (new Date(serverTime)).toUTCString())
-    }
 
     const sessionTimeKeeper = new TimeKeeper(agentIdentifier)
     expect(sessionTimeKeeper.ready).toEqual(false)
 
-    sessionTimeKeeper.processRumRequest(mockRumRequest, startTime, endTime)
+    sessionTimeKeeper.processRumRequest({}, startTime, endTime, new Date(serverTime) - 0)
     expect(sessionTimeKeeper.ready).toEqual(true)
 
     expect(session.write).toHaveBeenCalledWith({ serverTimeDiff: 2525 })

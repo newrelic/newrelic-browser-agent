@@ -1,8 +1,6 @@
 import { originTime } from '../constants/runtime'
 import { getRuntime } from '../config/runtime'
 
-const rfc2616Regex = /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), ([0-3][0-9]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) ([0-9]{4}) ([01][0-9]|2[0-3])(:[0-5][0-9]){2} GMT$/
-
 /**
  * Class used to adjust the timestamp of harvested data to New Relic server time. This
  * is done by tracking the performance timings of the RUM call and applying a calculation
@@ -63,18 +61,6 @@ export class TimeKeeper {
     this.processStoredDiff() // Check session entity for stored time diff
     if (this.#ready) return // Server time calculated from session entity
 
-    /** prefer nrServerTime from RUM body, but if not found fallback to header */
-    if (!nrServerTime) {
-      const responseDateHeader = rumRequest.getResponseHeader('Date')
-      if (!responseDateHeader) {
-        throw new Error('Missing date header on rum response.')
-      }
-      if (!rfc2616Regex.test(responseDateHeader)) {
-        throw new Error('Date header invalid format.')
-      }
-      nrServerTime = Date.parse(responseDateHeader)
-    }
-
     const medianRumOffset = (endTime - startTime) / 2
     const serverOffset = startTime + medianRumOffset
 
@@ -83,7 +69,7 @@ export class TimeKeeper {
     this.#localTimeDiff = originTime - this.#correctedOriginTime
 
     if (isNaN(this.#correctedOriginTime)) {
-      throw new Error('Date header invalid format.')
+      throw new Error('invalid correctedOriginTime.')
     }
 
     this.#session?.write({ serverTimeDiff: this.#localTimeDiff })
@@ -124,7 +110,6 @@ export class TimeKeeper {
     if (this.#ready) return // Time diff has already been calculated
 
     const storedServerTimeDiff = this.#session?.read()?.serverTimeDiff
-    console.log('storedServerTimeDiff...', storedServerTimeDiff)
     if (typeof storedServerTimeDiff === 'number' && !isNaN(storedServerTimeDiff)) {
       this.#localTimeDiff = storedServerTimeDiff
       this.#correctedOriginTime = originTime - this.#localTimeDiff

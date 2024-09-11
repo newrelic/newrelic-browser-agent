@@ -57,24 +57,29 @@ export class TimeKeeper {
    * @param rumRequest {XMLHttpRequest} The xhr for the rum request
    * @param startTime {number} The start time of the RUM request
    * @param endTime {number} The end time of the RUM request
+   * @param nrServerTime {number} the unix number value of the NR server time in MS, returned in the RUM request body
    */
-  processRumRequest (rumRequest, startTime, endTime) {
+  processRumRequest (rumRequest, startTime, endTime, nrServerTime) {
     this.processStoredDiff() // Check session entity for stored time diff
     if (this.#ready) return // Server time calculated from session entity
 
-    const responseDateHeader = rumRequest.getResponseHeader('Date')
-    if (!responseDateHeader) {
-      throw new Error('Missing date header on rum response.')
-    }
-    if (!rfc2616Regex.test(responseDateHeader)) {
-      throw new Error('Date header invalid format.')
+    /** prefer nrServerTime from RUM body, but if not found fallback to header */
+    if (!nrServerTime) {
+      const responseDateHeader = rumRequest.getResponseHeader('Date')
+      if (!responseDateHeader) {
+        throw new Error('Missing date header on rum response.')
+      }
+      if (!rfc2616Regex.test(responseDateHeader)) {
+        throw new Error('Date header invalid format.')
+      }
+      nrServerTime = Date.parse(responseDateHeader)
     }
 
     const medianRumOffset = (endTime - startTime) / 2
     const serverOffset = startTime + medianRumOffset
 
     // Corrected page origin time
-    this.#correctedOriginTime = Math.floor(Date.parse(responseDateHeader) - serverOffset)
+    this.#correctedOriginTime = Math.floor(nrServerTime - serverOffset)
     this.#localTimeDiff = originTime - this.#correctedOriginTime
 
     if (isNaN(this.#correctedOriginTime)) {
@@ -119,6 +124,7 @@ export class TimeKeeper {
     if (this.#ready) return // Time diff has already been calculated
 
     const storedServerTimeDiff = this.#session?.read()?.serverTimeDiff
+    console.log('storedServerTimeDiff...', storedServerTimeDiff)
     if (typeof storedServerTimeDiff === 'number' && !isNaN(storedServerTimeDiff)) {
       this.#localTimeDiff = storedServerTimeDiff
       this.#correctedOriginTime = originTime - this.#localTimeDiff

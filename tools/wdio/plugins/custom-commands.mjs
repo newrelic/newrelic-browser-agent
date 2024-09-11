@@ -17,7 +17,7 @@ export default class CustomCommands {
     browser.addCommand('waitForAgentLoad', async function () {
       await browser.waitUntil(
         () => browser.execute(function () {
-          return window.NREUM && window.NREUM.activatedFeatures && Object.values(window.NREUM.activatedFeatures)[0] && !!Object.values(window.NREUM.activatedFeatures)[0].loaded
+          return !window.nrLoaded
         }),
         {
           timeout: 30000,
@@ -111,7 +111,7 @@ export default class CustomCommands {
       await browser.testHandle.scheduleReply('bamServer', {
         test: testRumRequest,
         permanent: true,
-        body: JSON.stringify({ ...rumFlags, sr: srOverride, srs: stMode })
+        body: JSON.stringify(rumFlags({ sr: srOverride, srs: stMode }))
       })
     })
 
@@ -120,14 +120,12 @@ export default class CustomCommands {
      * to a specific value. Default is to set the header to one hour in the past.
      */
     browser.addCommand('mockDateResponse', async function (serverTime = Date.now() - (60 * 60 * 1000), opts = {}) {
-      const { flags } = opts
+      const { flags = {} } = opts
+      const body = JSON.stringify(rumFlags(flags, { nrServerTime: serverTime }))
       await browser.testHandle.scheduleReply('bamServer', {
         test: testRumRequest,
         permanent: true,
-        setHeaders: [
-          { key: 'Date', value: (new Date(serverTime)).toUTCString() }
-        ],
-        body: JSON.stringify({ ...rumFlags, ...flags })
+        body
       })
       return serverTime
     })

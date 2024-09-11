@@ -45,7 +45,28 @@ beforeEach(() => {
 })
 
 describe('processRumRequest', () => {
-  test('should calculate an older corrected page origin', () => {
+  test('should calculate an older corrected page origin - body', () => {
+    const mockRumRequest = {
+      getResponseHeader: jest.fn(() => (new Date(serverTime)).toUTCString())
+    }
+
+    timeKeeper.processRumRequest(mockRumRequest, startTime, endTime, (new Date(serverTime)) - 0)
+
+    expect(timeKeeper.correctedOriginTime).toEqual(1706213060475)
+  })
+
+  test('should calculate a newer corrected page origin - body', () => {
+    serverTime = 1706213056000
+
+    const mockRumRequest = {
+      getResponseHeader: jest.fn(() => (new Date(serverTime)).toUTCString())
+    }
+
+    timeKeeper.processRumRequest(mockRumRequest, startTime, endTime, (new Date(serverTime)) - 0)
+
+    expect(timeKeeper.correctedOriginTime).toEqual(1706213055475)
+  })
+  test('should calculate an older corrected page origin - header', () => {
     const mockRumRequest = {
       getResponseHeader: jest.fn(() => (new Date(serverTime)).toUTCString())
     }
@@ -55,7 +76,7 @@ describe('processRumRequest', () => {
     expect(timeKeeper.correctedOriginTime).toEqual(1706213060475)
   })
 
-  test('should calculate a newer corrected page origin', () => {
+  test('should calculate a newer corrected page origin - header', () => {
     serverTime = 1706213056000
 
     const mockRumRequest = {
@@ -77,13 +98,13 @@ describe('processRumRequest', () => {
     expect(timeKeeper.correctedOriginTime).toEqual(1706213060475)
   })
 
-  test.each([null, undefined])('should throw an error when rumRequest is %s', (rumRequest) => {
+  test.each([null, undefined])('should throw an error when rumRequest is %s and no timestamp in body', (rumRequest) => {
     expect(() => timeKeeper.processRumRequest(rumRequest, startTime, endTime))
       .toThrowError()
     expect(timeKeeper.ready).toEqual(false)
   })
 
-  test.each([null, undefined])('should throw an error when date header is %s', (dateHeader) => {
+  test.each([null, undefined])('should throw an error when date header is %s and no timestamp in body', (dateHeader) => {
     const mockRumRequest = {
       getResponseHeader: jest.fn(() => dateHeader)
     }

@@ -25,7 +25,7 @@ module.exports = fp(async function (fastify) {
         .header('content-type', 'application/json')
         .header('Timing-Allow-Origin', request.headers.origin)
         .code(200)
-        .send(JSON.stringify(rumFlags))
+        .send(JSON.stringify(rumFlags()))
     }
   })
   fastify.route({

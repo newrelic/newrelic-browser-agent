@@ -105,10 +105,13 @@ export class Aggregate extends AggregateBase {
     queryParameters.fp = firstPaint.current.value
     queryParameters.fcp = firstContentfulPaint.current.value
 
+    console.log('timekeeper is ready?', this.timeKeeper?.ready)
+
     if (this.timeKeeper?.ready) {
       queryParameters.timestamp = Math.floor(this.timeKeeper.correctAbsoluteTimestamp(
         this.timeKeeper.convertRelativeTimestamp(now())
       ))
+      console.log('queryparams', queryParameters)
     }
 
     const rumStartTime = now()
@@ -126,18 +129,17 @@ export class Aggregate extends AggregateBase {
         }
 
         try {
-          this.timeKeeper.processRumRequest(xhr, rumStartTime, rumEndTime)
-          if (!this.timeKeeper.ready) throw new Error('TimeKeeper not ready')
+          const { app, nrServerTime, ...flags } = JSON.parse(responseText)
+          try {
+            this.timeKeeper.processRumRequest(xhr, nrServerTime, rumStartTime, rumEndTime)
+            if (!this.timeKeeper.ready) throw new Error('TimeKeeper not ready')
 
-          agentRuntime.timeKeeper = this.timeKeeper
-        } catch (error) {
-          this.ee.abort()
-          warn(17, error)
-          return
-        }
-
-        try {
-          const { app, ...flags } = JSON.parse(responseText)
+            agentRuntime.timeKeeper = this.timeKeeper
+          } catch (error) {
+            this.ee.abort()
+            warn(17, error)
+            return
+          }
           agentRuntime.appMetadata = app
           activateFeatures(flags, this.agentIdentifier)
           this.drain()

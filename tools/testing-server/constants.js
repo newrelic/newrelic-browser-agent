@@ -29,22 +29,26 @@ module.exports.loaderConfigKeys = [
 
 module.exports.loaderOnlyConfigKeys = ['accountID', 'agentID', 'trustKey']
 
-module.exports.rumFlags = {
-  loaded: 1, // Used internally to signal the tests that the agent has loaded
-
-  st: 1, // session trace entitlements 0|1
-  err: 1, // err entitlements 0|1
-  ins: 1, // ins entitlements 0|1
-  spa: 1, // spa entitlements 0|1
-  sr: 1, // session replay entitlements 0|1
-  sts: 1, // session trace sampling 0|1|2 - off full error
-  srs: 1, // session replay sampling 0|1|2 - off full error
-  app: {
-    agents: [
-      { entityGuid: defaultEntityGuid }
-    ]
-  }
+const defaultFlagValue = (flag) => {
+  if (flag !== undefined) return flag
+  return 1
 }
+module.exports.rumFlags = (flags = {}, app = {}) => ({
+  loaded: defaultFlagValue(flags.loaded), // Used internally to signal the tests that the agent has loaded
+  st: defaultFlagValue(flags.st), // session trace entitlements 0|1
+  err: defaultFlagValue(flags.err), // err entitlements 0|1
+  ins: defaultFlagValue(flags.ins), // ins entitlements 0|1
+  spa: defaultFlagValue(flags.spa), // spa entitlements 0|1
+  sr: defaultFlagValue(flags.sr), // session replay entitlements 0|1
+  sts: defaultFlagValue(flags.sts), // session trace sampling 0|1|2 - off full error
+  srs: defaultFlagValue(flags.srs), // session replay sampling 0|1|2 - off full error
+  app: {
+    agents: app.agents || [
+      { entityGuid: defaultEntityGuid }
+    ],
+    nrServerTime: app.nrServerTime || Date.now()
+  }
+})
 
 const enabled = true; const autoStart = true; const harvestTimeSeconds = 5
 const enabledFeature = { enabled, autoStart, harvestTimeSeconds }

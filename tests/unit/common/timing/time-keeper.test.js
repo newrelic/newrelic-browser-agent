@@ -45,26 +45,13 @@ beforeEach(() => {
 })
 
 describe('processRumRequest', () => {
-  test('should calculate an older corrected page origin - body', () => {
-    timeKeeper.processRumRequest({}, startTime, endTime, (new Date(serverTime)) - 0)
-
-    expect(timeKeeper.correctedOriginTime).toEqual(1706213060475)
-  })
-
-  test('should calculate a newer corrected page origin - body', () => {
-    serverTime = 1706213056000
-
-    timeKeeper.processRumRequest({}, startTime, endTime, (new Date(serverTime)) - 0)
-
-    expect(timeKeeper.correctedOriginTime).toEqual(1706213055475)
-  })
-  test('should calculate an older corrected page origin - header', () => {
+  test('should calculate an older corrected page origin', () => {
     timeKeeper.processRumRequest({}, startTime, endTime, new Date(serverTime) - 0)
 
     expect(timeKeeper.correctedOriginTime).toEqual(1706213060475)
   })
 
-  test('should calculate a newer corrected page origin - header', () => {
+  test('should calculate a newer corrected page origin', () => {
     serverTime = 1706213056000
 
     timeKeeper.processRumRequest({}, startTime, endTime, new Date(serverTime) - 0)

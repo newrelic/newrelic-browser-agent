@@ -43,20 +43,6 @@ describe('NR Server Time', () => {
     testTimeExpectations(rumTimestamp, timeKeeper, false)
   })
 
-  it('should send jserror with timestamp prior to rum date body', async () => {
-    const errorsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testErrorsRequest })
-    const [[errorsHarvest], timeKeeper] = await Promise.all([
-      errorsCapture.waitForResult({ totalCount: 1 }),
-      browser.url(await browser.testHandle.assetURL('nr-server-time/error-before-load.html'))
-        .then(() => browser.waitForAgentLoad())
-        .then(() => browser.getPageTime())
-    ])
-
-    const error = errorsHarvest.request.body.err[0]
-    expect(error.params.firstOccurrenceTimestamp).toEqual(error.params.timestamp)
-    testTimeExpectations(error.params.timestamp, timeKeeper, true)
-  })
-
   it('should send jserror with timestamp prior to rum date header', async () => {
     const errorsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testErrorsRequest })
     const [[errorsHarvest], timeKeeper] = await Promise.all([

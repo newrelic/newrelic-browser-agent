@@ -1,6 +1,7 @@
 import { JSONPath } from 'jsonpath-plus'
 import { testAjaxEventsRequest, testErrorsRequest, testInteractionEventsRequest, testRumRequest } from '../../../tools/testing-server/utils/expect-tests.js'
 import { notSafari, onlyChromium } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { rumFlags } from '../../../tools/testing-server/constants.js'
 
 // test: does not disrupt old spa when not enabled -- this is tested via old spa tests passing by default!
 describe('Soft navigations', () => {
@@ -44,7 +45,7 @@ describe('Soft navigations', () => {
   it('does not harvest when spa is blocked by rum response', async () => {
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: `${JSON.stringify({ st: 1, err: 1, ins: 1, spa: 0, loaded: 1 })}`
+      body: JSON.stringify(rumFlags({ spa: 0 }))
     })
 
     const [interactionsHarvests] = await Promise.all([

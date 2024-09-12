@@ -2,6 +2,7 @@
  * All behavior and mode transition from error mode of Trace in tandem with the replay feature is tested in here.
  * Right now, Trace can only be in error mode when its stn flag is 0 but replay runs in error mode.
  */
+import { rumFlags } from '../../../tools/testing-server/constants'
 import { testBlobTraceRequest, testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
 import { stConfig, testExpectedTrace } from '../util/helpers'
 
@@ -20,7 +21,7 @@ describe('respects feature flags', () => {
   it('0, 0 == PERMANENTLY OFF', async () => {
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ st: 0, sts: 0, err: 1, ins: 1, spa: 1, sr: 0, srs: 0, loaded: 1 })
+      body: JSON.stringify(rumFlags({ st: 0, sts: 0, sr: 0, srs: 0 }))
     })
 
     const [sessionTraceHarvests] = await Promise.all([
@@ -38,7 +39,7 @@ describe('respects feature flags', () => {
   it('0, 1 == PERMANENTLY OFF', async () => {
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ st: 0, sts: 1, err: 1, ins: 1, spa: 1, sr: 0, srs: 0, loaded: 1 })
+      body: JSON.stringify(rumFlags({ st: 0, sts: 1, sr: 0, srs: 0 }))
     })
 
     const [sessionTraceHarvests] = await Promise.all([
@@ -56,7 +57,7 @@ describe('respects feature flags', () => {
   it('0, 2 == PERMANENTLY OFF', async () => {
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ st: 0, sts: 2, err: 1, ins: 1, spa: 1, sr: 0, srs: 0, loaded: 1 })
+      body: JSON.stringify(rumFlags({ st: 0, sts: 2, sr: 0, srs: 0 }))
     })
 
     const [sessionTraceHarvests] = await Promise.all([
@@ -75,7 +76,7 @@ describe('respects feature flags', () => {
     url = await browser.testHandle.assetURL('instrumented.html', stConfig({ session_replay: { enabled: true } }))
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ st: 1, sts: 0, err: 1, ins: 1, spa: 1, sr: 1, srs: 0, loaded: 1 })
+      body: JSON.stringify(rumFlags({ st: 1, sts: 0, sr: 1, srs: 0 }))
     })
 
     let [sessionTraceHarvests] = await Promise.all([
@@ -100,7 +101,7 @@ describe('respects feature flags', () => {
   it('1, 1 == STARTS IN FULL', async () => {
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ st: 1, sts: 1, err: 1, ins: 1, spa: 1, sr: 1, srs: 0, loaded: 1 })
+      body: JSON.stringify(rumFlags({ st: 1, sts: 1, sr: 1, srs: 0 }))
     })
 
     let [sessionTraceHarvests] = await Promise.all([
@@ -116,7 +117,7 @@ describe('respects feature flags', () => {
   it('1, 2 == STARTS IN ERROR, CHANGES TO FULL (noticeError)', async () => {
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ st: 1, sts: 2, err: 1, ins: 1, spa: 1, sr: 0, srs: 0, loaded: 1 })
+      body: JSON.stringify(rumFlags({ st: 1, sts: 2, sr: 0, srs: 0 }))
     })
 
     let [sessionTraceHarvests] = await Promise.all([
@@ -152,7 +153,7 @@ describe('respects feature flags', () => {
     url = await browser.testHandle.assetURL('js-error-with-error-after-page-load.html', stConfig())
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ st: 1, sts: 2, err: 1, ins: 1, spa: 1, sr: 0, srs: 0, loaded: 1 })
+      body: JSON.stringify(rumFlags({ st: 1, sts: 2, sr: 0, srs: 0 }))
     })
 
     let [sessionTraceHarvests] = await Promise.all([
@@ -186,7 +187,7 @@ describe('respects feature flags', () => {
     url = await browser.testHandle.assetURL('js-error-with-error-before-page-load.html', stConfig())
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ st: 1, sts: 2, err: 1, ins: 1, spa: 1, sr: 0, srs: 0, loaded: 1 })
+      body: JSON.stringify(rumFlags({ st: 1, sts: 2, sr: 0, srs: 0 }))
     })
 
     const [sessionTraceHarvests] = await Promise.all([
@@ -202,7 +203,7 @@ describe('respects feature flags', () => {
   it('does not capture more than the last 30 seconds when error happens', async () => {
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ st: 1, sts: 2, err: 1, ins: 1, spa: 1, sr: 0, srs: 0, loaded: 1 })
+      body: JSON.stringify(rumFlags({ st: 1, sts: 2, sr: 0, srs: 0 }))
     })
 
     await browser.url(url).then(() => browser.waitForAgentLoad())
@@ -222,7 +223,7 @@ describe('respects feature flags', () => {
   it('does not perform final harvest while in error mode', async () => {
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ st: 1, sts: 2, err: 1, ins: 1, spa: 1, sr: 0, srs: 0, loaded: 1 })
+      body: JSON.stringify(rumFlags({ st: 1, sts: 2, sr: 0, srs: 0 }))
     })
 
     await browser.url(url).then(() => browser.waitForAgentLoad())
@@ -239,7 +240,7 @@ describe('respects feature flags', () => {
     url = await browser.testHandle.assetURL('instrumented.html', stConfig({ privacy: { cookies_enabled: false } }))
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ st: 1, sts: 1, err: 1, ins: 1, spa: 1, sr: 0, srs: 0, loaded: 1 })
+      body: JSON.stringify(rumFlags({ st: 1, sts: 1, sr: 0, srs: 0 }))
     })
 
     const [sessionTraceHarvests] = await Promise.all([
@@ -254,7 +255,7 @@ describe('respects feature flags', () => {
   it('should not trigger session trace when an error is seen and mode is off', async () => {
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ st: 1, sts: 0, err: 1, ins: 1, spa: 1, sr: 0, srs: 0, loaded: 1 })
+      body: JSON.stringify(rumFlags({ st: 1, sts: 0, sr: 0, srs: 0 }))
     })
 
     const [sessionTraceHarvests] = await Promise.all([

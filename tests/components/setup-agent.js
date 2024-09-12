@@ -2,7 +2,6 @@ import { faker } from '@faker-js/faker'
 import { getNREUMInitializedAgent, setNREUMInitializedAgent } from '../../src/common/window/nreum'
 import { configure } from '../../src/loaders/configure/configure'
 import { ee } from '../../src/common/event-emitter/contextual-ee'
-import { Aggregator } from '../../src/common/aggregate/aggregator'
 import { TimeKeeper } from '../../src/common/timing/time-keeper'
 import { getRuntime } from '../../src/common/config/runtime'
 import { setupAgentSession } from '../../src/features/utils/agent-session'
@@ -39,7 +38,6 @@ export function setupAgent ({ agentOverrides = {}, info = {}, init = {}, loaderC
   const fakeAgent = {
     agentIdentifier,
     ee: eventEmitter,
-    sharedAggregator: new Aggregator({ agentIdentifier, ee: eventEmitter }),
     ...agentOverrides
   }
   setNREUMInitializedAgent(agentIdentifier, fakeAgent)
@@ -80,8 +78,8 @@ export function resetAgentEventEmitter (agentIdentifier) {
 }
 
 export function resetAggregator (agentIdentifier) {
-  const agent = getNREUMInitializedAgent(agentIdentifier)
-  agent.sharedAggregator.take(Object.keys(agent.sharedAggregator.aggregatedData))
+  const runtime = getRuntime(agentIdentifier)
+  runtime.aggregator.take(Object.keys(runtime.aggregator.aggregatedData))
 }
 
 export function resetEventManager (agentIdentifier) {

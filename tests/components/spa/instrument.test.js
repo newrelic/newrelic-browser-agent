@@ -1,10 +1,9 @@
-import { Aggregator } from '../../../src/common/aggregate/aggregator'
-import { ee } from '../../../src/common/event-emitter/contextual-ee'
 import { Spa } from '../../../src/features/spa'
 import { registerHandler } from '../../../src/common/event-emitter/register-handler'
 import { drain } from '../../../src/common/drain/drain'
-import { EventManager } from '../../../src/features/utils/event-manager'
 import * as runtimeModule from '../../../src/common/config/runtime'
+import { Obfuscator } from '../../../src/common/util/obfuscate'
+import { Aggregator } from '../../../src/common/aggregate/aggregator'
 
 jest.mock('../../../src/common/constants/runtime')
 jest.mock('../../../src/common/config/info', () => ({
@@ -22,7 +21,9 @@ const agentIdentifier = 'abcdefg'
 
 beforeAll(async () => {
   jest.spyOn(runtimeModule, 'getRuntime').mockImplementation(() => ({
-    eventManager: new EventManager()
+    eventManager: { buffers: [] },
+    obfuscator: new Obfuscator({ agentIdentifier }),
+    aggregator: new Aggregator({ agentIdentifier })
   }))
   spaInstrument = new Spa(agentIdentifier, false)
 })
@@ -42,6 +43,7 @@ describe('SPA instrument', () => {
     }
     const args = [{
       addEventListener: () => null,
+      0: () => null,
       1: () => null
     }, {
       addEventListener: () => null,

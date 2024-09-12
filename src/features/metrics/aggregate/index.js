@@ -18,8 +18,6 @@ export class Aggregate extends AggregateBase {
   constructor (agentIdentifier) {
     super(agentIdentifier, FEATURE_NAME)
 
-    console.log(this.aggregator)
-
     this.waitForFlags(['err']).then(([errFlag]) => {
       if (errFlag) {
         // *cli, Mar 23 - Per NR-94597, this feature should only harvest ONCE at the (potential) EoL time of the page.

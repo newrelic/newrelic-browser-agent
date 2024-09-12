@@ -3,7 +3,6 @@ import { TimeKeeper } from '../../../../src/common/timing/time-keeper'
 import { originTime } from '../../../../src/common/constants/runtime'
 import * as runtimeModule from '../../../../src/common/config/runtime'
 import * as eventEmitterModule from '../../../../src/common/event-emitter/contextual-ee'
-import { EventManager } from '../../../../src/features/utils/event-manager'
 import { Obfuscator } from '../../../../src/common/util/obfuscate'
 import { Aggregator } from '../../../../src/common/aggregate/aggregator'
 

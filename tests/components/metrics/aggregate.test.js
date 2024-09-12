@@ -12,7 +12,7 @@ beforeAll(async () => {
 let metricsAggregate, metricName
 
 beforeEach(async () => {
-  const metricsInstrument = new Metrics(agentSetup.agentIdentifier, agentSetup.aggregator)
+  const metricsInstrument = new Metrics(agentSetup.agentIdentifier)
   await new Promise(process.nextTick)
   metricsAggregate = metricsInstrument.featAggregate
 
@@ -30,7 +30,7 @@ afterEach(() => {
   test(`${name} with no value creates a metric with just a count`, () => {
     createAndStoreMetric(undefined, isSupportability)
 
-    const records = agentSetup.aggregator.take([type])[type]
+    const records = metricsAggregate.aggregator.take([type])[type]
       .filter(x => x?.params?.name === metricName)
     expect(records.length).toEqual(1)
 
@@ -47,7 +47,7 @@ afterEach(() => {
     createAndStoreMetric(undefined, isSupportability)
     createAndStoreMetric(undefined, isSupportability)
 
-    const records = agentSetup.aggregator.take([type])[type]
+    const records = metricsAggregate.aggregator.take([type])[type]
       .filter(x => x?.params?.name === metricName)
     expect(records.length).toEqual(1)
 
@@ -62,7 +62,7 @@ afterEach(() => {
   test(`${name} with a value ${auxDescription}`, () => {
     createAndStoreMetric(isSupportability ? 500 : { time: 500 }, isSupportability)
 
-    const records = agentSetup.aggregator.take([type])[type]
+    const records = metricsAggregate.aggregator.take([type])[type]
       .filter(x => x?.params?.name === metricName)
     expect(records.length).toEqual(1)
 
@@ -80,7 +80,7 @@ afterEach(() => {
       .fill(null).map(() => faker.number.int({ min: 100, max: 1000 }))
     values.forEach(v => createAndStoreMetric(isSupportability ? v : { time: v }, isSupportability))
 
-    const records = agentSetup.aggregator.take([type])[type]
+    const records = metricsAggregate.aggregator.take([type])[type]
       .filter(x => x?.params?.name === metricName)
     expect(records.length).toEqual(1)
 
@@ -99,7 +99,7 @@ afterEach(() => {
   test(`${name} does not create a ${otherType} item`, () => {
     createAndStoreMetric(faker.number.float(), isSupportability)
 
-    const records = agentSetup.aggregator.take([otherType])?.[otherType]
+    const records = metricsAggregate.aggregator.take([otherType])?.[otherType]
       ?.filter(x => x?.params?.name === metricName) || []
     expect(records).toEqual([])
   })
@@ -108,7 +108,7 @@ afterEach(() => {
     test('storeEvent (custom) with an invalid value type does not create a named metric object in metrics section', () => {
       createAndStoreMetric(faker.number.float(), false)
 
-      const records = agentSetup.aggregator.take([CUSTOM_METRIC])[CUSTOM_METRIC]
+      const records = metricsAggregate.aggregator.take([CUSTOM_METRIC])[CUSTOM_METRIC]
         .filter(x => x?.params?.name === metricName)
       expect(records.length).toEqual(1)
 

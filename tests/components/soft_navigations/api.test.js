@@ -26,11 +26,11 @@ beforeAll(() => {
 let softNavAggregate
 
 beforeEach(async () => {
-  const softNavInstrument = new SoftNav(agentSetup.agentIdentifier, agentSetup.aggregator)
+  const softNavInstrument = new SoftNav(agentSetup.agentIdentifier)
   await new Promise(process.nextTick)
   softNavAggregate = softNavInstrument.featAggregate
 
-  softNavAggregate.ee.emit('rumresp', [{ spa: 1 }])
+  softNavInstrument.ee.emit('rumresp', [{ spa: 1 }])
   await new Promise(process.nextTick)
 
   softNavAggregate.initialPageLoadInteraction = null

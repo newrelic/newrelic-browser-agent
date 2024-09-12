@@ -1,9 +1,7 @@
 import * as qp from '@newrelic/nr-querypack'
-import { ee } from '../../../../../src/common/event-emitter/contextual-ee'
 import { Aggregator } from '../../../../../src/common/aggregate/aggregator'
 import { Aggregate } from '../../../../../src/features/page_view_timing/aggregate'
 import { getInfo } from '../../../../../src/common/config/info'
-import { EventManager } from '../../../../../src/features/utils/event-manager'
 import * as runtimeModule from '../../../../../src/common/config/runtime'
 import { Obfuscator } from '../../../../../src/common/util/obfuscate'
 

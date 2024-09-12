@@ -1,9 +1,6 @@
 import { faker } from '@faker-js/faker'
 import { FeatureBase } from '../../../../src/features/utils/feature-base'
 import { ee } from '../../../../src/common/event-emitter/contextual-ee'
-import { EventManager } from '../../../../src/features/utils/event-manager'
-import * as runtimeModule from '../../../../src/common/config/runtime'
-import { Aggregator } from '../../../../src/common/aggregate/aggregator'
 
 jest.enableAutomock()
 jest.unmock('../../../../src/features/utils/feature-base')

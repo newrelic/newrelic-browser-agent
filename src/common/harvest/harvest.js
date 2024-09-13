@@ -159,7 +159,21 @@ export class Harvest extends SharedContext {
     const info = getInfo(this.sharedContext.agentIdentifier)
 
     const ref = this.obfuscator.obfuscateString(cleanURL(getLocation()))
-    const hr = runtime?.session?.state.sessionReplayMode === 1 && endpoint !== 'jserrors'
+    let hr = runtime?.session?.state.sessionReplayMode === 1 && endpoint !== 'jserrors'
+
+    switch (endpoint) {
+      case 'jserrors':
+        hr = false
+        break
+      case 'rum':
+        // we can not know if SR will be enabled by the rum response in this state, so we can never mark this as true
+        // there is a potential case where the replay is preloaded setting the replay mode to true before we know the flag values
+        // if the flag value came back as 0, the data would be dropped and now the pageview has replay flag == true even though we didnt harvest SR
+        hr = !runtime?.session?.isNew && runtime?.session?.state.sessionReplayMode === 1
+        break
+      default:
+        hr = runtime?.session?.state.sessionReplayMode === 1
+    }
 
     const qps = [
       'a=' + info.applicationID,

@@ -45,7 +45,7 @@ export class EventBuffer {
    * held is another event buffer
    */
   get held () {
-    this.#held ??= new EventBuffer(this.maxPayloadSize)
+    if (!this.#held) this.#held = new EventBuffer(this.maxPayloadSize)
     return this.#held
   }
 

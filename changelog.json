@@ -5,6 +5,31 @@
       "changes": [
         {
           "type": "fix",
+          "sha": "e537359f354270fcbd607445b6853c236f0fdbfc",
+          "message": "Remove nullish coalescing inside getter",
+          "issues": [
+            "1180"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "304e3954df9639d6d61e545fcaa0c761346a5016",
+          "message": "Removing long task",
+          "issues": [
+            "1153"
+          ]
+        }
+      ],
+      "version": "1.266.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "26d15f99-3d65-4ac0-b60d-3003763be2cf",
+      "createTime": "2024-09-16T18:08:18.394Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
           "sha": "5f8a0c42fbade8f6f81471439ecc8999b1556290",
           "message": "Disable websocket wrapping",
           "issues": [
@@ -1878,5 +1903,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2024-09-06T15:15:02.825Z"
+  "updateTime": "2024-09-16T18:08:18.394Z"
 }

@@ -13,3 +13,8 @@ export class Instrument extends GenericEvents {
     super(agentIdentifier, aggregator, auto)
   }
 }
+
+/**
+ * @deprecated This feature has been replaced by Generic Events. Use/Import `GenericEvents` instead. This wrapper will be removed in a future release
+ */
+export const PageAction = Instrument

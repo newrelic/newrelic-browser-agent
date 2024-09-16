@@ -1,0 +1,2 @@
+export const IDEAL_PAYLOAD_SIZE = 64000
+export const MAX_PAYLOAD_SIZE = 1000000

@@ -1,7 +1,7 @@
 import { record as recorder } from 'rrweb'
 import { stringify } from '../../../common/util/stringify'
-import { AVG_COMPRESSION, CHECKOUT_MS, IDEAL_PAYLOAD_SIZE, QUERY_PARAM_PADDING, RRWEB_EVENT_TYPES, SR_EVENT_EMITTER_TYPES } from '../constants'
-import { getConfigurationValue } from '../../../common/config/config'
+import { AVG_COMPRESSION, CHECKOUT_MS, QUERY_PARAM_PADDING, RRWEB_EVENT_TYPES, SR_EVENT_EMITTER_TYPES } from '../constants'
+import { getConfigurationValue } from '../../../common/config/init'
 import { RecorderEvents } from './recorder-events'
 import { MODE } from '../../../common/session/constants'
 import { stylesheetEvaluator } from './stylesheet-evaluator'
@@ -9,6 +9,7 @@ import { handle } from '../../../common/event-emitter/handle'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { buildNRMetaNode } from './utils'
+import { IDEAL_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
 
 export class Recorder {
   /** Each page mutation or event will be stored (raw) in this array. This array will be cleared on each harvest */
@@ -41,7 +42,14 @@ export class Recorder {
   }
 
   getEvents () {
-    if (this.#preloaded[0]?.events.length) return { ...this.#preloaded[0], type: 'preloaded' }
+    if (this.#preloaded[0]?.events.length) {
+      return {
+        ...this.#preloaded[0],
+        events: this.#preloaded[0].events,
+        payloadBytesEstimation: this.#preloaded[0].payloadBytesEstimation,
+        type: 'preloaded'
+      }
+    }
     return {
       events: [...this.#backloggedEvents.events, ...this.#events.events].filter(x => x),
       type: 'standard',
@@ -93,7 +101,8 @@ export class Recorder {
         this.parent.ee.emit('internal-error', [err])
         /** returning true informs rrweb to swallow the error instead of throwing it to the window */
         return true
-      }
+      },
+      recordAfter: 'DOMContentLoaded'
     })
 
     this.stopRecording = () => {
@@ -176,9 +185,7 @@ export class Recorder {
     if (event.type === RRWEB_EVENT_TYPES.FullSnapshot) {
       this.currentBufferTarget.hasSnapshot = true
     }
-
     this.currentBufferTarget.add(event)
-    this.currentBufferTarget.payloadBytesEstimation += eventBytes
 
     // We are making an effort to try to keep payloads manageable for unloading.  If they reach the unload limit before their interval,
     // it will send immediately.  This often happens on the first snapshot, which can be significantly larger than the other payloads.

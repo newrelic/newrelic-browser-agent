@@ -2,15 +2,6 @@ import logger from '@wdio/logger'
 import fetch from 'node-fetch'
 import { serialize } from '../../../shared/serializer.js'
 import { deepmerge } from 'deepmerge-ts'
-import {
-  testAjaxEventsRequest, testAjaxTimeSlicesRequest, testCustomMetricsRequest, testErrorsRequest,
-  testEventsRequest, testInsRequest, testInteractionEventsRequest, testMetricsRequest, testResourcesRequest,
-  testRumRequest, testSupportMetricsRequest,
-  testTimingEventsRequest, testBlobRequest, testBlobReplayRequest, testBlobTraceRequest, testSessionReplaySnapshotRequest,
-  testInternalErrorsRequest,
-  testAnyJseXhrRequest,
-  testLogsRequest
-} from '../../../testing-server/utils/expect-tests.js'
 import defaultAssetQuery from './default-asset-query.mjs'
 import { getBrowserName, getBrowserVersion } from '../../../browsers-lists/utils.mjs'
 import { NetworkCaptureConnector } from './network-capture-connector.mjs'
@@ -142,7 +133,7 @@ export class TestHandleConnector {
       method: 'POST',
       body: serialize({
         serverId,
-        scheduledReply: { ...scheduledReply, test: scheduledReply.test }
+        scheduledReply
       }),
       headers: { 'content-type': 'application/serialized+json' }
     })
@@ -150,6 +141,28 @@ export class TestHandleConnector {
     if (result.status !== 200) {
       log.error(`Scheduling reply failed with status code ${result.status}`, await result.json(), result.error)
       throw new Error('Scheduling reply failed with an unknown result')
+    }
+  }
+
+  /**
+   * Deletes one or more scheduled replies for the given server by the scheduled reply test function name.
+   * @param {'assetServer'|'bamServer'} serverId Id of the server the request will be received on
+   * @param {ScheduledReply} scheduledReply The reply options to apply to the server request, only needs to include
+   * the test function
+   */
+  async clearScheduledReply (serverId, scheduledReply) {
+    const result = await fetch(`${this.#commandServerBase}/test-handle/${this.#testId}/scheduleReply`, {
+      method: 'DELETE',
+      body: serialize({
+        serverId,
+        scheduledReply
+      }),
+      headers: { 'content-type': 'application/serialized+json' }
+    })
+
+    if (result.status !== 200) {
+      log.error(`Deleting scheduled reply failed with status code ${result.status}`, await result.json(), result.error)
+      throw new Error('Deleting scheduled reply failed with an unknown result')
     }
   }
 
@@ -271,177 +284,5 @@ export class TestHandleConnector {
     } finally {
       this.#pendingExpects.delete(pendingExpect)
     }
-  }
-
-  /* ***** BAM Expect Shortcut Methods ***** */
-
-  expectRum (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testRumRequest,
-      expectTimeout
-    })
-  }
-
-  expectEvents (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testEventsRequest,
-      expectTimeout
-    })
-  }
-
-  expectTimings (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testTimingEventsRequest,
-      expectTimeout
-    })
-  }
-
-  expectFinalTimings (timeout, expectTimeout = false) {
-    return Promise.all([ // EoL harvest can actually happen twice on navigation away -- typically when there's an CLS update/node
-      this.expect('bamServer', {
-        timeout,
-        test: testTimingEventsRequest,
-        expectTimeout
-      }),
-      this.expect('bamServer', {
-        timeout,
-        test: testTimingEventsRequest,
-        expectTimeout
-      })
-    ]).then(([firstHarvest, secondHarvest]) => {
-      firstHarvest.request.body.push(...secondHarvest.request.body)
-      return firstHarvest
-    })
-  }
-
-  expectAjaxEvents (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testAjaxEventsRequest,
-      expectTimeout
-    })
-  }
-
-  expectInteractionEvents (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testInteractionEventsRequest,
-      expectTimeout
-    })
-  }
-
-  expectMetrics (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testMetricsRequest,
-      expectTimeout
-    })
-  }
-
-  expectSupportMetrics (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testSupportMetricsRequest,
-      expectTimeout
-    })
-  }
-
-  expectCustomMetrics (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testCustomMetricsRequest,
-      expectTimeout
-    })
-  }
-
-  expectErrors (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testErrorsRequest,
-      expectTimeout
-    })
-  }
-
-  expectAnyJseXhr (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testAnyJseXhrRequest,
-      expectTimeout
-    })
-  }
-
-  expectInternalErrors (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testInternalErrorsRequest,
-      expectTimeout
-    })
-  }
-
-  expectAjaxTimeSlices (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testAjaxTimeSlicesRequest,
-      expectTimeout
-    })
-  }
-
-  expectIns (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testInsRequest,
-      expectTimeout
-    })
-  }
-
-  expectResources (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testResourcesRequest,
-      expectTimeout
-    })
-  }
-
-  expectLogs (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testLogsRequest,
-      expectTimeout
-    })
-  }
-
-  expectBlob (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testBlobRequest,
-      expectTimeout
-    })
-  }
-
-  expectReplay (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testBlobReplayRequest,
-      expectTimeout
-    })
-  }
-
-  expectTrace (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testBlobTraceRequest,
-      expectTimeout
-    })
-  }
-
-  expectSessionReplaySnapshot (timeout, expectTimeout = false) {
-    return this.expect('bamServer', {
-      timeout,
-      test: testSessionReplaySnapshotRequest,
-      expectTimeout
-    })
   }
 }

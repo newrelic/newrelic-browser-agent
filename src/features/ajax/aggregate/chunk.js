@@ -1,5 +1,6 @@
 import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../../../common/serialize/bel-serializer'
-import { getInfo } from '../../../common/config/config'
+import { getInfo } from '../../../common/config/info'
+import { MAX_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
 
 export default class Chunk {
   constructor (events, aggregateInstance) {
@@ -46,6 +47,6 @@ export default class Chunk {
       this.payload += insert
     }
 
-    this.tooBig = this.payload.length * 2 > aggregateInstance.MAX_PAYLOAD_SIZE
+    this.tooBig = this.payload.length * 2 > MAX_PAYLOAD_SIZE
   }
 }

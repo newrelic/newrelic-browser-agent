@@ -1,9 +1,9 @@
 import { Interaction } from '../../../../../src/features/soft_navigations/aggregate/interaction'
 import { INTERACTION_STATUS } from '../../../../../src/features/soft_navigations/constants'
-import * as configModule from '../../../../../src/common/config/config'
+import * as runtimeModule from '../../../../../src/common/config/runtime'
 import { Obfuscator } from '../../../../../src/common/util/obfuscate'
 
-jest.mock('../../../../../src/common/config/config', () => ({
+jest.mock('../../../../../src/common/config/info', () => ({
   __esModule: true,
   getInfo: jest.fn().mockReturnValue({
     jsAttributes: {
@@ -11,13 +11,19 @@ jest.mock('../../../../../src/common/config/config', () => ({
       key2: 'value2'
     },
     atts: 'apm_attributes_string'
-  }),
-  getConfigurationValue: jest.fn(),
+  })
+}))
+jest.mock('../../../../../src/common/config/init', () => ({
+  __esModule: true,
+  getConfigurationValue: jest.fn()
+}))
+jest.mock('../../../../../src/common/config/runtime', () => ({
+  __esModule: true,
   getRuntime: jest.fn()
 }))
 
 beforeEach(() => {
-  jest.mocked(configModule.getRuntime).mockReturnValue({
+  jest.mocked(runtimeModule.getRuntime).mockReturnValue({
     obfuscator: new Obfuscator('abcd')
   })
 })
@@ -158,7 +164,7 @@ describe('Interaction when done', () => {
 
 test('Interaction serialize output is correct', () => {
   jest.resetModules() // reset so we get a reliable node ID of 1
-  jest.doMock('../../../../../src/common/config/config', () => ({
+  jest.doMock('../../../../../src/common/config/info', () => ({
     __esModule: true,
     getInfo: jest.fn().mockReturnValue({
       jsAttributes: {
@@ -166,8 +172,14 @@ test('Interaction serialize output is correct', () => {
         key2: 'value2'
       },
       atts: 'apm_attributes_string'
-    }),
-    getConfigurationValue: jest.fn(),
+    })
+  }))
+  jest.doMock('../../../../../src/common/config/init', () => ({
+    __esModule: true,
+    getConfigurationValue: jest.fn()
+  }))
+  jest.doMock('../../../../../src/common/config/runtime', () => ({
+    __esModule: true,
     getRuntime: jest.fn().mockReturnValue({
       obfuscator: new Obfuscator('abcd')
     })

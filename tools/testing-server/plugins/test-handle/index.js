@@ -8,7 +8,6 @@ const { testIdFromRequest } = require('../../utils/fastify-request')
  */
 module.exports = fp(async function (fastify, testServer) {
   fastify.decorateRequest('scheduledReply', null)
-  fastify.decorateRequest('resolvingExpect', null)
   fastify.decorateRequest('networkCaptures', null)
   fastify.decorateRequest('testHandle', null)
   fastify.addHook('onRequest', async (request) => {
@@ -49,28 +48,6 @@ module.exports = fp(async function (fastify, testServer) {
           reply.header(header.key, header.value)
         }
       }
-    }
-
-    if (request.resolvingExpect) {
-      const fn = request.resolvingExpect.expectTimeout
-        ? request.resolvingExpect.reject
-        : request.resolvingExpect.resolve
-
-      fn({
-        request: {
-          body: request.body,
-          query: request.query,
-          headers: request.headers,
-          method: request.method.toUpperCase()
-        },
-        reply: {
-          statusCode: reply.statusCode,
-          headers: reply.getHeaders(),
-          body: request.url.startsWith('/tests/assets/') || request.url.startsWith('/build/')
-            ? 'Asset content'
-            : payload
-        }
-      })
     }
 
     request.networkCaptures?.forEach(networkCapture => {

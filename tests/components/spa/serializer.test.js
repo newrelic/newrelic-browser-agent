@@ -2,7 +2,8 @@
 import * as qp from '@newrelic/nr-querypack'
 import { Serializer } from '../../../src/features/spa/aggregate/serializer'
 import { Interaction } from '../../../src/features/spa/aggregate/interaction'
-import * as configModule from '../../../src/common/config/config'
+import * as infoModule from '../../../src/common/config/info'
+import * as runtimeModule from '../../../src/common/config/runtime'
 import { Obfuscator } from '../../../src/common/util/obfuscate'
 
 const testCases = require('@newrelic/nr-querypack/examples/all.json').filter((testCase) => {
@@ -11,12 +12,19 @@ const testCases = require('@newrelic/nr-querypack/examples/all.json').filter((te
     JSON.parse(testCase.json).length === 1
 })
 let mockInfo = {}
-jest.mock('../../../src/common/config/config', () => ({
-  getConfigurationValue: jest.fn(),
-  originals: { ST: setTimeout, CT: clearTimeout },
+jest.mock('../../../src/common/constants/runtime')
+jest.mock('../../../src/common/config/info', () => ({
+  __esModule: true,
   getInfo: jest.fn(() => mockInfo),
-  setInfo: jest.fn((_id, newInfo) => { mockInfo = newInfo }),
-  getRuntime: jest.fn()
+  setInfo: jest.fn((_id, newInfo) => { mockInfo = newInfo })
+}))
+jest.mock('../../../src/common/config/init', () => ({
+  __esModule: true,
+  getConfigurationValue: jest.fn()
+}))
+jest.mock('../../../src/common/config/runtime', () => ({
+  __esModule: true,
+  getRuntime: jest.fn().mockReturnValue({})
 }))
 
 const agentIdentifier = 'abcdefg'
@@ -33,7 +41,7 @@ const fieldPropMap = {
 }
 
 beforeEach(() => {
-  jest.mocked(configModule.getRuntime).mockReturnValue({
+  jest.mocked(runtimeModule.getRuntime).mockReturnValue({
     origin: 'localhost',
     obfuscator: new Obfuscator(agentIdentifier)
   })
@@ -129,7 +137,7 @@ function runTest (testCase) {
   const navTiming = []
   let offset = 0
 
-  delete configModule.getInfo(agentIdentifier).atts
+  delete infoModule.getInfo(agentIdentifier).atts
 
   inputJSON.forEach(function (root) {
     offset = root.start
@@ -151,7 +159,7 @@ function runTest (testCase) {
       }
     }
 
-    const info = configModule.getInfo(agentIdentifier)
+    const info = infoModule.getInfo(agentIdentifier)
 
     const typesByName = {}
     schema.nodeTypes.forEach(type => (typesByName[type.type] = type))
@@ -285,7 +293,7 @@ function handleAttributes (node) {
         node.attrs.custom[child.key] = null
         break
       case 'apmAttributes':
-        configModule.getInfo(agentIdentifier).atts = child.obfuscatedAttributes
+        infoModule.getInfo(agentIdentifier).atts = child.obfuscatedAttributes
         break
       case 'elementData':
         node.attrs.elementData = child

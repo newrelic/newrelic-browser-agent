@@ -14,6 +14,16 @@ test('can register a feat and drain it', () => {
   expect(emitSpy).toHaveBeenCalledWith('drain-page_view_event', expect.anything())
 })
 
+test('will not execute .on if the object is not an EE', () => {
+  registerHandler('tusks', () => {}, 'page_view_event', ee.get('abcd'))
+  registerDrain('abcd', 'page_view_event')
+  let valuesSpy = jest.spyOn(Object, 'values').mockImplementation(() => [[{ foo: 'bar' }]])
+  let emitSpy = jest.spyOn(ee.get('abcd'), 'on')
+  drain('abcd', 'page_view_event')
+  expect(valuesSpy).toHaveBeenCalled()
+  expect(emitSpy).not.toHaveBeenCalled()
+})
+
 test('other unregistered drains do not affect feat reg & drain', () => {
   registerDrain('abcd', 'page_view_event')
 

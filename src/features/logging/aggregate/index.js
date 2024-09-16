@@ -1,4 +1,6 @@
-import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
+import { getInfo } from '../../../common/config/info'
+import { getConfigurationValue } from '../../../common/config/init'
+import { getRuntime } from '../../../common/config/runtime'
 import { handle } from '../../../common/event-emitter/handle'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
@@ -6,10 +8,12 @@ import { warn } from '../../../common/util/console'
 import { stringify } from '../../../common/util/stringify'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { AggregateBase } from '../../utils/aggregate-base'
-import { FEATURE_NAME, LOGGING_EVENT_EMITTER_CHANNEL, LOG_LEVELS, MAX_PAYLOAD_SIZE } from '../constants'
+import { FEATURE_NAME, LOGGING_EVENT_EMITTER_CHANNEL, LOG_LEVELS } from '../constants'
 import { Log } from '../shared/log'
 import { isValidLogLevel } from '../shared/utils'
 import { applyFnToProps } from '../../../common/util/traverse'
+import { MAX_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
+import { EventBuffer } from '../../utils/event-buffer'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -19,11 +23,7 @@ export class Aggregate extends AggregateBase {
     super(agentIdentifier, aggregator, FEATURE_NAME)
 
     /** held logs before sending */
-    this.bufferedLogs = []
-    /** held logs during sending, for retries */
-    this.outgoingLogs = []
-    /** the estimated bytes of log data waiting to be sent -- triggers a harvest if adding a new log will exceed limit  */
-    this.estimatedBytes = 0
+    this.bufferedLogs = new EventBuffer()
 
     this.#agentRuntime = getRuntime(this.agentIdentifier)
     this.#agentInfo = getInfo(this.agentIdentifier)
@@ -37,11 +37,11 @@ export class Aggregate extends AggregateBase {
         getPayload: this.prepareHarvest.bind(this),
         raw: true
       }, this)
-      /** harvest immediately once started to purge pre-load logs collected */
-      this.scheduler.startTimer(this.harvestTimeSeconds, 0)
       /** emitted by instrument class (wrapped loggers) or the api methods directly */
       registerHandler(LOGGING_EVENT_EMITTER_CHANNEL, this.handleLog.bind(this), this.featureName, this.ee)
       this.drain()
+      /** harvest immediately once started to purge pre-load logs collected */
+      this.scheduler.startTimer(this.harvestTimeSeconds, 0)
     })
   }
 
@@ -68,38 +68,36 @@ export class Aggregate extends AggregateBase {
       return
     }
     if (typeof message !== 'string' || !message) return warn(32)
-    if (message.length > MAX_PAYLOAD_SIZE) {
-      handle(SUPPORTABILITY_METRIC_CHANNEL, ['Logging/Harvest/Failed/Seen', message.length])
-      return warn(31, message.slice(0, 25) + '...')
-    }
 
     const log = new Log(
-      this.#agentRuntime.timeKeeper.convertRelativeTimestamp(timestamp),
+      Math.floor(this.#agentRuntime.timeKeeper.correctAbsoluteTimestamp(
+        this.#agentRuntime.timeKeeper.convertRelativeTimestamp(timestamp)
+      )),
       message,
       attributes,
       level
     )
     const logBytes = log.message.length + stringify(log.attributes).length + log.level.length + 10 // timestamp == 10 chars
-    if (logBytes > MAX_PAYLOAD_SIZE) {
-      handle(SUPPORTABILITY_METRIC_CHANNEL, ['Logging/Harvest/Failed/Seen', logBytes])
-      return warn(31, log.message.slice(0, 25) + '...')
+
+    if (!this.bufferedLogs.canMerge(logBytes)) {
+      if (this.bufferedLogs.hasData) {
+        handle(SUPPORTABILITY_METRIC_CHANNEL, ['Logging/Harvest/Early/Seen', this.bufferedLogs.bytes + logBytes])
+        this.scheduler.runHarvest({})
+        if (logBytes < MAX_PAYLOAD_SIZE) this.bufferedLogs.add(log)
+      } else {
+        handle(SUPPORTABILITY_METRIC_CHANNEL, ['Logging/Harvest/Failed/Seen', logBytes])
+        warn(31, log.message.slice(0, 25) + '...')
+      }
+      return
     }
 
-    if (this.estimatedBytes + logBytes >= MAX_PAYLOAD_SIZE) {
-      handle(SUPPORTABILITY_METRIC_CHANNEL, ['Logging/Harvest/Early/Seen', this.estimatedBytes + logBytes])
-      this.scheduler.runHarvest({})
-    }
-    this.estimatedBytes += logBytes
-    this.bufferedLogs.push(log)
+    this.bufferedLogs.add(log)
   }
 
-  prepareHarvest () {
-    if (this.blocked || !(this.bufferedLogs.length || this.outgoingLogs.length)) return
-    /** populate outgoing array while also clearing main buffer */
-    this.outgoingLogs.push(...this.bufferedLogs.splice(0))
-    this.estimatedBytes = 0
+  prepareHarvest (options = {}) {
+    if (this.blocked || !this.bufferedLogs.hasData) return
     /** see https://source.datanerd.us/agents/rum-specs/blob/main/browser/Log for logging spec */
-    return {
+    const payload = {
       qs: {
         browser_monitoring_key: this.#agentInfo.licenseKey
       },
@@ -119,14 +117,20 @@ export class Aggregate extends AggregateBase {
         },
         /** logs section contains individual unique log entries */
         logs: applyFnToProps(
-          this.outgoingLogs,
+          this.bufferedLogs.buffer,
           this.obfuscator.obfuscateString.bind(this.obfuscator), 'string'
         )
       }]
     }
+
+    if (options.retry) this.bufferedLogs.hold()
+    else this.bufferedLogs.clear()
+
+    return payload
   }
 
   onHarvestFinished (result) {
-    if (!result.retry) this.outgoingLogs = []
+    if (result.retry) this.bufferedLogs.unhold()
+    else this.bufferedLogs.held.clear()
   }
 }

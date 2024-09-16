@@ -12,7 +12,9 @@ import { registerHandler as register } from '../../../common/event-emitter/regis
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { stringify } from '../../../common/util/stringify'
 import { handle } from '../../../common/event-emitter/handle'
-import { getInfo, getConfigurationValue, getRuntime } from '../../../common/config/config'
+import { getInfo } from '../../../common/config/info'
+import { getConfigurationValue } from '../../../common/config/init'
+import { getRuntime } from '../../../common/config/runtime'
 import { globalScope } from '../../../common/constants/runtime'
 
 import { FEATURE_NAME } from '../constants'
@@ -182,7 +184,9 @@ export class Aggregate extends AggregateBase {
     if (!this.stackReported[bucketHash]) {
       this.stackReported[bucketHash] = true
       params.stack_trace = truncateSize(stackInfo.stackString)
-      this.observedAt[bucketHash] = agentRuntime.timeKeeper.convertRelativeTimestamp(time)
+      this.observedAt[bucketHash] = Math.floor(agentRuntime.timeKeeper.correctAbsoluteTimestamp(
+        agentRuntime.timeKeeper.convertRelativeTimestamp(time)
+      ))
     } else {
       params.browser_stack_hash = stringHashCode(stackInfo.stackString)
     }
@@ -199,7 +203,9 @@ export class Aggregate extends AggregateBase {
     }
 
     params.firstOccurrenceTimestamp = this.observedAt[bucketHash]
-    params.timestamp = agentRuntime.timeKeeper.convertRelativeTimestamp(time)
+    params.timestamp = Math.floor(agentRuntime.timeKeeper.correctAbsoluteTimestamp(
+      agentRuntime.timeKeeper.convertRelativeTimestamp(time)
+    ))
 
     var type = internal ? 'ierr' : 'err'
     var newMetrics = { time }

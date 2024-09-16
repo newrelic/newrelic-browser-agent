@@ -1,7 +1,8 @@
-import { getRuntime, getConfiguration } from '../../../common/config/config'
+import { getConfiguration } from '../../../common/config/init'
+import { getRuntime } from '../../../common/config/runtime'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
-import { FEATURE_NAME, SUPPORTABILITY_METRIC, CUSTOM_METRIC, SUPPORTABILITY_METRIC_CHANNEL, CUSTOM_METRIC_CHANNEL } from '../constants'
+import { FEATURE_NAME, SUPPORTABILITY_METRIC, CUSTOM_METRIC, SUPPORTABILITY_METRIC_CHANNEL, CUSTOM_METRIC_CHANNEL/*, WATCHABLE_WEB_SOCKET_EVENTS */ } from '../constants'
 import { getFrameworks } from './framework-detection'
 import { isFileProtocol } from '../../../common/url/protocol'
 import { onDOMContentLoaded } from '../../../common/window/load'
@@ -9,6 +10,8 @@ import { windowAddEventListener } from '../../../common/event-listener/event-lis
 import { isBrowserScope, isWorkerScope } from '../../../common/constants/runtime'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { deregisterDrain } from '../../../common/drain/drain'
+// import { WEBSOCKET_TAG } from '../../../common/wrap/wrap-websocket'
+// import { handleWebsocketEvents } from './websocket-detection'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -98,16 +101,27 @@ export class Aggregate extends AggregateBase {
     if (proxy.beacon) this.storeSupportabilityMetrics('Config/BeaconUrl/Changed')
 
     if (isBrowserScope && window.MutationObserver) {
-      this.storeSupportabilityMetrics('Generic/VideoElement/Added', window.document.querySelectorAll('video').length)
+      if (window.self !== window.top) { this.storeSupportabilityMetrics('Generic/Runtime/IFrame/Detected') }
+      const preExistingVideos = window.document.querySelectorAll('video').length
+      if (preExistingVideos) this.storeSupportabilityMetrics('Generic/VideoElement/Added', preExistingVideos)
+      const preExistingIframes = window.document.querySelectorAll('iframe').length
+      if (preExistingIframes) this.storeSupportabilityMetrics('Generic/IFrame/Added', preExistingIframes)
       const mo = new MutationObserver(records => {
         records.forEach(record => {
           record.addedNodes.forEach(addedNode => {
             if (addedNode instanceof HTMLVideoElement) { this.storeSupportabilityMetrics('Generic/VideoElement/Added', 1) }
+            if (addedNode instanceof HTMLIFrameElement) { this.storeSupportabilityMetrics('Generic/IFrame/Added', 1) }
           })
         })
       })
       mo.observe(window.document.body, { childList: true, subtree: true })
     }
+
+    // WATCHABLE_WEB_SOCKET_EVENTS.forEach(tag => {
+    //   registerHandler('buffered-' + WEBSOCKET_TAG + tag, (...args) => {
+    //     handleWebsocketEvents(this.storeSupportabilityMetrics.bind(this), tag, ...args)
+    //   }, this.featureName, this.ee)
+    // })
   }
 
   eachSessionChecks () {
@@ -147,8 +161,8 @@ export class Aggregate extends AggregateBase {
       if (typeof performance !== 'undefined') {
         const markers = performance.getEntriesByType('mark')
         const measures = performance.getEntriesByType('measure')
-        this.storeSupportabilityMetrics('Generic/Performance/Mark/Seen', markers.length)
-        this.storeSupportabilityMetrics('Generic/Performance/Measure/Seen', measures.length)
+        if (markers.length) this.storeSupportabilityMetrics('Generic/Performance/Mark/Seen', markers.length)
+        if (measures.length) this.storeSupportabilityMetrics('Generic/Performance/Measure/Seen', measures.length)
       }
     } catch (e) {
       // do nothing

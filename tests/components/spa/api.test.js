@@ -2,25 +2,24 @@ import helpers from './helpers'
 import { Aggregator } from '../../../src/common/aggregate/aggregator'
 import { ee } from '../../../src/common/event-emitter/contextual-ee'
 import { Spa } from '../../../src/features/spa'
-import { getInfo, originals } from '../../../src/common/config/config'
+import { getInfo } from '../../../src/common/config/info'
 import { bundleId } from '../../../src/common/ids/bundle-id'
 import { now } from '../../../src/common/timing/now'
+import { gosNREUMOriginals } from '../../../src/common/window/nreum'
 
-jest.mock('../../../src/common/constants/runtime', () => ({
+jest.mock('../../../src/common/constants/runtime')
+jest.mock('../../../src/common/config/info', () => ({
   __esModule: true,
-  isBrowserScope: true,
-  globalScope: global
+  getInfo: jest.fn(),
+  isValid: jest.fn().mockReturnValue(true)
 }))
-jest.mock('../../../src/common/config/config', () => ({
+jest.mock('../../../src/common/config/init', () => ({
   __esModule: true,
-  getConfigurationValue: jest.fn(),
-  originals: {
-    ST: setTimeout,
-    CT: clearTimeout
-  },
-  getRuntime: jest.fn().mockReturnValue({}),
-  isConfigured: jest.fn().mockReturnValue(true),
-  getInfo: jest.fn()
+  getConfigurationValue: jest.fn()
+}))
+jest.mock('../../../src/common/config/runtime', () => ({
+  __esModule: true,
+  getRuntime: jest.fn().mockReturnValue({})
 }))
 
 let spaInstrument, spaAggregate, newrelic, mockCurrentInfo
@@ -170,7 +169,7 @@ test('async api no callback', async () => {
     function onInteractionStart (cb) {
       const asyncDone = newrelic.interaction().createTracer('custom-async')
 
-      originals.ST(asyncDone, 5)
+      gosNREUMOriginals().o.ST(asyncDone, 5)
       setTimeout(function () {
         newrelic.interaction().command('setAttribute', undefined, 'setTimeout-cb', true)
         cb()

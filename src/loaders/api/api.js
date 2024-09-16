@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { FEATURE_NAMES } from '../features/features'
-import { getRuntime, setInfo, getInfo } from '../../common/config/config'
+import { getInfo, setInfo } from '../../common/config/info'
+import { getRuntime } from '../../common/config/runtime'
 import { handle } from '../../common/event-emitter/handle'
 import { ee } from '../../common/event-emitter/contextual-ee'
 import { drain, registerDrain } from '../../common/drain/drain'

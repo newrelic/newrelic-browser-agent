@@ -2,15 +2,19 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
 */
-import {
-  wrapMutation, wrapPromise, wrapHistory, wrapTimer, wrapFetch, wrapXhr, wrapJsonP
-} from '../../../common/wrap'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
 import { InstrumentBase } from '../../utils/instrument-base'
 import * as CONSTANTS from '../constants'
 import { isBrowserScope } from '../../../common/constants/runtime'
 import { now } from '../../../common/timing/now'
 import { handle } from '../../../common/event-emitter/handle'
+import { wrapJsonP } from '../../../common/wrap/wrap-jsonp'
+import { wrapPromise } from '../../../common/wrap/wrap-promise'
+import { wrapTimer } from '../../../common/wrap/wrap-timer'
+import { wrapXhr } from '../../../common/wrap/wrap-xhr'
+import { wrapFetch } from '../../../common/wrap/wrap-fetch'
+import { wrapHistory } from '../../../common/wrap/wrap-history'
+import { wrapMutation } from '../../../common/wrap/wrap-mutation'
 
 const {
   FEATURE_NAME, START, END, BODY, CB_END, JS_TIME, FETCH, FN_START, CB_START, FN_END
@@ -112,3 +116,5 @@ export class Instrument extends InstrumentBase {
     this.abortHandler = undefined // weakly allow this abort op to run only once
   }
 }
+
+export const Spa = Instrument

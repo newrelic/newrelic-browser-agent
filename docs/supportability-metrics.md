@@ -6,6 +6,45 @@ Supportability metrics are intended to be used to give internal value through an
 ## How
 A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service called Angler aggregates metrics against known labels once per hour and reports a new event with the aggregation findings to a dedicated account.
 
+### WebSockets
+<!--- WebSocket new class was made, ms from page origin --->
+* WebSocket/New/Ms
+<!--- WebSocket new class was made, ms from class init --->
+* WebSocket/New/MsSinceClassInit
+
+<!--- WebSocket send method was called, ms from page origin --->
+* WebSocket/Send/Ms
+<!--- WebSocket send method was called, ms from class init --->
+* WebSocket/Send/MsSinceClassInit
+<!--- WebSocket send method was called, bytes from args --->
+* WebSocket/Send/Bytes
+
+<!--- WebSocket was cleanly closed, ms from page origin --->
+* WebSocket/Close-Clean/Ms
+<!--- WebSocket was cleanly closed, ms from class init --->
+* WebSocket/Close-Clean/MsSinceClassInit
+<!--- WebSocket was uncleanly closed, ms from page origin --->
+* WebSocket/Close-Dirty/Ms
+<!--- WebSocket was uncleanly closed, ms from class init --->
+* WebSocket/Close-Dirty/MsSinceClassInit
+  
+<!--- WebSocket message event was received, ms from page origin --->
+* WebSocket/Message/Ms
+<!--- WebSocket message event was received, ms from class init --->
+* WebSocket/Message/MsSinceClassInit
+<!--- WebSocket message event was received, bytes from args --->
+* WebSocket/Message/Bytes
+  
+<!--- WebSocket error event was received, ms from page origin --->
+* WebSocket/Error/Ms
+<!--- WebSocket error event was received, ms from class init --->
+* WebSocket/Error/MsSinceClassInit
+  
+<!--- WebSocket open event was received, ms from page origin --->
+* WebSocket/Open/Ms
+<!--- WebSocket open event was received, ms from class init --->
+* WebSocket/Open/MsSinceClassInit
+
 ### Logging
 <!--- Logging harvest was too big to send --->
 * Logging/Harvest/Failed/Seen
@@ -71,6 +110,8 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 * Generic/Runtime/Unknown/Detected
 <!--- Agent script element was decorated with nonce attribute --->
 * Generic/Runtime/Nonce/Detected
+* <!--- Agent running in an IFrame was Detected --->
+* Generic/Runtime/IFrame/Detected
 <!--- Agent is running in a local file --->
 * Generic/FileProtocol/Detected
 <!--- Obfuscation rules were Detected --->
@@ -93,6 +134,8 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 * Generic/Resources/Non-Ajax/External
 <!--- A <video> element was added to the DOM, should have a total count as part of the metric --->
 * Generic/VideoElement/Added
+<!--- A <iframe> element was added to the DOM, should have a total count as part of the metric --->
+* Generic/IFrame/Added
 
 ### Frameworks
 <!--- React was Detected --->

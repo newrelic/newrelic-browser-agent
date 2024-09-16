@@ -1,4 +1,5 @@
 import { srConfig, getSR } from '../util/helpers'
+import { testErrorsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 describe('Session Replay Sample Mode Validation', () => {
   afterEach(async () => {
@@ -10,6 +11,7 @@ describe('Session Replay Sample Mode Validation', () => {
     await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
       .then(() => browser.waitForSessionReplayRecording())
 
+    await browser.pause(1000) // Give the agent time to update the session replay state
     await expect(getSR()).resolves.toMatchObject({
       recording: true,
       initialized: true,
@@ -23,6 +25,7 @@ describe('Session Replay Sample Mode Validation', () => {
     await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
       .then(() => browser.waitForSessionReplayRecording())
 
+    await browser.pause(1000) // Give the agent time to update the session replay state
     await expect(getSR()).resolves.toMatchObject({
       recording: true,
       initialized: true,
@@ -35,11 +38,14 @@ describe('Session Replay Sample Mode Validation', () => {
     await browser.enableSessionReplay(0, 100)
     await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
       .then(() => browser.waitForSessionReplayRecording())
-    let sr = await getSR()
-    expect(sr.recording).toEqual(true)
-    expect(sr.initialized).toEqual(true)
-    expect(sr.events).toEqual(expect.any(Array))
-    expect(sr.mode).toEqual(2)
+
+    await browser.pause(1000) // Give the agent time to update the session replay state
+    await expect(getSR()).resolves.toMatchObject({
+      recording: true,
+      initialized: true,
+      events: expect.any(Array),
+      mode: 2
+    })
   })
 
   it('Full 0 Error 0 === OFF', async () => {
@@ -47,6 +53,7 @@ describe('Session Replay Sample Mode Validation', () => {
     await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
       .then(() => browser.waitForFeatureAggregate('session_replay'))
 
+    await browser.pause(1000) // Give the agent time to update the session replay state
     await expect(getSR()).resolves.toMatchObject({
       recording: false,
       initialized: true,
@@ -60,6 +67,7 @@ describe('Session Replay Sample Mode Validation', () => {
     await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
       .then(() => browser.waitForFeatureAggregate('session_replay'))
 
+    await browser.pause(1000) // Give the agent time to update the session replay state
     await expect(getSR()).resolves.toMatchObject({
       recording: false,
       initialized: true,
@@ -74,6 +82,7 @@ describe('Session Replay Sample Mode Validation', () => {
       browser.pause(1000)
     ])
 
+    await browser.pause(1000) // Give the agent time to update the session replay state
     await expect(getSR()).resolves.toMatchObject({
       recording: true,
       initialized: true,
@@ -87,10 +96,13 @@ describe('Session Replay Sample Mode Validation', () => {
     await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
       .then(() => browser.waitForFeatureAggregate('session_replay')).then(() => browser.pause(1000))
 
-    let sr = await getSR()
-    expect(sr.recording).toEqual(true)
-    expect(sr.initialized).toEqual(true)
-    expect(sr.mode).toEqual(2)
+    await browser.pause(1000) // Give the agent time to update the session replay state
+    await expect(getSR()).resolves.toMatchObject({
+      recording: true,
+      initialized: true,
+      events: expect.any(Array),
+      mode: 2
+    })
 
     await Promise.all([
       browser.execute(function () {
@@ -98,12 +110,13 @@ describe('Session Replay Sample Mode Validation', () => {
       })
     ])
 
-    await browser.pause(1000)
-
-    sr = await getSR()
-    expect(sr.recording).toEqual(true)
-    expect(sr.initialized).toEqual(true)
-    expect(sr.mode).toEqual(1)
+    await browser.pause(1000) // Give the agent time to update the session replay state
+    await expect(getSR()).resolves.toMatchObject({
+      recording: true,
+      initialized: true,
+      events: expect.any(Array),
+      mode: 1
+    })
   })
 
   it('ERROR (seen after init) => FULL', async () => {
@@ -111,6 +124,7 @@ describe('Session Replay Sample Mode Validation', () => {
     await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
       .then(() => browser.waitForSessionReplayRecording())
 
+    await browser.pause(1000) // Give the agent time to update the session replay state
     await expect(getSR()).resolves.toMatchObject({
       recording: true,
       initialized: true,
@@ -124,6 +138,7 @@ describe('Session Replay Sample Mode Validation', () => {
       }), browser.pause(1000)
     ])
 
+    await browser.pause(1000) // Give the agent time to update the session replay state
     await expect(getSR()).resolves.toMatchObject({
       recording: true,
       initialized: true,
@@ -135,7 +150,7 @@ describe('Session Replay Sample Mode Validation', () => {
   it('ERROR (seen before init) => ERROR', async () => {
     await browser.enableSessionReplay(0, 100)
     await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
-      .then(() => browser.waitForSessionReplayRecording('session_replay'))
+      .then(() => browser.waitForSessionReplayRecording())
 
     await expect(getSR()).resolves.toMatchObject({
       recording: true,
@@ -146,60 +161,66 @@ describe('Session Replay Sample Mode Validation', () => {
   })
 
   it('ERROR (seen before init) --> PRELOAD => (hasReplay)', async () => {
+    const errorsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testErrorsRequest })
     await browser.enableSessionReplay(0, 100)
-    await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig({ session_replay: { preload: true } })))
-      .then(() => browser.waitForPreloadRecorder())
-      .then(() => browser.execute(function () {
-        newrelic.noticeError(new Error('test'))
-      }))
-    const { request: { body: err1 } } = await browser.testHandle.expectErrors()
-    const beforeLoad = err1.err[0]
-    expect(beforeLoad.params.hasReplay).toEqual(true)
+    const [errorsHarvests] = await Promise.all([
+      errorsCapture.waitForResult({ totalCount: 1 }),
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig({ session_replay: { preload: true } })))
+        .then(() => browser.waitForPreloadRecorder())
+        .then(() => browser.execute(function () {
+          newrelic.noticeError(new Error('test'))
+        }))
+    ])
+
+    expect(errorsHarvests[0].request.body.err[0].params.hasReplay).toEqual(true)
   })
 
   it('ERROR (seen before init) --> PRELOAD but ABORTS => (!hasReplay)', async () => {
-    await browser.testHandle.clearScheduledReplies('bamServer')
+    const errorsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testErrorsRequest })
     await browser.enableSessionReplay(0, 100, 0)
-    await browser.url(await browser.testHandle.assetURL('rrweb-split-errors.html', srConfig({ session_replay: { preload: true } })))
-      .then(() => browser.waitForAgentLoad())
-    const { request: { body: err1 } } = await browser.testHandle.expectErrors()
-    const beforeLoad = err1.err[0]
-    expect(beforeLoad.params.hasReplay).toBeUndefined()
+    const [errorsHarvests] = await Promise.all([
+      errorsCapture.waitForResult({ totalCount: 1 }),
+      browser.url(await browser.testHandle.assetURL('rrweb-split-errors.html', srConfig({ session_replay: { preload: true } })))
+        .then(() => browser.waitForAgentLoad())
+    ])
+
+    expect(errorsHarvests[0].request.body.err[0].params.hasReplay).toBeUndefined()
   })
 
   it('ERROR (seen before and after init) -- noticeError => FULL (split)', async () => {
+    const errorsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testErrorsRequest })
     await browser.enableSessionReplay(0, 100)
-    await browser.url(await browser.testHandle.assetURL('rrweb-split-errors.html', srConfig()))
-      .then(() => browser.waitForSessionReplayRecording())
+    let [errorsHarvests] = await Promise.all([
+      errorsCapture.waitForResult({ totalCount: 1 }),
+      browser.url(await browser.testHandle.assetURL('rrweb-split-errors.html', srConfig()))
+        .then(() => browser.waitForSessionReplayRecording())
+    ])
 
-    const { request: { body: err1 } } = await browser.testHandle.expectErrors()
+    expect(errorsHarvests[0].request.body.err[0].params.hasReplay).toBeUndefined()
 
-    const beforeLoad = err1.err[0]
-    expect(beforeLoad.params.hasReplay).toBeUndefined()
-
-    const [{ request: { body: err2 } }] = await Promise.all([
-      browser.testHandle.expectErrors(),
+    ;[errorsHarvests] = await Promise.all([
+      errorsCapture.waitForResult({ timeout: 10000 }),
       browser.execute(function () {
         newrelic.noticeError(new Error('after load'))
       })
     ])
 
-    const afterLoad = err2.err[0]
-    expect(afterLoad.params.hasReplay).toEqual(true)
+    expect(errorsHarvests[errorsHarvests.length - 1].request.body.err[0].params.hasReplay).toEqual(true)
   })
 
   it('ERROR (seen before and after init) -- thrown error => FULL (split)', async () => {
+    const errorsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testErrorsRequest })
     await browser.enableSessionReplay(0, 100)
-    await browser.url(await browser.testHandle.assetURL('rrweb-split-errors.html', srConfig()))
-      .then(() => browser.waitForSessionReplayRecording())
+    let [errorsHarvests] = await Promise.all([
+      errorsCapture.waitForResult({ totalCount: 1 }),
+      browser.url(await browser.testHandle.assetURL('rrweb-split-errors.html', srConfig()))
+        .then(() => browser.waitForSessionReplayRecording())
+    ])
 
-    const { request: { body: err1 } } = await browser.testHandle.expectErrors()
+    expect(errorsHarvests[0].request.body.err[0].params.hasReplay).toBeUndefined()
 
-    const beforeLoad = err1.err[0]
-    expect(beforeLoad.params.hasReplay).toBeUndefined()
-
-    const [{ request: { body: err2 } }] = await Promise.all([
-      browser.testHandle.expectErrors(),
+    ;[errorsHarvests] = await Promise.all([
+      errorsCapture.waitForResult({ timeout: 10000 }),
       browser.execute(function () {
         var scr = document.createElement('script')
         scr.innerHTML = 'eval(\'1=2\')'
@@ -207,15 +228,17 @@ describe('Session Replay Sample Mode Validation', () => {
       })
     ])
 
-    const afterLoad = err2.err[0]
-    expect(afterLoad.params.hasReplay).toEqual(true)
+    expect(errorsHarvests[errorsHarvests.length - 1].request.body.err[0].params.hasReplay).toEqual(true)
   })
 
   it('Duplicate errors before and after init are decorated with hasReplay and timestamps correctly - FULL', async () => {
-    await browser.url(await browser.testHandle.assetURL('rrweb-duplicate-errors-split.html', srConfig({ session_replay: { preload: false, sampling_rate: 100 }, jserrors: { harvestTimeSeconds: 10 } })))
-      .then(() => browser.waitForSessionReplayRecording('session_replay'))
+    const errorsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testErrorsRequest })
+    const [[errors]] = await Promise.all([
+      errorsCapture.waitForResult({ totalCount: 1 }),
+      browser.url(await browser.testHandle.assetURL('rrweb-duplicate-errors-split.html', srConfig({ session_replay: { preload: false, sampling_rate: 100 }, jserrors: { harvestTimeSeconds: 10 } })))
+        .then(() => browser.waitForSessionReplayRecording())
+    ])
 
-    const errors = await browser.testHandle.expectErrors()
     /** should not have hr param on jserror payloads */
     expect(errors.request.query.hr).toEqual(undefined)
     const hasReplaySet = errors.request.body.err.find(x => x.params.hasReplay)
@@ -239,10 +262,13 @@ describe('Session Replay Sample Mode Validation', () => {
   })
 
   it('Duplicate errors before and after init are decorated with hasReplay and timestamps correctly - ERROR', async () => {
-    await browser.url(await browser.testHandle.assetURL('rrweb-duplicate-errors-split.html', srConfig({ session_replay: { preload: false, sampling_rate: 0, error_sampling_rate: 100 }, jserrors: { harvestTimeSeconds: 10 } })))
-      .then(() => browser.waitForSessionReplayRecording('session_replay'))
+    const errorsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testErrorsRequest })
+    const [[errors]] = await Promise.all([
+      errorsCapture.waitForResult({ totalCount: 1 }),
+      browser.url(await browser.testHandle.assetURL('rrweb-duplicate-errors-split.html', srConfig({ session_replay: { preload: false, sampling_rate: 0, error_sampling_rate: 100 }, jserrors: { harvestTimeSeconds: 10 } })))
+        .then(() => browser.waitForSessionReplayRecording())
+    ])
 
-    const errors = await browser.testHandle.expectErrors()
     /** should not have hr param on jserror payloads */
     expect(errors.request.query.hr).toEqual(undefined)
     const hasReplaySet = errors.request.body.err.find(x => x.params.hasReplay)
@@ -270,6 +296,7 @@ describe('Session Replay Sample Mode Validation', () => {
     await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
       .then(() => browser.waitForSessionReplayRecording())
 
+    await browser.pause(1000) // Give the agent time to update the session replay state
     await expect(getSR()).resolves.toMatchObject({
       recording: true,
       initialized: true,
@@ -277,12 +304,11 @@ describe('Session Replay Sample Mode Validation', () => {
       mode: 1
     })
 
-    await Promise.all([
-      browser.execute(function () {
-        Object.values(NREUM.initializedAgents)[0].runtime.session.reset()
-      }), browser.pause(1000)
-    ])
+    await browser.execute(function () {
+      Object.values(NREUM.initializedAgents)[0].runtime.session.reset()
+    })
 
+    await browser.pause(1000) // Give the agent time to update the session replay state
     await expect(getSR()).resolves.toMatchObject({
       recording: false,
       initialized: true,
@@ -296,6 +322,7 @@ describe('Session Replay Sample Mode Validation', () => {
     await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
       .then(() => browser.waitForSessionReplayRecording())
 
+    await browser.pause(1000) // Give the agent time to update the session replay state
     await expect(getSR()).resolves.toMatchObject({
       blocked: false,
       recording: true,
@@ -304,12 +331,11 @@ describe('Session Replay Sample Mode Validation', () => {
       mode: 1
     })
 
-    await Promise.all([
-      browser.execute(function () {
-        Object.values(NREUM.initializedAgents)[0].runtime.session.reset()
-      }), browser.pause(1000)
-    ])
+    await browser.execute(function () {
+      Object.values(NREUM.initializedAgents)[0].runtime.session.reset()
+    })
 
+    await browser.pause(1000) // Give the agent time to update the session replay state
     await expect(getSR()).resolves.toMatchObject({
       blocked: true,
       recording: false,
@@ -318,12 +344,11 @@ describe('Session Replay Sample Mode Validation', () => {
       mode: 0
     })
 
-    await Promise.all([
-      browser.execute(function () {
-        newrelic.noticeError(new Error('test'))
-      }), browser.pause(1000)
-    ])
+    await browser.execute(function () {
+      newrelic.noticeError(new Error('test'))
+    })
 
+    await browser.pause(1000) // Give the agent time to update the session replay state
     await expect(getSR()).resolves.toMatchObject({
       blocked: true,
       recording: false,

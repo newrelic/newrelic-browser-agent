@@ -33,16 +33,6 @@ module.exports = fp(async function (fastify, testServer) {
       reply.code(400).send(e)
     }
   })
-  fastify.post('/test-handle/:testId/expect', async function (request, reply) {
-    const testHandle = testServer.getTestHandle(request.params.testId)
-
-    try {
-      const result = await testHandle.expect(request.body.serverId, request.body.expectOpts)
-      reply.code(200).send(result)
-    } catch (e) {
-      reply.code(400).send(e)
-    }
-  })
 
   // Scheduled Replays APIs
 
@@ -51,6 +41,16 @@ module.exports = fp(async function (fastify, testServer) {
 
     try {
       testHandle.scheduleReply(request.body.serverId, request.body.scheduledReply)
+      reply.code(200).send()
+    } catch (e) {
+      reply.code(400).send(e)
+    }
+  })
+  fastify.delete('/test-handle/:testId/scheduleReply', async function (request, reply) {
+    const testHandle = testServer.getTestHandle(request.params.testId)
+
+    try {
+      testHandle.clearScheduledReply(request.body.serverId, request.body.scheduledReply)
       reply.code(200).send()
     } catch (e) {
       reply.code(400).send(e)

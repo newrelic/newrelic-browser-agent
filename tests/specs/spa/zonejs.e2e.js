@@ -1,13 +1,23 @@
+import { testInteractionEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
+
 describe('spa interactions with zonejs', () => {
+  let interactionsCapture
+
+  beforeEach(async () => {
+    interactionsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testInteractionEventsRequest })
+  })
+
   it('should capture spa interactions with zonejs present', async () => {
     const url = await browser.testHandle.assetURL('spa/zonejs.html')
-    const [initialPageLoadInteractionResults] = await Promise.all([
-      browser.testHandle.expectInteractionEvents(), // Discard the initial page load interaction
-      browser.url(url)
-        .then(() => browser.waitForAgentLoad())
+    const [interactionHarvests] = await Promise.all([
+      interactionsCapture.waitForResult({ timeout: 10000 }),
+      await browser.url(url).then(() => browser.waitForAgentLoad()),
+      // Perform click after the initial page load interaction is captured
+      interactionsCapture.waitForResult({ totalCount: 1 })
+        .then(() => $('body').click())
     ])
 
-    expect(initialPageLoadInteractionResults.request.body).toEqual(expect.arrayContaining([
+    expect(interactionHarvests[0].request.body).toEqual(expect.arrayContaining([
       expect.objectContaining({
         category: 'Initial page load',
         type: 'interaction',
@@ -18,12 +28,7 @@ describe('spa interactions with zonejs', () => {
       })
     ]))
 
-    const [clickInteractionResults] = await Promise.all([
-      browser.testHandle.expectInteractionEvents(),
-      $('body').click()
-    ])
-
-    expect(clickInteractionResults.request.body).toEqual(expect.arrayContaining([
+    expect(interactionHarvests[1].request.body).toEqual(expect.arrayContaining([
       expect.objectContaining({
         category: 'Route change',
         type: 'interaction',
@@ -37,13 +42,12 @@ describe('spa interactions with zonejs', () => {
 
   it('should only call onreadystatechange once with zonejs present', async () => {
     const url = await browser.testHandle.assetURL('spa/zonejs-on-ready-state-change.html')
-    const [interactionEvents] = await Promise.all([
-      browser.testHandle.expectInteractionEvents(), // Discard the initial page load interaction
-      browser.url(url)
-        .then(() => browser.waitForAgentLoad())
+    const [interactionHarvests] = await Promise.all([
+      interactionsCapture.waitForResult({ totalCount: 1 }),
+      await browser.url(url).then(() => browser.waitForAgentLoad())
     ])
 
-    const event = interactionEvents.request.body
+    const event = interactionHarvests[0].request.body
       .find(ev => ev.type === 'interaction' && ev.trigger === 'initialPageLoad')
     expect(event).toEqual(expect.objectContaining({
       category: 'Initial page load',

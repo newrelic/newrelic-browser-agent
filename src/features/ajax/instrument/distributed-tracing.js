@@ -2,7 +2,8 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { getConfiguration, getConfigurationValue, getLoaderConfig } from '../../../common/config/config'
+import { getConfiguration, getConfigurationValue } from '../../../common/config/init'
+import { getLoaderConfig } from '../../../common/config/loader-config'
 import { generateSpanId, generateTraceId } from '../../../common/ids/unique-id'
 import { parseUrl } from '../../../common/url/parse-url'
 import { globalScope } from '../../../common/constants/runtime'

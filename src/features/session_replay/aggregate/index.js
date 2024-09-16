@@ -4,16 +4,14 @@
  */
 /**
  * @file Records, aggregates, and harvests session replay data.
- *
- * NOTE: This code is under development and dormant. It will not download to instrumented pages or record any data.
- * It is not production ready, and is not intended to be imported or implemented in any build of the browser agent until
- * functionality is validated and a full user experience is curated.
  */
 
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
-import { ABORT_REASONS, FEATURE_NAME, MAX_PAYLOAD_SIZE, QUERY_PARAM_PADDING, RRWEB_EVENT_TYPES, SR_EVENT_EMITTER_TYPES, TRIGGERS } from '../constants'
-import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
+import { ABORT_REASONS, FEATURE_NAME, QUERY_PARAM_PADDING, RRWEB_EVENT_TYPES, SR_EVENT_EMITTER_TYPES, TRIGGERS } from '../constants'
+import { getInfo } from '../../../common/config/info'
+import { getConfigurationValue } from '../../../common/config/init'
+import { getRuntime } from '../../../common/config/runtime'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { sharedChannel } from '../../../common/constants/shared-channel'
 import { obj as encodeObj } from '../../../common/url/encode'
@@ -29,6 +27,7 @@ import { stylesheetEvaluator } from '../shared/stylesheet-evaluator'
 import { deregisterDrain } from '../../../common/drain/drain'
 import { now } from '../../../common/timing/now'
 import { buildNRMetaNode } from '../shared/utils'
+import { MAX_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -328,8 +327,13 @@ export class Aggregate extends AggregateBase {
 
     const firstEventTimestamp = this.getCorrectedTimestamp(events[0]) // from rrweb node
     const lastEventTimestamp = this.getCorrectedTimestamp(events[events.length - 1]) // from rrweb node
-    const firstTimestamp = firstEventTimestamp || this.timeKeeper.correctAbsoluteTimestamp(recorderEvents.cycleTimestamp) // from rrweb node || from when the harvest cycle started
-    const lastTimestamp = lastEventTimestamp || this.timeKeeper.convertRelativeTimestamp(relativeNow)
+    // from rrweb node || from when the harvest cycle started
+    const firstTimestamp = firstEventTimestamp || Math.floor(this.timeKeeper.correctAbsoluteTimestamp(
+      this.timeKeeper.correctAbsoluteTimestamp(recorderEvents.cycleTimestamp)
+    ))
+    const lastTimestamp = lastEventTimestamp || Math.floor(this.timeKeeper.correctAbsoluteTimestamp(
+      this.timeKeeper.convertRelativeTimestamp(relativeNow)
+    ))
 
     const agentMetadata = agentRuntime.appMetadata?.agents?.[0] || {}
 

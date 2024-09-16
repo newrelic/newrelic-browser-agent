@@ -52,6 +52,7 @@ jobs:
     with:
       ref: ${{ inputs.ref || github.ref }}
       browser-target: ${{ inputs.latest-only == true && 'ios@latest' || 'ios@*' }}
+      additional-flags: --timeout 120000 --session-timeout 240000
     secrets: inherit
 
   android:
@@ -59,15 +60,8 @@ jobs:
     with:
       ref: ${{ inputs.ref || github.ref }}
       browser-target: ${{ inputs.latest-only == true && 'android@latest' || 'android@*' }}
+      additional-flags: --timeout 120000 --session-timeout 240000
     secrets: inherit
-
-  # ie:
-  #   uses: ./.github/workflows/wdio-single-browser.yml
-  #   with:
-  #     ref: ${{ inputs.ref || github.ref }}
-  #     browser-target: ie@11
-  #     additional-flags: -P
-  #   secrets: inherit
 
   ios-webview:
     uses: ./.github/workflows/wdio-single-browser.yml

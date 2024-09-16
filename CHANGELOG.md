@@ -3,6 +3,37 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.265.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.265.0...v1.265.1) (2024-09-06)
+
+
+### Bug Fixes
+
+* Disable websocket wrapping ([#1176](https://github.com/newrelic/newrelic-browser-agent/issues/1176)) ([5f8a0c4](https://github.com/newrelic/newrelic-browser-agent/commit/5f8a0c42fbade8f6f81471439ecc8999b1556290))
+
+## [1.265.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.264.0...v1.265.0) (2024-08-30)
+
+
+### Features
+
+* add payload size evaluation to generic events feature ([#1152](https://github.com/newrelic/newrelic-browser-agent/issues/1152)) ([65d9d11](https://github.com/newrelic/newrelic-browser-agent/commit/65d9d11172df4a3abe750c3d110b53ad65ae4319))
+* Add WebSocket wrapper and supportability metrics ([#1159](https://github.com/newrelic/newrelic-browser-agent/issues/1159)) ([7b4ab87](https://github.com/newrelic/newrelic-browser-agent/commit/7b4ab87ae28450cc97f6a84f3176e0c9f8698d76))
+* Configure Session Replay to wait for DOMContentLoaded ([#1164](https://github.com/newrelic/newrelic-browser-agent/issues/1164)) ([84bd299](https://github.com/newrelic/newrelic-browser-agent/commit/84bd29981675660d8f47a0f49235005e7be11947))
+* removing internal barrel exports ([#1158](https://github.com/newrelic/newrelic-browser-agent/issues/1158)) ([2e29a6e](https://github.com/newrelic/newrelic-browser-agent/commit/2e29a6e3c9d7a6a099b73aff59682a1e38008072))
+* Standardize Feature Buffering Behavior ([#1155](https://github.com/newrelic/newrelic-browser-agent/issues/1155)) ([d070a43](https://github.com/newrelic/newrelic-browser-agent/commit/d070a4315df35ace82e20b8b2c69044bf8504c92))
+
+
+### Bug Fixes
+
+* Ensure drain target is a valid event emitter before subscribing ([#1167](https://github.com/newrelic/newrelic-browser-agent/issues/1167)) ([187d31f](https://github.com/newrelic/newrelic-browser-agent/commit/187d31fe0fd95e75907742a7c49779683a6b040c))
+* fix duplicative log payloads on unload ([#1166](https://github.com/newrelic/newrelic-browser-agent/issues/1166)) ([52bb088](https://github.com/newrelic/newrelic-browser-agent/commit/52bb08880215c40abf080a2bf1c80a29c7ad3324))
+* relative timestamps in session trace ([#1142](https://github.com/newrelic/newrelic-browser-agent/issues/1142)) ([378b1fb](https://github.com/newrelic/newrelic-browser-agent/commit/378b1fb49ca5732e0c1b704920143b966102cfb6))
+* Updated Logging API function ([#1147](https://github.com/newrelic/newrelic-browser-agent/issues/1147)) ([bf2e980](https://github.com/newrelic/newrelic-browser-agent/commit/bf2e98056c2ad214421918fb4938a08b6213590e))
+
+
+### Security Fixes
+
+* apply obfuscation rules to session trace ([#1149](https://github.com/newrelic/newrelic-browser-agent/issues/1149)) ([fbc6f9d](https://github.com/newrelic/newrelic-browser-agent/commit/fbc6f9d31a33515e05d70e190c9c8da198fa4415))
+
 ## [1.264.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.263.0...v1.264.0) (2024-08-06)
 
 

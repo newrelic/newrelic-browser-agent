@@ -8,6 +8,10 @@
     <title>RUM Unit Test</title>
     {init} {config} {loader}
     <script>
+      var xhr = new XMLHttpRequest()
+      xhr.open('GET', '/text')
+      xhr.send()
+
       window.addEventListener('newrelic', function(event) {
         if (event.detail.loaded) {
           var xhr = new XMLHttpRequest()
@@ -15,8 +19,8 @@
           xhr.send()
 
           newrelic.noticeError('test')
-
           newrelic.addPageAction('test', { test: 1 })
+          newrelic.log('foobar')
         }
       })
     </script>

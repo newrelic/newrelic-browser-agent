@@ -1,6 +1,8 @@
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
-import { getConfigurationValue, getInfo, getRuntime } from '../../../common/config/config'
+import { getInfo } from '../../../common/config/info'
+import { getConfigurationValue } from '../../../common/config/init'
+import { getRuntime } from '../../../common/config/runtime'
 import { FEATURE_NAME } from '../constants'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { TraceStorage } from './trace/storage'
@@ -93,7 +95,7 @@ export class Aggregate extends AggregateBase {
     if (typeof PerformanceNavigationTiming !== 'undefined') {
       this.traceStorage.storeTiming(globalScope.performance?.getEntriesByType?.('navigation')[0])
     } else {
-      this.traceStorage.storeTiming(globalScope.performance?.timing)
+      this.traceStorage.storeTiming(globalScope.performance?.timing, true)
     }
 
     /** Only start actually harvesting if running in full mode at init time */
@@ -152,15 +154,21 @@ export class Aggregate extends AggregateBase {
         type: 'BrowserSessionChunk',
         app_id: this.agentInfo.applicationID,
         protocol_version: '0',
-        timestamp: this.timeKeeper.convertRelativeTimestamp(earliestTimeStamp),
+        timestamp: Math.floor(this.timeKeeper.correctAbsoluteTimestamp(
+          this.timeKeeper.convertRelativeTimestamp(earliestTimeStamp)
+        )),
         attributes: encodeObj({
           ...(agentMetadata.entityGuid && { entityGuid: agentMetadata.entityGuid }),
           harvestId: `${this.agentRuntime.session?.state.value}_${this.agentRuntime.ptid}_${this.agentRuntime.harvestCount}`,
           // this section of attributes must be controllable and stay below the query param padding limit -- see QUERY_PARAM_PADDING
           // if not, data could be lost to truncation at time of sending, potentially breaking parsing / API behavior in NR1
           // trace payload metadata
-          'trace.firstTimestamp': this.timeKeeper.convertRelativeTimestamp(earliestTimeStamp),
-          'trace.lastTimestamp': this.timeKeeper.convertRelativeTimestamp(latestTimeStamp),
+          'trace.firstTimestamp': Math.floor(this.timeKeeper.correctAbsoluteTimestamp(
+            this.timeKeeper.convertRelativeTimestamp(earliestTimeStamp)
+          )),
+          'trace.lastTimestamp': Math.floor(this.timeKeeper.correctAbsoluteTimestamp(
+            this.timeKeeper.convertRelativeTimestamp(latestTimeStamp)
+          )),
           'trace.nodes': stns.length,
           'trace.originTimestamp': this.timeKeeper.correctedOriginTime,
           // other payload metadata

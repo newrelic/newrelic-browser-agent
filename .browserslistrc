@@ -3,9 +3,4 @@ last 10 Safari versions
 last 10 Firefox versions
 last 10 Edge versions
 last 10 ChromeAndroid versions
-
-# last 10 iOS versions
-# SauceLabs does not support testing iOS 15.6 or 15.7. Until the browserslist query
-# of `last 10 iOS versions` no longer returns 15.6 and 15.7, we will pin our testing
-# to `iOS >= 15.5`
-iOS >= 15.5
+last 10 iOS versions

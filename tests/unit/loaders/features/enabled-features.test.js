@@ -1,4 +1,4 @@
-import { setConfiguration } from '../../../../src/common/config/config'
+import { setConfiguration } from '../../../../src/common/config/init'
 import * as enabledFeaturesModule from '../../../../src/loaders/features/enabled-features'
 
 jest.mock('../../../../src/loaders/features/features', () => ({

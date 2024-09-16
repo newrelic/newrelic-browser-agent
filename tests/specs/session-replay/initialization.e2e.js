@@ -1,4 +1,4 @@
-import { testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
+import { testBlobReplayRequest, testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
 import { srConfig, getSR } from '../util/helpers'
 
 async function disqualifySR () {
@@ -30,17 +30,18 @@ describe('Session Replay Initialization', () => {
 
   it('should not start recording if rum response sr flag is 0', async () => {
     await disqualifySR()
-    const [rumResp] = await Promise.all([
-      browser.testHandle.expectRum(),
+    const rumCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testRumRequest })
+    const [rumHarvests] = await Promise.all([
+      rumCapture.waitForResult({ totalCount: 1 }),
       browser.url(await browser.testHandle.assetURL('instrumented.html', srConfig()))
         .then(() => browser.waitForFeatureAggregate('session_replay'))
     ])
 
-    expect(JSON.parse(rumResp.reply.body).sr).toEqual(0)
-
-    const sr = await getSR()
-    expect(sr.initialized).toEqual(false)
-    expect(sr.recording).toEqual(false)
+    expect(JSON.parse(rumHarvests[0].reply.body).sr).toEqual(0)
+    await expect(getSR()).resolves.toEqual(expect.objectContaining({
+      initialized: false,
+      recording: false
+    }))
   })
 
   it('should start recording if rum response sr flag is 1', async () => {
@@ -66,9 +67,13 @@ describe('Session Replay Initialization', () => {
 
   it('should not record if rum response sr flag is 0 and then api is called', async () => {
     await disqualifySR()
-    await browser.url(await browser.testHandle.assetURL('instrumented.html', srConfig()))
-      .then(() => browser.waitForAgentLoad())
+    const sessionReplayCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testBlobReplayRequest })
+    const [sessionReplayHarvests] = await Promise.all([
+      sessionReplayCapture.waitForResult({ timeout: 10000 }),
+      browser.url(await browser.testHandle.assetURL('instrumented.html', srConfig()))
+        .then(() => browser.waitForAgentLoad())
+    ])
 
-    await expect(browser.testHandle.expectReplay(10000, true)).resolves.toBeUndefined()
+    expect(sessionReplayHarvests.length).toEqual(0)
   })
 })

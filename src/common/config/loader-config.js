@@ -1,4 +1,4 @@
-import { getNREUMInitializedAgent } from '../../window/nreum'
+import { getNREUMInitializedAgent } from '../window/nreum'
 import { getModeledObject } from './configurable'
 
 const model = {

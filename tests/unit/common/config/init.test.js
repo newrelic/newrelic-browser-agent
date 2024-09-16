@@ -1,9 +1,9 @@
-jest.mock('../../../../../src/common/util/console.js')
+jest.mock('../../../../src/common/util/console.js')
 
 let getConfiguration, setConfiguration, getConfigurationValue
 beforeEach(async () => {
   jest.resetModules()
-  ;({ getConfiguration, setConfiguration, getConfigurationValue } = await import('../../../../../src/common/config/state/init.js'))
+  ;({ getConfiguration, setConfiguration, getConfigurationValue } = await import('../../../../src/common/config/init.js'))
 })
 
 test('set/getConfiguration should throw on an invalid agent id', () => {

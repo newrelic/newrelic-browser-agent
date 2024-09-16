@@ -1,4 +1,5 @@
 import SpecMatcher from '../../tools/browser-matcher/spec-matcher.mjs'
+import { testErrorsRequest } from '../../tools/testing-server/utils/expect-tests'
 
 /**
  * These test throw different errors in non-chromium browsers that result
@@ -7,14 +8,19 @@ import SpecMatcher from '../../tools/browser-matcher/spec-matcher.mjs'
  * browsers.
  */
 const supportedBrowsers = new SpecMatcher()
-  .include('chrome>=42')
-  .include('edge>=14')
+  .include('chrome')
+  .include('edge')
   .include('android')
 
 describe.withBrowsersMatching(supportedBrowsers)('stack trace', () => {
+  let errorsCapture
+
+  beforeEach(async () => {
+    errorsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testErrorsRequest })
+  })
   it('identifies <inline> for same-page scripts (but only same-page scripts)', async () => {
-    const [errorsResults] = await Promise.all([
-      browser.testHandle.expectErrors(),
+    const [[errorsResults]] = await Promise.all([
+      errorsCapture.waitForResult({ totalCount: 1 }),
       browser.url(await browser.testHandle.assetURL('sub-path-script-error/')) // Setup expects before loading the page
         .then(() => browser.waitForAgentLoad())
     ])
@@ -39,8 +45,8 @@ describe.withBrowsersMatching(supportedBrowsers)('stack trace', () => {
     await browser.url(await browser.testHandle.assetURL('sub-path-script-error/index.html'))
       .then(() => browser.waitForAgentLoad())
 
-    const [errorsResults] = await Promise.all([
-      browser.testHandle.expectErrors(),
+    const [[errorsResults]] = await Promise.all([
+      errorsCapture.waitForResult({ totalCount: 1 }),
       browser.execute(function () {
         window.history.replaceState(null, 'New Page Title', './new-route/')
         fetch('http://test/json/foo')

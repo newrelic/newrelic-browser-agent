@@ -1,8 +1,8 @@
-import { LOG_LEVELS } from '../../../features/logging/constants'
-import { isValidSelector } from '../../dom/query-selector'
-import { DEFAULT_EXPIRES_MS, DEFAULT_INACTIVE_MS } from '../../session/constants'
-import { warn } from '../../util/console'
-import { getNREUMInitializedAgent } from '../../window/nreum'
+import { LOG_LEVELS } from '../../features/logging/constants'
+import { isValidSelector } from '../dom/query-selector'
+import { DEFAULT_EXPIRES_MS, DEFAULT_INACTIVE_MS } from '../session/constants'
+import { warn } from '../util/console'
+import { getNREUMInitializedAgent } from '../window/nreum'
 import { getModeledObject } from './configurable'
 
 const nrMask = '[data-nr-mask]'

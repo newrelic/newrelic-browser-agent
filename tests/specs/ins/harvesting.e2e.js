@@ -1,4 +1,3 @@
-const now = require('../../lib/now.js')
 const { testInsRequest, testErrorsRequest } = require('../../../tools/testing-server/utils/expect-tests')
 
 describe('ins harvesting', () => {
@@ -24,13 +23,74 @@ describe('ins harvesting', () => {
     let event = pageActionsHarvest[0]
     expect(event.actionName).toEqual('DummyEvent')
     expect(event.free).toEqual('tacos')
-    let receiptTime = now()
+    let receiptTime = Date.now()
     let relativeHarvestTime = query.rst
     let estimatedPageLoad = receiptTime - relativeHarvestTime
     let eventTimeSinceLoad = event.timeSinceLoad * 1000
     let estimatedEventTime = eventTimeSinceLoad + estimatedPageLoad
     expect(relativeHarvestTime > eventTimeSinceLoad).toEqual(true) //, 'harvest time (' + relativeHarvestTime + ') should always be bigger than event time (' + eventTimeSinceLoad + ')')
     expect(estimatedEventTime < receiptTime).toEqual(true) //, 'estimated event time (' + estimatedEventTime + ') < receipt time (' + receiptTime + ')')
+  })
+
+  it('should harvest early when buffer gets too large (overall quantity)', async () => {
+    const testUrl = await browser.testHandle.assetURL('instrumented.html', { init: { generic_events: { harvestTimeSeconds: 30 } } })
+    await browser.url(testUrl)
+      .then(() => browser.waitForAgentLoad())
+
+    /** harvest should trigger immediately */
+    const [insightsResult] = await Promise.all([
+      insightsCapture.waitForResult({ timeout: 10000 }),
+      browser.execute(function () {
+        let i = 0
+        while (i++ < 1010) {
+          newrelic.addPageAction('foobar')
+        }
+      })
+    ])
+    expect(insightsResult.length).toBeTruthy()
+  })
+
+  it('should harvest early when buffer gets too large (one big event)', async () => {
+    const testUrl = await browser.testHandle.assetURL('instrumented.html', { init: { generic_events: { harvestTimeSeconds: 30 } } })
+    await browser.url(testUrl)
+      .then(() => browser.waitForAgentLoad())
+
+    const [insightsResult] = await Promise.all([
+      insightsCapture.waitForResult({ timeout: 10000 }),
+      browser.execute(function () {
+        newrelic.addPageAction('foobar', createLargeObject())
+        function createLargeObject () {
+          let i = 0; let obj = {}
+          while (i++ < 64000) {
+            obj[i] = 'x'
+          }
+          return obj
+        }
+      })
+    ])
+    expect(insightsResult.length).toBeTruthy()
+  })
+
+  it('should not harvest if too large', async () => {
+    const testUrl = await browser.testHandle.assetURL('instrumented.html')
+    await browser.url(testUrl)
+      .then(() => browser.waitForAgentLoad())
+
+    const [insightsResult] = await Promise.all([
+      insightsCapture.waitForResult({ timeout: 10000 }),
+      browser.execute(function () {
+        newrelic.addPageAction('foobar', createLargeObject())
+        function createLargeObject () {
+          let i = 0; let obj = {}
+          while (i++ < 100000) {
+            obj[i] = Math.random()
+          }
+          return obj
+        }
+      })
+    ])
+
+    expect(insightsResult).toEqual([])
   })
 
   it('should honor payload precedence', async () => {

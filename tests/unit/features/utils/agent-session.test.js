@@ -13,13 +13,19 @@ beforeEach(() => {
     }
   }
 
-  jest.doMock('../../../../src/common/config/config', () => ({
+  jest.doMock('../../../../src/common/config/info', () => ({
+    __esModule: true,
+    getInfo: jest.fn(),
+    setInfo: jest.fn()
+  }))
+  jest.doMock('../../../../src/common/config/init', () => ({
     __esModule: true,
     getConfigurationValue: jest.fn(),
-    getConfiguration: jest.fn().mockImplementation(() => ({})),
-    getInfo: jest.fn(),
-    getRuntime: jest.fn().mockImplementation(() => ({ session: agentSession })),
-    setInfo: jest.fn()
+    getConfiguration: jest.fn().mockImplementation(() => ({}))
+  }))
+  jest.doMock('../../../../src/common/config/runtime', () => ({
+    __esModule: true,
+    getRuntime: jest.fn().mockImplementation(() => ({ session: agentSession }))
   }))
   jest.doMock('../../../../src/common/drain/drain', () => ({
     __esModule: true,
@@ -84,7 +90,7 @@ test('should not drain the session feature more than once', async () => {
 })
 
 test('should set custom session data', async () => {
-  const { getInfo } = await import('../../../../src/common/config/config')
+  const { getInfo } = await import('../../../../src/common/config/info')
   const agentInfo = {
     [faker.string.uuid()]: faker.lorem.sentence(),
     jsAttributes: {
@@ -106,7 +112,7 @@ test('should not set custom session data in worker scope', async () => {
   const globalScope = await import('../../../../src/common/constants/runtime')
   jest.replaceProperty(globalScope, 'isBrowserScope', false)
 
-  const { setInfo } = await import('../../../../src/common/config/config')
+  const { setInfo } = await import('../../../../src/common/config/info')
   const { setupAgentSession } = await import('../../../../src/features/utils/agent-session')
   setupAgentSession(agentIdentifier)
 

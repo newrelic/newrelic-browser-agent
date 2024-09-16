@@ -1,4 +1,5 @@
-import { notSafari, supportsMultipleTabs } from '../../tools/browser-matcher/common-matchers.mjs'
+import { supportsMultiTabSessions } from '../../tools/browser-matcher/common-matchers.mjs'
+import { testErrorsRequest } from '../../tools/testing-server/utils/expect-tests'
 
 const config = {
   init: {
@@ -68,7 +69,7 @@ describe('newrelic session ID', () => {
       expect(ls2.expiresAt).toEqual(ls1.expiresAt)
     })
 
-    it.withBrowsersMatching([supportsMultipleTabs, notSafari])('should keep a session id across page loads - Multi tab navigation', async () => {
+    it.withBrowsersMatching(supportsMultiTabSessions)('should keep a session id across page loads - Multi tab navigation', async () => {
       await browser.url(await browser.testHandle.assetURL('session-entity.html', config))
         .then(() => browser.waitForAgentLoad())
 
@@ -91,10 +92,14 @@ describe('newrelic session ID', () => {
     })
 
     it('Session exists when config is set after loader', async () => {
-      await browser.url(await browser.testHandle.assetURL('custom-attribute-race-condition.html', config))
-        .then(() => browser.waitForAgentLoad())
+      const errorsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testErrorsRequest })
 
-      const { request: { query } } = await browser.testHandle.expectErrors()
+      const [[{ request: { query } }]] = await Promise.all([
+        errorsCapture.waitForResult({ totalCount: 1 }),
+        browser.url(await browser.testHandle.assetURL('custom-attribute-race-condition.html', config))
+          .then(() => browser.waitForAgentLoad())
+      ])
+
       expect(query.s).not.toEqual('0')
       expect(query.s).toBeTruthy()
     })

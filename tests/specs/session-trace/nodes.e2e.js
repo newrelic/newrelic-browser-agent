@@ -1,37 +1,48 @@
 import { testExpectedTrace } from '../util/helpers'
+import { testBlobTraceRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 describe('AJAX', () => {
+  let sessionTraceCapture
+
+  beforeEach(async () => {
+    sessionTraceCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testBlobTraceRequest })
+  })
+
   afterEach(async () => {
     await browser.destroyAgentSession()
   })
 
   it('Does not capture XMLHttpRequest nodes when AJAX feature is disabled', async () => {
     await Promise.all([
-      browser.testHandle.expectTrace(),
+      sessionTraceCapture.waitForResult({ totalCount: 1 }),
       browser.url(await browser.testHandle.assetURL('stn/ajax-disabled.html', { init: { ajax: { enabled: false } } }))
         .then(() => browser.waitForAgentLoad())
     ])
 
-    const [{ request }] = await Promise.all([
-      browser.testHandle.expectTrace(10000),
+    const [sessionTraceHarvests] = await Promise.all([
+      sessionTraceCapture.waitForResult({ timeout: 10000 }),
       browser.execute(function () {
         document.querySelector('#trigger').click()
       })
     ])
-    testExpectedTrace({ data: request })
-    const loadNodes = request.body.filter(function (node) { return (node.t === 'event' && node.n === 'load') || node.n === 'readystatechange' })
-    expect(loadNodes.length).toEqual(0)
+
+    sessionTraceHarvests.forEach(harvest => {
+      testExpectedTrace({ data: harvest.request })
+      const loadNodes = harvest.request.body.filter(function (node) {
+        return node.t === 'ajax'
+      })
+      expect(loadNodes.length).toEqual(0)
+    })
   })
 
   it('Does not capture XMLHttpRequest nodes in AJAX deny list', async () => {
-    console.log(`${browser.testHandle.bamServerConfig.host}:${browser.testHandle.bamServerConfig.port}`)
     await Promise.all([
-      browser.testHandle.expectTrace(),
+      sessionTraceCapture.waitForResult({ totalCount: 1 }),
       browser.url(await browser.testHandle.assetURL('stn/ajax-disabled.html', {
         init: {
           ajax: {
             deny_list: [
-        `${browser.testHandle.bamServerConfig.host}:${browser.testHandle.bamServerConfig.port}`
+              `${browser.testHandle.bamServerConfig.host}:${browser.testHandle.bamServerConfig.port}`
             ]
           }
         }
@@ -39,27 +50,47 @@ describe('AJAX', () => {
         .then(() => browser.waitForAgentLoad())
     ])
 
-    const [{ request }] = await Promise.all([
-      browser.testHandle.expectTrace(10000),
+    const [sessionTraceHarvests] = await Promise.all([
+      sessionTraceCapture.waitForResult({ timeout: 10000 }),
       browser.execute(function () {
         document.querySelector('#trigger').click()
       })
     ])
-    testExpectedTrace({ data: request })
-    const loadNodes = request.body.filter(function (node) { return node.t === 'ajax' })
-    expect(loadNodes.length).toEqual(0)
+
+    sessionTraceHarvests.forEach(harvest => {
+      testExpectedTrace({ data: harvest.request })
+      const loadNodes = harvest.request.body.filter(function (node) {
+        return node.t === 'ajax'
+      })
+      expect(loadNodes.length).toEqual(0)
+    })
   })
-})
 
-describe('timings', () => {
-  it('No negative timings', async () => {
-    const [{ request }] = await Promise.all([
-      browser.testHandle.expectTrace(),
-      browser.url(await browser.testHandle.assetURL('instrumented.html'))
-        .then(() => browser.waitForAgentLoad())
-    ])
+  describe('timings', () => {
+    it('No negative timings', async () => {
+      const [sessionTraceHarvests] = await Promise.all([
+        sessionTraceCapture.waitForResult({ totalCount: 1 }),
+        browser.url(await browser.testHandle.assetURL('instrumented.html'))
+          .then(() => browser.waitForAgentLoad())
+      ])
 
-    testExpectedTrace({ data: request })
-    expect(request.body.every(x => x.s >= 0 && x.e >= 0)).toEqual(true)
+      sessionTraceHarvests.forEach(harvest => {
+        testExpectedTrace({ data: harvest.request })
+        expect(harvest.request.body.every(x => x.s >= 0 && x.e >= 0)).toEqual(true)
+      })
+    })
+
+    it('should capture all timings in relative timestamp values', async () => {
+      const [sessionTraceHarvests] = await Promise.all([
+        sessionTraceCapture.waitForResult({ totalCount: 1 }),
+        browser.url(await browser.testHandle.assetURL('instrumented.html'))
+          .then(() => browser.waitForAgentLoad())
+      ])
+
+      sessionTraceHarvests.forEach(harvest => {
+        testExpectedTrace({ data: harvest.request })
+        expect(harvest.request.body.every(x => x.s < 60000 && x.e < 60000)).toEqual(true)
+      })
+    })
   })
 })

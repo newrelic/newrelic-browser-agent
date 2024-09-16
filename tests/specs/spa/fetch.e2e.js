@@ -1,43 +1,53 @@
+import { JSONPath } from 'jsonpath-plus'
 import { checkAjaxEvents, checkSpa } from '../../util/basic-checks'
 import { supportsFetch } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { testAjaxEventsRequest, testInteractionEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 describe.withBrowsersMatching(supportsFetch)('Fetch SPA Interaction Tracking', () => {
+  let interactionsCapture, ajaxEventsCapture
+
+  beforeEach(async () => {
+    [interactionsCapture, ajaxEventsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+      { test: testInteractionEventsRequest },
+      { test: testAjaxEventsRequest }
+    ])
+  })
+
   it('should capture the ajax in the initial interaction when sent before page load', async () => {
-    const [interactionResults] = await Promise.all([
-      browser.testHandle.expectInteractionEvents(10000),
+    const [interactionHarvests, ajaxEventsHarvests] = await Promise.all([
+      interactionsCapture.waitForResult({ totalCount: 1 }),
+      ajaxEventsCapture.waitForResult({ timeout: 10000 }),
       await browser.url(
         await browser.testHandle.assetURL('ajax/fetch-before-load.html')
       ).then(() => browser.waitForAgentLoad())
     ])
 
-    checkSpa(interactionResults.request)
-    expect(interactionResults.request.body).toEqual([
+    checkSpa(interactionHarvests[0].request)
+    expect(
+      JSONPath({ path: '$.[*].request.body.[?(!!@ && @.path===\'/json\')]', json: interactionHarvests })
+    ).toEqual(expect.arrayContaining([
       expect.objectContaining({
-        category: 'Initial page load',
-        type: 'interaction',
-        trigger: 'initialPageLoad',
-        children: expect.arrayContaining([
-          expect.objectContaining({
-            type: 'ajax',
-            requestedWith: 'fetch',
-            path: '/json',
-            nodeId: expect.any(String),
-            children: [],
-            method: 'GET',
-            status: 200,
-            domain: browser.testHandle.assetServerConfig.host + ':' + browser.testHandle.assetServerConfig.port,
-            requestBodySize: 0,
-            responseBodySize: 14,
-            callbackDuration: expect.any(Number),
-            callbackEnd: expect.any(Number),
-            end: expect.any(Number),
-            guid: null,
-            timestamp: null,
-            traceId: null
-          })
-        ])
+        type: 'ajax',
+        requestedWith: 'fetch',
+        path: '/json',
+        nodeId: expect.any(String),
+        children: [],
+        method: 'GET',
+        status: 200,
+        domain: browser.testHandle.assetServerConfig.host + ':' + browser.testHandle.assetServerConfig.port,
+        requestBodySize: 0,
+        responseBodySize: 14,
+        callbackDuration: expect.any(Number),
+        callbackEnd: expect.any(Number),
+        end: expect.any(Number),
+        guid: null,
+        timestamp: null,
+        traceId: null
       })
-    ])
+    ]))
+    expect(
+      JSONPath({ path: '$.[*].request.body.[?(!!@ && @.path===\'/json\')]', json: ajaxEventsHarvests })
+    ).toEqual([])
   })
 
   it('should capture the ajax in the click interaction', async () => {
@@ -45,63 +55,57 @@ describe.withBrowsersMatching(supportsFetch)('Fetch SPA Interaction Tracking', (
       await browser.testHandle.assetURL('ajax/fetch-simple.html')
     ).then(() => browser.waitForAgentLoad())
 
-    const [interactionResults] = await Promise.all([
-      browser.testHandle.expectInteractionEvents(10000),
+    const [interactionHarvests, ajaxEventsHarvests] = await Promise.all([
+      interactionsCapture.waitForResult({ totalCount: 2 }),
+      ajaxEventsCapture.waitForResult({ timeout: 10000 }),
       $('#sendAjax').click()
     ])
 
-    checkSpa(interactionResults.request, { trigger: 'click' })
-    expect(interactionResults.request.body).toEqual([
+    checkSpa(interactionHarvests[1].request, { trigger: 'click' })
+    expect(
+      JSONPath({ path: '$.[*].request.body.[?(!!@ && @.path===\'/json\')]', json: interactionHarvests })
+    ).toEqual(expect.arrayContaining([
       expect.objectContaining({
-        category: 'Route change',
-        type: 'interaction',
-        trigger: 'click',
-        children: expect.arrayContaining([
-          expect.objectContaining({
-            type: 'ajax',
-            requestedWith: 'fetch',
-            path: '/json',
-            nodeId: expect.any(String),
-            children: [],
-            method: 'GET',
-            status: 200,
-            domain: browser.testHandle.assetServerConfig.host + ':' + browser.testHandle.assetServerConfig.port,
-            requestBodySize: 0,
-            responseBodySize: 14,
-            callbackDuration: expect.any(Number),
-            callbackEnd: expect.any(Number),
-            end: expect.any(Number),
-            guid: null,
-            timestamp: null,
-            traceId: null
-          })
-        ])
+        type: 'ajax',
+        requestedWith: 'fetch',
+        path: '/json',
+        nodeId: expect.any(String),
+        children: [],
+        method: 'GET',
+        status: 200,
+        domain: browser.testHandle.assetServerConfig.host + ':' + browser.testHandle.assetServerConfig.port,
+        requestBodySize: 0,
+        responseBodySize: 14,
+        callbackDuration: expect.any(Number),
+        callbackEnd: expect.any(Number),
+        end: expect.any(Number),
+        guid: null,
+        timestamp: null,
+        traceId: null
       })
-    ])
+    ]))
+    expect(
+      JSONPath({ path: '$.[*].request.body.[?(!!@ && @.path===\'/json\')]', json: ajaxEventsHarvests })
+    ).toEqual([])
   })
 
   it('should not capture the ajax in the initial interaction when sent after page load', async () => {
-    const [interactionResults] = await Promise.all([
-      browser.testHandle.expectInteractionEvents(10000),
+    const [interactionHarvests, ajaxEventsHarvests] = await Promise.all([
+      interactionsCapture.waitForResult({ totalCount: 1 }),
+      ajaxEventsCapture.waitForResult({ timeout: 10000 }),
       await browser.url(
         await browser.testHandle.assetURL('ajax/fetch-after-load.html')
       ).then(() => browser.waitForAgentLoad())
     ])
 
-    checkSpa(interactionResults.request)
-    expect(interactionResults.request.body).toEqual([
-      expect.objectContaining({
-        category: 'Initial page load',
-        type: 'interaction',
-        trigger: 'initialPageLoad',
-        children: expect.arrayContaining([
-          expect.not.objectContaining({
-            type: 'ajax',
-            requestedWith: 'fetch',
-            path: '/json'
-          })
-        ])
-      })
+    checkSpa(interactionHarvests[0].request)
+    expect(
+      JSONPath({ path: '$.[*].request.body.[?(!!@ && @.path===\'/json\')]', json: interactionHarvests })
+    ).toEqual([])
+    expect(
+      JSONPath({ path: '$.[*].request.body.[?(!!@ && @.path===\'/json\')]', json: ajaxEventsHarvests })
+    ).toEqual([
+      expect.objectContaining({ requestedWith: 'fetch', path: '/json' })
     ])
   })
 
@@ -110,27 +114,16 @@ describe.withBrowsersMatching(supportsFetch)('Fetch SPA Interaction Tracking', (
       await browser.testHandle.assetURL('ajax/fetch-post.html')
     ).then(() => browser.waitForAgentLoad())
 
-    const [interactionResults] = await Promise.all([
-      browser.testHandle.expectInteractionEvents(10000),
+    const [interactionHarvests] = await Promise.all([
+      interactionsCapture.waitForResult({ totalCount: 2 }),
       $('#sendAjax').click()
     ])
 
-    checkSpa(interactionResults.request, { trigger: 'click' })
-    expect(interactionResults.request.body).toEqual([
-      expect.objectContaining({
-        category: 'Route change',
-        type: 'interaction',
-        trigger: 'click',
-        children: expect.arrayContaining([
-          expect.objectContaining({
-            type: 'ajax',
-            requestedWith: 'fetch',
-            path: '/echo',
-            requestBodySize: 3,
-            responseBodySize: 3
-          })
-        ])
-      })
+    checkSpa(interactionHarvests[1].request, { trigger: 'click' })
+    expect(
+      JSONPath({ path: '$.[*].request.body.[?(!!@ && @.path===\'/echo\')]', json: interactionHarvests })
+    ).toEqual([
+      expect.objectContaining({ requestedWith: 'fetch', path: '/echo', requestBodySize: 3, responseBodySize: 3 })
     ])
   })
 
@@ -139,17 +132,14 @@ describe.withBrowsersMatching(supportsFetch)('Fetch SPA Interaction Tracking', (
       await browser.testHandle.assetURL('ajax/fetch-empty.html')
     ).then(() => browser.waitForAgentLoad())
 
-    const [, eventResults] = await Promise.all([
-      browser.testHandle.expectInteractionEvents(10000, true),
-      browser.testHandle.expectEvents(10000),
+    const [interactionHarvests] = await Promise.all([
+      interactionsCapture.waitForResult({ timeout: 10000 }),
       $('#sendAjax').click()
     ])
 
-    expect(eventResults.request.body).toEqual(expect.arrayContaining([
-      expect.not.objectContaining({
-        domain: browser.testHandle.assetServerConfig.host + ':' + browser.testHandle.assetServerConfig.port
-      })
-    ]))
+    expect(
+      JSONPath({ path: `$.[*].request.body.[?(!!@ && @.domain==='${browser.testHandle.assetServerConfig.host + ':' + browser.testHandle.assetServerConfig.port}')]`, json: interactionHarvests })
+    ).toEqual([])
   })
 
   it('should create nested ajax nodes when ajax is nested', async () => {
@@ -157,33 +147,19 @@ describe.withBrowsersMatching(supportsFetch)('Fetch SPA Interaction Tracking', (
       await browser.testHandle.assetURL('ajax/fetch-nested.html')
     ).then(() => browser.waitForAgentLoad())
 
-    const [interactionResults] = await Promise.all([
-      browser.testHandle.expectInteractionEvents(10000),
+    const [interactionHarvests] = await Promise.all([
+      interactionsCapture.waitForResult({ totalCount: 2 }),
       $('#sendAjax').click()
     ])
 
-    checkSpa(interactionResults.request, { trigger: 'click' })
-    expect(interactionResults.request.body).toEqual(expect.arrayContaining([
-      expect.objectContaining({
-        category: 'Route change',
-        type: 'interaction',
-        trigger: 'click',
-        children: expect.arrayContaining([
-          expect.objectContaining({
-            type: 'ajax',
-            requestedWith: 'fetch',
-            path: '/json',
-            children: expect.arrayContaining([
-              expect.objectContaining({
-                type: 'ajax',
-                requestedWith: 'fetch',
-                path: '/echo'
-              })
-            ])
-          })
-        ])
-      })
-    ]))
+    checkSpa(interactionHarvests[1].request, { trigger: 'click' })
+    const jsonFetch = JSONPath({ path: '$.[*].request.body.[?(!!@ && @.path===\'/json\')]', json: interactionHarvests })
+    expect(jsonFetch.length).toEqual(1)
+    expect(
+      JSONPath({ path: '$.children.[?(!!@ && @.path===\'/echo\')]', json: jsonFetch[0] })
+    ).toEqual([
+      expect.objectContaining({ requestedWith: 'fetch', path: '/echo' })
+    ])
   })
 
   it('should not molest the response object when wrapping', async () => {
@@ -265,8 +241,8 @@ describe.withBrowsersMatching(supportsFetch)('Fetch SPA Interaction Tracking', (
   })
 
   it('should capture distributed tracing properties', async () => {
-    const [interactionResults] = await Promise.all([
-      browser.testHandle.expectInteractionEvents(10000),
+    const [interactionHarvests] = await Promise.all([
+      interactionsCapture.waitForResult({ totalCount: 1 }),
       await browser.url(
         await browser.testHandle.assetURL('distributed_tracing/fetch-sameorigin.html', {
           init: {
@@ -277,22 +253,17 @@ describe.withBrowsersMatching(supportsFetch)('Fetch SPA Interaction Tracking', (
       ).then(() => browser.waitForAgentLoad())
     ])
 
-    checkSpa(interactionResults.request)
-    expect(interactionResults.request.body).toEqual([
+    checkSpa(interactionHarvests[0].request)
+    expect(
+      JSONPath({ path: '$.[*].request.body.[?(!!@ && @.path && @.path.match(/^\\/dt\\/[\\w\\d]+/i))]', json: interactionHarvests })
+    ).toEqual([
       expect.objectContaining({
-        category: 'Initial page load',
-        type: 'interaction',
-        trigger: 'initialPageLoad',
-        children: expect.arrayContaining([
-          expect.objectContaining({
-            type: 'ajax',
-            requestedWith: 'fetch',
-            path: expect.stringMatching(/^\/dt\/[\w\d]+/),
-            guid: expect.stringMatching(/[\w\d]+/),
-            traceId: expect.stringMatching(/[\w\d]+/),
-            timestamp: expect.toBePositive()
-          })
-        ])
+        type: 'ajax',
+        requestedWith: 'fetch',
+        path: expect.stringMatching(/^\/dt\/[\w\d]+/),
+        guid: expect.stringMatching(/[\w\d]+/),
+        traceId: expect.stringMatching(/[\w\d]+/),
+        timestamp: expect.toBePositive()
       })
     ])
   })
@@ -301,14 +272,14 @@ describe.withBrowsersMatching(supportsFetch)('Fetch SPA Interaction Tracking', (
     await browser.url(await browser.testHandle.assetURL('ajax/fetch-simple.html'))
       .then(() => browser.waitForAgentLoad())
 
-    const [interactionEventsHarvest] = await Promise.all([
-      browser.testHandle.expectInteractionEvents(),
+    const [interactionHarvests] = await Promise.all([
+      interactionsCapture.waitForResult({ totalCount: 2 }),
       $('#sendAjax').click()
     ])
 
-    checkAjaxEvents({ body: interactionEventsHarvest.request.body[0].children, query: interactionEventsHarvest.request.query }, { specificPath: '/json' })
+    checkAjaxEvents({ body: interactionHarvests[1].request.body[0].children, query: interactionHarvests[1].request.query }, { specificPath: '/json' })
 
-    const ajaxEvent = interactionEventsHarvest.request.body[0].children.find(event => event.path === '/json')
+    const ajaxEvent = JSONPath({ path: '$.[*].request.body.[?(!!@ && @.path===\'/json\')]', json: interactionHarvests })[0]
     expect(ajaxEvent.end).toBeGreaterThanOrEqual(ajaxEvent.start)
     expect(ajaxEvent.callbackEnd).toBeGreaterThanOrEqual(ajaxEvent.end)
   })
@@ -317,33 +288,30 @@ describe.withBrowsersMatching(supportsFetch)('Fetch SPA Interaction Tracking', (
     await browser.url(await browser.testHandle.assetURL('ajax/fetch-404.html'))
       .then(() => browser.waitForAgentLoad())
 
-    const [interactionEventsHarvest] = await Promise.all([
-      browser.testHandle.expectInteractionEvents(),
+    const [interactionHarvests] = await Promise.all([
+      interactionsCapture.waitForResult({ totalCount: 2 }),
       $('#sendAjax').click()
     ])
 
-    checkAjaxEvents({ body: interactionEventsHarvest.request.body[0].children, query: interactionEventsHarvest.request.query }, { specificPath: '/paththatdoesnotexist' })
+    checkAjaxEvents({ body: interactionHarvests[1].request.body[0].children, query: interactionHarvests[1].request.query }, { specificPath: '/paththatdoesnotexist' })
 
-    const ajaxEvent = interactionEventsHarvest.request.body[0].children.find(event => event.path === '/paththatdoesnotexist')
+    const ajaxEvent = JSONPath({ path: '$.[*].request.body.[?(!!@ && @.path===\'/paththatdoesnotexist\')]', json: interactionHarvests })[0]
     expect(ajaxEvent.status).toEqual(404)
   })
 
   it('only captures pre-load ajax calls in the spa payload', async () => {
-    const [interactionResults, eventsResults] = await Promise.all([
-      browser.testHandle.expectInteractionEvents(),
-      browser.testHandle.expectAjaxEvents(),
+    const [interactionHarvests, ajaxEventsHarvests] = await Promise.all([
+      interactionsCapture.waitForResult({ totalCount: 1 }),
+      ajaxEventsCapture.waitForResult({ timeout: 10000 }),
       browser.url(await browser.testHandle.assetURL('ajax/fetch-before-load.html'))
         .then(() => browser.waitForAgentLoad())
     ])
 
-    const spaAjaxCalls = interactionResults.request.body[0].children.filter(xhr =>
-      xhr.type === 'ajax' && xhr.path === '/json'
-    )
-    expect(spaAjaxCalls.length).toEqual(1)
-
-    const eventsAjaxCalls = eventsResults.request.body.filter(xhr =>
-      xhr.type === 'ajax' && xhr.path === '/json'
-    )
-    expect(eventsAjaxCalls.length).toEqual(0)
+    expect(
+      JSONPath({ path: '$.[*].request.body.[?(!!@ && @.path===\'/json\')]', json: interactionHarvests }).length
+    ).toEqual(1)
+    expect(
+      JSONPath({ path: '$.[*].request.body.[?(!!@ && @.path===\'/json\')]', json: ajaxEventsHarvests }).length
+    ).toEqual(0)
   })
 })

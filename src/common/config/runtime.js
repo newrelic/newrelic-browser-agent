@@ -1,7 +1,13 @@
 import { getModeledObject } from './configurable'
-import { getNREUMInitializedAgent } from '../../window/nreum'
-import { globalScope, originTime } from '../../constants/runtime'
-import { BUILD_ENV, DIST_METHOD, VERSION } from '../../constants/env'
+import { getNREUMInitializedAgent } from '../window/nreum'
+import { globalScope, originTime } from '../constants/runtime'
+import { BUILD_ENV, DIST_METHOD, VERSION } from '../constants/env'
+
+/**
+ * Module level count of harvests. This property will auto-increment each time it is accessed.
+ * @type {number}
+ */
+let harvestCount = 0
 
 const readonly = {
   buildEnv: BUILD_ENV,
@@ -24,7 +30,6 @@ const model = {
   appMetadata: {},
   session: undefined,
   denyList: undefined,
-  harvestCount: 0,
   timeKeeper: undefined,
   obfuscator: undefined
 }
@@ -43,6 +48,14 @@ export function setRuntime (id, obj) {
     ...getModeledObject(obj, model),
     ...readonly
   }
+
+  if (!Object.hasOwnProperty.call(_cache[id], 'harvestCount')) {
+    // Harvest count needs to be added as a getter so the variable is updated each time it is accessed
+    Object.defineProperty(_cache[id], 'harvestCount', {
+      get: () => ++harvestCount
+    })
+  }
+
   const agentInst = getNREUMInitializedAgent(id)
   if (agentInst) agentInst.runtime = _cache[id]
 }

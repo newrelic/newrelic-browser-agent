@@ -152,8 +152,4 @@ export const supportsInteractionToNextPaint = new SpecMatcher()
   .include('edge>=96')
   .include('android>=9.0')
 
-export const supportsLongTaskTiming = new SpecMatcher()
-  .include('chrome>=58')
-  .include('edge>=79')
-
 export const supportsCumulativeLayoutShift = supportsLargestContentfulPaint

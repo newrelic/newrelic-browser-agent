@@ -83,8 +83,7 @@ test('init props exist and return expected defaults', () => {
   expect(config.page_view_timing).toEqual({
     autoStart: true,
     enabled: true,
-    harvestTimeSeconds: 30,
-    long_task: false
+    harvestTimeSeconds: 30
   })
   expect(config.privacy).toEqual({
     cookies_enabled: true

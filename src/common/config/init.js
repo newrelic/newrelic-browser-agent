@@ -48,6 +48,7 @@ const model = () => {
     metrics: { enabled: true, autoStart: true },
     obfuscate: undefined,
     page_action: { enabled: true },
+    user_actions: { enabled: true },
     page_view_event: { enabled: true, autoStart: true },
     page_view_timing: { enabled: true, harvestTimeSeconds: 30, long_task: false, autoStart: true },
     privacy: { cookies_enabled: true }, // *cli - per discussion, default should be true

@@ -106,9 +106,7 @@ export class Aggregate extends AggregateBase {
     queryParameters.fcp = firstContentfulPaint.current.value
 
     if (this.timeKeeper?.ready) {
-      queryParameters.timestamp = Math.floor(this.timeKeeper.correctAbsoluteTimestamp(
-        this.timeKeeper.convertRelativeTimestamp(now())
-      ))
+      queryParameters.timestamp = Math.floor(this.timeKeeper.correctRelativeTimestamp(now()))
     }
 
     const rumStartTime = now()

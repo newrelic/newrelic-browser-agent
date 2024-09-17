@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>User Action Test</title>
+    {init} {config}
+		 <!-- <script>
+		;window.NREUM||(NREUM={});NREUM.init={distributed_tracing:{enabled:true,cors_use_newrelic_header:false,cors_use_tracecontext_headers:false},privacy:{cookies_enabled:true},ajax:{deny_list:["staging-bam-cell.nr-data.net"]}};
+
+;NREUM.loader_config={accountID:"550352",trustKey:"1",agentID:"174742265",licenseKey:"NRBR-c7d7aa44f6c74d8ed93",applicationID:"174742265"};
+;NREUM.info={beacon:"staging-bam-cell.nr-data.net",errorBeacon:"staging-bam-cell.nr-data.net",licenseKey:"NRBR-c7d7aa44f6c74d8ed93",applicationID:"174742265",sa:1};
+
+	</script>
+		<script>NREUM.init.ssl = true</script> -->
+		{loader}
+  </head>
+  <body>
+		<button id="pay-btn" class="btn-cart-add flex-grow container" type="submit">Create click user action</button>
+		<input type="text" id="textbox"/>
+  </body>
+</html>

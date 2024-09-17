@@ -9,8 +9,8 @@ const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
 const targetDir = path.resolve(__dirname, '../../tests/webview-specs/assets')
 const outputDir = path.resolve(__dirname, '../../tools/lambda-test')
 
-const androidUpload = `curl -u "${process.env.LT_USERNAME}:${process.env.LT_ACCESS_KEY}" --location --request POST 'https://manual-api.lambdatest.com/app/upload/virtualDevice' --form 'name="app-debug.apk"' --form 'appFile=@"${targetDir}/app-debug.apk"'`
-const iosUpload = `curl -u "${process.env.LT_USERNAME}:${process.env.LT_ACCESS_KEY}" --location --request POST 'https://manual-api.lambdatest.com/app/upload/virtualDevice' --form 'name="NRTestApp.apk"' --form 'appFile=@"${targetDir}/NRTestApp.zip"'`
+const androidUpload = `curl -u "${process.env.LT_USERNAME}:${process.env.LT_ACCESS_KEY}" --location --request POST 'https://manual-api.lambdatest.com/app/upload/virtualDevice' --form "visibilty=team" --form 'name="app-debug.apk"' --form 'appFile=@"${targetDir}/app-debug.apk"'`
+const iosUpload = `curl -u "${process.env.LT_USERNAME}:${process.env.LT_ACCESS_KEY}" --location --request POST 'https://manual-api.lambdatest.com/app/upload/virtualDevice' --form "visibilty=team" --form 'name="NRTestApp.apk"' --form 'appFile=@"${targetDir}/NRTestApp.zip"'`
 
 let androidID = null; let iosID = null
 

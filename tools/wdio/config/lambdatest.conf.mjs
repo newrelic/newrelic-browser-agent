@@ -5,6 +5,7 @@ import child_process from 'node:child_process'
 import browsersList from '../../browsers-lists/lt-browsers-list.mjs'
 import args from '../args.mjs'
 import { getBrowserName } from '../../browsers-lists/utils.mjs'
+import webviewAssetIds from '../../lambda-test/webview-asset-ids'
 
 const require = module.createRequire(import.meta.url)
 const supportedDesktop = require('../../browsers-lists/lt-desktop-supported.json')
@@ -64,10 +65,10 @@ function lambdaTestCapabilities () {
           // Important: ensure the uploaded apps are set to "team" visibility.
           if (parsedBrowserName === 'android') {
             capabilities['appium:platformName'] = 'android'
-            capabilities['LT:Options'].app = 'lt://APP10160352241718733717577609'
+            capabilities['LT:Options'].app = webviewAssetIds.androidID
           } else /* === 'ios' */ {
             capabilities['appium:platformName'] = 'ios'
-            capabilities['LT:Options'].app = 'lt://APP10160352241718734672953481'
+            capabilities['LT:Options'].app = webviewAssetIds.iosID
           }
         } else {
           capabilities['appium:platformName'] = testBrowser.device_name

@@ -82,6 +82,13 @@ await spawnAsync(
   DEFAULT_SPAWN_OPTIONS
 )
 
+console.log('Updating LambdaTest browsers lists')
+await spawnAsync(
+  `npm${os.platform() === 'win32' ? '.cmd' : ''}`,
+  ['run', 'lt:upload-webview-assets'],
+  DEFAULT_SPAWN_OPTIONS
+)
+
 console.log('Updating third-party licenses')
 await spawnAsync(
   `npm${os.platform() === 'win32' ? '.cmd' : ''}`,

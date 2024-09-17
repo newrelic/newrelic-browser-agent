@@ -33,7 +33,7 @@ test('getConfigurationValue parses path correctly', () => {
 test('init props exist and return expected defaults', () => {
   setConfiguration('34567', {})
   const config = getConfiguration('34567')
-  expect(Object.keys(config).length).toEqual(20)
+  expect(Object.keys(config).length).toEqual(21)
   expect(config.ajax).toEqual({
     autoStart: true,
     block_internal: true,
@@ -74,6 +74,9 @@ test('init props exist and return expected defaults', () => {
   })
   expect(config.obfuscate).toEqual(undefined)
   expect(config.page_action).toEqual({
+    enabled: true
+  })
+  expect(config.user_actions).toEqual({
     enabled: true
   })
   expect(config.page_view_event).toEqual({

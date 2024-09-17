@@ -1,7 +1,6 @@
 const { Transform } = require('stream')
 const path = require('path')
 const fs = require('fs')
-const sslShim = require('./ssl-shim')
 const { paths } = require('../../constants')
 
 /**
@@ -74,7 +73,7 @@ module.exports = function (request, reply, testServer) {
           null,
           chunkString.replace(
             '{loader}',
-            `<script type="text/javascript" ${nonce}>${sslShim}</script>${loaderScript}`
+            `${loaderScript}`
           )
         )
       } else {

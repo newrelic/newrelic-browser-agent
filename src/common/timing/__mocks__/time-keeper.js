@@ -3,4 +3,5 @@ export const TimeKeeper = jest.fn(function () {
   this.convertRelativeTimestamp = jest.fn()
   this.convertAbsoluteTimestamp = jest.fn()
   this.correctAbsoluteTimestamp = jest.fn()
+  this.correctRelativeTimestamp = jest.fn()
 })

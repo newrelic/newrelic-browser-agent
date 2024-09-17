@@ -6,7 +6,7 @@ import { stringify } from '../../../common/util/stringify'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { cleanURL } from '../../../common/url/clean-url'
 import { getInfo } from '../../../common/config/info'
-import { getConfigurationValue } from '../../../common/config/init'
+import { getConfiguration } from '../../../common/config/init'
 import { getRuntime } from '../../../common/config/runtime'
 import { FEATURE_NAME } from '../constants'
 import { isBrowserScope } from '../../../common/constants/runtime'
@@ -25,9 +25,10 @@ export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
+    const agentInit = getConfiguration(this.agentIdentifier)
 
     this.eventsPerHarvest = 1000
-    this.harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'generic_events.harvestTimeSeconds')
+    this.harvestTimeSeconds = agentInit.generic_events.harvestTimeSeconds
 
     this.referrerUrl = (isBrowserScope && document.referrer) ? cleanURL(document.referrer) : undefined
 
@@ -42,14 +43,12 @@ export class Aggregate extends AggregateBase {
         return
       }
 
-      if (getConfigurationValue(this.agentIdentifier, 'page_action.enabled')) {
+      if (agentInit.page_action.enabled) {
         registerHandler('api-addPageAction', (timestamp, name, attributes) => {
           this.addEvent({
             ...attributes,
             eventType: 'PageAction',
-            timestamp: Math.floor(this.#agentRuntime.timeKeeper.correctAbsoluteTimestamp(
-              this.#agentRuntime.timeKeeper.convertRelativeTimestamp(timestamp)
-            )),
+            timestamp: Math.floor(this.#agentRuntime.timeKeeper.correctRelativeTimestamp(timestamp)),
             timeSinceLoad: timestamp / 1000,
             actionName: name,
             referrerUrl: this.referrerUrl,
@@ -58,6 +57,20 @@ export class Aggregate extends AggregateBase {
               browserWidth: window.document.documentElement?.clientWidth,
               browserHeight: window.document.documentElement?.clientHeight
             })
+          })
+        }, this.featureName, this.ee)
+      }
+
+      if (agentInit.user_actions.enabled) {
+        registerHandler('ua', (evt) => {
+          this.addEvent({
+            eventType: 'UserAction',
+            timestamp: Math.floor(this.#agentRuntime.timeKeeper.correctRelativeTimestamp(evt.timeStamp)),
+            action: evt.type,
+            targetId: evt.target?.id,
+            targetTag: evt.target?.tagName,
+            targetType: evt.target?.type,
+            targetClass: evt.target?.className
           })
         }, this.featureName, this.ee)
       }
@@ -85,9 +98,7 @@ export class Aggregate extends AggregateBase {
 
     const defaultEventAttributes = {
       /** should be overridden by the event-specific attributes, but just in case -- set it to now() */
-      timestamp: Math.floor(this.#agentRuntime.timeKeeper.correctAbsoluteTimestamp(
-        this.#agentRuntime.timeKeeper.convertRelativeTimestamp(now())
-      )),
+      timestamp: Math.floor(this.#agentRuntime.timeKeeper.correctRelativeTimestamp(now())),
       /** all generic events require a pageUrl */
       pageUrl: cleanURL(getRuntime(this.agentIdentifier).origin)
     }

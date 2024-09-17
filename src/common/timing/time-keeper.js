@@ -114,6 +114,15 @@ export class TimeKeeper {
     return timestamp - this.#localTimeDiff
   }
 
+  /**
+   * Corrects relative timestamp to NR server time (epoch).
+   * @param {DOMHighResTimeStamp} relativeTime
+   * @returns {number}
+   */
+  correctRelativeTimestamp (relativeTime) {
+    return this.correctAbsoluteTimestamp(this.convertRelativeTimestamp(relativeTime))
+  }
+
   /** Process the session entity and use the info to set the main time calculations if present */
   processStoredDiff () {
     if (this.#ready) return // Time diff has already been calculated

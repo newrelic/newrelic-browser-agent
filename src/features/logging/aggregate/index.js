@@ -70,9 +70,7 @@ export class Aggregate extends AggregateBase {
     if (typeof message !== 'string' || !message) return warn(32)
 
     const log = new Log(
-      Math.floor(this.#agentRuntime.timeKeeper.correctAbsoluteTimestamp(
-        this.#agentRuntime.timeKeeper.convertRelativeTimestamp(timestamp)
-      )),
+      Math.floor(this.#agentRuntime.timeKeeper.correctRelativeTimestamp(timestamp)),
       message,
       attributes,
       level

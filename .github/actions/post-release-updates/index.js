@@ -118,7 +118,8 @@ if (args.openPullRequest) {
       'tools/browsers-lists/*.json',
       'third_party_manifest.json',
       'THIRD_PARTY_NOTICES.md',
-      'tools/test-builds/**/package.json'
+      'tools/test-builds/**/package.json',
+      'tools/webview-asset-ids.js'
     ],
     COMMIT_MESSAGE,
     true

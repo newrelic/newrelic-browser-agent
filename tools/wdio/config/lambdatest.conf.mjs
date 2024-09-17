@@ -64,7 +64,7 @@ function lambdaTestCapabilities () {
           // Important: ensure the uploaded apps are set to "team" visibility.
           if (parsedBrowserName === 'android') {
             capabilities['appium:platformName'] = 'android'
-            capabilities['LT:Options'].app = 'lt://APP10160352241718733717577609'
+            capabilities['LT:Options'].app = 'lt://APP1016027451726583159334455'
           } else /* === 'ios' */ {
             capabilities['appium:platformName'] = 'ios'
             capabilities['LT:Options'].app = 'lt://APP10160352241718734672953481'

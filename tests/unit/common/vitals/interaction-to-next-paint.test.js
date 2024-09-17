@@ -5,9 +5,9 @@ beforeEach(() => {
 })
 
 const inpAttribution = {
-  eventTarget: 'html',
-  eventType: 'keydown',
-  eventTime: 100,
+  interactionType: 'keydown',
+  interactionTarget: 'html',
+  interactionTime: 100,
   loadState: 'complete'
 }
 const getFreshINPImport = async (codeToRun) => {
@@ -22,7 +22,12 @@ describe('inp', () => {
   test('reports fcp from web-vitals', (done) => {
     getFreshINPImport(metric => metric.subscribe(({ value, attrs }) => {
       expect(value).toEqual(8)
-      expect(attrs).toEqual({ ...inpAttribution, metricId: 'ruhroh' })
+      expect(attrs).toEqual({
+        ...inpAttribution,
+        eventTarget: inpAttribution.interactionTarget,
+        eventTime: inpAttribution.interactionTime,
+        metricId: 'ruhroh'
+      })
       done()
     }))
   })

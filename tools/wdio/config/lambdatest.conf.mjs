@@ -67,7 +67,7 @@ function lambdaTestCapabilities () {
             capabilities['LT:Options'].app = 'lt://APP1016027451726583159334455'
           } else /* === 'ios' */ {
             capabilities['appium:platformName'] = 'ios'
-            capabilities['LT:Options'].app = 'lt://APP10160352241718734672953481'
+            capabilities['LT:Options'].app = 'lt://APP1016038711726585722814439'
           }
         } else {
           capabilities['appium:platformName'] = testBrowser.device_name

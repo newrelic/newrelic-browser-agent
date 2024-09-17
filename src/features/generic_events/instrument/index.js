@@ -16,6 +16,8 @@ export class Instrument extends InstrumentBase {
     const agentInit = getConfiguration(this.agentIdentifier)
     const genericEventSourceConfigs = [
       agentInit.page_action.enabled,
+      agentInit.performance.capture_marks,
+      agentInit.performance.capture_measures,
       agentInit.user_actions.enabled
       // other future generic event source configs to go here, like M&Ms, PageResouce, etc.
     ]

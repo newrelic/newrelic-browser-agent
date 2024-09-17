@@ -58,8 +58,8 @@ module.exports.defaultInitBlock = {
   logging: enabledFeature,
   metrics: { enabled, autoStart },
   obfuscate: undefined,
+  performance: { capture_marks: true, capture_measures: true },
   page_action: { enabled },
-  user_actions: { enabled },
   page_view_event: { enabled, autoStart },
   page_view_timing: enabledFeature,
   privacy: { cookies_enabled: true },
@@ -68,5 +68,6 @@ module.exports.defaultInitBlock = {
   session_trace: enabledFeature,
   ssl: false,
   soft_navigations: enabledFeature,
-  spa: enabledFeature
+  spa: enabledFeature,
+  user_actions: { enabled }
 }

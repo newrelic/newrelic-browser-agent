@@ -75,6 +75,38 @@ export class Aggregate extends AggregateBase {
         }, this.featureName, this.ee)
       }
 
+      /**
+       * is it worth complicating the agent and skipping the POs for single repeating queries? maybe,
+       * but right now it was less desirable simply because it is a nice benefit of populating the event buffer
+       * immediately as events happen for payload evaluation purposes and that becomes a little more chaotic
+       * with an arbitrary query method. note: eventTypes: [...types] does not support the 'buffered' flag so we have
+       * to create up to two PO's here.
+       */
+      const performanceTypesToCapture = [...(agentInit.performance.capture_marks ? ['mark'] : []), ...(agentInit.performance.capture_measures ? ['measure'] : [])]
+      if (performanceTypesToCapture.length) {
+        try {
+          performanceTypesToCapture.forEach(type => {
+            if (PerformanceObserver.supportedEntryTypes.includes(type)) {
+              const observer = new PerformanceObserver((list) => {
+                list.getEntries().forEach(entry => {
+                  this.addEvent({
+                    eventType: 'BrowserPerformance',
+                    timestamp: Math.floor(this.#agentRuntime.timeKeeper.correctRelativeTimestamp(entry.startTime)),
+                    name: entry.name,
+                    duration: entry.duration,
+                    type,
+                    ...(entry.detail && { detail: entry.detail })
+                  })
+                })
+              })
+              observer.observe({ buffered: true, type })
+            }
+          })
+        } catch (err) {
+        // Something failed in our set up, likely the browser does not support PO's... do nothing
+        }
+      }
+
       this.harvestScheduler = new HarvestScheduler('ins', { onFinished: (...args) => this.onHarvestFinished(...args) }, this)
       this.harvestScheduler.harvest.on('ins', (...args) => this.onHarvestStarted(...args))
       this.harvestScheduler.startTimer(this.harvestTimeSeconds, 0)

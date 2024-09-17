@@ -33,7 +33,7 @@ describe('ins harvesting', () => {
   })
 
   it('should submit PageActions even with other features disabled', async () => {
-    const testUrl = await browser.testHandle.assetURL('instrumented.html', { init: { user_actions: { enabled: false } } })
+    const testUrl = await browser.testHandle.assetURL('instrumented.html', { init: { user_actions: { enabled: false }, performance: { capture_marks: false, capture_measures: false } } })
     await browser.url(testUrl).then(() => browser.waitForAgentLoad())
 
     const [[{ request: { body: { ins: pageActionsHarvest } } }]] = await Promise.all([
@@ -77,6 +77,53 @@ describe('ins harvesting', () => {
       targetClass: '',
       pageUrl: expect.any(String),
       timestamp: expect.any(Number)
+    })
+  })
+
+  it('should submit Marks', async () => {
+    const testUrl = await browser.testHandle.assetURL('marks-and-measures.html', { init: { performance: { capture_marks: true, capture_measures: false } } })
+    await browser.url(testUrl).then(() => browser.waitForAgentLoad())
+
+    const [[{ request: { body: { ins: insHarvest } } }]] = await Promise.all([
+      insightsCapture.waitForResult({ totalCount: 1 })
+    ])
+
+    expect(insHarvest.length).toEqual(2) // this page sets two marks
+    expect(insHarvest[0]).toMatchObject({
+      duration: 0,
+      eventType: 'BrowserPerformance',
+      name: 'before-agent',
+      pageUrl: expect.any(String),
+      timestamp: expect.any(Number),
+      type: 'mark'
+    })
+    expect(insHarvest[1]).toMatchObject({
+      duration: 0,
+      eventType: 'BrowserPerformance',
+      name: 'after-agent',
+      pageUrl: expect.any(String),
+      timestamp: expect.any(Number),
+      type: 'mark'
+    })
+  })
+
+  it('should submit Measures', async () => {
+    const testUrl = await browser.testHandle.assetURL('marks-and-measures.html', { init: { performance: { capture_marks: false, capture_measures: true } } })
+    await browser.url(testUrl).then(() => browser.waitForAgentLoad())
+
+    const [[{ request: { body: { ins: insHarvest } } }]] = await Promise.all([
+      insightsCapture.waitForResult({ totalCount: 1 })
+    ])
+
+    expect(insHarvest.length).toEqual(1) // this page sets one measure
+    expect(insHarvest[0]).toMatchObject({
+      detail: '{"foo":"bar"}',
+      duration: expect.any(Number),
+      eventType: 'BrowserPerformance',
+      name: 'agent-load',
+      pageUrl: expect.any(String),
+      timestamp: expect.any(Number),
+      type: 'measure'
     })
   })
 

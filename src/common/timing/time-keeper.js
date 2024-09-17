@@ -71,7 +71,7 @@ export class TimeKeeper {
     this.#localTimeDiff = originTime - this.#correctedOriginTime
 
     if (isNaN(this.#correctedOriginTime)) {
-      throw new Error('invalid correctedOriginTime')
+      throw new Error('Failed to correct browser time to server time')
     }
 
     this.#session?.write({ serverTimeDiff: this.#localTimeDiff })

@@ -8,6 +8,10 @@ const inpAttribution = {
   interactionType: 'keydown',
   interactionTarget: 'html',
   interactionTime: 100,
+  inputDelay: 0,
+  nextPaintTime: 200,
+  processingDuration: 0,
+  presentationDelay: 0,
   loadState: 'complete'
 }
 const getFreshINPImport = async (codeToRun) => {
@@ -19,7 +23,7 @@ const getFreshINPImport = async (codeToRun) => {
 }
 
 describe('inp', () => {
-  test('reports fcp from web-vitals', (done) => {
+  test('reports inp from web-vitals', (done) => {
     getFreshINPImport(metric => metric.subscribe(({ value, attrs }) => {
       expect(value).toEqual(8)
       expect(attrs).toEqual({

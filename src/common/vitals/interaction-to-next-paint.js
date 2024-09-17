@@ -15,6 +15,10 @@ if (isBrowserScope) {
       interactionTarget: attribution.interactionTarget,
       interactionTime: attribution.interactionTime,
       interactionType: attribution.interactionType,
+      inputDelay: attribution.inputDelay,
+      nextPaintTime: attribution.nextPaintTime,
+      processingDuration: attribution.processingDuration,
+      presentationDelay: attribution.presentationDelay,
       loadState: attribution.loadState
     }
     interactionToNextPaint.update({ value, attrs })

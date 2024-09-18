@@ -124,7 +124,7 @@ export class Recorder {
     /** An count of stylesheet objects that were blocked from accessing contents via JS */
     const incompletes = stylesheetEvaluator.evaluate()
     const missingInlineSMTag = 'SessionReplay/Payload/Missing-Inline-Css/'
-    /** only run the audit if fix_stylesheets is configured as on (default behavior) */
+    /** only run the full fixing behavior (more costly) if fix_stylesheets is configured as on (default behavior) */
     if (!this.shouldFix) {
       if (incompletes > 0) {
         this.currentBufferTarget.inlinedAllStylesheets = false

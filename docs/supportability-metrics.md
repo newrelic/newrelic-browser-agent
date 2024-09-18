@@ -226,6 +226,8 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 * SessionReplay/Payload/Missing-Inline-Css/Failed
 <!--- SessionReplay Detected missing inline CSS contents but was able to fix them --->
 * SessionReplay/Payload/Missing-Inline-Css/Fixed
+<!--- SessionReplay Detected missing inline CSS contents but skipped fixing them due to configuration --->
+* SessionReplay/Payload/Missing-Inline-Css/Skipped
 
 ### Soft Nav
 <!--- Soft Nav initial page load Interaction Duration in Ms --->

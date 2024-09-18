@@ -192,8 +192,6 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 * Config/SessionReplay/AutoStart/Modified
 <!--- init.Session_replay.collect_fonts was Changed from the default --->
 * Config/SessionReplay/CollectFonts/Modified
-<!--- init.Session_replay.inline_stylesheet was Changed from the default --->
-* Config/SessionReplay/InlineStylesheet/Modified
 <!--- init.Session_replay.inline_images was Changed from the default --->
 * Config/SessionReplay/InlineImages/Modified
 <!--- init.Session_replay.mask_all_inputs was Changed from the default --->

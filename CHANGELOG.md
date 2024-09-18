@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.266.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.265.1...v1.266.0) (2024-09-16)
+
+
+### Features
+
+* Removing long task ([#1153](https://github.com/newrelic/newrelic-browser-agent/issues/1153)) ([304e395](https://github.com/newrelic/newrelic-browser-agent/commit/304e3954df9639d6d61e545fcaa0c761346a5016))
+
+
+### Bug Fixes
+
+* Remove nullish coalescing inside getter ([#1180](https://github.com/newrelic/newrelic-browser-agent/issues/1180)) ([e537359](https://github.com/newrelic/newrelic-browser-agent/commit/e537359f354270fcbd607445b6853c236f0fdbfc))
+
 ## [1.265.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.265.0...v1.265.1) (2024-09-06)
 
 

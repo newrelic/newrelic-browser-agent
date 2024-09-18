@@ -50,7 +50,7 @@ const model = () => {
     page_action: { enabled: true },
     user_actions: { enabled: true },
     page_view_event: { enabled: true, autoStart: true },
-    page_view_timing: { enabled: true, harvestTimeSeconds: 30, long_task: false, autoStart: true },
+    page_view_timing: { enabled: true, harvestTimeSeconds: 30, autoStart: true },
     privacy: { cookies_enabled: true }, // *cli - per discussion, default should be true
     proxy: {
       assets: undefined, // if this value is set, it will be used to overwrite the webpack asset path used to fetch assets

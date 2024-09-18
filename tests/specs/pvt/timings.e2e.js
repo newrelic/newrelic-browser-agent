@@ -1,4 +1,4 @@
-import { supportsCumulativeLayoutShift, supportsFirstContentfulPaint, supportsFirstInputDelay, supportsFirstPaint, supportsInteractionToNextPaint, supportsLargestContentfulPaint, supportsLongTaskTiming } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { supportsCumulativeLayoutShift, supportsFirstContentfulPaint, supportsFirstInputDelay, supportsFirstPaint, supportsInteractionToNextPaint, supportsLargestContentfulPaint } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { testTimingEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 const isClickInteractionType = type => type === 'pointerdown' || type === 'mousedown' || type === 'click'
@@ -178,40 +178,6 @@ describe('pvt timings tests', () => {
 
         const expectedAttribute = load.attributes.find(a => a.key === 'test')
         expect(expectedAttribute?.value).toEqual('testValue')
-      })
-    })
-  })
-
-  describe('long task related timings', () => {
-    loadersToTest.forEach(loader => {
-      it.withBrowsersMatching([supportsLongTaskTiming])(`emits long task timings when observed for ${loader} agent`, async () => {
-        await browser.url(
-          await browser.testHandle.assetURL('long-tasks.html', { loader, init: { page_view_timing: { long_task: true, harvestTimeSeconds: 3 } } })
-        )
-
-        const [timingsHarvests] = await Promise.all([
-          timingsCapture.waitForResult({ timeout: 10000 }),
-          browser.waitUntil(() => browser.execute(function () {
-            return window.tasksDone === true
-          }),
-          {
-            timeout: 10000,
-            timeoutMsg: 'tasksDone was never set'
-          }
-          )
-        ])
-        const ltEvents = timingsHarvests
-          .flatMap(harvest => harvest.request.body)
-          .filter(timing => timing.name === 'lt')
-        expect(ltEvents.length).toBeGreaterThanOrEqual(2)
-
-        ltEvents.forEach(lt => {
-          // Attributes array should start with: [ltFrame, ltStart, ltCtr, (ltCtrSrc, ltCtrId, ltCtrName, )...]
-          expect(lt.value).toBeGreaterThanOrEqual(50)
-          expect(lt.attributes.length).toBeGreaterThanOrEqual(3)
-          expect(lt.attributes[1].type).toEqual('doubleAttribute') // entry.startTime
-          if (lt.attributes[2].value !== 'window') expect(lt.attributes.length).toBeGreaterThanOrEqual(6)
-        })
       })
     })
   })

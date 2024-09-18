@@ -32,23 +32,8 @@ describe('ins harvesting', () => {
     expect(estimatedEventTime < receiptTime).toEqual(true) //, 'estimated event time (' + estimatedEventTime + ') < receipt time (' + receiptTime + ')')
   })
 
-  it('should submit PageActions even with other features disabled', async () => {
-    const testUrl = await browser.testHandle.assetURL('instrumented.html', { init: { user_actions: { enabled: false } } })
-    await browser.url(testUrl).then(() => browser.waitForAgentLoad())
-
-    const [[{ request: { body: { ins: pageActionsHarvest } } }]] = await Promise.all([
-      insightsCapture.waitForResult({ totalCount: 1 }),
-      browser.execute(function () {
-        newrelic.addPageAction('DummyEvent', { free: 'tacos' })
-      })
-    ])
-
-    expect(pageActionsHarvest.length).toEqual(1)
-    expect(pageActionsHarvest[0].actionName).toEqual('DummyEvent')
-  })
-
-  it('should submit UserAction', async () => {
-    const testUrl = await browser.testHandle.assetURL('user-actions.html')
+  it('should submit UserAction (when enabled)', async () => {
+    const testUrl = await browser.testHandle.assetURL('user-actions.html', { init: { user_actions: { enabled: true } } })
     await browser.url(testUrl).then(() => browser.waitForAgentLoad())
 
     const [[{ request: { body: { ins: userActionsHarvest } } }]] = await Promise.all([

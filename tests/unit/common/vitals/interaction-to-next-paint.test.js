@@ -26,10 +26,17 @@ describe('inp', () => {
   test('reports inp from web-vitals', (done) => {
     getFreshINPImport(metric => metric.subscribe(({ value, attrs }) => {
       expect(value).toEqual(8)
-      expect(attrs).toEqual({
-        ...inpAttribution,
+      expect(attrs).toStrictEqual({
         eventTarget: inpAttribution.interactionTarget,
         eventTime: inpAttribution.interactionTime,
+        interactionTarget: inpAttribution.interactionTarget,
+        interactionTime: inpAttribution.interactionTime,
+        interactionType: inpAttribution.interactionType,
+        inputDelay: inpAttribution.inputDelay,
+        nextPaintTime: inpAttribution.nextPaintTime,
+        processingDuration: inpAttribution.processingDuration,
+        presentationDelay: inpAttribution.presentationDelay,
+        loadState: inpAttribution.loadState,
         metricId: 'ruhroh'
       })
       done()

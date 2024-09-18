@@ -1,6 +1,7 @@
 import { testBlobTraceRequest, testRumRequest } from '../../../tools/testing-server/utils/expect-tests.js'
 import { supportsMultiTabSessions } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { testExpectedTrace, stConfig, MODE, decodeAttributes } from '../util/helpers.js'
+import { rumFlags } from '../../../tools/testing-server/constants.js'
 
 const getTraceMode = () => browser.execute(function () {
   const agent = Object.values(newrelic.initializedAgents)[0]
@@ -23,7 +24,7 @@ describe('Session Replay Across Pages', () => {
   it('should record across same-tab page refresh when already recording, even if sampling is 0', async () => {
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ st: 1, sts: 1, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
+      body: JSON.stringify(rumFlags({ sr: 0 }))
     })
 
     let [sessionTraceHarvests] = await Promise.all([
@@ -38,7 +39,7 @@ describe('Session Replay Across Pages', () => {
 
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ st: 1, sts: 0, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
+      body: JSON.stringify(rumFlags({ sts: 0, sr: 0 }))
     })
 
     ;[sessionTraceHarvests] = await Promise.all([
@@ -59,7 +60,7 @@ describe('Session Replay Across Pages', () => {
   it('should record across same-tab page navigation when already recording, even if sampling is 0', async () => {
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ st: 1, sts: 1, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
+      body: JSON.stringify(rumFlags({ sr: 0 }))
     })
 
     let [sessionTraceHarvests] = await Promise.all([
@@ -74,7 +75,7 @@ describe('Session Replay Across Pages', () => {
 
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ st: 1, sts: 0, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
+      body: JSON.stringify(rumFlags({ sts: 0, sr: 0 }))
     })
 
     ;[sessionTraceHarvests] = await Promise.all([
@@ -95,7 +96,7 @@ describe('Session Replay Across Pages', () => {
   it.withBrowsersMatching(supportsMultiTabSessions)('should record across new-tab page navigation once recording, even if sampled as 0', async () => {
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ st: 1, sts: 1, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
+      body: JSON.stringify(rumFlags({ sr: 0 }))
     })
 
     let [sessionTraceHarvests] = await Promise.all([
@@ -110,7 +111,7 @@ describe('Session Replay Across Pages', () => {
 
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ st: 1, sts: 0, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
+      body: JSON.stringify(rumFlags({ sr: 0, sts: 0 }))
     })
 
     ;[sessionTraceHarvests] = await Promise.all([
@@ -136,7 +137,7 @@ describe('Session Replay Across Pages', () => {
   it('should not record across navigations if not active', async () => {
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ st: 1, sts: 1, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
+      body: JSON.stringify(rumFlags({ sr: 0 }))
     })
 
     let [sessionTraceHarvests] = await Promise.all([
@@ -154,7 +155,7 @@ describe('Session Replay Across Pages', () => {
     })
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ st: 1, sts: 0, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
+      body: JSON.stringify(rumFlags({ sr: 0, sts: 0 }))
     })
 
     ;[sessionTraceHarvests] = await Promise.all([
@@ -171,7 +172,7 @@ describe('Session Replay Across Pages', () => {
   it('should not report harvest if sessionId changes', async () => {
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ st: 1, sts: 1, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
+      body: JSON.stringify(rumFlags({ sr: 0 }))
     })
 
     let [sessionTraceHarvests] = await Promise.all([
@@ -185,7 +186,7 @@ describe('Session Replay Across Pages', () => {
 
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ st: 1, sts: 0, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
+      body: JSON.stringify(rumFlags({ sr: 0, sts: 0 }))
     })
 
     ;[sessionTraceHarvests] = await Promise.all([
@@ -203,7 +204,7 @@ describe('Session Replay Across Pages', () => {
   it('should not report harvest if session resets', async () => {
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ st: 1, sts: 1, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
+      body: JSON.stringify(rumFlags({ sr: 0 }))
     })
 
     let [sessionTraceHarvests] = await Promise.all([
@@ -217,7 +218,7 @@ describe('Session Replay Across Pages', () => {
 
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ st: 1, sts: 0, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
+      body: JSON.stringify(rumFlags({ sr: 0, sts: 0 }))
     })
 
     ;[sessionTraceHarvests] = await Promise.all([
@@ -235,7 +236,7 @@ describe('Session Replay Across Pages', () => {
   it.withBrowsersMatching(supportsMultiTabSessions)('should not report harvest if session resets on another page', async () => {
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ st: 1, sts: 1, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
+      body: JSON.stringify(rumFlags({ sr: 0 }))
     })
 
     let [sessionTraceHarvests] = await Promise.all([
@@ -249,7 +250,7 @@ describe('Session Replay Across Pages', () => {
 
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ st: 1, sts: 1, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
+      body: JSON.stringify(rumFlags({ sr: 0 }))
     })
 
     ;[sessionTraceHarvests] = await Promise.all([
@@ -281,7 +282,7 @@ describe('Session Replay Across Pages', () => {
   it.withBrowsersMatching(supportsMultiTabSessions)('catches mode transition from other pages in the session', async () => {
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ st: 1, sts: 2, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
+      body: JSON.stringify(rumFlags({ sts: 2, sr: 0 }))
     })
 
     let [sessionTraceHarvests] = await Promise.all([
@@ -295,7 +296,7 @@ describe('Session Replay Across Pages', () => {
 
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({ st: 1, sts: 2, err: 1, ins: 1, spa: 1, sr: 0, loaded: 1 })
+      body: JSON.stringify(rumFlags({ sts: 2, sr: 0 }))
     })
 
     ;[sessionTraceHarvests] = await Promise.all([

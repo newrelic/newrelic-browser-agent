@@ -1,8 +1,6 @@
 import { originTime } from '../constants/runtime'
 import { getRuntime } from '../config/runtime'
 
-const rfc2616Regex = /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), ([0-3][0-9]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) ([0-9]{4}) ([01][0-9]|2[0-3])(:[0-5][0-9]){2} GMT$/
-
 /**
  * Class used to adjust the timestamp of harvested data to New Relic server time. This
  * is done by tracking the performance timings of the RUM call and applying a calculation
@@ -57,28 +55,23 @@ export class TimeKeeper {
    * @param rumRequest {XMLHttpRequest} The xhr for the rum request
    * @param startTime {number} The start time of the RUM request
    * @param endTime {number} The end time of the RUM request
+   * @param nrServerTime {number} the unix number value of the NR server time in MS, returned in the RUM request body
    */
-  processRumRequest (rumRequest, startTime, endTime) {
+  processRumRequest (rumRequest, startTime, endTime, nrServerTime) {
     this.processStoredDiff() // Check session entity for stored time diff
     if (this.#ready) return // Server time calculated from session entity
 
-    const responseDateHeader = rumRequest.getResponseHeader('Date')
-    if (!responseDateHeader) {
-      throw new Error('Missing date header on rum response.')
-    }
-    if (!rfc2616Regex.test(responseDateHeader)) {
-      throw new Error('Date header invalid format.')
-    }
+    if (!nrServerTime) throw new Error('nrServerTime not found')
 
     const medianRumOffset = (endTime - startTime) / 2
     const serverOffset = startTime + medianRumOffset
 
     // Corrected page origin time
-    this.#correctedOriginTime = Math.floor(Date.parse(responseDateHeader) - serverOffset)
+    this.#correctedOriginTime = Math.floor(nrServerTime - serverOffset)
     this.#localTimeDiff = originTime - this.#correctedOriginTime
 
     if (isNaN(this.#correctedOriginTime)) {
-      throw new Error('Date header invalid format.')
+      throw new Error('Failed to correct browser time to server time')
     }
 
     this.#session?.write({ serverTimeDiff: this.#localTimeDiff })

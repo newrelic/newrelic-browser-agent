@@ -1,3 +1,4 @@
+import { rumFlags } from '../../../tools/testing-server/constants'
 import { testBlobReplayRequest, testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
 import { srConfig, getSR } from '../util/helpers'
 
@@ -6,16 +7,7 @@ async function disqualifySR () {
   await browser.testHandle.scheduleReply('bamServer', {
     test: testRumRequest,
     permanent: true,
-    body: JSON.stringify({
-      st: 1,
-      sts: 1,
-      err: 1,
-      ins: 1,
-      spa: 1,
-      loaded: 1,
-      sr: 0,
-      srs: 0
-    })
+    body: JSON.stringify(rumFlags({ sr: 0, srs: 0 }))
   })
 }
 

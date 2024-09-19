@@ -74,7 +74,7 @@ export class Recorder {
     const { block_class, ignore_class, mask_text_class, block_selector, mask_input_options, mask_text_selector, mask_all_inputs, inline_images, collect_fonts } = getConfigurationValue(this.parent.agentIdentifier, 'session_replay')
     const customMasker = (text, element) => {
       try {
-        if (element?.type?.toLowerCase?.() !== 'password' && (element?.dataset?.nrUnmask !== undefined || element?.classList?.contains('nr-unmask'))) return text
+        if (typeof element?.type === 'string' &&  element.type.toLowerCase() !== 'password' && (element?.dataset?.nrUnmask !== undefined || element?.classList?.contains('nr-unmask'))) return text
       } catch (err) {
         // likely an element was passed to this handler that was invalid and was missing attributes or methods
       }

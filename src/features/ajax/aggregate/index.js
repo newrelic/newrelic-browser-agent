@@ -18,6 +18,7 @@ import { parseGQL } from './gql'
 import { getNREUMInitializedAgent } from '../../../common/window/nreum'
 import Chunk from './chunk'
 import { EventBuffer } from '../../utils/event-buffer'
+import { FEATURE_TO_ENDPOINT } from '../../utils/processed-events-util'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -57,7 +58,7 @@ export class Aggregate extends AggregateBase {
     }, this.featureName, this.ee)
 
     this.waitForFlags(([])).then(() => {
-      const scheduler = new HarvestScheduler('events', {
+      const scheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
         onFinished: this.onEventsHarvestFinished.bind(this),
         getPayload: this.prepareHarvest.bind(this)
       }, this)

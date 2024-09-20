@@ -14,6 +14,7 @@ import { isValidLogLevel } from '../shared/utils'
 import { applyFnToProps } from '../../../common/util/traverse'
 import { MAX_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
 import { EventBuffer } from '../../utils/event-buffer'
+import { FEATURE_TO_ENDPOINT } from '../../utils/processed-events-util'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -31,7 +32,7 @@ export class Aggregate extends AggregateBase {
     this.harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'logging.harvestTimeSeconds')
 
     this.waitForFlags([]).then(() => {
-      this.scheduler = new HarvestScheduler('browser/logs', {
+      this.scheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
         onFinished: this.onHarvestFinished.bind(this),
         retryDelay: this.harvestTimeSeconds,
         getPayload: this.prepareHarvest.bind(this),

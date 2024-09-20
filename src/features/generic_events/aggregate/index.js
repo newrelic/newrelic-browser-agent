@@ -19,6 +19,7 @@ import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { EventBuffer } from '../../utils/event-buffer'
 import { applyFnToProps } from '../../../common/util/traverse'
 import { IDEAL_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
+import { FEATURE_TO_ENDPOINT } from '../../utils/processed-events-util'
 
 export class Aggregate extends AggregateBase {
   #agentRuntime
@@ -62,8 +63,8 @@ export class Aggregate extends AggregateBase {
         }, this.featureName, this.ee)
       }
 
-      this.harvestScheduler = new HarvestScheduler('ins', { onFinished: (...args) => this.onHarvestFinished(...args) }, this)
-      this.harvestScheduler.harvest.on('ins', (...args) => this.onHarvestStarted(...args))
+      this.harvestScheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], { onFinished: (...args) => this.onHarvestFinished(...args) }, this)
+      this.harvestScheduler.harvest.on(FEATURE_TO_ENDPOINT[this.featureName], (...args) => this.onHarvestStarted(...args))
       this.harvestScheduler.startTimer(this.harvestTimeSeconds, 0)
 
       this.drain()

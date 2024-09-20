@@ -9,6 +9,7 @@ import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { EventBuffer } from '../../utils/event-buffer'
+import { FEATURE_TO_ENDPOINT } from '../../utils/processed-events-util'
 import { API_TRIGGER_NAME, FEATURE_NAME, INTERACTION_STATUS } from '../constants'
 import { AjaxNode } from './ajax-node'
 import { InitialPageLoadInteraction } from './initial-page-load-interaction'
@@ -41,12 +42,12 @@ export class Aggregate extends AggregateBase {
     this.waitForFlags(['spa']).then(([spaOn]) => {
       if (spaOn) {
         this.drain()
-        const scheduler = new HarvestScheduler('events', {
+        const scheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
           onFinished: this.onHarvestFinished.bind(this),
           retryDelay: harvestTimeSeconds,
           onUnload: () => this.interactionInProgress?.done() // return any held ajax or jserr events so they can be sent with EoL harvest
         }, { agentIdentifier, ee: this.ee })
-        scheduler.harvest.on('events', this.onHarvestStarted.bind(this))
+        scheduler.harvest.on(FEATURE_TO_ENDPOINT[this.featureName], this.onHarvestStarted.bind(this))
         scheduler.startTimer(harvestTimeSeconds, 0)
       } else {
         this.blocked = true // if rum response determines that customer lacks entitlements for spa endpoint, this feature shouldn't harvest

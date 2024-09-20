@@ -22,6 +22,7 @@ import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
 import { subscribeToVisibilityChange } from '../../../common/window/page-visibility'
 import { VITAL_NAMES } from '../../../common/vitals/constants'
 import { EventBuffer } from '../../utils/event-buffer'
+import { FEATURE_TO_ENDPOINT } from '../../utils/processed-events-util'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -61,7 +62,7 @@ export class Aggregate extends AggregateBase {
         this.addTiming(name, value * 1000, attrs)
       }, true) // CLS node should only reports on vis change rather than on every change
 
-      const scheduler = new HarvestScheduler('events', {
+      const scheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
         onFinished: (...args) => this.onHarvestFinished(...args),
         getPayload: (...args) => this.prepareHarvest(...args)
       }, this)

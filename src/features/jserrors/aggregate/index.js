@@ -24,6 +24,7 @@ import { getNREUMInitializedAgent } from '../../../common/window/nreum'
 import { deregisterDrain } from '../../../common/drain/drain'
 import { now } from '../../../common/timing/now'
 import { applyFnToProps } from '../../../common/util/traverse'
+import { FEATURE_TO_ENDPOINT } from '../../utils/processed-events-util'
 
 /**
  * @typedef {import('./compute-stack-trace.js').StackInfo} StackInfo
@@ -54,8 +55,8 @@ export class Aggregate extends AggregateBase {
     // 0 == off, 1 == on
     this.waitForFlags(['err']).then(([errFlag]) => {
       if (errFlag) {
-        const scheduler = new HarvestScheduler('jserrors', { onFinished: (...args) => this.onHarvestFinished(...args) }, this)
-        scheduler.harvest.on('jserrors', (...args) => this.onHarvestStarted(...args))
+        const scheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], { onFinished: (...args) => this.onHarvestFinished(...args) }, this)
+        scheduler.harvest.on(FEATURE_TO_ENDPOINT[this.featureName], (...args) => this.onHarvestStarted(...args))
         scheduler.startTimer(harvestTimeSeconds)
         this.drain()
       } else {

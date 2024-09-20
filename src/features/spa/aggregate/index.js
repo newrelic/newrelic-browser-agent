@@ -27,6 +27,7 @@ import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { deregisterDrain } from '../../../common/drain/drain'
 import { warn } from '../../../common/util/console'
 import { EventBuffer } from '../../utils/event-buffer'
+import { FEATURE_TO_ENDPOINT } from '../../utils/processed-events-util'
 
 const {
   FEATURE_NAME, INTERACTION_EVENTS, MAX_TIMER_BUDGET, FN_START, FN_END, CB_START, INTERACTION_API, REMAINING,
@@ -107,11 +108,11 @@ export class Aggregate extends AggregateBase {
 
     this.waitForFlags((['spa'])).then(([spaFlag]) => {
       if (spaFlag) {
-        scheduler = new HarvestScheduler('events', {
+        scheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
           onFinished: onHarvestFinished,
           retryDelay: state.harvestTimeSeconds
         }, { agentIdentifier, ee: baseEE })
-        scheduler.harvest.on('events', onHarvestStarted)
+        scheduler.harvest.on(FEATURE_TO_ENDPOINT[this.featureName], onHarvestStarted)
         this.drain()
       } else {
         this.blocked = true

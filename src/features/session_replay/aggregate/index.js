@@ -28,6 +28,7 @@ import { deregisterDrain } from '../../../common/drain/drain'
 import { now } from '../../../common/timing/now'
 import { buildNRMetaNode } from '../shared/utils'
 import { MAX_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
+import { FEATURE_TO_ENDPOINT } from '../../utils/processed-events-util'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -89,7 +90,7 @@ export class Aggregate extends AggregateBase {
     })
 
     // Bespoke logic for blobs endpoint.
-    this.scheduler = new HarvestScheduler('browser/blobs', {
+    this.scheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
       onFinished: this.onHarvestFinished.bind(this),
       retryDelay: this.harvestTimeSeconds,
       getPayload: this.prepareHarvest.bind(this),

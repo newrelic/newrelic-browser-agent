@@ -106,7 +106,7 @@ export class Harvest extends SharedContext {
     const gzip = !!qs?.attributes?.includes('gzip')
 
     if (!gzip) {
-      if (endpoint === 'events') {
+      if (body.e) { // features going to /events/ endpoint currently returns payload with this structure -- being removed atm
         body = body.e
       } else {
         body = stringify(body)

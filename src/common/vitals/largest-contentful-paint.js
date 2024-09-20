@@ -21,7 +21,7 @@ if (isBrowserScope) {
         timeToFirstByte: attribution.timeToFirstByte,
         resourceLoadDelay: attribution.resourceLoadDelay,
         resourceLoadDuration: attribution.resourceLoadDuration,
-        resourceLoadTime: attribution.resourceLoadDuration, // kept for NR backwards compatibility
+        resourceLoadTime: attribution.resourceLoadDuration, // kept for NR backwards compatibility, deprecated in v3->v4
         elementRenderDelay: attribution.elementRenderDelay
       }
       if (attribution.url) attrs.elUrl = cleanURL(attribution.url)

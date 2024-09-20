@@ -3,7 +3,7 @@ import { isBrowserScope } from '../../../common/constants/runtime'
 
 class StylesheetEvaluator {
   #evaluated = new WeakSet()
-  #fetchProms = []
+  #brokenSheets = []
   /**
   * Flipped to true if stylesheets that cannot be natively inlined are detected by the stylesheetEvaluator class
   * Used at harvest time to denote that all subsequent payloads are subject to this and customers should be advised to handle crossorigin decoration
@@ -17,6 +17,7 @@ class StylesheetEvaluator {
    */
   evaluate () {
     let incompletes = 0
+    this.#brokenSheets = []
     if (isBrowserScope) {
       for (let i = 0; i < Object.keys(document.styleSheets).length; i++) {
         if (!this.#evaluated.has(document.styleSheets[i])) {
@@ -27,7 +28,7 @@ class StylesheetEvaluator {
           } catch (err) {
             if (!document.styleSheets[i].href) return
             incompletes++
-            this.#fetchProms.push(this.#fetchAndOverride(document.styleSheets[i]))
+            this.#brokenSheets.push(document.styleSheets[i])
           }
         }
       }
@@ -41,8 +42,8 @@ class StylesheetEvaluator {
    * @returns {Promise}
    */
   async fix () {
-    await Promise.all(this.#fetchProms)
-    this.#fetchProms = []
+    await Promise.all(this.#brokenSheets.map(sheet => this.#fetchAndOverride(sheet)))
+    this.#brokenSheets = []
     const failedToFix = this.failedToFix
     this.failedToFix = 0
     return failedToFix

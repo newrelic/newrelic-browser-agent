@@ -31,7 +31,9 @@ const model = {
   session: undefined,
   denyList: undefined,
   timeKeeper: undefined,
-  obfuscator: undefined
+  obfuscator: undefined,
+  /** Map of ingest endpoints to the respective array of ProcessedEvents instances */
+  pendingEvents: {}
 }
 
 const _cache = {}

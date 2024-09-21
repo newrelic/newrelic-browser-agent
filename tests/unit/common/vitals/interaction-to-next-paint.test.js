@@ -5,7 +5,7 @@ beforeEach(() => {
 })
 
 const inpAttribution = {
-  interactionType: 'keydown',
+  interactionType: 'keyboard',
   interactionTarget: 'html',
   interactionTime: 100,
   inputDelay: 0,

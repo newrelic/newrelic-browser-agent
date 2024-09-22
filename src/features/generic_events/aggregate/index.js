@@ -72,7 +72,7 @@ export class Aggregate extends AggregateBase {
           if (this.currentUserAction[aggregationKey]) {
             // exists already, so lets just aggregate
             this.currentUserAction[aggregationKey].count++
-            this.currentUserAction[aggregationKey].relativeMs.push(evt.timeStamp - this.currentUserAction[aggregationKey].originMs)
+            this.currentUserAction[aggregationKey].relativeMs.push(Math.floor(evt.timeStamp - this.currentUserAction[aggregationKey].originMs))
             // detect rage click
             const len = this.currentUserAction[aggregationKey].relativeMs.length
             if (this.currentUserAction[aggregationKey].event.type === 'click' && len >= 5 && this.currentUserAction[aggregationKey].relativeMs[len - 1] - this.currentUserAction[aggregationKey].relativeMs[len - 6] < 1000) {
@@ -85,7 +85,7 @@ export class Aggregate extends AggregateBase {
             this.currentUserAction[aggregationKey] = {
               event: evt,
               count: 1,
-              originMs: evt.timeStamp,
+              originMs: Math.floor(evt.timeStamp),
               relativeMs: [0],
               selectorPath,
               rageClick: false

@@ -19,6 +19,7 @@ import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { EventBuffer } from '../../utils/event-buffer'
 import { applyFnToProps } from '../../../common/util/traverse'
 import { IDEAL_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
+import { generateSelectorPath } from '../../../common/dom/selector-path'
 
 export class Aggregate extends AggregateBase {
   #agentRuntime
@@ -62,16 +63,32 @@ export class Aggregate extends AggregateBase {
       }
 
       if (agentInit.user_actions.enabled) {
+        this.currentUserAction = {}
         registerHandler('ua', (evt) => {
-          this.addEvent({
-            eventType: 'UserAction',
-            timestamp: Math.floor(this.#agentRuntime.timeKeeper.correctRelativeTimestamp(evt.timeStamp)),
-            action: evt.type,
-            targetId: evt.target?.id,
-            targetTag: evt.target?.tagName,
-            targetType: evt.target?.type,
-            targetClass: evt.target?.className
-          })
+          const selectorPath = generateSelectorPath(evt.target)
+          const aggregationKey = evt.type + '-' + (selectorPath || (evt.target === evt.target.top ? 'window' : evt.target === document ? 'document' : Math.random())) // do not aggregate at all if we cant identify the target
+          if (this.currentUserAction[aggregationKey]) {
+            // exists already, so lets just aggregate
+            this.currentUserAction[aggregationKey].count++
+            this.currentUserAction[aggregationKey].relativeMs.push(evt.timeStamp - this.currentUserAction[aggregationKey].originMs)
+            // detect rage click
+            const len = this.currentUserAction[aggregationKey].relativeMs.length
+            if (this.currentUserAction[aggregationKey].event.type === 'click' && len >= 5 && this.currentUserAction[aggregationKey].relativeMs[len - 1] - this.currentUserAction[aggregationKey].relativeMs[len - 6] < 1000) {
+              this.currentUserAction[aggregationKey].rageClick = true
+            }
+          } else {
+            // store the prev existing one (if there is one)
+            this.addCurrentUserAction()
+            // then set as this new event aggregation
+            this.currentUserAction[aggregationKey] = {
+              event: evt,
+              count: 1,
+              originMs: evt.timeStamp,
+              relativeMs: [0],
+              selectorPath,
+              rageClick: false
+            }
+          }
         }, this.featureName, this.ee)
       }
 
@@ -81,6 +98,25 @@ export class Aggregate extends AggregateBase {
 
       this.drain()
     })
+  }
+
+  addCurrentUserAction () {
+    // store the prev existing one (if there is one)
+    const [[prevKey, prevVal] = []] = Object.entries(this.currentUserAction)
+    if (prevVal) {
+      this.addEvent({
+        eventType: 'UserAction',
+        timestamp: Math.floor(this.#agentRuntime.timeKeeper.correctRelativeTimestamp(prevVal.event.timeStamp)),
+        action: prevVal.event.type,
+        actionCount: prevVal.count,
+        duration: prevVal.relativeMs[prevVal.relativeMs.length - 1],
+        ...(prevVal.rageClick && { rageClick: prevVal.rageClick }),
+        relativeMs: prevVal.relativeMs,
+        target: prevVal.selectorPath
+      })
+      // then clear it...
+      delete this.currentUserAction[prevKey]
+    }
   }
 
   // WARNING: Insights times are in seconds. EXCEPT timestamp, which is in ms.
@@ -118,6 +154,7 @@ export class Aggregate extends AggregateBase {
   }
 
   onHarvestStarted (options) {
+    this.addCurrentUserAction()
     const { userAttributes, atts } = getInfo(this.agentIdentifier)
     if (!this.events.hasData) return
     var payload = ({

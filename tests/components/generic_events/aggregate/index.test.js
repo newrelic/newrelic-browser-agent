@@ -147,14 +147,18 @@ describe('sub-features', () => {
 
   test('should record user actions when enabled', () => {
     getInfo(agentSetup.agentIdentifier).jsAttributes = { globalFoo: 'globalBar' }
-    genericEventsAggregate.ee.emit('ua', [{ timeStamp: 123456, type: 'click', target: { id: 'myBtn', tagName: 'button' } }])
+    const target = document.createElement('button')
+    target.id = 'myBtn'
+    genericEventsAggregate.ee.emit('ua', [{ timeStamp: 123456, type: 'click', target }])
 
-    expect(genericEventsAggregate.events.buffer[0]).toMatchObject({
+    const harvest = genericEventsAggregate.onHarvestStarted({ retry: true })
+    expect(harvest.body.ins[0]).toMatchObject({
       eventType: 'UserAction',
       timestamp: expect.any(Number),
       action: 'click',
-      targetId: 'myBtn',
-      targetTag: 'button',
+      actionCount: 1,
+      duration: 0,
+      target: 'button#myBtn:nth-of-type(1)',
       globalFoo: 'globalBar'
     })
   })

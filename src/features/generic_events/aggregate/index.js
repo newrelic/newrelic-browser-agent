@@ -8,7 +8,7 @@ import { cleanURL } from '../../../common/url/clean-url'
 import { getInfo } from '../../../common/config/info'
 import { getConfiguration } from '../../../common/config/init'
 import { getRuntime } from '../../../common/config/runtime'
-import { FEATURE_NAME } from '../constants'
+import { FEATURE_NAME, OBSERVED_WINDOW_EVENTS } from '../constants'
 import { isBrowserScope } from '../../../common/constants/runtime'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { warn } from '../../../common/util/console'
@@ -65,7 +65,9 @@ export class Aggregate extends AggregateBase {
       if (agentInit.user_actions.enabled) {
         this.currentUserAction = {}
         registerHandler('ua', (evt) => {
-          const selectorPath = generateSelectorPath(evt.target)
+          let selectorPath
+          if (evt.type === 'scrollend' || OBSERVED_WINDOW_EVENTS.includes(evt.type)) selectorPath = 'window'
+          selectorPath ??= generateSelectorPath(evt.target)
           const aggregationKey = evt.type + '-' + (selectorPath || (evt.target === evt.target.top ? 'window' : evt.target === document ? 'document' : Math.random())) // do not aggregate at all if we cant identify the target
           if (this.currentUserAction[aggregationKey]) {
             // exists already, so lets just aggregate

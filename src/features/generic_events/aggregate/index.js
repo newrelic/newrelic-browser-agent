@@ -66,7 +66,8 @@ export class Aggregate extends AggregateBase {
         this.currentUserAction = {}
         registerHandler('ua', (evt) => {
           let selectorPath
-          if (evt.type === 'scrollend' || OBSERVED_WINDOW_EVENTS.includes(evt.type)) selectorPath = 'window'
+          if (evt.type === 'scrollend') selectorPath = 'html>body'
+          else if (OBSERVED_WINDOW_EVENTS.includes(evt.type)) selectorPath = 'window'
           selectorPath ??= generateSelectorPath(evt.target)
           const aggregationKey = evt.type + '-' + (selectorPath || (evt.target === evt.target.top ? 'window' : evt.target === document ? 'document' : Math.random())) // do not aggregate at all if we cant identify the target
           if (this.currentUserAction[aggregationKey]) {

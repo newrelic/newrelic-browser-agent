@@ -5,9 +5,13 @@ beforeEach(() => {
 })
 
 const inpAttribution = {
-  eventTarget: 'html',
-  eventType: 'keydown',
-  eventTime: 100,
+  interactionType: 'keyboard',
+  interactionTarget: 'html',
+  interactionTime: 100,
+  inputDelay: 0,
+  nextPaintTime: 200,
+  processingDuration: 0,
+  presentationDelay: 0,
   loadState: 'complete'
 }
 const getFreshINPImport = async (codeToRun) => {
@@ -19,10 +23,22 @@ const getFreshINPImport = async (codeToRun) => {
 }
 
 describe('inp', () => {
-  test('reports fcp from web-vitals', (done) => {
+  test('reports inp from web-vitals', (done) => {
     getFreshINPImport(metric => metric.subscribe(({ value, attrs }) => {
       expect(value).toEqual(8)
-      expect(attrs).toEqual({ ...inpAttribution, metricId: 'ruhroh' })
+      expect(attrs).toStrictEqual({
+        eventTarget: inpAttribution.interactionTarget,
+        eventTime: inpAttribution.interactionTime,
+        interactionTarget: inpAttribution.interactionTarget,
+        interactionTime: inpAttribution.interactionTime,
+        interactionType: inpAttribution.interactionType,
+        inputDelay: inpAttribution.inputDelay,
+        nextPaintTime: inpAttribution.nextPaintTime,
+        processingDuration: inpAttribution.processingDuration,
+        presentationDelay: inpAttribution.presentationDelay,
+        loadState: inpAttribution.loadState,
+        metricId: 'ruhroh'
+      })
       done()
     }))
   })

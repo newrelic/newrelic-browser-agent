@@ -10,9 +10,15 @@ if (isBrowserScope) {
   onINP(({ value, attribution, id }) => {
     const attrs = {
       metricId: id,
-      eventTarget: attribution.eventTarget,
-      eventType: attribution.eventType,
-      eventTime: attribution.eventTime,
+      eventTarget: attribution.interactionTarget, // event* attrs deprecated in v4, kept for NR backwards compatibility
+      eventTime: attribution.interactionTime, // event* attrs deprecated in v4, kept for NR backwards compatibility
+      interactionTarget: attribution.interactionTarget,
+      interactionTime: attribution.interactionTime,
+      interactionType: attribution.interactionType,
+      inputDelay: attribution.inputDelay,
+      nextPaintTime: attribution.nextPaintTime,
+      processingDuration: attribution.processingDuration,
+      presentationDelay: attribution.presentationDelay,
       loadState: attribution.loadState
     }
     interactionToNextPaint.update({ value, attrs })

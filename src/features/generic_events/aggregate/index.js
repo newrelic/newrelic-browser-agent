@@ -8,7 +8,7 @@ import { cleanURL } from '../../../common/url/clean-url'
 import { getInfo } from '../../../common/config/info'
 import { getConfiguration } from '../../../common/config/init'
 import { getRuntime } from '../../../common/config/runtime'
-import { FEATURE_NAME, OBSERVED_WINDOW_EVENTS } from '../constants'
+import { FEATURE_NAME } from '../constants'
 import { isBrowserScope } from '../../../common/constants/runtime'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { warn } from '../../../common/util/console'
@@ -19,7 +19,7 @@ import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { EventBuffer } from '../../utils/event-buffer'
 import { applyFnToProps } from '../../../common/util/traverse'
 import { IDEAL_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
-import { generateSelectorPath } from '../../../common/dom/selector-path'
+import { UserActionsAggregator } from './user-actions'
 
 export class Aggregate extends AggregateBase {
   #agentRuntime
@@ -63,35 +63,25 @@ export class Aggregate extends AggregateBase {
       }
 
       if (agentInit.user_actions.enabled) {
-        this.currentUserAction = {}
+        this.userActionAggregator = new UserActionsAggregator((aggData) => {
+          if (!aggData) return
+          this.addEvent({
+            eventType: 'UserAction',
+            timestamp: Math.floor(this.#agentRuntime.timeKeeper.correctRelativeTimestamp(aggData.event.timeStamp)),
+            action: aggData.event.type,
+            actionCount: aggData.count,
+            duration: aggData.relativeMs[aggData.relativeMs.length - 1],
+            rageClick: aggData.rageClick,
+            relativeMs: aggData.relativeMs,
+            target: aggData.selectorPath,
+            targetId: aggData.event.target?.id,
+            targetTag: aggData.event.target?.tagName,
+            targetType: aggData.event.target?.type,
+            targetClass: aggData.event.target?.className
+          })
+        })
         registerHandler('ua', (evt) => {
-          let selectorPath
-          if (evt.type === 'scrollend') selectorPath = 'html>body'
-          else if (OBSERVED_WINDOW_EVENTS.includes(evt.type)) selectorPath = 'window'
-          selectorPath ??= generateSelectorPath(evt.target)
-          const aggregationKey = evt.type + '-' + (selectorPath || (evt.target === evt.target.top ? 'window' : evt.target === document ? 'document' : Math.random())) // do not aggregate at all if we cant identify the target
-          if (this.currentUserAction[aggregationKey]) {
-            // exists already, so lets just aggregate
-            this.currentUserAction[aggregationKey].count++
-            this.currentUserAction[aggregationKey].relativeMs.push(Math.floor(evt.timeStamp - this.currentUserAction[aggregationKey].originMs))
-            // detect rage click
-            const len = this.currentUserAction[aggregationKey].relativeMs.length
-            if (this.currentUserAction[aggregationKey].event.type === 'click' && len >= 5 && this.currentUserAction[aggregationKey].relativeMs[len - 1] - this.currentUserAction[aggregationKey].relativeMs[len - 6] < 1000) {
-              this.currentUserAction[aggregationKey].rageClick = true
-            }
-          } else {
-            // store the prev existing one (if there is one)
-            this.addCurrentUserAction()
-            // then set as this new event aggregation
-            this.currentUserAction[aggregationKey] = {
-              event: evt,
-              count: 1,
-              originMs: Math.floor(evt.timeStamp),
-              relativeMs: [0],
-              selectorPath,
-              rageClick: false
-            }
-          }
+          this.userActionAggregator.process(evt)
         }, this.featureName, this.ee)
       }
 
@@ -101,25 +91,6 @@ export class Aggregate extends AggregateBase {
 
       this.drain()
     })
-  }
-
-  addCurrentUserAction () {
-    // store the prev existing one (if there is one)
-    const [[prevKey, prevVal] = []] = Object.entries(this.currentUserAction)
-    if (prevVal) {
-      this.addEvent({
-        eventType: 'UserAction',
-        timestamp: Math.floor(this.#agentRuntime.timeKeeper.correctRelativeTimestamp(prevVal.event.timeStamp)),
-        action: prevVal.event.type,
-        actionCount: prevVal.count,
-        duration: prevVal.relativeMs[prevVal.relativeMs.length - 1],
-        ...(prevVal.rageClick && { rageClick: prevVal.rageClick }),
-        relativeMs: prevVal.relativeMs,
-        target: prevVal.selectorPath
-      })
-      // then clear it...
-      delete this.currentUserAction[prevKey]
-    }
   }
 
   // WARNING: Insights times are in seconds. EXCEPT timestamp, which is in ms.
@@ -157,7 +128,9 @@ export class Aggregate extends AggregateBase {
   }
 
   onHarvestStarted (options) {
-    this.addCurrentUserAction()
+    /** send whatever UserActions have been aggregated up to this point
+     * if we are in a final harvest */
+    if (options.isFinalHarvest) this.userActionAggregator?.storeCurrentUserActionInFeature()
     const { userAttributes, atts } = getInfo(this.agentIdentifier)
     if (!this.events.hasData) return
     var payload = ({

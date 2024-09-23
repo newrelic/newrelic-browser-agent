@@ -151,7 +151,7 @@ describe('sub-features', () => {
     target.id = 'myBtn'
     genericEventsAggregate.ee.emit('ua', [{ timeStamp: 123456, type: 'click', target }])
 
-    const harvest = genericEventsAggregate.onHarvestStarted({ retry: true })
+    const harvest = genericEventsAggregate.onHarvestStarted({ isFinalHarvest: true }) // force it to put the aggregation into the event buffer
     expect(harvest.body.ins[0]).toMatchObject({
       eventType: 'UserAction',
       timestamp: expect.any(Number),

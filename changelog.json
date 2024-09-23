@@ -4,6 +4,47 @@
     {
       "changes": [
         {
+          "type": "feat",
+          "sha": "81349b82f5befd88f425cce1dee06f08fcea8a05",
+          "message": "Upgrade to web-vitals v4",
+          "issues": [
+            "1193"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "a21b939884697fc4951e6d4cdaceecaa9b000810",
+          "message": "Improve notifications of stylesheet status for session replay",
+          "issues": [
+            "1190"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "fd033a7be52fed01e5a67a5f8060cf6ec080c769",
+          "message": "add soft navigations to Browser-Agent loader",
+          "issues": [
+            "1191"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "60d63cf416529d700abaa6fa36ba3e64402b35a9",
+          "message": "Update TimeKeeper Source of Truth",
+          "issues": [
+            "1181"
+          ]
+        }
+      ],
+      "version": "1.267.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "a0db4cf4-14fd-4421-a54b-d38e072dce47",
+      "createTime": "2024-09-23T19:27:12.684Z"
+    },
+    {
+      "changes": [
+        {
           "type": "fix",
           "sha": "e537359f354270fcbd607445b6853c236f0fdbfc",
           "message": "Remove nullish coalescing inside getter",
@@ -1903,5 +1944,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2024-09-16T18:08:18.394Z"
+  "updateTime": "2024-09-23T19:27:12.684Z"
 }

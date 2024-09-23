@@ -159,6 +159,8 @@ describe('sub-features', () => {
       actionCount: 1,
       duration: 0,
       target: 'button#myBtn:nth-of-type(1)',
+      targetId: 'myBtn',
+      targetTag: 'BUTTON',
       globalFoo: 'globalBar'
     })
   })

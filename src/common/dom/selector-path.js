@@ -1,42 +1,31 @@
-export function generateSelectorPath (context) {
-  let index, pathSelector
+export const generateSelectorPath = (context) => {
+  if (!context) return
 
-  if (context === null) return
-  // call getIndex function
-  index = getIndex(context)
+  const getIndex = (node) => {
+    let i = 1
+    const { tagName } = node
+    while (node.previousElementSibling) {
+      if (node.previousElementSibling.tagName === tagName) i++
+      node = node.previousElementSibling
+    }
+    return i
+  }
+
+  let pathSelector = ''
+  let index = getIndex(context)
 
   while (context?.tagName) {
-    // selector path
-    const className = context.className
-    const idName = context.id
+    const { className, id, localName } = context
+    const selector = [
+      localName,
+      className ? `.${className}` : '',
+      id ? `#${id}` : '',
+      pathSelector ? `>${pathSelector}` : ''
+    ].join('')
 
-    pathSelector = context.localName +
-        (className ? `.${className}` : '') +
-        (idName ? `#${idName}` : '') +
-        (pathSelector ? '>' + pathSelector : '')
-
+    pathSelector = selector
     context = context.parentNode
   }
-  // if the event happened on the window or other non-DOM element, just return undefined
-  if (!pathSelector) return
-  // selector path for nth of type
-  pathSelector = pathSelector + `:nth-of-type(${index})`
-  return pathSelector
-}
 
-// get index for nth of type element
-function getIndex (node) {
-  let i = 1
-  let tagName = node.tagName
-
-  while (node.previousSibling) {
-    node = node.previousSibling
-    if (
-      node.nodeType === 1 &&
-            tagName.toLowerCase() === node.tagName.toLowerCase()
-    ) {
-      i++
-    }
-  }
-  return i
+  return pathSelector ? `${pathSelector}:nth-of-type(${index})` : undefined
 }

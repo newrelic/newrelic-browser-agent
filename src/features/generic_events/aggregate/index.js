@@ -64,7 +64,8 @@ export class Aggregate extends AggregateBase {
 
       if (agentInit.user_actions.enabled) {
         this.userActionAggregator = new UserActionsAggregator((aggData) => {
-          if (!aggData) return
+          if (!aggData || !aggData.event) return
+          const { target } = aggData.event
           this.addEvent({
             eventType: 'UserAction',
             timestamp: Math.floor(this.#agentRuntime.timeKeeper.correctRelativeTimestamp(aggData.event.timeStamp)),
@@ -74,10 +75,10 @@ export class Aggregate extends AggregateBase {
             rageClick: aggData.rageClick,
             relativeMs: aggData.relativeMs,
             target: aggData.selectorPath,
-            targetId: aggData.event.target?.id,
-            targetTag: aggData.event.target?.tagName,
-            targetType: aggData.event.target?.type,
-            targetClass: aggData.event.target?.className
+            ...(target?.id && { targetId: target.id }),
+            ...(target?.tagName && { targetTag: target.tagName }),
+            ...(target?.type && { targetType: target.type }),
+            ...(target?.className && { targetClass: target.className })
           })
         })
         registerHandler('ua', (evt) => {

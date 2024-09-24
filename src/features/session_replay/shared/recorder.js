@@ -29,6 +29,8 @@ export class Recorder {
     this.recording = false
     /** The pointer to the current bucket holding rrweb events */
     this.currentBufferTarget = this.#events
+    /** Only set to true once a snapshot node has been processed.  Used to block preload harvests from sending before we know we have a snapshot */
+    this.hasSeenSnapshot = false
     /** Hold on to the last meta node, so that it can be re-inserted if the meta and snapshot nodes are broken up due to harvesting */
     this.lastMeta = false
     /** The parent class that instantiated the recorder */
@@ -190,6 +192,7 @@ export class Recorder {
     // snapshot event
     if (event.type === RRWEB_EVENT_TYPES.FullSnapshot) {
       this.currentBufferTarget.hasSnapshot = true
+      this.hasSeenSnapshot = true
     }
     this.currentBufferTarget.add(event)
 

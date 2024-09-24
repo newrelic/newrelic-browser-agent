@@ -63,8 +63,8 @@ export class Aggregate extends AggregateBase {
       }, true) // CLS node should only reports on vis change rather than on every change
 
       const scheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
-        onFinished: (...args) => this.onHarvestFinished(...args),
-        getPayload: (...args) => this.prepareHarvest(...args)
+        onFinished: (result) => this.timings.postHarvestCleanup(result.retry),
+        getPayload: (options) => this.timings.makeHarvestPayload(options.retry)
       }, this)
       scheduler.startTimer(harvestTimeSeconds)
 
@@ -121,17 +121,6 @@ export class Aggregate extends AggregateBase {
     })
 
     handle('pvtAdded', [name, value, attrs], undefined, FEATURE_NAMES.sessionTrace, this.ee)
-  }
-
-  // serialize and return current timing data, clear and save current data for retry
-  prepareHarvest (options) {
-    const payload = this.timings.makeHarvestPayload(options.retry)
-    if (!payload) return
-    return payload
-  }
-
-  onHarvestFinished (result) {
-    this.timings.postHarvestCleanup(result.retry)
   }
 
   appendGlobalCustomAttributes (timing) {

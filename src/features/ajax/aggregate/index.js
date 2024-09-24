@@ -58,8 +58,8 @@ export class Aggregate extends AggregateBase {
 
     this.waitForFlags(([])).then(() => {
       const scheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
-        onFinished: this.onEventsHarvestFinished.bind(this),
-        getPayload: this.prepareHarvest.bind(this)
+        onFinished: (result) => this.ajaxEvents.postHarvestCleanup(result.retry),
+        getPayload: (options) => this.ajaxEvents.makeHarvestPayload(options.retry)
       }, this)
       scheduler.startTimer(harvestTimeSeconds)
       this.drain()
@@ -139,16 +139,6 @@ export class Aggregate extends AggregateBase {
     } else {
       this.ajaxEvents.addEvent(event)
     }
-  }
-
-  prepareHarvest (options) {
-    const payload = this.ajaxEvents.makeHarvestPayload(options.retry)
-    if (!payload) return
-    return payload
-  }
-
-  onEventsHarvestFinished (result) {
-    this.ajaxEvents.postHarvestCleanup(result.retry)
   }
 
   getPayload (events) {

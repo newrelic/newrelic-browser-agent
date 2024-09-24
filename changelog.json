@@ -34,6 +34,22 @@
           "issues": [
             "1181"
           ]
+        },
+        {
+          "type": "fix",
+          "sha": "9f2ef1f7d0e5dceaf61745a47849a3b2cc930c53",
+          "message": "Improve reliability of customMasker",
+          "issues": [
+            "1197"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "310937ae20a004f91f3ccb4ba6b1d1b230d92632",
+          "message": "Stringify now returns an empty string if failed to transform",
+          "issues": [
+            "1198"
+          ]
         }
       ],
       "version": "1.267.0",

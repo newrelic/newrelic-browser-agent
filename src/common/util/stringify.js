@@ -4,7 +4,6 @@
  */
 
 import { ee } from '../event-emitter/contextual-ee'
-import { warn } from './console'
 
 /**
  * Returns a function for use as a replacer parameter in JSON.stringify() to handle circular references.
@@ -36,7 +35,6 @@ export function stringify (val) {
   } catch (e) {
     try {
       ee.emit('internal-error', [e])
-      warn(45, 'Could not stringify the value: ' + val)
     } catch (err) {
       // do nothing
     }

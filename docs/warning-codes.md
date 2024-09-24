@@ -89,3 +89,5 @@
 `Agent not configured properly.`
 ### 44
 `Invalid object passed to generic event aggregate. Missing "eventType".`
+### 45
+`An internal agent process failed to execute.`

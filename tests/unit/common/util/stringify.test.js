@@ -37,13 +37,14 @@ test('should support serializing circular references by omitting the circular re
   expect(stringify(input)).toEqual('{"a":1,"arr":["foo",null]}')
 })
 
-test('should emit an "internal-error" event if an error occurs during JSON.stringify', () => {
+test('should emit an "internal-error" event and still return a string if an error occurs during JSON.stringify', () => {
   jest.spyOn(eventEmitterModule.ee, 'emit')
   jest.spyOn(JSON, 'stringify').mockImplementation(() => {
     throw new Error('message')
   })
 
-  stringify('foo')
+  const output = stringify('foo')
 
   expect(eventEmitterModule.ee.emit).toHaveBeenCalledWith('internal-error', expect.any(Array))
+  expect(output).toEqual('')
 })

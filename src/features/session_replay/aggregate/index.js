@@ -241,7 +241,7 @@ export class Aggregate extends AggregateBase {
   }
 
   prepareHarvest ({ opts } = {}) {
-    if (!this.recorder || !this.timeKeeper?.ready) return
+    if (!this.recorder || !this.timeKeeper?.ready || !this.recorder.hasSeenSnapshot) return
     const recorderEvents = this.recorder.getEvents()
     // get the event type and use that to trigger another harvest if needed
     if (!recorderEvents.events.length || (this.mode !== MODE.FULL) || this.blocked) return

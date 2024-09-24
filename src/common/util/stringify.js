@@ -38,8 +38,9 @@ export function stringify (val) {
       ee.emit('internal-error', [e])
       warn(45, 'Could not stringify the value: ' + val)
     } catch (err) {
-      // return a string so that downstream users of the method do not throw errors
-      return ''
+      // do nothing
     }
+    // return a string so that downstream users of the method do not throw errors
+    return ''
   }
 }

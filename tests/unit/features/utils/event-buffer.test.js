@@ -158,6 +158,10 @@ describe('EventBuffer', () => {
       eventBuffer.add({ test: 1 })
       expect(eventBuffer.canMerge()).toEqual(false)
     })
+    it('should return false if 0 size provided', () => {
+      eventBuffer.add({ test: 1 })
+      expect(eventBuffer.canMerge(0)).toEqual(false)
+    })
     it('should return false if size is not a number', () => {
       eventBuffer.add({ test: 1 })
       expect(eventBuffer.canMerge('test')).toEqual(false)

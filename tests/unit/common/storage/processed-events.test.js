@@ -5,7 +5,7 @@ import { stringify } from '../../../../src/common/util/stringify'
 describe('ProcessedEvent class', () => {
   test('can add event and track size', () => {
     const pe = new ProcessedEvents()
-    pe.addEvent('123')
+    expect(pe.addEvent('123')).toBeTruthy()
     expect(pe.events.length).toEqual(1)
     expect(pe.eventsRawSize).toEqual(5)
 
@@ -14,13 +14,21 @@ describe('ProcessedEvent class', () => {
     expect(pe.eventsRawSize).toEqual(5 + stringify({ a: 'b', c: 'd' }).length)
   })
 
+  test('drops event if it would cause payload limit to exceed', () => {
+    const pe = new ProcessedEvents()
+    pe.eventsRawSize = MAX_PAYLOAD_SIZE - 1
+    expect(pe.addEvent('some long string')).toEqual(false)
+    expect(pe.events.length).toEqual(0)
+    expect(pe.eventsRawSize).toEqual(MAX_PAYLOAD_SIZE - 1)
+  })
+
   test('returns as-is payload on makeHarvestPayload', () => {
     const pe = new ProcessedEvents()
     expect(pe.makeHarvestPayload()).toBeUndefined()
 
     pe.addEvent('abc')
     pe.addEvent(123)
-    expect(pe.makeHarvestPayload()).toEqual(['abc', 123])
+    expect(pe.makeHarvestPayload()).toEqual({ body: ['abc', 123] })
     expect(pe.events.length).toEqual(0) // that it was reset
     expect(pe.eventsRawSize).toEqual(0)
   })
@@ -42,7 +50,7 @@ describe('ProcessedEvent class', () => {
     const pe = new ProcessedEvents({ serializer })
     pe.addEvent(1)
     pe.addEvent(2)
-    expect(pe.makeHarvestPayload()).toEqual('a1a2')
+    expect(pe.makeHarvestPayload()).toEqual({ body: 'a1a2' })
   })
 
   test('postHarvestCleanup on success', () => {

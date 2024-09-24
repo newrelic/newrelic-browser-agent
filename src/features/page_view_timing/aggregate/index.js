@@ -127,9 +127,7 @@ export class Aggregate extends AggregateBase {
   prepareHarvest (options) {
     const payload = this.timings.makeHarvestPayload(options.retry)
     if (!payload) return
-    return {
-      body: payload
-    }
+    return payload
   }
 
   onHarvestFinished (result) {

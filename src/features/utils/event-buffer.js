@@ -65,7 +65,7 @@ export class EventBuffer {
    */
   add (event) {
     const size = stringify(event).length
-    if (!size || !this.canMerge(size)) return this
+    if (!this.canMerge(size)) return this
     this.#buffer.push(event)
     this.#bytes += size
     return this
@@ -122,6 +122,7 @@ export class EventBuffer {
    * @returns {boolean}
    */
   canMerge (size) {
+    if (!size) return false
     return this.bytes + (size || Infinity) < this.maxPayloadSize
   }
 }

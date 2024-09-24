@@ -13,6 +13,11 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * Update TimeKeeper Source of Truth ([#1181](https://github.com/newrelic/newrelic-browser-agent/issues/1181)) ([60d63cf](https://github.com/newrelic/newrelic-browser-agent/commit/60d63cf416529d700abaa6fa36ba3e64402b35a9))
 * Upgrade to web-vitals v4 ([#1193](https://github.com/newrelic/newrelic-browser-agent/issues/1193)) ([81349b8](https://github.com/newrelic/newrelic-browser-agent/commit/81349b82f5befd88f425cce1dee06f08fcea8a05))
 
+### Bug Fixes
+
+* Improve reliability of customMasker ([#1197](https://github.com/newrelic/newrelic-browser-agent/issues/1197)) ([9f2ef1f](https://github.com/newrelic/newrelic-browser-agent/commit/9f2ef1f7d0e5dceaf61745a47849a3b2cc930c53))
+* Stringify now returns an empty string if failed to transform ([#1198](https://github.com/newrelic/newrelic-browser-agent/issues/1198)) ([310937a](https://github.com/newrelic/newrelic-browser-agent/commit/310937ae20a004f91f3ccb4ba6b1d1b230d92632))
+
 ## [1.266.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.265.1...v1.266.0) (2024-09-16)
 
 

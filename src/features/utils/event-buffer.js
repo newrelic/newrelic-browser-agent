@@ -122,7 +122,6 @@ export class EventBuffer {
    * @returns {boolean}
    */
   canMerge (size) {
-    if (!size) return false
     return this.bytes + (size || Infinity) < this.maxPayloadSize
   }
 }

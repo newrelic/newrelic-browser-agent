@@ -1,6 +1,6 @@
 import { RAGE_CLICK_THRESHOLD_EVENTS, RAGE_CLICK_THRESHOLD_MS } from '../../constants'
 
-export class UserAction {
+export class AggregatedUserAction {
   constructor (evt, selectorPath) {
     this.event = evt
     this.count = 1

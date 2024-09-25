@@ -63,7 +63,8 @@ export class Aggregate extends AggregateBase {
       }
 
       if (agentInit.user_actions.enabled) {
-        this.userActionAggregator = new UserActionsAggregator((aggData) => {
+        this.userActionAggregator = new UserActionsAggregator()
+        this.userActionAggregator.on('aggregation-complete', (aggData) => {
           if (!aggData?.event) return
           try {
             const { target, timeStamp, type } = aggData.event
@@ -85,6 +86,7 @@ export class Aggregate extends AggregateBase {
           // do nothing for now
           }
         })
+
         registerHandler('ua', (evt) => {
           this.userActionAggregator.process(evt)
         }, this.featureName, this.ee)

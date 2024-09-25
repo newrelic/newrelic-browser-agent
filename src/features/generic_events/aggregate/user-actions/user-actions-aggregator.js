@@ -1,18 +1,30 @@
 import { generateSelectorPath } from '../../../../common/dom/selector-path'
 import { OBSERVED_WINDOW_EVENTS } from '../../constants'
-import { UserAction } from './user-action'
+import { AggregatedUserAction } from './aggregated-user-action'
 
 export class UserActionsAggregator {
-  /** @type {UserAction=} */
+  /** @type {AggregatedUserAction=} */
   #aggregationEvent = undefined
   #aggregationKey = ''
-  #storeInFeature = () => {}
+  #subscribers = []
 
   /**
    * @param {Function} storeMethod The function given by the parent class to call when an event is done aggregating
    */
-  constructor (storeMethod) {
-    this.#storeInFeature = storeMethod
+  constructor () {
+    return this
+  }
+
+  #emit (event, data) {
+    this.#subscribers.forEach(subscriber => {
+      if (subscriber.event === event) {
+        subscriber.callback(data)
+      }
+    })
+  }
+
+  on (event, callback) {
+    this.#subscribers.push({ event, callback })
   }
 
   /**
@@ -30,7 +42,7 @@ export class UserActionsAggregator {
       this.storeCurrentUserActionInFeature()
       // then set as this new event aggregation
       this.#aggregationKey = aggregationKey
-      this.#aggregationEvent = new UserAction(evt, selectorPath)
+      this.#aggregationEvent = new AggregatedUserAction(evt, selectorPath)
     }
   }
 
@@ -40,7 +52,7 @@ export class UserActionsAggregator {
   storeCurrentUserActionInFeature () {
     // store the prev existing one (if there is one)
     if (this.#aggregationEvent) {
-      this.#storeInFeature(this.#aggregationEvent)
+      this.#emit('aggregation-complete', this.#aggregationEvent)
       // then clear it...
       this.#aggregationKey = ''
       this.#aggregationEvent = undefined
@@ -56,7 +68,7 @@ export class UserActionsAggregator {
  */
 function getSelectorPath (evt) {
   let selectorPath
-  if (OBSERVED_WINDOW_EVENTS.includes(evt.type) || evt.target === evt.target.top) selectorPath = 'window'
+  if (OBSERVED_WINDOW_EVENTS.includes(evt.type) || evt.target === evt.target?.top) selectorPath = 'window'
   if (evt.target === document) selectorPath = 'document'
   // if still no selectorPath, generate one from target tree that includes elem ids
   selectorPath ??= generateSelectorPath(evt.target, { includeId: true, includeClass: false })

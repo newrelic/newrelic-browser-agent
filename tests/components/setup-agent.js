@@ -55,7 +55,7 @@ export function setupAgent ({ agentOverrides = {}, info = {}, init = {}, loaderC
     runtime.timeKeeper = new TimeKeeper(agentIdentifier)
     runtime.timeKeeper.processRumRequest({
       getResponseHeader: jest.fn(() => (new Date()).toUTCString())
-    }, 450, 600)
+    }, 450, 600, Date.now())
   }
 
   return { agentIdentifier, aggregator: fakeAgent.sharedAggregator }

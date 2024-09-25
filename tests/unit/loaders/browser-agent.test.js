@@ -10,6 +10,7 @@ import { Instrument as InstrumentSpa } from '../../../src/features/spa/instrumen
 import { Instrument as InstrumentSessionReplay } from '../../../src/features/session_replay/instrument'
 import { Instrument as InstrumentGenericEvents } from '../../../src/features/generic_events/instrument'
 import { Instrument as InstrumentLogs } from '../../../src/features/logging/instrument'
+import { Instrument as InstrumentSoftNav } from '../../../src/features/soft_navigations/instrument'
 import * as agentModule from '../../../src/loaders/agent'
 
 jest.enableAutomock()
@@ -27,6 +28,7 @@ test('should create a new agent with all features', () => {
       InstrumentMetrics,
       InstrumentErrors,
       InstrumentSpa,
+      InstrumentSoftNav,
       InstrumentSessionReplay,
       InstrumentGenericEvents,
       InstrumentLogs

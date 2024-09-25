@@ -58,7 +58,8 @@ export class EventBuffer {
   }
 
   /**
-   * Adds an event object to the buffer while tallying size
+   * Adds an event object to the buffer while tallying size. Only adds the event if it is valid
+   * and would not make the event buffer exceed the maxPayloadSize.
    * @param {Object} event the event object to add to the buffer
    * @returns {EventBuffer} returns the event buffer for chaining
    */

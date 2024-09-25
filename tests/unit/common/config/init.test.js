@@ -111,7 +111,6 @@ test('init props exist and return expected defaults', () => {
     harvestTimeSeconds: 60,
     ignore_class: 'nr-ignore',
     inline_images: false,
-    inline_stylesheet: true,
     mask_all_inputs: true,
     mask_input_options: {
       color: false,

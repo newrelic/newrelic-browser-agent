@@ -13,7 +13,7 @@ const lcpAttribution = {
   element: '#someid',
   timeToFirstByte: 1,
   resourceLoadDelay: 2,
-  resourceLoadTime: 3,
+  resourceLoadDuration: 3,
   elementRenderDelay: 4,
   url: 'http://domain.com/page?k1=v1#hash'
 }
@@ -38,7 +38,8 @@ describe('lcp', () => {
         element: lcpAttribution.element,
         timeToFirstByte: lcpAttribution.timeToFirstByte,
         resourceLoadDelay: lcpAttribution.resourceLoadDelay,
-        resourceLoadTime: lcpAttribution.resourceLoadTime,
+        resourceLoadDuration: lcpAttribution.resourceLoadDuration,
+        resourceLoadTime: lcpAttribution.resourceLoadDuration,
         elementRenderDelay: lcpAttribution.elementRenderDelay
       })
       done()

@@ -38,5 +38,7 @@ export function stringify (val) {
     } catch (err) {
       // do nothing
     }
+    // return a string so that downstream users of the method do not throw errors
+    return ''
   }
 }

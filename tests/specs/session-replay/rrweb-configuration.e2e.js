@@ -321,22 +321,7 @@ describe('RRWeb Configuration', () => {
       expect(imageNodes[0].attributes.rr_dataURL).toBeUndefined()
     })
 
-    it('inline_stylesheet false DOES NOT add inline text', async () => {
-      const [sessionReplaysHarvests] = await Promise.all([
-        sessionReplaysCapture.waitForResult({ timeout: 10000 }),
-        browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig({ session_replay: { inline_stylesheet: false } })))
-          .then(() => browser.waitForAgentLoad())
-      ])
-
-      expect(decodeAttributes(sessionReplaysHarvests[0].request.query.attributes).inlinedAllStylesheets).toEqual(false)
-
-      const linkNodes = JSONPath({ path: '$.[*].request.body.[?(!!@ && @.tagName===\'link\' && @.attributes.type===\'text/css\')]', json: sessionReplaysHarvests })
-      linkNodes.forEach(linkNode => {
-        expect(linkNode.attributes._cssText).toBeUndefined()
-      })
-    })
-
-    it('inline_stylesheet true DOES add inline text', async () => {
+    it('agent always inlines stylesheets', async () => {
       const [sessionReplaysHarvests] = await Promise.all([
         sessionReplaysCapture.waitForResult({ timeout: 10000 }),
         browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))

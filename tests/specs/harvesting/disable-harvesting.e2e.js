@@ -1,4 +1,5 @@
 import { testBlobTraceRequest, testErrorsRequest, testEventsRequest, testInsRequest, testMetricsRequest, testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
+import { rumFlags } from '../../../tools/testing-server/constants'
 
 describe('disable harvesting', () => {
   it('should disable harvesting metrics and errors when err entitlement is 0', async () => {
@@ -8,13 +9,7 @@ describe('disable harvesting', () => {
     ])
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({
-        st: 1,
-        err: 0,
-        ins: 1,
-        spa: 1,
-        loaded: 1
-      })
+      body: JSON.stringify(rumFlags({ err: 0 }))
     })
 
     const [metricsHarvests, errorsHarvests] = await Promise.all([
@@ -32,13 +27,7 @@ describe('disable harvesting', () => {
     const eventsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testEventsRequest })
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({
-        st: 1,
-        err: 1,
-        ins: 1,
-        spa: 0,
-        loaded: 1
-      })
+      body: JSON.stringify(rumFlags({ spa: 0 }))
     })
 
     // Disable non-spa features that also use the events endpoint
@@ -59,13 +48,7 @@ describe('disable harvesting', () => {
     const insightsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testInsRequest })
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({
-        st: 1,
-        err: 1,
-        ins: 0,
-        spa: 1,
-        loaded: 1
-      })
+      body: JSON.stringify(rumFlags({ ins: 0 }))
     })
 
     const [insightsHarvests] = await Promise.all([
@@ -81,13 +64,7 @@ describe('disable harvesting', () => {
     const traceCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testBlobTraceRequest })
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify({
-        st: 0,
-        err: 1,
-        ins: 1,
-        spa: 1,
-        loaded: 1
-      })
+      body: JSON.stringify(rumFlags({ st: 0 }))
     })
 
     const [traceHarvests] = await Promise.all([

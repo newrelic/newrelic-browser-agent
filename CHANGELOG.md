@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.267.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.266.0...v1.267.0) (2024-09-23)
+
+
+### Features
+
+* add soft navigations to Browser-Agent loader ([#1191](https://github.com/newrelic/newrelic-browser-agent/issues/1191)) ([fd033a7](https://github.com/newrelic/newrelic-browser-agent/commit/fd033a7be52fed01e5a67a5f8060cf6ec080c769))
+* Improve notifications of stylesheet status for session replay ([#1190](https://github.com/newrelic/newrelic-browser-agent/issues/1190)) ([a21b939](https://github.com/newrelic/newrelic-browser-agent/commit/a21b939884697fc4951e6d4cdaceecaa9b000810))
+* Update TimeKeeper Source of Truth ([#1181](https://github.com/newrelic/newrelic-browser-agent/issues/1181)) ([60d63cf](https://github.com/newrelic/newrelic-browser-agent/commit/60d63cf416529d700abaa6fa36ba3e64402b35a9))
+* Upgrade to web-vitals v4 ([#1193](https://github.com/newrelic/newrelic-browser-agent/issues/1193)) ([81349b8](https://github.com/newrelic/newrelic-browser-agent/commit/81349b82f5befd88f425cce1dee06f08fcea8a05))
+
+### Bug Fixes
+
+* Improve reliability of customMasker ([#1197](https://github.com/newrelic/newrelic-browser-agent/issues/1197)) ([9f2ef1f](https://github.com/newrelic/newrelic-browser-agent/commit/9f2ef1f7d0e5dceaf61745a47849a3b2cc930c53))
+* Stringify now returns an empty string if failed to transform ([#1198](https://github.com/newrelic/newrelic-browser-agent/issues/1198)) ([310937a](https://github.com/newrelic/newrelic-browser-agent/commit/310937ae20a004f91f3ccb4ba6b1d1b230d92632))
+
 ## [1.266.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.265.1...v1.266.0) (2024-09-16)
 
 

@@ -19,7 +19,7 @@ import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { EventBuffer } from '../../utils/event-buffer'
 import { applyFnToProps } from '../../../common/util/traverse'
 import { IDEAL_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
-import { UserActionsAggregator } from './user-actions'
+import { UserActionsAggregator } from './user-actions/user-actions-aggregator'
 
 export class Aggregate extends AggregateBase {
   #agentRuntime
@@ -64,22 +64,26 @@ export class Aggregate extends AggregateBase {
 
       if (agentInit.user_actions.enabled) {
         this.userActionAggregator = new UserActionsAggregator((aggData) => {
-          if (!aggData || !aggData.event) return
-          const { target } = aggData.event
-          this.addEvent({
-            eventType: 'UserAction',
-            timestamp: Math.floor(this.#agentRuntime.timeKeeper.correctRelativeTimestamp(aggData.event.timeStamp)),
-            action: aggData.event.type,
-            actionCount: aggData.count,
-            duration: aggData.relativeMs[aggData.relativeMs.length - 1],
-            rageClick: aggData.rageClick,
-            relativeMs: aggData.relativeMs,
-            target: aggData.selectorPath,
-            ...(target?.id && { targetId: target.id }),
-            ...(target?.tagName && { targetTag: target.tagName }),
-            ...(target?.type && { targetType: target.type }),
-            ...(target?.className && { targetClass: target.className })
-          })
+          if (!aggData?.event) return
+          try {
+            const { target, timeStamp, type } = aggData.event
+            this.addEvent({
+              eventType: 'UserAction',
+              timestamp: Math.floor(this.#agentRuntime.timeKeeper.correctRelativeTimestamp(timeStamp)),
+              action: type,
+              actionCount: aggData.count,
+              duration: aggData.relativeMs[aggData.relativeMs.length - 1],
+              rageClick: aggData.rageClick,
+              relativeMs: aggData.relativeMs,
+              target: aggData.selectorPath,
+              ...(target?.id && { targetId: target.id }),
+              ...(target?.tagName && { targetTag: target.tagName }),
+              ...(target?.type && { targetType: target.type }),
+              ...(target?.className && { targetClass: target.className })
+            })
+          } catch (e) {
+          // do nothing for now
+          }
         })
         registerHandler('ua', (evt) => {
           this.userActionAggregator.process(evt)

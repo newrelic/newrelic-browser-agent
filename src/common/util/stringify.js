@@ -37,7 +37,6 @@ export function stringify (val) {
       ee.emit('internal-error', [e])
     } catch (err) {
       // do nothing
-      return ''
     }
     // return a string so that downstream users of the method do not throw errors
     return ''

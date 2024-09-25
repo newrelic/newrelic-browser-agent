@@ -130,9 +130,7 @@ describe('final harvesting', () => {
     ]))
     expect(errorsFinalHarvest.request.body.xhr.length).toBeGreaterThan(0)
     expect(traceFinalHarvest.request.body.length).toBeGreaterThan(0)
-    expect(insightsFinalHarvest.request.body).toMatchObject({
-      ins: [{ actionName: 'DummyEvent', free: 'tacos' }]
-    })
+    expect(insightsFinalHarvest.request.body.ins[0]).toMatchObject(expect.objectContaining({ actionName: 'DummyEvent', free: 'tacos', eventType: 'PageAction' }))
 
     /*
     sendBeacon can be flakey so we check to see if at least one of the network

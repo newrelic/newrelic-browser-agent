@@ -73,5 +73,5 @@ module.exports.defaultInitBlock = {
   ssl: false,
   soft_navigations: enabledFeature,
   spa: enabledFeature,
-  user_actions: { enabled }
+  user_actions: { enabled: false }
 }

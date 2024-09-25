@@ -3,6 +3,7 @@
  */
 
 import { getConfiguration } from '../../../common/config/init'
+import { isBrowserScope } from '../../../common/constants/runtime'
 import { deregisterDrain } from '../../../common/drain/drain'
 import { handle } from '../../../common/event-emitter/handle'
 import { windowAddEventListener } from '../../../common/event-listener/event-listener-opts'
@@ -22,7 +23,7 @@ export class Instrument extends InstrumentBase {
       // other future generic event source configs to go here, like M&Ms, PageResouce, etc.
     ]
 
-    if (agentInit.user_actions.enabled) {
+    if (isBrowserScope && agentInit.user_actions.enabled) {
       OBSERVED_EVENTS.forEach(eventType =>
         windowAddEventListener(eventType, (evt) => handle('ua', [evt], undefined, this.featureName, this.ee), true)
       )

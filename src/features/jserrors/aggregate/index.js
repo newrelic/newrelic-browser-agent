@@ -184,9 +184,7 @@ export class Aggregate extends AggregateBase {
     if (!this.stackReported[bucketHash]) {
       this.stackReported[bucketHash] = true
       params.stack_trace = truncateSize(stackInfo.stackString)
-      this.observedAt[bucketHash] = Math.floor(agentRuntime.timeKeeper.correctAbsoluteTimestamp(
-        agentRuntime.timeKeeper.convertRelativeTimestamp(time)
-      ))
+      this.observedAt[bucketHash] = Math.floor(agentRuntime.timeKeeper.correctRelativeTimestamp(time))
     } else {
       params.browser_stack_hash = stringHashCode(stackInfo.stackString)
     }
@@ -203,9 +201,7 @@ export class Aggregate extends AggregateBase {
     }
 
     params.firstOccurrenceTimestamp = this.observedAt[bucketHash]
-    params.timestamp = Math.floor(agentRuntime.timeKeeper.correctAbsoluteTimestamp(
-      agentRuntime.timeKeeper.convertRelativeTimestamp(time)
-    ))
+    params.timestamp = Math.floor(agentRuntime.timeKeeper.correctRelativeTimestamp(time))
 
     var type = internal ? 'ierr' : 'err'
     var newMetrics = { time }

@@ -1,4 +1,4 @@
-import { checkAjaxEvents, checkJsErrors, checkMetrics, checkPVT, checkPageAction, checkRumBody, checkRumQuery, checkSessionTrace, checkSpa } from '../util/basic-checks'
+import { checkAjaxEvents, checkJsErrors, checkMetrics, checkPVT, checkGenericEvents, checkRumBody, checkRumQuery, checkSessionTrace, checkSpa } from '../util/basic-checks'
 import { testAjaxEventsRequest, testBlobTraceRequest, testErrorsRequest, testInsRequest, testInteractionEventsRequest, testMetricsRequest, testRumRequest, testTimingEventsRequest } from '../../tools/testing-server/utils/expect-tests'
 
 const scriptLoadTypes = [null, 'defer', 'async', 'injection']
@@ -83,7 +83,7 @@ describe('Loaders', () => {
       metricsHarvests.forEach(harvest => checkMetrics(harvest.request))
       ajaxEventsHarvests.forEach(harvest => checkAjaxEvents(harvest.request))
       errorsHarvests.forEach(harvest => checkJsErrors(harvest.request))
-      insightsHarvests.forEach(harvest => checkPageAction(harvest.request))
+      insightsHarvests.forEach(harvest => checkGenericEvents(harvest.request))
       tracesHarvests.forEach(harvest => checkSessionTrace(harvest.request))
 
       expect(interactionEventsHarvests.length).toEqual(0)
@@ -112,7 +112,7 @@ describe('Loaders', () => {
       metricsHarvests.forEach(harvest => checkMetrics(harvest.request))
       ajaxEventsHarvests.forEach(harvest => checkAjaxEvents(harvest.request))
       errorsHarvests.forEach(harvest => checkJsErrors(harvest.request))
-      insightsHarvests.forEach(harvest => checkPageAction(harvest.request))
+      insightsHarvests.forEach(harvest => checkGenericEvents(harvest.request))
       tracesHarvests.forEach(harvest => checkSessionTrace(harvest.request))
       interactionEventsHarvests.forEach(harvest => checkSpa(harvest.request))
     })

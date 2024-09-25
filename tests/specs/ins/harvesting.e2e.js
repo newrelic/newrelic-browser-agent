@@ -32,6 +32,42 @@ describe('ins harvesting', () => {
     expect(estimatedEventTime < receiptTime).toEqual(true) //, 'estimated event time (' + estimatedEventTime + ') < receipt time (' + receiptTime + ')')
   })
 
+  it('should submit UserAction (when enabled)', async () => {
+    const testUrl = await browser.testHandle.assetURL('user-actions.html', { init: { user_actions: { enabled: true } } })
+    await browser.url(testUrl).then(() => browser.waitForAgentLoad())
+
+    const [insHarvests] = await Promise.all([
+      insightsCapture.waitForResult({ timeout: 5000 }),
+      $('#pay-btn').click().then(async () => await $('#textbox').click())
+    ])
+
+    const userActionsHarvest = insHarvests.flatMap(harvest => harvest.request.body.ins) // firefox sends a window focus event on load, so we may end up with 2 harvests
+    const clickUAs = userActionsHarvest.filter(ua => ua.action === 'click')
+
+    expect(await $('#pay-btn').isFocused()).toEqual(false) // should've shifted focus to textbox
+    expect(clickUAs.length).toBeGreaterThanOrEqual(2)
+    expect(clickUAs[0]).toMatchObject({
+      eventType: 'UserAction',
+      action: 'click',
+      targetId: 'pay-btn',
+      targetTag: 'BUTTON',
+      targetType: 'submit',
+      targetClass: 'btn-cart-add flex-grow container',
+      pageUrl: expect.any(String),
+      timestamp: expect.any(Number)
+    })
+    expect(clickUAs[1]).toMatchObject({
+      eventType: 'UserAction',
+      action: 'click',
+      targetId: 'textbox',
+      targetTag: 'INPUT',
+      targetType: 'text',
+      targetClass: '',
+      pageUrl: expect.any(String),
+      timestamp: expect.any(Number)
+    })
+  })
+
   it('should harvest early when buffer gets too large (overall quantity)', async () => {
     const testUrl = await browser.testHandle.assetURL('instrumented.html', { init: { generic_events: { harvestTimeSeconds: 30 } } })
     await browser.url(testUrl)

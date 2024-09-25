@@ -196,18 +196,13 @@ export function checkMetrics ({ query, body }) {
   })
 }
 
-export function checkPageAction ({ query, body }, { specificAction, actionContents } = {}) {
+export function checkGenericEvents ({ query, body }, { specificAction, actionContents } = {}) {
   expect(query).toEqual(baseQuery)
   expect(body.ins?.length).toBeGreaterThanOrEqual(1)
   body.ins.forEach(ins => {
     expect(ins).toMatchObject({
-      actionName: expect.any(String),
-      browserHeight: expect.any(Number),
-      browserWidth: expect.any(Number),
-      currentUrl: expect.any(String),
       eventType: expect.any(String),
       pageUrl: expect.any(String),
-      timeSinceLoad: expect.any(Number),
       timestamp: expect.any(Number)
     })
 

@@ -74,7 +74,7 @@ test('should only buffer 64kb of events at a time', async () => {
   expect(genericEventsAggregate.harvestScheduler.runHarvest).toHaveBeenCalled()
 })
 
-describe('page_actions', () => {
+describe('sub-features', () => {
   beforeEach(async () => {
     genericEventsAggregate.ee.emit('rumresp', [{ ins: 1 }])
     await new Promise(process.nextTick)
@@ -143,5 +143,19 @@ describe('page_actions', () => {
     genericEventsAggregate = new Aggregate(agentSetup.agentIdentifier, agentSetup.aggregator)
     genericEventsAggregate.ee.emit('api-addPageAction', [relativeTimestamp, name, {}])
     expect(genericEventsAggregate.events[0]).toBeUndefined()
+  })
+
+  test('should record user actions when enabled', () => {
+    getInfo(agentSetup.agentIdentifier).jsAttributes = { globalFoo: 'globalBar' }
+    genericEventsAggregate.ee.emit('ua', [{ timeStamp: 123456, type: 'click', target: { id: 'myBtn', tagName: 'button' } }])
+
+    expect(genericEventsAggregate.events.buffer[0]).toMatchObject({
+      eventType: 'UserAction',
+      timestamp: expect.any(Number),
+      action: 'click',
+      targetId: 'myBtn',
+      targetTag: 'button',
+      globalFoo: 'globalBar'
+    })
   })
 })

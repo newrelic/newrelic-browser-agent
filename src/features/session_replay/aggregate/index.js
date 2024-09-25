@@ -327,12 +327,8 @@ export class Aggregate extends AggregateBase {
     const firstEventTimestamp = this.getCorrectedTimestamp(events[0]) // from rrweb node
     const lastEventTimestamp = this.getCorrectedTimestamp(events[events.length - 1]) // from rrweb node
     // from rrweb node || from when the harvest cycle started
-    const firstTimestamp = firstEventTimestamp || Math.floor(this.timeKeeper.correctAbsoluteTimestamp(
-      this.timeKeeper.correctAbsoluteTimestamp(recorderEvents.cycleTimestamp)
-    ))
-    const lastTimestamp = lastEventTimestamp || Math.floor(this.timeKeeper.correctAbsoluteTimestamp(
-      this.timeKeeper.convertRelativeTimestamp(relativeNow)
-    ))
+    const firstTimestamp = firstEventTimestamp || Math.floor(this.timeKeeper.correctAbsoluteTimestamp(recorderEvents.cycleTimestamp))
+    const lastTimestamp = lastEventTimestamp || Math.floor(this.timeKeeper.correctRelativeTimestamp(relativeNow))
 
     const agentMetadata = agentRuntime.appMetadata?.agents?.[0] || {}
 

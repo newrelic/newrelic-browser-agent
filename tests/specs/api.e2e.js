@@ -1,5 +1,5 @@
 import { apiMethods, asyncApiMethods } from '../../src/loaders/api/api-methods'
-import { checkAjaxEvents, checkJsErrors, checkMetrics, checkPageAction, checkPVT, checkRumBody, checkRumQuery, checkSessionTrace, checkSpa } from '../util/basic-checks'
+import { checkAjaxEvents, checkJsErrors, checkMetrics, checkGenericEvents, checkPVT, checkRumBody, checkRumQuery, checkSessionTrace, checkSpa } from '../util/basic-checks'
 import { testAjaxEventsRequest, testAjaxTimeSlicesRequest, testBlobTraceRequest, testCustomMetricsRequest, testErrorsRequest, testEventsRequest, testInsRequest, testInteractionEventsRequest, testMetricsRequest, testRumRequest, testTimingEventsRequest } from '../../tools/testing-server/utils/expect-tests'
 
 describe('newrelic api', () => {
@@ -164,7 +164,7 @@ describe('newrelic api', () => {
           .then(() => browser.waitForAgentLoad())
       ])
 
-      const pageActions = insResult[0].request.body.ins
+      const pageActions = insResult[0].request.body.ins.filter(evt => evt.eventType === 'PageAction')
       expect(pageActions).toBeDefined()
       expect(pageActions.length).toEqual(1) // exactly 1 PageAction was submitted
       expect(pageActions[0].actionName).toEqual('finished') // PageAction has actionName = finished
@@ -382,7 +382,7 @@ describe('newrelic api', () => {
       checkAjaxEvents(results[2][0].request)
       checkJsErrors(results[3][0].request, { messages: ['test'] })
       checkMetrics(results[4][0].request)
-      checkPageAction(results[5][0].request, { specificAction: 'test', actionContents: { test: 1 } })
+      checkGenericEvents(results[5][0].request, { specificAction: 'test', actionContents: { test: 1 } })
       checkSessionTrace(results[6][0].request)
       checkSpa(results[7][0].request)
     })

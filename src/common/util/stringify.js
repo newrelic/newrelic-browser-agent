@@ -39,5 +39,7 @@ export function stringify (val) {
       // do nothing
       return ''
     }
+    // return a string so that downstream users of the method do not throw errors
+    return ''
   }
 }

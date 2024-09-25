@@ -59,6 +59,9 @@
       "features/session_replay": [
         "dist/types/features/session_replay/instrument/index.d.ts"
       ],
+      "features/soft_navigations": [
+        "dist/types/features/soft_navigations/instrument/index.d.ts"
+      ],
       "features/spa": [
         "dist/types/features/spa/instrument/index.d.ts"
       ]
@@ -193,7 +196,7 @@
   "dependencies": {
     "fflate": "0.7.4",
     "rrweb": "2.0.0-alpha.12",
-    "web-vitals": "3.5.2"
+    "web-vitals": "4.2.3"
   },
   "devDependencies": {
     "@babel/cli": "^7.23.4",

@@ -29,14 +29,14 @@ export class Recorder {
     this.recording = false
     /** The pointer to the current bucket holding rrweb events */
     this.currentBufferTarget = this.#events
+    /** Only set to true once a snapshot node has been processed.  Used to block preload harvests from sending before we know we have a snapshot */
+    this.hasSeenSnapshot = false
     /** Hold on to the last meta node, so that it can be re-inserted if the meta and snapshot nodes are broken up due to harvesting */
     this.lastMeta = false
     /** The parent class that instantiated the recorder */
     this.parent = parent
-    /** Config to inform to inline stylesheet contents (true default) */
-    this.shouldInlineStylesheets = getConfigurationValue(this.parent.agentIdentifier, 'session_replay.inline_stylesheet')
     /** A flag that can be set to false by failing conversions to stop the fetching process */
-    this.shouldFix = this.shouldInlineStylesheets && getConfigurationValue(this.parent.agentIdentifier, 'session_replay.fix_stylesheets')
+    this.shouldFix = getConfigurationValue(this.parent.agentIdentifier, 'session_replay.fix_stylesheets')
     /** The method to stop recording. This defaults to a noop, but is overwritten once the recording library is imported and initialized */
     this.stopRecording = () => { /* no-op until set by rrweb initializer */ }
   }
@@ -73,10 +73,14 @@ export class Recorder {
   /** Begin recording using configured recording lib */
   startRecording () {
     this.recording = true
-    const { block_class, ignore_class, mask_text_class, block_selector, mask_input_options, mask_text_selector, mask_all_inputs, inline_stylesheet, inline_images, collect_fonts } = getConfigurationValue(this.parent.agentIdentifier, 'session_replay')
+    const { block_class, ignore_class, mask_text_class, block_selector, mask_input_options, mask_text_selector, mask_all_inputs, inline_images, collect_fonts } = getConfigurationValue(this.parent.agentIdentifier, 'session_replay')
     const customMasker = (text, element) => {
-      if (element?.type?.toLowerCase() !== 'password' && (element?.dataset.nrUnmask !== undefined || element?.classList.contains('nr-unmask'))) return text
-      return '*'.repeat(text.length)
+      try {
+        if (typeof element?.type === 'string' && element.type.toLowerCase() !== 'password' && (element?.dataset?.nrUnmask !== undefined || element?.classList?.contains('nr-unmask'))) return text
+      } catch (err) {
+        // likely an element was passed to this handler that was invalid and was missing attributes or methods
+      }
+      return '*'.repeat(text?.length || 0)
     }
     // set up rrweb configurations for maximum privacy --
     // https://newrelic.atlassian.net/wiki/spaces/O11Y/pages/2792293280/2023+02+28+Browser+-+Session+Replay#Configuration-options
@@ -91,7 +95,7 @@ export class Recorder {
       maskTextFn: customMasker,
       maskAllInputs: mask_all_inputs,
       maskInputFn: customMasker,
-      inlineStylesheet: inline_stylesheet,
+      inlineStylesheet: true,
       inlineImages: inline_images,
       collectFonts: collect_fonts,
       checkoutEveryNms: CHECKOUT_MS[this.parent.mode],
@@ -119,13 +123,17 @@ export class Recorder {
    * @param {*} isCheckout - Flag indicating if the payload was triggered as a checkout
    */
   audit (event, isCheckout) {
-    /** only run the audit if inline_stylesheets is configured as on (default behavior) */
-    if (this.shouldInlineStylesheets === false || !this.shouldFix) {
-      this.currentBufferTarget.inlinedAllStylesheets = false
-      return this.store(event, isCheckout)
-    }
     /** An count of stylesheet objects that were blocked from accessing contents via JS */
     const incompletes = stylesheetEvaluator.evaluate()
+    const missingInlineSMTag = 'SessionReplay/Payload/Missing-Inline-Css/'
+    /** only run the full fixing behavior (more costly) if fix_stylesheets is configured as on (default behavior) */
+    if (!this.shouldFix) {
+      if (incompletes > 0) {
+        this.currentBufferTarget.inlinedAllStylesheets = false
+        handle(SUPPORTABILITY_METRIC_CHANNEL, [missingInlineSMTag + 'Skipped', incompletes], undefined, FEATURE_NAMES.metrics, this.parent.ee)
+      }
+      return this.store(event, isCheckout)
+    }
     /** Only stop ignoring data if already ignoring and a new valid snapshap is taking place (0 incompletes and we get a meta node for the snap) */
     if (!incompletes && this.#fixing && event.type === RRWEB_EVENT_TYPES.Meta) this.#fixing = false
     if (incompletes > 0) {
@@ -135,8 +143,8 @@ export class Recorder {
           this.currentBufferTarget.inlinedAllStylesheets = false
           this.shouldFix = false
         }
-        handle(SUPPORTABILITY_METRIC_CHANNEL, ['SessionReplay/Payload/Missing-Inline-Css/Failed', failedToFix], undefined, FEATURE_NAMES.metrics, this.parent.ee)
-        handle(SUPPORTABILITY_METRIC_CHANNEL, ['SessionReplay/Payload/Missing-Inline-Css/Fixed', incompletes - failedToFix], undefined, FEATURE_NAMES.metrics, this.parent.ee)
+        handle(SUPPORTABILITY_METRIC_CHANNEL, [missingInlineSMTag + 'Failed', failedToFix], undefined, FEATURE_NAMES.metrics, this.parent.ee)
+        handle(SUPPORTABILITY_METRIC_CHANNEL, [missingInlineSMTag + 'Fixed', incompletes - failedToFix], undefined, FEATURE_NAMES.metrics, this.parent.ee)
         this.takeFullSnapshot()
       })
       /** Only start ignoring data if got a faulty snapshot */
@@ -184,6 +192,7 @@ export class Recorder {
     // snapshot event
     if (event.type === RRWEB_EVENT_TYPES.FullSnapshot) {
       this.currentBufferTarget.hasSnapshot = true
+      this.hasSeenSnapshot = true
     }
     this.currentBufferTarget.add(event)
 

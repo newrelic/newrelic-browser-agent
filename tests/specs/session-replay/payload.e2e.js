@@ -82,7 +82,14 @@ describe('Session Replay Payload Validation', () => {
         .then(() => browser.getAgentSessionInfo())
     ])
 
-    testExpectedReplay({ data: sessionReplayHarvest.request, session, hasError: false, hasMeta: true, hasSnapshot: true, isFirstChunk: true })
+    testExpectedReplay({
+      data: sessionReplayHarvest.request,
+      session,
+      hasError: false,
+      hasMeta: true,
+      hasSnapshot: true,
+      isFirstChunk: true
+    })
   })
 
   it('should match expected payload - error', async () => {

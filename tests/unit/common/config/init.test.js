@@ -76,6 +76,9 @@ test('init props exist and return expected defaults', () => {
   expect(config.page_action).toEqual({
     enabled: true
   })
+  expect(config.user_actions).toEqual({
+    enabled: true
+  })
   expect(config.page_view_event).toEqual({
     autoStart: true,
     enabled: true

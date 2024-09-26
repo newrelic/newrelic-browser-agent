@@ -14,7 +14,7 @@ export const RRWEB_EVENT_TYPES = {
   Custom: 5
 }
 
-export function testExpectedReplay ({ data, session, hasMeta, hasSnapshot, hasError, isFirstChunk, contentEncoding, decompressedBytes, appId, entityGuid, harvestId }) {
+export function testExpectedReplay ({ data, session, hasMeta, hasSnapshot, hasError, isFirstChunk, contentEncoding, decompressedBytes, appId, entityGuid, harvestId, pageUrl }) {
   expect(data.query).toMatchObject({
     browser_monitoring_key: expect.any(String),
     type: 'SessionReplay',
@@ -41,7 +41,8 @@ export function testExpectedReplay ({ data, session, hasMeta, hasSnapshot, hasEr
     isFirstChunk: isFirstChunk || expect.any(Boolean),
     decompressedBytes: decompressedBytes || expect.any(Number),
     'rrweb.version': expect.any(String),
-    inlinedAllStylesheets: expect.any(Boolean)
+    inlinedAllStylesheets: expect.any(Boolean),
+    ...(pageUrl && { pageUrl })
   })
 
   expect(data.body).toEqual(expect.any(Array))

@@ -28,6 +28,7 @@ import { deregisterDrain } from '../../../common/drain/drain'
 import { now } from '../../../common/timing/now'
 import { buildNRMetaNode } from '../shared/utils'
 import { MAX_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
+import { cleanURL } from '../../../common/url/clean-url'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -362,7 +363,8 @@ export class Aggregate extends AggregateBase {
           'rrweb.version': RRWEB_VERSION,
           'payload.type': recorderEvents.type,
           // customer-defined data should go last so that if it exceeds the query param padding limit it will be truncated instead of important attrs
-          ...(endUserId && { 'enduser.id': this.obfuscator.obfuscateString(endUserId) })
+          ...(endUserId && { 'enduser.id': this.obfuscator.obfuscateString(endUserId) }),
+          pageUrl: cleanURL(agentRuntime.origin)
           // The Query Param is being arbitrarily limited in length here.  It is also applied when estimating the size of the payload in getPayloadSize()
         }, QUERY_PARAM_PADDING).substring(1) // remove the leading '&'
       },

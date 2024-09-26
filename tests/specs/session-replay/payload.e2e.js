@@ -88,7 +88,8 @@ describe('Session Replay Payload Validation', () => {
       hasError: false,
       hasMeta: true,
       hasSnapshot: true,
-      isFirstChunk: true
+      isFirstChunk: true,
+      pageUrl: sessionReplayHarvest.request.headers.origin + '/tests/assets/rrweb-instrumented.html'
     })
   })
 

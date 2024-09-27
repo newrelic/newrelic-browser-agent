@@ -85,6 +85,40 @@ describe('ins harvesting', () => {
     expect(clickUAs[1].relativeMs).toEqual(expect.stringMatching(/^\[\d+(,\d+){4}\]$/))
   })
 
+  it('should detect iframes on UserActions if agent is running inside iframe', async () => {
+    const testUrl = await browser.testHandle.assetURL('iframe/same-origin.html', { init: { user_actions: { enabled: true } } })
+    await browser.url(testUrl).then(() => browser.pause(2000))
+
+    const [insHarvests] = await Promise.all([
+      insightsCapture.waitForResult({ timeout: 5000 }),
+      browser.execute(function () {
+        const frame = document.querySelector('iframe')
+        const frameBody = frame.contentWindow.document.querySelector('body')
+        frame.focus()
+        frameBody.click()
+        frame.blur()
+      })
+
+    ])
+
+    const userActionsHarvest = insHarvests.flatMap(harvest => harvest.request.body.ins) // firefox sends a window focus event on load, so we may end up with 2 harvests
+    const clickUAs = userActionsHarvest.filter(ua => ua.action === 'click')
+    expect(clickUAs.length).toBeGreaterThanOrEqual(1)
+    expect(clickUAs[0]).toMatchObject({
+      eventType: 'UserAction',
+      action: 'click',
+      actionCount: 1,
+      duration: 0,
+      iframe: true, // <--- this is the important part, it is detected if the agent is running in the iframe that caught an action
+      relativeMs: '[0]',
+      target: 'html>body:nth-of-type(1)',
+      targetTag: 'BODY',
+      pageUrl: expect.any(String),
+      currentUrl: expect.any(String),
+      timestamp: expect.any(Number)
+    })
+  })
+
   it('should harvest early when buffer gets too large (overall quantity)', async () => {
     const testUrl = await browser.testHandle.assetURL('instrumented.html', { init: { generic_events: { harvestTimeSeconds: 30 } } })
     await browser.url(testUrl)

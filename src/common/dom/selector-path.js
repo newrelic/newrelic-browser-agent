@@ -5,10 +5,10 @@
  * @param {boolean} includeClass
  * @returns {string|undefined}
  */
-export const generateSelectorPath = (elem, { includeId, includeClass }) => {
+export const generateSelectorPath = (elem) => {
   if (!elem) return
 
-  const getIndex = (node) => {
+  const getNthOfTypeIndex = (node) => {
     try {
       let i = 1
       const { tagName } = node
@@ -23,15 +23,14 @@ export const generateSelectorPath = (elem, { includeId, includeClass }) => {
   }
 
   let pathSelector = ''
-  let index = getIndex(elem)
+  let index = getNthOfTypeIndex(elem)
 
   try {
     while (elem?.tagName) {
-      const { className, id, localName } = elem
+      const { id, localName } = elem
       const selector = [
         localName,
-        includeClass && className ? `.${className}` : '',
-        includeId && id ? `#${id}` : '',
+        id ? `#${id}` : '',
         pathSelector ? `>${pathSelector}` : ''
       ].join('')
 

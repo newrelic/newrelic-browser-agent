@@ -6,56 +6,36 @@ export class UserActionsAggregator {
   /** @type {AggregatedUserAction=} */
   #aggregationEvent = undefined
   #aggregationKey = ''
-  #subscribers = []
 
-  /**
-   * @param {Function} storeMethod The function given by the parent class to call when an event is done aggregating
-   */
-  constructor () {
-    return this
-  }
-
-  #emit (event, data) {
-    this.#subscribers.forEach(subscriber => {
-      if (subscriber.event === event) {
-        subscriber.callback(data)
-      }
-    })
-  }
-
-  on (event, callback) {
-    this.#subscribers.push({ event, callback })
+  get aggregationEvent () {
+    // if this is accessed externally, we need to be done aggregating it
+    // to prevent mutability issues. It may need to be accessed during an unload
+    const finishedEvent = this.#aggregationEvent
+    // then set as this new event aggregation
+    this.#aggregationKey = ''
+    this.#aggregationEvent = undefined
+    return finishedEvent
   }
 
   /**
    * Process the event and determine if a new aggregation set should be made or if it should increment the current aggregation
    * @param {Event} evt The event supplied by the addEventListener callback
+   * @returns {AggregatedUserAction|undefined} The previous aggregation set if it has been completed by processing the current event
    */
   process (evt) {
+    if (!evt) return
     const selectorPath = getSelectorPath(evt)
     const aggregationKey = getAggregationKey(evt, selectorPath)
-    if (aggregationKey === this.#aggregationKey) {
+    if (!!aggregationKey && aggregationKey === this.#aggregationKey) {
       // an aggregation exists already, so lets just continue to increment
       this.#aggregationEvent.aggregate(evt)
     } else {
-      // store the prev existing one (if there is one)
-      this.storeCurrentUserActionInFeature()
+      // return the prev existing one (if there is one)
+      const finishedEvent = this.#aggregationEvent
       // then set as this new event aggregation
       this.#aggregationKey = aggregationKey
       this.#aggregationEvent = new AggregatedUserAction(evt, selectorPath)
-    }
-  }
-
-  /**
-   * Store the current aggregation set in the parent feature's event buffer and clear the state of the aggregator
-   */
-  storeCurrentUserActionInFeature () {
-    // store the prev existing one (if there is one)
-    if (this.#aggregationEvent) {
-      this.#emit('aggregation-complete', this.#aggregationEvent)
-      // then clear it...
-      this.#aggregationKey = ''
-      this.#aggregationEvent = undefined
+      return finishedEvent
     }
   }
 }
@@ -68,13 +48,11 @@ export class UserActionsAggregator {
  */
 function getSelectorPath (evt) {
   let selectorPath
-  if (OBSERVED_WINDOW_EVENTS.includes(evt.type) || evt.target === evt.target?.top) selectorPath = 'window'
-  if (evt.target === document) selectorPath = 'document'
+  if (OBSERVED_WINDOW_EVENTS.includes(evt.type) || evt.target === window) selectorPath = 'window'
+  else if (evt.target === document) selectorPath = 'document'
   // if still no selectorPath, generate one from target tree that includes elem ids
-  selectorPath ??= generateSelectorPath(evt.target, { includeId: true, includeClass: false })
-  // if finally still no selectorPath, assign a random val,
-  // since we don't want to aggregate at all if we dont know what the target is
-  selectorPath ??= '' + Math.random()
+  else selectorPath = generateSelectorPath(evt.target)
+  // if STILL no selectorPath, it will return undefined which will skip aggregation for this event
   return selectorPath
 }
 

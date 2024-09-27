@@ -12,15 +12,16 @@ describe('UserActionsAggregator', () => {
     expect(aggregator).toBeInstanceOf(UserActionsAggregator)
   })
 
-  test('should process events and aggregate correctly, and emit to subscribers', () => {
-    const evt = { type: 'click', target: document }
+  test('should process events and return the prior event when done', () => {
+    const evt = { type: 'test', target: document }
+    const evt2 = { type: 'test2', target: document }
 
-    const doneFn = jest.fn()
-    aggregator.on('aggregation-complete', doneFn)
-    aggregator.process(evt)
+    expect(aggregator.process(evt)).toBeUndefined()
 
-    aggregator.storeCurrentUserActionInFeature()
-    expect(doneFn).toHaveBeenCalledWith(new AggregatedUserAction(evt, 'document'))
+    const output = aggregator.process(evt2)
+    expect(output).toBeInstanceOf(AggregatedUserAction)
+    expect(output.event).toEqual(evt) // not evt2, it returns the processed event (evt)
+    expect(output.count).toEqual(1)
   })
 
   test('getSelectorPath should return correct selector path', () => {
@@ -32,43 +33,45 @@ describe('UserActionsAggregator', () => {
     const domEvt = { type: 'click', target: button }
     const undefinedEvt = { type: 'click', target: undefined }
 
-    const checks = ['window', 'document', 'html>body>button#my-button:nth-of-type(1)', 'undefined']
+    const shouldBeUndefined = aggregator.process(windowEvt)
+    const shouldBeWindowEvt = aggregator.process(documentEvt)
+    const shouldBeDocumentEvt = aggregator.process(domEvt)
+    const shouldBeDomEvt = aggregator.process(undefinedEvt)
+    const shouldBeUndefinedEvt = aggregator.process()
 
-    aggregator.on('aggregation-complete', (userActionEvent) => {
-      expect(userActionEvent.selectorPath).toBe(checks.shift())
-    })
-
-    aggregator.process(windowEvt)
-    aggregator.process(documentEvt)
-    aggregator.process(domEvt)
-    aggregator.process(undefinedEvt)
+    expect(shouldBeUndefined).toBeUndefined()
+    expect(shouldBeWindowEvt.selectorPath).toEqual('window')
+    expect(shouldBeDocumentEvt.selectorPath).toEqual('document')
+    expect(shouldBeDomEvt.selectorPath).toEqual('html>body>button#my-button:nth-of-type(1)')
+    expect(shouldBeUndefinedEvt).toBeUndefined()
   })
 
   test('should aggregate when matching, end aggregation when not', () => {
-    const button = document.createElement('button')
-    button.id = 'my-button'
-    document.body.prepend(button)
+    const textarea = document.createElement('textarea')
+    textarea.id = 'my-text-area'
+    document.body.prepend(textarea)
     const windowEvt = { type: 'click', target: window }
     const documentEvt = { type: 'click', target: document }
-    const domEvt = { type: 'click', target: button }
+    const domClickEvt = { type: 'click', target: textarea }
+    const domKeydownEvt = { type: 'keydown', target: textarea }
     const undefinedEvt = { type: 'click', target: undefined }
 
-    const typeChecks = ['window', 'document', 'html>body>button#my-button:nth-of-type(1)', 'undefined']
-    const aggregationChecks = [3, 2, 4, 1]
-    aggregator.on('aggregation-complete', (userActionEvent) => {
-      expect(userActionEvent.selectorPath).toBe(typeChecks.shift())
-      expect(userActionEvent.count).toBe(aggregationChecks.shift())
-    })
-
-    aggregator.process(windowEvt)
-    aggregator.process(windowEvt)
-    aggregator.process(windowEvt)
-    aggregator.process(documentEvt)
-    aggregator.process(documentEvt)
-    aggregator.process(domEvt)
-    aggregator.process(domEvt)
-    aggregator.process(domEvt)
-    aggregator.process(domEvt)
-    aggregator.process(undefinedEvt)
+    expect(aggregator.process(windowEvt)).toBeUndefined()
+    expect(aggregator.process(windowEvt)).toBeUndefined()
+    expect(aggregator.process(windowEvt)).toBeUndefined()
+    /** aggregation should stop since a new evt -target- was observed */
+    expect(aggregator.process(documentEvt)).toMatchObject({ count: 3, selectorPath: 'window' })
+    expect(aggregator.process(documentEvt)).toBeUndefined()
+    /** aggregation should stop since a new evt -target- was observed */
+    expect(aggregator.process(domClickEvt)).toMatchObject({ count: 2, selectorPath: 'document' })
+    expect(aggregator.process(domClickEvt)).toBeUndefined()
+    expect(aggregator.process(domClickEvt)).toBeUndefined()
+    expect(aggregator.process(domClickEvt)).toBeUndefined()
+    /** aggregation should stop since a new evt -type- was observed */
+    expect(aggregator.process(domKeydownEvt)).toMatchObject({ count: 4, selectorPath: 'html>body>textarea#my-text-area:nth-of-type(1)' })
+    /** aggregation should stop since a new evt -target- was observed and undefined are not aggregated */
+    expect(aggregator.process(undefinedEvt)).toMatchObject({ count: 1, selectorPath: 'html>body>textarea#my-text-area:nth-of-type(1)' })
+    /** aggregation should stop since a new evt -target- was observed and undefined are not aggregated */
+    expect(aggregator.process(undefinedEvt)).toBeUndefined()
   })
 })

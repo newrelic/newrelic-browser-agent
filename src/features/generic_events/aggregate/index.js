@@ -9,7 +9,7 @@ import { getInfo } from '../../../common/config/info'
 import { getConfiguration } from '../../../common/config/init'
 import { getRuntime } from '../../../common/config/runtime'
 import { FEATURE_NAME } from '../constants'
-import { isBrowserScope } from '../../../common/constants/runtime'
+import { initialLocation, isBrowserScope } from '../../../common/constants/runtime'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { warn } from '../../../common/util/console'
 import { now } from '../../../common/timing/now'
@@ -52,8 +52,6 @@ export class Aggregate extends AggregateBase {
             timestamp: Math.floor(this.#agentRuntime.timeKeeper.correctRelativeTimestamp(timestamp)),
             timeSinceLoad: timestamp / 1000,
             actionName: name,
-            referrerUrl: this.referrerUrl,
-            currentUrl: cleanURL('' + location),
             ...(isBrowserScope && {
               browserWidth: window.document.documentElement?.clientWidth,
               browserHeight: window.document.documentElement?.clientHeight
@@ -62,33 +60,39 @@ export class Aggregate extends AggregateBase {
         }, this.featureName, this.ee)
       }
 
-      if (agentInit.user_actions.enabled) {
+      if (isBrowserScope && agentInit.user_actions.enabled) {
         this.userActionAggregator = new UserActionsAggregator()
-        this.userActionAggregator.on('aggregation-complete', (aggData) => {
-          if (!aggData?.event) return
+
+        this.addUserAction = (aggregatedUserAction) => {
           try {
-            const { target, timeStamp, type } = aggData.event
-            this.addEvent({
-              eventType: 'UserAction',
-              timestamp: Math.floor(this.#agentRuntime.timeKeeper.correctRelativeTimestamp(timeStamp)),
-              action: type,
-              actionCount: aggData.count,
-              duration: aggData.relativeMs[aggData.relativeMs.length - 1],
-              rageClick: aggData.rageClick,
-              relativeMs: aggData.relativeMs,
-              target: aggData.selectorPath,
-              ...(target?.id && { targetId: target.id }),
-              ...(target?.tagName && { targetTag: target.tagName }),
-              ...(target?.type && { targetType: target.type }),
-              ...(target?.className && { targetClass: target.className })
-            })
+            /** The aggregator process only returns an event when it is "done" aggregating -
+             * so we still need to validate that an event was given to this method before we try to add */
+            if (aggregatedUserAction?.event) {
+              const { target, timeStamp, type } = aggregatedUserAction.event
+              this.addEvent({
+                eventType: 'UserAction',
+                timestamp: Math.floor(this.#agentRuntime.timeKeeper.correctRelativeTimestamp(timeStamp)),
+                action: type,
+                actionCount: aggregatedUserAction.count,
+                duration: aggregatedUserAction.relativeMs[aggregatedUserAction.relativeMs.length - 1],
+                rageClick: aggregatedUserAction.rageClick,
+                relativeMs: aggregatedUserAction.relativeMs,
+                target: aggregatedUserAction.selectorPath,
+                ...(aggregatedUserAction.iframe && { iframe: true }),
+                ...(target?.id && { targetId: target.id }),
+                ...(target?.tagName && { targetTag: target.tagName }),
+                ...(target?.type && { targetType: target.type }),
+                ...(target?.className && { targetClass: target.className })
+              })
+            }
           } catch (e) {
-          // do nothing for now
+            // do nothing for now
           }
-        })
+        }
 
         registerHandler('ua', (evt) => {
-          this.userActionAggregator.process(evt)
+          /** the processor will return the previously aggregated event if it has been completed by processing the current event */
+          this.addUserAction(this.userActionAggregator.process(evt))
         }, this.featureName, this.ee)
       }
 
@@ -116,8 +120,10 @@ export class Aggregate extends AggregateBase {
     const defaultEventAttributes = {
       /** should be overridden by the event-specific attributes, but just in case -- set it to now() */
       timestamp: Math.floor(this.#agentRuntime.timeKeeper.correctRelativeTimestamp(now())),
-      /** all generic events require a pageUrl */
-      pageUrl: cleanURL(getRuntime(this.agentIdentifier).origin)
+      /** all generic events require pageUrl(s) */
+      pageUrl: cleanURL('' + initialLocation),
+      currentUrl: cleanURL('' + location),
+      referrerUrl: this.referrerUrl
     }
 
     const eventAttributes = {
@@ -136,8 +142,8 @@ export class Aggregate extends AggregateBase {
 
   onHarvestStarted (options) {
     /** send whatever UserActions have been aggregated up to this point
-     * if we are in a final harvest */
-    if (options.isFinalHarvest) this.userActionAggregator?.storeCurrentUserActionInFeature()
+     * if we are in a final harvest. By accessing the aggregationEvent, the aggregation is then force-cleared */
+    if (options.isFinalHarvest) this.addUserAction(this.userActionAggregator.aggregationEvent)
     const { userAttributes, atts } = getInfo(this.agentIdentifier)
     if (!this.events.hasData) return
     var payload = ({

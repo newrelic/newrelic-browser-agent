@@ -1,7 +1,7 @@
 import { generateSelectorPath } from '../../../../src/common/dom/selector-path'
 
 describe('generateSelectorPath', () => {
-  let div, span, p
+  let span, p
 
   beforeEach(() => {
     document.body.innerHTML = `
@@ -19,33 +19,20 @@ describe('generateSelectorPath', () => {
     </html>
         `
 
-    div = document.getElementById('container')
     span = document.querySelector('.grandchild')
     p = document.getElementById('target')
   })
 
   test('should generate selector path including id', () => {
-    const selector = generateSelectorPath(p, { includeId: true, includeClass: false })
-    expect(selector).toBe('html>body>div#container>div>p#target:nth-of-type(1)')
-  })
+    const selectorWithId = generateSelectorPath(p)
+    expect(selectorWithId).toBe('html>body>div#container>div>p#target:nth-of-type(1)')
 
-  test('should generate selector path including class', () => {
-    const selector = generateSelectorPath(span, { includeId: false, includeClass: true })
-    expect(selector).toBe('html>body>div>div.child>span.grandchild:nth-of-type(1)')
-  })
-
-  test('should generate selector path including both id and class', () => {
-    const selector = generateSelectorPath(span, { includeId: true, includeClass: true })
-    expect(selector).toBe('html>body>div#container>div.child>span.grandchild:nth-of-type(1)')
-  })
-
-  test('should generate selector path without id and class', () => {
-    const selector = generateSelectorPath(div, { includeId: false, includeClass: false })
-    expect(selector).toBe('html>body>div:nth-of-type(1)')
+    const selectorWithoutId = generateSelectorPath(span)
+    expect(selectorWithoutId).toBe('html>body>div#container>div>span:nth-of-type(1)')
   })
 
   test('should return undefined for null element', () => {
-    const selector = generateSelectorPath(null, { includeId: true, includeClass: true })
+    const selector = generateSelectorPath(null)
     expect(selector).toBeUndefined()
   })
 

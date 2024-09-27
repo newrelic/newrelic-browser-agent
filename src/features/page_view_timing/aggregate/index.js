@@ -125,8 +125,10 @@ export class Aggregate extends AggregateBase {
 
   // serialize and return current timing data, clear and save current data for retry
   prepareHarvest (options) {
+    const payload = this.timings.makeHarvestPayload(options.retry)
+    if (!payload) return
     return {
-      body: this.timings.makeHarvestPayload(options.retry)
+      body: payload
     }
   }
 

@@ -11,6 +11,7 @@ import { deregisterDrain } from '../../../common/drain/drain'
 import { globalScope } from '../../../common/constants/runtime'
 import { MODE, SESSION_EVENTS } from '../../../common/session/constants'
 import { applyFnToProps } from '../../../common/util/traverse'
+import { FEATURE_TO_ENDPOINT } from '../../utils/processed-events-util'
 
 const ERROR_MODE_SECONDS_WINDOW = 30 * 1000 // sliding window of nodes to track when simply monitoring (but not harvesting) in error mode
 /** Reserved room for query param attrs */
@@ -76,7 +77,7 @@ export class Aggregate extends AggregateBase {
 
     this.timeKeeper ??= this.agentRuntime.timeKeeper
 
-    this.scheduler = new HarvestScheduler('browser/blobs', {
+    this.scheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
       onFinished: this.onHarvestFinished.bind(this),
       retryDelay: this.harvestTimeSeconds,
       getPayload: this.prepareHarvest.bind(this),

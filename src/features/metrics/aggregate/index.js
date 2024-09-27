@@ -10,6 +10,7 @@ import { windowAddEventListener } from '../../../common/event-listener/event-lis
 import { isBrowserScope, isWorkerScope } from '../../../common/constants/runtime'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { deregisterDrain } from '../../../common/drain/drain'
+import { FEATURE_TO_ENDPOINT } from '../../utils/processed-events-util'
 // import { WEBSOCKET_TAG } from '../../../common/wrap/wrap-websocket'
 // import { handleWebsocketEvents } from './websocket-detection'
 
@@ -21,9 +22,9 @@ export class Aggregate extends AggregateBase {
     this.waitForFlags(['err']).then(([errFlag]) => {
       if (errFlag) {
         // *cli, Mar 23 - Per NR-94597, this feature should only harvest ONCE at the (potential) EoL time of the page.
-        const scheduler = new HarvestScheduler('jserrors', { onUnload: () => this.unload() }, this)
+        const scheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], { onUnload: () => this.unload() }, this)
         // this is needed to ensure EoL is "on" and sent
-        scheduler.harvest.on('jserrors', () => ({ body: this.aggregator.take(['cm', 'sm']) }))
+        scheduler.harvest.on(FEATURE_TO_ENDPOINT[this.featureName], () => ({ body: this.aggregator.take(['cm', 'sm']) }))
         this.drain()
       } else {
         this.blocked = true // if rum response determines that customer lacks entitlements for spa endpoint, this feature shouldn't harvest

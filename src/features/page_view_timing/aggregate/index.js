@@ -21,8 +21,8 @@ import { largestContentfulPaint } from '../../../common/vitals/largest-contentfu
 import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
 import { subscribeToVisibilityChange } from '../../../common/window/page-visibility'
 import { VITAL_NAMES } from '../../../common/vitals/constants'
-import { EventBuffer } from '../../utils/event-buffer'
-import { FEATURE_TO_ENDPOINT } from '../../utils/processed-events-util'
+import { FEATURE_TO_ENDPOINT, getStorageInstance } from '../../utils/processed-events-util'
+import { getRuntime } from '../../../common/config/runtime'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -34,7 +34,7 @@ export class Aggregate extends AggregateBase {
   constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
 
-    this.timings = new EventBuffer()
+    this.timings = getStorageInstance(this.featureName, getRuntime(this.agentIdentifier).pendingEvents, { serializer: this.getPayload.bind(this) })
     this.curSessEndRecorded = false
 
     registerHandler('docHidden', msTimestamp => this.endCurrentSession(msTimestamp), this.featureName, this.ee)
@@ -114,7 +114,7 @@ export class Aggregate extends AggregateBase {
       attrs.cls = cumulativeLayoutShift.current.value
     }
 
-    this.timings.add({
+    this.timings.addEvent({
       name,
       value,
       attrs
@@ -123,9 +123,15 @@ export class Aggregate extends AggregateBase {
     handle('pvtAdded', [name, value, attrs], undefined, FEATURE_NAMES.sessionTrace, this.ee)
   }
 
+  // serialize and return current timing data, clear and save current data for retry
+  prepareHarvest (options) {
+    return {
+      body: this.timings.makeHarvestPayload(options.retry)
+    }
+  }
+
   onHarvestFinished (result) {
-    if (result.retry && this.timings.held.hasData) this.timings.unhold()
-    else this.timings.held.clear()
+    this.timings.postHarvestCleanup(result.retry)
   }
 
   appendGlobalCustomAttributes (timing) {
@@ -139,19 +145,6 @@ export class Aggregate extends AggregateBase {
         timingAttributes[key] = val
       }
     })
-  }
-
-  // serialize and return current timing data, clear and save current data for retry
-  prepareHarvest (options) {
-    if (!this.timings.hasData) return
-
-    var payload = this.getPayload(this.timings.buffer)
-    if (options.retry) this.timings.hold()
-    else this.timings.clear()
-
-    return {
-      body: { e: payload }
-    }
   }
 
   // serialize array of timing data

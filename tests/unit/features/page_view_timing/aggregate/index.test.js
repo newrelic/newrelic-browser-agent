@@ -15,7 +15,7 @@ jest.mock('../../../../../src/common/config/init', () => ({
 }))
 jest.mock('../../../../../src/common/config/runtime', () => ({
   __esModule: true,
-  getRuntime: jest.fn().mockReturnValue({})
+  getRuntime: jest.fn().mockReturnValue({ pendingEvents: {} })
 }))
 
 const pvtAgg = new Aggregate('abcd', new Aggregator({ agentIdentifier: 'abcd', ee }))
@@ -49,24 +49,24 @@ describe('PVT aggregate', () => {
   test('addConnectionAttributes', () => {
     global.navigator.connection = {}
     pvtAgg.addTiming('abc', 1)
-    expect(pvtAgg.timings.buffer[0].attrs).toEqual(expect.objectContaining({}))
+    expect(pvtAgg.timings.events[0].attrs).toEqual(expect.objectContaining({}))
 
     global.navigator.connection.type = 'type'
     pvtAgg.addTiming('abc', 1)
-    expect(pvtAgg.timings.buffer[1].attrs).toEqual(expect.objectContaining({
+    expect(pvtAgg.timings.events[1].attrs).toEqual(expect.objectContaining({
       'net-type': 'type'
     }))
 
     global.navigator.connection.effectiveType = 'effectiveType'
     pvtAgg.addTiming('abc', 1)
-    expect(pvtAgg.timings.buffer[2].attrs).toEqual(expect.objectContaining({
+    expect(pvtAgg.timings.events[2].attrs).toEqual(expect.objectContaining({
       'net-type': 'type',
       'net-etype': 'effectiveType'
     }))
 
     global.navigator.connection.rtt = 'rtt'
     pvtAgg.addTiming('abc', 1)
-    expect(pvtAgg.timings.buffer[3].attrs).toEqual(expect.objectContaining({
+    expect(pvtAgg.timings.events[3].attrs).toEqual(expect.objectContaining({
       'net-type': 'type',
       'net-etype': 'effectiveType',
       'net-rtt': 'rtt'
@@ -74,7 +74,7 @@ describe('PVT aggregate', () => {
 
     global.navigator.connection.downlink = 'downlink'
     pvtAgg.addTiming('abc', 1)
-    expect(pvtAgg.timings.buffer[4].attrs).toEqual(expect.objectContaining({
+    expect(pvtAgg.timings.events[4].attrs).toEqual(expect.objectContaining({
       'net-type': 'type',
       'net-etype': 'effectiveType',
       'net-rtt': 'rtt',
@@ -89,7 +89,7 @@ describe('PVT aggregate', () => {
     }
     pvtAgg.addTiming('abc', 1)
 
-    expect(pvtAgg.timings.buffer[5].attrs).toEqual(expect.objectContaining({
+    expect(pvtAgg.timings.events[5].attrs).toEqual(expect.objectContaining({
       'net-type': 'type',
       'net-etype': 'effectiveType',
       'net-rtt': 'rtt',

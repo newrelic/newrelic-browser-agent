@@ -158,6 +158,8 @@ export class Aggregate extends AggregateBase {
     })
 
     if (options.retry) this.events.hold()
+    else this.events.clear()
+
     return payload
   }
 

@@ -8,8 +8,9 @@ export class UserActionsAggregator {
   #aggregationKey = ''
 
   get aggregationEvent () {
-    // if this is accessed externally, we need to be done aggregating it
-    // to prevent mutability issues. It may need to be accessed during an unload
+    // if this is accessed externally, we need to be done aggregating on it
+    // to prevent potential mutability and duplication issues, so the state is cleared upon returning.
+    // This value may need to be accessed during an unload harvest.
     const finishedEvent = this.#aggregationEvent
     this.#aggregationKey = ''
     this.#aggregationEvent = undefined

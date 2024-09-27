@@ -48,16 +48,17 @@ export class Aggregate extends AggregateBase {
   sendRum () {
     const info = this.agentRef.info
     const harvester = new Harvest(this)
+    const measures = {}
 
-    if (info.queueTime) this.aggregator.store('measures', 'qt', { value: info.queueTime })
-    if (info.applicationTime) this.aggregator.store('measures', 'ap', { value: info.applicationTime })
+    if (info.queueTime) measures.qt = info.queueTime
+    if (info.applicationTime) measures.ap = info.applicationTime
 
     // These 3 values should've been recorded after load and before this func runs. They are part of the minimum required for PageView events to be created.
     // Following PR #428, which demands that all agents send RUM call, these need to be sent even outside of the main window context where PerformanceTiming
     // or PerformanceNavigationTiming do not exists. Hence, they'll be filled in by 0s instead in, for example, worker threads that still init the PVE module.
-    this.aggregator.store('measures', 'be', { value: this.timeToFirstByte })
-    this.aggregator.store('measures', 'fe', { value: this.firstByteToWindowLoad })
-    this.aggregator.store('measures', 'dc', { value: this.firstByteToDomContent })
+    measures.be = this.timeToFirstByte
+    measures.fe = this.firstByteToWindowLoad
+    measures.dc = this.firstByteToDomContent
 
     const queryParameters = {
       tt: info.ttGuid,
@@ -65,12 +66,7 @@ export class Aggregate extends AggregateBase {
       ac: info.account,
       pr: info.product,
       af: getActivatedFeaturesFlags(this.agentIdentifier).join(','),
-      ...(
-        Object.entries(this.aggregator.get('measures') || {}).reduce((aggregator, [metricName, measure]) => {
-          aggregator[metricName] = measure.params?.value
-          return aggregator
-        }, {})
-      ),
+      ...measures,
       xx: info.extra,
       ua: info.userAttributes,
       at: info.atts

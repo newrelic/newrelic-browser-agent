@@ -5,18 +5,28 @@ export class ProcessedEvents {
   constructor (options = {}) {
     this.events = []
     this.eventsRawSize = 0
+    /** Provided callback with a single arg accepting an array of events for features that serializes their payloads a certain way. */
     this.serializer = options.serializer
   }
 
+  /**
+   * Add feature-processed event to our buffer. If this event would cause our total raw size to exceed the set max payload size, it is dropped.
+   * @param {any} event - any primitive type or object
+   * @returns {Boolean} true if successfully added; false otherwise
+   */
   addEvent (event) {
+    const newEventSize = stringify(event)?.length || 0 // (estimate) # of bytes a directly stringified event it would take to send
+    if (this.eventsRawSize + newEventSize > MAX_PAYLOAD_SIZE) return false
+
     this.events.push(event)
-    this.eventsRawSize += stringify(event).length // (estimate) # of bytes a directly stringified event it would take to send
+    this.eventsRawSize += newEventSize
+    return true
   }
 
   /**
    * Format pending events for harvest.
    * @param {Boolean} shouldRetryOnFail - harvester flag to backup payload for retry later if harvest request fails; this should be moved to harvester logic
-   * @returns final payload body, or undefined if there are no pending events
+   * @returns final payload, or undefined if there are no pending events
    */
   makeHarvestPayload (shouldRetryOnFail = false) {
     if (!this.events.length) return
@@ -28,7 +38,10 @@ export class ProcessedEvents {
     const payload = this.serializer ? this.serializer(this.events) : this.events
     this.events = []
     this.eventsRawSize = 0
-    return payload
+
+    return {
+      body: payload
+    }
   }
 
   /**

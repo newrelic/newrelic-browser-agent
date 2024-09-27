@@ -16,9 +16,8 @@ import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { parseGQL } from './gql'
 import { getNREUMInitializedAgent } from '../../../common/window/nreum'
-import Chunk from './chunk'
-import { EventBuffer } from '../../utils/event-buffer'
-import { FEATURE_TO_ENDPOINT } from '../../utils/processed-events-util'
+import { FEATURE_TO_ENDPOINT, getStorageInstance } from '../../utils/processed-events-util'
+import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../../../common/serialize/bel-serializer'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -36,22 +35,22 @@ export class Aggregate extends AggregateBase {
     const harvestTimeSeconds = this.#agentInit.ajax.harvestTimeSeconds || 10
     setDenyList(this.#agentRuntime.denyList)
 
-    this.ajaxEvents = new EventBuffer()
+    this.ajaxEvents = getStorageInstance(this.featureName, this.#agentRuntime.pendingEvents, { serializer: this.getPayload.bind(this) })
     this.spaAjaxEvents = {}
     const classThis = this
 
     // --- v Used by old spa feature
     this.ee.on('interactionDone', (interaction, wasSaved) => {
-      if (!this.spaAjaxEvents[interaction.id]?.hasData) return
+      if (!this.spaAjaxEvents[interaction.id]) return
 
       if (!wasSaved) { // if the ixn was saved, then its ajax reqs are part of the payload whereas if it was discarded, it should still be harvested in the ajax feature itself
-        this.ajaxEvents.merge(this.spaAjaxEvents[interaction.id])
+        this.spaAjaxEvents[interaction.id].forEach((item) => this.ajaxEvents.addEvent(item))
       }
       delete this.spaAjaxEvents[interaction.id]
     })
     // --- ^
     // --- v Used by new soft nav
-    registerHandler('returnAjax', event => this.ajaxEvents.add(event), this.featureName, this.ee)
+    registerHandler('returnAjax', event => this.ajaxEvents.addEvent(event), this.featureName, this.ee)
     // --- ^
     registerHandler('xhr', function () { // the EE-drain system not only switches "this" but also passes a new EventContext with info. Should consider platform refactor to another system which passes a mutable context around separately and predictably to avoid problems like this.
       classThis.storeXhr(...arguments, this) // this switches the context back to the class instance while passing the NR context as an argument -- see "ctx" in storeXhr
@@ -135,61 +134,66 @@ export class Aggregate extends AggregateBase {
       handle('ajax', [event], undefined, FEATURE_NAMES.softNav, this.ee)
     } else if (ctx.spaNode) { // For old spa (when running), if the ajax happened inside an interaction, hold it until the interaction finishes
       const interactionId = ctx.spaNode.interaction.id
-      this.spaAjaxEvents[interactionId] ??= new EventBuffer()
-      this.spaAjaxEvents[interactionId].add(event)
+      this.spaAjaxEvents[interactionId] ??= []
+      this.spaAjaxEvents[interactionId].push(event)
     } else {
-      this.ajaxEvents.add(event)
+      this.ajaxEvents.addEvent(event)
     }
   }
 
   prepareHarvest (options) {
-    options = options || {}
-    if (this.ajaxEvents.buffer.length === 0) return null
-
-    const payload = this.#getPayload(this.ajaxEvents.buffer)
-    const payloadObjs = []
-
-    for (let i = 0; i < payload.length; i++) payloadObjs.push({ body: { e: payload[i] } })
-
-    if (options.retry) this.ajaxEvents.hold()
-    else this.ajaxEvents.clear()
-
-    return payloadObjs
+    const payload = this.ajaxEvents.makeHarvestPayload(options.retry)
+    if (!payload) return
+    return payload
   }
 
   onEventsHarvestFinished (result) {
-    if (result.retry && this.ajaxEvents.held.hasData) this.ajaxEvents.unhold()
-    else this.ajaxEvents.held.clear()
+    this.ajaxEvents.postHarvestCleanup(result.retry)
   }
 
-  #getPayload (events, numberOfChunks) {
-    numberOfChunks = numberOfChunks || 1
-    const payload = []
-    const chunkSize = events.length / numberOfChunks
-    const eventChunks = splitChunks.call(this, events, chunkSize)
-    let tooBig = false
-    for (let i = 0; i < eventChunks.length; i++) {
-      const currentChunk = eventChunks[i]
-      if (currentChunk.tooBig) {
-        if (currentChunk.events.length > 1) {
-          tooBig = true
-          break // if the payload is too big BUT is made of more than 1 event, we can split it down again
-        }
-        // Otherwise, if it consists of one sole event, we do not send it (discarded) since we cannot break it apart any further.
-      } else {
-        payload.push(currentChunk.payload)
-      }
-    }
-    // Check if the current payload string is too big, if so then run getPayload again with more buckets.
-    return tooBig ? this.#getPayload(events, ++numberOfChunks) : payload
+  getPayload (events) {
+    const addString = getAddStringContext(this.agentIdentifier)
+    let payload = 'bel.7;'
 
-    function splitChunks (arr, chunkSize) {
-      chunkSize = chunkSize || arr.length
-      const chunks = []
-      for (let i = 0, len = arr.length; i < len; i += chunkSize) {
-        chunks.push(new Chunk(arr.slice(i, i + chunkSize), this))
+    for (let i = 0; i < events.length; i++) {
+      const event = events[i]
+      const fields = [
+        numeric(event.startTime),
+        numeric(event.endTime - event.startTime),
+        numeric(0), // callbackEnd
+        numeric(0), // no callbackDuration for non-SPA events
+        addString(event.method),
+        numeric(event.status),
+        addString(event.domain),
+        addString(event.path),
+        numeric(event.requestSize),
+        numeric(event.responseSize),
+        event.type === 'fetch' ? 1 : '',
+        addString(0), // nodeId
+        nullable(event.spanId, addString, true) + // guid
+        nullable(event.traceId, addString, true) + // traceId
+        nullable(event.spanTimestamp, numeric, false) // timestamp
+      ]
+
+      let insert = '2,'
+
+      // Since configuration objects (like info) are created new each time they are set, we have to grab the current pointer to the attr object here.
+      const jsAttributes = this.#agentInfo.jsAttributes
+
+      // add custom attributes
+      // gql decorators are added as custom attributes to alleviate need for new BEL schema
+      const attrParts = addCustomAttributes({ ...(jsAttributes || {}), ...(event.gql || {}) }, addString)
+      fields.unshift(numeric(attrParts.length))
+
+      insert += fields.join(',')
+      if (attrParts && attrParts.length > 0) {
+        insert += ';' + attrParts.join(';')
       }
-      return chunks
+      if ((i + 1) < events.length) insert += ';'
+
+      payload += insert
     }
+
+    return payload
   }
 }

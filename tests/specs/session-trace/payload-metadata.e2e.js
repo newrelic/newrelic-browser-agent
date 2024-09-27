@@ -37,7 +37,8 @@ describe('STN Payload metadata checks', () => {
       nodeCount: request.body.length,
       firstTimestampOffset,
       lastTimestampOffset,
-      firstSessionHarvest: true
+      firstSessionHarvest: true,
+      pageUrl: request.headers.origin + '/tests/assets/instrumented.html'
     })
   })
 })

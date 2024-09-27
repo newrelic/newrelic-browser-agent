@@ -58,7 +58,8 @@ export function testExpectedTrace ({
   session,
   ptid,
   harvestId,
-  entityGuid
+  entityGuid,
+  pageUrl
 }) {
   expect(data.query).toMatchObject({
     browser_monitoring_key: expect.any(String),
@@ -78,6 +79,7 @@ export function testExpectedTrace ({
     'trace.nodes': nodeCount || expect.any(Number),
     ptid: ptid || expect.anything(),
     session: session || expect.any(String),
+    ...(pageUrl && { pageUrl }),
     // optional attrs here
     ...(firstSessionHarvest && { firstSessionHarvest }),
     ...(hasReplay && { hasReplay })

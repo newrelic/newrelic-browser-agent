@@ -132,7 +132,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ### web-vitals
 
-This product includes source derived from [web-vitals](https://github.com/GoogleChrome/web-vitals) ([v3.5.2](https://github.com/GoogleChrome/web-vitals/tree/v3.5.2)), distributed under the [Apache-2.0 License](https://github.com/GoogleChrome/web-vitals/blob/v3.5.2/LICENSE):
+This product includes source derived from [web-vitals](https://github.com/GoogleChrome/web-vitals) ([v4.2.3](https://github.com/GoogleChrome/web-vitals/tree/v4.2.3)), distributed under the [Apache-2.0 License](https://github.com/GoogleChrome/web-vitals/blob/v4.2.3/LICENSE):
 
 ```
 

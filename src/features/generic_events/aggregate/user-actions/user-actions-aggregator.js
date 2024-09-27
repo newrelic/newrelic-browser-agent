@@ -11,7 +11,6 @@ export class UserActionsAggregator {
     // if this is accessed externally, we need to be done aggregating it
     // to prevent mutability issues. It may need to be accessed during an unload
     const finishedEvent = this.#aggregationEvent
-    // then set as this new event aggregation
     this.#aggregationKey = ''
     this.#aggregationEvent = undefined
     return finishedEvent

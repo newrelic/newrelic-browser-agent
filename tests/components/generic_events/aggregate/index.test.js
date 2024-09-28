@@ -150,6 +150,8 @@ describe('sub-features', () => {
     const target = document.createElement('button')
     target.id = 'myBtn'
     genericEventsAggregate.ee.emit('ua', [{ timeStamp: 123456, type: 'click', target }])
+    // blur event to trigger aggregation to stop and add to harvest buffer
+    genericEventsAggregate.ee.emit('ua', [{ timeStamp: 234567, type: 'blur', target: window }])
 
     const harvest = genericEventsAggregate.onHarvestStarted({ isFinalHarvest: true }) // force it to put the aggregation into the event buffer
     expect(harvest.body.ins[0]).toMatchObject({
@@ -175,6 +177,8 @@ describe('sub-features', () => {
     genericEventsAggregate.ee.emit('ua', [{ timeStamp: 400, type: 'click', target }])
     genericEventsAggregate.ee.emit('ua', [{ timeStamp: 500, type: 'click', target }])
     genericEventsAggregate.ee.emit('ua', [{ timeStamp: 600, type: 'click', target }])
+    // blur event to trigger aggregation to stop and add to harvest buffer
+    genericEventsAggregate.ee.emit('ua', [{ timeStamp: 234567, type: 'blur', target: window }])
 
     const harvest = genericEventsAggregate.onHarvestStarted({ isFinalHarvest: true }) // force it to put the aggregation into the event buffer
     expect(harvest.body.ins[0]).toMatchObject({
@@ -200,6 +204,8 @@ describe('sub-features', () => {
     /** even though target1 and target2 have the same tag (button) and id (myBtn), it should still NOT aggregate them because they have different nth-of-type paths */
     genericEventsAggregate.ee.emit('ua', [{ timeStamp: 100, type: 'click', target }])
     genericEventsAggregate.ee.emit('ua', [{ timeStamp: 200, type: 'click', target: target2 }])
+    // blur event to trigger aggregation to stop and add to harvest buffer
+    genericEventsAggregate.ee.emit('ua', [{ timeStamp: 234567, type: 'blur', target: window }])
 
     const harvest = genericEventsAggregate.onHarvestStarted({ isFinalHarvest: true }) // force it to put the aggregation into the event buffer
     expect(harvest.body.ins[0]).toMatchObject({

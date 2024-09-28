@@ -28,6 +28,8 @@ export class Aggregate extends AggregateBase {
     super(agentIdentifier, aggregator, FEATURE_NAME)
     const agentInit = getConfiguration(this.agentIdentifier)
 
+    this.shouldRunUserActions = isBrowserScope && agentInit.user_actions.enabled
+
     this.eventsPerHarvest = 1000
     this.harvestTimeSeconds = agentInit.generic_events.harvestTimeSeconds
 
@@ -43,6 +45,8 @@ export class Aggregate extends AggregateBase {
         deregisterDrain(this.agentIdentifier, this.featureName)
         return
       }
+
+      const preHarvestMethods = []
 
       if (agentInit.page_action.enabled) {
         registerHandler('api-addPageAction', (timestamp, name, attributes) => {
@@ -60,7 +64,7 @@ export class Aggregate extends AggregateBase {
         }, this.featureName, this.ee)
       }
 
-      if (isBrowserScope && agentInit.user_actions.enabled) {
+      if (this.shouldRunUserActions) {
         this.userActionAggregator = new UserActionsAggregator()
 
         this.addUserAction = (aggregatedUserAction) => {
@@ -94,10 +98,19 @@ export class Aggregate extends AggregateBase {
           /** the processor will return the previously aggregated event if it has been completed by processing the current event */
           this.addUserAction(this.userActionAggregator.process(evt))
         }, this.featureName, this.ee)
+
+        preHarvestMethods.push((options = {}) => {
+          /** send whatever UserActions have been aggregated up to this point
+           * if we are in a final harvest. By accessing the aggregationEvent, the aggregation is then force-cleared */
+          if (options.isFinalHarvest) this.addUserAction(this.userActionAggregator.aggregationEvent)
+        })
       }
 
       this.harvestScheduler = new HarvestScheduler('ins', { onFinished: (...args) => this.onHarvestFinished(...args) }, this)
-      this.harvestScheduler.harvest.on('ins', (...args) => this.onHarvestStarted(...args))
+      this.harvestScheduler.harvest.on('ins', (...args) => {
+        preHarvestMethods.forEach(fn => fn(...args))
+        this.onHarvestStarted(...args)
+      })
       this.harvestScheduler.startTimer(this.harvestTimeSeconds, 0)
 
       this.drain()
@@ -141,9 +154,6 @@ export class Aggregate extends AggregateBase {
   }
 
   onHarvestStarted (options) {
-    /** send whatever UserActions have been aggregated up to this point
-     * if we are in a final harvest. By accessing the aggregationEvent, the aggregation is then force-cleared */
-    if (options.isFinalHarvest) this.addUserAction(this.userActionAggregator.aggregationEvent)
     const { userAttributes, atts } = getInfo(this.agentIdentifier)
     if (!this.events.hasData) return
     var payload = ({

@@ -109,7 +109,7 @@ export class Aggregate extends AggregateBase {
       this.harvestScheduler = new HarvestScheduler('ins', { onFinished: (...args) => this.onHarvestFinished(...args) }, this)
       this.harvestScheduler.harvest.on('ins', (...args) => {
         preHarvestMethods.forEach(fn => fn(...args))
-        this.onHarvestStarted(...args)
+        return this.onHarvestStarted(...args)
       })
       this.harvestScheduler.startTimer(this.harvestTimeSeconds, 0)
 

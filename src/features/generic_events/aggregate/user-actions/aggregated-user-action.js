@@ -1,4 +1,3 @@
-import { isIFrameWindow } from '../../../../common/dom/iframe'
 import { RAGE_CLICK_THRESHOLD_EVENTS, RAGE_CLICK_THRESHOLD_MS } from '../../constants'
 
 export class AggregatedUserAction {
@@ -9,7 +8,6 @@ export class AggregatedUserAction {
     this.relativeMs = [0]
     this.selectorPath = selectorPath
     this.rageClick = undefined
-    this.iframe = isIFrameWindow(evt.view)
   }
 
   /**

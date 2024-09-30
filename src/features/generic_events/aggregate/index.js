@@ -20,6 +20,7 @@ import { EventBuffer } from '../../utils/event-buffer'
 import { applyFnToProps } from '../../../common/util/traverse'
 import { IDEAL_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
 import { UserActionsAggregator } from './user-actions/user-actions-aggregator'
+import { isIFrameWindow } from '../../../common/dom/iframe'
 
 export class Aggregate extends AggregateBase {
   #agentRuntime
@@ -72,7 +73,7 @@ export class Aggregate extends AggregateBase {
             /** The aggregator process only returns an event when it is "done" aggregating -
              * so we still need to validate that an event was given to this method before we try to add */
             if (aggregatedUserAction?.event) {
-              const { target, timeStamp, type } = aggregatedUserAction.event
+              const { target, timeStamp, type, view } = aggregatedUserAction.event
               this.addEvent({
                 eventType: 'UserAction',
                 timestamp: Math.floor(this.#agentRuntime.timeKeeper.correctRelativeTimestamp(timeStamp)),
@@ -82,7 +83,7 @@ export class Aggregate extends AggregateBase {
                 rageClick: aggregatedUserAction.rageClick,
                 relativeMs: aggregatedUserAction.relativeMs,
                 target: aggregatedUserAction.selectorPath,
-                ...(aggregatedUserAction.iframe && { iframe: true }),
+                ...(isIFrameWindow(view) && { iframe: true }),
                 ...(target?.id && { targetId: target.id }),
                 ...(target?.tagName && { targetTag: target.tagName }),
                 ...(target?.type && { targetType: target.type }),

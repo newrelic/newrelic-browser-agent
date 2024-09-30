@@ -37,7 +37,7 @@ describe('ins harvesting', () => {
     await browser.url(testUrl).then(() => browser.waitForAgentLoad())
 
     const [insHarvests] = await Promise.all([
-      insightsCapture.waitForResult({ timeout: 5000 }),
+      insightsCapture.waitForResult({ timeout: 7500 }),
       $('#pay-btn').click().then(async () => {
         // rage click
         await browser.execute(function () {

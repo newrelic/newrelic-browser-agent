@@ -96,7 +96,7 @@ describe('ins harvesting', () => {
         const frameBody = frame.contentWindow.document.querySelector('body')
         frame.focus()
         frameBody.click()
-        frame.blur()
+        window.focus()
         window.location.reload()
       })
 

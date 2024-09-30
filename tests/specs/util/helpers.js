@@ -14,7 +14,7 @@ export const RRWEB_EVENT_TYPES = {
   Custom: 5
 }
 
-export function testExpectedReplay ({ data, session, hasMeta, hasSnapshot, hasError, isFirstChunk, contentEncoding, decompressedBytes, appId, entityGuid, harvestId, pageUrl }) {
+export function testExpectedReplay ({ data, session, hasMeta, hasSnapshot, hasError, isFirstChunk, contentEncoding, decompressedBytes, appId, entityGuid, harvestId, currentUrl }) {
   expect(data.query).toMatchObject({
     browser_monitoring_key: expect.any(String),
     type: 'SessionReplay',
@@ -42,7 +42,7 @@ export function testExpectedReplay ({ data, session, hasMeta, hasSnapshot, hasEr
     decompressedBytes: decompressedBytes || expect.any(Number),
     'rrweb.version': expect.any(String),
     inlinedAllStylesheets: expect.any(Boolean),
-    ...(pageUrl && { pageUrl })
+    ...(currentUrl && { currentUrl })
   })
 
   expect(data.body).toEqual(expect.any(Array))
@@ -59,7 +59,7 @@ export function testExpectedTrace ({
   ptid,
   harvestId,
   entityGuid,
-  pageUrl
+  currentUrl
 }) {
   expect(data.query).toMatchObject({
     browser_monitoring_key: expect.any(String),
@@ -79,7 +79,7 @@ export function testExpectedTrace ({
     'trace.nodes': nodeCount || expect.any(Number),
     ptid: ptid || expect.anything(),
     session: session || expect.any(String),
-    ...(pageUrl && { pageUrl }),
+    ...(currentUrl && { currentUrl }),
     // optional attrs here
     ...(firstSessionHarvest && { firstSessionHarvest }),
     ...(hasReplay && { hasReplay })

@@ -38,7 +38,7 @@ describe('STN Payload metadata checks', () => {
       firstTimestampOffset,
       lastTimestampOffset,
       firstSessionHarvest: true,
-      pageUrl: request.headers.origin + '/tests/assets/instrumented.html'
+      currentUrl: request.headers.origin + '/tests/assets/instrumented.html'
     })
   })
 })

@@ -55,6 +55,7 @@ export class Aggregate extends AggregateBase {
             timestamp: Math.floor(this.#agentRuntime.timeKeeper.correctRelativeTimestamp(timestamp)),
             timeSinceLoad: timestamp / 1000,
             actionName: name,
+            referrerUrl: this.referrerUrl,
             ...(isBrowserScope && {
               browserWidth: window.document.documentElement?.clientWidth,
               browserHeight: window.document.documentElement?.clientHeight
@@ -134,8 +135,7 @@ export class Aggregate extends AggregateBase {
       timestamp: Math.floor(this.#agentRuntime.timeKeeper.correctRelativeTimestamp(now())),
       /** all generic events require pageUrl(s) */
       pageUrl: cleanURL('' + initialLocation),
-      currentUrl: cleanURL('' + location),
-      referrerUrl: this.referrerUrl
+      currentUrl: cleanURL('' + location)
     }
 
     const eventAttributes = {

@@ -29,8 +29,6 @@ export class Aggregate extends AggregateBase {
     super(agentIdentifier, aggregator, FEATURE_NAME)
     const agentInit = getConfiguration(this.agentIdentifier)
 
-    this.shouldRunUserActions = isBrowserScope && agentInit.user_actions.enabled
-
     this.eventsPerHarvest = 1000
     this.harvestTimeSeconds = agentInit.generic_events.harvestTimeSeconds
 
@@ -65,7 +63,7 @@ export class Aggregate extends AggregateBase {
         }, this.featureName, this.ee)
       }
 
-      if (this.shouldRunUserActions) {
+      if (isBrowserScope && agentInit.user_actions.enabled) {
         this.userActionAggregator = new UserActionsAggregator()
 
         this.addUserAction = (aggregatedUserAction) => {
@@ -73,7 +71,7 @@ export class Aggregate extends AggregateBase {
             /** The aggregator process only returns an event when it is "done" aggregating -
              * so we still need to validate that an event was given to this method before we try to add */
             if (aggregatedUserAction?.event) {
-              const { target, timeStamp, type, view } = aggregatedUserAction.event
+              const { target, timeStamp, type } = aggregatedUserAction.event
               this.addEvent({
                 eventType: 'UserAction',
                 timestamp: Math.floor(this.#agentRuntime.timeKeeper.correctRelativeTimestamp(timeStamp)),
@@ -83,7 +81,7 @@ export class Aggregate extends AggregateBase {
                 rageClick: aggregatedUserAction.rageClick,
                 relativeMs: aggregatedUserAction.relativeMs,
                 target: aggregatedUserAction.selectorPath,
-                ...(isIFrameWindow(view) && { iframe: true }),
+                ...(isIFrameWindow(window) && { iframe: true }),
                 ...(target?.id && { targetId: target.id }),
                 ...(target?.tagName && { targetTag: target.tagName }),
                 ...(target?.type && { targetType: target.type }),

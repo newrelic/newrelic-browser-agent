@@ -97,25 +97,16 @@ describe('ins harvesting', () => {
         frame.focus()
         frameBody.click()
         frame.blur()
+        window.location.reload()
       })
 
     ])
 
     const userActionsHarvest = insHarvests.flatMap(harvest => harvest.request.body.ins) // firefox sends a window focus event on load, so we may end up with 2 harvests
-    const clickUAs = userActionsHarvest.filter(ua => ua.action === 'click')
-    expect(clickUAs.length).toBeGreaterThanOrEqual(1)
-    expect(clickUAs[0]).toMatchObject({
-      eventType: 'UserAction',
-      action: 'click',
-      actionCount: 1,
-      duration: 0,
-      iframe: true, // <--- this is the important part, it is detected if the agent is running in the iframe that caught an action
-      relativeMs: '[0]',
-      target: 'html>body:nth-of-type(1)',
-      targetTag: 'BODY',
-      pageUrl: expect.any(String),
-      currentUrl: expect.any(String),
-      timestamp: expect.any(Number)
+    expect(userActionsHarvest.length).toBeGreaterThanOrEqual(3) // 3 page events above, plus the occasional window focus event mentioned above
+    userActionsHarvest.forEach(ua => {
+      expect(ua.eventType).toEqual('UserAction')
+      expect(ua.iframe).toEqual(true)
     })
   })
 

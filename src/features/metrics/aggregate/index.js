@@ -10,6 +10,7 @@ import { windowAddEventListener } from '../../../common/event-listener/event-lis
 import { isBrowserScope, isWorkerScope } from '../../../common/constants/runtime'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { deregisterDrain } from '../../../common/drain/drain'
+import { isIFrameWindow } from '../../../common/dom/iframe'
 // import { WEBSOCKET_TAG } from '../../../common/wrap/wrap-websocket'
 // import { handleWebsocketEvents } from './websocket-detection'
 
@@ -101,7 +102,7 @@ export class Aggregate extends AggregateBase {
     if (proxy.beacon) this.storeSupportabilityMetrics('Config/BeaconUrl/Changed')
 
     if (isBrowserScope && window.MutationObserver) {
-      if (window.self !== window.top) { this.storeSupportabilityMetrics('Generic/Runtime/IFrame/Detected') }
+      if (isIFrameWindow(window)) { this.storeSupportabilityMetrics('Generic/Runtime/IFrame/Detected') }
       const preExistingVideos = window.document.querySelectorAll('video').length
       if (preExistingVideos) this.storeSupportabilityMetrics('Generic/VideoElement/Added', preExistingVideos)
       const preExistingIframes = window.document.querySelectorAll('iframe').length

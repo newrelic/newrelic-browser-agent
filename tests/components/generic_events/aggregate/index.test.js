@@ -147,14 +147,87 @@ describe('sub-features', () => {
 
   test('should record user actions when enabled', () => {
     getInfo(agentSetup.agentIdentifier).jsAttributes = { globalFoo: 'globalBar' }
-    genericEventsAggregate.ee.emit('ua', [{ timeStamp: 123456, type: 'click', target: { id: 'myBtn', tagName: 'button' } }])
+    const target = document.createElement('button')
+    target.id = 'myBtn'
+    genericEventsAggregate.ee.emit('ua', [{ timeStamp: 123456, type: 'click', target }])
+    // blur event to trigger aggregation to stop and add to harvest buffer
+    genericEventsAggregate.ee.emit('ua', [{ timeStamp: 234567, type: 'blur', target: window }])
 
-    expect(genericEventsAggregate.events.buffer[0]).toMatchObject({
+    const harvest = genericEventsAggregate.onHarvestStarted({ isFinalHarvest: true }) // force it to put the aggregation into the event buffer
+    expect(harvest.body.ins[0]).toMatchObject({
       eventType: 'UserAction',
       timestamp: expect.any(Number),
       action: 'click',
+      actionCount: 1,
+      duration: 0,
+      target: 'button#myBtn:nth-of-type(1)',
       targetId: 'myBtn',
-      targetTag: 'button',
+      targetTag: 'BUTTON',
+      globalFoo: 'globalBar'
+    })
+  })
+
+  test('should aggregate user actions when matching target', () => {
+    getInfo(agentSetup.agentIdentifier).jsAttributes = { globalFoo: 'globalBar' }
+    const target = document.createElement('button')
+    target.id = 'myBtn'
+    genericEventsAggregate.ee.emit('ua', [{ timeStamp: 100, type: 'click', target }])
+    genericEventsAggregate.ee.emit('ua', [{ timeStamp: 200, type: 'click', target }])
+    genericEventsAggregate.ee.emit('ua', [{ timeStamp: 300, type: 'click', target }])
+    genericEventsAggregate.ee.emit('ua', [{ timeStamp: 400, type: 'click', target }])
+    genericEventsAggregate.ee.emit('ua', [{ timeStamp: 500, type: 'click', target }])
+    genericEventsAggregate.ee.emit('ua', [{ timeStamp: 600, type: 'click', target }])
+    // blur event to trigger aggregation to stop and add to harvest buffer
+    genericEventsAggregate.ee.emit('ua', [{ timeStamp: 234567, type: 'blur', target: window }])
+
+    const harvest = genericEventsAggregate.onHarvestStarted({ isFinalHarvest: true }) // force it to put the aggregation into the event buffer
+    expect(harvest.body.ins[0]).toMatchObject({
+      eventType: 'UserAction',
+      timestamp: expect.any(Number),
+      action: 'click',
+      actionCount: 6,
+      duration: 500,
+      target: 'button#myBtn:nth-of-type(1)',
+      targetId: 'myBtn',
+      targetTag: 'BUTTON',
+      globalFoo: 'globalBar'
+    })
+  })
+  test('should NOT aggregate user actions when targets are not identical', () => {
+    getInfo(agentSetup.agentIdentifier).jsAttributes = { globalFoo: 'globalBar' }
+    const target = document.createElement('button')
+    target.id = 'myBtn'
+    document.body.appendChild(target)
+    const target2 = document.createElement('button')
+    target2.id = 'myBtn'
+    document.body.appendChild(target2)
+    /** even though target1 and target2 have the same tag (button) and id (myBtn), it should still NOT aggregate them because they have different nth-of-type paths */
+    genericEventsAggregate.ee.emit('ua', [{ timeStamp: 100, type: 'click', target }])
+    genericEventsAggregate.ee.emit('ua', [{ timeStamp: 200, type: 'click', target: target2 }])
+    // blur event to trigger aggregation to stop and add to harvest buffer
+    genericEventsAggregate.ee.emit('ua', [{ timeStamp: 234567, type: 'blur', target: window }])
+
+    const harvest = genericEventsAggregate.onHarvestStarted({ isFinalHarvest: true }) // force it to put the aggregation into the event buffer
+    expect(harvest.body.ins[0]).toMatchObject({
+      eventType: 'UserAction',
+      timestamp: expect.any(Number),
+      action: 'click',
+      actionCount: 1,
+      duration: 0,
+      target: 'html>body>button#myBtn:nth-of-type(1)',
+      targetId: 'myBtn',
+      targetTag: 'BUTTON',
+      globalFoo: 'globalBar'
+    })
+    expect(harvest.body.ins[1]).toMatchObject({
+      eventType: 'UserAction',
+      timestamp: expect.any(Number),
+      action: 'click',
+      actionCount: 1,
+      duration: 0,
+      target: 'html>body>button#myBtn:nth-of-type(2)',
+      targetId: 'myBtn',
+      targetTag: 'BUTTON',
       globalFoo: 'globalBar'
     })
   })

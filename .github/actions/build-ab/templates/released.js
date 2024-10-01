@@ -24,6 +24,10 @@ window.NREUM={
     session_trace: {
       enabled: true
     },
+    performance: {
+      capture_marks: true, 
+      capture_measures: true
+    },
     proxy: {}
   },
   loader_config: {

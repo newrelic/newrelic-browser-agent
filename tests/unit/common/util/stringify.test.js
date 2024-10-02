@@ -19,10 +19,12 @@ test('should utilize JSON.stringify to serialize input data', () => {
 test.each([
   ['array', [0, 1, 'asdf', undefined, null, 'weee'], '[0,1,"asdf",null,null,"weee"]'],
   ['object', { a: 123, c: 'b', f: 'asdf', u: undefined, n: null }, '{"a":123,"c":"b","f":"asdf","n":null}'],
-  ['undefined', undefined, undefined],
+  ['undefined', undefined, ''],
   ['null', null, 'null'],
   ['number', 123, '123'],
-  ['function', function F () {}, undefined],
+  ['string', '0', '"0"'],
+  ['symbol', Symbol('foo'), ''],
+  ['function', function F () {}, ''],
   ['object w/ prototype', (() => { function F () {}; F.prototype = { a: 123 }; const obj = new F(); obj.other = 222; return obj })(), '{"other":222}'],
   ['nested json', { stringified: stringify({ a: 123, c: 'b', f: 'asdf', u: undefined, n: null }) }, '{"stringified":"{\\"a\\":123,\\"c\\":\\"b\\",\\"f\\":\\"asdf\\",\\"n\\":null}"}']
 ])('should serialize input %s properly', (_, input, expected) => {

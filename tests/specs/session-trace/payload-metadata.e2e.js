@@ -32,6 +32,13 @@ describe('STN Payload metadata checks', () => {
     const firstTimestampOffset = request.body.reduce((acc, next) => (next.s < acc) ? next.s : acc, Infinity)
     const lastTimestampOffset = request.body.reduce((acc, next) => (next.e > acc) ? next.e : acc, 0)
     // first session harvest is not reported if session is disabled
-    testExpectedTrace({ data: request, nodeCount: request.body.length, firstTimestampOffset, lastTimestampOffset, firstSessionHarvest: true })
+    testExpectedTrace({
+      data: request,
+      nodeCount: request.body.length,
+      firstTimestampOffset,
+      lastTimestampOffset,
+      firstSessionHarvest: true,
+      currentUrl: request.headers.origin + '/tests/assets/instrumented.html'
+    })
   })
 })

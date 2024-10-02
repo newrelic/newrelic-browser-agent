@@ -123,10 +123,10 @@ export class Aggregate extends AggregateBase {
                   this.addEvent({
                     eventType: 'BrowserPerformance',
                     timestamp: Math.floor(this.#agentRuntime.timeKeeper.correctRelativeTimestamp(entry.startTime)),
-                    name: entry.name,
-                    duration: entry.duration,
-                    type,
-                    ...(entry.detail && { detail: entry.detail })
+                    entryName: entry.name,
+                    entryDuration: entry.duration,
+                    entryType: type,
+                    ...(entry.detail && { entryDetail: entry.detail })
                   })
                 })
               })

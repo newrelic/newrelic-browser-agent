@@ -265,10 +265,10 @@ describe('sub-features', () => {
     expect(genericEventsAggregate.events.buffer[0]).toMatchObject({
       eventType: 'BrowserPerformance',
       timestamp: expect.any(Number),
-      name: 'test',
-      duration: 0,
-      type: 'mark',
-      detail: JSON.stringify({ foo: 'bar' })
+      entryName: 'test',
+      entryDuration: 0,
+      entryType: 'mark',
+      entryDetail: JSON.stringify({ foo: 'bar' })
     })
   })
 
@@ -305,10 +305,10 @@ describe('sub-features', () => {
     expect(genericEventsAggregate.events.buffer[0]).toMatchObject({
       eventType: 'BrowserPerformance',
       timestamp: expect.any(Number),
-      name: 'test',
-      duration: 10,
-      type: 'measure',
-      detail: JSON.stringify({ foo: 'bar' })
+      entryName: 'test',
+      entryDuration: 10,
+      entryType: 'measure',
+      entryDetail: JSON.stringify({ foo: 'bar' })
     })
   })
 })

@@ -120,20 +120,20 @@ describe('ins harvesting', () => {
 
     expect(insHarvest.length).toEqual(2) // this page sets two marks
     expect(insHarvest[0]).toMatchObject({
-      duration: 0,
+      entryDuration: 0,
       eventType: 'BrowserPerformance',
-      name: 'before-agent',
+      entryName: 'before-agent',
       pageUrl: expect.any(String),
       timestamp: expect.any(Number),
-      type: 'mark'
+      entryType: 'mark'
     })
     expect(insHarvest[1]).toMatchObject({
-      duration: 0,
+      entryDuration: 0,
       eventType: 'BrowserPerformance',
-      name: 'after-agent',
+      entryName: 'after-agent',
       pageUrl: expect.any(String),
       timestamp: expect.any(Number),
-      type: 'mark'
+      entryType: 'mark'
     })
   })
 
@@ -147,13 +147,13 @@ describe('ins harvesting', () => {
 
     expect(insHarvest.length).toEqual(1) // this page sets one measure
     expect(insHarvest[0]).toMatchObject({
-      detail: '{"foo":"bar"}',
-      duration: expect.any(Number),
+      entryDetail: '{"foo":"bar"}',
+      entryDuration: expect.any(Number),
       eventType: 'BrowserPerformance',
-      name: 'agent-load',
+      entryName: 'agent-load',
       pageUrl: expect.any(String),
       timestamp: expect.any(Number),
-      type: 'measure'
+      entryType: 'measure'
     })
   })
 

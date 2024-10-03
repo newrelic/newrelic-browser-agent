@@ -18,13 +18,12 @@ import { getRuntime } from '../../../common/config/runtime'
 import { globalScope } from '../../../common/constants/runtime'
 
 import { FEATURE_NAME } from '../constants'
-import { FEATURE_NAMES } from '../../../loaders/features/features'
+import { FEATURE_NAMES, FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { getNREUMInitializedAgent } from '../../../common/window/nreum'
 import { deregisterDrain } from '../../../common/drain/drain'
 import { now } from '../../../common/timing/now'
 import { applyFnToProps } from '../../../common/util/traverse'
-import { FEATURE_TO_ENDPOINT } from '../../utils/processed-events-util'
 
 /**
  * @typedef {import('./compute-stack-trace.js').StackInfo} StackInfo

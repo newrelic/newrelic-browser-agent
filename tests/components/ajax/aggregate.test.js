@@ -6,7 +6,6 @@ import { Instrument as Ajax } from '../../../src/features/ajax/instrument'
 import { resetAgent, setupAgent } from '../setup-agent'
 import { EventContext } from '../../../src/common/event-emitter/event-context'
 import { getInfo } from '../../../src/common/config/info'
-import * as agentConstants from '../../../src/common/constants/agent-constants'
 
 const ajaxArguments = [
   { // params
@@ -61,8 +60,8 @@ test('on interactionDiscarded, saved (old) SPA events are put back in ajaxEvents
   ajaxAggregate.ee.emit('xhr', ajaxArguments, context)
   ajaxAggregate.ee.emit('interactionDone', [interaction, false])
 
-  expect(ajaxAggregate.spaAjaxEvents[interaction.id]).toBeUndefined() // no interactions in SPA under interaction 0
-  expect(ajaxAggregate.ajaxEvents.events.length).toEqual(1)
+  expect(ajaxAggregate.underSpaEvents[interaction.id]).toBeUndefined() // no interactions in SPA under interaction 0
+  expect(ajaxAggregate.events.get().length).toEqual(1)
 })
 
 test('on returnAjax from soft nav, event is re-routed back into ajaxEvents', () => {
@@ -74,30 +73,30 @@ test('on returnAjax from soft nav, event is re-routed back into ajaxEvents', () 
   const event = jest.mocked(handleModule.handle).mock.lastCall[1][0]
   ajaxAggregate.ee.emit('returnAjax', [event], context)
 
-  expect(ajaxAggregate.ajaxEvents.events.length).toEqual(1)
-  expect(ajaxAggregate.ajaxEvents.events[0]).toEqual(expect.objectContaining({ startTime: 0, path: '/pathname' }))
+  expect(ajaxAggregate.events.get().length).toEqual(1)
+  expect(ajaxAggregate.events.get()[0]).toEqual(expect.objectContaining({ startTime: 0, path: '/pathname' }))
 })
 
 describe('storeXhr', () => {
   test('for a plain ajax request buffers in ajaxEvents', () => {
     ajaxAggregate.ee.emit('xhr', ajaxArguments, context)
 
-    expect(ajaxAggregate.ajaxEvents.events.length).toEqual(1) // non-SPA ajax requests are buffered in ajaxEvents
-    expect(Object.keys(ajaxAggregate.spaAjaxEvents).length).toEqual(0)
+    expect(ajaxAggregate.events.get().length).toEqual(1) // non-SPA ajax requests are buffered in ajaxEvents
+    expect(Object.keys(ajaxAggregate.underSpaEvents).length).toEqual(0)
 
-    const ajaxEvent = ajaxAggregate.ajaxEvents.events[0]
+    const ajaxEvent = ajaxAggregate.events.get()[0]
     expect(ajaxEvent).toEqual(expect.objectContaining({ startTime: 0, path: '/pathname' }))
   })
 
-  test('for a (old) SPA ajax request buffers in spaAjaxEvents', () => {
+  test('for a (old) SPA ajax request buffers in underSpaEvents', () => {
     const interaction = { id: 0 }
     context.spaNode = { interaction }
 
     ajaxAggregate.ee.emit('xhr', ajaxArguments, context)
 
-    const interactionAjaxEvents = ajaxAggregate.spaAjaxEvents[interaction.id]
-    expect(interactionAjaxEvents.length).toEqual(1) // SPA ajax requests are buffered in spaAjaxEvents and under its interaction id
-    expect(ajaxAggregate.ajaxEvents.events.length).toEqual(0)
+    const interactionAjaxEvents = ajaxAggregate.underSpaEvents[interaction.id]
+    expect(interactionAjaxEvents.length).toEqual(1) // SPA ajax requests are buffered in underSpaEvents and under its interaction id
+    expect(ajaxAggregate.events.get().length).toEqual(0)
 
     const spaAjaxEvent = interactionAjaxEvents[0]
     expect(spaAjaxEvent).toEqual(expect.objectContaining({ startTime: 0, path: '/pathname' }))
@@ -110,8 +109,8 @@ describe('storeXhr', () => {
 
     ajaxAggregate.ee.emit('xhr', ajaxArguments, context)
 
-    expect(ajaxAggregate.ajaxEvents.events.length).toEqual(0)
-    expect(Object.keys(ajaxAggregate.spaAjaxEvents).length).toEqual(0)
+    expect(ajaxAggregate.events.get().length).toEqual(0)
+    expect(Object.keys(ajaxAggregate.underSpaEvents).length).toEqual(0)
     expect(handleModule.handle).toHaveBeenLastCalledWith(
       'ajax',
       [expect.objectContaining({ startTime: 0, path: '/pathname' })],
@@ -153,7 +152,7 @@ describe('prepareHarvest', () => {
     }
     getInfo(agentSetup.agentIdentifier).jsAttributes = expectedCustomAttributes
 
-    const serializedPayload = ajaxAggregate.ajaxEvents.makeHarvestPayload(false)
+    const serializedPayload = ajaxAggregate.makeHarvestPayload(false)
     // serializedPayload from ajax comes back as an array of bodies now, so we just need to decode each one and flatten
     // this decoding does not happen elsewhere in the app so this only needs to happen here in this specific test
     const decodedEvents = qp.decode(serializedPayload.body)
@@ -167,10 +166,10 @@ describe('prepareHarvest', () => {
   })
 
   test('correctly exits if maxPayload is too small', () => {
-    jest.replaceProperty(agentConstants, 'MAX_PAYLOAD_SIZE', 10) // this is too small for any AJAX payload to fit in
+    ajaxAggregate.events.maxPayloadSize = 10 // this is too small for any AJAX payload to fit in
     for (let callNo = 0; callNo < 10; callNo++) ajaxAggregate.ee.emit('xhr', ajaxArguments, context)
 
-    const serializedPayload = ajaxAggregate.ajaxEvents.makeHarvestPayload(false)
+    const serializedPayload = ajaxAggregate.makeHarvestPayload(false)
     expect(serializedPayload).toBeUndefined() // payload that are each too small for limit will be dropped
   })
 })

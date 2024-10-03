@@ -10,7 +10,7 @@ import { handle } from '../../../common/event-emitter/handle'
 import { getInfo } from '../../../common/config/info'
 import { getConfigurationValue } from '../../../common/config/init'
 import { FEATURE_NAME } from '../constants'
-import { FEATURE_NAMES } from '../../../loaders/features/features'
+import { FEATURE_NAMES, FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { cumulativeLayoutShift } from '../../../common/vitals/cumulative-layout-shift'
 import { firstContentfulPaint } from '../../../common/vitals/first-contentful-paint'
@@ -21,8 +21,6 @@ import { largestContentfulPaint } from '../../../common/vitals/largest-contentfu
 import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
 import { subscribeToVisibilityChange } from '../../../common/window/page-visibility'
 import { VITAL_NAMES } from '../../../common/vitals/constants'
-import { FEATURE_TO_ENDPOINT, getStorageInstance } from '../../utils/processed-events-util'
-import { getRuntime } from '../../../common/config/runtime'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -33,8 +31,6 @@ export class Aggregate extends AggregateBase {
 
   constructor (agentIdentifier, aggregator) {
     super(agentIdentifier, aggregator, FEATURE_NAME)
-
-    this.timings = getStorageInstance(this.featureName, getRuntime(this.agentIdentifier).pendingEvents, { serializer: this.getPayload.bind(this) })
     this.curSessEndRecorded = false
 
     registerHandler('docHidden', msTimestamp => this.endCurrentSession(msTimestamp), this.featureName, this.ee)
@@ -63,8 +59,8 @@ export class Aggregate extends AggregateBase {
       }, true) // CLS node should only reports on vis change rather than on every change
 
       const scheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
-        onFinished: (result) => this.timings.postHarvestCleanup(result.retry),
-        getPayload: (options) => this.timings.makeHarvestPayload(options.retry)
+        onFinished: (result) => this.postHarvestCleanup(result.retry),
+        getPayload: (options) => this.makeHarvestPayload(options.retry)
       }, this)
       scheduler.startTimer(harvestTimeSeconds)
 
@@ -114,7 +110,7 @@ export class Aggregate extends AggregateBase {
       attrs.cls = cumulativeLayoutShift.current.value
     }
 
-    this.timings.addEvent({
+    this.events.add({
       name,
       value,
       attrs
@@ -137,7 +133,7 @@ export class Aggregate extends AggregateBase {
   }
 
   // serialize array of timing data
-  getPayload (data) {
+  serializer (data) {
     var addString = getAddStringContext(this.agentIdentifier)
 
     var payload = 'bel.6;'

@@ -16,7 +16,7 @@ import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { Serializer } from './serializer'
 import { ee } from '../../../common/event-emitter/contextual-ee'
 import * as CONSTANTS from '../constants'
-import { FEATURE_NAMES } from '../../../loaders/features/features'
+import { FEATURE_NAMES, FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { firstContentfulPaint } from '../../../common/vitals/first-contentful-paint'
 import { firstPaint } from '../../../common/vitals/first-paint'
@@ -27,7 +27,6 @@ import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { deregisterDrain } from '../../../common/drain/drain'
 import { warn } from '../../../common/util/console'
 import { EventBuffer } from '../../utils/event-buffer'
-import { FEATURE_TO_ENDPOINT } from '../../utils/processed-events-util'
 
 const {
   FEATURE_NAME, INTERACTION_EVENTS, MAX_TIMER_BUDGET, FN_START, FN_END, CB_START, INTERACTION_API, REMAINING,

@@ -11,7 +11,7 @@ import { deregisterDrain } from '../../../common/drain/drain'
 import { globalScope } from '../../../common/constants/runtime'
 import { MODE, SESSION_EVENTS } from '../../../common/session/constants'
 import { applyFnToProps } from '../../../common/util/traverse'
-import { FEATURE_TO_ENDPOINT } from '../../utils/processed-events-util'
+import { FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
 
 const ERROR_MODE_SECONDS_WINDOW = 30 * 1000 // sliding window of nodes to track when simply monitoring (but not harvesting) in error mode
 /** Reserved room for query param attrs */

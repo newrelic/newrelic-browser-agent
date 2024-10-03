@@ -14,7 +14,7 @@ import { isValidLogLevel } from '../shared/utils'
 import { applyFnToProps } from '../../../common/util/traverse'
 import { MAX_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
 import { EventBuffer } from '../../utils/event-buffer'
-import { FEATURE_TO_ENDPOINT } from '../../utils/processed-events-util'
+import { FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME

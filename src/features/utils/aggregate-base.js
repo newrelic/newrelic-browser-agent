@@ -6,10 +6,12 @@ import { gosCDN } from '../../common/window/nreum'
 import { deregisterDrain, drain } from '../../common/drain/drain'
 import { activatedFeatures } from '../../common/util/feature-flags'
 import { Obfuscator } from '../../common/util/obfuscate'
+import { EventBuffer2 } from './event-buffer'
 
 export class AggregateBase extends FeatureBase {
   constructor (...args) {
     super(...args)
+    this.events = new EventBuffer2()
     this.checkConfiguration()
     this.obfuscator = getRuntime(this.agentIdentifier).obfuscator
   }
@@ -45,6 +47,32 @@ export class AggregateBase extends FeatureBase {
   drain () {
     drain(this.agentIdentifier, this.featureName)
     this.drained = true
+  }
+
+  /**
+   * Return harvest payload. A "serializer" function can be defined on a derived class to format the payload.
+   * @param {Boolean} shouldRetryOnFail - harvester flag to backup payload for retry later if harvest request fails; this should be moved to harvester logic
+   * @returns final payload, or undefined if there are no pending events
+   */
+  makeHarvestPayload (shouldRetryOnFail = false) {
+    if (this.events.isEmpty()) return
+
+    if (shouldRetryOnFail) this.events.save()
+    const payload = this.serializer ? this.serializer(this.events.get()) : this.events.get()
+    this.events.clear()
+
+    return {
+      body: payload
+    }
+  }
+
+  /**
+   * Cleanup task after a harvest.
+   * @param {Boolean} harvestFailed - harvester flag to restore events in main buffer for retry later if request failed
+   */
+  postHarvestCleanup (harvestFailed = false) {
+    if (harvestFailed) this.events.reloadSave()
+    this.events.clearSave()
   }
 
   /**

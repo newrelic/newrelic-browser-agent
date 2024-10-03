@@ -10,7 +10,7 @@ import { windowAddEventListener } from '../../../common/event-listener/event-lis
 import { isBrowserScope, isWorkerScope } from '../../../common/constants/runtime'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { deregisterDrain } from '../../../common/drain/drain'
-import { FEATURE_TO_ENDPOINT } from '../../utils/processed-events-util'
+import { FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
 // import { WEBSOCKET_TAG } from '../../../common/wrap/wrap-websocket'
 // import { handleWebsocketEvents } from './websocket-detection'
 

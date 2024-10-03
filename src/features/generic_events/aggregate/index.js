@@ -19,7 +19,7 @@ import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { EventBuffer } from '../../utils/event-buffer'
 import { applyFnToProps } from '../../../common/util/traverse'
 import { IDEAL_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
-import { FEATURE_TO_ENDPOINT } from '../../utils/processed-events-util'
+import { FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
 
 export class Aggregate extends AggregateBase {
   #agentRuntime

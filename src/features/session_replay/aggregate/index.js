@@ -19,7 +19,7 @@ import { warn } from '../../../common/util/console'
 import { globalScope } from '../../../common/constants/runtime'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { handle } from '../../../common/event-emitter/handle'
-import { FEATURE_NAMES } from '../../../loaders/features/features'
+import { FEATURE_NAMES, FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
 import { RRWEB_VERSION } from '../../../common/constants/env'
 import { MODE, SESSION_EVENTS, SESSION_EVENT_TYPES } from '../../../common/session/constants'
 import { stringify } from '../../../common/util/stringify'
@@ -28,7 +28,6 @@ import { deregisterDrain } from '../../../common/drain/drain'
 import { now } from '../../../common/timing/now'
 import { buildNRMetaNode } from '../shared/utils'
 import { MAX_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
-import { FEATURE_TO_ENDPOINT } from '../../utils/processed-events-util'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME

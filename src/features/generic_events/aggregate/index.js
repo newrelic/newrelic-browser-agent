@@ -78,9 +78,9 @@ export class Aggregate extends AggregateBase {
                 timestamp: Math.floor(this.#agentRuntime.timeKeeper.correctRelativeTimestamp(timeStamp)),
                 action: type,
                 actionCount: aggregatedUserAction.count,
-                duration: aggregatedUserAction.relativeMs[aggregatedUserAction.relativeMs.length - 1],
+                actionDuration: aggregatedUserAction.relativeMs[aggregatedUserAction.relativeMs.length - 1],
+                actionMs: aggregatedUserAction.relativeMs,
                 rageClick: aggregatedUserAction.rageClick,
-                relativeMs: aggregatedUserAction.relativeMs,
                 target: aggregatedUserAction.selectorPath,
                 ...(isIFrameWindow(window) && { iframe: true }),
                 ...(target?.id && { targetId: target.id }),
@@ -118,6 +118,18 @@ export class Aggregate extends AggregateBase {
   }
 
   // WARNING: Insights times are in seconds. EXCEPT timestamp, which is in ms.
+  /** Some keys are set by the query params or request headers sent with the harvest and override the body values, so check those before adding new standard body values...
+   * see harvest.js#baseQueryString for more info on the query params
+   * Notably:
+   * * name: set by the `t=` query param
+   * * appId: set by the `a=` query param
+   * * standalone: set by the `sa=` query param
+   * * session: set by the `s=` query param
+   * * sessionTraceId: set by the `ptid=` query param
+   * * userAgent*: set by the userAgent header
+   * @param {object=} obj the event object for storing in the event buffer
+   * @returns void
+   */
   addEvent (obj = {}) {
     if (!obj || !Object.keys(obj).length) return
     if (!obj.eventType) {

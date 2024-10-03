@@ -57,8 +57,8 @@ describe('ins harvesting', () => {
       eventType: 'UserAction',
       action: 'click',
       actionCount: 1,
-      duration: 0,
-      relativeMs: '[0]',
+      actionDuration: 0,
+      actionMs: '[0]',
       target: 'html>body>button#pay-btn:nth-of-type(1)',
       targetId: 'pay-btn',
       targetTag: 'BUTTON',
@@ -71,8 +71,8 @@ describe('ins harvesting', () => {
       eventType: 'UserAction',
       action: 'click',
       actionCount: 5,
-      duration: expect.any(Number),
-      relativeMs: expect.any(String),
+      actionDuration: expect.any(Number),
+      actionMs: expect.any(String),
       rageClick: true,
       target: 'html>body>input#textbox:nth-of-type(1)',
       targetId: 'textbox',
@@ -81,8 +81,8 @@ describe('ins harvesting', () => {
       pageUrl: expect.any(String),
       timestamp: expect.any(Number)
     })
-    expect(clickUAs[1].duration).toBeGreaterThan(0)
-    expect(clickUAs[1].relativeMs).toEqual(expect.stringMatching(/^\[\d+(,\d+){4}\]$/))
+    expect(clickUAs[1].actionDuration).toBeGreaterThan(0)
+    expect(clickUAs[1].actionMs).toEqual(expect.stringMatching(/^\[\d+(,\d+){4}\]$/))
   })
 
   it('should detect iframes on UserActions if agent is running inside iframe', async () => {

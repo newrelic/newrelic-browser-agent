@@ -172,7 +172,7 @@ describe('JSE Error detection in various callbacks', () => {
       { message: 'Unhandled Promise Rejection: ', tested: false, meta: 'error with no message' },
       { message: 'Unhandled Promise Rejection: {}', tested: false, meta: 'map object' },
       { message: 'Unhandled Promise Rejection: {"abc":"Hello"}', tested: false, meta: 'factory function' },
-      { message: 'Unhandled Promise Rejection: undefined', tested: false, meta: 'uncalled function' },
+      { message: 'Unhandled Promise Rejection: ', tested: false, meta: 'uncalled function' },
       { message: 'Unhandled Promise Rejection: {"abc":"circular"}', tested: false, meta: 'circular object' }
     ]
     assertErrorAttributes(errorQuery)

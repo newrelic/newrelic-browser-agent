@@ -25,6 +25,9 @@ test.each([
   ['string', '0', '"0"'],
   ['symbol', Symbol('foo'), ''],
   ['function', function F () {}, ''],
+  ['toJSON valid', { toJSON: () => ({ foo: 'bar' }) }, '{"foo":"bar"}'],
+  ['toJSON undefined', { toJSON: () => undefined }, ''],
+  ['toJSON error', { toJSON: () => { throw new Error('toJSON') } }, ''],
   ['object w/ prototype', (() => { function F () {}; F.prototype = { a: 123 }; const obj = new F(); obj.other = 222; return obj })(), '{"other":222}'],
   ['nested json', { stringified: stringify({ a: 123, c: 'b', f: 'asdf', u: undefined, n: null }) }, '{"stringified":"{\\"a\\":123,\\"c\\":\\"b\\",\\"f\\":\\"asdf\\",\\"n\\":null}"}']
 ])('should serialize input %s properly', (_, input, expected) => {

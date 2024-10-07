@@ -12,6 +12,7 @@ import { globalScope } from '../../../common/constants/runtime'
 import { MODE, SESSION_EVENTS } from '../../../common/session/constants'
 import { applyFnToProps } from '../../../common/util/traverse'
 import { cleanURL } from '../../../common/url/clean-url'
+import { single } from '../../../common/util/invoke'
 
 const ERROR_MODE_SECONDS_WINDOW = 30 * 1000 // sliding window of nodes to track when simply monitoring (but not harvesting) in error mode
 /** Reserved room for query param attrs */
@@ -93,11 +94,13 @@ export class Aggregate extends AggregateBase {
     registerHandler('trace-jserror', (...args) => this.traceStorage.storeErrorAgg(...args), this.featureName, this.ee)
     registerHandler('pvtAdded', (...args) => this.traceStorage.processPVT(...args), this.featureName, this.ee)
 
-    if (typeof PerformanceNavigationTiming !== 'undefined') {
-      this.traceStorage.storeTiming(globalScope.performance?.getEntriesByType?.('navigation')[0])
-    } else {
-      this.traceStorage.storeTiming(globalScope.performance?.timing, true)
-    }
+    single(() => {
+      if (typeof PerformanceNavigationTiming !== 'undefined') {
+        this.traceStorage.storeTiming(globalScope.performance?.getEntriesByType?.('navigation')[0])
+      } else {
+        this.traceStorage.storeTiming(globalScope.performance?.timing, true)
+      }
+    })
 
     /** Only start actually harvesting if running in full mode at init time */
     if (this.mode === MODE.FULL) this.startHarvesting()

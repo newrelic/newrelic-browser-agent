@@ -94,6 +94,12 @@ export class Aggregate extends AggregateBase {
 
   prepareHarvest (options = {}) {
     if (this.blocked || !this.bufferedLogs.hasData) return
+    /** These attributes are evaluated and dropped at ingest processing time and do not get stored on NRDB */
+    const unbilledAttributes = {
+      'instrumentation.provider': 'browser',
+      'instrumentation.version': this.#agentRuntime.version,
+      'instrumentation.name': this.#agentRuntime.loaderType
+    }
     /** see https://source.datanerd.us/agents/rum-specs/blob/main/browser/Log for logging spec */
     const payload = {
       qs: {
@@ -103,9 +109,6 @@ export class Aggregate extends AggregateBase {
         common: {
           /** Attributes in the `common` section are added to `all` logs generated in the payload */
           attributes: {
-            'instrumentation.provider': 'browser',
-            'instrumentation.version': this.#agentRuntime.version,
-            'instrumentation.name': this.#agentRuntime.loaderType,
             'entity.guid': this.#agentRuntime.appMetadata?.agents?.[0]?.entityGuid, // browser entity guid as provided from RUM response
             session: this.#agentRuntime?.session?.state.value || '0', // The session ID that we generate and keep across page loads
             hasReplay: this.#agentRuntime?.session?.state.sessionReplayMode === 1, // True if a session replay recording is running
@@ -113,7 +116,8 @@ export class Aggregate extends AggregateBase {
             ptid: this.#agentRuntime.ptid, // page trace id
             appId: this.#agentInfo.applicationID, // Application ID from info object,
             standalone: Boolean(this.#agentInfo.sa), // copy paste (true) vs APM (false)
-            agentVersion: this.#agentRuntime.version // browser agent version
+            agentVersion: this.#agentRuntime.version, // browser agent version,
+            ...unbilledAttributes
           }
         },
         /** logs section contains individual unique log entries */

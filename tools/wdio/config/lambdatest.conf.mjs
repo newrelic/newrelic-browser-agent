@@ -5,7 +5,7 @@ import child_process from 'node:child_process'
 import browsersList from '../../browsers-lists/lt-browsers-list.mjs'
 import args from '../args.mjs'
 import { getBrowserName } from '../../browsers-lists/utils.mjs'
-import webviewAssetIds from '../../lambda-test/webview-asset-ids'
+import webviewAssetIds from '../../lambda-test/webview-asset-ids.mjs'
 
 const require = module.createRequire(import.meta.url)
 const supportedDesktop = require('../../browsers-lists/lt-desktop-supported.json')

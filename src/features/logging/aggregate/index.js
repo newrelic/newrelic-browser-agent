@@ -103,6 +103,9 @@ export class Aggregate extends AggregateBase {
         common: {
           /** Attributes in the `common` section are added to `all` logs generated in the payload */
           attributes: {
+            'instrumentation.provider': 'browser',
+            'instrumentation.version': this.#agentRuntime.version,
+            'instrumentation.name': this.#agentRuntime.loaderType,
             'entity.guid': this.#agentRuntime.appMetadata?.agents?.[0]?.entityGuid, // browser entity guid as provided from RUM response
             session: this.#agentRuntime?.session?.state.value || '0', // The session ID that we generate and keep across page loads
             hasReplay: this.#agentRuntime?.session?.state.sessionReplayMode === 1, // True if a session replay recording is running

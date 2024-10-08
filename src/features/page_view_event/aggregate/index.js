@@ -114,12 +114,23 @@ export class Aggregate extends AggregateBase {
       endpoint: 'rum',
       payload: { qs: queryParameters, body },
       opts: { needResponse: true, sendEmptyBody: true },
-      cbFinished: ({ status, responseText, xhr }) => {
+      cbFinished: ({ status, responseText, xhr, fetchResponse }) => {
         const rumEndTime = now()
 
         if (status >= 400 || status === 0) {
           // Adding retry logic for the rum call will be a separate change
           this.ee.abort()
+          return
+        }
+
+        try {
+          this.timeKeeper.processRumRequest(xhr ?? fetchResponse, rumStartTime, rumEndTime)
+          if (!this.timeKeeper.ready) throw new Error('TimeKeeper not ready')
+
+          agentRuntime.timeKeeper = this.timeKeeper
+        } catch (error) {
+          this.ee.abort()
+          warn(17, error)
           return
         }
 

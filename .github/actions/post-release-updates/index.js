@@ -82,13 +82,6 @@ await spawnAsync(
   DEFAULT_SPAWN_OPTIONS
 )
 
-console.log('Updating LambdaTest browsers lists')
-await spawnAsync(
-  `npm${os.platform() === 'win32' ? '.cmd' : ''}`,
-  ['run', 'lt:upload-webview-assets'],
-  DEFAULT_SPAWN_OPTIONS
-)
-
 console.log('Updating third-party licenses')
 await spawnAsync(
   `npm${os.platform() === 'win32' ? '.cmd' : ''}`,
@@ -118,8 +111,7 @@ if (args.openPullRequest) {
       'tools/browsers-lists/*.json',
       'third_party_manifest.json',
       'THIRD_PARTY_NOTICES.md',
-      'tools/test-builds/**/package.json',
-      'tools/lambda-test/webview-asset-ids.mjs'
+      'tools/test-builds/**/package.json'
     ],
     COMMIT_MESSAGE,
     true

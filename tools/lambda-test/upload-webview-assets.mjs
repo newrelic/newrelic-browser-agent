@@ -29,7 +29,7 @@ exec(iosUpload, (error, stdout, stderr) => {
 function checkDone () {
   if (androidID && iosID) {
     console.log('uploaded...', androidID, iosID)
-    fs.writeFileSync(`${outputDir}/webview-asset-ids.mjs`, `export default { androidID: '${androidID}', iosID: '${iosID}' }\n`)
+    fs.writeFileSync(`${outputDir}/webview-asset-ids.js`, `export default { androidID: '${androidID}', iosID: '${iosID}' }\n`)
     process.exit()
   }
 }

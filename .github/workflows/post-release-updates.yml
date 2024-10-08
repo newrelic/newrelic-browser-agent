@@ -12,9 +12,6 @@ jobs:
   post-release-updates:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    env:
-      LAMBDA_USERNAME: ${{ secrets.LAMBDA_USERNAME }}
-      LAMBDA_ACCESS_KEY: ${{ secrets.LAMBDA_ACCESS_KEY }}
     defaults:
       run:
         shell: bash

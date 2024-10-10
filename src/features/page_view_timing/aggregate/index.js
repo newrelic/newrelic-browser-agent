@@ -7,8 +7,6 @@ import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { handle } from '../../../common/event-emitter/handle'
-import { getInfo } from '../../../common/config/info'
-import { getConfigurationValue } from '../../../common/config/init'
 import { FEATURE_NAME } from '../constants'
 import { FEATURE_NAMES, FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
@@ -29,14 +27,14 @@ export class Aggregate extends AggregateBase {
     this.addTiming(name, value, attrs)
   }
 
-  constructor (agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator, FEATURE_NAME)
+  constructor (thisAgent) {
+    super(thisAgent, FEATURE_NAME)
     this.curSessEndRecorded = false
 
     registerHandler('docHidden', msTimestamp => this.endCurrentSession(msTimestamp), this.featureName, this.ee)
     registerHandler('winPagehide', msTimestamp => this.recordPageUnload(msTimestamp), this.featureName, this.ee)
 
-    const harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'page_view_timing.harvestTimeSeconds') || 30
+    const harvestTimeSeconds = thisAgent.init.page_view_timing.harvestTimeSeconds || 30
 
     this.waitForFlags(([])).then(() => {
       /* It's important that CWV api, like "onLCP", is called before the **scheduler** is initialized. The reason is because they listen to the same
@@ -121,11 +119,10 @@ export class Aggregate extends AggregateBase {
 
   appendGlobalCustomAttributes (timing) {
     var timingAttributes = timing.attrs || {}
-    var customAttributes = getInfo(this.agentIdentifier).jsAttributes || {}
 
     var reservedAttributes = ['size', 'eid', 'cls', 'type', 'fid', 'elTag', 'elUrl', 'net-type',
       'net-etype', 'net-rtt', 'net-dlink']
-    Object.entries(customAttributes || {}).forEach(([key, val]) => {
+    Object.entries(this.agentRef.info.jsAttributes || {}).forEach(([key, val]) => {
       if (reservedAttributes.indexOf(key) < 0) {
         timingAttributes[key] = val
       }

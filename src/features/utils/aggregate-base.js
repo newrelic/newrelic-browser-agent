@@ -1,19 +1,20 @@
 import { FeatureBase } from './feature-base'
-import { getInfo, isValid } from '../../common/config/info'
-import { getRuntime } from '../../common/config/runtime'
+import { isValid } from '../../common/config/info'
 import { configure } from '../../loaders/configure/configure'
 import { gosCDN } from '../../common/window/nreum'
 import { deregisterDrain, drain } from '../../common/drain/drain'
 import { activatedFeatures } from '../../common/util/feature-flags'
 import { Obfuscator } from '../../common/util/obfuscate'
 import { EventBuffer2 } from './event-buffer'
+import { FEATURE_TO_ENDPOINT } from '../../loaders/features/features'
 
 export class AggregateBase extends FeatureBase {
-  constructor (...args) {
-    super(...args)
-    this.events = new EventBuffer2()
-    this.checkConfiguration()
-    this.obfuscator = getRuntime(this.agentIdentifier).obfuscator
+  constructor (thisAgentRef, featureName) {
+    super(thisAgentRef.agentIdentifier, featureName)
+    this.agentRef = thisAgentRef
+    this.events = FEATURE_TO_ENDPOINT[this.featureName] === 'jserrors' ? undefined : new EventBuffer2()
+    this.checkConfiguration(thisAgentRef)
+    this.obfuscator = thisAgentRef.runtime.obfuscator
   }
 
   /**
@@ -58,11 +59,11 @@ export class AggregateBase extends FeatureBase {
     if (this.events.isEmpty()) return
 
     if (shouldRetryOnFail) this.events.save()
-    const payload = this.serializer ? this.serializer(this.events.get()) : this.events.get()
+    const body = this.serializer ? this.serializer(this.events.get()) : this.events.get()
     this.events.clear()
 
     return {
-      body: payload
+      body
     }
   }
 
@@ -79,7 +80,7 @@ export class AggregateBase extends FeatureBase {
    * Checks for additional `jsAttributes` items to support backward compatibility with implementations of the agent where
    * loader configurations may appear after the loader code is executed.
    */
-  checkConfiguration () {
+  checkConfiguration (existingAgent) {
     // NOTE: This check has to happen at aggregator load time
     if (!isValid(this.agentIdentifier)) {
       const cdn = gosCDN()
@@ -87,7 +88,7 @@ export class AggregateBase extends FeatureBase {
       try {
         jsAttributes = {
           ...jsAttributes,
-          ...getInfo(this.agentIdentifier)?.jsAttributes
+          ...existingAgent.info?.jsAttributes
         }
       } catch (err) {
         // do nothing
@@ -98,13 +99,12 @@ export class AggregateBase extends FeatureBase {
           ...cdn.info,
           jsAttributes
         },
-        runtime: getRuntime(this.agentIdentifier)
+        runtime: existingAgent.runtime
       })
     }
 
-    const runtime = getRuntime(this.agentIdentifier)
-    if (!runtime.obfuscator) {
-      runtime.obfuscator = new Obfuscator(this.agentIdentifier)
+    if (!existingAgent.runtime.obfuscator) {
+      existingAgent.runtime.obfuscator = new Obfuscator(this.agentIdentifier)
     }
   }
 }

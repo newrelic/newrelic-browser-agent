@@ -10,7 +10,6 @@ import { featurePriority, FEATURE_NAMES } from './features/features'
 // required features
 import { Instrument as PageViewEvent } from '../features/page_view_event/instrument'
 // common files
-import { Aggregator } from '../common/aggregate/aggregator'
 import { gosNREUM, setNREUMInitializedAgent } from '../common/window/nreum'
 import { warn } from '../common/util/console'
 import { globalScope } from '../common/constants/runtime'
@@ -34,7 +33,6 @@ export class Agent extends AgentBase {
       return
     }
 
-    this.sharedAggregator = new Aggregator({ agentIdentifier: this.agentIdentifier })
     this.features = {}
     setNREUMInitializedAgent(this.agentIdentifier, this) // append this agent onto the global NREUM.initializedAgents
 
@@ -80,7 +78,7 @@ export class Agent extends AgentBase {
           })
         }
 
-        this.features[InstrumentCtor.featureName] = new InstrumentCtor(this.agentIdentifier, this.sharedAggregator)
+        this.features[InstrumentCtor.featureName] = new InstrumentCtor(this)
       })
     } catch (err) {
       warn(22, err)

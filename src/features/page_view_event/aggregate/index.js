@@ -1,8 +1,7 @@
 import { globalScope, isBrowserScope, originTime } from '../../../common/constants/runtime'
 import { addPT, addPN } from '../../../common/timing/nav-timing'
 import { stringify } from '../../../common/util/stringify'
-import { getInfo, isValid } from '../../../common/config/info'
-import { getRuntime } from '../../../common/config/runtime'
+import { isValid } from '../../../common/config/info'
 import { Harvest } from '../../../common/harvest/harvest'
 import * as CONSTANTS from '../constants'
 import { getActivatedFeaturesFlags } from './initialized-features'
@@ -18,15 +17,15 @@ import { applyFnToProps } from '../../../common/util/traverse'
 
 export class Aggregate extends AggregateBase {
   static featureName = CONSTANTS.FEATURE_NAME
-  constructor (agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator, CONSTANTS.FEATURE_NAME)
+  constructor (thisAgent) {
+    super(thisAgent, CONSTANTS.FEATURE_NAME)
 
     this.timeToFirstByte = 0
     this.firstByteToWindowLoad = 0 // our "frontend" duration
     this.firstByteToDomContent = 0 // our "dom processing" duration
-    this.timeKeeper = new TimeKeeper(this.agentIdentifier)
+    this.timeKeeper = new TimeKeeper(thisAgent.agentIdentifier)
 
-    if (!isValid(agentIdentifier)) {
+    if (!isValid(thisAgent.agentIdentifier)) {
       this.ee.abort()
       return warn(43)
     }
@@ -47,8 +46,7 @@ export class Aggregate extends AggregateBase {
   }
 
   sendRum () {
-    const info = getInfo(this.agentIdentifier)
-    const agentRuntime = getRuntime(this.agentIdentifier)
+    const info = this.agentRef.info
     const harvester = new Harvest(this)
     const measures = {}
 
@@ -74,7 +72,7 @@ export class Aggregate extends AggregateBase {
       at: info.atts
     }
 
-    if (agentRuntime.session) queryParameters.fsh = Number(agentRuntime.session.isNew) // "first session harvest" aka RUM request or PageView event of a session
+    if (this.agentRef.runtime.session) queryParameters.fsh = Number(this.agentRef.runtime.session.isNew) // "first session harvest" aka RUM request or PageView event of a session
 
     let body
     if (typeof info.jsAttributes === 'object' && Object.keys(info.jsAttributes).length > 0) {
@@ -124,13 +122,13 @@ export class Aggregate extends AggregateBase {
           try {
             this.timeKeeper.processRumRequest(xhr, rumStartTime, rumEndTime, app.nrServerTime)
             if (!this.timeKeeper.ready) throw new Error('TimeKeeper not ready')
-            agentRuntime.timeKeeper = this.timeKeeper
+            this.agentRef.runtime.timeKeeper = this.timeKeeper
           } catch (error) {
             this.ee.abort()
             warn(17, error)
             return
           }
-          agentRuntime.appMetadata = app
+          this.agentRef.runtime.appMetadata = app
           activateFeatures(flags, this.agentIdentifier)
           this.drain()
         } catch (err) {

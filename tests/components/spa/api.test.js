@@ -1,5 +1,4 @@
 import helpers from './helpers'
-import { Aggregator } from '../../../src/common/aggregate/aggregator'
 import { ee } from '../../../src/common/event-emitter/contextual-ee'
 import { Spa } from '../../../src/features/spa'
 import { getInfo } from '../../../src/common/config/info'
@@ -30,8 +29,7 @@ beforeAll(async () => {
   mockCurrentInfo = { jsAttributes: {} }
   getInfo.mockReturnValue(mockCurrentInfo)
 
-  const aggregator = new Aggregator({ agentIdentifier, ee })
-  spaInstrument = new Spa(agentIdentifier, aggregator)
+  spaInstrument = new Spa({ agentIdentifier, info: mockCurrentInfo, init: { spa: { enabled: true } }, runtime: {} })
   await expect(spaInstrument.onAggregateImported).resolves.toEqual(true)
   spaAggregate = spaInstrument.featAggregate
   spaAggregate.blocked = true

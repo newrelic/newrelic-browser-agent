@@ -5,9 +5,6 @@
 import { stringify } from '../../../common/util/stringify'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { cleanURL } from '../../../common/url/clean-url'
-import { getInfo } from '../../../common/config/info'
-import { getConfiguration } from '../../../common/config/init'
-import { getRuntime } from '../../../common/config/runtime'
 import { FEATURE_NAME } from '../constants'
 import { isBrowserScope } from '../../../common/constants/runtime'
 import { AggregateBase } from '../../utils/aggregate-base'
@@ -22,20 +19,15 @@ import { IDEAL_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
 import { FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
 
 export class Aggregate extends AggregateBase {
-  #agentRuntime
   static featureName = FEATURE_NAME
-  constructor (agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator, FEATURE_NAME)
-    const agentInit = getConfiguration(this.agentIdentifier)
+  constructor (thisAgent) {
+    super(thisAgent, FEATURE_NAME)
 
     this.eventsPerHarvest = 1000
-    this.harvestTimeSeconds = agentInit.generic_events.harvestTimeSeconds
+    this.harvestTimeSeconds = thisAgent.init.generic_events.harvestTimeSeconds
 
     this.referrerUrl = (isBrowserScope && document.referrer) ? cleanURL(document.referrer) : undefined
-
     this.events = new EventBuffer()
-
-    this.#agentRuntime = getRuntime(this.agentIdentifier)
 
     this.waitForFlags(['ins']).then(([ins]) => {
       if (!ins) {
@@ -44,12 +36,12 @@ export class Aggregate extends AggregateBase {
         return
       }
 
-      if (agentInit.page_action.enabled) {
+      if (thisAgent.init.page_action.enabled) {
         registerHandler('api-addPageAction', (timestamp, name, attributes) => {
           this.addEvent({
             ...attributes,
             eventType: 'PageAction',
-            timestamp: Math.floor(this.#agentRuntime.timeKeeper.correctRelativeTimestamp(timestamp)),
+            timestamp: Math.floor(this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(timestamp)),
             timeSinceLoad: timestamp / 1000,
             actionName: name,
             referrerUrl: this.referrerUrl,
@@ -62,11 +54,11 @@ export class Aggregate extends AggregateBase {
         }, this.featureName, this.ee)
       }
 
-      if (agentInit.user_actions.enabled) {
+      if (thisAgent.init.user_actions.enabled) {
         registerHandler('ua', (evt) => {
           this.addEvent({
             eventType: 'UserAction',
-            timestamp: Math.floor(this.#agentRuntime.timeKeeper.correctRelativeTimestamp(evt.timeStamp)),
+            timestamp: Math.floor(this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(evt.timeStamp)),
             action: evt.type,
             targetId: evt.target?.id,
             targetTag: evt.target?.tagName,
@@ -99,14 +91,14 @@ export class Aggregate extends AggregateBase {
 
     const defaultEventAttributes = {
       /** should be overridden by the event-specific attributes, but just in case -- set it to now() */
-      timestamp: Math.floor(this.#agentRuntime.timeKeeper.correctRelativeTimestamp(now())),
+      timestamp: Math.floor(this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(now())),
       /** all generic events require a pageUrl */
-      pageUrl: cleanURL(getRuntime(this.agentIdentifier).origin)
+      pageUrl: cleanURL(this.agentRef.runtime.origin)
     }
 
     const eventAttributes = {
       /** Agent-level custom attributes */
-      ...(getInfo(this.agentIdentifier).jsAttributes || {}),
+      ...(this.agentRef.info.jsAttributes || {}),
       /** Fallbacks for required properties in-case the event did not supply them, should take precedence over agent-level custom attrs */
       ...defaultEventAttributes,
       /** Event-specific attributes take precedence over agent-level custom attributes and fallbacks */
@@ -119,7 +111,7 @@ export class Aggregate extends AggregateBase {
   }
 
   onHarvestStarted (options) {
-    const { userAttributes, atts } = getInfo(this.agentIdentifier)
+    const { userAttributes, atts } = this.agentRef.info
     if (!this.events.hasData) return
     var payload = ({
       qs: {

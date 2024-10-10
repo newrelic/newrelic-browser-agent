@@ -238,7 +238,8 @@ A lot of new frameworks support the concept of server-side rendering the pages o
 
 ## Disclaimers
 
-The session replay library shipping as part of the browser agent is not turned on by default. For information on the use of this feature, see [Session Replay](#session-replay)
+* The session replay feature is not turned on by default. For information on the use of this feature, see [Session Replay](#session-replay)
+* As part of the improvement efforts around our SPA capabilities, the `createTracer` API has been [deprecated](https://docs.newrelic.com/eol/2024/04/eol-04-24-24-createtracer/). Please engage in removing usage of that library. If tracking task duration, we recommend utilizing the generic browser performance mark and measure APIs, which will gain native detection support from the agent in a future update.
 
 ## Support
 

@@ -5,10 +5,10 @@ import * as loggingUtilsModule from '../../../src/features/logging/shared/utils'
 import { Instrument as Logging } from '../../../src/features/logging/instrument'
 import { faker } from '@faker-js/faker'
 
-let agentSetup
+let mainAgent
 
 beforeAll(async () => {
-  agentSetup = setupAgent()
+  mainAgent = setupAgent()
 })
 
 let loggingInstrument
@@ -16,11 +16,11 @@ let loggingInstrument
 beforeEach(async () => {
   jest.spyOn(loggingUtilsModule, 'bufferLog')
 
-  loggingInstrument = new Logging(agentSetup.agentIdentifier, agentSetup.aggregator)
+  loggingInstrument = new Logging(mainAgent)
 })
 
 test('should subscribe to wrap-logger events and buffer them', async () => {
-  const instanceEE = ee.get(agentSetup.agentIdentifier)
+  const instanceEE = ee.get(mainAgent.agentIdentifier)
   expect(instanceEE.on).toHaveBeenCalledWith('wrap-logger-end', expect.any(Function))
 
   const myLoggerSuite = {

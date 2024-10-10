@@ -5,9 +5,6 @@
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { stringify } from '../../../common/util/stringify'
 import { handle } from '../../../common/event-emitter/handle'
-import { getInfo } from '../../../common/config/info'
-import { getConfiguration } from '../../../common/config/init'
-import { getRuntime } from '../../../common/config/runtime'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { setDenyList, shouldCollectEvent } from '../../../common/deny-list/deny-list'
 import { FEATURE_NAME } from '../constants'
@@ -21,19 +18,12 @@ import { EventBuffer } from '../../utils/event-buffer'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
-  #agentInfo
-  #agentRuntime
-  #agentInit
 
-  constructor (agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator, FEATURE_NAME)
+  constructor (thisAgent) {
+    super(thisAgent, FEATURE_NAME)
 
-    this.#agentInfo = getInfo(agentIdentifier)
-    this.#agentRuntime = getRuntime(agentIdentifier)
-    this.#agentInit = getConfiguration(agentIdentifier)
-
-    const harvestTimeSeconds = this.#agentInit.ajax.harvestTimeSeconds || 10
-    setDenyList(this.#agentRuntime.denyList)
+    const harvestTimeSeconds = thisAgent.init.ajax.harvestTimeSeconds || 10
+    setDenyList(thisAgent.runtime.denyList)
 
     this.ajaxEvents = new EventBuffer()
     this.spaAjaxEvents = {}
@@ -78,15 +68,15 @@ export class Aggregate extends AggregateBase {
     }
 
     const shouldCollect = shouldCollectEvent(params)
-    const shouldOmitAjaxMetrics = this.#agentInit.feature_flags?.includes('ajax_metrics_deny_list')
+    const shouldOmitAjaxMetrics = this.agentRef.init.feature_flags?.includes('ajax_metrics_deny_list')
 
     // store for timeslice metric (harvested by jserrors feature)
     if (shouldCollect || !shouldOmitAjaxMetrics) {
-      this.aggregator.store('xhr', hash, params, metrics)
+      this.agentRef.sharedAggregator.store('xhr', hash, params, metrics)
     }
 
     if (!shouldCollect) {
-      if (params.hostname === this.#agentInfo.errorBeacon || (this.#agentInit.proxy?.beacon && params.hostname === this.#agentInit.proxy.beacon)) {
+      if (params.hostname === this.agentRef.info.errorBeacon || (this.agentRef.init.proxy?.beacon && params.hostname === this.agentRef.init.proxy.beacon)) {
         // This doesn't make a distinction if the same-domain request is going to a different port or path...
         handle(SUPPORTABILITY_METRIC_CHANNEL, ['Ajax/Events/Excluded/Agent'], undefined, FEATURE_NAMES.metrics, this.ee)
 
@@ -118,7 +108,7 @@ export class Aggregate extends AggregateBase {
       event.spanId = ctx.dt.spanId
       event.traceId = ctx.dt.traceId
       event.spanTimestamp = Math.floor(
-        this.#agentRuntime.timeKeeper.correctAbsoluteTimestamp(ctx.dt.timestamp)
+        this.agentRef.runtime.timeKeeper.correctAbsoluteTimestamp(ctx.dt.timestamp)
       )
     }
 

@@ -1,6 +1,3 @@
-import { getInfo } from '../../../common/config/info'
-import { getConfigurationValue } from '../../../common/config/init'
-import { getRuntime } from '../../../common/config/runtime'
 import { handle } from '../../../common/event-emitter/handle'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
@@ -17,18 +14,13 @@ import { EventBuffer } from '../../utils/event-buffer'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
-  #agentRuntime
-  #agentInfo
-  constructor (agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator, FEATURE_NAME)
+  constructor (thisAgent) {
+    super(thisAgent, FEATURE_NAME)
 
     /** held logs before sending */
     this.bufferedLogs = new EventBuffer()
 
-    this.#agentRuntime = getRuntime(this.agentIdentifier)
-    this.#agentInfo = getInfo(this.agentIdentifier)
-
-    this.harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'logging.harvestTimeSeconds')
+    this.harvestTimeSeconds = thisAgent.init.logging.harvestTimeSeconds
 
     this.waitForFlags([]).then(() => {
       this.scheduler = new HarvestScheduler('browser/logs', {
@@ -70,7 +62,7 @@ export class Aggregate extends AggregateBase {
     if (typeof message !== 'string' || !message) return warn(32)
 
     const log = new Log(
-      Math.floor(this.#agentRuntime.timeKeeper.correctRelativeTimestamp(timestamp)),
+      Math.floor(this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(timestamp)),
       message,
       attributes,
       level
@@ -97,20 +89,20 @@ export class Aggregate extends AggregateBase {
     /** see https://source.datanerd.us/agents/rum-specs/blob/main/browser/Log for logging spec */
     const payload = {
       qs: {
-        browser_monitoring_key: this.#agentInfo.licenseKey
+        browser_monitoring_key: this.agentRef.info.licenseKey
       },
       body: [{
         common: {
           /** Attributes in the `common` section are added to `all` logs generated in the payload */
           attributes: {
-            'entity.guid': this.#agentRuntime.appMetadata?.agents?.[0]?.entityGuid, // browser entity guid as provided from RUM response
-            session: this.#agentRuntime?.session?.state.value || '0', // The session ID that we generate and keep across page loads
-            hasReplay: this.#agentRuntime?.session?.state.sessionReplayMode === 1, // True if a session replay recording is running
-            hasTrace: this.#agentRuntime?.session?.state.sessionTraceMode === 1, // True if a session trace recording is running
-            ptid: this.#agentRuntime.ptid, // page trace id
-            appId: this.#agentInfo.applicationID, // Application ID from info object,
-            standalone: Boolean(this.#agentInfo.sa), // copy paste (true) vs APM (false)
-            agentVersion: this.#agentRuntime.version // browser agent version
+            'entity.guid': this.agentRef.runtime.appMetadata?.agents?.[0]?.entityGuid, // browser entity guid as provided from RUM response
+            session: this.agentRef.runtime?.session?.state.value || '0', // The session ID that we generate and keep across page loads
+            hasReplay: this.agentRef.runtime?.session?.state.sessionReplayMode === 1, // True if a session replay recording is running
+            hasTrace: this.agentRef.runtime?.session?.state.sessionTraceMode === 1, // True if a session trace recording is running
+            ptid: this.agentRef.runtime.ptid, // page trace id
+            appId: this.agentRef.info.applicationID, // Application ID from info object,
+            standalone: Boolean(this.agentRef.info.sa), // copy paste (true) vs APM (false)
+            agentVersion: this.agentRef.runtime.version // browser agent version
           }
         },
         /** logs section contains individual unique log entries */

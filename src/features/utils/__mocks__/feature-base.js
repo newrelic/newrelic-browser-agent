@@ -1,6 +1,5 @@
-export const FeatureBase = jest.fn(function (agentIdentifier, aggregator, featureName) {
+export const FeatureBase = jest.fn(function (agentIdentifier, featureName) {
   this.agentIdentifier = agentIdentifier
-  this.aggregator = aggregator
   this.featureName = featureName
 
   this.ee = {

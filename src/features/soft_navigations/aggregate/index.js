@@ -1,4 +1,3 @@
-import { getConfigurationValue } from '../../../common/config/init'
 import { deregisterDrain } from '../../../common/drain/drain'
 import { handle } from '../../../common/event-emitter/handle'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
@@ -16,14 +15,14 @@ import { Interaction } from './interaction'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
-  constructor (agentIdentifier, aggregator, { domObserver }) {
-    super(agentIdentifier, aggregator, FEATURE_NAME)
+  constructor (thisAgent, { domObserver }) {
+    super(thisAgent, FEATURE_NAME)
 
-    const harvestTimeSeconds = getConfigurationValue(agentIdentifier, 'soft_navigations.harvestTimeSeconds') || 10
+    const harvestTimeSeconds = thisAgent.init.soft_navigations.harvestTimeSeconds || 10
     this.interactionsToHarvest = new EventBuffer()
     this.domObserver = domObserver
 
-    this.initialPageLoadInteraction = new InitialPageLoadInteraction(agentIdentifier)
+    this.initialPageLoadInteraction = new InitialPageLoadInteraction(thisAgent.agentIdentifier)
     timeToFirstByte.subscribe(({ attrs }) => {
       const loadEventTime = attrs.navigationEntry.loadEventEnd
       this.initialPageLoadInteraction.forceSave = true
@@ -45,7 +44,7 @@ export class Aggregate extends AggregateBase {
           onFinished: this.onHarvestFinished.bind(this),
           retryDelay: harvestTimeSeconds,
           onUnload: () => this.interactionInProgress?.done() // return any held ajax or jserr events so they can be sent with EoL harvest
-        }, { agentIdentifier, ee: this.ee })
+        }, this)
         scheduler.harvest.on('events', this.onHarvestStarted.bind(this))
         scheduler.startTimer(harvestTimeSeconds, 0)
       } else {

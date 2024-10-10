@@ -1,5 +1,3 @@
-import { getConfiguration } from '../../../common/config/init'
-import { getRuntime } from '../../../common/config/runtime'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { FEATURE_NAME, SUPPORTABILITY_METRIC, CUSTOM_METRIC, SUPPORTABILITY_METRIC_CHANNEL, CUSTOM_METRIC_CHANNEL/*, WATCHABLE_WEB_SOCKET_EVENTS */ } from '../constants'
@@ -16,15 +14,15 @@ import { isIFrameWindow } from '../../../common/dom/iframe'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
-  constructor (agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator, FEATURE_NAME)
+  constructor (thisAgent) {
+    super(thisAgent, FEATURE_NAME)
 
     this.waitForFlags(['err']).then(([errFlag]) => {
       if (errFlag) {
         // *cli, Mar 23 - Per NR-94597, this feature should only harvest ONCE at the (potential) EoL time of the page.
         const scheduler = new HarvestScheduler('jserrors', { onUnload: () => this.unload() }, this)
         // this is needed to ensure EoL is "on" and sent
-        scheduler.harvest.on('jserrors', () => ({ body: this.aggregator.take(['cm', 'sm']) }))
+        scheduler.harvest.on('jserrors', () => ({ body: this.agentRef.sharedAggregator.take(['cm', 'sm']) }))
         this.drain()
       } else {
         this.blocked = true // if rum response determines that customer lacks entitlements for spa endpoint, this feature shouldn't harvest
@@ -44,20 +42,20 @@ export class Aggregate extends AggregateBase {
     if (this.blocked) return
     const type = SUPPORTABILITY_METRIC
     const params = { name }
-    this.aggregator.storeMetric(type, name, params, value)
+    this.agentRef.sharedAggregator.storeMetric(type, name, params, value)
   }
 
   storeEventMetrics (name, metrics) {
     if (this.blocked) return
     const type = CUSTOM_METRIC
     const params = { name }
-    this.aggregator.store(type, name, params, metrics)
+    this.agentRef.sharedAggregator.store(type, name, params, metrics)
   }
 
   singleChecks () {
     // report loaderType
-    const { distMethod, loaderType } = getRuntime(this.agentIdentifier)
-    const { proxy, privacy } = getConfiguration(this.agentIdentifier)
+    const { distMethod, loaderType } = this.agentRef.runtime
+    const { proxy, privacy } = this.agentRef.init
 
     if (loaderType) this.storeSupportabilityMetrics(`Generic/LoaderType/${loaderType}/Detected`)
     if (distMethod) this.storeSupportabilityMetrics(`Generic/DistMethod/${distMethod}/Detected`)

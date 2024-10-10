@@ -3,12 +3,12 @@ import { setupAgent } from '../setup-agent'
 import { Instrument as Ajax } from '../../../src/features/ajax/instrument'
 import { FEATURE_NAMES } from '../../../src/loaders/features/features'
 
-let agentSetup
+let mainAgent
 
 beforeAll(async () => {
   jest.spyOn(handleModule, 'handle')
 
-  agentSetup = setupAgent()
+  mainAgent = setupAgent()
 })
 
 let ajaxInstrument
@@ -16,7 +16,7 @@ let ajaxInstrument
 beforeEach(async () => {
   jest.spyOn(handleModule, 'handle')
 
-  ajaxInstrument = new Ajax(agentSetup.agentIdentifier, agentSetup.aggregator)
+  ajaxInstrument = new Ajax(mainAgent)
   jest.spyOn(ajaxInstrument.ee, 'emit')
 })
 

@@ -18,8 +18,8 @@ const UI_WAIT_INTERVAL = 1 / 10 * 1000 // assume 10 fps
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
-  constructor (agentIdentifier, aggregator, auto = true) {
-    super(agentIdentifier, aggregator, FEATURE_NAME, auto)
+  constructor (thisAgent, auto = true) {
+    super(thisAgent, FEATURE_NAME, auto)
     if (!isBrowserScope || !gosNREUMOriginals().o.MO) return // soft navigations is not supported outside web env or browsers without the mutation observer API
 
     const historyEE = wrapHistory(this.ee)
@@ -58,7 +58,7 @@ export class Instrument extends InstrumentBase {
     for (let eventType of INTERACTION_TRIGGERS) document.addEventListener(eventType, () => { /* no-op, this ensures the UI events are monitored by our callback above */ })
 
     this.abortHandler = abort
-    this.importAggregator({ domObserver })
+    this.importAggregator(thisAgent, { domObserver })
 
     function abort () {
       this.removeOnAbort?.abort()

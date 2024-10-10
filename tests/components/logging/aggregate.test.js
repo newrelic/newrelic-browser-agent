@@ -7,12 +7,12 @@ import * as handleModule from '../../../src/common/event-emitter/handle'
 import { resetAgent, setupAgent } from '../setup-agent'
 import { getInfo } from '../../../src/common/config/info'
 
-let agentSetup, info, runtime
+let mainAgent, info, runtime
 
 beforeAll(async () => {
-  agentSetup = setupAgent()
-  info = getInfo(agentSetup.agentIdentifier)
-  runtime = getRuntime(agentSetup.agentIdentifier)
+  mainAgent = setupAgent()
+  info = getInfo(mainAgent.agentIdentifier)
+  runtime = getRuntime(mainAgent.agentIdentifier)
 })
 
 let loggingAggregate
@@ -21,13 +21,13 @@ beforeEach(async () => {
   jest.spyOn(handleModule, 'handle')
   jest.spyOn(consoleModule, 'warn').mockImplementation(() => {})
 
-  const loggingInstrument = new Logging(agentSetup.agentIdentifier, agentSetup.aggregator)
+  const loggingInstrument = new Logging(mainAgent)
   await new Promise(process.nextTick)
   loggingAggregate = loggingInstrument.featAggregate
 })
 
 afterEach(() => {
-  resetAgent(agentSetup.agentIdentifier)
+  resetAgent(mainAgent.agentIdentifier)
   jest.clearAllMocks()
 })
 
@@ -35,7 +35,6 @@ describe('class setup', () => {
   test('should have expected public properties', () => {
     expect(Object.keys(loggingAggregate)).toEqual(expect.arrayContaining([
       'agentIdentifier',
-      'aggregator',
       'ee',
       'featureName',
       'blocked',
@@ -61,7 +60,7 @@ describe('payloads', () => {
   test('fills buffered logs with event emitter messages and prepares matching payload', async () => {
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', { myAttributes: 1 }, 'error'])
 
-    const timeKeeper = getRuntime(agentSetup.agentIdentifier).timeKeeper
+    const timeKeeper = getRuntime(mainAgent.agentIdentifier).timeKeeper
     const expectedLog = new Log(
       Math.floor(timeKeeper.correctAbsoluteTimestamp(
         timeKeeper.convertRelativeTimestamp(1234)
@@ -81,7 +80,7 @@ describe('payloads', () => {
             session: runtime.session.state.value,
             hasReplay: false,
             hasTrace: false,
-            ptid: agentSetup.agentIdentifier,
+            ptid: mainAgent.agentIdentifier,
             appId: info.applicationID,
             standalone: false,
             agentVersion: expect.any(String)

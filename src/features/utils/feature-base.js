@@ -1,11 +1,9 @@
 import { ee } from '../../common/event-emitter/contextual-ee'
 
 export class FeatureBase {
-  constructor (agentIdentifier, aggregator, featureName) {
+  constructor (agentIdentifier, featureName) {
     /** @type {string} */
     this.agentIdentifier = agentIdentifier
-    /** @type {import('../../common/aggregate/aggregator').Aggregator} */
-    this.aggregator = aggregator
     /** @type {import('../../common/event-emitter/contextual-ee').ee} */
     this.ee = ee.get(agentIdentifier)
     /** @type {string} */

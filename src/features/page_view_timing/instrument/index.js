@@ -12,8 +12,8 @@ import { now } from '../../../common/timing/now'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
-  constructor (agentIdentifier, aggregator, auto = true) {
-    super(agentIdentifier, aggregator, FEATURE_NAME, auto)
+  constructor (thisAgent, auto = true) {
+    super(thisAgent, FEATURE_NAME, auto)
     if (!isBrowserScope) return // CWV is irrelevant outside web context
 
     // While we try to replicate web-vital's visibilitywatcher logic in an effort to defer that library to post-pageload, this isn't perfect and doesn't consider prerendering.
@@ -22,7 +22,7 @@ export class Instrument extends InstrumentBase {
     // Window fires its pagehide event (typically on navigation--this occurrence is a *subset* of vis change); don't defer this unless it's guarantee it cannot happen before load(?)
     windowAddEventListener('pagehide', () => handle('winPagehide', [now()], undefined, FEATURE_NAME, this.ee))
 
-    this.importAggregator()
+    this.importAggregator(thisAgent)
   }
 }
 

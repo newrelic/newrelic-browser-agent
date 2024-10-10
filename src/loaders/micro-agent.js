@@ -3,7 +3,6 @@ import { Instrument as PVE } from '../features/page_view_event/instrument'
 import { getEnabledFeatures } from './features/enabled-features'
 import { configure } from './configure/configure'
 // core files
-import { Aggregator } from '../common/aggregate/aggregator'
 import { setNREUMInitializedAgent } from '../common/window/nreum'
 import { getInfo } from '../common/config/info'
 import { getConfiguration, getConfigurationValue } from '../common/config/init'
@@ -33,7 +32,6 @@ export class MicroAgent extends AgentBase {
   constructor (options, agentIdentifier) {
     super(agentIdentifier)
 
-    this.sharedAggregator = new Aggregator({ agentIdentifier: this.agentIdentifier })
     this.features = {}
     setNREUMInitializedAgent(this.agentIdentifier, this)
 
@@ -76,7 +74,7 @@ export class MicroAgent extends AgentBase {
 
       try {
         // a biproduct of doing this is that the "session manager" is automatically handled through importing this feature
-        this.features.page_view_event = new PVE(this.agentIdentifier, this.sharedAggregator)
+        this.features.page_view_event = new PVE(this)
       } catch (err) {
         warn(24, err)
       }
@@ -88,7 +86,7 @@ export class MicroAgent extends AgentBase {
             import(/* webpackChunkName: "lazy-feature-loader" */ '../features/utils/lazy-feature-loader').then(({ lazyFeatureLoader }) => {
               return lazyFeatureLoader(f, 'aggregate')
             }).then(({ Aggregate }) => {
-              this.features[f] = new Aggregate(this.agentIdentifier, this.sharedAggregator)
+              this.features[f] = new Aggregate(this)
             }).catch(err =>
               warn(25, err))
           }

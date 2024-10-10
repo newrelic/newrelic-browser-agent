@@ -9,10 +9,10 @@ import { resetAgent, setupAgent } from '../setup-agent'
 jest.retryTimes(3)
 
 const INTERACTION_API = 'api-ixn'
-let agentSetup
+let mainAgent
 
 beforeAll(() => {
-  agentSetup = setupAgent({
+  mainAgent = setupAgent({
     agentOverrides: {
       runSoftNavOverSpa: true
     },
@@ -26,7 +26,7 @@ beforeAll(() => {
 let softNavAggregate
 
 beforeEach(async () => {
-  const softNavInstrument = new SoftNav(agentSetup.agentIdentifier, agentSetup.aggregator)
+  const softNavInstrument = new SoftNav(mainAgent)
   await new Promise(process.nextTick)
   softNavAggregate = softNavInstrument.featAggregate
 
@@ -40,7 +40,7 @@ beforeEach(async () => {
 })
 
 afterEach(() => {
-  resetAgent(agentSetup.agentIdentifier)
+  resetAgent(mainAgent.agentIdentifier)
   jest.clearAllMocks()
 })
 

@@ -312,3 +312,9 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 * API/log/called
 <!--- newrelic.wrapLogger() was called --->
 * API/wrapLogger/called
+
+### INTERNAL ERRORS
+<!--- an internal error relating to rrweb processing was observed -->
+* Internal/Error/Rrweb
+<!--- an uncategorized internal error was observed -->
+* Internal/Error/Other

@@ -24,6 +24,8 @@ import { getNREUMInitializedAgent } from '../../../common/window/nreum'
 import { deregisterDrain } from '../../../common/drain/drain'
 import { now } from '../../../common/timing/now'
 import { applyFnToProps } from '../../../common/util/traverse'
+import { isInternalError } from './internal-errors'
+import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 
 /**
  * @typedef {import('./compute-stack-trace.js').StackInfo} StackInfo
@@ -160,6 +162,13 @@ export class Aggregate extends AggregateBase {
     }
 
     var stackInfo = computeStackTrace(err)
+
+    const { shouldSwallow, reason } = isInternalError(stackInfo, internal)
+    if (shouldSwallow) {
+      handle(SUPPORTABILITY_METRIC_CHANNEL, ['Internal/Error/' + reason], undefined, FEATURE_NAMES.metrics, this.ee)
+      return
+    }
+
     var canonicalStackString = this.buildCanonicalStackString(stackInfo)
 
     const params = {
@@ -203,7 +212,7 @@ export class Aggregate extends AggregateBase {
     params.firstOccurrenceTimestamp = this.observedAt[bucketHash]
     params.timestamp = Math.floor(agentRuntime.timeKeeper.correctRelativeTimestamp(time))
 
-    var type = internal ? 'ierr' : 'err'
+    var type = 'err'
     var newMetrics = { time }
 
     // Trace sends the error in its payload, and both trace & replay simply listens for any error to occur.

@@ -65,7 +65,7 @@ export class InstrumentBase extends FeatureBase {
   /**
    * Lazy-load the latter part of the feature: its aggregator. This method is called by the first part of the feature
    * (the instrumentation) when instrumentation is complete.
-   * @param {BrowserAgent} thisAgentRef - reference to the base agent ancestor that this feature belongs to
+   * @param thisAgentRef - reference to the base agent ancestor that this feature belongs to
    * @param {Object} [argsObjFromInstrument] - any values or references to pass down to aggregate
    * @returns void
    */

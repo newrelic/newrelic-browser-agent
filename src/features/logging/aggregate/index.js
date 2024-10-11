@@ -86,6 +86,12 @@ export class Aggregate extends AggregateBase {
 
   prepareHarvest (options = {}) {
     if (this.blocked || !this.bufferedLogs.hasData) return
+    /** These attributes are evaluated and dropped at ingest processing time and do not get stored on NRDB */
+    const unbilledAttributes = {
+      'instrumentation.provider': 'browser',
+      'instrumentation.version': this.agentRef.runtime.version,
+      'instrumentation.name': this.agentRef.runtime.loaderType
+    }
     /** see https://source.datanerd.us/agents/rum-specs/blob/main/browser/Log for logging spec */
     const payload = {
       qs: {
@@ -96,13 +102,14 @@ export class Aggregate extends AggregateBase {
           /** Attributes in the `common` section are added to `all` logs generated in the payload */
           attributes: {
             'entity.guid': this.agentRef.runtime.appMetadata?.agents?.[0]?.entityGuid, // browser entity guid as provided from RUM response
-            session: this.agentRef.runtime?.session?.state.value || '0', // The session ID that we generate and keep across page loads
-            hasReplay: this.agentRef.runtime?.session?.state.sessionReplayMode === 1, // True if a session replay recording is running
-            hasTrace: this.agentRef.runtime?.session?.state.sessionTraceMode === 1, // True if a session trace recording is running
+            session: this.agentRef.runtime.session?.state.value || '0', // The session ID that we generate and keep across page loads
+            hasReplay: this.agentRef.runtime.session?.state.sessionReplayMode === 1, // True if a session replay recording is running
+            hasTrace: this.agentRef.runtime.session?.state.sessionTraceMode === 1, // True if a session trace recording is running
             ptid: this.agentRef.runtime.ptid, // page trace id
             appId: this.agentRef.info.applicationID, // Application ID from info object,
             standalone: Boolean(this.agentRef.info.sa), // copy paste (true) vs APM (false)
-            agentVersion: this.agentRef.runtime.version // browser agent version
+            agentVersion: this.agentRef.runtime.version, // browser agent version
+            ...unbilledAttributes
           }
         },
         /** logs section contains individual unique log entries */

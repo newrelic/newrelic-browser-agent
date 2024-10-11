@@ -76,6 +76,9 @@ describe('payloads', () => {
       body: [{
         common: {
           attributes: {
+            'instrumentation.name': 'browser-test',
+            'instrumentation.provider': 'browser',
+            'instrumentation.version': expect.any(String),
             'entity.guid': runtime.appMetadata.agents[0].entityGuid,
             session: runtime.session.state.value,
             hasReplay: false,

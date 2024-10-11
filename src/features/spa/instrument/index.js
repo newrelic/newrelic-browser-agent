@@ -20,6 +20,9 @@ const {
   FEATURE_NAME, START, END, BODY, CB_END, JS_TIME, FETCH, FN_START, CB_START, FN_END
 } = CONSTANTS
 
+/**
+ * @deprecated This feature has been deprecated, in favor of `soft_navigations`, which is in limited preview. Consider using/importing `SoftNavigations` instead. To gain access to the limited preview, please see https://docs.newrelic.com/docs/browser/single-page-app-monitoring/get-started/browser-spa-v2/ for more information. This feature will be removed in a future release.
+ */
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
   constructor (thisAgent, auto = true) {

@@ -16,7 +16,8 @@ import { AgentBase } from './agent-base'
 const nonAutoFeatures = [
   FEATURE_NAMES.jserrors,
   FEATURE_NAMES.genericEvents,
-  FEATURE_NAMES.metrics
+  FEATURE_NAMES.metrics,
+  FEATURE_NAMES.logging
 ]
 
 /**

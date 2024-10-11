@@ -28,6 +28,15 @@ describe('isInternalError', () => {
     expect(result).toEqual({ shouldSwallow: true, reason: 'Rrweb-Security-Policy' })
   })
 
+  it('should swallow and reason "Rrweb-Security-Policy" for security policy error in generic recorder module (npm custom build)', () => {
+    const stackInfo = {
+      frames: [{ url: 'custom/npm/build/recorder.1a2b3c4d.js' }],
+      message: 'An attempt was made to break through the security policy of the user agent'
+    }
+    const result = evaluateInternalError(stackInfo, false)
+    expect(result).toEqual({ shouldSwallow: true, reason: 'Rrweb-Security-Policy' })
+  })
+
   it('should swallow and reason "Other" for any error when internal flag is true', () => {
     const stackInfo = {
       frames: [{ url: 'some-other-script.js' }],

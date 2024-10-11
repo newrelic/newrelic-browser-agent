@@ -94,6 +94,12 @@ export class Aggregate extends AggregateBase {
 
   prepareHarvest (options = {}) {
     if (this.blocked || !this.bufferedLogs.hasData) return
+    /** These attributes are evaluated and dropped at ingest processing time and do not get stored on NRDB */
+    const unbilledAttributes = {
+      'instrumentation.provider': 'browser',
+      'instrumentation.version': this.#agentRuntime.version,
+      'instrumentation.name': this.#agentRuntime.loaderType
+    }
     /** see https://source.datanerd.us/agents/rum-specs/blob/main/browser/Log for logging spec */
     const payload = {
       qs: {
@@ -110,7 +116,8 @@ export class Aggregate extends AggregateBase {
             ptid: this.#agentRuntime.ptid, // page trace id
             appId: this.#agentInfo.applicationID, // Application ID from info object,
             standalone: Boolean(this.#agentInfo.sa), // copy paste (true) vs APM (false)
-            agentVersion: this.#agentRuntime.version // browser agent version
+            agentVersion: this.#agentRuntime.version, // browser agent version,
+            ...unbilledAttributes
           }
         },
         /** logs section contains individual unique log entries */

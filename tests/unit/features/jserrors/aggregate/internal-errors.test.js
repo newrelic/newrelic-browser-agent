@@ -10,6 +10,15 @@ describe('isInternalError', () => {
     expect(result).toEqual({ shouldSwallow: false, reason: 'Other' })
   })
 
+  it('should not swallow and reason "Other" when no error has message that is not a string', () => {
+    const stackInfo = {
+      frames: [{ url: 'some-other-script.js' }],
+      message: { foo: 'bar' }
+    }
+    const result = evaluateInternalError(stackInfo, false)
+    expect(result).toEqual({ shouldSwallow: false, reason: 'Other' })
+  })
+
   it('should swallow and reason "Rrweb-Security-Policy" for nr-recorder security policy error', () => {
     const stackInfo = {
       frames: [{ url: 'nr-123-recorder.min.js' }],

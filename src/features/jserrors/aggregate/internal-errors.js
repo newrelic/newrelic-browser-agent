@@ -9,7 +9,7 @@ export function evaluateInternalError (stackInfo, internal) {
   const output = { shouldSwallow: internal || false, reason: 'Other' }
   const leadingFrame = stackInfo.frames?.[0]
   /** If we cant otherwise determine from the frames and message, the default of internal + reason will be the fallback */
-  if (!leadingFrame || !stackInfo.message) return output
+  if (!leadingFrame || typeof stackInfo?.message !== 'string') return output
 
   // check if the error happened in expected modules or if messages match known patterns
   const isNrRecorder = leadingFrame?.url?.match(/nr-(.*)-recorder.min.js/)

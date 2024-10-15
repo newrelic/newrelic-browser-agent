@@ -14,7 +14,6 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { warn } from '../../../common/util/console'
 import { now } from '../../../common/timing/now'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
-import { deregisterDrain } from '../../../common/drain/drain'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { EventBuffer } from '../../utils/event-buffer'
 import { applyFnToProps } from '../../../common/util/traverse'
@@ -41,7 +40,7 @@ export class Aggregate extends AggregateBase {
     this.waitForFlags(['ins']).then(([ins]) => {
       if (!ins) {
         this.blocked = true
-        deregisterDrain(this.agentIdentifier, this.featureName)
+        this.deregisterDrain()
         return
       }
 

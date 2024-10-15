@@ -1,5 +1,4 @@
 import { getConfigurationValue } from '../../../common/config/init'
-import { deregisterDrain } from '../../../common/drain/drain'
 import { handle } from '../../../common/event-emitter/handle'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
@@ -50,7 +49,7 @@ export class Aggregate extends AggregateBase {
         scheduler.startTimer(harvestTimeSeconds, 0)
       } else {
         this.blocked = true // if rum response determines that customer lacks entitlements for spa endpoint, this feature shouldn't harvest
-        deregisterDrain(this.agentIdentifier, this.featureName)
+        this.deregisterDrain()
       }
     })
 

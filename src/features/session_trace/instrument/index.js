@@ -8,7 +8,6 @@ import { wrapEvents } from '../../../common/wrap/wrap-events'
 import { InstrumentBase } from '../../utils/instrument-base'
 import * as CONSTANTS from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
-import { deregisterDrain } from '../../../common/drain/drain'
 import { canEnableSessionTracking } from '../../utils/feature-gates'
 import { now } from '../../../common/timing/now'
 
@@ -22,7 +21,7 @@ export class Instrument extends InstrumentBase {
     super(agentIdentifier, aggregator, FEATURE_NAME, auto)
     const canTrackSession = canEnableSessionTracking(this.agentIdentifier)
     if (!canTrackSession) {
-      deregisterDrain(this.agentIdentifier, this.featureName)
+      this.deregisterDrain()
       return
     }
 

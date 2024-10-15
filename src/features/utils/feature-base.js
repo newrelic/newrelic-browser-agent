@@ -1,4 +1,5 @@
 import { ee } from '../../common/event-emitter/contextual-ee'
+import { deregisterDrain } from '../../common/drain/drain'
 
 export class FeatureBase {
   constructor (agentIdentifier, aggregator, featureName) {
@@ -16,5 +17,9 @@ export class FeatureBase {
      * @type {boolean}
      */
     this.blocked = false
+  }
+
+  deregisterDrain () {
+    deregisterDrain(this.agentIdentifier, this.featureName)
   }
 }

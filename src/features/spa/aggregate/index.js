@@ -24,7 +24,6 @@ import { bundleId } from '../../../common/ids/bundle-id'
 import { loadedAsDeferredBrowserScript } from '../../../common/constants/runtime'
 import { handle } from '../../../common/event-emitter/handle'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
-import { deregisterDrain } from '../../../common/drain/drain'
 import { warn } from '../../../common/util/console'
 import { EventBuffer } from '../../utils/event-buffer'
 
@@ -115,7 +114,7 @@ export class Aggregate extends AggregateBase {
         this.drain()
       } else {
         this.blocked = true
-        deregisterDrain(this.agentIdentifier, this.featureName)
+        this.deregisterDrain()
       }
     })
 

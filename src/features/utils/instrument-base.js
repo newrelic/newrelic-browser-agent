@@ -19,6 +19,7 @@ import { single } from '../../common/util/invoke'
  * @extends FeatureBase
  */
 export class InstrumentBase extends FeatureBase {
+  static getAggregator
   /**
    * Instantiate InstrumentBase.
    * @param {string} agentIdentifier - The unique ID of the instantiated agent (relative to global scope).
@@ -91,10 +92,11 @@ export class InstrumentBase extends FeatureBase {
       }
 
       // Create a single Aggregator for this agent if DNE yet; to be used by jserror endpoint features.
-      if (!thisAgentRef.sharedAggregator) {
-        const { Aggregator } = await import(/* webpackChunkName: "shared-aggregator" */ '../../common/aggregate/aggregator')
+      if (!InstrumentBase.getAggregator) {
+        InstrumentBase.getAggregator = import(/* webpackChunkName: "shared-aggregator" */ '../../common/aggregate/aggregator')
+        const { Aggregator } = await InstrumentBase.getAggregator
         thisAgentRef.sharedAggregator = new Aggregator()
-      }
+      } else await InstrumentBase.getAggregator // if another feature is already importing the aggregator, wait for it to finish
 
       /**
        * Note this try-catch differs from the one in Agent.run() in that it's placed later in a page's lifecycle and

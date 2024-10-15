@@ -2,7 +2,6 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { windowAddEventListener } from '../event-listener/event-listener-opts'
 import { globalScope, isWorkerScope, isBrowserScope } from '../constants/runtime'
 import { subscribeToVisibilityChange } from '../window/page-visibility'
 
@@ -26,8 +25,6 @@ if (isWorkerScope) {
 export function subscribeToEOL (cb) {
   if (isBrowserScope) {
     subscribeToVisibilityChange(cb, true) // when user switches tab or hides window, esp. mobile scenario
-    windowAddEventListener('pagehide', cb) // when user navigates away, and because safari iOS v14.4- doesn't fully support vis change
-    // --this ought to be removed once support for version below 14.5 phases out
   } else if (isWorkerScope) {
     globalScope.cleanupTasks.push(cb) // close() should run these tasks before quitting thread
   }

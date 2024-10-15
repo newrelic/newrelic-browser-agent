@@ -17,15 +17,15 @@ import { applyFnToProps } from '../../../common/util/traverse'
 
 export class Aggregate extends AggregateBase {
   static featureName = CONSTANTS.FEATURE_NAME
-  constructor (thisAgent) {
-    super(thisAgent, CONSTANTS.FEATURE_NAME)
+  constructor (agentRef) {
+    super(agentRef, CONSTANTS.FEATURE_NAME)
 
     this.timeToFirstByte = 0
     this.firstByteToWindowLoad = 0 // our "frontend" duration
     this.firstByteToDomContent = 0 // our "dom processing" duration
-    this.timeKeeper = new TimeKeeper(thisAgent.agentIdentifier)
+    this.timeKeeper = new TimeKeeper(agentRef.agentIdentifier)
 
-    if (!isValid(thisAgent.agentIdentifier)) {
+    if (!isValid(agentRef.agentIdentifier)) {
       this.ee.abort()
       return warn(43)
     }

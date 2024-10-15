@@ -32,12 +32,12 @@ const {
 } = CONSTANTS
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
-  constructor (thisAgent) {
-    super(thisAgent, FEATURE_NAME)
+  constructor (agentRef) {
+    super(agentRef, FEATURE_NAME)
 
     this.state = {
-      initialPageURL: thisAgent.runtime.origin,
-      lastSeenUrl: thisAgent.runtime.origin,
+      initialPageURL: agentRef.runtime.origin,
+      lastSeenUrl: agentRef.runtime.origin,
       lastSeenRouteName: null,
       timerMap: {},
       timerBudget: MAX_TIMER_BUDGET,
@@ -48,10 +48,10 @@ export class Aggregate extends AggregateBase {
       pageLoaded: false,
       childTime: 0,
       depth: 0,
-      harvestTimeSeconds: thisAgent.init.spa.harvestTimeSeconds || 10,
+      harvestTimeSeconds: agentRef.init.spa.harvestTimeSeconds || 10,
       interactionsToHarvest: new EventBuffer(),
       // The below feature flag is used to disable the SPA ajax fix for specific customers, see https://new-relic.atlassian.net/browse/NR-172169
-      disableSpaFix: (thisAgent.init.feature_flags || []).indexOf('disable-spa-fix') > -1
+      disableSpaFix: (agentRef.init.feature_flags || []).indexOf('disable-spa-fix') > -1
     }
 
     let scheduler
@@ -59,7 +59,7 @@ export class Aggregate extends AggregateBase {
 
     const { state, serializer } = this
 
-    const baseEE = ee.get(thisAgent.agentIdentifier) // <-- parent baseEE
+    const baseEE = ee.get(agentRef.agentIdentifier) // <-- parent baseEE
     const mutationEE = baseEE.get('mutation')
     const promiseEE = baseEE.get('promise')
     const historyEE = baseEE.get('history')
@@ -112,13 +112,13 @@ export class Aggregate extends AggregateBase {
         this.drain()
       } else {
         this.blocked = true
-        deregisterDrain(thisAgent.agentIdentifier, this.featureName)
+        deregisterDrain(agentRef.agentIdentifier, this.featureName)
       }
     })
 
-    if (thisAgent.init.spa.enabled !== true) return
+    if (agentRef.init.spa.enabled !== true) return
 
-    state.initialPageLoad = new Interaction('initialPageLoad', 0, state.lastSeenUrl, state.lastSeenRouteName, onInteractionFinished, thisAgent.agentIdentifier)
+    state.initialPageLoad = new Interaction('initialPageLoad', 0, state.lastSeenUrl, state.lastSeenRouteName, onInteractionFinished, agentRef.agentIdentifier)
     state.initialPageLoad.save = true
     state.prevInteraction = state.initialPageLoad
     state.currentNode = state.initialPageLoad.root // hint
@@ -209,7 +209,7 @@ export class Aggregate extends AggregateBase {
         // Otherwise, if no interaction is currently active, create a new node ID,
         // and let the aggregator know that we entered a new event handler callback
         // so that it has a chance to possibly start an interaction.
-        var ixn = new Interaction(evName, this[FN_START], state.lastSeenUrl, state.lastSeenRouteName, onInteractionFinished, thisAgent.agentIdentifier)
+        var ixn = new Interaction(evName, this[FN_START], state.lastSeenUrl, state.lastSeenRouteName, onInteractionFinished, agentRef.agentIdentifier)
 
         // Store the interaction as prevInteraction in case it is prematurely discarded
         state.prevInteraction = ixn
@@ -307,7 +307,7 @@ export class Aggregate extends AggregateBase {
         this.sent = true
         node.dt = this.dt
         if (node.dt?.timestamp) {
-          node.dt.timestamp = thisAgent.runtime.timeKeeper.correctAbsoluteTimestamp(node.dt.timestamp)
+          node.dt.timestamp = agentRef.runtime.timeKeeper.correctAbsoluteTimestamp(node.dt.timestamp)
         }
         node.jsEnd = node.start = this.startTime
         node[INTERACTION][REMAINING]++
@@ -407,7 +407,7 @@ export class Aggregate extends AggregateBase {
           if (dtPayload && this[SPA_NODE]) {
             this[SPA_NODE].dt = dtPayload
             if (this[SPA_NODE].dt?.timestamp) {
-              this[SPA_NODE].dt.timestamp = thisAgent.runtime.timeKeeper.correctAbsoluteTimestamp(this[SPA_NODE].dt.timestamp)
+              this[SPA_NODE].dt.timestamp = agentRef.runtime.timeKeeper.correctAbsoluteTimestamp(this[SPA_NODE].dt.timestamp)
             }
           }
         }
@@ -545,7 +545,7 @@ export class Aggregate extends AggregateBase {
       var interaction
       if (state?.currentNode?.[INTERACTION]) interaction = this.ixn = state.currentNode[INTERACTION]
       else if (state?.prevNode?.end === null && state?.prevNode?.[INTERACTION]?.root?.[INTERACTION]?.eventName !== 'initialPageLoad') interaction = this.ixn = state.prevNode[INTERACTION]
-      else interaction = this.ixn = new Interaction('api', t, state.lastSeenUrl, state.lastSeenRouteName, onInteractionFinished, thisAgent.agentIdentifier)
+      else interaction = this.ixn = new Interaction('api', t, state.lastSeenUrl, state.lastSeenRouteName, onInteractionFinished, agentRef.agentIdentifier)
       if (!state.currentNode) {
         interaction.checkFinish()
         if (state.depth) setCurrentNode(interaction.root)
@@ -699,9 +699,9 @@ export class Aggregate extends AggregateBase {
     register('function-err', function (args, obj, error) {
       if (!state.currentNode) return
       error.__newrelic ??= {}
-      error.__newrelic[thisAgent.agentIdentifier] = { interactionId: state.currentNode.interaction.id }
+      error.__newrelic[agentRef.agentIdentifier] = { interactionId: state.currentNode.interaction.id }
       if (state.currentNode.type && state.currentNode.type !== 'interaction') {
-        error.__newrelic[thisAgent.agentIdentifier].interactionNodeId = state.currentNode.id
+        error.__newrelic[agentRef.agentIdentifier].interactionNodeId = state.currentNode.id
       }
     }, this.featureName, baseEE)
 

@@ -16,12 +16,12 @@ const QUERY_PARAM_PADDING = 5000
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
 
-  constructor (thisAgent) {
-    super(thisAgent, FEATURE_NAME)
+  constructor (agentRef) {
+    super(agentRef, FEATURE_NAME)
 
     /** A buffer to hold on to harvested traces in the case that a retry must be made later */
     this.sentTrace = null
-    this.harvestTimeSeconds = thisAgent.init.session_trace.harvestTimeSeconds || 30
+    this.harvestTimeSeconds = agentRef.init.session_trace.harvestTimeSeconds || 30
     /** Tied to the entitlement flag response from BCS.  Will short circuit operations of the agg if false  */
     this.entitled = undefined
     /** A flag used to decide if the 30 node threshold should be ignored on the first harvest to ensure sending on the first payload */

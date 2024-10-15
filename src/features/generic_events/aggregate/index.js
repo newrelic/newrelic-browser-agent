@@ -21,11 +21,11 @@ import { isIFrameWindow } from '../../../common/dom/iframe'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
-  constructor (thisAgent) {
-    super(thisAgent, FEATURE_NAME)
+  constructor (agentRef) {
+    super(agentRef, FEATURE_NAME)
 
     this.eventsPerHarvest = 1000
-    this.harvestTimeSeconds = thisAgent.init.generic_events.harvestTimeSeconds
+    this.harvestTimeSeconds = agentRef.init.generic_events.harvestTimeSeconds
 
     this.referrerUrl = (isBrowserScope && document.referrer) ? cleanURL(document.referrer) : undefined
     this.events = new EventBuffer()
@@ -39,7 +39,7 @@ export class Aggregate extends AggregateBase {
 
       const preHarvestMethods = []
 
-      if (thisAgent.init.page_action.enabled) {
+      if (agentRef.init.page_action.enabled) {
         registerHandler('api-addPageAction', (timestamp, name, attributes) => {
           this.addEvent({
             ...attributes,
@@ -56,7 +56,7 @@ export class Aggregate extends AggregateBase {
         }, this.featureName, this.ee)
       }
 
-      if (isBrowserScope && thisAgent.init.user_actions.enabled) {
+      if (isBrowserScope && agentRef.init.user_actions.enabled) {
         this.userActionAggregator = new UserActionsAggregator()
 
         this.addUserAction = (aggregatedUserAction) => {

@@ -28,8 +28,8 @@ export class Aggregate extends AggregateBase {
     this.addTiming(name, value, attrs)
   }
 
-  constructor (thisAgent) {
-    super(thisAgent, FEATURE_NAME)
+  constructor (agentRef) {
+    super(agentRef, FEATURE_NAME)
 
     this.timings = new EventBuffer()
     this.curSessEndRecorded = false
@@ -37,7 +37,7 @@ export class Aggregate extends AggregateBase {
     registerHandler('docHidden', msTimestamp => this.endCurrentSession(msTimestamp), this.featureName, this.ee)
     registerHandler('winPagehide', msTimestamp => this.recordPageUnload(msTimestamp), this.featureName, this.ee)
 
-    const harvestTimeSeconds = thisAgent.init.page_view_timing.harvestTimeSeconds || 30
+    const harvestTimeSeconds = agentRef.init.page_view_timing.harvestTimeSeconds || 30
 
     this.waitForFlags(([])).then(() => {
       /* It's important that CWV api, like "onLCP", is called before the **scheduler** is initialized. The reason is because they listen to the same

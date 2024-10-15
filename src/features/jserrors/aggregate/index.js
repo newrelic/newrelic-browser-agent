@@ -28,8 +28,8 @@ import { applyFnToProps } from '../../../common/util/traverse'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
-  constructor (thisAgent) {
-    super(thisAgent, FEATURE_NAME)
+  constructor (agentRef) {
+    super(agentRef, FEATURE_NAME)
 
     this.stackReported = {}
     this.observedAt = {}
@@ -46,7 +46,7 @@ export class Aggregate extends AggregateBase {
     register('softNavFlush', (interactionId, wasFinished, softNavAttrs) =>
       this.onSoftNavNotification(interactionId, wasFinished, softNavAttrs), this.featureName, this.ee) // when an ixn is done or cancelled
 
-    const harvestTimeSeconds = thisAgent.init.jserrors.harvestTimeSeconds || 10
+    const harvestTimeSeconds = agentRef.init.jserrors.harvestTimeSeconds || 10
 
     // 0 == off, 1 == on
     this.waitForFlags(['err']).then(([errFlag]) => {

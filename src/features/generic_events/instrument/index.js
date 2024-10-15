@@ -11,15 +11,15 @@ import { FEATURE_NAME, OBSERVED_EVENTS, OBSERVED_WINDOW_EVENTS } from '../consta
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
-  constructor (thisAgent, auto = true) {
-    super(thisAgent, FEATURE_NAME, auto)
+  constructor (agentRef, auto = true) {
+    super(agentRef, FEATURE_NAME, auto)
     const genericEventSourceConfigs = [
-      thisAgent.init.page_action.enabled,
-      thisAgent.init.user_actions.enabled
+      agentRef.init.page_action.enabled,
+      agentRef.init.user_actions.enabled
       // other future generic event source configs to go here, like M&Ms, PageResouce, etc.
     ]
 
-    if (isBrowserScope && thisAgent.init.user_actions.enabled) {
+    if (isBrowserScope && agentRef.init.user_actions.enabled) {
       OBSERVED_EVENTS.forEach(eventType =>
         windowAddEventListener(eventType, (evt) => handle('ua', [evt], undefined, this.featureName, this.ee), true)
       )
@@ -30,8 +30,8 @@ export class Instrument extends InstrumentBase {
     }
 
     /** If any of the sources are active, import the aggregator. otherwise deregister */
-    if (genericEventSourceConfigs.some(x => x)) this.importAggregator(thisAgent)
-    else deregisterDrain(thisAgent.agentIdentifier, this.featureName)
+    if (genericEventSourceConfigs.some(x => x)) this.importAggregator(agentRef)
+    else deregisterDrain(agentRef.agentIdentifier, this.featureName)
   }
 }
 

@@ -16,8 +16,8 @@ export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
   #replayRunning = false
 
-  constructor (thisAgent, auto = true) {
-    super(thisAgent, FEATURE_NAME, auto)
+  constructor (agentRef, auto = true) {
+    super(agentRef, FEATURE_NAME, auto)
 
     try {
       // this try-catch can be removed when IE11 is completely unsupported & gone
@@ -44,7 +44,7 @@ export class Instrument extends InstrumentBase {
     }, eventListenerOpts(false, this.removeOnAbort?.signal))
 
     this.abortHandler = this.#abort // we also use this as a flag to denote that the feature is active or on and handling errors
-    this.importAggregator(thisAgent)
+    this.importAggregator(agentRef)
   }
 
   /** Restoration and resource release tasks to be done if JS error loader is being aborted. Unwind changes to globals. */

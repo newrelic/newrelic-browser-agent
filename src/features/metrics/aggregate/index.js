@@ -14,8 +14,8 @@ import { isIFrameWindow } from '../../../common/dom/iframe'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
-  constructor (thisAgent) {
-    super(thisAgent, FEATURE_NAME)
+  constructor (agentRef) {
+    super(agentRef, FEATURE_NAME)
 
     this.waitForFlags(['err']).then(([errFlag]) => {
       if (errFlag) {

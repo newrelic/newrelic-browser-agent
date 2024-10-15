@@ -15,14 +15,14 @@ import { Interaction } from './interaction'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
-  constructor (thisAgent, { domObserver }) {
-    super(thisAgent, FEATURE_NAME)
+  constructor (agentRef, { domObserver }) {
+    super(agentRef, FEATURE_NAME)
 
-    const harvestTimeSeconds = thisAgent.init.soft_navigations.harvestTimeSeconds || 10
+    const harvestTimeSeconds = agentRef.init.soft_navigations.harvestTimeSeconds || 10
     this.interactionsToHarvest = new EventBuffer()
     this.domObserver = domObserver
 
-    this.initialPageLoadInteraction = new InitialPageLoadInteraction(thisAgent.agentIdentifier)
+    this.initialPageLoadInteraction = new InitialPageLoadInteraction(agentRef.agentIdentifier)
     timeToFirstByte.subscribe(({ attrs }) => {
       const loadEventTime = attrs.navigationEntry.loadEventEnd
       this.initialPageLoadInteraction.forceSave = true

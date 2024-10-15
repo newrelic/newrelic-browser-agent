@@ -32,10 +32,10 @@ export class Aggregate extends AggregateBase {
   mode = MODE.OFF
 
   // pass the recorder into the aggregator
-  constructor (thisAgent, args) {
-    super(thisAgent, FEATURE_NAME)
+  constructor (agentRef, args) {
+    super(agentRef, FEATURE_NAME)
     /** The interval to harvest at.  This gets overridden if the size of the payload exceeds certain thresholds */
-    this.harvestTimeSeconds = thisAgent.init.session_replay.harvestTimeSeconds || 60
+    this.harvestTimeSeconds = agentRef.init.session_replay.harvestTimeSeconds || 60
     /** Set once the recorder has fully initialized after flag checks and sampling */
     this.initialized = false
     /** Set once the feature has been "aborted" to prevent other side-effects from continuing */
@@ -74,7 +74,7 @@ export class Aggregate extends AggregateBase {
     this.ee.on(SESSION_EVENTS.RESUME, () => {
       if (!this.recorder) return
       // if the mode changed on a different tab, it needs to update this instance to match
-      this.mode = thisAgent.runtime.session.state.sessionReplayMode
+      this.mode = agentRef.runtime.session.state.sessionReplayMode
       if (!this.initialized || this.mode === MODE.OFF) return
       this.recorder?.startRecording()
     })
@@ -101,7 +101,7 @@ export class Aggregate extends AggregateBase {
       this.handleError(e)
     }, this.featureName, this.ee)
 
-    const { error_sampling_rate, sampling_rate, autoStart, block_selector, mask_text_selector, mask_all_inputs, inline_images, collect_fonts } = thisAgent.init.session_replay
+    const { error_sampling_rate, sampling_rate, autoStart, block_selector, mask_text_selector, mask_all_inputs, inline_images, collect_fonts } = agentRef.init.session_replay
 
     this.waitForFlags(['srs', 'sr']).then(([srMode, entitled]) => {
       this.entitled = !!entitled

@@ -7,11 +7,11 @@ import { activatedFeatures } from '../../common/util/feature-flags'
 import { Obfuscator } from '../../common/util/obfuscate'
 
 export class AggregateBase extends FeatureBase {
-  constructor (thisAgentRef, featureName) {
-    super(thisAgentRef.agentIdentifier, featureName)
-    this.agentRef = thisAgentRef
-    this.checkConfiguration(thisAgentRef)
-    this.obfuscator = thisAgentRef.runtime.obfuscator
+  constructor (agentRef, featureName) {
+    super(agentRef.agentIdentifier, featureName)
+    this.agentRef = agentRef
+    this.checkConfiguration(agentRef)
+    this.obfuscator = agentRef.runtime.obfuscator
   }
 
   /**

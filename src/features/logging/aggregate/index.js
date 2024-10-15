@@ -14,13 +14,13 @@ import { EventBuffer } from '../../utils/event-buffer'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
-  constructor (thisAgent) {
-    super(thisAgent, FEATURE_NAME)
+  constructor (agentRef) {
+    super(agentRef, FEATURE_NAME)
 
     /** held logs before sending */
     this.bufferedLogs = new EventBuffer()
 
-    this.harvestTimeSeconds = thisAgent.init.logging.harvestTimeSeconds
+    this.harvestTimeSeconds = agentRef.init.logging.harvestTimeSeconds
 
     this.waitForFlags([]).then(() => {
       this.scheduler = new HarvestScheduler('browser/logs', {

@@ -28,6 +28,8 @@ export function wrapXhr (sharedEE) {
   var baseEE = sharedEE || contextualEE
   const ee = scopedEE(baseEE)
 
+  if (typeof globalScope.XMLHttpRequest === 'undefined') return ee
+
   // Notice if our wrapping never ran yet, the falsy NaN will not early return; but if it has,
   // then we increment the count to track # of feats using this at runtime.
   if (wrapped[ee.debugId]++) return ee

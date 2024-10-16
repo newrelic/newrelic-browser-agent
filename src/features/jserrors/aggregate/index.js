@@ -21,6 +21,8 @@ import { getNREUMInitializedAgent } from '../../../common/window/nreum'
 import { deregisterDrain } from '../../../common/drain/drain'
 import { now } from '../../../common/timing/now'
 import { applyFnToProps } from '../../../common/util/traverse'
+import { evaluateInternalError } from './internal-errors'
+import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 
 /**
  * @typedef {import('./compute-stack-trace.js').StackInfo} StackInfo
@@ -139,6 +141,15 @@ export class Aggregate extends AggregateBase {
     return canonicalStackString
   }
 
+  /**
+   *
+   * @param {Error|UncaughtError} err The error instance to be processed
+   * @param {number} time the relative ms (to origin) timestamp of occurence
+   * @param {boolean=} internal if the error was "caught" and deemed "internal" before reporting to the jserrors feature
+   * @param {object=} customAttributes  any custom attributes to be included in the error payload
+   * @param {boolean=} hasReplay a flag indicating if the error occurred during a replay session
+   * @returns
+   */
   storeError (err, time, internal, customAttributes, hasReplay) {
     if (!err) return
     // are we in an interaction
@@ -156,6 +167,13 @@ export class Aggregate extends AggregateBase {
     }
 
     var stackInfo = computeStackTrace(err)
+
+    const { shouldSwallow, reason } = evaluateInternalError(stackInfo, internal)
+    if (shouldSwallow) {
+      handle(SUPPORTABILITY_METRIC_CHANNEL, ['Internal/Error/' + reason], undefined, FEATURE_NAMES.metrics, this.ee)
+      return
+    }
+
     var canonicalStackString = this.buildCanonicalStackString(stackInfo)
 
     const params = {
@@ -199,7 +217,7 @@ export class Aggregate extends AggregateBase {
     params.firstOccurrenceTimestamp = this.observedAt[bucketHash]
     params.timestamp = Math.floor(this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(time))
 
-    var type = internal ? 'ierr' : 'err'
+    var type = 'err'
     var newMetrics = { time }
 
     // Trace sends the error in its payload, and both trace & replay simply listens for any error to occur.

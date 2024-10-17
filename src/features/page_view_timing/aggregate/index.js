@@ -35,7 +35,8 @@ export class Aggregate extends AggregateBase {
     this.curSessEndRecorded = false
 
     registerHandler('docHidden', msTimestamp => this.endCurrentSession(msTimestamp), this.featureName, this.ee)
-    registerHandler('winPagehide', msTimestamp => this.recordPageUnload(msTimestamp), this.featureName, this.ee)
+    // Add the time of _window pagehide event_ firing to the next PVT harvest == NRDB windowUnload attr:
+    registerHandler('winPagehide', msTimestamp => this.addTiming('unload', msTimestamp, null), this.featureName, this.ee)
 
     const harvestTimeSeconds = agentRef.init.page_view_timing.harvestTimeSeconds || 30
 
@@ -78,21 +79,6 @@ export class Aggregate extends AggregateBase {
       this.addTiming('pageHide', timestamp, null)
       this.curSessEndRecorded = true
     }
-  }
-
-  /**
-   * Add the time of _window pagehide event_ firing to the next PVT harvest == NRDB windowUnload attr.
-   */
-  recordPageUnload (timestamp) {
-    this.addTiming('unload', timestamp, null)
-    /*
-    Issue: Because window's pageHide commonly fires BEFORE vis change and "final" harvest would happen at the former in this case, we also have to add our vis-change event now or it may not be sent.
-    Affected: Safari < v14.1/.5 ; versions that don't support 'visiilitychange' event
-    Impact: For affected w/o this, NR 'pageHide' attribute may not be sent. For other browsers w/o this, NR 'pageHide' gets fragmented into its own harvest call on page unloading because of dual EoL logic.
-    Mitigation: NR 'unload' and 'pageHide' are both recorded when window pageHide fires, rather than only recording 'unload'.
-    Future: When EoL can become the singular subscribeToVisibilityChange, it's likely endCurrentSession isn't needed here as 'unload'-'pageHide' can be untangled.
-    */
-    this.endCurrentSession(timestamp)
   }
 
   addTiming (name, value, attrs) {

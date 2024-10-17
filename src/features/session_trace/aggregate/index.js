@@ -64,6 +64,12 @@ export class Aggregate extends AggregateBase {
         // if another page's session entity has expired, or another page has transitioned to off and this one hasn't... we can just abort straight away here
         if (this.sessionId !== sessionState.value || (eventType === 'cross-tab' && this.scheduler?.started && sessionState.sessionTraceMode === MODE.OFF)) this.abort(2)
       })
+
+      if (typeof PerformanceNavigationTiming !== 'undefined') {
+        this.traceStorage.storeTiming(globalScope.performance?.getEntriesByType?.('navigation')[0])
+      } else {
+        this.traceStorage.storeTiming(globalScope.performance?.timing, true)
+      }
     }
 
     /** ST/SR sampling flow in BCS - https://drive.google.com/file/d/19hwt2oft-8Hh4RrjpLqEXfpP_9wYBLcq/view?usp=sharing */
@@ -92,12 +98,6 @@ export class Aggregate extends AggregateBase {
     registerHandler('bstApi', (...args) => this.traceStorage.storeSTN(...args), this.featureName, this.ee)
     registerHandler('trace-jserror', (...args) => this.traceStorage.storeErrorAgg(...args), this.featureName, this.ee)
     registerHandler('pvtAdded', (...args) => this.traceStorage.processPVT(...args), this.featureName, this.ee)
-
-    if (typeof PerformanceNavigationTiming !== 'undefined') {
-      this.traceStorage.storeTiming(globalScope.performance?.getEntriesByType?.('navigation')[0])
-    } else {
-      this.traceStorage.storeTiming(globalScope.performance?.timing, true)
-    }
 
     /** Only start actually harvesting if running in full mode at init time */
     if (this.mode === MODE.FULL) this.startHarvesting()

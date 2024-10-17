@@ -75,6 +75,13 @@ test('prepareHarvest returns undefined if there are no trace nodes', () => {
   expect(sessionTraceAggregate.traceStorage.takeSTNs).not.toHaveBeenCalled()
 })
 
+test('initialize only ever stores timings once', () => {
+  const storeTimingSpy = jest.spyOn(sessionTraceAggregate.traceStorage, 'storeTiming')
+  /** initialize was already called in setup, so we should not see a new call */
+  sessionTraceAggregate.initialize()
+  expect(storeTimingSpy).toHaveBeenCalledTimes(0)
+})
+
 test('tracks previously stored events and processes them once per occurrence', done => {
   document.addEventListener('visibilitychange', () => 1)
   document.addEventListener('visibilitychange', () => 2)

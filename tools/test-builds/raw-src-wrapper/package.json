@@ -9,6 +9,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@newrelic/browser-agent": "file:../../../temp/newrelic-browser-agent-1.268.0.tgz"
+    "@newrelic/browser-agent": "file:../../../temp/newrelic-browser-agent-1.269.0.tgz"
   }
 }

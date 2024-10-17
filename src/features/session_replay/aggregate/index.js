@@ -21,7 +21,6 @@ import { RRWEB_VERSION } from '../../../common/constants/env'
 import { MODE, SESSION_EVENTS, SESSION_EVENT_TYPES } from '../../../common/session/constants'
 import { stringify } from '../../../common/util/stringify'
 import { stylesheetEvaluator } from '../shared/stylesheet-evaluator'
-import { deregisterDrain } from '../../../common/drain/drain'
 import { now } from '../../../common/timing/now'
 import { buildNRMetaNode } from '../shared/utils'
 import { MAX_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
@@ -106,7 +105,7 @@ export class Aggregate extends AggregateBase {
     this.waitForFlags(['srs', 'sr']).then(([srMode, entitled]) => {
       this.entitled = !!entitled
       if (!this.entitled) {
-        deregisterDrain(this.agentIdentifier, this.featureName)
+        this.deregisterDrain()
         if (this.recorder?.recording) {
           this.abort(ABORT_REASONS.ENTITLEMENTS)
           handle(SUPPORTABILITY_METRIC_CHANNEL, ['SessionReplay/EnabledNotEntitled/Detected'], undefined, FEATURE_NAMES.metrics, this.ee)

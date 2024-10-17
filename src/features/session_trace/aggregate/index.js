@@ -4,7 +4,6 @@ import { FEATURE_NAME } from '../constants'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { TraceStorage } from './trace/storage'
 import { obj as encodeObj } from '../../../common/url/encode'
-import { deregisterDrain } from '../../../common/drain/drain'
 import { globalScope } from '../../../common/constants/runtime'
 import { MODE, SESSION_EVENTS } from '../../../common/session/constants'
 import { applyFnToProps } from '../../../common/util/traverse'
@@ -38,7 +37,7 @@ export class Aggregate extends AggregateBase {
   /** Sets up event listeners, and initializes this module to run in the correct "mode".  Can be triggered from a few places, but makes an effort to only set up listeners once */
   initialize (stMode, stEntitled, ignoreSession) {
     this.entitled ??= stEntitled
-    if (this.blocked || !this.entitled) return deregisterDrain(this.agentIdentifier, this.featureName)
+    if (this.blocked || !this.entitled) return this.deregisterDrain()
 
     if (!this.initialized) {
       this.initialized = true
@@ -74,7 +73,7 @@ export class Aggregate extends AggregateBase {
 
     /** If the mode is off, we do not want to hold up draining for other features, so we deregister the feature for now.
      * If it drains later (due to a mode change), data and handlers will instantly drain instead of waiting for the registry. */
-    if (this.mode === MODE.OFF) return deregisterDrain(this.agentIdentifier, this.featureName)
+    if (this.mode === MODE.OFF) return this.deregisterDrain()
 
     this.timeKeeper ??= this.agentRef.runtime.timeKeeper
 

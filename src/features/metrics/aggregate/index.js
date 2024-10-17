@@ -7,7 +7,6 @@ import { onDOMContentLoaded } from '../../../common/window/load'
 import { windowAddEventListener } from '../../../common/event-listener/event-listener-opts'
 import { isBrowserScope, isWorkerScope } from '../../../common/constants/runtime'
 import { AggregateBase } from '../../utils/aggregate-base'
-import { deregisterDrain } from '../../../common/drain/drain'
 import { isIFrameWindow } from '../../../common/dom/iframe'
 // import { WEBSOCKET_TAG } from '../../../common/wrap/wrap-websocket'
 // import { handleWebsocketEvents } from './websocket-detection'
@@ -26,7 +25,7 @@ export class Aggregate extends AggregateBase {
         this.drain()
       } else {
         this.blocked = true // if rum response determines that customer lacks entitlements for spa endpoint, this feature shouldn't harvest
-        deregisterDrain(this.agentIdentifier, this.featureName)
+        this.deregisterDrain()
       }
     })
 

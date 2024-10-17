@@ -3,7 +3,6 @@
  */
 
 import { isBrowserScope } from '../../../common/constants/runtime'
-import { deregisterDrain } from '../../../common/drain/drain'
 import { handle } from '../../../common/event-emitter/handle'
 import { windowAddEventListener } from '../../../common/event-listener/event-listener-opts'
 import { InstrumentBase } from '../../utils/instrument-base'
@@ -31,7 +30,7 @@ export class Instrument extends InstrumentBase {
 
     /** If any of the sources are active, import the aggregator. otherwise deregister */
     if (genericEventSourceConfigs.some(x => x)) this.importAggregator(agentRef)
-    else deregisterDrain(agentRef.agentIdentifier, this.featureName)
+    else this.deregisterDrain()
   }
 }
 

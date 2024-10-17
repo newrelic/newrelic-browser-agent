@@ -51,7 +51,9 @@ export class HarvestScheduler extends SharedContext {
     if (this.aborted) return
     // If opts.onUnload is defined, these are special actions to execute before attempting to send the final payload.
     if (this.opts.onUnload) this.opts.onUnload()
-    this.runHarvest({ unload: true })
+    // Events may still be added at unload time by other features, which we want to include in the final harvest of the feature. Hence, all final harvests are delayed to the
+    // end of the event loop to allow time via macrotask. All features will get to run their onUnload fn first before any final harvests are sent.
+    setTimeout(() => this.runHarvest({ unload: true }), 0)
   }
 
   startTimer (interval, initialDelay) {

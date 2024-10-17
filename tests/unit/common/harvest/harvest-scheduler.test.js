@@ -36,21 +36,19 @@ describe('unload', () => {
     expect(subscribeToEOL).toHaveBeenCalledWith(expect.any(Function))
   })
 
-  test('should run onUnload callback when started', () => {
-    harvestSchedulerInstance.opts.onUnload = jest.fn()
+  test('should run onUnload callback on EoL when provided', () => {
+    harvestSchedulerInstance = new HarvestScheduler(undefined, { onUnload: jest.fn() })
 
-    eolSubscribeFn()
+    for (const arr of jest.mocked(subscribeToEOL).mock.calls) arr[0]()
 
     expect(harvestSchedulerInstance.opts.onUnload).toHaveBeenCalledTimes(1)
   })
 
-  test('should run harvest (on next tick) when started and not aborted', () => {
+  test('should run harvest on EoL if not aborted', () => {
     harvestSchedulerInstance.aborted = false
 
     eolSubscribeFn()
 
-    expect(harvestSchedulerInstance.runHarvest).not.toHaveBeenCalled()
-    jest.advanceTimersByTime(1)
     expect(harvestSchedulerInstance.runHarvest).toHaveBeenCalledWith({ unload: true })
   })
 

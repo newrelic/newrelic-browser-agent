@@ -25,8 +25,8 @@ const {
  */
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
-  constructor (agentIdentifier, aggregator, auto = true) {
-    super(agentIdentifier, aggregator, FEATURE_NAME, auto)
+  constructor (agentRef, auto = true) {
+    super(agentRef, FEATURE_NAME, auto)
     if (!isBrowserScope) return // SPA not supported outside web env
 
     try {
@@ -54,7 +54,7 @@ export class Instrument extends InstrumentBase {
     promiseEE.on(CB_END, endTimestamp)
     jsonpEE.on(CB_END, endTimestamp)
 
-    this.ee.on('fn-err', (...args) => { if (!args[2]?.__newrelic?.[agentIdentifier]) handle('function-err', [...args], undefined, this.featureName, this.ee) })
+    this.ee.on('fn-err', (...args) => { if (!args[2]?.__newrelic?.[agentRef.agentIdentifier]) handle('function-err', [...args], undefined, this.featureName, this.ee) })
 
     this.ee.buffer([FN_START, FN_END, 'xhr-resolved'], this.featureName)
     eventsEE.buffer([FN_START], this.featureName)
@@ -110,7 +110,7 @@ export class Instrument extends InstrumentBase {
     }
 
     this.abortHandler = this.#abort
-    this.importAggregator()
+    this.importAggregator(agentRef)
   }
 
   /** Restoration and resource release tasks to be done if SPA loader is being aborted. Unwind changes to globals and subscription to DOM events. */

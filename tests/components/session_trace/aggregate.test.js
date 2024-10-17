@@ -2,16 +2,16 @@ import { Instrument as SessionTrace } from '../../../src/features/session_trace/
 import { setupAgent } from '../setup-agent'
 import { MODE } from '../../../src/common/session/constants'
 
-let agentSetup
+let mainAgent
 
 beforeAll(() => {
-  agentSetup = setupAgent()
+  mainAgent = setupAgent()
 })
 
 let sessionTraceAggregate
 
 beforeEach(async () => {
-  const sessionTraceInstrument = new SessionTrace(agentSetup.agentIdentifier, agentSetup.aggregator)
+  const sessionTraceInstrument = new SessionTrace(mainAgent)
   await new Promise(process.nextTick)
   sessionTraceAggregate = sessionTraceInstrument.featAggregate
 

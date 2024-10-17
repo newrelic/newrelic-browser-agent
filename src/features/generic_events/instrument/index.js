@@ -2,7 +2,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { getConfiguration } from '../../../common/config/init'
 import { isBrowserScope } from '../../../common/constants/runtime'
 import { deregisterDrain } from '../../../common/drain/drain'
 import { handle } from '../../../common/event-emitter/handle'
@@ -12,16 +11,15 @@ import { FEATURE_NAME, OBSERVED_EVENTS, OBSERVED_WINDOW_EVENTS } from '../consta
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
-  constructor (agentIdentifier, aggregator, auto = true) {
-    super(agentIdentifier, aggregator, FEATURE_NAME, auto)
-    const agentInit = getConfiguration(this.agentIdentifier)
+  constructor (agentRef, auto = true) {
+    super(agentRef, FEATURE_NAME, auto)
     const genericEventSourceConfigs = [
-      agentInit.page_action.enabled,
-      agentInit.user_actions.enabled
+      agentRef.init.page_action.enabled,
+      agentRef.init.user_actions.enabled
       // other future generic event source configs to go here, like M&Ms, PageResouce, etc.
     ]
 
-    if (isBrowserScope && agentInit.user_actions.enabled) {
+    if (isBrowserScope && agentRef.init.user_actions.enabled) {
       OBSERVED_EVENTS.forEach(eventType =>
         windowAddEventListener(eventType, (evt) => handle('ua', [evt], undefined, this.featureName, this.ee), true)
       )
@@ -32,8 +30,8 @@ export class Instrument extends InstrumentBase {
     }
 
     /** If any of the sources are active, import the aggregator. otherwise deregister */
-    if (genericEventSourceConfigs.some(x => x)) this.importAggregator()
-    else deregisterDrain(this.agentIdentifier, this.featureName)
+    if (genericEventSourceConfigs.some(x => x)) this.importAggregator(agentRef)
+    else deregisterDrain(agentRef.agentIdentifier, this.featureName)
   }
 }
 

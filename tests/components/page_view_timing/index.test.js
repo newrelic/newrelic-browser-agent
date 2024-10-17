@@ -1,8 +1,3 @@
-import { Aggregator } from '../../../src/common/aggregate/aggregator'
-import { ee } from '../../../src/common/event-emitter/contextual-ee'
-import { setConfiguration } from '../../../src/common/config/init'
-import { setInfo } from '../../../src/common/config/info'
-import { setRuntime } from '../../../src/common/config/runtime'
 import { VITAL_NAMES } from '../../../src/common/vitals/constants'
 
 // Note: these callbacks fire right away unlike the real web-vitals API which are async-on-trigger
@@ -46,18 +41,21 @@ const expectedNetworkInfo = {
 }
 
 let pvtAgg
-const agentId = 'abcd'
+const agentIdentifier = 'abcd'
 describe('pvt aggregate tests', () => {
   beforeEach(async () => {
     triggerVisChange = undefined
     jest.doMock('../../../src/common/util/feature-flags', () => ({
       __esModule: true,
-      activatedFeatures: { [agentId]: { pvt: 1 } }
+      activatedFeatures: { [agentIdentifier]: { pvt: 1 } }
     }))
 
-    setInfo(agentId, { licenseKey: 'licenseKey', applicationID: 'applicationID' })
-    setConfiguration(agentId, {})
-    setRuntime(agentId, {})
+    const mainAgent = {
+      agentIdentifier,
+      info: { licenseKey: 'licenseKey', applicationID: 'applicationID' },
+      init: { page_view_timing: {} },
+      runtime: {}
+    }
     const { Aggregate } = await import('../../../src/features/page_view_timing/aggregate')
 
     global.navigator.connection = {
@@ -66,7 +64,7 @@ describe('pvt aggregate tests', () => {
       rtt: 270,
       downlink: 700
     }
-    pvtAgg = new Aggregate(agentId, new Aggregator({ agentIdentifier: agentId, ee }))
+    pvtAgg = new Aggregate(mainAgent)
     await pvtAgg.waitForFlags(([]))
     pvtAgg.prepareHarvest = jest.fn(() => ({}))
   })

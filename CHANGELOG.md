@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.270.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.269.0...v1.270.0) (2024-10-17)
+
+
+### Features
+
+* Move deregisterDrain method to feature-base ([#1220](https://github.com/newrelic/newrelic-browser-agent/issues/1220)) ([5fdea14](https://github.com/newrelic/newrelic-browser-agent/commit/5fdea14097d415d7c6f3f98bfe87848e118ec62e))
+* Relocate aggregator from loader and improve agent internals ([#1216](https://github.com/newrelic/newrelic-browser-agent/issues/1216)) ([789df5a](https://github.com/newrelic/newrelic-browser-agent/commit/789df5a0d5574acb02ac0db2aea98150a9c8786e))
+* Remove 'pageHide' from page end-of-lifecycle listener ([#1219](https://github.com/newrelic/newrelic-browser-agent/issues/1219)) ([daf349e](https://github.com/newrelic/newrelic-browser-agent/commit/daf349e632902597c232c3392cc5d188f2995f25))
+
 ## [1.269.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.268.0...v1.269.0) (2024-10-16)
 
 

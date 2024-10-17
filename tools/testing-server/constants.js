@@ -62,6 +62,7 @@ module.exports.defaultInitBlock = {
   logging: enabledFeature,
   metrics: { enabled, autoStart },
   obfuscate: undefined,
+  performance: { capture_marks: true, capture_measures: true },
   page_action: { enabled },
   page_view_event: { enabled, autoStart },
   page_view_timing: enabledFeature,

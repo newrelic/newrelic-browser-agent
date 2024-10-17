@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { gosNREUMOriginals } from '../../../common/window/nreum'
-import { getLoaderConfig } from '../../../common/config/loader-config'
 import { handle } from '../../../common/event-emitter/handle'
 import { id } from '../../../common/ids/id'
 import { ffVersion, globalScope, isBrowserScope } from '../../../common/constants/runtime'
@@ -29,10 +28,10 @@ var origXHR = gosNREUMOriginals().o.XHR
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
-  constructor (agentIdentifier, aggregator, auto = true) {
-    super(agentIdentifier, aggregator, FEATURE_NAME, auto)
+  constructor (agentRef, auto = true) {
+    super(agentRef, FEATURE_NAME, auto)
 
-    this.dt = new DT(agentIdentifier)
+    this.dt = new DT(agentRef.agentIdentifier)
 
     this.handler = (type, args, ctx, group) => handle(type, args, ctx, group, this.ee)
 
@@ -60,13 +59,13 @@ export class Instrument extends InstrumentBase {
 
     wrapFetch(this.ee)
     wrapXhr(this.ee)
-    subscribeToEvents(agentIdentifier, this.ee, this.handler, this.dt)
+    subscribeToEvents(agentRef, this.ee, this.handler, this.dt)
 
-    this.importAggregator()
+    this.importAggregator(agentRef)
   }
 }
 
-function subscribeToEvents (agentIdentifier, ee, handler, dt) {
+function subscribeToEvents (agentRef, ee, handler, dt) {
   ee.on('new-xhr', onNewXhr)
   ee.on('open-xhr-start', onOpenXhrStart)
   ee.on('open-xhr-end', onOpenXhrEnd)
@@ -121,9 +120,8 @@ function subscribeToEvents (agentIdentifier, ee, handler, dt) {
   }
 
   function onOpenXhrEnd (args, xhr) {
-    var loaderConfig = getLoaderConfig(agentIdentifier)
-    if (loaderConfig.xpid && this.sameOrigin) {
-      xhr.setRequestHeader('X-NewRelic-ID', loaderConfig.xpid)
+    if (agentRef.loader_config.xpid && this.sameOrigin) {
+      xhr.setRequestHeader('X-NewRelic-ID', agentRef.loader_config.xpid)
     }
 
     var payload = dt.generateTracePayload(this.parsedOrigin)

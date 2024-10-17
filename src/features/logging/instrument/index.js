@@ -4,8 +4,8 @@ import { bufferLog } from '../shared/utils'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
-  constructor (agentIdentifier, aggregator, auto = true) {
-    super(agentIdentifier, aggregator, FEATURE_NAME, auto)
+  constructor (agentRef, auto = true) {
+    super(agentRef, FEATURE_NAME, auto)
 
     const instanceEE = this.ee
     /** emitted by wrap-logger function */
@@ -13,7 +13,7 @@ export class Instrument extends InstrumentBase {
       const { level, customAttributes } = this
       bufferLog(instanceEE, message, customAttributes, level)
     })
-    this.importAggregator()
+    this.importAggregator(agentRef)
   }
 }
 

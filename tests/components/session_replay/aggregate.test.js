@@ -10,10 +10,10 @@ import { getRuntime } from '../../../src/common/config/runtime'
 import { getInfo } from '../../../src/common/config/info'
 import { MAX_PAYLOAD_SIZE } from '../../../src/common/constants/agent-constants'
 
-let agentSetup
+let mainAgent
 
 beforeAll(() => {
-  agentSetup = setupAgent()
+  mainAgent = setupAgent()
 })
 
 let sessionReplayAggregate, session
@@ -22,7 +22,7 @@ beforeEach(async () => {
   document.body.innerHTML = `<span>${faker.lorem.paragraph()}</span>`
   jest.spyOn(consoleModule, 'warn').mockImplementation(() => {})
 
-  const sessionReplayInstrument = new SessionReplay(agentSetup.agentIdentifier, agentSetup.aggregator)
+  const sessionReplayInstrument = new SessionReplay(mainAgent)
   await new Promise(process.nextTick)
   sessionReplayAggregate = sessionReplayInstrument.featAggregate
 
@@ -30,17 +30,17 @@ beforeEach(async () => {
     cbFinished({ status: 200 })
   })
 
-  session = getRuntime(agentSetup.agentIdentifier).session
+  session = getRuntime(mainAgent.agentIdentifier).session
 })
 
 afterEach(() => {
-  resetAgent(agentSetup.agentIdentifier)
+  resetAgent(mainAgent.agentIdentifier)
   jest.clearAllMocks()
 })
 
 describe('Session Replay Session Behavior', () => {
   test('when session ends', async () => {
-    getRuntime(agentSetup.agentIdentifier).session.state.isNew = true
+    getRuntime(mainAgent.agentIdentifier).session.state.isNew = true
     sessionReplayAggregate.ee.emit('rumresp', [{ sr: 1, srs: MODE.FULL }])
     await new Promise(process.nextTick)
 
@@ -58,7 +58,7 @@ describe('Session Replay Session Behavior', () => {
   })
 
   test('when session is paused and resumed', async () => {
-    getRuntime(agentSetup.agentIdentifier).session.state.isNew = true
+    getRuntime(mainAgent.agentIdentifier).session.state.isNew = true
     sessionReplayAggregate.ee.emit('rumresp', [{ sr: 1, srs: MODE.FULL }])
     await new Promise(process.nextTick)
 
@@ -75,7 +75,7 @@ describe('Session Replay Session Behavior', () => {
   })
 
   test('session SR mode matches SR mode -- FULL', async () => {
-    getRuntime(agentSetup.agentIdentifier).session.state.isNew = true
+    getRuntime(mainAgent.agentIdentifier).session.state.isNew = true
     sessionReplayAggregate.ee.emit('rumresp', [{ sr: 1, srs: MODE.FULL }])
     await new Promise(process.nextTick)
 
@@ -84,7 +84,7 @@ describe('Session Replay Session Behavior', () => {
   })
 
   test('session SR mode matches SR mode -- ERROR', async () => {
-    getRuntime(agentSetup.agentIdentifier).session.state.isNew = true
+    getRuntime(mainAgent.agentIdentifier).session.state.isNew = true
     sessionReplayAggregate.ee.emit('rumresp', [{ sr: 1, srs: MODE.ERROR }])
     await new Promise(process.nextTick)
 
@@ -93,7 +93,7 @@ describe('Session Replay Session Behavior', () => {
   })
 
   test('session SR mode matches SR mode -- OFF', async () => {
-    getRuntime(agentSetup.agentIdentifier).session.state.isNew = true
+    getRuntime(mainAgent.agentIdentifier).session.state.isNew = true
     sessionReplayAggregate.ee.emit('rumresp', [{ sr: 1, srs: MODE.OFF }])
     await new Promise(process.nextTick)
 
@@ -102,7 +102,7 @@ describe('Session Replay Session Behavior', () => {
   })
 
   test('session SR mode is OFF when not entitled -- FULL', async () => {
-    getRuntime(agentSetup.agentIdentifier).session.state.isNew = true
+    getRuntime(mainAgent.agentIdentifier).session.state.isNew = true
     sessionReplayAggregate.ee.emit('rumresp', [{ sr: 0, srs: MODE.FULL }])
     await new Promise(process.nextTick)
 
@@ -111,7 +111,7 @@ describe('Session Replay Session Behavior', () => {
   })
 
   test('session SR mode is OFF when not entitled -- ERROR', async () => {
-    getRuntime(agentSetup.agentIdentifier).session.state.isNew = true
+    getRuntime(mainAgent.agentIdentifier).session.state.isNew = true
     sessionReplayAggregate.ee.emit('rumresp', [{ sr: 0, srs: MODE.ERROR }])
     await new Promise(process.nextTick)
 
@@ -154,7 +154,7 @@ describe('Session Replay Sample -> Mode Behaviors', () => {
     await new Promise(process.nextTick)
     session.isNew = false
 
-    const sessionReplayInstrument = new SessionReplay(agentSetup.agentIdentifier, agentSetup.aggregator)
+    const sessionReplayInstrument = new SessionReplay(mainAgent)
     await new Promise(process.nextTick)
     const newSessionReplayAggregate = sessionReplayInstrument.featAggregate
 
@@ -167,9 +167,9 @@ describe('Session Replay Sample -> Mode Behaviors', () => {
 
 describe('Session Replay Error Mode Behaviors', () => {
   test('an error BEFORE rrweb import starts running in ERROR from beginning (when not preloaded)', async () => {
-    ee.get(agentSetup.agentIdentifier).emit(SR_EVENT_EMITTER_TYPES.ERROR_DURING_REPLAY, ['test1'], undefined, FEATURE_NAMES.sessionReplay, ee.get(agentSetup.agentIdentifier))
+    ee.get(mainAgent.agentIdentifier).emit(SR_EVENT_EMITTER_TYPES.ERROR_DURING_REPLAY, ['test1'], undefined, FEATURE_NAMES.sessionReplay, ee.get(mainAgent.agentIdentifier))
 
-    const sessionReplayInstrument = new SessionReplay(agentSetup.agentIdentifier, agentSetup.aggregator)
+    const sessionReplayInstrument = new SessionReplay(mainAgent)
     await new Promise(process.nextTick)
     const newSessionReplayAggregate = sessionReplayInstrument.featAggregate
 
@@ -187,7 +187,7 @@ describe('Session Replay Error Mode Behaviors', () => {
     expect(sessionReplayAggregate.mode).toEqual(MODE.ERROR)
     expect(sessionReplayAggregate.scheduler.started).toEqual(false)
 
-    ee.get(agentSetup.agentIdentifier).emit(SR_EVENT_EMITTER_TYPES.ERROR_DURING_REPLAY, ['test1'], undefined, FEATURE_NAMES.sessionReplay, ee.get(agentSetup.agentIdentifier))
+    ee.get(mainAgent.agentIdentifier).emit(SR_EVENT_EMITTER_TYPES.ERROR_DURING_REPLAY, ['test1'], undefined, FEATURE_NAMES.sessionReplay, ee.get(mainAgent.agentIdentifier))
 
     expect(sessionReplayAggregate.mode).toEqual(MODE.FULL)
     expect(sessionReplayAggregate.scheduler.started).toEqual(true)
@@ -279,7 +279,7 @@ describe('Session Replay Harvest Behaviors', () => {
     const harvestContents = jest.mocked(sessionReplayAggregate.getHarvestContents).mock.results[0].value
     expect(harvestContents.qs).toMatchObject({
       protocol_version: '0',
-      browser_monitoring_key: getInfo(agentSetup.agentIdentifier).licenseKey
+      browser_monitoring_key: getInfo(mainAgent.agentIdentifier).licenseKey
     })
     expect(harvestContents.qs.attributes.includes('content_encoding')).toEqual(false)
     expect(harvestContents.qs.attributes.includes('isFirstChunk')).toEqual(true)
@@ -338,7 +338,7 @@ describe('Session Replay Harvest Behaviors', () => {
 })
 
 function createAnyQueryMatcher () {
-  const info = getInfo(agentSetup.agentIdentifier)
+  const info = getInfo(mainAgent.agentIdentifier)
   return {
     browser_monitoring_key: info.licenseKey,
     type: 'SessionReplay',

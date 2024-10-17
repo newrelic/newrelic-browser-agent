@@ -1,29 +1,23 @@
 import * as qp from '@newrelic/nr-querypack'
-import { ee } from '../../../../../src/common/event-emitter/contextual-ee'
-import { Aggregator } from '../../../../../src/common/aggregate/aggregator'
 import { Aggregate } from '../../../../../src/features/page_view_timing/aggregate'
-import { getInfo } from '../../../../../src/common/config/info'
 
-jest.mock('../../../../../src/common/config/info', () => ({
-  __esModule: true,
-  getInfo: jest.fn(),
-  isValid: jest.fn().mockReturnValue(true)
-}))
-jest.mock('../../../../../src/common/config/init', () => ({
-  __esModule: true,
-  getConfigurationValue: jest.fn().mockReturnValue(undefined)
-}))
+const mockRuntime = {} // getAddStringContext in the serializer still relies on getRuntime() fn
 jest.mock('../../../../../src/common/config/runtime', () => ({
   __esModule: true,
-  getRuntime: jest.fn().mockReturnValue({})
+  getRuntime: jest.fn(() => mockRuntime),
+  setRuntime: jest.fn()
 }))
 
-const pvtAgg = new Aggregate('abcd', new Aggregator({ agentIdentifier: 'abcd', ee }))
+const pvtAgg = new Aggregate({
+  agentIdentifier: 'abcd',
+  info: { },
+  init: { page_view_timing: {} },
+  runtime: mockRuntime
+})
 
 describe('PVT aggregate', () => {
   test('serializer default attributes', () => {
     const schema = qp.schemas['bel.6']
-    getInfo.mockReturnValue({})
 
     testCases().forEach(testCase => {
       const expectedPayload = qp.encode(testCase.input, schema)
@@ -34,7 +28,7 @@ describe('PVT aggregate', () => {
 
   test('serializer handles custom attributes', () => {
     // should add custom, should not add cls (reserved)
-    getInfo.mockReturnValue({ jsAttributes: { custom: 'val', cls: 'customVal' } })
+    pvtAgg.agentRef.info.jsAttributes = { custom: 'val', cls: 'customVal' }
 
     testCases().forEach(testCase => {
       const payload = pvtAgg.getPayload(getAgentInternalFormat(testCase.input))

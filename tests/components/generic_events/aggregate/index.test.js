@@ -15,7 +15,7 @@ beforeAll(() => {
 })
 
 beforeEach(async () => {
-  const genericEventsInstrument = new GenericEvents(agentSetup.agentIdentifier, agentSetup.aggregator)
+  const genericEventsInstrument = new GenericEvents(agentSetup)
   await new Promise(process.nextTick)
   genericEventsAggregate = genericEventsInstrument.featAggregate
 })
@@ -140,7 +140,7 @@ describe('sub-features', () => {
     getConfiguration(agentSetup.agentIdentifier).page_action = { enabled: false }
 
     const { Aggregate } = await import('../../../../src/features/generic_events/aggregate')
-    genericEventsAggregate = new Aggregate(agentSetup.agentIdentifier, agentSetup.aggregator)
+    genericEventsAggregate = new Aggregate(agentSetup)
     genericEventsAggregate.ee.emit('api-addPageAction', [relativeTimestamp, name, {}])
     expect(genericEventsAggregate.events[0]).toBeUndefined()
   })

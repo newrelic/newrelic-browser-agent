@@ -17,8 +17,8 @@ const {
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
-  constructor (agentIdentifier, aggregator, auto = true) {
-    super(agentIdentifier, aggregator, FEATURE_NAME, auto)
+  constructor (agentRef, auto = true) {
+    super(agentRef, FEATURE_NAME, auto)
     const canTrackSession = canEnableSessionTracking(this.agentIdentifier)
     if (!canTrackSession) {
       this.deregisterDrain()
@@ -58,7 +58,7 @@ export class Instrument extends InstrumentBase {
       // Per NEWRELIC-8525, we don't have a fallback for capturing resources for older versions that don't support PO at this time.
     }
 
-    this.importAggregator({ resourceObserver: observer })
+    this.importAggregator(agentRef, { resourceObserver: observer })
   }
 }
 

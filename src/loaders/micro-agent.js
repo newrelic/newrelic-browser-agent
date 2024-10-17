@@ -3,7 +3,6 @@ import { Instrument as PVE } from '../features/page_view_event/instrument'
 import { getEnabledFeatures } from './features/enabled-features'
 import { configure } from './configure/configure'
 // core files
-import { Aggregator } from '../common/aggregate/aggregator'
 import { setNREUMInitializedAgent } from '../common/window/nreum'
 import { getInfo } from '../common/config/info'
 import { getConfiguration, getConfigurationValue } from '../common/config/init'
@@ -11,7 +10,6 @@ import { getLoaderConfig } from '../common/config/loader-config'
 import { getRuntime } from '../common/config/runtime'
 import { FEATURE_NAMES } from './features/features'
 import { warn } from '../common/util/console'
-import { onWindowLoad } from '../common/window/load'
 import { AgentBase } from './agent-base'
 
 const nonAutoFeatures = [
@@ -34,7 +32,6 @@ export class MicroAgent extends AgentBase {
   constructor (options, agentIdentifier) {
     super(agentIdentifier)
 
-    this.sharedAggregator = new Aggregator({ agentIdentifier: this.agentIdentifier })
     this.features = {}
     setNREUMInitializedAgent(this.agentIdentifier, this)
 
@@ -77,21 +74,22 @@ export class MicroAgent extends AgentBase {
 
       try {
         // a biproduct of doing this is that the "session manager" is automatically handled through importing this feature
-        this.features.page_view_event = new PVE(this.agentIdentifier, this.sharedAggregator)
+        this.features.page_view_event = new PVE(this)
       } catch (err) {
         warn(24, err)
       }
 
-      onWindowLoad(() => {
-        // these features do not import an "instrument" file, meaning they are only hooked up to the API.
+      this.features.page_view_event.onAggregateImported.then(() => {
+        /* The following features do not import an "instrument" file, meaning they are only hooked up to the API.
+        Since the missing instrument-base class handles drain-gating (racing behavior) and PVE handles some setup, these are chained until after PVE has finished initializing
+        so as to avoid the race condition of things like session and sharedAggregator not being ready by features that uses them right away. */
         nonAutoFeatures.forEach(f => {
           if (enabledFeatures[f] && features.includes(f)) {
             import(/* webpackChunkName: "lazy-feature-loader" */ '../features/utils/lazy-feature-loader').then(({ lazyFeatureLoader }) => {
               return lazyFeatureLoader(f, 'aggregate')
             }).then(({ Aggregate }) => {
-              this.features[f] = new Aggregate(this.agentIdentifier, this.sharedAggregator)
-            }).catch(err =>
-              warn(25, err))
+              this.features[f] = new Aggregate(this)
+            }).catch(err => warn(25, err))
           }
         })
       })

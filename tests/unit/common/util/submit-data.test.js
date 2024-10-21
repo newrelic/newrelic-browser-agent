@@ -19,21 +19,12 @@ afterEach(() => {
 describe('getSubmitMethod', () => {
   test('should use xhr for final harvest when isBrowserScope is false', () => {
     jest.replaceProperty(runtimeModule, 'isBrowserScope', false)
-    jest.replaceProperty(runtimeModule, 'supportsSendBeacon', true)
 
     expect(submitData.getSubmitMethod({ isFinalHarvest: true })).toEqual(submitData.xhr)
   })
 
-  test('should use xhr for final harvest when supportsSendBeacon is false', () => {
+  test('should use beacon for final harvest when isBrowserScope is true', () => {
     jest.replaceProperty(runtimeModule, 'isBrowserScope', true)
-    jest.replaceProperty(runtimeModule, 'supportsSendBeacon', false)
-
-    expect(submitData.getSubmitMethod({ isFinalHarvest: true })).toEqual(submitData.xhr)
-  })
-
-  test('should use beacon for final harvest when isBrowserScope and supportsSendBeacon is true', () => {
-    jest.replaceProperty(runtimeModule, 'isBrowserScope', true)
-    jest.replaceProperty(runtimeModule, 'supportsSendBeacon', true)
 
     expect(submitData.getSubmitMethod({ isFinalHarvest: true })).toEqual(submitData.beacon)
   })
@@ -42,14 +33,12 @@ describe('getSubmitMethod', () => {
     null, undefined, false
   ])('should use xhr when final harvest is %s', (isFinalHarvest) => {
     jest.replaceProperty(runtimeModule, 'isBrowserScope', true)
-    jest.replaceProperty(runtimeModule, 'supportsSendBeacon', true)
 
     expect(submitData.getSubmitMethod({ isFinalHarvest })).toEqual(submitData.xhr)
   })
 
   test('should use xhr when opts is undefined', () => {
     jest.replaceProperty(runtimeModule, 'isBrowserScope', true)
-    jest.replaceProperty(runtimeModule, 'supportsSendBeacon', true)
 
     expect(submitData.getSubmitMethod()).toEqual(submitData.xhr)
   })

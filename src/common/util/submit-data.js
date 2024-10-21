@@ -4,7 +4,7 @@
  * @license Apache-2.0
  */
 
-import { isBrowserScope, supportsSendBeacon } from '../constants/runtime'
+import { isBrowserScope } from '../constants/runtime'
 
 /**
  * @typedef {xhr|beacon} NetworkMethods
@@ -17,7 +17,7 @@ import { isBrowserScope, supportsSendBeacon } from '../constants/runtime'
  * a final harvest within the agent.
  */
 export function getSubmitMethod ({ isFinalHarvest = false } = {}) {
-  return isFinalHarvest && isBrowserScope && supportsSendBeacon
+  return isFinalHarvest && isBrowserScope
     // Use sendBeacon for final harvest
     ? beacon
     // If not final harvest, or not browserScope, always use xhr post

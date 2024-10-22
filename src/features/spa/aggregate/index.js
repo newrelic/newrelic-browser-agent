@@ -19,7 +19,7 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { firstContentfulPaint } from '../../../common/vitals/first-contentful-paint'
 import { firstPaint } from '../../../common/vitals/first-paint'
 import { bundleId } from '../../../common/ids/bundle-id'
-import { loadedAsDeferredBrowserScript } from '../../../common/constants/runtime'
+import { initialLocation, loadedAsDeferredBrowserScript } from '../../../common/constants/runtime'
 import { handle } from '../../../common/event-emitter/handle'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { warn } from '../../../common/util/console'
@@ -35,8 +35,8 @@ export class Aggregate extends AggregateBase {
     super(agentRef, FEATURE_NAME)
 
     this.state = {
-      initialPageURL: agentRef.runtime.origin,
-      lastSeenUrl: agentRef.runtime.origin,
+      initialPageURL: initialLocation,
+      lastSeenUrl: initialLocation,
       lastSeenRouteName: null,
       timerMap: {},
       timerBudget: MAX_TIMER_BUDGET,

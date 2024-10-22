@@ -1,6 +1,6 @@
 import { getModeledObject } from './configurable'
 import { getNREUMInitializedAgent } from '../window/nreum'
-import { globalScope, originTime } from '../constants/runtime'
+import { originTime } from '../constants/runtime'
 import { BUILD_ENV, DIST_METHOD, VERSION } from '../constants/env'
 
 /**
@@ -23,7 +23,6 @@ const model = {
   loaderType: undefined,
   maxBytes: 30000,
   onerror: undefined,
-  origin: '' + globalScope.location,
   ptid: undefined,
   releaseIds: {},
   /** Agent-specific metadata found in the RUM call response. ex. entityGuid */

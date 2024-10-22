@@ -22,6 +22,26 @@ describe('STN Payload metadata checks', () => {
     expect(sessionTraceHarvests.length).toBe(0)
   })
 
+  it('harvests timing api data (and only ever once)', async () => {
+    const [stResults] = await Promise.all([
+      sessionTraceCapture.waitForResult({ timeout: 10000 }),
+      browser.url(await browser.testHandle.assetURL('instrumented.html', stConfig()))
+        .then(() => browser.waitForAgentLoad())
+        .then(() => browser.execute(function () {
+          // initialize again, to ensure we still only get one set of timing data
+          Object.values(newrelic.initializedAgents)[0].features.session_trace.featAggregate.initialize()
+        }))
+    ])
+
+    let seenTimingApiData = 0
+    stResults.forEach(({ request }) => {
+      if (request.body.find(x => x.n === 'domContentLoadedEventStart' && x.o === 'document' && x.t === 'timing')) {
+        seenTimingApiData++
+      }
+    })
+    expect(seenTimingApiData).toEqual(1)
+  })
+
   it('adds metadata query attrs', async () => {
     const [[{ request }]] = await Promise.all([
       sessionTraceCapture.waitForResult({ totalCount: 1 }),
@@ -32,6 +52,13 @@ describe('STN Payload metadata checks', () => {
     const firstTimestampOffset = request.body.reduce((acc, next) => (next.s < acc) ? next.s : acc, Infinity)
     const lastTimestampOffset = request.body.reduce((acc, next) => (next.e > acc) ? next.e : acc, 0)
     // first session harvest is not reported if session is disabled
-    testExpectedTrace({ data: request, nodeCount: request.body.length, firstTimestampOffset, lastTimestampOffset, firstSessionHarvest: true })
+    testExpectedTrace({
+      data: request,
+      nodeCount: request.body.length,
+      firstTimestampOffset,
+      lastTimestampOffset,
+      firstSessionHarvest: true,
+      currentUrl: request.headers.origin + '/tests/assets/instrumented.html'
+    })
   })
 })

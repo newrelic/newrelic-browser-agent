@@ -4,6 +4,88 @@
     {
       "changes": [
         {
+          "type": "fix",
+          "sha": "d1896869858eca3320144113e168f17f524f3119",
+          "message": "Only ever allow session traces to capture page load timings once",
+          "issues": [
+            "1212"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "f14b0fec81d7d21b418b6be6c5d415bdd813eca9",
+          "message": "Handle Session Replay Security Policy Errors",
+          "issues": [
+            "1215"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "1b2448498cf285f36530f2107cb0403401958b1f",
+          "message": "Include logging feature in micro agent loader",
+          "issues": [
+            "1210"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "6926474fe2530475e10daab2bb6bad745bb547e1",
+          "message": "Add instrumentation metadata to logging",
+          "issues": [
+            "1208"
+          ]
+        }
+      ],
+      "version": "1.269.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "b1dd9e77-97c7-49ad-851e-fd82e00c5aca",
+      "createTime": "2024-10-16T16:00:42.905Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
+          "sha": "94a9a0b465e9ea34132317236d47ac9f62ee4051",
+          "message": "Always return a string for custom stringify method",
+          "issues": [
+            "1207"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "b5e4c6dcdcfce3ab88132f2a1d82d4d02ab7640b",
+          "message": "Aggregate UserActions",
+          "issues": [
+            "1195"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "d3fac07379d18c98e9838152a31a482ff25fe5bf",
+          "message": "Force generic events feature to clear buffer when unloading",
+          "issues": [
+            "1202"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "1b0bb1dd992674f77c41a73449b64b022cdfc83c",
+          "message": "Add UserAction to GenericEvents",
+          "issues": [
+            "1186"
+          ]
+        }
+      ],
+      "version": "1.268.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "617ba9f2-df28-45fd-82f6-f9ebfdae2338",
+      "createTime": "2024-10-08T15:19:03.167Z"
+    },
+    {
+      "changes": [
+        {
           "type": "feat",
           "sha": "81349b82f5befd88f425cce1dee06f08fcea8a05",
           "message": "Upgrade to web-vitals v4",
@@ -1960,5 +2042,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2024-09-23T19:27:12.684Z"
+  "updateTime": "2024-10-16T16:00:42.905Z"
 }

@@ -173,6 +173,7 @@ export class AgentBase {
    * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/interaction/}
    * @returns {InteractionInstance} An API object that is bound to a specific BrowserInteraction event. Each time this method is called for the same BrowserInteraction, a new object is created, but it still references the same interaction.
    *  - Note: Does not apply to MicroAgent
+   *  - Deprecation Notice: interaction.createTracer is deprecated.  See https://docs.newrelic.com/eol/2024/04/eol-04-24-24-createtracer/ for more information.
   */
   interaction () {
     return this.#callMethod('interaction')

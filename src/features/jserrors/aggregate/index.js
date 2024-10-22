@@ -18,9 +18,10 @@ import { FEATURE_NAME } from '../constants'
 import { FEATURE_NAMES, FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { getNREUMInitializedAgent } from '../../../common/window/nreum'
-import { deregisterDrain } from '../../../common/drain/drain'
 import { now } from '../../../common/timing/now'
 import { applyFnToProps } from '../../../common/util/traverse'
+import { evaluateInternalError } from './internal-errors'
+import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 
 /**
  * @typedef {import('./compute-stack-trace.js').StackInfo} StackInfo
@@ -28,8 +29,8 @@ import { applyFnToProps } from '../../../common/util/traverse'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
-  constructor (thisAgent) {
-    super(thisAgent, FEATURE_NAME)
+  constructor (agentRef) {
+    super(agentRef, FEATURE_NAME)
 
     this.stackReported = {}
     this.observedAt = {}
@@ -46,7 +47,7 @@ export class Aggregate extends AggregateBase {
     register('softNavFlush', (interactionId, wasFinished, softNavAttrs) =>
       this.onSoftNavNotification(interactionId, wasFinished, softNavAttrs), this.featureName, this.ee) // when an ixn is done or cancelled
 
-    const harvestTimeSeconds = thisAgent.init.jserrors.harvestTimeSeconds || 10
+    const harvestTimeSeconds = agentRef.init.jserrors.harvestTimeSeconds || 10
 
     // 0 == off, 1 == on
     this.waitForFlags(['err']).then(([errFlag]) => {
@@ -57,7 +58,7 @@ export class Aggregate extends AggregateBase {
         this.drain()
       } else {
         this.blocked = true // if rum response determines that customer lacks entitlements for spa endpoint, this feature shouldn't harvest
-        deregisterDrain(this.agentIdentifier, this.featureName)
+        this.deregisterDrain()
       }
     })
   }
@@ -139,6 +140,15 @@ export class Aggregate extends AggregateBase {
     return canonicalStackString
   }
 
+  /**
+   *
+   * @param {Error|UncaughtError} err The error instance to be processed
+   * @param {number} time the relative ms (to origin) timestamp of occurence
+   * @param {boolean=} internal if the error was "caught" and deemed "internal" before reporting to the jserrors feature
+   * @param {object=} customAttributes  any custom attributes to be included in the error payload
+   * @param {boolean=} hasReplay a flag indicating if the error occurred during a replay session
+   * @returns
+   */
   storeError (err, time, internal, customAttributes, hasReplay) {
     if (!err) return
     // are we in an interaction
@@ -156,6 +166,13 @@ export class Aggregate extends AggregateBase {
     }
 
     var stackInfo = computeStackTrace(err)
+
+    const { shouldSwallow, reason } = evaluateInternalError(stackInfo, internal)
+    if (shouldSwallow) {
+      handle(SUPPORTABILITY_METRIC_CHANNEL, ['Internal/Error/' + reason], undefined, FEATURE_NAMES.metrics, this.ee)
+      return
+    }
+
     var canonicalStackString = this.buildCanonicalStackString(stackInfo)
 
     const params = {
@@ -199,7 +216,7 @@ export class Aggregate extends AggregateBase {
     params.firstOccurrenceTimestamp = this.observedAt[bucketHash]
     params.timestamp = Math.floor(this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(time))
 
-    var type = internal ? 'ierr' : 'err'
+    var type = 'err'
     var newMetrics = { time }
 
     // Trace sends the error in its payload, and both trace & replay simply listens for any error to occur.

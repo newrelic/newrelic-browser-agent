@@ -10,13 +10,13 @@ import { getLoaderConfig } from '../common/config/loader-config'
 import { getRuntime } from '../common/config/runtime'
 import { FEATURE_NAMES } from './features/features'
 import { warn } from '../common/util/console'
-import { onWindowLoad } from '../common/window/load'
 import { AgentBase } from './agent-base'
 
 const nonAutoFeatures = [
   FEATURE_NAMES.jserrors,
   FEATURE_NAMES.genericEvents,
-  FEATURE_NAMES.metrics
+  FEATURE_NAMES.metrics,
+  FEATURE_NAMES.logging
 ]
 
 /**
@@ -79,16 +79,17 @@ export class MicroAgent extends AgentBase {
         warn(24, err)
       }
 
-      onWindowLoad(() => {
-        // these features do not import an "instrument" file, meaning they are only hooked up to the API.
+      this.features.page_view_event.onAggregateImported.then(() => {
+        /* The following features do not import an "instrument" file, meaning they are only hooked up to the API.
+        Since the missing instrument-base class handles drain-gating (racing behavior) and PVE handles some setup, these are chained until after PVE has finished initializing
+        so as to avoid the race condition of things like session and sharedAggregator not being ready by features that uses them right away. */
         nonAutoFeatures.forEach(f => {
           if (enabledFeatures[f] && features.includes(f)) {
             import(/* webpackChunkName: "lazy-feature-loader" */ '../features/utils/lazy-feature-loader').then(({ lazyFeatureLoader }) => {
               return lazyFeatureLoader(f, 'aggregate')
             }).then(({ Aggregate }) => {
               this.features[f] = new Aggregate(this)
-            }).catch(err =>
-              warn(25, err))
+            }).catch(err => warn(25, err))
           }
         })
       })

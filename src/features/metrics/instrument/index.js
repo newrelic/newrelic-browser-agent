@@ -5,8 +5,8 @@ import { FEATURE_NAME/*, WATCHABLE_WEB_SOCKET_EVENTS */ } from '../constants'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
-  constructor (thisAgent, auto = true) {
-    super(thisAgent, FEATURE_NAME, auto)
+  constructor (agentRef, auto = true) {
+    super(agentRef, FEATURE_NAME, auto)
     // wrapWebSocket(this.ee)
 
     // WATCHABLE_WEB_SOCKET_EVENTS.forEach((suffix) => {
@@ -15,7 +15,7 @@ export class Instrument extends InstrumentBase {
     //   })
     // })
 
-    this.importAggregator(thisAgent)
+    this.importAggregator(agentRef)
   }
 }
 

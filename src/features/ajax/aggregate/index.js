@@ -18,11 +18,11 @@ import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
 
-  constructor (thisAgent) {
-    super(thisAgent, FEATURE_NAME)
+  constructor (agentRef) {
+    super(agentRef, FEATURE_NAME)
 
-    const harvestTimeSeconds = thisAgent.init.ajax.harvestTimeSeconds || 10
-    setDenyList(thisAgent.runtime.denyList)
+    const harvestTimeSeconds = agentRef.init.ajax.harvestTimeSeconds || 10
+    setDenyList(agentRef.runtime.denyList)
 
     this.underSpaEvents = {}
     const classThis = this

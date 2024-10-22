@@ -3,6 +3,34 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.269.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.268.0...v1.269.0) (2024-10-16)
+
+
+### Features
+
+* Add instrumentation metadata to logging ([#1208](https://github.com/newrelic/newrelic-browser-agent/issues/1208)) ([6926474](https://github.com/newrelic/newrelic-browser-agent/commit/6926474fe2530475e10daab2bb6bad745bb547e1))
+* Include logging feature in micro agent loader ([#1210](https://github.com/newrelic/newrelic-browser-agent/issues/1210)) ([1b24484](https://github.com/newrelic/newrelic-browser-agent/commit/1b2448498cf285f36530f2107cb0403401958b1f))
+
+
+### Bug Fixes
+
+* Handle Session Replay Security Policy Errors ([#1215](https://github.com/newrelic/newrelic-browser-agent/issues/1215)) ([f14b0fe](https://github.com/newrelic/newrelic-browser-agent/commit/f14b0fec81d7d21b418b6be6c5d415bdd813eca9))
+* Only ever allow session traces to capture page load timings once ([#1212](https://github.com/newrelic/newrelic-browser-agent/issues/1212)) ([d189686](https://github.com/newrelic/newrelic-browser-agent/commit/d1896869858eca3320144113e168f17f524f3119))
+
+## [1.268.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.267.0...v1.268.0) (2024-10-08)
+
+
+### Features
+
+* Add UserAction to GenericEvents ([#1186](https://github.com/newrelic/newrelic-browser-agent/issues/1186)) ([1b0bb1d](https://github.com/newrelic/newrelic-browser-agent/commit/1b0bb1dd992674f77c41a73449b64b022cdfc83c))
+* Aggregate UserActions ([#1195](https://github.com/newrelic/newrelic-browser-agent/issues/1195)) ([b5e4c6d](https://github.com/newrelic/newrelic-browser-agent/commit/b5e4c6dcdcfce3ab88132f2a1d82d4d02ab7640b))
+
+
+### Bug Fixes
+
+* Always return a string for custom stringify method ([#1207](https://github.com/newrelic/newrelic-browser-agent/issues/1207)) ([94a9a0b](https://github.com/newrelic/newrelic-browser-agent/commit/94a9a0b465e9ea34132317236d47ac9f62ee4051))
+* Force generic events feature to clear buffer when unloading ([#1202](https://github.com/newrelic/newrelic-browser-agent/issues/1202)) ([d3fac07](https://github.com/newrelic/newrelic-browser-agent/commit/d3fac07379d18c98e9838152a31a482ff25fe5bf))
+
 ## [1.267.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.266.0...v1.267.0) (2024-09-23)
 
 

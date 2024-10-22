@@ -1,4 +1,3 @@
-import { deregisterDrain } from '../../../common/drain/drain'
 import { handle } from '../../../common/event-emitter/handle'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
@@ -15,14 +14,14 @@ import { Interaction } from './interaction'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
-  constructor (thisAgent, { domObserver }) {
-    super(thisAgent, FEATURE_NAME)
+  constructor (agentRef, { domObserver }) {
+    super(agentRef, FEATURE_NAME)
 
-    const harvestTimeSeconds = thisAgent.init.soft_navigations.harvestTimeSeconds || 10
+    const harvestTimeSeconds = agentRef.init.soft_navigations.harvestTimeSeconds || 10
     this.interactionsToHarvest = new EventBuffer()
     this.domObserver = domObserver
 
-    this.initialPageLoadInteraction = new InitialPageLoadInteraction(thisAgent.agentIdentifier)
+    this.initialPageLoadInteraction = new InitialPageLoadInteraction(agentRef.agentIdentifier)
     timeToFirstByte.subscribe(({ attrs }) => {
       const loadEventTime = attrs.navigationEntry.loadEventEnd
       this.initialPageLoadInteraction.forceSave = true
@@ -49,7 +48,7 @@ export class Aggregate extends AggregateBase {
         scheduler.startTimer(harvestTimeSeconds, 0)
       } else {
         this.blocked = true // if rum response determines that customer lacks entitlements for spa endpoint, this feature shouldn't harvest
-        deregisterDrain(this.agentIdentifier, this.featureName)
+        this.deregisterDrain()
       }
     })
 

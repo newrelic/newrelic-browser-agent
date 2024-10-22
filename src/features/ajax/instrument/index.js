@@ -28,10 +28,10 @@ var origXHR = gosNREUMOriginals().o.XHR
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
-  constructor (thisAgent, auto = true) {
-    super(thisAgent, FEATURE_NAME, auto)
+  constructor (agentRef, auto = true) {
+    super(agentRef, FEATURE_NAME, auto)
 
-    this.dt = new DT(thisAgent.agentIdentifier)
+    this.dt = new DT(agentRef.agentIdentifier)
 
     this.handler = (type, args, ctx, group) => handle(type, args, ctx, group, this.ee)
 
@@ -59,13 +59,13 @@ export class Instrument extends InstrumentBase {
 
     wrapFetch(this.ee)
     wrapXhr(this.ee)
-    subscribeToEvents(thisAgent, this.ee, this.handler, this.dt)
+    subscribeToEvents(agentRef, this.ee, this.handler, this.dt)
 
-    this.importAggregator(thisAgent)
+    this.importAggregator(agentRef)
   }
 }
 
-function subscribeToEvents (thisAgent, ee, handler, dt) {
+function subscribeToEvents (agentRef, ee, handler, dt) {
   ee.on('new-xhr', onNewXhr)
   ee.on('open-xhr-start', onOpenXhrStart)
   ee.on('open-xhr-end', onOpenXhrEnd)
@@ -120,8 +120,8 @@ function subscribeToEvents (thisAgent, ee, handler, dt) {
   }
 
   function onOpenXhrEnd (args, xhr) {
-    if (thisAgent.loader_config.xpid && this.sameOrigin) {
-      xhr.setRequestHeader('X-NewRelic-ID', thisAgent.loader_config.xpid)
+    if (agentRef.loader_config.xpid && this.sameOrigin) {
+      xhr.setRequestHeader('X-NewRelic-ID', agentRef.loader_config.xpid)
     }
 
     var payload = dt.generateTracePayload(this.parsedOrigin)

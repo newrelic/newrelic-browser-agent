@@ -145,6 +145,7 @@ export const supportsFirstInputDelay = new SpecMatcher()
 export const supportsLargestContentfulPaint = new SpecMatcher()
   .include('chrome>=77')
   .include('edge>=79')
+  .include('firefox>=122')
   .include('android>=9.0')
 
 export const supportsInteractionToNextPaint = new SpecMatcher()
@@ -152,4 +153,7 @@ export const supportsInteractionToNextPaint = new SpecMatcher()
   .include('edge>=96')
   .include('android>=9.0')
 
-export const supportsCumulativeLayoutShift = supportsLargestContentfulPaint
+export const supportsCumulativeLayoutShift = new SpecMatcher()
+  .include('chrome>=77')
+  .include('edge>=79')
+  .include('android>=9.0')

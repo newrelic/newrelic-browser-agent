@@ -6,25 +6,26 @@ import { stringify } from '../../../common/util/stringify'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { cleanURL } from '../../../common/url/clean-url'
 import { FEATURE_NAME } from '../constants'
-import { isBrowserScope } from '../../../common/constants/runtime'
+import { initialLocation, isBrowserScope } from '../../../common/constants/runtime'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { warn } from '../../../common/util/console'
 import { now } from '../../../common/timing/now'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
-import { deregisterDrain } from '../../../common/drain/drain'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { EventBuffer } from '../../utils/event-buffer'
 import { applyFnToProps } from '../../../common/util/traverse'
 import { IDEAL_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
 import { FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
+import { UserActionsAggregator } from './user-actions/user-actions-aggregator'
+import { isIFrameWindow } from '../../../common/dom/iframe'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
-  constructor (thisAgent) {
-    super(thisAgent, FEATURE_NAME)
+  constructor (agentRef) {
+    super(agentRef, FEATURE_NAME)
 
     this.eventsPerHarvest = 1000
-    this.harvestTimeSeconds = thisAgent.init.generic_events.harvestTimeSeconds
+    this.harvestTimeSeconds = agentRef.init.generic_events.harvestTimeSeconds
 
     this.referrerUrl = (isBrowserScope && document.referrer) ? cleanURL(document.referrer) : undefined
     this.events = new EventBuffer()
@@ -32,11 +33,11 @@ export class Aggregate extends AggregateBase {
     this.waitForFlags(['ins']).then(([ins]) => {
       if (!ins) {
         this.blocked = true
-        deregisterDrain(this.agentIdentifier, this.featureName)
+        this.deregisterDrain()
         return
       }
 
-      if (thisAgent.init.page_action.enabled) {
+      if (agentRef.init.page_action.enabled) {
         registerHandler('api-addPageAction', (timestamp, name, attributes) => {
           this.addEvent({
             ...attributes,
@@ -45,7 +46,6 @@ export class Aggregate extends AggregateBase {
             timeSinceLoad: timestamp / 1000,
             actionName: name,
             referrerUrl: this.referrerUrl,
-            currentUrl: cleanURL('' + location),
             ...(isBrowserScope && {
               browserWidth: window.document.documentElement?.clientWidth,
               browserHeight: window.document.documentElement?.clientHeight
@@ -54,21 +54,47 @@ export class Aggregate extends AggregateBase {
         }, this.featureName, this.ee)
       }
 
-      if (thisAgent.init.user_actions.enabled) {
+      let addUserAction
+      if (isBrowserScope && agentRef.init.user_actions.enabled) {
+        this.userActionAggregator = new UserActionsAggregator()
+
+        addUserAction = (aggregatedUserAction) => {
+          try {
+            /** The aggregator process only returns an event when it is "done" aggregating -
+             * so we still need to validate that an event was given to this method before we try to add */
+            if (aggregatedUserAction?.event) {
+              const { target, timeStamp, type } = aggregatedUserAction.event
+              this.addEvent({
+                eventType: 'UserAction',
+                timestamp: Math.floor(this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(timeStamp)),
+                action: type,
+                actionCount: aggregatedUserAction.count,
+                actionDuration: aggregatedUserAction.relativeMs[aggregatedUserAction.relativeMs.length - 1],
+                actionMs: aggregatedUserAction.relativeMs,
+                rageClick: aggregatedUserAction.rageClick,
+                target: aggregatedUserAction.selectorPath,
+                ...(isIFrameWindow(window) && { iframe: true }),
+                ...(target?.id && { targetId: target.id }),
+                ...(target?.tagName && { targetTag: target.tagName }),
+                ...(target?.type && { targetType: target.type }),
+                ...(target?.className && { targetClass: target.className })
+              })
+            }
+          } catch (e) {
+            // do nothing for now
+          }
+        }
+
         registerHandler('ua', (evt) => {
-          this.addEvent({
-            eventType: 'UserAction',
-            timestamp: Math.floor(this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(evt.timeStamp)),
-            action: evt.type,
-            targetId: evt.target?.id,
-            targetTag: evt.target?.tagName,
-            targetType: evt.target?.type,
-            targetClass: evt.target?.className
-          })
+          /** the processor will return the previously aggregated event if it has been completed by processing the current event */
+          addUserAction(this.userActionAggregator.process(evt))
         }, this.featureName, this.ee)
       }
 
-      this.harvestScheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], { onFinished: (...args) => this.onHarvestFinished(...args) }, this)
+      this.harvestScheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
+        onFinished: (...args) => this.onHarvestFinished(...args),
+        onUnload: () => addUserAction?.(this.userActionAggregator.aggregationEvent)
+      }, this)
       this.harvestScheduler.harvest.on(FEATURE_TO_ENDPOINT[this.featureName], (...args) => this.onHarvestStarted(...args))
       this.harvestScheduler.startTimer(this.harvestTimeSeconds, 0)
 
@@ -77,6 +103,18 @@ export class Aggregate extends AggregateBase {
   }
 
   // WARNING: Insights times are in seconds. EXCEPT timestamp, which is in ms.
+  /** Some keys are set by the query params or request headers sent with the harvest and override the body values, so check those before adding new standard body values...
+   * see harvest.js#baseQueryString for more info on the query params
+   * Notably:
+   * * name: set by the `t=` query param
+   * * appId: set by the `a=` query param
+   * * standalone: set by the `sa=` query param
+   * * session: set by the `s=` query param
+   * * sessionTraceId: set by the `ptid=` query param
+   * * userAgent*: set by the userAgent header
+   * @param {object=} obj the event object for storing in the event buffer
+   * @returns void
+   */
   addEvent (obj = {}) {
     if (!obj || !Object.keys(obj).length) return
     if (!obj.eventType) {
@@ -92,8 +130,9 @@ export class Aggregate extends AggregateBase {
     const defaultEventAttributes = {
       /** should be overridden by the event-specific attributes, but just in case -- set it to now() */
       timestamp: Math.floor(this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(now())),
-      /** all generic events require a pageUrl */
-      pageUrl: cleanURL(this.agentRef.runtime.origin)
+      /** all generic events require pageUrl(s) */
+      pageUrl: cleanURL('' + initialLocation),
+      currentUrl: cleanURL('' + location)
     }
 
     const eventAttributes = {

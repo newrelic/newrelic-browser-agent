@@ -17,16 +17,16 @@ export class Instrument extends InstrumentBase {
 
   #mode
   #agentRef
-  constructor (thisAgent, auto = true) {
-    super(thisAgent, FEATURE_NAME, auto)
+  constructor (agentRef, auto = true) {
+    super(agentRef, FEATURE_NAME, auto)
     let session
     this.replayRunning = false
-    this.#agentRef = thisAgent
+    this.#agentRef = agentRef
     try {
       session = JSON.parse(localStorage.getItem(`${PREFIX}_${DEFAULT_KEY}`))
     } catch (err) { }
 
-    if (hasReplayPrerequisite(thisAgent.agentIdentifier)) {
+    if (hasReplayPrerequisite(agentRef.agentIdentifier)) {
       this.ee.on(SR_EVENT_EMITTER_TYPES.RECORD, () => this.#apiStartOrRestartReplay())
     }
 
@@ -34,7 +34,7 @@ export class Instrument extends InstrumentBase {
       this.#mode = session?.sessionReplayMode
       this.#preloadStartRecording()
     } else {
-      this.importAggregator(thisAgent)
+      this.importAggregator(agentRef)
     }
 
     /** If the recorder is running, we can pass error events on to the agg to help it switch to full mode later */

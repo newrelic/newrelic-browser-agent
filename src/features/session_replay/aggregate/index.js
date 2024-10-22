@@ -21,20 +21,20 @@ import { RRWEB_VERSION } from '../../../common/constants/env'
 import { MODE, SESSION_EVENTS, SESSION_EVENT_TYPES } from '../../../common/session/constants'
 import { stringify } from '../../../common/util/stringify'
 import { stylesheetEvaluator } from '../shared/stylesheet-evaluator'
-import { deregisterDrain } from '../../../common/drain/drain'
 import { now } from '../../../common/timing/now'
 import { buildNRMetaNode } from '../shared/utils'
 import { MAX_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
+import { cleanURL } from '../../../common/url/clean-url'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   mode = MODE.OFF
 
   // pass the recorder into the aggregator
-  constructor (thisAgent, args) {
-    super(thisAgent, FEATURE_NAME)
+  constructor (agentRef, args) {
+    super(agentRef, FEATURE_NAME)
     /** The interval to harvest at.  This gets overridden if the size of the payload exceeds certain thresholds */
-    this.harvestTimeSeconds = thisAgent.init.session_replay.harvestTimeSeconds || 60
+    this.harvestTimeSeconds = agentRef.init.session_replay.harvestTimeSeconds || 60
     /** Set once the recorder has fully initialized after flag checks and sampling */
     this.initialized = false
     /** Set once the feature has been "aborted" to prevent other side-effects from continuing */
@@ -73,7 +73,7 @@ export class Aggregate extends AggregateBase {
     this.ee.on(SESSION_EVENTS.RESUME, () => {
       if (!this.recorder) return
       // if the mode changed on a different tab, it needs to update this instance to match
-      this.mode = thisAgent.runtime.session.state.sessionReplayMode
+      this.mode = agentRef.runtime.session.state.sessionReplayMode
       if (!this.initialized || this.mode === MODE.OFF) return
       this.recorder?.startRecording()
     })
@@ -100,12 +100,12 @@ export class Aggregate extends AggregateBase {
       this.handleError(e)
     }, this.featureName, this.ee)
 
-    const { error_sampling_rate, sampling_rate, autoStart, block_selector, mask_text_selector, mask_all_inputs, inline_images, collect_fonts } = thisAgent.init.session_replay
+    const { error_sampling_rate, sampling_rate, autoStart, block_selector, mask_text_selector, mask_all_inputs, inline_images, collect_fonts } = agentRef.init.session_replay
 
     this.waitForFlags(['srs', 'sr']).then(([srMode, entitled]) => {
       this.entitled = !!entitled
       if (!this.entitled) {
-        deregisterDrain(this.agentIdentifier, this.featureName)
+        this.deregisterDrain()
         if (this.recorder?.recording) {
           this.abort(ABORT_REASONS.ENTITLEMENTS)
           handle(SUPPORTABILITY_METRIC_CHANNEL, ['SessionReplay/EnabledNotEntitled/Detected'], undefined, FEATURE_NAMES.metrics, this.ee)
@@ -356,7 +356,8 @@ export class Aggregate extends AggregateBase {
           'rrweb.version': RRWEB_VERSION,
           'payload.type': recorderEvents.type,
           // customer-defined data should go last so that if it exceeds the query param padding limit it will be truncated instead of important attrs
-          ...(endUserId && { 'enduser.id': this.obfuscator.obfuscateString(endUserId) })
+          ...(endUserId && { 'enduser.id': this.obfuscator.obfuscateString(endUserId) }),
+          currentUrl: this.obfuscator.obfuscateString(cleanURL('' + location))
           // The Query Param is being arbitrarily limited in length here.  It is also applied when estimating the size of the payload in getPayloadSize()
         }, QUERY_PARAM_PADDING).substring(1) // remove the leading '&'
       },

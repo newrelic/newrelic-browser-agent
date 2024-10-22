@@ -152,38 +152,41 @@ describe('JSE Error detection in various callbacks', () => {
     expect(expectedErrorMessages.every(x => x.tested)).toBeTruthy()
   })
 
-  it('should report unhandledPromiseRejections that are readable', async () => {
-    const pageUrl = await browser.testHandle.assetURL('unhandled-promise-rejection-readable.html')
-    const [[{ request: { body: errorBody, query: errorQuery } }]] = await Promise.all([
-      errorsCapture.waitForResult({ totalCount: 1 }),
-      browser.url(pageUrl)
-        .then(() => browser.waitForAgentLoad())
-    ])
+  const expectedErrorMessages = [
+    { message: 'Unhandled Promise Rejection: Test', meta: 'string' },
+    { message: 'Unhandled Promise Rejection: 1', meta: 'number' },
+    { message: 'Unhandled Promise Rejection: {"a":1,"b":{"a":1}}', meta: 'nested obj' },
+    { message: 'Unhandled Promise Rejection: [1,2,3]', meta: 'array' },
+    { message: 'Unhandled Promise Rejection: test', meta: 'error with message' },
+    { message: 'test', meta: 'error with no setter with message' },
+    { message: 'Unhandled Promise Rejection', meta: 'undefined' },
+    { message: 'Unhandled Promise Rejection: null', meta: 'null' },
+    { message: 'Unhandled Promise Rejection: ', meta: 'error with no message' },
+    { message: 'Unhandled Promise Rejection: {}', meta: 'map object' },
+    { message: 'Unhandled Promise Rejection: {"abc":"Hello"}', meta: 'factory function' },
+    { message: 'Unhandled Promise Rejection: ', meta: 'uncalled function' },
+    { message: 'Unhandled Promise Rejection: {"abc":"circular"}', meta: 'circular object' }
+  ]
+  expectedErrorMessages.forEach(expected => {
+    it('should report unhandledPromiseRejections that are readable - ' + expected.meta, async () => {
+      const pageUrl = await browser.testHandle.assetURL('unhandled-promise-rejection-readable.html')
+      const [[{
+        request: {
+          body: errorBody,
+          query: errorQuery
+        }
+      }]] = await Promise.all([
+        errorsCapture.waitForResult({ totalCount: 1 }),
+        browser.url(pageUrl)
+          .then(() => browser.waitForAgentLoad())
+      ])
+      assertErrorAttributes(errorQuery)
+      const actualError = errorBody.err.find(err => err.params.message === expected.message)
 
-    const expectedErrorMessages = [
-      { message: 'Unhandled Promise Rejection: Test', tested: false, meta: 'string' },
-      { message: 'Unhandled Promise Rejection: 1', tested: false, meta: 'number' },
-      { message: 'Unhandled Promise Rejection: {"a":1,"b":{"a":1}}', tested: false, meta: 'nested obj' },
-      { message: 'Unhandled Promise Rejection: [1,2,3]', tested: false, meta: 'array' },
-      { message: 'Unhandled Promise Rejection: test', tested: false, meta: 'error with message' },
-      { message: 'test', tested: false, meta: 'error with no setter with message' },
-      { message: 'Unhandled Promise Rejection', tested: false, meta: 'undefined' },
-      { message: 'Unhandled Promise Rejection: null', tested: false, meta: 'null' },
-      { message: 'Unhandled Promise Rejection: ', tested: false, meta: 'error with no message' },
-      { message: 'Unhandled Promise Rejection: {}', tested: false, meta: 'map object' },
-      { message: 'Unhandled Promise Rejection: {"abc":"Hello"}', tested: false, meta: 'factory function' },
-      { message: 'Unhandled Promise Rejection: undefined', tested: false, meta: 'uncalled function' },
-      { message: 'Unhandled Promise Rejection: {"abc":"circular"}', tested: false, meta: 'circular object' }
-    ]
-    assertErrorAttributes(errorQuery)
-    errorBody.err.forEach(err => {
-      const targetError = expectedErrorMessages.find(x => !x.tested && x.message === err.params.message)
-      if (targetError) targetError.tested = true
-      expect(!!targetError).toBeTruthy()
-      expect(!!err.params.stack_trace).toBeTruthy()
-      expect(!!err.params.stackHash).toBeTruthy()
+      expect(!!actualError).toBeTruthy()
+      expect(!!actualError.params.stack_trace).toBeTruthy()
+      expect(!!actualError.params.stackHash).toBeTruthy()
     })
-    expect(expectedErrorMessages.every(x => x.tested)).toBeTruthy()
   })
 
   it('should report errors from XHR callbacks', async () => {

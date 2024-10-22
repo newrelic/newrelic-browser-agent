@@ -4,11 +4,11 @@ import { FEATURE_NAME } from '../constants'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { TraceStorage } from './trace/storage'
 import { obj as encodeObj } from '../../../common/url/encode'
-import { deregisterDrain } from '../../../common/drain/drain'
 import { globalScope } from '../../../common/constants/runtime'
 import { MODE, SESSION_EVENTS } from '../../../common/session/constants'
 import { applyFnToProps } from '../../../common/util/traverse'
 import { FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
+import { cleanURL } from '../../../common/url/clean-url'
 
 const ERROR_MODE_SECONDS_WINDOW = 30 * 1000 // sliding window of nodes to track when simply monitoring (but not harvesting) in error mode
 /** Reserved room for query param attrs */
@@ -16,12 +16,12 @@ const QUERY_PARAM_PADDING = 5000
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
 
-  constructor (thisAgent) {
-    super(thisAgent, FEATURE_NAME)
+  constructor (agentRef) {
+    super(agentRef, FEATURE_NAME)
 
     /** A buffer to hold on to harvested traces in the case that a retry must be made later */
     this.sentTrace = null
-    this.harvestTimeSeconds = thisAgent.init.session_trace.harvestTimeSeconds || 30
+    this.harvestTimeSeconds = agentRef.init.session_trace.harvestTimeSeconds || 30
     /** Tied to the entitlement flag response from BCS.  Will short circuit operations of the agg if false  */
     this.entitled = undefined
     /** A flag used to decide if the 30 node threshold should be ignored on the first harvest to ensure sending on the first payload */
@@ -38,7 +38,7 @@ export class Aggregate extends AggregateBase {
   /** Sets up event listeners, and initializes this module to run in the correct "mode".  Can be triggered from a few places, but makes an effort to only set up listeners once */
   initialize (stMode, stEntitled, ignoreSession) {
     this.entitled ??= stEntitled
-    if (this.blocked || !this.entitled) return deregisterDrain(this.agentIdentifier, this.featureName)
+    if (this.blocked || !this.entitled) return this.deregisterDrain()
 
     if (!this.initialized) {
       this.initialized = true
@@ -59,6 +59,12 @@ export class Aggregate extends AggregateBase {
         // if another page's session entity has expired, or another page has transitioned to off and this one hasn't... we can just abort straight away here
         if (this.sessionId !== sessionState.value || (eventType === 'cross-tab' && this.scheduler?.started && sessionState.sessionTraceMode === MODE.OFF)) this.abort(2)
       })
+
+      if (typeof PerformanceNavigationTiming !== 'undefined') {
+        this.traceStorage.storeTiming(globalScope.performance?.getEntriesByType?.('navigation')[0])
+      } else {
+        this.traceStorage.storeTiming(globalScope.performance?.timing, true)
+      }
     }
 
     /** ST/SR sampling flow in BCS - https://drive.google.com/file/d/19hwt2oft-8Hh4RrjpLqEXfpP_9wYBLcq/view?usp=sharing */
@@ -68,7 +74,7 @@ export class Aggregate extends AggregateBase {
 
     /** If the mode is off, we do not want to hold up draining for other features, so we deregister the feature for now.
      * If it drains later (due to a mode change), data and handlers will instantly drain instead of waiting for the registry. */
-    if (this.mode === MODE.OFF) return deregisterDrain(this.agentIdentifier, this.featureName)
+    if (this.mode === MODE.OFF) return this.deregisterDrain()
 
     this.timeKeeper ??= this.agentRef.runtime.timeKeeper
 
@@ -87,12 +93,6 @@ export class Aggregate extends AggregateBase {
     registerHandler('bstApi', (...args) => this.traceStorage.storeSTN(...args), this.featureName, this.ee)
     registerHandler('trace-jserror', (...args) => this.traceStorage.storeErrorAgg(...args), this.featureName, this.ee)
     registerHandler('pvtAdded', (...args) => this.traceStorage.processPVT(...args), this.featureName, this.ee)
-
-    if (typeof PerformanceNavigationTiming !== 'undefined') {
-      this.traceStorage.storeTiming(globalScope.performance?.getEntriesByType?.('navigation')[0])
-    } else {
-      this.traceStorage.storeTiming(globalScope.performance?.timing, true)
-    }
 
     /** Only start actually harvesting if running in full mode at init time */
     if (this.mode === MODE.FULL) this.startHarvesting()
@@ -168,7 +168,8 @@ export class Aggregate extends AggregateBase {
           ptid: `${this.ptid}`,
           session: `${this.sessionId}`,
           // customer-defined data should go last so that if it exceeds the query param padding limit it will be truncated instead of important attrs
-          ...(endUserId && { 'enduser.id': this.obfuscator.obfuscateString(endUserId) })
+          ...(endUserId && { 'enduser.id': this.obfuscator.obfuscateString(endUserId) }),
+          currentUrl: this.obfuscator.obfuscateString(cleanURL('' + location))
           // The Query Param is being arbitrarily limited in length here.  It is also applied when estimating the size of the payload in getPayloadSize()
         }, QUERY_PARAM_PADDING).substring(1) // remove the leading '&'
       },

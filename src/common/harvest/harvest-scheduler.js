@@ -34,8 +34,9 @@ export class HarvestScheduler extends SharedContext {
     this.harvesting = false
     this.harvest = new Harvest(this.sharedContext)
 
-    // unload if EOL mechanism fires
-    subscribeToEOL(this.unload.bind(this))
+    // If a feature specifies stuff to be done on page unload, those are frontrunned (via capture phase) before ANY feature final harvests.
+    if (typeof this.opts.onUnload === 'function') subscribeToEOL(this.opts.onUnload, true)
+    subscribeToEOL(this.unload.bind(this)) // this should consist only of sending final harvest
 
     /* Flush all buffered data if session resets and give up retries. This should be synchronous to ensure that the correct `session` value is sent.
       Since session-reset generates a new session ID and the ID is grabbed at send-time, any delays or retries would cause the payload to be sent under
@@ -49,8 +50,6 @@ export class HarvestScheduler extends SharedContext {
    */
   unload () {
     if (this.aborted) return
-    // If opts.onUnload is defined, these are special actions to execute before attempting to send the final payload.
-    if (this.opts.onUnload) this.opts.onUnload()
     this.runHarvest({ unload: true })
   }
 

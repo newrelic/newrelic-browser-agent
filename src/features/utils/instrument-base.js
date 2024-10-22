@@ -27,8 +27,8 @@ export class InstrumentBase extends FeatureBase {
    *     of its pooled instrumentation data handled by the agent's centralized drain functionality, rather than draining
    *     immediately. Primarily useful for fine-grained control in tests.
    */
-  constructor (thisAgentRef, featureName, auto = true) {
-    super(thisAgentRef.agentIdentifier, featureName)
+  constructor (agentRef, featureName, auto = true) {
+    super(agentRef.agentIdentifier, featureName)
     this.auto = auto
 
     /** @type {Function | undefined} This should be set by any derived Instrument class if it has things to do when feature fails or is killed. */
@@ -48,16 +48,16 @@ export class InstrumentBase extends FeatureBase {
     this.onAggregateImported = undefined
 
     /** used in conjunction with newrelic.start() to defer harvesting in features */
-    if (thisAgentRef.init[this.featureName].autoStart === false) this.auto = false
+    if (agentRef.init[this.featureName].autoStart === false) this.auto = false
     /** if the feature requires opt-in (!auto-start), it will get registered once the api has been called */
-    if (this.auto) registerDrain(thisAgentRef.agentIdentifier, featureName)
+    if (this.auto) registerDrain(agentRef.agentIdentifier, featureName)
     else {
       this.ee.on('manual-start-all', single(() => {
         // register the feature to drain only once the API has been called, it will drain when importAggregator finishes for all the features
         // called by the api in that cycle
-        registerDrain(thisAgentRef.agentIdentifier, this.featureName)
+        registerDrain(agentRef.agentIdentifier, this.featureName)
         this.auto = true
-        this.importAggregator(thisAgentRef)
+        this.importAggregator(agentRef)
       }))
     }
   }
@@ -65,11 +65,11 @@ export class InstrumentBase extends FeatureBase {
   /**
    * Lazy-load the latter part of the feature: its aggregator. This method is called by the first part of the feature
    * (the instrumentation) when instrumentation is complete.
-   * @param {BrowserAgent} thisAgentRef - reference to the base agent ancestor that this feature belongs to
+   * @param agentRef - reference to the base agent ancestor that this feature belongs to
    * @param {Object} [argsObjFromInstrument] - any values or references to pass down to aggregate
    * @returns void
    */
-  importAggregator (thisAgentRef, argsObjFromInstrument = {}) {
+  importAggregator (agentRef, argsObjFromInstrument = {}) {
     if (this.featAggregate || !this.auto) return
 
     let loadedSuccessfully
@@ -91,10 +91,11 @@ export class InstrumentBase extends FeatureBase {
       }
 
       // Create a single Aggregator for this agent if DNE yet; to be used by jserror endpoint features.
-      if (!thisAgentRef.sharedAggregator) {
-        const { Aggregator } = await import(/* webpackChunkName: "shared-aggregator" */ '../../common/aggregate/aggregator')
-        thisAgentRef.sharedAggregator = new Aggregator()
-      }
+      if (!agentRef.sharedAggregator) {
+        agentRef.sharedAggregator = import(/* webpackChunkName: "shared-aggregator" */ '../../common/aggregate/aggregator')
+        const { Aggregator } = await agentRef.sharedAggregator
+        agentRef.sharedAggregator = new Aggregator()
+      } else await agentRef.sharedAggregator // if another feature is already importing the aggregator, wait for it to finish
 
       /**
        * Note this try-catch differs from the one in Agent.run() in that it's placed later in a page's lifecycle and
@@ -108,7 +109,7 @@ export class InstrumentBase extends FeatureBase {
         }
         const { lazyFeatureLoader } = await import(/* webpackChunkName: "lazy-feature-loader" */ './lazy-feature-loader')
         const { Aggregate } = await lazyFeatureLoader(this.featureName, 'aggregate')
-        this.featAggregate = new Aggregate(thisAgentRef, argsObjFromInstrument)
+        this.featAggregate = new Aggregate(agentRef, argsObjFromInstrument)
         loadedSuccessfully(true)
       } catch (e) {
         warn(34, e)

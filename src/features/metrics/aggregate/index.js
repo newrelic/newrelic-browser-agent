@@ -7,15 +7,15 @@ import { onDOMContentLoaded } from '../../../common/window/load'
 import { windowAddEventListener } from '../../../common/event-listener/event-listener-opts'
 import { isBrowserScope, isWorkerScope } from '../../../common/constants/runtime'
 import { AggregateBase } from '../../utils/aggregate-base'
-import { deregisterDrain } from '../../../common/drain/drain'
 import { FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
+import { isIFrameWindow } from '../../../common/dom/iframe'
 // import { WEBSOCKET_TAG } from '../../../common/wrap/wrap-websocket'
 // import { handleWebsocketEvents } from './websocket-detection'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
-  constructor (thisAgent) {
-    super(thisAgent, FEATURE_NAME)
+  constructor (agentRef) {
+    super(agentRef, FEATURE_NAME)
 
     this.waitForFlags(['err']).then(([errFlag]) => {
       if (errFlag) {
@@ -26,7 +26,7 @@ export class Aggregate extends AggregateBase {
         this.drain()
       } else {
         this.blocked = true // if rum response determines that customer lacks entitlements for spa endpoint, this feature shouldn't harvest
-        deregisterDrain(this.agentIdentifier, this.featureName)
+        this.deregisterDrain()
       }
     })
 
@@ -100,7 +100,7 @@ export class Aggregate extends AggregateBase {
     if (proxy.beacon) this.storeSupportabilityMetrics('Config/BeaconUrl/Changed')
 
     if (isBrowserScope && window.MutationObserver) {
-      if (window.self !== window.top) { this.storeSupportabilityMetrics('Generic/Runtime/IFrame/Detected') }
+      if (isIFrameWindow(window)) { this.storeSupportabilityMetrics('Generic/Runtime/IFrame/Detected') }
       const preExistingVideos = window.document.querySelectorAll('video').length
       if (preExistingVideos) this.storeSupportabilityMetrics('Generic/VideoElement/Added', preExistingVideos)
       const preExistingIframes = window.document.querySelectorAll('iframe').length

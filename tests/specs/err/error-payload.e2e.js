@@ -3,8 +3,7 @@
 const { Key } = require('webdriverio')
 const { notSafari, notIOS, notAndroid } = require('../../../tools/browser-matcher/common-matchers.mjs')
 const { srConfig } = require('../util/helpers')
-const { checkJsErrors } = require('../../util/basic-checks')
-const { testErrorsRequest, testAnyJseXhrRequest } = require('../../../tools/testing-server/utils/expect-tests')
+const { testErrorsRequest, testSupportMetricsRequest } = require('../../../tools/testing-server/utils/expect-tests')
 
 describe('error payloads', () => {
   let errorsCapture
@@ -138,19 +137,23 @@ describe('error payloads', () => {
    * This is a specific bug observed in rrweb for specific browsers tied to contenteditable divs.
    * This serves a purpose of checking that rrweb errors are not reported as `err`
    * **/
-  it.withBrowsersMatching([notSafari, notAndroid, notIOS])('should collect rrweb errors only as internal errors', async () => {
-    const anyJseXhrCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testAnyJseXhrRequest })
+  it.withBrowsersMatching([notSafari, notAndroid, notIOS])('should collect rrweb errors only as internal error supportability metric', async () => {
+    const jsErrCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testErrorsRequest })
+    const smCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testSupportMetricsRequest })
     await browser.enableSessionReplay()
-    const [[{ request }]] = await Promise.all([
-      anyJseXhrCapture.waitForResult({ timeout: 10000 }),
+    const [jseCaptureResults, smCaptureResults] = await Promise.all([
+      jsErrCapture.waitForResult({ timeout: 10000 }),
+      smCapture.waitForResult({ totalCount: 1 }),
       browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
         .then(() => browser.waitForSessionReplayRecording())
         .then(() => $('#content-editable-div'))
         .then((elem) => elem.click())
         .then(() => browser.keys([Key.Ctrl, Key.Backspace]))
+        .then(() => browser.refresh())
     ])
 
-    checkJsErrors(request, ['Cannot read properties of null (reading \'tagName\')'], 'ierr')
-    expect(request.body.err).toBeUndefined()
+    const sms = smCaptureResults[0].request.body.sm
+    expect(sms.find(sm => sm.params.name === 'Internal/Error/Rrweb')).toBeTruthy()
+    expect(jseCaptureResults).toEqual([])
   })
 })

@@ -2,19 +2,19 @@ import { FeatureBase } from './feature-base'
 import { isValid } from '../../common/config/info'
 import { configure } from '../../loaders/configure/configure'
 import { gosCDN } from '../../common/window/nreum'
-import { deregisterDrain, drain } from '../../common/drain/drain'
+import { drain } from '../../common/drain/drain'
 import { activatedFeatures } from '../../common/util/feature-flags'
 import { Obfuscator } from '../../common/util/obfuscate'
 import { EventBuffer2 } from './event-buffer'
 import { FEATURE_TO_ENDPOINT } from '../../loaders/features/features'
 
 export class AggregateBase extends FeatureBase {
-  constructor (thisAgentRef, featureName) {
-    super(thisAgentRef.agentIdentifier, featureName)
-    this.agentRef = thisAgentRef
+  constructor (agentRef, featureName) {
+    super(agentRef.agentIdentifier, featureName)
+    this.agentRef = agentRef
     this.events = FEATURE_TO_ENDPOINT[this.featureName] === 'jserrors' ? undefined : new EventBuffer2()
-    this.checkConfiguration(thisAgentRef)
-    this.obfuscator = thisAgentRef.runtime.obfuscator
+    this.checkConfiguration(agentRef)
+    this.obfuscator = agentRef.runtime.obfuscator
   }
 
   /**
@@ -41,7 +41,7 @@ export class AggregateBase extends FeatureBase {
     return flagsPromise.catch(err => {
       this.ee.emit('internal-error', [err])
       this.blocked = true
-      deregisterDrain(this.agentIdentifier, this.featureName)
+      this.deregisterDrain()
     })
   }
 

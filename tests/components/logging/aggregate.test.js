@@ -8,6 +8,8 @@ import * as handleModule from '../../../src/common/event-emitter/handle'
 import { resetAgent, setupAgent } from '../setup-agent'
 import { getInfo } from '../../../src/common/config/info'
 
+import { faker } from '@faker-js/faker'
+
 let mainAgent, info, runtime
 
 beforeAll(async () => {
@@ -185,6 +187,9 @@ describe('payloads', () => {
   })
 
   test('initialLocation should be in pageUrl of log object attributes', async () => {
+    const currentUrl = faker.internet.url()
+    jest.spyOn(window, 'location', 'get').mockReturnValue(currentUrl)
+
     const log = new Log(
       Math.floor(runtime.timeKeeper.correctAbsoluteTimestamp(
         runtime.timeKeeper.convertRelativeTimestamp(1234)

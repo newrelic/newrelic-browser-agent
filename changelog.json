@@ -4,6 +4,55 @@
     {
       "changes": [
         {
+          "type": "feat",
+          "sha": "a5996bec25f7c4038ce87f2ad72eb61d637f5994",
+          "message": "Remove supportsSendBeacon runtime property",
+          "issues": [
+            "1224"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "c6a20e11b694fcf721ce27b02be1df76caed1a3e",
+          "message": "Add Firefox to LCP test matcher",
+          "issues": [
+            "1223"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "daf349e632902597c232c3392cc5d188f2995f25",
+          "message": "Remove 'pageHide' from page end-of-lifecycle listener",
+          "issues": [
+            "1219"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "5fdea14097d415d7c6f3f98bfe87848e118ec62e",
+          "message": "Move deregisterDrain method to feature-base",
+          "issues": [
+            "1220"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "789df5a0d5574acb02ac0db2aea98150a9c8786e",
+          "message": "Relocate aggregator from loader and improve agent internals",
+          "issues": [
+            "1216"
+          ]
+        }
+      ],
+      "version": "1.270.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "3d5396c5-8086-479e-bf80-7968181edc8c",
+      "createTime": "2024-10-22T22:07:09.547Z"
+    },
+    {
+      "changes": [
+        {
           "type": "fix",
           "sha": "d1896869858eca3320144113e168f17f524f3119",
           "message": "Only ever allow session traces to capture page load timings once",
@@ -2042,5 +2091,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2024-10-16T16:00:42.905Z"
+  "updateTime": "2024-10-22T22:07:09.547Z"
 }

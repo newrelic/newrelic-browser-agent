@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.270.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.270.0...v1.270.1) (2024-10-23)
+
+
+### Bug Fixes
+
+* Remove undefined agentRuntime in Session Trace ([#1227](https://github.com/newrelic/newrelic-browser-agent/issues/1227)) ([dc5938f](https://github.com/newrelic/newrelic-browser-agent/commit/dc5938f26e43686759de976d4631b22f112b71e8))
+
+## [1.270.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.269.0...v1.270.0) (2024-10-22)
+
+
+### Features
+
+* Add Firefox to LCP test matcher ([#1223](https://github.com/newrelic/newrelic-browser-agent/issues/1223)) ([c6a20e1](https://github.com/newrelic/newrelic-browser-agent/commit/c6a20e11b694fcf721ce27b02be1df76caed1a3e))
+* Move deregisterDrain method to feature-base ([#1220](https://github.com/newrelic/newrelic-browser-agent/issues/1220)) ([5fdea14](https://github.com/newrelic/newrelic-browser-agent/commit/5fdea14097d415d7c6f3f98bfe87848e118ec62e))
+* Relocate aggregator from loader and improve agent internals ([#1216](https://github.com/newrelic/newrelic-browser-agent/issues/1216)) ([789df5a](https://github.com/newrelic/newrelic-browser-agent/commit/789df5a0d5574acb02ac0db2aea98150a9c8786e))
+* Remove 'pageHide' from page end-of-lifecycle listener ([#1219](https://github.com/newrelic/newrelic-browser-agent/issues/1219)) ([daf349e](https://github.com/newrelic/newrelic-browser-agent/commit/daf349e632902597c232c3392cc5d188f2995f25))
+* Remove supportsSendBeacon runtime property ([#1224](https://github.com/newrelic/newrelic-browser-agent/issues/1224)) ([a5996be](https://github.com/newrelic/newrelic-browser-agent/commit/a5996bec25f7c4038ce87f2ad72eb61d637f5994))
+
 ## [1.269.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.268.0...v1.269.0) (2024-10-16)
 
 

@@ -4,6 +4,23 @@
     {
       "changes": [
         {
+          "type": "fix",
+          "sha": "dc5938f26e43686759de976d4631b22f112b71e8",
+          "message": "Remove undefined agentRuntime in Session Trace",
+          "issues": [
+            "1227"
+          ]
+        }
+      ],
+      "version": "1.270.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "b0b05cf0-efba-4408-94b4-d688e8222ead",
+      "createTime": "2024-10-23T19:58:25.349Z"
+    },
+    {
+      "changes": [
+        {
           "type": "feat",
           "sha": "a5996bec25f7c4038ce87f2ad72eb61d637f5994",
           "message": "Remove supportsSendBeacon runtime property",
@@ -2091,5 +2108,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2024-10-22T22:07:09.547Z"
+  "updateTime": "2024-10-23T19:58:25.349Z"
 }

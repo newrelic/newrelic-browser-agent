@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.270.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.270.0...v1.270.1) (2024-10-23)
+
+
+### Bug Fixes
+
+* Remove undefined agentRuntime in Session Trace ([#1227](https://github.com/newrelic/newrelic-browser-agent/issues/1227)) ([dc5938f](https://github.com/newrelic/newrelic-browser-agent/commit/dc5938f26e43686759de976d4631b22f112b71e8))
+
 ## [1.270.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.269.0...v1.270.0) (2024-10-22)
 
 

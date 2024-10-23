@@ -1,6 +1,7 @@
 import { Instrument as SessionTrace } from '../../../src/features/session_trace/instrument'
 import { setupAgent } from '../setup-agent'
 import { MODE } from '../../../src/common/session/constants'
+import { MAX_NODES_PER_HARVEST } from '../../../src/features/session_trace/constants'
 
 let mainAgent
 
@@ -102,4 +103,23 @@ test('tracks previously stored events and processes them once per occurrence', d
     expect(sessionTraceAggregate.traceStorage.prevStoredEvents.size).toEqual(2)
     done()
   }, 100)
+})
+
+test('when max nodes per harvest is reached, no node is further added in FULL mode', () => {
+  sessionTraceAggregate.traceStorage.nodeCount = MAX_NODES_PER_HARVEST
+  sessionTraceAggregate.mode = MODE.FULL
+
+  sessionTraceAggregate.traceStorage.storeSTN({ n: 'someNode', s: 123 })
+  expect(sessionTraceAggregate.traceStorage.nodeCount).toEqual(MAX_NODES_PER_HARVEST)
+  expect(Object.keys(sessionTraceAggregate.traceStorage.trace).length).toEqual(0)
+})
+
+test('when max nodes per harvest is reached, node is still added in ERROR mode', () => {
+  sessionTraceAggregate.traceStorage.nodeCount = MAX_NODES_PER_HARVEST
+  sessionTraceAggregate.mode = MODE.ERROR
+  jest.spyOn(sessionTraceAggregate.traceStorage, 'trimSTNs').mockReturnValue(MAX_NODES_PER_HARVEST)
+
+  sessionTraceAggregate.traceStorage.storeSTN({ n: 'someNode', s: 123 })
+  expect(sessionTraceAggregate.traceStorage.nodeCount).toEqual(MAX_NODES_PER_HARVEST + 1)
+  expect(Object.keys(sessionTraceAggregate.traceStorage.trace).length).toEqual(1)
 })

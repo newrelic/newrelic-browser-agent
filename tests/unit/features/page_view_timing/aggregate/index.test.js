@@ -21,6 +21,7 @@ describe('PVT aggregate', () => {
 
     testCases().forEach(testCase => {
       const expectedPayload = qp.encode(testCase.input, schema)
+      console.log(pvtAgg.serializer)
       const payload = pvtAgg.serializer(getAgentInternalFormat(testCase.input))
       expect(payload).toEqual(expectedPayload)
     })

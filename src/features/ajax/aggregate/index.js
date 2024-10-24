@@ -12,7 +12,6 @@ import { FEATURE_NAMES, FEATURE_TO_ENDPOINT } from '../../../loaders/features/fe
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { parseGQL } from './gql'
-import { getNREUMInitializedAgent } from '../../../common/window/nreum'
 import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../../../common/serialize/bel-serializer'
 
 export class Aggregate extends AggregateBase {
@@ -67,10 +66,11 @@ export class Aggregate extends AggregateBase {
 
     const shouldCollect = shouldCollectEvent(params)
     const shouldOmitAjaxMetrics = this.agentRef.init.feature_flags?.includes('ajax_metrics_deny_list')
+    const jserrorsInUse = Boolean(this.agentRef.features?.[FEATURE_NAMES.jserrors])
 
-    // store for timeslice metric (harvested by jserrors feature)
-    if (shouldCollect || !shouldOmitAjaxMetrics) {
-      this.agentRef.sharedAggregator.store('xhr', hash, params, metrics)
+    // Report ajax timeslice metric (to be harvested by jserrors feature, but only if it's running).
+    if (jserrorsInUse && (shouldCollect || !shouldOmitAjaxMetrics)) {
+      this.agentRef.sharedAggregator.add('xhr', hash, params, metrics)
     }
 
     if (!shouldCollect) {
@@ -117,7 +117,7 @@ export class Aggregate extends AggregateBase {
     })
     if (event.gql) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Ajax/Events/GraphQL/Bytes-Added', stringify(event.gql).length], undefined, FEATURE_NAMES.metrics, this.ee)
 
-    const softNavInUse = Boolean(getNREUMInitializedAgent(this.agentIdentifier)?.features?.[FEATURE_NAMES.softNav])
+    const softNavInUse = Boolean(this.agentRef.features?.[FEATURE_NAMES.softNav])
     if (softNavInUse) { // For newer soft nav (when running), pass the event to it for evaluation -- either part of an interaction or is given back
       handle('ajax', [event], undefined, FEATURE_NAMES.softNav, this.ee)
     } else if (ctx.spaNode) { // For old spa (when running), if the ajax happened inside an interaction, hold it until the interaction finishes

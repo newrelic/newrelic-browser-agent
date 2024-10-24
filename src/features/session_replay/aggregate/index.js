@@ -54,14 +54,6 @@ export class Aggregate extends AggregateBase {
 
     handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/Enabled'], undefined, FEATURE_NAMES.metrics, this.ee)
 
-    this.ee.on(`cfc.${FEATURE_NAMES.jserrors}`, (crossFeatureData) => {
-      crossFeatureData.hasReplay = !!(this.scheduler?.started &&
-        this.recorder &&
-        this.mode === MODE.FULL &&
-        !this.blocked &&
-        this.entitled)
-    })
-
     // The SessionEntity class can emit a message indicating the session was cleared and reset (expiry, inactivity). This feature must abort and never resume if that occurs.
     this.ee.on(SESSION_EVENTS.RESET, () => {
       this.abort(ABORT_REASONS.RESET)
@@ -132,6 +124,10 @@ export class Aggregate extends AggregateBase {
 
     handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/SamplingRate/Value', sampling_rate], undefined, FEATURE_NAMES.metrics, this.ee)
     handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/ErrorSamplingRate/Value', error_sampling_rate], undefined, FEATURE_NAMES.metrics, this.ee)
+  }
+
+  replayIsActive () {
+    return Boolean(this.scheduler?.started && this.recorder && this.mode === MODE.FULL && !this.blocked && this.entitled)
   }
 
   handleError (e) {

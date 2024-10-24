@@ -12,7 +12,8 @@ export class AggregateBase extends FeatureBase {
   constructor (agentRef, featureName) {
     super(agentRef.agentIdentifier, featureName)
     this.agentRef = agentRef
-    this.events = FEATURE_TO_ENDPOINT[this.featureName] === 'jserrors' ? undefined : new EventBuffer2()
+    // Jserror and Metric features uses a singleton EventAggregator instead of a regular EventBuffer.
+    this.events = FEATURE_TO_ENDPOINT[this.featureName] === 'jserrors' ? agentRef.sharedAggregator : new EventBuffer2()
     this.checkConfiguration(agentRef)
     this.obfuscator = agentRef.runtime.obfuscator
   }
@@ -55,25 +56,29 @@ export class AggregateBase extends FeatureBase {
    * @param {Boolean} shouldRetryOnFail - harvester flag to backup payload for retry later if harvest request fails; this should be moved to harvester logic
    * @returns final payload, or undefined if there are no pending events
    */
-  makeHarvestPayload (shouldRetryOnFail = false) {
-    if (this.events.isEmpty()) return
+  makeHarvestPayload (shouldRetryOnFail = false, opts = {}) {
+    if (this.events.isEmpty(opts)) return
 
-    if (shouldRetryOnFail) this.events.save()
-    const body = this.serializer ? this.serializer(this.events.get()) : this.events.get()
-    this.events.clear()
+    if (shouldRetryOnFail) this.events.save(opts)
+    // A serializer or formatter assists in creating the payload `body` from stored events on harvest when defined by derived feature class.
+    const body = this.serializer ? this.serializer(this.events.get(opts)) : this.events.get(opts)
+    this.events.clear(opts)
 
-    return {
+    const payload = {
       body
     }
+    // Constructs the payload `qs` for relevant features on harvest.
+    if (this.queryStringsBuilder) payload.qs = this.queryStringsBuilder(body)
+    return payload
   }
 
   /**
    * Cleanup task after a harvest.
    * @param {Boolean} harvestFailed - harvester flag to restore events in main buffer for retry later if request failed
    */
-  postHarvestCleanup (harvestFailed = false) {
-    if (harvestFailed) this.events.reloadSave()
-    this.events.clearSave()
+  postHarvestCleanup (harvestFailed = false, opts = {}) {
+    if (harvestFailed) this.events.reloadSave(opts)
+    this.events.clearSave(opts)
   }
 
   /**

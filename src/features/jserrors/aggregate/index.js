@@ -78,8 +78,8 @@ export class Aggregate extends AggregateBase {
         qs.pve = '1'
         this.errorOnPage = true
       }
-      // For assurance, erase any `hasReplay` flag from all errors if replay is not recording, or not running at all.
-      if (!this.agentRef.features?.[FEATURE_NAMES.sessionReplay]?.featAggregate.replayIsActive()) payloadBody.err.forEach(error => delete error.params.hasReplay)
+      // For assurance, erase any `hasReplay` flag from all errors if replay is not recording, not-yet imported, or not running at all.
+      if (!this.agentRef.features?.[FEATURE_NAMES.sessionReplay]?.featAggregate?.replayIsActive()) payloadBody.err.forEach(error => delete error.params.hasReplay)
     }
     return qs
   }

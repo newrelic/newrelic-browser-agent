@@ -19,6 +19,11 @@ export class EventAggregator {
     return true
   }
 
+  addMetric (type, name, params, value) {
+    this.#aggregator.storeMetric(type, name, params, value)
+    return true
+  }
+
   save ({ aggregatorTypes }) {
     const key = aggregatorTypes.toString() // the stringified types serve as the key to each save call, e.g. ['err', 'ierr', 'xhr'] => 'err,ierr,xhr'
     const backupAggregatedDataSubset = {}
@@ -37,7 +42,8 @@ export class EventAggregator {
     */
   }
 
-  get ({ aggregatorTypes }) {
+  get (opts) {
+    const aggregatorTypes = Array.isArray(opts) ? opts : opts.aggregatorTypes
     return this.#aggregator.take(aggregatorTypes, false)
   }
 

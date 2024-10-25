@@ -16,13 +16,14 @@ export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor (agentRef) {
     super(agentRef, FEATURE_NAME)
+    const aggregatorTypes = ['cm', 'sm'] // the types in EventAggregator this feature cares about
 
     this.waitForFlags(['err']).then(([errFlag]) => {
       if (errFlag) {
         // *cli, Mar 23 - Per NR-94597, this feature should only harvest ONCE at the (potential) EoL time of the page.
         const scheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], { onUnload: () => this.unload() }, this)
         // this is needed to ensure EoL is "on" and sent
-        scheduler.harvest.on(FEATURE_TO_ENDPOINT[this.featureName], () => ({ body: this.agentRef.sharedAggregator.take(['cm', 'sm']) }))
+        scheduler.harvest.on(FEATURE_TO_ENDPOINT[this.featureName], () => this.makeHarvestPayload(undefined, { aggregatorTypes }))
         this.drain()
       } else {
         this.blocked = true // if rum response determines that customer lacks entitlements for spa endpoint, this feature shouldn't harvest
@@ -42,14 +43,14 @@ export class Aggregate extends AggregateBase {
     if (this.blocked) return
     const type = SUPPORTABILITY_METRIC
     const params = { name }
-    this.agentRef.sharedAggregator.storeMetric(type, name, params, value)
+    this.events.addMetric(type, name, params, value)
   }
 
   storeEventMetrics (name, metrics) {
     if (this.blocked) return
     const type = CUSTOM_METRIC
     const params = { name }
-    this.agentRef.sharedAggregator.store(type, name, params, metrics)
+    this.events.add(type, name, params, metrics)
   }
 
   singleChecks () {

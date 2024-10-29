@@ -5,6 +5,23 @@
       "changes": [
         {
           "type": "fix",
+          "sha": "95f5a77c60221c0eda61a42f33648f5a2791891f",
+          "message": "Correct naming for logging pageUrl attribute",
+          "issues": [
+            "1225"
+          ]
+        }
+      ],
+      "version": "1.270.2",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "6ee3cfd5-b381-4fbb-b754-dc4604ed5e5c",
+      "createTime": "2024-10-28T19:01:16.177Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
           "sha": "dc5938f26e43686759de976d4631b22f112b71e8",
           "message": "Remove undefined agentRuntime in Session Trace",
           "issues": [
@@ -2108,5 +2125,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2024-10-23T19:58:25.349Z"
+  "updateTime": "2024-10-28T19:01:16.177Z"
 }

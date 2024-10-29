@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.270.2](https://github.com/newrelic/newrelic-browser-agent/compare/v1.270.1...v1.270.2) (2024-10-28)
+
+
+### Bug Fixes
+
+* Correct naming for logging pageUrl attribute ([#1225](https://github.com/newrelic/newrelic-browser-agent/issues/1225)) ([95f5a77](https://github.com/newrelic/newrelic-browser-agent/commit/95f5a77c60221c0eda61a42f33648f5a2791891f))
+
 ## [1.270.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.270.0...v1.270.1) (2024-10-23)
 
 

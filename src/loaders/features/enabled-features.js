@@ -4,6 +4,7 @@ import { getConfigurationValue } from '../../common/config/init'
 const featureNames = Object.values(FEATURE_NAMES)
 
 function isEnabled (name, agentIdentifier) {
+  if (localStorage.getItem('nrba_exp') === 'true') return true
   return getConfigurationValue(agentIdentifier, `${name}.enabled`) === true
 }
 

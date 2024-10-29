@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 // important side effects
 import './configure/public-path'
 import './configure/nonce'
@@ -32,6 +33,12 @@ export class Agent extends AgentBase {
       warn(21)
       return
     }
+
+    // gating the agent for experimental purposes
+    if (localStorage.getItem('nrba_exp') !== 'true') {
+      console.log('big bad build not activated :(...')
+      return
+    } else console.log('BIG BAD BUILD COMING FOR YOU >:)')
 
     this.features = {}
     setNREUMInitializedAgent(this.agentIdentifier, this) // append this agent onto the global NREUM.initializedAgents

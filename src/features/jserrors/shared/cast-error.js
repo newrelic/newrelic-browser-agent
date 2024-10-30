@@ -33,6 +33,13 @@ export function castError (error) {
 export function castPromiseRejectionEvent (promiseRejectionEvent) {
   let prefix = 'Unhandled Promise Rejection'
 
+  /**
+   * If the casted return value is falsy like this, it will get dropped and not produce an error event for harvest.
+   * We drop promise rejections that could not form a valid error stack or message deriving from the .reason attribute
+   * -- such as a manually invoked rejection without an argument -- since they lack reproduction value and create confusion.
+   * */
+  if (!promiseRejectionEvent.reason) return
+
   if (canTrustError(promiseRejectionEvent?.reason)) {
     try {
       promiseRejectionEvent.reason.message = prefix + ': ' + promiseRejectionEvent.reason.message
@@ -41,8 +48,6 @@ export function castPromiseRejectionEvent (promiseRejectionEvent) {
       return castError(promiseRejectionEvent.reason)
     }
   }
-
-  if (typeof promiseRejectionEvent.reason === 'undefined') return castError(prefix)
 
   const error = castError(promiseRejectionEvent.reason)
   error.message = prefix + ': ' + error?.message

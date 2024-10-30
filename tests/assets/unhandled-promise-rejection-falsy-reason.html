@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {init} {config} {loader}
+  </head>
+
+  <body>
+    <script>
+      "use strict";
+       // falsy reasons, these should get dropped
+      new Promise(function(res, rej) { rej() });
+      new Promise(function(res, rej) { rej('') });
+      new Promise(function(res, rej) { rej(null) });
+    </script>
+    this is a generic page that is instrumented by the JS agent
+  </body>
+</html>

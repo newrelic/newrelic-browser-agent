@@ -159,8 +159,6 @@ describe('JSE Error detection in various callbacks', () => {
     { message: 'Unhandled Promise Rejection: [1,2,3]', meta: 'array' },
     { message: 'Unhandled Promise Rejection: test', meta: 'error with message' },
     { message: 'test', meta: 'error with no setter with message' },
-    { message: 'Unhandled Promise Rejection', meta: 'undefined' },
-    { message: 'Unhandled Promise Rejection: null', meta: 'null' },
     { message: 'Unhandled Promise Rejection: ', meta: 'error with no message' },
     { message: 'Unhandled Promise Rejection: {}', meta: 'map object' },
     { message: 'Unhandled Promise Rejection: {"abc":"Hello"}', meta: 'factory function' },
@@ -187,6 +185,17 @@ describe('JSE Error detection in various callbacks', () => {
       expect(!!actualError.params.stack_trace).toBeTruthy()
       expect(!!actualError.params.stackHash).toBeTruthy()
     })
+  })
+
+  it('should not report unhandled rejections with falsy reasons', async () => {
+    const pageUrl = await browser.testHandle.assetURL('unhandled-promise-rejection-falsy-reason.html')
+    const [errorsExpect] = await Promise.all([
+      errorsCapture.waitForResult({ timeout: 10000 }),
+      browser.url(pageUrl)
+        .then(() => browser.waitForAgentLoad())
+    ])
+
+    expect(errorsExpect).toEqual([])
   })
 
   it('should report errors from XHR callbacks', async () => {

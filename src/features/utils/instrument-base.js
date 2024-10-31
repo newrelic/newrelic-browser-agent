@@ -90,17 +90,6 @@ export class InstrumentBase extends FeatureBase {
         if (this.featureName === FEATURE_NAMES.sessionReplay) this.abortHandler?.() // SR should stop recording if session DNE
       }
 
-      try {
-        if (canEnableSessionTracking(this.agentIdentifier)) { // would require some setup before certain features start
-          const { setupAgentSession } = await import(/* webpackChunkName: "session-manager" */ './agent-session')
-          session = setupAgentSession(this.agentIdentifier)
-        }
-      } catch (e) {
-        warn(20, e)
-        this.ee.emit('internal-error', [e])
-        if (this.featureName === FEATURE_NAMES.sessionReplay) this.abortHandler?.() // SR should stop recording if session DNE
-      }
-
       /**
        * Note this try-catch differs from the one in Agent.run() in that it's placed later in a page's lifecycle and
        * it's only responsible for aborting its one specific feature, rather than all.

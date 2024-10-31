@@ -1,6 +1,5 @@
 /* eslint-disable prefer-promise-reject-errors */
 import helpers from './helpers'
-import { Aggregator } from '../../../src/common/aggregate/aggregator'
 import { ee } from '../../../src/common/event-emitter/contextual-ee'
 import { Spa } from '../../../src/features/spa'
 
@@ -31,8 +30,7 @@ jest.mock('../../../src/common/util/feature-flags', () => ({
 
 let spaInstrument, spaAggregate, newrelic
 beforeAll(async () => {
-  const aggregator = new Aggregator({ agentIdentifier, ee })
-  spaInstrument = new Spa(agentIdentifier, aggregator)
+  spaInstrument = new Spa({ agentIdentifier, info: {}, init: { spa: { enabled: true } }, runtime: {} })
   await expect(spaInstrument.onAggregateImported).resolves.toEqual(true)
   spaAggregate = spaInstrument.featAggregate
   newrelic = helpers.getNewrelicGlobal(spaAggregate.ee)

@@ -1,16 +1,13 @@
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
-import { getInfo } from '../../../common/config/info'
-import { getConfigurationValue } from '../../../common/config/init'
-import { getRuntime } from '../../../common/config/runtime'
 import { FEATURE_NAME } from '../constants'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { TraceStorage } from './trace/storage'
 import { obj as encodeObj } from '../../../common/url/encode'
-import { deregisterDrain } from '../../../common/drain/drain'
 import { globalScope } from '../../../common/constants/runtime'
 import { MODE, SESSION_EVENTS } from '../../../common/session/constants'
 import { applyFnToProps } from '../../../common/util/traverse'
+import { cleanURL } from '../../../common/url/clean-url'
 
 const ERROR_MODE_SECONDS_WINDOW = 30 * 1000 // sliding window of nodes to track when simply monitoring (but not harvesting) in error mode
 /** Reserved room for query param attrs */
@@ -18,14 +15,12 @@ const QUERY_PARAM_PADDING = 5000
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
 
-  constructor (agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator, FEATURE_NAME)
-    this.agentRuntime = getRuntime(agentIdentifier)
-    this.agentInfo = getInfo(agentIdentifier)
+  constructor (agentRef) {
+    super(agentRef, FEATURE_NAME)
 
     /** A buffer to hold on to harvested traces in the case that a retry must be made later */
     this.sentTrace = null
-    this.harvestTimeSeconds = getConfigurationValue(agentIdentifier, 'session_trace.harvestTimeSeconds') || 30
+    this.harvestTimeSeconds = agentRef.init.session_trace.harvestTimeSeconds || 30
     /** Tied to the entitlement flag response from BCS.  Will short circuit operations of the agg if false  */
     this.entitled = undefined
     /** A flag used to decide if the 30 node threshold should be ignored on the first harvest to ensure sending on the first payload */
@@ -42,13 +37,13 @@ export class Aggregate extends AggregateBase {
   /** Sets up event listeners, and initializes this module to run in the correct "mode".  Can be triggered from a few places, but makes an effort to only set up listeners once */
   initialize (stMode, stEntitled, ignoreSession) {
     this.entitled ??= stEntitled
-    if (this.blocked || !this.entitled) return deregisterDrain(this.agentIdentifier, this.featureName)
+    if (this.blocked || !this.entitled) return this.deregisterDrain()
 
     if (!this.initialized) {
       this.initialized = true
       /** Store session identifiers at initialization time to be cross-checked later at harvest time for session changes that are subject to race conditions */
-      this.ptid = this.agentRuntime.ptid
-      this.sessionId = this.agentRuntime.session?.state.value
+      this.ptid = this.agentRef.runtime.ptid
+      this.sessionId = this.agentRef.runtime.session?.state.value
       // The SessionEntity class can emit a message indicating the session was cleared and reset (expiry, inactivity). This feature must abort and never resume if that occurs.
       this.ee.on(SESSION_EVENTS.RESET, () => {
         if (this.blocked) return
@@ -63,18 +58,24 @@ export class Aggregate extends AggregateBase {
         // if another page's session entity has expired, or another page has transitioned to off and this one hasn't... we can just abort straight away here
         if (this.sessionId !== sessionState.value || (eventType === 'cross-tab' && this.scheduler?.started && sessionState.sessionTraceMode === MODE.OFF)) this.abort(2)
       })
+
+      if (typeof PerformanceNavigationTiming !== 'undefined') {
+        this.traceStorage.storeTiming(globalScope.performance?.getEntriesByType?.('navigation')[0])
+      } else {
+        this.traceStorage.storeTiming(globalScope.performance?.timing, true)
+      }
     }
 
     /** ST/SR sampling flow in BCS - https://drive.google.com/file/d/19hwt2oft-8Hh4RrjpLqEXfpP_9wYBLcq/view?usp=sharing */
     /** ST will run in the mode provided by BCS if the session IS NEW.  If not... it will use the state of the session entity to determine what mode to run in */
-    if (!this.agentRuntime.session.isNew && !ignoreSession) this.mode = this.agentRuntime.session.state.sessionTraceMode
+    if (!this.agentRef.runtime.session.isNew && !ignoreSession) this.mode = this.agentRef.runtime.session.state.sessionTraceMode
     else this.mode = stMode
 
     /** If the mode is off, we do not want to hold up draining for other features, so we deregister the feature for now.
      * If it drains later (due to a mode change), data and handlers will instantly drain instead of waiting for the registry. */
-    if (this.mode === MODE.OFF) return deregisterDrain(this.agentIdentifier, this.featureName)
+    if (this.mode === MODE.OFF) return this.deregisterDrain()
 
-    this.timeKeeper ??= this.agentRuntime.timeKeeper
+    this.timeKeeper ??= this.agentRef.runtime.timeKeeper
 
     this.scheduler = new HarvestScheduler('browser/blobs', {
       onFinished: this.onHarvestFinished.bind(this),
@@ -92,12 +93,6 @@ export class Aggregate extends AggregateBase {
     registerHandler('trace-jserror', (...args) => this.traceStorage.storeErrorAgg(...args), this.featureName, this.ee)
     registerHandler('pvtAdded', (...args) => this.traceStorage.processPVT(...args), this.featureName, this.ee)
 
-    if (typeof PerformanceNavigationTiming !== 'undefined') {
-      this.traceStorage.storeTiming(globalScope.performance?.getEntriesByType?.('navigation')[0])
-    } else {
-      this.traceStorage.storeTiming(globalScope.performance?.timing, true)
-    }
-
     /** Only start actually harvesting if running in full mode at init time */
     if (this.mode === MODE.FULL) this.startHarvesting()
     else {
@@ -106,7 +101,7 @@ export class Aggregate extends AggregateBase {
         if (this.mode === MODE.ERROR) this.switchToFull()
       }, this.featureName, this.ee)
     }
-    this.agentRuntime.session.write({ sessionTraceMode: this.mode })
+    this.agentRef.runtime.session.write({ sessionTraceMode: this.mode })
     this.drain()
   }
 
@@ -122,7 +117,7 @@ export class Aggregate extends AggregateBase {
     this.traceStorage.prevStoredEvents.clear() // release references to past events for GC
     if (!this.timeKeeper?.ready) return // this should likely never happen, but just to be safe, we should never harvest if we cant correct time
     if (this.blocked || this.mode !== MODE.FULL || this.traceStorage.nodeCount === 0) return
-    if (this.sessionId !== this.agentRuntime.session?.state.value || this.ptid !== this.agentRuntime.ptid) return this.abort(3) // if something unexpected happened and we somehow still got to the point of harvesting after a session identifier changed, we should force-exit instead of harvesting
+    if (this.sessionId !== this.agentRef.runtime.session?.state.value || this.ptid !== this.agentRef.runtime.ptid) return this.abort(3) // if something unexpected happened and we somehow still got to the point of harvesting after a session identifier changed, we should force-exit instead of harvesting
     /** Get the ST nodes from the traceStorage buffer.  This also returns helpful metadata about the payload. */
     const { stns, earliestTimeStamp, latestTimeStamp } = this.traceStorage.takeSTNs()
     if (!stns) return // there are no trace nodes
@@ -130,11 +125,11 @@ export class Aggregate extends AggregateBase {
       this.sentTrace = stns
     }
 
-    const firstSessionHarvest = !this.agentRuntime.session.state.traceHarvestStarted
-    if (firstSessionHarvest) this.agentRuntime.session.write({ traceHarvestStarted: true })
+    const firstSessionHarvest = !this.agentRef.runtime.session.state.traceHarvestStarted
+    if (firstSessionHarvest) this.agentRef.runtime.session.write({ traceHarvestStarted: true })
 
-    const hasReplay = this.agentRuntime.session?.state.sessionReplayMode === 1
-    const endUserId = this.agentInfo?.jsAttributes?.['enduser.id']
+    const hasReplay = this.agentRef.runtime.session?.state.sessionReplayMode === 1
+    const endUserId = this.agentRef.info?.jsAttributes?.['enduser.id']
 
     this.everHarvested = true
 
@@ -147,17 +142,17 @@ export class Aggregate extends AggregateBase {
      *
      * For data that does not fit the schema of the above, it should be url-encoded and placed into `attributes`
      */
-    const agentMetadata = this.agentRuntime.appMetadata?.agents?.[0] || {}
+    const agentMetadata = this.agentRef.runtime.appMetadata?.agents?.[0] || {}
     return {
       qs: {
-        browser_monitoring_key: this.agentInfo.licenseKey,
+        browser_monitoring_key: this.agentRef.info.licenseKey,
         type: 'BrowserSessionChunk',
-        app_id: this.agentInfo.applicationID,
+        app_id: this.agentRef.info.applicationID,
         protocol_version: '0',
         timestamp: Math.floor(this.timeKeeper.correctRelativeTimestamp(earliestTimeStamp)),
         attributes: encodeObj({
           ...(agentMetadata.entityGuid && { entityGuid: agentMetadata.entityGuid }),
-          harvestId: `${this.agentRuntime.session?.state.value}_${this.agentRuntime.ptid}_${this.agentRuntime.harvestCount}`,
+          harvestId: `${this.agentRef.runtime.session?.state.value}_${this.agentRef.runtime.ptid}_${this.agentRef.runtime.harvestCount}`,
           // this section of attributes must be controllable and stay below the query param padding limit -- see QUERY_PARAM_PADDING
           // if not, data could be lost to truncation at time of sending, potentially breaking parsing / API behavior in NR1
           // trace payload metadata
@@ -166,13 +161,14 @@ export class Aggregate extends AggregateBase {
           'trace.nodes': stns.length,
           'trace.originTimestamp': this.timeKeeper.correctedOriginTime,
           // other payload metadata
-          agentVersion: this.agentRuntime.version,
+          agentVersion: this.agentRef.runtime.version,
           ...(firstSessionHarvest && { firstSessionHarvest }),
           ...(hasReplay && { hasReplay }),
           ptid: `${this.ptid}`,
           session: `${this.sessionId}`,
           // customer-defined data should go last so that if it exceeds the query param padding limit it will be truncated instead of important attrs
-          ...(endUserId && { 'enduser.id': this.obfuscator.obfuscateString(endUserId) })
+          ...(endUserId && { 'enduser.id': this.obfuscator.obfuscateString(endUserId) }),
+          currentUrl: this.obfuscator.obfuscateString(cleanURL('' + location))
           // The Query Param is being arbitrarily limited in length here.  It is also applied when estimating the size of the payload in getPayloadSize()
         }, QUERY_PARAM_PADDING).substring(1) // remove the leading '&'
       },
@@ -195,7 +191,7 @@ export class Aggregate extends AggregateBase {
     if (this.mode === MODE.FULL || !this.entitled || this.blocked) return
     const prevMode = this.mode
     this.mode = MODE.FULL
-    this.agentRuntime.session.write({ sessionTraceMode: this.mode })
+    this.agentRef.runtime.session.write({ sessionTraceMode: this.mode })
     if (prevMode === MODE.OFF || !this.initialized) return this.initialize(this.mode, this.entitled)
     if (this.initialized) {
       this.traceStorage.trimSTNs(ERROR_MODE_SECONDS_WINDOW) // up until now, Trace would've been just buffering nodes up to max, which needs to be trimmed to last X seconds
@@ -207,7 +203,7 @@ export class Aggregate extends AggregateBase {
   abort (reason) {
     this.blocked = true
     this.mode = MODE.OFF
-    this.agentRuntime.session.write({ sessionTraceMode: this.mode })
+    this.agentRef.runtime.session.write({ sessionTraceMode: this.mode })
     this.scheduler?.stopTimer()
   }
 }

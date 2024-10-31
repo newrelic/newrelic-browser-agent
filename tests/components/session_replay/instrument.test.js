@@ -2,40 +2,34 @@ import { resetAgent, setupAgent } from '../setup-agent'
 import { Instrument as SessionReplay } from '../../../src/features/session_replay/instrument'
 import * as nreumModule from '../../../src/common/window/nreum'
 import { setConfiguration } from '../../../src/common/config/init'
-import { getRuntime } from '../../../src/common/config/runtime'
 import { MODE } from '../../specs/util/helpers'
 
-let agentSetup
+let mainAgent, savedInitialSession
 
 beforeAll(() => {
-  agentSetup = setupAgent({
+  mainAgent = setupAgent({
     init: {
       session_replay: { preload: false, enabled: true }
     }
   })
-})
-
-let session
-
-beforeEach(() => {
-  session = getRuntime(agentSetup.agentIdentifier).session
+  savedInitialSession = mainAgent.runtime.session
 })
 
 afterEach(() => {
-  if (!getRuntime(agentSetup.agentIdentifier).session) {
-    getRuntime(agentSetup.agentIdentifier).session = session
+  if (!mainAgent.runtime.session) {
+    mainAgent.runtime.session = savedInitialSession
   }
   if (jest.mocked(nreumModule.gosNREUMOriginals).mock) {
     jest.mocked(nreumModule.gosNREUMOriginals).mockRestore()
   }
 
-  resetAgent(agentSetup.agentIdentifier)
+  resetAgent(mainAgent.agentIdentifier)
   jest.clearAllMocks()
 })
 
 describe('Replay', () => { // this is moreso a test of the SR-specific logic within importAggregator() of instrument-base.js
   test('does import with all pre-req settings on - no preload', async () => {
-    const sessionReplayInstrument = new SessionReplay(agentSetup.agentIdentifier, agentSetup.aggregator)
+    const sessionReplayInstrument = new SessionReplay(mainAgent)
     await new Promise(process.nextTick)
 
     expect(sessionReplayInstrument.recorder).toBeUndefined()
@@ -45,7 +39,7 @@ describe('Replay', () => { // this is moreso a test of the SR-specific logic wit
   test('does not import if MutationObserver is missing', async () => {
     jest.spyOn(nreumModule, 'gosNREUMOriginals').mockImplementation(() => ({ o: { MO: undefined } }))
 
-    const sessionReplayInstrument = new SessionReplay(agentSetup.agentIdentifier, agentSetup.aggregator)
+    const sessionReplayInstrument = new SessionReplay(mainAgent)
     await new Promise(process.nextTick)
 
     expect(sessionReplayInstrument.recorder).toBeUndefined()
@@ -53,9 +47,9 @@ describe('Replay', () => { // this is moreso a test of the SR-specific logic wit
   })
 
   test('does not import if cookies_enabled is false', async () => {
-    setConfiguration(agentSetup.agentIdentifier, { privacy: { cookies_enabled: false } })
+    setConfiguration(mainAgent.agentIdentifier, { privacy: { cookies_enabled: false } })
 
-    const sessionReplayInstrument = new SessionReplay(agentSetup.agentIdentifier, agentSetup.aggregator)
+    const sessionReplayInstrument = new SessionReplay(mainAgent)
     await new Promise(process.nextTick)
 
     expect(sessionReplayInstrument.recorder).toBeUndefined()
@@ -63,9 +57,9 @@ describe('Replay', () => { // this is moreso a test of the SR-specific logic wit
   })
 
   test('does not import if session_trace is disabled', async () => {
-    setConfiguration(agentSetup.agentIdentifier, { session_trace: { enabled: false } })
+    setConfiguration(mainAgent.agentIdentifier, { session_trace: { enabled: false } })
 
-    const sessionReplayInstrument = new SessionReplay(agentSetup.agentIdentifier, agentSetup.aggregator)
+    const sessionReplayInstrument = new SessionReplay(mainAgent)
     await new Promise(process.nextTick)
 
     expect(sessionReplayInstrument.recorder).toBeUndefined()
@@ -73,9 +67,9 @@ describe('Replay', () => { // this is moreso a test of the SR-specific logic wit
   })
 
   test('does not import if session does not exist or failed to init', async () => {
-    jest.replaceProperty(getRuntime(agentSetup.agentIdentifier), 'session', undefined)
+    mainAgent.runtime.session = undefined
 
-    const sessionReplayInstrument = new SessionReplay(agentSetup.agentIdentifier, agentSetup.aggregator)
+    const sessionReplayInstrument = new SessionReplay(mainAgent)
     await new Promise(process.nextTick)
 
     expect(sessionReplayInstrument.recorder).toBeUndefined()
@@ -90,10 +84,10 @@ describe('Preload early records', () => {
   })
 
   test('with flag enabled and if session dne yet', async () => {
-    jest.replaceProperty(getRuntime(agentSetup.agentIdentifier), 'session', undefined)
-    setConfiguration(agentSetup.agentIdentifier, { session_replay: { preload: true, enabled: true } })
+    mainAgent.runtime.session = undefined
+    setConfiguration(mainAgent.agentIdentifier, { session_replay: { preload: true, enabled: true } })
 
-    const sessionReplayInstrument = new SessionReplay(agentSetup.agentIdentifier, agentSetup.aggregator)
+    const sessionReplayInstrument = new SessionReplay(mainAgent)
     await new Promise(process.nextTick)
 
     expect(sessionReplayInstrument.recorder).toBeDefined()
@@ -101,10 +95,10 @@ describe('Preload early records', () => {
   })
 
   test('when replay already on in existing session, even if preload flag disabled', async () => {
-    setConfiguration(agentSetup.agentIdentifier, { session_replay: { preload: false, enabled: true } })
-    session.write({ sessionReplayMode: MODE.FULL })
+    setConfiguration(mainAgent.agentIdentifier, { session_replay: { preload: false, enabled: true } })
+    mainAgent.runtime.session.write({ sessionReplayMode: MODE.FULL })
 
-    const sessionReplayInstrument = new SessionReplay(agentSetup.agentIdentifier, agentSetup.aggregator)
+    const sessionReplayInstrument = new SessionReplay(mainAgent)
     await new Promise(process.nextTick)
 
     expect(sessionReplayInstrument.recorder).toBeDefined()
@@ -112,10 +106,10 @@ describe('Preload early records', () => {
   })
 
   test('when replay already on in existing session, even if flag enabled but a pre-req is not', async () => {
-    setConfiguration(agentSetup.agentIdentifier, { privacy: { cookies_enabled: false }, session_replay: { preload: false, enabled: true } })
-    session.write({ sessionReplayMode: MODE.FULL })
+    setConfiguration(mainAgent.agentIdentifier, { privacy: { cookies_enabled: false }, session_replay: { preload: false, enabled: true } })
+    mainAgent.runtime.session.write({ sessionReplayMode: MODE.FULL })
 
-    const sessionReplayInstrument = new SessionReplay(agentSetup.agentIdentifier, agentSetup.aggregator)
+    const sessionReplayInstrument = new SessionReplay(mainAgent)
     await new Promise(process.nextTick)
 
     expect(sessionReplayInstrument.recorder).toBeDefined()
@@ -123,10 +117,10 @@ describe('Preload early records', () => {
   })
 
   test('if replay is off in existing session, but all required flags are enabled', async () => {
-    setConfiguration(agentSetup.agentIdentifier, { session_replay: { preload: true, enabled: true } })
-    session.write({ sessionReplayMode: MODE.OFF })
+    setConfiguration(mainAgent.agentIdentifier, { session_replay: { preload: true, enabled: true } })
+    mainAgent.runtime.session.write({ sessionReplayMode: MODE.OFF })
 
-    const sessionReplayInstrument = new SessionReplay(agentSetup.agentIdentifier, agentSetup.aggregator)
+    const sessionReplayInstrument = new SessionReplay(mainAgent)
     await new Promise(process.nextTick)
 
     expect(sessionReplayInstrument.recorder).toBeDefined()
@@ -136,7 +130,7 @@ describe('Preload early records', () => {
 
 describe('Preload recording stops if', () => {
   beforeAll(() => {
-    setConfiguration(agentSetup.agentIdentifier, { session_replay: { preload: true, enabled: true } })
+    setConfiguration(mainAgent.agentIdentifier, { session_replay: { preload: true, enabled: true } })
   })
 
   test('session entity fails to initialize', async () => {
@@ -144,9 +138,9 @@ describe('Preload recording stops if', () => {
       __esModule: true,
       setupAgentSession: jest.fn(() => { throw new Error('RIP') })
     }))
-    jest.replaceProperty(getRuntime(agentSetup.agentIdentifier), 'session', undefined)
+    mainAgent.runtime.session = undefined
 
-    const sessionReplayInstrument = new SessionReplay(agentSetup.agentIdentifier, agentSetup.aggregator)
+    const sessionReplayInstrument = new SessionReplay(mainAgent)
     await new Promise(process.nextTick)
 
     expect(sessionReplayInstrument.recorder).toBeDefined()
@@ -159,7 +153,7 @@ describe('Preload recording stops if', () => {
       setupAgentSession: jest.fn(() => { throw new Error('RIP') })
     }))
 
-    const sessionReplayInstrument = new SessionReplay(agentSetup.agentIdentifier, agentSetup.aggregator)
+    const sessionReplayInstrument = new SessionReplay(mainAgent)
     await new Promise(process.nextTick)
 
     expect(sessionReplayInstrument.recorder).toBeDefined()

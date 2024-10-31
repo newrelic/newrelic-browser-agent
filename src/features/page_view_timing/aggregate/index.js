@@ -7,8 +7,6 @@ import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { handle } from '../../../common/event-emitter/handle'
-import { getInfo } from '../../../common/config/info'
-import { getConfigurationValue } from '../../../common/config/init'
 import { FEATURE_NAME } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
@@ -30,16 +28,17 @@ export class Aggregate extends AggregateBase {
     this.addTiming(name, value, attrs)
   }
 
-  constructor (agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator, FEATURE_NAME)
+  constructor (agentRef) {
+    super(agentRef, FEATURE_NAME)
 
     this.timings = new EventBuffer()
     this.curSessEndRecorded = false
 
     registerHandler('docHidden', msTimestamp => this.endCurrentSession(msTimestamp), this.featureName, this.ee)
-    registerHandler('winPagehide', msTimestamp => this.recordPageUnload(msTimestamp), this.featureName, this.ee)
+    // Add the time of _window pagehide event_ firing to the next PVT harvest == NRDB windowUnload attr:
+    registerHandler('winPagehide', msTimestamp => this.addTiming('unload', msTimestamp, null), this.featureName, this.ee)
 
-    const harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'page_view_timing.harvestTimeSeconds') || 30
+    const harvestTimeSeconds = agentRef.init.page_view_timing.harvestTimeSeconds || 30
 
     this.waitForFlags(([])).then(() => {
       /* It's important that CWV api, like "onLCP", is called before the **scheduler** is initialized. The reason is because they listen to the same
@@ -82,21 +81,6 @@ export class Aggregate extends AggregateBase {
     }
   }
 
-  /**
-   * Add the time of _window pagehide event_ firing to the next PVT harvest == NRDB windowUnload attr.
-   */
-  recordPageUnload (timestamp) {
-    this.addTiming('unload', timestamp, null)
-    /*
-    Issue: Because window's pageHide commonly fires BEFORE vis change and "final" harvest would happen at the former in this case, we also have to add our vis-change event now or it may not be sent.
-    Affected: Safari < v14.1/.5 ; versions that don't support 'visiilitychange' event
-    Impact: For affected w/o this, NR 'pageHide' attribute may not be sent. For other browsers w/o this, NR 'pageHide' gets fragmented into its own harvest call on page unloading because of dual EoL logic.
-    Mitigation: NR 'unload' and 'pageHide' are both recorded when window pageHide fires, rather than only recording 'unload'.
-    Future: When EoL can become the singular subscribeToVisibilityChange, it's likely endCurrentSession isn't needed here as 'unload'-'pageHide' can be untangled.
-    */
-    this.endCurrentSession(timestamp)
-  }
-
   addTiming (name, value, attrs) {
     attrs = attrs || {}
     addConnectionAttributes(attrs) // network conditions may differ from the actual for VitalMetrics when they were captured
@@ -129,11 +113,10 @@ export class Aggregate extends AggregateBase {
 
   appendGlobalCustomAttributes (timing) {
     var timingAttributes = timing.attrs || {}
-    var customAttributes = getInfo(this.agentIdentifier).jsAttributes || {}
 
     var reservedAttributes = ['size', 'eid', 'cls', 'type', 'fid', 'elTag', 'elUrl', 'net-type',
       'net-etype', 'net-rtt', 'net-dlink']
-    Object.entries(customAttributes || {}).forEach(([key, val]) => {
+    Object.entries(this.agentRef.info.jsAttributes || {}).forEach(([key, val]) => {
       if (reservedAttributes.indexOf(key) < 0) {
         timingAttributes[key] = val
       }

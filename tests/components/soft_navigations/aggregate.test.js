@@ -2,10 +2,10 @@ import { resetAgent, setupAgent } from '../setup-agent'
 import { Instrument as SoftNav } from '../../../src/features/soft_navigations/instrument'
 import * as ttfbModule from '../../../src/common/vitals/time-to-first-byte'
 
-let agentSetup
+let mainAgent
 
 beforeAll(() => {
-  agentSetup = setupAgent({
+  mainAgent = setupAgent({
     agentOverrides: {
       runSoftNavOverSpa: true
     },
@@ -21,7 +21,7 @@ let softNavAggregate
 beforeEach(async () => {
   jest.spyOn(ttfbModule.timeToFirstByte, 'subscribe')
 
-  const softNavInstrument = new SoftNav(agentSetup.agentIdentifier, agentSetup.aggregator)
+  const softNavInstrument = new SoftNav(mainAgent)
   await new Promise(process.nextTick)
   softNavAggregate = softNavInstrument.featAggregate
 
@@ -30,7 +30,7 @@ beforeEach(async () => {
 })
 
 afterEach(() => {
-  resetAgent(agentSetup.agentIdentifier)
+  resetAgent(mainAgent.agentIdentifier)
   jest.clearAllMocks()
 })
 

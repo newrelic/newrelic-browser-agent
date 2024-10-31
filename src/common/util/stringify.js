@@ -31,7 +31,7 @@ const getCircularReplacer = () => {
  */
 export function stringify (val) {
   try {
-    return JSON.stringify(val, getCircularReplacer())
+    return JSON.stringify(val, getCircularReplacer()) ?? ''
   } catch (e) {
     try {
       ee.emit('internal-error', [e])

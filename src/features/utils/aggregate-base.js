@@ -1,17 +1,17 @@
 import { FeatureBase } from './feature-base'
-import { getInfo, isValid } from '../../common/config/info'
-import { getRuntime } from '../../common/config/runtime'
+import { isValid } from '../../common/config/info'
 import { configure } from '../../loaders/configure/configure'
 import { gosCDN } from '../../common/window/nreum'
-import { deregisterDrain, drain } from '../../common/drain/drain'
+import { drain } from '../../common/drain/drain'
 import { activatedFeatures } from '../../common/util/feature-flags'
 import { Obfuscator } from '../../common/util/obfuscate'
 
 export class AggregateBase extends FeatureBase {
-  constructor (...args) {
-    super(...args)
-    this.checkConfiguration()
-    this.obfuscator = getRuntime(this.agentIdentifier).obfuscator
+  constructor (agentRef, featureName) {
+    super(agentRef.agentIdentifier, featureName)
+    this.agentRef = agentRef
+    this.checkConfiguration(agentRef)
+    this.obfuscator = agentRef.runtime.obfuscator
   }
 
   /**
@@ -38,7 +38,7 @@ export class AggregateBase extends FeatureBase {
     return flagsPromise.catch(err => {
       this.ee.emit('internal-error', [err])
       this.blocked = true
-      deregisterDrain(this.agentIdentifier, this.featureName)
+      this.deregisterDrain()
     })
   }
 
@@ -51,7 +51,7 @@ export class AggregateBase extends FeatureBase {
    * Checks for additional `jsAttributes` items to support backward compatibility with implementations of the agent where
    * loader configurations may appear after the loader code is executed.
    */
-  checkConfiguration () {
+  checkConfiguration (existingAgent) {
     // NOTE: This check has to happen at aggregator load time
     if (!isValid(this.agentIdentifier)) {
       const cdn = gosCDN()
@@ -59,7 +59,7 @@ export class AggregateBase extends FeatureBase {
       try {
         jsAttributes = {
           ...jsAttributes,
-          ...getInfo(this.agentIdentifier)?.jsAttributes
+          ...existingAgent.info?.jsAttributes
         }
       } catch (err) {
         // do nothing
@@ -70,13 +70,12 @@ export class AggregateBase extends FeatureBase {
           ...cdn.info,
           jsAttributes
         },
-        runtime: getRuntime(this.agentIdentifier)
+        runtime: existingAgent.runtime
       })
     }
 
-    const runtime = getRuntime(this.agentIdentifier)
-    if (!runtime.obfuscator) {
-      runtime.obfuscator = new Obfuscator(this.agentIdentifier)
+    if (!existingAgent.runtime.obfuscator) {
+      existingAgent.runtime.obfuscator = new Obfuscator(this.agentIdentifier)
     }
   }
 }

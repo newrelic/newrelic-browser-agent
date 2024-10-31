@@ -72,8 +72,6 @@ export const ffVersion = (() => {
   return 0
 })()
 
-export const supportsSendBeacon = !!globalScope.navigator?.sendBeacon
-
 /**
  * Represents the absolute timestamp in milliseconds that the page was loaded
  * according to the browser's local clock.

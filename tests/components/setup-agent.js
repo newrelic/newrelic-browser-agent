@@ -38,7 +38,7 @@ export function setupAgent ({ agentOverrides = {}, info = {}, init = {}, loaderC
   const fakeAgent = {
     agentIdentifier,
     ee: eventEmitter,
-    sharedAggregator: new Aggregator({ agentIdentifier, ee: eventEmitter }),
+    sharedAggregator: new Aggregator(),
     ...agentOverrides
   }
   setNREUMInitializedAgent(agentIdentifier, fakeAgent)
@@ -58,7 +58,7 @@ export function setupAgent ({ agentOverrides = {}, info = {}, init = {}, loaderC
     }, 450, 600, Date.now())
   }
 
-  return { agentIdentifier, aggregator: fakeAgent.sharedAggregator }
+  return fakeAgent
 }
 
 export function resetAgent (agentIdentifier) {

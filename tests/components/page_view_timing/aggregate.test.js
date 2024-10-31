@@ -32,7 +32,7 @@ jest.mock('web-vitals/attribution', () => ({
   }))
 }))
 
-let agentSetup
+let mainAgent
 
 beforeAll(async () => {
   global.navigator.connection = {
@@ -42,7 +42,7 @@ beforeAll(async () => {
     downlink: 700
   }
 
-  agentSetup = setupAgent()
+  mainAgent = setupAgent()
 })
 
 let timingsAggregate
@@ -50,14 +50,14 @@ let timingsAggregate
 beforeEach(async () => {
   jest.spyOn(pageVisibilityModule, 'subscribeToVisibilityChange')
 
-  const timingsInstrument = new Timings(agentSetup.agentIdentifier, agentSetup.aggregator)
+  const timingsInstrument = new Timings(mainAgent)
   await new Promise(process.nextTick)
   timingsAggregate = timingsInstrument.featAggregate
   timingsAggregate.ee.emit('rumresp', {})
 })
 
 afterEach(() => {
-  resetAgent(agentSetup.agentIdentifier)
+  resetAgent(mainAgent.agentIdentifier)
   jest.clearAllMocks()
 })
 

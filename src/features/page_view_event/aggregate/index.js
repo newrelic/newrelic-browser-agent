@@ -1,8 +1,7 @@
 import { globalScope, isBrowserScope, originTime } from '../../../common/constants/runtime'
 import { addPT, addPN } from '../../../common/timing/nav-timing'
 import { stringify } from '../../../common/util/stringify'
-import { getInfo, isValid } from '../../../common/config/info'
-import { getRuntime } from '../../../common/config/runtime'
+import { isValid } from '../../../common/config/info'
 import { Harvest } from '../../../common/harvest/harvest'
 import * as CONSTANTS from '../constants'
 import { getActivatedFeaturesFlags } from './initialized-features'
@@ -18,15 +17,15 @@ import { applyFnToProps } from '../../../common/util/traverse'
 
 export class Aggregate extends AggregateBase {
   static featureName = CONSTANTS.FEATURE_NAME
-  constructor (agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator, CONSTANTS.FEATURE_NAME)
+  constructor (agentRef) {
+    super(agentRef, CONSTANTS.FEATURE_NAME)
 
     this.timeToFirstByte = 0
     this.firstByteToWindowLoad = 0 // our "frontend" duration
     this.firstByteToDomContent = 0 // our "dom processing" duration
-    this.timeKeeper = new TimeKeeper(this.agentIdentifier)
+    this.timeKeeper = new TimeKeeper(agentRef.agentIdentifier)
 
-    if (!isValid(agentIdentifier)) {
+    if (!isValid(agentRef.agentIdentifier)) {
       this.ee.abort()
       return warn(43)
     }
@@ -47,19 +46,19 @@ export class Aggregate extends AggregateBase {
   }
 
   sendRum () {
-    const info = getInfo(this.agentIdentifier)
-    const agentRuntime = getRuntime(this.agentIdentifier)
+    const info = this.agentRef.info
     const harvester = new Harvest(this)
+    const measures = {}
 
-    if (info.queueTime) this.aggregator.store('measures', 'qt', { value: info.queueTime })
-    if (info.applicationTime) this.aggregator.store('measures', 'ap', { value: info.applicationTime })
+    if (info.queueTime) measures.qt = info.queueTime
+    if (info.applicationTime) measures.ap = info.applicationTime
 
     // These 3 values should've been recorded after load and before this func runs. They are part of the minimum required for PageView events to be created.
     // Following PR #428, which demands that all agents send RUM call, these need to be sent even outside of the main window context where PerformanceTiming
     // or PerformanceNavigationTiming do not exists. Hence, they'll be filled in by 0s instead in, for example, worker threads that still init the PVE module.
-    this.aggregator.store('measures', 'be', { value: this.timeToFirstByte })
-    this.aggregator.store('measures', 'fe', { value: this.firstByteToWindowLoad })
-    this.aggregator.store('measures', 'dc', { value: this.firstByteToDomContent })
+    measures.be = this.timeToFirstByte
+    measures.fe = this.firstByteToWindowLoad
+    measures.dc = this.firstByteToDomContent
 
     const queryParameters = {
       tt: info.ttGuid,
@@ -67,18 +66,13 @@ export class Aggregate extends AggregateBase {
       ac: info.account,
       pr: info.product,
       af: getActivatedFeaturesFlags(this.agentIdentifier).join(','),
-      ...(
-        Object.entries(this.aggregator.get('measures') || {}).reduce((aggregator, [metricName, measure]) => {
-          aggregator[metricName] = measure.params?.value
-          return aggregator
-        }, {})
-      ),
+      ...measures,
       xx: info.extra,
       ua: info.userAttributes,
       at: info.atts
     }
 
-    if (agentRuntime.session) queryParameters.fsh = Number(agentRuntime.session.isNew) // "first session harvest" aka RUM request or PageView event of a session
+    if (this.agentRef.runtime.session) queryParameters.fsh = Number(this.agentRef.runtime.session.isNew) // "first session harvest" aka RUM request or PageView event of a session
 
     let body
     if (typeof info.jsAttributes === 'object' && Object.keys(info.jsAttributes).length > 0) {
@@ -128,13 +122,13 @@ export class Aggregate extends AggregateBase {
           try {
             this.timeKeeper.processRumRequest(xhr, rumStartTime, rumEndTime, app.nrServerTime)
             if (!this.timeKeeper.ready) throw new Error('TimeKeeper not ready')
-            agentRuntime.timeKeeper = this.timeKeeper
+            this.agentRef.runtime.timeKeeper = this.timeKeeper
           } catch (error) {
             this.ee.abort()
             warn(17, error)
             return
           }
-          agentRuntime.appMetadata = app
+          this.agentRef.runtime.appMetadata = app
           activateFeatures(flags, this.agentIdentifier)
           this.drain()
         } catch (err) {

@@ -9,9 +9,6 @@
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { ABORT_REASONS, FEATURE_NAME, QUERY_PARAM_PADDING, RRWEB_EVENT_TYPES, SR_EVENT_EMITTER_TYPES, TRIGGERS } from '../constants'
-import { getInfo } from '../../../common/config/info'
-import { getConfigurationValue } from '../../../common/config/init'
-import { getRuntime } from '../../../common/config/runtime'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { sharedChannel } from '../../../common/constants/shared-channel'
 import { obj as encodeObj } from '../../../common/url/encode'
@@ -24,20 +21,20 @@ import { RRWEB_VERSION } from '../../../common/constants/env'
 import { MODE, SESSION_EVENTS, SESSION_EVENT_TYPES } from '../../../common/session/constants'
 import { stringify } from '../../../common/util/stringify'
 import { stylesheetEvaluator } from '../shared/stylesheet-evaluator'
-import { deregisterDrain } from '../../../common/drain/drain'
 import { now } from '../../../common/timing/now'
 import { buildNRMetaNode } from '../shared/utils'
 import { MAX_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
+import { cleanURL } from '../../../common/url/clean-url'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   mode = MODE.OFF
 
   // pass the recorder into the aggregator
-  constructor (agentIdentifier, aggregator, args) {
-    super(agentIdentifier, aggregator, FEATURE_NAME)
+  constructor (agentRef, args) {
+    super(agentRef, FEATURE_NAME)
     /** The interval to harvest at.  This gets overridden if the size of the payload exceeds certain thresholds */
-    this.harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'session_replay.harvestTimeSeconds') || 60
+    this.harvestTimeSeconds = agentRef.init.session_replay.harvestTimeSeconds || 60
     /** Set once the recorder has fully initialized after flag checks and sampling */
     this.initialized = false
     /** Set once the feature has been "aborted" to prevent other side-effects from continuing */
@@ -76,8 +73,7 @@ export class Aggregate extends AggregateBase {
     this.ee.on(SESSION_EVENTS.RESUME, () => {
       if (!this.recorder) return
       // if the mode changed on a different tab, it needs to update this instance to match
-      const { session } = getRuntime(this.agentIdentifier)
-      this.mode = session.state.sessionReplayMode
+      this.mode = agentRef.runtime.session.state.sessionReplayMode
       if (!this.initialized || this.mode === MODE.OFF) return
       this.recorder?.startRecording()
     })
@@ -104,12 +100,12 @@ export class Aggregate extends AggregateBase {
       this.handleError(e)
     }, this.featureName, this.ee)
 
-    const { error_sampling_rate, sampling_rate, autoStart, block_selector, mask_text_selector, mask_all_inputs, inline_images, collect_fonts } = getConfigurationValue(this.agentIdentifier, 'session_replay')
+    const { error_sampling_rate, sampling_rate, autoStart, block_selector, mask_text_selector, mask_all_inputs, inline_images, collect_fonts } = agentRef.init.session_replay
 
     this.waitForFlags(['srs', 'sr']).then(([srMode, entitled]) => {
       this.entitled = !!entitled
       if (!this.entitled) {
-        deregisterDrain(this.agentIdentifier, this.featureName)
+        this.deregisterDrain()
         if (this.recorder?.recording) {
           this.abort(ABORT_REASONS.ENTITLEMENTS)
           handle(SUPPORTABILITY_METRIC_CHANNEL, ['SessionReplay/EnabledNotEntitled/Detected'], undefined, FEATURE_NAMES.metrics, this.ee)
@@ -177,7 +173,7 @@ export class Aggregate extends AggregateBase {
     // we are not actively recording SR... DO NOT import or run the recording library
     // session replay samples can only be decided on the first load of a session
     // session replays can continue if already in progress
-    const { session, timeKeeper } = getRuntime(this.agentIdentifier)
+    const { session, timeKeeper } = this.agentRef.runtime
     this.timeKeeper = timeKeeper
     if (this.recorder?.parent.trigger === TRIGGERS.API && this.recorder?.recording) {
       this.mode = MODE.FULL
@@ -284,8 +280,7 @@ export class Aggregate extends AggregateBase {
       return
     }
     // TODO -- Gracefully handle the buffer for retries.
-    const { session } = getRuntime(this.agentIdentifier)
-    if (!session.state.sessionReplaySentFirstChunk) this.syncWithSessionManager({ sessionReplaySentFirstChunk: true })
+    if (!this.agentRef.runtime.session.state.sessionReplaySentFirstChunk) this.syncWithSessionManager({ sessionReplaySentFirstChunk: true })
     this.recorder.clearBuffer()
     if (recorderEvents.type === 'preloaded') this.scheduler.runHarvest(opts)
     return [payload]
@@ -300,9 +295,8 @@ export class Aggregate extends AggregateBase {
   getHarvestContents (recorderEvents) {
     recorderEvents ??= this.recorder.getEvents()
     let events = recorderEvents.events
-    const agentRuntime = getRuntime(this.agentIdentifier)
-    const info = getInfo(this.agentIdentifier)
-    const endUserId = info.jsAttributes?.['enduser.id']
+    const agentRuntime = this.agentRef.runtime
+    const endUserId = this.agentRef.info.jsAttributes?.['enduser.id']
 
     // do not let the first node be a full snapshot node, since this NEEDS to be preceded by a meta node
     // we will manually inject it if this happens
@@ -334,9 +328,9 @@ export class Aggregate extends AggregateBase {
 
     return {
       qs: {
-        browser_monitoring_key: info.licenseKey,
+        browser_monitoring_key: this.agentRef.info.licenseKey,
         type: 'SessionReplay',
-        app_id: info.applicationID,
+        app_id: this.agentRef.info.applicationID,
         protocol_version: '0',
         timestamp: firstTimestamp,
         attributes: encodeObj({
@@ -362,7 +356,8 @@ export class Aggregate extends AggregateBase {
           'rrweb.version': RRWEB_VERSION,
           'payload.type': recorderEvents.type,
           // customer-defined data should go last so that if it exceeds the query param padding limit it will be truncated instead of important attrs
-          ...(endUserId && { 'enduser.id': this.obfuscator.obfuscateString(endUserId) })
+          ...(endUserId && { 'enduser.id': this.obfuscator.obfuscateString(endUserId) }),
+          currentUrl: this.obfuscator.obfuscateString(cleanURL('' + location))
           // The Query Param is being arbitrarily limited in length here.  It is also applied when estimating the size of the payload in getPayloadSize()
         }, QUERY_PARAM_PADDING).substring(1) // remove the leading '&'
       },
@@ -405,7 +400,6 @@ export class Aggregate extends AggregateBase {
   }
 
   syncWithSessionManager (state = {}) {
-    const { session } = getRuntime(this.agentIdentifier)
-    session.write(state)
+    this.agentRef.runtime.session.write(state)
   }
 }

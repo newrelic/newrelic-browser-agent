@@ -15,7 +15,7 @@ beforeAll(() => {
 })
 
 beforeEach(async () => {
-  const genericEventsInstrument = new GenericEvents(agentSetup.agentIdentifier, agentSetup.aggregator)
+  const genericEventsInstrument = new GenericEvents(agentSetup)
   await new Promise(process.nextTick)
   genericEventsAggregate = genericEventsInstrument.featAggregate
 })
@@ -140,7 +140,7 @@ describe('sub-features', () => {
     getConfiguration(agentSetup.agentIdentifier).page_action = { enabled: false }
 
     const { Aggregate } = await import('../../../../src/features/generic_events/aggregate')
-    genericEventsAggregate = new Aggregate(agentSetup.agentIdentifier, agentSetup.aggregator)
+    genericEventsAggregate = new Aggregate(agentSetup)
     genericEventsAggregate.ee.emit('api-addPageAction', [relativeTimestamp, name, {}])
     expect(genericEventsAggregate.events[0]).toBeUndefined()
   })
@@ -159,7 +159,7 @@ describe('sub-features', () => {
       timestamp: expect.any(Number),
       action: 'click',
       actionCount: 1,
-      duration: 0,
+      actionDuration: 0,
       target: 'button#myBtn:nth-of-type(1)',
       targetId: 'myBtn',
       targetTag: 'BUTTON',
@@ -186,7 +186,7 @@ describe('sub-features', () => {
       timestamp: expect.any(Number),
       action: 'click',
       actionCount: 6,
-      duration: 500,
+      actionDuration: 500,
       target: 'button#myBtn:nth-of-type(1)',
       targetId: 'myBtn',
       targetTag: 'BUTTON',
@@ -213,7 +213,7 @@ describe('sub-features', () => {
       timestamp: expect.any(Number),
       action: 'click',
       actionCount: 1,
-      duration: 0,
+      actionDuration: 0,
       target: 'html>body>button#myBtn:nth-of-type(1)',
       targetId: 'myBtn',
       targetTag: 'BUTTON',
@@ -224,7 +224,7 @@ describe('sub-features', () => {
       timestamp: expect.any(Number),
       action: 'click',
       actionCount: 1,
-      duration: 0,
+      actionDuration: 0,
       target: 'html>body>button#myBtn:nth-of-type(2)',
       targetId: 'myBtn',
       targetTag: 'BUTTON',

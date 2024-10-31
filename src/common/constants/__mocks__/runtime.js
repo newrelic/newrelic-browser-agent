@@ -5,6 +5,5 @@ export const initialLocation = '' + globalScope?.location
 export const isiOS = false
 export const iOSBelow16 = false
 export const ffVersion = 0
-export const supportsSendBeacon = true
 
 export const originTime = Date.now()

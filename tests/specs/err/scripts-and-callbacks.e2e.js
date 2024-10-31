@@ -163,7 +163,9 @@ describe('JSE Error detection in various callbacks', () => {
     { message: 'Unhandled Promise Rejection: {}', meta: 'map object' },
     { message: 'Unhandled Promise Rejection: {"abc":"Hello"}', meta: 'factory function' },
     { message: 'Unhandled Promise Rejection: ', meta: 'uncalled function' },
-    { message: 'Unhandled Promise Rejection: {"abc":"circular"}', meta: 'circular object' }
+    { message: 'Unhandled Promise Rejection: {"abc":"circular"}', meta: 'circular object' },
+    { message: 'Unhandled Promise Rejection: test', meta: 'thrown error' },
+    { message: 'Unhandled Promise Rejection: test', meta: 'thrown error in nested fn' }
   ]
   expectedErrorMessages.forEach(expected => {
     it('should report unhandledPromiseRejections that are readable - ' + expected.meta, async () => {

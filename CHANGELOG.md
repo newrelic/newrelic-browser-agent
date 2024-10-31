@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.270.3](https://github.com/newrelic/newrelic-browser-agent/compare/v1.270.2...v1.270.3) (2024-10-31)
+
+
+### Bug Fixes
+
+* Ensure all lazy loaded modules issue warning instead of errors ([#1234](https://github.com/newrelic/newrelic-browser-agent/issues/1234)) ([cdfdab7](https://github.com/newrelic/newrelic-browser-agent/commit/cdfdab701bda6266416ad27750e63e8e9e0e075b))
+
 ## [1.270.2](https://github.com/newrelic/newrelic-browser-agent/compare/v1.270.1...v1.270.2) (2024-10-28)
 
 

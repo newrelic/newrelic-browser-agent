@@ -5,6 +5,23 @@
       "changes": [
         {
           "type": "fix",
+          "sha": "cdfdab701bda6266416ad27750e63e8e9e0e075b",
+          "message": "Ensure all lazy loaded modules issue warning instead of errors",
+          "issues": [
+            "1234"
+          ]
+        }
+      ],
+      "version": "1.270.3",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "b0eaa7cc-2218-489c-82d2-96d82acd5dcb",
+      "createTime": "2024-10-31T18:10:14.684Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
           "sha": "95f5a77c60221c0eda61a42f33648f5a2791891f",
           "message": "Correct naming for logging pageUrl attribute",
           "issues": [
@@ -2125,5 +2142,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2024-10-28T19:01:16.177Z"
+  "updateTime": "2024-10-31T18:10:14.684Z"
 }

@@ -104,21 +104,24 @@ export class Aggregate extends AggregateBase {
        * with an arbitrary query method. note: eventTypes: [...types] does not support the 'buffered' flag so we have
        * to create up to two PO's here.
        */
-      const performanceTypesToCapture = [...(agentInit.performance.capture_marks ? ['mark'] : []), ...(agentInit.performance.capture_measures ? ['measure'] : [])]
+      const performanceTypesToCapture = [...(agentRef.init.performance.capture_marks ? ['mark'] : []), ...(agentRef.init.performance.capture_measures ? ['measure'] : [])]
       if (performanceTypesToCapture.length) {
         try {
           performanceTypesToCapture.forEach(type => {
             if (PerformanceObserver.supportedEntryTypes.includes(type)) {
               const observer = new PerformanceObserver((list) => {
                 list.getEntries().forEach(entry => {
-                  this.addEvent({
-                    eventType: 'BrowserPerformance',
-                    timestamp: Math.floor(this.#agentRuntime.timeKeeper.correctRelativeTimestamp(entry.startTime)),
-                    entryName: entry.name,
-                    entryDuration: entry.duration,
-                    entryType: type,
-                    ...(entry.detail && { entryDetail: entry.detail })
-                  })
+                  try {
+                    this.addEvent({
+                      eventType: 'BrowserPerformance',
+                      timestamp: Math.floor(agentRef.runtime.timeKeeper.correctRelativeTimestamp(entry.startTime)),
+                      entryName: entry.name,
+                      entryDuration: entry.duration,
+                      entryType: type,
+                      ...(entry.detail && { entryDetail: entry.detail })
+                    })
+                  } catch (err) {
+                  }
                 })
               })
               observer.observe({ buffered: true, type })

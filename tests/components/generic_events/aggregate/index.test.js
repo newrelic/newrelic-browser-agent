@@ -146,7 +146,7 @@ describe('sub-features', () => {
   })
 
   test('should record user actions when enabled', () => {
-    getInfo(agentSetup.agentIdentifier).jsAttributes = { globalFoo: 'globalBar' }
+    agentSetup.info.jsAttributes = { globalFoo: 'globalBar' }
     const target = document.createElement('button')
     target.id = 'myBtn'
     genericEventsAggregate.ee.emit('ua', [{ timeStamp: 123456, type: 'click', target }])
@@ -233,8 +233,8 @@ describe('sub-features', () => {
   })
 
   test('should record marks when enabled', async () => {
-    getConfiguration(agentSetup.agentIdentifier).performance = { capture_marks: true }
-    getInfo(agentSetup.agentIdentifier).jsAttributes = { globalFoo: 'globalBar' }
+    agentSetup.init.performance.capture_marks = true
+    agentSetup.info.jsAttributes = { globalFoo: 'globalBar' }
     const mockPerformanceObserver = jest.fn(cb => ({
       observe: () => {
         const callCb = () => {
@@ -256,7 +256,7 @@ describe('sub-features', () => {
     global.PerformanceObserver.supportedEntryTypes = ['mark']
 
     const { Aggregate } = await import('../../../../src/features/generic_events/aggregate')
-    genericEventsAggregate = new Aggregate(agentSetup.agentIdentifier, agentSetup.aggregator)
+    genericEventsAggregate = new Aggregate(agentSetup)
     expect(genericEventsAggregate.events[0]).toBeUndefined()
 
     genericEventsAggregate.ee.emit('rumresp', [{ ins: 1 }])
@@ -273,13 +273,13 @@ describe('sub-features', () => {
   })
 
   test('should record measures when enabled', async () => {
-    getConfiguration(agentSetup.agentIdentifier).performance = { capture_measures: true }
+    agentSetup.init.performance = { capture_measures: true }
     getInfo(agentSetup.agentIdentifier).jsAttributes = { globalFoo: 'globalBar' }
     const mockPerformanceObserver = jest.fn(cb => ({
       observe: () => {
         const callCb = () => {
           // eslint-disable-next-line
-          cb({getEntries: () => [{ 
+          cb({getEntries: () => [{
             name: 'test',
             duration: 10,
             detail: JSON.stringify({ foo: 'bar' }),
@@ -296,7 +296,7 @@ describe('sub-features', () => {
     global.PerformanceObserver.supportedEntryTypes = ['measure']
 
     const { Aggregate } = await import('../../../../src/features/generic_events/aggregate')
-    genericEventsAggregate = new Aggregate(agentSetup.agentIdentifier, agentSetup.aggregator)
+    genericEventsAggregate = new Aggregate(agentSetup)
     expect(genericEventsAggregate.events[0]).toBeUndefined()
 
     genericEventsAggregate.ee.emit('rumresp', [{ ins: 1 }])

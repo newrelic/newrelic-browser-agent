@@ -13,10 +13,10 @@ export class Instrument extends InstrumentBase {
   constructor (agentRef, auto = true) {
     super(agentRef, FEATURE_NAME, auto)
     const genericEventSourceConfigs = [
-      agentInit.page_action.enabled,
-      agentInit.performance.capture_marks,
-      agentInit.performance.capture_measures,
-      agentInit.user_actions.enabled
+      agentRef.init.page_action.enabled,
+      agentRef.init.performance.capture_marks,
+      agentRef.init.performance.capture_measures,
+      agentRef.init.user_actions.enabled
       // other future generic event source configs to go here, like M&Ms, PageResouce, etc.
     ]
 

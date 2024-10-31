@@ -11,39 +11,38 @@ beforeAll(() => {
 
 describe('pageActions sub-feature', () => {
   test('should import if at least one child feature is enabled', async () => {
-    const config = getConfiguration(agentSetup.agentIdentifier)
-    config.page_action.enabled = true
-    config.user_actions.enabled = false
-    config.performance = { capture_marks: false, capture_measures: false }
+    mainAgent.init.page_action.enabled = true
+    mainAgent.init.user_actions.enabled = false
+    mainAgent.init.performance = { capture_marks: false, capture_measures: false }
 
-    let genericEventsInstrument = new GenericEvents(agentSetup.agentIdentifier, agentSetup.aggregator)
+    let genericEventsInstrument = new GenericEvents(mainAgent)
     await new Promise(process.nextTick)
 
     expect(genericEventsInstrument.featAggregate).toBeDefined()
 
-    config.page_action.enabled = false
-    config.user_actions.enabled = true
-    config.performance = { capture_marks: false, capture_measures: false }
+    mainAgent.init.page_action.enabled = false
+    mainAgent.init.user_actions.enabled = true
+    mainAgent.init.performance = { capture_marks: false, capture_measures: false }
 
-    genericEventsInstrument = new GenericEvents(agentSetup.agentIdentifier, agentSetup.aggregator)
+    genericEventsInstrument = new GenericEvents(mainAgent)
     await new Promise(process.nextTick)
 
     expect(genericEventsInstrument.featAggregate).toBeDefined()
 
-    config.page_action.enabled = false
-    config.user_actions.enabled = false
-    config.performance = { capture_marks: true, capture_measures: false }
+    mainAgent.init.page_action.enabled = false
+    mainAgent.init.user_actions.enabled = false
+    mainAgent.init.performance = { capture_marks: true, capture_measures: false }
 
-    genericEventsInstrument = new GenericEvents(agentSetup.agentIdentifier, agentSetup.aggregator)
+    genericEventsInstrument = new GenericEvents(mainAgent)
     await new Promise(process.nextTick)
 
     expect(genericEventsInstrument.featAggregate).toBeDefined()
 
-    config.page_action.enabled = false
-    config.user_actions.enabled = false
-    config.performance = { capture_marks: false, capture_measures: true }
+    mainAgent.init.page_action.enabled = false
+    mainAgent.init.user_actions.enabled = false
+    mainAgent.init.performance = { capture_marks: false, capture_measures: true }
 
-    genericEventsInstrument = new GenericEvents(agentSetup.agentIdentifier, agentSetup.aggregator)
+    genericEventsInstrument = new GenericEvents(mainAgent)
 
     await new Promise(process.nextTick)
 
@@ -51,10 +50,9 @@ describe('pageActions sub-feature', () => {
   })
 
   test('should not import if no child features are enabled', async () => {
-    const config = getConfiguration(agentSetup.agentIdentifier)
-    config.page_action.enabled = false
-    config.user_actions.enabled = false
-    config.performance = { capture_marks: false, capture_measures: false }
+    mainAgent.init.page_action.enabled = false
+    mainAgent.init.user_actions.enabled = false
+    mainAgent.init.performance = { capture_marks: false, capture_measures: false }
 
     const genericEventsInstrument = new GenericEvents(mainAgent)
     await new Promise(process.nextTick)

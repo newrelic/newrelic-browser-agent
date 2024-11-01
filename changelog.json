@@ -4,6 +4,23 @@
     {
       "changes": [
         {
+          "type": "feat",
+          "sha": "25a1fffb91fa5936766a7bc89d735b3018aa62a2",
+          "message": "Ignore unhandled promise rejections that lack a valid reason",
+          "issues": [
+            "1233"
+          ]
+        }
+      ],
+      "version": "1.271.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "5fe576f3-60ca-49a1-91d0-8b60f72a523c",
+      "createTime": "2024-11-01T14:08:54.003Z"
+    },
+    {
+      "changes": [
+        {
           "type": "fix",
           "sha": "cdfdab701bda6266416ad27750e63e8e9e0e075b",
           "message": "Ensure all lazy loaded modules issue warning instead of errors",
@@ -2142,5 +2159,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2024-10-31T18:10:14.684Z"
+  "updateTime": "2024-11-01T14:08:54.003Z"
 }

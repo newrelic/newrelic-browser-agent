@@ -150,6 +150,10 @@ export class EventBuffer2 {
     return this.#buffer
   }
 
+  byteSize () {
+    return this.#rawBytes
+  }
+
   /**
    * Add feature-processed event to our buffer. If this event would cause our total raw size to exceed the set max payload size, it is dropped.
    * @param {any} event - any primitive type or object

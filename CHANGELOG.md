@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.271.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.270.3...v1.271.0) (2024-11-01)
+
+
+### Features
+
+* Ignore unhandled promise rejections that lack a valid reason ([#1233](https://github.com/newrelic/newrelic-browser-agent/issues/1233)) ([25a1fff](https://github.com/newrelic/newrelic-browser-agent/commit/25a1fffb91fa5936766a7bc89d735b3018aa62a2))
+
 ## [1.270.3](https://github.com/newrelic/newrelic-browser-agent/compare/v1.270.2...v1.270.3) (2024-10-31)
 
 

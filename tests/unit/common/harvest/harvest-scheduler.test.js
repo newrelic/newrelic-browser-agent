@@ -180,7 +180,7 @@ describe('runHarvest', () => {
 
   test('should not run harvest when scheduler is aborted', () => {
     harvestSchedulerInstance.aborted = true
-    harvestSchedulerInstance.runHarvest({})
+    harvestSchedulerInstance.runHarvest()
 
     expect(harvestInstance.sendX).not.toHaveBeenCalled()
     expect(harvestInstance.send).not.toHaveBeenCalled()
@@ -269,7 +269,7 @@ describe('runHarvest', () => {
     harvestSchedulerInstance.started = true
     harvestSchedulerInstance.opts.getPayload = jest.fn().mockReturnValue()
 
-    harvestSchedulerInstance.runHarvest({})
+    harvestSchedulerInstance.runHarvest()
 
     expect(harvestInstance.sendX).not.toHaveBeenCalled()
     expect(harvestInstance.send).not.toHaveBeenCalled()

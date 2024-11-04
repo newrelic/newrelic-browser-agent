@@ -1,4 +1,4 @@
-import { EventBuffer } from '../../../../src/features/utils/event-buffer'
+import { EventBuffer2 } from '../../../../src/features/utils/event-buffer'
 import { Instrument as GenericEvents } from '../../../../src/features/generic_events/instrument'
 import { getInfo } from '../../../../src/common/config/info'
 import { resetAgent, setupAgent } from '../../setup-agent'
@@ -28,9 +28,9 @@ test('should use default values', () => {
   expect(genericEventsAggregate).toMatchObject({
     eventsPerHarvest: 1000,
     harvestTimeSeconds: 30,
-    referrerUrl: 'https://test.com',
-    events: new EventBuffer()
+    referrerUrl: 'https://test.com'
   })
+  expect(genericEventsAggregate.events instanceof EventBuffer2).toBeTruthy()
 })
 
 test('should wait for flags - 1', async () => {

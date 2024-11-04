@@ -64,8 +64,8 @@ export class Aggregate extends AggregateBase {
     })
   }
 
-  serializer (typeToBucketsArrMap) {
-    return applyFnToProps(typeToBucketsArrMap, this.obfuscator.obfuscateString.bind(this.obfuscator), 'string')
+  serializer (aggregatorTypeToBucketsMap) {
+    return applyFnToProps(aggregatorTypeToBucketsMap, this.obfuscator.obfuscateString.bind(this.obfuscator), 'string')
   }
 
   queryStringsBuilder (payloadBody) {

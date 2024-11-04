@@ -273,13 +273,13 @@ describe('_send', () => {
 
   test('should set body to events when endpoint is events', () => {
     spec.endpoint = 'events'
-    spec.payload.body.e = faker.lorem.sentence()
+    spec.payload.body = faker.lorem.sentence()
 
     const result = harvestInstance._send(spec)
 
     expect(result).toEqual(true)
     expect(submitMethod).toHaveBeenCalledWith({
-      body: spec.payload.body.e,
+      body: spec.payload.body,
       headers: [{ key: 'content-type', value: 'text/plain' }],
       sync: undefined,
       url: expect.stringContaining(`https://${errorBeacon}/${spec.endpoint}/1/${licenseKey}?`)

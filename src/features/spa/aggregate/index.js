@@ -23,7 +23,6 @@ import { loadedAsDeferredBrowserScript } from '../../../common/constants/runtime
 import { handle } from '../../../common/event-emitter/handle'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { warn } from '../../../common/util/console'
-import { EventBuffer } from '../../utils/event-buffer'
 
 const {
   FEATURE_NAME, INTERACTION_EVENTS, MAX_TIMER_BUDGET, FN_START, FN_END, CB_START, INTERACTION_API, REMAINING,
@@ -34,7 +33,7 @@ export class Aggregate extends AggregateBase {
   constructor (agentRef) {
     super(agentRef, FEATURE_NAME)
 
-    this.state = {
+    const state = this.state = {
       initialPageURL: agentRef.runtime.origin,
       lastSeenUrl: agentRef.runtime.origin,
       lastSeenRouteName: null,
@@ -48,15 +47,13 @@ export class Aggregate extends AggregateBase {
       childTime: 0,
       depth: 0,
       harvestTimeSeconds: agentRef.init.spa.harvestTimeSeconds || 10,
-      interactionsToHarvest: new EventBuffer(),
       // The below feature flag is used to disable the SPA ajax fix for specific customers, see https://new-relic.atlassian.net/browse/NR-172169
       disableSpaFix: (agentRef.init.feature_flags || []).indexOf('disable-spa-fix') > -1
     }
+    this.spaSerializerClass = new Serializer(this)
 
+    const classThis = this
     let scheduler
-    this.serializer = new Serializer(this)
-
-    const { state, serializer } = this
 
     const baseEE = ee.get(agentRef.agentIdentifier) // <-- parent baseEE
     const mutationEE = baseEE.get('mutation')
@@ -104,10 +101,10 @@ export class Aggregate extends AggregateBase {
     this.waitForFlags((['spa'])).then(([spaFlag]) => {
       if (spaFlag) {
         scheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
-          onFinished: onHarvestFinished,
+          onFinished: (result) => this.postHarvestCleanup(result.retry),
           retryDelay: state.harvestTimeSeconds
         }, this)
-        scheduler.harvest.on(FEATURE_TO_ENDPOINT[this.featureName], onHarvestStarted)
+        scheduler.harvest.on(FEATURE_TO_ENDPOINT[this.featureName], (options) => this.makeHarvestPayload(options.retry))
         this.drain()
       } else {
         this.blocked = true
@@ -670,22 +667,6 @@ export class Aggregate extends AggregateBase {
       setCurrentNode(null)
     }
 
-    const classThis = this
-    function onHarvestStarted (options) {
-      if (!state.interactionsToHarvest.hasData || classThis.blocked) return {}
-      var payload = serializer.serializeMultiple(state.interactionsToHarvest.buffer, 0, navTiming)
-
-      if (options.retry) state.interactionsToHarvest.hold()
-      else state.interactionsToHarvest.clear()
-
-      return { body: { e: payload } }
-    }
-
-    function onHarvestFinished (result) {
-      if (result.sent && result.retry && state.interactionsToHarvest.held.hasData) state.interactionsToHarvest.unhold()
-      else state.interactionsToHarvest.held.clear()
-    }
-
     baseEE.on('spa-jserror', function (type, name, params, metrics) {
       if (!state.currentNode) return
       params._interactionId = state.currentNode.interaction.id
@@ -736,7 +717,7 @@ export class Aggregate extends AggregateBase {
         interaction.root.attrs.firstContentfulPaint = firstContentfulPaint.current.value
       }
       baseEE.emit('interactionDone', [interaction, true])
-      state.interactionsToHarvest.add(interaction)
+      classThis.events.add(interaction)
 
       let smCategory
       if (interaction.root?.attrs?.trigger === 'initialPageLoad') smCategory = 'InitialPageLoad'
@@ -747,5 +728,9 @@ export class Aggregate extends AggregateBase {
       scheduler?.scheduleHarvest(0)
       if (!scheduler) warn(19)
     }
+  }
+
+  serializer (eventBuffer) {
+    return this.spaSerializerClass.serializeMultiple(eventBuffer, 0, navTiming)
   }
 }

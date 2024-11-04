@@ -116,13 +116,13 @@ export class Aggregate extends AggregateBase {
   }
 
   // serialize array of timing data
-  serializer (data) {
+  serializer (eventBuffer) {
     var addString = getAddStringContext(this.agentIdentifier)
 
     var payload = 'bel.6;'
 
-    for (var i = 0; i < data.length; i++) {
-      var timing = data[i]
+    for (var i = 0; i < eventBuffer.length; i++) {
+      var timing = eventBuffer[i]
 
       payload += 'e,'
       payload += addString(timing.name) + ','
@@ -135,7 +135,7 @@ export class Aggregate extends AggregateBase {
         payload += numeric(attrParts.length) + ';' + attrParts.join(';')
       }
 
-      if ((i + 1) < data.length) payload += ';'
+      if ((i + 1) < eventBuffer.length) payload += ';'
     }
 
     return payload

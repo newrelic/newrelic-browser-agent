@@ -129,12 +129,12 @@ export class Aggregate extends AggregateBase {
     }
   }
 
-  serializer (events) {
+  serializer (eventBuffer) {
     const addString = getAddStringContext(this.agentIdentifier)
     let payload = 'bel.7;'
 
-    for (let i = 0; i < events.length; i++) {
-      const event = events[i]
+    for (let i = 0; i < eventBuffer.length; i++) {
+      const event = eventBuffer[i]
       const fields = [
         numeric(event.startTime),
         numeric(event.endTime - event.startTime),
@@ -167,7 +167,7 @@ export class Aggregate extends AggregateBase {
       if (attrParts && attrParts.length > 0) {
         insert += ';' + attrParts.join(';')
       }
-      if ((i + 1) < events.length) insert += ';'
+      if ((i + 1) < eventBuffer.length) insert += ';'
 
       payload += insert
     }

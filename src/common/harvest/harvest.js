@@ -106,12 +106,7 @@ export class Harvest extends SharedContext {
     const gzip = !!qs?.attributes?.includes('gzip')
 
     if (!gzip) {
-      if (endpoint === 'events') {
-        if (body.e) body = body.e // features going to events/ endpoint currently returns payload with this structure -- being removed atm
-        // converted events/ features would no longer have .e but is already stringified so send as is.
-      } else {
-        body = stringify(body)
-      }
+      if (endpoint !== 'events') body = stringify(body) // all features going to /events/ endpoint should already be serialized & stringified
       /** Warn --once per endpoint-- if the agent tries to send large payloads */
       if (body.length > 750000 && (warnings[endpoint] = (warnings?.[endpoint] || 0) + 1) === 1) warn(28, endpoint)
     }

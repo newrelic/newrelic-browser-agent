@@ -5,7 +5,7 @@ import { gosCDN } from '../../common/window/nreum'
 import { drain } from '../../common/drain/drain'
 import { activatedFeatures } from '../../common/util/feature-flags'
 import { Obfuscator } from '../../common/util/obfuscate'
-import { EventBuffer2 } from './event-buffer'
+import { EventBuffer } from './event-buffer'
 import { FEATURE_NAMES, FEATURE_TO_ENDPOINT } from '../../loaders/features/features'
 
 export class AggregateBase extends FeatureBase {
@@ -14,7 +14,7 @@ export class AggregateBase extends FeatureBase {
     this.agentRef = agentRef
     // Jserror and Metric features uses a singleton EventAggregator instead of a regular EventBuffer.
     if (FEATURE_TO_ENDPOINT[this.featureName] === 'jserrors') this.events = agentRef.sharedAggregator
-    else if (this.featureName !== FEATURE_NAMES.pageViewEvent) this.events = new EventBuffer2() // PVE has no need for events
+    else if (this.featureName !== FEATURE_NAMES.pageViewEvent) this.events = new EventBuffer() // PVE has no need for events
     this.checkConfiguration(agentRef)
     this.obfuscator = agentRef.runtime.obfuscator
   }

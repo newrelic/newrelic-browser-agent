@@ -24,11 +24,11 @@ export class RecorderEvents {
   }
 
   get events () {
-    return this.#events.buffer
+    return this.#events.get()
   }
 
   /** A value which increments with every new mutation node reported. Resets after a harvest is sent */
   get payloadBytesEstimation () {
-    return this.#events.bytes
+    return this.#events.byteSize()
   }
 }

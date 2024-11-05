@@ -1,4 +1,4 @@
-import { EventBuffer2 } from '../../../../src/features/utils/event-buffer'
+import { EventBuffer } from '../../../../src/features/utils/event-buffer'
 import { Instrument as GenericEvents } from '../../../../src/features/generic_events/instrument'
 import { getInfo } from '../../../../src/common/config/info'
 import { resetAgent, setupAgent } from '../../setup-agent'
@@ -30,7 +30,7 @@ test('should use default values', () => {
     harvestTimeSeconds: 30,
     referrerUrl: 'https://test.com'
   })
-  expect(genericEventsAggregate.events instanceof EventBuffer2).toBeTruthy()
+  expect(genericEventsAggregate.events instanceof EventBuffer).toBeTruthy()
 })
 
 test('should wait for flags - 1', async () => {

@@ -78,9 +78,9 @@ export class Aggregate extends AggregateBase {
 
     // Bespoke logic for blobs endpoint.
     this.scheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
-      onFinished: this.onHarvestFinished.bind(this),
+      onFinished: (result) => this.postHarvestCleanup(result),
       retryDelay: this.harvestTimeSeconds,
-      getPayload: this.prepareHarvest.bind(this),
+      getPayload: ({ retry, ...opts }) => this.makeHarvestPayload(retry, opts),
       raw: true
     }, this)
 
@@ -232,7 +232,7 @@ export class Aggregate extends AggregateBase {
     }
   }
 
-  prepareHarvest ({ opts } = {}) {
+  makeHarvestPayload (shouldRetryOnFail, opts) {
     if (!this.recorder || !this.timeKeeper?.ready || !this.recorder.hasSeenSnapshot) return
     const recorderEvents = this.recorder.getEvents()
     // get the event type and use that to trigger another harvest if needed
@@ -361,7 +361,7 @@ export class Aggregate extends AggregateBase {
     }
   }
 
-  onHarvestFinished (result) {
+  postHarvestCleanup (result) {
     // The mutual decision for now is to stop recording and clear buffers if ingest is experiencing 429 rate limiting
     if (result.status === 429) {
       this.abort(ABORT_REASONS.TOO_MANY)

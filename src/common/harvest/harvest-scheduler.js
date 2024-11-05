@@ -98,7 +98,7 @@ export class HarvestScheduler extends SharedContext {
     let payload
 
     if (this.opts.getPayload) {
-      // Ajax, PVT, Logging, SR & ST features provide a single callback function to get data for harvesting
+      // Ajax, PVT, Softnav, Logging, SR & ST features provide a single callback function to get data for harvesting
       submitMethod = submitData.getSubmitMethod({ isFinalHarvest: opts?.unload })
       if (!submitMethod) return false
 

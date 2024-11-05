@@ -40,10 +40,10 @@ export class Aggregate extends AggregateBase {
         this.drain()
         const scheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
           onFinished: (result) => this.postHarvestCleanup(result.sent && result.retry),
+          getPayload: (options) => this.makeHarvestPayload(options.retry),
           retryDelay: harvestTimeSeconds,
           onUnload: () => this.interactionInProgress?.done() // return any held ajax or jserr events so they can be sent with EoL harvest
         }, this)
-        scheduler.harvest.on(FEATURE_TO_ENDPOINT[this.featureName], (options) => this.makeHarvestPayload(options.retry))
         scheduler.startTimer(harvestTimeSeconds, 0)
       } else {
         this.blocked = true // if rum response determines that customer lacks entitlements for spa endpoint, this feature shouldn't harvest

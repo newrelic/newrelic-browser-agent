@@ -4,7 +4,7 @@
  */
 
 import { getInfo } from '../../../common/config/info'
-import { getRuntime } from '../../../common/config/runtime'
+import { initialLocation } from '../../../common/constants/runtime'
 import { gosNREUMOriginals } from '../../../common/window/nreum'
 import { ee } from '../../../common/event-emitter/contextual-ee'
 import { InteractionNode } from './interaction-node'
@@ -34,7 +34,7 @@ export function Interaction (eventName, timestamp, url, routeName, onFinished, a
   var attrs = root.attrs
 
   attrs.trigger = eventName
-  attrs.initialPageURL = getRuntime(agentIdentifier).origin
+  attrs.initialPageURL = initialLocation
   attrs.oldRoute = routeName
   attrs.newURL = attrs.oldURL = url
   attrs.custom = {}

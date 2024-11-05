@@ -3,6 +3,27 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.271.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.270.3...v1.271.0) (2024-11-01)
+
+
+### Features
+
+* Ignore unhandled promise rejections that lack a valid reason ([#1233](https://github.com/newrelic/newrelic-browser-agent/issues/1233)) ([25a1fff](https://github.com/newrelic/newrelic-browser-agent/commit/25a1fffb91fa5936766a7bc89d735b3018aa62a2))
+
+## [1.270.3](https://github.com/newrelic/newrelic-browser-agent/compare/v1.270.2...v1.270.3) (2024-10-31)
+
+
+### Bug Fixes
+
+* Ensure all lazy loaded modules issue warning instead of errors ([#1234](https://github.com/newrelic/newrelic-browser-agent/issues/1234)) ([cdfdab7](https://github.com/newrelic/newrelic-browser-agent/commit/cdfdab701bda6266416ad27750e63e8e9e0e075b))
+
+## [1.270.2](https://github.com/newrelic/newrelic-browser-agent/compare/v1.270.1...v1.270.2) (2024-10-28)
+
+
+### Bug Fixes
+
+* Correct naming for logging pageUrl attribute ([#1225](https://github.com/newrelic/newrelic-browser-agent/issues/1225)) ([95f5a77](https://github.com/newrelic/newrelic-browser-agent/commit/95f5a77c60221c0eda61a42f33648f5a2791891f))
+
 ## [1.270.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.270.0...v1.270.1) (2024-10-23)
 
 

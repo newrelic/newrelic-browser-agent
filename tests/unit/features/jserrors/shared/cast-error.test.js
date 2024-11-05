@@ -133,15 +133,13 @@ describe('cast-error', () => {
       })
     })
 
-    test('handles events with an undefined reason', () => {
-      const castedError = castPromiseRejectionEvent({ reason: undefined })
-      expect(castedError).toMatchObject({
-        name: 'UncaughtError',
-        message: 'Unhandled Promise Rejection',
-        sourceURL: undefined,
-        line: undefined,
-        column: undefined
-      })
+    test('terminates for events with falsy reasons', () => {
+      let castedError = castPromiseRejectionEvent({ reason: undefined })
+      expect(castedError).toBeUndefined()
+      castedError = castPromiseRejectionEvent({ reason: null })
+      expect(castedError).toBeUndefined()
+      castedError = castPromiseRejectionEvent({ reason: '' })
+      expect(castedError).toBeUndefined()
     })
   })
 })

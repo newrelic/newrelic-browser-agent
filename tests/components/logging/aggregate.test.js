@@ -1,4 +1,5 @@
 import { getRuntime } from '../../../src/common/config/runtime'
+import { initialLocation } from '../../../src/common/constants/runtime'
 import { LOGGING_EVENT_EMITTER_CHANNEL } from '../../../src/features/logging/constants'
 import { Instrument as Logging } from '../../../src/features/logging/instrument'
 import { Log } from '../../../src/features/logging/shared/log'
@@ -6,6 +7,8 @@ import * as consoleModule from '../../../src/common/util/console'
 import * as handleModule from '../../../src/common/event-emitter/handle'
 import { resetAgent, setupAgent } from '../setup-agent'
 import { getInfo } from '../../../src/common/config/info'
+
+import { faker } from '@faker-js/faker'
 
 let mainAgent, info, runtime
 
@@ -181,6 +184,23 @@ describe('payloads', () => {
 
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, Symbol('test'), {}, 'error'])
     expect(logs.pop().message).toEqual('Symbol(test)')
+  })
+
+  test('initialLocation should be in pageUrl of log object attributes', async () => {
+    const currentUrl = faker.internet.url()
+    jest.spyOn(window, 'location', 'get').mockReturnValue(currentUrl)
+
+    const log = new Log(
+      Math.floor(runtime.timeKeeper.correctAbsoluteTimestamp(
+        runtime.timeKeeper.convertRelativeTimestamp(1234)
+      )),
+      'test message',
+      { },
+      'error'
+    )
+    const expected = initialLocation.toString()
+
+    expect(log.attributes.pageUrl).toEqual(expected)
   })
 })
 

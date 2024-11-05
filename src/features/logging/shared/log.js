@@ -1,4 +1,4 @@
-import { globalScope } from '../../../common/constants/runtime'
+import { initialLocation } from '../../../common/constants/runtime'
 import { cleanURL } from '../../../common/url/clean-url'
 import { LOG_LEVELS } from '../constants'
 
@@ -22,7 +22,7 @@ export class Log {
     /** @type {long} */
     this.timestamp = timestamp
     this.message = message
-    this.attributes = { ...attributes, pageUrl: cleanURL('' + globalScope.location) }
+    this.attributes = { ...attributes, pageUrl: cleanURL('' + initialLocation) }
     this.level = level.toUpperCase()
   }
 }

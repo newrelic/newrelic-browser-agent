@@ -52,7 +52,7 @@ export class Aggregate extends AggregateBase {
     this.waitForFlags(['err']).then(([errFlag]) => {
       if (errFlag) {
         const scheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
-          onFinished: (result) => this.postHarvestCleanup(result.retry, { aggregatorTypes })
+          onFinished: (result) => this.postHarvestCleanup(result.sent && result.retry, { aggregatorTypes })
         }, this)
         scheduler.harvest.on(FEATURE_TO_ENDPOINT[this.featureName], (options) => this.makeHarvestPayload(options.retry, { aggregatorTypes }))
         scheduler.startTimer(harvestTimeSeconds)
@@ -68,18 +68,18 @@ export class Aggregate extends AggregateBase {
     return applyFnToProps(aggregatorTypeToBucketsMap, this.obfuscator.obfuscateString.bind(this.obfuscator), 'string')
   }
 
-  queryStringsBuilder (payloadBody) {
+  queryStringsBuilder (aggregatorTakeReturnedData) {
     const qs = {}
     const releaseIds = stringify(this.agentRef.runtime.releaseIds)
     if (releaseIds !== '{}') qs.ri = releaseIds
 
-    if (payloadBody?.err?.length) {
+    if (aggregatorTakeReturnedData?.err?.length) {
       if (!this.errorOnPage) {
         qs.pve = '1'
         this.errorOnPage = true
       }
       // For assurance, erase any `hasReplay` flag from all errors if replay is not recording, not-yet imported, or not running at all.
-      if (!this.agentRef.features?.[FEATURE_NAMES.sessionReplay]?.featAggregate?.replayIsActive()) payloadBody.err.forEach(error => delete error.params.hasReplay)
+      if (!this.agentRef.features?.[FEATURE_NAMES.sessionReplay]?.featAggregate?.replayIsActive()) aggregatorTakeReturnedData.err.forEach(error => delete error.params.hasReplay)
     }
     return qs
   }

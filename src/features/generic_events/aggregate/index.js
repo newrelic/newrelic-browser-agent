@@ -90,7 +90,7 @@ export class Aggregate extends AggregateBase {
       }
 
       this.harvestScheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
-        onFinished: (result) => this.postHarvestCleanup(result.retry),
+        onFinished: (result) => this.postHarvestCleanup(result.sent && result.retry),
         onUnload: () => addUserAction?.(this.userActionAggregator.aggregationEvent)
       }, this)
       this.harvestScheduler.harvest.on(FEATURE_TO_ENDPOINT[this.featureName], (options) => this.makeHarvestPayload(options.retry))

@@ -39,7 +39,7 @@ export class Aggregate extends AggregateBase {
       if (spaOn) {
         this.drain()
         const scheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
-          onFinished: (result) => this.postHarvestCleanup(result.retry),
+          onFinished: (result) => this.postHarvestCleanup(result.sent && result.retry),
           retryDelay: harvestTimeSeconds,
           onUnload: () => this.interactionInProgress?.done() // return any held ajax or jserr events so they can be sent with EoL harvest
         }, this)

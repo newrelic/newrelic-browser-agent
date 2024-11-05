@@ -19,8 +19,6 @@ export class Aggregate extends AggregateBase {
   constructor (agentRef) {
     super(agentRef, FEATURE_NAME)
 
-    /** A buffer to hold on to harvested traces in the case that a retry must be made later */
-    this.sentTrace = null
     this.harvestTimeSeconds = agentRef.init.session_trace.harvestTimeSeconds || 30
     /** Tied to the entitlement flag response from BCS.  Will short circuit operations of the agg if false  */
     this.entitled = undefined
@@ -29,7 +27,7 @@ export class Aggregate extends AggregateBase {
     /** If the harvest module is harvesting */
     this.harvesting = false
     /** TraceStorage is the mechanism that holds, normalizes and aggregates ST nodes.  It will be accessed and purged when harvests occur */
-    this.traceStorage = new TraceStorage(this)
+    this.events = new TraceStorage(this)
     /** This agg needs information about sampling (sts) and entitlements (st) to make the appropriate decisions on running */
     this.waitForFlags(['sts', 'st'])
       .then(([stMode, stEntitled]) => this.initialize(stMode, stEntitled))
@@ -61,9 +59,9 @@ export class Aggregate extends AggregateBase {
       })
 
       if (typeof PerformanceNavigationTiming !== 'undefined') {
-        this.traceStorage.storeTiming(globalScope.performance?.getEntriesByType?.('navigation')[0])
+        this.events.storeTiming(globalScope.performance?.getEntriesByType?.('navigation')[0])
       } else {
-        this.traceStorage.storeTiming(globalScope.performance?.timing, true)
+        this.events.storeTiming(globalScope.performance?.timing, true)
       }
     }
 
@@ -79,20 +77,20 @@ export class Aggregate extends AggregateBase {
     this.timeKeeper ??= this.agentRef.runtime.timeKeeper
 
     this.scheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
-      onFinished: this.onHarvestFinished.bind(this),
+      onFinished: (result) => this.postHarvestCleanup(result.sent && result.retry),
       retryDelay: this.harvestTimeSeconds,
-      getPayload: this.prepareHarvest.bind(this),
+      getPayload: (options) => this.makeHarvestPayload(options.retry),
       raw: true
     }, this)
 
     /** The handlers set up by the Inst file */
-    registerHandler('bst', (...args) => this.traceStorage.storeEvent(...args), this.featureName, this.ee)
-    registerHandler('bstResource', (...args) => this.traceStorage.storeResources(...args), this.featureName, this.ee)
-    registerHandler('bstHist', (...args) => this.traceStorage.storeHist(...args), this.featureName, this.ee)
-    registerHandler('bstXhrAgg', (...args) => this.traceStorage.storeXhrAgg(...args), this.featureName, this.ee)
-    registerHandler('bstApi', (...args) => this.traceStorage.storeSTN(...args), this.featureName, this.ee)
-    registerHandler('trace-jserror', (...args) => this.traceStorage.storeErrorAgg(...args), this.featureName, this.ee)
-    registerHandler('pvtAdded', (...args) => this.traceStorage.processPVT(...args), this.featureName, this.ee)
+    registerHandler('bst', (...args) => this.events.storeEvent(...args), this.featureName, this.ee)
+    registerHandler('bstResource', (...args) => this.events.storeResources(...args), this.featureName, this.ee)
+    registerHandler('bstHist', (...args) => this.events.storeHist(...args), this.featureName, this.ee)
+    registerHandler('bstXhrAgg', (...args) => this.events.storeXhrAgg(...args), this.featureName, this.ee)
+    registerHandler('bstApi', (...args) => this.events.storeSTN(...args), this.featureName, this.ee)
+    registerHandler('trace-jserror', (...args) => this.events.storeErrorAgg(...args), this.featureName, this.ee)
+    registerHandler('pvtAdded', (...args) => this.events.processPVT(...args), this.featureName, this.ee)
 
     /** Only start actually harvesting if running in full mode at init time */
     if (this.mode === MODE.FULL) this.startHarvesting()
@@ -113,28 +111,32 @@ export class Aggregate extends AggregateBase {
     this.scheduler.startTimer(this.harvestTimeSeconds)
   }
 
-  /** Called by the harvest scheduler at harvest time to retrieve the payload.  This will only actually return a payload if running in full mode */
-  prepareHarvest (options = {}) {
-    this.traceStorage.prevStoredEvents.clear() // release references to past events for GC
+  preHarvestChecks () {
+    if (this.mode !== MODE.FULL) return // only allow harvest if running in full mode
     if (!this.timeKeeper?.ready) return // this should likely never happen, but just to be safe, we should never harvest if we cant correct time
-    if (this.blocked || this.mode !== MODE.FULL || this.traceStorage.nodeCount === 0) return
-    if (this.sessionId !== this.agentRef.runtime.session?.state.value || this.ptid !== this.agentRef.runtime.ptid) return this.abort(3) // if something unexpected happened and we somehow still got to the point of harvesting after a session identifier changed, we should force-exit instead of harvesting
-    /** Get the ST nodes from the traceStorage buffer.  This also returns helpful metadata about the payload. */
-    const { stns, earliestTimeStamp, latestTimeStamp } = this.traceStorage.takeSTNs()
-    if (!stns) return // there are no trace nodes
-    if (options.retry) {
-      this.sentTrace = stns
+    if (!this.agentRef.runtime.session) return // session entity is required for trace to run and continue running
+    if (this.sessionId !== this.agentRef.runtime.session.state.value || this.ptid !== this.agentRef.runtime.ptid) {
+      // If something unexpected happened and we somehow still got to harvesting after a session identifier changed, we should force-exit instead of harvesting:
+      this.abort(3)
+      return
     }
+    return true
+  }
 
+  serializer ({ stns }) {
+    if (!stns.length) return // there are no processed nodes
+    this.everHarvested = true
+    return applyFnToProps(stns, this.obfuscator.obfuscateString.bind(this.obfuscator), 'string')
+  }
+
+  queryStringsBuilder ({ stns, earliestTimeStamp, latestTimeStamp }) {
     const firstSessionHarvest = !this.agentRef.runtime.session.state.traceHarvestStarted
     if (firstSessionHarvest) this.agentRef.runtime.session.write({ traceHarvestStarted: true })
+    const hasReplay = this.agentRef.runtime.session.state.sessionReplayMode === 1
+    const endUserId = this.agentRef.info.jsAttributes['enduser.id']
+    const entityGuid = this.agentRef.runtime.appMetadata.agents?.[0]?.entityGuid
 
-    const hasReplay = this.agentRef.runtime.session?.state.sessionReplayMode === 1
-    const endUserId = this.agentRef.info?.jsAttributes?.['enduser.id']
-
-    this.everHarvested = true
-
-    /** The blob consumer expects the following and will reject if not supplied:
+    /* The blob consumer expects the following and will reject if not supplied:
      * browser_monitoring_key
      * type
      * app_id
@@ -143,47 +145,34 @@ export class Aggregate extends AggregateBase {
      *
      * For data that does not fit the schema of the above, it should be url-encoded and placed into `attributes`
      */
-    const agentMetadata = this.agentRef.runtime.appMetadata?.agents?.[0] || {}
-    return {
-      qs: {
-        browser_monitoring_key: this.agentRef.info.licenseKey,
-        type: 'BrowserSessionChunk',
-        app_id: this.agentRef.info.applicationID,
-        protocol_version: '0',
-        timestamp: Math.floor(this.timeKeeper.correctRelativeTimestamp(earliestTimeStamp)),
-        attributes: encodeObj({
-          ...(agentMetadata.entityGuid && { entityGuid: agentMetadata.entityGuid }),
-          harvestId: `${this.agentRef.runtime.session?.state.value}_${this.agentRef.runtime.ptid}_${this.agentRef.runtime.harvestCount}`,
-          // this section of attributes must be controllable and stay below the query param padding limit -- see QUERY_PARAM_PADDING
-          // if not, data could be lost to truncation at time of sending, potentially breaking parsing / API behavior in NR1
-          // trace payload metadata
-          'trace.firstTimestamp': Math.floor(this.timeKeeper.correctRelativeTimestamp(earliestTimeStamp)),
-          'trace.lastTimestamp': Math.floor(this.timeKeeper.correctRelativeTimestamp(latestTimeStamp)),
-          'trace.nodes': stns.length,
-          'trace.originTimestamp': this.timeKeeper.correctedOriginTime,
-          // other payload metadata
-          agentVersion: this.agentRef.runtime.version,
-          ...(firstSessionHarvest && { firstSessionHarvest }),
-          ...(hasReplay && { hasReplay }),
-          ptid: `${this.ptid}`,
-          session: `${this.sessionId}`,
-          // customer-defined data should go last so that if it exceeds the query param padding limit it will be truncated instead of important attrs
-          ...(endUserId && { 'enduser.id': this.obfuscator.obfuscateString(endUserId) }),
-          currentUrl: this.obfuscator.obfuscateString(cleanURL('' + location))
-          // The Query Param is being arbitrarily limited in length here.  It is also applied when estimating the size of the payload in getPayloadSize()
-        }, QUERY_PARAM_PADDING).substring(1) // remove the leading '&'
-      },
-      body: applyFnToProps(stns, this.obfuscator.obfuscateString.bind(this.obfuscator), 'string')
-    }
-  }
 
-  /** When the harvest scheduler finishes, this callback is executed. It's main purpose is to determine if the payload needs to be retried
-   * and if so, it will take all data from the temporary buffer and place it back into the traceStorage module
-   */
-  onHarvestFinished (result) {
-    if (result.sent && result.retry && this.sentTrace) { // merge previous trace back into buffer to retry for next harvest
-      Object.entries(this.sentTrace).forEach(([name, listOfSTNodes]) => { this.traceStorage.restoreNode(name, listOfSTNodes) })
-      this.sentTrace = null
+    return {
+      browser_monitoring_key: this.agentRef.info.licenseKey,
+      type: 'BrowserSessionChunk',
+      app_id: this.agentRef.info.applicationID,
+      protocol_version: '0',
+      timestamp: Math.floor(this.timeKeeper.correctRelativeTimestamp(earliestTimeStamp)),
+      attributes: encodeObj({
+        ...(entityGuid && { entityGuid }),
+        harvestId: `${this.agentRef.runtime.session.state.value}_${this.agentRef.runtime.ptid}_${this.agentRef.runtime.harvestCount}`,
+        // this section of attributes must be controllable and stay below the query param padding limit -- see QUERY_PARAM_PADDING
+        // if not, data could be lost to truncation at time of sending, potentially breaking parsing / API behavior in NR1
+        // trace payload metadata
+        'trace.firstTimestamp': Math.floor(this.timeKeeper.correctRelativeTimestamp(earliestTimeStamp)),
+        'trace.lastTimestamp': Math.floor(this.timeKeeper.correctRelativeTimestamp(latestTimeStamp)),
+        'trace.nodes': stns.length,
+        'trace.originTimestamp': this.timeKeeper.correctedOriginTime,
+        // other payload metadata
+        agentVersion: this.agentRef.runtime.version,
+        ...(firstSessionHarvest && { firstSessionHarvest }),
+        ...(hasReplay && { hasReplay }),
+        ptid: `${this.ptid}`,
+        session: `${this.sessionId}`,
+        // customer-defined data should go last so that if it exceeds the query param padding limit it will be truncated instead of important attrs
+        ...(endUserId && { 'enduser.id': this.obfuscator.obfuscateString(endUserId) }),
+        currentUrl: this.obfuscator.obfuscateString(cleanURL('' + location))
+        // The Query Param is being arbitrarily limited in length here.  It is also applied when estimating the size of the payload in getPayloadSize()
+      }, QUERY_PARAM_PADDING).substring(1) // remove the leading '&'
     }
   }
 
@@ -195,16 +184,17 @@ export class Aggregate extends AggregateBase {
     this.agentRef.runtime.session.write({ sessionTraceMode: this.mode })
     if (prevMode === MODE.OFF || !this.initialized) return this.initialize(this.mode, this.entitled)
     if (this.initialized) {
-      this.traceStorage.trimSTNs(ERROR_MODE_SECONDS_WINDOW) // up until now, Trace would've been just buffering nodes up to max, which needs to be trimmed to last X seconds
+      this.events.trimSTNs(ERROR_MODE_SECONDS_WINDOW) // up until now, Trace would've been just buffering nodes up to max, which needs to be trimmed to last X seconds
     }
     this.startHarvesting()
   }
 
   /** Stop running for the remainder of the page lifecycle */
-  abort (reason) {
+  abort () {
     this.blocked = true
     this.mode = MODE.OFF
     this.agentRef.runtime.session.write({ sessionTraceMode: this.mode })
     this.scheduler?.stopTimer()
+    this.events.clear()
   }
 }

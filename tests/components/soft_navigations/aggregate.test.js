@@ -136,14 +136,14 @@ describe('back up buffer is cleared when', () => { // prevent mem leak
     softNavAggregate.makeHarvestPayload(true)
   })
 
-  test('harvest was blocked', () => {
+  test('harvest was blocked, or sent successfully without retry response', () => {
     softNavAggregate.postHarvestCleanup(false) // when HTTP status returns 0
     expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(0)
 
     softNavAggregate.interactionsToHarvest.reloadSave() // backup buffer does not hold onto stale data
     expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(0)
   })
-  test('harvest is sent but got a retry response', () => {
+  test('harvest is sent and got a retry response', () => {
     softNavAggregate.postHarvestCleanup(true)
     expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(1)
 

@@ -20,7 +20,7 @@ export class Aggregate extends AggregateBase {
 
     this.waitForFlags([]).then(() => {
       this.scheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
-        onFinished: (result) => this.postHarvestCleanup(result.retry),
+        onFinished: (result) => this.postHarvestCleanup(result.sent && result.retry),
         retryDelay: this.harvestTimeSeconds,
         getPayload: (options) => this.makeHarvestPayload(options.retry),
         raw: true

@@ -14,7 +14,8 @@ export class AggregateBase extends FeatureBase {
     this.agentRef = agentRef
     // Jserror and Metric features uses a singleton EventAggregator instead of a regular EventBuffer.
     if (FEATURE_TO_ENDPOINT[this.featureName] === 'jserrors') this.events = agentRef.sharedAggregator
-    else if (this.featureName !== FEATURE_NAMES.pageViewEvent) this.events = new EventBuffer() // PVE has no need for events
+    // PVE has no need for eventBuffer, and SessionTrace has its own storage mechanism.
+    else if (![FEATURE_NAMES.pageViewEvent, FEATURE_NAMES.sessionTrace].includes(this.featureName)) this.events = new EventBuffer()
     this.checkConfiguration(agentRef)
     this.obfuscator = agentRef.runtime.obfuscator
   }
@@ -59,17 +60,20 @@ export class AggregateBase extends FeatureBase {
    */
   makeHarvestPayload (shouldRetryOnFail = false, opts = {}) {
     if (this.events.isEmpty(opts)) return
+    // Other conditions and things to do when preparing harvest that is required.
+    if (this.preHarvestChecks && !this.preHarvestChecks()) return
 
     if (shouldRetryOnFail) this.events.save(opts)
+    const returnedData = this.events.get(opts)
     // A serializer or formatter assists in creating the payload `body` from stored events on harvest when defined by derived feature class.
-    const body = this.serializer ? this.serializer(this.events.get(opts)) : this.events.get(opts)
+    const body = this.serializer ? this.serializer(returnedData) : returnedData
     this.events.clear(opts)
 
     const payload = {
       body
     }
     // Constructs the payload `qs` for relevant features on harvest.
-    if (this.queryStringsBuilder) payload.qs = this.queryStringsBuilder(body)
+    if (this.queryStringsBuilder) payload.qs = this.queryStringsBuilder(returnedData)
     return payload
   }
 

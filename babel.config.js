@@ -29,7 +29,9 @@ module.exports = function (api, ...args) {
       {
         include: ['BUILD_VERSION', 'BUILD_ENV', 'RRWEB_VERSION']
       }
-    ]
+    ],
+    // Support import `with` attribute for json
+    '@babel/plugin-syntax-import-attributes'
   ]
   const env = {
     test: {

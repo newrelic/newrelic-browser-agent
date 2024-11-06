@@ -36,7 +36,10 @@ module.exports = {
     {
       files: ['**/*.mjs'],
       parserOptions: {
-        sourceType: 'module'
+        sourceType: 'module',
+        babelOptions: {
+          plugins: ['@babel/plugin-syntax-import-attributes']
+        }
       }
     },
     {

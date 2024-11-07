@@ -146,7 +146,7 @@ describe('sub-features', () => {
   })
 
   test('should record user actions when enabled', () => {
-    getInfo(agentSetup.agentIdentifier).jsAttributes = { globalFoo: 'globalBar' }
+    agentSetup.info.jsAttributes = { globalFoo: 'globalBar' }
     const target = document.createElement('button')
     target.id = 'myBtn'
     genericEventsAggregate.ee.emit('ua', [{ timeStamp: 123456, type: 'click', target }])
@@ -229,6 +229,86 @@ describe('sub-features', () => {
       targetId: 'myBtn',
       targetTag: 'BUTTON',
       globalFoo: 'globalBar'
+    })
+  })
+
+  test('should record marks when enabled', async () => {
+    agentSetup.init.performance.capture_marks = true
+    agentSetup.info.jsAttributes = { globalFoo: 'globalBar' }
+    const mockPerformanceObserver = jest.fn(cb => ({
+      observe: () => {
+        const callCb = () => {
+          // eslint-disable-next-line
+          cb({getEntries: () => [{ 
+            name: 'test',
+            duration: 0,
+            detail: JSON.stringify({ foo: 'bar' }),
+            startTime: performance.now()
+          }]
+          })
+        }
+        callCb()
+      },
+      disconnect: jest.fn()
+    }))
+
+    global.PerformanceObserver = mockPerformanceObserver
+    global.PerformanceObserver.supportedEntryTypes = ['mark']
+
+    const { Aggregate } = await import('../../../../src/features/generic_events/aggregate')
+    genericEventsAggregate = new Aggregate(agentSetup)
+    expect(genericEventsAggregate.events[0]).toBeUndefined()
+
+    genericEventsAggregate.ee.emit('rumresp', [{ ins: 1 }])
+    await new Promise(process.nextTick)
+
+    expect(genericEventsAggregate.events.buffer[0]).toMatchObject({
+      eventType: 'BrowserPerformance',
+      timestamp: expect.any(Number),
+      entryName: 'test',
+      entryDuration: 0,
+      entryType: 'mark',
+      entryDetail: JSON.stringify({ foo: 'bar' })
+    })
+  })
+
+  test('should record measures when enabled', async () => {
+    agentSetup.init.performance = { capture_measures: true }
+    getInfo(agentSetup.agentIdentifier).jsAttributes = { globalFoo: 'globalBar' }
+    const mockPerformanceObserver = jest.fn(cb => ({
+      observe: () => {
+        const callCb = () => {
+          // eslint-disable-next-line
+          cb({getEntries: () => [{
+            name: 'test',
+            duration: 10,
+            detail: JSON.stringify({ foo: 'bar' }),
+            startTime: performance.now()
+          }]
+          })
+        }
+        callCb()
+      },
+      disconnect: jest.fn()
+    }))
+
+    global.PerformanceObserver = mockPerformanceObserver
+    global.PerformanceObserver.supportedEntryTypes = ['measure']
+
+    const { Aggregate } = await import('../../../../src/features/generic_events/aggregate')
+    genericEventsAggregate = new Aggregate(agentSetup)
+    expect(genericEventsAggregate.events[0]).toBeUndefined()
+
+    genericEventsAggregate.ee.emit('rumresp', [{ ins: 1 }])
+    await new Promise(process.nextTick)
+
+    expect(genericEventsAggregate.events.buffer[0]).toMatchObject({
+      eventType: 'BrowserPerformance',
+      timestamp: expect.any(Number),
+      entryName: 'test',
+      entryDuration: 10,
+      entryType: 'measure',
+      entryDetail: JSON.stringify({ foo: 'bar' })
     })
   })
 })

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    <script>performance.mark('before-agent')</script>
+    {init} {config} {loader}
+    <script>performance.mark('after-agent')</script>
+  </head>
+  <body>Instrumented
+    <script>
+      performance.measure('agent-load', {detail: {foo:'bar'}, start: 'before-agent', end: 'after-agent'} )
+    </script>
+  </body>
+</html>

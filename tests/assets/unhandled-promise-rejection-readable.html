@@ -52,6 +52,14 @@
         }
         rej(new Foo());
       });
+      new Promise(function(res, rej) {
+        throw new Error("test");
+      });
+      new Promise(function(res, rej) {
+        (function () {
+          throw new Error("test");
+        })()
+      });
     </script>
     this is a generic page that is instrumented by the JS agent
   </body>

@@ -48,9 +48,12 @@ const model = () => {
     metrics: { enabled: true, autoStart: true },
     obfuscate: undefined,
     page_action: { enabled: true },
-    user_actions: { enabled: true },
     page_view_event: { enabled: true, autoStart: true },
     page_view_timing: { enabled: true, harvestTimeSeconds: 30, autoStart: true },
+    performance: {
+      capture_marks: false,
+      capture_measures: false // false by default through experimental phase, but flipped to true once GA'd
+    },
     privacy: { cookies_enabled: true }, // *cli - per discussion, default should be true
     proxy: {
       assets: undefined, // if this value is set, it will be used to overwrite the webpack asset path used to fetch assets
@@ -105,7 +108,8 @@ const model = () => {
     session_trace: { enabled: true, harvestTimeSeconds: 10, autoStart: true },
     soft_navigations: { enabled: true, harvestTimeSeconds: 10, autoStart: true },
     spa: { enabled: true, harvestTimeSeconds: 10, autoStart: true },
-    ssl: undefined
+    ssl: undefined,
+    user_actions: { enabled: true }
   }
 }
 

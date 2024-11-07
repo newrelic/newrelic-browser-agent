@@ -1,6 +1,6 @@
 import { supportsFirstPaint, supportsFirstContentfulPaint } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { JSONPath } from 'jsonpath-plus'
-const { testInteractionEventsRequest, testErrorsRequest } = require('../../../tools/testing-server/utils/expect-tests')
+import { testInteractionEventsRequest, testErrorsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 describe('attribution tests', () => {
   let interactionsCapture

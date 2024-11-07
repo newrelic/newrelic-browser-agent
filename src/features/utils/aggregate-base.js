@@ -13,7 +13,7 @@ export class AggregateBase extends FeatureBase {
     super(agentRef.agentIdentifier, featureName)
     this.agentRef = agentRef
     // Jserror and Metric features uses a singleton EventAggregator instead of a regular EventBuffer.
-    if (FEATURE_TO_ENDPOINT[this.featureName] === 'jserrors') this.events = agentRef.sharedAggregator
+    if ([FEATURE_NAMES.jserrors, FEATURE_NAMES.metrics].includes(this.featureName)) this.events = agentRef.sharedAggregator
     // PVE has no need for eventBuffer, and SessionTrace has its own storage mechanism.
     else if (![FEATURE_NAMES.pageViewEvent, FEATURE_NAMES.sessionTrace].includes(this.featureName)) this.events = new EventBuffer()
     this.checkConfiguration(agentRef)

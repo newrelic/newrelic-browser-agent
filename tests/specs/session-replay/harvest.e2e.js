@@ -1,4 +1,4 @@
-import { notIOS, onlyChrome, supportsFetch } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { notIOS, onlyChrome } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { srConfig, decodeAttributes, getSR } from '../util/helpers'
 import { testBlobReplayRequest } from '../../../tools/testing-server/utils/expect-tests'
 
@@ -74,7 +74,7 @@ describe('Session Replay Harvest Behavior', () => {
     expect(parseInt(sessionReplayHarvests[1].request.query.timestamp, 10)).toEqual(attr2['replay.firstTimestamp'])
   })
 
-  it.withBrowsersMatching(supportsFetch)('should use sendBeacon for unload harvests', async () => {
+  it('should use sendBeacon for unload harvests', async () => {
     await Promise.all([
       sessionReplaysCapture.waitForResult({ totalCount: 1 }),
       browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig({ session_replay: { harvestTimeSeconds: 30 } })))

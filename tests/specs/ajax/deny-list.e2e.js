@@ -1,4 +1,3 @@
-import { supportsFetch } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { extractAjaxEvents } from '../../util/xhr'
 import { testAjaxEventsRequest, testAjaxTimeSlicesRequest, testInteractionEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
@@ -46,16 +45,12 @@ describe('xhr events deny list', () => {
         type: 'ajax',
         requestedWith: 'XMLHttpRequest'
       }),
-      ...(browserMatch(supportsFetch)
-        ? [
-            expect.objectContaining({
-              domain: expect.stringContaining('bam-test-1.nr-local.net'),
-              path: '/json',
-              type: 'ajax',
-              requestedWith: 'fetch'
-            })
-          ]
-        : [])
+      expect.objectContaining({
+        domain: expect.stringContaining('bam-test-1.nr-local.net'),
+        path: '/json',
+        type: 'ajax',
+        requestedWith: 'fetch'
+      })
     ]))
   })
 
@@ -87,7 +82,7 @@ describe('xhr events deny list', () => {
     ]))
   })
 
-  it.withBrowsersMatching(supportsFetch)('does not capture data URLs (or events with undefined hostname) at all', async () => {
+  it('does not capture data URLs (or events with undefined hostname) at all', async () => {
     const [ajaxTimeSliceCapture, ajaxEventsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
       { test: testAjaxTimeSlicesRequest },
       { test: testAjaxEventsRequest }

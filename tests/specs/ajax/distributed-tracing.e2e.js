@@ -1,5 +1,4 @@
 import { faker } from '@faker-js/faker'
-import { supportsFetch } from '../../../tools/browser-matcher/common-matchers.mjs'
 
 const assetServerTraceTest = function (request) {
   if (request.method !== 'GET') return
@@ -165,7 +164,7 @@ describe('xhr distributed tracing', () => {
 
   testCases.forEach(testCase => {
     fetchScenarios.forEach(fetchScenario => {
-      describe.withBrowsersMatching(supportsFetch)(fetchScenario.name, () => {
+      describe(fetchScenario.name, () => {
         it(testCase.name, async () => {
           let targetAsset = fetchScenario.sameOriginFile
           let targetServer = 'assetServer'
@@ -199,7 +198,7 @@ describe('xhr distributed tracing', () => {
     })
   })
 
-  describe.withBrowsersMatching(supportsFetch)('fetch with empty url string parameter', () => {
+  describe('fetch with empty url string parameter', () => {
     testCases.forEach(testCase => {
       if (!testCase.sameOrigin) {
         // An empty string as the first parameter to fetch always implies same origin

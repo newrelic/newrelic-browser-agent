@@ -1,4 +1,3 @@
-import { supportsFetch } from '../../tools/browser-matcher/common-matchers.mjs'
 import { testCustomMetricsRequest, testSupportMetricsRequest } from '../../tools/testing-server/utils/expect-tests'
 
 const loaderTypes = ['rum', 'full', 'spa']
@@ -12,7 +11,7 @@ describe('metrics', () => {
   })
 
   loaderTypes.forEach(loaderType => {
-    it.withBrowsersMatching(supportsFetch)(`generic agent info captured for ${loaderType} loader`, async () => {
+    it(`generic agent info captured for ${loaderType} loader`, async () => {
       await browser.url(await browser.testHandle.assetURL('instrumented.html', { loader: loaderType }))
         .then(() => browser.waitForAgentLoad())
 

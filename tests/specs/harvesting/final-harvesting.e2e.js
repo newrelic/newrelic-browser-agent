@@ -1,4 +1,3 @@
-import { supportsFetch } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { testAjaxEventsRequest, testBlobTraceRequest, testErrorsRequest, testInsRequest, testMetricsRequest, testRumRequest, testTimingEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 describe('final harvesting', () => {
@@ -74,7 +73,7 @@ describe('final harvesting', () => {
     expect(insightsFinalHarvest.request.body.ins.length).toBeGreaterThan(0)
   })
 
-  it.withBrowsersMatching(supportsFetch)('should use sendBeacon for unload harvests', async () => {
+  it('should use sendBeacon for unload harvests', async () => {
     await browser.url(await browser.testHandle.assetURL('final-harvest.html'))
       .then(() => browser.waitForAgentLoad())
 

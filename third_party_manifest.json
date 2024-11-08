@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "Fri Nov 01 2024 17:54:11 GMT+0000 (Coordinated Universal Time)",
+  "lastUpdated": "Thu Nov 07 2024 23:01:35 GMT+0000 (Coordinated Universal Time)",
   "projectName": "New Relic Browser Agent",
   "projectUrl": "https://github.com/newrelic/newrelic-browser-agent",
   "includeOptDeps": true,
@@ -73,15 +73,28 @@
       "publisher": "The Babel Team",
       "url": "https://babel.dev/team"
     },
-    "@babel/eslint-parser@7.25.1": {
+    "@babel/eslint-parser@7.25.9": {
       "name": "@babel/eslint-parser",
-      "version": "7.25.1",
-      "range": "^7.23.3",
+      "version": "7.25.9",
+      "range": "^7.25.9",
       "licenses": "MIT",
       "repoUrl": "https://github.com/babel/babel",
-      "versionedRepoUrl": "https://github.com/babel/babel/tree/v7.25.1",
+      "versionedRepoUrl": "https://github.com/babel/babel/tree/v7.25.9",
       "licenseFile": "node_modules/@babel/eslint-parser/LICENSE",
-      "licenseUrl": "https://github.com/babel/babel/blob/v7.25.1/LICENSE",
+      "licenseUrl": "https://github.com/babel/babel/blob/v7.25.9/LICENSE",
+      "licenseTextSource": "file",
+      "publisher": "The Babel Team",
+      "url": "https://babel.dev/team"
+    },
+    "@babel/plugin-syntax-import-attributes@7.26.0": {
+      "name": "@babel/plugin-syntax-import-attributes",
+      "version": "7.26.0",
+      "range": "^7.26.0",
+      "licenses": "MIT",
+      "repoUrl": "https://github.com/babel/babel",
+      "versionedRepoUrl": "https://github.com/babel/babel/tree/v7.26.0",
+      "licenseFile": "node_modules/@babel/plugin-syntax-import-attributes/LICENSE",
+      "licenseUrl": "https://github.com/babel/babel/blob/v7.26.0/LICENSE",
       "licenseTextSource": "file",
       "publisher": "The Babel Team",
       "url": "https://babel.dev/team"

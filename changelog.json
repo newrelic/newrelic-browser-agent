@@ -5,6 +5,23 @@
       "changes": [
         {
           "type": "feat",
+          "sha": "1a58409cda8b7b264e58fe284041540941dccd1c",
+          "message": "Marks and measures",
+          "issues": [
+            "1189"
+          ]
+        }
+      ],
+      "version": "1.272.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "f5153f08-af41-4b8e-8612-0de33c05c0c2",
+      "createTime": "2024-11-07T17:22:04.292Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
           "sha": "25a1fffb91fa5936766a7bc89d735b3018aa62a2",
           "message": "Ignore unhandled promise rejections that lack a valid reason",
           "issues": [
@@ -2159,5 +2176,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2024-11-01T14:08:54.003Z"
+  "updateTime": "2024-11-07T17:22:04.292Z"
 }

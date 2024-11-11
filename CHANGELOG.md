@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.272.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.271.0...v1.272.0) (2024-11-07)
+
+
+### Features
+
+* Marks and measures ([#1189](https://github.com/newrelic/newrelic-browser-agent/issues/1189)) ([1a58409](https://github.com/newrelic/newrelic-browser-agent/commit/1a58409cda8b7b264e58fe284041540941dccd1c))
+
 ## [1.271.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.270.3...v1.271.0) (2024-11-01)
 
 

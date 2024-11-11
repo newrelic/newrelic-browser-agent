@@ -262,7 +262,7 @@ describe('sub-features', () => {
     genericEventsAggregate.ee.emit('rumresp', [{ ins: 1 }])
     await new Promise(process.nextTick)
 
-    expect(genericEventsAggregate.events.buffer[0]).toMatchObject({
+    expect(genericEventsAggregate.events.get()[0]).toMatchObject({
       eventType: 'BrowserPerformance',
       timestamp: expect.any(Number),
       entryName: 'test',
@@ -302,7 +302,7 @@ describe('sub-features', () => {
     genericEventsAggregate.ee.emit('rumresp', [{ ins: 1 }])
     await new Promise(process.nextTick)
 
-    expect(genericEventsAggregate.events.buffer[0]).toMatchObject({
+    expect(genericEventsAggregate.events.get()[0]).toMatchObject({
       eventType: 'BrowserPerformance',
       timestamp: expect.any(Number),
       entryName: 'test',

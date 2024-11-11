@@ -6,7 +6,7 @@ import { drain } from '../../common/drain/drain'
 import { activatedFeatures } from '../../common/util/feature-flags'
 import { Obfuscator } from '../../common/util/obfuscate'
 import { EventBuffer } from './event-buffer'
-import { FEATURE_NAMES, FEATURE_TO_ENDPOINT } from '../../loaders/features/features'
+import { FEATURE_NAMES } from '../../loaders/features/features'
 
 export class AggregateBase extends FeatureBase {
   constructor (agentRef, featureName) {

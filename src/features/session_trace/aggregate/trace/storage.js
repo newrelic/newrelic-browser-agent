@@ -29,8 +29,8 @@ export class TraceStorage {
   trace = {}
   earliestTimeStamp = Infinity
   latestTimeStamp = 0
-  tempStorage = []
   prevStoredEvents = new Set()
+  #backupTrace
 
   constructor (parent) {
     this.parent = parent
@@ -43,9 +43,6 @@ export class TraceStorage {
       if (this.parent.mode !== MODE.ERROR) return
       const openedSpace = this.trimSTNs(ERROR_MODE_SECONDS_WINDOW) // but maybe we could make some space by discarding irrelevant nodes if we're in sessioned Error mode
       if (openedSpace === 0) return
-    }
-    while (this.tempStorage.length) {
-      this.storeSTN(this.tempStorage.shift())
     }
 
     if (this.trace[stn.n]) this.trace[stn.n].push(stn)
@@ -96,15 +93,9 @@ export class TraceStorage {
       const partitionListByOriginMap = listOfSTNodes.sort((a, b) => a.s - b.s).reduce(reindexByOriginFn, {})
       return Object.values(partitionListByOriginMap).flat() // join the partitions back into 1-D, now ordered by origin then start time
     }, this)
-    if (stns.length === 0) return {}
 
-    this.trace = {}
-    this.nodeCount = 0
     const earliestTimeStamp = this.earliestTimeStamp
-    this.earliestTimeStamp = Infinity
     const latestTimeStamp = this.latestTimeStamp
-    this.latestTimeStamp = 0
-
     return { stns, earliestTimeStamp, latestTimeStamp }
   }
 
@@ -282,10 +273,30 @@ export class TraceStorage {
     this.storeSTN(new TraceNode('Ajax', metrics.time, metrics.time + metrics.duration, `${params.status} ${params.method}: ${params.host}${params.pathname}`, 'ajax'))
   }
 
-  restoreNode (name, listOfSTNodes) {
-    if (this.nodeCount >= MAX_NODES_PER_HARVEST) return
+  /* Below are the interface expected & required of whatever storage is used across all features on an individual basis. This allows a common `.events` property on Trace. */
+  isEmpty () {
+    return this.nodeCount === 0
+  }
 
-    this.nodeCount += listOfSTNodes.length
-    this.trace[name] = this.trace[name] ? listOfSTNodes.concat(this.trace[name]) : listOfSTNodes
+  save () {
+    this.#backupTrace = this.trace
+  }
+
+  get = this.takeSTNs
+
+  clear () {
+    this.trace = {}
+    this.nodeCount = 0
+    this.prevStoredEvents.clear() // release references to past events for GC
+    this.earliestTimeStamp = Infinity
+    this.latestTimeStamp = 0
+  }
+
+  reloadSave () {
+    Object.values(this.#backupTrace).forEach(stnsArray => stnsArray.forEach(stn => this.storeSTN(stn)))
+  }
+
+  clearSave () {
+    this.#backupTrace = undefined
   }
 }

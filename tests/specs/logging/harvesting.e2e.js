@@ -14,7 +14,7 @@ describe('logging harvesting', () => {
     const expectedLogs = ['INFO', 'DEBUG', 'TRACE', 'ERROR', 'WARN'].map(level => ({
       level, message: level.toLowerCase(), timestamp: expect.any(Number), attributes
     }))
-    const expectedPayload = [{
+    const commonAttributes = {
       common: {
         attributes: {
           appId: 42,
@@ -29,7 +29,10 @@ describe('logging harvesting', () => {
           session: expect.any(String),
           ptid: expect.any(String)
         }
-      },
+      }
+    }
+    const expectedPayload = [{
+      ...commonAttributes,
       logs: expectedLogs
     }]
 
@@ -67,6 +70,20 @@ describe('logging harvesting', () => {
           logsCapture.waitForResult({ totalCount: 1 }),
           browser.url(await browser.testHandle.assetURL(`logs-${type}-too-large.html`))
         ])
+
+        const logs = [...expectedLogs, {
+          level: 'DEBUG',
+          message: 'New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#31',
+          timestamp: expect.any(Number),
+          attributes: {
+            pageUrl: expect.any(String),
+            wrappedFn: 'console.debug'
+          }
+        }]
+        const expectedPayload = [{
+          ...commonAttributes,
+          logs
+        }]
         expect(JSON.parse(body)).toEqual(expectedPayload) // should not contain the '...xxxxx...' payload in it
       })
     })

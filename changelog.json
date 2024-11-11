@@ -5,6 +5,31 @@
       "changes": [
         {
           "type": "feat",
+          "sha": "f77380b01e9b57db0b5c782d6d512431229bcd79",
+          "message": "Refactor feature storages",
+          "issues": [
+            "1241"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "911d8d1d78b49fa4252257596e013806885ace9b",
+          "message": "Remove wrap-events usage from soft nav",
+          "issues": [
+            "1244"
+          ]
+        }
+      ],
+      "version": "1.273.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "cfe0b973-a6ce-4433-b940-345d8d9ba9ff",
+      "createTime": "2024-11-11T17:36:53.044Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
           "sha": "1a58409cda8b7b264e58fe284041540941dccd1c",
           "message": "Marks and measures",
           "issues": [
@@ -2176,5 +2201,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2024-11-07T17:22:04.292Z"
+  "updateTime": "2024-11-11T17:36:53.044Z"
 }

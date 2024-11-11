@@ -16,7 +16,7 @@ import { warn } from '../../../common/util/console'
 import { globalScope } from '../../../common/constants/runtime'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { handle } from '../../../common/event-emitter/handle'
-import { FEATURE_NAMES } from '../../../loaders/features/features'
+import { FEATURE_NAMES, FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
 import { RRWEB_VERSION } from '../../../common/constants/env'
 import { MODE, SESSION_EVENTS, SESSION_EVENT_TYPES } from '../../../common/session/constants'
 import { stringify } from '../../../common/util/stringify'
@@ -54,14 +54,6 @@ export class Aggregate extends AggregateBase {
 
     handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/Enabled'], undefined, FEATURE_NAMES.metrics, this.ee)
 
-    this.ee.on(`cfc.${FEATURE_NAMES.jserrors}`, (crossFeatureData) => {
-      crossFeatureData.hasReplay = !!(this.scheduler?.started &&
-        this.recorder &&
-        this.mode === MODE.FULL &&
-        !this.blocked &&
-        this.entitled)
-    })
-
     // The SessionEntity class can emit a message indicating the session was cleared and reset (expiry, inactivity). This feature must abort and never resume if that occurs.
     this.ee.on(SESSION_EVENTS.RESET, () => {
       this.abort(ABORT_REASONS.RESET)
@@ -85,10 +77,10 @@ export class Aggregate extends AggregateBase {
     })
 
     // Bespoke logic for blobs endpoint.
-    this.scheduler = new HarvestScheduler('browser/blobs', {
-      onFinished: this.onHarvestFinished.bind(this),
+    this.scheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
+      onFinished: (result) => this.postHarvestCleanup(result),
       retryDelay: this.harvestTimeSeconds,
-      getPayload: this.prepareHarvest.bind(this),
+      getPayload: ({ retry, ...opts }) => this.makeHarvestPayload(retry, opts),
       raw: true
     }, this)
 
@@ -132,6 +124,10 @@ export class Aggregate extends AggregateBase {
 
     handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/SamplingRate/Value', sampling_rate], undefined, FEATURE_NAMES.metrics, this.ee)
     handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/ErrorSamplingRate/Value', error_sampling_rate], undefined, FEATURE_NAMES.metrics, this.ee)
+  }
+
+  replayIsActive () {
+    return Boolean(this.scheduler?.started && this.recorder && this.mode === MODE.FULL && !this.blocked && this.entitled)
   }
 
   handleError (e) {
@@ -236,7 +232,7 @@ export class Aggregate extends AggregateBase {
     }
   }
 
-  prepareHarvest ({ opts } = {}) {
+  makeHarvestPayload (shouldRetryOnFail, opts) {
     if (!this.recorder || !this.timeKeeper?.ready || !this.recorder.hasSeenSnapshot) return
     const recorderEvents = this.recorder.getEvents()
     // get the event type and use that to trigger another harvest if needed
@@ -365,7 +361,7 @@ export class Aggregate extends AggregateBase {
     }
   }
 
-  onHarvestFinished (result) {
+  postHarvestCleanup (result) {
     // The mutual decision for now is to stop recording and clear buffers if ingest is experiencing 429 rate limiting
     if (result.status === 429) {
       this.abort(ABORT_REASONS.TOO_MANY)

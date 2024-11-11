@@ -16,6 +16,11 @@ on:
         required: false
         type: boolean
         default: false
+      concurrency:
+        description: 'The number of test runner threads to spawn for a run'
+        required: false
+        type: number
+        default: 10
   workflow_call:
     inputs:
       browser-target:

@@ -10,7 +10,7 @@ import { warn } from '../../../../src/common/util/console'
 import * as runtimeConstantsModule from '../../../../src/common/constants/runtime'
 import { canEnableSessionTracking } from '../../../../src/features/utils/feature-gates'
 import { getConfigurationValue } from '../../../../src/common/config/init'
-import { Aggregator } from '../../../../src/common/aggregate/aggregator'
+import { EventAggregator } from '../../../../src/common/aggregate/event-aggregator'
 
 jest.enableAutomock()
 jest.unmock('../../../../src/features/utils/instrument-base')
@@ -183,12 +183,12 @@ test('does not initialized Aggregator more than once with multiple features', as
   pve.importAggregator(agentBase)
   pvt.importAggregator(agentBase)
 
-  expect(Aggregator).toHaveBeenCalledTimes(0)
+  expect(EventAggregator).toHaveBeenCalledTimes(0)
   await Promise.all([
     jest.mocked(onWindowLoad).mock.calls[0][0](), // PVE should import & initialize Aggregator
     jest.mocked(onWindowLoad).mock.calls[1][0]() // and PVT should wait for PVE to do that instead of initializing it again
   ])
-  expect(Aggregator).toHaveBeenCalledTimes(1)
+  expect(EventAggregator).toHaveBeenCalledTimes(1)
 })
 
 test('does initialize separate Aggregators with multiple agents', async () => {
@@ -203,10 +203,10 @@ test('does initialize separate Aggregators with multiple agents', async () => {
   pve.importAggregator(agentBase)
   pve2.importAggregator(agentBase2)
 
-  expect(Aggregator).toHaveBeenCalledTimes(0)
+  expect(EventAggregator).toHaveBeenCalledTimes(0)
   await Promise.all([
     jest.mocked(onWindowLoad).mock.calls[0][0](),
-    jest.mocked(onWindowLoad).mock.calls[1][0]() // second agent PVE reusing same module should also initialize a new Aggregator
+    jest.mocked(onWindowLoad).mock.calls[1][0]() // second agent PVE reusing same module should also initialize a new EventAggregator
   ])
-  expect(Aggregator).toHaveBeenCalledTimes(2)
+  expect(EventAggregator).toHaveBeenCalledTimes(2)
 })

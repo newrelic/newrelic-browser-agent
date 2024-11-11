@@ -97,9 +97,9 @@ export class InstrumentBase extends FeatureBase {
       try {
         // Create a single Aggregator for this agent if DNE yet; to be used by jserror endpoint features.
         if (!agentRef.sharedAggregator) {
-          agentRef.sharedAggregator = import(/* webpackChunkName: "shared-aggregator" */ '../../common/aggregate/aggregator')
-          const { Aggregator } = await agentRef.sharedAggregator
-          agentRef.sharedAggregator = new Aggregator()
+          agentRef.sharedAggregator = import(/* webpackChunkName: "shared-aggregator" */ '../../common/aggregate/event-aggregator')
+          const { EventAggregator } = await agentRef.sharedAggregator
+          agentRef.sharedAggregator = new EventAggregator()
         } else await agentRef.sharedAggregator // if another feature is already importing the aggregator, wait for it to finish
 
         if (!this.#shouldImportAgg(this.featureName, session)) {

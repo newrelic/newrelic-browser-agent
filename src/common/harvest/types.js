@@ -12,7 +12,6 @@
  * @typedef {object} HarvestPayload
  * @property {object} qs Map of values that should be sent as part of the request query string.
  * @property {object} body Map of values that should be sent as the body of the request.
- * @property {string} body.e Special case of body used for browser interactions.
  */
 
 /**

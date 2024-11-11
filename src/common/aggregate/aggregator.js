@@ -2,12 +2,8 @@
  * Copyright 2020 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-
-import { SharedContext } from '../context/shared-context'
-
-export class Aggregator extends SharedContext {
-  constructor (parent) {
-    super(parent)
+export class Aggregator {
+  constructor () {
     this.aggregatedData = {}
   }
 
@@ -16,13 +12,14 @@ export class Aggregator extends SharedContext {
   // metrics are the numeric values to be aggregated
 
   store (type, name, params, newMetrics, customParams) {
-    var bucket = this.getBucket(type, name, params, customParams)
+    var bucket = this.#getBucket(type, name, params, customParams)
     bucket.metrics = aggregateMetrics(newMetrics, bucket.metrics)
     return bucket
   }
 
-  merge (type, name, metrics, params, customParams) {
-    var bucket = this.getBucket(type, name, params, customParams)
+  merge (type, name, metrics, params, customParams, overwriteParams = false) {
+    var bucket = this.#getBucket(type, name, params, customParams)
+    if (overwriteParams) bucket.params = params // replace current params with incoming params obj
 
     if (!bucket.metrics) {
       bucket.metrics = metrics
@@ -50,12 +47,27 @@ export class Aggregator extends SharedContext {
   }
 
   storeMetric (type, name, params, value) {
-    var bucket = this.getBucket(type, name, params)
+    var bucket = this.#getBucket(type, name, params)
     bucket.stats = updateMetric(value, bucket.stats)
     return bucket
   }
 
-  getBucket (type, name, params, customParams) {
+  // Get all listed types buckets and it deletes the retrieved content from the aggregatedData
+  take (types, deleteWhenRetrieved = true) {
+    var results = {}
+    var type = ''
+    var hasData = false
+    for (var i = 0; i < types.length; i++) {
+      type = types[i]
+      results[type] = Object.values(this.aggregatedData[type] || {})
+
+      if (results[type].length) hasData = true
+      if (deleteWhenRetrieved) delete this.aggregatedData[type]
+    }
+    return hasData ? results : null
+  }
+
+  #getBucket (type, name, params, customParams) {
     if (!this.aggregatedData[type]) this.aggregatedData[type] = {}
     var bucket = this.aggregatedData[type][name]
     if (!bucket) {
@@ -65,28 +77,6 @@ export class Aggregator extends SharedContext {
       }
     }
     return bucket
-  }
-
-  get (type, name) {
-    // if name is passed, get a single bucket
-    if (name) return this.aggregatedData[type] && this.aggregatedData[type][name]
-    // else, get all buckets of that type
-    return this.aggregatedData[type]
-  }
-
-  // Like get, but for many types and it deletes the retrieved content from the aggregatedData
-  take (types) {
-    var results = {}
-    var type = ''
-    var hasData = false
-    for (var i = 0; i < types.length; i++) {
-      type = types[i]
-      results[type] = Object.values(this.aggregatedData[type] || {})
-
-      if (results[type].length) hasData = true
-      delete this.aggregatedData[type]
-    }
-    return hasData ? results : null
   }
 }
 

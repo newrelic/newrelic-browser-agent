@@ -12,9 +12,9 @@ import { warn } from '../../../common/util/console'
 import { now } from '../../../common/timing/now'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
-import { EventBuffer } from '../../utils/event-buffer'
 import { applyFnToProps } from '../../../common/util/traverse'
 import { IDEAL_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
+import { FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
 import { UserActionsAggregator } from './user-actions/user-actions-aggregator'
 import { isIFrameWindow } from '../../../common/dom/iframe'
 
@@ -27,7 +27,6 @@ export class Aggregate extends AggregateBase {
     this.harvestTimeSeconds = agentRef.init.generic_events.harvestTimeSeconds
 
     this.referrerUrl = (isBrowserScope && document.referrer) ? cleanURL(document.referrer) : undefined
-    this.events = new EventBuffer()
 
     this.waitForFlags(['ins']).then(([ins]) => {
       if (!ins) {
@@ -35,8 +34,6 @@ export class Aggregate extends AggregateBase {
         this.deregisterDrain()
         return
       }
-
-      const preHarvestMethods = []
 
       if (agentRef.init.page_action.enabled) {
         registerHandler('api-addPageAction', (timestamp, name, attributes) => {
@@ -55,10 +52,11 @@ export class Aggregate extends AggregateBase {
         }, this.featureName, this.ee)
       }
 
+      let addUserAction
       if (isBrowserScope && agentRef.init.user_actions.enabled) {
         this.userActionAggregator = new UserActionsAggregator()
 
-        this.addUserAction = (aggregatedUserAction) => {
+        addUserAction = (aggregatedUserAction) => {
           try {
             /** The aggregator process only returns an event when it is "done" aggregating -
              * so we still need to validate that an event was given to this method before we try to add */
@@ -87,14 +85,8 @@ export class Aggregate extends AggregateBase {
 
         registerHandler('ua', (evt) => {
           /** the processor will return the previously aggregated event if it has been completed by processing the current event */
-          this.addUserAction(this.userActionAggregator.process(evt))
+          addUserAction(this.userActionAggregator.process(evt))
         }, this.featureName, this.ee)
-
-        preHarvestMethods.push((options = {}) => {
-          /** send whatever UserActions have been aggregated up to this point
-           * if we are in a final harvest. By accessing the aggregationEvent, the aggregation is then force-cleared */
-          if (options.isFinalHarvest) this.addUserAction(this.userActionAggregator.aggregationEvent)
-        })
       }
 
       /**
@@ -132,11 +124,11 @@ export class Aggregate extends AggregateBase {
         }
       }
 
-      this.harvestScheduler = new HarvestScheduler('ins', { onFinished: (...args) => this.onHarvestFinished(...args) }, this)
-      this.harvestScheduler.harvest.on('ins', (...args) => {
-        preHarvestMethods.forEach(fn => fn(...args))
-        return this.onHarvestStarted(...args)
-      })
+      this.harvestScheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
+        onFinished: (result) => this.postHarvestCleanup(result.sent && result.retry),
+        onUnload: () => addUserAction?.(this.userActionAggregator.aggregationEvent)
+      }, this)
+      this.harvestScheduler.harvest.on(FEATURE_TO_ENDPOINT[this.featureName], (options) => this.makeHarvestPayload(options.retry))
       this.harvestScheduler.startTimer(this.harvestTimeSeconds, 0)
 
       this.drain()
@@ -190,34 +182,17 @@ export class Aggregate extends AggregateBase {
     this.checkEventLimits()
   }
 
-  onHarvestStarted (options) {
-    const { userAttributes, atts } = this.agentRef.info
-    if (!this.events.hasData) return
-    var payload = ({
-      qs: {
-        ua: userAttributes,
-        at: atts
-      },
-      body: applyFnToProps(
-        { ins: this.events.buffer },
-        this.obfuscator.obfuscateString.bind(this.obfuscator), 'string'
-      )
-    })
-
-    if (options.retry) this.events.hold()
-    else this.events.clear()
-
-    return payload
+  serializer (eventBuffer) {
+    return applyFnToProps({ ins: eventBuffer }, this.obfuscator.obfuscateString.bind(this.obfuscator), 'string')
   }
 
-  onHarvestFinished (result) {
-    if (result && result?.sent && result?.retry && this.events.held.hasData) this.events.unhold()
-    else this.events.held.clear()
+  queryStringsBuilder () {
+    return { ua: this.agentRef.info.userAttributes, at: this.agentRef.info.atts }
   }
 
   checkEventLimits () {
     // check if we've reached any harvest limits...
-    if (this.events.bytes > IDEAL_PAYLOAD_SIZE) {
+    if (this.events.byteSize() > IDEAL_PAYLOAD_SIZE) {
       this.ee.emit(SUPPORTABILITY_METRIC_CHANNEL, ['GenericEvents/Harvest/Max/Seen'])
       this.harvestScheduler.runHarvest()
     }

@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.273.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.272.0...v1.273.0) (2024-11-11)
+
+
+### Features
+
+* Refactor feature storages ([#1241](https://github.com/newrelic/newrelic-browser-agent/issues/1241)) ([f77380b](https://github.com/newrelic/newrelic-browser-agent/commit/f77380b01e9b57db0b5c782d6d512431229bcd79))
+* Remove wrap-events usage from soft nav ([#1244](https://github.com/newrelic/newrelic-browser-agent/issues/1244)) ([911d8d1](https://github.com/newrelic/newrelic-browser-agent/commit/911d8d1d78b49fa4252257596e013806885ace9b))
+
 ## [1.272.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.271.0...v1.272.0) (2024-11-07)
 
 

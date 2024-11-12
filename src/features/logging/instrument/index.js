@@ -10,12 +10,12 @@ export class Instrument extends InstrumentBase {
     super(agentRef, FEATURE_NAME, auto)
 
     const instanceEE = this.ee
-    wrapLogger(instanceEE, globalScope.console, 'log', { customAttributes: { wrappedFn: 'console.log' }, level: 'info' })
-    wrapLogger(instanceEE, globalScope.console, 'error', { customAttributes: { wrappedFn: 'console.error' }, level: 'error' })
-    wrapLogger(instanceEE, globalScope.console, 'warn', { customAttributes: { wrappedFn: 'console.warn' }, level: 'warn' })
-    wrapLogger(instanceEE, globalScope.console, 'info', { customAttributes: { wrappedFn: 'console.info' }, level: 'info' })
-    wrapLogger(instanceEE, globalScope.console, 'debug', { customAttributes: { wrappedFn: 'console.debug' }, level: 'debug' })
-    wrapLogger(instanceEE, globalScope.console, 'trace', { customAttributes: { wrappedFn: 'console.trace' }, level: 'trace' })
+    wrapLogger(instanceEE, globalScope.console, 'log', { level: 'info' })
+    wrapLogger(instanceEE, globalScope.console, 'error', { level: 'error' })
+    wrapLogger(instanceEE, globalScope.console, 'warn', { level: 'warn' })
+    wrapLogger(instanceEE, globalScope.console, 'info', { level: 'info' })
+    wrapLogger(instanceEE, globalScope.console, 'debug', { level: 'debug' })
+    wrapLogger(instanceEE, globalScope.console, 'trace', { level: 'trace' })
     /** emitted by wrap-logger function */
     this.ee.on('wrap-logger-end', function handleLog ([message]) {
       const { level, customAttributes } = this

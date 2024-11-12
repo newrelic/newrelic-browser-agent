@@ -1,9 +1,8 @@
 import { JSONPath } from 'jsonpath-plus'
 import { checkAjaxEvents, checkSpa } from '../../util/basic-checks'
-import { supportsFetch } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { testAjaxEventsRequest, testInteractionEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
-describe.withBrowsersMatching(supportsFetch)('Fetch SPA Interaction Tracking', () => {
+describe('Fetch SPA Interaction Tracking', () => {
   let interactionsCapture, ajaxEventsCapture
 
   beforeEach(async () => {

@@ -1,7 +1,7 @@
 import { checkRumBody, checkRumPerf, checkRumQuery } from '../../util/basic-checks'
 import { testAssetRequest, testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
 import { detailedCheckRum } from '../../util/detailed-checks'
-import { supportsFirstContentfulPaint, supportsFirstPaint } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { supportsFirstPaint } from '../../../tools/browser-matcher/common-matchers.mjs'
 
 const loader_config = {
   applicationTime: 382,
@@ -66,7 +66,7 @@ describe('basic pve capturing', () => {
   })
 
   /** equivalent to former paint-timing.test.js */
-  it.withBrowsersMatching([supportsFirstPaint, supportsFirstContentfulPaint])('reports paint timings', async () => {
+  it.withBrowsersMatching(supportsFirstPaint)('reports paint timings', async () => {
     const [[rumHarvest]] = await Promise.all([
       rumCapture.waitForResult({ totalCount: 1 }),
       browser.url(await browser.testHandle.assetURL('instrumented.html', { config: { account: loader_config.account } }))

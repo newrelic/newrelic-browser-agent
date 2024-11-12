@@ -1,4 +1,4 @@
-import { supportsFirstPaint, supportsFirstContentfulPaint } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { supportsFirstPaint } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { JSONPath } from 'jsonpath-plus'
 import { testInteractionEventsRequest, testErrorsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
@@ -230,8 +230,7 @@ describe('attribution tests', () => {
       expect(ipl.navTiming).toEqual(expect.any(Object))
       if (browserMatch(supportsFirstPaint)) expect(ipl.firstPaint).toBeGreaterThan(0)
       else expect(ipl.firstPaint).toBeNull()
-      if (browserMatch(supportsFirstContentfulPaint)) expect(ipl.firstContentfulPaint).toBeGreaterThan(0)
-      else expect(ipl.firstContentfulPaint).toBeNull()
+      expect(ipl.firstContentfulPaint).toBeGreaterThan(0)
 
       expect(rc.category).toEqual('Route change')
       expect(rc.navTiming).toBeNull()

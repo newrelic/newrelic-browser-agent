@@ -1,6 +1,5 @@
 import { faker } from '@faker-js/faker'
 import { srConfig, decodeAttributes } from './util/helpers'
-import { supportsFetch } from '../../tools/browser-matcher/common-matchers.mjs'
 import { testAjaxEventsRequest, testBlobReplayRequest, testBlobTraceRequest, testErrorsRequest, testInsRequest, testInteractionEventsRequest, testLogsRequest, testRumRequest, testTimingEventsRequest } from '../../tools/testing-server/utils/expect-tests'
 
 let serverTime
@@ -204,10 +203,8 @@ describe('NR Server Time', () => {
     const ajaxEvent = interactionsHarvest.request.body[0].children.find(r => r.path === '/json' && r.requestedWith === 'XMLHttpRequest')
     testTimeExpectations(ajaxEvent.timestamp, timeKeeper, true)
 
-    if (browserMatch(supportsFetch)) {
-      const fetchEvent = interactionsHarvest.request.body[0].children.find(r => r.path === '/json' && r.requestedWith === 'fetch')
-      testTimeExpectations(fetchEvent.timestamp, timeKeeper, true)
-    }
+    const fetchEvent = interactionsHarvest.request.body[0].children.find(r => r.path === '/json' && r.requestedWith === 'fetch')
+    testTimeExpectations(fetchEvent.timestamp, timeKeeper, true)
   })
 
   it('should send xhr with distributed tracing timestamp after rum date header', async () => {
@@ -249,10 +246,8 @@ describe('NR Server Time', () => {
     const ajaxEvent = ajaxEventsHarvest.request.body.find(r => r.path === '/json' && r.requestedWith === 'XMLHttpRequest')
     testTimeExpectations(ajaxEvent.timestamp, timeKeeper, false)
 
-    if (browserMatch(supportsFetch)) {
-      const fetchEvent = ajaxEventsHarvest.request.body.find(r => r.path === '/json' && r.requestedWith === 'fetch')
-      testTimeExpectations(fetchEvent.timestamp, timeKeeper, false)
-    }
+    const fetchEvent = ajaxEventsHarvest.request.body.find(r => r.path === '/json' && r.requestedWith === 'fetch')
+    testTimeExpectations(fetchEvent.timestamp, timeKeeper, false)
   })
 
   it('should send all payloads with floored absolute timestamps', async () => {

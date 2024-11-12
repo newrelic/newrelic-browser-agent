@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2024 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>Logs - Console Logs - Payload Too Large</title>
+    {init} {config} {loader}
+  </head>
+  <body>Logs - Console Logs - Payload Too Large
+    <script>
+      console.log('x'.repeat(1024*1024)) // too big
+      console.log('log')
+      console.info('info')
+      console.debug('debug')
+      console.trace('trace')
+      console.error('error')
+      console.warn('warn')
+
+      // harvest should not have the '...xxxxx...' payload in it
+    </script>
+  </body>
+</html>

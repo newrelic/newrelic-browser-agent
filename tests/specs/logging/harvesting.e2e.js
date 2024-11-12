@@ -10,10 +10,6 @@ describe('logging harvesting', () => {
   describe('logging harvests', () => {
     const pageUrl = expect.any(String)
     const customAttributes = { test: 1 }
-    const attributes = { ...customAttributes, pageUrl }
-    const expectedLogs = ['INFO', 'DEBUG', 'TRACE', 'ERROR', 'WARN'].map(level => ({
-      level, message: level.toLowerCase(), timestamp: expect.any(Number), attributes
-    }))
     const commonAttributes = {
       common: {
         attributes: {
@@ -31,17 +27,40 @@ describe('logging harvesting', () => {
         }
       }
     }
-    const expectedPayload = [{
-      ...commonAttributes,
-      logs: expectedLogs
-    }]
+    const expectedLogs = (type) => {
+      if (type === 'api' || type === 'api-wrap-logger') {
+        return ['INFO', 'DEBUG', 'TRACE', 'ERROR', 'WARN'].map(level => ({
+          level,
+          message: level.toLowerCase(),
+          timestamp: expect.any(Number),
+          attributes: {
+            pageUrl,
+            ...customAttributes
+          }
+        }))
+      } else if (type === 'console-logger') {
+        return ['LOG', 'INFO', 'DEBUG', 'TRACE', 'ERROR', 'WARN'].map(level => ({
+          level: level === 'LOG' ? 'INFO' : level,
+          message: level.toLowerCase(),
+          timestamp: expect.any(Number),
+          attributes: {
+            pageUrl,
+            wrappedFn: `console.${level.toLowerCase()}`
+          }
+        }))
+      }
+    }
 
-    ;['api', 'api-wrap-logger'].forEach(type => {
+    ;['api', 'api-wrap-logger', 'console-logger'].forEach(type => {
       it(`should harvest expected logs - ${type} pre load`, async () => {
         const [[{ request: { body } }]] = await Promise.all([
           logsCapture.waitForResult({ totalCount: 1 }),
           browser.url(await browser.testHandle.assetURL(`logs-${type}-pre-load.html`))
         ])
+        const expectedPayload = [{
+          ...commonAttributes,
+          logs: expectedLogs(type)
+        }]
 
         expect(JSON.parse(body)).toEqual(expectedPayload)
       })
@@ -51,6 +70,10 @@ describe('logging harvesting', () => {
           logsCapture.waitForResult({ totalCount: 1 }),
           browser.url(await browser.testHandle.assetURL(`logs-${type}-post-load.html`))
         ])
+        const expectedPayload = [{
+          ...commonAttributes,
+          logs: expectedLogs(type)
+        }]
 
         expect(JSON.parse(body)).toEqual(expectedPayload)
       })
@@ -71,7 +94,7 @@ describe('logging harvesting', () => {
           browser.url(await browser.testHandle.assetURL(`logs-${type}-too-large.html`))
         ])
 
-        const logs = [...expectedLogs, {
+        const logs = [...expectedLogs(type), {
           level: 'DEBUG',
           message: 'New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#31',
           timestamp: expect.any(Number),

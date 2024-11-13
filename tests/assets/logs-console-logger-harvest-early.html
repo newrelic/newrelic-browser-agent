@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2024 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>Logs - Console Logs - Harvest Early</title>
+    {init} {config} {loader}
+  </head>
+  <body>Logs - Console Logs - Harvest Early
+    <script>
+      const longMessage = 'x'.repeat(800*800)
+      /** the combination of the two large messages pushes it past the MAX_PAYLOAD_SIZE,
+       * causing the first valid one to get harvested before buffering the second one **/
+      console.info(longMessage)
+      console.info(longMessage)
+      // harvest should not have the '...xxxxx...' payload in it
+    </script>
+  </body>
+</html>

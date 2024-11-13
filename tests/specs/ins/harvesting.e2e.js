@@ -51,7 +51,6 @@ describe('ins harvesting', () => {
     ])
 
     const userActionsHarvest = insHarvests.flatMap(harvest => harvest.request.body.ins) // firefox sends a window focus event on load, so we may end up with 2 harvests
-    console.log(userActionsHarvest)
     const clickUAs = userActionsHarvest.filter(ua => ua.action === 'click')
     expect(clickUAs.length).toBeGreaterThanOrEqual(2)
     expect(clickUAs[0]).toMatchObject({

@@ -4,11 +4,7 @@ import { warn } from '../common/util/console'
 import { SR_EVENT_EMITTER_TYPES } from '../features/session_replay/constants'
 import { generateRandomHexString } from '../common/ids/unique-id'
 
-/**
- * @typedef {import('./api/interaction-types').InteractionInstance} InteractionInstance
- */
-
-export class AgentBase {
+export class MicroAgentBase {
   agentIdentifier
 
   constructor (agentIdentifier = generateRandomHexString(16)) {
@@ -24,6 +20,8 @@ export class AgentBase {
     if (typeof this.api?.[methodName] !== 'function') warn(35, methodName)
     else return this.api[methodName](...args)
   }
+
+  // MicroAgent class custom defines its own start
 
   /**
    * Reports a browser PageAction event along with a name and optional attributes.
@@ -97,15 +95,6 @@ export class AgentBase {
   }
 
   /**
-   * Records an additional time point as "finished" in a session trace and adds a page action.
-   * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/finished/}
-   * @param {number} [timeStamp] Defaults to the current time of the call. If used, this marks the time that the page is "finished" according to your own criteria.
-   */
-  finished (timeStamp) {
-    return this.#callMethod('finished', timeStamp)
-  }
-
-  /**
    * Adds a unique name and ID to identify releases with multiple JavaScript bundles on the same page.
    * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/addrelease/}
    * @param {string} name A short description of the component; for example, the name of a project, application, file, or library.
@@ -116,12 +105,46 @@ export class AgentBase {
   }
 
   /**
-   * Starts a set of agent features if not running in "autoStart" mode
-   * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/start/}
-   * @param {string|string[]} [featureNames] The name(s) of the features to start.  If no name(s) are passed, all features will be started
+   * Capture a single log.
+   * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/log/}
+   * @param {string} message String to be captured as log message
+   * @param {{customAttributes?: object, level?: 'ERROR'|'TRACE'|'DEBUG'|'INFO'|'WARN'}} [options] customAttributes defaults to `{}` if not assigned, level defaults to `info` if not assigned.
+  */
+  log (message, options) {
+    return this.#callMethod('log', message, options)
+  }
+}
+
+/**
+ * @typedef {import('./api/interaction-types').InteractionInstance} InteractionInstance
+ */
+
+export class AgentBase extends MicroAgentBase {
+  /**
+   * Tries to execute the api and generates a generic warning message with the api name injected if unsuccessful
+   * @param {string} methodName
+   * @param  {...any} args
    */
-  start (featureNames) {
-    return this.#callMethod('start', featureNames)
+  #callMethod (methodName, ...args) {
+    if (typeof this.api?.[methodName] !== 'function') warn(35, methodName)
+    else return this.api[methodName](...args)
+  }
+
+  /**
+   * Starts any and all features that are not running yet in "autoStart" mode
+   * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/start/}
+   */
+  start () {
+    return this.#callMethod('start')
+  }
+
+  /**
+   * Records an additional time point as "finished" in a session trace and adds a page action.
+   * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/finished/}
+   * @param {number} [timeStamp] Defaults to the current time of the call. If used, this marks the time that the page is "finished" according to your own criteria.
+   */
+  finished (timeStamp) {
+    return this.#callMethod('finished', timeStamp)
   }
 
   /**
@@ -177,16 +200,6 @@ export class AgentBase {
   */
   interaction () {
     return this.#callMethod('interaction')
-  }
-
-  /**
-   * Capture a single log.
-   * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/log/}
-   * @param {string} message String to be captured as log message
-   * @param {{customAttributes?: object, level?: 'ERROR'|'TRACE'|'DEBUG'|'INFO'|'WARN'}} [options] customAttributes defaults to `{}` if not assigned, level defaults to `info` if not assigned.
-  */
-  log (message, options) {
-    return this.#callMethod('log', message, options)
   }
 
   /**

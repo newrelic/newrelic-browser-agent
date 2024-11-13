@@ -1,6 +1,6 @@
 import { getRuntime } from '../../../src/common/config/runtime'
 import { initialLocation } from '../../../src/common/constants/runtime'
-import { LOGGING_EVENT_EMITTER_CHANNEL, LOGGING_MODE } from '../../../src/features/logging/constants'
+import { LOG_LEVELS, LOGGING_EVENT_EMITTER_CHANNEL, LOGGING_MODE } from '../../../src/features/logging/constants'
 import { Instrument as Logging } from '../../../src/features/logging/instrument'
 import { Log } from '../../../src/features/logging/shared/log'
 import * as consoleModule from '../../../src/common/util/console'
@@ -224,23 +224,17 @@ describe('payloads', () => {
   })
 })
 
-describe('payloads - log events are emitted (or not) according to flag from rum response', () => {
+test.each(Object.keys(LOGGING_MODE))('payloads - log events are emitted (or not) according to flag from rum response - %s', async (logLevel) => {
   const SOME_TIMESTAMP = 1234
-  test('should short circuit if logging mode is OFF', async () => {
-    await mockLoggingRumResponse(LOGGING_MODE.OFF)
-    loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [SOME_TIMESTAMP, 'some error', { myAttributes: 1 }, 'ERROR'])
-    expect(loggingAggregate.events.isEmpty()).toBe(true)
-  })
+  await mockLoggingRumResponse(LOGGING_MODE[logLevel])
+  loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [SOME_TIMESTAMP, LOG_LEVELS.ERROR, { myAttributes: 1 }, LOG_LEVELS.ERROR])
+  loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [SOME_TIMESTAMP, LOG_LEVELS.WARN, { myAttributes: 1 }, LOG_LEVELS.WARN])
+  loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [SOME_TIMESTAMP, LOG_LEVELS.INFO, { myAttributes: 1 }, LOG_LEVELS.INFO])
+  loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [SOME_TIMESTAMP, LOG_LEVELS.DEBUG, { myAttributes: 1 }, LOG_LEVELS.DEBUG])
+  loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [SOME_TIMESTAMP, LOG_LEVELS.TRACE, { myAttributes: 1 }, LOG_LEVELS.TRACE])
 
-  const logLevels = Object.keys(LOGGING_MODE).filter(mode => mode !== 'OFF')
-  test.each(logLevels)('should emit event if logging mode matches message log level - %s', async (logLevel) => {
-    await mockLoggingRumResponse(LOGGING_MODE[logLevel])
-    loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [SOME_TIMESTAMP, logLevel, { myAttributes: 1 }, logLevel])
-
-    expect(loggingAggregate.events.isEmpty()).toBe(false)
-    expect(loggingAggregate.events.get()[0]?.message).toEqual(logLevel)
-    loggingAggregate.events.clear()
-  })
+  expect(loggingAggregate.events.get().length).toEqual(LOGGING_MODE[logLevel])
+  loggingAggregate.events.clear()
 })
 
 test('can harvest early', async () => {

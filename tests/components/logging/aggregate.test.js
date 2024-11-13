@@ -38,7 +38,6 @@ const mockLoggingRumResponse = async (mode) => {
   loggingAggregate.ee.emit('rumresp', [{
     log: mode
   }])
-  await new Promise(process.nextTick)
   return await new Promise(process.nextTick)
 }
 
@@ -56,25 +55,21 @@ describe('class setup', () => {
 
   test('should wait for flags - undefined', async () => {
     expect(loggingAggregate.drained).toBeUndefined()
-    loggingAggregate.ee.emit('rumresp', [{}])
+    loggingAggregate.ee.emit('rumresp', [{}]) // log flag is missing
     await new Promise(process.nextTick)
     expect(loggingAggregate.blocked).toEqual(true)
   })
 
   test('should wait for flags - 0 = OFF', async () => {
     expect(loggingAggregate.drained).toBeUndefined()
-    loggingAggregate.ee.emit('rumresp', [{ log: LOGGING_MODE.OFF }])
-
-    await new Promise(process.nextTick)
+    await mockLoggingRumResponse(LOGGING_MODE.OFF)
 
     expect(loggingAggregate.blocked).toEqual(true)
   })
 
   test('should wait for flags - 1 = ERROR', async () => {
     expect(loggingAggregate.drained).toBeUndefined()
-    loggingAggregate.ee.emit('rumresp', [{ log: LOGGING_MODE.ERROR }])
-
-    await new Promise(process.nextTick)
+    await mockLoggingRumResponse(LOGGING_MODE.ERROR)
 
     expect(loggingAggregate.drained).toEqual(true)
   })
@@ -232,7 +227,7 @@ describe('payloads', () => {
 describe('payloads - log events are emitted (or not) according to flag from rum response', () => {
   const SOME_TIMESTAMP = 1234
   test('should short circuit if logging mode is OFF', async () => {
-    mockLoggingRumResponse(LOGGING_MODE.OFF)
+    await mockLoggingRumResponse(LOGGING_MODE.OFF)
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [SOME_TIMESTAMP, 'some error', { myAttributes: 1 }, 'ERROR'])
     expect(loggingAggregate.events.isEmpty()).toBe(true)
   })
@@ -289,8 +284,7 @@ describe('payloads - log events are emitted (or not) according to flag from rum 
 })
 
 test('can harvest early', async () => {
-  mockLoggingRumResponse(LOGGING_MODE.INFO)
-  await new Promise(process.nextTick)
+  await mockLoggingRumResponse(LOGGING_MODE.INFO)
 
   jest.spyOn(loggingAggregate.scheduler, 'runHarvest')
 

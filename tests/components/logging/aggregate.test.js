@@ -232,48 +232,8 @@ describe('payloads - log events are emitted (or not) according to flag from rum 
     expect(loggingAggregate.events.isEmpty()).toBe(true)
   })
 
-  test('should emit event if logging mode matches message log level - ERROR', async () => {
-    const logLevel = 'ERROR'
-    await mockLoggingRumResponse(LOGGING_MODE[logLevel])
-    loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [SOME_TIMESTAMP, logLevel, { myAttributes: 1 }, logLevel])
-
-    expect(loggingAggregate.events.isEmpty()).toBe(false)
-    expect(loggingAggregate.events.get()[0]?.message).toEqual(logLevel)
-    loggingAggregate.events.clear()
-  })
-
-  test('should emit event if logging mode matches message log level - WARN', async () => {
-    const logLevel = 'WARN'
-    await mockLoggingRumResponse(LOGGING_MODE[logLevel])
-    loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [SOME_TIMESTAMP, logLevel, { myAttributes: 1 }, logLevel])
-
-    expect(loggingAggregate.events.isEmpty()).toBe(false)
-    expect(loggingAggregate.events.get()[0]?.message).toEqual(logLevel)
-    loggingAggregate.events.clear()
-  })
-
-  test('should emit event if logging mode matches message log level - INFO', async () => {
-    const logLevel = 'INFO'
-    await mockLoggingRumResponse(LOGGING_MODE[logLevel])
-    loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [SOME_TIMESTAMP, logLevel, { myAttributes: 1 }, logLevel])
-
-    expect(loggingAggregate.events.isEmpty()).toBe(false)
-    expect(loggingAggregate.events.get()[0]?.message).toEqual(logLevel)
-    loggingAggregate.events.clear()
-  })
-
-  test('should emit event if logging mode matches message log level - DEBUG', async () => {
-    const logLevel = 'DEBUG'
-    await mockLoggingRumResponse(LOGGING_MODE[logLevel])
-    loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [SOME_TIMESTAMP, logLevel, { myAttributes: 1 }, logLevel])
-
-    expect(loggingAggregate.events.isEmpty()).toBe(false)
-    expect(loggingAggregate.events.get()[0]?.message).toEqual(logLevel)
-    loggingAggregate.events.clear()
-  })
-
-  test('should emit event if logging mode matches message log level - TRACE', async () => {
-    const logLevel = 'TRACE'
+  const logLevels = Object.keys(LOGGING_MODE).filter(mode => mode !== 'OFF')
+  test.each(logLevels)('should emit event if logging mode matches message log level - %s', async (logLevel) => {
     await mockLoggingRumResponse(LOGGING_MODE[logLevel])
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [SOME_TIMESTAMP, logLevel, { myAttributes: 1 }, logLevel])
 

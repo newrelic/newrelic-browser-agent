@@ -1,6 +1,6 @@
 import { getRuntime } from '../../../src/common/config/runtime'
 import { initialLocation } from '../../../src/common/constants/runtime'
-import { LOGGING_EVENT_EMITTER_CHANNEL } from '../../../src/features/logging/constants'
+import { LOGGING_EVENT_EMITTER_CHANNEL, LOGGING_MODE } from '../../../src/features/logging/constants'
 import { Instrument as Logging } from '../../../src/features/logging/instrument'
 import { Log } from '../../../src/features/logging/shared/log'
 import * as consoleModule from '../../../src/common/util/console'
@@ -34,6 +34,14 @@ afterEach(() => {
   jest.clearAllMocks()
 })
 
+const mockLoggingRumResponse = async (mode) => {
+  loggingAggregate.ee.emit('rumresp', [{
+    log: mode
+  }])
+  await new Promise(process.nextTick)
+  return await new Promise(process.nextTick)
+}
+
 describe('class setup', () => {
   test('should have expected public properties', () => {
     expect(Object.keys(loggingAggregate)).toEqual(expect.arrayContaining([
@@ -46,18 +54,35 @@ describe('class setup', () => {
     ]))
   })
 
-  test('should wait for flags', async () => {
+  test('should wait for flags - undefined', async () => {
     expect(loggingAggregate.drained).toBeUndefined()
-    loggingAggregate.ee.emit('rumresp', {})
+    loggingAggregate.ee.emit('rumresp', [{}])
     await new Promise(process.nextTick)
+    expect(loggingAggregate.blocked).toEqual(true)
+  })
+
+  test('should wait for flags - 0 = OFF', async () => {
+    expect(loggingAggregate.drained).toBeUndefined()
+    loggingAggregate.ee.emit('rumresp', [{ log: LOGGING_MODE.OFF }])
+
+    await new Promise(process.nextTick)
+
+    expect(loggingAggregate.blocked).toEqual(true)
+  })
+
+  test('should wait for flags - 1 = ERROR', async () => {
+    expect(loggingAggregate.drained).toBeUndefined()
+    loggingAggregate.ee.emit('rumresp', [{ log: LOGGING_MODE.ERROR }])
+
+    await new Promise(process.nextTick)
+
     expect(loggingAggregate.drained).toEqual(true)
   })
 })
 
 describe('payloads', () => {
-  beforeEach(async () => {
-    loggingAggregate.ee.emit('rumresp', {})
-    await new Promise(process.nextTick)
+  beforeEach(() => {
+    mockLoggingRumResponse(LOGGING_MODE.INFO)
   })
 
   test('fills buffered logs with event emitter messages and prepares matching payload', async () => {
@@ -204,8 +229,67 @@ describe('payloads', () => {
   })
 })
 
+describe('payloads - log events are emitted (or not) according to flag from rum response', () => {
+  const SOME_TIMESTAMP = 1234
+  test('should short circuit if logging mode is OFF', async () => {
+    mockLoggingRumResponse(LOGGING_MODE.OFF)
+    loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [SOME_TIMESTAMP, 'some error', { myAttributes: 1 }, 'ERROR'])
+    expect(loggingAggregate.events.isEmpty()).toBe(true)
+  })
+
+  test('should emit event if logging mode matches message log level - ERROR', async () => {
+    const logLevel = 'ERROR'
+    await mockLoggingRumResponse(LOGGING_MODE[logLevel])
+    loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [SOME_TIMESTAMP, logLevel, { myAttributes: 1 }, logLevel])
+
+    expect(loggingAggregate.events.isEmpty()).toBe(false)
+    expect(loggingAggregate.events.get()[0]?.message).toEqual(logLevel)
+    loggingAggregate.events.clear()
+  })
+
+  test('should emit event if logging mode matches message log level - WARN', async () => {
+    const logLevel = 'WARN'
+    await mockLoggingRumResponse(LOGGING_MODE[logLevel])
+    loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [SOME_TIMESTAMP, logLevel, { myAttributes: 1 }, logLevel])
+
+    expect(loggingAggregate.events.isEmpty()).toBe(false)
+    expect(loggingAggregate.events.get()[0]?.message).toEqual(logLevel)
+    loggingAggregate.events.clear()
+  })
+
+  test('should emit event if logging mode matches message log level - INFO', async () => {
+    const logLevel = 'INFO'
+    await mockLoggingRumResponse(LOGGING_MODE[logLevel])
+    loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [SOME_TIMESTAMP, logLevel, { myAttributes: 1 }, logLevel])
+
+    expect(loggingAggregate.events.isEmpty()).toBe(false)
+    expect(loggingAggregate.events.get()[0]?.message).toEqual(logLevel)
+    loggingAggregate.events.clear()
+  })
+
+  test('should emit event if logging mode matches message log level - DEBUG', async () => {
+    const logLevel = 'DEBUG'
+    await mockLoggingRumResponse(LOGGING_MODE[logLevel])
+    loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [SOME_TIMESTAMP, logLevel, { myAttributes: 1 }, logLevel])
+
+    expect(loggingAggregate.events.isEmpty()).toBe(false)
+    expect(loggingAggregate.events.get()[0]?.message).toEqual(logLevel)
+    loggingAggregate.events.clear()
+  })
+
+  test('should emit event if logging mode matches message log level - TRACE', async () => {
+    const logLevel = 'TRACE'
+    await mockLoggingRumResponse(LOGGING_MODE[logLevel])
+    loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [SOME_TIMESTAMP, logLevel, { myAttributes: 1 }, logLevel])
+
+    expect(loggingAggregate.events.isEmpty()).toBe(false)
+    expect(loggingAggregate.events.get()[0]?.message).toEqual(logLevel)
+    loggingAggregate.events.clear()
+  })
+})
+
 test('can harvest early', async () => {
-  loggingAggregate.ee.emit('rumresp', {})
+  mockLoggingRumResponse(LOGGING_MODE.INFO)
   await new Promise(process.nextTick)
 
   jest.spyOn(loggingAggregate.scheduler, 'runHarvest')

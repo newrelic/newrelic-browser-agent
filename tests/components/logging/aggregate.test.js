@@ -53,9 +53,9 @@ describe('class setup', () => {
     ]))
   })
 
-  test('should wait for flags - undefined', async () => {
+  test('should wait for flags - log flag is missing', async () => {
     expect(loggingAggregate.drained).toBeUndefined()
-    loggingAggregate.ee.emit('rumresp', [{}]) // log flag is missing
+    loggingAggregate.ee.emit('rumresp', [{}])
     await new Promise(process.nextTick)
     expect(loggingAggregate.blocked).toEqual(true)
   })

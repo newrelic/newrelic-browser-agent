@@ -66,6 +66,9 @@ export class Interaction extends BelNode {
   done (customEndTime) {
     // User could've mark this interaction--regardless UI or api started--as "don't close until .end() is called on it". Only .end provides a timestamp; the default flows do not.
     if (this.keepOpenUntilEndApi && customEndTime === undefined) return false
+    // If interaction is already closed, this is a no-op. However, returning true lets startUIInteraction know that it CAN start a new interaction, as this one is done.
+    if (this.status !== INTERACTION_STATUS.IP) return true
+
     this.onDone.forEach(apiProvidedCb => apiProvidedCb(this.customDataByApi)) // this interaction's .save or .ignore can still be set by these user provided callbacks for example
 
     if (this.forceIgnore) this.#cancel() // .ignore() always has precedence over save actions
@@ -76,7 +79,6 @@ export class Interaction extends BelNode {
   }
 
   #finish (customEndTime = 0) {
-    if (this.status !== INTERACTION_STATUS.IP) return // disallow this call if the ixn is already done aka not in-progress
     clearTimeout(this.cancellationTimer)
     this.end = Math.max(this.domTimestamp, this.historyTimestamp, customEndTime)
     this.customAttributes = { ...getInfo(this.agentIdentifier).jsAttributes, ...this.customAttributes } // attrs specific to this interaction should have precedence over the general custom attrs
@@ -88,7 +90,6 @@ export class Interaction extends BelNode {
   }
 
   #cancel () {
-    if (this.status !== INTERACTION_STATUS.IP) return // disallow this call if the ixn is already done aka not in-progress
     clearTimeout(this.cancellationTimer)
     this.status = INTERACTION_STATUS.CAN
 

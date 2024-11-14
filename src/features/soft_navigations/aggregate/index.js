@@ -79,7 +79,7 @@ export class Aggregate extends AggregateBase {
 
   startUIInteraction (eventName, startedAt, sourceElem) { // this is throttled by instrumentation so that it isn't excessively called
     if (this.interactionInProgress?.createdByApi) return // api-started interactions cannot be disrupted aka cancelled by UI events (and the vice versa applies as well)
-    if (this.interactionInProgress?.done() === false) return
+    if (this.interactionInProgress?.done() === false) return // current in-progress is blocked from closing, e.g. by 'waitForEnd' api option
 
     this.interactionInProgress = new Interaction(this.agentIdentifier, eventName, startedAt, this.latestRouteSetByApi)
     if (eventName === 'click') {

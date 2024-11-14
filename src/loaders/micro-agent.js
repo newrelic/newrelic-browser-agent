@@ -6,7 +6,7 @@ import { configure } from './configure/configure'
 import { setNREUMInitializedAgent } from '../common/window/nreum'
 import { FEATURE_NAMES } from './features/features'
 import { warn } from '../common/util/console'
-import { MicroAgentBase } from './agent-base'
+import { MicroAgentBase } from './micro-agent-base'
 
 const nonAutoFeatures = [
   FEATURE_NAMES.jserrors,

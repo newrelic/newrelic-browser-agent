@@ -1,8 +1,7 @@
-import { supportsBFCache } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { testTimingEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 describe('Back/forward cache', () => {
-  it.withBrowsersMatching(supportsBFCache)('is not blocked by agent code', async () => {
+  it('is not blocked by agent code', async () => {
     const networkCapture = await browser.testHandle.createNetworkCaptures('assetServer', {
       test: function (request) {
         const url = new URL(request.url, 'resolve://')

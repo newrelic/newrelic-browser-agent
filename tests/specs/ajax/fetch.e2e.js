@@ -1,8 +1,8 @@
-import { onlyFirefox, supportsFetch } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { onlyFirefox } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { checkAjaxEvents, checkAjaxMetrics } from '../../util/basic-checks'
 import { testAjaxEventsRequest, testAjaxTimeSlicesRequest } from '../../../tools/testing-server/utils/expect-tests'
 
-describe.withBrowsersMatching(supportsFetch)('Fetch Ajax', () => {
+describe('Fetch Ajax', () => {
   let ajaxEventsCapture
   let ajaxMetricsCapture
 

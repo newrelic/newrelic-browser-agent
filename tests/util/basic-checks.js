@@ -1,5 +1,5 @@
 /* eslint-disable */
-import {onlyAndroid, supportsFirstPaint, supportsFirstContentfulPaint} from "../../tools/browser-matcher/common-matchers.mjs";
+import {onlyAndroid, supportsFirstPaint} from "../../tools/browser-matcher/common-matchers.mjs";
 
 export const baseQuery = expect.objectContaining({
   a: expect.any(String),
@@ -302,7 +302,7 @@ export function checkSpa ({ query, body }, { trigger } = {}) {
   if (!browserMatch(onlyAndroid)) {
     expect(interaction).toEqual(expect.objectContaining({
       firstPaint: browserMatch(supportsFirstPaint) && (!trigger || trigger === 'initialPageLoad') ? expect.any(Number) : null,
-      firstContentfulPaint: browserMatch(supportsFirstContentfulPaint) && (!trigger || trigger === 'initialPageLoad') ? expect.any(Number) : null
+      firstContentfulPaint: (!trigger || trigger === 'initialPageLoad') ? expect.any(Number) : null
     }))
   }
 }

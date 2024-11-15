@@ -1,4 +1,4 @@
-import { supportsCumulativeLayoutShift, supportsFirstContentfulPaint, supportsFirstInputDelay, supportsFirstPaint, supportsInteractionToNextPaint, supportsLargestContentfulPaint } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { supportsCumulativeLayoutShift, supportsFirstInputDelay, supportsFirstPaint, supportsInteractionToNextPaint, supportsLargestContentfulPaint } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { testTimingEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 const isClickInteractionType = type => type === 'pointerdown' || type === 'mousedown' || type === 'click'
@@ -33,11 +33,9 @@ describe('pvt timings tests', () => {
           expect(fp.value).toBeGreaterThan(0)
         }
 
-        if (browserMatch(supportsFirstContentfulPaint)) {
-          const fcp = timingsHarvests.find(harvest => harvest.request.body.find(t => t.name === 'fcp'))
-            ?.request.body.find(timing => timing.name === 'fcp')
-          expect(fcp.value).toBeGreaterThan(0)
-        }
+        const fcp = timingsHarvests.find(harvest => harvest.request.body.find(t => t.name === 'fcp'))
+          ?.request.body.find(timing => timing.name === 'fcp')
+        expect(fcp.value).toBeGreaterThan(0)
 
         const load = timingsHarvests.find(harvest => harvest.request.body.find(t => t.name === 'load'))
           ?.request.body.find(timing => timing.name === 'load')

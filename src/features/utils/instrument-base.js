@@ -82,7 +82,7 @@ export class InstrumentBase extends FeatureBase {
       try {
         if (canEnableSessionTracking(this.agentIdentifier)) { // would require some setup before certain features start
           const { setupAgentSession } = await import(/* webpackChunkName: "session-manager" */ './agent-session')
-          session = setupAgentSession(this.agentIdentifier)
+          session = setupAgentSession(agentRef)
         }
       } catch (e) {
         warn(20, e)

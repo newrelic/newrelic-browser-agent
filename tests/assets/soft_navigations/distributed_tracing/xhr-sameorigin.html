@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>XHR DT Same Origin</title>
+  {init} {config} {loader}
+  <script>
+    let i = 0
+    function sendAjax (isInitial) {
+      var xhr = new XMLHttpRequest()
+
+      xhr.addEventListener('loadend', function () {
+        if (!isInitial) {
+          window.location.hash = Math.random()
+
+          const elem = document.createElement('div')
+          elem.innerHTML = 'TEST' + i++
+          document.body.appendChild(elem)
+        }
+      })
+      xhr.open('GET', '/dt/' + NREUM.info.licenseKey)
+      xhr.send()
+    }
+    sendAjax(true)
+  </script>
+</head>
+<body>
+<div>
+  This page initiates a XHR before page load to the asset server. A button can be used to perform the XHR
+  again.
+</div>
+<div><button id="sendAjax">Send Ajax</button></div>
+<script>
+  window.disableAjaxHashChange = false
+  document.getElementById('sendAjax').addEventListener('click', sendAjax)
+</script>
+</body>
+</html>

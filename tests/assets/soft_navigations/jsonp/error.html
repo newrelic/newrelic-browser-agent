@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<!--
+  Copyright 2020 New Relic Corporation. All rights reserved.
+  SPDX-License-Identifier: Apache-2.0
+-->
+
+<html>
+  <head>
+    <title>JSONP Unit Test</title>
+    {init}
+    {config}
+    {loader}
+  </head>
+  <body>
+    <script type="text/javascript">
+      function foo (data) {
+        // should never get here
+      }
+
+      document.addEventListener('click', function () {
+        var el = document.createElement('script')
+        el.src = '/nonexistent?cb=foo'
+        window.document.body.appendChild(el)
+
+        // change path here, since callback will not be invoked
+        window.location.hash = Math.random()
+      }, false)
+    </script>
+    <p>Click me!</p>
+  </body>
+</html>

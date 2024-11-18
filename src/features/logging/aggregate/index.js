@@ -5,7 +5,7 @@ import { warn } from '../../../common/util/console'
 import { stringify } from '../../../common/util/stringify'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { AggregateBase } from '../../utils/aggregate-base'
-import { FEATURE_NAME, LOGGING_EVENT_EMITTER_CHANNEL, LOG_LEVELS } from '../constants'
+import { FEATURE_NAME, LOGGING_EVENT_EMITTER_CHANNEL, LOG_LEVELS, LOGGING_MODE } from '../constants'
 import { Log } from '../shared/log'
 import { isValidLogLevel } from '../shared/utils'
 import { applyFnToProps } from '../../../common/util/traverse'
@@ -18,7 +18,13 @@ export class Aggregate extends AggregateBase {
     super(agentRef, FEATURE_NAME)
     this.harvestTimeSeconds = agentRef.init.logging.harvestTimeSeconds
 
-    this.waitForFlags([]).then(() => {
+    this.waitForFlags(['log']).then(([loggingMode]) => {
+      if (!loggingMode) {
+        this.blocked = true
+        this.deregisterDrain()
+        return
+      }
+      this.loggingMode = loggingMode
       this.scheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
         onFinished: (result) => this.postHarvestCleanup(result.sent && result.retry),
         retryDelay: this.harvestTimeSeconds,
@@ -34,11 +40,12 @@ export class Aggregate extends AggregateBase {
   }
 
   handleLog (timestamp, message, attributes = {}, level = LOG_LEVELS.INFO) {
-    if (this.blocked) return
+    if (this.blocked || !this.loggingMode) return
 
     if (!attributes || typeof attributes !== 'object') attributes = {}
     if (typeof level === 'string') level = level.toUpperCase()
     if (!isValidLogLevel(level)) return warn(30, level)
+    if (this.loggingMode < (LOGGING_MODE[level] || Infinity)) return
 
     try {
       if (typeof message !== 'string') {

@@ -19,7 +19,7 @@ describe('Soft navigations', () => {
   it('replaces old spa when flag enabled, captures ipl and route-change ixns', async () => {
     let [interactionsHarvests] = await Promise.all([
       interactionsCapture.waitForResult({ totalCount: 1 }),
-      browser.url(await browser.testHandle.assetURL('soft-nav-interaction-on-click.html', config))
+      browser.url(await browser.testHandle.assetURL('soft_navigations/soft-nav-interaction-on-click.html', config))
         .then(() => browser.waitForAgentLoad())
     ])
 
@@ -50,7 +50,7 @@ describe('Soft navigations', () => {
 
     const [interactionsHarvests] = await Promise.all([
       interactionsCapture.waitForResult({ timeout: 10000 }),
-      browser.url(await browser.testHandle.assetURL('soft-nav-interaction-on-click.html', config))
+      browser.url(await browser.testHandle.assetURL('soft_navigations/soft-nav-interaction-on-click.html', config))
         .then(() => browser.waitForAgentLoad())
         .then(() => $('body').click())
     ])
@@ -82,7 +82,7 @@ describe('Soft navigations', () => {
   it('(multiple) ajax and errors are captured after page load by route-change ixn', async () => {
     await Promise.all([
       interactionsCapture.waitForResult({ totalCount: 1 }),
-      browser.url(await browser.testHandle.assetURL('soft-nav-interaction-on-click.html', config))
+      browser.url(await browser.testHandle.assetURL('soft_navigations/soft-nav-interaction-on-click.html', config))
         .then(() => browser.waitForAgentLoad())
     ])
 
@@ -121,7 +121,7 @@ describe('Soft navigations', () => {
   it.withBrowsersMatching(notSafari)('ajax and jserror tied to discarded ixns are not lost', async () => {
     await Promise.all([
       interactionsCapture.waitForResult({ totalCount: 1 }),
-      browser.url(await browser.testHandle.assetURL('spa/errors/discarded-interaction.html', config))
+      browser.url(await browser.testHandle.assetURL('soft_navigations/errors/discarded-interaction.html', config))
         .then(() => browser.waitForAgentLoad())
     ])
 

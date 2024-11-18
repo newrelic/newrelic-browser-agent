@@ -6,7 +6,7 @@ import { stringify } from '../../../common/util/stringify'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { cleanURL } from '../../../common/url/clean-url'
 import { FEATURE_NAME } from '../constants'
-import { initialLocation, isBrowserScope } from '../../../common/constants/runtime'
+import { globalScope, initialLocation, isBrowserScope } from '../../../common/constants/runtime'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { warn } from '../../../common/util/console'
 import { now } from '../../../common/timing/now'
@@ -28,7 +28,10 @@ export class Aggregate extends AggregateBase {
 
     this.referrerUrl = (isBrowserScope && document.referrer) ? cleanURL(document.referrer) : undefined
 
+    window.logs.push('generic events')
+
     this.waitForFlags(['ins']).then(([ins]) => {
+      window.logs.push('got ins', ins)
       if (!ins) {
         this.blocked = true
         this.deregisterDrain()
@@ -107,7 +110,7 @@ export class Aggregate extends AggregateBase {
                     this.addEvent({
                       eventType: 'BrowserPerformance',
                       timestamp: Math.floor(agentRef.runtime.timeKeeper.correctRelativeTimestamp(entry.startTime)),
-                      entryName: entry.name,
+                      entryName: cleanURL(entry.name),
                       entryDuration: entry.duration,
                       entryType: type,
                       ...(entry.detail && { entryDetail: entry.detail })
@@ -122,6 +125,43 @@ export class Aggregate extends AggregateBase {
         } catch (err) {
         // Something failed in our set up, likely the browser does not support PO's... do nothing
         }
+      }
+
+      if (isBrowserScope && agentRef.init.performance.resources.enabled) {
+        registerHandler('browserPerformance.resource', (entry) => {
+          window.logs.push('got ee message...')
+          // convert the entry to a plain object and separate the name and duration from the object
+          // you need to do this to be able to spread it into the addEvent call later, and name and duration
+          // would be duplicative of entryName and entryDuration and are protected keys in NR1
+          const { name, duration, ...entryObject } = entry.toJSON()
+
+          let firstParty = false
+          try {
+            window.logs.push('name ' + name)
+            const entryDomain = new URL(name).hostname
+            window.logs.push('entryDomain ' + entryDomain)
+            /** decide if we should ignore internal */
+            if (this.agentRef.init.performance.resources.ignore_newrelic && (entryDomain.includes('newrelic.com') || entryDomain.includes('nr-data.net') || entryDomain.includes('nr-local.net'))) return
+            /** decide if the entryDomain is a first party domain */
+            firstParty = entryDomain === globalScope?.location.hostname || agentRef.init.performance.resources.first_party_domains.includes(entryDomain)
+          } catch (err) {
+            // couldnt parse the URL, so firstParty will just default to false
+          }
+
+          const event = {
+            ...entryObject,
+            eventType: 'BrowserPerformance',
+            timestamp: Math.floor(agentRef.runtime.timeKeeper.correctRelativeTimestamp(entryObject.startTime)),
+            entryName: name,
+            entryDuration: duration,
+            firstParty
+          }
+
+          window.logs.push('got resource event')
+
+          this.addEvent(event)
+          window.logs(this.events.get().length + ' events')
+        }, this.featureName, this.ee)
       }
 
       this.harvestScheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {

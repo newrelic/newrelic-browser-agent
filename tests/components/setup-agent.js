@@ -48,7 +48,7 @@ export function setupAgent ({ agentOverrides = {}, info = {}, init = {}, loaderC
     'browser-test',
     true
   )
-  setupAgentSession(agentIdentifier)
+  setupAgentSession(fakeAgent)
 
   runtime = getRuntime(agentIdentifier)
   if (!runtime.timeKeeper) {

@@ -4,6 +4,23 @@
     {
       "changes": [
         {
+          "type": "fix",
+          "sha": "19cbb634b5016e3e8ce0c40a6bf1ee59156c78eb",
+          "message": "Multiple MicroAgent undefined session and limit available API",
+          "issues": [
+            "1252"
+          ]
+        }
+      ],
+      "version": "1.273.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "efd8b450-06d8-450b-8130-d57024674e1b",
+      "createTime": "2024-11-18T16:05:55.225Z"
+    },
+    {
+      "changes": [
+        {
           "type": "feat",
           "sha": "f77380b01e9b57db0b5c782d6d512431229bcd79",
           "message": "Refactor feature storages",
@@ -2201,5 +2218,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2024-11-11T17:36:53.044Z"
+  "updateTime": "2024-11-18T16:05:55.225Z"
 }

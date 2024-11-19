@@ -56,7 +56,7 @@ const model = () => {
       resources: {
         enabled: false, // whether to run this subfeature or not in the generic_events feature. false by default through experimental phase, but flipped to true once GA'd
         asset_types: [], // MDN types to collect, empty array will collect all types
-        first_party_domains: [], // for decorating 1st vs 3rd party attribution
+        first_party_domains: [], // when included, will decorate the resource as first party if matching
         ignore_newrelic: true // ignore capturing internal agent scripts and harvest calls
       }
     },

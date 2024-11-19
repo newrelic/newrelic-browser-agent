@@ -17,6 +17,7 @@ import { IDEAL_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
 import { FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
 import { UserActionsAggregator } from './user-actions/user-actions-aggregator'
 import { isIFrameWindow } from '../../../common/dom/iframe'
+import { handle } from '../../../common/event-emitter/handle'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -28,10 +29,16 @@ export class Aggregate extends AggregateBase {
 
     this.referrerUrl = (isBrowserScope && document.referrer) ? cleanURL(document.referrer) : undefined
 
-    window.logs.push('generic events')
+    /** track usage SMs to improve these experimental features */
+    const configPerfTag = 'Config/Performance/'
+    if (agentRef.init.performance.capture_marks) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'CaptureMarks/Enabled'])
+    if (agentRef.init.performance.capture_measures) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'CaptureMeasures/Enabled'])
+    if (agentRef.init.performance.resources.enabled) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'Resources/Enabled'])
+    if (agentRef.init.performance.resources.asset_types?.length !== 0) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'Resources/AssetTypes/Changed'])
+    if (agentRef.init.performance.resources.first_party_domains?.length !== 0) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'Resources/FirstPartyDomains/Changed'])
+    if (agentRef.init.performance.resources.ignore_newrelic === false) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'Resources/IgnoreNewrelic/Changed'])
 
     this.waitForFlags(['ins']).then(([ins]) => {
-      window.logs.push('got ins', ins)
       if (!ins) {
         this.blocked = true
         this.deregisterDrain()
@@ -107,6 +114,7 @@ export class Aggregate extends AggregateBase {
               const observer = new PerformanceObserver((list) => {
                 list.getEntries().forEach(entry => {
                   try {
+                    handle(SUPPORTABILITY_METRIC_CHANNEL, ['Generic/Performance/' + type + '/Seen'])
                     this.addEvent({
                       eventType: 'BrowserPerformance',
                       timestamp: Math.floor(agentRef.runtime.timeKeeper.correctRelativeTimestamp(entry.startTime)),
@@ -129,38 +137,42 @@ export class Aggregate extends AggregateBase {
 
       if (isBrowserScope && agentRef.init.performance.resources.enabled) {
         registerHandler('browserPerformance.resource', (entry) => {
-          window.logs.push('got ee message...')
-          // convert the entry to a plain object and separate the name and duration from the object
-          // you need to do this to be able to spread it into the addEvent call later, and name and duration
-          // would be duplicative of entryName and entryDuration and are protected keys in NR1
-          const { name, duration, ...entryObject } = entry.toJSON()
-
-          let firstParty = false
           try {
-            window.logs.push('name ' + name)
-            const entryDomain = new URL(name).hostname
-            window.logs.push('entryDomain ' + entryDomain)
-            /** decide if we should ignore internal */
-            if (this.agentRef.init.performance.resources.ignore_newrelic && (entryDomain.includes('newrelic.com') || entryDomain.includes('nr-data.net') || entryDomain.includes('nr-local.net'))) return
-            /** decide if the entryDomain is a first party domain */
-            firstParty = entryDomain === globalScope?.location.hostname || agentRef.init.performance.resources.first_party_domains.includes(entryDomain)
-          } catch (err) {
+            // convert the entry to a plain object and separate the name and duration from the object
+            // you need to do this to be able to spread it into the addEvent call later, and name and duration
+            // would be duplicative of entryName and entryDuration and are protected keys in NR1
+            const { name, duration, ...entryObject } = entry.toJSON()
+
+            let firstParty = false
+            try {
+              const entryDomain = new URL(name).hostname
+              const isNr = (entryDomain.includes('newrelic.com') || entryDomain.includes('nr-data.net') || entryDomain.includes('nr-local.net'))
+              /** decide if we should ignore nr-specific assets */
+              if (this.agentRef.init.performance.resources.ignore_newrelic && isNr) return
+              /** decide if we should ignore the asset type (empty means allow everything, which is the default) */
+              if (this.agentRef.init.performance.resources.asset_types.length && !this.agentRef.init.performance.resources.asset_types.includes(entryObject.initiatorType)) return
+              /** decide if the entryDomain is a first party domain */
+              firstParty = entryDomain === globalScope?.location.hostname || agentRef.init.performance.resources.first_party_domains.includes(entryDomain)
+              if (firstParty) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Generic/Performance/FirstPartyResource/Seen'])
+              if (isNr) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Generic/Performance/NrResource/Seen'])
+            } catch (err) {
             // couldnt parse the URL, so firstParty will just default to false
+            }
+
+            handle(SUPPORTABILITY_METRIC_CHANNEL, ['Generic/Performance/Resource/Seen'])
+            const event = {
+              ...entryObject,
+              eventType: 'BrowserPerformance',
+              timestamp: Math.floor(agentRef.runtime.timeKeeper.correctRelativeTimestamp(entryObject.startTime)),
+              entryName: name,
+              entryDuration: duration,
+              firstParty
+            }
+
+            this.addEvent(event)
+          } catch (err) {
+            // fail silently
           }
-
-          const event = {
-            ...entryObject,
-            eventType: 'BrowserPerformance',
-            timestamp: Math.floor(agentRef.runtime.timeKeeper.correctRelativeTimestamp(entryObject.startTime)),
-            entryName: name,
-            entryDuration: duration,
-            firstParty
-          }
-
-          window.logs.push('got resource event')
-
-          this.addEvent(event)
-          window.logs(this.events.get().length + ' events')
         }, this.featureName, this.ee)
       }
 

@@ -31,13 +31,9 @@ export class Instrument extends InstrumentBase {
         // Capture is not used here so that we don't get element focus/blur events, only the window's as they do not bubble. They are also not cancellable, so no worries about being front of line.
         )
       }
-      window.logs = []
-      window.logs.push(agentRef.init.performance.resources.enabled)
-      window.logs.push(globalScope.PerformanceObserver?.supportedEntryTypes.includes('resource'))
       if (agentRef.init.performance.resources.enabled && globalScope.PerformanceObserver?.supportedEntryTypes.includes('resource')) {
         const observer = new PerformanceObserver((list) => {
           list.getEntries().forEach(entry => {
-            window.logs.push('reporting resource entry ' + entry.name)
             handle('browserPerformance.resource', [entry], undefined, this.featureName, this.ee)
           })
         })

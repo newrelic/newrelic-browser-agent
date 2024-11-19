@@ -99,13 +99,6 @@ export class Recorder {
       inlineImages: inline_images,
       collectFonts: collect_fonts,
       checkoutEveryNms: CHECKOUT_MS[this.parent.mode],
-      /** Emits errors thrown by rrweb directly before bubbling them up to the window */
-      errorHandler: (err) => {
-        /** capture rrweb errors as "internal" errors only */
-        this.parent.ee.emit('internal-error', [err])
-        /** returning true informs rrweb to swallow the error instead of throwing it to the window */
-        return true
-      },
       recordAfter: 'DOMContentLoaded'
     })
 

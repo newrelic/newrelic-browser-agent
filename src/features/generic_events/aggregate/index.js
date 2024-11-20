@@ -29,21 +29,14 @@ export class Aggregate extends AggregateBase {
 
     this.referrerUrl = (isBrowserScope && document.referrer) ? cleanURL(document.referrer) : undefined
 
-    /** track usage SMs to improve these experimental features */
-    const configPerfTag = 'Config/Performance/'
-    if (agentRef.init.performance.capture_marks) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'CaptureMarks/Enabled'])
-    if (agentRef.init.performance.capture_measures) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'CaptureMeasures/Enabled'])
-    if (agentRef.init.performance.resources.enabled) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'Resources/Enabled'])
-    if (agentRef.init.performance.resources.asset_types?.length !== 0) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'Resources/AssetTypes/Changed'])
-    if (agentRef.init.performance.resources.first_party_domains?.length !== 0) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'Resources/FirstPartyDomains/Changed'])
-    if (agentRef.init.performance.resources.ignore_newrelic === false) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'Resources/IgnoreNewrelic/Changed'])
-
     this.waitForFlags(['ins']).then(([ins]) => {
       if (!ins) {
         this.blocked = true
         this.deregisterDrain()
         return
       }
+
+      this.trackSupportabilityMetrics()
 
       if (agentRef.init.page_action.enabled) {
         registerHandler('api-addPageAction', (timestamp, name, attributes) => {
@@ -248,5 +241,16 @@ export class Aggregate extends AggregateBase {
       this.ee.emit(SUPPORTABILITY_METRIC_CHANNEL, ['GenericEvents/Harvest/Max/Seen'])
       this.harvestScheduler.runHarvest()
     }
+  }
+
+  trackSupportabilityMetrics () {
+    /** track usage SMs to improve these experimental features */
+    const configPerfTag = 'Config/Performance/'
+    if (this.agentRef.init.performance.capture_marks) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'CaptureMarks/Enabled'])
+    if (this.agentRef.init.performance.capture_measures) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'CaptureMeasures/Enabled'])
+    if (this.agentRef.init.performance.resources.enabled) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'Resources/Enabled'])
+    if (this.agentRef.init.performance.resources.asset_types?.length !== 0) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'Resources/AssetTypes/Changed'])
+    if (this.agentRef.init.performance.resources.first_party_domains?.length !== 0) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'Resources/FirstPartyDomains/Changed'])
+    if (this.agentRef.init.performance.resources.ignore_newrelic === false) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'Resources/IgnoreNewrelic/Changed'])
   }
 }

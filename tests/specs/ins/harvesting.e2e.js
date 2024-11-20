@@ -1,3 +1,4 @@
+const { onlyFirefox } = require('../../../tools/browser-matcher/common-matchers.mjs')
 const { testInsRequest, testErrorsRequest } = require('../../../tools/testing-server/utils/expect-tests')
 
 describe('ins harvesting', () => {
@@ -83,6 +84,31 @@ describe('ins harvesting', () => {
     })
     expect(clickUAs[1].actionDuration).toBeGreaterThan(0)
     expect(clickUAs[1].actionMs).toEqual(expect.stringMatching(/^\[\d+(,\d+){4}\]$/))
+  })
+
+  // firefox generates a focus event when the page loads, which makes testing this easier
+  it.withBrowsersMatching(onlyFirefox)('should ignore window attributes on UserAction blur and focus', async () => {
+    const testUrl = await browser.testHandle.assetURL('user-actions.html', { init: { user_actions: { enabled: true } } })
+    await browser.url(testUrl).then(() => browser.waitForAgentLoad())
+
+    const [insHarvests] = await Promise.all([
+      insightsCapture.waitForResult({ timeout: 7500 }),
+      $('#pay-btn').click().then(async () => {
+        // rage click
+        await browser.execute(function () {
+          for (let i = 0; i < 5; i++) {
+            document.querySelector('#textbox').click()
+          }
+        })
+        // stop aggregating textbox clicks
+        await $('body').click()
+      })
+    ])
+
+    const userActionsHarvest = insHarvests.flatMap(harvest => harvest.request.body.ins) // firefox sends a window focus event on load, so we may end up with 2 harvests
+    const focusBlurUAs = userActionsHarvest.filter(ua => ua.action === 'focus' || ua.action === 'blur')
+    expect(focusBlurUAs.length).toBeGreaterThan(0)
+    expect(focusBlurUAs[0].targetType).toBeUndefined()
   })
 
   it('should detect iframes on UserActions if agent is running inside iframe', async () => {

@@ -46,6 +46,11 @@ export function createWrapperWithEmitter (emitter, always) {
 
   return wrapFn
 
+  function getContextName (prefix, methodName) {
+    const contextPrefix = prefix ? prefix + methodName : methodName
+    return `${contextPrefix}-ctx`
+  }
+
   /**
    * Wraps a function with event emitting functionality.
    * @param {function} fn - The function to wrap.
@@ -59,7 +64,10 @@ export function createWrapperWithEmitter (emitter, always) {
     // Unless fn is both wrappable and unwrapped, return it unchanged.
     if (notWrappable(fn)) return fn
 
-    if (!prefix) prefix = ''
+    if (!prefix) {
+      prefix = ''
+    }
+    const contextName = getContextName(prefix, methodName)
 
     nrWrapper[flag] = fn
     copy(fn, nrWrapper, emitter)
@@ -73,36 +81,39 @@ export function createWrapperWithEmitter (emitter, always) {
     function nrWrapper () {
       var args
       var originalThis
-      var ctx
       var result
 
       try {
         originalThis = this
         args = [...arguments]
 
-        if (typeof getContext === 'function') {
-          ctx = getContext(args, originalThis)
+        if (typeof nrWrapper[contextName] === 'function') {
+          nrWrapper[contextName] = nrWrapper[contextName](args, originalThis)
+        } else if (typeof nrWrapper[contextName] === 'object') {
+          // found cached context, proceed
+        } else if (typeof getContext === 'function') {
+          nrWrapper[contextName] = getContext(args, originalThis)
         } else {
-          ctx = getContext || {}
+          nrWrapper[contextName] = getContext || {}
         }
       } catch (e) {
-        report([e, '', [args, originalThis, methodName], ctx], emitter)
+        report([e, '', [args, originalThis, methodName], nrWrapper[contextName]], emitter)
       }
 
       // Warning: start events may mutate args!
-      safeEmit(prefix + 'start', [args, originalThis, methodName], ctx, bubble)
+      safeEmit(prefix + 'start', [args, originalThis, methodName], nrWrapper[contextName], bubble)
 
       try {
         result = fn.apply(originalThis, args)
         return result
       } catch (err) {
-        safeEmit(prefix + 'err', [args, originalThis, err], ctx, bubble)
+        safeEmit(prefix + 'err', [args, originalThis, err], nrWrapper[contextName], bubble)
 
         // rethrow error so we don't effect execution by observing.
         throw err
       } finally {
         // happens no matter what.
-        safeEmit(prefix + 'end', [args, originalThis, result], ctx, bubble)
+        safeEmit(prefix + 'end', [args, originalThis, result], nrWrapper[contextName], bubble)
       }
     }
   }
@@ -117,8 +128,9 @@ export function createWrapperWithEmitter (emitter, always) {
    * of events emitted by this wrapper.
    * @param {boolean} [bubble=false] If `true`, emitted events should also bubble up to the old emitter upon which
    * the `emitter` in the current scope was based (if it defines one).
+   * @param {boolean} [overwriteContext=false] If `true`, will overwrite the context for wrapper function
    */
-  function inPlace (obj, methods, prefix, getContext, bubble) {
+  function inPlace (obj, methods, prefix, getContext, bubble, overwriteContext) {
     if (!prefix) prefix = ''
 
     // If prefix starts with '-' set this boolean to add the method name to the prefix before passing each one to wrap.
@@ -128,6 +140,9 @@ export function createWrapperWithEmitter (emitter, always) {
       const method = methods[i]
       const fn = obj[method]
 
+      if (overwriteContext && fn[flag]) {
+        fn[getContextName(prefix, method)] = getContext
+      }
       // Unless fn is both wrappable and unwrapped, bail so we don't add extra properties with undefined values.
       if (notWrappable(fn)) continue
 

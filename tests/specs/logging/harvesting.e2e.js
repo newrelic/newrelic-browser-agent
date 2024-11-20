@@ -151,7 +151,7 @@ describe('logging harvesting', () => {
     })
 
     it('should allow for re-wrapping and 3rd party wrapping', async () => {
-      await mockRumResponse(LOGGING_MODE.INFO)
+      await mockRumResponse(LOGGING_MODE.DEBUG)
       const [[{ request: { body } }]] = await Promise.all([
         logsCapture.waitForResult({ totalCount: 1 }),
         browser.url(await browser.testHandle.assetURL('logs-api-wrap-logger-rewrapped.html'))
@@ -164,12 +164,12 @@ describe('logging harvesting', () => {
       // original wrapping context (warn)
       expect(logs[0].message).toEqual('test1')
       expect(logs[0].level).toEqual('WARN')
-      // should not re-wrap, meaning the level should not change, but the message should here
+      // should not re-wrap but will overwrite the attributes so it'll become a DEBUG; the 'test2' message should be there
       expect(logs[1].message).toEqual('test2')
-      expect(logs[1].level).toEqual('WARN')
-      // should allow a 3rd party to wrap the function and not affect the context (warn)
+      expect(logs[1].level).toEqual('DEBUG')
+      // should allow a 3rd party to wrap the function and not affect the context (debug)
       expect(logs[2].message).toEqual('test3')
-      expect(logs[2].level).toEqual('WARN')
+      expect(logs[2].level).toEqual('DEBUG')
     })
   })
 

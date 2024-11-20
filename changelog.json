@@ -4,6 +4,23 @@
     {
       "changes": [
         {
+          "type": "feat",
+          "sha": "2d8d114e70ba2861fb5639e132f25c9c03df871b",
+          "message": "Upgrade SessionReplay libraries to latest version",
+          "issues": [
+            "1251"
+          ]
+        }
+      ],
+      "version": "1.274.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "5c0da2d3-92eb-4ab8-8952-bdb5ac32c823",
+      "createTime": "2024-11-19T20:16:39.794Z"
+    },
+    {
+      "changes": [
+        {
           "type": "fix",
           "sha": "19cbb634b5016e3e8ce0c40a6bf1ee59156c78eb",
           "message": "Multiple MicroAgent undefined session and limit available API",
@@ -2218,5 +2235,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2024-11-18T16:05:55.225Z"
+  "updateTime": "2024-11-19T20:16:39.794Z"
 }

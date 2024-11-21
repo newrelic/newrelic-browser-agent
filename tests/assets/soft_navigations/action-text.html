@@ -16,9 +16,14 @@
     <input id="two" type="submit" value="#2" />
     <a id="three" title="#3">decoy</a>
     <script type="text/javascript">
-    document.addEventListener('click', function () {
-      window.location.hash = Math.random()
-    }, false)
+      let i = 0
+      document.addEventListener('click', function () {
+        window.location.hash = Math.random()
+
+        const elem = document.createElement('div')
+				elem.innerHTML = 'TEST' + i++
+				document.body.appendChild(elem)
+      }, false)
     </script>
   </body>
 </html>

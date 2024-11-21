@@ -10,15 +10,15 @@ describe('XHR SPA Interaction Tracking', () => {
   })
 
   it('should capture the ajax in the initial interaction when sent before load', async () => {
-    const [interactionsHarvests] = await Promise.all([
+    const [interactionHarvests] = await Promise.all([
       interactionsCapture.waitForResult({ totalCount: 1 }),
       await browser.url(
-        await browser.testHandle.assetURL('ajax/xhr-before-load.html', config)
+        await browser.testHandle.assetURL('soft_navigations/ajax/xhr-before-load.html', config)
       ).then(() => browser.waitForAgentLoad())
     ])
 
-    checkSpa(interactionsHarvests[0].request)
-    expect(interactionsHarvests[0].request.body).toEqual([
+    checkSpa(interactionHarvests[0].request)
+    expect(interactionHarvests[0].request.body).toEqual([
       expect.objectContaining({
         category: 'Initial page load',
         type: 'interaction',
@@ -49,16 +49,16 @@ describe('XHR SPA Interaction Tracking', () => {
 
   it('should capture the ajax in the click interaction', async () => {
     await browser.url(
-      await browser.testHandle.assetURL('ajax/xhr-simple.html', config)
+      await browser.testHandle.assetURL('soft_navigations/ajax/xhr-simple.html', config)
     ).then(() => browser.waitForAgentLoad())
 
-    const [interactionsHarvests] = await Promise.all([
+    const [interactionHarvests] = await Promise.all([
       interactionsCapture.waitForResult({ timeout: 10000 }),
       $('#sendAjax').click()
     ])
 
-    checkSpa(interactionsHarvests[1].request, { trigger: 'click' })
-    expect(interactionsHarvests[1].request.body).toEqual([
+    checkSpa(interactionHarvests[1].request, { trigger: 'click' })
+    expect(interactionHarvests[1].request.body).toEqual([
       expect.objectContaining({
         category: 'Route change',
         type: 'interaction',
@@ -88,15 +88,15 @@ describe('XHR SPA Interaction Tracking', () => {
   })
 
   it('should not capture the ajax in the initial interaction when sent after load', async () => {
-    const [interactionsHarvests] = await Promise.all([
+    const [interactionHarvests] = await Promise.all([
       interactionsCapture.waitForResult({ totalCount: 1 }),
       await browser.url(
-        await browser.testHandle.assetURL('ajax/xhr-after-load.html', config)
+        await browser.testHandle.assetURL('soft_navigations/ajax/xhr-after-load.html', config)
       ).then(() => browser.waitForAgentLoad())
     ])
 
-    checkSpa(interactionsHarvests[0].request)
-    expect(interactionsHarvests[0].request.body).toEqual([
+    checkSpa(interactionHarvests[0].request)
+    expect(interactionHarvests[0].request.body).toEqual([
       expect.objectContaining({
         category: 'Initial page load',
         type: 'interaction',
@@ -114,16 +114,16 @@ describe('XHR SPA Interaction Tracking', () => {
 
   it('should capture the ajax request and response size', async () => {
     await browser.url(
-      await browser.testHandle.assetURL('ajax/xhr-post.html', config)
+      await browser.testHandle.assetURL('soft_navigations/ajax/xhr-post.html', config)
     ).then(() => browser.waitForAgentLoad())
 
-    const [interactionsHarvests] = await Promise.all([
+    const [interactionHarvests] = await Promise.all([
       interactionsCapture.waitForResult({ timeout: 10000 }),
       $('#sendAjax').click()
     ])
 
-    checkSpa(interactionsHarvests[1].request, { trigger: 'click' })
-    expect(interactionsHarvests[1].request.body).toEqual([
+    checkSpa(interactionHarvests[1].request, { trigger: 'click' })
+    expect(interactionHarvests[1].request.body).toEqual([
       expect.objectContaining({
         category: 'Route change',
         type: 'interaction',
@@ -143,16 +143,16 @@ describe('XHR SPA Interaction Tracking', () => {
 
   it('should not create an interaction node for a xhr that never sends', async () => {
     await browser.url(
-      await browser.testHandle.assetURL('ajax/xhr-no-send.html', config)
+      await browser.testHandle.assetURL('soft_navigations/ajax/xhr-no-send.html', config)
     ).then(() => browser.waitForAgentLoad())
 
-    const [interactionsHarvests] = await Promise.all([
+    const [interactionHarvests] = await Promise.all([
       interactionsCapture.waitForResult({ timeout: 10000 }),
       $('#sendAjax').click()
     ])
 
-    checkSpa(interactionsHarvests[1].request, { trigger: 'click' })
-    expect(interactionsHarvests[1].request.body).toEqual(expect.arrayContaining([
+    checkSpa(interactionHarvests[1].request, { trigger: 'click' })
+    expect(interactionHarvests[1].request.body).toEqual(expect.arrayContaining([
       expect.objectContaining({
         category: 'Route change',
         type: 'interaction',
@@ -163,10 +163,10 @@ describe('XHR SPA Interaction Tracking', () => {
   })
 
   it('should capture distributed tracing properties', async () => {
-    const [interactionsHarvests] = await Promise.all([
+    const [interactionHarvests] = await Promise.all([
       interactionsCapture.waitForResult({ totalCount: 1 }),
       await browser.url(
-        await browser.testHandle.assetURL('distributed_tracing/xhr-sameorigin.html', {
+        await browser.testHandle.assetURL('soft_navigations/distributed_tracing/xhr-sameorigin.html', {
           loader: 'spa',
           init: {
             feature_flags: ['soft_nav'],
@@ -177,8 +177,8 @@ describe('XHR SPA Interaction Tracking', () => {
       ).then(() => browser.waitForAgentLoad())
     ])
 
-    checkSpa(interactionsHarvests[0].request)
-    expect(interactionsHarvests[0].request.body).toEqual([
+    checkSpa(interactionHarvests[0].request)
+    expect(interactionHarvests[0].request.body).toEqual([
       expect.objectContaining({
         category: 'Initial page load',
         type: 'interaction',
@@ -198,46 +198,46 @@ describe('XHR SPA Interaction Tracking', () => {
   })
 
   it('creates interaction event data for erred xhr', async () => {
-    await browser.url(await browser.testHandle.assetURL('ajax/xhr-404.html', config))
+    await browser.url(await browser.testHandle.assetURL('soft_navigations/ajax/xhr-404.html', config))
       .then(() => browser.waitForAgentLoad())
 
-    const [interactionsHarvests] = await Promise.all([
+    const [interactionHarvests] = await Promise.all([
       interactionsCapture.waitForResult({ timeout: 10000 }),
       $('#sendAjax').click()
     ])
 
-    checkAjaxEvents({ body: interactionsHarvests[1].request.body[0].children, query: interactionsHarvests[1].request.query }, { specificPath: '/paththatdoesnotexist' })
+    checkAjaxEvents({ body: interactionHarvests[1].request.body[0].children, query: interactionHarvests[1].request.query }, { specificPath: '/paththatdoesnotexist' })
 
-    const ajaxEvent = interactionsHarvests[1].request.body[0].children.find(event => event.path === '/paththatdoesnotexist')
+    const ajaxEvent = interactionHarvests[1].request.body[0].children.find(event => event.path === '/paththatdoesnotexist')
     expect(ajaxEvent.status).toEqual(404)
   })
 
   it('creates interaction event data for xhr with network error', async () => {
-    await browser.url(await browser.testHandle.assetURL('ajax/xhr-network-error.html', config))
+    await browser.url(await browser.testHandle.assetURL('soft_navigations/ajax/xhr-network-error.html', config))
       .then(() => browser.waitForAgentLoad())
 
-    const [interactionsHarvests] = await Promise.all([
+    const [interactionHarvests] = await Promise.all([
       interactionsCapture.waitForResult({ timeout: 10000 }),
       $('#sendAjax').click()
     ])
 
-    checkAjaxEvents({ body: interactionsHarvests[1].request.body[0].children, query: interactionsHarvests[1].request.query }, { specificPath: '/bizbaz' })
+    checkAjaxEvents({ body: interactionHarvests[1].request.body[0].children, query: interactionHarvests[1].request.query }, { specificPath: '/bizbaz' })
 
-    const ajaxEvent = interactionsHarvests[1].request.body[0].children.find(event => event.path === '/bizbaz')
+    const ajaxEvent = interactionHarvests[1].request.body[0].children.find(event => event.path === '/bizbaz')
     expect(ajaxEvent.status).toEqual(0)
   })
 
   it('produces interaction event data when xhr is 3rd party listener patched after agent', async () => {
-    await browser.url(await browser.testHandle.assetURL('ajax/xhr-patch-listener-after.html', config))
+    await browser.url(await browser.testHandle.assetURL('soft_navigations/ajax/xhr-patch-listener-after.html', config))
       .then(() => browser.waitForAgentLoad())
 
-    const [interactionsHarvests] = await Promise.all([
+    const [interactionHarvests] = await Promise.all([
       interactionsCapture.waitForResult({ timeout: 10000 }),
       $('#sendAjax').click()
     ])
 
-    checkSpa(interactionsHarvests[1].request, { trigger: 'click' })
-    checkAjaxEvents({ body: interactionsHarvests[1].request.body[0].children, query: interactionsHarvests[1].request.query }, { specificPath: '/json' })
+    checkSpa(interactionHarvests[1].request, { trigger: 'click' })
+    checkAjaxEvents({ body: interactionHarvests[1].request.body[0].children, query: interactionHarvests[1].request.query }, { specificPath: '/json' })
 
     await expect(browser.execute(function () {
       return window.wrapperInvoked

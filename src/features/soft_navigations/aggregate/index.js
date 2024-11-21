@@ -70,11 +70,11 @@ export class Aggregate extends AggregateBase {
   serializer (eventBuffer) {
     // The payload depacker takes the first ixn of a payload (if there are multiple ixns) and positively offset the subsequent ixns timestamps by that amount.
     // In order to accurately portray the real start & end times of the 2nd & onward ixns, we hence need to negatively offset their start timestamps with that of the 1st ixn.
-    let firstIxnStartTime = 0 // the very 1st ixn does not require any offsetting
+    let firstIxnStartTime
     const serializedIxnList = []
     for (const interaction of eventBuffer) {
       serializedIxnList.push(interaction.serialize(firstIxnStartTime))
-      if (!firstIxnStartTime) firstIxnStartTime = Math.floor(interaction.start)
+      if (firstIxnStartTime === undefined) firstIxnStartTime = Math.floor(interaction.start) // careful not to match or overwrite on 0 value!
     }
     return `bel.7;${serializedIxnList.join(';')}`
   }

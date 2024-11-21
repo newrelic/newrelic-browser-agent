@@ -267,7 +267,7 @@ test('.actionText and .setAttribute add attributes to ixn specifically', () => {
 
 // This isn't just an API test; it double serves as data validation on the querypack payload output.
 test('multiple finished ixns retain the correct start/end timestamps in payload', () => {
-  softNavAggregate.ee.emit(`${INTERACTION_API}-get`, [100])
+  softNavAggregate.ee.emit(`${INTERACTION_API}-get`, [0])
   let ixnContext = getIxnContext(newrelic.interaction())
   ixnContext.associatedInteraction.nodeId = 1
   ixnContext.associatedInteraction.id = 'some_id'
@@ -290,7 +290,7 @@ test('multiple finished ixns retain the correct start/end timestamps in payload'
 
   expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(3)
   // WARN: Double check decoded output & behavior or any introduced bugs before changing the follow line's static string.
-  expect(softNavAggregate.makeHarvestPayload().body).toEqual("bel.7;1,,2s,2s,,,'api,'http://localhost/,1,1,,2,!!!!'some_id,'1,!!;;1,,5k,5k,,,'api,'http://localhost/,1,1,,2,!!!!'some_other_id,'2,!!;;1,,go,8c,,,'api,'http://localhost/,1,1,,2,!!!!'some_another_id,'3,!!;")
+  expect(softNavAggregate.makeHarvestPayload().body).toEqual("bel.7;1,,,5k,,,'api,'http://localhost/,1,1,,2,!!!!'some_id,'1,!!;;1,,8c,5k,,,'api,'http://localhost/,1,1,,2,!!!!'some_other_id,'2,!!;;1,,jg,8c,,,'api,'http://localhost/,1,1,,2,!!!!'some_another_id,'3,!!;")
 })
 
 // This isn't just an API test; it double serves as data validation on the querypack payload output.

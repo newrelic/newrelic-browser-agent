@@ -61,17 +61,28 @@ test('should warn if invalid event is provide', async () => {
   expect(console.debug).toHaveBeenCalledWith('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#44', undefined)
 })
 
-test('should only buffer 64kb of events at a time', async () => {
+test('should harvest early if will exceed 1mb', async () => {
   genericEventsAggregate.ee.emit('rumresp', [{ ins: 1 }])
 
   await new Promise(process.nextTick)
 
   genericEventsAggregate.harvestScheduler.runHarvest = jest.fn()
-  genericEventsAggregate.addEvent({ name: 'test', eventType: 'x'.repeat(63000) })
+  genericEventsAggregate.addEvent({ name: 'test', eventType: 'x'.repeat(900000) })
 
   expect(genericEventsAggregate.harvestScheduler.runHarvest).not.toHaveBeenCalled()
-  genericEventsAggregate.addEvent({ name: 1000, eventType: 'x'.repeat(1000) })
+  genericEventsAggregate.addEvent({ name: 1000, eventType: 'x'.repeat(100000) })
   expect(genericEventsAggregate.harvestScheduler.runHarvest).toHaveBeenCalled()
+})
+
+test('should not harvest if single event will exceed 1mb', async () => {
+  genericEventsAggregate.ee.emit('rumresp', [{ ins: 1 }])
+
+  await new Promise(process.nextTick)
+
+  genericEventsAggregate.harvestScheduler.runHarvest = jest.fn()
+  genericEventsAggregate.addEvent({ name: 'test', eventType: 'x'.repeat(1000000) })
+
+  expect(genericEventsAggregate.harvestScheduler.runHarvest).not.toHaveBeenCalled()
 })
 
 describe('sub-features', () => {

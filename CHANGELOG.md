@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.274.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.273.1...v1.274.0) (2024-11-19)
+
+
+### Features
+
+* Upgrade SessionReplay libraries to latest version ([#1251](https://github.com/newrelic/newrelic-browser-agent/issues/1251)) ([2d8d114](https://github.com/newrelic/newrelic-browser-agent/commit/2d8d114e70ba2861fb5639e132f25c9c03df871b))
+
+## [1.273.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.273.0...v1.273.1) (2024-11-18)
+
+
+### Bug Fixes
+
+* Multiple MicroAgent undefined session and limit available API ([#1252](https://github.com/newrelic/newrelic-browser-agent/issues/1252)) ([19cbb63](https://github.com/newrelic/newrelic-browser-agent/commit/19cbb634b5016e3e8ce0c40a6bf1ee59156c78eb))
+
 ## [1.273.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.272.0...v1.273.0) (2024-11-11)
 
 

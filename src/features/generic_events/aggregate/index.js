@@ -13,7 +13,6 @@ import { now } from '../../../common/timing/now'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { applyFnToProps } from '../../../common/util/traverse'
-import { IDEAL_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
 import { FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
 import { UserActionsAggregator } from './user-actions/user-actions-aggregator'
 import { isIFrameWindow } from '../../../common/dom/iframe'
@@ -222,9 +221,16 @@ export class Aggregate extends AggregateBase {
       ...obj
     }
 
-    this.events.add(eventAttributes)
-
-    this.checkEventLimits()
+    const addedEvent = this.events.add(eventAttributes)
+    if (!addedEvent && !this.events.isEmpty()) {
+      /** could not add the event because it pushed the buffer over the limit
+       * so we harvest early, and try to add it again now that the buffer is cleared
+       * if it fails again, we do nothing
+       */
+      this.ee.emit(SUPPORTABILITY_METRIC_CHANNEL, ['GenericEvents/Harvest/Max/Seen'])
+      this.harvestScheduler.runHarvest()
+      this.events.add(eventAttributes)
+    }
   }
 
   serializer (eventBuffer) {
@@ -234,15 +240,7 @@ export class Aggregate extends AggregateBase {
   queryStringsBuilder () {
     return { ua: this.agentRef.info.userAttributes, at: this.agentRef.info.atts }
   }
-
-  checkEventLimits () {
-    // check if we've reached any harvest limits...
-    if (this.events.byteSize() > IDEAL_PAYLOAD_SIZE) {
-      this.ee.emit(SUPPORTABILITY_METRIC_CHANNEL, ['GenericEvents/Harvest/Max/Seen'])
-      this.harvestScheduler.runHarvest()
-    }
-  }
-
+  
   trackSupportabilityMetrics () {
     /** track usage SMs to improve these experimental features */
     const configPerfTag = 'Config/Performance/'

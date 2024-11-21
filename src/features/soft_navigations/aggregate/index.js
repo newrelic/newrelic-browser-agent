@@ -6,7 +6,7 @@ import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
 import { FEATURE_NAMES, FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { AggregateBase } from '../../utils/aggregate-base'
-import { API_TRIGGER_NAME, FEATURE_NAME, INTERACTION_STATUS } from '../constants'
+import { API_TRIGGER_NAME, FEATURE_NAME, INTERACTION_STATUS, IPL_TRIGGER_NAME } from '../constants'
 import { AjaxNode } from './ajax-node'
 import { InitialPageLoadInteraction } from './initial-page-load-interaction'
 import { Interaction } from './interaction'
@@ -21,12 +21,14 @@ export class Aggregate extends AggregateBase {
     this.domObserver = domObserver
 
     this.initialPageLoadInteraction = new InitialPageLoadInteraction(agentRef.agentIdentifier)
-    timeToFirstByte.subscribe(({ attrs }) => {
-      const loadEventTime = attrs.navigationEntry.loadEventEnd
-      this.initialPageLoadInteraction.forceSave = true
-      this.initialPageLoadInteraction.done(loadEventTime)
+    this.initialPageLoadInteraction.onDone.push(() => { // this ensures the .end() method also works with iPL
+      this.initialPageLoadInteraction.forceSave = true // unless forcibly ignored, iPL always finish by default
       this.interactionsToHarvest.add(this.initialPageLoadInteraction)
       this.initialPageLoadInteraction = null
+    })
+    timeToFirstByte.subscribe(({ attrs }) => {
+      const loadEventTime = attrs.navigationEntry.loadEventEnd
+      this.initialPageLoadInteraction.done(loadEventTime)
       // Report metric on the initial page load time
       handle(SUPPORTABILITY_METRIC_CHANNEL, ['SoftNav/Interaction/InitialPageLoad/Duration/Ms', Math.round(loadEventTime)], undefined, FEATURE_NAMES.metrics, this.ee)
     })
@@ -131,7 +133,7 @@ export class Aggregate extends AggregateBase {
     for (let idx = interactionsBuffer.length - 1; idx >= 0; idx--) { // reverse search for the latest completed interaction for efficiency
       const finishedInteraction = interactionsBuffer[idx]
       if (finishedInteraction.isActiveDuring(timestamp)) {
-        if (finishedInteraction.trigger !== 'initialPageLoad') return finishedInteraction
+        if (finishedInteraction.trigger !== IPL_TRIGGER_NAME) return finishedInteraction
         // It's possible that a complete interaction occurs before page is fully loaded, so we need to consider if a route-change ixn may have overlapped this iPL
         else saveIxn = finishedInteraction
       }
@@ -196,6 +198,7 @@ export class Aggregate extends AggregateBase {
       // In here, 'this' refers to the EventContext specific to per InteractionHandle instance spawned by each .interaction() api call.
       // Each api call aka IH instance would therefore retain a reference to either the in-progress interaction *at the time of the call* OR a new api-started interaction.
       this.associatedInteraction = thisClass.getInteractionFor(time)
+      if (this.associatedInteraction?.trigger === IPL_TRIGGER_NAME) this.associatedInteraction = null // the api get-interaction method cannot target IPL
       if (!this.associatedInteraction) {
         // This new api-driven interaction will be the target of any subsequent .interaction() call, until it is closed by EITHER .end() OR the regular seenHistoryAndDomChange process.
         this.associatedInteraction = thisClass.interactionInProgress = new Interaction(thisClass.agentIdentifier, API_TRIGGER_NAME, time, thisClass.latestRouteSetByApi)

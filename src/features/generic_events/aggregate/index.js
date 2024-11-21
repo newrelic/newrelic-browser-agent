@@ -240,7 +240,7 @@ export class Aggregate extends AggregateBase {
   queryStringsBuilder () {
     return { ua: this.agentRef.info.userAttributes, at: this.agentRef.info.atts }
   }
-  
+
   trackSupportabilityMetrics () {
     /** track usage SMs to improve these experimental features */
     const configPerfTag = 'Config/Performance/'

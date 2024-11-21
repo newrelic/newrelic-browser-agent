@@ -115,6 +115,7 @@ export class Interaction extends BelNode {
   get navTiming () {}
 
   serialize (firstStartTimeOfPayload) {
+    const isFirstIxnOfPayload = firstStartTimeOfPayload === undefined
     const addString = getAddStringContext(this.agentIdentifier)
     const nodeList = []
     let ixnType
@@ -126,7 +127,7 @@ export class Interaction extends BelNode {
     const fields = [
       numeric(this.belType),
       0, // this will be overwritten below with number of attached nodes
-      numeric(this.start - firstStartTimeOfPayload), // relative to first node
+      numeric(this.start - (isFirstIxnOfPayload ? 0 : firstStartTimeOfPayload)), // the very 1st ixn does not require offset so it should fallback to a 0 while rest is offset by the very 1st ixn's start
       numeric(this.end - this.start), // end -- relative to start
       numeric(this.callbackEnd), // cbEnd -- relative to start; not used by BrowserInteraction events
       numeric(this.callbackDuration), // not relative
@@ -145,9 +146,9 @@ export class Interaction extends BelNode {
     const allAttachedNodes = addCustomAttributes(this.customAttributes || {}, addString) // start with all custom attributes
     if (getInfo(this.agentIdentifier).atts) allAttachedNodes.push('a,' + addString(getInfo(this.agentIdentifier).atts)) // add apm provided attributes
     /* Querypack encoder+decoder quirkiness:
-       - If first ixn node of payload is being processed, we use this node's start to offset. (firstStartTime should be 0--or undefined.)
-       - Else for subsequent ixn nodes, we use the first ixn node's start to offset. */
-    this.children.forEach(node => allAttachedNodes.push(node.serialize(firstStartTimeOfPayload || this.start))) // recursively add the serialized string of every child of this (ixn) bel node
+       - If first ixn node of payload is being processed, its children's start time must be offset by this node's start. (firstStartTime should be undefined.)
+       - Else for subsequent ixns in the same payload, we go back to using that first ixn node's start to offset their children's start. */
+    this.children.forEach(node => allAttachedNodes.push(node.serialize(isFirstIxnOfPayload ? this.start : firstStartTimeOfPayload))) // recursively add the serialized string of every child of this (ixn) bel node
 
     fields[1] = numeric(allAttachedNodes.length)
     nodeList.push(fields)

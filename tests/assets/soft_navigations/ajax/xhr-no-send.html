@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>XHR No Send</title>
+  {init} {config} {loader}
+</head>
+<body>
+<div>
+  This page uses a button to initiate an XHR but never actually calls the send method.
+  A setTimeout is used to trigger a hash change for SPA testing 1 second after the XHR is created.
+</div>
+<div><button id="sendAjax">Send Ajax</button></div>
+<script type="text/javascript">
+  let i = 0
+  document.addEventListener('click', function () {
+    var xhr = new XMLHttpRequest()
+    xhr.open('POST', '/echo')
+
+    setTimeout(function () {
+      window.location.hash = Math.random()
+
+      const elem = document.createElement('div')
+      elem.innerHTML = 'TEST' + i++
+      document.body.appendChild(elem)
+    }, 100)
+  }, false)
+</script>
+</body>
+</html>

@@ -17,7 +17,7 @@ describe('Soft navigations', () => {
   })
 
   it('replaces old spa when flag enabled, captures ipl and route-change ixns', async () => {
-    let [interactionsHarvests] = await Promise.all([
+    let [interactionHarvests] = await Promise.all([
       interactionsCapture.waitForResult({ totalCount: 1 }),
       browser.url(await browser.testHandle.assetURL('soft_navigations/soft-nav-interaction-on-click.html', config))
         .then(() => browser.waitForAgentLoad())
@@ -31,15 +31,15 @@ describe('Soft navigations', () => {
     })
     expect(browserResp).toEqual([null, 'soft_navigations'])
 
-    expect(interactionsHarvests[0].request.body.length).toEqual(1)
-    expect(interactionsHarvests[0].request.body[0].category).toEqual('Initial page load')
+    expect(interactionHarvests[0].request.body.length).toEqual(1)
+    expect(interactionHarvests[0].request.body[0].category).toEqual('Initial page load')
 
-    ;[interactionsHarvests] = await Promise.all([
+    ;[interactionHarvests] = await Promise.all([
       interactionsCapture.waitForResult({ totalCount: 2 }),
       $('body').click()]
     )
-    expect(interactionsHarvests[1].request.body.length).toEqual(1)
-    expect(interactionsHarvests[1].request.body[0].category).toEqual('Route change')
+    expect(interactionHarvests[1].request.body.length).toEqual(1)
+    expect(interactionHarvests[1].request.body[0].category).toEqual('Route change')
   })
 
   it('does not harvest when spa is blocked by rum response', async () => {
@@ -48,24 +48,24 @@ describe('Soft navigations', () => {
       body: JSON.stringify(rumFlags({ spa: 0 }))
     })
 
-    const [interactionsHarvests] = await Promise.all([
+    const [interactionHarvests] = await Promise.all([
       interactionsCapture.waitForResult({ timeout: 10000 }),
       browser.url(await browser.testHandle.assetURL('soft_navigations/soft-nav-interaction-on-click.html', config))
         .then(() => browser.waitForAgentLoad())
         .then(() => $('body').click())
     ])
 
-    expect(interactionsHarvests.length).toEqual(0)
+    expect(interactionHarvests.length).toEqual(0)
   })
 
   it('(multiple) ajax and errors are captured before page load by iPL ixn', async () => {
-    const [interactionsHarvests, errorsHarvests] = await Promise.all([
+    const [interactionHarvests, errorsHarvests] = await Promise.all([
       interactionsCapture.waitForResult({ totalCount: 1 }),
       errorsCapture.waitForResult({ totalCount: 1 }),
       browser.url(await browser.testHandle.assetURL('ajax-and-errors-before-page-load.html', config))
         .then(() => browser.waitForAgentLoad())
     ])
-    const iplIxn = interactionsHarvests[0].request.body[0]
+    const iplIxn = interactionHarvests[0].request.body[0]
     const ajaxArr = iplIxn.children
     const errorsArr = errorsHarvests[0].request.body.err
 

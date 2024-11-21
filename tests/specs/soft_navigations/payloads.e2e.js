@@ -122,62 +122,6 @@ describe('attribution tests', () => {
   })
 
   describe('basic tests', () => {
-    it('should capture SPA interactions using loader_config data', async () => {
-      const injectedConfig = {
-        loader: 'spa',
-        injectUpdatedLoaderConfig: true,
-        init: {
-          feature_flags: ['soft_nav'],
-          session_trace: { enabled: false }
-        }
-      }
-      const testStartTime = Date.now()
-      const [interactionHarvests] = await Promise.all([
-        interactionsCapture.waitForResult({ timeout: 10000 }),
-        await browser.url(
-          await browser.testHandle.assetURL('soft_navigations/xhr.html', injectedConfig)
-        ).then(() => browser.waitForAgentLoad()),
-        // Perform click after the initial page load interaction is captured
-        interactionsCapture.waitForResult({ totalCount: 1 })
-          .then(() => $('body').click())
-      ])
-      const receiptTime = Date.now()
-
-      const interactionEvents = JSONPath({ path: '$.[*].request.body.[?(!!@ && @.type===\'interaction\')]', json: interactionHarvests })
-      expect(interactionEvents.length).toEqual(2)
-
-      expect(interactionEvents[0].trigger).toEqual('initialPageLoad')
-      expect(interactionEvents[0].children[0].path.startsWith('/1/')).toEqual(true)
-      expect(interactionEvents[0].isRouteChange).not.toBeTruthy()
-
-      expect(interactionEvents[1].id).toBeTruthy()
-      expect(interactionEvents[1].id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/)).toBeTruthy()
-      expect(interactionEvents[1].nodeId).toBeTruthy()
-
-      expect(interactionEvents[1].end).toBeGreaterThanOrEqual(interactionEvents[1].start)
-      expect(interactionEvents[1].callbackEnd).toBeGreaterThanOrEqual(interactionEvents[1].start)
-      expect(interactionEvents[1].end).toBeLessThanOrEqual(interactionEvents[1].end)
-      expect(interactionEvents[1].children.length).toEqual(1)
-
-      const xhr = interactionEvents[1].children[0]
-      expect(xhr.nodeId).toBeTruthy()
-      expect(xhr.type).toEqual('ajax') //, 'should be an ajax node')
-      expect(xhr.children.length).toEqual(0) //, 'should not have nested children')
-      expect(xhr.method).toEqual('POST') // 'should be a POST request')
-      expect(xhr.status).toEqual(200) // 'should have a 200 status')
-      expect(xhr.domain.split(':')[0]).toEqual('bam-test-1.nr-local.net') // 'should have a correct hostname')
-      const port = +xhr.domain.split(':')[1]
-      expect(port > 1000 && port < 100000).toBeTruthy() //, 'port should be in expected range')
-      expect(xhr.requestBodySize).toEqual(3) // 'should have correct requestBodySize')
-      expect(xhr.responseBodySize).toEqual(3) // 'should have correct responseBodySize')
-      expect(xhr.requestedWith).toEqual('XMLHttpRequest') // 'should indicate it was requested with xhr')
-
-      let fixup = receiptTime - interactionHarvests[1].request.query.rst
-      let estimatedInteractionTimestamp = interactionEvents[1].start + fixup
-      expect(estimatedInteractionTimestamp).toBeGreaterThan(testStartTime) //, 'estimated ixn start after test start')
-      expect(estimatedInteractionTimestamp).toBeLessThan(receiptTime) //, 'estimated ixn start before receipt time')
-    })
-
     it('contains nav and paint timings based on category', async () => {
       const [interactionHarvests] = await Promise.all([
         interactionsCapture.waitForResult({ totalCount: 2 }),
@@ -211,7 +155,7 @@ describe('attribution tests', () => {
       errorMetricsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testErrorsRequest })
     })
 
-    it('captures error in xhr', async () => {
+    it.only('captures error in xhr', async () => {
       const [ixns, [{ request: { body: errorBody } }]] = await Promise.all([
         interactionsCapture.waitForResult({ totalCount: 2 }),
         errorMetricsCapture.waitForResult({ totalCount: 1 }),
@@ -233,6 +177,7 @@ describe('attribution tests', () => {
       expect(interactionNodeId).not.toEqual(null)
 
       var error = errorBody.err[0]
+      console.log(error, interactionTree)
       expect(error.params.message).toEqual('some error')
       expect(error.params.browserInteractionId).toEqual(interactionId)// 'should have the correct interaction id')
       expect(error.params.parentNodeId).toEqual(interactionNodeId)

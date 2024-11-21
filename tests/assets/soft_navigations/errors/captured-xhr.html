@@ -16,6 +16,7 @@
   Tests the interaction between Browser Interactions and Errors
 
   <script>
+    let i = 0
     // click starts interaction
     document.addEventListener('click', function () {
       var xhr = new XMLHttpRequest()
@@ -23,8 +24,13 @@
       xhr.send('123')
 
       xhr.addEventListener('load', function() {
-      // change hash to capture interaction
+        // change hash and modify DOM to capture interaction
         window.location.hash = Math.random()
+
+        const elem = document.createElement('div')
+        elem.innerHTML = 'TEST' + i++
+        document.body.appendChild(elem)
+
         throw new Error('some error')
       }, true)
     })

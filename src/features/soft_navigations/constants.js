@@ -6,6 +6,7 @@ export const INTERACTION_TRIGGERS = [
   'submit' // e.g. user clicks submit butotn or presses enter while editing a form field
 ]
 export const API_TRIGGER_NAME = 'api'
+export const IPL_TRIGGER_NAME = 'initialPageLoad'
 
 export const FEATURE_NAME = FEATURE_NAMES.softNav
 

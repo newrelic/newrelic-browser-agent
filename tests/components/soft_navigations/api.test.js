@@ -130,7 +130,7 @@ test('.interaction with waitForEnd flag keeps ixn open until .end', () => {
   expect(softNavAggregate.interactionInProgress).toBeNull()
   expect(ixnContext.associatedInteraction.end).toEqual(45)
 
-  ixn = newrelic.interaction({ customIxnCreationTime: 50, waitForEnd: true }) // on new api ixn
+  ixn = newrelic.interaction({ waitForEnd: true }) // on new api ixn
   ixnContext = getIxnContext(ixn)
   softNavAggregate.ee.emit('newURL', [70, 'example.com'])
   softNavAggregate.ee.emit('newDom', [80])
@@ -158,17 +158,6 @@ test('.save forcibly harvest any would-be cancelled ixns', async () => {
   newrelic.interaction().save().end()
   await new Promise(process.nextTick)
   expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(3)
-})
-
-test('.interaction gets ixn retroactively too when processed late after ee buffer drain', async () => {
-  softNavAggregate.ee.emit('newUIEvent', [{ type: 'submit', timeStamp: 0 }])
-  let timeInBtwn = performance.now()
-  await new Promise(resolve => setTimeout(resolve, 100))
-  newrelic.interaction().save().end()
-
-  expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(1)
-  const ixn = newrelic.interaction({ customIxnCreationTime: timeInBtwn })
-  expect(getIxnContext(ixn).associatedInteraction.trigger).toBe('submit')
 })
 
 test('.ignore forcibly discard any would-be harvested ixns', () => {

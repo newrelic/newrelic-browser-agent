@@ -4,7 +4,7 @@ import { generateUuid } from '../../../common/ids/unique-id'
 import { addCustomAttributes, getAddStringContext, nullable, numeric } from '../../../common/serialize/bel-serializer'
 import { now } from '../../../common/timing/now'
 import { cleanURL } from '../../../common/url/clean-url'
-import { NODE_TYPE, INTERACTION_STATUS, INTERACTION_TYPE, API_TRIGGER_NAME } from '../constants'
+import { NODE_TYPE, INTERACTION_STATUS, INTERACTION_TYPE, API_TRIGGER_NAME, IPL_TRIGGER_NAME } from '../constants'
 import { BelNode } from './bel-node'
 
 /**
@@ -106,7 +106,7 @@ export class Interaction extends BelNode {
    */
   isActiveDuring (timestamp) {
     if (this.status === INTERACTION_STATUS.IP) return this.start <= timestamp
-    return (this.status === INTERACTION_STATUS.FIN && this.start <= timestamp && this.end >= timestamp)
+    return (this.status === INTERACTION_STATUS.FIN && this.end > timestamp && this.start <= timestamp)
   }
 
   // Following are virtual properties overridden by a subclass:
@@ -118,7 +118,7 @@ export class Interaction extends BelNode {
     const addString = getAddStringContext(this.agentIdentifier)
     const nodeList = []
     let ixnType
-    if (this.trigger === 'initialPageLoad') ixnType = INTERACTION_TYPE.INITIAL_PAGE_LOAD
+    if (this.trigger === IPL_TRIGGER_NAME) ixnType = INTERACTION_TYPE.INITIAL_PAGE_LOAD
     else if (this.newURL !== this.oldURL) ixnType = INTERACTION_TYPE.ROUTE_CHANGE
     else ixnType = INTERACTION_TYPE.UNSPECIFIED
 

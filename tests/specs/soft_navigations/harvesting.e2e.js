@@ -10,46 +10,37 @@ describe('spa harvesting', () => {
     interactionsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testInteractionEventsRequest })
   })
 
-  it('should set correct customEnd value on multiple custom interactions', async () => {
+  it('should set correct start and end values on multiple custom interactions', async () => {
     const [interactionHarvests] = await Promise.all([
       interactionsCapture.waitForResult({ timeout: 10000 }),
       browser.url(await browser.testHandle.assetURL('soft_navigations/multiple-custom-interactions.html', config))
     ])
 
     const customInteractions = JSONPath({ path: '$.[*].request.body.[?(!!@ && @.customName)]', json: interactionHarvests })
-    expect(customInteractions.length).toEqual(4)
+    expect(customInteractions.length).toEqual(3)
     expect(customInteractions).toEqual(expect.arrayContaining([
       expect.objectContaining({
         customName: 'interaction1',
-        children: expect.arrayContaining([expect.objectContaining({
-          type: 'customEnd'
-        })])
+        end: expect.any(Number)
       }),
       expect.objectContaining({
         customName: 'interaction2',
-        children: expect.arrayContaining([expect.objectContaining({
-          type: 'customEnd'
-        })])
-      }),
-      expect.objectContaining({
-        customName: 'interaction3',
-        children: expect.not.arrayContaining([expect.objectContaining({
-          type: 'customEnd'
-        })])
+        end: expect.any(Number)
       }),
       expect.objectContaining({
         customName: 'interaction4',
-        children: expect.arrayContaining([expect.objectContaining({
-          type: 'customEnd'
-        })])
+        end: expect.any(Number)
       })
     ]))
-    customInteractions
-      .filter(interaction => ['interaction1', 'interaction2', 'interaction4'].includes(interaction.customName))
-      .forEach(interaction => {
-        const customEndTime = interaction.children.find(child => child.type === 'customEnd')
-        expect(customEndTime.time).toBeGreaterThanOrEqual(interaction.end)
-      })
+
+    expect(customInteractions[0].start).toBeGreaterThanOrEqual(0)
+    expect(customInteractions[0].start).toBeLessThanOrEqual(customInteractions[0].end)
+    expect(customInteractions[0].end).toBeLessThanOrEqual(customInteractions[1].start)
+
+    expect(customInteractions[1].start).toBeLessThanOrEqual(customInteractions[1].end)
+    expect(customInteractions[1].end).toBeLessThanOrEqual(customInteractions[2].start)
+
+    expect(customInteractions[2].start).toBeLessThanOrEqual(customInteractions[2].end)
   })
 
   it('should not exceed 128 child nodes', async () => {
@@ -157,9 +148,9 @@ describe('spa harvesting', () => {
     const ipl = interactionHarvests[0].request.body[0]
     expect(ipl).toEqual(expect.objectContaining({
       trigger: 'initialPageLoad',
-      children: [expect.objectContaining({
-        type: 'customEnd'
-      })]
+      end: expect.any(Number),
+      children: expect.any(Array)
     }))
+    expect(ipl.end).toBeGreaterThanOrEqual(0)
   })
 })

@@ -101,15 +101,10 @@ describe('XHR SPA Interaction Tracking', () => {
         category: 'Initial page load',
         type: 'interaction',
         trigger: 'initialPageLoad',
-        children: expect.arrayContaining([
-          expect.not.objectContaining({
-            type: 'ajax',
-            requestedWith: 'XMLHttpRequest',
-            path: '/json'
-          })
-        ])
+        children: expect.any(Array)
       })
     ])
+    expect(interactionHarvests[0].request.body[0].children).toBeEmpty()
   })
 
   it('should capture the ajax request and response size', async () => {

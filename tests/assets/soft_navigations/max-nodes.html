@@ -18,7 +18,12 @@
       xhr.open('GET', '/json')
       xhr.send()
     }
+    
     window.location.hash = Math.random()
+
+    const elem = document.createElement('div')
+    elem.innerHTML = 'TEST' + i++
+    document.body.appendChild(elem)
   })
 </script>
 </body>

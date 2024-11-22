@@ -126,7 +126,7 @@ describe('attribution tests', () => {
       const [interactionHarvests] = await Promise.all([
         interactionsCapture.waitForResult({ totalCount: 2 }),
         await browser.url(
-          await browser.testHandle.assetURL('soft_navigations/xhr.html', config)
+          await browser.testHandle.assetURL('soft_navigations/soft-nav-interaction-on-click.html', config)
         ).then(() => browser.waitForAgentLoad()),
         // Perform click after the initial page load interaction is captured
         interactionsCapture.waitForResult({ totalCount: 1 })
@@ -155,7 +155,7 @@ describe('attribution tests', () => {
       errorMetricsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testErrorsRequest })
     })
 
-    it.only('captures error in xhr', async () => {
+    it('captures error in xhr', async () => {
       const [ixns, [{ request: { body: errorBody } }]] = await Promise.all([
         interactionsCapture.waitForResult({ totalCount: 2 }),
         errorMetricsCapture.waitForResult({ totalCount: 1 }),
@@ -177,10 +177,9 @@ describe('attribution tests', () => {
       expect(interactionNodeId).not.toEqual(null)
 
       var error = errorBody.err[0]
-      console.log(error, interactionTree)
       expect(error.params.message).toEqual('some error')
-      expect(error.params.browserInteractionId).toEqual(interactionId)// 'should have the correct interaction id')
-      expect(error.params.parentNodeId).toEqual(interactionNodeId)
+      expect(error.params.browserInteractionId).toEqual(interactionId) // 'should have the correct interaction id'
+      // expect(error.params.parentNodeId).toEqual(interactionNodeId) // there's no parentNodeId in soft nav but is left here in case it's re-added
       expect(error.metrics.count).toEqual(1)
     })
 
@@ -215,8 +214,8 @@ describe('attribution tests', () => {
       expect(errorBody.err.length).toEqual(2)
       var error1 = errorBody.err[0]
       var error2 = errorBody.err[1]
-      expect(error1.params.browserInteractionId).toEqual(interactionId)// 'should have the correct interaction id')
-      expect(error2.params.browserInteractionId).toEqual(interactionId2)// 'should have the correct interaction id')
+      expect(error1.params.browserInteractionId).toEqual(interactionId) // 'should have the correct interaction id'
+      expect(error2.params.browserInteractionId).toEqual(interactionId2) // 'should have the correct interaction id'
     })
   })
 })

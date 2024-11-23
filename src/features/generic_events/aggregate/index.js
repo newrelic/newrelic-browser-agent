@@ -5,7 +5,7 @@
 import { stringify } from '../../../common/util/stringify'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { cleanURL } from '../../../common/url/clean-url'
-import { FEATURE_NAME } from '../constants'
+import { FEATURE_NAME, RESERVED_EVENT_TYPES } from '../constants'
 import { initialLocation, isBrowserScope } from '../../../common/constants/runtime'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { warn } from '../../../common/util/console'
@@ -34,12 +34,21 @@ export class Aggregate extends AggregateBase {
         return
       }
 
+      registerHandler('api-recordCustomEvent', (timestamp, eventType, attributes) => {
+        if (RESERVED_EVENT_TYPES.includes(eventType)) return warn(46)
+        this.addEvent({
+          eventType,
+          timestamp: this.toEpoch(timestamp),
+          ...attributes
+        }, false)
+      }, this.featureName, this.ee)
+
       if (agentRef.init.page_action.enabled) {
         registerHandler('api-addPageAction', (timestamp, name, attributes) => {
           this.addEvent({
             ...attributes,
             eventType: 'PageAction',
-            timestamp: Math.floor(this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(timestamp)),
+            timestamp: this.toEpoch(timestamp),
             timeSinceLoad: timestamp / 1000,
             actionName: name,
             referrerUrl: this.referrerUrl,
@@ -63,7 +72,7 @@ export class Aggregate extends AggregateBase {
               const { target, timeStamp, type } = aggregatedUserAction.event
               this.addEvent({
                 eventType: 'UserAction',
-                timestamp: Math.floor(this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(timeStamp)),
+                timestamp: this.toEpoch(timeStamp),
                 action: type,
                 actionCount: aggregatedUserAction.count,
                 actionDuration: aggregatedUserAction.relativeMs[aggregatedUserAction.relativeMs.length - 1],
@@ -105,7 +114,7 @@ export class Aggregate extends AggregateBase {
                   try {
                     this.addEvent({
                       eventType: 'BrowserPerformance',
-                      timestamp: Math.floor(agentRef.runtime.timeKeeper.correctRelativeTimestamp(entry.startTime)),
+                      timestamp: this.toEpoch(entry.startTime),
                       entryName: entry.name,
                       entryDuration: entry.duration,
                       entryType: type,
@@ -147,7 +156,7 @@ export class Aggregate extends AggregateBase {
    * @param {object=} obj the event object for storing in the event buffer
    * @returns void
    */
-  addEvent (obj = {}) {
+  addEvent (obj = {}, shouldAddDefaultAttributes = true) {
     if (!obj || !Object.keys(obj).length) return
     if (!obj.eventType) {
       warn(44)
@@ -171,7 +180,7 @@ export class Aggregate extends AggregateBase {
       /** Agent-level custom attributes */
       ...(this.agentRef.info.jsAttributes || {}),
       /** Fallbacks for required properties in-case the event did not supply them, should take precedence over agent-level custom attrs */
-      ...defaultEventAttributes,
+      ...(shouldAddDefaultAttributes && defaultEventAttributes),
       /** Event-specific attributes take precedence over agent-level custom attributes and fallbacks */
       ...obj
     }
@@ -194,5 +203,9 @@ export class Aggregate extends AggregateBase {
 
   queryStringsBuilder () {
     return { ua: this.agentRef.info.userAttributes, at: this.agentRef.info.atts }
+  }
+
+  toEpoch (timestamp) {
+    return Math.floor(this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(timestamp))
   }
 }

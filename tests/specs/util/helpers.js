@@ -166,3 +166,23 @@ export async function getSR () {
     }
   })
 }
+
+export async function getLogs () {
+  return browser.execute(function () {
+    try {
+      var logs = Object.values(newrelic.initializedAgents)[0].features.logging.featAggregate
+      return {
+        events: logs.events.get(),
+        blocked: logs.blocked,
+        loggingMode: logs.loggingMode
+      }
+    } catch (err) {
+      return {
+        events: [],
+        blocked: undefined,
+        loggingMode: undefined,
+        err: JSON.stringify(err)
+      }
+    }
+  })
+}

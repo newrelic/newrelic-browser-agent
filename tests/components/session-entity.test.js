@@ -39,7 +39,8 @@ describe('constructor', () => {
         inactiveAt: expect.any(Number),
         sessionReplayMode: expect.any(Number),
         sessionReplaySentFirstChunk: expect.any(Boolean),
-        sessionTraceMode: expect.any(Number)
+        sessionTraceMode: expect.any(Number),
+        loggingMode: expect.any(Number)
       })
     })
   })
@@ -53,7 +54,8 @@ describe('constructor', () => {
       updatedAt: expect.any(Number),
       sessionReplayMode: expect.any(Number),
       sessionReplaySentFirstChunk: expect.any(Boolean),
-      sessionTraceMode: expect.any(Number)
+      sessionTraceMode: expect.any(Number),
+      loggingMode: expect.any(Number)
     }))
   })
 
@@ -117,7 +119,8 @@ describe('constructor', () => {
       updatedAt: expect.any(Number),
       sessionReplayMode: expect.any(Number),
       sessionReplaySentFirstChunk: expect.any(Boolean),
-      sessionTraceMode: expect.any(Number)
+      sessionTraceMode: expect.any(Number),
+      loggingMode: expect.any(Number)
     }))
   })
 
@@ -133,7 +136,8 @@ describe('constructor', () => {
       updatedAt: expect.any(Number),
       sessionReplayMode: expect.any(Number),
       sessionReplaySentFirstChunk: expect.any(Boolean),
-      sessionTraceMode: expect.any(Number)
+      sessionTraceMode: expect.any(Number),
+      loggingMode: expect.any(Number)
     }))
   })
 
@@ -149,7 +153,8 @@ describe('constructor', () => {
       updatedAt: expect.any(Number),
       sessionReplayMode: expect.any(Number),
       sessionReplaySentFirstChunk: expect.any(Boolean),
-      sessionTraceMode: expect.any(Number)
+      sessionTraceMode: expect.any(Number),
+      loggingMode: expect.any(Number)
     }))
   })
 })
@@ -218,7 +223,8 @@ describe('read()', () => {
       inactiveAt: expect.any(Number),
       sessionReplayMode: expect.any(Number),
       sessionReplaySentFirstChunk: expect.any(Boolean),
-      sessionTraceMode: expect.any(Number)
+      sessionTraceMode: expect.any(Number),
+      loggingMode: expect.any(Number)
     }))
   })
 

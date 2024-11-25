@@ -117,4 +117,8 @@ export class AggregateBase extends FeatureBase {
       existingAgent.runtime.obfuscator = new Obfuscator(this.agentIdentifier)
     }
   }
+
+  syncWithSessionManager (state = {}) {
+    this.agentRef.runtime.session.write(state)
+  }
 }

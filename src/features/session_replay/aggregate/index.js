@@ -73,7 +73,7 @@ export class Aggregate extends AggregateBase {
     this.ee.on(SESSION_EVENTS.UPDATE, (type, data) => {
       if (!this.recorder || !this.initialized || this.blocked || type !== SESSION_EVENT_TYPES.CROSS_TAB) return
       if (this.mode !== MODE.OFF && data.sessionReplayMode === MODE.OFF) this.abort(ABORT_REASONS.CROSS_TAB)
-      this.mode = data.sessionReplay
+      this.mode = data.sessionReplayMode
     })
 
     // Bespoke logic for blobs endpoint.
@@ -393,9 +393,5 @@ export class Aggregate extends AggregateBase {
     this.recorder?.clearTimestamps?.()
     this.ee.emit('REPLAY_ABORTED')
     while (this.recorder?.getEvents().events.length) this.recorder?.clearBuffer?.()
-  }
-
-  syncWithSessionManager (state = {}) {
-    this.agentRef.runtime.session.write(state)
   }
 }

@@ -63,8 +63,10 @@ describe('disable harvesting', () => {
 
   it('should disable harvesting console logs when log entitlement is 0', async () => {
     // logging mode will only take effect on a fresh session
-    const logsCapture = await browser.testHandle.createNetworkCaptures('bamServer2', { test: testLogsRequest })
-    await browser.testHandle.scheduleReply('bamServer2', {
+    await browser.destroyAgentSession()
+
+    const logsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testLogsRequest })
+    await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
       body: JSON.stringify(rumFlags({ log: LOGGING_MODE.OFF }))
     })
@@ -114,23 +116,3 @@ describe('disable harvesting', () => {
     })
   })
 })
-
-// logging mode will only take effect on a fresh session
-// describe('disable harvesting - logging', () => {
-//   it('should disable harvesting console logs when log entitlement is 0', async () => {
-//     const logsCapture = await browser.testHandle.createNetworkCaptures('bamServer2', { test: testLogsRequest })
-//     await browser.testHandle.scheduleReply('bamServer2', {
-//       test: testRumRequest,
-//       body: JSON.stringify(rumFlags({ log: 0 }))
-//     })
-//
-//     const [logsHarvests] = await Promise.all([
-//       logsCapture.waitForResult({ timeout: 10000 }),
-//       browser.url(await browser.testHandle.assetURL('obfuscate-pii.html'))
-//         .then(() => browser.waitForAgentLoad())
-//     ])
-//
-//     console.log('logHarvests: ', logsHarvests)
-//     expect(logsHarvests).toEqual([])
-//   })
-// })

@@ -150,7 +150,7 @@ describe('Logging Across Pages', () => {
     await expect(getLogs()).resolves.toEqual(expect.objectContaining({
       events: [],
       blocked: true,
-      loggingMode: 0
+      loggingMode: LOGGING_MODE.OFF
     }))
 
     await browser.closeWindow()
@@ -160,7 +160,7 @@ describe('Logging Across Pages', () => {
     await expect(getLogs()).resolves.toEqual(expect.objectContaining({
       events: [],
       blocked: true,
-      loggingMode: 0
+      loggingMode: LOGGING_MODE.OFF
     }))
   })
 })

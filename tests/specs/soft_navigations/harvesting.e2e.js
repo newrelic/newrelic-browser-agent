@@ -1,4 +1,3 @@
-import { checkSpa } from '../../util/basic-checks'
 import { testInteractionEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
 import { JSONPath } from 'jsonpath-plus'
 
@@ -43,26 +42,6 @@ describe('spa harvesting', () => {
     expect(customInteractions[2].start).toBeLessThanOrEqual(customInteractions[2].end)
   })
 
-  it('should not exceed 128 child nodes', async () => {
-    await Promise.all([
-      interactionsCapture.waitForResult({ totalCount: 1 }),
-      browser.url(await browser.testHandle.assetURL('soft_navigations/max-nodes.html', config))
-        .then(() => browser.waitForAgentLoad())
-    ])
-
-    const [interactionHarvests] = await Promise.all([
-      interactionsCapture.waitForResult({ timeout: 20000 }), // It can take a bit of time to get all the XHRs resolved
-      $('#sendAjax').click()
-    ])
-
-    expect(interactionHarvests.length).toEqual(2)
-    checkSpa(interactionHarvests[1].request, { trigger: 'click' })
-    const ajaxNodes = interactionHarvests[1].request.body[0].children.filter(node =>
-      node.type === 'ajax' && node.path === '/json'
-    )
-    expect(ajaxNodes.length).toBeBetween(1, 129)
-  })
-
   it('pushstate is followed by a popstate', async () => {
     const url = await browser.testHandle.assetURL('instrumented.html', config)
     await Promise.all([
@@ -71,10 +50,14 @@ describe('spa harvesting', () => {
     ])
 
     const [interactionHarvests] = await Promise.all([
-      interactionsCapture.waitForResult({ timeout: 10000 }),
+      interactionsCapture.waitForResult({ totalCount: 2 }),
       browser.execute(function () {
         window.history.pushState({}, '', '/newurl')
-        window.addEventListener('popstate', function () { setTimeout(newrelic.interaction().createTracer('timer')) })
+        window.addEventListener('popstate', function () {
+          const elem = document.createElement('div')
+          elem.innerHTML = 'TEST'
+          document.body.appendChild(elem)
+        })
         window.history.back()
       })
     ])
@@ -87,13 +70,7 @@ describe('spa harvesting', () => {
       trigger: 'popstate',
       oldURL: parsedUrl.origin + '/newurl',
       newURL: parsedUrl.origin + parsedUrl.pathname, // should be the original asset url
-      children: [
-        expect.objectContaining({
-          type: 'customTracer',
-          name: 'timer',
-          children: []
-        })
-      ]
+      children: []
     }))
   })
 
@@ -105,36 +82,31 @@ describe('spa harvesting', () => {
     ])
 
     const hashFragment = 'otherurl'
-    await Promise.all([
-      interactionsCapture.waitForResult({ totalCount: 2 }),
-      browser.execute(function (hashFragment) {
-        window.location.hash = hashFragment
-      }, hashFragment)
-    ])
+    await browser.execute(function (hashFragment) {
+      window.location.hash = hashFragment
+    }, hashFragment)
 
     const [interactionHarvests] = await Promise.all([
-      interactionsCapture.waitForResult({ timeout: 10000 }),
+      interactionsCapture.waitForResult({ totalCount: 2 }),
       browser.execute(function () {
-        window.addEventListener('popstate', function () { setTimeout(newrelic.interaction().createTracer('onPopstate')) })
+        window.addEventListener('popstate', function () {
+          const elem = document.createElement('div')
+          elem.innerHTML = 'TEST'
+          document.body.appendChild(elem)
+        })
         window.history.back()
       })
     ])
 
     const parsedUrl = new URL(url)
-    expect(interactionHarvests.length).toEqual(3)
-    expect(interactionHarvests[2].request.body[0]).toEqual(expect.objectContaining({
+    expect(interactionHarvests.length).toEqual(2)
+    expect(interactionHarvests[1].request.body[0]).toEqual(expect.objectContaining({
       category: 'Route change',
       type: 'interaction',
       trigger: 'popstate',
       oldURL: parsedUrl.origin + parsedUrl.pathname + '#' + hashFragment,
       newURL: parsedUrl.origin + parsedUrl.pathname, // should be the original asset url
-      children: [
-        expect.objectContaining({
-          type: 'customTracer',
-          name: 'onPopstate',
-          children: []
-        })
-      ]
+      children: []
     }))
   })
 

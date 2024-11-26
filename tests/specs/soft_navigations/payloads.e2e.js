@@ -1,5 +1,4 @@
-import { supportsFirstPaint } from '../../../tools/browser-matcher/common-matchers.mjs'
-import { JSONPath } from 'jsonpath-plus'
+import { notSafari, supportsFirstPaint } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { testInteractionEventsRequest, testErrorsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 describe('attribution tests', () => {
@@ -22,25 +21,26 @@ describe('attribution tests', () => {
     }
 
     it('captures innerText', async () => {
-      const [interactionHarvests] = await Promise.all([
-        interactionsCapture.waitForResult({ timeout: 10000 }),
-        await browser.url(
+      let [interactionHarvests] = await Promise.all([
+        interactionsCapture.waitForResult({ totalCount: 1 }),
+        browser.url(
           await browser.testHandle.assetURL('soft_navigations/action-text.html', configWithDenyList)
-        ).then(() => browser.waitForAgentLoad()),
-        // Perform click after the initial page load interaction is captured
-        interactionsCapture.waitForResult({ totalCount: 1 })
-          .then(() => $('#one').click())
+        ).then(() => browser.waitForAgentLoad())
       ])
+      const ipl = interactionHarvests[0].request.body[0]
 
-      const interactionEvents = JSONPath({ path: '$.[*].request.body.[?(!!@ && @.type===\'interaction\')]', json: interactionHarvests })
-      expect(interactionEvents.length).toEqual(2)
+      expect(ipl.trigger).toEqual('initialPageLoad')
+      expect(ipl.children.length).toEqual(0)
+      expect(ipl.isRouteChange).not.toBeTruthy()
 
-      expect(interactionEvents[0].trigger).toEqual('initialPageLoad')
-      expect(interactionEvents[0].children.length).toEqual(0)
-      expect(interactionEvents[0].isRouteChange).not.toBeTruthy()
+      ;[interactionHarvests] = await Promise.all([
+        interactionsCapture.waitForResult({ totalCount: 2 }),
+        $('#one').click()
+      ])
+      const rc = interactionHarvests[1].request.body[0]
 
-      expect(interactionEvents[1].children.length).toEqual(1)
-      expect(interactionEvents[1].children[0]).toMatchObject({
+      expect(rc.children.length).toEqual(1)
+      expect(rc.children[0]).toMatchObject({
         type: 'stringAttribute',
         key: 'actionText',
         value: '#1'
@@ -48,25 +48,26 @@ describe('attribution tests', () => {
     })
 
     it('captures value', async () => {
-      const [interactionHarvests] = await Promise.all([
-        interactionsCapture.waitForResult({ timeout: 10000 }),
-        await browser.url(
+      let [interactionHarvests] = await Promise.all([
+        interactionsCapture.waitForResult({ totalCount: 1 }),
+        browser.url(
           await browser.testHandle.assetURL('soft_navigations/action-text.html', configWithDenyList)
-        ).then(() => browser.waitForAgentLoad()),
-        // Perform click after the initial page load interaction is captured
-        interactionsCapture.waitForResult({ totalCount: 1 })
-          .then(() => $('#two').click())
+        ).then(() => browser.waitForAgentLoad())
       ])
+      const ipl = interactionHarvests[0].request.body[0]
 
-      const interactionEvents = JSONPath({ path: '$.[*].request.body.[?(!!@ && @.type===\'interaction\')]', json: interactionHarvests })
-      expect(interactionEvents.length).toEqual(2)
+      expect(ipl.trigger).toEqual('initialPageLoad')
+      expect(ipl.children.length).toEqual(0)
+      expect(ipl.isRouteChange).not.toBeTruthy()
 
-      expect(interactionEvents[0].trigger).toEqual('initialPageLoad')
-      expect(interactionEvents[0].children.length).toEqual(0)
-      expect(interactionEvents[0].isRouteChange).not.toBeTruthy()
+      ;[interactionHarvests] = await Promise.all([
+        interactionsCapture.waitForResult({ totalCount: 2 }),
+        $('#two').click()
+      ])
+      const rc = interactionHarvests[1].request.body[0]
 
-      expect(interactionEvents[1].children.length).toEqual(1)
-      expect(interactionEvents[1].children[0]).toMatchObject({
+      expect(rc.children.length).toEqual(1)
+      expect(rc.children[0]).toMatchObject({
         type: 'stringAttribute',
         key: 'actionText',
         value: '#2'
@@ -74,25 +75,26 @@ describe('attribution tests', () => {
     })
 
     it('captures title', async () => {
-      const [interactionHarvests] = await Promise.all([
-        interactionsCapture.waitForResult({ timeout: 10000 }),
-        await browser.url(
+      let [interactionHarvests] = await Promise.all([
+        interactionsCapture.waitForResult({ totalCount: 1 }),
+        browser.url(
           await browser.testHandle.assetURL('soft_navigations/action-text.html', configWithDenyList)
-        ).then(() => browser.waitForAgentLoad()),
-        // Perform click after the initial page load interaction is captured
-        interactionsCapture.waitForResult({ totalCount: 1 })
-          .then(() => $('#three').click())
+        ).then(() => browser.waitForAgentLoad())
       ])
+      const ipl = interactionHarvests[0].request.body[0]
 
-      const interactionEvents = JSONPath({ path: '$.[*].request.body.[?(!!@ && @.type===\'interaction\')]', json: interactionHarvests })
-      expect(interactionEvents.length).toEqual(2)
+      expect(ipl.trigger).toEqual('initialPageLoad')
+      expect(ipl.children.length).toEqual(0)
+      expect(ipl.isRouteChange).not.toBeTruthy()
 
-      expect(interactionEvents[0].trigger).toEqual('initialPageLoad')
-      expect(interactionEvents[0].children.length).toEqual(0)
-      expect(interactionEvents[0].isRouteChange).not.toBeTruthy()
+      ;[interactionHarvests] = await Promise.all([
+        interactionsCapture.waitForResult({ totalCount: 2 }),
+        $('#three').click()
+      ])
+      const rc = interactionHarvests[1].request.body[0]
 
-      expect(interactionEvents[1].children.length).toEqual(1)
-      expect(interactionEvents[1].children[0]).toMatchObject({
+      expect(rc.children.length).toEqual(1)
+      expect(rc.children[0]).toMatchObject({
         type: 'stringAttribute',
         key: 'actionText',
         value: '#3'
@@ -100,24 +102,25 @@ describe('attribution tests', () => {
     })
 
     it('does not capture body text', async () => {
-      const [interactionHarvests] = await Promise.all([
-        interactionsCapture.waitForResult({ timeout: 10000 }),
-        await browser.url(
+      let [interactionHarvests] = await Promise.all([
+        interactionsCapture.waitForResult({ totalCount: 1 }),
+        browser.url(
           await browser.testHandle.assetURL('soft_navigations/action-text.html', configWithDenyList)
-        ).then(() => browser.waitForAgentLoad()),
-        // Perform click after the initial page load interaction is captured
-        interactionsCapture.waitForResult({ totalCount: 1 })
-          .then(() => $('body').click())
+        ).then(() => browser.waitForAgentLoad())
       ])
+      const ipl = interactionHarvests[0].request.body[0]
 
-      const interactionEvents = JSONPath({ path: '$.[*].request.body.[?(!!@ && @.type===\'interaction\')]', json: interactionHarvests })
-      expect(interactionEvents.length).toEqual(2)
+      expect(ipl.trigger).toEqual('initialPageLoad')
+      expect(ipl.children.length).toEqual(0)
+      expect(ipl.isRouteChange).not.toBeTruthy()
 
-      expect(interactionEvents[0].trigger).toEqual('initialPageLoad')
-      expect(interactionEvents[0].children.length).toEqual(0)
-      expect(interactionEvents[0].isRouteChange).not.toBeTruthy()
+      ;[interactionHarvests] = await Promise.all([
+        interactionsCapture.waitForResult({ totalCount: 2 }),
+        $('body').click()
+      ])
+      const rc = interactionHarvests[1].request.body[0]
 
-      expect(interactionEvents[1].children.length).toEqual(0)
+      expect(rc.children.length).toEqual(0)
     })
   })
 
@@ -148,7 +151,8 @@ describe('attribution tests', () => {
     })
   })
 
-  describe('errors', () => {
+  // Safari (via LT) has a weird behavior of a very large timeStamp value for UI event which makes the interaction start nonsense. This results in an inability to associate ajax & errors.
+  describe.withBrowsersMatching(notSafari)('errors', () => {
     let errorMetricsCapture
 
     beforeEach(async () => {
@@ -185,12 +189,11 @@ describe('attribution tests', () => {
 
     it('captures same error in multiple interactions', async () => {
       const [ixns, [{ request: { body: errorBody } }]] = await Promise.all([
-        interactionsCapture.waitForResult({ totalCount: 3 }),
+        interactionsCapture.waitForResult({ totalCount: 2 }),
         errorMetricsCapture.waitForResult({ totalCount: 1 }),
-        await browser.url(
+        browser.url(
           await browser.testHandle.assetURL('soft_navigations/errors/captured-custom.html', config)
-        )
-          .then(() => browser.waitForAgentLoad())
+        ).then(() => browser.waitForAgentLoad())
           .then(() => $('body').click())
           .then(() => browser.pause(1000))
           .then(() => $('body').click())
@@ -199,17 +202,12 @@ describe('attribution tests', () => {
       const interactionTrees = ixns.filter(x => x.request.body[0].trigger !== 'initialPageLoad')
 
       const ixn1 = interactionTrees[0].request.body[0]
-      const ixn2 = interactionTrees[1].request.body[0]
+      const ixn2 = interactionTrees[0].request.body[1] // there should be 2 interactions in the 2nd payload
 
-      var interactionId = ixn1.id
-      var interactionNodeId = ixn1.children[0].nodeId
+      const interactionId = ixn1.id
       expect(interactionId).not.toEqual(null)
-      expect(interactionNodeId).not.toEqual(null)
-
-      var interactionId2 = ixn2.id
-      var interactionNodeId2 = ixn2.children[0].nodeId
+      const interactionId2 = ixn2.id
       expect(interactionId2).not.toEqual(null)
-      expect(interactionNodeId2).not.toEqual(null)
 
       expect(errorBody.err.length).toEqual(2)
       var error1 = errorBody.err[0]

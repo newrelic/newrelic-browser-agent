@@ -13,8 +13,6 @@ import { BelNode } from './bel-node'
 export class Interaction extends BelNode {
   id = generateUuid() // unique id that is serialized and used to link interactions with errors
   initialPageURL = initialLocation
-  oldURL = '' + globalScope?.location
-  newURL = '' + globalScope?.location
   customName
   customAttributes = {}
   customDataByApi = {}
@@ -30,7 +28,7 @@ export class Interaction extends BelNode {
   onDone = []
   cancellationTimer
 
-  constructor (agentIdentifier, uiEvent, uiEventTimestamp, currentRouteKnown) {
+  constructor (agentIdentifier, uiEvent, uiEventTimestamp, currentRouteKnown, currentUrl) {
     super(agentIdentifier)
     this.belType = NODE_TYPE.INTERACTION
     this.trigger = uiEvent
@@ -42,6 +40,7 @@ export class Interaction extends BelNode {
     ])
     this.forceSave = this.forceIgnore = false
     if (this.trigger === API_TRIGGER_NAME) this.createdByApi = true
+    this.newURL = this.oldURL = (currentUrl || globalScope?.location.href)
   }
 
   updateDom (timestamp) {

@@ -2,6 +2,7 @@ import { PREFIX } from '../../src/common/session/constants'
 import { SessionEntity } from '../../src/common/session/session-entity'
 import { LocalMemory, model } from './session-helpers'
 import * as runtimeModule from '../../src/common/constants/runtime'
+import { buildExpectedSessionState } from '../specs/util/helpers'
 
 jest.useFakeTimers()
 
@@ -33,30 +34,13 @@ describe('constructor', () => {
       inactiveTimer: expect.any(Object),
       isNew: expect.any(Boolean),
       storage: expect.any(Object),
-      state: expect.objectContaining({
-        value: expect.any(String),
-        expiresAt: expect.any(Number),
-        inactiveAt: expect.any(Number),
-        sessionReplayMode: expect.any(Number),
-        sessionReplaySentFirstChunk: expect.any(Boolean),
-        sessionTraceMode: expect.any(Number),
-        loggingMode: expect.any(Number)
-      })
+      state: expect.objectContaining(buildExpectedSessionState())
     })
   })
 
   test('can use sane defaults', () => {
     const session = new SessionEntity({ agentIdentifier, key, storage })
-    expect(session.state).toEqual(expect.objectContaining({
-      value: expect.any(String),
-      expiresAt: expect.any(Number),
-      inactiveAt: expect.any(Number),
-      updatedAt: expect.any(Number),
-      sessionReplayMode: expect.any(Number),
-      sessionReplaySentFirstChunk: expect.any(Boolean),
-      sessionTraceMode: expect.any(Number),
-      loggingMode: expect.any(Number)
-    }))
+    expect(session.state).toEqual(expect.objectContaining(buildExpectedSessionState()))
   })
 
   test('expiresAt is the correct future timestamp - new session', () => {
@@ -112,16 +96,7 @@ describe('constructor', () => {
     // missing required fields
     const storage = new LocalMemory({ [`${PREFIX}_${key}`]: { invalid_fields: true } })
     const session = new SessionEntity({ agentIdentifier, key, storage })
-    expect(session.state).toEqual(expect.objectContaining({
-      value: expect.any(String),
-      expiresAt: expect.any(Number),
-      inactiveAt: expect.any(Number),
-      updatedAt: expect.any(Number),
-      sessionReplayMode: expect.any(Number),
-      sessionReplaySentFirstChunk: expect.any(Boolean),
-      sessionTraceMode: expect.any(Number),
-      loggingMode: expect.any(Number)
-    }))
+    expect(session.state).toEqual(expect.objectContaining(buildExpectedSessionState()))
   })
 
   test('expired expiresAt value in storage sets new defaults', () => {
@@ -129,16 +104,7 @@ describe('constructor', () => {
     jest.setSystemTime(now)
     const storage = new LocalMemory({ [`${PREFIX}_${key}`]: { value, expiresAt: now - 100, inactiveAt: Infinity } })
     const session = new SessionEntity({ agentIdentifier, key, storage })
-    expect(session.state).toEqual(expect.objectContaining({
-      value: expect.any(String),
-      expiresAt: expect.any(Number),
-      inactiveAt: expect.any(Number),
-      updatedAt: expect.any(Number),
-      sessionReplayMode: expect.any(Number),
-      sessionReplaySentFirstChunk: expect.any(Boolean),
-      sessionTraceMode: expect.any(Number),
-      loggingMode: expect.any(Number)
-    }))
+    expect(session.state).toEqual(expect.objectContaining(buildExpectedSessionState()))
   })
 
   test('expired inactiveAt value in storage sets new defaults', () => {
@@ -146,16 +112,7 @@ describe('constructor', () => {
     jest.setSystemTime(now)
     const storage = new LocalMemory({ [`${PREFIX}_${key}`]: { value, inactiveAt: now - 100, expiresAt: Infinity } })
     const session = new SessionEntity({ agentIdentifier, key, storage })
-    expect(session.state).toEqual(expect.objectContaining({
-      value: expect.any(String),
-      expiresAt: expect.any(Number),
-      inactiveAt: expect.any(Number),
-      updatedAt: expect.any(Number),
-      sessionReplayMode: expect.any(Number),
-      sessionReplaySentFirstChunk: expect.any(Boolean),
-      sessionTraceMode: expect.any(Number),
-      loggingMode: expect.any(Number)
-    }))
+    expect(session.state).toEqual(expect.objectContaining(buildExpectedSessionState()))
   })
 })
 
@@ -217,15 +174,7 @@ describe('read()', () => {
     const newSession = new SessionEntity({ agentIdentifier, key, storage, expiresMs: 10 })
     expect(newSession.isNew).toBeTruthy()
 
-    expect(newSession.read()).toEqual(expect.objectContaining({
-      value: expect.any(String),
-      expiresAt: expect.any(Number),
-      inactiveAt: expect.any(Number),
-      sessionReplayMode: expect.any(Number),
-      sessionReplaySentFirstChunk: expect.any(Boolean),
-      sessionTraceMode: expect.any(Number),
-      loggingMode: expect.any(Number)
-    }))
+    expect(newSession.read()).toEqual(expect.objectContaining(buildExpectedSessionState()))
   })
 
   test('"pre-existing" sessions get data from read()', () => {

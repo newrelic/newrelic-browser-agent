@@ -6,7 +6,7 @@ import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
 import { FEATURE_NAMES, FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { AggregateBase } from '../../utils/aggregate-base'
-import { API_TRIGGER_NAME, FEATURE_NAME, INTERACTION_STATUS, IPL_TRIGGER_NAME } from '../constants'
+import { API_TRIGGER_NAME, FEATURE_NAME, INTERACTION_STATUS, INTERACTION_TRIGGERS, IPL_TRIGGER_NAME } from '../constants'
 import { AjaxNode } from './ajax-node'
 import { InitialPageLoadInteraction } from './initial-page-load-interaction'
 import { Interaction } from './interaction'
@@ -35,6 +35,7 @@ export class Aggregate extends AggregateBase {
 
     this.latestRouteSetByApi = null
     this.interactionInProgress = null // aside from the "page load" interaction, there can only ever be 1 ongoing at a time
+    this.latestHistoryUrl = null
 
     this.blocked = false
     this.waitForFlags(['spa']).then(([spaOn]) => {
@@ -55,7 +56,11 @@ export class Aggregate extends AggregateBase {
 
     // By default, a complete UI driven interaction requires event -> URL change -> DOM mod in that exact order.
     registerHandler('newUIEvent', (event) => this.startUIInteraction(event.type, Math.floor(event.timeStamp), event.target), this.featureName, this.ee)
-    registerHandler('newURL', (timestamp, url) => this.interactionInProgress?.updateHistory(timestamp, url), this.featureName, this.ee)
+    registerHandler('newURL', (timestamp, url) => {
+      // In the case of 'popstate' trigger, by the time the event fires, the URL has already changed, so we need to store what-will-be the *previous* URL for oldURL of next popstate ixn.
+      this.latestHistoryUrl = url
+      this.interactionInProgress?.updateHistory(timestamp, url)
+    }, this.featureName, this.ee)
     registerHandler('newDom', timestamp => {
       this.interactionInProgress?.updateDom(timestamp)
       if (this.interactionInProgress?.seenHistoryAndDomChange()) this.interactionInProgress.done()
@@ -83,8 +88,10 @@ export class Aggregate extends AggregateBase {
     if (this.interactionInProgress?.createdByApi) return // api-started interactions cannot be disrupted aka cancelled by UI events (and the vice versa applies as well)
     if (this.interactionInProgress?.done() === false) return // current in-progress is blocked from closing, e.g. by 'waitForEnd' api option
 
-    this.interactionInProgress = new Interaction(this.agentIdentifier, eventName, startedAt, this.latestRouteSetByApi)
-    if (eventName === 'click') {
+    const oldURL = eventName === INTERACTION_TRIGGERS[3] ? this.latestHistoryUrl : undefined // see related comment in 'newURL' handler above, 'popstate'
+    this.interactionInProgress = new Interaction(this.agentIdentifier, eventName, startedAt, this.latestRouteSetByApi, oldURL)
+
+    if (eventName === INTERACTION_TRIGGERS[0]) { // 'click'
       const sourceElemText = getActionText(sourceElem)
       if (sourceElemText) this.interactionInProgress.customAttributes.actionText = sourceElemText
     }
@@ -202,6 +209,7 @@ export class Aggregate extends AggregateBase {
       if (!this.associatedInteraction) {
         // This new api-driven interaction will be the target of any subsequent .interaction() call, until it is closed by EITHER .end() OR the regular seenHistoryAndDomChange process.
         this.associatedInteraction = thisClass.interactionInProgress = new Interaction(thisClass.agentIdentifier, API_TRIGGER_NAME, time, thisClass.latestRouteSetByApi)
+        thisClass.domObserver.observe(document.body, { attributes: true, childList: true, subtree: true, characterData: true }) // start observing for DOM changes like a regular UI-driven interaction
         thisClass.setClosureHandlers()
       }
       if (waitForEnd === true) this.associatedInteraction.keepOpenUntilEndApi = true

@@ -31,6 +31,16 @@ export class MicroAgentBase {
   }
 
   /**
+   * Records a custom event with a specified eventType and attributes.
+   * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/recordCustomEvent/}
+   * @param {string} eventType The eventType to store the event as.
+   * @param {object} [attributes] JSON object with one or more key/value pairs. For example: {key:"value"}.
+   */
+  recordCustomEvent (eventType, attributes) {
+    return this.#callMethod('recordCustomEvent', eventType, attributes)
+  }
+
+  /**
    * Groups page views to help URL structure or to capture the URL's routing information.
    * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/setpageviewname/}
    * @param {string} name The page name you want to use. Use alphanumeric characters.

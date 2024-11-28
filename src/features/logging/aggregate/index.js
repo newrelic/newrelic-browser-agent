@@ -33,7 +33,8 @@ export class Aggregate extends AggregateBase {
     })
   }
 
-  handleLog (timestamp, message, attributes = {}, level = LOG_LEVELS.INFO) {
+  handleLog (timestamp, message, attributes = {}, level = LOG_LEVELS.INFO, target) {
+    if (target && !target.entityGuid) return warn(47)
     if (this.blocked) return
 
     if (!attributes || typeof attributes !== 'object') attributes = {}
@@ -72,24 +73,26 @@ export class Aggregate extends AggregateBase {
       return
     }
 
-    if (this.events.wouldExceedMaxSize(logBytes)) {
-      handle(SUPPORTABILITY_METRIC_CHANNEL, ['Logging/Harvest/Early/Seen', this.events.bytes + logBytes])
+    const events = this.eventManager.get(stringify(target))
+
+    if (events.wouldExceedMaxSize(logBytes)) {
+      handle(SUPPORTABILITY_METRIC_CHANNEL, ['Logging/Harvest/Early/Seen', events.bytes + logBytes])
       this.scheduler.runHarvest() // force a harvest to try adding again
     }
 
-    if (!this.events.add(log)) { // still failed after a harvest attempt despite not being too large would mean harvest failed with options.retry
+    if (!events.add(log)) { // still failed after a harvest attempt despite not being too large would mean harvest failed with options.retry
       handle(SUPPORTABILITY_METRIC_CHANNEL, [failToHarvestMessage, logBytes])
       warn(31, log.message.slice(0, 25) + '...')
     }
   }
 
-  serializer (eventBuffer) {
+  serializer (eventBuffer, target) {
     const sessionEntity = this.agentRef.runtime.session
     return [{
       common: {
         /** Attributes in the `common` section are added to `all` logs generated in the payload */
         attributes: {
-          'entity.guid': this.agentRef.runtime.appMetadata?.agents?.[0]?.entityGuid, // browser entity guid as provided from RUM response
+          'entity.guid': target.entityGuid || this.agentRef.runtime.appMetadata?.agents?.[0]?.entityGuid, // browser entity guid as provided API target OR the default from RUM response if not supplied
           ...(sessionEntity && {
             session: sessionEntity.state.value || '0', // The session ID that we generate and keep across page loads
             hasReplay: sessionEntity.state.sessionReplayMode === 1, // True if a session replay recording is running
@@ -113,7 +116,7 @@ export class Aggregate extends AggregateBase {
     }]
   }
 
-  queryStringsBuilder () {
-    return { browser_monitoring_key: this.agentRef.info.licenseKey }
+  queryStringsBuilder (_, target) {
+    return { browser_monitoring_key: target.licenseKey }
   }
 }

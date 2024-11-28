@@ -38,42 +38,20 @@ export class Harvest extends SharedContext {
   }
 
   /**
-   * Initiate a harvest from multiple sources. An event that corresponds to the endpoint
-   * name is emitted, which gives any listeners the opportunity to provide payload data.
-   * Note: Used by page_action
-   * @param {NetworkSendSpec} spec Specification for sending data
-   */
-  sendX (spec = {}) {
-    const submitMethod = submitData.getSubmitMethod({ isFinalHarvest: spec.opts?.unload })
-    const options = {
-      retry: !spec.opts?.unload && submitMethod === submitData.xhr,
-      isFinalHarvest: spec.opts?.unload === true
-    }
-    const payload = this.createPayload(spec.endpoint, options)
-    const caller = this._send.bind(this)
-    return caller({ ...spec, payload, submitMethod })
-  }
-
-  /**
-   * Initiate a harvest call.
-   * @param {NetworkSendSpec} spec Specification for sending data
-   */
-  send (spec = {}) {
-    const caller = this._send.bind(this)
-
-    return caller(spec)
-  }
-
-  /**
    * Initiate a harvest call. Typically used by `sendX` and `send` methods or called directly
    * for raw network calls.
    * @param {NetworkSendSpec} param0 Specification for sending data
    * @returns {boolean} True if the network call succeeded. For final harvest calls, the return
    * value should not be relied upon because network calls will be made asynchronously.
    */
-  _send ({ endpoint, payload = {}, opts = {}, submitMethod, cbFinished, customUrl, raw, includeBaseParams = true }) {
+  send ({ endpoint, target, payload = {}, opts = {}, submitMethod, cbFinished, customUrl, raw, includeBaseParams = true }) {
     const info = getInfo(this.sharedContext.agentIdentifier)
     if (!info.errorBeacon) return false
+
+    target ??= {
+      licenseKey: info.licenseKey,
+      applicationID: info.applicationID
+    }
 
     const agentRuntime = getRuntime(this.sharedContext.agentIdentifier)
     let { body, qs } = this.cleanPayload(payload)
@@ -89,11 +67,11 @@ export class Harvest extends SharedContext {
     const protocol = init.ssl === false ? 'http' : 'https'
     const perceviedBeacon = init.proxy.beacon || info.errorBeacon
     const endpointURLPart = endpoint !== 'rum' ? `/${endpoint}` : ''
-    let url = `${protocol}://${perceviedBeacon}${endpointURLPart}/1/${info.licenseKey}`
+    let url = `${protocol}://${perceviedBeacon}${endpointURLPart}/1/${target.licenseKey}`
     if (customUrl) url = customUrl
     if (raw) url = `${protocol}://${perceviedBeacon}/${endpoint}`
 
-    const baseParams = !raw && includeBaseParams ? this.baseQueryString(qs, endpoint) : ''
+    const baseParams = !raw && includeBaseParams ? this.baseQueryString(qs, endpoint, target.applicationID) : ''
     let payloadParams = encodeObj(qs, agentRuntime.maxBytes)
     if (!submitMethod) {
       submitMethod = submitData.getSubmitMethod({ isFinalHarvest: opts.unload })
@@ -131,7 +109,7 @@ export class Harvest extends SharedContext {
       result.addEventListener('loadend', function () {
         // `this` refers to the XHR object in this scope, do not change this to a fat arrow
         // status 0 refers to a local error, such as CORS or network failure, or a blocked request by the browser (e.g. adblocker)
-        const cbResult = { sent: this.status !== 0, status: this.status, xhr: this, fullUrl }
+        const cbResult = { sent: this.status !== 0, status: this.status, xhr: this, fullUrl, target }
         if (this.status === 429) {
           cbResult.retry = true
           cbResult.delay = harvestScope.tooManyRequestsDelay
@@ -150,7 +128,7 @@ export class Harvest extends SharedContext {
   }
 
   // The stuff that gets sent every time.
-  baseQueryString (qs, endpoint) {
+  baseQueryString (qs, endpoint, appId) {
     const runtime = getRuntime(this.sharedContext.agentIdentifier)
     const info = getInfo(this.sharedContext.agentIdentifier)
 
@@ -158,7 +136,7 @@ export class Harvest extends SharedContext {
     const hr = runtime?.session?.state.sessionReplayMode === 1 && endpoint !== 'jserrors'
 
     const qps = [
-      'a=' + info.applicationID,
+      'a=' + appId,
       encodeParam('sa', (info.sa ? '' + info.sa : '')),
       encodeParam('v', VERSION),
       transactionNameParam(info),
@@ -171,41 +149,6 @@ export class Harvest extends SharedContext {
     ]
     if (hr) qps.push(encodeParam('hr', '1', qs))
     return qps.join('')
-  }
-
-  /**
-   * Calls and accumulates data from registered harvesting functions based on
-   * the endpoint being harvested.
-   * @param {HarvestEndpointIdentifier} endpoint BAM endpoint identifier.
-   * @param {FeatureHarvestCallbackOptions} options Options to be passed to the
-   * feature harvest listener callback.
-   * @returns {HarvestPayload} Payload object to transmit to the bam endpoint.
-   */
-  createPayload (endpoint, options) {
-    const listeners = this._events[endpoint]
-    const payload = {
-      body: {},
-      qs: {}
-    }
-
-    if (Array.isArray(listeners) && listeners.length > 0) {
-      for (let i = 0; i < listeners.length; i++) {
-        const singlePayload = listeners[i](options)
-
-        if (singlePayload) {
-          payload.body = {
-            ...payload.body,
-            ...(singlePayload.body || {})
-          }
-          payload.qs = {
-            ...payload.qs,
-            ...(singlePayload.qs || {})
-          }
-        }
-      }
-    }
-
-    return payload
   }
 
   /**
@@ -237,20 +180,6 @@ export class Harvest extends SharedContext {
       body: clean(payload.body),
       qs: clean(payload.qs)
     }
-  }
-
-  /**
-   * Registers a function to be called when harvesting is triggered for a specific
-   * endpoint.
-   * @param {HarvestEndpointIdentifier} endpoint
-   * @param {FeatureHarvestCallback} listener
-   */
-  on (endpoint, listener) {
-    if (!Array.isArray(this._events[endpoint])) {
-      this._events[endpoint] = []
-    }
-
-    this._events[endpoint].push(listener)
   }
 }
 

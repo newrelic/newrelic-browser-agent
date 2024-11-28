@@ -16,6 +16,7 @@ import { applyFnToProps } from '../../../common/util/traverse'
 import { FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
 import { UserActionsAggregator } from './user-actions/user-actions-aggregator'
 import { isIFrameWindow } from '../../../common/dom/iframe'
+import { isValidTarget } from '../../../common/util/target'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -35,7 +36,8 @@ export class Aggregate extends AggregateBase {
       }
 
       if (agentRef.init.page_action.enabled) {
-        registerHandler('api-addPageAction', (timestamp, name, attributes) => {
+        registerHandler('api-addPageAction', (timestamp, name, attributes, target) => {
+          if (!isValidTarget(target)) return warn(46, target)
           this.addEvent({
             ...attributes,
             eventType: 'PageAction',
@@ -47,7 +49,7 @@ export class Aggregate extends AggregateBase {
               browserWidth: window.document.documentElement?.clientWidth,
               browserHeight: window.document.documentElement?.clientHeight
             })
-          })
+          }, target)
         }, this.featureName, this.ee)
       }
 
@@ -125,9 +127,9 @@ export class Aggregate extends AggregateBase {
 
       this.harvestScheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
         onFinished: (result) => this.postHarvestCleanup(result.sent && result.retry),
-        onUnload: () => addUserAction?.(this.userActionAggregator.aggregationEvent)
+        onUnload: () => addUserAction?.(this.userActionAggregator.aggregationEvent),
+        getPayload: (options) => this.makeHarvestPayload(options.retry)
       }, this)
-      this.harvestScheduler.harvest.on(FEATURE_TO_ENDPOINT[this.featureName], (options) => this.makeHarvestPayload(options.retry))
       this.harvestScheduler.startTimer(this.harvestTimeSeconds, 0)
 
       this.drain()
@@ -145,14 +147,17 @@ export class Aggregate extends AggregateBase {
    * * sessionTraceId: set by the `ptid=` query param
    * * userAgent*: set by the userAgent header
    * @param {object=} obj the event object for storing in the event buffer
+   * @param {object=} target the target object for the event to scope buffering and harvesting. Defaults to agent config if undefined
    * @returns void
    */
-  addEvent (obj = {}) {
+  addEvent (obj = {}, target) {
     if (!obj || !Object.keys(obj).length) return
     if (!obj.eventType) {
       warn(44)
       return
     }
+
+    const events = this.eventManager.get(stringify(target))
 
     for (let key in obj) {
       let val = obj[key]
@@ -176,15 +181,15 @@ export class Aggregate extends AggregateBase {
       ...obj
     }
 
-    const addedEvent = this.events.add(eventAttributes)
-    if (!addedEvent && !this.events.isEmpty()) {
+    const addedEvent = events.add(eventAttributes)
+    if (!addedEvent && !events.isEmpty()) {
       /** could not add the event because it pushed the buffer over the limit
        * so we harvest early, and try to add it again now that the buffer is cleared
        * if it fails again, we do nothing
        */
       this.ee.emit(SUPPORTABILITY_METRIC_CHANNEL, ['GenericEvents/Harvest/Max/Seen'])
       this.harvestScheduler.runHarvest()
-      this.events.add(eventAttributes)
+      events.add(eventAttributes)
     }
   }
 

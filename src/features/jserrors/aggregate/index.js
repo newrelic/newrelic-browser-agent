@@ -21,6 +21,9 @@ import { now } from '../../../common/timing/now'
 import { applyFnToProps } from '../../../common/util/traverse'
 import { evaluateInternalError } from './internal-errors'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
+import { EventAggregator } from '../../../common/aggregate/event-aggregator'
+import { isValidTarget } from '../../../common/util/target'
+import { warn } from '../../../common/util/console'
 
 /**
  * @typedef {import('./compute-stack-trace.js').StackInfo} StackInfo
@@ -29,7 +32,7 @@ import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor (agentRef) {
-    super(agentRef, FEATURE_NAME)
+    super(agentRef, FEATURE_NAME, () => new EventAggregator())
 
     this.stackReported = {}
     this.observedAt = {}
@@ -42,6 +45,9 @@ export class Aggregate extends AggregateBase {
 
     register('err', (...args) => this.storeError(...args), this.featureName, this.ee)
     register('ierr', (...args) => this.storeError(...args), this.featureName, this.ee)
+    register('xhr-timeslice', (hash, params, metrics) => {
+      this.events.add('xhr', hash, params, metrics)
+    }, this.featureName, this.ee)
     register('softNavFlush', (interactionId, wasFinished, softNavAttrs) =>
       this.onSoftNavNotification(interactionId, wasFinished, softNavAttrs), this.featureName, this.ee) // when an ixn is done or cancelled
 
@@ -52,9 +58,9 @@ export class Aggregate extends AggregateBase {
     this.waitForFlags(['err']).then(([errFlag]) => {
       if (errFlag) {
         const scheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
-          onFinished: (result) => this.postHarvestCleanup(result.sent && result.retry, { aggregatorTypes })
+          onFinished: (result) => this.postHarvestCleanup(result.sent && result.retry, { aggregatorTypes, result }),
+          getPayload: (options) => this.makeHarvestPayload(options.retry, { aggregatorTypes })
         }, this)
-        scheduler.harvest.on(FEATURE_TO_ENDPOINT[this.featureName], (options) => this.makeHarvestPayload(options.retry, { aggregatorTypes }))
         scheduler.startTimer(harvestTimeSeconds)
         this.drain()
       } else {
@@ -114,10 +120,12 @@ export class Aggregate extends AggregateBase {
    * @param {boolean=} internal if the error was "caught" and deemed "internal" before reporting to the jserrors feature
    * @param {object=} customAttributes  any custom attributes to be included in the error payload
    * @param {boolean=} hasReplay a flag indicating if the error occurred during a replay session
+   * @param {object=} target the target to buffer and harvest to, if undefined the default configuration target is used
    * @returns
    */
-  storeError (err, time, internal, customAttributes, hasReplay) {
+  storeError (err, time, internal, customAttributes, hasReplay, target) {
     if (!err) return
+    if (!isValidTarget(target)) return warn(46, target)
     // are we in an interaction
     time = time || now()
     let filterOutput
@@ -187,7 +195,7 @@ export class Aggregate extends AggregateBase {
     var newMetrics = { time }
 
     // Trace sends the error in its payload, and both trace & replay simply listens for any error to occur.
-    const jsErrorEvent = [type, bucketHash, params, newMetrics, customAttributes]
+    const jsErrorEvent = [type, bucketHash, params, newMetrics, customAttributes, target]
     handle('trace-jserror', jsErrorEvent, undefined, FEATURE_NAMES.sessionTrace, this.ee)
     // still send EE events for other features such as above, but stop this one from aggregating internal data
     if (this.blocked) return
@@ -217,7 +225,7 @@ export class Aggregate extends AggregateBase {
   }
 
   #storeJserrorForHarvest (errorInfoArr, softNavOccurredFinished, softNavCustomAttrs = {}) {
-    let [type, bucketHash, params, newMetrics, localAttrs] = errorInfoArr
+    let [type, bucketHash, params, newMetrics, localAttrs, target] = errorInfoArr
     const allCustomAttrs = {}
 
     if (softNavOccurredFinished) {
@@ -234,7 +242,9 @@ export class Aggregate extends AggregateBase {
 
     const jsAttributesHash = stringHashCode(stringify(allCustomAttrs))
     const aggregateHash = bucketHash + ':' + jsAttributesHash
-    this.events.add(type, aggregateHash, params, newMetrics, allCustomAttrs)
+
+    const events = this.eventManager.get(stringify(target))
+    events.add(type, aggregateHash, params, newMetrics, allCustomAttrs)
 
     function setCustom (key, val) {
       allCustomAttrs[key] = (val && typeof val === 'object' ? stringify(val) : val)
@@ -264,7 +274,8 @@ export class Aggregate extends AggregateBase {
       var jsAttributesHash = stringHashCode(stringify(allCustomAttrs))
       var aggregateHash = hash + ':' + jsAttributesHash
 
-      this.events.add(item[0], aggregateHash, params, item[3], allCustomAttrs)
+      const events = this.eventManager.get(item[5])
+      events.add(item[0], aggregateHash, params, item[3], allCustomAttrs)
 
       function setCustom ([key, val]) {
         allCustomAttrs[key] = (val && typeof val === 'object' ? stringify(val) : val)

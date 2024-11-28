@@ -19,6 +19,10 @@ export class RecorderEvents {
   /** Payload metadata -- Denotes whether all stylesheet elements were able to be inlined */
   inlinedAllStylesheets = true
 
+  constructor (shouldInlineStylesheets = true) {
+    this.inlinedAllStylesheets = shouldInlineStylesheets
+  }
+
   add (event) {
     this.#events.add(event)
   }

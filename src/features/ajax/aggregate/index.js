@@ -70,7 +70,7 @@ export class Aggregate extends AggregateBase {
 
     // Report ajax timeslice metric (to be harvested by jserrors feature, but only if it's running).
     if (jserrorsInUse && (shouldCollect || !shouldOmitAjaxMetrics)) {
-      this.agentRef.sharedAggregator.add('xhr', hash, params, metrics)
+      handle('xhr-timeslice', [hash, params, metrics], undefined, FEATURE_NAMES.jserrors, this.ee)
     }
 
     if (!shouldCollect) {

@@ -27,83 +27,19 @@ afterEach(() => {
   jest.clearAllMocks()
 })
 
-describe('sendX', () => {
-  beforeEach(() => {
-    jest.mocked(submitDataModule.getSubmitMethod).mockReturnValue(jest.fn())
-    jest.spyOn(harvestInstance, '_send').mockImplementation(jest.fn())
-    jest.spyOn(harvestInstance, 'createPayload').mockReturnValue({})
-  })
-
-  test('should pass spec settings on to _send method', async () => {
-    const endpoint = faker.string.uuid()
-    const spec = {
-      endpoint,
-      [faker.string.uuid()]: faker.lorem.sentence()
-    }
-
-    harvestInstance.sendX(spec)
-
-    expect(harvestInstance._send).toHaveBeenCalledWith(expect.objectContaining(spec))
-  })
-
-  test('should create payload with retry true', async () => {
-    const endpoint = faker.string.uuid()
-    const spec = {
-      endpoint,
-      opts: {
-        unload: false
-      }
-    }
-    jest.mocked(submitDataModule.getSubmitMethod).mockReturnValue(submitDataModule.xhr)
-
-    harvestInstance.sendX(spec)
-
-    expect(harvestInstance.createPayload).toHaveBeenCalledWith(spec.endpoint, { retry: true, isFinalHarvest: false })
-  })
-
-  test.each([undefined, {}])('should still call _send when spec is %s', async (spec) => {
-    harvestInstance.sendX(spec)
-
-    expect(harvestInstance._send).toHaveBeenCalledWith({
-      payload: {},
-      submitMethod: expect.any(Function)
-    })
-  })
-})
-
 describe('send', () => {
-  beforeEach(() => {
-    jest.spyOn(harvestInstance, '_send').mockImplementation(jest.fn())
-  })
-
-  test('should pass spec settings on to _send method', async () => {
-    const endpoint = faker.string.uuid()
-    const spec = {
-      endpoint,
-      [faker.string.uuid()]: faker.lorem.sentence()
-    }
-
-    harvestInstance.send(spec)
-
-    expect(harvestInstance._send).toHaveBeenCalledWith(spec)
-  })
-
-  test.each([undefined, {}])('should still call _send when spec is %s', async (spec) => {
-    harvestInstance.send(spec)
-
-    expect(harvestInstance._send).toHaveBeenCalledWith(spec || {})
-  })
-})
-
-describe('_send', () => {
   let errorBeacon
   let submitMethod
   let spec
   let licenseKey
+  let applicationID
+  let target
 
   beforeEach(() => {
     errorBeacon = faker.internet.domainName()
     licenseKey = faker.string.uuid()
+    applicationID = faker.string.uuid()
+    target = { licenseKey, applicationID }
     jest.mocked(infoModule.getInfo).mockReturnValue({
       errorBeacon,
       licenseKey
@@ -119,6 +55,7 @@ describe('_send', () => {
 
     spec = {
       endpoint: faker.string.uuid(),
+      target,
       payload: {
         body: {
           [faker.string.uuid()]: faker.lorem.sentence()
@@ -136,7 +73,7 @@ describe('_send', () => {
   test('should return false when info.errorBeacon is not defined', () => {
     jest.mocked(infoModule.getInfo).mockReturnValue({})
 
-    const result = harvestInstance._send(spec)
+    const result = harvestInstance.send(spec)
 
     expect(result).toEqual(false)
     expect(submitMethod).not.toHaveBeenCalled()
@@ -147,7 +84,7 @@ describe('_send', () => {
     spec.opts.sendEmptyBody = false
     spec.cbFinished = jest.fn()
 
-    const result = harvestInstance._send(spec)
+    const result = harvestInstance.send(spec)
 
     expect(result).toEqual(false)
     expect(submitMethod).not.toHaveBeenCalled()
@@ -157,7 +94,7 @@ describe('_send', () => {
   test('should construct the rum url', () => {
     spec.endpoint = 'rum'
 
-    const result = harvestInstance._send(spec)
+    const result = harvestInstance.send(spec)
 
     expect(result).toEqual(true)
     expect(submitMethod).toHaveBeenCalledWith({
@@ -169,7 +106,7 @@ describe('_send', () => {
   })
 
   test('should construct the non-rum url', () => {
-    const result = harvestInstance._send(spec)
+    const result = harvestInstance.send(spec)
 
     expect(result).toEqual(true)
     expect(submitMethod).toHaveBeenCalledWith({
@@ -182,7 +119,7 @@ describe('_send', () => {
 
   test('able to use and send to proxy when defined', () => {
     jest.mocked(initModule.getConfiguration).mockReturnValue({ proxy: { beacon: 'some_other_string' } })
-    const result = harvestInstance._send(spec)
+    const result = harvestInstance.send(spec)
 
     expect(result).toEqual(true)
     expect(submitMethod).toHaveBeenCalledWith({
@@ -196,7 +133,7 @@ describe('_send', () => {
   test('should use the custom defined url', () => {
     spec.customUrl = faker.internet.url()
 
-    const result = harvestInstance._send(spec)
+    const result = harvestInstance.send(spec)
 
     expect(result).toEqual(true)
     expect(submitMethod).toHaveBeenCalledWith({
@@ -210,7 +147,7 @@ describe('_send', () => {
   test('should not include the license key or base params in a raw url', () => {
     spec.raw = true
 
-    const result = harvestInstance._send(spec)
+    const result = harvestInstance.send(spec)
     const queryString = Object.entries(spec.payload.qs)
       .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
       .join('&')
@@ -232,7 +169,7 @@ describe('_send', () => {
     jest.mocked(encodeModule.obj).mockReturnValue(`&${queryString}`)
     spec.raw = true
 
-    const result = harvestInstance._send(spec)
+    const result = harvestInstance.send(spec)
 
     expect(result).toEqual(true)
     expect(submitMethod).toHaveBeenCalledWith({
@@ -246,7 +183,7 @@ describe('_send', () => {
   test('should not alter body when gzip qs is present', () => {
     spec.payload.qs.attributes += '&content_encoding=gzip'
 
-    const result = harvestInstance._send(spec)
+    const result = harvestInstance.send(spec)
 
     expect(result).toEqual(true)
     expect(submitMethod).toHaveBeenCalledWith({
@@ -260,13 +197,13 @@ describe('_send', () => {
   test('should warn (once) if payload is large', () => {
     spec.payload.body = 'x'.repeat(1024 * 1024) // ~1mb string
 
-    const result = harvestInstance._send(spec)
+    const result = harvestInstance.send(spec)
 
     expect(result).toEqual(true)
     expect(warn).toHaveBeenCalledWith(28, expect.any(String))
     expect(warn).toHaveBeenCalledTimes(1)
 
-    const result2 = harvestInstance._send(spec)
+    const result2 = harvestInstance.send(spec)
     expect(result2).toEqual(true)
     expect(warn).toHaveBeenCalledTimes(1)
   })
@@ -275,7 +212,7 @@ describe('_send', () => {
     spec.endpoint = 'events'
     spec.payload.body = faker.lorem.sentence()
 
-    const result = harvestInstance._send(spec)
+    const result = harvestInstance.send(spec)
 
     expect(result).toEqual(true)
     expect(submitMethod).toHaveBeenCalledWith({
@@ -295,7 +232,7 @@ describe('_send', () => {
     spec.opts.sendEmptyBody = true
     spec.payload.body = inputBody
 
-    const result = harvestInstance._send(spec)
+    const result = harvestInstance.send(spec)
 
     expect(result).toEqual(true)
     expect(submitMethod).toHaveBeenCalledWith({
@@ -310,7 +247,7 @@ describe('_send', () => {
     jest.mocked(submitDataModule.getSubmitMethod).mockReturnValue(submitDataModule.xhr)
     spec.cbFinished = jest.fn()
 
-    const result = harvestInstance._send(spec)
+    const result = harvestInstance.send(spec)
     const xhrAddEventListener = jest.mocked(submitDataModule.xhr).mock.results[0].value.addEventListener
     const xhrLoadEndHandler = jest.mocked(xhrAddEventListener).mock.calls[0][1]
 
@@ -322,7 +259,7 @@ describe('_send', () => {
     expect(xhrAddEventListener).toHaveBeenCalledWith('loadend', expect.any(Function), expect.any(Object))
     expect(result).toEqual(jest.mocked(submitDataModule.xhr).mock.results[0].value)
     expect(submitMethod).not.toHaveBeenCalled()
-    expect(spec.cbFinished).toHaveBeenCalledWith({ ...xhrState, sent: true, xhr: xhrState, fullUrl: expect.any(String) })
+    expect(spec.cbFinished).toHaveBeenCalledWith({ ...xhrState, sent: true, xhr: xhrState, fullUrl: expect.any(String), target })
   })
 
   test('should set cbFinished state retry to true with delay when xhr has 429 status', () => {
@@ -330,7 +267,7 @@ describe('_send', () => {
     spec.cbFinished = jest.fn()
     harvestInstance.tooManyRequestsDelay = faker.number.int({ min: 100, max: 1000 })
 
-    const result = harvestInstance._send(spec)
+    const result = harvestInstance.send(spec)
     const xhrAddEventListener = jest.mocked(submitDataModule.xhr).mock.results[0].value.addEventListener
     const xhrLoadEndHandler = jest.mocked(xhrAddEventListener).mock.calls[0][1]
 
@@ -348,7 +285,8 @@ describe('_send', () => {
       retry: true,
       delay: harvestInstance.tooManyRequestsDelay,
       xhr: xhrState,
-      fullUrl: expect.any(String)
+      fullUrl: expect.any(String),
+      target
     })
   })
 
@@ -358,7 +296,7 @@ describe('_send', () => {
     jest.mocked(submitDataModule.getSubmitMethod).mockReturnValue(submitDataModule.xhr)
     spec.cbFinished = jest.fn()
 
-    const result = harvestInstance._send(spec)
+    const result = harvestInstance.send(spec)
     const xhrAddEventListener = jest.mocked(submitDataModule.xhr).mock.results[0].value.addEventListener
     const xhrLoadEndHandler = jest.mocked(xhrAddEventListener).mock.calls[0][1]
 
@@ -375,7 +313,8 @@ describe('_send', () => {
       sent: true,
       retry: true,
       xhr: xhrState,
-      fullUrl: expect.any(String)
+      fullUrl: expect.any(String),
+      target
     })
   })
 
@@ -384,7 +323,7 @@ describe('_send', () => {
     spec.cbFinished = jest.fn()
     spec.opts.needResponse = true
 
-    const result = harvestInstance._send(spec)
+    const result = harvestInstance.send(spec)
     const xhrAddEventListener = jest.mocked(submitDataModule.xhr).mock.results[0].value.addEventListener
     const xhrLoadEndHandler = jest.mocked(xhrAddEventListener).mock.calls[0][1]
 
@@ -401,7 +340,8 @@ describe('_send', () => {
       ...xhrState,
       sent: true,
       xhr: xhrState,
-      fullUrl: expect.any(String)
+      fullUrl: expect.any(String),
+      target
     })
   })
 
@@ -410,7 +350,7 @@ describe('_send', () => {
     spec.cbFinished = jest.fn()
     spec.opts.needResponse = false
 
-    const result = harvestInstance._send(spec)
+    const result = harvestInstance.send(spec)
     const xhrAddEventListener = jest.mocked(submitDataModule.xhr).mock.results[0].value.addEventListener
     const xhrLoadEndHandler = jest.mocked(xhrAddEventListener).mock.calls[0][1]
 
@@ -428,7 +368,8 @@ describe('_send', () => {
       responseText: undefined,
       sent: true,
       xhr: xhrState,
-      fullUrl: expect.any(String)
+      fullUrl: expect.any(String),
+      target
     })
   })
 
@@ -436,7 +377,7 @@ describe('_send', () => {
     jest.mocked(submitDataModule.getSubmitMethod).mockReturnValue(submitDataModule.xhr)
     spec.cbFinished = jest.fn()
 
-    const result = harvestInstance._send(spec)
+    const result = harvestInstance.send(spec)
     const xhrAddEventListener = jest.mocked(submitDataModule.xhr).mock.results[0].value.addEventListener
     const xhrLoadEndHandler = jest.mocked(xhrAddEventListener).mock.calls[0][1]
 
@@ -452,7 +393,8 @@ describe('_send', () => {
       ...xhrState,
       sent: false,
       xhr: xhrState,
-      fullUrl: expect.any(String)
+      fullUrl: expect.any(String),
+      target
     })
   })
 })
@@ -477,7 +419,7 @@ describe('baseQueryString', () => {
       ptid
     })
 
-    const results = harvestInstance.baseQueryString()
+    const results = harvestInstance.baseQueryString({}, 'test', applicationID)
 
     expect(results).toContain(`a=${applicationID}`)
     expect(encodeModule.param).toHaveBeenCalledWith('sa', sa)
@@ -551,139 +493,6 @@ describe('baseQueryString', () => {
 
     expect(encodeModule.param).toHaveBeenCalledWith('ptid', '')
     expect(results).toContain('&ptid=')
-  })
-})
-
-describe('createPayload', () => {
-  test('should return empty body and qs values when no listeners exist', () => {
-    const feature = faker.string.uuid()
-    const results = harvestInstance.createPayload(feature)
-
-    expect(results).toEqual({
-      body: {},
-      qs: {}
-    })
-  })
-
-  test('should pass options to callback', () => {
-    const feature = faker.string.uuid()
-    const options = {
-      [faker.string.uuid()]: faker.lorem.sentence()
-    }
-    const harvestCallback = jest.fn()
-
-    harvestInstance.on(feature, harvestCallback)
-    const results = harvestInstance.createPayload(feature, options)
-
-    expect(results).toEqual({
-      body: {},
-      qs: {}
-    })
-  })
-
-  test('should aggregate the body properties of the payload', () => {
-    const feature = faker.string.uuid()
-    const payloadA = {
-      body: {
-        [faker.string.uuid()]: {
-          [faker.string.uuid()]: faker.lorem.sentence()
-        }
-      }
-    }
-    const payloadB = {
-      body: {
-        [faker.string.uuid()]: {
-          [faker.string.uuid()]: faker.lorem.sentence()
-        }
-      }
-    }
-    const harvestCallbackA = jest.fn().mockReturnValue(payloadA)
-    const harvestCallbackB = jest.fn().mockReturnValue(payloadB)
-
-    harvestInstance.on(feature, harvestCallbackA)
-    harvestInstance.on(feature, harvestCallbackB)
-    const results = harvestInstance.createPayload(feature)
-
-    expect(results).toEqual({
-      body: {
-        ...payloadA.body,
-        ...payloadB.body
-      },
-      qs: {}
-    })
-  })
-
-  test('should aggregate the qs properties of the payload', () => {
-    const feature = faker.string.uuid()
-    const payloadA = {
-      qs: {
-        [faker.string.uuid()]: {
-          [faker.string.uuid()]: faker.lorem.sentence()
-        }
-      }
-    }
-    const payloadB = {
-      qs: {
-        [faker.string.uuid()]: {
-          [faker.string.uuid()]: faker.lorem.sentence()
-        }
-      }
-    }
-    const harvestCallbackA = jest.fn().mockReturnValue(payloadA)
-    const harvestCallbackB = jest.fn().mockReturnValue(payloadB)
-
-    harvestInstance.on(feature, harvestCallbackA)
-    harvestInstance.on(feature, harvestCallbackB)
-    const results = harvestInstance.createPayload(feature)
-
-    expect(results).toEqual({
-      body: {},
-      qs: {
-        ...payloadA.qs,
-        ...payloadB.qs
-      }
-    })
-  })
-
-  test('should not deep merge the body and qs properties', () => {
-    const feature = faker.string.uuid()
-    const bodyProp = faker.string.uuid()
-    const qsProp = faker.string.uuid()
-    const payloadA = {
-      body: {
-        [bodyProp]: {
-          [faker.string.uuid()]: faker.lorem.sentence()
-        }
-      },
-      qs: {
-        [qsProp]: {
-          [faker.string.uuid()]: faker.lorem.sentence()
-        }
-      }
-    }
-    const payloadB = {
-      body: {
-        [bodyProp]: {
-          [faker.string.uuid()]: faker.lorem.sentence()
-        }
-      },
-      qs: {
-        [qsProp]: {
-          [faker.string.uuid()]: faker.lorem.sentence()
-        }
-      }
-    }
-    const harvestCallbackA = jest.fn().mockReturnValue(payloadA)
-    const harvestCallbackB = jest.fn().mockReturnValue(payloadB)
-
-    harvestInstance.on(feature, harvestCallbackA)
-    harvestInstance.on(feature, harvestCallbackB)
-    const results = harvestInstance.createPayload(feature)
-
-    expect(results).toEqual({
-      body: payloadB.body,
-      qs: payloadB.qs
-    })
   })
 })
 

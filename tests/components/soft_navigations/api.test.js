@@ -301,7 +301,7 @@ test('multiple finished ixns retain the correct start/end timestamps in payload'
 
   expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(3)
   // WARN: Double check decoded output & behavior or any introduced bugs before changing the follow line's static string.
-  expect(softNavAggregate.makeHarvestPayload().body).toEqual("bel.7;1,,2s,2s,,,'api,'http://localhost/,1,1,,2,!!!!'some_id,'1,!!;;1,,5k,5k,,,'api,'http://localhost/,1,1,,2,!!!!'some_other_id,'2,!!;;1,,go,8c,,,'api,'http://localhost/,1,1,,2,!!!!'some_another_id,'3,!!;")
+  expect(softNavAggregate.makeHarvestPayload()[0].payload.body).toEqual("bel.7;1,,2s,2s,,,'api,'http://localhost/,1,1,,2,!!!!'some_id,'1,!!;;1,,5k,5k,,,'api,'http://localhost/,1,1,,2,!!!!'some_other_id,'2,!!;;1,,go,8c,,,'api,'http://localhost/,1,1,,2,!!!!'some_another_id,'3,!!;")
 })
 
 // This isn't just an API test; it double serves as data validation on the querypack payload output.
@@ -332,7 +332,7 @@ test('multiple finished ixns with ajax have correct start/end timestamps (in aja
 
   expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(2)
   // WARN: Double check decoded output & behavior or any introduced bugs before changing the follow line's static string.
-  expect(softNavAggregate.makeHarvestPayload().body).toEqual("bel.7;1,2,1,3,,,'api,'http://localhost/,1,1,,2,!!!!'some_id,'1,!!;2,,1,3,,,,,,,,,,'2,!!!;2,,2,3,,,,,,,,,,'3,!!!;;1,2,9,4,,,'api,'http://localhost/,1,1,,2,!!!!'some_other_id,'4,!!;2,,a,1,,,,,,,,,,'5,!!!;2,,b,1,,,,,,,,,,'6,!!!;")
+  expect(softNavAggregate.makeHarvestPayload()[0].payload.body).toEqual("bel.7;1,2,1,3,,,'api,'http://localhost/,1,1,,2,!!!!'some_id,'1,!!;2,,1,3,,,,,,,,,,'2,!!!;2,,2,3,,,,,,,,,,'3,!!!;;1,2,9,4,,,'api,'http://localhost/,1,1,,2,!!!!'some_other_id,'4,!!;2,,a,1,,,,,,,,,,'5,!!!;2,,b,1,,,,,,,,,,'6,!!!;")
 })
 
 function getIxnContext (ixn) {

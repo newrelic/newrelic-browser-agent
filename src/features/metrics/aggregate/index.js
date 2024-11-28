@@ -9,21 +9,23 @@ import { isBrowserScope, isWorkerScope } from '../../../common/constants/runtime
 import { AggregateBase } from '../../utils/aggregate-base'
 import { FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
 import { isIFrameWindow } from '../../../common/dom/iframe'
+import { EventAggregator } from '../../../common/aggregate/event-aggregator'
 // import { WEBSOCKET_TAG } from '../../../common/wrap/wrap-websocket'
 // import { handleWebsocketEvents } from './websocket-detection'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor (agentRef) {
-    super(agentRef, FEATURE_NAME)
+    super(agentRef, FEATURE_NAME, () => new EventAggregator())
     const aggregatorTypes = ['cm', 'sm'] // the types in EventAggregator this feature cares about
 
     this.waitForFlags(['err']).then(([errFlag]) => {
       if (errFlag) {
         // *cli, Mar 23 - Per NR-94597, this feature should only harvest ONCE at the (potential) EoL time of the page.
-        const scheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], { onUnload: () => this.unload() }, this)
-        // this is needed to ensure EoL is "on" and sent
-        scheduler.harvest.on(FEATURE_TO_ENDPOINT[this.featureName], () => this.makeHarvestPayload(undefined, { aggregatorTypes }))
+        new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
+          onUnload: () => this.unload(),
+          getPayload: () => this.makeHarvestPayload(undefined, { aggregatorTypes })
+        }, this)
         this.drain()
       } else {
         this.blocked = true // if rum response determines that customer lacks entitlements for spa endpoint, this feature shouldn't harvest

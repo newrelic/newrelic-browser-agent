@@ -197,4 +197,40 @@ export class Aggregate extends AggregateBase {
     this.scheduler?.stopTimer()
     this.events.clear()
   }
+
+  /**
+   * Cleanup task after a harvest.
+   * @param {Boolean} harvestFailed - harvester flag to restore events in main buffer for retry later if request failed
+   */
+  postHarvestCleanup (harvestFailed = false, opts = {}) {
+    if (harvestFailed) this.events.reloadSave(opts)
+    this.events.clearSave(opts)
+  }
+
+  /**
+   * Return harvest payload. A "serializer" function can be defined on a derived class to format the payload.
+   * @param {Boolean} shouldRetryOnFail - harvester flag to backup payload for retry later if harvest request fails; this should be moved to harvester logic
+   * @returns final payload, or undefined if there are no pending events
+   */
+  makeHarvestPayload (shouldRetryOnFail = false, opts = {}) {
+    const target = { licenseKey: this.agentRef.info.licenseKey, applicationID: this.agentRef.info.applicationID }
+    if (this.events.isEmpty(opts)) return [{ target, payload: undefined }]
+    // Other conditions and things to do when preparing harvest that is required.
+    if (this.preHarvestChecks && !this.preHarvestChecks()) return [{ target, payload: undefined }]
+
+    if (shouldRetryOnFail) this.events.save(opts)
+    const returnedData = this.events.get(opts)
+    // A serializer or formatter assists in creating the payload `body` from stored events on harvest when defined by derived feature class.
+    const body = this.serializer(returnedData)
+    this.events.clear(opts)
+
+    const payload = {
+      body
+    }
+    // Constructs the payload `qs` for relevant features on harvest.
+    payload.qs = this.queryStringsBuilder(returnedData)
+
+    // console.log('got payload', payload)
+    return [{ target: { licenseKey: this.agentRef.info.licenseKey, applicationID: this.agentRef.info.applicationID }, payload }]
+  }
 }

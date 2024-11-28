@@ -20,6 +20,7 @@ import { MODE } from '../../common/session/constants'
 import { LOG_LEVELS } from '../../features/logging/constants'
 import { bufferLog } from '../../features/logging/shared/utils'
 import { wrapLogger } from '../../common/wrap/wrap-logger'
+import { isValidTarget } from '../../common/util/target'
 
 export function setTopLevelCallers () {
   const nr = gosCDN()
@@ -57,9 +58,39 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
   var prefix = 'api-'
   var spaPrefix = prefix + 'ixn-'
 
-  apiInterface.log = function (message, { customAttributes = {}, level = LOG_LEVELS.INFO } = {}) {
+  apiInterface.register = function (target) {
+    // TODO: send a register call, needs consumer change.
+    const attrs = {}
+    if (!isValidTarget(target)) return warn(46, target)
+    return {
+      api: {
+        addPageAction: (name, attributes = {}) => apiInterface.addPageAction(name, { ...attrs, ...attributes }, target),
+        log: (message, options) => {
+          if (!target.entityGuid) return warn(47)
+          apiInterface.log(message, {
+            ...options,
+            customAttributes: { ...attrs, ...(options.customAttributes || {}) }
+          }, target)
+        },
+        noticeError: (error, attributes = {}) => apiInterface.noticeError(error, { ...attrs, ...attributes }, target),
+        setCustomAttribute: (key, value) => {
+          attrs[key] = value
+        },
+        setApplicationVersion: (value) => {
+          attrs['application.version'] = value
+        },
+        setUserId: (value) => {
+          attrs['enduser.id'] = value
+        }
+      },
+      customAttributes: attrs,
+      target
+    }
+  }
+
+  apiInterface.log = function (message, { customAttributes = {}, level = LOG_LEVELS.INFO } = {}, target) {
     handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/log/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
-    bufferLog(instanceEE, message, customAttributes, level)
+    bufferLog(instanceEE, message, customAttributes, level, target)
   }
 
   apiInterface.wrapLogger = (parent, functionName, { customAttributes = {}, level = LOG_LEVELS.INFO } = {}) => {
@@ -197,10 +228,10 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
     }
   }
 
-  apiInterface.noticeError = function (err, customAttributes) {
+  apiInterface.noticeError = function (err, customAttributes, target) {
     if (typeof err === 'string') err = new Error(err)
     handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/noticeError/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
-    handle('err', [err, now(), false, customAttributes, !!replayRunning[agentIdentifier]], undefined, FEATURE_NAMES.jserrors, instanceEE)
+    handle('err', [err, now(), false, customAttributes, !!replayRunning[agentIdentifier], target], undefined, FEATURE_NAMES.jserrors, instanceEE)
   }
 
   // theres no window.load event on non-browser scopes, lazy load immediately

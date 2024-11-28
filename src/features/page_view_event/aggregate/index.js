@@ -106,6 +106,7 @@ export class Aggregate extends AggregateBase {
     const rumStartTime = now()
     harvester.send({
       endpoint: 'rum',
+      target: { licenseKey: this.agentRef.info.licenseKey, applicationID: this.agentRef.info.applicationID },
       payload: { qs: queryParameters, body },
       opts: { needResponse: true, sendEmptyBody: true },
       cbFinished: ({ status, responseText, xhr }) => {

@@ -164,7 +164,7 @@ describe('sub-features', () => {
     // blur event to trigger aggregation to stop and add to harvest buffer
     genericEventsAggregate.ee.emit('ua', [{ timeStamp: 234567, type: 'blur', target: window }])
 
-    const harvest = genericEventsAggregate.makeHarvestPayload() // force it to put the aggregation into the event buffer
+    const [{ payload: harvest }] = genericEventsAggregate.makeHarvestPayload() // force it to put the aggregation into the event buffer
     expect(harvest.body.ins[0]).toMatchObject({
       eventType: 'UserAction',
       timestamp: expect.any(Number),
@@ -191,7 +191,7 @@ describe('sub-features', () => {
     // blur event to trigger aggregation to stop and add to harvest buffer
     genericEventsAggregate.ee.emit('ua', [{ timeStamp: 234567, type: 'blur', target: window }])
 
-    const harvest = genericEventsAggregate.makeHarvestPayload() // force it to put the aggregation into the event buffer
+    const [{ payload: harvest }] = genericEventsAggregate.makeHarvestPayload() // force it to put the aggregation into the event buffer
     expect(harvest.body.ins[0]).toMatchObject({
       eventType: 'UserAction',
       timestamp: expect.any(Number),
@@ -218,7 +218,7 @@ describe('sub-features', () => {
     // blur event to trigger aggregation to stop and add to harvest buffer
     genericEventsAggregate.ee.emit('ua', [{ timeStamp: 234567, type: 'blur', target: window }])
 
-    const harvest = genericEventsAggregate.makeHarvestPayload() // force it to put the aggregation into the event buffer
+    const [{ payload: harvest }] = genericEventsAggregate.makeHarvestPayload() // force it to put the aggregation into the event buffer
     expect(harvest.body.ins[0]).toMatchObject({
       eventType: 'UserAction',
       timestamp: expect.any(Number),
@@ -250,7 +250,7 @@ describe('sub-features', () => {
       observe: () => {
         const callCb = () => {
           // eslint-disable-next-line
-          cb({getEntries: () => [{ 
+          cb({getEntries: () => [{
             name: 'test',
             duration: 0,
             detail: JSON.stringify({ foo: 'bar' }),

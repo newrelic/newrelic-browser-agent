@@ -152,7 +152,7 @@ describe('prepareHarvest', () => {
     }
     getInfo(agentSetup.agentIdentifier).jsAttributes = expectedCustomAttributes
 
-    const serializedPayload = ajaxAggregate.makeHarvestPayload(false)
+    const [{ payload: serializedPayload }] = ajaxAggregate.makeHarvestPayload(false)
     // serializedPayload from ajax comes back as an array of bodies now, so we just need to decode each one and flatten
     // this decoding does not happen elsewhere in the app so this only needs to happen here in this specific test
     const decodedEvents = qp.decode(serializedPayload.body)
@@ -169,7 +169,7 @@ describe('prepareHarvest', () => {
     ajaxAggregate.events.maxPayloadSize = 10 // this is too small for any AJAX payload to fit in
     for (let callNo = 0; callNo < 10; callNo++) ajaxAggregate.ee.emit('xhr', ajaxArguments, context)
 
-    const serializedPayload = ajaxAggregate.makeHarvestPayload(false)
+    const [{ payload: serializedPayload }] = ajaxAggregate.makeHarvestPayload(false)
     expect(serializedPayload).toBeUndefined() // payload that are each too small for limit will be dropped
   })
 })

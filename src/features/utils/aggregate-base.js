@@ -6,16 +6,29 @@ import { drain } from '../../common/drain/drain'
 import { activatedFeatures } from '../../common/util/feature-flags'
 import { Obfuscator } from '../../common/util/obfuscate'
 import { EventBuffer } from './event-buffer'
-import { FEATURE_NAMES } from '../../loaders/features/features'
+import { EventManager } from './event-manager'
+import { stringify } from '../../common/util/stringify'
 
 export class AggregateBase extends FeatureBase {
-  constructor (agentRef, featureName) {
+  /**
+   * Create an AggregateBase instance.
+   * @param {Object} agentRef The reference to the agent instance.
+   * @param {string} featureName The name of the feature creating the instance.
+   * @param {Function} eventStore A method to create a new data store.
+   */
+  constructor (agentRef, featureName, eventStore = () => new EventBuffer()) {
     super(agentRef.agentIdentifier, featureName)
     this.agentRef = agentRef
-    // Jserror and Metric features uses a singleton EventAggregator instead of a regular EventBuffer.
-    if ([FEATURE_NAMES.jserrors, FEATURE_NAMES.metrics].includes(this.featureName)) this.events = agentRef.sharedAggregator
-    // PVE has no need for eventBuffer, and SessionTrace has its own storage mechanism.
-    else if (![FEATURE_NAMES.pageViewEvent, FEATURE_NAMES.sessionTrace].includes(this.featureName)) this.events = new EventBuffer()
+
+    this.eventManager = new EventManager(eventStore, stringify({
+      licenseKey: agentRef.info.licenseKey,
+      applicationID: agentRef.info.applicationID,
+      entityGuid: this.agentRef.runtime.appMetadata?.agents?.[0]?.entityGuid // since this is typically ran immediately, it will be undefined for the base config -- but for consistency -- it should be set here as external callers will be setting this value. if undefined, it will fallback to referencing the default
+    }))
+
+    /** The default event store points at the configuration target */
+    this.events = this.eventManager.get(this.defaultLookupKey)
+
     this.checkConfiguration(agentRef)
     this.obfuscator = agentRef.runtime.obfuscator
   }
@@ -59,22 +72,26 @@ export class AggregateBase extends FeatureBase {
    * @returns final payload, or undefined if there are no pending events
    */
   makeHarvestPayload (shouldRetryOnFail = false, opts = {}) {
-    if (this.events.isEmpty(opts)) return
-    // Other conditions and things to do when preparing harvest that is required.
-    if (this.preHarvestChecks && !this.preHarvestChecks()) return
+    return this.eventManager.getAll().map(({ lookupKey, eventBuffer }) => {
+      const { licenseKey, applicationID, entityGuid } = JSON.parse(lookupKey)
+      const target = { licenseKey, applicationID, entityGuid }
+      if (eventBuffer.isEmpty(opts)) return { target, payload: undefined }
+      // Other conditions and things to do when preparing harvest that is required.
+      if (this.preHarvestChecks && !this.preHarvestChecks()) return { target, payload: undefined }
 
-    if (shouldRetryOnFail) this.events.save(opts)
-    const returnedData = this.events.get(opts)
-    // A serializer or formatter assists in creating the payload `body` from stored events on harvest when defined by derived feature class.
-    const body = this.serializer ? this.serializer(returnedData) : returnedData
-    this.events.clear(opts)
+      if (shouldRetryOnFail) eventBuffer.save(opts)
+      const returnedData = eventBuffer.get(opts)
+      // A serializer or formatter assists in creating the payload `body` from stored events on harvest when defined by derived feature class.
+      const body = this.serializer ? this.serializer(returnedData, target) : returnedData
+      eventBuffer.clear(opts)
 
-    const payload = {
-      body
-    }
-    // Constructs the payload `qs` for relevant features on harvest.
-    if (this.queryStringsBuilder) payload.qs = this.queryStringsBuilder(returnedData)
-    return payload
+      const payload = {
+        body
+      }
+      // Constructs the payload `qs` for relevant features on harvest.
+      if (this.queryStringsBuilder) payload.qs = this.queryStringsBuilder(returnedData, target)
+      return { target, payload }
+    })
   }
 
   /**
@@ -82,8 +99,9 @@ export class AggregateBase extends FeatureBase {
    * @param {Boolean} harvestFailed - harvester flag to restore events in main buffer for retry later if request failed
    */
   postHarvestCleanup (harvestFailed = false, opts = {}) {
-    if (harvestFailed) this.events.reloadSave(opts)
-    this.events.clearSave(opts)
+    const events = this.eventManager.get(stringify(opts?.target))
+    if (harvestFailed) events.reloadSave(opts)
+    events.clearSave(opts)
   }
 
   /**

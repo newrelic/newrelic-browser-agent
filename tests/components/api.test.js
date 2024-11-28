@@ -42,7 +42,7 @@ describe('setAPI', () => {
   test('should add expected api methods returned object', () => {
     const apiInterface = setAPI(agentId, true)
 
-    expect(Object.keys(apiInterface).length).toEqual(17)
+    expect(Object.keys(apiInterface).length).toEqual(18)
     expect(typeof apiInterface.setErrorHandler).toEqual('function')
     expect(typeof apiInterface.finished).toEqual('function')
     expect(typeof apiInterface.addToTrace).toEqual('function')
@@ -60,6 +60,7 @@ describe('setAPI', () => {
     expect(typeof apiInterface[SR_EVENT_EMITTER_TYPES.PAUSE]).toEqual('function')
     expect(typeof apiInterface.log).toEqual('function')
     expect(typeof apiInterface.wrapLogger).toEqual('function')
+    expect(typeof apiInterface.register).toEqual('function')
   })
 
   test('should register api drain when not forced', () => {
@@ -557,6 +558,148 @@ describe('setAPI', () => {
         FEATURE_NAMES.jserrors,
         instanceEE
       )
+    })
+  })
+
+  describe('register', () => {
+    let apiInterface, licenseKey, applicationID, entityGuid
+
+    beforeEach(async () => {
+      licenseKey = faker.string.uuid()
+      applicationID = faker.string.uuid()
+      entityGuid = faker.string.uuid()
+      apiInterface = setAPI(agentId, true)
+      await new Promise(process.nextTick)
+    })
+
+    test('should return api object', () => {
+      const myApi = apiInterface.register({ licenseKey, applicationID, entityGuid })
+
+      expect(myApi).toMatchObject({
+        api: {
+          noticeError: expect.any(Function),
+          log: expect.any(Function),
+          addPageAction: expect.any(Function),
+          setCustomAttribute: expect.any(Function),
+          setUserId: expect.any(Function),
+          setApplicationVersion: expect.any(Function)
+        },
+        customAttributes: {},
+        target: { licenseKey, applicationID, entityGuid }
+      })
+    })
+
+    test('should warn if invalid target', () => {
+      let myApi = apiInterface.register({ applicationID, entityGuid })
+      expect(console.debug).toHaveBeenCalledWith('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#46', { applicationID, entityGuid })
+      expect(myApi).not.toBeDefined()
+
+      myApi = apiInterface.register({ licenseKey, entityGuid })
+      expect(console.debug).toHaveBeenCalledWith('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#46', { licenseKey, entityGuid })
+      expect(myApi).not.toBeDefined()
+
+      myApi = apiInterface.register({ entityGuid })
+      expect(console.debug).toHaveBeenCalledWith('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#46', { entityGuid })
+      expect(myApi).not.toBeDefined()
+    })
+
+    test('should warn if logging without target entityGuid', () => {
+      let myApi = apiInterface.register({ licenseKey, applicationID })
+      myApi.api.log('test')
+      expect(console.debug).toHaveBeenCalledWith('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#47', undefined)
+      // should not have emitted
+      expect(handleModule.handle).toHaveBeenCalledTimes(0)
+    })
+
+    test('should update custom attributes', () => {
+      const myApi = apiInterface.register({ licenseKey, applicationID, entityGuid })
+
+      myApi.api.setCustomAttribute('foo', 'bar')
+      expect(myApi.customAttributes).toEqual({ foo: 'bar' })
+
+      myApi.api.setCustomAttribute('foo', 'bar2')
+      expect(myApi.customAttributes).toEqual({ foo: 'bar2' })
+
+      myApi.api.setApplicationVersion('appversion')
+      expect(myApi.customAttributes).toEqual({ foo: 'bar2', 'application.version': 'appversion' })
+
+      myApi.api.setUserId('userid')
+      expect(myApi.customAttributes).toEqual({ foo: 'bar2', 'application.version': 'appversion', 'enduser.id': 'userid' })
+    })
+
+    test('should call base apis - noticeError', () => {
+      const target = { licenseKey, applicationID, entityGuid }
+      const myApi = apiInterface.register(target)
+
+      const err = new Error('test')
+      const customAttrs = { foo: 'bar' }
+
+      myApi.api.noticeError(err, customAttrs)
+
+      expect(handleModule.handle).toHaveBeenCalledWith(
+        'err',
+        [err, expect.toBeNumber(), false, customAttrs, false, target],
+        undefined,
+        FEATURE_NAMES.jserrors,
+        instanceEE
+      )
+    })
+
+    test('should call base apis - addPageAction', () => {
+      const target = { licenseKey, applicationID, entityGuid }
+      const myApi = apiInterface.register(target)
+
+      const customAttrs = { foo: 'bar' }
+
+      myApi.api.addPageAction('test', customAttrs)
+
+      expect(handleModule.handle).toHaveBeenCalledTimes(2)
+      expect(handleModule.handle).toHaveBeenCalledWith(
+        SUPPORTABILITY_METRIC_CHANNEL,
+        ['API/addPageAction/called'],
+        undefined,
+        FEATURE_NAMES.metrics,
+        instanceEE
+      )
+      expect(handleModule.handle).toHaveBeenCalledWith(
+        'api-addPageAction',
+        [expect.toBeNumber(), 'test', customAttrs, target],
+        null,
+        FEATURE_NAMES.genericEvents,
+        instanceEE
+      )
+    })
+
+    test('should call base apis - log', () => {
+      const target = { licenseKey, applicationID, entityGuid }
+      const myApi = apiInterface.register(target)
+
+      const opts = { customAttributes: { test: 1 }, level: 'info' }
+
+      myApi.api.log('test', opts)
+
+      expect(handleModule.handle).toHaveBeenCalledTimes(3)
+
+      const firstEmit = handleModule.handle.mock.calls[0]
+      expect(firstEmit[0]).toEqual(SUPPORTABILITY_METRIC_CHANNEL)
+      expect(firstEmit[1]).toEqual(['API/log/called'])
+      expect(firstEmit[2]).toBeUndefined()
+      expect(firstEmit[3]).toEqual(FEATURE_NAMES.metrics)
+      expect(firstEmit[4]).toEqual(instanceEE)
+
+      const secondEmit = handleModule.handle.mock.calls[1]
+      expect(secondEmit[0]).toEqual(SUPPORTABILITY_METRIC_CHANNEL)
+      expect(secondEmit[1]).toEqual(['API/logging/info/called'])
+      expect(secondEmit[2]).toBeUndefined()
+      expect(secondEmit[3]).toEqual(FEATURE_NAMES.metrics)
+      expect(secondEmit[4]).toEqual(instanceEE)
+
+      const thirdEmit = handleModule.handle.mock.calls[2]
+      expect(thirdEmit[0]).toEqual('log')
+      expect(thirdEmit[1]).toEqual([expect.any(Number), 'test', opts.customAttributes, opts.level, target])
+      expect(thirdEmit[2]).toBeUndefined()
+      expect(thirdEmit[3]).toEqual(FEATURE_NAMES.logging)
+      expect(thirdEmit[4]).toEqual(instanceEE)
     })
   })
 

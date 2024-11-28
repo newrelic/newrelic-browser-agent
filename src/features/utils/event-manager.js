@@ -1,3 +1,5 @@
+import { stringify } from '../../common/util/stringify'
+
 /**
  * EventManager is a container for event stores. Its buffer list will expand as new dataset targets are provided by APIs.  Defaults to the configuration target.
  */
@@ -14,16 +16,22 @@ export class EventManager {
   constructor (createStore, defaultLookupKey) {
     this.#createStore = createStore
     /** @type {string} the default lookup key */
-    this.#defaultLookupKey = defaultLookupKey
+    this.#defaultLookupKey = this.#getLookupKey(defaultLookupKey)
   }
 
   /**
-   * Returns a boolean indicating if the lookup key is valid.
-   * @param {string=} lookupKey
+   * Returns a valid lookup key
+   * @param {*=} lookupKey
    * @returns
    */
-  #isValidLookupKey (lookupKey) {
-    return !!lookupKey && typeof lookupKey === 'string'
+  #getLookupKey (target) {
+    if (!!target && typeof target === 'string') return target
+    if (!target || typeof target !== 'object' || !target.licenseKey || !target.applicationID) return this.#defaultLookupKey
+    return stringify({
+      licenseKey: target.licenseKey,
+      applicationID: target.applicationID,
+      entityGuid: target.entityGuid
+    })
   }
 
   /**
@@ -34,8 +42,8 @@ export class EventManager {
    * @param {string=} lookupKey The key used to retrieve an event store. Typically a stringified object of the target metadata.
    * @returns {Object} Returns the matching event store. Event stores can be comprised of EventBuffers or EventAggregators, both of which share the same interface.
    */
-  get (lookupKey) {
-    if (!this.#isValidLookupKey(lookupKey)) lookupKey = this.#defaultLookupKey
+  get (target) {
+    const lookupKey = this.#getLookupKey(target)
     if (!this.#buffers.has(lookupKey)) this.#buffers.set(lookupKey, this.#createStore())
     return this.#buffers.get(lookupKey)
   }

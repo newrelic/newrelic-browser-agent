@@ -73,7 +73,7 @@ export class Aggregate extends AggregateBase {
       return
     }
 
-    const events = this.eventManager.get(stringify(target))
+    const events = this.eventManager.get(target)
 
     if (events.wouldExceedMaxSize(logBytes)) {
       handle(SUPPORTABILITY_METRIC_CHANNEL, ['Logging/Harvest/Early/Seen', events.bytes + logBytes])

@@ -674,6 +674,8 @@ describe('setAPI', () => {
       const target = { licenseKey, applicationID, entityGuid }
       const myApi = apiInterface.register(target)
 
+      console.log(myApi)
+
       const opts = { customAttributes: { test: 1 }, level: 'info' }
 
       myApi.api.log('test', opts)

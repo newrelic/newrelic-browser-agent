@@ -243,7 +243,7 @@ export class Aggregate extends AggregateBase {
     const jsAttributesHash = stringHashCode(stringify(allCustomAttrs))
     const aggregateHash = bucketHash + ':' + jsAttributesHash
 
-    const events = this.eventManager.get(stringify(target))
+    const events = this.eventManager.get(target)
     events.add(type, aggregateHash, params, newMetrics, allCustomAttrs)
 
     function setCustom (key, val) {

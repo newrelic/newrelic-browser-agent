@@ -7,7 +7,6 @@ import { activatedFeatures } from '../../common/util/feature-flags'
 import { Obfuscator } from '../../common/util/obfuscate'
 import { EventBuffer } from './event-buffer'
 import { EventManager } from './event-manager'
-import { stringify } from '../../common/util/stringify'
 
 export class AggregateBase extends FeatureBase {
   /**
@@ -20,14 +19,11 @@ export class AggregateBase extends FeatureBase {
     super(agentRef.agentIdentifier, featureName)
     this.agentRef = agentRef
 
-    this.eventManager = new EventManager(eventStore, stringify({
-      licenseKey: agentRef.info.licenseKey,
-      applicationID: agentRef.info.applicationID,
-      entityGuid: this.agentRef.runtime.appMetadata?.agents?.[0]?.entityGuid // since this is typically ran immediately, it will be undefined for the base config -- but for consistency -- it should be set here as external callers will be setting this value. if undefined, it will fallback to referencing the default
-    }))
+    /** use the config'd licenseKey and appId for the default */
+    this.eventManager = new EventManager(eventStore, this.agentRef.info)
 
     /** The default event store points at the configuration target */
-    this.events = this.eventManager.get(this.defaultLookupKey)
+    this.events = this.eventManager.get()
 
     this.checkConfiguration(agentRef)
     this.obfuscator = agentRef.runtime.obfuscator
@@ -99,7 +95,7 @@ export class AggregateBase extends FeatureBase {
    * @param {Boolean} harvestFailed - harvester flag to restore events in main buffer for retry later if request failed
    */
   postHarvestCleanup (harvestFailed = false, opts = {}) {
-    const events = this.eventManager.get(stringify(opts?.target))
+    const events = this.eventManager.get(opts?.target) // if undefined, will use the default target
     if (harvestFailed) events.reloadSave(opts)
     events.clearSave(opts)
   }

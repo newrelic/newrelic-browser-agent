@@ -157,7 +157,7 @@ export class Aggregate extends AggregateBase {
       return
     }
 
-    const events = this.eventManager.get(stringify(target))
+    const events = this.eventManager.get(target)
 
     for (let key in obj) {
       let val = obj[key]

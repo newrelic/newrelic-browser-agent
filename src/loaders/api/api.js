@@ -21,6 +21,7 @@ import { LOG_LEVELS } from '../../features/logging/constants'
 import { bufferLog } from '../../features/logging/shared/utils'
 import { wrapLogger } from '../../common/wrap/wrap-logger'
 import { isValidTarget } from '../../common/util/target'
+import { getConfigurationValue } from '../../common/config/init'
 
 export function setTopLevelCallers () {
   const nr = gosCDN()
@@ -62,17 +63,27 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
     // TODO: send a register call, needs consumer change.
     const attrs = {}
     if (!isValidTarget(target)) return warn(46, target)
+
+    /**
+       * The reporter method that will be used to report the data to the container agent's API method.
+       * If the external.capture_registered_data configuration value is set to true, the data will be reported to BOTH the container and the external target
+       * @param {*} methodToCall the container agent's API method to call
+       * @param {*} args the arguments to supply to the container agent's API method
+       * @param {*} target the target to report the data to. If undefined, will report to the container agent's target.
+       * @returns
+       */
+    const report = (methodToCall, args, target) => {
+      if (getConfigurationValue(agentIdentifier, 'external.capture_registered_data')) { methodToCall(...args) }
+      return methodToCall(...args, target)
+    }
     return {
       api: {
-        addPageAction: (name, attributes = {}) => apiInterface.addPageAction(name, { ...attrs, ...attributes }, target),
+        addPageAction: (name, attributes = {}) => report(apiInterface.addPageAction, [name, { ...attrs, ...attributes }], target),
         log: (message, options) => {
           if (!target.entityGuid) return warn(47)
-          apiInterface.log(message, {
-            ...options,
-            customAttributes: { ...attrs, ...(options.customAttributes || {}) }
-          }, target)
+          return report(apiInterface.log, [message, { ...options, customAttributes: { ...attrs, ...(options.customAttributes || {}) } }], target)
         },
-        noticeError: (error, attributes = {}) => apiInterface.noticeError(error, { ...attrs, ...attributes }, target),
+        noticeError: (error, attributes = {}) => report(apiInterface.noticeError, [error, { ...attrs, ...attributes }], target),
         setCustomAttribute: (key, value) => {
           attrs[key] = value
         },

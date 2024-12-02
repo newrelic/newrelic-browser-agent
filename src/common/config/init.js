@@ -40,6 +40,7 @@ const model = () => {
       cors_use_tracecontext_headers: undefined,
       allowed_origins: undefined
     },
+    external: { capture_registered_data: false },
     feature_flags: [],
     generic_events: { enabled: true, harvestTimeSeconds: 30, autoStart: true },
     harvest: { tooManyRequestsDelay: 60 },

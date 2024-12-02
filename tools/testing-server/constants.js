@@ -55,6 +55,7 @@ const enabledFeature = { enabled, autoStart, harvestTimeSeconds }
 module.exports.defaultInitBlock = {
   ajax: { deny_list: [], block_internal: false, ...enabledFeature },
   distributed_tracing: {},
+  external: { capture_registered_data: false },
   feature_flags: [],
   generic_events: enabledFeature,
   harvest: { tooManyRequestsDelay: 5 },

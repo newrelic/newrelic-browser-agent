@@ -13,7 +13,7 @@ describe('logging harvesting', () => {
 
   afterEach(async () => {
     // logging mode is sticky to the session, so we need to reset before the next test
-    await await browser.destroyAgentSession()
+    await browser.destroyAgentSession()
   })
 
   const mockRumResponse = async (logLevel) => {

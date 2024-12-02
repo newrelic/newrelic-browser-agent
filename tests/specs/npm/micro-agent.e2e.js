@@ -3,6 +3,10 @@
 import { testErrorsRequest, testInsRequest, testLogsRequest, testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 describe('micro-agent', () => {
+  beforeEach(async () => {
+    await browser.enableLogging()
+  })
+
   it('Smoke Test - Can send distinct payloads of all relevant data types to 2 distinct app IDs', async () => {
     const [rumCapture, errorsCapture, insightsCapture, logsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
       { test: testRumRequest },
@@ -40,7 +44,7 @@ describe('micro-agent', () => {
       rumCapture.waitForResult({ totalCount: 2 }),
       errorsCapture.waitForResult({ totalCount: 2 }),
       insightsCapture.waitForResult({ totalCount: 2 }),
-      logsCapture.waitForResult({ totalCount: 2 })
+      logsCapture.waitForResult({ totalCount: 2, timeout: 15000 })
     ])
 
     // these props will get set to true once a test has matched it

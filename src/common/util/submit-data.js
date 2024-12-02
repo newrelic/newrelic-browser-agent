@@ -17,11 +17,44 @@ import { isBrowserScope } from '../constants/runtime'
  * a final harvest within the agent.
  */
 export function getSubmitMethod ({ isFinalHarvest = false } = {}) {
-  return isFinalHarvest && isBrowserScope
+  if (isFinalHarvest && isBrowserScope) {
     // Use sendBeacon for final harvest
-    ? beacon
-    // If not final harvest, or not browserScope, always use xhr post
-    : xhr
+    return beacon
+  }
+
+  // If not final harvest, or not browserScope, use XHR post if available
+  if (typeof XMLHttpRequest !== 'undefined') {
+    return xhr
+  }
+
+  // Fallback for web workers where XMLHttpRequest is not available
+  return xhrFetch
+}
+
+/**
+ *
+ * @param url
+ * @param body
+ * @param method
+ * @param headers
+ * @returns {Promise<Response>}
+ */
+export function xhrFetch ({
+  url,
+  body = null,
+  method = 'POST',
+  headers = [{
+    key: 'content-type',
+    value: 'text/plain'
+  }]
+}) {
+  const objHeaders = {}
+
+  for (const header of headers) {
+    objHeaders[header.key] = header.value
+  }
+
+  return fetch(url, { headers: objHeaders, method, body, credentials: 'include' })
 }
 
 /**

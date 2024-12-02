@@ -139,8 +139,6 @@ export class InstrumentBase extends FeatureBase {
         return hasReplayPrerequisite(this.agentIdentifier) && !!session
       case FEATURE_NAMES.sessionTrace:
         return !!session
-      case FEATURE_NAMES.logging:
-        return !!session
       default:
         return true
     }

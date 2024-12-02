@@ -13,7 +13,6 @@ import { MAX_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
 import { FEATURE_NAMES, FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
 import { SESSION_EVENT_TYPES, SESSION_EVENTS } from '../../../common/session/constants'
 import { ABORT_REASONS } from '../../session_replay/constants'
-import { canEnableSessionTracking } from '../../utils/feature-gates'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -33,17 +32,20 @@ export class Aggregate extends AggregateBase {
     })
 
     this.waitForFlags(['log']).then(([loggingMode]) => {
-      const session = this.agentRef.runtime.session
+      const session = this.agentRef.runtime.session ?? {}
       if (this.loggingMode === LOGGING_MODE.OFF || (session.isNew && loggingMode === LOGGING_MODE.OFF)) {
         this.blocked = true
         this.deregisterDrain()
         return
       }
-      if (session.isNew || !canEnableSessionTracking(this.agentRef.agentIdentifier)) {
+      if (session.isNew || !this.isSessionTrackingEnabled) {
         this.loggingMode = loggingMode
-        this.syncWithSessionManager({
-          loggingMode: this.loggingMode
-        })
+
+        if (this.isSessionTrackingEnabled) {
+          this.syncWithSessionManager({
+            loggingMode: this.loggingMode
+          })
+        }
       } else {
         this.loggingMode = session.state.loggingMode
       }

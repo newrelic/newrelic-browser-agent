@@ -7,6 +7,7 @@ import { activatedFeatures } from '../../common/util/feature-flags'
 import { Obfuscator } from '../../common/util/obfuscate'
 import { EventBuffer } from './event-buffer'
 import { FEATURE_NAMES } from '../../loaders/features/features'
+import { canEnableSessionTracking } from './feature-gates'
 
 export class AggregateBase extends FeatureBase {
   constructor (agentRef, featureName) {
@@ -18,6 +19,7 @@ export class AggregateBase extends FeatureBase {
     else if (![FEATURE_NAMES.pageViewEvent, FEATURE_NAMES.sessionTrace].includes(this.featureName)) this.events = new EventBuffer()
     this.checkConfiguration(agentRef)
     this.obfuscator = agentRef.runtime.obfuscator
+    this.isSessionTrackingEnabled = canEnableSessionTracking(this.agentIdentifier)
   }
 
   /**
@@ -119,6 +121,8 @@ export class AggregateBase extends FeatureBase {
   }
 
   syncWithSessionManager (state = {}) {
-    this.agentRef.runtime.session.write(state)
+    if (this.isSessionTrackingEnabled) {
+      this.agentRef.runtime.session.write(state)
+    }
   }
 }

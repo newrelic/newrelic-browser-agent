@@ -144,6 +144,25 @@ export class Harvest extends SharedContext {
         }
         cbFinished(cbResult)
       }, eventListenerOpts(false))
+    } else if (!opts.unload && cbFinished && submitMethod === submitData.xhrFetch) {
+      const harvestScope = this
+      result.then(async function (response) {
+        const status = response.status
+        const cbResult = { sent: true, status, fullUrl, fetchResponse: response }
+
+        if (response.status === 429) {
+          cbResult.retry = true
+          cbResult.delay = harvestScope.tooManyRequestsDelay
+        } else if (status === 408 || status === 500 || status === 503) {
+          cbResult.retry = true
+        }
+
+        if (opts.needResponse) {
+          cbResult.responseText = await response.text()
+        }
+
+        cbFinished(cbResult)
+      })
     }
 
     return result

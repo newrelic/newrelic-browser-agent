@@ -19,7 +19,7 @@ export class AggregateBase extends FeatureBase {
     else if (![FEATURE_NAMES.pageViewEvent, FEATURE_NAMES.sessionTrace].includes(this.featureName)) this.events = new EventBuffer()
     this.checkConfiguration(agentRef)
     this.obfuscator = agentRef.runtime.obfuscator
-    this.isSessionTrackingEnabled = canEnableSessionTracking(this.agentIdentifier)
+    this.isSessionTrackingEnabled = canEnableSessionTracking(this.agentIdentifier) && this.agentRef.runtime.session
   }
 
   /**

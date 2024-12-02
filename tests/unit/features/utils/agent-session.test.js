@@ -1,11 +1,16 @@
 import { faker } from '@faker-js/faker'
 
-let agentIdentifier
 let agentSession
 let mockEE
+let mockAgent
 
 beforeEach(() => {
-  agentIdentifier = faker.string.uuid()
+  mockAgent = {
+    agentIdentifier: faker.string.uuid(),
+    init: {},
+    info: {},
+    runtime: {}
+  }
   mockEE = { [faker.string.uuid()]: faker.lorem.sentence() }
   agentSession = {
     state: {
@@ -13,20 +18,6 @@ beforeEach(() => {
     }
   }
 
-  jest.doMock('../../../../src/common/config/info', () => ({
-    __esModule: true,
-    getInfo: jest.fn(),
-    setInfo: jest.fn()
-  }))
-  jest.doMock('../../../../src/common/config/init', () => ({
-    __esModule: true,
-    getConfigurationValue: jest.fn(),
-    getConfiguration: jest.fn().mockImplementation(() => ({}))
-  }))
-  jest.doMock('../../../../src/common/config/runtime', () => ({
-    __esModule: true,
-    getRuntime: jest.fn().mockImplementation(() => ({ session: agentSession }))
-  }))
   jest.doMock('../../../../src/common/drain/drain', () => ({
     __esModule: true,
     drain: jest.fn()
@@ -47,10 +38,11 @@ beforeEach(() => {
   }))
   jest.doMock('../../../../src/common/session/session-entity', () => ({
     __esModule: true,
-    SessionEntity: jest.fn().mockReturnValue({
+    SessionEntity: jest.fn().mockImplementation(({ agentIdentifier }) => ({
+      agentIdentifier,
       state: agentSession.state,
       syncCustomAttribute: jest.fn()
-    })
+    }))
   }))
   jest.doMock('../../../../src/common/storage/local-storage.js', () => ({
     __esModule: true,
@@ -64,7 +56,7 @@ afterEach(() => {
 
 test('should register handlers and drain the session feature', async () => {
   const { setupAgentSession } = await import('../../../../src/features/utils/agent-session')
-  const result = setupAgentSession(agentIdentifier)
+  const result = setupAgentSession(mockAgent)
 
   const { registerHandler } = await import('../../../../src/common/event-emitter/register-handler')
   const { drain } = await import('../../../../src/common/drain/drain')
@@ -72,13 +64,13 @@ test('should register handlers and drain the session feature', async () => {
   expect(result).toEqual(expect.objectContaining(agentSession))
   expect(registerHandler).toHaveBeenNthCalledWith(1, 'api-setCustomAttribute', expect.any(Function), 'session', mockEE)
   expect(registerHandler).toHaveBeenNthCalledWith(2, 'api-setUserId', expect.any(Function), 'session', mockEE)
-  expect(drain).toHaveBeenCalledWith(agentIdentifier, 'session')
+  expect(drain).toHaveBeenCalledWith(mockAgent.agentIdentifier, 'session')
 })
 
-test('should not drain the session feature more than once', async () => {
+test('multiple calls to setupAgentSession for same agent does not re-execute it', async () => {
   const { setupAgentSession } = await import('../../../../src/features/utils/agent-session')
-  const result1 = setupAgentSession(agentIdentifier)
-  const result2 = setupAgentSession(agentIdentifier)
+  const result1 = setupAgentSession(mockAgent)
+  const result2 = setupAgentSession(mockAgent)
 
   const { registerHandler } = await import('../../../../src/common/event-emitter/register-handler')
   const { drain } = await import('../../../../src/common/drain/drain')
@@ -89,34 +81,39 @@ test('should not drain the session feature more than once', async () => {
   expect(drain).toHaveBeenCalledTimes(1)
 })
 
+test('calls to setupAgentSession for different agents executes separately', async () => {
+  const { setupAgentSession } = await import('../../../../src/features/utils/agent-session')
+  const result1 = setupAgentSession(mockAgent)
+
+  const agentId1 = mockAgent.agentIdentifier
+  const agentId2 = mockAgent.agentIdentifier = faker.string.uuid()
+  mockAgent.runtime = {} // this reset effectively imitates a different agent with a clean runtime.session state
+  const result2 = setupAgentSession(mockAgent)
+
+  const { registerHandler } = await import('../../../../src/common/event-emitter/register-handler')
+  const { drain } = await import('../../../../src/common/drain/drain')
+
+  expect(result1.agentIdentifier).toEqual(agentId1)
+  expect(result2.agentIdentifier).toEqual(agentId2)
+  expect(registerHandler).toHaveBeenCalledTimes(4)
+  expect(drain).toHaveBeenCalledTimes(2)
+})
+
 test('should set custom session data', async () => {
-  const { getInfo } = await import('../../../../src/common/config/info')
-  const agentInfo = {
+  mockAgent.info = {
     [faker.string.uuid()]: faker.lorem.sentence(),
     jsAttributes: {
       [faker.string.uuid()]: faker.lorem.sentence()
     }
   }
-  jest.mocked(getInfo).mockReturnValue(agentInfo)
   agentSession.state.custom = {
     [faker.string.uuid()]: faker.lorem.sentence()
   }
 
   const { setupAgentSession } = await import('../../../../src/features/utils/agent-session')
-  setupAgentSession(agentIdentifier)
+  setupAgentSession(mockAgent)
 
-  expect(agentInfo.jsAttributes).toEqual(expect.objectContaining(agentSession.state.custom))
-})
-
-test('should not set custom session data in worker scope', async () => {
-  const globalScope = await import('../../../../src/common/constants/runtime')
-  jest.replaceProperty(globalScope, 'isBrowserScope', false)
-
-  const { setInfo } = await import('../../../../src/common/config/info')
-  const { setupAgentSession } = await import('../../../../src/features/utils/agent-session')
-  setupAgentSession(agentIdentifier)
-
-  expect(setInfo).not.toHaveBeenCalled()
+  expect(mockAgent.info.jsAttributes).toEqual(expect.objectContaining(agentSession.state.custom))
 })
 
 test('should sync custom attributes', async () => {
@@ -129,7 +126,7 @@ test('should sync custom attributes', async () => {
   ]
 
   const { setupAgentSession } = await import('../../../../src/features/utils/agent-session')
-  const retVal = setupAgentSession(agentIdentifier)
+  const retVal = setupAgentSession(mockAgent)
 
   const setCustomAttributeHandler = jest.mocked(registerHandler).mock.calls[0][1]
   const setUserIdHandler = jest.mocked(registerHandler).mock.calls[1][1]

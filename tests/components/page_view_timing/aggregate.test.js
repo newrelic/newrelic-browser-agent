@@ -32,7 +32,7 @@ jest.mock('web-vitals/attribution', () => ({
   }))
 }))
 
-let agentSetup
+let mainAgent
 
 beforeAll(async () => {
   global.navigator.connection = {
@@ -42,7 +42,7 @@ beforeAll(async () => {
     downlink: 700
   }
 
-  agentSetup = setupAgent()
+  mainAgent = setupAgent()
 })
 
 let timingsAggregate
@@ -50,14 +50,14 @@ let timingsAggregate
 beforeEach(async () => {
   jest.spyOn(pageVisibilityModule, 'subscribeToVisibilityChange')
 
-  const timingsInstrument = new Timings(agentSetup.agentIdentifier, agentSetup.aggregator)
+  const timingsInstrument = new Timings(mainAgent)
   await new Promise(process.nextTick)
   timingsAggregate = timingsInstrument.featAggregate
   timingsAggregate.ee.emit('rumresp', {})
 })
 
 afterEach(() => {
-  resetAgent(agentSetup.agentIdentifier)
+  resetAgent(mainAgent.agentIdentifier)
   jest.clearAllMocks()
 })
 
@@ -69,7 +69,7 @@ const expectedNetworkInfo = {
 }
 
 test('LCP event with CLS attribute', () => {
-  const timing = find(timingsAggregate.timings.buffer, function (t) {
+  const timing = find(timingsAggregate.events.get(), function (t) {
     return t.name === 'lcp'
   })
 
@@ -91,26 +91,26 @@ test('LCP event with CLS attribute', () => {
 })
 
 test('sends expected FI attributes when available', () => {
-  expect(timingsAggregate.timings.buffer.length).toBeGreaterThanOrEqual(1)
-  const fiPayload = timingsAggregate.timings.buffer.find(x => x.name === 'fi')
+  expect(timingsAggregate.events.get().length).toBeGreaterThanOrEqual(1)
+  const fiPayload = timingsAggregate.events.get().find(x => x.name === 'fi')
   expect(fiPayload.value).toEqual(5)
   expect(fiPayload.attrs).toEqual(expect.objectContaining({ type: 'pointerdown', fid: 1234, cls: 0.1119, ...expectedNetworkInfo }))
 })
 
 test('sends CLS node with right val on vis change', () => {
-  let clsNode = timingsAggregate.timings.buffer.find(tn => tn.name === VITAL_NAMES.CUMULATIVE_LAYOUT_SHIFT)
+  let clsNode = timingsAggregate.events.get().find(tn => tn.name === VITAL_NAMES.CUMULATIVE_LAYOUT_SHIFT)
   expect(clsNode).toBeUndefined()
 
   pageVisibilityModule.subscribeToVisibilityChange.mock.calls[1][0]()
 
-  clsNode = timingsAggregate.timings.buffer.find(tn => tn.name === VITAL_NAMES.CUMULATIVE_LAYOUT_SHIFT)
+  clsNode = timingsAggregate.events.get().find(tn => tn.name === VITAL_NAMES.CUMULATIVE_LAYOUT_SHIFT)
   expect(clsNode).toBeTruthy()
   expect(clsNode.value).toEqual(111.9) // since cls multiply decimal by 1000 to offset consumer division by 1000
   expect(clsNode.attrs.cls).toBeUndefined() // cls node doesn't need cls property
 })
 
 test('sends INP node with right val', () => {
-  let inpNode = timingsAggregate.timings.buffer.find(tn => tn.name === VITAL_NAMES.INTERACTION_TO_NEXT_PAINT)
+  let inpNode = timingsAggregate.events.get().find(tn => tn.name === VITAL_NAMES.INTERACTION_TO_NEXT_PAINT)
   expect(inpNode).toBeTruthy()
   expect(inpNode.value).toEqual(8)
   expect(inpNode.attrs.cls).toEqual(0.1119)

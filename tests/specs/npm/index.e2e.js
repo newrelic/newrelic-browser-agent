@@ -1,4 +1,3 @@
-import { es2022Support } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { apiMethods, asyncApiMethods } from '../../../src/loaders/api/api-methods'
 import { testAjaxTimeSlicesRequest, testErrorsRequest, testInsRequest, testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
 
@@ -11,7 +10,7 @@ const testBuilds = [
   'custom-agent-pro-deprecated-features'
 ]
 
-describe.withBrowsersMatching(es2022Support)('basic npm agent', () => {
+describe('basic npm agent', () => {
   let rumCapture
   let errorsCapture
   let insightsCapture

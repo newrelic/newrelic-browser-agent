@@ -5,6 +5,281 @@
       "changes": [
         {
           "type": "feat",
+          "sha": "2d8d114e70ba2861fb5639e132f25c9c03df871b",
+          "message": "Upgrade SessionReplay libraries to latest version",
+          "issues": [
+            "1251"
+          ]
+        }
+      ],
+      "version": "1.274.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "5c0da2d3-92eb-4ab8-8952-bdb5ac32c823",
+      "createTime": "2024-11-19T20:16:39.794Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
+          "sha": "19cbb634b5016e3e8ce0c40a6bf1ee59156c78eb",
+          "message": "Multiple MicroAgent undefined session and limit available API",
+          "issues": [
+            "1252"
+          ]
+        }
+      ],
+      "version": "1.273.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "efd8b450-06d8-450b-8130-d57024674e1b",
+      "createTime": "2024-11-18T16:05:55.225Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
+          "sha": "f77380b01e9b57db0b5c782d6d512431229bcd79",
+          "message": "Refactor feature storages",
+          "issues": [
+            "1241"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "911d8d1d78b49fa4252257596e013806885ace9b",
+          "message": "Remove wrap-events usage from soft nav",
+          "issues": [
+            "1244"
+          ]
+        }
+      ],
+      "version": "1.273.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "cfe0b973-a6ce-4433-b940-345d8d9ba9ff",
+      "createTime": "2024-11-11T17:36:53.044Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
+          "sha": "1a58409cda8b7b264e58fe284041540941dccd1c",
+          "message": "Marks and measures",
+          "issues": [
+            "1189"
+          ]
+        }
+      ],
+      "version": "1.272.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "f5153f08-af41-4b8e-8612-0de33c05c0c2",
+      "createTime": "2024-11-07T17:22:04.292Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
+          "sha": "25a1fffb91fa5936766a7bc89d735b3018aa62a2",
+          "message": "Ignore unhandled promise rejections that lack a valid reason",
+          "issues": [
+            "1233"
+          ]
+        }
+      ],
+      "version": "1.271.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "5fe576f3-60ca-49a1-91d0-8b60f72a523c",
+      "createTime": "2024-11-01T14:08:54.003Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
+          "sha": "cdfdab701bda6266416ad27750e63e8e9e0e075b",
+          "message": "Ensure all lazy loaded modules issue warning instead of errors",
+          "issues": [
+            "1234"
+          ]
+        }
+      ],
+      "version": "1.270.3",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "b0eaa7cc-2218-489c-82d2-96d82acd5dcb",
+      "createTime": "2024-10-31T18:10:14.684Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
+          "sha": "95f5a77c60221c0eda61a42f33648f5a2791891f",
+          "message": "Correct naming for logging pageUrl attribute",
+          "issues": [
+            "1225"
+          ]
+        }
+      ],
+      "version": "1.270.2",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "6ee3cfd5-b381-4fbb-b754-dc4604ed5e5c",
+      "createTime": "2024-10-28T19:01:16.177Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
+          "sha": "dc5938f26e43686759de976d4631b22f112b71e8",
+          "message": "Remove undefined agentRuntime in Session Trace",
+          "issues": [
+            "1227"
+          ]
+        }
+      ],
+      "version": "1.270.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "b0b05cf0-efba-4408-94b4-d688e8222ead",
+      "createTime": "2024-10-23T19:58:25.349Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
+          "sha": "a5996bec25f7c4038ce87f2ad72eb61d637f5994",
+          "message": "Remove supportsSendBeacon runtime property",
+          "issues": [
+            "1224"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "c6a20e11b694fcf721ce27b02be1df76caed1a3e",
+          "message": "Add Firefox to LCP test matcher",
+          "issues": [
+            "1223"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "daf349e632902597c232c3392cc5d188f2995f25",
+          "message": "Remove 'pageHide' from page end-of-lifecycle listener",
+          "issues": [
+            "1219"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "5fdea14097d415d7c6f3f98bfe87848e118ec62e",
+          "message": "Move deregisterDrain method to feature-base",
+          "issues": [
+            "1220"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "789df5a0d5574acb02ac0db2aea98150a9c8786e",
+          "message": "Relocate aggregator from loader and improve agent internals",
+          "issues": [
+            "1216"
+          ]
+        }
+      ],
+      "version": "1.270.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "3d5396c5-8086-479e-bf80-7968181edc8c",
+      "createTime": "2024-10-22T22:07:09.547Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
+          "sha": "d1896869858eca3320144113e168f17f524f3119",
+          "message": "Only ever allow session traces to capture page load timings once",
+          "issues": [
+            "1212"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "f14b0fec81d7d21b418b6be6c5d415bdd813eca9",
+          "message": "Handle Session Replay Security Policy Errors",
+          "issues": [
+            "1215"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "1b2448498cf285f36530f2107cb0403401958b1f",
+          "message": "Include logging feature in micro agent loader",
+          "issues": [
+            "1210"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "6926474fe2530475e10daab2bb6bad745bb547e1",
+          "message": "Add instrumentation metadata to logging",
+          "issues": [
+            "1208"
+          ]
+        }
+      ],
+      "version": "1.269.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "b1dd9e77-97c7-49ad-851e-fd82e00c5aca",
+      "createTime": "2024-10-16T16:00:42.905Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
+          "sha": "94a9a0b465e9ea34132317236d47ac9f62ee4051",
+          "message": "Always return a string for custom stringify method",
+          "issues": [
+            "1207"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "b5e4c6dcdcfce3ab88132f2a1d82d4d02ab7640b",
+          "message": "Aggregate UserActions",
+          "issues": [
+            "1195"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "d3fac07379d18c98e9838152a31a482ff25fe5bf",
+          "message": "Force generic events feature to clear buffer when unloading",
+          "issues": [
+            "1202"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "1b0bb1dd992674f77c41a73449b64b022cdfc83c",
+          "message": "Add UserAction to GenericEvents",
+          "issues": [
+            "1186"
+          ]
+        }
+      ],
+      "version": "1.268.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "617ba9f2-df28-45fd-82f6-f9ebfdae2338",
+      "createTime": "2024-10-08T15:19:03.167Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
           "sha": "81349b82f5befd88f425cce1dee06f08fcea8a05",
           "message": "Upgrade to web-vitals v4",
           "issues": [
@@ -1960,5 +2235,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2024-09-23T19:27:12.684Z"
+  "updateTime": "2024-11-19T20:16:39.794Z"
 }

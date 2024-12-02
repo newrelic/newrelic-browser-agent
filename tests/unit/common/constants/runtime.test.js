@@ -155,22 +155,3 @@ test.each([
   expect(runtime.ffVersion).toEqual(expected)
   delete global.window
 })
-
-test('should set supportsSendBeacon to false', async () => {
-  // Ensure we don't have a sendBeacon function
-  delete global.navigator.sendBeacon
-
-  const runtime = await import('../../../../src/common/constants/runtime')
-
-  expect(runtime.supportsSendBeacon).toEqual(false)
-})
-
-test('should set supportsSendBeacon to true', async () => {
-  global.navigator.sendBeacon = jest.fn()
-  global.window = { navigator: global.navigator, document: true }
-
-  const runtime = await import('../../../../src/common/constants/runtime')
-
-  expect(runtime.supportsSendBeacon).toEqual(true)
-  delete global.window
-})

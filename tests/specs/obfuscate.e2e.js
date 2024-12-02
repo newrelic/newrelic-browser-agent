@@ -1,4 +1,3 @@
-import { supportsFetchExtended } from '../../tools/browser-matcher/common-matchers.mjs'
 import { testAjaxEventsRequest, testBlobTraceRequest, testErrorsRequest, testInsRequest, testInteractionEventsRequest, testLogsRequest, testRumRequest, testTimingEventsRequest } from '../../tools/testing-server/utils/expect-tests'
 
 const config = {
@@ -24,7 +23,7 @@ const config = {
   }
 }
 
-describe.withBrowsersMatching(supportsFetchExtended)('obfuscate rules', () => {
+describe('obfuscate rules', () => {
   let rumCapture
   let timingEventsCapture
   let ajaxEventsCapture

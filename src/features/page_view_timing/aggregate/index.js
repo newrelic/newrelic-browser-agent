@@ -7,10 +7,8 @@ import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { handle } from '../../../common/event-emitter/handle'
-import { getInfo } from '../../../common/config/info'
-import { getConfigurationValue } from '../../../common/config/init'
 import { FEATURE_NAME } from '../constants'
-import { FEATURE_NAMES } from '../../../loaders/features/features'
+import { FEATURE_NAMES, FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { cumulativeLayoutShift } from '../../../common/vitals/cumulative-layout-shift'
 import { firstContentfulPaint } from '../../../common/vitals/first-contentful-paint'
@@ -21,7 +19,6 @@ import { largestContentfulPaint } from '../../../common/vitals/largest-contentfu
 import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
 import { subscribeToVisibilityChange } from '../../../common/window/page-visibility'
 import { VITAL_NAMES } from '../../../common/vitals/constants'
-import { EventBuffer } from '../../utils/event-buffer'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -30,16 +27,15 @@ export class Aggregate extends AggregateBase {
     this.addTiming(name, value, attrs)
   }
 
-  constructor (agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator, FEATURE_NAME)
-
-    this.timings = new EventBuffer()
+  constructor (agentRef) {
+    super(agentRef, FEATURE_NAME)
     this.curSessEndRecorded = false
 
     registerHandler('docHidden', msTimestamp => this.endCurrentSession(msTimestamp), this.featureName, this.ee)
-    registerHandler('winPagehide', msTimestamp => this.recordPageUnload(msTimestamp), this.featureName, this.ee)
+    // Add the time of _window pagehide event_ firing to the next PVT harvest == NRDB windowUnload attr:
+    registerHandler('winPagehide', msTimestamp => this.addTiming('unload', msTimestamp, null), this.featureName, this.ee)
 
-    const harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'page_view_timing.harvestTimeSeconds') || 30
+    const harvestTimeSeconds = agentRef.init.page_view_timing.harvestTimeSeconds || 30
 
     this.waitForFlags(([])).then(() => {
       /* It's important that CWV api, like "onLCP", is called before the **scheduler** is initialized. The reason is because they listen to the same
@@ -61,9 +57,9 @@ export class Aggregate extends AggregateBase {
         this.addTiming(name, value * 1000, attrs)
       }, true) // CLS node should only reports on vis change rather than on every change
 
-      const scheduler = new HarvestScheduler('events', {
-        onFinished: (...args) => this.onHarvestFinished(...args),
-        getPayload: (...args) => this.prepareHarvest(...args)
+      const scheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
+        onFinished: (result) => this.postHarvestCleanup(result.sent && result.retry),
+        getPayload: (options) => this.makeHarvestPayload(options.retry)
       }, this)
       scheduler.startTimer(harvestTimeSeconds)
 
@@ -82,21 +78,6 @@ export class Aggregate extends AggregateBase {
     }
   }
 
-  /**
-   * Add the time of _window pagehide event_ firing to the next PVT harvest == NRDB windowUnload attr.
-   */
-  recordPageUnload (timestamp) {
-    this.addTiming('unload', timestamp, null)
-    /*
-    Issue: Because window's pageHide commonly fires BEFORE vis change and "final" harvest would happen at the former in this case, we also have to add our vis-change event now or it may not be sent.
-    Affected: Safari < v14.1/.5 ; versions that don't support 'visiilitychange' event
-    Impact: For affected w/o this, NR 'pageHide' attribute may not be sent. For other browsers w/o this, NR 'pageHide' gets fragmented into its own harvest call on page unloading because of dual EoL logic.
-    Mitigation: NR 'unload' and 'pageHide' are both recorded when window pageHide fires, rather than only recording 'unload'.
-    Future: When EoL can become the singular subscribeToVisibilityChange, it's likely endCurrentSession isn't needed here as 'unload'-'pageHide' can be untangled.
-    */
-    this.endCurrentSession(timestamp)
-  }
-
   addTiming (name, value, attrs) {
     attrs = attrs || {}
     addConnectionAttributes(attrs) // network conditions may differ from the actual for VitalMetrics when they were captured
@@ -113,7 +94,7 @@ export class Aggregate extends AggregateBase {
       attrs.cls = cumulativeLayoutShift.current.value
     }
 
-    this.timings.add({
+    this.events.add({
       name,
       value,
       attrs
@@ -122,45 +103,26 @@ export class Aggregate extends AggregateBase {
     handle('pvtAdded', [name, value, attrs], undefined, FEATURE_NAMES.sessionTrace, this.ee)
   }
 
-  onHarvestFinished (result) {
-    if (result.retry && this.timings.held.hasData) this.timings.unhold()
-    else this.timings.held.clear()
-  }
-
   appendGlobalCustomAttributes (timing) {
     var timingAttributes = timing.attrs || {}
-    var customAttributes = getInfo(this.agentIdentifier).jsAttributes || {}
 
     var reservedAttributes = ['size', 'eid', 'cls', 'type', 'fid', 'elTag', 'elUrl', 'net-type',
       'net-etype', 'net-rtt', 'net-dlink']
-    Object.entries(customAttributes || {}).forEach(([key, val]) => {
+    Object.entries(this.agentRef.info.jsAttributes || {}).forEach(([key, val]) => {
       if (reservedAttributes.indexOf(key) < 0) {
         timingAttributes[key] = val
       }
     })
   }
 
-  // serialize and return current timing data, clear and save current data for retry
-  prepareHarvest (options) {
-    if (!this.timings.hasData) return
-
-    var payload = this.getPayload(this.timings.buffer)
-    if (options.retry) this.timings.hold()
-    else this.timings.clear()
-
-    return {
-      body: { e: payload }
-    }
-  }
-
   // serialize array of timing data
-  getPayload (data) {
+  serializer (eventBuffer) {
     var addString = getAddStringContext(this.agentIdentifier)
 
     var payload = 'bel.6;'
 
-    for (var i = 0; i < data.length; i++) {
-      var timing = data[i]
+    for (var i = 0; i < eventBuffer.length; i++) {
+      var timing = eventBuffer[i]
 
       payload += 'e,'
       payload += addString(timing.name) + ','
@@ -173,7 +135,7 @@ export class Aggregate extends AggregateBase {
         payload += numeric(attrParts.length) + ';' + attrParts.join(';')
       }
 
-      if ((i + 1) < data.length) payload += ';'
+      if ((i + 1) < eventBuffer.length) payload += ';'
     }
 
     return payload

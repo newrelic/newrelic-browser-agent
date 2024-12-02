@@ -1,7 +1,7 @@
 import { BrowserAgent } from '../../dist/types/loaders/browser-agent'
 import { MicroAgent } from '../../dist/types/loaders/micro-agent'
 import { InteractionInstance, getContext, onEnd } from '../../dist/types/loaders/api/interaction-types'
-import { expectType } from 'tsd'
+import { expectType, expectError } from 'tsd'
 
 // Browser Agent APIs
 const browserAgent = new BrowserAgent({})
@@ -26,7 +26,7 @@ expectType<(value: string | null) => any>(browserAgent.setApplicationVersion)
 expectType<(callback: (error: Error | string) => boolean | { group: string; }) => any>(browserAgent.setErrorHandler)
 expectType<(timeStamp?: number) => any>(browserAgent.finished)
 expectType<(name: string, id: string) => any>(browserAgent.addRelease)
-expectType<(featureNames?: string | string[]) => any>(browserAgent.start)
+expectType<() => any>(browserAgent.start)
 expectType<() => any>(browserAgent.recordReplay)
 expectType<() => any>(browserAgent.pauseReplay)
 expectType<(message: string, options?: { customAttributes?: object, level?: 'ERROR' | 'TRACE' | 'DEBUG' | 'INFO' | 'WARN'}) => any>(browserAgent.log)
@@ -45,20 +45,8 @@ expectType<(name: string, trigger?: string) => InteractionInstance>(browserAgent
 
 // Micro Agent APIs
 const microAgent = new MicroAgent({})
-expectType<(customAttributes: {
-  name: string;
-  start: number;
-  end?: number;
-  origin?: string;
-  type?: string;
-  // @ts-ignore
-}) => any>(microAgent.addToTrace)
-// @ts-ignore
-expectType<(name: string) => any>(microAgent.setCurrentRouteName)
-// @ts-ignore
-expectType<() => InteractionInstance>(microAgent.interaction)
+expectType<(featureNames?: string | string[]) => boolean>(microAgent.start)
 
-// Base Agent APIs
 expectType<(name: string, attributes?: object) => any>(microAgent.addPageAction)
 expectType<(name: string, host?: string) => any>(microAgent.setPageViewName)
 expectType<(name: string, value: string | number | boolean | null, persist?: boolean) => any>(microAgent.setCustomAttribute)
@@ -66,6 +54,14 @@ expectType<(error: Error | string, customAttributes?: object) => any>(microAgent
 expectType<(value: string | null) => any>(microAgent.setUserId)
 expectType<(value: string | null) => any>(microAgent.setApplicationVersion)
 expectType<(callback: (error: Error | string) => boolean | { group: string; }) => any>(microAgent.setErrorHandler)
-expectType<(timeStamp?: number) => any>(microAgent.finished)
 expectType<(name: string, id: string) => any>(microAgent.addRelease)
 expectType<(message: string, options?: { customAttributes?: object, level?: 'ERROR' | 'TRACE' | 'DEBUG' | 'INFO' | 'WARN'}) => any>(microAgent.log)
+
+// The following browser agent APIs should not be available in the Micro Agent:
+expectError(() => expectType<any>(microAgent.addToTrace))
+expectError(() => expectType<any>(microAgent.setCurrentRouteName))
+expectError(() => expectType<any>(microAgent.interaction))
+expectError(() => expectType<any>(microAgent.finished))
+expectError(() => expectType<any>(microAgent.recordReplay))
+expectError(() => expectType<any>(microAgent.pauseReplay))
+expectError(() => expectType<any>(microAgent.wrapLogger))

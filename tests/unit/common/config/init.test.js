@@ -33,7 +33,7 @@ test('getConfigurationValue parses path correctly', () => {
 test('init props exist and return expected defaults', () => {
   setConfiguration('34567', {})
   const config = getConfiguration('34567')
-  expect(Object.keys(config).length).toEqual(21)
+  expect(Object.keys(config).length).toEqual(22)
   expect(config.ajax).toEqual({
     autoStart: true,
     block_internal: true,
@@ -87,6 +87,10 @@ test('init props exist and return expected defaults', () => {
     autoStart: true,
     enabled: true,
     harvestTimeSeconds: 30
+  })
+  expect(config.performance).toEqual({
+    capture_marks: false,
+    capture_measures: false
   })
   expect(config.privacy).toEqual({
     cookies_enabled: true
@@ -150,6 +154,9 @@ test('init props exist and return expected defaults', () => {
     harvestTimeSeconds: 10
   })
   expect(config.ssl).toEqual(undefined)
+  expect(config.user_actions).toEqual({
+    enabled: true
+  })
 })
 
 describe('property getters/setters used for validation', () => {

@@ -19,6 +19,9 @@ describe('logging harvesting', () => {
         attributes: {
           appId: 42,
           agentVersion: expect.any(String),
+          'instrumentation.provider': 'browser',
+          'instrumentation.version': expect.any(String),
+          'instrumentation.name': 'spa',
           'entity.guid': expect.any(String),
           hasReplay: false,
           hasTrace: true,

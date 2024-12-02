@@ -25,9 +25,9 @@ export default (env) => {
       plugins: [
         new webpack.IgnorePlugin({
           checkResource: (resource, context) => {
-            if (context.match(/features\/utils/) && resource.indexOf('aggregate') > -1) {
+            if (context.match(/features\/utils/) && resource.endsWith('aggregate')) {
               // Only allow page_view_event, page_view_timing, and metrics features
-              return !resource.match(/(page_view_event|page_view_timing|metrics)\/aggregate/)
+              return !/(page_view_event|page_view_timing|metrics)\/aggregate/.test(resource)
             }
 
             return false
@@ -44,9 +44,9 @@ export default (env) => {
       plugins: [
         new webpack.IgnorePlugin({
           checkResource: (resource, context) => {
-            if (context.match(/features\/utils/) && resource.indexOf('aggregate') > -1) {
+            if (context.match(/features\/utils/) && resource.endsWith('aggregate')) {
               // Allow all features except spa
-              return resource.match(/(spa)\/aggregate/)
+              return /(spa)\/aggregate/.test(resource)
             }
 
             return false

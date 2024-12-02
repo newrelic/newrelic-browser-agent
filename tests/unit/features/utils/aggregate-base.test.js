@@ -1,7 +1,6 @@
 import { faker } from '@faker-js/faker'
 import { AggregateBase } from '../../../../src/features/utils/aggregate-base'
-import { getInfo, isValid } from '../../../../src/common/config/info'
-import { getRuntime } from '../../../../src/common/config/runtime'
+import { isValid } from '../../../../src/common/config/info'
 import { configure } from '../../../../src/loaders/configure/configure'
 import { gosCDN } from '../../../../src/common/window/nreum'
 
@@ -16,12 +15,7 @@ jest.mock('../../../../src/common/event-emitter/register-handler', () => ({
 }))
 jest.mock('../../../../src/common/config/info', () => ({
   __esModule: true,
-  getInfo: jest.fn(),
   isValid: jest.fn().mockReturnValue(false)
-}))
-jest.mock('../../../../src/common/config/runtime', () => ({
-  __esModule: true,
-  getRuntime: jest.fn()
 }))
 jest.mock('../../../../src/loaders/configure/configure', () => ({
   __esModule: true,
@@ -51,13 +45,16 @@ jest.mock('../../../../src/common/util/feature-flags', () => ({
 }))
 
 let agentIdentifier
-let aggregator
 let featureName
+let mainAgent
 
 beforeEach(() => {
   agentIdentifier = faker.string.uuid()
-  aggregator = {}
   featureName = faker.string.uuid()
+  mainAgent = {
+    agentIdentifier,
+    runtime: { [faker.string.uuid()]: faker.lorem.sentence() }
+  }
 })
 
 afterEach(() => {
@@ -80,19 +77,12 @@ test('should merge info, jsattributes, and runtime objects', () => {
       [faker.string.uuid()]: faker.lorem.sentence()
     }
   }
-  jest.mocked(getInfo).mockReturnValue(mockInfo2)
+  mainAgent.info = mockInfo2
 
-  const mockRuntime = {
-    [faker.string.uuid()]: faker.lorem.sentence()
-  }
-  jest.mocked(getRuntime).mockReturnValue(mockRuntime)
-
-  new AggregateBase(agentIdentifier, aggregator, featureName)
+  new AggregateBase(mainAgent, featureName)
 
   expect(isValid).toHaveBeenCalledWith(agentIdentifier)
   expect(gosCDN).toHaveBeenCalledTimes(1)
-  expect(getInfo).toHaveBeenCalledWith(agentIdentifier)
-  expect(getRuntime).toHaveBeenCalledWith(agentIdentifier)
   expect(configure).toHaveBeenCalledWith({ agentIdentifier }, {
     info: {
       ...mockInfo1,
@@ -101,25 +91,23 @@ test('should merge info, jsattributes, and runtime objects', () => {
         ...mockInfo2.jsAttributes
       }
     },
-    runtime: mockRuntime
+    runtime: mainAgent.runtime
   })
 })
 
 test('should only configure the agent once', () => {
   jest.mocked(isValid).mockReturnValue(true)
 
-  new AggregateBase(agentIdentifier, aggregator, featureName)
+  new AggregateBase(mainAgent, featureName)
 
   expect(isValid).toHaveBeenCalledWith(agentIdentifier)
   expect(gosCDN).not.toHaveBeenCalled()
-  expect(getInfo).not.toHaveBeenCalled()
-  expect(getRuntime).toHaveBeenCalledTimes(2)
   expect(configure).not.toHaveBeenCalled()
 })
 
 test('should resolve waitForFlags correctly based on flags with real vals', async () => {
   const flagNames = [faker.string.uuid(), faker.string.uuid(), faker.string.uuid()]
-  const aggregateBase = new AggregateBase(agentIdentifier, aggregator, featureName)
+  const aggregateBase = new AggregateBase(mainAgent, featureName)
   const flagWait = aggregateBase.waitForFlags(flagNames)
   aggregateBase.ee.emit('rumresp', [{
     [flagNames[0]]: 0,
@@ -134,7 +122,7 @@ test('should resolve waitForFlags correctly based on flags with real vals', asyn
 
 test('should return empty array when flagNames is empty', async () => {
   const flagNames = [faker.string.uuid(), faker.string.uuid(), faker.string.uuid()]
-  const aggregateBase = new AggregateBase(agentIdentifier, aggregator, featureName)
+  const aggregateBase = new AggregateBase(mainAgent, featureName)
   const flagWait = aggregateBase.waitForFlags()
   aggregateBase.ee.emit('rumresp', [{
     [flagNames[0]]: 0,
@@ -148,7 +136,8 @@ test('should return empty array when flagNames is empty', async () => {
 })
 
 test('should return activatedFeatures values when available', async () => {
-  const aggregateBase = new AggregateBase('abcd', aggregator, featureName) // 'abcd' matches the af mock at the top of this file
+  mainAgent.agentIdentifier = 'abcd' // 'abcd' matches the af mock at the top of this file
+  const aggregateBase = new AggregateBase(mainAgent, featureName)
   const flagWait = aggregateBase.waitForFlags()
   await expect(flagWait).resolves.toEqual([])
 })

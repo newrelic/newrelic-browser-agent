@@ -3,6 +3,102 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.274.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.273.1...v1.274.0) (2024-11-19)
+
+
+### Features
+
+* Upgrade SessionReplay libraries to latest version ([#1251](https://github.com/newrelic/newrelic-browser-agent/issues/1251)) ([2d8d114](https://github.com/newrelic/newrelic-browser-agent/commit/2d8d114e70ba2861fb5639e132f25c9c03df871b))
+
+## [1.273.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.273.0...v1.273.1) (2024-11-18)
+
+
+### Bug Fixes
+
+* Multiple MicroAgent undefined session and limit available API ([#1252](https://github.com/newrelic/newrelic-browser-agent/issues/1252)) ([19cbb63](https://github.com/newrelic/newrelic-browser-agent/commit/19cbb634b5016e3e8ce0c40a6bf1ee59156c78eb))
+
+## [1.273.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.272.0...v1.273.0) (2024-11-11)
+
+
+### Features
+
+* Refactor feature storages ([#1241](https://github.com/newrelic/newrelic-browser-agent/issues/1241)) ([f77380b](https://github.com/newrelic/newrelic-browser-agent/commit/f77380b01e9b57db0b5c782d6d512431229bcd79))
+* Remove wrap-events usage from soft nav ([#1244](https://github.com/newrelic/newrelic-browser-agent/issues/1244)) ([911d8d1](https://github.com/newrelic/newrelic-browser-agent/commit/911d8d1d78b49fa4252257596e013806885ace9b))
+
+## [1.272.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.271.0...v1.272.0) (2024-11-07)
+
+
+### Features
+
+* Marks and measures ([#1189](https://github.com/newrelic/newrelic-browser-agent/issues/1189)) ([1a58409](https://github.com/newrelic/newrelic-browser-agent/commit/1a58409cda8b7b264e58fe284041540941dccd1c))
+
+## [1.271.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.270.3...v1.271.0) (2024-11-01)
+
+
+### Features
+
+* Ignore unhandled promise rejections that lack a valid reason ([#1233](https://github.com/newrelic/newrelic-browser-agent/issues/1233)) ([25a1fff](https://github.com/newrelic/newrelic-browser-agent/commit/25a1fffb91fa5936766a7bc89d735b3018aa62a2))
+
+## [1.270.3](https://github.com/newrelic/newrelic-browser-agent/compare/v1.270.2...v1.270.3) (2024-10-31)
+
+
+### Bug Fixes
+
+* Ensure all lazy loaded modules issue warning instead of errors ([#1234](https://github.com/newrelic/newrelic-browser-agent/issues/1234)) ([cdfdab7](https://github.com/newrelic/newrelic-browser-agent/commit/cdfdab701bda6266416ad27750e63e8e9e0e075b))
+
+## [1.270.2](https://github.com/newrelic/newrelic-browser-agent/compare/v1.270.1...v1.270.2) (2024-10-28)
+
+
+### Bug Fixes
+
+* Correct naming for logging pageUrl attribute ([#1225](https://github.com/newrelic/newrelic-browser-agent/issues/1225)) ([95f5a77](https://github.com/newrelic/newrelic-browser-agent/commit/95f5a77c60221c0eda61a42f33648f5a2791891f))
+
+## [1.270.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.270.0...v1.270.1) (2024-10-23)
+
+
+### Bug Fixes
+
+* Remove undefined agentRuntime in Session Trace ([#1227](https://github.com/newrelic/newrelic-browser-agent/issues/1227)) ([dc5938f](https://github.com/newrelic/newrelic-browser-agent/commit/dc5938f26e43686759de976d4631b22f112b71e8))
+
+## [1.270.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.269.0...v1.270.0) (2024-10-22)
+
+
+### Features
+
+* Add Firefox to LCP test matcher ([#1223](https://github.com/newrelic/newrelic-browser-agent/issues/1223)) ([c6a20e1](https://github.com/newrelic/newrelic-browser-agent/commit/c6a20e11b694fcf721ce27b02be1df76caed1a3e))
+* Move deregisterDrain method to feature-base ([#1220](https://github.com/newrelic/newrelic-browser-agent/issues/1220)) ([5fdea14](https://github.com/newrelic/newrelic-browser-agent/commit/5fdea14097d415d7c6f3f98bfe87848e118ec62e))
+* Relocate aggregator from loader and improve agent internals ([#1216](https://github.com/newrelic/newrelic-browser-agent/issues/1216)) ([789df5a](https://github.com/newrelic/newrelic-browser-agent/commit/789df5a0d5574acb02ac0db2aea98150a9c8786e))
+* Remove 'pageHide' from page end-of-lifecycle listener ([#1219](https://github.com/newrelic/newrelic-browser-agent/issues/1219)) ([daf349e](https://github.com/newrelic/newrelic-browser-agent/commit/daf349e632902597c232c3392cc5d188f2995f25))
+* Remove supportsSendBeacon runtime property ([#1224](https://github.com/newrelic/newrelic-browser-agent/issues/1224)) ([a5996be](https://github.com/newrelic/newrelic-browser-agent/commit/a5996bec25f7c4038ce87f2ad72eb61d637f5994))
+
+## [1.269.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.268.0...v1.269.0) (2024-10-16)
+
+
+### Features
+
+* Add instrumentation metadata to logging ([#1208](https://github.com/newrelic/newrelic-browser-agent/issues/1208)) ([6926474](https://github.com/newrelic/newrelic-browser-agent/commit/6926474fe2530475e10daab2bb6bad745bb547e1))
+* Include logging feature in micro agent loader ([#1210](https://github.com/newrelic/newrelic-browser-agent/issues/1210)) ([1b24484](https://github.com/newrelic/newrelic-browser-agent/commit/1b2448498cf285f36530f2107cb0403401958b1f))
+
+
+### Bug Fixes
+
+* Handle Session Replay Security Policy Errors ([#1215](https://github.com/newrelic/newrelic-browser-agent/issues/1215)) ([f14b0fe](https://github.com/newrelic/newrelic-browser-agent/commit/f14b0fec81d7d21b418b6be6c5d415bdd813eca9))
+* Only ever allow session traces to capture page load timings once ([#1212](https://github.com/newrelic/newrelic-browser-agent/issues/1212)) ([d189686](https://github.com/newrelic/newrelic-browser-agent/commit/d1896869858eca3320144113e168f17f524f3119))
+
+## [1.268.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.267.0...v1.268.0) (2024-10-08)
+
+
+### Features
+
+* Add UserAction to GenericEvents ([#1186](https://github.com/newrelic/newrelic-browser-agent/issues/1186)) ([1b0bb1d](https://github.com/newrelic/newrelic-browser-agent/commit/1b0bb1dd992674f77c41a73449b64b022cdfc83c))
+* Aggregate UserActions ([#1195](https://github.com/newrelic/newrelic-browser-agent/issues/1195)) ([b5e4c6d](https://github.com/newrelic/newrelic-browser-agent/commit/b5e4c6dcdcfce3ab88132f2a1d82d4d02ab7640b))
+
+
+### Bug Fixes
+
+* Always return a string for custom stringify method ([#1207](https://github.com/newrelic/newrelic-browser-agent/issues/1207)) ([94a9a0b](https://github.com/newrelic/newrelic-browser-agent/commit/94a9a0b465e9ea34132317236d47ac9f62ee4051))
+* Force generic events feature to clear buffer when unloading ([#1202](https://github.com/newrelic/newrelic-browser-agent/issues/1202)) ([d3fac07](https://github.com/newrelic/newrelic-browser-agent/commit/d3fac07379d18c98e9838152a31a482ff25fe5bf))
+
 ## [1.267.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.266.0...v1.267.0) (2024-09-23)
 
 

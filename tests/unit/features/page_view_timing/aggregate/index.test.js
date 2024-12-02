@@ -1,43 +1,38 @@
 import * as qp from '@newrelic/nr-querypack'
-import { ee } from '../../../../../src/common/event-emitter/contextual-ee'
-import { Aggregator } from '../../../../../src/common/aggregate/aggregator'
 import { Aggregate } from '../../../../../src/features/page_view_timing/aggregate'
-import { getInfo } from '../../../../../src/common/config/info'
 
-jest.mock('../../../../../src/common/config/info', () => ({
-  __esModule: true,
-  getInfo: jest.fn(),
-  isValid: jest.fn().mockReturnValue(true)
-}))
-jest.mock('../../../../../src/common/config/init', () => ({
-  __esModule: true,
-  getConfigurationValue: jest.fn().mockReturnValue(undefined)
-}))
+const mockRuntime = {} // getAddStringContext in the serializer still relies on getRuntime() fn
 jest.mock('../../../../../src/common/config/runtime', () => ({
   __esModule: true,
-  getRuntime: jest.fn().mockReturnValue({})
+  getRuntime: jest.fn(() => mockRuntime),
+  setRuntime: jest.fn()
 }))
 
-const pvtAgg = new Aggregate('abcd', new Aggregator({ agentIdentifier: 'abcd', ee }))
+const pvtAgg = new Aggregate({
+  agentIdentifier: 'abcd',
+  info: { },
+  init: { page_view_timing: {} },
+  runtime: mockRuntime
+})
 
 describe('PVT aggregate', () => {
   test('serializer default attributes', () => {
     const schema = qp.schemas['bel.6']
-    getInfo.mockReturnValue({})
 
     testCases().forEach(testCase => {
       const expectedPayload = qp.encode(testCase.input, schema)
-      const payload = pvtAgg.getPayload(getAgentInternalFormat(testCase.input))
+      console.log(pvtAgg.serializer)
+      const payload = pvtAgg.serializer(getAgentInternalFormat(testCase.input))
       expect(payload).toEqual(expectedPayload)
     })
   })
 
   test('serializer handles custom attributes', () => {
     // should add custom, should not add cls (reserved)
-    getInfo.mockReturnValue({ jsAttributes: { custom: 'val', cls: 'customVal' } })
+    pvtAgg.agentRef.info.jsAttributes = { custom: 'val', cls: 'customVal' }
 
     testCases().forEach(testCase => {
-      const payload = pvtAgg.getPayload(getAgentInternalFormat(testCase.input))
+      const payload = pvtAgg.serializer(getAgentInternalFormat(testCase.input))
       const events = qp.decode(payload)
       const hasReserved = overriddenReservedAttributes(events)
       const result = haveCustomAttributes(events)
@@ -49,24 +44,24 @@ describe('PVT aggregate', () => {
   test('addConnectionAttributes', () => {
     global.navigator.connection = {}
     pvtAgg.addTiming('abc', 1)
-    expect(pvtAgg.timings.buffer[0].attrs).toEqual(expect.objectContaining({}))
+    expect(pvtAgg.events.get()[0].attrs).toEqual(expect.objectContaining({}))
 
     global.navigator.connection.type = 'type'
     pvtAgg.addTiming('abc', 1)
-    expect(pvtAgg.timings.buffer[1].attrs).toEqual(expect.objectContaining({
+    expect(pvtAgg.events.get()[1].attrs).toEqual(expect.objectContaining({
       'net-type': 'type'
     }))
 
     global.navigator.connection.effectiveType = 'effectiveType'
     pvtAgg.addTiming('abc', 1)
-    expect(pvtAgg.timings.buffer[2].attrs).toEqual(expect.objectContaining({
+    expect(pvtAgg.events.get()[2].attrs).toEqual(expect.objectContaining({
       'net-type': 'type',
       'net-etype': 'effectiveType'
     }))
 
     global.navigator.connection.rtt = 'rtt'
     pvtAgg.addTiming('abc', 1)
-    expect(pvtAgg.timings.buffer[3].attrs).toEqual(expect.objectContaining({
+    expect(pvtAgg.events.get()[3].attrs).toEqual(expect.objectContaining({
       'net-type': 'type',
       'net-etype': 'effectiveType',
       'net-rtt': 'rtt'
@@ -74,7 +69,7 @@ describe('PVT aggregate', () => {
 
     global.navigator.connection.downlink = 'downlink'
     pvtAgg.addTiming('abc', 1)
-    expect(pvtAgg.timings.buffer[4].attrs).toEqual(expect.objectContaining({
+    expect(pvtAgg.events.get()[4].attrs).toEqual(expect.objectContaining({
       'net-type': 'type',
       'net-etype': 'effectiveType',
       'net-rtt': 'rtt',
@@ -89,7 +84,7 @@ describe('PVT aggregate', () => {
     }
     pvtAgg.addTiming('abc', 1)
 
-    expect(pvtAgg.timings.buffer[5].attrs).toEqual(expect.objectContaining({
+    expect(pvtAgg.events.get()[5].attrs).toEqual(expect.objectContaining({
       'net-type': 'type',
       'net-etype': 'effectiveType',
       'net-rtt': 'rtt',

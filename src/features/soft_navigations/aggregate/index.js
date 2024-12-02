@@ -1,14 +1,11 @@
-import { getConfigurationValue } from '../../../common/config/init'
-import { deregisterDrain } from '../../../common/drain/drain'
 import { handle } from '../../../common/event-emitter/handle'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { single } from '../../../common/util/invoke'
 import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
-import { FEATURE_NAMES } from '../../../loaders/features/features'
+import { FEATURE_NAMES, FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { AggregateBase } from '../../utils/aggregate-base'
-import { EventBuffer } from '../../utils/event-buffer'
 import { API_TRIGGER_NAME, FEATURE_NAME, INTERACTION_STATUS } from '../constants'
 import { AjaxNode } from './ajax-node'
 import { InitialPageLoadInteraction } from './initial-page-load-interaction'
@@ -16,14 +13,14 @@ import { Interaction } from './interaction'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
-  constructor (agentIdentifier, aggregator, { domObserver }) {
-    super(agentIdentifier, aggregator, FEATURE_NAME)
+  constructor (agentRef, { domObserver }) {
+    super(agentRef, FEATURE_NAME)
 
-    const harvestTimeSeconds = getConfigurationValue(agentIdentifier, 'soft_navigations.harvestTimeSeconds') || 10
-    this.interactionsToHarvest = new EventBuffer()
+    const harvestTimeSeconds = agentRef.init.soft_navigations.harvestTimeSeconds || 10
+    this.interactionsToHarvest = this.events
     this.domObserver = domObserver
 
-    this.initialPageLoadInteraction = new InitialPageLoadInteraction(agentIdentifier)
+    this.initialPageLoadInteraction = new InitialPageLoadInteraction(agentRef.agentIdentifier)
     timeToFirstByte.subscribe(({ attrs }) => {
       const loadEventTime = attrs.navigationEntry.loadEventEnd
       this.initialPageLoadInteraction.forceSave = true
@@ -41,16 +38,16 @@ export class Aggregate extends AggregateBase {
     this.waitForFlags(['spa']).then(([spaOn]) => {
       if (spaOn) {
         this.drain()
-        const scheduler = new HarvestScheduler('events', {
-          onFinished: this.onHarvestFinished.bind(this),
+        const scheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
+          onFinished: (result) => this.postHarvestCleanup(result.sent && result.retry),
+          getPayload: (options) => this.makeHarvestPayload(options.retry),
           retryDelay: harvestTimeSeconds,
           onUnload: () => this.interactionInProgress?.done() // return any held ajax or jserr events so they can be sent with EoL harvest
-        }, { agentIdentifier, ee: this.ee })
-        scheduler.harvest.on('events', this.onHarvestStarted.bind(this))
+        }, this)
         scheduler.startTimer(harvestTimeSeconds, 0)
       } else {
         this.blocked = true // if rum response determines that customer lacks entitlements for spa endpoint, this feature shouldn't harvest
-        deregisterDrain(this.agentIdentifier, this.featureName)
+        this.deregisterDrain()
       }
     })
 
@@ -68,27 +65,16 @@ export class Aggregate extends AggregateBase {
     registerHandler('jserror', this.#handleJserror.bind(this), this.featureName, this.ee)
   }
 
-  onHarvestStarted (options) {
-    if (!this.interactionsToHarvest.hasData || this.blocked) return
+  serializer (eventBuffer) {
     // The payload depacker takes the first ixn of a payload (if there are multiple ixns) and positively offset the subsequent ixns timestamps by that amount.
     // In order to accurately portray the real start & end times of the 2nd & onward ixns, we hence need to negatively offset their start timestamps with that of the 1st ixn.
     let firstIxnStartTime = 0 // the very 1st ixn does not require any offsetting
     const serializedIxnList = []
-    for (const interaction of this.interactionsToHarvest.buffer) {
+    for (const interaction of eventBuffer) {
       serializedIxnList.push(interaction.serialize(firstIxnStartTime))
       if (!firstIxnStartTime) firstIxnStartTime = Math.floor(interaction.start)
     }
-    const payload = `bel.7;${serializedIxnList.join(';')}`
-
-    if (options.retry) this.interactionsToHarvest.hold()
-    else this.interactionsToHarvest.clear()
-
-    return { body: { e: payload } }
-  }
-
-  onHarvestFinished (result) {
-    if (result.sent && result.retry && this.interactionsToHarvest.held.hasData) this.interactionsToHarvest.unhold()
-    else this.interactionsToHarvest.held.clear()
+    return `bel.7;${serializedIxnList.join(';')}`
   }
 
   startUIInteraction (eventName, startedAt, sourceElem) { // this is throttled by instrumentation so that it isn't excessively called
@@ -141,8 +127,9 @@ export class Aggregate extends AggregateBase {
     */
     if (this.interactionInProgress?.isActiveDuring(timestamp)) return this.interactionInProgress
     let saveIxn
-    for (let idx = this.interactionsToHarvest.buffer.length - 1; idx >= 0; idx--) { // reverse search for the latest completed interaction for efficiency
-      const finishedInteraction = this.interactionsToHarvest.buffer[idx]
+    const interactionsBuffer = this.interactionsToHarvest.get()
+    for (let idx = interactionsBuffer.length - 1; idx >= 0; idx--) { // reverse search for the latest completed interaction for efficiency
+      const finishedInteraction = interactionsBuffer[idx]
       if (finishedInteraction.isActiveDuring(timestamp)) {
         if (finishedInteraction.trigger !== 'initialPageLoad') return finishedInteraction
         // It's possible that a complete interaction occurs before page is fully loaded, so we need to consider if a route-change ixn may have overlapped this iPL

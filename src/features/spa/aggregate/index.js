@@ -9,24 +9,20 @@ import { shouldCollectEvent } from '../../../common/deny-list/deny-list'
 import { navTimingValues as navTiming } from '../../../common/timing/nav-timing'
 import { generateUuid } from '../../../common/ids/unique-id'
 import { Interaction } from './interaction'
-import { getConfigurationValue } from '../../../common/config/init'
-import { getRuntime } from '../../../common/config/runtime'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { Serializer } from './serializer'
 import { ee } from '../../../common/event-emitter/contextual-ee'
 import * as CONSTANTS from '../constants'
-import { FEATURE_NAMES } from '../../../loaders/features/features'
+import { FEATURE_NAMES, FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { firstContentfulPaint } from '../../../common/vitals/first-contentful-paint'
 import { firstPaint } from '../../../common/vitals/first-paint'
 import { bundleId } from '../../../common/ids/bundle-id'
-import { loadedAsDeferredBrowserScript } from '../../../common/constants/runtime'
+import { initialLocation, loadedAsDeferredBrowserScript } from '../../../common/constants/runtime'
 import { handle } from '../../../common/event-emitter/handle'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
-import { deregisterDrain } from '../../../common/drain/drain'
 import { warn } from '../../../common/util/console'
-import { EventBuffer } from '../../utils/event-buffer'
 
 const {
   FEATURE_NAME, INTERACTION_EVENTS, MAX_TIMER_BUDGET, FN_START, FN_END, CB_START, INTERACTION_API, REMAINING,
@@ -34,13 +30,12 @@ const {
 } = CONSTANTS
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
-  constructor (agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator, FEATURE_NAME)
+  constructor (agentRef) {
+    super(agentRef, FEATURE_NAME)
 
-    const agentRuntime = getRuntime(agentIdentifier)
-    this.state = {
-      initialPageURL: agentRuntime.origin,
-      lastSeenUrl: agentRuntime.origin,
+    const state = this.state = {
+      initialPageURL: initialLocation,
+      lastSeenUrl: initialLocation,
       lastSeenRouteName: null,
       timerMap: {},
       timerBudget: MAX_TIMER_BUDGET,
@@ -51,18 +46,16 @@ export class Aggregate extends AggregateBase {
       pageLoaded: false,
       childTime: 0,
       depth: 0,
-      harvestTimeSeconds: getConfigurationValue(agentIdentifier, 'spa.harvestTimeSeconds') || 10,
-      interactionsToHarvest: new EventBuffer(),
+      harvestTimeSeconds: agentRef.init.spa.harvestTimeSeconds || 10,
       // The below feature flag is used to disable the SPA ajax fix for specific customers, see https://new-relic.atlassian.net/browse/NR-172169
-      disableSpaFix: (getConfigurationValue(agentIdentifier, 'feature_flags') || []).indexOf('disable-spa-fix') > -1
+      disableSpaFix: (agentRef.init.feature_flags || []).indexOf('disable-spa-fix') > -1
     }
+    this.spaSerializerClass = new Serializer(this)
 
+    const classThis = this
     let scheduler
-    this.serializer = new Serializer(this)
 
-    const { state, serializer } = this
-
-    const baseEE = ee.get(agentIdentifier) // <-- parent baseEE
+    const baseEE = ee.get(agentRef.agentIdentifier) // <-- parent baseEE
     const mutationEE = baseEE.get('mutation')
     const promiseEE = baseEE.get('promise')
     const historyEE = baseEE.get('history')
@@ -107,21 +100,21 @@ export class Aggregate extends AggregateBase {
 
     this.waitForFlags((['spa'])).then(([spaFlag]) => {
       if (spaFlag) {
-        scheduler = new HarvestScheduler('events', {
-          onFinished: onHarvestFinished,
+        scheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
+          onFinished: (result) => this.postHarvestCleanup(result.sent && result.retry),
+          getPayload: (options) => this.makeHarvestPayload(options.retry),
           retryDelay: state.harvestTimeSeconds
-        }, { agentIdentifier, ee: baseEE })
-        scheduler.harvest.on('events', onHarvestStarted)
+        }, this)
         this.drain()
       } else {
         this.blocked = true
-        deregisterDrain(this.agentIdentifier, this.featureName)
+        this.deregisterDrain()
       }
     })
 
-    if (!isEnabled()) return
+    if (agentRef.init.spa.enabled !== true) return
 
-    state.initialPageLoad = new Interaction('initialPageLoad', 0, state.lastSeenUrl, state.lastSeenRouteName, onInteractionFinished, agentIdentifier)
+    state.initialPageLoad = new Interaction('initialPageLoad', 0, state.lastSeenUrl, state.lastSeenRouteName, onInteractionFinished, agentRef.agentIdentifier)
     state.initialPageLoad.save = true
     state.prevInteraction = state.initialPageLoad
     state.currentNode = state.initialPageLoad.root // hint
@@ -212,7 +205,7 @@ export class Aggregate extends AggregateBase {
         // Otherwise, if no interaction is currently active, create a new node ID,
         // and let the aggregator know that we entered a new event handler callback
         // so that it has a chance to possibly start an interaction.
-        var ixn = new Interaction(evName, this[FN_START], state.lastSeenUrl, state.lastSeenRouteName, onInteractionFinished, agentIdentifier)
+        var ixn = new Interaction(evName, this[FN_START], state.lastSeenUrl, state.lastSeenRouteName, onInteractionFinished, agentRef.agentIdentifier)
 
         // Store the interaction as prevInteraction in case it is prematurely discarded
         state.prevInteraction = ixn
@@ -310,7 +303,7 @@ export class Aggregate extends AggregateBase {
         this.sent = true
         node.dt = this.dt
         if (node.dt?.timestamp) {
-          node.dt.timestamp = agentRuntime.timeKeeper.correctAbsoluteTimestamp(node.dt.timestamp)
+          node.dt.timestamp = agentRef.runtime.timeKeeper.correctAbsoluteTimestamp(node.dt.timestamp)
         }
         node.jsEnd = node.start = this.startTime
         node[INTERACTION][REMAINING]++
@@ -410,7 +403,7 @@ export class Aggregate extends AggregateBase {
           if (dtPayload && this[SPA_NODE]) {
             this[SPA_NODE].dt = dtPayload
             if (this[SPA_NODE].dt?.timestamp) {
-              this[SPA_NODE].dt.timestamp = agentRuntime.timeKeeper.correctAbsoluteTimestamp(this[SPA_NODE].dt.timestamp)
+              this[SPA_NODE].dt.timestamp = agentRef.runtime.timeKeeper.correctAbsoluteTimestamp(this[SPA_NODE].dt.timestamp)
             }
           }
         }
@@ -548,7 +541,7 @@ export class Aggregate extends AggregateBase {
       var interaction
       if (state?.currentNode?.[INTERACTION]) interaction = this.ixn = state.currentNode[INTERACTION]
       else if (state?.prevNode?.end === null && state?.prevNode?.[INTERACTION]?.root?.[INTERACTION]?.eventName !== 'initialPageLoad') interaction = this.ixn = state.prevNode[INTERACTION]
-      else interaction = this.ixn = new Interaction('api', t, state.lastSeenUrl, state.lastSeenRouteName, onInteractionFinished, agentIdentifier)
+      else interaction = this.ixn = new Interaction('api', t, state.lastSeenUrl, state.lastSeenRouteName, onInteractionFinished, agentRef.agentIdentifier)
       if (!state.currentNode) {
         interaction.checkFinish()
         if (state.depth) setCurrentNode(interaction.root)
@@ -674,22 +667,6 @@ export class Aggregate extends AggregateBase {
       setCurrentNode(null)
     }
 
-    const classThis = this
-    function onHarvestStarted (options) {
-      if (!state.interactionsToHarvest.hasData || classThis.blocked) return {}
-      var payload = serializer.serializeMultiple(state.interactionsToHarvest.buffer, 0, navTiming)
-
-      if (options.retry) state.interactionsToHarvest.hold()
-      else state.interactionsToHarvest.clear()
-
-      return { body: { e: payload } }
-    }
-
-    function onHarvestFinished (result) {
-      if (result.sent && result.retry && state.interactionsToHarvest.held.hasData) state.interactionsToHarvest.unhold()
-      else state.interactionsToHarvest.held.clear()
-    }
-
     baseEE.on('spa-jserror', function (type, name, params, metrics) {
       if (!state.currentNode) return
       params._interactionId = state.currentNode.interaction.id
@@ -702,9 +679,9 @@ export class Aggregate extends AggregateBase {
     register('function-err', function (args, obj, error) {
       if (!state.currentNode) return
       error.__newrelic ??= {}
-      error.__newrelic[agentIdentifier] = { interactionId: state.currentNode.interaction.id }
+      error.__newrelic[agentRef.agentIdentifier] = { interactionId: state.currentNode.interaction.id }
       if (state.currentNode.type && state.currentNode.type !== 'interaction') {
-        error.__newrelic[agentIdentifier].interactionNodeId = state.currentNode.id
+        error.__newrelic[agentRef.agentIdentifier].interactionNodeId = state.currentNode.id
       }
     }, this.featureName, baseEE)
 
@@ -740,7 +717,7 @@ export class Aggregate extends AggregateBase {
         interaction.root.attrs.firstContentfulPaint = firstContentfulPaint.current.value
       }
       baseEE.emit('interactionDone', [interaction, true])
-      state.interactionsToHarvest.add(interaction)
+      classThis.events.add(interaction)
 
       let smCategory
       if (interaction.root?.attrs?.trigger === 'initialPageLoad') smCategory = 'InitialPageLoad'
@@ -751,10 +728,9 @@ export class Aggregate extends AggregateBase {
       scheduler?.scheduleHarvest(0)
       if (!scheduler) warn(19)
     }
+  }
 
-    function isEnabled () {
-      var enabled = getConfigurationValue(agentIdentifier, 'spa.enabled')
-      return enabled !== false
-    }
+  serializer (eventBuffer) {
+    return this.spaSerializerClass.serializeMultiple(eventBuffer, 0, navTiming)
   }
 }

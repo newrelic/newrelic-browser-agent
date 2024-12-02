@@ -2,10 +2,10 @@ import { faker } from '@faker-js/faker'
 import { getNREUMInitializedAgent, setNREUMInitializedAgent } from '../../src/common/window/nreum'
 import { configure } from '../../src/loaders/configure/configure'
 import { ee } from '../../src/common/event-emitter/contextual-ee'
-import { Aggregator } from '../../src/common/aggregate/aggregator'
 import { TimeKeeper } from '../../src/common/timing/time-keeper'
 import { getRuntime } from '../../src/common/config/runtime'
 import { setupAgentSession } from '../../src/features/utils/agent-session'
+import { EventAggregator } from '../../src/common/aggregate/event-aggregator'
 
 /**
  * Sets up a new agent for component testing. This should be called only
@@ -38,7 +38,7 @@ export function setupAgent ({ agentOverrides = {}, info = {}, init = {}, loaderC
   const fakeAgent = {
     agentIdentifier,
     ee: eventEmitter,
-    sharedAggregator: new Aggregator({ agentIdentifier, ee: eventEmitter }),
+    sharedAggregator: new EventAggregator(),
     ...agentOverrides
   }
   setNREUMInitializedAgent(agentIdentifier, fakeAgent)
@@ -48,7 +48,7 @@ export function setupAgent ({ agentOverrides = {}, info = {}, init = {}, loaderC
     'browser-test',
     true
   )
-  setupAgentSession(agentIdentifier)
+  setupAgentSession(fakeAgent)
 
   runtime = getRuntime(agentIdentifier)
   if (!runtime.timeKeeper) {
@@ -58,7 +58,7 @@ export function setupAgent ({ agentOverrides = {}, info = {}, init = {}, loaderC
     }, 450, 600, Date.now())
   }
 
-  return { agentIdentifier, aggregator: fakeAgent.sharedAggregator }
+  return fakeAgent
 }
 
 export function resetAgent (agentIdentifier) {
@@ -79,7 +79,7 @@ export function resetAgentEventEmitter (agentIdentifier) {
 
 export function resetAggregator (agentIdentifier) {
   const agent = getNREUMInitializedAgent(agentIdentifier)
-  agent.sharedAggregator.take(Object.keys(agent.sharedAggregator.aggregatedData))
+  agent.sharedAggregator.clear()
 }
 
 export function resetSession (agentIdentifier) {

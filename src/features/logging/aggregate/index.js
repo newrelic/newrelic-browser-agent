@@ -1,6 +1,3 @@
-import { getInfo } from '../../../common/config/info'
-import { getConfigurationValue } from '../../../common/config/init'
-import { getRuntime } from '../../../common/config/runtime'
 import { handle } from '../../../common/event-emitter/handle'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
@@ -13,28 +10,19 @@ import { Log } from '../shared/log'
 import { isValidLogLevel } from '../shared/utils'
 import { applyFnToProps } from '../../../common/util/traverse'
 import { MAX_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
-import { EventBuffer } from '../../utils/event-buffer'
+import { FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
-  #agentRuntime
-  #agentInfo
-  constructor (agentIdentifier, aggregator) {
-    super(agentIdentifier, aggregator, FEATURE_NAME)
-
-    /** held logs before sending */
-    this.bufferedLogs = new EventBuffer()
-
-    this.#agentRuntime = getRuntime(this.agentIdentifier)
-    this.#agentInfo = getInfo(this.agentIdentifier)
-
-    this.harvestTimeSeconds = getConfigurationValue(this.agentIdentifier, 'logging.harvestTimeSeconds')
+  constructor (agentRef) {
+    super(agentRef, FEATURE_NAME)
+    this.harvestTimeSeconds = agentRef.init.logging.harvestTimeSeconds
 
     this.waitForFlags([]).then(() => {
-      this.scheduler = new HarvestScheduler('browser/logs', {
-        onFinished: this.onHarvestFinished.bind(this),
+      this.scheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
+        onFinished: (result) => this.postHarvestCleanup(result.sent && result.retry),
         retryDelay: this.harvestTimeSeconds,
-        getPayload: this.prepareHarvest.bind(this),
+        getPayload: (options) => this.makeHarvestPayload(options.retry),
         raw: true
       }, this)
       /** emitted by instrument class (wrapped loggers) or the api methods directly */
@@ -70,65 +58,62 @@ export class Aggregate extends AggregateBase {
     if (typeof message !== 'string' || !message) return warn(32)
 
     const log = new Log(
-      Math.floor(this.#agentRuntime.timeKeeper.correctRelativeTimestamp(timestamp)),
+      Math.floor(this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(timestamp)),
       message,
       attributes,
       level
     )
     const logBytes = log.message.length + stringify(log.attributes).length + log.level.length + 10 // timestamp == 10 chars
 
-    if (!this.bufferedLogs.canMerge(logBytes)) {
-      if (this.bufferedLogs.hasData) {
-        handle(SUPPORTABILITY_METRIC_CHANNEL, ['Logging/Harvest/Early/Seen', this.bufferedLogs.bytes + logBytes])
-        this.scheduler.runHarvest({})
-        if (logBytes < MAX_PAYLOAD_SIZE) this.bufferedLogs.add(log)
-      } else {
-        handle(SUPPORTABILITY_METRIC_CHANNEL, ['Logging/Harvest/Failed/Seen', logBytes])
-        warn(31, log.message.slice(0, 25) + '...')
-      }
+    const failToHarvestMessage = 'Logging/Harvest/Failed/Seen'
+    if (logBytes > MAX_PAYLOAD_SIZE) { // cannot possibly send this, even with an empty buffer
+      handle(SUPPORTABILITY_METRIC_CHANNEL, [failToHarvestMessage, logBytes])
+      warn(31, log.message.slice(0, 25) + '...')
       return
     }
 
-    this.bufferedLogs.add(log)
-  }
-
-  prepareHarvest (options = {}) {
-    if (this.blocked || !this.bufferedLogs.hasData) return
-    /** see https://source.datanerd.us/agents/rum-specs/blob/main/browser/Log for logging spec */
-    const payload = {
-      qs: {
-        browser_monitoring_key: this.#agentInfo.licenseKey
-      },
-      body: [{
-        common: {
-          /** Attributes in the `common` section are added to `all` logs generated in the payload */
-          attributes: {
-            'entity.guid': this.#agentRuntime.appMetadata?.agents?.[0]?.entityGuid, // browser entity guid as provided from RUM response
-            session: this.#agentRuntime?.session?.state.value || '0', // The session ID that we generate and keep across page loads
-            hasReplay: this.#agentRuntime?.session?.state.sessionReplayMode === 1, // True if a session replay recording is running
-            hasTrace: this.#agentRuntime?.session?.state.sessionTraceMode === 1, // True if a session trace recording is running
-            ptid: this.#agentRuntime.ptid, // page trace id
-            appId: this.#agentInfo.applicationID, // Application ID from info object,
-            standalone: Boolean(this.#agentInfo.sa), // copy paste (true) vs APM (false)
-            agentVersion: this.#agentRuntime.version // browser agent version
-          }
-        },
-        /** logs section contains individual unique log entries */
-        logs: applyFnToProps(
-          this.bufferedLogs.buffer,
-          this.obfuscator.obfuscateString.bind(this.obfuscator), 'string'
-        )
-      }]
+    if (this.events.wouldExceedMaxSize(logBytes)) {
+      handle(SUPPORTABILITY_METRIC_CHANNEL, ['Logging/Harvest/Early/Seen', this.events.bytes + logBytes])
+      this.scheduler.runHarvest() // force a harvest to try adding again
     }
 
-    if (options.retry) this.bufferedLogs.hold()
-    else this.bufferedLogs.clear()
-
-    return payload
+    if (!this.events.add(log)) { // still failed after a harvest attempt despite not being too large would mean harvest failed with options.retry
+      handle(SUPPORTABILITY_METRIC_CHANNEL, [failToHarvestMessage, logBytes])
+      warn(31, log.message.slice(0, 25) + '...')
+    }
   }
 
-  onHarvestFinished (result) {
-    if (result.retry) this.bufferedLogs.unhold()
-    else this.bufferedLogs.held.clear()
+  serializer (eventBuffer) {
+    const sessionEntity = this.agentRef.runtime.session
+    return [{
+      common: {
+        /** Attributes in the `common` section are added to `all` logs generated in the payload */
+        attributes: {
+          'entity.guid': this.agentRef.runtime.appMetadata?.agents?.[0]?.entityGuid, // browser entity guid as provided from RUM response
+          ...(sessionEntity && {
+            session: sessionEntity.state.value || '0', // The session ID that we generate and keep across page loads
+            hasReplay: sessionEntity.state.sessionReplayMode === 1, // True if a session replay recording is running
+            hasTrace: sessionEntity.state.sessionTraceMode === 1 // True if a session trace recording is running
+          }),
+          ptid: this.agentRef.runtime.ptid, // page trace id
+          appId: this.agentRef.info.applicationID, // Application ID from info object,
+          standalone: Boolean(this.agentRef.info.sa), // copy paste (true) vs APM (false)
+          agentVersion: this.agentRef.runtime.version, // browser agent version
+          // The following 3 attributes are evaluated and dropped at ingest processing time and do not get stored on NRDB:
+          'instrumentation.provider': 'browser',
+          'instrumentation.version': this.agentRef.runtime.version,
+          'instrumentation.name': this.agentRef.runtime.loaderType
+        }
+      },
+      /** logs section contains individual unique log entries */
+      logs: applyFnToProps(
+        eventBuffer,
+        this.obfuscator.obfuscateString.bind(this.obfuscator), 'string'
+      )
+    }]
+  }
+
+  queryStringsBuilder () {
+    return { browser_monitoring_key: this.agentRef.info.licenseKey }
   }
 }

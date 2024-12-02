@@ -3,7 +3,6 @@ import { isBrowserScope } from '../../../common/constants/runtime'
 import { handle } from '../../../common/event-emitter/handle'
 import { windowAddEventListener } from '../../../common/event-listener/event-listener-opts'
 import { debounce } from '../../../common/util/invoke'
-import { wrapEvents } from '../../../common/wrap/wrap-events'
 import { wrapHistory } from '../../../common/wrap/wrap-history'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME, INTERACTION_TRIGGERS } from '../constants'
@@ -18,12 +17,17 @@ const UI_WAIT_INTERVAL = 1 / 10 * 1000 // assume 10 fps
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
-  constructor (agentIdentifier, aggregator, auto = true) {
-    super(agentIdentifier, aggregator, FEATURE_NAME, auto)
+  constructor (agentRef, auto = true) {
+    super(agentRef, FEATURE_NAME, auto)
     if (!isBrowserScope || !gosNREUMOriginals().o.MO) return // soft navigations is not supported outside web env or browsers without the mutation observer API
 
     const historyEE = wrapHistory(this.ee)
-    const eventsEE = wrapEvents(this.ee)
+
+    INTERACTION_TRIGGERS.forEach((trigger) => {
+      windowAddEventListener(trigger, (evt) => {
+        processUserInteraction(evt)
+      }, true)
+    })
 
     const trackURLChange = () => handle('newURL', [now(), '' + window.location], undefined, this.featureName, this.ee)
     historyEE.on('pushState-end', trackURLChange)
@@ -50,15 +54,8 @@ export class Instrument extends InstrumentBase {
       domObserver.observe(document.body, { attributes: true, childList: true, subtree: true, characterData: true })
     }, UI_WAIT_INTERVAL, { leading: true })
 
-    eventsEE.on('fn-start', ([evt]) => { // set up a new user ixn before the callback for the triggering event executes
-      if (INTERACTION_TRIGGERS.includes(evt?.type)) {
-        processUserInteraction(evt)
-      }
-    })
-    for (let eventType of INTERACTION_TRIGGERS) document.addEventListener(eventType, () => { /* no-op, this ensures the UI events are monitored by our callback above */ })
-
     this.abortHandler = abort
-    this.importAggregator({ domObserver })
+    this.importAggregator(agentRef, { domObserver })
 
     function abort () {
       this.removeOnAbort?.abort()

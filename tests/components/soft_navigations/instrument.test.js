@@ -4,10 +4,10 @@ import * as handleModule from '../../../src/common/event-emitter/handle'
 import { resetAgent, setupAgent } from '../setup-agent'
 import { faker } from '@faker-js/faker'
 
-let agentSetup
+let mainAgent
 
 beforeAll(() => {
-  agentSetup = setupAgent({
+  mainAgent = setupAgent({
     agentOverrides: {
       runSoftNavOverSpa: true
     },
@@ -20,11 +20,11 @@ beforeAll(() => {
 
 beforeEach(async () => {
   jest.spyOn(handleModule, 'handle')
-  new SoftNav(agentSetup.agentIdentifier, agentSetup.aggregator)
+  new SoftNav(mainAgent)
 })
 
 afterEach(() => {
-  resetAgent(agentSetup.agentIdentifier)
+  resetAgent(mainAgent.agentIdentifier)
   jest.clearAllMocks()
 })
 

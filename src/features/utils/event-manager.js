@@ -21,8 +21,8 @@ export class EventManager {
 
   /**
    * Returns a valid lookup key
-   * @param {*=} lookupKey
-   * @returns
+   * @param {*} lookupKey
+   * @returns {string} the lookupkey string
    */
   #getLookupKey (target) {
     if (!!target && typeof target === 'string') return target

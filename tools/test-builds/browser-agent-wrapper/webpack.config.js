@@ -7,6 +7,7 @@ const htmlTemplate = (script) => `<html>
     <title>RUM Unit Test</title>
     {init}
     {config}
+    {loader}
     <script src="${script}.js"></script>
   </head>
   <body>

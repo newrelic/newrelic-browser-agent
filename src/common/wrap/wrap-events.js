@@ -37,8 +37,8 @@ export function wrapEvents (sharedEE) {
   // Guard against instrumenting environments w/o necessary features
   if ('getPrototypeOf' in Object) {
     if (isBrowserScope) findEventListenerProtoAndCb(document, wrapNode)
+    if (XHR) findEventListenerProtoAndCb(XHR.prototype, wrapNode)
     findEventListenerProtoAndCb(globalScope, wrapNode)
-    findEventListenerProtoAndCb(XHR.prototype, wrapNode)
   }
 
   ee.on(ADD_EVENT_LISTENER + '-start', function (args, target) {

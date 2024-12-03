@@ -7,6 +7,7 @@ window.NREUM.info.licenseKey = '{{{args.licenseKey}}}'
 window.NREUM.init.proxy = {}
 window.NREUM.init.session_replay.enabled = true
 window.NREUM.init.session_trace.enabled = true
+window.NREUM.init.user_actions = {elementAttributes: ['id', 'className', 'tagName', 'type', 'innerText', 'textContent', 'ariaLabel', 'alt', 'title']}
 
 // Session replay entitlements check
 try {

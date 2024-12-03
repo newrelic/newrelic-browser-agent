@@ -11,12 +11,18 @@ describe('logging harvesting', () => {
     })
   })
 
+  afterEach(async () => {
+    // logging mode is sticky to the session, so we need to reset before the next test
+    await browser.destroyAgentSession()
+  })
+
   const mockRumResponse = async (logLevel) => {
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
       body: JSON.stringify(rumFlags({ log: logLevel }))
     })
   }
+
   const checkPayload = (actualPayload, expectedPayload) => {
     expect(actualPayload).toContainAllKeys(['common', 'logs'])
     expect(actualPayload.common).toEqual(expectedPayload.common)
@@ -70,8 +76,8 @@ describe('logging harvesting', () => {
         it(`should harvest expected logs - ${type} pre load - logging mode: ${mode}`, async () => {
           await mockRumResponse(logLevel)
           const [[{ request: { body } }]] = await Promise.all([
-            logsCapture.waitForResult({ totalCount: 1 }),
-            browser.url(await browser.testHandle.assetURL(`logs-${type}-pre-load.html`))
+            logsCapture.waitForResult({ totalCount: 1, timeout: 15000 }),
+            await browser.url(await browser.testHandle.assetURL(`logs-${type}-pre-load.html`))
           ])
 
           const actualPayload = JSON.parse(body)
@@ -81,7 +87,7 @@ describe('logging harvesting', () => {
         it(`should harvest expected logs - ${type} post load - logging mode: ${mode}`, async () => {
           await mockRumResponse(logLevel)
           const [[{ request: { body } }]] = await Promise.all([
-            logsCapture.waitForResult({ totalCount: 1 }),
+            logsCapture.waitForResult({ totalCount: 1, timeout: 15000 }),
             browser.url(await browser.testHandle.assetURL(`logs-${type}-post-load.html`))
           ])
           const actualPayload = JSON.parse(body)

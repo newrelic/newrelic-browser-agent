@@ -73,7 +73,7 @@ export class Aggregate extends AggregateBase {
     this.ee.on(SESSION_EVENTS.UPDATE, (type, data) => {
       if (!this.recorder || !this.initialized || this.blocked || type !== SESSION_EVENT_TYPES.CROSS_TAB) return
       if (this.mode !== MODE.OFF && data.sessionReplayMode === MODE.OFF) this.abort(ABORT_REASONS.CROSS_TAB)
-      this.mode = data.sessionReplay
+      this.mode = data.sessionReplayMode
     })
 
     // Bespoke logic for blobs endpoint.
@@ -147,16 +147,14 @@ export class Aggregate extends AggregateBase {
       this.scheduler.startTimer(this.harvestTimeSeconds)
       this.syncWithSessionManager({ sessionReplayMode: this.mode })
     } else {
-      this.initializeRecording(false, true, true)
+      this.initializeRecording(false, true)
     }
   }
 
   /**
-   * Evaluate entitlements and sampling before starting feature mechanics, importing and configuring recording library, and setting storage state
-   * @param {boolean} entitlements - the true/false state of the "sr" flag from RUM response
-   * @param {boolean} errorSample - the true/false state of the error sampling decision
-   * @param {boolean} fullSample - the true/false state of the full sampling decision
-   * @param {boolean} ignoreSession - whether to force the method to ignore the session state and use just the sample flags
+   * Evaluate entitlements (which already accounts for sampling) before starting feature mechanics, importing and configuring recording library, and setting storage state
+   * @param {boolean} srMode - the true/false state of the "sr" flag from RUM response
+   * @param {boolean} ignoreSession - whether to force the method to ignore the session state and use just the "sr" flag
    * @returns {void}
    */
   async initializeRecording (srMode, ignoreSession) {
@@ -393,9 +391,5 @@ export class Aggregate extends AggregateBase {
     this.recorder?.clearTimestamps?.()
     this.ee.emit('REPLAY_ABORTED')
     while (this.recorder?.getEvents().events.length) this.recorder?.clearBuffer?.()
-  }
-
-  syncWithSessionManager (state = {}) {
-    this.agentRef.runtime.session.write(state)
   }
 }

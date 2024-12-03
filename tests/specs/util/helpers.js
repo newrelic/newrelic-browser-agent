@@ -14,6 +14,19 @@ export const RRWEB_EVENT_TYPES = {
   Custom: 5
 }
 
+export function buildExpectedSessionState (additionalExpectations) {
+  return Object.assign({
+    value: expect.any(String),
+    expiresAt: expect.any(Number),
+    inactiveAt: expect.any(Number),
+    updatedAt: expect.any(Number),
+    sessionReplayMode: expect.any(Number),
+    sessionReplaySentFirstChunk: expect.any(Boolean),
+    sessionTraceMode: expect.any(Number),
+    loggingMode: expect.any(Number)
+  }, additionalExpectations)
+}
+
 export function testExpectedReplay ({ data, session, hasMeta, hasSnapshot, hasError, isFirstChunk, contentEncoding, decompressedBytes, appId, entityGuid, harvestId, currentUrl }) {
   expect(data.query).toMatchObject({
     browser_monitoring_key: expect.any(String),
@@ -161,6 +174,26 @@ export async function getSR () {
         exists: false,
         mode: 0,
         blocked: undefined,
+        err: JSON.stringify(err)
+      }
+    }
+  })
+}
+
+export async function getLogs () {
+  return browser.execute(function () {
+    try {
+      var logs = Object.values(newrelic.initializedAgents)[0].features.logging.featAggregate
+      return {
+        events: logs.events.get(),
+        blocked: logs.blocked,
+        loggingMode: logs.loggingMode
+      }
+    } catch (err) {
+      return {
+        events: [],
+        blocked: undefined,
+        loggingMode: undefined,
         err: JSON.stringify(err)
       }
     }

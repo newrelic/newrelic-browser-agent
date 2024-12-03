@@ -17,7 +17,8 @@ export const activatedFeatures = {}
  * @param {string} agentIdentifier agent instance identifier
  * @returns {void}
  */
-export function activateFeatures (flags, agentIdentifier) {
+export function activateFeatures (rumResponse, agentIdentifier) {
+  const { app, ...flags } = rumResponse
   const sharedEE = ee.get(agentIdentifier)
   activatedFeatures[agentIdentifier] ??= {}
   if (!(flags && typeof flags === 'object')) return

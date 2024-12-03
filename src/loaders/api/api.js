@@ -64,6 +64,15 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
     const attrs = {}
     if (!isValidTarget(target)) return warn(46, target)
 
+    let rumResponse = {}
+    const waitForRumResponse = new Promise((resolve, reject) => {
+      handle('api-pve', [(data) => {
+        rumResponse = data
+        target.entityGuid = data.app.agents?.[0].entityGuid
+        resolve()
+      }], undefined, FEATURE_NAMES.pageViewEvent, instanceEE)
+    })
+
     /**
        * The reporter method that will be used to report the data to the container agent's API method.
        * If the external.capture_registered_data configuration value is set to true, the data will be reported to BOTH the container and the external target
@@ -73,14 +82,16 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
        * @returns
        */
     const report = (methodToCall, args, target) => {
-      if (getConfigurationValue(agentIdentifier, 'external.capture_registered_data')) { methodToCall(...args) }
-      return methodToCall(...args, target)
+      waitForRumResponse.then(() => {
+        if (methodToCall === apiInterface.log && !(target.entityGuid && rumResponse.log)) return warn(47)
+        if (getConfigurationValue(agentIdentifier, 'external.capture_registered_data')) { methodToCall(...args) }
+        methodToCall(...args, target)
+      })
     }
     return {
       api: {
         addPageAction: (name, attributes = {}) => report(apiInterface.addPageAction, [name, { ...attrs, ...attributes }], target),
-        log: (message, options) => {
-          if (!target.entityGuid) return warn(47)
+        log: (message, options = {}) => {
           return report(apiInterface.log, [message, { ...options, customAttributes: { ...attrs, ...(options.customAttributes || {}) } }], target)
         },
         noticeError: (error, attributes = {}) => report(apiInterface.noticeError, [error, { ...attrs, ...attributes }], target),
@@ -95,7 +106,8 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
         }
       },
       customAttributes: attrs,
-      target
+      target,
+      rumResponse
     }
   }
 

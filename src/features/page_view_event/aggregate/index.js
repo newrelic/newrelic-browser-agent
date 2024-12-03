@@ -14,6 +14,7 @@ import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
 import { now } from '../../../common/timing/now'
 import { TimeKeeper } from '../../../common/timing/time-keeper'
 import { applyFnToProps } from '../../../common/util/traverse'
+import { registerHandler } from '../../../common/event-emitter/register-handler'
 
 export class Aggregate extends AggregateBase {
   static featureName = CONSTANTS.FEATURE_NAME
@@ -24,6 +25,10 @@ export class Aggregate extends AggregateBase {
     this.firstByteToWindowLoad = 0 // our "frontend" duration
     this.firstByteToDomContent = 0 // our "dom processing" duration
     this.timeKeeper = new TimeKeeper(agentRef.agentIdentifier)
+
+    registerHandler('api-pve', (cb) => {
+      this.sendRum(cb)
+    }, this.featureName, this.ee)
 
     if (!isValid(agentRef.agentIdentifier)) {
       this.ee.abort()
@@ -45,7 +50,7 @@ export class Aggregate extends AggregateBase {
     }
   }
 
-  sendRum () {
+  sendRum (cb = activateFeatures) {
     const info = this.agentRef.info
     const harvester = new Harvest(this)
     const measures = {}
@@ -119,9 +124,9 @@ export class Aggregate extends AggregateBase {
         }
 
         try {
-          const { app, ...flags } = JSON.parse(responseText)
+          const rumResponse = JSON.parse(responseText)
           try {
-            this.timeKeeper.processRumRequest(xhr, rumStartTime, rumEndTime, app.nrServerTime)
+            this.timeKeeper.processRumRequest(xhr, rumStartTime, rumEndTime, rumResponse.app.nrServerTime)
             if (!this.timeKeeper.ready) throw new Error('TimeKeeper not ready')
             this.agentRef.runtime.timeKeeper = this.timeKeeper
           } catch (error) {
@@ -129,8 +134,8 @@ export class Aggregate extends AggregateBase {
             warn(17, error)
             return
           }
-          this.agentRef.runtime.appMetadata = app
-          activateFeatures(flags, this.agentIdentifier)
+          this.agentRef.runtime.appMetadata = rumResponse.app
+          cb(rumResponse, this.agentIdentifier)
           this.drain()
         } catch (err) {
           this.ee.abort()

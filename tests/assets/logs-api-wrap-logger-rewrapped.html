@@ -18,13 +18,14 @@
 
       newrelic.wrapLogger(loggers, 'log', { level: "debug" })
       loggers.log('test2')
-      // should capture another event, ignoring the `debug` level and harvesting with `warn`
+      // should capture another event, update to harvest with `debug` level
       // should NOT duplicate the log events (ie, capture 2 logs for this one call)
 
       var orig = loggers.log
-      loggers.log = (...args) => {console.log('wrapped again by 3rd party'); orig(...args)} 
+      // simulate wrapping by 3rd party
+      loggers.log = (...args) => { orig(...args)}
       loggers.log('test3')
-      // should capture another event, and still have the `warn` level even though the parent context was changed
+      // should capture another event, and still have the `debug` level even though the parent context was changed
     </script>
   </head>
   <body>Logs API Error Object</body>

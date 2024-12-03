@@ -10,7 +10,9 @@
 import { ee as baseEE, contextId } from '../event-emitter/contextual-ee'
 import { EventContext } from '../event-emitter/event-context'
 import { warn } from '../util/console'
-import { createWrapperWithEmitter as wfn } from './wrap-function'
+import { flag, createWrapperWithEmitter as wfn } from './wrap-function'
+
+const contextMap = new Map()
 
 /**
  * Wraps a supplied function and adds emitter events under the `-wrap-logger-` prefix
@@ -33,8 +35,11 @@ export function wrapLogger(sharedEE, parent, loggerFn, context) {
   ctx.level = context.level
   ctx.customAttributes = context.customAttributes
 
+  const contextLookupKey = parent[loggerFn]?.[flag] || parent[loggerFn]
+  contextMap.set(contextLookupKey, ctx)
+
   /** observe calls to <loggerFn> and emit events prefixed with `wrap-logger-` */
-  wrapFn.inPlace(parent, [loggerFn], 'wrap-logger-', ctx)
+  wrapFn.inPlace(parent, [loggerFn], 'wrap-logger-', () => contextMap.get(contextLookupKey))
 
   return ee
 }

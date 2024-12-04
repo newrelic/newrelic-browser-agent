@@ -244,7 +244,7 @@ jobs:
       - name: Build npm package
         run: npm run build:npm
       - name: Publish npm package
-        run: npm publish
+        run: cd dist && npm publish
 
   # Raise the release notes pr on the docs website repo
   raise-release-notes-pr:

@@ -124,6 +124,12 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 * Generic/Performance/Mark/Seen
 <!--- A Performance.measure event was observed --->
 * Generic/Performance/Measure/Seen
+<!--- A Performance.resource event was observed --->
+* Generic/Performance/Resource/Seen
+<!--- A first party Performance.resource event was observed --->
+* Generic/Performance/FirstPartyResource/Seen
+<!--- A first party Performance.resource event was observed --->
+* Generic/Performance/NrResource/Seen
 <!--- A resource timing API Ajax event was observed that matches the Agent beacon --->
 * Generic/Resources/Ajax/Internal
 <!--- A resource timing API Non-Ajax (other assets like scripts, etc) event was observed that matches the Agent beacon --->
@@ -186,6 +192,18 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 * Config/AssetsUrl/Changed
 <!--- init.proxy.beacon was Changed from the default --->
 * Config/BeaconUrl/Changed
+<!--- init.performance.capture_marks was Enabled --->
+* Config/Performance/CaptureMarks/Enabled
+<!--- init.performance.capture_measures was Enabled --->
+* Config/Performance/CaptureMeasures/Enabled
+<!--- init.performance.resources was Enabled --->
+* Config/Performance/Resources/Enabled
+<!--- init.performance.resources.asset_types was changed --->
+* Config/Performance/Resources/AssetTypes/Changed
+<!--- init.performance.resources.first_party_domains was changed --->
+* Config/Performance/Resources/FirstPartyDomains/Changed
+<!--- init.performance.resources.ignore_newrelic was changed --->
+* Config/Performance/Resources/IgnoreNewrelic/Changed
 <!--- init.Session_replay.Enabled was Enabled --->
 * Config/SessionReplay/Enabled
 <!--- init.Session_replay.autoStart was Changed from the default --->

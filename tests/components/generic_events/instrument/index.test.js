@@ -9,11 +9,11 @@ beforeAll(() => {
   mainAgent = setupAgent()
 })
 
-describe('pageActions sub-feature', () => {
+describe('generic events sub-features', () => {
   test('should import if at least one child feature is enabled', async () => {
     mainAgent.init.page_action.enabled = true
     mainAgent.init.user_actions.enabled = false
-    mainAgent.init.performance = { capture_marks: false, capture_measures: false }
+    mainAgent.init.performance = { capture_marks: false, capture_measures: false, resources: { enabled: false } }
 
     let genericEventsInstrument = new GenericEvents(mainAgent)
     await new Promise(process.nextTick)
@@ -22,7 +22,7 @@ describe('pageActions sub-feature', () => {
 
     mainAgent.init.page_action.enabled = false
     mainAgent.init.user_actions.enabled = true
-    mainAgent.init.performance = { capture_marks: false, capture_measures: false }
+    mainAgent.init.performance = { capture_marks: false, capture_measures: false, resources: { enabled: false } }
 
     genericEventsInstrument = new GenericEvents(mainAgent)
     await new Promise(process.nextTick)
@@ -31,7 +31,7 @@ describe('pageActions sub-feature', () => {
 
     mainAgent.init.page_action.enabled = false
     mainAgent.init.user_actions.enabled = false
-    mainAgent.init.performance = { capture_marks: true, capture_measures: false }
+    mainAgent.init.performance = { capture_marks: true, capture_measures: false, resources: { enabled: false } }
 
     genericEventsInstrument = new GenericEvents(mainAgent)
     await new Promise(process.nextTick)
@@ -40,7 +40,17 @@ describe('pageActions sub-feature', () => {
 
     mainAgent.init.page_action.enabled = false
     mainAgent.init.user_actions.enabled = false
-    mainAgent.init.performance = { capture_marks: false, capture_measures: true }
+    mainAgent.init.performance = { capture_marks: false, capture_measures: true, resources: { enabled: false } }
+
+    genericEventsInstrument = new GenericEvents(mainAgent)
+
+    await new Promise(process.nextTick)
+
+    expect(genericEventsInstrument.featAggregate).toBeDefined()
+
+    mainAgent.init.page_action.enabled = false
+    mainAgent.init.user_actions.enabled = false
+    mainAgent.init.performance = { capture_marks: false, capture_measures: false, resources: { enabled: true, asset_types: [], first_party_domains: [], ignore_newrelic: true } }
 
     genericEventsInstrument = new GenericEvents(mainAgent)
 
@@ -52,7 +62,7 @@ describe('pageActions sub-feature', () => {
   test('should not import if no child features are enabled', async () => {
     mainAgent.init.page_action.enabled = false
     mainAgent.init.user_actions.enabled = false
-    mainAgent.init.performance = { capture_marks: false, capture_measures: false }
+    mainAgent.init.performance = { capture_marks: false, capture_measures: false, resources: { enabled: false } }
 
     const genericEventsInstrument = new GenericEvents(mainAgent)
     await new Promise(process.nextTick)
@@ -63,6 +73,7 @@ describe('pageActions sub-feature', () => {
   test('user actions should be observed if enabled', () => {
     mainAgent.init.page_action.enabled = false
     mainAgent.init.user_actions.enabled = true
+    mainAgent.init.performance = { capture_marks: false, capture_measures: false, resources: { enabled: false } }
     const handleSpy = jest.spyOn(handleModule, 'handle')
 
     const genericEventsInstrument = new GenericEvents(mainAgent)

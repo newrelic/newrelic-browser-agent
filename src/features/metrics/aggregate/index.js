@@ -134,38 +134,6 @@ export class Aggregate extends AggregateBase {
   }
 
   unload () {
-    try {
-      if (this.resourcesSent) return
-      this.resourcesSent = true // make sure this only gets sent once
-
-      // Capture SMs around network resources using the performance API to assess
-      // work to split this out from the ST nodes
-      // differentiate between internal+external and ajax+non-ajax
-      const ajaxResources = ['beacon', 'fetch', 'xmlhttprequest']
-      const internalUrls = ['nr-data.net', 'newrelic.com', 'nr-local.net', 'localhost']
-      function isInternal (x) { return internalUrls.some(y => x.name.indexOf(y) >= 0) }
-      function isAjax (x) { return ajaxResources.includes(x.initiatorType) }
-      const allResources = performance?.getEntriesByType('resource') || []
-      allResources.forEach((entry) => {
-        if (isInternal(entry)) {
-          if (isAjax(entry)) this.storeSupportabilityMetrics('Generic/Resources/Ajax/Internal')
-          else this.storeSupportabilityMetrics('Generic/Resources/Non-Ajax/Internal')
-        } else {
-          if (isAjax(entry)) this.storeSupportabilityMetrics('Generic/Resources/Ajax/External')
-          else this.storeSupportabilityMetrics('Generic/Resources/Non-Ajax/External')
-        }
-      })
-
-      // Capture SMs for performance markers and measures to assess the usage and possible inclusion of this
-      // data in the agent for use in NR
-      if (typeof performance !== 'undefined') {
-        const markers = performance.getEntriesByType('mark')
-        const measures = performance.getEntriesByType('measure')
-        if (markers.length) this.storeSupportabilityMetrics('Generic/Performance/Mark/Seen', markers.length)
-        if (measures.length) this.storeSupportabilityMetrics('Generic/Performance/Measure/Seen', measures.length)
-      }
-    } catch (e) {
-      // do nothing
-    }
+    // do nothing for now, marks and measures and resources stats are now being captured by the ge feature
   }
 }

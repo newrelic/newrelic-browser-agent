@@ -284,7 +284,7 @@ describe('sub-features', () => {
   })
 
   test('should record measures when enabled', async () => {
-    agentSetup.init.performance = { capture_measures: true }
+    agentSetup.init.performance = { capture_measures: true, resources: { enabled: false, asset_types: [], first_party_domains: [], ignore_newrelic: true } }
     getInfo(agentSetup.agentIdentifier).jsAttributes = { globalFoo: 'globalBar' }
     const mockPerformanceObserver = jest.fn(cb => ({
       observe: () => {

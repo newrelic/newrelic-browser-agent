@@ -95,3 +95,5 @@
 `Supplied an invalid API target. Must be an <Object> that contains licenseKey and applicationID properties.`
 ### 47
 `Supplied API target is missing an entityGuid. Some APIs may not behave correctly without a valid entityGuid (ex. logs).`
+### 48
+`Failed to connect. Cannot allow registered API.

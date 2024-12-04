@@ -62,7 +62,7 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
 
   agent.ee = ee.get(agent.agentIdentifier)
 
-  if (agent.api === undefined) agent.api = setAPI(agent.agentIdentifier, forceDrain, agent.runSoftNavOverSpa)
+  if (agent.api === undefined) agent.api = setAPI(agent, forceDrain, agent.runSoftNavOverSpa)
   if (agent.exposed === undefined) agent.exposed = exposed
   alreadySetOnce = true
 }

@@ -30,15 +30,22 @@ export function buildRegisterApi (agentRef, handlers, target) {
   const waitForRumResponse = new Promise((resolve, reject) => {
     /** if the connect callback doesnt resolve in 15 seconds... reject */
     const timeout = setTimeout(reject, 15000)
-    handle('api-pve', [(data) => {
-      try {
-        clearTimeout(timeout)
-        target.entityGuid = data.app.agents?.[0].entityGuid
-        resolve(data)
-      } catch (err) {
-        reject(err)
-      }
-    }], undefined, FEATURE_NAMES.pageViewEvent, agentRef.ee)
+    handle('api-pve', [
+      /** Handles the rum response when finished */
+      (data) => {
+        try {
+          clearTimeout(timeout)
+          target.entityGuid = data.app.agents?.[0].entityGuid
+          resolve(data)
+        } catch (err) {
+          reject(err)
+        }
+      },
+      /** custom attributes to send with the rum call */
+      attrs,
+      /** target to send the rum call to */
+      target
+    ], undefined, FEATURE_NAMES.pageViewEvent, agentRef.ee)
   })
 
   /**

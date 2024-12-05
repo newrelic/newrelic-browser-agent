@@ -93,11 +93,6 @@
       "require": "./dist/cjs/loaders/micro-agent.js",
       "default": "./dist/esm/loaders/micro-agent.js"
     },
-    "./loaders/micro-agent-interface": {
-      "types": "./dist/types/loaders/micro-agent-interface.d.ts",
-      "require": "./dist/cjs/loaders/micro-agent-interface.js",
-      "default": "./dist/esm/loaders/micro-agent-interface.js"
-    },
     "./features/ajax": {
       "types": "./dist/types/features/ajax/instrument/index.d.ts",
       "require": "./dist/cjs/features/ajax/instrument/index.js",

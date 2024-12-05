@@ -26,8 +26,8 @@ export class Aggregate extends AggregateBase {
     this.firstByteToDomContent = 0 // our "dom processing" duration
     this.timeKeeper = new TimeKeeper(agentRef.agentIdentifier)
 
-    registerHandler('api-pve', (cb) => {
-      this.sendRum(cb)
+    registerHandler('api-pve', (cb, customAttibutes, target) => {
+      this.sendRum(cb, customAttibutes, target)
     }, this.featureName, this.ee)
 
     if (!isValid(agentRef.agentIdentifier)) {
@@ -50,7 +50,7 @@ export class Aggregate extends AggregateBase {
     }
   }
 
-  sendRum (cb = activateFeatures) {
+  sendRum (cb = activateFeatures, customAttributes = this.agentRef.info.jsAttributes, target = { licenseKey: this.agentRef.info.licenseKey, applicationID: this.agentRef.info.applicationID }) {
     const info = this.agentRef.info
     const harvester = new Harvest(this)
     const measures = {}
@@ -80,8 +80,8 @@ export class Aggregate extends AggregateBase {
     if (this.agentRef.runtime.session) queryParameters.fsh = Number(this.agentRef.runtime.session.isNew) // "first session harvest" aka RUM request or PageView event of a session
 
     let body
-    if (typeof info.jsAttributes === 'object' && Object.keys(info.jsAttributes).length > 0) {
-      body = applyFnToProps({ ja: info.jsAttributes }, this.obfuscator.obfuscateString.bind(this.obfuscator), 'string')
+    if (typeof customAttributes === 'object' && Object.keys(customAttributes).length > 0) {
+      body = applyFnToProps({ ja: customAttributes }, this.obfuscator.obfuscateString.bind(this.obfuscator), 'string')
     }
 
     if (globalScope.performance) {
@@ -111,7 +111,7 @@ export class Aggregate extends AggregateBase {
     const rumStartTime = now()
     harvester.send({
       endpoint: 'rum',
-      target: { licenseKey: this.agentRef.info.licenseKey, applicationID: this.agentRef.info.applicationID },
+      target,
       payload: { qs: queryParameters, body },
       opts: { needResponse: true, sendEmptyBody: true },
       cbFinished: ({ status, responseText, xhr }) => {

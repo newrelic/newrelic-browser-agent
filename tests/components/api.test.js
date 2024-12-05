@@ -555,6 +555,21 @@ describe('setAPI', () => {
   describe('register', () => {
     let apiInterface, licenseKey, applicationID
 
+    const expectSM = (tag) => expect(handleModule.handle).toHaveBeenCalledWith(
+      SUPPORTABILITY_METRIC_CHANNEL,
+      [tag],
+      undefined,
+      FEATURE_NAMES.metrics,
+      agent.ee
+    )
+    const expectApiPVE = (target) => expect(handleModule.handle).toHaveBeenCalledWith(
+      'api-pve',
+      [expect.any(Function), expect.any(Object), target],
+      undefined,
+      FEATURE_NAMES.pageViewEvent,
+      agent.ee
+    )
+
     beforeEach(async () => {
       licenseKey = faker.string.uuid()
       applicationID = faker.string.uuid()
@@ -626,34 +641,10 @@ describe('setAPI', () => {
       myApi.noticeError(err, customAttrs)
 
       setTimeout(() => {
-        expect(handleModule.handle).toHaveBeenCalledWith(
-          SUPPORTABILITY_METRIC_CHANNEL,
-          ['API/register/called'],
-          undefined,
-          FEATURE_NAMES.metrics,
-          agent.ee
-        )
-        expect(handleModule.handle).toHaveBeenCalledWith(
-          'api-pve',
-          [expect.any(Function)],
-          undefined,
-          FEATURE_NAMES.pageViewEvent,
-          agent.ee
-        )
-        expect(handleModule.handle).toHaveBeenCalledWith(
-          SUPPORTABILITY_METRIC_CHANNEL,
-          ['API/register/noticeError/called'],
-          undefined,
-          FEATURE_NAMES.metrics,
-          agent.ee
-        )
-        expect(handleModule.handle).toHaveBeenCalledWith(
-          SUPPORTABILITY_METRIC_CHANNEL,
-          ['API/noticeError/called'],
-          undefined,
-          FEATURE_NAMES.metrics,
-          agent.ee
-        )
+        expectSM('API/register/called')
+        expectApiPVE(target)
+        expectSM('API/register/noticeError/called')
+        expectSM('API/noticeError/called')
         expect(handleModule.handle).toHaveBeenCalledWith(
           'err',
           [err, expect.toBeNumber(), false, customAttrs, false, target],
@@ -674,34 +665,10 @@ describe('setAPI', () => {
       myApi.addPageAction('test', customAttrs)
 
       setTimeout(() => {
-        expect(handleModule.handle).toHaveBeenCalledWith(
-          SUPPORTABILITY_METRIC_CHANNEL,
-          ['API/register/called'],
-          undefined,
-          FEATURE_NAMES.metrics,
-          agent.ee
-        )
-        expect(handleModule.handle).toHaveBeenCalledWith(
-          'api-pve',
-          [expect.any(Function)],
-          undefined,
-          FEATURE_NAMES.pageViewEvent,
-          agent.ee
-        )
-        expect(handleModule.handle).toHaveBeenCalledWith(
-          SUPPORTABILITY_METRIC_CHANNEL,
-          ['API/register/addPageAction/called'],
-          undefined,
-          FEATURE_NAMES.metrics,
-          agent.ee
-        )
-        expect(handleModule.handle).toHaveBeenCalledWith(
-          SUPPORTABILITY_METRIC_CHANNEL,
-          ['API/addPageAction/called'],
-          undefined,
-          FEATURE_NAMES.metrics,
-          agent.ee
-        )
+        expectSM('API/register/called')
+        expectApiPVE(target)
+        expectSM('API/register/addPageAction/called')
+        expectSM('API/addPageAction/called')
         expect(handleModule.handle).toHaveBeenCalledWith(
           'api-addPageAction',
           [expect.any(Number), 'test', customAttrs, target],
@@ -722,41 +689,11 @@ describe('setAPI', () => {
       myApi.log('test', { customAttributes: customAttrs })
 
       setTimeout(() => {
-        expect(handleModule.handle).toHaveBeenCalledWith(
-          SUPPORTABILITY_METRIC_CHANNEL,
-          ['API/register/called'],
-          undefined,
-          FEATURE_NAMES.metrics,
-          agent.ee
-        )
-        expect(handleModule.handle).toHaveBeenCalledWith(
-          'api-pve',
-          [expect.any(Function)],
-          undefined,
-          FEATURE_NAMES.pageViewEvent,
-          agent.ee
-        )
-        expect(handleModule.handle).toHaveBeenCalledWith(
-          SUPPORTABILITY_METRIC_CHANNEL,
-          ['API/register/log/called'],
-          undefined,
-          FEATURE_NAMES.metrics,
-          agent.ee
-        )
-        expect(handleModule.handle).toHaveBeenCalledWith(
-          SUPPORTABILITY_METRIC_CHANNEL,
-          ['API/log/called'],
-          undefined,
-          FEATURE_NAMES.metrics,
-          agent.ee
-        )
-        expect(handleModule.handle).toHaveBeenCalledWith(
-          SUPPORTABILITY_METRIC_CHANNEL,
-          ['API/logging/info/called'],
-          undefined,
-          FEATURE_NAMES.metrics,
-          agent.ee
-        )
+        expectSM('API/register/called')
+        expectApiPVE(target)
+        expectSM('API/register/log/called')
+        expectSM('API/log/called')
+        expectSM('API/logging/info/called')
         expect(handleModule.handle).toHaveBeenCalledWith(
           'log',
           [expect.any(Number), 'test', customAttrs, 'INFO', target],

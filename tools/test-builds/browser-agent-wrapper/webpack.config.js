@@ -7,6 +7,17 @@ const htmlTemplate = (script) => `<html>
     <title>RUM Unit Test</title>
     {init}
     {config}
+    <script src="${script}.js"></script>
+  </head>
+  <body>
+    <h1>This is a generic page that is instrumented by the NPM agent</h1>
+  </body>
+</html>`
+const microAgentHtmlTemplate = (script) => `<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {init}
+    {config}
     {loader}
     <script src="${script}.js"></script>
   </head>
@@ -115,7 +126,7 @@ const config = [
         filename: 'micro-agent.html',
         minify: false,
         inject: false,
-        templateContent: htmlTemplate('micro-agent')
+        templateContent: microAgentHtmlTemplate('micro-agent')
       })
     ]
   },

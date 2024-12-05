@@ -99,7 +99,7 @@ export class Aggregate extends AggregateBase {
             hasTrace: sessionEntity.state.sessionTraceMode === 1 // True if a session trace recording is running
           }),
           ptid: this.agentRef.runtime.ptid, // page trace id
-          appId: this.agentRef.info.applicationID, // Application ID from info object,
+          appId: target.applicationID || this.agentRef.info.applicationID, // Application ID from info object,
           standalone: Boolean(this.agentRef.info.sa), // copy paste (true) vs APM (false)
           agentVersion: this.agentRef.runtime.version, // browser agent version
           // The following 3 attributes are evaluated and dropped at ingest processing time and do not get stored on NRDB:

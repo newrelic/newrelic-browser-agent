@@ -54,7 +54,10 @@ export function setAPI (agentRef, forceDrain, runSoftNavOverSpa = false) {
   var prefix = 'api-'
   var spaPrefix = prefix + 'ixn-'
 
-  /** Shared handlers are used by both the base agent instance as well as "registered" entities */
+  /** Shared handlers are used by both the base agent instance as well as "registered" entities
+   * We isolate them like this so that the public interface methods are unchanged and still dont require
+   * a target, but the register APIs `can` supply a target.
+  */
   const sharedHandlers = {
     addPageAction: function addPageAction (name, attributes, target, timestamp = now()) {
       apiCall(prefix, 'addPageAction', true, FEATURE_NAMES.genericEvents, timestamp)(name, attributes, target)
@@ -74,8 +77,8 @@ export function setAPI (agentRef, forceDrain, runSoftNavOverSpa = false) {
     return buildRegisterApi(agentRef, sharedHandlers, target)
   }
 
-  apiInterface.log = function (message, options, target) {
-    sharedHandlers.log(message, options, target)
+  apiInterface.log = function (message, options) {
+    sharedHandlers.log(message, options)
   }
 
   apiInterface.wrapLogger = (parent, functionName, { customAttributes = {}, level = LOG_LEVELS.INFO } = {}) => {
@@ -86,8 +89,8 @@ export function setAPI (agentRef, forceDrain, runSoftNavOverSpa = false) {
   // Setup stub functions that queue calls for later processing.
   asyncApiMethods.forEach(fnName => { apiInterface[fnName] = apiCall(prefix, fnName, true, 'api') })
 
-  apiInterface.addPageAction = function (name, attributes, target) {
-    sharedHandlers.addPageAction(name, attributes, target)
+  apiInterface.addPageAction = function (name, attributes) {
+    sharedHandlers.addPageAction(name, attributes)
   }
 
   apiInterface.setPageViewName = function (name, host) {
@@ -215,8 +218,8 @@ export function setAPI (agentRef, forceDrain, runSoftNavOverSpa = false) {
     }
   }
 
-  apiInterface.noticeError = function (err, customAttributes, target) {
-    sharedHandlers.noticeError(err, customAttributes, target)
+  apiInterface.noticeError = function (err, customAttributes) {
+    sharedHandlers.noticeError(err, customAttributes)
   }
 
   // theres no window.load event on non-browser scopes, lazy load immediately

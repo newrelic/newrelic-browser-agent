@@ -29,7 +29,7 @@ beforeAll(async () => {
   mockCurrentInfo = { jsAttributes: {} }
   getInfo.mockReturnValue(mockCurrentInfo)
 
-  spaInstrument = new Spa({ agentIdentifier, info: mockCurrentInfo, init: { spa: { enabled: true } }, runtime: {} })
+  spaInstrument = new Spa({ agentIdentifier, info: mockCurrentInfo, init: { spa: { enabled: true } }, runtime: {}, ee: ee.get(agentIdentifier) })
   await expect(spaInstrument.onAggregateImported).resolves.toEqual(true)
   spaAggregate = spaInstrument.featAggregate
   spaAggregate.blocked = true

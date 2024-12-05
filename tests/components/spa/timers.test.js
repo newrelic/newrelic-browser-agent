@@ -21,7 +21,7 @@ let spaInstrument, spaAggregate, newrelic
 const agentIdentifier = 'abcdefg'
 
 beforeAll(async () => {
-  spaInstrument = new Spa({ agentIdentifier, info: {}, init: { spa: { enabled: true } }, runtime: {} })
+  spaInstrument = new Spa({ agentIdentifier, info: {}, init: { spa: { enabled: true } }, runtime: {}, ee: ee.get(agentIdentifier) })
   await expect(spaInstrument.onAggregateImported).resolves.toEqual(true)
   spaAggregate = spaInstrument.featAggregate
   spaAggregate.blocked = true

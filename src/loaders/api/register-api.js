@@ -6,14 +6,8 @@ import { now } from '../../common/timing/now'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
 
 /**
-* @typedef {Object} RegisterAPI
-* @property {Function} addPageAction - Add a page action for the registered entity.
-* @property {Function} log - Capture a log for the registered entity.
-* @property {Function} noticeError - Notice an error for the registered entity.
-* @property {Function} setApplicationVersion - Add an application.version attribute to all outgoing data for the registered entity.
-* @property {Function} setCustomAttribute - Add a custom attribute to outgoing data for the registered entity.
-* @property {Function} setUserId - Add an enduser.id attribute to all outgoing API data for the registered entity.
-*/
+ * @typedef {import('./register-api-types').RegisterAPI} RegisterAPI
+ */
 
 /**
  * Builds the api object that will be returned from the register api method.
@@ -25,7 +19,23 @@ import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
  */
 export function buildRegisterApi (agentRef, handlers, target) {
   const attrs = {}
-  if (!isValidTarget(target)) return warn(46, target)
+  if (!isValidTarget(target)) {
+    const invalidTargetResponse = () => warn(46, target)
+    invalidTargetResponse()
+    return {
+      addPageAction: invalidTargetResponse,
+      log: invalidTargetResponse,
+      noticeError: invalidTargetResponse,
+      setApplicationVersion: invalidTargetResponse,
+      setCustomAttribute: invalidTargetResponse,
+      setUserId: invalidTargetResponse,
+      /** metadata */
+      metadata: {
+        customAttributes: attrs,
+        target
+      }
+    }
+  }
 
   const waitForRumResponse = new Promise((resolve, reject) => {
     /** if the connect callback doesnt resolve in 15 seconds... reject */
@@ -65,7 +75,7 @@ export function buildRegisterApi (agentRef, handlers, target) {
       if (agentRef.init.external.capture_registered_data) { methodToCall(...args, undefined, timestamp) } // also report to container by providing undefined target
       methodToCall(...args, target, timestamp) // report to target
     }).catch(err => {
-      return warn(48, err)
+      warn(48, err)
     })
   }
   return {

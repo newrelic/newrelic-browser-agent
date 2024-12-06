@@ -594,14 +594,15 @@ describe('setAPI', () => {
       })
     })
 
-    test('should warn and not work if invalid target', () => {
-      let myApi = apiInterface.register({ applicationID })
-      expect(console.debug).toHaveBeenCalledWith('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#46', { applicationID })
-      expect(myApi).not.toBeDefined()
-
-      myApi = apiInterface.register({ licenseKey })
-      expect(console.debug).toHaveBeenCalledWith('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#46', { licenseKey })
-      expect(myApi).not.toBeDefined()
+    ;[{ applicationID }, { licenseKey }].forEach(opts => {
+      test('should warn and not work if invalid target', () => {
+        let myApi = apiInterface.register(opts)
+        expect(console.debug).toHaveBeenCalledWith('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#46', opts)
+        myApi.addPageAction()
+        myApi.noticeError()
+        myApi.log()
+        expect(console.debug).toHaveBeenCalledTimes(4)
+      })
     })
 
     test('should not log if rum response lacks entity guid', () => {

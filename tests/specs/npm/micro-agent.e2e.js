@@ -23,9 +23,9 @@ describe('micro-agent', () => {
       })
 
       // each payload in this test is decorated with data that matches its appId for ease of testing
-      window.newrelic.setCustomAttribute('customAttr', '42')
-      window.agent1.setCustomAttribute('customAttr', '1')
-      window.agent2.setCustomAttribute('customAttr', '2')
+      window.newrelic.setCustomAttribute('customAttr', '42') // container agent
+      window.agent1.setCustomAttribute('customAttr', '1') // micro agent (agent1)
+      window.agent2.setCustomAttribute('customAttr', '2') // micro agent (agent2)
 
       // each payload in this test is decorated with data that matches its appId for ease of testing
       window.newrelic.noticeError('42')

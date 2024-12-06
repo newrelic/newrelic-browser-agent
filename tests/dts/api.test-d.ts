@@ -45,17 +45,12 @@ expectType<(name: string, trigger?: string) => InteractionInstance>(browserAgent
 
 // Micro Agent APIs
 const microAgent = new MicroAgent({})
-expectType<(featureNames?: string | string[]) => boolean>(microAgent.start)
-
-expectType<(name: string, attributes?: object) => any>(microAgent.addPageAction)
-expectType<(name: string, host?: string) => any>(microAgent.setPageViewName)
-expectType<(name: string, value: string | number | boolean | null, persist?: boolean) => any>(microAgent.setCustomAttribute)
-expectType<(error: Error | string, customAttributes?: object) => any>(microAgent.noticeError)
-expectType<(value: string | null) => any>(microAgent.setUserId)
-expectType<(value: string | null) => any>(microAgent.setApplicationVersion)
-expectType<(callback: (error: Error | string) => boolean | { group: string; }) => any>(microAgent.setErrorHandler)
-expectType<(name: string, id: string) => any>(microAgent.addRelease)
-expectType<(message: string, options?: { customAttributes?: object, level?: 'ERROR' | 'TRACE' | 'DEBUG' | 'INFO' | 'WARN'}) => any>(microAgent.log)
+expectType<(name: string, attributes?: object) => void>(microAgent.addPageAction)
+expectType<(name: string, value: string | number | boolean | null, persist?: boolean) => void>(microAgent.setCustomAttribute)
+expectType<(error: Error | string, customAttributes?: object) => void>(microAgent.noticeError)
+expectType<(value: string | null) => void>(microAgent.setUserId)
+expectType<(value: string | null) => void>(microAgent.setApplicationVersion)
+expectType<(message: string, options?: { customAttributes?: object, level?: 'ERROR' | 'TRACE' | 'DEBUG' | 'INFO' | 'WARN'}) => void>(microAgent.log)
 
 // The following browser agent APIs should not be available in the Micro Agent:
 expectError(() => expectType<any>(microAgent.addToTrace))

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation. All rights reserved.
+  SPDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>RUM inline hit test</title>
+    {init}
+    {config}
+    {loader}
+  </head>
+  <body>
+    <div>This page has 3 things to click on!</div>
+    <button id="one">#1</button>
+    <input id="two" type="submit" value="#2" />
+    <a id="three" title="#3">decoy</a>
+    <script type="text/javascript">
+      let i = 0
+      document.addEventListener('click', function () {
+        window.location.hash = Math.random()
+
+        const elem = document.createElement('div')
+				elem.innerHTML = 'TEST' + i++
+				document.body.appendChild(elem)
+      }, false)
+    </script>
+  </body>
+</html>

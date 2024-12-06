@@ -109,7 +109,7 @@ const model = () => {
     soft_navigations: { enabled: true, harvestTimeSeconds: 10, autoStart: true },
     spa: { enabled: true, harvestTimeSeconds: 10, autoStart: true },
     ssl: undefined,
-    user_actions: { enabled: true }
+    user_actions: { enabled: true, elementAttributes: ['id', 'className', 'tagName', 'type'] }
   }
 }
 

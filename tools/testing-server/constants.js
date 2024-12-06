@@ -73,5 +73,5 @@ module.exports.defaultInitBlock = {
   ssl: false,
   soft_navigations: enabledFeature,
   spa: enabledFeature,
-  user_actions: { enabled: true }
+  user_actions: { enabled: true, elementAttributes: ['id', 'className', 'tagName', 'type'] }
 }

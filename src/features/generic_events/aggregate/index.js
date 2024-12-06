@@ -51,7 +51,7 @@ export class Aggregate extends AggregateBase {
         }, this.featureName, this.ee)
       }
 
-      let addUserAction
+      let addUserAction = () => { /** no-op */ }
       if (isBrowserScope && agentRef.init.user_actions.enabled) {
         this.userActionAggregator = new UserActionsAggregator()
 
@@ -75,7 +75,8 @@ export class Aggregate extends AggregateBase {
                   /** prevent us from capturing an obscenely long value */
                   if (target?.[field]) acc[targetAttrName(field)] = String(target[field]).trim().slice(0, 128)
                   return acc
-                }, {}))
+                }, {})),
+                ...aggregatedUserAction.nearestTargetFields
               })
 
               /**
@@ -98,7 +99,7 @@ export class Aggregate extends AggregateBase {
 
         registerHandler('ua', (evt) => {
           /** the processor will return the previously aggregated event if it has been completed by processing the current event */
-          addUserAction(this.userActionAggregator.process(evt))
+          addUserAction(this.userActionAggregator.process(evt, this.agentRef.init.user_actions.elementAttributes))
         }, this.featureName, this.ee)
       }
 

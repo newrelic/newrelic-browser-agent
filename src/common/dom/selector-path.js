@@ -5,8 +5,8 @@
  * @param {boolean} includeClass
  * @returns {string|undefined}
  */
-export const generateSelectorPath = (elem) => {
-  if (!elem) return
+export const generateSelectorPath = (elem, targetFields = []) => {
+  if (!elem) return { path: undefined, nearestFields: {} }
 
   const getNthOfTypeIndex = (node) => {
     try {
@@ -25,9 +25,13 @@ export const generateSelectorPath = (elem) => {
   let pathSelector = ''
   let index = getNthOfTypeIndex(elem)
 
+  const nearestFields = {}
   try {
     while (elem?.tagName) {
       const { id, localName } = elem
+      targetFields.forEach(field => {
+        nearestFields[nearestAttrName(field)] ||= elem[field]
+      })
       const selector = [
         localName,
         id ? `#${id}` : '',
@@ -41,5 +45,13 @@ export const generateSelectorPath = (elem) => {
   // do nothing for now
   }
 
-  return pathSelector ? index ? `${pathSelector}:nth-of-type(${index})` : pathSelector : undefined
+  const path = pathSelector ? index ? `${pathSelector}:nth-of-type(${index})` : pathSelector : undefined
+  return { path, nearestFields }
+
+  function nearestAttrName (originalFieldName) {
+    /** preserve original renaming structure for pre-existing field maps */
+    if (originalFieldName === 'tagName') originalFieldName = 'tag'
+    if (originalFieldName === 'className') originalFieldName = 'class'
+    return `nearest${originalFieldName.charAt(0).toUpperCase() + originalFieldName.slice(1)}`
+  }
 }

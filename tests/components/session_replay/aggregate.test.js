@@ -14,6 +14,8 @@ let mainAgent
 
 beforeAll(() => {
   mainAgent = setupAgent()
+  // stop JEST DOM from throwing errors with the stylesheet API
+  mainAgent.init.session_replay.fix_stylesheets = false
 })
 
 let sessionReplayAggregate, session
@@ -26,7 +28,7 @@ beforeEach(async () => {
   await new Promise(process.nextTick)
   sessionReplayAggregate = sessionReplayInstrument.featAggregate
 
-  jest.spyOn(sessionReplayAggregate.scheduler.harvest, '_send').mockImplementation(({ cbFinished }) => {
+  jest.spyOn(sessionReplayAggregate.scheduler.harvest, 'send').mockImplementation(({ cbFinished }) => {
     cbFinished({ status: 200 })
   })
 
@@ -325,7 +327,7 @@ describe('Session Replay Harvest Behaviors', () => {
   })
 
   test('Aborts if 429 response', async () => {
-    jest.spyOn(sessionReplayAggregate.scheduler.harvest, '_send').mockImplementation(({ cbFinished }) => {
+    jest.spyOn(sessionReplayAggregate.scheduler.harvest, 'send').mockImplementation(({ cbFinished }) => {
       cbFinished({ status: 429 })
     })
 

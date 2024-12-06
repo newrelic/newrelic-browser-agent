@@ -53,7 +53,8 @@ beforeEach(() => {
   featureName = faker.string.uuid()
   mainAgent = {
     agentIdentifier,
-    runtime: { [faker.string.uuid()]: faker.lorem.sentence() }
+    runtime: { [faker.string.uuid()]: faker.lorem.sentence() },
+    info: { licenseKey: faker.string.uuid(), applicationID: faker.string.uuid(), entityGuid: faker.string.uuid() }
   }
 })
 

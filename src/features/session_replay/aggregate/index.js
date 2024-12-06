@@ -233,15 +233,17 @@ export class Aggregate extends AggregateBase {
   }
 
   makeHarvestPayload (shouldRetryOnFail, opts) {
-    if (!this.recorder || !this.timeKeeper?.ready || !this.recorder.hasSeenSnapshot) return
+    const target = { licenseKey: this.agentRef.info.licenseKey, applicationID: this.agentRef.info.applicationID }
+    const payloadOutput = { target, payload: undefined }
+    if (!this.recorder || !this.timeKeeper?.ready || !this.recorder.hasSeenSnapshot) return [payloadOutput]
     const recorderEvents = this.recorder.getEvents()
     // get the event type and use that to trigger another harvest if needed
-    if (!recorderEvents.events.length || (this.mode !== MODE.FULL) || this.blocked) return
+    if (!recorderEvents.events.length || (this.mode !== MODE.FULL) || this.blocked) return [payloadOutput]
 
     const payload = this.getHarvestContents(recorderEvents)
     if (!payload.body.length) {
       this.recorder.clearBuffer()
-      return
+      return [payloadOutput]
     }
 
     handle(SUPPORTABILITY_METRIC_CHANNEL, ['SessionReplay/Harvest/Attempts'], undefined, FEATURE_NAMES.metrics, this.ee)
@@ -273,13 +275,16 @@ export class Aggregate extends AggregateBase {
 
     if (len > MAX_PAYLOAD_SIZE) {
       this.abort(ABORT_REASONS.TOO_BIG, len)
-      return
+      return [payloadOutput]
     }
     // TODO -- Gracefully handle the buffer for retries.
     if (!this.agentRef.runtime.session.state.sessionReplaySentFirstChunk) this.syncWithSessionManager({ sessionReplaySentFirstChunk: true })
     this.recorder.clearBuffer()
     if (recorderEvents.type === 'preloaded') this.scheduler.runHarvest(opts)
-    return [payload]
+
+    payloadOutput.payload = payload
+
+    return [payloadOutput]
   }
 
   getCorrectedTimestamp (node) {

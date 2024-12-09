@@ -4,10 +4,11 @@ import { numeric } from '../../../common/serialize/bel-serializer'
 import { firstPaint } from '../../../common/vitals/first-paint'
 import { firstContentfulPaint } from '../../../common/vitals/first-contentful-paint'
 import { getInfo } from '../../../common/config/info'
+import { IPL_TRIGGER_NAME } from '../constants'
 
 export class InitialPageLoadInteraction extends Interaction {
   constructor (agentIdentifier) {
-    super(agentIdentifier, 'initialPageLoad', 0, null)
+    super(agentIdentifier, IPL_TRIGGER_NAME, 0, null)
     const agentInfo = getInfo(agentIdentifier)
     this.queueTime = agentInfo.queueTime
     this.appTime = agentInfo.applicationTime

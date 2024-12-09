@@ -5,6 +5,23 @@
       "changes": [
         {
           "type": "feat",
+          "sha": "e4c7debe2a1653efdad8940c55a71dd0140ce900",
+          "message": "Capture Page Resource Assets",
+          "issues": [
+            "1257"
+          ]
+        }
+      ],
+      "version": "1.276.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "6f187f60-9fba-4121-a447-484d39df9513",
+      "createTime": "2024-12-09T20:36:14.956Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
           "sha": "8d10e14953f9a5b9ba97e865ba5476fc527ba384",
           "message": "Allow logs api wrapper to update custom attributes",
           "issues": [
@@ -2268,5 +2285,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2024-12-03T21:39:52.055Z"
+  "updateTime": "2024-12-09T20:36:14.956Z"
 }

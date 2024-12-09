@@ -1,5 +1,6 @@
 const { testInsRequest, testErrorsRequest } = require('../../../tools/testing-server/utils/expect-tests')
 const { onlyFirefox, onlyChrome } = require('../../../tools/browser-matcher/common-matchers.mjs')
+const { deepmergeInto } = require('deepmerge-ts')
 
 describe('ins harvesting', () => {
   let insightsCapture
@@ -9,17 +10,7 @@ describe('ins harvesting', () => {
   })
 
   it('should submit PageActions', async () => {
-    const testUrl = await browser.testHandle.assetURL('instrumented.html', {
-      init: {
-        user_actions: { enabled: false },
-        page_actions: { enabled: true },
-        performance: {
-          capture_marks: false,
-          capture_measures: false,
-          resources: { enabled: false }
-        }
-      }
-    })
+    const testUrl = await browser.testHandle.assetURL('instrumented.html', getInsInit({ page_actions: { enabled: true } }))
     await browser.url(testUrl)
       .then(() => browser.waitForAgentLoad())
 
@@ -44,17 +35,7 @@ describe('ins harvesting', () => {
   })
 
   it('should submit UserAction (when enabled)', async () => {
-    const testUrl = await browser.testHandle.assetURL('user-actions.html', {
-      init: {
-        user_actions: { enabled: true },
-        page_actions: { enabled: false },
-        performance: {
-          capture_marks: false,
-          capture_measures: false,
-          resources: { enabled: false }
-        }
-      }
-    })
+    const testUrl = await browser.testHandle.assetURL('user-actions.html', getInsInit({ user_actions: { enabled: true } }))
     await browser.url(testUrl).then(() => browser.waitForAgentLoad())
 
     const [insHarvests] = await Promise.all([
@@ -107,17 +88,7 @@ describe('ins harvesting', () => {
   })
 
   it('should detect iframes on UserActions if agent is running inside iframe', async () => {
-    const testUrl = await browser.testHandle.assetURL('iframe/same-origin.html', {
-      init: {
-        user_actions: { enabled: true },
-        page_actions: { enabled: false },
-        performance: {
-          capture_marks: false,
-          capture_measures: false,
-          resources: { enabled: false }
-        }
-      }
-    })
+    const testUrl = await browser.testHandle.assetURL('iframe/same-origin.html', getInsInit({ user_actions: { enabled: true } }))
     await browser.url(testUrl).then(() => browser.pause(2000))
 
     const [insHarvests] = await Promise.all([
@@ -142,17 +113,7 @@ describe('ins harvesting', () => {
   })
 
   it('should submit Marks', async () => {
-    const testUrl = await browser.testHandle.assetURL('marks-and-measures.html', {
-      init: {
-        user_actions: { enabled: false },
-        page_actions: { enabled: false },
-        performance: {
-          capture_marks: true,
-          capture_measures: false,
-          resources: { enabled: false }
-        }
-      }
-    })
+    const testUrl = await browser.testHandle.assetURL('marks-and-measures.html', getInsInit({ performance: { capture_marks: true } }))
     await browser.url(testUrl).then(() => browser.waitForAgentLoad())
 
     const [[{ request: { body: { ins: insHarvest } } }]] = await Promise.all([
@@ -179,17 +140,7 @@ describe('ins harvesting', () => {
   })
 
   it('should submit Measures', async () => {
-    const testUrl = await browser.testHandle.assetURL('marks-and-measures.html', {
-      init: {
-        user_actions: { enabled: false },
-        page_actions: { enabled: false },
-        performance: {
-          capture_marks: false,
-          capture_measures: true,
-          resources: { enabled: false }
-        }
-      }
-    })
+    const testUrl = await browser.testHandle.assetURL('marks-and-measures.html', getInsInit({ performance: { capture_measures: true } }))
     await browser.url(testUrl).then(() => browser.waitForAgentLoad())
 
     const [[{ request: { body: { ins: insHarvest } } }]] = await Promise.all([
@@ -209,17 +160,7 @@ describe('ins harvesting', () => {
   })
 
   it('should capture page resources - ignore_newrelic: false', async () => {
-    const testUrl = await browser.testHandle.assetURL('page-resources.html', {
-      init: {
-        user_actions: { enabled: false },
-        page_actions: { enabled: false },
-        performance: {
-          capture_marks: false,
-          capture_measures: false,
-          resources: { enabled: true, ignore_newrelic: false }
-        }
-      }
-    })
+    const testUrl = await browser.testHandle.assetURL('page-resources.html', getInsInit({ performance: { resources: { enabled: true, ignore_newrelic: false } } }))
     await browser.url(testUrl).then(() => browser.waitForAgentLoad())
 
     const [[{ request: { body: { ins: insHarvest } } }]] = await Promise.all([
@@ -240,17 +181,7 @@ describe('ins harvesting', () => {
   })
 
   it('should capture page resources - ignore_newrelic: true', async () => {
-    const testUrl = await browser.testHandle.assetURL('page-resources.html', {
-      init: {
-        user_actions: { enabled: false },
-        page_actions: { enabled: false },
-        performance: {
-          capture_marks: false,
-          capture_measures: false,
-          resources: { enabled: true }
-        }
-      }
-    })
+    const testUrl = await browser.testHandle.assetURL('page-resources.html', getInsInit({ performance: { resources: { enabled: true, ignore_newrelic: true } } }))
     await browser.url(testUrl).then(() => browser.waitForAgentLoad())
 
     const [[{ request: { body: { ins: insHarvest } } }]] = await Promise.all([
@@ -264,21 +195,7 @@ describe('ins harvesting', () => {
 
   it('should capture page resources - asset_types', async () => {
     /** allow newrelic, which will try to capture 6 different asset types, but the asset types filter should only keep img types */
-    const testUrl = await browser.testHandle.assetURL('page-resources.html', {
-      init: {
-        user_actions: { enabled: false },
-        page_actions: { enabled: false },
-        performance: {
-          capture_marks: false,
-          capture_measures: false,
-          resources: {
-            enabled: true,
-            ignore_newrelic: false,
-            asset_types: ['img']
-          }
-        }
-      }
-    })
+    const testUrl = await browser.testHandle.assetURL('page-resources.html', getInsInit({ performance: { resources: { enabled: true, ignore_newrelic: false, asset_types: ['img'] } } }))
     await browser.url(testUrl).then(() => browser.waitForAgentLoad())
 
     const [[{ request: { body: { ins: insHarvest } } }]] = await Promise.all([
@@ -291,20 +208,7 @@ describe('ins harvesting', () => {
   })
 
   it('should capture page resources - first_party_domains', async () => {
-    const testUrl = await browser.testHandle.assetURL('page-resources.html', {
-      init: {
-        user_actions: { enabled: false },
-        page_actions: { enabled: false },
-        performance: {
-          capture_marks: false,
-          capture_measures: false,
-          resources: {
-            enabled: true,
-            first_party_domains: ['upload.wikimedia.org']
-          }
-        }
-      }
-    })
+    const testUrl = await browser.testHandle.assetURL('page-resources.html', getInsInit({ performance: { resources: { enabled: true, first_party_domains: ['upload.wikimedia.org'] } } }))
     await browser.url(testUrl).then(() => browser.waitForAgentLoad())
 
     const [[{ request: { body: { ins: insHarvest } } }]] = await Promise.all([
@@ -501,3 +405,17 @@ describe('ins harvesting', () => {
     }
   }
 })
+
+function getInsInit (overrides = {}) {
+  const init = {
+    user_actions: { enabled: false },
+    page_actions: { enabled: false },
+    performance: {
+      capture_marks: false,
+      capture_measures: false,
+      resources: { enabled: false, ignore_newrelic: true, asset_types: [], first_party_domains: [] }
+    }
+  }
+  deepmergeInto(init, overrides)
+  return { init }
+}

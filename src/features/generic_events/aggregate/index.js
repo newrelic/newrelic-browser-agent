@@ -6,7 +6,7 @@ import { stringify } from '../../../common/util/stringify'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { cleanURL } from '../../../common/url/clean-url'
 import { FEATURE_NAME } from '../constants'
-import { initialLocation, isBrowserScope } from '../../../common/constants/runtime'
+import { globalScope, initialLocation, isBrowserScope } from '../../../common/constants/runtime'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { warn } from '../../../common/util/console'
 import { now } from '../../../common/timing/now'
@@ -16,6 +16,7 @@ import { applyFnToProps } from '../../../common/util/traverse'
 import { FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
 import { UserActionsAggregator } from './user-actions/user-actions-aggregator'
 import { isIFrameWindow } from '../../../common/dom/iframe'
+import { handle } from '../../../common/event-emitter/handle'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -33,6 +34,8 @@ export class Aggregate extends AggregateBase {
         this.deregisterDrain()
         return
       }
+
+      this.trackSupportabilityMetrics()
 
       if (agentRef.init.page_action.enabled) {
         registerHandler('api-addPageAction', (timestamp, name, attributes) => {
@@ -103,10 +106,11 @@ export class Aggregate extends AggregateBase {
               const observer = new PerformanceObserver((list) => {
                 list.getEntries().forEach(entry => {
                   try {
+                    handle(SUPPORTABILITY_METRIC_CHANNEL, ['Generic/Performance/' + type + '/Seen'])
                     this.addEvent({
                       eventType: 'BrowserPerformance',
                       timestamp: Math.floor(agentRef.runtime.timeKeeper.correctRelativeTimestamp(entry.startTime)),
-                      entryName: entry.name,
+                      entryName: cleanURL(entry.name),
                       entryDuration: entry.duration,
                       entryType: type,
                       ...(entry.detail && { entryDetail: entry.detail })
@@ -121,6 +125,47 @@ export class Aggregate extends AggregateBase {
         } catch (err) {
         // Something failed in our set up, likely the browser does not support PO's... do nothing
         }
+      }
+
+      if (isBrowserScope && agentRef.init.performance.resources.enabled) {
+        registerHandler('browserPerformance.resource', (entry) => {
+          try {
+            // convert the entry to a plain object and separate the name and duration from the object
+            // you need to do this to be able to spread it into the addEvent call later, and name and duration
+            // would be duplicative of entryName and entryDuration and are protected keys in NR1
+            const { name, duration, ...entryObject } = entry.toJSON()
+
+            let firstParty = false
+            try {
+              const entryDomain = new URL(name).hostname
+              const isNr = (entryDomain.includes('newrelic.com') || entryDomain.includes('nr-data.net') || entryDomain.includes('nr-local.net'))
+              /** decide if we should ignore nr-specific assets */
+              if (this.agentRef.init.performance.resources.ignore_newrelic && isNr) return
+              /** decide if we should ignore the asset type (empty means allow everything, which is the default) */
+              if (this.agentRef.init.performance.resources.asset_types.length && !this.agentRef.init.performance.resources.asset_types.includes(entryObject.initiatorType)) return
+              /** decide if the entryDomain is a first party domain */
+              firstParty = entryDomain === globalScope?.location.hostname || agentRef.init.performance.resources.first_party_domains.includes(entryDomain)
+              if (firstParty) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Generic/Performance/FirstPartyResource/Seen'])
+              if (isNr) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Generic/Performance/NrResource/Seen'])
+            } catch (err) {
+            // couldnt parse the URL, so firstParty will just default to false
+            }
+
+            handle(SUPPORTABILITY_METRIC_CHANNEL, ['Generic/Performance/Resource/Seen'])
+            const event = {
+              ...entryObject,
+              eventType: 'BrowserPerformance',
+              timestamp: Math.floor(agentRef.runtime.timeKeeper.correctRelativeTimestamp(entryObject.startTime)),
+              entryName: name,
+              entryDuration: duration,
+              firstParty
+            }
+
+            this.addEvent(event)
+          } catch (err) {
+            this.ee.emit('internal-error', [err, 'GenericEvents-Resource'])
+          }
+        }, this.featureName, this.ee)
       }
 
       this.harvestScheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
@@ -194,5 +239,16 @@ export class Aggregate extends AggregateBase {
 
   queryStringsBuilder () {
     return { ua: this.agentRef.info.userAttributes, at: this.agentRef.info.atts }
+  }
+
+  trackSupportabilityMetrics () {
+    /** track usage SMs to improve these experimental features */
+    const configPerfTag = 'Config/Performance/'
+    if (this.agentRef.init.performance.capture_marks) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'CaptureMarks/Enabled'])
+    if (this.agentRef.init.performance.capture_measures) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'CaptureMeasures/Enabled'])
+    if (this.agentRef.init.performance.resources.enabled) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'Resources/Enabled'])
+    if (this.agentRef.init.performance.resources.asset_types?.length !== 0) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'Resources/AssetTypes/Changed'])
+    if (this.agentRef.init.performance.resources.first_party_domains?.length !== 0) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'Resources/FirstPartyDomains/Changed'])
+    if (this.agentRef.init.performance.resources.ignore_newrelic === false) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'Resources/IgnoreNewrelic/Changed'])
   }
 }

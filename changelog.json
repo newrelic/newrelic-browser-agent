@@ -5,6 +5,39 @@
       "changes": [
         {
           "type": "feat",
+          "sha": "8d10e14953f9a5b9ba97e865ba5476fc527ba384",
+          "message": "Allow logs api wrapper to update custom attributes",
+          "issues": [
+            "1265"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "37e976bf360c209efd163855e7fbe84d665e444b",
+          "message": "Enable the browser agent to run in extension background contexts",
+          "issues": [
+            "1206"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "e00a46975bcc93c48798bd9153f3a503998b0915",
+          "message": "Harvest generic events when max size is reached",
+          "issues": [
+            "1250"
+          ]
+        }
+      ],
+      "version": "1.275.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "f1d3d772-cd3d-48f7-9b9a-c7b5ed538d05",
+      "createTime": "2024-12-03T21:39:52.055Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
           "sha": "2d8d114e70ba2861fb5639e132f25c9c03df871b",
           "message": "Upgrade SessionReplay libraries to latest version",
           "issues": [
@@ -2235,5 +2268,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2024-11-19T20:16:39.794Z"
+  "updateTime": "2024-12-03T21:39:52.055Z"
 }

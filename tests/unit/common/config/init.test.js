@@ -90,7 +90,13 @@ test('init props exist and return expected defaults', () => {
   })
   expect(config.performance).toEqual({
     capture_marks: false,
-    capture_measures: false
+    capture_measures: false,
+    resources: {
+      enabled: false,
+      asset_types: [],
+      first_party_domains: [],
+      ignore_newrelic: true
+    }
   })
   expect(config.privacy).toEqual({
     cookies_enabled: true

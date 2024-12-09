@@ -59,13 +59,6 @@ if (!!newrelic && !!newrelic.log) {
   newrelic.log('NRBA postamble executed', {level: 'info'})
   newrelic.log(new Error('NRBA test error'), {level: 'error'})
 }
-if (!!newrelic && !!newrelic.wrapLogger) {
-  newrelic.wrapLogger(console, 'log', {customAttributes: {wrappedFn: 'console.log'}, level: 'info'})
-  newrelic.wrapLogger(console, 'error', {customAttributes: {wrappedFn: 'console.error'}, level: 'error'})
-  newrelic.wrapLogger(console, 'trace', {customAttributes: {wrappedFn: 'console.trace'}, level: 'trace'})
-  newrelic.wrapLogger(console, 'warn', {customAttributes: {wrappedFn: 'console.warn'}, level: 'warn'})
-  newrelic.wrapLogger(console, 'info', {customAttributes: {wrappedFn: 'console.info'}, level: 'info'})
-  newrelic.wrapLogger(console, 'debug', {customAttributes: {wrappedFn: 'console.debug'}, level: 'debug'})
-}
+
 if (!!newrelic && !!newrelic.setApplicationVersion) newrelic.setApplicationVersion( '' + Math.floor(Math.random() * 10) + '.' + Math.floor(Math.random() * 10) + '.' + Math.floor(Math.random() * 10) )
 {{/if}}

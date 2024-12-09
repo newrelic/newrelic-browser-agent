@@ -28,7 +28,8 @@ window.NREUM={
       capture_marks: false, 
       capture_measures: true
     },
-    proxy: {}
+    proxy: {},
+    user_actions: {elementAttributes: ['id', 'className', 'tagName', 'type', 'innerText', 'textContent', 'ariaLabel', 'alt', 'title']}
   },
   loader_config: {
     accountID: '1',

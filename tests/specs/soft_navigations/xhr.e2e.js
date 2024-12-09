@@ -152,9 +152,14 @@ describe('XHR SPA Interaction Tracking', () => {
         category: 'Route change',
         type: 'interaction',
         trigger: 'click',
-        children: [{ key: 'actionText', type: 'stringAttribute', value: 'Send Ajax' }]
+        children: expect.any(Array)
       })
     ]))
+    interactionHarvests.forEach(interaction => {
+      interaction.request.body.forEach(body => {
+        expect(body.children).not.toContainEqual(expect.objectContaining({ type: 'ajax' }))
+      })
+    })
   })
 
   it('should capture distributed tracing properties', async () => {
@@ -227,7 +232,7 @@ describe('XHR SPA Interaction Tracking', () => {
       .then(() => browser.waitForAgentLoad())
 
     const [interactionHarvests] = await Promise.all([
-      interactionsCapture.waitForResult({ timeout: 10000 }),
+      interactionsCapture.waitForResult({ totalCount: 2 }),
       $('#sendAjax').click()
     ])
 

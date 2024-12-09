@@ -24,9 +24,9 @@ export class Instrument extends InstrumentBase {
       this.removeOnAbort = new AbortController()
     } catch (e) {}
 
-    this.ee.on('internal-error', (error) => {
+    this.ee.on('internal-error', (error, reason) => {
       if (!this.abortHandler) return
-      handle('ierr', [castError(error), now(), true, {}, this.#replayRunning], undefined, this.featureName, this.ee)
+      handle('ierr', [castError(error), now(), true, {}, this.#replayRunning, reason], undefined, this.featureName, this.ee)
     })
 
     this.ee.on(SR_EVENT_EMITTER_TYPES.REPLAY_RUNNING, (isRunning) => {

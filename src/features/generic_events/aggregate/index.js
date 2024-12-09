@@ -163,7 +163,7 @@ export class Aggregate extends AggregateBase {
 
             this.addEvent(event)
           } catch (err) {
-            // fail silently
+            this.ee.emit('internal-error', [err, 'GenericEvents-Resource'])
           }
         }, this.featureName, this.ee)
       }

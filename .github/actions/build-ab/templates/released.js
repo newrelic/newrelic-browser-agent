@@ -26,7 +26,8 @@ window.NREUM={
     },
     performance: {
       capture_marks: false, 
-      capture_measures: true
+      capture_measures: true,
+      resources: { enabled: true }
     },
     proxy: {}
   },

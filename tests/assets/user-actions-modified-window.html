@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>User Action Test</title>
+    {init} {config} {loader}
+  </head>
+  <body style="height: 200vh; overflow: scroll;">
+		<button id="pay-btn" class="btn-cart-add flex-grow container" type="submit">Create click user action</button>
+		<input type="text" id="textbox"/>
+    <script>
+      // having a type attribute on the window should be ignored by the collected UserActions
+      window.type = 'test'
+    </script>
+  </body>
+</html>

@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.276.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.275.0...v1.276.0) (2024-12-09)
+
+
+### Features
+
+* Capture Page Resource Assets ([#1257](https://github.com/newrelic/newrelic-browser-agent/issues/1257)) ([e4c7deb](https://github.com/newrelic/newrelic-browser-agent/commit/e4c7debe2a1653efdad8940c55a71dd0140ce900))
+
 ## [1.275.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.274.0...v1.275.0) (2024-12-03)
 
 

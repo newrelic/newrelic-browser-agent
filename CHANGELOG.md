@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.276.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.275.0...v1.276.0) (2024-12-10)
+
+
+### Features
+
+* Capture Page Resource Assets ([#1257](https://github.com/newrelic/newrelic-browser-agent/issues/1257)) ([e4c7deb](https://github.com/newrelic/newrelic-browser-agent/commit/e4c7debe2a1653efdad8940c55a71dd0140ce900))
+
+
+### Bug Fixes
+
+* Fix syntax error in fallback when tracking xhr readyState ([#1272](https://github.com/newrelic/newrelic-browser-agent/issues/1272)) ([2bb6b5b](https://github.com/newrelic/newrelic-browser-agent/commit/2bb6b5b2e104a6b3ac9ceb70d396f65cfb61c1bd))
+
 ## [1.275.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.274.0...v1.275.0) (2024-12-03)
 
 

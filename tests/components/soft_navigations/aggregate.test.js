@@ -1,6 +1,7 @@
 import { resetAgent, setupAgent } from '../setup-agent'
 import { Instrument as SoftNav } from '../../../src/features/soft_navigations/instrument'
 import * as ttfbModule from '../../../src/common/vitals/time-to-first-byte'
+import { INTERACTION_STATUS } from '../../../src/features/soft_navigations/constants'
 
 let mainAgent
 
@@ -127,6 +128,17 @@ test('interactions are backed up when pre harvesting', () => {
   expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(0)
   softNavAggregate.interactionsToHarvest.reloadSave()
   expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(1)
+})
+
+test('calling done on the initialPageLoad actually closes it correctly', () => {
+  expect(softNavAggregate.initialPageLoadInteraction).toBeTruthy()
+  let endTime = performance.now()
+  let ipl = softNavAggregate.initialPageLoadInteraction
+  softNavAggregate.initialPageLoadInteraction.done(endTime)
+  expect(softNavAggregate.initialPageLoadInteraction).toBeNull()
+  expect(ipl.end).toEqual(endTime)
+  expect(ipl.status).toEqual(INTERACTION_STATUS.FIN)
+  expect(softNavAggregate.interactionsToHarvest.get()).toEqual([ipl])
 })
 
 describe('back up buffer is cleared when', () => { // prevent mem leak

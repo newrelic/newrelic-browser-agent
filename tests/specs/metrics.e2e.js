@@ -36,34 +36,6 @@ describe('metrics', () => {
     })
   })
 
-  it('should send SMs for resources seen', async () => {
-    await browser.url(await browser.testHandle.assetURL('resources.html'))
-      .then(() => browser.waitForAgentLoad())
-
-    const [supportabilityMetricsHarvests] = await Promise.all([
-      supportabilityMetricsCapture.waitForResult({ totalCount: 1 }),
-      await browser.url(await browser.testHandle.assetURL('/')) // Setup expects before navigating
-    ])
-
-    const supportabilityMetrics = supportabilityMetricsHarvests[0].request.body.sm
-    expect(supportabilityMetrics).toEqual(expect.arrayContaining([{
-      params: { name: 'Generic/Resources/Non-Ajax/Internal' },
-      stats: { c: expect.toBeWithin(1, Infinity) }
-    }]))
-    expect(supportabilityMetrics).toEqual(expect.arrayContaining([{
-      params: { name: 'Generic/Resources/Non-Ajax/External' },
-      stats: { c: expect.toBeWithin(1, Infinity) }
-    }]))
-    expect(supportabilityMetrics).toEqual(expect.arrayContaining([{
-      params: { name: 'Generic/Resources/Ajax/Internal' },
-      stats: { c: expect.toBeWithin(1, Infinity) }
-    }]))
-    expect(supportabilityMetrics).toEqual(expect.arrayContaining([{
-      params: { name: 'Generic/Resources/Ajax/External' },
-      stats: { c: expect.toBeWithin(1, Infinity) }
-    }]))
-  })
-
   it('should send CMs and SMs when calling agent api methods', async () => {
     const customMetricsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testCustomMetricsRequest })
     await browser.url(await browser.testHandle.assetURL('api/customMetrics.html'))

@@ -648,7 +648,7 @@ describe('setAPI', () => {
         expectSM('API/noticeError/called')
         expect(handleModule.handle).toHaveBeenCalledWith(
           'err',
-          [err, expect.toBeNumber(), false, customAttrs, false, target],
+          [err, expect.toBeNumber(), false, customAttrs, false, undefined, target],
           undefined,
           FEATURE_NAMES.jserrors,
           agent.ee

@@ -69,7 +69,7 @@ export function setAPI (agentRef, forceDrain, runSoftNavOverSpa = false) {
     noticeError: function noticeError (err, customAttributes, target, timestamp = now()) {
       if (typeof err === 'string') err = new Error(err)
       handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/noticeError/called'], undefined, FEATURE_NAMES.metrics, agentRef.ee)
-      handle('err', [err, timestamp, false, customAttributes, !!replayRunning[agentRef.agentIdentifier], target], undefined, FEATURE_NAMES.jserrors, agentRef.ee)
+      handle('err', [err, timestamp, false, customAttributes, !!replayRunning[agentRef.agentIdentifier], undefined, target], undefined, FEATURE_NAMES.jserrors, agentRef.ee)
     }
   }
   apiInterface.register = function (target) {

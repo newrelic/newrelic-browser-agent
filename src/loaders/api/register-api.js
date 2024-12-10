@@ -19,7 +19,7 @@ import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
  */
 export function buildRegisterApi (agentRef, handlers, target) {
   const attrs = {}
-  if (!isValidTarget(target) || !target) {
+  if (!isValidTarget(target, false)) {
     const invalidTargetResponse = () => warn(46, target)
     invalidTargetResponse()
     return {

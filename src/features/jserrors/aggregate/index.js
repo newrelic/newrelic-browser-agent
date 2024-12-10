@@ -120,10 +120,11 @@ export class Aggregate extends AggregateBase {
    * @param {boolean=} internal if the error was "caught" and deemed "internal" before reporting to the jserrors feature
    * @param {object=} customAttributes  any custom attributes to be included in the error payload
    * @param {boolean=} hasReplay a flag indicating if the error occurred during a replay session
+   * @param {string=} swallowReason a string indicating pre-defined reason if swallowing the error.  Mainly used by the internal error SMs.
    * @param {object=} target the target to buffer and harvest to, if undefined the default configuration target is used
    * @returns
    */
-  storeError (err, time, internal, customAttributes, hasReplay, target) {
+  storeError (err, time, internal, customAttributes, hasReplay, swallowReason, target) {
     if (!err) return
     if (!isValidTarget(target)) return warn(46, target)
     // are we in an interaction
@@ -142,7 +143,7 @@ export class Aggregate extends AggregateBase {
 
     var stackInfo = computeStackTrace(err)
 
-    const { shouldSwallow, reason } = evaluateInternalError(stackInfo, internal)
+    const { shouldSwallow, reason } = evaluateInternalError(stackInfo, internal, swallowReason)
     if (shouldSwallow) {
       handle(SUPPORTABILITY_METRIC_CHANNEL, ['Internal/Error/' + reason], undefined, FEATURE_NAMES.metrics, this.ee)
       return

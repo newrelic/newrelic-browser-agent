@@ -5,8 +5,8 @@ const REASON_SECURITY_POLICY = 'Security-Policy'
  * @param {Object} stackInfo - The error stack information.
  * @returns {boolean} - Whether the error should be swallowed or not.
  */
-export function evaluateInternalError (stackInfo, internal) {
-  const output = { shouldSwallow: internal || false, reason: 'Other' }
+export function evaluateInternalError (stackInfo, internal, reason) {
+  const output = { shouldSwallow: internal || false, reason: reason || 'Other' }
   const leadingFrame = stackInfo.frames?.[0]
   /** If we cant otherwise determine from the frames and message, the default of internal + reason will be the fallback */
   if (!leadingFrame || typeof stackInfo?.message !== 'string') return output

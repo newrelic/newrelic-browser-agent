@@ -1,4 +1,3 @@
-const { onlyFirefox } = require('../../../tools/browser-matcher/common-matchers.mjs')
 const { testInsRequest, testErrorsRequest } = require('../../../tools/testing-server/utils/expect-tests')
 const { onlyFirefox, onlyChrome } = require('../../../tools/browser-matcher/common-matchers.mjs')
 const { deepmergeInto } = require('deepmerge-ts')
@@ -90,7 +89,7 @@ describe('ins harvesting', () => {
 
   // firefox generates a focus event when the page loads, which makes testing this easier
   it.withBrowsersMatching(onlyFirefox)('should ignore window attributes on UserAction blur and focus', async () => {
-    const testUrl = await browser.testHandle.assetURL('user-actions.html', { init: { user_actions: { enabled: true } } })
+    const testUrl = await browser.testHandle.assetURL('user-actions-modified-window.html', { init: { user_actions: { enabled: true } } })
     await browser.url(testUrl).then(() => browser.waitForAgentLoad())
 
     const [insHarvests] = await Promise.all([
@@ -350,7 +349,6 @@ describe('ins harvesting', () => {
     }
 
     checkAllTested () {
-      console.log(this.typesToTest)
       return Object.entries(this.typesToTest).forEach(([type, { tested }]) => {
         expect(tested).toEqual(this.expectedTypes.includes(type))
       })

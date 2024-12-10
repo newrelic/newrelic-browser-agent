@@ -4,6 +4,31 @@
     {
       "changes": [
         {
+          "type": "fix",
+          "sha": "2bb6b5b2e104a6b3ac9ceb70d396f65cfb61c1bd",
+          "message": "Fix syntax error in fallback when tracking xhr readyState",
+          "issues": [
+            "1272"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "e4c7debe2a1653efdad8940c55a71dd0140ce900",
+          "message": "Capture Page Resource Assets",
+          "issues": [
+            "1257"
+          ]
+        }
+      ],
+      "version": "1.276.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "61f68e0c-d574-483a-984e-302c523c5d22",
+      "createTime": "2024-12-10T15:04:02.114Z"
+    },
+    {
+      "changes": [
+        {
           "type": "feat",
           "sha": "8d10e14953f9a5b9ba97e865ba5476fc527ba384",
           "message": "Allow logs api wrapper to update custom attributes",
@@ -2268,5 +2293,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2024-12-03T21:39:52.055Z"
+  "updateTime": "2024-12-10T15:04:02.114Z"
 }

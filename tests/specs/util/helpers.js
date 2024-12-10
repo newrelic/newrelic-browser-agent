@@ -106,6 +106,18 @@ export function decodeAttributes (attributes) {
   return decodedObj
 }
 
+export async function getDebugLogs () {
+  return browser.execute(function () {
+    return window.NRDEBUG_LOGS
+  })
+}
+
+export async function clearDebugLogs () {
+  return browser.execute(function () {
+    window.NRDEBUG_LOGS = []
+  })
+}
+
 export function srConfig (initOverrides = {}) {
   return deepmerge(
     {

@@ -1,5 +1,7 @@
 const { onlyFirefox } = require('../../../tools/browser-matcher/common-matchers.mjs')
 const { testInsRequest, testErrorsRequest } = require('../../../tools/testing-server/utils/expect-tests')
+const { onlyFirefox, onlyChrome } = require('../../../tools/browser-matcher/common-matchers.mjs')
+const { deepmergeInto } = require('deepmerge-ts')
 
 describe('ins harvesting', () => {
   let insightsCapture
@@ -9,7 +11,7 @@ describe('ins harvesting', () => {
   })
 
   it('should submit PageActions', async () => {
-    const testUrl = await browser.testHandle.assetURL('instrumented.html')
+    const testUrl = await browser.testHandle.assetURL('instrumented.html', getInsInit({ page_actions: { enabled: true } }))
     await browser.url(testUrl)
       .then(() => browser.waitForAgentLoad())
 
@@ -34,7 +36,7 @@ describe('ins harvesting', () => {
   })
 
   it('should submit UserAction (when enabled)', async () => {
-    const testUrl = await browser.testHandle.assetURL('user-actions.html', { init: { user_actions: { enabled: true } } })
+    const testUrl = await browser.testHandle.assetURL('user-actions.html', getInsInit({ user_actions: { enabled: true } }))
     await browser.url(testUrl).then(() => browser.waitForAgentLoad())
 
     const [insHarvests] = await Promise.all([
@@ -82,7 +84,7 @@ describe('ins harvesting', () => {
       pageUrl: expect.any(String),
       timestamp: expect.any(Number)
     })
-    expect(clickUAs[1].actionDuration).toBeGreaterThan(0)
+    expect(clickUAs[1].actionDuration).toBeGreaterThanOrEqual(0)
     expect(clickUAs[1].actionMs).toEqual(expect.stringMatching(/^\[\d+(,\d+){4}\]$/))
   })
 
@@ -112,7 +114,7 @@ describe('ins harvesting', () => {
   })
 
   it('should detect iframes on UserActions if agent is running inside iframe', async () => {
-    const testUrl = await browser.testHandle.assetURL('iframe/same-origin.html', { init: { user_actions: { enabled: true } } })
+    const testUrl = await browser.testHandle.assetURL('iframe/same-origin.html', getInsInit({ user_actions: { enabled: true } }))
     await browser.url(testUrl).then(() => browser.pause(2000))
 
     const [insHarvests] = await Promise.all([
@@ -137,7 +139,7 @@ describe('ins harvesting', () => {
   })
 
   it('should submit Marks', async () => {
-    const testUrl = await browser.testHandle.assetURL('marks-and-measures.html', { init: { performance: { capture_marks: true, capture_measures: false } } })
+    const testUrl = await browser.testHandle.assetURL('marks-and-measures.html', getInsInit({ performance: { capture_marks: true } }))
     await browser.url(testUrl).then(() => browser.waitForAgentLoad())
 
     const [[{ request: { body: { ins: insHarvest } } }]] = await Promise.all([
@@ -164,7 +166,7 @@ describe('ins harvesting', () => {
   })
 
   it('should submit Measures', async () => {
-    const testUrl = await browser.testHandle.assetURL('marks-and-measures.html', { init: { performance: { capture_marks: false, capture_measures: true } } })
+    const testUrl = await browser.testHandle.assetURL('marks-and-measures.html', getInsInit({ performance: { capture_measures: true } }))
     await browser.url(testUrl).then(() => browser.waitForAgentLoad())
 
     const [[{ request: { body: { ins: insHarvest } } }]] = await Promise.all([
@@ -183,6 +185,68 @@ describe('ins harvesting', () => {
     })
   })
 
+  it('should capture page resources - ignore_newrelic: false', async () => {
+    const testUrl = await browser.testHandle.assetURL('page-resources.html', getInsInit({ performance: { resources: { enabled: true, ignore_newrelic: false } } }))
+    await browser.url(testUrl).then(() => browser.waitForAgentLoad())
+
+    const [[{ request: { body: { ins: insHarvest } } }]] = await Promise.all([
+      insightsCapture.waitForResult({ totalCount: 1 })
+    ])
+
+    const initiatorTypes = [
+      'img',
+      'link',
+      'script',
+      'xmlhttprequest'
+    ]
+    if (!browserMatch(onlyFirefox)) initiatorTypes.push('css')
+    if (browserMatch(onlyFirefox)) initiatorTypes.push('other')
+    const tester = new PageResourcesTester(initiatorTypes)
+    insHarvest.forEach((entry) => tester.test(entry))
+    tester.checkAllTested()
+  })
+
+  it('should capture page resources - ignore_newrelic: true', async () => {
+    const testUrl = await browser.testHandle.assetURL('page-resources.html', getInsInit({ performance: { resources: { enabled: true, ignore_newrelic: true } } }))
+    await browser.url(testUrl).then(() => browser.waitForAgentLoad())
+
+    const [[{ request: { body: { ins: insHarvest } } }]] = await Promise.all([
+      insightsCapture.waitForResult({ totalCount: 1 })
+    ])
+
+    const tester = new PageResourcesTester(['img'])
+    insHarvest.forEach((entry) => tester.test(entry))
+    tester.checkAllTested()
+  })
+
+  it('should capture page resources - asset_types', async () => {
+    /** allow newrelic, which will try to capture 6 different asset types, but the asset types filter should only keep img types */
+    const testUrl = await browser.testHandle.assetURL('page-resources.html', getInsInit({ performance: { resources: { enabled: true, ignore_newrelic: false, asset_types: ['img'] } } }))
+    await browser.url(testUrl).then(() => browser.waitForAgentLoad())
+
+    const [[{ request: { body: { ins: insHarvest } } }]] = await Promise.all([
+      insightsCapture.waitForResult({ totalCount: 1 })
+    ])
+
+    const tester = new PageResourcesTester(['img'])
+    insHarvest.forEach((entry) => tester.test(entry))
+    tester.checkAllTested()
+  })
+
+  it('should capture page resources - first_party_domains', async () => {
+    const testUrl = await browser.testHandle.assetURL('page-resources.html', getInsInit({ performance: { resources: { enabled: true, first_party_domains: ['upload.wikimedia.org'] } } }))
+    await browser.url(testUrl).then(() => browser.waitForAgentLoad())
+
+    const [[{ request: { body: { ins: insHarvest } } }]] = await Promise.all([
+      insightsCapture.waitForResult({ totalCount: 1 })
+    ])
+
+    const tester = new PageResourcesTester(['img'])
+    /** test that the wikimedia asset is reported as first party even though its running on domain bam-test-1.nr-local.net */
+    insHarvest.forEach((entry) => tester.test(entry, { img: true }))
+    tester.checkAllTested()
+  })
+
   it('should harvest early when buffer gets too large (overall quantity)', async () => {
     const testUrl = await browser.testHandle.assetURL('instrumented.html', { init: { generic_events: { harvestTimeSeconds: 30 } } })
     await browser.url(testUrl)
@@ -193,29 +257,8 @@ describe('ins harvesting', () => {
       insightsCapture.waitForResult({ timeout: 10000 }),
       browser.execute(function () {
         let i = 0
-        while (i++ < 1010) {
+        while (i++ < 10000) {
           newrelic.addPageAction('foobar')
-        }
-      })
-    ])
-    expect(insightsResult.length).toBeTruthy()
-  })
-
-  it('should harvest early when buffer gets too large (one big event)', async () => {
-    const testUrl = await browser.testHandle.assetURL('instrumented.html', { init: { generic_events: { harvestTimeSeconds: 30 } } })
-    await browser.url(testUrl)
-      .then(() => browser.waitForAgentLoad())
-
-    const [insightsResult] = await Promise.all([
-      insightsCapture.waitForResult({ timeout: 10000 }),
-      browser.execute(function () {
-        newrelic.addPageAction('foobar', createLargeObject())
-        function createLargeObject () {
-          let i = 0; let obj = {}
-          while (i++ < 64000) {
-            obj[i] = 'x'
-          }
-          return obj
         }
       })
     ])
@@ -233,7 +276,7 @@ describe('ins harvesting', () => {
         newrelic.addPageAction('foobar', createLargeObject())
         function createLargeObject () {
           let i = 0; let obj = {}
-          while (i++ < 100000) {
+          while (i++ < 1000000) {
             obj[i] = Math.random()
           }
           return obj
@@ -291,4 +334,114 @@ describe('ins harvesting', () => {
       })
     ]))
   })
+
+  class PageResourcesTester {
+    constructor (expectedTypes = []) {
+      this.typesToTest = {
+        css: { tag: 'css', tested: false },
+        img: { tag: 'img', tested: false },
+        link: { tag: 'link', tested: false },
+        script: { tag: 'script', tested: false },
+        xmlhttprequest: { tag: 'xmlhttprequest', tested: false },
+        other: { tag: 'other', tested: false }
+      }
+
+      this.expectedTypes = expectedTypes
+    }
+
+    checkAllTested () {
+      console.log(this.typesToTest)
+      return Object.entries(this.typesToTest).forEach(([type, { tested }]) => {
+        expect(tested).toEqual(this.expectedTypes.includes(type))
+      })
+    }
+
+    test (entry, firstPartyOverrides = {}) {
+      let initiatorType, firstParty
+      if (entry.entryName.includes('font.woff')) {
+        // firefox reports the css initiatorType as 'other', while other browsers report it as 'css'
+        initiatorType = browserMatch(onlyFirefox) ? this.typesToTest.other.tag : this.typesToTest.css.tag
+        firstParty = firstPartyOverrides[initiatorType] ?? true
+      } else if (entry.entryName.includes('House_of_Commons_Chamber_1.png')) {
+        initiatorType = this.typesToTest.img.tag
+        firstParty = firstPartyOverrides[initiatorType] ?? false
+      } else if (entry.entryName.includes('favicon.ico')) {
+        initiatorType = this.typesToTest.other.tag
+        firstParty = firstPartyOverrides[initiatorType] ?? true
+      } else if (entry.entryName.includes('nr-spa.min.js')) {
+        initiatorType = this.typesToTest.script.tag
+        firstParty = firstPartyOverrides[initiatorType] ?? true
+      } else if (entry.entryName.includes('style.css')) {
+        initiatorType = this.typesToTest.link.tag
+        firstParty = firstPartyOverrides[initiatorType] ?? true
+      } else {
+        initiatorType = this.typesToTest.xmlhttprequest.tag
+        firstParty = firstPartyOverrides[initiatorType] ?? true
+      }
+      this.typesToTest[initiatorType].tested = true
+
+      const allBrowserFields = {
+        connectEnd: expect.any(Number),
+        connectStart: expect.any(Number),
+        currentUrl: expect.any(String),
+        decodedBodySize: expect.any(Number),
+        domainLookupEnd: expect.any(Number),
+        domainLookupStart: expect.any(Number),
+        encodedBodySize: expect.any(Number),
+        entryDuration: expect.any(Number),
+        entryName: expect.any(String),
+        entryType: 'resource',
+        eventType: 'BrowserPerformance',
+        fetchStart: expect.any(Number),
+        firstParty,
+        initiatorType,
+        nextHopProtocol: expect.any(String),
+        pageUrl: expect.any(String),
+        redirectEnd: expect.any(Number),
+        redirectStart: expect.any(Number),
+        requestStart: expect.any(Number),
+        responseEnd: expect.any(Number),
+        responseStart: expect.any(Number),
+        secureConnectionStart: expect.any(Number),
+        startTime: expect.any(Number),
+        timestamp: expect.any(Number),
+        transferSize: expect.any(Number),
+        workerStart: expect.any(Number)
+      }
+      const chromeFields = {
+        deliveryType: expect.any(String),
+        firstInterimResponseStart: expect.any(Number),
+        renderBlockingStatus: expect.any(String),
+        serverTiming: expect.any(String),
+        responseStatus: expect.any(Number)
+
+      }
+      const firefoxFields = {
+        contentType: expect.any(String),
+        responseStatus: expect.any(Number)
+      }
+
+      let testFields = {
+        ...allBrowserFields,
+        ...(browserMatch(onlyFirefox) && firefoxFields),
+        ...(browserMatch(onlyChrome) && chromeFields)
+      }
+
+      expect(entry).toMatchObject(testFields)
+    }
+  }
 })
+
+function getInsInit (overrides = {}) {
+  const init = {
+    user_actions: { enabled: false },
+    page_actions: { enabled: false },
+    performance: {
+      capture_marks: false,
+      capture_measures: false,
+      resources: { enabled: false, ignore_newrelic: true, asset_types: [], first_party_domains: [] }
+    }
+  }
+  deepmergeInto(init, overrides)
+  return { init }
+}

@@ -22,9 +22,12 @@ export class Recorder {
   #fixing = false
 
   constructor (parent) {
-    this.#events = new RecorderEvents()
-    this.#backloggedEvents = new RecorderEvents()
-    this.#preloaded = [new RecorderEvents()]
+    /** A flag that can be set to false by failing conversions to stop the fetching process */
+    this.shouldFix = getConfigurationValue(parent.agentIdentifier, 'session_replay.fix_stylesheets')
+    /** Event Buffers */
+    this.#events = new RecorderEvents(this.shouldFix)
+    this.#backloggedEvents = new RecorderEvents(this.shouldFix)
+    this.#preloaded = [new RecorderEvents(this.shouldFix)]
     /** True when actively recording, false when paused or stopped */
     this.recording = false
     /** The pointer to the current bucket holding rrweb events */
@@ -35,8 +38,6 @@ export class Recorder {
     this.lastMeta = false
     /** The parent class that instantiated the recorder */
     this.parent = parent
-    /** A flag that can be set to false by failing conversions to stop the fetching process */
-    this.shouldFix = getConfigurationValue(this.parent.agentIdentifier, 'session_replay.fix_stylesheets')
     /** The method to stop recording. This defaults to a noop, but is overwritten once the recording library is imported and initialized */
     this.stopRecording = () => { /* no-op until set by rrweb initializer */ }
   }
@@ -66,8 +67,8 @@ export class Recorder {
   clearBuffer () {
     if (this.#preloaded[0]?.events.length) this.#preloaded.shift()
     else if (this.parent.mode === MODE.ERROR) this.#backloggedEvents = this.#events
-    else this.#backloggedEvents = new RecorderEvents()
-    this.#events = new RecorderEvents()
+    else this.#backloggedEvents = new RecorderEvents(this.shouldFix)
+    this.#events = new RecorderEvents(this.shouldFix)
   }
 
   /** Begin recording using configured recording lib */
@@ -117,7 +118,7 @@ export class Recorder {
    */
   audit (event, isCheckout) {
     /** An count of stylesheet objects that were blocked from accessing contents via JS */
-    const incompletes = stylesheetEvaluator.evaluate()
+    const incompletes = getConfigurationValue(this.parent.agentIdentifier, 'session_replay.fix_stylesheets') ? stylesheetEvaluator.evaluate() : 0
     const missingInlineSMTag = 'SessionReplay/Payload/Missing-Inline-Css/'
     /** only run the full fixing behavior (more costly) if fix_stylesheets is configured as on (default behavior) */
     if (!this.shouldFix) {
@@ -197,7 +198,7 @@ export class Recorder {
         this.parent.scheduler.runHarvest()
       } else {
         // we are still in "preload" and it triggered a "stop point".  Make a new set, which will get pointed at on next cycle
-        this.#preloaded.push(new RecorderEvents())
+        this.#preloaded.push(new RecorderEvents(this.shouldFix))
       }
     }
   }

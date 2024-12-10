@@ -30,7 +30,7 @@ jest.mock('../../../src/common/util/feature-flags', () => ({
 
 let spaInstrument, spaAggregate, newrelic
 beforeAll(async () => {
-  spaInstrument = new Spa({ agentIdentifier, info: {}, init: { spa: { enabled: true } }, runtime: {} })
+  spaInstrument = new Spa({ agentIdentifier, info: {}, init: { spa: { enabled: true } }, runtime: {}, ee: ee.get(agentIdentifier) })
   await expect(spaInstrument.onAggregateImported).resolves.toEqual(true)
   spaAggregate = spaInstrument.featAggregate
   newrelic = helpers.getNewrelicGlobal(spaAggregate.ee)

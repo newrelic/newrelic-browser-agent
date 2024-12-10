@@ -27,7 +27,11 @@ window.NREUM={
     performance: {
       capture_marks: false, 
       capture_measures: true,
-      resources: { enabled: true }
+      resources: { 
+        enabled: true,
+        ignore_newrelic: false,
+        first_party_domains: ['dev-one.nr-assets.net', 'staging-one.nr-assets.net', 'one.nr-assets.net', 'nr-assets.net']
+      }
     },
     proxy: {}
   },

@@ -374,7 +374,7 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
     if (hasUndefinedHostname(params)) return // don't bother with XHR of url with no hostname
 
     metrics.duration = now() - this.startTime
-    if (!this.loadCazptureCalled && xhr.readyState === 4) {
+    if (!this.loadCaptureCalled && xhr.readyState === 4) {
       captureXhrData(this, xhr)
     } else if (params.status == null) {
       params.status = 0

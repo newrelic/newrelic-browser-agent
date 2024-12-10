@@ -22,9 +22,9 @@ export class UserActionsAggregator {
    * @param {Event} evt The event supplied by the addEventListener callback
    * @returns {AggregatedUserAction|undefined} The previous aggregation set if it has been completed by processing the current event
    */
-  process (evt) {
+  process (evt, targetFields) {
     if (!evt) return
-    const selectorPath = getSelectorPath(evt)
+    const { selectorPath, nearestTargetFields } = getSelectorPath(evt, targetFields)
     const aggregationKey = getAggregationKey(evt, selectorPath)
     if (!!aggregationKey && aggregationKey === this.#aggregationKey) {
       // an aggregation exists already, so lets just continue to increment
@@ -34,7 +34,7 @@ export class UserActionsAggregator {
       const finishedEvent = this.#aggregationEvent
       // then set as this new event aggregation
       this.#aggregationKey = aggregationKey
-      this.#aggregationEvent = new AggregatedUserAction(evt, selectorPath)
+      this.#aggregationEvent = new AggregatedUserAction(evt, selectorPath, nearestTargetFields)
       return finishedEvent
     }
   }
@@ -46,14 +46,18 @@ export class UserActionsAggregator {
  * @param {Event} evt
  * @returns {string}
  */
-function getSelectorPath (evt) {
-  let selectorPath
+function getSelectorPath (evt, targetFields) {
+  let selectorPath; let nearestTargetFields = {}
   if (OBSERVED_WINDOW_EVENTS.includes(evt.type) || evt.target === window) selectorPath = 'window'
   else if (evt.target === document) selectorPath = 'document'
   // if still no selectorPath, generate one from target tree that includes elem ids
-  else selectorPath = generateSelectorPath(evt.target)
+  else {
+    const { path, nearestFields } = generateSelectorPath(evt.target, targetFields)
+    selectorPath = path
+    nearestTargetFields = nearestFields
+  }
   // if STILL no selectorPath, it will return undefined which will skip aggregation for this event
-  return selectorPath
+  return { selectorPath, nearestTargetFields }
 }
 
 /**

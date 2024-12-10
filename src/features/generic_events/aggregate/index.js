@@ -54,7 +54,7 @@ export class Aggregate extends AggregateBase {
         }, this.featureName, this.ee)
       }
 
-      let addUserAction
+      let addUserAction = () => { /** no-op */ }
       if (isBrowserScope && agentRef.init.user_actions.enabled) {
         this.userActionAggregator = new UserActionsAggregator()
 
@@ -74,11 +74,26 @@ export class Aggregate extends AggregateBase {
                 rageClick: aggregatedUserAction.rageClick,
                 target: aggregatedUserAction.selectorPath,
                 ...(isIFrameWindow(window) && { iframe: true }),
-                ...(target?.id && { targetId: target.id }),
-                ...(target?.tagName && { targetTag: target.tagName }),
-                ...(target?.type && { targetType: target.type }),
-                ...(target?.className && { targetClass: target.className })
+                ...(this.agentRef.init.user_actions.elementAttributes.reduce((acc, field) => {
+                  /** prevent us from capturing an obscenely long value */
+                  if (target?.[field]) acc[targetAttrName(field)] = String(target[field]).trim().slice(0, 128)
+                  return acc
+                }, {})),
+                ...aggregatedUserAction.nearestTargetFields
               })
+
+              /**
+               * Returns the original target field name with `target` prepended and camelCased
+               * @param {string} originalFieldName
+               * @returns {string} the target field name
+               */
+              function targetAttrName (originalFieldName) {
+                /** preserve original renaming structure for pre-existing field maps */
+                if (originalFieldName === 'tagName') originalFieldName = 'tag'
+                if (originalFieldName === 'className') originalFieldName = 'class'
+                /** return the original field name, cap'd and prepended with target to match formatting */
+                return `target${originalFieldName.charAt(0).toUpperCase() + originalFieldName.slice(1)}`
+              }
             }
           } catch (e) {
             // do nothing for now
@@ -87,7 +102,7 @@ export class Aggregate extends AggregateBase {
 
         registerHandler('ua', (evt) => {
           /** the processor will return the previously aggregated event if it has been completed by processing the current event */
-          addUserAction(this.userActionAggregator.process(evt))
+          addUserAction(this.userActionAggregator.process(evt, this.agentRef.init.user_actions.elementAttributes))
         }, this.featureName, this.ee)
       }
 

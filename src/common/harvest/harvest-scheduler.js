@@ -4,7 +4,6 @@
  */
 
 import * as submitData from '../util/submit-data'
-import { SharedContext } from '../context/shared-context'
 import { Harvest } from './harvest'
 import { subscribeToEOL } from '../unload/eol'
 import { SESSION_EVENTS } from '../session/constants'
@@ -12,7 +11,7 @@ import { SESSION_EVENTS } from '../session/constants'
 /**
  * Periodically invokes harvest calls and handles retries
  */
-export class HarvestScheduler extends SharedContext {
+export class HarvestScheduler {
   /**
      * Create a HarvestScheduler
      * @param {string} endpoint - The base BAM endpoint name -- ex. 'events'
@@ -22,17 +21,17 @@ export class HarvestScheduler extends SharedContext {
      * @param {number} opts.retryDelay - The number of seconds to wait before retrying after a network failure
      * @param {boolean} opts.raw - Use a prefabricated payload shape as the harvest payload without the need for formatting
      * @param {string} opts.customUrl - A custom url that falls outside of the shape of the standard BAM harvester url pattern.  Will use directly instead of concatenating various pieces
-     * @param {*} parent - The parent object, whose state can be passed into SharedContext
+     * @param {Object} parent - The parent object
      */
   constructor (endpoint, opts, parent) {
-    super(parent) // gets any allowed properties from the parent and stores them in `sharedContext`
+    this.agentRef = parent.agentRef
     this.endpoint = endpoint
     this.opts = opts || {}
     this.started = false
     this.timeoutHandle = null
     this.aborted = false // this controls the per-interval and final harvests for the scheduler (currently per feature specific!)
     this.harvesting = false
-    this.harvest = new Harvest(this.sharedContext)
+    this.harvest = new Harvest(this)
 
     // If a feature specifies stuff to be done on page unload, those are frontrunned (via capture phase) before ANY feature final harvests.
     if (typeof this.opts.onUnload === 'function') subscribeToEOL(this.opts.onUnload, true)
@@ -41,7 +40,7 @@ export class HarvestScheduler extends SharedContext {
     /* Flush all buffered data if session resets and give up retries. This should be synchronous to ensure that the correct `session` value is sent.
       Since session-reset generates a new session ID and the ID is grabbed at send-time, any delays or retries would cause the payload to be sent under
       the wrong session ID. */
-    this.sharedContext?.ee.on(SESSION_EVENTS.RESET, () => this.runHarvest({ forceNoRetry: true }))
+    this.agentRef?.ee?.on(SESSION_EVENTS.RESET, () => this.runHarvest({ forceNoRetry: true }))
   }
 
   /**

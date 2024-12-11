@@ -11,6 +11,7 @@ import { isValidLogLevel } from '../shared/utils'
 import { applyFnToProps } from '../../../common/util/traverse'
 import { MAX_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
 import { FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
+import { isContainerAgentTarget } from '../../../common/util/target'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -95,7 +96,7 @@ export class Aggregate extends AggregateBase {
           'entity.guid': target.entityGuid || this.agentRef.runtime.appMetadata?.agents?.[0]?.entityGuid, // browser entity guid as provided API target OR the default from RUM response if not supplied
           ...(sessionEntity && {
             session: sessionEntity.state.value || '0', // The session ID that we generate and keep across page loads
-            hasReplay: sessionEntity.state.sessionReplayMode === 1, // True if a session replay recording is running
+            hasReplay: sessionEntity.state.sessionReplayMode === 1 && isContainerAgentTarget(target, this.agentRef), // True if a session replay recording is running
             hasTrace: sessionEntity.state.sessionTraceMode === 1 // True if a session trace recording is running
           }),
           ptid: this.agentRef.runtime.ptid, // page trace id

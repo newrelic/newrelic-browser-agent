@@ -7,16 +7,13 @@ import { obj as encodeObj, param as encodeParam } from '../url/encode'
 import { stringify } from '../util/stringify'
 import * as submitData from '../util/submit-data'
 import { getLocation } from '../url/location'
-import { getInfo } from '../config/info'
-import { getConfigurationValue, getConfiguration } from '../config/init'
-import { getRuntime } from '../config/runtime'
 import { cleanURL } from '../url/clean-url'
 import { eventListenerOpts } from '../event-listener/event-listener-opts'
-import { SharedContext } from '../context/shared-context'
 import { VERSION } from '../constants/env'
 import { isWorkerScope } from '../constants/runtime'
 import { warn } from '../util/console'
 import { now } from '../timing/now'
+import { isContainerAgentTarget } from '../util/target'
 
 const warnings = {}
 
@@ -27,12 +24,11 @@ const warnings = {}
  * @typedef {import('./types.js').FeatureHarvestCallback} FeatureHarvestCallback
  * @typedef {import('./types.js').FeatureHarvestCallbackOptions} FeatureHarvestCallbackOptions
  */
-export class Harvest extends SharedContext {
+export class Harvest {
   constructor (parent) {
-    super(parent) // gets any allowed properties from the parent and stores them in `sharedContext`
-
-    this.tooManyRequestsDelay = getConfigurationValue(this.sharedContext.agentIdentifier, 'harvest.tooManyRequestsDelay') || 60
-    this.obfuscator = getRuntime(this.sharedContext.agentIdentifier).obfuscator
+    this.agentRef = parent.agentRef
+    this.tooManyRequestsDelay = this.agentRef.init.harvest?.tooManyRequestsDelay || 60
+    this.obfuscator = this.agentRef.runtime.obfuscator
 
     this._events = {}
   }
@@ -45,7 +41,7 @@ export class Harvest extends SharedContext {
    * value should not be relied upon because network calls will be made asynchronously.
    */
   send ({ endpoint, target, payload = {}, opts = {}, submitMethod, cbFinished, customUrl, raw, includeBaseParams = true }) {
-    const info = getInfo(this.sharedContext.agentIdentifier)
+    const info = this.agentRef.info
     if (!info.errorBeacon) return false
 
     target ??= {
@@ -53,7 +49,7 @@ export class Harvest extends SharedContext {
       applicationID: info.applicationID
     }
 
-    const agentRuntime = getRuntime(this.sharedContext.agentIdentifier)
+    const agentRuntime = this.agentRef.runtime
     let { body, qs } = this.cleanPayload(payload)
 
     if (Object.keys(body).length === 0 && !opts?.sendEmptyBody) { // no payload body? nothing to send, just run onfinish stuff and return
@@ -63,7 +59,7 @@ export class Harvest extends SharedContext {
       return false
     }
 
-    const init = getConfiguration(this.sharedContext.agentIdentifier)
+    const init = this.agentRef.init
     const protocol = init.ssl === false ? 'http' : 'https'
     const perceviedBeacon = init.proxy.beacon || info.errorBeacon
     const endpointURLPart = endpoint !== 'rum' ? `/${endpoint}` : ''
@@ -71,7 +67,7 @@ export class Harvest extends SharedContext {
     if (customUrl) url = customUrl
     if (raw) url = `${protocol}://${perceviedBeacon}/${endpoint}`
 
-    const baseParams = !raw && includeBaseParams ? this.baseQueryString(qs, endpoint, target.applicationID) : ''
+    const baseParams = !raw && includeBaseParams ? this.baseQueryString(qs, endpoint, target) : ''
     let payloadParams = encodeObj(qs, agentRuntime.maxBytes)
     if (!submitMethod) {
       submitMethod = submitData.getSubmitMethod({ isFinalHarvest: opts.unload })
@@ -147,15 +143,15 @@ export class Harvest extends SharedContext {
   }
 
   // The stuff that gets sent every time.
-  baseQueryString (qs, endpoint, appId) {
-    const runtime = getRuntime(this.sharedContext.agentIdentifier)
-    const info = getInfo(this.sharedContext.agentIdentifier)
+  baseQueryString (qs, endpoint, target) {
+    const runtime = this.agentRef.runtime
+    const info = this.agentRef.info
 
     const ref = this.obfuscator.obfuscateString(cleanURL(getLocation()))
-    const hr = runtime?.session?.state.sessionReplayMode === 1 && endpoint !== 'jserrors'
+    const hr = runtime?.session?.state.sessionReplayMode === 1 && endpoint !== 'jserrors' && isContainerAgentTarget(target, this.agentRef)
 
     const qps = [
-      'a=' + appId,
+      'a=' + target?.applicationID,
       encodeParam('sa', (info.sa ? '' + info.sa : '')),
       encodeParam('v', VERSION),
       transactionNameParam(info),

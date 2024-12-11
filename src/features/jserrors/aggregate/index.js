@@ -22,7 +22,7 @@ import { applyFnToProps } from '../../../common/util/traverse'
 import { evaluateInternalError } from './internal-errors'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { EventAggregator } from '../../../common/aggregate/event-aggregator'
-import { isValidTarget } from '../../../common/util/target'
+import { isContainerAgentTarget, isValidTarget } from '../../../common/util/target'
 import { warn } from '../../../common/util/console'
 
 /**
@@ -161,7 +161,8 @@ export class Aggregate extends AggregateBase {
     // Do not modify the name ('errorGroup') of params without DEM approval!
     if (filterOutput?.group) params.errorGroup = filterOutput.group
 
-    if (hasReplay) params.hasReplay = hasReplay
+    // Should only decorate "hasReplay" for the container agent, so check if the target matches the config
+    if (hasReplay && isContainerAgentTarget(target, this.agentRef)) params.hasReplay = hasReplay
     /**
      * The bucketHash is different from the params.stackHash because the params.stackHash is based on the canonicalized
      * stack trace and is used downstream in NR1 to attempt to group the same errors across different browsers. However,

@@ -11,3 +11,14 @@ export function isValidTarget (target, allowUndefined = true) {
   /** required values */
   return !!target?.licenseKey && !!target?.applicationID
 }
+
+/**
+ * Checks if the target matches the container agent target
+ * @param {*} target the target to be validated
+ * @param {*} agentRef the agent reference to be validated
+ * @returns {boolean}
+ */
+export function isContainerAgentTarget (target, agentRef) {
+  if (!target) return true
+  return (target?.licenseKey === agentRef.info.licenseKey && target?.applicationID === agentRef.info.applicationID)
+}

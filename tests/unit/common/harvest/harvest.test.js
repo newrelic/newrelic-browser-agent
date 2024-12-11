@@ -2,9 +2,6 @@ import { faker } from '@faker-js/faker'
 
 import * as encodeModule from '../../../../src/common/url/encode'
 import * as submitDataModule from '../../../../src/common/util/submit-data'
-import * as infoModule from '../../../../src/common/config/info'
-import * as initModule from '../../../../src/common/config/init'
-import * as runtimeModule from '../../../../src/common/config/runtime'
 import { warn } from '../../../../src/common/util/console'
 import { Obfuscator } from '../../../../src/common/util/obfuscate'
 import { Harvest } from '../../../../src/common/harvest/harvest'
@@ -13,15 +10,15 @@ jest.enableAutomock()
 jest.unmock('../../../../src/common/harvest/harvest')
 let harvestInstance
 
-beforeEach(() => {
-  jest.mocked(runtimeModule.getRuntime).mockReturnValue({
+let agentRef = {
+  info: { licenseKey: '12345', applicationID: '67890' },
+  runtime: {
     maxBytes: Infinity,
     harvestCount: 0,
     obfuscator: new Obfuscator()
-  })
-
-  harvestInstance = new Harvest()
-})
+  },
+  init: { harvest: { tooManyRequestsDelay: 60 } }
+}
 
 afterEach(() => {
   jest.clearAllMocks()
@@ -40,17 +37,13 @@ describe('send', () => {
     licenseKey = faker.string.uuid()
     applicationID = faker.string.uuid()
     target = { licenseKey, applicationID }
-    jest.mocked(infoModule.getInfo).mockReturnValue({
-      errorBeacon,
-      licenseKey
-    })
-    jest.mocked(runtimeModule.getRuntime).mockReturnValue({
-      maxBytes: Infinity,
-      harvestCount: 0
-    })
-    jest.mocked(initModule.getConfiguration).mockReturnValue({
-      ssl: undefined,
-      proxy: {}
+
+    harvestInstance = new Harvest({
+      agentRef: {
+        info: { ...agentRef.info, errorBeacon, licenseKey },
+        runtime: { ...agentRef.runtime, maxBytes: Infinity, harvestCount: 0 },
+        init: { ...agentRef.init, ssl: undefined, proxy: {} }
+      }
     })
 
     spec = {
@@ -71,7 +64,7 @@ describe('send', () => {
   })
 
   test('should return false when info.errorBeacon is not defined', () => {
-    jest.mocked(infoModule.getInfo).mockReturnValue({})
+    harvestInstance.agentRef.info.errorBeacon = undefined
 
     const result = harvestInstance.send(spec)
 
@@ -118,7 +111,7 @@ describe('send', () => {
   })
 
   test('able to use and send to proxy when defined', () => {
-    jest.mocked(initModule.getConfiguration).mockReturnValue({ proxy: { beacon: 'some_other_string' } })
+    harvestInstance.agentRef.init.proxy.beacon = 'some_other_string'
     const result = harvestInstance.send(spec)
 
     expect(result).toEqual(true)
@@ -401,25 +394,19 @@ describe('send', () => {
 
 describe('baseQueryString', () => {
   beforeEach(() => {
-    jest.mocked(infoModule.getInfo).mockReturnValue({})
-    jest.mocked(runtimeModule.getRuntime).mockReturnValue({})
+    harvestInstance.agentRef.info = {}
+    harvestInstance.agentRef.runtime = {}
   })
 
   test('should construct a string of base query parameters', () => {
     const applicationID = faker.string.uuid()
     const sa = faker.string.uuid()
-    jest.mocked(infoModule.getInfo).mockReturnValue({
-      applicationID,
-      sa
-    })
+    harvestInstance.agentRef.info = { applicationID, sa }
     const customTransaction = faker.string.uuid()
     const ptid = faker.string.uuid()
-    jest.mocked(runtimeModule.getRuntime).mockReturnValue({
-      customTransaction,
-      ptid
-    })
+    harvestInstance.agentRef.runtime = { customTransaction, ptid }
 
-    const results = harvestInstance.baseQueryString({}, 'test', applicationID)
+    const results = harvestInstance.baseQueryString({}, 'test', { applicationID })
 
     expect(results).toContain(`a=${applicationID}`)
     expect(encodeModule.param).toHaveBeenCalledWith('sa', sa)
@@ -441,9 +428,7 @@ describe('baseQueryString', () => {
 
   test('should set t param to info.tNamePlain', () => {
     const tNamePlain = faker.string.uuid()
-    jest.mocked(infoModule.getInfo).mockReturnValue({
-      tNamePlain
-    })
+    harvestInstance.agentRef.info.tNamePlain = tNamePlain
 
     const results = harvestInstance.baseQueryString()
 
@@ -453,9 +438,7 @@ describe('baseQueryString', () => {
 
   test('should set to param to info.transactionName and exclude t param', () => {
     const transactionName = faker.string.uuid()
-    jest.mocked(infoModule.getInfo).mockReturnValue({
-      transactionName
-    })
+    harvestInstance.agentRef.info.transactionName = transactionName
 
     const results = harvestInstance.baseQueryString()
 

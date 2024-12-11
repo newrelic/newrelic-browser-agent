@@ -82,7 +82,7 @@ await spawnAsync(
   DEFAULT_SPAWN_OPTIONS
 )
 
-console.log('Updating LambdaTest browsers lists')
+console.log('Updating LambdaTest webview assets')
 await spawnAsync(
   `npm${os.platform() === 'win32' ? '.cmd' : ''}`,
   ['run', 'lt:upload-webview-assets'],

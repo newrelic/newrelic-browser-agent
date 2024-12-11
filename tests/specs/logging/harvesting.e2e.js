@@ -157,7 +157,7 @@ describe('logging harvesting', () => {
     })
 
     it('should allow for re-wrapping and 3rd party wrapping', async () => {
-      await mockRumResponse(LOGGING_MODE.INFO)
+      await mockRumResponse(LOGGING_MODE.DEBUG)
       const [[{ request: { body } }]] = await Promise.all([
         logsCapture.waitForResult({ totalCount: 1 }),
         browser.url(await browser.testHandle.assetURL('logs-api-wrap-logger-rewrapped.html'))

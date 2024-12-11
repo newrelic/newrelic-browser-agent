@@ -119,7 +119,7 @@ if (args.openPullRequest) {
       'third_party_manifest.json',
       'THIRD_PARTY_NOTICES.md',
       'tools/test-builds/**/package.json',
-      'tools/lambda-test/webview-asset-ids.js'
+      'tools/lambda-test/webview-asset-ids.mjs'
     ],
     COMMIT_MESSAGE,
     true

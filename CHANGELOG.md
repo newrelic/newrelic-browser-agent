@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.275.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.274.0...v1.275.0) (2024-12-03)
+
+
+### Features
+
+* Allow logs api wrapper to update custom attributes ([#1265](https://github.com/newrelic/newrelic-browser-agent/issues/1265)) ([8d10e14](https://github.com/newrelic/newrelic-browser-agent/commit/8d10e14953f9a5b9ba97e865ba5476fc527ba384))
+* Enable the browser agent to run in extension background contexts ([#1206](https://github.com/newrelic/newrelic-browser-agent/issues/1206)) ([37e976b](https://github.com/newrelic/newrelic-browser-agent/commit/37e976bf360c209efd163855e7fbe84d665e444b))
+
+
+### Bug Fixes
+
+* Harvest generic events when max size is reached ([#1250](https://github.com/newrelic/newrelic-browser-agent/issues/1250)) ([e00a469](https://github.com/newrelic/newrelic-browser-agent/commit/e00a46975bcc93c48798bd9153f3a503998b0915))
+
 ## [1.274.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.273.1...v1.274.0) (2024-11-19)
 
 

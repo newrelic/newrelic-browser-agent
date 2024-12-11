@@ -39,13 +39,7 @@ export class Aggregate extends AggregateBase {
         return
       }
       if (session.isNew || !this.isSessionTrackingEnabled) {
-        this.loggingMode = loggingMode
-
-        if (this.isSessionTrackingEnabled) {
-          this.syncWithSessionManager({
-            loggingMode: this.loggingMode
-          })
-        }
+        this.updateLoggingMode(loggingMode)
       } else {
         this.loggingMode = session.state.loggingMode
       }
@@ -60,6 +54,13 @@ export class Aggregate extends AggregateBase {
       this.drain()
       /** harvest immediately once started to purge pre-load logs collected */
       this.scheduler.startTimer(this.harvestTimeSeconds, 0)
+    })
+  }
+
+  updateLoggingMode (loggingMode) {
+    this.loggingMode = loggingMode
+    this.syncWithSessionManager({
+      loggingMode: this.loggingMode
     })
   }
 
@@ -152,8 +153,7 @@ export class Aggregate extends AggregateBase {
   abort (reason = {}) {
     handle(SUPPORTABILITY_METRIC_CHANNEL, [`Logging/Abort/${reason.sm}`], undefined, FEATURE_NAMES.logging, this.ee)
     this.blocked = true
-    this.loggingMode = LOGGING_MODE.OFF
-    this.syncWithSessionManager({ loggingMode: this.loggingMode })
+    this.updateLoggingMode(LOGGING_MODE.OFF)
     this.events.clear()
     this.deregisterDrain()
   }

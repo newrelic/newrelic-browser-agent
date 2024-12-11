@@ -54,7 +54,9 @@ describe('XHR SPA Interaction Tracking', () => {
 
     const [interactionHarvests] = await Promise.all([
       interactionsCapture.waitForResult({ timeout: 10000 }),
-      $('#sendAjax').click()
+      browser.execute(function () {
+        document.getElementById('sendAjax').click()
+      })
     ])
 
     checkSpa(interactionHarvests[1].request, { trigger: 'click' })
@@ -113,8 +115,10 @@ describe('XHR SPA Interaction Tracking', () => {
     ).then(() => browser.waitForAgentLoad())
 
     const [interactionHarvests] = await Promise.all([
-      interactionsCapture.waitForResult({ timeout: 10000 }),
-      $('#sendAjax').click()
+      interactionsCapture.waitForResult({ totalCount: 2 }),
+      browser.execute(function () {
+        document.getElementById('sendAjax').click()
+      })
     ])
 
     checkSpa(interactionHarvests[1].request, { trigger: 'click' })
@@ -143,7 +147,9 @@ describe('XHR SPA Interaction Tracking', () => {
 
     const [interactionHarvests] = await Promise.all([
       interactionsCapture.waitForResult({ timeout: 10000 }),
-      $('#sendAjax').click()
+      browser.execute(function () {
+        document.getElementById('sendAjax').click()
+      })
     ])
 
     checkSpa(interactionHarvests[1].request, { trigger: 'click' })
@@ -203,7 +209,9 @@ describe('XHR SPA Interaction Tracking', () => {
 
     const [interactionHarvests] = await Promise.all([
       interactionsCapture.waitForResult({ timeout: 10000 }),
-      $('#sendAjax').click()
+      browser.execute(function () {
+        document.getElementById('sendAjax').click()
+      })
     ])
 
     checkAjaxEvents({ body: interactionHarvests[1].request.body[0].children, query: interactionHarvests[1].request.query }, { specificPath: '/paththatdoesnotexist' })
@@ -218,7 +226,9 @@ describe('XHR SPA Interaction Tracking', () => {
 
     const [interactionHarvests] = await Promise.all([
       interactionsCapture.waitForResult({ timeout: 10000 }),
-      $('#sendAjax').click()
+      browser.execute(function () {
+        document.getElementById('sendAjax').click()
+      })
     ])
 
     checkAjaxEvents({ body: interactionHarvests[1].request.body[0].children, query: interactionHarvests[1].request.query }, { specificPath: '/bizbaz' })
@@ -233,7 +243,9 @@ describe('XHR SPA Interaction Tracking', () => {
 
     const [interactionHarvests] = await Promise.all([
       interactionsCapture.waitForResult({ totalCount: 2 }),
-      $('#sendAjax').click()
+      browser.execute(function () {
+        document.getElementById('sendAjax').click()
+      })
     ])
 
     checkSpa(interactionHarvests[1].request, { trigger: 'click' })

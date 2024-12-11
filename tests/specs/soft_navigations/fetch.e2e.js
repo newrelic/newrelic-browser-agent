@@ -17,7 +17,9 @@ describe('Fetch SPA Interaction Tracking', () => {
 
     const [interactionHarvests] = await Promise.all([
       interactionsCapture.waitForResult({ totalCount: 2 }),
-      $('#sendAjax').click()
+      browser.execute(function () {
+        document.getElementById('sendAjax').click()
+      })
     ])
 
     checkSpa(interactionHarvests[1].request, { trigger: 'click' })
@@ -35,7 +37,9 @@ describe('Fetch SPA Interaction Tracking', () => {
 
     const [interactionHarvests] = await Promise.all([
       interactionsCapture.waitForResult({ timeout: 10000 }),
-      $('#sendAjax').click()
+      browser.execute(function () {
+        document.getElementById('sendAjax').click()
+      })
     ])
 
     expect(
@@ -66,7 +70,9 @@ describe('Fetch SPA Interaction Tracking', () => {
     await browser.execute(function () {
       window.clearResults()
     })
-    await $('#sendAjax').click()
+    await browser.execute(function () {
+      document.getElementById('sendAjax').click()
+    })
     await browser.waitUntil(
       () => browser.execute(function () {
         return window.checkRunning === false
@@ -105,7 +111,9 @@ describe('Fetch SPA Interaction Tracking', () => {
     await browser.execute(function () {
       window.clearResults()
     })
-    await $('#sendAjax').click()
+    await browser.execute(function () {
+      document.getElementById('sendAjax').click()
+    })
     await browser.waitUntil(
       () => browser.execute(function () {
         return window.checkRunning === false
@@ -157,7 +165,9 @@ describe('Fetch SPA Interaction Tracking', () => {
 
     const [interactionHarvests] = await Promise.all([
       interactionsCapture.waitForResult({ totalCount: 2 }),
-      $('#sendAjax').click()
+      browser.execute(function () {
+        document.getElementById('sendAjax').click()
+      })
     ])
 
     checkAjaxEvents({ body: interactionHarvests[1].request.body[0].children, query: interactionHarvests[1].request.query }, { specificPath: '/paththatdoesnotexist' })

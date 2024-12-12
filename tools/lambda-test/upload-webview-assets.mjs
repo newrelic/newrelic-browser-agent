@@ -10,7 +10,7 @@ const outputDir = path.resolve(__dirname, '../../tools/lambda-test')
 function uploadFile (name, path) {
   const file = fs.readFileSync(path)
   const form = new FormData()
-  form.append('visibilty', 'team')
+  form.append('visibility', 'team')
   form.append('name', name)
   form.append('appFile', new File([file], path))
 

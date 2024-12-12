@@ -19,7 +19,7 @@ function uploadFile (name, path) {
   return fetch('https://manual-api.lambdatest.com/app/upload/virtualDevice', {
     method: 'POST',
     headers: {
-      Authorization: 'Basic ' + btoa(`${process.env.LT_USERNAME}:${process.env.LT_ACCESS_KEY}`)
+      Authorization: 'Basic ' + btoa(`${process.env.LAMBDA_USERNAME}:${process.env.LAMBDA_ACCESS_KEY}`)
     },
     body: form
   })

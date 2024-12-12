@@ -17,6 +17,7 @@ import { FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
 import { UserActionsAggregator } from './user-actions/user-actions-aggregator'
 import { isIFrameWindow } from '../../../common/dom/iframe'
 import { handle } from '../../../common/event-emitter/handle'
+import { getEnabledDatasources } from '../shared/utils'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -35,9 +36,10 @@ export class Aggregate extends AggregateBase {
         return
       }
 
-      this.trackSupportabilityMetrics()
+      const { datasources } = getEnabledDatasources(this.agentRef.init)
+      this.trackSupportabilityMetrics(datasources)
 
-      if (agentRef.init.page_action.enabled) {
+      if (datasources.pageActionsEnabled) {
         registerHandler('api-addPageAction', (timestamp, name, attributes) => {
           this.addEvent({
             ...attributes,
@@ -55,7 +57,7 @@ export class Aggregate extends AggregateBase {
       }
 
       let addUserAction
-      if (isBrowserScope && agentRef.init.user_actions.enabled) {
+      if (isBrowserScope && datasources.userActionsEnabled) {
         this.userActionAggregator = new UserActionsAggregator()
 
         addUserAction = (aggregatedUserAction) => {
@@ -107,7 +109,7 @@ export class Aggregate extends AggregateBase {
        * with an arbitrary query method. note: eventTypes: [...types] does not support the 'buffered' flag so we have
        * to create up to two PO's here.
        */
-      const performanceTypesToCapture = [...(agentRef.init.performance.capture_marks ? ['mark'] : []), ...(agentRef.init.performance.capture_measures ? ['measure'] : [])]
+      const performanceTypesToCapture = [...(datasources.captureMarksEnabled ? ['mark'] : []), ...(datasources.captureMeasuresEnabled ? ['measure'] : [])]
       if (performanceTypesToCapture.length) {
         try {
           performanceTypesToCapture.forEach(type => {
@@ -136,7 +138,7 @@ export class Aggregate extends AggregateBase {
         }
       }
 
-      if (isBrowserScope && agentRef.init.performance.resources.enabled) {
+      if (isBrowserScope && datasources.resourcesEnabled) {
         registerHandler('browserPerformance.resource', (entry) => {
           try {
             // convert the entry to a plain object and separate the name and duration from the object
@@ -250,12 +252,12 @@ export class Aggregate extends AggregateBase {
     return { ua: this.agentRef.info.userAttributes, at: this.agentRef.info.atts }
   }
 
-  trackSupportabilityMetrics () {
+  trackSupportabilityMetrics (datasources) {
     /** track usage SMs to improve these experimental features */
     const configPerfTag = 'Config/Performance/'
-    if (this.agentRef.init.performance.capture_marks) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'CaptureMarks/Enabled'])
-    if (this.agentRef.init.performance.capture_measures) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'CaptureMeasures/Enabled'])
-    if (this.agentRef.init.performance.resources.enabled) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'Resources/Enabled'])
+    if (datasources.captureMarksEnabled) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'CaptureMarks/Enabled'])
+    if (datasources.captureMeasuresEnabled) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'CaptureMeasures/Enabled'])
+    if (datasources.resourcesEnabled) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'Resources/Enabled'])
     if (this.agentRef.init.performance.resources.asset_types?.length !== 0) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'Resources/AssetTypes/Changed'])
     if (this.agentRef.init.performance.resources.first_party_domains?.length !== 0) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'Resources/FirstPartyDomains/Changed'])
     if (this.agentRef.init.performance.resources.ignore_newrelic === false) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'Resources/IgnoreNewrelic/Changed'])

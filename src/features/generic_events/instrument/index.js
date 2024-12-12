@@ -12,7 +12,6 @@ export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
   constructor (agentRef, auto = true) {
     super(agentRef, FEATURE_NAME, auto)
-
     /** config values that gate whether the generic events aggregator should be imported at all */
     const genericEventSourceConfigs = [
       agentRef.init.page_action.enabled,

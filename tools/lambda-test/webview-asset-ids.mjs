@@ -1,1 +1,1 @@
-export default { androidID: 'lt://APP1016025291733961487398810', iosID: 'lt://APP10160461441733961486358178' }
+export default { androidID: 'undefined', iosID: 'undefined' }

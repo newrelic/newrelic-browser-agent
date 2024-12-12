@@ -29,6 +29,7 @@ export class InstrumentBase extends FeatureBase {
    */
   constructor (agentRef, featureName, auto = true) {
     super(agentRef.agentIdentifier, featureName)
+    this.agentRef = agentRef
     this.auto = auto
 
     /** @type {Function | undefined} This should be set by any derived Instrument class if it has things to do when feature fails or is killed. */

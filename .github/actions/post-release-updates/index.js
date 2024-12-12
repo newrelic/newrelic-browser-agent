@@ -46,7 +46,6 @@ if (args.openPullRequest) {
 
   gitRunner = new GitCliRunner(REPO_ROOT_PATH, args.githubLogin, args.githubToken, args.githubUserName, args.githubEmail)
   await gitRunner.setUser()
-  // await gitRunner.checkoutBranch(REPO_BASE, true)
   try {
     await gitRunner.deleteLocalBranch(PR_BRANCH_NAME)
   } catch (error) {

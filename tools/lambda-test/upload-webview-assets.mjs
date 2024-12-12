@@ -14,7 +14,7 @@ function uploadFile (name, path) {
   form.append('name', name)
   form.append('appFile', new File([file], path))
 
-  console.log('got file for', name, path, file)
+  console.log('got file for', name)
 
   return fetch('https://manual-api.lambdatest.com/app/upload/virtualDevice', {
     method: 'POST',
@@ -31,7 +31,7 @@ Promise.all([
 ])
   .then(([androidResponse, iosResponse]) => Promise.all([androidResponse.json(), iosResponse.json()]))
   .then(([androidResponse, iosResponse]) => {
-    console.log('got response', androidResponse, iosResponse)
+    console.log('uploaded android and ios assets')
     fs.writeFileSync(`${outputDir}/webview-asset-ids.mjs`, `export default { androidID: '${androidResponse.app_url}', iosID: '${iosResponse.app_url}' }\n`)
   }).catch(errorMessage => {
     console.log(errorMessage)

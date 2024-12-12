@@ -55,7 +55,7 @@ export class Aggregate extends AggregateBase {
       }
 
       let addUserAction
-      if (isBrowserScope && this.agentRef.init.user_actions.enabled) {
+      if (isBrowserScope && agentRef.init.user_actions.enabled) {
         this.userActionAggregator = new UserActionsAggregator()
 
         addUserAction = (aggregatedUserAction) => {
@@ -66,7 +66,7 @@ export class Aggregate extends AggregateBase {
               const { target, timeStamp, type } = aggregatedUserAction.event
               this.addEvent({
                 eventType: 'UserAction',
-                timestamp: Math.floor(agentRef.runtime.timeKeeper.correctRelativeTimestamp(timeStamp)),
+                timestamp: Math.floor(this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(timeStamp)),
                 action: type,
                 actionCount: aggregatedUserAction.count,
                 actionDuration: aggregatedUserAction.relativeMs[aggregatedUserAction.relativeMs.length - 1],

@@ -5,6 +5,7 @@ import { subscribeToEOL } from '../../../../src/common/unload/eol'
 import { Harvest } from '../../../../src/common/harvest/harvest'
 
 import { HarvestScheduler } from '../../../../src/common/harvest/harvest-scheduler'
+import { ee } from '../../../../src/common/event-emitter/contextual-ee'
 
 jest.enableAutomock()
 jest.unmock('../../../../src/common/harvest/harvest-scheduler')
@@ -12,9 +13,17 @@ jest.useFakeTimers()
 
 let harvestSchedulerInstance
 let harvestInstance
+let cbFinished
+
+const target = { licenseKey: '12345', applicationID: '67890' }
+const mockAgent = { agentRef: { info: target, ee } }
 
 beforeEach(() => {
-  harvestSchedulerInstance = new HarvestScheduler()
+  cbFinished = jest.fn()
+  harvestSchedulerInstance = new HarvestScheduler('test', {
+    getPayload: jest.fn().mockReturnValue([{ payload: { foo: 'bar' }, target }]),
+    onFinished: cbFinished
+  }, mockAgent)
   harvestInstance = jest.mocked(Harvest).mock.instances[0]
 })
 
@@ -31,13 +40,11 @@ describe('unload', () => {
   })
 
   test('should subscribe to eol', () => {
-    new HarvestScheduler()
-
     expect(subscribeToEOL).toHaveBeenCalledWith(expect.any(Function))
   })
 
   test('should run onUnload callback on EoL when provided', () => {
-    harvestSchedulerInstance = new HarvestScheduler(undefined, { onUnload: jest.fn() })
+    harvestSchedulerInstance = new HarvestScheduler(undefined, { onUnload: jest.fn() }, mockAgent)
 
     for (const arr of jest.mocked(subscribeToEOL).mock.calls) arr[0]()
 
@@ -182,30 +189,7 @@ describe('runHarvest', () => {
     harvestSchedulerInstance.aborted = true
     harvestSchedulerInstance.runHarvest()
 
-    expect(harvestInstance.sendX).not.toHaveBeenCalled()
     expect(harvestInstance.send).not.toHaveBeenCalled()
-  })
-
-  test.each([
-    null, undefined
-  ])('should use sendX for harvesting when getPayload is %s', (getPayload) => {
-    harvestSchedulerInstance.endpoint = faker.string.uuid()
-    harvestSchedulerInstance.opts.getPayload = getPayload
-    const harvestRunOpts = {
-      [faker.string.uuid()]: faker.lorem.sentence()
-    }
-
-    harvestSchedulerInstance.runHarvest(harvestRunOpts)
-
-    expect(harvestInstance.sendX).toHaveBeenCalledWith({
-      cbFinished: expect.any(Function),
-      customUrl: undefined,
-      endpoint: harvestSchedulerInstance.endpoint,
-      opts: harvestRunOpts,
-      payload: undefined,
-      raw: undefined,
-      submitMethod: undefined
-    })
   })
 
   test('should use send for harvesting when getPayload is defined', () => {
@@ -218,7 +202,7 @@ describe('runHarvest', () => {
       }
     }
     harvestSchedulerInstance.endpoint = faker.string.uuid()
-    harvestSchedulerInstance.opts.getPayload = jest.fn().mockReturnValue(payload)
+    harvestSchedulerInstance.opts.getPayload = jest.fn().mockReturnValue([{ payload, target }])
     const harvestRunOpts = {
       [faker.string.uuid()]: faker.lorem.sentence()
     }
@@ -232,11 +216,12 @@ describe('runHarvest', () => {
       opts: harvestRunOpts,
       payload,
       raw: undefined,
-      submitMethod: expect.any(Function)
+      submitMethod: expect.any(Function),
+      target
     })
   })
 
-  test('should use _send for harvesting when opts.raw is true', () => {
+  test('should use send for harvesting when opts.raw is true', () => {
     const payload = {
       body: {
         [faker.string.uuid()]: faker.lorem.sentence()
@@ -247,21 +232,22 @@ describe('runHarvest', () => {
     }
     harvestSchedulerInstance.endpoint = faker.string.uuid()
     harvestSchedulerInstance.opts.raw = true
-    harvestSchedulerInstance.opts.getPayload = jest.fn().mockReturnValue(payload)
+    harvestSchedulerInstance.opts.getPayload = jest.fn().mockReturnValue([{ payload, target }])
     const harvestRunOpts = {
       [faker.string.uuid()]: faker.lorem.sentence()
     }
 
     harvestSchedulerInstance.runHarvest(harvestRunOpts)
 
-    expect(harvestInstance._send).toHaveBeenCalledWith({
+    expect(harvestInstance.send).toHaveBeenCalledWith({
       cbFinished: expect.any(Function),
       customUrl: undefined,
       endpoint: harvestSchedulerInstance.endpoint,
       opts: harvestRunOpts,
       payload,
       raw: true,
-      submitMethod: expect.any(Function)
+      submitMethod: expect.any(Function),
+      target
     })
   })
 
@@ -271,7 +257,6 @@ describe('runHarvest', () => {
 
     harvestSchedulerInstance.runHarvest()
 
-    expect(harvestInstance.sendX).not.toHaveBeenCalled()
     expect(harvestInstance.send).not.toHaveBeenCalled()
     expect(harvestSchedulerInstance.scheduleHarvest).toHaveBeenCalled()
   })
@@ -287,7 +272,7 @@ describe('runHarvest', () => {
     }
     harvestSchedulerInstance.started = true
     harvestSchedulerInstance.endpoint = faker.string.uuid()
-    harvestSchedulerInstance.opts.getPayload = jest.fn().mockReturnValue(payload)
+    harvestSchedulerInstance.opts.getPayload = jest.fn().mockReturnValue([{ payload, target }])
     const harvestRunOpts = {
       [faker.string.uuid()]: faker.lorem.sentence()
     }
@@ -325,9 +310,9 @@ describe('runHarvest', () => {
     const result = {
       [faker.string.uuid()]: faker.lorem.sentence()
     }
-
+    harvestSchedulerInstance.opts.getPayload = jest.fn().mockReturnValue([{ payload: { foo: 'bar' }, target }])
     harvestSchedulerInstance.runHarvest(harvestRunOpts)
-    const cbFinishedFn = jest.mocked(harvestInstance.sendX).mock.calls[0][0].cbFinished
+    const cbFinishedFn = jest.mocked(harvestInstance.send).mock.calls[0][0].cbFinished
     cbFinishedFn(result)
 
     expect(harvestSchedulerInstance.onHarvestFinished).toHaveBeenCalledWith(harvestRunOpts, result)
@@ -342,8 +327,9 @@ describe('runHarvest', () => {
       [faker.string.uuid()]: faker.lorem.sentence()
     }
 
+    harvestSchedulerInstance.opts.getPayload = jest.fn().mockReturnValue([{ payload: { foo: 'bar' }, target }])
     harvestSchedulerInstance.runHarvest(harvestRunOpts)
-    const cbFinishedFn = jest.mocked(harvestInstance.sendX).mock.calls[0][0].cbFinished
+    const cbFinishedFn = jest.mocked(harvestInstance.send).mock.calls[0][0].cbFinished
     cbFinishedFn(result)
 
     expect(harvestSchedulerInstance.onHarvestFinished).toHaveBeenCalledWith(harvestRunOpts, {

@@ -11,6 +11,7 @@ import { isValidLogLevel } from '../shared/utils'
 import { applyFnToProps } from '../../../common/util/traverse'
 import { MAX_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
 import { FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
+import { isContainerAgentTarget } from '../../../common/util/target'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -33,7 +34,8 @@ export class Aggregate extends AggregateBase {
     })
   }
 
-  handleLog (timestamp, message, attributes = {}, level = LOG_LEVELS.INFO) {
+  handleLog (timestamp, message, attributes = {}, level = LOG_LEVELS.INFO, target) {
+    if (target && !target.entityGuid) return warn(47)
     if (this.blocked) return
 
     if (!attributes || typeof attributes !== 'object') attributes = {}
@@ -72,31 +74,33 @@ export class Aggregate extends AggregateBase {
       return
     }
 
-    if (this.events.wouldExceedMaxSize(logBytes)) {
-      handle(SUPPORTABILITY_METRIC_CHANNEL, ['Logging/Harvest/Early/Seen', this.events.bytes + logBytes])
+    const events = this.eventManager.get(target)
+
+    if (events.wouldExceedMaxSize(logBytes)) {
+      handle(SUPPORTABILITY_METRIC_CHANNEL, ['Logging/Harvest/Early/Seen', events.bytes + logBytes])
       this.scheduler.runHarvest() // force a harvest to try adding again
     }
 
-    if (!this.events.add(log)) { // still failed after a harvest attempt despite not being too large would mean harvest failed with options.retry
+    if (!events.add(log)) { // still failed after a harvest attempt despite not being too large would mean harvest failed with options.retry
       handle(SUPPORTABILITY_METRIC_CHANNEL, [failToHarvestMessage, logBytes])
       warn(31, log.message.slice(0, 25) + '...')
     }
   }
 
-  serializer (eventBuffer) {
+  serializer (eventBuffer, target) {
     const sessionEntity = this.agentRef.runtime.session
     return [{
       common: {
         /** Attributes in the `common` section are added to `all` logs generated in the payload */
         attributes: {
-          'entity.guid': this.agentRef.runtime.appMetadata?.agents?.[0]?.entityGuid, // browser entity guid as provided from RUM response
+          'entity.guid': target.entityGuid || this.agentRef.runtime.appMetadata?.agents?.[0]?.entityGuid, // browser entity guid as provided API target OR the default from RUM response if not supplied
           ...(sessionEntity && {
             session: sessionEntity.state.value || '0', // The session ID that we generate and keep across page loads
-            hasReplay: sessionEntity.state.sessionReplayMode === 1, // True if a session replay recording is running
+            hasReplay: sessionEntity.state.sessionReplayMode === 1 && isContainerAgentTarget(target, this.agentRef), // True if a session replay recording is running
             hasTrace: sessionEntity.state.sessionTraceMode === 1 // True if a session trace recording is running
           }),
           ptid: this.agentRef.runtime.ptid, // page trace id
-          appId: this.agentRef.info.applicationID, // Application ID from info object,
+          appId: target.applicationID || this.agentRef.info.applicationID, // Application ID from info object,
           standalone: Boolean(this.agentRef.info.sa), // copy paste (true) vs APM (false)
           agentVersion: this.agentRef.runtime.version, // browser agent version
           // The following 3 attributes are evaluated and dropped at ingest processing time and do not get stored on NRDB:
@@ -113,7 +117,7 @@ export class Aggregate extends AggregateBase {
     }]
   }
 
-  queryStringsBuilder () {
-    return { browser_monitoring_key: this.agentRef.info.licenseKey }
+  queryStringsBuilder (_, target) {
+    return { browser_monitoring_key: target.licenseKey }
   }
 }

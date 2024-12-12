@@ -42,6 +42,7 @@ module.exports.rumFlags = (flags = {}, app = {}) => ({
   sr: defaultFlagValue(flags.sr), // session replay entitlements 0|1
   sts: defaultFlagValue(flags.sts), // session trace sampling 0|1|2 - off full error
   srs: defaultFlagValue(flags.srs), // session replay sampling 0|1|2 - off full error
+  log: defaultFlagValue(flags.log), // log entitlements 0|1
   app: {
     agents: app.agents || [
       { entityGuid: defaultEntityGuid }
@@ -55,6 +56,7 @@ const enabledFeature = { enabled, autoStart, harvestTimeSeconds }
 module.exports.defaultInitBlock = {
   ajax: { deny_list: [], block_internal: false, ...enabledFeature },
   distributed_tracing: {},
+  external: { capture_registered_data: false },
   feature_flags: [],
   generic_events: enabledFeature,
   harvest: { tooManyRequestsDelay: 5 },

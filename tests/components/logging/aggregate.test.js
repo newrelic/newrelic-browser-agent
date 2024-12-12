@@ -74,7 +74,7 @@ describe('payloads', () => {
     )
     expect(loggingAggregate.events.get()[0]).toEqual(expectedLog)
 
-    expect(loggingAggregate.makeHarvestPayload()).toEqual({
+    expect(loggingAggregate.makeHarvestPayload()[0].payload).toEqual({
       qs: { browser_monitoring_key: info.licenseKey },
       body: [{
         common: {

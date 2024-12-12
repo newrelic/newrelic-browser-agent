@@ -22,7 +22,7 @@ export class Instrument extends InstrumentBase {
     ]
 
     if (isBrowserScope) {
-      if (this.agentRef.init.user_actions.enabled) {
+      if (agentRef.init.user_actions.enabled) {
         OBSERVED_EVENTS.forEach(eventType =>
           windowAddEventListener(eventType, (evt) => handle('ua', [evt], undefined, this.featureName, this.ee), true)
         )
@@ -31,7 +31,7 @@ export class Instrument extends InstrumentBase {
         // Capture is not used here so that we don't get element focus/blur events, only the window's as they do not bubble. They are also not cancellable, so no worries about being front of line.
         )
       }
-      if (this.agentRef.init.performance.resources.enabled && globalScope.PerformanceObserver?.supportedEntryTypes.includes('resource')) {
+      if (agentRef.init.performance.resources.enabled && globalScope.PerformanceObserver?.supportedEntryTypes.includes('resource')) {
         const observer = new PerformanceObserver((list) => {
           list.getEntries().forEach(entry => {
             handle('browserPerformance.resource', [entry], undefined, this.featureName, this.ee)

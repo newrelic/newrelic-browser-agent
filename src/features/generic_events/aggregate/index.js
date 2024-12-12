@@ -37,7 +37,7 @@ export class Aggregate extends AggregateBase {
 
       this.trackSupportabilityMetrics()
 
-      if (this.agentRef.init.page_action.enabled) {
+      if (agentRef.init.page_action.enabled) {
         registerHandler('api-addPageAction', (timestamp, name, attributes) => {
           this.addEvent({
             ...attributes,
@@ -66,7 +66,7 @@ export class Aggregate extends AggregateBase {
               const { target, timeStamp, type } = aggregatedUserAction.event
               this.addEvent({
                 eventType: 'UserAction',
-                timestamp: Math.floor(this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(timeStamp)),
+                timestamp: Math.floor(agentRef.runtime.timeKeeper.correctRelativeTimestamp(timeStamp)),
                 action: type,
                 actionCount: aggregatedUserAction.count,
                 actionDuration: aggregatedUserAction.relativeMs[aggregatedUserAction.relativeMs.length - 1],
@@ -107,7 +107,7 @@ export class Aggregate extends AggregateBase {
        * with an arbitrary query method. note: eventTypes: [...types] does not support the 'buffered' flag so we have
        * to create up to two PO's here.
        */
-      const performanceTypesToCapture = [...(this.agentRef.init.performance.capture_marks ? ['mark'] : []), ...(this.agentRef.init.performance.capture_measures ? ['measure'] : [])]
+      const performanceTypesToCapture = [...(agentRef.init.performance.capture_marks ? ['mark'] : []), ...(agentRef.init.performance.capture_measures ? ['measure'] : [])]
       if (performanceTypesToCapture.length) {
         try {
           performanceTypesToCapture.forEach(type => {
@@ -136,7 +136,7 @@ export class Aggregate extends AggregateBase {
         }
       }
 
-      if (isBrowserScope && this.agentRef.init.performance.resources.enabled) {
+      if (isBrowserScope && agentRef.init.performance.resources.enabled) {
         registerHandler('browserPerformance.resource', (entry) => {
           try {
             // convert the entry to a plain object and separate the name and duration from the object

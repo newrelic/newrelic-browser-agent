@@ -46,7 +46,6 @@ if (args.openPullRequest) {
 
   gitRunner = new GitCliRunner(REPO_ROOT_PATH, args.githubLogin, args.githubToken, args.githubUserName, args.githubEmail)
   await gitRunner.setUser()
-  await gitRunner.checkoutBranch(REPO_BASE, true)
   try {
     await gitRunner.deleteLocalBranch(PR_BRANCH_NAME)
   } catch (error) {
@@ -82,6 +81,13 @@ await spawnAsync(
   DEFAULT_SPAWN_OPTIONS
 )
 
+console.log('Updating LambdaTest webview assets')
+await spawnAsync(
+  `npm${os.platform() === 'win32' ? '.cmd' : ''}`,
+  ['run', 'lt:upload-webview-assets'],
+  DEFAULT_SPAWN_OPTIONS
+)
+
 console.log('Updating third-party licenses')
 await spawnAsync(
   `npm${os.platform() === 'win32' ? '.cmd' : ''}`,
@@ -111,7 +117,8 @@ if (args.openPullRequest) {
       'tools/browsers-lists/*.json',
       'third_party_manifest.json',
       'THIRD_PARTY_NOTICES.md',
-      'tools/test-builds/**/package.json'
+      'tools/test-builds/**/package.json',
+      'tools/lambda-test/webview-asset-ids.mjs'
     ],
     COMMIT_MESSAGE,
     true

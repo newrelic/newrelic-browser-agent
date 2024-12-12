@@ -177,6 +177,7 @@
     "cdn:watch": "jung -r ./src -F '.*\\.test\\.js' --run -- npm run cdn:build:local",
     "test-server": "node ./tools/wdio/bin/server",
     "lt:update-browsers": "node ./tools/browsers-lists/lt-update-supported.mjs",
+    "lt:upload-webview-assets": "node ./tools/lambda-test/upload-webview-assets.mjs",
     "tools:test-builds": "npm --prefix ./tools/test-builds run build-all",
     "third-party-updates": "oss third-party manifest --includeOptDeps && oss third-party notices --includeOptDeps",
     "prepare": "husky install",

@@ -12,13 +12,16 @@ jobs:
   post-release-updates:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      LAMBDA_USERNAME: ${{ secrets.LAMBDA_USERNAME }}
+      LAMBDA_ACCESS_KEY: ${{ secrets.LAMBDA_ACCESS_KEY }}
     defaults:
       run:
         shell: bash
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          ref: ${{ inputs.ref || github.ref || github.event.head_commit.ref }}
       - uses: actions/setup-node@v4
         with:
           node-version: lts/*

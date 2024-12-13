@@ -1,3 +1,4 @@
+import { FEATURE_FLAGS } from '../../features/generic_events/constants'
 import { LOG_LEVELS } from '../../features/logging/constants'
 import { isValidSelector } from '../dom/query-selector'
 import { DEFAULT_EXPIRES_MS, DEFAULT_INACTIVE_MS } from '../session/constants'
@@ -9,6 +10,12 @@ const nrMask = '[data-nr-mask]'
 
 const model = () => {
   const hiddenState = {
+    feature_flags: [],
+    experimental: {
+      marks: false,
+      measures: false,
+      resources: false
+    },
     mask_selector: '*',
     block_selector: '[data-nr-block]',
     mask_input_options: {
@@ -40,7 +47,8 @@ const model = () => {
       cors_use_tracecontext_headers: undefined,
       allowed_origins: undefined
     },
-    feature_flags: [],
+    get feature_flags () { return hiddenState.feature_flags },
+    set feature_flags (val) { hiddenState.feature_flags = val },
     generic_events: { enabled: true, harvestTimeSeconds: 30, autoStart: true },
     harvest: { tooManyRequestsDelay: 60 },
     jserrors: { enabled: true, harvestTimeSeconds: 10, autoStart: true },
@@ -51,10 +59,14 @@ const model = () => {
     page_view_event: { enabled: true, autoStart: true },
     page_view_timing: { enabled: true, harvestTimeSeconds: 30, autoStart: true },
     performance: {
-      capture_marks: false,
-      capture_measures: false, // false by default through experimental phase, but flipped to true once GA'd
+      get capture_marks () { return hiddenState.feature_flags.includes(FEATURE_FLAGS.MARKS) || hiddenState.experimental.marks },
+      set capture_marks (val) { hiddenState.experimental.marks = val },
+      get capture_measures () { return hiddenState.feature_flags.includes(FEATURE_FLAGS.MEASURES) || hiddenState.experimental.measures },
+      set capture_measures (val) { hiddenState.experimental.measures = val },
       resources: {
-        enabled: false, // whether to run this subfeature or not in the generic_events feature. false by default through experimental phase, but flipped to true once GA'd
+        // whether to run this subfeature or not in the generic_events feature. false by default through experimental phase, but flipped to true once GA'd
+        get enabled () { return hiddenState.feature_flags.includes(FEATURE_FLAGS.RESOURCES) || hiddenState.experimental.resources },
+        set enabled (val) { hiddenState.experimental.resources = val },
         asset_types: [], // MDN types to collect, empty array will collect all types
         first_party_domains: [], // when included, will decorate the resource as first party if matching
         ignore_newrelic: true // ignore capturing internal agent scripts and harvest calls

@@ -48,7 +48,7 @@ jobs:
           ref: main
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.11.0
+          node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
       - name: Install project dependencies
         run: npm ci
       - name: Build dev
@@ -105,7 +105,7 @@ jobs:
   #         ref: main
   #     - uses: actions/setup-node@v4
   #       with:
-  #         node-version: 22.11.0
+  #         node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
   #     - name: Publish dev loader to nr
   #       uses: ./.github/actions/nr-upload-dev
   #       with:
@@ -125,7 +125,7 @@ jobs:
           ref: main
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.11.0
+          node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
       - name: Publish dev a/b script
         uses: ./.github/actions/internal-ab
         with:
@@ -154,7 +154,7 @@ jobs:
           ref: main
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.11.0
+          node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
       - name: Deploy staging a/b script
         uses: ./.github/actions/internal-ab
         with:

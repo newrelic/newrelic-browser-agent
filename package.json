@@ -154,6 +154,17 @@
       "default": "./dist/esm/features/spa/instrument/index.js"
     }
   },
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "onFail": "error",
+      "version": "22.11.0"
+    },
+    "packageManager": {
+      "name": "npm",
+      "onFail": "error"
+    }
+  },
   "engines": {
     "node": ">=12.17.0 < 13.0.0 || >=13.7.0"
   },
@@ -170,7 +181,7 @@
     "build:npm": "npm run npm:build:esm && npm run npm:build:cjs && npm run npm:build:types && npm run npm:pack",
     "cdn:build": "npm run cdn:build:prod",
     "cdn:build:local": "npm run cdn:webpack",
-  "cdn:build:prod": "npm run cdn:webpack -- --env mode=prod",
+    "cdn:build:prod": "npm run cdn:webpack -- --env mode=prod",
     "cdn:build:dev": "npm run cdn:webpack -- --env mode=dev",
     "cdn:build:experiment": "npm run cdn:webpack -- --env mode=experiment",
     "cdn:webpack": "npx webpack --progress --config ./tools/webpack/index.mjs",

@@ -105,7 +105,7 @@ export class Interaction extends BelNode {
    */
   isActiveDuring (timestamp) {
     if (this.status === INTERACTION_STATUS.IP) return this.start <= timestamp
-    return (this.status === INTERACTION_STATUS.FIN && this.end > timestamp && this.start <= timestamp)
+    return (this.status === INTERACTION_STATUS.FIN && this.start <= timestamp && this.end > timestamp)
   }
 
   // Following are virtual properties overridden by a subclass:

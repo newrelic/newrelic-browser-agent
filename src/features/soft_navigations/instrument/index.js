@@ -6,6 +6,7 @@ import { debounce } from '../../../common/util/invoke'
 import { wrapHistory } from '../../../common/wrap/wrap-history'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME, INTERACTION_TRIGGERS } from '../constants'
+import { now } from '../../../common/timing/now'
 
 /**
  * The minimal time after a UI event for which no further events will be processed - i.e. a throttling rate to reduce spam.
@@ -28,7 +29,7 @@ export class Instrument extends InstrumentBase {
       }, true)
     })
 
-    const trackURLChange = () => handle('newURL', [performance.now(), '' + window.location], undefined, this.featureName, this.ee)
+    const trackURLChange = () => handle('newURL', [now(), '' + window.location], undefined, this.featureName, this.ee)
     historyEE.on('pushState-end', trackURLChange)
     historyEE.on('replaceState-end', trackURLChange)
 
@@ -36,14 +37,14 @@ export class Instrument extends InstrumentBase {
       this.removeOnAbort = new AbortController()
     } catch (e) {}
     const trackURLChangeEvent = (evt) => handle('newURL', [evt.timeStamp, '' + window.location], undefined, this.featureName, this.ee)
-    windowAddEventListener('popstate', trackURLChangeEvent, false, this.removeOnAbort?.signal)
+    windowAddEventListener('popstate', trackURLChangeEvent, true, this.removeOnAbort?.signal)
 
     let oncePerFrame = false // attempt to reduce dom noice since the observer runs very frequently with below options
     const domObserver = new (gosNREUMOriginals().o).MO((domChanges, observer) => {
       if (oncePerFrame) return
       oncePerFrame = true
       requestAnimationFrame(() => { // waiting for next frame to time when any visuals are supposedly updated
-        handle('newDom', [performance.now()], undefined, this.featureName, this.ee)
+        handle('newDom', [now()], undefined, this.featureName, this.ee)
         oncePerFrame = false
       })
     })

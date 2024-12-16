@@ -11,3 +11,9 @@ export const RAGE_CLICK_THRESHOLD_EVENTS = 4
 export const RAGE_CLICK_THRESHOLD_MS = 1000
 
 export const RESERVED_EVENT_TYPES = ['PageAction', 'UserAction', 'BrowserPerformance']
+
+export const FEATURE_FLAGS = {
+  MARKS: 'experimental.marks',
+  MEASURES: 'experimental.measures',
+  RESOURCES: 'experimental.resources'
+}

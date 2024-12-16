@@ -77,7 +77,7 @@ jobs:
           npm run build:all
       - name: Run WDIO Tests
         run: |
-          node --max-old-space-size=8192 ./tools/wdio/bin/cli.js \
+          node --no-experimental-require-module --max-old-space-size=8192 ./tools/wdio/bin/cli.js \
             -T \
             -b '${{ inputs.browser-target }}' \
             --concurrent ${{ inputs.concurrency }} \

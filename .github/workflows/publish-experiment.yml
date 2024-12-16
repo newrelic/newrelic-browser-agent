@@ -28,7 +28,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: 22.11.0
       - name: Install project dependencies
         run: npm ci
       - name: Clean branch name
@@ -86,7 +86,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: 22.11.0
       - name: Publish a/b script
         uses: ./.github/actions/internal-ab
         with:

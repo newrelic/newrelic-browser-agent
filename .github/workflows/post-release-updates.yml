@@ -24,7 +24,7 @@ jobs:
           ref: ${{ inputs.ref || github.ref || github.event.head_commit.ref }}
       - uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: 22.11.0
       - name: Perform updates
         uses: ./.github/actions/post-release-updates
         with:

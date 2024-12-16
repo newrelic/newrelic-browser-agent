@@ -20,7 +20,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: 22.11.0
       - name: Install project dependencies
         run: npm ci
       - name: Build prod
@@ -74,7 +74,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: 22.11.0
       - name: Get version number
         id: agent-loader-version
         run: echo "results=$(cat package.json | jq -r '.version')" >> $GITHUB_OUTPUT
@@ -127,7 +127,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: 22.11.0
       - name: Deploy prod a/b script
         uses: ./.github/actions/internal-ab
         with:
@@ -152,7 +152,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: 22.11.0
       - name: Deploy eu-prod a/b script
         uses: ./.github/actions/internal-ab
         with:
@@ -177,7 +177,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: 22.11.0
       - name: Get version number
         id: agent-loader-version
         run: echo "results=$(cat package.json | jq -r '.version')" >> $GITHUB_OUTPUT
@@ -205,7 +205,7 @@ jobs:
   #     - uses: actions/checkout@v4
   #     - uses: actions/setup-node@v4
   #       with:
-  #         node-version: lts/*
+  #         node-version: 22.11.0
   #     - name: Get version number
   #       id: agent-loader-version
   #       run: echo "results=$(cat package.json | jq -r '.version')" >> $GITHUB_OUTPUT
@@ -235,7 +235,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: 22.11.0
       - name: Authenticate npm
         run: |
           npm config set '//registry.npmjs.org/:_authToken' "${NPM_TOKEN}"
@@ -258,7 +258,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: 22.11.0
       - name: Get version number
         id: agent-loader-version
         run: echo "results=$(cat package.json | jq -r '.version')" >> $GITHUB_OUTPUT
@@ -282,7 +282,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: 22.11.0
       - name: Notify Release Repo
         uses: ./.github/actions/notify-repository
         with:

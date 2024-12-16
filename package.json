@@ -154,6 +154,17 @@
       "default": "./dist/esm/features/spa/instrument/index.js"
     }
   },
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "onFail": "error",
+      "version": "22.11.0"
+    },
+    "packageManager": {
+      "name": "npm",
+      "onFail": "error"
+    }
+  },
   "engines": {
     "node": ">=12.17.0 < 13.0.0 || >=13.7.0"
   },

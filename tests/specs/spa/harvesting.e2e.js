@@ -1,11 +1,54 @@
 import { checkSpa } from '../../util/basic-checks'
 import { testInteractionEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
+import { JSONPath } from 'jsonpath-plus'
 
-describe('spa harvesting', () => {
+describe.withoutCoverage()('spa harvesting', () => {
   let interactionsCapture
 
   beforeEach(async () => {
     interactionsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testInteractionEventsRequest })
+  })
+
+  it('should set correct customEnd value on multiple custom interactions', async () => {
+    const [interactionHarvests] = await Promise.all([
+      interactionsCapture.waitForResult({ timeout: 10000 }),
+      browser.url(await browser.testHandle.assetURL('spa/multiple-custom-interactions.html'))
+    ])
+
+    const customInteractions = JSONPath({ path: '$.[*].request.body.[?(!!@ && @.customName)]', json: interactionHarvests })
+    expect(customInteractions.length).toEqual(4)
+    expect(customInteractions).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        customName: 'interaction1',
+        children: expect.arrayContaining([expect.objectContaining({
+          type: 'customEnd'
+        })])
+      }),
+      expect.objectContaining({
+        customName: 'interaction2',
+        children: expect.arrayContaining([expect.objectContaining({
+          type: 'customEnd'
+        })])
+      }),
+      expect.objectContaining({
+        customName: 'interaction3',
+        children: expect.not.arrayContaining([expect.objectContaining({
+          type: 'customEnd'
+        })])
+      }),
+      expect.objectContaining({
+        customName: 'interaction4',
+        children: expect.arrayContaining([expect.objectContaining({
+          type: 'customEnd'
+        })])
+      })
+    ]))
+    customInteractions
+      .filter(interaction => ['interaction1', 'interaction2', 'interaction4'].includes(interaction.customName))
+      .forEach(interaction => {
+        const customEndTime = interaction.children.find(child => child.type === 'customEnd')
+        expect(customEndTime.time).toBeGreaterThanOrEqual(interaction.end)
+      })
   })
 
   it('should not exceed 128 child nodes', async () => {

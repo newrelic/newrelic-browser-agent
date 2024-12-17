@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Simple XHR</title>
+  {init} {config} {loader}
+  <script>
+    var wrapperInvoked = false
+
+    function wrap(callback) {
+      return function () {
+        var args = Array.prototype.slice.call(arguments)
+        wrapperInvoked = true
+        callback.apply(this, args)
+      }
+    }
+
+    function patchAddEventListener(prototype) {
+      if (prototype.hasOwnProperty && prototype.hasOwnProperty('addEventListener')) {
+        var orig = prototype.addEventListener
+        prototype.addEventListener = function(event, callback, bubble) {
+          orig.call(this, event, wrap(callback), bubble)
+        }
+      }
+    }
+
+    var proto = XMLHttpRequest.prototype
+    while (proto && !proto.hasOwnProperty('addEventListener')) {
+      proto = Object.getPrototypeOf(proto)
+    }
+    patchAddEventListener(proto)
+  </script>
+</head>
+<body>
+<div>
+  This page uses inline code to simulate a 3rd party patching of the XMLHttpRequest
+  addEventListener after the agent has loaded. This page uses a button to initiate an XHR.
+</div>
+<div><button id="sendAjax">Send Ajax</button></div>
+<script>
+  let i = 0
+  document.getElementById('sendAjax').addEventListener('click', function () {
+    var xhr = new XMLHttpRequest()
+    xhr.addEventListener('loadend', function () {
+      window.location.hash = Math.random()
+
+      const elem = document.createElement('div')
+      elem.innerHTML = 'TEST' + i++
+      document.body.appendChild(elem)
+    })
+    xhr.open('GET', '/json')
+    xhr.send()
+  })
+</script>
+</body>
+</html>

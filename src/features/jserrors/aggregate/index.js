@@ -46,15 +46,15 @@ export class Aggregate extends AggregateBase {
       this.onSoftNavNotification(interactionId, wasFinished, softNavAttrs), this.featureName, this.ee) // when an ixn is done or cancelled
 
     const harvestTimeSeconds = agentRef.init.jserrors.harvestTimeSeconds || 10
-    const aggregatorTypes = ['err', 'ierr', 'xhr'] // the types in EventAggregator this feature cares about
+    this.harvestOpts.aggregatorTypes = ['err', 'ierr', 'xhr'] // the types in EventAggregator this feature cares about
 
     // 0 == off, 1 == on
     this.waitForFlags(['err']).then(([errFlag]) => {
       if (errFlag) {
         const scheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
-          onFinished: (result) => this.postHarvestCleanup(result.sent && result.retry, { aggregatorTypes })
+          onFinished: (result) => this.postHarvestCleanup(result)
         }, this)
-        scheduler.harvest.on(FEATURE_TO_ENDPOINT[this.featureName], (options) => this.makeHarvestPayload(options.retry, { aggregatorTypes }))
+        scheduler.harvest.on(FEATURE_TO_ENDPOINT[this.featureName], (options) => this.makeHarvestPayload(options.retry))
         scheduler.startTimer(harvestTimeSeconds)
         this.drain()
       } else {

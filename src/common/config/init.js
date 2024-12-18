@@ -50,7 +50,7 @@ const model = () => {
     get feature_flags () { return hiddenState.feature_flags },
     set feature_flags (val) { hiddenState.feature_flags = val },
     generic_events: { enabled: true, harvestTimeSeconds: 30, autoStart: true },
-    harvest: { tooManyRequestsDelay: 60 },
+    harvest: { tooManyRequestsDelay: 60, interval: 30 },
     jserrors: { enabled: true, harvestTimeSeconds: 10, autoStart: true },
     logging: { enabled: true, harvestTimeSeconds: 10, autoStart: true, level: LOG_LEVELS.INFO },
     metrics: { enabled: true, autoStart: true },

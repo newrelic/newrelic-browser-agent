@@ -24,7 +24,7 @@ export class Aggregate extends AggregateBase {
     super(agentRef, FEATURE_NAME)
 
     this.eventsPerHarvest = 1000
-    this.harvestTimeSeconds = agentRef.init.generic_events.harvestTimeSeconds
+    this.harvestTimeSeconds = agentRef.init.generic_events.harvestTimeSeconds || 30
 
     this.referrerUrl = (isBrowserScope && document.referrer) ? cleanURL(document.referrer) : undefined
 
@@ -57,6 +57,7 @@ export class Aggregate extends AggregateBase {
       let addUserAction
       if (isBrowserScope && agentRef.init.user_actions.enabled) {
         this.userActionAggregator = new UserActionsAggregator()
+        this.harvestOpts.beforeUnload = () => addUserAction?.(this.userActionAggregator.aggregationEvent)
 
         addUserAction = (aggregatedUserAction) => {
           try {
@@ -178,7 +179,7 @@ export class Aggregate extends AggregateBase {
       }
 
       this.harvestScheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
-        onFinished: (result) => this.postHarvestCleanup(result.sent && result.retry),
+        onFinished: (result) => this.postHarvestCleanup(result),
         onUnload: () => addUserAction?.(this.userActionAggregator.aggregationEvent)
       }, this)
       this.harvestScheduler.harvest.on(FEATURE_TO_ENDPOINT[this.featureName], (options) => this.makeHarvestPayload(options.retry))

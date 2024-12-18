@@ -55,7 +55,8 @@ test('init props exist and return expected defaults', () => {
   })
   expect(config.feature_flags).toEqual([])
   expect(config.harvest).toEqual({
-    tooManyRequestsDelay: 60
+    tooManyRequestsDelay: 60,
+    interval: 30
   })
   expect(config.jserrors).toEqual({
     autoStart: true,

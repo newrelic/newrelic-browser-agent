@@ -16,14 +16,15 @@ export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor (agentRef) {
     super(agentRef, FEATURE_NAME)
-    const aggregatorTypes = ['cm', 'sm'] // the types in EventAggregator this feature cares about
+    this.harvestOpts.aggregatorTypes = ['cm', 'sm'] // the types in EventAggregator this feature cares about
+    // This feature only harvests once per potential EoL of the page, which is handled by the central harvester.
 
     this.waitForFlags(['err']).then(([errFlag]) => {
       if (errFlag) {
         // *cli, Mar 23 - Per NR-94597, this feature should only harvest ONCE at the (potential) EoL time of the page.
         const scheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], { onUnload: () => this.unload() }, this)
         // this is needed to ensure EoL is "on" and sent
-        scheduler.harvest.on(FEATURE_TO_ENDPOINT[this.featureName], () => this.makeHarvestPayload(undefined, { aggregatorTypes }))
+        scheduler.harvest.on(FEATURE_TO_ENDPOINT[this.featureName], () => this.makeHarvestPayload())
         this.drain()
       } else {
         this.blocked = true // if rum response determines that customer lacks entitlements for spa endpoint, this feature shouldn't harvest

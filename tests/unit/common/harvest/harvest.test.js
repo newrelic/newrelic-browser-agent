@@ -491,7 +491,7 @@ describe('baseQueryString', () => {
     expect(results).toMatch(/&rst=\d{1,9}/)
     expect(results).toContain('&ck=0')
     expect(results).toContain('&s=0')
-    expect(encodeModule.param).toHaveBeenCalledWith('ref', location)
+    expect(encodeModule.param).toHaveBeenCalledWith('ref', location.href)
     expect(results).toContain(`&ref=${encodeURIComponent(location)}`)
     expect(encodeModule.param).toHaveBeenCalledWith('ptid', ptid)
     expect(results).toContain(`&ptid=${ptid}`)
@@ -542,7 +542,7 @@ describe('baseQueryString', () => {
 
     const results = harvestInstance.baseQueryString()
 
-    expect(harvestInstance.obfuscator.obfuscateString).toHaveBeenCalledWith(location)
+    expect(harvestInstance.obfuscator.obfuscateString).toHaveBeenCalledWith(location.href)
     expect(results).toContain(`&ref=${obfuscatedLocation}`)
   })
 

@@ -6,7 +6,6 @@
 import { obj as encodeObj, param as encodeParam } from '../url/encode'
 import { stringify } from '../util/stringify'
 import * as submitData from '../util/submit-data'
-import { getLocation } from '../url/location'
 import { getInfo } from '../config/info'
 import { getConfigurationValue, getConfiguration } from '../config/init'
 import { getRuntime } from '../config/runtime'
@@ -14,7 +13,7 @@ import { cleanURL } from '../url/clean-url'
 import { eventListenerOpts } from '../event-listener/event-listener-opts'
 import { SharedContext } from '../context/shared-context'
 import { VERSION } from '../constants/env'
-import { isWorkerScope } from '../constants/runtime'
+import { globalScope, isWorkerScope } from '../constants/runtime'
 import { warn } from '../util/console'
 import { now } from '../timing/now'
 
@@ -173,7 +172,7 @@ export class Harvest extends SharedContext {
     const runtime = getRuntime(this.sharedContext.agentIdentifier)
     const info = getInfo(this.sharedContext.agentIdentifier)
 
-    const ref = this.obfuscator.obfuscateString(cleanURL(getLocation()))
+    const ref = this.obfuscator.obfuscateString(cleanURL('' + globalScope.location))
     const hr = runtime?.session?.state.sessionReplayMode === 1 && endpoint !== 'jserrors'
 
     const qps = [

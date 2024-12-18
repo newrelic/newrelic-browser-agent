@@ -18,8 +18,9 @@ export class Aggregate extends AggregateBase {
 
   constructor (agentRef) {
     super(agentRef, FEATURE_NAME)
-
     this.harvestTimeSeconds = agentRef.init.session_trace.harvestTimeSeconds || 30
+    this.harvestOpts.raw = true
+
     /** Tied to the entitlement flag response from BCS.  Will short circuit operations of the agg if false  */
     this.entitled = undefined
     /** A flag used to decide if the 30 node threshold should be ignored on the first harvest to ensure sending on the first payload */
@@ -28,7 +29,8 @@ export class Aggregate extends AggregateBase {
     this.harvesting = false
     /** TraceStorage is the mechanism that holds, normalizes and aggregates ST nodes.  It will be accessed and purged when harvests occur */
     this.events = new TraceStorage(this)
-    /** This agg needs information about sampling (sts) and entitlements (st) to make the appropriate decisions on running */
+
+    /* This agg needs information about sampling (sts) and entitlements (st) to make the appropriate decisions on running */
     this.waitForFlags(['sts', 'st'])
       .then(([stMode, stEntitled]) => this.initialize(stMode, stEntitled))
   }
@@ -77,7 +79,7 @@ export class Aggregate extends AggregateBase {
     this.timeKeeper ??= this.agentRef.runtime.timeKeeper
 
     this.scheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
-      onFinished: (result) => this.postHarvestCleanup(result.sent && result.retry),
+      onFinished: (result) => this.postHarvestCleanup(result),
       retryDelay: this.harvestTimeSeconds,
       getPayload: (options) => this.makeHarvestPayload(options.retry),
       raw: true

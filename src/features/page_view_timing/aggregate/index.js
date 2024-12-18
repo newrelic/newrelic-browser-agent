@@ -58,7 +58,7 @@ export class Aggregate extends AggregateBase {
       }, true) // CLS node should only reports on vis change rather than on every change
 
       const scheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
-        onFinished: (result) => this.postHarvestCleanup(result.sent && result.retry),
+        onFinished: (result) => this.postHarvestCleanup(result),
         getPayload: (options) => this.makeHarvestPayload(options.retry)
       }, this)
       scheduler.startTimer(harvestTimeSeconds)

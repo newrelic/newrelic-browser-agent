@@ -51,6 +51,7 @@ export class Aggregate extends AggregateBase {
 
     this.recorder = args?.recorder
     this.errorNoticed = args?.errorNoticed || false
+    this.harvestOpts.raw = true
 
     handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/Enabled'], undefined, FEATURE_NAMES.metrics, this.ee)
 

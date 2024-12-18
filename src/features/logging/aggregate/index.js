@@ -16,11 +16,12 @@ export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor (agentRef) {
     super(agentRef, FEATURE_NAME)
-    this.harvestTimeSeconds = agentRef.init.logging.harvestTimeSeconds
+    this.harvestTimeSeconds = agentRef.init.logging.harvestTimeSeconds || 10
+    this.harvestOpts.raw = true
 
     this.waitForFlags([]).then(() => {
       this.scheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
-        onFinished: (result) => this.postHarvestCleanup(result.sent && result.retry),
+        onFinished: (result) => this.postHarvestCleanup(result),
         retryDelay: this.harvestTimeSeconds,
         getPayload: (options) => this.makeHarvestPayload(options.retry),
         raw: true

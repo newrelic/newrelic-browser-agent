@@ -18,6 +18,7 @@ export class AggregateBase extends FeatureBase {
     else if (![FEATURE_NAMES.pageViewEvent, FEATURE_NAMES.sessionTrace].includes(this.featureName)) this.events = new EventBuffer()
     this.checkConfiguration(agentRef)
     this.obfuscator = agentRef.runtime.obfuscator
+    this.harvestOpts = {} // features aggregate classes can define custom opts for when their harvest is called
   }
 
   /**
@@ -58,16 +59,16 @@ export class AggregateBase extends FeatureBase {
    * @param {Boolean} shouldRetryOnFail - harvester flag to backup payload for retry later if harvest request fails; this should be moved to harvester logic
    * @returns final payload, or undefined if there are no pending events
    */
-  makeHarvestPayload (shouldRetryOnFail = false, opts = {}) {
-    if (this.events.isEmpty(opts)) return
+  makeHarvestPayload (shouldRetryOnFail = false) {
+    if (this.events.isEmpty(this.harvestOpts)) return
     // Other conditions and things to do when preparing harvest that is required.
     if (this.preHarvestChecks && !this.preHarvestChecks()) return
 
-    if (shouldRetryOnFail) this.events.save(opts)
-    const returnedData = this.events.get(opts)
+    if (shouldRetryOnFail) this.events.save(this.harvestOpts)
+    const returnedData = this.events.get(this.harvestOpts)
     // A serializer or formatter assists in creating the payload `body` from stored events on harvest when defined by derived feature class.
     const body = this.serializer ? this.serializer(returnedData) : returnedData
-    this.events.clear(opts)
+    this.events.clear(this.harvestOpts)
 
     const payload = {
       body
@@ -79,11 +80,12 @@ export class AggregateBase extends FeatureBase {
 
   /**
    * Cleanup task after a harvest.
-   * @param {Boolean} harvestFailed - harvester flag to restore events in main buffer for retry later if request failed
+   * @param {object} result - the cbResult object from the harvester's send method
    */
-  postHarvestCleanup (harvestFailed = false, opts = {}) {
-    if (harvestFailed) this.events.reloadSave(opts)
-    this.events.clearSave(opts)
+  postHarvestCleanup (result = {}) {
+    const harvestFailed = result.sent && result.retry
+    if (harvestFailed) this.events.reloadSave(this.harvestOpts)
+    this.events.clearSave(this.harvestOpts)
   }
 
   /**

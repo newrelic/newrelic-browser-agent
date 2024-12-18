@@ -36,13 +36,13 @@ export class Aggregate extends AggregateBase {
     this.latestRouteSetByApi = null
     this.interactionInProgress = null // aside from the "page load" interaction, there can only ever be 1 ongoing at a time
     this.latestHistoryUrl = null
+    this.harvestOpts.beforeUnload = () => this.interactionInProgress?.done() // return any withheld ajax or jserr events so they can be sent with EoL harvest
 
-    this.blocked = false
     this.waitForFlags(['spa']).then(([spaOn]) => {
       if (spaOn) {
         this.drain()
         const scheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
-          onFinished: (result) => this.postHarvestCleanup(result.sent && result.retry),
+          onFinished: (result) => this.postHarvestCleanup(result),
           getPayload: (options) => this.makeHarvestPayload(options.retry),
           retryDelay: harvestTimeSeconds,
           onUnload: () => this.interactionInProgress?.done() // return any held ajax or jserr events so they can be sent with EoL harvest

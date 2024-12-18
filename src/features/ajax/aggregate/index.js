@@ -45,7 +45,7 @@ export class Aggregate extends AggregateBase {
 
     this.waitForFlags(([])).then(() => {
       const scheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
-        onFinished: (result) => this.postHarvestCleanup(result.sent && result.retry),
+        onFinished: (result) => this.postHarvestCleanup(result),
         getPayload: (options) => this.makeHarvestPayload(options.retry)
       }, this)
       scheduler.startTimer(harvestTimeSeconds)

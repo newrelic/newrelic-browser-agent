@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.277.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.276.0...v1.277.0) (2024-12-18)
+
+
+### Features
+
+* Add custom events API ([#1263](https://github.com/newrelic/newrelic-browser-agent/issues/1263)) ([9395415](https://github.com/newrelic/newrelic-browser-agent/commit/9395415d942b55e88e89438aa203c6a1642d9e6b))
+
+
+### Bug Fixes
+
+* Soft navigation bug fixes and new soft navigation tests ([#1268](https://github.com/newrelic/newrelic-browser-agent/issues/1268)) ([7624928](https://github.com/newrelic/newrelic-browser-agent/commit/762492896a7b96564269aab1aadeb6e44a4da242))
+
 ## [1.276.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.275.0...v1.276.0) (2024-12-16)
 
 

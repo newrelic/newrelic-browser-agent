@@ -54,7 +54,7 @@ describe('ins harvesting', () => {
       expect(event.index).toEqual(i)
       expect(event.timestamp).toBeGreaterThan(0)
       expect(event.timestamp).toBeLessThan(Date.now())
-      expect(Object.keys(event).length).toEqual(3)
+      expect(Object.keys(event).length).toEqual(5)
     })
   })
 

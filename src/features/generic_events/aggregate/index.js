@@ -43,7 +43,7 @@ export class Aggregate extends AggregateBase {
           eventType,
           timestamp: this.toEpoch(timestamp),
           ...attributes
-        }, false)
+        })
       }, this.featureName, this.ee)
 
       if (agentRef.init.page_action.enabled) {
@@ -210,7 +210,7 @@ export class Aggregate extends AggregateBase {
    * @param {object=} obj the event object for storing in the event buffer
    * @returns void
    */
-  addEvent (obj = {}, shouldAddDefaultAttributes = true) {
+  addEvent (obj = {}) {
     if (!obj || !Object.keys(obj).length) return
     if (!obj.eventType) {
       warn(44)
@@ -234,7 +234,7 @@ export class Aggregate extends AggregateBase {
       /** Agent-level custom attributes */
       ...(this.agentRef.info.jsAttributes || {}),
       /** Fallbacks for required properties in-case the event did not supply them, should take precedence over agent-level custom attrs */
-      ...(shouldAddDefaultAttributes && defaultEventAttributes),
+      ...defaultEventAttributes,
       /** Event-specific attributes take precedence over agent-level custom attributes and fallbacks */
       ...obj
     }

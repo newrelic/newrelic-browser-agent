@@ -1,0 +1,26 @@
+# This composite action is used to capture the current build size of the main branch.
+
+name: 'NR Capture Build Size'
+
+inputs:
+  branch_name:
+    description: 'branch name of the prior head triggering the event'
+    required: true
+  nr_api_key:
+    description: 'API key to be used to upload the build size to NR'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install dependencies
+      run: npm install --silent --no-progress --prefix $GITHUB_ACTION_PATH/..
+      shell: bash
+
+    - name: Run action script
+      id: action-script
+      run: |
+        node $GITHUB_ACTION_PATH/index.js \
+          --branch-name ${{ inputs.branch_name }} \
+          --nr-api-key ${{ inputs.nr_api_key }}
+      shell: bash

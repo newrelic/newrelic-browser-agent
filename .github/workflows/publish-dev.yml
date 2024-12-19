@@ -90,6 +90,14 @@ jobs:
           fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
           fastly_service: staging-js-agent.newrelic.com
           asset_path: ${{ join(fromJson(steps.s3-upload.outputs.results).*.Key, ' ') }}
+      - name: Clean branch name
+        id: clean-branch-name
+        run: echo "results=$(echo '${{ github.event.base_ref || github.ref }}' | sed 's/refs\/heads\///g' | sed 's/[^[:alnum:].-]/-/g')" >> $GITHUB_OUTPUT
+      - name: Track build size with NR
+        uses: ./.github/actions/nr-capture-build-size
+        with:
+          branch_name: ${{ steps.clean-branch-name.outputs.results}}
+          nr_api_key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
 
   # Publish dev to staging NRDB
   # publish-dev-nr:

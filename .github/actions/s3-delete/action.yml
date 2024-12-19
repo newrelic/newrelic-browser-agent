@@ -47,7 +47,6 @@ runs:
           --region ${{ inputs.aws_region }} \
           --bucket ${{ inputs.aws_bucket_name }} \
           --role ${{ inputs.aws_role }} \
-          --input ${{ inputs.local_dir }} \
           ${{ inputs.dry_run && '--dry' || '' }} \
           ${{ inputs.bucket_dir && format('--dir {0}', inputs.bucket_dir) || '' }}
       shell: bash

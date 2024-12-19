@@ -11,9 +11,6 @@ export const args = yargs(hideBin(process.argv))
   .string('bucket')
   .describe('bucket', 'S3 bucket name')
 
-  .string('input')
-  .describe('input', 'The local directory containing the files to be uploaded.')
-
   .string('region')
   .describe('region', 'AWS region location of S3 bucket. Defaults to us-east-1.')
   .default('region', 'us-east-1')
@@ -26,5 +23,5 @@ export const args = yargs(hideBin(process.argv))
   .string('dir')
   .describe('dir', 'Bucket sub-directory name. Leave empty to refer to the root of the bucket.')
 
-  .demandOption(['bucket', 'role', 'input'])
+  .demandOption(['bucket', 'role'])
   .argv

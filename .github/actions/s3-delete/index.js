@@ -60,14 +60,14 @@ async function deleteFiles(bucketName, keys) {
     );
     for (const key in keys) {
       await waitUntilObjectNotExists(
-        { s3Client },
+        { client: s3Client },
         { Bucket: bucketName, Key: key },
-      );
+      )
     }
     core.info(
-      `Successfully deleted ${Deleted.length} objects. Deleted objects:`,
-    );
-    core.info(Deleted.map((d) => ` • ${d.Key}`).join("\n"));
+      `Successfully deleted ${Deleted?.length || 0} objects. Deleted objects:`,
+    )
+    core.info(Deleted?.map((d) => ` • ${d.Key}`).join("\n"))
   } catch (err) {
     if (err instanceof S3ServiceException) {
       core.setFailed(

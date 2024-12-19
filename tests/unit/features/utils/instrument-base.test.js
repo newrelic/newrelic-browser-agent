@@ -10,7 +10,7 @@ import { warn } from '../../../../src/common/util/console'
 import * as runtimeConstantsModule from '../../../../src/common/constants/runtime'
 import { canEnableSessionTracking } from '../../../../src/features/utils/feature-gates'
 import { getConfigurationValue } from '../../../../src/common/config/init'
-import { EventAggregator } from '../../../../src/common/aggregate/event-aggregator'
+import { EventStoreManager } from '../../../../src/features/utils/event-store-manager'
 
 jest.enableAutomock()
 jest.unmock('../../../../src/features/utils/instrument-base')
@@ -29,6 +29,10 @@ beforeEach(() => {
   featureName = faker.string.uuid()
   agentBase = {
     agentIdentifier,
+    info: {
+      licenseKey: faker.string.uuid(),
+      applicationID: faker.string.uuid()
+    },
     init: {
       [featureName]: { autoStart: true },
       [FEATURE_NAMES.pageViewEvent]: { autoStart: true },
@@ -183,16 +187,18 @@ test('does not initialized Aggregator more than once with multiple features', as
   pve.importAggregator(agentBase)
   pvt.importAggregator(agentBase)
 
-  expect(EventAggregator).toHaveBeenCalledTimes(0)
+  expect(EventStoreManager).toHaveBeenCalledTimes(0)
   await Promise.all([
     jest.mocked(onWindowLoad).mock.calls[0][0](), // PVE should import & initialize Aggregator
     jest.mocked(onWindowLoad).mock.calls[1][0]() // and PVT should wait for PVE to do that instead of initializing it again
   ])
-  expect(EventAggregator).toHaveBeenCalledTimes(1)
+  expect(EventStoreManager).toHaveBeenCalledTimes(1)
+  expect(EventStoreManager).toHaveBeenCalledWith(agentBase.mainAppKey, 2) // 2 = initialize EventAggregator
 })
 
 test('does initialize separate Aggregators with multiple agents', async () => {
   const agentBase2 = {
+    ...agentBase,
     agentIdentifier: faker.string.uuid(),
     init: {
       [FEATURE_NAMES.pageViewEvent]: { autoStart: true }
@@ -203,10 +209,12 @@ test('does initialize separate Aggregators with multiple agents', async () => {
   pve.importAggregator(agentBase)
   pve2.importAggregator(agentBase2)
 
-  expect(EventAggregator).toHaveBeenCalledTimes(0)
+  expect(EventStoreManager).toHaveBeenCalledTimes(0)
   await Promise.all([
     jest.mocked(onWindowLoad).mock.calls[0][0](),
     jest.mocked(onWindowLoad).mock.calls[1][0]() // second agent PVE reusing same module should also initialize a new EventAggregator
   ])
-  expect(EventAggregator).toHaveBeenCalledTimes(2)
+  expect(EventStoreManager).toHaveBeenCalledTimes(2)
+  expect(EventStoreManager).toHaveBeenCalledWith(agentBase.mainAppKey, 2)
+  expect(EventStoreManager).toHaveBeenCalledWith(agentBase2.mainAppKey, 2)
 })

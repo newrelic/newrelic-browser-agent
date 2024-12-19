@@ -106,7 +106,10 @@ export class Aggregate extends AggregateBase {
 
     this.rumStartTime = now()
     this.agentRef.runtime.harvester.triggerHarvestFor(this, {
-      payload: { qs: queryParameters, body },
+      directSend: {
+        targetApp: this.agentRef.mainAppKey,
+        payload: { qs: queryParameters, body }
+      },
       needResponse: true,
       sendEmptyBody: true
     })

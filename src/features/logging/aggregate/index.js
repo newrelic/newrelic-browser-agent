@@ -74,7 +74,7 @@ export class Aggregate extends AggregateBase {
     }
 
     if (this.events.wouldExceedMaxSize(logBytes)) {
-      handle(SUPPORTABILITY_METRIC_CHANNEL, ['Logging/Harvest/Early/Seen', this.events.bytes + logBytes])
+      handle(SUPPORTABILITY_METRIC_CHANNEL, ['Logging/Harvest/Early/Seen', this.events.byteSize() + logBytes])
       this.scheduler.runHarvest() // force a harvest to try adding again
     }
 

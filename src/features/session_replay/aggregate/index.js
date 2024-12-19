@@ -280,7 +280,7 @@ export class Aggregate extends AggregateBase {
     if (!this.agentRef.runtime.session.state.sessionReplaySentFirstChunk) this.syncWithSessionManager({ sessionReplaySentFirstChunk: true })
     this.recorder.clearBuffer()
     if (recorderEvents.type === 'preloaded') this.scheduler.runHarvest(opts)
-    return [payload]
+    return [{ targetApp: undefined, payload }] // SR doesn't need a targetApp as it only works for the main, but format needs to make AggregateBase
   }
 
   getCorrectedTimestamp (node) {

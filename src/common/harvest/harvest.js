@@ -75,6 +75,7 @@ export class Harvest extends SharedContext {
     if (!info.errorBeacon) return false
 
     const agentRuntime = getRuntime(this.sharedContext.agentIdentifier)
+    if (payload.payload) payload = payload.payload // to be compatible with new makeharvestpayload!
     let { body, qs } = this.cleanPayload(payload)
 
     if (Object.keys(body).length === 0 && !opts?.sendEmptyBody) { // no payload body? nothing to send, just run onfinish stuff and return
@@ -208,7 +209,8 @@ export class Harvest extends SharedContext {
 
     if (Array.isArray(listeners) && listeners.length > 0) {
       for (let i = 0; i < listeners.length; i++) {
-        const singlePayload = listeners[i](options)
+        let singlePayload = listeners[i](options)
+        if (singlePayload && Array.isArray(singlePayload)) singlePayload = singlePayload[0].payload // to be compatible with new makeharvestpayload!
 
         if (singlePayload) {
           payload.body = {

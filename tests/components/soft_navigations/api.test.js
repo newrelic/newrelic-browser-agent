@@ -145,19 +145,19 @@ test('.save forcibly harvest any would-be cancelled ixns', async () => {
   let ixn = newrelic.interaction().save()
   let ixnContext = getIxnContext(ixn)
   softNavAggregate.ee.emit(`${INTERACTION_API}-end`, [100], ixnContext)
-  expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(1)
+  expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(1)
   expect(ixnContext.associatedInteraction.end).toEqual(100)
 
   softNavAggregate.ee.emit('newUIEvent', [{ type: 'keydown', timeStamp: 200 }])
   ixn = newrelic.interaction().save()
   ixnContext = getIxnContext(ixn)
   softNavAggregate.ee.emit('newUIEvent', [{ type: 'keydown', timeStamp: 210 }])
-  expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(2)
+  expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(2)
   expect(ixnContext.associatedInteraction.end).toBeGreaterThan(ixnContext.associatedInteraction.start) // thisCtx is still referencing the first keydown ixn
 
   newrelic.interaction().save().end()
   await new Promise(process.nextTick)
-  expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(3)
+  expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(3)
 })
 
 test('.ignore forcibly discard any would-be harvested ixns', () => {
@@ -166,11 +166,11 @@ test('.ignore forcibly discard any would-be harvested ixns', () => {
   softNavAggregate.ee.emit('newURL', [23, 'example.com'])
   softNavAggregate.ee.emit('newDom', [34])
   expect(softNavAggregate.interactionInProgress).toBeNull()
-  expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(0)
+  expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(0)
 
   const ixn = newrelic.interaction({ waitForEnd: true }).ignore().save() // ignore ought to override this
   ixn.end()
-  expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(0)
+  expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(0)
   expect(getIxnContext(ixn).associatedInteraction.status).toEqual('cancelled')
 })
 
@@ -205,7 +205,7 @@ test('.onEnd queues callbacks for right before ixn is done', async () => {
     ixn1.save() // should be able to force save this would-be discarded ixn
   }).end()
   expect(hasRan).toEqual(true)
-  expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(1)
+  expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(1)
 
   hasRan = false
   const ixn2 = newrelic.interaction().save()
@@ -214,7 +214,7 @@ test('.onEnd queues callbacks for right before ixn is done', async () => {
     ixn2.ignore()
   }).end()
   expect(hasRan).toEqual(true)
-  expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(1) // ixn was discarded
+  expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(1) // ixn was discarded
 })
 
 test('.setCurrentRouteName updates the targetRouteName of current ixn and is tracked for new ixn', () => {
@@ -288,9 +288,9 @@ test('multiple finished ixns retain the correct start/end timestamps in payload'
   ixnContext.associatedInteraction.forceSave = true
   softNavAggregate.ee.emit(`${INTERACTION_API}-end`, [1000], ixnContext)
 
-  expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(3)
+  expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(3)
   // WARN: Double check decoded output & behavior or any introduced bugs before changing the follow line's static string.
-  expect(softNavAggregate.makeHarvestPayload().body).toEqual("bel.7;1,,,5k,,,'api,'http://localhost/,1,1,,2,!!!!'some_id,'1,!!;;1,,8c,5k,,,'api,'http://localhost/,1,1,,2,!!!!'some_other_id,'2,!!;;1,,jg,8c,,,'api,'http://localhost/,1,1,,2,!!!!'some_another_id,'3,!!;")
+  expect(softNavAggregate.makeHarvestPayload()[0].payload.body).toEqual("bel.7;1,,,5k,,,'api,'http://localhost/,1,1,,2,!!!!'some_id,'1,!!;;1,,8c,5k,,,'api,'http://localhost/,1,1,,2,!!!!'some_other_id,'2,!!;;1,,jg,8c,,,'api,'http://localhost/,1,1,,2,!!!!'some_another_id,'3,!!;")
 })
 
 // This isn't just an API test; it double serves as data validation on the querypack payload output.
@@ -319,9 +319,9 @@ test('multiple finished ixns with ajax have correct start/end timestamps (in aja
   softNavAggregate.ee.emit('ajax', [{ startTime: 12, endTime: 13 }])
   ixnContext.associatedInteraction.children[1].nodeId = 6
 
-  expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(2)
+  expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(2)
   // WARN: Double check decoded output & behavior or any introduced bugs before changing the follow line's static string.
-  expect(softNavAggregate.makeHarvestPayload().body).toEqual("bel.7;1,2,1,3,,,'api,'http://localhost/,1,1,,2,!!!!'some_id,'1,!!;2,,1,3,,,,,,,,,,'2,!!!;2,,2,3,,,,,,,,,,'3,!!!;;1,2,9,4,,,'api,'http://localhost/,1,1,,2,!!!!'some_other_id,'4,!!;2,,a,1,,,,,,,,,,'5,!!!;2,,b,1,,,,,,,,,,'6,!!!;")
+  expect(softNavAggregate.makeHarvestPayload()[0].payload.body).toEqual("bel.7;1,2,1,3,,,'api,'http://localhost/,1,1,,2,!!!!'some_id,'1,!!;2,,1,3,,,,,,,,,,'2,!!!;2,,2,3,,,,,,,,,,'3,!!!;;1,2,9,4,,,'api,'http://localhost/,1,1,,2,!!!!'some_other_id,'4,!!;2,,a,1,,,,,,,,,,'5,!!!;2,,b,1,,,,,,,,,,'6,!!!;")
 })
 
 function getIxnContext (ixn) {

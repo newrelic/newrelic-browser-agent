@@ -1,4 +1,3 @@
-import { EventBuffer } from '../../../../src/features/utils/event-buffer'
 import { Instrument as GenericEvents } from '../../../../src/features/generic_events/instrument'
 import { getInfo } from '../../../../src/common/config/info'
 import { resetAgent, setupAgent } from '../../setup-agent'
@@ -30,7 +29,6 @@ test('should use default values', () => {
     harvestTimeSeconds: 30,
     referrerUrl: 'https://test.com'
   })
-  expect(genericEventsAggregate.events instanceof EventBuffer).toBeTruthy()
 })
 
 test('should wait for flags - 1', async () => {
@@ -100,7 +98,7 @@ describe('sub-features', () => {
 
     genericEventsAggregate.ee.emit('api-addPageAction', [relativeTimestamp, name, { foo: 'bar' }])
 
-    expect(genericEventsAggregate.events.get()[0]).toMatchObject({
+    expect(genericEventsAggregate.events.get()[0].data[0]).toMatchObject({
       eventType: 'PageAction',
       timestamp: Math.floor(timeKeeper.correctAbsoluteTimestamp(
         timeKeeper.convertRelativeTimestamp(relativeTimestamp)
@@ -124,7 +122,7 @@ describe('sub-features', () => {
 
     genericEventsAggregate.ee.emit('api-addPageAction', [relativeTimestamp, name, { eventType: 'BetterPageAction', timestamp: 'BetterTimestamp' }])
 
-    expect(genericEventsAggregate.events.get()[0]).toMatchObject({
+    expect(genericEventsAggregate.events.get()[0].data[0]).toMatchObject({
       eventType: 'PageAction',
       timestamp: expect.any(Number)
     })
@@ -138,7 +136,7 @@ describe('sub-features', () => {
 
     genericEventsAggregate.ee.emit('api-addPageAction', [relativeTimestamp, name, {}])
 
-    expect(genericEventsAggregate.events.get()[0]).toMatchObject({
+    expect(genericEventsAggregate.events.get()[0].data[0]).toMatchObject({
       eventType: 'PageAction',
       timestamp: expect.any(Number)
     })
@@ -165,7 +163,8 @@ describe('sub-features', () => {
     genericEventsAggregate.ee.emit('ua', [{ timeStamp: 234567, type: 'blur', target: window }])
 
     const harvest = genericEventsAggregate.makeHarvestPayload() // force it to put the aggregation into the event buffer
-    expect(harvest.body.ins[0]).toMatchObject({
+    console.log(harvest)
+    expect(harvest[0].payload.body.ins[0]).toMatchObject({
       eventType: 'UserAction',
       timestamp: expect.any(Number),
       action: 'click',
@@ -192,7 +191,7 @@ describe('sub-features', () => {
     genericEventsAggregate.ee.emit('ua', [{ timeStamp: 234567, type: 'blur', target: window }])
 
     const harvest = genericEventsAggregate.makeHarvestPayload() // force it to put the aggregation into the event buffer
-    expect(harvest.body.ins[0]).toMatchObject({
+    expect(harvest[0].payload.body.ins[0]).toMatchObject({
       eventType: 'UserAction',
       timestamp: expect.any(Number),
       action: 'click',
@@ -219,7 +218,7 @@ describe('sub-features', () => {
     genericEventsAggregate.ee.emit('ua', [{ timeStamp: 234567, type: 'blur', target: window }])
 
     const harvest = genericEventsAggregate.makeHarvestPayload() // force it to put the aggregation into the event buffer
-    expect(harvest.body.ins[0]).toMatchObject({
+    expect(harvest[0].payload.body.ins[0]).toMatchObject({
       eventType: 'UserAction',
       timestamp: expect.any(Number),
       action: 'click',
@@ -230,7 +229,7 @@ describe('sub-features', () => {
       targetTag: 'BUTTON',
       globalFoo: 'globalBar'
     })
-    expect(harvest.body.ins[1]).toMatchObject({
+    expect(harvest[0].payload.body.ins[1]).toMatchObject({
       eventType: 'UserAction',
       timestamp: expect.any(Number),
       action: 'click',
@@ -273,7 +272,7 @@ describe('sub-features', () => {
     genericEventsAggregate.ee.emit('rumresp', [{ ins: 1 }])
     await new Promise(process.nextTick)
 
-    expect(genericEventsAggregate.events.get()[0]).toMatchObject({
+    expect(genericEventsAggregate.events.get()[0].data[0]).toMatchObject({
       eventType: 'BrowserPerformance',
       timestamp: expect.any(Number),
       entryName: 'test',
@@ -313,7 +312,7 @@ describe('sub-features', () => {
     genericEventsAggregate.ee.emit('rumresp', [{ ins: 1 }])
     await new Promise(process.nextTick)
 
-    expect(genericEventsAggregate.events.get()[0]).toMatchObject({
+    expect(genericEventsAggregate.events.get()[0].data[0]).toMatchObject({
       eventType: 'BrowserPerformance',
       timestamp: expect.any(Number),
       entryName: 'test',

@@ -44,24 +44,24 @@ describe('PVT aggregate', () => {
   test('addConnectionAttributes', () => {
     global.navigator.connection = {}
     pvtAgg.addTiming('abc', 1)
-    expect(pvtAgg.events.get()[0].attrs).toEqual(expect.objectContaining({}))
+    expect(pvtAgg.events.get()[0].data[0].attrs).toEqual(expect.objectContaining({}))
 
     global.navigator.connection.type = 'type'
     pvtAgg.addTiming('abc', 1)
-    expect(pvtAgg.events.get()[1].attrs).toEqual(expect.objectContaining({
+    expect(pvtAgg.events.get()[0].data[1].attrs).toEqual(expect.objectContaining({
       'net-type': 'type'
     }))
 
     global.navigator.connection.effectiveType = 'effectiveType'
     pvtAgg.addTiming('abc', 1)
-    expect(pvtAgg.events.get()[2].attrs).toEqual(expect.objectContaining({
+    expect(pvtAgg.events.get()[0].data[2].attrs).toEqual(expect.objectContaining({
       'net-type': 'type',
       'net-etype': 'effectiveType'
     }))
 
     global.navigator.connection.rtt = 'rtt'
     pvtAgg.addTiming('abc', 1)
-    expect(pvtAgg.events.get()[3].attrs).toEqual(expect.objectContaining({
+    expect(pvtAgg.events.get()[0].data[3].attrs).toEqual(expect.objectContaining({
       'net-type': 'type',
       'net-etype': 'effectiveType',
       'net-rtt': 'rtt'
@@ -69,7 +69,7 @@ describe('PVT aggregate', () => {
 
     global.navigator.connection.downlink = 'downlink'
     pvtAgg.addTiming('abc', 1)
-    expect(pvtAgg.events.get()[4].attrs).toEqual(expect.objectContaining({
+    expect(pvtAgg.events.get()[0].data[4].attrs).toEqual(expect.objectContaining({
       'net-type': 'type',
       'net-etype': 'effectiveType',
       'net-rtt': 'rtt',
@@ -84,7 +84,7 @@ describe('PVT aggregate', () => {
     }
     pvtAgg.addTiming('abc', 1)
 
-    expect(pvtAgg.events.get()[5].attrs).toEqual(expect.objectContaining({
+    expect(pvtAgg.events.get()[0].data[5].attrs).toEqual(expect.objectContaining({
       'net-type': 'type',
       'net-etype': 'effectiveType',
       'net-rtt': 'rtt',

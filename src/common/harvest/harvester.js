@@ -50,7 +50,7 @@ export class Harvester {
    * Given a feature (aggregate), execute a harvest on-demand.
    * @param {object} aggregateInst
    * @param {object} localOpts
-   * @returns {boolean} True if a network call was made. Note that this does not mean or guarantee that it was successful.
+   * @returns {boolean} True if 1+ network call was made. Note that this does not mean or guarantee that it was successful (or that all were in the case of more than 1).
    */
   triggerHarvestFor (aggregateInst, localOpts = {}) {
     if (aggregateInst.blocked) return false
@@ -59,20 +59,27 @@ export class Harvester {
     if (!submitMethod) return false
 
     const shouldRetryOnFail = !localOpts.isFinalHarvest && submitMethod === xhrMethod // always retry all features harvests except for final
-    let payload
-    if (!localOpts.payload) { // primarily used by rum call to bypass makeHarvestPayload by providing payload directly
-      payload = aggregateInst.makeHarvestPayload(shouldRetryOnFail) // be sure the 'this' of makeHarvestPayload is the aggregate w/ access to its harvestOpts
-      if (!payload) return false
-    } else payload = localOpts.payload
+    let dataToSendArr; let ranSend = false
+    if (!localOpts.directSend) { // primarily used by rum call to bypass makeHarvestPayload by providing payload directly
+      dataToSendArr = aggregateInst.makeHarvestPayload(shouldRetryOnFail) // be sure the 'this' of makeHarvestPayload is the aggregate w/ access to its harvestOpts
+      if (!dataToSendArr) return false // can be undefined if storage is empty or preharvest checks failed
+    } else dataToSendArr = [localOpts.directSend]
 
-    return send(this.agentRef, {
-      endpoint: FEATURE_TO_ENDPOINT[aggregateInst.featureName],
-      payload,
-      localOpts,
-      submitMethod,
-      cbFinished,
-      raw: aggregateInst.harvestOpts.raw
+    dataToSendArr.forEach(({ targetApp, payload }) => {
+      if (!payload) return
+
+      send(this.agentRef, {
+        endpoint: FEATURE_TO_ENDPOINT[aggregateInst.featureName],
+        targetApp,
+        payload,
+        localOpts,
+        submitMethod,
+        cbFinished,
+        raw: aggregateInst.harvestOpts.raw
+      })
+      ranSend = true
     })
+    return ranSend
 
     /**
      * This is executed immediately after harvest sends the data via XHR, or if there's nothing to send. Note that this excludes on unloading / sendBeacon.
@@ -95,13 +102,13 @@ const warnings = {}
   * @param {NetworkSendSpec} param0 Specification for sending data
   * @returns {boolean} True if a network call was made. Note that this does not mean or guarantee that it was successful.
   */
-function send (agentRef, { endpoint, payload, localOpts = {}, submitMethod, cbFinished, raw }) {
+function send (agentRef, { endpoint, targetApp, payload, localOpts = {}, submitMethod, cbFinished, raw }) {
   if (!agentRef.info.errorBeacon) return false
 
   let { body, qs } = cleanPayload(payload)
 
   if (Object.keys(body).length === 0 && !localOpts.sendEmptyBody) { // if there's no body to send, just run onfinish stuff and return
-    if (cbFinished) cbFinished({ sent: false })
+    if (cbFinished) cbFinished({ sent: false, targetApp })
     return false
   }
 
@@ -109,8 +116,8 @@ function send (agentRef, { endpoint, payload, localOpts = {}, submitMethod, cbFi
   const perceivedBeacon = agentRef.init.proxy.beacon || agentRef.info.errorBeacon
   const url = raw
     ? `${protocol}://${perceivedBeacon}/${endpoint}`
-    : `${protocol}://${perceivedBeacon}${endpoint !== RUM ? '/' + endpoint : ''}/1/${agentRef.info.licenseKey}`
-  const baseParams = !raw ? baseQueryString(agentRef, qs, endpoint) : ''
+    : `${protocol}://${perceivedBeacon}${endpoint !== RUM ? '/' + endpoint : ''}/1/${targetApp.licenseKey}`
+  const baseParams = !raw ? baseQueryString(agentRef, qs, endpoint, targetApp.appId) : ''
   let payloadParams = obj(qs, agentRef.runtime.maxBytes)
   if (baseParams === '' && payloadParams.startsWith('&')) {
     payloadParams = payloadParams.substring(1)
@@ -139,7 +146,7 @@ function send (agentRef, { endpoint, payload, localOpts = {}, submitMethod, cbFi
     if (submitMethod === xhrMethod) {
       result.addEventListener('loadend', function () {
         // status 0 refers to a local error, such as CORS or network failure, or a blocked request by the browser (e.g. adblocker)
-        const cbResult = { sent: this.status !== 0, status: this.status, xhr: this, fullUrl }
+        const cbResult = { sent: this.status !== 0, status: this.status, xhr: this, fullUrl, targetApp }
         // `this` here in block refers to the XHR object in this scope, do not change the anon function to an arrow function
         switch (this.status) {
           case 429:
@@ -157,7 +164,7 @@ function send (agentRef, { endpoint, payload, localOpts = {}, submitMethod, cbFi
     } else if (submitMethod === fetchMethod) {
       result.then(async function (response) {
         const status = response.status
-        const cbResult = { sent: true, status, fullUrl, fetchResponse: response }
+        const cbResult = { sent: true, status, fullUrl, fetchResponse: response, targetApp }
         switch (status) {
           case 429:
           case 408:
@@ -206,12 +213,12 @@ function cleanPayload (payload = {}) {
 }
 
 // The stuff that gets sent every time.
-function baseQueryString (agentRef, qs, endpoint) {
+function baseQueryString (agentRef, qs, endpoint, applicationID) {
   const ref = agentRef.runtime.obfuscator.obfuscateString(cleanURL('' + globalScope.location))
   const hr = agentRef.runtime.session?.state.sessionReplayMode === 1 && endpoint !== JSERRORS
 
   const qps = [
-    'a=' + agentRef.info.applicationID,
+    'a=' + applicationID,
     param('sa', (agentRef.info.sa ? '' + agentRef.info.sa : '')),
     param('v', VERSION),
     transactionNameParam(),

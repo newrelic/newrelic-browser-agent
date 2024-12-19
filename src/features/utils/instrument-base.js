@@ -90,6 +90,7 @@ export class InstrumentBase extends FeatureBase {
         if (this.featureName === FEATURE_NAMES.sessionReplay) this.abortHandler?.() // SR should stop recording if session DNE
       }
 
+      agentRef.mainAppKey = { licenseKey: agentRef.info.licenseKey, appId: agentRef.info.applicationID }
       /**
        * Note this try-catch differs from the one in Agent.run() in that it's placed later in a page's lifecycle and
        * it's only responsible for aborting its one specific feature, rather than all.
@@ -97,9 +98,9 @@ export class InstrumentBase extends FeatureBase {
       try {
         // Create a single Aggregator for this agent if DNE yet; to be used by jserror endpoint features.
         if (!agentRef.sharedAggregator) {
-          agentRef.sharedAggregator = import(/* webpackChunkName: "shared-aggregator" */ '../../common/aggregate/event-aggregator')
-          const { EventAggregator } = await agentRef.sharedAggregator
-          agentRef.sharedAggregator = new EventAggregator()
+          agentRef.sharedAggregator = import(/* webpackChunkName: "event-store-manager" */ '../utils/event-store-manager')
+          const { EventStoreManager } = await agentRef.sharedAggregator
+          agentRef.sharedAggregator = new EventStoreManager(agentRef.mainAppKey, 2)
         } else await agentRef.sharedAggregator // if another feature is already importing the aggregator, wait for it to finish
 
         if (!this.#shouldImportAgg(this.featureName, session)) {

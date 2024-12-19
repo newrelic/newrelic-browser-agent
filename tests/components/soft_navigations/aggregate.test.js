@@ -42,7 +42,7 @@ test('processes regular interactions', () => {
   const ttfbSubscriber = jest.mocked(ttfbModule.timeToFirstByte.subscribe).mock.calls[0][0]
   ttfbSubscriber({ attrs: { navigationEntry: { loadEventEnd: 123 } } })
   expect(softNavAggregate.initialPageLoadInteraction).toBeNull()
-  expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(1)
+  expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(1)
 
   softNavAggregate.ee.emit('newURL', [234, '' + window.location])
   softNavAggregate.ee.emit('newDom', [235])
@@ -58,8 +58,8 @@ test('processes regular interactions', () => {
   softNavAggregate.ee.emit('newDom', [348.5])
   expect(softNavAggregate.interactionInProgress).toBeNull()
   expect(softNavAggregate.domObserver.cb).toBeUndefined() // observer should be disconnected after ixn done
-  expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(2)
-  expect(softNavAggregate.interactionsToHarvest.get()[1].end).toEqual(348.5) // check end time for the ixn is as expected
+  expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(2)
+  expect(softNavAggregate.interactionsToHarvest.get()[0].data[1].end).toEqual(348.5) // check end time for the ixn is as expected
 })
 
 test('regular interactions have applicable timeouts', async () => {
@@ -72,7 +72,7 @@ test('regular interactions have applicable timeouts', async () => {
   jest.runAllTimers()
 
   expect(softNavAggregate.interactionInProgress).toBeNull()
-  expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(0) // since initialPageLoad ixn hasn't closed, and we expect that UI ixn to have been cancelled
+  expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(0) // since initialPageLoad ixn hasn't closed, and we expect that UI ixn to have been cancelled
 
   jest.useRealTimers()
 })
@@ -104,11 +104,11 @@ test('getInteractionFor grabs the right active interaction for a timestamp', () 
 
   softNavAggregate.interactionInProgress.forceSave = true
   expect(softNavAggregate.interactionInProgress.done()).toEqual(true) // this would mark the ixn as finished and queued for harvest
-  expect(softNavAggregate.getInteractionFor(currentTime)).toBe(softNavAggregate.interactionsToHarvest.get()[0]) // queued+completed UI interaction is STILL chosen over initialPageLoad
+  expect(softNavAggregate.getInteractionFor(currentTime)).toBe(softNavAggregate.interactionsToHarvest.get()[0].data[0]) // queued+completed UI interaction is STILL chosen over initialPageLoad
 
-  softNavAggregate.interactionsToHarvest.get()[0].status = 'cancelled'
+  softNavAggregate.interactionsToHarvest.get()[0].data[0].status = 'cancelled'
   expect(softNavAggregate.getInteractionFor(currentTime)).toBe(softNavAggregate.initialPageLoadInteraction) // cancelled ixn not considered (even if queued--not possible atm)
-  const holdIxn = softNavAggregate.interactionsToHarvest.get()[softNavAggregate.interactionsToHarvest.get().length - 1]
+  const holdIxn = softNavAggregate.interactionsToHarvest.get()[0].data[softNavAggregate.interactionsToHarvest.get()[0].data.length - 1]
   expect(softNavAggregate.getInteractionFor(currentTime)).toBe(softNavAggregate.initialPageLoadInteraction) // cancelled (untracked) ixn not considered; falls back to iPL
 
   const ttfbSubscriber = jest.mocked(ttfbModule.timeToFirstByte.subscribe).mock.calls[0][0]
@@ -117,7 +117,7 @@ test('getInteractionFor grabs the right active interaction for a timestamp', () 
 
   holdIxn.status = 'finished'
   // now we have an array of 2: [completed route-change, completed iPL] wherein the route-change duration is wholly within the iPL duration
-  expect(softNavAggregate.getInteractionFor(currentTime)).toBe(softNavAggregate.interactionsToHarvest.get()[0])
+  expect(softNavAggregate.getInteractionFor(currentTime)).toBe(softNavAggregate.interactionsToHarvest.get()[0].data[0])
 })
 
 test('interactions are backed up when pre harvesting', () => {
@@ -125,9 +125,9 @@ test('interactions are backed up when pre harvesting', () => {
   ttfbSubscriber({ attrs: { navigationEntry: { loadEventEnd: performance.now() } } })
   softNavAggregate.makeHarvestPayload(true) // this flag is on during typical interval harvests except for unload
 
-  expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(0)
+  expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(0)
   softNavAggregate.interactionsToHarvest.reloadSave()
-  expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(1)
+  expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(1)
 })
 
 test('calling done on the initialPageLoad actually closes it correctly', () => {
@@ -138,7 +138,7 @@ test('calling done on the initialPageLoad actually closes it correctly', () => {
   expect(softNavAggregate.initialPageLoadInteraction).toBeNull()
   expect(ipl.end).toEqual(endTime)
   expect(ipl.status).toEqual(INTERACTION_STATUS.FIN)
-  expect(softNavAggregate.interactionsToHarvest.get()).toEqual([ipl])
+  expect(softNavAggregate.interactionsToHarvest.get()[0].data).toEqual([ipl])
 })
 
 describe('back up buffer is cleared when', () => { // prevent mem leak
@@ -150,16 +150,16 @@ describe('back up buffer is cleared when', () => { // prevent mem leak
 
   test('harvest was blocked, or sent successfully without retry response', () => {
     softNavAggregate.postHarvestCleanup({ sent: true, retry: false }) // when HTTP status returns 0
-    expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(0)
+    expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(0)
 
     softNavAggregate.interactionsToHarvest.reloadSave() // backup buffer does not hold onto stale data
-    expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(0)
+    expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(0)
   })
   test('harvest is sent and got a retry response', () => {
     softNavAggregate.postHarvestCleanup({ sent: true, retry: true })
-    expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(1)
+    expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(1)
 
     softNavAggregate.interactionsToHarvest.reloadSave() // backup buffer does not duplicate retrying data
-    expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(1)
+    expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(1)
   })
 })

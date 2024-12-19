@@ -83,6 +83,10 @@ if (args.dry) {
 }
 const keysToBeDeleted = await collectKeysToDelete(args.bucket, args.dir)
 if (!args.dry) {
-  await deleteFiles(args.bucket, keysToBeDeleted)
+  if (keysToBeDeleted.length > 0) {
+    await deleteFiles(args.bucket, keysToBeDeleted)
+  } else {
+    core.info('No files found to delete')
+  }
 }
 core.info('Completed successfully')

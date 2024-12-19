@@ -35,6 +35,7 @@ async function collectKeysToDelete(bucketName, bucketDir) {
       })
     }
     core.info(`Found ${keys.length} matching files`)
+    core.info(keys.map(k => ` • ${k}`).join('\n'))
     return keys
   } catch (err) {
     if (err instanceof S3ServiceException) {

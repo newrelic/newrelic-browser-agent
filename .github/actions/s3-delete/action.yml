@@ -1,0 +1,53 @@
+# This composite action is used to delete files from a S3 bucket.
+
+name: 'S3 File Deletion'
+
+inputs:
+  aws_access_key_id:
+    description: 'AWS access key id used for authentication.'
+    required: true
+  aws_secret_access_key:
+    description: 'AWS secret access key used for authentication.'
+    required: true
+  aws_region:
+    description: "AWS region where S3 bucket is located."
+    required: false
+    default: us-east-1
+  aws_role:
+    description: "AWS role ARN that needs to be used for authentication."
+    required: true
+  aws_bucket_name:
+    description: "S3 bucket name where files need to be deleted."
+    required: true
+  dry_run:
+    description: "Indicates if we should just list files to deleted without actually deleting them."
+    required: false
+  bucket_dir:
+    description: 'A sub directory where the files are located within the S3 bucket.'
+    required: false
+
+outputs:
+  results:
+    description: "Array of objects containing information about each file uploaded"
+    value: ${{ steps.action-script.outputs.results }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install dependencies
+      run: npm install --silent --no-progress --prefix $GITHUB_ACTION_PATH/..
+      shell: bash
+    - name: Run action script
+      id: action-script
+      env:
+        AWS_ACCESS_KEY_ID: ${{ inputs.aws_access_key_id }}
+        AWS_SECRET_ACCESS_KEY: ${{ inputs.aws_secret_access_key }}
+      run: |
+        node $GITHUB_ACTION_PATH/index.js \
+          --region ${{ inputs.aws_region }} \
+          --bucket ${{ inputs.aws_bucket_name }} \
+          --role ${{ inputs.aws_role }} \
+          --input ${{ inputs.local_dir }} \
+          ${{ inputs.dry_run && '--dry' || '' }} \
+          ${{ inputs.bucket_dir && format('--dir {0}', inputs.bucket_dir) || '' }}
+      shell: bash

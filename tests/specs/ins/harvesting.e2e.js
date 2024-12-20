@@ -35,6 +35,46 @@ describe('ins harvesting', () => {
     expect(estimatedEventTime < receiptTime).toEqual(true) //, 'estimated event time (' + estimatedEventTime + ') < receipt time (' + receiptTime + ')')
   })
 
+  it('should submit Custom Events', async () => {
+    const testUrl = await browser.testHandle.assetURL('instrumented.html')
+    await browser.url(testUrl)
+      .then(() => browser.waitForAgentLoad())
+
+    const [[{ request: { body: { ins: customEventsHarvest } } }]] = await Promise.all([
+      insightsCapture.waitForResult({ totalCount: 1 }),
+      browser.execute(function () {
+        newrelic.recordCustomEvent('event0', { index: 0 })
+        newrelic.recordCustomEvent('event1', { index: 1 })
+      })
+    ])
+
+    expect(customEventsHarvest.length).toEqual(2)
+    customEventsHarvest.forEach((event, i) => {
+      expect(event.eventType).toEqual(`event${i}`)
+      expect(event.index).toEqual(i)
+      expect(event.timestamp).toBeGreaterThan(0)
+      expect(event.timestamp).toBeLessThan(Date.now())
+      expect(Object.keys(event).length).toEqual(5)
+    })
+  })
+
+  it('should not submit reserved Custom Events', async () => {
+    const testUrl = await browser.testHandle.assetURL('instrumented.html')
+    await browser.url(testUrl)
+      .then(() => browser.waitForAgentLoad())
+
+    const [customEventsHarvest] = await Promise.all([
+      insightsCapture.waitForResult({ timeout: 10000 }),
+      browser.execute(function () {
+        newrelic.recordCustomEvent('PageAction', { index: 0 })
+        newrelic.recordCustomEvent('BrowserPerformance', { index: 1 })
+        newrelic.recordCustomEvent('UserAction', { index: 2 })
+      })
+    ])
+
+    expect(customEventsHarvest.length).toEqual(0)
+  })
+
   it('should submit UserAction (when enabled)', async () => {
     const testUrl = await browser.testHandle.assetURL('user-actions.html', getInsInit({ user_actions: { enabled: true } }))
     await browser.url(testUrl).then(() => browser.waitForAgentLoad())

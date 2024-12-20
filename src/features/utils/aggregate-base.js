@@ -12,6 +12,10 @@ export class AggregateBase extends FeatureBase {
   constructor (agentRef, featureName) {
     super(agentRef.agentIdentifier, featureName)
     this.agentRef = agentRef
+    this.checkConfiguration(agentRef)
+    this.doOnceForAllAggregate(agentRef)
+
+    // This switch needs to be after doOnceForAllAggregate which may new sharedAggregator and reset mainAppKey.
     switch (this.featureName) {
       // PVE has no need for eventBuffer, and SessionTrace + Replay have their own storage mechanisms.
       case FEATURE_NAMES.pageViewEvent:
@@ -27,8 +31,6 @@ export class AggregateBase extends FeatureBase {
         this.events = new EventStoreManager(agentRef.mainAppKey, 1)
         break
     }
-    this.checkConfiguration(agentRef)
-    this.obfuscator = agentRef.runtime.obfuscator
     this.harvestOpts = {} // features aggregate classes can define custom opts for when their harvest is called
   }
 
@@ -130,9 +132,18 @@ export class AggregateBase extends FeatureBase {
         runtime: existingAgent.runtime
       })
     }
+  }
 
-    if (!existingAgent.runtime.obfuscator) {
-      existingAgent.runtime.obfuscator = new Obfuscator(this.agentIdentifier)
-    }
+  /**
+   * These are actions related to shared resources that should be initialized once by whichever feature Aggregate subclass loads first.
+   * This method should run after checkConfiguration, which may reset the agent's info/runtime object that is used here.
+   */
+  doOnceForAllAggregate (agentRef) {
+    if (!agentRef.runtime.obfuscator) agentRef.runtime.obfuscator = new Obfuscator(this.agentIdentifier)
+    this.obfuscator = agentRef.runtime.obfuscator
+
+    if (!agentRef.mainAppKey) agentRef.mainAppKey = { licenseKey: agentRef.info.licenseKey, appId: agentRef.info.applicationID }
+    // Create a single Aggregator for this agent if DNE yet; to be used by jserror endpoint features.
+    if (!agentRef.sharedAggregator) agentRef.sharedAggregator = new EventStoreManager(agentRef.mainAppKey, 2)
   }
 }

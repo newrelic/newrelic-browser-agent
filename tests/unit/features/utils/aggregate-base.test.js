@@ -3,6 +3,8 @@ import { AggregateBase } from '../../../../src/features/utils/aggregate-base'
 import { isValid } from '../../../../src/common/config/info'
 import { configure } from '../../../../src/loaders/configure/configure'
 import { gosCDN } from '../../../../src/common/window/nreum'
+import { FEATURE_NAMES } from '../../../../src/loaders/features/features'
+import { EventStoreManager } from '../../../../src/features/utils/event-store-manager'
 
 jest.enableAutomock()
 jest.unmock('../../../../src/features/utils/aggregate-base')
@@ -141,4 +143,42 @@ test('should return activatedFeatures values when available', async () => {
   const aggregateBase = new AggregateBase(mainAgent, featureName)
   const flagWait = aggregateBase.waitForFlags()
   await expect(flagWait).resolves.toEqual([])
+})
+
+test('does not initialized Aggregator more than once with multiple features', async () => {
+  expect(EventStoreManager).toHaveBeenCalledTimes(0)
+  expect(mainAgent.mainAppKey).toBeUndefined()
+
+  new AggregateBase(mainAgent, FEATURE_NAMES.pageViewEvent)
+  expect(EventStoreManager).toHaveBeenCalledTimes(1)
+  expect(EventStoreManager).toHaveBeenCalledWith(mainAgent.mainAppKey, 2) // 2 = initialize EventAggregator
+  expect(mainAgent.mainAppKey).toBeTruthy()
+  expect(mainAgent.sharedAggregator).toBeTruthy()
+
+  new AggregateBase(mainAgent, FEATURE_NAMES.jserrors) // this feature should be using that same aggregator as its .events
+  expect(EventStoreManager).toHaveBeenCalledTimes(1)
+
+  new AggregateBase(mainAgent, FEATURE_NAMES.pageViewTiming) // PVT should use its own EventStoreManager
+  expect(EventStoreManager).toHaveBeenCalledTimes(2)
+  expect(EventStoreManager).toHaveBeenCalledWith(mainAgent.mainAppKey, 1) // 1 = initialize EventBuffer
+})
+
+test('does initialize separate Aggregators with multiple agents', async () => {
+  const mainAgent2 = {
+    ...mainAgent,
+    agentIdentifier: faker.string.uuid(),
+    init: {
+      [FEATURE_NAMES.pageViewEvent]: { autoStart: true }
+    }
+  }
+  expect(EventStoreManager).toHaveBeenCalledTimes(0)
+
+  new AggregateBase(mainAgent, FEATURE_NAMES.pageViewEvent)
+  new AggregateBase(mainAgent2, FEATURE_NAMES.pageViewEvent)
+  expect(EventStoreManager).toHaveBeenCalledTimes(2)
+  expect(EventStoreManager).not.toHaveBeenCalledWith(expect.any(Object), 1)
+
+  new AggregateBase(mainAgent, FEATURE_NAMES.jserrors) // still does not initialize sharedAgg again on the same agent
+  new AggregateBase(mainAgent2, FEATURE_NAMES.jserrors)
+  expect(EventStoreManager).toHaveBeenCalledTimes(2)
 })

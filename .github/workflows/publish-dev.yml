@@ -93,6 +93,17 @@ jobs:
       - name: Clean branch name
         id: clean-branch-name
         run: echo "results=$(echo '${{ github.event.base_ref || github.ref }}' | sed 's/refs\/heads\///g' | sed 's/[^[:alnum:].-]/-/g')" >> $GITHUB_OUTPUT
+       
+        # This step creates a new Change Tracking Marker
+      - name: New Relic Application Deployment Marker
+        uses: newrelic/deployment-marker-action@v2.3.0
+        with:
+          apiKey: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
+          guid: NTUwMzUyfEJST1dTRVJ8QVBQTElDQVRJT058ODkzODM5MjI
+          commit: "${{ github.sha }}"
+          version: "${{ steps.clean-branch-name.outputs.results }}"
+          user: "${{ github.actor }}"
+        # track build size as custom event  
       - name: Track build size with NR
         uses: ./.github/actions/nr-capture-build-size
         with:

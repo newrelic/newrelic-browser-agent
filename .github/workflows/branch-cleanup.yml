@@ -1,0 +1,38 @@
+# This workflow will run automatically when a branch is deleted.
+
+name: Branch Cleanup
+
+on: delete
+
+jobs:
+  branch-delete:
+    if: github.event.ref_type == 'branch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Clean up for deleted branch
+        id: cleanup-start
+        run: echo "Clean up for branch ${{ github.event.ref }}"
+      - name: Delete dev experiment
+        id: s3-delete-dev
+        uses: ./.github/actions/s3-delete
+        with:
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_role: ${{ secrets.AWS_ROLE_ARN }}
+          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
+          bucket_dir: experiments/dev/${{ github.event.ref }}
+          dry_run: true
+      - name: Delete staging experiment
+        id: s3-delete-staging
+        uses: ./.github/actions/s3-delete
+        with:
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_role: ${{ secrets.AWS_ROLE_ARN }}
+          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
+          bucket_dir: experiments/staging/${{ github.event.ref }}
+          dry_run: true

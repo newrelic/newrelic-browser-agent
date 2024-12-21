@@ -16,7 +16,7 @@ export const args = yargs(hideBin(process.argv))
   .default('region', 'us-east-1')
 
   .boolean('dry')
-  .default('dry', true) // TODO: change this to false when ticket is done
+  .default('dry', false)
   .describe('dry', 'Runs the action script without actually uploading files.')
   .alias('dry', 'dry-run')
 

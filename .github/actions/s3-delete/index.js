@@ -21,7 +21,8 @@ const s3Client = new S3Client({
 
 async function collectKeysToDelete(bucketName, bucketDir) {
   const keys = []
-  core.info(`Looking up files in S3 bucket ${bucketName} with prefix ${bucketDir}`)
+  core.info("Bucket name: " + bucketName)
+  core.info(`Looking up files with prefix '${bucketDir}'`)
 
   try {
     const params = {
@@ -30,7 +31,7 @@ async function collectKeysToDelete(bucketName, bucketDir) {
     }
     const paginator = paginateListObjectsV2({ client: s3Client }, params)
     for await (const page of paginator) {
-      page.Contents.forEach(obj => {
+      page.Contents?.forEach(obj => {
         keys.push(obj.Key)
       })
     }
@@ -45,19 +46,23 @@ async function collectKeysToDelete(bucketName, bucketDir) {
     } else {
       core.setFailed(`Error while listing objects for "${bucketName}". ${err.name}: ${err.message}`)
     }
+    process.exit(1)
   }
 }
 
 async function deleteFiles(bucketName, keys) {
   try {
+    core.info('Deleting...')
+
     const { Deleted } = await s3Client.send(
       new DeleteObjectsCommand({
         Bucket: bucketName,
         Delete: {
           Objects: keys.map((k) => ({ Key: k })),
         },
-      }),
-    );
+     }),
+    )
+
     for (const key in keys) {
       await waitUntilObjectNotExists(
         { client: s3Client },
@@ -65,7 +70,7 @@ async function deleteFiles(bucketName, keys) {
       )
     }
     core.info(
-      `Successfully deleted ${Deleted?.length || 0} objects. Deleted objects:`,
+      `Successfully deleted ${Deleted?.length || 0} objects.`,
     )
     core.info(Deleted?.map((d) => ` • ${d.Key}`).join("\n"))
   } catch (err) {
@@ -76,6 +81,7 @@ async function deleteFiles(bucketName, keys) {
     } else {
       core.setFailed(`Error while deleting objects for "${bucketName}". ${err.name}: ${err.message}`)
     }
+    process.exit(1)
   }
 }
 

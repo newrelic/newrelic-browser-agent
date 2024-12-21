@@ -72,6 +72,8 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
 
   apiInterface.addPageAction = apiCall(prefix, 'addPageAction', true, FEATURE_NAMES.genericEvents)
 
+  apiInterface.recordCustomEvent = apiCall(prefix, 'recordCustomEvent', true, FEATURE_NAMES.genericEvents)
+
   apiInterface.setPageViewName = function (name, host) {
     if (typeof name !== 'string') return
     if (name.charAt(0) !== '/') name = '/' + name
@@ -192,7 +194,7 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
   function apiCall (prefix, name, notSpa, bufferGroup) {
     return function () {
       handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/' + name + '/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
-      if (bufferGroup) handle(prefix + name, [now(), ...arguments], notSpa ? null : this, bufferGroup, instanceEE) // no bufferGroup means only the SM is emitted
+      if (bufferGroup) handle(prefix + name, [notSpa ? now() : performance.now(), ...arguments], notSpa ? null : this, bufferGroup, instanceEE) // no bufferGroup means only the SM is emitted
       return notSpa ? undefined : this // returns the InteractionHandle which allows these methods to be chained
     }
   }

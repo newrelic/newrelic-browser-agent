@@ -42,12 +42,13 @@ describe('setAPI', () => {
   test('should add expected api methods returned object', () => {
     const apiInterface = setAPI(agentId, true)
 
-    expect(Object.keys(apiInterface).length).toEqual(17)
+    expect(Object.keys(apiInterface).length).toEqual(18)
     expect(typeof apiInterface.setErrorHandler).toEqual('function')
     expect(typeof apiInterface.finished).toEqual('function')
     expect(typeof apiInterface.addToTrace).toEqual('function')
     expect(typeof apiInterface.addRelease).toEqual('function')
     expect(typeof apiInterface.addPageAction).toEqual('function')
+    expect(typeof apiInterface.recordCustomEvent).toEqual('function')
     expect(typeof apiInterface.setCurrentRouteName).toEqual('function')
     expect(typeof apiInterface.setPageViewName).toEqual('function')
     expect(typeof apiInterface.setCustomAttribute).toEqual('function')

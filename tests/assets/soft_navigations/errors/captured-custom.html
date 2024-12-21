@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+
+<head>
+  <title>Error in interaction</title>
+  {init}
+  {config}
+  {loader}
+</head>
+
+<body>
+  Tests the interaction between Browser Interactions and Errors
+
+  <script>
+    // click starts interaction
+    document.addEventListener('click', function () {
+      window.location.hash = Math.random()
+      const elem = document.createElement('div')
+      elem.innerHTML = window.location
+      document.body.appendChild(elem)
+      throw new Error('some error')
+    })
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Fetch Response Object Check</title>
+  {init} {config} {loader}
+  <script>
+    let i = 0
+    window.checkRunning = false
+    window.checkResults = []
+    function clearResults () {
+      window.checkResults = []
+    }
+    function checkResponse (resp) {
+      window.checkRunning = true
+      if (
+        !(resp instanceof Response) ||
+        typeof resp.arrayBuffer !== 'function' ||
+        typeof resp.blob !== 'function' ||
+        typeof resp.clone !== 'function' ||
+        typeof resp.formData !== 'function' ||
+        typeof resp.json !== 'function' ||
+        typeof resp.text !== 'function'
+      ) {
+        window.checkResults.push([false, 'Invalid response object'])
+        return
+      }
+
+      Promise.all([
+        resp.clone().arrayBuffer()
+          .then(function (val) {
+            if (!(val instanceof ArrayBuffer)) {
+              window.checkResults.push([false, 'Invalid ArrayBuffer result object'])
+              return
+            }
+            if ((new TextDecoder()).decode(val) !== '["123"]') {
+              window.checkResults.push([false, 'Invalid ArrayBuffer result value'])
+              return
+            }
+            window.checkResults.push([true])
+          })
+          .catch(function (err) {
+            window.checkResults.push([false, 'Invalid ArrayBuffer result object', err.message || err])
+          }),
+        resp.clone().blob()
+          .then(function (val) {
+            if (!(val instanceof Blob)) {
+              window.checkResults.push([false, 'Invalid Blob result object'])
+              return
+            }
+            val.text()
+              .then(function (val) {
+                if (val !== '["123"]') {
+                  window.checkResults.push([false, 'Invalid Blob result value'])
+                  return
+                }
+                window.checkResults.push([true])
+              })
+          })
+          .catch(function (err) {
+            window.checkResults.push([false, 'Invalid Blob result object', err.message || err])
+          }),
+        resp.clone().json()
+          .then(function (val) {
+            if (!Array.isArray(val)) {
+              window.checkResults.push([false, 'Invalid JSON result object'])
+              return
+            }
+            if (val[0] !== '123') {
+              window.checkResults.push([false, 'Invalid JSON result value'])
+              return
+            }
+            window.checkResults.push([true])
+          })
+          .catch(function (err) {
+            window.checkResults.push([false, 'Invalid JSON result object', err.message || err])
+          }),
+        resp.clone().text()
+          .then(function (val) {
+            if (typeof val !== 'string') {
+              window.checkResults.push([false, 'Invalid Text result object'])
+              return
+            }
+            if (val !== '["123"]') {
+              window.checkResults.push([false, 'Invalid Text result value'])
+              return
+            }
+            window.checkResults.push([true])
+          })
+          .catch(function (err) {
+            window.checkResults.push([false, 'Invalid Text result object', err.message || err])
+          })
+      ]).then(function () {
+        window.checkRunning = false
+      }).catch(function () {
+        window.checkRunning = false
+      })
+    }
+    function sendFetchCheckResponse (isInitial) {
+      fetch('/echo', {
+        method: 'POST',
+        body: '["123"]'
+      })
+        .then(checkResponse)
+        .catch(function (err) {
+          window.checkResults.push([false, 'Fetch failed', err.message || err])
+          if (!isInitial) {
+            window.location.hash = Math.random()
+
+            const elem = document.createElement('div')
+            elem.innerHTML = 'TEST' + i++
+            document.body.appendChild(elem)
+          }
+        })
+    }
+    sendFetchCheckResponse(true)
+  </script>
+</head>
+<body>
+<div>
+  This page initiates a fetch before page load and verifies the response object is not
+  being altered by the agent. A button can be used to perform the fetch and verification
+  again.
+</div>
+<div><button id="sendAjax">Send Ajax</button></div>
+<script>
+  document.getElementById('sendAjax').addEventListener('click', sendFetchCheckResponse)
+</script>
+</body>
+</html>

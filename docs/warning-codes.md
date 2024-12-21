@@ -91,3 +91,5 @@
 `Invalid object passed to generic event aggregate. Missing "eventType".`
 ### 45
 `An internal agent process failed to execute.`
+### 46
+`A reserved eventType was provided to recordCustomEvent(...) -- The event was not recorded.`

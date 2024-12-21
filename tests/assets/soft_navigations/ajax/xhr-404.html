@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Simple XHR</title>
+  {init} {config} {loader}
+</head>
+<body>
+<div>
+  This page uses a button to initiate an XHR that will result in a 404.
+</div>
+<div><button id="sendAjax">Send Ajax</button></div>
+<script>
+  let i = 0
+  document.getElementById('sendAjax').addEventListener('click', function () {
+    var xhr = new XMLHttpRequest()
+    xhr.addEventListener('loadend', function () {
+      window.location.hash = Math.random()
+
+      const elem = document.createElement('div')
+      elem.innerHTML = 'TEST' + i++
+      document.body.appendChild(elem)
+    })
+    xhr.open('GET', '/paththatdoesnotexist')
+    xhr.send()
+  })
+</script>
+</body>
+</html>

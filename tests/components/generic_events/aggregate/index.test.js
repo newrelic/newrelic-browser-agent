@@ -7,26 +7,25 @@ import { getRuntime } from '../../../../src/common/config/runtime'
 const referrerUrl = 'https://test.com'
 Object.defineProperty(global.document, 'referrer', { value: referrerUrl, configurable: true })
 
-let agentSetup, genericEventsAggregate
+let mainAgent, genericEventsAggregate
 
 beforeAll(() => {
-  agentSetup = setupAgent()
+  mainAgent = setupAgent()
 })
 
 beforeEach(async () => {
-  const genericEventsInstrument = new GenericEvents(agentSetup)
+  const genericEventsInstrument = new GenericEvents(mainAgent)
   await new Promise(process.nextTick)
   genericEventsAggregate = genericEventsInstrument.featAggregate
 })
 
 afterEach(() => {
-  resetAgent(agentSetup.agentIdentifier)
+  resetAgent(mainAgent.agentIdentifier)
 })
 
 test('should use default values', () => {
   expect(genericEventsAggregate).toMatchObject({
     eventsPerHarvest: 1000,
-    harvestTimeSeconds: 30,
     referrerUrl: 'https://test.com'
   })
 })
@@ -64,12 +63,14 @@ test('should harvest early if will exceed 1mb', async () => {
 
   await new Promise(process.nextTick)
 
-  genericEventsAggregate.harvestScheduler.runHarvest = jest.fn()
+  mainAgent.runtime.harvester.triggerHarvestFor = jest.fn()
   genericEventsAggregate.addEvent({ name: 'test', eventType: 'x'.repeat(900000) })
 
-  expect(genericEventsAggregate.harvestScheduler.runHarvest).not.toHaveBeenCalled()
+  expect(mainAgent.runtime.harvester.triggerHarvestFor).not.toHaveBeenCalled()
   genericEventsAggregate.addEvent({ name: 1000, eventType: 'x'.repeat(100000) })
-  expect(genericEventsAggregate.harvestScheduler.runHarvest).toHaveBeenCalled()
+  expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalled()
+
+  mainAgent.runtime.harvester.triggerHarvestFor.mockRestore()
 })
 
 test('should not harvest if single event will exceed 1mb', async () => {
@@ -77,10 +78,12 @@ test('should not harvest if single event will exceed 1mb', async () => {
 
   await new Promise(process.nextTick)
 
-  genericEventsAggregate.harvestScheduler.runHarvest = jest.fn()
+  mainAgent.runtime.harvester.triggerHarvestFor = jest.fn()
   genericEventsAggregate.addEvent({ name: 'test', eventType: 'x'.repeat(1000000) })
 
-  expect(genericEventsAggregate.harvestScheduler.runHarvest).not.toHaveBeenCalled()
+  expect(mainAgent.runtime.harvester.triggerHarvestFor).not.toHaveBeenCalled()
+
+  mainAgent.runtime.harvester.triggerHarvestFor.mockRestore()
 })
 
 describe('sub-features', () => {
@@ -93,8 +96,8 @@ describe('sub-features', () => {
     const relativeTimestamp = Math.random() * 1000
     const name = 'name'
 
-    const timeKeeper = getRuntime(agentSetup.agentIdentifier).timeKeeper
-    getInfo(agentSetup.agentIdentifier).jsAttributes = { globalFoo: 'globalBar' }
+    const timeKeeper = getRuntime(mainAgent.agentIdentifier).timeKeeper
+    getInfo(mainAgent.agentIdentifier).jsAttributes = { globalFoo: 'globalBar' }
 
     genericEventsAggregate.ee.emit('api-addPageAction', [relativeTimestamp, name, { foo: 'bar' }])
 
@@ -132,7 +135,7 @@ describe('sub-features', () => {
     const relativeTimestamp = Math.random() * 1000
     const name = 'name'
 
-    getInfo(agentSetup.agentIdentifier).jsAttributes = { eventType: 'BetterPageAction', timestamp: 'BetterTimestamp' }
+    getInfo(mainAgent.agentIdentifier).jsAttributes = { eventType: 'BetterPageAction', timestamp: 'BetterTimestamp' }
 
     genericEventsAggregate.ee.emit('api-addPageAction', [relativeTimestamp, name, {}])
 
@@ -146,16 +149,16 @@ describe('sub-features', () => {
     const relativeTimestamp = Math.random() * 1000
     const name = 'name'
 
-    getConfiguration(agentSetup.agentIdentifier).page_action = { enabled: false }
+    getConfiguration(mainAgent.agentIdentifier).page_action = { enabled: false }
 
     const { Aggregate } = await import('../../../../src/features/generic_events/aggregate')
-    genericEventsAggregate = new Aggregate(agentSetup)
+    genericEventsAggregate = new Aggregate(mainAgent)
     genericEventsAggregate.ee.emit('api-addPageAction', [relativeTimestamp, name, {}])
     expect(genericEventsAggregate.events[0]).toBeUndefined()
   })
 
   test('should record user actions when enabled', () => {
-    agentSetup.info.jsAttributes = { globalFoo: 'globalBar' }
+    mainAgent.info.jsAttributes = { globalFoo: 'globalBar' }
     const target = document.createElement('button')
     target.id = 'myBtn'
     genericEventsAggregate.ee.emit('ua', [{ timeStamp: 123456, type: 'click', target }])
@@ -178,7 +181,7 @@ describe('sub-features', () => {
   })
 
   test('should aggregate user actions when matching target', () => {
-    getInfo(agentSetup.agentIdentifier).jsAttributes = { globalFoo: 'globalBar' }
+    getInfo(mainAgent.agentIdentifier).jsAttributes = { globalFoo: 'globalBar' }
     const target = document.createElement('button')
     target.id = 'myBtn'
     genericEventsAggregate.ee.emit('ua', [{ timeStamp: 100, type: 'click', target }])
@@ -204,7 +207,7 @@ describe('sub-features', () => {
     })
   })
   test('should NOT aggregate user actions when targets are not identical', () => {
-    getInfo(agentSetup.agentIdentifier).jsAttributes = { globalFoo: 'globalBar' }
+    getInfo(mainAgent.agentIdentifier).jsAttributes = { globalFoo: 'globalBar' }
     const target = document.createElement('button')
     target.id = 'myBtn'
     document.body.appendChild(target)
@@ -243,8 +246,8 @@ describe('sub-features', () => {
   })
 
   test('should record marks when enabled', async () => {
-    agentSetup.init.performance.capture_marks = true
-    agentSetup.info.jsAttributes = { globalFoo: 'globalBar' }
+    mainAgent.init.performance.capture_marks = true
+    mainAgent.info.jsAttributes = { globalFoo: 'globalBar' }
     const mockPerformanceObserver = jest.fn(cb => ({
       observe: () => {
         const callCb = () => {
@@ -266,7 +269,7 @@ describe('sub-features', () => {
     global.PerformanceObserver.supportedEntryTypes = ['mark']
 
     const { Aggregate } = await import('../../../../src/features/generic_events/aggregate')
-    genericEventsAggregate = new Aggregate(agentSetup)
+    genericEventsAggregate = new Aggregate(mainAgent)
     expect(genericEventsAggregate.events[0]).toBeUndefined()
 
     genericEventsAggregate.ee.emit('rumresp', [{ ins: 1 }])
@@ -283,8 +286,8 @@ describe('sub-features', () => {
   })
 
   test('should record measures when enabled', async () => {
-    agentSetup.init.performance = { capture_measures: true, resources: { enabled: false, asset_types: [], first_party_domains: [], ignore_newrelic: true } }
-    getInfo(agentSetup.agentIdentifier).jsAttributes = { globalFoo: 'globalBar' }
+    mainAgent.init.performance = { capture_measures: true, resources: { enabled: false, asset_types: [], first_party_domains: [], ignore_newrelic: true } }
+    getInfo(mainAgent.agentIdentifier).jsAttributes = { globalFoo: 'globalBar' }
     const mockPerformanceObserver = jest.fn(cb => ({
       observe: () => {
         const callCb = () => {
@@ -306,7 +309,7 @@ describe('sub-features', () => {
     global.PerformanceObserver.supportedEntryTypes = ['measure']
 
     const { Aggregate } = await import('../../../../src/features/generic_events/aggregate')
-    genericEventsAggregate = new Aggregate(agentSetup)
+    genericEventsAggregate = new Aggregate(mainAgent)
     expect(genericEventsAggregate.events[0]).toBeUndefined()
 
     genericEventsAggregate.ee.emit('rumresp', [{ ins: 1 }])

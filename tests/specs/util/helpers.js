@@ -141,7 +141,7 @@ export function stConfig (initOverrides = {}) {
       loader: 'spa',
       init: {
         privacy: { cookies_enabled: true },
-        session_trace: { enabled: true, harvestTimeSeconds: 5 }
+        session_trace: { enabled: true }
       }
     },
     {

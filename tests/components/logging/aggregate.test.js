@@ -41,8 +41,7 @@ describe('class setup', () => {
       'ee',
       'featureName',
       'blocked',
-      'events',
-      'harvestTimeSeconds'
+      'events'
     ]))
   })
 
@@ -208,12 +207,12 @@ test('can harvest early', async () => {
   loggingAggregate.ee.emit('rumresp', {})
   await new Promise(process.nextTick)
 
-  jest.spyOn(loggingAggregate.scheduler, 'runHarvest')
+  jest.spyOn(mainAgent.runtime.harvester, 'triggerHarvestFor')
 
   loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'x'.repeat(800 * 800), { myAttributes: 1 }, 'ERROR']) // almost too big
   expect(handleModule.handle).toHaveBeenCalledTimes(0)
   loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'x'.repeat(800 * 800), { myAttributes: 1 }, 'ERROR']) // almost too big
   expect(handleModule.handle).toHaveBeenCalledTimes(1)
   expect(handleModule.handle).toHaveBeenCalledWith('storeSupportabilityMetrics', ['Logging/Harvest/Early/Seen', expect.any(Number)])
-  expect(loggingAggregate.scheduler.runHarvest).toHaveBeenCalled()
+  expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalled()
 })

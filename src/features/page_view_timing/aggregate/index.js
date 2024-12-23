@@ -4,11 +4,10 @@
  */
 
 import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../../../common/serialize/bel-serializer'
-import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { handle } from '../../../common/event-emitter/handle'
 import { FEATURE_NAME } from '../constants'
-import { FEATURE_NAMES, FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
+import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { cumulativeLayoutShift } from '../../../common/vitals/cumulative-layout-shift'
 import { firstContentfulPaint } from '../../../common/vitals/first-contentful-paint'
@@ -35,11 +34,7 @@ export class Aggregate extends AggregateBase {
     // Add the time of _window pagehide event_ firing to the next PVT harvest == NRDB windowUnload attr:
     registerHandler('winPagehide', msTimestamp => this.addTiming('unload', msTimestamp, null), this.featureName, this.ee)
 
-    const harvestTimeSeconds = agentRef.init.page_view_timing.harvestTimeSeconds || 30
-
     this.waitForFlags(([])).then(() => {
-      /* It's important that CWV api, like "onLCP", is called before the **scheduler** is initialized. The reason is because they listen to the same
-        on vis change or pagehide events, and we'd want ex. onLCP to record the timing (win the race) before we try to send "final harvest". */
       firstPaint.subscribe(this.#handleVitalMetric)
       firstContentfulPaint.subscribe(this.#handleVitalMetric)
       firstInputDelay.subscribe(this.#handleVitalMetric)
@@ -56,12 +51,6 @@ export class Aggregate extends AggregateBase {
         if (value === undefined) return
         this.addTiming(name, value * 1000, attrs)
       }, true) // CLS node should only reports on vis change rather than on every change
-
-      const scheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
-        onFinished: (result) => this.postHarvestCleanup(result),
-        getPayload: (options) => this.makeHarvestPayload(options.retry)
-      }, this)
-      scheduler.startTimer(harvestTimeSeconds)
 
       this.drain()
     })

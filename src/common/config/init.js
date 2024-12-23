@@ -39,7 +39,7 @@ const model = () => {
     }
   }
   return {
-    ajax: { deny_list: undefined, block_internal: true, enabled: true, harvestTimeSeconds: 10, autoStart: true },
+    ajax: { deny_list: undefined, block_internal: true, enabled: true, autoStart: true },
     distributed_tracing: {
       enabled: undefined,
       exclude_newrelic_header: undefined,
@@ -49,15 +49,15 @@ const model = () => {
     },
     get feature_flags () { return hiddenState.feature_flags },
     set feature_flags (val) { hiddenState.feature_flags = val },
-    generic_events: { enabled: true, harvestTimeSeconds: 30, autoStart: true },
+    generic_events: { enabled: true, autoStart: true },
     harvest: { tooManyRequestsDelay: 60, interval: 30 },
-    jserrors: { enabled: true, harvestTimeSeconds: 10, autoStart: true },
-    logging: { enabled: true, harvestTimeSeconds: 10, autoStart: true, level: LOG_LEVELS.INFO },
+    jserrors: { enabled: true, autoStart: true },
+    logging: { enabled: true, autoStart: true, level: LOG_LEVELS.INFO },
     metrics: { enabled: true, autoStart: true },
     obfuscate: undefined,
     page_action: { enabled: true },
     page_view_event: { enabled: true, autoStart: true },
-    page_view_timing: { enabled: true, harvestTimeSeconds: 30, autoStart: true },
+    page_view_timing: { enabled: true, autoStart: true },
     performance: {
       get capture_marks () { return hiddenState.feature_flags.includes(FEATURE_FLAGS.MARKS) || hiddenState.experimental.marks },
       set capture_marks (val) { hiddenState.experimental.marks = val },
@@ -123,9 +123,9 @@ const model = () => {
         else warn(7, val)
       }
     },
-    session_trace: { enabled: true, harvestTimeSeconds: 10, autoStart: true },
-    soft_navigations: { enabled: true, harvestTimeSeconds: 10, autoStart: true },
-    spa: { enabled: true, harvestTimeSeconds: 10, autoStart: true },
+    session_trace: { enabled: true, autoStart: true },
+    soft_navigations: { enabled: true, autoStart: true },
+    spa: { enabled: true, autoStart: true },
     ssl: undefined,
     user_actions: { enabled: true }
   }

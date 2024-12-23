@@ -15,7 +15,19 @@ export class Harvester {
   constructor (agentRef) {
     this.agentRef = agentRef
 
-    const WHILE_TESTING = { [FEATURE_NAMES.pageViewEvent]: true } // while transitioning from old harvest, porting one feature at a time
+    const WHILE_TESTING = { // while transitioning from old harvest, porting one feature at a time
+      [FEATURE_NAMES.pageViewEvent]: true,
+      [FEATURE_NAMES.pageViewTiming]: true,
+      [FEATURE_NAMES.genericEvents]: true,
+      [FEATURE_NAMES.metrics]: true,
+      [FEATURE_NAMES.jserrors]: true,
+      [FEATURE_NAMES.ajax]: true,
+      [FEATURE_NAMES.sessionTrace]: true,
+      [FEATURE_NAMES.spa]: true,
+      [FEATURE_NAMES.softNav]: true,
+      [FEATURE_NAMES.logging]: true
+      // [FEATURE_NAMES.sessionReplay]: true
+    }
     const featuresInstruments = Object.values(agentRef.features).filter(feature => WHILE_TESTING[feature.featureName])
 
     // const featuresInstruments = Object.values(agentRef.features)
@@ -31,7 +43,8 @@ export class Harvester {
         if (typeof aggregateInst.harvestOpts.beforeUnload === 'function') aggregateInst.harvestOpts.beforeUnload()
       })
       this.initializedAggregates?.forEach(aggregateInst => this.triggerHarvestFor(aggregateInst, { isFinalHarvest: true }))
-    })
+      /* This callback should run in bubble phase, so that that CWV api, like "onLCP", is called before the final harvest so that emitted timings are part of last outgoing. */
+    }, false)
 
     /* Flush all buffered data if session resets and give up retries. This should be synchronous to ensure that the correct `session` value is sent.
       Since session-reset generates a new session ID and the ID is grabbed at send-time, any delays or retries would cause the payload to be sent under the wrong session ID. */
@@ -79,6 +92,7 @@ export class Harvester {
       })
       ranSend = true
     })
+    // console.log(`harvesting for ${aggregateInst.featureName} at ${now()}${localOpts.isFinalHarvest ? ' (final)' : ''}`)
     return ranSend
 
     /**

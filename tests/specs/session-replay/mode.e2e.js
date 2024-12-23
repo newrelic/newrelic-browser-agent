@@ -235,7 +235,7 @@ describe('Session Replay Sample Mode Validation', () => {
     const errorsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testErrorsRequest })
     const [[errors]] = await Promise.all([
       errorsCapture.waitForResult({ totalCount: 1 }),
-      browser.url(await browser.testHandle.assetURL('rrweb-duplicate-errors-split.html', srConfig({ session_replay: { preload: false, sampling_rate: 100 }, jserrors: { harvestTimeSeconds: 10 } })))
+      browser.url(await browser.testHandle.assetURL('rrweb-duplicate-errors-split.html', srConfig({ session_replay: { preload: false, sampling_rate: 100 } })))
         .then(() => browser.waitForSessionReplayRecording())
     ])
 
@@ -265,7 +265,7 @@ describe('Session Replay Sample Mode Validation', () => {
     const errorsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testErrorsRequest })
     const [[errors]] = await Promise.all([
       errorsCapture.waitForResult({ totalCount: 1 }),
-      browser.url(await browser.testHandle.assetURL('rrweb-duplicate-errors-split.html', srConfig({ session_replay: { preload: false, sampling_rate: 0, error_sampling_rate: 100 }, jserrors: { harvestTimeSeconds: 10 } })))
+      browser.url(await browser.testHandle.assetURL('rrweb-duplicate-errors-split.html', srConfig({ session_replay: { preload: false, sampling_rate: 0, error_sampling_rate: 100 } })))
         .then(() => browser.waitForSessionReplayRecording())
     ])
 

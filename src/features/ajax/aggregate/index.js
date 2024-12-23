@@ -5,10 +5,9 @@
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { stringify } from '../../../common/util/stringify'
 import { handle } from '../../../common/event-emitter/handle'
-import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { setDenyList, shouldCollectEvent } from '../../../common/deny-list/deny-list'
 import { FEATURE_NAME } from '../constants'
-import { FEATURE_NAMES, FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
+import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { parseGQL } from './gql'
@@ -19,10 +18,7 @@ export class Aggregate extends AggregateBase {
 
   constructor (agentRef) {
     super(agentRef, FEATURE_NAME)
-
-    const harvestTimeSeconds = agentRef.init.ajax.harvestTimeSeconds || 10
     setDenyList(agentRef.runtime.denyList)
-
     this.underSpaEvents = {}
     const classThis = this
 
@@ -43,14 +39,7 @@ export class Aggregate extends AggregateBase {
       classThis.storeXhr(...arguments, this) // this switches the context back to the class instance while passing the NR context as an argument -- see "ctx" in storeXhr
     }, this.featureName, this.ee)
 
-    this.waitForFlags(([])).then(() => {
-      const scheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
-        onFinished: (result) => this.postHarvestCleanup(result),
-        getPayload: (options) => this.makeHarvestPayload(options.retry)
-      }, this)
-      scheduler.startTimer(harvestTimeSeconds)
-      this.drain()
-    })
+    this.waitForFlags(([])).then(() => this.drain())
   }
 
   storeXhr (params, metrics, startTime, endTime, type, ctx) {

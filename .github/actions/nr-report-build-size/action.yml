@@ -3,6 +3,11 @@
 
 name: 'Report Build Size to New Relic'
 
+inputs:
+  nr-api-key:
+    description: 'NR API Key for reporting events'
+    required: true
+
 runs:
   using: "composite"
   steps:
@@ -18,7 +23,7 @@ runs:
     - name: Report rum size to NR
       uses: metal-messiah/webpack-build-size-action@main
       with:
-        nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
+        nr-api-key: ${{ inputs.nr-api-key }}
         nr-account-id: '550352'
         nr-env: 'staging'
         analysis-file-contents: ${{ steps.get-stats.outputs.rum }}
@@ -26,7 +31,7 @@ runs:
     - name: Report full size to NR
       uses: metal-messiah/webpack-build-size-action@main
       with:
-        nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
+        nr-api-key: ${{ inputs.nr-api-key }}
         nr-account-id: '550352'
         nr-env: 'staging'
         analysis-file-contents: ${{ steps.get-stats.outputs.full }}
@@ -34,7 +39,7 @@ runs:
     - name: Report spa size to NR
       uses: metal-messiah/webpack-build-size-action@main
       with:
-        nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
+        nr-api-key: ${{ inputs.nr-api-key }}
         nr-account-id: '550352'
         nr-env: 'staging'
         analysis-file-contents: ${{ steps.get-stats.outputs.spa }}

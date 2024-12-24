@@ -98,7 +98,9 @@ jobs:
           comment: ${{ steps.asset-size-report.outputs.results }}
           comment_tag: <!-- browser_agent asset size report -->
       - name: report local stats
-      uses: './.github/actions/nr-report-build-size'
+        uses: './.github/actions/nr-report-build-size'
+        with:
+          nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
 
   # Jobs for workflow_dispatch events
 

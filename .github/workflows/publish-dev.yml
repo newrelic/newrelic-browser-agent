@@ -90,6 +90,20 @@ jobs:
           fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
           fastly_service: staging-js-agent.newrelic.com
           asset_path: ${{ join(fromJson(steps.s3-upload.outputs.results).*.Key, ' ') }}
+        # This step creates a new Change Tracking Marker
+      - name: New Relic Application Deployment Marker
+        uses: newrelic/deployment-marker-action@v2.3.0
+        with:
+          apiKey: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
+          guid: NTUwMzUyfEJST1dTRVJ8QVBQTElDQVRJT058ODkzODM5MjI
+          commit: "${{ github.sha }}"
+          version: "${{ github.ref_name }}"
+          user: "${{ github.actor }}"
+        # track build size as custom event  
+      - name: Report local stats as NR event
+        uses: './.github/actions/nr-report-build-size'
+        with:
+          nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
 
   # Publish dev to staging NRDB
   # publish-dev-nr:

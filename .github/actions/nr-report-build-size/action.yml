@@ -1,7 +1,7 @@
-# This composite action is used to verify all loaders of a specific
-# version exist in NR environments.
+# This composite action is used to report the local build size to New Relic
+# You must build the agent before running this action
 
-name: 'NR Verify'
+name: 'Report Build Size to New Relic'
 
 runs:
   using: "composite"
@@ -9,10 +9,33 @@ runs:
     - name: Install dependencies
       run: npm install --silent --no-progress --prefix $GITHUB_ACTION_PATH/..
       shell: bash
-    - name: Run action script
-      id: action-script
-      run: |
-        node $GITHUB_ACTION_PATH/index.js \
-          ${{ inputs.environment && format('--environment {0}', inputs.environment) || '' }} \
-          --loader-version ${{ inputs.loader_version }}
-      shell: bash
+    - name: Get local stats
+        id: get-stats
+        run: |
+          rum=$(cat ./build/nr-rum-standard.stats.json); echo "rum=$rum" >> $GITHUB_OUTPUT;
+          full=$(cat ./build/nr-full-standard.stats.json); echo "full=$full" >> $GITHUB_OUTPUT;
+          spa=$(cat ./build/nr-spa-standard.stats.json); echo "spa=$spa" >> $GITHUB_OUTPUT;
+    - name: Report rum size to NR
+      uses: metal-messiah/webpack-build-size-action@main
+      with:
+        nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
+        nr-account-id: '550352'
+        nr-env: 'staging'
+        analysis-file-contents: ${{ steps.get-stats.outputs.rum }}
+        file-name-filter: '.min.js'
+    - name: Report full size to NR
+      uses: metal-messiah/webpack-build-size-action@main
+      with:
+        nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
+        nr-account-id: '550352'
+        nr-env: 'staging'
+        analysis-file-contents: ${{ steps.get-stats.outputs.full }}
+        file-name-filter: '.min.js'
+    - name: Report spa size to NR
+      uses: metal-messiah/webpack-build-size-action@main
+      with:
+        nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
+        nr-account-id: '550352'
+        nr-env: 'staging'
+        analysis-file-contents: ${{ steps.get-stats.outputs.spa }}
+        file-name-filter: '.min.js'

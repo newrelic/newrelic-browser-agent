@@ -97,42 +97,8 @@ jobs:
           pr_number: ${{ github.event.number }}
           comment: ${{ steps.asset-size-report.outputs.results }}
           comment_tag: <!-- browser_agent asset size report -->
-      - name: Get local stats
-        id: get-stats
-        run: |
-          rum=$(cat ./build/nr-rum-standard.stats.json); echo "rum=$rum" >> $GITHUB_OUTPUT;
-          full=$(cat ./build/nr-full-standard.stats.json); echo "full=$full" >> $GITHUB_OUTPUT;
-          spa=$(cat ./build/nr-spa-standard.stats.json); echo "spa=$spa" >> $GITHUB_OUTPUT;
-      - name: Clean branch name
-        id: clean-branch-name
-        run: echo "results=$(echo '${{ github.event.base_ref.ref_name || github.ref_name }}' | sed 's/refs\/heads\///g' | sed 's/[^[:alnum:].-]/-/g')" >> $GITHUB_OUTPUT
-      - name: Report rum size to NR
-        uses: metal-messiah/webpack-build-size-action@main
-        with:
-          nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
-          nr-account-id: '550352'
-          nr-env: 'staging'
-          analysis-file-contents: ${{ steps.get-stats.outputs.rum }}
-          file-name-filter: '.min.js'
-          version: ${{ steps.clean-branch-name.outputs.results }}
-      - name: Report full size to NR
-        uses: metal-messiah/webpack-build-size-action@main
-        with:
-          nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
-          nr-account-id: '550352'
-          nr-env: 'staging'
-          analysis-file-contents: ${{ steps.get-stats.outputs.full }}
-          file-name-filter: '.min.js'
-          version: ${{ steps.clean-branch-name.outputs.results }}
-      - name: Report spa size to NR
-        uses: metal-messiah/webpack-build-size-action@main
-        with:
-          nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
-          nr-account-id: '550352'
-          nr-env: 'staging'
-          analysis-file-contents: ${{ steps.get-stats.outputs.spa }}
-          file-name-filter: '.min.js'
-          version: ${{ steps.clean-branch-name.outputs.results }}
+      - name: report local stats
+      uses: './.github/actions/nr-report-build-size'
 
   # Jobs for workflow_dispatch events
 

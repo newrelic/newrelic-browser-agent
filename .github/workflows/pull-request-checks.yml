@@ -105,7 +105,7 @@ jobs:
           spa=$(cat ./build/nr-spa-standard.stats.json); echo "spa=$spa" >> $GITHUB_OUTPUT;
       - name: Clean branch name
         id: clean-branch-name
-        run: echo "results=$(echo '${{ github.event.base_ref || github.ref_name }}' | sed 's/refs\/heads\///g' | sed 's/[^[:alnum:].-]/-/g')" >> $GITHUB_OUTPUT
+        run: echo "results=$(echo '${{ github.event.base_ref.ref_name || github.ref_name }}' | sed 's/refs\/heads\///g' | sed 's/[^[:alnum:].-]/-/g')" >> $GITHUB_OUTPUT
       - name: Report rum size to NR
         uses: metal-messiah/webpack-build-size-action@main
         with:

@@ -12,8 +12,7 @@ describe('setErrorHandler API', () => {
     const url = await browser.testHandle.assetURL('ignored-error.html', {
       init: {
         page_view_timing: { enabled: false },
-        metrics: { enabled: false },
-        jserrors: { harvestTimeSeconds: 2 }
+        metrics: { enabled: false }
       }
     })
 
@@ -39,8 +38,7 @@ describe('setErrorHandler API', () => {
     const url = await browser.testHandle.assetURL('instrumented.html', {
       init: {
         page_view_timing: { enabled: false },
-        metrics: { enabled: false },
-        jserrors: { harvestTimeSeconds: 2 }
+        metrics: { enabled: false }
       }
     })
 

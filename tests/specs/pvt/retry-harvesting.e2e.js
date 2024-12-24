@@ -17,11 +17,10 @@ describe('pvt harvesting', () => {
       let url = await browser.testHandle.assetURL('instrumented.html', {
         init: {
           page_view_timing: {
-            enabled: true,
-            harvestTimeSeconds: 2
+            enabled: true
           },
           harvest: {
-            tooManyRequestsDelay: 5
+            interval: 2
           }
         }
       })
@@ -48,11 +47,10 @@ describe('pvt harvesting', () => {
       let url = await browser.testHandle.assetURL('instrumented.html', {
         init: {
           page_view_timing: {
-            enabled: true,
-            harvestTimeSeconds: 2
+            enabled: true
           },
           harvest: {
-            tooManyRequestsDelay: 5
+            interval: 2
           }
         }
       })

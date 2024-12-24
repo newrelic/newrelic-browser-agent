@@ -19,11 +19,6 @@ jest.mock('../../../src/common/config/runtime', () => ({
   __esModule: true,
   getRuntime: jest.fn().mockReturnValue({})
 }))
-jest.mock('../../../src/common/harvest/harvest-scheduler', () => ({
-  HarvestScheduler: jest.fn().mockImplementation(() => {
-    return { harvest: { on: jest.fn() }, scheduleHarvest: jest.fn() }
-  })
-}))
 jest.mock('../../../src/common/util/feature-flags', () => ({
   activatedFeatures: { [agentIdentifier]: { spa: 1 } }
 }))

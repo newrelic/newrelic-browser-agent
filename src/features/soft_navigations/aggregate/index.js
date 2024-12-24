@@ -1,9 +1,8 @@
 import { handle } from '../../../common/event-emitter/handle'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
-import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { single } from '../../../common/util/invoke'
 import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
-import { FEATURE_NAMES, FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
+import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { API_TRIGGER_NAME, FEATURE_NAME, INTERACTION_STATUS, INTERACTION_TRIGGERS, IPL_TRIGGER_NAME } from '../constants'
@@ -16,7 +15,6 @@ export class Aggregate extends AggregateBase {
   constructor (agentRef, { domObserver }) {
     super(agentRef, FEATURE_NAME)
 
-    const harvestTimeSeconds = agentRef.init.soft_navigations.harvestTimeSeconds || 10
     this.interactionsToHarvest = this.events
     this.domObserver = domObserver
 
@@ -36,18 +34,12 @@ export class Aggregate extends AggregateBase {
     this.latestRouteSetByApi = null
     this.interactionInProgress = null // aside from the "page load" interaction, there can only ever be 1 ongoing at a time
     this.latestHistoryUrl = null
+    this.harvestOpts.beforeUnload = () => this.interactionInProgress?.done() // return any withheld ajax or jserr events so they can be sent with EoL harvest
 
-    this.blocked = false
     this.waitForFlags(['spa']).then(([spaOn]) => {
       if (spaOn) {
         this.drain()
-        const scheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
-          onFinished: (result) => this.postHarvestCleanup(result.sent && result.retry),
-          getPayload: (options) => this.makeHarvestPayload(options.retry),
-          retryDelay: harvestTimeSeconds,
-          onUnload: () => this.interactionInProgress?.done() // return any held ajax or jserr events so they can be sent with EoL harvest
-        }, this)
-        scheduler.startTimer(harvestTimeSeconds, 0)
+        setTimeout(() => agentRef.runtime.harvester.triggerHarvestFor(this), 0) // send the IPL ixn on next tick, giving some time for any ajax to finish; we may want to just remove this?
       } else {
         this.blocked = true // if rum response determines that customer lacks entitlements for spa endpoint, this feature shouldn't harvest
         this.deregisterDrain()
@@ -136,7 +128,7 @@ export class Aggregate extends AggregateBase {
     */
     if (this.interactionInProgress?.isActiveDuring(timestamp)) return this.interactionInProgress
     let saveIxn
-    const interactionsBuffer = this.interactionsToHarvest.get()
+    const interactionsBuffer = this.interactionsToHarvest.get(this.agentRef.mainAppKey)[0].data
     for (let idx = interactionsBuffer.length - 1; idx >= 0; idx--) { // reverse search for the latest completed interaction for efficiency
       const finishedInteraction = interactionsBuffer[idx]
       if (finishedInteraction.isActiveDuring(timestamp)) {

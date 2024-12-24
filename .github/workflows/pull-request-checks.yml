@@ -97,42 +97,6 @@ jobs:
           pr_number: ${{ github.event.number }}
           comment: ${{ steps.asset-size-report.outputs.results }}
           comment_tag: <!-- browser_agent asset size report -->
-      - name: Get local stats
-        id: get-stats
-        run: |
-          rum=$(cat ../../build/nr-rum-standard.stats.json); ; echo "rum=$rum" >> $GITHUB_OUTPUT;
-          full=$(cat ../../build/nr-full-standard.stats.json); ; echo "full=$full" >> $GITHUB_OUTPUT;
-          spa=$(cat ../../build/nr-spa-standard.stats.json); ; echo "spa=$spa" >> $GITHUB_OUTPUT;
-      - name: Report rum size to NR
-        uses: metal-messiah/webpack-build-size-action
-        with:
-          nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
-          nr-account-id: '550352'
-          nr-env: 'staging'
-          analysis-type: 'webpack'
-          analysis-file-contents: ${{ steps.get-stats.outputs.rum }}
-          file-name-filter: '.min.js'
-          traverse: false
-      - name: Report full size to NR
-        uses: metal-messiah/webpack-build-size-action
-        with:
-          nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
-          nr-account-id: '550352'
-          nr-env: 'staging'
-          analysis-type: 'webpack'
-          analysis-file-contents: ${{ steps.get-stats.outputs.full }}
-          file-name-filter: '.min.js'
-          traverse: false
-      - name: Report spa size to NR
-        uses: metal-messiah/webpack-build-size-action
-        with:
-          nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
-          nr-account-id: '550352'
-          nr-env: 'staging'
-          analysis-type: 'webpack'
-          analysis-file-contents: ${{ steps.get-stats.outputs.spa }}
-          file-name-filter: '.min.js'
-          traverse: false
 
   # Jobs for workflow_dispatch events
 
@@ -188,6 +152,49 @@ jobs:
             Last ran on `${{ steps.workflow-time.outputs.results }}`
             Checking merge of (${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).head_sha }}) into [${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).base_ref }}](https://github.com/newrelic/newrelic-browser-agent/compare/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).head_sha }}..${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).base_sha }}) (${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).base_sha }})
           comment_tag: <!-- browser_agent pull request checks -->
+
+  report-build-size:
+    name: Report build size
+    if: github.event_name == 'workflow_dispatch'
+    needs: find-pull-request
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get local stats
+        id: get-stats
+        run: |
+          rum=$(cat ../../build/nr-rum-standard.stats.json); ; echo "rum=$rum" >> $GITHUB_OUTPUT;
+          full=$(cat ../../build/nr-full-standard.stats.json); ; echo "full=$full" >> $GITHUB_OUTPUT;
+          spa=$(cat ../../build/nr-spa-standard.stats.json); ; echo "spa=$spa" >> $GITHUB_OUTPUT;
+      - name: Report rum size to NR
+        uses: metal-messiah/webpack-build-size-action
+        with:
+          nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
+          nr-account-id: '550352'
+          nr-env: 'staging'
+          analysis-type: 'webpack'
+          analysis-file-contents: ${{ steps.get-stats.outputs.rum }}
+          file-name-filter: '.min.js'
+          traverse: false
+      - name: Report full size to NR
+        uses: metal-messiah/webpack-build-size-action
+        with:
+          nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
+          nr-account-id: '550352'
+          nr-env: 'staging'
+          analysis-type: 'webpack'
+          analysis-file-contents: ${{ steps.get-stats.outputs.full }}
+          file-name-filter: '.min.js'
+          traverse: false
+      - name: Report spa size to NR
+        uses: metal-messiah/webpack-build-size-action
+        with:
+          nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
+          nr-account-id: '550352'
+          nr-env: 'staging'
+          analysis-type: 'webpack'
+          analysis-file-contents: ${{ steps.get-stats.outputs.spa }}
+          file-name-filter: '.min.js'
+          traverse: false
 
   wdio-coverage:
     name: WDIO coverage

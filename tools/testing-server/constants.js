@@ -57,7 +57,7 @@ module.exports.defaultInitBlock = {
   distributed_tracing: {},
   feature_flags: [],
   generic_events: enabledFeature,
-  harvest: { tooManyRequestsDelay: 5, interval: 5 },
+  harvest: { interval: 5 },
   jserrors: enabledFeature,
   logging: enabledFeature,
   metrics: { enabled, autoStart },

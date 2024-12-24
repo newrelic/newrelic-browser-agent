@@ -15,18 +15,6 @@
  */
 
 /**
- * @typedef {object} FeatureHarvestCallbackOptions Options for aggregating data for harvesting.
- * @property {boolean} options.retry Indicates if the feature should store the aggregated
- * data in anticipation of a possible need to retry the transmission.
- */
-
-/**
- * @callback FeatureHarvestCallback
- * @param {FeatureHarvestCallbackOptions} options Options for aggregating data for harvesting.
- * @returns {HarvestPayload} Payload of data to transmit to bam endpoint.
- */
-
-/**
  * @typedef {object} NetworkSendSpec
  * @property {HarvestEndpointIdentifier} endpoint The endpoint to use (jserrors, events, resources etc.)
  * @property {HarvestPayload} payload Object representing payload.

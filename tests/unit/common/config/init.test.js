@@ -113,7 +113,6 @@ test('init props exist and return expected defaults', () => {
     enabled: false,
     error_sampling_rate: 100,
     fix_stylesheets: true,
-    harvestTimeSeconds: 60,
     ignore_class: 'nr-ignore',
     inline_images: false,
     mask_all_inputs: true,

@@ -85,7 +85,6 @@ const model = () => {
       // feature settings
       autoStart: true,
       enabled: false,
-      harvestTimeSeconds: 60,
       preload: false, // if true, enables the agent to load rrweb immediately instead of waiting to do so after the window.load event
       sampling_rate: 10, // float from 0 - 100
       error_sampling_rate: 100, // float from 0 - 100

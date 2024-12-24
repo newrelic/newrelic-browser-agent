@@ -1,4 +1,4 @@
-import { FEATURE_TO_ENDPOINT, JSERRORS, RUM, EVENTS, FEATURE_NAMES } from '../../loaders/features/features'
+import { FEATURE_TO_ENDPOINT, JSERRORS, RUM, EVENTS } from '../../loaders/features/features'
 import { VERSION } from '../constants/env'
 import { globalScope, isWorkerScope } from '../constants/runtime'
 import { eventListenerOpts } from '../event-listener/event-listener-opts'
@@ -15,22 +15,7 @@ export class Harvester {
   constructor (agentRef) {
     this.agentRef = agentRef
 
-    const WHILE_TESTING = { // while transitioning from old harvest, porting one feature at a time
-      [FEATURE_NAMES.pageViewEvent]: true,
-      [FEATURE_NAMES.pageViewTiming]: true,
-      [FEATURE_NAMES.genericEvents]: true,
-      [FEATURE_NAMES.metrics]: true,
-      [FEATURE_NAMES.jserrors]: true,
-      [FEATURE_NAMES.ajax]: true,
-      [FEATURE_NAMES.sessionTrace]: true,
-      [FEATURE_NAMES.spa]: true,
-      [FEATURE_NAMES.softNav]: true,
-      [FEATURE_NAMES.logging]: true
-      // [FEATURE_NAMES.sessionReplay]: true
-    }
-    const featuresInstruments = Object.values(agentRef.features).filter(feature => WHILE_TESTING[feature.featureName])
-
-    // const featuresInstruments = Object.values(agentRef.features)
+    const featuresInstruments = Object.values(agentRef.features)
     Promise.all(featuresInstruments.map(feature => feature.onAggregateImported)).then(loadedSuccessfullyArr => {
       // Double check that all aggregates have been initialized, successfully or not, before starting harvest schedule, which only queries the succesfully loaded ones.
       const featuresToHarvest = featuresInstruments.filter((instrumentInstance, index) => loadedSuccessfullyArr[index])

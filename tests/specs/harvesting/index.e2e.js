@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker'
 import { testExpectedTrace } from '../util/helpers'
-import { testAjaxEventsRequest, testAjaxTimeSlicesRequest, testBlobTraceRequest, testErrorsRequest, testInsRequest, testInteractionEventsRequest, testRumRequest, testTimingEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
+import { testAjaxEventsRequest, testAjaxTimeSlicesRequest, testBlobTraceRequest, testErrorsRequest, testInsRequest, testInteractionEventsRequest, testLogsRequest, testRumRequest, testTimingEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 describe('harvesting', () => {
   let rumCapture
@@ -11,9 +11,10 @@ describe('harvesting', () => {
   let insightsCapture
   let interactionEventsCapture
   let errorMetricsCapture
+  let loggingEventsCapture
 
   beforeEach(async () => {
-    [rumCapture, timingEventsCapture, ajaxEventsCapture, ajaxMetricsCapture, traceCapture, insightsCapture, interactionEventsCapture, errorMetricsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+    [rumCapture, timingEventsCapture, ajaxEventsCapture, ajaxMetricsCapture, traceCapture, insightsCapture, interactionEventsCapture, errorMetricsCapture, loggingEventsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
       { test: testRumRequest },
       { test: testTimingEventsRequest },
       { test: testAjaxEventsRequest },
@@ -21,7 +22,8 @@ describe('harvesting', () => {
       { test: testBlobTraceRequest },
       { test: testInsRequest },
       { test: testInteractionEventsRequest },
-      { test: testErrorsRequest }
+      { test: testErrorsRequest },
+      { test: testLogsRequest }
     ])
   })
 
@@ -313,6 +315,28 @@ describe('harvesting', () => {
     ajaxEventsHarvests.forEach(harvest => expect(harvest.request.query.s).toEqual('0'))
     ajaxMetricsHarvests.forEach(harvest => expect(harvest.request.query.s).toEqual('0'))
     interactionEventsHarvests.forEach(harvest => expect(harvest.request.query.s).toEqual('0'))
+  })
+
+  it('should not contain session data in the logs request when cookies_enabled is false', async () => {
+    const testURL = await browser.testHandle.assetURL('obfuscate-pii.html', {
+      init: {
+        privacy: {
+          cookies_enabled: false
+        }
+      }
+    })
+
+    const [
+      loggingEventsHarvests
+    ] = await Promise.all([
+      loggingEventsCapture.waitForResult({ totalCount: 1 }),
+      browser.url(testURL)
+        .then(() => browser.waitForAgentLoad())
+    ])
+
+    loggingEventsHarvests.forEach(harvest => {
+      expect(harvest.request.query.session).toBeUndefined()
+    })
   })
 
   it('should not harvest features when there is no data', async () => {

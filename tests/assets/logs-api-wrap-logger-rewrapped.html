@@ -11,7 +11,7 @@
       var loggers = {
         log: function(message, attr){}
       }
-      
+
       newrelic.wrapLogger(loggers, 'log', { level: "warn" })
       loggers.log('test1')
       // should capture event with `warn` level

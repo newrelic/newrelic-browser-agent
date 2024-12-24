@@ -54,9 +54,10 @@ test('should construct a new instrument', () => {
   expect(registerDrain).toHaveBeenCalledWith(agentIdentifier, featureName)
 })
 
-test('should wait for feature opt-in to import the aggregate', () => {
+test('should wait for feature opt-in to import the aggregate', async () => {
   const instrument = new InstrumentBase(agentBase, featureName, false)
-  jest.spyOn(instrument, 'importAggregator').mockImplementation(jest.fn)
+  agentBase.runtime = { harvester: { initializedAggregates: [] } }
+  jest.spyOn(instrument, 'importAggregator').mockImplementation(() => { instrument.onAggregateImported = Promise.resolve(true) })
 
   expect(registerDrain).not.toHaveBeenCalled()
   expect(instrument.auto).toEqual(false)
@@ -67,6 +68,9 @@ test('should wait for feature opt-in to import the aggregate', () => {
   expect(registerDrain).toHaveBeenCalledWith(agentIdentifier, featureName)
   expect(instrument.importAggregator).toHaveBeenCalledTimes(1)
   expect(instrument.auto).toEqual(true)
+
+  await new Promise(process.nextTick)
+  expect(agentBase.runtime.harvester.initializedAggregates).toContain(instrument.featAggregate)
 })
 
 test('should import aggregator on window load', async () => {

@@ -43,7 +43,6 @@ export class InstrumentBase extends FeatureBase {
     /**
      * @type {Promise} Assigned immediately after @see importAggregator runs. Serves as a signal for when the inner async fn finishes execution. Useful for features to await
      * one another if there are inter-features dependencies.
-     * TODO: This is only used for the SPA feature component tests and should be refactored out.
     */
     this.onAggregateImported = undefined
 
@@ -58,6 +57,9 @@ export class InstrumentBase extends FeatureBase {
         registerDrain(agentRef.agentIdentifier, this.featureName)
         this.auto = true
         this.importAggregator(agentRef)
+        this.onAggregateImported.then(loaded => { // "subscribe" the feature aggregate to harvest interval when it's ready
+          if (loaded) agentRef.runtime.harvester.initializedAggregates.push(this.featAggregate)
+        })
       }))
     }
   }

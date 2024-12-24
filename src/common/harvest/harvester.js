@@ -15,10 +15,16 @@ export class Harvester {
   constructor (agentRef) {
     this.agentRef = agentRef
 
-    const featuresInstruments = Object.values(agentRef.features)
-    Promise.all(featuresInstruments.map(feature => feature.onAggregateImported)).then(loadedSuccessfullyArr => {
+    const autoFeaturesInstruments = Object.values(agentRef.features).filter(feature => feature.auto) // features without autoStart won't be fully initialized until later
+    const importingFeatures = []
+    // Since the harvester is expected to be initialized by PVE Aggregate module, at such time, all the features should be awaiting import though featAggregate may not be available just yet.
+    for (const feature of autoFeaturesInstruments) {
+      if (!feature.onAggregateImported) warn(47, feature.featureName)
+      else importingFeatures.push(feature)
+    }
+    Promise.all(importingFeatures.map(instrument => instrument.onAggregateImported)).then(loadedSuccessfullyArr => {
       // Double check that all aggregates have been initialized, successfully or not, before starting harvest schedule, which only queries the succesfully loaded ones.
-      const featuresToHarvest = featuresInstruments.filter((instrumentInstance, index) => loadedSuccessfullyArr[index])
+      const featuresToHarvest = importingFeatures.filter((instrumentInstance, index) => loadedSuccessfullyArr[index])
       this.initializedAggregates = featuresToHarvest.map(instrumentInstance => instrumentInstance.featAggregate)
       this.#startTimer(agentRef.init.harvest.interval)
     })

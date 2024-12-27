@@ -64,7 +64,7 @@ export class MicroAgent extends MicroAgentBase {
                 return lazyFeatureLoader(f, 'aggregate')
               }).then(({ Aggregate }) => {
                 this.features[f] = new Aggregate(this)
-                this.runtime.harvester.initializedAggregates.push(f) // so that harvester will poll this feature agg on interval
+                this.runtime.harvester.initializedAggregates.push(this.features[f]) // so that harvester will poll this feature agg on interval
               }).catch(err => warn(25, err))
             }
           })

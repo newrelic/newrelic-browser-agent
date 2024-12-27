@@ -22,7 +22,7 @@ runs:
         full=$(cat ./build/nr-full-standard.stats.json); echo "full=$full" >> $GITHUB_OUTPUT;
         spa=$(cat ./build/nr-spa-standard.stats.json); echo "spa=$spa" >> $GITHUB_OUTPUT;
     - name: Report rum size to NR
-      uses: metal-messiah/webpack-build-size-action@main
+      uses: newrelic/capture-build-size@main
       with:
         nr-api-key: ${{ inputs.nr-api-key }}
         nr-account-id: '550352'
@@ -30,7 +30,7 @@ runs:
         analysis-file-contents: ${{ steps.get-stats.outputs.rum }}
         file-name-filter: '.min.js'
     - name: Report full size to NR
-      uses: metal-messiah/webpack-build-size-action@main
+      uses: newrelic/capture-build-size@main
       with:
         nr-api-key: ${{ inputs.nr-api-key }}
         nr-account-id: '550352'
@@ -38,7 +38,7 @@ runs:
         analysis-file-contents: ${{ steps.get-stats.outputs.full }}
         file-name-filter: '.min.js'
     - name: Report spa size to NR
-      uses: metal-messiah/webpack-build-size-action@main
+      uses: newrelic/capture-build-size@main
       with:
         nr-api-key: ${{ inputs.nr-api-key }}
         nr-account-id: '550352'

@@ -130,7 +130,7 @@ test('.interaction with waitForEnd flag keeps ixn open until .end', () => {
   expect(softNavAggregate.interactionInProgress).toBeNull()
   expect(ixnContext.associatedInteraction.end).toEqual(45)
 
-  ixn = newrelic.interaction({ customIxnCreationTime: 50, waitForEnd: true }) // on new api ixn
+  ixn = newrelic.interaction({ waitForEnd: true }) // on new api ixn
   ixnContext = getIxnContext(ixn)
   softNavAggregate.ee.emit('newURL', [70, 'example.com'])
   softNavAggregate.ee.emit('newDom', [80])
@@ -158,17 +158,6 @@ test('.save forcibly harvest any would-be cancelled ixns', async () => {
   newrelic.interaction().save().end()
   await new Promise(process.nextTick)
   expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(3)
-})
-
-test('.interaction gets ixn retroactively too when processed late after ee buffer drain', async () => {
-  softNavAggregate.ee.emit('newUIEvent', [{ type: 'submit', timeStamp: 0 }])
-  let timeInBtwn = performance.now()
-  await new Promise(resolve => setTimeout(resolve, 100))
-  newrelic.interaction().save().end()
-
-  expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(1)
-  const ixn = newrelic.interaction({ customIxnCreationTime: timeInBtwn })
-  expect(getIxnContext(ixn).associatedInteraction.trigger).toBe('submit')
 })
 
 test('.ignore forcibly discard any would-be harvested ixns', () => {
@@ -278,7 +267,7 @@ test('.actionText and .setAttribute add attributes to ixn specifically', () => {
 
 // This isn't just an API test; it double serves as data validation on the querypack payload output.
 test('multiple finished ixns retain the correct start/end timestamps in payload', () => {
-  softNavAggregate.ee.emit(`${INTERACTION_API}-get`, [100])
+  softNavAggregate.ee.emit(`${INTERACTION_API}-get`, [0])
   let ixnContext = getIxnContext(newrelic.interaction())
   ixnContext.associatedInteraction.nodeId = 1
   ixnContext.associatedInteraction.id = 'some_id'
@@ -301,7 +290,7 @@ test('multiple finished ixns retain the correct start/end timestamps in payload'
 
   expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(3)
   // WARN: Double check decoded output & behavior or any introduced bugs before changing the follow line's static string.
-  expect(softNavAggregate.makeHarvestPayload().body).toEqual("bel.7;1,,2s,2s,,,'api,'http://localhost/,1,1,,2,!!!!'some_id,'1,!!;;1,,5k,5k,,,'api,'http://localhost/,1,1,,2,!!!!'some_other_id,'2,!!;;1,,go,8c,,,'api,'http://localhost/,1,1,,2,!!!!'some_another_id,'3,!!;")
+  expect(softNavAggregate.makeHarvestPayload().body).toEqual("bel.7;1,,,5k,,,'api,'http://localhost/,1,1,,2,!!!!'some_id,'1,!!;;1,,8c,5k,,,'api,'http://localhost/,1,1,,2,!!!!'some_other_id,'2,!!;;1,,jg,8c,,,'api,'http://localhost/,1,1,,2,!!!!'some_another_id,'3,!!;")
 })
 
 // This isn't just an API test; it double serves as data validation on the querypack payload output.

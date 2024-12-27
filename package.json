@@ -1,6 +1,6 @@
 {
   "name": "@newrelic/browser-agent",
-  "version": "1.275.0",
+  "version": "1.277.0",
   "private": false,
   "author": "New Relic Browser Agent Team <browser-agent@newrelic.com>",
   "description": "New Relic Browser Agent",
@@ -154,6 +154,17 @@
       "default": "./dist/esm/features/spa/instrument/index.js"
     }
   },
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "onFail": "error",
+      "version": "22.11.0"
+    },
+    "packageManager": {
+      "name": "npm",
+      "onFail": "error"
+    }
+  },
   "engines": {
     "node": ">=12.17.0 < 13.0.0 || >=13.7.0"
   },
@@ -177,6 +188,7 @@
     "cdn:watch": "jung -r ./src -F '.*\\.test\\.js' --run -- npm run cdn:build:local",
     "test-server": "node ./tools/wdio/bin/server",
     "lt:update-browsers": "node ./tools/browsers-lists/lt-update-supported.mjs",
+    "lt:upload-webview-assets": "node ./tools/lambda-test/upload-webview-assets.mjs",
     "tools:test-builds": "npm --prefix ./tools/test-builds run build-all",
     "third-party-updates": "oss third-party manifest --includeOptDeps && oss third-party notices --includeOptDeps",
     "prepare": "husky install",

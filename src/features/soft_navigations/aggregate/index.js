@@ -6,7 +6,7 @@ import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
 import { FEATURE_NAMES, FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { AggregateBase } from '../../utils/aggregate-base'
-import { API_TRIGGER_NAME, FEATURE_NAME, INTERACTION_STATUS } from '../constants'
+import { API_TRIGGER_NAME, FEATURE_NAME, INTERACTION_STATUS, INTERACTION_TRIGGERS, IPL_TRIGGER_NAME } from '../constants'
 import { AjaxNode } from './ajax-node'
 import { InitialPageLoadInteraction } from './initial-page-load-interaction'
 import { Interaction } from './interaction'
@@ -21,18 +21,21 @@ export class Aggregate extends AggregateBase {
     this.domObserver = domObserver
 
     this.initialPageLoadInteraction = new InitialPageLoadInteraction(agentRef.agentIdentifier)
-    timeToFirstByte.subscribe(({ attrs }) => {
-      const loadEventTime = attrs.navigationEntry.loadEventEnd
-      this.initialPageLoadInteraction.forceSave = true
-      this.initialPageLoadInteraction.done(loadEventTime)
+    this.initialPageLoadInteraction.onDone.push(() => { // this ensures the .end() method also works with iPL
+      this.initialPageLoadInteraction.forceSave = true // unless forcibly ignored, iPL always finish by default
       this.interactionsToHarvest.add(this.initialPageLoadInteraction)
       this.initialPageLoadInteraction = null
+    })
+    timeToFirstByte.subscribe(({ attrs }) => {
+      const loadEventTime = attrs.navigationEntry.loadEventEnd
+      this.initialPageLoadInteraction.done(loadEventTime)
       // Report metric on the initial page load time
       handle(SUPPORTABILITY_METRIC_CHANNEL, ['SoftNav/Interaction/InitialPageLoad/Duration/Ms', Math.round(loadEventTime)], undefined, FEATURE_NAMES.metrics, this.ee)
     })
 
     this.latestRouteSetByApi = null
     this.interactionInProgress = null // aside from the "page load" interaction, there can only ever be 1 ongoing at a time
+    this.latestHistoryUrl = null
 
     this.blocked = false
     this.waitForFlags(['spa']).then(([spaOn]) => {
@@ -53,7 +56,11 @@ export class Aggregate extends AggregateBase {
 
     // By default, a complete UI driven interaction requires event -> URL change -> DOM mod in that exact order.
     registerHandler('newUIEvent', (event) => this.startUIInteraction(event.type, Math.floor(event.timeStamp), event.target), this.featureName, this.ee)
-    registerHandler('newURL', (timestamp, url) => this.interactionInProgress?.updateHistory(timestamp, url), this.featureName, this.ee)
+    registerHandler('newURL', (timestamp, url) => {
+      // In the case of 'popstate' trigger, by the time the event fires, the URL has already changed, so we need to store what-will-be the *previous* URL for oldURL of next popstate ixn.
+      this.latestHistoryUrl = url
+      this.interactionInProgress?.updateHistory(timestamp, url)
+    }, this.featureName, this.ee)
     registerHandler('newDom', timestamp => {
       this.interactionInProgress?.updateDom(timestamp)
       if (this.interactionInProgress?.seenHistoryAndDomChange()) this.interactionInProgress.done()
@@ -68,21 +75,23 @@ export class Aggregate extends AggregateBase {
   serializer (eventBuffer) {
     // The payload depacker takes the first ixn of a payload (if there are multiple ixns) and positively offset the subsequent ixns timestamps by that amount.
     // In order to accurately portray the real start & end times of the 2nd & onward ixns, we hence need to negatively offset their start timestamps with that of the 1st ixn.
-    let firstIxnStartTime = 0 // the very 1st ixn does not require any offsetting
+    let firstIxnStartTime
     const serializedIxnList = []
     for (const interaction of eventBuffer) {
       serializedIxnList.push(interaction.serialize(firstIxnStartTime))
-      if (!firstIxnStartTime) firstIxnStartTime = Math.floor(interaction.start)
+      if (firstIxnStartTime === undefined) firstIxnStartTime = Math.floor(interaction.start) // careful not to match or overwrite on 0 value!
     }
     return `bel.7;${serializedIxnList.join(';')}`
   }
 
   startUIInteraction (eventName, startedAt, sourceElem) { // this is throttled by instrumentation so that it isn't excessively called
     if (this.interactionInProgress?.createdByApi) return // api-started interactions cannot be disrupted aka cancelled by UI events (and the vice versa applies as well)
-    if (this.interactionInProgress?.done() === false) return
+    if (this.interactionInProgress?.done() === false) return // current in-progress is blocked from closing, e.g. by 'waitForEnd' api option
 
-    this.interactionInProgress = new Interaction(this.agentIdentifier, eventName, startedAt, this.latestRouteSetByApi)
-    if (eventName === 'click') {
+    const oldURL = eventName === INTERACTION_TRIGGERS[3] ? this.latestHistoryUrl : undefined // see related comment in 'newURL' handler above, 'popstate'
+    this.interactionInProgress = new Interaction(this.agentIdentifier, eventName, startedAt, this.latestRouteSetByApi, oldURL)
+
+    if (eventName === INTERACTION_TRIGGERS[0]) { // 'click'
       const sourceElemText = getActionText(sourceElem)
       if (sourceElemText) this.interactionInProgress.customAttributes.actionText = sourceElemText
     }
@@ -131,7 +140,7 @@ export class Aggregate extends AggregateBase {
     for (let idx = interactionsBuffer.length - 1; idx >= 0; idx--) { // reverse search for the latest completed interaction for efficiency
       const finishedInteraction = interactionsBuffer[idx]
       if (finishedInteraction.isActiveDuring(timestamp)) {
-        if (finishedInteraction.trigger !== 'initialPageLoad') return finishedInteraction
+        if (finishedInteraction.trigger !== IPL_TRIGGER_NAME) return finishedInteraction
         // It's possible that a complete interaction occurs before page is fully loaded, so we need to consider if a route-change ixn may have overlapped this iPL
         else saveIxn = finishedInteraction
       }
@@ -196,9 +205,11 @@ export class Aggregate extends AggregateBase {
       // In here, 'this' refers to the EventContext specific to per InteractionHandle instance spawned by each .interaction() api call.
       // Each api call aka IH instance would therefore retain a reference to either the in-progress interaction *at the time of the call* OR a new api-started interaction.
       this.associatedInteraction = thisClass.getInteractionFor(time)
+      if (this.associatedInteraction?.trigger === IPL_TRIGGER_NAME) this.associatedInteraction = null // the api get-interaction method cannot target IPL
       if (!this.associatedInteraction) {
         // This new api-driven interaction will be the target of any subsequent .interaction() call, until it is closed by EITHER .end() OR the regular seenHistoryAndDomChange process.
         this.associatedInteraction = thisClass.interactionInProgress = new Interaction(thisClass.agentIdentifier, API_TRIGGER_NAME, time, thisClass.latestRouteSetByApi)
+        thisClass.domObserver.observe(document.body, { attributes: true, childList: true, subtree: true, characterData: true }) // start observing for DOM changes like a regular UI-driven interaction
         thisClass.setClosureHandlers()
       }
       if (waitForEnd === true) this.associatedInteraction.keepOpenUntilEndApi = true

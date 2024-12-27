@@ -5,6 +5,72 @@
       "changes": [
         {
           "type": "feat",
+          "sha": "9395415d942b55e88e89438aa203c6a1642d9e6b",
+          "message": "Add custom events API",
+          "issues": [
+            "1263"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "762492896a7b96564269aab1aadeb6e44a4da242",
+          "message": "Soft navigation bug fixes and new soft navigation tests",
+          "issues": [
+            "1268"
+          ]
+        }
+      ],
+      "version": "1.277.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "e01beb28-b225-4333-9334-f7ac3e63180d",
+      "createTime": "2024-12-18T17:31:02.842Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
+          "sha": "537e72da0821792006abd16c41ffa025fd73b474",
+          "message": "allow feature flags to control experimental features",
+          "issues": [
+            "1282"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "8410dbeef30aeb0e578c63a293ec311c3d42f8da",
+          "message": "Ignore reserved attribute names on UserActions tied to the window",
+          "issues": [
+            "1261"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "2bb6b5b2e104a6b3ac9ceb70d396f65cfb61c1bd",
+          "message": "Fix syntax error in fallback when tracking xhr readyState",
+          "issues": [
+            "1272"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "e4c7debe2a1653efdad8940c55a71dd0140ce900",
+          "message": "Capture Page Resource Assets",
+          "issues": [
+            "1257"
+          ]
+        }
+      ],
+      "version": "1.276.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "a317a8f3-8963-4cc5-b0c1-f978662811e3",
+      "createTime": "2024-12-16T20:51:42.875Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
           "sha": "8d10e14953f9a5b9ba97e865ba5476fc527ba384",
           "message": "Allow logs api wrapper to update custom attributes",
           "issues": [
@@ -2268,5 +2334,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2024-12-03T21:39:52.055Z"
+  "updateTime": "2024-12-18T17:31:02.842Z"
 }

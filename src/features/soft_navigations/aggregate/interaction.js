@@ -4,7 +4,7 @@ import { generateUuid } from '../../../common/ids/unique-id'
 import { addCustomAttributes, getAddStringContext, nullable, numeric } from '../../../common/serialize/bel-serializer'
 import { now } from '../../../common/timing/now'
 import { cleanURL } from '../../../common/url/clean-url'
-import { NODE_TYPE, INTERACTION_STATUS, INTERACTION_TYPE, API_TRIGGER_NAME } from '../constants'
+import { NODE_TYPE, INTERACTION_STATUS, INTERACTION_TYPE, API_TRIGGER_NAME, IPL_TRIGGER_NAME } from '../constants'
 import { BelNode } from './bel-node'
 
 /**
@@ -13,8 +13,6 @@ import { BelNode } from './bel-node'
 export class Interaction extends BelNode {
   id = generateUuid() // unique id that is serialized and used to link interactions with errors
   initialPageURL = initialLocation
-  oldURL = '' + globalScope?.location
-  newURL = '' + globalScope?.location
   customName
   customAttributes = {}
   customDataByApi = {}
@@ -30,7 +28,7 @@ export class Interaction extends BelNode {
   onDone = []
   cancellationTimer
 
-  constructor (agentIdentifier, uiEvent, uiEventTimestamp, currentRouteKnown) {
+  constructor (agentIdentifier, uiEvent, uiEventTimestamp, currentRouteKnown, currentUrl) {
     super(agentIdentifier)
     this.belType = NODE_TYPE.INTERACTION
     this.trigger = uiEvent
@@ -42,6 +40,7 @@ export class Interaction extends BelNode {
     ])
     this.forceSave = this.forceIgnore = false
     if (this.trigger === API_TRIGGER_NAME) this.createdByApi = true
+    this.newURL = this.oldURL = (currentUrl || globalScope?.location.href)
   }
 
   updateDom (timestamp) {
@@ -66,6 +65,9 @@ export class Interaction extends BelNode {
   done (customEndTime) {
     // User could've mark this interaction--regardless UI or api started--as "don't close until .end() is called on it". Only .end provides a timestamp; the default flows do not.
     if (this.keepOpenUntilEndApi && customEndTime === undefined) return false
+    // If interaction is already closed, this is a no-op. However, returning true lets startUIInteraction know that it CAN start a new interaction, as this one is done.
+    if (this.status !== INTERACTION_STATUS.IP) return true
+
     this.onDone.forEach(apiProvidedCb => apiProvidedCb(this.customDataByApi)) // this interaction's .save or .ignore can still be set by these user provided callbacks for example
 
     if (this.forceIgnore) this.#cancel() // .ignore() always has precedence over save actions
@@ -76,7 +78,6 @@ export class Interaction extends BelNode {
   }
 
   #finish (customEndTime = 0) {
-    if (this.status !== INTERACTION_STATUS.IP) return // disallow this call if the ixn is already done aka not in-progress
     clearTimeout(this.cancellationTimer)
     this.end = Math.max(this.domTimestamp, this.historyTimestamp, customEndTime)
     this.customAttributes = { ...getInfo(this.agentIdentifier).jsAttributes, ...this.customAttributes } // attrs specific to this interaction should have precedence over the general custom attrs
@@ -88,7 +89,6 @@ export class Interaction extends BelNode {
   }
 
   #cancel () {
-    if (this.status !== INTERACTION_STATUS.IP) return // disallow this call if the ixn is already done aka not in-progress
     clearTimeout(this.cancellationTimer)
     this.status = INTERACTION_STATUS.CAN
 
@@ -105,7 +105,7 @@ export class Interaction extends BelNode {
    */
   isActiveDuring (timestamp) {
     if (this.status === INTERACTION_STATUS.IP) return this.start <= timestamp
-    return (this.status === INTERACTION_STATUS.FIN && this.start <= timestamp && this.end >= timestamp)
+    return (this.status === INTERACTION_STATUS.FIN && this.start <= timestamp && this.end > timestamp)
   }
 
   // Following are virtual properties overridden by a subclass:
@@ -114,10 +114,11 @@ export class Interaction extends BelNode {
   get navTiming () {}
 
   serialize (firstStartTimeOfPayload) {
+    const isFirstIxnOfPayload = firstStartTimeOfPayload === undefined
     const addString = getAddStringContext(this.agentIdentifier)
     const nodeList = []
     let ixnType
-    if (this.trigger === 'initialPageLoad') ixnType = INTERACTION_TYPE.INITIAL_PAGE_LOAD
+    if (this.trigger === IPL_TRIGGER_NAME) ixnType = INTERACTION_TYPE.INITIAL_PAGE_LOAD
     else if (this.newURL !== this.oldURL) ixnType = INTERACTION_TYPE.ROUTE_CHANGE
     else ixnType = INTERACTION_TYPE.UNSPECIFIED
 
@@ -125,7 +126,7 @@ export class Interaction extends BelNode {
     const fields = [
       numeric(this.belType),
       0, // this will be overwritten below with number of attached nodes
-      numeric(this.start - firstStartTimeOfPayload), // relative to first node
+      numeric(this.start - (isFirstIxnOfPayload ? 0 : firstStartTimeOfPayload)), // the very 1st ixn does not require offset so it should fallback to a 0 while rest is offset by the very 1st ixn's start
       numeric(this.end - this.start), // end -- relative to start
       numeric(this.callbackEnd), // cbEnd -- relative to start; not used by BrowserInteraction events
       numeric(this.callbackDuration), // not relative
@@ -144,9 +145,9 @@ export class Interaction extends BelNode {
     const allAttachedNodes = addCustomAttributes(this.customAttributes || {}, addString) // start with all custom attributes
     if (getInfo(this.agentIdentifier).atts) allAttachedNodes.push('a,' + addString(getInfo(this.agentIdentifier).atts)) // add apm provided attributes
     /* Querypack encoder+decoder quirkiness:
-       - If first ixn node of payload is being processed, we use this node's start to offset. (firstStartTime should be 0--or undefined.)
-       - Else for subsequent ixn nodes, we use the first ixn node's start to offset. */
-    this.children.forEach(node => allAttachedNodes.push(node.serialize(firstStartTimeOfPayload || this.start))) // recursively add the serialized string of every child of this (ixn) bel node
+       - If first ixn node of payload is being processed, its children's start time must be offset by this node's start. (firstStartTime should be undefined.)
+       - Else for subsequent ixns in the same payload, we go back to using that first ixn node's start to offset their children's start. */
+    this.children.forEach(node => allAttachedNodes.push(node.serialize(isFirstIxnOfPayload ? this.start : firstStartTimeOfPayload))) // recursively add the serialized string of every child of this (ixn) bel node
 
     fields[1] = numeric(allAttachedNodes.length)
     nodeList.push(fields)

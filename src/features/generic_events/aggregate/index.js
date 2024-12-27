@@ -5,7 +5,7 @@
 import { stringify } from '../../../common/util/stringify'
 import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { cleanURL } from '../../../common/url/clean-url'
-import { FEATURE_NAME } from '../constants'
+import { FEATURE_NAME, RESERVED_EVENT_TYPES } from '../constants'
 import { globalScope, initialLocation, isBrowserScope } from '../../../common/constants/runtime'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { warn } from '../../../common/util/console'
@@ -37,12 +37,21 @@ export class Aggregate extends AggregateBase {
 
       this.trackSupportabilityMetrics()
 
+      registerHandler('api-recordCustomEvent', (timestamp, eventType, attributes) => {
+        if (RESERVED_EVENT_TYPES.includes(eventType)) return warn(46)
+        this.addEvent({
+          eventType,
+          timestamp: this.toEpoch(timestamp),
+          ...attributes
+        })
+      }, this.featureName, this.ee)
+
       if (agentRef.init.page_action.enabled) {
         registerHandler('api-addPageAction', (timestamp, name, attributes) => {
           this.addEvent({
             ...attributes,
             eventType: 'PageAction',
-            timestamp: Math.floor(this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(timestamp)),
+            timestamp: this.toEpoch(timestamp),
             timeSinceLoad: timestamp / 1000,
             actionName: name,
             referrerUrl: this.referrerUrl,
@@ -66,7 +75,7 @@ export class Aggregate extends AggregateBase {
               const { target, timeStamp, type } = aggregatedUserAction.event
               this.addEvent({
                 eventType: 'UserAction',
-                timestamp: Math.floor(this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(timeStamp)),
+                timestamp: this.toEpoch(timeStamp),
                 action: type,
                 actionCount: aggregatedUserAction.count,
                 actionDuration: aggregatedUserAction.relativeMs[aggregatedUserAction.relativeMs.length - 1],
@@ -74,11 +83,20 @@ export class Aggregate extends AggregateBase {
                 rageClick: aggregatedUserAction.rageClick,
                 target: aggregatedUserAction.selectorPath,
                 ...(isIFrameWindow(window) && { iframe: true }),
-                ...(target?.id && { targetId: target.id }),
-                ...(target?.tagName && { targetTag: target.tagName }),
-                ...(target?.type && { targetType: target.type }),
-                ...(target?.className && { targetClass: target.className })
+                ...(canTrustTargetAttribute('id') && { targetId: target.id }),
+                ...(canTrustTargetAttribute('tagName') && { targetTag: target.tagName }),
+                ...(canTrustTargetAttribute('type') && { targetType: target.type }),
+                ...(canTrustTargetAttribute('className') && { targetClass: target.className })
               })
+
+              /**
+               * Only trust attributes that exist on HTML element targets, which excludes the window and the document targets
+               * @param {string} attribute The attribute to check for on the target element
+               * @returns {boolean} Whether the target element has the attribute and can be trusted
+               */
+              function canTrustTargetAttribute (attribute) {
+                return !!(aggregatedUserAction.selectorPath !== 'window' && aggregatedUserAction.selectorPath !== 'document' && target instanceof HTMLElement && target?.[attribute])
+              }
             }
           } catch (e) {
             // do nothing for now
@@ -109,7 +127,7 @@ export class Aggregate extends AggregateBase {
                     handle(SUPPORTABILITY_METRIC_CHANNEL, ['Generic/Performance/' + type + '/Seen'])
                     this.addEvent({
                       eventType: 'BrowserPerformance',
-                      timestamp: Math.floor(agentRef.runtime.timeKeeper.correctRelativeTimestamp(entry.startTime)),
+                      timestamp: this.toEpoch(entry.startTime),
                       entryName: cleanURL(entry.name),
                       entryDuration: entry.duration,
                       entryType: type,
@@ -239,6 +257,10 @@ export class Aggregate extends AggregateBase {
 
   queryStringsBuilder () {
     return { ua: this.agentRef.info.userAttributes, at: this.agentRef.info.atts }
+  }
+
+  toEpoch (timestamp) {
+    return Math.floor(this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(timestamp))
   }
 
   trackSupportabilityMetrics () {

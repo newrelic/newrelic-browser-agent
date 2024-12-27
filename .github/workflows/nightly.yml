@@ -33,6 +33,7 @@ jobs:
         uses: './.github/actions/nr-report-build-size'
         with:
           nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
+          trigger: nightly
 
   verify-ab-assets:
     name: Verify A/B Assets

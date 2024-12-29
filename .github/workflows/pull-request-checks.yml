@@ -140,6 +140,7 @@ jobs:
           analysis-file-url: 'https://js-agent.newrelic.com/dev/nr-rum-standard.stats.json'
           file-name-filter: '.min.js'
           trigger: 'pull-request-checks'
+          version: 'main'
       - name: Report dev pro size to NR
         uses: newrelic/capture-build-size@main
         with:
@@ -149,6 +150,7 @@ jobs:
           analysis-file-url: 'https://js-agent.newrelic.com/dev/nr-full-standard.stats.json'
           file-name-filter: '.min.js'
           trigger: 'pull-request-checks'
+          version: 'main'
       - name: Report dev spa size to NR
         uses: newrelic/capture-build-size@main
         with:
@@ -158,6 +160,7 @@ jobs:
           analysis-file-url: 'https://js-agent.newrelic.com/dev/nr-full-standard.stats.json'
           file-name-filter: '.min.js'
           trigger: 'pull-request-checks'
+          version: 'main'
 
   # Jobs for workflow_dispatch events
 

@@ -157,7 +157,7 @@ jobs:
           nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
           nr-account-id: '550352'
           nr-env: 'staging'
-          analysis-file-url: 'https://js-agent.newrelic.com/dev/nr-full-standard.stats.json'
+          analysis-file-url: 'https://js-agent.newrelic.com/dev/nr-spa-standard.stats.json'
           file-name-filter: '.min.js'
           trigger: 'pull-request-checks'
           version: 'main'

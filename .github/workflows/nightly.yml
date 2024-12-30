@@ -30,7 +30,7 @@ jobs:
         uses: newrelic/capture-build-size@main
         with:
           nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
-          nr-account-id: '550352'
+          nr-account-id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
           nr-env: 'staging'
           analysis-file-url: 'https://js-agent.newrelic.com/dev/nr-rum-standard.stats.json'
           file-name-filter: '.min.js'
@@ -39,7 +39,7 @@ jobs:
         uses: newrelic/capture-build-size@main
         with:
           nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
-          nr-account-id: '550352'
+          nr-account-id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
           nr-env: 'staging'
           analysis-file-url: 'https://js-agent.newrelic.com/dev/nr-full-standard.stats.json'
           file-name-filter: '.min.js'
@@ -48,7 +48,7 @@ jobs:
         uses: newrelic/capture-build-size@main
         with:
           nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
-          nr-account-id: '550352'
+          nr-account-id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
           nr-env: 'staging'
           analysis-file-url: 'https://js-agent.newrelic.com/dev/nr-full-standard.stats.json'
           file-name-filter: '.min.js'

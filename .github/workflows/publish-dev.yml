@@ -95,7 +95,7 @@ jobs:
         uses: newrelic/deployment-marker-action@v2.3.0
         with:
           apiKey: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
-          guid: NTUwMzUyfEJST1dTRVJ8QVBQTElDQVRJT058ODkzODM5MjI
+          guid: ${{ secrets.INTERNAL_STAGING_INGEST_ENTITY_GUID }}
           commit: "${{ github.sha }}"
           version: "${{ github.ref_name }}"
           user: "${{ github.actor }}"
@@ -110,29 +110,32 @@ jobs:
         uses: newrelic/capture-build-size@main
         with:
           nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
-          nr-account-id: '550352'
+          nr-account-id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
           nr-env: 'staging'
           analysis-file-contents: ${{ steps.get-stats.outputs.rum }}
           file-name-filter: '.min.js'
           trigger: 'publish-dev'
+          traverse: true
       - name: Report pro size to NR
         uses: newrelic/capture-build-size@main
         with:
           nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
-          nr-account-id: '550352'
+          nr-account-id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
           nr-env: 'staging'
           analysis-file-contents: ${{ steps.get-stats.outputs.full }}
           file-name-filter: '.min.js'
           trigger: 'publish-dev'
+          traverse: true
       - name: Report spa size to NR
         uses: newrelic/capture-build-size@main
         with:
           nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
-          nr-account-id: '550352'
+          nr-account-id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
           nr-env: 'staging'
           analysis-file-contents: ${{ steps.get-stats.outputs.spa }}
           file-name-filter: '.min.js'
           trigger: 'publish-dev'
+          traverse: true
 
   # Publish dev to staging NRDB
   # publish-dev-nr:

@@ -5,12 +5,14 @@ import { warn } from '../../../common/util/console'
 import { stringify } from '../../../common/util/stringify'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { AggregateBase } from '../../utils/aggregate-base'
-import { FEATURE_NAME, LOGGING_EVENT_EMITTER_CHANNEL, LOG_LEVELS } from '../constants'
+import { FEATURE_NAME, LOGGING_EVENT_EMITTER_CHANNEL, LOG_LEVELS, LOGGING_MODE } from '../constants'
 import { Log } from '../shared/log'
 import { isValidLogLevel } from '../shared/utils'
 import { applyFnToProps } from '../../../common/util/traverse'
 import { MAX_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
-import { FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
+import { FEATURE_NAMES, FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
+import { SESSION_EVENT_TYPES, SESSION_EVENTS } from '../../../common/session/constants'
+import { ABORT_REASONS } from '../../session_replay/constants'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -18,7 +20,29 @@ export class Aggregate extends AggregateBase {
     super(agentRef, FEATURE_NAME)
     this.harvestTimeSeconds = agentRef.init.logging.harvestTimeSeconds
 
-    this.waitForFlags([]).then(() => {
+    // The SessionEntity class can emit a message indicating the session was cleared and reset (expiry, inactivity). This feature must abort and never resume if that occurs.
+    this.ee.on(SESSION_EVENTS.RESET, () => {
+      this.abort(ABORT_REASONS.RESET)
+    })
+
+    this.ee.on(SESSION_EVENTS.UPDATE, (type, data) => {
+      if (this.blocked || type !== SESSION_EVENT_TYPES.CROSS_TAB) return
+      if (this.mode !== LOGGING_MODE.OFF && data.loggingMode === LOGGING_MODE.OFF) this.abort(ABORT_REASONS.CROSS_TAB)
+      else this.mode = data.loggingMode
+    })
+
+    this.waitForFlags(['log']).then(([loggingMode]) => {
+      const session = this.agentRef.runtime.session ?? {}
+      if (this.loggingMode === LOGGING_MODE.OFF || (session.isNew && loggingMode === LOGGING_MODE.OFF)) {
+        this.blocked = true
+        this.deregisterDrain()
+        return
+      }
+      if (session.isNew || !this.isSessionTrackingEnabled) {
+        this.updateLoggingMode(loggingMode)
+      } else {
+        this.loggingMode = session.state.loggingMode
+      }
       this.scheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
         onFinished: (result) => this.postHarvestCleanup(result.sent && result.retry),
         retryDelay: this.harvestTimeSeconds,
@@ -33,12 +57,20 @@ export class Aggregate extends AggregateBase {
     })
   }
 
+  updateLoggingMode (loggingMode) {
+    this.loggingMode = loggingMode
+    this.syncWithSessionManager({
+      loggingMode: this.loggingMode
+    })
+  }
+
   handleLog (timestamp, message, attributes = {}, level = LOG_LEVELS.INFO) {
-    if (this.blocked) return
+    if (this.blocked || !this.loggingMode) return
 
     if (!attributes || typeof attributes !== 'object') attributes = {}
     if (typeof level === 'string') level = level.toUpperCase()
     if (!isValidLogLevel(level)) return warn(30, level)
+    if (this.loggingMode < (LOGGING_MODE[level] || Infinity)) return
 
     try {
       if (typeof message !== 'string') {
@@ -115,5 +147,14 @@ export class Aggregate extends AggregateBase {
 
   queryStringsBuilder () {
     return { browser_monitoring_key: this.agentRef.info.licenseKey }
+  }
+
+  /** Abort the feature, once aborted it will not resume */
+  abort (reason = {}) {
+    handle(SUPPORTABILITY_METRIC_CHANNEL, [`Logging/Abort/${reason.sm}`], undefined, FEATURE_NAMES.logging, this.ee)
+    this.blocked = true
+    this.updateLoggingMode(LOGGING_MODE.OFF)
+    this.events.clear()
+    this.deregisterDrain()
   }
 }

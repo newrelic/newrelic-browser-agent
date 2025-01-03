@@ -6,6 +6,7 @@ import { TimeKeeper } from '../../src/common/timing/time-keeper'
 import { getRuntime } from '../../src/common/config/runtime'
 import { setupAgentSession } from '../../src/features/utils/agent-session'
 import { EventAggregator } from '../../src/common/aggregate/event-aggregator'
+import { Harvester } from '../../src/common/harvest/harvester'
 
 /**
  * Sets up a new agent for component testing. This should be called only
@@ -57,6 +58,8 @@ export function setupAgent ({ agentOverrides = {}, info = {}, init = {}, loaderC
       getResponseHeader: jest.fn(() => (new Date()).toUTCString())
     }, 450, 600, Date.now())
   }
+  fakeAgent.features = {}
+  if (!runtime.harvester) runtime.harvester = new Harvester(fakeAgent)
 
   return fakeAgent
 }

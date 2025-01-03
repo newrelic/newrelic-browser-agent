@@ -1,7 +1,13 @@
+// To reduce build size a bit:
+export const EVENTS = 'events'
+export const JSERRORS = 'jserrors'
+const BLOBS = 'browser/blobs'
+export const RUM = 'rum'
+
 export const FEATURE_NAMES = {
   ajax: 'ajax',
   genericEvents: 'generic_events',
-  jserrors: 'jserrors',
+  jserrors: JSERRORS,
   logging: 'logging',
   metrics: 'metrics',
   /**
@@ -35,14 +41,15 @@ export const featurePriority = {
 }
 
 export const FEATURE_TO_ENDPOINT = {
-  [FEATURE_NAMES.pageViewTiming]: 'events',
-  [FEATURE_NAMES.ajax]: 'events',
-  [FEATURE_NAMES.spa]: 'events',
-  [FEATURE_NAMES.softNav]: 'events',
-  [FEATURE_NAMES.metrics]: 'jserrors',
-  [FEATURE_NAMES.jserrors]: 'jserrors',
-  [FEATURE_NAMES.sessionTrace]: 'browser/blobs',
-  [FEATURE_NAMES.sessionReplay]: 'browser/blobs',
+  [FEATURE_NAMES.pageViewEvent]: RUM,
+  [FEATURE_NAMES.pageViewTiming]: EVENTS,
+  [FEATURE_NAMES.ajax]: EVENTS,
+  [FEATURE_NAMES.spa]: EVENTS,
+  [FEATURE_NAMES.softNav]: EVENTS,
+  [FEATURE_NAMES.metrics]: JSERRORS,
+  [FEATURE_NAMES.jserrors]: JSERRORS,
+  [FEATURE_NAMES.sessionTrace]: BLOBS,
+  [FEATURE_NAMES.sessionReplay]: BLOBS,
   [FEATURE_NAMES.logging]: 'browser/logs',
   [FEATURE_NAMES.genericEvents]: 'ins'
 }

@@ -20,7 +20,7 @@ describe('Session Replay Harvest Behavior', () => {
     const start = Date.now()
     const [[{ request: blobHarvest }]] = await Promise.all([
       sessionReplaysCapture.waitForResult({ totalCount: 1 }),
-      browser.url(await browser.testHandle.assetURL('64kb-dom.html', srConfig({ session_replay: { harvestTimeSeconds: 60 } })))
+      browser.url(await browser.testHandle.assetURL('64kb-dom.html', srConfig({ harvester: { interval: 60 } })))
         .then(() => browser.waitForSessionReplayRecording())
     ])
 
@@ -34,7 +34,7 @@ describe('Session Replay Harvest Behavior', () => {
   it.withBrowsersMatching(onlyChrome)('should abort if exceeds maximum size', async () => {
     const [sessionReplayHarvests] = await Promise.all([
       sessionReplaysCapture.waitForResult({ timeout: 10000 }),
-      browser.url(await browser.testHandle.assetURL('1mb-dom.html', srConfig({ session_replay: { harvestTimeSeconds: 5 } })))
+      browser.url(await browser.testHandle.assetURL('1mb-dom.html', srConfig()))
     ])
 
     expect(sessionReplayHarvests.length).toEqual(0)
@@ -48,7 +48,7 @@ describe('Session Replay Harvest Behavior', () => {
   it.withBrowsersMatching(notIOS)('should set timestamps on each payload', async () => {
     const [sessionReplayHarvests] = await Promise.all([
       sessionReplaysCapture.waitForResult({ totalCount: 2 }),
-      browser.url(await browser.testHandle.assetURL('64kb-dom.html', srConfig({ session_replay: { harvestTimeSeconds: 5 } })))
+      browser.url(await browser.testHandle.assetURL('64kb-dom.html', srConfig()))
     ])
 
     expect(sessionReplayHarvests[0].request.body.length).toBeGreaterThan(0)
@@ -77,7 +77,7 @@ describe('Session Replay Harvest Behavior', () => {
   it('should use sendBeacon for unload harvests', async () => {
     await Promise.all([
       sessionReplaysCapture.waitForResult({ totalCount: 1 }),
-      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig({ session_replay: { harvestTimeSeconds: 30 } })))
+      browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig({ harvester: { interval: 30 } })))
         .then(() => browser.execute(function () {
           const sendBeaconFn = navigator.sendBeacon.bind(navigator)
           navigator.sendBeacon = function (url, body) {

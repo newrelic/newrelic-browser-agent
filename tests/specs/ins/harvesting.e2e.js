@@ -319,7 +319,7 @@ describe('ins harvesting', () => {
   })
 
   it('should harvest early when buffer gets too large (overall quantity)', async () => {
-    const testUrl = await browser.testHandle.assetURL('instrumented.html', { init: { generic_events: { harvestTimeSeconds: 30 } } })
+    const testUrl = await browser.testHandle.assetURL('instrumented.html', { init: { harvest: { interval: 30 } } })
     await browser.url(testUrl)
       .then(() => browser.waitForAgentLoad())
 

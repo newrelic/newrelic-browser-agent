@@ -14,6 +14,46 @@ jobs:
       browser-target: chrome@latest
     secrets: inherit
 
+  track-size:
+    name: Track Build Size
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
+      - name: Install project dependencies
+        run: npm ci
+      - name: Report lite size to NR
+        uses: newrelic/capture-build-size@main
+        with:
+          nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
+          nr-account-id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
+          nr-env: 'staging'
+          analysis-file-url: 'https://js-agent.newrelic.com/dev/nr-rum-standard.stats.json'
+          file-name-filter: '.min.js'
+          trigger: 'nightly'
+      - name: Report pro size to NR
+        uses: newrelic/capture-build-size@main
+        with:
+          nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
+          nr-account-id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
+          nr-env: 'staging'
+          analysis-file-url: 'https://js-agent.newrelic.com/dev/nr-full-standard.stats.json'
+          file-name-filter: '.min.js'
+          trigger: 'nightly'
+      - name: Report spa size to NR
+        uses: newrelic/capture-build-size@main
+        with:
+          nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
+          nr-account-id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
+          nr-env: 'staging'
+          analysis-file-url: 'https://js-agent.newrelic.com/dev/nr-full-standard.stats.json'
+          file-name-filter: '.min.js'
+          trigger: 'nightly'
+
   verify-ab-assets:
     name: Verify A/B Assets
     timeout-minutes: 60

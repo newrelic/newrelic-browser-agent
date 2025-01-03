@@ -61,6 +61,46 @@ jobs:
           fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
           fastly_service: staging-js-agent.newrelic.com
           asset_path: ${{ join(fromJson(steps.s3-upload.outputs.results).*.Key, ' ') }}
+      - name: Get version number
+        id: agent-loader-version
+        run: echo "results=$(cat package.json | jq -r '.version')" >> $GITHUB_OUTPUT
+      - name: Get local stats
+        id: get-stats
+        shell: bash
+        run: |
+          rum=$(cat ./build/nr-rum-standard.stats.json); echo "rum=$rum" >> $GITHUB_OUTPUT;
+          full=$(cat ./build/nr-full-standard.stats.json); echo "full=$full" >> $GITHUB_OUTPUT;
+          spa=$(cat ./build/nr-spa-standard.stats.json); echo "spa=$spa" >> $GITHUB_OUTPUT;
+      - name: Report lite size to NR
+        uses: newrelic/capture-build-size@main
+        with:
+          nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
+          nr-account-id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
+          nr-env: 'staging'
+          analysis-file-contents: ${{ steps.get-stats.outputs.rum }}
+          file-name-filter: '.min.js'
+          trigger: 'publish-release'
+          version: v${{ steps.agent-loader-version.outputs.results }}
+      - name: Report pro size to NR
+        uses: newrelic/capture-build-size@main
+        with:
+          nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
+          nr-account-id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
+          nr-env: 'staging'
+          analysis-file-contents: ${{ steps.get-stats.outputs.full }}
+          file-name-filter: '.min.js'
+          trigger: 'publish-release'
+          version: v${{ steps.agent-loader-version.outputs.results }}
+      - name: Report spa size to NR
+        uses: newrelic/capture-build-size@main
+        with:
+          nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
+          nr-account-id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
+          nr-env: 'staging'
+          analysis-file-contents: ${{ steps.get-stats.outputs.spa }}
+          file-name-filter: '.min.js'
+          trigger: 'publish-release'
+          version: v${{ steps.agent-loader-version.outputs.results }}
 
   # Publish the new "current" version to s3 before the prod a/b scripts have been built
   publish-current-to-s3:

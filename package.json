@@ -218,7 +218,7 @@
     "@babel/plugin-transform-template-literals": "^7.24.7",
     "@babel/preset-env": "^7.23.8",
     "@babel/register": "^7.23.7",
-    "@faker-js/faker": "^8.3.1",
+    "@faker-js/faker": "^9.3.0",
     "@fastify/compress": "^6.5.0",
     "@fastify/cors": "^8.5.0",
     "@fastify/multipart": "^8.1.0",

@@ -93,5 +93,3 @@
 `An internal agent process failed to execute.`
 ### 46
 `A reserved eventType was provided to recordCustomEvent(...) -- The event was not recorded.`
-### 47
-`A feature was marked for auto starting but has still not started importing its aggregate.`

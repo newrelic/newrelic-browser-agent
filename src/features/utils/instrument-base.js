@@ -57,9 +57,6 @@ export class InstrumentBase extends FeatureBase {
         registerDrain(agentRef.agentIdentifier, this.featureName)
         this.auto = true
         this.importAggregator(agentRef)
-        this.onAggregateImported.then(loaded => { // "subscribe" the feature aggregate to harvest interval when it's ready
-          if (loaded) agentRef.runtime.harvester.initializedAggregates.push(this.featAggregate)
-        })
       }))
     }
   }
@@ -105,6 +102,8 @@ export class InstrumentBase extends FeatureBase {
         const { lazyFeatureLoader } = await import(/* webpackChunkName: "lazy-feature-loader" */ './lazy-feature-loader')
         const { Aggregate } = await lazyFeatureLoader(this.featureName, 'aggregate')
         this.featAggregate = new Aggregate(agentRef, argsObjFromInstrument)
+
+        agentRef.runtime.harvester?.initializedAggregates.push(this.featAggregate) // "subscribe" the feature to harvest interval (PVE will start the timer)
         loadedSuccessfully(true)
       } catch (e) {
         warn(34, e)

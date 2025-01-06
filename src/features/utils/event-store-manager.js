@@ -25,7 +25,7 @@ export class EventStoreManager {
    * @returns {boolean} True if the target's storage is empty (defaults to all storages)
    */
   isEmpty (optsIfPresent, target) {
-    if (target) return this.appStorageMap.get(target).isEmpty(optsIfPresent)
+    if (target) return this.appStorageMap.get(target)?.isEmpty(optsIfPresent)
     for (const eventStore of this.appStorageMap.values()) {
       if (!eventStore.isEmpty(optsIfPresent)) return false
     }
@@ -53,7 +53,7 @@ export class EventStoreManager {
    * @returns {Array} Objects of `data` labeled with their respective `target` app to be sent to
    */
   get (optsIfPresent, target) {
-    if (target) return [{ targetApp: target, data: this.appStorageMap.get(target).get(optsIfPresent) }]
+    if (target) return [{ targetApp: target, data: this.appStorageMap.get(target)?.get(optsIfPresent) }]
     const allPayloads = []
     this.appStorageMap.forEach((eventStore, recordedTarget) => {
       allPayloads.push({ targetApp: recordedTarget, data: eventStore.get(optsIfPresent) })
@@ -70,12 +70,12 @@ export class EventStoreManager {
   }
 
   save (optsIfPresent, target) {
-    if (target) return this.appStorageMap.get(target).save(optsIfPresent)
+    if (target) return this.appStorageMap.get(target)?.save(optsIfPresent)
     this.appStorageMap.forEach((eventStore) => eventStore.save(optsIfPresent))
   }
 
   clear (optsIfPresent, target) {
-    if (target) return this.appStorageMap.get(target).clear(optsIfPresent)
+    if (target) return this.appStorageMap.get(target)?.clear(optsIfPresent)
     this.appStorageMap.forEach((eventStore) => eventStore.clear(optsIfPresent))
   }
 
@@ -85,7 +85,7 @@ export class EventStoreManager {
       this.appStorageMap.forEach((eventStore) => eventStore.reloadSave(optsIfPresent))
       return
     }
-    return this.appStorageMap.get(target).reloadSave(optsIfPresent)
+    return this.appStorageMap.get(target)?.reloadSave(optsIfPresent)
   }
 
   clearSave (optsIfPresent, target) {
@@ -93,6 +93,6 @@ export class EventStoreManager {
       this.appStorageMap.forEach((eventStore) => eventStore.clearSave(optsIfPresent))
       return
     }
-    return this.appStorageMap.get(target).clearSave(optsIfPresent)
+    return this.appStorageMap.get(target)?.clearSave(optsIfPresent)
   }
 }

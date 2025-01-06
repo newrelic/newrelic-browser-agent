@@ -138,5 +138,6 @@ export class Aggregate extends AggregateBase {
     this.agentRef.runtime.appMetadata = app
     activateFeatures(flags, this.agentIdentifier)
     this.drain()
+    this.agentRef.runtime.harvester.startTimer()
   }
 }

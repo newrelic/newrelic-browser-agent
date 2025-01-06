@@ -12,37 +12,29 @@ import { stringify } from '../util/stringify'
 import { getSubmitMethod, xhr as xhrMethod, xhrFetch as fetchMethod } from '../util/submit-data'
 
 export class Harvester {
+  #started = false
+  initializedAggregates = []
+
   constructor (agentRef) {
     this.agentRef = agentRef
 
-    const autoFeaturesInstruments = Object.values(agentRef.features).filter(feature => feature.auto) // features without autoStart won't be fully initialized until later
-    const importingFeatures = []
-    // Since the harvester is expected to be initialized by PVE Aggregate module, at such time, all the features should be awaiting import though featAggregate may not be available just yet.
-    for (const feature of autoFeaturesInstruments) {
-      if (!feature.onAggregateImported) warn(47, feature.featureName)
-      else importingFeatures.push(feature)
-    }
-    Promise.all(importingFeatures.map(instrument => instrument.onAggregateImported)).then(loadedSuccessfullyArr => {
-      // Double check that all aggregates have been initialized, successfully or not, before starting harvest schedule, which only queries the succesfully loaded ones.
-      const featuresToHarvest = importingFeatures.filter((instrumentInstance, index) => loadedSuccessfullyArr[index])
-      this.initializedAggregates = featuresToHarvest.map(instrumentInstance => instrumentInstance.featAggregate)
-      this.#startTimer(agentRef.init.harvest.interval)
-    })
-
     subscribeToEOL(() => { // do one last harvest round or check
-      this.initializedAggregates?.forEach(aggregateInst => { // let all features wrap up things needed to do before ANY harvest in case there's last minute cross-feature data dependencies
+      this.initializedAggregates.forEach(aggregateInst => { // let all features wrap up things needed to do before ANY harvest in case there's last minute cross-feature data dependencies
         if (typeof aggregateInst.harvestOpts.beforeUnload === 'function') aggregateInst.harvestOpts.beforeUnload()
       })
-      this.initializedAggregates?.forEach(aggregateInst => this.triggerHarvestFor(aggregateInst, { isFinalHarvest: true }))
+      this.initializedAggregates.forEach(aggregateInst => this.triggerHarvestFor(aggregateInst, { isFinalHarvest: true }))
       /* This callback should run in bubble phase, so that that CWV api, like "onLCP", is called before the final harvest so that emitted timings are part of last outgoing. */
     }, false)
 
     /* Flush all buffered data if session resets and give up retries. This should be synchronous to ensure that the correct `session` value is sent.
       Since session-reset generates a new session ID and the ID is grabbed at send-time, any delays or retries would cause the payload to be sent under the wrong session ID. */
-    agentRef.ee.on(SESSION_EVENTS.RESET, () => this.initializedAggregates?.forEach(aggregateInst => this.triggerHarvestFor(aggregateInst, { forceNoRetry: true })))
+    agentRef.ee.on(SESSION_EVENTS.RESET, () => this.initializedAggregates.forEach(aggregateInst => this.triggerHarvestFor(aggregateInst, { forceNoRetry: true })))
   }
 
-  #startTimer (harvestInterval) {
+  startTimer (harvestInterval = this.agentRef.init.harvest.interval) {
+    if (this.#started) return
+    this.#started = true
+
     const onHarvestInterval = () => {
       this.initializedAggregates.forEach(aggregateInst => this.triggerHarvestFor(aggregateInst))
       setTimeout(onHarvestInterval, harvestInterval * 1000) // repeat in X seconds
@@ -83,7 +75,6 @@ export class Harvester {
       })
       ranSend = true
     })
-    // console.log(`harvesting for ${aggregateInst.featureName} at ${now()}${localOpts.isFinalHarvest ? ' (final)' : ''}`)
     return ranSend
 
     /**
@@ -150,42 +141,34 @@ function send (agentRef, { endpoint, targetApp, payload, localOpts = {}, submitM
   if (!localOpts.isFinalHarvest && cbFinished) { // final harvests don't hold onto buffer data (shouldRetryOnFail is false), so cleanup isn't needed
     if (submitMethod === xhrMethod) {
       result.addEventListener('loadend', function () {
-        // status 0 refers to a local error, such as CORS or network failure, or a blocked request by the browser (e.g. adblocker)
-        const cbResult = { sent: this.status !== 0, status: this.status, xhr: this, fullUrl, targetApp }
         // `this` here in block refers to the XHR object in this scope, do not change the anon function to an arrow function
-        switch (this.status) {
-          case 429:
-          case 408:
-          case 500:
-          case 503:
-            cbResult.retry = true
-            break
-        }
-        if (localOpts.needResponse) {
-          cbResult.responseText = this.responseText
-        }
+        // status 0 refers to a local error, such as CORS or network failure, or a blocked request by the browser (e.g. adblocker)
+        const cbResult = { sent: this.status !== 0, status: this.status, retry: shouldRetry(this.status), xhr: this, fullUrl, targetApp }
+        if (localOpts.needResponse) cbResult.responseText = this.responseText
         cbFinished(cbResult)
       }, eventListenerOpts(false))
     } else if (submitMethod === fetchMethod) {
       result.then(async function (response) {
         const status = response.status
-        const cbResult = { sent: true, status, fullUrl, fetchResponse: response, targetApp }
-        switch (status) {
-          case 429:
-          case 408:
-          case 500:
-          case 503:
-            cbResult.retry = true
-            break
-        }
-        if (localOpts.needResponse) {
-          cbResult.responseText = await response.text()
-        }
+        const cbResult = { sent: true, status, retry: shouldRetry(status), fullUrl, fetchResponse: response, targetApp }
+        if (localOpts.needResponse) cbResult.responseText = await response.text()
         cbFinished(cbResult)
       })
     }
   }
   return true
+
+  function shouldRetry (status) {
+    switch (status) {
+      case 429:
+      case 408:
+      case 500:
+      case 503:
+        return true
+      default:
+        return false
+    }
+  }
 }
 
 /**

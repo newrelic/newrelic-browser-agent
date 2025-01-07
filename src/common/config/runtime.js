@@ -30,7 +30,8 @@ const model = {
   session: undefined,
   denyList: undefined,
   timeKeeper: undefined,
-  obfuscator: undefined
+  obfuscator: undefined,
+  harvester: undefined
 }
 
 const _cache = {}

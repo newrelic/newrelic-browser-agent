@@ -13,7 +13,7 @@ export class EventAggregator {
     return aggregatorTypes.every(type => !this.#aggregator.aggregatedData[type]) // no bucket exist for any of the types we're looking for
   }
 
-  add (type, name, params, newMetrics, customParams) {
+  add ([type, name, params, newMetrics, customParams]) {
     // Do we need to track byte size here like EventBuffer?
     this.#aggregator.store(type, name, params, newMetrics, customParams)
     return true

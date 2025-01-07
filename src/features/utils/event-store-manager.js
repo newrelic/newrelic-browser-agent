@@ -22,10 +22,13 @@ export class EventStoreManager {
   /**
    * @param {object} optsIfPresent - exists if called during harvest interval, @see AggregateBase.makeHarvestPayload
    * @param {object} target - specific app's storage to check; if not provided, this method takes into account all apps recorded by this manager
-   * @returns {boolean} True if the target's storage is empty (defaults to all storages)
+   * @returns {boolean} True if the target's storage is empty, or target does not exist in map (defaults to all storages)
    */
   isEmpty (optsIfPresent, target) {
-    if (target) return this.appStorageMap.get(target)?.isEmpty(optsIfPresent)
+    if (target) {
+      if (!this.appStorageMap.has(target)) return true
+      else return this.appStorageMap.get(target).isEmpty(optsIfPresent)
+    }
     for (const eventStore of this.appStorageMap.values()) {
       if (!eventStore.isEmpty(optsIfPresent)) return false
     }

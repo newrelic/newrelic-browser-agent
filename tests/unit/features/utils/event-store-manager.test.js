@@ -96,4 +96,9 @@ describe('EventStoreManager', () => {
     store.clear()
     expect(store.isEmpty()).toBeTruthy()
   })
+
+  test('isEmpty returns true when the target does not exist', () => {
+    const store = new EventStoreManager({}, 1)
+    expect(store.isEmpty(undefined, { name: 'DNE' })).toEqual(true)
+  })
 })

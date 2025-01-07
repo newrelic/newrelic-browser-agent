@@ -32,6 +32,7 @@ let triggerVisChange
 jest.mock('../../../src/common/window/page-visibility', () => ({
   subscribeToVisibilityChange: jest.fn(cb => { triggerVisChange ??= cb })
 }))
+jest.mock('../../../src/common/harvest/harvester')
 
 const expectedNetworkInfo = {
   'net-type': expect.any(String),
@@ -54,7 +55,8 @@ describe('pvt aggregate tests', () => {
       agentIdentifier,
       info: { licenseKey: 'licenseKey', applicationID: 'applicationID' },
       init: { page_view_timing: {} },
-      runtime: {}
+      ee: { on: jest.fn() },
+      runtime: { harvester: { initializedAggregates: [] } }
     }
     const { Aggregate } = await import('../../../src/features/page_view_timing/aggregate')
 
@@ -69,7 +71,7 @@ describe('pvt aggregate tests', () => {
     pvtAgg.prepareHarvest = jest.fn(() => ({}))
   })
   test('LCP event with CLS attribute', () => {
-    const timing = find(pvtAgg.events.get(), function (t) {
+    const timing = find(pvtAgg.events.get()[0].data, function (t) {
       return t.name === 'lcp'
     })
 
@@ -91,24 +93,24 @@ describe('pvt aggregate tests', () => {
   })
 
   test('sends expected FI attributes when available', () => {
-    expect(pvtAgg.events.get().length).toBeTruthy()
-    const fiPayload = pvtAgg.events.get().find(x => x.name === 'fi')
+    expect(pvtAgg.events.get()[0].data.length).toBeTruthy()
+    const fiPayload = pvtAgg.events.get()[0].data.find(x => x.name === 'fi')
     expect(fiPayload.value).toEqual(5)
     expect(fiPayload.attrs).toEqual(expect.objectContaining({ type: 'pointerdown', fid: 1234, cls: 0.1119, ...expectedNetworkInfo }))
   })
 
   test('sends CLS node with right val on vis change', () => {
-    let clsNode = pvtAgg.events.get().find(tn => tn.name === VITAL_NAMES.CUMULATIVE_LAYOUT_SHIFT)
+    let clsNode = pvtAgg.events.get()[0].data.find(tn => tn.name === VITAL_NAMES.CUMULATIVE_LAYOUT_SHIFT)
     expect(clsNode).toBeUndefined()
 
     triggerVisChange()
-    clsNode = pvtAgg.events.get().find(tn => tn.name === VITAL_NAMES.CUMULATIVE_LAYOUT_SHIFT)
+    clsNode = pvtAgg.events.get()[0].data.find(tn => tn.name === VITAL_NAMES.CUMULATIVE_LAYOUT_SHIFT)
     expect(clsNode).toBeTruthy()
     expect(clsNode.value).toEqual(111.9) // since cls multiply decimal by 1000 to offset consumer division by 1000
     expect(clsNode.attrs.cls).toBeUndefined() // cls node doesn't need cls property
   })
   test('sends INP node with right val', () => {
-    let inpNode = pvtAgg.events.get().find(tn => tn.name === VITAL_NAMES.INTERACTION_TO_NEXT_PAINT)
+    let inpNode = pvtAgg.events.get()[0].data.find(tn => tn.name === VITAL_NAMES.INTERACTION_TO_NEXT_PAINT)
     expect(inpNode).toBeTruthy()
     expect(inpNode.value).toEqual(8)
     expect(inpNode.attrs.cls).toEqual(0.1119)

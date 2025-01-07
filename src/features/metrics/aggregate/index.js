@@ -1,5 +1,4 @@
 import { registerHandler } from '../../../common/event-emitter/register-handler'
-import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { FEATURE_NAME, SUPPORTABILITY_METRIC, CUSTOM_METRIC, SUPPORTABILITY_METRIC_CHANNEL, CUSTOM_METRIC_CHANNEL/*, WATCHABLE_WEB_SOCKET_EVENTS */ } from '../constants'
 import { getFrameworks } from './framework-detection'
 import { isFileProtocol } from '../../../common/url/protocol'
@@ -7,25 +6,19 @@ import { onDOMContentLoaded } from '../../../common/window/load'
 import { windowAddEventListener } from '../../../common/event-listener/event-listener-opts'
 import { isBrowserScope, isWorkerScope } from '../../../common/constants/runtime'
 import { AggregateBase } from '../../utils/aggregate-base'
-import { FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
 import { isIFrameWindow } from '../../../common/dom/iframe'
-import { EventAggregator } from '../../../common/aggregate/event-aggregator'
 // import { WEBSOCKET_TAG } from '../../../common/wrap/wrap-websocket'
 // import { handleWebsocketEvents } from './websocket-detection'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor (agentRef) {
-    super(agentRef, FEATURE_NAME, () => new EventAggregator())
-    const aggregatorTypes = ['cm', 'sm'] // the types in EventAggregator this feature cares about
+    super(agentRef, FEATURE_NAME)
+    this.harvestOpts.aggregatorTypes = ['cm', 'sm'] // the types in EventAggregator this feature cares about
+    // This feature only harvests once per potential EoL of the page, which is handled by the central harvester.
 
     this.waitForFlags(['err']).then(([errFlag]) => {
       if (errFlag) {
-        // *cli, Mar 23 - Per NR-94597, this feature should only harvest ONCE at the (potential) EoL time of the page.
-        new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
-          onUnload: () => this.unload(),
-          getPayload: () => this.makeHarvestPayload(undefined, { aggregatorTypes })
-        }, this)
         this.drain()
       } else {
         this.blocked = true // if rum response determines that customer lacks entitlements for spa endpoint, this feature shouldn't harvest
@@ -41,6 +34,8 @@ export class Aggregate extends AggregateBase {
     this.eachSessionChecks() // the start of every time user engages with page
   }
 
+  preHarvestChecks () { return this.drained } // only allow any metrics to be sent if we know for sure it has gotten the go-ahead RUM flag
+
   storeSupportabilityMetrics (name, value) {
     if (this.blocked) return
     const type = SUPPORTABILITY_METRIC
@@ -52,7 +47,7 @@ export class Aggregate extends AggregateBase {
     if (this.blocked) return
     const type = CUSTOM_METRIC
     const params = { name }
-    this.events.add(type, name, params, metrics)
+    this.events.add([type, name, params, metrics])
   }
 
   singleChecks () {
@@ -133,9 +128,5 @@ export class Aggregate extends AggregateBase {
     windowAddEventListener('pageshow', (evt) => {
       if (evt?.persisted) { this.storeSupportabilityMetrics('Generic/BFCache/PageRestored') }
     })
-  }
-
-  unload () {
-    // do nothing for now, marks and measures and resources stats are now being captured by the ge feature
   }
 }

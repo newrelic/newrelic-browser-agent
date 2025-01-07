@@ -1,5 +1,4 @@
 import { registerHandler } from '../../../common/event-emitter/register-handler'
-import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { FEATURE_NAME } from '../constants'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { TraceStorage } from './trace/storage'
@@ -7,7 +6,6 @@ import { obj as encodeObj } from '../../../common/url/encode'
 import { globalScope } from '../../../common/constants/runtime'
 import { MODE, SESSION_EVENTS } from '../../../common/session/constants'
 import { applyFnToProps } from '../../../common/util/traverse'
-import { FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
 import { cleanURL } from '../../../common/url/clean-url'
 
 const ERROR_MODE_SECONDS_WINDOW = 30 * 1000 // sliding window of nodes to track when simply monitoring (but not harvesting) in error mode
@@ -18,8 +16,8 @@ export class Aggregate extends AggregateBase {
 
   constructor (agentRef) {
     super(agentRef, FEATURE_NAME)
+    this.harvestOpts.raw = true
 
-    this.harvestTimeSeconds = agentRef.init.session_trace.harvestTimeSeconds || 30
     /** Tied to the entitlement flag response from BCS.  Will short circuit operations of the agg if false  */
     this.entitled = undefined
     /** A flag used to decide if the 30 node threshold should be ignored on the first harvest to ensure sending on the first payload */
@@ -28,7 +26,8 @@ export class Aggregate extends AggregateBase {
     this.harvesting = false
     /** TraceStorage is the mechanism that holds, normalizes and aggregates ST nodes.  It will be accessed and purged when harvests occur */
     this.events = new TraceStorage(this)
-    /** This agg needs information about sampling (sts) and entitlements (st) to make the appropriate decisions on running */
+
+    /* This agg needs information about sampling (sts) and entitlements (st) to make the appropriate decisions on running */
     this.waitForFlags(['sts', 'st'])
       .then(([stMode, stEntitled]) => this.initialize(stMode, stEntitled))
   }
@@ -36,7 +35,8 @@ export class Aggregate extends AggregateBase {
   /** Sets up event listeners, and initializes this module to run in the correct "mode".  Can be triggered from a few places, but makes an effort to only set up listeners once */
   initialize (stMode, stEntitled, ignoreSession) {
     this.entitled ??= stEntitled
-    if (this.blocked || !this.entitled) return this.deregisterDrain()
+    if (!this.entitled) this.blocked = true
+    if (this.blocked) return this.deregisterDrain()
 
     if (!this.initialized) {
       this.initialized = true
@@ -55,7 +55,7 @@ export class Aggregate extends AggregateBase {
         // this will only have an effect if ST is NOT already in full mode
         if (this.mode !== MODE.FULL && (sessionState.sessionReplayMode === MODE.FULL || sessionState.sessionTraceMode === MODE.FULL)) this.switchToFull()
         // if another page's session entity has expired, or another page has transitioned to off and this one hasn't... we can just abort straight away here
-        if (this.sessionId !== sessionState.value || (eventType === 'cross-tab' && this.scheduler?.started && sessionState.sessionTraceMode === MODE.OFF)) this.abort(2)
+        if (this.sessionId !== sessionState.value || (eventType === 'cross-tab' && sessionState.sessionTraceMode === MODE.OFF)) this.abort(2)
       })
 
       if (typeof PerformanceNavigationTiming !== 'undefined') {
@@ -76,13 +76,6 @@ export class Aggregate extends AggregateBase {
 
     this.timeKeeper ??= this.agentRef.runtime.timeKeeper
 
-    this.scheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
-      onFinished: (result) => this.postHarvestCleanup(result.sent && result.retry),
-      retryDelay: this.harvestTimeSeconds,
-      getPayload: (options) => this.makeHarvestPayload(options.retry),
-      raw: true
-    }, this)
-
     /** The handlers set up by the Inst file */
     registerHandler('bst', (...args) => this.events.storeEvent(...args), this.featureName, this.ee)
     registerHandler('bstResource', (...args) => this.events.storeResources(...args), this.featureName, this.ee)
@@ -92,9 +85,7 @@ export class Aggregate extends AggregateBase {
     registerHandler('trace-jserror', (...args) => this.events.storeErrorAgg(...args), this.featureName, this.ee)
     registerHandler('pvtAdded', (...args) => this.events.processPVT(...args), this.featureName, this.ee)
 
-    /** Only start actually harvesting if running in full mode at init time */
-    if (this.mode === MODE.FULL) this.startHarvesting()
-    else {
+    if (this.mode !== MODE.FULL) {
       /** A separate handler for noticing errors, and switching to "full" mode if running in "error" mode */
       registerHandler('trace-jserror', () => {
         if (this.mode === MODE.ERROR) this.switchToFull()
@@ -102,13 +93,6 @@ export class Aggregate extends AggregateBase {
     }
     this.agentRef.runtime.session.write({ sessionTraceMode: this.mode })
     this.drain()
-  }
-
-  /** This module does not auto harvest by default -- it needs to be kicked off.  Once this method is called, it will then harvest on an interval */
-  startHarvesting () {
-    if (this.scheduler.started || this.blocked) return
-    this.scheduler.runHarvest()
-    this.scheduler.startTimer(this.harvestTimeSeconds)
   }
 
   preHarvestChecks () {
@@ -185,8 +169,8 @@ export class Aggregate extends AggregateBase {
     if (prevMode === MODE.OFF || !this.initialized) return this.initialize(this.mode, this.entitled)
     if (this.initialized) {
       this.events.trimSTNs(ERROR_MODE_SECONDS_WINDOW) // up until now, Trace would've been just buffering nodes up to max, which needs to be trimmed to last X seconds
+      this.agentRef.runtime.harvester.triggerHarvestFor(this)
     }
-    this.startHarvesting()
   }
 
   /** Stop running for the remainder of the page lifecycle */
@@ -194,7 +178,6 @@ export class Aggregate extends AggregateBase {
     this.blocked = true
     this.mode = MODE.OFF
     this.agentRef.runtime.session.write({ sessionTraceMode: this.mode })
-    this.scheduler?.stopTimer()
     this.events.clear()
   }
 

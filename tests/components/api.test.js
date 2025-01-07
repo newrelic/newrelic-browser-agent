@@ -40,6 +40,7 @@ describe('setAPI', () => {
     expect(typeof apiInterface.addToTrace).toEqual('function')
     expect(typeof apiInterface.addRelease).toEqual('function')
     expect(typeof apiInterface.addPageAction).toEqual('function')
+    expect(typeof apiInterface.recordCustomEvent).toEqual('function')
     expect(typeof apiInterface.setCurrentRouteName).toEqual('function')
     expect(typeof apiInterface.setPageViewName).toEqual('function')
     expect(typeof apiInterface.setCustomAttribute).toEqual('function')

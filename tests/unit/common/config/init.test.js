@@ -23,10 +23,10 @@ test('set/getConfiguration works correctly', () => {
 })
 
 test('getConfigurationValue parses path correctly', () => {
-  setConfiguration('ab', { generic_events: { harvestTimeSeconds: 1000 } })
+  setConfiguration('ab', { generic_events: { autoStart: false } })
   expect(getConfigurationValue('ab', '')).toBeUndefined()
-  expect(getConfigurationValue('ab', 'generic_events')).toEqual({ enabled: true, harvestTimeSeconds: 1000, autoStart: true })
-  expect(getConfigurationValue('ab', 'generic_events.harvestTimeSeconds')).toEqual(1000)
+  expect(getConfigurationValue('ab', 'generic_events')).toEqual({ enabled: true, autoStart: false })
+  expect(getConfigurationValue('ab', 'generic_events.autoStart')).toEqual(false)
   expect(getConfigurationValue('ab', 'generic_events.dne')).toBeUndefined()
 })
 
@@ -38,8 +38,7 @@ test('init props exist and return expected defaults', () => {
     autoStart: true,
     block_internal: true,
     deny_list: undefined,
-    enabled: true,
-    harvestTimeSeconds: 10
+    enabled: true
   })
   expect(config.distributed_tracing).toEqual({
     allowed_origins: undefined,
@@ -53,22 +52,19 @@ test('init props exist and return expected defaults', () => {
   })
   expect(config.generic_events).toEqual({
     autoStart: true,
-    enabled: true,
-    harvestTimeSeconds: 30
+    enabled: true
   })
   expect(config.feature_flags).toEqual([])
   expect(config.harvest).toEqual({
-    tooManyRequestsDelay: 60
+    interval: 30
   })
   expect(config.jserrors).toEqual({
     autoStart: true,
-    enabled: true,
-    harvestTimeSeconds: 10
+    enabled: true
   })
   expect(config.logging).toEqual({
     autoStart: true,
     enabled: true,
-    harvestTimeSeconds: 10,
     level: 'INFO'
   })
   expect(config.metrics).toEqual({
@@ -88,8 +84,7 @@ test('init props exist and return expected defaults', () => {
   })
   expect(config.page_view_timing).toEqual({
     autoStart: true,
-    enabled: true,
-    harvestTimeSeconds: 30
+    enabled: true
   })
   expect(config.performance).toEqual({
     capture_marks: false,
@@ -120,7 +115,6 @@ test('init props exist and return expected defaults', () => {
     enabled: false,
     error_sampling_rate: 100,
     fix_stylesheets: true,
-    harvestTimeSeconds: 60,
     ignore_class: 'nr-ignore',
     inline_images: false,
     mask_all_inputs: true,
@@ -149,18 +143,15 @@ test('init props exist and return expected defaults', () => {
   })
   expect(config.session_trace).toEqual({
     autoStart: true,
-    enabled: true,
-    harvestTimeSeconds: 10
+    enabled: true
   })
   expect(config.soft_navigations).toEqual({
     autoStart: true,
-    enabled: true,
-    harvestTimeSeconds: 10
+    enabled: true
   })
   expect(config.spa).toEqual({
     autoStart: true,
-    enabled: true,
-    harvestTimeSeconds: 10
+    enabled: true
   })
   expect(config.ssl).toEqual(undefined)
   expect(config.user_actions).toEqual({

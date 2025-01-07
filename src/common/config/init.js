@@ -1,3 +1,4 @@
+import { FEATURE_FLAGS } from '../../features/generic_events/constants'
 import { LOG_LEVELS } from '../../features/logging/constants'
 import { isValidSelector } from '../dom/query-selector'
 import { DEFAULT_EXPIRES_MS, DEFAULT_INACTIVE_MS } from '../session/constants'
@@ -9,6 +10,12 @@ const nrMask = '[data-nr-mask]'
 
 const model = () => {
   const hiddenState = {
+    feature_flags: [],
+    experimental: {
+      marks: false,
+      measures: false,
+      resources: false
+    },
     mask_selector: '*',
     block_selector: '[data-nr-block]',
     mask_input_options: {
@@ -32,7 +39,7 @@ const model = () => {
     }
   }
   return {
-    ajax: { deny_list: undefined, block_internal: true, enabled: true, harvestTimeSeconds: 10, autoStart: true },
+    ajax: { deny_list: undefined, block_internal: true, enabled: true, autoStart: true },
     distributed_tracing: {
       enabled: undefined,
       exclude_newrelic_header: undefined,
@@ -50,12 +57,16 @@ const model = () => {
     obfuscate: undefined,
     page_action: { enabled: true },
     page_view_event: { enabled: true, autoStart: true },
-    page_view_timing: { enabled: true, harvestTimeSeconds: 30, autoStart: true },
+    page_view_timing: { enabled: true, autoStart: true },
     performance: {
-      capture_marks: false,
-      capture_measures: false, // false by default through experimental phase, but flipped to true once GA'd
+      get capture_marks () { return hiddenState.feature_flags.includes(FEATURE_FLAGS.MARKS) || hiddenState.experimental.marks },
+      set capture_marks (val) { hiddenState.experimental.marks = val },
+      get capture_measures () { return hiddenState.feature_flags.includes(FEATURE_FLAGS.MEASURES) || hiddenState.experimental.measures },
+      set capture_measures (val) { hiddenState.experimental.measures = val },
       resources: {
-        enabled: false, // whether to run this subfeature or not in the generic_events feature. false by default through experimental phase, but flipped to true once GA'd
+        // whether to run this subfeature or not in the generic_events feature. false by default through experimental phase, but flipped to true once GA'd
+        get enabled () { return hiddenState.feature_flags.includes(FEATURE_FLAGS.RESOURCES) || hiddenState.experimental.resources },
+        set enabled (val) { hiddenState.experimental.resources = val },
         asset_types: [], // MDN types to collect, empty array will collect all types
         first_party_domains: [], // when included, will decorate the resource as first party if matching
         ignore_newrelic: true // ignore capturing internal agent scripts and harvest calls
@@ -74,7 +85,6 @@ const model = () => {
       // feature settings
       autoStart: true,
       enabled: false,
-      harvestTimeSeconds: 60,
       preload: false, // if true, enables the agent to load rrweb immediately instead of waiting to do so after the window.load event
       sampling_rate: 10, // float from 0 - 100
       error_sampling_rate: 100, // float from 0 - 100
@@ -112,9 +122,9 @@ const model = () => {
         else warn(7, val)
       }
     },
-    session_trace: { enabled: true, harvestTimeSeconds: 10, autoStart: true },
-    soft_navigations: { enabled: true, harvestTimeSeconds: 10, autoStart: true },
-    spa: { enabled: true, harvestTimeSeconds: 10, autoStart: true },
+    session_trace: { enabled: true, autoStart: true },
+    soft_navigations: { enabled: true, autoStart: true },
+    spa: { enabled: true, autoStart: true },
     ssl: undefined,
     user_actions: { enabled: true }
   }

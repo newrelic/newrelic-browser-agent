@@ -3,7 +3,6 @@ import { testTimingEventsRequest } from '../../../tools/testing-server/utils/exp
 
 const isClickInteractionType = type => type === 'pointerdown' || type === 'mousedown' || type === 'click'
 const loadersToTest = ['rum', 'spa']
-const init = { page_view_timing: { harvestTimeSeconds: 3 } }
 
 describe('pvt timings tests', () => {
   let timingsCapture
@@ -130,7 +129,7 @@ describe('pvt timings tests', () => {
       [['unload', 'cls-basic.html'], ['pageHide', 'cls-pagehide.html']].forEach(([prop, testAsset]) => {
         it.withBrowsersMatching([supportsCumulativeLayoutShift])(`${prop} for ${loader} agent collects cls attribute`, async () => {
           await browser.url(
-            await browser.testHandle.assetURL(testAsset, { loader, init })
+            await browser.testHandle.assetURL(testAsset, { loader })
           ).then(() => browser.waitForAgentLoad())
           if (prop === 'pageHide') await $('#btn1').click()
 
@@ -160,7 +159,7 @@ describe('pvt timings tests', () => {
   describe('custom attribution timings', () => {
     loadersToTest.forEach(loader => {
       it(`window load timing for ${loader} agent includes custom attributes`, async () => {
-        let url = await browser.testHandle.assetURL('load-timing-attributes.html', { loader, init })
+        let url = await browser.testHandle.assetURL('load-timing-attributes.html', { loader })
         const reservedTimingAttributes = ['size', 'eid', 'cls', 'type', 'fid', 'elUrl', 'elTag',
           'net-type', 'net-etype', 'net-rtt', 'net-dlink']
 

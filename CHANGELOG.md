@@ -3,6 +3,32 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.277.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.276.0...v1.277.0) (2024-12-18)
+
+
+### Features
+
+* Add custom events API ([#1263](https://github.com/newrelic/newrelic-browser-agent/issues/1263)) ([9395415](https://github.com/newrelic/newrelic-browser-agent/commit/9395415d942b55e88e89438aa203c6a1642d9e6b))
+
+
+### Bug Fixes
+
+* Soft navigation bug fixes and new soft navigation tests ([#1268](https://github.com/newrelic/newrelic-browser-agent/issues/1268)) ([7624928](https://github.com/newrelic/newrelic-browser-agent/commit/762492896a7b96564269aab1aadeb6e44a4da242))
+
+## [1.276.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.275.0...v1.276.0) (2024-12-16)
+
+
+### Features
+
+* allow feature flags to control experimental features ([#1282](https://github.com/newrelic/newrelic-browser-agent/issues/1282)) ([537e72d](https://github.com/newrelic/newrelic-browser-agent/commit/537e72da0821792006abd16c41ffa025fd73b474))
+* Capture Page Resource Assets ([#1257](https://github.com/newrelic/newrelic-browser-agent/issues/1257)) ([e4c7deb](https://github.com/newrelic/newrelic-browser-agent/commit/e4c7debe2a1653efdad8940c55a71dd0140ce900))
+
+
+### Bug Fixes
+
+* Fix syntax error in fallback when tracking xhr readyState ([#1272](https://github.com/newrelic/newrelic-browser-agent/issues/1272)) ([2bb6b5b](https://github.com/newrelic/newrelic-browser-agent/commit/2bb6b5b2e104a6b3ac9ceb70d396f65cfb61c1bd))
+* Ignore reserved attribute names on UserActions tied to the window ([#1261](https://github.com/newrelic/newrelic-browser-agent/issues/1261)) ([8410dbe](https://github.com/newrelic/newrelic-browser-agent/commit/8410dbeef30aeb0e578c63a293ec311c3d42f8da))
+
 ## [1.275.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.274.0...v1.275.0) (2024-12-03)
 
 

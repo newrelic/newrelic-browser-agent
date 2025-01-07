@@ -92,6 +92,7 @@
 ### 45
 `An internal agent process failed to execute.`
 ### 46
+<<<<<<< HEAD
 `Supplied an invalid API target. Must be an <Object> that contains licenseKey and applicationID properties.`
 ### 47
 `Supplied API target is missing an entityGuid. Some APIs may not behave correctly without a valid entityGuid (ex. logs).`
@@ -99,3 +100,6 @@
 `Failed to connect. Cannot allow registered API.`
 ### 49 
 `Container agent is not available to register with. Can not connect`
+=======
+`A reserved eventType was provided to recordCustomEvent(...) -- The event was not recorded.`
+>>>>>>> main

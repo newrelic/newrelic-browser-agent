@@ -43,7 +43,6 @@ export class InstrumentBase extends FeatureBase {
     /**
      * @type {Promise} Assigned immediately after @see importAggregator runs. Serves as a signal for when the inner async fn finishes execution. Useful for features to await
      * one another if there are inter-features dependencies.
-     * TODO: This is only used for the SPA feature component tests and should be refactored out.
     */
     this.onAggregateImported = undefined
 
@@ -103,6 +102,8 @@ export class InstrumentBase extends FeatureBase {
         const { lazyFeatureLoader } = await import(/* webpackChunkName: "lazy-feature-loader" */ './lazy-feature-loader')
         const { Aggregate } = await lazyFeatureLoader(this.featureName, 'aggregate')
         this.featAggregate = new Aggregate(agentRef, argsObjFromInstrument)
+
+        agentRef.runtime.harvester.initializedAggregates.push(this.featAggregate) // "subscribe" the feature to future harvest intervals (PVE will start the timer)
         loadedSuccessfully(true)
       } catch (e) {
         warn(34, e)

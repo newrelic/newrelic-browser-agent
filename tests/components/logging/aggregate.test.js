@@ -41,8 +41,7 @@ describe('class setup', () => {
       'ee',
       'featureName',
       'blocked',
-      'events',
-      'harvestTimeSeconds'
+      'events'
     ]))
   })
 
@@ -72,7 +71,7 @@ describe('payloads', () => {
       { myAttributes: 1 },
       'error'
     )
-    expect(loggingAggregate.events.get()[0]).toEqual(expectedLog)
+    expect(loggingAggregate.events.get()[0].data[0]).toEqual(expectedLog)
 
     expect(loggingAggregate.makeHarvestPayload()[0].payload).toEqual({
       qs: { browser_monitoring_key: info.licenseKey },
@@ -100,7 +99,7 @@ describe('payloads', () => {
   test('prepares payload as expected', async () => {
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', { myAttributes: 1 }, 'error'])
 
-    expect(loggingAggregate.events.get()[0]).toEqual(new Log(
+    expect(loggingAggregate.events.get()[0].data[0]).toEqual(new Log(
       Math.floor(runtime.timeKeeper.correctAbsoluteTimestamp(
         runtime.timeKeeper.convertRelativeTimestamp(1234)
       )),
@@ -145,7 +144,7 @@ describe('payloads', () => {
       'error'
     )
 
-    const logs = loggingAggregate.events.get()
+    const logs = loggingAggregate.events.get()[0].data
 
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', [], 'ERROR'])
     expect(logs.pop()).toEqual(expected)
@@ -171,11 +170,11 @@ describe('payloads', () => {
     )
 
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', {}, 'ErRoR'])
-    expect(loggingAggregate.events.get()[0]).toEqual(expected)
+    expect(loggingAggregate.events.get()[0].data[0]).toEqual(expected)
   })
 
   test('should buffer logs with non-stringify-able message', async () => {
-    const logs = loggingAggregate.events.get()
+    const logs = loggingAggregate.events.get()[0].data
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, new Error('test'), {}, 'error'])
     expect(logs.pop().message).toEqual('Error: test')
 
@@ -208,12 +207,12 @@ test('can harvest early', async () => {
   loggingAggregate.ee.emit('rumresp', {})
   await new Promise(process.nextTick)
 
-  jest.spyOn(loggingAggregate.scheduler, 'runHarvest')
+  jest.spyOn(mainAgent.runtime.harvester, 'triggerHarvestFor')
 
   loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'x'.repeat(800 * 800), { myAttributes: 1 }, 'ERROR']) // almost too big
   expect(handleModule.handle).toHaveBeenCalledTimes(0)
   loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'x'.repeat(800 * 800), { myAttributes: 1 }, 'ERROR']) // almost too big
   expect(handleModule.handle).toHaveBeenCalledTimes(1)
   expect(handleModule.handle).toHaveBeenCalledWith('storeSupportabilityMetrics', ['Logging/Harvest/Early/Seen', expect.any(Number)])
-  expect(loggingAggregate.scheduler.runHarvest).toHaveBeenCalled()
+  expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalled()
 })

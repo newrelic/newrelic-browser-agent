@@ -28,15 +28,16 @@ beforeEach(async () => {
   await new Promise(process.nextTick)
   sessionReplayAggregate = sessionReplayInstrument.featAggregate
 
-  jest.spyOn(sessionReplayAggregate.scheduler.harvest, 'send').mockImplementation(({ cbFinished }) => {
-    cbFinished({ status: 200 })
-  })
+  // TODO MAKE SURE THIS WORKS WITH NEW SYSTEM
+  mainAgent.runtime.harvester.initializedAggregates = [sessionReplayAggregate] // required for harvester to function
+  jest.spyOn(mainAgent.runtime.harvester, 'triggerHarvestFor')
 
   session = getRuntime(mainAgent.agentIdentifier).session
 })
 
 afterEach(() => {
   resetAgent(mainAgent.agentIdentifier)
+  mainAgent.runtime.harvester.triggerHarvestFor.mockRestore()
   jest.clearAllMocks()
 })
 
@@ -46,15 +47,13 @@ describe('Session Replay Session Behavior', () => {
     sessionReplayAggregate.ee.emit('rumresp', [{ sr: 1, srs: MODE.FULL }])
     await new Promise(process.nextTick)
 
-    jest.spyOn(sessionReplayAggregate.scheduler, 'runHarvest')
-
     expect(sessionReplayAggregate.initialized).toBeTruthy()
     expect(sessionReplayAggregate.recorder.recording).toBeTruthy()
 
     sessionReplayAggregate.ee.emit(SESSION_EVENTS.RESET)
     await new Promise(process.nextTick)
 
-    expect(sessionReplayAggregate.scheduler.runHarvest).toHaveBeenCalled()
+    expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalled()
     expect(sessionReplayAggregate.recorder.recording).toBeFalsy()
     expect(sessionReplayAggregate.blocked).toBeTruthy()
   })
@@ -179,7 +178,6 @@ describe('Session Replay Error Mode Behaviors', () => {
     await new Promise(process.nextTick)
 
     expect(newSessionReplayAggregate.mode).toEqual(MODE.ERROR)
-    expect(newSessionReplayAggregate.scheduler.started).toEqual(false)
   })
 
   test('an error AFTER rrweb import changes mode and starts harvester', async () => {
@@ -187,24 +185,21 @@ describe('Session Replay Error Mode Behaviors', () => {
     await new Promise(process.nextTick)
 
     expect(sessionReplayAggregate.mode).toEqual(MODE.ERROR)
-    expect(sessionReplayAggregate.scheduler.started).toEqual(false)
 
     ee.get(mainAgent.agentIdentifier).emit(SR_EVENT_EMITTER_TYPES.ERROR_DURING_REPLAY, ['test1'], undefined, FEATURE_NAMES.sessionReplay, ee.get(mainAgent.agentIdentifier))
 
     expect(sessionReplayAggregate.mode).toEqual(MODE.FULL)
-    expect(sessionReplayAggregate.scheduler.started).toEqual(true)
   })
 })
 
 describe('Session Replay Payload Validation', () => {
   test('payload - minified', async () => {
     jest.spyOn(session, 'getDuration').mockReturnValue(1000)
-    jest.spyOn(sessionReplayAggregate.scheduler, 'runHarvest')
     jest.spyOn(sessionReplayAggregate, 'getHarvestContents')
 
     sessionReplayAggregate.ee.emit('rumresp', [{ sr: 1, srs: MODE.FULL }])
     await new Promise(process.nextTick)
-    expect(sessionReplayAggregate.scheduler.runHarvest).toHaveBeenCalledTimes(1)
+    expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledTimes(1)
 
     const harvestContents = jest.mocked(sessionReplayAggregate.getHarvestContents).mock.results[0].value
     expect(harvestContents.qs).toMatchObject(createAnyQueryMatcher())
@@ -223,12 +218,11 @@ describe('Session Replay Payload Validation', () => {
     }))
 
     jest.spyOn(session, 'getDuration').mockReturnValue(1000)
-    jest.spyOn(sessionReplayAggregate.scheduler, 'runHarvest')
     jest.spyOn(sessionReplayAggregate, 'getHarvestContents')
 
     sessionReplayAggregate.ee.emit('rumresp', [{ sr: 1, srs: MODE.FULL }])
     await new Promise(process.nextTick)
-    expect(sessionReplayAggregate.scheduler.runHarvest).toHaveBeenCalledTimes(1)
+    expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledTimes(1)
 
     const harvestContents = jest.mocked(sessionReplayAggregate.getHarvestContents).mock.results[0].value
     expect(harvestContents.qs).toMatchObject(createAnyQueryMatcher())
@@ -254,12 +248,11 @@ describe('Session Replay Harvest Behaviors', () => {
     const { gunzipSync, strFromU8 } = await import('fflate')
 
     jest.spyOn(session, 'getDuration').mockReturnValue(1000)
-    jest.spyOn(sessionReplayAggregate.scheduler, 'runHarvest')
     jest.spyOn(sessionReplayAggregate, 'getHarvestContents')
 
     sessionReplayAggregate.ee.emit('rumresp', [{ sr: 1, srs: MODE.FULL }])
     await new Promise(process.nextTick)
-    expect(sessionReplayAggregate.scheduler.runHarvest).toHaveBeenCalledTimes(1)
+    expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledTimes(1)
 
     const harvestContents = jest.mocked(sessionReplayAggregate.getHarvestContents).mock.results[0].value
     expect(harvestContents.qs).toMatchObject(createAnyQueryMatcher())
@@ -271,12 +264,11 @@ describe('Session Replay Harvest Behaviors', () => {
 
   test('uncompressed payload is provided to harvester when fflate import fails', async () => {
     jest.spyOn(session, 'getDuration').mockReturnValue(1000)
-    jest.spyOn(sessionReplayAggregate.scheduler, 'runHarvest')
     jest.spyOn(sessionReplayAggregate, 'getHarvestContents')
 
     sessionReplayAggregate.ee.emit('rumresp', [{ sr: 1, srs: MODE.FULL }])
     await new Promise(process.nextTick)
-    expect(sessionReplayAggregate.scheduler.runHarvest).toHaveBeenCalledTimes(1)
+    expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledTimes(1)
 
     const harvestContents = jest.mocked(sessionReplayAggregate.getHarvestContents).mock.results[0].value
     expect(harvestContents.qs).toMatchObject({
@@ -297,27 +289,24 @@ describe('Session Replay Harvest Behaviors', () => {
   })
 
   test('harvests early if exceeds limit', async () => {
-    jest.spyOn(sessionReplayAggregate.scheduler, 'runHarvest')
-
     const before = Date.now()
     sessionReplayAggregate.ee.emit('rumresp', [{ sr: 1, srs: MODE.FULL }])
     await new Promise(process.nextTick)
-    expect(sessionReplayAggregate.scheduler.runHarvest).toHaveBeenCalledTimes(1)
+    expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledTimes(1)
 
     document.body.innerHTML = `<span>${faker.lorem.words(IDEAL_PAYLOAD_SIZE)}</span>`
     await new Promise(process.nextTick)
     const after = Date.now()
 
-    expect(after - before).toBeLessThan(sessionReplayAggregate.harvestTimeSeconds * 1000)
+    expect(after - before).toBeLessThan(mainAgent.init.harvest.interval * 1000)
   })
 
   test('Aborts if exceeds total limit', async () => {
-    jest.spyOn(sessionReplayAggregate.scheduler, 'runHarvest')
     jest.spyOn(sessionReplayAggregate, 'getHarvestContents')
 
     sessionReplayAggregate.ee.emit('rumresp', [{ sr: 1, srs: MODE.FULL }])
     await new Promise(process.nextTick)
-    expect(sessionReplayAggregate.scheduler.runHarvest).toHaveBeenCalledTimes(1)
+    expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledTimes(1)
 
     document.body.innerHTML = `<span>${faker.lorem.words(MAX_PAYLOAD_SIZE)}</span>`
     await new Promise(process.nextTick)
@@ -327,12 +316,10 @@ describe('Session Replay Harvest Behaviors', () => {
   })
 
   test('Aborts if 429 response', async () => {
-    jest.spyOn(sessionReplayAggregate.scheduler.harvest, 'send').mockImplementation(({ cbFinished }) => {
-      cbFinished({ status: 429 })
-    })
-
     sessionReplayAggregate.ee.emit('rumresp', [{ sr: 1, srs: MODE.FULL }])
     await new Promise(process.nextTick)
+
+    sessionReplayAggregate.postHarvestCleanup({ status: 429 })
 
     expect(sessionReplayAggregate.blocked).toEqual(true)
     expect(sessionReplayAggregate.mode).toEqual(MODE.OFF)

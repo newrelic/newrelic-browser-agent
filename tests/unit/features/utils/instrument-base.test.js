@@ -28,6 +28,10 @@ beforeEach(() => {
   featureName = faker.string.uuid()
   agentBase = {
     agentIdentifier,
+    info: {
+      licenseKey: faker.string.uuid(),
+      applicationID: faker.string.uuid()
+    },
     init: {
       [featureName]: { autoStart: true },
       [FEATURE_NAMES.pageViewEvent]: { autoStart: true },
@@ -50,9 +54,9 @@ test('should construct a new instrument', () => {
   expect(registerDrain).toHaveBeenCalledWith(agentIdentifier, featureName)
 })
 
-test('should wait for feature opt-in to import the aggregate', () => {
+test('should wait for feature opt-in to import the aggregate', async () => {
   const instrument = new InstrumentBase(agentBase, featureName, false)
-  jest.spyOn(instrument, 'importAggregator').mockImplementation(jest.fn)
+  jest.spyOn(instrument, 'importAggregator').mockImplementation(() => { })
 
   expect(registerDrain).not.toHaveBeenCalled()
   expect(instrument.auto).toEqual(false)

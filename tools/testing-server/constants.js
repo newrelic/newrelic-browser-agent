@@ -51,15 +51,15 @@ module.exports.rumFlags = (flags = {}, app = {}) => ({
   }
 })
 
-const enabled = true; const autoStart = true; const harvestTimeSeconds = 5
-const enabledFeature = { enabled, autoStart, harvestTimeSeconds }
+const enabled = true; const autoStart = true
+const enabledFeature = { enabled, autoStart }
 module.exports.defaultInitBlock = {
   ajax: { deny_list: [], block_internal: false, ...enabledFeature },
   distributed_tracing: {},
   external: { capture_registered_data: false },
   feature_flags: [],
   generic_events: enabledFeature,
-  harvest: { tooManyRequestsDelay: 5 },
+  harvest: { interval: 5 },
   jserrors: enabledFeature,
   logging: enabledFeature,
   metrics: { enabled, autoStart },
@@ -74,7 +74,7 @@ module.exports.defaultInitBlock = {
   page_view_timing: enabledFeature,
   privacy: { cookies_enabled: true },
   session: { expiresMs: 14400000, inactiveMs: 1800000 },
-  session_replay: { enabled: false, harvestTimeSeconds, sampling_rate: 0, error_sampling_rate: 0, autoStart },
+  session_replay: { enabled: false, sampling_rate: 0, error_sampling_rate: 0, autoStart },
   session_trace: enabledFeature,
   ssl: false,
   soft_navigations: enabledFeature,

@@ -17,6 +17,7 @@ describe('setTopLevelCallers', () => {
     expect(typeof nreum.addToTrace).toEqual('function')
     expect(typeof nreum.addRelease).toEqual('function')
     expect(typeof nreum.addPageAction).toEqual('function')
+    expect(typeof nreum.recordCustomEvent).toEqual('function')
     expect(typeof nreum.setCurrentRouteName).toEqual('function')
     expect(typeof nreum.setPageViewName).toEqual('function')
     expect(typeof nreum.setCustomAttribute).toEqual('function')

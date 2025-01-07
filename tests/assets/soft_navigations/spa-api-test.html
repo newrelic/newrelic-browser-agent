@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>SPA API test</title>
+    <script>
+      window.test = {
+        passed: false,
+        ran: false
+      }
+    </script>
+    {init}
+    {config}
+    {loader}
+  </head>
+  <body>
+    <div>This test runs every SPA API call that isn't deprecated. Any agent loader should be able to handle these calls without exceptions being thrown.</div>
+    <script type="text/javascript">
+      document.addEventListener('click', function () {
+        try {
+          var ixn = newrelic.interaction()
+          ixn.actionText('click')
+          ixn.setName('myInteraction', 'submit')
+          ixn.setAttribute('id', 456)
+          ixn.getContext((ctx) => {
+            ctx.productId = 789
+          })
+          ixn.onEnd((ctx) => {
+            if (ctx.productId) {
+              interaction.setAttribute(
+                'productId', ctx.productId
+              )
+            }
+          })
+          ixn.ignore()
+          ixn.save()
+          ixn.end()
+
+          newrelic.setCurrentRouteName('/users')
+
+          window.test.passed = true
+        } finally {
+          window.test.ran = true
+        }
+      }, false)
+    </script>
+  </body>
+</html>

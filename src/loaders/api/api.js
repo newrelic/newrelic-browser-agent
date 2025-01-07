@@ -93,6 +93,8 @@ export function setAPI (agentRef, forceDrain, runSoftNavOverSpa = false) {
     sharedHandlers.addPageAction(name, attributes)
   }
 
+  apiInterface.recordCustomEvent = apiCall(prefix, 'recordCustomEvent', true, FEATURE_NAMES.genericEvents)
+
   apiInterface.setPageViewName = function (name, host) {
     if (typeof name !== 'string') return
     if (name.charAt(0) !== '/') name = '/' + name

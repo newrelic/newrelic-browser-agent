@@ -1243,7 +1243,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### @wdio/logger
 
-This product includes source derived from [@wdio/logger](https://github.com/webdriverio/webdriverio) ([v8.38.0](https://github.com/webdriverio/webdriverio/tree/v8.38.0)), distributed under the [MIT License](https://github.com/webdriverio/webdriverio/blob/v8.38.0/LICENSE-MIT):
+This product includes source derived from [@wdio/logger](https://github.com/webdriverio/webdriverio) ([v9.4.4](https://github.com/webdriverio/webdriverio/tree/v9.4.4)), distributed under the [MIT License](https://github.com/webdriverio/webdriverio/blob/v9.4.4/LICENSE):
 
 ```
 Copyright (c) OpenJS Foundation and other contributors
@@ -1299,7 +1299,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### @wdio/spec-reporter
 
-This product includes source derived from [@wdio/spec-reporter](https://github.com/webdriverio/webdriverio) ([v8.40.3](https://github.com/webdriverio/webdriverio/tree/v8.40.3)), distributed under the [MIT License](https://github.com/webdriverio/webdriverio/blob/v8.40.3/LICENSE-MIT):
+This product includes source derived from [@wdio/spec-reporter](https://github.com/webdriverio/webdriverio) ([v9.5.0](https://github.com/webdriverio/webdriverio/tree/v9.5.0)), distributed under the [MIT License](https://github.com/webdriverio/webdriverio/blob/v9.5.0/LICENSE):
 
 ```
 Copyright (c) OpenJS Foundation and other contributors
@@ -1791,7 +1791,7 @@ THE SOFTWARE.
 
 ### fastify-plugin
 
-This product includes source derived from [fastify-plugin](https://github.com/fastify/fastify-plugin) ([v4.5.1](https://github.com/fastify/fastify-plugin/tree/v4.5.1)), distributed under the [MIT License](https://github.com/fastify/fastify-plugin/blob/v4.5.1/LICENSE):
+This product includes source derived from [fastify-plugin](https://github.com/fastify/fastify-plugin) ([v5.0.1](https://github.com/fastify/fastify-plugin/tree/v5.0.1)), distributed under the [MIT License](https://github.com/fastify/fastify-plugin/blob/v5.0.1/LICENSE):
 
 ```
 MIT License
@@ -2197,7 +2197,7 @@ SOFTWARE.
 
 ### jsonpath-plus
 
-This product includes source derived from [jsonpath-plus](https://github.com/s3u/JSONPath) ([v9.0.0](https://github.com/s3u/JSONPath/tree/v9.0.0)), distributed under the [MIT License](https://github.com/s3u/JSONPath/blob/v9.0.0/LICENSE):
+This product includes source derived from [jsonpath-plus](https://github.com/s3u/JSONPath) ([v10.0.7](https://github.com/s3u/JSONPath/tree/v10.0.7)), distributed under the [MIT License](https://github.com/s3u/JSONPath/blob/v10.0.7/LICENSE):
 
 ```
 MIT License
@@ -2440,7 +2440,7 @@ END OF TERMS AND CONDITIONS
 
 ### uuid
 
-This product includes source derived from [uuid](https://github.com/uuidjs/uuid) ([v10.0.0](https://github.com/uuidjs/uuid/tree/v10.0.0)), distributed under the [MIT License](https://github.com/uuidjs/uuid/blob/v10.0.0/LICENSE.md):
+This product includes source derived from [uuid](https://github.com/uuidjs/uuid) ([v11.0.3](https://github.com/uuidjs/uuid/tree/v11.0.3)), distributed under the [MIT License](https://github.com/uuidjs/uuid/blob/v11.0.3/LICENSE.md):
 
 ```
 The MIT License (MIT)
@@ -2457,7 +2457,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ### wait-on
 
-This product includes source derived from [wait-on](https://github.com/jeffbski/wait-on) ([v8.0.0](https://github.com/jeffbski/wait-on/tree/v8.0.0)), distributed under the [MIT License](https://github.com/jeffbski/wait-on/blob/v8.0.0/LICENSE):
+This product includes source derived from [wait-on](https://github.com/jeffbski/wait-on) ([v8.0.1](https://github.com/jeffbski/wait-on/tree/v8.0.1)), distributed under the [MIT License](https://github.com/jeffbski/wait-on/blob/v8.0.1/LICENSE):
 
 ```
 The MIT License (MIT)

@@ -22,6 +22,7 @@ jest.mock('../../../src/common/config/runtime', () => ({
 jest.mock('../../../src/common/util/feature-flags', () => ({
   activatedFeatures: { [agentIdentifier]: { spa: 1 } }
 }))
+jest.mock('../../../src/common/harvest/harvester')
 
 let spaInstrument, spaAggregate, newrelic
 beforeAll(async () => {

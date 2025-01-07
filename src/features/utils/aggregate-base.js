@@ -7,6 +7,7 @@ import { activatedFeatures } from '../../common/util/feature-flags'
 import { Obfuscator } from '../../common/util/obfuscate'
 import { FEATURE_NAMES } from '../../loaders/features/features'
 import { EventStoreManager } from './event-store-manager'
+import { Harvester } from '../../common/harvest/harvester'
 
 export class AggregateBase extends FeatureBase {
   constructor (agentRef, featureName) {
@@ -145,5 +146,7 @@ export class AggregateBase extends FeatureBase {
     if (!agentRef.mainAppKey) agentRef.mainAppKey = { licenseKey: agentRef.info.licenseKey, appId: agentRef.info.applicationID }
     // Create a single Aggregator for this agent if DNE yet; to be used by jserror endpoint features.
     if (!agentRef.sharedAggregator) agentRef.sharedAggregator = new EventStoreManager(agentRef.mainAppKey, 2)
+
+    if (!agentRef.runtime.harvester) agentRef.runtime.harvester = new Harvester(agentRef)
   }
 }

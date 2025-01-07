@@ -7,6 +7,7 @@ jest.mock('../../../../../src/common/config/runtime', () => ({
   getRuntime: jest.fn(() => mockRuntime),
   setRuntime: jest.fn()
 }))
+jest.mock('../../../../../src/common/harvest/harvester')
 
 const pvtAgg = new Aggregate({
   agentIdentifier: 'abcd',

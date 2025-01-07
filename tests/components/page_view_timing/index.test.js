@@ -32,6 +32,7 @@ let triggerVisChange
 jest.mock('../../../src/common/window/page-visibility', () => ({
   subscribeToVisibilityChange: jest.fn(cb => { triggerVisChange ??= cb })
 }))
+jest.mock('../../../src/common/harvest/harvester')
 
 const expectedNetworkInfo = {
   'net-type': expect.any(String),
@@ -54,7 +55,8 @@ describe('pvt aggregate tests', () => {
       agentIdentifier,
       info: { licenseKey: 'licenseKey', applicationID: 'applicationID' },
       init: { page_view_timing: {} },
-      runtime: {}
+      ee: { on: jest.fn() },
+      runtime: { harvester: { initializedAggregates: [] } }
     }
     const { Aggregate } = await import('../../../src/features/page_view_timing/aggregate')
 

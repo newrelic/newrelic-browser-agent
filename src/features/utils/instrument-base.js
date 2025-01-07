@@ -103,7 +103,7 @@ export class InstrumentBase extends FeatureBase {
         const { Aggregate } = await lazyFeatureLoader(this.featureName, 'aggregate')
         this.featAggregate = new Aggregate(agentRef, argsObjFromInstrument)
 
-        agentRef.runtime.harvester?.initializedAggregates.push(this.featAggregate) // "subscribe" the feature to harvest interval (PVE will start the timer)
+        agentRef.runtime.harvester.initializedAggregates.push(this.featAggregate) // "subscribe" the feature to future harvest intervals (PVE will start the timer)
         loadedSuccessfully(true)
       } catch (e) {
         warn(34, e)

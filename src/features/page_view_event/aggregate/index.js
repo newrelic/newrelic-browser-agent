@@ -13,7 +13,6 @@ import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
 import { now } from '../../../common/timing/now'
 import { TimeKeeper } from '../../../common/timing/time-keeper'
 import { applyFnToProps } from '../../../common/util/traverse'
-import { Harvester } from '../../../common/harvest/harvester'
 
 export class Aggregate extends AggregateBase {
   static featureName = CONSTANTS.FEATURE_NAME
@@ -29,7 +28,6 @@ export class Aggregate extends AggregateBase {
       return warn(43)
     }
     agentRef.runtime.timeKeeper = new TimeKeeper(agentRef.agentIdentifier)
-    agentRef.runtime.harvester = new Harvester(agentRef)
 
     if (isBrowserScope) {
       timeToFirstByte.subscribe(({ value, attrs }) => {

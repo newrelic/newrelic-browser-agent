@@ -4,6 +4,23 @@
     {
       "changes": [
         {
+          "type": "fix",
+          "sha": "5cecedcad6af7a14ec0e6777eba059ff1a5c008d",
+          "message": "Make Metrics harvest only on EoL for new Harvester",
+          "issues": [
+            "1311"
+          ]
+        }
+      ],
+      "version": "1.278.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "19340905-8a18-4ba5-9359-72425f0adc00",
+      "createTime": "2025-01-08T18:59:50.502Z"
+    },
+    {
+      "changes": [
+        {
           "type": "feat",
           "sha": "32c0e3f7008423a3e327d17b926d1702d08ae21f",
           "message": "Centralized harvesting",
@@ -2351,5 +2368,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2025-01-07T17:23:03.207Z"
+  "updateTime": "2025-01-08T18:59:50.502Z"
 }

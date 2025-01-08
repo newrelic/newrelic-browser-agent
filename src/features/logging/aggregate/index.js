@@ -1,6 +1,5 @@
 import { handle } from '../../../common/event-emitter/handle'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
-import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { warn } from '../../../common/util/console'
 import { stringify } from '../../../common/util/stringify'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
@@ -10,7 +9,7 @@ import { Log } from '../shared/log'
 import { isValidLogLevel } from '../shared/utils'
 import { applyFnToProps } from '../../../common/util/traverse'
 import { MAX_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
-import { FEATURE_NAMES, FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
+import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { SESSION_EVENT_TYPES, SESSION_EVENTS } from '../../../common/session/constants'
 import { ABORT_REASONS } from '../../session_replay/constants'
 import { canEnableSessionTracking } from '../../utils/feature-gates'
@@ -19,7 +18,6 @@ export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor (agentRef) {
     super(agentRef, FEATURE_NAME)
-    this.harvestTimeSeconds = agentRef.init.logging.harvestTimeSeconds
     this.isSessionTrackingEnabled = canEnableSessionTracking(this.agentIdentifier) && this.agentRef.runtime.session
 
     // The SessionEntity class can emit a message indicating the session was cleared and reset (expiry, inactivity). This feature must abort and never resume if that occurs.
@@ -33,6 +31,7 @@ export class Aggregate extends AggregateBase {
       else this.mode = data.loggingMode
     })
 
+    this.harvestOpts.raw = true
     this.waitForFlags(['log']).then(([loggingMode]) => {
       const session = this.agentRef.runtime.session ?? {}
       if (this.loggingMode === LOGGING_MODE.OFF || (session.isNew && loggingMode === LOGGING_MODE.OFF)) {
@@ -45,17 +44,12 @@ export class Aggregate extends AggregateBase {
       } else {
         this.loggingMode = session.state.loggingMode
       }
-      this.scheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
-        onFinished: (result) => this.postHarvestCleanup(result.sent && result.retry),
-        retryDelay: this.harvestTimeSeconds,
-        getPayload: (options) => this.makeHarvestPayload(options.retry),
-        raw: true
-      }, this)
+
       /** emitted by instrument class (wrapped loggers) or the api methods directly */
       registerHandler(LOGGING_EVENT_EMITTER_CHANNEL, this.handleLog.bind(this), this.featureName, this.ee)
       this.drain()
       /** harvest immediately once started to purge pre-load logs collected */
-      this.scheduler.startTimer(this.harvestTimeSeconds, 0)
+      agentRef.runtime.harvester.triggerHarvestFor(this)
     })
   }
 
@@ -107,8 +101,8 @@ export class Aggregate extends AggregateBase {
     }
 
     if (this.events.wouldExceedMaxSize(logBytes)) {
-      handle(SUPPORTABILITY_METRIC_CHANNEL, ['Logging/Harvest/Early/Seen', this.events.bytes + logBytes])
-      this.scheduler.runHarvest() // force a harvest to try adding again
+      handle(SUPPORTABILITY_METRIC_CHANNEL, ['Logging/Harvest/Early/Seen', this.events.byteSize() + logBytes])
+      this.agentRef.runtime.harvester.triggerHarvestFor(this) // force a harvest synchronously to try adding again
     }
 
     if (!this.events.add(log)) { // still failed after a harvest attempt despite not being too large would mean harvest failed with options.retry

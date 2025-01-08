@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.278.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.277.0...v1.278.0) (2025-01-07)
+
+
+### Features
+
+* Centralized harvesting ([#1298](https://github.com/newrelic/newrelic-browser-agent/issues/1298)) ([32c0e3f](https://github.com/newrelic/newrelic-browser-agent/commit/32c0e3f7008423a3e327d17b926d1702d08ae21f))
+
 ## [1.277.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.276.0...v1.277.0) (2024-12-18)
 
 

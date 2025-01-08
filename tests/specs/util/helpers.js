@@ -137,7 +137,7 @@ export function srConfig (initOverrides = {}) {
       loader: 'spa',
       init: {
         privacy: { cookies_enabled: true },
-        session_replay: { enabled: true, harvestTimeSeconds: 5 }
+        session_replay: { enabled: true }
       }
     },
     {
@@ -154,7 +154,7 @@ export function stConfig (initOverrides = {}) {
       loader: 'spa',
       init: {
         privacy: { cookies_enabled: true },
-        session_trace: { enabled: true, harvestTimeSeconds: 5 }
+        session_trace: { enabled: true }
       }
     },
     {
@@ -175,8 +175,7 @@ export async function getSR () {
         recording: (sr.recorder && sr.recorder.recording) || false,
         mode: sr.mode,
         exists: true,
-        blocked: sr.blocked,
-        harvestTimeSeconds: sr.harvestTimeSeconds
+        blocked: sr.blocked
       }
     } catch (err) {
       return {

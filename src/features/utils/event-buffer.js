@@ -53,7 +53,6 @@ export class EventBuffer {
 
   /**
    * Backup the buffered data and clear the main buffer
-   * @returns {Array} the events being backed up
    */
   save () {
     this.#bufferBackup = this.#buffer

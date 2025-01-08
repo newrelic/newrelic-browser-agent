@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { stringify } from '../../../common/util/stringify'
-import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { cleanURL } from '../../../common/url/clean-url'
 import { FEATURE_NAME, RESERVED_EVENT_TYPES } from '../constants'
 import { globalScope, initialLocation, isBrowserScope } from '../../../common/constants/runtime'
@@ -13,7 +12,6 @@ import { now } from '../../../common/timing/now'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { applyFnToProps } from '../../../common/util/traverse'
-import { FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
 import { UserActionsAggregator } from './user-actions/user-actions-aggregator'
 import { isIFrameWindow } from '../../../common/dom/iframe'
 import { handle } from '../../../common/event-emitter/handle'
@@ -22,10 +20,7 @@ export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor (agentRef) {
     super(agentRef, FEATURE_NAME)
-
     this.eventsPerHarvest = 1000
-    this.harvestTimeSeconds = agentRef.init.generic_events.harvestTimeSeconds
-
     this.referrerUrl = (isBrowserScope && document.referrer) ? cleanURL(document.referrer) : undefined
 
     this.waitForFlags(['ins']).then(([ins]) => {
@@ -66,6 +61,7 @@ export class Aggregate extends AggregateBase {
       let addUserAction
       if (isBrowserScope && agentRef.init.user_actions.enabled) {
         this.userActionAggregator = new UserActionsAggregator()
+        this.harvestOpts.beforeUnload = () => addUserAction?.(this.userActionAggregator.aggregationEvent)
 
         addUserAction = (aggregatedUserAction) => {
           try {
@@ -186,13 +182,7 @@ export class Aggregate extends AggregateBase {
         }, this.featureName, this.ee)
       }
 
-      this.harvestScheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
-        onFinished: (result) => this.postHarvestCleanup(result.sent && result.retry),
-        onUnload: () => addUserAction?.(this.userActionAggregator.aggregationEvent)
-      }, this)
-      this.harvestScheduler.harvest.on(FEATURE_TO_ENDPOINT[this.featureName], (options) => this.makeHarvestPayload(options.retry))
-      this.harvestScheduler.startTimer(this.harvestTimeSeconds, 0)
-
+      agentRef.runtime.harvester.triggerHarvestFor(this)
       this.drain()
     })
   }
@@ -246,7 +236,7 @@ export class Aggregate extends AggregateBase {
        * if it fails again, we do nothing
        */
       this.ee.emit(SUPPORTABILITY_METRIC_CHANNEL, ['GenericEvents/Harvest/Max/Seen'])
-      this.harvestScheduler.runHarvest()
+      this.agentRef.runtime.harvester.triggerHarvestFor(this)
       this.events.add(eventAttributes)
     }
   }

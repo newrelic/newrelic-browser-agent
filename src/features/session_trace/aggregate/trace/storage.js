@@ -273,7 +273,8 @@ export class TraceStorage {
     this.storeSTN(new TraceNode('Ajax', metrics.time, metrics.time + metrics.duration, `${params.status} ${params.method}: ${params.host}${params.pathname}`, 'ajax'))
   }
 
-  /* Below are the interface expected & required of whatever storage is used across all features on an individual basis. This allows a common `.events` property on Trace. */
+  /* Below are the interface expected & required of whatever storage is used across all features on an individual basis. This allows a common `.events` property on Trace shared with AggregateBase.
+    Note that the usage must be in sync with the EventStoreManager class such that AggregateBase.makeHarvestPayload can run the same regardless of which storage class a feature is using. */
   isEmpty () {
     return this.nodeCount === 0
   }
@@ -282,7 +283,9 @@ export class TraceStorage {
     this.#backupTrace = this.trace
   }
 
-  get = this.takeSTNs
+  get () {
+    return [{ targetApp: this.parent.agentRef.mainAppKey, data: this.takeSTNs() }]
+  }
 
   clear () {
     this.trace = {}

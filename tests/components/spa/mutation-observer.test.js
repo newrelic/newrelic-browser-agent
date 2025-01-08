@@ -16,6 +16,7 @@ jest.mock('../../../src/common/config/runtime', () => ({
   __esModule: true,
   getRuntime: jest.fn().mockReturnValue({})
 }))
+jest.mock('../../../src/common/harvest/harvester')
 
 let spaInstrument, spaAggregate, newrelic
 const agentIdentifier = 'abcdefg'

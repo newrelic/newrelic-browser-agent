@@ -100,7 +100,7 @@ describe('logging harvesting', () => {
         let now = Date.now(); let then
         await Promise.all([
           logsCapture.waitForResult({ totalCount: 1 }).then(() => { then = Date.now() }),
-          browser.url(await browser.testHandle.assetURL(`logs-${type}-harvest-early.html`, { init: { logging: { harvestTimeSeconds: 10 } } }))
+          browser.url(await browser.testHandle.assetURL(`logs-${type}-harvest-early.html`, { init: { harvest: { interval: 10 } } }))
         ])
 
         expect(then - now).toBeLessThan(10000)

@@ -5,6 +5,23 @@
       "changes": [
         {
           "type": "feat",
+          "sha": "32c0e3f7008423a3e327d17b926d1702d08ae21f",
+          "message": "Centralized harvesting",
+          "issues": [
+            "1298"
+          ]
+        }
+      ],
+      "version": "1.278.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "6762d16a-1507-432f-8404-790629d82720",
+      "createTime": "2025-01-07T17:23:03.207Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
           "sha": "9395415d942b55e88e89438aa203c6a1642d9e6b",
           "message": "Add custom events API",
           "issues": [
@@ -2334,5 +2351,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2024-12-18T17:31:02.842Z"
+  "updateTime": "2025-01-07T17:23:03.207Z"
 }

@@ -7,7 +7,6 @@
  */
 
 import { registerHandler } from '../../../common/event-emitter/register-handler'
-import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { ABORT_REASONS, FEATURE_NAME, QUERY_PARAM_PADDING, RRWEB_EVENT_TYPES, SR_EVENT_EMITTER_TYPES, TRIGGERS } from '../constants'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { sharedChannel } from '../../../common/constants/shared-channel'
@@ -16,7 +15,7 @@ import { warn } from '../../../common/util/console'
 import { globalScope } from '../../../common/constants/runtime'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { handle } from '../../../common/event-emitter/handle'
-import { FEATURE_NAMES, FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
+import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { RRWEB_VERSION } from '../../../common/constants/env'
 import { MODE, SESSION_EVENTS, SESSION_EVENT_TYPES } from '../../../common/session/constants'
 import { stringify } from '../../../common/util/stringify'
@@ -34,8 +33,6 @@ export class Aggregate extends AggregateBase {
   // pass the recorder into the aggregator
   constructor (agentRef, args) {
     super(agentRef, FEATURE_NAME)
-    /** The interval to harvest at.  This gets overridden if the size of the payload exceeds certain thresholds */
-    this.harvestTimeSeconds = agentRef.init.session_replay.harvestTimeSeconds || 60
     /** Set once the recorder has fully initialized after flag checks and sampling */
     this.initialized = false
     /** Set once the feature has been "aborted" to prevent other side-effects from continuing */
@@ -52,6 +49,7 @@ export class Aggregate extends AggregateBase {
 
     this.recorder = args?.recorder
     this.errorNoticed = args?.errorNoticed || false
+    this.harvestOpts.raw = true
 
     this.isSessionTrackingEnabled = canEnableSessionTracking(this.agentIdentifier) && this.agentRef.runtime.session
 
@@ -79,16 +77,8 @@ export class Aggregate extends AggregateBase {
       this.mode = data.sessionReplayMode
     })
 
-    // Bespoke logic for blobs endpoint.
-    this.scheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
-      onFinished: (result) => this.postHarvestCleanup(result),
-      retryDelay: this.harvestTimeSeconds,
-      getPayload: ({ retry, ...opts }) => this.makeHarvestPayload(retry, opts),
-      raw: true
-    }, this)
-
     registerHandler(SR_EVENT_EMITTER_TYPES.PAUSE, () => {
-      this.forceStop(this.mode !== MODE.ERROR)
+      this.forceStop(this.mode === MODE.FULL)
     }, this.featureName, this.ee)
 
     registerHandler(SR_EVENT_EMITTER_TYPES.ERROR_DURING_REPLAY, e => {
@@ -130,7 +120,7 @@ export class Aggregate extends AggregateBase {
   }
 
   replayIsActive () {
-    return Boolean(this.scheduler?.started && this.recorder && this.mode === MODE.FULL && !this.blocked && this.entitled)
+    return Boolean(this.recorder && this.mode === MODE.FULL && !this.blocked && this.entitled)
   }
 
   handleError (e) {
@@ -147,17 +137,16 @@ export class Aggregate extends AggregateBase {
     // if the error was noticed AFTER the recorder was already imported....
     if (this.recorder && this.initialized) {
       if (!this.recorder.recording) this.recorder.startRecording()
-      this.scheduler.startTimer(this.harvestTimeSeconds)
       this.syncWithSessionManager({ sessionReplayMode: this.mode })
     } else {
-      this.initializeRecording(false, true)
+      this.initializeRecording(MODE.FULL, true)
     }
   }
 
   /**
-   * Evaluate entitlements (which already accounts for sampling) before starting feature mechanics, importing and configuring recording library, and setting storage state
-   * @param {boolean} srMode - the true/false state of the "sr" flag from RUM response
-   * @param {boolean} ignoreSession - whether to force the method to ignore the session state and use just the "sr" flag
+   * Evaluate entitlements and sampling before starting feature mechanics, importing and configuring recording library, and setting storage state
+   * @param {boolean} srMode - the true/false state of the "sr" flag (aka. entitlements) from RUM response
+   * @param {boolean} ignoreSession - whether to force the method to ignore the session state and use just the sample flags
    * @returns {void}
    */
   async initializeRecording (srMode, ignoreSession) {
@@ -199,20 +188,13 @@ export class Aggregate extends AggregateBase {
     // If an error was noticed before the mode could be set (like in the early lifecycle of the page), immediately set to FULL mode
     if (this.mode === MODE.ERROR && this.errorNoticed) this.mode = MODE.FULL
 
-    if (this.mode === MODE.FULL) {
-      // If theres preloaded events and we are in full mode, just harvest immediately to clear up space and for consistency
-      if (this.recorder?.getEvents().type === 'preloaded') {
-        this.prepUtils().then(() => {
-          this.scheduler.runHarvest()
-        })
-      }
-      // FULL mode records AND reports from the beginning, while ERROR mode only records (but does not report).
-      // ERROR mode will do this until an error is thrown, and then switch into FULL mode.
-      // If an error happened in ERROR mode before we've gotten to this stage, it will have already set the mode to FULL
-      if (!this.scheduler.started) {
-      // We only report (harvest) in FULL mode
-        this.scheduler.startTimer(this.harvestTimeSeconds)
-      }
+    // FULL mode records AND reports from the beginning, while ERROR mode only records (but does not report).
+    // ERROR mode will do this until an error is thrown, and then switch into FULL mode.
+    // The makeHarvestPayload should ensure that no payload is returned if we're not in FULL mode...
+
+    // If theres preloaded events and we are in full mode, just harvest immediately to clear up space and for consistency
+    if (this.mode === MODE.FULL && this.recorder?.getEvents().type === 'preloaded') {
+      this.prepUtils().then(() => this.agentRef.runtime.harvester.triggerHarvestFor(this))
     }
 
     await this.prepUtils()
@@ -233,11 +215,13 @@ export class Aggregate extends AggregateBase {
     }
   }
 
-  makeHarvestPayload (shouldRetryOnFail, opts) {
+  makeHarvestPayload (shouldRetryOnFail) {
+    if (this.mode !== MODE.FULL || this.blocked) return
     if (!this.recorder || !this.timeKeeper?.ready || !this.recorder.hasSeenSnapshot) return
+
     const recorderEvents = this.recorder.getEvents()
     // get the event type and use that to trigger another harvest if needed
-    if (!recorderEvents.events.length || (this.mode !== MODE.FULL) || this.blocked) return
+    if (!recorderEvents.events.length) return
 
     const payload = this.getHarvestContents(recorderEvents)
     if (!payload.body.length) {
@@ -259,7 +243,6 @@ export class Aggregate extends AggregateBase {
         return stringify(output)
       }).join(',')}]`))
       len = payload.body.length
-      this.scheduler.opts.gzip = true
     } else {
       payload.body = payload.body.map(({ __serialized, ...node }) => {
         if (node.__newrelic) return node
@@ -269,7 +252,6 @@ export class Aggregate extends AggregateBase {
         return output
       })
       len = stringify(payload.body).length
-      this.scheduler.opts.gzip = false
     }
 
     if (len > MAX_PAYLOAD_SIZE) {
@@ -279,8 +261,8 @@ export class Aggregate extends AggregateBase {
     // TODO -- Gracefully handle the buffer for retries.
     if (!this.agentRef.runtime.session.state.sessionReplaySentFirstChunk) this.syncWithSessionManager({ sessionReplaySentFirstChunk: true })
     this.recorder.clearBuffer()
-    if (recorderEvents.type === 'preloaded') this.scheduler.runHarvest(opts)
-    return [payload]
+    if (recorderEvents.type === 'preloaded') this.agentRef.runtime.harvester.triggerHarvestFor(this)
+    return [{ targetApp: undefined, payload }] // SR doesn't need a targetApp as it only works for the main, but format needs to make AggregateBase
   }
 
   getCorrectedTimestamp (node) {
@@ -367,8 +349,6 @@ export class Aggregate extends AggregateBase {
     if (result.status === 429) {
       this.abort(ABORT_REASONS.TOO_MANY)
     }
-
-    if (this.blocked) this.scheduler.stopTimer(true)
   }
 
   /**
@@ -377,7 +357,7 @@ export class Aggregate extends AggregateBase {
    * the stopRecording API.
    */
   forceStop (forceHarvest) {
-    if (forceHarvest) this.scheduler.runHarvest()
+    if (forceHarvest) this.agentRef.runtime.harvester.triggerHarvestFor(this)
     this.mode = MODE.OFF
     this.recorder?.stopRecording?.()
     this.syncWithSessionManager({ sessionReplayMode: this.mode })
@@ -392,7 +372,6 @@ export class Aggregate extends AggregateBase {
     this.recorder?.stopRecording?.()
     this.syncWithSessionManager({ sessionReplayMode: this.mode })
     this.recorder?.clearTimestamps?.()
-    this.ee.emit('REPLAY_ABORTED')
     while (this.recorder?.getEvents().events.length) this.recorder?.clearBuffer?.()
   }
 

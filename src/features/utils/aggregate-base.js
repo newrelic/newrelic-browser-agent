@@ -71,18 +71,18 @@ export class AggregateBase extends FeatureBase {
   /**
    * Return harvest payload. A "serializer" function can be defined on a derived class to format the payload.
    * @param {Boolean} shouldRetryOnFail - harvester flag to backup payload for retry later if harvest request fails; this should be moved to harvester logic
-   * @param {object|undefined} target - the target app passed onto the event store manager to determine which app's data to return; if none provided, all apps data will be returned
+   * @param {object|undefined} opts.target - the target app passed onto the event store manager to determine which app's data to return; if none provided, all apps data will be returned
    * @returns {Array} Final payload tagged with their targeting browser app. The value of `payload` can be undefined if there are no pending events for an app. This should be a minimum length of 1.
    */
-  makeHarvestPayload (shouldRetryOnFail = false, target) {
-    if (this.events.isEmpty(this.harvestOpts, target)) return
+  makeHarvestPayload (shouldRetryOnFail = false, opts = {}) {
+    if (this.events.isEmpty(this.harvestOpts, opts.target)) return
     // Other conditions and things to do when preparing harvest that is required.
-    if (this.preHarvestChecks && !this.preHarvestChecks()) return
+    if (this.preHarvestChecks && !this.preHarvestChecks(opts)) return
 
-    if (shouldRetryOnFail) this.events.save(this.harvestOpts, target)
-    const returnedDataArr = this.events.get(this.harvestOpts, target)
+    if (shouldRetryOnFail) this.events.save(this.harvestOpts, opts.target)
+    const returnedDataArr = this.events.get(this.harvestOpts, opts.target)
     if (!returnedDataArr.length) throw new Error('Unexpected problem encountered. There should be at least one app for harvest!')
-    this.events.clear(this.harvestOpts, target)
+    this.events.clear(this.harvestOpts, opts.target)
 
     return returnedDataArr.map(({ targetApp, data }) => {
       // A serializer or formatter assists in creating the payload `body` from stored events on harvest when defined by derived feature class.

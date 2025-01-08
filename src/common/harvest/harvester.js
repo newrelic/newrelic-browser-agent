@@ -57,7 +57,7 @@ export class Harvester {
     const shouldRetryOnFail = !localOpts.isFinalHarvest && submitMethod === xhrMethod // always retry all features harvests except for final
     let dataToSendArr; let ranSend = false
     if (!localOpts.directSend) { // primarily used by rum call to bypass makeHarvestPayload by providing payload directly
-      dataToSendArr = aggregateInst.makeHarvestPayload(shouldRetryOnFail) // be sure the 'this' of makeHarvestPayload is the aggregate w/ access to its harvestOpts
+      dataToSendArr = aggregateInst.makeHarvestPayload(shouldRetryOnFail, localOpts) // be sure the 'this' of makeHarvestPayload is the aggregate w/ access to its harvestOpts
       if (!dataToSendArr) return false // can be undefined if storage is empty or preharvest checks failed
     } else dataToSendArr = [localOpts.directSend]
 

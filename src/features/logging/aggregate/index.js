@@ -13,12 +13,14 @@ import { MAX_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
 import { FEATURE_NAMES, FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
 import { SESSION_EVENT_TYPES, SESSION_EVENTS } from '../../../common/session/constants'
 import { ABORT_REASONS } from '../../session_replay/constants'
+import { canEnableSessionTracking } from '../../utils/feature-gates'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor (agentRef) {
     super(agentRef, FEATURE_NAME)
     this.harvestTimeSeconds = agentRef.init.logging.harvestTimeSeconds
+    this.isSessionTrackingEnabled = canEnableSessionTracking(this.agentIdentifier) && this.agentRef.runtime.session
 
     // The SessionEntity class can emit a message indicating the session was cleared and reset (expiry, inactivity). This feature must abort and never resume if that occurs.
     this.ee.on(SESSION_EVENTS.RESET, () => {
@@ -156,5 +158,11 @@ export class Aggregate extends AggregateBase {
     this.updateLoggingMode(LOGGING_MODE.OFF)
     this.events.clear()
     this.deregisterDrain()
+  }
+
+  syncWithSessionManager (state = {}) {
+    if (this.isSessionTrackingEnabled) {
+      this.agentRef.runtime.session.write(state)
+    }
   }
 }

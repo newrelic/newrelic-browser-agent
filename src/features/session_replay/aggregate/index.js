@@ -25,6 +25,7 @@ import { now } from '../../../common/timing/now'
 import { buildNRMetaNode } from '../shared/utils'
 import { MAX_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
 import { cleanURL } from '../../../common/url/clean-url'
+import { canEnableSessionTracking } from '../../utils/feature-gates'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -51,6 +52,8 @@ export class Aggregate extends AggregateBase {
 
     this.recorder = args?.recorder
     this.errorNoticed = args?.errorNoticed || false
+
+    this.isSessionTrackingEnabled = canEnableSessionTracking(this.agentIdentifier) && this.agentRef.runtime.session
 
     handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/Enabled'], undefined, FEATURE_NAMES.metrics, this.ee)
 
@@ -391,5 +394,11 @@ export class Aggregate extends AggregateBase {
     this.recorder?.clearTimestamps?.()
     this.ee.emit('REPLAY_ABORTED')
     while (this.recorder?.getEvents().events.length) this.recorder?.clearBuffer?.()
+  }
+
+  syncWithSessionManager (state = {}) {
+    if (this.isSessionTrackingEnabled) {
+      this.agentRef.runtime.session.write(state)
+    }
   }
 }

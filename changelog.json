@@ -5,6 +5,23 @@
       "changes": [
         {
           "type": "fix",
+          "sha": "64babe18a5c4190f6d7bdc775fe5f55db095c892",
+          "message": "Allow the page view feature to have access to an event buffer",
+          "issues": [
+            "1315"
+          ]
+        }
+      ],
+      "version": "1.278.2",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "40eb13de-24a0-4805-8d51-62ff0f2ce6da",
+      "createTime": "2025-01-09T23:17:44.037Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
           "sha": "5cecedcad6af7a14ec0e6777eba059ff1a5c008d",
           "message": "Make Metrics harvest only on EoL for new Harvester",
           "issues": [
@@ -2368,5 +2385,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2025-01-08T18:59:50.502Z"
+  "updateTime": "2025-01-09T23:17:44.037Z"
 }

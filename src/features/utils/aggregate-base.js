@@ -28,8 +28,7 @@ export class AggregateBase extends FeatureBase {
 
     // This switch needs to be after doOnceForAllAggregate which may new sharedAggregator and reset mainAppKey.
     switch (this.featureName) {
-      // PVE has no need for eventBuffer, and SessionTrace + Replay have their own storage mechanisms.
-      // case FEATURE_NAMES.pageViewEvent:
+      // SessionTrace + Replay have their own storage mechanisms.
       case FEATURE_NAMES.sessionTrace:
       case FEATURE_NAMES.sessionReplay:
         break

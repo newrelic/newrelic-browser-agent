@@ -63,14 +63,14 @@ describe('EventStoreManager', () => {
     const tgt1Meta = { licenseKey: '1', applicationID: '1' }
     const tgt2 = 'otherTarget'
     const tgt2Meta = { licenseKey: '2', applicationID: '2' }
+
     const store = new EventStoreManager(mockAgentRef, EventBuffer)
     store.entityManager.set(tgt1, tgt1Meta)
     store.entityManager.set(tgt2, tgt2Meta)
+
     store.add('evt0') // no target (default entity)
     store.add('evt1', tgt1)
     store.add('evt2', tgt2)
-
-    console.log(store.get())
 
     expect(store.get()).toEqual([{ targetApp: info, data: ['evt0'] }, { targetApp: tgt1Meta, data: ['evt1'] }, { targetApp: tgt2Meta, data: ['evt2'] }])
   })

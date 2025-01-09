@@ -18,8 +18,7 @@ export class AggregateBase extends FeatureBase {
 
     // This switch needs to be after doOnceForAllAggregate which may new sharedAggregator and reset mainAppKey.
     switch (this.featureName) {
-      // PVE has no need for eventBuffer, and SessionTrace + Replay have their own storage mechanisms.
-      case FEATURE_NAMES.pageViewEvent:
+      // SessionTrace + Replay have their own storage mechanisms.
       case FEATURE_NAMES.sessionTrace:
       case FEATURE_NAMES.sessionReplay:
         break
@@ -28,6 +27,9 @@ export class AggregateBase extends FeatureBase {
       case FEATURE_NAMES.metrics:
         this.events = agentRef.sharedAggregator
         break
+      /** All other features get EventBuffer in the ESM by default. Note: PVE is included here, but event buffer will always be empty so future harvests will still not happen by interval or EOL.
+      This was necessary to prevent race cond. issues where the event buffer was checked before the feature could "block" itself.
+      Its easier to just keep an empty event buffer in place. */
       default:
         this.events = new EventStoreManager(agentRef.mainAppKey, 1)
         break

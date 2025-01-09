@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.278.2](https://github.com/newrelic/newrelic-browser-agent/compare/v1.278.1...v1.278.2) (2025-01-09)
+
+
+### Bug Fixes
+
+* Allow the page view feature to have access to an event buffer ([#1315](https://github.com/newrelic/newrelic-browser-agent/issues/1315)) ([64babe1](https://github.com/newrelic/newrelic-browser-agent/commit/64babe18a5c4190f6d7bdc775fe5f55db095c892))
+
 ## [1.278.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.278.0...v1.278.1) (2025-01-08)
 
 

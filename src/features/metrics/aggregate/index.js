@@ -34,7 +34,7 @@ export class Aggregate extends AggregateBase {
     this.eachSessionChecks() // the start of every time user engages with page
   }
 
-  preHarvestChecks () { return this.drained } // only allow any metrics to be sent if we know for sure it has gotten the go-ahead RUM flag
+  preHarvestChecks (opts) { return this.drained && opts.isFinalHarvest } // only allow any metrics to be sent after we get the right RUM flag and only on EoL
 
   storeSupportabilityMetrics (name, value) {
     if (this.blocked) return

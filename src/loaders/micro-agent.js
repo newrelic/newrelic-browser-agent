@@ -15,7 +15,7 @@ export class MicroAgent {
     try {
       Object.assign(this, window.newrelic?.register(opts) || {})
     } catch (err) {
-      warn(48, err)
+      warn(49, err)
     }
   }
 

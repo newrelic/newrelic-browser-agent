@@ -43,8 +43,8 @@ export class Aggregate extends AggregateBase {
       }, this.featureName, this.ee)
 
       if (agentRef.init.page_action.enabled) {
-        registerHandler('api-addPageAction', (timestamp, name, attributes, target) => {
-          if (!isValidTarget(target)) return warn(46, target)
+        registerHandler('api-addPageAction', (timestamp, name, attributes, targetEntityGuid) => {
+          if (!isValidTarget(this.agentRef.runtime.entityManager.get(targetEntityGuid))) return warn(47, targetEntityGuid)
           this.addEvent({
             ...attributes,
             eventType: 'PageAction',
@@ -56,7 +56,7 @@ export class Aggregate extends AggregateBase {
               browserWidth: window.document.documentElement?.clientWidth,
               browserHeight: window.document.documentElement?.clientHeight
             })
-          }, target)
+          }, targetEntityGuid)
         }, this.featureName, this.ee)
       }
 
@@ -200,18 +200,15 @@ export class Aggregate extends AggregateBase {
    * * sessionTraceId: set by the `ptid=` query param
    * * userAgent*: set by the userAgent header
    * @param {object=} obj the event object for storing in the event buffer
-   * @param {object=} target the target object for the event to scope buffering and harvesting. Defaults to agent config if undefined
+   * @param {string=} targetEntityGuid the target entity guid for the event to scope buffering and harvesting. Defaults to agent config if undefined
    * @returns void
    */
-  addEvent (obj = {}, target) {
+  addEvent (obj = {}, targetEntityGuid) {
     if (!obj || !Object.keys(obj).length) return
     if (!obj.eventType) {
       warn(44)
       return
     }
-
-    // TODO FIX THIS TO USE THE NEW SYSTEM
-    const events = this.eventManager.get(target)
 
     for (let key in obj) {
       let val = obj[key]
@@ -235,9 +232,8 @@ export class Aggregate extends AggregateBase {
       ...obj
     }
 
-    // TODO FIX THIS TO USE THE NEW SYSTEM
-    const addedEvent = events.add(eventAttributes)
-    if (!addedEvent && !events.isEmpty()) {
+    const addedEvent = this.events.add(eventAttributes, targetEntityGuid)
+    if (!addedEvent && !this.events.isEmpty(undefined, targetEntityGuid)) {
       /** could not add the event because it pushed the buffer over the limit
        * so we harvest early, and try to add it again now that the buffer is cleared
        * if it fails again, we do nothing

@@ -20,7 +20,7 @@ import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
 export function buildRegisterApi (agentRef, handlers, target) {
   const attrs = {}
   if (!isValidTarget(target, false)) {
-    const invalidTargetResponse = () => warn(46, target)
+    const invalidTargetResponse = () => warn(47, target)
     invalidTargetResponse()
     return {
       addPageAction: invalidTargetResponse,
@@ -45,7 +45,9 @@ export function buildRegisterApi (agentRef, handlers, target) {
       (data) => {
         try {
           clearTimeout(timeout)
-          target.entityGuid = data.app.agents?.[0].entityGuid
+          const entityGuid = data.app.agents?.[0].entityGuid
+          if (!entityGuid) throw new Error('No target entity guid returned from PVE call')
+          target.entityGuid = entityGuid
           resolve(data)
         } catch (err) {
           reject(err)
@@ -53,7 +55,7 @@ export function buildRegisterApi (agentRef, handlers, target) {
       },
       /** custom attributes to send with the rum call */
       attrs,
-      /** target to send the rum call to */
+      /** target to send the rum call to (we dont have the entityguid yet in PVE call, so must supply a direct obj) */
       target
     ], undefined, FEATURE_NAMES.pageViewEvent, agentRef.ee)
   })
@@ -63,7 +65,7 @@ export function buildRegisterApi (agentRef, handlers, target) {
      * If the external.capture_registered_data configuration value is set to true, the data will be reported to BOTH the container and the external target
      * @param {*} methodToCall the container agent's API method to call
      * @param {*} args the arguments to supply to the container agent's API method
-     * @param {*} target the target to report the data to. If undefined, will report to the container agent's target.
+     * @param {string} targetEntityGuid the target entity guid, which looks up the target to report the data to from the entity manager. If undefined, will report to the container agent's target.
      * @returns
      */
   const report = (methodToCall, args, target) => {
@@ -71,11 +73,12 @@ export function buildRegisterApi (agentRef, handlers, target) {
     const timestamp = now()
     handle(SUPPORTABILITY_METRIC_CHANNEL, [`API/register/${methodToCall.name}/called`], undefined, FEATURE_NAMES.metrics, agentRef.ee)
     waitForRumResponse.then((rumResponse) => {
+      // target should be decorated with entityGuid by the rum resp at this point
       if (methodToCall === handlers.log && !(target.entityGuid && rumResponse.log)) return // not enough metadata <or> was not sampled
       if (agentRef.init.external.capture_registered_data) { methodToCall(...args, undefined, timestamp) } // also report to container by providing undefined target
-      methodToCall(...args, target, timestamp) // report to target
+      methodToCall(...args, target.entityGuid, timestamp) // report to target
     }).catch(err => {
-      warn(48, err)
+      warn(49, err)
     })
   }
   return {

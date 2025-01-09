@@ -50,7 +50,7 @@ const model = () => {
     external: { capture_registered_data: false },
     feature_flags: [],
     generic_events: { enabled: true, harvestTimeSeconds: 30, autoStart: true },
-    harvest: { tooManyRequestsDelay: 60 },
+    harvest: { interval: 30 },
     jserrors: { enabled: true, harvestTimeSeconds: 10, autoStart: true },
     logging: { enabled: true, harvestTimeSeconds: 10, autoStart: true, level: LOG_LEVELS.INFO },
     metrics: { enabled: true, autoStart: true },

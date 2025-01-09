@@ -49,6 +49,12 @@ export class Aggregate extends AggregateBase {
     }
   }
 
+  /**
+   *
+   * @param {Function} cb A function to run once the RUM call has finished - Defaults to activateFeatures
+   * @param {*} customAttributes custom attributes to attach to the RUM call - Defaults to info.js
+   * @param {*} target The target to harvest to - Since we will not know the entityGuid before harvesting, this must be an object directly supplied from the info object or API, not an entityGuid string for lookup with the entityManager - Defaults to { licenseKey: this.agentRef.info.licenseKey, applicationID: this.agentRef.info.applicationID }
+   */
   sendRum (cb = activateFeatures, customAttributes = this.agentRef.info.jsAttributes, target = { licenseKey: this.agentRef.info.licenseKey, applicationID: this.agentRef.info.applicationID }) {
     const info = this.agentRef.info
     const measures = {}
@@ -107,21 +113,21 @@ export class Aggregate extends AggregateBase {
       queryParameters.timestamp = Math.floor(timeKeeper.correctRelativeTimestamp(now()))
     }
 
-    // TODO THIS NEEDS TO SUPPORT CUSTOM CALLBACK AND PROBABLY EXTEND THE DIRECT SEND TO SUPPORT A TARGET BETTER
     this.rumStartTime = now()
+
     this.agentRef.runtime.harvester.triggerHarvestFor(this, {
       directSend: {
-        targetApp: this.agentRef.mainAppKey,
+        targetApp: target,
         payload: { qs: queryParameters, body }
       },
       needResponse: true,
-      sendEmptyBody: true
+      sendEmptyBody: true,
+      cbFinished: cb
     })
   }
 
-  postHarvestCleanup ({ status, responseText, xhr }) {
+  postHarvestCleanup ({ status, responseText, xhr, targetApp, cbFinished = activateFeatures }) {
     const rumEndTime = now()
-    this.blocked = true // this prevents harvester from polling this feature's event buffer (DNE) on interval; in other words, harvests will skip PVE
 
     if (status >= 400 || status === 0) {
       warn(18, status)
@@ -130,17 +136,21 @@ export class Aggregate extends AggregateBase {
       return
     }
 
-    const { app, ...flags } = JSON.parse(responseText)
+    const rumResponse = JSON.parse(responseText)
     try {
-      this.agentRef.runtime.timeKeeper.processRumRequest(xhr, this.rumStartTime, rumEndTime, app.nrServerTime)
+      this.agentRef.runtime.timeKeeper.processRumRequest(xhr, this.rumStartTime, rumEndTime, rumResponse.app.nrServerTime)
       if (!this.agentRef.runtime.timeKeeper.ready) throw new Error('TimeKeeper not ready')
     } catch (error) {
       this.ee.abort()
       warn(17, error)
       return
     }
-    this.agentRef.runtime.appMetadata = app
-    activateFeatures(flags, this.agentIdentifier)
+
+    const respEntityGuid = rumResponse.app.agents[0].entityGuid
+    this.agentRef.runtime.entityManager.set(respEntityGuid, { entityGuid: respEntityGuid, ...targetApp })
+    this.agentRef.runtime.appMetadata = rumResponse.app
+    // cbFinished is the activateFeatures function by default, but can be another cb function for the MFE api too
+    cbFinished(rumResponse, this.agentIdentifier)
     this.drain()
     this.agentRef.runtime.harvester.startTimer()
   }

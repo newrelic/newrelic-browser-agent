@@ -16,6 +16,11 @@ beforeAll(async () => {
   mainAgent = setupAgent()
   info = getInfo(mainAgent.agentIdentifier)
   runtime = getRuntime(mainAgent.agentIdentifier)
+  /** mock response from PVE that assigns an entityGuid to the entity manager */
+  runtime.entityManager.set(
+    runtime.appMetadata.agents[0].entityGuid,
+    { licenseKey: info.licenseKey, applicationID: info.applicationID, entityGuid: runtime.appMetadata.agents[0].entityGuid }
+  )
 })
 
 let loggingAggregate

@@ -117,9 +117,10 @@ export class Aggregate extends AggregateBase {
    * @param {object=} target the target to buffer and harvest to, if undefined the default configuration target is used
    * @returns
    */
-  storeError (err, time, internal, customAttributes, hasReplay, swallowReason, target) {
+  storeError (err, time, internal, customAttributes, hasReplay, swallowReason, targetEntityGuid) {
     if (!err) return
-    if (!isValidTarget(target)) return warn(46, target)
+    const target = this.agentRef.runtime.entityManager.get(targetEntityGuid)
+    if (!isValidTarget(target)) return warn(47, targetEntityGuid)
     // are we in an interaction
     time = time || now()
     let filterOutput
@@ -190,7 +191,7 @@ export class Aggregate extends AggregateBase {
     var newMetrics = { time }
 
     // Trace sends the error in its payload, and both trace & replay simply listens for any error to occur.
-    const jsErrorEvent = [type, bucketHash, params, newMetrics, customAttributes, target]
+    const jsErrorEvent = [type, bucketHash, params, newMetrics, customAttributes, targetEntityGuid]
     handle('trace-jserror', jsErrorEvent, undefined, FEATURE_NAMES.sessionTrace, this.ee)
     // still send EE events for other features such as above, but stop this one from aggregating internal data
     if (this.blocked) return
@@ -220,9 +221,7 @@ export class Aggregate extends AggregateBase {
   }
 
   #storeJserrorForHarvest (errorInfoArr, softNavOccurredFinished, softNavCustomAttrs = {}) {
-    // TODO USE TARGET
-    // eslint-disable-next-line no-unused-vars
-    let [type, bucketHash, params, newMetrics, localAttrs, target] = errorInfoArr
+    let [type, bucketHash, params, newMetrics, localAttrs, targetEntityGuid] = errorInfoArr
     const allCustomAttrs = {}
 
     if (softNavOccurredFinished) {
@@ -239,8 +238,8 @@ export class Aggregate extends AggregateBase {
 
     const jsAttributesHash = stringHashCode(stringify(allCustomAttrs))
     const aggregateHash = bucketHash + ':' + jsAttributesHash
-    // TODO - FIX THIS TO WORK WITH THE NEW SYSTEM (target)
-    this.events.add([type, aggregateHash, params, newMetrics, allCustomAttrs])
+
+    this.events.add([type, aggregateHash, params, newMetrics, allCustomAttrs], targetEntityGuid)
 
     function setCustom (key, val) {
       allCustomAttrs[key] = (val && typeof val === 'object' ? stringify(val) : val)
@@ -270,8 +269,7 @@ export class Aggregate extends AggregateBase {
       var jsAttributesHash = stringHashCode(stringify(allCustomAttrs))
       var aggregateHash = hash + ':' + jsAttributesHash
 
-      // TODO UPDATE THIS TO USE ITEM[5] as the TARGET
-      this.events.add([item[0], aggregateHash, params, item[3], allCustomAttrs])
+      this.events.add([item[0], aggregateHash, params, item[3], allCustomAttrs], item[5])
 
       function setCustom ([key, val]) {
         allCustomAttrs[key] = (val && typeof val === 'object' ? stringify(val) : val)

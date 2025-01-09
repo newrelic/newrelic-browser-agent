@@ -34,7 +34,7 @@ describe('setAPI', () => {
   test('should add expected api methods returned object', () => {
     const apiInterface = setAPI(agent, true)
 
-    expect(Object.keys(apiInterface).length).toEqual(18)
+    expect(Object.keys(apiInterface).length).toEqual(19)
     expect(typeof apiInterface.setErrorHandler).toEqual('function')
     expect(typeof apiInterface.finished).toEqual('function')
     expect(typeof apiInterface.addToTrace).toEqual('function')
@@ -598,7 +598,7 @@ describe('setAPI', () => {
     ;[{ applicationID }, { licenseKey }].forEach(opts => {
       test('should warn and not work if invalid target', () => {
         let myApi = apiInterface.register(opts)
-        expect(console.debug).toHaveBeenCalledWith('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#46', opts)
+        expect(console.debug).toHaveBeenCalledWith('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#47', opts)
         myApi.addPageAction()
         myApi.noticeError()
         myApi.log()
@@ -649,7 +649,7 @@ describe('setAPI', () => {
         expectSM('API/noticeError/called')
         expect(handleModule.handle).toHaveBeenCalledWith(
           'err',
-          [err, expect.toBeNumber(), false, customAttrs, false, undefined, target],
+          [err, expect.toBeNumber(), false, customAttrs, false, undefined, entityGuid],
           undefined,
           FEATURE_NAMES.jserrors,
           agent.ee
@@ -673,7 +673,7 @@ describe('setAPI', () => {
         expectSM('API/addPageAction/called')
         expect(handleModule.handle).toHaveBeenCalledWith(
           'api-addPageAction',
-          [expect.any(Number), 'test', customAttrs, target],
+          [expect.any(Number), 'test', customAttrs, entityGuid],
           null,
           FEATURE_NAMES.genericEvents,
           agent.ee
@@ -698,7 +698,7 @@ describe('setAPI', () => {
         expectSM('API/logging/info/called')
         expect(handleModule.handle).toHaveBeenCalledWith(
           'log',
-          [expect.any(Number), 'test', customAttrs, 'INFO', target],
+          [expect.any(Number), 'test', customAttrs, 'INFO', entityGuid],
           undefined,
           FEATURE_NAMES.logging,
           agent.ee

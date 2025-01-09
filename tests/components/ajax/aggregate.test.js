@@ -166,7 +166,7 @@ describe('prepareHarvest', () => {
   })
 
   test('correctly exits if maxPayload is too small', () => {
-    ajaxAggregate.events.appStorageMap.get(ajaxAggregate.events.mainApp).maxPayloadSize = 10 // this is too small for any AJAX payload to fit in
+    ajaxAggregate.events.appStorageMap.get('default').maxPayloadSize = 10 // this is too small for any AJAX payload to fit in
     for (let callNo = 0; callNo < 10; callNo++) ajaxAggregate.ee.emit('xhr', ajaxArguments, context)
 
     // TODO MAKE SURE THIS WORKS WITH NEW SYSTEM

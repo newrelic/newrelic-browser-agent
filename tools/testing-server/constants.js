@@ -9,8 +9,9 @@ const defaultAgentConfig = {
 }
 module.exports.defaultAgentConfig = defaultAgentConfig
 
-const defaultEntityGuid = btoa(`${defaultAgentConfig.accountID}|BROWSER|APPLICATION|${defaultAgentConfig.applicationID}`).replace(/=/g, '')
-module.exports.defaultEntityGuid = defaultEntityGuid
+const mockEntityGuid = () => {
+  return btoa(`${defaultAgentConfig.accountID}|BROWSER|APPLICATION|${Math.floor(Math.random() * 1000000)}`).replace(/=/g, '')
+}
 
 module.exports.paths = {
   rootDir: path.resolve(__dirname, '../../'),
@@ -45,7 +46,7 @@ module.exports.rumFlags = (flags = {}, app = {}) => ({
   log: defaultFlagValue(flags.log), // log entitlements 0|1
   app: {
     agents: app.agents || [
-      { entityGuid: defaultEntityGuid }
+      { entityGuid: mockEntityGuid() }
     ],
     nrServerTime: app.nrServerTime || Date.now()
   }

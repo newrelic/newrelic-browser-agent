@@ -5,6 +5,8 @@ import { configure } from '../../../../src/loaders/configure/configure'
 import { gosCDN } from '../../../../src/common/window/nreum'
 import { FEATURE_NAMES } from '../../../../src/loaders/features/features'
 import { EventStoreManager } from '../../../../src/features/utils/event-store-manager'
+import { EventBuffer } from '../../../../src/features/utils/event-buffer'
+import { EventAggregator } from '../../../../src/common/aggregate/event-aggregator'
 
 jest.enableAutomock()
 jest.unmock('../../../../src/features/utils/aggregate-base')
@@ -148,12 +150,12 @@ test('should return activatedFeatures values when available', async () => {
 
 test('does not initialized Aggregator more than once with multiple features', async () => {
   expect(EventStoreManager).toHaveBeenCalledTimes(0)
-  expect(mainAgent.mainAppKey).toBeUndefined()
+  expect(mainAgent.runtime.entityManager).toBeUndefined()
 
   new AggregateBase(mainAgent, FEATURE_NAMES.pageViewEvent)
   expect(EventStoreManager).toHaveBeenCalledTimes(1)
-  expect(EventStoreManager).toHaveBeenCalledWith(mainAgent.mainAppKey, 2) // 2 = initialize EventAggregator
-  expect(mainAgent.mainAppKey).toBeTruthy()
+  expect(EventStoreManager).toHaveBeenCalledWith(EventAggregator) // 2 = initialize EventAggregator
+  expect(mainAgent.runtime.entityManager).toBeTruthy()
   expect(mainAgent.sharedAggregator).toBeTruthy()
 
   new AggregateBase(mainAgent, FEATURE_NAMES.jserrors) // this feature should be using that same aggregator as its .events
@@ -161,7 +163,7 @@ test('does not initialized Aggregator more than once with multiple features', as
 
   new AggregateBase(mainAgent, FEATURE_NAMES.pageViewTiming) // PVT should use its own EventStoreManager
   expect(EventStoreManager).toHaveBeenCalledTimes(2)
-  expect(EventStoreManager).toHaveBeenCalledWith(mainAgent.mainAppKey, 1) // 1 = initialize EventBuffer
+  expect(EventStoreManager).toHaveBeenCalledWith(EventBuffer) // 1 = initialize EventBuffer
 })
 
 test('does initialize separate Aggregators with multiple agents', async () => {

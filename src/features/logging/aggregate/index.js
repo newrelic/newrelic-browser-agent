@@ -26,8 +26,10 @@ export class Aggregate extends AggregateBase {
     })
   }
 
-  handleLog (timestamp, message, attributes = {}, level = LOG_LEVELS.INFO, target) {
-    if (target && !target.entityGuid) return warn(47)
+  handleLog (timestamp, message, attributes = {}, level = LOG_LEVELS.INFO, targetEntityGuid) {
+    const target = this.agentRef.runtime.entityManager.get(targetEntityGuid)
+
+    if (target && !target.entityGuid) return warn(48)
     if (this.blocked) return
 
     if (!attributes || typeof attributes !== 'object') attributes = {}
@@ -66,25 +68,25 @@ export class Aggregate extends AggregateBase {
       return
     }
 
-    // TODO FIX THIS TO WORK WITH NEW SYSTEM (TARGET)
-    if (this.events.wouldExceedMaxSize(logBytes)) {
+    if (this.events.wouldExceedMaxSize(logBytes, targetEntityGuid)) {
       handle(SUPPORTABILITY_METRIC_CHANNEL, ['Logging/Harvest/Early/Seen', this.events.byteSize() + logBytes])
-      this.agentRef.runtime.harvester.triggerHarvestFor(this) // force a harvest synchronously to try adding again
+      this.agentRef.runtime.harvester.triggerHarvestFor(this, { targetEntityGuid }) // force a harvest synchronously to try adding again
     }
 
-    if (!this.events.add(log)) { // still failed after a harvest attempt despite not being too large would mean harvest failed with options.retry
+    if (!this.events.add(log, targetEntityGuid)) { // still failed after a harvest attempt despite not being too large would mean harvest failed with options.retry
       handle(SUPPORTABILITY_METRIC_CHANNEL, [failToHarvestMessage, logBytes])
       warn(31, log.message.slice(0, 25) + '...')
     }
   }
 
-  serializer (eventBuffer, target) {
+  serializer (eventBuffer, targetEntityGuid) {
+    const target = this.agentRef.runtime.entityManager.get(targetEntityGuid)
     const sessionEntity = this.agentRef.runtime.session
     return [{
       common: {
         /** Attributes in the `common` section are added to `all` logs generated in the payload */
         attributes: {
-          'entity.guid': target.entityGuid || this.agentRef.runtime.appMetadata?.agents?.[0]?.entityGuid, // browser entity guid as provided API target OR the default from RUM response if not supplied
+          'entity.guid': targetEntityGuid || this.agentRef.runtime.appMetadata?.agents?.[0]?.entityGuid, // browser entity guid as provided API target OR the default from RUM response if not supplied
           ...(sessionEntity && {
             session: sessionEntity.state.value || '0', // The session ID that we generate and keep across page loads
             hasReplay: sessionEntity.state.sessionReplayMode === 1 && isContainerAgentTarget(target, this.agentRef), // True if a session replay recording is running
@@ -108,7 +110,8 @@ export class Aggregate extends AggregateBase {
     }]
   }
 
-  queryStringsBuilder (_, target) {
+  queryStringsBuilder (_, targetEntityGuid) {
+    const target = this.agentRef.runtime.entityManager.get(targetEntityGuid)
     return { browser_monitoring_key: target.licenseKey }
   }
 }

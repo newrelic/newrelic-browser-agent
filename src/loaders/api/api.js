@@ -59,17 +59,17 @@ export function setAPI (agentRef, forceDrain, runSoftNavOverSpa = false) {
    * a target, but the register APIs `can` supply a target.
   */
   const sharedHandlers = {
-    addPageAction: function addPageAction (name, attributes, target, timestamp = now()) {
-      apiCall(prefix, 'addPageAction', true, FEATURE_NAMES.genericEvents, timestamp)(name, attributes, target)
+    addPageAction: function addPageAction (name, attributes, targetEntityGuid, timestamp = now()) {
+      apiCall(prefix, 'addPageAction', true, FEATURE_NAMES.genericEvents, timestamp)(name, attributes, targetEntityGuid)
     },
-    log: function log (message, { customAttributes = {}, level = LOG_LEVELS.INFO } = {}, target, timestamp = now()) {
+    log: function log (message, { customAttributes = {}, level = LOG_LEVELS.INFO } = {}, targetEntityGuid, timestamp = now()) {
       handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/log/called'], undefined, FEATURE_NAMES.metrics, agentRef.ee)
-      bufferLog(agentRef.ee, message, customAttributes, level, target, timestamp)
+      bufferLog(agentRef.ee, message, customAttributes, level, targetEntityGuid, timestamp)
     },
-    noticeError: function noticeError (err, customAttributes, target, timestamp = now()) {
+    noticeError: function noticeError (err, customAttributes, targetEntityGuid, timestamp = now()) {
       if (typeof err === 'string') err = new Error(err)
       handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/noticeError/called'], undefined, FEATURE_NAMES.metrics, agentRef.ee)
-      handle('err', [err, timestamp, false, customAttributes, !!replayRunning[agentRef.agentIdentifier], undefined, target], undefined, FEATURE_NAMES.jserrors, agentRef.ee)
+      handle('err', [err, timestamp, false, customAttributes, !!replayRunning[agentRef.agentIdentifier], undefined, targetEntityGuid], undefined, FEATURE_NAMES.jserrors, agentRef.ee)
     }
   }
   apiInterface.register = function (target) {

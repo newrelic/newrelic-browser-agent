@@ -115,7 +115,6 @@ export class Aggregate extends AggregateBase {
 
   postHarvestCleanup ({ status, responseText, xhr }) {
     const rumEndTime = now()
-    this.blocked = true // this prevents harvester from polling this feature's event buffer (DNE) on interval; in other words, harvests will skip PVE
 
     if (status >= 400 || status === 0) {
       warn(18, status)

@@ -150,7 +150,7 @@ test('does not initialized Aggregator more than once with multiple features', as
   expect(mainAgent.mainAppKey).toBeUndefined()
 
   new AggregateBase(mainAgent, FEATURE_NAMES.pageViewEvent)
-  expect(EventStoreManager).toHaveBeenCalledTimes(2)
+  expect(EventStoreManager).toHaveBeenCalledTimes(2) // once for runtime.sharedAgg + once for PVE.events
   expect(EventStoreManager).toHaveBeenCalledWith(mainAgent.mainAppKey, 2) // 2 = initialize EventAggregator
   expect(mainAgent.mainAppKey).toBeTruthy()
   expect(mainAgent.sharedAggregator).toBeTruthy()

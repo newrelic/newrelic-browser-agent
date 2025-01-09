@@ -175,7 +175,7 @@ test('does initialize separate Aggregators with multiple agents', async () => {
 
   new AggregateBase(mainAgent, FEATURE_NAMES.pageViewEvent)
   new AggregateBase(mainAgent2, FEATURE_NAMES.pageViewEvent)
-  expect(EventStoreManager).toHaveBeenCalledTimes(4)
+  expect(EventStoreManager).toHaveBeenCalledTimes(4) // runtime.sharedAgg + PVE.events but multiply by having 2 agents
 
   new AggregateBase(mainAgent, FEATURE_NAMES.jserrors) // still does not initialize sharedAgg again on the same agent
   new AggregateBase(mainAgent2, FEATURE_NAMES.jserrors)

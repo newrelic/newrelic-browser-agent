@@ -72,7 +72,7 @@ describe('pvt timings tests', () => {
 
   describe('interaction related timings', () => {
     loadersToTest.forEach(loader => {
-      it(`FI, FID, INP & LCP for ${loader} agent`, async () => {
+      it(`FI, INP & LCP for ${loader} agent`, async () => {
         const start = Date.now()
         await browser.url(
           await browser.testHandle.assetURL('basic-click-tracking.html', { loader })
@@ -95,10 +95,6 @@ describe('pvt timings tests', () => {
           const fiType = fi.attributes.find(attr => attr.key === 'type')
           expect(isClickInteractionType(fiType.value)).toEqual(true)
           expect(fiType.type).toEqual('stringAttribute')
-
-          const fid = fi.attributes.find(attr => attr.key === 'fid')
-          expect(fid.value).toBeGreaterThanOrEqual(0)
-          expect(fid.type).toEqual('doubleAttribute')
         }
 
         if (browserMatch(supportsLargestContentfulPaint)) {

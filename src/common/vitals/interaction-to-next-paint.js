@@ -6,6 +6,7 @@ import { onINP } from 'web-vitals/attribution'
 import { VitalMetric } from './vital-metric'
 import { VITAL_NAMES } from './constants'
 import { isBrowserScope } from '../constants/runtime'
+import { recordFirstInteraction } from './first-interaction'
 
 export const interactionToNextPaint = new VitalMetric(VITAL_NAMES.INTERACTION_TO_NEXT_PAINT)
 
@@ -26,5 +27,7 @@ if (isBrowserScope) {
       loadState: attribution.loadState
     }
     interactionToNextPaint.update({ value, attrs })
+
+    recordFirstInteraction(attribution)
   })
 }

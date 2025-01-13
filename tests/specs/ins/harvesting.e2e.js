@@ -178,6 +178,25 @@ describe('ins harvesting', () => {
     })
   })
 
+  it('should only report duplicative focus and blur events once', async () => {
+    const testUrl = await browser.testHandle.assetURL('user-actions.html', getInsInit({ user_actions: { enabled: true } }))
+    await browser.url(testUrl).then(() => browser.pause(2000))
+
+    const [insHarvests] = await Promise.all([
+      insightsCapture.waitForResult({ timeout: 5000 }),
+      browser.execute(function () {
+        let i = 0; while (i++ < 10) {
+          window.dispatchEvent(new Event('focus'))
+          window.dispatchEvent(new Event('blur'))
+        }
+      })
+
+    ])
+
+    const userActionsHarvest = insHarvests.flatMap(harvest => harvest.request.body.ins) // firefox sends a window focus event on load, so we may end up with 2 harvests
+    expect(userActionsHarvest.filter(ua => ua.action === 'focus').length).toEqual(1)
+  })
+
   ;[
     [getInsInit({ performance: { capture_marks: true } }), 'enabled'],
     [getInsInit({ performance: { capture_marks: false }, feature_flags: [FEATURE_FLAGS.MARKS] }), 'feature flag']

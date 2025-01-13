@@ -223,7 +223,7 @@
     "@fastify/cors": "^8.5.0",
     "@fastify/multipart": "^8.1.0",
     "@fastify/static": "^6.12.0",
-    "@fastify/websocket": "^10.0.1",
+    "@fastify/websocket": "^11.0.2",
     "@newrelic/newrelic-oss-cli": "^0.1.2",
     "@newrelic/nr-querypack": "https://git@github.com/newrelic/nr-querypack",
     "@wdio/cli": "^8.27.0",

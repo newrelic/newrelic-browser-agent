@@ -71,7 +71,7 @@ test('creates right nodes', async () => {
 test('prepareHarvest returns undefined if there are no trace nodes', () => {
   jest.spyOn(sessionTraceAggregate.events, 'takeSTNs')
 
-  let [{ payload }] = sessionTraceAggregate.makeHarvestPayload()
+  let payload = sessionTraceAggregate.makeHarvestPayload()
   expect(payload).toBeUndefined()
   expect(sessionTraceAggregate.events.takeSTNs).not.toHaveBeenCalled()
 })

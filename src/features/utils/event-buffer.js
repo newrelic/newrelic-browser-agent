@@ -36,7 +36,6 @@ export class EventBuffer {
    * @returns {Boolean} true if successfully added; false otherwise
    */
   add (event) {
-    console.log('EB add called', event)
     const addSize = stringify(event)?.length || 0 // (estimate) # of bytes a directly stringified event it would take to send
     if (this.#rawBytes + addSize > this.maxPayloadSize) return false
     this.#buffer.push(event)

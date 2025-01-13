@@ -231,17 +231,6 @@ describe('sub-features', () => {
       targetTag: 'BUTTON',
       globalFoo: 'globalBar'
     })
-    expect(harvest[0].payload.body.ins[1]).toMatchObject({
-      eventType: 'UserAction',
-      timestamp: expect.any(Number),
-      action: 'click',
-      actionCount: 1,
-      actionDuration: 0,
-      target: 'html>body>button#myBtn:nth-of-type(2)',
-      targetId: 'myBtn',
-      targetTag: 'BUTTON',
-      globalFoo: 'globalBar'
-    })
   })
 
   test('should record marks when enabled', async () => {

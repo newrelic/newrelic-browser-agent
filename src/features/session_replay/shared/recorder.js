@@ -22,8 +22,6 @@ export class Recorder {
   #fixing = false
 
   constructor (parent) {
-    /** A flag that can be set to false by failing conversions to stop the fetching process */
-    this.shouldFix = this.parent.agentRef.init.session_replay.fix_stylesheets
     /** Event Buffers */
     this.#events = new RecorderEvents(this.shouldFix)
     this.#backloggedEvents = new RecorderEvents(this.shouldFix)
@@ -38,6 +36,8 @@ export class Recorder {
     this.lastMeta = false
     /** The parent class that instantiated the recorder */
     this.parent = parent
+    /** A flag that can be set to false by failing conversions to stop the fetching process */
+    this.shouldFix = this.parent.agentRef.init.session_replay.fix_stylesheets
     /** The method to stop recording. This defaults to a noop, but is overwritten once the recording library is imported and initialized */
     this.stopRecording = () => { /* no-op until set by rrweb initializer */ }
   }

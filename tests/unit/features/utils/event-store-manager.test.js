@@ -7,28 +7,28 @@ const info = { licenseKey: '12345', applicationID: '67890' }
 const entityManager = new EntityManager({ info })
 const mockAgentRef = { runtime: { entityManager } }
 describe('EventStoreManager', () => {
-  // test('uses EventBuffer class', () => {
-  //   const store = new EventStoreManager(mockAgentRef, EventBuffer)
-  //   expect(store.StorageClass.name).toEqual('EventBuffer')
-  // })
-  // test('uses EventAggregator class when storageChoice is 2', () => {
-  //   const store = new EventStoreManager(mockAgentRef, EventAggregator)
-  //   expect(store.StorageClass.name).toEqual('EventAggregator')
-  // })
+  test('uses EventBuffer class', () => {
+    const store = new EventStoreManager(mockAgentRef, EventBuffer)
+    expect(store.StorageClass.name).toEqual('EventBuffer')
+  })
+  test('uses EventAggregator class when storageChoice is 2', () => {
+    const store = new EventStoreManager(mockAgentRef, EventAggregator)
+    expect(store.StorageClass.name).toEqual('EventAggregator')
+  })
 
-  // test('has the required common methods defined', () => {
-  //   const store = new EventStoreManager(mockAgentRef, EventBuffer)
-  //   expect(store.isEmpty).toBeDefined()
-  //   expect(store.add).toBeDefined()
-  //   expect(store.addMetric).toBeDefined()
-  //   expect(store.get).toBeDefined()
-  //   expect(store.byteSize).toBeDefined()
-  //   expect(store.wouldExceedMaxSize).toBeDefined()
-  //   expect(store.save).toBeDefined()
-  //   expect(store.clear).toBeDefined()
-  //   expect(store.reloadSave).toBeDefined()
-  //   expect(store.clearSave).toBeDefined()
-  // })
+  test('has the required common methods defined', () => {
+    const store = new EventStoreManager(mockAgentRef, EventBuffer)
+    expect(store.isEmpty).toBeDefined()
+    expect(store.add).toBeDefined()
+    expect(store.addMetric).toBeDefined()
+    expect(store.get).toBeDefined()
+    expect(store.byteSize).toBeDefined()
+    expect(store.wouldExceedMaxSize).toBeDefined()
+    expect(store.save).toBeDefined()
+    expect(store.clear).toBeDefined()
+    expect(store.reloadSave).toBeDefined()
+    expect(store.clearSave).toBeDefined()
+  })
 
   test('calls the underlying StorgeClass add, get, isEmpty methods', () => {
     const myTarget = 'abcd1234'
@@ -75,37 +75,37 @@ describe('EventStoreManager', () => {
     expect(store.get()).toEqual([{ targetApp: info, data: ['evt0'] }, { targetApp: tgt1Meta, data: ['evt1'] }, { targetApp: tgt2Meta, data: ['evt2'] }])
   })
 
-  // test('get does not error when target does not exist', () => {
-  //   const myTarget = 'abcd1234'
-  //   const store = new EventStoreManager(mockAgentRef, EventBuffer)
-  //   expect(() => store.get(undefined, { name: 'DNE' })).not.toThrow()
-  //   expect(store.get(undefined, { name: 'DNE' })).toEqual([{ targetApp: { name: 'DNE' }, data: undefined }])
+  test('get does not error when target does not exist', () => {
+    const myTarget = 'abcd1234'
+    const store = new EventStoreManager(mockAgentRef, EventBuffer)
+    expect(() => store.get(undefined, myTarget)).not.toThrow()
+    expect(store.get(undefined, myTarget)).toEqual([{ targetApp: info, data: [] }])
 
-  //   // on top of that, we never added to the default app, and a default get should not error either
-  //   expect(store.get(undefined, myTarget)).toEqual([{ targetApp: myTarget, data: [] }])
-  // })
+    // on top of that, we never added to the default app, and a default get should not error either
+    expect(store.get()[0]).toEqual({ targetApp: info, data: [] })
+  })
 
-  // test('isEmpty checks ALL storages when target is not provided', () => {
-  //   const tgt1 = { name: 'myTarget' }
-  //   const store = new EventStoreManager(mockAgentRef, EventBuffer)
-  //   expect(store.isEmpty()).toBeTruthy()
-  //   store.add('myEvent', tgt1)
-  //   expect(store.isEmpty()).toBeFalsy()
-  //   store.clear()
-  //   expect(store.isEmpty()).toBeTruthy()
+  test('isEmpty checks ALL storages when target is not provided', () => {
+    const tgt1 = { name: 'myTarget' }
+    const store = new EventStoreManager(mockAgentRef, EventBuffer)
+    expect(store.isEmpty()).toBeTruthy()
+    store.add('myEvent', tgt1)
+    expect(store.isEmpty()).toBeFalsy()
+    store.clear()
+    expect(store.isEmpty()).toBeTruthy()
 
-  //   store.add('evt2', { name: 'otherTarget' })
-  //   expect(store.isEmpty()).toBeFalsy()
-  //   expect(store.isEmpty(undefined, tgt1)).toBeTruthy()
-  //   store.add('evt1', tgt1)
-  //   expect(store.isEmpty()).toBeFalsy()
+    store.add('evt2', { name: 'otherTarget' })
+    expect(store.isEmpty()).toBeFalsy()
+    expect(store.isEmpty(undefined, tgt1)).toBeTruthy()
+    store.add('evt1', tgt1)
+    expect(store.isEmpty()).toBeFalsy()
 
-  //   store.clear()
-  //   expect(store.isEmpty()).toBeTruthy()
-  // })
+    store.clear()
+    expect(store.isEmpty()).toBeTruthy()
+  })
 
-  // test('isEmpty returns true when the target does not exist', () => {
-  //   const store = new EventStoreManager(mockAgentRef, EventBuffer)
-  //   expect(store.isEmpty(undefined, { name: 'DNE' })).toEqual(true)
-  // })
+  test('isEmpty returns true when the target does not exist', () => {
+    const store = new EventStoreManager(mockAgentRef, EventBuffer)
+    expect(store.isEmpty(undefined, { name: 'DNE' })).toEqual(true)
+  })
 })

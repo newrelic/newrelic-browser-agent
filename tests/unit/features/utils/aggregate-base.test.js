@@ -153,17 +153,17 @@ test('does not initialized Aggregator more than once with multiple features', as
   expect(mainAgent.runtime.entityManager).toBeUndefined()
 
   new AggregateBase(mainAgent, FEATURE_NAMES.pageViewEvent)
-  expect(EventStoreManager).toHaveBeenCalledTimes(1)
-  expect(EventStoreManager).toHaveBeenCalledWith(EventAggregator) // 2 = initialize EventAggregator
+  expect(EventStoreManager).toHaveBeenCalledTimes(2)
+  expect(EventStoreManager).toHaveBeenCalledWith(mainAgent, EventAggregator) // 2 = initialize EventAggregator
   expect(mainAgent.runtime.entityManager).toBeTruthy()
   expect(mainAgent.sharedAggregator).toBeTruthy()
 
   new AggregateBase(mainAgent, FEATURE_NAMES.jserrors) // this feature should be using that same aggregator as its .events
-  expect(EventStoreManager).toHaveBeenCalledTimes(1)
+  expect(EventStoreManager).toHaveBeenCalledTimes(2)
 
   new AggregateBase(mainAgent, FEATURE_NAMES.pageViewTiming) // PVT should use its own EventStoreManager
-  expect(EventStoreManager).toHaveBeenCalledTimes(2)
-  expect(EventStoreManager).toHaveBeenCalledWith(EventBuffer) // 1 = initialize EventBuffer
+  expect(EventStoreManager).toHaveBeenCalledTimes(3)
+  expect(EventStoreManager).toHaveBeenCalledWith(mainAgent, EventBuffer) // 1 = initialize EventBuffer
 })
 
 test('does initialize separate Aggregators with multiple agents', async () => {
@@ -178,10 +178,10 @@ test('does initialize separate Aggregators with multiple agents', async () => {
 
   new AggregateBase(mainAgent, FEATURE_NAMES.pageViewEvent)
   new AggregateBase(mainAgent2, FEATURE_NAMES.pageViewEvent)
-  expect(EventStoreManager).toHaveBeenCalledTimes(2)
+  expect(EventStoreManager).toHaveBeenCalledTimes(4)
   expect(EventStoreManager).not.toHaveBeenCalledWith(expect.any(Object), 1)
 
   new AggregateBase(mainAgent, FEATURE_NAMES.jserrors) // still does not initialize sharedAgg again on the same agent
   new AggregateBase(mainAgent2, FEATURE_NAMES.jserrors)
-  expect(EventStoreManager).toHaveBeenCalledTimes(2)
+  expect(EventStoreManager).toHaveBeenCalledTimes(4)
 })

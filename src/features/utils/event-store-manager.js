@@ -50,8 +50,6 @@ export class EventStoreManager {
    * @returns {boolean} True if the event was successfully added
    */
   add (event, targetEntityGuid) {
-    console.log('ESM add called', event, targetEntityGuid)
-    console.log('event store is', this.#getEventStore(targetEntityGuid))
     return this.#getEventStore(targetEntityGuid).add(event)
   }
 

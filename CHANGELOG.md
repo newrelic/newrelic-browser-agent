@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.278.3](https://github.com/newrelic/newrelic-browser-agent/compare/v1.278.2...v1.278.3) (2025-01-14)
+
+
+### Bug Fixes
+
+* Change obfuscator to read directly from obfuscation rules configuration ([#1327](https://github.com/newrelic/newrelic-browser-agent/issues/1327)) ([a75f935](https://github.com/newrelic/newrelic-browser-agent/commit/a75f935d9b045ac74878f7dd1fab04d046b376dc))
+
 ## [1.278.2](https://github.com/newrelic/newrelic-browser-agent/compare/v1.278.1...v1.278.2) (2025-01-09)
 
 

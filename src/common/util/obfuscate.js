@@ -22,6 +22,9 @@ import { warn } from './console'
 export class Obfuscator {
   constructor (agentRef) {
     this.agentRef = agentRef
+    this.warnedRegexMissing = false
+    this.warnedInvalidRegex = false
+    this.warnedInvalidReplacement = false
   }
 
   get obfuscateConfigRules () {
@@ -63,9 +66,17 @@ export class Obfuscator {
     const invalidRegexDetected = Boolean(rule.regex !== undefined && typeof rule.regex !== 'string' && !(rule.regex instanceof RegExp))
     const invalidReplacementDetected = Boolean(rule.replacement && typeof rule.replacement !== 'string')
 
-    if (regexMissingDetected) warn(12, rule)
-    else if (invalidRegexDetected) warn(13, rule)
-    if (invalidReplacementDetected) warn(14, rule)
+    if (regexMissingDetected && !this.warnedRegexMissing) {
+      warn(12, rule)
+      this.warnedRegexMissing = true
+    } else if (invalidRegexDetected && !this.warnedInvalidRegex) {
+      warn(13, rule)
+      this.warnedInvalidRegex = true
+    }
+    if (invalidReplacementDetected && !this.warnedInvalidReplacement) {
+      warn(14, rule)
+      this.warnedInvalidReplacement = true
+    }
 
     return {
       rule,

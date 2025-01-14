@@ -5,6 +5,23 @@
       "changes": [
         {
           "type": "fix",
+          "sha": "a75f935d9b045ac74878f7dd1fab04d046b376dc",
+          "message": "Change obfuscator to read directly from obfuscation rules configuration",
+          "issues": [
+            "1327"
+          ]
+        }
+      ],
+      "version": "1.278.3",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "cce8b457-0046-470d-be90-e339c477f2e8",
+      "createTime": "2025-01-14T23:04:39.838Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
           "sha": "64babe18a5c4190f6d7bdc775fe5f55db095c892",
           "message": "Allow the page view feature to have access to an event buffer",
           "issues": [
@@ -2385,5 +2402,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2025-01-09T23:17:44.037Z"
+  "updateTime": "2025-01-14T23:04:39.838Z"
 }

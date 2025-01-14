@@ -113,7 +113,7 @@ describe('obfuscate rules', () => {
       insightsCapture.waitForResult({ totalCount: 2 }),
       browser.execute(function () {
         Object.values(newrelic.initializedAgents)[0].init.obfuscate.push({
-          regex: /newrule/g,
+          regex: 'newrule',
           replacement: 'OBFUSCATED'
         })
         window.newrelic.addPageAction('my newrule pageaction', { foo: 'bar' })

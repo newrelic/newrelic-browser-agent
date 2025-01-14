@@ -95,9 +95,40 @@ describe('obfuscate rules', () => {
       checkPayload(harvest.request.query)
     })
   })
+
+  it('should apply to obfuscation rules added after init', async () => {
+    const [insightsHarvests] = await Promise.all([
+      insightsCapture.waitForResult({ totalCount: 1 }),
+      browser.url(await browser.testHandle.assetURL('obfuscate-pii.html', config))
+        .then(() => browser.waitForAgentLoad())
+    ])
+
+    expect(insightsHarvests.length).toBeGreaterThan(0)
+    insightsHarvests.forEach(harvest => {
+      checkPayload(harvest.request.body)
+      checkPayload(harvest.request.query)
+    })
+
+    const [insightsHarvests2] = await Promise.all([
+      insightsCapture.waitForResult({ totalCount: 2 }),
+      browser.execute(function () {
+        Object.values(newrelic.initializedAgents)[0].init.obfuscate.push({
+          regex: 'newrule',
+          replacement: 'OBFUSCATED'
+        })
+        window.newrelic.addPageAction('my newrule pageaction', { foo: 'bar' })
+      })
+    ])
+
+    expect(insightsHarvests2.length).toBeGreaterThan(0)
+    insightsHarvests2.forEach(harvest => {
+      checkPayload(harvest.request.body, 'newrule')
+      checkPayload(harvest.request.query, 'newrule')
+    })
+  })
 })
 
-function checkPayload (payload) {
+function checkPayload (payload, customStringCheck) {
   expect(payload).toBeDefined() // payload exists
 
   var strPayload = JSON.stringify(payload)
@@ -105,4 +136,5 @@ function checkPayload (payload) {
   expect(strPayload.includes('pii')).toBeFalsy() // pii was obfuscated
   expect(strPayload.includes('bam-test')).toBeFalsy() // bam-test was obfuscated
   expect(strPayload.includes('fakeid')).toBeFalsy() // fakeid was obfuscated
+  if (customStringCheck) expect(strPayload.includes(customStringCheck)).toBeFalsy()
 }

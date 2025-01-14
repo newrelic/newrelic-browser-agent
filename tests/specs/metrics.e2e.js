@@ -95,7 +95,7 @@ describe('metrics', () => {
     }]))
   })
 
-  it('should create SMs for valid obfuscation rules', async () => {
+  it('should create SMs when obfuscation rules are detected', async () => {
     await browser.url(await browser.testHandle.assetURL('obfuscate-pii-valid.html'))
       .then(() => browser.waitForAgentLoad())
 
@@ -107,70 +107,6 @@ describe('metrics', () => {
     const supportabilityMetrics = supportabilityMetricsHarvests[0].request.body.sm
     expect(supportabilityMetrics).toEqual(expect.arrayContaining([{
       params: { name: 'Generic/Obfuscate/Detected' },
-      stats: { c: 1 }
-    }]))
-    expect(supportabilityMetrics).not.toEqual(expect.arrayContaining([{
-      params: { name: 'Generic/Obfuscate/Invalid' },
-      stats: { c: 1 }
-    }]))
-  })
-
-  it('should create SMs for obfuscation rule containing invalid regex type', async () => {
-    await browser.url(await browser.testHandle.assetURL('obfuscate-pii-invalid-regex-type.html'))
-      .then(() => browser.waitForAgentLoad())
-
-    const [supportabilityMetricsHarvests] = await Promise.all([
-      supportabilityMetricsCapture.waitForResult({ totalCount: 1 }),
-      await browser.url(await browser.testHandle.assetURL('/')) // Setup expects before navigating
-    ])
-
-    const supportabilityMetrics = supportabilityMetricsHarvests[0].request.body.sm
-    expect(supportabilityMetrics).toEqual(expect.arrayContaining([{
-      params: { name: 'Generic/Obfuscate/Detected' },
-      stats: { c: 1 }
-    }]))
-    expect(supportabilityMetrics).toEqual(expect.arrayContaining([{
-      params: { name: 'Generic/Obfuscate/Invalid' },
-      stats: { c: 1 }
-    }]))
-  })
-
-  it('should create SMs for obfuscation rule containing undefined regex type', async () => {
-    await browser.url(await browser.testHandle.assetURL('obfuscate-pii-invalid-regex-undefined.html'))
-      .then(() => browser.waitForAgentLoad())
-
-    const [supportabilityMetricsHarvests] = await Promise.all([
-      supportabilityMetricsCapture.waitForResult({ totalCount: 1 }),
-      await browser.url(await browser.testHandle.assetURL('/')) // Setup expects before navigating
-    ])
-
-    const supportabilityMetrics = supportabilityMetricsHarvests[0].request.body.sm
-    expect(supportabilityMetrics).toEqual(expect.arrayContaining([{
-      params: { name: 'Generic/Obfuscate/Detected' },
-      stats: { c: 1 }
-    }]))
-    expect(supportabilityMetrics).toEqual(expect.arrayContaining([{
-      params: { name: 'Generic/Obfuscate/Invalid' },
-      stats: { c: 1 }
-    }]))
-  })
-
-  it('should create SMs for obfuscation rule containing invalid replacement type', async () => {
-    await browser.url(await browser.testHandle.assetURL('obfuscate-pii-invalid-replacement-type.html'))
-      .then(() => browser.waitForAgentLoad())
-
-    const [supportabilityMetricsHarvests] = await Promise.all([
-      supportabilityMetricsCapture.waitForResult({ totalCount: 1 }),
-      await browser.url(await browser.testHandle.assetURL('/')) // Setup expects before navigating
-    ])
-
-    const supportabilityMetrics = supportabilityMetricsHarvests[0].request.body.sm
-    expect(supportabilityMetrics).toEqual(expect.arrayContaining([{
-      params: { name: 'Generic/Obfuscate/Detected' },
-      stats: { c: 1 }
-    }]))
-    expect(supportabilityMetrics).toEqual(expect.arrayContaining([{
-      params: { name: 'Generic/Obfuscate/Invalid' },
       stats: { c: 1 }
     }]))
   })

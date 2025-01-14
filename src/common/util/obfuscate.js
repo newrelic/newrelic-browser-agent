@@ -1,5 +1,5 @@
-import { getConfigurationValue } from '../config/init'
 import { isFileProtocol } from '../url/protocol'
+import { gosNREUM } from '../window/nreum'
 import { warn } from './console'
 
 /**
@@ -21,18 +21,13 @@ import { warn } from './console'
  */
 
 export class Obfuscator {
-  /**
-   * @type {ObfuscationRuleValidation[]}
-   */
-  #ruleValidationCache
-
-  constructor (agentIdentifier) {
-    this.#ruleValidationCache = Obfuscator.getRuleValidationCache(agentIdentifier)
-    Obfuscator.logObfuscationRuleErrors(this.#ruleValidationCache)
+  constructor (agentRef) {
+    this.agentRef = agentRef
   }
 
-  get ruleValidationCache () {
-    return this.#ruleValidationCache
+  get obfuscateConfigRules () {
+    // try to read directly from global init first! Some customers add to this array over time in async way
+    return gosNREUM().init?.obfuscate || this.agentRef.init.obfuscate || []
   }
 
   /**
@@ -44,24 +39,7 @@ export class Obfuscator {
     // if input is not of type string or is an empty string, short-circuit
     if (typeof input !== 'string' || input.trim().length === 0) return input
 
-    return this.#ruleValidationCache
-      .filter(ruleValidation => ruleValidation.isValid)
-      .reduce((input, ruleValidation) => {
-        const { rule } = ruleValidation
-        return input.replace(rule.regex, rule.replacement || '*')
-      }, input)
-  }
-
-  /**
-   * Returns an array of obfuscation rules to be applied to harvested payloads
-   * @param {string} agentIdentifier The agent identifier to get rules for
-   * @returns {ObfuscationRuleValidation[]} The array of rules or validation states
-   */
-  static getRuleValidationCache (agentIdentifier) {
-    /**
-     * @type {ObfuscationRule[]}
-     */
-    let rules = getConfigurationValue(agentIdentifier, 'obfuscate') || []
+    const rules = (this.obfuscateConfigRules).map(rule => Obfuscator.validateObfuscationRule(rule))
     if (isFileProtocol()) {
       rules.push({
         regex: /^file:\/\/(.*)/,
@@ -69,7 +47,12 @@ export class Obfuscator {
       })
     }
 
-    return rules.map(rule => Obfuscator.validateObfuscationRule(rule))
+    return rules
+      .filter(ruleValidation => ruleValidation.isValid)
+      .reduce((input, ruleValidation) => {
+        const { rule } = ruleValidation
+        return input.replace(rule.regex, rule.replacement || '*')
+      }, input)
   }
 
   /**
@@ -82,6 +65,10 @@ export class Obfuscator {
     const invalidRegexDetected = Boolean(rule.regex !== undefined && typeof rule.regex !== 'string' && !(rule.regex instanceof RegExp))
     const invalidReplacementDetected = Boolean(rule.replacement && typeof rule.replacement !== 'string')
 
+    if (regexMissingDetected) warn(12, rule)
+    else if (invalidRegexDetected) warn(13, rule)
+    if (invalidReplacementDetected) warn(14, rule)
+
     return {
       rule,
       isValid: !regexMissingDetected && !invalidRegexDetected && !invalidReplacementDetected,
@@ -90,22 +77,6 @@ export class Obfuscator {
         invalidRegexDetected,
         invalidReplacementDetected
       }
-    }
-  }
-
-  /**
-   * Logs any obfuscation rule errors to the console. This is called when an obfuscator
-   * instance is created.
-   * @param {ObfuscationRuleValidation[]} ruleValidationCache The cache of rule validation states
-   */
-  static logObfuscationRuleErrors (ruleValidationCache) {
-    for (const ruleValidation of ruleValidationCache) {
-      const { rule, isValid, errors } = ruleValidation
-      if (isValid) continue
-
-      if (errors.regexMissingDetected) warn(12, rule)
-      else if (errors.invalidRegexDetected) warn(13, rule)
-      if (errors.invalidReplacementDetected) warn(14, rule)
     }
   }
 }

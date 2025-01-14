@@ -87,10 +87,8 @@ export class Aggregate extends AggregateBase {
     }
 
     // Capture SMs to assess customer engagement with the obfuscation config
-    const ruleValidations = this.obfuscator.ruleValidationCache
-    if (ruleValidations.length > 0) {
+    if (this.obfuscator.obfuscateConfigRules.length > 0) {
       this.storeSupportabilityMetrics('Generic/Obfuscate/Detected')
-      if (ruleValidations.filter(ruleValidation => !ruleValidation.isValid).length > 0) this.storeSupportabilityMetrics('Generic/Obfuscate/Invalid')
     }
 
     // Check if proxy for either chunks or beacon is being used

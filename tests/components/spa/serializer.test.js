@@ -43,7 +43,7 @@ const fieldPropMap = {
 beforeEach(() => {
   jest.mocked(runtimeModule.getRuntime).mockReturnValue({
     origin: 'localhost',
-    obfuscator: new Obfuscator(agentIdentifier)
+    obfuscator: new Obfuscator({ init: { obfuscate: [] } })
   })
 })
 

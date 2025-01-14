@@ -36,7 +36,7 @@ jest.mock('../../../../../src/common/timing/nav-timing', () => ({
 
 beforeEach(() => {
   jest.mocked(runtimeModule.getRuntime).mockReturnValue({
-    obfuscator: new Obfuscator('abcd')
+    obfuscator: new Obfuscator({ init: { obfuscate: [] } })
   })
 })
 

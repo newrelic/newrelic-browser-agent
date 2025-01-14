@@ -112,7 +112,7 @@ describe('obfuscate rules', () => {
     const [insightsHarvests2] = await Promise.all([
       insightsCapture.waitForResult({ totalCount: 2 }),
       browser.execute(function () {
-        window.NREUM.init.obfuscate.push({
+        Object.values(newrelic.initializedAgents)[0].init.obfuscate.push({
           regex: /newrule/g,
           replacement: 'OBFUSCATED'
         })

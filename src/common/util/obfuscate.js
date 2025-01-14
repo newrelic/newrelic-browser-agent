@@ -1,5 +1,4 @@
 import { isFileProtocol } from '../url/protocol'
-import { gosNREUM } from '../window/nreum'
 import { warn } from './console'
 
 /**
@@ -26,8 +25,7 @@ export class Obfuscator {
   }
 
   get obfuscateConfigRules () {
-    // try to read directly from global init first! Some customers add to this array over time in async way
-    return gosNREUM().init?.obfuscate || this.agentRef.init.obfuscate || []
+    return this.agentRef.init.obfuscate || []
   }
 
   /**

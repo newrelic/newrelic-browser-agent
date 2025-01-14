@@ -89,12 +89,12 @@ code, the source code can be found at [https://github.com/newrelic/newrelic-brow
 
 ### fflate
 
-This product includes source derived from [fflate](https://github.com/101arrowz/fflate) ([v0.7.4](https://github.com/101arrowz/fflate/tree/v0.7.4)), distributed under the [MIT License](https://github.com/101arrowz/fflate/blob/v0.7.4/LICENSE):
+This product includes source derived from [fflate](https://github.com/101arrowz/fflate) ([v0.8.2](https://github.com/101arrowz/fflate/tree/v0.8.2)), distributed under the [MIT License](https://github.com/101arrowz/fflate/blob/v0.8.2/LICENSE):
 
 ```
 MIT License
 
-Copyright (c) 2020 Arjun Barrett
+Copyright (c) 2023 Arjun Barrett
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -2197,7 +2197,7 @@ SOFTWARE.
 
 ### jsonpath-plus
 
-This product includes source derived from [jsonpath-plus](https://github.com/s3u/JSONPath) ([v10.0.7](https://github.com/s3u/JSONPath/tree/v10.0.7)), distributed under the [MIT License](https://github.com/s3u/JSONPath/blob/v10.0.7/LICENSE):
+This product includes source derived from [jsonpath-plus](https://github.com/s3u/JSONPath) ([v10.2.0](https://github.com/s3u/JSONPath/tree/v10.2.0)), distributed under the [MIT License](https://github.com/s3u/JSONPath/blob/v10.2.0/LICENSE):
 
 ```
 MIT License

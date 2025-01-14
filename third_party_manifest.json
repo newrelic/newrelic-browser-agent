@@ -1,20 +1,20 @@
 {
-  "lastUpdated": "Thu Jan 09 2025 23:21:10 GMT+0000 (Coordinated Universal Time)",
+  "lastUpdated": "Tue Jan 14 2025 23:34:12 GMT+0000 (Coordinated Universal Time)",
   "projectName": "New Relic Browser Agent",
   "projectUrl": "https://github.com/newrelic/newrelic-browser-agent",
   "includeOptDeps": true,
   "optionalDependencies": {},
   "includeDev": true,
   "dependencies": {
-    "fflate@0.7.4": {
+    "fflate@0.8.2": {
       "name": "fflate",
-      "version": "0.7.4",
-      "range": "^0.7.4",
+      "version": "0.8.2",
+      "range": "0.8.2",
       "licenses": "MIT",
       "repoUrl": "https://github.com/101arrowz/fflate",
-      "versionedRepoUrl": "https://github.com/101arrowz/fflate/tree/v0.7.4",
+      "versionedRepoUrl": "https://github.com/101arrowz/fflate/tree/v0.8.2",
       "licenseFile": "node_modules/fflate/LICENSE",
-      "licenseUrl": "https://github.com/101arrowz/fflate/blob/v0.7.4/LICENSE",
+      "licenseUrl": "https://github.com/101arrowz/fflate/blob/v0.8.2/LICENSE",
       "licenseTextSource": "file",
       "publisher": "Arjun Barrett",
       "email": "arjunbarrett@gmail.com"
@@ -622,15 +622,15 @@
       "licenseUrl": "https://github.com/jestjs/jest/blob/v29.7.0/LICENSE",
       "licenseTextSource": "file"
     },
-    "jsonpath-plus@10.0.7": {
+    "jsonpath-plus@10.2.0": {
       "name": "jsonpath-plus",
-      "version": "10.0.7",
+      "version": "10.2.0",
       "range": "^10.0.7",
       "licenses": "MIT",
       "repoUrl": "https://github.com/s3u/JSONPath",
-      "versionedRepoUrl": "https://github.com/s3u/JSONPath/tree/v10.0.7",
+      "versionedRepoUrl": "https://github.com/s3u/JSONPath/tree/v10.2.0",
       "licenseFile": "node_modules/jsonpath-plus/LICENSE",
-      "licenseUrl": "https://github.com/s3u/JSONPath/blob/v10.0.7/LICENSE",
+      "licenseUrl": "https://github.com/s3u/JSONPath/blob/v10.2.0/LICENSE",
       "licenseTextSource": "file",
       "publisher": "Stefan Goessner"
     },

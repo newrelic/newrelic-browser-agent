@@ -57,7 +57,7 @@ describe('obfuscateString', () => {
   ])('obfuscateString returns the input it is %s', (input) => {
     jest.spyOn(initModule, 'getConfigurationValue').mockReturnValue(rules)
 
-    const obfuscator = new Obfuscator()
+    const obfuscator = new Obfuscator({ init: { obfuscate: [] } })
     obfuscator.sharedContext = { agentIdentifier }
 
     expect(obfuscator.obfuscateString(input)).toEqual(input)
@@ -70,7 +70,8 @@ describe('validateObfuscationRule', () => {
       replacement: faker.lorem.text()
     }
 
-    expect(Obfuscator.validateObfuscationRule(rule)).toEqual({
+    const obfuscator = new Obfuscator({ init: { obfuscate: [] } })
+    expect(obfuscator.validateObfuscationRule(rule)).toEqual({
       rule,
       isValid: false,
       errors: {
@@ -92,7 +93,9 @@ describe('validateObfuscationRule', () => {
       replacement: faker.lorem.text()
     }
 
-    expect(Obfuscator.validateObfuscationRule(rule)).toEqual({
+    const obfuscator = new Obfuscator({ init: { obfuscate: [] } })
+
+    expect(obfuscator.validateObfuscationRule(rule)).toEqual({
       rule,
       isValid: false,
       errors: {
@@ -113,7 +116,8 @@ describe('validateObfuscationRule', () => {
       replacement: input
     }
 
-    expect(Obfuscator.validateObfuscationRule(rule)).toEqual({
+    const obfuscator = new Obfuscator({ init: { obfuscate: [] } })
+    expect(obfuscator.validateObfuscationRule(rule)).toEqual({
       rule,
       isValid: false,
       errors: {
@@ -127,7 +131,8 @@ describe('validateObfuscationRule', () => {
   test('should return valid for a valid rule', () => {
     const rule = rules[0]
 
-    expect(Obfuscator.validateObfuscationRule(rule)).toEqual({
+    const obfuscator = new Obfuscator({ init: { obfuscate: [] } })
+    expect(obfuscator.validateObfuscationRule(rule)).toEqual({
       rule,
       isValid: true,
       errors: {

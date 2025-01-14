@@ -40,7 +40,7 @@ export class Obfuscator {
     // if input is not of type string or is an empty string, short-circuit
     if (typeof input !== 'string' || input.trim().length === 0) return input
 
-    const rules = (this.obfuscateConfigRules).map(rule => Obfuscator.validateObfuscationRule(rule))
+    const rules = (this.obfuscateConfigRules).map(rule => this.validateObfuscationRule(rule))
     if (isFileProtocol()) {
       rules.push({
         regex: /^file:\/\/(.*)/,
@@ -61,7 +61,7 @@ export class Obfuscator {
    * @param {ObfuscationRule} rule The rule to validate
    * @returns {ObfuscationRuleValidation} The validation state of the rule
    */
-  static validateObfuscationRule (rule) {
+  validateObfuscationRule (rule) {
     const regexMissingDetected = Boolean(rule.regex === undefined)
     const invalidRegexDetected = Boolean(rule.regex !== undefined && typeof rule.regex !== 'string' && !(rule.regex instanceof RegExp))
     const invalidReplacementDetected = Boolean(rule.replacement && typeof rule.replacement !== 'string')

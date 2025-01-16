@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>XHR Before Load</title>
+  {init} {config} {loader}
+</head>
+<body>
+<div>
+  This page initiates an XHR after the page load event is fired. If using the
+  spa feature, the XHR should still be processed by the ajax feature.
+</div>
+<script type="text/javascript">
+  window.addEventListener('load', function () {
+    setTimeout(() => {
+      var xhr = new XMLHttpRequest()
+      xhr.open('/json')
+      xhr.send()
+    }, 1000)
+  })
+</script>
+</body>
+</html>

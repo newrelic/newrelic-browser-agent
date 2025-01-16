@@ -9,13 +9,12 @@ import { stringHashCode } from './string-hash-code'
 import { truncateSize } from './format-stack-trace'
 
 import { registerHandler as register } from '../../../common/event-emitter/register-handler'
-import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { stringify } from '../../../common/util/stringify'
 import { handle } from '../../../common/event-emitter/handle'
 import { globalScope } from '../../../common/constants/runtime'
 
 import { FEATURE_NAME } from '../constants'
-import { FEATURE_NAMES, FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
+import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { now } from '../../../common/timing/now'
 import { applyFnToProps } from '../../../common/util/traverse'
@@ -45,17 +44,11 @@ export class Aggregate extends AggregateBase {
     register('softNavFlush', (interactionId, wasFinished, softNavAttrs) =>
       this.onSoftNavNotification(interactionId, wasFinished, softNavAttrs), this.featureName, this.ee) // when an ixn is done or cancelled
 
-    const harvestTimeSeconds = agentRef.init.jserrors.harvestTimeSeconds || 10
-    const aggregatorTypes = ['err', 'ierr', 'xhr'] // the types in EventAggregator this feature cares about
+    this.harvestOpts.aggregatorTypes = ['err', 'ierr', 'xhr'] // the types in EventAggregator this feature cares about
 
     // 0 == off, 1 == on
     this.waitForFlags(['err']).then(([errFlag]) => {
       if (errFlag) {
-        const scheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
-          onFinished: (result) => this.postHarvestCleanup(result.sent && result.retry, { aggregatorTypes })
-        }, this)
-        scheduler.harvest.on(FEATURE_TO_ENDPOINT[this.featureName], (options) => this.makeHarvestPayload(options.retry, { aggregatorTypes }))
-        scheduler.startTimer(harvestTimeSeconds)
         this.drain()
       } else {
         this.blocked = true // if rum response determines that customer lacks entitlements for spa endpoint, this feature shouldn't harvest
@@ -114,9 +107,10 @@ export class Aggregate extends AggregateBase {
    * @param {boolean=} internal if the error was "caught" and deemed "internal" before reporting to the jserrors feature
    * @param {object=} customAttributes  any custom attributes to be included in the error payload
    * @param {boolean=} hasReplay a flag indicating if the error occurred during a replay session
+   * @param {string=} swallowReason a string indicating pre-defined reason if swallowing the error.  Mainly used by the internal error SMs.
    * @returns
    */
-  storeError (err, time, internal, customAttributes, hasReplay) {
+  storeError (err, time, internal, customAttributes, hasReplay, swallowReason) {
     if (!err) return
     // are we in an interaction
     time = time || now()
@@ -134,7 +128,7 @@ export class Aggregate extends AggregateBase {
 
     var stackInfo = computeStackTrace(err)
 
-    const { shouldSwallow, reason } = evaluateInternalError(stackInfo, internal)
+    const { shouldSwallow, reason } = evaluateInternalError(stackInfo, internal, swallowReason)
     if (shouldSwallow) {
       handle(SUPPORTABILITY_METRIC_CHANNEL, ['Internal/Error/' + reason], undefined, FEATURE_NAMES.metrics, this.ee)
       return
@@ -234,7 +228,7 @@ export class Aggregate extends AggregateBase {
 
     const jsAttributesHash = stringHashCode(stringify(allCustomAttrs))
     const aggregateHash = bucketHash + ':' + jsAttributesHash
-    this.events.add(type, aggregateHash, params, newMetrics, allCustomAttrs)
+    this.events.add([type, aggregateHash, params, newMetrics, allCustomAttrs])
 
     function setCustom (key, val) {
       allCustomAttrs[key] = (val && typeof val === 'object' ? stringify(val) : val)
@@ -264,7 +258,7 @@ export class Aggregate extends AggregateBase {
       var jsAttributesHash = stringHashCode(stringify(allCustomAttrs))
       var aggregateHash = hash + ':' + jsAttributesHash
 
-      this.events.add(item[0], aggregateHash, params, item[3], allCustomAttrs)
+      this.events.add([item[0], aggregateHash, params, item[3], allCustomAttrs])
 
       function setCustom ([key, val]) {
         allCustomAttrs[key] = (val && typeof val === 'object' ? stringify(val) : val)

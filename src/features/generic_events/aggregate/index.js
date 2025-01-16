@@ -3,28 +3,24 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { stringify } from '../../../common/util/stringify'
-import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { cleanURL } from '../../../common/url/clean-url'
-import { FEATURE_NAME } from '../constants'
-import { initialLocation, isBrowserScope } from '../../../common/constants/runtime'
+import { FEATURE_NAME, RESERVED_EVENT_TYPES } from '../constants'
+import { globalScope, initialLocation, isBrowserScope } from '../../../common/constants/runtime'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { warn } from '../../../common/util/console'
 import { now } from '../../../common/timing/now'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { applyFnToProps } from '../../../common/util/traverse'
-import { FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
 import { UserActionsAggregator } from './user-actions/user-actions-aggregator'
 import { isIFrameWindow } from '../../../common/dom/iframe'
+import { handle } from '../../../common/event-emitter/handle'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor (agentRef) {
     super(agentRef, FEATURE_NAME)
-
     this.eventsPerHarvest = 1000
-    this.harvestTimeSeconds = agentRef.init.generic_events.harvestTimeSeconds
-
     this.referrerUrl = (isBrowserScope && document.referrer) ? cleanURL(document.referrer) : undefined
 
     this.waitForFlags(['ins']).then(([ins]) => {
@@ -34,12 +30,23 @@ export class Aggregate extends AggregateBase {
         return
       }
 
+      this.trackSupportabilityMetrics()
+
+      registerHandler('api-recordCustomEvent', (timestamp, eventType, attributes) => {
+        if (RESERVED_EVENT_TYPES.includes(eventType)) return warn(46)
+        this.addEvent({
+          eventType,
+          timestamp: this.toEpoch(timestamp),
+          ...attributes
+        })
+      }, this.featureName, this.ee)
+
       if (agentRef.init.page_action.enabled) {
         registerHandler('api-addPageAction', (timestamp, name, attributes) => {
           this.addEvent({
             ...attributes,
             eventType: 'PageAction',
-            timestamp: Math.floor(this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(timestamp)),
+            timestamp: this.toEpoch(timestamp),
             timeSinceLoad: timestamp / 1000,
             actionName: name,
             referrerUrl: this.referrerUrl,
@@ -54,6 +61,7 @@ export class Aggregate extends AggregateBase {
       let addUserAction = () => { /** no-op */ }
       if (isBrowserScope && agentRef.init.user_actions.enabled) {
         this.userActionAggregator = new UserActionsAggregator()
+        this.harvestOpts.beforeUnload = () => addUserAction?.(this.userActionAggregator.aggregationEvent)
 
         addUserAction = (aggregatedUserAction) => {
           try {
@@ -63,7 +71,7 @@ export class Aggregate extends AggregateBase {
               const { target, timeStamp, type } = aggregatedUserAction.event
               this.addEvent({
                 eventType: 'UserAction',
-                timestamp: Math.floor(this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(timeStamp)),
+                timestamp: this.toEpoch(timeStamp),
                 action: type,
                 actionCount: aggregatedUserAction.count,
                 actionDuration: aggregatedUserAction.relativeMs[aggregatedUserAction.relativeMs.length - 1],
@@ -73,7 +81,7 @@ export class Aggregate extends AggregateBase {
                 ...(isIFrameWindow(window) && { iframe: true }),
                 ...(this.agentRef.init.user_actions.elementAttributes.reduce((acc, field) => {
                   /** prevent us from capturing an obscenely long value */
-                  if (target?.[field]) acc[targetAttrName(field)] = String(target[field]).trim().slice(0, 128)
+                  if (canTrustTargetAttribute(field)) acc[targetAttrName(field)] = String(target[field]).trim().slice(0, 128)
                   return acc
                 }, {})),
                 ...aggregatedUserAction.nearestTargetFields
@@ -90,6 +98,15 @@ export class Aggregate extends AggregateBase {
                 if (originalFieldName === 'className') originalFieldName = 'class'
                 /** return the original field name, cap'd and prepended with target to match formatting */
                 return `target${originalFieldName.charAt(0).toUpperCase() + originalFieldName.slice(1)}`
+              }
+
+              /**
+               * Only trust attributes that exist on HTML element targets, which excludes the window and the document targets
+               * @param {string} attribute The attribute to check for on the target element
+               * @returns {boolean} Whether the target element has the attribute and can be trusted
+               */
+              function canTrustTargetAttribute (attribute) {
+                return !!(aggregatedUserAction.selectorPath !== 'window' && aggregatedUserAction.selectorPath !== 'document' && target instanceof HTMLElement && target?.[attribute])
               }
             }
           } catch (e) {
@@ -118,10 +135,11 @@ export class Aggregate extends AggregateBase {
               const observer = new PerformanceObserver((list) => {
                 list.getEntries().forEach(entry => {
                   try {
+                    handle(SUPPORTABILITY_METRIC_CHANNEL, ['Generic/Performance/' + type + '/Seen'])
                     this.addEvent({
                       eventType: 'BrowserPerformance',
-                      timestamp: Math.floor(agentRef.runtime.timeKeeper.correctRelativeTimestamp(entry.startTime)),
-                      entryName: entry.name,
+                      timestamp: this.toEpoch(entry.startTime),
+                      entryName: cleanURL(entry.name),
                       entryDuration: entry.duration,
                       entryType: type,
                       ...(entry.detail && { entryDetail: entry.detail })
@@ -138,13 +156,48 @@ export class Aggregate extends AggregateBase {
         }
       }
 
-      this.harvestScheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
-        onFinished: (result) => this.postHarvestCleanup(result.sent && result.retry),
-        onUnload: () => addUserAction?.(this.userActionAggregator.aggregationEvent)
-      }, this)
-      this.harvestScheduler.harvest.on(FEATURE_TO_ENDPOINT[this.featureName], (options) => this.makeHarvestPayload(options.retry))
-      this.harvestScheduler.startTimer(this.harvestTimeSeconds, 0)
+      if (isBrowserScope && agentRef.init.performance.resources.enabled) {
+        registerHandler('browserPerformance.resource', (entry) => {
+          try {
+            // convert the entry to a plain object and separate the name and duration from the object
+            // you need to do this to be able to spread it into the addEvent call later, and name and duration
+            // would be duplicative of entryName and entryDuration and are protected keys in NR1
+            const { name, duration, ...entryObject } = entry.toJSON()
 
+            let firstParty = false
+            try {
+              const entryDomain = new URL(name).hostname
+              const isNr = (entryDomain.includes('newrelic.com') || entryDomain.includes('nr-data.net') || entryDomain.includes('nr-local.net'))
+              /** decide if we should ignore nr-specific assets */
+              if (this.agentRef.init.performance.resources.ignore_newrelic && isNr) return
+              /** decide if we should ignore the asset type (empty means allow everything, which is the default) */
+              if (this.agentRef.init.performance.resources.asset_types.length && !this.agentRef.init.performance.resources.asset_types.includes(entryObject.initiatorType)) return
+              /** decide if the entryDomain is a first party domain */
+              firstParty = entryDomain === globalScope?.location.hostname || agentRef.init.performance.resources.first_party_domains.includes(entryDomain)
+              if (firstParty) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Generic/Performance/FirstPartyResource/Seen'])
+              if (isNr) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Generic/Performance/NrResource/Seen'])
+            } catch (err) {
+            // couldnt parse the URL, so firstParty will just default to false
+            }
+
+            handle(SUPPORTABILITY_METRIC_CHANNEL, ['Generic/Performance/Resource/Seen'])
+            const event = {
+              ...entryObject,
+              eventType: 'BrowserPerformance',
+              timestamp: Math.floor(agentRef.runtime.timeKeeper.correctRelativeTimestamp(entryObject.startTime)),
+              entryName: name,
+              entryDuration: duration,
+              firstParty
+            }
+
+            this.addEvent(event)
+          } catch (err) {
+            this.ee.emit('internal-error', [err, 'GenericEvents-Resource'])
+          }
+        }, this.featureName, this.ee)
+      }
+
+      agentRef.runtime.harvester.triggerHarvestFor(this)
       this.drain()
     })
   }
@@ -198,7 +251,7 @@ export class Aggregate extends AggregateBase {
        * if it fails again, we do nothing
        */
       this.ee.emit(SUPPORTABILITY_METRIC_CHANNEL, ['GenericEvents/Harvest/Max/Seen'])
-      this.harvestScheduler.runHarvest()
+      this.agentRef.runtime.harvester.triggerHarvestFor(this)
       this.events.add(eventAttributes)
     }
   }
@@ -209,5 +262,20 @@ export class Aggregate extends AggregateBase {
 
   queryStringsBuilder () {
     return { ua: this.agentRef.info.userAttributes, at: this.agentRef.info.atts }
+  }
+
+  toEpoch (timestamp) {
+    return Math.floor(this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(timestamp))
+  }
+
+  trackSupportabilityMetrics () {
+    /** track usage SMs to improve these experimental features */
+    const configPerfTag = 'Config/Performance/'
+    if (this.agentRef.init.performance.capture_marks) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'CaptureMarks/Enabled'])
+    if (this.agentRef.init.performance.capture_measures) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'CaptureMeasures/Enabled'])
+    if (this.agentRef.init.performance.resources.enabled) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'Resources/Enabled'])
+    if (this.agentRef.init.performance.resources.asset_types?.length !== 0) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'Resources/AssetTypes/Changed'])
+    if (this.agentRef.init.performance.resources.first_party_domains?.length !== 0) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'Resources/FirstPartyDomains/Changed'])
+    if (this.agentRef.init.performance.resources.ignore_newrelic === false) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'Resources/IgnoreNewrelic/Changed'])
   }
 }

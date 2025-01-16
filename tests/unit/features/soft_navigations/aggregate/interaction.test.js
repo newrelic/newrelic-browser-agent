@@ -24,7 +24,7 @@ jest.mock('../../../../../src/common/config/runtime', () => ({
 
 beforeEach(() => {
   jest.mocked(runtimeModule.getRuntime).mockReturnValue({
-    obfuscator: new Obfuscator('abcd')
+    obfuscator: new Obfuscator({ init: { obfuscate: [] } })
   })
 })
 
@@ -90,19 +90,33 @@ test('isActiveDuring correctly compares given timestamp', () => {
 })
 
 describe('Interaction when done', () => {
-  test('runs stuff and returns the correct boolean value', () => {
+  test('stays open if keepOpenUntilEndApi is set to true', () => {
     const ixn = new Interaction('abcd')
-    ixn.status = INTERACTION_STATUS.FIN // can disregard #finish and #cancel for now
-
     ixn.keepOpenUntilEndApi = true // with this flag, ixn should stay open until a custom end time is provided
     expect(ixn.done()).toBe(false)
+    expect(ixn.status).toEqual(INTERACTION_STATUS.IP)
     expect(ixn.done(123)).toBe(true)
-    ixn.keepOpenUntilEndApi = false
+  })
+  test('runs onDone handlers and returns the correct boolean value on finish', () => {
+    const ixn = new Interaction('abcd')
+    ixn.forceSave = true
 
     let wasRan = false
     ixn.onDone.push(sandboxObj => { sandboxObj.should_share = true },
       sandboxObj => { expect(sandboxObj.should_share).toBe(true); wasRan = true }) // callbacks in the onDone array should share the same arg object
     expect(ixn.done()).toBe(true)
+    expect(ixn.status).toEqual(INTERACTION_STATUS.FIN)
+    expect(wasRan).toBe(true)
+  })
+  test('runs onDone handlers even if the interaction is cancelled', () => {
+    const ixn = new Interaction('abcd')
+    ixn.forceIgnore = true
+
+    let wasRan = false
+    ixn.onDone.push(sandboxObj => { sandboxObj.should_share = true },
+      sandboxObj => { expect(sandboxObj.should_share).toBe(true); wasRan = true }) // callbacks in the onDone array should share the same arg object
+    expect(ixn.done()).toBe(true)
+    expect(ixn.status).toEqual(INTERACTION_STATUS.CAN)
     expect(wasRan).toBe(true)
   })
   test('is cancelled under certain conditions', () => {
@@ -162,6 +176,21 @@ describe('Interaction when done', () => {
   })
 })
 
+test('Done interactions cannot be done again', () => {
+  const ixn = new Interaction('abc')
+  let cbCount = 0
+  ixn.onDone.push(() => { cbCount++ })
+  ixn.forceSave = true
+  expect(ixn.done()).toEqual(true)
+  expect(ixn.status).toBe(INTERACTION_STATUS.FIN)
+  expect(cbCount).toEqual(1)
+
+  ixn.forceSave = false; ixn.forceIgnore = true // this would typically cause done() to cancel the ixn instead if still in-progress
+  expect(ixn.done()).toEqual(true) // calling done again should be a "successful" no-op operation
+  expect(ixn.status).toBe(INTERACTION_STATUS.FIN) // status should remain the same instead of changing to cancelled
+  expect(cbCount).toEqual(1) // the onDone callbacks should not run again
+})
+
 test('Interaction serialize output is correct', () => {
   jest.resetModules() // reset so we get a reliable node ID of 1
   jest.doMock('../../../../../src/common/config/info', () => ({
@@ -181,7 +210,7 @@ test('Interaction serialize output is correct', () => {
   jest.doMock('../../../../../src/common/config/runtime', () => ({
     __esModule: true,
     getRuntime: jest.fn().mockReturnValue({
-      obfuscator: new Obfuscator('abcd')
+      obfuscator: new Obfuscator({ init: { obfuscate: [] } })
     })
   }))
   const { Interaction } = require('../../../../../src/features/soft_navigations/aggregate/interaction')

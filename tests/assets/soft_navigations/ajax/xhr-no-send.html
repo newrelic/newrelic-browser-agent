@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>XHR No Send</title>
+  {init} {config} {loader}
+</head>
+<body>
+<div>
+  This page uses a button to initiate a XHR. The send method is not called on the XHR object.
+</div>
+<div><button id="sendAjax">Send Ajax</button></div>
+<script type="text/javascript">
+  let i = 0
+  document.addEventListener('click', function () {
+    var xhr = new XMLHttpRequest()
+    xhr.open('POST', '/echo')
+
+    window.location.hash = Math.random()
+
+    const elem = document.createElement('div')
+    elem.innerHTML = 'TEST' + i++
+    document.body.appendChild(elem)
+  }, false)
+</script>
+</body>
+</html>

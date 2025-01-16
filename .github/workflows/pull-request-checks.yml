@@ -41,7 +41,7 @@ jobs:
           ref: ${{ github.ref }}
       - uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
       - name: Install dependencies
         run: npm ci
       - name: Running types build
@@ -71,7 +71,7 @@ jobs:
           ref: ${{ github.ref }}
       - uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
       - name: Install dependencies
         run: npm ci
       - name: Running cdn build
@@ -97,6 +97,10 @@ jobs:
           pr_number: ${{ github.event.number }}
           comment: ${{ steps.asset-size-report.outputs.results }}
           comment_tag: <!-- browser_agent asset size report -->
+      - name: Report local stats as NR event
+        uses: './.github/actions/nr-report-build-size'
+        with:
+          nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
 
   # Jobs for workflow_dispatch events
 
@@ -113,7 +117,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
       - name: Find pull request target
         id: pull-request-target
         uses: ./.github/actions/find-pull-request
@@ -137,7 +141,7 @@ jobs:
           ref: 'refs/pull/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}/merge'
       - uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
       - name: Get workflow time
         id: workflow-time
         run: echo "results=$(TZ=America/Chicago date +'%B %d, %Y %H:%M:%S %Z')" >> $GITHUB_OUTPUT
@@ -190,7 +194,7 @@ jobs:
           ref: 'refs/pull/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}/merge'
       - uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
       - name: Get workflow time
         id: workflow-time
         run: echo "results=$(TZ=America/Chicago date +'%B %d, %Y %H:%M:%S %Z')" >> $GITHUB_OUTPUT

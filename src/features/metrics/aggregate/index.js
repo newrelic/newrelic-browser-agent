@@ -1,5 +1,4 @@
 import { registerHandler } from '../../../common/event-emitter/register-handler'
-import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { FEATURE_NAME, SUPPORTABILITY_METRIC, CUSTOM_METRIC, SUPPORTABILITY_METRIC_CHANNEL, CUSTOM_METRIC_CHANNEL/*, WATCHABLE_WEB_SOCKET_EVENTS */ } from '../constants'
 import { getFrameworks } from './framework-detection'
 import { isFileProtocol } from '../../../common/url/protocol'
@@ -7,7 +6,6 @@ import { onDOMContentLoaded } from '../../../common/window/load'
 import { windowAddEventListener } from '../../../common/event-listener/event-listener-opts'
 import { isBrowserScope, isWorkerScope } from '../../../common/constants/runtime'
 import { AggregateBase } from '../../utils/aggregate-base'
-import { FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
 import { isIFrameWindow } from '../../../common/dom/iframe'
 // import { WEBSOCKET_TAG } from '../../../common/wrap/wrap-websocket'
 // import { handleWebsocketEvents } from './websocket-detection'
@@ -16,14 +14,11 @@ export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor (agentRef) {
     super(agentRef, FEATURE_NAME)
-    const aggregatorTypes = ['cm', 'sm'] // the types in EventAggregator this feature cares about
+    this.harvestOpts.aggregatorTypes = ['cm', 'sm'] // the types in EventAggregator this feature cares about
+    // This feature only harvests once per potential EoL of the page, which is handled by the central harvester.
 
     this.waitForFlags(['err']).then(([errFlag]) => {
       if (errFlag) {
-        // *cli, Mar 23 - Per NR-94597, this feature should only harvest ONCE at the (potential) EoL time of the page.
-        const scheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], { onUnload: () => this.unload() }, this)
-        // this is needed to ensure EoL is "on" and sent
-        scheduler.harvest.on(FEATURE_TO_ENDPOINT[this.featureName], () => this.makeHarvestPayload(undefined, { aggregatorTypes }))
         this.drain()
       } else {
         this.blocked = true // if rum response determines that customer lacks entitlements for spa endpoint, this feature shouldn't harvest
@@ -39,6 +34,8 @@ export class Aggregate extends AggregateBase {
     this.eachSessionChecks() // the start of every time user engages with page
   }
 
+  preHarvestChecks (opts) { return this.drained && opts.isFinalHarvest } // only allow any metrics to be sent after we get the right RUM flag and only on EoL
+
   storeSupportabilityMetrics (name, value) {
     if (this.blocked) return
     const type = SUPPORTABILITY_METRIC
@@ -50,7 +47,7 @@ export class Aggregate extends AggregateBase {
     if (this.blocked) return
     const type = CUSTOM_METRIC
     const params = { name }
-    this.events.add(type, name, params, metrics)
+    this.events.add([type, name, params, metrics])
   }
 
   singleChecks () {
@@ -90,10 +87,8 @@ export class Aggregate extends AggregateBase {
     }
 
     // Capture SMs to assess customer engagement with the obfuscation config
-    const ruleValidations = this.obfuscator.ruleValidationCache
-    if (ruleValidations.length > 0) {
+    if (this.obfuscator.obfuscateConfigRules.length > 0) {
       this.storeSupportabilityMetrics('Generic/Obfuscate/Detected')
-      if (ruleValidations.filter(ruleValidation => !ruleValidation.isValid).length > 0) this.storeSupportabilityMetrics('Generic/Obfuscate/Invalid')
     }
 
     // Check if proxy for either chunks or beacon is being used
@@ -131,41 +126,5 @@ export class Aggregate extends AggregateBase {
     windowAddEventListener('pageshow', (evt) => {
       if (evt?.persisted) { this.storeSupportabilityMetrics('Generic/BFCache/PageRestored') }
     })
-  }
-
-  unload () {
-    try {
-      if (this.resourcesSent) return
-      this.resourcesSent = true // make sure this only gets sent once
-
-      // Capture SMs around network resources using the performance API to assess
-      // work to split this out from the ST nodes
-      // differentiate between internal+external and ajax+non-ajax
-      const ajaxResources = ['beacon', 'fetch', 'xmlhttprequest']
-      const internalUrls = ['nr-data.net', 'newrelic.com', 'nr-local.net', 'localhost']
-      function isInternal (x) { return internalUrls.some(y => x.name.indexOf(y) >= 0) }
-      function isAjax (x) { return ajaxResources.includes(x.initiatorType) }
-      const allResources = performance?.getEntriesByType('resource') || []
-      allResources.forEach((entry) => {
-        if (isInternal(entry)) {
-          if (isAjax(entry)) this.storeSupportabilityMetrics('Generic/Resources/Ajax/Internal')
-          else this.storeSupportabilityMetrics('Generic/Resources/Non-Ajax/Internal')
-        } else {
-          if (isAjax(entry)) this.storeSupportabilityMetrics('Generic/Resources/Ajax/External')
-          else this.storeSupportabilityMetrics('Generic/Resources/Non-Ajax/External')
-        }
-      })
-
-      // Capture SMs for performance markers and measures to assess the usage and possible inclusion of this
-      // data in the agent for use in NR
-      if (typeof performance !== 'undefined') {
-        const markers = performance.getEntriesByType('mark')
-        const measures = performance.getEntriesByType('measure')
-        if (markers.length) this.storeSupportabilityMetrics('Generic/Performance/Mark/Seen', markers.length)
-        if (measures.length) this.storeSupportabilityMetrics('Generic/Performance/Measure/Seen', measures.length)
-      }
-    } catch (e) {
-      // do nothing
-    }
   }
 }

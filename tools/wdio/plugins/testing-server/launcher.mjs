@@ -9,12 +9,14 @@ const log = logger('testing-server')
  */
 export default class TestingServerLauncher {
   #testingServer
+  #collectCoverage
 
   constructor (opts) {
     this.#testingServer = new TestServer({
       ...opts,
       logger: log
     })
+    this.#collectCoverage = opts.coverage
   }
 
   async onPrepare (_, capabilities) {
@@ -25,9 +27,11 @@ export default class TestingServerLauncher {
     log.info(`Command server started on http://${this.#testingServer.commandServer.host}:${this.#testingServer.commandServer.port}`)
 
     capabilities.forEach((capability) => {
+      /** these props will be deleted later before sending to LT */
       capability.assetServer = serialize({ host: this.#testingServer.assetServer.host, port: this.#testingServer.assetServer.port })
       capability.bamServer = serialize({ host: this.#testingServer.bamServer.host, port: this.#testingServer.bamServer.port })
       capability.commandServer = serialize({ host: this.#testingServer.commandServer.host, port: this.#testingServer.commandServer.port })
+      capability.collectCoverage = this.#collectCoverage
     })
   }
 

@@ -33,11 +33,12 @@ test('instrument detects heuristic steps', async () => {
   expect(handleModule.handle).toHaveBeenLastCalledWith('newURL', [expect.any(Number), window.location.href], undefined, FEATURE_NAME, expect.any(Object))
   history.replaceState({}, '')
   expect(handleModule.handle).toHaveBeenLastCalledWith('newURL', [expect.any(Number), window.location.href], undefined, FEATURE_NAME, expect.any(Object))
-  window.dispatchEvent(new Event('popstate'))
+  window.dispatchEvent(new Event('popstate')) // this results in both a 'newUIEvent' and 'newURL' internal events
   expect(handleModule.handle).toHaveBeenLastCalledWith('newURL', [expect.any(Number), window.location.href], undefined, FEATURE_NAME, expect.any(Object))
-  expect(handleModule.handle).toHaveBeenCalledTimes(3)
+  expect(handleModule.handle).toHaveBeenCalledTimes(4)
 
   handleModule.handle.mockClear()
+  await new Promise((resolve) => setTimeout(resolve, 100)) // wait for the debounce on 'newUIEvent' to clear
   // document.dispatchEvent(new Event('click')) // feature only listens for UI events that has addEventListener callbacks tied to it
   // expect(handleSpy).not.toHaveBeenCalled()
   let count = 0

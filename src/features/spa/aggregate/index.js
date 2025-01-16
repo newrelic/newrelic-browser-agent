@@ -10,11 +10,10 @@ import { navTimingValues as navTiming } from '../../../common/timing/nav-timing'
 import { generateUuid } from '../../../common/ids/unique-id'
 import { Interaction } from './interaction'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
-import { HarvestScheduler } from '../../../common/harvest/harvest-scheduler'
 import { Serializer } from './serializer'
 import { ee } from '../../../common/event-emitter/contextual-ee'
 import * as CONSTANTS from '../constants'
-import { FEATURE_NAMES, FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
+import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { firstContentfulPaint } from '../../../common/vitals/first-contentful-paint'
 import { firstPaint } from '../../../common/vitals/first-paint'
@@ -46,14 +45,12 @@ export class Aggregate extends AggregateBase {
       pageLoaded: false,
       childTime: 0,
       depth: 0,
-      harvestTimeSeconds: agentRef.init.spa.harvestTimeSeconds || 10,
       // The below feature flag is used to disable the SPA ajax fix for specific customers, see https://new-relic.atlassian.net/browse/NR-172169
       disableSpaFix: (agentRef.init.feature_flags || []).indexOf('disable-spa-fix') > -1
     }
     this.spaSerializerClass = new Serializer(this)
 
     const classThis = this
-    let scheduler
 
     const baseEE = ee.get(agentRef.agentIdentifier) // <-- parent baseEE
     const mutationEE = baseEE.get('mutation')
@@ -98,13 +95,10 @@ export class Aggregate extends AggregateBase {
     //  | click ending:                   |   65  |    50    |        |           |           |
     // click fn-end                       |   70  |    0     |    0   |     70    |     20    |
 
+    let harvester
     this.waitForFlags((['spa'])).then(([spaFlag]) => {
       if (spaFlag) {
-        scheduler = new HarvestScheduler(FEATURE_TO_ENDPOINT[this.featureName], {
-          onFinished: (result) => this.postHarvestCleanup(result.sent && result.retry),
-          getPayload: (options) => this.makeHarvestPayload(options.retry),
-          retryDelay: state.harvestTimeSeconds
-        }, this)
+        harvester = agentRef.runtime.harvester // since this is after RUM call, PVE would've initialized harvester by now
         this.drain()
       } else {
         this.blocked = true
@@ -725,8 +719,11 @@ export class Aggregate extends AggregateBase {
       else smCategory = 'Custom'
       handle(SUPPORTABILITY_METRIC_CHANNEL, [`Spa/Interaction/${smCategory}/Duration/Ms`, Math.max((interaction.root?.end || 0) - (interaction.root?.start || 0), 0)], undefined, FEATURE_NAMES.metrics, baseEE)
 
-      scheduler?.scheduleHarvest(0)
-      if (!scheduler) warn(19)
+      if (!harvester) {
+        warn(19)
+        return
+      }
+      harvester.triggerHarvestFor(classThis)
     }
   }
 

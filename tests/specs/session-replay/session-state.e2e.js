@@ -66,7 +66,7 @@ describe('session manager state behavior', () => {
         })
       ])
 
-      expect(sessionReplayHarvests.length).toEqual(0)
+      expect(sessionReplayHarvests.length).toEqual(1)
     })
   })
 

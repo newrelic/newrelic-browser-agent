@@ -3,6 +3,73 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.278.3](https://github.com/newrelic/newrelic-browser-agent/compare/v1.278.2...v1.278.3) (2025-01-14)
+
+
+### Bug Fixes
+
+* Change obfuscator to read directly from obfuscation rules configuration ([#1327](https://github.com/newrelic/newrelic-browser-agent/issues/1327)) ([a75f935](https://github.com/newrelic/newrelic-browser-agent/commit/a75f935d9b045ac74878f7dd1fab04d046b376dc))
+
+## [1.278.2](https://github.com/newrelic/newrelic-browser-agent/compare/v1.278.1...v1.278.2) (2025-01-09)
+
+
+### Bug Fixes
+
+* Allow the page view feature to have access to an event buffer ([#1315](https://github.com/newrelic/newrelic-browser-agent/issues/1315)) ([64babe1](https://github.com/newrelic/newrelic-browser-agent/commit/64babe18a5c4190f6d7bdc775fe5f55db095c892))
+
+## [1.278.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.278.0...v1.278.1) (2025-01-08)
+
+
+### Bug Fixes
+
+* Make Metrics harvest only on EoL for new Harvester ([#1311](https://github.com/newrelic/newrelic-browser-agent/issues/1311)) ([5cecedc](https://github.com/newrelic/newrelic-browser-agent/commit/5cecedcad6af7a14ec0e6777eba059ff1a5c008d))
+
+## [1.278.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.277.0...v1.278.0) (2025-01-07)
+
+
+### Features
+
+* Centralized harvesting ([#1298](https://github.com/newrelic/newrelic-browser-agent/issues/1298)) ([32c0e3f](https://github.com/newrelic/newrelic-browser-agent/commit/32c0e3f7008423a3e327d17b926d1702d08ae21f))
+
+## [1.277.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.276.0...v1.277.0) (2024-12-18)
+
+
+### Features
+
+* Add custom events API ([#1263](https://github.com/newrelic/newrelic-browser-agent/issues/1263)) ([9395415](https://github.com/newrelic/newrelic-browser-agent/commit/9395415d942b55e88e89438aa203c6a1642d9e6b))
+
+
+### Bug Fixes
+
+* Soft navigation bug fixes and new soft navigation tests ([#1268](https://github.com/newrelic/newrelic-browser-agent/issues/1268)) ([7624928](https://github.com/newrelic/newrelic-browser-agent/commit/762492896a7b96564269aab1aadeb6e44a4da242))
+
+## [1.276.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.275.0...v1.276.0) (2024-12-16)
+
+
+### Features
+
+* allow feature flags to control experimental features ([#1282](https://github.com/newrelic/newrelic-browser-agent/issues/1282)) ([537e72d](https://github.com/newrelic/newrelic-browser-agent/commit/537e72da0821792006abd16c41ffa025fd73b474))
+* Capture Page Resource Assets ([#1257](https://github.com/newrelic/newrelic-browser-agent/issues/1257)) ([e4c7deb](https://github.com/newrelic/newrelic-browser-agent/commit/e4c7debe2a1653efdad8940c55a71dd0140ce900))
+
+
+### Bug Fixes
+
+* Fix syntax error in fallback when tracking xhr readyState ([#1272](https://github.com/newrelic/newrelic-browser-agent/issues/1272)) ([2bb6b5b](https://github.com/newrelic/newrelic-browser-agent/commit/2bb6b5b2e104a6b3ac9ceb70d396f65cfb61c1bd))
+* Ignore reserved attribute names on UserActions tied to the window ([#1261](https://github.com/newrelic/newrelic-browser-agent/issues/1261)) ([8410dbe](https://github.com/newrelic/newrelic-browser-agent/commit/8410dbeef30aeb0e578c63a293ec311c3d42f8da))
+
+## [1.275.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.274.0...v1.275.0) (2024-12-03)
+
+
+### Features
+
+* Allow logs api wrapper to update custom attributes ([#1265](https://github.com/newrelic/newrelic-browser-agent/issues/1265)) ([8d10e14](https://github.com/newrelic/newrelic-browser-agent/commit/8d10e14953f9a5b9ba97e865ba5476fc527ba384))
+* Enable the browser agent to run in extension background contexts ([#1206](https://github.com/newrelic/newrelic-browser-agent/issues/1206)) ([37e976b](https://github.com/newrelic/newrelic-browser-agent/commit/37e976bf360c209efd163855e7fbe84d665e444b))
+
+
+### Bug Fixes
+
+* Harvest generic events when max size is reached ([#1250](https://github.com/newrelic/newrelic-browser-agent/issues/1250)) ([e00a469](https://github.com/newrelic/newrelic-browser-agent/commit/e00a46975bcc93c48798bd9153f3a503998b0915))
+
 ## [1.274.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.273.1...v1.274.0) (2024-11-19)
 
 

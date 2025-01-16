@@ -10,7 +10,6 @@ import { warn } from '../../../../src/common/util/console'
 import * as runtimeConstantsModule from '../../../../src/common/constants/runtime'
 import { canEnableSessionTracking } from '../../../../src/features/utils/feature-gates'
 import { getConfigurationValue } from '../../../../src/common/config/init'
-import { EventAggregator } from '../../../../src/common/aggregate/event-aggregator'
 
 jest.enableAutomock()
 jest.unmock('../../../../src/features/utils/instrument-base')
@@ -29,6 +28,10 @@ beforeEach(() => {
   featureName = faker.string.uuid()
   agentBase = {
     agentIdentifier,
+    info: {
+      licenseKey: faker.string.uuid(),
+      applicationID: faker.string.uuid()
+    },
     init: {
       [featureName]: { autoStart: true },
       [FEATURE_NAMES.pageViewEvent]: { autoStart: true },
@@ -51,9 +54,9 @@ test('should construct a new instrument', () => {
   expect(registerDrain).toHaveBeenCalledWith(agentIdentifier, featureName)
 })
 
-test('should wait for feature opt-in to import the aggregate', () => {
+test('should wait for feature opt-in to import the aggregate', async () => {
   const instrument = new InstrumentBase(agentBase, featureName, false)
-  jest.spyOn(instrument, 'importAggregator').mockImplementation(jest.fn)
+  jest.spyOn(instrument, 'importAggregator').mockImplementation(() => { })
 
   expect(registerDrain).not.toHaveBeenCalled()
   expect(instrument.auto).toEqual(false)
@@ -175,38 +178,4 @@ test('should drain and not import agg when shouldImportAgg is false for session_
   expect(drain).toHaveBeenCalledWith(agentIdentifier, FEATURE_NAMES.sessionReplay)
   expect(lazyFeatureLoader).not.toHaveBeenCalled()
   expect(mockAggregate).not.toHaveBeenCalled()
-})
-
-test('does not initialized Aggregator more than once with multiple features', async () => {
-  const pve = new InstrumentBase(agentBase, FEATURE_NAMES.pageViewEvent)
-  const pvt = new InstrumentBase(agentBase, FEATURE_NAMES.pageViewTiming)
-  pve.importAggregator(agentBase)
-  pvt.importAggregator(agentBase)
-
-  expect(EventAggregator).toHaveBeenCalledTimes(0)
-  await Promise.all([
-    jest.mocked(onWindowLoad).mock.calls[0][0](), // PVE should import & initialize Aggregator
-    jest.mocked(onWindowLoad).mock.calls[1][0]() // and PVT should wait for PVE to do that instead of initializing it again
-  ])
-  expect(EventAggregator).toHaveBeenCalledTimes(1)
-})
-
-test('does initialize separate Aggregators with multiple agents', async () => {
-  const agentBase2 = {
-    agentIdentifier: faker.string.uuid(),
-    init: {
-      [FEATURE_NAMES.pageViewEvent]: { autoStart: true }
-    }
-  }
-  const pve = new InstrumentBase(agentBase, FEATURE_NAMES.pageViewEvent)
-  const pve2 = new InstrumentBase(agentBase2, FEATURE_NAMES.pageViewEvent)
-  pve.importAggregator(agentBase)
-  pve2.importAggregator(agentBase2)
-
-  expect(EventAggregator).toHaveBeenCalledTimes(0)
-  await Promise.all([
-    jest.mocked(onWindowLoad).mock.calls[0][0](),
-    jest.mocked(onWindowLoad).mock.calls[1][0]() // second agent PVE reusing same module should also initialize a new EventAggregator
-  ])
-  expect(EventAggregator).toHaveBeenCalledTimes(2)
 })

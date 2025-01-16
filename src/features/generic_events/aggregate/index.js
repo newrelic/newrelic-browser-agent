@@ -133,7 +133,6 @@ export class Aggregate extends AggregateBase {
 
                     function createDetailAttrs (obj, rootKey = '', output = {}) {
                       if (obj === null || obj === undefined) return output
-                      // if (typeof obj === 'string') output.entryDetail = obj
                       else if (typeof obj !== 'object') output.entryDetail = obj
                       else {
                         Object.entries(obj).forEach(([key, value]) => {

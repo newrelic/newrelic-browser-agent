@@ -245,21 +245,21 @@ describe('ins harvesting', () => {
 
     expect(insHarvest.length).toEqual(8) // this page sets seven measures
     // detail: {foo:'bar'}
-    expect(insHarvest[0]['entryDetail.foo']).toEqual('bar')
+    expect(insHarvest.find(x => x.entryName === 'simple-object')['entryDetail.foo']).toEqual('bar')
     // detail: {nested1:{nested2:{nested3:{nested4: {foo: 'bar'}}}}
-    expect(insHarvest[1]['entryDetail.nested1.nested2.nested3.nested4.foo']).toEqual('bar')
+    expect(insHarvest.find(x => x.entryName === 'nested-object')['entryDetail.nested1.nested2.nested3.nested4.foo']).toEqual('bar')
     // detail: 'hi'
-    expect(insHarvest[2].entryDetail).toEqual('hi')
+    expect(insHarvest.find(x => x.entryName === 'string').entryDetail).toEqual('hi')
     // detail: ''
-    expect(insHarvest[3].entryDetail).toEqual('')
+    expect(insHarvest.find(x => x.entryName === 'falsy-string').entryDetail).toEqual('')
     // detail: 1
-    expect(insHarvest[4].entryDetail).toEqual(1)
+    expect(insHarvest.find(x => x.entryName === 'number').entryDetail).toEqual(1)
     // detail: 0
-    expect(insHarvest[5].entryDetail).toEqual(0)
+    expect(insHarvest.find(x => x.entryName === 'falsy-number').entryDetail).toEqual(0)
     // detail: true
-    expect(insHarvest[6].entryDetail).toEqual(true)
+    expect(insHarvest.find(x => x.entryName === 'boolean').entryDetail).toEqual(true)
     // detail: false
-    expect(insHarvest[7].entryDetail).toEqual(false)
+    expect(insHarvest.find(x => x.entryName === 'falsy-boolean').entryDetail).toEqual(false)
   })
 
   ;[

@@ -121,14 +121,28 @@ export class Aggregate extends AggregateBase {
                 list.getEntries().forEach(entry => {
                   try {
                     handle(SUPPORTABILITY_METRIC_CHANNEL, ['Generic/Performance/' + type + '/Seen'])
+                    const detailObj = agentRef.init.performance.capture_detail ? createDetailAttrs(entry.detail) : {}
                     this.addEvent({
+                      ...detailObj,
                       eventType: 'BrowserPerformance',
                       timestamp: this.toEpoch(entry.startTime),
                       entryName: cleanURL(entry.name),
                       entryDuration: entry.duration,
-                      entryType: type,
-                      ...(entry.detail && { entryDetail: entry.detail })
+                      entryType: type
                     })
+
+                    function createDetailAttrs (obj, rootKey = '', output = {}) {
+                      if (obj === null || obj === undefined) return output
+                      // if (typeof obj === 'string') output.entryDetail = obj
+                      else if (typeof obj !== 'object') output.entryDetail = obj
+                      else {
+                        Object.entries(obj).forEach(([key, value]) => {
+                          if (typeof value === 'object') createDetailAttrs(value, rootKey + key + '.', output)
+                          else output['entryDetail.' + rootKey + key] = value
+                        })
+                      }
+                      return output
+                    }
                   } catch (err) {
                   }
                 })

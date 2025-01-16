@@ -63,6 +63,7 @@ const model = () => {
       set capture_marks (val) { hiddenState.experimental.marks = val },
       get capture_measures () { return hiddenState.feature_flags.includes(FEATURE_FLAGS.MEASURES) || hiddenState.experimental.measures },
       set capture_measures (val) { hiddenState.experimental.measures = val },
+      capture_detail: true,
       resources: {
         // whether to run this subfeature or not in the generic_events feature. false by default through experimental phase, but flipped to true once GA'd
         get enabled () { return hiddenState.feature_flags.includes(FEATURE_FLAGS.RESOURCES) || hiddenState.experimental.resources },

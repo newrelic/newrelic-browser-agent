@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    <script>performance.mark('before-agent')</script>
+    {init} {config} {loader}
+    <script>performance.mark('after-agent')</script>
+  </head>
+  <body>Instrumented
+    <script>
+      performance.measure('simple-object', {detail: {foo:'bar'}, start: 'before-agent', end: 'after-agent'} )
+      performance.measure('nested-object', {detail: {nested1:{nested2:{nested3:{nested4: {foo: 'bar'}}}}, notNested: 'hi'}, start: 'before-agent', end: 'after-agent'} )
+      performance.measure('string', {detail: 'hi', start: 'before-agent', end: 'after-agent'} )
+      performance.measure('falsy-string', {detail: '', start: 'before-agent', end: 'after-agent'} )
+      performance.measure('number', {detail: 1, start: 'before-agent', end: 'after-agent'} )
+      performance.measure('falsy-number', {detail: 0, start: 'before-agent', end: 'after-agent'} )
+      performance.measure('boolean', {detail: true, start: 'before-agent', end: 'after-agent'} )
+      performance.measure('falsy-boolean', {detail: false, start: 'before-agent', end: 'after-agent'} )
+    </script>
+  </body>
+</html>

@@ -224,7 +224,7 @@ describe('ins harvesting', () => {
 
       expect(insHarvest.length).toEqual(1) // this page sets one measure
       expect(insHarvest[0]).toMatchObject({
-        entryDetail: '{"foo":"bar"}',
+        'entryDetail.foo': 'bar',
         entryDuration: expect.any(Number),
         eventType: 'BrowserPerformance',
         entryName: 'agent-load',
@@ -233,6 +233,33 @@ describe('ins harvesting', () => {
         entryType: 'measure'
       })
     })
+  })
+
+  it('should spread detail', async () => {
+    const testUrl = await browser.testHandle.assetURL('marks-and-measures-detail.html', getInsInit({ performance: { capture_measures: true } }))
+    await browser.url(testUrl).then(() => browser.waitForAgentLoad())
+
+    const [[{ request: { body: { ins: insHarvest } } }]] = await Promise.all([
+      insightsCapture.waitForResult({ totalCount: 1 })
+    ])
+
+    expect(insHarvest.length).toEqual(8) // this page sets seven measures
+    // detail: {foo:'bar'}
+    expect(insHarvest[0]['entryDetail.foo']).toEqual('bar')
+    // detail: {nested1:{nested2:{nested3:{nested4: {foo: 'bar'}}}}
+    expect(insHarvest[1]['entryDetail.nested1.nested2.nested3.nested4.foo']).toEqual('bar')
+    // detail: 'hi'
+    expect(insHarvest[2].entryDetail).toEqual('hi')
+    // detail: ''
+    expect(insHarvest[3].entryDetail).toEqual('')
+    // detail: 1
+    expect(insHarvest[4].entryDetail).toEqual(1)
+    // detail: 0
+    expect(insHarvest[5].entryDetail).toEqual(0)
+    // detail: true
+    expect(insHarvest[6].entryDetail).toEqual(true)
+    // detail: false
+    expect(insHarvest[7].entryDetail).toEqual(false)
   })
 
   ;[

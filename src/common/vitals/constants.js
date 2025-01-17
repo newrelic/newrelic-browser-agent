@@ -7,3 +7,7 @@ export const VITAL_NAMES = {
   INTERACTION_TO_NEXT_PAINT: 'inp',
   TIME_TO_FIRST_BYTE: 'ttfb'
 }
+
+export const PERFORMANCE_ENTRY_TYPE = {
+  FIRST_INPUT: 'first-input'
+}

@@ -1,4 +1,4 @@
-import { supportsCumulativeLayoutShift, supportsFirstPaint, supportsInteractionToNextPaint, supportsLargestContentfulPaint } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { supportsCumulativeLayoutShift, supportsFirstPaint, supportsInteractionToNextPaint, supportsLargestContentfulPaint, supportsPerformanceEventTiming } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { testTimingEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 const loadersToTest = ['rum', 'spa']
@@ -81,16 +81,18 @@ describe('pvt timings tests', () => {
             .then(async () => browser.url(await browser.testHandle.assetURL('/')))
         ])
 
-        // FID is replaced by subscribing to 'first-input'
-        const fi = timingsHarvests.find(harvest => harvest.request.body.find(t => t.name === 'fi'))
-          ?.request.body.find(timing => timing.name === 'fi')
-        expect(fi.value).toBeGreaterThanOrEqual(0)
-        expect(fi.value).toBeLessThan(Date.now() - start)
+        if (browserMatch(supportsPerformanceEventTiming)) {
+          // FID is replaced by subscribing to 'first-input'
+          const fi = timingsHarvests.find(harvest => harvest.request.body.find(t => t.name === 'fi'))
+            ?.request.body.find(timing => timing.name === 'fi')
+          expect(fi.value).toBeGreaterThanOrEqual(0)
+          expect(fi.value).toBeLessThan(Date.now() - start)
 
-        const isClickInteractionType = type => type === 'pointerdown' || type === 'mousedown' || type === 'click'
-        const fiType = fi.attributes.find(attr => attr.key === 'type')
-        expect(isClickInteractionType(fiType.value)).toEqual(true)
-        expect(fiType.type).toEqual('stringAttribute')
+          const isClickInteractionType = type => type === 'pointerdown' || type === 'mousedown' || type === 'click'
+          const fiType = fi.attributes.find(attr => attr.key === 'type')
+          expect(isClickInteractionType(fiType.value)).toEqual(true)
+          expect(fiType.type).toEqual('stringAttribute')
+        }
 
         if (browserMatch(supportsLargestContentfulPaint)) {
           const lcp = timingsHarvests.find(harvest => harvest.request.body.find(t => t.name === 'lcp'))

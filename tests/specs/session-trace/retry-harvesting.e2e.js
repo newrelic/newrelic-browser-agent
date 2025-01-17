@@ -8,7 +8,7 @@ describe('stn retry harvesting', () => {
     sessionTraceCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testBlobTraceRequest })
   })
 
-  ;[408, 429, 500, 503].forEach(statusCode =>
+  ;[408, 429, 500, 502, 504, 520].forEach(statusCode =>
     it(`should send the session trace on the next harvest when the first harvest statusCode is ${statusCode}`, async () => {
       await browser.testHandle.scheduleReply('bamServer', {
         test: testBlobRequest,

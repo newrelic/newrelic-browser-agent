@@ -18,7 +18,6 @@ beforeEach(() => {
         setTimeout(callCb, 250)
       }
       setTimeout(callCb, 250)
-      // }
     },
     disconnect: jest.fn()
   }))

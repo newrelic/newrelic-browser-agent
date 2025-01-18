@@ -24,7 +24,7 @@ jest.mock('../../../../../src/common/config/runtime', () => ({
 
 beforeEach(() => {
   jest.mocked(runtimeModule.getRuntime).mockReturnValue({
-    obfuscator: new Obfuscator('abcd')
+    obfuscator: new Obfuscator({ init: { obfuscate: [] } })
   })
 })
 
@@ -210,7 +210,7 @@ test('Interaction serialize output is correct', () => {
   jest.doMock('../../../../../src/common/config/runtime', () => ({
     __esModule: true,
     getRuntime: jest.fn().mockReturnValue({
-      obfuscator: new Obfuscator('abcd')
+      obfuscator: new Obfuscator({ init: { obfuscate: [] } })
     })
   }))
   const { Interaction } = require('../../../../../src/features/soft_navigations/aggregate/interaction')

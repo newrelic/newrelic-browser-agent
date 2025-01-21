@@ -98,7 +98,9 @@ export class Aggregate extends AggregateBase {
           // The following 3 attributes are evaluated and dropped at ingest processing time and do not get stored on NRDB:
           'instrumentation.provider': 'browser',
           'instrumentation.version': this.agentRef.runtime.version,
-          'instrumentation.name': this.agentRef.runtime.loaderType
+          'instrumentation.name': this.agentRef.runtime.loaderType,
+          // Custom attributes
+          ...this.agentRef.info.jsAttributes
         }
       },
       /** logs section contains individual unique log entries */

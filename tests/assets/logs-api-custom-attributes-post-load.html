@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>Logs API Custom Attributes Post Load</title>
+    {init} {config} {loader}
+  </head>
+  <body>
+    Logs API Custom Attributes Post Load
+    <script>
+      newrelic.setCustomAttribute('test', 19)
+      newrelic.setCustomAttribute('hello', 'world')
+      newrelic.setCustomAttribute('bool', true)
+
+      newrelic.log("info", { customAttributes: { test: 1 }, level: "info" });
+      newrelic.log("debug", { customAttributes: { test: 1 }, level: "debug" });
+      newrelic.log("trace", { customAttributes: { test: 1 }, level: "trace" });
+      newrelic.log("error", { customAttributes: { test: 1 }, level: "error" });
+      newrelic.log("warn", { customAttributes: { test: 1 }, level: "warn" });
+    </script>
+  </body>
+</html>

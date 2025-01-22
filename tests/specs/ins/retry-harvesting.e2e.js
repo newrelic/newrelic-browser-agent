@@ -7,7 +7,7 @@ describe('ins retry harvesting', () => {
     insightsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testInsRequest })
   })
 
-  ;[408, 429, 500, 503].forEach(statusCode =>
+  ;[408, 429, 500, 502, 504, 520].forEach(statusCode =>
     it(`should send the page action on the next harvest when the first harvest statusCode is ${statusCode}`, async () => {
       await browser.testHandle.scheduleReply('bamServer', {
         test: testInsRequest,
@@ -40,7 +40,7 @@ describe('ins retry harvesting', () => {
     })
   );
 
-  [400, 404, 502, 504, 512].forEach(statusCode =>
+  [400, 404].forEach(statusCode =>
     it(`should not send the page action on the next harvest when the first harvest statusCode is ${statusCode}`, async () => {
       await browser.testHandle.scheduleReply('bamServer', {
         test: testInsRequest,

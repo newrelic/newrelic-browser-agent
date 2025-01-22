@@ -29,7 +29,7 @@ describe('STN Payload metadata checks', () => {
         .then(() => browser.waitForAgentLoad())
         .then(() => browser.execute(function () {
           // initialize again, to ensure we still only get one set of timing data
-          Object.values(newrelic.initializedAgents)[0].features.session_trace.featAggregate.initialize()
+          Object.values(newrelic.initializedAgents)[0].features.session_trace.featAggregate.initialize(1, 1)
         }))
     ])
 

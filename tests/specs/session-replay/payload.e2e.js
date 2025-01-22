@@ -158,7 +158,7 @@ describe('Session Replay Payload Validation', () => {
 
     let [sessionReplaySnapshotHarvests] = await Promise.all([
       sessionReplaySnapshotCapture.waitForResult({ timeout: 10000 }),
-      browser.url(await browser.testHandle.assetURL('rrweb-invalid-stylesheet.html', srConfig({ session_replay: { fix_stylesheets: false, enabled: true, harvestTimeSeconds: 5 } })))
+      browser.url(await browser.testHandle.assetURL('rrweb-invalid-stylesheet.html', srConfig({ session_replay: { fix_stylesheets: false, enabled: true } })))
         .then(() => browser.waitForFeatureAggregate('session_replay'))
     ])
 

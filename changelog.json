@@ -4,6 +4,74 @@
     {
       "changes": [
         {
+          "type": "fix",
+          "sha": "a75f935d9b045ac74878f7dd1fab04d046b376dc",
+          "message": "Change obfuscator to read directly from obfuscation rules configuration",
+          "issues": [
+            "1327"
+          ]
+        }
+      ],
+      "version": "1.278.3",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "cce8b457-0046-470d-be90-e339c477f2e8",
+      "createTime": "2025-01-14T23:04:39.838Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
+          "sha": "64babe18a5c4190f6d7bdc775fe5f55db095c892",
+          "message": "Allow the page view feature to have access to an event buffer",
+          "issues": [
+            "1315"
+          ]
+        }
+      ],
+      "version": "1.278.2",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "40eb13de-24a0-4805-8d51-62ff0f2ce6da",
+      "createTime": "2025-01-09T23:17:44.037Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
+          "sha": "5cecedcad6af7a14ec0e6777eba059ff1a5c008d",
+          "message": "Make Metrics harvest only on EoL for new Harvester",
+          "issues": [
+            "1311"
+          ]
+        }
+      ],
+      "version": "1.278.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "19340905-8a18-4ba5-9359-72425f0adc00",
+      "createTime": "2025-01-08T18:59:50.502Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
+          "sha": "32c0e3f7008423a3e327d17b926d1702d08ae21f",
+          "message": "Centralized harvesting",
+          "issues": [
+            "1298"
+          ]
+        }
+      ],
+      "version": "1.278.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "6762d16a-1507-432f-8404-790629d82720",
+      "createTime": "2025-01-07T17:23:03.207Z"
+    },
+    {
+      "changes": [
+        {
           "type": "feat",
           "sha": "9395415d942b55e88e89438aa203c6a1642d9e6b",
           "message": "Add custom events API",
@@ -2334,5 +2402,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2024-12-18T17:31:02.842Z"
+  "updateTime": "2025-01-14T23:04:39.838Z"
 }

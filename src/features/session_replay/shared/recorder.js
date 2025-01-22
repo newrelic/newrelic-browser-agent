@@ -1,7 +1,6 @@
 import { record as recorder } from 'rrweb'
 import { stringify } from '../../../common/util/stringify'
 import { AVG_COMPRESSION, CHECKOUT_MS, QUERY_PARAM_PADDING, RRWEB_EVENT_TYPES, SR_EVENT_EMITTER_TYPES } from '../constants'
-import { getConfigurationValue } from '../../../common/config/init'
 import { RecorderEvents } from './recorder-events'
 import { MODE } from '../../../common/session/constants'
 import { stylesheetEvaluator } from './stylesheet-evaluator'
@@ -10,6 +9,7 @@ import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { buildNRMetaNode } from './utils'
 import { IDEAL_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
+import { AggregateBase } from '../../utils/aggregate-base'
 
 export class Recorder {
   /** Each page mutation or event will be stored (raw) in this array. This array will be cleared on each harvest */
@@ -36,7 +36,7 @@ export class Recorder {
     /** The parent class that instantiated the recorder */
     this.parent = parent
     /** A flag that can be set to false by failing conversions to stop the fetching process */
-    this.shouldFix = getConfigurationValue(this.parent.agentIdentifier, 'session_replay.fix_stylesheets')
+    this.shouldFix = this.parent.agentRef.init.session_replay.fix_stylesheets
     /** The method to stop recording. This defaults to a noop, but is overwritten once the recording library is imported and initialized */
     this.stopRecording = () => { /* no-op until set by rrweb initializer */ }
   }
@@ -73,7 +73,7 @@ export class Recorder {
   /** Begin recording using configured recording lib */
   startRecording () {
     this.recording = true
-    const { block_class, ignore_class, mask_text_class, block_selector, mask_input_options, mask_text_selector, mask_all_inputs, inline_images, collect_fonts } = getConfigurationValue(this.parent.agentIdentifier, 'session_replay')
+    const { block_class, ignore_class, mask_text_class, block_selector, mask_input_options, mask_text_selector, mask_all_inputs, inline_images, collect_fonts } = this.parent.agentRef.init.session_replay
     const customMasker = (text, element) => {
       try {
         if (typeof element?.type === 'string' && element.type.toLowerCase() !== 'password' && (element?.dataset?.nrUnmask !== undefined || element?.classList?.contains('nr-unmask'))) return text
@@ -151,7 +151,7 @@ export class Recorder {
   store (event, isCheckout) {
     if (!event) return
 
-    if (!this.parent.scheduler && this.#preloaded.length) this.currentBufferTarget = this.#preloaded[this.#preloaded.length - 1]
+    if (!(this.parent instanceof AggregateBase) && this.#preloaded.length) this.currentBufferTarget = this.#preloaded[this.#preloaded.length - 1]
     else this.currentBufferTarget = this.#events
 
     if (this.parent.blocked) return
@@ -193,8 +193,8 @@ export class Recorder {
     // it will send immediately.  This often happens on the first snapshot, which can be significantly larger than the other payloads.
     if (((event.type === RRWEB_EVENT_TYPES.FullSnapshot && this.currentBufferTarget.hasMeta) || payloadSize > IDEAL_PAYLOAD_SIZE) && this.parent.mode === MODE.FULL) {
       // if we've made it to the ideal size of ~64kb before the interval timer, we should send early.
-      if (this.parent.scheduler) {
-        this.parent.scheduler.runHarvest()
+      if (this.parent instanceof AggregateBase) {
+        this.parent.agentRef.runtime.harvester.triggerHarvestFor(this.parent)
       } else {
         // we are still in "preload" and it triggered a "stop point".  Make a new set, which will get pointed at on next cycle
         this.#preloaded.push(new RecorderEvents())

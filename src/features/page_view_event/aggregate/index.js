@@ -2,7 +2,6 @@ import { globalScope, isBrowserScope, originTime } from '../../../common/constan
 import { addPT, addPN } from '../../../common/timing/nav-timing'
 import { stringify } from '../../../common/util/stringify'
 import { isValid } from '../../../common/config/info'
-import { Harvest } from '../../../common/harvest/harvest'
 import * as CONSTANTS from '../constants'
 import { getActivatedFeaturesFlags } from './initialized-features'
 import { activateFeatures } from '../../../common/util/feature-flags'
@@ -23,12 +22,12 @@ export class Aggregate extends AggregateBase {
     this.timeToFirstByte = 0
     this.firstByteToWindowLoad = 0 // our "frontend" duration
     this.firstByteToDomContent = 0 // our "dom processing" duration
-    this.timeKeeper = new TimeKeeper(agentRef.agentIdentifier)
 
     if (!isValid(agentRef.agentIdentifier)) {
       this.ee.abort()
       return warn(43)
     }
+    agentRef.runtime.timeKeeper = new TimeKeeper(agentRef.agentIdentifier)
 
     if (isBrowserScope) {
       timeToFirstByte.subscribe(({ value, attrs }) => {
@@ -47,7 +46,6 @@ export class Aggregate extends AggregateBase {
 
   sendRum () {
     const info = this.agentRef.info
-    const harvester = new Harvest(this)
     const measures = {}
 
     if (info.queueTime) measures.qt = info.queueTime
@@ -99,43 +97,44 @@ export class Aggregate extends AggregateBase {
     queryParameters.fp = firstPaint.current.value
     queryParameters.fcp = firstContentfulPaint.current.value
 
-    if (this.timeKeeper?.ready) {
-      queryParameters.timestamp = Math.floor(this.timeKeeper.correctRelativeTimestamp(now()))
+    const timeKeeper = this.agentRef.runtime.timeKeeper
+    if (timeKeeper?.ready) {
+      queryParameters.timestamp = Math.floor(timeKeeper.correctRelativeTimestamp(now()))
     }
 
-    const rumStartTime = now()
-    harvester.send({
-      endpoint: 'rum',
-      payload: { qs: queryParameters, body },
-      opts: { needResponse: true, sendEmptyBody: true },
-      cbFinished: ({ status, responseText, xhr }) => {
-        const rumEndTime = now()
-
-        if (status >= 400 || status === 0) {
-          // Adding retry logic for the rum call will be a separate change
-          this.ee.abort()
-          return
-        }
-
-        try {
-          const { app, ...flags } = JSON.parse(responseText)
-          try {
-            this.timeKeeper.processRumRequest(xhr, rumStartTime, rumEndTime, app.nrServerTime)
-            if (!this.timeKeeper.ready) throw new Error('TimeKeeper not ready')
-            this.agentRef.runtime.timeKeeper = this.timeKeeper
-          } catch (error) {
-            this.ee.abort()
-            warn(17, error)
-            return
-          }
-          this.agentRef.runtime.appMetadata = app
-          activateFeatures(flags, this.agentIdentifier)
-          this.drain()
-        } catch (err) {
-          this.ee.abort()
-          warn(18, err)
-        }
-      }
+    this.rumStartTime = now()
+    this.agentRef.runtime.harvester.triggerHarvestFor(this, {
+      directSend: {
+        targetApp: this.agentRef.mainAppKey,
+        payload: { qs: queryParameters, body }
+      },
+      needResponse: true,
+      sendEmptyBody: true
     })
+  }
+
+  postHarvestCleanup ({ status, responseText, xhr }) {
+    const rumEndTime = now()
+
+    if (status >= 400 || status === 0) {
+      warn(18, status)
+      // Adding retry logic for the rum call will be a separate change; this.blocked will need to be changed since that prevents another triggerHarvestFor()
+      this.ee.abort()
+      return
+    }
+
+    const { app, ...flags } = JSON.parse(responseText)
+    try {
+      this.agentRef.runtime.timeKeeper.processRumRequest(xhr, this.rumStartTime, rumEndTime, app.nrServerTime)
+      if (!this.agentRef.runtime.timeKeeper.ready) throw new Error('TimeKeeper not ready')
+    } catch (error) {
+      this.ee.abort()
+      warn(17, error)
+      return
+    }
+    this.agentRef.runtime.appMetadata = app
+    activateFeatures(flags, this.agentIdentifier)
+    this.drain()
+    this.agentRef.runtime.harvester.startTimer()
   }
 }

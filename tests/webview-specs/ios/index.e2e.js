@@ -20,24 +20,7 @@ describe.withBrowsersMatching(onlyIOS)('ios webview', () => {
     await driver.setClipboard(Buffer.from(url).toString('base64'), 'plaintext')
     const addressBar = await $('-ios predicate string: type == "XCUIElementTypeTextField"')
     await addressBar.clearValue()
-    await driver.touchPerform([
-      {
-        action: 'press',
-        options: {
-          element: addressBar.elementId
-        }
-      },
-      {
-        action: 'wait',
-        options: {
-          ms: 500
-        }
-      },
-      {
-        action: 'release',
-        options: {}
-      }
-    ])
+    addressBar.click({ duration: 500 })
     await $('-ios predicate string: type == "XCUIElementTypeMenuItem" AND label == "Paste" AND name == "Paste"')
       .click()
 

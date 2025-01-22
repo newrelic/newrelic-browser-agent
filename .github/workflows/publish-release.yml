@@ -68,9 +68,9 @@ jobs:
         id: get-stats
         shell: bash
         run: |
-          rum=$(cat ./build/nr-rum-standard.stats.json); echo "rum=$rum" >> $GITHUB_OUTPUT;
-          full=$(cat ./build/nr-full-standard.stats.json); echo "full=$full" >> $GITHUB_OUTPUT;
-          spa=$(cat ./build/nr-spa-standard.stats.json); echo "spa=$spa" >> $GITHUB_OUTPUT;
+          rum=$(cat ./build/nr-rum-standard-${{ steps.agent-loader-version.outputs.results }}.stats.json); echo "rum=$rum" >> $GITHUB_OUTPUT;
+          full=$(cat ./build/nr-full-standard-${{ steps.agent-loader-version.outputs.results }}.stats.json); echo "full=$full" >> $GITHUB_OUTPUT;
+          spa=$(cat ./build/nr-spa-standard-${{ steps.agent-loader-version.outputs.results }}.stats.json); echo "spa=$spa" >> $GITHUB_OUTPUT;
       - name: Report lite size to NR
         uses: newrelic/capture-build-size@main
         with:

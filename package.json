@@ -266,7 +266,7 @@
     "typescript": "^5.3.3",
     "uuid": "^11.0.3",
     "wait-on": "^8.0.0",
-    "wdio-lambdatest-service": "^3.0.1",
+    "wdio-lambdatest-service": "^4.0.0",
     "webpack": "^5.89.0",
     "webpack-bundle-analyzer": "^4.10.1",
     "webpack-cli": "^5.1.4",

@@ -26,7 +26,7 @@ if (isBrowserScope) {
           })
         }
       })
-      observer.observe({ type: PERFORMANCE_ENTRY_TYPE.FIRST_INPUT })
+      observer.observe({ type: PERFORMANCE_ENTRY_TYPE.FIRST_INPUT, buffered: true })
     }
   } catch (e) {
     // Do nothing.

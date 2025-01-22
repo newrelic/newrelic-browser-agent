@@ -142,10 +142,10 @@ export class Aggregate extends AggregateBase {
                         if (nestedJSON === null || nestedJSON === undefined) return items
                         Object.keys(nestedJSON).forEach(key => {
                           let newKey = parentKey + '.' + key
-                          if (typeof nestedJSON[key] === 'object' && nestedJSON[key] !== null && !Array.isArray(nestedJSON[key])) {
+                          if (isPureObject(nestedJSON[key])) {
                             Object.assign(items, flattenJSON(nestedJSON[key], newKey))
                           } else {
-                            items[newKey] = nestedJSON[key]
+                            if (nestedJSON[key] !== null && nestedJSON[key] !== undefined) items[newKey] = nestedJSON[key]
                           }
                         })
                         return items

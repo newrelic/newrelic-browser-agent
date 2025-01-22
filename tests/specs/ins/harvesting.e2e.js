@@ -189,12 +189,18 @@ describe('ins harvesting', () => {
           window.dispatchEvent(new Event('focus'))
           window.dispatchEvent(new Event('blur'))
         }
-      })
-
+      }).then(() => $('body').click()) //  stop aggregating the blur events
     ])
 
     const userActionsHarvest = insHarvests.flatMap(harvest => harvest.request.body.ins) // firefox sends a window focus event on load, so we may end up with 2 harvests
-    expect(userActionsHarvest.filter(ua => ua.action === 'focus').length).toEqual(1)
+    const focusEvents = userActionsHarvest.filter(ua => ua.action === 'focus')
+    const blurEvents = userActionsHarvest.filter(ua => ua.action === 'blur')
+    expect(focusEvents.length).toEqual(1)
+    expect(JSON.parse(focusEvents[0].actionMs).length).toEqual(1)
+    expect(focusEvents[0].actionCount).toEqual(1)
+    expect(blurEvents.length).toEqual(1)
+    expect(JSON.parse(blurEvents[0].actionMs).length).toEqual(1)
+    expect(blurEvents[0].actionCount).toEqual(1)
   })
 
   ;[

@@ -243,7 +243,7 @@ describe('ins harvesting', () => {
       insightsCapture.waitForResult({ totalCount: 1 })
     ])
 
-    expect(insHarvest.length).toEqual(8) // this page sets seven measures
+    expect(insHarvest.length).toEqual(10) // this page sets 10 measures
     // detail: {foo:'bar'}
     expect(insHarvest.find(x => x.entryName === 'simple-object')['entryDetail.foo']).toEqual('bar')
     // detail: {nested1:{nested2:{nested3:{nested4: {foo: 'bar'}}}}
@@ -260,6 +260,10 @@ describe('ins harvesting', () => {
     expect(insHarvest.find(x => x.entryName === 'boolean').entryDetail).toEqual(true)
     // detail: false
     expect(insHarvest.find(x => x.entryName === 'falsy-boolean').entryDetail).toEqual(false)
+    // detail: [1,2,3]
+    expect(insHarvest.find(x => x.entryName === 'array').entryDetail).toEqual('[1,2,3]')
+    // detail: []
+    expect(insHarvest.find(x => x.entryName === 'falsy-array').entryDetail).toEqual('[]')
   })
 
   ;[

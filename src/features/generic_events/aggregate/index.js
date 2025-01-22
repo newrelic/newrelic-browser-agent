@@ -15,6 +15,7 @@ import { applyFnToProps } from '../../../common/util/traverse'
 import { UserActionsAggregator } from './user-actions/user-actions-aggregator'
 import { isIFrameWindow } from '../../../common/dom/iframe'
 import { handle } from '../../../common/event-emitter/handle'
+import { isPureObject } from '../../../common/util/type-check'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -131,16 +132,24 @@ export class Aggregate extends AggregateBase {
                       entryType: type
                     })
 
-                    function createDetailAttrs (obj, rootKey = '', output = {}) {
-                      if (obj === null || obj === undefined) return output
-                      else if (typeof obj !== 'object') output.entryDetail = obj
-                      else {
-                        Object.entries(obj).forEach(([key, value]) => {
-                          if (typeof value === 'object') createDetailAttrs(value, rootKey + key + '.', output)
-                          else output['entryDetail.' + rootKey + key] = value
+                    function createDetailAttrs (detail) {
+                      if (detail === null || detail === undefined) return {}
+                      else if (!isPureObject(detail)) return { entryDetail: detail }
+                      else return flattenJSON(detail)
+
+                      function flattenJSON (nestedJSON, parentKey = 'entryDetail') {
+                        let items = {}
+                        if (nestedJSON === null || nestedJSON === undefined) return items
+                        Object.keys(nestedJSON).forEach(key => {
+                          let newKey = parentKey + '.' + key
+                          if (typeof nestedJSON[key] === 'object' && nestedJSON[key] !== null && !Array.isArray(nestedJSON[key])) {
+                            Object.assign(items, flattenJSON(nestedJSON[key], newKey))
+                          } else {
+                            items[newKey] = nestedJSON[key]
+                          }
                         })
+                        return items
                       }
-                      return output
                     }
                   } catch (err) {
                   }

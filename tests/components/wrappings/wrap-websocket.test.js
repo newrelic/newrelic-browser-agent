@@ -29,6 +29,12 @@ describe('wrap-websocket', () => {
     expect(ws.protocol).toEqual('')
     expect(ws.readyState).toEqual(0)
     expect(ws.url).toEqual('ws://foo.com/websocket')
+
+    expect(WebSocket.length).not.toBeUndefined()
+    expect(WebSocket.CONNECTING).toEqual(0)
+    expect(WebSocket.OPEN).toEqual(1)
+    expect(WebSocket.CLOSING).toEqual(2)
+    expect(WebSocket.CLOSED).toEqual(3)
   })
 
   it('should not run if no WS global', async () => {

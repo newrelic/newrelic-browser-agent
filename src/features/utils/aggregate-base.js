@@ -1,3 +1,7 @@
+/**
+ * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
 import { FeatureBase } from './feature-base'
 import { isValid } from '../../common/config/info'
 import { configure } from '../../loaders/configure/configure'

@@ -1,3 +1,7 @@
+/**
+ * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
 import { FEATURE_FLAGS } from '../../features/generic_events/constants'
 import { LOG_LEVELS } from '../../features/logging/constants'
 import { isValidSelector } from '../dom/query-selector'

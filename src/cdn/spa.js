@@ -1,4 +1,9 @@
 /**
+ * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/**
  * @file Creates a "SPA" agent loader bundle composed of the core agent and all available feature modules.
  */
 

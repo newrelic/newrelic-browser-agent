@@ -1,3 +1,7 @@
+/**
+ * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { FEATURE_NAME } from '../constants'
 import { AggregateBase } from '../../utils/aggregate-base'

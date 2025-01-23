@@ -224,7 +224,7 @@ describe('ins harvesting', () => {
 
       expect(insHarvest.length).toEqual(1) // this page sets one measure
       expect(insHarvest[0]).toMatchObject({
-        entryDetail: '{"foo":"bar"}',
+        'entryDetail.foo': 'bar',
         entryDuration: expect.any(Number),
         eventType: 'BrowserPerformance',
         entryName: 'agent-load',
@@ -233,6 +233,37 @@ describe('ins harvesting', () => {
         entryType: 'measure'
       })
     })
+  })
+
+  it('should spread detail', async () => {
+    const testUrl = await browser.testHandle.assetURL('marks-and-measures-detail.html', getInsInit({ performance: { capture_measures: true } }))
+    await browser.url(testUrl).then(() => browser.waitForAgentLoad())
+
+    const [[{ request: { body: { ins: insHarvest } } }]] = await Promise.all([
+      insightsCapture.waitForResult({ totalCount: 1 })
+    ])
+
+    expect(insHarvest.length).toEqual(10) // this page sets 10 measures
+    // detail: {foo:'bar'}
+    expect(insHarvest.find(x => x.entryName === 'simple-object')['entryDetail.foo']).toEqual('bar')
+    // detail: {nested1:{nested2:{nested3:{nested4: {foo: 'bar'}}}}
+    expect(insHarvest.find(x => x.entryName === 'nested-object')['entryDetail.nested1.nested2.nested3.nested4.foo']).toEqual('bar')
+    // detail: 'hi'
+    expect(insHarvest.find(x => x.entryName === 'string').entryDetail).toEqual('hi')
+    // detail: ''
+    expect(insHarvest.find(x => x.entryName === 'falsy-string').entryDetail).toEqual('')
+    // detail: 1
+    expect(insHarvest.find(x => x.entryName === 'number').entryDetail).toEqual(1)
+    // detail: 0
+    expect(insHarvest.find(x => x.entryName === 'falsy-number').entryDetail).toEqual(0)
+    // detail: true
+    expect(insHarvest.find(x => x.entryName === 'boolean').entryDetail).toEqual(true)
+    // detail: false
+    expect(insHarvest.find(x => x.entryName === 'falsy-boolean').entryDetail).toEqual(false)
+    // detail: [1,2,3]
+    expect(insHarvest.find(x => x.entryName === 'array').entryDetail).toEqual('[1,2,3]')
+    // detail: []
+    expect(insHarvest.find(x => x.entryName === 'falsy-array').entryDetail).toEqual('[]')
   })
 
   ;[

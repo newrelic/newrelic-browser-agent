@@ -178,6 +178,41 @@ describe('ins harvesting', () => {
     })
   })
 
+  it('should only report duplicative focus and blur events once', async () => {
+    const testUrl = await browser.testHandle.assetURL('user-actions.html', getInsInit({ user_actions: { enabled: true } }))
+    await browser.url(testUrl).then(() => browser.pause(2000))
+
+    const [insHarvests] = await Promise.all([
+      insightsCapture.waitForResult({ timeout: 5000 }),
+      browser.execute(function () {
+        let i = 0; while (i++ < 10) {
+          window.dispatchEvent(new Event('focus'))
+          window.dispatchEvent(new Event('blur'))
+        }
+      }).then(() => $('body').click()) //  stop aggregating the blur events
+    ])
+
+    const userActionsHarvest = insHarvests.flatMap(harvest => harvest.request.body.ins) // firefox sends a window focus event on load, so we may end up with 2 harvests
+    const focusEvents = userActionsHarvest.filter(ua => ua.action === 'focus')
+    const blurEvents = userActionsHarvest.filter(ua => ua.action === 'blur')
+
+    // firefox generates a focus event when the page loads, which is reported within the time gap between the page load and the first user action. This
+    // leads to two focus events for firefox and one for the others, but very inconsistently since it could be triggered in the time it takes to debounce
+    const isFirefox = browserMatch(onlyFirefox)
+    if (isFirefox) {
+      expect(focusEvents.length).toBeLessThanOrEqual(2)
+      expect(JSON.parse(focusEvents[0].actionMs).length).toBeLessThanOrEqual(2)
+      expect(focusEvents[0].actionCount).toBeLessThanOrEqual(2)
+    } else {
+      expect(focusEvents.length).toEqual(1)
+      expect(JSON.parse(focusEvents[0].actionMs).length).toEqual(1)
+      expect(focusEvents[0].actionCount).toEqual(1)
+    }
+    expect(blurEvents.length).toEqual(1)
+    expect(JSON.parse(blurEvents[0].actionMs).length).toEqual(1)
+    expect(blurEvents[0].actionCount).toEqual(1)
+  })
+
   ;[
     [getInsInit({ performance: { capture_marks: true } }), 'enabled'],
     [getInsInit({ performance: { capture_marks: false }, feature_flags: [FEATURE_FLAGS.MARKS] }), 'feature flag']

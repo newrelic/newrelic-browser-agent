@@ -1,3 +1,7 @@
+/**
+ * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
 import { FEATURE_TO_ENDPOINT, JSERRORS, RUM, EVENTS, FEATURE_NAMES } from '../../loaders/features/features'
 import { VERSION } from '../constants/env'

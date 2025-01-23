@@ -1,3 +1,7 @@
+/**
+ * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
 export const defaults = {}
 export const gosNREUM = jest.fn(() => ({}))
 export const gosNREUMInfo = jest.fn(() => ({}))

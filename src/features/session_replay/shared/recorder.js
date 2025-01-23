@@ -1,3 +1,7 @@
+/**
+ * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
 import { record as recorder } from 'rrweb'
 import { stringify } from '../../../common/util/stringify'
 import { AVG_COMPRESSION, CHECKOUT_MS, QUERY_PARAM_PADDING, RRWEB_EVENT_TYPES, SR_EVENT_EMITTER_TYPES } from '../constants'

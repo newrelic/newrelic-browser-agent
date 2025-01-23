@@ -30,7 +30,7 @@ module.exports = {
     NREUM: true,
     newrelic: true
   },
-  plugins: ['sonarjs'],
+  plugins: ['sonarjs', 'headers'],
   extends: ['standard', 'plugin:sonarjs/recommended'],
   overrides: [
     {
@@ -53,7 +53,18 @@ module.exports = {
       },
       rules: {
         'no-console': ['error'],
-        'n/no-callback-literal': 'off' // This is not NodeJS code and should not be forced to adhere to NodeJS callback parameter pattern
+        'n/no-callback-literal': 'off', // This is not NodeJS code and should not be forced to adhere to NodeJS callback parameter pattern
+        'headers/header-format': [
+          'error',
+          {
+            source: 'string',
+            content: `Copyright {year} New Relic, Inc. All rights reserved.
+SPDX-License-Identifier: Apache-2.0`,
+            variables: {
+              year: '2020-' + new Date().getFullYear()
+            }
+          }
+        ]
       }
     },
     {

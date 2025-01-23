@@ -1,4 +1,9 @@
 /**
+ * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/**
  * @file Contains constants about the environment the agent is running
  * within. These values are derived at the time the agent is first loaded.
  * @copyright 2023 New Relic Corporation. All rights reserved.

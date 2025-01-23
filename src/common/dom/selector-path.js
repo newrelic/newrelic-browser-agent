@@ -1,4 +1,9 @@
 /**
+ * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/**
  * Generates a CSS selector path for the given element, if possible
  * @param {HTMLElement} elem
  * @param {boolean} includeId

@@ -1,4 +1,9 @@
 /**
+ * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/**
  * @file This file exposes CDN build environment variables. These variables will
  * be overridden with babel.
  */

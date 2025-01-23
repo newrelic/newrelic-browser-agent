@@ -1,4 +1,9 @@
 /**
+ * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/**
  * @file Contains common methods used to transmit harvested data.
  * @copyright 2023 New Relic Corporation. All rights reserved.
  * @license Apache-2.0

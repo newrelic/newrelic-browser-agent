@@ -1,4 +1,10 @@
-/** An array of filter objects {hostname, pathname} for identifying XHR events to be excluded from collection.
+/**
+ * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/**
+ * An array of filter objects {hostname, pathname} for identifying XHR events to be excluded from collection.
  * @see {@link https://docs.newrelic.com/docs/browser/new-relic-browser/configuration/filter-ajax-request-events/ Filter AjaxRequest events}
  * @type {Array.<{hostname: string, pathname: string}>}
  */

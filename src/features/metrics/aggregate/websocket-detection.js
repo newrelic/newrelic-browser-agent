@@ -1,3 +1,7 @@
+/**
+ * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
 import { dataSize } from '../../../common/util/data-size'
 import { toTitleCase } from '../../../common/util/text'
 import { ADD_EVENT_LISTENER_TAG } from '../../../common/wrap/wrap-websocket'

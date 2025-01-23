@@ -1,7 +1,8 @@
-/*
- * Copyright 2020 New Relic Corporation. All rights reserved.
+/**
+ * Copyright 2020-2025 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
+
 /**
  * @file Wraps DOM insertion methods which in turn wrap JSONP functions that show up in the DOM.
  * This module is used by: spa.

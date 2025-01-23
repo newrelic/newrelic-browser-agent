@@ -1,3 +1,8 @@
+/**
+ * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 /* eslint-disable n/handle-callback-err */
 
 import { warn } from '../common/util/console'

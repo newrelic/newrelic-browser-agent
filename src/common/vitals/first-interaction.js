@@ -1,3 +1,7 @@
+/**
+ * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
 import { VitalMetric } from './vital-metric'
 import { VITAL_NAMES, PERFORMANCE_ENTRY_TYPE } from './constants'
 import { initiallyHidden, isBrowserScope } from '../constants/runtime'

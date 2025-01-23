@@ -1,3 +1,7 @@
+/**
+ * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
 import { globalScope } from '../../../../common/constants/runtime'
 import { MODE } from '../../../../common/session/constants'
 import { now } from '../../../../common/timing/now'

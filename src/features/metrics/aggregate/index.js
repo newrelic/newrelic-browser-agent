@@ -1,3 +1,7 @@
+/**
+ * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { FEATURE_NAME, SUPPORTABILITY_METRIC, CUSTOM_METRIC, SUPPORTABILITY_METRIC_CHANNEL, CUSTOM_METRIC_CHANNEL/*, WATCHABLE_WEB_SOCKET_EVENTS */ } from '../constants'
 import { getFrameworks } from './framework-detection'

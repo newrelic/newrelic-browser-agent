@@ -15,6 +15,11 @@ on:
         options:
           - dev
           - staging
+      publish_ab_script:
+        description: 'Flag that determines if the A/B script should be published to internal site'
+        required: true
+        type: boolean
+        default: true
 
 jobs:
   # Build and publish the branch to S3 experiments folder
@@ -76,6 +81,7 @@ jobs:
 
   # Rebuild and publish the environment A/B script
   publish-ab:
+    if: ${{ inputs.publish_ab_script == true }}
     needs: [publish-experiment-to-s3]
     runs-on: ubuntu-latest
     timeout-minutes: 30

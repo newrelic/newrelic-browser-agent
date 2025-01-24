@@ -30,7 +30,7 @@ afterEach(() => {
   test(`${name} with no value creates a metric with just a count`, () => {
     createAndStoreMetric(undefined, isSupportability)
 
-    const records = metricsAggregate.events.get([type])[type]
+    const records = metricsAggregate.events.get({ aggregatorTypes: [type] })[0].data[type]
       .filter(x => x?.params?.name === metricName)
     expect(records.length).toEqual(1)
 
@@ -47,7 +47,7 @@ afterEach(() => {
     createAndStoreMetric(undefined, isSupportability)
     createAndStoreMetric(undefined, isSupportability)
 
-    const records = metricsAggregate.events.get([type])[type]
+    const records = metricsAggregate.events.get({ aggregatorTypes: [type] })[0].data[type]
       .filter(x => x?.params?.name === metricName)
     expect(records.length).toEqual(1)
 
@@ -62,7 +62,7 @@ afterEach(() => {
   test(`${name} with a value ${auxDescription}`, () => {
     createAndStoreMetric(isSupportability ? 500 : { time: 500 }, isSupportability)
 
-    const records = metricsAggregate.events.get([type])[type]
+    const records = metricsAggregate.events.get({ aggregatorTypes: [type] })[0].data[type]
       .filter(x => x?.params?.name === metricName)
     expect(records.length).toEqual(1)
 
@@ -80,7 +80,7 @@ afterEach(() => {
       .fill(null).map(() => faker.number.int({ min: 100, max: 1000 }))
     values.forEach(v => createAndStoreMetric(isSupportability ? v : { time: v }, isSupportability))
 
-    const records = metricsAggregate.events.get([type])[type]
+    const records = metricsAggregate.events.get({ aggregatorTypes: [type] })[0].data[type]
       .filter(x => x?.params?.name === metricName)
     expect(records.length).toEqual(1)
 
@@ -108,7 +108,7 @@ afterEach(() => {
     test('storeEvent (custom) with an invalid value type does not create a named metric object in metrics section', () => {
       createAndStoreMetric(faker.number.float(), false)
 
-      const records = metricsAggregate.events.get([CUSTOM_METRIC])[CUSTOM_METRIC]
+      const records = metricsAggregate.events.get({ aggregatorTypes: [CUSTOM_METRIC] })[0].data[CUSTOM_METRIC]
         .filter(x => x?.params?.name === metricName)
       expect(records.length).toEqual(1)
 
@@ -116,6 +116,15 @@ afterEach(() => {
       expect(records[0].metrics.count).toEqual(1)
     })
   }
+})
+
+test('Metrics does not harvest on interval, only on EoL', () => {
+  createAndStoreMetric(undefined, true)
+  expect(metricsAggregate.events.isEmpty(metricsAggregate.harvestOpts)).toEqual(false) // double check so that harvest should proceed
+  metricsAggregate.drained = true // this is a requisite for harvest in preHarvestChecks
+
+  expect(mainAgent.runtime.harvester.triggerHarvestFor(metricsAggregate)).toEqual(false) // mimics what the harveseter does on interval
+  expect(mainAgent.runtime.harvester.triggerHarvestFor(metricsAggregate, { isFinalHarvest: true })).toEqual(true) // mimics what the harveseter does on EoL
 })
 
 function createAndStoreMetric (value, isSupportability) {

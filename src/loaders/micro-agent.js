@@ -1,3 +1,8 @@
+/**
+ * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 // loader files
 import { Instrument as PVE } from '../features/page_view_event/instrument'
 import { getEnabledFeatures } from './features/enabled-features'

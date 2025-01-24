@@ -7,7 +7,7 @@ describe('err retry harvesting', () => {
     errorsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testErrorsRequest })
   })
 
-  ;[408, 429, 500, 503].forEach(statusCode =>
+  ;[408, 429, 500, 502, 504, 512, 530].forEach(statusCode =>
     it(`should send the error on the next harvest when the first harvest statusCode is ${statusCode}`, async () => {
       await browser.testHandle.scheduleReply('bamServer', {
         test: testErrorsRequest,
@@ -40,7 +40,7 @@ describe('err retry harvesting', () => {
     })
   )
 
-  ;[400, 404, 502, 504, 512].forEach(statusCode =>
+  ;[400, 404].forEach(statusCode =>
     it(`should not send the error on the next harvest when the first harvest statusCode is ${statusCode}`, async () => {
       await browser.testHandle.scheduleReply('bamServer', {
         test: testErrorsRequest,

@@ -1,3 +1,7 @@
+/**
+ * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
 import { generateRandomHexString } from '../ids/unique-id'
 import { warn } from '../util/console'
 import { stringify } from '../util/stringify'

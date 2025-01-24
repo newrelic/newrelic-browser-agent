@@ -5,8 +5,8 @@ import { ee } from '../../src/common/event-emitter/contextual-ee'
 import { TimeKeeper } from '../../src/common/timing/time-keeper'
 import { getRuntime } from '../../src/common/config/runtime'
 import { setupAgentSession } from '../../src/features/utils/agent-session'
-import { EventAggregator } from '../../src/common/aggregate/event-aggregator'
 import { Harvester } from '../../src/common/harvest/harvester'
+import { EventStoreManager } from '../../src/features/utils/event-store-manager'
 
 /**
  * Sets up a new agent for component testing. This should be called only
@@ -39,7 +39,7 @@ export function setupAgent ({ agentOverrides = {}, info = {}, init = {}, loaderC
   const fakeAgent = {
     agentIdentifier,
     ee: eventEmitter,
-    sharedAggregator: new EventAggregator(),
+    sharedAggregator: new EventStoreManager({ licenseKey: info.licenseKey, appId: info.applicationID }, 2),
     ...agentOverrides
   }
   setNREUMInitializedAgent(agentIdentifier, fakeAgent)

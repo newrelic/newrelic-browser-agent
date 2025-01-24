@@ -3,6 +3,27 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.278.3](https://github.com/newrelic/newrelic-browser-agent/compare/v1.278.2...v1.278.3) (2025-01-14)
+
+
+### Bug Fixes
+
+* Change obfuscator to read directly from obfuscation rules configuration ([#1327](https://github.com/newrelic/newrelic-browser-agent/issues/1327)) ([a75f935](https://github.com/newrelic/newrelic-browser-agent/commit/a75f935d9b045ac74878f7dd1fab04d046b376dc))
+
+## [1.278.2](https://github.com/newrelic/newrelic-browser-agent/compare/v1.278.1...v1.278.2) (2025-01-09)
+
+
+### Bug Fixes
+
+* Allow the page view feature to have access to an event buffer ([#1315](https://github.com/newrelic/newrelic-browser-agent/issues/1315)) ([64babe1](https://github.com/newrelic/newrelic-browser-agent/commit/64babe18a5c4190f6d7bdc775fe5f55db095c892))
+
+## [1.278.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.278.0...v1.278.1) (2025-01-08)
+
+
+### Bug Fixes
+
+* Make Metrics harvest only on EoL for new Harvester ([#1311](https://github.com/newrelic/newrelic-browser-agent/issues/1311)) ([5cecedc](https://github.com/newrelic/newrelic-browser-agent/commit/5cecedcad6af7a14ec0e6777eba059ff1a5c008d))
+
 ## [1.278.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.277.0...v1.278.0) (2025-01-07)
 
 

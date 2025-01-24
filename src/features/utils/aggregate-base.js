@@ -1,3 +1,7 @@
+/**
+ * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
 import { FeatureBase } from './feature-base'
 import { isValid } from '../../common/config/info'
 import { configure } from '../../loaders/configure/configure'
@@ -18,8 +22,7 @@ export class AggregateBase extends FeatureBase {
 
     // This switch needs to be after doOnceForAllAggregate which may new sharedAggregator and reset mainAppKey.
     switch (this.featureName) {
-      // PVE has no need for eventBuffer, and SessionTrace + Replay have their own storage mechanisms.
-      case FEATURE_NAMES.pageViewEvent:
+      // SessionTrace + Replay have their own storage mechanisms.
       case FEATURE_NAMES.sessionTrace:
       case FEATURE_NAMES.sessionReplay:
         break
@@ -28,6 +31,9 @@ export class AggregateBase extends FeatureBase {
       case FEATURE_NAMES.metrics:
         this.events = agentRef.sharedAggregator
         break
+      /** All other features get EventBuffer in the ESM by default. Note: PVE is included here, but event buffer will always be empty so future harvests will still not happen by interval or EOL.
+      This was necessary to prevent race cond. issues where the event buffer was checked before the feature could "block" itself.
+      Its easier to just keep an empty event buffer in place. */
       default:
         this.events = new EventStoreManager(agentRef.mainAppKey, 1)
         break
@@ -71,18 +77,18 @@ export class AggregateBase extends FeatureBase {
   /**
    * Return harvest payload. A "serializer" function can be defined on a derived class to format the payload.
    * @param {Boolean} shouldRetryOnFail - harvester flag to backup payload for retry later if harvest request fails; this should be moved to harvester logic
-   * @param {object|undefined} target - the target app passed onto the event store manager to determine which app's data to return; if none provided, all apps data will be returned
+   * @param {object|undefined} opts.target - the target app passed onto the event store manager to determine which app's data to return; if none provided, all apps data will be returned
    * @returns {Array} Final payload tagged with their targeting browser app. The value of `payload` can be undefined if there are no pending events for an app. This should be a minimum length of 1.
    */
-  makeHarvestPayload (shouldRetryOnFail = false, target) {
-    if (this.events.isEmpty(this.harvestOpts, target)) return
+  makeHarvestPayload (shouldRetryOnFail = false, opts = {}) {
+    if (this.events.isEmpty(this.harvestOpts, opts.target)) return
     // Other conditions and things to do when preparing harvest that is required.
-    if (this.preHarvestChecks && !this.preHarvestChecks()) return
+    if (this.preHarvestChecks && !this.preHarvestChecks(opts)) return
 
-    if (shouldRetryOnFail) this.events.save(this.harvestOpts, target)
-    const returnedDataArr = this.events.get(this.harvestOpts, target)
+    if (shouldRetryOnFail) this.events.save(this.harvestOpts, opts.target)
+    const returnedDataArr = this.events.get(this.harvestOpts, opts.target)
     if (!returnedDataArr.length) throw new Error('Unexpected problem encountered. There should be at least one app for harvest!')
-    this.events.clear(this.harvestOpts, target)
+    this.events.clear(this.harvestOpts, opts.target)
 
     return returnedDataArr.map(({ targetApp, data }) => {
       // A serializer or formatter assists in creating the payload `body` from stored events on harvest when defined by derived feature class.
@@ -140,7 +146,7 @@ export class AggregateBase extends FeatureBase {
    * This method should run after checkConfiguration, which may reset the agent's info/runtime object that is used here.
    */
   doOnceForAllAggregate (agentRef) {
-    if (!agentRef.runtime.obfuscator) agentRef.runtime.obfuscator = new Obfuscator(this.agentIdentifier)
+    if (!agentRef.runtime.obfuscator) agentRef.runtime.obfuscator = new Obfuscator(agentRef)
     this.obfuscator = agentRef.runtime.obfuscator
 
     if (!agentRef.mainAppKey) agentRef.mainAppKey = { licenseKey: agentRef.info.licenseKey, appId: agentRef.info.applicationID }

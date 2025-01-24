@@ -1,4 +1,9 @@
 /**
+ * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/**
  * @file Defines `InstrumentBase` to be used as the super of the Instrument classes implemented by each feature.
  * Inherits and executes the `checkConfiguration` method from [FeatureBase]{@link ./feature-base}, which also
  * exposes the `blocked` property.

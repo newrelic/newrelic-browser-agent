@@ -1,4 +1,7 @@
-import { getConfigurationValue } from '../config/init'
+/**
+ * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
 import { isFileProtocol } from '../url/protocol'
 import { warn } from './console'
 
@@ -21,18 +24,15 @@ import { warn } from './console'
  */
 
 export class Obfuscator {
-  /**
-   * @type {ObfuscationRuleValidation[]}
-   */
-  #ruleValidationCache
-
-  constructor (agentIdentifier) {
-    this.#ruleValidationCache = Obfuscator.getRuleValidationCache(agentIdentifier)
-    Obfuscator.logObfuscationRuleErrors(this.#ruleValidationCache)
+  constructor (agentRef) {
+    this.agentRef = agentRef
+    this.warnedRegexMissing = false
+    this.warnedInvalidRegex = false
+    this.warnedInvalidReplacement = false
   }
 
-  get ruleValidationCache () {
-    return this.#ruleValidationCache
+  get obfuscateConfigRules () {
+    return this.agentRef.init.obfuscate || []
   }
 
   /**
@@ -44,7 +44,15 @@ export class Obfuscator {
     // if input is not of type string or is an empty string, short-circuit
     if (typeof input !== 'string' || input.trim().length === 0) return input
 
-    return this.#ruleValidationCache
+    const rules = (this.obfuscateConfigRules).map(rule => this.validateObfuscationRule(rule))
+    if (isFileProtocol()) {
+      rules.push({
+        regex: /^file:\/\/(.*)/,
+        replacement: atob('ZmlsZTovL09CRlVTQ0FURUQ=')
+      })
+    }
+
+    return rules
       .filter(ruleValidation => ruleValidation.isValid)
       .reduce((input, ruleValidation) => {
         const { rule } = ruleValidation
@@ -53,34 +61,26 @@ export class Obfuscator {
   }
 
   /**
-   * Returns an array of obfuscation rules to be applied to harvested payloads
-   * @param {string} agentIdentifier The agent identifier to get rules for
-   * @returns {ObfuscationRuleValidation[]} The array of rules or validation states
-   */
-  static getRuleValidationCache (agentIdentifier) {
-    /**
-     * @type {ObfuscationRule[]}
-     */
-    let rules = getConfigurationValue(agentIdentifier, 'obfuscate') || []
-    if (isFileProtocol()) {
-      rules.push({
-        regex: /^file:\/\/(.*)/,
-        replacement: atob('ZmlsZTovL09CRlVTQ0FURUQ=')
-      })
-    }
-
-    return rules.map(rule => Obfuscator.validateObfuscationRule(rule))
-  }
-
-  /**
    * Validates an obfuscation rule and provides errors if any are found.
    * @param {ObfuscationRule} rule The rule to validate
    * @returns {ObfuscationRuleValidation} The validation state of the rule
    */
-  static validateObfuscationRule (rule) {
+  validateObfuscationRule (rule) {
     const regexMissingDetected = Boolean(rule.regex === undefined)
     const invalidRegexDetected = Boolean(rule.regex !== undefined && typeof rule.regex !== 'string' && !(rule.regex instanceof RegExp))
     const invalidReplacementDetected = Boolean(rule.replacement && typeof rule.replacement !== 'string')
+
+    if (regexMissingDetected && !this.warnedRegexMissing) {
+      warn(12, rule)
+      this.warnedRegexMissing = true
+    } else if (invalidRegexDetected && !this.warnedInvalidRegex) {
+      warn(13, rule)
+      this.warnedInvalidRegex = true
+    }
+    if (invalidReplacementDetected && !this.warnedInvalidReplacement) {
+      warn(14, rule)
+      this.warnedInvalidReplacement = true
+    }
 
     return {
       rule,
@@ -90,22 +90,6 @@ export class Obfuscator {
         invalidRegexDetected,
         invalidReplacementDetected
       }
-    }
-  }
-
-  /**
-   * Logs any obfuscation rule errors to the console. This is called when an obfuscator
-   * instance is created.
-   * @param {ObfuscationRuleValidation[]} ruleValidationCache The cache of rule validation states
-   */
-  static logObfuscationRuleErrors (ruleValidationCache) {
-    for (const ruleValidation of ruleValidationCache) {
-      const { rule, isValid, errors } = ruleValidation
-      if (isValid) continue
-
-      if (errors.regexMissingDetected) warn(12, rule)
-      else if (errors.invalidRegexDetected) warn(13, rule)
-      if (errors.invalidReplacementDetected) warn(14, rule)
     }
   }
 }

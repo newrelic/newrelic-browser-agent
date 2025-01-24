@@ -1,3 +1,7 @@
+/**
+ * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
 import { globalScope, isBrowserScope, originTime } from '../../../common/constants/runtime'
 import { addPT, addPN } from '../../../common/timing/nav-timing'
 import { stringify } from '../../../common/util/stringify'
@@ -115,7 +119,6 @@ export class Aggregate extends AggregateBase {
 
   postHarvestCleanup ({ status, responseText, xhr }) {
     const rumEndTime = now()
-    this.blocked = true // this prevents harvester from polling this feature's event buffer (DNE) on interval; in other words, harvests will skip PVE
 
     if (status >= 400 || status === 0) {
       warn(18, status)

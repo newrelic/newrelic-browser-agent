@@ -97,10 +97,70 @@ jobs:
           pr_number: ${{ github.event.number }}
           comment: ${{ steps.asset-size-report.outputs.results }}
           comment_tag: <!-- browser_agent asset size report -->
-      - name: Report local stats as NR event
-        uses: './.github/actions/nr-report-build-size'
+      - name: Get local stats
+        id: get-stats
+        shell: bash
+        run: |
+          rum=$(cat ./build/nr-rum-standard.stats.json); echo "rum=$rum" >> $GITHUB_OUTPUT;
+          full=$(cat ./build/nr-full-standard.stats.json); echo "full=$full" >> $GITHUB_OUTPUT;
+          spa=$(cat ./build/nr-spa-standard.stats.json); echo "spa=$spa" >> $GITHUB_OUTPUT;
+      - name: Report lite size to NR
+        uses: newrelic/capture-build-size@main
         with:
           nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
+          nr-account-id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
+          nr-env: 'staging'
+          analysis-file-contents: ${{ steps.get-stats.outputs.rum }}
+          file-name-filter: '.min.js'
+          trigger: 'pull-request-checks'
+      - name: Report pro size to NR
+        uses: newrelic/capture-build-size@main
+        with:
+          nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
+          nr-account-id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
+          nr-env: 'staging'
+          analysis-file-contents: ${{ steps.get-stats.outputs.full }}
+          file-name-filter: '.min.js'
+          trigger: 'pull-request-checks'
+      - name: Report spa size to NR
+        uses: newrelic/capture-build-size@main
+        with:
+          nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
+          nr-account-id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
+          nr-env: 'staging'
+          analysis-file-contents: ${{ steps.get-stats.outputs.spa }}
+          file-name-filter: '.min.js'
+          trigger: 'pull-request-checks'
+      - name: Report dev lite size to NR
+        uses: newrelic/capture-build-size@main
+        with:
+          nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
+          nr-account-id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
+          nr-env: 'staging'
+          analysis-file-url: 'https://js-agent.newrelic.com/dev/nr-rum-standard.stats.json'
+          file-name-filter: '.min.js'
+          trigger: 'pull-request-checks'
+          version: 'main'
+      - name: Report dev pro size to NR
+        uses: newrelic/capture-build-size@main
+        with:
+          nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
+          nr-account-id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
+          nr-env: 'staging'
+          analysis-file-url: 'https://js-agent.newrelic.com/dev/nr-full-standard.stats.json'
+          file-name-filter: '.min.js'
+          trigger: 'pull-request-checks'
+          version: 'main'
+      - name: Report dev spa size to NR
+        uses: newrelic/capture-build-size@main
+        with:
+          nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
+          nr-account-id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
+          nr-env: 'staging'
+          analysis-file-url: 'https://js-agent.newrelic.com/dev/nr-spa-standard.stats.json'
+          file-name-filter: '.min.js'
+          trigger: 'pull-request-checks'
+          version: 'main'
 
   # Jobs for workflow_dispatch events
 

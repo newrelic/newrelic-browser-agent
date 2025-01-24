@@ -1,3 +1,7 @@
+/**
+ * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
 export class Timer {
   constructor (opts, ms) {
     if (!opts.onEnd) throw new Error('onEnd handler is required')

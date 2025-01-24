@@ -1,3 +1,7 @@
+/**
+ * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
 import { globalScope } from '../../../../common/constants/runtime'
 import { MODE } from '../../../../common/session/constants'
 import { now } from '../../../../common/timing/now'
@@ -132,11 +136,6 @@ export class TraceStorage {
 
   processPVT (name, value, attrs) {
     this.storeTiming({ [name]: value })
-    if (hasFID(name, attrs)) this.storeEvent({ type: 'fid', target: 'document' }, 'document', value, value + attrs.fid)
-
-    function hasFID (name, attrs) {
-      return name === 'fi' && !!attrs && typeof attrs.fid === 'number'
-    }
   }
 
   storeTiming (timingEntry, isAbsoluteTimestamp = false) {

@@ -290,3 +290,60 @@ jobs:
           repo_owner: newrelic
           repo_name: newrelic-browser-agent-release
           event_type: new_release
+
+  track-build-size:
+    needs: [notify-release-repo]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
+      - name: Install project dependencies
+        run: npm ci
+      - name: Build prod
+        run: npm run cdn:build:prod
+      - name: Get version number
+        id: agent-loader-version
+        run: echo "results=$(cat package.json | jq -r '.version')" >> $GITHUB_OUTPUT
+      - name: Get local stats
+        id: get-stats
+        shell: bash
+        run: |
+          rum=$(cat ./build/nr-rum-standard-${{ steps.agent-loader-version.outputs.results }}.stats.json); echo "rum=$rum" >> $GITHUB_OUTPUT;
+          full=$(cat ./build/nr-full-standard-${{ steps.agent-loader-version.outputs.results }}.stats.json); echo "full=$full" >> $GITHUB_OUTPUT;
+          spa=$(cat ./build/nr-spa-standard-${{ steps.agent-loader-version.outputs.results }}.stats.json); echo "spa=$spa" >> $GITHUB_OUTPUT;
+      - name: Report lite size to NR
+        uses: newrelic/capture-build-size@main
+        with:
+          nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
+          nr-account-id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
+          nr-env: 'staging'
+          analysis-file-contents: ${{ steps.get-stats.outputs.rum }}
+          file-name-filter: '.min.js'
+          trigger: 'publish-release'
+          version: v${{ steps.agent-loader-version.outputs.results }}
+      - name: Report pro size to NR
+        uses: newrelic/capture-build-size@main
+        with:
+          nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
+          nr-account-id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
+          nr-env: 'staging'
+          analysis-file-contents: ${{ steps.get-stats.outputs.full }}
+          file-name-filter: '.min.js'
+          trigger: 'publish-release'
+          version: v${{ steps.agent-loader-version.outputs.results }}
+      - name: Report spa size to NR
+        uses: newrelic/capture-build-size@main
+        with:
+          nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
+          nr-account-id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
+          nr-env: 'staging'
+          analysis-file-contents: ${{ steps.get-stats.outputs.spa }}
+          file-name-filter: '.min.js'
+          trigger: 'publish-release'
+          version: v${{ steps.agent-loader-version.outputs.results }}

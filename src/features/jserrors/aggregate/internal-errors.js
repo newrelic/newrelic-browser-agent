@@ -1,3 +1,7 @@
+/**
+ * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
 const REASON_RRWEB = 'Rrweb'
 const REASON_SECURITY_POLICY = 'Security-Policy'
 /**

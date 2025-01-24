@@ -1,5 +1,5 @@
-/*
- * Copyright 2020 New Relic Corporation. All rights reserved.
+/**
+ * Copyright 2020-2025 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -11,8 +11,8 @@ import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { cumulativeLayoutShift } from '../../../common/vitals/cumulative-layout-shift'
 import { firstContentfulPaint } from '../../../common/vitals/first-contentful-paint'
-import { firstInputDelay } from '../../../common/vitals/first-input-delay'
 import { firstPaint } from '../../../common/vitals/first-paint'
+import { firstInteraction } from '../../../common/vitals/first-interaction'
 import { interactionToNextPaint } from '../../../common/vitals/interaction-to-next-paint'
 import { largestContentfulPaint } from '../../../common/vitals/largest-contentful-paint'
 import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
@@ -37,8 +37,8 @@ export class Aggregate extends AggregateBase {
     this.waitForFlags(([])).then(() => {
       firstPaint.subscribe(this.#handleVitalMetric)
       firstContentfulPaint.subscribe(this.#handleVitalMetric)
-      firstInputDelay.subscribe(this.#handleVitalMetric)
       largestContentfulPaint.subscribe(this.#handleVitalMetric)
+      firstInteraction.subscribe(this.#handleVitalMetric)
       interactionToNextPaint.subscribe(this.#handleVitalMetric)
       timeToFirstByte.subscribe(({ attrs }) => {
         this.addTiming('load', Math.round(attrs.navigationEntry.loadEventEnd))

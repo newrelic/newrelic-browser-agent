@@ -2,7 +2,7 @@ import { testAjaxEventsRequest, testAjaxTimeSlicesRequest } from '../../../tools
 import { checkAjaxEvents, checkAjaxMetrics } from '../../util/basic-checks'
 
 describe('xhr retry harvesting', () => {
-  ;[408, 429, 500, 503].forEach(statusCode =>
+  ;[408, 429, 500, 502, 504, 520].forEach(statusCode =>
     it(`should send the ajax event and metric on the next harvest when the first harvest statusCode is ${statusCode}`, async () => {
       const [ajaxEventsCapture, ajaxMetricsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
         { test: testAjaxEventsRequest },
@@ -72,7 +72,7 @@ describe('xhr retry harvesting', () => {
     })
   )
 
-  ;[400, 404, 502, 504, 512].forEach(statusCode =>
+  ;[400, 404].forEach(statusCode =>
     it(`should not send the ajax event and metric on the next harvest when the first harvest statusCode is ${statusCode}`, async () => {
       const [ajaxEventsCapture, ajaxMetricsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
         { test: testAjaxEventsRequest },

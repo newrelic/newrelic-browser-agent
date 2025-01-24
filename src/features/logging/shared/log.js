@@ -1,3 +1,7 @@
+/**
+ * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
 import { initialLocation } from '../../../common/constants/runtime'
 import { cleanURL } from '../../../common/url/clean-url'
 import { LOG_LEVELS } from '../constants'

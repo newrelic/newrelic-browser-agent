@@ -1,20 +1,20 @@
 {
-  "lastUpdated": "Thu Dec 19 2024 20:09:27 GMT+0000 (Coordinated Universal Time)",
+  "lastUpdated": "Tue Jan 14 2025 23:34:12 GMT+0000 (Coordinated Universal Time)",
   "projectName": "New Relic Browser Agent",
   "projectUrl": "https://github.com/newrelic/newrelic-browser-agent",
   "includeOptDeps": true,
   "optionalDependencies": {},
   "includeDev": true,
   "dependencies": {
-    "fflate@0.7.4": {
+    "fflate@0.8.2": {
       "name": "fflate",
-      "version": "0.7.4",
-      "range": "^0.7.4",
+      "version": "0.8.2",
+      "range": "0.8.2",
       "licenses": "MIT",
       "repoUrl": "https://github.com/101arrowz/fflate",
-      "versionedRepoUrl": "https://github.com/101arrowz/fflate/tree/v0.7.4",
+      "versionedRepoUrl": "https://github.com/101arrowz/fflate/tree/v0.8.2",
       "licenseFile": "node_modules/fflate/LICENSE",
-      "licenseUrl": "https://github.com/101arrowz/fflate/blob/v0.7.4/LICENSE",
+      "licenseUrl": "https://github.com/101arrowz/fflate/blob/v0.8.2/LICENSE",
       "licenseTextSource": "file",
       "publisher": "Arjun Barrett",
       "email": "arjunbarrett@gmail.com"
@@ -262,15 +262,15 @@
       "publisher": "Christian Bromann",
       "email": "mail@bromann.dev"
     },
-    "@wdio/logger@8.38.0": {
+    "@wdio/logger@9.4.4": {
       "name": "@wdio/logger",
-      "version": "8.38.0",
-      "range": "^8.24.12",
+      "version": "9.4.4",
+      "range": "^9.4.4",
       "licenses": "MIT",
       "repoUrl": "https://github.com/webdriverio/webdriverio",
-      "versionedRepoUrl": "https://github.com/webdriverio/webdriverio/tree/v8.38.0",
-      "licenseFile": "node_modules/@wdio/logger/LICENSE-MIT",
-      "licenseUrl": "https://github.com/webdriverio/webdriverio/blob/v8.38.0/LICENSE-MIT",
+      "versionedRepoUrl": "https://github.com/webdriverio/webdriverio/tree/v9.4.4",
+      "licenseFile": "node_modules/@wdio/logger/LICENSE",
+      "licenseUrl": "https://github.com/webdriverio/webdriverio/blob/v9.4.4/LICENSE",
       "licenseTextSource": "file",
       "publisher": "Christian Bromann",
       "email": "mail@bromann.dev"
@@ -288,15 +288,15 @@
       "publisher": "Christian Bromann",
       "email": "mail@bromann.dev"
     },
-    "@wdio/spec-reporter@8.40.3": {
+    "@wdio/spec-reporter@9.5.0": {
       "name": "@wdio/spec-reporter",
-      "version": "8.40.3",
-      "range": "^8.27.0",
+      "version": "9.5.0",
+      "range": "^9.5.0",
       "licenses": "MIT",
       "repoUrl": "https://github.com/webdriverio/webdriverio",
-      "versionedRepoUrl": "https://github.com/webdriverio/webdriverio/tree/v8.40.3",
-      "licenseFile": "node_modules/@wdio/spec-reporter/LICENSE-MIT",
-      "licenseUrl": "https://github.com/webdriverio/webdriverio/blob/v8.40.3/LICENSE-MIT",
+      "versionedRepoUrl": "https://github.com/webdriverio/webdriverio/tree/v9.5.0",
+      "licenseFile": "node_modules/@wdio/spec-reporter/LICENSE",
+      "licenseUrl": "https://github.com/webdriverio/webdriverio/blob/v9.5.0/LICENSE",
       "licenseTextSource": "file",
       "publisher": "Christian Bromann",
       "email": "mail@bromann.dev"
@@ -440,15 +440,15 @@
       "publisher": "Nicholas C. Zakas",
       "email": "nicholas+npm@nczconsulting.com"
     },
-    "fastify-plugin@4.5.1": {
+    "fastify-plugin@5.0.1": {
       "name": "fastify-plugin",
-      "version": "4.5.1",
-      "range": "^4.5.1",
+      "version": "5.0.1",
+      "range": "^5.0.1",
       "licenses": "MIT",
       "repoUrl": "https://github.com/fastify/fastify-plugin",
-      "versionedRepoUrl": "https://github.com/fastify/fastify-plugin/tree/v4.5.1",
+      "versionedRepoUrl": "https://github.com/fastify/fastify-plugin/tree/v5.0.1",
       "licenseFile": "node_modules/fastify-plugin/LICENSE",
-      "licenseUrl": "https://github.com/fastify/fastify-plugin/blob/v4.5.1/LICENSE",
+      "licenseUrl": "https://github.com/fastify/fastify-plugin/blob/v5.0.1/LICENSE",
       "licenseTextSource": "file",
       "publisher": "Tomas Della Vedova - @delvedor",
       "url": "http://delved.org"
@@ -622,15 +622,15 @@
       "licenseUrl": "https://github.com/jestjs/jest/blob/v29.7.0/LICENSE",
       "licenseTextSource": "file"
     },
-    "jsonpath-plus@9.0.0": {
+    "jsonpath-plus@10.2.0": {
       "name": "jsonpath-plus",
-      "version": "9.0.0",
-      "range": "^9.0.0",
+      "version": "10.2.0",
+      "range": "^10.0.7",
       "licenses": "MIT",
       "repoUrl": "https://github.com/s3u/JSONPath",
-      "versionedRepoUrl": "https://github.com/s3u/JSONPath/tree/v9.0.0",
+      "versionedRepoUrl": "https://github.com/s3u/JSONPath/tree/v10.2.0",
       "licenseFile": "node_modules/jsonpath-plus/LICENSE",
-      "licenseUrl": "https://github.com/s3u/JSONPath/blob/v9.0.0/LICENSE",
+      "licenseUrl": "https://github.com/s3u/JSONPath/blob/v10.2.0/LICENSE",
       "licenseTextSource": "file",
       "publisher": "Stefan Goessner"
     },
@@ -720,26 +720,26 @@
       "licenseTextSource": "file",
       "publisher": "Microsoft Corp."
     },
-    "uuid@10.0.0": {
+    "uuid@11.0.3": {
       "name": "uuid",
-      "version": "10.0.0",
-      "range": "^10.0.0",
+      "version": "11.0.3",
+      "range": "^11.0.3",
       "licenses": "MIT",
       "repoUrl": "https://github.com/uuidjs/uuid",
-      "versionedRepoUrl": "https://github.com/uuidjs/uuid/tree/v10.0.0",
+      "versionedRepoUrl": "https://github.com/uuidjs/uuid/tree/v11.0.3",
       "licenseFile": "node_modules/uuid/LICENSE.md",
-      "licenseUrl": "https://github.com/uuidjs/uuid/blob/v10.0.0/LICENSE.md",
+      "licenseUrl": "https://github.com/uuidjs/uuid/blob/v11.0.3/LICENSE.md",
       "licenseTextSource": "file"
     },
-    "wait-on@8.0.0": {
+    "wait-on@8.0.1": {
       "name": "wait-on",
-      "version": "8.0.0",
+      "version": "8.0.1",
       "range": "^8.0.0",
       "licenses": "MIT",
       "repoUrl": "https://github.com/jeffbski/wait-on",
-      "versionedRepoUrl": "https://github.com/jeffbski/wait-on/tree/v8.0.0",
+      "versionedRepoUrl": "https://github.com/jeffbski/wait-on/tree/v8.0.1",
       "licenseFile": "node_modules/wait-on/LICENSE",
-      "licenseUrl": "https://github.com/jeffbski/wait-on/blob/v8.0.0/LICENSE",
+      "licenseUrl": "https://github.com/jeffbski/wait-on/blob/v8.0.1/LICENSE",
       "licenseTextSource": "file",
       "publisher": "Jeff Barczewski",
       "email": "info@codewinds.com"

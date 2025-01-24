@@ -89,6 +89,7 @@ test('init props exist and return expected defaults', () => {
   expect(config.performance).toEqual({
     capture_marks: false,
     capture_measures: false,
+    capture_detail: true,
     resources: {
       enabled: false,
       asset_types: [],

@@ -1,3 +1,7 @@
+/**
+ * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
 import { Timer } from './timer'
 import { subscribeToVisibilityChange } from '../window/page-visibility'
 import { debounce } from '../util/invoke'

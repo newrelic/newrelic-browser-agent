@@ -5,10 +5,10 @@ import { ee } from '../../src/common/event-emitter/contextual-ee'
 import { TimeKeeper } from '../../src/common/timing/time-keeper'
 import { getRuntime } from '../../src/common/config/runtime'
 import { setupAgentSession } from '../../src/features/utils/agent-session'
-import { EventAggregator } from '../../src/common/aggregate/event-aggregator'
 import { Harvester } from '../../src/common/harvest/harvester'
 import { EntityManager } from '../../src/features/utils/entity-manager'
 import { EventStoreManager } from '../../src/features/utils/event-store-manager'
+import { EventAggregator } from '../../src/common/aggregate/event-aggregator'
 
 /**
  * Sets up a new agent for component testing. This should be called only

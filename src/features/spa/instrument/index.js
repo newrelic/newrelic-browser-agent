@@ -1,7 +1,7 @@
-/*
- * Copyright 2020 New Relic Corporation. All rights reserved.
+/**
+ * Copyright 2020-2025 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
-*/
+ */
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
 import { InstrumentBase } from '../../utils/instrument-base'
 import * as CONSTANTS from '../constants'

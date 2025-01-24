@@ -274,7 +274,7 @@ describe('sub-features', () => {
   })
 
   test('should record measures when enabled', async () => {
-    mainAgent.init.performance = { capture_measures: true, resources: { enabled: false, asset_types: [], first_party_domains: [], ignore_newrelic: true } }
+    mainAgent.init.performance = { capture_measures: true, capture_detail: true, resources: { enabled: false, asset_types: [], first_party_domains: [], ignore_newrelic: true } }
     getInfo(mainAgent.agentIdentifier).jsAttributes = { globalFoo: 'globalBar' }
     const mockPerformanceObserver = jest.fn(cb => ({
       observe: () => {
@@ -283,7 +283,7 @@ describe('sub-features', () => {
           cb({getEntries: () => [{
             name: 'test',
             duration: 10,
-            detail: JSON.stringify({ foo: 'bar' }),
+            detail: { foo: 'bar' },
             startTime: performance.now()
           }]
           })
@@ -309,7 +309,7 @@ describe('sub-features', () => {
       entryName: 'test',
       entryDuration: 10,
       entryType: 'measure',
-      entryDetail: JSON.stringify({ foo: 'bar' })
+      'entryDetail.foo': 'bar'
     })
   })
 })

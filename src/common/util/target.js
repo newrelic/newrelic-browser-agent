@@ -1,6 +1,9 @@
 /**
- * Checks if API targets are valid.  Undefined is valid because the fallback logic to the default will be applied.
- * Target can be undefined to support legacy/default behaviors where the target would never be supplied.  This can be overridden by setting the allowUndefined argument to false.
+ * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/**
  * @param {Object=} target the target to be validated
  * @param {boolean=} allowUndefined defaults to true if not supplied
  * @returns {boolean}

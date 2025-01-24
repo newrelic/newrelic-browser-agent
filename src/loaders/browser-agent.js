@@ -1,3 +1,7 @@
+/**
+ * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
 import { Agent } from './agent'
 
 import { Instrument as InstrumentPageViewEvent } from '../features/page_view_event/instrument'

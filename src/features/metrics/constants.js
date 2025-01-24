@@ -1,3 +1,8 @@
+/**
+ * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 // import { ADD_EVENT_LISTENER_TAG } from '../../common/wrap/wrap-websocket'
 import { FEATURE_NAMES } from '../../loaders/features/features'
 

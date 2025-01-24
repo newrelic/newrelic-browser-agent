@@ -1,3 +1,7 @@
+/**
+ * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
 import { setAPI, setTopLevelCallers } from '../api/api'
 import { addToNREUM, gosCDN } from '../../common/window/nreum'
 import { setInfo } from '../../common/config/info'

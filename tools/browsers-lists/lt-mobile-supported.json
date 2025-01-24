@@ -1,8 +1,8 @@
 {
   "ios": [
     {
-      "device_name": "iPhone 15",
-      "version": "18.0",
+      "device_name": "iPhone 16",
+      "version": "18.1",
       "platformName": "ios"
     },
     {

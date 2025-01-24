@@ -1,3 +1,7 @@
+/**
+ * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
 import { FEATURE_FLAGS } from '../../features/generic_events/constants'
 import { LOG_LEVELS } from '../../features/logging/constants'
 import { isValidSelector } from '../dom/query-selector'
@@ -63,6 +67,7 @@ const model = () => {
       set capture_marks (val) { hiddenState.experimental.marks = val },
       get capture_measures () { return hiddenState.feature_flags.includes(FEATURE_FLAGS.MEASURES) || hiddenState.experimental.measures },
       set capture_measures (val) { hiddenState.experimental.measures = val },
+      capture_detail: true,
       resources: {
         // whether to run this subfeature or not in the generic_events feature. false by default through experimental phase, but flipped to true once GA'd
         get enabled () { return hiddenState.feature_flags.includes(FEATURE_FLAGS.RESOURCES) || hiddenState.experimental.resources },

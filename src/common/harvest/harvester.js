@@ -1,6 +1,12 @@
-import { FEATURE_TO_ENDPOINT, JSERRORS, RUM, EVENTS } from '../../loaders/features/features'
+/**
+ * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
+import { FEATURE_TO_ENDPOINT, JSERRORS, RUM, EVENTS, FEATURE_NAMES } from '../../loaders/features/features'
 import { VERSION } from '../constants/env'
 import { globalScope, isWorkerScope } from '../constants/runtime'
+import { handle } from '../event-emitter/handle'
 import { eventListenerOpts } from '../event-listener/event-listener-opts'
 import { SESSION_EVENTS } from '../session/constants'
 import { now } from '../timing/now'
@@ -10,6 +16,9 @@ import { obj, param } from '../url/encode'
 import { warn } from '../util/console'
 import { stringify } from '../util/stringify'
 import { getSubmitMethod, xhr as xhrMethod, xhrFetch as fetchMethod } from '../util/submit-data'
+
+const RETRY_FAILED = 'Harvester/Retry/Failed/'
+const RETRY_SUCCEEDED = 'Harvester/Retry/Succeeded/'
 
 export class Harvester {
   #started = false
@@ -82,7 +91,14 @@ export class Harvester {
      * @param {Object} result - information regarding the result of the harvest attempt
      */
     function cbFinished (result) {
-      if (localOpts.forceNoRetry) result.retry = false // discard unsent data rather than re-queuing for next harvest attempt
+      if (aggregateInst.harvestOpts.prevAttemptCode) { // this means we just retried a harvest that last failed
+        handle(SUPPORTABILITY_METRIC_CHANNEL, [(result.retry ? RETRY_FAILED : RETRY_SUCCEEDED) + aggregateInst.harvestOpts.prevAttemptCode], undefined, FEATURE_NAMES.metrics, aggregateInst.ee)
+        delete aggregateInst.harvestOpts.prevAttemptCode // always reset last observation so we don't falsely report again next harvest
+        // In case this re-attempt failed again, that'll be handled (re-marked again) next.
+      }
+      if (result.retry) aggregateInst.harvestOpts.prevAttemptCode = result.status // earmark this Agg harvest as failed-but-retrying for next harvest trigger so we can capture metrics about retries
+
+      if (localOpts.forceNoRetry) result.retry = false // discard unsent data rather than re-queuing for next harvest attempt; used by session reset to flush data belonging to prev session
       aggregateInst.postHarvestCleanup(result)
     }
   }
@@ -160,14 +176,12 @@ function send (agentRef, { endpoint, targetApp, payload, localOpts = {}, submitM
 
   function shouldRetry (status) {
     switch (status) {
-      case 429:
       case 408:
+      case 429:
       case 500:
-      case 503:
         return true
-      default:
-        return false
     }
+    return (status >= 502 && status <= 504) || (status >= 512 && status <= 530)
   }
 }
 

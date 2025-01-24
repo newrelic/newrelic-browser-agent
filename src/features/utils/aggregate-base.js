@@ -1,3 +1,7 @@
+/**
+ * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
 import { FeatureBase } from './feature-base'
 import { isValid } from '../../common/config/info'
 import { configure } from '../../loaders/configure/configure'
@@ -37,6 +41,9 @@ export class AggregateBase extends FeatureBase {
       case FEATURE_NAMES.metrics:
         this.events = agentRef.sharedAggregator
         break
+      /** All other features get EventBuffer in the ESM by default. Note: PVE is included here, but event buffer will always be empty so future harvests will still not happen by interval or EOL.
+      This was necessary to prevent race cond. issues where the event buffer was checked before the feature could "block" itself.
+      Its easier to just keep an empty event buffer in place. */
       default:
         this.events = new EventStoreManager(this.agentRef, EventBuffer)
         break
@@ -149,7 +156,7 @@ export class AggregateBase extends FeatureBase {
    * This method should run after checkConfiguration, which may reset the agent's info/runtime object that is used here.
    */
   doOnceForAllAggregate (agentRef) {
-    if (!agentRef.runtime.obfuscator) agentRef.runtime.obfuscator = new Obfuscator(this.agentIdentifier)
+    if (!agentRef.runtime.obfuscator) agentRef.runtime.obfuscator = new Obfuscator(agentRef)
     this.obfuscator = agentRef.runtime.obfuscator
 
     if (!agentRef.runtime.entityManager) agentRef.runtime.entityManager = new EntityManager(this.agentRef)

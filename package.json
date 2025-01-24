@@ -1,6 +1,6 @@
 {
   "name": "@newrelic/browser-agent",
-  "version": "1.277.0",
+  "version": "1.278.3",
   "private": false,
   "author": "New Relic Browser Agent Team <browser-agent@newrelic.com>",
   "description": "New Relic Browser Agent",
@@ -206,7 +206,7 @@
     "url": "https://github.com/newrelic/newrelic-browser-agent.git"
   },
   "dependencies": {
-    "fflate": "0.7.4",
+    "fflate": "0.8.2",
     "rrweb": "^2.0.0-alpha.17",
     "web-vitals": "4.2.3"
   },
@@ -238,6 +238,7 @@
     "dotenv-webpack": "^8.0.1",
     "eslint": "^8.56.0",
     "eslint-config-standard": "^17.1.0",
+    "eslint-plugin-headers": "^1.2.1",
     "eslint-plugin-import": "^2.29.1",
     "eslint-plugin-n": "^16.6.2",
     "eslint-plugin-promise": "^6.1.1",
@@ -266,7 +267,7 @@
     "typescript": "^5.3.3",
     "uuid": "^11.0.3",
     "wait-on": "^8.0.0",
-    "wdio-lambdatest-service": "^3.0.1",
+    "wdio-lambdatest-service": "^4.0.0",
     "webpack": "^5.89.0",
     "webpack-bundle-analyzer": "^4.10.1",
     "webpack-cli": "^5.1.4",

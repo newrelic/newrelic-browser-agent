@@ -2,27 +2,18 @@ import { VITAL_NAMES } from '../../../src/common/vitals/constants'
 
 // Note: these callbacks fire right away unlike the real web-vitals API which are async-on-trigger
 jest.mock('web-vitals/attribution', () => ({
-  // eslint-disable-next-line
   onCLS: jest.fn((cb) => cb({
     value: 0.1119,
     attribution: {}
   })),
-  // eslint-disable-next-line
   onFCP: jest.fn((cb) => cb({
     value: 1,
     attribution: {}
   })),
-  // eslint-disable-next-line
-  onFID: jest.fn(cb => cb({
-    value: 1234,
-    attribution: { eventTime: 5, eventType: 'pointerdown' }
-  })),
-  // eslint-disable-next-line
   onINP: jest.fn((cb) => cb({
     value: 8,
     attribution: {}
   })),
-  // eslint-disable-next-line
   onLCP: jest.fn((cb) => cb({
     value: 1,
     attribution: {}
@@ -90,13 +81,6 @@ describe('pvt aggregate tests', () => {
       })
       return match
     }
-  })
-
-  test('sends expected FI attributes when available', () => {
-    expect(pvtAgg.events.get()[0].data.length).toBeTruthy()
-    const fiPayload = pvtAgg.events.get()[0].data.find(x => x.name === 'fi')
-    expect(fiPayload.value).toEqual(5)
-    expect(fiPayload.attrs).toEqual(expect.objectContaining({ type: 'pointerdown', fid: 1234, cls: 0.1119, ...expectedNetworkInfo }))
   })
 
   test('sends CLS node with right val on vis change', () => {

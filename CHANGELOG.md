@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.279.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.278.3...v1.279.0) (2025-01-24)
+
+
+### Features
+
+* Add HTTP codes for harvest retry attempts ([#1331](https://github.com/newrelic/newrelic-browser-agent/issues/1331)) ([7c309f7](https://github.com/newrelic/newrelic-browser-agent/commit/7c309f780ce32e1787d66fb22a6a9313f2466b31))
+* Capture details in marks and measures ([#1332](https://github.com/newrelic/newrelic-browser-agent/issues/1332)) ([32a6b56](https://github.com/newrelic/newrelic-browser-agent/commit/32a6b56d5db0ffc6c2157718ee72ca62695ee258))
+* debounce window user actions ([#1326](https://github.com/newrelic/newrelic-browser-agent/issues/1326)) ([dec8f2d](https://github.com/newrelic/newrelic-browser-agent/commit/dec8f2d07e9e521e08647bd281457292312b56c0))
+* Remove FID ([#1319](https://github.com/newrelic/newrelic-browser-agent/issues/1319)) ([0f32b99](https://github.com/newrelic/newrelic-browser-agent/commit/0f32b993a77e747f9724b6ba363e94730a6c8b3f))
+
 ## [1.278.3](https://github.com/newrelic/newrelic-browser-agent/compare/v1.278.2...v1.278.3) (2025-01-14)
 
 

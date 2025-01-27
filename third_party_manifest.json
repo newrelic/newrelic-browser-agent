@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "Tue Jan 14 2025 23:34:12 GMT+0000 (Coordinated Universal Time)",
+  "lastUpdated": "Mon Jan 27 2025 17:06:38 GMT+0000 (Coordinated Universal Time)",
   "projectName": "New Relic Browser Agent",
   "projectUrl": "https://github.com/newrelic/newrelic-browser-agent",
   "includeOptDeps": true,
@@ -47,15 +47,15 @@
     }
   },
   "devDependencies": {
-    "@babel/cli@7.25.6": {
+    "@babel/cli@7.26.4": {
       "name": "@babel/cli",
-      "version": "7.25.6",
+      "version": "7.26.4",
       "range": "^7.23.4",
       "licenses": "MIT",
       "repoUrl": "https://github.com/babel/babel",
-      "versionedRepoUrl": "https://github.com/babel/babel/tree/v7.25.6",
+      "versionedRepoUrl": "https://github.com/babel/babel/tree/v7.26.4",
       "licenseFile": "node_modules/@babel/cli/LICENSE",
-      "licenseUrl": "https://github.com/babel/babel/blob/v7.25.6/LICENSE",
+      "licenseUrl": "https://github.com/babel/babel/blob/v7.26.4/LICENSE",
       "licenseTextSource": "file",
       "publisher": "The Babel Team",
       "url": "https://babel.dev/team"
@@ -377,6 +377,18 @@
       "publisher": "Feross Aboukhadijeh",
       "email": "feross@feross.org",
       "url": "https://feross.org"
+    },
+    "eslint-plugin-headers@1.2.1": {
+      "name": "eslint-plugin-headers",
+      "version": "1.2.1",
+      "range": "^1.2.1",
+      "licenses": "ISC",
+      "repoUrl": "https://github.com/robmisasi/eslint-plugin-headers",
+      "versionedRepoUrl": "https://github.com/robmisasi/eslint-plugin-headers/tree/v1.2.1",
+      "licenseFile": "node_modules/eslint-plugin-headers/LICENSE",
+      "licenseUrl": "https://github.com/robmisasi/eslint-plugin-headers/blob/v1.2.1/LICENSE",
+      "licenseTextSource": "file",
+      "publisher": "Rob Misasi"
     },
     "eslint-plugin-import@2.29.1": {
       "name": "eslint-plugin-import",
@@ -731,29 +743,29 @@
       "licenseUrl": "https://github.com/uuidjs/uuid/blob/v11.0.3/LICENSE.md",
       "licenseTextSource": "file"
     },
-    "wait-on@8.0.1": {
+    "wait-on@8.0.2": {
       "name": "wait-on",
-      "version": "8.0.1",
+      "version": "8.0.2",
       "range": "^8.0.0",
       "licenses": "MIT",
       "repoUrl": "https://github.com/jeffbski/wait-on",
-      "versionedRepoUrl": "https://github.com/jeffbski/wait-on/tree/v8.0.1",
+      "versionedRepoUrl": "https://github.com/jeffbski/wait-on/tree/v8.0.2",
       "licenseFile": "node_modules/wait-on/LICENSE",
-      "licenseUrl": "https://github.com/jeffbski/wait-on/blob/v8.0.1/LICENSE",
+      "licenseUrl": "https://github.com/jeffbski/wait-on/blob/v8.0.2/LICENSE",
       "licenseTextSource": "file",
       "publisher": "Jeff Barczewski",
       "email": "info@codewinds.com"
     },
-    "wdio-lambdatest-service@3.0.1": {
+    "wdio-lambdatest-service@4.0.0": {
       "name": "wdio-lambdatest-service",
-      "version": "3.0.1",
-      "range": "^3.0.1",
+      "version": "4.0.0",
+      "range": "^4.0.0",
       "licenses": "MIT",
       "repoUrl": "https://github.com/LambdaTest/wdio-lambdatest-service",
-      "versionedRepoUrl": "https://github.com/LambdaTest/wdio-lambdatest-service/tree/v3.0.1",
-      "licenseFile": "node_modules/wdio-lambdatest-service/README.md",
-      "licenseUrl": "https://github.com/LambdaTest/wdio-lambdatest-service/blob/v3.0.1/README.md",
-      "licenseTextSource": "spdx",
+      "versionedRepoUrl": "https://github.com/LambdaTest/wdio-lambdatest-service/tree/v4.0.0",
+      "licenseFile": "node_modules/wdio-lambdatest-service/LICENSE",
+      "licenseUrl": "https://github.com/LambdaTest/wdio-lambdatest-service/blob/v4.0.0/LICENSE",
+      "licenseTextSource": "file",
       "publisher": "LambdaTest",
       "email": "keys@lambdatest.com"
     },

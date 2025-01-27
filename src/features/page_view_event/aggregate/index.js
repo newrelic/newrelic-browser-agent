@@ -167,9 +167,10 @@ export class Aggregate extends AggregateBase {
    */
   processEntityGuidFromRumResponse (rumResponse, targetApp) {
     const respEntityGuid = rumResponse.app.agents[0].entityGuid
-    this.ee.emit('entity-guid', [respEntityGuid])
     this.agentRef.runtime.entityManager.set(respEntityGuid, { entityGuid: respEntityGuid, ...targetApp })
     if (!Object.keys(this.agentRef.runtime.appMetadata).length) this.agentRef.runtime.appMetadata = rumResponse.app
     if (!this.agentRef.sharedAggregator) this.agentRef.sharedAggregator = new EventStoreManager(this.agentRef.runtime.entityManager, EventAggregator, respEntityGuid)
+
+    this.ee.emit('entity-guid', [respEntityGuid])
   }
 }

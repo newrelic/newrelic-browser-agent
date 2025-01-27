@@ -126,10 +126,9 @@ export class Recorder {
     const missingInlineSMTag = 'SessionReplay/Payload/Missing-Inline-Css/'
     /** only run the full fixing behavior (more costly) if fix_stylesheets is configured as on (default behavior) */
     if (!this.shouldFix) {
-      if (incompletes > 0) {
-        this.currentBufferTarget.inlinedAllStylesheets = false
-        handle(SUPPORTABILITY_METRIC_CHANNEL, [missingInlineSMTag + 'Skipped', incompletes], undefined, FEATURE_NAMES.metrics, this.parent.ee)
-      }
+      this.currentBufferTarget.inlinedAllStylesheets = false
+      if (incompletes) handle(SUPPORTABILITY_METRIC_CHANNEL, [missingInlineSMTag + 'Skipped', incompletes], undefined, FEATURE_NAMES.metrics, this.parent.ee)
+
       return this.store(event, isCheckout)
     }
     /** Only stop ignoring data if already ignoring and a new valid snapshap is taking place (0 incompletes and we get a meta node for the snap) */

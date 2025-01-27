@@ -21,6 +21,10 @@ export class Aggregate extends AggregateBase {
     this.harvestOpts.aggregatorTypes = ['cm', 'sm'] // the types in EventAggregator this feature cares about
     // This feature only harvests once per potential EoL of the page, which is handled by the central harvester.
 
+    // this must be read/stored synchronously, as the currentScript is removed from the DOM after this script is executed and this lookup will be void
+    // its used to report a SM later in the lifecycle
+    this.agentNonce = isBrowserScope && document.currentScript?.nonce
+
     this.waitForFlags(['err']).then(([errFlag]) => {
       if (errFlag) {
         this.singleChecks() // checks that are run only one time, at script load
@@ -64,8 +68,7 @@ export class Aggregate extends AggregateBase {
     if (isBrowserScope) {
       this.storeSupportabilityMetrics('Generic/Runtime/Browser/Detected')
 
-      const nonce = document?.currentScript?.nonce
-      if (nonce && nonce !== '') {
+      if (this.agentNonce && this.agentNonce !== '') {
         this.storeSupportabilityMetrics('Generic/Runtime/Nonce/Detected')
       }
 

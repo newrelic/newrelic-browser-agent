@@ -26,10 +26,9 @@ import { globalScope } from '../common/constants/runtime'
 export class Agent extends AgentBase {
   /**
    * @param {Object} options Options to initialize agent with
-   * @param {string} [agentIdentifier] Optional identifier of agent
    */
-  constructor (options, agentIdentifier) {
-    super(agentIdentifier)
+  constructor (options) {
+    super()
 
     if (!globalScope) {
       // We could not determine the runtime environment. Short-circuite the agent here

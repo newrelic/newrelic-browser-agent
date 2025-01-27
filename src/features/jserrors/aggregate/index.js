@@ -20,7 +20,6 @@ import { now } from '../../../common/timing/now'
 import { applyFnToProps } from '../../../common/util/traverse'
 import { evaluateInternalError } from './internal-errors'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
-import { EventAggregator } from '../../../common/aggregate/event-aggregator'
 import { isContainerAgentTarget, isValidTarget } from '../../../common/util/target'
 import { warn } from '../../../common/util/console'
 
@@ -31,7 +30,7 @@ import { warn } from '../../../common/util/console'
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor (agentRef) {
-    super(agentRef, FEATURE_NAME, () => new EventAggregator())
+    super(agentRef, FEATURE_NAME)
 
     this.stackReported = {}
     this.observedAt = {}
@@ -44,9 +43,6 @@ export class Aggregate extends AggregateBase {
 
     register('err', (...args) => this.storeError(...args), this.featureName, this.ee)
     register('ierr', (...args) => this.storeError(...args), this.featureName, this.ee)
-    register('xhr-timeslice', (hash, params, metrics) => {
-      this.events.add('xhr', hash, params, metrics)
-    }, this.featureName, this.ee)
     register('softNavFlush', (interactionId, wasFinished, softNavAttrs) =>
       this.onSoftNavNotification(interactionId, wasFinished, softNavAttrs), this.featureName, this.ee) // when an ixn is done or cancelled
 

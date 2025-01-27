@@ -23,6 +23,8 @@ export class Aggregate extends AggregateBase {
 
     this.waitForFlags(['err']).then(([errFlag]) => {
       if (errFlag) {
+        this.singleChecks() // checks that are run only one time, at script load
+        this.eachSessionChecks() // the start of every time user engages with page
         this.drain()
       } else {
         this.blocked = true // if rum response determines that customer lacks entitlements for spa endpoint, this feature shouldn't harvest
@@ -33,9 +35,6 @@ export class Aggregate extends AggregateBase {
     // Allow features external to the metrics feature to capture SMs and CMs through the event emitter
     registerHandler(SUPPORTABILITY_METRIC_CHANNEL, this.storeSupportabilityMetrics.bind(this), this.featureName, this.ee)
     registerHandler(CUSTOM_METRIC_CHANNEL, this.storeEventMetrics.bind(this), this.featureName, this.ee)
-
-    this.singleChecks() // checks that are run only one time, at script load
-    this.eachSessionChecks() // the start of every time user engages with page
   }
 
   preHarvestChecks (opts) { return this.drained && opts.isFinalHarvest } // only allow any metrics to be sent after we get the right RUM flag and only on EoL

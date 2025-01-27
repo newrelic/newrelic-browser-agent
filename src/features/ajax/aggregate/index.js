@@ -55,6 +55,12 @@ export class Aggregate extends AggregateBase {
 
     const shouldCollect = shouldCollectEvent(params)
     const shouldOmitAjaxMetrics = this.agentRef.init.feature_flags?.includes('ajax_metrics_deny_list')
+    const jserrorsInUse = Boolean(this.agentRef.features?.[FEATURE_NAMES.jserrors])
+
+    // Report ajax timeslice metric (to be harvested by jserrors feature, but only if it's running).
+    if (jserrorsInUse && (shouldCollect || !shouldOmitAjaxMetrics)) {
+      this.agentRef.sharedAggregator.add(['xhr', hash, params, metrics])
+    }
 
     if (!shouldCollect) {
       if (params.hostname === this.agentRef.info.errorBeacon || (this.agentRef.init.proxy?.beacon && params.hostname === this.agentRef.init.proxy.beacon)) {
@@ -113,6 +119,7 @@ export class Aggregate extends AggregateBase {
   }
 
   serializer (eventBuffer) {
+    if (!eventBuffer.length) return
     const addString = getAddStringContext(this.agentIdentifier)
     let payload = 'bel.7;'
 

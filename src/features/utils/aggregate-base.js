@@ -15,7 +15,6 @@ import { Harvester } from '../../common/harvest/harvester'
 import { warn } from '../../common/util/console'
 import { EntityManager } from './entity-manager'
 import { EventBuffer } from './event-buffer'
-import { EventAggregator } from '../../common/aggregate/event-aggregator'
 
 export class AggregateBase extends FeatureBase {
   /**
@@ -30,25 +29,37 @@ export class AggregateBase extends FeatureBase {
     this.checkConfiguration(agentRef)
     this.doOnceForAllAggregate(agentRef)
 
-    // This switch needs to be after doOnceForAllAggregate which may new sharedAggregator and reset mainAppKey.
+    this.harvestOpts = {} // features aggregate classes can define custom opts for when their harvest is called
+
+    const agentEntityGuid = this.agentRef?.runtime?.appMetadata?.agents?.[0]?.entityGuid
+    if (agentEntityGuid) {
+      this.#setupEventStore(agentEntityGuid)
+    } else {
+      this.ee.on('entity-guid', entityGuid => {
+        this.#setupEventStore(entityGuid)
+      })
+    }
+  }
+
+  #setupEventStore (entityGuid) {
+    if (this.events || !entityGuid) return
     switch (this.featureName) {
-      // SessionTrace + Replay have their own storage mechanisms.
+    // SessionTrace + Replay have their own storage mechanisms.
       case FEATURE_NAMES.sessionTrace:
       case FEATURE_NAMES.sessionReplay:
         break
-      // Jserror and Metric features uses a singleton EventAggregator instead of a regular EventBuffer.
+        // Jserror and Metric features uses a singleton EventAggregator instead of a regular EventBuffer.
       case FEATURE_NAMES.jserrors:
       case FEATURE_NAMES.metrics:
-        this.events = agentRef.sharedAggregator
+        this.events = this.agentRef.sharedAggregator
         break
-      /** All other features get EventBuffer in the ESM by default. Note: PVE is included here, but event buffer will always be empty so future harvests will still not happen by interval or EOL.
-      This was necessary to prevent race cond. issues where the event buffer was checked before the feature could "block" itself.
-      Its easier to just keep an empty event buffer in place. */
+        /** All other features get EventBuffer in the ESM by default. Note: PVE is included here, but event buffer will always be empty so future harvests will still not happen by interval or EOL.
+    This was necessary to prevent race cond. issues where the event buffer was checked before the feature could "block" itself.
+    Its easier to just keep an empty event buffer in place. */
       default:
-        this.events = new EventStoreManager(this.agentRef, EventBuffer)
+        this.events = new EventStoreManager(this.agentRef.runtime.entityManager, EventBuffer, entityGuid)
         break
     }
-    this.harvestOpts = {} // features aggregate classes can define custom opts for when their harvest is called
   }
 
   /**
@@ -72,11 +83,12 @@ export class AggregateBase extends FeatureBase {
         })
       }
     })
-    return flagsPromise.catch(err => {
-      this.ee.emit('internal-error', [err])
-      this.blocked = true
-      this.deregisterDrain()
-    })
+    return flagsPromise
+      .catch(err => {
+        this.ee.emit('internal-error', [err])
+        this.blocked = true
+        this.deregisterDrain()
+      })
   }
 
   drain () {
@@ -91,7 +103,7 @@ export class AggregateBase extends FeatureBase {
    * @returns {Array} Final payload tagged with their targeting browser app. The value of `payload` can be undefined if there are no pending events for an app. This should be a minimum length of 1.
    */
   makeHarvestPayload (shouldRetryOnFail = false, opts = {}) {
-    if (this.events.isEmpty(this.harvestOpts, opts.targetEntityGuid)) return
+    if (!this.events || this.events.isEmpty(this.harvestOpts, opts.targetEntityGuid)) return
     // Other conditions and things to do when preparing harvest that is required.
     if (this.preHarvestChecks && !this.preHarvestChecks(opts)) return
 
@@ -119,8 +131,8 @@ export class AggregateBase extends FeatureBase {
    */
   postHarvestCleanup (result = {}) {
     const harvestFailed = result.sent && result.retry
-    if (harvestFailed) this.events.reloadSave(this.harvestOpts, result.targetApp)
-    this.events.clearSave(this.harvestOpts, result.targetApp)
+    if (harvestFailed) this.events.reloadSave(this.harvestOpts, result.targetApp?.entityGuid)
+    this.events.clearSave(this.harvestOpts, result.targetApp?.entityGuid)
   }
 
   /**
@@ -160,8 +172,6 @@ export class AggregateBase extends FeatureBase {
     this.obfuscator = agentRef.runtime.obfuscator
 
     if (!agentRef.runtime.entityManager) agentRef.runtime.entityManager = new EntityManager(this.agentRef)
-    // Create a single Aggregator for this agent if DNE yet; to be used by jserror endpoint features.
-    if (!agentRef.sharedAggregator) agentRef.sharedAggregator = new EventStoreManager(this.agentRef, EventAggregator)
 
     if (!agentRef.runtime.harvester) agentRef.runtime.harvester = new Harvester(agentRef)
   }

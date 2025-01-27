@@ -46,7 +46,9 @@ describe('class setup', () => {
       'ee',
       'featureName',
       'blocked',
-      'events'
+      'agentRef',
+      'obfuscator',
+      'harvestOpts'
     ]))
   })
 

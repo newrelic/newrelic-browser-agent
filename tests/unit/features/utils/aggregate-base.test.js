@@ -7,11 +7,13 @@ import { FEATURE_NAMES } from '../../../../src/loaders/features/features'
 import { EventStoreManager } from '../../../../src/features/utils/event-store-manager'
 import { EventBuffer } from '../../../../src/features/utils/event-buffer'
 import { EventAggregator } from '../../../../src/common/aggregate/event-aggregator'
+import { Aggregate as PVEAggregate } from '../../../../src/features/page_view_event/aggregate/index'
 
 jest.enableAutomock()
 jest.unmock('../../../../src/features/utils/aggregate-base')
 jest.unmock('../../../../src/features/utils/feature-base')
 jest.unmock('../../../../src/common/event-emitter/contextual-ee')
+jest.unmock('../../../../src/features/page_view_event/aggregate/index')
 
 jest.mock('../../../../src/common/event-emitter/register-handler', () => ({
   __esModule: true,
@@ -57,7 +59,7 @@ beforeEach(() => {
   featureName = faker.string.uuid()
   mainAgent = {
     agentIdentifier,
-    runtime: { [faker.string.uuid()]: faker.lorem.sentence() },
+    runtime: { [faker.string.uuid()]: faker.lorem.sentence(), appMetadata: { agents: [{ entityGuid: '12345' }] } },
     // TODO CHECK THAT THIS STILL WORKS WITH NEW SYSTEM
     info: { licenseKey: faker.string.uuid(), applicationID: faker.string.uuid(), entityGuid: faker.string.uuid() }
   }
@@ -152,9 +154,13 @@ test('does not initialized Aggregator more than once with multiple features', as
   expect(EventStoreManager).toHaveBeenCalledTimes(0)
   expect(mainAgent.runtime.entityManager).toBeUndefined()
 
-  new AggregateBase(mainAgent, FEATURE_NAMES.pageViewEvent)
+  const pveAgg = new PVEAggregate(mainAgent, FEATURE_NAMES.pageViewEvent)
+
+  const mockRumResp1 = { app: { agents: [{ entityGuid: '12345' }] } }
+  pveAgg.processEntityGuidFromRumResponse(mockRumResp1, { licenseKey: '1', applicationID: '1' })
+
   expect(EventStoreManager).toHaveBeenCalledTimes(2)
-  expect(EventStoreManager).toHaveBeenCalledWith(mainAgent, EventAggregator) // 2 = initialize EventAggregator
+  expect(EventStoreManager).toHaveBeenCalledWith(mainAgent.runtime.entityManager, EventAggregator, '12345') // 2 = initialize EventAggregator
   expect(mainAgent.runtime.entityManager).toBeTruthy()
   expect(mainAgent.sharedAggregator).toBeTruthy()
 
@@ -163,7 +169,7 @@ test('does not initialized Aggregator more than once with multiple features', as
 
   new AggregateBase(mainAgent, FEATURE_NAMES.pageViewTiming) // PVT should use its own EventStoreManager
   expect(EventStoreManager).toHaveBeenCalledTimes(3)
-  expect(EventStoreManager).toHaveBeenCalledWith(mainAgent, EventBuffer) // 1 = initialize EventBuffer
+  expect(EventStoreManager).toHaveBeenCalledWith(mainAgent.runtime.entityManager, EventBuffer, '12345') // 1 = initialize EventBuffer
 })
 
 test('does initialize separate Aggregators with multiple agents', async () => {
@@ -172,12 +178,20 @@ test('does initialize separate Aggregators with multiple agents', async () => {
     agentIdentifier: faker.string.uuid(),
     init: {
       [FEATURE_NAMES.pageViewEvent]: { autoStart: true }
-    }
+    },
+    runtime: { [faker.string.uuid()]: faker.lorem.sentence(), appMetadata: { agents: [{ entityGuid: '56789' }] } }
+
   }
   expect(EventStoreManager).toHaveBeenCalledTimes(0)
 
-  new AggregateBase(mainAgent, FEATURE_NAMES.pageViewEvent)
-  new AggregateBase(mainAgent2, FEATURE_NAMES.pageViewEvent)
+  const pveAgg1 = new PVEAggregate(mainAgent, FEATURE_NAMES.pageViewEvent)
+  const pveAgg2 = new PVEAggregate(mainAgent2, FEATURE_NAMES.pageViewEvent)
+
+  const mockRumResp1 = { app: { agents: [{ entityGuid: '12345' }] } }
+  const mockRumResp2 = { app: { agents: [{ entityGuid: '56789' }] } }
+  pveAgg1.processEntityGuidFromRumResponse(mockRumResp1, { licenseKey: '1', applicationID: '1' })
+  pveAgg2.processEntityGuidFromRumResponse(mockRumResp2, { licenseKey: '2', applicationID: '2' })
+
   expect(EventStoreManager).toHaveBeenCalledTimes(4)
   expect(EventStoreManager).not.toHaveBeenCalledWith(expect.any(Object), 1)
 

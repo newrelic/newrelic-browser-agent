@@ -2,7 +2,6 @@
  * Copyright 2020-2025 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { DEFAULT_ENTITY } from './entity-manager'
 
 /**
  * This layer allows multiple browser entity apps, or "target", to each have their own segregated storage instance.
@@ -13,19 +12,20 @@ export class EventStoreManager {
    * @param {object} agentRef - reference to base agent class
    * @param {EventBuffer|EventAggregator} storageClass - the type of storage to use in this manager; 'EventBuffer' (1), 'EventAggregator' (2)
    */
-  constructor (agentRef, storageClass) {
-    this.entityManager = agentRef.runtime.entityManager
+  constructor (entityManager, storageClass, defaultEntityGuid) {
+    this.entityManager = entityManager
     this.StorageClass = storageClass
     this.appStorageMap = new Map()
-    this.defaultEventStore = this.#getEventStore()
+    this.defaultEntity = this.#getEventStore(defaultEntityGuid)
   }
 
   /**
    * Always returns a storage instance.  Creates one if one does not exist.  If a lookup is not provided, uses the DEFAULT namespace
-   * @param {string} targetEntityGuid the lookup
+   * @param {string=} targetEntityGuid the lookup
    * @returns {*} ALWAYS returns a storage instance
    */
-  #getEventStore (targetEntityGuid = DEFAULT_ENTITY) {
+  #getEventStore (targetEntityGuid) {
+    if (!targetEntityGuid) return this.defaultEntity
     if (!this.appStorageMap.has(targetEntityGuid)) this.appStorageMap.set(targetEntityGuid, new this.StorageClass())
     return this.appStorageMap.get(targetEntityGuid)
   }
@@ -59,7 +59,7 @@ export class EventStoreManager {
 
   /** This is only used by the Metrics feature which has no need to add metric under a different app atm. */
   addMetric (type, name, params, value) {
-    return this.#getEventStore(DEFAULT_ENTITY).addMetric(type, name, params, value)
+    return this.#getEventStore().addMetric(type, name, params, value)
   }
 
   /**

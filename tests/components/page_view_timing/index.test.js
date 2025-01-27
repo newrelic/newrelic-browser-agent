@@ -56,7 +56,7 @@ describe('pvt aggregate tests', () => {
       info: { licenseKey: 'licenseKey', applicationID: 'applicationID' },
       init: { page_view_timing: {} },
       ee: { on: jest.fn() },
-      runtime: { harvester: { initializedAggregates: [] } }
+      runtime: { harvester: { initializedAggregates: [] }, appMetadata: { agents: [{ entityGuid: 'entityGuid' }] } }
     }
     const { Aggregate } = await import('../../../src/features/page_view_timing/aggregate')
 

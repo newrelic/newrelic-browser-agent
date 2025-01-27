@@ -15,11 +15,12 @@ beforeAll(() => {
 
 beforeEach(async () => {
   const genericEventsInstrument = new GenericEvents(mainAgent)
-  await new Promise(process.nextTick)
+  await genericEventsInstrument.onAggregateImported
   genericEventsAggregate = genericEventsInstrument.featAggregate
 })
 
 afterEach(() => {
+  jest.clearAllMocks()
   resetAgent(mainAgent.agentIdentifier)
 })
 
@@ -59,16 +60,17 @@ test('should warn if invalid event is provide', async () => {
 })
 
 test('should harvest early if will exceed 1mb', async () => {
-  genericEventsAggregate.ee.emit('rumresp', [{ ins: 1 }])
-
-  await new Promise(process.nextTick)
-
   mainAgent.runtime.harvester.triggerHarvestFor = jest.fn()
+  expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledTimes(0)
+  genericEventsAggregate.ee.emit('rumresp', [{ ins: 1 }])
+  await new Promise(process.nextTick)
+  expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledTimes(1)
+
   genericEventsAggregate.addEvent({ name: 'test', eventType: 'x'.repeat(900000) })
 
-  expect(mainAgent.runtime.harvester.triggerHarvestFor).not.toHaveBeenCalled()
+  expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledTimes(1)
   genericEventsAggregate.addEvent({ name: 1000, eventType: 'x'.repeat(100000) })
-  expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalled()
+  expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledTimes(2)
 
   mainAgent.runtime.harvester.triggerHarvestFor.mockRestore()
 })
@@ -154,7 +156,7 @@ describe('sub-features', () => {
     const { Aggregate } = await import('../../../../src/features/generic_events/aggregate')
     genericEventsAggregate = new Aggregate(mainAgent)
     genericEventsAggregate.ee.emit('api-addPageAction', [relativeTimestamp, name, {}])
-    expect(genericEventsAggregate.events[0]).toBeUndefined()
+    expect(genericEventsAggregate.events?.[0]).toBeUndefined()
   })
 
   test('should record user actions when enabled', () => {
@@ -258,7 +260,7 @@ describe('sub-features', () => {
 
     const { Aggregate } = await import('../../../../src/features/generic_events/aggregate')
     genericEventsAggregate = new Aggregate(mainAgent)
-    expect(genericEventsAggregate.events[0]).toBeUndefined()
+    expect(genericEventsAggregate.events?.[0]).toBeUndefined()
 
     genericEventsAggregate.ee.emit('rumresp', [{ ins: 1 }])
     await new Promise(process.nextTick)
@@ -298,7 +300,7 @@ describe('sub-features', () => {
 
     const { Aggregate } = await import('../../../../src/features/generic_events/aggregate')
     genericEventsAggregate = new Aggregate(mainAgent)
-    expect(genericEventsAggregate.events[0]).toBeUndefined()
+    expect(genericEventsAggregate.events?.[0]).toBeUndefined()
 
     genericEventsAggregate.ee.emit('rumresp', [{ ins: 1 }])
     await new Promise(process.nextTick)

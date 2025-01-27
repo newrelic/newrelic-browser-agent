@@ -1,7 +1,9 @@
 import * as qp from '@newrelic/nr-querypack'
 import { Aggregate } from '../../../../../src/features/page_view_timing/aggregate'
 
-const mockRuntime = {} // getAddStringContext in the serializer still relies on getRuntime() fn
+const mockRuntime = {
+  appMetadata: { agents: [{ entityGuid: '12345' }] }
+} // getAddStringContext in the serializer still relies on getRuntime() fn
 jest.mock('../../../../../src/common/config/runtime', () => ({
   __esModule: true,
   getRuntime: jest.fn(() => mockRuntime),
@@ -15,6 +17,8 @@ const pvtAgg = new Aggregate({
   init: { page_view_timing: {} },
   runtime: mockRuntime
 })
+
+pvtAgg.ee.emit('rumresp', [])
 
 describe('PVT aggregate', () => {
   test('serializer default attributes', () => {

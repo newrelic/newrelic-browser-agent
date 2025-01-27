@@ -39,6 +39,7 @@ beforeEach(async () => {
   const ajaxInstrument = new Ajax(agentSetup)
   await new Promise(process.nextTick)
   ajaxAggregate = ajaxInstrument.featAggregate
+  ajaxAggregate.ee.emit('rumresp', [])
   ajaxAggregate.drain()
 
   context = new EventContext()
@@ -166,7 +167,7 @@ describe('prepareHarvest', () => {
   })
 
   test('correctly exits if maxPayload is too small', () => {
-    ajaxAggregate.events.appStorageMap.get('default').maxPayloadSize = 10 // this is too small for any AJAX payload to fit in
+    ajaxAggregate.events.defaultEntity.maxPayloadSize = 10 // this is too small for any AJAX payload to fit in
     for (let callNo = 0; callNo < 10; callNo++) ajaxAggregate.ee.emit('xhr', ajaxArguments, context)
 
     const serializedPayload = ajaxAggregate.makeHarvestPayload(false)

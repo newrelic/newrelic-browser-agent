@@ -62,7 +62,7 @@ export function setupAgent ({ agentOverrides = {}, info = {}, init = {}, loaderC
   }
   fakeAgent.features = {}
   if (!runtime.harvester) runtime.harvester = new Harvester(fakeAgent)
-  fakeAgent.sharedAggregator = new EventStoreManager(fakeAgent, EventAggregator)
+  fakeAgent.sharedAggregator = new EventStoreManager(fakeAgent.runtime.entityManager, EventAggregator, fakeAgent.runtime.appMetadata.agents[0].entityGuid)
 
   return fakeAgent
 }

@@ -52,7 +52,8 @@ const model = () => {
       allowed_origins: undefined
     },
     external: { capture_registered_data: false },
-    feature_flags: [],
+    get feature_flags () { return hiddenState.feature_flags },
+    set feature_flags (val) { hiddenState.feature_flags = val },
     generic_events: { enabled: true, autoStart: true },
     harvest: { interval: 30 },
     jserrors: { enabled: true, autoStart: true },

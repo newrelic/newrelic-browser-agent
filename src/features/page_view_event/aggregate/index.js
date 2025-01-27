@@ -18,6 +18,8 @@ import { now } from '../../../common/timing/now'
 import { TimeKeeper } from '../../../common/timing/time-keeper'
 import { applyFnToProps } from '../../../common/util/traverse'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
+import { EventStoreManager } from '../../utils/event-store-manager'
+import { EventAggregator } from '../../../common/aggregate/event-aggregator'
 
 export class Aggregate extends AggregateBase {
   static featureName = CONSTANTS.FEATURE_NAME
@@ -142,6 +144,7 @@ export class Aggregate extends AggregateBase {
 
     const rumResponse = JSON.parse(responseText)
     try {
+      // will do nothing if already done
       this.agentRef.runtime.timeKeeper.processRumRequest(xhr, this.rumStartTime, rumEndTime, rumResponse.app.nrServerTime)
       if (!this.agentRef.runtime.timeKeeper.ready) throw new Error('TimeKeeper not ready')
     } catch (error) {
@@ -150,12 +153,23 @@ export class Aggregate extends AggregateBase {
       return
     }
 
-    const respEntityGuid = rumResponse.app.agents[0].entityGuid
-    this.agentRef.runtime.entityManager.set(respEntityGuid, { entityGuid: respEntityGuid, ...targetApp })
-    this.agentRef.runtime.appMetadata = rumResponse.app
+    this.processEntityGuidFromRumResponse(rumResponse, targetApp)
+
     // cbFinished is the activateFeatures function by default, but can be another cb function for the MFE api too
     cbFinished(rumResponse, this.agentIdentifier)
     this.drain()
     this.agentRef.runtime.harvester.startTimer()
+  }
+
+  /**
+   * Process any tasks that require use of the entity guid directly, like creating the shared agg or the runtime metadata
+   * @param {*} rumResponse
+   */
+  processEntityGuidFromRumResponse (rumResponse, targetApp) {
+    const respEntityGuid = rumResponse.app.agents[0].entityGuid
+    this.ee.emit('entity-guid', [respEntityGuid])
+    this.agentRef.runtime.entityManager.set(respEntityGuid, { entityGuid: respEntityGuid, ...targetApp })
+    if (!Object.keys(this.agentRef.runtime.appMetadata).length) this.agentRef.runtime.appMetadata = rumResponse.app
+    if (!this.agentRef.sharedAggregator) this.agentRef.sharedAggregator = new EventStoreManager(this.agentRef.runtime.entityManager, EventAggregator, respEntityGuid)
   }
 }

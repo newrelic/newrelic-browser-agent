@@ -41,6 +41,7 @@ export class Aggregate extends AggregateBase {
     this.harvestOpts.beforeUnload = () => this.interactionInProgress?.done() // return any withheld ajax or jserr events so they can be sent with EoL harvest
 
     this.waitForFlags(['spa']).then(([spaOn]) => {
+      this.interactionsToHarvest = this.events
       if (spaOn) {
         this.drain()
         setTimeout(() => agentRef.runtime.harvester.triggerHarvestFor(this), 0) // send the IPL ixn on next tick, giving some time for any ajax to finish; we may want to just remove this?

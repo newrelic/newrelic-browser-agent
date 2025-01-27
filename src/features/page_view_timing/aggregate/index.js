@@ -50,7 +50,7 @@ export class Aggregate extends AggregateBase {
         const { name, value, attrs } = cumulativeLayoutShift.current
         if (value === undefined) return
         this.addTiming(name, value * 1000, attrs)
-      }, true) // CLS node should only reports on vis change rather than on every change
+      }, true, true) // CLS node should only reports on vis change rather than on every change
 
       this.drain()
     })

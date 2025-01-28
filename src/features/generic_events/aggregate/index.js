@@ -17,6 +17,7 @@ import { isIFrameWindow } from '../../../common/dom/iframe'
 import { isValidTarget } from '../../../common/util/target'
 import { handle } from '../../../common/event-emitter/handle'
 import { isPureObject } from '../../../common/util/type-check'
+import { FEATURE_NAMES } from '../../../loaders/features/features'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -123,7 +124,7 @@ export class Aggregate extends AggregateBase {
               const observer = new PerformanceObserver((list) => {
                 list.getEntries().forEach(entry => {
                   try {
-                    handle(SUPPORTABILITY_METRIC_CHANNEL, ['Generic/Performance/' + type + '/Seen'])
+                    handle(SUPPORTABILITY_METRIC_CHANNEL, ['Generic/Performance/' + type + '/Seen'], undefined, FEATURE_NAMES.metrics, this.ee)
                     const detailObj = agentRef.init.performance.capture_detail ? createDetailAttrs(entry.detail) : {}
                     this.addEvent({
                       ...detailObj,
@@ -183,13 +184,13 @@ export class Aggregate extends AggregateBase {
               if (this.agentRef.init.performance.resources.asset_types.length && !this.agentRef.init.performance.resources.asset_types.includes(entryObject.initiatorType)) return
               /** decide if the entryDomain is a first party domain */
               firstParty = entryDomain === globalScope?.location.hostname || agentRef.init.performance.resources.first_party_domains.includes(entryDomain)
-              if (firstParty) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Generic/Performance/FirstPartyResource/Seen'])
-              if (isNr) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Generic/Performance/NrResource/Seen'])
+              if (firstParty) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Generic/Performance/FirstPartyResource/Seen'], undefined, FEATURE_NAMES.metrics, this.ee)
+              if (isNr) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Generic/Performance/NrResource/Seen'], undefined, FEATURE_NAMES.metrics, this.ee)
             } catch (err) {
             // couldnt parse the URL, so firstParty will just default to false
             }
 
-            handle(SUPPORTABILITY_METRIC_CHANNEL, ['Generic/Performance/Resource/Seen'])
+            handle(SUPPORTABILITY_METRIC_CHANNEL, ['Generic/Performance/Resource/Seen'], undefined, FEATURE_NAMES.metrics, this.ee)
             const event = {
               ...entryObject,
               eventType: 'BrowserPerformance',
@@ -281,11 +282,11 @@ export class Aggregate extends AggregateBase {
   trackSupportabilityMetrics () {
     /** track usage SMs to improve these experimental features */
     const configPerfTag = 'Config/Performance/'
-    if (this.agentRef.init.performance.capture_marks) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'CaptureMarks/Enabled'])
-    if (this.agentRef.init.performance.capture_measures) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'CaptureMeasures/Enabled'])
-    if (this.agentRef.init.performance.resources.enabled) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'Resources/Enabled'])
-    if (this.agentRef.init.performance.resources.asset_types?.length !== 0) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'Resources/AssetTypes/Changed'])
-    if (this.agentRef.init.performance.resources.first_party_domains?.length !== 0) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'Resources/FirstPartyDomains/Changed'])
-    if (this.agentRef.init.performance.resources.ignore_newrelic === false) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'Resources/IgnoreNewrelic/Changed'])
+    if (this.agentRef.init.performance.capture_marks) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'CaptureMarks/Enabled'], undefined, FEATURE_NAMES.metrics, this.ee)
+    if (this.agentRef.init.performance.capture_measures) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'CaptureMeasures/Enabled'], undefined, FEATURE_NAMES.metrics, this.ee)
+    if (this.agentRef.init.performance.resources.enabled) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'Resources/Enabled'], undefined, FEATURE_NAMES.metrics, this.ee)
+    if (this.agentRef.init.performance.resources.asset_types?.length !== 0) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'Resources/AssetTypes/Changed'], undefined, FEATURE_NAMES.metrics, this.ee)
+    if (this.agentRef.init.performance.resources.first_party_domains?.length !== 0) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'Resources/FirstPartyDomains/Changed'], undefined, FEATURE_NAMES.metrics, this.ee)
+    if (this.agentRef.init.performance.resources.ignore_newrelic === false) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'Resources/IgnoreNewrelic/Changed'], undefined, FEATURE_NAMES.metrics, this.ee)
   }
 }

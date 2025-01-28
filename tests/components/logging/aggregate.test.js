@@ -119,12 +119,12 @@ describe('payloads', () => {
   test('short circuits if log is too big', async () => {
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'x'.repeat(1024 * 1024), { myAttributes: 1 }, 'ERROR'])
 
-    expect(handleModule.handle).toHaveBeenCalledWith('storeSupportabilityMetrics', ['Logging/Harvest/Failed/Seen', expect.any(Number)])
+    expect(handleModule.handle).toHaveBeenCalledWith('storeSupportabilityMetrics', ['Logging/Harvest/Failed/Seen', expect.any(Number)], undefined, 'metrics', loggingAggregate.ee)
     expect(handleModule.handle).toHaveBeenCalledTimes(1)
     expect(consoleModule.warn).toHaveBeenCalledWith(31, 'xxxxxxxxxxxxxxxxxxxxxxxxx...')
 
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'short message, long attrs', { myAttributes: 'x'.repeat(1024 * 1024) }, 'ERROR'])
-    expect(handleModule.handle).toHaveBeenCalledWith('storeSupportabilityMetrics', ['Logging/Harvest/Failed/Seen', expect.any(Number)])
+    expect(handleModule.handle).toHaveBeenCalledWith('storeSupportabilityMetrics', ['Logging/Harvest/Failed/Seen', expect.any(Number)], undefined, 'metrics', loggingAggregate.ee)
     expect(handleModule.handle).toHaveBeenCalledTimes(2)
     expect(consoleModule.warn).toHaveBeenCalledWith(31, 'short message, long attrs...')
   })
@@ -220,6 +220,6 @@ test('can harvest early', async () => {
   expect(handleModule.handle).toHaveBeenCalledTimes(0)
   loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'x'.repeat(800 * 800), { myAttributes: 1 }, 'ERROR']) // almost too big
   expect(handleModule.handle).toHaveBeenCalledTimes(1)
-  expect(handleModule.handle).toHaveBeenCalledWith('storeSupportabilityMetrics', ['Logging/Harvest/Early/Seen', expect.any(Number)])
+  expect(handleModule.handle).toHaveBeenCalledWith('storeSupportabilityMetrics', ['Logging/Harvest/Early/Seen', expect.any(Number)], undefined, 'metrics', loggingAggregate.ee)
   expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalled()
 })

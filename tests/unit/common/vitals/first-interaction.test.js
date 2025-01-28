@@ -1,34 +1,43 @@
+import { PERFORMANCE_ENTRY_TYPE } from '../../../../src/common/vitals/constants'
+
 beforeEach(() => {
   jest.resetModules()
   jest.resetAllMocks()
   jest.clearAllMocks()
+
+  const mockPerformanceObserver = jest.fn(cb => ({
+    // Note: this is an imperfect mock, as observer.disconnect() is not functional
+    observe: () => {
+      const callCb = () => {
+        cb({
+          getEntries: () => [{
+            name: PERFORMANCE_ENTRY_TYPE.FIRST_INPUT,
+            startTime: 1
+          }]
+        })
+        setTimeout(callCb, 250)
+      }
+      setTimeout(callCb, 250)
+    },
+    disconnect: jest.fn()
+  }))
+  global.PerformanceObserver = mockPerformanceObserver
+  global.PerformanceObserver.supportedEntryTypes = [PERFORMANCE_ENTRY_TYPE.FIRST_INPUT]
 })
 
-const fidAttribution = {
-  eventTarget: 'html>body',
-  eventType: 'pointerdown',
-  eventTime: 1,
-  loadState: 'loading'
-}
-let triggeronFIDCallback
-const getFreshFIDImport = async (codeToRun) => {
-  jest.doMock('web-vitals/attribution', () => ({
-    onFID: jest.fn(cb => { triggeronFIDCallback = cb; cb({ value: 100, attribution: fidAttribution }) })
-  }))
-  const { firstInputDelay } = await import('../../../../src/common/vitals/first-input-delay')
-  codeToRun(firstInputDelay)
+const getFreshImport = async (codeToRun) => {
+  const { firstInteraction } = await import('../../../../src/common/vitals/first-interaction')
+  codeToRun(firstInteraction)
 }
 
-describe('fid', () => {
-  test('reports fcp from web-vitals', (done) => {
-    getFreshFIDImport(metric => metric.subscribe(({ value, attrs }) => {
-      expect(value).toEqual(1)
-      expect(attrs.type).toEqual(fidAttribution.eventType)
-      expect(attrs.fid).toEqual(100)
-      expect(attrs.eventTarget).toEqual(fidAttribution.eventTarget)
-      expect(attrs.loadState).toEqual(fidAttribution.loadState)
-      done()
-    }))
+describe('fi (first interaction)', () => {
+  test('reports fi', (done) => {
+    getFreshImport(metric => {
+      metric.subscribe(({ value }) => {
+        expect(value).toEqual(1)
+        done()
+      })
+    })
   })
 
   test('Does NOT report values if initiallyHidden', (done) => {
@@ -38,7 +47,7 @@ describe('fid', () => {
       isBrowserScope: true
     }))
 
-    getFreshFIDImport(metric => {
+    getFreshImport(metric => {
       metric.subscribe(() => {
         console.log('should not have reported')
         expect(1).toEqual(2)
@@ -50,11 +59,12 @@ describe('fid', () => {
   test('does NOT report if not browser scoped', (done) => {
     jest.doMock('../../../../src/common/constants/runtime', () => ({
       __esModule: true,
+      initiallyHidden: false,
       isBrowserScope: false
     }))
 
-    getFreshFIDImport(metric => {
-      metric.subscribe(() => {
+    getFreshImport(metric => {
+      metric.subscribe(({ value, attrs }) => {
         console.log('should not have reported...')
         expect(1).toEqual(2)
       })
@@ -65,10 +75,11 @@ describe('fid', () => {
   test('multiple subs get same value', done => {
     jest.doMock('../../../../src/common/constants/runtime', () => ({
       __esModule: true,
+      initiallyHidden: false,
       isBrowserScope: true
     }))
     let witness = 0
-    getFreshFIDImport(metric => {
+    getFreshImport(metric => {
       metric.subscribe(({ value }) => {
         expect(value).toEqual(1)
         witness++
@@ -88,15 +99,14 @@ describe('fid', () => {
       isBrowserScope: true
     }))
     let triggered = 0
-    getFreshFIDImport(metric => {
-      metric.subscribe(({ value }) => {
-        triggered++
-        expect(value).toEqual(1)
-        expect(triggered).toEqual(1)
-      })
-      triggeronFIDCallback({ value: 'notequal1' })
+    getFreshImport(metric => metric.subscribe(({ value }) => {
+      triggered++
+      expect(value).toEqual(1)
       expect(triggered).toEqual(1)
-      done()
-    })
+      setTimeout(() => {
+        expect(triggered).toEqual(1)
+        done()
+      }, 1000)
+    }))
   })
 })

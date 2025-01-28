@@ -1,7 +1,6 @@
-import { supportsCumulativeLayoutShift, supportsFirstInputDelay, supportsFirstPaint, supportsInteractionToNextPaint, supportsLargestContentfulPaint } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { supportsCumulativeLayoutShift, supportsFirstPaint, supportsInteractionToNextPaint, supportsLargestContentfulPaint, supportsPerformanceEventTiming } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { testTimingEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
-const isClickInteractionType = type => type === 'pointerdown' || type === 'mousedown' || type === 'click'
 const loadersToTest = ['rum', 'spa']
 
 describe('pvt timings tests', () => {
@@ -13,7 +12,7 @@ describe('pvt timings tests', () => {
 
   describe('page viz related timings', () => {
     loadersToTest.forEach(loader => {
-      it(`Load, Unload, FP, FCP & pageHide for ${loader} agent`, async () => {
+      it(`Load, Unload, FP, FCP, CLS & pageHide for ${loader} agent`, async () => {
         const start = Date.now()
         await browser.url(
           await browser.testHandle.assetURL('instrumented.html', { loader })
@@ -51,6 +50,9 @@ describe('pvt timings tests', () => {
         if (browserMatch(supportsCumulativeLayoutShift)) {
           const emptyCls = pageHide.attributes.find(a => a.key === 'cls')
           expect(emptyCls.value).toEqual(0)
+
+          // There should also be a standalone CLS node sent on EoL
+          expect(timingsHarvests.find(harvest => harvest.request.body.find(t => t.name === 'cls'))).toBeTruthy()
         }
       })
 
@@ -69,7 +71,7 @@ describe('pvt timings tests', () => {
 
   describe('interaction related timings', () => {
     loadersToTest.forEach(loader => {
-      it(`FI, FID, INP & LCP for ${loader} agent`, async () => {
+      it(`FI, INP & LCP for ${loader} agent`, async () => {
         const start = Date.now()
         await browser.url(
           await browser.testHandle.assetURL('basic-click-tracking.html', { loader })
@@ -82,19 +84,17 @@ describe('pvt timings tests', () => {
             .then(async () => browser.url(await browser.testHandle.assetURL('/')))
         ])
 
-        if (browserMatch(supportsFirstInputDelay)) {
+        if (browserMatch(supportsPerformanceEventTiming)) {
+          // FID is replaced by subscribing to 'first-input'
           const fi = timingsHarvests.find(harvest => harvest.request.body.find(t => t.name === 'fi'))
             ?.request.body.find(timing => timing.name === 'fi')
           expect(fi.value).toBeGreaterThanOrEqual(0)
           expect(fi.value).toBeLessThan(Date.now() - start)
 
+          const isClickInteractionType = type => type === 'pointerdown' || type === 'mousedown' || type === 'click'
           const fiType = fi.attributes.find(attr => attr.key === 'type')
           expect(isClickInteractionType(fiType.value)).toEqual(true)
           expect(fiType.type).toEqual('stringAttribute')
-
-          const fid = fi.attributes.find(attr => attr.key === 'fid')
-          expect(fid.value).toBeGreaterThanOrEqual(0)
-          expect(fid.type).toEqual('doubleAttribute')
         }
 
         if (browserMatch(supportsLargestContentfulPaint)) {
@@ -127,7 +127,7 @@ describe('pvt timings tests', () => {
   describe('layout shift related timings', () => {
     loadersToTest.forEach(loader => {
       [['unload', 'cls-basic.html'], ['pageHide', 'cls-pagehide.html']].forEach(([prop, testAsset]) => {
-        it.withBrowsersMatching([supportsCumulativeLayoutShift])(`${prop} for ${loader} agent collects cls attribute`, async () => {
+        it.withBrowsersMatching([supportsCumulativeLayoutShift])(`${prop} for ${loader} agent collects cls attribute & node`, async () => {
           await browser.url(
             await browser.testHandle.assetURL(testAsset, { loader })
           ).then(() => browser.waitForAgentLoad())
@@ -151,6 +151,7 @@ describe('pvt timings tests', () => {
           const cls = evt.attributes.find(a => a.key === 'cls')
           expect(cls?.value).toBeGreaterThan(0)
           expect(cls?.type).toEqual('doubleAttribute')
+          expect(timingsHarvests.find(harvest => harvest.request.body.find(t => t.name === 'cls'))).toBeTruthy()
         })
       })
     })

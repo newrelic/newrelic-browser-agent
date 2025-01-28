@@ -11,8 +11,8 @@ import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { cumulativeLayoutShift } from '../../../common/vitals/cumulative-layout-shift'
 import { firstContentfulPaint } from '../../../common/vitals/first-contentful-paint'
-import { firstInputDelay } from '../../../common/vitals/first-input-delay'
 import { firstPaint } from '../../../common/vitals/first-paint'
+import { firstInteraction } from '../../../common/vitals/first-interaction'
 import { interactionToNextPaint } from '../../../common/vitals/interaction-to-next-paint'
 import { largestContentfulPaint } from '../../../common/vitals/largest-contentful-paint'
 import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
@@ -37,8 +37,8 @@ export class Aggregate extends AggregateBase {
     this.waitForFlags(([])).then(() => {
       firstPaint.subscribe(this.#handleVitalMetric)
       firstContentfulPaint.subscribe(this.#handleVitalMetric)
-      firstInputDelay.subscribe(this.#handleVitalMetric)
       largestContentfulPaint.subscribe(this.#handleVitalMetric)
+      firstInteraction.subscribe(this.#handleVitalMetric)
       interactionToNextPaint.subscribe(this.#handleVitalMetric)
       timeToFirstByte.subscribe(({ attrs }) => {
         this.addTiming('load', Math.round(attrs.navigationEntry.loadEventEnd))
@@ -50,7 +50,7 @@ export class Aggregate extends AggregateBase {
         const { name, value, attrs } = cumulativeLayoutShift.current
         if (value === undefined) return
         this.addTiming(name, value * 1000, attrs)
-      }, true) // CLS node should only reports on vis change rather than on every change
+      }, true, true) // CLS node should only reports on vis change rather than on every change
 
       this.drain()
     })

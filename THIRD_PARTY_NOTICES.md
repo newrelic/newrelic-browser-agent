@@ -377,7 +377,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### @babel/core
 
-This product includes source derived from [@babel/core](https://github.com/babel/babel) ([v7.25.2](https://github.com/babel/babel/tree/v7.25.2)), distributed under the [MIT License](https://github.com/babel/babel/blob/v7.25.2/LICENSE):
+This product includes source derived from [@babel/core](https://github.com/babel/babel) ([v7.26.7](https://github.com/babel/babel/tree/v7.26.7)), distributed under the [MIT License](https://github.com/babel/babel/blob/v7.26.7/LICENSE):
 
 ```
 MIT License
@@ -527,7 +527,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### @babel/register
 
-This product includes source derived from [@babel/register](https://github.com/babel/babel) ([v7.24.6](https://github.com/babel/babel/tree/v7.24.6)), distributed under the [MIT License](https://github.com/babel/babel/blob/v7.24.6/LICENSE):
+This product includes source derived from [@babel/register](https://github.com/babel/babel) ([v7.25.9](https://github.com/babel/babel/tree/v7.25.9)), distributed under the [MIT License](https://github.com/babel/babel/blob/v7.25.9/LICENSE):
 
 ```
 MIT License
@@ -2723,7 +2723,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### webpack-cli
 
-This product includes source derived from [webpack-cli](https://github.com/webpack/webpack-cli) ([v5.1.4](https://github.com/webpack/webpack-cli/tree/v5.1.4)), distributed under the [MIT License](https://github.com/webpack/webpack-cli/blob/v5.1.4/LICENSE):
+This product includes source derived from [webpack-cli](https://github.com/webpack/webpack-cli) ([v6.0.1](https://github.com/webpack/webpack-cli/tree/v6.0.1)), distributed under the [MIT License](https://github.com/webpack/webpack-cli/blob/v6.0.1/LICENSE):
 
 ```
 Copyright JS Foundation and other contributors
@@ -2750,7 +2750,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### webpack
 
-This product includes source derived from [webpack](https://github.com/webpack/webpack) ([v5.94.0](https://github.com/webpack/webpack/tree/v5.94.0)), distributed under the [MIT License](https://github.com/webpack/webpack/blob/v5.94.0/LICENSE):
+This product includes source derived from [webpack](https://github.com/webpack/webpack) ([v5.97.1](https://github.com/webpack/webpack/tree/v5.97.1)), distributed under the [MIT License](https://github.com/webpack/webpack/blob/v5.97.1/LICENSE):
 
 ```
 Copyright JS Foundation and other contributors

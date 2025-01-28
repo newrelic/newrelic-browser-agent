@@ -4,6 +4,23 @@
     {
       "changes": [
         {
+          "type": "fix",
+          "sha": "5db1d97a147c78bf93dee669ff9da95bb560d1db",
+          "message": "CLS timing node not being reported post new Harvester",
+          "issues": [
+            "1352"
+          ]
+        }
+      ],
+      "version": "1.279.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "4bb8580b-46e8-4141-9eef-6635a5d5f047",
+      "createTime": "2025-01-28T15:17:59.288Z"
+    },
+    {
+      "changes": [
+        {
           "type": "feat",
           "sha": "0f32b993a77e747f9724b6ba363e94730a6c8b3f",
           "message": "Remove FID",
@@ -2443,5 +2460,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2025-01-24T20:38:18.276Z"
+  "updateTime": "2025-01-28T15:17:59.288Z"
 }

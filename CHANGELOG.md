@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.279.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.279.0...v1.279.1) (2025-01-28)
+
+
+### Bug Fixes
+
+* CLS timing node not being reported post new Harvester ([#1352](https://github.com/newrelic/newrelic-browser-agent/issues/1352)) ([5db1d97](https://github.com/newrelic/newrelic-browser-agent/commit/5db1d97a147c78bf93dee669ff9da95bb560d1db))
+
 ## [1.279.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.278.3...v1.279.0) (2025-01-24)
 
 

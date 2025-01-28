@@ -24,6 +24,7 @@ import { now } from '../../../common/timing/now'
 import { buildNRMetaNode } from '../shared/utils'
 import { MAX_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
 import { cleanURL } from '../../../common/url/clean-url'
+import { canEnableSessionTracking } from '../../utils/feature-gates'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -50,6 +51,8 @@ export class Aggregate extends AggregateBase {
     this.errorNoticed = args?.errorNoticed || false
     this.harvestOpts.raw = true
 
+    this.isSessionTrackingEnabled = canEnableSessionTracking(this.agentIdentifier) && this.agentRef.runtime.session
+
     handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/Enabled'], undefined, FEATURE_NAMES.metrics, this.ee)
 
     // The SessionEntity class can emit a message indicating the session was cleared and reset (expiry, inactivity). This feature must abort and never resume if that occurs.
@@ -71,7 +74,7 @@ export class Aggregate extends AggregateBase {
     this.ee.on(SESSION_EVENTS.UPDATE, (type, data) => {
       if (!this.recorder || !this.initialized || this.blocked || type !== SESSION_EVENT_TYPES.CROSS_TAB) return
       if (this.mode !== MODE.OFF && data.sessionReplayMode === MODE.OFF) this.abort(ABORT_REASONS.CROSS_TAB)
-      this.mode = data.sessionReplay
+      this.mode = data.sessionReplayMode
     })
 
     registerHandler(SR_EVENT_EMITTER_TYPES.PAUSE, () => {
@@ -142,7 +145,7 @@ export class Aggregate extends AggregateBase {
 
   /**
    * Evaluate entitlements and sampling before starting feature mechanics, importing and configuring recording library, and setting storage state
-   * @param {boolean} entitlements - the true/false state of the "sr" flag from RUM response
+   * @param {boolean} srMode - the true/false state of the "sr" flag (aka. entitlements) from RUM response
    * @param {boolean} ignoreSession - whether to force the method to ignore the session state and use just the sample flags
    * @returns {void}
    */
@@ -373,6 +376,8 @@ export class Aggregate extends AggregateBase {
   }
 
   syncWithSessionManager (state = {}) {
-    this.agentRef.runtime.session.write(state)
+    if (this.isSessionTrackingEnabled) {
+      this.agentRef.runtime.session.write(state)
+    }
   }
 }

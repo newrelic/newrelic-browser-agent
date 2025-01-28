@@ -116,6 +116,20 @@ export default class CustomCommands {
     })
 
     /**
+     * Sets a permanent scheduled reply for the rum call to include the log flag with sampling rate.
+     * Defaults to 100% sampling rate and log mode = 3/INFO.
+     */
+    browser.addCommand('enableLogging', async function ({ sampling_rate = 100, logMode = 3 } = {}) {
+      const loggingMode = Math.random() * 100 < sampling_rate ? logMode : 0
+      await browser.testHandle.clearScheduledReply('bamServer', { test: testRumRequest })
+      await browser.testHandle.scheduleReply('bamServer', {
+        test: testRumRequest,
+        permanent: true,
+        body: JSON.stringify(rumFlags({ log: loggingMode }))
+      })
+    })
+
+    /**
      * Sets a permanent scheduled reply for the rum call to define the Date header
      * to a specific value. Default is to set the header to one hour in the past.
      */

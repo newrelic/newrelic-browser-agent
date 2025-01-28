@@ -1,5 +1,6 @@
 import { supportsMultiTabSessions } from '../../tools/browser-matcher/common-matchers.mjs'
 import { testErrorsRequest } from '../../tools/testing-server/utils/expect-tests'
+import { buildExpectedSessionState } from './util/helpers'
 
 const config = {
   init: {
@@ -8,14 +9,7 @@ const config = {
 }
 
 describe('newrelic session ID', () => {
-  const anySession = () => ({
-    value: expect.any(String),
-    expiresAt: expect.any(Number),
-    inactiveAt: expect.any(Number),
-    updatedAt: expect.any(Number),
-    sessionReplayMode: expect.any(Number),
-    sessionReplaySentFirstChunk: expect.any(Boolean),
-    sessionTraceMode: expect.any(Number),
+  const anySession = () => buildExpectedSessionState({
     traceHarvestStarted: expect.any(Boolean),
     custom: expect.any(Object),
     serverTimeDiff: expect.any(Number)

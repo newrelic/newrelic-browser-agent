@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "Mon Jan 27 2025 17:06:38 GMT+0000 (Coordinated Universal Time)",
+  "lastUpdated": "Tue Jan 28 2025 15:21:03 GMT+0000 (Coordinated Universal Time)",
   "projectName": "New Relic Browser Agent",
   "projectUrl": "https://github.com/newrelic/newrelic-browser-agent",
   "includeOptDeps": true,
@@ -60,15 +60,15 @@
       "publisher": "The Babel Team",
       "url": "https://babel.dev/team"
     },
-    "@babel/core@7.25.2": {
+    "@babel/core@7.26.7": {
       "name": "@babel/core",
-      "version": "7.25.2",
+      "version": "7.26.7",
       "range": "^7.23.7",
       "licenses": "MIT",
       "repoUrl": "https://github.com/babel/babel",
-      "versionedRepoUrl": "https://github.com/babel/babel/tree/v7.25.2",
+      "versionedRepoUrl": "https://github.com/babel/babel/tree/v7.26.7",
       "licenseFile": "node_modules/@babel/core/LICENSE",
-      "licenseUrl": "https://github.com/babel/babel/blob/v7.25.2/LICENSE",
+      "licenseUrl": "https://github.com/babel/babel/blob/v7.26.7/LICENSE",
       "licenseTextSource": "file",
       "publisher": "The Babel Team",
       "url": "https://babel.dev/team"
@@ -125,15 +125,15 @@
       "publisher": "The Babel Team",
       "url": "https://babel.dev/team"
     },
-    "@babel/register@7.24.6": {
+    "@babel/register@7.25.9": {
       "name": "@babel/register",
-      "version": "7.24.6",
+      "version": "7.25.9",
       "range": "^7.23.7",
       "licenses": "MIT",
       "repoUrl": "https://github.com/babel/babel",
-      "versionedRepoUrl": "https://github.com/babel/babel/tree/v7.24.6",
+      "versionedRepoUrl": "https://github.com/babel/babel/tree/v7.25.9",
       "licenseFile": "node_modules/@babel/register/LICENSE",
-      "licenseUrl": "https://github.com/babel/babel/blob/v7.24.6/LICENSE",
+      "licenseUrl": "https://github.com/babel/babel/blob/v7.25.9/LICENSE",
       "licenseTextSource": "file",
       "publisher": "The Babel Team",
       "url": "https://babel.dev/team"
@@ -782,26 +782,26 @@
       "publisher": "Yury Grunin",
       "email": "grunin.ya@ya.ru"
     },
-    "webpack-cli@5.1.4": {
+    "webpack-cli@6.0.1": {
       "name": "webpack-cli",
-      "version": "5.1.4",
-      "range": "^5.1.4",
+      "version": "6.0.1",
+      "range": "^6.0.1",
       "licenses": "MIT",
       "repoUrl": "https://github.com/webpack/webpack-cli",
-      "versionedRepoUrl": "https://github.com/webpack/webpack-cli/tree/v5.1.4",
+      "versionedRepoUrl": "https://github.com/webpack/webpack-cli/tree/v6.0.1",
       "licenseFile": "node_modules/webpack-cli/LICENSE",
-      "licenseUrl": "https://github.com/webpack/webpack-cli/blob/v5.1.4/LICENSE",
+      "licenseUrl": "https://github.com/webpack/webpack-cli/blob/v6.0.1/LICENSE",
       "licenseTextSource": "file"
     },
-    "webpack@5.94.0": {
+    "webpack@5.97.1": {
       "name": "webpack",
-      "version": "5.94.0",
+      "version": "5.97.1",
       "range": "^5.89.0",
       "licenses": "MIT",
       "repoUrl": "https://github.com/webpack/webpack",
-      "versionedRepoUrl": "https://github.com/webpack/webpack/tree/v5.94.0",
+      "versionedRepoUrl": "https://github.com/webpack/webpack/tree/v5.97.1",
       "licenseFile": "node_modules/webpack/LICENSE",
-      "licenseUrl": "https://github.com/webpack/webpack/blob/v5.94.0/LICENSE",
+      "licenseUrl": "https://github.com/webpack/webpack/blob/v5.97.1/LICENSE",
       "licenseTextSource": "file",
       "publisher": "Tobias Koppers @sokra"
     },

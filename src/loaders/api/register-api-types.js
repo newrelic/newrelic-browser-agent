@@ -15,9 +15,19 @@
  */
 
 /**
+ * @typedef {Object} RegisterAPIConstructor
+ * @property {Object} opts - The options for the registered entity.
+ * @property {string} opts.licenseKey - The license key for the registered entity.
+ * @property {string} opts.applicationID - The application ID for the registered entity.
+ */
+
+/**
  * @typedef {Object} RegisterAPIMetadata
- * @property {Object} customAttributes - The custom attributes to be sent with the registered entity's data.
- * @property {Object} target - The target information for the registered entity.
+ * @property {Object} customAttributes - The custom attributes for the registered entity.
+ * @property {Object} target - The options for the registered entity.
+ * @property {string} target.licenseKey - The license key for the registered entity.
+ * @property {string} target.applicationID - The application ID for the registered entity.
+ * @property {string} target.entityGuid - The entity guid returned for the registered entity.
  */
 
 export default {}

@@ -2,92 +2,94 @@
  * Copyright 2020-2025 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
+
+// loader files
+import { Instrument as PVE } from '../features/page_view_event/instrument'
+import { getEnabledFeatures } from './features/enabled-features'
+import { configure } from './configure/configure'
+// core files
+import { setNREUMInitializedAgent } from '../common/window/nreum'
+import { FEATURE_NAMES } from './features/features'
 import { warn } from '../common/util/console'
+import { MicroAgentBase } from './micro-agent-base'
+
+const nonAutoFeatures = [
+  FEATURE_NAMES.jserrors,
+  FEATURE_NAMES.genericEvents,
+  FEATURE_NAMES.metrics,
+  FEATURE_NAMES.logging
+]
 
 /**
- * @typedef {import('./api/register-api-types').RegisterAPI} RegisterAPI
- * @typedef {import('./api/register-api-types').RegisterAPIMetadata} RegisterAPIMetadata
+ * A minimal agent class designed to only respond to manual user input. As such, this class does not
+ * automatically instrument. Instead, each MicroAgent instance will lazy load the required features and can support loading multiple instances on one page.
+ * Out of the box, it can manually handle and report Page View, Page Action, and Error events.
  */
-export class MicroAgent {
-  /** @type {RegisterAPIMetadata} */
-  metadata = {
-    target: {},
-    customAttributes: {}
-  }
+export class MicroAgent extends MicroAgentBase {
+  /**
+   * @param {Object} options - Specifies features and runtime configuration,
+   * @param {string=} agentIdentifier - The optional unique ID of the agent.
+   */
+  constructor (options, agentIdentifier) {
+    super(agentIdentifier)
 
-  constructor (opts) {
-    try {
-      Object.assign(this, window.newrelic?.register(opts) || {})
-    } catch (err) {
-      warn(49, err)
+    this.features = {}
+    setNREUMInitializedAgent(this.agentIdentifier, this)
+
+    configure(this, { ...options, runtime: { isolatedBacklog: true } }, options.loaderType || 'micro-agent')
+    Object.assign(this, this.api) // the APIs should be available at the class level for micro-agent
+
+    /**
+     * Starts a set of agent features if not running in "autoStart" mode
+     * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/start/}
+     * @param {string|string[]} [featureNames] The feature name(s) to start.  If no name(s) are passed, all features will be started
+     */
+    this.start = (featureNames) => {
+      try {
+        if (featureNames === undefined || (Array.isArray(featureNames) && featureNames.length === 0)) featureNames = nonAutoFeatures
+        else if (typeof featureNames === 'string') featureNames = [featureNames]
+
+        if (featureNames.some(f => !nonAutoFeatures.includes(f))) warn(37, nonAutoFeatures)
+        const enabledFeatures = getEnabledFeatures(this.agentIdentifier)
+
+        try {
+          // a biproduct of doing this is that the "session manager" is automatically handled through importing this feature
+          this.features.page_view_event = new PVE(this)
+        } catch (err) {
+          warn(24, err)
+        }
+
+        this.features.page_view_event.onAggregateImported.then(() => {
+          /* The following features do not import an "instrument" file, meaning they are only hooked up to the API.
+          Since the missing instrument-base class handles drain-gating (racing behavior) and PVE handles some setup, these are chained until after PVE has finished initializing
+          so as to avoid the race condition of things like session and sharedAggregator not being ready by features that uses them right away. */
+          nonAutoFeatures.forEach(f => {
+            if (enabledFeatures[f] && featureNames.includes(f)) {
+              import(/* webpackChunkName: "lazy-feature-loader" */ '../features/utils/lazy-feature-loader').then(({ lazyFeatureLoader }) => {
+                return lazyFeatureLoader(f, 'aggregate')
+              }).then(({ Aggregate }) => {
+                this.features[f] = new Aggregate(this)
+                this.runtime.harvester.initializedAggregates.push(this.features[f]) // so that harvester will poll this feature agg on interval
+              }).catch(err => warn(25, err))
+            }
+          })
+        })
+        return true
+      } catch (err) {
+        warn(26, err)
+        return false
+      }
     }
+
+    this.start(nonAutoFeatures.filter(featureName => !!this.init[featureName].autoStart))
   }
 
-  /**
-   * Reports a browser PageAction event along with a name and optional attributes to the registered target.
-   * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/addpageaction/}
-   * @param {string} name Name or category of the action. Reported as the actionName attribute.
-   * @param {object} [attributes] JSON object with one or more key/value pairs. For example: {key:"value"}. The key is reported as its own PageAction attribute with the specified values.
-   */
-  addPageAction (name, attributes) {
-    /** this method will be overset once register is successful */
-    warn(35, 'addPageAction')
-  }
-
-  /**
-   * Adds a user-defined attribute name and value to subsequent events on the page for the registered target. Note -- the persist flag does not work with the register API.
-   * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/setcustomattribute/}
-   * @param {string} name Name of the attribute. Appears as column in the PageView event. It will also appear as a column in the PageAction event if you are using it.
-   * @param {string|number|boolean|null} value Value of the attribute. Appears as the value in the named attribute column in the PageView event. It will appear as a column in the PageAction event if you are using it. Custom attribute values cannot be complex objects, only simple types such as Strings, Integers and Booleans. Passing a null value unsets any existing attribute of the same name.
-   * @param {boolean} [persist] Default false. If set to true, the name-value pair will also be set into the browser's storage API. Then on the following instrumented pages that load within the same session, the pair will be re-applied as a custom attribute.
-   */
-  setCustomAttribute (name, value, persist) {
-    /** this method will be overset once register is successful */
-    warn(35, 'setCustomAttribute')
-  }
-
-  /**
-   * Identifies a browser error without disrupting your app's operations for the registered target.
-   * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/noticeerror/}
-   * @param {Error|string} error Provide a meaningful error message that you can use when analyzing data on browser's JavaScript errors page.
-   * @param {object} [customAttributes] An object containing name/value pairs representing custom attributes.
-   */
-  noticeError (error, customAttributes) {
-    /** this method will be overset once register is successful */
-    warn(35, 'noticeError')
-  }
-
-  /**
-   * Adds a user-defined identifier string to subsequent events on the page for the registered taret.
-   * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/setuserid/}
-   * @param {string|null} value A string identifier for the end-user, useful for tying all browser events to specific users. The value parameter does not have to be unique. If IDs should be unique, the caller is responsible for that validation. Passing a null value unsets any existing user ID.
-   */
-  setUserId (value) {
-    /** this method will be overset once register is successful */
-    warn(35, 'setUserId')
-  }
-
-  /**
-   * Adds a user-defined application version string to subsequent events on the page for the registered target.
-   * This decorates all payloads with an attribute of `application.version` which is queryable in NR1.
-   * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/setapplicationversion/}
-   * @param {string|null} value A string identifier for the application version, useful for
-   * tying all browser events to a specific release tag. The value parameter does not
-   * have to be unique. Passing a null value unsets any existing value.
-   */
-  setApplicationVersion (value) {
-    /** this method will be overset once register is successful */
-    warn(35, 'setApplicationVersion')
-  }
-
-  /**
-   * Capture a single log for the registered target.
-   * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/log/}
-   * @param {string} message String to be captured as log message
-   * @param {{customAttributes?: object, level?: 'ERROR'|'TRACE'|'DEBUG'|'INFO'|'WARN'}} [options] customAttributes defaults to `{}` if not assigned, level defaults to `info` if not assigned.
-  */
-  log (message, options) {
-    /** this method will be overset once register is successful */
-    warn(35, 'setCustomAttribute')
+  get config () {
+    return {
+      info: this.info,
+      init: this.init,
+      loader_config: this.loader_config,
+      runtime: this.runtime
+    }
   }
 }

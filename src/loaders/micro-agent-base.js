@@ -35,18 +35,6 @@ export class MicroAgentBase {
   }
 
   /**
-   * Registers an external caller to report through the base agent to a different target than the base agent.
-   * @param {object} target the target object to report data to
-   * @param {string} target.licenseKey The licenseKey to report data to
-   * @param {string} target.applicationID The applicationID to report data to
-   * @param {string=} target.entityGuid The entityGuid to report data to
-   * @returns {object} Returns an object that contains the available API methods and configurations to use with the external caller. See loaders/api/api.js for more information.
-   */
-  register (target) {
-    return this.#callMethod('register', target)
-  }
-
-  /**
    * Records a custom event with a specified eventType and attributes.
    * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/recordCustomEvent/}
    * @param {string} eventType The eventType to store the event as.

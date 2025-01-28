@@ -1,3 +1,4 @@
+import { RegisteredEntity } from './../../dist/types/loaders/registered-entity.d';
 import { BrowserAgent } from '../../dist/types/loaders/browser-agent'
 import { MicroAgent } from '../../dist/types/loaders/micro-agent'
 import { InteractionInstance, getContext, onEnd } from '../../dist/types/loaders/api/interaction-types'
@@ -45,18 +46,26 @@ expectType<(name: string, trigger?: string) => InteractionInstance>(browserAgent
 
 // Micro Agent APIs
 const microAgent = new MicroAgent({})
-expectType<(name: string, attributes?: object) => void>(microAgent.addPageAction)
-expectType<(name: string, value: string | number | boolean | null, persist?: boolean) => void>(microAgent.setCustomAttribute)
-expectType<(error: Error | string, customAttributes?: object) => void>(microAgent.noticeError)
-expectType<(value: string | null) => void>(microAgent.setUserId)
-expectType<(value: string | null) => void>(microAgent.setApplicationVersion)
-expectType<(message: string, options?: { customAttributes?: object, level?: 'ERROR' | 'TRACE' | 'DEBUG' | 'INFO' | 'WARN'}) => void>(microAgent.log)
+expectType<(featureNames?: string | string[]) => boolean>(microAgent.start)
 
-// The following browser agent APIs should not be available in the Micro Agent:
-expectError(() => expectType<any>(microAgent.addToTrace))
-expectError(() => expectType<any>(microAgent.setCurrentRouteName))
-expectError(() => expectType<any>(microAgent.interaction))
-expectError(() => expectType<any>(microAgent.finished))
-expectError(() => expectType<any>(microAgent.recordReplay))
-expectError(() => expectType<any>(microAgent.pauseReplay))
-expectError(() => expectType<any>(microAgent.wrapLogger))
+expectType<(name: string, attributes?: object) => any>(microAgent.addPageAction)
+expectType<(name: string, host?: string) => any>(microAgent.setPageViewName)
+expectType<(name: string, value: string | number | boolean | null, persist?: boolean) => any>(microAgent.setCustomAttribute)
+expectType<(error: Error | string, customAttributes?: object) => any>(microAgent.noticeError)
+expectType<(value: string | null) => any>(microAgent.setUserId)
+expectType<(value: string | null) => any>(microAgent.setApplicationVersion)
+expectType<(callback: (error: Error | string) => boolean | { group: string; }) => any>(microAgent.setErrorHandler)
+expectType<(name: string, id: string) => any>(microAgent.addRelease)
+expectType<(message: string, options?: { customAttributes?: object, level?: 'ERROR' | 'TRACE' | 'DEBUG' | 'INFO' | 'WARN'}) => any>(microAgent.log)
+
+const registeredEntity = new RegisteredEntity({
+  // @ts-ignore
+  licenseKey: '1234',
+  applicationID: '5678'
+})
+expectType<(name: string, attributes?: object) => void>(registeredEntity.addPageAction)
+expectType<(name: string, value: string | number | boolean | null, persist?: boolean) => void>(registeredEntity.setCustomAttribute)
+expectType<(error: Error | string, customAttributes?: object) => void>(registeredEntity.noticeError)
+expectType<(value: string | null) => void>(registeredEntity.setUserId)
+expectType<(value: string | null) => void>(registeredEntity.setApplicationVersion)
+expectType<(message: string, options?: { customAttributes?: object, level?: 'ERROR' | 'TRACE' | 'DEBUG' | 'INFO' | 'WARN'}) => void>(registeredEntity.log)

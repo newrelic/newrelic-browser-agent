@@ -72,6 +72,12 @@ export function setAPI (agentRef, forceDrain, runSoftNavOverSpa = false) {
       handle('err', [err, timestamp, false, customAttributes, !!replayRunning[agentRef.agentIdentifier], undefined, targetEntityGuid], undefined, FEATURE_NAMES.jserrors, agentRef.ee)
     }
   }
+
+  /**
+   * @experimental
+   * IMPORTANT: This feature is being developed for use internally and is not in a public-facing production-ready state.
+   * It is not recommended for use in production environments and will not receive support for issues.
+   */
   apiInterface.register = function (target) {
     handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/register/called'], undefined, FEATURE_NAMES.metrics, agentRef.ee)
     return buildRegisterApi(agentRef, sharedHandlers, target)

@@ -12,7 +12,7 @@ import { warn } from '../common/util/console'
 
 /**
  * @experimental
- * IMPORTANT: This feature is being developed for use internally and not in a public-facing production-ready state.
+ * IMPORTANT: This feature is being developed for use internally and is not in a public-facing production-ready state.
  * It is not recommended for use in production environments and will not receive support for issues.
  *
  * An interface for registering an external caller to report through the base agent to a different target than the base agent.

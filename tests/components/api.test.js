@@ -602,7 +602,7 @@ describe('setAPI', () => {
         myApi.addPageAction()
         myApi.noticeError()
         myApi.log()
-        expect(console.debug).toHaveBeenCalledTimes(4)
+        expect(console.debug).toHaveBeenCalledTimes(5)
       })
     })
 

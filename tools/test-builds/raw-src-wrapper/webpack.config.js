@@ -13,7 +13,7 @@ const htmlTemplate = (script) => `<html>
     <h1>This is a generic page that is instrumented by the NPM agent</h1>
   </body>
 </html>`
-const microAgentHtmlTemplate = (script) => `<html>
+const registeredEntityHtmlTemplate = (script) => `<html>
   <head>
     <title>RUM Unit Test</title>
     {init}
@@ -49,6 +49,7 @@ const config = [
       'custom-agent-pro-deprecated-features': './src/custom-agent-pro-deprecated-features.js',
       'custom-agent-spa': './src/custom-agent-spa.js',
       'micro-agent': './src/micro-agent.js',
+      'registered-entity': './src/registered-entity.js',
       // worker init script
       'worker-init': './src/worker-init.js'
     },
@@ -120,7 +121,13 @@ const config = [
         filename: 'micro-agent.html',
         minify: false,
         inject: false,
-        templateContent: microAgentHtmlTemplate('micro-agent')
+        templateContent: htmlTemplate('micro-agent')
+      }),
+      new HtmlWebpackPlugin({
+        filename: 'registered-entity.html',
+        minify: false,
+        inject: false,
+        templateContent: registeredEntityHtmlTemplate('registered-entity')
       })
     ]
   },

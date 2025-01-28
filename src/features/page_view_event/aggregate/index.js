@@ -163,14 +163,19 @@ export class Aggregate extends AggregateBase {
 
   /**
    * Process any tasks that require use of the entity guid directly, like creating the shared agg or the runtime metadata
-   * @param {*} rumResponse
+   * @param {*} rumResponse the rum response object returned from the server
+   * @param {*} targetApp the target app object that was used to point the rum call to the correct app
+   * @returns {void}
    */
   processEntityGuidFromRumResponse (rumResponse, targetApp) {
     const respEntityGuid = rumResponse.app.agents[0].entityGuid
+    if (!respEntityGuid) return warn(52)
+    // set the entity manager with the entity guid and the target app object
     this.agentRef.runtime.entityManager.set(respEntityGuid, { entityGuid: respEntityGuid, ...targetApp })
+    // set the agent runtime objects that require the rum response or entity guid
     if (!Object.keys(this.agentRef.runtime.appMetadata).length) this.agentRef.runtime.appMetadata = rumResponse.app
     if (!this.agentRef.sharedAggregator) this.agentRef.sharedAggregator = new EventStoreManager(this.agentRef.runtime.entityManager, EventAggregator, respEntityGuid)
-
+    // alert any features that need the entity guid, such as those waiting to set up event buffers
     this.ee.emit('entity-guid', [respEntityGuid])
   }
 }

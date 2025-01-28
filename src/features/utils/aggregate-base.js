@@ -41,6 +41,11 @@ export class AggregateBase extends FeatureBase {
     }
   }
 
+  /**
+   * sets up the event store for the feature.  It must wait for the entity guid to be available before setting up the event store.  This is called once the rum response is received with an entityGuid.
+   * @param {string} entityGuid
+   * @returns {void}
+   */
   #setupEventStore (entityGuid) {
     if (this.events || !entityGuid) return
     switch (this.featureName) {
@@ -83,14 +88,16 @@ export class AggregateBase extends FeatureBase {
         })
       }
     })
-    return flagsPromise
-      .catch(err => {
-        this.ee.emit('internal-error', [err])
-        this.blocked = true
-        this.deregisterDrain()
-      })
+    return flagsPromise.catch(err => {
+      this.ee.emit('internal-error', [err])
+      this.blocked = true
+      this.deregisterDrain()
+    })
   }
 
+  /**
+   * Stages the feature to be drained
+   */
   drain () {
     drain(this.agentIdentifier, this.featureName)
     this.drained = true
@@ -99,7 +106,8 @@ export class AggregateBase extends FeatureBase {
   /**
    * Return harvest payload. A "serializer" function can be defined on a derived class to format the payload.
    * @param {Boolean} shouldRetryOnFail - harvester flag to backup payload for retry later if harvest request fails; this should be moved to harvester logic
-   * @param {object|undefined} opts - the target entity guid passed onto the event store manager to determine which app's data to return; if none provided, all apps data will be returned
+   * @param {object|undefined} opts - opts passed from the harvester to help form the payload
+   * @param {string} opts.targetEntityGuid - the entity guid of the target app
    * @returns {Array} Final payload tagged with their targeting browser app. The value of `payload` can be undefined if there are no pending events for an app. This should be a minimum length of 1.
    */
   makeHarvestPayload (shouldRetryOnFail = false, opts = {}) {
@@ -128,6 +136,10 @@ export class AggregateBase extends FeatureBase {
   /**
    * Cleanup task after a harvest.
    * @param {object} result - the cbResult object from the harvester's send method
+   * @param {object=} result.targetApp - the target app object that was used to point the harvest to the correct app
+   * @param {string=} result.targetApp.entityGuid - the entity guid of the target app
+   * @param {boolean=} result.sent - whether the harvest was sent successfully
+   * @param {boolean=} result.retry - whether the harvest should be retried
    */
   postHarvestCleanup (result = {}) {
     const harvestFailed = result.sent && result.retry

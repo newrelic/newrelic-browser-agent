@@ -103,3 +103,7 @@
 `Container agent is not available to register with. Can not connect`
 ### 51
 `Unexpected problem encountered. There should be at least one app for harvest!`
+### 52
+`Did not recieve a valid entityGuid from connection response`
+### 53 
+`An experimental feature is being used. Support can not be offered for issues`

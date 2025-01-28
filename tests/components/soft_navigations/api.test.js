@@ -26,7 +26,7 @@ let softNavAggregate
 
 beforeEach(async () => {
   const softNavInstrument = new SoftNav(mainAgent)
-  await softNavInstrument.onAggregateImported
+  await new Promise(process.nextTick)
   softNavAggregate = softNavInstrument.featAggregate
 
   softNavAggregate.ee.emit('rumresp', [{ spa: 1 }])
@@ -290,7 +290,6 @@ test('multiple finished ixns retain the correct start/end timestamps in payload'
 
   expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(3)
   // WARN: Double check decoded output & behavior or any introduced bugs before changing the follow line's static string.
-  // TODO CHECK THAT THIS STILL WORKS WITH NEW SYYSTEM
   expect(softNavAggregate.makeHarvestPayload()[0].payload.body).toEqual("bel.7;1,,,5k,,,'api,'http://localhost/,1,1,,2,!!!!'some_id,'1,!!;;1,,8c,5k,,,'api,'http://localhost/,1,1,,2,!!!!'some_other_id,'2,!!;;1,,jg,8c,,,'api,'http://localhost/,1,1,,2,!!!!'some_another_id,'3,!!;")
 })
 
@@ -304,7 +303,6 @@ test('multiple finished ixns with ajax have correct start/end timestamps (in aja
   softNavAggregate.ee.emit(`${INTERACTION_API}-end`, [4.56], ixnContext)
 
   softNavAggregate.ee.emit('ajax', [{ startTime: 2.34, endTime: 5.67 }])
-  // console.log(ixnContext.associatedInteraction)
   ixnContext.associatedInteraction.children[0].nodeId = 2
   softNavAggregate.ee.emit('ajax', [{ startTime: 3.45, endTime: 6.78 }])
   ixnContext.associatedInteraction.children[1].nodeId = 3

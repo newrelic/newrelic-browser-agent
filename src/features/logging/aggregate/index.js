@@ -74,7 +74,7 @@ export class Aggregate extends AggregateBase {
     }
 
     if (this.events.wouldExceedMaxSize(logBytes, targetEntityGuid)) {
-      handle(SUPPORTABILITY_METRIC_CHANNEL, ['Logging/Harvest/Early/Seen', this.events.byteSize() + logBytes], undefined, FEATURE_NAMES.metrics, this.ee)
+      handle(SUPPORTABILITY_METRIC_CHANNEL, ['Logging/Harvest/Early/Seen', this.events.byteSize(targetEntityGuid) + logBytes], undefined, FEATURE_NAMES.metrics, this.ee)
       this.agentRef.runtime.harvester.triggerHarvestFor(this, { targetEntityGuid }) // force a harvest synchronously to try adding again
     }
 

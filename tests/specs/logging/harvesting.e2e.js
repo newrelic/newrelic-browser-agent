@@ -32,6 +32,27 @@ describe('logging harvesting', () => {
       },
       logs: expectedLogs
     }]
+    const expectedPayloadWithSetCustomAttributes = [{
+      common: {
+        attributes: {
+          appId: 42,
+          agentVersion: expect.any(String),
+          'instrumentation.provider': 'browser',
+          'instrumentation.version': expect.any(String),
+          'instrumentation.name': 'spa',
+          'entity.guid': expect.any(String),
+          hasReplay: false,
+          hasTrace: true,
+          standalone: false,
+          session: expect.any(String),
+          ptid: expect.any(String),
+          test: 19,
+          hello: 'world',
+          bool: true
+        }
+      },
+      logs: expectedLogs
+    }]
 
     ;['api', 'api-wrap-logger'].forEach(type => {
       it(`should harvest expected logs - ${type} pre load`, async () => {
@@ -68,6 +89,24 @@ describe('logging harvesting', () => {
           browser.url(await browser.testHandle.assetURL(`logs-${type}-too-large.html`))
         ])
         expect(JSON.parse(body)).toEqual(expectedPayload) // should not contain the '...xxxxx...' payload in it
+      })
+
+      it(`should have custom attributes from info object and setCustomAttribute call - ${type} pre load`, async () => {
+        const [[{ request: { body } }]] = await Promise.all([
+          logsCapture.waitForResult({ totalCount: 1 }),
+          browser.url(await browser.testHandle.assetURL(`logs-${type}-custom-attributes-pre-load.html`))
+        ])
+
+        expect(JSON.parse(body)).toEqual(expectedPayloadWithSetCustomAttributes)
+      })
+
+      it(`should have custom attributes from info object and setCustomAttribute call - ${type} post load`, async () => {
+        const [[{ request: { body } }]] = await Promise.all([
+          logsCapture.waitForResult({ totalCount: 1 }),
+          browser.url(await browser.testHandle.assetURL(`logs-${type}-custom-attributes-post-load.html`))
+        ])
+
+        expect(JSON.parse(body)).toEqual(expectedPayloadWithSetCustomAttributes)
       })
     })
 

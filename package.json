@@ -172,7 +172,7 @@
     "start": "npm-run-all --parallel cdn:watch test-server",
     "lint": "eslint -c .eslintrc.js --ext .js,.cjs,.mjs .",
     "lint:fix": "npm run lint -- --fix",
-    "test": "jest",
+    "test": " NODE_OPTIONS=--max-old-space-size=8192 jest",
     "test:unit": "jest --selectProjects unit",
     "test:component": "jest --selectProjects component",
     "test:types": "tsd -f ./tests/dts/**/*.ts",

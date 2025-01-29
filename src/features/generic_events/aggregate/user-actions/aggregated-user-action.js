@@ -5,13 +5,14 @@
 import { RAGE_CLICK_THRESHOLD_EVENTS, RAGE_CLICK_THRESHOLD_MS } from '../../constants'
 
 export class AggregatedUserAction {
-  constructor (evt, selectorPath) {
+  constructor (evt, selectorPath, nearestTargetFields) {
     this.event = evt
     this.count = 1
     this.originMs = Math.floor(evt.timeStamp)
     this.relativeMs = [0]
     this.selectorPath = selectorPath
     this.rageClick = undefined
+    this.nearestTargetFields = nearestTargetFields
   }
 
   /**

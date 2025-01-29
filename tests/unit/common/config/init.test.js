@@ -73,7 +73,8 @@ test('init props exist and return expected defaults', () => {
     enabled: true
   })
   expect(config.user_actions).toEqual({
-    enabled: true
+    enabled: true,
+    elementAttributes: ['id', 'className', 'tagName', 'type']
   })
   expect(config.page_view_event).toEqual({
     autoStart: true,
@@ -153,7 +154,8 @@ test('init props exist and return expected defaults', () => {
   })
   expect(config.ssl).toEqual(undefined)
   expect(config.user_actions).toEqual({
-    enabled: true
+    enabled: true,
+    elementAttributes: ['id', 'className', 'tagName', 'type']
   })
 })
 

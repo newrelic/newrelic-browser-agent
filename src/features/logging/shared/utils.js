@@ -13,10 +13,11 @@ import { LOGGING_EVENT_EMITTER_CHANNEL, LOG_LEVELS } from '../constants'
    * @param {string} message - the log message string
    * @param {{[key: string]: *}} customAttributes - The log's custom attributes if any
    * @param {enum} level - the log level enum
+   * @param {object=} targetEntityGuid - the optional target entity guid provided by an api call
    */
-export function bufferLog (ee, message, customAttributes = {}, level = LOG_LEVELS.INFO) {
+export function bufferLog (ee, message, customAttributes = {}, level = LOG_LEVELS.INFO, targetEntityGuid, timestamp = now()) {
   handle(SUPPORTABILITY_METRIC_CHANNEL, [`API/logging/${level.toLowerCase()}/called`], undefined, FEATURE_NAMES.metrics, ee)
-  handle(LOGGING_EVENT_EMITTER_CHANNEL, [now(), message, customAttributes, level], undefined, FEATURE_NAMES.logging, ee)
+  handle(LOGGING_EVENT_EMITTER_CHANNEL, [timestamp, message, customAttributes, level, targetEntityGuid], undefined, FEATURE_NAMES.logging, ee)
 }
 
 /**

@@ -120,7 +120,7 @@ function send (agentRef, { endpoint, targetApp, payload, localOpts = {}, submitM
   let { body, qs } = cleanPayload(payload)
 
   if (Object.keys(body).length === 0 && !localOpts.sendEmptyBody) { // if there's no body to send, just run onfinish stuff and return
-    if (cbFinished) cbFinished({ sent: false, targetApp })
+    if (cbFinished) cbFinished({ sent: false, targetApp, cbFinished: localOpts.cbFinished })
     return false
   }
 
@@ -129,7 +129,7 @@ function send (agentRef, { endpoint, targetApp, payload, localOpts = {}, submitM
   const url = raw
     ? `${protocol}://${perceivedBeacon}/${endpoint}`
     : `${protocol}://${perceivedBeacon}${endpoint !== RUM ? '/' + endpoint : ''}/1/${targetApp.licenseKey}`
-  const baseParams = !raw ? baseQueryString(agentRef, qs, endpoint, targetApp.appId) : ''
+  const baseParams = !raw ? baseQueryString(agentRef, qs, endpoint, targetApp.applicationID) : ''
   let payloadParams = obj(qs, agentRef.runtime.maxBytes)
   if (baseParams === '' && payloadParams.startsWith('&')) {
     payloadParams = payloadParams.substring(1)
@@ -159,14 +159,14 @@ function send (agentRef, { endpoint, targetApp, payload, localOpts = {}, submitM
       result.addEventListener('loadend', function () {
         // `this` here in block refers to the XHR object in this scope, do not change the anon function to an arrow function
         // status 0 refers to a local error, such as CORS or network failure, or a blocked request by the browser (e.g. adblocker)
-        const cbResult = { sent: this.status !== 0, status: this.status, retry: shouldRetry(this.status), xhr: this, fullUrl, targetApp }
+        const cbResult = { sent: this.status !== 0, status: this.status, retry: shouldRetry(this.status), fullUrl, xhr: this, targetApp, cbFinished: localOpts.cbFinished }
         if (localOpts.needResponse) cbResult.responseText = this.responseText
         cbFinished(cbResult)
       }, eventListenerOpts(false))
     } else if (submitMethod === fetchMethod) {
       result.then(async function (response) {
         const status = response.status
-        const cbResult = { sent: true, status, retry: shouldRetry(status), fullUrl, fetchResponse: response, targetApp }
+        const cbResult = { sent: true, status, retry: shouldRetry(status), fullUrl, fetchResponse: response, targetApp, cbFinished: localOpts.cbFinished }
         if (localOpts.needResponse) cbResult.responseText = await response.text()
         cbFinished(cbResult)
       })

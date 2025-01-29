@@ -14,6 +14,8 @@ let mainAgent
 
 beforeAll(() => {
   mainAgent = setupAgent()
+  // stop JEST DOM from throwing errors with the stylesheet API
+  mainAgent.init.session_replay.fix_stylesheets = false
 })
 
 let sessionReplayAggregate, session
@@ -25,6 +27,8 @@ beforeEach(async () => {
   const sessionReplayInstrument = new SessionReplay(mainAgent)
   await new Promise(process.nextTick)
   sessionReplayAggregate = sessionReplayInstrument.featAggregate
+
+  // TODO MAKE SURE THIS WORKS WITH NEW SYSTEM
   mainAgent.runtime.harvester.initializedAggregates = [sessionReplayAggregate] // required for harvester to function
   jest.spyOn(mainAgent.runtime.harvester, 'triggerHarvestFor')
 

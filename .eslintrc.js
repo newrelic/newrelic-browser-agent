@@ -54,6 +54,7 @@ module.exports = {
       rules: {
         'no-console': ['error'],
         'n/no-callback-literal': 'off', // This is not NodeJS code and should not be forced to adhere to NodeJS callback parameter pattern
+        'n/handle-callback-err': 'off', // eslint interprets our noticeError method as a callback, but it is not
         'headers/header-format': [
           'error',
           {

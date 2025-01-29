@@ -12,7 +12,7 @@ describe('pvt timings tests', () => {
 
   describe('page viz related timings', () => {
     loadersToTest.forEach(loader => {
-      it(`Load, Unload, FP, FCP & pageHide for ${loader} agent`, async () => {
+      it(`Load, Unload, FP, FCP, CLS & pageHide for ${loader} agent`, async () => {
         const start = Date.now()
         await browser.url(
           await browser.testHandle.assetURL('instrumented.html', { loader })
@@ -50,6 +50,9 @@ describe('pvt timings tests', () => {
         if (browserMatch(supportsCumulativeLayoutShift)) {
           const emptyCls = pageHide.attributes.find(a => a.key === 'cls')
           expect(emptyCls.value).toEqual(0)
+
+          // There should also be a standalone CLS node sent on EoL
+          expect(timingsHarvests.find(harvest => harvest.request.body.find(t => t.name === 'cls'))).toBeTruthy()
         }
       })
 
@@ -124,7 +127,7 @@ describe('pvt timings tests', () => {
   describe('layout shift related timings', () => {
     loadersToTest.forEach(loader => {
       [['unload', 'cls-basic.html'], ['pageHide', 'cls-pagehide.html']].forEach(([prop, testAsset]) => {
-        it.withBrowsersMatching([supportsCumulativeLayoutShift])(`${prop} for ${loader} agent collects cls attribute`, async () => {
+        it.withBrowsersMatching([supportsCumulativeLayoutShift])(`${prop} for ${loader} agent collects cls attribute & node`, async () => {
           await browser.url(
             await browser.testHandle.assetURL(testAsset, { loader })
           ).then(() => browser.waitForAgentLoad())
@@ -148,6 +151,7 @@ describe('pvt timings tests', () => {
           const cls = evt.attributes.find(a => a.key === 'cls')
           expect(cls?.value).toBeGreaterThan(0)
           expect(cls?.type).toEqual('doubleAttribute')
+          expect(timingsHarvests.find(harvest => harvest.request.body.find(t => t.name === 'cls'))).toBeTruthy()
         })
       })
     })

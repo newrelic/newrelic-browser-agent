@@ -28,10 +28,9 @@ const nonAutoFeatures = [
 export class MicroAgent extends MicroAgentBase {
   /**
    * @param {Object} options - Specifies features and runtime configuration,
-   * @param {string=} agentIdentifier - The optional unique ID of the agent.
    */
-  constructor (options, agentIdentifier) {
-    super(agentIdentifier)
+  constructor (options) {
+    super()
 
     this.features = {}
     setNREUMInitializedAgent(this.agentIdentifier, this)

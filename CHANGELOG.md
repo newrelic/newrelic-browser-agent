@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.280.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.279.1...v1.280.0) (2025-01-31)
+
+
+### Features
+
+* Remove agentIdentifier argument from agent constructors ([#1353](https://github.com/newrelic/newrelic-browser-agent/issues/1353)) ([cb866e5](https://github.com/newrelic/newrelic-browser-agent/commit/cb866e5678bf6aa898c082f2be83145a5014fd0e))
+
+
+### Bug Fixes
+
+* Roll back to previous FirstInteraction implementation ([#1359](https://github.com/newrelic/newrelic-browser-agent/issues/1359)) ([c2e22ab](https://github.com/newrelic/newrelic-browser-agent/commit/c2e22ab49b00e9cfbeb54664a820e1aa4ed28a53))
+
 ## [1.279.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.279.0...v1.279.1) (2025-01-28)
 
 

@@ -31,12 +31,17 @@ export class Aggregate extends AggregateBase {
     }
 
     const { userJourneyPaths, userJourneyTimestamps } = agentRef.runtime.session.read()
+    const splitPaths = userJourneyPaths?.split('>')
     this.userJourney = {
       host: globalScope.location?.host,
       paths: userJourneyPaths,
       timestamps: userJourneyTimestamps,
-      navs: userJourneyPaths.split('>').length,
-      maxSizeReached: false
+      navs: splitPaths.length,
+      maxSizeReached: false,
+      ...(splitPaths.length && splitPaths.reduce((acc, path, i) => {
+        acc['path' + i] = path
+        return acc
+      }, {}))
     }
 
     this.waitForFlags(['ins']).then(([ins]) => {
@@ -54,7 +59,10 @@ export class Aggregate extends AggregateBase {
           pathname
           // search
         } = new URL(url)
-        if (this.userJourney.paths.length + pathname.length + hash.length > 4096 || this.userJourney.timestamps.length + ('' + timestamp).length > 4096) {
+        if (
+          // this.userJourney.paths.length + pathname.length + hash.length > 4096 ||
+          this.userJourney.timestamps.length + ('' + timestamp).length > 4096 ||
+          this.userJourney.navs >= 254) {
           this.userJourney.maxSizeReached = true
           return
         }
@@ -63,19 +71,18 @@ export class Aggregate extends AggregateBase {
         this.userJourney.paths += pathname + hash
         if (this.userJourney.timestamps) this.userJourney.timestamps += '>'
         this.userJourney.timestamps += this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(timestamp)
-        this.userJourney.navs++
+
+        this.userJourney['path' + this.userJourney.navs++] = pathname + hash
+
         this.syncWithSessionManager({ userJourneyPaths: this.userJourney.paths, userJourneyTimestamps: this.userJourney.timestamps })
       }, this.featureName, this.ee)
       this.beforeUnloadFns.push(() => {
+        if (!this.userJourney.paths) return
+        const { paths, ...rest } = this.userJourney
         this.addEvent({
           eventType: 'SessionMetadata',
-
-          maxSizeReached: this.userJourney.maxSizeReached,
-          navs: this.userJourney.navs,
-          host: this.userJourney.host,
-          paths: this.userJourney.paths,
-          timestamps: this.userJourney.timestamps
-        })
+          ...rest
+        }, true, true)
       })
 
       registerHandler('api-recordCustomEvent', (timestamp, eventType, attributes) => {
@@ -267,7 +274,7 @@ export class Aggregate extends AggregateBase {
    * @param {object=} obj the event object for storing in the event buffer
    * @returns void
    */
-  addEvent (obj = {}) {
+  addEvent (obj = {}, ignoreDefaultAttributes = false, ignoreCustomAttributes = false) {
     if (!obj || !Object.keys(obj).length) return
     if (!obj.eventType) {
       warn(44)
@@ -289,9 +296,9 @@ export class Aggregate extends AggregateBase {
 
     const eventAttributes = {
       /** Agent-level custom attributes */
-      ...(this.agentRef.info.jsAttributes || {}),
+      ...(!ignoreCustomAttributes && (this.agentRef.info.jsAttributes || {})),
       /** Fallbacks for required properties in-case the event did not supply them, should take precedence over agent-level custom attrs */
-      ...defaultEventAttributes,
+      ...(!ignoreDefaultAttributes && defaultEventAttributes),
       /** Event-specific attributes take precedence over agent-level custom attributes and fallbacks */
       ...obj
     }

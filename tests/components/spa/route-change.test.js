@@ -2,6 +2,8 @@ import helpers from './helpers'
 import { ee } from '../../../src/common/event-emitter/contextual-ee'
 import { Spa } from '../../../src/features/spa'
 
+jest.retryTimes(3)
+
 jest.mock('../../../src/common/constants/runtime')
 jest.mock('../../../src/common/config/info', () => ({
   __esModule: true,

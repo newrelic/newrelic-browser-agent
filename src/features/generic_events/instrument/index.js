@@ -6,7 +6,9 @@
 import { globalScope, isBrowserScope } from '../../../common/constants/runtime'
 import { handle } from '../../../common/event-emitter/handle'
 import { windowAddEventListener } from '../../../common/event-listener/event-listener-opts'
+import { now } from '../../../common/timing/now'
 import { debounce } from '../../../common/util/invoke'
+import { wrapHistory } from '../../../common/wrap/wrap-history'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME, OBSERVED_EVENTS, OBSERVED_WINDOW_EVENTS } from '../constants'
 
@@ -42,6 +44,17 @@ export class Instrument extends InstrumentBase {
           })
         })
         observer.observe({ type: 'resource', buffered: true })
+      }
+      if (agentRef.init.session.user_journey) {
+        const trackUserJourney = (timestamp = now()) => {
+          handle('user-journey', [timestamp, location], undefined, this.featureName, this.ee)
+        }
+
+        trackUserJourney()
+        const historyEE = wrapHistory(this.ee)
+        historyEE.on('pushState-end', trackUserJourney)
+        historyEE.on('replaceState-end', trackUserJourney)
+        windowAddEventListener('popstate', (evt) => trackUserJourney(evt.timeStamp), true, this.removeOnAbort?.signal)
       }
     }
 

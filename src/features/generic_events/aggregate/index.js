@@ -25,6 +25,18 @@ export class Aggregate extends AggregateBase {
     this.eventsPerHarvest = 1000
     this.referrerUrl = (isBrowserScope && document.referrer) ? cleanURL(document.referrer) : undefined
 
+    this.beforeUnloadFns = []
+    this.harvestOpts.beforeUnload = () => {
+      this.beforeUnloadFns.forEach(fn => fn())
+    }
+
+    const { userJourneyPaths, userJourneyTimestamps } = agentRef.runtime.session.read()
+    this.userJourney = {
+      host: globalScope.location?.host,
+      paths: userJourneyPaths,
+      timestamps: userJourneyTimestamps
+    }
+
     this.waitForFlags(['ins']).then(([ins]) => {
       if (!ins) {
         this.blocked = true
@@ -33,6 +45,27 @@ export class Aggregate extends AggregateBase {
       }
 
       this.trackSupportabilityMetrics()
+
+      registerHandler('user-journey', (timestamp, url) => {
+        const { hash, pathname, search } = new URL(url)
+        if (this.userJourney.paths.length + pathname.length + hash.length + search.length > 4096) return
+        if (this.userJourney.timestamps.length + ('' + timestamp).length > 4096) return
+
+        if (this.userJourney.paths) this.userJourney.paths += '>'
+        this.userJourney.paths += pathname + search + hash
+        if (this.userJourney.timestamps) this.userJourney.timestamps += '>'
+        this.userJourney.timestamps += this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(timestamp)
+        this.syncWithSessionManager({ userJourneyPaths: this.userJourney.paths, userJourneyTimestamps: this.userJourney.timestamps })
+      }, this.featureName, this.ee)
+      this.beforeUnloadFns.push(() => {
+        this.addEvent({
+          eventType: 'SessionMetadata',
+
+          host: this.userJourney.host,
+          paths: this.userJourney.paths,
+          timestamps: this.userJourney.timestamps
+        })
+      })
 
       registerHandler('api-recordCustomEvent', (timestamp, eventType, attributes) => {
         if (RESERVED_EVENT_TYPES.includes(eventType)) return warn(46)
@@ -63,7 +96,7 @@ export class Aggregate extends AggregateBase {
       let addUserAction
       if (isBrowserScope && agentRef.init.user_actions.enabled) {
         this.userActionAggregator = new UserActionsAggregator()
-        this.harvestOpts.beforeUnload = () => addUserAction?.(this.userActionAggregator.aggregationEvent)
+        this.beforeUnloadFns.push(() => addUserAction?.(this.userActionAggregator.aggregationEvent))
 
         addUserAction = (aggregatedUserAction) => {
           try {
@@ -237,7 +270,7 @@ export class Aggregate extends AggregateBase {
 
     const defaultEventAttributes = {
       /** should be overridden by the event-specific attributes, but just in case -- set it to now() */
-      timestamp: Math.floor(this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(now())),
+      timestamp: this.toEpoch(now()),
       /** all generic events require pageUrl(s) */
       pageUrl: cleanURL('' + initialLocation),
       currentUrl: cleanURL('' + location)
@@ -285,5 +318,9 @@ export class Aggregate extends AggregateBase {
     if (this.agentRef.init.performance.resources.asset_types?.length !== 0) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'Resources/AssetTypes/Changed'], undefined, FEATURE_NAMES.metrics, this.ee)
     if (this.agentRef.init.performance.resources.first_party_domains?.length !== 0) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'Resources/FirstPartyDomains/Changed'], undefined, FEATURE_NAMES.metrics, this.ee)
     if (this.agentRef.init.performance.resources.ignore_newrelic === false) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'Resources/IgnoreNewrelic/Changed'], undefined, FEATURE_NAMES.metrics, this.ee)
+  }
+
+  syncWithSessionManager (state = {}) {
+    this.agentRef.runtime.session.write(state)
   }
 }

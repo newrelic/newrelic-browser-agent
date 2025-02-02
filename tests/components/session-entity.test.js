@@ -1,6 +1,6 @@
 import { PREFIX } from '../../src/common/session/constants'
-import { SessionEntity } from '../../src/common/session/session-entity'
-import { LocalMemory, model } from './session-helpers'
+import { SessionEntity, model } from '../../src/common/session/session-entity'
+import { LocalMemory } from './session-helpers'
 import * as runtimeModule from '../../src/common/constants/runtime'
 
 jest.useFakeTimers()

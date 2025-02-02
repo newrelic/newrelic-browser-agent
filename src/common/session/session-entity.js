@@ -19,7 +19,7 @@ import { windowAddEventListener } from '../event-listener/event-listener-opts'
 
 // this is what can be stored in local storage (not enforced but probably should be)
 // these values should sync between local storage and the parent class props
-const model = {
+export const model = {
   value: '',
   inactiveAt: 0,
   expiresAt: 0,
@@ -29,6 +29,8 @@ const model = {
   sessionTraceMode: MODE.OFF,
   traceHarvestStarted: false,
   serverTimeDiff: null, // set by TimeKeeper; "undefined" value will not be stringified and stored but "null" will
+  userJourneyPaths: '',
+  userJourneyTimestamps: '',
   custom: {}
 }
 

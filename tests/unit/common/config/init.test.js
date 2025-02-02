@@ -103,7 +103,8 @@ test('init props exist and return expected defaults', () => {
   })
   expect(config.session).toEqual({
     expiresMs: 14400000,
-    inactiveMs: 1800000
+    inactiveMs: 1800000,
+    user_journey: true
   })
   expect(config.session_replay).toEqual({
     autoStart: true,

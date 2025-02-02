@@ -29,15 +29,3 @@ export class LocalMemory {
     }
   }
 }
-export const model = {
-  value: '',
-  inactiveAt: 0,
-  expiresAt: 0,
-  updatedAt: Date.now(),
-  sessionReplayMode: 0,
-  sessionReplaySentFirstChunk: false,
-  sessionTraceMode: 0,
-  traceHarvestStarted: false,
-  serverTimeDiff: null,
-  custom: {}
-}

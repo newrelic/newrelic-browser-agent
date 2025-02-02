@@ -84,7 +84,8 @@ const model = () => {
     },
     session: {
       expiresMs: DEFAULT_EXPIRES_MS,
-      inactiveMs: DEFAULT_INACTIVE_MS
+      inactiveMs: DEFAULT_INACTIVE_MS,
+      user_journey: true
     },
     session_replay: {
       // feature settings

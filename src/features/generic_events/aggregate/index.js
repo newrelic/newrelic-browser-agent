@@ -34,7 +34,8 @@ export class Aggregate extends AggregateBase {
     this.userJourney = {
       host: globalScope.location?.host,
       paths: userJourneyPaths,
-      timestamps: userJourneyTimestamps
+      timestamps: userJourneyTimestamps,
+      navs: userJourneyPaths.split('>').length
     }
 
     this.waitForFlags(['ins']).then(([ins]) => {
@@ -47,20 +48,26 @@ export class Aggregate extends AggregateBase {
       this.trackSupportabilityMetrics()
 
       registerHandler('user-journey', (timestamp, url) => {
-        const { hash, pathname, search } = new URL(url)
-        if (this.userJourney.paths.length + pathname.length + hash.length + search.length > 4096) return
+        const {
+          hash,
+          pathname
+          // search
+        } = new URL(url)
+        if (this.userJourney.paths.length + pathname.length + hash.length > 4096) return
         if (this.userJourney.timestamps.length + ('' + timestamp).length > 4096) return
 
         if (this.userJourney.paths) this.userJourney.paths += '>'
-        this.userJourney.paths += pathname + search + hash
+        this.userJourney.paths += pathname + hash
         if (this.userJourney.timestamps) this.userJourney.timestamps += '>'
         this.userJourney.timestamps += this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(timestamp)
+        this.userJourney.navs++
         this.syncWithSessionManager({ userJourneyPaths: this.userJourney.paths, userJourneyTimestamps: this.userJourney.timestamps })
       }, this.featureName, this.ee)
       this.beforeUnloadFns.push(() => {
         this.addEvent({
           eventType: 'SessionMetadata',
 
+          navs: this.userJourney.navs,
           host: this.userJourney.host,
           paths: this.userJourney.paths,
           timestamps: this.userJourney.timestamps

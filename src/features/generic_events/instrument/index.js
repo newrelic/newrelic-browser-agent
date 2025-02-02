@@ -46,15 +46,15 @@ export class Instrument extends InstrumentBase {
         observer.observe({ type: 'resource', buffered: true })
       }
       if (agentRef.init.session.user_journey) {
-        const trackUserJourney = (timestamp = now()) => {
-          handle('user-journey', [timestamp, location], undefined, this.featureName, this.ee)
+        const trackUserJourney = (evt = {}) => {
+          handle('user-journey', [evt.timeStamp || now(), location], undefined, this.featureName, this.ee)
         }
 
         trackUserJourney()
         const historyEE = wrapHistory(this.ee)
         historyEE.on('pushState-end', trackUserJourney)
         historyEE.on('replaceState-end', trackUserJourney)
-        windowAddEventListener('popstate', (evt) => trackUserJourney(evt.timeStamp), true, this.removeOnAbort?.signal)
+        windowAddEventListener('popstate', trackUserJourney, true, this.removeOnAbort?.signal)
       }
     }
 

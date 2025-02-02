@@ -35,7 +35,8 @@ export class Aggregate extends AggregateBase {
       host: globalScope.location?.host,
       paths: userJourneyPaths,
       timestamps: userJourneyTimestamps,
-      navs: userJourneyPaths.split('>').length
+      navs: userJourneyPaths.split('>').length,
+      maxSizeReached: false
     }
 
     this.waitForFlags(['ins']).then(([ins]) => {
@@ -53,8 +54,10 @@ export class Aggregate extends AggregateBase {
           pathname
           // search
         } = new URL(url)
-        if (this.userJourney.paths.length + pathname.length + hash.length > 4096) return
-        if (this.userJourney.timestamps.length + ('' + timestamp).length > 4096) return
+        if (this.userJourney.paths.length + pathname.length + hash.length > 4096 || this.userJourney.timestamps.length + ('' + timestamp).length > 4096) {
+          this.userJourney.maxSizeReached = true
+          return
+        }
 
         if (this.userJourney.paths) this.userJourney.paths += '>'
         this.userJourney.paths += pathname + hash
@@ -67,6 +70,7 @@ export class Aggregate extends AggregateBase {
         this.addEvent({
           eventType: 'SessionMetadata',
 
+          maxSizeReached: this.userJourney.maxSizeReached,
           navs: this.userJourney.navs,
           host: this.userJourney.host,
           paths: this.userJourney.paths,

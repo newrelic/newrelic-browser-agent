@@ -32,6 +32,12 @@ export class Aggregate extends AggregateBase {
 
     const { userJourneyPaths, userJourneyTimestamps } = agentRef.runtime.session.read()
     const splitPaths = userJourneyPaths?.split('>')
+
+    function pad (num, chars) {
+      var s = '000' + num
+      return s.slice(s.length - chars)
+    }
+
     this.userJourney = {
       host: globalScope.location?.host,
       paths: userJourneyPaths,
@@ -39,7 +45,7 @@ export class Aggregate extends AggregateBase {
       navs: splitPaths.length,
       maxSizeReached: false,
       ...(splitPaths.length && splitPaths.reduce((acc, path, i) => {
-        acc['path' + i] = path
+        acc[pad(i, 4)] = path
         return acc
       }, {}))
     }
@@ -72,7 +78,7 @@ export class Aggregate extends AggregateBase {
         if (this.userJourney.timestamps) this.userJourney.timestamps += '>'
         this.userJourney.timestamps += this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(timestamp)
 
-        this.userJourney['path' + this.userJourney.navs++] = pathname + hash
+        this.userJourney[pad(this.userJourney.navs++, 4)] = pathname + hash
 
         this.syncWithSessionManager({ userJourneyPaths: this.userJourney.paths, userJourneyTimestamps: this.userJourney.timestamps })
       }, this.featureName, this.ee)

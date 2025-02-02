@@ -74,11 +74,11 @@ export class Aggregate extends AggregateBase {
         }
 
         if (this.userJourney.paths) this.userJourney.paths += '>'
-        this.userJourney.paths += pathname + hash
+        this.userJourney.paths += (pathname || '/') + hash
         if (this.userJourney.timestamps) this.userJourney.timestamps += '>'
         this.userJourney.timestamps += this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(timestamp)
 
-        this.userJourney[pad(this.userJourney.navs++, 4)] = pathname + hash
+        this.userJourney[pad(this.userJourney.navs++, 4)] = (pathname || '/') + hash
 
         this.syncWithSessionManager({ userJourneyPaths: this.userJourney.paths, userJourneyTimestamps: this.userJourney.timestamps })
       }, this.featureName, this.ee)

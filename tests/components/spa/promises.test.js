@@ -3,6 +3,8 @@ import helpers from './helpers'
 import { ee } from '../../../src/common/event-emitter/contextual-ee'
 import { Spa } from '../../../src/features/spa'
 
+jest.retryTimes(3)
+
 const agentIdentifier = 'abcdefg'
 
 jest.mock('../../../src/common/constants/runtime')

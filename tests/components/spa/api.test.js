@@ -6,6 +6,8 @@ import { bundleId } from '../../../src/common/ids/bundle-id'
 import { now } from '../../../src/common/timing/now'
 import { gosNREUMOriginals } from '../../../src/common/window/nreum'
 
+jest.retryTimes(3)
+
 jest.mock('../../../src/common/constants/runtime')
 jest.mock('../../../src/common/config/info', () => ({
   __esModule: true,

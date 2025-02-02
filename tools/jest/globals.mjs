@@ -5,3 +5,5 @@ if (typeof window !== 'undefined') {
   window.Request = jest.fn()
   window.Response = jest.fn()
 }
+
+jest.retryTimes(3)

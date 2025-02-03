@@ -68,7 +68,7 @@ export class Aggregate extends AggregateBase {
         if (
           // this.userJourney.paths.length + pathname.length + hash.length > 4096 ||
           this.userJourney.timestamps.length + ('' + timestamp).length > 4096 ||
-          this.userJourney.navs >= 254) {
+          this.userJourney.navs >= 229) { // 255 - 26 = 229 'agentVersion','appId','appName','asn','asnLatitude','asnLongitude','asnOrganization','city','countryCode','currentUrl','customer_user_id','deviceType','entityGuid','host','maxSizeReached','name','application.version','browserAgentFullyLoaded','navs','regionCode','session','sessionTraceId','timestamps','userAgentName','userAgentOS','userAgentVersion'
           this.userJourney.maxSizeReached = true
           return
         }

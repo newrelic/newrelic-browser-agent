@@ -31,7 +31,7 @@ export class Aggregate extends AggregateBase {
     }
 
     const { userJourneyPaths, userJourneyTimestamps } = agentRef.runtime.session.read()
-    const splitPaths = userJourneyPaths?.split('>')
+    const splitPaths = userJourneyPaths?.split('>').filter(x => x)
 
     function pad (num, chars) {
       var s = '000' + num
@@ -39,6 +39,7 @@ export class Aggregate extends AggregateBase {
     }
 
     this.userJourney = {
+      needsHarvest: true,
       host: globalScope.location?.host,
       paths: userJourneyPaths,
       timestamps: userJourneyTimestamps,
@@ -80,16 +81,18 @@ export class Aggregate extends AggregateBase {
 
         this.userJourney[pad(this.userJourney.navs++, 4)] = (pathname || '/') + hash
 
+        this.userJourney.needsHarvest = true
+
         this.syncWithSessionManager({ userJourneyPaths: this.userJourney.paths, userJourneyTimestamps: this.userJourney.timestamps })
       }, this.featureName, this.ee)
-      this.beforeUnloadFns.push(() => {
-        if (!this.userJourney.paths) return
-        const { paths, ...rest } = this.userJourney
-        this.addEvent({
-          eventType: 'SessionMetadata',
-          ...rest
-        }, true, true)
-      })
+      // this.beforeUnloadFns.push(() => {
+      //   if (!this.userJourney.paths) return
+      //   const { paths, ...rest } = this.userJourney
+      //   this.addEvent({
+      //     eventType: 'SessionMetadata',
+      //     ...rest
+      //   }, true, true)
+      // })
 
       registerHandler('api-recordCustomEvent', (timestamp, eventType, attributes) => {
         if (RESERVED_EVENT_TYPES.includes(eventType)) return warn(46)
@@ -265,6 +268,18 @@ export class Aggregate extends AggregateBase {
       agentRef.runtime.harvester.triggerHarvestFor(this)
       this.drain()
     })
+  }
+
+  /** hi-jacking this method for the POC to inject the userJourney aggregation */
+  preHarvestChecks (opts) {
+    const { paths, needsHarvest, ...rest } = this.userJourney
+    if (!paths || !needsHarvest) return true
+    this.addEvent({
+      eventType: 'SessionMetadata',
+      ...rest
+    }, true, true)
+    this.userJourney.needsHarvest = false
+    return true
   }
 
   // WARNING: Insights times are in seconds. EXCEPT timestamp, which is in ms.

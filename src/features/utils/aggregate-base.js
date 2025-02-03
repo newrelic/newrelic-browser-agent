@@ -81,9 +81,9 @@ export class AggregateBase extends FeatureBase {
    * @returns {Array} Final payload tagged with their targeting browser app. The value of `payload` can be undefined if there are no pending events for an app. This should be a minimum length of 1.
    */
   makeHarvestPayload (shouldRetryOnFail = false, opts = {}) {
-    if (this.events.isEmpty(this.harvestOpts, opts.target)) return
     // Other conditions and things to do when preparing harvest that is required.
     if (this.preHarvestChecks && !this.preHarvestChecks(opts)) return
+    if (this.events.isEmpty(this.harvestOpts, opts.target)) return
 
     if (shouldRetryOnFail) this.events.save(this.harvestOpts, opts.target)
     const returnedDataArr = this.events.get(this.harvestOpts, opts.target)

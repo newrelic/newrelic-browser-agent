@@ -1,0 +1,25 @@
+# This workflow is used to tag a new prerelease version
+
+name: Tag Prerelease Version
+
+on:
+  workflow_dispatch:
+    inputs:
+      version-type:
+        description: "The type of version bump to make. One of: major, minor, patch, premajor, preminor, prepatch, or prerelease."
+        type: string
+        required: true
+      preid:
+        description: "The prerelease identifier to use when bumping a prerelease version."
+        type: string
+        required: true
+        default: rc
+
+jobs:
+  tag-prerelease-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ./.github/actions/tag-prerelease-version
+        with:
+          version-type: ${{ inputs.version-type }}
+          preid: ${{ inputs.preid }}

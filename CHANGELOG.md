@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.281.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.280.0...v1.281.0) (2025-02-04)
+
+
+### Features
+
+* Capture Nearest UserAction Fields ([#1267](https://github.com/newrelic/newrelic-browser-agent/issues/1267)) ([d410937](https://github.com/newrelic/newrelic-browser-agent/commit/d410937983545a6a6aa39c52c3762f621acf1110))
+
 ## [1.280.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.279.1...v1.280.0) (2025-01-31)
 
 

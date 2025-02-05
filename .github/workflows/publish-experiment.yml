@@ -26,6 +26,8 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v4
+        with:
+            ref: ${{ github.ref }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
@@ -84,6 +86,8 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v4
+        with:
+            ref: ${{ github.ref }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.

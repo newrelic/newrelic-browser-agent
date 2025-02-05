@@ -30,7 +30,7 @@ runs:
         if [[ ${{ steps.agent-loader-version.outputs.results }} =~ $pattern ]]; then
           echo "results=$(npm version ${{ inputs.version-type }} --preid=${{ inputs.preid }})" >> $GITHUB_OUTPUT
         else
-          echo "results=$(npm version prerelease" >> $GITHUB_OUTPUT
+          echo "results=$(npm version prerelease)" >> $GITHUB_OUTPUT
         fi
       shell: bash
     - name: Add prerelease dist-tag

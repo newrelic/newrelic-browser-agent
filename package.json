@@ -1,6 +1,6 @@
 {
   "name": "@newrelic/browser-agent",
-  "version": "1.278.3",
+  "version": "1.281.0",
   "private": false,
   "author": "New Relic Browser Agent Team <browser-agent@newrelic.com>",
   "description": "New Relic Browser Agent",
@@ -172,7 +172,7 @@
     "start": "npm-run-all --parallel cdn:watch test-server",
     "lint": "eslint -c .eslintrc.js --ext .js,.cjs,.mjs .",
     "lint:fix": "npm run lint -- --fix",
-    "test": "jest",
+    "test": " NODE_OPTIONS=--max-old-space-size=8192 jest",
     "test:unit": "jest --selectProjects unit",
     "test:component": "jest --selectProjects component",
     "test:types": "tsd -f ./tests/dts/**/*.ts",
@@ -270,7 +270,7 @@
     "wdio-lambdatest-service": "^4.0.0",
     "webpack": "^5.89.0",
     "webpack-bundle-analyzer": "^4.10.1",
-    "webpack-cli": "^5.1.4",
+    "webpack-cli": "^6.0.1",
     "yargs": "^17.7.2"
   },
   "files": [

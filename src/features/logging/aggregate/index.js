@@ -99,18 +99,18 @@ export class Aggregate extends AggregateBase {
 
     const failToHarvestMessage = 'Logging/Harvest/Failed/Seen'
     if (logBytes > MAX_PAYLOAD_SIZE) { // cannot possibly send this, even with an empty buffer
-      handle(SUPPORTABILITY_METRIC_CHANNEL, [failToHarvestMessage, logBytes])
+      handle(SUPPORTABILITY_METRIC_CHANNEL, [failToHarvestMessage, logBytes], undefined, FEATURE_NAMES.metrics, this.ee)
       warn(31, log.message.slice(0, 25) + '...')
       return
     }
 
     if (this.events.wouldExceedMaxSize(logBytes)) {
-      handle(SUPPORTABILITY_METRIC_CHANNEL, ['Logging/Harvest/Early/Seen', this.events.byteSize() + logBytes])
+      handle(SUPPORTABILITY_METRIC_CHANNEL, ['Logging/Harvest/Early/Seen', this.events.byteSize() + logBytes], undefined, FEATURE_NAMES.metrics, this.ee)
       this.agentRef.runtime.harvester.triggerHarvestFor(this) // force a harvest synchronously to try adding again
     }
 
     if (!this.events.add(log)) { // still failed after a harvest attempt despite not being too large would mean harvest failed with options.retry
-      handle(SUPPORTABILITY_METRIC_CHANNEL, [failToHarvestMessage, logBytes])
+      handle(SUPPORTABILITY_METRIC_CHANNEL, [failToHarvestMessage, logBytes], undefined, FEATURE_NAMES.metrics, this.ee)
       warn(31, log.message.slice(0, 25) + '...')
     }
   }

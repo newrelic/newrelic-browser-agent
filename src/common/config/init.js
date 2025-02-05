@@ -131,7 +131,7 @@ const model = () => {
     soft_navigations: { enabled: true, autoStart: true },
     spa: { enabled: true, autoStart: true },
     ssl: undefined,
-    user_actions: { enabled: true }
+    user_actions: { enabled: true, elementAttributes: ['id', 'className', 'tagName', 'type'] }
   }
 }
 

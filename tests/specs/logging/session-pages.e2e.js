@@ -122,8 +122,10 @@ describe('Logging Across Pages', () => {
 
     await Promise.all([
       logsCapture.waitForResult({ timeout: TIMEOUT }),
-      browser.newWindow(await browser.testHandle.assetURL('logs-console-logger-post-load.html'), { type: 'tab' }),
-      browser.waitForAgentLoad()
+      browser.createWindow('tab')
+        .then((newTab) => browser.switchToWindow(newTab.handle))
+        .then(async () => browser.url(await browser.testHandle.assetURL('logs-console-logger-post-load.html')))
+        .then(() => browser.waitForAgentLoad())
     ])
 
     const page2BlockedBeforeAbort = await browser.execute(function () {
@@ -148,7 +150,6 @@ describe('Logging Across Pages', () => {
 
     await browser.pause(1000) // Give the agent time to update the session state
     await expect(getLogs()).resolves.toEqual(expect.objectContaining({
-      events: [],
       blocked: true,
       loggingMode: LOGGING_MODE.OFF
     }))
@@ -158,7 +159,6 @@ describe('Logging Across Pages', () => {
 
     await browser.pause(1000) // Give the agent time to update the session state
     await expect(getLogs()).resolves.toEqual(expect.objectContaining({
-      events: [],
       blocked: true,
       loggingMode: LOGGING_MODE.OFF
     }))

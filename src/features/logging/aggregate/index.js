@@ -153,8 +153,9 @@ export class Aggregate extends AggregateBase {
   abort (reason = {}) {
     handle(SUPPORTABILITY_METRIC_CHANNEL, [`Logging/Abort/${reason.sm}`], undefined, FEATURE_NAMES.logging, this.ee)
     this.blocked = true
-    this.updateLoggingMode(LOGGING_MODE.OFF)
     this.events.clear()
+    this.events.clearSave()
+    this.updateLoggingMode(LOGGING_MODE.OFF)
     this.deregisterDrain()
   }
 

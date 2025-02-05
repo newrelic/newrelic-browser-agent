@@ -61,11 +61,3 @@ if (!!newrelic && !!newrelic.log) {
   newrelic.log('NRBA log API - info', {level: 'info'})
   newrelic.log('NRBA log API - debug', {level: 'debug'})
 }
-if (!!newrelic && !!newrelic.wrapLogger) {
-  newrelic.wrapLogger(console, 'log', {customAttributes: {wrappedFn: 'console.log'}, level: 'info'})
-  newrelic.wrapLogger(console, 'error', {customAttributes: {wrappedFn: 'console.error'}, level: 'error'})
-  newrelic.wrapLogger(console, 'trace', {customAttributes: {wrappedFn: 'console.trace'}, level: 'trace'})
-  newrelic.wrapLogger(console, 'warn', {customAttributes: {wrappedFn: 'console.warn'}, level: 'warn'})
-  newrelic.wrapLogger(console, 'info', {customAttributes: {wrappedFn: 'console.info'}, level: 'info'})
-  newrelic.wrapLogger(console, 'debug', {customAttributes: {wrappedFn: 'console.debug'}, level: 'debug'})
-}

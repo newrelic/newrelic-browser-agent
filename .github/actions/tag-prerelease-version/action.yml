@@ -26,7 +26,8 @@ runs:
     - name: Bump prerelease version
       id: bump-prerelease
       run: |
-        if [[ "${{ steps.agent-loader-version.outputs.results }}" =~ *-rc* ]]; then
+        pattern=".*-rc\.[0-9]+$"
+        if [[ "${{ steps.agent-loader-version.outputs.results }}" =~ $pattern ]]; then
           echo "results=$(npm version ${{ inputs.version-type }} --preid=${{ inputs.preid }})" >> $GITHUB_OUTPUT
         else
           echo "results=$(npm version prerelease" >> $GITHUB_OUTPUT

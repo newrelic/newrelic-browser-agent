@@ -23,6 +23,8 @@ jobs:
         shell: bash
     env:
       NPM_TOKEN: ${{ secrets.BROWSER_NPM_TOKEN }}
+      GITHUB_LOGIN: ${{ secrets.BROWSER_GITHUB_BOT_NAME }}
+      GITHUB_EMAIL: ${{ secrets.BROWSER_GITHUB_BOT_EMAIL }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -31,6 +33,11 @@ jobs:
       - name: Authenticate npm
         run: |
           npm config set '//registry.npmjs.org/:_authToken' "${NPM_TOKEN}"
+      - name: Set up git
+        id: git-setup
+        run: |
+          git config --global user.name "${GITHUB_LOGIN}"
+          git config --global user.email "${GITHUB_EMAIL}"
       - name: Get version number
         id: agent-loader-version
         run: echo "results=$(cat package.json | jq -r '.version')" >> $GITHUB_OUTPUT

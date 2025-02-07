@@ -30,7 +30,7 @@ test('creates right nodes', async () => {
   document.dispatchEvent(new CustomEvent('DOMContentLoaded')) // simulate natural browser event
   window.dispatchEvent(new CustomEvent('load')) // load is actually ignored by Trace as it should be passed by the PVT feature, so it should not be in payload
   sessionTraceAggregate.events.storeXhrAgg('xhr', '[200,null,null]', { method: 'GET', status: 200 }, { rxSize: 770, duration: 99, cbTime: 0, time: 217 }) // fake ajax data
-  sessionTraceAggregate.events.processPVT('fi', 30) // fake pvt data
+  sessionTraceAggregate.events.processPVT('fi', 30, { fid: 8 }) // fake pvt data
 
   const [{ payload }] = sessionTraceAggregate.makeHarvestPayload()
   let res = payload.body
@@ -58,6 +58,11 @@ test('creates right nodes', async () => {
   expect(pvt.o).toEqual('document')
   expect(pvt.s).toEqual(pvt.e) // that FI has no duration
   expect(pvt.t).toEqual('timing')
+  pvt = res.filter(node => node.n === 'fid')[0]
+  expect(pvt.o).toEqual('document')
+  expect(pvt.s).toEqual(30) // that FID has a duration relative to FI'
+  expect(pvt.e).toEqual(30 + 8)
+  expect(pvt.t).toEqual('event')
 
   let unknown = res.filter(n => n.o === 'unknown')
   expect(unknown.length).toEqual(0) // no events with unknown origin

@@ -7,6 +7,7 @@ window.NREUM.info.licenseKey = '{{{args.licenseKey}}}'
 window.NREUM.init.proxy = {}
 window.NREUM.init.session_replay.enabled = true
 window.NREUM.init.session_trace.enabled = true
+window.NREUM.init.user_actions = {elementAttributes: ['id', 'className', 'tagName', 'type', 'innerText', 'textContent', 'ariaLabel', 'alt', 'title']}
 
 // Session replay entitlements check
 try {
@@ -54,18 +55,10 @@ try {
   if (!!newrelic && !!newrelic.noticeError) newrelic.noticeError(err)
 }
 
-{{#if (isEnvironment args.environment 'staging')}}
 if (!!newrelic && !!newrelic.log) {
-  newrelic.log('NRBA postamble executed', {level: 'info'})
-  newrelic.log(new Error('NRBA test error'), {level: 'error'})
+  newrelic.log('NRBA log API - error', {level: 'error'})
+  newrelic.log('NRBA log API - trace', {level: 'trace'})
+  newrelic.log('NRBA log API - warn', {level: 'warn'})
+  newrelic.log('NRBA log API - info', {level: 'info'})
+  newrelic.log('NRBA log API - debug', {level: 'debug'})
 }
-if (!!newrelic && !!newrelic.wrapLogger) {
-  newrelic.wrapLogger(console, 'log', {customAttributes: {wrappedFn: 'console.log'}, level: 'info'})
-  newrelic.wrapLogger(console, 'error', {customAttributes: {wrappedFn: 'console.error'}, level: 'error'})
-  newrelic.wrapLogger(console, 'trace', {customAttributes: {wrappedFn: 'console.trace'}, level: 'trace'})
-  newrelic.wrapLogger(console, 'warn', {customAttributes: {wrappedFn: 'console.warn'}, level: 'warn'})
-  newrelic.wrapLogger(console, 'info', {customAttributes: {wrappedFn: 'console.info'}, level: 'info'})
-  newrelic.wrapLogger(console, 'debug', {customAttributes: {wrappedFn: 'console.debug'}, level: 'debug'})
-}
-if (!!newrelic && !!newrelic.setApplicationVersion) newrelic.setApplicationVersion( '' + Math.floor(Math.random() * 10) + '.' + Math.floor(Math.random() * 10) + '.' + Math.floor(Math.random() * 10) )
-{{/if}}

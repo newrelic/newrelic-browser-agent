@@ -81,14 +81,14 @@ describe('ins harvesting', () => {
 
     const [insHarvests] = await Promise.all([
       insightsCapture.waitForResult({ timeout: 7500 }),
-      $('#pay-btn').click().then(async () => {
+      $('#textbox').click().then(async () => {
         // rage click
         await browser.execute(function () {
           for (let i = 0; i < 5; i++) {
-            document.querySelector('#textbox').click()
+            document.querySelector('span').click()
           }
         })
-        // stop aggregating textbox clicks
+        // stop aggregating clicks
         await $('body').click()
       })
     ])
@@ -102,11 +102,10 @@ describe('ins harvesting', () => {
       actionCount: 1,
       actionDuration: 0,
       actionMs: '[0]',
-      target: 'html>body>button#pay-btn:nth-of-type(1)',
-      targetId: 'pay-btn',
-      targetTag: 'BUTTON',
-      targetType: 'submit',
-      targetClass: 'btn-cart-add flex-grow container',
+      target: 'html>body>div>input#textbox:nth-of-type(1)',
+      targetId: 'textbox',
+      targetTag: 'INPUT',
+      targetType: 'text',
       pageUrl: expect.any(String),
       timestamp: expect.any(Number)
     })
@@ -116,11 +115,13 @@ describe('ins harvesting', () => {
       actionCount: 5,
       actionDuration: expect.any(Number),
       actionMs: expect.any(String),
+      nearestId: 'pay-btn',
+      nearestTag: 'SPAN',
+      nearestType: 'submit',
+      nearestClass: 'btn-cart-add flex-grow container',
       rageClick: true,
-      target: 'html>body>input#textbox:nth-of-type(1)',
-      targetId: 'textbox',
-      targetTag: 'INPUT',
-      targetType: 'text',
+      target: 'html>body>div>button#pay-btn>span:nth-of-type(1)',
+      targetTag: 'SPAN',
       pageUrl: expect.any(String),
       timestamp: expect.any(Number)
     })

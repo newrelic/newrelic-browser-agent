@@ -1,6 +1,6 @@
-# This workflow is used to tag a new prerelease version
+# This workflow is used to bump a new prerelease version and publish to NPM
 
-name: Tag Prerelease Version
+name: Prerelease NPM Version
 
 on:
   workflow_dispatch:
@@ -14,10 +14,16 @@ on:
         type: string
         required: true
         default: rc
+      dry_run:
+        description: "Indicates whether to dry run the npm publish command."
+        type: boolean
+        required: true
 
 jobs:
-  tag-prerelease-version:
+  prerelease-npm-version:
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.agent-loader-version.outputs.results }}
     defaults:
       run:
         shell: bash
@@ -50,6 +56,9 @@ jobs:
           else
             echo "results=$(npm version prerelease)" >> $GITHUB_OUTPUT
           fi
-      - name: Add prerelease dist-tag
-        id: add-prerelease-dist-tag
-        run: npm dist-tag add rc@${{ steps.bump-prerelease.outputs.results }}
+      - name: Install project dependencies
+        run: npm ci
+      - name: Build npm package
+        run: npm run build:npm
+      - name: Publish npm package
+        run: npm publish ${{ inputs.dry_run && '--dry-run' || '' }} --tag=${{ steps.bump-prerelease.outputs.results }}

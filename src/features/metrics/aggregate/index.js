@@ -116,6 +116,32 @@ export class Aggregate extends AggregateBase {
       mo.observe(window.document.body, { childList: true, subtree: true })
     }
 
+    // webdriver detection
+    if (navigator.webdriver) this.storeSupportabilityMetrics('Generic/WebDriver/Detected')
+
+    // Browser Pressure POC
+    if (isBrowserScope && typeof window.PressureObserver === 'function') {
+      const impact = {
+        nominal: 0,
+        fair: 1,
+        serious: 2,
+        critical: 3
+      }
+      let lastPressure = ''
+      const pressureObserverCallback = (records) => {
+        const latestRecord = records[records.length - 1]
+
+        if (lastPressure === latestRecord.state) return // report once per status change
+
+        lastPressure = latestRecord.state
+        if (impact[lastPressure] >= impact.fair) {
+          this.storeSupportabilityMetrics('Generic/HighPressure/Detected')
+        }
+      }
+      const pressureObserver = new window.PressureObserver(pressureObserverCallback)
+      pressureObserver.observe('cpu', { sampleInterval: 1000 })
+    }
+
     // WATCHABLE_WEB_SOCKET_EVENTS.forEach(tag => {
     //   registerHandler('buffered-' + WEBSOCKET_TAG + tag, (...args) => {
     //     handleWebsocketEvents(this.storeSupportabilityMetrics.bind(this), tag, ...args)

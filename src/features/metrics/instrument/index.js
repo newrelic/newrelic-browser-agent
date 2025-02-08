@@ -3,10 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-// import { handle } from '../../../common/event-emitter/handle'
+import { isBrowserScope } from '../../../common/constants/runtime'
+import { handle } from '../../../common/event-emitter/handle'
 // import { WEBSOCKET_TAG, wrapWebSocket } from '../../../common/wrap/wrap-websocket'
 import { InstrumentBase } from '../../utils/instrument-base'
-import { FEATURE_NAME/*, WATCHABLE_WEB_SOCKET_EVENTS */ } from '../constants'
+import {
+  FEATURE_NAME,
+  /*, WATCHABLE_WEB_SOCKET_EVENTS */
+  SUPPORTABILITY_METRIC_CHANNEL
+} from '../constants'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
@@ -19,6 +24,12 @@ export class Instrument extends InstrumentBase {
     //     handle('buffered-' + WEBSOCKET_TAG + suffix, [...args], undefined, this.featureName, this.ee)
     //   })
     // })
+
+    if (isBrowserScope) {
+      document.addEventListener('securitypolicyviolation', (e) => {
+        handle(SUPPORTABILITY_METRIC_CHANNEL, ['Generic/CSPViolation/Detected'], undefined, this.featureName, this.ee)
+      })
+    }
 
     this.importAggregator(agentRef)
   }

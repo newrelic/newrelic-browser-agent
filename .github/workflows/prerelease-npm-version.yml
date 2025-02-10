@@ -1,4 +1,5 @@
-# This workflow is used to bump a new prerelease version and publish to NPM
+# This workflow is used to manually bump a new prerelease version and publish to NPM.
+# The prerelease-npm-version action in this workflow is called on each main branch push with the "rc" preid and tag.
 
 name: Prerelease NPM Version
 
@@ -14,6 +15,11 @@ on:
         type: string
         required: true
         default: rc
+      tag:
+        description: "The NPM package distribution tag to use when publishing the prerelease."
+        type: string
+        required: true
+        default: rc
       dry_run:
         description: "Indicates whether to dry run the npm publish command."
         type: boolean
@@ -23,42 +29,16 @@ jobs:
   prerelease-npm-version:
     runs-on: ubuntu-latest
     outputs:
-      version: ${{ steps.agent-loader-version.outputs.results }}
-    defaults:
-      run:
-        shell: bash
-    env:
-      NPM_TOKEN: ${{ secrets.BROWSER_NPM_TOKEN }}
-      GITHUB_LOGIN: ${{ secrets.BROWSER_GITHUB_BOT_NAME }}
-      GITHUB_EMAIL: ${{ secrets.BROWSER_GITHUB_BOT_EMAIL }}
+      version: ${{ steps.prerelease-npm-version.outputs.results }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
-      - name: Authenticate npm
-        run: |
-          npm config set '//registry.npmjs.org/:_authToken' "${NPM_TOKEN}"
-      - name: Set up git
-        id: git-setup
-        run: |
-          git config --global user.name "${GITHUB_LOGIN}"
-          git config --global user.email "${GITHUB_EMAIL}"
-      - name: Get version number
-        id: agent-loader-version
-        run: echo "results=$(cat package.json | jq -r '.version')" >> $GITHUB_OUTPUT
-      - name: Bump prerelease version
-        id: bump-prerelease
-        run: |
-          pattern=".*-rc\.[0-9]+$"
-          if [[ ${{ steps.agent-loader-version.outputs.results }} =~ $pattern ]]; then
-            echo "results=$(npm version ${{ inputs.version-type }} --preid=${{ inputs.preid }})" >> $GITHUB_OUTPUT
-          else
-            echo "results=$(npm version prerelease)" >> $GITHUB_OUTPUT
-          fi
-      - name: Install project dependencies
-        run: npm ci
-      - name: Build npm package
-        run: npm run build:npm
-      - name: Publish npm package
-        run: npm publish ${{ inputs.dry_run && '--dry-run' || '' }} --tag=${{ steps.bump-prerelease.outputs.results }}
+      - uses: ./.github/actions/prerelease-npm-version
+        id: prerelease-npm-version
+        with:
+          version-type: ${{ github.event.inputs.version-type }}
+          preid: ${{ github.event.inputs.preid }}
+          tag: ${{ github.event.inputs.tag }}
+          dry_run: ${{ github.event.inputs.dry_run }}

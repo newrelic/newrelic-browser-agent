@@ -30,12 +30,6 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - name: Authenticate npm
-      env:
-        NPM_TOKEN: ${{ secrets.BROWSER_NPM_TOKEN }}
-      shell: bash
-      run: |
-        npm config set '//registry.npmjs.org/:_authToken' "${NPM_TOKEN}"
     - name: Get version number
       id: agent-loader-version
       shell: bash

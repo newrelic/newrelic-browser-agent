@@ -10,5 +10,5 @@ updates:
     schedule:
       interval: "weekly"
     allow:
-      dependency-type: "production"
+      - dependency-type: "production"
 

@@ -74,6 +74,10 @@ export class AggregateBase extends FeatureBase {
     this.drained = true
   }
 
+  preHarvestChecks (opts) {
+    return !this.blocked
+  }
+
   /**
    * Return harvest payload. A "serializer" function can be defined on a derived class to format the payload.
    * @param {Boolean} shouldRetryOnFail - harvester flag to backup payload for retry later if harvest request fails; this should be moved to harvester logic

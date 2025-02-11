@@ -29,7 +29,6 @@ jobs:
           aws_role: ${{ secrets.AWS_ROLE_ARN }}
           aws_bucket_name: ${{ secrets.AWS_BUCKET }}
           bucket_dir: experiments/dev/${{ github.event.ref }}
-          dry_run: true
       - name: Delete staging experiment
         id: s3-delete-staging
         uses: ./.github/actions/s3-delete
@@ -39,4 +38,12 @@ jobs:
           aws_role: ${{ secrets.AWS_ROLE_ARN }}
           aws_bucket_name: ${{ secrets.AWS_BUCKET }}
           bucket_dir: experiments/staging/${{ github.event.ref }}
-          dry_run: true
+      - name: Delete standalone experiment
+        id: s3-delete-staging
+        uses: ./.github/actions/s3-delete
+        with:
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_role: ${{ secrets.AWS_ROLE_ARN }}
+          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
+          bucket_dir: experiments/standalone/${{ github.event.ref }}

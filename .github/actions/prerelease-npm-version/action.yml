@@ -40,9 +40,9 @@ runs:
       run: |
         pattern=".*-rc\.[0-9]+$"
         if [[ ${{ steps.agent-loader-version.outputs.results }} =~ $pattern ]]; then
-          echo "results=$(npm version ${{ inputs.version-type }} --preid=${{ inputs.preid }})" >> $GITHUB_OUTPUT
-        else
           echo "results=$(npm version prerelease --preid=${{ inputs.preid }})" >> $GITHUB_OUTPUT
+        else
+          echo "results=$(npm version ${{ inputs.version-type }} --preid=${{ inputs.preid }})" >> $GITHUB_OUTPUT
         fi
     - name: Install project dependencies
       shell: bash

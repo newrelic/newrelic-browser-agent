@@ -5,6 +5,27 @@
 import { defaults as nrDefaults, getNREUMInitializedAgent } from '../window/nreum'
 import { getModeledObject } from './configurable'
 
+/**
+ * @typedef {Object} Info
+ * @property {string} [beacon]
+ * @property {string} [errorBeacon] - Base URL endpoint for all data harvested by the agent. Proxies should be defined in the init instead.
+ * @property {string} licenseKey - New Relic license key provided by the website in user account.
+ * @property {string} applicationID - New Relic application ID provided when creating a browser entity in the UI.
+ * @property {number} [sa]
+ * @property {number} [queueTime]
+ * @property {number} [applicationTime]
+ * @property {string} [ttGuid]
+ * @property {string} [user]
+ * @property {string} [account]
+ * @property {string} [product]
+ * @property {string} [extra]
+ * @property {Object} [jsAttributes] - Custom attributes that are added to majority of agent's payloads. The `setCustomAttribute` API method affects this.
+ * @property {string} [userAttributes]
+ * @property {string} [atts]
+ * @property {string} [transactionName]
+ * @property {string} [tNamePlain]
+ */
+
 const model = {
   // preset defaults
   beacon: nrDefaults.beacon,
@@ -20,9 +41,7 @@ const model = {
   account: undefined,
   product: undefined,
   extra: undefined,
-  jsAttributes: {
-
-  },
+  jsAttributes: {},
   userAttributes: undefined,
   atts: undefined,
   transactionName: undefined,

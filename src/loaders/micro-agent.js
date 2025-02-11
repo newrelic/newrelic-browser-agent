@@ -27,7 +27,7 @@ const nonAutoFeatures = [
  */
 export class MicroAgent extends MicroAgentBase {
   /**
-   * @param {Object} options - Specifies features and runtime configuration,
+   * @param {import('./agent').AgentOptions} options
    */
   constructor (options) {
     super()

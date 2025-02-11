@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { Agent } from './agent'
-
 import { Instrument as InstrumentPageViewEvent } from '../features/page_view_event/instrument'
 import { Instrument as InstrumentPageViewTiming } from '../features/page_view_timing/instrument'
 import { Instrument as InstrumentMetrics } from '../features/metrics/instrument'
@@ -21,9 +20,12 @@ import { Instrument as InstrumentSoftNav } from '../features/soft_navigations/in
  * The BrowserAgent class is the most convenient and reliable option for most use cases.
  */
 export class BrowserAgent extends Agent {
-  constructor (args) {
+  /**
+   * @param {import('./agent').AgentOptions} options
+   */
+  constructor (options) {
     super({
-      ...args,
+      ...options,
       features: [
         InstrumentXhr,
         InstrumentPageViewEvent,

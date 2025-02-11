@@ -20,12 +20,23 @@ import { warn } from '../common/util/console'
 import { globalScope } from '../common/constants/runtime'
 
 /**
+ * @typedef {Object} AgentOptions
+ * @property {import('../common/config/info').Info} [info] - An object containing operational info needed by the agent. It's strongly encouraged to define this.
+ * @property {import('../common/config/init').Init} [init] - An object containing initialization configurations for the agent.
+ * @property {Object} [loader_config] - An object containing configuration primarily passed by APM injection. This is not recommended for use if not already provided by installation.
+ * @property {Object} [runtime] - An object containing runtime references by the agent. This is not recommended for use.
+ * @property {Array<Object>} [features] - A list of feature modules to include in the agent. This is only necessary when using the `Agent` class strictly.
+ * @property {boolean} [exposed] - Whether the agent should expose its API to (be affected by) the global `newrelic` object.
+ * @property {string} [loaderType] - The type of loader that is initializing the agent. It's recommended to allow the default.
+ */
+
+/**
  * A flexible class that may be used to compose an agent from a select subset of feature modules. In applications
  * sensitive to network load, this may result in smaller builds with slightly lower performance impact.
  */
 export class Agent extends AgentBase {
   /**
-   * @param {Object} options Options to initialize agent with
+   * @param {AgentOptions} options
    */
   constructor (options) {
     super()

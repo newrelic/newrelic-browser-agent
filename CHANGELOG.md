@@ -3,6 +3,42 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.281.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.280.0...v1.281.0) (2025-02-04)
+
+
+### Features
+
+* Capture Nearest UserAction Fields ([#1267](https://github.com/newrelic/newrelic-browser-agent/issues/1267)) ([d410937](https://github.com/newrelic/newrelic-browser-agent/commit/d410937983545a6a6aa39c52c3762f621acf1110))
+
+## [1.280.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.279.1...v1.280.0) (2025-01-31)
+
+
+### Features
+
+* Remove agentIdentifier argument from agent constructors ([#1353](https://github.com/newrelic/newrelic-browser-agent/issues/1353)) ([cb866e5](https://github.com/newrelic/newrelic-browser-agent/commit/cb866e5678bf6aa898c082f2be83145a5014fd0e))
+
+
+### Bug Fixes
+
+* Roll back to previous FirstInteraction implementation ([#1359](https://github.com/newrelic/newrelic-browser-agent/issues/1359)) ([c2e22ab](https://github.com/newrelic/newrelic-browser-agent/commit/c2e22ab49b00e9cfbeb54664a820e1aa4ed28a53))
+
+## [1.279.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.279.0...v1.279.1) (2025-01-28)
+
+
+### Bug Fixes
+
+* CLS timing node not being reported post new Harvester ([#1352](https://github.com/newrelic/newrelic-browser-agent/issues/1352)) ([5db1d97](https://github.com/newrelic/newrelic-browser-agent/commit/5db1d97a147c78bf93dee669ff9da95bb560d1db))
+
+## [1.279.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.278.3...v1.279.0) (2025-01-24)
+
+
+### Features
+
+* Add HTTP codes for harvest retry attempts ([#1331](https://github.com/newrelic/newrelic-browser-agent/issues/1331)) ([7c309f7](https://github.com/newrelic/newrelic-browser-agent/commit/7c309f780ce32e1787d66fb22a6a9313f2466b31))
+* Capture details in marks and measures ([#1332](https://github.com/newrelic/newrelic-browser-agent/issues/1332)) ([32a6b56](https://github.com/newrelic/newrelic-browser-agent/commit/32a6b56d5db0ffc6c2157718ee72ca62695ee258))
+* debounce window user actions ([#1326](https://github.com/newrelic/newrelic-browser-agent/issues/1326)) ([dec8f2d](https://github.com/newrelic/newrelic-browser-agent/commit/dec8f2d07e9e521e08647bd281457292312b56c0))
+* Remove FID ([#1319](https://github.com/newrelic/newrelic-browser-agent/issues/1319)) ([0f32b99](https://github.com/newrelic/newrelic-browser-agent/commit/0f32b993a77e747f9724b6ba363e94730a6c8b3f))
+
 ## [1.278.3](https://github.com/newrelic/newrelic-browser-agent/compare/v1.278.2...v1.278.3) (2025-01-14)
 
 

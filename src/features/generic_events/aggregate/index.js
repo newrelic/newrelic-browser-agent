@@ -16,6 +16,7 @@ import { UserActionsAggregator } from './user-actions/user-actions-aggregator'
 import { isIFrameWindow } from '../../../common/dom/iframe'
 import { handle } from '../../../common/event-emitter/handle'
 import { isPureObject } from '../../../common/util/type-check'
+import { FEATURE_NAMES } from '../../../loaders/features/features'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -59,7 +60,7 @@ export class Aggregate extends AggregateBase {
         }, this.featureName, this.ee)
       }
 
-      let addUserAction
+      let addUserAction = () => { /** no-op */ }
       if (isBrowserScope && agentRef.init.user_actions.enabled) {
         this.userActionAggregator = new UserActionsAggregator()
         this.harvestOpts.beforeUnload = () => addUserAction?.(this.userActionAggregator.aggregationEvent)
@@ -80,11 +81,26 @@ export class Aggregate extends AggregateBase {
                 rageClick: aggregatedUserAction.rageClick,
                 target: aggregatedUserAction.selectorPath,
                 ...(isIFrameWindow(window) && { iframe: true }),
-                ...(canTrustTargetAttribute('id') && { targetId: target.id }),
-                ...(canTrustTargetAttribute('tagName') && { targetTag: target.tagName }),
-                ...(canTrustTargetAttribute('type') && { targetType: target.type }),
-                ...(canTrustTargetAttribute('className') && { targetClass: target.className })
+                ...(this.agentRef.init.user_actions.elementAttributes.reduce((acc, field) => {
+                  /** prevent us from capturing an obscenely long value */
+                  if (canTrustTargetAttribute(field)) acc[targetAttrName(field)] = String(target[field]).trim().slice(0, 128)
+                  return acc
+                }, {})),
+                ...aggregatedUserAction.nearestTargetFields
               })
+
+              /**
+               * Returns the original target field name with `target` prepended and camelCased
+               * @param {string} originalFieldName
+               * @returns {string} the target field name
+               */
+              function targetAttrName (originalFieldName) {
+                /** preserve original renaming structure for pre-existing field maps */
+                if (originalFieldName === 'tagName') originalFieldName = 'tag'
+                if (originalFieldName === 'className') originalFieldName = 'class'
+                /** return the original field name, cap'd and prepended with target to match formatting */
+                return `target${originalFieldName.charAt(0).toUpperCase() + originalFieldName.slice(1)}`
+              }
 
               /**
                * Only trust attributes that exist on HTML element targets, which excludes the window and the document targets
@@ -102,7 +118,7 @@ export class Aggregate extends AggregateBase {
 
         registerHandler('ua', (evt) => {
           /** the processor will return the previously aggregated event if it has been completed by processing the current event */
-          addUserAction(this.userActionAggregator.process(evt))
+          addUserAction(this.userActionAggregator.process(evt, this.agentRef.init.user_actions.elementAttributes))
         }, this.featureName, this.ee)
       }
 
@@ -121,7 +137,7 @@ export class Aggregate extends AggregateBase {
               const observer = new PerformanceObserver((list) => {
                 list.getEntries().forEach(entry => {
                   try {
-                    handle(SUPPORTABILITY_METRIC_CHANNEL, ['Generic/Performance/' + type + '/Seen'])
+                    handle(SUPPORTABILITY_METRIC_CHANNEL, ['Generic/Performance/' + type + '/Seen'], undefined, FEATURE_NAMES.metrics, this.ee)
                     const detailObj = agentRef.init.performance.capture_detail ? createDetailAttrs(entry.detail) : {}
                     this.addEvent({
                       ...detailObj,
@@ -181,13 +197,13 @@ export class Aggregate extends AggregateBase {
               if (this.agentRef.init.performance.resources.asset_types.length && !this.agentRef.init.performance.resources.asset_types.includes(entryObject.initiatorType)) return
               /** decide if the entryDomain is a first party domain */
               firstParty = entryDomain === globalScope?.location.hostname || agentRef.init.performance.resources.first_party_domains.includes(entryDomain)
-              if (firstParty) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Generic/Performance/FirstPartyResource/Seen'])
-              if (isNr) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Generic/Performance/NrResource/Seen'])
+              if (firstParty) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Generic/Performance/FirstPartyResource/Seen'], undefined, FEATURE_NAMES.metrics, this.ee)
+              if (isNr) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Generic/Performance/NrResource/Seen'], undefined, FEATURE_NAMES.metrics, this.ee)
             } catch (err) {
             // couldnt parse the URL, so firstParty will just default to false
             }
 
-            handle(SUPPORTABILITY_METRIC_CHANNEL, ['Generic/Performance/Resource/Seen'])
+            handle(SUPPORTABILITY_METRIC_CHANNEL, ['Generic/Performance/Resource/Seen'], undefined, FEATURE_NAMES.metrics, this.ee)
             const event = {
               ...entryObject,
               eventType: 'BrowserPerformance',
@@ -278,11 +294,11 @@ export class Aggregate extends AggregateBase {
   trackSupportabilityMetrics () {
     /** track usage SMs to improve these experimental features */
     const configPerfTag = 'Config/Performance/'
-    if (this.agentRef.init.performance.capture_marks) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'CaptureMarks/Enabled'])
-    if (this.agentRef.init.performance.capture_measures) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'CaptureMeasures/Enabled'])
-    if (this.agentRef.init.performance.resources.enabled) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'Resources/Enabled'])
-    if (this.agentRef.init.performance.resources.asset_types?.length !== 0) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'Resources/AssetTypes/Changed'])
-    if (this.agentRef.init.performance.resources.first_party_domains?.length !== 0) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'Resources/FirstPartyDomains/Changed'])
-    if (this.agentRef.init.performance.resources.ignore_newrelic === false) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'Resources/IgnoreNewrelic/Changed'])
+    if (this.agentRef.init.performance.capture_marks) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'CaptureMarks/Enabled'], undefined, FEATURE_NAMES.metrics, this.ee)
+    if (this.agentRef.init.performance.capture_measures) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'CaptureMeasures/Enabled'], undefined, FEATURE_NAMES.metrics, this.ee)
+    if (this.agentRef.init.performance.resources.enabled) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'Resources/Enabled'], undefined, FEATURE_NAMES.metrics, this.ee)
+    if (this.agentRef.init.performance.resources.asset_types?.length !== 0) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'Resources/AssetTypes/Changed'], undefined, FEATURE_NAMES.metrics, this.ee)
+    if (this.agentRef.init.performance.resources.first_party_domains?.length !== 0) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'Resources/FirstPartyDomains/Changed'], undefined, FEATURE_NAMES.metrics, this.ee)
+    if (this.agentRef.init.performance.resources.ignore_newrelic === false) handle(SUPPORTABILITY_METRIC_CHANNEL, [configPerfTag + 'Resources/IgnoreNewrelic/Changed'], undefined, FEATURE_NAMES.metrics, this.ee)
   }
 }

@@ -162,7 +162,7 @@ function testCases () {
             },
             {
               type: 'doubleAttribute',
-              key: 'foo',
+              key: 'fid',
               value: 12.34
             }
           ]
@@ -201,7 +201,7 @@ function testCases () {
             },
             {
               type: 'doubleAttribute',
-              key: 'foo',
+              key: 'fid',
               value: 12.34
             }
           ]
@@ -218,7 +218,7 @@ function testCases () {
             },
             {
               type: 'doubleAttribute',
-              key: 'foo',
+              key: 'fid',
               value: 12.34
             }
           ]

@@ -13,6 +13,10 @@ jest.mock('web-vitals/attribution', () => ({
     value: 1,
     attribution: {}
   })),
+  onFID: jest.fn(cb => cb({
+    value: 1234,
+    attribution: { eventTime: 5, eventType: 'pointerdown' }
+  })),
   onINP: jest.fn((cb) => cb({
     value: 8,
     attribution: {}
@@ -79,6 +83,13 @@ test('LCP event with CLS attribute', () => {
     })
     return match
   }
+})
+
+test('sends expected FI attributes when available', () => {
+  expect(timingsAggregate.events.get()[0].data.length).toBeGreaterThanOrEqual(1)
+  const fiPayload = timingsAggregate.events.get()[0].data.find(x => x.name === 'fi')
+  expect(fiPayload.value).toEqual(5)
+  expect(fiPayload.attrs).toEqual(expect.objectContaining({ type: 'pointerdown', fid: 1234, cls: 0.1119, ...expectedNetworkInfo }))
 })
 
 test('sends CLS node with right val on vis change', () => {

@@ -33,7 +33,8 @@ window.NREUM={
         first_party_domains: ['dev-one.nr-assets.net', 'staging-one.nr-assets.net', 'one.nr-assets.net', 'nr-assets.net']
       }
     },
-    proxy: {}
+    proxy: {},
+    user_actions: {elementAttributes: ['id', 'className', 'tagName', 'type', 'innerText', 'textContent', 'ariaLabel', 'alt', 'title']}
   },
   loader_config: {
     accountID: '1',

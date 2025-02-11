@@ -8,8 +8,8 @@ import { generateRandomHexString } from '../common/ids/unique-id'
 export class MicroAgentBase {
   agentIdentifier
 
-  constructor (agentIdentifier = generateRandomHexString(16)) {
-    this.agentIdentifier = agentIdentifier
+  constructor () {
+    this.agentIdentifier = generateRandomHexString(16)
   }
 
   /**

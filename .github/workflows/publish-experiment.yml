@@ -15,6 +15,7 @@ on:
         options:
           - dev
           - staging
+          - standalone # Note: this option prevents the experiment from being added to dev or staging envs. See the `publish-dev` workflow and `build-ab` action.
       publish_ab_script:
         description: 'Flag that determines if the A/B script should be published to internal site'
         required: true

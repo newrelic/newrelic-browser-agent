@@ -5,7 +5,6 @@ import { resetAgent, setupAgent } from '../setup-agent'
  * Test `.interaction gets ixn retroactively too when processed late after ee buffer drain` is a bit
  * flaky so add a retry for this file.
  */
-jest.retryTimes(3)
 
 const INTERACTION_API = 'api-ixn'
 let mainAgent
@@ -31,6 +30,8 @@ beforeEach(async () => {
 
   softNavAggregate.ee.emit('rumresp', [{ spa: 1 }])
   await new Promise(process.nextTick)
+  // to prevent xmlhttprequest errors in jest
+  softNavAggregate.blocked = true
 
   softNavAggregate.initialPageLoadInteraction = null
   softNavAggregate.interactionInProgress = null

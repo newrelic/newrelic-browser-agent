@@ -21,8 +21,14 @@ export class Aggregate extends AggregateBase {
     this.harvestOpts.aggregatorTypes = ['cm', 'sm'] // the types in EventAggregator this feature cares about
     // This feature only harvests once per potential EoL of the page, which is handled by the central harvester.
 
+    // this must be read/stored synchronously, as the currentScript is removed from the DOM after this script is executed and this lookup will be void
+    // its used to report a SM later in the lifecycle
+    this.agentNonce = isBrowserScope && document.currentScript?.nonce
+
     this.waitForFlags(['err']).then(([errFlag]) => {
       if (errFlag) {
+        this.singleChecks() // checks that are run only one time, at script load
+        this.eachSessionChecks() // the start of every time user engages with page
         this.drain()
       } else {
         this.blocked = true // if rum response determines that customer lacks entitlements for spa endpoint, this feature shouldn't harvest
@@ -33,9 +39,6 @@ export class Aggregate extends AggregateBase {
     // Allow features external to the metrics feature to capture SMs and CMs through the event emitter
     registerHandler(SUPPORTABILITY_METRIC_CHANNEL, this.storeSupportabilityMetrics.bind(this), this.featureName, this.ee)
     registerHandler(CUSTOM_METRIC_CHANNEL, this.storeEventMetrics.bind(this), this.featureName, this.ee)
-
-    this.singleChecks() // checks that are run only one time, at script load
-    this.eachSessionChecks() // the start of every time user engages with page
   }
 
   preHarvestChecks (opts) { return this.drained && opts.isFinalHarvest } // only allow any metrics to be sent after we get the right RUM flag and only on EoL
@@ -65,8 +68,7 @@ export class Aggregate extends AggregateBase {
     if (isBrowserScope) {
       this.storeSupportabilityMetrics('Generic/Runtime/Browser/Detected')
 
-      const nonce = document?.currentScript?.nonce
-      if (nonce && nonce !== '') {
+      if (this.agentNonce && this.agentNonce !== '') {
         this.storeSupportabilityMetrics('Generic/Runtime/Nonce/Detected')
       }
 

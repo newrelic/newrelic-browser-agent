@@ -29,6 +29,9 @@
       "loaders/micro-agent": [
         "dist/types/loaders/micro-agent.d.ts"
       ],
+      "loaders/registered-entity": [
+        "dist/types/loaders/registered-entity.d.ts"
+      ],
       "features/ajax": [
         "dist/types/features/ajax/instrument/index.d.ts"
       ],
@@ -92,6 +95,11 @@
       "types": "./dist/types/loaders/micro-agent.d.ts",
       "require": "./dist/cjs/loaders/micro-agent.js",
       "default": "./dist/esm/loaders/micro-agent.js"
+    },
+    "./loaders/registered-entity": {
+      "types": "./dist/types/loaders/registered-entity.d.ts",
+      "require": "./dist/cjs/loaders/registered-entity.js",
+      "default": "./dist/esm/loaders/registered-entity.js"
     },
     "./features/ajax": {
       "types": "./dist/types/features/ajax/instrument/index.d.ts",

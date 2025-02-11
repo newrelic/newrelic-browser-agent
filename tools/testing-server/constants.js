@@ -9,8 +9,9 @@ const defaultAgentConfig = {
 }
 module.exports.defaultAgentConfig = defaultAgentConfig
 
-const defaultEntityGuid = btoa(`${defaultAgentConfig.accountID}|BROWSER|APPLICATION|${defaultAgentConfig.applicationID}`).replace(/=/g, '')
-module.exports.defaultEntityGuid = defaultEntityGuid
+const mockEntityGuid = () => {
+  return btoa(`${defaultAgentConfig.accountID}|BROWSER|APPLICATION|${Math.floor(Math.random() * 1000000)}`).replace(/=/g, '')
+}
 
 module.exports.paths = {
   rootDir: path.resolve(__dirname, '../../'),
@@ -42,9 +43,10 @@ module.exports.rumFlags = (flags = {}, app = {}) => ({
   sr: defaultFlagValue(flags.sr), // session replay entitlements 0|1
   sts: defaultFlagValue(flags.sts), // session trace sampling 0|1|2 - off full error
   srs: defaultFlagValue(flags.srs), // session replay sampling 0|1|2 - off full error
+  log: defaultFlagValue(flags.log), // log entitlements 0|1
   app: {
     agents: app.agents || [
-      { entityGuid: defaultEntityGuid }
+      { entityGuid: mockEntityGuid() }
     ],
     nrServerTime: app.nrServerTime || Date.now()
   }
@@ -55,6 +57,7 @@ const enabledFeature = { enabled, autoStart }
 module.exports.defaultInitBlock = {
   ajax: { deny_list: [], block_internal: false, ...enabledFeature },
   distributed_tracing: {},
+  external: { capture_registered_data: false },
   feature_flags: [],
   generic_events: enabledFeature,
   harvest: { interval: 5 },

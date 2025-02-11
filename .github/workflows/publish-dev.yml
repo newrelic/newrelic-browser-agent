@@ -214,3 +214,32 @@ jobs:
           aws_role: ${{ secrets.AWS_ROLE_ARN }}
           aws_bucket_name: ${{ secrets.AWS_BUCKET }}
           fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
+
+  # Bump a new prerelease version and publish to NPM.
+  prerelease-npm-version:
+    runs-on: ubuntu-latest
+    env:
+      NPM_TOKEN: ${{ secrets.BROWSER_NPM_TOKEN }}
+      GITHUB_LOGIN: ${{ secrets.BROWSER_GITHUB_BOT_NAME }}
+      GITHUB_EMAIL: ${{ secrets.BROWSER_GITHUB_BOT_EMAIL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
+      - name: Authenticate npm
+        shell: bash
+        run: |
+          npm config set '//registry.npmjs.org/:_authToken' "${NPM_TOKEN}"
+      - name: Set up git
+        id: git-setup
+        run: |
+          git config --global user.name "${GITHUB_LOGIN}"
+          git config --global user.email "${GITHUB_EMAIL}"
+      - uses: ./.github/actions/prerelease-npm-version
+        id: prerelease-npm-version
+        with:
+          version-type: preminor
+          preid: rc
+          tag: rc
+          dry_run: true

@@ -8,8 +8,18 @@ on:
     inputs:
       version-type:
         description: "The type of version bump to make. One of: major, minor, patch, premajor, preminor, prepatch, or prerelease."
-        type: string
+        type: choice
         required: true
+        default: preminor
+        options:
+          - major
+          - minor
+          - patch
+          - premajor
+          - preminor
+          - prepatch
+          - prerelease
+          - from-git
       preid:
         description: "The prerelease identifier to use when bumping a prerelease version."
         type: string

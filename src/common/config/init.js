@@ -52,7 +52,7 @@ import { getModeledObject } from './configurable'
  * @property {boolean} [performance.capture_detail] - If true, `BrowserPerformance` events from marks and measures will include, as attribute(s), the `detail` metadata provided to `markOptions` and `measureOptions`.
  * @property {Object} [performance.resources]
  * @property {boolean} [performance.resources.enabled] - If true, the agent will capture PerformanceResourceTiming entries.
- * @property {Array<string>} [performance.resources.asset_types] - Array of `initiatorType` strings to filter the desired ResourceTiming entries. By default, all resource types are captured.
+ * @property {Array<string>} [performance.resources.asset_types] - Array of `initiatorType` strings to filter the desired ResourceTiming entries. By default, all resource types are captured, which is also the case if an empty array is provided.
  * @property {Array<string>} [performance.resources.first_party_domains] - Each resource URL will be checked against this list to determine if it should be labeled "first party" in the resulting `BrowserPerformance` event.
  * @property {boolean} [performance.resources.ignore_newrelic] - When true (default), resource entries associated with New Relic domains will be ignored.
  * @property {Object} [privacy]

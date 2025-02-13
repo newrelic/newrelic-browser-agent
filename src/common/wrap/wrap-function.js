@@ -183,7 +183,7 @@ function report (args, emitter) {
  *     Defaults to the global event emitter.
  * @returns {object} - The destination founction or object with copied properties.
  */
-function copy (from, to, emitter) {
+export function copy (from, to, emitter) {
   if (Object.defineProperty && Object.keys) {
     // Create accessors that proxy to actual function
     try {

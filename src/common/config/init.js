@@ -88,7 +88,7 @@ import { getModeledObject } from './configurable'
  * @property {boolean} [ssl] - If explicitly false, the agent will use HTTP instead of HTTPS. This setting should NOT be used.
  * @property {Object} [user_actions]
  * @property {boolean} [user_actions.enabled] - Must be true to allow UserAction events to be captured.
- * @property {Array<string>} [user_actions.elementAttributes] - List of HTML Element properties to be captured with UserAction events' target elements. This may help to identify the source element being interacted with in the UI.
+ * @property {Array<string>} [user_actions.elementAttributes] - List of HTML Element properties to be captured with UserAction events' target or ancestor elements. This may help to identify the source element being interacted with in the UI.
  */
 
 const nrMask = '[data-nr-mask]'

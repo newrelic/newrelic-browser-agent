@@ -68,7 +68,7 @@ import { getModeledObject } from './configurable'
  * @property {boolean} [session_replay.enabled] - Turn on/off the session replay feature (off by default).
  * @property {boolean} [session_replay.preload] - If true, allow the agent to import and run rrweb recorder immediately instead of waiting until after the window.load event, for new sessions. Existing sessions ignore this setting.
  * @deprecated {number} [session_replay.sampling_rate] - This setting is deprecated and ineffective. Sampling is controlled in New Relic by server-side configuration.
- * @property {number} [session_replay.error_sampling_rate] - This setting is deprecated and ineffective.
+ * @deprecated {number} [session_replay.error_sampling_rate] - This setting is deprecated and ineffective.
  * @property {boolean} [session_replay.collect_fonts] - When true, serialize fonts for collection without public asset url. This is currently broken -- https://github.com/rrweb-io/rrweb/issues/1304.
  * @property {boolean} [session_replay.inline_images] - When true, serialize images for collection without public asset url. Not recommended for use. This is currently for TESTING as it easily generates payloads too large to be harvested.
  * @property {boolean} [session_replay.fix_stylesheets] - When true, tries to fetch any missing stylesheets again to inline in replayer.

@@ -52,7 +52,7 @@ import { getModeledObject } from './configurable'
  * @property {boolean} [performance.capture_detail] - If true, `BrowserPerformance` events from marks and measures will include, as attribute(s), the `detail` metadata provided to `markOptions` and `measureOptions`.
  * @property {Object} [performance.resources]
  * @property {boolean} [performance.resources.enabled] - If true, the agent will capture PerformanceResourceTiming entries.
- * @property {Array<string>} [performance.resources.asset_types] - Array of `initiatorType` strings to filter the desired ResourceTiming entries. By default, all resource types are captured, which is also the case if an empty array is provided.
+ * @property {Array<string>} [performance.resources.asset_types] - Array of `initiatorType` strings to filter the desired ResourceTiming entries. By default, all resource types are captured.
  * @property {Array<string>} [performance.resources.first_party_domains] - Each resource URL will be checked against this list to determine if it should be labeled "first party" in the resulting `BrowserPerformance` event.
  * @property {boolean} [performance.resources.ignore_newrelic] - When true (default), resource entries associated with New Relic domains will be ignored.
  * @property {Object} [privacy]
@@ -66,10 +66,10 @@ import { getModeledObject } from './configurable'
  * @property {Object} [session_replay]
  * @property {boolean} [session_replay.autoStart] - If true, the agent will automatically start the session replay feature. Otherwise, it will be in a deferred state until the `start` API method is called.
  * @property {boolean} [session_replay.enabled] - Turn on/off the session replay feature (off by default).
- * @property {boolean} [session_replay.preload] - If true, allow the agent to import and run rrweb recorder immediately instead of waiting until after the window.load event, for new sessions. Existing sessions ignore this setting.
- * @deprecated {number} [session_replay.sampling_rate] - This setting is deprecated and ineffective. Sampling is controlled in New Relic by server-side configuration.
- * @deprecated {number} [session_replay.error_sampling_rate] - This setting is deprecated and ineffective.
- * @property {boolean} [session_replay.collect_fonts] - When true, serialize fonts for collection without public asset url. See issues with this feature at https://github.com/rrweb-io/rrweb/issues/1304.
+ * @property {boolean} [session_replay.preload] - If true, allow the agent to run rrweb recorder immediately instead of waiting until after the window.load event, for new sessions. Existing sessions ignore this setting.
+ * @property {number} [session_replay.sampling_rate] - This setting is deprecated and ineffective. Sampling is controlled in New Relic by server-side configuration.
+ * @property {number} [session_replay.error_sampling_rate] - This setting is deprecated and ineffective.
+ * @property {boolean} [session_replay.collect_fonts] - When true, serialize fonts for collection without public asset url. This is currently broken -- https://github.com/rrweb-io/rrweb/issues/1304.
  * @property {boolean} [session_replay.inline_images] - When true, serialize images for collection without public asset url. Not recommended for use. This is currently for TESTING as it easily generates payloads too large to be harvested.
  * @property {boolean} [session_replay.fix_stylesheets] - When true, tries to fetch any missing stylesheets again to inline in replayer.
  * @property {boolean} [session_replay.mask_all_inputs] - If true, all input content will be masked with asterisks.
@@ -88,7 +88,7 @@ import { getModeledObject } from './configurable'
  * @property {boolean} [ssl] - If explicitly false, the agent will use HTTP instead of HTTPS. This setting should NOT be used.
  * @property {Object} [user_actions]
  * @property {boolean} [user_actions.enabled] - Must be true to allow UserAction events to be captured.
- * @property {Array<string>} [user_actions.elementAttributes] - List of HTML Element properties to be captured with UserAction events' target or ancestor elements. This may help to identify the source element being interacted with in the UI.
+ * @property {Array<string>} [user_actions.elementAttributes] - List of HTML Element properties to be captured with UserAction events' target elements. This may help to identify the source element being interacted with in the UI.
  */
 
 const nrMask = '[data-nr-mask]'

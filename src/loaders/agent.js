@@ -21,7 +21,7 @@ import { globalScope } from '../common/constants/runtime'
 
 /**
  * @typedef {Object} AgentOptions
- * @property {import('../common/config/info').Info} [info] - An object containing operational info needed by the agent. It's strongly encouraged to define this.
+ * @property {import('../common/config/info').Info} info - An object containing operational info needed by the agent. It's strongly encouraged to define this.
  * @property {import('../common/config/init').Init} [init] - An object containing initialization configurations for the agent.
  * @property {Object} [loader_config] - An object containing configuration primarily passed by APM injection. This is not recommended for use if not already provided by installation.
  * @property {Object} [runtime] - An object containing runtime references by the agent. This is not recommended for use.

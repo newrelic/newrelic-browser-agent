@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline'; connect-src *;">
+    {init} {config} {loader}
+  </head>
+  <body>Instrumented
+    <script>
+      // This script will trigger a CSP violation
+      var script = document.createElement('script');
+      script.src = 'https://example.com';
+      document.body.appendChild(script);
+    </script>
+  </body>
+</html>

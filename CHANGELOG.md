@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.283.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.282.0...v1.283.0) (2025-02-18)
+
+
+### Features
+
+* Add auto-logging feature ([#1274](https://github.com/newrelic/newrelic-browser-agent/issues/1274)) ([91204ae](https://github.com/newrelic/newrelic-browser-agent/commit/91204ae0099508d13c944be06ed6c46dce901ce3))
+* Add global custom attributes to log data ([#1343](https://github.com/newrelic/newrelic-browser-agent/issues/1343)) ([dc7d27c](https://github.com/newrelic/newrelic-browser-agent/commit/dc7d27c718c13a54bce5cc1fa6b0260b95008637))
+
 ## [1.282.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.281.0...v1.282.0) (2025-02-13)
 
 

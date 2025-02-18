@@ -5,6 +5,31 @@
       "changes": [
         {
           "type": "feat",
+          "sha": "dc7d27c718c13a54bce5cc1fa6b0260b95008637",
+          "message": "Add global custom attributes to log data",
+          "issues": [
+            "1343"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "91204ae0099508d13c944be06ed6c46dce901ce3",
+          "message": "Add auto-logging feature",
+          "issues": [
+            "1274"
+          ]
+        }
+      ],
+      "version": "1.283.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "a717c893-14c1-4428-87d7-fca900a4e8cd",
+      "createTime": "2025-02-18T23:07:41.791Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
           "sha": "9b2756f520cb946192e72d138e14fb4fca75a7b8",
           "message": "Re-implement wrap-websocket into agent",
           "issues": [
@@ -2519,5 +2544,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2025-02-13T18:21:10.680Z"
+  "updateTime": "2025-02-18T23:07:41.791Z"
 }

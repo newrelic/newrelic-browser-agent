@@ -1300,7 +1300,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### @wdio/spec-reporter
 
-This product includes source derived from [@wdio/spec-reporter](https://github.com/webdriverio/webdriverio) ([v9.5.0](https://github.com/webdriverio/webdriverio/tree/v9.5.0)), distributed under the [MIT License](https://github.com/webdriverio/webdriverio/blob/v9.5.0/LICENSE):
+This product includes source derived from [@wdio/spec-reporter](https://github.com/webdriverio/webdriverio) ([v9.6.3](https://github.com/webdriverio/webdriverio/tree/v9.6.3)), distributed under the [MIT License](https://github.com/webdriverio/webdriverio/blob/v9.6.3/LICENSE):
 
 ```
 Copyright (c) OpenJS Foundation and other contributors
@@ -1526,7 +1526,7 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH RE
 
 ### eslint-plugin-import
 
-This product includes source derived from [eslint-plugin-import](https://github.com/import-js/eslint-plugin-import) ([v2.29.1](https://github.com/import-js/eslint-plugin-import/tree/v2.29.1)), distributed under the [MIT License](https://github.com/import-js/eslint-plugin-import/blob/v2.29.1/LICENSE):
+This product includes source derived from [eslint-plugin-import](https://github.com/import-js/eslint-plugin-import) ([v2.31.0](https://github.com/import-js/eslint-plugin-import/tree/v2.31.0)), distributed under the [MIT License](https://github.com/import-js/eslint-plugin-import/blob/v2.31.0/LICENSE):
 
 ```
 The MIT License (MIT)
@@ -2393,7 +2393,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ### typescript
 
-This product includes source derived from [typescript](https://github.com/Microsoft/TypeScript) ([v5.5.4](https://github.com/Microsoft/TypeScript/tree/v5.5.4)), distributed under the [Apache-2.0 License](https://github.com/Microsoft/TypeScript/blob/v5.5.4/LICENSE.txt):
+This product includes source derived from [typescript](https://github.com/microsoft/TypeScript) ([v5.7.3](https://github.com/microsoft/TypeScript/tree/v5.7.3)), distributed under the [Apache-2.0 License](https://github.com/microsoft/TypeScript/blob/v5.7.3/LICENSE.txt):
 
 ```
 Apache License

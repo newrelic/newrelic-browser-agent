@@ -2,7 +2,7 @@ const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 
 const isProduction = process.env.NODE_ENV === 'production'
-const htmlTemplate = (script) => `<html>
+const htmlTemplate = (script) => `<!DOCTYPE html>
   <head>
     <title>RUM Unit Test</title>
     {init}
@@ -19,7 +19,9 @@ const config = [
   {
     cache: false,
     entry: {
-      'apollo-client': './src/apollo-client.js'
+      'apollo-client': './src/apollo-client.js',
+      'reconnecting-websocket': './src/reconnecting-websocket.js',
+      'robust-websocket': './src/robust-websocket.js'
     },
     output: {
       path: path.resolve(__dirname, '../../../tests/assets/test-builds/library-wrapper')
@@ -66,6 +68,18 @@ const config = [
         minify: false,
         inject: false,
         templateContent: htmlTemplate('apollo-client')
+      }),
+      new HtmlWebpackPlugin({
+        filename: 'reconnecting-websocket.html',
+        minify: false,
+        inject: false,
+        templateContent: htmlTemplate('reconnecting-websocket')
+      }),
+      new HtmlWebpackPlugin({
+        filename: 'robust-websocket.html',
+        minify: false,
+        inject: false,
+        templateContent: htmlTemplate('robust-websocket')
       })
     ]
   }

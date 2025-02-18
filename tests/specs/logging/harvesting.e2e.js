@@ -1,20 +1,38 @@
-import { testLogsRequest } from '../../../tools/testing-server/utils/expect-tests'
+import { testLogsRequest, testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
+import { rumFlags } from '../../../tools/testing-server/constants'
+import { LOGGING_MODE } from '../../../src/features/logging/constants'
 
 describe('logging harvesting', () => {
   let logsCapture
 
   beforeEach(async () => {
-    logsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testLogsRequest })
+    logsCapture = await browser.testHandle.createNetworkCaptures('bamServer', {
+      test: testLogsRequest
+    })
   })
+
+  afterEach(async () => {
+    // logging mode is sticky to the session, so we need to reset before the next test
+    await browser.destroyAgentSession()
+  })
+
+  const mockRumResponse = async (logLevel) => {
+    await browser.testHandle.scheduleReply('bamServer', {
+      test: testRumRequest,
+      body: JSON.stringify(rumFlags({ log: logLevel }))
+    })
+  }
+
+  const checkPayload = (actualPayload, expectedPayload) => {
+    expect(actualPayload).toContainAllKeys(['common', 'logs'])
+    expect(actualPayload.common).toEqual(expectedPayload.common)
+    expect(actualPayload.logs).toIncludeSameMembers(expectedPayload.logs)
+  }
 
   describe('logging harvests', () => {
     const pageUrl = expect.any(String)
     const customAttributes = { test: 1 }
-    const attributes = { ...customAttributes, pageUrl }
-    const expectedLogs = ['INFO', 'DEBUG', 'TRACE', 'ERROR', 'WARN'].map(level => ({
-      level, message: level.toLowerCase(), timestamp: expect.any(Number), attributes
-    }))
-    const expectedPayload = [{
+    const commonAttributes = {
       common: {
         attributes: {
           appId: 42,
@@ -29,30 +47,56 @@ describe('logging harvesting', () => {
           session: expect.any(String),
           ptid: expect.any(String)
         }
-      },
-      logs: expectedLogs
-    }]
+      }
+    }
+    const expectedLogs = (type, logLevels = []) => {
+      return logLevels.map(level => ({
+        level: type === 'console-logger' && level === 'LOG' ? 'INFO' : level,
+        message: level.toLowerCase(),
+        timestamp: expect.any(Number),
+        attributes: {
+          pageUrl,
+          ...(type === 'api' || type === 'api-wrap-logger' ? customAttributes : {})
+        }
+      }))
+    }
 
-    ;['api', 'api-wrap-logger'].forEach(type => {
-      it(`should harvest expected logs - ${type} pre load`, async () => {
-        const [[{ request: { body } }]] = await Promise.all([
-          logsCapture.waitForResult({ totalCount: 1 }),
-          browser.url(await browser.testHandle.assetURL(`logs-${type}-pre-load.html`))
-        ])
+    ;['api', 'api-wrap-logger', 'console-logger'].forEach(type => {
+      Object.keys(LOGGING_MODE).filter(mode => mode !== 'OFF').forEach(mode => {
+        const logLevel = LOGGING_MODE[mode]
+        const loggingModes = Object.entries(LOGGING_MODE).filter(entry => entry[1] > LOGGING_MODE.OFF && entry[1] <= logLevel).map(entry => entry[0])
+        if (type === 'console-logger' && logLevel >= LOGGING_MODE.INFO) {
+          loggingModes.push('LOG')
+        }
+        const expectedPayload = [{
+          ...commonAttributes,
+          logs: expectedLogs(type, loggingModes)
+        }]
 
-        expect(JSON.parse(body)).toEqual(expectedPayload)
-      })
+        it(`should harvest expected logs - ${type} pre load - logging mode: ${mode}`, async () => {
+          await mockRumResponse(logLevel)
+          const [[{ request: { body } }]] = await Promise.all([
+            logsCapture.waitForResult({ totalCount: 1, timeout: 15000 }),
+            await browser.url(await browser.testHandle.assetURL(`logs-${type}-pre-load.html`))
+          ])
 
-      it(`should harvest expected logs - ${type} post load`, async () => {
-        const [[{ request: { body } }]] = await Promise.all([
-          logsCapture.waitForResult({ totalCount: 1 }),
-          browser.url(await browser.testHandle.assetURL(`logs-${type}-post-load.html`))
-        ])
+          const actualPayload = JSON.parse(body)
+          checkPayload(actualPayload[0], expectedPayload[0])
+        })
 
-        expect(JSON.parse(body)).toEqual(expectedPayload)
+        it(`should harvest expected logs - ${type} post load - logging mode: ${mode}`, async () => {
+          await mockRumResponse(logLevel)
+          const [[{ request: { body } }]] = await Promise.all([
+            logsCapture.waitForResult({ totalCount: 1, timeout: 15000 }),
+            browser.url(await browser.testHandle.assetURL(`logs-${type}-post-load.html`))
+          ])
+          const actualPayload = JSON.parse(body)
+          checkPayload(actualPayload[0], expectedPayload[0])
+        })
       })
 
       it(`should harvest early if reaching limit - ${type}`, async () => {
+        await mockRumResponse(LOGGING_MODE.INFO)
         let now = Date.now(); let then
         await Promise.all([
           logsCapture.waitForResult({ totalCount: 1 }).then(() => { then = Date.now() }),
@@ -63,11 +107,28 @@ describe('logging harvesting', () => {
       })
 
       it(`should ignore log if too large - ${type}`, async () => {
+        await mockRumResponse(LOGGING_MODE.TRACE)
         const [[{ request: { body } }]] = await Promise.all([
           logsCapture.waitForResult({ totalCount: 1 }),
           browser.url(await browser.testHandle.assetURL(`logs-${type}-too-large.html`))
         ])
-        expect(JSON.parse(body)).toEqual(expectedPayload) // should not contain the '...xxxxx...' payload in it
+        const loggingModes = Object.entries(LOGGING_MODE).filter(entry => entry[1] > LOGGING_MODE.OFF).map(entry => entry[0])
+        if (type === 'console-logger') {
+          loggingModes.push('LOG')
+        }
+        const logs = [...expectedLogs(type, loggingModes), {
+          level: 'DEBUG',
+          message: 'New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#31',
+          timestamp: expect.any(Number),
+          attributes: {
+            pageUrl: expect.any(String)
+          }
+        }]
+        const expectedPayload = [{
+          ...commonAttributes,
+          logs
+        }]
+        checkPayload(JSON.parse(body)[0], expectedPayload[0]) // should not contain the '...xxxxx...' payload in it
       })
     })
 
@@ -81,6 +142,7 @@ describe('logging harvesting', () => {
     })
 
     it('should not double harvest on navigation logs', async () => {
+      await mockRumResponse(LOGGING_MODE.INFO)
       const [logsRequests] = await Promise.all([
         logsCapture.waitForResult({ timeout: 15000 }),
         browser.url(await browser.testHandle.assetURL('logs-redirect.html'))
@@ -95,6 +157,7 @@ describe('logging harvesting', () => {
     })
 
     it('should allow for re-wrapping and 3rd party wrapping', async () => {
+      await mockRumResponse(LOGGING_MODE.DEBUG)
       const [[{ request: { body } }]] = await Promise.all([
         logsCapture.waitForResult({ totalCount: 1 }),
         browser.url(await browser.testHandle.assetURL('logs-api-wrap-logger-rewrapped.html'))
@@ -119,6 +182,7 @@ describe('logging harvesting', () => {
   describe('logging retry harvests', () => {
     [429].forEach(statusCode =>
       it(`should send the logs on the next harvest when the first harvest statusCode is ${statusCode}`, async () => {
+        await mockRumResponse(LOGGING_MODE.TRACE)
         await browser.testHandle.scheduleReply('bamServer', {
           test: testLogsRequest,
           permanent: true,

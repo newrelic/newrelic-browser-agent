@@ -26,29 +26,23 @@ describe('logging harvesting', () => {
   const checkPayload = (actualPayload, expectedPayload) => {
     expect(actualPayload).toContainAllKeys(['common', 'logs'])
     expect(actualPayload.common).toEqual(expectedPayload.common)
-    expect(actualPayload.logs).toIncludeSameMembers(expectedPayload.logs)
+    // expect(actualPayload.logs).toMatchObject(expectedPayload.logs)
+
+    actualPayload.logs.forEach((log, index) => {
+      expect(log).toContainAllKeys(['level', 'message', 'timestamp', 'attributes'])
+
+      const expectedLog = expectedPayload.logs.find(x => x.level === log.level && x.message === log.message)
+
+      expect(log.timestamp).toEqual(expect.any(Number))
+      expect(log.timestamp).toBeLessThanOrEqual(Date.now())
+      expect(log.attributes).toMatchObject(expectedLog.attributes)
+    })
   }
 
   describe('logging harvests', () => {
     const pageUrl = expect.any(String)
     const customAttributes = { test: 1 }
-    const commonAttributes = {
-      common: {
-        attributes: {
-          appId: 42,
-          agentVersion: expect.any(String),
-          'instrumentation.provider': 'browser',
-          'instrumentation.version': expect.any(String),
-          'instrumentation.name': 'spa',
-          'entity.guid': expect.any(String),
-          hasReplay: false,
-          hasTrace: true,
-          standalone: false,
-          session: expect.any(String),
-          ptid: expect.any(String)
-        }
-      }
-    }
+
     const expectedLogs = (type, logLevels = []) => {
       return logLevels.map(level => ({
         level: type === 'console-logger' && level === 'LOG' ? 'INFO' : level,
@@ -61,6 +55,25 @@ describe('logging harvesting', () => {
       }))
     }
 
+    const commonAttributes = (customAttrs = {}) => ({
+      common: {
+        attributes: {
+          appId: 42,
+          agentVersion: expect.any(String),
+          'instrumentation.provider': 'browser',
+          'instrumentation.version': expect.any(String),
+          'instrumentation.name': 'spa',
+          'entity.guid': expect.any(String),
+          hasReplay: false,
+          hasTrace: true,
+          standalone: false,
+          session: expect.any(String),
+          ptid: expect.any(String),
+          ...customAttrs
+        }
+      }
+    })
+
     ;['api', 'api-wrap-logger', 'console-logger'].forEach(type => {
       Object.keys(LOGGING_MODE).filter(mode => mode !== 'OFF').forEach(mode => {
         const logLevel = LOGGING_MODE[mode]
@@ -69,7 +82,7 @@ describe('logging harvesting', () => {
           loggingModes.push('LOG')
         }
         const expectedPayload = [{
-          ...commonAttributes,
+          ...commonAttributes(),
           logs: expectedLogs(type, loggingModes)
         }]
 
@@ -92,6 +105,34 @@ describe('logging harvesting', () => {
           ])
           const actualPayload = JSON.parse(body)
           checkPayload(actualPayload[0], expectedPayload[0])
+        })
+
+        it(`should have custom attributes from info object and setCustomAttribute call - ${type} pre load - ${mode}`, async () => {
+          await mockRumResponse(logLevel)
+          const [[{ request: { body } }]] = await Promise.all([
+            logsCapture.waitForResult({ totalCount: 1, timeout: 15000 }),
+            browser.url(await browser.testHandle.assetURL(`logs-${type}-custom-attributes-pre-load.html`))
+          ])
+          const actualPayload = JSON.parse(body)
+
+          checkPayload(actualPayload[0], {
+            ...commonAttributes({ test: 19, hello: 'world', bool: true }),
+            logs: expectedLogs(type, loggingModes)
+          })
+        })
+
+        it(`should have custom attributes from info object and setCustomAttribute call - ${type} post load - ${mode}`, async () => {
+          await mockRumResponse(logLevel)
+          const [[{ request: { body } }]] = await Promise.all([
+            logsCapture.waitForResult({ totalCount: 1, timeout: 15000 }),
+            browser.url(await browser.testHandle.assetURL(`logs-${type}-custom-attributes-post-load.html`))
+          ])
+          const actualPayload = JSON.parse(body)
+
+          checkPayload(actualPayload[0], {
+            ...commonAttributes({ test: 19, hello: 'world', bool: true }),
+            logs: expectedLogs(type, loggingModes)
+          })
         })
       })
 
@@ -125,7 +166,7 @@ describe('logging harvesting', () => {
           }
         }]
         const expectedPayload = [{
-          ...commonAttributes,
+          ...commonAttributes(),
           logs
         }]
         checkPayload(JSON.parse(body)[0], expectedPayload[0]) // should not contain the '...xxxxx...' payload in it

@@ -4,6 +4,23 @@
     {
       "changes": [
         {
+          "type": "fix",
+          "sha": "95bbe92f12d20447b40538b17db61c2ea887ef79",
+          "message": "Removing websocket wrapping & SM",
+          "issues": [
+            "1388"
+          ]
+        }
+      ],
+      "version": "1.283.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "918f277e-785f-42bf-a938-2a8a90c96721",
+      "createTime": "2025-02-19T18:25:47.998Z"
+    },
+    {
+      "changes": [
+        {
           "type": "feat",
           "sha": "dc7d27c718c13a54bce5cc1fa6b0260b95008637",
           "message": "Add global custom attributes to log data",
@@ -2544,5 +2561,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2025-02-18T23:07:41.791Z"
+  "updateTime": "2025-02-19T18:25:47.998Z"
 }

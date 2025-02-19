@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.283.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.283.0...v1.283.1) (2025-02-19)
+
+
+### Bug Fixes
+
+* Removing websocket wrapping & SM ([#1388](https://github.com/newrelic/newrelic-browser-agent/issues/1388)) ([95bbe92](https://github.com/newrelic/newrelic-browser-agent/commit/95bbe92f12d20447b40538b17db61c2ea887ef79))
+
 ## [1.283.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.282.0...v1.283.0) (2025-02-18)
 
 

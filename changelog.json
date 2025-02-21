@@ -5,6 +5,23 @@
       "changes": [
         {
           "type": "fix",
+          "sha": "00cfd661ad24ec2faa885fcab1df61912163ef13",
+          "message": "Add logging analytic metrics and fix browser performance metrics",
+          "issues": [
+            "1392"
+          ]
+        }
+      ],
+      "version": "1.283.2",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "99e3ed87-3778-4a59-b253-f9d0c94629a1",
+      "createTime": "2025-02-21T20:25:42.625Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
           "sha": "95bbe92f12d20447b40538b17db61c2ea887ef79",
           "message": "Removing websocket wrapping & SM",
           "issues": [
@@ -2561,5 +2578,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2025-02-19T18:25:47.998Z"
+  "updateTime": "2025-02-21T20:25:42.625Z"
 }

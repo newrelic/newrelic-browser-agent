@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.283.2](https://github.com/newrelic/newrelic-browser-agent/compare/v1.283.1...v1.283.2) (2025-02-21)
+
+
+### Bug Fixes
+
+* Add logging analytic metrics and fix browser performance metrics ([#1392](https://github.com/newrelic/newrelic-browser-agent/issues/1392)) ([00cfd66](https://github.com/newrelic/newrelic-browser-agent/commit/00cfd661ad24ec2faa885fcab1df61912163ef13))
+
 ## [1.283.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.283.0...v1.283.1) (2025-02-19)
 
 

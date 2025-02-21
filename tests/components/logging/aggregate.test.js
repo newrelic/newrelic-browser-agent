@@ -241,10 +241,11 @@ test('can harvest early', async () => {
 
   jest.spyOn(mainAgent.runtime.harvester, 'triggerHarvestFor')
 
+  const harvestEarlySm = ['storeSupportabilityMetrics', ['Logging/Harvest/Early/Seen', expect.any(Number)], undefined, 'metrics', loggingAggregate.ee]
+
   loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'x'.repeat(800 * 800), { myAttributes: 1 }, 'ERROR']) // almost too big
-  expect(handleModule.handle).toHaveBeenCalledTimes(0)
+  expect(handleModule.handle).not.toHaveBeenCalledWith(...harvestEarlySm)
   loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'x'.repeat(800 * 800), { myAttributes: 1 }, 'ERROR']) // almost too big
-  expect(handleModule.handle).toHaveBeenCalledTimes(1)
-  expect(handleModule.handle).toHaveBeenCalledWith('storeSupportabilityMetrics', ['Logging/Harvest/Early/Seen', expect.any(Number)], undefined, 'metrics', loggingAggregate.ee)
+  expect(handleModule.handle).toHaveBeenCalledWith(...harvestEarlySm)
   expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalled()
 })

@@ -13,9 +13,6 @@ import { sharedChannel } from '../../../common/constants/shared-channel'
 import { obj as encodeObj } from '../../../common/url/encode'
 import { warn } from '../../../common/util/console'
 import { globalScope } from '../../../common/constants/runtime'
-import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
-import { handle } from '../../../common/event-emitter/handle'
-import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { RRWEB_VERSION } from '../../../common/constants/env'
 import { MODE, SESSION_EVENTS, SESSION_EVENT_TYPES } from '../../../common/session/constants'
 import { stringify } from '../../../common/util/stringify'
@@ -53,7 +50,7 @@ export class Aggregate extends AggregateBase {
 
     this.isSessionTrackingEnabled = canEnableSessionTracking(this.agentIdentifier) && this.agentRef.runtime.session
 
-    handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/Enabled'], undefined, FEATURE_NAMES.metrics, this.ee)
+    this.reportSupportabilityMetric('Config/SessionReplay/Enabled')
 
     // The SessionEntity class can emit a message indicating the session was cleared and reset (expiry, inactivity). This feature must abort and never resume if that occurs.
     this.ee.on(SESSION_EVENTS.RESET, () => {
@@ -93,7 +90,7 @@ export class Aggregate extends AggregateBase {
         this.deregisterDrain()
         if (this.recorder?.recording) {
           this.abort(ABORT_REASONS.ENTITLEMENTS)
-          handle(SUPPORTABILITY_METRIC_CHANNEL, ['SessionReplay/EnabledNotEntitled/Detected'], undefined, FEATURE_NAMES.metrics, this.ee)
+          this.reportSupportabilityMetric('SessionReplay/EnabledNotEntitled/Detected')
         }
         return
       }
@@ -108,15 +105,15 @@ export class Aggregate extends AggregateBase {
     }) // notify watchers that replay started with the mode
 
     /** Detect if the default configs have been altered and report a SM.  This is useful to evaluate what the reasonable defaults are across a customer base over time */
-    if (!autoStart) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/AutoStart/Modified'], undefined, FEATURE_NAMES.metrics, this.ee)
-    if (collect_fonts === true) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/CollectFonts/Modified'], undefined, FEATURE_NAMES.metrics, this.ee)
-    if (inline_images === true) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/InlineImages/Modifed'], undefined, FEATURE_NAMES.metrics, this.ee)
-    if (mask_all_inputs !== true) handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/MaskAllInputs/Modified'], undefined, FEATURE_NAMES.metrics, this.ee)
-    if (block_selector !== '[data-nr-block]') handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/BlockSelector/Modified'], undefined, FEATURE_NAMES.metrics, this.ee)
-    if (mask_text_selector !== '*') handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/MaskTextSelector/Modified'], undefined, FEATURE_NAMES.metrics, this.ee)
+    if (!autoStart) this.reportSupportabilityMetric('Config/SessionReplay/AutoStart/Modified')
+    if (collect_fonts === true) this.reportSupportabilityMetric('Config/SessionReplay/CollectFonts/Modified')
+    if (inline_images === true) this.reportSupportabilityMetric('Config/SessionReplay/InlineImages/Modifed')
+    if (mask_all_inputs !== true) this.reportSupportabilityMetric('Config/SessionReplay/MaskAllInputs/Modified')
+    if (block_selector !== '[data-nr-block]') this.reportSupportabilityMetric('Config/SessionReplay/BlockSelector/Modified')
+    if (mask_text_selector !== '*') this.reportSupportabilityMetric('Config/SessionReplay/MaskTextSelector/Modified')
 
-    handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/SamplingRate/Value', sampling_rate], undefined, FEATURE_NAMES.metrics, this.ee)
-    handle(SUPPORTABILITY_METRIC_CHANNEL, ['Config/SessionReplay/ErrorSamplingRate/Value', error_sampling_rate], undefined, FEATURE_NAMES.metrics, this.ee)
+    this.reportSupportabilityMetric('Config/SessionReplay/SamplingRate/Value', sampling_rate)
+    this.reportSupportabilityMetric('Config/SessionReplay/ErrorSamplingRate/Value', error_sampling_rate)
   }
 
   replayIsActive () {
@@ -229,7 +226,7 @@ export class Aggregate extends AggregateBase {
       return
     }
 
-    handle(SUPPORTABILITY_METRIC_CHANNEL, ['SessionReplay/Harvest/Attempts'], undefined, FEATURE_NAMES.metrics, this.ee)
+    this.reportSupportabilityMetric('SessionReplay/Harvest/Attempts')
 
     let len = 0
     if (!!this.gzipper && !!this.u8) {
@@ -366,7 +363,7 @@ export class Aggregate extends AggregateBase {
   /** Abort the feature, once aborted it will not resume */
   abort (reason = {}, data) {
     warn(33, reason.message)
-    handle(SUPPORTABILITY_METRIC_CHANNEL, [`SessionReplay/Abort/${reason.sm}`, data], undefined, FEATURE_NAMES.metrics, this.ee)
+    this.reportSupportabilityMetric(`SessionReplay/Abort/${reason.sm}`, data)
     this.blocked = true
     this.mode = MODE.OFF
     this.recorder?.stopRecording?.()

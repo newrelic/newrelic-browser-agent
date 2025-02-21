@@ -132,7 +132,7 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 <!--- A Performance.mark event was observed --->
 * Generic/Performance/mark/Seen
 <!--- A Performance.measure event was observed --->
-* Generic/Performance/seen/Seen
+* Generic/Performance/measure/Seen
 <!--- A Performance.resource event was observed --->
 * Generic/Performance/Resource/Seen
 <!--- A first party Performance.resource event was observed --->

@@ -131,9 +131,9 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 <!--- Current page was restored out of the BF Cache --->
 * Generic/BFCache/PageRestored
 <!--- A Performance.mark event was observed --->
-* Generic/Performance/Mark/Seen
+* Generic/Performance/mark/Seen
 <!--- A Performance.measure event was observed --->
-* Generic/Performance/Measure/Seen
+* Generic/Performance/seen/Seen
 <!--- A Performance.resource event was observed --->
 * Generic/Performance/Resource/Seen
 <!--- A first party Performance.resource event was observed --->

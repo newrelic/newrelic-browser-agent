@@ -135,7 +135,7 @@ export class Aggregate extends AggregateBase {
               const observer = new PerformanceObserver((list) => {
                 list.getEntries().forEach(entry => {
                   try {
-                    this.reportSupportabilityMetric('Generic/Performance/' + type + '/Bytes-Added')
+                    this.reportSupportabilityMetric('Generic/Performance/' + type + '/Seen')
                     const detailObj = agentRef.init.performance.capture_detail ? createDetailAttrs(entry.detail) : {}
                     this.addEvent({
                       ...detailObj,

@@ -142,8 +142,6 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 * Generic/VideoElement/Added
 <!--- A <iframe> element was added to the DOM, should have a total count as part of the metric --->
 * Generic/IFrame/Added
-<!--- A pressure event greater than fair was detected --->
-* Generic/HighPressure/Detected
 <!--- The browser being controlled by webDriver was detected --->
 * Generic/WebDriver/Detected
 <!--- A CSP violation was detected --->

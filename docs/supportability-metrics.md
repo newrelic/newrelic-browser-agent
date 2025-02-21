@@ -59,7 +59,6 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 <!--- Logging feature was aborted due to reset -->
 * Logging/Abort/Reset
 <!--- Logging harvest was sent before the interval elapsed --->
-* Logging/Harvest/Early/Seen
 
 ### Generic Events
 <!--- GenericEvents harvest had too many nodes and sent early --->

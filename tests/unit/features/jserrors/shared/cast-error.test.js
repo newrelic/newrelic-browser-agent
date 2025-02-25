@@ -133,6 +133,15 @@ describe('cast-error', () => {
       })
     })
 
+    test('handles promise rejections that already have a prefix (no prefix duplication)', () => {
+      err.message = 'Unhandled Promise Rejection: test'
+      const castedTrustedError = castPromiseRejectionEvent({ reason: err })
+      expect(castedTrustedError.message).toEqual('Unhandled Promise Rejection: test')
+
+      const castedError = castPromiseRejectionEvent({ reason: 'Unhandled Promise Rejection: test' })
+      expect(castedError.message).toEqual('Unhandled Promise Rejection: test')
+    })
+
     test('terminates for events with falsy reasons', () => {
       let castedError = castPromiseRejectionEvent({ reason: undefined })
       expect(castedError).toBeUndefined()

@@ -19,18 +19,6 @@ describe('stylesheet-evaluator', (done) => {
         }
       }))
     }))
-    class CSSStyleSheetMock {
-      cssRules = {}
-      rules = {}
-      replace (txt) {
-        return new Promise((resolve) => {
-          this.cssRules = { txt }
-          this.rules = { txt }
-          resolve()
-        })
-      }
-    }
-    global.CSSStyleSheet = CSSStyleSheetMock
   })
 
   test('should evaluate stylesheets with cssRules as false', async () => {
@@ -81,6 +69,18 @@ describe('stylesheet-evaluator', (done) => {
       }
     })
     expect(stylesheetEvaluator.evaluate()).toEqual(0)
+  })
+
+  test('should not throw error if null prop in global', async () => {
+    jest.resetModules()
+    const { stylesheetEvaluator } = await import('../../../../../src/features/session_replay/shared/stylesheet-evaluator')
+    Object.defineProperty(document, 'styleSheets', {
+      value: {
+        0: null
+      },
+      configurable: true
+    })
+    expect(() => stylesheetEvaluator.evaluate()).not.toThrow()
   })
 })
 

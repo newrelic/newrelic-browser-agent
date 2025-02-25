@@ -24,7 +24,7 @@ class StylesheetEvaluator {
     this.#brokenSheets = []
     if (isBrowserScope) {
       for (let i = 0; i < Object.keys(document.styleSheets).length; i++) {
-        if (!this.#evaluated.has(document.styleSheets[i]) && document.styleSheets[i]) {
+        if (!this.#evaluated.has(document.styleSheets[i]) && typeof document.styleSheets[i] === "object" && document.styleSheets[i] != null) {
           this.#evaluated.add(document.styleSheets[i])
           try {
             // eslint-disable-next-line

@@ -35,7 +35,7 @@ export function castError (error) {
    * @returns {Error} An Error object with the message as the casted reason
    */
 export function castPromiseRejectionEvent (promiseRejectionEvent) {
-  const prefix = 'Unhandled Promise Rejection'
+  const prefix = 'Unhandled Promise Rejection: '
 
   /**
    * If the casted return value is falsy like this, it will get dropped and not produce an error event for harvest.
@@ -46,15 +46,15 @@ export function castPromiseRejectionEvent (promiseRejectionEvent) {
 
   if (canTrustError(promiseRejectionEvent.reason)) {
     try {
-      promiseRejectionEvent.reason.message = prefix + ': ' + promiseRejectionEvent.reason.message
-      return castError(promiseRejectionEvent.reason)
+      if (!promiseRejectionEvent.reason.message.startsWith(prefix)) promiseRejectionEvent.reason.message = prefix + promiseRejectionEvent.reason.message
     } catch (e) {
-      return castError(promiseRejectionEvent.reason)
+      // failed to modify the message, do nothing else
     }
+    return castError(promiseRejectionEvent.reason)
   }
 
   const error = castError(promiseRejectionEvent.reason)
-  error.message = prefix + ': ' + error?.message
+  if (!((error?.message || '').startsWith(prefix))) error.message = prefix + error?.message
   return error
 }
 

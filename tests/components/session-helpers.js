@@ -38,6 +38,7 @@ export const model = {
   sessionReplaySentFirstChunk: false,
   sessionTraceMode: 0,
   traceHarvestStarted: false,
+  loggingMode: 0,
   serverTimeDiff: null,
   custom: {}
 }

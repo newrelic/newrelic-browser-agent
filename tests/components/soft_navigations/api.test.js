@@ -31,7 +31,7 @@ beforeEach(async () => {
   softNavAggregate.ee.emit('rumresp', [{ spa: 1 }])
   await new Promise(process.nextTick)
   // to prevent xmlhttprequest errors in jest
-  softNavAggregate.blocked = true
+  global.XMLHttpRequest = jest.fn()
 
   softNavAggregate.initialPageLoadInteraction = null
   softNavAggregate.interactionInProgress = null

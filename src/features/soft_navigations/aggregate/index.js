@@ -7,7 +7,6 @@ import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { single } from '../../../common/util/invoke'
 import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
-import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { API_TRIGGER_NAME, FEATURE_NAME, INTERACTION_STATUS, INTERACTION_TRIGGERS, IPL_TRIGGER_NAME } from '../constants'
 import { AjaxNode } from './ajax-node'
@@ -34,7 +33,7 @@ export class Aggregate extends AggregateBase {
       const loadEventTime = attrs.navigationEntry.loadEventEnd
       this.initialPageLoadInteraction.done(loadEventTime)
       // Report metric on the initial page load time
-      handle(SUPPORTABILITY_METRIC_CHANNEL, ['SoftNav/Interaction/InitialPageLoad/Duration/Ms', Math.round(loadEventTime)], undefined, FEATURE_NAMES.metrics, this.ee)
+      this.reportSupportabilityMetric('SoftNav/Interaction/InitialPageLoad/Duration/Ms', Math.round(loadEventTime))
     })
 
     this.latestRouteSetByApi = null
@@ -103,7 +102,7 @@ export class Aggregate extends AggregateBase {
     this.interactionInProgress.cancellationTimer = setTimeout(() => {
       this.interactionInProgress.done()
       // Report metric on frequency of cancellation due to timeout for UI ixn
-      handle(SUPPORTABILITY_METRIC_CHANNEL, ['SoftNav/Interaction/TimeOut'], undefined, FEATURE_NAMES.metrics, this.ee)
+      this.reportSupportabilityMetric('SoftNav/Interaction/TimeOut')
     }, 30000) // UI ixn are disregarded after 30 seconds if it's not completed by then
     this.setClosureHandlers()
   }
@@ -116,10 +115,10 @@ export class Aggregate extends AggregateBase {
       this.domObserver.disconnect() // can stop observing whenever our interaction logic completes a cycle
 
       // Report metric on the ixn duration
-      handle(SUPPORTABILITY_METRIC_CHANNEL, [
+      this.reportSupportabilityMetric(
         `SoftNav/Interaction/${ref.newURL !== ref.oldURL ? 'RouteChange' : 'Custom'}/Duration/Ms`,
         Math.round(ref.end - ref.start)
-      ], undefined, FEATURE_NAMES.metrics, this.ee)
+      )
     })
     this.interactionInProgress.on('cancelled', () => {
       this.interactionInProgress = null

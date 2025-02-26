@@ -4,8 +4,15 @@ import { MicroAgent } from '../../dist/types/loaders/micro-agent'
 import { InteractionInstance, getContext, onEnd } from '../../dist/types/loaders/api/interaction-types'
 import { expectType, expectError } from 'tsd'
 
+const validOptions = {
+  info: {
+    applicationID: '12345',
+    licenseKey: 'abcde'
+  }
+}
+
 // Browser Agent APIs
-const browserAgent = new BrowserAgent({})
+const browserAgent = new BrowserAgent(validOptions)
 expectType<BrowserAgent>(browserAgent)
 expectType<(customAttributes: {
   name: string;
@@ -45,7 +52,7 @@ expectType<(key: string, value: any) => InteractionInstance>(browserAgent.intera
 expectType<(name: string, trigger?: string) => InteractionInstance>(browserAgent.interaction().setName)
 
 // Micro Agent APIs
-const microAgent = new MicroAgent({})
+const microAgent = new MicroAgent(validOptions)
 expectType<(featureNames?: string | string[]) => boolean>(microAgent.start)
 
 expectType<(name: string, attributes?: object) => any>(microAgent.addPageAction)

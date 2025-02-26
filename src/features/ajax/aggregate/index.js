@@ -118,6 +118,7 @@ export class Aggregate extends AggregateBase {
   }
 
   serializer (eventBuffer) {
+    if (!eventBuffer.length) return
     const addString = getAddStringContext(this.agentIdentifier)
     let payload = 'bel.7;'
 

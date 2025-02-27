@@ -5,13 +5,26 @@
 import { onINP } from 'web-vitals/attribution'
 import { VitalMetric } from './vital-metric'
 import { VITAL_NAMES } from './constants'
-import { isBrowserScope } from '../constants/runtime'
-import { recordFirstInteraction } from './first-interaction'
+import { initiallyHidden, isBrowserScope } from '../constants/runtime'
 
 export const interactionToNextPaint = new VitalMetric(VITAL_NAMES.INTERACTION_TO_NEXT_PAINT)
+// Note: First Interaction is a legacy NR timing event, not an actual CWV metric
+// ('fi' used to be detected via FID.  It is now represented by the first INP)
+export const firstInteraction = new VitalMetric(VITAL_NAMES.FIRST_INTERACTION)
 
 if (isBrowserScope) {
-/* Interaction-to-Next-Paint */
+  const recordFirstInteraction = (attribution) => {
+    firstInteraction.update({
+      value: attribution.interactionTime,
+      attrs: {
+        type: attribution.interactionType,
+        eventTarget: attribution.interactionTarget,
+        loadState: attribution.loadState
+      }
+    })
+  }
+
+  /* Interaction-to-Next-Paint */
   onINP(({ value, attribution, id }) => {
     const attrs = {
       metricId: id,
@@ -28,6 +41,9 @@ if (isBrowserScope) {
     }
     interactionToNextPaint.update({ value, attrs })
 
-    recordFirstInteraction(attribution)
+    // preserve the original behavior where FID is not reported if the page is hidden before the first interaction
+    if (!firstInteraction.isValid && !initiallyHidden) {
+      recordFirstInteraction(attribution)
+    }
   })
 }

@@ -18,8 +18,7 @@ const getFreshImport = async (codeToRun) => {
   jest.doMock('web-vitals/attribution', () => ({
     onINP: jest.fn(cb => cb({ value: 8, attribution: inpAttribution, id: 'ruhroh' }))
   }))
-  await import('../../../../src/common/vitals/interaction-to-next-paint')
-  const { firstInteraction } = await import('../../../../src/common/vitals/first-interaction')
+  const { firstInteraction } = await import('../../../../src/common/vitals/interaction-to-next-paint')
   codeToRun(firstInteraction)
 }
 

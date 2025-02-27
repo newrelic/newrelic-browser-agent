@@ -14,15 +14,14 @@ export function recordFirstInteraction (attribution) {
   if (isBrowserScope) {
     // preserve the original behavior where FID is not reported if the page is hidden before the first interaction
     if (initiallyHidden || firstInteraction.isValid) return
-    const attrs = {
-      type: attribution.interactionType,
-      eventTarget: attribution.interactionTarget,
-      loadState: attribution.loadState
-    }
 
     firstInteraction.update({
       value: attribution.interactionTime,
-      attrs
+      attrs: {
+        type: attribution.interactionType,
+        eventTarget: attribution.interactionTarget,
+        loadState: attribution.loadState
+      }
     })
   }
 }

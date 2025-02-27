@@ -26,8 +26,7 @@ const getFreshImport = async (codeToRun) => {
 describe('fi (first interaction)', () => {
   test('reports fi', (done) => {
     getFreshImport((metric) => {
-      metric.subscribe(({ value, attrs }) => {
-        console.log('Value: ', value)
+      metric.subscribe(({ value }) => {
         expect(value).toEqual(8853)
         done()
       })
@@ -58,7 +57,7 @@ describe('fi (first interaction)', () => {
     }))
 
     getFreshImport(metric => {
-      metric.subscribe(({ value, attrs }) => {
+      metric.subscribe(() => {
         console.log('should not have reported...')
         expect(1).toEqual(2)
       })

@@ -25,8 +25,11 @@ const getFreshImport = async (codeToRun) => {
 describe('fi (first interaction)', () => {
   test('reports fi', (done) => {
     getFreshImport((metric) => {
-      metric.subscribe(({ value }) => {
+      metric.subscribe(({ value, attrs }) => {
         expect(value).toEqual(8853)
+        expect(attrs.type).toEqual('pointer')
+        expect(attrs.eventTarget).toEqual('button')
+        expect(attrs.loadState).toEqual('complete')
         done()
       })
     })

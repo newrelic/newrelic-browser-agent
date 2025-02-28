@@ -136,11 +136,6 @@ export class TraceStorage {
 
   processPVT (name, value, attrs) {
     this.storeTiming({ [name]: value })
-    if (hasFID(name, attrs)) this.storeEvent({ type: 'fid', target: 'document' }, 'document', value, value + attrs.fid)
-
-    function hasFID (name, attrs) {
-      return name === 'fi' && !!attrs && typeof attrs.fid === 'number'
-    }
   }
 
   storeTiming (timingEntry, isAbsoluteTimestamp = false) {

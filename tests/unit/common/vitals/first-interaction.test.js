@@ -4,31 +4,35 @@ beforeEach(() => {
   jest.clearAllMocks()
 })
 
-const fidAttribution = {
-  eventTarget: 'html>body',
-  eventType: 'pointerdown',
-  eventTime: 1,
-  loadState: 'loading'
+const inpAttribution = {
+  interactionType: 'pointer',
+  interactionTarget: 'button',
+  interactionTime: 8853.8,
+  inputDelay: 0,
+  nextPaintTime: 200,
+  processingDuration: 0,
+  presentationDelay: 0,
+  loadState: 'complete'
 }
-let triggeronFIDCallback
-const getFreshFIDImport = async (codeToRun) => {
+const getFreshImport = async (codeToRun) => {
   jest.doMock('web-vitals/attribution', () => ({
-    onFID: jest.fn(cb => { triggeronFIDCallback = cb; cb({ value: 100, attribution: fidAttribution }) })
+    onINP: jest.fn(cb => cb({ value: 8, attribution: inpAttribution, id: 'ruhroh' }))
   }))
-  const { firstInputDelay } = await import('../../../../src/common/vitals/first-input-delay')
-  codeToRun(firstInputDelay)
+  const { firstInteraction } = await import('../../../../src/common/vitals/interaction-to-next-paint')
+  codeToRun(firstInteraction)
 }
 
-describe('fid', () => {
-  test('reports fcp from web-vitals', (done) => {
-    getFreshFIDImport(metric => metric.subscribe(({ value, attrs }) => {
-      expect(value).toEqual(1)
-      expect(attrs.type).toEqual(fidAttribution.eventType)
-      expect(attrs.fid).toEqual(100)
-      expect(attrs.eventTarget).toEqual(fidAttribution.eventTarget)
-      expect(attrs.loadState).toEqual(fidAttribution.loadState)
-      done()
-    }))
+describe('fi (first interaction)', () => {
+  test('reports fi', (done) => {
+    getFreshImport((metric) => {
+      metric.subscribe(({ value, attrs }) => {
+        expect(value).toEqual(8853)
+        expect(attrs.type).toEqual('pointer')
+        expect(attrs.eventTarget).toEqual('button')
+        expect(attrs.loadState).toEqual('complete')
+        done()
+      })
+    })
   })
 
   test('Does NOT report values if initiallyHidden', (done) => {
@@ -38,7 +42,7 @@ describe('fid', () => {
       isBrowserScope: true
     }))
 
-    getFreshFIDImport(metric => {
+    getFreshImport(metric => {
       metric.subscribe(() => {
         console.log('should not have reported')
         expect(1).toEqual(2)
@@ -54,8 +58,8 @@ describe('fid', () => {
       isBrowserScope: false
     }))
 
-    getFreshFIDImport(metric => {
-      metric.subscribe(({ value, attrs }) => {
+    getFreshImport(metric => {
+      metric.subscribe(() => {
         console.log('should not have reported...')
         expect(1).toEqual(2)
       })
@@ -70,13 +74,13 @@ describe('fid', () => {
       isBrowserScope: true
     }))
     let witness = 0
-    getFreshFIDImport(metric => {
+    getFreshImport(metric => {
       metric.subscribe(({ value }) => {
-        expect(value).toEqual(1)
+        expect(value).toEqual(8853)
         witness++
       })
       metric.subscribe(({ value }) => {
-        expect(value).toEqual(1)
+        expect(value).toEqual(8853)
         witness++
         if (witness === 2) done()
       })
@@ -90,15 +94,14 @@ describe('fid', () => {
       isBrowserScope: true
     }))
     let triggered = 0
-    getFreshFIDImport(metric => {
-      metric.subscribe(({ value }) => {
-        triggered++
-        expect(value).toEqual(1)
-        expect(triggered).toEqual(1)
-      })
-      triggeronFIDCallback({ value: 'notequal1' })
+    getFreshImport(metric => metric.subscribe(({ value }) => {
+      triggered++
+      expect(value).toEqual(8853)
       expect(triggered).toEqual(1)
-      done()
-    })
+      setTimeout(() => {
+        expect(triggered).toEqual(1)
+        done()
+      }, 1000)
+    }))
   })
 })

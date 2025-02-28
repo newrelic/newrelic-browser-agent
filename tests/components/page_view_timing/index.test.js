@@ -10,13 +10,14 @@ jest.mock('web-vitals/attribution', () => ({
     value: 1,
     attribution: {}
   })),
-  onFID: jest.fn(cb => cb({
-    value: 1234,
-    attribution: { eventTime: 5, eventType: 'pointerdown' }
-  })),
   onINP: jest.fn((cb) => cb({
     value: 8,
-    attribution: {}
+    attribution: {
+      interactionType: 'pointer',
+      interactionTime: 8853.8,
+      interactionTarget: 'button',
+      loadState: 'complete'
+    }
   })),
   onLCP: jest.fn((cb) => cb({
     value: 1,
@@ -90,8 +91,13 @@ describe('pvt aggregate tests', () => {
   test('sends expected FI attributes when available', () => {
     expect(pvtAgg.events.get()[0].data.length).toBeTruthy()
     const fiPayload = pvtAgg.events.get()[0].data.find(x => x.name === 'fi')
-    expect(fiPayload.value).toEqual(5)
-    expect(fiPayload.attrs).toEqual(expect.objectContaining({ type: 'pointerdown', fid: 1234, cls: 0.1119, ...expectedNetworkInfo }))
+    expect(fiPayload.value).toEqual(8853) // event time data is sent in ms
+    expect(fiPayload.attrs).toEqual(expect.objectContaining({
+      type: 'pointer',
+      eventTarget: 'button',
+      cls: 0.1119,
+      ...expectedNetworkInfo
+    }))
   })
 
   test('sends CLS node with right val on vis change', () => {

@@ -54,6 +54,7 @@ for (const change of versionData.changes) {
 const frontMatter = {
   releaseDate,
   version: args.tag.substr(1),
+  downloadLink: "https://www.npmjs.com/package/@newrelic/browser-agent",
   features: [],
   bugs: [],
   security: []

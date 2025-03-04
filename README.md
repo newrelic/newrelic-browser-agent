@@ -88,6 +88,23 @@ The following features may be disabled by adding `init` entries as shown above. 
 
 See the [New Relic documentation site](https://docs.newrelic.com/docs/browser/browser-monitoring/getting-started/introduction-browser-monitoring/) for information on the above features.
 
+## Options Parameter
+
+The `options` parameter used, or passed in, when instantiating the `BrowserAgent` class can include the following arguments:
+
+| Argument       | Type     | Description                                                                 |
+|----------------|----------|-----------------------------------------------------------------------------|
+| `info`         | Object   | Operational information for the agent. `applicationID` and `licenseKey` properties are strictly required to be defined inside of this. Some properties may be provided by APM-injection installation. See model object in [info.js](src/common/config/info.js). |
+| `init`         | Object   | (Optional) Initialization settings for the agent, including feature toggles. This controls many parts of the agent's behavior and that of its features. It's recommended to understand each config being changed before doing so. See the object returned by `model()` in [init.js](src/common/config/init.js). |
+| `loader_config`| Object   | (Optional) Agent installed via APM-injection is provided this object by the APM agent. It's highly recommended to leave this alone. Defaults to model object in [loader-config.js](src/common/config/loader-config.js). |
+| `runtime`      | Object   | (Optional) Used by the agent to store shared references or info at runtime. It's highly recommended to leave this alone. Defaults to model object in [runtime.js](src/common/config/runtime.js). |
+| `exposed`      | Boolean  | (Optional) Affects whether the `newrelic` API includes or acts on this agent. If set to false, for example, `newrelic.setCustomAttribute()` would not affect this agent instance. Defaults to true. |
+
+The underlying `Agent` class `options` parameter also includes the following _additional_ arguments, as shown in the next section:
+
+| Argument       | Type     | Description                                                                 |
+|----------------|----------|-----------------------------------------------------------------------------|
+| `features`     | Array    | List of feature classes to be used by the agent. This determines what features _can_ actually be enabled and affects your bundler build size of the agent. `PageViewEvent` is forcibly included, even if it's not in this array or an empty array is passed in. |
 
 ## Composing a custom agent with selected feature modules
 

@@ -3,6 +3,35 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.283.2](https://github.com/newrelic/newrelic-browser-agent/compare/v1.283.1...v1.283.2) (2025-02-21)
+
+
+### Bug Fixes
+
+* Add logging analytic metrics and fix browser performance metrics ([#1392](https://github.com/newrelic/newrelic-browser-agent/issues/1392)) ([00cfd66](https://github.com/newrelic/newrelic-browser-agent/commit/00cfd661ad24ec2faa885fcab1df61912163ef13))
+
+## [1.283.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.283.0...v1.283.1) (2025-02-19)
+
+
+### Bug Fixes
+
+* Removing websocket wrapping & SM ([#1388](https://github.com/newrelic/newrelic-browser-agent/issues/1388)) ([95bbe92](https://github.com/newrelic/newrelic-browser-agent/commit/95bbe92f12d20447b40538b17db61c2ea887ef79))
+
+## [1.283.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.282.0...v1.283.0) (2025-02-18)
+
+
+### Features
+
+* Add auto-logging feature ([#1274](https://github.com/newrelic/newrelic-browser-agent/issues/1274)) ([91204ae](https://github.com/newrelic/newrelic-browser-agent/commit/91204ae0099508d13c944be06ed6c46dce901ce3))
+* Add global custom attributes to log data ([#1343](https://github.com/newrelic/newrelic-browser-agent/issues/1343)) ([dc7d27c](https://github.com/newrelic/newrelic-browser-agent/commit/dc7d27c718c13a54bce5cc1fa6b0260b95008637))
+
+## [1.282.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.281.0...v1.282.0) (2025-02-13)
+
+
+### Features
+
+* Re-implement wrap-websocket into agent ([#1342](https://github.com/newrelic/newrelic-browser-agent/issues/1342)) ([9b2756f](https://github.com/newrelic/newrelic-browser-agent/commit/9b2756f520cb946192e72d138e14fb4fca75a7b8))
+
 ## [1.281.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.280.0...v1.281.0) (2025-02-04)
 
 

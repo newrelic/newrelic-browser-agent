@@ -1,5 +1,6 @@
-import { testBlobTraceRequest, testErrorsRequest, testEventsRequest, testInsRequest, testMetricsRequest, testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
+import { testBlobTraceRequest, testErrorsRequest, testEventsRequest, testInsRequest, testLogsRequest, testMetricsRequest, testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
 import { rumFlags } from '../../../tools/testing-server/constants'
+import { LOGGING_MODE } from '../../../src/features/logging/constants'
 
 describe('disable harvesting', () => {
   it('should disable harvesting metrics and errors when err entitlement is 0', async () => {
@@ -58,6 +59,25 @@ describe('disable harvesting', () => {
     ])
 
     expect(insightsHarvests).toEqual([])
+  })
+
+  it('should disable harvesting console logs when log entitlement is 0', async () => {
+    // logging mode will only take effect on a fresh session
+    await browser.destroyAgentSession()
+
+    const logsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testLogsRequest })
+    await browser.testHandle.scheduleReply('bamServer', {
+      test: testRumRequest,
+      body: JSON.stringify(rumFlags({ log: LOGGING_MODE.OFF }))
+    })
+
+    const [logsHarvests] = await Promise.all([
+      logsCapture.waitForResult({ timeout: 10000 }),
+      browser.url(await browser.testHandle.assetURL('obfuscate-pii.html'))
+        .then(() => browser.waitForAgentLoad())
+    ])
+
+    expect(logsHarvests).toEqual([])
   })
 
   it('should disable harvesting session traces when stn entitlement is 0', async () => {

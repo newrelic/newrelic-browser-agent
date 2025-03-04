@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { registerHandler } from '../../../common/event-emitter/register-handler'
-import { FEATURE_NAME, SUPPORTABILITY_METRIC, CUSTOM_METRIC, SUPPORTABILITY_METRIC_CHANNEL, CUSTOM_METRIC_CHANNEL, WATCHABLE_WEB_SOCKET_EVENTS } from '../constants'
+import { FEATURE_NAME, SUPPORTABILITY_METRIC, CUSTOM_METRIC, SUPPORTABILITY_METRIC_CHANNEL, CUSTOM_METRIC_CHANNEL } from '../constants'
 import { getFrameworks } from './framework-detection'
 import { isFileProtocol } from '../../../common/url/protocol'
 import { onDOMContentLoaded } from '../../../common/window/load'
@@ -11,8 +11,8 @@ import { windowAddEventListener } from '../../../common/event-listener/event-lis
 import { isBrowserScope, isWorkerScope } from '../../../common/constants/runtime'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { isIFrameWindow } from '../../../common/dom/iframe'
-import { WEBSOCKET_TAG } from '../../../common/wrap/wrap-websocket'
-import { handleWebsocketEvents } from './websocket-detection'
+// import { WEBSOCKET_TAG } from '../../../common/wrap/wrap-websocket'
+// import { handleWebsocketEvents } from './websocket-detection'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -119,11 +119,11 @@ export class Aggregate extends AggregateBase {
     // webdriver detection
     if (navigator.webdriver) this.storeSupportabilityMetrics('Generic/WebDriver/Detected')
 
-    WATCHABLE_WEB_SOCKET_EVENTS.forEach(tag => {
-      registerHandler('buffered-' + WEBSOCKET_TAG + tag, (...args) => {
-        handleWebsocketEvents(this.storeSupportabilityMetrics.bind(this), tag, ...args)
-      }, this.featureName, this.ee)
-    })
+    // WATCHABLE_WEB_SOCKET_EVENTS.forEach(tag => {
+    //   registerHandler('buffered-' + WEBSOCKET_TAG + tag, (...args) => {
+    //     handleWebsocketEvents(this.storeSupportabilityMetrics.bind(this), tag, ...args)
+    //   }, this.featureName, this.ee)
+    // })
   }
 
   eachSessionChecks () {

@@ -1,6 +1,6 @@
 import { getRuntime } from '../../../src/common/config/runtime'
 import { initialLocation } from '../../../src/common/constants/runtime'
-import { LOGGING_EVENT_EMITTER_CHANNEL } from '../../../src/features/logging/constants'
+import { LOG_LEVELS, LOGGING_EVENT_EMITTER_CHANNEL, LOGGING_MODE } from '../../../src/features/logging/constants'
 import { Instrument as Logging } from '../../../src/features/logging/instrument'
 import { Log } from '../../../src/features/logging/shared/log'
 import * as consoleModule from '../../../src/common/util/console'
@@ -34,6 +34,13 @@ afterEach(() => {
   jest.clearAllMocks()
 })
 
+const mockLoggingRumResponse = async (mode) => {
+  loggingAggregate.ee.emit('rumresp', [{
+    log: mode
+  }])
+  return await new Promise(process.nextTick)
+}
+
 describe('class setup', () => {
   test('should have expected public properties', () => {
     expect(Object.keys(loggingAggregate)).toEqual(expect.arrayContaining([
@@ -45,18 +52,31 @@ describe('class setup', () => {
     ]))
   })
 
-  test('should wait for flags', async () => {
+  test('should wait for flags - log flag is missing', async () => {
     expect(loggingAggregate.drained).toBeUndefined()
-    loggingAggregate.ee.emit('rumresp', {})
+    loggingAggregate.ee.emit('rumresp', [{}])
     await new Promise(process.nextTick)
+    expect(loggingAggregate.blocked).toEqual(true)
+  })
+
+  test('should wait for flags - 0 = OFF', async () => {
+    expect(loggingAggregate.drained).toBeUndefined()
+    await mockLoggingRumResponse(LOGGING_MODE.OFF)
+
+    expect(loggingAggregate.blocked).toEqual(true)
+  })
+
+  test('should wait for flags - 1 = ERROR', async () => {
+    expect(loggingAggregate.drained).toBeUndefined()
+    await mockLoggingRumResponse(LOGGING_MODE.ERROR)
+
     expect(loggingAggregate.drained).toEqual(true)
   })
 })
 
 describe('payloads', () => {
-  beforeEach(async () => {
-    loggingAggregate.ee.emit('rumresp', {})
-    await new Promise(process.nextTick)
+  beforeEach(() => {
+    mockLoggingRumResponse(LOGGING_MODE.INFO)
   })
 
   test('fills buffered logs with event emitter messages and prepares matching payload', async () => {
@@ -203,16 +223,29 @@ describe('payloads', () => {
   })
 })
 
+test.each(Object.keys(LOGGING_MODE))('payloads - log events are emitted (or not) according to flag from rum response - %s', async (logLevel) => {
+  const SOME_TIMESTAMP = 1234
+  await mockLoggingRumResponse(LOGGING_MODE[logLevel])
+  loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [SOME_TIMESTAMP, LOG_LEVELS.ERROR, { myAttributes: 1 }, LOG_LEVELS.ERROR])
+  loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [SOME_TIMESTAMP, LOG_LEVELS.WARN, { myAttributes: 1 }, LOG_LEVELS.WARN])
+  loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [SOME_TIMESTAMP, LOG_LEVELS.INFO, { myAttributes: 1 }, LOG_LEVELS.INFO])
+  loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [SOME_TIMESTAMP, LOG_LEVELS.DEBUG, { myAttributes: 1 }, LOG_LEVELS.DEBUG])
+  loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [SOME_TIMESTAMP, LOG_LEVELS.TRACE, { myAttributes: 1 }, LOG_LEVELS.TRACE])
+
+  expect(loggingAggregate.events.get()[0].data.length).toEqual(LOGGING_MODE[logLevel])
+  loggingAggregate.events.clear()
+})
+
 test('can harvest early', async () => {
-  loggingAggregate.ee.emit('rumresp', {})
-  await new Promise(process.nextTick)
+  await mockLoggingRumResponse(LOGGING_MODE.INFO)
 
   jest.spyOn(mainAgent.runtime.harvester, 'triggerHarvestFor')
 
+  const harvestEarlySm = ['storeSupportabilityMetrics', ['Logging/Harvest/Early/Seen', expect.any(Number)], undefined, 'metrics', loggingAggregate.ee]
+
   loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'x'.repeat(800 * 800), { myAttributes: 1 }, 'ERROR']) // almost too big
-  expect(handleModule.handle).toHaveBeenCalledTimes(0)
+  expect(handleModule.handle).not.toHaveBeenCalledWith(...harvestEarlySm)
   loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'x'.repeat(800 * 800), { myAttributes: 1 }, 'ERROR']) // almost too big
-  expect(handleModule.handle).toHaveBeenCalledTimes(1)
-  expect(handleModule.handle).toHaveBeenCalledWith('storeSupportabilityMetrics', ['Logging/Harvest/Early/Seen', expect.any(Number)], undefined, 'metrics', loggingAggregate.ee)
+  expect(handleModule.handle).toHaveBeenCalledWith(...harvestEarlySm)
   expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalled()
 })

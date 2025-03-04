@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "Tue Feb 04 2025 16:40:30 GMT+0000 (Coordinated Universal Time)",
+  "lastUpdated": "Fri Feb 21 2025 22:13:09 GMT+0000 (Coordinated Universal Time)",
   "projectName": "New Relic Browser Agent",
   "projectUrl": "https://github.com/newrelic/newrelic-browser-agent",
   "includeOptDeps": true,
@@ -288,15 +288,15 @@
       "publisher": "Christian Bromann",
       "email": "mail@bromann.dev"
     },
-    "@wdio/spec-reporter@9.5.0": {
+    "@wdio/spec-reporter@9.6.3": {
       "name": "@wdio/spec-reporter",
-      "version": "9.5.0",
+      "version": "9.6.3",
       "range": "^9.5.0",
       "licenses": "MIT",
       "repoUrl": "https://github.com/webdriverio/webdriverio",
-      "versionedRepoUrl": "https://github.com/webdriverio/webdriverio/tree/v9.5.0",
+      "versionedRepoUrl": "https://github.com/webdriverio/webdriverio/tree/v9.6.3",
       "licenseFile": "node_modules/@wdio/spec-reporter/LICENSE",
-      "licenseUrl": "https://github.com/webdriverio/webdriverio/blob/v9.5.0/LICENSE",
+      "licenseUrl": "https://github.com/webdriverio/webdriverio/blob/v9.6.3/LICENSE",
       "licenseTextSource": "file",
       "publisher": "Christian Bromann",
       "email": "mail@bromann.dev"
@@ -390,15 +390,15 @@
       "licenseTextSource": "file",
       "publisher": "Rob Misasi"
     },
-    "eslint-plugin-import@2.29.1": {
+    "eslint-plugin-import@2.31.0": {
       "name": "eslint-plugin-import",
-      "version": "2.29.1",
+      "version": "2.31.0",
       "range": "^2.29.1",
       "licenses": "MIT",
       "repoUrl": "https://github.com/import-js/eslint-plugin-import",
-      "versionedRepoUrl": "https://github.com/import-js/eslint-plugin-import/tree/v2.29.1",
+      "versionedRepoUrl": "https://github.com/import-js/eslint-plugin-import/tree/v2.31.0",
       "licenseFile": "node_modules/eslint-plugin-import/LICENSE",
-      "licenseUrl": "https://github.com/import-js/eslint-plugin-import/blob/v2.29.1/LICENSE",
+      "licenseUrl": "https://github.com/import-js/eslint-plugin-import/blob/v2.31.0/LICENSE",
       "licenseTextSource": "file",
       "publisher": "Ben Mosher",
       "email": "me@benmosher.com"
@@ -720,15 +720,15 @@
       "email": "sam.verschueren@gmail.com",
       "url": "https://github.com/SamVerschueren"
     },
-    "typescript@5.5.4": {
+    "typescript@5.7.3": {
       "name": "typescript",
-      "version": "5.5.4",
+      "version": "5.7.3",
       "range": "^5.3.3",
       "licenses": "Apache-2.0",
-      "repoUrl": "https://github.com/Microsoft/TypeScript",
-      "versionedRepoUrl": "https://github.com/Microsoft/TypeScript/tree/v5.5.4",
+      "repoUrl": "https://github.com/microsoft/TypeScript",
+      "versionedRepoUrl": "https://github.com/microsoft/TypeScript/tree/v5.7.3",
       "licenseFile": "node_modules/typescript/LICENSE.txt",
-      "licenseUrl": "https://github.com/Microsoft/TypeScript/blob/v5.5.4/LICENSE.txt",
+      "licenseUrl": "https://github.com/microsoft/TypeScript/blob/v5.7.3/LICENSE.txt",
       "licenseTextSource": "file",
       "publisher": "Microsoft Corp."
     },

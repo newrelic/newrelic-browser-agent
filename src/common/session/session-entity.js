@@ -16,6 +16,7 @@ import { handle } from '../event-emitter/handle'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
 import { FEATURE_NAMES } from '../../loaders/features/features'
 import { windowAddEventListener } from '../event-listener/event-listener-opts'
+import { LOGGING_MODE } from '../../features/logging/constants'
 
 // this is what can be stored in local storage (not enforced but probably should be)
 // these values should sync between local storage and the parent class props
@@ -28,6 +29,7 @@ const model = {
   sessionReplaySentFirstChunk: false,
   sessionTraceMode: MODE.OFF,
   traceHarvestStarted: false,
+  loggingMode: LOGGING_MODE.OFF,
   serverTimeDiff: null, // set by TimeKeeper; "undefined" value will not be stringified and stored but "null" will
   custom: {}
 }

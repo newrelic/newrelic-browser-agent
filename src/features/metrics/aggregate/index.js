@@ -116,6 +116,9 @@ export class Aggregate extends AggregateBase {
       mo.observe(window.document.body, { childList: true, subtree: true })
     }
 
+    // webdriver detection
+    if (navigator.webdriver) this.storeSupportabilityMetrics('Generic/WebDriver/Detected')
+
     // WATCHABLE_WEB_SOCKET_EVENTS.forEach(tag => {
     //   registerHandler('buffered-' + WEBSOCKET_TAG + tag, (...args) => {
     //     handleWebsocketEvents(this.storeSupportabilityMetrics.bind(this), tag, ...args)

@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.284.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.283.2...v1.284.0) (2025-03-04)
+
+
+### Features
+
+* Remove FID, replace first interaction detection with INP ([#1395](https://github.com/newrelic/newrelic-browser-agent/issues/1395)) ([436ce94](https://github.com/newrelic/newrelic-browser-agent/commit/436ce94eac45e3e28d6b3be6fe9f9fcb15ac1e9b))
+
+
+### Bug Fixes
+
+* bump web-vitals from 4.2.3 to 4.2.4 ([#1379](https://github.com/newrelic/newrelic-browser-agent/issues/1379)) ([d0b5b83](https://github.com/newrelic/newrelic-browser-agent/commit/d0b5b83ec50755771e9d4afbf984937f5ab00458))
+* Deduplicate Prefixes on Unhandled Promise Rejection Messages ([#1397](https://github.com/newrelic/newrelic-browser-agent/issues/1397)) ([474fc4f](https://github.com/newrelic/newrelic-browser-agent/commit/474fc4fbc6f7b3fe6b396ce86acaaa1bc712e5fd))
+* Guard against non-CSSStyleSheet when fixing sheets for replay ([#1396](https://github.com/newrelic/newrelic-browser-agent/issues/1396)) ([b929aba](https://github.com/newrelic/newrelic-browser-agent/commit/b929abafb5ab04287fc1f0a07397ff739f314c38))
+* Upgrade rrweb to 18 ([#1383](https://github.com/newrelic/newrelic-browser-agent/issues/1383)) ([46b691b](https://github.com/newrelic/newrelic-browser-agent/commit/46b691b671d2090f47707eea6dfa5ae8f31d0c7b))
+
 ## [1.283.2](https://github.com/newrelic/newrelic-browser-agent/compare/v1.283.1...v1.283.2) (2025-02-21)
 
 

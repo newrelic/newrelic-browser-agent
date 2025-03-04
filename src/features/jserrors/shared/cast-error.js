@@ -54,7 +54,7 @@ export function castPromiseRejectionEvent (promiseRejectionEvent) {
   }
 
   const error = castError(promiseRejectionEvent.reason)
-  if (!((error?.message || '').startsWith(prefix))) error.message = prefix + error?.message
+  if (!((error.message || '').startsWith(prefix))) error.message = prefix + error.message
   return error
 }
 

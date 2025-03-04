@@ -50,6 +50,15 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 * Logging/Harvest/Failed/Seen
 <!--- Logging harvest was sent before the interval elapsed --->
 * Logging/Harvest/Early/Seen
+<!--- Logging event was dropped due to sampling --->
+* Logging/Event/Dropped/Sampling
+<!--- Logging event was dropped due to failed string casting --->
+* Logging/Event/Dropped/Casting
+<!--- Logging event added to the buffer --->
+* Logging/Event/Added/Seen
+<!--- Logging feature was aborted due to reset -->
+* Logging/Abort/Reset
+<!--- Logging harvest was sent before the interval elapsed --->
 
 ### Generic Events
 <!--- GenericEvents harvest had too many nodes and sent early --->
@@ -121,9 +130,9 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 <!--- Current page was restored out of the BF Cache --->
 * Generic/BFCache/PageRestored
 <!--- A Performance.mark event was observed --->
-* Generic/Performance/Mark/Seen
+* Generic/Performance/mark/Seen
 <!--- A Performance.measure event was observed --->
-* Generic/Performance/Measure/Seen
+* Generic/Performance/measure/Seen
 <!--- A Performance.resource event was observed --->
 * Generic/Performance/Resource/Seen
 <!--- A first party Performance.resource event was observed --->

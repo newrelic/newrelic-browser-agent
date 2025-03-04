@@ -19,7 +19,6 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { now } from '../../../common/timing/now'
 import { applyFnToProps } from '../../../common/util/traverse'
 import { evaluateInternalError } from './internal-errors'
-import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 
 /**
  * @typedef {import('./compute-stack-trace.js').StackInfo} StackInfo
@@ -130,7 +129,7 @@ export class Aggregate extends AggregateBase {
 
     const { shouldSwallow, reason } = evaluateInternalError(stackInfo, internal, swallowReason)
     if (shouldSwallow) {
-      handle(SUPPORTABILITY_METRIC_CHANNEL, ['Internal/Error/' + reason], undefined, FEATURE_NAMES.metrics, this.ee)
+      this.reportSupportabilityMetric('Internal/Error/' + reason)
       return
     }
 

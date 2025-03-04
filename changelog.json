@@ -4,6 +4,82 @@
     {
       "changes": [
         {
+          "type": "fix",
+          "sha": "00cfd661ad24ec2faa885fcab1df61912163ef13",
+          "message": "Add logging analytic metrics and fix browser performance metrics",
+          "issues": [
+            "1392"
+          ]
+        }
+      ],
+      "version": "1.283.2",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "99e3ed87-3778-4a59-b253-f9d0c94629a1",
+      "createTime": "2025-02-21T20:25:42.625Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
+          "sha": "95bbe92f12d20447b40538b17db61c2ea887ef79",
+          "message": "Removing websocket wrapping & SM",
+          "issues": [
+            "1388"
+          ]
+        }
+      ],
+      "version": "1.283.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "918f277e-785f-42bf-a938-2a8a90c96721",
+      "createTime": "2025-02-19T18:25:47.998Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
+          "sha": "dc7d27c718c13a54bce5cc1fa6b0260b95008637",
+          "message": "Add global custom attributes to log data",
+          "issues": [
+            "1343"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "91204ae0099508d13c944be06ed6c46dce901ce3",
+          "message": "Add auto-logging feature",
+          "issues": [
+            "1274"
+          ]
+        }
+      ],
+      "version": "1.283.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "a717c893-14c1-4428-87d7-fca900a4e8cd",
+      "createTime": "2025-02-18T23:07:41.791Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
+          "sha": "9b2756f520cb946192e72d138e14fb4fca75a7b8",
+          "message": "Re-implement wrap-websocket into agent",
+          "issues": [
+            "1342"
+          ]
+        }
+      ],
+      "version": "1.282.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "d7b7c2f6-2da8-4d9f-84e3-3d2c51e75164",
+      "createTime": "2025-02-13T18:21:10.680Z"
+    },
+    {
+      "changes": [
+        {
           "type": "feat",
           "sha": "d410937983545a6a6aa39c52c3762f621acf1110",
           "message": "Capture Nearest UserAction Fields",
@@ -2502,5 +2578,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2025-02-04T16:05:04.264Z"
+  "updateTime": "2025-02-21T20:25:42.625Z"
 }

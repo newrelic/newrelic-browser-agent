@@ -1,0 +1,65 @@
+# This action is used to bump a new prerelease version and publish that version to NPM.
+
+name: Prerelease NPM Version
+
+inputs:
+  version-type:
+    description: "The type of version bump to make. One of: major, minor, patch, premajor, preminor, prepatch, or prerelease."
+    type: choice
+    required: true
+    default: preminor
+    options:
+      - major
+      - minor
+      - patch
+      - premajor
+      - preminor
+      - prepatch
+      - prerelease
+      - from-git
+  preid:
+    description: "The prerelease identifier to use for the version number when bumping a prerelease version."
+    type: string
+    required: true
+    default: rc
+  tag:
+    description: "The NPM package distribution tag to use when publishing the prerelease."
+    type: string
+    required: true
+    default: rc
+  dry_run:
+    description: "Indicates whether to dry run the npm publish command."
+    type: boolean
+    required: true
+
+outputs:
+  version:
+    description: "The new version number after bumping a prerelease version."
+    value: ${{ steps.bump-prerelease.outputs.results }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Get version number
+      id: agent-loader-version
+      shell: bash
+      run: echo "results=$(cat package.json | jq -r '.version')" >> $GITHUB_OUTPUT
+    - name: Bump prerelease version
+      id: bump-prerelease
+      shell: bash
+      run: |
+        pattern=".*-rc\.[0-9]+$"
+        if [[ ${{ steps.agent-loader-version.outputs.results }} =~ $pattern ]]; then
+          echo "results=$(npm version prerelease --preid=${{ inputs.preid }})" >> $GITHUB_OUTPUT
+        else
+          echo "results=$(npm version ${{ inputs.version-type }} --preid=${{ inputs.preid }})" >> $GITHUB_OUTPUT
+        fi
+    - name: Install project dependencies
+      shell: bash
+      run: npm ci
+    - name: Build npm package
+      shell: bash
+      run: npm run build:npm
+    - name: Publish npm package
+      shell: bash
+      run: npm publish ${{ inputs.dry_run && '--dry-run' || '' }} --tag=${{ inputs.tag }}

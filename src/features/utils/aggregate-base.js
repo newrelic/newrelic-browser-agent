@@ -12,6 +12,8 @@ import { Obfuscator } from '../../common/util/obfuscate'
 import { FEATURE_NAMES } from '../../loaders/features/features'
 import { EventStoreManager } from './event-store-manager'
 import { Harvester } from '../../common/harvest/harvester'
+import { handle } from '../../common/event-emitter/handle'
+import { SUPPORTABILITY_METRIC_CHANNEL } from '../metrics/constants'
 
 export class AggregateBase extends FeatureBase {
   constructor (agentRef, featureName) {
@@ -72,6 +74,10 @@ export class AggregateBase extends FeatureBase {
   drain () {
     drain(this.agentIdentifier, this.featureName)
     this.drained = true
+  }
+
+  preHarvestChecks (opts) {
+    return !this.blocked
   }
 
   /**
@@ -154,5 +160,14 @@ export class AggregateBase extends FeatureBase {
     if (!agentRef.sharedAggregator) agentRef.sharedAggregator = new EventStoreManager(agentRef.mainAppKey, 2)
 
     if (!agentRef.runtime.harvester) agentRef.runtime.harvester = new Harvester(agentRef)
+  }
+
+  /**
+   * Report a supportability metric
+   * @param {*} metricName The tag of the name matching the Angler aggregation tag
+   * @param {*} [value] An optional value to supply. If not supplied, the metric count will be incremented by 1 for every call.
+   */
+  reportSupportabilityMetric (metricName, value) {
+    handle(SUPPORTABILITY_METRIC_CHANNEL, [metricName, value], undefined, FEATURE_NAMES.metrics, this.ee)
   }
 }

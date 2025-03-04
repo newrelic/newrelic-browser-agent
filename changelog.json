@@ -4,6 +4,55 @@
     {
       "changes": [
         {
+          "type": "feat",
+          "sha": "436ce94eac45e3e28d6b3be6fe9f9fcb15ac1e9b",
+          "message": "Remove FID, replace first interaction detection with INP",
+          "issues": [
+            "1395"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "474fc4fbc6f7b3fe6b396ce86acaaa1bc712e5fd",
+          "message": "Deduplicate Prefixes on Unhandled Promise Rejection Messages",
+          "issues": [
+            "1397"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "46b691b671d2090f47707eea6dfa5ae8f31d0c7b",
+          "message": "Upgrade rrweb to 18",
+          "issues": [
+            "1383"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "d0b5b83ec50755771e9d4afbf984937f5ab00458",
+          "message": "bump web-vitals from 4.2.3 to 4.2.4",
+          "issues": [
+            "1379"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "b929abafb5ab04287fc1f0a07397ff739f314c38",
+          "message": "Guard against non-CSSStyleSheet when fixing sheets for replay",
+          "issues": [
+            "1396"
+          ]
+        }
+      ],
+      "version": "1.284.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "d38cce67-82da-4915-a555-c5c4977f0d4f",
+      "createTime": "2025-03-04T21:23:38.234Z"
+    },
+    {
+      "changes": [
+        {
           "type": "fix",
           "sha": "00cfd661ad24ec2faa885fcab1df61912163ef13",
           "message": "Add logging analytic metrics and fix browser performance metrics",
@@ -2578,5 +2627,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2025-02-21T20:25:42.625Z"
+  "updateTime": "2025-03-04T21:23:38.234Z"
 }

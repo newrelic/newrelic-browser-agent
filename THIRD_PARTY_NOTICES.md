@@ -118,7 +118,7 @@ SOFTWARE.
 
 ### rrweb
 
-This product includes source derived from [rrweb](https://github.com/rrweb-io/rrweb) ([v2.0.0-alpha.17](https://github.com/rrweb-io/rrweb/tree/v2.0.0-alpha.17)), distributed under the [MIT License](https://github.com/rrweb-io/rrweb/blob/v2.0.0-alpha.17/README.md):
+This product includes source derived from [rrweb](https://github.com/rrweb-io/rrweb) ([v2.0.0-alpha.18](https://github.com/rrweb-io/rrweb/tree/v2.0.0-alpha.18)), distributed under the [MIT License](https://github.com/rrweb-io/rrweb/blob/v2.0.0-alpha.18/README.md):
 
 ```
 MIT License
@@ -134,7 +134,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ### web-vitals
 
-This product includes source derived from [web-vitals](https://github.com/GoogleChrome/web-vitals) ([v4.2.3](https://github.com/GoogleChrome/web-vitals/tree/v4.2.3)), distributed under the [Apache-2.0 License](https://github.com/GoogleChrome/web-vitals/blob/v4.2.3/LICENSE):
+This product includes source derived from [web-vitals](https://github.com/GoogleChrome/web-vitals) ([v4.2.4](https://github.com/GoogleChrome/web-vitals/tree/v4.2.4)), distributed under the [Apache-2.0 License](https://github.com/GoogleChrome/web-vitals/blob/v4.2.4/LICENSE):
 
 ```
 

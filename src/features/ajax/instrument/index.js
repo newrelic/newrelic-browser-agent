@@ -25,6 +25,7 @@ var handlersLen = handlers.length
 
 var origRequest = gosNREUMOriginals().o.REQ
 var origXHR = gosNREUMOriginals().o.XHR
+const NR_CAT_HEADER = 'X-NewRelic-App-Data'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
@@ -392,8 +393,8 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
     var size = responseSizeFromXhr(xhr, ctx.lastSize)
     if (size) ctx.metrics.rxSize = size
 
-    if (ctx.sameOrigin) {
-      var header = xhr.getResponseHeader('X-NewRelic-App-Data')
+    if (ctx.sameOrigin && xhr.getAllResponseHeaders().indexOf(NR_CAT_HEADER) >= 0) {
+      var header = xhr.getResponseHeader(NR_CAT_HEADER)
       if (header) {
         handle(SUPPORTABILITY_METRIC, ['Ajax/CrossApplicationTracing/Header/Seen'], undefined, FEATURE_NAMES.metrics, ee)
         ctx.params.cat = header.split(', ').pop()

@@ -67,12 +67,6 @@ export const supportsFirstPaint = new SpecMatcher()
   .include('chrome')
   .include('edge')
 
-export const supportsFirstInputDelay = new SpecMatcher()
-  .include('android')
-  .include('chrome')
-  .include('edge')
-  .include('firefox')
-
 export const supportsLargestContentfulPaint = new SpecMatcher()
   .include('android')
   .include('chrome')

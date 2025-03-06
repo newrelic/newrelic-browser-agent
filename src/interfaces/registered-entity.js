@@ -5,9 +5,9 @@
 import { warn } from '../common/util/console'
 
 /**
- * @typedef {import('./api/register-api-types').RegisterAPI} RegisterAPI
- * @typedef {import('./api/register-api-types').RegisterAPIMetadata} RegisterAPIMetadata
- * @typedef {import('./api/register-api-types').RegisterAPIConstructor} RegisterAPIConstructor
+ * @typedef {import('../loaders/api/register-api-types').RegisterAPI} RegisterAPI
+ * @typedef {import('../loaders/api/register-api-types').RegisterAPIMetadata} RegisterAPIMetadata
+ * @typedef {import('../loaders/api/register-api-types').RegisterAPIConstructor} RegisterAPIConstructor
  */
 
 /**

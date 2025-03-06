@@ -1,4 +1,4 @@
-import { RegisteredEntity } from './../../dist/types/loaders/registered-entity.d';
+import { RegisteredEntity } from '../../dist/types/interfaces/registered-entity';
 import { BrowserAgent } from '../../dist/types/loaders/browser-agent'
 import { MicroAgent } from '../../dist/types/loaders/micro-agent'
 import { InteractionInstance, getContext, onEnd } from '../../dist/types/loaders/api/interaction-types'

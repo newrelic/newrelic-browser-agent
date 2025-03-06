@@ -79,7 +79,6 @@ describe('Replay', () => { // this is moreso a test of the SR-specific logic wit
 
 describe('Preload early records', () => {
   beforeEach(() => {
-    // setConfiguration(agentSetup.agentIdentifier, { session_trace: { enabled: true } })
     localStorage.clear()
   })
 

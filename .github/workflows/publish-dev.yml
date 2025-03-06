@@ -107,7 +107,7 @@ jobs:
           full=$(cat ./build/nr-full-standard.stats.json); echo "full=$full" >> $GITHUB_OUTPUT;
           spa=$(cat ./build/nr-spa-standard.stats.json); echo "spa=$spa" >> $GITHUB_OUTPUT;
       - name: Report lite size to NR
-        uses: newrelic/capture-build-size@main
+        uses: newrelic-apps/capture-build-size@v1.0.1
         with:
           nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
           nr-account-id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
@@ -117,7 +117,7 @@ jobs:
           trigger: 'publish-dev'
           traverse: true
       - name: Report pro size to NR
-        uses: newrelic/capture-build-size@main
+        uses: newrelic-apps/capture-build-size@v1.0.1
         with:
           nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
           nr-account-id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
@@ -127,7 +127,7 @@ jobs:
           trigger: 'publish-dev'
           traverse: true
       - name: Report spa size to NR
-        uses: newrelic/capture-build-size@main
+        uses: newrelic-apps/capture-build-size@v1.0.1
         with:
           nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
           nr-account-id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}

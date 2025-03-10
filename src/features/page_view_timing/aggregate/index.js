@@ -18,6 +18,7 @@ import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
 import { subscribeToVisibilityChange } from '../../../common/window/page-visibility'
 import { VITAL_NAMES } from '../../../common/vitals/constants'
 import { initiallyHidden } from '../../../common/constants/runtime'
+import { eventOrigin } from '../../../common/util/event-origin'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -34,7 +35,6 @@ export class Aggregate extends AggregateBase {
     registerHandler('docHidden', msTimestamp => this.endCurrentSession(msTimestamp), this.featureName, this.ee)
     // Add the time of _window pagehide event_ firing to the next PVT harvest == NRDB windowUnload attr:
     registerHandler('winPagehide', msTimestamp => this.addTiming('unload', msTimestamp, null), this.featureName, this.ee)
-    registerHandler('addFirstIxn', () => this.maybeAddFirstInteraction(), this.featureName, this.ee)
 
     this.waitForFlags(([])).then(() => {
       firstPaint.subscribe(this.#handleVitalMetric)
@@ -84,28 +84,34 @@ export class Aggregate extends AggregateBase {
       attrs.cls = cumulativeLayoutShift.current.value
     }
 
-    this.events.add({
+    const timing = {
       name,
       value,
       attrs
-    })
+    }
+    this.events.add(timing)
 
     handle('pvtAdded', [name, value, attrs], undefined, FEATURE_NAMES.sessionTrace, this.ee)
+
+    this.checkForFirstInteraction()
+
+    // makes testing easier
+    return timing
   }
 
-  maybeAddFirstInteraction () {
+  /**
+   * Checks the performance API to see if the agent can set a first interaction event value
+   * @returns {void}
+   */
+  checkForFirstInteraction () {
     // preserve the original behavior where FID is not reported if the page is hidden before the first interaction
-    if (this.firstIxnRecorded || initiallyHidden) return
+    if (this.firstIxnRecorded || initiallyHidden || !performance) return
     const firstInput = performance.getEntriesByType('first-input')[0]
     if (!firstInput) return
     this.firstIxnRecorded = true
-    this.events.add({
-      name: 'fi',
-      value: firstInput.startTime,
-      attrs: {
-        type: firstInput.name,
-        eventTarget: firstInput.target
-      }
+    this.addTiming('fi', firstInput.startTime, {
+      type: firstInput.name,
+      eventTarget: eventOrigin(firstInput.target)
     })
   }
 

@@ -22,7 +22,6 @@ describe('PVT aggregate', () => {
 
     testCases().forEach(testCase => {
       const expectedPayload = qp.encode(testCase.input, schema)
-      console.log(pvtAgg.serializer)
       const payload = pvtAgg.serializer(getAgentInternalFormat(testCase.input))
       expect(payload).toEqual(expectedPayload)
     })
@@ -48,29 +47,29 @@ describe('PVT aggregate', () => {
     expect(pvtAgg.events.get()[0].data[0].attrs).toEqual(expect.objectContaining({}))
 
     global.navigator.connection.type = 'type'
-    pvtAgg.addTiming('abc', 1)
-    expect(pvtAgg.events.get()[0].data[1].attrs).toEqual(expect.objectContaining({
+    let timing = pvtAgg.addTiming('abc', 1)
+    expect(timing.attrs).toEqual(expect.objectContaining({
       'net-type': 'type'
     }))
 
     global.navigator.connection.effectiveType = 'effectiveType'
-    pvtAgg.addTiming('abc', 1)
-    expect(pvtAgg.events.get()[0].data[2].attrs).toEqual(expect.objectContaining({
+    timing = pvtAgg.addTiming('abc', 1)
+    expect(timing.attrs).toEqual(expect.objectContaining({
       'net-type': 'type',
       'net-etype': 'effectiveType'
     }))
 
     global.navigator.connection.rtt = 'rtt'
-    pvtAgg.addTiming('abc', 1)
-    expect(pvtAgg.events.get()[0].data[3].attrs).toEqual(expect.objectContaining({
+    timing = pvtAgg.addTiming('abc', 1)
+    expect(timing.attrs).toEqual(expect.objectContaining({
       'net-type': 'type',
       'net-etype': 'effectiveType',
       'net-rtt': 'rtt'
     }))
 
     global.navigator.connection.downlink = 'downlink'
-    pvtAgg.addTiming('abc', 1)
-    expect(pvtAgg.events.get()[0].data[4].attrs).toEqual(expect.objectContaining({
+    timing = pvtAgg.addTiming('abc', 1)
+    expect(timing.attrs).toEqual(expect.objectContaining({
       'net-type': 'type',
       'net-etype': 'effectiveType',
       'net-rtt': 'rtt',
@@ -83,9 +82,9 @@ describe('PVT aggregate', () => {
       rtt: 'rtt',
       downlink: 'downlink'
     }
-    pvtAgg.addTiming('abc', 1)
+    timing = pvtAgg.addTiming('abc', 1)
 
-    expect(pvtAgg.events.get()[0].data[5].attrs).toEqual(expect.objectContaining({
+    expect(timing.attrs).toEqual(expect.objectContaining({
       'net-type': 'type',
       'net-etype': 'effectiveType',
       'net-rtt': 'rtt',

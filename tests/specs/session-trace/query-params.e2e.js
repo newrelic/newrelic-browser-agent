@@ -33,10 +33,6 @@ describe('ht query param', () => {
     await browser.destroyAgentSession()
   })
 
-  // afterEach(async () => {
-  //   await browser.destroyAgentSession()
-  // })
-
   it('should be undefined if session trace is running - logs endpoint', async () => {
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
@@ -112,7 +108,6 @@ describe('ht query param', () => {
     ajaxEventsHarvests.forEach(harvest => {
       expect(harvest.request.query.ht).toEqual('1')
     })
-
     errorsHarvests.forEach(harvest => {
       expect(harvest.request.query.ht).toEqual('1')
     })
@@ -155,7 +150,6 @@ describe('ht query param', () => {
     ajaxEventsHarvests.forEach(harvest => {
       expect(harvest.request.query.ht).toBeUndefined()
     })
-
     errorsHarvests.forEach(harvest => {
       expect(harvest.request.query.ht).toBeUndefined()
     })

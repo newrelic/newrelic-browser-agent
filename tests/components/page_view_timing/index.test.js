@@ -66,26 +66,6 @@ describe('pvt aggregate tests', () => {
       activatedFeatures: { [agentIdentifier]: { pvt: 1 } }
     }))
 
-    const mockPerformanceObserver = jest.fn(cb => ({
-      // Note: this is an imperfect mock, as observer.disconnect() is not functional
-      observe: () => {
-        const callCb = () => {
-          cb({
-            getEntries: () => [{
-              entryType: 'first-input',
-              name: 'pointerdown',
-              startTime: 8853.8,
-              target: 'button'
-            }]
-          })
-          setTimeout(callCb, 250)
-        }
-        setTimeout(callCb, 250)
-      },
-      disconnect: jest.fn()
-    }))
-    global.PerformanceObserver = mockPerformanceObserver
-    global.PerformanceObserver.supportedEntryTypes = ['first-input']
 
     const mainAgent = {
       agentIdentifier,

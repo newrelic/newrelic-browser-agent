@@ -36,7 +36,7 @@ describe('fcp', () => {
       initiallyHidden: false,
       isBrowserScope: true
     }))
-    global.performance.getEntriesByType = jest.fn(() => [{ name: 'first-contentful-paint', startTime: 1 }])
+    // global.performance.getEntriesByType = jest.fn(() => [{ name: 'first-contentful-paint', startTime: 1 }])
 
     getFreshFCPImport(firstContentfulPaint => firstContentfulPaint.subscribe(({ value }) => {
       expect(value).toEqual(1)
@@ -66,7 +66,7 @@ describe('fcp', () => {
       initiallyHidden: false,
       isBrowserScope: true
     }))
-    global.performance.getEntriesByType = jest.fn(() => [{ name: 'other-timing-name', startTime: 1 }])
+    // global.performance.getEntriesByType = jest.fn(() => [{ name: 'other-timing-name', startTime: 1 }])
 
     getFreshFCPImport(firstContentfulPaint => {
       firstContentfulPaint.subscribe(() => {
@@ -84,7 +84,7 @@ describe('fcp', () => {
       initiallyHidden: true,
       isBrowserScope: true
     }))
-    global.performance.getEntriesByType = jest.fn(() => [{ name: 'first-contentful-paint', startTime: 1 }])
+    // global.performance.getEntriesByType = jest.fn(() => [{ name: 'first-contentful-paint', startTime: 1 }])
 
     getFreshFCPImport(firstContentfulPaint => {
       firstContentfulPaint.subscribe(() => {

@@ -91,6 +91,8 @@ export class Aggregate extends AggregateBase {
     }
     this.events.add(timing)
 
+    console.log('add', timing)
+
     handle('pvtAdded', [name, value, attrs], undefined, FEATURE_NAMES.sessionTrace, this.ee)
 
     this.checkForFirstInteraction()

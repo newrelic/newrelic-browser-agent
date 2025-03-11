@@ -7,18 +7,18 @@ if (typeof window !== 'undefined') {
 }
 
 Object.defineProperty(global.performance, 'getEntriesByType', {
-  value: jest.fn().mockReturnValue([
+  value: jest.fn(entryType => ([
     {
       cancelable: true,
       duration: 17,
-      entryType: 'first-input',
+      entryType,
       name: 'pointer',
       processingEnd: 8860,
       processingStart: 8859,
       startTime: 8853,
-      target: document.createElement('button')
+      target: { tagName: 'button' }
     }
-  ])
+  ]))
 })
 
 jest.retryTimes(3)

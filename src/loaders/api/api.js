@@ -20,6 +20,7 @@ import { MODE } from '../../common/session/constants'
 import { LOG_LEVELS } from '../../features/logging/constants'
 import { bufferLog } from '../../features/logging/shared/utils'
 import { wrapLogger } from '../../common/wrap/wrap-logger'
+import { dispatchGlobalEvent } from '../../common/dispatch/global-event'
 
 export function setTopLevelCallers () {
   const nr = gosCDN()
@@ -194,6 +195,14 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
   function apiCall (prefix, name, notSpa, bufferGroup) {
     return function () {
       handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/' + name + '/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
+      dispatchGlobalEvent({
+        agentIdentifier,
+        loaded: true,
+        type: 'data',
+        name: 'api',
+        feature: prefix + name,
+        data: { notSpa, bufferGroup }
+      })
       if (bufferGroup) handle(prefix + name, [notSpa ? now() : performance.now(), ...arguments], notSpa ? null : this, bufferGroup, instanceEE) // no bufferGroup means only the SM is emitted
       return notSpa ? undefined : this // returns the InteractionHandle which allows these methods to be chained
     }

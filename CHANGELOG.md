@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.284.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.284.0...v1.284.1) (2025-03-11)
+
+
+### Bug Fixes
+
+* Console error on some cross-origin requests without NR CAT header ([#1407](https://github.com/newrelic/newrelic-browser-agent/issues/1407)) ([6660c44](https://github.com/newrelic/newrelic-browser-agent/commit/6660c4455f73bdd90da9946f48ca6c6b377a866f))
+* Obtain FirstInteraction directly from performance API ([#1410](https://github.com/newrelic/newrelic-browser-agent/issues/1410)) ([22ef4ff](https://github.com/newrelic/newrelic-browser-agent/commit/22ef4ffaef72729f99ee615d4851870f51a129f7))
+
 ## [1.284.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.283.2...v1.284.0) (2025-03-04)
 
 

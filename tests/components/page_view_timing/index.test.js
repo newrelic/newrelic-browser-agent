@@ -37,6 +37,25 @@ const expectedNetworkInfo = {
   'net-dlink': expect.any(Number)
 }
 
+Object.defineProperty(performance, 'getEntriesByType', {
+  value: jest.fn().mockImplementation(entryType => {
+    return [
+      {
+        cancelable: true,
+        duration: 17,
+        entryType,
+        name: 'pointer',
+        processingEnd: 8860,
+        processingStart: 8859,
+        startTime: 8853,
+        target: { tagName: 'button' }
+      }
+    ]
+  }),
+  configurable: true,
+  writable: true
+})
+
 let pvtAgg
 const agentIdentifier = 'abcd'
 describe('pvt aggregate tests', () => {

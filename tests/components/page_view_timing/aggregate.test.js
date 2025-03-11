@@ -38,6 +38,25 @@ beforeAll(async () => {
     downlink: 700
   }
 
+  Object.defineProperty(performance, 'getEntriesByType', {
+    value: jest.fn().mockImplementation(entryType => {
+      return [
+        {
+          cancelable: true,
+          duration: 17,
+          entryType,
+          name: 'pointer',
+          processingEnd: 8860,
+          processingStart: 8859,
+          startTime: 8853,
+          target: { tagName: 'button' }
+        }
+      ]
+    }),
+    configurable: true,
+    writable: true
+  })
+
   mainAgent = setupAgent()
 })
 

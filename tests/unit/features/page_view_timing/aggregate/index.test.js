@@ -42,6 +42,24 @@ describe('PVT aggregate', () => {
   })
 
   test('addConnectionAttributes', () => {
+    Object.defineProperty(performance, 'getEntriesByType', {
+      value: jest.fn().mockImplementation(entryType => {
+        return [
+          {
+            cancelable: true,
+            duration: 17,
+            entryType,
+            name: 'pointer',
+            processingEnd: 8860,
+            processingStart: 8859,
+            startTime: 8853,
+            target: { tagName: 'button' }
+          }
+        ]
+      }),
+      configurable: true,
+      writable: true
+    })
     global.navigator.connection = {}
     pvtAgg.addTiming('abc', 1)
     expect(pvtAgg.events.get()[0].data[0].attrs).toEqual(expect.objectContaining({}))

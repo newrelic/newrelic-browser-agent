@@ -6,19 +6,4 @@ if (typeof window !== 'undefined') {
   window.Response = jest.fn()
 }
 
-Object.defineProperty(global.performance, 'getEntriesByType', {
-  value: jest.fn(entryType => ([
-    {
-      cancelable: true,
-      duration: 17,
-      entryType,
-      name: 'pointer',
-      processingEnd: 8860,
-      processingStart: 8859,
-      startTime: 8853,
-      target: { tagName: 'button' }
-    }
-  ]))
-})
-
 jest.retryTimes(3)

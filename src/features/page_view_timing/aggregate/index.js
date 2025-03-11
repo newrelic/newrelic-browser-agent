@@ -91,8 +91,6 @@ export class Aggregate extends AggregateBase {
     }
     this.events.add(timing)
 
-    console.log('add', timing)
-
     handle('pvtAdded', [name, value, attrs], undefined, FEATURE_NAMES.sessionTrace, this.ee)
 
     this.checkForFirstInteraction()
@@ -113,7 +111,8 @@ export class Aggregate extends AggregateBase {
     this.firstIxnRecorded = true
     this.addTiming('fi', firstInput.startTime, {
       type: firstInput.name,
-      eventTarget: eventOrigin(firstInput.target)
+      eventTarget: eventOrigin(firstInput.target),
+      loadState: document.readyState
     })
   }
 

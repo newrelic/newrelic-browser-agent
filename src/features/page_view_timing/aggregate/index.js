@@ -130,7 +130,7 @@ export class Aggregate extends AggregateBase {
 
   preHarvestChecks () {
     this.checkForFirstInteraction()
-    return true
+    return super.preHarvestChecks()
   }
 
   // serialize array of timing data

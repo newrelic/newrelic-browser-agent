@@ -66,7 +66,6 @@ describe('pvt aggregate tests', () => {
       activatedFeatures: { [agentIdentifier]: { pvt: 1 } }
     }))
 
-
     const mainAgent = {
       agentIdentifier,
       info: { licenseKey: 'licenseKey', applicationID: 'applicationID' },

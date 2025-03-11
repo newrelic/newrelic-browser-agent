@@ -2,6 +2,14 @@
  * Copyright 2020-2025 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
+
+/**
+ * Returns a string representing the origin of an event target. Used by SessionTrace and PageViewTiming features to assign a "better" target to events
+ * @param {*} t The target to derive the origin from.
+ * @param {*} [target] A known target to compare to. If supplied, and a derived origin could not be reached, this will be referenced.
+ * @param {*} [ee] An event emitter instance to use for context retrieval, which only applies to XMLHttpRequests.
+ * @returns {string} The derived origin of the event target.
+ */
 export function eventOrigin (t, target, ee) {
   let origin = 'unknown'
 

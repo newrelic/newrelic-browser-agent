@@ -128,6 +128,11 @@ export class Aggregate extends AggregateBase {
     })
   }
 
+  preHarvestChecks () {
+    this.checkForFirstInteraction()
+    return true
+  }
+
   // serialize array of timing data
   serializer (eventBuffer) {
     var addString = getAddStringContext(this.agentIdentifier)

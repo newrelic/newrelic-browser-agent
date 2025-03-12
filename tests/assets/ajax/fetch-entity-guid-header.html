@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Fetch - Entity GUID</title>
+  {init} {config} {loader}
+</head>
+<body>
+<div>
+  This page uses a button to initiate a fetch with a NR entity guid header. When running in a spec file, setting
+  `window.disableAjaxHashChange = true` will disable the hash route change so the
+  ajax call is fully processed by the ajax feature instead of the SPA feature.
+</div>
+<div><button id="sendAjax">Send Ajax</button></div>
+<script>
+  // window.myRegisteredEntity = newrelic.register({
+  //   licenseKey: 'TEST_LICENSE_KEY',
+  //   applicationID: 'TEST_APPLICATION_ID',
+  // })
+  // myRegisteredEntity.on('ready', (myEntity) => {
+  //   console.log('Entity ready', myEntity)
+  // })
+  // myRegisteredEntity.on('error', (err) => {
+  //   console.error('Entity error', err)
+  // })
+
+  newrelic.register({
+    licenseKey: 'TEST_LICENSE_KEY',
+    applicationID: 'TEST_APPLICATION_ID',
+    entityGuid: 'bad-entity-guid'
+  }).on('ready', (myEntity) => {
+    sharedAjaxHeaders['X-Newrelic-Entity-Guid'] = myEntity.metadata.target.entityGuid
+  }).on('error', (err) => {
+    newrelic.noticeError(err)
+  })
+
+  window.disableAjaxHashChange = false
+  document.getElementById('sendAjax').addEventListener('click', function () {
+
+    fetch('/json', {
+      headers: {
+        'X-Newrelic-Entity-Guid': myRegisteredEntity.metadata.target.entityGuid
+      }
+    }).then(function () {
+      if (!disableAjaxHashChange) {
+        window.location.hash = Math.random()
+      }
+    })
+  })
+</script>
+</body>
+</html>

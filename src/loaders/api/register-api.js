@@ -51,8 +51,16 @@ export function buildRegisterApi (agentRef, handlers, target) {
         try {
           clearTimeout(timeout)
           const entityGuid = data.app.agents?.[0].entityGuid
-          if (!entityGuid) throw new Error('No target entity guid returned from PVE call')
-          target.entityGuid = entityGuid
+          if (!entityGuid) {
+            warn(49)
+            throw new Error('Register API failed')
+          }
+          /** If pre-supplied, the entity guid should match the connection response's entity guid */
+          if (target.entityGuid && target.entityGuid !== entityGuid) {
+            warn(55, target.entityGuid)
+            throw new Error('Register API failed')
+          }
+          target.entityGuid ??= entityGuid
           resolve(data)
         } catch (err) {
           reject(err)
@@ -86,7 +94,7 @@ export function buildRegisterApi (agentRef, handlers, target) {
       warn(49, err)
     })
   }
-  return {
+  const apis = {
     addPageAction: (name, attributes = {}) => report(handlers.addPageAction, [name, { ...attrs, ...attributes }], target),
     log: (message, options = {}) => report(handlers.log, [message, { ...options, customAttributes: { ...attrs, ...(options.customAttributes || {}) } }], target),
     noticeError: (error, attributes = {}) => report(handlers.noticeError, [error, { ...attrs, ...attributes }], target),
@@ -103,6 +111,13 @@ export function buildRegisterApi (agentRef, handlers, target) {
     metadata: {
       customAttributes: attrs,
       target
+    },
+    on: (eventName, callback) => {
+      if (eventName === 'ready') waitForRumResponse.then(() => callback(apis))
+      if (eventName === 'error') waitForRumResponse.catch((err) => callback(err))
+
+      return apis
     }
   }
+  return apis
 }

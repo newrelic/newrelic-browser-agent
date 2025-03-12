@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>XHR - Entity GUID</title>
+  {init} {config} {loader}
+</head>
+<body>
+<div>
+  This page uses a button to initiate an XHR with a NR entity guid header. When running in a spec file, setting
+  `window.disableAjaxHashChange = true` will disable the hash route change so the
+  ajax call is fully processed by the ajax feature instead of the SPA feature.
+</div>
+<div><button id="sendAjax">Send Ajax</button></div>
+<script>
+  window.myRegisteredEntity = newrelic.register({
+    licenseKey: 'TEST_LICENSE_KEY',
+    applicationID: 'TEST_APPLICATION_ID',
+  })
+
+  window.disableAjaxHashChange = false
+  document.getElementById('sendAjax').addEventListener('click', function () {
+    var xhr = new XMLHttpRequest()
+    xhr.addEventListener('loadend', function () {
+      if (!disableAjaxHashChange) {
+        window.location.hash = Math.random()
+      }
+    })
+    xhr.open('GET', '/json')
+    xhr.setRequestHeader('X-Newrelic-Entity-Guid', myRegisteredEntity.metadata.target.entityGuid)
+    xhr.send()
+  })
+</script>
+</body>
+</html>

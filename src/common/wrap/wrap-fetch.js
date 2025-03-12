@@ -9,6 +9,7 @@
  */
 import { ee as baseEE, contextId } from '../event-emitter/contextual-ee'
 import { globalScope } from '../constants/runtime'
+import { NEW_RELIC_ENTITY_GUID_HEADER } from '../constants/agent-constants'
 
 var prefix = 'fetch-'
 var bodyPrefix = prefix + 'body-'
@@ -72,6 +73,20 @@ export function wrapFetch (sharedEE) {
         var args = [...arguments]
 
         var ctx = {}
+
+        /** detect the new relic entity guid header, if found - pass it on to be handled and delete
+         * from the actual fetch request before sending so as not to interfere with the request/service */
+        const headers = args?.[0]?.headers || args?.[1]?.headers || {}
+        let entityGuid
+
+        Object.entries(headers).forEach(([headerKey, headerVal]) => {
+          if (headerKey.toLowerCase() === NEW_RELIC_ENTITY_GUID_HEADER) {
+            entityGuid = headerVal
+            if (args?.[0]?.headers) delete args?.[0]?.headers[headerKey]
+            if (args?.[1]?.headers) delete args?.[1]?.headers[headerKey]
+          }
+        })
+
         // we are wrapping args in an array so we can preserve the reference
         ee.emit(prefix + 'before-start', [args], ctx)
         var dtPayload
@@ -79,7 +94,7 @@ export function wrapFetch (sharedEE) {
 
         var origPromiseFromFetch = fn.apply(this, args)
 
-        ee.emit(prefix + 'start', [args, dtPayload], origPromiseFromFetch)
+        ee.emit(prefix + 'start', [args, dtPayload, entityGuid], origPromiseFromFetch)
 
         // Note we need to cast the returned (orig) Promise from native APIs into the current global Promise, which may or may not be our WrappedPromise.
         return origPromiseFromFetch.then(function (val) {

@@ -11,6 +11,8 @@ import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { parseGQL } from './gql'
 import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../../../common/serialize/bel-serializer'
+import { isContainerAgentTarget, isValidTarget } from '../../../common/util/target'
+import { warn } from '../../../common/util/console'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -106,15 +108,28 @@ export class Aggregate extends AggregateBase {
     if (event.gql) this.reportSupportabilityMetric('Ajax/Events/GraphQL/Bytes-Added', stringify(event.gql).length)
 
     const softNavInUse = Boolean(this.agentRef.features?.[FEATURE_NAMES.softNav])
-    if (softNavInUse) { // For newer soft nav (when running), pass the event to it for evaluation -- either part of an interaction or is given back
-      handle('ajax', [event], undefined, FEATURE_NAMES.softNav, this.ee)
-    } else if (ctx.spaNode) { // For old spa (when running), if the ajax happened inside an interaction, hold it until the interaction finishes
-      const interactionId = ctx.spaNode.interaction.id
-      this.underSpaEvents[interactionId] ??= []
-      this.underSpaEvents[interactionId].push(event)
-    } else {
-      this.events.add(event)
+
+    if (ctx.entityGuid) {
+      const target = this.agentRef.runtime.entityManager.get(ctx.entityGuid)
+      if (!isValidTarget(target) || isContainerAgentTarget(target, this.agentRef)) {
+        warn(47, ctx.entityGuid)
+        delete ctx.entityGuid
+      }
+      if ((softNavInUse || ctx.spaNode) && !this.shouldAllowMainAgentToCapture(ctx)) warn(54, ctx.entityGuid)
     }
+
+    if (this.shouldAllowMainAgentToCapture(ctx)) {
+      if (softNavInUse) { // For newer soft nav (when running), pass the event to it for evaluation -- either part of an interaction or is given back
+        handle('ajax', [event], undefined, FEATURE_NAMES.softNav, this.ee)
+      } else if (ctx.spaNode) { // For old spa (when running), if the ajax happened inside an interaction, hold it until the interaction finishes
+        const interactionId = ctx.spaNode.interaction.id
+        this.underSpaEvents[interactionId] ??= []
+        this.underSpaEvents[interactionId].push(event)
+      } else this.events.add(event)
+    }
+
+    // always add directly if scoped to a sub-entity, the other pathways above will be deterministic if the main agent should procede
+    if (ctx.entityGuid) this.events.add(event, ctx.entityGuid)
   }
 
   serializer (eventBuffer) {
@@ -162,5 +177,14 @@ export class Aggregate extends AggregateBase {
     }
 
     return payload
+  }
+
+  /**
+   * If the event lacks an entityGuid, the main agent should capture the data. However, the main agent should not capture events if the main agent is not configured to capture data and the data has been scoped to a sub-entity
+   * @param {object} ctx - the context object for the event
+   * @returns {boolean} - whether the main agent should capture the event to its internal target
+   */
+  shouldAllowMainAgentToCapture (ctx) {
+    return (!ctx.entityGuid || (this.agentRef.init.external.capture_registered_data && ctx.entityGuid))
   }
 }

@@ -4,3 +4,4 @@
  */
 export const IDEAL_PAYLOAD_SIZE = 64000
 export const MAX_PAYLOAD_SIZE = 1000000
+export const NEW_RELIC_ENTITY_GUID_HEADER = 'x-newrelic-entity-guid'

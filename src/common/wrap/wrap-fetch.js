@@ -79,11 +79,12 @@ export function wrapFetch (sharedEE) {
         const headers = args?.[0]?.headers || args?.[1]?.headers || {}
         let entityGuid
 
-        Object.entries(headers).forEach(([headerKey, headerVal]) => {
+        const entries = headers instanceof Headers ? headers.entries() : Object.entries(headers)
+        entries.forEach(([headerKey, headerVal]) => {
           if (headerKey.toLowerCase() === NEW_RELIC_ENTITY_GUID_HEADER) {
             entityGuid = headerVal
-            if (args?.[0]?.headers) delete args?.[0]?.headers[headerKey]
-            if (args?.[1]?.headers) delete args?.[1]?.headers[headerKey]
+            if (args?.[0]?.headers) delete args[0].headers[headerKey]
+            if (args?.[1]?.headers) delete args[1].headers[headerKey]
           }
         })
 

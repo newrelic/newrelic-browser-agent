@@ -1,15 +1,17 @@
 import { onlyFirefox } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { checkAjaxEvents, checkAjaxMetrics } from '../../util/basic-checks'
-import { testAjaxEventsRequest, testAjaxTimeSlicesRequest } from '../../../tools/testing-server/utils/expect-tests'
+import { testAjaxEventsRequest, testAjaxTimeSlicesRequest, testErrorsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 describe('Fetch Ajax', () => {
   let ajaxEventsCapture
   let ajaxMetricsCapture
+  let errorEventsCapture
 
   beforeEach(async () => {
-    [ajaxEventsCapture, ajaxMetricsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+    [ajaxEventsCapture, ajaxMetricsCapture, errorEventsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
       { test: testAjaxEventsRequest },
-      { test: testAjaxTimeSlicesRequest }
+      { test: testAjaxTimeSlicesRequest },
+      { test: testErrorsRequest }
     ])
   })
 
@@ -376,5 +378,39 @@ describe('Fetch Ajax', () => {
       .find(metric => metric.params.pathname === '/chunked')
     expect(ajaxMetric.metrics.rxSize.t).toBeUndefined()
     expect(ajaxMetric.metrics.rxSize.c).toEqual(1)
+  })
+
+  it('identifies and passes entity guid header to correct entity', async () => {
+    await browser.url(await browser.testHandle.assetURL('ajax/fetch-entity-guid-header.html'))
+      .then(() => browser.waitForAgentLoad())
+
+    const [
+      ajaxEventsHarvest,
+      errorEventsHarvest,
+      ajaxMetricsHarvest
+    ] = await Promise.all([
+      ajaxEventsCapture.waitForResult({ timeout: 10000 }),
+      errorEventsCapture.waitForResult({ timeout: 10000 }),
+      ajaxMetricsCapture.waitForResult({ timeout: 10000 })
+    ])
+
+    const firstArgScopedAjax = ajaxEventsHarvest.find(r => r.request.query.a === '1')
+    const firstArgScopedAjaxMetric = ajaxMetricsHarvest.find(r => r.request.query.a === '1')
+    const secondArgScopedAjax = ajaxEventsHarvest.find(r => r.request.query.a === '2')
+    const secondArgScopedAjaxMetric = ajaxMetricsHarvest.find(r => r.request.query.a === '2')
+
+    ;[firstArgScopedAjax, secondArgScopedAjax].forEach(ajax => {
+      expect(ajax).toBeTruthy()
+      expect(ajax.request.body[0]).toMatchObject({
+        path: '/json',
+        requestedWith: 'fetch'
+      })
+    })
+
+    ;[firstArgScopedAjaxMetric, secondArgScopedAjaxMetric].forEach(ajax => {
+      expect(ajax.request.body.xhr[0].params.pathname).toEqual('/json')
+    })
+
+    expect(errorEventsHarvest.length).toBe(0)
   })
 })

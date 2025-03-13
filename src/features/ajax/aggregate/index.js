@@ -57,10 +57,21 @@ export class Aggregate extends AggregateBase {
     const shouldCollect = shouldCollectEvent(params)
     const shouldOmitAjaxMetrics = this.agentRef.init.feature_flags?.includes('ajax_metrics_deny_list')
     const jserrorsInUse = Boolean(this.agentRef.features?.[FEATURE_NAMES.jserrors])
+    const softNavInUse = Boolean(this.agentRef.features?.[FEATURE_NAMES.softNav])
+
+    if (ctx.entityGuid) {
+      const target = this.agentRef.runtime.entityManager.get(ctx.entityGuid)
+      if (!isValidTarget(target) || isContainerAgentTarget(target, this.agentRef)) {
+        warn(47, ctx.entityGuid)
+        delete ctx.entityGuid
+      }
+      if ((softNavInUse || ctx.spaNode) && !this.shouldAllowMainAgentToCapture(ctx)) warn(54, ctx.entityGuid)
+    }
 
     // Report ajax timeslice metric (to be harvested by jserrors feature, but only if it's running).
     if (jserrorsInUse && (shouldCollect || !shouldOmitAjaxMetrics)) {
-      this.agentRef.sharedAggregator.add(['xhr', hash, params, metrics])
+      if (ctx.entityGuid) this.agentRef.sharedAggregator.add(['xhr', hash, params, metrics], ctx.entityGuid)
+      if (this.shouldAllowMainAgentToCapture(ctx)) this.agentRef.sharedAggregator.add(['xhr', hash, params, metrics])
     }
 
     if (!shouldCollect) {
@@ -106,17 +117,6 @@ export class Aggregate extends AggregateBase {
       query: ctx.parsedOrigin?.search
     })
     if (event.gql) this.reportSupportabilityMetric('Ajax/Events/GraphQL/Bytes-Added', stringify(event.gql).length)
-
-    const softNavInUse = Boolean(this.agentRef.features?.[FEATURE_NAMES.softNav])
-
-    if (ctx.entityGuid) {
-      const target = this.agentRef.runtime.entityManager.get(ctx.entityGuid)
-      if (!isValidTarget(target) || isContainerAgentTarget(target, this.agentRef)) {
-        warn(47, ctx.entityGuid)
-        delete ctx.entityGuid
-      }
-      if ((softNavInUse || ctx.spaNode) && !this.shouldAllowMainAgentToCapture(ctx)) warn(54, ctx.entityGuid)
-    }
 
     if (this.shouldAllowMainAgentToCapture(ctx)) {
       if (softNavInUse) { // For newer soft nav (when running), pass the event to it for evaluation -- either part of an interaction or is given back

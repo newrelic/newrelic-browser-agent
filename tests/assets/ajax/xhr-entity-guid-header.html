@@ -6,28 +6,31 @@
 </head>
 <body>
 <div>
-  This page uses a button to initiate an XHR with a NR entity guid header. When running in a spec file, setting
-  `window.disableAjaxHashChange = true` will disable the hash route change so the
-  ajax call is fully processed by the ajax feature instead of the SPA feature.
+  This page initiates an XHR with a NR entity guid header.
 </div>
-<div><button id="sendAjax">Send Ajax</button></div>
 <script>
-  window.myRegisteredEntity = newrelic.register({
-    licenseKey: 'TEST_LICENSE_KEY',
-    applicationID: 'TEST_APPLICATION_ID',
+ window.app1 = newrelic.register({
+    licenseKey: NREUM.info.licenseKey, // testing server is set up to only accept this licenseKey
+    applicationID: 1, // reports to app 1
+  }).on('ready', ({metadata}) => {
+    var xhr = new XMLHttpRequest()
+    xhr.open('GET', '/json')
+    xhr.setRequestHeader('X-Newrelic-Entity-Guid', metadata.target.entityGuid)
+    xhr.send()
+  }).on('error', (err) => {
+    newrelic.noticeError(err)
   })
 
-  window.disableAjaxHashChange = false
-  document.getElementById('sendAjax').addEventListener('click', function () {
+  window.app2 = newrelic.register({
+    licenseKey: NREUM.info.licenseKey, // testing server is set up to only accept this licenseKey
+    applicationID: 2, // reports to app 2
+  }).on('ready', ({metadata}) => {
     var xhr = new XMLHttpRequest()
-    xhr.addEventListener('loadend', function () {
-      if (!disableAjaxHashChange) {
-        window.location.hash = Math.random()
-      }
-    })
     xhr.open('GET', '/json')
-    xhr.setRequestHeader('X-Newrelic-Entity-Guid', myRegisteredEntity.metadata.target.entityGuid)
+    xhr.setRequestHeader('X-Newrelic-Entity-Guid', metadata.target.entityGuid)
     xhr.send()
+  }).on('error', (err) => {
+    newrelic.noticeError(err)
   })
 </script>
 </body>

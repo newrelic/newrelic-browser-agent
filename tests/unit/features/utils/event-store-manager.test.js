@@ -2,11 +2,11 @@ import { EventStoreManager } from '../../../../src/features/utils/event-store-ma
 
 describe('EventStoreManager', () => {
   test('uses EventBuffer class when storageChoice is 1', () => {
-    const store = new EventStoreManager({}, 1)
+    const store = new EventStoreManager({}, 1, '123', 'page_view_event')
     expect(store.StorageClass.name).toEqual('EventBuffer')
   })
   test('uses EventAggregator class when storageChoice is 2', () => {
-    const store = new EventStoreManager({}, 2)
+    const store = new EventStoreManager({}, 2, '123', 'page_view_event')
     expect(store.StorageClass.name).toEqual('EventAggregator')
   })
 
@@ -24,9 +24,15 @@ describe('EventStoreManager', () => {
     expect(store.clearSave).toBeDefined()
   })
 
+  test('has agentIdentifier and featureName defined', () => {
+    const store = new EventStoreManager({}, 2, '123', 'page_view_event')
+    expect(store.agentIdentifier).toEqual('123')
+    expect(store.featureName).toEqual('page_view_event')
+  })
+
   test('calls the underlying StorgeClass add, get, isEmpty methods', () => {
     const myTarget = { name: 'myTarget' }
-    const store = new EventStoreManager(myTarget, 1)
+    const store = new EventStoreManager(myTarget, 1, '123', 'page_view_event')
     const myEventBuffer = store.appStorageMap.get(myTarget)
 
     expect(myEventBuffer.constructor.name).toEqual('EventBuffer')
@@ -45,7 +51,7 @@ describe('EventStoreManager', () => {
 
   test('add uses original target when target is not provided', () => {
     const myTarget = { name: 'myTarget' }
-    const store = new EventStoreManager(myTarget, 1)
+    const store = new EventStoreManager(myTarget, 1, '123', 'page_view_event')
     const myEventBuffer = store.appStorageMap.get(myTarget)
 
     jest.spyOn(myEventBuffer, 'add')
@@ -54,14 +60,14 @@ describe('EventStoreManager', () => {
   })
 
   test('add does not error when target does not exist', () => {
-    const store = new EventStoreManager({}, 1)
+    const store = new EventStoreManager({}, 1, '123', 'page_view_event')
     expect(() => store.add('myEvent', { name: 'DNE' })).not.toThrow()
   })
 
   test('get takes from ALL storages when target is not provided', () => {
     const tgt1 = { name: 'myTarget' }
     const tgt2 = { name: 'otherTarget' }
-    const store = new EventStoreManager(tgt1, 1)
+    const store = new EventStoreManager(tgt1, 1, '123', 'page_view_event')
     store.add('evt1', tgt1)
     store.add('evt2', tgt2)
 
@@ -70,7 +76,7 @@ describe('EventStoreManager', () => {
 
   test('get does not error when target does not exist', () => {
     const myTarget = { name: 'myTarget' }
-    const store = new EventStoreManager(myTarget, 1)
+    const store = new EventStoreManager(myTarget, 1, '123', 'page_view_event')
     expect(() => store.get(undefined, { name: 'DNE' })).not.toThrow()
     expect(store.get(undefined, { name: 'DNE' })).toEqual([{ targetApp: { name: 'DNE' }, data: undefined }])
 
@@ -80,7 +86,7 @@ describe('EventStoreManager', () => {
 
   test('isEmpty checks ALL storages when target is not provided', () => {
     const tgt1 = { name: 'myTarget' }
-    const store = new EventStoreManager(tgt1, 1)
+    const store = new EventStoreManager(tgt1, 1, '123', 'page_view_event')
     expect(store.isEmpty()).toBeTruthy()
     store.add('myEvent', tgt1)
     expect(store.isEmpty()).toBeFalsy()
@@ -98,7 +104,7 @@ describe('EventStoreManager', () => {
   })
 
   test('isEmpty returns true when the target does not exist', () => {
-    const store = new EventStoreManager({}, 1)
+    const store = new EventStoreManager({}, 1, '123', 'page_view_event')
     expect(store.isEmpty(undefined, { name: 'DNE' })).toEqual(true)
   })
 })

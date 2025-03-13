@@ -8,7 +8,6 @@ import { getOrSet } from '../util/get-or-set'
 import { getRuntime } from '../config/runtime'
 import { EventContext } from './event-context'
 import { bundleId } from '../ids/bundle-id'
-import { dispatchGlobalEvent } from '../dispatch/global-event'
 
 // create a unique id to store event context data for the current agent bundle
 const contextId = `nr@context:${bundleId}`
@@ -106,14 +105,6 @@ function ee (old, debugId) {
     var bufferGroup = getBuffer()[bufferGroupMap[type]]
     if (bufferGroup) {
       bufferGroup.push([emitter, type, args, ctx])
-      dispatchGlobalEvent({
-        agentIdentifier: emitter.debugId,
-        loaded: true,
-        type: 'data',
-        name: 'buffer',
-        feature: bufferGroupMap[type],
-        data: { type, args, force: !!force, bubble: !!bubble }
-      })
     }
 
     // Return the context so that the module that emitted can see what was done.

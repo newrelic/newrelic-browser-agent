@@ -13,7 +13,7 @@
       xhr.send()
 
       window.addEventListener('newrelic', function(event) {
-        if (event.detail.loaded) {
+        if (event?.detail?.type === 'lifecycle' && event.detail.name === 'load') {
           var xhr = new XMLHttpRequest()
           xhr.open('GET', '/json')
           xhr.send()

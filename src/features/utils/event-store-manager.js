@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { EventAggregator } from '../../common/aggregate/event-aggregator'
+import { dispatchGlobalEvent } from '../../common/dispatch/global-event'
 import { EventBuffer } from './event-buffer'
 
 /**
@@ -13,12 +14,16 @@ export class EventStoreManager {
   /**
    * @param {object} defaultTarget - should contain licenseKey and appId of the main app from NREUM.info at startup
    * @param {1|2} storageChoice - the type of storage to use in this manager; 'EventBuffer' (1), 'EventAggregator' (2)
+   * @param {string} agentIdentifier - agent identifier used in inspection events
+   * @param {string} featureName - feature name used in inspection events for non-shared aggregators
    */
-  constructor (defaultTarget, storageChoice) {
+  constructor (defaultTarget, storageChoice, agentIdentifier, featureName) {
     this.mainApp = defaultTarget
     this.StorageClass = storageChoice === 1 ? EventBuffer : EventAggregator
     this.appStorageMap = new Map()
     this.appStorageMap.set(defaultTarget, new this.StorageClass())
+    this.agentIdentifier = agentIdentifier
+    this.featureName = featureName
   }
 
   // This class must contain an union of all methods from all supported storage classes and conceptualize away the target app argument.
@@ -45,6 +50,14 @@ export class EventStoreManager {
    * @returns {boolean} True if the event was successfully added
    */
   add (event, target) {
+    dispatchGlobalEvent({
+      agentIdentifier: this.agentIdentifier,
+      loaded: true,
+      type: 'data',
+      name: 'buffer',
+      feature: this.featureName,
+      data: event
+    })
     if (target && !this.appStorageMap.has(target)) this.appStorageMap.set(target, new this.StorageClass())
     return this.appStorageMap.get(target || this.mainApp).add(event)
   }

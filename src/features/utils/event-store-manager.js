@@ -4,6 +4,7 @@
  */
 import { EventAggregator } from '../../common/aggregate/event-aggregator'
 import { dispatchGlobalEvent } from '../../common/dispatch/global-event'
+import { activatedFeatures } from '../../common/util/feature-flags'
 import { EventBuffer } from './event-buffer'
 
 /**
@@ -52,7 +53,7 @@ export class EventStoreManager {
   add (event, target) {
     dispatchGlobalEvent({
       agentIdentifier: this.agentIdentifier,
-      loaded: true,
+      loaded: !!activatedFeatures?.[this.agentIdentifier],
       type: 'data',
       name: 'buffer',
       feature: this.featureName,

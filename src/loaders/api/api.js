@@ -21,6 +21,7 @@ import { LOG_LEVELS } from '../../features/logging/constants'
 import { bufferLog } from '../../features/logging/shared/utils'
 import { wrapLogger } from '../../common/wrap/wrap-logger'
 import { dispatchGlobalEvent } from '../../common/dispatch/global-event'
+import { activatedFeatures } from '../../common/util/feature-flags'
 
 export function setTopLevelCallers () {
   const nr = gosCDN()
@@ -197,7 +198,7 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
       handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/' + name + '/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
       dispatchGlobalEvent({
         agentIdentifier,
-        loaded: true,
+        loaded: !!activatedFeatures?.[agentIdentifier],
         type: 'data',
         name: 'api',
         feature: prefix + name,

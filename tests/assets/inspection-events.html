@@ -59,9 +59,10 @@
         window.inspectionEvents.harvest = true
       }
 
+      // The API call in this test is called before the agent is loaded, so loaded should be false
       if (
         name === 'api' &&
-        loaded === true &&
+        loaded === false &&
         type === 'data' &&
         feature &&
         data

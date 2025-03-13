@@ -73,7 +73,7 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
   if (!alreadySetOnce) {
     dispatchGlobalEvent({
       agentIdentifier: agent.agentIdentifier,
-      loaded: false,
+      loaded: !!activatedFeatures?.[agent.agentIdentifier],
       type: 'lifecycle',
       name: 'initialize',
       feature: undefined,

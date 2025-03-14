@@ -32,7 +32,7 @@ test('creates right nodes', async () => {
   sessionTraceAggregate.events.storeXhrAgg('xhr', '[200,null,null]', { method: 'GET', status: 200 }, { rxSize: 770, duration: 99, cbTime: 0, time: 217 }) // fake ajax data
   sessionTraceAggregate.events.processPVT('fi', 30) // fake pvt data
 
-  const payload = sessionTraceAggregate.makeHarvestPayload()[0].payload
+  const [{ payload }] = sessionTraceAggregate.makeHarvestPayload()
   let res = payload.body
 
   let node = res.filter(node => node.n === 'DOMContentLoaded')[0]

@@ -6,7 +6,9 @@ import { TimeKeeper } from '../../src/common/timing/time-keeper'
 import { getRuntime } from '../../src/common/config/runtime'
 import { setupAgentSession } from '../../src/features/utils/agent-session'
 import { Harvester } from '../../src/common/harvest/harvester'
+import { EntityManager } from '../../src/features/utils/entity-manager'
 import { EventStoreManager } from '../../src/features/utils/event-store-manager'
+import { EventAggregator } from '../../src/common/aggregate/event-aggregator'
 
 /**
  * Sets up a new agent for component testing. This should be called only
@@ -31,6 +33,7 @@ export function setupAgent ({ agentOverrides = {}, info = {}, init = {}, loaderC
   if (!loaderConfig.agentID) loaderConfig.agentID = info.applicationID
   if (!loaderConfig.agentID) loaderConfig.licenseKey = info.licenseKey
   if (!runtime.appMetadata) runtime.appMetadata = { agents: [{ entityGuid: faker.string.uuid() }] }
+  if (!runtime.entityManager) runtime.entityManager = new EntityManager({ info })
 
   const eventEmitter = ee.get(agentIdentifier)
   jest.spyOn(eventEmitter, 'on')
@@ -39,7 +42,6 @@ export function setupAgent ({ agentOverrides = {}, info = {}, init = {}, loaderC
   const fakeAgent = {
     agentIdentifier,
     ee: eventEmitter,
-    sharedAggregator: new EventStoreManager({ licenseKey: info.licenseKey, appId: info.applicationID }, 2),
     ...agentOverrides
   }
   setNREUMInitializedAgent(agentIdentifier, fakeAgent)
@@ -58,6 +60,7 @@ export function setupAgent ({ agentOverrides = {}, info = {}, init = {}, loaderC
   }
   fakeAgent.features = {}
   if (!runtime.harvester) runtime.harvester = new Harvester(fakeAgent)
+  fakeAgent.sharedAggregator = new EventStoreManager(fakeAgent.runtime.entityManager, EventAggregator, fakeAgent.runtime.appMetadata.agents[0].entityGuid)
 
   return fakeAgent
 }

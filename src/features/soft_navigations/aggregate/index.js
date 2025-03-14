@@ -23,9 +23,11 @@ export class Aggregate extends AggregateBase {
 
     this.initialPageLoadInteraction = new InitialPageLoadInteraction(agentRef.agentIdentifier)
     this.initialPageLoadInteraction.onDone.push(() => { // this ensures the .end() method also works with iPL
-      this.initialPageLoadInteraction.forceSave = true // unless forcibly ignored, iPL always finish by default
-      this.interactionsToHarvest.add(this.initialPageLoadInteraction)
+      this.initialPageLoadInteraction.forceSave = true // unless forcibly ignored, iPL always finish by defaultn wait for drain + this.events
+      const ixn = this.initialPageLoadInteraction
       this.initialPageLoadInteraction = null
+      // buffer the ixn so we can harvest it after draining and setting up the event buffers
+      handle('iplDone', [ixn], undefined, this.featureName, this.ee)
     })
     timeToFirstByte.subscribe(({ attrs }) => {
       const loadEventTime = attrs.navigationEntry.loadEventEnd
@@ -40,14 +42,21 @@ export class Aggregate extends AggregateBase {
     this.harvestOpts.beforeUnload = () => this.interactionInProgress?.done() // return any withheld ajax or jserr events so they can be sent with EoL harvest
 
     this.waitForFlags(['spa']).then(([spaOn]) => {
+      this.interactionsToHarvest = this.events
       if (spaOn) {
         this.drain()
-        setTimeout(() => agentRef.runtime.harvester.triggerHarvestFor(this), 0) // send the IPL ixn on next tick, giving some time for any ajax to finish; we may want to just remove this?
       } else {
         this.blocked = true // if rum response determines that customer lacks entitlements for spa endpoint, this feature shouldn't harvest
         this.deregisterDrain()
       }
     })
+
+    // We add the ipl to the event buffer (interactionsToHarvest) after the agent has drained because the event buffer is not set up on the feature until an entity guid was recieved from the rum call.
+    // soft nav follows a bit of a divergent pattern from the other features, as it creates the IPL data in the agg before draining, where the other features wait until draining to format the data.
+    registerHandler('iplDone', (ixn) => {
+      this.interactionsToHarvest.add(ixn)
+      setTimeout(() => agentRef.runtime.harvester.triggerHarvestFor(this), 0) // send the IPL ixn on next tick, giving some time for any ajax to finish; we may want to just remove this?
+    }, this.featureName, this.ee)
 
     // By default, a complete UI driven interaction requires event -> URL change -> DOM mod in that exact order.
     registerHandler('newUIEvent', (event) => this.startUIInteraction(event.type, Math.floor(event.timeStamp), event.target), this.featureName, this.ee)
@@ -131,7 +140,7 @@ export class Aggregate extends AggregateBase {
     */
     if (this.interactionInProgress?.isActiveDuring(timestamp)) return this.interactionInProgress
     let saveIxn
-    const interactionsBuffer = this.interactionsToHarvest.get(this.agentRef.mainAppKey)[0].data
+    const [{ data: interactionsBuffer }] = this.interactionsToHarvest.get()
     for (let idx = interactionsBuffer.length - 1; idx >= 0; idx--) { // reverse search for the latest completed interaction for efficiency
       const finishedInteraction = interactionsBuffer[idx]
       if (finishedInteraction.isActiveDuring(timestamp)) {

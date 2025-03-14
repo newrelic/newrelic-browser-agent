@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.285.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.284.1...v1.285.0) (2025-03-14)
+
+
+### Features
+
+* Inspection events ([#1413](https://github.com/newrelic/newrelic-browser-agent/issues/1413)) ([1832562](https://github.com/newrelic/newrelic-browser-agent/commit/1832562f52c1e2e26c49c2855ad1996d6251b803))
+
 ## [1.284.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.284.0...v1.284.1) (2025-03-11)
 
 

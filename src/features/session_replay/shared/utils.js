@@ -28,3 +28,15 @@ export function buildNRMetaNode (timestamp, timeKeeper) {
     originTimeDiff: Math.floor(originTime - timeKeeper.correctedOriginTime)
   }
 }
+
+export function customMasker (text, element) {
+  try {
+    if (typeof element?.type === 'string') {
+      if (element.type.toLowerCase() === 'password') return '*'.repeat(text?.length || 0)
+      if (element?.dataset?.nrUnmask !== undefined || element?.classList?.contains('nr-unmask')) return text
+    }
+  } catch (err) {
+    // likely an element was passed to this handler that was invalid and was missing attributes or methods
+  }
+  return typeof text === 'string' ? text.replace(/[\S]/g, '*') : '*'.repeat(text?.length || 0)
+}

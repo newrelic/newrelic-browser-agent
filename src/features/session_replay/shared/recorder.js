@@ -11,7 +11,7 @@ import { stylesheetEvaluator } from './stylesheet-evaluator'
 import { handle } from '../../../common/event-emitter/handle'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
-import { buildNRMetaNode } from './utils'
+import { buildNRMetaNode, customMasker } from './utils'
 import { IDEAL_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
 import { AggregateBase } from '../../utils/aggregate-base'
 
@@ -78,14 +78,7 @@ export class Recorder {
   startRecording () {
     this.recording = true
     const { block_class, ignore_class, mask_text_class, block_selector, mask_input_options, mask_text_selector, mask_all_inputs, inline_images, collect_fonts } = this.parent.agentRef.init.session_replay
-    const customMasker = (text, element) => {
-      try {
-        if (typeof element?.type === 'string' && element.type.toLowerCase() !== 'password' && (element?.dataset?.nrUnmask !== undefined || element?.classList?.contains('nr-unmask'))) return text
-      } catch (err) {
-        // likely an element was passed to this handler that was invalid and was missing attributes or methods
-      }
-      return '*'.repeat(text?.length || 0)
-    }
+
     // set up rrweb configurations for maximum privacy --
     // https://newrelic.atlassian.net/wiki/spaces/O11Y/pages/2792293280/2023+02+28+Browser+-+Session+Replay#Configuration-options
     const stop = recorder({

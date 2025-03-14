@@ -4,8 +4,8 @@
  */
 
 /**
- * @param {Object=} target the target to be validated
- * @param {boolean=} allowUndefined defaults to true if not supplied
+ * @param {Object} [target] - the target to be validated
+ * @param {boolean} [allowUndefined=true]
  * @returns {boolean}
  */
 export function isValidTarget (target, allowUndefined = true) {

@@ -56,9 +56,7 @@ export function setupAgent ({ agentOverrides = {}, info = {}, init = {}, loaderC
   runtime = getRuntime(agentIdentifier)
   if (!runtime.timeKeeper) {
     runtime.timeKeeper = new TimeKeeper(agentIdentifier)
-    runtime.timeKeeper.processRumRequest({
-      getResponseHeader: jest.fn(() => (new Date()).toUTCString())
-    }, 450, 600, Date.now())
+    runtime.timeKeeper.processRumRequest({}, 450, 600, Date.now())
   }
   fakeAgent.features = {}
   if (!runtime.harvester) runtime.harvester = new Harvester(fakeAgent)

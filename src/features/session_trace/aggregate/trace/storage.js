@@ -6,6 +6,7 @@ import { globalScope } from '../../../../common/constants/runtime'
 import { MODE } from '../../../../common/session/constants'
 import { now } from '../../../../common/timing/now'
 import { parseUrl } from '../../../../common/url/parse-url'
+import { eventOrigin } from '../../../../common/util/event-origin'
 import { MAX_NODES_PER_HARVEST } from '../../constants'
 import { TraceNode } from './node'
 
@@ -173,15 +174,15 @@ export class TraceStorage {
     try {
       // webcomponents-lite.js can trigger an exception on currentEvent.target getter because
       // it does not check currentEvent.currentTarget before calling getRootNode() on it
-      evt.o = this.evtOrigin(currentEvent.target, target)
+      evt.o = eventOrigin(currentEvent.target, target, this.parent.ee)
     } catch (e) {
-      evt.o = this.evtOrigin(null, target)
+      evt.o = eventOrigin(null, target, this.parent.ee)
     }
     this.storeSTN(evt)
   }
 
   shouldIgnoreEvent (event, target) {
-    const origin = this.evtOrigin(event.target, target)
+    const origin = eventOrigin(event.target, target, this.parent.ee)
     if (event.type in ignoredEvents.global) return true
     if (!!ignoredEvents[origin] && ignoredEvents[origin].ignoreAll) return true
     return !!(!!ignoredEvents[origin] && event.type in ignoredEvents[origin])
@@ -211,31 +212,6 @@ export class TraceStorage {
       default:
         return type
     }
-  }
-
-  evtOrigin (t, target) {
-    let origin = 'unknown'
-
-    if (t && t instanceof XMLHttpRequest) {
-      const params = this.parent.ee.context(t).params
-      if (!params || !params.status || !params.method || !params.host || !params.pathname) return 'xhrOriginMissing'
-      origin = params.status + ' ' + params.method + ': ' + params.host + params.pathname
-    } else if (t && typeof (t.tagName) === 'string') {
-      origin = t.tagName.toLowerCase()
-      if (t.id) origin += '#' + t.id
-      if (t.className) {
-        for (let i = 0; i < t.classList.length; i++) origin += '.' + t.classList[i]
-      }
-    }
-
-    if (origin === 'unknown') {
-      if (typeof target === 'string') origin = target
-      else if (target === document) origin = 'document'
-      else if (target === window) origin = 'window'
-      else if (target instanceof FileReader) origin = 'FileReader'
-    }
-
-    return origin
   }
 
   // Tracks when the window history API specified by wrap-history is used.

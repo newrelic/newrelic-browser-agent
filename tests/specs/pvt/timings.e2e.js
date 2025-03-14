@@ -91,7 +91,7 @@ describe('pvt timings tests', () => {
           expect(fi.value).toBeGreaterThanOrEqual(0)
           expect(fi.value).toBeLessThan(Date.now() - start)
 
-          const isClickInteractionType = type => type === 'pointer'
+          const isClickInteractionType = type => type === 'mousedown' || type === 'pointerdown'
           const fiType = fi.attributes.find(attr => attr.key === 'type')
           expect(isClickInteractionType(fiType.value)).toEqual(true)
           expect(fiType.type).toEqual('stringAttribute')

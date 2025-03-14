@@ -318,7 +318,7 @@ jobs:
           full=$(cat ./build/nr-full-standard-${{ steps.agent-loader-version.outputs.results }}.stats.json); echo "full=$full" >> $GITHUB_OUTPUT;
           spa=$(cat ./build/nr-spa-standard-${{ steps.agent-loader-version.outputs.results }}.stats.json); echo "spa=$spa" >> $GITHUB_OUTPUT;
       - name: Report lite size to NR
-        uses: newrelic/capture-build-size@main
+        uses: newrelic-apps/capture-build-size@v1.0.1
         with:
           nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
           nr-account-id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
@@ -328,7 +328,7 @@ jobs:
           trigger: 'publish-release'
           version: v${{ steps.agent-loader-version.outputs.results }}
       - name: Report pro size to NR
-        uses: newrelic/capture-build-size@main
+        uses: newrelic-apps/capture-build-size@v1.0.1
         with:
           nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
           nr-account-id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
@@ -338,7 +338,7 @@ jobs:
           trigger: 'publish-release'
           version: v${{ steps.agent-loader-version.outputs.results }}
       - name: Report spa size to NR
-        uses: newrelic/capture-build-size@main
+        uses: newrelic-apps/capture-build-size@v1.0.1
         with:
           nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
           nr-account-id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}

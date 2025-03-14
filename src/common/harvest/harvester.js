@@ -16,6 +16,8 @@ import { obj, param } from '../url/encode'
 import { warn } from '../util/console'
 import { stringify } from '../util/stringify'
 import { getSubmitMethod, xhr as xhrMethod, xhrFetch as fetchMethod } from '../util/submit-data'
+import { activatedFeatures } from '../util/feature-flags'
+import { dispatchGlobalEvent } from '../dispatch/global-event'
 
 const RETRY_FAILED = 'Harvester/Retry/Failed/'
 const RETRY_SUCCEEDED = 'Harvester/Retry/Succeeded/'
@@ -80,7 +82,8 @@ export class Harvester {
         localOpts,
         submitMethod,
         cbFinished,
-        raw: aggregateInst.harvestOpts.raw
+        raw: aggregateInst.harvestOpts.raw,
+        featureName: aggregateInst.featureName
       })
       ranSend = true
     })
@@ -114,7 +117,7 @@ const warnings = {}
   * @param {NetworkSendSpec} param0 Specification for sending data
   * @returns {boolean} True if a network call was made. Note that this does not mean or guarantee that it was successful.
   */
-function send (agentRef, { endpoint, targetApp, payload, localOpts = {}, submitMethod, cbFinished, raw }) {
+function send (agentRef, { endpoint, targetApp, payload, localOpts = {}, submitMethod, cbFinished, raw, featureName }) {
   if (!agentRef.info.errorBeacon) return false
 
   let { body, qs } = cleanPayload(payload)
@@ -172,6 +175,24 @@ function send (agentRef, { endpoint, targetApp, payload, localOpts = {}, submitM
       })
     }
   }
+
+  dispatchGlobalEvent({
+    agentIdentifier: agentRef.agentIdentifier,
+    loaded: !!activatedFeatures?.[agentRef.agentIdentifier],
+    type: 'data',
+    name: 'harvest',
+    feature: featureName,
+    data: {
+      endpoint,
+      headers,
+      targetApp,
+      payload,
+      submitMethod: getSubmitMethodName(),
+      raw,
+      synchronousXhr: !!(localOpts.isFinalHarvest && isWorkerScope)
+    }
+  })
+
   return true
 
   function shouldRetry (status) {
@@ -182,6 +203,12 @@ function send (agentRef, { endpoint, targetApp, payload, localOpts = {}, submitM
         return true
     }
     return (status >= 502 && status <= 504) || (status >= 512 && status <= 530)
+  }
+
+  function getSubmitMethodName () {
+    if (submitMethod === xhrMethod) return 'xhr'
+    if (submitMethod === fetchMethod) return 'fetch'
+    return 'beacon'
   }
 }
 

@@ -39,7 +39,7 @@ export function setupAgent ({ agentOverrides = {}, info = {}, init = {}, loaderC
   const fakeAgent = {
     agentIdentifier,
     ee: eventEmitter,
-    sharedAggregator: new EventStoreManager({ licenseKey: info.licenseKey, appId: info.applicationID }, 2),
+    sharedAggregator: new EventStoreManager({ licenseKey: info.licenseKey, appId: info.applicationID }, 2, agentIdentifier),
     ...agentOverrides
   }
   setNREUMInitializedAgent(agentIdentifier, fakeAgent)

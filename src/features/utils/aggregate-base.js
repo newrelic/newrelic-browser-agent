@@ -37,7 +37,7 @@ export class AggregateBase extends FeatureBase {
       This was necessary to prevent race cond. issues where the event buffer was checked before the feature could "block" itself.
       Its easier to just keep an empty event buffer in place. */
       default:
-        this.events = new EventStoreManager(agentRef.mainAppKey, 1)
+        this.events = new EventStoreManager(agentRef.mainAppKey, 1, agentRef.agentIdentifier, this.featureName)
         break
     }
     this.harvestOpts = {} // features aggregate classes can define custom opts for when their harvest is called
@@ -157,7 +157,7 @@ export class AggregateBase extends FeatureBase {
 
     if (!agentRef.mainAppKey) agentRef.mainAppKey = { licenseKey: agentRef.info.licenseKey, appId: agentRef.info.applicationID }
     // Create a single Aggregator for this agent if DNE yet; to be used by jserror endpoint features.
-    if (!agentRef.sharedAggregator) agentRef.sharedAggregator = new EventStoreManager(agentRef.mainAppKey, 2)
+    if (!agentRef.sharedAggregator) agentRef.sharedAggregator = new EventStoreManager(agentRef.mainAppKey, 2, agentRef.agentIdentifier, 'shared_aggregator')
 
     if (!agentRef.runtime.harvester) agentRef.runtime.harvester = new Harvester(agentRef)
   }

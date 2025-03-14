@@ -151,7 +151,8 @@ test('does not initialized Aggregator more than once with multiple features', as
 
   new AggregateBase(mainAgent, FEATURE_NAMES.pageViewEvent)
   expect(EventStoreManager).toHaveBeenCalledTimes(2) // once for runtime.sharedAgg + once for PVE.events
-  expect(EventStoreManager).toHaveBeenCalledWith(mainAgent.mainAppKey, 2) // 2 = initialize EventAggregator
+  expect(EventStoreManager).toHaveBeenNthCalledWith(1, mainAgent.mainAppKey, 2, mainAgent.agentIdentifier, 'shared_aggregator') // 2 = initialize EventAggregator
+  expect(EventStoreManager).toHaveBeenNthCalledWith(2, mainAgent.mainAppKey, 1, mainAgent.agentIdentifier, FEATURE_NAMES.pageViewEvent)
   expect(mainAgent.mainAppKey).toBeTruthy()
   expect(mainAgent.sharedAggregator).toBeTruthy()
 
@@ -160,7 +161,7 @@ test('does not initialized Aggregator more than once with multiple features', as
 
   new AggregateBase(mainAgent, FEATURE_NAMES.pageViewTiming) // PVT should use its own EventStoreManager
   expect(EventStoreManager).toHaveBeenCalledTimes(3)
-  expect(EventStoreManager).toHaveBeenCalledWith(mainAgent.mainAppKey, 1) // 1 = initialize EventBuffer
+  expect(EventStoreManager).toHaveBeenCalledWith(mainAgent.mainAppKey, 1, mainAgent.agentIdentifier, FEATURE_NAMES.pageViewTiming) // 1 = initialize EventBuffer
 })
 
 test('does initialize separate Aggregators with multiple agents', async () => {

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
-import { FEATURE_TO_ENDPOINT, JSERRORS, RUM, EVENTS, FEATURE_NAMES } from '../../loaders/features/features'
+import { FEATURE_TO_ENDPOINT, JSERRORS, RUM, EVENTS, FEATURE_NAMES, BLOBS, LOGS } from '../../loaders/features/features'
 import { VERSION } from '../constants/env'
 import { globalScope, isWorkerScope } from '../constants/runtime'
 import { handle } from '../event-emitter/handle'
@@ -245,6 +245,7 @@ function cleanPayload (payload = {}) {
 function baseQueryString (agentRef, qs, endpoint, applicationID) {
   const ref = agentRef.runtime.obfuscator.obfuscateString(cleanURL('' + globalScope.location))
   const hr = agentRef.runtime.session?.state.sessionReplayMode === 1 && endpoint !== JSERRORS
+  const ht = agentRef.runtime.session?.state.sessionTraceMode === 1 && ![LOGS, BLOBS].includes(endpoint)
 
   const qps = [
     'a=' + applicationID,
@@ -259,6 +260,8 @@ function baseQueryString (agentRef, qs, endpoint, applicationID) {
     param('ptid', (agentRef.runtime.ptid ? '' + agentRef.runtime.ptid : ''))
   ]
   if (hr) qps.push(param('hr', '1', qs))
+  if (ht) qps.push(param('ht', '1', qs))
+
   return qps.join('')
 
   // Constructs the transaction name param for the beacon URL.

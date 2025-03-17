@@ -6,8 +6,9 @@
 // To reduce build size a bit:
 export const EVENTS = 'events'
 export const JSERRORS = 'jserrors'
-const BLOBS = 'browser/blobs'
+export const BLOBS = 'browser/blobs'
 export const RUM = 'rum'
+export const LOGS = 'browser/logs'
 
 export const FEATURE_NAMES = {
   ajax: 'ajax',
@@ -55,6 +56,6 @@ export const FEATURE_TO_ENDPOINT = {
   [FEATURE_NAMES.jserrors]: JSERRORS,
   [FEATURE_NAMES.sessionTrace]: BLOBS,
   [FEATURE_NAMES.sessionReplay]: BLOBS,
-  [FEATURE_NAMES.logging]: 'browser/logs',
+  [FEATURE_NAMES.logging]: LOGS,
   [FEATURE_NAMES.genericEvents]: 'ins'
 }

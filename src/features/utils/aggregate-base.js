@@ -17,6 +17,7 @@ import { EntityManager } from './entity-manager'
 import { EventBuffer } from './event-buffer'
 import { handle } from '../../common/event-emitter/handle'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../metrics/constants'
+import { EventAggregator } from '../../common/aggregate/event-aggregator'
 
 export class AggregateBase extends FeatureBase {
   /**
@@ -35,10 +36,10 @@ export class AggregateBase extends FeatureBase {
 
     const agentEntityGuid = this.agentRef?.runtime?.appMetadata?.agents?.[0]?.entityGuid
     if (agentEntityGuid) {
-      this.#setupEventStore(agentEntityGuid)
+      this.#setupEventStore(this.agentRef?.runtime?.appMetadata?.agents?.[0]?.entityGuid) // if there's no entity guid, wont dont anything, and will wait for rum flags
     } else {
-      this.ee.on('entity-guid', entityGuid => {
-        this.#setupEventStore(entityGuid)
+      this.ee.on('entity-added', entity => {
+        this.#setupEventStore(entity.entityGuid)
       })
     }
   }
@@ -58,7 +59,7 @@ export class AggregateBase extends FeatureBase {
         // Jserror and Metric features uses a singleton EventAggregator instead of a regular EventBuffer.
       case FEATURE_NAMES.jserrors:
       case FEATURE_NAMES.metrics:
-        this.events = this.agentRef.sharedAggregator
+        this.events = this.agentRef.sharedAggregator ??= new EventStoreManager(this.agentRef.runtime.entityManager, EventAggregator, entityGuid)
         break
         /** All other features get EventBuffer in the ESM by default. Note: PVE is included here, but event buffer will always be empty so future harvests will still not happen by interval or EOL.
     This was necessary to prevent race cond. issues where the event buffer was checked before the feature could "block" itself.

@@ -5,8 +5,10 @@ import { EventStoreManager } from '../../../../src/features/utils/event-store-ma
 
 const entityGuid = '12345'
 const info = { licenseKey: '12345', applicationID: '67890' }
-const entityManager = new EntityManager({ info })
-entityManager.set(entityGuid, info)
+const entity = { entityGuid, ...info }
+const entityManager = new EntityManager({ info, ee: { emit: jest.fn() } })
+entityManager.setDefaultEntity(entity)
+entityManager.set(entityGuid, entity)
 const mockAgentRef = { runtime: { entityManager, appMetadata: { agents: [{ entityGuid }] } } }
 describe('EventStoreManager', () => {
   test('uses EventBuffer class', () => {
@@ -73,17 +75,17 @@ describe('EventStoreManager', () => {
     store.add('evt1', tgt1)
     store.add('evt2', tgt2)
 
-    expect(store.get()).toEqual([{ targetApp: info, data: ['evt0'] }, { targetApp: tgt1Meta, data: ['evt1'] }, { targetApp: tgt2Meta, data: ['evt2'] }])
+    expect(store.get()).toEqual([{ targetApp: entity, data: ['evt0'] }, { targetApp: tgt1Meta, data: ['evt1'] }, { targetApp: tgt2Meta, data: ['evt2'] }])
   })
 
   test('get does not error when target does not exist', () => {
     const myTarget = 'abcd1234'
     const store = new EventStoreManager(mockAgentRef.runtime.entityManager, EventBuffer, mockAgentRef.runtime.appMetadata.agents[0].entityGuid)
     expect(() => store.get(undefined, myTarget)).not.toThrow()
-    expect(store.get(undefined, myTarget)).toEqual([{ targetApp: info, data: [] }])
+    expect(store.get(undefined, myTarget)).toEqual([{ targetApp: undefined, data: [] }])
 
     // on top of that, we never added to the default app, and a default get should not error either
-    expect(store.get()[0]).toEqual({ targetApp: info, data: [] })
+    expect(store.get()[0]).toEqual({ targetApp: entity, data: [] })
   })
 
   test('isEmpty checks ALL storages when target is not provided', () => {

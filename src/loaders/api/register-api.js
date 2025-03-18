@@ -4,7 +4,7 @@
  */
 import { handle } from '../../common/event-emitter/handle'
 import { warn } from '../../common/util/console'
-import { isValidTarget } from '../../common/util/target'
+import { isContainerAgentTarget, isValidTarget } from '../../common/util/target'
 import { FEATURE_NAMES } from '../features/features'
 import { now } from '../../common/timing/now'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
@@ -42,27 +42,36 @@ export function buildRegisterApi (agentRef, handlers, target) {
     }
   }
 
-  const waitForRumResponse = new Promise((resolve, reject) => {
+  /**
+   * Wait for all needed connections for the registered child to be ready to report data
+   * 1. The main agent to be ready (made a RUM call and got its entity guid)
+   * 2. The child to be registered with the main agent (made its own RUM call and got its entity guid)
+   * @type {Promise<void>}
+   */
+  const connected = new Promise((resolve, reject) => {
+    let mainAgentReady = !!agentRef.runtime.entityManager.get().entityGuid
+    let registrationReady = false
+
     /** if the connect callback doesnt resolve in 15 seconds... reject */
     const timeout = setTimeout(reject, 15000)
-    handle('api-pve', [
-      /** Handles the rum response when finished */
-      (data) => {
-        try {
-          clearTimeout(timeout)
-          const entityGuid = data.app.agents?.[0].entityGuid
-          if (!entityGuid) throw new Error('No target entity guid returned from PVE call')
-          target.entityGuid = entityGuid
-          resolve(data)
-        } catch (err) {
-          reject(err)
-        }
-      },
-      /** custom attributes to send with the rum call */
-      attrs,
-      /** target to send the rum call to (we dont have the entityguid yet in PVE call, so must supply a direct obj) */
-      target
-    ], undefined, FEATURE_NAMES.pageViewEvent, agentRef.ee)
+
+    // tell the main agent to send a rum call for this target
+    // when the rum call resolves, it will emit an "entity-added" event, see below
+    agentRef.ee.emit('api-send-rum', [attrs, target])
+
+    // wait for entity events to emit to see when main agent and/or API registration is ready
+    agentRef.ee.on('entity-added', entity => {
+      if (isContainerAgentTarget(entity, agentRef)) mainAgentReady ||= true
+      if (target.licenseKey === entity.licenseKey && target.applicationID === entity.applicationID) {
+        registrationReady = true
+        target.entityGuid = entity.entityGuid
+      }
+
+      if (mainAgentReady && registrationReady) {
+        clearTimeout(timeout)
+        resolve()
+      }
+    })
   })
 
   /**
@@ -73,18 +82,18 @@ export function buildRegisterApi (agentRef, handlers, target) {
      * @param {string} targetEntityGuid the target entity guid, which looks up the target to report the data to from the entity manager. If undefined, will report to the container agent's target.
      * @returns
      */
-  const report = (methodToCall, args, target) => {
+  const report = async (methodToCall, args, target) => {
     /** set the timestamp before the async part of waiting for the rum response for better accuracy */
     const timestamp = now()
     handle(SUPPORTABILITY_METRIC_CHANNEL, [`API/register/${methodToCall.name}/called`], undefined, FEATURE_NAMES.metrics, agentRef.ee)
-    waitForRumResponse.then((rumResponse) => {
+    try {
+      await connected
       // target should be decorated with entityGuid by the rum resp at this point
-      if (methodToCall === handlers.log && !(target.entityGuid && rumResponse.log)) return // not enough metadata <or> was not sampled
       if (agentRef.init.external.capture_registered_data) { methodToCall(...args, undefined, timestamp) } // also report to container by providing undefined target
       methodToCall(...args, target.entityGuid, timestamp) // report to target
-    }).catch(err => {
+    } catch (err) {
       warn(49, err)
-    })
+    }
   }
   return {
     addPageAction: (name, attributes = {}) => report(handlers.addPageAction, [name, { ...attrs, ...attributes }], target),
@@ -102,7 +111,8 @@ export function buildRegisterApi (agentRef, handlers, target) {
     /** metadata */
     metadata: {
       customAttributes: attrs,
-      target
+      target,
+      connected
     }
   }
 }

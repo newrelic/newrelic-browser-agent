@@ -70,10 +70,10 @@ export class EventStoreManager {
    */
   get (opts, targetEntityGuid) {
     if (targetEntityGuid) return [{ targetApp: this.entityManager.get(targetEntityGuid), data: this.#getEventStore(targetEntityGuid).get(opts) }]
-
     const allPayloads = []
     this.appStorageMap.forEach((eventStore, targetEntityGuid) => {
-      allPayloads.push({ targetApp: this.entityManager.get(targetEntityGuid), data: eventStore.get(opts) })
+      const targetApp = this.entityManager.get(targetEntityGuid)
+      if (targetApp) allPayloads.push({ targetApp, data: eventStore.get(opts) })
     })
     return allPayloads
   }

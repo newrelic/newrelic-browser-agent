@@ -9,6 +9,9 @@ import { Harvester } from '../../src/common/harvest/harvester'
 import { EntityManager } from '../../src/features/utils/entity-manager'
 import { EventStoreManager } from '../../src/features/utils/event-store-manager'
 import { EventAggregator } from '../../src/common/aggregate/event-aggregator'
+import { getInfo } from '../../src/common/config/info'
+
+const entityGuid = faker.string.uuid()
 
 /**
  * Sets up a new agent for component testing. This should be called only
@@ -28,16 +31,18 @@ import { EventAggregator } from '../../src/common/aggregate/event-aggregator'
 export function setupAgent ({ agentOverrides = {}, info = {}, init = {}, loaderConfig = {}, runtime = {} } = {}) {
   const agentIdentifier = faker.string.uuid()
 
+  const eventEmitter = ee.get(agentIdentifier)
+  jest.spyOn(eventEmitter, 'on')
+  jest.spyOn(eventEmitter, 'addEventListener')
+
   if (!info.applicationID) info.applicationID = faker.string.uuid()
   if (!info.licenseKey) info.licenseKey = faker.string.uuid()
   if (!loaderConfig.agentID) loaderConfig.agentID = info.applicationID
   if (!loaderConfig.agentID) loaderConfig.licenseKey = info.licenseKey
-  if (!runtime.appMetadata) runtime.appMetadata = { agents: [{ entityGuid: faker.string.uuid() }] }
-  if (!runtime.entityManager) runtime.entityManager = new EntityManager({ info })
+  if (!runtime.appMetadata) runtime.appMetadata = { agents: [{ entityGuid }] }
+  if (!runtime.entityManager) runtime.entityManager = new EntityManager({ info, ee })
 
-  const eventEmitter = ee.get(agentIdentifier)
-  jest.spyOn(eventEmitter, 'on')
-  jest.spyOn(eventEmitter, 'addEventListener')
+  runtime.entityManager.setDefaultEntity({ entityGuid, ...info })
 
   const fakeAgent = {
     agentIdentifier,
@@ -69,6 +74,14 @@ export function resetAgent (agentIdentifier) {
   resetAgentEventEmitter(agentIdentifier)
   resetAggregator(agentIdentifier)
   resetSession(agentIdentifier)
+  resetEntityManager(agentIdentifier)
+}
+
+export function resetEntityManager (agentIdentifier) {
+  const entityManager = getRuntime(agentIdentifier).entityManager
+  entityManager.clear()
+  entityManager.setDefaultEntity({ entityGuid, ...getInfo(agentIdentifier) })
+  entityManager.set(entityGuid, { entityGuid, ...getInfo(agentIdentifier) })
 }
 
 export function resetAgentEventEmitter (agentIdentifier) {

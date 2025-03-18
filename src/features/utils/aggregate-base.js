@@ -35,7 +35,7 @@ export class AggregateBase extends FeatureBase {
 
     const agentEntityGuid = this.agentRef?.runtime?.appMetadata?.agents?.[0]?.entityGuid
     if (agentEntityGuid) {
-      this.#setupEventStore(this.agentRef?.runtime?.appMetadata?.agents?.[0]?.entityGuid) // if there's no entity guid, wont dont anything, and will wait for rum flags
+this.#setupEventStore(agentEntityGuid) // if there's no entity guid, wont dont anything, and will wait for rum flags
     } else {
       this.ee.on('entity-added', entity => {
         this.#setupEventStore(entity.entityGuid)

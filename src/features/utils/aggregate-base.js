@@ -24,7 +24,6 @@ export class AggregateBase extends FeatureBase {
    * Create an AggregateBase instance.
    * @param {Object} agentRef The reference to the agent instance.
    * @param {string} featureName The name of the feature creating the instance.
-   * @param {Function} eventStore A method to create a new data store.
    */
   constructor (agentRef, featureName) {
     super(agentRef.agentIdentifier, featureName)

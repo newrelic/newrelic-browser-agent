@@ -157,19 +157,21 @@ test('does not initialized Aggregator more than once with multiple features', as
   const pveAgg = new PVEAggregate(mainAgent, FEATURE_NAMES.pageViewEvent)
 
   const mockRumResp1 = { app: { agents: [{ entityGuid: '12345' }] } }
-  pveAgg.processEntityGuidFromRumResponse(mockRumResp1, { licenseKey: '1', applicationID: '1' })
+  pveAgg.processEntities(mockRumResp1.app.agents, { licenseKey: '1', applicationID: '1' })
 
-  expect(EventStoreManager).toHaveBeenCalledTimes(2)
-  expect(EventStoreManager).toHaveBeenCalledWith(mainAgent.runtime.entityManager, EventAggregator, '12345') // 2 = initialize EventAggregator
+  expect(EventStoreManager).toHaveBeenCalledTimes(1)
+  expect(EventStoreManager).toHaveBeenCalledWith(mainAgent, EventBuffer, '12345', FEATURE_NAMES.pageViewEvent) // 2 = initialize EventAggregator
   expect(mainAgent.runtime.entityManager).toBeTruthy()
-  expect(mainAgent.sharedAggregator).toBeTruthy()
+  expect(mainAgent.sharedAggregator).toBeUndefined()
 
-  new AggregateBase(mainAgent, FEATURE_NAMES.jserrors) // this feature should be using that same aggregator as its .events
+  new AggregateBase(mainAgent, FEATURE_NAMES.jserrors) // this feature should be using the shared aggregator, so it will set it now
   expect(EventStoreManager).toHaveBeenCalledTimes(2)
+  expect(EventStoreManager).toHaveBeenCalledWith(mainAgent, EventAggregator, '12345', 'shared_aggregator') // 2 = initialize EventAggregator
+  expect(mainAgent.sharedAggregator).toBeTruthy()
 
   new AggregateBase(mainAgent, FEATURE_NAMES.pageViewTiming) // PVT should use its own EventStoreManager
   expect(EventStoreManager).toHaveBeenCalledTimes(3)
-  expect(EventStoreManager).toHaveBeenCalledWith(mainAgent.runtime.entityManager, EventBuffer, '12345') // 1 = initialize EventBuffer
+  expect(EventStoreManager).toHaveBeenCalledWith(mainAgent, EventBuffer, '12345', FEATURE_NAMES.pageViewTiming) // 1 = initialize EventBuffer
 })
 
 test('does initialize separate Aggregators with multiple agents', async () => {
@@ -189,13 +191,17 @@ test('does initialize separate Aggregators with multiple agents', async () => {
 
   const mockRumResp1 = { app: { agents: [{ entityGuid: '12345' }] } }
   const mockRumResp2 = { app: { agents: [{ entityGuid: '56789' }] } }
-  pveAgg1.processEntityGuidFromRumResponse(mockRumResp1, { licenseKey: '1', applicationID: '1' })
-  pveAgg2.processEntityGuidFromRumResponse(mockRumResp2, { licenseKey: '2', applicationID: '2' })
+  pveAgg1.processEntities(mockRumResp1.app.agents, { licenseKey: '1', applicationID: '1' })
+  pveAgg2.processEntities(mockRumResp2.app.agents, { licenseKey: '2', applicationID: '2' })
 
-  expect(EventStoreManager).toHaveBeenCalledTimes(4)
-  expect(EventStoreManager).not.toHaveBeenCalledWith(expect.any(Object), 1)
+  expect(EventStoreManager).toHaveBeenCalledTimes(2) // event buffer x 2
+  expect(EventStoreManager).not.toHaveBeenCalledWith(expect.any(Object), EventAggregator, '12345')
 
-  new AggregateBase(mainAgent, FEATURE_NAMES.jserrors) // still does not initialize sharedAgg again on the same agent
+  new AggregateBase(mainAgent, FEATURE_NAMES.jserrors)
   new AggregateBase(mainAgent2, FEATURE_NAMES.jserrors)
-  expect(EventStoreManager).toHaveBeenCalledTimes(4)
+  expect(EventStoreManager).toHaveBeenCalledTimes(4) // event buffer x 2, event aggregator x 2
+
+  new AggregateBase(mainAgent, FEATURE_NAMES.metrics)
+  new AggregateBase(mainAgent2, FEATURE_NAMES.metrics)
+  expect(EventStoreManager).toHaveBeenCalledTimes(4) // should not initialize another since jserrors set up the shared instance
 })

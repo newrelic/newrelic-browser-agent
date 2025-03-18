@@ -40,15 +40,16 @@ test('init props exist and return expected defaults', () => {
     deny_list: undefined,
     enabled: true
   })
+  expect(config.api).toEqual({
+    allow_registered_children: true,
+    duplicate_registered_data: false
+  })
   expect(config.distributed_tracing).toEqual({
     allowed_origins: undefined,
     cors_use_newrelic_header: undefined,
     cors_use_tracecontext_headers: undefined,
     enabled: undefined,
     exclude_newrelic_header: undefined
-  })
-  expect(config.external).toEqual({
-    capture_registered_data: false
   })
   expect(config.generic_events).toEqual({
     autoStart: true,

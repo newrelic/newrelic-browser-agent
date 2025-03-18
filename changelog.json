@@ -4,6 +4,31 @@
     {
       "changes": [
         {
+          "type": "fix",
+          "sha": "22ef4ffaef72729f99ee615d4851870f51a129f7",
+          "message": "Obtain FirstInteraction directly from performance API",
+          "issues": [
+            "1410"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "6660c4455f73bdd90da9946f48ca6c6b377a866f",
+          "message": "Console error on some cross-origin requests without NR CAT header",
+          "issues": [
+            "1407"
+          ]
+        }
+      ],
+      "version": "1.284.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "3edea383-18ac-4d45-93ff-69f7e8e5ca97",
+      "createTime": "2025-03-11T18:51:07.416Z"
+    },
+    {
+      "changes": [
+        {
           "type": "feat",
           "sha": "436ce94eac45e3e28d6b3be6fe9f9fcb15ac1e9b",
           "message": "Remove FID, replace first interaction detection with INP",
@@ -2627,5 +2652,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2025-03-04T21:23:38.234Z"
+  "updateTime": "2025-03-11T18:51:07.416Z"
 }

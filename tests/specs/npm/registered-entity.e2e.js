@@ -18,27 +18,33 @@ describe('registered-entity', () => {
       window.agent1 = new RegisteredEntity({
         licenseKey: window.NREUM.info.licenseKey,
         applicationID: 1
-      }).on('ready', ({ metadata }) => {
-        var xhr = new XMLHttpRequest()
-        xhr.open('GET', '/json')
-        xhr.setRequestHeader('X-Newrelic-Entity-Guid', metadata.target.entityGuid) // app 1 should report XMLHttpRequest
-        xhr.send()
-      }).on('error', (err) => {
-        newrelic.noticeError(err)
       })
+      window.agent1.metadata.connected
+        .then(({ metadata }) => {
+          var xhr = new XMLHttpRequest()
+          xhr.open('GET', '/json')
+          xhr.setRequestHeader('X-Newrelic-Entity-Guid', metadata.target.entityGuid) // app 1 should report XMLHttpRequest
+          xhr.send()
+        })
+        .catch((err) => {
+          newrelic.noticeError(err)
+        })
 
       window.agent2 = new RegisteredEntity({
         licenseKey: window.NREUM.info.licenseKey,
         applicationID: 2
-      }).on('ready', ({ metadata }) => {
-        fetch('/json', {
-          headers: {
-            'X-Newrelic-Entity-Guid': metadata.target.entityGuid // app 2 should report fetch
-          }
-        })
-      }).on('error', (err) => {
-        newrelic.noticeError(err)
       })
+      window.agent2.metadata.connected
+        .then(({ metadata }) => {
+          fetch('/json', {
+            headers: {
+              'X-Newrelic-Entity-Guid': metadata.target.entityGuid // app 2 should report fetch
+            }
+          })
+        })
+        .catch((err) => {
+          newrelic.noticeError(err)
+        })
 
       // each payload in this test is decorated with data that matches its appId for ease of testing
       window.newrelic.setCustomAttribute('customAttr', '42') // container agent

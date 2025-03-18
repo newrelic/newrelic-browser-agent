@@ -12,11 +12,13 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { cumulativeLayoutShift } from '../../../common/vitals/cumulative-layout-shift'
 import { firstContentfulPaint } from '../../../common/vitals/first-contentful-paint'
 import { firstPaint } from '../../../common/vitals/first-paint'
-import { firstInteraction, interactionToNextPaint } from '../../../common/vitals/interaction-to-next-paint'
+import { interactionToNextPaint } from '../../../common/vitals/interaction-to-next-paint'
 import { largestContentfulPaint } from '../../../common/vitals/largest-contentful-paint'
 import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
 import { subscribeToVisibilityChange } from '../../../common/window/page-visibility'
 import { VITAL_NAMES } from '../../../common/vitals/constants'
+import { initiallyHidden } from '../../../common/constants/runtime'
+import { eventOrigin } from '../../../common/util/event-origin'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -28,6 +30,7 @@ export class Aggregate extends AggregateBase {
   constructor (agentRef) {
     super(agentRef, FEATURE_NAME)
     this.curSessEndRecorded = false
+    this.firstIxnRecorded = false
 
     registerHandler('docHidden', msTimestamp => this.endCurrentSession(msTimestamp), this.featureName, this.ee)
     // Add the time of _window pagehide event_ firing to the next PVT harvest == NRDB windowUnload attr:
@@ -37,7 +40,6 @@ export class Aggregate extends AggregateBase {
       firstPaint.subscribe(this.#handleVitalMetric)
       firstContentfulPaint.subscribe(this.#handleVitalMetric)
       largestContentfulPaint.subscribe(this.#handleVitalMetric)
-      firstInteraction.subscribe(this.#handleVitalMetric)
       interactionToNextPaint.subscribe(this.#handleVitalMetric)
       timeToFirstByte.subscribe(({ attrs }) => {
         this.addTiming('load', Math.round(attrs.navigationEntry.loadEventEnd))
@@ -82,13 +84,36 @@ export class Aggregate extends AggregateBase {
       attrs.cls = cumulativeLayoutShift.current.value
     }
 
-    this.events.add({
+    const timing = {
       name,
       value,
       attrs
-    })
+    }
+    this.events.add(timing)
 
     handle('pvtAdded', [name, value, attrs], undefined, FEATURE_NAMES.sessionTrace, this.ee)
+
+    this.checkForFirstInteraction()
+
+    // makes testing easier
+    return timing
+  }
+
+  /**
+   * Checks the performance API to see if the agent can set a first interaction event value
+   * @returns {void}
+   */
+  checkForFirstInteraction () {
+    // preserve the original behavior where FID is not reported if the page is hidden before the first interaction
+    if (this.firstIxnRecorded || initiallyHidden || !performance) return
+    const firstInput = performance.getEntriesByType('first-input')[0]
+    if (!firstInput) return
+    this.firstIxnRecorded = true
+    this.addTiming('fi', firstInput.startTime, {
+      type: firstInput.name,
+      eventTarget: eventOrigin(firstInput.target),
+      loadState: document.readyState
+    })
   }
 
   appendGlobalCustomAttributes (timing) {
@@ -101,6 +126,11 @@ export class Aggregate extends AggregateBase {
         timingAttributes[key] = val
       }
     })
+  }
+
+  preHarvestChecks () {
+    this.checkForFirstInteraction()
+    return super.preHarvestChecks()
   }
 
   // serialize array of timing data

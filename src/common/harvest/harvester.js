@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
-import { FEATURE_TO_ENDPOINT, JSERRORS, RUM, EVENTS, FEATURE_NAMES } from '../../loaders/features/features'
+import { FEATURE_TO_ENDPOINT, JSERRORS, RUM, EVENTS, FEATURE_NAMES, BLOBS, LOGS } from '../../loaders/features/features'
 import { VERSION } from '../constants/env'
 import { globalScope, isWorkerScope } from '../constants/runtime'
 import { handle } from '../event-emitter/handle'
@@ -16,6 +16,8 @@ import { obj, param } from '../url/encode'
 import { warn } from '../util/console'
 import { stringify } from '../util/stringify'
 import { getSubmitMethod, xhr as xhrMethod, xhrFetch as fetchMethod } from '../util/submit-data'
+import { activatedFeatures } from '../util/feature-flags'
+import { dispatchGlobalEvent } from '../dispatch/global-event'
 
 const RETRY_FAILED = 'Harvester/Retry/Failed/'
 const RETRY_SUCCEEDED = 'Harvester/Retry/Succeeded/'
@@ -80,7 +82,8 @@ export class Harvester {
         localOpts,
         submitMethod,
         cbFinished,
-        raw: aggregateInst.harvestOpts.raw
+        raw: aggregateInst.harvestOpts.raw,
+        featureName: aggregateInst.featureName
       })
       ranSend = true
     })
@@ -114,7 +117,7 @@ const warnings = {}
   * @param {NetworkSendSpec} param0 Specification for sending data
   * @returns {boolean} True if a network call was made. Note that this does not mean or guarantee that it was successful.
   */
-function send (agentRef, { endpoint, targetApp, payload, localOpts = {}, submitMethod, cbFinished, raw }) {
+function send (agentRef, { endpoint, targetApp, payload, localOpts = {}, submitMethod, cbFinished, raw, featureName }) {
   if (!agentRef.info.errorBeacon) return false
 
   let { body, qs } = cleanPayload(payload)
@@ -159,7 +162,7 @@ function send (agentRef, { endpoint, targetApp, payload, localOpts = {}, submitM
       result.addEventListener('loadend', function () {
         // `this` here in block refers to the XHR object in this scope, do not change the anon function to an arrow function
         // status 0 refers to a local error, such as CORS or network failure, or a blocked request by the browser (e.g. adblocker)
-        const cbResult = { sent: this.status !== 0, status: this.status, retry: shouldRetry(this.status), fullUrl, xhr: this, targetApp, cbFinished: localOpts.cbFinished }
+        const cbResult = { sent: this.status !== 0, status: this.status, retry: shouldRetry(this.status), fullUrl, xhr: this, targetApp }
         if (localOpts.needResponse) cbResult.responseText = this.responseText
         cbFinished(cbResult)
       }, eventListenerOpts(false))
@@ -172,6 +175,24 @@ function send (agentRef, { endpoint, targetApp, payload, localOpts = {}, submitM
       })
     }
   }
+
+  dispatchGlobalEvent({
+    agentIdentifier: agentRef.agentIdentifier,
+    loaded: !!activatedFeatures?.[agentRef.agentIdentifier],
+    type: 'data',
+    name: 'harvest',
+    feature: featureName,
+    data: {
+      endpoint,
+      headers,
+      targetApp,
+      payload,
+      submitMethod: getSubmitMethodName(),
+      raw,
+      synchronousXhr: !!(localOpts.isFinalHarvest && isWorkerScope)
+    }
+  })
+
   return true
 
   function shouldRetry (status) {
@@ -182,6 +203,12 @@ function send (agentRef, { endpoint, targetApp, payload, localOpts = {}, submitM
         return true
     }
     return (status >= 502 && status <= 504) || (status >= 512 && status <= 530)
+  }
+
+  function getSubmitMethodName () {
+    if (submitMethod === xhrMethod) return 'xhr'
+    if (submitMethod === fetchMethod) return 'fetch'
+    return 'beacon'
   }
 }
 
@@ -218,6 +245,7 @@ function cleanPayload (payload = {}) {
 function baseQueryString (agentRef, qs, endpoint, applicationID) {
   const ref = agentRef.runtime.obfuscator.obfuscateString(cleanURL('' + globalScope.location))
   const hr = agentRef.runtime.session?.state.sessionReplayMode === 1 && endpoint !== JSERRORS
+  const ht = agentRef.runtime.session?.state.sessionTraceMode === 1 && ![LOGS, BLOBS].includes(endpoint)
 
   const qps = [
     'a=' + applicationID,
@@ -232,6 +260,8 @@ function baseQueryString (agentRef, qs, endpoint, applicationID) {
     param('ptid', (agentRef.runtime.ptid ? '' + agentRef.runtime.ptid : ''))
   ]
   if (hr) qps.push(param('hr', '1', qs))
+  if (ht) qps.push(param('ht', '1', qs))
+
   return qps.join('')
 
   // Constructs the transaction name param for the beacon URL.

@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "Fri Feb 21 2025 22:13:09 GMT+0000 (Coordinated Universal Time)",
+  "lastUpdated": "Tue Mar 11 2025 19:56:52 GMT+0000 (Coordinated Universal Time)",
   "projectName": "New Relic Browser Agent",
   "projectUrl": "https://github.com/newrelic/newrelic-browser-agent",
   "includeOptDeps": true,
@@ -19,27 +19,27 @@
       "publisher": "Arjun Barrett",
       "email": "arjunbarrett@gmail.com"
     },
-    "rrweb@2.0.0-alpha.17": {
+    "rrweb@2.0.0-alpha.18": {
       "name": "rrweb",
-      "version": "2.0.0-alpha.17",
-      "range": "^2.0.0-alpha.17",
+      "version": "2.0.0-alpha.18",
+      "range": "^2.0.0-alpha.18",
       "licenses": "MIT",
       "repoUrl": "https://github.com/rrweb-io/rrweb",
-      "versionedRepoUrl": "https://github.com/rrweb-io/rrweb/tree/v2.0.0-alpha.17",
+      "versionedRepoUrl": "https://github.com/rrweb-io/rrweb/tree/v2.0.0-alpha.18",
       "licenseFile": "node_modules/rrweb/README.md",
-      "licenseUrl": "https://github.com/rrweb-io/rrweb/blob/v2.0.0-alpha.17/README.md",
+      "licenseUrl": "https://github.com/rrweb-io/rrweb/blob/v2.0.0-alpha.18/README.md",
       "licenseTextSource": "spdx",
       "publisher": "yanzhen@smartx.com"
     },
-    "web-vitals@4.2.3": {
+    "web-vitals@4.2.4": {
       "name": "web-vitals",
-      "version": "4.2.3",
-      "range": "4.2.3",
+      "version": "4.2.4",
+      "range": "4.2.4",
       "licenses": "Apache-2.0",
       "repoUrl": "https://github.com/GoogleChrome/web-vitals",
-      "versionedRepoUrl": "https://github.com/GoogleChrome/web-vitals/tree/v4.2.3",
+      "versionedRepoUrl": "https://github.com/GoogleChrome/web-vitals/tree/v4.2.4",
       "licenseFile": "node_modules/web-vitals/LICENSE",
-      "licenseUrl": "https://github.com/GoogleChrome/web-vitals/blob/v4.2.3/LICENSE",
+      "licenseUrl": "https://github.com/GoogleChrome/web-vitals/blob/v4.2.4/LICENSE",
       "licenseTextSource": "file",
       "publisher": "Philip Walton",
       "email": "philip@philipwalton.com",

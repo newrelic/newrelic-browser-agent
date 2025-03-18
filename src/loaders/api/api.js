@@ -18,6 +18,8 @@ import { LOG_LEVELS } from '../../features/logging/constants'
 import { bufferLog } from '../../features/logging/shared/utils'
 import { wrapLogger } from '../../common/wrap/wrap-logger'
 import { buildRegisterApi } from './register-api'
+import { dispatchGlobalEvent } from '../../common/dispatch/global-event'
+import { activatedFeatures } from '../../common/util/feature-flags'
 
 export function setTopLevelCallers () {
   const nr = gosCDN()
@@ -59,14 +61,14 @@ export function setAPI (agentRef, forceDrain, runSoftNavOverSpa = false) {
    * a target, but the register APIs `can` supply a target.
   */
   const sharedHandlers = {
-    addPageAction: function addPageAction (name, attributes, targetEntityGuid, timestamp = now()) {
+    addPageAction: function (name, attributes, targetEntityGuid, timestamp = now()) {
       apiCall(prefix, 'addPageAction', true, FEATURE_NAMES.genericEvents, timestamp)(name, attributes, targetEntityGuid)
     },
-    log: function log (message, { customAttributes = {}, level = LOG_LEVELS.INFO } = {}, targetEntityGuid, timestamp = now()) {
+    log: function (message, { customAttributes = {}, level = LOG_LEVELS.INFO } = {}, targetEntityGuid, timestamp = now()) {
       handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/log/called'], undefined, FEATURE_NAMES.metrics, agentRef.ee)
       bufferLog(agentRef.ee, message, customAttributes, level, targetEntityGuid, timestamp)
     },
-    noticeError: function noticeError (err, customAttributes, targetEntityGuid, timestamp = now()) {
+    noticeError: function (err, customAttributes, targetEntityGuid, timestamp = now()) {
       if (typeof err === 'string') err = new Error(err)
       handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/noticeError/called'], undefined, FEATURE_NAMES.metrics, agentRef.ee)
       handle('err', [err, timestamp, false, customAttributes, !!replayRunning[agentRef.agentIdentifier], undefined, targetEntityGuid], undefined, FEATURE_NAMES.jserrors, agentRef.ee)
@@ -221,6 +223,14 @@ export function setAPI (agentRef, forceDrain, runSoftNavOverSpa = false) {
   function apiCall (prefix, name, notSpa, bufferGroup, timestamp = now()) {
     return function () {
       handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/' + name + '/called'], undefined, FEATURE_NAMES.metrics, agentRef.ee)
+      dispatchGlobalEvent({
+        agentIdentifier: agentRef.agentIdentifier,
+        loaded: !!activatedFeatures?.[agentRef.agentIdentifier],
+        type: 'data',
+        name: 'api',
+        feature: prefix + name,
+        data: { notSpa, bufferGroup }
+      })
       if (bufferGroup) handle(prefix + name, [timestamp, ...arguments], notSpa ? null : this, bufferGroup, agentRef.ee) // no bufferGroup means only the SM is emitted
       return notSpa ? undefined : this // returns the InteractionHandle which allows these methods to be chained
     }

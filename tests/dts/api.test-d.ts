@@ -76,3 +76,12 @@ expectType<(error: Error | string, customAttributes?: object) => void>(registere
 expectType<(value: string | null) => void>(registeredEntity.setUserId)
 expectType<(value: string | null) => void>(registeredEntity.setApplicationVersion)
 expectType<(message: string, options?: { customAttributes?: object, level?: 'ERROR' | 'TRACE' | 'DEBUG' | 'INFO' | 'WARN'}) => void>(registeredEntity.log)
+
+// The following browser agent APIs should not be available in the Micro Agent:
+expectError(() => expectType<any>(microAgent.addToTrace))
+expectError(() => expectType<any>(microAgent.setCurrentRouteName))
+expectError(() => expectType<any>(microAgent.interaction))
+expectError(() => expectType<any>(microAgent.finished))
+expectError(() => expectType<any>(microAgent.recordReplay))
+expectError(() => expectType<any>(microAgent.pauseReplay))
+expectError(() => expectType<any>(microAgent.wrapLogger))

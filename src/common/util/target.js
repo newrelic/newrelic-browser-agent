@@ -4,14 +4,14 @@
  */
 
 /**
- * @param {Object=} target the target to be validated
- * @param {boolean=} allowUndefined defaults to true if not supplied
+ * @param {Object} [target] - the target to be validated
+ * @param {boolean} [allowUndefined=true]
  * @returns {boolean}
  */
-export function isValidTarget (target, allowUndefined = true) {
-  /** target can be undefined to support legacy/default behaviors */
-  if (target === undefined && allowUndefined) return true
-  /** required values */
+export function isValidTarget (target) {
+  /** target can be undefined to support legacy/default behaviors - main agent does not supply a target */
+  if (target === undefined) return true
+  /** if not undefined, we require specific values */
   return !!target?.licenseKey && !!target?.applicationID
 }
 

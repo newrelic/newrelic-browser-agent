@@ -8,7 +8,6 @@ import * as runtimeModule from '../../src/common/constants/runtime'
 import * as asyncApiModule from '../../src/loaders/api/apiAsync'
 import * as windowLoadModule from '../../src/common/window/load'
 import * as handleModule from '../../src/common/event-emitter/handle'
-import * as logUtilsModule from '../../src/features/logging/shared/utils'
 
 import { SR_EVENT_EMITTER_TYPES } from '../../src/features/session_replay/constants'
 import { setupAgent } from './setup-agent'
@@ -17,12 +16,10 @@ let entityGuid
 describe('setAPI', () => {
   let agent = setupAgent()
 
-  beforeEach(() => {
+  beforeEach(async () => {
     console.debug = jest.fn()
     entityGuid = faker.string.uuid()
-    jest.spyOn(handleModule, 'handle').mockImplementation((type, args, ctx, group, ee) => {
-      if (type === 'api-pve') args[0]({ app: { agents: [{ entityGuid }] }, log: 2 })
-    })
+    jest.spyOn(handleModule, 'handle')
     jest.spyOn(agent.ee, 'emit')
   })
 
@@ -555,31 +552,43 @@ describe('setAPI', () => {
 
   describe('register', () => {
     let apiInterface, licenseKey, applicationID
+    let gotApiSendRumCall = false
 
-    const expectSM = (tag) => expect(handleModule.handle).toHaveBeenCalledWith(
-      SUPPORTABILITY_METRIC_CHANNEL,
-      [tag],
-      undefined,
-      FEATURE_NAMES.metrics,
-      agent.ee
-    )
-    const expectApiPVE = (target) => expect(handleModule.handle).toHaveBeenCalledWith(
-      'api-pve',
-      [expect.any(Function), expect.any(Object), target],
-      undefined,
-      FEATURE_NAMES.pageViewEvent,
-      agent.ee
-    )
+    const expectHandle = (type, args, count = 1) => {
+      expect(handleModule.handle.mock.calls.filter(call => {
+        return call[0] === type && !!call[1].find(arg => arg === args)
+      }).length).toEqual(count)
+    }
+
+    const expectApiSendRum = (val = true) => {
+      expect(gotApiSendRumCall).toEqual(val)
+    }
 
     beforeEach(async () => {
       licenseKey = faker.string.uuid()
       applicationID = faker.string.uuid()
       apiInterface = setAPI(agent, true)
       await new Promise(process.nextTick)
+
+      agent.ee.on('api-send-rum', () => {
+        gotApiSendRumCall = true
+        setTimeout(() => agent.ee.emit('entity-added', [{
+          entityGuid,
+          applicationID,
+          licenseKey
+        }]), 100)
+      })
+    })
+    afterEach(() => {
+      gotApiSendRumCall = false
     })
 
-    test('should return api object', () => {
+    test('should return api object', async () => {
       const myApi = apiInterface.register({ licenseKey, applicationID })
+
+      expectApiSendRum()
+
+      await myApi.metadata.connected
 
       expect(myApi).toMatchObject({
         noticeError: expect.any(Function),
@@ -590,7 +599,8 @@ describe('setAPI', () => {
         setApplicationVersion: expect.any(Function),
         metadata: {
           customAttributes: {},
-          target: { licenseKey, applicationID, entityGuid }
+          target: { licenseKey, applicationID, entityGuid },
+          connected: expect.any(Promise)
         }
       })
     })
@@ -598,6 +608,7 @@ describe('setAPI', () => {
     ;[{ applicationID }, { licenseKey }].forEach(opts => {
       test('should warn and not work if invalid target', () => {
         let myApi = apiInterface.register(opts)
+        expectApiSendRum(false)
         expect(console.debug).toHaveBeenCalledWith('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#47', opts)
         myApi.addPageAction()
         myApi.noticeError()
@@ -606,19 +617,22 @@ describe('setAPI', () => {
       })
     })
 
-    test('should not log if rum response lacks entity guid', () => {
-      jest.spyOn(handleModule, 'handle').mockImplementation((type, args, ctx, group, ee) => {
-        if (type === 'api-pve') args[0]({ app: { agents: [{ entityGuid: undefined }] }, log: 2 })
-      })
-      jest.spyOn(logUtilsModule, 'bufferLog')
+    test('should warn and not work if disabled', () => {
+      agent.init.api.allow_registered_children = false
       let myApi = apiInterface.register({ licenseKey, applicationID })
-      myApi.log('test')
-      // should not have emitted
-      expect(logUtilsModule.bufferLog).toHaveBeenCalledTimes(0)
+      expectApiSendRum(false)
+      expect(console.debug.mock.calls.map(call => call[0]).some(tag => tag.includes('#54'))).toEqual(true)
+      myApi.addPageAction()
+      myApi.noticeError()
+      myApi.log()
+      expect(console.debug).toHaveBeenCalledTimes(5)
+      agent.init.api.allow_registered_children = true
     })
 
     test('should update custom attributes', () => {
       const myApi = apiInterface.register({ licenseKey, applicationID, entityGuid })
+
+      expectApiSendRum()
 
       myApi.setCustomAttribute('foo', 'bar')
       expect(myApi.metadata.customAttributes).toEqual({ foo: 'bar' })
@@ -633,78 +647,134 @@ describe('setAPI', () => {
       expect(myApi.metadata.customAttributes).toEqual({ foo: 'bar2', 'application.version': 'appversion', 'enduser.id': 'userid' })
     })
 
-    test('should call base apis - noticeError', (done) => {
+    test('should duplicate data with config - true', async () => {
+      agent.init.api.duplicate_registered_data = true
       const target = { licenseKey, applicationID }
       const myApi = apiInterface.register(target)
 
-      const err = new Error('test')
-      const customAttrs = { foo: 'bar' }
-
-      myApi.noticeError(err, customAttrs)
-
-      setTimeout(() => {
-        expectSM('API/register/called')
-        expectApiPVE(target)
-        expectSM('API/register/noticeError/called')
-        expectSM('API/noticeError/called')
-        expect(handleModule.handle).toHaveBeenCalledWith(
-          'err',
-          [err, expect.toBeNumber(), false, customAttrs, false, undefined, entityGuid],
-          undefined,
-          FEATURE_NAMES.jserrors,
-          agent.ee
-        )
-        done()
-      }, 100)
-    })
-
-    test('should call base apis - addPageAction', (done) => {
-      const target = { licenseKey, applicationID }
-      const myApi = apiInterface.register(target)
-
-      const customAttrs = { foo: 'bar' }
-
-      myApi.addPageAction('test', customAttrs)
-
-      setTimeout(() => {
-        expectSM('API/register/called')
-        expectApiPVE(target)
-        expectSM('API/register/addPageAction/called')
-        expectSM('API/addPageAction/called')
-        expect(handleModule.handle).toHaveBeenCalledWith(
-          'api-addPageAction',
-          [expect.any(Number), 'test', customAttrs, entityGuid],
-          null,
-          FEATURE_NAMES.genericEvents,
-          agent.ee
-        )
-        done()
-      }, 100)
-    })
-
-    test('should call base apis - addPageAction', (done) => {
-      const target = { licenseKey, applicationID }
-      const myApi = apiInterface.register(target)
+      expectApiSendRum()
 
       const customAttrs = { foo: 'bar' }
 
       myApi.log('test', { customAttributes: customAttrs })
 
-      setTimeout(() => {
-        expectSM('API/register/called')
-        expectApiPVE(target)
-        expectSM('API/register/log/called')
-        expectSM('API/log/called')
-        expectSM('API/logging/info/called')
-        expect(handleModule.handle).toHaveBeenCalledWith(
-          'log',
-          [expect.any(Number), 'test', customAttrs, 'INFO', entityGuid],
-          undefined,
-          FEATURE_NAMES.logging,
-          agent.ee
-        )
-        done()
-      }, 100)
+      await myApi.metadata.connected
+      await new Promise(process.nextTick)
+
+      expectHandle('storeSupportabilityMetrics', 'API/register/called', 1)
+      expectHandle('storeSupportabilityMetrics', 'API/register/log/called', 1)
+      expectHandle('storeSupportabilityMetrics', 'API/log/called', 2)
+      expectHandle('storeSupportabilityMetrics', 'API/logging/info/called', 2)
+      expectHandle('log', 'test', 2)
+
+      agent.init.api.duplicate_registered_data = false
+    })
+
+    test('should duplicate data with config - matching entity guid', async () => {
+      agent.init.api.duplicate_registered_data = [entityGuid]
+      const target = { licenseKey, applicationID }
+      const myApi = apiInterface.register(target)
+
+      expectApiSendRum()
+
+      const customAttrs = { foo: 'bar' }
+
+      myApi.log('test', { customAttributes: customAttrs })
+
+      await myApi.metadata.connected
+      await new Promise(process.nextTick)
+
+      expectHandle('storeSupportabilityMetrics', 'API/register/called', 1)
+      expectHandle('storeSupportabilityMetrics', 'API/register/log/called', 1)
+      expectHandle('storeSupportabilityMetrics', 'API/log/called', 2)
+      expectHandle('storeSupportabilityMetrics', 'API/logging/info/called', 2)
+      expectHandle('log', 'test', 2)
+
+      agent.init.api.duplicate_registered_data = false
+    })
+
+    test('should NOT duplicate data with config - non-matching entity guid', async () => {
+      agent.init.api.duplicate_registered_data = [faker.string.uuid()]
+      const target = { licenseKey, applicationID }
+      const myApi = apiInterface.register(target)
+
+      expectApiSendRum()
+
+      const customAttrs = { foo: 'bar' }
+
+      myApi.log('test', { customAttributes: customAttrs })
+
+      await myApi.metadata.connected
+      await new Promise(process.nextTick)
+
+      expectHandle('storeSupportabilityMetrics', 'API/register/called', 1)
+      expectHandle('storeSupportabilityMetrics', 'API/register/log/called', 1)
+      expectHandle('storeSupportabilityMetrics', 'API/log/called', 1)
+      expectHandle('storeSupportabilityMetrics', 'API/logging/info/called', 1)
+      expectHandle('log', 'test', 1)
+
+      agent.init.api.duplicate_registered_data = false
+    })
+
+    describe('noticeError', () => {
+      test('should call base apis', async () => {
+        const target = { licenseKey, applicationID }
+        const myApi = apiInterface.register(target)
+
+        expectApiSendRum()
+
+        const err = new Error('test')
+        const customAttrs = { foo: 'bar' }
+
+        myApi.noticeError(err, customAttrs)
+
+        await myApi.metadata.connected
+        expectHandle('storeSupportabilityMetrics', 'API/register/called')
+        expectHandle('storeSupportabilityMetrics', 'API/register/noticeError/called')
+        expectHandle('storeSupportabilityMetrics', 'API/noticeError/called')
+        expectHandle('err', err)
+      })
+    })
+
+    describe('addPageAction', () => {
+      test('should call base apis', async () => {
+        const target = { licenseKey, applicationID }
+        const myApi = apiInterface.register(target)
+
+        expectApiSendRum()
+
+        const customAttrs = { foo: 'bar' }
+
+        myApi.addPageAction('test', customAttrs)
+
+        await myApi.metadata.connected
+
+        expectHandle('storeSupportabilityMetrics', 'API/register/called')
+        expectHandle('storeSupportabilityMetrics', 'API/register/addPageAction/called')
+        expectHandle('storeSupportabilityMetrics', 'API/addPageAction/called')
+        expectHandle('api-addPageAction', 'test')
+      })
+    })
+
+    describe('log', () => {
+      test('should call base apis', async () => {
+        const target = { licenseKey, applicationID }
+        const myApi = apiInterface.register(target)
+
+        expectApiSendRum()
+
+        const customAttrs = { foo: 'bar' }
+
+        myApi.log('test', { customAttributes: customAttrs })
+
+        await myApi.metadata.connected
+
+        expectHandle('storeSupportabilityMetrics', 'API/register/called')
+        expectHandle('storeSupportabilityMetrics', 'API/register/log/called')
+        expectHandle('storeSupportabilityMetrics', 'API/log/called')
+        expectHandle('storeSupportabilityMetrics', 'API/logging/info/called')
+        expectHandle('log', 'test')
+      })
     })
   })
 
@@ -726,7 +796,8 @@ describe('setAPI', () => {
         myLoggerPackage.myObservedLogger('test1')
 
         expect(myLoggerPackage.myObservedLogger).toHaveBeenCalled()
-        expect(agent.ee.emit).toHaveBeenCalledTimes(3) // drain, start, end
+
+        expect(agent.ee.emit).toHaveBeenCalledTimes(4) // drain, wrapLogger SM, start, end
 
         const endEmit = agent.ee.emit.mock.calls.at(-1)
         expect(endEmit[0]).toEqual('wrap-logger-end')
@@ -737,7 +808,7 @@ describe('setAPI', () => {
         myLoggerPackage.myUnobservedLogger('test1')
 
         expect(myLoggerPackage.myUnobservedLogger).toHaveBeenCalled()
-        expect(agent.ee.emit).toHaveBeenCalledTimes(3) // still at 3 from last call
+        expect(agent.ee.emit).toHaveBeenCalledTimes(4) // still at 4 from last call
       })
 
       test('should emit events for calls by wrapped function - specified', () => {
@@ -751,7 +822,7 @@ describe('setAPI', () => {
         myLoggerPackage[randomMethodName]('test1')
 
         expect(myLoggerPackage[randomMethodName]).toHaveBeenCalled()
-        expect(agent.ee.emit).toHaveBeenCalledTimes(3) // drain, start, end
+        expect(agent.ee.emit).toHaveBeenCalledTimes(4) // drain, wrapLogger SM, start, end
 
         const endEmit = agent.ee.emit.mock.calls.at(-1)
         expect(endEmit[0]).toEqual('wrap-logger-end')
@@ -770,7 +841,7 @@ describe('setAPI', () => {
         myLoggerPackage[randomMethodName]('test1', { test2: 2 }, ['test3'], true, 1)
 
         expect(myLoggerPackage[randomMethodName]).toHaveBeenCalled()
-        expect(agent.ee.emit).toHaveBeenCalledTimes(3) // drain, start, end
+        expect(agent.ee.emit).toHaveBeenCalledTimes(4) // drain, wrapLogger SM, start, end
 
         const endEmit = agent.ee.emit.mock.calls.at(-1)
         expect(endEmit[0]).toEqual('wrap-logger-end')

@@ -12,26 +12,32 @@
  window.app1 = newrelic.register({
     licenseKey: NREUM.info.licenseKey, // testing server is set up to only accept this licenseKey
     applicationID: 1, // reports to app 1
-  }).on('ready', ({metadata}) => {
-    var xhr = new XMLHttpRequest()
-    xhr.open('GET', '/json')
-    xhr.setRequestHeader('X-Newrelic-Entity-Guid', metadata.target.entityGuid)
-    xhr.send()
-  }).on('error', (err) => {
-    newrelic.noticeError(err)
   })
+  window.app1.metadata.connected
+    .then(({metadata}) => {
+      var xhr = new XMLHttpRequest()
+      xhr.open('GET', '/json')
+      xhr.setRequestHeader('X-Newrelic-Entity-Guid', metadata.target.entityGuid)
+      xhr.send()
+    })
+    .catch((err) => {
+      newrelic.noticeError(err)
+    })
 
   window.app2 = newrelic.register({
     licenseKey: NREUM.info.licenseKey, // testing server is set up to only accept this licenseKey
     applicationID: 2, // reports to app 2
-  }).on('ready', ({metadata}) => {
-    var xhr = new XMLHttpRequest()
-    xhr.open('GET', '/json')
-    xhr.setRequestHeader('X-Newrelic-Entity-Guid', metadata.target.entityGuid)
-    xhr.send()
-  }).on('error', (err) => {
-    newrelic.noticeError(err)
   })
+  window.app2.metadata.connected
+    .then(({metadata}) => {
+      var xhr = new XMLHttpRequest()
+      xhr.open('GET', '/json')
+      xhr.setRequestHeader('X-Newrelic-Entity-Guid', metadata.target.entityGuid)
+      xhr.send()
+    })
+    .catch((err) => {
+      newrelic.noticeError(err)
+    })
 </script>
 </body>
 </html>

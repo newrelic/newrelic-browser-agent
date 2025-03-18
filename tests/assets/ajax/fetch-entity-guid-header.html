@@ -13,30 +13,37 @@
   window.app1 = newrelic.register({
     licenseKey: NREUM.info.licenseKey,
     applicationID: 1, // first arg case reports to app 1
-  }).on('ready', ({metadata}) => {
-    const request = new Request('/json', {
-      headers: {
-        'X-Newrelic-Entity-Guid': metadata.target.entityGuid
-      }
-    })
-    fetch(request)
-  }).on('error', (err) => {
-    newrelic.noticeError(err)
   })
+  
+  window.app1.metadata.connected
+    .then(({metadata}) => {
+      const request = new Request('/json', {
+        headers: {
+          'X-Newrelic-Entity-Guid': metadata.target.entityGuid
+        }
+      })
+      fetch(request)
+    }).catch((err) => {
+      newrelic.noticeError(err)
+    })
 
   // Give entity guid as header in second argument of fetch
   window.app2 = newrelic.register({
     licenseKey: NREUM.info.licenseKey,
     applicationID: 2, // second arg case reports to app 2
-  }).on('ready', ({metadata}) => {
-    fetch('/json', {
-      headers: {
-        'X-Newrelic-Entity-Guid': metadata.target.entityGuid
-      }
-    })
-  }).on('error', (err) => {
-    newrelic.noticeError(err)
   })
+  
+  window.app2.metadata.connected
+    .then(({metadata}) => {
+      fetch('/json', {
+        headers: {
+          'X-Newrelic-Entity-Guid': metadata.target.entityGuid
+        }
+      })
+    })
+    .catch((err) => {
+      newrelic.noticeError(err)
+    })
 </script>
 </body>
 </html>

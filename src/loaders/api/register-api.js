@@ -92,8 +92,12 @@ export function buildRegisterApi (agentRef, handlers, target) {
     try {
       await connected
       // target should be decorated with entityGuid by the rum resp at this point
-      if (agentRef.init.api.duplicate_registered_data) { methodToCall(...args, undefined, timestamp) } // also report to container by providing undefined target
-      methodToCall(...args, target.entityGuid, timestamp) // report to target
+      const shouldDuplicate = agentRef.init.api.duplicate_registered_data
+      if (shouldDuplicate === true || (Array.isArray(shouldDuplicate) && shouldDuplicate.includes(target.entityGuid))) {
+        // also report to container by providing undefined target
+        methodToCall(...args, undefined, timestamp)
+      }
+      methodToCall(...args, target.entityGuid, timestamp) // always report to target
     } catch (err) {
       warn(49, err)
     }

@@ -554,7 +554,11 @@ describe('setAPI', () => {
     let apiInterface, licenseKey, applicationID
     let gotApiSendRumCall = false
 
-    const expectHandle = (type, args) => expect(handleModule.handle.mock.calls.find(call => call[0] === type && !!call[1].find(arg => arg === args))).toBeTruthy()
+    const expectHandle = (type, args, count = 1) => {
+      expect(handleModule.handle.mock.calls.filter(call => {
+        return call[0] === type && !!call[1].find(arg => arg === args)
+      }).length).toEqual(count)
+    }
 
     const expectApiSendRum = (val = true) => {
       expect(gotApiSendRumCall).toEqual(val)
@@ -613,6 +617,18 @@ describe('setAPI', () => {
       })
     })
 
+    test('should warn and not work if disabled', () => {
+      agent.init.api.allow_registered_children = false
+      let myApi = apiInterface.register({ licenseKey, applicationID })
+      expectApiSendRum(false)
+      expect(console.debug.mock.calls.map(call => call[0]).some(tag => tag.includes('#54'))).toEqual(true)
+      myApi.addPageAction()
+      myApi.noticeError()
+      myApi.log()
+      expect(console.debug).toHaveBeenCalledTimes(5)
+      agent.init.api.allow_registered_children = true
+    })
+
     test('should update custom attributes', () => {
       const myApi = apiInterface.register({ licenseKey, applicationID, entityGuid })
 
@@ -631,43 +647,8 @@ describe('setAPI', () => {
       expect(myApi.metadata.customAttributes).toEqual({ foo: 'bar2', 'application.version': 'appversion', 'enduser.id': 'userid' })
     })
 
-    test('should call base apis - noticeError', async () => {
-      const target = { licenseKey, applicationID }
-      const myApi = apiInterface.register(target)
-
-      expectApiSendRum()
-
-      const err = new Error('test')
-      const customAttrs = { foo: 'bar' }
-
-      myApi.noticeError(err, customAttrs)
-
-      await myApi.metadata.connected
-      expectHandle('storeSupportabilityMetrics', 'API/register/called')
-      expectHandle('storeSupportabilityMetrics', 'API/register/noticeError/called')
-      expectHandle('storeSupportabilityMetrics', 'API/noticeError/called')
-      expectHandle('err', err)
-    })
-
-    test('should call base apis - addPageAction', async () => {
-      const target = { licenseKey, applicationID }
-      const myApi = apiInterface.register(target)
-
-      expectApiSendRum()
-
-      const customAttrs = { foo: 'bar' }
-
-      myApi.addPageAction('test', customAttrs)
-
-      await myApi.metadata.connected
-
-      expectHandle('storeSupportabilityMetrics', 'API/register/called')
-      expectHandle('storeSupportabilityMetrics', 'API/register/addPageAction/called')
-      expectHandle('storeSupportabilityMetrics', 'API/addPageAction/called')
-      expectHandle('api-addPageAction', 'test')
-    })
-
-    test('should call base apis - log', async () => {
+    test('should duplicate data with config - true', async () => {
+      agent.init.api.duplicate_registered_data = true
       const target = { licenseKey, applicationID }
       const myApi = apiInterface.register(target)
 
@@ -678,12 +659,122 @@ describe('setAPI', () => {
       myApi.log('test', { customAttributes: customAttrs })
 
       await myApi.metadata.connected
+      await new Promise(process.nextTick)
 
-      expectHandle('storeSupportabilityMetrics', 'API/register/called')
-      expectHandle('storeSupportabilityMetrics', 'API/register/log/called')
-      expectHandle('storeSupportabilityMetrics', 'API/log/called')
-      expectHandle('storeSupportabilityMetrics', 'API/logging/info/called')
-      expectHandle('log', 'test')
+      expectHandle('storeSupportabilityMetrics', 'API/register/called', 1)
+      expectHandle('storeSupportabilityMetrics', 'API/register/log/called', 1)
+      expectHandle('storeSupportabilityMetrics', 'API/log/called', 2)
+      expectHandle('storeSupportabilityMetrics', 'API/logging/info/called', 2)
+      expectHandle('log', 'test', 2)
+
+      agent.init.api.duplicate_registered_data = false
+    })
+
+    test('should duplicate data with config - matching entity guid', async () => {
+      agent.init.api.duplicate_registered_data = [entityGuid]
+      const target = { licenseKey, applicationID }
+      const myApi = apiInterface.register(target)
+
+      expectApiSendRum()
+
+      const customAttrs = { foo: 'bar' }
+
+      myApi.log('test', { customAttributes: customAttrs })
+
+      await myApi.metadata.connected
+      await new Promise(process.nextTick)
+
+      expectHandle('storeSupportabilityMetrics', 'API/register/called', 1)
+      expectHandle('storeSupportabilityMetrics', 'API/register/log/called', 1)
+      expectHandle('storeSupportabilityMetrics', 'API/log/called', 2)
+      expectHandle('storeSupportabilityMetrics', 'API/logging/info/called', 2)
+      expectHandle('log', 'test', 2)
+
+      agent.init.api.duplicate_registered_data = false
+    })
+
+    test('should NOT duplicate data with config - non-matching entity guid', async () => {
+      agent.init.api.duplicate_registered_data = [faker.string.uuid()]
+      const target = { licenseKey, applicationID }
+      const myApi = apiInterface.register(target)
+
+      expectApiSendRum()
+
+      const customAttrs = { foo: 'bar' }
+
+      myApi.log('test', { customAttributes: customAttrs })
+
+      await myApi.metadata.connected
+      await new Promise(process.nextTick)
+
+      expectHandle('storeSupportabilityMetrics', 'API/register/called', 1)
+      expectHandle('storeSupportabilityMetrics', 'API/register/log/called', 1)
+      expectHandle('storeSupportabilityMetrics', 'API/log/called', 1)
+      expectHandle('storeSupportabilityMetrics', 'API/logging/info/called', 1)
+      expectHandle('log', 'test', 1)
+
+      agent.init.api.duplicate_registered_data = false
+    })
+
+    describe('noticeError', () => {
+      test('should call base apis', async () => {
+        const target = { licenseKey, applicationID }
+        const myApi = apiInterface.register(target)
+
+        expectApiSendRum()
+
+        const err = new Error('test')
+        const customAttrs = { foo: 'bar' }
+
+        myApi.noticeError(err, customAttrs)
+
+        await myApi.metadata.connected
+        expectHandle('storeSupportabilityMetrics', 'API/register/called')
+        expectHandle('storeSupportabilityMetrics', 'API/register/noticeError/called')
+        expectHandle('storeSupportabilityMetrics', 'API/noticeError/called')
+        expectHandle('err', err)
+      })
+    })
+
+    describe('addPageAction', () => {
+      test('should call base apis', async () => {
+        const target = { licenseKey, applicationID }
+        const myApi = apiInterface.register(target)
+
+        expectApiSendRum()
+
+        const customAttrs = { foo: 'bar' }
+
+        myApi.addPageAction('test', customAttrs)
+
+        await myApi.metadata.connected
+
+        expectHandle('storeSupportabilityMetrics', 'API/register/called')
+        expectHandle('storeSupportabilityMetrics', 'API/register/addPageAction/called')
+        expectHandle('storeSupportabilityMetrics', 'API/addPageAction/called')
+        expectHandle('api-addPageAction', 'test')
+      })
+    })
+
+    describe('log', () => {
+      test('should call base apis', async () => {
+        const target = { licenseKey, applicationID }
+        const myApi = apiInterface.register(target)
+
+        expectApiSendRum()
+
+        const customAttrs = { foo: 'bar' }
+
+        myApi.log('test', { customAttributes: customAttrs })
+
+        await myApi.metadata.connected
+
+        expectHandle('storeSupportabilityMetrics', 'API/register/called')
+        expectHandle('storeSupportabilityMetrics', 'API/register/log/called')
+        expectHandle('storeSupportabilityMetrics', 'API/log/called')
+        expectHandle('storeSupportabilityMetrics', 'API/logging/info/called')
+        expectHandle('log', 'test')
+      })
     })
   })
 

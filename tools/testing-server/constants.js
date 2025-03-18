@@ -56,8 +56,8 @@ const enabled = true; const autoStart = true
 const enabledFeature = { enabled, autoStart }
 module.exports.defaultInitBlock = {
   ajax: { deny_list: [], block_internal: false, ...enabledFeature },
+  api: { duplicate_registered_data: false },
   distributed_tracing: {},
-  external: { capture_registered_data: false },
   feature_flags: [],
   generic_events: enabledFeature,
   harvest: { interval: 5 },

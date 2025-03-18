@@ -76,7 +76,7 @@ export function buildRegisterApi (agentRef, handlers, target) {
 
   /**
      * The reporter method that will be used to report the data to the container agent's API method.
-     * If the external.capture_registered_data configuration value is set to true, the data will be reported to BOTH the container and the external target
+     * If the api.duplicate_registered_data configuration value is set to true, the data will be reported to BOTH the container and the external target
      * @param {*} methodToCall the container agent's API method to call
      * @param {*} args the arguments to supply to the container agent's API method
      * @param {string} targetEntityGuid the target entity guid, which looks up the target to report the data to from the entity manager. If undefined, will report to the container agent's target.
@@ -89,7 +89,7 @@ export function buildRegisterApi (agentRef, handlers, target) {
     try {
       await connected
       // target should be decorated with entityGuid by the rum resp at this point
-      if (agentRef.init.external.capture_registered_data) { methodToCall(...args, undefined, timestamp) } // also report to container by providing undefined target
+      if (agentRef.init.api.duplicate_registered_data) { methodToCall(...args, undefined, timestamp) } // also report to container by providing undefined target
       methodToCall(...args, target.entityGuid, timestamp) // report to target
     } catch (err) {
       warn(49, err)

@@ -124,6 +124,7 @@ const model = () => {
   }
   return {
     ajax: { deny_list: undefined, block_internal: true, enabled: true, autoStart: true },
+    api: { duplicate_registered_data: false },
     distributed_tracing: {
       enabled: undefined,
       exclude_newrelic_header: undefined,
@@ -131,7 +132,6 @@ const model = () => {
       cors_use_tracecontext_headers: undefined,
       allowed_origins: undefined
     },
-    external: { capture_registered_data: false },
     get feature_flags () { return hiddenState.feature_flags },
     set feature_flags (val) { hiddenState.feature_flags = val },
     generic_events: { enabled: true, autoStart: true },

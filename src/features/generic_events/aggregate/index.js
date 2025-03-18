@@ -14,7 +14,6 @@ import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { applyFnToProps } from '../../../common/util/traverse'
 import { UserActionsAggregator } from './user-actions/user-actions-aggregator'
 import { isIFrameWindow } from '../../../common/dom/iframe'
-import { isValidTarget } from '../../../common/util/target'
 import { isPureObject } from '../../../common/util/type-check'
 
 export class Aggregate extends AggregateBase {
@@ -44,7 +43,7 @@ export class Aggregate extends AggregateBase {
 
       if (agentRef.init.page_action.enabled) {
         registerHandler('api-addPageAction', (timestamp, name, attributes, targetEntityGuid) => {
-          if (!isValidTarget(this.agentRef.runtime.entityManager.get(targetEntityGuid))) return warn(47, targetEntityGuid)
+          if (!this.agentRef.runtime.entityManager.get(targetEntityGuid)) return warn(55, this.featureName)
           this.addEvent({
             ...attributes,
             eventType: 'PageAction',

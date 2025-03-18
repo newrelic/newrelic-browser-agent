@@ -19,7 +19,7 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { now } from '../../../common/timing/now'
 import { applyFnToProps } from '../../../common/util/traverse'
 import { evaluateInternalError } from './internal-errors'
-import { isContainerAgentTarget, isValidTarget } from '../../../common/util/target'
+import { isContainerAgentTarget } from '../../../common/util/target'
 import { warn } from '../../../common/util/console'
 
 /**
@@ -115,7 +115,7 @@ export class Aggregate extends AggregateBase {
   storeError (err, time, internal, customAttributes, hasReplay, swallowReason, targetEntityGuid) {
     if (!err) return
     const target = this.agentRef.runtime.entityManager.get(targetEntityGuid)
-    if (!isValidTarget(target)) return warn(47, targetEntityGuid)
+    if (!target) return warn(55, this.featureName)
     // are we in an interaction
     time = time || now()
     let filterOutput

@@ -109,3 +109,5 @@
 `An experimental feature is being used. Support can not be offered for issues`
 ### 54
 `Register API has been disabled on the container agent`
+### 55
+`Could not find a matching entity to store data`

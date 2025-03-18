@@ -27,7 +27,7 @@ export function buildRegisterApi (agentRef, handlers, target) {
 
   let invalidTargetResponse
   if (!agentRef.init.api.allow_registered_children) invalidTargetResponse = () => warn(54)
-  if (!isValidTarget(target, false)) invalidTargetResponse = () => warn(47, target)
+  if (!target || !isValidTarget(target)) invalidTargetResponse = () => warn(47, target)
   if (invalidTargetResponse) {
     invalidTargetResponse()
     return {

@@ -12,6 +12,7 @@ import { activatedFeatures } from '../../common/util/feature-flags'
 import { isWorkerScope } from '../../common/constants/runtime'
 import { redefinePublicPath } from './public-path'
 import { ee } from '../../common/event-emitter/contextual-ee'
+import { dispatchGlobalEvent } from '../../common/dispatch/global-event'
 
 let alreadySetOnce = false // the configure() function can run multiple times in agent lifecycle
 
@@ -68,5 +69,17 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
 
   if (agent.api === undefined) agent.api = setAPI(agent, forceDrain, agent.runSoftNavOverSpa)
   if (agent.exposed === undefined) agent.exposed = exposed
+
+  if (!alreadySetOnce) {
+    dispatchGlobalEvent({
+      agentIdentifier: agent.agentIdentifier,
+      loaded: !!activatedFeatures?.[agent.agentIdentifier],
+      type: 'lifecycle',
+      name: 'initialize',
+      feature: undefined,
+      data: { init: updatedInit, info, loader_config, runtime }
+    })
+  }
+
   alreadySetOnce = true
 }

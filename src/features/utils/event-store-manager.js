@@ -2,6 +2,8 @@
  * Copyright 2020-2025 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
+import { dispatchGlobalEvent } from '../../common/dispatch/global-event'
+import { activatedFeatures } from '../../common/util/feature-flags'
 
 /**
  * This layer allows multiple browser entity apps, or "target", to each have their own segregated storage instance.
@@ -12,11 +14,13 @@ export class EventStoreManager {
    * @param {object} agentRef - reference to base agent class
    * @param {EventBuffer|EventAggregator} storageClass - the type of storage to use in this manager; 'EventBuffer' (1), 'EventAggregator' (2)
    */
-  constructor (entityManager, storageClass, defaultEntityGuid) {
-    this.entityManager = entityManager
+  constructor (agentRef, storageClass, defaultEntityGuid, featureName) {
+    this.agentRef = agentRef
+    this.entityManager = agentRef.runtime.entityManager
     this.StorageClass = storageClass
     this.appStorageMap = new Map()
     this.defaultEntity = this.#getEventStore(defaultEntityGuid)
+    this.featureName = featureName
   }
 
   /**
@@ -54,6 +58,14 @@ export class EventStoreManager {
    * @returns {boolean} True if the event was successfully added
    */
   add (event, targetEntityGuid) {
+    dispatchGlobalEvent({
+      agentIdentifier: this.agentRef.agentIdentifier,
+      loaded: !!activatedFeatures?.[this.agentRef.agentIdentifier],
+      type: 'data',
+      name: 'buffer',
+      feature: this.featureName,
+      data: event
+    })
     return this.#getEventStore(targetEntityGuid).add(event)
   }
 

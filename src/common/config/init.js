@@ -124,7 +124,10 @@ const model = () => {
   }
   return {
     ajax: { deny_list: undefined, block_internal: true, enabled: true, autoStart: true },
-    api: { duplicate_registered_data: false },
+    api: {
+      allow_registered_children: true,
+      duplicate_registered_data: false
+    },
     distributed_tracing: {
       enabled: undefined,
       exclude_newrelic_header: undefined,

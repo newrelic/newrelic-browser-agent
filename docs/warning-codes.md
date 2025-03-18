@@ -107,3 +107,5 @@
 `Did not recieve a valid entityGuid from connection response`
 ### 53 
 `An experimental feature is being used. Support can not be offered for issues`
+### 54
+`Register API has been disabled on the container agent`

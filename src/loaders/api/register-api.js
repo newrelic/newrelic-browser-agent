@@ -24,8 +24,11 @@ import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
 export function buildRegisterApi (agentRef, handlers, target) {
   const attrs = {}
   warn(53, 'newrelic.register')
-  if (!isValidTarget(target, false)) {
-    const invalidTargetResponse = () => warn(47, target)
+
+  let invalidTargetResponse
+  if (!agentRef.init.api.allow_registered_children) invalidTargetResponse = () => warn(54)
+  if (!isValidTarget(target, false)) invalidTargetResponse = () => warn(47, target)
+  if (invalidTargetResponse) {
     invalidTargetResponse()
     return {
       addPageAction: invalidTargetResponse,

@@ -41,6 +41,7 @@ test('init props exist and return expected defaults', () => {
     enabled: true
   })
   expect(config.api).toEqual({
+    allow_registered_children: true,
     duplicate_registered_data: false
   })
   expect(config.distributed_tracing).toEqual({

@@ -25,25 +25,10 @@ export function buildRegisterApi (agentRef, handlers, target) {
   const attrs = {}
   warn(53, 'newrelic.register')
 
-  let invalidTargetResponse
-  if (!agentRef.init.api.allow_registered_children) invalidTargetResponse = () => warn(54)
-  if (!target || !isValidTarget(target)) invalidTargetResponse = () => warn(47, target)
-  if (invalidTargetResponse) {
-    invalidTargetResponse()
-    return {
-      addPageAction: invalidTargetResponse,
-      log: invalidTargetResponse,
-      noticeError: invalidTargetResponse,
-      setApplicationVersion: invalidTargetResponse,
-      setCustomAttribute: invalidTargetResponse,
-      setUserId: invalidTargetResponse,
-      /** metadata */
-      metadata: {
-        customAttributes: attrs,
-        target
-      }
-    }
-  }
+  let invalidApiResponse
+  if (!agentRef.init.api.allow_registered_children) invalidApiResponse = () => warn(54)
+  if (!target || !isValidTarget(target)) invalidApiResponse = () => warn(47, target)
+  if (invalidApiResponse) invalidApiResponse()
 
   /**
    * Wait for all needed connections for the registered child to be ready to report data
@@ -78,7 +63,7 @@ export function buildRegisterApi (agentRef, handlers, target) {
   })
 
   /**
-     * The reporter method that will be used to report the data to the container agent's API method.
+     * The reporter method that will be used to report the data to the container agent's API method. If invalid, will log a warning and not execute.
      * If the api.duplicate_registered_data configuration value is set to true, the data will be reported to BOTH the container and the external target
      * @param {*} methodToCall the container agent's API method to call
      * @param {*} args the arguments to supply to the container agent's API method
@@ -86,6 +71,7 @@ export function buildRegisterApi (agentRef, handlers, target) {
      * @returns
      */
   const report = async (methodToCall, args, target) => {
+    if (invalidApiResponse) return invalidApiResponse()
     /** set the timestamp before the async part of waiting for the rum response for better accuracy */
     const timestamp = now()
     handle(SUPPORTABILITY_METRIC_CHANNEL, [`API/register/${methodToCall.name}/called`], undefined, FEATURE_NAMES.metrics, agentRef.ee)

@@ -219,7 +219,7 @@ export class Aggregate extends AggregateBase {
 
     const recorderEvents = this.recorder.getEvents()
     // get the event type and use that to trigger another harvest if needed
-    if (!recorderEvents.events.length || (this.mode !== MODE.FULL) || this.blocked) return
+    if (!recorderEvents.events.length) return
 
     const payload = this.getHarvestContents(recorderEvents)
     if (!payload.body.length) {

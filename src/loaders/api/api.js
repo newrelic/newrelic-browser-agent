@@ -32,13 +32,13 @@ export function setTopLevelCallers () {
   function caller (fnName, ...args) {
     let returnVals = []
     Object.values(nr.initializedAgents).forEach(val => {
-      if (!val || !val.api) {
+      if (!val || !val.api || !val.runtime) {
         warn(38, fnName)
-      } else if (val.exposed && val.api[fnName]) {
+      } else if (val.exposed && val.api[fnName] && val.runtime.loaderType !== 'micro-agent') {
         returnVals.push(val.api[fnName](...args))
       }
     })
-    return returnVals.length > 1 ? returnVals : returnVals[0]
+    return returnVals[0]
   }
 }
 

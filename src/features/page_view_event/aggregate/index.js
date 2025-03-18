@@ -134,7 +134,7 @@ export class Aggregate extends AggregateBase {
     let app, flags
     try {
       ({ app, ...flags } = JSON.parse(responseText))
-      this.processEntity(app.agents, targetApp)
+      this.processEntities(app.agents, targetApp)
     } catch (error) {
       // wont set entity stuff here, if main agent will later abort, if registered agent, nothing will happen
       warn(52, error)
@@ -165,7 +165,7 @@ export class Aggregate extends AggregateBase {
 
     this.drain()
     this.agentRef.runtime.harvester.startTimer()
-    activateFeatures(flags, this.agentRef, targetApp)
+    activateFeatures(flags, this.agentRef)
   }
 
   processEntities (entities, targetApp) {

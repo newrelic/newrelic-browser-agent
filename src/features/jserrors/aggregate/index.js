@@ -186,8 +186,8 @@ export class Aggregate extends AggregateBase {
     var newMetrics = { time }
 
     // Trace sends the error in its payload, and both trace & replay simply listens for any error to occur.
-    const jsErrorEvent = [type, bucketHash, params, newMetrics, customAttributes, targetEntityGuid]
-    handle('trace-jserror', jsErrorEvent, undefined, FEATURE_NAMES.sessionTrace, this.ee)
+    const jsErrorEvent = [type, bucketHash, params, newMetrics, customAttributes]
+    if (this.shouldAllowMainAgentToCapture(targetEntityGuid)) handle('trace-jserror', jsErrorEvent, undefined, FEATURE_NAMES.sessionTrace, this.ee)
     // still send EE events for other features such as above, but stop this one from aggregating internal data
     if (this.blocked) return
 
@@ -196,23 +196,28 @@ export class Aggregate extends AggregateBase {
       params._interactionNodeId = err.__newrelic[this.agentIdentifier].interactionNodeId
     }
 
-    const softNavInUse = Boolean(this.agentRef.features?.[FEATURE_NAMES.softNav])
-    // Note: the following are subject to potential race cond wherein if the other feature aren't fully initialized, it'll be treated as there being no associated interaction.
-    // They each will also tack on their respective properties to the params object as part of the decision flow.
-    if (softNavInUse) handle('jserror', [params, time], undefined, FEATURE_NAMES.softNav, this.ee)
-    else handle('spa-jserror', jsErrorEvent, undefined, FEATURE_NAMES.spa, this.ee)
+    if (this.shouldAllowMainAgentToCapture(targetEntityGuid)) {
+      const softNavInUse = Boolean(this.agentRef.features?.[FEATURE_NAMES.softNav])
+      // Note: the following are subject to potential race cond wherein if the other feature aren't fully initialized, it'll be treated as there being no associated interaction.
+      // They each will also tack on their respective properties to the params object as part of the decision flow.
+      if (softNavInUse) handle('jserror', [params, time], undefined, FEATURE_NAMES.softNav, this.ee)
+      else handle('spa-jserror', jsErrorEvent, undefined, FEATURE_NAMES.spa, this.ee)
 
-    if (params.browserInteractionId && !params._softNavFinished) { // hold onto the error until the in-progress interaction is done, eithered saved or discarded
-      this.bufferedErrorsUnderSpa[params.browserInteractionId] ??= []
-      this.bufferedErrorsUnderSpa[params.browserInteractionId].push(jsErrorEvent)
-    } else if (params._interactionId != null) { // same as above, except tailored for the way old spa does it
-      this.bufferedErrorsUnderSpa[params._interactionId] = this.bufferedErrorsUnderSpa[params._interactionId] || []
-      this.bufferedErrorsUnderSpa[params._interactionId].push(jsErrorEvent)
-    } else {
+      if (params.browserInteractionId && !params._softNavFinished) { // hold onto the error until the in-progress interaction is done, eithered saved or discarded
+        this.bufferedErrorsUnderSpa[params.browserInteractionId] ??= []
+        this.bufferedErrorsUnderSpa[params.browserInteractionId].push(jsErrorEvent)
+      } else if (params._interactionId != null) { // same as above, except tailored for the way old spa does it
+        this.bufferedErrorsUnderSpa[params._interactionId] = this.bufferedErrorsUnderSpa[params._interactionId] || []
+        this.bufferedErrorsUnderSpa[params._interactionId].push(jsErrorEvent)
+      } else {
       // Either there is no interaction (then all these params properties will be undefined) OR there's a related soft navigation that's already completed.
       // The old spa does not look up completed interactions at all, so there's no need to consider it.
-      this.#storeJserrorForHarvest(jsErrorEvent, params.browserInteractionId !== undefined, params._softNavAttributes)
+        this.#storeJserrorForHarvest(jsErrorEvent, params.browserInteractionId !== undefined, params._softNavAttributes)
+      }
     }
+
+    // always add directly if scoped to a sub-entity, the other pathways above will be deterministic if the main agent should procede
+    if (targetEntityGuid) this.#storeJserrorForHarvest([...jsErrorEvent, targetEntityGuid], params.browserInteractionId !== undefined, params._softNavAttributes)
   }
 
   #storeJserrorForHarvest (errorInfoArr, softNavOccurredFinished, softNavCustomAttrs = {}) {
@@ -239,6 +244,15 @@ export class Aggregate extends AggregateBase {
     function setCustom (key, val) {
       allCustomAttrs[key] = (val && typeof val === 'object' ? stringify(val) : val)
     }
+  }
+
+  /**
+  * If the event lacks an entityGuid, the main agent should capture the data. However, the main agent should not capture events if the main agent is not configured to capture data and the data has been scoped to a sub-entity
+  * @param {object} ctx - the context object for the event
+  * @returns {boolean} - whether the main agent should capture the event to its internal target
+  */
+  shouldAllowMainAgentToCapture (entityGuid) {
+    return (!entityGuid || (this.agentRef.init.api.duplicate_registered_data && entityGuid))
   }
 
   // TO-DO: Remove this function when old spa is taken out. #storeJserrorForHarvest handles the work with the softnav feature.

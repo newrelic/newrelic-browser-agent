@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.285.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.284.1...v1.285.0) (2025-03-18)
+
+
+### Features
+
+* Decorate harvest requests with ht (hasTrace) param ([#1409](https://github.com/newrelic/newrelic-browser-agent/issues/1409)) ([b8ed2b0](https://github.com/newrelic/newrelic-browser-agent/commit/b8ed2b0aeef8b8db651ddb8001171f28785c7673))
+* Inspection events ([#1413](https://github.com/newrelic/newrelic-browser-agent/issues/1413)) ([1832562](https://github.com/newrelic/newrelic-browser-agent/commit/1832562f52c1e2e26c49c2855ad1996d6251b803))
+
+
+### Bug Fixes
+
+* Logging mode on session update ([#1417](https://github.com/newrelic/newrelic-browser-agent/issues/1417)) ([3f59afe](https://github.com/newrelic/newrelic-browser-agent/commit/3f59afef8a53848d80f7f32d28302b6b0bcf7d2f))
+* Session Replay text masking for whitespace ([#1416](https://github.com/newrelic/newrelic-browser-agent/issues/1416)) ([97bf326](https://github.com/newrelic/newrelic-browser-agent/commit/97bf32655d6e608ea7248acc680d983b1d1e0eea))
+
 ## [1.284.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.284.0...v1.284.1) (2025-03-11)
 
 

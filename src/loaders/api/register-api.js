@@ -25,10 +25,8 @@ export function buildRegisterApi (agentRef, handlers, target) {
   const attrs = {}
   warn(53, 'newrelic.register')
 
+  /** @type {Function|undefined} a function that is set and reports when APIs are triggered -- warns the customer of the invalid state  */
   let invalidApiResponse
-  if (!agentRef.init.api.allow_registered_children) invalidApiResponse = () => warn(54)
-  if (!target || !isValidTarget(target)) invalidApiResponse = () => warn(47, target)
-  if (invalidApiResponse) invalidApiResponse()
 
   /**
    * Wait for all needed connections for the registered child to be ready to report data
@@ -36,31 +34,37 @@ export function buildRegisterApi (agentRef, handlers, target) {
    * 2. The child to be registered with the main agent (made its own RUM call and got its entity guid)
    * @type {Promise<void>}
    */
-  const connected = new Promise((resolve, reject) => {
-    let mainAgentReady = !!agentRef.runtime.entityManager.get().entityGuid
-    let registrationReady = false
+  let connected
+  if (!agentRef.init.api.allow_registered_children) invalidApiResponse = () => warn(54)
+  if (!target || !isValidTarget(target)) invalidApiResponse = () => warn(47, target)
+  if (invalidApiResponse) invalidApiResponse()
+  else {
+    connected = new Promise((resolve, reject) => {
+      let mainAgentReady = !!agentRef.runtime.entityManager.get().entityGuid
+      let registrationReady = false
 
-    /** if the connect callback doesnt resolve in 15 seconds... reject */
-    const timeout = setTimeout(reject, 15000)
+      /** if the connect callback doesnt resolve in 15 seconds... reject */
+      const timeout = setTimeout(reject, 15000)
 
-    // tell the main agent to send a rum call for this target
-    // when the rum call resolves, it will emit an "entity-added" event, see below
-    agentRef.ee.emit('api-send-rum', [attrs, target])
+      // tell the main agent to send a rum call for this target
+      // when the rum call resolves, it will emit an "entity-added" event, see below
+      agentRef.ee.emit('api-send-rum', [attrs, target])
 
-    // wait for entity events to emit to see when main agent and/or API registration is ready
-    agentRef.ee.on('entity-added', entity => {
-      if (isContainerAgentTarget(entity, agentRef)) mainAgentReady ||= true
-      if (target.licenseKey === entity.licenseKey && target.applicationID === entity.applicationID) {
-        registrationReady = true
-        target.entityGuid = entity.entityGuid
-      }
+      // wait for entity events to emit to see when main agent and/or API registration is ready
+      agentRef.ee.on('entity-added', entity => {
+        if (isContainerAgentTarget(entity, agentRef)) mainAgentReady ||= true
+        if (target.licenseKey === entity.licenseKey && target.applicationID === entity.applicationID) {
+          registrationReady = true
+          target.entityGuid = entity.entityGuid
+        }
 
-      if (mainAgentReady && registrationReady) {
-        clearTimeout(timeout)
-        resolve()
-      }
+        if (mainAgentReady && registrationReady) {
+          clearTimeout(timeout)
+          resolve()
+        }
+      })
     })
-  })
+  }
 
   /**
      * The reporter method that will be used to report the data to the container agent's API method. If invalid, will log a warning and not execute.

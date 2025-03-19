@@ -32,7 +32,7 @@ export function buildRegisterApi (agentRef, handlers, target) {
    * Wait for all needed connections for the registered child to be ready to report data
    * 1. The main agent to be ready (made a RUM call and got its entity guid)
    * 2. The child to be registered with the main agent (made its own RUM call and got its entity guid)
-   * @type {Promise<void>}
+   * @type {Promise<RegisterAPI>}
    */
   let connected
   if (!agentRef.init.api.allow_registered_children) invalidApiResponse = () => warn(54)

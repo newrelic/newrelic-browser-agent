@@ -43,29 +43,34 @@ export function buildRegisterApi (agentRef, handlers, target) {
     connected = Promise.reject(new Error('Failed to connect'))
   } else {
     connected = new Promise((resolve, reject) => {
-      let mainAgentReady = !!agentRef.runtime.entityManager?.get().entityGuid
-      let registrationReady = false
+      try {
+        let mainAgentReady = !!agentRef.runtime.entityManager.get().entityGuid
+        let registrationReady = false
 
-      /** if the connect callback doesnt resolve in 15 seconds... reject */
-      const timeout = setTimeout(() => reject(new Error('Failed to connect - Timeout')), 15000)
+        /** if the connect callback doesnt resolve in 15 seconds... reject */
+        const timeout = setTimeout(() => reject(new Error('Failed to connect - Timeout')), 15000)
 
-      // tell the main agent to send a rum call for this target
-      // when the rum call resolves, it will emit an "entity-added" event, see below
-      agentRef.ee.emit('api-send-rum', [attrs, target])
+        // tell the main agent to send a rum call for this target
+        // when the rum call resolves, it will emit an "entity-added" event, see below
+        agentRef.ee.emit('api-send-rum', [attrs, target])
 
-      // wait for entity events to emit to see when main agent and/or API registration is ready
-      agentRef.ee.on('entity-added', entity => {
-        if (isContainerAgentTarget(entity, agentRef)) mainAgentReady ||= true
-        if (target.licenseKey === entity.licenseKey && target.applicationID === entity.applicationID) {
-          registrationReady = true
-          target.entityGuid = entity.entityGuid
-        }
+        // wait for entity events to emit to see when main agent and/or API registration is ready
+        agentRef.ee.on('entity-added', entity => {
+          if (isContainerAgentTarget(entity, agentRef)) mainAgentReady ||= true
+          if (target.licenseKey === entity.licenseKey && target.applicationID === entity.applicationID) {
+            registrationReady = true
+            target.entityGuid = entity.entityGuid
+          }
 
-        if (mainAgentReady && registrationReady) {
-          clearTimeout(timeout)
-          resolve(api)
-        }
-      })
+          if (mainAgentReady && registrationReady) {
+            clearTimeout(timeout)
+            resolve(api)
+          }
+        })
+      } catch (err) {
+        warn(58, err)
+        reject(err)
+      }
     })
   }
 

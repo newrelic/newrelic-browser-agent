@@ -21,6 +21,7 @@
       xhr.send()
     })
     .catch((err) => {
+      console.error(err)
       newrelic.noticeError(err)
     })
 
@@ -36,6 +37,7 @@
       xhr.send()
     })
     .catch((err) => {
+      console.error(err)
       newrelic.noticeError(err)
     })
 </script>

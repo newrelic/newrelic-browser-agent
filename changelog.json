@@ -5,6 +5,47 @@
       "changes": [
         {
           "type": "fix",
+          "sha": "97bf32655d6e608ea7248acc680d983b1d1e0eea",
+          "message": "Session Replay text masking for whitespace",
+          "issues": [
+            "1416"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "3f59afef8a53848d80f7f32d28302b6b0bcf7d2f",
+          "message": "Logging mode on session update",
+          "issues": [
+            "1417"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "b8ed2b0aeef8b8db651ddb8001171f28785c7673",
+          "message": "Decorate harvest requests with ht (hasTrace) param",
+          "issues": [
+            "1409"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "1832562f52c1e2e26c49c2855ad1996d6251b803",
+          "message": "Inspection events",
+          "issues": [
+            "1413"
+          ]
+        }
+      ],
+      "version": "1.285.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "426f7147-c886-4bc8-bf71-57c587d35a5f",
+      "createTime": "2025-03-18T18:30:03.184Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
           "sha": "22ef4ffaef72729f99ee615d4851870f51a129f7",
           "message": "Obtain FirstInteraction directly from performance API",
           "issues": [
@@ -2652,5 +2693,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2025-03-11T18:51:07.416Z"
+  "updateTime": "2025-03-18T18:30:03.184Z"
 }

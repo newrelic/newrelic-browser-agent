@@ -32,19 +32,22 @@ export function buildRegisterApi (agentRef, handlers, target) {
    * Wait for all needed connections for the registered child to be ready to report data
    * 1. The main agent to be ready (made a RUM call and got its entity guid)
    * 2. The child to be registered with the main agent (made its own RUM call and got its entity guid)
-   * @type {Promise<void>}
+   * @type {Promise<RegisterAPI>}
    */
   let connected
   if (!agentRef.init.api.allow_registered_children) invalidApiResponse = () => warn(54)
   if (!target || !isValidTarget(target)) invalidApiResponse = () => warn(47, target)
-  if (invalidApiResponse) invalidApiResponse()
-  else {
+
+  if (invalidApiResponse) {
+    invalidApiResponse()
+    connected = Promise.reject(new Error('Failed to connect'))
+  } else {
     connected = new Promise((resolve, reject) => {
-      let mainAgentReady = !!agentRef.runtime.entityManager.get().entityGuid
+      let mainAgentReady = !!agentRef.runtime.entityManager?.get().entityGuid
       let registrationReady = false
 
       /** if the connect callback doesnt resolve in 15 seconds... reject */
-      const timeout = setTimeout(reject, 15000)
+      const timeout = setTimeout(() => reject(new Error('Failed to connect - Timeout')), 15000)
 
       // tell the main agent to send a rum call for this target
       // when the rum call resolves, it will emit an "entity-added" event, see below
@@ -60,7 +63,7 @@ export function buildRegisterApi (agentRef, handlers, target) {
 
         if (mainAgentReady && registrationReady) {
           clearTimeout(timeout)
-          resolve()
+          resolve(api)
         }
       })
     })
@@ -92,7 +95,8 @@ export function buildRegisterApi (agentRef, handlers, target) {
       warn(49, err)
     }
   }
-  return {
+
+  const api = {
     addPageAction: (name, attributes = {}) => report(handlers.addPageAction, [name, { ...attrs, ...attributes }], target),
     log: (message, options = {}) => report(handlers.log, [message, { ...options, customAttributes: { ...attrs, ...(options.customAttributes || {}) } }], target),
     noticeError: (error, attributes = {}) => report(handlers.noticeError, [error, { ...attrs, ...attributes }], target),
@@ -112,4 +116,6 @@ export function buildRegisterApi (agentRef, handlers, target) {
       connected
     }
   }
+
+  return api
 }

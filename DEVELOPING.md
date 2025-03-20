@@ -8,22 +8,6 @@
     <div style="margin:0 5px;"><img src="https://img.shields.io/github/issues-pr/newrelic/newrelic-browser-agent/Next%20Release?color=orange&label=Next%20Release%20-%20In%20Progress&style=plastic" /></div>
 </div>
 
-<!-- <h3 style="text-align:center;border-top:1px solid grey;margin:0 0 5px;"><a href="https://one.newrelic.com">https://one.newrelic.com</a></h3>
-<div style="display:flex;flex-wrap:wrap;justify-content:space-evenly;align-items:top;;margin:0 0 10px">
-    <div style="margin:0 5px;"><img src="https://img.shields.io/endpoint?style=plastic&url=https%3A%2F%2Fnewrelic.github.io%2Fnewrelic-browser-agent-release%2Fbadges%2Fcurrent-version-production.json" /></div>
-    <div style="margin:0 5px;"><img src="https://img.shields.io/endpoint?style=plastic&url=https%3A%2F%2Fnewrelic.github.io%2Fnewrelic-browser-agent-release%2Fbadges%2Fupdate-version-production.json" /></div>
-    <div style="margin:0 5px;"><img src="https://img.shields.io/endpoint?style=plastic&url=https%3A%2F%2Fnewrelic.github.io%2Fnewrelic-browser-agent-release%2Fbadges%2Fcopy-paste-version-production.json" /></div>
-    <div style="margin:0 5px;"><img src="https://img.shields.io/endpoint?style=plastic&url=https%3A%2F%2Fnewrelic.github.io%2Fnewrelic-browser-agent-release%2Fbadges%2Fgeneric-deploy-percent-production.json" /></div>
-</div>
-
-<h3 style="text-align:center;border-top:1px solid grey;margin:0 0 5px;"><a href="https://one.eu.newrelic.com">https://one.eu.newrelic.com</a></h3>
-<div style="display:flex;flex-wrap:wrap;justify-content:space-evenly;align-items:top;;margin:0 0 10px">
-    <div style="margin:0 5px;"><img src="https://img.shields.io/endpoint?style=plastic&url=https%3A%2F%2Fnewrelic.github.io%2Fnewrelic-browser-agent-release%2Fbadges%2Fcurrent-version-eu.json" /></div>
-    <div style="margin:0 5px;"><img src="https://img.shields.io/endpoint?style=plastic&url=https%3A%2F%2Fnewrelic.github.io%2Fnewrelic-browser-agent-release%2Fbadges%2Fupdate-version-eu.json" /></div>
-    <div style="margin:0 5px;"><img src="https://img.shields.io/endpoint?style=plastic&url=https%3A%2F%2Fnewrelic.github.io%2Fnewrelic-browser-agent-release%2Fbadges%2Fcopy-paste-version-eu.json" /></div>
-    <div style="margin:0 5px;"><img src="https://img.shields.io/endpoint?style=plastic&url=https%3A%2F%2Fnewrelic.github.io%2Fnewrelic-browser-agent-release%2Fbadges%2Fgeneric-deploy-percent-eu.json" /></div>
-</div> -->
-
 # New Relic Browser agent development
 
 This page contains information about working on the New Relic Browser agent project in a local development environment. For info on implementing the Browser agent in your own application, see the resources below:

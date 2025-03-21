@@ -93,3 +93,5 @@
 `An internal agent process failed to execute.`
 ### 46
 `A reserved eventType was provided to recordCustomEvent(...) -- The event was not recorded.`
+### 47
+`With fix_stylesheet off, ensure that all of your CSS are decorated with the "crossorigin='anonymous'" attribute or are publicly accessible. Replays may display bad layout otherwise.`

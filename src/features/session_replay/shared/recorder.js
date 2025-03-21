@@ -14,6 +14,7 @@ import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { buildNRMetaNode, customMasker } from './utils'
 import { IDEAL_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
 import { AggregateBase } from '../../utils/aggregate-base'
+import { warn } from '../../../common/util/console'
 
 export class Recorder {
   /** Each page mutation or event will be stored (raw) in this array. This array will be cleared on each harvest */
@@ -43,6 +44,8 @@ export class Recorder {
     this.shouldFix = this.parent.agentRef.init.session_replay.fix_stylesheets
     /** The method to stop recording. This defaults to a noop, but is overwritten once the recording library is imported and initialized */
     this.stopRecording = () => { /* no-op until set by rrweb initializer */ }
+
+    if (this.shouldFix === false) warn(47) // notifies user of potential replayer issue if fix_stylesheets is off
   }
 
   getEvents () {

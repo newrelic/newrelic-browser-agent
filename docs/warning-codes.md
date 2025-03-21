@@ -93,3 +93,21 @@
 `An internal agent process failed to execute.`
 ### 46
 `A reserved eventType was provided to recordCustomEvent(...) -- The event was not recorded.`
+### 47
+`Supplied an invalid API target. Must be an <Object> that contains licenseKey and applicationID properties.`
+### 48
+`Supplied API target is missing an entityGuid. Some APIs may not behave correctly without a valid entityGuid (ex. logs).`
+### 49 
+`Failed to connect. Cannot allow registered API.`
+### 50
+`Container agent is not available to register with. Can not connect`
+### 51
+`Unexpected problem encountered. There should be at least one app for harvest!`
+### 52
+`Did not recieve a valid entityGuid from connection response`
+### 53 
+`An experimental feature is being used. Support can not be offered for issues`
+### 54
+`Register API has been disabled on the container agent`
+### 55
+`Could not find a matching entity to store data`

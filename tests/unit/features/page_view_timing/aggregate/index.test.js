@@ -1,19 +1,23 @@
 import * as qp from '@newrelic/nr-querypack'
 import { Aggregate } from '../../../../../src/features/page_view_timing/aggregate'
+import { resetAgent, setupAgent } from '../../../../components/setup-agent'
 
-const mockRuntime = {} // getAddStringContext in the serializer still relies on getRuntime() fn
-jest.mock('../../../../../src/common/config/runtime', () => ({
-  __esModule: true,
-  getRuntime: jest.fn(() => mockRuntime),
-  setRuntime: jest.fn()
-}))
-jest.mock('../../../../../src/common/harvest/harvester')
+let pvtAgg, mainAgent
+beforeAll(() => {
+  mainAgent = setupAgent()
+  pvtAgg = new Aggregate(mainAgent)
+  pvtAgg.ee.emit('rumresp', [])
+})
 
-const pvtAgg = new Aggregate({
-  agentIdentifier: 'abcd',
-  info: { },
-  init: { page_view_timing: {} },
-  runtime: mockRuntime
+beforeEach(async () => {
+  pvtAgg = new Aggregate(mainAgent)
+  pvtAgg.ee.emit('rumresp', [])
+  await new Promise(process.nextTick)
+})
+
+afterEach(() => {
+  resetAgent(mainAgent.agentIdentifier)
+  jest.resetAllMocks()
 })
 
 describe('PVT aggregate', () => {

@@ -213,6 +213,7 @@ export class Aggregate extends AggregateBase {
   }
 
   makeHarvestPayload (shouldRetryOnFail) {
+    const payloadOutput = { targetApp: undefined, payload: undefined }
     if (this.mode !== MODE.FULL || this.blocked) return
     if (!this.recorder || !this.timeKeeper?.ready || !this.recorder.hasSeenSnapshot) return
 
@@ -223,7 +224,7 @@ export class Aggregate extends AggregateBase {
     const payload = this.getHarvestContents(recorderEvents)
     if (!payload.body.length) {
       this.recorder.clearBuffer()
-      return
+      return [payloadOutput]
     }
 
     this.reportSupportabilityMetric('SessionReplay/Harvest/Attempts')
@@ -253,13 +254,15 @@ export class Aggregate extends AggregateBase {
 
     if (len > MAX_PAYLOAD_SIZE) {
       this.abort(ABORT_REASONS.TOO_BIG, len)
-      return
+      return [payloadOutput]
     }
     // TODO -- Gracefully handle the buffer for retries.
     if (!this.agentRef.runtime.session.state.sessionReplaySentFirstChunk) this.syncWithSessionManager({ sessionReplaySentFirstChunk: true })
     this.recorder.clearBuffer()
     if (recorderEvents.type === 'preloaded') this.agentRef.runtime.harvester.triggerHarvestFor(this)
-    return [{ targetApp: undefined, payload }] // SR doesn't need a targetApp as it only works for the main, but format needs to make AggregateBase
+    payloadOutput.payload = payload
+
+    return [payloadOutput]
   }
 
   getCorrectedTimestamp (node) {

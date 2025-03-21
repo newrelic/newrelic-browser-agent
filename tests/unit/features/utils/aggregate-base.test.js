@@ -5,11 +5,15 @@ import { configure } from '../../../../src/loaders/configure/configure'
 import { gosCDN } from '../../../../src/common/window/nreum'
 import { FEATURE_NAMES } from '../../../../src/loaders/features/features'
 import { EventStoreManager } from '../../../../src/features/utils/event-store-manager'
+import { EventBuffer } from '../../../../src/features/utils/event-buffer'
+import { EventAggregator } from '../../../../src/common/aggregate/event-aggregator'
+import { Aggregate as PVEAggregate } from '../../../../src/features/page_view_event/aggregate/index'
 
 jest.enableAutomock()
 jest.unmock('../../../../src/features/utils/aggregate-base')
 jest.unmock('../../../../src/features/utils/feature-base')
 jest.unmock('../../../../src/common/event-emitter/contextual-ee')
+jest.unmock('../../../../src/features/page_view_event/aggregate/index')
 
 jest.mock('../../../../src/common/event-emitter/register-handler', () => ({
   __esModule: true,
@@ -55,8 +59,9 @@ beforeEach(() => {
   featureName = faker.string.uuid()
   mainAgent = {
     agentIdentifier,
-    runtime: { [faker.string.uuid()]: faker.lorem.sentence() },
-    info: {}
+    runtime: { [faker.string.uuid()]: faker.lorem.sentence(), appMetadata: { agents: [{ entityGuid: '12345' }] } },
+    // TODO CHECK THAT THIS STILL WORKS WITH NEW SYSTEM
+    info: { licenseKey: faker.string.uuid(), applicationID: faker.string.uuid(), entityGuid: faker.string.uuid() }
   }
 })
 
@@ -147,21 +152,26 @@ test('should return activatedFeatures values when available', async () => {
 
 test('does not initialized Aggregator more than once with multiple features', async () => {
   expect(EventStoreManager).toHaveBeenCalledTimes(0)
-  expect(mainAgent.mainAppKey).toBeUndefined()
+  expect(mainAgent.runtime.entityManager).toBeUndefined()
 
-  new AggregateBase(mainAgent, FEATURE_NAMES.pageViewEvent)
-  expect(EventStoreManager).toHaveBeenCalledTimes(2) // once for runtime.sharedAgg + once for PVE.events
-  expect(EventStoreManager).toHaveBeenNthCalledWith(1, mainAgent.mainAppKey, 2, mainAgent.agentIdentifier, 'shared_aggregator') // 2 = initialize EventAggregator
-  expect(EventStoreManager).toHaveBeenNthCalledWith(2, mainAgent.mainAppKey, 1, mainAgent.agentIdentifier, FEATURE_NAMES.pageViewEvent)
-  expect(mainAgent.mainAppKey).toBeTruthy()
-  expect(mainAgent.sharedAggregator).toBeTruthy()
+  const pveAgg = new PVEAggregate(mainAgent, FEATURE_NAMES.pageViewEvent)
 
-  new AggregateBase(mainAgent, FEATURE_NAMES.jserrors) // this feature should be using that same aggregator as its .events
+  const mockRumResp1 = { app: { agents: [{ entityGuid: '12345' }] } }
+  pveAgg.processEntities(mockRumResp1.app.agents, { licenseKey: '1', applicationID: '1' })
+
+  expect(EventStoreManager).toHaveBeenCalledTimes(1)
+  expect(EventStoreManager).toHaveBeenCalledWith(mainAgent, EventBuffer, '12345', FEATURE_NAMES.pageViewEvent) // 2 = initialize EventAggregator
+  expect(mainAgent.runtime.entityManager).toBeTruthy()
+  expect(mainAgent.sharedAggregator).toBeUndefined()
+
+  new AggregateBase(mainAgent, FEATURE_NAMES.jserrors) // this feature should be using the shared aggregator, so it will set it now
   expect(EventStoreManager).toHaveBeenCalledTimes(2)
+  expect(EventStoreManager).toHaveBeenCalledWith(mainAgent, EventAggregator, '12345', 'shared_aggregator') // 2 = initialize EventAggregator
+  expect(mainAgent.sharedAggregator).toBeTruthy()
 
   new AggregateBase(mainAgent, FEATURE_NAMES.pageViewTiming) // PVT should use its own EventStoreManager
   expect(EventStoreManager).toHaveBeenCalledTimes(3)
-  expect(EventStoreManager).toHaveBeenCalledWith(mainAgent.mainAppKey, 1, mainAgent.agentIdentifier, FEATURE_NAMES.pageViewTiming) // 1 = initialize EventBuffer
+  expect(EventStoreManager).toHaveBeenCalledWith(mainAgent, EventBuffer, '12345', FEATURE_NAMES.pageViewTiming) // 1 = initialize EventBuffer
 })
 
 test('does initialize separate Aggregators with multiple agents', async () => {
@@ -170,15 +180,28 @@ test('does initialize separate Aggregators with multiple agents', async () => {
     agentIdentifier: faker.string.uuid(),
     init: {
       [FEATURE_NAMES.pageViewEvent]: { autoStart: true }
-    }
+    },
+    runtime: { [faker.string.uuid()]: faker.lorem.sentence(), appMetadata: { agents: [{ entityGuid: '56789' }] } }
+
   }
   expect(EventStoreManager).toHaveBeenCalledTimes(0)
 
-  new AggregateBase(mainAgent, FEATURE_NAMES.pageViewEvent)
-  new AggregateBase(mainAgent2, FEATURE_NAMES.pageViewEvent)
-  expect(EventStoreManager).toHaveBeenCalledTimes(4) // runtime.sharedAgg + PVE.events but multiply by having 2 agents
+  const pveAgg1 = new PVEAggregate(mainAgent, FEATURE_NAMES.pageViewEvent)
+  const pveAgg2 = new PVEAggregate(mainAgent2, FEATURE_NAMES.pageViewEvent)
 
-  new AggregateBase(mainAgent, FEATURE_NAMES.jserrors) // still does not initialize sharedAgg again on the same agent
+  const mockRumResp1 = { app: { agents: [{ entityGuid: '12345' }] } }
+  const mockRumResp2 = { app: { agents: [{ entityGuid: '56789' }] } }
+  pveAgg1.processEntities(mockRumResp1.app.agents, { licenseKey: '1', applicationID: '1' })
+  pveAgg2.processEntities(mockRumResp2.app.agents, { licenseKey: '2', applicationID: '2' })
+
+  expect(EventStoreManager).toHaveBeenCalledTimes(2) // event buffer x 2
+  expect(EventStoreManager).not.toHaveBeenCalledWith(expect.any(Object), EventAggregator, '12345')
+
+  new AggregateBase(mainAgent, FEATURE_NAMES.jserrors)
   new AggregateBase(mainAgent2, FEATURE_NAMES.jserrors)
-  expect(EventStoreManager).toHaveBeenCalledTimes(4)
+  expect(EventStoreManager).toHaveBeenCalledTimes(4) // event buffer x 2, event aggregator x 2
+
+  new AggregateBase(mainAgent, FEATURE_NAMES.metrics)
+  new AggregateBase(mainAgent2, FEATURE_NAMES.metrics)
+  expect(EventStoreManager).toHaveBeenCalledTimes(4) // should not initialize another since jserrors set up the shared instance
 })

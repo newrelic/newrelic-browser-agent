@@ -24,7 +24,16 @@ export class Aggregate extends AggregateBase {
     this.initialPageLoadInteraction = new InitialPageLoadInteraction(agentRef.agentIdentifier)
     this.initialPageLoadInteraction.onDone.push(() => { // this ensures the .end() method also works with iPL
       this.initialPageLoadInteraction.forceSave = true // unless forcibly ignored, iPL always finish by default
-      this.interactionsToHarvest.add(this.initialPageLoadInteraction)
+      const ixn = this.initialPageLoadInteraction
+      /** this.events (ixns to harvest) has already been set up, use it immediately */
+      if (this.interactionsToHarvest) this.interactionsToHarvest.add(ixn)
+      else {
+        /** this.events (ixns to harvest) hasnt been initialized yet... wait for it */
+        this.ee.on('entity-added', () => {
+          this.interactionsToHarvest = this.events
+          this.interactionsToHarvest.add(ixn)
+        })
+      }
       this.initialPageLoadInteraction = null
     })
     timeToFirstByte.subscribe(({ attrs }) => {
@@ -42,7 +51,7 @@ export class Aggregate extends AggregateBase {
     this.waitForFlags(['spa']).then(([spaOn]) => {
       if (spaOn) {
         this.drain()
-        setTimeout(() => agentRef.runtime.harvester.triggerHarvestFor(this), 0) // send the IPL ixn on next tick, giving some time for any ajax to finish; we may want to just remove this?
+        setTimeout(() => agentRef.runtime.harvester.triggerHarvestFor(this), 0)
       } else {
         this.blocked = true // if rum response determines that customer lacks entitlements for spa endpoint, this feature shouldn't harvest
         this.deregisterDrain()
@@ -131,7 +140,7 @@ export class Aggregate extends AggregateBase {
     */
     if (this.interactionInProgress?.isActiveDuring(timestamp)) return this.interactionInProgress
     let saveIxn
-    const interactionsBuffer = this.interactionsToHarvest.get(this.agentRef.mainAppKey)[0].data
+    const [{ data: interactionsBuffer }] = this.interactionsToHarvest.get()
     for (let idx = interactionsBuffer.length - 1; idx >= 0; idx--) { // reverse search for the latest completed interaction for efficiency
       const finishedInteraction = interactionsBuffer[idx]
       if (finishedInteraction.isActiveDuring(timestamp)) {

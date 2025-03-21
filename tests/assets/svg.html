@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>SVG Test</title>
+    {init} {config} {loader}
+  </head>
+  <body>
+    <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+      <rect id="testRect" class="test-class" width="50" height="50" fill="blue"></rect>
+    </svg>
+    <!-- <script>
+      const rect = document.getElementById('testRect');
+
+      rect.addEventListener('click', () => {
+        console.log('Rect was clicked!');
+      });
+
+      const clickEvent = new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+        view: window
+      });
+      rect.dispatchEvent(clickEvent);
+    </script> -->
+  </body>
+</html>

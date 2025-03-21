@@ -34,9 +34,7 @@ export const generateSelectorPath = (elem, targetFields = []) => {
   try {
     while (elem?.tagName) {
       const { id, localName } = elem
-      targetFields.forEach(field => {
-        nearestFields[nearestAttrName(field)] ||= elem[field]
-      })
+      targetFields.forEach(field => { nearestFields[nearestAttrName(field)] ||= (elem[field]?.baseVal || elem[field]) })
       const selector = [
         localName,
         id ? `#${id}` : '',

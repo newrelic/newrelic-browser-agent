@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.286.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.285.0...v1.286.0) (2025-03-21)
+
+
+### Features
+
+* Handle duplicate agent APIs ([#1418](https://github.com/newrelic/newrelic-browser-agent/issues/1418)) ([f808447](https://github.com/newrelic/newrelic-browser-agent/commit/f8084474ea1a567a90d0615cdfeb13a8a2c1f110))
+
 ## [1.285.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.284.1...v1.285.0) (2025-03-18)
 
 

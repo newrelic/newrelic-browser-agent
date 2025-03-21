@@ -1,5 +1,11 @@
 <a href="https://opensource.newrelic.com/oss-category/#community-plus"><picture><source media="(prefers-color-scheme: dark)" srcset="https://github.com/newrelic/opensource-website/raw/main/src/images/categories/dark/Community_Plus.png"><source media="(prefers-color-scheme: light)" srcset="https://github.com/newrelic/opensource-website/raw/main/src/images/categories/Community_Plus.png"><img alt="New Relic Open Source community plus project banner." src="https://github.com/newrelic/opensource-website/raw/main/src/images/categories/Community_Plus.png"></picture></a>
 
+### **Deployment status:**
+<img src="https://img.shields.io/endpoint?style=plastic&amp;url=https%3A%2F%2Fnewrelic.github.io%2Fnewrelic-browser-agent-release%2Fbadges%2Fcurrent-version-production.json">
+<img src="https://img.shields.io/endpoint?style=plastic&amp;url=https%3A%2F%2Fnewrelic.github.io%2Fnewrelic-browser-agent-release%2Fbadges%2Fcopy-paste-version-production.json">
+<img src="https://img.shields.io/endpoint?style=plastic&amp;url=https%3A%2F%2Fnewrelic.github.io%2Fnewrelic-browser-agent-release%2Fbadges%2Fgeneric-deploy-percent-production.json">
+
+
 # New Relic Browser Agent
 
 The New Relic browser agent instruments your web application or site and provides observability into performance, errors, and other behaviors.

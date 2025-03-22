@@ -8,6 +8,10 @@
     <title>RUM Unit Test</title>
     {init}
     {config}
+    <script>
+      NREUM.init.harvest.interval = 30
+      NREUM.init.logging.enabled = false
+    </script>
     {loader}
   </head>
   <body>
@@ -18,7 +22,29 @@
       xhr.open('POST', '/echo')
       xhr.send('123')
 
-      xhr.addEventListener('load', function () {}, true)
+      setTimeout(function myTimeoutHandler(){
+          slowFn(1000000000)
+          throw new Error("I am an error")
+          return "yay"
+        }, 1000)
+
+      xhr.addEventListener('load', function () {
+        slowFn(1000000000) // AJAX 1 CB TIME
+
+        a = new Promise((resolve, reject) => {
+          slowFn(1000000000) // AJAX 1 PROMISE TIME
+          setTimeout(() => {
+            resolve()
+          }, 10000)
+        })
+      }, true)
+
+      function slowFn(loops){
+          i = 0
+          while(i < loops){
+            i++
+          }
+        }
 
       window.location.hash = Math.random()
     }, false)

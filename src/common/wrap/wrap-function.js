@@ -7,8 +7,11 @@
  * @file Provides helper functions for wrapping functions in various scenarios.
  */
 
+import { dispatchGlobalEvent } from '../dispatch/global-event'
 import { ee } from '../event-emitter/contextual-ee'
 import { bundleId } from '../ids/bundle-id'
+import { activatedFeatures } from '../util/feature-flags'
+import { TaskTimer } from '../util/task-timer'
 
 export const flag = `nr@original:${bundleId}`
 
@@ -72,10 +75,12 @@ export function createWrapperWithEmitter (emitter, always) {
      * @returns {any} The return value of the wrapped function.
      */
     function nrWrapper () {
+      let taskTimer = new TaskTimer()
       var args
       var originalThis
       var ctx
       var result
+      var thrownError
 
       try {
         originalThis = this
@@ -94,15 +99,40 @@ export function createWrapperWithEmitter (emitter, always) {
       safeEmit(prefix + 'start', [args, originalThis, methodName], ctx, bubble)
 
       try {
+        taskTimer.start()
         result = fn.apply(originalThis, args)
+        taskTimer.end()
         return result
       } catch (err) {
         safeEmit(prefix + 'err', [args, originalThis, err], ctx, bubble)
-
-        // rethrow error so we don't effect execution by observing.
-        throw err
+        // save thrown error so we can report it if this is a long task
+        thrownError = err
+        // rethrow error so we don't affect execution by observing.
+        throw thrownError
       } finally {
         // happens no matter what.
+        if (taskTimer.isLongTask) {
+          const longTask = {
+            // arguments: args,
+            fn: fn.toString().split('\n').map(line => line.trim()).join(`
+              `),
+            methodName,
+            thisContext: originalThis?.constructor?.name,
+            taskTimer,
+            stackTrace: (thrownError || new Error()).stack.split('\n').map(line => line.trim()).slice(1).join(`
+              `),
+            thrownError
+          }
+          safeEmit('long-task', [longTask])
+          dispatchGlobalEvent({
+            agentIdentifier: emitter.debugId,
+            loaded: !!activatedFeatures?.[emitter.debugId],
+            type: 'data',
+            name: 'long-task',
+            feature: undefined,
+            data: longTask
+          })
+        }
         safeEmit(prefix + 'end', [args, originalThis, result], ctx, bubble)
       }
     }

@@ -15,7 +15,7 @@ const SUPPORTS_PERFORMANCE_OBSERVER = typeof globalScope.PerformanceObserver ===
 
 const ignoredEvents = {
   // we find that certain events make the data too noisy to be useful
-  global: { mouseup: true, mousedown: true },
+  global: { mouseup: true, mousedown: true, mousemove: true },
   // certain events are present both in the window and in PVT metrics.  PVT metrics are prefered so the window events should be ignored
   window: { load: true, pagehide: true },
   // when ajax instrumentation is disabled, all XMLHttpRequest events will return with origin = xhrOriginMissing and should be ignored

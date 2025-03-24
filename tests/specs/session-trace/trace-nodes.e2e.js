@@ -126,6 +126,25 @@ describe('Trace nodes', () => {
       }, {})
     expect(Object.values(eventCounts).some(count => count > 1)).toBeFalsy()
   })
+
+  it('are not created for mouseover events', async () => {
+    const url = await browser.testHandle.assetURL('event-listener-mousemove.html', stConfig())
+    await browser.url(url).then(() => browser.waitForAgentLoad())
+
+    const [sessionTraceHarvests] = await Promise.all([
+      sessionTraceCapture.waitForResult({ timeout: 10000 }),
+      browser.execute(function () {
+        const storedEvents = Object.values(newrelic.initializedAgents)[0].features.session_trace.featAggregate.events.prevStoredEvents
+        for (let i = 0; i < 10; i++) storedEvents.add(i) // artificially add "events" since the counter is otherwise unreliable
+        return storedEvents
+      })
+    ])
+
+    sessionTraceHarvests.forEach(harvest => {
+      const foobarMousemoveEvts = JSONPath({ path: '$.request.body.[?(!!@ && @.t===\'event\' && @.n===\'mousing\' && @.o===\'div#foobar\')]', json: harvest })
+      expect(foobarMousemoveEvts.length).toEqual(0)
+    })
+  })
 })
 
 function getEventsSetSize () {

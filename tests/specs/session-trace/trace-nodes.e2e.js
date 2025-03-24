@@ -132,12 +132,7 @@ describe('Trace nodes', () => {
     await browser.url(url).then(() => browser.waitForAgentLoad())
 
     const [sessionTraceHarvests] = await Promise.all([
-      sessionTraceCapture.waitForResult({ timeout: 10000 }),
-      browser.execute(function () {
-        const storedEvents = Object.values(newrelic.initializedAgents)[0].features.session_trace.featAggregate.events.prevStoredEvents
-        for (let i = 0; i < 10; i++) storedEvents.add(i) // artificially add "events" since the counter is otherwise unreliable
-        return storedEvents
-      })
+      sessionTraceCapture.waitForResult({ timeout: 10000 })
     ])
 
     sessionTraceHarvests.forEach(harvest => {

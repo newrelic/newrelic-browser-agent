@@ -182,8 +182,8 @@ export class TraceStorage {
   }
 
   shouldIgnoreEvent (event, target) {
-    const origin = eventOrigin(event.target, target, this.parent.ee)
     if (event.type in ignoredEvents.global) return true
+    const origin = eventOrigin(event.target, target, this.parent.ee)
     if (!!ignoredEvents[origin] && ignoredEvents[origin].ignoreAll) return true
     return !!(!!ignoredEvents[origin] && event.type in ignoredEvents[origin])
   }

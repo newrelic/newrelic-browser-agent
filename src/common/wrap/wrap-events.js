@@ -45,8 +45,7 @@ export function wrapEvents (sharedEE) {
   ee.on(ADD_EVENT_LISTENER + '-start', function (args, target) {
     var originalListener = args[1]
     if (originalListener === null ||
-      (typeof originalListener !== 'function' && typeof originalListener !== 'object') ||
-      args[0] === 'mousemove'
+      (typeof originalListener !== 'function' && typeof originalListener !== 'object')
     ) {
       return
     }

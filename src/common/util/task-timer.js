@@ -4,24 +4,10 @@
  */
 export class TaskTimer {
   startTime = performance.now()
-  endTime = undefined
-  duration = undefined
-
-  start () {
-    this.startTime = performance.now()
-  }
-
-  end () {
-    this.endTime = performance.now()
-    this.setDuration()
-  }
-
-  setDuration () {
-    this.duration = (this.endTime || performance.now()) - this.startTime
-  }
+  duration = 0
 
   get isLongTask () {
-    this.setDuration()
+    this.duration = performance.now() - this.startTime
     return this.duration > 50
   }
 }

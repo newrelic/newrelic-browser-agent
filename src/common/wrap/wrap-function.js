@@ -75,7 +75,7 @@ export function createWrapperWithEmitter (emitter, always) {
      * @returns {any} The return value of the wrapped function.
      */
     function nrWrapper () {
-      let taskTimer = new TaskTimer()
+      let taskTimer
       var args
       var originalThis
       var ctx
@@ -99,9 +99,8 @@ export function createWrapperWithEmitter (emitter, always) {
       safeEmit(prefix + 'start', [args, originalThis, methodName], ctx, bubble)
 
       try {
-        taskTimer.start()
+        taskTimer = new TaskTimer()
         result = fn.apply(originalThis, args)
-        taskTimer.end()
         return result
       } catch (err) {
         safeEmit(prefix + 'err', [args, originalThis, err], ctx, bubble)
@@ -121,7 +120,7 @@ export function createWrapperWithEmitter (emitter, always) {
             taskTimer,
             stackTrace: (thrownError || new Error()).stack.split('\n').map(line => line.trim()).slice(1).join(`
               `),
-            thrownError
+            thrownError: thrownError?.message
           }
           safeEmit('long-task', [longTask])
           dispatchGlobalEvent({

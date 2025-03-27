@@ -43,6 +43,7 @@ export class Recorder {
     this.shouldFix = this.parent.agentRef.init.session_replay.fix_stylesheets
     /** The method to stop recording. This defaults to a noop, but is overwritten once the recording library is imported and initialized */
     this.stopRecording = () => { /* no-op until set by rrweb initializer */ }
+    this.eventsSeenAfterSessionExpire = false
   }
 
   getEvents () {
@@ -144,9 +145,18 @@ export class Recorder {
     if (!this.#fixing) this.store(event, isCheckout)
   }
 
+  isBeforeSessionExpiry (event) {
+    const isValid = event.timestamp < this.parent.agentRef.runtime.session.state.expiresAt
+    if (!isValid && !this.eventsSeenAfterSessionExpire) {
+      this.eventsSeenAfterSessionExpire = true
+    }
+    return isValid
+  }
+
   /** Store a payload in the buffer (this.#events).  This should be the callback to the recording lib noticing a mutation */
   store (event, isCheckout) {
     if (!event) return
+    if (!this.isBeforeSessionExpiry(event)) return
 
     if (!(this.parent instanceof AggregateBase) && this.#preloaded.length) this.currentBufferTarget = this.#preloaded[this.#preloaded.length - 1]
     else this.currentBufferTarget = this.#events

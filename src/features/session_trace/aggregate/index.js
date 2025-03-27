@@ -124,6 +124,10 @@ export class Aggregate extends AggregateBase {
     const endUserId = this.agentRef.info.jsAttributes['enduser.id']
     const entityGuid = this.agentRef.runtime.appMetadata.agents?.[0]?.entityGuid
 
+    if (this.events.eventsSeenAfterSessionExpire) {
+      this.parent.reportSupportabilityMetric('Session/Expired/SessionTrace/Seen')
+    }
+
     /* The blob consumer expects the following and will reject if not supplied:
      * browser_monitoring_key
      * type

@@ -1,5 +1,6 @@
 import * as qp from '@newrelic/nr-querypack'
 import { Aggregate } from '../../../../../src/features/page_view_timing/aggregate'
+import { setNREUMInitializedAgent } from '../../../../../src/common/window/nreum'
 
 const mockRuntime = {} // getAddStringContext in the serializer still relies on getRuntime() fn
 jest.mock('../../../../../src/common/config/runtime', () => ({
@@ -9,12 +10,14 @@ jest.mock('../../../../../src/common/config/runtime', () => ({
 }))
 jest.mock('../../../../../src/common/harvest/harvester')
 
-const pvtAgg = new Aggregate({
+const agentInst = {
   agentIdentifier: 'abcd',
   info: { },
   init: { page_view_timing: {} },
   runtime: mockRuntime
-})
+}
+setNREUMInitializedAgent(agentInst.agentIdentifier, agentInst) // needed since configure calls setInit instead of modifying agentInst.init directly
+const pvtAgg = new Aggregate(agentInst)
 
 describe('PVT aggregate', () => {
   test('serializer default attributes', () => {

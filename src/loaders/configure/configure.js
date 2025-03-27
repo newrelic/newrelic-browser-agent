@@ -5,7 +5,7 @@
 import { setAPI, setTopLevelCallers } from '../api/api'
 import { addToNREUM, gosCDN } from '../../common/window/nreum'
 import { setInfo } from '../../common/config/info'
-import { getConfiguration, setConfiguration } from '../../common/config/init'
+import { setConfiguration } from '../../common/config/init'
 import { setLoaderConfig } from '../../common/config/loader-config'
 import { setRuntime } from '../../common/config/runtime'
 import { activatedFeatures } from '../../common/util/feature-flags'
@@ -18,6 +18,7 @@ let alreadySetOnce = false // the configure() function can run multiple times in
 
 /**
  * Sets or re-sets the agent's configuration values from global settings. This also attach those as properties to the agent instance.
+ * IMPORTANT: setNREUMInitializedAgent must be called on the agent prior to calling this function.
  */
 export function configure (agent, opts = {}, loaderType, forceDrain) {
   // eslint-disable-next-line camelcase
@@ -41,7 +42,7 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
   }
   setInfo(agent.agentIdentifier, info)
 
-  const updatedInit = getConfiguration(agent.agentIdentifier)
+  const updatedInit = agent.init
   const internalTrafficList = [info.beacon, info.errorBeacon]
 
   if (!alreadySetOnce) {
@@ -65,19 +66,18 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
   runtime.ptid = agent.agentIdentifier
   setRuntime(agent.agentIdentifier, runtime)
 
-  agent.ee = ee.get(agent.agentIdentifier)
-
-  if (agent.api === undefined) agent.api = setAPI(agent.agentIdentifier, forceDrain, agent.runSoftNavOverSpa)
-  if (agent.exposed === undefined) agent.exposed = exposed
-
   if (!alreadySetOnce) {
+    agent.ee = ee.get(agent.agentIdentifier)
+    agent.exposed = exposed
+    setAPI(agent, forceDrain) // assign our API functions to the agent instance
+
     dispatchGlobalEvent({
       agentIdentifier: agent.agentIdentifier,
       loaded: !!activatedFeatures?.[agent.agentIdentifier],
       type: 'lifecycle',
       name: 'initialize',
       feature: undefined,
-      data: { init: updatedInit, info, loader_config, runtime }
+      data: agent.config
     })
   }
 

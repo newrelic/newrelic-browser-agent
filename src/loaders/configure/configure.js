@@ -14,7 +14,7 @@ import { redefinePublicPath } from './public-path'
 import { ee } from '../../common/event-emitter/contextual-ee'
 import { dispatchGlobalEvent } from '../../common/dispatch/global-event'
 
-let alreadySetOnce = false // the configure() function can run multiple times in agent lifecycle
+const alreadySetOnce = new Set() // the configure() function can run multiple times in agent lifecycle for different agents
 
 /**
  * Sets or re-sets the agent's configuration values from global settings. This also attach those as properties to the agent instance.
@@ -45,7 +45,7 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
   const updatedInit = agent.init
   const internalTrafficList = [info.beacon, info.errorBeacon]
 
-  if (!alreadySetOnce) {
+  if (!alreadySetOnce.has(agent.agentIdentifier)) {
     if (updatedInit.proxy.assets) {
       redefinePublicPath(updatedInit.proxy.assets)
       internalTrafficList.push(updatedInit.proxy.assets)
@@ -66,7 +66,7 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
   runtime.ptid = agent.agentIdentifier
   setRuntime(agent.agentIdentifier, runtime)
 
-  if (!alreadySetOnce) {
+  if (!alreadySetOnce.has(agent.agentIdentifier)) {
     agent.ee = ee.get(agent.agentIdentifier)
     agent.exposed = exposed
     setAPI(agent, forceDrain) // assign our API functions to the agent instance
@@ -81,5 +81,5 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
     })
   }
 
-  alreadySetOnce = true
+  alreadySetOnce.add(agent.agentIdentifier)
 }

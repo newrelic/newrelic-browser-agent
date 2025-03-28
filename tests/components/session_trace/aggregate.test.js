@@ -118,3 +118,10 @@ test('when max nodes per harvest is reached, node is still added in ERROR mode',
   expect(sessionTraceAggregate.events.nodeCount).toEqual(MAX_NODES_PER_HARVEST + 1)
   expect(Object.keys(sessionTraceAggregate.events.trace).length).toEqual(1)
 })
+
+test('when trace node is past session expiry, no node is added', () => {
+  sessionTraceAggregate.events.storeSTN({ n: 'someNode', s: Infinity })
+
+  expect(sessionTraceAggregate.events.nodeCount).toEqual(0)
+  expect(Object.keys(sessionTraceAggregate.events.trace).length).toEqual(0)
+})

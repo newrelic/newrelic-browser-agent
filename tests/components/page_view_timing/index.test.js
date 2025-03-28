@@ -1,4 +1,5 @@
 import { VITAL_NAMES } from '../../../src/common/vitals/constants'
+import { setNREUMInitializedAgent } from '../../../src/common/window/nreum'
 
 // Note: these callbacks fire right away unlike the real web-vitals API which are async-on-trigger
 jest.mock('web-vitals/attribution', () => ({
@@ -73,6 +74,7 @@ describe('pvt aggregate tests', () => {
       ee: { on: jest.fn() },
       runtime: { harvester: { initializedAggregates: [] } }
     }
+    setNREUMInitializedAgent(mainAgent.agentIdentifier, mainAgent) // needed since configure calls setInit instead of modifying agentInst.init directly
     const { Aggregate } = await import('../../../src/features/page_view_timing/aggregate')
 
     global.navigator.connection = {

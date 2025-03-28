@@ -20,8 +20,8 @@ export class AgentBase extends MicroAgentBase {
    * @param  {...any} args
    */
   #callMethod (methodName, ...args) {
-    if (typeof this.api?.[methodName] !== 'function') warn(35, methodName)
-    else return this.api[methodName](...args)
+    if (this[methodName] === AgentBase.prototype[methodName] || this[methodName] === MicroAgentBase.prototype[methodName]) warn(35, methodName)
+    else return this[methodName](...args)
   }
 
   /**

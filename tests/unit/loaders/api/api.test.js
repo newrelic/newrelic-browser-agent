@@ -39,27 +39,21 @@ describe('setTopLevelCallers', () => {
     nreum.initializedAgents = {
       [faker.string.uuid()]: {
         exposed: true,
-        api: {
-          setErrorHandler: jest.fn()
-        },
+        setErrorHandler: jest.fn(),
         runtime: {
           loaderType: 'micro-agent'
         }
       },
       [faker.string.uuid()]: {
         exposed: true,
-        api: {
-          setErrorHandler: jest.fn()
-        },
+        setErrorHandler: jest.fn(),
         runtime: {
           loaderType: 'browser-agent'
         }
       },
       [faker.string.uuid()]: {
         exposed: false,
-        api: {
-          setErrorHandler: jest.fn()
-        },
+        setErrorHandler: jest.fn(),
         runtime: {
           loaderType: 'browser-agent'
         }
@@ -71,10 +65,10 @@ describe('setTopLevelCallers', () => {
 
     Object.values(nreum.initializedAgents).forEach(agent => {
       if (agent.exposed && agent.runtime.loaderType === 'browser-agent') {
-        expect(agent.api.setErrorHandler).toHaveBeenCalledTimes(1)
-        expect(agent.api.setErrorHandler).toHaveBeenCalledWith(errorHandler)
+        expect(agent.setErrorHandler).toHaveBeenCalledTimes(1)
+        expect(agent.setErrorHandler).toHaveBeenCalledWith(errorHandler)
       } else {
-        expect(agent.api.setErrorHandler).not.toHaveBeenCalled()
+        expect(agent.setErrorHandler).not.toHaveBeenCalled()
       }
     })
   })
@@ -87,27 +81,21 @@ describe('setTopLevelCallers', () => {
     nreum.initializedAgents = {
       [faker.string.uuid()]: {
         exposed: true,
-        api: {
-          interaction: jest.fn().mockReturnValue(expected)
-        },
+        interaction: jest.fn().mockReturnValue(expected),
         runtime: {
           loaderType: 'browser-agent'
         }
       },
       [faker.string.uuid()]: {
         exposed: true,
-        api: {
-          interaction: jest.fn().mockReturnValue(expected)
-        },
+        interaction: jest.fn().mockReturnValue(expected),
         runtime: {
           loaderType: 'browser-agent'
         }
       },
       [faker.string.uuid()]: {
         exposed: false,
-        api: {
-          interaction: jest.fn().mockReturnValue(expected)
-        },
+        interaction: jest.fn().mockReturnValue(expected),
         runtime: {
           loaderType: 'browser-agent'
         }

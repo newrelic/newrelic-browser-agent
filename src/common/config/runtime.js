@@ -20,7 +20,7 @@ const readonly = {
   originTime
 }
 
-const model = {
+const RuntimeModel = {
   customTransaction: undefined,
   disabled: false,
   isolatedBacklog: false,
@@ -49,7 +49,7 @@ export function getRuntime (id) {
 export function setRuntime (id, obj) {
   if (!id) throw new Error('All runtime objects require an agent identifier!')
   _cache[id] = {
-    ...getModeledObject(obj, model),
+    ...getModeledObject(obj, RuntimeModel),
     ...readonly
   }
 

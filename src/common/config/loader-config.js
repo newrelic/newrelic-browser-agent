@@ -2,10 +2,9 @@
  * Copyright 2020-2025 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { getNREUMInitializedAgent } from '../window/nreum'
 import { getModeledObject } from './configurable'
 
-const model = {
+const LoaderConfigModel = {
   accountID: undefined,
   trustKey: undefined,
   agentID: undefined,
@@ -14,17 +13,6 @@ const model = {
   xpid: undefined
 }
 
-const _cache = {}
-
-export function getLoaderConfig (id) {
-  if (!id) throw new Error('All loader-config objects require an agent identifier!')
-  if (!_cache[id]) throw new Error(`LoaderConfig for ${id} was never set`)
-  return _cache[id]
-}
-
-export function setLoaderConfig (id, obj) {
-  if (!id) throw new Error('All loader-config objects require an agent identifier!')
-  _cache[id] = getModeledObject(obj, model)
-  const agentInst = getNREUMInitializedAgent(id)
-  if (agentInst) agentInst.loader_config = _cache[id]
+export const getLoaderConfig = (loaderConfig) => {
+  return getModeledObject(loaderConfig, LoaderConfigModel)
 }

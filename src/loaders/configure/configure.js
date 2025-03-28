@@ -6,13 +6,13 @@ import { setAPI, setTopLevelCallers } from '../api/api'
 import { addToNREUM, gosCDN } from '../../common/window/nreum'
 import { setInfo } from '../../common/config/info'
 import { setConfiguration } from '../../common/config/init'
-import { setLoaderConfig } from '../../common/config/loader-config'
 import { setRuntime } from '../../common/config/runtime'
 import { activatedFeatures } from '../../common/util/feature-flags'
 import { isWorkerScope } from '../../common/constants/runtime'
 import { redefinePublicPath } from './public-path'
 import { ee } from '../../common/event-emitter/contextual-ee'
 import { dispatchGlobalEvent } from '../../common/dispatch/global-event'
+import { getLoaderConfig } from '../../common/config/loader-config'
 
 const alreadySetOnce = new Set() // the configure() function can run multiple times in agent lifecycle for different agents
 
@@ -34,7 +34,7 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
 
   setConfiguration(agent.agentIdentifier, init || {})
   // eslint-disable-next-line camelcase
-  setLoaderConfig(agent.agentIdentifier, loader_config || {})
+  agent.loader_config = getLoaderConfig(loader_config || {})
 
   info.jsAttributes ??= {}
   if (isWorkerScope) { // add a default attr to all worker payloads

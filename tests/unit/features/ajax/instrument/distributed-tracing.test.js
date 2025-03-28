@@ -1,24 +1,25 @@
 import { faker } from '@faker-js/faker'
 import { DT } from '../../../../../src/features/ajax/instrument/distributed-tracing'
 import { getConfiguration, getConfigurationValue } from '../../../../../src/common/config/init'
-import { getLoaderConfig } from '../../../../../src/common/config/loader-config'
 import * as runtimeModule from '../../../../../src/common/constants/runtime'
 
 jest.enableAutomock()
 jest.unmock('../../../../../src/features/ajax/instrument/distributed-tracing')
 
-let agentIdentifier
+let agent
 let dtInstance
 
 beforeEach(() => {
-  agentIdentifier = faker.string.uuid()
-  dtInstance = new DT(agentIdentifier)
-
-  jest.mocked(getLoaderConfig).mockReturnValue({
-    accountID: '1234',
-    agentID: '5678',
-    trustKey: '1'
-  })
+  const agentIdentifier = faker.string.uuid()
+  agent = {
+    agentIdentifier,
+    loader_config: {
+      accountID: '1234',
+      agentID: '5678',
+      trustKey: '1'
+    }
+  }
+  dtInstance = new DT(agent)
 })
 
 afterEach(() => {
@@ -41,7 +42,7 @@ test('newrelic header has the correct format', () => {
   expect(payload.traceId).toEqual(header.d.tr)
   expect(payload.timestamp).toEqual(header.d.ti)
 
-  const loaderConfig = getLoaderConfig()
+  const loaderConfig = agent.loader_config
   expect(header.d.ty).toEqual('Browser')
   expect(header.d.ac).toEqual(loaderConfig.accountID)
   expect(header.d.ap).toEqual(loaderConfig.agentID)
@@ -150,7 +151,7 @@ test('trace context headers are generated with the correct format', () => {
   expect(parentHeaderParts[2]).toEqual(payload.spanId)
   expect(parentHeaderParts[3]).toEqual('01')
 
-  const loaderConfig = getLoaderConfig()
+  const loaderConfig = agent.loader_config
   const stateHeaderKey = stateHeader.substring(0, stateHeader.indexOf('='))
   expect(stateHeaderKey).toEqual(`${loaderConfig.trustKey}@nr`)
 
@@ -232,11 +233,11 @@ test('trace context headers are not added to cross-origin calls when disabled in
 })
 
 test('newrelic header is generated when configuration has numeric values', () => {
-  jest.mocked(getLoaderConfig).mockReturnValue({
+  agent.loader_config = {
     accountID: 1234,
     agentID: 5678,
     trustKey: 1
-  })
+  }
 
   const agentConfig = {
     distributed_tracing: {
@@ -255,7 +256,7 @@ test('newrelic header is generated when configuration has numeric values', () =>
   expect(payload.traceId).toEqual(header.d.tr)
   expect(payload.timestamp).toEqual(header.d.ti)
 
-  const loaderConfig = getLoaderConfig()
+  const loaderConfig = agent.loader_config
   expect(header.d.ty).toEqual('Browser')
   expect(header.d.ac).toEqual(loaderConfig.accountID.toString())
   expect(header.d.ap).toEqual(loaderConfig.agentID.toString())
@@ -276,11 +277,11 @@ test('no trace headers are generated when the loader config object is empty', ()
 })
 
 test.each([null, undefined])('no trace headers are generated when the loader config accountID is %s', (accountID) => {
-  jest.mocked(getLoaderConfig).mockReturnValue({
+  agent.loader_config = {
     accountID,
     agentID: '5678',
     trustKey: '1'
-  })
+  }
 
   const agentConfig = {
     distributed_tracing: {
@@ -298,11 +299,11 @@ test.each([null, undefined])('no trace headers are generated when the loader con
 })
 
 test.each([null, undefined])('no trace headers are generated when the loader config agentID is %s', (agentID) => {
-  jest.mocked(getLoaderConfig).mockReturnValue({
+  agent.loader_config = {
     accountID: '1234',
     agentID,
     trustKey: '1'
-  })
+  }
 
   const agentConfig = {
     distributed_tracing: {
@@ -320,11 +321,11 @@ test.each([null, undefined])('no trace headers are generated when the loader con
 })
 
 test.each([null, undefined])('trace headers are generated without trust key when the loader config trustKey is %s', (trustKey) => {
-  jest.mocked(getLoaderConfig).mockReturnValue({
+  agent.loader_config = {
     accountID: '1234',
     agentID: '5678',
     trustKey
-  })
+  }
 
   const agentConfig = {
     distributed_tracing: {
@@ -343,7 +344,7 @@ test.each([null, undefined])('trace headers are generated without trust key when
   expect(payload.traceId).toEqual(header.d.tr)
   expect(payload.timestamp).toEqual(header.d.ti)
 
-  const loaderConfig = getLoaderConfig()
+  const loaderConfig = agent.loader_config
   expect(header.d.ty).toEqual('Browser')
   expect(header.d.ac).toEqual(loaderConfig.accountID.toString())
   expect(header.d.ap).toEqual(loaderConfig.agentID.toString())

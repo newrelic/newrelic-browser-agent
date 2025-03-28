@@ -32,7 +32,7 @@ export class Instrument extends InstrumentBase {
   constructor (agentRef, auto = true) {
     super(agentRef, FEATURE_NAME, auto)
 
-    this.dt = new DT(agentRef.agentIdentifier)
+    this.dt = new DT(agentRef)
 
     this.handler = (type, args, ctx, group) => handle(type, args, ctx, group, this.ee)
 

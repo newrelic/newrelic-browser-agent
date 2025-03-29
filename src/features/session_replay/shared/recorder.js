@@ -145,18 +145,15 @@ export class Recorder {
     if (!this.#fixing) this.store(event, isCheckout)
   }
 
-  isBeforeSessionExpiry (event) {
-    const isValid = event.timestamp < this.parent.agentRef.runtime.session.state.expiresAt
-    if (!isValid && !this.eventsSeenAfterSessionExpire) {
-      this.eventsSeenAfterSessionExpire = true
-    }
-    return isValid
+  isAfterSessionExpiry (event) {
+    // eslint-disable-next-line no-return-assign
+    return this.eventsSeenAfterSessionExpire ||= this.parent.agentRef.runtime.session?.state?.expiresAt && event.timestamp >= this.parent.agentRef.runtime.session.state.expiresAt
   }
 
   /** Store a payload in the buffer (this.#events).  This should be the callback to the recording lib noticing a mutation */
   store (event, isCheckout) {
     if (!event) return
-    if (!this.isBeforeSessionExpiry(event)) return
+    if (this.isAfterSessionExpiry(event)) return
 
     if (!(this.parent instanceof AggregateBase) && this.#preloaded.length) this.currentBufferTarget = this.#preloaded[this.#preloaded.length - 1]
     else this.currentBufferTarget = this.#events

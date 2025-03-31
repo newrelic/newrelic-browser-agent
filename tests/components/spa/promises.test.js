@@ -4,11 +4,11 @@ import { ee } from '../../../src/common/event-emitter/contextual-ee'
 import { Spa } from '../../../src/features/spa'
 
 const agentIdentifier = 'abcdefg'
+const baseEE = ee.get(agentIdentifier)
 
 jest.mock('../../../src/common/constants/runtime')
 jest.mock('../../../src/common/config/info', () => ({
   __esModule: true,
-  getInfo: jest.fn().mockReturnValue({ jsAttributes: {} }),
   isValid: jest.fn().mockReturnValue(true)
 }))
 jest.mock('../../../src/common/config/init', () => ({
@@ -22,7 +22,7 @@ jest.mock('../../../src/common/harvest/harvester')
 
 let spaInstrument, spaAggregate, newrelic
 beforeAll(async () => {
-  spaInstrument = new Spa({ agentIdentifier, info: {}, init: { spa: { enabled: true } }, runtime: {} })
+  spaInstrument = new Spa({ agentIdentifier, info: {}, init: { spa: { enabled: true } }, runtime: {}, ee: baseEE })
   await expect(spaInstrument.onAggregateImported).resolves.toEqual(true)
   spaAggregate = spaInstrument.featAggregate
   newrelic = helpers.getNewrelicGlobal(spaAggregate.ee)
@@ -66,7 +66,7 @@ describe('Promise base', () => {
       }]
     })
 
-    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, validator, done), { baseEE: ee.get(agentIdentifier) })
+    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, validator, done), { baseEE })
 
     function onInteractionStart (cb) {
       new Promise(function (resolve, reject) {
@@ -100,7 +100,7 @@ describe('Promise base', () => {
       }]
     })
 
-    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, validator, done), { baseEE: ee.get(agentIdentifier) })
+    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, validator, done), { baseEE })
 
     function onInteractionStart (cb) {
       const thrownError = new Error('123')
@@ -132,7 +132,7 @@ describe('Promise prototype .then', () => {
       }]
     })
 
-    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, validator, done), { baseEE: ee.get(agentIdentifier) })
+    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, validator, done), { baseEE })
 
     function onInteractionStart (cb) {
       new Promise(function (resolve, reject) {
@@ -166,7 +166,7 @@ describe('Promise prototype .then', () => {
       }]
     })
 
-    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, validator, done), { baseEE: ee.get(agentIdentifier) })
+    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, validator, done), { baseEE })
 
     function onInteractionStart (cb) {
       Promise.resolve(10).then(function (val) {
@@ -206,7 +206,7 @@ describe('Promise prototype .then', () => {
       }]
     })
 
-    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, validator, done), { baseEE: ee.get(agentIdentifier) })
+    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, validator, done), { baseEE })
 
     function onInteractionStart (cb) {
       Promise.reject(10).then(null, function (val) {
@@ -239,7 +239,7 @@ describe('Promise prototype .then', () => {
       }]
     })
 
-    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, validator, done), { baseEE: ee.get(agentIdentifier) })
+    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, validator, done), { baseEE })
 
     function onInteractionStart (cb) {
       const thrownError = new Error(123)
@@ -271,7 +271,7 @@ describe('Promise prototype .then', () => {
       }]
     })
 
-    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, validator, done), { baseEE: ee.get(agentIdentifier) })
+    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, validator, done), { baseEE })
 
     function onInteractionStart (cb) {
       const promise = Promise.resolve(1)
@@ -325,7 +325,7 @@ describe('Promise prototype .catch', () => {
       }]
     })
 
-    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, validator, done), { baseEE: ee.get(agentIdentifier) })
+    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, validator, done), { baseEE })
 
     function onInteractionStart (cb) {
       new Promise(function (resolve, reject) {
@@ -359,7 +359,7 @@ describe('Promise prototype .catch', () => {
       }]
     })
 
-    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, validator, done), { baseEE: ee.get(agentIdentifier) })
+    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, validator, done), { baseEE })
 
     function onInteractionStart (cb) {
       Promise.reject(10).catch(function (val) {
@@ -392,7 +392,7 @@ describe('Promise prototype .catch', () => {
       }]
     })
 
-    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, validator, done), { baseEE: ee.get(agentIdentifier) })
+    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, validator, done), { baseEE })
 
     function onInteractionStart (cb) {
       const thrownError = new Error(123)
@@ -426,7 +426,7 @@ describe('Promise.resolve', () => {
       }]
     })
 
-    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, validator, done), { baseEE: ee.get(agentIdentifier) })
+    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, validator, done), { baseEE })
 
     function onInteractionStart (cb) {
       Promise.resolve(10).then(function (val) {
@@ -458,7 +458,7 @@ describe('Promise.resolve', () => {
       }]
     })
 
-    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, validator, done), { baseEE: ee.get(agentIdentifier) })
+    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, validator, done), { baseEE })
 
     function onInteractionStart (cb) {
       const p0 = new Promise(function (resolve, reject) {
@@ -492,7 +492,7 @@ test('Promise.reject yields correct value', done => {
     }]
   })
 
-  helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, validator, done), { baseEE: ee.get(agentIdentifier) })
+  helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, validator, done), { baseEE })
 
   function onInteractionStart (cb) {
     Promise.reject(10).catch(function (val) {
@@ -520,7 +520,7 @@ describe('Promise.all', () => {
       }]
     })
 
-    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, validator, done), { baseEE: ee.get(agentIdentifier) })
+    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, validator, done), { baseEE })
 
     function onInteractionStart (cb) {
       const a = Promise.resolve(123)
@@ -563,7 +563,7 @@ describe('Promise.all', () => {
       ]
     })
 
-    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, validator, done), { baseEE: ee.get(agentIdentifier) })
+    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, validator, done), { baseEE })
 
     function onInteractionStart (cb) {
       const a = Promise.reject(123)
@@ -608,7 +608,7 @@ describe('Promise.race', () => {
       }]
     })
 
-    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, validator, done), { baseEE: ee.get(agentIdentifier) })
+    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, validator, done), { baseEE })
 
     function onInteractionStart (cb) {
       const a = Promise.resolve(123)
@@ -648,7 +648,7 @@ describe('Promise.race', () => {
       }]
     })
 
-    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, validator, done), { baseEE: ee.get(agentIdentifier) })
+    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, validator, done), { baseEE })
 
     function onInteractionStart (cb) {
       let idOnAccept

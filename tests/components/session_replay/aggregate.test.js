@@ -6,7 +6,6 @@ import { ee } from '../../../src/common/event-emitter/contextual-ee'
 import { resetAgent, setupAgent } from '../setup-agent'
 import { Instrument as SessionReplay } from '../../../src/features/session_replay/instrument'
 import * as consoleModule from '../../../src/common/util/console'
-import { getInfo } from '../../../src/common/config/info'
 import { MAX_PAYLOAD_SIZE } from '../../../src/common/constants/agent-constants'
 
 let mainAgent
@@ -268,7 +267,7 @@ describe('Session Replay Harvest Behaviors', () => {
     const harvestContents = jest.mocked(sessionReplayAggregate.getHarvestContents).mock.results[0].value
     expect(harvestContents.qs).toMatchObject({
       protocol_version: '0',
-      browser_monitoring_key: getInfo(mainAgent.agentIdentifier).licenseKey
+      browser_monitoring_key: mainAgent.info.licenseKey
     })
     expect(harvestContents.qs.attributes.includes('content_encoding')).toEqual(false)
     expect(harvestContents.qs.attributes.includes('isFirstChunk')).toEqual(true)
@@ -322,11 +321,10 @@ describe('Session Replay Harvest Behaviors', () => {
 })
 
 function createAnyQueryMatcher () {
-  const info = getInfo(mainAgent.agentIdentifier)
   return {
-    browser_monitoring_key: info.licenseKey,
+    browser_monitoring_key: mainAgent.info.licenseKey,
     type: 'SessionReplay',
-    app_id: info.applicationID,
+    app_id: mainAgent.info.applicationID,
     protocol_version: '0',
     attributes: expect.any(String)
   }

@@ -27,7 +27,7 @@ export class Aggregate extends AggregateBase {
     this.firstByteToWindowLoad = 0 // our "frontend" duration
     this.firstByteToDomContent = 0 // our "dom processing" duration
 
-    if (!isValid(agentRef.agentIdentifier)) {
+    if (!isValid(agentRef.info)) {
       this.ee.abort()
       return warn(43)
     }

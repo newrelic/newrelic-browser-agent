@@ -2,7 +2,6 @@
 import * as qp from '@newrelic/nr-querypack'
 import { Serializer } from '../../../src/features/spa/aggregate/serializer'
 import { Interaction } from '../../../src/features/spa/aggregate/interaction'
-import * as infoModule from '../../../src/common/config/info'
 import { Obfuscator } from '../../../src/common/util/obfuscate'
 
 const testCases = require('@newrelic/nr-querypack/examples/all.json').filter((testCase) => {
@@ -10,23 +9,19 @@ const testCases = require('@newrelic/nr-querypack/examples/all.json').filter((te
     testCase.schema.version === 7 &&
     JSON.parse(testCase.json).length === 1
 })
-let mockInfo = {}
 jest.mock('../../../src/common/constants/runtime')
-jest.mock('../../../src/common/config/info', () => ({
-  __esModule: true,
-  getInfo: jest.fn(() => mockInfo),
-  setInfo: jest.fn((_id, newInfo) => { mockInfo = newInfo })
-}))
 jest.mock('../../../src/common/config/init', () => ({
   __esModule: true,
   getConfigurationValue: jest.fn()
 }))
 
 const agentIdentifier = 'abcdefg'
-const serializer = new Serializer({
+const fakeAgent = {
   agentIdentifier,
+  info: {},
   runtime: { obfuscator: new Obfuscator({ init: { obfuscate: [] } }) }
-})
+}
+const serializer = new Serializer(fakeAgent)
 
 const fieldPropMap = {
   start: 'start',
@@ -45,7 +40,7 @@ testCases.forEach(testCase => {
 })
 
 test('spa serializer attributes', () => {
-  const interaction = new Interaction('click', 1459358524622, 'http://example.com/', undefined, undefined, agentIdentifier)
+  const interaction = new Interaction('click', 1459358524622, 'http://example.com/', undefined, undefined, fakeAgent)
   interaction.root.attrs.custom.undefined = void 0
   interaction.root.attrs.custom.function = function foo (bar) {
     return 123
@@ -75,7 +70,7 @@ test('spa serializer attributes', () => {
 })
 
 test('spa interaction serializer attributes', () => {
-  const interaction = new Interaction('click', 1459358524622, 'http://example.com/', undefined, undefined, agentIdentifier)
+  const interaction = new Interaction('click', 1459358524622, 'http://example.com/', undefined, undefined, fakeAgent)
 
   for (let i = 1; i < 100; ++i) {
     interaction.root.attrs.custom['attr ' + i] = i
@@ -91,16 +86,16 @@ test('spa interaction serializer attributes', () => {
 })
 
 test('spa interaction serializer with undefined string values', () => {
-  const interaction = new Interaction('click', 1459358524622, 'http://domain/path', undefined, undefined, agentIdentifier)
+  const interaction = new Interaction('click', 1459358524622, 'http://domain/path', undefined, undefined, fakeAgent)
   const decoded = qp.decode(serializer.serializeSingle(interaction.root))
   expect(decoded[0].customName).toBeNull()
 })
 
 test('serializing multiple interactions', () => {
-  const ixn = new Interaction('initialPageLoad', 0, 'http://some-domain', undefined, undefined, agentIdentifier)
+  const ixn = new Interaction('initialPageLoad', 0, 'http://some-domain', undefined, undefined, fakeAgent)
   addAjaxNode(ixn.root)
 
-  const ixn2 = new Interaction('click', 0, 'http://some-domain', undefined, undefined, agentIdentifier)
+  const ixn2 = new Interaction('click', 0, 'http://some-domain', undefined, undefined, fakeAgent)
   ixn2.routeChange = true
   addAjaxNode(ixn2.root)
 
@@ -128,7 +123,7 @@ function runTest (testCase) {
   const navTiming = []
   let offset = 0
 
-  delete infoModule.getInfo(agentIdentifier).atts
+  delete fakeAgent.info.atts
 
   inputJSON.forEach(function (root) {
     offset = root.start
@@ -149,8 +144,6 @@ function runTest (testCase) {
         timestamp: root.timestamp
       }
     }
-
-    const info = infoModule.getInfo(agentIdentifier)
 
     const typesByName = {}
     schema.nodeTypes.forEach(type => (typesByName[type.type] = type))
@@ -219,11 +212,11 @@ function runTest (testCase) {
         }
 
         if (fieldSpec.name === 'queueTime') {
-          info.queueTime = node.queueTime
+          fakeAgent.info.queueTime = node.queueTime
         }
 
         if (fieldSpec.name === 'appTime') {
-          info.applicationTime = node.appTime
+          fakeAgent.info.applicationTime = node.appTime
         }
 
         if (fieldSpec.name === 'tracedCallbackDuration') {
@@ -284,7 +277,7 @@ function handleAttributes (node) {
         node.attrs.custom[child.key] = null
         break
       case 'apmAttributes':
-        infoModule.getInfo(agentIdentifier).atts = child.obfuscatedAttributes
+        fakeAgent.info.atts = child.obfuscatedAttributes
         break
       case 'elementData':
         node.attrs.elementData = child

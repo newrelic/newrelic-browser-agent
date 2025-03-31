@@ -5,9 +5,9 @@ jest.unmock('../../../../../src/features/soft_navigations/aggregate/ajax-node')
 jest.unmock('../../../../../src/features/soft_navigations/aggregate/bel-node')
 jest.unmock('../../../../../src/common/serialize/bel-serializer')
 
-const someAgentId = 'abcd'
 const someAgent = {
-  agentIdentifier: someAgentId,
+  agentIdentifier: 'abcd',
+  info: {},
   runtime: { obfuscator: new Obfuscator({ init: { obfuscate: [] } }) }
 }
 const someAjaxEvent = {
@@ -46,7 +46,7 @@ beforeEach(() => {
 test('Ajax node creation is correct', () => {
   const ajn = new AjaxNode(someAgent, someAjaxEvent)
 
-  expect(ajn.agentIdentifier).toEqual(someAgentId)
+  expect(ajn.info).toEqual({})
   expect(ajn.belType).toEqual(2)
   expect(ajn.nodeId).toEqual(1)
   expect(ajn.callbackDuration === 0 && ajn.callbackEnd === 0).toBeTruthy()

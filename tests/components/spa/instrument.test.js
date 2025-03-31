@@ -1,11 +1,11 @@
 import { Spa } from '../../../src/features/spa'
 import { registerHandler } from '../../../src/common/event-emitter/register-handler'
 import { drain } from '../../../src/common/drain/drain'
+import { ee } from '../../../src/common/event-emitter/contextual-ee'
 
 jest.mock('../../../src/common/constants/runtime')
 jest.mock('../../../src/common/config/info', () => ({
   __esModule: true,
-  getInfo: jest.fn().mockReturnValue({ jsAttributes: {} }),
   isValid: jest.fn().mockReturnValue(true)
 }))
 jest.mock('../../../src/common/config/init', () => ({
@@ -17,7 +17,7 @@ let spaInstrument
 const agentIdentifier = 'abcdefg'
 
 beforeAll(async () => {
-  spaInstrument = new Spa({ agentIdentifier, info: {}, init: { spa: { enabled: true } }, runtime: {} }, false)
+  spaInstrument = new Spa({ agentIdentifier, info: {}, init: { spa: { enabled: true } }, runtime: {}, ee: ee.get(agentIdentifier) }, false)
 })
 
 describe('SPA instrument', () => {

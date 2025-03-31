@@ -4,7 +4,7 @@
  */
 import { setAPI, setTopLevelCallers } from '../api/api'
 import { addToNREUM, gosCDN } from '../../common/window/nreum'
-import { setInfo } from '../../common/config/info'
+import { mergeInfo } from '../../common/config/info'
 import { setConfiguration } from '../../common/config/init'
 import { mergeRuntime } from '../../common/config/runtime'
 import { activatedFeatures } from '../../common/util/feature-flags'
@@ -39,7 +39,7 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
   if (isWorkerScope) { // add a default attr to all worker payloads
     info.jsAttributes.isWorker = true
   }
-  setInfo(agent.agentIdentifier, info)
+  agent.info = mergeInfo(info)
 
   const updatedInit = agent.init
   const internalTrafficList = [info.beacon, info.errorBeacon]

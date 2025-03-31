@@ -9,7 +9,6 @@ import * as asyncApiModule from '../../src/loaders/api/apiAsync'
 import * as windowLoadModule from '../../src/common/window/load'
 import * as handleModule from '../../src/common/event-emitter/handle'
 import { SR_EVENT_EMITTER_TYPES } from '../../src/features/session_replay/constants'
-import { setNREUMInitializedAgent } from '../../src/common/window/nreum'
 
 describe('setAPI', () => {
   let agentId
@@ -240,7 +239,6 @@ describe('setAPI', () => {
   describe('setCustomAttribute', () => {
     beforeEach(() => {
       setAPI(agentInst, true)
-      setNREUMInitializedAgent(agentId, agentInst) // needed since setCustomAttribute still calls setInfo instead of modifying agentInst.info directly
     })
 
     test('should only create SM event emitter event for calls to API', () => {
@@ -370,7 +368,6 @@ describe('setAPI', () => {
     })
 
     test('should set a custom attribute with name enduser.id', () => {
-      setNREUMInitializedAgent(agentId, agentInst) // needed since setUserId still calls setInfo instead of modifying agentInst.info directly
       const userId = faker.string.uuid()
       agentInst.setUserId(userId)
 
@@ -413,7 +410,6 @@ describe('setAPI', () => {
     })
 
     test('should set a custom attribute with name application.version', () => {
-      setNREUMInitializedAgent(agentId, agentInst) // needed since setApplicationVersion still calls setInfo instead of modifying agentInst.info directly
       const args = [faker.string.uuid()]
       agentInst.setApplicationVersion(...args)
 

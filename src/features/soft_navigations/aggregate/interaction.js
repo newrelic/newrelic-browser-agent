@@ -2,7 +2,6 @@
  * Copyright 2020-2025 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { getInfo } from '../../../common/config/info'
 import { globalScope, initialLocation } from '../../../common/constants/runtime'
 import { generateUuid } from '../../../common/ids/unique-id'
 import { addCustomAttributes, getAddStringContext, nullable, numeric } from '../../../common/serialize/bel-serializer'
@@ -84,7 +83,7 @@ export class Interaction extends BelNode {
   #finish (customEndTime = 0) {
     clearTimeout(this.cancellationTimer)
     this.end = Math.max(this.domTimestamp, this.historyTimestamp, customEndTime)
-    this.customAttributes = { ...getInfo(this.agentIdentifier).jsAttributes, ...this.customAttributes } // attrs specific to this interaction should have precedence over the general custom attrs
+    this.customAttributes = { ...this.info.jsAttributes, ...this.customAttributes } // attrs specific to this interaction should have precedence over the general custom attrs
     this.status = INTERACTION_STATUS.FIN
 
     // Run all the callbacks awaiting this interaction to finish.
@@ -147,7 +146,7 @@ export class Interaction extends BelNode {
       nullable(this.firstPaint, numeric, true) + nullable(this.firstContentfulPaint, numeric)
     ]
     const allAttachedNodes = addCustomAttributes(this.customAttributes || {}, addString) // start with all custom attributes
-    if (getInfo(this.agentIdentifier).atts) allAttachedNodes.push('a,' + addString(getInfo(this.agentIdentifier).atts)) // add apm provided attributes
+    if (this.info.atts) allAttachedNodes.push('a,' + addString(this.info.atts)) // add apm provided attributes
     /* Querypack encoder+decoder quirkiness:
        - If first ixn node of payload is being processed, its children's start time must be offset by this node's start. (firstStartTime should be undefined.)
        - Else for subsequent ixns in the same payload, we go back to using that first ixn node's start to offset their children's start. */

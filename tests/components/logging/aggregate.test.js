@@ -5,15 +5,13 @@ import { Log } from '../../../src/features/logging/shared/log'
 import * as consoleModule from '../../../src/common/util/console'
 import * as handleModule from '../../../src/common/event-emitter/handle'
 import { resetAgent, setupAgent } from '../setup-agent'
-import { getInfo } from '../../../src/common/config/info'
 
 import { faker } from '@faker-js/faker'
 
-let mainAgent, info
+let mainAgent
 
 beforeAll(async () => {
   mainAgent = setupAgent()
-  info = getInfo(mainAgent.agentIdentifier)
 })
 
 let loggingAggregate
@@ -92,7 +90,7 @@ describe('payloads', () => {
     expect(loggingAggregate.events.get()[0].data[0]).toEqual(expectedLog)
 
     expect(loggingAggregate.makeHarvestPayload()[0].payload).toEqual({
-      qs: { browser_monitoring_key: info.licenseKey },
+      qs: { browser_monitoring_key: mainAgent.info.licenseKey },
       body: [{
         common: {
           attributes: {
@@ -104,7 +102,7 @@ describe('payloads', () => {
             hasReplay: false,
             hasTrace: false,
             ptid: mainAgent.agentIdentifier,
-            appId: info.applicationID,
+            appId: mainAgent.info.applicationID,
             standalone: false,
             agentVersion: expect.any(String)
           }

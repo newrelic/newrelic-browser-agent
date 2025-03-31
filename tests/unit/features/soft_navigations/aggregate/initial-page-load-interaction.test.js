@@ -1,13 +1,6 @@
 import { InitialPageLoadInteraction } from '../../../../../src/features/soft_navigations/aggregate/initial-page-load-interaction'
 import { Obfuscator } from '../../../../../src/common/util/obfuscate'
 
-jest.mock('../../../../../src/common/config/info', () => ({
-  __esModule: true,
-  getInfo: jest.fn().mockReturnValue({
-    queueTime: 444,
-    appTime: 888
-  })
-}))
 jest.mock('../../../../../src/common/config/init', () => ({
   __esModule: true,
   getConfigurationValue: jest.fn()
@@ -32,6 +25,7 @@ jest.mock('../../../../../src/common/timing/nav-timing', () => ({
 test('InitialPageLoad serialized output is correct', () => {
   const ipl = new InitialPageLoadInteraction({
     agentIdentifier: 'abc',
+    info: { queueTime: 444, appTime: 888 },
     runtime: { obfuscator: new Obfuscator({ init: { obfuscate: [] } }) }
   })
   ipl.id = 'static-id'

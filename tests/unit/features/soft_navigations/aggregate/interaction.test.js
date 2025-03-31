@@ -2,16 +2,6 @@ import { Interaction } from '../../../../../src/features/soft_navigations/aggreg
 import { INTERACTION_STATUS } from '../../../../../src/features/soft_navigations/constants'
 import { Obfuscator } from '../../../../../src/common/util/obfuscate'
 
-jest.mock('../../../../../src/common/config/info', () => ({
-  __esModule: true,
-  getInfo: jest.fn().mockReturnValue({
-    jsAttributes: {
-      key1: 'value1',
-      key2: 'value2'
-    },
-    atts: 'apm_attributes_string'
-  })
-}))
 jest.mock('../../../../../src/common/config/init', () => ({
   __esModule: true,
   getConfigurationValue: jest.fn()
@@ -19,6 +9,13 @@ jest.mock('../../../../../src/common/config/init', () => ({
 
 const fakeAgent = {
   agentIdentifier: 'abcd',
+  info: {
+    jsAttributes: {
+      key1: 'value1',
+      key2: 'value2'
+    },
+    atts: 'apm_attributes_string'
+  },
   runtime: { obfuscator: new Obfuscator({ init: { obfuscate: [] } }) }
 }
 
@@ -187,16 +184,6 @@ test('Done interactions cannot be done again', () => {
 
 test('Interaction serialize output is correct', () => {
   jest.resetModules() // reset so we get a reliable node ID of 1
-  jest.doMock('../../../../../src/common/config/info', () => ({
-    __esModule: true,
-    getInfo: jest.fn().mockReturnValue({
-      jsAttributes: {
-        key1: 'value1',
-        key2: 'value2'
-      },
-      atts: 'apm_attributes_string'
-    })
-  }))
   jest.doMock('../../../../../src/common/config/init', () => ({
     __esModule: true,
     getConfigurationValue: jest.fn()

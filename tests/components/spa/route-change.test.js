@@ -5,7 +5,6 @@ import { Spa } from '../../../src/features/spa'
 jest.mock('../../../src/common/constants/runtime')
 jest.mock('../../../src/common/config/info', () => ({
   __esModule: true,
-  getInfo: jest.fn().mockReturnValue({ jsAttributes: {} }),
   isValid: jest.fn().mockReturnValue(true)
 }))
 jest.mock('../../../src/common/config/init', () => ({
@@ -16,9 +15,10 @@ jest.mock('../../../src/common/harvest/harvester')
 
 let spaInstrument, spaAggregate, newrelic
 const agentIdentifier = 'abcdefg'
+const baseEE = ee.get(agentIdentifier)
 
 beforeAll(async () => {
-  spaInstrument = new Spa({ agentIdentifier, info: {}, init: { spa: { enabled: true } }, runtime: {} })
+  spaInstrument = new Spa({ agentIdentifier, info: {}, init: { spa: { enabled: true } }, runtime: {}, ee: baseEE })
   await expect(spaInstrument.onAggregateImported).resolves.toEqual(true)
   spaAggregate = spaInstrument.featAggregate
   spaAggregate.blocked = true
@@ -37,7 +37,7 @@ test('setCurrentRouteName', done => {
   })
 
   newrelic.setCurrentRouteName('test start')
-  helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, spaAggregate, validator, done, false), { baseEE: ee.get(agentIdentifier) })
+  helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, spaAggregate, validator, done, false), { baseEE })
 
   function onInteractionStart (cb) {
     newrelic.setCurrentRouteName('in test interaction')
@@ -53,7 +53,7 @@ test('interaction is not a route change if it does not change the url while rout
   })
 
   newrelic.setCurrentRouteName(null)
-  helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, spaAggregate, validator, done, false), { baseEE: ee.get(agentIdentifier) })
+  helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, spaAggregate, validator, done, false), { baseEE })
 
   function onInteractionStart (cb) {
     cb()
@@ -68,7 +68,7 @@ test('interaction is not a route change if it does not change url or route', don
   })
 
   newrelic.setCurrentRouteName('test start')
-  helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, spaAggregate, validator, done, false), { baseEE: ee.get(agentIdentifier) })
+  helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, spaAggregate, validator, done, false), { baseEE })
 
   function onInteractionStart (cb) {
     cb()
@@ -83,7 +83,7 @@ test('url change is a route change when route name is set', done => {
   })
 
   newrelic.setCurrentRouteName('test start')
-  helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, spaAggregate, validator, done, true), { baseEE: ee.get(agentIdentifier) })
+  helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, spaAggregate, validator, done, true), { baseEE })
 
   function onInteractionStart (cb) {
     window.location.hash = Math.random()
@@ -99,7 +99,7 @@ test('replacestate is a route change when route name is set', done => {
   })
 
   newrelic.setCurrentRouteName('test start')
-  helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, spaAggregate, validator, done, true), { baseEE: ee.get(agentIdentifier) })
+  helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, spaAggregate, validator, done, true), { baseEE })
 
   function onInteractionStart (cb) {
     const prevLocation = window.location.pathname + window.location.search + window.location.hash
@@ -117,7 +117,7 @@ test('setting route to null does not count as a route change', done => {
   })
 
   newrelic.setCurrentRouteName('test start')
-  helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, spaAggregate, validator, done, false), { baseEE: ee.get(agentIdentifier) })
+  helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, spaAggregate, validator, done, false), { baseEE })
 
   function onInteractionStart (cb) {
     newrelic.setCurrentRouteName(null)
@@ -133,7 +133,7 @@ test('changing the url when route name is null counts as a route change', done =
   })
 
   newrelic.setCurrentRouteName(null)
-  helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, spaAggregate, validator, done, true), { baseEE: ee.get(agentIdentifier) })
+  helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, spaAggregate, validator, done, true), { baseEE })
 
   function onInteractionStart (cb) {
     window.location.hash = Math.random()
@@ -149,7 +149,7 @@ test('resetting the route to the same routename does not count as a route change
   })
 
   newrelic.setCurrentRouteName('test start')
-  helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, spaAggregate, validator, done, false), { baseEE: ee.get(agentIdentifier) })
+  helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, spaAggregate, validator, done, false), { baseEE })
 
   function onInteractionStart (cb) {
     newrelic.setCurrentRouteName('test start')
@@ -165,7 +165,7 @@ test('changing route, and changing back to original is not a route change', done
   })
 
   newrelic.setCurrentRouteName('original')
-  helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, spaAggregate, validator, done, false), { baseEE: ee.get(agentIdentifier) })
+  helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, spaAggregate, validator, done, false), { baseEE })
 
   function onInteractionStart (cb) {
     newrelic.setCurrentRouteName('new')
@@ -183,7 +183,7 @@ test('changing url, and changing back to original is a route change', done => {
 
   newrelic.setCurrentRouteName(null)
   window.location.hash = 'original'
-  helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, spaAggregate, validator, done, true), { baseEE: ee.get(agentIdentifier) })
+  helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, spaAggregate, validator, done, true), { baseEE })
 
   function onInteractionStart (cb) {
     window.location.hash = 'new'

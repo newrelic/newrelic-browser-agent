@@ -2,11 +2,8 @@
  * Copyright 2020-2025 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-
-import { getInfo } from '../../../common/config/info'
 import { initialLocation } from '../../../common/constants/runtime'
 import { gosNREUMOriginals } from '../../../common/window/nreum'
-import { ee } from '../../../common/event-emitter/contextual-ee'
 import { InteractionNode } from './interaction-node'
 
 var originalSetTimeout = gosNREUMOriginals().o.ST
@@ -14,12 +11,12 @@ var originalClearTimeout = gosNREUMOriginals().o.CT
 
 var lastId = {}
 
-export function Interaction (eventName, timestamp, url, routeName, onFinished, agentIdentifier) {
-  this.agentIdentifier = agentIdentifier
-  this.ee = ee.get(agentIdentifier)
+export function Interaction (eventName, timestamp, url, routeName, onFinished, agentRef) {
+  this.info = agentRef.info
+  this.ee = agentRef.ee
 
-  lastId[agentIdentifier] = 0
-  this.id = ++lastId[agentIdentifier]
+  lastId[agentRef.agentIdentifier] = 0
+  this.id = ++lastId[agentRef.agentIdentifier]
   this.eventName = eventName
   this.nodes = 0
   this.remaining = 0
@@ -102,7 +99,7 @@ InteractionPrototype.finish = function finishInteraction () {
     this.onFinished(this)
   }
 
-  Object.entries(getInfo(interaction.agentIdentifier).jsAttributes || {}).forEach(([attr, value]) => {
+  Object.entries(interaction.info.jsAttributes || {}).forEach(([attr, value]) => {
     if (!(attr in customAttrs)) customAttrs[attr] = value
   })
 

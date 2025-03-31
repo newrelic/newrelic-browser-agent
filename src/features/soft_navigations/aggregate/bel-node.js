@@ -16,7 +16,7 @@ export class BelNode {
 
   constructor (agentRef) {
     this.obfuscator = agentRef.runtime.obfuscator
-    this.agentIdentifier = agentRef.agentIdentifier
+    this.info = agentRef.info
   }
 
   addChild (child) {

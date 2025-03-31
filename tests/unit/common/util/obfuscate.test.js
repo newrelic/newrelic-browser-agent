@@ -3,19 +3,13 @@ import { Obfuscator } from '../../../../src/common/util/obfuscate'
 import * as initModule from '../../../../src/common/config/init'
 
 jest.mock('../../../../src/common/config/init')
-jest.mock('../../../../src/common/context/shared-context')
 jest.mock('../../../../src/common/url/protocol')
 jest.mock('../../../../src/common/util/console')
 
-let agentIdentifier
 const rules = [{
   regex: /pii/g,
   replacement: 'OBFUSCATED'
 }]
-
-beforeEach(() => {
-  agentIdentifier = faker.string.uuid()
-})
 
 afterEach(() => {
   jest.resetAllMocks()
@@ -58,7 +52,6 @@ describe('obfuscateString', () => {
     jest.spyOn(initModule, 'getConfigurationValue').mockReturnValue(rules)
 
     const obfuscator = new Obfuscator({ init: { obfuscate: [] } })
-    obfuscator.sharedContext = { agentIdentifier }
 
     expect(obfuscator.obfuscateString(input)).toEqual(input)
   })

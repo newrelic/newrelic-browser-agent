@@ -3,10 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { FEATURE_NAMES } from '../features/features'
-import { getInfo, setInfo } from '../../common/config/info'
-import { getRuntime } from '../../common/config/runtime'
+import { setInfo } from '../../common/config/info'
 import { handle } from '../../common/event-emitter/handle'
-import { ee } from '../../common/event-emitter/contextual-ee'
 import { drain, registerDrain } from '../../common/drain/drain'
 import { onWindowLoad } from '../../common/window/load'
 import { isBrowserScope } from '../../common/constants/runtime'
@@ -31,11 +29,11 @@ export function setTopLevelCallers () {
 
   function caller (fnName, ...args) {
     let returnVals = []
-    Object.values(nr.initializedAgents).forEach(val => {
-      if (!val || !val.api || !val.runtime) {
+    Object.values(nr.initializedAgents).forEach(agt => {
+      if (!agt || !agt.runtime) {
         warn(38, fnName)
-      } else if (val.exposed && val.api[fnName] && val.runtime.loaderType !== 'micro-agent') {
-        returnVals.push(val.api[fnName](...args))
+      } else if (agt.exposed && agt[fnName] && agt.runtime.loaderType !== 'micro-agent') {
+        returnVals.push(agt[fnName](...args))
       }
     })
     return returnVals[0]
@@ -44,42 +42,40 @@ export function setTopLevelCallers () {
 
 const replayRunning = {}
 
-export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) {
-  if (!forceDrain) registerDrain(agentIdentifier, 'api')
-  const apiInterface = {}
-  var instanceEE = ee.get(agentIdentifier)
-  var tracerEE = instanceEE.get('tracer')
+export function setAPI (agent, forceDrain) {
+  if (!forceDrain) registerDrain(agent.agentIdentifier, 'api')
+  const tracerEE = agent.ee.get('tracer')
 
-  replayRunning[agentIdentifier] = MODE.OFF
+  replayRunning[agent.agentIdentifier] = MODE.OFF
 
-  instanceEE.on(SR_EVENT_EMITTER_TYPES.REPLAY_RUNNING, (isRunning) => {
-    replayRunning[agentIdentifier] = isRunning
+  agent.ee.on(SR_EVENT_EMITTER_TYPES.REPLAY_RUNNING, (isRunning) => {
+    replayRunning[agent.agentIdentifier] = isRunning
   })
 
-  var prefix = 'api-'
-  var spaPrefix = prefix + 'ixn-'
+  const prefix = 'api-'
+  const spaPrefix = prefix + 'ixn-'
 
-  apiInterface.log = function (message, { customAttributes = {}, level = LOG_LEVELS.INFO } = {}) {
-    handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/log/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
-    bufferLog(instanceEE, message, customAttributes, level)
+  agent.log = function (message, { customAttributes = {}, level = LOG_LEVELS.INFO } = {}) {
+    handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/log/called'], undefined, FEATURE_NAMES.metrics, agent.ee)
+    bufferLog(agent.ee, message, customAttributes, level)
   }
 
-  apiInterface.wrapLogger = (parent, functionName, { customAttributes = {}, level = LOG_LEVELS.INFO } = {}) => {
-    handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/wrapLogger/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
-    wrapLogger(instanceEE, parent, functionName, { customAttributes, level })
+  agent.wrapLogger = (parent, functionName, { customAttributes = {}, level = LOG_LEVELS.INFO } = {}) => {
+    handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/wrapLogger/called'], undefined, FEATURE_NAMES.metrics, agent.ee)
+    wrapLogger(agent.ee, parent, functionName, { customAttributes, level })
   }
 
   // Setup stub functions that queue calls for later processing.
-  asyncApiMethods.forEach(fnName => { apiInterface[fnName] = apiCall(prefix, fnName, true, 'api') })
+  asyncApiMethods.forEach(fnName => { agent[fnName] = apiCall(prefix, fnName, true, 'api') })
 
-  apiInterface.addPageAction = apiCall(prefix, 'addPageAction', true, FEATURE_NAMES.genericEvents)
+  agent.addPageAction = apiCall(prefix, 'addPageAction', true, FEATURE_NAMES.genericEvents)
 
-  apiInterface.recordCustomEvent = apiCall(prefix, 'recordCustomEvent', true, FEATURE_NAMES.genericEvents)
+  agent.recordCustomEvent = apiCall(prefix, 'recordCustomEvent', true, FEATURE_NAMES.genericEvents)
 
-  apiInterface.setPageViewName = function (name, host) {
+  agent.setPageViewName = function (name, host) {
     if (typeof name !== 'string') return
     if (name.charAt(0) !== '/') name = '/' + name
-    getRuntime(agentIdentifier).customTransaction = (host || 'http://custom.transaction') + name
+    agent.runtime.customTransaction = (host || 'http://custom.transaction') + name
     return apiCall(prefix, 'setPageViewName', true)()
   }
 
@@ -92,15 +88,15 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
    * @returns @see apiCall
    */
   function appendJsAttribute (key, value, apiName, addToBrowserStorage) {
-    const currentInfo = getInfo(agentIdentifier)
+    const currentInfo = agent.info
     if (value === null) {
       delete currentInfo.jsAttributes[key]
     } else {
-      setInfo(agentIdentifier, { ...currentInfo, jsAttributes: { ...currentInfo.jsAttributes, [key]: value } })
+      setInfo(agent.agentIdentifier, { ...currentInfo, jsAttributes: { ...currentInfo.jsAttributes, [key]: value } })
     }
     return apiCall(prefix, apiName, true, (!!addToBrowserStorage || value === null) ? 'session' : undefined)(key, value)
   }
-  apiInterface.setCustomAttribute = function (name, value, persistAttribute = false) {
+  agent.setCustomAttribute = function (name, value, persistAttribute = false) {
     if (typeof name !== 'string') {
       warn(39, typeof name)
       return
@@ -116,7 +112,7 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
    * @param {string} value - unique user identifier; a null user id suggests none should exist
    * @returns @see apiCall
    */
-  apiInterface.setUserId = function (value) {
+  agent.setUserId = function (value) {
     if (!(typeof value === 'string' || value === null)) {
       warn(41, typeof value)
       return
@@ -129,7 +125,7 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
    * @param {string|null} value - Application version -- if null, will "unset" the value
    * @returns @see apiCall
    */
-  apiInterface.setApplicationVersion = function (value) {
+  agent.setApplicationVersion = function (value) {
     if (!(typeof value === 'string' || value === null)) {
       warn(42, typeof value)
       return
@@ -137,26 +133,26 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
     return appendJsAttribute('application.version', value, 'setApplicationVersion', false)
   }
 
-  apiInterface.start = () => {
+  agent.start = () => {
     try {
-      handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/start/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
-      instanceEE.emit('manual-start-all')
+      handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/start/called'], undefined, FEATURE_NAMES.metrics, agent.ee)
+      agent.ee.emit('manual-start-all')
     } catch (err) {
       warn(23, err)
     }
   }
 
-  apiInterface[SR_EVENT_EMITTER_TYPES.RECORD] = function () {
-    handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/recordReplay/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
-    handle(SR_EVENT_EMITTER_TYPES.RECORD, [], undefined, FEATURE_NAMES.sessionReplay, instanceEE)
+  agent[SR_EVENT_EMITTER_TYPES.RECORD] = function () {
+    handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/recordReplay/called'], undefined, FEATURE_NAMES.metrics, agent.ee)
+    handle(SR_EVENT_EMITTER_TYPES.RECORD, [], undefined, FEATURE_NAMES.sessionReplay, agent.ee)
   }
 
-  apiInterface[SR_EVENT_EMITTER_TYPES.PAUSE] = function () {
-    handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/pauseReplay/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
-    handle(SR_EVENT_EMITTER_TYPES.PAUSE, [], undefined, FEATURE_NAMES.sessionReplay, instanceEE)
+  agent[SR_EVENT_EMITTER_TYPES.PAUSE] = function () {
+    handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/pauseReplay/called'], undefined, FEATURE_NAMES.metrics, agent.ee)
+    handle(SR_EVENT_EMITTER_TYPES.PAUSE, [], undefined, FEATURE_NAMES.sessionReplay, agent.ee)
   }
 
-  apiInterface.interaction = function (options) {
+  agent.interaction = function (options) {
     return new InteractionHandle().get(typeof options === 'object' ? options : {})
   }
 
@@ -167,9 +163,9 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
       var contextStore = {}
       var ixn = this
       var hasCb = typeof cb === 'function'
-      handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/createTracer/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
+      handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/createTracer/called'], undefined, FEATURE_NAMES.metrics, agent.ee)
       // Soft navigations won't support Tracer nodes, but this fn should still work the same otherwise (e.g., run the orig cb).
-      if (!runSoftNavOverSpa) handle(spaPrefix + 'tracer', [now(), name, contextStore], ixn, FEATURE_NAMES.spa, instanceEE)
+      if (!agent.runSoftNavOverSpa) handle(spaPrefix + 'tracer', [now(), name, contextStore], ixn, FEATURE_NAMES.spa, agent.ee)
       return function () {
         tracerEE.emit((hasCb ? '' : 'no-') + 'fn-start', [now(), ixn, hasCb], contextStore)
         if (hasCb) {
@@ -189,30 +185,30 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
   }
 
   ;['actionText', 'setName', 'setAttribute', 'save', 'ignore', 'onEnd', 'getContext', 'end', 'get'].forEach(name => {
-    InteractionApiProto[name] = apiCall(spaPrefix, name, undefined, runSoftNavOverSpa ? FEATURE_NAMES.softNav : FEATURE_NAMES.spa)
+    InteractionApiProto[name] = apiCall(spaPrefix, name, undefined, agent.runSoftNavOverSpa ? FEATURE_NAMES.softNav : FEATURE_NAMES.spa)
   })
-  apiInterface.setCurrentRouteName = runSoftNavOverSpa ? apiCall(spaPrefix, 'routeName', undefined, FEATURE_NAMES.softNav) : apiCall(prefix, 'routeName', true, FEATURE_NAMES.spa)
+  agent.setCurrentRouteName = agent.runSoftNavOverSpa ? apiCall(spaPrefix, 'routeName', undefined, FEATURE_NAMES.softNav) : apiCall(prefix, 'routeName', true, FEATURE_NAMES.spa)
 
   function apiCall (prefix, name, notSpa, bufferGroup) {
     return function () {
-      handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/' + name + '/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
+      handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/' + name + '/called'], undefined, FEATURE_NAMES.metrics, agent.ee)
       dispatchGlobalEvent({
-        agentIdentifier,
-        loaded: !!activatedFeatures?.[agentIdentifier],
+        agentIdentifier: agent.agentIdentifier,
+        loaded: !!activatedFeatures?.[agent.agentIdentifier],
         type: 'data',
         name: 'api',
         feature: prefix + name,
         data: { notSpa, bufferGroup }
       })
-      if (bufferGroup) handle(prefix + name, [notSpa ? now() : performance.now(), ...arguments], notSpa ? null : this, bufferGroup, instanceEE) // no bufferGroup means only the SM is emitted
+      if (bufferGroup) handle(prefix + name, [notSpa ? now() : performance.now(), ...arguments], notSpa ? null : this, bufferGroup, agent.ee) // no bufferGroup means only the SM is emitted
       return notSpa ? undefined : this // returns the InteractionHandle which allows these methods to be chained
     }
   }
 
-  apiInterface.noticeError = function (err, customAttributes) {
+  agent.noticeError = function (err, customAttributes) {
     if (typeof err === 'string') err = new Error(err)
-    handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/noticeError/called'], undefined, FEATURE_NAMES.metrics, instanceEE)
-    handle('err', [err, now(), false, customAttributes, !!replayRunning[agentIdentifier]], undefined, FEATURE_NAMES.jserrors, instanceEE)
+    handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/noticeError/called'], undefined, FEATURE_NAMES.metrics, agent.ee)
+    handle('err', [err, now(), false, customAttributes, !!replayRunning[agent.agentIdentifier]], undefined, FEATURE_NAMES.jserrors, agent.ee)
   }
 
   // theres no window.load event on non-browser scopes, lazy load immediately
@@ -221,14 +217,14 @@ export function setAPI (agentIdentifier, forceDrain, runSoftNavOverSpa = false) 
   else onWindowLoad(() => lazyLoad(), true)
 
   function lazyLoad () {
-    import(/* webpackChunkName: "async-api" */'./apiAsync').then(({ setAPI }) => {
-      setAPI(agentIdentifier)
-      drain(agentIdentifier, 'api')
+    import(/* webpackChunkName: "async-api" */'./apiAsync').then(({ setAsyncAPI }) => {
+      setAsyncAPI(agent)
+      drain(agent.agentIdentifier, 'api')
     }).catch((err) => {
       warn(27, err)
-      instanceEE.abort()
+      agent.ee.abort()
     })
   }
 
-  return apiInterface
+  return true
 }

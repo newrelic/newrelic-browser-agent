@@ -136,14 +136,14 @@ export class AggregateBase extends FeatureBase {
       } catch (err) {
         // do nothing
       }
-      configure({ agentIdentifier: this.agentIdentifier }, {
+      configure(existingAgent, {
         ...cdn,
         info: {
           ...cdn.info,
           jsAttributes
         },
         runtime: existingAgent.runtime
-      })
+      }, existingAgent.runtime.loaderType)
     }
   }
 

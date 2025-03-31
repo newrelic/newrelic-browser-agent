@@ -14,6 +14,8 @@ import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { buildNRMetaNode, customMasker } from './utils'
 import { IDEAL_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
 import { AggregateBase } from '../../utils/aggregate-base'
+import { warn } from '../../../common/util/console'
+import { single } from '../../../common/util/invoke'
 
 export class Recorder {
   /** Each page mutation or event will be stored (raw) in this array. This array will be cleared on each harvest */
@@ -24,6 +26,8 @@ export class Recorder {
   #preloaded
   /** flag that if true, blocks events from being "stored".  Only set to true when a full snapshot has incomplete nodes (only stylesheets ATM) */
   #fixing = false
+
+  #warnCSSOnce = single(() => warn(47)) // notifies user of potential replayer issue if fix_stylesheets is off
 
   constructor (parent) {
     this.#events = new RecorderEvents()
@@ -121,6 +125,7 @@ export class Recorder {
     if (!this.shouldFix) {
       if (incompletes > 0) {
         this.currentBufferTarget.inlinedAllStylesheets = false
+        this.#warnCSSOnce()
         handle(SUPPORTABILITY_METRIC_CHANNEL, [missingInlineSMTag + 'Skipped', incompletes], undefined, FEATURE_NAMES.metrics, this.parent.ee)
       }
       return this.store(event, isCheckout)

@@ -93,3 +93,5 @@
 `An internal agent process failed to execute.`
 ### 46
 `A reserved eventType was provided to recordCustomEvent(...) -- The event was not recorded.`
+### 47
+`We tried to access a stylesheet's contents but failed due to browser security. For best results, ensure that cross-domain CSS assets are decorated with "crossorigin='anonymous'" attribution or are otherwise publicly accessible.`

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { globalScope } from '../../../../common/constants/runtime'
-import { DEFAULT_EXPIRES_MS, MODE } from '../../../../common/session/constants'
+import { MODE } from '../../../../common/session/constants'
 import { now } from '../../../../common/timing/now'
 import { parseUrl } from '../../../../common/url/parse-url'
 import { eventOrigin } from '../../../../common/util/event-origin'
@@ -42,6 +42,12 @@ export class TraceStorage {
     this.eventsSeenAfterSessionExpire = false
   }
 
+  isAfterSessionExpiry (entryTimestamp) {
+    // eslint-disable-next-line no-return-assign
+    return this.eventsSeenAfterSessionExpire ||= this.parent.timeKeeper?.ready && this.parent.agentRef.runtime?.session?.state?.expiresAt &&
+      this.parent.timeKeeper.convertRelativeTimestamp(entryTimestamp) >= this.parent.agentRef.runtime.session.state.expiresAt
+  }
+
   /** Central function called by all the other store__ & addToTrace API to append a trace node. */
   storeSTN (stn) {
     if (this.parent.blocked) return
@@ -50,7 +56,7 @@ export class TraceStorage {
       const openedSpace = this.trimSTNs(ERROR_MODE_SECONDS_WINDOW) // but maybe we could make some space by discarding irrelevant nodes if we're in sessioned Error mode
       if (openedSpace === 0) return
     }
-    if (!this.isBeforeSessionExpiry(stn.s)) return
+    if (this.isAfterSessionExpiry(stn.s)) return
 
     if (this.trace[stn.n]) this.trace[stn.n].push(stn)
     else this.trace[stn.n] = [stn]
@@ -139,16 +145,6 @@ export class TraceStorage {
 
   processPVT (name, value, attrs) {
     this.storeTiming({ [name]: value })
-  }
-
-  isBeforeSessionExpiry (entryTimestamp) {
-    let isValidTimingEntry = entryTimestamp < DEFAULT_EXPIRES_MS
-
-    if (!isValidTimingEntry && !this.eventsSeenAfterSessionExpire) {
-      this.eventsSeenAfterSessionExpire = true
-    }
-
-    return isValidTimingEntry
   }
 
   storeTiming (timingEntry, isAbsoluteTimestamp = false) {

@@ -32,8 +32,8 @@ export class Interaction extends BelNode {
   onDone = []
   cancellationTimer
 
-  constructor (agentIdentifier, uiEvent, uiEventTimestamp, currentRouteKnown, currentUrl) {
-    super(agentIdentifier)
+  constructor (agentRef, uiEvent, uiEventTimestamp, currentRouteKnown, currentUrl) {
+    super(agentRef)
     this.belType = NODE_TYPE.INTERACTION
     this.trigger = uiEvent
     this.start = uiEventTimestamp
@@ -119,7 +119,7 @@ export class Interaction extends BelNode {
 
   serialize (firstStartTimeOfPayload) {
     const isFirstIxnOfPayload = firstStartTimeOfPayload === undefined
-    const addString = getAddStringContext(this.agentIdentifier)
+    const addString = getAddStringContext(this.obfuscator)
     const nodeList = []
     let ixnType
     if (this.trigger === IPL_TRIGGER_NAME) ixnType = INTERACTION_TYPE.INITIAL_PAGE_LOAD

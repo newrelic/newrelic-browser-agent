@@ -6,13 +6,13 @@ import { setAPI, setTopLevelCallers } from '../api/api'
 import { addToNREUM, gosCDN } from '../../common/window/nreum'
 import { setInfo } from '../../common/config/info'
 import { setConfiguration } from '../../common/config/init'
-import { setRuntime } from '../../common/config/runtime'
+import { mergeRuntime } from '../../common/config/runtime'
 import { activatedFeatures } from '../../common/util/feature-flags'
 import { isWorkerScope } from '../../common/constants/runtime'
 import { redefinePublicPath } from './public-path'
 import { ee } from '../../common/event-emitter/contextual-ee'
 import { dispatchGlobalEvent } from '../../common/dispatch/global-event'
-import { getLoaderConfig } from '../../common/config/loader-config'
+import { mergeLoaderConfig } from '../../common/config/loader-config'
 
 const alreadySetOnce = new Set() // the configure() function can run multiple times in agent lifecycle for different agents
 
@@ -23,7 +23,6 @@ const alreadySetOnce = new Set() // the configure() function can run multiple ti
 export function configure (agent, opts = {}, loaderType, forceDrain) {
   // eslint-disable-next-line camelcase
   let { init, info, loader_config, runtime = {}, exposed = true } = opts
-  runtime.loaderType = loaderType
   const nr = gosCDN()
   if (!info) {
     init = nr.init
@@ -34,7 +33,7 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
 
   setConfiguration(agent.agentIdentifier, init || {})
   // eslint-disable-next-line camelcase
-  agent.loader_config = getLoaderConfig(loader_config || {})
+  agent.loader_config = mergeLoaderConfig(loader_config || {})
 
   info.jsAttributes ??= {}
   if (isWorkerScope) { // add a default attr to all worker payloads
@@ -64,7 +63,8 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
     ...(updatedInit.ajax.block_internal ? internalTrafficList : [])
   ]
   runtime.ptid = agent.agentIdentifier
-  setRuntime(agent.agentIdentifier, runtime)
+  runtime.loaderType = loaderType
+  agent.runtime = mergeRuntime(runtime)
 
   if (!alreadySetOnce.has(agent.agentIdentifier)) {
     agent.ee = ee.get(agent.agentIdentifier)

@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { getModeledObject } from './configurable'
-import { getNREUMInitializedAgent } from '../window/nreum'
 import { originTime } from '../constants/runtime'
 import { BUILD_ENV, DIST_METHOD, VERSION } from '../constants/env'
 
@@ -35,31 +34,12 @@ const RuntimeModel = {
   denyList: undefined,
   timeKeeper: undefined,
   obfuscator: undefined,
-  harvester: undefined
+  harvester: undefined,
+  get harvestCount () {
+    return ++harvestCount
+  }
 }
 
-const _cache = {}
-
-export function getRuntime (id) {
-  if (!id) throw new Error('All runtime objects require an agent identifier!')
-  if (!_cache[id]) throw new Error(`Runtime for ${id} was never set`)
-  return _cache[id]
-}
-
-export function setRuntime (id, obj) {
-  if (!id) throw new Error('All runtime objects require an agent identifier!')
-  _cache[id] = {
-    ...getModeledObject(obj, RuntimeModel),
-    ...readonly
-  }
-
-  if (!Object.hasOwnProperty.call(_cache[id], 'harvestCount')) {
-    // Harvest count needs to be added as a getter so the variable is updated each time it is accessed
-    Object.defineProperty(_cache[id], 'harvestCount', {
-      get: () => ++harvestCount
-    })
-  }
-
-  const agentInst = getNREUMInitializedAgent(id)
-  if (agentInst) agentInst.runtime = _cache[id]
+export const mergeRuntime = (runtime) => {
+  return Object.assign(getModeledObject(runtime, RuntimeModel), readonly)
 }

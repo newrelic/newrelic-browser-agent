@@ -31,7 +31,7 @@ export class Aggregate extends AggregateBase {
       this.ee.abort()
       return warn(43)
     }
-    agentRef.runtime.timeKeeper = new TimeKeeper(agentRef.agentIdentifier)
+    agentRef.runtime.timeKeeper = new TimeKeeper(agentRef.runtime.session)
 
     if (isBrowserScope) {
       timeToFirstByte.subscribe(({ value, attrs }) => {

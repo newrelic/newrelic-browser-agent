@@ -3,7 +3,6 @@ import * as qp from '@newrelic/nr-querypack'
 import { Serializer } from '../../../src/features/spa/aggregate/serializer'
 import { Interaction } from '../../../src/features/spa/aggregate/interaction'
 import * as infoModule from '../../../src/common/config/info'
-import * as runtimeModule from '../../../src/common/config/runtime'
 import { Obfuscator } from '../../../src/common/util/obfuscate'
 
 const testCases = require('@newrelic/nr-querypack/examples/all.json').filter((testCase) => {
@@ -22,13 +21,12 @@ jest.mock('../../../src/common/config/init', () => ({
   __esModule: true,
   getConfigurationValue: jest.fn()
 }))
-jest.mock('../../../src/common/config/runtime', () => ({
-  __esModule: true,
-  getRuntime: jest.fn().mockReturnValue({})
-}))
 
 const agentIdentifier = 'abcdefg'
-const serializer = new Serializer({ agentIdentifier })
+const serializer = new Serializer({
+  agentIdentifier,
+  runtime: { obfuscator: new Obfuscator({ init: { obfuscate: [] } }) }
+})
 
 const fieldPropMap = {
   start: 'start',
@@ -39,13 +37,6 @@ const fieldPropMap = {
   requestBodySize: 'txSize',
   responseBodySize: 'rxSize'
 }
-
-beforeEach(() => {
-  jest.mocked(runtimeModule.getRuntime).mockReturnValue({
-    origin: 'localhost',
-    obfuscator: new Obfuscator({ init: { obfuscate: [] } })
-  })
-})
 
 testCases.forEach(testCase => {
   test('spa serializer ' + testCase.name, () => {

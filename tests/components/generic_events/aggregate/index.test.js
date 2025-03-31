@@ -2,7 +2,6 @@ import { Instrument as GenericEvents } from '../../../../src/features/generic_ev
 import { getInfo } from '../../../../src/common/config/info'
 import { resetAgent, setupAgent } from '../../setup-agent'
 import { getConfiguration } from '../../../../src/common/config/init'
-import { getRuntime } from '../../../../src/common/config/runtime'
 
 const referrerUrl = 'https://test.com'
 Object.defineProperty(global.document, 'referrer', { value: referrerUrl, configurable: true })
@@ -96,7 +95,7 @@ describe('sub-features', () => {
     const relativeTimestamp = Math.random() * 1000
     const name = 'name'
 
-    const timeKeeper = getRuntime(mainAgent.agentIdentifier).timeKeeper
+    const timeKeeper = mainAgent.runtime.timeKeeper
     getInfo(mainAgent.agentIdentifier).jsAttributes = { globalFoo: 'globalBar' }
 
     genericEventsAggregate.ee.emit('api-addPageAction', [relativeTimestamp, name, { foo: 'bar' }])

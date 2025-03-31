@@ -6,6 +6,10 @@ jest.unmock('../../../../../src/features/soft_navigations/aggregate/bel-node')
 jest.unmock('../../../../../src/common/serialize/bel-serializer')
 
 const someAgentId = 'abcd'
+const someAgent = {
+  agentIdentifier: someAgentId,
+  runtime: { obfuscator: new Obfuscator({ init: { obfuscate: [] } }) }
+}
 const someAjaxEvent = {
   method: 'POST',
   status: 205,
@@ -35,18 +39,12 @@ beforeEach(() => {
     __esModule: true,
     getConfiguration: jest.fn()
   }))
-  jest.doMock('../../../../../src/common/config/runtime', () => ({
-    __esModule: true,
-    getRuntime: jest.fn().mockReturnValue({
-      obfuscator: new Obfuscator(someAgentId)
-    })
-  }))
 
   AjaxNode = require('../../../../../src/features/soft_navigations/aggregate/ajax-node').AjaxNode
 })
 
 test('Ajax node creation is correct', () => {
-  const ajn = new AjaxNode(someAgentId, someAjaxEvent)
+  const ajn = new AjaxNode(someAgent, someAjaxEvent)
 
   expect(ajn.agentIdentifier).toEqual(someAgentId)
   expect(ajn.belType).toEqual(2)
@@ -70,7 +68,7 @@ test('Ajax node creation is correct', () => {
 })
 
 test('Ajax serialize output is correct', () => {
-  const ajn = new AjaxNode(someAgentId, someAjaxEvent)
+  const ajn = new AjaxNode(someAgent, someAjaxEvent)
 
   expect(ajn.nodeId).toEqual(1)
   expect(ajn.serialize(0)).toEqual("2,3,sg,sg,,,'POST,5p,'google.com,'/,3f,co,1,'1,'some_span_id,'some_trace_id,lx;5,'operationName,'Anonymous;5,'operationType,'QUERY;5,'operationFramework,'GraphQL")

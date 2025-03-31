@@ -14,9 +14,9 @@ export class BelNode {
   callbackDuration = 0
   nodeId = ++nodesSeen
 
-  constructor (agentIdentifier) {
-    if (!agentIdentifier) throw new Error('Interaction is missing core attributes')
-    this.agentIdentifier = agentIdentifier
+  constructor (agentRef) {
+    this.obfuscator = agentRef.runtime.obfuscator
+    this.agentIdentifier = agentRef.agentIdentifier
   }
 
   addChild (child) {

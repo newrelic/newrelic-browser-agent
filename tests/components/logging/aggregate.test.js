@@ -1,4 +1,3 @@
-import { getRuntime } from '../../../src/common/config/runtime'
 import { initialLocation } from '../../../src/common/constants/runtime'
 import { LOG_LEVELS, LOGGING_EVENT_EMITTER_CHANNEL, LOGGING_MODE } from '../../../src/features/logging/constants'
 import { Instrument as Logging } from '../../../src/features/logging/instrument'
@@ -10,12 +9,11 @@ import { getInfo } from '../../../src/common/config/info'
 
 import { faker } from '@faker-js/faker'
 
-let mainAgent, info, runtime
+let mainAgent, info
 
 beforeAll(async () => {
   mainAgent = setupAgent()
   info = getInfo(mainAgent.agentIdentifier)
-  runtime = getRuntime(mainAgent.agentIdentifier)
 })
 
 let loggingAggregate
@@ -82,7 +80,7 @@ describe('payloads', () => {
   test('fills buffered logs with event emitter messages and prepares matching payload', async () => {
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', { myAttributes: 1 }, 'error'])
 
-    const timeKeeper = getRuntime(mainAgent.agentIdentifier).timeKeeper
+    const timeKeeper = mainAgent.runtime.timeKeeper
     const expectedLog = new Log(
       Math.floor(timeKeeper.correctAbsoluteTimestamp(
         timeKeeper.convertRelativeTimestamp(1234)
@@ -101,8 +99,8 @@ describe('payloads', () => {
             'instrumentation.name': 'browser-test',
             'instrumentation.provider': 'browser',
             'instrumentation.version': expect.any(String),
-            'entity.guid': runtime.appMetadata.agents[0].entityGuid,
-            session: runtime.session.state.value,
+            'entity.guid': mainAgent.runtime.appMetadata.agents[0].entityGuid,
+            session: mainAgent.runtime.session.state.value,
             hasReplay: false,
             hasTrace: false,
             ptid: mainAgent.agentIdentifier,
@@ -120,8 +118,8 @@ describe('payloads', () => {
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', { myAttributes: 1 }, 'error'])
 
     expect(loggingAggregate.events.get()[0].data[0]).toEqual(new Log(
-      Math.floor(runtime.timeKeeper.correctAbsoluteTimestamp(
-        runtime.timeKeeper.convertRelativeTimestamp(1234)
+      Math.floor(mainAgent.runtime.timeKeeper.correctAbsoluteTimestamp(
+        mainAgent.runtime.timeKeeper.convertRelativeTimestamp(1234)
       )),
       'test message',
       { myAttributes: 1 },
@@ -156,8 +154,8 @@ describe('payloads', () => {
 
   test('invalid custom attributes', async () => {
     const expected = new Log(
-      Math.floor(runtime.timeKeeper.correctAbsoluteTimestamp(
-        runtime.timeKeeper.convertRelativeTimestamp(1234)
+      Math.floor(mainAgent.runtime.timeKeeper.correctAbsoluteTimestamp(
+        mainAgent.runtime.timeKeeper.convertRelativeTimestamp(1234)
       )),
       'test message',
       { },
@@ -181,8 +179,8 @@ describe('payloads', () => {
 
   test('should work if log level is valid but wrong case', async () => {
     const expected = new Log(
-      Math.floor(runtime.timeKeeper.correctAbsoluteTimestamp(
-        runtime.timeKeeper.convertRelativeTimestamp(1234)
+      Math.floor(mainAgent.runtime.timeKeeper.correctAbsoluteTimestamp(
+        mainAgent.runtime.timeKeeper.convertRelativeTimestamp(1234)
       )),
       'test message',
       { },
@@ -210,8 +208,8 @@ describe('payloads', () => {
     jest.spyOn(window, 'location', 'get').mockReturnValue(currentUrl)
 
     const log = new Log(
-      Math.floor(runtime.timeKeeper.correctAbsoluteTimestamp(
-        runtime.timeKeeper.convertRelativeTimestamp(1234)
+      Math.floor(mainAgent.runtime.timeKeeper.correctAbsoluteTimestamp(
+        mainAgent.runtime.timeKeeper.convertRelativeTimestamp(1234)
       )),
       'test message',
       { },

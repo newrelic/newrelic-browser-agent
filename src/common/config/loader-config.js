@@ -13,6 +13,6 @@ const LoaderConfigModel = {
   xpid: undefined
 }
 
-export const getLoaderConfig = (loaderConfig) => {
+export const mergeLoaderConfig = (loaderConfig) => {
   return getModeledObject(loaderConfig, LoaderConfigModel)
 }

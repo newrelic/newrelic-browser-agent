@@ -31,7 +31,7 @@ export function activateFeatures (flags, agentIdentifier) {
   // let any window level subscribers know that the agent is running, per install docs
   dispatchGlobalEvent({
     agentIdentifier,
-    loaded: true, // @deprecated, replaced by 'drained'
+    loaded: true, // TODO: deprecate
     drained: true,
     type: 'lifecycle',
     name: 'load',

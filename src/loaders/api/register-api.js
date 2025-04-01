@@ -29,44 +29,92 @@ export function buildRegisterApi (agentRef, handlers, target) {
   let invalidApiResponse
 
   /**
-   * Wait for all needed connections for the registered child to be ready to report data
-   * 1. The main agent to be ready (made a RUM call and got its entity guid)
-   * 2. The child to be registered with the main agent (made its own RUM call and got its entity guid)
-   * @type {Promise<RegisterAPI>}
-   */
-  let connected
+       * A promise that indicates when all needed connections for the registered child to be ready to report data
+       * 1. The main agent to be ready (made a RUM call and got its entity guid)
+       * 2. The child to be registered with the main agent (made its own RUM call and got its entity guid)
+       * @type {Promise<RegisterAPI>}
+       */
+  let _connected
   if (!agentRef.init.api.allow_registered_children) invalidApiResponse = () => warn(54)
   if (!target || !isValidTarget(target)) invalidApiResponse = () => warn(47, target)
 
+  /** @type {RegisterAPI} */
+  const api = {
+    addPageAction: (name, attributes = {}) => {
+      report(handlers.addPageAction, [name, { ...attrs, ...attributes }], target)
+    },
+    log: (message, options = {}) => {
+      report(handlers.log, [message, { ...options, customAttributes: { ...attrs, ...(options.customAttributes || {}) } }], target)
+    },
+    noticeError: (error, attributes = {}) => {
+      report(handlers.noticeError, [error, { ...attrs, ...attributes }], target)
+    },
+    setApplicationVersion: (value) => {
+      attrs['application.version'] = value
+    },
+    setCustomAttribute: (key, value) => {
+      attrs[key] = value
+    },
+    setUserId: (value) => {
+      attrs['enduser.id'] = value
+    },
+    /** metadata */
+    metadata: {
+      customAttributes: attrs,
+      target,
+      /** set in a getter so that later access of the Promise is not polluted before customer is allowed to set a catch block */
+      get connected () {
+        return _connected || Promise.reject(new Error('Failed to connect'))
+      }
+    }
+  }
+
   if (invalidApiResponse) {
     invalidApiResponse()
-    connected = Promise.reject(new Error('Failed to connect'))
   } else {
-    connected = new Promise((resolve, reject) => {
+    _connected = new Promise((resolve, reject) => {
       try {
-        let mainAgentReady = !!agentRef.runtime.entityManager.get().entityGuid
-        let registrationReady = false
+        const entityManager = agentRef.runtime?.entityManager
+        /** check if main agent already has main agent entity guid */
+        let mainAgentReady = !!entityManager?.get().entityGuid
+        /** check if registered target already has entity guid */
+        let registeredEntityGuid = entityManager?.getEntityGuidFor(target.licenseKey, target.applicationID)
+        let registrationReady = !!registeredEntityGuid
 
-        /** if the connect callback doesnt resolve in 15 seconds... reject */
-        const timeout = setTimeout(() => reject(new Error('Failed to connect - Timeout')), 15000)
+        /** check if we can just resolve immediately without making another connect call */
+        if (mainAgentReady && registrationReady) {
+          target.entityGuid = registeredEntityGuid
+          resolve(api)
+        } else {
+          /** we need to make a new connection call since we dont already have a registered entity for this call */
 
-        // tell the main agent to send a rum call for this target
-        // when the rum call resolves, it will emit an "entity-added" event, see below
-        agentRef.ee.emit('api-send-rum', [attrs, target])
+          /** if the connect callback doesnt resolve in 15 seconds... reject */
+          const timeout = setTimeout(() => reject(new Error('Failed to connect - Timeout')), 15000)
 
-        // wait for entity events to emit to see when main agent and/or API registration is ready
-        agentRef.ee.on('entity-added', entity => {
-          if (isContainerAgentTarget(entity, agentRef)) mainAgentReady ||= true
-          if (target.licenseKey === entity.licenseKey && target.applicationID === entity.applicationID) {
-            registrationReady = true
-            target.entityGuid = entity.entityGuid
+          // tell the main agent to send a rum call for this target
+          // when the rum call resolves, it will emit an "entity-added" event, see below
+          agentRef.ee.emit('api-send-rum', [attrs, target])
+
+          // wait for entity events to emit to see when main agent and/or API registration is ready
+          agentRef.ee.on('entity-added', entityEventHandler)
+
+          function entityEventHandler (entity) {
+            if (isContainerAgentTarget(entity, agentRef)) mainAgentReady ||= true
+            else {
+              if (target.licenseKey === entity.licenseKey && target.applicationID === entity.applicationID) {
+                registrationReady = true
+                target.entityGuid = entity.entityGuid
+              }
+            }
+
+            if (mainAgentReady && registrationReady) {
+              clearTimeout(timeout)
+              // unsubscribe from the event emitter
+              agentRef.ee.removeEventListener('entity-added', entityEventHandler)
+              resolve(api)
+            }
           }
-
-          if (mainAgentReady && registrationReady) {
-            clearTimeout(timeout)
-            resolve(api)
-          }
-        })
+        }
       } catch (err) {
         reject(err)
       }
@@ -87,7 +135,7 @@ export function buildRegisterApi (agentRef, handlers, target) {
     const timestamp = now()
     handle(SUPPORTABILITY_METRIC_CHANNEL, [`API/register/${methodToCall.name}/called`], undefined, FEATURE_NAMES.metrics, agentRef.ee)
     try {
-      await connected
+      await _connected
       // target should be decorated with entityGuid by the rum resp at this point
       const shouldDuplicate = agentRef.init.api.duplicate_registered_data
       if (shouldDuplicate === true || (Array.isArray(shouldDuplicate) && shouldDuplicate.includes(target.entityGuid))) {
@@ -97,27 +145,6 @@ export function buildRegisterApi (agentRef, handlers, target) {
       methodToCall(...args, target.entityGuid, timestamp) // always report to target
     } catch (err) {
       warn(49, err)
-    }
-  }
-
-  const api = {
-    addPageAction: (name, attributes = {}) => report(handlers.addPageAction, [name, { ...attrs, ...attributes }], target),
-    log: (message, options = {}) => report(handlers.log, [message, { ...options, customAttributes: { ...attrs, ...(options.customAttributes || {}) } }], target),
-    noticeError: (error, attributes = {}) => report(handlers.noticeError, [error, { ...attrs, ...attributes }], target),
-    setApplicationVersion: (value) => {
-      attrs['application.version'] = value
-    },
-    setCustomAttribute: (key, value) => {
-      attrs[key] = value
-    },
-    setUserId: (value) => {
-      attrs['enduser.id'] = value
-    },
-    /** metadata */
-    metadata: {
-      customAttributes: attrs,
-      target,
-      connected
     }
   }
 

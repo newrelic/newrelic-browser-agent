@@ -569,11 +569,13 @@ describe('setAPI', () => {
       applicationID = faker.string.uuid()
       apiInterface = setAPI(agent, true)
       await new Promise(process.nextTick)
+      const randomEntityGuid = faker.string.uuid()
 
       agent.ee.on('api-send-rum', () => {
         gotApiSendRumCall = true
+        agent.runtime.entityManager.set(randomEntityGuid, { applicationID, licenseKey, entityGuid: randomEntityGuid })
         setTimeout(() => agent.ee.emit('entity-added', [{
-          entityGuid,
+          entityGuid: randomEntityGuid,
           applicationID,
           licenseKey
         }]), 100)
@@ -588,25 +590,29 @@ describe('setAPI', () => {
 
       expectApiSendRum()
 
-      await myApi.metadata.connected
-
-      expect(myApi).toMatchObject({
-        noticeError: expect.any(Function),
-        log: expect.any(Function),
-        addPageAction: expect.any(Function),
-        setCustomAttribute: expect.any(Function),
-        setUserId: expect.any(Function),
-        setApplicationVersion: expect.any(Function),
-        metadata: {
-          customAttributes: {},
-          target: { licenseKey, applicationID, entityGuid },
-          connected: expect.any(Promise)
-        }
+      /** wait for entity guid to be assigned */
+      myApi.metadata.connected.then(() => {
+        expect(myApi).toMatchObject({
+          noticeError: expect.any(Function),
+          log: expect.any(Function),
+          addPageAction: expect.any(Function),
+          setCustomAttribute: expect.any(Function),
+          setUserId: expect.any(Function),
+          setApplicationVersion: expect.any(Function),
+          metadata: {
+            customAttributes: {},
+            target: { licenseKey, applicationID, entityGuid },
+            connected: expect.any(Promise)
+          }
+        })
+      }).catch(() => {
+        // should not have hit catch block
+        expect(1).toEqual(2)
       })
     })
 
     ;[{ applicationID }, { licenseKey }].forEach(opts => {
-      test('should warn and not work if invalid target', () => {
+      test('should warn and not work if invalid target', (done) => {
         let myApi = apiInterface.register(opts)
         expectApiSendRum(false)
         expect(console.debug).toHaveBeenCalledWith('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#47', opts)
@@ -614,10 +620,15 @@ describe('setAPI', () => {
         myApi.noticeError()
         myApi.log()
         expect(console.debug).toHaveBeenCalledTimes(5)
+        myApi.metadata.connected.then(() => {
+          expect(1).toEqual(2) // should not get "then" here
+        }).catch(() => {
+          done()
+        })
       })
     })
 
-    test('should warn and not work if disabled', () => {
+    test('should warn and not work if disabled', (done) => {
       agent.init.api.allow_registered_children = false
       let myApi = apiInterface.register({ licenseKey, applicationID })
       expectApiSendRum(false)
@@ -627,6 +638,31 @@ describe('setAPI', () => {
       myApi.log()
       expect(console.debug).toHaveBeenCalledTimes(5)
       agent.init.api.allow_registered_children = true
+
+      myApi.metadata.connected.then(() => {
+        expect(1).toEqual(2) // should not get "then" here
+      }).catch(() => {
+        done()
+      })
+    })
+
+    test('should skip rum call if already registered', (done) => {
+      // console.log('first', licenseKey, applicationID)
+      let myApi = apiInterface.register({ licenseKey, applicationID })
+
+      myApi.metadata.connected.then((firstApi) => {
+        expect(firstApi).toEqual(myApi)
+        expectApiSendRum()
+        gotApiSendRumCall = false
+
+        let mySecondApiWithMatchingTarget = apiInterface.register({ licenseKey, applicationID })
+
+        mySecondApiWithMatchingTarget.metadata.connected.then((secondApi) => {
+          expect(secondApi.metadata.entityGuid).toEqual(firstApi.metadata.entityGuid)
+          expectApiSendRum(false)
+          done()
+        })
+      })
     })
 
     test('should update custom attributes', () => {
@@ -658,16 +694,18 @@ describe('setAPI', () => {
 
       myApi.log('test', { customAttributes: customAttrs })
 
-      await myApi.metadata.connected
-      await new Promise(process.nextTick)
+      myApi.metadata.connected.catch(() => {
+        // should not have hit catch block
+        expect(1).toEqual(2)
+      }).then(() => {
+        expectHandle('storeSupportabilityMetrics', 'API/register/called', 1)
+        expectHandle('storeSupportabilityMetrics', 'API/register/log/called', 1)
+        expectHandle('storeSupportabilityMetrics', 'API/log/called', 2)
+        expectHandle('storeSupportabilityMetrics', 'API/logging/info/called', 2)
+        expectHandle('log', 'test', 2)
 
-      expectHandle('storeSupportabilityMetrics', 'API/register/called', 1)
-      expectHandle('storeSupportabilityMetrics', 'API/register/log/called', 1)
-      expectHandle('storeSupportabilityMetrics', 'API/log/called', 2)
-      expectHandle('storeSupportabilityMetrics', 'API/logging/info/called', 2)
-      expectHandle('log', 'test', 2)
-
-      agent.init.api.duplicate_registered_data = false
+        agent.init.api.duplicate_registered_data = false
+      })
     })
 
     test('should duplicate data with config - matching entity guid', async () => {
@@ -681,14 +719,16 @@ describe('setAPI', () => {
 
       myApi.log('test', { customAttributes: customAttrs })
 
-      await myApi.metadata.connected
-      await new Promise(process.nextTick)
-
-      expectHandle('storeSupportabilityMetrics', 'API/register/called', 1)
-      expectHandle('storeSupportabilityMetrics', 'API/register/log/called', 1)
-      expectHandle('storeSupportabilityMetrics', 'API/log/called', 2)
-      expectHandle('storeSupportabilityMetrics', 'API/logging/info/called', 2)
-      expectHandle('log', 'test', 2)
+      myApi.metadata.connected.catch(() => {
+        // should not have hit catch block
+        expect(1).toEqual(2)
+      }).then(() => {
+        expectHandle('storeSupportabilityMetrics', 'API/register/called', 1)
+        expectHandle('storeSupportabilityMetrics', 'API/register/log/called', 1)
+        expectHandle('storeSupportabilityMetrics', 'API/log/called', 2)
+        expectHandle('storeSupportabilityMetrics', 'API/logging/info/called', 2)
+        expectHandle('log', 'test', 2)
+      })
 
       agent.init.api.duplicate_registered_data = false
     })
@@ -704,14 +744,16 @@ describe('setAPI', () => {
 
       myApi.log('test', { customAttributes: customAttrs })
 
-      await myApi.metadata.connected
-      await new Promise(process.nextTick)
-
-      expectHandle('storeSupportabilityMetrics', 'API/register/called', 1)
-      expectHandle('storeSupportabilityMetrics', 'API/register/log/called', 1)
-      expectHandle('storeSupportabilityMetrics', 'API/log/called', 1)
-      expectHandle('storeSupportabilityMetrics', 'API/logging/info/called', 1)
-      expectHandle('log', 'test', 1)
+      myApi.metadata.connected.catch(() => {
+        // should not have hit catch block
+        expect(1).toEqual(2)
+      }).then(() => {
+        expectHandle('storeSupportabilityMetrics', 'API/register/called', 1)
+        expectHandle('storeSupportabilityMetrics', 'API/register/log/called', 1)
+        expectHandle('storeSupportabilityMetrics', 'API/log/called', 1)
+        expectHandle('storeSupportabilityMetrics', 'API/logging/info/called', 1)
+        expectHandle('log', 'test', 1)
+      })
 
       agent.init.api.duplicate_registered_data = false
     })
@@ -728,11 +770,15 @@ describe('setAPI', () => {
 
         myApi.noticeError(err, customAttrs)
 
-        await myApi.metadata.connected
-        expectHandle('storeSupportabilityMetrics', 'API/register/called')
-        expectHandle('storeSupportabilityMetrics', 'API/register/noticeError/called')
-        expectHandle('storeSupportabilityMetrics', 'API/noticeError/called')
-        expectHandle('err', err)
+        myApi.metadata.connected.catch(() => {
+          // should not have hit catch block
+          expect(1).toEqual(2)
+        }).then(() => {
+          expectHandle('storeSupportabilityMetrics', 'API/register/called')
+          expectHandle('storeSupportabilityMetrics', 'API/register/noticeError/called')
+          expectHandle('storeSupportabilityMetrics', 'API/noticeError/called')
+          expectHandle('err', err)
+        })
       })
     })
 
@@ -747,12 +793,15 @@ describe('setAPI', () => {
 
         myApi.addPageAction('test', customAttrs)
 
-        await myApi.metadata.connected
-
-        expectHandle('storeSupportabilityMetrics', 'API/register/called')
-        expectHandle('storeSupportabilityMetrics', 'API/register/addPageAction/called')
-        expectHandle('storeSupportabilityMetrics', 'API/addPageAction/called')
-        expectHandle('api-addPageAction', 'test')
+        myApi.metadata.connected.catch(() => {
+          // should not have hit catch block
+          expect(1).toEqual(2)
+        }).then(() => {
+          expectHandle('storeSupportabilityMetrics', 'API/register/called')
+          expectHandle('storeSupportabilityMetrics', 'API/register/addPageAction/called')
+          expectHandle('storeSupportabilityMetrics', 'API/addPageAction/called')
+          expectHandle('api-addPageAction', 'test')
+        })
       })
     })
 
@@ -767,13 +816,16 @@ describe('setAPI', () => {
 
         myApi.log('test', { customAttributes: customAttrs })
 
-        await myApi.metadata.connected
-
-        expectHandle('storeSupportabilityMetrics', 'API/register/called')
-        expectHandle('storeSupportabilityMetrics', 'API/register/log/called')
-        expectHandle('storeSupportabilityMetrics', 'API/log/called')
-        expectHandle('storeSupportabilityMetrics', 'API/logging/info/called')
-        expectHandle('log', 'test')
+        myApi.metadata.connected.catch(() => {
+          // should not have hit catch block
+          expect(1).toEqual(2)
+        }).then(() => {
+          expectHandle('storeSupportabilityMetrics', 'API/register/called')
+          expectHandle('storeSupportabilityMetrics', 'API/register/log/called')
+          expectHandle('storeSupportabilityMetrics', 'API/log/called')
+          expectHandle('storeSupportabilityMetrics', 'API/logging/info/called')
+          expectHandle('log', 'test')
+        })
       })
     })
   })

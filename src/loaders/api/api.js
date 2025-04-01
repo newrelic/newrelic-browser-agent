@@ -194,7 +194,7 @@ export function setAPI (agent, forceDrain) {
       handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/' + name + '/called'], undefined, FEATURE_NAMES.metrics, agent.ee)
       dispatchGlobalEvent({
         agentIdentifier: agent.agentIdentifier,
-        loaded: !!activatedFeatures?.[agent.agentIdentifier],
+        drained: !!activatedFeatures?.[agent.agentIdentifier],
         type: 'data',
         name: 'api',
         feature: prefix + name,

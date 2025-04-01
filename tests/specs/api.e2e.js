@@ -1,6 +1,8 @@
 import { apiMethods, asyncApiMethods } from '../../src/loaders/api/api-methods'
 import { checkAjaxEvents, checkJsErrors, checkMetrics, checkGenericEvents, checkPVT, checkRumBody, checkRumQuery, checkSessionTrace, checkSpa } from '../util/basic-checks'
-import { testAjaxEventsRequest, testAjaxTimeSlicesRequest, testBlobTraceRequest, testCustomMetricsRequest, testErrorsRequest, testEventsRequest, testInsRequest, testInteractionEventsRequest, testMetricsRequest, testRumRequest, testTimingEventsRequest } from '../../tools/testing-server/utils/expect-tests'
+import { testAjaxEventsRequest, testAjaxTimeSlicesRequest, testBlobTraceRequest, testCustomMetricsRequest, testErrorsRequest, testEventsRequest, testInsRequest, testInteractionEventsRequest, testLogsRequest, testMetricsRequest, testRumRequest, testTimingEventsRequest } from '../../tools/testing-server/utils/expect-tests'
+import { rumFlags } from '../../tools/testing-server/constants'
+import { LOGGING_MODE } from '../../src/features/logging/constants'
 
 describe('newrelic api', () => {
   afterEach(async () => {
@@ -47,6 +49,22 @@ describe('newrelic api', () => {
     })
 
     expect(result).toEqual(true)
+  })
+
+  it('should work as expected within `newrelic` event listeners', async () => {
+    const logsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testLogsRequest })
+    await browser.testHandle.scheduleReply('bamServer', {
+      test: testRumRequest,
+      body: JSON.stringify(rumFlags({ log: LOGGING_MODE.INFO }))
+    })
+
+    const [logsHarvests] = await Promise.all([
+      logsCapture.waitForResult({ timeout: 10000 }),
+      browser.url(await browser.testHandle.assetURL('event-listener-newrelic.html'))
+        .then(() => browser.waitForAgentLoad())
+    ])
+
+    expect(logsHarvests.length).toEqual(1)
   })
 
   describe('setPageViewName()', () => {

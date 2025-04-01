@@ -53,7 +53,7 @@ export class EventStoreManager {
   add (event, target) {
     dispatchGlobalEvent({
       agentIdentifier: this.agentIdentifier,
-      loaded: !!activatedFeatures?.[this.agentIdentifier],
+      drained: !!activatedFeatures?.[this.agentIdentifier],
       type: 'data',
       name: 'buffer',
       feature: this.featureName,

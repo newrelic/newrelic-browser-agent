@@ -22,6 +22,25 @@ import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
  * @returns {RegisterAPI} the api object to be returned from the register api method
  */
 export function buildRegisterApi (agentRef, handlers, target) {
+  const assets = new Set()
+
+  const stack = new Error().stack
+  const fileNamesOfThisModule = extractJavaScriptFilenames(stack)
+  console.log('REGISTER CALLED BY', fileNamesOfThisModule)
+
+  let match
+  performance.getEntriesByType('resource').forEach(entry => {
+    fileNamesOfThisModule.forEach(moduleName => {
+      console.log('entry.name', entry.name, moduleName)
+      if (entry.name.includes(moduleName) && !assets.has(entry)) {
+        match = entry
+        assets.add(entry)
+      }
+    })
+  })
+
+  console.log('resource?', match)
+
   const attrs = {}
   warn(53, 'newrelic.register')
 
@@ -44,7 +63,7 @@ export function buildRegisterApi (agentRef, handlers, target) {
   } else {
     connected = new Promise((resolve, reject) => {
       try {
-        let mainAgentReady = !!agentRef.runtime.entityManager.get().entityGuid
+        let mainAgentReady = !!agentRef.runtime.entityManager?.get().entityGuid
         let registrationReady = false
 
         /** if the connect callback doesnt resolve in 15 seconds... reject */
@@ -86,6 +105,25 @@ export function buildRegisterApi (agentRef, handlers, target) {
     /** set the timestamp before the async part of waiting for the rum response for better accuracy */
     const timestamp = now()
     handle(SUPPORTABILITY_METRIC_CHANNEL, [`API/register/${methodToCall.name}/called`], undefined, FEATURE_NAMES.metrics, agentRef.ee)
+
+    const stack = new Error().stack
+    console.log(stack)
+    const fileNamesOfThisModule = extractJavaScriptFilenames(stack)
+    console.log('REPORT CALLED BY', fileNamesOfThisModule)
+
+    let match
+    performance.getEntriesByType('resource').forEach(entry => {
+      fileNamesOfThisModule.forEach(moduleName => {
+        console.log('entry.name', entry.name, moduleName)
+        if (entry.name.includes(moduleName) && !assets.has(entry)) {
+          match = entry
+          assets.add(entry)
+        }
+      })
+    })
+
+    console.log('resource?', match)
+    console.log('all assets', assets)
     try {
       await connected
       // target should be decorated with entityGuid by the rum resp at this point
@@ -122,4 +160,18 @@ export function buildRegisterApi (agentRef, handlers, target) {
   }
 
   return api
+}
+
+function extractJavaScriptFilenames (stack) {
+  // Regex to match JavaScript filenames in the stack trace
+  const regex = /(\/[\w-./]+\.js)/g
+  const matches = new Set()
+  let match
+
+  // Iterate through all matches in the stack
+  while ((match = regex.exec(stack)) !== null) {
+    matches.add(match[1])
+  }
+
+  return Array.from(matches)
 }

@@ -6,7 +6,6 @@ import { FEATURE_FLAGS } from '../../features/generic_events/constants'
 import { isValidSelector } from '../dom/query-selector'
 import { DEFAULT_EXPIRES_MS, DEFAULT_INACTIVE_MS } from '../session/constants'
 import { warn } from '../util/console'
-import { getNREUMInitializedAgent } from '../window/nreum'
 import { getModeledObject } from './configurable'
 
 /**
@@ -92,7 +91,7 @@ import { getModeledObject } from './configurable'
  */
 
 const nrMask = '[data-nr-mask]'
-const model = () => {
+const InitModelFn = () => {
   const hiddenState = {
     feature_flags: [],
     experimental: {
@@ -213,35 +212,6 @@ const model = () => {
   }
 }
 
-const _cache = {}
-const missingAgentIdError = 'All configuration objects require an agent identifier!'
-
-export function getConfiguration (id) {
-  if (!id) throw new Error(missingAgentIdError)
-  if (!_cache[id]) throw new Error(`Configuration for ${id} was never set`)
-  return _cache[id]
+export const mergeInit = (init) => {
+  return getModeledObject(init, InitModelFn())
 }
-
-export function setConfiguration (id, obj) {
-  if (!id) throw new Error(missingAgentIdError)
-  _cache[id] = getModeledObject(obj, model())
-  const agentInst = getNREUMInitializedAgent(id)
-  if (agentInst) agentInst.init = _cache[id]
-}
-
-export function getConfigurationValue (id, path) {
-  if (!id) throw new Error(missingAgentIdError)
-  var val = getConfiguration(id)
-  if (val) {
-    var parts = path.split('.')
-    for (var i = 0; i < parts.length - 1; i++) {
-      val = val[parts[i]]
-      if (typeof val !== 'object') return
-    }
-    val = val[parts[parts.length - 1]]
-  }
-  return val
-}
-
-// TO DO: a setConfigurationValue equivalent may be nice so individual
-//  properties can be tuned instead of reseting the whole model per call to `setConfiguration(agentIdentifier, {})`

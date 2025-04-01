@@ -10,10 +10,6 @@ jest.mock('../../../src/common/config/info', () => ({
   __esModule: true,
   isValid: jest.fn().mockReturnValue(true)
 }))
-jest.mock('../../../src/common/config/init', () => ({
-  __esModule: true,
-  getConfigurationValue: jest.fn()
-}))
 jest.mock('../../../src/common/harvest/harvester')
 
 let spaInstrument, spaAggregate, newrelic, mockCurrentInfo
@@ -23,7 +19,7 @@ const baseEE = ee.get(agentIdentifier)
 beforeAll(async () => {
   mockCurrentInfo = { jsAttributes: {} }
 
-  spaInstrument = new Spa({ agentIdentifier, info: mockCurrentInfo, init: { spa: { enabled: true } }, runtime: {}, ee: baseEE })
+  spaInstrument = new Spa({ agentIdentifier, info: mockCurrentInfo, init: { spa: { enabled: true }, privacy: {} }, runtime: {}, ee: baseEE })
   await expect(spaInstrument.onAggregateImported).resolves.toEqual(true)
   spaAggregate = spaInstrument.featAggregate
   spaAggregate.blocked = true

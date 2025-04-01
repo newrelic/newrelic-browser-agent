@@ -1,8 +1,6 @@
 import { faker } from '@faker-js/faker'
 import { Obfuscator } from '../../../../src/common/util/obfuscate'
-import * as initModule from '../../../../src/common/config/init'
 
-jest.mock('../../../../src/common/config/init')
 jest.mock('../../../../src/common/url/protocol')
 jest.mock('../../../../src/common/util/console')
 
@@ -10,10 +8,6 @@ const rules = [{
   regex: /pii/g,
   replacement: 'OBFUSCATED'
 }]
-
-afterEach(() => {
-  jest.resetAllMocks()
-})
 
 describe('obfuscateString', () => {
   test('obfuscateString returns the input when there are no rules', () => {
@@ -24,8 +18,6 @@ describe('obfuscateString', () => {
   })
 
   test('obfuscateString applies obfuscation rules to input', () => {
-    jest.spyOn(initModule, 'getConfigurationValue').mockReturnValue(rules)
-
     const input = 'pii'
     const obfuscator = new Obfuscator({ init: { obfuscate: rules } })
 
@@ -48,10 +40,8 @@ describe('obfuscateString', () => {
     undefined,
     '',
     123
-  ])('obfuscateString returns the input it is %s', (input) => {
-    jest.spyOn(initModule, 'getConfigurationValue').mockReturnValue(rules)
-
-    const obfuscator = new Obfuscator({ init: { obfuscate: [] } })
+  ])('obfuscateString returns the input as-is if %s', (input) => {
+    const obfuscator = new Obfuscator({ init: { obfuscate: rules } })
 
     expect(obfuscator.obfuscateString(input)).toEqual(input)
   })

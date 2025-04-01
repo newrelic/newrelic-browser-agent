@@ -35,10 +35,6 @@ let AjaxNode
 
 beforeEach(() => {
   jest.resetModules()
-  jest.doMock('../../../../../src/common/config/init', () => ({
-    __esModule: true,
-    getConfiguration: jest.fn()
-  }))
 
   AjaxNode = require('../../../../../src/features/soft_navigations/aggregate/ajax-node').AjaxNode
 })

@@ -10,10 +10,6 @@ const testCases = require('@newrelic/nr-querypack/examples/all.json').filter((te
     JSON.parse(testCase.json).length === 1
 })
 jest.mock('../../../src/common/constants/runtime')
-jest.mock('../../../src/common/config/init', () => ({
-  __esModule: true,
-  getConfigurationValue: jest.fn()
-}))
 
 const agentIdentifier = 'abcdefg'
 const fakeAgent = {

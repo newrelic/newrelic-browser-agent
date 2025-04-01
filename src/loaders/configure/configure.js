@@ -5,7 +5,7 @@
 import { setAPI, setTopLevelCallers } from '../api/api'
 import { addToNREUM, gosCDN } from '../../common/window/nreum'
 import { mergeInfo } from '../../common/config/info'
-import { setConfiguration } from '../../common/config/init'
+import { mergeInit } from '../../common/config/init'
 import { mergeRuntime } from '../../common/config/runtime'
 import { activatedFeatures } from '../../common/util/feature-flags'
 import { isWorkerScope } from '../../common/constants/runtime'
@@ -23,15 +23,15 @@ const alreadySetOnce = new Set() // the configure() function can run multiple ti
 export function configure (agent, opts = {}, loaderType, forceDrain) {
   // eslint-disable-next-line camelcase
   let { init, info, loader_config, runtime = {}, exposed = true } = opts
-  const nr = gosCDN()
   if (!info) {
+    const nr = gosCDN()
     init = nr.init
     info = nr.info
     // eslint-disable-next-line camelcase
     loader_config = nr.loader_config
   }
 
-  setConfiguration(agent.agentIdentifier, init || {})
+  agent.init = mergeInit(init || {})
   // eslint-disable-next-line camelcase
   agent.loader_config = mergeLoaderConfig(loader_config || {})
 

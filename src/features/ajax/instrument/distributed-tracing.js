@@ -2,7 +2,6 @@
  * Copyright 2020-2025 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { getConfiguration, getConfigurationValue } from '../../../common/config/init'
 import { generateSpanId, generateTraceId } from '../../../common/ids/unique-id'
 import { parseUrl } from '../../../common/url/parse-url'
 import { globalScope } from '../../../common/constants/runtime'
@@ -95,21 +94,16 @@ export class DT {
   // return true if DT is enabled and the origin is allowed, either by being
   // same-origin, or included in the allowed list
   shouldGenerateTrace (parsedOrigin) {
-    return getConfigurationValue(this.agentRef.agentIdentifier, 'distributed_tracing') && this.isAllowedOrigin(parsedOrigin)
+    return this.agentRef.init?.distributed_tracing && this.isAllowedOrigin(parsedOrigin)
   }
 
   isAllowedOrigin (parsedOrigin) {
     var allowed = false
-    var dtConfig = {}
-    var dt = getConfigurationValue(this.agentRef.agentIdentifier, 'distributed_tracing')
-
-    if (dt) {
-      dtConfig = getConfiguration(this.agentRef.agentIdentifier).distributed_tracing
-    }
+    const dtConfig = this.agentRef.init?.distributed_tracing
 
     if (parsedOrigin.sameOrigin) {
       allowed = true
-    } else if (dtConfig.allowed_origins instanceof Array) {
+    } else if (dtConfig?.allowed_origins instanceof Array) {
       for (var i = 0; i < dtConfig.allowed_origins.length; i++) {
         var allowedOrigin = parseUrl(dtConfig.allowed_origins[i])
         if (parsedOrigin.hostname === allowedOrigin.hostname &&
@@ -125,7 +119,7 @@ export class DT {
 
   // exclude the newrelic header for same-origin calls
   excludeNewrelicHeader () {
-    var dt = getConfigurationValue(this.agentRef.agentIdentifier, 'distributed_tracing')
+    var dt = this.agentRef.init?.distributed_tracing
     if (dt) {
       return !!dt.exclude_newrelic_header
     }
@@ -133,7 +127,7 @@ export class DT {
   }
 
   useNewrelicHeaderForCors () {
-    var dt = getConfigurationValue(this.agentRef.agentIdentifier, 'distributed_tracing')
+    var dt = this.agentRef.init?.distributed_tracing
     if (dt) {
       return dt.cors_use_newrelic_header !== false
     }
@@ -141,7 +135,7 @@ export class DT {
   }
 
   useTraceContextHeadersForCors () {
-    var dt = getConfigurationValue(this.agentRef.agentIdentifier, 'distributed_tracing')
+    var dt = this.agentRef.init?.distributed_tracing
     if (dt) {
       return !!dt.cors_use_tracecontext_headers
     }

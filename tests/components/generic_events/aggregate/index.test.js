@@ -1,6 +1,5 @@
 import { Instrument as GenericEvents } from '../../../../src/features/generic_events/instrument'
 import { resetAgent, setupAgent } from '../../setup-agent'
-import { getConfiguration } from '../../../../src/common/config/init'
 
 const referrerUrl = 'https://test.com'
 Object.defineProperty(global.document, 'referrer', { value: referrerUrl, configurable: true })
@@ -147,7 +146,7 @@ describe('sub-features', () => {
     const relativeTimestamp = Math.random() * 1000
     const name = 'name'
 
-    getConfiguration(mainAgent.agentIdentifier).page_action = { enabled: false }
+    mainAgent.init.page_action = { enabled: false }
 
     const { Aggregate } = await import('../../../../src/features/generic_events/aggregate')
     genericEventsAggregate = new Aggregate(mainAgent)

@@ -3,10 +3,6 @@ import { Interaction } from '../../../src/features/spa/aggregate/interaction'
 let mockClearTimeoutCalls = 0; let mockSetTimeoutCalls = 0; let mockExecuteTimeoutCallback = true
 
 jest.mock('../../../src/common/constants/runtime')
-jest.mock('../../../src/common/config/init', () => ({
-  __esModule: true,
-  getConfigurationValue: jest.fn()
-}))
 jest.mock('../../../src/common/window/nreum', () => ({
   __esModule: true,
   gosNREUM: jest.fn().mockReturnValue({}),

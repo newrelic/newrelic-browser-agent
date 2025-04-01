@@ -8,16 +8,12 @@ jest.mock('../../../src/common/config/info', () => ({
   __esModule: true,
   isValid: jest.fn().mockReturnValue(true)
 }))
-jest.mock('../../../src/common/config/init', () => ({
-  __esModule: true,
-  getConfigurationValue: jest.fn()
-}))
 
 let spaInstrument
 const agentIdentifier = 'abcdefg'
 
 beforeAll(async () => {
-  spaInstrument = new Spa({ agentIdentifier, info: {}, init: { spa: { enabled: true } }, runtime: {}, ee: ee.get(agentIdentifier) }, false)
+  spaInstrument = new Spa({ agentIdentifier, info: {}, init: { spa: { enabled: true }, privacy: {} }, runtime: {}, ee: ee.get(agentIdentifier) }, false)
 })
 
 describe('SPA instrument', () => {

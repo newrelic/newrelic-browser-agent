@@ -1,10 +1,6 @@
 import { InitialPageLoadInteraction } from '../../../../../src/features/soft_navigations/aggregate/initial-page-load-interaction'
 import { Obfuscator } from '../../../../../src/common/util/obfuscate'
 
-jest.mock('../../../../../src/common/config/init', () => ({
-  __esModule: true,
-  getConfigurationValue: jest.fn()
-}))
 jest.mock('../../../../../src/common/vitals/first-paint', () => ({
   __esModule: true,
   firstPaint: {

@@ -11,6 +11,7 @@
     {loader}
     <script>
       addEventListener("newrelic", (evt) => {
+        window.newrelicEventTime = Date.now()
         if (evt.detail.loaded) {
           // ensure API works as expected when listening to `newrelic` event
           newrelic.setPageViewName('some-page');
@@ -26,6 +27,8 @@
             }
           );
           newrelic.log('test message');
+
+          throw new Error('error 1')
         }
       })
     </script>

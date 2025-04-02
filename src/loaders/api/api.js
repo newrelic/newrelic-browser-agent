@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { FEATURE_NAMES } from '../features/features'
-import { setInfo } from '../../common/config/info'
 import { handle } from '../../common/event-emitter/handle'
 import { drain, registerDrain } from '../../common/drain/drain'
 import { onWindowLoad } from '../../common/window/load'
@@ -89,11 +88,9 @@ export function setAPI (agent, forceDrain) {
    */
   function appendJsAttribute (key, value, apiName, addToBrowserStorage) {
     const currentInfo = agent.info
-    if (value === null) {
-      delete currentInfo.jsAttributes[key]
-    } else {
-      setInfo(agent.agentIdentifier, { ...currentInfo, jsAttributes: { ...currentInfo.jsAttributes, [key]: value } })
-    }
+    if (value === null) delete currentInfo.jsAttributes[key]
+    else currentInfo.jsAttributes[key] = value
+
     return apiCall(prefix, apiName, true, (!!addToBrowserStorage || value === null) ? 'session' : undefined)(key, value)
   }
   agent.setCustomAttribute = function (name, value, persistAttribute = false) {

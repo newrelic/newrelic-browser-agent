@@ -27,11 +27,11 @@ export class Aggregate extends AggregateBase {
     this.firstByteToWindowLoad = 0 // our "frontend" duration
     this.firstByteToDomContent = 0 // our "dom processing" duration
 
-    if (!isValid(agentRef.agentIdentifier)) {
+    if (!isValid(agentRef.info)) {
       this.ee.abort()
       return warn(43)
     }
-    agentRef.runtime.timeKeeper = new TimeKeeper(agentRef.agentIdentifier)
+    agentRef.runtime.timeKeeper = new TimeKeeper(agentRef.runtime.session)
 
     if (isBrowserScope) {
       timeToFirstByte.subscribe(({ value, attrs }) => {

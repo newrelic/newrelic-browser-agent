@@ -1,7 +1,5 @@
-import { faker } from '@faker-js/faker'
 import { TimeKeeper } from '../../../../src/common/timing/time-keeper'
 import { originTime } from '../../../../src/common/constants/runtime'
-import * as runtimeModule from '../../../../src/common/config/runtime'
 import * as eventEmitterModule from '../../../../src/common/event-emitter/contextual-ee'
 
 jest.enableAutomock()
@@ -14,14 +12,12 @@ jest.mock('../../../../src/common/constants/runtime', () => ({
 const startTime = 450
 const endTime = 600
 
-let agentIdentifier
 let eventEmitter
 let session
 let serverTime
 let timeKeeper
 
 beforeEach(() => {
-  agentIdentifier = faker.string.uuid()
   eventEmitter = {
     on: jest.fn()
   }
@@ -34,14 +30,11 @@ beforeEach(() => {
   jest.useFakeTimers({
     now: originTime
   })
-  jest.spyOn(runtimeModule, 'getRuntime').mockImplementation(() => ({
-    session
-  }))
   jest.spyOn(eventEmitterModule.ee, 'get').mockReturnValue(eventEmitter)
 
   window.performance.timeOrigin = Date.now()
 
-  timeKeeper = new TimeKeeper(agentIdentifier)
+  timeKeeper = new TimeKeeper(session)
 })
 
 describe('processRumRequest', () => {
@@ -178,7 +171,7 @@ describe('session entity integration', () => {
       serverTimeDiff: -2475
     }))
 
-    const sessionTimeKeeper = new TimeKeeper(agentIdentifier)
+    const sessionTimeKeeper = new TimeKeeper(session)
     expect(sessionTimeKeeper.ready).toEqual(true)
 
     timeKeeper.processRumRequest({}, startTime, endTime, new Date(serverTime) - 0)
@@ -196,7 +189,7 @@ describe('session entity integration', () => {
     }))
     serverTime = 1706213056000
 
-    const sessionTimeKeeper = new TimeKeeper(agentIdentifier)
+    const sessionTimeKeeper = new TimeKeeper(session)
     expect(sessionTimeKeeper.ready).toEqual(true)
 
     timeKeeper.processRumRequest({}, startTime, endTime, new Date(serverTime) - 0)
@@ -213,7 +206,7 @@ describe('session entity integration', () => {
       serverTimeDiff: -2475
     }))
 
-    const sessionTimeKeeper = new TimeKeeper(agentIdentifier)
+    const sessionTimeKeeper = new TimeKeeper(session)
     expect(sessionTimeKeeper.ready).toEqual(true)
 
     timeKeeper.processRumRequest({}, startTime, endTime, new Date(serverTime) - 0)
@@ -231,7 +224,7 @@ describe('session entity integration', () => {
     }))
     serverTime = 1706213056000
 
-    const sessionTimeKeeper = new TimeKeeper(agentIdentifier)
+    const sessionTimeKeeper = new TimeKeeper(session)
     expect(sessionTimeKeeper.ready).toEqual(true)
 
     timeKeeper.processRumRequest({}, startTime, endTime, new Date(serverTime) - 0)
@@ -250,7 +243,7 @@ describe('session entity integration', () => {
 
     const sessionWriteSpy = jest.spyOn(session, 'write')
 
-    const sessionTimeKeeper = new TimeKeeper(agentIdentifier)
+    const sessionTimeKeeper = new TimeKeeper(session)
     expect(sessionTimeKeeper.ready).toEqual(true)
 
     sessionTimeKeeper.processRumRequest({}, startTime, endTime, new Date(serverTime) - 0)
@@ -258,7 +251,7 @@ describe('session entity integration', () => {
   })
 
   test('should write the calculated server time diff to the session - local behind server', () => {
-    const sessionTimeKeeper = new TimeKeeper(agentIdentifier)
+    const sessionTimeKeeper = new TimeKeeper(session)
     expect(sessionTimeKeeper.ready).toEqual(false)
 
     sessionTimeKeeper.processRumRequest({}, startTime, endTime, new Date(serverTime) - 0)
@@ -270,7 +263,7 @@ describe('session entity integration', () => {
   test('should write the calculated server time diff to the session - local ahead server', () => {
     serverTime = 1706213056000
 
-    const sessionTimeKeeper = new TimeKeeper(agentIdentifier)
+    const sessionTimeKeeper = new TimeKeeper(session)
     expect(sessionTimeKeeper.ready).toEqual(false)
 
     sessionTimeKeeper.processRumRequest({}, startTime, endTime, new Date(serverTime) - 0)
@@ -280,7 +273,7 @@ describe('session entity integration', () => {
   })
 
   test('should not try saving server diff time before time keeper ready', () => {
-    const sessionTimeKeeper = new TimeKeeper(agentIdentifier)
+    const sessionTimeKeeper = new TimeKeeper(session)
     expect(sessionTimeKeeper.ready).toEqual(false)
 
     expect(session.write).not.toHaveBeenCalled()

@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { originTime } from '../constants/runtime'
-import { getRuntime } from '../config/runtime'
 
 /**
  * Class used to adjust the timestamp of harvested data to New Relic server time. This
@@ -37,8 +36,8 @@ export class TimeKeeper {
    */
   #ready = false
 
-  constructor (agentIdentifier) {
-    this.#session = getRuntime(agentIdentifier)?.session
+  constructor (sessionObj) {
+    this.#session = sessionObj
     this.processStoredDiff()
   }
 

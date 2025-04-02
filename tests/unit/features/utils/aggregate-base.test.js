@@ -84,7 +84,7 @@ test('should merge info, jsattributes, and runtime objects', () => {
 
   new AggregateBase(mainAgent, featureName)
 
-  expect(isValid).toHaveBeenCalledWith(agentIdentifier)
+  expect(isValid).toHaveBeenCalledWith(mockInfo2)
   expect(gosCDN).toHaveBeenCalledTimes(1)
   expect(configure).toHaveBeenCalledWith(mainAgent, {
     info: {
@@ -103,7 +103,7 @@ test('should only configure the agent once', () => {
 
   new AggregateBase(mainAgent, featureName)
 
-  expect(isValid).toHaveBeenCalledWith(agentIdentifier)
+  expect(isValid).toHaveBeenCalledWith(mainAgent.info)
   expect(gosCDN).not.toHaveBeenCalled()
   expect(configure).not.toHaveBeenCalled()
 })

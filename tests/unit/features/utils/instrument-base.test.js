@@ -9,7 +9,6 @@ import { setupAgentSession } from '../../../../src/features/utils/agent-session'
 import { warn } from '../../../../src/common/util/console'
 import * as runtimeConstantsModule from '../../../../src/common/constants/runtime'
 import { canEnableSessionTracking } from '../../../../src/features/utils/feature-gates'
-import { getConfigurationValue } from '../../../../src/common/config/init'
 
 jest.enableAutomock()
 jest.unmock('../../../../src/features/utils/instrument-base')
@@ -70,7 +69,6 @@ test('should wait for feature opt-in to import the aggregate', async () => {
 })
 
 test('should import aggregator on window load', async () => {
-  jest.mocked(getConfigurationValue).mockReturnValue({ feature_flags: [] })
   const instrument = new InstrumentBase(agentBase, featureName)
   const aggregateArgs = { [faker.string.uuid()]: faker.lorem.sentence() }
   instrument.importAggregator(agentBase, aggregateArgs)

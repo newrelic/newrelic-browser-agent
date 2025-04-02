@@ -19,7 +19,7 @@ export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
   constructor (agentRef, auto = true) {
     super(agentRef, FEATURE_NAME, auto)
-    const canTrackSession = canEnableSessionTracking(this.agentIdentifier)
+    const canTrackSession = canEnableSessionTracking(agentRef.init)
     if (!canTrackSession) {
       this.deregisterDrain()
       return

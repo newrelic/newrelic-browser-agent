@@ -1,7 +1,6 @@
 import helpers from './helpers'
 import { ee } from '../../../src/common/event-emitter/contextual-ee'
 import { Spa } from '../../../src/features/spa'
-import { getInfo } from '../../../src/common/config/info'
 import { bundleId } from '../../../src/common/ids/bundle-id'
 import { now } from '../../../src/common/timing/now'
 import { gosNREUMOriginals } from '../../../src/common/window/nreum'
@@ -9,16 +8,7 @@ import { gosNREUMOriginals } from '../../../src/common/window/nreum'
 jest.mock('../../../src/common/constants/runtime')
 jest.mock('../../../src/common/config/info', () => ({
   __esModule: true,
-  getInfo: jest.fn(),
   isValid: jest.fn().mockReturnValue(true)
-}))
-jest.mock('../../../src/common/config/init', () => ({
-  __esModule: true,
-  getConfigurationValue: jest.fn()
-}))
-jest.mock('../../../src/common/config/runtime', () => ({
-  __esModule: true,
-  getRuntime: jest.fn().mockReturnValue({})
 }))
 jest.mock('../../../src/common/harvest/harvester')
 
@@ -28,9 +18,8 @@ const baseEE = ee.get(agentIdentifier)
 
 beforeAll(async () => {
   mockCurrentInfo = { jsAttributes: {} }
-  getInfo.mockReturnValue(mockCurrentInfo)
 
-  spaInstrument = new Spa({ agentIdentifier, info: mockCurrentInfo, init: { spa: { enabled: true } }, runtime: {} })
+  spaInstrument = new Spa({ agentIdentifier, info: mockCurrentInfo, init: { spa: { enabled: true }, privacy: {} }, runtime: {}, ee: baseEE })
   await expect(spaInstrument.onAggregateImported).resolves.toEqual(true)
   spaAggregate = spaInstrument.featAggregate
   spaAggregate.blocked = true

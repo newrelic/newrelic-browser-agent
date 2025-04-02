@@ -2,25 +2,19 @@
  * Copyright 2020-2025 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { getConfiguration, getConfigurationValue } from '../../../common/config/init'
-import { getLoaderConfig } from '../../../common/config/loader-config'
 import { generateSpanId, generateTraceId } from '../../../common/ids/unique-id'
 import { parseUrl } from '../../../common/url/parse-url'
 import { globalScope } from '../../../common/constants/runtime'
 import { stringify } from '../../../common/util/stringify'
 
 export class DT {
-  constructor (agentIdentifier) {
-    this.agentIdentifier = agentIdentifier
+  constructor (agentRef) {
+    this.agentRef = agentRef
   }
 
   generateTracePayload (parsedOrigin) {
-    if (!this.shouldGenerateTrace(parsedOrigin)) {
-      return null
-    }
-
-    var loaderConfig = getLoaderConfig(this.agentIdentifier)
-    if (!loaderConfig) {
+    const loaderConfig = this.agentRef.loader_config
+    if (!this.shouldGenerateTrace(parsedOrigin) || !loaderConfig) {
       return null
     }
 
@@ -100,21 +94,16 @@ export class DT {
   // return true if DT is enabled and the origin is allowed, either by being
   // same-origin, or included in the allowed list
   shouldGenerateTrace (parsedOrigin) {
-    return this.isDtEnabled() && this.isAllowedOrigin(parsedOrigin)
+    return this.agentRef.init?.distributed_tracing && this.isAllowedOrigin(parsedOrigin)
   }
 
   isAllowedOrigin (parsedOrigin) {
     var allowed = false
-    var dtConfig = {}
-    var dt = getConfigurationValue(this.agentIdentifier, 'distributed_tracing')
-
-    if (dt) {
-      dtConfig = getConfiguration(this.agentIdentifier).distributed_tracing
-    }
+    const dtConfig = this.agentRef.init?.distributed_tracing
 
     if (parsedOrigin.sameOrigin) {
       allowed = true
-    } else if (dtConfig.allowed_origins instanceof Array) {
+    } else if (dtConfig?.allowed_origins instanceof Array) {
       for (var i = 0; i < dtConfig.allowed_origins.length; i++) {
         var allowedOrigin = parseUrl(dtConfig.allowed_origins[i])
         if (parsedOrigin.hostname === allowedOrigin.hostname &&
@@ -128,17 +117,9 @@ export class DT {
     return allowed
   }
 
-  isDtEnabled () {
-    var dt = getConfigurationValue(this.agentIdentifier, 'distributed_tracing')
-    if (dt) {
-      return !!dt.enabled
-    }
-    return false
-  }
-
   // exclude the newrelic header for same-origin calls
   excludeNewrelicHeader () {
-    var dt = getConfigurationValue(this.agentIdentifier, 'distributed_tracing')
+    var dt = this.agentRef.init?.distributed_tracing
     if (dt) {
       return !!dt.exclude_newrelic_header
     }
@@ -146,7 +127,7 @@ export class DT {
   }
 
   useNewrelicHeaderForCors () {
-    var dt = getConfigurationValue(this.agentIdentifier, 'distributed_tracing')
+    var dt = this.agentRef.init?.distributed_tracing
     if (dt) {
       return dt.cors_use_newrelic_header !== false
     }
@@ -154,7 +135,7 @@ export class DT {
   }
 
   useTraceContextHeadersForCors () {
-    var dt = getConfigurationValue(this.agentIdentifier, 'distributed_tracing')
+    var dt = this.agentRef.init?.distributed_tracing
     if (dt) {
       return !!dt.cors_use_tracecontext_headers
     }

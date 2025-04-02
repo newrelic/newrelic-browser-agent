@@ -3,7 +3,6 @@ import { getNREUMInitializedAgent, setNREUMInitializedAgent } from '../../src/co
 import { configure } from '../../src/loaders/configure/configure'
 import { ee } from '../../src/common/event-emitter/contextual-ee'
 import { TimeKeeper } from '../../src/common/timing/time-keeper'
-import { getRuntime } from '../../src/common/config/runtime'
 import { setupAgentSession } from '../../src/features/utils/agent-session'
 import { Harvester } from '../../src/common/harvest/harvester'
 import { EventStoreManager } from '../../src/features/utils/event-store-manager'
@@ -51,13 +50,12 @@ export function setupAgent ({ agentOverrides = {}, info = {}, init = {}, loaderC
   )
   setupAgentSession(fakeAgent)
 
-  runtime = getRuntime(agentIdentifier)
-  if (!runtime.timeKeeper) {
-    runtime.timeKeeper = new TimeKeeper(agentIdentifier)
-    runtime.timeKeeper.processRumRequest({}, 450, 600, Date.now())
+  if (!fakeAgent.runtime.timeKeeper) {
+    fakeAgent.runtime.timeKeeper = new TimeKeeper(fakeAgent.runtime.session)
+    fakeAgent.runtime.timeKeeper.processRumRequest({}, 450, 600, Date.now())
   }
   fakeAgent.features = {}
-  if (!runtime.harvester) runtime.harvester = new Harvester(fakeAgent)
+  if (!fakeAgent.runtime.harvester) fakeAgent.runtime.harvester = new Harvester(fakeAgent)
 
   return fakeAgent
 }
@@ -84,6 +82,6 @@ export function resetAggregator (agentIdentifier) {
 }
 
 export function resetSession (agentIdentifier) {
-  const runtime = getRuntime(agentIdentifier)
-  runtime.session.reset()
+  const agent = getNREUMInitializedAgent(agentIdentifier)
+  agent.runtime.session.reset()
 }

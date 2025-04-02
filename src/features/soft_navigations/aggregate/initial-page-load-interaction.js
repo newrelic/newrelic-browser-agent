@@ -7,15 +7,13 @@ import { Interaction } from './interaction'
 import { numeric } from '../../../common/serialize/bel-serializer'
 import { firstPaint } from '../../../common/vitals/first-paint'
 import { firstContentfulPaint } from '../../../common/vitals/first-contentful-paint'
-import { getInfo } from '../../../common/config/info'
 import { IPL_TRIGGER_NAME } from '../constants'
 
 export class InitialPageLoadInteraction extends Interaction {
-  constructor (agentIdentifier) {
-    super(agentIdentifier, IPL_TRIGGER_NAME, 0, null)
-    const agentInfo = getInfo(agentIdentifier)
-    this.queueTime = agentInfo.queueTime
-    this.appTime = agentInfo.applicationTime
+  constructor (agentRef) {
+    super(agentRef, IPL_TRIGGER_NAME, 0, null)
+    this.queueTime = agentRef.info.queueTime
+    this.appTime = agentRef.info.applicationTime
   }
 
   get firstPaint () { return firstPaint.current.value }

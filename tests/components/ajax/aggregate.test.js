@@ -5,7 +5,6 @@ import * as handleModule from '../../../src/common/event-emitter/handle'
 import { Instrument as Ajax } from '../../../src/features/ajax/instrument'
 import { resetAgent, setupAgent } from '../setup-agent'
 import { EventContext } from '../../../src/common/event-emitter/event-context'
-import { getInfo } from '../../../src/common/config/info'
 
 const ajaxArguments = [
   { // params
@@ -25,10 +24,10 @@ const ajaxArguments = [
   'XMLHttpRequest' // type
 ]
 
-let agentSetup
+let fakeAgent
 
 beforeAll(() => {
-  agentSetup = setupAgent()
+  fakeAgent = setupAgent()
 })
 
 let ajaxAggregate, context
@@ -36,20 +35,20 @@ let ajaxAggregate, context
 beforeEach(async () => {
   jest.spyOn(handleModule, 'handle')
 
-  const ajaxInstrument = new Ajax(agentSetup)
+  const ajaxInstrument = new Ajax(fakeAgent)
   await new Promise(process.nextTick)
   ajaxAggregate = ajaxInstrument.featAggregate
   ajaxAggregate.drain()
 
   context = new EventContext()
 
-  getNREUMInitializedAgent(agentSetup.agentIdentifier).features = {
+  getNREUMInitializedAgent(fakeAgent.agentIdentifier).features = {
     [FEATURE_NAMES.softNav]: false
   }
 })
 
 afterEach(() => {
-  resetAgent(agentSetup.agentIdentifier)
+  resetAgent(fakeAgent.agentIdentifier)
   jest.clearAllMocks()
 })
 
@@ -65,7 +64,7 @@ test('on interactionDiscarded, saved (old) SPA events are put back in ajaxEvents
 })
 
 test('on returnAjax from soft nav, event is re-routed back into ajaxEvents', () => {
-  getNREUMInitializedAgent(agentSetup.agentIdentifier).features = {
+  getNREUMInitializedAgent(fakeAgent.agentIdentifier).features = {
     [FEATURE_NAMES.softNav]: true
   }
 
@@ -103,7 +102,7 @@ describe('storeXhr', () => {
   })
 
   test('for ajax under soft nav does not buffer and instead pipes it', () => {
-    getNREUMInitializedAgent(agentSetup.agentIdentifier).features = {
+    getNREUMInitializedAgent(fakeAgent.agentIdentifier).features = {
       [FEATURE_NAMES.softNav]: true
     }
 
@@ -150,7 +149,7 @@ describe('prepareHarvest', () => {
       customBooleanAttribute: true,
       nullCustomAttribute: null
     }
-    getInfo(agentSetup.agentIdentifier).jsAttributes = expectedCustomAttributes
+    fakeAgent.info.jsAttributes = expectedCustomAttributes
 
     const serializedPayload = ajaxAggregate.makeHarvestPayload(false)[0].payload
     // serializedPayload from ajax comes back as an array of bodies now, so we just need to decode each one and flatten

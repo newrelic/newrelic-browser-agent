@@ -48,7 +48,7 @@ export class Aggregate extends AggregateBase {
     this.errorNoticed = args?.errorNoticed || false
     this.harvestOpts.raw = true
 
-    this.isSessionTrackingEnabled = canEnableSessionTracking(this.agentIdentifier) && this.agentRef.runtime.session
+    this.isSessionTrackingEnabled = canEnableSessionTracking(agentRef.init) && agentRef.runtime.session
 
     this.reportSupportabilityMetric('Config/SessionReplay/Enabled')
 

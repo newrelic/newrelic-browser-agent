@@ -1,5 +1,4 @@
-import { setConfiguration } from '../../../../src/common/config/init'
-import * as enabledFeaturesModule from '../../../../src/loaders/features/enabled-features'
+import { getEnabledFeatures } from '../../../../src/loaders/features/enabled-features'
 
 jest.mock('../../../../src/loaders/features/features', () => ({
   FEATURE_NAMES: {
@@ -12,14 +11,12 @@ jest.mock('../../../../src/loaders/features/features', () => ({
 }))
 
 test('getEnabledFeatures works', () => {
-  setConfiguration('abc', {
+  const retMap = getEnabledFeatures({
     jserrors: { enabled: false },
     metrics: { enabled: true },
     session_trace: { enabled: false },
     soft_navigations: { enabled: false }
   })
-
-  const retMap = enabledFeaturesModule.getEnabledFeatures('abc')
   expect(retMap.jserrors).toEqual(false)
   expect(retMap.metrics).toEqual(true)
   expect(retMap.session_trace).toEqual(false)

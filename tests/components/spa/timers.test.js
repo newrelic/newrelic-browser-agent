@@ -5,24 +5,16 @@ import { Spa } from '../../../src/features/spa'
 jest.mock('../../../src/common/constants/runtime')
 jest.mock('../../../src/common/config/info', () => ({
   __esModule: true,
-  getInfo: jest.fn().mockReturnValue({ jsAttributes: {} }),
   isValid: jest.fn().mockReturnValue(true)
-}))
-jest.mock('../../../src/common/config/init', () => ({
-  __esModule: true,
-  getConfigurationValue: jest.fn()
-}))
-jest.mock('../../../src/common/config/runtime', () => ({
-  __esModule: true,
-  getRuntime: jest.fn().mockReturnValue({})
 }))
 jest.mock('../../../src/common/harvest/harvester')
 
 let spaInstrument, spaAggregate, newrelic
 const agentIdentifier = 'abcdefg'
+const baseEE = ee.get(agentIdentifier)
 
 beforeAll(async () => {
-  spaInstrument = new Spa({ agentIdentifier, info: {}, init: { spa: { enabled: true } }, runtime: {} })
+  spaInstrument = new Spa({ agentIdentifier, info: {}, init: { spa: { enabled: true }, privacy: {} }, runtime: {}, ee: baseEE })
   await expect(spaInstrument.onAggregateImported).resolves.toEqual(true)
   spaAggregate = spaInstrument.featAggregate
   spaAggregate.blocked = true
@@ -42,7 +34,7 @@ describe('SPA timers tracking', () => {
     })
 
     expect(spaAggregate.state.currentNode?.id).toBeFalsy()
-    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, spaAggregate, validator, done), { baseEE: ee.get(agentIdentifier) })
+    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, spaAggregate, validator, done), { baseEE })
 
     function onInteractionStart (cb) {
       // cancel timer1 after 5ms so that it never fires, do this first to avoid race conditions
@@ -64,7 +56,7 @@ describe('SPA timers tracking', () => {
     })
 
     expect(spaAggregate.state.currentNode?.id).toBeFalsy()
-    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, spaAggregate, validator, done), { baseEE: ee.get(agentIdentifier) })
+    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, spaAggregate, validator, done), { baseEE })
 
     function onInteractionStart (cb) {
       new Promise(() => {
@@ -91,7 +83,7 @@ describe('SPA timers tracking', () => {
       }]
     })
 
-    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, spaAggregate, validator, done), { baseEE: ee.get(agentIdentifier) })
+    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, spaAggregate, validator, done), { baseEE })
 
     function onInteractionStart (cb) {
       setTimeout(() => newrelic.interaction().createTracer('timer', () => {
@@ -116,7 +108,7 @@ describe('SPA timers tracking', () => {
       }]
     })
 
-    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, spaAggregate, validator, done), { baseEE: ee.get(agentIdentifier) })
+    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, spaAggregate, validator, done), { baseEE })
 
     function onInteractionStart (cb) {
       setTimeout(() => newrelic.interaction().createTracer('timer', () => {
@@ -139,7 +131,7 @@ describe('SPA timers tracking', () => {
       children: []
     })
 
-    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, spaAggregate, validator, done), { baseEE: ee.get(agentIdentifier) })
+    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, spaAggregate, validator, done), { baseEE })
 
     function onInteractionStart (cb) {
       Promise.resolve().then(function () {
@@ -170,7 +162,7 @@ describe('SPA timers tracking', () => {
     })
 
     expect(spaAggregate.state.currentNode?.id).toBeFalsy()
-    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, spaAggregate, validator, done), { baseEE: ee.get(agentIdentifier) })
+    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, spaAggregate, validator, done), { baseEE })
 
     function onInteractionStart (cb) {
       setTimeout(function () {
@@ -216,7 +208,7 @@ describe('SPA timers tracking', () => {
     })
 
     expect(spaAggregate.state.currentNode?.id).toBeFalsy()
-    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, spaAggregate, validator, done), { baseEE: ee.get(agentIdentifier) })
+    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, spaAggregate, validator, done), { baseEE })
 
     function onInteractionStart (cb) {
       setTimeout(newrelic.interaction().createTracer('timer', function () {

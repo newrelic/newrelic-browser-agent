@@ -5,6 +5,55 @@
       "changes": [
         {
           "type": "fix",
+          "sha": "86014247ed45520adbbb053d94b6f11de48e239f",
+          "message": "Patch `newrelic` event detail",
+          "issues": [
+            "1428"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "44786ae60d761b40a28f6df4b7b835c1791dda5f",
+          "message": "Erase .api property on agent instance",
+          "issues": [
+            "1425"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "7c02a02763abdd2697e9ed1d5a89d81c251dcf67",
+          "message": "Reduce noise from `mousemove` events",
+          "issues": [
+            "1424"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "0c1ce6ca82bce15da12fe84fd91a7d6be8b4da44",
+          "message": "Get string className for SVG elements",
+          "issues": [
+            "1423"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "f8084474ea1a567a90d0615cdfeb13a8a2c1f110",
+          "message": "Handle duplicate agent APIs",
+          "issues": [
+            "1418"
+          ]
+        }
+      ],
+      "version": "1.286.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "2d430882-b6bc-4fc0-a500-5c8ab00e83f5",
+      "createTime": "2025-04-01T22:28:52.259Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
           "sha": "97bf32655d6e608ea7248acc680d983b1d1e0eea",
           "message": "Session Replay text masking for whitespace",
           "issues": [
@@ -2693,5 +2742,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2025-03-18T18:30:03.184Z"
+  "updateTime": "2025-04-01T22:28:52.259Z"
 }

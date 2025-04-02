@@ -60,7 +60,7 @@ export class EventStoreManager {
   add (event, targetEntityGuid) {
     dispatchGlobalEvent({
       agentIdentifier: this.agentRef.agentIdentifier,
-      loaded: !!activatedFeatures?.[this.agentRef.agentIdentifier],
+      drained: !!activatedFeatures?.[this.agentRef.agentIdentifier],
       type: 'data',
       name: 'buffer',
       feature: this.featureName,

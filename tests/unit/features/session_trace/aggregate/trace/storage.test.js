@@ -30,4 +30,30 @@ describe('session trace storage', () => {
 
     expect(traceStorage.isEmpty()).toBe(true)
   })
+
+  test('should not store trace node if session rotated', async () => {
+    const traceNode = {
+      n: 'someName',
+      s: 123,
+      e: 124,
+      o: 'someOrigin',
+      t: 'someType'
+    }
+    const traceStorage = new TraceStorage({
+      agentRef: {
+        init: { },
+        runtime: {
+          session: {
+            state: {
+              value: 'someSessionIdThatWillNotMatch'
+            }
+          }
+        }
+      }
+    })
+
+    traceStorage.storeSTN(traceNode)
+
+    expect(traceStorage.isEmpty()).toBe(true)
+  })
 })

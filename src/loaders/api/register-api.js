@@ -116,6 +116,7 @@ export function buildRegisterApi (agentRef, handlers, target) {
           }
         }
       } catch (err) {
+        warn(58, err)
         reject(err)
       }
     })

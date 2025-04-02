@@ -94,11 +94,11 @@
 ### 46
 `A reserved eventType was provided to recordCustomEvent(...) -- The event was not recorded.`
 ### 47
-`Supplied an invalid API target. Must be an <Object> that contains licenseKey and applicationID properties.`
+`Supplied an invalid API target. Must be an <Object> that contains licenseKey and applicationID properties tied to a valid entityGuid value.`
 ### 48
 `Supplied API target is missing an entityGuid. Some APIs may not behave correctly without a valid entityGuid (ex. logs).`
 ### 49 
-`Failed to connect. Cannot allow registered API.`
+`Failed to connect. Cannot allow register API.`
 ### 50
 `Container agent is not available to register with. Can not connect`
 ### 51
@@ -111,3 +111,9 @@
 `Register API has been disabled on the container agent`
 ### 55
 `Could not find a matching entity to store data`
+### 56
+`An entity guid was detected on an AJAX call occuring during a BrowserInteraction, but the container agent is not configured to duplicate external data to the main agent target.  The BrowserInteraction will not include this AJAX record. See the configuration: init.external.capture_registered_data for more information`
+### 57
+`An entity guid was supplied to the register API, but connecting to New Relic returned an entityGuid that did not match. Cannot allow registered API.`
+### 58
+`Register API failed`

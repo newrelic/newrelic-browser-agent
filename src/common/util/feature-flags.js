@@ -28,10 +28,11 @@ export function activateFeatures (flags, agentIdentifier) {
 
   sentIds.add(agentIdentifier)
 
-  // let any window level subscribers know that the agent is running
+  // let any window level subscribers know that the agent is running, per install docs
   dispatchGlobalEvent({
     agentIdentifier,
     loaded: true,
+    drained: true,
     type: 'lifecycle',
     name: 'load',
     feature: undefined,

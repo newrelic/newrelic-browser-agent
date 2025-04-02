@@ -123,7 +123,7 @@ export class AggregateBase extends FeatureBase {
 
     if (shouldRetryOnFail) this.events.save(this.harvestOpts, opts.targetEntityGuid)
     const returnedDataArr = this.events.get(this.harvestOpts, opts.targetEntityGuid)
-    if (!returnedDataArr.length) return warn(51)
+    if (!returnedDataArr.length) return warn(52)
     this.events.clear(this.harvestOpts, opts.targetEntityGuid)
 
     return returnedDataArr.map(({ targetApp, data }) => {
@@ -170,14 +170,14 @@ export class AggregateBase extends FeatureBase {
       } catch (err) {
         // do nothing
       }
-      configure({ agentIdentifier: this.agentIdentifier }, {
+      configure(existingAgent, {
         ...cdn,
         info: {
           ...cdn.info,
           jsAttributes
         },
         runtime: existingAgent.runtime
-      })
+      }, existingAgent.runtime.loaderType)
     }
   }
 

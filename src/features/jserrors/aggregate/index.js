@@ -115,7 +115,7 @@ export class Aggregate extends AggregateBase {
   storeError (err, time, internal, customAttributes, hasReplay, swallowReason, targetEntityGuid) {
     if (!err) return
     const target = this.agentRef.runtime.entityManager.get(targetEntityGuid)
-    if (!target) return warn(55, this.featureName)
+    if (!target) return warn(56, this.featureName)
     // are we in an interaction
     time = time || now()
     let filterOutput

@@ -23,7 +23,7 @@ import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
  */
 export function buildRegisterApi (agentRef, handlers, target) {
   const attrs = {}
-  warn(53, 'newrelic.register')
+  warn(54, 'newrelic.register')
 
   /** @type {Function|undefined} a function that is set and reports when APIs are triggered -- warns the customer of the invalid state  */
   let invalidApiResponse
@@ -35,8 +35,8 @@ export function buildRegisterApi (agentRef, handlers, target) {
        * @type {Promise<RegisterAPI>}
        */
   let _connected
-  if (!agentRef.init.api.allow_registered_children) invalidApiResponse = () => warn(54)
-  if (!target || !isValidTarget(target)) invalidApiResponse = () => warn(47, target)
+  if (!agentRef.init.api.allow_registered_children) invalidApiResponse = () => warn(55)
+  if (!target || !isValidTarget(target)) invalidApiResponse = () => warn(48, target)
 
   /** @type {RegisterAPI} */
   const api = {
@@ -144,7 +144,7 @@ export function buildRegisterApi (agentRef, handlers, target) {
       }
       methodToCall(...args, target.entityGuid, timestamp) // always report to target
     } catch (err) {
-      warn(49, err)
+      warn(50, err)
     }
   }
 

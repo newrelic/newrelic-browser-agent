@@ -137,7 +137,7 @@ export class Aggregate extends AggregateBase {
       this.processEntities(app.agents, targetApp)
     } catch (error) {
       // wont set entity stuff here, if main agent will later abort, if registered agent, nothing will happen
-      warn(52, error)
+      warn(53, error)
     }
 
     /** Only run agent-wide side-effects if the harvest was for the main agent */

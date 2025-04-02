@@ -94,20 +94,22 @@
 ### 46
 `A reserved eventType was provided to recordCustomEvent(...) -- The event was not recorded.`
 ### 47
-`Supplied an invalid API target. Must be an <Object> that contains licenseKey and applicationID properties.`
+`We tried to access a stylesheet's contents but failed due to browser security. For best results, ensure that cross-domain CSS assets are decorated with "crossorigin='anonymous'" attribution or are otherwise publicly accessible.`
 ### 48
+`Supplied an invalid API target. Must be an <Object> that contains licenseKey and applicationID properties.`
+### 49
 `Supplied API target is missing an entityGuid. Some APIs may not behave correctly without a valid entityGuid (ex. logs).`
-### 49 
-`Failed to connect. Cannot allow registered API.`
 ### 50
-`Container agent is not available to register with. Can not connect`
+`Failed to connect. Cannot allow registered API.`
 ### 51
-`Unexpected problem encountered. There should be at least one app for harvest!`
+`Container agent is not available to register with. Can not connect`
 ### 52
+`Unexpected problem encountered. There should be at least one app for harvest!`
+### 53
 `Did not recieve a valid entityGuid from connection response`
-### 53 
-`An experimental feature is being used. Support can not be offered for issues`
 ### 54
-`Register API has been disabled on the container agent`
+`An experimental feature is being used. Support can not be offered for issues`
 ### 55
+`Register API has been disabled on the container agent`
+### 56
 `Could not find a matching entity to store data`

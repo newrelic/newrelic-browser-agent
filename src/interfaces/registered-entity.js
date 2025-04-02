@@ -30,10 +30,10 @@ export class RegisteredEntity {
    */
   constructor (opts) {
     try {
-      if (!window?.newrelic) return warn(50)
+      if (!window?.newrelic) return warn(51)
       Object.assign(this, window?.newrelic?.register(opts) || {})
     } catch (err) {
-      warn(49, err)
+      warn(50, err)
     }
   }
 

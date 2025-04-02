@@ -126,6 +126,20 @@ describe('Trace nodes', () => {
       }, {})
     expect(Object.values(eventCounts).some(count => count > 1)).toBeFalsy()
   })
+
+  it('are not created for mouseover events', async () => {
+    const url = await browser.testHandle.assetURL('event-listener-mousemove.html', stConfig())
+    await browser.url(url).then(() => browser.waitForAgentLoad())
+
+    const [sessionTraceHarvests] = await Promise.all([
+      sessionTraceCapture.waitForResult({ timeout: 10000 })
+    ])
+
+    sessionTraceHarvests.forEach(harvest => {
+      const foobarMousemoveEvts = JSONPath({ path: '$.request.body.[?(!!@ && @.t===\'event\' && @.n===\'mousing\' && @.o===\'div#foobar\')]', json: harvest })
+      expect(foobarMousemoveEvts.length).toEqual(0)
+    })
+  })
 })
 
 function getEventsSetSize () {

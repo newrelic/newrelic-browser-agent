@@ -43,7 +43,7 @@ export class Aggregate extends AggregateBase {
 
       if (agentRef.init.page_action.enabled) {
         registerHandler('api-addPageAction', (timestamp, name, attributes, targetEntityGuid) => {
-          if (!this.agentRef.runtime.entityManager.get(targetEntityGuid)) return warn(55, this.featureName)
+          if (!this.agentRef.runtime.entityManager.get(targetEntityGuid)) return warn(56, this.featureName)
           this.addEvent({
             ...attributes,
             eventType: 'PageAction',

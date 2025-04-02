@@ -29,8 +29,8 @@ export class Aggregate extends AggregateBase {
 
     this.ee.on(SESSION_EVENTS.UPDATE, (type, data) => {
       if (this.blocked || type !== SESSION_EVENT_TYPES.CROSS_TAB) return
-      if (this.mode !== LOGGING_MODE.OFF && data.loggingMode === LOGGING_MODE.OFF) this.abort(ABORT_REASONS.CROSS_TAB)
-      else this.mode = data.loggingMode
+      if (this.loggingMode !== LOGGING_MODE.OFF && data.loggingMode === LOGGING_MODE.OFF) this.abort(ABORT_REASONS.CROSS_TAB)
+      else this.loggingMode = data.loggingMode
     })
 
     this.harvestOpts.raw = true
@@ -65,7 +65,7 @@ export class Aggregate extends AggregateBase {
   handleLog (timestamp, message, attributes = {}, level = LOG_LEVELS.INFO, targetEntityGuid) {
     const target = this.agentRef.runtime.entityManager.get(targetEntityGuid)
 
-    if (target && !target.entityGuid) return warn(48)
+    if (target && !target.entityGuid) return warn(49)
     if (this.blocked || !this.loggingMode) return
 
     if (!attributes || typeof attributes !== 'object') attributes = {}

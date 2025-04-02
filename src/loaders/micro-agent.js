@@ -37,7 +37,6 @@ export class MicroAgent extends MicroAgentBase {
     setNREUMInitializedAgent(this.agentIdentifier, this)
 
     configure(this, { ...options, runtime: { isolatedBacklog: true } }, options.loaderType || 'micro-agent')
-    Object.assign(this, this.api) // the APIs should be available at the class level for micro-agent
 
     /**
      * Starts a set of agent features if not running in "autoStart" mode
@@ -91,5 +90,9 @@ export class MicroAgent extends MicroAgentBase {
       loader_config: this.loader_config,
       runtime: this.runtime
     }
+  }
+
+  get api () {
+    return this
   }
 }

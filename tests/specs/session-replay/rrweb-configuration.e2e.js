@@ -84,7 +84,7 @@ describe('RRWeb Configuration', () => {
   })
 
   describe('mask_text_selector', () => {
-    it('mask_text_selector: "*" should convert all text to *', async () => {
+    it('mask_text_selector: "*" should convert text to * and leave whitespace-only text as-is', async () => {
       await Promise.all([
         sessionReplaysCapture.waitForResult({ totalCount: 1 }),
         browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig({ session_replay: { mask_all_inputs: false } })))
@@ -95,7 +95,15 @@ describe('RRWeb Configuration', () => {
       expect(sessionReplaysHarvests.length).toBeGreaterThan(1)
       expect(decodeAttributes(sessionReplaysHarvests[0].request.query.attributes).hasSnapshot).toEqual(true)
 
-      const testNodes = JSONPath({ path: '$.[*].request.body.[?(!!@ && @.type===3 && !!@.textContent && ![\'script\',\'link\',\'style\'].includes(@parent.tagName))]', json: sessionReplaysHarvests })
+      // note: we need to leave text nodes containing only whitespace as-is to avoid adding extraneous '*'
+      const whitespaceOnlyNodes = JSONPath({ path: '$.[*].request.body.[?(!!@ && @.type===3 && !!@.textContent && @.textContent.match(/^\\s+$/) && ![\'script\',\'link\',\'style\'].includes(@parent.tagName))]', json: sessionReplaysHarvests })
+      expect(whitespaceOnlyNodes.length).toBeGreaterThan(0)
+
+      whitespaceOnlyNodes.forEach(node => {
+        expect(node.textContent).toMatch(/\s+/)
+      })
+
+      const testNodes = JSONPath({ path: '$.[*].request.body.[?(!!@ && @.type===3 && !!@.textContent && @.textContent.match(/\\S+/) && ![\'script\',\'link\',\'style\'].includes(@parent.tagName))]', json: sessionReplaysHarvests })
       expect(testNodes.length).toBeGreaterThan(0)
 
       testNodes.forEach(node => {

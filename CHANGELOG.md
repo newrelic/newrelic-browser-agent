@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.286.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.285.0...v1.286.0) (2025-04-01)
+
+
+### Features
+
+* Erase .api property on agent instance ([#1425](https://github.com/newrelic/newrelic-browser-agent/issues/1425)) ([44786ae](https://github.com/newrelic/newrelic-browser-agent/commit/44786ae60d761b40a28f6df4b7b835c1791dda5f))
+* Handle duplicate agent APIs ([#1418](https://github.com/newrelic/newrelic-browser-agent/issues/1418)) ([f808447](https://github.com/newrelic/newrelic-browser-agent/commit/f8084474ea1a567a90d0615cdfeb13a8a2c1f110))
+* Reduce noise from `mousemove` events ([#1424](https://github.com/newrelic/newrelic-browser-agent/issues/1424)) ([7c02a02](https://github.com/newrelic/newrelic-browser-agent/commit/7c02a02763abdd2697e9ed1d5a89d81c251dcf67))
+
+
+### Bug Fixes
+
+* Get string className for SVG elements ([#1423](https://github.com/newrelic/newrelic-browser-agent/issues/1423)) ([0c1ce6c](https://github.com/newrelic/newrelic-browser-agent/commit/0c1ce6ca82bce15da12fe84fd91a7d6be8b4da44))
+* Patch `newrelic` event detail ([#1428](https://github.com/newrelic/newrelic-browser-agent/issues/1428)) ([8601424](https://github.com/newrelic/newrelic-browser-agent/commit/86014247ed45520adbbb053d94b6f11de48e239f))
+
 ## [1.285.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.284.1...v1.285.0) (2025-03-18)
 
 

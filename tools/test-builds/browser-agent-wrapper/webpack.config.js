@@ -66,7 +66,7 @@ const config = [
       'worker-init': './src/worker-init.js'
     },
     output: {
-      path: path.resolve(__dirname, '../../../tests/assets/test-builds/raw-src-wrapper')
+      path: path.resolve(__dirname, '../../../tests/assets/test-builds/browser-agent-wrapper')
     },
     module: {
       rules: [
@@ -160,7 +160,7 @@ const config = [
       }
     },
     output: {
-      path: path.resolve(__dirname, '../../../tests/assets/test-builds/raw-src-wrapper')
+      path: path.resolve(__dirname, '../../../tests/assets/test-builds/browser-agent-wrapper')
     },
     module: {
       rules: [

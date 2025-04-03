@@ -23,6 +23,7 @@ export class Aggregate extends AggregateBase {
 
     this.initialPageLoadInteraction = new InitialPageLoadInteraction(agentRef.agentIdentifier)
     this.initialPageLoadInteraction.onDone.push(() => { // this ensures the .end() method also works with iPL
+      if (agentRef.runtime.session?.isNew) this.initialPageLoadInteraction.customAttributes.isFirstOfSession = true // mark the hard page load as first of its session
       this.initialPageLoadInteraction.forceSave = true // unless forcibly ignored, iPL always finish by default
       this.interactionsToHarvest.add(this.initialPageLoadInteraction)
       this.initialPageLoadInteraction = null

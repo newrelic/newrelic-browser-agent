@@ -110,6 +110,7 @@ export class Aggregate extends AggregateBase {
 
     state.initialPageLoad = new Interaction('initialPageLoad', 0, state.lastSeenUrl, state.lastSeenRouteName, onInteractionFinished, agentRef.agentIdentifier)
     state.initialPageLoad.save = true
+    if (agentRef.runtime.session?.isNew) state.initialPageLoad.root.attrs.custom.isFirstOfSession = true // mark the hard page load as first of its session
     state.prevInteraction = state.initialPageLoad
     state.currentNode = state.initialPageLoad.root // hint
     // ensure that checkFinish calls are safe during initialPageLoad

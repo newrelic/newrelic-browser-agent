@@ -45,7 +45,7 @@ describe('session trace storage', () => {
         runtime: {
           session: {
             state: {
-              value: 'someSessionIdThatWillNotMatch'
+              value: 'old-session-id'
             }
           }
         }

@@ -274,7 +274,7 @@ export class Aggregate extends AggregateBase {
        * if it fails again, we do nothing
        */
       this.ee.emit(SUPPORTABILITY_METRIC_CHANNEL, ['GenericEvents/Harvest/Max/Seen'])
-      this.agentRef.runtime.harvester.triggerHarvestFor(this)
+      this.agentRef.runtime.harvester.triggerHarvestFor(this, { targetEntityGuid })
       this.events.add(eventAttributes)
     }
   }

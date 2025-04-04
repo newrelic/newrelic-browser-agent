@@ -123,7 +123,7 @@ function send (agentRef, { endpoint, targetApp, payload, localOpts = {}, submitM
   let { body, qs } = cleanPayload(payload)
 
   if (Object.keys(body).length === 0 && !localOpts.sendEmptyBody) { // if there's no body to send, just run onfinish stuff and return
-    if (cbFinished) cbFinished({ sent: false, targetApp, cbFinished: localOpts.cbFinished })
+    if (cbFinished) cbFinished({ sent: false, targetApp })
     return false
   }
 
@@ -169,7 +169,7 @@ function send (agentRef, { endpoint, targetApp, payload, localOpts = {}, submitM
     } else if (submitMethod === fetchMethod) {
       result.then(async function (response) {
         const status = response.status
-        const cbResult = { sent: true, status, retry: shouldRetry(status), fullUrl, fetchResponse: response, targetApp, cbFinished: localOpts.cbFinished }
+        const cbResult = { sent: true, status, retry: shouldRetry(status), fullUrl, fetchResponse: response, targetApp }
         if (localOpts.needResponse) cbResult.responseText = await response.text()
         cbFinished(cbResult)
       })

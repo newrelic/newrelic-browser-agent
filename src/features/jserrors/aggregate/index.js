@@ -247,8 +247,9 @@ export class Aggregate extends AggregateBase {
   }
 
   /**
-  * If the event lacks an entityGuid, the main agent should capture the data. However, the main agent should not capture events if the main agent is not configured to capture data and the data has been scoped to a sub-entity
-  * @param {object} ctx - the context object for the event
+  * If the event lacks an entityGuid (the default behavior), the main agent should capture the data. If the data is assigned to a sub-entity target
+  * the main agent should not capture events unless it is configured to do so.
+  * @param {string} entityGuid - the context object for the event
   * @returns {boolean} - whether the main agent should capture the event to its internal target
   */
   shouldAllowMainAgentToCapture (entityGuid) {

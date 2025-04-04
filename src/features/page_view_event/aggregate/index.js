@@ -131,6 +131,7 @@ export class Aggregate extends AggregateBase {
   }
 
   postHarvestCleanup ({ status, responseText, xhr, targetApp }) {
+    const rumEndTime = now()
     let app, flags
     try {
       ({ app, ...flags } = JSON.parse(responseText))
@@ -152,7 +153,7 @@ export class Aggregate extends AggregateBase {
 
     try {
       // will do nothing if already done
-      this.agentRef.runtime.timeKeeper.processRumRequest(xhr, this.rumStartTime, now(), app.nrServerTime)
+      this.agentRef.runtime.timeKeeper.processRumRequest(xhr, this.rumStartTime, rumEndTime, app.nrServerTime)
       if (!this.agentRef.runtime.timeKeeper.ready) throw new Error('TimeKeeper not ready')
     } catch (error) {
       this.ee.abort()

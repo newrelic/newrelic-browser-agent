@@ -63,9 +63,7 @@ export class Aggregate extends AggregateBase {
   }
 
   handleLog (timestamp, message, attributes = {}, level = LOG_LEVELS.INFO, targetEntityGuid) {
-    const target = this.agentRef.runtime.entityManager.get(targetEntityGuid)
-
-    if (target && !target.entityGuid) return warn(49)
+    if (!this.agentRef.runtime.entityManager.get(targetEntityGuid)) return warn(56, this.featureName)
     if (this.blocked || !this.loggingMode) return
 
     if (!attributes || typeof attributes !== 'object') attributes = {}

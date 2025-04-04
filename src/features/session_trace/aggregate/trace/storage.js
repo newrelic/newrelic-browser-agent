@@ -45,9 +45,7 @@ export class TraceStorage {
   isAfterSessionExpiry (entryTimestamp) {
     // eslint-disable-next-line no-return-assign
     return this.eventsSeenAfterSessionExpire ||=
-      (!!this.parent.agentRef.runtime?.session?.state?.value && this.parent.sessionId !== this.parent.agentRef.runtime.session.state.value) || // diff session ids means session has rotated
-      (this.parent.timeKeeper?.ready && this.parent.agentRef.runtime?.session?.state?.expiresAt &&
-        this.parent.timeKeeper.convertRelativeTimestamp(entryTimestamp) >= this.parent.agentRef.runtime.session.state.expiresAt)
+      this.parent.agentRef.runtime?.session?.isAfterSessionExpiry((this.parent.timeKeeper?.ready && this.parent.timeKeeper.convertRelativeTimestamp(entryTimestamp)) ?? undefined)
   }
 
   /** Central function called by all the other store__ & addToTrace API to append a trace node. */

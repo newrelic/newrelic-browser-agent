@@ -153,8 +153,7 @@ export class Recorder {
   isAfterSessionExpiry (event) {
     // eslint-disable-next-line no-return-assign
     return this.eventsSeenAfterSessionExpire ||=
-      (!!this.parent.agentRef.runtime?.session?.state?.value && this.parent.sessionId !== this.parent.agentRef.runtime.session.state.value) ||
-      (this.parent.agentRef.runtime.session?.state?.expiresAt && event.timestamp >= this.parent.agentRef.runtime.session.state.expiresAt)
+      this.parent.agentRef.runtime?.session?.isAfterSessionExpiry(event.timestamp)
   }
 
   /** Store a payload in the buffer (this.#events).  This should be the callback to the recording lib noticing a mutation */

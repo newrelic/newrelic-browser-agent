@@ -14,31 +14,8 @@ describe('recorder', () => {
           session: {
             state: {
               expiresAt: 123
-            }
-          }
-        }
-      }
-    })
-
-    recorder.store(event)
-
-    expect(recorder.getEvents().events).toHaveLength(0)
-  })
-
-  test('should not store event if session has rotated', async () => {
-    const event = { timestamp: 123 }
-    const recorder = new Recorder({
-      agentRef: {
-        init: {
-          session_replay: {
-            stylesheets: true
-          }
-        },
-        runtime: {
-          session: {
-            state: {
-              value: 'old-session-id'
-            }
+            },
+            isAfterSessionExpiry: () => true
           }
         }
       }

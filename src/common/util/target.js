@@ -23,5 +23,5 @@ export function isValidTarget (target) {
  */
 export function isContainerAgentTarget (target, agentRef) {
   if (!target) return true
-  return (target?.licenseKey === agentRef.info.licenseKey && target?.applicationID === agentRef.info.applicationID)
+  return (target.licenseKey === agentRef.info.licenseKey && target.applicationID === agentRef.info.applicationID)
 }

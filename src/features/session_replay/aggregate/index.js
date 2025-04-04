@@ -158,7 +158,6 @@ export class Aggregate extends AggregateBase {
     // session replays can continue if already in progress
     const { session, timeKeeper } = this.agentRef.runtime
     this.timeKeeper = timeKeeper
-    this.sessionId = this.agentRef.runtime.session?.state.value
     if (this.recorder?.parent.trigger === TRIGGERS.API && this.recorder?.recording) {
       this.mode = MODE.FULL
     } else if (!session.isNew && !ignoreSession) { // inherit the mode of the existing session

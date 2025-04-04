@@ -21,6 +21,7 @@ const nonAutoFeatures = [
 ]
 
 /**
+ * @deprecated This feature has been deprecated and will be removed in a future release. A future product centralizing around a single agent instance will be released as a replacement, at which time this loader will be removed.
  * A minimal agent class designed to only respond to manual user input. As such, this class does not
  * automatically instrument. Instead, each MicroAgent instance will lazy load the required features and can support loading multiple instances on one page.
  * Out of the box, it can manually handle and report Page View, Page Action, and Error events.

@@ -1,5 +1,5 @@
 import { VITAL_NAMES } from '../../../src/common/vitals/constants'
-import { setNREUMInitializedAgent } from '../../../src/common/window/nreum'
+import { resetAgent, setupAgent } from '../setup-agent'
 
 // Note: these callbacks fire right away unlike the real web-vitals API which are async-on-trigger
 jest.mock('web-vitals/attribution', () => ({
@@ -25,9 +25,11 @@ jest.mock('web-vitals/attribution', () => ({
     attribution: {}
   }))
 }))
-let triggerVisChange
+let mockVisChanges = []
 jest.mock('../../../src/common/window/page-visibility', () => ({
-  subscribeToVisibilityChange: jest.fn(cb => { triggerVisChange ??= cb })
+  subscribeToVisibilityChange: jest.fn(cb => {
+    mockVisChanges.push(cb)
+  })
 }))
 jest.mock('../../../src/common/harvest/harvester')
 
@@ -57,25 +59,17 @@ Object.defineProperty(performance, 'getEntriesByType', {
   writable: true
 })
 
-let pvtAgg
-const agentIdentifier = 'abcd'
+let pvtAgg, mainAgent
 describe('pvt aggregate tests', () => {
+  beforeAll(() => {
+    mainAgent = setupAgent()
+  })
   beforeEach(async () => {
-    triggerVisChange = undefined
+    mockVisChanges = []
     jest.doMock('../../../src/common/util/feature-flags', () => ({
       __esModule: true,
-      activatedFeatures: { [agentIdentifier]: { pvt: 1 } }
+      activatedFeatures: { [mainAgent.agentIdentifier]: { pvt: 1 } }
     }))
-
-    const mainAgent = {
-      agentIdentifier,
-      info: { licenseKey: 'licenseKey', applicationID: 'applicationID' },
-      init: { page_view_timing: {} },
-      ee: { on: jest.fn() },
-      runtime: { harvester: { initializedAggregates: [] } }
-    }
-    setNREUMInitializedAgent(mainAgent.agentIdentifier, mainAgent) // needed since configure calls setInit instead of modifying agentInst.init directly
-    const { Aggregate } = await import('../../../src/features/page_view_timing/aggregate')
 
     global.navigator.connection = {
       type: 'cellular',
@@ -83,10 +77,21 @@ describe('pvt aggregate tests', () => {
       rtt: 270,
       downlink: 700
     }
-    pvtAgg = new Aggregate(mainAgent)
-    await pvtAgg.waitForFlags(([]))
+
+    const { Instrument } = await import('../../../src/features/page_view_timing/instrument')
+    const pvtInst = new Instrument(mainAgent)
+    await pvtInst.onAggregateImported
+    pvtAgg = pvtInst.featAggregate
+
     pvtAgg.prepareHarvest = jest.fn(() => ({}))
+    pvtAgg.ee.emit('rumresp', [])
+    await new Promise(process.nextTick)
   })
+
+  afterEach(async () => {
+    resetAgent(mainAgent.agentIdentifier)
+  })
+
   test('LCP event with CLS attribute', () => {
     const timing = find(pvtAgg.events.get()[0].data, function (t) {
       return t.name === 'lcp'
@@ -125,7 +130,7 @@ describe('pvt aggregate tests', () => {
     let clsNode = pvtAgg.events.get()[0].data.find(tn => tn.name === VITAL_NAMES.CUMULATIVE_LAYOUT_SHIFT)
     expect(clsNode).toBeUndefined()
 
-    triggerVisChange()
+    mockVisChanges.forEach(cb => cb())
     clsNode = pvtAgg.events.get()[0].data.find(tn => tn.name === VITAL_NAMES.CUMULATIVE_LAYOUT_SHIFT)
     expect(clsNode).toBeTruthy()
     expect(clsNode.value).toEqual(111.9) // since cls multiply decimal by 1000 to offset consumer division by 1000

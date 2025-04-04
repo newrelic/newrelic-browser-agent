@@ -2,7 +2,6 @@
  * Copyright 2020-2025 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { ee } from '../event-emitter/contextual-ee'
 import { dispatchGlobalEvent } from '../dispatch/global-event'
 
 const sentIds = new Set()
@@ -17,13 +16,13 @@ export const activatedFeatures = {}
  * @param {string} agentIdentifier agent instance identifier
  * @returns {void}
  */
-export function activateFeatures (flags, agentIdentifier) {
-  const sharedEE = ee.get(agentIdentifier)
+export function activateFeatures (flags, agentRef) {
+  const agentIdentifier = agentRef.agentIdentifier
   activatedFeatures[agentIdentifier] ??= {}
-  if (!(flags && typeof flags === 'object')) return
+  if (!flags || typeof flags !== 'object') return
   if (sentIds.has(agentIdentifier)) return
 
-  sharedEE.emit('rumresp', [flags])
+  agentRef.ee.emit('rumresp', [flags])
   activatedFeatures[agentIdentifier] = flags
 
   sentIds.add(agentIdentifier)

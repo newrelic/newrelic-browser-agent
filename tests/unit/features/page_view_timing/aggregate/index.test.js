@@ -1,23 +1,24 @@
 import * as qp from '@newrelic/nr-querypack'
 import { Aggregate } from '../../../../../src/features/page_view_timing/aggregate'
-import { setNREUMInitializedAgent } from '../../../../../src/common/window/nreum'
+import { resetAgent, setupAgent } from '../../../../components/setup-agent'
 
-const mockRuntime = {} // getAddStringContext in the serializer still relies on getRuntime() fn
-jest.mock('../../../../../src/common/config/runtime', () => ({
-  __esModule: true,
-  getRuntime: jest.fn(() => mockRuntime),
-  setRuntime: jest.fn()
-}))
-jest.mock('../../../../../src/common/harvest/harvester')
+let pvtAgg, mainAgent
+beforeAll(() => {
+  mainAgent = setupAgent()
+  pvtAgg = new Aggregate(mainAgent)
+  pvtAgg.ee.emit('rumresp', [])
+})
 
-const agentInst = {
-  agentIdentifier: 'abcd',
-  info: { },
-  init: { page_view_timing: {} },
-  runtime: mockRuntime
-}
-setNREUMInitializedAgent(agentInst.agentIdentifier, agentInst) // needed since configure calls setInit instead of modifying agentInst.init directly
-const pvtAgg = new Aggregate(agentInst)
+beforeEach(async () => {
+  pvtAgg = new Aggregate(mainAgent)
+  pvtAgg.ee.emit('rumresp', [])
+  await new Promise(process.nextTick)
+})
+
+afterEach(() => {
+  resetAgent(mainAgent.agentIdentifier)
+  jest.resetAllMocks()
+})
 
 describe('PVT aggregate', () => {
   test('serializer default attributes', () => {

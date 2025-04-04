@@ -23,7 +23,8 @@ export function buildExpectedSessionState (additionalExpectations) {
     sessionReplayMode: expect.any(Number),
     sessionReplaySentFirstChunk: expect.any(Boolean),
     sessionTraceMode: expect.any(Number),
-    loggingMode: expect.any(Number)
+    loggingMode: expect.any(Number),
+    numOfExpirations: expect.any(Number)
   }, additionalExpectations)
 }
 

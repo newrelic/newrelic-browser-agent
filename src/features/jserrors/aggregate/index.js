@@ -252,7 +252,7 @@ export class Aggregate extends AggregateBase {
   * @returns {boolean} - whether the main agent should capture the event to its internal target
   */
   shouldAllowMainAgentToCapture (entityGuid) {
-    return (!entityGuid || (this.agentRef.init.api.duplicate_registered_data && entityGuid))
+    return (!entityGuid || this.agentRef.init.api.duplicate_registered_data)
   }
 
   // TO-DO: Remove this function when old spa is taken out. #storeJserrorForHarvest handles the work with the softnav feature.

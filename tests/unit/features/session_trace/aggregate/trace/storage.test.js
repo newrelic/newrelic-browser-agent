@@ -24,7 +24,8 @@ describe('session trace storage', () => {
             isAfterSessionExpiry: () => true
           }
         }
-      }
+      },
+      reportSupportabilityMetric: jest.fn()
     })
 
     traceStorage.storeSTN(traceNode)

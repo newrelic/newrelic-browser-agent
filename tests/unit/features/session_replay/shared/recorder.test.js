@@ -18,7 +18,8 @@ describe('recorder', () => {
             isAfterSessionExpiry: () => true
           }
         }
-      }
+      },
+      reportSupportabilityMetric: jest.fn()
     })
 
     recorder.store(event)

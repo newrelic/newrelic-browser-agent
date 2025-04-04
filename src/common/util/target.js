@@ -10,9 +10,9 @@
  */
 export function isValidTarget (target) {
   /** target can be undefined to support legacy/default behaviors - main agent does not supply a target */
-  if (target === undefined) return true
+  if (!target) return true
   /** if not undefined, we require specific values */
-  return !!target?.licenseKey && !!target?.applicationID
+  return !!(target.licenseKey && target.applicationID)
 }
 
 /**

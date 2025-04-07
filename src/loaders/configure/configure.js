@@ -2,7 +2,7 @@
  * Copyright 2020-2025 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { setAPI, setTopLevelCallers } from '../api/api'
+import { setTopLevelCallers } from '../api/topLevelCallers'
 import { addToNREUM, gosCDN } from '../../common/window/nreum'
 import { setInfo } from '../../common/config/info'
 import { setConfiguration } from '../../common/config/init'
@@ -52,7 +52,7 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
     }
     if (updatedInit.proxy.beacon) internalTrafficList.push(updatedInit.proxy.beacon)
 
-    setTopLevelCallers() // no need to set global APIs on newrelic obj more than once
+    setTopLevelCallers(agent) // no need to set global APIs on newrelic obj more than once
     addToNREUM('activatedFeatures', activatedFeatures)
 
     // Update if soft_navigations is allowed to run AND part of this agent build, used to override old spa functions.
@@ -69,7 +69,6 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
   if (!alreadySetOnce.has(agent.agentIdentifier)) {
     agent.ee = ee.get(agent.agentIdentifier)
     agent.exposed = exposed
-    setAPI(agent, forceDrain) // assign our API functions to the agent instance
 
     dispatchGlobalEvent({
       agentIdentifier: agent.agentIdentifier,

@@ -8,10 +8,26 @@ import { isContainerAgentTarget, isValidTarget } from '../../common/util/target'
 import { FEATURE_NAMES } from '../features/features'
 import { now } from '../../common/timing/now'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
+import { setupAPI } from './sharedHandlers'
+import { REGISTER } from './constants'
+import { log } from './log'
+import { addPageAction } from './addPageAction'
+import { noticeError } from './noticeError'
 
 /**
  * @typedef {import('./register-api-types').RegisterAPI} RegisterAPI
  */
+
+/**
+ * @experimental
+ * IMPORTANT: This feature is being developed for use internally and is not in a public-facing production-ready state.
+ * It is not recommended for use in production environments and will not receive support for issues.
+ */
+export function setupRegisterAPI (agent) {
+  setupAPI(REGISTER, function (target) {
+    return buildRegisterApi(agent, target)
+  }, agent)
+}
 
 /**
  * Builds the api object that will be returned from the register api method.
@@ -21,7 +37,7 @@ import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
  * @param {Object} target the target information to be used by the external target's API to send data to the correct location
  * @returns {RegisterAPI} the api object to be returned from the register api method
  */
-export function buildRegisterApi (agentRef, handlers, target) {
+export function buildRegisterApi (agentRef, target) {
   const attrs = {}
   warn(54, 'newrelic.register')
 
@@ -41,13 +57,13 @@ export function buildRegisterApi (agentRef, handlers, target) {
   /** @type {RegisterAPI} */
   const api = {
     addPageAction: (name, attributes = {}) => {
-      report(handlers.addPageAction, [name, { ...attrs, ...attributes }], target)
+      report(addPageAction, [name, { ...attrs, ...attributes }, agentRef], target)
     },
     log: (message, options = {}) => {
-      report(handlers.log, [message, { ...options, customAttributes: { ...attrs, ...(options.customAttributes || {}) } }], target)
+      report(log, [message, { ...options, customAttributes: { ...attrs, ...(options.customAttributes || {}) } }, agentRef], target)
     },
     noticeError: (error, attributes = {}) => {
-      report(handlers.noticeError, [error, { ...attrs, ...attributes }], target)
+      report(noticeError, [error, { ...attrs, ...attributes }, agentRef], target)
     },
     setApplicationVersion: (value) => {
       attrs['application.version'] = value

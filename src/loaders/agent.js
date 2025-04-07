@@ -18,6 +18,11 @@ import { Instrument as PageViewEvent } from '../features/page_view_event/instrum
 import { gosNREUM, setNREUMInitializedAgent } from '../common/window/nreum'
 import { warn } from '../common/util/console'
 import { globalScope } from '../common/constants/runtime'
+import { setupSetCustomAttributeAPI } from './api/setCustomAttribute'
+import { setupSetUserIdAPI } from './api/setUserId'
+import { setupSetApplicationVersionAPI } from './api/setApplicationVersion'
+import { setupStartAPI } from './api/start'
+// agent-level API files
 
 /**
  * @typedef {Object} AgentOptions
@@ -59,6 +64,12 @@ export class Agent extends AgentBase {
 
     this.runSoftNavOverSpa = [...this.desiredFeatures].some(instr => instr.featureName === FEATURE_NAMES.softNav)
     configure(this, options, options.loaderType || 'agent') // add api, exposed, and other config properties
+
+    /** assign base agent-level API definitions, feature-level APIs will be handled by the features to allow better code-splitting */
+    setupSetCustomAttributeAPI(this)
+    setupSetUserIdAPI(this)
+    setupSetApplicationVersionAPI(this)
+    setupStartAPI(this)
 
     this.run()
   }

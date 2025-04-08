@@ -288,9 +288,18 @@ test('multiple finished ixns retain the correct start/end timestamps in payload'
   ixnContext.associatedInteraction.forceSave = true
   softNavAggregate.ee.emit(`${INTERACTION_API}-end`, [1000], ixnContext)
 
-  expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(3)
+  softNavAggregate.ee.emit(`${INTERACTION_API}-get`, [1200])
+  ixnContext = getIxnContext(newrelic.interaction())
+  ixnContext.associatedInteraction.nodeId = 4
+  ixnContext.associatedInteraction.id = 'another_id'
+  ixnContext.associatedInteraction.forceSave = true
+  softNavAggregate.ee.emit(`${INTERACTION_API}-end`, [1300], ixnContext)
+
+  console.log(softNavAggregate.interactionsToHarvest.get()[0])
+
+  expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(4)
   // WARN: Double check decoded output & behavior or any introduced bugs before changing the follow line's static string.
-  expect(softNavAggregate.makeHarvestPayload()[0].payload.body).toEqual("bel.7;1,,,5k,,,'api,'http://localhost/,1,1,,2,!!!!'some_id,'1,!!;;1,,8c,5k,,,'api,'http://localhost/,1,1,,2,!!!!'some_other_id,'2,!!;;1,,jg,8c,,,'api,'http://localhost/,1,1,,2,!!!!'some_another_id,'3,!!;")
+  expect(softNavAggregate.makeHarvestPayload()[0].payload.body).toEqual("bel.7;1,,,5k,,,'api,'http://localhost/,1,1,,2,!!!!'some_id,'1,!!;;1,,8c,5k,,,'api,'http://localhost/,1,1,,2,!!!!'some_other_id,'2,!!;;1,,jg,8c,,,'api,'http://localhost/,1,1,,2,!!!!'some_another_id,'3,!!;;1,,xc,2s,,,'api,'http://localhost/,1,1,,2,!!!!'another_id,'4,!!;")
 })
 
 // This isn't just an API test; it double serves as data validation on the querypack payload output.

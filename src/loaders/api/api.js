@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { FEATURE_NAMES } from '../features/features'
-import { setInfo } from '../../common/config/info'
 import { handle } from '../../common/event-emitter/handle'
 import { drain, registerDrain } from '../../common/drain/drain'
 import { onWindowLoad } from '../../common/window/load'
@@ -18,6 +17,7 @@ import { MODE } from '../../common/session/constants'
 import { LOG_LEVELS } from '../../features/logging/constants'
 import { bufferLog } from '../../features/logging/shared/utils'
 import { wrapLogger } from '../../common/wrap/wrap-logger'
+import { buildRegisterApi } from './register-api'
 import { dispatchGlobalEvent } from '../../common/dispatch/global-event'
 import { activatedFeatures } from '../../common/util/feature-flags'
 
@@ -55,9 +55,37 @@ export function setAPI (agent, forceDrain) {
   const prefix = 'api-'
   const spaPrefix = prefix + 'ixn-'
 
-  agent.log = function (message, { customAttributes = {}, level = LOG_LEVELS.INFO } = {}) {
-    handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/log/called'], undefined, FEATURE_NAMES.metrics, agent.ee)
-    bufferLog(agent.ee, message, customAttributes, level)
+  /** Shared handlers are used by both the base agent instance as well as "registered" entities
+   * We isolate them like this so that the public interface methods are unchanged and still dont require
+   * a target, but the register APIs `can` supply a target.
+  */
+  const sharedHandlers = {
+    addPageAction: function (name, attributes, targetEntityGuid, timestamp = now()) {
+      apiCall(prefix, 'addPageAction', true, FEATURE_NAMES.genericEvents, timestamp)(name, attributes, targetEntityGuid)
+    },
+    log: function (message, { customAttributes = {}, level = LOG_LEVELS.INFO } = {}, targetEntityGuid, timestamp = now()) {
+      handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/log/called'], undefined, FEATURE_NAMES.metrics, agent.ee)
+      bufferLog(agent.ee, message, customAttributes, level, targetEntityGuid, timestamp)
+    },
+    noticeError: function (err, customAttributes, targetEntityGuid, timestamp = now()) {
+      if (typeof err === 'string') err = new Error(err)
+      handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/noticeError/called'], undefined, FEATURE_NAMES.metrics, agent.ee)
+      handle('err', [err, timestamp, false, customAttributes, !!replayRunning[agent.agentIdentifier], undefined, targetEntityGuid], undefined, FEATURE_NAMES.jserrors, agent.ee)
+    }
+  }
+
+  /**
+   * @experimental
+   * IMPORTANT: This feature is being developed for use internally and is not in a public-facing production-ready state.
+   * It is not recommended for use in production environments and will not receive support for issues.
+   */
+  agent.register = function (target) {
+    handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/register/called'], undefined, FEATURE_NAMES.metrics, agent.ee)
+    return buildRegisterApi(agent, sharedHandlers, target)
+  }
+
+  agent.log = function (message, options) {
+    sharedHandlers.log(message, options)
   }
 
   agent.wrapLogger = (parent, functionName, { customAttributes = {}, level = LOG_LEVELS.INFO } = {}) => {
@@ -68,7 +96,9 @@ export function setAPI (agent, forceDrain) {
   // Setup stub functions that queue calls for later processing.
   asyncApiMethods.forEach(fnName => { agent[fnName] = apiCall(prefix, fnName, true, 'api') })
 
-  agent.addPageAction = apiCall(prefix, 'addPageAction', true, FEATURE_NAMES.genericEvents)
+  agent.addPageAction = function (name, attributes) {
+    sharedHandlers.addPageAction(name, attributes)
+  }
 
   agent.recordCustomEvent = apiCall(prefix, 'recordCustomEvent', true, FEATURE_NAMES.genericEvents)
 
@@ -92,7 +122,7 @@ export function setAPI (agent, forceDrain) {
     if (value === null) {
       delete currentInfo.jsAttributes[key]
     } else {
-      setInfo(agent.agentIdentifier, { ...currentInfo, jsAttributes: { ...currentInfo.jsAttributes, [key]: value } })
+      agent.info = { ...agent.info, jsAttributes: { ...currentInfo.jsAttributes, [key]: value } }
     }
     return apiCall(prefix, apiName, true, (!!addToBrowserStorage || value === null) ? 'session' : undefined)(key, value)
   }
@@ -189,7 +219,7 @@ export function setAPI (agent, forceDrain) {
   })
   agent.setCurrentRouteName = agent.runSoftNavOverSpa ? apiCall(spaPrefix, 'routeName', undefined, FEATURE_NAMES.softNav) : apiCall(prefix, 'routeName', true, FEATURE_NAMES.spa)
 
-  function apiCall (prefix, name, notSpa, bufferGroup) {
+  function apiCall (prefix, name, notSpa, bufferGroup, timestamp = now()) {
     return function () {
       handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/' + name + '/called'], undefined, FEATURE_NAMES.metrics, agent.ee)
       dispatchGlobalEvent({
@@ -200,15 +230,13 @@ export function setAPI (agent, forceDrain) {
         feature: prefix + name,
         data: { notSpa, bufferGroup }
       })
-      if (bufferGroup) handle(prefix + name, [notSpa ? now() : performance.now(), ...arguments], notSpa ? null : this, bufferGroup, agent.ee) // no bufferGroup means only the SM is emitted
+      if (bufferGroup) handle(prefix + name, [timestamp, ...arguments], notSpa ? null : this, bufferGroup, agent.ee) // no bufferGroup means only the SM is emitted
       return notSpa ? undefined : this // returns the InteractionHandle which allows these methods to be chained
     }
   }
 
   agent.noticeError = function (err, customAttributes) {
-    if (typeof err === 'string') err = new Error(err)
-    handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/noticeError/called'], undefined, FEATURE_NAMES.metrics, agent.ee)
-    handle('err', [err, now(), false, customAttributes, !!replayRunning[agent.agentIdentifier]], undefined, FEATURE_NAMES.jserrors, agent.ee)
+    sharedHandlers.noticeError(err, customAttributes)
   }
 
   // theres no window.load event on non-browser scopes, lazy load immediately

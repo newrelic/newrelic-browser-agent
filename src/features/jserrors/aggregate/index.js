@@ -19,6 +19,8 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { now } from '../../../common/timing/now'
 import { applyFnToProps } from '../../../common/util/traverse'
 import { evaluateInternalError } from './internal-errors'
+import { isContainerAgentTarget } from '../../../common/util/target'
+import { warn } from '../../../common/util/console'
 
 /**
  * @typedef {import('./compute-stack-trace.js').StackInfo} StackInfo
@@ -107,10 +109,13 @@ export class Aggregate extends AggregateBase {
    * @param {object=} customAttributes  any custom attributes to be included in the error payload
    * @param {boolean=} hasReplay a flag indicating if the error occurred during a replay session
    * @param {string=} swallowReason a string indicating pre-defined reason if swallowing the error.  Mainly used by the internal error SMs.
+   * @param {object=} target the target to buffer and harvest to, if undefined the default configuration target is used
    * @returns
    */
-  storeError (err, time, internal, customAttributes, hasReplay, swallowReason) {
+  storeError (err, time, internal, customAttributes, hasReplay, swallowReason, targetEntityGuid) {
     if (!err) return
+    const target = this.agentRef.runtime.entityManager.get(targetEntityGuid)
+    if (!target) return warn(56, this.featureName)
     // are we in an interaction
     time = time || now()
     let filterOutput
@@ -145,7 +150,8 @@ export class Aggregate extends AggregateBase {
     // Do not modify the name ('errorGroup') of params without DEM approval!
     if (filterOutput?.group) params.errorGroup = filterOutput.group
 
-    if (hasReplay) params.hasReplay = hasReplay
+    // Should only decorate "hasReplay" for the container agent, so check if the target matches the config
+    if (hasReplay && isContainerAgentTarget(target, this.agentRef)) params.hasReplay = hasReplay
     /**
      * The bucketHash is different from the params.stackHash because the params.stackHash is based on the canonicalized
      * stack trace and is used downstream in NR1 to attempt to group the same errors across different browsers. However,
@@ -181,7 +187,7 @@ export class Aggregate extends AggregateBase {
 
     // Trace sends the error in its payload, and both trace & replay simply listens for any error to occur.
     const jsErrorEvent = [type, bucketHash, params, newMetrics, customAttributes]
-    handle('trace-jserror', jsErrorEvent, undefined, FEATURE_NAMES.sessionTrace, this.ee)
+    if (this.shouldAllowMainAgentToCapture(targetEntityGuid)) handle('trace-jserror', jsErrorEvent, undefined, FEATURE_NAMES.sessionTrace, this.ee)
     // still send EE events for other features such as above, but stop this one from aggregating internal data
     if (this.blocked) return
 
@@ -190,27 +196,32 @@ export class Aggregate extends AggregateBase {
       params._interactionNodeId = err.__newrelic[this.agentIdentifier].interactionNodeId
     }
 
-    const softNavInUse = Boolean(this.agentRef.features?.[FEATURE_NAMES.softNav])
-    // Note: the following are subject to potential race cond wherein if the other feature aren't fully initialized, it'll be treated as there being no associated interaction.
-    // They each will also tack on their respective properties to the params object as part of the decision flow.
-    if (softNavInUse) handle('jserror', [params, time], undefined, FEATURE_NAMES.softNav, this.ee)
-    else handle('spa-jserror', jsErrorEvent, undefined, FEATURE_NAMES.spa, this.ee)
+    if (this.shouldAllowMainAgentToCapture(targetEntityGuid)) {
+      const softNavInUse = Boolean(this.agentRef.features?.[FEATURE_NAMES.softNav])
+      // Note: the following are subject to potential race cond wherein if the other feature aren't fully initialized, it'll be treated as there being no associated interaction.
+      // They each will also tack on their respective properties to the params object as part of the decision flow.
+      if (softNavInUse) handle('jserror', [params, time], undefined, FEATURE_NAMES.softNav, this.ee)
+      else handle('spa-jserror', jsErrorEvent, undefined, FEATURE_NAMES.spa, this.ee)
 
-    if (params.browserInteractionId && !params._softNavFinished) { // hold onto the error until the in-progress interaction is done, eithered saved or discarded
-      this.bufferedErrorsUnderSpa[params.browserInteractionId] ??= []
-      this.bufferedErrorsUnderSpa[params.browserInteractionId].push(jsErrorEvent)
-    } else if (params._interactionId != null) { // same as above, except tailored for the way old spa does it
-      this.bufferedErrorsUnderSpa[params._interactionId] = this.bufferedErrorsUnderSpa[params._interactionId] || []
-      this.bufferedErrorsUnderSpa[params._interactionId].push(jsErrorEvent)
-    } else {
+      if (params.browserInteractionId && !params._softNavFinished) { // hold onto the error until the in-progress interaction is done, eithered saved or discarded
+        this.bufferedErrorsUnderSpa[params.browserInteractionId] ??= []
+        this.bufferedErrorsUnderSpa[params.browserInteractionId].push(jsErrorEvent)
+      } else if (params._interactionId != null) { // same as above, except tailored for the way old spa does it
+        this.bufferedErrorsUnderSpa[params._interactionId] = this.bufferedErrorsUnderSpa[params._interactionId] || []
+        this.bufferedErrorsUnderSpa[params._interactionId].push(jsErrorEvent)
+      } else {
       // Either there is no interaction (then all these params properties will be undefined) OR there's a related soft navigation that's already completed.
       // The old spa does not look up completed interactions at all, so there's no need to consider it.
-      this.#storeJserrorForHarvest(jsErrorEvent, params.browserInteractionId !== undefined, params._softNavAttributes)
+        this.#storeJserrorForHarvest(jsErrorEvent, params.browserInteractionId !== undefined, params._softNavAttributes)
+      }
     }
+
+    // always add directly if scoped to a sub-entity, the other pathways above will be deterministic if the main agent should procede
+    if (targetEntityGuid) this.#storeJserrorForHarvest([...jsErrorEvent, targetEntityGuid], false, params._softNavAttributes)
   }
 
   #storeJserrorForHarvest (errorInfoArr, softNavOccurredFinished, softNavCustomAttrs = {}) {
-    let [type, bucketHash, params, newMetrics, localAttrs] = errorInfoArr
+    let [type, bucketHash, params, newMetrics, localAttrs, targetEntityGuid] = errorInfoArr
     const allCustomAttrs = {}
 
     if (softNavOccurredFinished) {
@@ -227,11 +238,22 @@ export class Aggregate extends AggregateBase {
 
     const jsAttributesHash = stringHashCode(stringify(allCustomAttrs))
     const aggregateHash = bucketHash + ':' + jsAttributesHash
-    this.events.add([type, aggregateHash, params, newMetrics, allCustomAttrs])
+
+    this.events.add([type, aggregateHash, params, newMetrics, allCustomAttrs], targetEntityGuid)
 
     function setCustom (key, val) {
       allCustomAttrs[key] = (val && typeof val === 'object' ? stringify(val) : val)
     }
+  }
+
+  /**
+  * If the event lacks an entityGuid (the default behavior), the main agent should capture the data. If the data is assigned to a sub-entity target
+  * the main agent should not capture events unless it is configured to do so.
+  * @param {string} entityGuid - the context object for the event
+  * @returns {boolean} - whether the main agent should capture the event to its internal target
+  */
+  shouldAllowMainAgentToCapture (entityGuid) {
+    return (!entityGuid || this.agentRef.init.api.duplicate_registered_data)
   }
 
   // TO-DO: Remove this function when old spa is taken out. #storeJserrorForHarvest handles the work with the softnav feature.
@@ -257,7 +279,7 @@ export class Aggregate extends AggregateBase {
       var jsAttributesHash = stringHashCode(stringify(allCustomAttrs))
       var aggregateHash = hash + ':' + jsAttributesHash
 
-      this.events.add([item[0], aggregateHash, params, item[3], allCustomAttrs])
+      this.events.add([item[0], aggregateHash, params, item[3], allCustomAttrs], item[5])
 
       function setCustom ([key, val]) {
         allCustomAttrs[key] = (val && typeof val === 'object' ? stringify(val) : val)

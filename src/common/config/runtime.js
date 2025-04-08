@@ -21,21 +21,22 @@ const readonly = {
 }
 
 const model = {
+  /** Agent-specific metadata found in the RUM call response. ex. entityGuid */
+  appMetadata: {},
   customTransaction: undefined,
+  denyList: undefined,
   disabled: false,
+  entityManager: undefined,
+  harvester: undefined,
   isolatedBacklog: false,
   loaderType: undefined,
   maxBytes: 30000,
+  obfuscator: undefined,
   onerror: undefined,
   ptid: undefined,
   releaseIds: {},
-  /** Agent-specific metadata found in the RUM call response. ex. entityGuid */
-  appMetadata: {},
   session: undefined,
-  denyList: undefined,
-  timeKeeper: undefined,
-  obfuscator: undefined,
-  harvester: undefined
+  timeKeeper: undefined
 }
 
 const _cache = {}

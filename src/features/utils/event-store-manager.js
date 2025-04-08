@@ -2,10 +2,8 @@
  * Copyright 2020-2025 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { EventAggregator } from '../../common/aggregate/event-aggregator'
 import { dispatchGlobalEvent } from '../../common/dispatch/global-event'
 import { activatedFeatures } from '../../common/util/feature-flags'
-import { EventBuffer } from './event-buffer'
 
 /**
  * This layer allows multiple browser entity apps, or "target", to each have their own segregated storage instance.
@@ -13,32 +11,40 @@ import { EventBuffer } from './event-buffer'
  */
 export class EventStoreManager {
   /**
-   * @param {object} defaultTarget - should contain licenseKey and appId of the main app from NREUM.info at startup
-   * @param {1|2} storageChoice - the type of storage to use in this manager; 'EventBuffer' (1), 'EventAggregator' (2)
-   * @param {string} agentIdentifier - agent identifier used in inspection events
-   * @param {string} featureName - feature name used in inspection events for non-shared aggregators
+   * @param {object} agentRef - reference to base agent class
+   * @param {EventBuffer|EventAggregator} storageClass - the type of storage to use in this manager; 'EventBuffer' (1), 'EventAggregator' (2)
    */
-  constructor (defaultTarget, storageChoice, agentIdentifier, featureName) {
-    this.mainApp = defaultTarget
-    this.StorageClass = storageChoice === 1 ? EventBuffer : EventAggregator
+  constructor (agentRef, storageClass, defaultEntityGuid, featureName) {
+    this.agentRef = agentRef
+    this.entityManager = agentRef.runtime.entityManager
+    this.StorageClass = storageClass
     this.appStorageMap = new Map()
-    this.appStorageMap.set(defaultTarget, new this.StorageClass())
-    this.agentIdentifier = agentIdentifier
+    this.defaultEntity = this.#getEventStore(defaultEntityGuid)
     this.featureName = featureName
+  }
+
+  /**
+   * Always returns a storage instance.  Creates one if one does not exist.  If a lookup is not provided, uses the DEFAULT namespace
+   * @param {string=} targetEntityGuid the lookup
+   * @returns {*} ALWAYS returns a storage instance
+   */
+  #getEventStore (targetEntityGuid) {
+    if (!targetEntityGuid) return this.defaultEntity
+    if (!this.appStorageMap.has(targetEntityGuid)) this.appStorageMap.set(targetEntityGuid, new this.StorageClass())
+    return this.appStorageMap.get(targetEntityGuid)
   }
 
   // This class must contain an union of all methods from all supported storage classes and conceptualize away the target app argument.
 
   /**
+   * Calls the isEmpty method on the underlying storage class. If target is provided, runs just for the target, otherwise runs for all apps.
    * @param {object} optsIfPresent - exists if called during harvest interval, @see AggregateBase.makeHarvestPayload
    * @param {object} target - specific app's storage to check; if not provided, this method takes into account all apps recorded by this manager
    * @returns {boolean} True if the target's storage is empty, or target does not exist in map (defaults to all storages)
    */
-  isEmpty (optsIfPresent, target) {
-    if (target) {
-      if (!this.appStorageMap.has(target)) return true
-      else return this.appStorageMap.get(target).isEmpty(optsIfPresent)
-    }
+  isEmpty (optsIfPresent, targetEntityGuid) {
+    if (targetEntityGuid) return this.#getEventStore(targetEntityGuid).isEmpty(optsIfPresent)
+
     for (const eventStore of this.appStorageMap.values()) {
       if (!eventStore.isEmpty(optsIfPresent)) return false
     }
@@ -46,74 +52,91 @@ export class EventStoreManager {
   }
 
   /**
+   * Calls the add method on the underlying storage class.
    * @param {string} event - the event element to store
-   * @param {object} target - the app to store event under; if not provided, this method adds to the main app from NREUM.info
+   * @param {object} targetEntityGuid - the entity guid lookup to store event under; if not provided, this method adds to the default
    * @returns {boolean} True if the event was successfully added
    */
-  add (event, target) {
+  add (event, targetEntityGuid) {
     dispatchGlobalEvent({
-      agentIdentifier: this.agentIdentifier,
-      drained: !!activatedFeatures?.[this.agentIdentifier],
+      agentIdentifier: this.agentRef.agentIdentifier,
+      drained: !!activatedFeatures?.[this.agentRef.agentIdentifier],
       type: 'data',
       name: 'buffer',
       feature: this.featureName,
       data: event
     })
-    if (target && !this.appStorageMap.has(target)) this.appStorageMap.set(target, new this.StorageClass())
-    return this.appStorageMap.get(target || this.mainApp).add(event)
+    return this.#getEventStore(targetEntityGuid).add(event)
   }
 
   /** This is only used by the Metrics feature which has no need to add metric under a different app atm. */
   addMetric (type, name, params, value) {
-    return this.appStorageMap.get(this.mainApp).addMetric(type, name, params, value)
+    return this.#getEventStore().addMetric(type, name, params, value)
   }
 
   /**
-   * @param {object} optsIfPresent - exists if called during harvest interval, @see AggregateBase.makeHarvestPayload
-   * @param {object} target - specific app to fetch; if not provided, this method fetches from all apps
+   * Calls the get method on the underlying storage class. If target is provided, runs just for the target, otherwise runs for all apps.
+   * @param {object=} opts - exists if called during harvest interval, @see AggregateBase.makeHarvestPayload
+   * @param {object=} target - specific app to fetch; if not provided, this method fetches from all apps
    * @returns {Array} Objects of `data` labeled with their respective `target` app to be sent to
    */
-  get (optsIfPresent, target) {
-    if (target) return [{ targetApp: target, data: this.appStorageMap.get(target)?.get(optsIfPresent) }]
+  get (opts, targetEntityGuid) {
+    if (targetEntityGuid) return [{ targetApp: this.entityManager.get(targetEntityGuid), data: this.#getEventStore(targetEntityGuid).get(opts) }]
     const allPayloads = []
-    this.appStorageMap.forEach((eventStore, recordedTarget) => {
-      allPayloads.push({ targetApp: recordedTarget, data: eventStore.get(optsIfPresent) })
+    this.appStorageMap.forEach((eventStore, targetEntityGuid) => {
+      const targetApp = this.entityManager.get(targetEntityGuid)
+      if (targetApp) allPayloads.push({ targetApp, data: eventStore.get(opts) })
     })
     return allPayloads
   }
 
-  byteSize (target) {
-    return this.appStorageMap.get(target || this.mainApp).byteSize()
+  /**
+   * Calls the byteSize method on the underlying storage class
+   * @param {*} targetEntityGuid
+   * @returns
+   */
+  byteSize (targetEntityGuid) {
+    return this.#getEventStore(targetEntityGuid).byteSize()
   }
 
-  wouldExceedMaxSize (incomingSize, target) {
-    return this.appStorageMap.get(target || this.mainApp).wouldExceedMaxSize(incomingSize)
+  /**
+   * Calls the wouldExceedMaxSize method on the underlying storage class
+   * @param {*} incomingSize
+   * @param {*} targetEntityGuid
+   * @returns
+   */
+  wouldExceedMaxSize (incomingSize, targetEntityGuid) {
+    return this.#getEventStore(targetEntityGuid).wouldExceedMaxSize(incomingSize)
   }
 
-  save (optsIfPresent, target) {
-    if (target) return this.appStorageMap.get(target)?.save(optsIfPresent)
+  /**
+   * Calls the save method on the underlying storage class. If target is provided, runs just for the target, otherwise runs for all apps.
+   * @param {*} optsIfPresent
+   * @param {*} targetEntityGuid
+   * @returns
+   */
+  save (optsIfPresent, targetEntityGuid) {
+    if (targetEntityGuid) return this.#getEventStore(targetEntityGuid).save(optsIfPresent)
     this.appStorageMap.forEach((eventStore) => eventStore.save(optsIfPresent))
   }
 
-  clear (optsIfPresent, target) {
-    if (target) return this.appStorageMap.get(target)?.clear(optsIfPresent)
+  /**
+   * Calls the clear method on the underlying storage class. If target is provided, runs just for the target, otherwise runs for all apps.
+   * @param {*} optsIfPresent
+   * @param {*} targetEntityGuid
+   * @returns
+   */
+  clear (optsIfPresent, targetEntityGuid) {
+    if (targetEntityGuid) return this.#getEventStore(targetEntityGuid).clear(optsIfPresent)
     this.appStorageMap.forEach((eventStore) => eventStore.clear(optsIfPresent))
   }
 
   // Unlike the methods above, the following will have a target as they are called by AggregateBase.postHarvestCleanup callback on harvest finish after getting & sending the data.
-  reloadSave (optsIfPresent, target) {
-    if (!target) { // -- remove this block once the old harvest.js & harvest-schedule.js are deleted!
-      this.appStorageMap.forEach((eventStore) => eventStore.reloadSave(optsIfPresent))
-      return
-    }
-    return this.appStorageMap.get(target)?.reloadSave(optsIfPresent)
+  reloadSave (optsIfPresent, targetEntityGuid) {
+    return this.#getEventStore(targetEntityGuid).reloadSave(optsIfPresent)
   }
 
-  clearSave (optsIfPresent, target) {
-    if (!target) { // -- remove this block once the old harvest.js & harvest-schedule.js are deleted!
-      this.appStorageMap.forEach((eventStore) => eventStore.clearSave(optsIfPresent))
-      return
-    }
-    return this.appStorageMap.get(target)?.clearSave(optsIfPresent)
+  clearSave (optsIfPresent, targetEntityGuid) {
+    return this.#getEventStore(targetEntityGuid).clearSave(optsIfPresent)
   }
 }

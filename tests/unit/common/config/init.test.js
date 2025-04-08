@@ -33,12 +33,16 @@ test('getConfigurationValue parses path correctly', () => {
 test('init props exist and return expected defaults', () => {
   setConfiguration('34567', {})
   const config = getConfiguration('34567')
-  expect(Object.keys(config).length).toEqual(22)
+  expect(Object.keys(config).length).toEqual(23)
   expect(config.ajax).toEqual({
     autoStart: true,
     block_internal: true,
     deny_list: undefined,
     enabled: true
+  })
+  expect(config.api).toEqual({
+    allow_registered_children: true,
+    duplicate_registered_data: false
   })
   expect(config.distributed_tracing).toEqual({
     allowed_origins: undefined,

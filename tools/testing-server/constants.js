@@ -9,8 +9,9 @@ const defaultAgentConfig = {
 }
 module.exports.defaultAgentConfig = defaultAgentConfig
 
-const defaultEntityGuid = btoa(`${defaultAgentConfig.accountID}|BROWSER|APPLICATION|${defaultAgentConfig.applicationID}`).replace(/=/g, '')
-module.exports.defaultEntityGuid = defaultEntityGuid
+const mockEntityGuid = () => {
+  return btoa(`${defaultAgentConfig.accountID}|BROWSER|APPLICATION|${Math.floor(Math.random() * 1000000)}`).replace(/=/g, '')
+}
 
 module.exports.paths = {
   rootDir: path.resolve(__dirname, '../../'),
@@ -45,7 +46,7 @@ module.exports.rumFlags = (flags = {}, app = {}) => ({
   log: flags.log ?? 3, // logging sampling 0|1|2|3|4|5 - off error warn info debug trace
   app: {
     agents: app.agents || [
-      { entityGuid: defaultEntityGuid }
+      { entityGuid: mockEntityGuid() }
     ],
     nrServerTime: app.nrServerTime || Date.now()
   }
@@ -55,6 +56,10 @@ const enabled = true; const autoStart = true
 const enabledFeature = { enabled, autoStart }
 module.exports.defaultInitBlock = {
   ajax: { deny_list: [], block_internal: false, ...enabledFeature },
+  api: {
+    allow_registered_children: true,
+    duplicate_registered_data: false // if an array of entity guids are supplied, can be more granular - true|false will be all or nothing
+  },
   distributed_tracing: {},
   feature_flags: [],
   generic_events: enabledFeature,

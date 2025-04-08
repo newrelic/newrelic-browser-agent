@@ -59,7 +59,7 @@ export class EventAggregator {
     aggregatorTypes.forEach(type => delete this.#aggregator.aggregatedData[type])
   }
 
-  reloadSave ({ aggregatorTypes } = {}) {
+  reloadSave ({ aggregatorTypes }) {
     const key = aggregatorTypes.toString()
     const backupAggregatedDataSubset = this.#savedNamesToBuckets[key]
     // Grabs the previously stored subset and merge it back into aggregatedData.
@@ -73,7 +73,7 @@ export class EventAggregator {
     })
   }
 
-  clearSave ({ aggregatorTypes } = {}) {
+  clearSave ({ aggregatorTypes }) {
     const key = aggregatorTypes.toString()
     delete this.#savedNamesToBuckets[key]
   }

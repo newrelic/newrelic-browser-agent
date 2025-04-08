@@ -105,6 +105,7 @@ export class Recorder {
 
     this.stopRecording = () => {
       this.recording = false
+      this.notified = false
       this.parent.ee.emit(SR_EVENT_EMITTER_TYPES.REPLAY_RUNNING, [false, this.parent.mode])
       stop?.()
     }

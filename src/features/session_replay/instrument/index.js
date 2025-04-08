@@ -11,6 +11,8 @@ import { DEFAULT_KEY, MODE, PREFIX } from '../../../common/session/constants'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { hasReplayPrerequisite, isPreloadAllowed } from '../shared/utils'
 import { FEATURE_NAME, SR_EVENT_EMITTER_TYPES, TRIGGERS } from '../constants'
+import { setupRecordReplayAPI } from '../../../loaders/api/recordReplay'
+import { setupPauseReplayAPI } from '../../../loaders/api/pauseReplay'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
@@ -19,6 +21,11 @@ export class Instrument extends InstrumentBase {
   #agentRef
   constructor (agentRef, auto = true) {
     super(agentRef, FEATURE_NAME, auto)
+
+    /** feature specific APIs */
+    setupRecordReplayAPI(agentRef)
+    setupPauseReplayAPI(agentRef)
+
     let session
     this.replayRunning = false
     this.#agentRef = agentRef

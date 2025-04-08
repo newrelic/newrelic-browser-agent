@@ -217,7 +217,7 @@ export class Aggregate extends AggregateBase {
     }
 
     // always add directly if scoped to a sub-entity, the other pathways above will be deterministic if the main agent should procede
-    if (targetEntityGuid) this.#storeJserrorForHarvest([...jsErrorEvent, targetEntityGuid], params.browserInteractionId !== undefined, params._softNavAttributes)
+    if (targetEntityGuid) this.#storeJserrorForHarvest([...jsErrorEvent, targetEntityGuid], false, params._softNavAttributes)
   }
 
   #storeJserrorForHarvest (errorInfoArr, softNavOccurredFinished, softNavCustomAttrs = {}) {

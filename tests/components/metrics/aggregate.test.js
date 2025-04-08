@@ -6,7 +6,7 @@ import { faker } from '@faker-js/faker'
 let mainAgent
 
 beforeAll(async () => {
-  mainAgent = setupAgent()
+  mainAgent = setupAgent(undefined, 2)
 })
 
 let metricsAggregate, metricName

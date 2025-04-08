@@ -23,7 +23,7 @@ import { EventStoreManager } from '../../src/features/utils/event-store-manager'
  * @param runtime
  * @returns {{aggregator: Aggregator, agentIdentifier: string, licenseKey: string}}
  */
-export function setupAgent ({ agentOverrides = {}, info = {}, init = {}, loaderConfig = {}, runtime = {} } = {}) {
+export function setupAgent ({ agentOverrides = {}, info = {}, init = {}, loaderConfig = {}, runtime = {} } = {}, aggType = 1) {
   const agentIdentifier = faker.string.uuid()
 
   if (!info.applicationID) info.applicationID = faker.string.uuid()
@@ -39,7 +39,7 @@ export function setupAgent ({ agentOverrides = {}, info = {}, init = {}, loaderC
   const fakeAgent = {
     agentIdentifier,
     ee: eventEmitter,
-    sharedAggregator: new EventStoreManager({ licenseKey: info.licenseKey, appId: info.applicationID }, 2, agentIdentifier),
+    sharedAggregator: new EventStoreManager({ licenseKey: info.licenseKey, appId: info.applicationID }, aggType, agentIdentifier),
     ...agentOverrides
   }
   setNREUMInitializedAgent(agentIdentifier, fakeAgent)

@@ -13,7 +13,7 @@
  * @property {boolean} [ajax.autoStart] - If true, the agent will automatically start the ajax feature. Otherwise, it will be in a deferred state until the `start` API method is called.
  * @property {Object} [api]
  * @property {boolean} [api.allow_registered_children] - If true, the agent will allow registered children to be sent to the server.
- * @property {boolean} [api.allow_registered_children] - If true, the agent will allow registered children to be sent to the server.
+ * @property {boolean} [api.duplicate_registered_data] - If true, the agent will capture registered child data to the main agent as well as the registered child.
  * @property {Object} [distributed_tracing]
  * @property {boolean} [distributed_tracing.enabled] - If true, distributed tracing headers will be added to outgoing requests. Requires ajax feature to be running.
  * @property {boolean} [distributed_tracing.exclude_newrelic_header]

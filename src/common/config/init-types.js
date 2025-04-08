@@ -5,20 +5,15 @@
  */
 
 /**
- * @experimental
- * @typedef  {Object} [Api]
- * @property {boolean} [api.allow_registered_children] - If true, the agent will allow registered children to be sent to the server.
- * @property {boolean} [api.duplicate_registered_data] - If true, the agent will capture registered child data to the main agent as well as the registered child.
- */
-
-/**
  * @typedef {Object} Init
  * @property {Object} [ajax]
  * @property {Array<string>} [ajax.deny_list] - List of domain URLs to be excluded from AjaxRequest collection.
  * @property {boolean} [ajax.block_internal] - If true, agent requests going to harvest endpoint are treated as on deny list. In other words, agent will not self-report AJAX.
  * @property {boolean} [ajax.enabled] - Turn on/off the ajax feature (on by default).
  * @property {boolean} [ajax.autoStart] - If true, the agent will automatically start the ajax feature. Otherwise, it will be in a deferred state until the `start` API method is called.
- * @property {Api} [api]
+ * @property {Object} [api]
+ * @property {boolean} [api.allow_registered_children] - If true, the agent will allow registered children to be sent to the server.
+ * @property {boolean} [api.allow_registered_children] - If true, the agent will allow registered children to be sent to the server.
  * @property {Object} [distributed_tracing]
  * @property {boolean} [distributed_tracing.enabled] - If true, distributed tracing headers will be added to outgoing requests. Requires ajax feature to be running.
  * @property {boolean} [distributed_tracing.exclude_newrelic_header]

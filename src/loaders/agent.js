@@ -18,11 +18,11 @@ import { Instrument as PageViewEvent } from '../features/page_view_event/instrum
 import { gosNREUM, setNREUMInitializedAgent } from '../common/window/nreum'
 import { warn } from '../common/util/console'
 import { globalScope } from '../common/constants/runtime'
+// agent-level API files
 import { setupSetCustomAttributeAPI } from './api/setCustomAttribute'
 import { setupSetUserIdAPI } from './api/setUserId'
 import { setupSetApplicationVersionAPI } from './api/setApplicationVersion'
 import { setupStartAPI } from './api/start'
-// agent-level API files
 
 /**
  * @typedef {Object} AgentOptions

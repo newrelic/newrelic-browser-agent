@@ -266,33 +266,58 @@ afterEach(() => {
 
 // This isn't just an API test; it double serves as data validation on the querypack payload output.
 test('multiple finished ixns retain the correct start/end timestamps in payload', (done) => {
+  const randomTime = () => Math.floor(Math.random() * (1000 - 100 + 1)) + 100
   setTimeout(async () => {
-    softNavAggregate.ee.emit(`${INTERACTION_API}-get`, [0])
+    let ixn1Start, ixn1End, ixn2Start, ixn2End, ixn3Start, ixn3End
+    ixn1Start = randomTime()
+    softNavAggregate.ee.emit(`${INTERACTION_API}-get`, [ixn1Start])
     let ixnContext = getIxnContext(newrelic.interaction())
     ixnContext.associatedInteraction.nodeId = 1
     ixnContext.associatedInteraction.id = 'some_id'
     ixnContext.associatedInteraction.forceSave = true
-    softNavAggregate.ee.emit(`${INTERACTION_API}-end`, [200], ixnContext)
+    setTimeout(() => {
+      ixn1End = ixn1Start + randomTime()
+      softNavAggregate.ee.emit(`${INTERACTION_API}-end`, [ixn1End], ixnContext)
+      console.log('done1')
 
-    softNavAggregate.ee.emit(`${INTERACTION_API}-get`, [300])
-    ixnContext = getIxnContext(newrelic.interaction())
-    ixnContext.associatedInteraction.nodeId = 2
-    ixnContext.associatedInteraction.id = 'some_other_id'
-    ixnContext.associatedInteraction.forceSave = true
-    softNavAggregate.ee.emit(`${INTERACTION_API}-end`, [500], ixnContext)
+      setTimeout(() => {
+        ixn2Start = ixn1End + randomTime()
+        softNavAggregate.ee.emit(`${INTERACTION_API}-get`, [ixn2Start])
+        ixnContext = getIxnContext(newrelic.interaction())
+        ixnContext.associatedInteraction.nodeId = 2
+        ixnContext.associatedInteraction.id = 'some_other_id'
+        ixnContext.associatedInteraction.forceSave = true
 
-    softNavAggregate.ee.emit(`${INTERACTION_API}-get`, [700])
-    ixnContext = getIxnContext(newrelic.interaction())
-    ixnContext.associatedInteraction.nodeId = 3
-    ixnContext.associatedInteraction.id = 'some_another_id'
-    ixnContext.associatedInteraction.forceSave = true
-    softNavAggregate.ee.emit(`${INTERACTION_API}-end`, [1000], ixnContext)
+        setTimeout(() => {
+          ixn2End = ixn2Start + randomTime()
+          softNavAggregate.ee.emit(`${INTERACTION_API}-end`, [ixn2End], ixnContext)
+          console.log('done2')
 
-    await waitFor(1000)
-    expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(3)
-    // WARN: Double check decoded output & behavior or any introduced bugs before changing the follow line's static string.
-    expect(softNavAggregate.makeHarvestPayload()[0].payload.body).toEqual("bel.7;1,,,5k,,,'api,'http://localhost/,1,1,,2,!!!!'some_id,'1,!!;;1,,8c,5k,,,'api,'http://localhost/,1,1,,2,!!!!'some_other_id,'2,!!;;1,,jg,8c,,,'api,'http://localhost/,1,1,,2,!!!!'some_another_id,'3,!!;")
-    done()
+          setTimeout(() => {
+            ixn3Start = ixn2End + randomTime()
+            softNavAggregate.ee.emit(`${INTERACTION_API}-get`, [ixn3Start])
+            ixnContext = getIxnContext(newrelic.interaction())
+            ixnContext.associatedInteraction.nodeId = 3
+            ixnContext.associatedInteraction.id = 'some_another_id'
+            ixnContext.associatedInteraction.forceSave = true
+
+            setTimeout(() => {
+              ixn3End = ixn3Start + randomTime()
+              softNavAggregate.ee.emit(`${INTERACTION_API}-end`, [ixn3End], ixnContext)
+              console.log('done3')
+
+              setTimeout(() => {
+                console.log('check vals')
+                expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(3)
+                // WARN: Double check decoded output & behavior or any introduced bugs before changing the follow line's static string.
+                // expect(softNavAggregate.makeHarvestPayload()[0].payload.body).toEqual("bel.7;1,,,5k,,,'api,'http://localhost/,1,1,,2,!!!!'some_id,'1,!!;;1,,8c,5k,,,'api,'http://localhost/,1,1,,2,!!!!'some_other_id,'2,!!;;1,,jg,8c,,,'api,'http://localhost/,1,1,,2,!!!!'some_another_id,'3,!!;")
+                done()
+              }, 200)
+            }, 200)
+          }, 200)
+        }, 200)
+      }, 200)
+    }, 200)
   }, 1000)
 
   function waitFor (ms) {

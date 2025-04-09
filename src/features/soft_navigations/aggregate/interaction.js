@@ -68,7 +68,7 @@ export class Interaction extends BelNode {
   }
 
   done (customEndTime) {
-    console.log('called done on', this.id, customEndTime)
+    console.log('called done on', this.id, customEndTime, this.keepOpenUntilEndApi, this.status)
     // User could've mark this interaction--regardless UI or api started--as "don't close until .end() is called on it". Only .end provides a timestamp; the default flows do not.
     if (this.keepOpenUntilEndApi && customEndTime === undefined) return false
     // If interaction is already closed, this is a no-op. However, returning true lets startUIInteraction know that it CAN start a new interaction, as this one is done.

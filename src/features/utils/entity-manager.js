@@ -40,6 +40,7 @@ export class EntityManager {
   }
 
   setDefaultEntity (entity) {
+    console.log('SET DEFAULT ENTITY', entity)
     this.#defaultEntity = entity
   }
 }

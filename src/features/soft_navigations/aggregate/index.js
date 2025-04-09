@@ -111,6 +111,7 @@ export class Aggregate extends AggregateBase {
     this.interactionInProgress.on('finished', () => {
       const ref = this.interactionInProgress
       this.interactionsToHarvest.add(this.interactionInProgress)
+      console.log(this.interactionsToHarvest.defaultEntity.get())
       this.interactionInProgress = null
       this.domObserver.disconnect() // can stop observing whenever our interaction logic completes a cycle
 
@@ -140,7 +141,12 @@ export class Aggregate extends AggregateBase {
     */
     if (this.interactionInProgress?.isActiveDuring(timestamp)) return this.interactionInProgress
     let saveIxn
-    const [{ data: interactionsBuffer }] = this.interactionsToHarvest.get()
+    // console.log('getInteractionFor', timestamp, this.interactionsToHarvest)
+    // const [{ data: interactionsBuffer }] = this.interactionsToHarvest.get()
+    // console.log(this.interactionsToHarvest)
+    const interactionsBuffer = this.interactionsToHarvest.get()[0]?.data
+    if (!interactionsBuffer) return // no ixns to search through, so return undefined
+
     for (let idx = interactionsBuffer.length - 1; idx >= 0; idx--) { // reverse search for the latest completed interaction for efficiency
       const finishedInteraction = interactionsBuffer[idx]
       if (finishedInteraction.isActiveDuring(timestamp)) {
@@ -216,9 +222,13 @@ export class Aggregate extends AggregateBase {
         thisClass.domObserver.observe(document.body, { attributes: true, childList: true, subtree: true, characterData: true }) // start observing for DOM changes like a regular UI-driven interaction
         thisClass.setClosureHandlers()
       }
+      console.log('api found ixn', this.associatedInteraction, time)
       if (waitForEnd === true) this.associatedInteraction.keepOpenUntilEndApi = true
     }, thisClass.featureName, thisClass.ee)
-    registerHandler(INTERACTION_API + 'end', function (timeNow) { this.associatedInteraction.done(timeNow) }, thisClass.featureName, thisClass.ee)
+    registerHandler(INTERACTION_API + 'end', function (timeNow) {
+      console.log('end ixn', this.associatedInteraction.id, timeNow)
+      this.associatedInteraction.done(timeNow)
+    }, thisClass.featureName, thisClass.ee)
     registerHandler(INTERACTION_API + 'save', function () { this.associatedInteraction.forceSave = true }, thisClass.featureName, thisClass.ee)
     registerHandler(INTERACTION_API + 'ignore', function () { this.associatedInteraction.forceIgnore = true }, thisClass.featureName, thisClass.ee)
 

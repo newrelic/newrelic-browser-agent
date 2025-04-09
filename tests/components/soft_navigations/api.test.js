@@ -1,6 +1,8 @@
 import { Instrument as SoftNav } from '../../../src/features/soft_navigations/instrument'
 import { resetAgent, setupAgent } from '../setup-agent'
 
+jest.retryTimes(0)
+
 const INTERACTION_API = 'api-ixn'
 let mainAgent
 
@@ -20,11 +22,9 @@ let softNavAggregate
 
 beforeEach(async () => {
   const softNavInstrument = new SoftNav(mainAgent)
-  await new Promise(process.nextTick)
+  await softNavInstrument.onAggregateImported
   softNavAggregate = softNavInstrument.featAggregate
 
-  console.log('emitting entity-added')
-  softNavAggregate.ee.emit('entity-added', [{ entityGuid: 'abcd1234' }])
   softNavAggregate.ee.emit('rumresp', [{ spa: 1 }])
   await new Promise(process.nextTick)
   // to prevent xmlhttprequest errors in jest
@@ -37,6 +37,7 @@ beforeEach(async () => {
 
 afterEach(() => {
   resetAgent(mainAgent.agentIdentifier)
+  softNavAggregate.events.clear()
   jest.clearAllMocks()
 })
 
@@ -264,31 +265,34 @@ afterEach(() => {
 // })
 
 // This isn't just an API test; it double serves as data validation on the querypack payload output.
-test('multiple finished ixns retain the correct start/end timestamps in payload', () => {
-  softNavAggregate.ee.emit(`${INTERACTION_API}-get`, [0])
-  let ixnContext = getIxnContext(newrelic.interaction())
-  ixnContext.associatedInteraction.nodeId = 1
-  ixnContext.associatedInteraction.id = 'some_id'
-  ixnContext.associatedInteraction.forceSave = true
-  softNavAggregate.ee.emit(`${INTERACTION_API}-end`, [200], ixnContext)
+test('multiple finished ixns retain the correct start/end timestamps in payload', (done) => {
+  setTimeout(() => {
+    softNavAggregate.ee.emit(`${INTERACTION_API}-get`, [0])
+    let ixnContext = getIxnContext(newrelic.interaction())
+    ixnContext.associatedInteraction.nodeId = 1
+    ixnContext.associatedInteraction.id = 'some_id'
+    ixnContext.associatedInteraction.forceSave = true
+    softNavAggregate.ee.emit(`${INTERACTION_API}-end`, [200], ixnContext)
 
-  softNavAggregate.ee.emit(`${INTERACTION_API}-get`, [300])
-  ixnContext = getIxnContext(newrelic.interaction())
-  ixnContext.associatedInteraction.nodeId = 2
-  ixnContext.associatedInteraction.id = 'some_other_id'
-  ixnContext.associatedInteraction.forceSave = true
-  softNavAggregate.ee.emit(`${INTERACTION_API}-end`, [500], ixnContext)
+    softNavAggregate.ee.emit(`${INTERACTION_API}-get`, [300])
+    ixnContext = getIxnContext(newrelic.interaction())
+    ixnContext.associatedInteraction.nodeId = 2
+    ixnContext.associatedInteraction.id = 'some_other_id'
+    ixnContext.associatedInteraction.forceSave = true
+    softNavAggregate.ee.emit(`${INTERACTION_API}-end`, [500], ixnContext)
 
-  softNavAggregate.ee.emit(`${INTERACTION_API}-get`, [700])
-  ixnContext = getIxnContext(newrelic.interaction())
-  ixnContext.associatedInteraction.nodeId = 3
-  ixnContext.associatedInteraction.id = 'some_another_id'
-  ixnContext.associatedInteraction.forceSave = true
-  softNavAggregate.ee.emit(`${INTERACTION_API}-end`, [1000], ixnContext)
+    softNavAggregate.ee.emit(`${INTERACTION_API}-get`, [700])
+    ixnContext = getIxnContext(newrelic.interaction())
+    ixnContext.associatedInteraction.nodeId = 3
+    ixnContext.associatedInteraction.id = 'some_another_id'
+    ixnContext.associatedInteraction.forceSave = true
+    softNavAggregate.ee.emit(`${INTERACTION_API}-end`, [1000], ixnContext)
 
-  expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(3)
-  // WARN: Double check decoded output & behavior or any introduced bugs before changing the follow line's static string.
-  expect(softNavAggregate.makeHarvestPayload()[0].payload.body).toEqual("bel.7;1,,,5k,,,'api,'http://localhost/,1,1,,2,!!!!'some_id,'1,!!;;1,,8c,5k,,,'api,'http://localhost/,1,1,,2,!!!!'some_other_id,'2,!!;;1,,jg,8c,,,'api,'http://localhost/,1,1,,2,!!!!'some_another_id,'3,!!;")
+    expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(3)
+    // WARN: Double check decoded output & behavior or any introduced bugs before changing the follow line's static string.
+    expect(softNavAggregate.makeHarvestPayload()[0].payload.body).toEqual("bel.7;1,,,5k,,,'api,'http://localhost/,1,1,,2,!!!!'some_id,'1,!!;;1,,8c,5k,,,'api,'http://localhost/,1,1,,2,!!!!'some_other_id,'2,!!;;1,,jg,8c,,,'api,'http://localhost/,1,1,,2,!!!!'some_another_id,'3,!!;")
+    done()
+  }, 1000)
 })
 
 // This isn't just an API test; it double serves as data validation on the querypack payload output.

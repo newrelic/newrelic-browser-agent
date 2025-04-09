@@ -44,6 +44,7 @@ export class EventBuffer {
     if (this.#rawBytes + addSize > this.maxPayloadSize) return false
     this.#buffer.push(event)
     this.#rawBytes += addSize
+    console.log('added event to buffer', this.#buffer.length, this.#rawBytes)
     return true
   }
 

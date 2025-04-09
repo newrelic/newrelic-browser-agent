@@ -66,6 +66,7 @@ export class EventStoreManager {
       feature: this.featureName,
       data: event
     })
+    console.log('adding event', event)
     return this.#getEventStore(targetEntityGuid).add(event)
   }
 
@@ -82,11 +83,14 @@ export class EventStoreManager {
    */
   get (opts, targetEntityGuid) {
     if (targetEntityGuid) return [{ targetApp: this.entityManager.get(targetEntityGuid), data: this.#getEventStore(targetEntityGuid).get(opts) }]
-    const allPayloads = []
+
+    console.log(this.entityManager)
+    const allPayloads = [{ targetApp: this.entityManager.get(), data: this.defaultEntity.get() }]
     this.appStorageMap.forEach((eventStore, targetEntityGuid) => {
       const targetApp = this.entityManager.get(targetEntityGuid)
       if (targetApp) allPayloads.push({ targetApp, data: eventStore.get(opts) })
     })
+    console.log('allPayloads', allPayloads)
     return allPayloads
   }
 

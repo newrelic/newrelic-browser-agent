@@ -45,6 +45,7 @@ export class Interaction extends BelNode {
     this.forceSave = this.forceIgnore = false
     if (this.trigger === API_TRIGGER_NAME) this.createdByApi = true
     this.newURL = this.oldURL = (currentUrl || globalScope?.location.href)
+    console.log('create a new interaction', this.id, this.start, this.createdByApi)
   }
 
   updateDom (timestamp) {

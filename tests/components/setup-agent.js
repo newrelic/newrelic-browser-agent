@@ -8,7 +8,7 @@ import { setupAgentSession } from '../../src/features/utils/agent-session'
 import { Harvester } from '../../src/common/harvest/harvester'
 import { EntityManager } from '../../src/features/utils/entity-manager'
 import { EventStoreManager } from '../../src/features/utils/event-store-manager'
-import { EventAggregator } from '../../src/common/aggregate/event-aggregator'
+import { EventBuffer } from '../../src/features/utils/event-buffer'
 import { getInfo } from '../../src/common/config/info'
 
 const entityGuid = faker.string.uuid()
@@ -26,9 +26,10 @@ const entityGuid = faker.string.uuid()
  * @param init
  * @param loaderConfig
  * @param runtime
+ * @param storageChoice
  * @returns {{aggregator: Aggregator, agentIdentifier: string, licenseKey: string}}
  */
-export function setupAgent ({ agentOverrides = {}, info = {}, init = {}, loaderConfig = {}, runtime = {} } = {}) {
+export function setupAgent ({ agentOverrides = {}, info = {}, init = {}, loaderConfig = {}, runtime = {} } = {}, storageChoice = EventBuffer) {
   const agentIdentifier = faker.string.uuid()
 
   const eventEmitter = ee.get(agentIdentifier)
@@ -65,7 +66,7 @@ export function setupAgent ({ agentOverrides = {}, info = {}, init = {}, loaderC
   }
   fakeAgent.features = {}
   if (!runtime.harvester) runtime.harvester = new Harvester(fakeAgent)
-  fakeAgent.sharedAggregator = new EventStoreManager(fakeAgent, EventAggregator, fakeAgent.runtime.appMetadata.agents[0].entityGuid, 'shared_aggregator')
+  fakeAgent.sharedAggregator = new EventStoreManager(fakeAgent, storageChoice, fakeAgent.runtime.appMetadata.agents[0].entityGuid, 'shared_aggregator')
 
   return fakeAgent
 }
@@ -96,7 +97,7 @@ export function resetAgentEventEmitter (agentIdentifier) {
 
 export function resetAggregator (agentIdentifier) {
   const agent = getNREUMInitializedAgent(agentIdentifier)
-  agent.sharedAggregator = new EventStoreManager(agent, EventAggregator, agent.runtime.appMetadata.agents[0].entityGuid, 'shared_aggregator')
+  agent.sharedAggregator.clear()
 }
 
 export function resetSession (agentIdentifier) {

@@ -111,7 +111,7 @@ export class Aggregate extends AggregateBase {
     this.interactionInProgress.on('finished', () => {
       const ref = this.interactionInProgress
       this.interactionsToHarvest.add(this.interactionInProgress)
-      // console.log(this.interactionsToHarvest.defaultEntity.get())
+      console.log('FINISHED!', this.interactionsToHarvest.defaultEntity.get())
       this.interactionInProgress = null
       this.domObserver.disconnect() // can stop observing whenever our interaction logic completes a cycle
 
@@ -226,7 +226,7 @@ export class Aggregate extends AggregateBase {
       if (waitForEnd === true) this.associatedInteraction.keepOpenUntilEndApi = true
     }, thisClass.featureName, thisClass.ee)
     registerHandler(INTERACTION_API + 'end', function (timeNow) {
-      // console.log('end ixn', this.associatedInteraction.id, timeNow)
+      console.log('end ixn', this.associatedInteraction.id, timeNow)
       this.associatedInteraction.done(timeNow)
     }, thisClass.featureName, thisClass.ee)
     registerHandler(INTERACTION_API + 'save', function () { this.associatedInteraction.forceSave = true }, thisClass.featureName, thisClass.ee)

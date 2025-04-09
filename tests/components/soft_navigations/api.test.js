@@ -1,11 +1,6 @@
 import { Instrument as SoftNav } from '../../../src/features/soft_navigations/instrument'
 import { resetAgent, setupAgent } from '../setup-agent'
 
-/**
- * Test `.interaction gets ixn retroactively too when processed late after ee buffer drain` is a bit
- * flaky so add a retry for this file.
- */
-
 const INTERACTION_API = 'api-ixn'
 let mainAgent
 

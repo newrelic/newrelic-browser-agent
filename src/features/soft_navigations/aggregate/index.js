@@ -212,6 +212,7 @@ export class Aggregate extends AggregateBase {
     const thisClass = this
 
     registerHandler(INTERACTION_API + 'get', function (time, { waitForEnd } = {}) {
+      console.log('get ixn', time)
       // In here, 'this' refers to the EventContext specific to per InteractionHandle instance spawned by each .interaction() api call.
       // Each api call aka IH instance would therefore retain a reference to either the in-progress interaction *at the time of the call* OR a new api-started interaction.
       this.associatedInteraction = thisClass.getInteractionFor(time)

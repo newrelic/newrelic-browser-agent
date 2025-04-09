@@ -126,6 +126,7 @@ export class Interaction extends BelNode {
     else if (this.newURL !== this.oldURL) ixnType = INTERACTION_TYPE.ROUTE_CHANGE
     else ixnType = INTERACTION_TYPE.UNSPECIFIED
 
+    console.log('Is first? ' + isFirstIxnOfPayload + ', payload start: ' + firstStartTimeOfPayload + ', this.start: ' + this.start)
     // IMPORTANT: The order in which addString is called matters and correlates to the order in which string shows up in the harvest payload. Do not re-order the following code.
     const fields = [
       numeric(this.belType),

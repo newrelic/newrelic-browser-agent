@@ -87,6 +87,8 @@ export class Interaction extends BelNode {
     this.customAttributes = { ...getInfo(this.agentIdentifier).jsAttributes, ...this.customAttributes } // attrs specific to this interaction should have precedence over the general custom attrs
     this.status = INTERACTION_STATUS.FIN
 
+    console.log('FINISH!', this.id, this.start, this.end)
+
     // Run all the callbacks awaiting this interaction to finish.
     const callbacks = this.eventSubscription.get('finished')
     callbacks.forEach(fn => fn())

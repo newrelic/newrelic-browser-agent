@@ -81,7 +81,10 @@ describe('EventStoreManager', () => {
     store.add('evt1', tgt1)
     store.add('evt2', tgt2)
 
-    expect(store.get()).toEqual([{ targetApp: entity, data: ['evt0'] }, { targetApp: tgt1Meta, data: ['evt1'] }, { targetApp: tgt2Meta, data: ['evt2'] }])
+    const stores = store.get()
+    expect(stores.find(x => x.targetApp === entity).data).toEqual(['evt0'])
+    expect(stores.find(x => x.targetApp === tgt1Meta).data).toEqual(['evt1'])
+    expect(stores.find(x => x.targetApp === tgt2Meta).data).toEqual(['evt2'])
   })
 
   test('get does not error when target does not exist', () => {

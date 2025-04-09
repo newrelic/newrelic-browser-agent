@@ -45,7 +45,7 @@ export class Interaction extends BelNode {
     this.forceSave = this.forceIgnore = false
     if (this.trigger === API_TRIGGER_NAME) this.createdByApi = true
     this.newURL = this.oldURL = (currentUrl || globalScope?.location.href)
-    console.log('create a new interaction', this.id, this.start, this.createdByApi)
+    // console.log('create a new interaction', this.id, this.start, this.createdByApi)
   }
 
   updateDom (timestamp) {
@@ -88,7 +88,7 @@ export class Interaction extends BelNode {
     this.customAttributes = { ...getInfo(this.agentIdentifier).jsAttributes, ...this.customAttributes } // attrs specific to this interaction should have precedence over the general custom attrs
     this.status = INTERACTION_STATUS.FIN
 
-    console.log('FINISH!', this.id, this.start, this.end)
+    // console.log('FINISH!', this.id, this.start, this.end)
 
     // Run all the callbacks awaiting this interaction to finish.
     const callbacks = this.eventSubscription.get('finished')

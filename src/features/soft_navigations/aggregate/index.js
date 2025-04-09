@@ -111,7 +111,7 @@ export class Aggregate extends AggregateBase {
     this.interactionInProgress.on('finished', () => {
       const ref = this.interactionInProgress
       this.interactionsToHarvest.add(this.interactionInProgress)
-      console.log(this.interactionsToHarvest.defaultEntity.get())
+      // console.log(this.interactionsToHarvest.defaultEntity.get())
       this.interactionInProgress = null
       this.domObserver.disconnect() // can stop observing whenever our interaction logic completes a cycle
 
@@ -222,11 +222,11 @@ export class Aggregate extends AggregateBase {
         thisClass.domObserver.observe(document.body, { attributes: true, childList: true, subtree: true, characterData: true }) // start observing for DOM changes like a regular UI-driven interaction
         thisClass.setClosureHandlers()
       }
-      console.log('api found ixn', this.associatedInteraction, time)
+      // console.log('api found ixn', this.associatedInteraction, time)
       if (waitForEnd === true) this.associatedInteraction.keepOpenUntilEndApi = true
     }, thisClass.featureName, thisClass.ee)
     registerHandler(INTERACTION_API + 'end', function (timeNow) {
-      console.log('end ixn', this.associatedInteraction.id, timeNow)
+      // console.log('end ixn', this.associatedInteraction.id, timeNow)
       this.associatedInteraction.done(timeNow)
     }, thisClass.featureName, thisClass.ee)
     registerHandler(INTERACTION_API + 'save', function () { this.associatedInteraction.forceSave = true }, thisClass.featureName, thisClass.ee)

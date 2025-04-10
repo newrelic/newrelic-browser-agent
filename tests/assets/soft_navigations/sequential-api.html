@@ -23,33 +23,26 @@
                 return new Promise((resolve) => setTimeout(resolve, ms));
               }
 
-              console.log("API TRIGGERS!");
-
               let ixn1 = newrelic.interaction();
               ixn1.setName("some_id");
 
               await waitFor(200);
-              console.log("WAITED 200ms");
               ixn1.save();
               ixn1.end();
 
               await waitFor(100);
-              console.log("WAITED 100ms");
               let ixn2 = newrelic.interaction();
               ixn2.setName("some_other_id");
 
               await waitFor(200);
-              console.log("WAITED 200ms");
               ixn2.save();
               ixn2.end();
 
               await waitFor(200);
-              console.log("WAITED 200ms");
               let ixn3 = newrelic.interaction();
               ixn3.setName("some_another_id");
 
               await waitFor(300);
-              console.log("WAITED 300ms");
               ixn3.save();
               ixn3.end();
             }

@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.287.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.286.0...v1.287.0) (2025-04-10)
+
+
+### Features
+
+* Central Agent Architecture - Micro Front Ends ([#1266](https://github.com/newrelic/newrelic-browser-agent/issues/1266)) ([b1a6c30](https://github.com/newrelic/newrelic-browser-agent/commit/b1a6c30bf78001f5286a614c229ceb7a256593aa))
+
 ## [1.286.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.285.0...v1.286.0) (2025-04-01)
 
 

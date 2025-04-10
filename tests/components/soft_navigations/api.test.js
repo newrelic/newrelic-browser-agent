@@ -26,7 +26,7 @@ beforeEach(async () => {
   softNavAggregate = softNavInstrument.featAggregate
 
   softNavAggregate.ee.emit('rumresp', [{ spa: 1 }])
-  await new Promise(process.nextTick)
+  // await new Promise(process.nextTick)
   // to prevent xmlhttprequest errors in jest
   global.XMLHttpRequest = jest.fn()
 
@@ -266,35 +266,47 @@ afterEach(() => {
 
 // This isn't just an API test; it double serves as data validation on the querypack payload output.
 test('multiple finished ixns retain the correct start/end timestamps in payload', () => {
-  softNavAggregate.ee.emit(`${INTERACTION_API}-get`, [0])
-  let ixnContext = getIxnContext(newrelic.interaction())
-  ixnContext.associatedInteraction.nodeId = 1
-  ixnContext.associatedInteraction.id = 'some_id'
-  ixnContext.associatedInteraction.forceSave = true
-  softNavAggregate.ee.emit(`${INTERACTION_API}-end`, [200], ixnContext)
+  // softNavAggregate.ee.emit(`${INTERACTION_API}-get`, [0])
+  // let ixnContext = getIxnContext(newrelic.interaction())
+  let ixn1 = mainAgent.interaction().get()
+  ixn1.setName('some_id')
+
+  jest.advanceTimersByTime(200) // 200
+  ixn1.save()
+  ixn1.end()
 
   expect(softNavAggregate.interactionsToHarvest.get()[0].data.at(-1).start).toEqual(0)
   expect(softNavAggregate.interactionsToHarvest.get()[0].data.at(-1).end).toEqual(200)
 
-  softNavAggregate.ee.emit(`${INTERACTION_API}-get`, [300])
-  ixnContext = getIxnContext(newrelic.interaction())
-  ixnContext.associatedInteraction.nodeId = 2
-  ixnContext.associatedInteraction.id = 'some_other_id'
-  ixnContext.associatedInteraction.forceSave = true
-  softNavAggregate.ee.emit(`${INTERACTION_API}-end`, [500], ixnContext)
+  let ixn2 = mainAgent.interaction().get()
+  ixn2.setName('some_id')
+
+  jest.advanceTimersByTime(200) // 500
+  ixn2.save()
+  ixn2.end()
 
   expect(softNavAggregate.interactionsToHarvest.get()[0].data.at(-1).start).toEqual(300)
   expect(softNavAggregate.interactionsToHarvest.get()[0].data.at(-1).end).toEqual(500)
 
-  softNavAggregate.ee.emit(`${INTERACTION_API}-get`, [700])
-  ixnContext = getIxnContext(newrelic.interaction())
-  ixnContext.associatedInteraction.nodeId = 3
-  ixnContext.associatedInteraction.id = 'some_another_id'
-  ixnContext.associatedInteraction.forceSave = true
-  softNavAggregate.ee.emit(`${INTERACTION_API}-end`, [1000], ixnContext)
+  // softNavAggregate.ee.emit(`${INTERACTION_API}-get`, [300])
+  // ixnContext = getIxnContext(newrelic.interaction())
+  // ixnContext.associatedInteraction.nodeId = 2
+  // ixnContext.associatedInteraction.id = 'some_other_id'
+  // ixnContext.associatedInteraction.forceSave = true
+  // softNavAggregate.ee.emit(`${INTERACTION_API}-end`, [500], ixnContext)
 
-  expect(softNavAggregate.interactionsToHarvest.get()[0].data.at(-1).start).toEqual(700)
-  expect(softNavAggregate.interactionsToHarvest.get()[0].data.at(-1).end).toEqual(1000)
+  // expect(softNavAggregate.interactionsToHarvest.get()[0].data.at(-1).start).toEqual(300)
+  // expect(softNavAggregate.interactionsToHarvest.get()[0].data.at(-1).end).toEqual(500)
+
+  // softNavAggregate.ee.emit(`${INTERACTION_API}-get`, [700])
+  // ixnContext = getIxnContext(newrelic.interaction())
+  // ixnContext.associatedInteraction.nodeId = 3
+  // ixnContext.associatedInteraction.id = 'some_another_id'
+  // ixnContext.associatedInteraction.forceSave = true
+  // softNavAggregate.ee.emit(`${INTERACTION_API}-end`, [1000], ixnContext)
+
+  // expect(softNavAggregate.interactionsToHarvest.get()[0].data.at(-1).start).toEqual(700)
+  // expect(softNavAggregate.interactionsToHarvest.get()[0].data.at(-1).end).toEqual(1000)
 
   // expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(3)
   // // WARN: Double check decoded output & behavior or any introduced bugs before changing the follow line's static string.

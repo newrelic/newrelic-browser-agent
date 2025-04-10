@@ -222,13 +222,12 @@ export function setAPI (agent, forceDrain) {
     }
   })
   agent.setCurrentRouteName = function () {
-    return agent.runSoftNavOverSpa
-      ? apiCall
-        .apply(this, [spaPrefix, 'routeName', undefined, FEATURE_NAMES.softNav])
-        .apply(this, arguments)
-      : apiCall
-        .apply(this, [prefix, 'routeName', true, FEATURE_NAMES.spa])
-        .apply(this, arguments)
+    return apiCall(
+      agent.runSoftNavOverSpa ? spaPrefix : prefix,
+      'routeName',
+      agent.runSoftNavOverSpa ? undefined : true,
+      agent.runSoftNavOverSpa ? FEATURE_NAMES.softNav : FEATURE_NAMES.spa
+    )(...arguments)
   }
 
   function apiCall (prefix, name, notSpa, bufferGroup, timestamp = now()) {

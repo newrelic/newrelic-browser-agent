@@ -96,7 +96,7 @@ export function resetAgentEventEmitter (agentIdentifier) {
 
 export function resetAggregator (agentIdentifier) {
   const agent = getNREUMInitializedAgent(agentIdentifier)
-  agent.sharedAggregator = new EventStoreManager(agent, EventAggregator, agent.runtime.appMetadata.agents[0].entityGuid, 'shared_aggregator')
+  agent.sharedAggregator.clear()
 }
 
 export function resetSession (agentIdentifier) {

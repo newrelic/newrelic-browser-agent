@@ -2,12 +2,11 @@ import { SUPPORTABILITY_METRIC, CUSTOM_METRIC } from '../../../src/features/metr
 import { resetAgent, setupAgent } from '../setup-agent'
 import { Instrument as Metrics } from '../../../src/features/metrics/instrument'
 import { faker } from '@faker-js/faker'
-import { EventAggregator } from '../../../src/common/aggregate/event-aggregator'
 
 let mainAgent
 
 beforeAll(async () => {
-  mainAgent = setupAgent({}, EventAggregator)
+  mainAgent = setupAgent()
 })
 
 let metricsAggregate, metricName

@@ -216,20 +216,23 @@ export function setAPI (agent, forceDrain) {
 
   ;['actionText', 'setName', 'setAttribute', 'save', 'ignore', 'onEnd', 'getContext', 'end', 'get'].forEach(name => {
     InteractionApiProto[name] = function () {
-      console.log('this...', this)
-      const apiCaller = apiCall.bind(this)
-      const executor = apiCaller(spaPrefix, name, undefined, agent.runSoftNavOverSpa ? FEATURE_NAMES.softNav : FEATURE_NAMES.spa).bind(this)
-      return executor.apply(this, arguments)
+      return apiCall
+        .apply(this, [spaPrefix, name, undefined, agent.runSoftNavOverSpa ? FEATURE_NAMES.softNav : FEATURE_NAMES.spa])
+        .apply(this, arguments)
     }
   })
   agent.setCurrentRouteName = function () {
-    return agent.runSoftNavOverSpa ? apiCall(spaPrefix, 'routeName', undefined, FEATURE_NAMES.softNav)() : () => apiCall(prefix, 'routeName', true, FEATURE_NAMES.spa)()
+    return agent.runSoftNavOverSpa
+      ? apiCall
+        .apply(this, [spaPrefix, 'routeName', undefined, FEATURE_NAMES.softNav])
+        .apply(this, arguments)
+      : apiCall
+        .apply(this, [prefix, 'routeName', true, FEATURE_NAMES.spa])
+        .apply(this, arguments)
   }
 
   function apiCall (prefix, name, notSpa, bufferGroup, timestamp = now()) {
-    console.log('executing top level api call', timestamp, this)
     return function () {
-      console.log('executing bottom level api call', timestamp, this)
       handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/' + name + '/called'], undefined, FEATURE_NAMES.metrics, agent.ee)
       dispatchGlobalEvent({
         agentIdentifier: agent.agentIdentifier,
@@ -239,9 +242,7 @@ export function setAPI (agent, forceDrain) {
         feature: prefix + name,
         data: { notSpa, bufferGroup }
       })
-      console.log('emit with timestamp', timestamp)
       if (bufferGroup) handle(prefix + name, [timestamp, ...arguments], notSpa ? null : this, bufferGroup, agent.ee) // no bufferGroup means only the SM is emitted
-      console.log('return', this)
       return notSpa ? undefined : this // returns the InteractionHandle which allows these methods to be chained
     }
   }

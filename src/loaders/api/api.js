@@ -215,9 +215,17 @@ export function setAPI (agent, forceDrain) {
   }
 
   ;['actionText', 'setName', 'setAttribute', 'save', 'ignore', 'onEnd', 'getContext', 'end', 'get'].forEach(name => {
-    InteractionApiProto[name] = apiCall(spaPrefix, name, undefined, agent.runSoftNavOverSpa ? FEATURE_NAMES.softNav : FEATURE_NAMES.spa)
+    InteractionApiProto[name] = function () {
+      return apiCall
+        .apply(this, [spaPrefix, name, undefined, agent.runSoftNavOverSpa ? FEATURE_NAMES.softNav : FEATURE_NAMES.spa])
+        .apply(this, arguments)
+    }
   })
-  agent.setCurrentRouteName = agent.runSoftNavOverSpa ? apiCall(spaPrefix, 'routeName', undefined, FEATURE_NAMES.softNav) : apiCall(prefix, 'routeName', true, FEATURE_NAMES.spa)
+  agent.setCurrentRouteName = function () {
+    return agent.runSoftNavOverSpa
+      ? apiCall(spaPrefix, 'routeName', undefined, FEATURE_NAMES.softNav)(...arguments)
+      : apiCall(prefix, 'routeName', true, FEATURE_NAMES.spa)(...arguments)
+  }
 
   function apiCall (prefix, name, notSpa, bufferGroup, timestamp = now()) {
     return function () {

@@ -42,7 +42,8 @@ export class Aggregate extends AggregateBase {
       }, this.featureName, this.ee)
 
       if (agentRef.init.page_action.enabled) {
-        registerHandler('api-addPageAction', (timestamp, name, attributes) => {
+        registerHandler('api-addPageAction', (timestamp, name, attributes, targetEntityGuid) => {
+          if (!this.agentRef.runtime.entityManager.get(targetEntityGuid)) return warn(56, this.featureName)
           this.addEvent({
             ...attributes,
             eventType: 'PageAction',
@@ -54,7 +55,7 @@ export class Aggregate extends AggregateBase {
               browserWidth: window.document.documentElement?.clientWidth,
               browserHeight: window.document.documentElement?.clientHeight
             })
-          })
+          }, targetEntityGuid)
         }, this.featureName, this.ee)
       }
 
@@ -234,9 +235,10 @@ export class Aggregate extends AggregateBase {
    * * sessionTraceId: set by the `ptid=` query param
    * * userAgent*: set by the userAgent header
    * @param {object=} obj the event object for storing in the event buffer
+   * @param {string=} targetEntityGuid the target entity guid for the event to scope buffering and harvesting. Defaults to agent config if undefined
    * @returns void
    */
-  addEvent (obj = {}) {
+  addEvent (obj = {}, targetEntityGuid) {
     if (!obj || !Object.keys(obj).length) return
     if (!obj.eventType) {
       warn(44)
@@ -265,14 +267,14 @@ export class Aggregate extends AggregateBase {
       ...obj
     }
 
-    const addedEvent = this.events.add(eventAttributes)
-    if (!addedEvent && !this.events.isEmpty()) {
+    const addedEvent = this.events.add(eventAttributes, targetEntityGuid)
+    if (!addedEvent && !this.events.isEmpty(undefined, targetEntityGuid)) {
       /** could not add the event because it pushed the buffer over the limit
        * so we harvest early, and try to add it again now that the buffer is cleared
        * if it fails again, we do nothing
        */
       this.ee.emit(SUPPORTABILITY_METRIC_CHANNEL, ['GenericEvents/Harvest/Max/Seen'])
-      this.agentRef.runtime.harvester.triggerHarvestFor(this)
+      this.agentRef.runtime.harvester.triggerHarvestFor(this, { targetEntityGuid })
       this.events.add(eventAttributes)
     }
   }

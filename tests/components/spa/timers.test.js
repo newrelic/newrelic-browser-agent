@@ -22,9 +22,18 @@ let spaInstrument, spaAggregate, newrelic
 const agentIdentifier = 'abcdefg'
 
 beforeAll(async () => {
-  spaInstrument = new Spa({ agentIdentifier, info: {}, init: { spa: { enabled: true } }, runtime: {} })
+  spaInstrument = new Spa({
+    agentIdentifier,
+    info: {},
+    init: { spa: { enabled: true } },
+    runtime: {
+      appMetadata: { agents: [{ entityGuid: '12345' }] }
+    },
+    ee: ee.get(agentIdentifier)
+  })
   await expect(spaInstrument.onAggregateImported).resolves.toEqual(true)
   spaAggregate = spaInstrument.featAggregate
+  spaAggregate.ee.emit('rumresp', [{ spa: 1 }])
   spaAggregate.blocked = true
   spaAggregate.drain()
   newrelic = helpers.getNewrelicGlobal(spaAggregate.ee)

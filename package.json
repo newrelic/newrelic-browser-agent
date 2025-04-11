@@ -1,6 +1,6 @@
 {
   "name": "@newrelic/browser-agent",
-  "version": "1.286.0",
+  "version": "1.287.0",
   "private": false,
   "author": "New Relic Browser Agent Team <browser-agent@newrelic.com>",
   "description": "New Relic Browser Agent",
@@ -28,6 +28,9 @@
       ],
       "loaders/micro-agent": [
         "dist/types/loaders/micro-agent.d.ts"
+      ],
+      "interfaces/registered-entity": [
+        "dist/types/interfaces/registered-entity.d.ts"
       ],
       "features/ajax": [
         "dist/types/features/ajax/instrument/index.d.ts"
@@ -92,6 +95,11 @@
       "types": "./dist/types/loaders/micro-agent.d.ts",
       "require": "./dist/cjs/loaders/micro-agent.js",
       "default": "./dist/esm/loaders/micro-agent.js"
+    },
+    "./interfaces/registered-entity": {
+      "types": "./dist/types/interfaces/registered-entity.d.ts",
+      "require": "./dist/cjs/interfaces/registered-entity.js",
+      "default": "./dist/esm/interfaces/registered-entity.js"
     },
     "./features/ajax": {
       "types": "./dist/types/features/ajax/instrument/index.d.ts",
@@ -178,6 +186,7 @@
     "test:types": "tsd -f ./tests/dts/**/*.ts",
     "wdio": "node --max-old-space-size=8192 tools/wdio/bin/cli.js",
     "build:all": "npm run cdn:build:local && npm run build:npm && npm run tools:test-builds",
+    "build:browser-agent-wrapper": "npm run cdn:build:local && npm run build:npm && npm --prefix tools/test-builds/browser-agent-wrapper run build",
     "build:npm": "npm run npm:build:esm && npm run npm:build:cjs && npm run npm:build:types && npm run npm:pack",
     "cdn:build": "npm run cdn:build:prod",
     "cdn:build:local": "npm run cdn:webpack",

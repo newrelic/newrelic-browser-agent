@@ -17,7 +17,11 @@ jest.mock('../../../src/common/config/init', () => ({
 }))
 jest.mock('../../../src/common/config/runtime', () => ({
   __esModule: true,
-  getRuntime: jest.fn().mockReturnValue({})
+  getRuntime: jest.fn().mockReturnValue({
+    appMetadata: {
+      agents: [{ entityGuid: '1234' }]
+    }
+  })
 }))
 jest.mock('../../../src/common/util/feature-flags', () => ({
   activatedFeatures: { [agentIdentifier]: { spa: 1 } }
@@ -26,7 +30,17 @@ jest.mock('../../../src/common/harvest/harvester')
 
 let spaInstrument, spaAggregate, newrelic
 beforeAll(async () => {
-  spaInstrument = new Spa({ agentIdentifier, info: {}, init: { spa: { enabled: true } }, runtime: {} })
+  spaInstrument = new Spa({
+    agentIdentifier,
+    info: {},
+    init: { spa: { enabled: true } },
+    runtime: {
+      appMetadata: {
+        agents: [{ entityGuid: '1234' }]
+      }
+    },
+    ee: ee.get(agentIdentifier)
+  })
   await expect(spaInstrument.onAggregateImported).resolves.toEqual(true)
   spaAggregate = spaInstrument.featAggregate
   newrelic = helpers.getNewrelicGlobal(spaAggregate.ee)

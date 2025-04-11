@@ -267,7 +267,7 @@ export class TraceStorage {
   }
 
   get () {
-    return [{ targetApp: this.parent.agentRef.mainAppKey, data: this.takeSTNs() }]
+    return [{ targetApp: this.parent.agentRef.runtime.entityManager.get(), data: this.takeSTNs() }]
   }
 
   clear () {

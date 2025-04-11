@@ -31,7 +31,8 @@ const model = {
   traceHarvestStarted: false,
   loggingMode: LOGGING_MODE.OFF,
   serverTimeDiff: null, // set by TimeKeeper; "undefined" value will not be stringified and stored but "null" will
-  custom: {}
+  custom: {},
+  numOfExpirations: 0
 }
 
 export class SessionEntity {
@@ -74,7 +75,7 @@ export class SessionEntity {
     }
   }
 
-  setup ({ value = generateRandomHexString(16), expiresMs = DEFAULT_EXPIRES_MS, inactiveMs = DEFAULT_INACTIVE_MS }) {
+  setup ({ value = generateRandomHexString(16), expiresMs = DEFAULT_EXPIRES_MS, inactiveMs = DEFAULT_INACTIVE_MS, numOfExpirations = 0 }) {
     /** Ensure that certain properties are preserved across a reset if already set */
     const persistentAttributes = { serverTimeDiff: this.state.serverTimeDiff || model.serverTimeDiff }
     this.state = {}
@@ -98,11 +99,13 @@ export class SessionEntity {
     // this gets ignored if the value is falsy, allowing for session entities that do not expire
     if (expiresMs) {
       this.state.expiresAt = initialRead?.expiresAt || this.getFutureTimestamp(expiresMs)
+      this.state.numOfExpirations = initialRead?.numOfExpirations || numOfExpirations
       this.expiresTimer = new Timer({
         // When the inactive timer ends, collect a SM and reset the session
         onEnd: () => {
           this.collectSM('expired')
           this.collectSM('duration')
+          this.state.numOfExpirations++
           this.reset()
         }
       }, this.state.expiresAt - Date.now())
@@ -176,6 +179,7 @@ export class SessionEntity {
       if (this.isExpired(obj.expiresAt)) {
         this.collectSM('expired')
         this.collectSM('duration', obj, true)
+        this.state.numOfExpirations++
         return this.reset()
       }
       // if "inactive" timer is expired at "read" time -- esp. initial read -- reset
@@ -236,7 +240,8 @@ export class SessionEntity {
         key: this.key,
         storage: this.storage,
         expiresMs: this.expiresMs,
-        inactiveMs: this.inactiveMs
+        inactiveMs: this.inactiveMs,
+        numOfExpirations: this.state.numOfExpirations
       })
       return this.read()
     } catch (e) {
@@ -251,6 +256,10 @@ export class SessionEntity {
     // read here & invalidate
     const existingData = this.read()
     this.write({ ...existingData, inactiveAt: this.getFutureTimestamp(this.inactiveMs) })
+  }
+
+  isAfterSessionExpiry (timestamp) {
+    return this.state.numOfExpirations > 0 || (typeof timestamp === 'number' && typeof this.state.expiresAt === 'number' && timestamp >= this.state.expiresAt)
   }
 
   /**

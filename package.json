@@ -216,8 +216,14 @@
   },
   "dependencies": {
     "fflate": "0.8.2",
-    "rrweb": "^2.0.0-alpha.18",
+    "rrweb": "2.0.0-alpha.17",
     "web-vitals": "4.2.4"
+  },
+  "overrides": {
+    "@rrweb/types" : "2.0.0-alpha.17",
+    "@rrweb/utils" : "2.0.0-alpha.17",
+    "rrdom": "2.0.0-alpha.17",
+    "rrweb-snapshot": "2.0.0-alpha.17"
   },
   "devDependencies": {
     "@babel/cli": "^7.23.4",

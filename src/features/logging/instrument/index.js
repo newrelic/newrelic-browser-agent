@@ -9,6 +9,7 @@ import { wrapLogger } from '../../../common/wrap/wrap-logger'
 import { globalScope } from '../../../common/constants/runtime'
 import { setupLogAPI } from '../../../loaders/api/log'
 import { setupWrapLoggerAPI } from '../../../loaders/api/wrapLogger'
+import { setupRegisterAPI } from '../../../loaders/api/register'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
@@ -18,6 +19,7 @@ export class Instrument extends InstrumentBase {
     /** feature specific APIs */
     setupLogAPI(agentRef)
     setupWrapLoggerAPI(agentRef)
+    setupRegisterAPI(agentRef)
 
     const instanceEE = this.ee
     wrapLogger(instanceEE, globalScope.console, 'log', { level: 'info' })

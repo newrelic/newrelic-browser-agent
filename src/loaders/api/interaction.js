@@ -45,13 +45,15 @@ export function setupInteractionAPI (agent) {
     }
   }
 
-  ;['actionText', 'setName', 'setAttribute', 'save', 'ignore', 'onEnd', 'getContext', 'end', 'get'].forEach(name => {
-    setupAPI(name, function () {
-      handle(prefix + name, [now(), ...arguments], this, agent.runSoftNavOverSpa ? FEATURE_NAMES.softNav : FEATURE_NAMES.spa, agent.ee) // no bufferGroup means only the SM is emitted
-    }, InteractionApiProto)
+  ;['actionText', 'setName', 'setAttribute', 'save', 'ignore', 'onEnd', 'getContext', 'end', 'get'].forEach((name) => {
+    setupAPI.apply(this, [name, function () {
+      handle(spaPrefix + name, [now(), ...arguments], this, agent.runSoftNavOverSpa ? FEATURE_NAMES.softNav : FEATURE_NAMES.spa, agent.ee)
+      return this
+    }, agent, InteractionApiProto])
   })
 
   setupAPI(SET_CURRENT_ROUTE_NAME, function () {
-    handle(spaPrefix + 'routeName', [now(), ...arguments], this, agent.runSoftNavOverSpa ? FEATURE_NAMES.softNav : FEATURE_NAMES.spa, agent.ee)
+    if (agent.runSoftNavOverSpa) handle(spaPrefix + 'routeName', [performance.now(), ...arguments], undefined, FEATURE_NAMES.softNav, agent.ee)
+    else handle(prefix + 'routeName', [now(), ...arguments], this, FEATURE_NAMES.spa, agent.ee)
   }, agent)
 }

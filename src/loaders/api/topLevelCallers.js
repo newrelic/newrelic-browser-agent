@@ -11,6 +11,14 @@ export function setTopLevelCallers (agentRef) {
   Object.getOwnPropertyNames(ApiBase.prototype).forEach(fnName => {
     const origFn = ApiBase.prototype[fnName]
     if (typeof origFn !== 'function' || origFn === 'constructor') return
-    nr[fnName] = (...args) => agentRef[fnName](...args)
+    /** if the method already exists on the top and we are allowed to -- we can call it multiple times */
+    let origNrFn = nr[fnName]
+    if (!agentRef[fnName] || !agentRef.exposed || agentRef.runtime?.loaderType === 'micro-agent') return // dont set the top level callers if we are not allowed to
+
+    nr[fnName] = (...args) => {
+      const thisAgentFnResult = agentRef[fnName](...args)
+      if (!origNrFn) return thisAgentFnResult
+      return origNrFn(...args) // if origFn is defined, we want to return the value from that call (ie the first agent that was set)
+    }
   })
 }

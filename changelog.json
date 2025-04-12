@@ -4,6 +4,23 @@
     {
       "changes": [
         {
+          "type": "feat",
+          "sha": "b1a6c30bf78001f5286a614c229ceb7a256593aa",
+          "message": "Central Agent Architecture - Micro Front Ends",
+          "issues": [
+            "1266"
+          ]
+        }
+      ],
+      "version": "1.287.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "45cb14c6-2200-45ad-a1d8-a7912839781e",
+      "createTime": "2025-04-10T22:19:28.056Z"
+    },
+    {
+      "changes": [
+        {
           "type": "fix",
           "sha": "86014247ed45520adbbb053d94b6f11de48e239f",
           "message": "Patch `newrelic` event detail",
@@ -2742,5 +2759,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2025-04-01T22:28:52.259Z"
+  "updateTime": "2025-04-10T22:19:28.056Z"
 }

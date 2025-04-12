@@ -12,10 +12,20 @@ import { AgentBase } from '../agent-base'
 import { FEATURE_NAMES } from '../features/features'
 import { prefix } from './constants'
 
-export function setupAPI (name, fn, agent) {
+/**
+ * setupAPI is a utility function that assigns API methods to an object while emitting supportability metrics and global events.
+ * @param {string} name The API method name to be set up.
+ * @param {Function} fn The function to be executed when the API method is called.
+ * @param {Object} agent The agent instance.  Will be used if no object is provided to assign the api method to.
+ * @param {Object} [obj] The object to which the API method will be assigned.
+ * @returns {*} The output of the function being called.
+ */
+export function setupAPI (name, fn, agent, obj) {
+  /* use object if provided, otherwise use agent as base for api method assignment */
+  const api = (obj || agent)
   // We only set the global API event if the API is not already overridden from the default
-  if (agent[name] !== AgentBase.prototype[name]) return
-  agent[name] = function () {
+  if (!api || (!!api[name] && api[name] !== AgentBase.prototype[name])) return
+  api[name] = function () {
     handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/' + name + '/called'], undefined, FEATURE_NAMES.metrics, agent.ee)
     dispatchGlobalEvent({
       agentIdentifier: agent.agentIdentifier,

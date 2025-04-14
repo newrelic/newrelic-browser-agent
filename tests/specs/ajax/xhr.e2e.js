@@ -557,6 +557,4 @@ describe('XHR Ajax', () => {
       .find(metric => metric.params.pathname === '/delayed')
     expect(ajaxMetric).toBeUndefined()
   })
-
-  /** SOMETHING ABOUT THE ABOVE TEST MAKES THIS FAIL */
 })

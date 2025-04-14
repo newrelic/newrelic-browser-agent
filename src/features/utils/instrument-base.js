@@ -73,7 +73,7 @@ export class InstrumentBase extends FeatureBase {
    * @param {Object} [argsObjFromInstrument] - any values or references to pass down to aggregate
    * @returns void
    */
-  importAggregator (agentRef, argsObjFromInstrument = {}) {
+  importAggregator (agentRef, aggregator, argsObjFromInstrument = {}) {
     if (this.featAggregate || !this.auto) return
 
     let loadedSuccessfully
@@ -104,8 +104,7 @@ export class InstrumentBase extends FeatureBase {
           loadedSuccessfully(false) // aggregate module isn't loaded at all
           return
         }
-        const { lazyFeatureLoader } = await import(/* webpackChunkName: "lazy-feature-loader" */ './lazy-feature-loader')
-        const { Aggregate } = await lazyFeatureLoader(this.featureName, 'aggregate')
+        const { Aggregate } = await aggregator
         this.featAggregate = new Aggregate(agentRef, argsObjFromInstrument)
 
         agentRef.runtime.harvester.initializedAggregates.push(this.featAggregate) // "subscribe" the feature to future harvest intervals (PVE will start the timer)

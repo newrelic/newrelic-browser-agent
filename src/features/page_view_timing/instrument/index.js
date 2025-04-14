@@ -22,7 +22,7 @@ export class Instrument extends InstrumentBase {
     // Window fires its pagehide event (typically on navigation--this occurrence is a *subset* of vis change); don't defer this unless it's guarantee it cannot happen before load(?)
     windowAddEventListener('pagehide', () => handle('winPagehide', [now()], undefined, FEATURE_NAME, this.ee))
 
-    this.importAggregator(agentRef)
+    this.importAggregator(agentRef, import(/* webpackChunkName: "page_view_timing-aggregate" */ '../aggregate'))
   }
 }
 

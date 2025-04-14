@@ -46,7 +46,7 @@ export class Instrument extends InstrumentBase {
     }
 
     /** If any of the sources are active, import the aggregator. otherwise deregister */
-    if (genericEventSourceConfigs.some(x => x)) this.importAggregator(agentRef)
+    if (genericEventSourceConfigs.some(x => x)) this.importAggregator(agentRef, import(/* webpackChunkName: "generic_events-aggregate" */ '../aggregate'))
     else this.deregisterDrain()
   }
 }

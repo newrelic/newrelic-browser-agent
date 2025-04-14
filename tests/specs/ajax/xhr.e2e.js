@@ -173,30 +173,6 @@ describe('XHR Ajax', () => {
     expect(ajaxMetric.params.status).toEqual(0)
   })
 
-  it('produces no event and metric data when xhr is aborted', async () => {
-    await browser.url(await browser.testHandle.assetURL('ajax/xhr-abort.html'))
-      .then(() => browser.waitForAgentLoad())
-      .then(() => browser.execute(function () {
-        window.disableAjaxHashChange = true
-      }))
-
-    const [ajaxEventsHarvest, ajaxMetricsHarvest] = await Promise.all([
-      ajaxEventsCapture.waitForResult({ timeout: 10000 }),
-      ajaxMetricsCapture.waitForResult({ timeout: 10000 }),
-      $('#sendAjax').click()
-    ])
-
-    const ajaxEvent = ajaxEventsHarvest
-      .flatMap(harvest => harvest.request.body)
-      .find(event => event.path === '/delayed')
-    expect(ajaxEvent).toBeUndefined()
-
-    const ajaxMetric = ajaxMetricsHarvest
-      .flatMap(harvest => harvest.request.body.xhr)
-      .find(metric => metric.params.pathname === '/delayed')
-    expect(ajaxMetric).toBeUndefined()
-  })
-
   it('produces event and metric with correct transmit and receive size calculated', async () => {
     await browser.url(await browser.testHandle.assetURL('instrumented.html'))
       .then(() => browser.waitForAgentLoad())
@@ -557,4 +533,30 @@ describe('XHR Ajax', () => {
       return window.wrapperInvoked
     })).resolves.toEqual(true)
   })
+
+  it('produces no event and metric data when xhr is aborted', async () => {
+    await browser.url(await browser.testHandle.assetURL('ajax/xhr-abort.html'))
+      .then(() => browser.waitForAgentLoad())
+      .then(() => browser.execute(function () {
+        window.disableAjaxHashChange = true
+      }))
+
+    const [ajaxEventsHarvest, ajaxMetricsHarvest] = await Promise.all([
+      ajaxEventsCapture.waitForResult({ timeout: 10000 }),
+      ajaxMetricsCapture.waitForResult({ timeout: 10000 }),
+      $('#sendAjax').click()
+    ])
+
+    const ajaxEvent = ajaxEventsHarvest
+      .flatMap(harvest => harvest.request.body)
+      .find(event => event.path === '/delayed')
+    expect(ajaxEvent).toBeUndefined()
+
+    const ajaxMetric = ajaxMetricsHarvest
+      .flatMap(harvest => harvest.request.body.xhr)
+      .find(metric => metric.params.pathname === '/delayed')
+    expect(ajaxMetric).toBeUndefined()
+  })
+
+  /** SOMETHING ABOUT THE ABOVE TEST MAKES THIS FAIL */
 })

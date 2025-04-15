@@ -141,6 +141,13 @@ describe('reset()', () => {
     expect(session.state.custom?.test).toEqual(undefined)
     expect(session.read()?.custom?.test).toEqual(undefined)
   })
+
+  test('should increment numOfResets', () => {
+    const session = new SessionEntity({ agentIdentifier, key, storage, expiresMs: 10 })
+    expect(session.state.numOfResets).toEqual(0)
+    session.reset()
+    expect(session.state.numOfResets).toEqual(1)
+  })
 })
 
 describe('isNew', () => {
@@ -294,8 +301,8 @@ describe('isAfterSessionExpiry', () => {
     const now = Date.now()
     jest.setSystemTime(now)
     const session = new SessionEntity({ agentIdentifier, key, storage, expiresMs: 10 })
-    jest.advanceTimersByTime(20)
-    expect(session.state.numOfExpirations).toEqual(2)
+    jest.advanceTimersByTime(11)
+    expect(session.state.numOfResets).toEqual(1)
     expect(session.isAfterSessionExpiry()).toEqual(true)
   })
 

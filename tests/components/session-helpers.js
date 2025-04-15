@@ -41,5 +41,5 @@ export const model = {
   loggingMode: 0,
   serverTimeDiff: null,
   custom: {},
-  numOfExpirations: 0
+  numOfResets: 0
 }

@@ -1,5 +1,6 @@
 const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
+const { webpackCacheGroup } = require('../../bundler-tools/bundler-tools.js')
 
 const isProduction = process.env.NODE_ENV === 'production'
 const htmlTemplate = (script) => `<html>
@@ -67,6 +68,13 @@ const config = [
     },
     output: {
       path: path.resolve(__dirname, '../../../tests/assets/test-builds/browser-agent-wrapper')
+    },
+    optimization: {
+      splitChunks: {
+        cacheGroups: {
+          ...webpackCacheGroup()
+        }
+      }
     },
     module: {
       rules: [

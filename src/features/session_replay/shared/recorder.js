@@ -154,6 +154,10 @@ export class Recorder {
   /** Store a payload in the buffer (this.#events).  This should be the callback to the recording lib noticing a mutation */
   store (event, isCheckout) {
     if (!event) return
+    if (this.parent.agentRef.runtime?.session?.isAfterSessionExpiry(event.timestamp)) {
+      this.parent.reportSupportabilityMetric('Session/Expired/SessionReplay/Seen')
+      return
+    }
 
     if (!(this.parent instanceof AggregateBase) && this.#preloaded.length) this.currentBufferTarget = this.#preloaded[this.#preloaded.length - 1]
     else this.currentBufferTarget = this.#events

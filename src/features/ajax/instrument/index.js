@@ -62,7 +62,7 @@ export class Instrument extends InstrumentBase {
     wrapXhr(this.ee)
     subscribeToEvents(agentRef, this.ee, this.handler, this.dt)
 
-    this.importAggregator(agentRef)
+    this.importAggregator(agentRef, import(/* webpackChunkName: "ajax-aggregate" */ '../aggregate/index.js'))
   }
 }
 

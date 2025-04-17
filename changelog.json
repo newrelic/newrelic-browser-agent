@@ -5,6 +5,47 @@
       "changes": [
         {
           "type": "feat",
+          "sha": "5819b649792b6227d49173ecb326f918b1f39bdb",
+          "message": "Prevent storing session data past session expiry",
+          "issues": [
+            "1426"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "7dd8b6217763c57c382737b6ff90667066437b75",
+          "message": "Reset `notified` when replay stops recording",
+          "issues": [
+            "1435"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "ab315dc009a45911911f5d176978fac0cf066be3",
+          "message": "Solve race condition in logging abort",
+          "issues": [
+            "1445"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "8d7bdd63abe0b6d9dfccc46f63845bde0fd099a4",
+          "message": "Introduce isFirstOfSession attribute on InitialPageLoad events",
+          "issues": [
+            "1432"
+          ]
+        }
+      ],
+      "version": "1.288.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "aa62ba28-420a-4316-bcc6-f6bcdadefa6c",
+      "createTime": "2025-04-16T17:53:15.185Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
           "sha": "b1a6c30bf78001f5286a614c229ceb7a256593aa",
           "message": "Central Agent Architecture - Micro Front Ends",
           "issues": [
@@ -2759,5 +2800,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2025-04-10T22:19:28.056Z"
+  "updateTime": "2025-04-16T17:53:15.185Z"
 }

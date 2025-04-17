@@ -256,3 +256,8 @@ test('can harvest early', async () => {
   expect(handleModule.handle).toHaveBeenCalledWith(...harvestEarlySm)
   expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalled()
 })
+
+test('should not error if aborting before events have been set', async () => {
+  delete loggingAggregate.events
+  expect(() => loggingAggregate.abort()).not.toThrow()
+})

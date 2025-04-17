@@ -2,7 +2,6 @@ import { faker } from '@faker-js/faker'
 import { FEATURE_NAMES } from '../../src/loaders/features/features'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../src/features/metrics/constants'
 import { setAPI } from '../../src/loaders/api/api'
-import { setInfo } from '../../src/common/config/info'
 import * as drainModule from '../../src/common/drain/drain'
 import * as runtimeModule from '../../src/common/constants/runtime'
 import * as asyncApiModule from '../../src/loaders/api/apiAsync'
@@ -29,28 +28,25 @@ describe('setAPI', () => {
   })
 
   test('should add expected api methods returned object', () => {
-    const apiInterface = setAPI(agent, true)
-
-    expect(Object.keys(apiInterface).length).toEqual(19)
-    expect(typeof apiInterface.setErrorHandler).toEqual('function')
-    expect(typeof apiInterface.finished).toEqual('function')
-    expect(typeof apiInterface.addToTrace).toEqual('function')
-    expect(typeof apiInterface.addRelease).toEqual('function')
-    expect(typeof apiInterface.addPageAction).toEqual('function')
-    expect(typeof apiInterface.recordCustomEvent).toEqual('function')
-    expect(typeof apiInterface.setCurrentRouteName).toEqual('function')
-    expect(typeof apiInterface.setPageViewName).toEqual('function')
-    expect(typeof apiInterface.setCustomAttribute).toEqual('function')
-    expect(typeof apiInterface.interaction).toEqual('function')
-    expect(typeof apiInterface.noticeError).toEqual('function')
-    expect(typeof apiInterface.setUserId).toEqual('function')
-    expect(typeof apiInterface.setApplicationVersion).toEqual('function')
-    expect(typeof apiInterface.start).toEqual('function')
-    expect(typeof apiInterface[SR_EVENT_EMITTER_TYPES.RECORD]).toEqual('function')
-    expect(typeof apiInterface[SR_EVENT_EMITTER_TYPES.PAUSE]).toEqual('function')
-    expect(typeof apiInterface.log).toEqual('function')
-    expect(typeof apiInterface.wrapLogger).toEqual('function')
-    expect(typeof apiInterface.register).toEqual('function')
+    expect(typeof agent.setErrorHandler).toEqual('function')
+    expect(typeof agent.finished).toEqual('function')
+    expect(typeof agent.addToTrace).toEqual('function')
+    expect(typeof agent.addRelease).toEqual('function')
+    expect(typeof agent.addPageAction).toEqual('function')
+    expect(typeof agent.recordCustomEvent).toEqual('function')
+    expect(typeof agent.setCurrentRouteName).toEqual('function')
+    expect(typeof agent.setPageViewName).toEqual('function')
+    expect(typeof agent.setCustomAttribute).toEqual('function')
+    expect(typeof agent.interaction).toEqual('function')
+    expect(typeof agent.noticeError).toEqual('function')
+    expect(typeof agent.setUserId).toEqual('function')
+    expect(typeof agent.setApplicationVersion).toEqual('function')
+    expect(typeof agent.start).toEqual('function')
+    expect(typeof agent[SR_EVENT_EMITTER_TYPES.RECORD]).toEqual('function')
+    expect(typeof agent[SR_EVENT_EMITTER_TYPES.PAUSE]).toEqual('function')
+    expect(typeof agent.log).toEqual('function')
+    expect(typeof agent.wrapLogger).toEqual('function')
+    expect(typeof agent.register).toEqual('function')
   })
 
   test('should register api drain when not forced', () => {
@@ -64,14 +60,14 @@ describe('setAPI', () => {
 
   test('should immediately load the async APIs when not in a browser scope', async () => {
     jest.replaceProperty(runtimeModule, 'isBrowserScope', false)
-    jest.spyOn(asyncApiModule, 'setAPI')
+    jest.spyOn(asyncApiModule, 'setAsyncAPI')
     jest.spyOn(drainModule, 'drain')
 
     setAPI(agent, true)
     await new Promise(process.nextTick)
 
-    expect(asyncApiModule.setAPI).toHaveBeenCalledTimes(1)
-    expect(asyncApiModule.setAPI).toHaveBeenCalledWith(agent.agentIdentifier)
+    expect(asyncApiModule.setAsyncAPI).toHaveBeenCalledTimes(1)
+    expect(asyncApiModule.setAsyncAPI).toHaveBeenCalledWith(agent)
     expect(drainModule.drain).toHaveBeenCalledTimes(1)
     expect(drainModule.drain).toHaveBeenCalledWith(agent.agentIdentifier, 'api')
   })
@@ -79,13 +75,13 @@ describe('setAPI', () => {
   test('should wait to load the async APIs when in a browser scope', async () => {
     jest.spyOn(windowLoadModule, 'onWindowLoad').mockImplementation(() => {})
     jest.replaceProperty(runtimeModule, 'isBrowserScope', true)
-    jest.spyOn(asyncApiModule, 'setAPI')
+    jest.spyOn(asyncApiModule, 'setAsyncAPI')
     jest.spyOn(drainModule, 'drain')
 
     setAPI(agent, true)
     await new Promise(process.nextTick)
 
-    expect(asyncApiModule.setAPI).not.toHaveBeenCalled()
+    expect(asyncApiModule.setAsyncAPI).not.toHaveBeenCalled()
     expect(windowLoadModule.onWindowLoad).toHaveBeenCalledTimes(1)
     expect(windowLoadModule.onWindowLoad).toHaveBeenCalledWith(expect.any(Function), true)
 
@@ -93,8 +89,8 @@ describe('setAPI', () => {
     windowLoad()
     await new Promise(process.nextTick)
 
-    expect(asyncApiModule.setAPI).toHaveBeenCalledTimes(1)
-    expect(asyncApiModule.setAPI).toHaveBeenCalledWith(agent.agentIdentifier)
+    expect(asyncApiModule.setAsyncAPI).toHaveBeenCalledTimes(1)
+    expect(asyncApiModule.setAsyncAPI).toHaveBeenCalledWith(agent)
     expect(drainModule.drain).toHaveBeenCalledTimes(1)
     expect(drainModule.drain).toHaveBeenCalledWith(agent.agentIdentifier, 'api')
   })
@@ -108,10 +104,10 @@ describe('setAPI', () => {
     jest.spyOn(windowLoadModule, 'onWindowLoad').mockImplementation(() => {})
     jest.replaceProperty(runtimeModule, 'isBrowserScope', true)
 
-    const apiInterface = setAPI(agent, true)
+    setAPI(agent, true)
     await new Promise(process.nextTick)
 
-    apiInterface[api](...args)
+    agent[api](...args)
 
     expect(handleModule.handle).toHaveBeenCalledWith(
       SUPPORTABILITY_METRIC_CHANNEL,
@@ -130,16 +126,14 @@ describe('setAPI', () => {
   })
 
   describe('addPageAction', () => {
-    let apiInterface
-
     beforeEach(async () => {
-      apiInterface = setAPI(agent, true)
+      setAPI(agent, true)
       await new Promise(process.nextTick)
     })
 
     test('should create event emitter event for calls to API', () => {
       const args = [faker.string.uuid(), faker.string.uuid()]
-      apiInterface.addPageAction(...args)
+      agent.addPageAction(...args)
 
       expect(handleModule.handle).toHaveBeenCalledTimes(2)
       expect(handleModule.handle).toHaveBeenCalledWith(
@@ -160,16 +154,15 @@ describe('setAPI', () => {
   })
 
   describe('setCurrentRouteName', () => {
-    let apiInterface
-
     beforeEach(async () => {
-      apiInterface = setAPI(agent, true)
+      setAPI(agent, true)
       await new Promise(process.nextTick)
     })
 
     test('should create event emitter event for calls to API', () => {
+      setAPI(agent, true)
       const args = [faker.string.uuid(), faker.string.uuid()]
-      apiInterface.setCurrentRouteName(...args)
+      agent.setCurrentRouteName(...args)
 
       expect(handleModule.handle).toHaveBeenCalledTimes(2)
       expect(handleModule.handle).toHaveBeenCalledWith(
@@ -190,16 +183,14 @@ describe('setAPI', () => {
   })
 
   describe('setPageViewName', () => {
-    let apiInterface
-
     beforeEach(async () => {
-      apiInterface = setAPI(agent, true)
+      setAPI(agent, true)
       await new Promise(process.nextTick)
     })
 
     test('should only create SM event emitter event for calls to API', () => {
       const args = [faker.string.uuid(), faker.string.uuid()]
-      apiInterface.setPageViewName(...args)
+      agent.setPageViewName(...args)
 
       expect(handleModule.handle).toHaveBeenCalledTimes(1)
       expect(handleModule.handle).toHaveBeenCalledWith(
@@ -213,7 +204,7 @@ describe('setAPI', () => {
 
     test.each([null, undefined])('should return early when name is %s', (name) => {
       const args = [name, faker.string.uuid()]
-      apiInterface.setPageViewName(...args)
+      agent.setPageViewName(...args)
 
       expect(handleModule.handle).not.toHaveBeenCalled()
       expect(agent.runtime.customTransaction).toEqual(undefined)
@@ -221,37 +212,35 @@ describe('setAPI', () => {
 
     test('should use a default host when one is not provided', () => {
       const args = [faker.string.uuid()]
-      apiInterface.setPageViewName(...args)
+      agent.setPageViewName(...args)
 
       expect(agent.runtime.customTransaction).toEqual(`http://custom.transaction/${args[0]}`)
     })
 
     test('should use the host provided', () => {
       const args = [faker.string.uuid(), faker.string.uuid()]
-      apiInterface.setPageViewName(...args)
+      agent.setPageViewName(...args)
 
       expect(agent.runtime.customTransaction).toEqual(`${args[1]}/${args[0]}`)
     })
 
     test('should not prepend name with slash when it is provided with one', () => {
       const args = ['/' + faker.string.uuid()]
-      apiInterface.setPageViewName(...args)
+      agent.setPageViewName(...args)
 
       expect(agent.runtime.customTransaction).toEqual(`http://custom.transaction${args[0]}`)
     })
   })
 
   describe('setCustomAttribute', () => {
-    let apiInterface
-
     beforeEach(async () => {
-      apiInterface = setAPI(agent, true)
+      setAPI(agent, true)
       await new Promise(process.nextTick)
     })
 
     test('should only create SM event emitter event for calls to API', () => {
       const args = [faker.string.uuid(), faker.string.uuid()]
-      apiInterface.setCustomAttribute(...args)
+      agent.setCustomAttribute(...args)
 
       expect(handleModule.handle).toHaveBeenCalledTimes(1)
       expect(handleModule.handle).toHaveBeenCalledWith(
@@ -265,7 +254,7 @@ describe('setAPI', () => {
 
     test.each([null, undefined, {}, []])('should return early and warn when name is not a string (%s)', (name) => {
       const args = [name, faker.string.uuid()]
-      apiInterface.setCustomAttribute(...args)
+      agent.setCustomAttribute(...args)
 
       expect(console.debug).toHaveBeenCalledTimes(1)
       expect(console.debug).toHaveBeenCalledWith(expect.stringContaining('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#39'), typeof name)
@@ -273,7 +262,7 @@ describe('setAPI', () => {
 
     test.each([undefined, {}, [], Symbol('foobar')])('should return early and warn when value is not a string, number, or null (%s)', (value) => {
       const args = [faker.string.uuid(), value]
-      apiInterface.setCustomAttribute(...args)
+      agent.setCustomAttribute(...args)
 
       expect(console.debug).toHaveBeenCalledTimes(1)
       expect(console.debug).toHaveBeenCalledWith(expect.stringContaining('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#40'), typeof value)
@@ -281,21 +270,21 @@ describe('setAPI', () => {
 
     test('should set a custom attribute with a string value', () => {
       const args = [faker.string.uuid(), faker.string.uuid()]
-      apiInterface.setCustomAttribute(...args)
+      agent.setCustomAttribute(...args)
 
       expect(agent.info.jsAttributes[args[0]]).toEqual(args[1])
     })
 
     test('should set a custom attribute with a number value', () => {
       const args = [faker.string.uuid(), faker.number.int()]
-      apiInterface.setCustomAttribute(...args)
+      agent.setCustomAttribute(...args)
 
       expect(agent.info.jsAttributes[args[0]]).toEqual(args[1])
     })
 
     test('should set a custom attribute with a boolean value', () => {
       const args = [faker.string.uuid(), faker.datatype.boolean()]
-      apiInterface.setCustomAttribute(...args)
+      agent.setCustomAttribute(...args)
 
       expect(agent.info.jsAttributes[args[0]]).toEqual(args[1])
     })
@@ -308,7 +297,7 @@ describe('setAPI', () => {
           [args[0]]: faker.string.uuid()
         }
       }
-      apiInterface.setCustomAttribute(...args)
+      agent.setCustomAttribute(...args)
 
       expect(agent.info.jsAttributes[args[0]]).toEqual(undefined)
     })
@@ -318,7 +307,7 @@ describe('setAPI', () => {
       faker.string.uuid()
     ])('should create session event emitter event when persisting value %s', (value) => {
       const args = [faker.string.uuid(), value, true]
-      apiInterface.setCustomAttribute(...args)
+      agent.setCustomAttribute(...args)
 
       expect(handleModule.handle).toHaveBeenCalledTimes(2)
       expect(handleModule.handle).toHaveBeenCalledWith(
@@ -332,7 +321,7 @@ describe('setAPI', () => {
 
     test('should always create session event emitter event when value is null and persistance argument is false', () => {
       const args = [faker.string.uuid(), null, false]
-      apiInterface.setCustomAttribute(...args)
+      agent.setCustomAttribute(...args)
 
       expect(handleModule.handle).toHaveBeenCalledTimes(2)
       expect(handleModule.handle).toHaveBeenCalledWith(
@@ -346,16 +335,14 @@ describe('setAPI', () => {
   })
 
   describe('setUserId', () => {
-    let apiInterface
-
     beforeEach(async () => {
-      apiInterface = setAPI(agent, true)
+      setAPI(agent, true)
       await new Promise(process.nextTick)
     })
 
     test('should always persist the user id attribute', () => {
       const args = [faker.string.uuid()]
-      apiInterface.setUserId(...args)
+      agent.setUserId(...args)
 
       expect(handleModule.handle).toHaveBeenCalledTimes(2)
       expect(handleModule.handle).toHaveBeenCalledWith(
@@ -375,18 +362,17 @@ describe('setAPI', () => {
     })
 
     test.each([123, undefined, {}, []])('should return early and warn when value is not a string or null (%s)', (value) => {
-      const args = [value]
-      apiInterface.setUserId(...args)
+      agent.setUserId(value)
 
       expect(console.debug).toHaveBeenCalledTimes(1)
       expect(console.debug).toHaveBeenCalledWith(expect.stringContaining('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#41'), typeof value)
     })
 
     test('should set a custom attribute with name enduser.id', () => {
-      const args = [faker.string.uuid()]
-      apiInterface.setUserId(...args)
+      const userId = faker.string.uuid()
+      agent.setUserId(userId)
 
-      expect(agent.info.jsAttributes['enduser.id']).toEqual(args[0])
+      expect(agent.info.jsAttributes['enduser.id']).toEqual(userId)
     })
 
     test('should delete custom attribute when value is null', () => {
@@ -397,23 +383,20 @@ describe('setAPI', () => {
           'enduser.id': faker.string.uuid()
         }
       }
-      apiInterface.setUserId(...args)
+      agent.setUserId(...args)
 
       expect(agent.info.jsAttributes['enduser.id']).toEqual(undefined)
     })
   })
 
   describe('setApplicationVersion', () => {
-    let apiInterface
-
     beforeEach(async () => {
-      apiInterface = setAPI(agent, true)
+      setAPI(agent, true)
       await new Promise(process.nextTick)
     })
 
     test('should only create SM event emitter event for calls to API', () => {
-      const args = [faker.string.uuid()]
-      apiInterface.setApplicationVersion(...args)
+      agent.setApplicationVersion(faker.string.uuid())
 
       expect(handleModule.handle).toHaveBeenCalledTimes(1)
       expect(handleModule.handle).toHaveBeenCalledWith(
@@ -426,8 +409,7 @@ describe('setAPI', () => {
     })
 
     test.each([123, undefined, {}, []])('should return early and warn when value is not a string or null (%s)', (value) => {
-      const args = [value]
-      apiInterface.setApplicationVersion(...args)
+      agent.setApplicationVersion(value)
 
       expect(console.debug).toHaveBeenCalledTimes(1)
       expect(console.debug).toHaveBeenCalledWith(expect.stringContaining('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#42'), typeof value)
@@ -435,35 +417,33 @@ describe('setAPI', () => {
 
     test('should set a custom attribute with name application.version', () => {
       const args = [faker.string.uuid()]
-      apiInterface.setApplicationVersion(...args)
+      agent.setApplicationVersion(...args)
 
       expect(agent.info.jsAttributes['application.version']).toEqual(args[0])
     })
 
     test('should delete custom attribute when value is null', () => {
       const args = [null]
-      setInfo(agent, {
+      agent.info = {
         ...(agent.info),
         jsAttributes: {
           'application.version': faker.string.uuid()
         }
-      })
-      apiInterface.setApplicationVersion(...args)
+      }
+      agent.setApplicationVersion(...args)
 
       expect(agent.info.jsAttributes['application.version']).toEqual(undefined)
     })
   })
 
   describe('start', () => {
-    let apiInterface
-
     beforeEach(async () => {
-      apiInterface = setAPI(agent, true)
+      setAPI(agent, true)
       await new Promise(process.nextTick)
     })
 
     test('should create SM event emitter event for calls to API', () => {
-      apiInterface.start()
+      agent.start()
 
       expect(handleModule.handle).toHaveBeenCalledTimes(1)
       expect(handleModule.handle).toHaveBeenCalledWith(
@@ -476,13 +456,13 @@ describe('setAPI', () => {
     })
 
     test('should emit event to start all features (if not auto)', () => {
-      apiInterface.start()
+      agent.start()
       expect(agent.ee.emit).toHaveBeenCalledWith('manual-start-all')
     })
 
     test('should emit start even if some arg is passed', () => {
       const badFeatureName = faker.string.uuid()
-      apiInterface.start(badFeatureName)
+      agent.start(badFeatureName)
 
       expect(agent.ee.emit).toHaveBeenCalledWith('manual-start-all')
       expect(agent.ee.emit).not.toHaveBeenCalledWith(badFeatureName)
@@ -491,16 +471,13 @@ describe('setAPI', () => {
   })
 
   describe('noticeError', () => {
-    let apiInterface
-
     beforeEach(async () => {
-      apiInterface = setAPI(agent, true)
+      setAPI(agent, true)
       await new Promise(process.nextTick)
     })
 
     test('should create event emitter event for calls to API', () => {
-      const args = [faker.string.uuid()]
-      apiInterface.noticeError(...args)
+      agent.noticeError(faker.string.uuid())
 
       expect(handleModule.handle).toHaveBeenCalledTimes(2)
       expect(handleModule.handle).toHaveBeenCalledWith(
@@ -521,7 +498,7 @@ describe('setAPI', () => {
 
     test('should pass the error object as is when provided', () => {
       const args = [new Error(faker.string.uuid())]
-      apiInterface.noticeError(...args)
+      agent.noticeError(...args)
 
       expect(handleModule.handle).toHaveBeenCalledWith(
         'err',
@@ -538,7 +515,7 @@ describe('setAPI', () => {
         [faker.string.uuid()]: faker.string.uuid(),
         [faker.string.uuid()]: faker.string.uuid()
       }]
-      apiInterface.noticeError(...args)
+      agent.noticeError(...args)
 
       expect(handleModule.handle).toHaveBeenCalledWith(
         'err',
@@ -551,7 +528,7 @@ describe('setAPI', () => {
   })
 
   describe('register', () => {
-    let apiInterface, licenseKey, applicationID
+    let licenseKey, applicationID
     let gotApiSendRumCall = false
 
     const expectHandle = (type, args, count = 1) => {
@@ -567,13 +544,14 @@ describe('setAPI', () => {
     beforeEach(async () => {
       licenseKey = faker.string.uuid()
       applicationID = faker.string.uuid()
-      apiInterface = setAPI(agent, true)
       await new Promise(process.nextTick)
+      const randomEntityGuid = faker.string.uuid()
 
       agent.ee.on('api-send-rum', () => {
         gotApiSendRumCall = true
+        agent.runtime.entityManager.set(randomEntityGuid, { applicationID, licenseKey, entityGuid: randomEntityGuid })
         setTimeout(() => agent.ee.emit('entity-added', [{
-          entityGuid,
+          entityGuid: randomEntityGuid,
           applicationID,
           licenseKey
         }]), 100)
@@ -584,42 +562,51 @@ describe('setAPI', () => {
     })
 
     test('should return api object', async () => {
-      const myApi = apiInterface.register({ licenseKey, applicationID })
+      const myApi = agent.register({ licenseKey, applicationID })
 
       expectApiSendRum()
 
-      await myApi.metadata.connected
-
-      expect(myApi).toMatchObject({
-        noticeError: expect.any(Function),
-        log: expect.any(Function),
-        addPageAction: expect.any(Function),
-        setCustomAttribute: expect.any(Function),
-        setUserId: expect.any(Function),
-        setApplicationVersion: expect.any(Function),
-        metadata: {
-          customAttributes: {},
-          target: { licenseKey, applicationID, entityGuid },
-          connected: expect.any(Promise)
-        }
+      /** wait for entity guid to be assigned */
+      myApi.metadata.connected.then(() => {
+        expect(myApi).toMatchObject({
+          noticeError: expect.any(Function),
+          log: expect.any(Function),
+          addPageAction: expect.any(Function),
+          setCustomAttribute: expect.any(Function),
+          setUserId: expect.any(Function),
+          setApplicationVersion: expect.any(Function),
+          metadata: {
+            customAttributes: {},
+            target: { licenseKey, applicationID, entityGuid },
+            connected: expect.any(Promise)
+          }
+        })
+      }).catch(() => {
+        // should not have hit catch block
+        expect(1).toEqual(2)
       })
     })
 
     ;[{ applicationID }, { licenseKey }].forEach(opts => {
-      test('should warn and not work if invalid target', () => {
-        let myApi = apiInterface.register(opts)
+      test('should warn and not work if invalid target', (done) => {
+        let myApi = agent.register(opts)
         expectApiSendRum(false)
-        expect(console.debug).toHaveBeenCalledWith('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#47', opts)
+        expect(console.debug).toHaveBeenCalledWith('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#48', opts)
         myApi.addPageAction()
         myApi.noticeError()
         myApi.log()
         expect(console.debug).toHaveBeenCalledTimes(5)
+        myApi.metadata.connected.then(() => {
+          expect(1).toEqual(2) // should not get "then" here
+        }).catch(() => {
+          done()
+        })
       })
     })
 
-    test('should warn and not work if disabled', () => {
+    test('should warn and not work if disabled', (done) => {
       agent.init.api.allow_registered_children = false
-      let myApi = apiInterface.register({ licenseKey, applicationID })
+      let myApi = agent.register({ licenseKey, applicationID })
       expectApiSendRum(false)
       expect(console.debug.mock.calls.map(call => call[0]).some(tag => tag.includes('#54'))).toEqual(true)
       myApi.addPageAction()
@@ -627,10 +614,35 @@ describe('setAPI', () => {
       myApi.log()
       expect(console.debug).toHaveBeenCalledTimes(5)
       agent.init.api.allow_registered_children = true
+
+      myApi.metadata.connected.then(() => {
+        expect(1).toEqual(2) // should not get "then" here
+      }).catch(() => {
+        done()
+      })
+    })
+
+    test('should skip rum call if already registered', (done) => {
+      // console.log('first', licenseKey, applicationID)
+      let myApi = agent.register({ licenseKey, applicationID })
+
+      myApi.metadata.connected.then((firstApi) => {
+        expect(firstApi).toEqual(myApi)
+        expectApiSendRum()
+        gotApiSendRumCall = false
+
+        let mySecondApiWithMatchingTarget = agent.register({ licenseKey, applicationID })
+
+        mySecondApiWithMatchingTarget.metadata.connected.then((secondApi) => {
+          expect(secondApi.metadata.entityGuid).toEqual(firstApi.metadata.entityGuid)
+          expectApiSendRum(false)
+          done()
+        })
+      })
     })
 
     test('should update custom attributes', () => {
-      const myApi = apiInterface.register({ licenseKey, applicationID, entityGuid })
+      const myApi = agent.register({ licenseKey, applicationID, entityGuid })
 
       expectApiSendRum()
 
@@ -650,7 +662,7 @@ describe('setAPI', () => {
     test('should duplicate data with config - true', async () => {
       agent.init.api.duplicate_registered_data = true
       const target = { licenseKey, applicationID }
-      const myApi = apiInterface.register(target)
+      const myApi = agent.register(target)
 
       expectApiSendRum()
 
@@ -658,22 +670,24 @@ describe('setAPI', () => {
 
       myApi.log('test', { customAttributes: customAttrs })
 
-      await myApi.metadata.connected
-      await new Promise(process.nextTick)
+      myApi.metadata.connected.catch(() => {
+        // should not have hit catch block
+        expect(1).toEqual(2)
+      }).then(() => {
+        expectHandle('storeSupportabilityMetrics', 'API/register/called', 1)
+        expectHandle('storeSupportabilityMetrics', 'API/register/log/called', 1)
+        expectHandle('storeSupportabilityMetrics', 'API/log/called', 2)
+        expectHandle('storeSupportabilityMetrics', 'API/logging/info/called', 2)
+        expectHandle('log', 'test', 2)
 
-      expectHandle('storeSupportabilityMetrics', 'API/register/called', 1)
-      expectHandle('storeSupportabilityMetrics', 'API/register/log/called', 1)
-      expectHandle('storeSupportabilityMetrics', 'API/log/called', 2)
-      expectHandle('storeSupportabilityMetrics', 'API/logging/info/called', 2)
-      expectHandle('log', 'test', 2)
-
-      agent.init.api.duplicate_registered_data = false
+        agent.init.api.duplicate_registered_data = false
+      })
     })
 
     test('should duplicate data with config - matching entity guid', async () => {
       agent.init.api.duplicate_registered_data = [entityGuid]
       const target = { licenseKey, applicationID }
-      const myApi = apiInterface.register(target)
+      const myApi = agent.register(target)
 
       expectApiSendRum()
 
@@ -681,14 +695,16 @@ describe('setAPI', () => {
 
       myApi.log('test', { customAttributes: customAttrs })
 
-      await myApi.metadata.connected
-      await new Promise(process.nextTick)
-
-      expectHandle('storeSupportabilityMetrics', 'API/register/called', 1)
-      expectHandle('storeSupportabilityMetrics', 'API/register/log/called', 1)
-      expectHandle('storeSupportabilityMetrics', 'API/log/called', 2)
-      expectHandle('storeSupportabilityMetrics', 'API/logging/info/called', 2)
-      expectHandle('log', 'test', 2)
+      myApi.metadata.connected.catch(() => {
+        // should not have hit catch block
+        expect(1).toEqual(2)
+      }).then(() => {
+        expectHandle('storeSupportabilityMetrics', 'API/register/called', 1)
+        expectHandle('storeSupportabilityMetrics', 'API/register/log/called', 1)
+        expectHandle('storeSupportabilityMetrics', 'API/log/called', 2)
+        expectHandle('storeSupportabilityMetrics', 'API/logging/info/called', 2)
+        expectHandle('log', 'test', 2)
+      })
 
       agent.init.api.duplicate_registered_data = false
     })
@@ -696,7 +712,7 @@ describe('setAPI', () => {
     test('should NOT duplicate data with config - non-matching entity guid', async () => {
       agent.init.api.duplicate_registered_data = [faker.string.uuid()]
       const target = { licenseKey, applicationID }
-      const myApi = apiInterface.register(target)
+      const myApi = agent.register(target)
 
       expectApiSendRum()
 
@@ -704,14 +720,16 @@ describe('setAPI', () => {
 
       myApi.log('test', { customAttributes: customAttrs })
 
-      await myApi.metadata.connected
-      await new Promise(process.nextTick)
-
-      expectHandle('storeSupportabilityMetrics', 'API/register/called', 1)
-      expectHandle('storeSupportabilityMetrics', 'API/register/log/called', 1)
-      expectHandle('storeSupportabilityMetrics', 'API/log/called', 1)
-      expectHandle('storeSupportabilityMetrics', 'API/logging/info/called', 1)
-      expectHandle('log', 'test', 1)
+      myApi.metadata.connected.catch(() => {
+        // should not have hit catch block
+        expect(1).toEqual(2)
+      }).then(() => {
+        expectHandle('storeSupportabilityMetrics', 'API/register/called', 1)
+        expectHandle('storeSupportabilityMetrics', 'API/register/log/called', 1)
+        expectHandle('storeSupportabilityMetrics', 'API/log/called', 1)
+        expectHandle('storeSupportabilityMetrics', 'API/logging/info/called', 1)
+        expectHandle('log', 'test', 1)
+      })
 
       agent.init.api.duplicate_registered_data = false
     })
@@ -719,7 +737,7 @@ describe('setAPI', () => {
     describe('noticeError', () => {
       test('should call base apis', async () => {
         const target = { licenseKey, applicationID }
-        const myApi = apiInterface.register(target)
+        const myApi = agent.register(target)
 
         expectApiSendRum()
 
@@ -728,18 +746,22 @@ describe('setAPI', () => {
 
         myApi.noticeError(err, customAttrs)
 
-        await myApi.metadata.connected
-        expectHandle('storeSupportabilityMetrics', 'API/register/called')
-        expectHandle('storeSupportabilityMetrics', 'API/register/noticeError/called')
-        expectHandle('storeSupportabilityMetrics', 'API/noticeError/called')
-        expectHandle('err', err)
+        myApi.metadata.connected.catch(() => {
+          // should not have hit catch block
+          expect(1).toEqual(2)
+        }).then(() => {
+          expectHandle('storeSupportabilityMetrics', 'API/register/called')
+          expectHandle('storeSupportabilityMetrics', 'API/register/noticeError/called')
+          expectHandle('storeSupportabilityMetrics', 'API/noticeError/called')
+          expectHandle('err', err)
+        })
       })
     })
 
     describe('addPageAction', () => {
       test('should call base apis', async () => {
         const target = { licenseKey, applicationID }
-        const myApi = apiInterface.register(target)
+        const myApi = agent.register(target)
 
         expectApiSendRum()
 
@@ -747,19 +769,22 @@ describe('setAPI', () => {
 
         myApi.addPageAction('test', customAttrs)
 
-        await myApi.metadata.connected
-
-        expectHandle('storeSupportabilityMetrics', 'API/register/called')
-        expectHandle('storeSupportabilityMetrics', 'API/register/addPageAction/called')
-        expectHandle('storeSupportabilityMetrics', 'API/addPageAction/called')
-        expectHandle('api-addPageAction', 'test')
+        myApi.metadata.connected.catch(() => {
+          // should not have hit catch block
+          expect(1).toEqual(2)
+        }).then(() => {
+          expectHandle('storeSupportabilityMetrics', 'API/register/called')
+          expectHandle('storeSupportabilityMetrics', 'API/register/addPageAction/called')
+          expectHandle('storeSupportabilityMetrics', 'API/addPageAction/called')
+          expectHandle('api-addPageAction', 'test')
+        })
       })
     })
 
     describe('log', () => {
       test('should call base apis', async () => {
         const target = { licenseKey, applicationID }
-        const myApi = apiInterface.register(target)
+        const myApi = agent.register(target)
 
         expectApiSendRum()
 
@@ -767,30 +792,33 @@ describe('setAPI', () => {
 
         myApi.log('test', { customAttributes: customAttrs })
 
-        await myApi.metadata.connected
-
-        expectHandle('storeSupportabilityMetrics', 'API/register/called')
-        expectHandle('storeSupportabilityMetrics', 'API/register/log/called')
-        expectHandle('storeSupportabilityMetrics', 'API/log/called')
-        expectHandle('storeSupportabilityMetrics', 'API/logging/info/called')
-        expectHandle('log', 'test')
+        myApi.metadata.connected.catch(() => {
+          // should not have hit catch block
+          expect(1).toEqual(2)
+        }).then(() => {
+          expectHandle('storeSupportabilityMetrics', 'API/register/called')
+          expectHandle('storeSupportabilityMetrics', 'API/register/log/called')
+          expectHandle('storeSupportabilityMetrics', 'API/log/called')
+          expectHandle('storeSupportabilityMetrics', 'API/logging/info/called')
+          expectHandle('log', 'test')
+        })
       })
     })
   })
 
   describe('logging', () => {
-    let apiInterface
     beforeEach(async () => {
-      apiInterface = setAPI(agent, true)
+      setAPI(agent, true)
       await new Promise(process.nextTick)
     })
+
     describe('wrapLogger', () => {
       test('should emit events for calls by wrapped function - defaults', () => {
         const myLoggerPackage = {
           myObservedLogger: jest.fn(),
           myUnobservedLogger: jest.fn()
         }
-        apiInterface.wrapLogger(myLoggerPackage, 'myObservedLogger')
+        agent.wrapLogger(myLoggerPackage, 'myObservedLogger')
 
         /** emits data for observed fn */
         myLoggerPackage.myObservedLogger('test1')
@@ -816,7 +844,7 @@ describe('setAPI', () => {
         const myLoggerPackage = {
           [randomMethodName]: jest.fn()
         }
-        apiInterface.wrapLogger(myLoggerPackage, randomMethodName, { level: 'warn' })
+        agent.wrapLogger(myLoggerPackage, randomMethodName, { level: 'warn' })
 
         /** emits data for observed fn */
         myLoggerPackage[randomMethodName]('test1')
@@ -835,7 +863,7 @@ describe('setAPI', () => {
         const myLoggerPackage = {
           [randomMethodName]: jest.fn()
         }
-        apiInterface.wrapLogger(myLoggerPackage, randomMethodName)
+        agent.wrapLogger(myLoggerPackage, randomMethodName)
 
         /** emits data for observed fn */
         myLoggerPackage[randomMethodName]('test1', { test2: 2 }, ['test3'], true, 1)
@@ -854,7 +882,7 @@ describe('setAPI', () => {
         const myLoggerPackage = {
           [randomMethodName]: jest.fn((arg) => arg + ' returned')
         }
-        apiInterface.wrapLogger(myLoggerPackage, randomMethodName)
+        agent.wrapLogger(myLoggerPackage, randomMethodName)
 
         /** emits data for observed fn */
         const output = myLoggerPackage[randomMethodName]('test1')
@@ -868,13 +896,13 @@ describe('setAPI', () => {
         const myLoggerPackage = {
           [distinctMethodName]: jest.fn()
         }
-        apiInterface.wrapLogger(myLoggerPackage, distinctMethodName)
+        agent.wrapLogger(myLoggerPackage, distinctMethodName)
 
         myLoggerPackage[distinctMethodName]('test1')
         expect(myLoggerPackage[distinctMethodName]).toHaveBeenCalledTimes(1)
 
         /** Wrap again... BUT it should only emit an event once still */
-        apiInterface.wrapLogger(myLoggerPackage, distinctMethodName)
+        agent.wrapLogger(myLoggerPackage, distinctMethodName)
         expect(myLoggerPackage[distinctMethodName]).toHaveBeenCalledTimes(1)
       })
     })
@@ -883,7 +911,7 @@ describe('setAPI', () => {
       describe(logMethod, () => {
         test('should create event emitter event for calls to API', () => {
           const args = ['message', { customAttributes: { test: 1 }, level: logMethod }]
-          apiInterface.log(...args)
+          agent.log(...args)
 
           expect(handleModule.handle).toHaveBeenCalledTimes(3)
 
@@ -913,15 +941,13 @@ describe('setAPI', () => {
   })
 
   describe('interaction', () => {
-    let apiInterface
-
     beforeEach(async () => {
-      apiInterface = setAPI(agent, true)
+      setAPI(agent, true)
       await new Promise(process.nextTick)
     })
 
     test('should create event emitter event for calls to API', () => {
-      apiInterface.interaction()
+      agent.interaction()
 
       expect(handleModule.handle).toHaveBeenCalledTimes(2)
       expect(handleModule.handle).toHaveBeenCalledWith(
@@ -941,7 +967,7 @@ describe('setAPI', () => {
     })
 
     test('should return an object containing the SPA interaction API methods', () => {
-      const interaction = apiInterface.interaction()
+      const interaction = agent.interaction()
 
       expect(typeof interaction.actionText).toEqual('function')
       expect(typeof interaction.setName).toEqual('function')
@@ -966,7 +992,7 @@ describe('setAPI', () => {
       { api: 'end', args: [faker.string.uuid(), faker.string.uuid()] },
       { api: 'get', args: [faker.string.uuid(), faker.string.uuid()] }
     ])('interaction instance API $api should create event emitter event for calls to API', ({ api, args }) => {
-      const interaction = apiInterface.interaction()
+      const interaction = agent.interaction()
       interaction[api](...args)
 
       expect(handleModule.handle).toHaveBeenCalledWith(
@@ -990,7 +1016,7 @@ describe('setAPI', () => {
       let tracerEE
 
       beforeEach(() => {
-        interaction = apiInterface.interaction()
+        interaction = agent.interaction()
         tracerEE = agent.ee.get('tracer')
         jest.spyOn(tracerEE, 'emit')
       })

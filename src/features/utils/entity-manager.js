@@ -5,6 +5,7 @@
 
 export class EntityManager {
   #entities = new Map()
+  #entityGuidLookup = {}
   #defaultEntity = null
 
   constructor (agentRef) {
@@ -17,9 +18,20 @@ export class EntityManager {
     return this.#entities.get(entityGuid)
   }
 
+  getEntityGuidFor (licenseKey, applicationID) {
+    if (!this.#entityGuidLookup[licenseKey] || !this.#entityGuidLookup[applicationID]) return
+    return this.#entityGuidLookup[licenseKey].filter(x => this.#entityGuidLookup[applicationID].includes(x))[0]
+  }
+
   set (entityGuid, entity) {
     if (this.#entities.has(entityGuid)) return
     this.#entities.set(entityGuid, entity)
+
+    this.#entityGuidLookup[entity.licenseKey] ??= []
+    this.#entityGuidLookup[entity.licenseKey].push(entityGuid)
+    this.#entityGuidLookup[entity.applicationID] ??= []
+    this.#entityGuidLookup[entity.applicationID].push(entityGuid)
+
     this.agentRef.ee.emit('entity-added', [entity])
   }
 

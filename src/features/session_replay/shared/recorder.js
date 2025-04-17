@@ -11,9 +11,11 @@ import { stylesheetEvaluator } from './stylesheet-evaluator'
 import { handle } from '../../../common/event-emitter/handle'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
-import { buildNRMetaNode } from './utils'
+import { buildNRMetaNode, customMasker } from './utils'
 import { IDEAL_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
 import { AggregateBase } from '../../utils/aggregate-base'
+import { warn } from '../../../common/util/console'
+import { single } from '../../../common/util/invoke'
 
 export class Recorder {
   /** Each page mutation or event will be stored (raw) in this array. This array will be cleared on each harvest */
@@ -24,6 +26,8 @@ export class Recorder {
   #preloaded
   /** flag that if true, blocks events from being "stored".  Only set to true when a full snapshot has incomplete nodes (only stylesheets ATM) */
   #fixing = false
+
+  #warnCSSOnce = single(() => warn(47)) // notifies user of potential replayer issue if fix_stylesheets is off
 
   constructor (parent) {
     /** The parent class that instantiated the recorder */
@@ -79,14 +83,7 @@ export class Recorder {
   startRecording () {
     this.recording = true
     const { block_class, ignore_class, mask_text_class, block_selector, mask_input_options, mask_text_selector, mask_all_inputs, inline_images, collect_fonts } = this.parent.agentRef.init.session_replay
-    const customMasker = (text, element) => {
-      try {
-        if (typeof element?.type === 'string' && element.type.toLowerCase() !== 'password' && (element?.dataset?.nrUnmask !== undefined || element?.classList?.contains('nr-unmask'))) return text
-      } catch (err) {
-        // likely an element was passed to this handler that was invalid and was missing attributes or methods
-      }
-      return '*'.repeat(text?.length || 0)
-    }
+
     // set up rrweb configurations for maximum privacy --
     // https://newrelic.atlassian.net/wiki/spaces/O11Y/pages/2792293280/2023+02+28+Browser+-+Session+Replay#Configuration-options
     const stop = recorder({
@@ -109,6 +106,7 @@ export class Recorder {
 
     this.stopRecording = () => {
       this.recording = false
+      this.notified = false
       this.parent.ee.emit(SR_EVENT_EMITTER_TYPES.REPLAY_RUNNING, [false, this.parent.mode])
       stop?.()
     }
@@ -126,9 +124,11 @@ export class Recorder {
     const missingInlineSMTag = 'SessionReplay/Payload/Missing-Inline-Css/'
     /** only run the full fixing behavior (more costly) if fix_stylesheets is configured as on (default behavior) */
     if (!this.shouldFix) {
-      this.currentBufferTarget.inlinedAllStylesheets = false
-      if (incompletes) handle(SUPPORTABILITY_METRIC_CHANNEL, [missingInlineSMTag + 'Skipped', incompletes], undefined, FEATURE_NAMES.metrics, this.parent.ee)
-
+      if (incompletes > 0) {
+        this.currentBufferTarget.inlinedAllStylesheets = false
+        this.#warnCSSOnce()
+        handle(SUPPORTABILITY_METRIC_CHANNEL, [missingInlineSMTag + 'Skipped', incompletes], undefined, FEATURE_NAMES.metrics, this.parent.ee)
+      }
       return this.store(event, isCheckout)
     }
     /** Only stop ignoring data if already ignoring and a new valid snapshap is taking place (0 incompletes and we get a meta node for the snap) */
@@ -154,6 +154,10 @@ export class Recorder {
   /** Store a payload in the buffer (this.#events).  This should be the callback to the recording lib noticing a mutation */
   store (event, isCheckout) {
     if (!event) return
+    if (this.parent.agentRef.runtime?.session?.isAfterSessionExpiry(event.timestamp)) {
+      this.parent.reportSupportabilityMetric('Session/Expired/SessionReplay/Seen')
+      return
+    }
 
     if (!(this.parent instanceof AggregateBase) && this.#preloaded.length) this.currentBufferTarget = this.#preloaded[this.#preloaded.length - 1]
     else this.currentBufferTarget = this.#events

@@ -43,7 +43,7 @@ export class Aggregate extends AggregateBase {
 
       if (agentRef.init.page_action.enabled) {
         registerHandler('api-addPageAction', (timestamp, name, attributes, targetEntityGuid) => {
-          if (!this.agentRef.runtime.entityManager.get(targetEntityGuid)) return warn(55, this.featureName)
+          if (!this.agentRef.runtime.entityManager.get(targetEntityGuid)) return warn(56, this.featureName)
           this.addEvent({
             ...attributes,
             eventType: 'PageAction',
@@ -274,7 +274,7 @@ export class Aggregate extends AggregateBase {
        * if it fails again, we do nothing
        */
       this.ee.emit(SUPPORTABILITY_METRIC_CHANNEL, ['GenericEvents/Harvest/Max/Seen'])
-      this.agentRef.runtime.harvester.triggerHarvestFor(this)
+      this.agentRef.runtime.harvester.triggerHarvestFor(this, { targetEntityGuid })
       this.events.add(eventAttributes)
     }
   }

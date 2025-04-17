@@ -15,7 +15,7 @@ const SUPPORTS_PERFORMANCE_OBSERVER = typeof globalScope.PerformanceObserver ===
 
 const ignoredEvents = {
   // we find that certain events make the data too noisy to be useful
-  global: { mouseup: true, mousedown: true },
+  global: { mouseup: true, mousedown: true, mousemove: true },
   // certain events are present both in the window and in PVT metrics.  PVT metrics are prefered so the window events should be ignored
   window: { load: true, pagehide: true },
   // when ajax instrumentation is disabled, all XMLHttpRequest events will return with origin = xhrOriginMissing and should be ignored
@@ -41,6 +41,10 @@ export class TraceStorage {
     this.parent = parent
   }
 
+  isAfterSessionExpiry (entryTimestamp) {
+    return this.parent.agentRef.runtime?.session?.isAfterSessionExpiry((this.parent.timeKeeper?.ready && this.parent.timeKeeper.convertRelativeTimestamp(entryTimestamp)) ?? undefined)
+  }
+
   /** Central function called by all the other store__ & addToTrace API to append a trace node. */
   storeSTN (stn) {
     if (this.parent.blocked) return
@@ -48,6 +52,10 @@ export class TraceStorage {
       if (this.parent.mode !== MODE.ERROR) return
       const openedSpace = this.trimSTNs(ERROR_MODE_SECONDS_WINDOW) // but maybe we could make some space by discarding irrelevant nodes if we're in sessioned Error mode
       if (openedSpace === 0) return
+    }
+    if (this.isAfterSessionExpiry(stn.s)) {
+      this.parent.reportSupportabilityMetric('Session/Expired/SessionTrace/Seen')
+      return
     }
 
     if (this.trace[stn.n]) this.trace[stn.n].push(stn)
@@ -182,8 +190,8 @@ export class TraceStorage {
   }
 
   shouldIgnoreEvent (event, target) {
-    const origin = eventOrigin(event.target, target, this.parent.ee)
     if (event.type in ignoredEvents.global) return true
+    const origin = eventOrigin(event.target, target, this.parent.ee)
     if (!!ignoredEvents[origin] && ignoredEvents[origin].ignoreAll) return true
     return !!(!!ignoredEvents[origin] && event.type in ignoredEvents[origin])
   }

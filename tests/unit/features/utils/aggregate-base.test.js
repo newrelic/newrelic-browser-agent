@@ -91,7 +91,7 @@ test('should merge info, jsattributes, and runtime objects', () => {
 
   expect(isValid).toHaveBeenCalledWith(agentIdentifier)
   expect(gosCDN).toHaveBeenCalledTimes(1)
-  expect(configure).toHaveBeenCalledWith({ agentIdentifier }, {
+  expect(configure).toHaveBeenCalledWith(mainAgent, {
     info: {
       ...mockInfo1,
       jsAttributes: {
@@ -100,7 +100,7 @@ test('should merge info, jsattributes, and runtime objects', () => {
       }
     },
     runtime: mainAgent.runtime
-  })
+  }, mainAgent.runtime.loaderType)
 })
 
 test('should only configure the agent once', () => {

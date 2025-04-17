@@ -115,7 +115,7 @@ export class Aggregate extends AggregateBase {
   storeError (err, time, internal, customAttributes, hasReplay, swallowReason, targetEntityGuid) {
     if (!err) return
     const target = this.agentRef.runtime.entityManager.get(targetEntityGuid)
-    if (!target) return warn(55, this.featureName)
+    if (!target) return warn(56, this.featureName)
     // are we in an interaction
     time = time || now()
     let filterOutput
@@ -217,7 +217,7 @@ export class Aggregate extends AggregateBase {
     }
 
     // always add directly if scoped to a sub-entity, the other pathways above will be deterministic if the main agent should procede
-    if (targetEntityGuid) this.#storeJserrorForHarvest([...jsErrorEvent, targetEntityGuid], params.browserInteractionId !== undefined, params._softNavAttributes)
+    if (targetEntityGuid) this.#storeJserrorForHarvest([...jsErrorEvent, targetEntityGuid], false, params._softNavAttributes)
   }
 
   #storeJserrorForHarvest (errorInfoArr, softNavOccurredFinished, softNavCustomAttrs = {}) {
@@ -247,12 +247,13 @@ export class Aggregate extends AggregateBase {
   }
 
   /**
-  * If the event lacks an entityGuid, the main agent should capture the data. However, the main agent should not capture events if the main agent is not configured to capture data and the data has been scoped to a sub-entity
-  * @param {object} ctx - the context object for the event
+  * If the event lacks an entityGuid (the default behavior), the main agent should capture the data. If the data is assigned to a sub-entity target
+  * the main agent should not capture events unless it is configured to do so.
+  * @param {string} entityGuid - the context object for the event
   * @returns {boolean} - whether the main agent should capture the event to its internal target
   */
   shouldAllowMainAgentToCapture (entityGuid) {
-    return (!entityGuid || (this.agentRef.init.api.duplicate_registered_data && entityGuid))
+    return (!entityGuid || this.agentRef.init.api.duplicate_registered_data)
   }
 
   // TO-DO: Remove this function when old spa is taken out. #storeJserrorForHarvest handles the work with the softnav feature.

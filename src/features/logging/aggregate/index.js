@@ -29,8 +29,8 @@ export class Aggregate extends AggregateBase {
 
     this.ee.on(SESSION_EVENTS.UPDATE, (type, data) => {
       if (this.blocked || type !== SESSION_EVENT_TYPES.CROSS_TAB) return
-      if (this.mode !== LOGGING_MODE.OFF && data.loggingMode === LOGGING_MODE.OFF) this.abort(ABORT_REASONS.CROSS_TAB)
-      else this.mode = data.loggingMode
+      if (this.loggingMode !== LOGGING_MODE.OFF && data.loggingMode === LOGGING_MODE.OFF) this.abort(ABORT_REASONS.CROSS_TAB)
+      else this.loggingMode = data.loggingMode
     })
 
     this.harvestOpts.raw = true
@@ -63,9 +63,7 @@ export class Aggregate extends AggregateBase {
   }
 
   handleLog (timestamp, message, attributes = {}, level = LOG_LEVELS.INFO, targetEntityGuid) {
-    const target = this.agentRef.runtime.entityManager.get(targetEntityGuid)
-
-    if (target && !target.entityGuid) return warn(48)
+    if (!this.agentRef.runtime.entityManager.get(targetEntityGuid)) return warn(56, this.featureName)
     if (this.blocked || !this.loggingMode) return
 
     if (!attributes || typeof attributes !== 'object') attributes = {}
@@ -164,8 +162,10 @@ export class Aggregate extends AggregateBase {
   abort (reason = {}) {
     this.reportSupportabilityMetric(`Logging/Abort/${reason.sm}`)
     this.blocked = true
-    this.events.clear()
-    this.events.clearSave()
+    if (this.events) {
+      this.events.clear()
+      this.events.clearSave()
+    }
     this.updateLoggingMode(LOGGING_MODE.OFF)
     this.deregisterDrain()
   }

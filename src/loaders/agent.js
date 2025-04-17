@@ -72,6 +72,10 @@ export class Agent extends AgentBase {
     }
   }
 
+  get api () {
+    return this
+  }
+
   run () {
     // Attempt to initialize all the requested features (sequentially in prio order & synchronously), with any failure aborting the whole process.
     try {
@@ -102,7 +106,6 @@ export class Agent extends AgentBase {
       }
 
       const newrelic = gosNREUM()
-      delete newrelic.initializedAgents[this.agentIdentifier]?.api // prevent further calls to agent-specific APIs (see "configure.js")
       delete newrelic.initializedAgents[this.agentIdentifier]?.features // GC mem used internally by features
       delete this.sharedAggregator
       // Keep the initialized agent object with its configs for troubleshooting purposes.

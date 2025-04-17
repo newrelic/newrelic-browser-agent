@@ -1,29 +1,19 @@
 import { faker } from '@faker-js/faker'
 import { FEATURE_NAMES } from '../../src/loaders/features/features'
 import { CUSTOM_METRIC_CHANNEL } from '../../src/features/metrics/constants'
-import { setAPI } from '../../src/loaders/api/apiAsync'
-import { setInfo } from '../../src/common/config/info'
-import { setConfiguration } from '../../src/common/config/init'
-import { setRuntime, getRuntime } from '../../src/common/config/runtime'
+import { setAsyncAPI } from '../../src/loaders/api/apiAsync'
 import { ee } from '../../src/common/event-emitter/contextual-ee'
 import * as registerHandlerModule from '../../src/common/event-emitter/register-handler'
 import * as handleModule from '../../src/common/event-emitter/handle'
 import { originTime } from '../../src/common/constants/runtime'
 
-describe('setAPI', () => {
+describe('setAsyncAPI', () => {
   let agentId
-  let licenseKey
-  let applicationID
   let instanceEE
+  let agentInst
 
   beforeEach(() => {
     agentId = faker.string.uuid()
-    licenseKey = faker.string.uuid()
-    applicationID = faker.string.uuid()
-
-    setInfo(agentId, { licenseKey, applicationID })
-    setConfiguration(agentId, {})
-    setRuntime(agentId, {})
 
     console.warn = jest.fn()
     jest.spyOn(handleModule, 'handle')
@@ -31,6 +21,14 @@ describe('setAPI', () => {
     instanceEE = ee.get(agentId)
     jest.spyOn(instanceEE, 'emit')
     jest.spyOn(registerHandlerModule, 'registerHandler')
+
+    agentInst = {
+      ee: instanceEE,
+      runtime: {
+        onerror: undefined,
+        releaseIds: {}
+      }
+    }
   })
 
   afterEach(() => {
@@ -38,7 +36,7 @@ describe('setAPI', () => {
   })
 
   test('should register expected api methods as handlers on the instance event emitter', () => {
-    setAPI(agentId)
+    setAsyncAPI(agentInst)
 
     expect(registerHandlerModule.registerHandler).toHaveBeenCalledTimes(4)
     expect(registerHandlerModule.registerHandler).toHaveBeenCalledWith(
@@ -71,11 +69,9 @@ describe('setAPI', () => {
     let apiFn
 
     beforeEach(() => {
-      setAPI(agentId)
+      setAsyncAPI(agentInst)
 
       apiFn = jest.mocked(registerHandlerModule.registerHandler).mock.calls[0][1]
-
-      setRuntime(agentId, { ...getRuntime(agentId) })
     })
 
     test('should create event emitter events and add to the trace', () => {
@@ -140,11 +136,9 @@ describe('setAPI', () => {
     let apiFn
 
     beforeEach(() => {
-      setAPI(agentId)
+      setAsyncAPI(agentInst)
 
       apiFn = jest.mocked(registerHandlerModule.registerHandler).mock.calls[2][1]
-
-      setRuntime(agentId, { ...getRuntime(agentId) })
     })
 
     test.each([
@@ -233,11 +227,11 @@ describe('setAPI', () => {
     let apiFn
 
     beforeEach(() => {
-      setAPI(agentId)
+      setAsyncAPI(agentInst)
 
       apiFn = jest.mocked(registerHandlerModule.registerHandler).mock.calls[1][1]
 
-      setRuntime(agentId, { ...getRuntime(agentId), onerror: undefined })
+      agentInst.runtime.onerror = undefined // reset the error handler
     })
 
     test('should set the agent error handler', () => {
@@ -246,7 +240,7 @@ describe('setAPI', () => {
 
       apiFn(time, errorHandler)
 
-      expect(getRuntime(agentId).onerror).toEqual(errorHandler)
+      expect(agentInst.runtime.onerror).toEqual(errorHandler)
     })
   })
 
@@ -254,11 +248,11 @@ describe('setAPI', () => {
     let apiFn
 
     beforeEach(() => {
-      setAPI(agentId)
+      setAsyncAPI(agentInst)
 
       apiFn = jest.mocked(registerHandlerModule.registerHandler).mock.calls[3][1]
 
-      setRuntime(agentId, { ...getRuntime(agentId), onerror: undefined })
+      agentInst.runtime.releaseIds = {}
     })
 
     test('should add the release to the runtime', () => {
@@ -268,7 +262,7 @@ describe('setAPI', () => {
 
       apiFn(time, releaseName, releaseVersion)
 
-      const releases = getRuntime(agentId).releaseIds
+      const releases = agentInst.runtime.releaseIds
       expect(Object.entries(releases).length).toEqual(1)
       expect(Object.entries(releases)).toEqual([[releaseName, releaseVersion]])
     })
@@ -282,7 +276,7 @@ describe('setAPI', () => {
         apiFn(time, releaseName, releaseVersion)
       }
 
-      const releases = getRuntime(agentId).releaseIds
+      const releases = agentInst.runtime.releaseIds
       expect(Object.entries(releases).length).toEqual(10)
     })
 
@@ -293,7 +287,7 @@ describe('setAPI', () => {
 
       apiFn(time, releaseName, releaseVersion)
 
-      const releases = getRuntime(agentId).releaseIds
+      const releases = agentInst.runtime.releaseIds
       expect(Object.keys(releases)[0].length).toEqual(200)
       expect(Object.values(releases)[0].length).toEqual(200)
     })

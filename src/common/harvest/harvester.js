@@ -178,7 +178,7 @@ function send (agentRef, { endpoint, targetApp, payload, localOpts = {}, submitM
 
   dispatchGlobalEvent({
     agentIdentifier: agentRef.agentIdentifier,
-    loaded: !!activatedFeatures?.[agentRef.agentIdentifier],
+    drained: !!activatedFeatures?.[agentRef.agentIdentifier],
     type: 'data',
     name: 'harvest',
     feature: featureName,

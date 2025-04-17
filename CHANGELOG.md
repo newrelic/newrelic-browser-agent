@@ -3,6 +3,56 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.288.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.287.0...v1.288.0) (2025-04-16)
+
+
+### Features
+
+* Introduce isFirstOfSession attribute on InitialPageLoad events ([#1432](https://github.com/newrelic/newrelic-browser-agent/issues/1432)) ([8d7bdd6](https://github.com/newrelic/newrelic-browser-agent/commit/8d7bdd63abe0b6d9dfccc46f63845bde0fd099a4))
+* Prevent storing session data past session expiry ([#1426](https://github.com/newrelic/newrelic-browser-agent/issues/1426)) ([5819b64](https://github.com/newrelic/newrelic-browser-agent/commit/5819b649792b6227d49173ecb326f918b1f39bdb))
+
+
+### Bug Fixes
+
+* Reset `notified` when replay stops recording ([#1435](https://github.com/newrelic/newrelic-browser-agent/issues/1435)) ([7dd8b62](https://github.com/newrelic/newrelic-browser-agent/commit/7dd8b6217763c57c382737b6ff90667066437b75))
+* Solve race condition in logging abort ([#1445](https://github.com/newrelic/newrelic-browser-agent/issues/1445)) ([ab315dc](https://github.com/newrelic/newrelic-browser-agent/commit/ab315dc009a45911911f5d176978fac0cf066be3))
+
+## [1.287.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.286.0...v1.287.0) (2025-04-10)
+
+
+### Features
+
+* Central Agent Architecture - Micro Front Ends ([#1266](https://github.com/newrelic/newrelic-browser-agent/issues/1266)) ([b1a6c30](https://github.com/newrelic/newrelic-browser-agent/commit/b1a6c30bf78001f5286a614c229ceb7a256593aa))
+
+## [1.286.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.285.0...v1.286.0) (2025-04-01)
+
+
+### Features
+
+* Erase .api property on agent instance ([#1425](https://github.com/newrelic/newrelic-browser-agent/issues/1425)) ([44786ae](https://github.com/newrelic/newrelic-browser-agent/commit/44786ae60d761b40a28f6df4b7b835c1791dda5f))
+* Handle duplicate agent APIs ([#1418](https://github.com/newrelic/newrelic-browser-agent/issues/1418)) ([f808447](https://github.com/newrelic/newrelic-browser-agent/commit/f8084474ea1a567a90d0615cdfeb13a8a2c1f110))
+* Reduce noise from `mousemove` events ([#1424](https://github.com/newrelic/newrelic-browser-agent/issues/1424)) ([7c02a02](https://github.com/newrelic/newrelic-browser-agent/commit/7c02a02763abdd2697e9ed1d5a89d81c251dcf67))
+
+
+### Bug Fixes
+
+* Get string className for SVG elements ([#1423](https://github.com/newrelic/newrelic-browser-agent/issues/1423)) ([0c1ce6c](https://github.com/newrelic/newrelic-browser-agent/commit/0c1ce6ca82bce15da12fe84fd91a7d6be8b4da44))
+* Patch `newrelic` event detail ([#1428](https://github.com/newrelic/newrelic-browser-agent/issues/1428)) ([8601424](https://github.com/newrelic/newrelic-browser-agent/commit/86014247ed45520adbbb053d94b6f11de48e239f))
+
+## [1.285.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.284.1...v1.285.0) (2025-03-18)
+
+
+### Features
+
+* Decorate harvest requests with ht (hasTrace) param ([#1409](https://github.com/newrelic/newrelic-browser-agent/issues/1409)) ([b8ed2b0](https://github.com/newrelic/newrelic-browser-agent/commit/b8ed2b0aeef8b8db651ddb8001171f28785c7673))
+* Inspection events ([#1413](https://github.com/newrelic/newrelic-browser-agent/issues/1413)) ([1832562](https://github.com/newrelic/newrelic-browser-agent/commit/1832562f52c1e2e26c49c2855ad1996d6251b803))
+
+
+### Bug Fixes
+
+* Logging mode on session update ([#1417](https://github.com/newrelic/newrelic-browser-agent/issues/1417)) ([3f59afe](https://github.com/newrelic/newrelic-browser-agent/commit/3f59afef8a53848d80f7f32d28302b6b0bcf7d2f))
+* Session Replay text masking for whitespace ([#1416](https://github.com/newrelic/newrelic-browser-agent/issues/1416)) ([97bf326](https://github.com/newrelic/newrelic-browser-agent/commit/97bf32655d6e608ea7248acc680d983b1d1e0eea))
+
 ## [1.284.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.284.0...v1.284.1) (2025-03-11)
 
 

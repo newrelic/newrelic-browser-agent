@@ -27,7 +27,7 @@ jobs:
       - name: Install project dependencies
         run: npm ci
       - name: Report lite size to NR
-        uses: newrelic/capture-build-size@main
+        uses: newrelic-apps/capture-build-size@v1.0.1
         with:
           nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
           nr-account-id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
@@ -36,7 +36,7 @@ jobs:
           file-name-filter: '.min.js'
           trigger: 'nightly'
       - name: Report pro size to NR
-        uses: newrelic/capture-build-size@main
+        uses: newrelic-apps/capture-build-size@v1.0.1
         with:
           nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
           nr-account-id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}
@@ -45,7 +45,7 @@ jobs:
           file-name-filter: '.min.js'
           trigger: 'nightly'
       - name: Report spa size to NR
-        uses: newrelic/capture-build-size@main
+        uses: newrelic-apps/capture-build-size@v1.0.1
         with:
           nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
           nr-account-id: ${{ secrets.INTERNAL_STAGING_INGEST_ACCOUNT_ID }}

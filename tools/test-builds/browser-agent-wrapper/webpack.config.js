@@ -13,16 +13,16 @@ const htmlTemplate = (script) => `<html>
     <h1>This is a generic page that is instrumented by the NPM agent</h1>
   </body>
 </html>`
-const registeredEntityHtmlTemplate = (script) => `<html>
+const multiAgentHtmlTemplate = `<html>
   <head>
     <title>RUM Unit Test</title>
     {init}
     {config}
-    {loader}
-    <script src="${script}.js"></script>
+    <script src="browser-agent.js"></script>
+    <script src="micro-agent.js"></script>
   </head>
   <body>
-    <h1>This is a generic page that is instrumented by the NPM agent</h1>
+    <h1>This is a generic page that is instrumented by the NPM agent. It has a main agent and a micro agent running together.</h1>
   </body>
 </html>`
 const workerHtmlTemplate = `<html>
@@ -32,6 +32,18 @@ const workerHtmlTemplate = `<html>
     {config}
     {worker-commands}
     <script src="worker-init.js"></script>
+  </head>
+  <body>
+    <h1>This is a generic page that is instrumented by the NPM agent</h1>
+  </body>
+</html>`
+const registeredEntityHtmlTemplate = (script) => `<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {init}
+    {config}
+    {loader}
+    <script src="${script}.js"></script>
   </head>
   <body>
     <h1>This is a generic page that is instrumented by the NPM agent</h1>
@@ -57,12 +69,6 @@ const config = [
       path: path.resolve(__dirname, '../../../tests/assets/test-builds/browser-agent-wrapper')
     },
     module: {
-      parser: {
-        javascript: {
-          exportsPresence: 'error',
-          importExportsPresence: 'error'
-        }
-      },
       rules: [
         {
           test: /\.(js|jsx)$/i,
@@ -134,6 +140,12 @@ const config = [
         minify: false,
         inject: false,
         templateContent: registeredEntityHtmlTemplate('registered-entity')
+      }),
+      new HtmlWebpackPlugin({
+        filename: 'multi-agent.html',
+        minify: false,
+        inject: false,
+        templateContent: multiAgentHtmlTemplate
       })
     ]
   },

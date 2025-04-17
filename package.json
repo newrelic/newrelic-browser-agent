@@ -1,6 +1,6 @@
 {
   "name": "@newrelic/browser-agent",
-  "version": "1.284.1",
+  "version": "1.288.0",
   "private": false,
   "author": "New Relic Browser Agent Team <browser-agent@newrelic.com>",
   "description": "New Relic Browser Agent",
@@ -186,6 +186,7 @@
     "test:types": "tsd -f ./tests/dts/**/*.ts",
     "wdio": "node --max-old-space-size=8192 tools/wdio/bin/cli.js",
     "build:all": "npm run cdn:build:local && npm run build:npm && npm run tools:test-builds",
+    "build:browser-agent-wrapper": "npm run cdn:build:local && npm run build:npm && npm --prefix tools/test-builds/browser-agent-wrapper run build",
     "build:npm": "npm run npm:build:esm && npm run npm:build:cjs && npm run npm:build:types && npm run npm:pack",
     "cdn:build": "npm run cdn:build:prod",
     "cdn:build:local": "npm run cdn:webpack",

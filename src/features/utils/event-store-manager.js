@@ -36,7 +36,7 @@ export class EventStoreManager {
   }
 
   setEventStore (targetEntityGuid) {
-    const eventStorage = isContainerAgentTarget(this.entityManager.get(targetEntityGuid), this.agentRef) && !!this.defaultEntity ? this.defaultEntity : new this.StorageClass()
+    const eventStorage = (!!this.defaultEntity && isContainerAgentTarget(this.entityManager.get(targetEntityGuid), this.agentRef)) ? this.defaultEntity : new this.StorageClass()
     this.appStorageMap.set(targetEntityGuid, eventStorage)
   }
 

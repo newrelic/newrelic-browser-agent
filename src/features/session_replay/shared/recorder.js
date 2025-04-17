@@ -155,7 +155,7 @@ export class Recorder {
   store (event, isCheckout) {
     if (!event) return
     if (this.parent.agentRef.runtime?.session?.isAfterSessionExpiry(event.timestamp)) {
-      this.parent.reportSupportabilityMetric('Session/Expired/SessionReplay/Seen')
+      handle(SUPPORTABILITY_METRIC_CHANNEL, ['Session/Expired/SessionReplay/Seen'], undefined, FEATURE_NAMES.metrics, this.ee)
       return
     }
 

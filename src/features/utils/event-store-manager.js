@@ -4,6 +4,7 @@
  */
 import { dispatchGlobalEvent } from '../../common/dispatch/global-event'
 import { activatedFeatures } from '../../common/util/feature-flags'
+import { isContainerAgentTarget } from '../../common/util/target'
 
 /**
  * This layer allows multiple browser entity apps, or "target", to each have their own segregated storage instance.
@@ -30,14 +31,13 @@ export class EventStoreManager {
    */
   #getEventStore (targetEntityGuid) {
     if (!targetEntityGuid) return this.defaultEntity
-    if (!this.appStorageMap.has(targetEntityGuid)) this.appStorageMap.set(targetEntityGuid, new this.StorageClass())
+    if (!this.appStorageMap.has(targetEntityGuid)) this.setEventStore(targetEntityGuid)
     return this.appStorageMap.get(targetEntityGuid)
   }
 
-  setDefaultEntity (entityGuid, optsIfPresent) {
-    const mergeContents = this.defaultEntity.get(optsIfPresent)
-    this.defaultEntity = this.#getEventStore(entityGuid)
-    if (mergeContents?.length) mergeContents.forEach(data => this.defaultEntity.add(data))
+  setEventStore (targetEntityGuid) {
+    const eventStorage = isContainerAgentTarget(this.entityManager.get(targetEntityGuid), this.agentRef) && !!this.defaultEntity ? this.defaultEntity : new this.StorageClass()
+    this.appStorageMap.set(targetEntityGuid, eventStorage)
   }
 
   // This class must contain an union of all methods from all supported storage classes and conceptualize away the target app argument.

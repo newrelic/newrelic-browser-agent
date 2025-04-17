@@ -18,7 +18,6 @@ import { EventBuffer } from './event-buffer'
 import { handle } from '../../common/event-emitter/handle'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../metrics/constants'
 import { EventAggregator } from '../../common/aggregate/event-aggregator'
-import { isContainerAgentTarget } from '../../common/util/target'
 
 export class AggregateBase extends FeatureBase {
   /**
@@ -40,7 +39,8 @@ export class AggregateBase extends FeatureBase {
       /** wait for the entity guid from the rum response and use to it to further configure things to set the default entity to share an indexed entity with entityGuid */
       this.ee.on('entity-added', entity => {
         // not all event managers have this fn, like ST and SR
-        if (this.events && isContainerAgentTarget(entity, this.agentRef)) this.events.setDefaultEntity?.(entity.entityGuid, this.harvestOpts)
+        // this allows the lookup to work for the default and an entityGuid without creating two separate buffers
+        this.events?.setEventStore?.(entity.entityGuid)
       })
     }
   }

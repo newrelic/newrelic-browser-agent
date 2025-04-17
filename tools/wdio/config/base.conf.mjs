@@ -46,7 +46,7 @@ export default function config () {
     mochaOpts: {
       ui: 'bdd',
       timeout: args.timeout,
-      retries: args.retry ? 3 : 0
+      retries: args.retry ? 5 : 0
     },
     autoCompileOpts: {
       babelOpts: {

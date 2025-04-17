@@ -29,7 +29,6 @@ export class Aggregate extends AggregateBase {
       this.initialPageLoadInteraction.forceSave = true // unless forcibly ignored, iPL always finish by default
       const ixn = this.initialPageLoadInteraction
       this.interactionsToHarvest.add(ixn)
-
       this.initialPageLoadInteraction = null
     })
     timeToFirstByte.subscribe(({ attrs }) => {

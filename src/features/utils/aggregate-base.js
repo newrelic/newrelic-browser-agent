@@ -18,6 +18,7 @@ import { EventBuffer } from './event-buffer'
 import { handle } from '../../common/event-emitter/handle'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../metrics/constants'
 import { EventAggregator } from '../../common/aggregate/event-aggregator'
+import { isContainerAgentTarget } from '../../common/util/target'
 
 export class AggregateBase extends FeatureBase {
   /**
@@ -34,11 +35,12 @@ export class AggregateBase extends FeatureBase {
     this.harvestOpts = {} // features aggregate classes can define custom opts for when their harvest is called
 
     const agentEntityGuid = this.agentRef?.runtime?.appMetadata?.agents?.[0]?.entityGuid
-    if (agentEntityGuid) {
-      this.#setupEventStore(agentEntityGuid) // if there's no entity guid, wont dont anything, and will wait for rum flags
-    } else {
+    this.#setupEventStore(agentEntityGuid)
+    if (!agentEntityGuid) {
+      /** wait for the entity guid from the rum response and use to it to further configure things to set the default entity to share an indexed entity with entityGuid */
       this.ee.on('entity-added', entity => {
-        this.#setupEventStore(entity.entityGuid)
+        // not all event managers have this fn, like ST and SR
+        if (this.events && isContainerAgentTarget(entity, this.agentRef)) this.events.setDefaultEntity?.(entity.entityGuid, this.harvestOpts)
       })
     }
   }
@@ -49,7 +51,7 @@ export class AggregateBase extends FeatureBase {
    * @returns {void}
    */
   #setupEventStore (entityGuid) {
-    if (this.events || !entityGuid) return
+    if (this.events) return
     switch (this.featureName) {
     // SessionTrace + Replay have their own storage mechanisms.
       case FEATURE_NAMES.sessionTrace:

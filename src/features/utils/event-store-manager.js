@@ -19,8 +19,8 @@ export class EventStoreManager {
     this.entityManager = agentRef.runtime.entityManager
     this.StorageClass = storageClass
     this.appStorageMap = new Map()
-    this.defaultEntity = this.#getEventStore(defaultEntityGuid)
     this.featureName = featureName
+    this.defaultEntity = defaultEntityGuid ? this.#getEventStore(defaultEntityGuid) : new this.StorageClass()
   }
 
   /**
@@ -32,6 +32,12 @@ export class EventStoreManager {
     if (!targetEntityGuid) return this.defaultEntity
     if (!this.appStorageMap.has(targetEntityGuid)) this.appStorageMap.set(targetEntityGuid, new this.StorageClass())
     return this.appStorageMap.get(targetEntityGuid)
+  }
+
+  setDefaultEntity (entityGuid, optsIfPresent) {
+    const mergeContents = this.defaultEntity.get(optsIfPresent)
+    this.defaultEntity = this.#getEventStore(entityGuid)
+    if (mergeContents?.length) mergeContents.forEach(data => this.defaultEntity.add(data))
   }
 
   // This class must contain an union of all methods from all supported storage classes and conceptualize away the target app argument.

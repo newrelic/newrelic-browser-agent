@@ -166,9 +166,10 @@ describe('prepareHarvest', () => {
     })
   })
 
-  test('correctly exits if maxPayload is too small', () => {
-    ajaxAggregate.events.defaultEntity.maxPayloadSize = 10 // this is too small for any AJAX payload to fit in
-    for (let callNo = 0; callNo < 10; callNo++) ajaxAggregate.ee.emit('xhr', ajaxArguments, context)
+  test('correctly exits if maxPayload is too small', async () => {
+    for (let callNo = 0; callNo < 10; callNo++) {
+      ajaxAggregate.ee.emit('xhr', [{ ...ajaxArguments[0], pathname: 'x'.repeat(1000000) }, ...ajaxArguments], context)
+    }
 
     const serializedPayload = ajaxAggregate.makeHarvestPayload(false)
     expect(serializedPayload).toBeUndefined() // payload that are each too small for limit will be dropped

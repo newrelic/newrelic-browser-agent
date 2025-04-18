@@ -35,7 +35,7 @@ describe('retry harvesting', () => {
 
       expect(firstInteractionEventHarvest[0].reply.statusCode).toEqual(statusCode)
       expect(secondInteractionEventHarvest[1].request.body).toEqual(expect.arrayContaining(firstInteractionEventHarvest[0].request.body))
-    }, 5)
+    })
   )
 
   ;[400, 404].forEach(statusCode =>
@@ -65,6 +65,6 @@ describe('retry harvesting', () => {
 
       expect(firstInteractionEventHarvest[0].reply.statusCode).toEqual(statusCode)
       expect(secondInteractionEventHarvest[1].request.body).not.toEqual(expect.arrayContaining(firstInteractionEventHarvest[0].request.body))
-    }, 5)
+    })
   )
 })

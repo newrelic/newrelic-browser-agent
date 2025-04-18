@@ -38,11 +38,13 @@ export class EventStoreManager {
   }
 
   setEventStore (targetEntityGuid) {
+    /** we should already have an event store for the default */
+    if (!targetEntityGuid) return
     /** if the target is the container agent, SHARE the default storage -- otherwise create a new event store */
     const eventStorage = (isContainerAgentTarget(this.entityManager.get(targetEntityGuid), this.agentRef))
       ? this.appStorageMap.get(DEFAULT_KEY)
       : new this.StorageClass()
-    this.appStorageMap.set(targetEntityGuid || DEFAULT_KEY, eventStorage)
+    this.appStorageMap.set(targetEntityGuid, eventStorage)
   }
 
   // This class must contain an union of all methods from all supported storage classes and conceptualize away the target app argument.

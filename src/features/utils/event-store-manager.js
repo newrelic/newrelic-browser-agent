@@ -24,7 +24,7 @@ export class EventStoreManager {
     this.StorageClass = storageClass
     this.appStorageMap = new Map([[DEFAULT_KEY, new this.StorageClass()]])
     this.featureName = featureName
-    if (defaultEntityGuid) this.setEventStore(defaultEntityGuid)
+    this.setEventStore(defaultEntityGuid)
   }
 
   /**

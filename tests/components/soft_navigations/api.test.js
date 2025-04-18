@@ -45,38 +45,38 @@ afterEach(() => {
 
 test('.interaction gets current or creates new api ixn', () => {
   softNavAggregate.initialPageLoadInteraction = { isActiveDuring: () => true }
-  const ixn1 = window.newrelic.interaction()
+  const ixn1 = mainAgent.interaction()
   expect(getIxnContext(ixn1).associatedInteraction).toBe(softNavAggregate.initialPageLoadInteraction) // should grab the iPL if it's still open and no other ixn in progress
 
   softNavAggregate.ee.emit('newUIEvent', [{ type: 'submit', timeStamp: 12 }])
   expect(softNavAggregate.interactionInProgress).toBeTruthy()
-  expect(getIxnContext(window.newrelic.interaction()).associatedInteraction).toBe(softNavAggregate.interactionInProgress)
+  expect(getIxnContext(mainAgent.interaction()).associatedInteraction).toBe(softNavAggregate.interactionInProgress)
 
   softNavAggregate.interactionInProgress.done()
   expect(softNavAggregate.interactionInProgress).toBeNull()
-  const ixn2 = newrelic.interaction()
+  const ixn2 = mainAgent.interaction()
   expect(getIxnContext(ixn2).associatedInteraction).toBe(softNavAggregate.initialPageLoadInteraction) // should fallback to the iPL once the UI ixn is over
 
   softNavAggregate.initialPageLoadInteraction = null
-  newrelic.interaction()
+  mainAgent.interaction()
   expect(softNavAggregate.interactionInProgress.trigger).toEqual('api') // once iPL is over, get creates a new api ixn
   expect(softNavAggregate.interactionInProgress.cancellationTimer).toBeUndefined()
 })
 
 test('.interaction returns a different new context for every call', async () => {
-  const ixn1 = newrelic.interaction()
-  const ixn2 = newrelic.interaction()
+  const ixn1 = mainAgent.interaction()
+  const ixn2 = mainAgent.interaction()
   expect(ixn1).not.toBe(ixn2)
   expect(getIxnContext(ixn1).associatedInteraction).toBe(getIxnContext(ixn2).associatedInteraction) // both handles should still be pointing to the same interaction
 
   softNavAggregate.interactionInProgress.done()
-  const ixn3 = newrelic.interaction()
+  const ixn3 = mainAgent.interaction()
   expect(getIxnContext(ixn1).associatedInteraction).toBeTruthy() // old ixn is retained on handles
   expect(getIxnContext(ixn3).associatedInteraction).not.toEqual(getIxnContext(ixn1).associatedInteraction) // new handle should point to new interaction
 })
 
 test('open api ixn ignores UI events and auto closes after history & dom change', () => {
-  const ixn = newrelic.interaction()
+  const ixn = mainAgent.interaction()
   const ixnContext = getIxnContext(ixn)
   softNavAggregate.ee.emit('newUIEvent', [{ type: 'submit', timeStamp: 12 }])
   expect(softNavAggregate.interactionInProgress).toBe(ixnContext.associatedInteraction)
@@ -90,13 +90,13 @@ test('open api ixn ignores UI events and auto closes after history & dom change'
 
 test('.end closes interactions (by default, cancels them)', () => {
   softNavAggregate.ee.emit('newUIEvent', [{ type: 'submit', timeStamp: 12 }])
-  let ixn = newrelic.interaction()
+  let ixn = mainAgent.interaction()
   let ixnContext = getIxnContext(ixn)
   ixn.end()
   expect(ixnContext.associatedInteraction.trigger).toEqual('submit')
   expect(ixnContext.associatedInteraction.status).toEqual('cancelled')
 
-  ixn = newrelic.interaction()
+  ixn = mainAgent.interaction()
   ixnContext = getIxnContext(ixn)
   ixn.end()
   expect(ixnContext.associatedInteraction.trigger).toEqual('api')
@@ -106,7 +106,7 @@ test('.end closes interactions (by default, cancels them)', () => {
 })
 
 test('multiple .end on one ixn results in only the first taking effect', () => {
-  const ixn = newrelic.interaction()
+  const ixn = mainAgent.interaction()
   const ixnContext = getIxnContext(ixn)
 
   ixnContext.associatedInteraction.forceSave = true
@@ -121,7 +121,7 @@ test('multiple .end on one ixn results in only the first taking effect', () => {
 test('.interaction with waitForEnd flag keeps ixn open until .end', () => {
   softNavAggregate.ee.emit('newUIEvent', [{ type: 'submit', timeStamp: 12 }])
 
-  let ixn = newrelic.interaction({ waitForEnd: true })
+  let ixn = mainAgent.interaction({ waitForEnd: true })
   let ixnContext = getIxnContext(ixn)
   softNavAggregate.ee.emit('newURL', [23, 'example.com'])
   softNavAggregate.ee.emit('newDom', [34])
@@ -131,7 +131,7 @@ test('.interaction with waitForEnd flag keeps ixn open until .end', () => {
   expect(softNavAggregate.interactionInProgress).toBeNull()
   expect(ixnContext.associatedInteraction.end).toEqual(45)
 
-  ixn = newrelic.interaction({ waitForEnd: true }) // on new api ixn
+  ixn = mainAgent.interaction({ waitForEnd: true }) // on new api ixn
   ixnContext = getIxnContext(ixn)
   softNavAggregate.ee.emit('newURL', [70, 'example.com'])
   softNavAggregate.ee.emit('newDom', [80])
@@ -143,33 +143,33 @@ test('.interaction with waitForEnd flag keeps ixn open until .end', () => {
 })
 
 test('.save forcibly harvest any would-be cancelled ixns', async () => {
-  let ixn = newrelic.interaction().save()
+  let ixn = mainAgent.interaction().save()
   let ixnContext = getIxnContext(ixn)
   softNavAggregate.ee.emit(`${INTERACTION_API}-end`, [100], ixnContext)
   expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(1)
   expect(ixnContext.associatedInteraction.end).toEqual(100)
 
   softNavAggregate.ee.emit('newUIEvent', [{ type: 'keydown', timeStamp: 200 }])
-  ixn = newrelic.interaction().save()
+  ixn = mainAgent.interaction().save()
   ixnContext = getIxnContext(ixn)
   softNavAggregate.ee.emit('newUIEvent', [{ type: 'keydown', timeStamp: 210 }])
   expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(2)
   expect(ixnContext.associatedInteraction.end).toBeGreaterThan(ixnContext.associatedInteraction.start) // thisCtx is still referencing the first keydown ixn
 
-  newrelic.interaction().save().end()
+  mainAgent.interaction().save().end()
   await new Promise(process.nextTick)
   expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(3)
 })
 
 test('.ignore forcibly discard any would-be harvested ixns', () => {
   softNavAggregate.ee.emit('newUIEvent', [{ type: 'submit', timeStamp: 12 }])
-  newrelic.interaction().ignore()
+  mainAgent.interaction().ignore()
   softNavAggregate.ee.emit('newURL', [23, 'example.com'])
   softNavAggregate.ee.emit('newDom', [34])
   expect(softNavAggregate.interactionInProgress).toBeNull()
   expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(0)
 
-  const ixn = newrelic.interaction({ waitForEnd: true }).ignore().save() // ignore ought to override this
+  const ixn = mainAgent.interaction({ waitForEnd: true }).ignore().save() // ignore ought to override this
   ixn.end()
   expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(0)
   expect(getIxnContext(ixn).associatedInteraction.status).toEqual('cancelled')
@@ -177,18 +177,18 @@ test('.ignore forcibly discard any would-be harvested ixns', () => {
 
 test('.getContext stores values scoped to each ixn', async () => {
   let hasRan = false
-  newrelic.interaction().getContext(privCtx => { privCtx.someVar = true })
-  newrelic.interaction().getContext(privCtx => {
+  mainAgent.interaction().getContext(privCtx => { privCtx.someVar = true })
+  mainAgent.interaction().getContext(privCtx => {
     expect(privCtx.someVar).toEqual(true)
     hasRan = true
   })
 
   await new Promise(resolve => setTimeout(resolve, 100))
   expect(hasRan).toEqual(true)
-  newrelic.interaction().end()
+  mainAgent.interaction().end()
 
   hasRan = false
-  newrelic.interaction().getContext(privCtx => {
+  mainAgent.interaction().getContext(privCtx => {
     expect(privCtx.someVar).toBeUndefined() // two separate interactions should not share the same data store
     hasRan = true
   })
@@ -198,7 +198,7 @@ test('.getContext stores values scoped to each ixn', async () => {
 
 test('.onEnd queues callbacks for right before ixn is done', async () => {
   let hasRan = false
-  const ixn1 = newrelic.interaction().getContext(privCtx => { privCtx.someVar = true })
+  const ixn1 = mainAgent.interaction().getContext(privCtx => { privCtx.someVar = true })
   await new Promise(resolve => setTimeout(resolve, 100))
   ixn1.onEnd(privCtx => {
     expect(privCtx.someVar).toEqual(true) // should have access to the same data store as getContext
@@ -209,7 +209,7 @@ test('.onEnd queues callbacks for right before ixn is done', async () => {
   expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(1)
 
   hasRan = false
-  const ixn2 = newrelic.interaction().save()
+  const ixn2 = mainAgent.interaction().save()
   ixn2.onEnd(() => {
     hasRan = true
     ixn2.ignore()
@@ -222,45 +222,45 @@ test('.setCurrentRouteName updates the targetRouteName of current ixn and is tra
   const firstRoute = 'route_X'
   const middleRoute = 'route_Y'
   const lastRoute = 'route_Z'
-  let ixn = newrelic.interaction() // a new ixn would start with undefined old & new routes
+  let ixn = mainAgent.interaction() // a new ixn would start with undefined old & new routes
   let ixnContext = getIxnContext(ixn)
-  newrelic.setCurrentRouteName(firstRoute)
+  mainAgent.setCurrentRouteName(firstRoute)
   expect(ixnContext.associatedInteraction.oldRoute).toBeUndefined()
   expect(ixnContext.associatedInteraction.newRoute).toEqual(firstRoute)
   ixn.end()
 
-  ixn = newrelic.interaction() // most recent route should be maintained
+  ixn = mainAgent.interaction() // most recent route should be maintained
   ixnContext = getIxnContext(ixn)
   expect(ixnContext.associatedInteraction.oldRoute).toEqual(firstRoute)
   expect(ixnContext.associatedInteraction.newRoute).toBeUndefined()
-  newrelic.setCurrentRouteName(middleRoute)
-  newrelic.setCurrentRouteName(lastRoute)
+  mainAgent.setCurrentRouteName(middleRoute)
+  mainAgent.setCurrentRouteName(lastRoute)
   expect(ixnContext.associatedInteraction.oldRoute).toEqual(firstRoute)
   expect(ixnContext.associatedInteraction.newRoute).toEqual(lastRoute)
   ixn.end()
 
-  newrelic.setCurrentRouteName(middleRoute) // setCurrentRouteName doesn't need an existing ixn to function, but the change should still carry forward
-  ixn = newrelic.interaction()
+  mainAgent.setCurrentRouteName(middleRoute) // setCurrentRouteName doesn't need an existing ixn to function, but the change should still carry forward
+  ixn = mainAgent.interaction()
   ixnContext = getIxnContext(ixn)
   expect(ixnContext.associatedInteraction.oldRoute).toEqual(middleRoute)
 })
 
 test('.setName can change customName and trigger of ixn', () => {
-  const ixn = newrelic.interaction().setName('quack', 'moo')
+  const ixn = mainAgent.interaction().setName('quack', 'moo')
   const ixnContext = getIxnContext(ixn)
   expect(ixnContext.associatedInteraction.customName).toEqual('quack')
   expect(ixnContext.associatedInteraction.trigger).toEqual('moo')
 })
 
 test('.actionText and .setAttribute add attributes to ixn specifically', () => {
-  let ixn = newrelic.interaction().actionText('title')
+  let ixn = mainAgent.interaction().actionText('title')
   let ixnContext = getIxnContext(ixn)
   ixn.setAttribute('key_1', 'value_1')
   ixn.setAttribute('key_1', 'value_2').end()
   expect(ixnContext.associatedInteraction.customAttributes.actionText).toEqual('title')
   expect(ixnContext.associatedInteraction.customAttributes.key_1).toEqual('value_2')
 
-  ixn = newrelic.interaction()
+  ixn = mainAgent.interaction()
   ixnContext = getIxnContext(ixn)
   expect(ixnContext.associatedInteraction.customAttributes.actionText).toBeUndefined()
   expect(ixnContext.associatedInteraction.customAttributes.key_1).toBeUndefined()
@@ -269,21 +269,21 @@ test('.actionText and .setAttribute add attributes to ixn specifically', () => {
 // This isn't just an API test; it double serves as data validation on the querypack payload output.
 test('multiple finished ixns retain the correct start/end timestamps in payload', () => {
   softNavAggregate.ee.emit(`${INTERACTION_API}-get`, [0])
-  let ixnContext = getIxnContext(newrelic.interaction())
+  let ixnContext = getIxnContext(mainAgent.interaction())
   ixnContext.associatedInteraction.nodeId = 1
   ixnContext.associatedInteraction.id = 'some_id'
   ixnContext.associatedInteraction.forceSave = true
   softNavAggregate.ee.emit(`${INTERACTION_API}-end`, [200], ixnContext)
 
   softNavAggregate.ee.emit(`${INTERACTION_API}-get`, [300])
-  ixnContext = getIxnContext(newrelic.interaction())
+  ixnContext = getIxnContext(mainAgent.interaction())
   ixnContext.associatedInteraction.nodeId = 2
   ixnContext.associatedInteraction.id = 'some_other_id'
   ixnContext.associatedInteraction.forceSave = true
   softNavAggregate.ee.emit(`${INTERACTION_API}-end`, [500], ixnContext)
 
   softNavAggregate.ee.emit(`${INTERACTION_API}-get`, [700])
-  ixnContext = getIxnContext(newrelic.interaction())
+  ixnContext = getIxnContext(mainAgent.interaction())
   ixnContext.associatedInteraction.nodeId = 3
   ixnContext.associatedInteraction.id = 'some_another_id'
   ixnContext.associatedInteraction.forceSave = true
@@ -297,7 +297,7 @@ test('multiple finished ixns retain the correct start/end timestamps in payload'
 // This isn't just an API test; it double serves as data validation on the querypack payload output.
 test('multiple finished ixns with ajax have correct start/end timestamps (in ajax nodes)', () => {
   softNavAggregate.ee.emit(`${INTERACTION_API}-get`, [1.23])
-  let ixnContext = getIxnContext(newrelic.interaction())
+  let ixnContext = getIxnContext(mainAgent.interaction())
   ixnContext.associatedInteraction.nodeId = 1
   ixnContext.associatedInteraction.id = 'some_id'
   ixnContext.associatedInteraction.forceSave = true
@@ -309,7 +309,7 @@ test('multiple finished ixns with ajax have correct start/end timestamps (in aja
   ixnContext.associatedInteraction.children[1].nodeId = 3
 
   softNavAggregate.ee.emit(`${INTERACTION_API}-get`, [10])
-  ixnContext = getIxnContext(newrelic.interaction())
+  ixnContext = getIxnContext(mainAgent.interaction())
   ixnContext.associatedInteraction.nodeId = 4
   ixnContext.associatedInteraction.id = 'some_other_id'
   ixnContext.associatedInteraction.forceSave = true

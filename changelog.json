@@ -4,6 +4,31 @@
     {
       "changes": [
         {
+          "type": "fix",
+          "sha": "56e75b243b87d1d44e8014ac0ad5f408f0d145c5",
+          "message": "Ensure event buffer always exists",
+          "issues": [
+            "1452"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "49205807b6038afb32e3f04ebabedfe5fc11456b",
+          "message": "Call handle directly for submitting SM from SR recorder",
+          "issues": [
+            "1453"
+          ]
+        }
+      ],
+      "version": "1.288.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "fa455c83-ffc8-45e1-870e-b617edbae89b",
+      "createTime": "2025-04-18T23:41:11.957Z"
+    },
+    {
+      "changes": [
+        {
           "type": "feat",
           "sha": "5819b649792b6227d49173ecb326f918b1f39bdb",
           "message": "Prevent storing session data past session expiry",
@@ -2800,5 +2825,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2025-04-16T17:53:15.185Z"
+  "updateTime": "2025-04-18T23:41:11.957Z"
 }

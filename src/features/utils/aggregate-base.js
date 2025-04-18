@@ -34,11 +34,13 @@ export class AggregateBase extends FeatureBase {
     this.harvestOpts = {} // features aggregate classes can define custom opts for when their harvest is called
 
     const agentEntityGuid = this.agentRef?.runtime?.appMetadata?.agents?.[0]?.entityGuid
-    if (agentEntityGuid) {
-      this.#setupEventStore(agentEntityGuid) // if there's no entity guid, wont dont anything, and will wait for rum flags
-    } else {
+    this.#setupEventStore(agentEntityGuid)
+    if (!agentEntityGuid) {
+      /** wait for the entity guid from the rum response and use to it to further configure things to set the default entity to share an indexed entity with entityGuid */
       this.ee.on('entity-added', entity => {
-        this.#setupEventStore(entity.entityGuid)
+        // not all event managers have this fn, like ST and SR
+        // this allows the lookup to work for the default and an entityGuid without creating two separate buffers
+        this.events?.setEventStore?.(entity.entityGuid)
       })
     }
   }
@@ -49,7 +51,7 @@ export class AggregateBase extends FeatureBase {
    * @returns {void}
    */
   #setupEventStore (entityGuid) {
-    if (this.events || !entityGuid) return
+    if (this.events) return
     switch (this.featureName) {
     // SessionTrace + Replay have their own storage mechanisms.
       case FEATURE_NAMES.sessionTrace:

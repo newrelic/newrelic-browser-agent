@@ -918,10 +918,6 @@ describe('API tests', () => {
   })
 
   describe('setTopLevelCallers', () => {
-    let presetKeys
-    beforeAll(() => {
-      presetKeys = Object.keys(gosCDN()).length
-    })
     afterEach(() => {
       jest.clearAllMocks()
       delete global.NREUM
@@ -955,7 +951,13 @@ describe('API tests', () => {
       setTopLevelCallers(mockAgent)
       const nreum = gosCDN()
 
-      expect(Object.keys(nreum).length - Object.keys(mockAgent).length + 1).toEqual(presetKeys)
+      const apiKeysNeedingMatch = Object.keys(mockAgent).filter(key => key !== 'exposed' && key !== 'runtime')
+      Object.keys(nreum).forEach(key => {
+        const match = apiKeysNeedingMatch.findIndex(apiKey => apiKey === key)
+        if (match >= 0) apiKeysNeedingMatch.splice(match, 1)
+      })
+
+      expect(apiKeysNeedingMatch).toEqual([])
       expect(typeof nreum.setErrorHandler).toEqual('function')
       expect(typeof nreum.finished).toEqual('function')
       expect(typeof nreum.addToTrace).toEqual('function')

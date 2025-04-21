@@ -13,7 +13,7 @@ export function setTopLevelCallers (agentRef) {
     if (typeof origFn !== 'function' || origFn === 'constructor') return
     /** if the method already exists on the top and we are allowed to -- we can call it multiple times */
     let origNrFn = nr[fnName]
-    if (!agentRef[fnName] || !agentRef.exposed || agentRef.runtime?.loaderType === 'micro-agent') return // dont set the top level callers if we are not allowed to
+    if (!agentRef[fnName] || agentRef.exposed === false || agentRef.runtime?.loaderType === 'micro-agent') return // dont set the top level callers if we are not allowed to
 
     nr[fnName] = (...args) => {
       const thisAgentFnResult = agentRef[fnName](...args)

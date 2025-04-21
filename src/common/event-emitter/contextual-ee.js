@@ -33,7 +33,7 @@ function ee (old, debugId) {
     // We only want to check the runtime configuration for `isolatedBacklog` if the event emitter belongs to a feature.
     // For feature event emitters, the debugId will be an agentIdentifier with a length of 16. In contrast, some of our
     // tests do not namespace the event emitter with an agentID and just use the parent (which has no ID).
-    isolatedBacklog = debugId.length !== 16 ? false : nr.initializedAgents?.[debugId]?.isolatedBacklog
+    isolatedBacklog = debugId.length !== 16 ? false : nr.initializedAgents?.[debugId]?.runtime.isolatedBacklog
   } catch (err) {
     // Do nothing for now.
   }

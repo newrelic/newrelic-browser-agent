@@ -91,6 +91,19 @@ const config = [
         }
       ]
     },
+    optimization: {
+      minimize: false, // Disable minification globally
+      splitChunks: {
+        cacheGroups: {
+          microAgent: {
+            test: /micro-agent\.js$/,
+            name: 'micro-agent',
+            chunks: 'all',
+            enforce: true
+          }
+        }
+      }
+    },
     plugins: [
       new HtmlWebpackPlugin({
         filename: 'browser-agent.html',

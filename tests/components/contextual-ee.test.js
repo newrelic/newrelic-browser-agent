@@ -46,13 +46,15 @@ describe('scoping event-emitter', () => {
   test('it creates a child event-emitter with an isolated backlog', async () => {
     const childName = faker.string.alphanumeric(16)
     mockNREUM.initializedAgents = {
-      [childName]: { isolatedBacklog: true }
+      [childName]: {
+        runtime: { isolatedBacklog: true }
+      }
     }
 
     const { ee } = await import('../../src/common/event-emitter/contextual-ee')
     const result = ee.get(childName)
 
-    expect(ee.backlog).not.toBe(result.backlog)
+    expect(ee.backlog === result.backlog).toBe(false)
   })
 })
 

@@ -162,8 +162,10 @@ export class Aggregate extends AggregateBase {
   abort (reason = {}) {
     this.reportSupportabilityMetric(`Logging/Abort/${reason.sm}`)
     this.blocked = true
-    this.events.clear()
-    this.events.clearSave()
+    if (this.events) {
+      this.events.clear()
+      this.events.clearSave()
+    }
     this.updateLoggingMode(LOGGING_MODE.OFF)
     this.deregisterDrain()
   }

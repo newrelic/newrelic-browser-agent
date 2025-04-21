@@ -41,6 +41,10 @@ export class TraceStorage {
     this.parent = parent
   }
 
+  isAfterSessionExpiry (entryTimestamp) {
+    return this.parent.agentRef.runtime?.session?.isAfterSessionExpiry((this.parent.timeKeeper?.ready && this.parent.timeKeeper.convertRelativeTimestamp(entryTimestamp)) ?? undefined)
+  }
+
   /** Central function called by all the other store__ & addToTrace API to append a trace node. */
   storeSTN (stn) {
     if (this.parent.blocked) return
@@ -48,6 +52,10 @@ export class TraceStorage {
       if (this.parent.mode !== MODE.ERROR) return
       const openedSpace = this.trimSTNs(ERROR_MODE_SECONDS_WINDOW) // but maybe we could make some space by discarding irrelevant nodes if we're in sessioned Error mode
       if (openedSpace === 0) return
+    }
+    if (this.isAfterSessionExpiry(stn.s)) {
+      this.parent.reportSupportabilityMetric('Session/Expired/SessionTrace/Seen')
+      return
     }
 
     if (this.trace[stn.n]) this.trace[stn.n].push(stn)

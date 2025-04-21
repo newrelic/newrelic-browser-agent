@@ -9,7 +9,7 @@ const entity = { entityGuid, ...info }
 const entityManager = new EntityManager({ info, ee: { emit: jest.fn() } })
 entityManager.setDefaultEntity(entity)
 entityManager.set(entityGuid, entity)
-const mockAgentRef = { runtime: { entityManager, appMetadata: { agents: [{ entityGuid }] } } }
+const mockAgentRef = { info, runtime: { entityManager, appMetadata: { agents: [{ entityGuid }] } } }
 describe('EventStoreManager', () => {
   test('uses EventBuffer class when storageChoice is EventBuffer', () => {
     const store = new EventStoreManager(mockAgentRef, EventBuffer, mockAgentRef.runtime.appMetadata.agents[0].entityGuid, 'test')
@@ -95,7 +95,7 @@ describe('EventStoreManager', () => {
   })
 
   test('isEmpty checks ALL storages when target is not provided', () => {
-    const tgt1 = { name: 'myTarget' }
+    const tgt1 = 'myTarget'
     const store = new EventStoreManager(mockAgentRef, EventBuffer, mockAgentRef.runtime.appMetadata.agents[0].entityGuid, 'test')
     expect(store.isEmpty()).toBeTruthy()
     store.add('myEvent', tgt1)
@@ -103,7 +103,7 @@ describe('EventStoreManager', () => {
     store.clear()
     expect(store.isEmpty()).toBeTruthy()
 
-    store.add('evt2', { name: 'otherTarget' })
+    store.add('evt2', 'otherTarget')
     expect(store.isEmpty()).toBeFalsy()
     expect(store.isEmpty(undefined, tgt1)).toBeTruthy()
     store.add('evt1', tgt1)

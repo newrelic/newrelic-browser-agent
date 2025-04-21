@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.288.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.288.0...v1.288.1) (2025-04-18)
+
+
+### Bug Fixes
+
+* Call handle directly for submitting SM from SR recorder ([#1453](https://github.com/newrelic/newrelic-browser-agent/issues/1453)) ([4920580](https://github.com/newrelic/newrelic-browser-agent/commit/49205807b6038afb32e3f04ebabedfe5fc11456b))
+* Ensure event buffer always exists ([#1452](https://github.com/newrelic/newrelic-browser-agent/issues/1452)) ([56e75b2](https://github.com/newrelic/newrelic-browser-agent/commit/56e75b243b87d1d44e8014ac0ad5f408f0d145c5))
+
 ## [1.288.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.287.0...v1.288.0) (2025-04-16)
 
 

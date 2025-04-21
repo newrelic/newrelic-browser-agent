@@ -5,12 +5,10 @@
 import { warn } from '../common/util/console'
 import { ADD_PAGE_ACTION, ADD_RELEASE, ADD_TO_TRACE, FINISHED, INTERACTION, LOG, NOTICE_ERROR, PAUSE_REPLAY, RECORD_CUSTOM_EVENT, RECORD_REPLAY, REGISTER, SET_APPLICATION_VERSION, SET_CURRENT_ROUTE_NAME, SET_CUSTOM_ATTRIBUTE, SET_ERROR_HANDLER, SET_PAGE_VIEW_NAME, SET_USER_ID, START, WRAP_LOGGER } from './api/constants'
 
+/**
+ * @typedef {import('./api/interaction-types').InteractionInstance} InteractionInstance
+ */
 export class ApiBase {
-  /**
-   * Tries to execute the api and generates a generic warning message with the api name injected if unsuccessful
-   * @param {string} methodName
-   * @param  {...any} args
-   */
   #callMethod (methodName, ...args) {
     if (this[methodName] === ApiBase.prototype[methodName]) warn(35, methodName)
     else return this[methodName](...args)

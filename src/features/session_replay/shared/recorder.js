@@ -106,6 +106,7 @@ export class Recorder {
 
     this.stopRecording = () => {
       this.recording = false
+      this.notified = false
       this.parent.ee.emit(SR_EVENT_EMITTER_TYPES.REPLAY_RUNNING, [false, this.parent.mode])
       stop?.()
     }
@@ -153,6 +154,10 @@ export class Recorder {
   /** Store a payload in the buffer (this.#events).  This should be the callback to the recording lib noticing a mutation */
   store (event, isCheckout) {
     if (!event) return
+    if (this.parent.agentRef.runtime?.session?.isAfterSessionExpiry(event.timestamp)) {
+      handle(SUPPORTABILITY_METRIC_CHANNEL, ['Session/Expired/SessionReplay/Seen'], undefined, FEATURE_NAMES.metrics, this.ee)
+      return
+    }
 
     if (!(this.parent instanceof AggregateBase) && this.#preloaded.length) this.currentBufferTarget = this.#preloaded[this.#preloaded.length - 1]
     else this.currentBufferTarget = this.#events

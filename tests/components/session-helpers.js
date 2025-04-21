@@ -40,5 +40,6 @@ export const model = {
   traceHarvestStarted: false,
   loggingMode: 0,
   serverTimeDiff: null,
-  custom: {}
+  custom: {},
+  numOfResets: 0
 }

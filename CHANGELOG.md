@@ -3,6 +3,28 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.288.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.288.0...v1.288.1) (2025-04-18)
+
+
+### Bug Fixes
+
+* Call handle directly for submitting SM from SR recorder ([#1453](https://github.com/newrelic/newrelic-browser-agent/issues/1453)) ([4920580](https://github.com/newrelic/newrelic-browser-agent/commit/49205807b6038afb32e3f04ebabedfe5fc11456b))
+* Ensure event buffer always exists ([#1452](https://github.com/newrelic/newrelic-browser-agent/issues/1452)) ([56e75b2](https://github.com/newrelic/newrelic-browser-agent/commit/56e75b243b87d1d44e8014ac0ad5f408f0d145c5))
+
+## [1.288.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.287.0...v1.288.0) (2025-04-16)
+
+
+### Features
+
+* Introduce isFirstOfSession attribute on InitialPageLoad events ([#1432](https://github.com/newrelic/newrelic-browser-agent/issues/1432)) ([8d7bdd6](https://github.com/newrelic/newrelic-browser-agent/commit/8d7bdd63abe0b6d9dfccc46f63845bde0fd099a4))
+* Prevent storing session data past session expiry ([#1426](https://github.com/newrelic/newrelic-browser-agent/issues/1426)) ([5819b64](https://github.com/newrelic/newrelic-browser-agent/commit/5819b649792b6227d49173ecb326f918b1f39bdb))
+
+
+### Bug Fixes
+
+* Reset `notified` when replay stops recording ([#1435](https://github.com/newrelic/newrelic-browser-agent/issues/1435)) ([7dd8b62](https://github.com/newrelic/newrelic-browser-agent/commit/7dd8b6217763c57c382737b6ff90667066437b75))
+* Solve race condition in logging abort ([#1445](https://github.com/newrelic/newrelic-browser-agent/issues/1445)) ([ab315dc](https://github.com/newrelic/newrelic-browser-agent/commit/ab315dc009a45911911f5d176978fac0cf066be3))
+
 ## [1.287.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.286.0...v1.287.0) (2025-04-10)
 
 

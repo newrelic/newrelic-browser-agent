@@ -38,6 +38,7 @@ beforeEach(async () => {
   const ajaxInstrument = new Ajax(fakeAgent)
   await new Promise(process.nextTick)
   ajaxAggregate = ajaxInstrument.featAggregate
+  ajaxAggregate.ee.emit('rumresp', [])
   ajaxAggregate.drain()
 
   context = new EventContext()
@@ -151,7 +152,7 @@ describe('prepareHarvest', () => {
     }
     fakeAgent.info.jsAttributes = expectedCustomAttributes
 
-    const serializedPayload = ajaxAggregate.makeHarvestPayload(false)[0].payload
+    const [{ payload: serializedPayload }] = ajaxAggregate.makeHarvestPayload(false)
     // serializedPayload from ajax comes back as an array of bodies now, so we just need to decode each one and flatten
     // this decoding does not happen elsewhere in the app so this only needs to happen here in this specific test
     const decodedEvents = qp.decode(serializedPayload.body)
@@ -164,11 +165,13 @@ describe('prepareHarvest', () => {
     })
   })
 
-  test('correctly exits if maxPayload is too small', () => {
-    ajaxAggregate.events.appStorageMap.get(ajaxAggregate.events.mainApp).maxPayloadSize = 10 // this is too small for any AJAX payload to fit in
-    for (let callNo = 0; callNo < 10; callNo++) ajaxAggregate.ee.emit('xhr', ajaxArguments, context)
+  test('correctly exits if maxPayload is too small', async () => {
+    for (let callNo = 0; callNo < 10; callNo++) {
+      ajaxAggregate.ee.emit('xhr', [{ ...ajaxArguments[0], pathname: 'x'.repeat(1000000) }, ...ajaxArguments], context)
+    }
 
-    expect(ajaxAggregate.makeHarvestPayload(false)).toBeUndefined() // payload that are each too small for limit will be dropped
+    const serializedPayload = ajaxAggregate.makeHarvestPayload(false)
+    expect(serializedPayload).toBeUndefined() // payload that are each too small for limit will be dropped
   })
 })
 

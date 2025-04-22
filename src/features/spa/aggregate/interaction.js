@@ -12,8 +12,7 @@ var originalClearTimeout = gosNREUMOriginals().o.CT
 var lastId = {}
 
 export function Interaction (eventName, timestamp, url, routeName, onFinished, agentRef) {
-  this.info = agentRef.info
-  this.ee = agentRef.ee
+  this.agentRef = agentRef
 
   lastId[agentRef.agentIdentifier] = 0
   this.id = ++lastId[agentRef.agentIdentifier]
@@ -99,10 +98,10 @@ InteractionPrototype.finish = function finishInteraction () {
     this.onFinished(this)
   }
 
-  Object.entries(interaction.info.jsAttributes || {}).forEach(([attr, value]) => {
+  Object.entries(interaction.agentRef.info.jsAttributes || {}).forEach(([attr, value]) => {
     if (!(attr in customAttrs)) customAttrs[attr] = value
   })
 
   root.end = endTimestamp
-  interaction.ee.emit('interaction', [this])
+  interaction.agentRef.ee.emit('interaction', [this])
 }

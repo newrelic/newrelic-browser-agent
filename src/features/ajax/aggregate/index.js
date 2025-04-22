@@ -58,7 +58,7 @@ export class Aggregate extends AggregateBase {
 
     // Report ajax timeslice metric (to be harvested by jserrors feature, but only if it's running).
     if (jserrorsInUse && (shouldCollect || !shouldOmitAjaxMetrics)) {
-      this.agentRef.sharedAggregator.add(['xhr', hash, params, metrics])
+      this.agentRef.sharedAggregator?.add(['xhr', hash, params, metrics])
     }
 
     if (!shouldCollect) {
@@ -118,6 +118,7 @@ export class Aggregate extends AggregateBase {
   }
 
   serializer (eventBuffer) {
+    if (!eventBuffer.length) return
     const addString = getAddStringContext(this.agentRef.runtime.obfuscator)
     let payload = 'bel.7;'
 

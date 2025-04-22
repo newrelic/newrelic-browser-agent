@@ -14,9 +14,10 @@ const agentIdentifier = 'abcdefg'
 const baseEE = ee.get(agentIdentifier)
 
 beforeAll(async () => {
-  spaInstrument = new Spa({ agentIdentifier, info: {}, init: { spa: { enabled: true }, privacy: {} }, runtime: {}, ee: baseEE })
+  spaInstrument = new Spa({ agentIdentifier, info: {}, init: { spa: { enabled: true }, privacy: {} }, runtime: { appMetadata: { agents: [{ entityGuid: '12345' }] } }, ee: baseEE })
   await expect(spaInstrument.onAggregateImported).resolves.toEqual(true)
   spaAggregate = spaInstrument.featAggregate
+  spaAggregate.ee.emit('rumresp', [{ spa: 1 }])
   spaAggregate.blocked = true
   spaAggregate.drain()
   newrelic = helpers.getNewrelicGlobal(spaAggregate.ee)

@@ -12,7 +12,7 @@ import { BUILD_ENV, DIST_METHOD, VERSION } from '../constants/env'
  */
 let harvestCount = 0
 
-const readonly = {
+const ReadOnly = {
   buildEnv: BUILD_ENV,
   distMethod: DIST_METHOD,
   version: VERSION,
@@ -20,26 +20,30 @@ const readonly = {
 }
 
 const RuntimeModel = {
+  /** Agent-specific metadata found in the RUM call response. ex. entityGuid */
+  appMetadata: {},
   customTransaction: undefined,
+  denyList: undefined,
   disabled: false,
+  entityManager: undefined,
+  harvester: undefined,
   isolatedBacklog: false,
   loaderType: undefined,
   maxBytes: 30000,
+  obfuscator: undefined,
   onerror: undefined,
   ptid: undefined,
   releaseIds: {},
-  /** Agent-specific metadata found in the RUM call response. ex. entityGuid */
-  appMetadata: {},
   session: undefined,
-  denyList: undefined,
   timeKeeper: undefined,
-  obfuscator: undefined,
-  harvester: undefined,
-  get harvestCount () {
-    return ++harvestCount
-  }
+  get harvestCount () { return ++harvestCount }
 }
 
 export const mergeRuntime = (runtime) => {
-  return Object.assign(getModeledObject(runtime, RuntimeModel), readonly)
+  const modeledObject = getModeledObject(runtime, RuntimeModel)
+  const readonlyDescriptors = Object.keys(ReadOnly).reduce((descriptors, key) => {
+    descriptors[key] = { value: ReadOnly[key], writable: false, configurable: true, enumerable: true }
+    return descriptors
+  }, {})
+  return Object.defineProperties(modeledObject, readonlyDescriptors)
 }

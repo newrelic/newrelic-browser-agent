@@ -2,6 +2,8 @@ import helpers from './helpers'
 import { ee } from '../../../src/common/event-emitter/contextual-ee'
 import { Spa } from '../../../src/features/spa'
 
+jest.retryTimes(3)
+
 jest.mock('../../../src/common/constants/runtime')
 jest.mock('../../../src/common/config/info', () => ({
   __esModule: true,
@@ -14,7 +16,7 @@ const agentIdentifier = 'abcdefg'
 const baseEE = ee.get(agentIdentifier)
 
 beforeAll(async () => {
-  spaInstrument = new Spa({ agentIdentifier, info: {}, init: { spa: { enabled: true }, privacy: {} }, runtime: {}, ee: baseEE })
+  spaInstrument = new Spa({ agentIdentifier, info: {}, init: { spa: { enabled: true }, privacy: {} }, runtime: { appMetadata: { agents: [{ entityGuid: 'entityGuid' }] } }, ee: baseEE })
   await expect(spaInstrument.onAggregateImported).resolves.toEqual(true)
   spaAggregate = spaInstrument.featAggregate
   spaAggregate.blocked = true

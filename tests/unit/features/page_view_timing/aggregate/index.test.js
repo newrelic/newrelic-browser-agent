@@ -1,6 +1,5 @@
 import * as qp from '@newrelic/nr-querypack'
 import { Aggregate } from '../../../../../src/features/page_view_timing/aggregate'
-import { setNREUMInitializedAgent } from '../../../../../src/common/window/nreum'
 
 jest.mock('../../../../../src/common/harvest/harvester')
 
@@ -10,7 +9,6 @@ const agentInst = {
   init: { page_view_timing: {} },
   runtime: {}
 }
-setNREUMInitializedAgent(agentInst.agentIdentifier, agentInst) // needed since configure calls setInit instead of modifying agentInst.init directly
 const pvtAgg = new Aggregate(agentInst)
 
 describe('PVT aggregate', () => {
@@ -59,7 +57,7 @@ describe('PVT aggregate', () => {
     })
     global.navigator.connection = {}
     pvtAgg.addTiming('abc', 1)
-    expect(pvtAgg.events.get()[0].data[0].attrs).toEqual(expect.objectContaining({}))
+    expect(pvtAgg.events.get(undefined, 'NR_CONTAINER_AGENT')[0].data[0].attrs).toEqual(expect.objectContaining({}))
 
     global.navigator.connection.type = 'type'
     let timing = pvtAgg.addTiming('abc', 1)

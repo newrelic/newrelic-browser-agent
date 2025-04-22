@@ -12,6 +12,11 @@ let mainAgent
 
 beforeAll(async () => {
   mainAgent = setupAgent()
+  /** mock response from PVE that assigns an entityGuid to the entity manager */
+  mainAgent.runtime.entityManager.set(
+    mainAgent.runtime.appMetadata.agents[0].entityGuid,
+    { licenseKey: mainAgent.info.licenseKey, applicationID: mainAgent.info.applicationID, entityGuid: mainAgent.runtime.appMetadata.agents[0].entityGuid }
+  )
 })
 
 let loggingAggregate
@@ -44,7 +49,9 @@ describe('class setup', () => {
       'ee',
       'featureName',
       'blocked',
-      'events'
+      'agentRef',
+      'obfuscator',
+      'harvestOpts'
     ]))
   })
 
@@ -244,4 +251,9 @@ test('can harvest early', async () => {
   loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'x'.repeat(800 * 800), { myAttributes: 1 }, 'ERROR']) // almost too big
   expect(handleModule.handle).toHaveBeenCalledWith(...harvestEarlySm)
   expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalled()
+})
+
+test('should not error if aborting before events have been set', async () => {
+  delete loggingAggregate.events
+  expect(() => loggingAggregate.abort()).not.toThrow()
 })

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>Session Replay - error after load</title>
+    <style>
+      .left {
+        position: absolute;
+        left: 50px;
+        top: 200px;
+      }
+      .right {
+        position: absolute;
+        right: 50px;
+        top: 200px;
+      }
+    </style>
+    <link rel="stylesheet" type="text/css" href="style.css" />
+    {init} {config}
+    <script>
+      localStorage.clear()
+      NREUM.init.session_replay = {enabled: true, collect_fonts: true}
+      NREUM.init.privacy.cookies_enabled = true
+    </script>
+    {loader}
+    <script>
+      function simulatePageHide() {
+        document.visibilityState = 'hidden'
+        document.dispatchEvent(new Event("visibilitychange"))
+      }
+
+      function simulatePageShow() {
+        document.visibilityState = 'visible'
+        document.dispatchEvent(new Event("visibilitychange"))
+      }
+
+      window.phase1Complete
+      window.addEventListener("load", () => {
+        const check = setInterval(() => {
+          // if error is thrown before jserror is notified, then jserror will not be decorated with `hasReplay`
+          if (!!Object.values(newrelic.initializedAgents)[0].features.session_replay?.featAggregate?.recorder?.notified) {
+            clearInterval(check)
+            console.log('noticing error....')
+            newrelic.noticeError(new Error('after load'))
+            window.phase1Complete = Date.now()
+          }
+        }, 10)
+      });
+
+      const check2 = setInterval(() => {
+        // ensure the errors are harvested separately
+        if (Date.now() - window.phase1Complete > 5000) {
+          clearInterval(check2)
+          Object.defineProperty(document, 'visibilityState', {
+            value: 'visible',
+            writable: true
+          })
+          simulatePageHide()
+          simulatePageShow()
+          console.log('noticing second error....')
+          newrelic.noticeError(new Error('after resume, should have hasReplay = true'))
+        }
+      }, 200)
+    </script>
+  </head>
+  <body>
+    this is a page that provides several types of elements with selectors that session_replay can interact with based on how it is configured
+    <hr />
+    <hr />
+    <textarea id="plain"></textarea>
+    <textarea id="ignore" class="nr-ignore"></textarea>
+    <textarea id="block" class="nr-block"></textarea>
+    <textarea id="mask" class="nr-mask"></textarea>
+    <textarea id="nr-block" data-nr-block></textarea>
+    <textarea id="other-block" data-other-block></textarea>
+    <input type="password" id="pass-input" />
+    <input type="text" id="text-input" />
+  </body>
+</html>

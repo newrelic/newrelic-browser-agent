@@ -73,7 +73,7 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
 
     dispatchGlobalEvent({
       agentIdentifier: agent.agentIdentifier,
-      loaded: !!activatedFeatures?.[agent.agentIdentifier],
+      drained: !!activatedFeatures?.[agent.agentIdentifier],
       type: 'lifecycle',
       name: 'initialize',
       feature: undefined,

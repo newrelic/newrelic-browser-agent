@@ -23,7 +23,7 @@ beforeEach(async () => {
   jest.spyOn(ttfbModule.timeToFirstByte, 'subscribe')
 
   const softNavInstrument = new SoftNav(mainAgent)
-  await new Promise(process.nextTick)
+  await softNavInstrument.onAggregateImported
   softNavAggregate = softNavInstrument.featAggregate
 
   softNavAggregate.ee.emit('rumresp', [{ spa: 1 }])

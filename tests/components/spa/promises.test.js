@@ -18,7 +18,7 @@ jest.mock('../../../src/common/harvest/harvester')
 
 let spaInstrument, spaAggregate, newrelic
 beforeAll(async () => {
-  spaInstrument = new Spa({ agentIdentifier, info: {}, init: { spa: { enabled: true }, privacy: {} }, runtime: {}, ee: baseEE })
+  spaInstrument = new Spa({ agentIdentifier, info: {}, init: { spa: { enabled: true }, privacy: {} }, runtime: { appMetadata: { agents: [{ entityGuid: '1234' }] } }, ee: baseEE })
   await expect(spaInstrument.onAggregateImported).resolves.toEqual(true)
   spaAggregate = spaInstrument.featAggregate
   newrelic = helpers.getNewrelicGlobal(spaAggregate.ee)

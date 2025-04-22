@@ -5,6 +5,138 @@
       "changes": [
         {
           "type": "fix",
+          "sha": "56e75b243b87d1d44e8014ac0ad5f408f0d145c5",
+          "message": "Ensure event buffer always exists",
+          "issues": [
+            "1452"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "49205807b6038afb32e3f04ebabedfe5fc11456b",
+          "message": "Call handle directly for submitting SM from SR recorder",
+          "issues": [
+            "1453"
+          ]
+        }
+      ],
+      "version": "1.288.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "fa455c83-ffc8-45e1-870e-b617edbae89b",
+      "createTime": "2025-04-18T23:41:11.957Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
+          "sha": "5819b649792b6227d49173ecb326f918b1f39bdb",
+          "message": "Prevent storing session data past session expiry",
+          "issues": [
+            "1426"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "7dd8b6217763c57c382737b6ff90667066437b75",
+          "message": "Reset `notified` when replay stops recording",
+          "issues": [
+            "1435"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "ab315dc009a45911911f5d176978fac0cf066be3",
+          "message": "Solve race condition in logging abort",
+          "issues": [
+            "1445"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "8d7bdd63abe0b6d9dfccc46f63845bde0fd099a4",
+          "message": "Introduce isFirstOfSession attribute on InitialPageLoad events",
+          "issues": [
+            "1432"
+          ]
+        }
+      ],
+      "version": "1.288.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "aa62ba28-420a-4316-bcc6-f6bcdadefa6c",
+      "createTime": "2025-04-16T17:53:15.185Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
+          "sha": "b1a6c30bf78001f5286a614c229ceb7a256593aa",
+          "message": "Central Agent Architecture - Micro Front Ends",
+          "issues": [
+            "1266"
+          ]
+        }
+      ],
+      "version": "1.287.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "45cb14c6-2200-45ad-a1d8-a7912839781e",
+      "createTime": "2025-04-10T22:19:28.056Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
+          "sha": "86014247ed45520adbbb053d94b6f11de48e239f",
+          "message": "Patch `newrelic` event detail",
+          "issues": [
+            "1428"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "44786ae60d761b40a28f6df4b7b835c1791dda5f",
+          "message": "Erase .api property on agent instance",
+          "issues": [
+            "1425"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "7c02a02763abdd2697e9ed1d5a89d81c251dcf67",
+          "message": "Reduce noise from `mousemove` events",
+          "issues": [
+            "1424"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "0c1ce6ca82bce15da12fe84fd91a7d6be8b4da44",
+          "message": "Get string className for SVG elements",
+          "issues": [
+            "1423"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "f8084474ea1a567a90d0615cdfeb13a8a2c1f110",
+          "message": "Handle duplicate agent APIs",
+          "issues": [
+            "1418"
+          ]
+        }
+      ],
+      "version": "1.286.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "2d430882-b6bc-4fc0-a500-5c8ab00e83f5",
+      "createTime": "2025-04-01T22:28:52.259Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
           "sha": "97bf32655d6e608ea7248acc680d983b1d1e0eea",
           "message": "Session Replay text masking for whitespace",
           "issues": [
@@ -2693,5 +2825,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2025-03-18T18:30:03.184Z"
+  "updateTime": "2025-04-18T23:41:11.957Z"
 }

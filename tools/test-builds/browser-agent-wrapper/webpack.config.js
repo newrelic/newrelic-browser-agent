@@ -13,7 +13,7 @@ const htmlTemplate = (script) => `<html>
     <h1>This is a generic page that is instrumented by the NPM agent</h1>
   </body>
 </html>`
-const multiAgentHtmlTemplate = () => `<html>
+const multiAgentHtmlTemplate = `<html>
   <head>
     <title>RUM Unit Test</title>
     {init}
@@ -37,6 +37,18 @@ const workerHtmlTemplate = `<html>
     <h1>This is a generic page that is instrumented by the NPM agent</h1>
   </body>
 </html>`
+const registeredEntityHtmlTemplate = (script) => `<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {init}
+    {config}
+    {loader}
+    <script src="${script}.js"></script>
+  </head>
+  <body>
+    <h1>This is a generic page that is instrumented by the NPM agent</h1>
+  </body>
+</html>`
 
 const config = [
   // standard config
@@ -49,6 +61,7 @@ const config = [
       'custom-agent-pro-deprecated-features': './src/custom-agent-pro-deprecated-features.js',
       'custom-agent-spa': './src/custom-agent-spa.js',
       'micro-agent': './src/micro-agent.js',
+      'registered-entity': './src/registered-entity.js',
       // worker init script
       'worker-init': './src/worker-init.js'
     },
@@ -56,12 +69,6 @@ const config = [
       path: path.resolve(__dirname, '../../../tests/assets/test-builds/browser-agent-wrapper')
     },
     module: {
-      parser: {
-        javascript: {
-          exportsPresence: 'error',
-          importExportsPresence: 'error'
-        }
-      },
       rules: [
         {
           test: /\.(js|jsx)$/i,
@@ -142,10 +149,16 @@ const config = [
         templateContent: htmlTemplate('micro-agent')
       }),
       new HtmlWebpackPlugin({
+        filename: 'registered-entity.html',
+        minify: false,
+        inject: false,
+        templateContent: registeredEntityHtmlTemplate('registered-entity')
+      }),
+      new HtmlWebpackPlugin({
         filename: 'multi-agent.html',
         minify: false,
         inject: false,
-        templateContent: multiAgentHtmlTemplate()
+        templateContent: multiAgentHtmlTemplate
       })
     ]
   },

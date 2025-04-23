@@ -75,6 +75,7 @@ export function resetAgent (agentIdentifier) {
   resetAggregator(agentIdentifier)
   resetSession(agentIdentifier)
   resetEntityManager(agentIdentifier)
+  getRuntime(agentIdentifier).isRecording = false
 }
 
 export function resetEntityManager (agentIdentifier) {

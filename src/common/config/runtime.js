@@ -29,6 +29,7 @@ const model = {
   entityManager: undefined,
   harvester: undefined,
   isolatedBacklog: false,
+  isRecording: false, // true when actively recording, false when paused or stopped
   loaderType: undefined,
   maxBytes: 30000,
   obfuscator: undefined,

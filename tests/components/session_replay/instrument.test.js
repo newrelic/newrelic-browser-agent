@@ -90,7 +90,7 @@ describe('Preload early records', () => {
     await new Promise(process.nextTick)
 
     expect(sessionReplayInstrument.recorder).toBeDefined()
-    expect(sessionReplayInstrument.recorder.recording).toEqual(true)
+    expect(mainAgent.runtime.isRecording).toEqual(true)
   })
 
   test('when replay already on in existing session, even if preload flag disabled', async () => {
@@ -101,7 +101,7 @@ describe('Preload early records', () => {
     await new Promise(process.nextTick)
 
     expect(sessionReplayInstrument.recorder).toBeDefined()
-    expect(sessionReplayInstrument.recorder.recording).toEqual(true)
+    expect(mainAgent.runtime.isRecording).toEqual(true)
   })
 
   test('when replay already on in existing session, even if flag enabled but a pre-req is not', async () => {
@@ -112,7 +112,7 @@ describe('Preload early records', () => {
     await new Promise(process.nextTick)
 
     expect(sessionReplayInstrument.recorder).toBeDefined()
-    expect(sessionReplayInstrument.recorder.recording).toEqual(true)
+    expect(mainAgent.runtime.isRecording).toEqual(true)
   })
 
   test('if replay is off in existing session, but all required flags are enabled', async () => {
@@ -123,7 +123,7 @@ describe('Preload early records', () => {
     await new Promise(process.nextTick)
 
     expect(sessionReplayInstrument.recorder).toBeDefined()
-    expect(sessionReplayInstrument.recorder.recording).toEqual(true)
+    expect(mainAgent.runtime.isRecording).toEqual(true)
   })
 })
 
@@ -143,7 +143,7 @@ describe('Preload recording stops if', () => {
     await new Promise(process.nextTick)
 
     expect(sessionReplayInstrument.recorder).toBeDefined()
-    expect(sessionReplayInstrument.recorder.recording).toEqual(false)
+    expect(mainAgent.runtime.isRecording).toEqual(false)
   })
 
   test('replay aggregate fails to initialize', async () => {
@@ -156,6 +156,6 @@ describe('Preload recording stops if', () => {
     await new Promise(process.nextTick)
 
     expect(sessionReplayInstrument.recorder).toBeDefined()
-    expect(sessionReplayInstrument.recorder.recording).toEqual(false)
+    expect(mainAgent.runtime.isRecording).toEqual(false)
   })
 })

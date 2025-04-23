@@ -13,7 +13,6 @@ import { gosCDN } from '../../common/window/nreum'
 import { apiMethods, asyncApiMethods } from './api-methods'
 import { SR_EVENT_EMITTER_TYPES } from '../../features/session_replay/constants'
 import { now } from '../../common/timing/now'
-import { MODE } from '../../common/session/constants'
 import { LOG_LEVELS } from '../../features/logging/constants'
 import { bufferLog } from '../../features/logging/shared/utils'
 import { wrapLogger } from '../../common/wrap/wrap-logger'
@@ -40,17 +39,9 @@ export function setTopLevelCallers () {
   }
 }
 
-const replayRunning = {}
-
 export function setAPI (agent, forceDrain) {
   if (!forceDrain) registerDrain(agent.agentIdentifier, 'api')
   const tracerEE = agent.ee.get('tracer')
-
-  replayRunning[agent.agentIdentifier] = MODE.OFF
-
-  agent.ee.on(SR_EVENT_EMITTER_TYPES.REPLAY_RUNNING, (isRunning) => {
-    replayRunning[agent.agentIdentifier] = isRunning
-  })
 
   const prefix = 'api-'
   const spaPrefix = prefix + 'ixn-'
@@ -70,7 +61,7 @@ export function setAPI (agent, forceDrain) {
     noticeError: function (err, customAttributes, targetEntityGuid, timestamp = now()) {
       if (typeof err === 'string') err = new Error(err)
       handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/noticeError/called'], undefined, FEATURE_NAMES.metrics, agent.ee)
-      handle('err', [err, timestamp, false, customAttributes, !!replayRunning[agent.agentIdentifier], undefined, targetEntityGuid], undefined, FEATURE_NAMES.jserrors, agent.ee)
+      handle('err', [err, timestamp, false, customAttributes, agent.runtime.isRecording, undefined, targetEntityGuid], undefined, FEATURE_NAMES.jserrors, agent.ee)
     }
   }
 

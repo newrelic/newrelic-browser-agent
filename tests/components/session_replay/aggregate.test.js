@@ -43,36 +43,38 @@ afterEach(() => {
 
 describe('Session Replay Session Behavior', () => {
   test('when session ends', async () => {
-    getRuntime(mainAgent.agentIdentifier).session.state.isNew = true
+    const runtime = getRuntime(mainAgent.agentIdentifier)
+    runtime.session.state.isNew = true
     sessionReplayAggregate.ee.emit('rumresp', [{ sr: 1, srs: MODE.FULL }])
     await new Promise(process.nextTick)
 
     expect(sessionReplayAggregate.initialized).toBeTruthy()
-    expect(sessionReplayAggregate.recorder.recording).toBeTruthy()
+    expect(runtime.isRecording).toBeTruthy()
 
     sessionReplayAggregate.ee.emit(SESSION_EVENTS.RESET)
     await new Promise(process.nextTick)
 
     expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalled()
-    expect(sessionReplayAggregate.recorder.recording).toBeFalsy()
+    expect(runtime.isRecording).toBeFalsy()
     expect(sessionReplayAggregate.blocked).toBeTruthy()
   })
 
   test('when session is paused and resumed', async () => {
-    getRuntime(mainAgent.agentIdentifier).session.state.isNew = true
+    const runtime = getRuntime(mainAgent.agentIdentifier)
+    runtime.session.state.isNew = true
     sessionReplayAggregate.ee.emit('rumresp', [{ sr: 1, srs: MODE.FULL }])
     await new Promise(process.nextTick)
 
     expect(sessionReplayAggregate.initialized).toBeTruthy()
-    expect(sessionReplayAggregate.recorder.recording).toBeTruthy()
+    expect(runtime.isRecording).toBeTruthy()
 
     sessionReplayAggregate.ee.emit(SESSION_EVENTS.PAUSE)
     await new Promise(process.nextTick)
-    expect(sessionReplayAggregate.recorder.recording).toBeFalsy()
+    expect(runtime.isRecording).toBeFalsy()
 
     sessionReplayAggregate.ee.emit(SESSION_EVENTS.RESUME)
     await new Promise(process.nextTick)
-    expect(sessionReplayAggregate.recorder.recording).toBeTruthy()
+    expect(runtime.isRecording).toBeTruthy()
   })
 
   test('session SR mode matches SR mode -- FULL', async () => {
@@ -284,7 +286,6 @@ describe('Session Replay Harvest Behaviors', () => {
     sessionReplayAggregate.ee.emit('rumresp', [{ sr: 1, srs: MODE.FULL }])
     await new Promise(process.nextTick)
 
-    expect(sessionReplayAggregate.recorder.getEvents().events.length).toEqual(0)
     expect(sessionReplayAggregate.recorder.getEvents().events.length).toEqual(0)
   })
 

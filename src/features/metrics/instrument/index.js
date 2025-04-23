@@ -30,6 +30,10 @@ export class Instrument extends InstrumentBase {
       document.addEventListener('securitypolicyviolation', (e) => {
         handle(SUPPORTABILITY_METRIC_CHANNEL, ['Generic/CSPViolation/Detected'], undefined, this.featureName, this.ee)
       })
+      /** we need to detect the nonce here since the lazy agg script runs in a callback and does not have access to the currentScript property */
+      if (document.currentScript?.nonce) {
+        handle(SUPPORTABILITY_METRIC_CHANNEL, ['Generic/Runtime/Nonce/Detected'], undefined, this.featureName, this.ee)
+      }
     }
 
     this.importAggregator(agentRef, import(/* webpackChunkName: "metrics-aggregate" */ '../aggregate'))

@@ -12,6 +12,7 @@ import { setNREUMInitializedAgent } from '../common/window/nreum'
 import { FEATURE_NAMES } from './features/features'
 import { warn } from '../common/util/console'
 import { MicroAgentBase } from './micro-agent-base'
+// api files that are not auto-instrumented
 import { setupSetCustomAttributeAPI } from './api/setCustomAttribute'
 import { setupSetUserIdAPI } from './api/setUserId'
 import { setupSetApplicationVersionAPI } from './api/setApplicationVersion'
@@ -50,7 +51,7 @@ export class MicroAgent extends MicroAgentBase {
 
     configure(this, { ...options, runtime: { isolatedBacklog: true } }, options.loaderType || 'micro-agent')
 
-    /** assign base agent-level API definitions, feature-level APIs will be handled by the features to allow better code-splitting */
+    /** assign base agent-level API definitions */
     setupSetCustomAttributeAPI(this)
     setupSetUserIdAPI(this)
     setupSetApplicationVersionAPI(this)

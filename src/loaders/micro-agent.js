@@ -12,6 +12,18 @@ import { setNREUMInitializedAgent } from '../common/window/nreum'
 import { FEATURE_NAMES } from './features/features'
 import { warn } from '../common/util/console'
 import { MicroAgentBase } from './micro-agent-base'
+import { setupSetCustomAttributeAPI } from './api/setCustomAttribute'
+import { setupSetUserIdAPI } from './api/setUserId'
+import { setupSetApplicationVersionAPI } from './api/setApplicationVersion'
+import { setupStartAPI } from './api/start'
+import { setupNoticeErrorAPI } from './api/noticeError'
+import { setupSetErrorHandlerAPI } from './api/setErrorHandler'
+import { setupAddReleaseAPI } from './api/addRelease'
+import { setupAddPageActionAPI } from './api/addPageAction'
+import { setupRecordCustomEventAPI } from './api/recordCustomEvent'
+import { setupFinishedAPI } from './api/finished'
+import { setupLogAPI } from './api/log'
+import { setupWrapLoggerAPI } from './api/wrapLogger'
 
 const nonAutoFeatures = [
   FEATURE_NAMES.jserrors,
@@ -37,6 +49,25 @@ export class MicroAgent extends MicroAgentBase {
     setNREUMInitializedAgent(this.agentIdentifier, this)
 
     configure(this, { ...options, runtime: { isolatedBacklog: true } }, options.loaderType || 'micro-agent')
+
+    /** assign base agent-level API definitions, feature-level APIs will be handled by the features to allow better code-splitting */
+    setupSetCustomAttributeAPI(this)
+    setupSetUserIdAPI(this)
+    setupSetApplicationVersionAPI(this)
+    setupStartAPI(this)
+
+    /** feature APIs that wont get set up automatically for the micro agent since it skips the inst file */
+    /** jserrors */
+    setupNoticeErrorAPI(this)
+    setupSetErrorHandlerAPI(this)
+    setupAddReleaseAPI(this)
+    /** generic events */
+    setupAddPageActionAPI(this)
+    setupRecordCustomEventAPI(this)
+    setupFinishedAPI(this)
+    /** logging */
+    setupLogAPI(this)
+    setupWrapLoggerAPI(this)
 
     /**
      * Starts a set of agent features if not running in "autoStart" mode

@@ -11,7 +11,7 @@ describe('hasReplay', () => {
         .then(() => browser.waitForSessionReplayRecording())
     ])
 
-    const error1Params = errors[0].request.body.err[0].params
+    const error1Params = errors[0].request.body.err[0].params // TODO: errors[0] is undef
     expect(error1Params.message).toBe('after load')
     expect(error1Params.hasReplay).toBe(true)
 

@@ -167,9 +167,9 @@ export function stConfig (initOverrides = {}) {
 }
 
 export async function getSR () {
-  const agent = Object.values(newrelic.initializedAgents)[0]
   return browser.execute(function () {
     try {
+      const agent = Object.values(newrelic.initializedAgents)[0]
       var sr = agent.features.session_replay.featAggregate
       return {
         events: (sr.recorder && sr.recorder.getEvents().events) || [],

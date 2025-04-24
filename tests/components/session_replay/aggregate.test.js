@@ -6,8 +6,6 @@ import { ee } from '../../../src/common/event-emitter/contextual-ee'
 import { resetAgent, setupAgent } from '../setup-agent'
 import { Instrument as SessionReplay } from '../../../src/features/session_replay/instrument'
 import * as consoleModule from '../../../src/common/util/console'
-import { getRuntime } from '../../../src/common/config/runtime'
-import { getInfo } from '../../../src/common/config/info'
 import { MAX_PAYLOAD_SIZE } from '../../../src/common/constants/agent-constants'
 
 let mainAgent
@@ -32,7 +30,7 @@ beforeEach(async () => {
   mainAgent.runtime.harvester.initializedAggregates = [sessionReplayAggregate] // required for harvester to function
   jest.spyOn(mainAgent.runtime.harvester, 'triggerHarvestFor')
 
-  session = getRuntime(mainAgent.agentIdentifier).session
+  session = mainAgent.runtime.session
 })
 
 afterEach(() => {
@@ -43,7 +41,7 @@ afterEach(() => {
 
 describe('Session Replay Session Behavior', () => {
   test('when session ends', async () => {
-    getRuntime(mainAgent.agentIdentifier).session.state.isNew = true
+    mainAgent.runtime.session.state.isNew = true
     sessionReplayAggregate.ee.emit('rumresp', [{ sr: 1, srs: MODE.FULL }])
     await new Promise(process.nextTick)
 
@@ -59,7 +57,7 @@ describe('Session Replay Session Behavior', () => {
   })
 
   test('when session is paused and resumed', async () => {
-    getRuntime(mainAgent.agentIdentifier).session.state.isNew = true
+    mainAgent.runtime.session.state.isNew = true
     sessionReplayAggregate.ee.emit('rumresp', [{ sr: 1, srs: MODE.FULL }])
     await new Promise(process.nextTick)
 
@@ -76,7 +74,7 @@ describe('Session Replay Session Behavior', () => {
   })
 
   test('session SR mode matches SR mode -- FULL', async () => {
-    getRuntime(mainAgent.agentIdentifier).session.state.isNew = true
+    mainAgent.runtime.session.state.isNew = true
     sessionReplayAggregate.ee.emit('rumresp', [{ sr: 1, srs: MODE.FULL }])
     await new Promise(process.nextTick)
 
@@ -85,7 +83,7 @@ describe('Session Replay Session Behavior', () => {
   })
 
   test('session SR mode matches SR mode -- ERROR', async () => {
-    getRuntime(mainAgent.agentIdentifier).session.state.isNew = true
+    mainAgent.runtime.session.state.isNew = true
     sessionReplayAggregate.ee.emit('rumresp', [{ sr: 1, srs: MODE.ERROR }])
     await new Promise(process.nextTick)
 
@@ -94,7 +92,7 @@ describe('Session Replay Session Behavior', () => {
   })
 
   test('session SR mode matches SR mode -- OFF', async () => {
-    getRuntime(mainAgent.agentIdentifier).session.state.isNew = true
+    mainAgent.runtime.session.state.isNew = true
     sessionReplayAggregate.ee.emit('rumresp', [{ sr: 1, srs: MODE.OFF }])
     await new Promise(process.nextTick)
 
@@ -103,7 +101,7 @@ describe('Session Replay Session Behavior', () => {
   })
 
   test('session SR mode is OFF when not entitled -- FULL', async () => {
-    getRuntime(mainAgent.agentIdentifier).session.state.isNew = true
+    mainAgent.runtime.session.state.isNew = true
     sessionReplayAggregate.ee.emit('rumresp', [{ sr: 0, srs: MODE.FULL }])
     await new Promise(process.nextTick)
 
@@ -112,7 +110,7 @@ describe('Session Replay Session Behavior', () => {
   })
 
   test('session SR mode is OFF when not entitled -- ERROR', async () => {
-    getRuntime(mainAgent.agentIdentifier).session.state.isNew = true
+    mainAgent.runtime.session.state.isNew = true
     sessionReplayAggregate.ee.emit('rumresp', [{ sr: 0, srs: MODE.ERROR }])
     await new Promise(process.nextTick)
 
@@ -273,7 +271,7 @@ describe('Session Replay Harvest Behaviors', () => {
     const harvestContents = jest.mocked(sessionReplayAggregate.getHarvestContents).mock.results[0].value
     expect(harvestContents.qs).toMatchObject({
       protocol_version: '0',
-      browser_monitoring_key: getInfo(mainAgent.agentIdentifier).licenseKey
+      browser_monitoring_key: mainAgent.info.licenseKey
     })
     expect(harvestContents.qs.attributes.includes('content_encoding')).toEqual(false)
     expect(harvestContents.qs.attributes.includes('isFirstChunk')).toEqual(true)
@@ -327,11 +325,10 @@ describe('Session Replay Harvest Behaviors', () => {
 })
 
 function createAnyQueryMatcher () {
-  const info = getInfo(mainAgent.agentIdentifier)
   return {
-    browser_monitoring_key: info.licenseKey,
+    browser_monitoring_key: mainAgent.info.licenseKey,
     type: 'SessionReplay',
-    app_id: info.applicationID,
+    app_id: mainAgent.info.applicationID,
     protocol_version: '0',
     attributes: expect.any(String)
   }

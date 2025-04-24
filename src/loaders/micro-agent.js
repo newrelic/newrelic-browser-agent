@@ -49,7 +49,7 @@ export class MicroAgent extends MicroAgentBase {
         else if (typeof featureNames === 'string') featureNames = [featureNames]
 
         if (featureNames.some(f => !nonAutoFeatures.includes(f))) warn(37, nonAutoFeatures)
-        const enabledFeatures = getEnabledFeatures(this.agentIdentifier)
+        const enabledFeatures = getEnabledFeatures(this.init)
 
         try {
           // a biproduct of doing this is that the "session manager" is automatically handled through importing this feature

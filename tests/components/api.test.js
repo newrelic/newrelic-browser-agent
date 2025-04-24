@@ -233,9 +233,8 @@ describe('setAPI', () => {
   })
 
   describe('setCustomAttribute', () => {
-    beforeEach(async () => {
+    beforeEach(() => {
       setAPI(agent, true)
-      await new Promise(process.nextTick)
     })
 
     test('should only create SM event emitter event for calls to API', () => {

@@ -196,11 +196,16 @@ describe('Soft navigations', () => {
     expect(iplAjax[0].end).toBeLessThan(interactionHarvests[0].request.body[0].end) // the request should've wrapped up well before page load event fired
   })
 
-  it('[NR-178377] chained ajax requests that originate from pre-page-load are attributed properly', async () => {
+  it('[NR-178377] ajax requests that happen across the page load timespan are captured as expected', async () => {
+    /**
+     * Requests that start before page load and finish before page load should be captured in the IPL ixn payload
+     * Requests that start before page load and finish after page load should be captured in the AJAX payload
+     * Requests that start after page load and finish after page load should be captured in the AJAX payload
+     */
     let [interactionHarvests, ajaxEventsHarvests] = await Promise.all([
       interactionsCapture.waitForResult({ totalCount: 1 }),
       ajaxEventsCapture.waitForResult({ timeout: 10000 }),
-      browser.url(await browser.testHandle.assetURL('chained-ajax-before-load.html', config))
+      browser.url(await browser.testHandle.assetURL('ajax-lifecycles.html', config))
         .then(() => browser.waitForAgentLoad())
     ])
 
@@ -211,10 +216,10 @@ describe('Soft navigations', () => {
       expect.objectContaining({ path: '/json', requestedWith: 'fetch' })
     ]))
     expect(
-      JSONPath({ path: '$.[*].request.body.[?(!!@ && @.path===\'/text\')]', json: ajaxEventsHarvests })
+      JSONPath({ path: '$.[*].request.body.[?(!!@ && @.path===\'/slowresponse\')]', json: ajaxEventsHarvests })
     ).toEqual(expect.arrayContaining([ // these requests started before page load, so they belong with IPL ixn
-      expect.objectContaining({ path: '/text', requestedWith: 'XMLHttpRequest' }),
-      expect.objectContaining({ path: '/text', requestedWith: 'fetch' })
+      expect.objectContaining({ path: '/slowresponse', requestedWith: 'XMLHttpRequest' }),
+      expect.objectContaining({ path: '/slowresponse', requestedWith: 'fetch' })
     ]))
   })
 

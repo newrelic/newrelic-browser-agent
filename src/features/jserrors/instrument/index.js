@@ -24,17 +24,17 @@ export class Instrument extends InstrumentBase {
 
     this.ee.on('internal-error', (error, reason) => {
       if (!this.abortHandler) return
-      handle('ierr', [castError(error), now(), true, {}, this.agentRef.runtime.isRecording, reason], undefined, this.featureName, this.ee)
+      handle('ierr', [castError(error), now(), true, {}, this.agentRef.runtime?.isRecording, reason], undefined, this.featureName, this.ee)
     })
 
     globalScope.addEventListener('unhandledrejection', (promiseRejectionEvent) => {
       if (!this.abortHandler) return
-      handle('err', [castPromiseRejectionEvent(promiseRejectionEvent), now(), false, { unhandledPromiseRejection: 1 }, this.agentRef.runtime.isRecording], undefined, this.featureName, this.ee)
+      handle('err', [castPromiseRejectionEvent(promiseRejectionEvent), now(), false, { unhandledPromiseRejection: 1 }, this.agentRef.runtime?.isRecording], undefined, this.featureName, this.ee)
     }, eventListenerOpts(false, this.removeOnAbort?.signal))
 
     globalScope.addEventListener('error', (errorEvent) => {
       if (!this.abortHandler) return
-      handle('err', [castErrorEvent(errorEvent), now(), false, {}, this.agentRef.runtime.isRecording], undefined, this.featureName, this.ee)
+      handle('err', [castErrorEvent(errorEvent), now(), false, {}, this.agentRef.runtime?.isRecording], undefined, this.featureName, this.ee)
     }, eventListenerOpts(false, this.removeOnAbort?.signal))
 
     this.abortHandler = this.#abort // we also use this as a flag to denote that the feature is active or on and handling errors

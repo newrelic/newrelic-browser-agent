@@ -114,4 +114,3 @@ describe('basic npm agent', () => {
     expect(agentSession.localStorage).toEqual({})
   })
 })
-

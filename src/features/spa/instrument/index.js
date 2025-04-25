@@ -110,7 +110,7 @@ export class Instrument extends InstrumentBase {
     }
 
     this.abortHandler = this.#abort
-    this.importAggregator(agentRef, import(/* webpackChunkName: "spa-aggregate" */ '../aggregate'))
+    this.importAggregator(agentRef, () => import(/* webpackChunkName: "spa-aggregate" */ '../aggregate'))
   }
 
   /** Restoration and resource release tasks to be done if SPA loader is being aborted. Unwind changes to globals and subscription to DOM events. */

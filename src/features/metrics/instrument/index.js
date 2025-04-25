@@ -32,7 +32,7 @@ export class Instrument extends InstrumentBase {
       })
     }
 
-    this.importAggregator(agentRef, import(/* webpackChunkName: "metrics-aggregate" */ '../aggregate'))
+    this.importAggregator(agentRef, () => import(/* webpackChunkName: "metrics-aggregate" */ '../aggregate'))
   }
 }
 

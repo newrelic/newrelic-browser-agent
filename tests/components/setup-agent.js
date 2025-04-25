@@ -102,4 +102,5 @@ export function resetAggregator (agentIdentifier) {
 export function resetSession (agentIdentifier) {
   const runtime = getRuntime(agentIdentifier)
   runtime.session.reset()
+  runtime.session.state.numOfResets = 0 // avoid stopping harvests for session resets
 }

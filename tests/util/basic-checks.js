@@ -1,6 +1,26 @@
 /* eslint-disable */
 import {onlyAndroid, supportsFirstPaint} from "../../tools/browser-matcher/common-matchers.mjs";
 
+expect.extend({
+  toBeOneOfTypes(received, types) {
+    const pass = types.some(type => {
+      try { 
+        if (type === null) expect(received).toBeNull();
+        else if (type === undefined) expect(received).toBeUndefined();
+        else expect(received).toEqual(expect.any(type));
+        return true;
+      } catch (error) {
+        return false;
+      }
+    });
+
+    return {
+      message: () => `expected ${received} to be one of types: ${types.map(t => t.name).join(', ')}`,
+      pass,
+    };
+  },
+});
+
 export const baseQuery = expect.objectContaining({
   a: expect.any(String),
   ck: expect.any(String),

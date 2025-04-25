@@ -59,7 +59,7 @@ export class Instrument extends InstrumentBase {
     }, UI_WAIT_INTERVAL, { leading: true })
 
     this.abortHandler = abort
-    this.importAggregator(agentRef, import(/* webpackChunkName: "soft_navigations-aggregate" */ '../aggregate'), { domObserver })
+    this.importAggregator(agentRef, () => import(/* webpackChunkName: "soft_navigations-aggregate" */ '../aggregate'), { domObserver })
 
     function abort () {
       this.removeOnAbort?.abort()

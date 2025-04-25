@@ -71,7 +71,8 @@ export class InstrumentBase extends FeatureBase {
   /**
    * Lazy-load the latter part of the feature: its aggregator. This method is called by the first part of the feature
    * (the instrumentation) when instrumentation is complete.
-   * @param agentRef - reference to the base agent ancestor that this feature belongs to
+   * @param {Agent} agentRef - reference to the base agent ancestor that this feature belongs to
+   * @param {Function} fetchAggregator - a function that returns a promise that resolves to the aggregate module
    * @param {Object} [argsObjFromInstrument] - any values or references to pass down to aggregate
    * @returns void
    */

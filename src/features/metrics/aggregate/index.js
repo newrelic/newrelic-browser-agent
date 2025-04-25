@@ -68,6 +68,10 @@ export class Aggregate extends AggregateBase {
     if (isBrowserScope) {
       this.storeSupportabilityMetrics('Generic/Runtime/Browser/Detected')
 
+      if (this.agentNonce && this.agentNonce !== '') {
+        this.storeSupportabilityMetrics('Generic/Runtime/Nonce/Detected')
+      }
+
       // These SMs are used by the AppExp team
       onDOMContentLoaded(() => {
         getFrameworks().forEach(framework => {

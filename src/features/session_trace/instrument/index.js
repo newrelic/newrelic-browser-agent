@@ -26,7 +26,7 @@ export class Instrument extends InstrumentBase {
     setupAddToTraceAPI(agentRef)
     setupFinishedAPI(agentRef)
 
-    const canTrackSession = canEnableSessionTracking(this.agentIdentifier)
+    const canTrackSession = canEnableSessionTracking(agentRef.init)
     if (!canTrackSession) {
       this.deregisterDrain()
       return

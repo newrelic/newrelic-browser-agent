@@ -1,36 +1,30 @@
 import { faker } from '@faker-js/faker'
 import { DT } from '../../../../../src/features/ajax/instrument/distributed-tracing'
-import { getConfiguration, getConfigurationValue } from '../../../../../src/common/config/init'
-import { getLoaderConfig } from '../../../../../src/common/config/loader-config'
 import * as runtimeModule from '../../../../../src/common/constants/runtime'
 
 jest.enableAutomock()
 jest.unmock('../../../../../src/features/ajax/instrument/distributed-tracing')
 
-let agentIdentifier
+let agent
 let dtInstance
 
 beforeEach(() => {
-  agentIdentifier = faker.string.uuid()
-  dtInstance = new DT(agentIdentifier)
-
-  jest.mocked(getLoaderConfig).mockReturnValue({
-    accountID: '1234',
-    agentID: '5678',
-    trustKey: '1'
-  })
-})
-
-afterEach(() => {
-  jest.clearAllMocks()
+  const agentIdentifier = faker.string.uuid()
+  agent = {
+    agentIdentifier,
+    loader_config: {
+      accountID: '1234',
+      agentID: '5678',
+      trustKey: '1'
+    }
+  }
+  dtInstance = new DT(agent)
 })
 
 test('newrelic header has the correct format', () => {
-  const agentConfig = {
+  agent.init = {
     distributed_tracing: { enabled: true }
   }
-  jest.mocked(getConfiguration).mockReturnValue(agentConfig)
-  jest.mocked(getConfigurationValue).mockReturnValue(agentConfig.distributed_tracing)
 
   const payload = dtInstance.generateTracePayload({
     sameOrigin: true
@@ -41,7 +35,7 @@ test('newrelic header has the correct format', () => {
   expect(payload.traceId).toEqual(header.d.tr)
   expect(payload.timestamp).toEqual(header.d.ti)
 
-  const loaderConfig = getLoaderConfig()
+  const loaderConfig = agent.loader_config
   expect(header.d.ty).toEqual('Browser')
   expect(header.d.ac).toEqual(loaderConfig.accountID)
   expect(header.d.ap).toEqual(loaderConfig.agentID)
@@ -49,14 +43,12 @@ test('newrelic header has the correct format', () => {
 })
 
 test('newrelic header is not generated for same-origin calls when disabled in configuration', () => {
-  const agentConfig = {
+  agent.init = {
     distributed_tracing: {
       enabled: true,
       exclude_newrelic_header: true
     }
   }
-  jest.mocked(getConfiguration).mockReturnValue(agentConfig)
-  jest.mocked(getConfigurationValue).mockReturnValue(agentConfig.distributed_tracing)
 
   const payload = dtInstance.generateTracePayload({
     sameOrigin: true
@@ -68,14 +60,12 @@ test('newrelic header is not generated for same-origin calls when disabled in co
 })
 
 test('newrelic header is added to cross-origin calls by default', () => {
-  const agentConfig = {
+  agent.init = {
     distributed_tracing: {
       enabled: true,
       allowed_origins: ['https://someotherdomain.com']
     }
   }
-  jest.mocked(getConfiguration).mockReturnValue(agentConfig)
-  jest.mocked(getConfigurationValue).mockReturnValue(agentConfig.distributed_tracing)
 
   const payload = dtInstance.generateTracePayload({
     sameOrigin: false,
@@ -88,15 +78,13 @@ test('newrelic header is added to cross-origin calls by default', () => {
 })
 
 test('newrelic header is added to cross-origin calls when enabled in configuration', () => {
-  const agentConfig = {
+  agent.init = {
     distributed_tracing: {
       enabled: true,
       allowed_origins: ['https://someotherdomain.com'],
       cors_use_newrelic_header: true
     }
   }
-  jest.mocked(getConfiguration).mockReturnValue(agentConfig)
-  jest.mocked(getConfigurationValue).mockReturnValue(agentConfig.distributed_tracing)
 
   const payload = dtInstance.generateTracePayload({
     sameOrigin: false,
@@ -109,15 +97,13 @@ test('newrelic header is added to cross-origin calls when enabled in configurati
 })
 
 test('newrelic header is not added to cross-origin calls when disabled in configuration', () => {
-  const agentConfig = {
+  agent.init = {
     distributed_tracing: {
       enabled: true,
       allowed_origins: ['https://someotherdomain.com'],
       cors_use_newrelic_header: false
     }
   }
-  jest.mocked(getConfiguration).mockReturnValue(agentConfig)
-  jest.mocked(getConfigurationValue).mockReturnValue(agentConfig.distributed_tracing)
 
   const payload = dtInstance.generateTracePayload({
     sameOrigin: false,
@@ -130,13 +116,11 @@ test('newrelic header is not added to cross-origin calls when disabled in config
 })
 
 test('trace context headers are generated with the correct format', () => {
-  const agentConfig = {
+  agent.init = {
     distributed_tracing: {
       enabled: true
     }
   }
-  jest.mocked(getConfiguration).mockReturnValue(agentConfig)
-  jest.mocked(getConfigurationValue).mockReturnValue(agentConfig.distributed_tracing)
 
   const payload = dtInstance.generateTracePayload({
     sameOrigin: true
@@ -150,7 +134,7 @@ test('trace context headers are generated with the correct format', () => {
   expect(parentHeaderParts[2]).toEqual(payload.spanId)
   expect(parentHeaderParts[3]).toEqual('01')
 
-  const loaderConfig = getLoaderConfig()
+  const loaderConfig = agent.loader_config
   const stateHeaderKey = stateHeader.substring(0, stateHeader.indexOf('='))
   expect(stateHeaderKey).toEqual(`${loaderConfig.trustKey}@nr`)
 
@@ -167,14 +151,12 @@ test('trace context headers are generated with the correct format', () => {
 })
 
 test('trace context headers are not added to cross-origin calls by default', () => {
-  const agentConfig = {
+  agent.init = {
     distributed_tracing: {
       enabled: true,
       allowed_origins: ['https://someotherdomain.com']
     }
   }
-  jest.mocked(getConfiguration).mockReturnValue(agentConfig)
-  jest.mocked(getConfigurationValue).mockReturnValue(agentConfig.distributed_tracing)
 
   const payload = dtInstance.generateTracePayload({
     sameOrigin: false,
@@ -188,15 +170,13 @@ test('trace context headers are not added to cross-origin calls by default', () 
 })
 
 test('trace context headers are added to cross-origin calls when enabled in configuration', () => {
-  const agentConfig = {
+  agent.init = {
     distributed_tracing: {
       enabled: true,
       allowed_origins: ['https://someotherdomain.com'],
       cors_use_tracecontext_headers: true
     }
   }
-  jest.mocked(getConfiguration).mockReturnValue(agentConfig)
-  jest.mocked(getConfigurationValue).mockReturnValue(agentConfig.distributed_tracing)
 
   const payload = dtInstance.generateTracePayload({
     sameOrigin: false,
@@ -210,15 +190,13 @@ test('trace context headers are added to cross-origin calls when enabled in conf
 })
 
 test('trace context headers are not added to cross-origin calls when disabled in configuration', () => {
-  const agentConfig = {
+  agent.init = {
     distributed_tracing: {
       enabled: true,
       allowed_origins: ['https://someotherdomain.com'],
       cors_use_tracecontext_headers: false
     }
   }
-  jest.mocked(getConfiguration).mockReturnValue(agentConfig)
-  jest.mocked(getConfigurationValue).mockReturnValue(agentConfig.distributed_tracing)
 
   const payload = dtInstance.generateTracePayload({
     sameOrigin: false,
@@ -232,19 +210,17 @@ test('trace context headers are not added to cross-origin calls when disabled in
 })
 
 test('newrelic header is generated when configuration has numeric values', () => {
-  jest.mocked(getLoaderConfig).mockReturnValue({
+  agent.loader_config = {
     accountID: 1234,
     agentID: 5678,
     trustKey: 1
-  })
+  }
 
-  const agentConfig = {
+  agent.init = {
     distributed_tracing: {
       enabled: true
     }
   }
-  jest.mocked(getConfiguration).mockReturnValue(agentConfig)
-  jest.mocked(getConfigurationValue).mockReturnValue(agentConfig.distributed_tracing)
 
   const payload = dtInstance.generateTracePayload({
     sameOrigin: true
@@ -255,7 +231,7 @@ test('newrelic header is generated when configuration has numeric values', () =>
   expect(payload.traceId).toEqual(header.d.tr)
   expect(payload.timestamp).toEqual(header.d.ti)
 
-  const loaderConfig = getLoaderConfig()
+  const loaderConfig = agent.loader_config
   expect(header.d.ty).toEqual('Browser')
   expect(header.d.ac).toEqual(loaderConfig.accountID.toString())
   expect(header.d.ap).toEqual(loaderConfig.agentID.toString())
@@ -263,10 +239,8 @@ test('newrelic header is generated when configuration has numeric values', () =>
 })
 
 test('no trace headers are generated when the loader config object is empty', () => {
-  const agentConfig = {
+  agent.init = {
   }
-  jest.mocked(getConfiguration).mockReturnValue(agentConfig)
-  jest.mocked(getConfigurationValue).mockReturnValue(agentConfig.distributed_tracing)
 
   const payload = dtInstance.generateTracePayload({
     sameOrigin: true
@@ -276,19 +250,17 @@ test('no trace headers are generated when the loader config object is empty', ()
 })
 
 test.each([null, undefined])('no trace headers are generated when the loader config accountID is %s', (accountID) => {
-  jest.mocked(getLoaderConfig).mockReturnValue({
+  agent.loader_config = {
     accountID,
     agentID: '5678',
     trustKey: '1'
-  })
+  }
 
-  const agentConfig = {
+  agent.init = {
     distributed_tracing: {
       enabled: true
     }
   }
-  jest.mocked(getConfiguration).mockReturnValue(agentConfig)
-  jest.mocked(getConfigurationValue).mockReturnValue(agentConfig.distributed_tracing)
 
   const payload = dtInstance.generateTracePayload({
     sameOrigin: true
@@ -298,19 +270,17 @@ test.each([null, undefined])('no trace headers are generated when the loader con
 })
 
 test.each([null, undefined])('no trace headers are generated when the loader config agentID is %s', (agentID) => {
-  jest.mocked(getLoaderConfig).mockReturnValue({
+  agent.loader_config = {
     accountID: '1234',
     agentID,
     trustKey: '1'
-  })
+  }
 
-  const agentConfig = {
+  agent.init = {
     distributed_tracing: {
       enabled: true
     }
   }
-  jest.mocked(getConfiguration).mockReturnValue(agentConfig)
-  jest.mocked(getConfigurationValue).mockReturnValue(agentConfig.distributed_tracing)
 
   const payload = dtInstance.generateTracePayload({
     sameOrigin: true
@@ -320,19 +290,17 @@ test.each([null, undefined])('no trace headers are generated when the loader con
 })
 
 test.each([null, undefined])('trace headers are generated without trust key when the loader config trustKey is %s', (trustKey) => {
-  jest.mocked(getLoaderConfig).mockReturnValue({
+  agent.loader_config = {
     accountID: '1234',
     agentID: '5678',
     trustKey
-  })
+  }
 
-  const agentConfig = {
+  agent.init = {
     distributed_tracing: {
       enabled: true
     }
   }
-  jest.mocked(getConfiguration).mockReturnValue(agentConfig)
-  jest.mocked(getConfigurationValue).mockReturnValue(agentConfig.distributed_tracing)
 
   const payload = dtInstance.generateTracePayload({
     sameOrigin: true
@@ -343,7 +311,7 @@ test.each([null, undefined])('trace headers are generated without trust key when
   expect(payload.traceId).toEqual(header.d.tr)
   expect(payload.timestamp).toEqual(header.d.ti)
 
-  const loaderConfig = getLoaderConfig()
+  const loaderConfig = agent.loader_config
   expect(header.d.ty).toEqual('Browser')
   expect(header.d.ac).toEqual(loaderConfig.accountID.toString())
   expect(header.d.ap).toEqual(loaderConfig.agentID.toString())
@@ -355,13 +323,11 @@ test.each([null, undefined])('newrelic header is not added when btoa global is %
     btoa: replacementBTOA
   })
 
-  const agentConfig = {
+  agent.init = {
     distributed_tracing: {
       enabled: true
     }
   }
-  jest.mocked(getConfiguration).mockReturnValue(agentConfig)
-  jest.mocked(getConfigurationValue).mockReturnValue(agentConfig.distributed_tracing)
 
   const payload = dtInstance.generateTracePayload({
     sameOrigin: true

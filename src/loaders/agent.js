@@ -90,7 +90,7 @@ export class Agent extends AgentBase {
   run () {
     // Attempt to initialize all the requested features (sequentially in prio order & synchronously), with any failure aborting the whole process.
     try {
-      const enabledFeatures = getEnabledFeatures(this.agentIdentifier)
+      const enabledFeatures = getEnabledFeatures(this.init)
       const featuresToStart = [...this.desiredFeatures]
 
       featuresToStart.sort((a, b) => featurePriority[a.featureName] - featurePriority[b.featureName])

@@ -5,32 +5,16 @@ import { Spa } from '../../../src/features/spa'
 jest.mock('../../../src/common/constants/runtime')
 jest.mock('../../../src/common/config/info', () => ({
   __esModule: true,
-  getInfo: jest.fn().mockReturnValue({ jsAttributes: {} }),
   isValid: jest.fn().mockReturnValue(true)
-}))
-jest.mock('../../../src/common/config/init', () => ({
-  __esModule: true,
-  getConfigurationValue: jest.fn()
-}))
-jest.mock('../../../src/common/config/runtime', () => ({
-  __esModule: true,
-  getRuntime: jest.fn().mockReturnValue({})
 }))
 jest.mock('../../../src/common/harvest/harvester')
 
 let spaInstrument, spaAggregate, newrelic
 const agentIdentifier = 'abcdefg'
+const baseEE = ee.get(agentIdentifier)
 
 beforeAll(async () => {
-  spaInstrument = new Spa({
-    agentIdentifier,
-    info: {},
-    init: { spa: { enabled: true } },
-    runtime: {
-      appMetadata: { agents: [{ entityGuid: '12345' }] }
-    },
-    ee: ee.get(agentIdentifier)
-  })
+  spaInstrument = new Spa({ agentIdentifier, info: {}, init: { spa: { enabled: true }, privacy: {} }, runtime: { appMetadata: { agents: [{ entityGuid: '12345' }] } }, ee: baseEE })
   await expect(spaInstrument.onAggregateImported).resolves.toEqual(true)
   spaAggregate = spaInstrument.featAggregate
   ee.get(agentIdentifier).emit('rumresp', { spa: { enabled: true } })
@@ -55,7 +39,7 @@ describe('SPA captures', () => {
       children: []
     })
 
-    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, spaAggregate, validator, done), { baseEE: ee.get(agentIdentifier) })
+    helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, spaAggregate, validator, done), { baseEE })
 
     function onInteractionStart (cb) {
       setTimeout(() => {
@@ -100,7 +84,7 @@ describe('SPA captures', () => {
       div.innerHTML = x
       setTimeout(newrelic.interaction().createTracer('timer', function () {}))
     })
-    helpers.startInteraction(cb => cb(), afterInteractionDone.bind(null, spaAggregate, validator, done), { baseEE: ee.get(agentIdentifier), element: el })
+    helpers.startInteraction(cb => cb(), afterInteractionDone.bind(null, spaAggregate, validator, done), { baseEE, element: el })
   })
 
   ;['keypress', 'keyup', 'keydown', 'change'].forEach(eventType => {
@@ -118,7 +102,7 @@ describe('SPA captures', () => {
       })
 
       expect(spaAggregate.state.currentNode?.id).toBeFalsy()
-      helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, spaAggregate, validator, done), { baseEE: ee.get(agentIdentifier), eventType })
+      helpers.startInteraction(onInteractionStart, afterInteractionDone.bind(null, spaAggregate, validator, done), { baseEE, eventType })
 
       function onInteractionStart (cb) {
         setTimeout(newrelic.interaction().createTracer('timer', cb), 0)

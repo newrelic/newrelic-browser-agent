@@ -48,7 +48,7 @@ export class Aggregate extends AggregateBase {
       // The below feature flag is used to disable the SPA ajax fix for specific customers, see https://new-relic.atlassian.net/browse/NR-172169
       disableSpaFix: (agentRef.init.feature_flags || []).indexOf('disable-spa-fix') > -1
     }
-    this.spaSerializerClass = new Serializer(this)
+    this.spaSerializerClass = new Serializer(agentRef)
 
     const classThis = this
 

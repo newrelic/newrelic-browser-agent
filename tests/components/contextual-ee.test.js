@@ -1,20 +1,12 @@
 import { faker } from '@faker-js/faker'
 
 let mockNREUM
-let runtime
 
 beforeEach(() => {
   mockNREUM = {}
-  runtime = {}
-
   jest.doMock('../../src/common/window/nreum', () => ({
     __esModule: true,
     gosNREUM: jest.fn(() => mockNREUM)
-  }))
-
-  jest.doMock('../../src/common/config/runtime', () => ({
-    __esModule: true,
-    getRuntime: jest.fn(() => runtime)
   }))
 })
 
@@ -53,22 +45,16 @@ describe('scoping event-emitter', () => {
 
   test('it creates a child event-emitter with an isolated backlog', async () => {
     const childName = faker.string.alphanumeric(16)
-
-    jest.doMock('../../src/common/config/runtime', () => ({
-      __esModule: true,
-      getRuntime: jest.fn(id => {
-        if (id === childName) {
-          return { isolatedBacklog: true }
-        }
-
-        return runtime
-      })
-    }))
+    mockNREUM.initializedAgents = {
+      [childName]: {
+        runtime: { isolatedBacklog: true }
+      }
+    }
 
     const { ee } = await import('../../src/common/event-emitter/contextual-ee')
     const result = ee.get(childName)
 
-    expect(ee.backlog).not.toBe(result.backlog)
+    expect(ee.backlog === result.backlog).toBe(false)
   })
 })
 

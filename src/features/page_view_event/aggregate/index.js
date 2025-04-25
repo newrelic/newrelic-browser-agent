@@ -33,11 +33,11 @@ export class Aggregate extends AggregateBase {
       this.sendRum(customAttibutes, target)
     }, this.featureName, this.ee)
 
-    if (!isValid(agentRef.agentIdentifier)) {
+    if (!isValid(agentRef.info)) {
       this.ee.abort()
       return warn(43)
     }
-    agentRef.runtime.timeKeeper = new TimeKeeper(agentRef.agentIdentifier)
+    agentRef.runtime.timeKeeper = new TimeKeeper(agentRef.runtime.session)
 
     if (isBrowserScope) {
       timeToFirstByte.subscribe(({ value, attrs }) => {

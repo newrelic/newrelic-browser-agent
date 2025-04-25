@@ -44,7 +44,7 @@ export class Instrument extends InstrumentBase {
     }, eventListenerOpts(false, this.removeOnAbort?.signal))
 
     this.abortHandler = this.#abort // we also use this as a flag to denote that the feature is active or on and handling errors
-    this.importAggregator(agentRef, import(/* webpackChunkName: "jserrors-aggregate" */ '../aggregate'))
+    this.importAggregator(agentRef, () => import(/* webpackChunkName: "jserrors-aggregate" */ '../aggregate'))
   }
 
   /** Restoration and resource release tasks to be done if JS error loader is being aborted. Unwind changes to globals. */

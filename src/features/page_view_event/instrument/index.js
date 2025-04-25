@@ -14,7 +14,7 @@ export class Instrument extends InstrumentBase {
     /** messages from the register API that can trigger a new RUM call */
     this.ee.on('api-send-rum', (attrs, target) => handle('send-rum', [attrs, target], undefined, this.featureName, this.ee))
 
-    this.importAggregator(agentRef, import(/* webpackChunkName: "page_view_event-aggregate" */ '../aggregate'))
+    this.importAggregator(agentRef, () => import(/* webpackChunkName: "page_view_event-aggregate" */ '../aggregate'))
   }
 }
 

@@ -25,7 +25,7 @@ export class Instrument extends InstrumentBase {
       const { level, customAttributes } = this
       bufferLog(instanceEE, message, customAttributes, level)
     })
-    this.importAggregator(agentRef, import(/* webpackChunkName: "logging-aggregate" */ '../aggregate'))
+    this.importAggregator(agentRef, () => import(/* webpackChunkName: "logging-aggregate" */ '../aggregate'))
   }
 }
 

@@ -75,7 +75,7 @@ export class InstrumentBase extends FeatureBase {
    * @param {Object} [argsObjFromInstrument] - any values or references to pass down to aggregate
    * @returns void
    */
-  importAggregator (agentRef, aggregator, argsObjFromInstrument = {}) {
+  importAggregator (agentRef, fetchAggregator, argsObjFromInstrument = {}) {
     if (this.featAggregate) return
 
     let loadedSuccessfully
@@ -111,7 +111,7 @@ export class InstrumentBase extends FeatureBase {
           loadedSuccessfully(false) // aggregate module isn't loaded at all
           return
         }
-        const { Aggregate } = await aggregator
+        const { Aggregate } = await fetchAggregator()
         this.featAggregate = new Aggregate(agentRef, argsObjFromInstrument)
 
         agentRef.runtime.harvester.initializedAggregates.push(this.featAggregate) // "subscribe" the feature to future harvest intervals (PVE will start the timer)

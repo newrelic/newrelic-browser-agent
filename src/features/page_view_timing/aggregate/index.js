@@ -106,7 +106,7 @@ export class Aggregate extends AggregateBase {
   checkForFirstInteraction () {
     // preserve the original behavior where FID is not reported if the page is hidden before the first interaction
     if (this.firstIxnRecorded || initiallyHidden || !performance) return
-    const firstInput = performance.getEntriesByType('first-input')[0]
+    const firstInput = performance.getEntriesByType?.('first-input')[0]
     if (!firstInput) return
     this.firstIxnRecorded = true
     this.addTiming('fi', firstInput.startTime, {

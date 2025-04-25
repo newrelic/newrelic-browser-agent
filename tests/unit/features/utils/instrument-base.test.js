@@ -70,7 +70,7 @@ test('should import aggregator on window load', async () => {
   jest.mocked(getConfigurationValue).mockReturnValue({ feature_flags: [] })
   const instrument = new InstrumentBase(agentBase, featureName)
   const aggregateArgs = { [faker.string.uuid()]: faker.lorem.sentence() }
-  instrument.importAggregator(agentBase, importPromise, aggregateArgs)
+  instrument.importAggregator(agentBase, () => importPromise, aggregateArgs)
 
   const windowLoadCallback = jest.mocked(onWindowLoad).mock.calls[0][0]
   await windowLoadCallback()
@@ -85,7 +85,7 @@ test('should immediately import aggregator in worker scope', async () => {
 
   const instrument = new InstrumentBase(agentBase, featureName)
   const aggregateArgs = { [faker.string.uuid()]: faker.lorem.sentence() }
-  instrument.importAggregator(agentBase, importPromise, aggregateArgs)
+  instrument.importAggregator(agentBase, () => importPromise, aggregateArgs)
 
   // In worker scope, we cannot wait on importLater method
   await new Promise(process.nextTick)
@@ -97,7 +97,7 @@ test('should immediately import aggregator in worker scope', async () => {
 test('should not import aggregate more than once', async () => {
   const instrument = new InstrumentBase(agentBase, featureName)
   const aggregateArgs = { [faker.string.uuid()]: faker.lorem.sentence() }
-  instrument.importAggregator(agentBase, importPromise, aggregateArgs)
+  instrument.importAggregator(agentBase, () => importPromise, aggregateArgs)
 
   const windowLoadCallback = jest.mocked(onWindowLoad).mock.calls[0][0]
   await windowLoadCallback()
@@ -111,7 +111,7 @@ test('feature still imports by default even when setupAgentSession throws an err
   const instrument = new InstrumentBase(agentBase, featureName)
   const aggregateArgs = { [faker.string.uuid()]: faker.lorem.sentence() }
   instrument.abortHandler = jest.fn()
-  instrument.importAggregator(agentBase, importPromise, aggregateArgs)
+  instrument.importAggregator(agentBase, () => importPromise, aggregateArgs)
   expect(instrument.featAggregate).toBeUndefined()
 
   const windowLoadCallback = jest.mocked(onWindowLoad).mock.calls[0][0]
@@ -127,7 +127,7 @@ test('no uncaught async exception is thrown when an import fails', async () => {
 
   const instrument = new InstrumentBase(agentBase, featureName)
   instrument.abortHandler = jest.fn()
-  instrument.importAggregator(agentBase, Promise.reject(new Error('ChunkLoadError')))
+  instrument.importAggregator(agentBase, () => Promise.reject(new Error('ChunkLoadError')))
   expect(instrument.featAggregate).toBeUndefined()
 
   const windowLoadCallback = jest.mocked(onWindowLoad).mock.calls[0][0]
@@ -146,7 +146,7 @@ test('should not import agent-session when session tracking is disabled', async 
   const instrument = new InstrumentBase(agentBase, featureName)
   const aggregateArgs = { [faker.string.uuid()]: faker.lorem.sentence() }
   instrument.abortHandler = jest.fn()
-  instrument.importAggregator(agentBase, importPromise, aggregateArgs)
+  instrument.importAggregator(agentBase, () => importPromise, aggregateArgs)
   expect(instrument.featAggregate).toBeUndefined()
 
   const windowLoadCallback = jest.mocked(onWindowLoad).mock.calls[0][0]
@@ -162,7 +162,7 @@ test('should drain and not import agg when shouldImportAgg is false for session_
 
   const instrument = new InstrumentBase(agentBase, FEATURE_NAMES.sessionReplay)
   const aggregateArgs = { [faker.string.uuid()]: faker.lorem.sentence() }
-  instrument.importAggregator(agentBase, importPromise, aggregateArgs)
+  instrument.importAggregator(agentBase, () => importPromise, aggregateArgs)
 
   const windowLoadCallback = jest.mocked(onWindowLoad).mock.calls[0][0]
   await windowLoadCallback()

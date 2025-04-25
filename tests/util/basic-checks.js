@@ -71,13 +71,8 @@ export function checkPVT ({ query, body }) {
       attributes: expect.any(Array),
       name: x.name,
       type: expect.any(String),
+      value: expect.any(Number),
     })
-    // occasionally, ios in lambdatest returns the fallback `0` value for 'LOAD' or other timings,
-    // either because the performance API returns undefined or because the calculated originTime creates a negative value.
-    // The fallback `0` gets cast as 'null' in the payload.  This creates very flaky tests and this matcher accounts for that.
-    // this behavior was validated locally by getting debug logs from lambdatest.  As far as I can tell, this is not a behavior
-    // that happens in the wild, but rather a quirk of lambdatest.
-    expect(x.value).toBeOneOfTypes([Number, null]) 
   })
 }
 

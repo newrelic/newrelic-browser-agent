@@ -80,8 +80,8 @@ module.exports = class TestHandle {
    */
   processRequest (serverId, fastify, request) {
     // Scheduled Replys logic
-    if (this.#scheduledReplies.has(serverId)) {
-      const scheduledReplies = this.#scheduledReplies.get(serverId)
+    if (this.#scheduledReplies.has(serverId + this.testId)) {
+      const scheduledReplies = this.#scheduledReplies.get(serverId + this.testId)
 
       for (const scheduledReply of scheduledReplies) {
         try {
@@ -105,8 +105,8 @@ module.exports = class TestHandle {
     }
 
     // Network Captures logic
-    if (this.#networkCaptures.has(serverId)) {
-      const networkCaptures = this.#networkCaptures.get(serverId)
+    if (this.#networkCaptures.has(serverId + this.testId)) {
+      const networkCaptures = this.#networkCaptures.get(serverId + this.testId)
 
       for (const networkCapture of networkCaptures.values()) {
         try {
@@ -160,11 +160,11 @@ module.exports = class TestHandle {
    * @param {ScheduledReply} scheduledReply The reply options to apply to the server request
    */
   scheduleReply (serverId, scheduledReply) {
-    if (!this.#scheduledReplies.has(serverId)) {
-      this.#scheduledReplies.set(serverId, new Set())
+    if (!this.#scheduledReplies.has(serverId + this.testId)) {
+      this.#scheduledReplies.set(serverId + this.testId, new Set())
     }
 
-    this.#scheduledReplies.get(serverId).add(scheduledReply)
+    this.#scheduledReplies.get(serverId + this.testId).add(scheduledReply)
   }
 
   /**
@@ -174,13 +174,13 @@ module.exports = class TestHandle {
    * the test function
    */
   clearScheduledReply (serverId, scheduledReply) {
-    if (!this.#scheduledReplies.has(serverId)) {
+    if (!this.#scheduledReplies.has(serverId + this.testId)) {
       return
     }
 
-    this.#scheduledReplies.get(serverId).forEach(reply => {
+    this.#scheduledReplies.get(serverId + this.testId).forEach(reply => {
       if (scheduledReply.test.name === reply.test.name) {
-        this.#scheduledReplies.get(serverId).delete(reply)
+        this.#scheduledReplies.get(serverId + this.testId).delete(reply)
       }
     })
   }
@@ -190,7 +190,7 @@ module.exports = class TestHandle {
    * @param {'assetServer'|'bamServer'} serverId Id of the server to clear
    */
   clearScheduledReplies (serverId) {
-    this.#scheduledReplies.set(serverId, new Set())
+    this.#scheduledReplies.set(serverId + this.testId, new Set())
   }
 
   // Network Captures logic
@@ -205,14 +205,14 @@ module.exports = class TestHandle {
    * @returns {import('./network-capture')} The ID of the network capture
    */
   createNetworkCaptures (serverId, networkCaptureOptions) {
-    if (!this.#networkCaptures.has(serverId)) {
-      this.#networkCaptures.set(serverId, new Map())
+    if (!this.#networkCaptures.has(serverId + this.testId)) {
+      this.#networkCaptures.set(serverId + this.testId, new Map())
     }
 
     return networkCaptureOptions
       .map(options => {
         const networkCapture = new NetworkCapture(this, options)
-        this.#networkCaptures.get(serverId).set(networkCapture.instanceId, networkCapture)
+        this.#networkCaptures.get(serverId + this.testId).set(networkCapture.instanceId, networkCapture)
         return networkCapture.instanceId
       })
   }
@@ -225,7 +225,7 @@ module.exports = class TestHandle {
    * @returns {import('./network-capture').SerializedNetworkCapture[]} Array of serialized network captures
    */
   getNetworkCaptureCache (serverId, captureId) {
-    const networkCaptures = this.#networkCaptures.get(serverId)
+    const networkCaptures = this.#networkCaptures.get(serverId + this.testId)
 
     if (!networkCaptures || !networkCaptures.has(captureId)) {
       return []
@@ -241,7 +241,7 @@ module.exports = class TestHandle {
    * @returns {void}
    */
   clearNetworkCaptureCache (serverId, captureId) {
-    const networkCaptures = this.#networkCaptures.get(serverId)
+    const networkCaptures = this.#networkCaptures.get(serverId + this.testId)
 
     if (!networkCaptures || !networkCaptures.has(captureId)) {
       return
@@ -257,7 +257,7 @@ module.exports = class TestHandle {
    * @returns {void}
    */
   destroyNetworkCapture (serverId, captureId) {
-    const networkCaptures = this.#networkCaptures.get(serverId)
+    const networkCaptures = this.#networkCaptures.get(serverId + this.testId)
 
     if (!networkCaptures || !networkCaptures.has(captureId)) {
       return
@@ -277,7 +277,7 @@ module.exports = class TestHandle {
    * with an array of serialized network captures once the wait conditions are met.
    */
   awaitNetworkCapture (serverId, captureId, waitConditions) {
-    const networkCaptures = this.#networkCaptures.get(serverId)
+    const networkCaptures = this.#networkCaptures.get(serverId + this.testId)
 
     if (!networkCaptures || !networkCaptures.has(captureId)) {
       return []

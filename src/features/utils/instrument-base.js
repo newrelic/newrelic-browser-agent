@@ -92,7 +92,7 @@ export class InstrumentBase extends FeatureBase {
 
       let session
       try {
-        if (canEnableSessionTracking(this.agentIdentifier)) { // would require some setup before certain features start
+        if (canEnableSessionTracking(agentRef.init)) { // would require some setup before certain features start
           const { setupAgentSession } = await import(/* webpackChunkName: "session-manager" */ './agent-session')
           session = setupAgentSession(agentRef)
         }
@@ -107,7 +107,7 @@ export class InstrumentBase extends FeatureBase {
        * it's only responsible for aborting its one specific feature, rather than all.
        */
       try {
-        if (!this.#shouldImportAgg(this.featureName, session)) {
+        if (!this.#shouldImportAgg(this.featureName, session, agentRef.init)) {
           drain(this.agentIdentifier, this.featureName)
           loadedSuccessfully(false) // aggregate module isn't loaded at all
           return
@@ -139,10 +139,10 @@ export class InstrumentBase extends FeatureBase {
  * @param {import('../../common/session/session-entity').SessionEntity} session
  * @returns
  */
-  #shouldImportAgg (featureName, session) {
+  #shouldImportAgg (featureName, session, agentInit) {
     switch (featureName) {
       case FEATURE_NAMES.sessionReplay: // the session manager must be initialized successfully for Replay & Trace features
-        return hasReplayPrerequisite(this.agentIdentifier) && !!session
+        return hasReplayPrerequisite(agentInit) && !!session
       case FEATURE_NAMES.sessionTrace:
         return !!session
       default:

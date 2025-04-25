@@ -20,7 +20,7 @@ export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor (agentRef) {
     super(agentRef, FEATURE_NAME)
-    this.isSessionTrackingEnabled = canEnableSessionTracking(this.agentIdentifier) && this.agentRef.runtime.session
+    this.isSessionTrackingEnabled = canEnableSessionTracking(agentRef.init) && agentRef.runtime.session
 
     // The SessionEntity class can emit a message indicating the session was cleared and reset (expiry, inactivity). This feature must abort and never resume if that occurs.
     this.ee.on(SESSION_EVENTS.RESET, () => {

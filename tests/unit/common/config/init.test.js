@@ -1,38 +1,9 @@
+import { mergeInit } from '../../../../src/common/config/init.js'
+
 jest.mock('../../../../src/common/util/console.js')
 
-let getConfiguration, setConfiguration, getConfigurationValue
-beforeEach(async () => {
-  jest.resetModules()
-  ;({ getConfiguration, setConfiguration, getConfigurationValue } = await import('../../../../src/common/config/init.js'))
-})
-
-test('set/getConfiguration should throw on an invalid agent id', () => {
-  // currently only checks if it's a truthy value
-  expect(() => setConfiguration(undefined, {})).toThrow('require an agent id')
-  expect(() => getConfiguration(undefined)).toThrow('require an agent id')
-  expect(() => setConfiguration('', {})).toThrow('require an agent id')
-  expect(() => getConfiguration('')).toThrow('require an agent id')
-})
-
-test('set/getConfiguration works correctly', () => {
-  expect(() => setConfiguration(123, { jserrors: { enabled: false } })).not.toThrow() // notice setConfiguration accepts numbers
-  let cachedObj = getConfiguration('123')
-  expect(Object.keys(cachedObj).length).toBeGreaterThan(1)
-  expect(cachedObj.jserrors.enabled).toEqual(false)
-  expect(cachedObj.generic_events.enabled).toEqual(true) // this should mirror default in init.js
-})
-
-test('getConfigurationValue parses path correctly', () => {
-  setConfiguration('ab', { generic_events: { autoStart: false } })
-  expect(getConfigurationValue('ab', '')).toBeUndefined()
-  expect(getConfigurationValue('ab', 'generic_events')).toEqual({ enabled: true, autoStart: false })
-  expect(getConfigurationValue('ab', 'generic_events.autoStart')).toEqual(false)
-  expect(getConfigurationValue('ab', 'generic_events.dne')).toBeUndefined()
-})
-
 test('init props exist and return expected defaults', () => {
-  setConfiguration('34567', {})
-  const config = getConfiguration('34567')
+  const config = mergeInit({})
   expect(Object.keys(config).length).toEqual(23)
   expect(config.ajax).toEqual({
     autoStart: true,
@@ -164,7 +135,7 @@ test('init props exist and return expected defaults', () => {
 
 describe('property getters/setters used for validation', () => {
   test('invalid values do not pass through', () => {
-    setConfiguration('12345', {
+    const retInit = mergeInit({
       session_replay: {
         block_selector: '[invalid selector]',
         mask_text_selector: '[invalid selector]',
@@ -172,13 +143,13 @@ describe('property getters/setters used for validation', () => {
       }
     })
 
-    expect(getConfigurationValue('12345', 'session_replay.block_selector')).toEqual('[data-nr-block]')
-    expect(getConfigurationValue('12345', 'session_replay.mask_text_selector')).toEqual('*')
-    expect(getConfigurationValue('12345', 'session_replay.mask_input_options')).toMatchObject({ password: true, select: false })
+    expect(retInit.session_replay.block_selector).toEqual('[data-nr-block]')
+    expect(retInit.session_replay.mask_text_selector).toEqual('*')
+    expect(retInit.session_replay.mask_input_options).toMatchObject({ password: true, select: false })
   })
 
   test('valid values do pass through', () => {
-    setConfiguration('23456', {
+    const retInit = mergeInit({
       session_replay: {
         block_selector: '[block-text-test]',
         mask_text_selector: '[mask-text-test]',
@@ -186,33 +157,33 @@ describe('property getters/setters used for validation', () => {
       }
     })
 
-    expect(getConfigurationValue('23456', 'session_replay.block_selector')).toEqual('[data-nr-block],[block-text-test]')
-    expect(getConfigurationValue('23456', 'session_replay.mask_text_selector')).toEqual('[mask-text-test],[data-nr-mask]')
-    expect(getConfigurationValue('23456', 'session_replay.mask_input_options')).toMatchObject({ password: true, select: true })
+    expect(retInit.session_replay.block_selector).toEqual('[data-nr-block],[block-text-test]')
+    expect(retInit.session_replay.mask_text_selector).toEqual('[mask-text-test],[data-nr-mask]')
+    expect(retInit.session_replay.mask_input_options).toMatchObject({ password: true, select: true })
   })
 
   test('null accepted for mask_text', () => {
-    setConfiguration('34567', {
+    const retInit = mergeInit({
       session_replay: {
         mask_text_selector: null
       }
     })
 
-    expect(getConfigurationValue('34567', 'session_replay.mask_text_selector')).toEqual('[data-nr-mask]')
+    expect(retInit.session_replay.mask_text_selector).toEqual('[data-nr-mask]')
   })
 
   test('empty string accepted for mask_text', () => {
-    setConfiguration('34567', {
+    const retInit = mergeInit({
       session_replay: {
         mask_text_selector: ''
       }
     })
 
-    expect(getConfigurationValue('34567', 'session_replay.mask_text_selector')).toEqual('[data-nr-mask]')
+    expect(retInit.session_replay.mask_text_selector).toEqual('[data-nr-mask]')
   })
 
   test('props without a setter does not issue on attempted assignment', () => {
-    setConfiguration('34567', {
+    const retInit = mergeInit({
       session_replay: {
         block_class: undefined,
         ignore_class: null,
@@ -221,9 +192,9 @@ describe('property getters/setters used for validation', () => {
       }
     })
 
-    expect(getConfigurationValue('34567', 'session_replay.block_class')).toEqual('nr-block')
-    expect(getConfigurationValue('34567', 'session_replay.ignore_class')).toEqual('nr-ignore')
-    expect(getConfigurationValue('34567', 'session_replay.mask_text_class')).toEqual('nr-mask')
-    expect(getConfigurationValue('34567', 'session_replay.mask_input_options')).toMatchObject({ password: true, select: true })
+    expect(retInit.session_replay.block_class).toEqual('nr-block')
+    expect(retInit.session_replay.ignore_class).toEqual('nr-ignore')
+    expect(retInit.session_replay.mask_text_class).toEqual('nr-mask')
+    expect(retInit.session_replay.mask_input_options).toMatchObject({ password: true, select: true })
   })
 })

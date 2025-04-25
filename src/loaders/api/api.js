@@ -110,11 +110,9 @@ export function setAPI (agent, forceDrain) {
    */
   function appendJsAttribute (key, value, apiName, addToBrowserStorage) {
     const currentInfo = agent.info
-    if (value === null) {
-      delete currentInfo.jsAttributes[key]
-    } else {
-      agent.info = { ...agent.info, jsAttributes: { ...currentInfo.jsAttributes, [key]: value } }
-    }
+    if (value === null) delete currentInfo.jsAttributes[key]
+    else currentInfo.jsAttributes[key] = value
+
     return apiCall(prefix, apiName, true, (!!addToBrowserStorage || value === null) ? 'session' : undefined)(key, value)
   }
   agent.setCustomAttribute = function (name, value, persistAttribute = false) {

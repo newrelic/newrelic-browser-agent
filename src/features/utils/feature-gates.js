@@ -2,7 +2,6 @@
  * Copyright 2020-2025 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { getConfigurationValue } from '../../common/config/init'
 import { isBrowserScope } from '../../common/constants/runtime'
 
 /**
@@ -10,6 +9,6 @@ import { isBrowserScope } from '../../common/constants/runtime'
  * @param {string} agentId
  * @returns {boolean}
  */
-export const canEnableSessionTracking = (agentId) => {
-  return isBrowserScope && getConfigurationValue(agentId, 'privacy.cookies_enabled') === true
+export const canEnableSessionTracking = (agentInit) => {
+  return isBrowserScope && agentInit?.privacy.cookies_enabled === true
 }

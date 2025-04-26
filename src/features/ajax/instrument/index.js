@@ -125,7 +125,7 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
       xhr.setRequestHeader('X-NewRelic-ID', agentRef.loader_config.xpid)
     }
 
-    var payload = dt.generateTracePayload(this.parsedOrigin)
+    var payload = dt.generateTracePayload(agentRef, this.parsedOrigin)
     if (payload) {
       var added = false
       if (payload.newrelicHeader) {
@@ -261,7 +261,7 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
       this.sameOrigin = this.parsedOrigin.sameOrigin
     }
 
-    var payload = dt.generateTracePayload(this.parsedOrigin)
+    var payload = dt.generateTracePayload(agentRef, this.parsedOrigin)
     if (!payload || (!payload.newrelicHeader && !payload.traceContextParentHeader)) {
       return
     }

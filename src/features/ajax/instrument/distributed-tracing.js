@@ -12,7 +12,7 @@ export class DT {
     this.agentRef = agentRef
   }
 
-  generateTracePayload (parsedOrigin) {
+  generateTracePayload (agentRef, parsedOrigin) {
     const loaderConfig = this.agentRef.loader_config
     if (!this.shouldGenerateTrace(parsedOrigin) || !loaderConfig) {
       return null
@@ -28,7 +28,7 @@ export class DT {
 
     var spanId = generateSpanId()
     var traceId = generateTraceId()
-    var timestamp = Date.now()
+    var timestamp = agentRef.runtime.timeKeeper.correctAbsoluteTimestamp(Date.now())
 
     var payload = {
       spanId,

@@ -16,6 +16,11 @@ beforeEach(() => {
       accountID: '1234',
       agentID: '5678',
       trustKey: '1'
+    },
+    runtime: {
+      timeKeeper: {
+        correctAbsoluteTimestamp: jest.fn(() => Date.now())
+      }
     }
   }
   dtInstance = new DT(agent)
@@ -26,13 +31,14 @@ test('newrelic header has the correct format', () => {
     distributed_tracing: { enabled: true }
   }
 
-  const payload = dtInstance.generateTracePayload({
+  const payload = dtInstance.generateTracePayload(agent, {
     sameOrigin: true
   })
   const header = JSON.parse(atob(payload.newrelicHeader))
 
   expect(payload.spanId).toEqual(header.d.id)
   expect(payload.traceId).toEqual(header.d.tr)
+  expect(agent.runtime.timeKeeper.correctAbsoluteTimestamp).toHaveBeenCalled()
   expect(payload.timestamp).toEqual(header.d.ti)
 
   const loaderConfig = agent.loader_config
@@ -50,7 +56,7 @@ test('newrelic header is not generated for same-origin calls when disabled in co
     }
   }
 
-  const payload = dtInstance.generateTracePayload({
+  const payload = dtInstance.generateTracePayload(agent, {
     sameOrigin: true
   })
 
@@ -67,7 +73,7 @@ test('newrelic header is added to cross-origin calls by default', () => {
     }
   }
 
-  const payload = dtInstance.generateTracePayload({
+  const payload = dtInstance.generateTracePayload(agent, {
     sameOrigin: false,
     hostname: 'someotherdomain.com',
     protocol: 'https',
@@ -86,7 +92,7 @@ test('newrelic header is added to cross-origin calls when enabled in configurati
     }
   }
 
-  const payload = dtInstance.generateTracePayload({
+  const payload = dtInstance.generateTracePayload(agent, {
     sameOrigin: false,
     hostname: 'someotherdomain.com',
     protocol: 'https',
@@ -105,7 +111,7 @@ test('newrelic header is not added to cross-origin calls when disabled in config
     }
   }
 
-  const payload = dtInstance.generateTracePayload({
+  const payload = dtInstance.generateTracePayload(agent, {
     sameOrigin: false,
     hostname: 'someotherdomain.com',
     protocol: 'https',
@@ -122,7 +128,7 @@ test('trace context headers are generated with the correct format', () => {
     }
   }
 
-  const payload = dtInstance.generateTracePayload({
+  const payload = dtInstance.generateTracePayload(agent, {
     sameOrigin: true
   })
   const parentHeader = payload.traceContextParentHeader
@@ -148,6 +154,8 @@ test('trace context headers are generated with the correct format', () => {
   expect(stateHeaderParts[6]).toEqual('')
   expect(stateHeaderParts[7]).toEqual('')
   expect(stateHeaderParts[8]).toEqual(payload.timestamp.toString())
+
+  expect(agent.runtime.timeKeeper.correctAbsoluteTimestamp).toHaveBeenCalled()
 })
 
 test('trace context headers are not added to cross-origin calls by default', () => {
@@ -158,7 +166,7 @@ test('trace context headers are not added to cross-origin calls by default', () 
     }
   }
 
-  const payload = dtInstance.generateTracePayload({
+  const payload = dtInstance.generateTracePayload(agent, {
     sameOrigin: false,
     hostname: 'someotherdomain.com',
     protocol: 'https',
@@ -178,7 +186,7 @@ test('trace context headers are added to cross-origin calls when enabled in conf
     }
   }
 
-  const payload = dtInstance.generateTracePayload({
+  const payload = dtInstance.generateTracePayload(agent, {
     sameOrigin: false,
     hostname: 'someotherdomain.com',
     protocol: 'https',
@@ -198,7 +206,7 @@ test('trace context headers are not added to cross-origin calls when disabled in
     }
   }
 
-  const payload = dtInstance.generateTracePayload({
+  const payload = dtInstance.generateTracePayload(agent, {
     sameOrigin: false,
     hostname: 'someotherdomain.com',
     protocol: 'https',
@@ -222,7 +230,7 @@ test('newrelic header is generated when configuration has numeric values', () =>
     }
   }
 
-  const payload = dtInstance.generateTracePayload({
+  const payload = dtInstance.generateTracePayload(agent, {
     sameOrigin: true
   })
   const header = JSON.parse(atob(payload.newrelicHeader))
@@ -230,6 +238,7 @@ test('newrelic header is generated when configuration has numeric values', () =>
   expect(payload.spanId).toEqual(header.d.id)
   expect(payload.traceId).toEqual(header.d.tr)
   expect(payload.timestamp).toEqual(header.d.ti)
+  expect(agent.runtime.timeKeeper.correctAbsoluteTimestamp).toHaveBeenCalled()
 
   const loaderConfig = agent.loader_config
   expect(header.d.ty).toEqual('Browser')
@@ -242,7 +251,7 @@ test('no trace headers are generated when the loader config object is empty', ()
   agent.init = {
   }
 
-  const payload = dtInstance.generateTracePayload({
+  const payload = dtInstance.generateTracePayload(agent, {
     sameOrigin: true
   })
 
@@ -262,7 +271,7 @@ test.each([null, undefined])('no trace headers are generated when the loader con
     }
   }
 
-  const payload = dtInstance.generateTracePayload({
+  const payload = dtInstance.generateTracePayload(agent, {
     sameOrigin: true
   })
 
@@ -282,7 +291,7 @@ test.each([null, undefined])('no trace headers are generated when the loader con
     }
   }
 
-  const payload = dtInstance.generateTracePayload({
+  const payload = dtInstance.generateTracePayload(agent, {
     sameOrigin: true
   })
 
@@ -302,7 +311,7 @@ test.each([null, undefined])('trace headers are generated without trust key when
     }
   }
 
-  const payload = dtInstance.generateTracePayload({
+  const payload = dtInstance.generateTracePayload(agent, {
     sameOrigin: true
   })
   const header = JSON.parse(atob(payload.newrelicHeader))
@@ -310,6 +319,7 @@ test.each([null, undefined])('trace headers are generated without trust key when
   expect(payload.spanId).toEqual(header.d.id)
   expect(payload.traceId).toEqual(header.d.tr)
   expect(payload.timestamp).toEqual(header.d.ti)
+  expect(agent.runtime.timeKeeper.correctAbsoluteTimestamp).toHaveBeenCalled()
 
   const loaderConfig = agent.loader_config
   expect(header.d.ty).toEqual('Browser')
@@ -329,9 +339,10 @@ test.each([null, undefined])('newrelic header is not added when btoa global is %
     }
   }
 
-  const payload = dtInstance.generateTracePayload({
+  const payload = dtInstance.generateTracePayload(agent, {
     sameOrigin: true
   })
+  expect(agent.runtime.timeKeeper.correctAbsoluteTimestamp).toHaveBeenCalled()
 
   expect(typeof payload.spanId).toEqual('string')
   expect(typeof payload.traceId).toEqual('string')

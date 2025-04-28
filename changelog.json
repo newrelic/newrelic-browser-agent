@@ -4,6 +4,23 @@
     {
       "changes": [
         {
+          "type": "feat",
+          "sha": "6c3d7166e6a7014e1ae453801a9da875d311a3e1",
+          "message": "Remove agent config cache and getters/setters",
+          "issues": [
+            "1430"
+          ]
+        }
+      ],
+      "version": "1.289.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "f7bf0ee8-07c7-455f-b3f2-e9e526fb3a8e",
+      "createTime": "2025-04-24T22:49:38.121Z"
+    },
+    {
+      "changes": [
+        {
           "type": "fix",
           "sha": "56e75b243b87d1d44e8014ac0ad5f408f0d145c5",
           "message": "Ensure event buffer always exists",
@@ -2825,5 +2842,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2025-04-18T23:41:11.957Z"
+  "updateTime": "2025-04-24T22:49:38.121Z"
 }

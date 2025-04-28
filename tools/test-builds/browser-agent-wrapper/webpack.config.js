@@ -72,7 +72,13 @@ const config = [
     optimization: {
       splitChunks: {
         cacheGroups: {
-          ...webpackCacheGroup()
+          ...webpackCacheGroup(),
+          microAgent: {
+            test: /micro-agent\.js$/,
+            name: 'micro-agent',
+            chunks: 'all',
+            enforce: true
+          }
         }
       }
     },
@@ -105,19 +111,6 @@ const config = [
           }
         }
       ]
-    },
-    optimization: {
-      minimize: false, // Disable minification globally
-      splitChunks: {
-        cacheGroups: {
-          microAgent: {
-            test: /micro-agent\.js$/,
-            name: 'micro-agent',
-            chunks: 'all',
-            enforce: true
-          }
-        }
-      }
     },
     plugins: [
       new HtmlWebpackPlugin({

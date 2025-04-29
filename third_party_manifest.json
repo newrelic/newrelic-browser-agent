@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "Mon Apr 21 2025 14:02:51 GMT+0000 (Coordinated Universal Time)",
+  "lastUpdated": "Mon Apr 28 2025 17:41:53 GMT+0000 (Coordinated Universal Time)",
   "projectName": "New Relic Browser Agent",
   "projectUrl": "https://github.com/newrelic/newrelic-browser-agent",
   "includeOptDeps": true,
@@ -236,28 +236,28 @@
       "licenseUrl": "https://github.com/newrelic/nr-querypack/blob/v3.12.0/LICENSE",
       "licenseTextSource": "file"
     },
-    "@wdio/cli@8.41.0": {
+    "@wdio/cli@8.44.1": {
       "name": "@wdio/cli",
-      "version": "8.41.0",
+      "version": "8.44.1",
       "range": "^8.27.0",
       "licenses": "MIT",
       "repoUrl": "https://github.com/webdriverio/webdriverio",
-      "versionedRepoUrl": "https://github.com/webdriverio/webdriverio/tree/v8.41.0",
+      "versionedRepoUrl": "https://github.com/webdriverio/webdriverio/tree/v8.44.1",
       "licenseFile": "node_modules/@wdio/cli/LICENSE-MIT",
-      "licenseUrl": "https://github.com/webdriverio/webdriverio/blob/v8.41.0/LICENSE-MIT",
+      "licenseUrl": "https://github.com/webdriverio/webdriverio/blob/v8.44.1/LICENSE-MIT",
       "licenseTextSource": "file",
       "publisher": "Christian Bromann",
       "email": "mail@bromann.dev"
     },
-    "@wdio/local-runner@8.41.0": {
+    "@wdio/local-runner@8.44.1": {
       "name": "@wdio/local-runner",
-      "version": "8.41.0",
+      "version": "8.44.1",
       "range": "^8.27.0",
       "licenses": "MIT",
       "repoUrl": "https://github.com/webdriverio/webdriverio",
-      "versionedRepoUrl": "https://github.com/webdriverio/webdriverio/tree/v8.41.0",
+      "versionedRepoUrl": "https://github.com/webdriverio/webdriverio/tree/v8.44.1",
       "licenseFile": "node_modules/@wdio/local-runner/LICENSE-MIT",
-      "licenseUrl": "https://github.com/webdriverio/webdriverio/blob/v8.41.0/LICENSE-MIT",
+      "licenseUrl": "https://github.com/webdriverio/webdriverio/blob/v8.44.1/LICENSE-MIT",
       "licenseTextSource": "file",
       "publisher": "Christian Bromann",
       "email": "mail@bromann.dev"
@@ -634,15 +634,15 @@
       "licenseUrl": "https://github.com/jestjs/jest/blob/v29.7.0/LICENSE",
       "licenseTextSource": "file"
     },
-    "jsonpath-plus@10.2.0": {
+    "jsonpath-plus@10.3.0": {
       "name": "jsonpath-plus",
-      "version": "10.2.0",
+      "version": "10.3.0",
       "range": "^10.0.7",
       "licenses": "MIT",
       "repoUrl": "https://github.com/s3u/JSONPath",
-      "versionedRepoUrl": "https://github.com/s3u/JSONPath/tree/v10.2.0",
+      "versionedRepoUrl": "https://github.com/s3u/JSONPath/tree/v10.3.0",
       "licenseFile": "node_modules/jsonpath-plus/LICENSE",
-      "licenseUrl": "https://github.com/s3u/JSONPath/blob/v10.2.0/LICENSE",
+      "licenseUrl": "https://github.com/s3u/JSONPath/blob/v10.3.0/LICENSE",
       "licenseTextSource": "file",
       "publisher": "Stefan Goessner"
     },

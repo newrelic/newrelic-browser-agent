@@ -177,4 +177,33 @@ describe('UserAction events', () => {
       nearestTag: 'rect'
     })
   })
+
+  it('should assign currentUrl on start of action instead of at end of aggregation', async () => {
+    const testUrl = await browser.testHandle.assetURL('user-actions.html', { init })
+    await browser.url(testUrl).then(() => browser.waitForAgentLoad())
+
+    await $('#pay-btn').click()
+    await browser.execute(function () {
+      history.replaceState({}, '', '/new-url')
+    })
+    await $('#pay-btn').click()
+
+    // finish aggregation of click event and wait for harvest
+    const [insHarvests] = await Promise.all([
+      insightsCapture.waitForResult({ timeout: 6000 }),
+      $('body').click()
+    ])
+    const userActionsHarvest = insHarvests.flatMap(harvest => harvest.request.body.ins)
+    const clickUAs = userActionsHarvest.filter(ua => ua.action === 'click')
+
+    // The currentUrl should be the URL upon clicking the button, not the URL after it changes
+    expect(clickUAs[0]).toMatchObject({
+      eventType: 'UserAction',
+      action: 'click',
+      actionCount: 2,
+      currentUrl: expect.stringMatching(/\/user-actions\.html$/),
+      targetTag: 'SPAN',
+      nearestId: 'pay-btn'
+    })
+  })
 })

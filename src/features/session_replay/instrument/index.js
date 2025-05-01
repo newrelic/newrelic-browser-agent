@@ -11,6 +11,8 @@ import { DEFAULT_KEY, MODE, PREFIX } from '../../../common/session/constants'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { hasReplayPrerequisite, isPreloadAllowed } from '../shared/utils'
 import { FEATURE_NAME, SR_EVENT_EMITTER_TYPES, TRIGGERS } from '../constants'
+import { setupRecordReplayAPI } from '../../../loaders/api/recordReplay'
+import { setupPauseReplayAPI } from '../../../loaders/api/pauseReplay'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
@@ -19,6 +21,11 @@ export class Instrument extends InstrumentBase {
   #agentRef
   constructor (agentRef, auto = true) {
     super(agentRef, FEATURE_NAME, auto)
+
+    /** feature specific APIs */
+    setupRecordReplayAPI(agentRef)
+    setupPauseReplayAPI(agentRef)
+
     let session
     this.replayRunning = false
     this.#agentRef = agentRef
@@ -26,7 +33,7 @@ export class Instrument extends InstrumentBase {
       session = JSON.parse(localStorage.getItem(`${PREFIX}_${DEFAULT_KEY}`))
     } catch (err) { }
 
-    if (hasReplayPrerequisite(agentRef.agentIdentifier)) {
+    if (hasReplayPrerequisite(agentRef.init)) {
       this.ee.on(SR_EVENT_EMITTER_TYPES.RECORD, () => this.#apiStartOrRestartReplay())
     }
 
@@ -56,11 +63,11 @@ export class Instrument extends InstrumentBase {
     if (!session) { // this might be a new session if entity initializes: conservatively start recording if first-time config allows
       // Note: users with SR enabled, as well as these other configs enabled by-default, will be penalized by the recorder overhead EVEN IF they don't actually have or get
       // entitlement or sampling decision, or otherwise intentionally opted-in for the feature.
-      return isPreloadAllowed(this.agentIdentifier)
+      return isPreloadAllowed(this.#agentRef.init)
     } else if (session.sessionReplayMode === MODE.FULL || session.sessionReplayMode === MODE.ERROR) {
       return true // existing sessions get to continue recording, regardless of this page's configs or if it has expired (conservatively)
     } else { // SR mode was OFF but may potentially be turned on if session resets and configs allows the new session to have replay...
-      return isPreloadAllowed(this.agentIdentifier)
+      return isPreloadAllowed(this.#agentRef.init)
     }
   }
 

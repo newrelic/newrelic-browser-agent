@@ -1188,7 +1188,7 @@ This product includes source derived from [@newrelic/nr-querypack](https://githu
 
 ### @wdio/cli
 
-This product includes source derived from [@wdio/cli](https://github.com/webdriverio/webdriverio) ([v8.41.0](https://github.com/webdriverio/webdriverio/tree/v8.41.0)), distributed under the [MIT License](https://github.com/webdriverio/webdriverio/blob/v8.41.0/LICENSE-MIT):
+This product includes source derived from [@wdio/cli](https://github.com/webdriverio/webdriverio) ([v8.44.1](https://github.com/webdriverio/webdriverio/tree/v8.44.1)), distributed under the [MIT License](https://github.com/webdriverio/webdriverio/blob/v8.44.1/LICENSE-MIT):
 
 ```
 Copyright (c) OpenJS Foundation and other contributors
@@ -1216,7 +1216,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### @wdio/local-runner
 
-This product includes source derived from [@wdio/local-runner](https://github.com/webdriverio/webdriverio) ([v8.41.0](https://github.com/webdriverio/webdriverio/tree/v8.41.0)), distributed under the [MIT License](https://github.com/webdriverio/webdriverio/blob/v8.41.0/LICENSE-MIT):
+This product includes source derived from [@wdio/local-runner](https://github.com/webdriverio/webdriverio) ([v8.44.1](https://github.com/webdriverio/webdriverio/tree/v8.44.1)), distributed under the [MIT License](https://github.com/webdriverio/webdriverio/blob/v8.44.1/LICENSE-MIT):
 
 ```
 Copyright (c) OpenJS Foundation and other contributors
@@ -2213,7 +2213,7 @@ SOFTWARE.
 
 ### jsonpath-plus
 
-This product includes source derived from [jsonpath-plus](https://github.com/s3u/JSONPath) ([v10.2.0](https://github.com/s3u/JSONPath/tree/v10.2.0)), distributed under the [MIT License](https://github.com/s3u/JSONPath/blob/v10.2.0/LICENSE):
+This product includes source derived from [jsonpath-plus](https://github.com/s3u/JSONPath) ([v10.3.0](https://github.com/s3u/JSONPath/tree/v10.3.0)), distributed under the [MIT License](https://github.com/s3u/JSONPath/blob/v10.3.0/LICENSE):
 
 ```
 MIT License

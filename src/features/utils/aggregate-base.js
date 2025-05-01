@@ -161,7 +161,7 @@ export class AggregateBase extends FeatureBase {
    */
   checkConfiguration (existingAgent) {
     // NOTE: This check has to happen at aggregator load time
-    if (!isValid(this.agentIdentifier)) {
+    if (!isValid(existingAgent.info)) {
       const cdn = gosCDN()
       let jsAttributes = { ...cdn.info?.jsAttributes }
       try {

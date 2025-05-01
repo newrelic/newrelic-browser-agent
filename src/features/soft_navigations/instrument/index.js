@@ -11,6 +11,7 @@ import { wrapHistory } from '../../../common/wrap/wrap-history'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME, INTERACTION_TRIGGERS } from '../constants'
 import { now } from '../../../common/timing/now'
+import { setupInteractionAPI } from '../../../loaders/api/interaction'
 
 /**
  * The minimal time after a UI event for which no further events will be processed - i.e. a throttling rate to reduce spam.
@@ -23,6 +24,10 @@ export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
   constructor (agentRef, auto = true) {
     super(agentRef, FEATURE_NAME, auto)
+
+    /** feature specific APIs */
+    setupInteractionAPI(agentRef)
+
     if (!isBrowserScope || !gosNREUMOriginals().o.MO) return // soft navigations is not supported outside web env or browsers without the mutation observer API
 
     const historyEE = wrapHistory(this.ee)

@@ -6,16 +6,7 @@ import { ee } from '../../../src/common/event-emitter/contextual-ee'
 jest.mock('../../../src/common/constants/runtime')
 jest.mock('../../../src/common/config/info', () => ({
   __esModule: true,
-  getInfo: jest.fn().mockReturnValue({ jsAttributes: {} }),
   isValid: jest.fn().mockReturnValue(true)
-}))
-jest.mock('../../../src/common/config/init', () => ({
-  __esModule: true,
-  getConfigurationValue: jest.fn()
-}))
-jest.mock('../../../src/common/config/runtime', () => ({
-  __esModule: true,
-  getRuntime: jest.fn().mockReturnValue({})
 }))
 
 let spaInstrument

@@ -2,7 +2,6 @@
  * Copyright 2020-2025 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-
 import { initialLocation } from '../../../common/constants/runtime'
 import { gosNREUMOriginals } from '../../../common/window/nreum'
 import { InteractionNode } from './interaction-node'
@@ -99,7 +98,7 @@ InteractionPrototype.finish = function finishInteraction () {
     this.onFinished(this)
   }
 
-  Object.entries(interaction.agentRef.info?.jsAttributes || {}).forEach(([attr, value]) => {
+  Object.entries(interaction.agentRef.info.jsAttributes || {}).forEach(([attr, value]) => {
     if (!(attr in customAttrs)) customAttrs[attr] = value
   })
 

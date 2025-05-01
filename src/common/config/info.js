@@ -2,7 +2,7 @@
  * Copyright 2020-2025 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { defaults as nrDefaults, getNREUMInitializedAgent } from '../window/nreum'
+import { defaults as nrDefaults } from '../window/nreum'
 import { getModeledObject } from './configurable'
 
 /**
@@ -26,7 +26,7 @@ import { getModeledObject } from './configurable'
  * @property {string} [tNamePlain]
  */
 
-const model = {
+const InfoModel = {
   // preset defaults
   beacon: nrDefaults.beacon,
   errorBeacon: nrDefaults.errorBeacon,
@@ -48,26 +48,14 @@ const model = {
   tNamePlain: undefined
 }
 
-const _cache = {}
-
-export function isValid (id) {
+export function isValid (info) {
   try {
-    const info = getInfo(id)
-    return (!!info.licenseKey && !!info.errorBeacon && !!info.applicationID)
+    return !!info.licenseKey && !!info.errorBeacon && !!info.applicationID
   } catch (err) {
     return false
   }
 }
 
-export function getInfo (id) {
-  if (!id) throw new Error('All info objects require an agent identifier!')
-  if (!_cache[id]) throw new Error(`Info for ${id} was never set`)
-  return _cache[id]
-}
-
-export function setInfo (id, obj) {
-  if (!id) throw new Error('All info objects require an agent identifier!')
-  _cache[id] = getModeledObject(obj, model)
-  const agentInst = getNREUMInitializedAgent(id)
-  if (agentInst) agentInst.info = _cache[id]
+export const mergeInfo = (info) => {
+  return getModeledObject(info, InfoModel)
 }

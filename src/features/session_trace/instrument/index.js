@@ -10,6 +10,8 @@ import * as CONSTANTS from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { canEnableSessionTracking } from '../../utils/feature-gates'
 import { now } from '../../../common/timing/now'
+import { setupAddToTraceAPI } from '../../../loaders/api/addToTrace'
+import { setupFinishedAPI } from '../../../loaders/api/finished'
 
 const {
   BST_RESOURCE, RESOURCE, START, END, FEATURE_NAME, FN_END, FN_START, PUSH_STATE
@@ -19,7 +21,12 @@ export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
   constructor (agentRef, auto = true) {
     super(agentRef, FEATURE_NAME, auto)
-    const canTrackSession = canEnableSessionTracking(this.agentIdentifier)
+
+    /** feature specific APIs */
+    setupAddToTraceAPI(agentRef)
+    setupFinishedAPI(agentRef)
+
+    const canTrackSession = canEnableSessionTracking(agentRef.init)
     if (!canTrackSession) {
       this.deregisterDrain()
       return

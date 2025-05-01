@@ -4,12 +4,11 @@
  */
 import { cleanURL } from '../../../common/url/clean-url'
 import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../../../common/serialize/bel-serializer'
-import { SharedContext } from '../../../common/context/shared-context'
-import { getInfo } from '../../../common/config/info'
 
-export class Serializer extends SharedContext {
-  constructor (parent) {
-    super(parent)
+export class Serializer {
+  constructor (agentRef) {
+    this.obfuscator = agentRef.runtime.obfuscator
+    this.info = agentRef.info
 
     /**
      * This variable is used to calculate an interactions ending offset when the
@@ -22,20 +21,18 @@ export class Serializer extends SharedContext {
   }
 
   serializeMultiple (interactions, offset, navTiming) {
-    const info = getInfo(this.sharedContext.agentIdentifier)
-    var addString = getAddStringContext(this.sharedContext.agentIdentifier)
+    var addString = getAddStringContext(this.obfuscator)
     var serialized = 'bel.7'
     interactions.forEach((interaction) => {
-      serialized += ';' + this.serializeInteraction(interaction.root, offset, navTiming, interaction.routeChange, addString, info)
+      serialized += ';' + this.serializeInteraction(interaction.root, offset, navTiming, interaction.routeChange, addString, this.info)
     })
     this.firstTimestamp = undefined
     return serialized
   }
 
   serializeSingle (root, offset, navTiming, isRouteChange) {
-    const info = getInfo(this.sharedContext.agentIdentifier)
-    var addString = getAddStringContext(this.sharedContext.agentIdentifier)
-    var serialized = 'bel.7;' + this.serializeInteraction(root, offset, navTiming, isRouteChange, addString, info)
+    var addString = getAddStringContext(this.obfuscator)
+    var serialized = 'bel.7;' + this.serializeInteraction(root, offset, navTiming, isRouteChange, addString, this.info)
     this.firstTimestamp = undefined
     return serialized
   }

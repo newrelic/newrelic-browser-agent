@@ -1,8 +1,5 @@
 import { Instrument as GenericEvents } from '../../../../src/features/generic_events/instrument'
-import { getInfo } from '../../../../src/common/config/info'
 import { resetAgent, setupAgent } from '../../setup-agent'
-import { getConfiguration } from '../../../../src/common/config/init'
-import { getRuntime } from '../../../../src/common/config/runtime'
 
 const referrerUrl = 'https://test.com'
 Object.defineProperty(global.document, 'referrer', { value: referrerUrl, configurable: true })
@@ -98,8 +95,8 @@ describe('sub-features', () => {
     const relativeTimestamp = Math.random() * 1000
     const name = 'name'
 
-    const timeKeeper = getRuntime(mainAgent.agentIdentifier).timeKeeper
-    getInfo(mainAgent.agentIdentifier).jsAttributes = { globalFoo: 'globalBar' }
+    const timeKeeper = mainAgent.runtime.timeKeeper
+    mainAgent.info.jsAttributes = { globalFoo: 'globalBar' }
 
     genericEventsAggregate.ee.emit('api-addPageAction', [relativeTimestamp, name, { foo: 'bar' }])
 
@@ -137,7 +134,7 @@ describe('sub-features', () => {
     const relativeTimestamp = Math.random() * 1000
     const name = 'name'
 
-    getInfo(mainAgent.agentIdentifier).jsAttributes = { eventType: 'BetterPageAction', timestamp: 'BetterTimestamp' }
+    mainAgent.info.jsAttributes = { eventType: 'BetterPageAction', timestamp: 'BetterTimestamp' }
 
     genericEventsAggregate.ee.emit('api-addPageAction', [relativeTimestamp, name, {}])
 
@@ -151,7 +148,7 @@ describe('sub-features', () => {
     const relativeTimestamp = Math.random() * 1000
     const name = 'name'
 
-    getConfiguration(mainAgent.agentIdentifier).page_action = { enabled: false }
+    mainAgent.init.page_action = { enabled: false }
 
     const { Aggregate } = await import('../../../../src/features/generic_events/aggregate')
     genericEventsAggregate = new Aggregate(mainAgent)
@@ -182,7 +179,7 @@ describe('sub-features', () => {
   })
 
   test('should aggregate user actions when matching target', () => {
-    getInfo(mainAgent.agentIdentifier).jsAttributes = { globalFoo: 'globalBar' }
+    mainAgent.info.jsAttributes = { globalFoo: 'globalBar' }
     const target = document.createElement('button')
     target.id = 'myBtn'
     genericEventsAggregate.ee.emit('ua', [{ timeStamp: 100, type: 'click', target }])
@@ -208,7 +205,7 @@ describe('sub-features', () => {
     })
   })
   test('should NOT aggregate user actions when targets are not identical', () => {
-    getInfo(mainAgent.agentIdentifier).jsAttributes = { globalFoo: 'globalBar' }
+    mainAgent.info.jsAttributes = { globalFoo: 'globalBar' }
     const target = document.createElement('button')
     target.id = 'myBtn'
     document.body.appendChild(target)
@@ -277,7 +274,7 @@ describe('sub-features', () => {
 
   test('should record measures when enabled', async () => {
     mainAgent.init.performance = { capture_measures: true, capture_detail: true, resources: { enabled: false, asset_types: [], first_party_domains: [], ignore_newrelic: true } }
-    getInfo(mainAgent.agentIdentifier).jsAttributes = { globalFoo: 'globalBar' }
+    mainAgent.info.jsAttributes = { globalFoo: 'globalBar' }
     const mockPerformanceObserver = jest.fn(cb => ({
       observe: () => {
         const callCb = () => {

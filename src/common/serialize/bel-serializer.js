@@ -4,7 +4,6 @@
  */
 
 import { stringify } from '../util/stringify'
-import { getRuntime } from '../config/runtime'
 
 var hasOwnProp = Object.prototype.hasOwnProperty
 var MAX_ATTRIBUTES = 64
@@ -22,10 +21,9 @@ export function numeric (n, noDefault) {
   return (n === undefined || n === 0) ? '' : Math.floor(n).toString(36)
 }
 
-export function getAddStringContext (agentIdentifier) {
+export function getAddStringContext (obfuscator) {
   let stringTableIdx = 0
   const stringTable = Object.prototype.hasOwnProperty.call(Object, 'create') ? Object.create(null) : {}
-  const obfuscator = getRuntime(agentIdentifier).obfuscator
 
   return addString
 

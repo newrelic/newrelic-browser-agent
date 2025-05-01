@@ -1,35 +1,21 @@
 import { Interaction } from '../../../../../src/features/soft_navigations/aggregate/interaction'
 import { INTERACTION_STATUS } from '../../../../../src/features/soft_navigations/constants'
-import * as runtimeModule from '../../../../../src/common/config/runtime'
 import { Obfuscator } from '../../../../../src/common/util/obfuscate'
 
-jest.mock('../../../../../src/common/config/info', () => ({
-  __esModule: true,
-  getInfo: jest.fn().mockReturnValue({
+const fakeAgent = {
+  agentIdentifier: 'abcd',
+  info: {
     jsAttributes: {
       key1: 'value1',
       key2: 'value2'
     },
     atts: 'apm_attributes_string'
-  })
-}))
-jest.mock('../../../../../src/common/config/init', () => ({
-  __esModule: true,
-  getConfigurationValue: jest.fn()
-}))
-jest.mock('../../../../../src/common/config/runtime', () => ({
-  __esModule: true,
-  getRuntime: jest.fn()
-}))
-
-beforeEach(() => {
-  jest.mocked(runtimeModule.getRuntime).mockReturnValue({
-    obfuscator: new Obfuscator({ init: { obfuscate: [] } })
-  })
-})
+  },
+  runtime: { obfuscator: new Obfuscator({ init: { obfuscate: [] } }) }
+}
 
 test('Interaction node creation is correct', () => {
-  const ixn = new Interaction('abcd', 'click', 1234)
+  const ixn = new Interaction(fakeAgent, 'click', 1234)
 
   expect(ixn.belType).toEqual(1)
   expect(ixn.nodeId).toEqual(1)
@@ -46,7 +32,7 @@ test('Interaction node creation is correct', () => {
   expect(ixn.oldRoute || ixn.newRoute).toBeUndefined()
   expect(ixn.forceSave || ixn.forceIgnore).toBe(false)
 
-  const ixn2 = new Interaction('abcd', 'api', 1234, 'some_route')
+  const ixn2 = new Interaction(fakeAgent, 'api', 1234, 'some_route')
   expect(ixn2.trigger).toBe('api')
   expect(ixn2.createdByApi).toBe(true)
   expect(ixn2.oldRoute).toBe('some_route')
@@ -54,7 +40,7 @@ test('Interaction node creation is correct', () => {
 })
 
 test('History and DOM timestamps fn updates', () => {
-  const ixn = new Interaction('abcd')
+  const ixn = new Interaction(fakeAgent)
   ixn.updateDom(5812)
   expect(ixn.domTimestamp).toBe(5812)
   expect(ixn.seenHistoryAndDomChange()).toBeFalsy()
@@ -67,7 +53,7 @@ test('History and DOM timestamps fn updates', () => {
 })
 
 test('Can subscribe to interaction events', () => {
-  const ixn = new Interaction('abcd')
+  const ixn = new Interaction(fakeAgent)
   expect(() => ixn.on('invalid_event', function () {})).toThrow()
   expect(() => ixn.on('finished', 'not_a_fn_type')).toThrow()
 
@@ -79,7 +65,7 @@ test('Can subscribe to interaction events', () => {
 })
 
 test('isActiveDuring correctly compares given timestamp', () => {
-  const ixn = new Interaction('abcd', undefined, 50)
+  const ixn = new Interaction(fakeAgent, undefined, 50)
   expect(ixn.isActiveDuring(25)).toBe(false)
   expect(ixn.isActiveDuring(100)).toBe(true) // since it's still in progress
   ixn.status = INTERACTION_STATUS.FIN
@@ -91,14 +77,14 @@ test('isActiveDuring correctly compares given timestamp', () => {
 
 describe('Interaction when done', () => {
   test('stays open if keepOpenUntilEndApi is set to true', () => {
-    const ixn = new Interaction('abcd')
+    const ixn = new Interaction(fakeAgent)
     ixn.keepOpenUntilEndApi = true // with this flag, ixn should stay open until a custom end time is provided
     expect(ixn.done()).toBe(false)
     expect(ixn.status).toEqual(INTERACTION_STATUS.IP)
     expect(ixn.done(123)).toBe(true)
   })
   test('runs onDone handlers and returns the correct boolean value on finish', () => {
-    const ixn = new Interaction('abcd')
+    const ixn = new Interaction(fakeAgent)
     ixn.forceSave = true
 
     let wasRan = false
@@ -109,7 +95,7 @@ describe('Interaction when done', () => {
     expect(wasRan).toBe(true)
   })
   test('runs onDone handlers even if the interaction is cancelled', () => {
-    const ixn = new Interaction('abcd')
+    const ixn = new Interaction(fakeAgent)
     ixn.forceIgnore = true
 
     let wasRan = false
@@ -120,7 +106,7 @@ describe('Interaction when done', () => {
     expect(wasRan).toBe(true)
   })
   test('is cancelled under certain conditions', () => {
-    const ixn = new Interaction('abc')
+    const ixn = new Interaction(fakeAgent)
     let wasRan = false
     ixn.on('cancelled', () => { wasRan = true })
 
@@ -140,7 +126,7 @@ describe('Interaction when done', () => {
     expect(ixn.status).toBe(INTERACTION_STATUS.CAN) // ignore should override save
   })
   test('is saved properly under certain conditions', () => {
-    const ixn = new Interaction('abc', undefined, 0)
+    const ixn = new Interaction(fakeAgent, undefined, 0)
     let wasRan = false
     ixn.on('finished', () => { wasRan = true })
 
@@ -177,7 +163,7 @@ describe('Interaction when done', () => {
 })
 
 test('Done interactions cannot be done again', () => {
-  const ixn = new Interaction('abc')
+  const ixn = new Interaction(fakeAgent)
   let cbCount = 0
   ixn.onDone.push(() => { cbCount++ })
   ixn.forceSave = true
@@ -193,28 +179,9 @@ test('Done interactions cannot be done again', () => {
 
 test('Interaction serialize output is correct', () => {
   jest.resetModules() // reset so we get a reliable node ID of 1
-  jest.doMock('../../../../../src/common/config/info', () => ({
-    __esModule: true,
-    getInfo: jest.fn().mockReturnValue({
-      jsAttributes: {
-        key1: 'value1',
-        key2: 'value2'
-      },
-      atts: 'apm_attributes_string'
-    })
-  }))
-  jest.doMock('../../../../../src/common/config/init', () => ({
-    __esModule: true,
-    getConfigurationValue: jest.fn()
-  }))
-  jest.doMock('../../../../../src/common/config/runtime', () => ({
-    __esModule: true,
-    getRuntime: jest.fn().mockReturnValue({
-      obfuscator: new Obfuscator({ init: { obfuscate: [] } })
-    })
-  }))
+
   const { Interaction } = require('../../../../../src/features/soft_navigations/aggregate/interaction')
-  const ixn = new Interaction('abcd', 'submit', 1234, 'this_route')
+  const ixn = new Interaction(fakeAgent, 'submit', 1234, 'this_route')
   ixn.id = 'static-id'
   ixn.forceSave = true
   ixn.customName = 'my_custom_name'

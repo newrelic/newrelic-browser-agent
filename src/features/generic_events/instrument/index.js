@@ -7,6 +7,10 @@ import { globalScope, isBrowserScope } from '../../../common/constants/runtime'
 import { handle } from '../../../common/event-emitter/handle'
 import { windowAddEventListener } from '../../../common/event-listener/event-listener-opts'
 import { debounce } from '../../../common/util/invoke'
+import { setupAddPageActionAPI } from '../../../loaders/api/addPageAction'
+import { setupFinishedAPI } from '../../../loaders/api/finished'
+import { setupRecordCustomEventAPI } from '../../../loaders/api/recordCustomEvent'
+import { setupRegisterAPI } from '../../../loaders/api/register'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME, OBSERVED_EVENTS, OBSERVED_WINDOW_EVENTS } from '../constants'
 
@@ -22,6 +26,12 @@ export class Instrument extends InstrumentBase {
       agentRef.init.user_actions.enabled,
       agentRef.init.performance.resources.enabled
     ]
+
+    /** feature specific APIs */
+    setupAddPageActionAPI(agentRef)
+    setupRecordCustomEventAPI(agentRef)
+    setupFinishedAPI(agentRef)
+    setupRegisterAPI(agentRef)
 
     if (isBrowserScope) {
       if (agentRef.init.user_actions.enabled) {

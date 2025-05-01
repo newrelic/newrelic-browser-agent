@@ -13,8 +13,8 @@ import { setupRegisterAPI } from '../../../loaders/api/register'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
-  constructor (agentRef, auto = true) {
-    super(agentRef, FEATURE_NAME, auto)
+  constructor (agentRef) {
+    super(agentRef, FEATURE_NAME)
 
     /** feature specific APIs */
     setupLogAPI(agentRef)

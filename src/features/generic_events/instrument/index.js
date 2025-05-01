@@ -16,8 +16,8 @@ import { FEATURE_NAME, OBSERVED_EVENTS, OBSERVED_WINDOW_EVENTS } from '../consta
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
-  constructor (agentRef, auto = true) {
-    super(agentRef, FEATURE_NAME, auto)
+  constructor (agentRef) {
+    super(agentRef, FEATURE_NAME)
     /** config values that gate whether the generic events aggregator should be imported at all */
     const genericEventSourceConfigs = [
       agentRef.init.page_action.enabled,

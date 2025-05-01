@@ -19,8 +19,8 @@ export class Instrument extends InstrumentBase {
 
   #mode
   #agentRef
-  constructor (agentRef, auto = true) {
-    super(agentRef, FEATURE_NAME, auto)
+  constructor (agentRef) {
+    super(agentRef, FEATURE_NAME)
 
     /** feature specific APIs */
     setupRecordReplayAPI(agentRef)

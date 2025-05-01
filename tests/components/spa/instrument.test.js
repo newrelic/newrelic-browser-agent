@@ -22,7 +22,7 @@ let spaInstrument
 const agentIdentifier = 'abcdefg'
 
 beforeAll(async () => {
-  spaInstrument = new Spa({ agentIdentifier, info: {}, init: { spa: { enabled: true } }, runtime: {}, ee: ee.get(agentIdentifier) }, false)
+  spaInstrument = new Spa({ agentIdentifier, info: {}, init: { spa: { enabled: true, autoStart: false } }, runtime: {}, ee: ee.get(agentIdentifier) })
 })
 
 describe('SPA instrument', () => {

@@ -54,7 +54,8 @@ test('should construct a new instrument', () => {
 })
 
 test('should wait for feature opt-in to import the aggregate', async () => {
-  const instrument = new InstrumentBase(agentBase, featureName, false)
+  agentBase.init[featureName].autoStart = false
+  const instrument = new InstrumentBase(agentBase, featureName)
   jest.spyOn(instrument, 'importAggregator').mockImplementation(() => { })
 
   expect(registerDrain).not.toHaveBeenCalled()

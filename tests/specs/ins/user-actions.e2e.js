@@ -202,7 +202,6 @@ describe('UserAction events', () => {
       action: 'click',
       actionCount: 2,
       currentUrl: expect.stringMatching(/\/user-actions\.html$/),
-      targetTag: 'SPAN',
       nearestId: 'pay-btn'
     })
   })

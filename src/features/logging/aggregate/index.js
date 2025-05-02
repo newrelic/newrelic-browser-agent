@@ -44,7 +44,7 @@ export class Aggregate extends AggregateBase {
       if (session.isNew || !this.isSessionTrackingEnabled) {
         this.updateLoggingMode(loggingMode)
       } else {
-        this.loggingMode = session.state.loggingMode // {autoLog: 1, apiLog: 2}
+        this.loggingMode = session.state.loggingMode
       }
 
       /** emitted by instrument class (wrapped loggers) or the api methods directly */
@@ -69,7 +69,7 @@ export class Aggregate extends AggregateBase {
     if (!attributes || typeof attributes !== 'object') attributes = {}
     if (typeof level === 'string') level = level.toUpperCase()
     if (!isValidLogLevel(level)) return warn(30, level)
-    if (this.loggingMode < (LOGGING_MODE[level] || Infinity)) { // {autoLog: 1, apiLog: 2}
+    if (this.loggingMode < (LOGGING_MODE[level] || Infinity)) {
       this.reportSupportabilityMetric('Logging/Event/Dropped/Sampling')
       return
     }

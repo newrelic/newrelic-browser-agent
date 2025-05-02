@@ -79,6 +79,7 @@ export class Aggregate extends AggregateBase {
                 actionMs: aggregatedUserAction.relativeMs,
                 rageClick: aggregatedUserAction.rageClick,
                 target: aggregatedUserAction.selectorPath,
+                currentUrl: aggregatedUserAction.currentUrl,
                 ...(isIFrameWindow(window) && { iframe: true }),
                 ...(this.agentRef.init.user_actions.elementAttributes.reduce((acc, field) => {
                   /** prevent us from capturing an obscenely long value */

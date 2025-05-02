@@ -70,6 +70,7 @@ const config = [
       path: path.resolve(__dirname, '../../../tests/assets/test-builds/browser-agent-wrapper')
     },
     optimization: {
+      minimize: false,
       splitChunks: {
         cacheGroups: {
           ...webpackCacheGroup(),

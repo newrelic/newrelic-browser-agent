@@ -1,5 +1,6 @@
 const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
+const { webpackCacheGroup } = require('../../bundler-tools/bundler-tools')
 
 const isProduction = process.env.NODE_ENV === 'production'
 const htmlTemplate = (script) => `<!DOCTYPE html>
@@ -25,6 +26,14 @@ const config = [
     },
     output: {
       path: path.resolve(__dirname, '../../../tests/assets/test-builds/library-wrapper')
+    },
+    optimization: {
+      minimize: false,
+      splitChunks: {
+        cacheGroups: {
+          ...webpackCacheGroup()
+        }
+      }
     },
     module: {
       parser: {

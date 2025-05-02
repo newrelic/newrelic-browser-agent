@@ -84,23 +84,28 @@ export class Recorder {
 
     // set up rrweb configurations for maximum privacy --
     // https://newrelic.atlassian.net/wiki/spaces/O11Y/pages/2792293280/2023+02+28+Browser+-+Session+Replay#Configuration-options
-    const stop = recorder({
-      emit: this.audit.bind(this),
-      blockClass: block_class,
-      ignoreClass: ignore_class,
-      maskTextClass: mask_text_class,
-      blockSelector: block_selector,
-      maskInputOptions: mask_input_options,
-      maskTextSelector: mask_text_selector,
-      maskTextFn: customMasker,
-      maskAllInputs: mask_all_inputs,
-      maskInputFn: customMasker,
-      inlineStylesheet: true,
-      inlineImages: inline_images,
-      collectFonts: collect_fonts,
-      checkoutEveryNms: CHECKOUT_MS[this.parent.mode],
-      recordAfter: 'DOMContentLoaded'
-    })
+    let stop
+    try {
+      stop = recorder({
+        emit: this.audit.bind(this),
+        blockClass: block_class,
+        ignoreClass: ignore_class,
+        maskTextClass: mask_text_class,
+        blockSelector: block_selector,
+        maskInputOptions: mask_input_options,
+        maskTextSelector: mask_text_selector,
+        maskTextFn: customMasker,
+        maskAllInputs: mask_all_inputs,
+        maskInputFn: customMasker,
+        inlineStylesheet: true,
+        inlineImages: inline_images,
+        collectFonts: collect_fonts,
+        checkoutEveryNms: CHECKOUT_MS[this.parent.mode],
+        recordAfter: 'DOMContentLoaded'
+      })
+    } catch (err) {
+      this.parent.ee.emit('internal-error', [err])
+    }
 
     this.stopRecording = () => {
       this.parent.agentRef.runtime.isRecording = false

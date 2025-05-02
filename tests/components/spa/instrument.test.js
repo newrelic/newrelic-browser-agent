@@ -12,8 +12,8 @@ jest.mock('../../../src/common/config/info', () => ({
 let spaInstrument
 const agentIdentifier = 'abcdefg'
 
-beforeAll(() => {
-  spaInstrument = new Spa({ agentIdentifier, info: {}, init: { spa: { enabled: true }, privacy: {} }, runtime: {}, ee: ee.get(agentIdentifier) }, false)
+beforeAll(async () => {
+  spaInstrument = new Spa({ agentIdentifier, info: {}, init: { spa: { enabled: true, autoStart: false } }, runtime: {}, ee: ee.get(agentIdentifier) })
 })
 
 describe('SPA instrument', () => {

@@ -22,8 +22,8 @@ const UI_WAIT_INTERVAL = 1 / 10 * 1000 // assume 10 fps
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
-  constructor (agentRef, auto = true) {
-    super(agentRef, FEATURE_NAME, auto)
+  constructor (agentRef) {
+    super(agentRef, FEATURE_NAME)
 
     /** feature specific APIs */
     setupInteractionAPI(agentRef)
@@ -64,7 +64,7 @@ export class Instrument extends InstrumentBase {
     }, UI_WAIT_INTERVAL, { leading: true })
 
     this.abortHandler = abort
-    this.importAggregator(agentRef, { domObserver })
+    this.importAggregator(agentRef, () => import(/* webpackChunkName: "soft_navigations-aggregate" */ '../aggregate'), { domObserver })
 
     function abort () {
       this.removeOnAbort?.abort()

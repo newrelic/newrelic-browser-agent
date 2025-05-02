@@ -19,8 +19,8 @@ export class Instrument extends InstrumentBase {
 
   #mode
   #agentRef
-  constructor (agentRef, auto = true) {
-    super(agentRef, FEATURE_NAME, auto)
+  constructor (agentRef) {
+    super(agentRef, FEATURE_NAME)
 
     /** feature specific APIs */
     setupRecordReplayAPI(agentRef)
@@ -40,7 +40,7 @@ export class Instrument extends InstrumentBase {
       this.#mode = session?.sessionReplayMode
       this.#preloadStartRecording()
     } else {
-      this.importAggregator(agentRef)
+      this.importAggregator(this.#agentRef, () => import(/* webpackChunkName: "session_replay-aggregate" */ '../aggregate'))
     }
 
     /** If the recorder is running, we can pass error events on to the agg to help it switch to full mode later */
@@ -84,7 +84,7 @@ export class Instrument extends InstrumentBase {
     } catch (err) {
       this.parent.ee.emit('internal-error', [err])
     }
-    this.importAggregator(this.#agentRef, { recorder: this.recorder, errorNoticed: this.errorNoticed })
+    this.importAggregator(this.#agentRef, () => import(/* webpackChunkName: "session_replay-aggregate" */ '../aggregate'), { recorder: this.recorder, errorNoticed: this.errorNoticed })
   }
 
   /**

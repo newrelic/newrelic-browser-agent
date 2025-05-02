@@ -18,8 +18,8 @@ import { setupRegisterAPI } from '../../../loaders/api/register'
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
 
-  constructor (agentRef, auto = true) {
-    super(agentRef, FEATURE_NAME, auto)
+  constructor (agentRef) {
+    super(agentRef, FEATURE_NAME)
 
     /** feature specific APIs */
     setupNoticeErrorAPI(agentRef)
@@ -48,7 +48,7 @@ export class Instrument extends InstrumentBase {
     }, eventListenerOpts(false, this.removeOnAbort?.signal))
 
     this.abortHandler = this.#abort // we also use this as a flag to denote that the feature is active or on and handling errors
-    this.importAggregator(agentRef)
+    this.importAggregator(agentRef, () => import(/* webpackChunkName: "jserrors-aggregate" */ '../aggregate'))
   }
 
   /** Restoration and resource release tasks to be done if JS error loader is being aborted. Unwind changes to globals. */

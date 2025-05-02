@@ -15,6 +15,7 @@ import { wrapXhr } from '../../../common/wrap/wrap-xhr'
 import { wrapFetch } from '../../../common/wrap/wrap-fetch'
 import { wrapHistory } from '../../../common/wrap/wrap-history'
 import { wrapMutation } from '../../../common/wrap/wrap-mutation'
+import { setupInteractionAPI } from '../../../loaders/api/interaction'
 
 const {
   FEATURE_NAME, START, END, BODY, CB_END, JS_TIME, FETCH, FN_START, CB_START, FN_END
@@ -25,8 +26,12 @@ const {
  */
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
-  constructor (agentRef, auto = true) {
-    super(agentRef, FEATURE_NAME, auto)
+  constructor (agentRef) {
+    super(agentRef, FEATURE_NAME)
+
+    /** feature specific APIs */
+    setupInteractionAPI(agentRef)
+
     if (!isBrowserScope) return // SPA not supported outside web env
 
     try {

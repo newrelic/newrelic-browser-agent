@@ -28,11 +28,8 @@ export class InstrumentBase extends FeatureBase {
    * Instantiate InstrumentBase.
    * @param {string} agentIdentifier - The unique ID of the instantiated agent (relative to global scope).
    * @param {string} featureName - The name of the feature module (used to construct file path).
-   * @param {boolean} [auto=true] - Determines whether the feature should automatically register to have the draining
-   *     of its pooled instrumentation data handled by the agent's centralized drain functionality, rather than draining
-   *     immediately. Primarily useful for fine-grained control in tests.
    */
-  constructor (agentRef, featureName, auto = true) {
+  constructor (agentRef, featureName) {
     super(agentRef.agentIdentifier, featureName)
 
     /** @type {Function | undefined} This should be set by any derived Instrument class if it has things to do when feature fails or is killed. */
@@ -50,10 +47,13 @@ export class InstrumentBase extends FeatureBase {
     */
     this.onAggregateImported = undefined
 
-    /** used in conjunction with newrelic.start() to defer harvesting in features */
+    /**
+     * used in conjunction with newrelic.start() to defer harvesting in features
+     * @type {Promise} Resolves when the feature is ready to import its aggregator, either immediately or after the start API has been called if the feature is autoStart: false.
+    */
     this.deferred = Promise.resolve()
 
-    if (!auto || agentRef.init[this.featureName].autoStart === false) {
+    if (agentRef.init[this.featureName].autoStart === false) {
       this.deferred = new Promise((resolve, reject) => {
         this.ee.on('manual-start-all', single(() => {
         // register the feature to drain only once the API has been called, it will drain when importAggregator finishes for all the features

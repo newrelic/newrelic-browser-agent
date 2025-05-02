@@ -12,6 +12,19 @@ import { setNREUMInitializedAgent } from '../common/window/nreum'
 import { FEATURE_NAMES } from './features/features'
 import { warn } from '../common/util/console'
 import { MicroAgentBase } from './micro-agent-base'
+// api files that are not auto-instrumented
+import { setupSetCustomAttributeAPI } from './api/setCustomAttribute'
+import { setupSetUserIdAPI } from './api/setUserId'
+import { setupSetApplicationVersionAPI } from './api/setApplicationVersion'
+import { setupStartAPI } from './api/start'
+import { setupNoticeErrorAPI } from './api/noticeError'
+import { setupSetErrorHandlerAPI } from './api/setErrorHandler'
+import { setupAddReleaseAPI } from './api/addRelease'
+import { setupAddPageActionAPI } from './api/addPageAction'
+import { setupRecordCustomEventAPI } from './api/recordCustomEvent'
+import { setupFinishedAPI } from './api/finished'
+import { setupLogAPI } from './api/log'
+import { setupWrapLoggerAPI } from './api/wrapLogger'
 
 const nonAutoFeatures = [
   FEATURE_NAMES.jserrors,
@@ -22,7 +35,7 @@ const nonAutoFeatures = [
 
 /**
  * @deprecated This feature has been deprecated and will be removed in a future release. A future product centralizing around a single agent instance will be released as a replacement, at which time this loader will be removed.
- * A minimal agent class designed to only respond to manual user input. As such, this class does not
+ * --- A minimal agent class designed to only respond to manual user input. As such, this class does not
  * automatically instrument. Instead, each MicroAgent instance will lazy load the required features and can support loading multiple instances on one page.
  * Out of the box, it can manually handle and report Page View, Page Action, and Error events.
  */
@@ -37,6 +50,25 @@ export class MicroAgent extends MicroAgentBase {
     setNREUMInitializedAgent(this.agentIdentifier, this)
 
     configure(this, { ...options, runtime: { isolatedBacklog: true } }, options.loaderType || 'micro-agent')
+
+    /** assign base agent-level API definitions */
+    setupSetCustomAttributeAPI(this)
+    setupSetUserIdAPI(this)
+    setupSetApplicationVersionAPI(this)
+    setupStartAPI(this)
+
+    /** feature APIs that wont get set up automatically for the micro agent since it skips the inst file */
+    /** jserrors */
+    setupNoticeErrorAPI(this)
+    setupSetErrorHandlerAPI(this)
+    setupAddReleaseAPI(this)
+    /** generic events */
+    setupAddPageActionAPI(this)
+    setupRecordCustomEventAPI(this)
+    setupFinishedAPI(this)
+    /** logging */
+    setupLogAPI(this)
+    setupWrapLoggerAPI(this)
 
     /**
      * Starts a set of agent features if not running in "autoStart" mode

@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.289.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.288.1...v1.289.0) (2025-04-24)
+
+
+### Features
+
+* Remove agent config cache and getters/setters ([#1430](https://github.com/newrelic/newrelic-browser-agent/issues/1430)) ([6c3d716](https://github.com/newrelic/newrelic-browser-agent/commit/6c3d7166e6a7014e1ae453801a9da875d311a3e1))
+
 ## [1.288.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.288.0...v1.288.1) (2025-04-18)
 
 

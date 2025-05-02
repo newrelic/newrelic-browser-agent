@@ -1,6 +1,6 @@
 const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
-const { webpackCacheGroup } = require('../../bundler-tools/bundler-tools.js')
+const { webpackCacheGroup } = require('@newrelic/browser-agent/tools/bundler-tools')
 
 const isProduction = process.env.NODE_ENV === 'production'
 const htmlTemplate = (script) => `<html>

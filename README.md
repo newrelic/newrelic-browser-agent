@@ -251,6 +251,28 @@ import { Agent } from '@newrelic/browser-agent/loaders/agent'
 import { Metrics } from '@newrelic/browser-agent/src/features/metrics'
 ```
 
+### Bundling
+As an outcome of the design patterns employed in the browser agent package, building the agent can generate lazy-loaded chunks for many of the utilized modules. To concatenate, deduplicate and reduce those modules to a single lazy-loaded file the same way we do internally when shipping to our CDN, you can utilize the `"build-tools"` directory and include a webpack cache group rule to instruct webpack on how to handle the agent's lazy chunks.  The output of this cache group rule will generate a lazy aggregate module, and lazy chunks for session replay, which matches the pattern found on our CDN distribution. Plugins for other bundling tools are planned for the future.
+
+```javascript
+// in webpack.config.js
+const { webpackCacheGroup } = require('@newrelic/browser-agent/tools/bundler-tools')
+// ... or ...
+import { webpackCacheGroup } from '@newrelic/browser-agent/tools/bundler-tools'
+
+{
+  // ... other webpack configurations
+  optimization: {
+      splitChunks: {
+        cacheGroups: {
+          ...webpackCacheGroup(),
+        }
+      }
+    },
+  // ... other webpack configurations
+}
+```
+
 ## Library Support
 
 The browser agent is written to be agnostic to any JavaScript library or framework. The agent exposes a number of [API methods](https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/using-browser-apis/) that can be incorporated into libraries and frameworks. For example, export or make available the initialized agent and create a new error boundary in your react application that calls `browserAgent.noticeError()`.

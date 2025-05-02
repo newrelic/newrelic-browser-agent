@@ -33,7 +33,8 @@ on:
       dry_run:
         description: "Indicates whether to dry run the npm publish command."
         type: boolean
-        required: true
+        required: false
+        default: false
 
 jobs:
   prerelease-npm-version:

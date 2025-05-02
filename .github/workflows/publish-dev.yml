@@ -242,4 +242,4 @@ jobs:
           version-type: preminor
           preid: rc
           tag: rc
-          dry_run: true
+          dry_run: false

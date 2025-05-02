@@ -1,5 +1,6 @@
 const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
+const { webpackCacheGroup } = require('@newrelic/browser-agent/tools/bundler-tools')
 
 const isProduction = process.env.NODE_ENV === 'production'
 const htmlTemplate = (script) => `<html>
@@ -68,6 +69,20 @@ const config = [
     output: {
       path: path.resolve(__dirname, '../../../tests/assets/test-builds/browser-agent-wrapper')
     },
+    optimization: {
+      minimize: false,
+      splitChunks: {
+        cacheGroups: {
+          ...webpackCacheGroup(),
+          microAgent: {
+            test: /micro-agent\.js$/,
+            name: 'micro-agent',
+            chunks: 'all',
+            enforce: true
+          }
+        }
+      }
+    },
     module: {
       rules: [
         {
@@ -97,19 +112,6 @@ const config = [
           }
         }
       ]
-    },
-    optimization: {
-      minimize: false, // Disable minification globally
-      splitChunks: {
-        cacheGroups: {
-          microAgent: {
-            test: /micro-agent\.js$/,
-            name: 'micro-agent',
-            chunks: 'all',
-            enforce: true
-          }
-        }
-      }
     },
     plugins: [
       new HtmlWebpackPlugin({

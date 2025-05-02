@@ -254,7 +254,7 @@ import { Metrics } from '@newrelic/browser-agent/src/features/metrics'
 ## Bundling
 As an outcome of the design patterns employed in the browser agent package, building the agent can generate lazy-loaded chunks for many of the utilized modules. To concatenate, deduplicate and reduce those modules to a single lazy-loaded file the same way we do internally when shipping to our CDN, you can choose to utilize the `"build-tools"` directory which includes rulesets for various build tools.  
 
-**Please note - This is an optional step.  The browser agent can built without any rules instructing the build tools about the handling of the lazy-loaded chunks, or the chunks can be handled in any way you see fit to conform to your build process. This ruleset serves as an example of what we do internally when shipping to our CDN.**
+**Please note - This is an optional step.  The browser agent can be built without any rules instructing the build tools about the handling of the lazy-loaded chunks, or the chunks can be handled in any way you see fit to conform to your build process. This ruleset serves as an example of what we do internally when shipping to our CDN.**
 
 ### Webpack
 For Webpack (v4+), you can choose to use our [webpack cache group rule](https://github.com/newrelic/newrelic-browser-agent/blob/main/tools/bundler-tools/bundler-tools.mjs) to instruct webpack on how to handle the agent's lazy chunks. The cacheGroup rule acts as a rule within the [SplitChunksPlugin](https://webpack.js.org/plugins/split-chunks-plugin/). Please observe the relevant documentation for use of this plugin. The output of this cache group rule will generate a lazy aggregate module, and lazy chunks for session replay, which matches the pattern found on our CDN distribution. 

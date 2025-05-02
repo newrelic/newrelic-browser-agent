@@ -19,8 +19,8 @@ const {
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
-  constructor (agentRef, auto = true) {
-    super(agentRef, FEATURE_NAME, auto)
+  constructor (agentRef) {
+    super(agentRef, FEATURE_NAME)
 
     /** feature specific APIs */
     setupAddToTraceAPI(agentRef)
@@ -65,7 +65,7 @@ export class Instrument extends InstrumentBase {
       // Per NEWRELIC-8525, we don't have a fallback for capturing resources for older versions that don't support PO at this time.
     }
 
-    this.importAggregator(agentRef, { resourceObserver: observer })
+    this.importAggregator(agentRef, () => import(/* webpackChunkName: "session_trace-aggregate" */ '../aggregate'), { resourceObserver: observer })
   }
 }
 

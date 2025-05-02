@@ -13,8 +13,8 @@ import { setupRegisterAPI } from '../../../loaders/api/register'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
-  constructor (agentRef, auto = true) {
-    super(agentRef, FEATURE_NAME, auto)
+  constructor (agentRef) {
+    super(agentRef, FEATURE_NAME)
 
     /** feature specific APIs */
     setupLogAPI(agentRef)
@@ -33,7 +33,7 @@ export class Instrument extends InstrumentBase {
       const { level, customAttributes } = this
       bufferLog(instanceEE, message, customAttributes, level)
     })
-    this.importAggregator(agentRef)
+    this.importAggregator(agentRef, () => import(/* webpackChunkName: "logging-aggregate" */ '../aggregate'))
   }
 }
 

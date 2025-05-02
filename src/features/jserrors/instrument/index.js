@@ -10,12 +10,22 @@ import { globalScope } from '../../../common/constants/runtime'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
 import { now } from '../../../common/timing/now'
 import { castError, castErrorEvent, castPromiseRejectionEvent } from '../shared/cast-error'
+import { setupNoticeErrorAPI } from '../../../loaders/api/noticeError'
+import { setupSetErrorHandlerAPI } from '../../../loaders/api/setErrorHandler'
+import { setupAddReleaseAPI } from '../../../loaders/api/addRelease'
+import { setupRegisterAPI } from '../../../loaders/api/register'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
 
   constructor (agentRef, auto = true) {
     super(agentRef, FEATURE_NAME, auto)
+
+    /** feature specific APIs */
+    setupNoticeErrorAPI(agentRef)
+    setupSetErrorHandlerAPI(agentRef)
+    setupAddReleaseAPI(agentRef)
+    setupRegisterAPI(agentRef)
 
     try {
       // this try-catch can be removed when IE11 is completely unsupported & gone

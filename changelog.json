@@ -5,6 +5,47 @@
       "changes": [
         {
           "type": "feat",
+          "sha": "c11b6de857f42b4e2315012a897ac6693c67cd04",
+          "message": "bundler tools exports",
+          "issues": [
+            "1447"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "177316b8527ab158868da8ad9677c96fc60d08ea",
+          "message": "Set UserAction currentUrl before aggregation end",
+          "issues": [
+            "1463"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "56688831ed8fbf512dc70f1ebf37e648e498ece9",
+          "message": "Improve lazy-loading optimization",
+          "issues": [
+            "1443"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "8e7498e47a4666996f4837a53b02e8c313a48380",
+          "message": "API Code Splitting",
+          "issues": [
+            "1433"
+          ]
+        }
+      ],
+      "version": "1.290.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "183b38c4-d139-4689-b3b1-6797b9f5ea59",
+      "createTime": "2025-05-02T19:25:35.786Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
           "sha": "6c3d7166e6a7014e1ae453801a9da875d311a3e1",
           "message": "Remove agent config cache and getters/setters",
           "issues": [
@@ -2842,5 +2883,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2025-04-24T22:49:38.121Z"
+  "updateTime": "2025-05-02T19:25:35.786Z"
 }

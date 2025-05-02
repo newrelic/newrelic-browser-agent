@@ -74,7 +74,9 @@ export class Instrument extends InstrumentBase {
       this.recorder ??= new Recorder({ mode: this.#mode, agentIdentifier: this.agentIdentifier, trigger, ee: this.ee, agentRef: this.#agentRef })
       this.recorder.startRecording()
       this.abortHandler = this.recorder.stopRecording
-    } catch (e) {} // TODO add internal error handling
+    } catch (err) {
+      this.parent.ee.emit('internal-error', [err])
+    }
     this.importAggregator(this.#agentRef, { recorder: this.recorder, errorNoticed: this.errorNoticed })
   }
 

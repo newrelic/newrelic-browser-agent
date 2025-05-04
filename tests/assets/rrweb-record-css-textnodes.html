@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2025 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+<head>
+  <title>Session Replay</title>
+  {init} {config}
+  <script>
+    localStorage.clear()
+    NREUM.init.session_replay = {enabled: true, collect_fonts: true}
+    NREUM.init.privacy.cookies_enabled = true
+  </script>
+  {loader}
+</head>
+<body>
+  This is a page intended to "manually" set up session replay and will always record!
+  <hr />
+  <hr />
+  <div class="input-group">
+    <span class="input-group-text">With textarea</span>
+    <textarea class="form-control" aria-label="With textarea"></textarea>
+    <input type="text" value="test">
+    <input type="password" value="mypassword">
+  </div>
+  <div id="content-editable-div" contenteditable="true">Content Editable Div</div>
+  <hr />
+  <div id="test">
+  </div>
+  <img src="https://upload.wikimedia.org/wikipedia/commons/d/d7/House_of_Commons_Chamber_1.png" />
+  <script>
+    /*
+      This is a repro of https://github.com/rrweb-io/rrweb/issues/1575 that deals with
+      rrweb snapshots corrupting CSS data in v2.0.0-alpha.17
+     */
+    function addStyles() {
+      const testDiv = document.getElementById('test')
+      let y = document.createElement("style");
+      document.head.appendChild(y);
+      for (let i = 0; i < 10; i++) {
+        const div = document.createElement("div");
+        div.id = `div-${i}`;
+        div.class = 'nr-unmask';
+        div.innerHTML = `This is a test div ${i}`;
+        testDiv.appendChild(div);
+
+        const styleName = `#div-${i}`
+        y.append(document.createTextNode("/*************************************/"))
+        // the following CSS would be recorded as-is but rrweb's parser would consider it invalid CSS, resulting in broken replay
+        y.append(document.createTextNode(styleName + " { "));
+        y.append(document.createTextNode(" color: blue; "));
+        y.append(document.createTextNode("}"));
+        y.append(document.createTextNode("/*************************************/"))
+      }
+    }
+    addStyles()
+  </script>
+</body>
+</html>

@@ -160,6 +160,10 @@
       "types": "./dist/types/features/spa/instrument/index.d.ts",
       "require": "./dist/cjs/features/spa/instrument/index.js",
       "default": "./dist/esm/features/spa/instrument/index.js"
+    },
+    "./tools/bundler-tools": {
+      "require": "./tools/bundler-tools/bundler-tools.js",
+      "default": "./tools/bundler-tools/bundler-tools.mjs"
     }
   },
   "devEngines": {
@@ -285,6 +289,7 @@
   "files": [
     "dist",
     "src",
+    "tools/bundler-tools",
     "LICENSE",
     "README.md",
     "CHANGELOG.md"

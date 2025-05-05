@@ -31,7 +31,7 @@ inputs:
     description: "Indicates whether to dry run the npm publish command."
     type: boolean
     required: false
-    default: false
+    default: 'false'
 
 outputs:
   version:
@@ -63,4 +63,4 @@ runs:
       run: npm run build:npm
     - name: Publish npm package
       shell: bash
-      run: npm publish ${{ inputs.dry_run && '--dry-run' || '' }} --tag=${{ inputs.tag }}
+      run: npm publish ${{ ((inputs.dry_run == true || inputs.dry_run == 'true') && '--dry-run') || '' }} --tag=${{ inputs.tag }}

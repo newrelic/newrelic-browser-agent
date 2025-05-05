@@ -199,7 +199,7 @@ export async function getLogs () {
       return {
         events: logs.events.get(),
         blocked: logs.blocked,
-        loggingMode: logs.loggingMode
+        loggingMode: logs.loggingMode.auto
       }
     } catch (err) {
       return {

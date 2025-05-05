@@ -19,7 +19,7 @@ describe('logging harvesting', () => {
   const mockRumResponse = async (logLevel) => {
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify(rumFlags({ log: logLevel }))
+      body: JSON.stringify(rumFlags({ log: logLevel, logapi: logLevel }))
     })
   }
 

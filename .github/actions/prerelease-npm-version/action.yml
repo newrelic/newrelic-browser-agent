@@ -9,7 +9,7 @@ inputs:
     required: true
     default: rc
   version-override:
-    description: "If not supplied, the version in package.json will be used. If supplied, it must be greater than the current tag's version in NPM, otherwise the NPM version will still take precedence. We can only create prerelease versions *ahead* of the current version in NPM."
+    description: "If not supplied, the version in package.json will be used. Whichever version is greater between local and NPM will take precedence -- we can only create prerelease versions *ahead* of the current version in NPM."
     type: string
     required: false
   dry_run:

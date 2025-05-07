@@ -12,7 +12,7 @@ on:
         required: true
         default: rc
       version-override:
-        description: "A version number to override the version in package.json. If not supplied, the version in package.json will be used."
+        description: "If not supplied, the version in package.json will be used. Whichever version is greater between local and NPM will take precedence -- we can only create prerelease versions *ahead* of the current version in NPM."
         type: string
         required: false
       dry_run:

@@ -369,7 +369,6 @@ export class Aggregate extends AggregateBase {
     this.reportSupportabilityMetric(`SessionReplay/Abort/${reason.sm}`, data)
     this.blocked = true
     this.mode = MODE.OFF
-    this.agentRef.runtime.isRecording = false
     this.recorder?.stopRecording?.()
     this.syncWithSessionManager({ sessionReplayMode: this.mode })
     this.recorder?.clearTimestamps?.()

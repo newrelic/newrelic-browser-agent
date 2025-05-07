@@ -7,7 +7,7 @@ fetch('https://registry.npmjs.com/@newrelic/browser-agent/rc')
 .then((response) => response.json())
 .then((data) => {
 
-  const bumpedVersion = execSync(`npm version prerelease --preid=${args.preid}`).toString().trim()
+  const bumpedVersion = execSync(`npm version prerelease --git-tag-version false --preid=${args.preid}`).toString().trim()
 
 
   console.log("NPM VERSION", data.version)

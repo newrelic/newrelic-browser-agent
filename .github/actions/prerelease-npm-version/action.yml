@@ -9,7 +9,7 @@ inputs:
     required: true
     default: rc
   version-override:
-    description: "A version number to override the version in package.json. If not supplied, the version in package.json will be used."
+    description: "If not supplied, the version in package.json will be used. If supplied, it must be greater than the current tag's version in NPM, otherwise the NPM version will still take precedence. We can only create prerelease versions *ahead* of the current version in NPM."
     type: string
     required: false
   dry_run:
@@ -26,6 +26,9 @@ outputs:
 runs:
   using: "composite"
   steps:
+    - name: Install dependencies
+      run: npm install --silent --no-progress --prefix $GITHUB_ACTION_PATH/..
+      shell: bash
     - name: Get version number
       id: agent-loader-version
       shell: bash

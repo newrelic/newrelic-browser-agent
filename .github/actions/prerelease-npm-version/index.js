@@ -15,7 +15,7 @@ fetch('https://registry.npmjs.com/@newrelic/browser-agent/rc')
     console.log("BUMPED VERSION", bumpedVersion)
     const matcher = /.*-rc\.[0-9]+$/
 
-    console.log("NPM > current version?", semver.gt(data.version, args.currentVersion))
+    console.log("NPM > current version?", semver.gt(data.version, bumpedVersion))
 
     console.log(args.currentVersion.match(matcher))
 

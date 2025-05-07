@@ -45,7 +45,7 @@ export class Recorder {
     /** Hold on to the last meta node, so that it can be re-inserted if the meta and snapshot nodes are broken up due to harvesting */
     this.lastMeta = false
     /** The method to stop recording. This defaults to a noop, but is overwritten once the recording library is imported and initialized */
-    this.stopRecording = () => { /* no-op until set by rrweb initializer */ }
+    this.stopRecording = () => { this.parent.agentRef.runtime.isRecording = false }
   }
 
   getEvents () {

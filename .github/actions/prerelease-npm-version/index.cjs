@@ -7,9 +7,14 @@ const lineBreak = () => {
   console.log('----------------------------------')
 }
 
+lineBreak()
+console.log('Running pre-release version bump script')
+
 import('./args.js').then(({ args }) => {
   const preid = args.preid || 'rc'
 
+  lineBreak()
+  console.log(`Fetching tag ${preid} from NPM`)
   fetch(`https://registry.npmjs.com/@newrelic/browser-agent/${preid}`)
     .then((response) => response.json())
     .then((data) => {
@@ -20,7 +25,7 @@ import('./args.js').then(({ args }) => {
       const [_, npmPreid] = data.version && !!semver.prerelease(data.version) ? semver.prerelease(data.version) : [undefined, -1]
       
       lineBreak()
-      console.log('NPM Version', npmVersion, npmPreid)
+      console.log('NPM Version, preid value', npmVersion, npmPreid)
 
       const pkgSrc = args.versionOverride || versionJson.version
       const pkgVersion = pkgSrc ? `${semver.major(pkgSrc)}.${semver.minor(pkgSrc)}.${semver.patch(pkgSrc)}` : `0.0.0`
@@ -28,7 +33,7 @@ import('./args.js').then(({ args }) => {
       if (pkgPreidTag !== preid) pkgPreid = -1
 
       lineBreak()
-      console.log('Package Version', pkgVersion, pkgPreid)
+      console.log('Package Version, preid value', pkgVersion, pkgPreid)
 
       if (semver.gte(npmVersion, pkgVersion)) {
         lineBreak()
@@ -41,8 +46,14 @@ import('./args.js').then(({ args }) => {
         versionJson.version = pkgVersion + `-${preid}.` + (parseInt(pkgPreid) + 1)
       }
 
-      writeFileSync(process.cwd() + '/package.json', JSON.stringify(versionJson, undefined, 2))
+      lineBreak()
+      console.log('New Pre-release Package Version', versionJson.version)
 
+      lineBreak()
+      writeFileSync(process.cwd() + '/package.json', JSON.stringify(versionJson, undefined, 2))
+      console.log('Updated package.json')
+
+      lineBreak()
       core.setOutput('results', versionJson.version)
     })
     .catch((error) => {

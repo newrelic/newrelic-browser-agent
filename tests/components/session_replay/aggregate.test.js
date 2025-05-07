@@ -46,13 +46,13 @@ describe('Session Replay Session Behavior', () => {
     await new Promise(process.nextTick)
 
     expect(sessionReplayAggregate.initialized).toBeTruthy()
-    expect(sessionReplayAggregate.recorder.recording).toBeTruthy()
+    expect(mainAgent.runtime.isRecording).toBeTruthy()
 
     sessionReplayAggregate.ee.emit(SESSION_EVENTS.RESET)
     await new Promise(process.nextTick)
 
     expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalled()
-    expect(sessionReplayAggregate.recorder.recording).toBeFalsy()
+    expect(mainAgent.runtime.isRecording).toBeFalsy()
     expect(sessionReplayAggregate.blocked).toBeTruthy()
   })
 
@@ -62,15 +62,15 @@ describe('Session Replay Session Behavior', () => {
     await new Promise(process.nextTick)
 
     expect(sessionReplayAggregate.initialized).toBeTruthy()
-    expect(sessionReplayAggregate.recorder.recording).toBeTruthy()
+    expect(mainAgent.runtime.isRecording).toBeTruthy()
 
     sessionReplayAggregate.ee.emit(SESSION_EVENTS.PAUSE)
     await new Promise(process.nextTick)
-    expect(sessionReplayAggregate.recorder.recording).toBeFalsy()
+    expect(mainAgent.runtime.isRecording).toBeFalsy()
 
     sessionReplayAggregate.ee.emit(SESSION_EVENTS.RESUME)
     await new Promise(process.nextTick)
-    expect(sessionReplayAggregate.recorder.recording).toBeTruthy()
+    expect(mainAgent.runtime.isRecording).toBeTruthy()
   })
 
   test('session SR mode matches SR mode -- FULL', async () => {
@@ -282,7 +282,6 @@ describe('Session Replay Harvest Behaviors', () => {
     sessionReplayAggregate.ee.emit('rumresp', [{ sr: 1, srs: MODE.FULL }])
     await new Promise(process.nextTick)
 
-    expect(sessionReplayAggregate.recorder.getEvents().events.length).toEqual(0)
     expect(sessionReplayAggregate.recorder.getEvents().events.length).toEqual(0)
   })
 

@@ -88,7 +88,7 @@ export class Aggregate extends AggregateBase {
       this.entitled = !!entitled
       if (!this.entitled) {
         this.deregisterDrain()
-        if (this.recorder?.recording) {
+        if (this.agentRef.runtime.isRecording) {
           this.abort(ABORT_REASONS.ENTITLEMENTS)
           this.reportSupportabilityMetric('SessionReplay/EnabledNotEntitled/Detected')
         }
@@ -133,7 +133,7 @@ export class Aggregate extends AggregateBase {
     this.mode = MODE.FULL
     // if the error was noticed AFTER the recorder was already imported....
     if (this.recorder && this.initialized) {
-      if (!this.recorder.recording) this.recorder.startRecording()
+      if (!this.agentRef.runtime.isRecording) this.recorder.startRecording()
       this.syncWithSessionManager({ sessionReplayMode: this.mode })
     } else {
       this.initializeRecording(MODE.FULL, true)
@@ -158,7 +158,7 @@ export class Aggregate extends AggregateBase {
     // session replays can continue if already in progress
     const { session, timeKeeper } = this.agentRef.runtime
     this.timeKeeper = timeKeeper
-    if (this.recorder?.parent.trigger === TRIGGERS.API && this.recorder?.recording) {
+    if (this.recorder?.parent.trigger === TRIGGERS.API && this.agentRef.runtime.isRecording) {
       this.mode = MODE.FULL
     } else if (!session.isNew && !ignoreSession) { // inherit the mode of the existing session
       this.mode = session.state.sessionReplayMode
@@ -196,7 +196,7 @@ export class Aggregate extends AggregateBase {
 
     await this.prepUtils()
 
-    if (!this.recorder.recording) this.recorder.startRecording()
+    if (!this.agentRef.runtime.isRecording) this.recorder.startRecording()
 
     this.syncWithSessionManager({ sessionReplayMode: this.mode })
   }

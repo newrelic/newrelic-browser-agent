@@ -40,8 +40,8 @@
       window.phase1Complete
       window.addEventListener("load", () => {
         const check = setInterval(() => {
-          // if error is thrown before jserror is notified, then jserror will not be decorated with `hasReplay`
-          if (!!Object.values(newrelic.initializedAgents)[0].features.session_replay?.featAggregate?.recorder?.notified) {
+          // if error is thrown before replay is recording, then jserror will not be decorated with `hasReplay`
+          if (Object.values(newrelic.initializedAgents)[0].runtime.isRecording) {
             clearInterval(check)
             console.log('noticing error....')
             newrelic.noticeError(new Error('after load'))

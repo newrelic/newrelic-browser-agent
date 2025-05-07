@@ -5,7 +5,6 @@
 export const prefix = 'api-'
 export const spaPrefix = prefix + 'ixn-'
 
-
 export const ADD_PAGE_ACTION = 'addPageAction'
 export const ADD_TO_TRACE = 'addToTrace'
 export const ADD_RELEASE = 'addRelease'

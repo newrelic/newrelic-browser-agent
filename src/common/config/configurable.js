@@ -23,7 +23,7 @@ export function getModeledObject (obj, model) {
         else if (typeof obj[key] === 'object' && typeof model[key] === 'object') output[key] = getModeledObject(obj[key], model[key])
         else output[key] = obj[key]
       } catch (e) {
-        warn(1, e)
+        if (!output[key]) warn(1, e)
       }
     }
     return output

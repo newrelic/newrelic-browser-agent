@@ -75,6 +75,10 @@ try{
     automatedMatches.push('webdriver')
   }
 
+  if (window.outerWidth === 0 || window.outerHeight === 0) {
+    automatedMatches.push('invalid window size')
+  }
+
   const userAgentString = window.navigator.userAgent
 
   if (userAgentString){  
@@ -93,13 +97,13 @@ try{
 
   if (automatedMatches.length) {
     newrelic.setCustomAttribute("automated", true);
-    newrelic.setCustomAttribute('automated-matches', automatedMatches.join(','));
+    newrelic.setCustomAttribute('automated-hints', automatedMatches.join(','));
     newrelic.setCustomAttribute('userAgent', window.navigator.userAgent);
   }
 
   if (botMatches.length) {
-    newrelic.setCustomAttribute("suspected-bot", true);
-    newrelic.setCustomAttribute('suspected-bot-matches', botMatches.join(','));
+    newrelic.setCustomAttribute("bot", true);
+    newrelic.setCustomAttribute('bot-hints', botMatches.join(','));
     newrelic.setCustomAttribute('userAgent', window.navigator.userAgent);
   }
 } catch (e) {

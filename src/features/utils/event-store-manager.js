@@ -2,11 +2,10 @@
  * Copyright 2020-2025 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
+import { DEFAULT_KEY } from '../../common/constants/agent-constants'
 import { dispatchGlobalEvent } from '../../common/dispatch/global-event'
 import { activatedFeatures } from '../../common/util/feature-flags'
 import { isContainerAgentTarget } from '../../common/util/target'
-
-const DEFAULT_KEY = 'NR_CONTAINER_AGENT' // this is the default entity guid used for the default storage instance
 /**
  * This layer allows multiple browser entity apps, or "target", to each have their own segregated storage instance.
  * The purpose is so the harvester can send data to different apps within the same agent. Each feature should have a manager if it needs this capability.
@@ -97,6 +96,10 @@ export class EventStoreManager {
     if (targetEntityGuid) return [{ targetApp: this.entityManager.get(targetEntityGuid), data: this.#getEventStore(targetEntityGuid).get(opts) }]
     const allPayloads = []
     this.appStorageMap.forEach((eventStore, targetEntityGuid) => {
+      // We shouldnt harvest unless we have a valid entity guid.  It was ONLY stored under the default key temporarily
+      // until a real key was returned in the RUM call. The real key SHARES the event store with the default key, and
+      // should be the key that is honored to get the event store to ensure a valid connection was made.
+      if (targetEntityGuid === DEFAULT_KEY) return
       const targetApp = this.entityManager.get(targetEntityGuid)
       if (targetApp) allPayloads.push({ targetApp, data: eventStore.get(opts) })
     })

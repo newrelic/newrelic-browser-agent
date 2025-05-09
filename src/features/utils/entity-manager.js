@@ -3,18 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { DEFAULT_KEY } from '../../common/constants/agent-constants'
+
 export class EntityManager {
   #entities = new Map()
   #entityGuidLookup = {}
-  #defaultEntity = null
 
   constructor (agentRef) {
     this.agentRef = agentRef
-    this.#defaultEntity = { licenseKey: agentRef.info.licenseKey, applicationID: agentRef.info.applicationID }
+    this.#entities.set(DEFAULT_KEY, { licenseKey: agentRef.info.licenseKey, applicationID: agentRef.info.applicationID })
   }
 
-  get (entityGuid) {
-    if (!entityGuid) return this.#defaultEntity
+  get (entityGuid = DEFAULT_KEY) {
     return this.#entities.get(entityGuid)
   }
 
@@ -40,6 +40,6 @@ export class EntityManager {
   }
 
   setDefaultEntity (entity) {
-    this.#defaultEntity = entity
+    this.#entities.set(DEFAULT_KEY, entity)
   }
 }

@@ -30,6 +30,7 @@ const model = {
   sessionTraceMode: MODE.OFF,
   traceHarvestStarted: false,
   loggingMode: LOGGING_MODE.OFF,
+  logApiMode: LOGGING_MODE.OFF,
   serverTimeDiff: null, // set by TimeKeeper; "undefined" value will not be stringified and stored but "null" will
   custom: {},
   numOfResets: 0

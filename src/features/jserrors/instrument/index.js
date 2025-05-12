@@ -9,7 +9,6 @@ import { FEATURE_NAME } from '../constants'
 import { globalScope } from '../../../common/constants/runtime'
 import { eventListenerOpts } from '../../../common/event-listener/event-listener-opts'
 import { now } from '../../../common/timing/now'
-import { SR_EVENT_EMITTER_TYPES } from '../../session_replay/constants'
 import { castError, castErrorEvent, castPromiseRejectionEvent } from '../shared/cast-error'
 import { setupNoticeErrorAPI } from '../../../loaders/api/noticeError'
 import { setupSetErrorHandlerAPI } from '../../../loaders/api/setErrorHandler'
@@ -18,7 +17,6 @@ import { setupRegisterAPI } from '../../../loaders/api/register'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
-  #replayRunning = false
 
   constructor (agentRef) {
     super(agentRef, FEATURE_NAME)
@@ -36,21 +34,17 @@ export class Instrument extends InstrumentBase {
 
     this.ee.on('internal-error', (error, reason) => {
       if (!this.abortHandler) return
-      handle('ierr', [castError(error), now(), true, {}, this.#replayRunning, reason], undefined, this.featureName, this.ee)
-    })
-
-    this.ee.on(SR_EVENT_EMITTER_TYPES.REPLAY_RUNNING, (isRunning) => {
-      this.#replayRunning = isRunning
+      handle('ierr', [castError(error), now(), true, {}, agentRef.runtime.isRecording, reason], undefined, this.featureName, this.ee)
     })
 
     globalScope.addEventListener('unhandledrejection', (promiseRejectionEvent) => {
       if (!this.abortHandler) return
-      handle('err', [castPromiseRejectionEvent(promiseRejectionEvent), now(), false, { unhandledPromiseRejection: 1 }, this.#replayRunning], undefined, this.featureName, this.ee)
+      handle('err', [castPromiseRejectionEvent(promiseRejectionEvent), now(), false, { unhandledPromiseRejection: 1 }, agentRef.runtime.isRecording], undefined, this.featureName, this.ee)
     }, eventListenerOpts(false, this.removeOnAbort?.signal))
 
     globalScope.addEventListener('error', (errorEvent) => {
       if (!this.abortHandler) return
-      handle('err', [castErrorEvent(errorEvent), now(), false, {}, this.#replayRunning], undefined, this.featureName, this.ee)
+      handle('err', [castErrorEvent(errorEvent), now(), false, {}, agentRef.runtime.isRecording], undefined, this.featureName, this.ee)
     }, eventListenerOpts(false, this.removeOnAbort?.signal))
 
     this.abortHandler = this.#abort // we also use this as a flag to denote that the feature is active or on and handling errors

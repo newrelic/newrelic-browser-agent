@@ -197,6 +197,11 @@ describe('Soft navigations', () => {
   })
 
   it('[NR-178377] chained ajax requests that originate from pre-page-load are attributed properly', async () => {
+    /**
+     * Requests that start before page load and finish before page load should be captured in the IPL ixn payload
+     * Requests that start before page load and finish after page load should be captured in the AJAX payload
+     * Requests that start after page load and finish after page load should be captured in the AJAX payload
+     */
     let [interactionHarvests, ajaxEventsHarvests] = await Promise.all([
       interactionsCapture.waitForResult({ totalCount: 1 }),
       ajaxEventsCapture.waitForResult({ timeout: 10000 }),

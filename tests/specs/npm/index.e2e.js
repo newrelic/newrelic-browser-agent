@@ -1,4 +1,3 @@
-import { apiMethods, asyncApiMethods } from '../../../src/loaders/api/api-methods'
 import { testAjaxTimeSlicesRequest, testErrorsRequest, testInsRequest, testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 const testBuilds = [
@@ -65,25 +64,6 @@ describe('basic npm agent', () => {
         expect(insightsHarvests[0]).toBeDefined()
       }
     })
-
-    if (testBuild !== 'worker-agent') {
-      ;[['dist', 'browser-agent-wrapper'], ['src', 'raw-src-wrapper']].forEach(([type, wrapper]) => {
-        it(`${type}/${testBuild} exposes the correct API methods`, async () => {
-          await browser.url(await browser.testHandle.assetURL(`test-builds/${wrapper}/${testBuild}.html`))
-
-          const NREUMProps = await getAgentProps('NREUM')
-          const newrelicProps = await getAgentProps('newrelic')
-          const agentApiProps = await getAgentProps('window.agent.api')
-
-          ;[NREUMProps, newrelicProps, agentApiProps].forEach(keys => {
-            expect(keys).toEqual(expect.arrayContaining([
-              ...apiMethods,
-              ...asyncApiMethods
-            ]))
-          })
-        })
-      })
-    }
   })
 
   it('vite-react-wrapper sends basic calls', async () => {
@@ -134,18 +114,3 @@ describe('basic npm agent', () => {
     expect(agentSession.localStorage).toEqual({})
   })
 })
-
-async function getAgentProps (variablePath) {
-  return browser.execute(function (varPath) {
-    function getAllPropertyNames (obj) {
-      let result = new Set()
-      while (obj) {
-        Object.getOwnPropertyNames(obj).forEach(p => result.add(p))
-        obj = Object.getPrototypeOf(obj)
-      }
-      return [...result]
-    }
-    // eslint-disable-next-line no-eval
-    return getAllPropertyNames(eval(varPath))
-  }, variablePath)
-}

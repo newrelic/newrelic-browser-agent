@@ -4,7 +4,7 @@
  */
 import { record as recorder } from 'rrweb'
 import { stringify } from '../../../common/util/stringify'
-import { AVG_COMPRESSION, CHECKOUT_MS, QUERY_PARAM_PADDING, RRWEB_EVENT_TYPES, SR_EVENT_EMITTER_TYPES } from '../constants'
+import { AVG_COMPRESSION, CHECKOUT_MS, QUERY_PARAM_PADDING, RRWEB_EVENT_TYPES } from '../constants'
 import { RecorderEvents } from './recorder-events'
 import { MODE } from '../../../common/session/constants'
 import { stylesheetEvaluator } from './stylesheet-evaluator'
@@ -38,8 +38,6 @@ export class Recorder {
     this.#events = new RecorderEvents(this.shouldFix)
     this.#backloggedEvents = new RecorderEvents(this.shouldFix)
     this.#preloaded = [new RecorderEvents(this.shouldFix)]
-    /** True when actively recording, false when paused or stopped */
-    this.recording = false
     /** The pointer to the current bucket holding rrweb events */
     this.currentBufferTarget = this.#events
     /** Only set to true once a snapshot node has been processed.  Used to block preload harvests from sending before we know we have a snapshot */
@@ -47,7 +45,7 @@ export class Recorder {
     /** Hold on to the last meta node, so that it can be re-inserted if the meta and snapshot nodes are broken up due to harvesting */
     this.lastMeta = false
     /** The method to stop recording. This defaults to a noop, but is overwritten once the recording library is imported and initialized */
-    this.stopRecording = () => { /* no-op until set by rrweb initializer */ }
+    this.stopRecording = () => { this.parent.agentRef.runtime.isRecording = false }
   }
 
   getEvents () {
@@ -81,33 +79,36 @@ export class Recorder {
 
   /** Begin recording using configured recording lib */
   startRecording () {
-    this.recording = true
+    this.parent.agentRef.runtime.isRecording = true
     const { block_class, ignore_class, mask_text_class, block_selector, mask_input_options, mask_text_selector, mask_all_inputs, inline_images, collect_fonts } = this.parent.agentRef.init.session_replay
 
     // set up rrweb configurations for maximum privacy --
     // https://newrelic.atlassian.net/wiki/spaces/O11Y/pages/2792293280/2023+02+28+Browser+-+Session+Replay#Configuration-options
-    const stop = recorder({
-      emit: this.audit.bind(this),
-      blockClass: block_class,
-      ignoreClass: ignore_class,
-      maskTextClass: mask_text_class,
-      blockSelector: block_selector,
-      maskInputOptions: mask_input_options,
-      maskTextSelector: mask_text_selector,
-      maskTextFn: customMasker,
-      maskAllInputs: mask_all_inputs,
-      maskInputFn: customMasker,
-      inlineStylesheet: true,
-      inlineImages: inline_images,
-      collectFonts: collect_fonts,
-      checkoutEveryNms: CHECKOUT_MS[this.parent.mode],
-      recordAfter: 'DOMContentLoaded'
-    })
+    let stop
+    try {
+      stop = recorder({
+        emit: this.audit.bind(this),
+        blockClass: block_class,
+        ignoreClass: ignore_class,
+        maskTextClass: mask_text_class,
+        blockSelector: block_selector,
+        maskInputOptions: mask_input_options,
+        maskTextSelector: mask_text_selector,
+        maskTextFn: customMasker,
+        maskAllInputs: mask_all_inputs,
+        maskInputFn: customMasker,
+        inlineStylesheet: true,
+        inlineImages: inline_images,
+        collectFonts: collect_fonts,
+        checkoutEveryNms: CHECKOUT_MS[this.parent.mode],
+        recordAfter: 'DOMContentLoaded'
+      })
+    } catch (err) {
+      this.parent.ee.emit('internal-error', [err])
+    }
 
     this.stopRecording = () => {
-      this.recording = false
-      this.notified = false
-      this.parent.ee.emit(SR_EVENT_EMITTER_TYPES.REPLAY_RUNNING, [false, this.parent.mode])
+      this.parent.agentRef.runtime.isRecording = false
       stop?.()
     }
   }
@@ -154,8 +155,8 @@ export class Recorder {
   /** Store a payload in the buffer (this.#events).  This should be the callback to the recording lib noticing a mutation */
   store (event, isCheckout) {
     if (!event) return
-    if (this.parent.agentRef.runtime?.session?.isAfterSessionExpiry(event.timestamp)) {
-      this.parent.reportSupportabilityMetric('Session/Expired/SessionReplay/Seen')
+    if (this.parent.agentRef.runtime.session?.isAfterSessionExpiry(event.timestamp)) {
+      handle(SUPPORTABILITY_METRIC_CHANNEL, ['Session/Expired/SessionReplay/Seen'], undefined, FEATURE_NAMES.metrics, this.ee)
       return
     }
 
@@ -163,11 +164,6 @@ export class Recorder {
     else this.currentBufferTarget = this.#events
 
     if (this.parent.blocked) return
-
-    if (!this.notified) {
-      this.parent.ee.emit(SR_EVENT_EMITTER_TYPES.REPLAY_RUNNING, [true, this.parent.mode])
-      this.notified = true
-    }
 
     if (this.parent.timeKeeper?.ready && !event.__newrelic) {
       event.__newrelic = buildNRMetaNode(event.timestamp, this.parent.timeKeeper)
@@ -213,7 +209,7 @@ export class Recorder {
   /** force the recording lib to take a full DOM snapshot.  This needs to occur in certain cases, like visibility changes */
   takeFullSnapshot () {
     try {
-      if (!this.recording) return
+      if (!this.parent.agentRef.runtime.isRecording) return
       recorder.takeFullSnapshot()
     } catch (err) {
       // in the off chance we think we are recording, but rrweb does not, rrweb's lib will throw an error.  This catch is just a precaution

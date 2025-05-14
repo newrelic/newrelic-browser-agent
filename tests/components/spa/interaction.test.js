@@ -1,21 +1,8 @@
-import { ee } from '../../../src/common/event-emitter/contextual-ee'
 import { Interaction } from '../../../src/features/spa/aggregate/interaction'
 
 let mockClearTimeoutCalls = 0; let mockSetTimeoutCalls = 0; let mockExecuteTimeoutCallback = true
 
 jest.mock('../../../src/common/constants/runtime')
-jest.mock('../../../src/common/config/info', () => ({
-  __esModule: true,
-  getInfo: jest.fn().mockReturnValue({})
-}))
-jest.mock('../../../src/common/config/init', () => ({
-  __esModule: true,
-  getConfigurationValue: jest.fn()
-}))
-jest.mock('../../../src/common/config/runtime', () => ({
-  __esModule: true,
-  getRuntime: jest.fn().mockReturnValue({ origin: 'localhost' })
-}))
 jest.mock('../../../src/common/window/nreum', () => ({
   __esModule: true,
   gosNREUM: jest.fn().mockReturnValue({}),
@@ -31,10 +18,14 @@ jest.mock('../../../src/common/window/nreum', () => ({
   })
 }))
 
-const agentIdentifier = 'abcdefg'
+const fakeAgent = {
+  agentIdentifier: 'abcdefg',
+  ee: { emit: jest.fn() },
+  info: {}
+}
 
 test('checkFinish sets timers', () => {
-  const interaction = new Interaction(undefined, undefined, undefined, undefined, undefined, { agentIdentifier, ee: ee.get(agentIdentifier) })
+  const interaction = new Interaction(undefined, undefined, undefined, undefined, undefined, fakeAgent)
   const setTimeoutCallsStart = mockSetTimeoutCalls
 
   interaction.checkFinish()
@@ -43,7 +34,7 @@ test('checkFinish sets timers', () => {
 })
 
 test('checkFinish does not set timers when there is work in progress', () => {
-  const interaction = new Interaction(undefined, undefined, undefined, undefined, undefined, { agentIdentifier, ee: ee.get(agentIdentifier) })
+  const interaction = new Interaction(undefined, undefined, undefined, undefined, undefined, fakeAgent)
   const setTimeoutCallsStart = mockSetTimeoutCalls
 
   interaction.remaining = 1
@@ -53,7 +44,7 @@ test('checkFinish does not set timers when there is work in progress', () => {
 })
 
 test('assigns url and routename to attributes', () => {
-  const interaction = new Interaction(undefined, undefined, undefined, undefined, undefined, { agentIdentifier, ee: ee.get(agentIdentifier) })
+  const interaction = new Interaction(undefined, undefined, undefined, undefined, undefined, fakeAgent)
 
   expect(interaction.root.attrs.newURL).toBeUndefined()
   expect(interaction.root.attrs.newRoute).toBeUndefined()
@@ -68,7 +59,7 @@ test('assigns url and routename to attributes', () => {
 test('does not reset finishTimer if it has already been set', () => {
   const setTimeoutCallsStart = mockSetTimeoutCalls
   mockExecuteTimeoutCallback = false
-  const interaction = new Interaction(undefined, undefined, undefined, undefined, undefined, { agentIdentifier, ee: ee.get(agentIdentifier) })
+  const interaction = new Interaction(undefined, undefined, undefined, undefined, undefined, fakeAgent)
 
   interaction.checkFinish()
   expect(mockSetTimeoutCalls).toEqual(setTimeoutCallsStart + 1)
@@ -81,7 +72,7 @@ test('does not reset finishTimer if it has already been set', () => {
 test('if timer is in progress and there is work remaining, timer should be cancelled', () => {
   const clearTimeoutCallsStart = mockClearTimeoutCalls
   mockExecuteTimeoutCallback = false
-  const interaction = new Interaction(undefined, undefined, undefined, undefined, undefined, { agentIdentifier, ee: ee.get(agentIdentifier) })
+  const interaction = new Interaction(undefined, undefined, undefined, undefined, undefined, fakeAgent)
 
   interaction.checkFinish()
   interaction.remaining = 1

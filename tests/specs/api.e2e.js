@@ -1,4 +1,3 @@
-import { apiMethods, asyncApiMethods } from '../../src/loaders/api/api-methods'
 import { checkAjaxEvents, checkJsErrors, checkMetrics, checkGenericEvents, checkPVT, checkRumBody, checkRumQuery, checkSessionTrace, checkSpa } from '../util/basic-checks'
 import { testAjaxEventsRequest, testAjaxTimeSlicesRequest, testBlobTraceRequest, testCustomMetricsRequest, testErrorsRequest, testEventsRequest, testInsRequest, testInteractionEventsRequest, testLogsRequest, testMetricsRequest, testRumRequest, testTimingEventsRequest } from '../../tools/testing-server/utils/expect-tests'
 import { rumFlags } from '../../tools/testing-server/constants'
@@ -30,14 +29,42 @@ describe('newrelic api', () => {
       return getAllPropertyNames(Object.values(newrelic.initializedAgents)[0].api)
     })
 
-    expect(globalApiMethods).toEqual(expect.arrayContaining([
-      ...apiMethods,
-      ...asyncApiMethods
-    ]))
-    expect(agentInstanceApiMethods).toEqual(expect.arrayContaining([
-      ...apiMethods,
-      ...asyncApiMethods
-    ]))
+    const apiSeen = {
+      setErrorHandler: false,
+      finished: false,
+      addToTrace: false,
+      addRelease: false,
+      addPageAction: false,
+      recordCustomEvent: false,
+      setCurrentRouteName: false,
+      setPageViewName: false,
+      setCustomAttribute: false,
+      interaction: false,
+      noticeError: false,
+      setUserId: false,
+      setApplicationVersion: false,
+      start: false,
+      recordReplay: false,
+      pauseReplay: false,
+      log: false,
+      wrapLogger: false,
+      register: false
+    }
+    globalApiMethods.forEach(keyName => {
+      if (apiSeen[keyName] !== undefined) apiSeen[keyName] = true
+    })
+
+    expect(Object.values(apiSeen).every(x => x)).toEqual(true)
+
+    Object.keys(apiSeen).forEach(keyName => {
+      apiSeen[keyName] = false
+    })
+
+    agentInstanceApiMethods.forEach(keyName => {
+      if (apiSeen[keyName] !== undefined) apiSeen[keyName] = true
+    })
+
+    expect(Object.values(apiSeen).every(x => x)).toEqual(true)
   })
 
   it('should load when sessionStorage is not available', async () => {

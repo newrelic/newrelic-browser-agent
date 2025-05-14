@@ -11,22 +11,28 @@ import { DEFAULT_KEY, MODE, PREFIX } from '../../../common/session/constants'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { hasReplayPrerequisite, isPreloadAllowed } from '../shared/utils'
 import { FEATURE_NAME, SR_EVENT_EMITTER_TYPES, TRIGGERS } from '../constants'
+import { setupRecordReplayAPI } from '../../../loaders/api/recordReplay'
+import { setupPauseReplayAPI } from '../../../loaders/api/pauseReplay'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
 
   #mode
   #agentRef
-  constructor (agentRef, auto = true) {
-    super(agentRef, FEATURE_NAME, auto)
+  constructor (agentRef) {
+    super(agentRef, FEATURE_NAME)
+
+    /** feature specific APIs */
+    setupRecordReplayAPI(agentRef)
+    setupPauseReplayAPI(agentRef)
+
     let session
-    this.replayRunning = false
     this.#agentRef = agentRef
     try {
       session = JSON.parse(localStorage.getItem(`${PREFIX}_${DEFAULT_KEY}`))
     } catch (err) { }
 
-    if (hasReplayPrerequisite(agentRef.agentIdentifier)) {
+    if (hasReplayPrerequisite(agentRef.init)) {
       this.ee.on(SR_EVENT_EMITTER_TYPES.RECORD, () => this.#apiStartOrRestartReplay())
     }
 
@@ -34,20 +40,15 @@ export class Instrument extends InstrumentBase {
       this.#mode = session?.sessionReplayMode
       this.#preloadStartRecording()
     } else {
-      this.importAggregator(agentRef)
+      this.importAggregator(this.#agentRef, () => import(/* webpackChunkName: "session_replay-aggregate" */ '../aggregate'))
     }
 
     /** If the recorder is running, we can pass error events on to the agg to help it switch to full mode later */
     this.ee.on('err', (e) => {
-      if (this.replayRunning) {
+      if (this.#agentRef.runtime.isRecording) {
         this.errorNoticed = true
         handle(SR_EVENT_EMITTER_TYPES.ERROR_DURING_REPLAY, [e], undefined, this.featureName, this.ee)
       }
-    })
-
-    /** Emitted by the recorder when it starts capturing data, used to determine if we should pass errors on to the agg */
-    this.ee.on(SR_EVENT_EMITTER_TYPES.REPLAY_RUNNING, (isRunning) => {
-      this.replayRunning = isRunning
     })
   }
 
@@ -56,11 +57,11 @@ export class Instrument extends InstrumentBase {
     if (!session) { // this might be a new session if entity initializes: conservatively start recording if first-time config allows
       // Note: users with SR enabled, as well as these other configs enabled by-default, will be penalized by the recorder overhead EVEN IF they don't actually have or get
       // entitlement or sampling decision, or otherwise intentionally opted-in for the feature.
-      return isPreloadAllowed(this.agentIdentifier)
+      return isPreloadAllowed(this.#agentRef.init)
     } else if (session.sessionReplayMode === MODE.FULL || session.sessionReplayMode === MODE.ERROR) {
       return true // existing sessions get to continue recording, regardless of this page's configs or if it has expired (conservatively)
     } else { // SR mode was OFF but may potentially be turned on if session resets and configs allows the new session to have replay...
-      return isPreloadAllowed(this.agentIdentifier)
+      return isPreloadAllowed(this.#agentRef.init)
     }
   }
 
@@ -80,8 +81,10 @@ export class Instrument extends InstrumentBase {
       this.recorder ??= new Recorder({ mode: this.#mode, agentIdentifier: this.agentIdentifier, trigger, ee: this.ee, agentRef: this.#agentRef })
       this.recorder.startRecording()
       this.abortHandler = this.recorder.stopRecording
-    } catch (e) {} // TODO add internal error handling
-    this.importAggregator(this.#agentRef, { recorder: this.recorder, errorNoticed: this.errorNoticed })
+    } catch (err) {
+      this.parent.ee.emit('internal-error', [err])
+    }
+    this.importAggregator(this.#agentRef, () => import(/* webpackChunkName: "session_replay-aggregate" */ '../aggregate'), { recorder: this.recorder, errorNoticed: this.errorNoticed })
   }
 
   /**

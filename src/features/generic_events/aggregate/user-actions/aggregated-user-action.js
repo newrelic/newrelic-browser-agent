@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { RAGE_CLICK_THRESHOLD_EVENTS, RAGE_CLICK_THRESHOLD_MS } from '../../constants'
+import { cleanURL } from '../../../../common/url/clean-url'
 
 export class AggregatedUserAction {
   constructor (evt, selectorPath, nearestTargetFields) {
@@ -13,6 +14,7 @@ export class AggregatedUserAction {
     this.selectorPath = selectorPath
     this.rageClick = undefined
     this.nearestTargetFields = nearestTargetFields
+    this.currentUrl = cleanURL('' + location)
   }
 
   /**

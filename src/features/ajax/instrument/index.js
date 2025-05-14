@@ -29,10 +29,10 @@ const NR_CAT_HEADER = 'X-NewRelic-App-Data'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
-  constructor (agentRef, auto = true) {
-    super(agentRef, FEATURE_NAME, auto)
+  constructor (agentRef) {
+    super(agentRef, FEATURE_NAME)
 
-    this.dt = new DT(agentRef.agentIdentifier)
+    this.dt = new DT(agentRef)
 
     this.handler = (type, args, ctx, group) => handle(type, args, ctx, group, this.ee)
 
@@ -62,7 +62,7 @@ export class Instrument extends InstrumentBase {
     wrapXhr(this.ee)
     subscribeToEvents(agentRef, this.ee, this.handler, this.dt)
 
-    this.importAggregator(agentRef)
+    this.importAggregator(agentRef, () => import(/* webpackChunkName: "ajax-aggregate" */ '../aggregate/index.js'))
   }
 }
 

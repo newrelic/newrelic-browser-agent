@@ -5,6 +5,89 @@
       "changes": [
         {
           "type": "feat",
+          "sha": "c11b6de857f42b4e2315012a897ac6693c67cd04",
+          "message": "bundler tools exports",
+          "issues": [
+            "1447"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "177316b8527ab158868da8ad9677c96fc60d08ea",
+          "message": "Set UserAction currentUrl before aggregation end",
+          "issues": [
+            "1463"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "56688831ed8fbf512dc70f1ebf37e648e498ece9",
+          "message": "Improve lazy-loading optimization",
+          "issues": [
+            "1443"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "8e7498e47a4666996f4837a53b02e8c313a48380",
+          "message": "API Code Splitting",
+          "issues": [
+            "1433"
+          ]
+        }
+      ],
+      "version": "1.290.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "183b38c4-d139-4689-b3b1-6797b9f5ea59",
+      "createTime": "2025-05-02T19:25:35.786Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
+          "sha": "6c3d7166e6a7014e1ae453801a9da875d311a3e1",
+          "message": "Remove agent config cache and getters/setters",
+          "issues": [
+            "1430"
+          ]
+        }
+      ],
+      "version": "1.289.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "f7bf0ee8-07c7-455f-b3f2-e9e526fb3a8e",
+      "createTime": "2025-04-24T22:49:38.121Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
+          "sha": "56e75b243b87d1d44e8014ac0ad5f408f0d145c5",
+          "message": "Ensure event buffer always exists",
+          "issues": [
+            "1452"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "49205807b6038afb32e3f04ebabedfe5fc11456b",
+          "message": "Call handle directly for submitting SM from SR recorder",
+          "issues": [
+            "1453"
+          ]
+        }
+      ],
+      "version": "1.288.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "fa455c83-ffc8-45e1-870e-b617edbae89b",
+      "createTime": "2025-04-18T23:41:11.957Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
           "sha": "5819b649792b6227d49173ecb326f918b1f39bdb",
           "message": "Prevent storing session data past session expiry",
           "issues": [
@@ -2800,5 +2883,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2025-04-16T17:53:15.185Z"
+  "updateTime": "2025-05-02T19:25:35.786Z"
 }

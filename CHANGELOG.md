@@ -3,6 +3,31 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.290.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.289.0...v1.290.0) (2025-05-02)
+
+
+### Features
+
+* API Code Splitting ([#1433](https://github.com/newrelic/newrelic-browser-agent/issues/1433)) ([8e7498e](https://github.com/newrelic/newrelic-browser-agent/commit/8e7498e47a4666996f4837a53b02e8c313a48380))
+* bundler tools exports ([#1447](https://github.com/newrelic/newrelic-browser-agent/issues/1447)) ([c11b6de](https://github.com/newrelic/newrelic-browser-agent/commit/c11b6de857f42b4e2315012a897ac6693c67cd04))
+* Improve lazy-loading optimization ([#1443](https://github.com/newrelic/newrelic-browser-agent/issues/1443)) ([5668883](https://github.com/newrelic/newrelic-browser-agent/commit/56688831ed8fbf512dc70f1ebf37e648e498ece9))
+* Set UserAction currentUrl before aggregation end ([#1463](https://github.com/newrelic/newrelic-browser-agent/issues/1463)) ([177316b](https://github.com/newrelic/newrelic-browser-agent/commit/177316b8527ab158868da8ad9677c96fc60d08ea))
+
+## [1.289.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.288.1...v1.289.0) (2025-04-24)
+
+
+### Features
+
+* Remove agent config cache and getters/setters ([#1430](https://github.com/newrelic/newrelic-browser-agent/issues/1430)) ([6c3d716](https://github.com/newrelic/newrelic-browser-agent/commit/6c3d7166e6a7014e1ae453801a9da875d311a3e1))
+
+## [1.288.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.288.0...v1.288.1) (2025-04-18)
+
+
+### Bug Fixes
+
+* Call handle directly for submitting SM from SR recorder ([#1453](https://github.com/newrelic/newrelic-browser-agent/issues/1453)) ([4920580](https://github.com/newrelic/newrelic-browser-agent/commit/49205807b6038afb32e3f04ebabedfe5fc11456b))
+* Ensure event buffer always exists ([#1452](https://github.com/newrelic/newrelic-browser-agent/issues/1452)) ([56e75b2](https://github.com/newrelic/newrelic-browser-agent/commit/56e75b243b87d1d44e8014ac0ad5f408f0d145c5))
+
 ## [1.288.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.287.0...v1.288.0) (2025-04-16)
 
 

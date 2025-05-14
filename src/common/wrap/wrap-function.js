@@ -63,6 +63,8 @@ export function createWrapperWithEmitter (emitter, always) {
     // Unless fn is both wrappable and unwrapped, return it unchanged.
     if (notWrappable(fn)) return fn
 
+    const stack = new Error().stack
+
     if (!prefix) prefix = ''
 
     nrWrapper[flag] = fn
@@ -118,10 +120,12 @@ export function createWrapperWithEmitter (emitter, always) {
             methodName,
             thisContext: originalThis?.constructor?.name,
             taskTimer,
+            stack,
             stackTrace: (thrownError || new Error()).stack.split('\n').map(line => line.trim()).slice(1).join(`
               `),
             thrownError: thrownError?.message
           }
+          console.log('long task', longTask)
           safeEmit('long-task', [longTask])
           dispatchGlobalEvent({
             agentIdentifier: emitter.debugId,

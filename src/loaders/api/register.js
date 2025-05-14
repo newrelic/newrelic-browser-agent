@@ -38,6 +38,9 @@ export function setupRegisterAPI (agent) {
  * @returns {RegisterAPI} the api object to be returned from the register api method
  */
 export function buildRegisterApi (agentRef, target) {
+  const stack = new Error().stack
+  console.log('REGISTER STACK', { stack })
+
   const attrs = {}
   warn(54, 'newrelic.register')
 

@@ -10,7 +10,7 @@ import { BUILD_ENV, DIST_METHOD, VERSION } from '../constants/env'
  * Module level count of harvests. This property will auto-increment each time it is accessed.
  * @type {number}
  */
-let harvestCount = 0
+let _harvestCount = 0
 
 const ReadOnly = {
   buildEnv: BUILD_ENV,
@@ -37,7 +37,7 @@ const RuntimeModel = {
   releaseIds: {},
   session: undefined,
   timeKeeper: undefined,
-  get harvestCount () { return ++harvestCount }
+  get harvestCount () { return ++_harvestCount }
 }
 
 export const mergeRuntime = (runtime) => {

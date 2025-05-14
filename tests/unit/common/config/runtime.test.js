@@ -29,3 +29,12 @@ test('accessing harvestCount should increment it', () => {
 
   expect(returnedRuntime.harvestCount).not.toEqual(returnedRuntime.harvestCount)
 })
+
+test('merging runtime with another runtime (like configure) should not throw getter errors from runtime harvestCount', () => {
+  const consoleSpy = jest.spyOn(global.console, 'debug')
+
+  const returnedRuntime = mergeRuntime({})
+  mergeRuntime({ ...returnedRuntime, harvestCount: 0 })
+
+  expect(consoleSpy).not.toHaveBeenCalled()
+})

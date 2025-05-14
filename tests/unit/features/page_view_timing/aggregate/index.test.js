@@ -1,20 +1,15 @@
 import * as qp from '@newrelic/nr-querypack'
 import { Aggregate } from '../../../../../src/features/page_view_timing/aggregate'
 
-const mockRuntime = {} // getAddStringContext in the serializer still relies on getRuntime() fn
-jest.mock('../../../../../src/common/config/runtime', () => ({
-  __esModule: true,
-  getRuntime: jest.fn(() => mockRuntime),
-  setRuntime: jest.fn()
-}))
 jest.mock('../../../../../src/common/harvest/harvester')
 
-const pvtAgg = new Aggregate({
+const agentInst = {
   agentIdentifier: 'abcd',
-  info: { },
+  info: {},
   init: { page_view_timing: {} },
-  runtime: mockRuntime
-})
+  runtime: {}
+}
+const pvtAgg = new Aggregate(agentInst)
 
 describe('PVT aggregate', () => {
   test('serializer default attributes', () => {
@@ -62,7 +57,7 @@ describe('PVT aggregate', () => {
     })
     global.navigator.connection = {}
     pvtAgg.addTiming('abc', 1)
-    expect(pvtAgg.events.get()[0].data[0].attrs).toEqual(expect.objectContaining({}))
+    expect(pvtAgg.events.get(undefined, 'NR_CONTAINER_AGENT')[0].data[0].attrs).toEqual(expect.objectContaining({}))
 
     global.navigator.connection.type = 'type'
     let timing = pvtAgg.addTiming('abc', 1)

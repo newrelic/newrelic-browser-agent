@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html lang="en">
+  <head>
+    <title>RUM Unit Test</title>
+    {init}
+    {config}
+    {loader}
+    <script>
+      addEventListener("mousemove", function() {
+        console.log("Mouse moved")
+      })
+    </script>
+  </head>
+  <body>
+    <div id="initial">initial content</div>
+
+    <div id="foobar">
+      FOOBAR!
+    </div>
+    <script>
+        // Create a new mouse event
+        const mouseMoveEvent = new MouseEvent('mousemove', {
+          clientX: 100, // X coordinate relative to the viewport
+          clientY: 200, // Y coordinate relative to the viewport
+          bubbles: true, // Allow the event to bubble up the DOM tree
+          cancelable: true // Allow the event to be canceled
+        })
+
+        // Get the element to dispatch the event to
+        const element = document.getElementById('foobar')
+
+        // Dispatch the event
+        element.dispatchEvent(mouseMoveEvent)
+    </script>
+  </body>
+</html>

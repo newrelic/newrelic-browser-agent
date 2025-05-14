@@ -7,11 +7,19 @@ import { FEATURE_NAME } from '../constants'
 import { bufferLog } from '../shared/utils'
 import { wrapLogger } from '../../../common/wrap/wrap-logger'
 import { globalScope } from '../../../common/constants/runtime'
+import { setupLogAPI } from '../../../loaders/api/log'
+import { setupWrapLoggerAPI } from '../../../loaders/api/wrapLogger'
+import { setupRegisterAPI } from '../../../loaders/api/register'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
-  constructor (agentRef, auto = true) {
-    super(agentRef, FEATURE_NAME, auto)
+  constructor (agentRef) {
+    super(agentRef, FEATURE_NAME)
+
+    /** feature specific APIs */
+    setupLogAPI(agentRef)
+    setupWrapLoggerAPI(agentRef)
+    setupRegisterAPI(agentRef)
 
     const instanceEE = this.ee
     wrapLogger(instanceEE, globalScope.console, 'log', { level: 'info' })
@@ -25,7 +33,7 @@ export class Instrument extends InstrumentBase {
       const { level, customAttributes } = this
       bufferLog(instanceEE, message, customAttributes, level)
     })
-    this.importAggregator(agentRef)
+    this.importAggregator(agentRef, () => import(/* webpackChunkName: "logging-aggregate" */ '../aggregate'))
   }
 }
 

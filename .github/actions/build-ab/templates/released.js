@@ -12,6 +12,7 @@ window.NREUM={
         'bam-cell.nr-data.net'
       ]
     },
+    harvest: {interval: 5},
     session_replay: {
       enabled: true,
       autoStart: false,

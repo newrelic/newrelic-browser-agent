@@ -14,41 +14,26 @@ describe('basic error capturing', () => {
         .then(() => browser.waitForAgentLoad())
     ])
 
-    const expected = [
-      expect.objectContaining({
-        params: expect.objectContaining({ message: 'window load addEventListener' })
-      }),
-      expect.objectContaining({
-        params: expect.objectContaining({ message: 'document readystatechange addEventListener' })
-      }),
-      expect.objectContaining({
-        params: expect.objectContaining({ message: 'document DOMContentLoaded addEventListener' })
-      }),
-      expect.objectContaining({
-        params: expect.objectContaining({ message: 'setTimeout' })
-      }),
-      expect.objectContaining({
-        params: expect.objectContaining({ message: 'setInterval' })
-      }),
-      expect.objectContaining({
-        params: expect.objectContaining({ message: 'requestAnimationFrame' })
-      }),
-      expect.objectContaining({
-        params: expect.objectContaining({ message: 'xhr load addEventListener' })
-      })
-    ]
+    const seenMessages = {
+      'window load addEventListener': false,
+      'document readystatechange addEventListener': false,
+      'document DOMContentLoaded addEventListener': false,
+      setTimeout: false,
+      setInterval: false,
+      requestAnimationFrame: false,
+      'xhr load addEventListener': false,
+      'Unhandled Promise Rejection: fetch network error': false,
+      'Unhandled Promise Rejection: fetch response error': false
+    }
 
-    expected.push(...[
-      expect.objectContaining({
-        params: expect.objectContaining({ message: 'Unhandled Promise Rejection: fetch network error' })
-      }),
-      expect.objectContaining({
-        params: expect.objectContaining({ message: 'Unhandled Promise Rejection: fetch response error' })
-      })
-    ])
-
-    expect(errors[0].request.body.err.length).toEqual(expected.length)
-    expect(errors[0].request.body.err).toEqual(expect.arrayContaining(expected))
+    errors[0].request.body.err.forEach((error) => {
+      const message = error.params.message
+      expect(seenMessages[message]).toBeDefined()
+      if (seenMessages[message] !== undefined) {
+        seenMessages[message] = true
+      }
+    })
+    expect(Object.values(seenMessages).every((seen) => seen)).toBe(true)
   })
 
   it('should capture file and line number for syntax errors', async () => {

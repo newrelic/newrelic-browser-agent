@@ -7,8 +7,8 @@ import { NODE_TYPE } from '../constants'
 import { BelNode } from './bel-node'
 
 export class AjaxNode extends BelNode {
-  constructor (agentIdentifier, ajaxEvent) {
-    super(agentIdentifier)
+  constructor (agentRef, ajaxEvent) {
+    super(agentRef)
     this.belType = NODE_TYPE.AJAX
     this.method = ajaxEvent.method
     this.status = ajaxEvent.status
@@ -27,7 +27,7 @@ export class AjaxNode extends BelNode {
   }
 
   serialize (parentStartTimestamp) {
-    const addString = getAddStringContext(this.agentIdentifier)
+    const addString = getAddStringContext(this.obfuscator)
     const nodeList = []
 
     // IMPORTANT: The order in which addString is called matters and correlates to the order in which string shows up in the harvest payload. Do not re-order the following code.

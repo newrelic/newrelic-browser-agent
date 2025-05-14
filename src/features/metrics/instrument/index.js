@@ -16,8 +16,8 @@ import {
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
-  constructor (agentRef, auto = true) {
-    super(agentRef, FEATURE_NAME, auto)
+  constructor (agentRef) {
+    super(agentRef, FEATURE_NAME)
     // wrapWebSocket(this.ee) - feb'25 : removing wrapping again to avoid integration issues
 
     // WATCHABLE_WEB_SOCKET_EVENTS.forEach((suffix) => {
@@ -32,7 +32,7 @@ export class Instrument extends InstrumentBase {
       })
     }
 
-    this.importAggregator(agentRef)
+    this.importAggregator(agentRef, () => import(/* webpackChunkName: "metrics-aggregate" */ '../aggregate'))
   }
 }
 

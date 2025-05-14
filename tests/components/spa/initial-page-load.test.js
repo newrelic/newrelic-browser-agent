@@ -5,26 +5,19 @@ import { Spa } from '../../../src/features/spa'
 jest.mock('../../../src/common/constants/runtime')
 jest.mock('../../../src/common/config/info', () => ({
   __esModule: true,
-  getInfo: jest.fn().mockReturnValue({ jsAttributes: {} }),
   isValid: jest.fn().mockReturnValue(true)
-}))
-jest.mock('../../../src/common/config/init', () => ({
-  __esModule: true,
-  getConfigurationValue: jest.fn()
-}))
-jest.mock('../../../src/common/config/runtime', () => ({
-  __esModule: true,
-  getRuntime: jest.fn().mockReturnValue({})
 }))
 jest.mock('../../../src/common/harvest/harvester')
 
 let spaInstrument, spaAggregate, newrelic
 const agentIdentifier = 'abcdefg'
+const baseEE = ee.get(agentIdentifier)
 
 beforeAll(async () => {
-  spaInstrument = new Spa({ agentIdentifier, info: {}, init: { spa: { enabled: true } }, runtime: {} })
+  spaInstrument = new Spa({ agentIdentifier, info: {}, init: { spa: { enabled: true }, privacy: {} }, runtime: { appMetadata: { agents: [{ entityGuid: '12345' }] } }, ee: baseEE })
   await expect(spaInstrument.onAggregateImported).resolves.toEqual(true)
   spaAggregate = spaInstrument.featAggregate
+  ee.get(agentIdentifier).emit('rumresp', { spa: { enabled: true } })
   spaAggregate.blocked = true
   spaAggregate.drain()
   newrelic = helpers.getNewrelicGlobal(spaAggregate.ee)
@@ -42,7 +35,7 @@ test('initial page load timing', done => {
     children: []
   })
 
-  helpers.startInteraction(onInteractionStart, afterInteractionDone, { baseEE: ee.get(agentIdentifier), eventType: 'initialPageLoad' })
+  helpers.startInteraction(onInteractionStart, afterInteractionDone, { baseEE, eventType: 'initialPageLoad' })
 
   function onInteractionStart (cb) {
     let x = 0

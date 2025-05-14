@@ -197,6 +197,11 @@ describe('Soft navigations', () => {
   })
 
   it('[NR-178377] chained ajax requests that originate from pre-page-load are attributed properly', async () => {
+    /**
+     * Requests that start before page load and finish before page load should be captured in the IPL ixn payload
+     * Requests that start before page load and finish after page load should be captured in the AJAX payload
+     * Requests that start after page load and finish after page load should be captured in the AJAX payload
+     */
     let [interactionHarvests, ajaxEventsHarvests] = await Promise.all([
       interactionsCapture.waitForResult({ totalCount: 1 }),
       ajaxEventsCapture.waitForResult({ timeout: 10000 }),
@@ -216,5 +221,31 @@ describe('Soft navigations', () => {
       expect.objectContaining({ path: '/text', requestedWith: 'XMLHttpRequest' }),
       expect.objectContaining({ path: '/text', requestedWith: 'fetch' })
     ]))
+  })
+
+  it('multiple finished ixns retain the correct start/end timestamps and sequence in payload', async () => {
+    await Promise.all([
+      interactionsCapture.waitForResult({ totalCount: 1 }),
+      browser.url(await browser.testHandle.assetURL('soft_navigations/sequential-api.html', config))
+        .then(() => browser.waitForAgentLoad())
+    ])
+
+    let interactionHarvests = await interactionsCapture.waitForResult({ totalCount: 2 })
+
+    let sequentialMet = true
+    const body = interactionHarvests[1].request.body
+    body.forEach((ixn, i) => {
+      if (ixn.start > ixn.end) sequentialMet = false
+      if (ixn.end > (body[i + 1]?.start || Infinity)) sequentialMet = false
+      if (ixn.nodeId > (body[i + 1]?.nodeId || Infinity)) sequentialMet = false
+    })
+
+    expect(interactionHarvests[1].request.body.map(ixn => ([ixn.trigger, ixn.customName]))).toEqual([
+      ['api', 'some_id'],
+      ['api', 'some_other_id'],
+      ['api', 'some_another_id']
+    ])
+
+    expect(sequentialMet).toEqual(true)
   })
 })

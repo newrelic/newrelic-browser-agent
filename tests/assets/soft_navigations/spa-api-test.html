@@ -8,44 +8,47 @@
     <title>SPA API test</title>
     <script>
       window.test = {
-        passed: false,
-        ran: false
-      }
+        expectedBehavior: false,
+        expectedLog: undefined,
+        ran: false,
+      };
+      origDebug = console.debug;
     </script>
-    {init}
-    {config}
-    {loader}
+    {init} {config} {loader}
   </head>
   <body>
-    <div>This test runs every SPA API call that isn't deprecated. Any agent loader should be able to handle these calls without exceptions being thrown.</div>
+    <div>Any agent loader should be able to handle calling ixn calls without exceptions being thrown, though the ability to create ixns differs between loaders.</div>
     <script type="text/javascript">
-      document.addEventListener('click', function () {
-        try {
-          var ixn = newrelic.interaction()
-          ixn.actionText('click')
-          ixn.setName('myInteraction', 'submit')
-          ixn.setAttribute('id', 456)
-          ixn.getContext((ctx) => {
-            ctx.productId = 789
-          })
-          ixn.onEnd((ctx) => {
-            if (ctx.productId) {
-              interaction.setAttribute(
-                'productId', ctx.productId
-              )
+      document.addEventListener(
+        "click",
+        function () {
+          try {
+            const loaderType = new URLSearchParams(window.location.search).get("loader");
+            /** intercept our agent's warning message that should throw for testing purposes */
+            console.debug = function (...args) {
+              if (window.test.expectedLog !== undefined) return; // we only expect one log
+              if (loaderType === 'spa') {
+                window.test.expectedLog = false; // we dont expect a warning logged for spa
+                return
+              }
+              if (args[0] === "New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#35") window.test.expectedLog = true;
+              else window.test.expectedLog = false;
+            };
+            var ixn = newrelic.interaction();
+
+            window.test.expectedBehavior = loaderType === "spa" ? !!ixn : !ixn; // ixn should be undefined for `lite` and `pro`, defined for 'spa'
+            if (loaderType === "spa" && window.test.expectedLog === undefined) {
+              window.test.expectedLog = true;
             }
-          })
-          ixn.ignore()
-          ixn.save()
-          ixn.end()
-
-          newrelic.setCurrentRouteName('/users')
-
-          window.test.passed = true
-        } finally {
-          window.test.ran = true
-        }
-      }, false)
+          } catch (err) {
+            window.test.expectedBehavior = false;
+          } finally {
+            window.test.ran = true;
+            console.debug = origDebug; // restore the original debug function
+          }
+        },
+        false
+      );
     </script>
   </body>
 </html>

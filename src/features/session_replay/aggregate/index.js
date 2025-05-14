@@ -48,7 +48,7 @@ export class Aggregate extends AggregateBase {
     this.errorNoticed = args?.errorNoticed || false
     this.harvestOpts.raw = true
 
-    this.isSessionTrackingEnabled = canEnableSessionTracking(this.agentIdentifier) && this.agentRef.runtime.session
+    this.isSessionTrackingEnabled = canEnableSessionTracking(agentRef.init) && !!agentRef.runtime.session
 
     this.reportSupportabilityMetric('Config/SessionReplay/Enabled')
 
@@ -88,7 +88,7 @@ export class Aggregate extends AggregateBase {
       this.entitled = !!entitled
       if (!this.entitled) {
         this.deregisterDrain()
-        if (this.recorder?.recording) {
+        if (this.agentRef.runtime.isRecording) {
           this.abort(ABORT_REASONS.ENTITLEMENTS)
           this.reportSupportabilityMetric('SessionReplay/EnabledNotEntitled/Detected')
         }
@@ -133,7 +133,7 @@ export class Aggregate extends AggregateBase {
     this.mode = MODE.FULL
     // if the error was noticed AFTER the recorder was already imported....
     if (this.recorder && this.initialized) {
-      if (!this.recorder.recording) this.recorder.startRecording()
+      if (!this.agentRef.runtime.isRecording) this.recorder.startRecording()
       this.syncWithSessionManager({ sessionReplayMode: this.mode })
     } else {
       this.initializeRecording(MODE.FULL, true)
@@ -158,7 +158,7 @@ export class Aggregate extends AggregateBase {
     // session replays can continue if already in progress
     const { session, timeKeeper } = this.agentRef.runtime
     this.timeKeeper = timeKeeper
-    if (this.recorder?.parent.trigger === TRIGGERS.API && this.recorder?.recording) {
+    if (this.recorder?.parent.trigger === TRIGGERS.API && this.agentRef.runtime.isRecording) {
       this.mode = MODE.FULL
     } else if (!session.isNew && !ignoreSession) { // inherit the mode of the existing session
       this.mode = session.state.sessionReplayMode
@@ -196,7 +196,7 @@ export class Aggregate extends AggregateBase {
 
     await this.prepUtils()
 
-    if (!this.recorder.recording) this.recorder.startRecording()
+    if (!this.agentRef.runtime.isRecording) this.recorder.startRecording()
 
     this.syncWithSessionManager({ sessionReplayMode: this.mode })
   }
@@ -213,6 +213,7 @@ export class Aggregate extends AggregateBase {
   }
 
   makeHarvestPayload (shouldRetryOnFail) {
+    const payloadOutput = { targetApp: undefined, payload: undefined }
     if (this.mode !== MODE.FULL || this.blocked) return
     if (!this.recorder || !this.timeKeeper?.ready || !this.recorder.hasSeenSnapshot) return
 
@@ -223,7 +224,7 @@ export class Aggregate extends AggregateBase {
     const payload = this.getHarvestContents(recorderEvents)
     if (!payload.body.length) {
       this.recorder.clearBuffer()
-      return
+      return [payloadOutput]
     }
 
     this.reportSupportabilityMetric('SessionReplay/Harvest/Attempts')
@@ -253,13 +254,15 @@ export class Aggregate extends AggregateBase {
 
     if (len > MAX_PAYLOAD_SIZE) {
       this.abort(ABORT_REASONS.TOO_BIG, len)
-      return
+      return [payloadOutput]
     }
     // TODO -- Gracefully handle the buffer for retries.
     if (!this.agentRef.runtime.session.state.sessionReplaySentFirstChunk) this.syncWithSessionManager({ sessionReplaySentFirstChunk: true })
     this.recorder.clearBuffer()
     if (recorderEvents.type === 'preloaded') this.agentRef.runtime.harvester.triggerHarvestFor(this)
-    return [{ targetApp: undefined, payload }] // SR doesn't need a targetApp as it only works for the main, but format needs to make AggregateBase
+    payloadOutput.payload = payload
+
+    return [payloadOutput]
   }
 
   getCorrectedTimestamp (node) {

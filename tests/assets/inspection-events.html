@@ -17,11 +17,11 @@
     }
     window.addEventListener('newrelic', ({ detail }) => {
       if (!detail || !detail.agentIdentifier) return
-      const { name, loaded, type, feature, data } = detail
+      const { name, drained, type, feature, data } = detail
 
       if (
         name == 'initialize' &&
-        loaded == false &&
+        drained == false &&
         type == 'lifecycle' &&
         feature == undefined &&
         data
@@ -31,7 +31,7 @@
 
       if (
         name === 'load' &&
-        loaded === true &&
+        drained === true &&
         type === 'lifecycle' &&
         feature === undefined &&
         data
@@ -41,7 +41,7 @@
 
       if (
         name === 'buffer' &&
-        loaded === true &&
+        drained === true &&
         type === 'data' &&
         feature &&
         data
@@ -51,7 +51,7 @@
 
       if (
         name === 'harvest' &&
-        loaded === true &&
+        drained === true &&
         type === 'data' &&
         feature &&
         data
@@ -62,7 +62,7 @@
       // The API call in this test is called before the agent is loaded, so loaded should be false
       if (
         name === 'api' &&
-        loaded === false &&
+        drained === false &&
         type === 'data' &&
         feature &&
         data

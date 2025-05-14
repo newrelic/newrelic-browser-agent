@@ -2,56 +2,56 @@
  * Copyright 2020-2025 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { setAPI, setTopLevelCallers } from '../api/api'
+import { setTopLevelCallers } from '../api/topLevelCallers'
 import { addToNREUM, gosCDN } from '../../common/window/nreum'
-import { setInfo } from '../../common/config/info'
-import { getConfiguration, setConfiguration } from '../../common/config/init'
-import { setLoaderConfig } from '../../common/config/loader-config'
-import { setRuntime } from '../../common/config/runtime'
+import { mergeInfo } from '../../common/config/info'
+import { mergeInit } from '../../common/config/init'
+import { mergeRuntime } from '../../common/config/runtime'
 import { activatedFeatures } from '../../common/util/feature-flags'
 import { isWorkerScope } from '../../common/constants/runtime'
 import { redefinePublicPath } from './public-path'
 import { ee } from '../../common/event-emitter/contextual-ee'
 import { dispatchGlobalEvent } from '../../common/dispatch/global-event'
+import { mergeLoaderConfig } from '../../common/config/loader-config'
 
-let alreadySetOnce = false // the configure() function can run multiple times in agent lifecycle
+const alreadySetOnce = new Set() // the configure() function can run multiple times in agent lifecycle for different agents
 
 /**
  * Sets or re-sets the agent's configuration values from global settings. This also attach those as properties to the agent instance.
+ * IMPORTANT: setNREUMInitializedAgent must be called on the agent prior to calling this function.
  */
 export function configure (agent, opts = {}, loaderType, forceDrain) {
   // eslint-disable-next-line camelcase
   let { init, info, loader_config, runtime = {}, exposed = true } = opts
-  runtime.loaderType = loaderType
-  const nr = gosCDN()
   if (!info) {
+    const nr = gosCDN()
     init = nr.init
     info = nr.info
     // eslint-disable-next-line camelcase
     loader_config = nr.loader_config
   }
 
-  setConfiguration(agent.agentIdentifier, init || {})
+  agent.init = mergeInit(init || {})
   // eslint-disable-next-line camelcase
-  setLoaderConfig(agent.agentIdentifier, loader_config || {})
+  agent.loader_config = mergeLoaderConfig(loader_config || {})
 
   info.jsAttributes ??= {}
   if (isWorkerScope) { // add a default attr to all worker payloads
     info.jsAttributes.isWorker = true
   }
-  setInfo(agent.agentIdentifier, info)
+  agent.info = mergeInfo(info)
 
-  const updatedInit = getConfiguration(agent.agentIdentifier)
+  const updatedInit = agent.init
   const internalTrafficList = [info.beacon, info.errorBeacon]
 
-  if (!alreadySetOnce) {
+  if (!alreadySetOnce.has(agent.agentIdentifier)) {
     if (updatedInit.proxy.assets) {
       redefinePublicPath(updatedInit.proxy.assets)
       internalTrafficList.push(updatedInit.proxy.assets)
     }
     if (updatedInit.proxy.beacon) internalTrafficList.push(updatedInit.proxy.beacon)
 
-    setTopLevelCallers() // no need to set global APIs on newrelic obj more than once
+    setTopLevelCallers(agent) // no need to set global APIs on newrelic obj more than once
     addToNREUM('activatedFeatures', activatedFeatures)
 
     // Update if soft_navigations is allowed to run AND part of this agent build, used to override old spa functions.
@@ -63,23 +63,22 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
     ...(updatedInit.ajax.block_internal ? internalTrafficList : [])
   ]
   runtime.ptid = agent.agentIdentifier
-  setRuntime(agent.agentIdentifier, runtime)
+  runtime.loaderType = loaderType
+  agent.runtime = mergeRuntime(runtime)
 
-  agent.ee = ee.get(agent.agentIdentifier)
+  if (!alreadySetOnce.has(agent.agentIdentifier)) {
+    agent.ee = ee.get(agent.agentIdentifier)
+    agent.exposed = exposed
 
-  if (agent.api === undefined) agent.api = setAPI(agent.agentIdentifier, forceDrain, agent.runSoftNavOverSpa)
-  if (agent.exposed === undefined) agent.exposed = exposed
-
-  if (!alreadySetOnce) {
     dispatchGlobalEvent({
       agentIdentifier: agent.agentIdentifier,
-      loaded: !!activatedFeatures?.[agent.agentIdentifier],
+      drained: !!activatedFeatures?.[agent.agentIdentifier],
       type: 'lifecycle',
       name: 'initialize',
       feature: undefined,
-      data: { init: updatedInit, info, loader_config, runtime }
+      data: agent.config
     })
   }
 
-  alreadySetOnce = true
+  alreadySetOnce.add(agent.agentIdentifier)
 }

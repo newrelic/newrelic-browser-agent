@@ -3,10 +3,13 @@ import { getNREUMInitializedAgent, setNREUMInitializedAgent } from '../../src/co
 import { configure } from '../../src/loaders/configure/configure'
 import { ee } from '../../src/common/event-emitter/contextual-ee'
 import { TimeKeeper } from '../../src/common/timing/time-keeper'
-import { getRuntime } from '../../src/common/config/runtime'
 import { setupAgentSession } from '../../src/features/utils/agent-session'
 import { Harvester } from '../../src/common/harvest/harvester'
+import { EntityManager } from '../../src/features/utils/entity-manager'
 import { EventStoreManager } from '../../src/features/utils/event-store-manager'
+import { EventAggregator } from '../../src/common/aggregate/event-aggregator'
+
+const entityGuid = faker.string.uuid()
 
 /**
  * Sets up a new agent for component testing. This should be called only
@@ -26,20 +29,22 @@ import { EventStoreManager } from '../../src/features/utils/event-store-manager'
 export function setupAgent ({ agentOverrides = {}, info = {}, init = {}, loaderConfig = {}, runtime = {} } = {}) {
   const agentIdentifier = faker.string.uuid()
 
-  if (!info.applicationID) info.applicationID = faker.string.uuid()
-  if (!info.licenseKey) info.licenseKey = faker.string.uuid()
-  if (!loaderConfig.agentID) loaderConfig.agentID = info.applicationID
-  if (!loaderConfig.agentID) loaderConfig.licenseKey = info.licenseKey
-  if (!runtime.appMetadata) runtime.appMetadata = { agents: [{ entityGuid: faker.string.uuid() }] }
-
   const eventEmitter = ee.get(agentIdentifier)
   jest.spyOn(eventEmitter, 'on')
   jest.spyOn(eventEmitter, 'addEventListener')
 
+  if (!info.applicationID) info.applicationID = faker.string.uuid()
+  if (!info.licenseKey) info.licenseKey = faker.string.uuid()
+  if (!loaderConfig.agentID) loaderConfig.agentID = info.applicationID
+  if (!loaderConfig.agentID) loaderConfig.licenseKey = info.licenseKey
+  if (!runtime.appMetadata) runtime.appMetadata = { agents: [{ entityGuid }] }
+  if (!runtime.entityManager) runtime.entityManager = new EntityManager({ info, ee })
+
+  runtime.entityManager.setDefaultEntity({ entityGuid, ...info })
+
   const fakeAgent = {
     agentIdentifier,
     ee: eventEmitter,
-    sharedAggregator: new EventStoreManager({ licenseKey: info.licenseKey, appId: info.applicationID }, 2, agentIdentifier),
     ...agentOverrides
   }
   setNREUMInitializedAgent(agentIdentifier, fakeAgent)
@@ -51,13 +56,13 @@ export function setupAgent ({ agentOverrides = {}, info = {}, init = {}, loaderC
   )
   setupAgentSession(fakeAgent)
 
-  runtime = getRuntime(agentIdentifier)
-  if (!runtime.timeKeeper) {
-    runtime.timeKeeper = new TimeKeeper(agentIdentifier)
-    runtime.timeKeeper.processRumRequest({}, 450, 600, Date.now())
+  if (!fakeAgent.runtime.timeKeeper) {
+    fakeAgent.runtime.timeKeeper = new TimeKeeper(fakeAgent.runtime.session)
+    fakeAgent.runtime.timeKeeper.processRumRequest({}, 450, 600, Date.now())
   }
   fakeAgent.features = {}
-  if (!runtime.harvester) runtime.harvester = new Harvester(fakeAgent)
+  if (!fakeAgent.runtime.harvester) fakeAgent.runtime.harvester = new Harvester(fakeAgent)
+  fakeAgent.sharedAggregator = new EventStoreManager(fakeAgent, EventAggregator, fakeAgent.runtime.appMetadata.agents[0].entityGuid, 'shared_aggregator')
 
   return fakeAgent
 }
@@ -66,9 +71,19 @@ export function resetAgent (agentIdentifier) {
   resetAgentEventEmitter(agentIdentifier)
   resetAggregator(agentIdentifier)
   resetSession(agentIdentifier)
+  resetEntityManager(agentIdentifier)
+  getNREUMInitializedAgent(agentIdentifier).runtime.isRecording = false
 }
 
-export function resetAgentEventEmitter (agentIdentifier) {
+function resetEntityManager (agentIdentifier) {
+  const agent = getNREUMInitializedAgent(agentIdentifier)
+  const entityManager = agent.runtime.entityManager
+  entityManager.clear()
+  entityManager.setDefaultEntity({ entityGuid, ...agent.info })
+  entityManager.set(entityGuid, { entityGuid, ...agent.info })
+}
+
+function resetAgentEventEmitter (agentIdentifier) {
   const eventEmitter = ee.get(agentIdentifier)
   const listeners = [
     ...jest.mocked(eventEmitter.on).mock.calls,
@@ -78,12 +93,13 @@ export function resetAgentEventEmitter (agentIdentifier) {
   listeners.forEach(([type, fn]) => eventEmitter.removeEventListener(type, fn))
 }
 
-export function resetAggregator (agentIdentifier) {
+function resetAggregator (agentIdentifier) {
   const agent = getNREUMInitializedAgent(agentIdentifier)
   agent.sharedAggregator.clear()
 }
 
-export function resetSession (agentIdentifier) {
-  const runtime = getRuntime(agentIdentifier)
-  runtime.session.reset()
+function resetSession (agentIdentifier) {
+  const agent = getNREUMInitializedAgent(agentIdentifier)
+  agent.runtime.session.reset()
+  agent.runtime.session.state.numOfResets = 0 // avoid stopping harvests for session resets
 }

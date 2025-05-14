@@ -1,5 +1,11 @@
 <a href="https://opensource.newrelic.com/oss-category/#community-plus"><picture><source media="(prefers-color-scheme: dark)" srcset="https://github.com/newrelic/opensource-website/raw/main/src/images/categories/dark/Community_Plus.png"><source media="(prefers-color-scheme: light)" srcset="https://github.com/newrelic/opensource-website/raw/main/src/images/categories/Community_Plus.png"><img alt="New Relic Open Source community plus project banner." src="https://github.com/newrelic/opensource-website/raw/main/src/images/categories/Community_Plus.png"></picture></a>
 
+### **Deployment status:**
+<img src="https://img.shields.io/endpoint?style=plastic&amp;url=https%3A%2F%2Fnewrelic.github.io%2Fnewrelic-browser-agent-release%2Fbadges%2Fcurrent-version-production.json">
+<img src="https://img.shields.io/endpoint?style=plastic&amp;url=https%3A%2F%2Fnewrelic.github.io%2Fnewrelic-browser-agent-release%2Fbadges%2Fcopy-paste-version-production.json">
+<img src="https://img.shields.io/endpoint?style=plastic&amp;url=https%3A%2F%2Fnewrelic.github.io%2Fnewrelic-browser-agent-release%2Fbadges%2Fgeneric-deploy-percent-production.json">
+
+
 # New Relic Browser Agent
 
 The New Relic browser agent instruments your web application or site and provides observability into performance, errors, and other behaviors.
@@ -243,6 +249,38 @@ Neither the browser agent development team nor the New Relic support teams can s
 // THIS IS BAD - do not do this
 import { Agent } from '@newrelic/browser-agent/loaders/agent'
 import { Metrics } from '@newrelic/browser-agent/src/features/metrics'
+```
+
+## Bundling
+As an outcome of the design patterns employed in the browser agent package, building the agent can generate lazy-loaded chunks for many of the utilized modules. To concatenate, deduplicate and reduce those modules to a single lazy-loaded file the same way we do internally when shipping to our CDN, you can choose to utilize the `"build-tools"` directory which includes rulesets for various build tools.  
+
+**Please note - This is an optional step.  The browser agent can be built without any rules instructing the build tools about the handling of the lazy-loaded chunks, or the chunks can be handled in any way you see fit to conform to your build process. This ruleset serves as an example of what we do internally when shipping to our CDN.**
+
+### Webpack
+For Webpack (v4+), you can choose to use our [webpack cache group rule](https://github.com/newrelic/newrelic-browser-agent/blob/main/tools/bundler-tools/bundler-tools.mjs) to instruct webpack on how to handle the agent's lazy chunks. The cacheGroup rule acts as a rule within the [SplitChunksPlugin](https://webpack.js.org/plugins/split-chunks-plugin/). Please observe the relevant documentation for use of this plugin. The output of this cache group rule will generate a lazy aggregate module, and lazy chunks for session replay, which matches the pattern found on our CDN distribution. 
+
+### Other
+Plugins for other bundling tools are planned for the future.
+
+```javascript
+// in webpack.config.js
+const { webpackCacheGroup } = require('@newrelic/browser-agent/tools/bundler-tools')
+// ... or ...
+import { webpackCacheGroup } from '@newrelic/browser-agent/tools/bundler-tools'
+
+{
+  // ... 
+  optimization: {
+      splitChunks: {
+        cacheGroups: {
+          // A ruleset for handling the browser agent modules
+          ...webpackCacheGroup(), 
+          // ... other cache groups
+        }
+      }
+    },
+  // ... 
+}
 ```
 
 ## Library Support

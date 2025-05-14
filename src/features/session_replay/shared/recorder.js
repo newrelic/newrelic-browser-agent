@@ -4,7 +4,7 @@
  */
 import { record as recorder } from 'rrweb'
 import { stringify } from '../../../common/util/stringify'
-import { AVG_COMPRESSION, CHECKOUT_MS, QUERY_PARAM_PADDING, RRWEB_EVENT_TYPES, SR_EVENT_EMITTER_TYPES } from '../constants'
+import { AVG_COMPRESSION, CHECKOUT_MS, QUERY_PARAM_PADDING, RRWEB_EVENT_TYPES } from '../constants'
 import { RecorderEvents } from './recorder-events'
 import { MODE } from '../../../common/session/constants'
 import { stylesheetEvaluator } from './stylesheet-evaluator'
@@ -14,6 +14,8 @@ import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { buildNRMetaNode, customMasker } from './utils'
 import { IDEAL_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
 import { AggregateBase } from '../../utils/aggregate-base'
+import { warn } from '../../../common/util/console'
+import { single } from '../../../common/util/invoke'
 
 export class Recorder {
   /** Each page mutation or event will be stored (raw) in this array. This array will be cleared on each harvest */
@@ -25,24 +27,25 @@ export class Recorder {
   /** flag that if true, blocks events from being "stored".  Only set to true when a full snapshot has incomplete nodes (only stylesheets ATM) */
   #fixing = false
 
+  #warnCSSOnce = single(() => warn(47)) // notifies user of potential replayer issue if fix_stylesheets is off
+
   constructor (parent) {
-    this.#events = new RecorderEvents()
-    this.#backloggedEvents = new RecorderEvents()
-    this.#preloaded = [new RecorderEvents()]
-    /** True when actively recording, false when paused or stopped */
-    this.recording = false
+    /** The parent class that instantiated the recorder */
+    this.parent = parent
+    /** A flag that can be set to false by failing conversions to stop the fetching process */
+    this.shouldFix = this.parent.agentRef.init.session_replay.fix_stylesheets
+    /** Event Buffers */
+    this.#events = new RecorderEvents(this.shouldFix)
+    this.#backloggedEvents = new RecorderEvents(this.shouldFix)
+    this.#preloaded = [new RecorderEvents(this.shouldFix)]
     /** The pointer to the current bucket holding rrweb events */
     this.currentBufferTarget = this.#events
     /** Only set to true once a snapshot node has been processed.  Used to block preload harvests from sending before we know we have a snapshot */
     this.hasSeenSnapshot = false
     /** Hold on to the last meta node, so that it can be re-inserted if the meta and snapshot nodes are broken up due to harvesting */
     this.lastMeta = false
-    /** The parent class that instantiated the recorder */
-    this.parent = parent
-    /** A flag that can be set to false by failing conversions to stop the fetching process */
-    this.shouldFix = this.parent.agentRef.init.session_replay.fix_stylesheets
     /** The method to stop recording. This defaults to a noop, but is overwritten once the recording library is imported and initialized */
-    this.stopRecording = () => { /* no-op until set by rrweb initializer */ }
+    this.stopRecording = () => { this.parent.agentRef.runtime.isRecording = false }
   }
 
   getEvents () {
@@ -70,38 +73,42 @@ export class Recorder {
   clearBuffer () {
     if (this.#preloaded[0]?.events.length) this.#preloaded.shift()
     else if (this.parent.mode === MODE.ERROR) this.#backloggedEvents = this.#events
-    else this.#backloggedEvents = new RecorderEvents()
-    this.#events = new RecorderEvents()
+    else this.#backloggedEvents = new RecorderEvents(this.shouldFix)
+    this.#events = new RecorderEvents(this.shouldFix)
   }
 
   /** Begin recording using configured recording lib */
   startRecording () {
-    this.recording = true
+    this.parent.agentRef.runtime.isRecording = true
     const { block_class, ignore_class, mask_text_class, block_selector, mask_input_options, mask_text_selector, mask_all_inputs, inline_images, collect_fonts } = this.parent.agentRef.init.session_replay
 
     // set up rrweb configurations for maximum privacy --
     // https://newrelic.atlassian.net/wiki/spaces/O11Y/pages/2792293280/2023+02+28+Browser+-+Session+Replay#Configuration-options
-    const stop = recorder({
-      emit: this.audit.bind(this),
-      blockClass: block_class,
-      ignoreClass: ignore_class,
-      maskTextClass: mask_text_class,
-      blockSelector: block_selector,
-      maskInputOptions: mask_input_options,
-      maskTextSelector: mask_text_selector,
-      maskTextFn: customMasker,
-      maskAllInputs: mask_all_inputs,
-      maskInputFn: customMasker,
-      inlineStylesheet: true,
-      inlineImages: inline_images,
-      collectFonts: collect_fonts,
-      checkoutEveryNms: CHECKOUT_MS[this.parent.mode],
-      recordAfter: 'DOMContentLoaded'
-    })
+    let stop
+    try {
+      stop = recorder({
+        emit: this.audit.bind(this),
+        blockClass: block_class,
+        ignoreClass: ignore_class,
+        maskTextClass: mask_text_class,
+        blockSelector: block_selector,
+        maskInputOptions: mask_input_options,
+        maskTextSelector: mask_text_selector,
+        maskTextFn: customMasker,
+        maskAllInputs: mask_all_inputs,
+        maskInputFn: customMasker,
+        inlineStylesheet: true,
+        inlineImages: inline_images,
+        collectFonts: collect_fonts,
+        checkoutEveryNms: CHECKOUT_MS[this.parent.mode],
+        recordAfter: 'DOMContentLoaded'
+      })
+    } catch (err) {
+      this.parent.ee.emit('internal-error', [err])
+    }
 
     this.stopRecording = () => {
-      this.recording = false
-      this.parent.ee.emit(SR_EVENT_EMITTER_TYPES.REPLAY_RUNNING, [false, this.parent.mode])
+      this.parent.agentRef.runtime.isRecording = false
       stop?.()
     }
   }
@@ -114,12 +121,13 @@ export class Recorder {
    */
   audit (event, isCheckout) {
     /** An count of stylesheet objects that were blocked from accessing contents via JS */
-    const incompletes = stylesheetEvaluator.evaluate()
+    const incompletes = this.parent.agentRef.init.session_replay.fix_stylesheets ? stylesheetEvaluator.evaluate() : 0
     const missingInlineSMTag = 'SessionReplay/Payload/Missing-Inline-Css/'
     /** only run the full fixing behavior (more costly) if fix_stylesheets is configured as on (default behavior) */
     if (!this.shouldFix) {
       if (incompletes > 0) {
         this.currentBufferTarget.inlinedAllStylesheets = false
+        this.#warnCSSOnce()
         handle(SUPPORTABILITY_METRIC_CHANNEL, [missingInlineSMTag + 'Skipped', incompletes], undefined, FEATURE_NAMES.metrics, this.parent.ee)
       }
       return this.store(event, isCheckout)
@@ -147,16 +155,15 @@ export class Recorder {
   /** Store a payload in the buffer (this.#events).  This should be the callback to the recording lib noticing a mutation */
   store (event, isCheckout) {
     if (!event) return
+    if (this.parent.agentRef.runtime.session?.isAfterSessionExpiry(event.timestamp)) {
+      handle(SUPPORTABILITY_METRIC_CHANNEL, ['Session/Expired/SessionReplay/Seen'], undefined, FEATURE_NAMES.metrics, this.ee)
+      return
+    }
 
     if (!(this.parent instanceof AggregateBase) && this.#preloaded.length) this.currentBufferTarget = this.#preloaded[this.#preloaded.length - 1]
     else this.currentBufferTarget = this.#events
 
     if (this.parent.blocked) return
-
-    if (!this.notified) {
-      this.parent.ee.emit(SR_EVENT_EMITTER_TYPES.REPLAY_RUNNING, [true, this.parent.mode])
-      this.notified = true
-    }
 
     if (this.parent.timeKeeper?.ready && !event.__newrelic) {
       event.__newrelic = buildNRMetaNode(event.timestamp, this.parent.timeKeeper)
@@ -194,7 +201,7 @@ export class Recorder {
         this.parent.agentRef.runtime.harvester.triggerHarvestFor(this.parent)
       } else {
         // we are still in "preload" and it triggered a "stop point".  Make a new set, which will get pointed at on next cycle
-        this.#preloaded.push(new RecorderEvents())
+        this.#preloaded.push(new RecorderEvents(this.shouldFix))
       }
     }
   }
@@ -202,7 +209,7 @@ export class Recorder {
   /** force the recording lib to take a full DOM snapshot.  This needs to occur in certain cases, like visibility changes */
   takeFullSnapshot () {
     try {
-      if (!this.recording) return
+      if (!this.parent.agentRef.runtime.isRecording) return
       recorder.takeFullSnapshot()
     } catch (err) {
       // in the off chance we think we are recording, but rrweb does not, rrweb's lib will throw an error.  This catch is just a precaution

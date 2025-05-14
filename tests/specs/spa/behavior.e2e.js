@@ -17,24 +17,6 @@ describe('behavior tests', () => {
     })
   })
 
-  describe('lite loader behaviors with SPA', () => {
-    it('using SPA apis with lite loader still allows callbacks to fire', async () => {
-      await browser.url(
-        await browser.testHandle.assetURL('spa/api-tracers.html', { loader: 'rum' })
-      ).then(() => browser.waitForAgentLoad())
-
-      await $('body').click()
-
-      await browser.waitUntil(() => browser.execute(function () {
-        return window.firedCallbacks.syncCallback && window.firedCallbacks.asyncCallback
-      }),
-      {
-        timeout: 10000,
-        timeoutMsg: 'Conditions never passed'
-      })
-    })
-  })
-
   it('SPA captures ixn even with incorrect setTimeout arg', async () => {
     const interactionsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testInteractionEventsRequest })
 

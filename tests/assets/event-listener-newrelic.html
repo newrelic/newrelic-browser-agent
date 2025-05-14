@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html lang="en">
+  <head>
+    <title>RUM Unit Test</title>
+    {init}
+    {config}
+    {loader}
+    <script>
+      addEventListener("newrelic", (evt) => {
+        window.newrelicEventTime = Date.now()
+        if (evt.detail.loaded) {
+          // ensure API works as expected when listening to `newrelic` event
+          newrelic.setPageViewName('some-page');
+          newrelic.setApplicationVersion('1.0.0');
+          newrelic.setCustomAttribute('foo', 'bar');
+          newrelic.setErrorHandler((error) => {
+              if (error.foobar) {
+                return true;
+              }
+
+              // To group errors: return { group: 'GroupName' };
+              return false;
+            }
+          );
+          newrelic.log('test message');
+
+          throw new Error('error 1')
+        }
+      })
+    </script>
+  </head>
+  <body>
+    <div id="initial">initial content</div>
+  </body>
+</html>

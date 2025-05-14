@@ -407,7 +407,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### @babel/eslint-parser
 
-This product includes source derived from [@babel/eslint-parser](https://github.com/babel/babel) ([v7.25.9](https://github.com/babel/babel/tree/v7.25.9)), distributed under the [MIT License](https://github.com/babel/babel/blob/v7.25.9/LICENSE):
+This product includes source derived from [@babel/eslint-parser](https://github.com/babel/babel) ([v7.26.5](https://github.com/babel/babel/tree/v7.26.5)), distributed under the [MIT License](https://github.com/babel/babel/blob/v7.26.5/LICENSE):
 
 ```
 MIT License
@@ -467,7 +467,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### @babel/plugin-transform-template-literals
 
-This product includes source derived from [@babel/plugin-transform-template-literals](https://github.com/babel/babel) ([v7.24.7](https://github.com/babel/babel/tree/v7.24.7)), distributed under the [MIT License](https://github.com/babel/babel/blob/v7.24.7/LICENSE):
+This product includes source derived from [@babel/plugin-transform-template-literals](https://github.com/babel/babel) ([v7.25.9](https://github.com/babel/babel/tree/v7.25.9)), distributed under the [MIT License](https://github.com/babel/babel/blob/v7.25.9/LICENSE):
 
 ```
 MIT License
@@ -497,7 +497,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### @babel/preset-env
 
-This product includes source derived from [@babel/preset-env](https://github.com/babel/babel) ([v7.25.4](https://github.com/babel/babel/tree/v7.25.4)), distributed under the [MIT License](https://github.com/babel/babel/blob/v7.25.4/LICENSE):
+This product includes source derived from [@babel/preset-env](https://github.com/babel/babel) ([v7.26.7](https://github.com/babel/babel/tree/v7.26.7)), distributed under the [MIT License](https://github.com/babel/babel/blob/v7.26.7/LICENSE):
 
 ```
 MIT License
@@ -684,7 +684,7 @@ SOFTWARE.
 
 ### @fastify/multipart
 
-This product includes source derived from [@fastify/multipart](https://github.com/fastify/fastify-multipart) ([v8.3.0](https://github.com/fastify/fastify-multipart/tree/v8.3.0)), distributed under the [MIT License](https://github.com/fastify/fastify-multipart/blob/v8.3.0/LICENSE):
+This product includes source derived from [@fastify/multipart](https://github.com/fastify/fastify-multipart) ([v8.3.1](https://github.com/fastify/fastify-multipart/tree/v8.3.1)), distributed under the [MIT License](https://github.com/fastify/fastify-multipart/blob/v8.3.1/LICENSE):
 
 ```
 MIT License
@@ -1188,7 +1188,7 @@ This product includes source derived from [@newrelic/nr-querypack](https://githu
 
 ### @wdio/cli
 
-This product includes source derived from [@wdio/cli](https://github.com/webdriverio/webdriverio) ([v8.40.5](https://github.com/webdriverio/webdriverio/tree/v8.40.5)), distributed under the [MIT License](https://github.com/webdriverio/webdriverio/blob/v8.40.5/LICENSE-MIT):
+This product includes source derived from [@wdio/cli](https://github.com/webdriverio/webdriverio) ([v8.44.1](https://github.com/webdriverio/webdriverio/tree/v8.44.1)), distributed under the [MIT License](https://github.com/webdriverio/webdriverio/blob/v8.44.1/LICENSE-MIT):
 
 ```
 Copyright (c) OpenJS Foundation and other contributors
@@ -1216,7 +1216,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### @wdio/local-runner
 
-This product includes source derived from [@wdio/local-runner](https://github.com/webdriverio/webdriverio) ([v8.40.5](https://github.com/webdriverio/webdriverio/tree/v8.40.5)), distributed under the [MIT License](https://github.com/webdriverio/webdriverio/blob/v8.40.5/LICENSE-MIT):
+This product includes source derived from [@wdio/local-runner](https://github.com/webdriverio/webdriverio) ([v8.44.1](https://github.com/webdriverio/webdriverio/tree/v8.44.1)), distributed under the [MIT License](https://github.com/webdriverio/webdriverio/blob/v8.44.1/LICENSE-MIT):
 
 ```
 Copyright (c) OpenJS Foundation and other contributors
@@ -1272,7 +1272,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### @wdio/mocha-framework
 
-This product includes source derived from [@wdio/mocha-framework](https://github.com/webdriverio/webdriverio) ([v8.40.3](https://github.com/webdriverio/webdriverio/tree/v8.40.3)), distributed under the [MIT License](https://github.com/webdriverio/webdriverio/blob/v8.40.3/LICENSE-MIT):
+This product includes source derived from [@wdio/mocha-framework](https://github.com/webdriverio/webdriverio) ([v8.41.0](https://github.com/webdriverio/webdriverio/tree/v8.41.0)), distributed under the [MIT License](https://github.com/webdriverio/webdriverio/blob/v8.41.0/LICENSE-MIT):
 
 ```
 Copyright (c) OpenJS Foundation and other contributors
@@ -1357,7 +1357,7 @@ SOFTWARE.
 
 ### babel-loader
 
-This product includes source derived from [babel-loader](https://github.com/babel/babel-loader) ([v9.1.3](https://github.com/babel/babel-loader/tree/v9.1.3)), distributed under the [MIT License](https://github.com/babel/babel-loader/blob/v9.1.3/LICENSE):
+This product includes source derived from [babel-loader](https://github.com/babel/babel-loader) ([v9.2.1](https://github.com/babel/babel-loader/tree/v9.2.1)), distributed under the [MIT License](https://github.com/babel/babel-loader/blob/v9.2.1/LICENSE):
 
 ```
 Copyright (c) 2014-2019 Luís Couto <hello@luiscouto.pt>
@@ -1780,7 +1780,7 @@ Library.
 
 ### eslint
 
-This product includes source derived from [eslint](https://github.com/eslint/eslint) ([v8.57.0](https://github.com/eslint/eslint/tree/v8.57.0)), distributed under the [MIT License](https://github.com/eslint/eslint/blob/v8.57.0/LICENSE):
+This product includes source derived from [eslint](https://github.com/eslint/eslint) ([v8.57.1](https://github.com/eslint/eslint/tree/v8.57.1)), distributed under the [MIT License](https://github.com/eslint/eslint/blob/v8.57.1/LICENSE):
 
 ```
 Copyright OpenJS Foundation and other contributors, <www.openjsf.org>
@@ -1836,7 +1836,7 @@ SOFTWARE.
 
 ### fastify
 
-This product includes source derived from [fastify](https://github.com/fastify/fastify) ([v4.28.1](https://github.com/fastify/fastify/tree/v4.28.1)), distributed under the [MIT License](https://github.com/fastify/fastify/blob/v4.28.1/LICENSE):
+This product includes source derived from [fastify](https://github.com/fastify/fastify) ([v4.29.0](https://github.com/fastify/fastify/tree/v4.29.0)), distributed under the [MIT License](https://github.com/fastify/fastify/blob/v4.29.0/LICENSE):
 
 ```
 MIT License
@@ -1868,7 +1868,7 @@ SOFTWARE.
 
 ### form-data
 
-This product includes source derived from [form-data](https://github.com/form-data/form-data) ([v4.0.0](https://github.com/form-data/form-data/tree/v4.0.0)), distributed under the [MIT License](https://github.com/form-data/form-data/blob/v4.0.0/License):
+This product includes source derived from [form-data](https://github.com/form-data/form-data) ([v4.0.1](https://github.com/form-data/form-data/tree/v4.0.1)), distributed under the [MIT License](https://github.com/form-data/form-data/blob/v4.0.1/License):
 
 ```
 Copyright (c) 2012 Felix Geisendörfer (felix@debuggable.com) and contributors
@@ -1895,12 +1895,12 @@ Copyright (c) 2012 Felix Geisendörfer (felix@debuggable.com) and contributors
 
 ### fs-extra
 
-This product includes source derived from [fs-extra](https://github.com/jprichardson/node-fs-extra) ([v11.2.0](https://github.com/jprichardson/node-fs-extra/tree/v11.2.0)), distributed under the [MIT License](https://github.com/jprichardson/node-fs-extra/blob/v11.2.0/LICENSE):
+This product includes source derived from [fs-extra](https://github.com/jprichardson/node-fs-extra) ([v11.3.0](https://github.com/jprichardson/node-fs-extra/tree/v11.3.0)), distributed under the [MIT License](https://github.com/jprichardson/node-fs-extra/blob/v11.3.0/LICENSE):
 
 ```
 (The MIT License)
 
-Copyright (c) 2011-2017 JP Richardson
+Copyright (c) 2011-2024 JP Richardson
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
 (the 'Software'), to deal in the Software without restriction, including without limitation the rights to use, copy, modify,
@@ -1918,7 +1918,7 @@ OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHE
 
 ### glob
 
-This product includes source derived from [glob](https://github.com/isaacs/node-glob) ([v11.0.0](https://github.com/isaacs/node-glob/tree/v11.0.0)), distributed under the [ISC License](https://github.com/isaacs/node-glob/blob/v11.0.0/LICENSE):
+This product includes source derived from [glob](https://github.com/isaacs/node-glob) ([v11.0.1](https://github.com/isaacs/node-glob/tree/v11.0.1)), distributed under the [ISC License](https://github.com/isaacs/node-glob/blob/v11.0.1/LICENSE):
 
 ```
 The ISC License
@@ -1941,7 +1941,7 @@ IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 ### html-webpack-plugin
 
-This product includes source derived from [html-webpack-plugin](https://github.com/jantimon/html-webpack-plugin) ([v5.6.0](https://github.com/jantimon/html-webpack-plugin/tree/v5.6.0)), distributed under the [MIT License](https://github.com/jantimon/html-webpack-plugin/blob/v5.6.0/LICENSE):
+This product includes source derived from [html-webpack-plugin](https://github.com/jantimon/html-webpack-plugin) ([v5.6.3](https://github.com/jantimon/html-webpack-plugin/tree/v5.6.3)), distributed under the [MIT License](https://github.com/jantimon/html-webpack-plugin/blob/v5.6.3/LICENSE):
 
 ```
 Copyright JS Foundation and other contributors
@@ -2213,7 +2213,7 @@ SOFTWARE.
 
 ### jsonpath-plus
 
-This product includes source derived from [jsonpath-plus](https://github.com/s3u/JSONPath) ([v10.2.0](https://github.com/s3u/JSONPath/tree/v10.2.0)), distributed under the [MIT License](https://github.com/s3u/JSONPath/blob/v10.2.0/LICENSE):
+This product includes source derived from [jsonpath-plus](https://github.com/s3u/JSONPath) ([v10.3.0](https://github.com/s3u/JSONPath/tree/v10.3.0)), distributed under the [MIT License](https://github.com/s3u/JSONPath/blob/v10.3.0/LICENSE):
 
 ```
 MIT License
@@ -2348,7 +2348,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ### terser-webpack-plugin
 
-This product includes source derived from [terser-webpack-plugin](https://github.com/webpack-contrib/terser-webpack-plugin) ([v5.3.10](https://github.com/webpack-contrib/terser-webpack-plugin/tree/v5.3.10)), distributed under the [MIT License](https://github.com/webpack-contrib/terser-webpack-plugin/blob/v5.3.10/LICENSE):
+This product includes source derived from [terser-webpack-plugin](https://github.com/webpack-contrib/terser-webpack-plugin) ([v5.3.11](https://github.com/webpack-contrib/terser-webpack-plugin/tree/v5.3.11)), distributed under the [MIT License](https://github.com/webpack-contrib/terser-webpack-plugin/blob/v5.3.11/LICENSE):
 
 ```
 Copyright JS Foundation and other contributors
@@ -2456,7 +2456,7 @@ END OF TERMS AND CONDITIONS
 
 ### uuid
 
-This product includes source derived from [uuid](https://github.com/uuidjs/uuid) ([v11.0.3](https://github.com/uuidjs/uuid/tree/v11.0.3)), distributed under the [MIT License](https://github.com/uuidjs/uuid/blob/v11.0.3/LICENSE.md):
+This product includes source derived from [uuid](https://github.com/uuidjs/uuid) ([v11.0.5](https://github.com/uuidjs/uuid/tree/v11.0.5)), distributed under the [MIT License](https://github.com/uuidjs/uuid/blob/v11.0.5/LICENSE.md):
 
 ```
 The MIT License (MIT)

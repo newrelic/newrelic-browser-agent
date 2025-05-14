@@ -5,6 +5,7 @@ import NRBARemoveNonAsciiPlugin from '../plugins/remove-non-ascii.mjs'
 import NRBASubresourceIntegrityPlugin from '../plugins/sri-plugin.mjs'
 import NRBALoaderApmCheckPlugin from '../plugins/loader-apm-check.mjs'
 import NRBAFuzzyLoadersPlugin from '../plugins/fuzzy-loaders.mjs'
+import { webpackCacheGroup } from '../../bundler-tools/bundler-tools.mjs'
 
 /**
  * @typedef {import('../index.mjs').WebpackBuildOptions} WebpackBuildOptions
@@ -41,21 +42,9 @@ export default (env, asyncChunkName) => {
         cacheGroups: {
           defaultVendors: false,
           default: false,
-          'agent-chunk': {
-            name: asyncChunkName,
-            enforce: true,
-            test: (module, { chunkGraph }) => chunkGraph.getModuleChunks(module).filter(chunk => !['recorder', 'compressor'].includes(chunk.name)).length > 0
-          },
-          recorder: {
-            name: `${asyncChunkName}-recorder`,
-            enforce: true,
-            test: (module, { chunkGraph }) => chunkGraph.getModuleChunks(module).filter(chunk => !['recorder'].includes(chunk.name)).length === 0
-          },
-          compressor: {
-            name: `${asyncChunkName}-compressor`,
-            enforce: true,
-            test: (module, { chunkGraph }) => chunkGraph.getModuleChunks(module).filter(chunk => !['compressor'].includes(chunk.name)).length === 0
-          }
+          ...webpackCacheGroup(asyncChunkName, (module, { chunkGraph }) => chunkGraph.getModuleChunks(module).filter(chunk => !['recorder', 'compressor'].includes(chunk.name)).length > 0),
+          ...webpackCacheGroup(asyncChunkName + '-recorder', (module, { chunkGraph }) => chunkGraph.getModuleChunks(module).filter(chunk => !['recorder'].includes(chunk.name)).length === 0),
+          ...webpackCacheGroup(asyncChunkName + '-compressor', (module, { chunkGraph }) => chunkGraph.getModuleChunks(module).filter(chunk => !['compressor'].includes(chunk.name)).length === 0)
         }
       }
     },

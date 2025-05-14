@@ -1,8 +1,5 @@
 import { Instrument as GenericEvents } from '../../../../src/features/generic_events/instrument'
-import { getInfo } from '../../../../src/common/config/info'
 import { resetAgent, setupAgent } from '../../setup-agent'
-import { getConfiguration } from '../../../../src/common/config/init'
-import { getRuntime } from '../../../../src/common/config/runtime'
 
 const referrerUrl = 'https://test.com'
 Object.defineProperty(global.document, 'referrer', { value: referrerUrl, configurable: true })
@@ -15,11 +12,12 @@ beforeAll(() => {
 
 beforeEach(async () => {
   const genericEventsInstrument = new GenericEvents(mainAgent)
-  await new Promise(process.nextTick)
+  await genericEventsInstrument.onAggregateImported
   genericEventsAggregate = genericEventsInstrument.featAggregate
 })
 
 afterEach(() => {
+  jest.clearAllMocks()
   resetAgent(mainAgent.agentIdentifier)
 })
 
@@ -59,16 +57,17 @@ test('should warn if invalid event is provide', async () => {
 })
 
 test('should harvest early if will exceed 1mb', async () => {
-  genericEventsAggregate.ee.emit('rumresp', [{ ins: 1 }])
-
-  await new Promise(process.nextTick)
-
   mainAgent.runtime.harvester.triggerHarvestFor = jest.fn()
+  expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledTimes(0)
+  genericEventsAggregate.ee.emit('rumresp', [{ ins: 1 }])
+  await new Promise(process.nextTick)
+  expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledTimes(1)
+
   genericEventsAggregate.addEvent({ name: 'test', eventType: 'x'.repeat(900000) })
 
-  expect(mainAgent.runtime.harvester.triggerHarvestFor).not.toHaveBeenCalled()
+  expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledTimes(1)
   genericEventsAggregate.addEvent({ name: 1000, eventType: 'x'.repeat(100000) })
-  expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalled()
+  expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledTimes(2)
 
   mainAgent.runtime.harvester.triggerHarvestFor.mockRestore()
 })
@@ -96,8 +95,8 @@ describe('sub-features', () => {
     const relativeTimestamp = Math.random() * 1000
     const name = 'name'
 
-    const timeKeeper = getRuntime(mainAgent.agentIdentifier).timeKeeper
-    getInfo(mainAgent.agentIdentifier).jsAttributes = { globalFoo: 'globalBar' }
+    const timeKeeper = mainAgent.runtime.timeKeeper
+    mainAgent.info.jsAttributes = { globalFoo: 'globalBar' }
 
     genericEventsAggregate.ee.emit('api-addPageAction', [relativeTimestamp, name, { foo: 'bar' }])
 
@@ -135,7 +134,7 @@ describe('sub-features', () => {
     const relativeTimestamp = Math.random() * 1000
     const name = 'name'
 
-    getInfo(mainAgent.agentIdentifier).jsAttributes = { eventType: 'BetterPageAction', timestamp: 'BetterTimestamp' }
+    mainAgent.info.jsAttributes = { eventType: 'BetterPageAction', timestamp: 'BetterTimestamp' }
 
     genericEventsAggregate.ee.emit('api-addPageAction', [relativeTimestamp, name, {}])
 
@@ -149,12 +148,12 @@ describe('sub-features', () => {
     const relativeTimestamp = Math.random() * 1000
     const name = 'name'
 
-    getConfiguration(mainAgent.agentIdentifier).page_action = { enabled: false }
+    mainAgent.init.page_action = { enabled: false }
 
     const { Aggregate } = await import('../../../../src/features/generic_events/aggregate')
     genericEventsAggregate = new Aggregate(mainAgent)
     genericEventsAggregate.ee.emit('api-addPageAction', [relativeTimestamp, name, {}])
-    expect(genericEventsAggregate.events[0]).toBeUndefined()
+    expect(genericEventsAggregate.events?.[0]).toBeUndefined()
   })
 
   test('should record user actions when enabled', () => {
@@ -165,8 +164,8 @@ describe('sub-features', () => {
     // blur event to trigger aggregation to stop and add to harvest buffer
     genericEventsAggregate.ee.emit('ua', [{ timeStamp: 234567, type: 'blur', target: window }])
 
-    const harvest = genericEventsAggregate.makeHarvestPayload() // force it to put the aggregation into the event buffer
-    expect(harvest[0].payload.body.ins[0]).toMatchObject({
+    const [{ payload: harvest }] = genericEventsAggregate.makeHarvestPayload() // force it to put the aggregation into the event buffer
+    expect(harvest.body.ins[0]).toMatchObject({
       eventType: 'UserAction',
       timestamp: expect.any(Number),
       action: 'click',
@@ -180,7 +179,7 @@ describe('sub-features', () => {
   })
 
   test('should aggregate user actions when matching target', () => {
-    getInfo(mainAgent.agentIdentifier).jsAttributes = { globalFoo: 'globalBar' }
+    mainAgent.info.jsAttributes = { globalFoo: 'globalBar' }
     const target = document.createElement('button')
     target.id = 'myBtn'
     genericEventsAggregate.ee.emit('ua', [{ timeStamp: 100, type: 'click', target }])
@@ -192,8 +191,8 @@ describe('sub-features', () => {
     // blur event to trigger aggregation to stop and add to harvest buffer
     genericEventsAggregate.ee.emit('ua', [{ timeStamp: 234567, type: 'blur', target: window }])
 
-    const harvest = genericEventsAggregate.makeHarvestPayload() // force it to put the aggregation into the event buffer
-    expect(harvest[0].payload.body.ins[0]).toMatchObject({
+    const [{ payload: harvest }] = genericEventsAggregate.makeHarvestPayload() // force it to put the aggregation into the event buffer
+    expect(harvest.body.ins[0]).toMatchObject({
       eventType: 'UserAction',
       timestamp: expect.any(Number),
       action: 'click',
@@ -206,7 +205,7 @@ describe('sub-features', () => {
     })
   })
   test('should NOT aggregate user actions when targets are not identical', () => {
-    getInfo(mainAgent.agentIdentifier).jsAttributes = { globalFoo: 'globalBar' }
+    mainAgent.info.jsAttributes = { globalFoo: 'globalBar' }
     const target = document.createElement('button')
     target.id = 'myBtn'
     document.body.appendChild(target)
@@ -219,25 +218,14 @@ describe('sub-features', () => {
     // blur event to trigger aggregation to stop and add to harvest buffer
     genericEventsAggregate.ee.emit('ua', [{ timeStamp: 234567, type: 'blur', target: window }])
 
-    const harvest = genericEventsAggregate.makeHarvestPayload() // force it to put the aggregation into the event buffer
-    expect(harvest[0].payload.body.ins[0]).toMatchObject({
+    const [{ payload: harvest }] = genericEventsAggregate.makeHarvestPayload() // force it to put the aggregation into the event buffer
+    expect(harvest.body.ins[0]).toMatchObject({
       eventType: 'UserAction',
       timestamp: expect.any(Number),
       action: 'click',
       actionCount: 1,
       actionDuration: 0,
       target: 'html>body>button#myBtn:nth-of-type(1)',
-      targetId: 'myBtn',
-      targetTag: 'BUTTON',
-      globalFoo: 'globalBar'
-    })
-    expect(harvest[0].payload.body.ins[1]).toMatchObject({
-      eventType: 'UserAction',
-      timestamp: expect.any(Number),
-      action: 'click',
-      actionCount: 1,
-      actionDuration: 0,
-      target: 'html>body>button#myBtn:nth-of-type(2)',
       targetId: 'myBtn',
       targetTag: 'BUTTON',
       globalFoo: 'globalBar'
@@ -251,7 +239,7 @@ describe('sub-features', () => {
       observe: () => {
         const callCb = () => {
           // eslint-disable-next-line
-          cb({getEntries: () => [{ 
+          cb({getEntries: () => [{
             name: 'test',
             duration: 0,
             detail: JSON.stringify({ foo: 'bar' }),
@@ -269,7 +257,7 @@ describe('sub-features', () => {
 
     const { Aggregate } = await import('../../../../src/features/generic_events/aggregate')
     genericEventsAggregate = new Aggregate(mainAgent)
-    expect(genericEventsAggregate.events[0]).toBeUndefined()
+    expect(genericEventsAggregate.events?.[0]).toBeUndefined()
 
     genericEventsAggregate.ee.emit('rumresp', [{ ins: 1 }])
     await new Promise(process.nextTick)
@@ -286,7 +274,7 @@ describe('sub-features', () => {
 
   test('should record measures when enabled', async () => {
     mainAgent.init.performance = { capture_measures: true, capture_detail: true, resources: { enabled: false, asset_types: [], first_party_domains: [], ignore_newrelic: true } }
-    getInfo(mainAgent.agentIdentifier).jsAttributes = { globalFoo: 'globalBar' }
+    mainAgent.info.jsAttributes = { globalFoo: 'globalBar' }
     const mockPerformanceObserver = jest.fn(cb => ({
       observe: () => {
         const callCb = () => {
@@ -309,7 +297,7 @@ describe('sub-features', () => {
 
     const { Aggregate } = await import('../../../../src/features/generic_events/aggregate')
     genericEventsAggregate = new Aggregate(mainAgent)
-    expect(genericEventsAggregate.events[0]).toBeUndefined()
+    expect(genericEventsAggregate.events?.[0]).toBeUndefined()
 
     genericEventsAggregate.ee.emit('rumresp', [{ ins: 1 }])
     await new Promise(process.nextTick)

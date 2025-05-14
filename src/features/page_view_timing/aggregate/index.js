@@ -135,7 +135,7 @@ export class Aggregate extends AggregateBase {
 
   // serialize array of timing data
   serializer (eventBuffer) {
-    var addString = getAddStringContext(this.agentIdentifier)
+    var addString = getAddStringContext(this.agentRef.runtime.obfuscator)
 
     var payload = 'bel.6;'
 

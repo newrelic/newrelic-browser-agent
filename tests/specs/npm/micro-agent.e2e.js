@@ -91,4 +91,21 @@ describe('micro-agent', () => {
       return true
     }
   })
+
+  it('returns null on top-level spa api interaction call', async () => {
+    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/micro-agent.html'))
+
+    const ixn = await browser.execute(function () {
+      var opts = {
+        info: NREUM.info,
+        init: NREUM.init
+      }
+      window.agent1 = new MicroAgent({ ...opts, info: { ...opts.info, applicationID: 1 } })
+
+      // top-level interaction call should return null since there is no non-micro agent to respond to the api call
+      return window.newrelic.interaction()
+    })
+
+    expect(ixn).toBeNull()
+  })
 })

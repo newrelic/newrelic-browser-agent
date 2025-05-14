@@ -5,7 +5,6 @@ import * as handleModule from '../../../src/common/event-emitter/handle'
 import { Instrument as Ajax } from '../../../src/features/ajax/instrument'
 import { resetAgent, setupAgent } from '../setup-agent'
 import { EventContext } from '../../../src/common/event-emitter/event-context'
-import { getInfo } from '../../../src/common/config/info'
 
 const ajaxArguments = [
   { // params
@@ -25,10 +24,10 @@ const ajaxArguments = [
   'XMLHttpRequest' // type
 ]
 
-let agentSetup
+let fakeAgent
 
 beforeAll(() => {
-  agentSetup = setupAgent()
+  fakeAgent = setupAgent()
 })
 
 let ajaxAggregate, context
@@ -36,20 +35,21 @@ let ajaxAggregate, context
 beforeEach(async () => {
   jest.spyOn(handleModule, 'handle')
 
-  const ajaxInstrument = new Ajax(agentSetup)
+  const ajaxInstrument = new Ajax(fakeAgent)
   await new Promise(process.nextTick)
   ajaxAggregate = ajaxInstrument.featAggregate
+  ajaxAggregate.ee.emit('rumresp', [])
   ajaxAggregate.drain()
 
   context = new EventContext()
 
-  getNREUMInitializedAgent(agentSetup.agentIdentifier).features = {
+  getNREUMInitializedAgent(fakeAgent.agentIdentifier).features = {
     [FEATURE_NAMES.softNav]: false
   }
 })
 
 afterEach(() => {
-  resetAgent(agentSetup.agentIdentifier)
+  resetAgent(fakeAgent.agentIdentifier)
   jest.clearAllMocks()
 })
 
@@ -65,7 +65,7 @@ test('on interactionDiscarded, saved (old) SPA events are put back in ajaxEvents
 })
 
 test('on returnAjax from soft nav, event is re-routed back into ajaxEvents', () => {
-  getNREUMInitializedAgent(agentSetup.agentIdentifier).features = {
+  getNREUMInitializedAgent(fakeAgent.agentIdentifier).features = {
     [FEATURE_NAMES.softNav]: true
   }
 
@@ -103,7 +103,7 @@ describe('storeXhr', () => {
   })
 
   test('for ajax under soft nav does not buffer and instead pipes it', () => {
-    getNREUMInitializedAgent(agentSetup.agentIdentifier).features = {
+    getNREUMInitializedAgent(fakeAgent.agentIdentifier).features = {
       [FEATURE_NAMES.softNav]: true
     }
 
@@ -150,9 +150,9 @@ describe('prepareHarvest', () => {
       customBooleanAttribute: true,
       nullCustomAttribute: null
     }
-    getInfo(agentSetup.agentIdentifier).jsAttributes = expectedCustomAttributes
+    fakeAgent.info.jsAttributes = expectedCustomAttributes
 
-    const serializedPayload = ajaxAggregate.makeHarvestPayload(false)[0].payload
+    const [{ payload: serializedPayload }] = ajaxAggregate.makeHarvestPayload(false)
     // serializedPayload from ajax comes back as an array of bodies now, so we just need to decode each one and flatten
     // this decoding does not happen elsewhere in the app so this only needs to happen here in this specific test
     const decodedEvents = qp.decode(serializedPayload.body)
@@ -165,11 +165,13 @@ describe('prepareHarvest', () => {
     })
   })
 
-  test('correctly exits if maxPayload is too small', () => {
-    ajaxAggregate.events.appStorageMap.get(ajaxAggregate.events.mainApp).maxPayloadSize = 10 // this is too small for any AJAX payload to fit in
-    for (let callNo = 0; callNo < 10; callNo++) ajaxAggregate.ee.emit('xhr', ajaxArguments, context)
+  test('correctly exits if maxPayload is too small', async () => {
+    for (let callNo = 0; callNo < 10; callNo++) {
+      ajaxAggregate.ee.emit('xhr', [{ ...ajaxArguments[0], pathname: 'x'.repeat(1000000) }, ...ajaxArguments], context)
+    }
 
-    expect(ajaxAggregate.makeHarvestPayload(false)).toBeUndefined() // payload that are each too small for limit will be dropped
+    const serializedPayload = ajaxAggregate.makeHarvestPayload(false)
+    expect(serializedPayload).toBeUndefined() // payload that are each too small for limit will be dropped
   })
 })
 

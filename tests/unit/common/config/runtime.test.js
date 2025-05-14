@@ -1,50 +1,40 @@
-let getRuntime, setRuntime
+let mergeRuntime
 beforeEach(async () => {
   jest.resetModules()
-  ;({ getRuntime, setRuntime } = await import('../../../../src/common/config/runtime.js'))
+  ;({ mergeRuntime } = await import('../../../../src/common/config/runtime.js'))
 })
 
-test('set/getRuntime should throw on an invalid agent id', () => {
-  // currently only checks if it's a truthy value
-  expect(() => setRuntime(undefined, {})).toThrow('require an agent id')
-  expect(() => getRuntime(undefined)).toThrow('require an agent id')
-  expect(() => setRuntime('', {})).toThrow('require an agent id')
-  expect(() => getRuntime('')).toThrow('require an agent id')
-})
-
-test('set/getRuntime works correctly', () => {
-  expect(() => setRuntime(123, { session: 1 })).not.toThrow() // notice setRuntime accepts numbers
-  let cachedObj = getRuntime('123')
-  expect(Object.keys(cachedObj).length).toBeGreaterThan(1)
-  expect(cachedObj.session).toEqual(1)
-  expect(cachedObj.maxBytes).toEqual(30000) // this should mirror default in runtime.js
-})
-
-test('set/getRuntime should respect readonly properties', () => {
-  setRuntime('123', {
+test('mergeRuntime should respect readonly properties', () => {
+  const returnedRuntime = mergeRuntime({
     buildEnv: 'foo',
     distMethod: 'bar',
     version: 'biz',
     originTime: 'baz'
   })
-  let cachedObj = getRuntime('123')
-
-  expect(cachedObj.buildEnv).toEqual('NPM')
-  expect(cachedObj.distMethod).toEqual('NPM')
-  expect(cachedObj.version).toEqual(expect.any(String))
-  expect(cachedObj.version).not.toEqual('biz')
-  expect(cachedObj.originTime).toEqual(expect.any(Number))
-  expect(cachedObj.originTime).not.toEqual('baz')
+  expect(returnedRuntime.buildEnv).toEqual('NPM')
+  expect(returnedRuntime.distMethod).toEqual('NPM')
+  expect(returnedRuntime.version).toEqual(expect.any(String))
+  expect(returnedRuntime.version).not.toEqual('biz')
+  expect(returnedRuntime.originTime).toEqual(expect.any(Number))
+  expect(returnedRuntime.originTime).not.toEqual('baz')
 })
 
 test('accessing harvestCount should increment it', () => {
-  setRuntime('123', {
+  const returnedRuntime = mergeRuntime({
     buildEnv: 'foo',
     distMethod: 'bar',
     version: 'biz',
     originTime: 'baz'
   })
-  let cachedObj = getRuntime('123')
 
-  expect(cachedObj.harvestCount).not.toEqual(cachedObj.harvestCount)
+  expect(returnedRuntime.harvestCount).not.toEqual(returnedRuntime.harvestCount)
+})
+
+test('merging runtime with another runtime (like configure) should not throw getter errors from runtime harvestCount', () => {
+  const consoleSpy = jest.spyOn(global.console, 'debug')
+
+  const returnedRuntime = mergeRuntime({})
+  mergeRuntime({ ...returnedRuntime, harvestCount: 0 })
+
+  expect(consoleSpy).not.toHaveBeenCalled()
 })

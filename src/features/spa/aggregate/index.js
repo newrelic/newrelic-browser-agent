@@ -48,7 +48,7 @@ export class Aggregate extends AggregateBase {
       // The below feature flag is used to disable the SPA ajax fix for specific customers, see https://new-relic.atlassian.net/browse/NR-172169
       disableSpaFix: (agentRef.init.feature_flags || []).indexOf('disable-spa-fix') > -1
     }
-    this.spaSerializerClass = new Serializer(this)
+    this.spaSerializerClass = new Serializer(agentRef)
 
     const classThis = this
 
@@ -108,8 +108,9 @@ export class Aggregate extends AggregateBase {
 
     if (agentRef.init.spa.enabled !== true) return
 
-    state.initialPageLoad = new Interaction('initialPageLoad', 0, state.lastSeenUrl, state.lastSeenRouteName, onInteractionFinished, agentRef.agentIdentifier)
+    state.initialPageLoad = new Interaction('initialPageLoad', 0, state.lastSeenUrl, state.lastSeenRouteName, onInteractionFinished, agentRef)
     state.initialPageLoad.save = true
+    if (agentRef.runtime.session?.isNew) state.initialPageLoad.root.attrs.custom.isFirstOfSession = true // mark the hard page load as first of its session
     state.prevInteraction = state.initialPageLoad
     state.currentNode = state.initialPageLoad.root // hint
     // ensure that checkFinish calls are safe during initialPageLoad
@@ -199,7 +200,7 @@ export class Aggregate extends AggregateBase {
         // Otherwise, if no interaction is currently active, create a new node ID,
         // and let the aggregator know that we entered a new event handler callback
         // so that it has a chance to possibly start an interaction.
-        var ixn = new Interaction(evName, this[FN_START], state.lastSeenUrl, state.lastSeenRouteName, onInteractionFinished, agentRef.agentIdentifier)
+        var ixn = new Interaction(evName, this[FN_START], state.lastSeenUrl, state.lastSeenRouteName, onInteractionFinished, agentRef)
 
         // Store the interaction as prevInteraction in case it is prematurely discarded
         state.prevInteraction = ixn
@@ -535,7 +536,7 @@ export class Aggregate extends AggregateBase {
       var interaction
       if (state?.currentNode?.[INTERACTION]) interaction = this.ixn = state.currentNode[INTERACTION]
       else if (state?.prevNode?.end === null && state?.prevNode?.[INTERACTION]?.root?.[INTERACTION]?.eventName !== 'initialPageLoad') interaction = this.ixn = state.prevNode[INTERACTION]
-      else interaction = this.ixn = new Interaction('api', t, state.lastSeenUrl, state.lastSeenRouteName, onInteractionFinished, agentRef.agentIdentifier)
+      else interaction = this.ixn = new Interaction('api', t, state.lastSeenUrl, state.lastSeenRouteName, onInteractionFinished, agentRef)
       if (!state.currentNode) {
         interaction.checkFinish()
         if (state.depth) setCurrentNode(interaction.root)

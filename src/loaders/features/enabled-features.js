@@ -3,18 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { FEATURE_NAMES } from './features'
-import { getConfigurationValue } from '../../common/config/init'
 
 const featureNames = Object.values(FEATURE_NAMES)
 
-function isEnabled (name, agentIdentifier) {
-  return getConfigurationValue(agentIdentifier, `${name}.enabled`) === true
-}
-
-export function getEnabledFeatures (agentIdentifier) {
+export function getEnabledFeatures (agentInit) {
   const enabledFeatures = {}
   featureNames.forEach(featureName => {
-    enabledFeatures[featureName] = isEnabled(featureName, agentIdentifier)
+    enabledFeatures[featureName] = !!agentInit[featureName]?.enabled
   })
   return enabledFeatures
 }

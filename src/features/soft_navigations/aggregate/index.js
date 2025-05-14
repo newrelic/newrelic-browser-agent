@@ -21,10 +21,12 @@ export class Aggregate extends AggregateBase {
     this.interactionsToHarvest = this.events
     this.domObserver = domObserver
 
-    this.initialPageLoadInteraction = new InitialPageLoadInteraction(agentRef.agentIdentifier)
+    this.initialPageLoadInteraction = new InitialPageLoadInteraction(agentRef)
     this.initialPageLoadInteraction.onDone.push(() => { // this ensures the .end() method also works with iPL
+      if (agentRef.runtime.session?.isNew) this.initialPageLoadInteraction.customAttributes.isFirstOfSession = true // mark the hard page load as first of its session
       this.initialPageLoadInteraction.forceSave = true // unless forcibly ignored, iPL always finish by default
-      this.interactionsToHarvest.add(this.initialPageLoadInteraction)
+      const ixn = this.initialPageLoadInteraction
+      this.interactionsToHarvest.add(ixn)
       this.initialPageLoadInteraction = null
     })
     timeToFirstByte.subscribe(({ attrs }) => {
@@ -84,7 +86,7 @@ export class Aggregate extends AggregateBase {
     if (this.interactionInProgress?.done() === false) return // current in-progress is blocked from closing, e.g. by 'waitForEnd' api option
 
     const oldURL = eventName === INTERACTION_TRIGGERS[3] ? this.latestHistoryUrl : undefined // see related comment in 'newURL' handler above, 'popstate'
-    this.interactionInProgress = new Interaction(this.agentIdentifier, eventName, startedAt, this.latestRouteSetByApi, oldURL)
+    this.interactionInProgress = new Interaction(this.agentRef, eventName, startedAt, this.latestRouteSetByApi, oldURL)
 
     if (eventName === INTERACTION_TRIGGERS[0]) { // 'click'
       const sourceElemText = getActionText(sourceElem)
@@ -131,7 +133,7 @@ export class Aggregate extends AggregateBase {
     */
     if (this.interactionInProgress?.isActiveDuring(timestamp)) return this.interactionInProgress
     let saveIxn
-    const interactionsBuffer = this.interactionsToHarvest.get(this.agentRef.mainAppKey)[0].data
+    const [{ data: interactionsBuffer }] = this.interactionsToHarvest.get()
     for (let idx = interactionsBuffer.length - 1; idx >= 0; idx--) { // reverse search for the latest completed interaction for efficiency
       const finishedInteraction = interactionsBuffer[idx]
       if (finishedInteraction.isActiveDuring(timestamp)) {
@@ -154,15 +156,15 @@ export class Aggregate extends AggregateBase {
     if (!associatedInteraction) { // no interaction was happening when this ajax started, so give it back to Ajax feature for processing
       handle('returnAjax', [event], undefined, FEATURE_NAMES.ajax, this.ee)
     } else {
-      if (associatedInteraction.status === INTERACTION_STATUS.FIN) processAjax(this.agentIdentifier, event, associatedInteraction) // tack ajax onto the ixn object awaiting harvest
+      if (associatedInteraction.status === INTERACTION_STATUS.FIN) processAjax(this.agentRef, event, associatedInteraction) // tack ajax onto the ixn object awaiting harvest
       else { // same thing as above, just at a later time -- if the interaction in progress is cancelled, just send the event back to ajax feat unmodified
-        associatedInteraction.on('finished', () => processAjax(this.agentIdentifier, event, associatedInteraction))
+        associatedInteraction.on('finished', () => processAjax(this.agentRef, event, associatedInteraction))
         associatedInteraction.on('cancelled', () => handle('returnAjax', [event], undefined, FEATURE_NAMES.ajax, this.ee))
       }
     }
 
-    function processAjax (agentId, event, parentInteraction) {
-      const newNode = new AjaxNode(agentId, event)
+    function processAjax (agent, event, parentInteraction) {
+      const newNode = new AjaxNode(agent, event)
       parentInteraction.addChild(newNode)
     }
   }
@@ -203,7 +205,7 @@ export class Aggregate extends AggregateBase {
       if (this.associatedInteraction?.trigger === IPL_TRIGGER_NAME) this.associatedInteraction = null // the api get-interaction method cannot target IPL
       if (!this.associatedInteraction) {
         // This new api-driven interaction will be the target of any subsequent .interaction() call, until it is closed by EITHER .end() OR the regular seenHistoryAndDomChange process.
-        this.associatedInteraction = thisClass.interactionInProgress = new Interaction(thisClass.agentIdentifier, API_TRIGGER_NAME, time, thisClass.latestRouteSetByApi)
+        this.associatedInteraction = thisClass.interactionInProgress = new Interaction(thisClass.agentRef, API_TRIGGER_NAME, time, thisClass.latestRouteSetByApi)
         thisClass.domObserver.observe(document.body, { attributes: true, childList: true, subtree: true, characterData: true }) // start observing for DOM changes like a regular UI-driven interaction
         thisClass.setClosureHandlers()
       }

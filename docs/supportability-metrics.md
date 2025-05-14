@@ -71,8 +71,12 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 * Session/Inactive/Seen
 <!--- Duration of Session at time of ending --->
 * Session/Duration/Ms
-<!--- Capture SMs for Session trace if active (ptid is setwhen returned byReplay ingest). Retain these SMs while we are working through the Session_replay Feature --->
+<!--- Capture SMs for Session trace if active (ptid is set when returned byReplay ingest). Retain these SMs while we are working through the Session_replay Feature --->
 * PageSession/Feature/SessionTrace/Duration/Ms
+<!--- A Session Replay was discarded due to session expiration --->
+* Session/Expired/SessionReplay/Seen
+<!--- A Session Trace was discard due to session expiration --->
+* Session/Expired/SessionTrace/Seen
 
 ### AJAX
 <!--- Ajax Events were Excluded because they matched the Agent beacon --->

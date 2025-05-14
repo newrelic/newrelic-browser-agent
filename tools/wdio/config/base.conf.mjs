@@ -39,7 +39,7 @@ export default function config () {
       [path.resolve(__dirname, '../plugins/testing-server/index.mjs'), args],
       [path.resolve(__dirname, '../plugins/istanbul.mjs'), args]
     ],
-    reporters: ['spec'],
+    reporters: [['spec', { onlyFailures: true }]],
     specFileRetries: args.retry ? 1 : 0,
     specFileRetriesDeferred: true,
     framework: 'mocha',

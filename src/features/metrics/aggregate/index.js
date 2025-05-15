@@ -11,6 +11,7 @@ import { windowAddEventListener } from '../../../common/event-listener/event-lis
 import { isBrowserScope, isWorkerScope } from '../../../common/constants/runtime'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { isIFrameWindow } from '../../../common/dom/iframe'
+import { detectAutomation } from '../../../common/util/automation-detection'
 // import { WEBSOCKET_TAG } from '../../../common/wrap/wrap-websocket'
 // import { handleWebsocketEvents } from './websocket-detection'
 
@@ -39,6 +40,25 @@ export class Aggregate extends AggregateBase {
     // Allow features external to the metrics feature to capture SMs and CMs through the event emitter
     registerHandler(SUPPORTABILITY_METRIC_CHANNEL, this.storeSupportabilityMetrics.bind(this), this.featureName, this.ee)
     registerHandler(CUSTOM_METRIC_CHANNEL, this.storeEventMetrics.bind(this), this.featureName, this.ee)
+
+    if (isBrowserScope) {
+      try {
+        const { automatedMatches, botMatches, userAgentString } = detectAutomation()
+        if (automatedMatches.length) {
+          agentRef.info.jsAttributes.automated = true
+          agentRef.info.jsAttributes.automatedHints = automatedMatches.join(',')
+          agentRef.info.jsAttributes.userAgent = userAgentString
+        }
+
+        if (botMatches.length) {
+          agentRef.info.jsAttributes.bot = true
+          agentRef.info.jsAttributes.botHints = botMatches.join(',')
+          agentRef.info.jsAttributes.userAgent = userAgentString
+        }
+      } catch (e) {
+        // do nothing for now
+      }
+    }
   }
 
   preHarvestChecks (opts) { return this.drained && opts.isFinalHarvest } // only allow any metrics to be sent after we get the right RUM flag and only on EoL

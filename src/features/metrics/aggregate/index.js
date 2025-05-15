@@ -43,16 +43,10 @@ export class Aggregate extends AggregateBase {
 
     if (isBrowserScope) {
       try {
-        const { automatedMatches, botMatches, userAgentString } = detectAutomation()
-        if (automatedMatches.length) {
-          agentRef.info.jsAttributes.automated = true
-          agentRef.info.jsAttributes.automatedHints = automatedMatches.join(',')
-          agentRef.info.jsAttributes.userAgent = userAgentString
-        }
-
-        if (botMatches.length) {
+        const { matches, userAgentString } = detectAutomation()
+        if (matches.length) {
           agentRef.info.jsAttributes.bot = true
-          agentRef.info.jsAttributes.botHints = botMatches.join(',')
+          agentRef.info.jsAttributes.botHints = matches.join(',')
           agentRef.info.jsAttributes.userAgent = userAgentString
         }
       } catch (e) {

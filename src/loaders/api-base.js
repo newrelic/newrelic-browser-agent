@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { warn } from '../common/util/console'
-import { ADD_PAGE_ACTION, ADD_RELEASE, ADD_TO_TRACE, FINISHED, INTERACTION, LOG, NOTICE_ERROR, PAUSE_REPLAY, RECORD_CUSTOM_EVENT, RECORD_REPLAY, REGISTER, SET_APPLICATION_VERSION, SET_CURRENT_ROUTE_NAME, SET_CUSTOM_ATTRIBUTE, SET_ERROR_HANDLER, SET_PAGE_VIEW_NAME, SET_USER_ID, START, WRAP_LOGGER } from './api/constants'
+import { ADD_PAGE_ACTION, ADD_RELEASE, ADD_TO_TRACE, FINISHED, INTERACTION, LOG, NOTICE_ERROR, PAUSE_REPLAY, RECORD_CUSTOM_EVENT, RECORD_REPLAY, REGISTER, SET_APPLICATION_VERSION, SET_CURRENT_ROUTE_NAME, SET_CUSTOM_ATTRIBUTE, SET_ERROR_HANDLER, SET_PAGE_VIEW_NAME, SET_USER_ID, START, WRAP_LOGGER, MEASURE } from './api/constants'
 
 /**
  * @typedef {import('./api/interaction-types').InteractionInstance} InteractionInstance
@@ -214,5 +214,16 @@ export class ApiBase {
   */
   wrapLogger (parent, functionName, options) {
     return this.#callMethod(WRAP_LOGGER, parent, functionName, options)
+  }
+
+  /**
+   * Measures a task that is recorded as a BrowserPerformance event.
+   * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/measure/}
+   * @param {string} name The name of the task
+   * @param {object?} options An object used to control the way the measure API operates
+   * @returns {{start: number, end: number, duration: number, customAttributes: object}} Measurement details
+   */
+  measure (name, options) {
+    return this.#callMethod(MEASURE, name, options)
   }
 }

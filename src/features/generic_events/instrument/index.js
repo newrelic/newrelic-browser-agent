@@ -11,6 +11,7 @@ import { setupAddPageActionAPI } from '../../../loaders/api/addPageAction'
 import { setupFinishedAPI } from '../../../loaders/api/finished'
 import { setupRecordCustomEventAPI } from '../../../loaders/api/recordCustomEvent'
 import { setupRegisterAPI } from '../../../loaders/api/register'
+import { setupMeasureAPI } from '../../../loaders/api/measure'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME, OBSERVED_EVENTS, OBSERVED_WINDOW_EVENTS } from '../constants'
 
@@ -32,6 +33,7 @@ export class Instrument extends InstrumentBase {
     setupRecordCustomEventAPI(agentRef)
     setupFinishedAPI(agentRef)
     setupRegisterAPI(agentRef)
+    setupMeasureAPI(agentRef)
 
     if (isBrowserScope) {
       if (agentRef.init.user_actions.enabled) {

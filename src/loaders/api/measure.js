@@ -18,74 +18,21 @@ export function setupMeasureAPI (agent) {
       return
     }
 
-    const { start, end, duration, customAttributes } = options || {}
+    const { start, end, customAttributes } = options || {}
     const returnObj = { customAttributes: customAttributes || {} }
 
-    const getStartValue = () => {
-      if (typeof start === 'number') {
-        return start
-      } else if (start instanceof PerformanceMark) {
-        return start.startTime
-      } else if (typeof start === 'string') {
-        const mark = performance.getEntriesByName(start, 'mark')[0]
-        if (mark) {
-          return mark.startTime
-        }
-        throw new Error(58)
-      } else if (start == null) {
-        return 0
-      } else {
-        throw new Error(58)
-      }
+    const getValueFromTiming = (timing, d) => {
+      if (timing == null) return d
+      if (typeof timing === 'number') return timing
+      if (timing instanceof PerformanceMark) return timing.startTime
+      throw new Error(57)
     }
 
-    const getEndValue = () => {
-      if (typeof end === 'number') {
-        return end
-      } else if (end instanceof PerformanceMark) {
-        return end.startTime
-      } else if (typeof end === 'string') {
-        const mark = performance.getEntriesByName(end, 'mark')[0]
-        if (mark) {
-          return mark.startTime
-        }
-        throw new Error(59)
-      } else if (end == null) {
-        return n
-      } else {
-        throw new Error(59)
-      }
-    }
-
-    const hasStart = typeof start === 'number'
-    const hasEnd = typeof end === 'number'
     try {
-      if (typeof duration === 'number') {
-        returnObj.duration = duration
-
-        if (start == null && end == null) {
-          returnObj.start = n - duration
-          returnObj.end = n
-        } else if (hasStart && !hasEnd) {
-          returnObj.start = getStartValue()
-          returnObj.end = start + duration
-        } else if (!hasStart && hasEnd) {
-          returnObj.start = end - duration
-          returnObj.end = getEndValue()
-        } else if (hasStart && hasEnd && end - start === duration) {
-          returnObj.start = getStartValue()
-          returnObj.end = getEndValue()
-        } else {
-          throw new Error(60)
-        }
-      } else {
-        returnObj.start = getStartValue()
-        returnObj.end = getEndValue()
-        returnObj.duration = returnObj.end - returnObj.start
-      }
-      if (returnObj.start < 0 || returnObj.end < 0 || returnObj.duration < 0) {
-        throw new Error(61)
-      }
+      returnObj.start = getValueFromTiming(start, 0)
+      returnObj.end = getValueFromTiming(end, n)
+      returnObj.duration = returnObj.end - returnObj.start
+      if (returnObj.duration < 0) throw new Error(58)
     } catch (err) {
       warn(Number.parseInt(err.message))
       return

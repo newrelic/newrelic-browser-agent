@@ -114,12 +114,6 @@
 ### 56
 `Could not find a matching entity to store data`
 ### 57
-`Failed to execute measure. Name must be a string type.`
+`Failed to execute measure. Arguments must have valid types.`
 ### 58
-`Failed to execute measure. Start value in options object must be a valid number, PerformanceMark, or string type.`
-### 59
-`Failed to execute measure. End value in options object must be a valid number, PerformanceMark, or string type.`
-### 60
-`Failed to execute measure. If start, end, and duration are provided, then end - start must equal duration.`
-### 61
-`Failed to execute measure. Resulting measurement values must be non-negative.`
+`Failed to execute measure. Resulting duration must be non-negative.`

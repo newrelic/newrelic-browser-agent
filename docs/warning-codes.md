@@ -113,3 +113,7 @@
 `Register API has been disabled on the container agent`
 ### 56
 `Could not find a matching entity to store data`
+### 57
+`Failed to execute measure. Arguments must have valid types.`
+### 58
+`Failed to execute measure. Resulting duration must be non-negative.`

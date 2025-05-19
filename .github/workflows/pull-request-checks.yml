@@ -79,11 +79,11 @@ jobs:
         run: |
           FOUND_STRING=$(git diff origin/$BASE_REF...HEAD | grep --color=never 'SUPPORTABILITY_METRIC_CHANNEL' || true)
           FOUND_FILE=$(git diff --name-only origin/$BASE_REF...HEAD | grep 'supportability_metrics.md' || true)
-          echo "found_string<<EOF"
-          echo "$FOUND_STRING"
-          echo "EOF"
-          echo "found_file<<EOF"
-          echo "$FOUND_FILE"
+          echo "found_string<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$FOUND_STRING" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+          echo "found_file<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$FOUND_FILE" >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
       - name: Comment pull request
         uses: ./.github/actions/comment-pull-request

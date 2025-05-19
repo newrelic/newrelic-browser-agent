@@ -79,6 +79,7 @@ jobs:
         id: supportability_check
         uses: ./.github/actions/supportability-check
       - name: Comment pull request
+        if: steps.supportability_check.outputs.found_string != '0' || steps.supportability_check.outputs.found_file != '0'
         uses: ./.github/actions/comment-pull-request
         with:
           token: ${{ secrets.GITHUB_TOKEN }}

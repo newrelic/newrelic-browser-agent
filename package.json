@@ -221,7 +221,7 @@
   "dependencies": {
     "fflate": "0.8.2",
     "rrweb": "^2.0.0-alpha.18",
-    "web-vitals": "4.2.4"
+    "web-vitals": "5.0.1"
   },
   "devDependencies": {
     "@babel/cli": "^7.23.4",

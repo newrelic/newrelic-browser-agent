@@ -6,8 +6,10 @@ name: 'Supportability Check'
 outputs:
   found_string:
     description: "Lines containing SUPPORTABILITY_METRIC_CHANNEL"
+    value: ${{ steps.action-script.outputs.found_string }}
   found_file:
     description: "supportability_metrics.md if changed"
+    value: ${{ steps.action-script.outputs.found_file }}
 
 runs:
   using: "composite"

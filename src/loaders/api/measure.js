@@ -38,7 +38,7 @@ export function setupMeasureAPI (agent) {
       return
     }
 
-    handle(prefix + MEASURE, returnObj, undefined, FEATURE_NAMES.genericEvents, agent.ee)
+    handle(prefix + MEASURE, [returnObj, name], undefined, FEATURE_NAMES.genericEvents, agent.ee)
 
     return returnObj
   }, agent)

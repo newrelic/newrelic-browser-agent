@@ -3,6 +3,12 @@
 
 name: 'Supportability Check'
 
+outputs:
+  found_string:
+    description: "Lines containing SUPPORTABILITY_METRIC_CHANNEL"
+  found_file:
+    description: "supportability_metrics.md if changed"
+
 runs:
   using: "composite"
   steps:

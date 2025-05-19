@@ -23,17 +23,17 @@ async function main() {
   // Find added lines with the search string
   const diffLines = prDiff.split('\n');
   const changedLines = diffLines.filter(line => line.startsWith('+') && !line.startsWith('+++'));
-  const foundString = changedLines.filter(line => line.includes(SEARCH_STRING)).join('\n');
+  const foundString = changedLines.filter(line => line.includes(SEARCH_STRING)).join('\n') || 'Nothing found.';
 
   // Find if the file was changed (look for diff headers)
   const foundFile = diffLines
     .filter(line => line.startsWith('+++ b/'))
     .map(line => line.replace('+++ b/', ''))
-    .find(filename => filename === SEARCH_FILE) || '';
+    .find(filename => filename === SEARCH_FILE) || 'Nothing found.';
 
   // Set outputs for GitHub Actions
-  core.setOutput('found_string', foundString);
-  core.setOutput('found_file', foundFile);
+  core.setOutput('found_string', JSON.stringify(foundString))
+  core.setOutput('found_file', JSON.stringify(foundFile))
 
   // Optional: log for debugging
   if (foundString) {

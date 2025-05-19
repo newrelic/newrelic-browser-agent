@@ -88,7 +88,7 @@ jobs:
             ${{ steps.supportability_check.outputs.found_string }} supportability metrics tags detected
 
             supportability_metrics.md changes:
-            ${{ steps.supportability_check.outputs.found_file }} change to supportability_metrics.md detected
+            ${{ steps.supportability_check.outputs.found_file }} change(s) to supportability_metrics.md detected
 
             New supportability metrics require changes to supportability_metrics.md, as well as a new PR to Angler.  Please ensure an Angler PR is created and linked to this PR.
           comment_tag: <!-- supportability_metric_check -->

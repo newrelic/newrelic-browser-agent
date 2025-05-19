@@ -43,8 +43,8 @@ async function main() {
     .map(line => line.replace('+++ b/', ''))
     .find(filename => filename === SEARCH_FILE);
 
-  core.setOutput('found_string', foundString.length));
-  core.setOutput('found_file', !!foundFile ? 1 : 0);
+  core.setOutput('found_string', JSON.stringify(foundString.length))
+  core.setOutput('found_file', JSON.stringify(!!foundFile ? 1 : 0))
 
   // Optional: log for debugging
   if (foundString.length) {

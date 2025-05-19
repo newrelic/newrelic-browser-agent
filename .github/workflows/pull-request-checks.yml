@@ -77,7 +77,7 @@ jobs:
       - name: Search for string in changed lines or file changes
         id: supportability_check
         run: |
-          FOUND_STRING="$(git diff origin/$BASE_REF...HEAD | grep --color=never 'SUPPORTABILITY_METRIC_CHANNEL' || true)"
+          FOUND_STRING="$(git diff origin/$BASE_REF...HEAD | grep 'SUPPORTABILITY_METRIC_CHANNEL' || true)"
           FOUND_FILE="$(git diff --name-only origin/$BASE_REF...HEAD | grep 'supportability_metrics.md' || true)"
           echo "found_string<<EOF" >> "$GITHUB_OUTPUT"
           echo "$FOUND_STRING" >> "$GITHUB_OUTPUT"

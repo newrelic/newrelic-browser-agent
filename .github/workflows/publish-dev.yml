@@ -94,7 +94,7 @@ jobs:
       - name: New Relic Application Deployment Marker
         uses: newrelic/deployment-marker-action@v2.3.0
         with:
-          apiKey: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
+          apiKey: ${{ secrets.NR_DEPLOY_MARKER_API_KEY_STAGING }}
           guid: ${{ secrets.INTERNAL_STAGING_INGEST_ENTITY_GUID }}
           commit: "${{ github.sha }}"
           version: "${{ github.ref_name }}"

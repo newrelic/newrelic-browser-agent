@@ -58,6 +58,50 @@ jobs:
     with:
       ref: ${{ github.ref }}
 
+  sm-check:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Get base branch
+        id: vars
+        run: echo "BASE_REF=${{ github.event.pull_request.base.ref }}" >> $GITHUB_ENV
+      - name: Fetch base branch
+        run: git fetch origin $BASE_REF
+      - name: Search for string in changed lines or file changes
+        id: supportability_check
+        run: |
+          FOUND_STRING=$(git diff origin/$BASE_REF...HEAD | grep --color=never 'SUPPORTABILITY_METRIC_CHANNEL' || true)
+          FOUND_FILE=$(git diff --name-only origin/$BASE_REF...HEAD | grep 'supportability_metrics.md' || true)
+          {
+            echo "found_string<<EOF"
+            echo "$FOUND_STRING"
+            echo "EOF"
+            echo "found_file<<EOF"
+            echo "$FOUND_FILE"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+      - name: Comment pull request
+        uses: ./.github/actions/comment-pull-request
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          pr_number: ${{ github.event.number }}
+          comment: |
+            Supportability Metric Channel changes:
+            ${{ steps.supportability_check.outputs.found_string }}
+
+            supportability_metrics.md changes:
+            ${{ steps.supportability_check.outputs.found_file }}
+
+            New supportability metrics require changes to supportability_metrics.md, as well as a new PR to Angler.  Please ensure an Angler PR is created and linked to this PR.
+          comment_tag: <!-- supportability_metric_check -->
+
   size-check:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'

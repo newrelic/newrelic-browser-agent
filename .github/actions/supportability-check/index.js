@@ -1,5 +1,5 @@
-const core = require('@actions/core');
-const { Octokit } = require('@octokit/rest');
+import * as core from'@actions/core'
+import { Octokit } from '@octokit/rest'
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const OWNER = 'newrelic';

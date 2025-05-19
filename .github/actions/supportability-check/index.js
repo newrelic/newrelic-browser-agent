@@ -31,6 +31,9 @@ async function main() {
     .map(line => line.replace('+++ b/', ''))
     .find(filename => filename === SEARCH_FILE) || 'Nothing found.';
 
+  console.log('Setting found_string to: ', foundString)
+  console.log('Setting found_file to: ', foundFile)
+
   // Set outputs for GitHub Actions
   core.setOutput('found_string', JSON.stringify(foundString))
   core.setOutput('found_file', JSON.stringify(foundFile))

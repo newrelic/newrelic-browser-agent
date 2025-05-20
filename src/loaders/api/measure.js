@@ -12,29 +12,31 @@ import { setupAPI } from './sharedHandlers'
 export function setupMeasureAPI (agent) {
   setupAPI(MEASURE, function (name, options) {
     const n = now()
-
-    if (typeof name !== 'string' || name.length === 0) {
-      warn(57, typeof name)
-      return
-    }
-
     const { start, end, customAttributes } = options || {}
     const returnObj = { customAttributes: customAttributes || {} }
+
+    if (typeof returnObj.customAttributes !== 'object' || typeof name !== 'string' || name.length === 0) {
+      warn(57)
+      return
+    }
 
     const getValueFromTiming = (timing, d) => {
       if (timing == null) return d
       if (typeof timing === 'number') return timing
-      if (timing instanceof PerformanceMark) return timing.startTime
-      throw new Error(57)
+      if (typeof PerformanceMark === 'function' && timing instanceof PerformanceMark) return timing.startTime
+      return Number.NaN
     }
 
-    try {
-      returnObj.start = getValueFromTiming(start, 0)
-      returnObj.end = getValueFromTiming(end, n)
-      returnObj.duration = returnObj.end - returnObj.start
-      if (returnObj.duration < 0) throw new Error(58)
-    } catch (err) {
-      warn(Number.parseInt(err.message))
+    returnObj.start = getValueFromTiming(start, 0)
+    returnObj.end = getValueFromTiming(end, n)
+    if (Number.isNaN(returnObj.start) || Number.isNaN(returnObj.end)) {
+      warn(57)
+      return
+    }
+
+    returnObj.duration = returnObj.end - returnObj.start
+    if (returnObj.duration < 0) {
+      warn(58)
       return
     }
 

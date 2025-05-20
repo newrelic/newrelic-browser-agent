@@ -64,7 +64,8 @@ describe('API tests', () => {
         'pauseReplay',
         'log',
         'wrapLogger',
-        'register'
+        'register',
+        'measure'
       ]
       apiNames.forEach(apiName => checkApiExists(apiName, false))
 
@@ -111,7 +112,7 @@ describe('API tests', () => {
 
       delete agent.register
       await initializeFeature(GenericEvents, agent)
-      ;['addPageAction', 'recordCustomEvent', 'finished', 'register'].forEach(apiName => checkApiExists(apiName, true))
+      ;['addPageAction', 'recordCustomEvent', 'finished', 'register', 'measure'].forEach(apiName => checkApiExists(apiName, true))
 
       function checkApiExists (apiName, shouldBeDefined = false) {
         if (shouldBeDefined) expect(agent[apiName]).toBeDefined()
@@ -915,6 +916,54 @@ describe('API tests', () => {
         })
       })
     })
+
+    describe('measure', () => {
+      test('should create event emitter event for calls to API', () => {
+        agent.measure('testMeasure')
+
+        expectHandled(SUPPORTABILITY_METRIC_CHANNEL, ['API/measure/called'])
+        expectHandled('api-measure', [expect.any(Object), 'testMeasure'])
+      })
+
+      test('should pass in expected attributes into the event emitter call', () => {
+        agent.measure('testMeasure', { start: 5, end: 20, customAttributes: { foo: 'bar' } })
+
+        expectHandled(SUPPORTABILITY_METRIC_CHANNEL, ['API/measure/called'])
+        const args = { start: 5, end: 20, duration: 15, customAttributes: { foo: 'bar' } }
+        expectHandled('api-measure', [args, 'testMeasure'])
+      })
+
+      test('should return an object containing measurement details', () => {
+        const measurements = agent.measure('testMeasure')
+        expect(measurements).toEqual({
+          start: expect.any(Number),
+          end: expect.any(Number),
+          duration: expect.any(Number),
+          customAttributes: expect.any(Object)
+        })
+      })
+
+      test.each([null, undefined, {}, [], 123])('should return early and warn when name is not a string (%s)', (name) => {
+        agent.measure(name)
+
+        expect(console.debug).toHaveBeenCalledTimes(1)
+        expect(console.debug).toHaveBeenCalledWith(expect.stringContaining('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#57'), undefined)
+      })
+
+      test.each(['start', 'end', 'customAttributes'])('should return early and warn when options argument has invalid types', (param) => {
+        agent.measure('testMeasure', { [param]: faker.string.uuid() })
+
+        expect(console.debug).toHaveBeenCalledTimes(1)
+        expect(console.debug).toHaveBeenCalledWith(expect.stringContaining('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#57'), undefined)
+      })
+
+      test('should return early and warn when duration is negative', () => {
+        agent.measure('testMeasure', { start: 100, end: 50 })
+
+        expect(console.debug).toHaveBeenCalledTimes(1)
+        expect(console.debug).toHaveBeenCalledWith(expect.stringContaining('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#58'), undefined)
+      })
+    })
   })
 
   describe('setTopLevelCallers', () => {
@@ -946,7 +995,8 @@ describe('API tests', () => {
         pauseReplay: jest.fn(),
         log: jest.fn(),
         wrapLogger: jest.fn(),
-        register: jest.fn()
+        register: jest.fn(),
+        measure: jest.fn()
       }
       setTopLevelCallers(mockAgent)
       const nreum = gosCDN()
@@ -977,6 +1027,7 @@ describe('API tests', () => {
       expect(typeof nreum.log).toEqual('function')
       expect(typeof nreum.wrapLogger).toEqual('function')
       expect(typeof nreum.register).toEqual('function')
+      expect(typeof nreum.measure).toEqual('function')
     })
 
     test('should forward calls to the first initialized and exposed agent that is not a micro-agent', () => {

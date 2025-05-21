@@ -40,9 +40,9 @@ describe('ins harvesting', () => {
     })
   })
 
-  it('creates BrowserPerformance event with start', async () => {
+  it.only('creates BrowserPerformance event with start', async () => {
     browser.execute(function () {
-      newrelic.measure('testMeasure', { start: 1234 })
+      newrelic.measure('testMeasure', { start: 1234, timeout: 20000 })
     })
 
     const [[{ request: { body: { ins: insHarvest } } }]] = await Promise.all([

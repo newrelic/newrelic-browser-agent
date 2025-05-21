@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.290.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.290.0...v1.290.1) (2025-05-21)
+
+
+### Bug Fixes
+
+* Silence setting getter only harvestCount message ([#1480](https://github.com/newrelic/newrelic-browser-agent/issues/1480)) ([98b1ab6](https://github.com/newrelic/newrelic-browser-agent/commit/98b1ab69c8a03a41f0cdccf27e410728f389bebb))
+
 ## [1.290.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.289.0...v1.290.0) (2025-05-02)
 
 

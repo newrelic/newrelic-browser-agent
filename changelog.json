@@ -4,6 +4,23 @@
     {
       "changes": [
         {
+          "type": "fix",
+          "sha": "98b1ab69c8a03a41f0cdccf27e410728f389bebb",
+          "message": "Silence setting getter only harvestCount message",
+          "issues": [
+            "1480"
+          ]
+        }
+      ],
+      "version": "1.290.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "9177d7a6-aea8-4c0d-b562-aad5431d370e",
+      "createTime": "2025-05-21T22:25:38.591Z"
+    },
+    {
+      "changes": [
+        {
           "type": "feat",
           "sha": "c11b6de857f42b4e2315012a897ac6693c67cd04",
           "message": "bundler tools exports",
@@ -2883,5 +2900,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2025-05-02T19:25:35.786Z"
+  "updateTime": "2025-05-21T22:25:38.591Z"
 }

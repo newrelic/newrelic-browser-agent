@@ -263,7 +263,7 @@ export class Aggregate extends AggregateBase {
     payloadOutput.payload = payload
 
     if (!this.agentRef.runtime.session.state.traceHarvestStarted) {
-      warn(57, JSON.stringify(this.agentRef.runtime.session.state))
+      warn(59, JSON.stringify(this.agentRef.runtime.session.state))
     }
 
     return [payloadOutput]

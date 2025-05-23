@@ -220,6 +220,21 @@ export class Aggregate extends AggregateBase {
         }, this.featureName, this.ee)
       }
 
+      registerHandler('api-measure', (args, n) => {
+        const { start, duration, customAttributes } = args
+
+        const event = {
+          ...(agentRef.info.jsAttributes || {}),
+          ...customAttributes,
+          eventType: 'BrowserPerformance',
+          timestamp: Math.floor(agentRef.runtime.timeKeeper.correctRelativeTimestamp(start)),
+          entryName: n,
+          entryDuration: duration
+        }
+
+        this.addEvent(event)
+      }, this.featureName, this.ee)
+
       agentRef.runtime.harvester.triggerHarvestFor(this)
       this.drain()
     })

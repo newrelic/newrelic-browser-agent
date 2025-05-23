@@ -15,6 +15,7 @@ import { isContainerAgentTarget } from '../../../common/util/target'
 import { SESSION_EVENT_TYPES, SESSION_EVENTS } from '../../../common/session/constants'
 import { ABORT_REASONS } from '../../session_replay/constants'
 import { canEnableSessionTracking } from '../../utils/feature-gates'
+import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -32,6 +33,9 @@ export class Aggregate extends AggregateBase {
       if (this.loggingMode !== LOGGING_MODE.OFF && data.loggingMode === LOGGING_MODE.OFF) this.abort(ABORT_REASONS.CROSS_TAB)
       else this.loggingMode = data.loggingMode
     })
+
+    // TEST FOR PR ONLY, REMOVE BEFORE MERGING!
+    this.ee.emit(SUPPORTABILITY_METRIC_CHANNEL, ['test'])
 
     this.harvestOpts.raw = true
     this.waitForFlags(['log']).then(([loggingMode]) => {

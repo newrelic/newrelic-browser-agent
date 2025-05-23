@@ -1,0 +1,24 @@
+# This composite action is used to upload all loaders of a specific
+# version to the internal NR.
+
+name: 'Supportability Check'
+
+outputs:
+  found_string:
+    description: "Lines containing SUPPORTABILITY_METRIC_CHANNEL"
+    value: ${{ steps.action-script.outputs.found_string }}
+  found_file:
+    description: "supportability_metrics.md if changed"
+    value: ${{ steps.action-script.outputs.found_file }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install dependencies
+      run: npm install --silent --no-progress --prefix $GITHUB_ACTION_PATH/..
+      shell: bash
+    - name: Run action script
+      id: action-script
+      run: |
+        node $GITHUB_ACTION_PATH/index.js
+      shell: bash

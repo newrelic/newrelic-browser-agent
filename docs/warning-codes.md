@@ -113,3 +113,7 @@
 `Register API has been disabled on the container agent`
 ### 56
 `Could not find a matching entity to store data`
+### 57
+`Session replay harvested before a session trace payload could be sent. This could be problematic for replays that rely on a trace`
+### 58
+`Session trace aborted`

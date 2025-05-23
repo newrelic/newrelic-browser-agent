@@ -262,6 +262,10 @@ export class Aggregate extends AggregateBase {
     if (recorderEvents.type === 'preloaded') this.agentRef.runtime.harvester.triggerHarvestFor(this)
     payloadOutput.payload = payload
 
+    if (!this.agentRef.runtime.session.state.traceHarvestStarted) {
+      warn(57, JSON.stringify(this.agentRef.runtime.session.state))
+    }
+
     return [payloadOutput]
   }
 

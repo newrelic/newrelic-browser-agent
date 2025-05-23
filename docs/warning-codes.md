@@ -117,3 +117,7 @@
 `Failed to execute measure. Arguments must have valid types.`
 ### 58
 `Failed to execute measure. Resulting duration must be non-negative.`
+### 59
+`Session replay harvested before a session trace payload could be sent. This could be problematic for replays that rely on a trace`
+### 60
+`Session trace aborted`

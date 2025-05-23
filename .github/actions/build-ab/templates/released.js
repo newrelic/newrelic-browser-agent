@@ -15,11 +15,12 @@ window.NREUM={
     harvest: {interval: 5},
     session_replay: {
       enabled: true,
-      autoStart: false,
       fix_stylesheets: false,
       {{#if (isEnvironment args.environment 'dev' 'staging')}}
       mask_all_inputs: false,
       mask_text_selector: null,
+      {{else}}
+      autoStart: false,
       {{/if}}
     },
     session_trace: {

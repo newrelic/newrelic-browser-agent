@@ -11,6 +11,7 @@ import { globalScope } from '../../../common/constants/runtime'
 import { MODE, SESSION_EVENTS } from '../../../common/session/constants'
 import { applyFnToProps } from '../../../common/util/traverse'
 import { cleanURL } from '../../../common/url/clean-url'
+import { warn } from '../../../common/util/console'
 
 const ERROR_MODE_SECONDS_WINDOW = 30 * 1000 // sliding window of nodes to track when simply monitoring (but not harvesting) in error mode
 /** Reserved room for query param attrs */
@@ -97,6 +98,8 @@ export class Aggregate extends AggregateBase {
     }
     this.agentRef.runtime.session.write({ sessionTraceMode: this.mode })
     this.drain()
+    /** try to harvest immediately. This will not send if the trace is not running in FULL mode due to the pre-harvest checks. */
+    this.agentRef.runtime.harvester.triggerHarvestFor(this)
   }
 
   preHarvestChecks () {
@@ -178,7 +181,8 @@ export class Aggregate extends AggregateBase {
   }
 
   /** Stop running for the remainder of the page lifecycle */
-  abort () {
+  abort (code) {
+    warn(60, code)
     this.blocked = true
     this.mode = MODE.OFF
     this.agentRef.runtime.session.write({ sessionTraceMode: this.mode })

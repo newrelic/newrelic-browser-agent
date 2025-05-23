@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { dispatchGlobalEvent } from '../dispatch/global-event'
+
 /* eslint no-console: ["error", { allow: ["debug"] }] */
 
 /**
@@ -14,4 +16,15 @@
 export function warn (code, secondary) {
   if (typeof console.debug !== 'function') return
   console.debug(`New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#${code}`, secondary)
+  dispatchGlobalEvent({
+    agentIdentifier: null,
+    drained: null,
+    type: 'data',
+    name: 'warn',
+    feature: 'warn',
+    data: {
+      code,
+      secondary
+    }
+  })
 }

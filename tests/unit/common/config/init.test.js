@@ -28,7 +28,7 @@ test('init props exist and return expected defaults', () => {
   })
   expect(config.feature_flags).toEqual([])
   expect(config.harvest).toEqual({
-    interval: 30
+    interval: 10
   })
   expect(config.jserrors).toEqual({
     autoStart: true,

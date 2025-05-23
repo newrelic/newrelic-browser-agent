@@ -63,7 +63,7 @@ const InitModelFn = () => {
     get feature_flags () { return hiddenState.feature_flags },
     set feature_flags (val) { hiddenState.feature_flags = val },
     generic_events: { enabled: true, autoStart: true },
-    harvest: { interval: 30 },
+    harvest: { interval: 10 },
     jserrors: { enabled: true, autoStart: true },
     logging: { enabled: true, autoStart: true },
     metrics: { enabled: true, autoStart: true },

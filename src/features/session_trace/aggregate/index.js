@@ -103,6 +103,7 @@ export class Aggregate extends AggregateBase {
   }
 
   preHarvestChecks () {
+    if (this.blocked) return
     if (this.mode !== MODE.FULL) return // only allow harvest if running in full mode
     if (!this.timeKeeper?.ready) return // this should likely never happen, but just to be safe, we should never harvest if we cant correct time
     if (!this.agentRef.runtime.session) return // session entity is required for trace to run and continue running

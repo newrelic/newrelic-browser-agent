@@ -1051,7 +1051,7 @@ describe('API tests', () => {
           })
         })
 
-        test('start - number, end - number', () => {
+        test('start - undefined, end - number', () => {
           const measurements = agent.measure('testMeasure', { end: 1000 })
           expect(measurements).toEqual({
             start: 0,

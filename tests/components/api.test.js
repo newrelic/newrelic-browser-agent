@@ -998,7 +998,7 @@ describe('API tests', () => {
           })
         })
 
-        test('start - number, end null', () => {
+        test('start - number, end - null', () => {
           jest.spyOn(global.performance, 'now').mockReturnValue(12345)
           const measurements = agent.measure('testMeasure', { start: 1000, end: null })
           expect(measurements).toEqual({

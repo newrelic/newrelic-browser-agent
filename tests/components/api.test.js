@@ -1009,7 +1009,7 @@ describe('API tests', () => {
           })
         })
 
-        test('start - PerformanceMark, end undefined', () => {
+        test('start - PerformanceMark, end - undefined', () => {
           jest.spyOn(global.performance, 'now').mockReturnValue(12345)
 
           const measurements = agent.measure('testMeasure', { start: dummyMark('startMark', 1000) })

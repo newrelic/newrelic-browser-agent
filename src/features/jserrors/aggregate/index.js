@@ -31,6 +31,8 @@ export class Aggregate extends AggregateBase {
   constructor (agentRef) {
     super(agentRef, FEATURE_NAME)
 
+    this.reportSupportabilityMetric('test')
+
     this.stackReported = {}
     this.observedAt = {}
     this.pageviewReported = {}

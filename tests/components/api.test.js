@@ -154,6 +154,28 @@ describe('API tests', () => {
         const payload = handleModule.handle.mock.calls.find(callArr => callArr[0] === 'bstApi')[1][0]
         expect(payload.e - payload.s).toEqual(1000) // end - start was 1000ms apart in API call
       })
+
+      test('should return error code for non-valid UNIX timestamps', () => {
+        agent.addToTrace({
+          name: 'Event Name',
+          start: Date.now(),
+          end: -1000,
+          origin: 'Origin of event'
+        })
+
+        expect(console.debug).toHaveBeenCalledTimes(1)
+        expect(console.debug).toHaveBeenLastCalledWith(expect.stringContaining('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#61'), expect.any(Object))
+
+        agent.addToTrace({
+          name: 'Event Name',
+          start: -1234,
+          end: Date.now() + 1000,
+          origin: 'Origin of event'
+        })
+
+        expect(console.debug).toHaveBeenCalledTimes(2)
+        expect(console.debug).toHaveBeenLastCalledWith(expect.stringContaining('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#61'), expect.any(Object))
+      })
     })
 
     describe('addRelease', () => {

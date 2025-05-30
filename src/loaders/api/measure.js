@@ -20,10 +20,16 @@ export function setupMeasureAPI (agent) {
       return
     }
 
+    /**
+     * getValueFromTiming - Helper function to extract a numeric value from a supplied option.
+     * @param {Number|PerformanceMark} [timing] The timing value
+     * @param {Number} [d] The default value to return if timing is invalid
+     * @returns {Number} The timing value or the default value
+     */
     const getValueFromTiming = (timing, d) => {
       if (timing == null) return d
       if (typeof timing === 'number') return timing
-      if (typeof PerformanceMark === 'function' && timing instanceof PerformanceMark) return timing.startTime
+      if (timing instanceof PerformanceMark) return timing.startTime
       return Number.NaN
     }
 

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {init} {config} {loader}
+    <script>
+      const start = performance.mark("start");
+        window.unexpectedErrors = [];
+
+        /** valid measures should return an object */
+        if (!newrelic.measure("no-args")) window.unexpectedErrors.push("no-args");
+        if (!newrelic.measure("start-only-number", { start: 1 })) window.unexpectedErrors.push("start-only-number");
+        if (!newrelic.measure("end-only-number", { end: 2000 })) window.unexpectedErrors.push("end-only-number");
+        if (!newrelic.measure("start-end-number", { start: 1000, end: 2000 })) window.unexpectedErrors.push("start-end-number");
+
+        if (!newrelic.measure("custom-attributes", { customAttributes: { foo: "bar" } }).customAttributes) window.unexpectedErrors.push("custom-attributes");
+
+        /** invalid measures should return undefined */
+        if (!!newrelic.measure("invalid-start", { start: "invalid" })) window.unexpectedErrors.push("invalid-start");
+        if (!!newrelic.measure("invalid-end", { end: "invalid" })) window.unexpectedErrors.push("invalid-end");
+        if (!!newrelic.measure("invalid-duration-number", { start: 2000, end: 1000 })) window.unexpectedErrors.push("invalid-duration-number");
+
+        // performance marks
+        setTimeout(() => {
+          const end = performance.mark("end");
+
+          /** valid measures should return an object */
+          if (!newrelic.measure("start-only-mark", { start })) window.unexpectedErrors.push("start-only-mark");
+          if (!newrelic.measure("end-only-mark", { end })) window.unexpectedErrors.push("end-only-mark");
+          if (!newrelic.measure("start-end-performance-marks", { start, end })) window.unexpectedErrors.push("start-end-performance-marks");
+          if (!newrelic.measure("start-end-mixed", { start, end: 2000 })) window.unexpectedErrors.push("start-end-mixed");
+          if (!newrelic.measure("start-end-mixed-2", { start: 1000, end })) window.unexpectedErrors.push("start-end-mixed-2");
+
+          /** invalid measures should return undefined */
+          if (!!newrelic.measure("invalid-duration-marks", { start: end, end: start })) window.unexpectedErrors.push("invalid-duration-marks");
+        }, 1000);
+      
+    </script>
+  </head>
+  <body>Instrumented</body>
+</html>

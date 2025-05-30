@@ -918,6 +918,12 @@ describe('API tests', () => {
     })
 
     describe('measure', () => {
+      beforeAll(() => {
+        global.PerformanceMark = function (name, options) {
+          this.name = name
+          this.startTime = options.startTime
+        }
+      })
       test('should create event emitter event for calls to API', () => {
         agent.measure('testMeasure')
 
@@ -962,6 +968,134 @@ describe('API tests', () => {
 
         expect(console.debug).toHaveBeenCalledTimes(1)
         expect(console.debug).toHaveBeenCalledWith(expect.stringContaining('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#58'), undefined)
+      })
+
+      describe('should create correct output', () => {
+        let dummyMark
+        beforeAll(() => {
+          dummyMark = (name, startTime) => new PerformanceMark(name, { startTime })
+        })
+        test('no arguments', () => {
+          jest.spyOn(global.performance, 'now').mockReturnValue(12345)
+
+          const measurements = agent.measure('testMeasure')
+          expect(measurements).toEqual({
+            start: 0,
+            end: 12345,
+            duration: 12345 - 0,
+            customAttributes: {}
+          })
+        })
+
+        test('start - number, end undefined', () => {
+          jest.spyOn(global.performance, 'now').mockReturnValue(12345)
+          const measurements = agent.measure('testMeasure', { start: 1000 })
+          expect(measurements).toEqual({
+            start: 1000,
+            end: 12345,
+            duration: 12345 - 1000,
+            customAttributes: {}
+          })
+        })
+
+        test('start - number, end - null', () => {
+          jest.spyOn(global.performance, 'now').mockReturnValue(12345)
+          const measurements = agent.measure('testMeasure', { start: 1000, end: null })
+          expect(measurements).toEqual({
+            start: 1000,
+            end: 12345,
+            duration: 12345 - 1000,
+            customAttributes: {}
+          })
+        })
+
+        test('start - PerformanceMark, end - undefined', () => {
+          jest.spyOn(global.performance, 'now').mockReturnValue(12345)
+
+          const measurements = agent.measure('testMeasure', { start: dummyMark('startMark', 1000) })
+          expect(measurements).toEqual({
+            start: 1000,
+            end: 12345,
+            duration: 12345 - 1000,
+            customAttributes: {}
+          })
+        })
+
+        test('start - undefined, end - number', () => {
+          const measurements = agent.measure('testMeasure', { end: 1000 })
+          expect(measurements).toEqual({
+            start: 0,
+            end: 1000,
+            duration: 1000 - 0,
+            customAttributes: {}
+          })
+        })
+
+        test('start - null, end - number', () => {
+          const measurements = agent.measure('testMeasure', { start: null, end: 1000 })
+          expect(measurements).toEqual({
+            start: 0,
+            end: 1000,
+            duration: 1000 - 0,
+            customAttributes: {}
+          })
+        })
+
+        test('start - undefined, end - PerformanceMark', () => {
+          const measurements = agent.measure('testMeasure', { end: dummyMark('endMark', 1000) })
+          expect(measurements).toEqual({
+            start: 0,
+            end: 1000,
+            duration: 1000 - 0,
+            customAttributes: {}
+          })
+        })
+
+        test('start - undefined, end - number', () => {
+          const measurements = agent.measure('testMeasure', { end: 1000 })
+          expect(measurements).toEqual({
+            start: 0,
+            end: 1000,
+            duration: 1000 - 0,
+            customAttributes: {}
+          })
+        })
+
+        test('start - PerformanceMark, end - PerformanceMark', () => {
+          const measurements = agent.measure('testMeasure', { start: dummyMark('startMark', 1000), end: dummyMark('endMark', 2000) })
+          expect(measurements).toEqual({
+            start: 1000,
+            end: 2000,
+            duration: 2000 - 1000,
+            customAttributes: {}
+          })
+        })
+
+        test('start - number, end - PerformanceMark', () => {
+          const measurements = agent.measure('testMeasure', { start: 1000, end: dummyMark('endMark', 2000) })
+          expect(measurements).toEqual({
+            start: 1000,
+            end: 2000,
+            duration: 2000 - 1000,
+            customAttributes: {}
+          })
+        })
+
+        test('start - PerformanceMark, end - number', () => {
+          const measurements = agent.measure('testMeasure', { start: dummyMark('startMark', 1000), end: 2000 })
+          expect(measurements).toEqual({
+            start: 1000,
+            end: 2000,
+            duration: 2000 - 1000,
+            customAttributes: {}
+          })
+        })
+
+        test('custom attributes', () => {
+          const measurements = agent.measure('testMeasure', { customAttributes: { foo: 'bar' } })
+          expect(measurements.customAttributes).toEqual({ foo: 'bar' }
+          )
+        })
       })
     })
   })

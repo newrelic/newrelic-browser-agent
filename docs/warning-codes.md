@@ -121,3 +121,5 @@
 `Session replay harvested before a session trace payload could be sent. This could be problematic for replays that rely on a trace`
 ### 60
 `Session trace aborted`
+### 61
+`Timestamps must be valid UNIX timestamps.`

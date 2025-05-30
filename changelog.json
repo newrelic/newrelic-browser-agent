@@ -5,6 +5,39 @@
       "changes": [
         {
           "type": "fix",
+          "sha": "531f8d4228f6c7ead8e2342c8a8dd25c651e9ec6",
+          "message": "Fix race between end of session and features aborting",
+          "issues": [
+            "1487"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "50f4acea3e27c6b5e65d02ffb46af02b351e4500",
+          "message": "Harvest first session trace payload immediately",
+          "issues": [
+            "1483"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "f944b76c2137e6d75e47e692ded4ba5f04bb4b6d",
+          "message": "Create the measure API",
+          "issues": [
+            "1476"
+          ]
+        }
+      ],
+      "version": "1.291.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "0bb8f400-8ef6-451b-a1db-81b07d668993",
+      "createTime": "2025-05-30T01:48:15.628Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
           "sha": "98b1ab69c8a03a41f0cdccf27e410728f389bebb",
           "message": "Silence setting getter only harvestCount message",
           "issues": [
@@ -2900,5 +2933,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2025-05-21T22:25:38.591Z"
+  "updateTime": "2025-05-30T01:48:15.628Z"
 }

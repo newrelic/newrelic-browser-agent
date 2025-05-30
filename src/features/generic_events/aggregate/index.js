@@ -224,12 +224,12 @@ export class Aggregate extends AggregateBase {
         const { start, duration, customAttributes } = args
 
         const event = {
-          ...(agentRef.info.jsAttributes || {}),
           ...customAttributes,
           eventType: 'BrowserPerformance',
           timestamp: Math.floor(agentRef.runtime.timeKeeper.correctRelativeTimestamp(start)),
           entryName: n,
-          entryDuration: duration
+          entryDuration: duration,
+          entryType: 'measure'
         }
 
         this.addEvent(event)

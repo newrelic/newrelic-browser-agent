@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.291.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.290.1...v1.291.0) (2025-05-30)
+
+
+### Features
+
+* Create the measure API ([#1476](https://github.com/newrelic/newrelic-browser-agent/issues/1476)) ([f944b76](https://github.com/newrelic/newrelic-browser-agent/commit/f944b76c2137e6d75e47e692ded4ba5f04bb4b6d))
+
+
+### Bug Fixes
+
+* Fix race between end of session and features aborting ([#1487](https://github.com/newrelic/newrelic-browser-agent/issues/1487)) ([531f8d4](https://github.com/newrelic/newrelic-browser-agent/commit/531f8d4228f6c7ead8e2342c8a8dd25c651e9ec6))
+* Harvest first session trace payload immediately ([#1483](https://github.com/newrelic/newrelic-browser-agent/issues/1483)) ([50f4ace](https://github.com/newrelic/newrelic-browser-agent/commit/50f4acea3e27c6b5e65d02ffb46af02b351e4500))
+
 ## [1.290.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.290.0...v1.290.1) (2025-05-21)
 
 

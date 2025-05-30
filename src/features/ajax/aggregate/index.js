@@ -11,7 +11,6 @@ import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { parseGQL } from './gql'
 import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../../../common/serialize/bel-serializer'
-import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -61,8 +60,6 @@ export class Aggregate extends AggregateBase {
     if (jserrorsInUse && (shouldCollect || !shouldOmitAjaxMetrics)) {
       this.agentRef.sharedAggregator?.add(['xhr', hash, params, metrics])
     }
-
-    this.ee.emit(SUPPORTABILITY_METRIC_CHANNEL, 'Ajax/Events/Collected')
 
     if (!shouldCollect) {
       if (params.hostname === this.agentRef.info.errorBeacon || (this.agentRef.init.proxy?.beacon && params.hostname === this.agentRef.init.proxy.beacon)) {

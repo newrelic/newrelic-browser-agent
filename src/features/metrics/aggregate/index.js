@@ -72,8 +72,6 @@ export class Aggregate extends AggregateBase {
         this.storeSupportabilityMetrics('Generic/Runtime/Nonce/Detected')
       }
 
-      this.storeSupportabilityMetrics('TEST!')
-
       // These SMs are used by the AppExp team
       onDOMContentLoaded(() => {
         getFrameworks().forEach(framework => {

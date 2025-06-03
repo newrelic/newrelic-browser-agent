@@ -25,16 +25,16 @@ const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
 function updateLatestVersions (deskPlatforms) {
   const latestVersionsJson = {}
 
-  const win11 = deskPlatforms.find(p => p.platform === 'Windows 11')
+  const win11 = deskPlatforms.find(p => p.platform.toLowerCase() === 'windows 11')
   if (!win11) throw new Error('Windows 11 could not be found in API response.')
   // Assume: json returned by API lists in descending version order for each browser (string comparison).
-  const findLatestStableFor = (browserName) => Number(win11.browsers.find(spec => spec.type === 'stable' && spec.browser_name === browserName).version)
+  const findLatestStableFor = (browserName) => Number(win11.browsers.find(spec => spec.type === 'stable' && spec.browser_name.toLowerCase() === browserName.toLowerCase()).version)
   latestVersionsJson.chrome = findLatestStableFor('Chrome')
   latestVersionsJson.edge = findLatestStableFor('MicrosoftEdge')
   latestVersionsJson.firefox = findLatestStableFor('Firefox')
 
-  const macOSes = deskPlatforms.filter(p => p.platform.startsWith('macOS'))
-  const safaris = macOSes.map(p => p.browsers.find(spec => spec.browser_name === 'Safari'))
+  const macOSes = deskPlatforms.filter(p => p.platform.toLowerCase().startsWith('macos'))
+  const safaris = macOSes.map(p => p.browsers.find(spec => spec.browser_name.toLowerCase() === 'safari'))
   safaris.sort((a, b) => Number(a.version) - Number(b.version))
   latestVersionsJson.safari = Number(safaris.pop().version)
   latestVersionsJson.safari_min = Math.floor(browserslistMinVersion('last 10 Safari versions'))

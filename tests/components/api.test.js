@@ -155,7 +155,7 @@ describe('API tests', () => {
         expect(payload.e - payload.s).toEqual(1000) // end - start was 1000ms apart in API call
       })
 
-      test('should return error code for non-valid UNIX timestamps', () => {
+      test('should return error code for negative timestamps', () => {
         agent.addToTrace({
           name: 'Event Name',
           start: Date.now(),
@@ -174,6 +174,18 @@ describe('API tests', () => {
         })
 
         expect(console.debug).toHaveBeenCalledTimes(2)
+        expect(console.debug).toHaveBeenLastCalledWith(expect.stringContaining('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#61'), expect.any(Object))
+      })
+
+      test('should return error code for end time before start time', () => {
+        agent.addToTrace({
+          name: 'Event Name',
+          start: Date.now() + 2000,
+          end: Date.now() + 1000,
+          origin: 'Origin of event'
+        })
+
+        expect(console.debug).toHaveBeenCalled()
         expect(console.debug).toHaveBeenLastCalledWith(expect.stringContaining('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#61'), expect.any(Object))
       })
     })

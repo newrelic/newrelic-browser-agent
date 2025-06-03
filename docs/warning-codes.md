@@ -122,4 +122,4 @@
 ### 60
 `Session trace aborted`
 ### 61
-`Timestamps must be valid UNIX timestamps.`
+`Timestamps must be non-negative and end time cannot be before start time.`

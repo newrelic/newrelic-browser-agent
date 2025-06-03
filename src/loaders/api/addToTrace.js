@@ -21,7 +21,7 @@ export function setupAddToTraceAPI (agent) {
       t: 'api'
     }
 
-    if (report.s < 0 || report.e < 0) {
+    if (report.s < 0 || report.e < 0 || report.e < report.s) {
       warn(61, { start: report.s, end: report.e })
       return
     }

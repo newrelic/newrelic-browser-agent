@@ -160,7 +160,7 @@ export function buildRegisterApi (agentRef, target) {
       const shouldDuplicate = agentRef.init.api.duplicate_registered_data
       if (shouldDuplicate === true || (Array.isArray(shouldDuplicate) && shouldDuplicate.includes(target.entityGuid))) {
         // also report to container by providing undefined target
-        return methodToCall(...args, undefined, timestamp)
+        methodToCall(...args, undefined, timestamp)
       }
       return methodToCall(...args, target.entityGuid, timestamp) // always report to target
     } catch (err) {

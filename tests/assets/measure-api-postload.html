@@ -12,6 +12,13 @@
     Instrumented
     <script>
       window.addEventListener("load", () => {
+        const api = newrelic.register({
+          licenseKey: 'TEST_LICENSE_KEY',
+          applicationID: 'TEST_APP_ID'
+        });
+
+        
+
         const start = performance.mark("start");
         window.unexpectedErrors = [];
 

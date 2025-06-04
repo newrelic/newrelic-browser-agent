@@ -220,19 +220,21 @@ export class Aggregate extends AggregateBase {
         }, this.featureName, this.ee)
       }
 
-      registerHandler('api-measure', (args, n) => {
+      registerHandler('api-measure', (args, entryName, targetEntityGuid) => {
+        if (!this.agentRef.runtime.entityManager.get(targetEntityGuid)) return warn(56, this.featureName)
+
         const { start, duration, customAttributes } = args
 
         const event = {
           ...customAttributes,
           eventType: 'BrowserPerformance',
           timestamp: Math.floor(agentRef.runtime.timeKeeper.correctRelativeTimestamp(start)),
-          entryName: n,
+          entryName,
           entryDuration: duration,
           entryType: 'measure'
         }
 
-        this.addEvent(event)
+        this.addEvent(event, targetEntityGuid)
       }, this.featureName, this.ee)
 
       agentRef.runtime.harvester.triggerHarvestFor(this)

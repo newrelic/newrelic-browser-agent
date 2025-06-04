@@ -221,6 +221,9 @@ export class ApiBase {
    * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/measure/}
    * @param {string} name The name of the task
    * @param {object?} options An object used to control the way the measure API operates
+   * @param {number|PerformanceMark} [options.start] The start time of the measurement. If not provided, defaults to 0.
+   * @param {number|PerformanceMark} [options.end] The end time of the measurement. If not provided, defaults to the current time.
+   * @param {object} [options.customAttributes] An object containing custom attributes to be added to the measurement.
    * @returns {{start: number, end: number, duration: number, customAttributes: object}} Measurement details
    */
   measure (name, options) {

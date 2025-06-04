@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {init} {config} {loader}
+  </head>
+  <body>
+    Instrumented
+    <script>
+      window.addEventListener("load", () => {
+        window.api = newrelic.register({
+          licenseKey: 'TEST_LICENSE_KEY',
+          applicationID: 'TEST_APP_ID'
+        });
+
+        const start = performance.mark("start");
+        window.unexpectedErrors = [];
+
+        /** valid measures should return an object */
+        if (!api.measure("no-args")) window.unexpectedErrors.push("no-args");
+        if (!api.measure("start-only-number", { start: 0 })) window.unexpectedErrors.push("start-only-number");
+        if (!api.measure("end-only-number", { end: 2000 })) window.unexpectedErrors.push("end-only-number");
+        if (!api.measure("start-end-number", { start: 1000, end: 2000 })) window.unexpectedErrors.push("start-end-number");
+
+        if (!api.measure("custom-attributes", { customAttributes: { foo: "bar" } }).customAttributes) window.unexpectedErrors.push("custom-attributes");
+
+        /** invalid measures should return undefined */
+        if (!!api.measure("invalid-start", { start: "invalid" })) window.unexpectedErrors.push("invalid-start");
+        if (!!api.measure("invalid-end", { end: "invalid" })) window.unexpectedErrors.push("invalid-end");
+        if (!!api.measure("invalid-duration-number", { start: 2000, end: 1000 })) window.unexpectedErrors.push("invalid-duration-number");
+
+        // performance marks
+        setTimeout(() => {
+          const end = performance.mark("end");
+
+          /** valid measures should return an object */
+          if (!api.measure("start-only-mark", { start })) window.unexpectedErrors.push("start-only-mark");
+          if (!api.measure("end-only-mark", { end })) window.unexpectedErrors.push("end-only-mark");
+          if (!api.measure("start-end-performance-marks", { start, end })) window.unexpectedErrors.push("start-end-performance-marks");
+          if (!api.measure("start-end-mixed", { start, end: 2000 })) window.unexpectedErrors.push("start-end-mixed");
+          if (!api.measure("start-end-mixed-2", { start: 1000, end })) window.unexpectedErrors.push("start-end-mixed-2");
+
+          /** invalid measures should return undefined */
+          if (!!api.measure("invalid-duration-marks", { start: end, end: start })) window.unexpectedErrors.push("invalid-duration-marks");
+        }, 1000);
+      });
+    </script>
+  </body>
+</html>

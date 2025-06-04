@@ -13,6 +13,7 @@ import { REGISTER } from './constants'
 import { log } from './log'
 import { addPageAction } from './addPageAction'
 import { noticeError } from './noticeError'
+import { measure } from './measure'
 
 /**
  * @typedef {import('./register-api-types').RegisterAPI} RegisterAPI
@@ -64,6 +65,9 @@ export function buildRegisterApi (agentRef, target) {
     },
     noticeError: (error, attributes = {}) => {
       report(noticeError, [error, { ...attrs, ...attributes }, agentRef], target)
+    },
+    measure: (name, options) => {
+      return report(measure, [name, { ...options, customAttributes: { ...attrs, ...(options?.customAttributes || {}) } }, agentRef], target)
     },
     setApplicationVersion: (value) => {
       attrs['application.version'] = value
@@ -156,9 +160,9 @@ export function buildRegisterApi (agentRef, target) {
       const shouldDuplicate = agentRef.init.api.duplicate_registered_data
       if (shouldDuplicate === true || (Array.isArray(shouldDuplicate) && shouldDuplicate.includes(target.entityGuid))) {
         // also report to container by providing undefined target
-        methodToCall(...args, undefined, timestamp)
+        return methodToCall(...args, undefined, timestamp)
       }
-      methodToCall(...args, target.entityGuid, timestamp) // always report to target
+      return methodToCall(...args, target.entityGuid, timestamp) // always report to target
     } catch (err) {
       warn(50, err)
     }

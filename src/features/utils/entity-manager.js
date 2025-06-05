@@ -11,16 +11,16 @@ export class EntityManager {
 
   constructor (agentRef) {
     this.agentRef = agentRef
-    this.#entities.set(DEFAULT_KEY, { licenseKey: agentRef.info.licenseKey, applicationID: agentRef.info.applicationID })
+    this.#entities.set(DEFAULT_KEY, { licenseKey: agentRef.info.licenseKey, id: agentRef.info.applicationID })
   }
 
   get (entityGuid = DEFAULT_KEY) {
     return this.#entities.get(entityGuid)
   }
 
-  getEntityGuidFor (licenseKey, applicationID) {
-    if (!this.#entityGuidLookup[licenseKey] || !this.#entityGuidLookup[applicationID]) return
-    return this.#entityGuidLookup[licenseKey].filter(x => this.#entityGuidLookup[applicationID].includes(x))[0]
+  getEntityGuidFor (licenseKey, applicationOrEntityID) {
+    if (!this.#entityGuidLookup[licenseKey] || !this.#entityGuidLookup[applicationOrEntityID]) return
+    return this.#entityGuidLookup[licenseKey].filter(x => this.#entityGuidLookup[applicationOrEntityID].includes(x))[0]
   }
 
   set (entityGuid, entity) {

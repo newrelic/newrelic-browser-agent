@@ -61,27 +61,25 @@ export class Harvester {
     if (!submitMethod) return false
 
     const shouldRetryOnFail = !localOpts.isFinalHarvest && submitMethod === xhrMethod // always retry all features harvests except for final
-    let dataToSendArr; let ranSend = false
+    let payload; let ranSend = false
     if (!localOpts.directSend) { // primarily used by rum call to bypass makeHarvestPayload by providing payload directly
-      dataToSendArr = aggregateInst.makeHarvestPayload(shouldRetryOnFail, localOpts) // be sure the 'this' of makeHarvestPayload is the aggregate w/ access to its harvestOpts
-      if (!dataToSendArr) return false // can be undefined if storage is empty or preharvest checks failed
-    } else dataToSendArr = [localOpts.directSend]
+      payload = aggregateInst.makeHarvestPayload(shouldRetryOnFail, localOpts) // be sure the 'this' of makeHarvestPayload is the aggregate w/ access to its harvestOpts
+      if (!payload) return false // can be undefined if storage is empty or preharvest checks failed
+    } else payload = localOpts.directSend
 
-    dataToSendArr.forEach(({ targetApp, payload }) => {
-      if (!payload) return
+    if (!payload) return
 
-      send(this.agentRef, {
-        endpoint: FEATURE_TO_ENDPOINT[aggregateInst.featureName],
-        targetApp,
-        payload,
-        localOpts,
-        submitMethod,
-        cbFinished,
-        raw: aggregateInst.harvestOpts.raw,
-        featureName: aggregateInst.featureName
-      })
-      ranSend = true
+    send(this.agentRef, {
+      endpoint: FEATURE_TO_ENDPOINT[aggregateInst.featureName],
+      payload,
+      localOpts,
+      submitMethod,
+      cbFinished,
+      raw: aggregateInst.harvestOpts.raw,
+      featureName: aggregateInst.featureName
     })
+    ranSend = true
+
     return ranSend
 
     /**
@@ -112,13 +110,13 @@ const warnings = {}
   * @param {NetworkSendSpec} param0 Specification for sending data
   * @returns {boolean} True if a network call was made. Note that this does not mean or guarantee that it was successful.
   */
-function send (agentRef, { endpoint, targetApp, payload, localOpts = {}, submitMethod, cbFinished, raw, featureName }) {
+function send (agentRef, { endpoint, payload, localOpts = {}, submitMethod, cbFinished, raw, featureName }) {
   if (!agentRef.info.errorBeacon) return false
 
   let { body, qs } = cleanPayload(payload)
 
   if (Object.keys(body).length === 0 && !localOpts.sendEmptyBody) { // if there's no body to send, just run onfinish stuff and return
-    if (cbFinished) cbFinished({ sent: false, targetApp })
+    if (cbFinished) cbFinished({ sent: false })
     return false
   }
 
@@ -126,8 +124,8 @@ function send (agentRef, { endpoint, targetApp, payload, localOpts = {}, submitM
   const perceivedBeacon = agentRef.init.proxy.beacon || agentRef.info.errorBeacon
   const url = raw
     ? `${protocol}://${perceivedBeacon}/${endpoint}`
-    : `${protocol}://${perceivedBeacon}${endpoint !== RUM ? '/' + endpoint : ''}/1/${targetApp.licenseKey}`
-  const baseParams = !raw ? baseQueryString(agentRef, qs, endpoint, targetApp.applicationID) : ''
+    : `${protocol}://${perceivedBeacon}${endpoint !== RUM ? '/' + endpoint : ''}/1/${agentRef.info.licenseKey}`
+  const baseParams = !raw ? baseQueryString(agentRef, qs, endpoint) : ''
   let payloadParams = obj(qs, agentRef.runtime.maxBytes)
   if (baseParams === '' && payloadParams.startsWith('&')) {
     payloadParams = payloadParams.substring(1)
@@ -157,14 +155,14 @@ function send (agentRef, { endpoint, targetApp, payload, localOpts = {}, submitM
       result.addEventListener('loadend', function () {
         // `this` here in block refers to the XHR object in this scope, do not change the anon function to an arrow function
         // status 0 refers to a local error, such as CORS or network failure, or a blocked request by the browser (e.g. adblocker)
-        const cbResult = { sent: this.status !== 0, status: this.status, retry: shouldRetry(this.status), fullUrl, xhr: this, targetApp }
+        const cbResult = { sent: this.status !== 0, status: this.status, retry: shouldRetry(this.status), fullUrl, xhr: this }
         if (localOpts.needResponse) cbResult.responseText = this.responseText
         cbFinished(cbResult)
       }, eventListenerOpts(false))
     } else if (submitMethod === fetchMethod) {
       result.then(async function (response) {
         const status = response.status
-        const cbResult = { sent: true, status, retry: shouldRetry(status), fullUrl, fetchResponse: response, targetApp }
+        const cbResult = { sent: true, status, retry: shouldRetry(status), fullUrl, fetchResponse: response }
         if (localOpts.needResponse) cbResult.responseText = await response.text()
         cbFinished(cbResult)
       })
@@ -180,7 +178,6 @@ function send (agentRef, { endpoint, targetApp, payload, localOpts = {}, submitM
     data: {
       endpoint,
       headers,
-      targetApp,
       payload,
       submitMethod: getSubmitMethodName(),
       raw,
@@ -237,13 +234,13 @@ function cleanPayload (payload = {}) {
 }
 
 // The stuff that gets sent every time.
-function baseQueryString (agentRef, qs, endpoint, applicationID) {
+function baseQueryString (agentRef, qs, endpoint) {
   const ref = agentRef.runtime.obfuscator.obfuscateString(cleanURL('' + globalScope.location))
   const hr = agentRef.runtime.session?.state.sessionReplayMode === 1 && endpoint !== JSERRORS
   const ht = agentRef.runtime.session?.state.sessionTraceMode === 1 && ![LOGS, BLOBS].includes(endpoint)
 
   const qps = [
-    'a=' + applicationID,
+    'a=' + agentRef.info.applicationID,
     param('sa', (agentRef.info.sa ? '' + agentRef.info.sa : '')),
     param('v', VERSION),
     transactionNameParam(),

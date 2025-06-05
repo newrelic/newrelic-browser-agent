@@ -4,6 +4,7 @@
  */
 import { initialLocation } from '../../../common/constants/runtime'
 import { cleanURL } from '../../../common/url/clean-url'
+import { isValidMFETarget } from '../../../common/util/target'
 import { LOG_LEVELS } from '../constants'
 
 export class Log {
@@ -22,11 +23,17 @@ export class Log {
    * @param {object} attributes - other log event attributes
    * @param {enum} level - Log level
    */
-  constructor (timestamp, message, attributes = {}, level = LOG_LEVELS.INFO) {
+  constructor (timestamp, message, attributes = {}, level = LOG_LEVELS.INFO, target) {
     /** @type {long} */
     this.timestamp = timestamp
     this.message = message
     this.attributes = { ...attributes, pageUrl: cleanURL('' + initialLocation) }
     this.level = level.toUpperCase()
+
+    if (isValidMFETarget(target)) {
+      this.licenseKey = target.licenseKey
+      this.entityID = target.entityID
+      this.entityName = target.entityName
+    }
   }
 }

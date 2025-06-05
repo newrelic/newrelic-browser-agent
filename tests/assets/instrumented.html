@@ -6,7 +6,11 @@
 <html>
   <head>
     <title>RUM Unit Test</title>
-    {init} {config} {loader}
+    {init} {config} 
+    <script>
+      localStorage.clear()
+    </script>
+    {loader}
   </head>
   <body>Instrumented</body>
 </html>

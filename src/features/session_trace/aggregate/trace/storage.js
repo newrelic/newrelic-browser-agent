@@ -53,7 +53,6 @@ export class TraceStorage {
 
   /** Central internal function called by all the other store__ & addToTrace API to append a trace node. They MUST all have checked #canStoreNewNode before calling this func!! */
   #storeSTN (stn) {
-    if (!this.#canStoreNewNode()) return
     if (this.trace[stn.n]) this.trace[stn.n].push(stn)
     else this.trace[stn.n] = [stn]
 

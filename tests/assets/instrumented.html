@@ -6,14 +6,7 @@
 <html>
   <head>
     <title>RUM Unit Test</title>
-    {init} {config} 
-    <script>
-      localStorage.clear()
-    </script>
-    {loader}
-    <script>
-      newrelic.interaction().setName('THIS IS A TEST').save();
-    </script>
+    {init} {config} {loader}
   </head>
   <body>Instrumented</body>
 </html>

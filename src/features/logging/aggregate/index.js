@@ -11,7 +11,6 @@ import { Log } from '../shared/log'
 import { isValidLogLevel } from '../shared/utils'
 import { applyFnToProps } from '../../../common/util/traverse'
 import { MAX_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
-import { isContainerAgentTarget } from '../../../common/util/target'
 import { SESSION_EVENT_TYPES, SESSION_EVENTS } from '../../../common/session/constants'
 import { ABORT_REASONS } from '../../session_replay/constants'
 import { canEnableSessionTracking } from '../../utils/feature-gates'
@@ -62,8 +61,7 @@ export class Aggregate extends AggregateBase {
     })
   }
 
-  handleLog (timestamp, message, attributes = {}, level = LOG_LEVELS.INFO, targetEntityGuid) {
-    if (!this.agentRef.runtime.entityManager.get(targetEntityGuid)) return warn(56, this.featureName)
+  handleLog (timestamp, message, attributes = {}, level = LOG_LEVELS.INFO, target) {
     if (this.blocked || !this.loggingMode) return
 
     if (!attributes || typeof attributes !== 'object') attributes = {}
@@ -96,8 +94,10 @@ export class Aggregate extends AggregateBase {
       Math.floor(this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(timestamp)),
       message,
       attributes,
-      level
+      level,
+      target
     )
+
     const logBytes = log.message.length + stringify(log.attributes).length + log.level.length + 10 // timestamp == 10 chars
 
     const failToHarvestMessage = 'Logging/Harvest/Failed/Seen'
@@ -107,12 +107,12 @@ export class Aggregate extends AggregateBase {
       return
     }
 
-    if (this.events.wouldExceedMaxSize(logBytes, targetEntityGuid)) {
+    if (this.events.wouldExceedMaxSize(logBytes)) {
       this.reportSupportabilityMetric('Logging/Harvest/Early/Seen', this.events.byteSize() + logBytes)
-      this.agentRef.runtime.harvester.triggerHarvestFor(this, { targetEntityGuid }) // force a harvest synchronously to try adding again
+      this.agentRef.runtime.harvester.triggerHarvestFor(this) // force a harvest synchronously to try adding again
     }
 
-    if (!this.events.add(log, targetEntityGuid)) { // still failed after a harvest attempt despite not being too large would mean harvest failed with options.retry
+    if (!this.events.add(log)) { // still failed after a harvest attempt despite not being too large would mean harvest failed with options.retry
       this.reportSupportabilityMetric(failToHarvestMessage, logBytes)
       warn(31, log.message.slice(0, 25) + '...')
     } else {
@@ -120,21 +120,20 @@ export class Aggregate extends AggregateBase {
     }
   }
 
-  serializer (eventBuffer, targetEntityGuid) {
-    const target = this.agentRef.runtime.entityManager.get(targetEntityGuid)
+  serializer (eventBuffer) {
     const sessionEntity = this.agentRef.runtime.session
     return [{
       common: {
         /** Attributes in the `common` section are added to `all` logs generated in the payload */
         attributes: {
-          'entity.guid': target.entityGuid, // browser entity guid as provided API target OR the default from RUM response if not supplied
+          'entity.guid': this.agentRef.runtime.appMetadata.agents[0].entityGuid, // default from RUM response if no target is provided
           ...(sessionEntity && {
             session: sessionEntity.state.value || '0', // The session ID that we generate and keep across page loads
-            hasReplay: sessionEntity.state.sessionReplayMode === 1 && isContainerAgentTarget(target, this.agentRef), // True if a session replay recording is running
+            hasReplay: sessionEntity.state.sessionReplayMode === 1, // True if a session replay recording is running
             hasTrace: sessionEntity.state.sessionTraceMode === 1 // True if a session trace recording is running
           }),
           ptid: this.agentRef.runtime.ptid, // page trace id
-          appId: target.applicationID || this.agentRef.info.applicationID, // Application ID from info object,
+          appId: this.agentRef.info.applicationID, // Application ID from info object,
           standalone: Boolean(this.agentRef.info.sa), // copy paste (true) vs APM (false)
           agentVersion: this.agentRef.runtime.version, // browser agent version
           // The following 3 attributes are evaluated and dropped at ingest processing time and do not get stored on NRDB:
@@ -153,9 +152,8 @@ export class Aggregate extends AggregateBase {
     }]
   }
 
-  queryStringsBuilder (_, targetEntityGuid) {
-    const target = this.agentRef.runtime.entityManager.get(targetEntityGuid)
-    return { browser_monitoring_key: target.licenseKey }
+  queryStringsBuilder () {
+    return { browser_monitoring_key: this.agentRef.info.licenseKey }
   }
 
   /** Abort the feature, once aborted it will not resume */

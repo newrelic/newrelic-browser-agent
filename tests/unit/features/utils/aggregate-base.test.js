@@ -4,7 +4,6 @@ import { isValid } from '../../../../src/common/config/info'
 import { configure } from '../../../../src/loaders/configure/configure'
 import { gosCDN } from '../../../../src/common/window/nreum'
 import { FEATURE_NAMES } from '../../../../src/loaders/features/features'
-import { EventStoreManager } from '../../../../src/features/utils/event-store-manager'
 import { EventBuffer } from '../../../../src/features/utils/event-buffer'
 import { EventAggregator } from '../../../../src/common/aggregate/event-aggregator'
 import { Aggregate as PVEAggregate } from '../../../../src/features/page_view_event/aggregate/index'
@@ -150,31 +149,45 @@ test('should return activatedFeatures values when available', async () => {
   await expect(flagWait).resolves.toEqual([])
 })
 
-test('does not initialized Aggregator more than once with multiple features', async () => {
-  expect(EventStoreManager).toHaveBeenCalledTimes(0)
-  expect(mainAgent.runtime.entityManager).toBeUndefined()
-
+test('handles events storage correctly across multiple features', async () => {
   const pveAgg = new PVEAggregate(mainAgent, FEATURE_NAMES.pageViewEvent)
 
-  const mockRumResp1 = { app: { agents: [{ entityGuid: '12345' }] } }
-  pveAgg.processEntities(mockRumResp1.app.agents, { licenseKey: '1', applicationID: '1' })
-
-  expect(EventStoreManager).toHaveBeenCalledTimes(1)
-  expect(EventStoreManager).toHaveBeenCalledWith(mainAgent, EventBuffer, '12345', FEATURE_NAMES.pageViewEvent) // 2 = initialize EventAggregator
-  expect(mainAgent.runtime.entityManager).toBeTruthy()
+  expect(pveAgg.events instanceof EventBuffer).toEqual(true)
   expect(mainAgent.sharedAggregator).toBeUndefined()
 
-  new AggregateBase(mainAgent, FEATURE_NAMES.jserrors) // this feature should be using the shared aggregator, so it will set it now
-  expect(EventStoreManager).toHaveBeenCalledTimes(2)
-  expect(EventStoreManager).toHaveBeenCalledWith(mainAgent, EventAggregator, '12345', 'shared_aggregator') // 2 = initialize EventAggregator
-  expect(mainAgent.sharedAggregator).toBeTruthy()
+  /** event buffer users */
+  const eventBufferAggs = [
+    new AggregateBase(mainAgent, FEATURE_NAMES.pageViewTiming),
+    new AggregateBase(mainAgent, FEATURE_NAMES.ajax),
+    new AggregateBase(mainAgent, FEATURE_NAMES.genericEvents),
+    new AggregateBase(mainAgent, FEATURE_NAMES.logging)
+  ]
+  eventBufferAggs.forEach(agg => {
+    expect(agg.events instanceof EventBuffer).toEqual(true)
+    expect(eventBufferAggs.filter(a => a !== agg).some(a => a.events === agg.events)).toEqual(false) // should not be the same instance as any other aggregator
+  })
 
-  new AggregateBase(mainAgent, FEATURE_NAMES.pageViewTiming) // PVT should use its own EventStoreManager
-  expect(EventStoreManager).toHaveBeenCalledTimes(3)
-  expect(EventStoreManager).toHaveBeenCalledWith(mainAgent, EventBuffer, '12345', FEATURE_NAMES.pageViewTiming) // 1 = initialize EventBuffer
+  /** event aggregator users */
+  const eventAggregatorAggs = [new AggregateBase(mainAgent, FEATURE_NAMES.jserrors), new AggregateBase(mainAgent, FEATURE_NAMES.metrics)]
+  expect(mainAgent.sharedAggregator instanceof EventAggregator).toEqual(true) // should be the same instance as the shared aggregator
+
+  eventAggregatorAggs.forEach((agg, i) => {
+    expect(agg.events instanceof EventAggregator).toEqual(true)
+    expect(agg.events === mainAgent.sharedAggregator).toEqual(true) // should be the same instance as the shared aggregator
+    expect(eventAggregatorAggs.filter(a => a !== agg).every(a => a.events === agg.events)).toEqual(true) // should share instance with all other event buffer aggregators
+  })
+
+  /** neither users */
+  const neitherAggs = [new AggregateBase(mainAgent, FEATURE_NAMES.sessionReplay), new AggregateBase(mainAgent, FEATURE_NAMES.sessionTrace)]
+
+  neitherAggs.forEach((agg, i) => {
+    expect(agg.events === mainAgent.sharedAggregator).toEqual(false) // should not be the same instance as the shared aggregator
+    expect(agg.events instanceof EventBuffer).toEqual(false) // should not be an event buffer
+    expect(agg.events instanceof EventAggregator).toEqual(false) // should not be an event aggregator
+  })
 })
 
-test('does initialize separate Aggregators with multiple agents', async () => {
+test('handles events storage correctly across multiple features - multiple agents', async () => {
   const mainAgent2 = {
     ...mainAgent,
     agentIdentifier: faker.string.uuid(),
@@ -182,26 +195,37 @@ test('does initialize separate Aggregators with multiple agents', async () => {
       [FEATURE_NAMES.pageViewEvent]: { autoStart: true }
     },
     runtime: { [faker.string.uuid()]: faker.lorem.sentence(), appMetadata: { agents: [{ entityGuid: '56789' }] } }
-
   }
-  expect(EventStoreManager).toHaveBeenCalledTimes(0)
 
   const pveAgg1 = new PVEAggregate(mainAgent, FEATURE_NAMES.pageViewEvent)
   const pveAgg2 = new PVEAggregate(mainAgent2, FEATURE_NAMES.pageViewEvent)
 
-  const mockRumResp1 = { app: { agents: [{ entityGuid: '12345' }] } }
-  const mockRumResp2 = { app: { agents: [{ entityGuid: '56789' }] } }
-  pveAgg1.processEntities(mockRumResp1.app.agents, { licenseKey: '1', applicationID: '1' })
-  pveAgg2.processEntities(mockRumResp2.app.agents, { licenseKey: '2', applicationID: '2' })
+  expect(pveAgg1.events === pveAgg2.events).toEqual(false) // should not be the same instance
 
-  expect(EventStoreManager).toHaveBeenCalledTimes(2) // event buffer x 2
-  expect(EventStoreManager).not.toHaveBeenCalledWith(expect.any(Object), EventAggregator, '12345')
+  /** event buffer users */
+  const eventBufferAggs = [
+    new AggregateBase(mainAgent, FEATURE_NAMES.pageViewTiming),
+    new AggregateBase(mainAgent, FEATURE_NAMES.ajax),
+    new AggregateBase(mainAgent, FEATURE_NAMES.genericEvents),
+    new AggregateBase(mainAgent, FEATURE_NAMES.logging)
+  ]
+  const eventBuffer2Aggs = [
+    new AggregateBase(mainAgent2, FEATURE_NAMES.pageViewTiming),
+    new AggregateBase(mainAgent2, FEATURE_NAMES.ajax),
+    new AggregateBase(mainAgent2, FEATURE_NAMES.genericEvents),
+    new AggregateBase(mainAgent2, FEATURE_NAMES.logging)
+  ]
+  eventBufferAggs.forEach((agg, i) => {
+    expect(agg.events === eventBuffer2Aggs[i].events).toEqual(false) // should not be the same instance
+  })
 
-  new AggregateBase(mainAgent, FEATURE_NAMES.jserrors)
-  new AggregateBase(mainAgent2, FEATURE_NAMES.jserrors)
-  expect(EventStoreManager).toHaveBeenCalledTimes(4) // event buffer x 2, event aggregator x 2
+  /** event aggregator users */
+  const eventAggregatorAggs = [new AggregateBase(mainAgent, FEATURE_NAMES.jserrors), new AggregateBase(mainAgent, FEATURE_NAMES.metrics)]
+  const eventAggregator2Aggs = [new AggregateBase(mainAgent2, FEATURE_NAMES.jserrors), new AggregateBase(mainAgent2, FEATURE_NAMES.metrics)]
+  expect(mainAgent.sharedAggregator instanceof EventAggregator).toEqual(true) // should be the same instance as the shared aggregator
+  expect(mainAgent2.sharedAggregator instanceof EventAggregator).toEqual(true) // should be the same instance as the shared aggregator
 
-  new AggregateBase(mainAgent, FEATURE_NAMES.metrics)
-  new AggregateBase(mainAgent2, FEATURE_NAMES.metrics)
-  expect(EventStoreManager).toHaveBeenCalledTimes(4) // should not initialize another since jserrors set up the shared instance
+  eventAggregatorAggs.forEach((agg, i) => {
+    expect(agg.events === eventAggregator2Aggs[i].events).toEqual(false) // should not be the same instance
+  })
 })

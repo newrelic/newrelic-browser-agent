@@ -84,7 +84,7 @@ const expectedNetworkInfo = {
 }
 
 test('LCP event with CLS attribute', () => {
-  const timing = find(timingsAggregate.events.get()[0].data, function (t) {
+  const timing = find(timingsAggregate.events.get(), function (t) {
     return t.name === 'lcp'
   })
 
@@ -106,8 +106,8 @@ test('LCP event with CLS attribute', () => {
 })
 
 test('sends expected FI *once* with attributes when available', () => {
-  expect(timingsAggregate.events.get()[0].data.length).toBeGreaterThanOrEqual(1)
-  const fiPayload = timingsAggregate.events.get()[0].data.find(x => x.name === 'fi')
+  expect(timingsAggregate.events.get().length).toBeGreaterThanOrEqual(1)
+  const fiPayload = timingsAggregate.events.get().find(x => x.name === 'fi')
   expect(fiPayload.value).toEqual(8853) // event time data is sent in ms
   expect(fiPayload.attrs).toEqual(expect.objectContaining({
     type: 'pointer',
@@ -116,23 +116,23 @@ test('sends expected FI *once* with attributes when available', () => {
     ...expectedNetworkInfo
   }))
 
-  expect(timingsAggregate.events.get()[0].data.filter(x => x.name === 'fi').length).toEqual(1)
+  expect(timingsAggregate.events.get().filter(x => x.name === 'fi').length).toEqual(1)
 })
 
 test('sends CLS node with right val on vis change', () => {
-  let clsNode = timingsAggregate.events.get()[0].data.find(tn => tn.name === VITAL_NAMES.CUMULATIVE_LAYOUT_SHIFT)
+  let clsNode = timingsAggregate.events.get().find(tn => tn.name === VITAL_NAMES.CUMULATIVE_LAYOUT_SHIFT)
   expect(clsNode).toBeUndefined()
 
   pageVisibilityModule.subscribeToVisibilityChange.mock.calls[1][0]()
 
-  clsNode = timingsAggregate.events.get()[0].data.find(tn => tn.name === VITAL_NAMES.CUMULATIVE_LAYOUT_SHIFT)
+  clsNode = timingsAggregate.events.get().find(tn => tn.name === VITAL_NAMES.CUMULATIVE_LAYOUT_SHIFT)
   expect(clsNode).toBeTruthy()
   expect(clsNode.value).toEqual(111.9) // since cls multiply decimal by 1000 to offset consumer division by 1000
   expect(clsNode.attrs.cls).toBeUndefined() // cls node doesn't need cls property
 })
 
 test('sends INP node with right val', () => {
-  let inpNode = timingsAggregate.events.get()[0].data.find(tn => tn.name === VITAL_NAMES.INTERACTION_TO_NEXT_PAINT)
+  let inpNode = timingsAggregate.events.get().find(tn => tn.name === VITAL_NAMES.INTERACTION_TO_NEXT_PAINT)
   expect(inpNode).toBeTruthy()
   expect(inpNode.value).toEqual(8)
   expect(inpNode.attrs.cls).toEqual(0.1119)

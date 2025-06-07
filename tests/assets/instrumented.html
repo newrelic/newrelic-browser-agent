@@ -11,6 +11,9 @@
       localStorage.clear()
     </script>
     {loader}
+    <script>
+      newrelic.interaction().setName('THIS IS A TEST').save();
+    </script>
   </head>
   <body>Instrumented</body>
 </html>

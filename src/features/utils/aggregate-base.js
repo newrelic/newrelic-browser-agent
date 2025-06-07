@@ -48,14 +48,12 @@ export class AggregateBase extends FeatureBase {
         // Jserror and Metric features uses a singleton EventAggregator instead of a regular EventBuffer.
       case FEATURE_NAMES.jserrors:
       case FEATURE_NAMES.metrics:
-        // this.events = this.agentRef.sharedAggregator ??= new EventStoreManager(this.agentRef, EventAggregator, entityGuid, 'shared_aggregator')
-        this.events = new EventAggregator()
+        this.events = this.agentRef.sharedAggregator ??= new EventAggregator()
         break
-        /** All other features get EventBuffer in the ESM by default. Note: PVE is included here, but event buffer will always be empty so future harvests will still not happen by interval or EOL.
+        /** All other features get EventBuffer by default. Note: PVE is included here, but event buffer will always be empty so future harvests will still not happen by interval or EOL.
     This was necessary to prevent race cond. issues where the event buffer was checked before the feature could "block" itself.
     Its easier to just keep an empty event buffer in place. */
       default:
-        // this.events = new EventStoreManager(this.agentRef, EventBuffer, entityGuid, this.featureName)
         this.events = new EventBuffer()
         break
     }
@@ -131,15 +129,13 @@ export class AggregateBase extends FeatureBase {
   /**
    * Cleanup task after a harvest.
    * @param {object} result - the cbResult object from the harvester's send method
-   * @param {object=} result.targetApp - the target app object that was used to point the harvest to the correct app
-   * @param {string=} result.targetApp.entityGuid - the entity guid of the target app
    * @param {boolean=} result.sent - whether the harvest was sent successfully
    * @param {boolean=} result.retry - whether the harvest should be retried
    */
   postHarvestCleanup (result = {}) {
     const harvestFailed = result.sent && result.retry
-    if (harvestFailed) this.events.reloadSave(this.harvestOpts, result.targetApp?.entityGuid)
-    this.events.clearSave(this.harvestOpts, result.targetApp?.entityGuid)
+    if (harvestFailed) this.events.reloadSave(this.harvestOpts)
+    this.events.clearSave(this.harvestOpts)
   }
 
   /**

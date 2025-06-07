@@ -93,24 +93,15 @@ describe('triggerHarvestFor', () => {
   })
   test('allows directSend to provide the payload without makeHarvestPayload', () => {
     const fakeAggregate = { makeHarvestPayload: jest.fn(), harvestOpts: {} }
-    expect(harvester.triggerHarvestFor(fakeAggregate, { directSend: { targetApp: 'someApp', payload: 'fakePayload' } })).toEqual(true)
+    expect(harvester.triggerHarvestFor(fakeAggregate, { directSend: 'fakePayload' })).toEqual(true)
     expect(fakeAggregate.makeHarvestPayload).not.toHaveBeenCalled()
   })
   test('disallow directSend to send if no payload is defined', () => {
-    expect(harvester.triggerHarvestFor({}, { directSend: { targetApp: 'someApp', payload: undefined } })).toEqual(false)
+    const fakeAggregate = { makeHarvestPayload: jest.fn(), harvestOpts: {} }
+    expect(harvester.triggerHarvestFor(fakeAggregate, { directSend: undefined })).toEqual(false)
   })
   test('sends if payload is returned from makeHarvestPayload', () => {
-    const fakeAggregate = { makeHarvestPayload: jest.fn().mockReturnValue([{ targetApp: 'someApp', payload: 'fakePayload' }]), harvestOpts: {} }
-    expect(harvester.triggerHarvestFor(fakeAggregate, { })).toEqual(true)
-  })
-  test('sends if makeHarvestPayload returns payload for at least one app', () => {
-    const fakeAggregate = {
-      makeHarvestPayload: jest.fn().mockReturnValue([
-        { targetApp: 'someApp1', payload: undefined },
-        { targetApp: 'someApp2', payload: 'fakePayload' }
-      ]),
-      harvestOpts: {}
-    }
+    const fakeAggregate = { makeHarvestPayload: jest.fn().mockReturnValue('fakePayload'), harvestOpts: {} }
     expect(harvester.triggerHarvestFor(fakeAggregate, { })).toEqual(true)
   })
 })

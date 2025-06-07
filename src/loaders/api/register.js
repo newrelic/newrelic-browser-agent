@@ -44,6 +44,9 @@ export function buildRegisterApi (agentRef, target) {
   const attrs = {}
   warn(54, 'newrelic.register')
 
+  target ||= {}
+  target.licenseKey ||= agentRef.info.licenseKey // will inherit the license key from the container agent if not provided
+
   /** @type {Function|undefined} a function that is set and reports when APIs are triggered -- warns the customer of the invalid state  */
   let invalidApiResponse
 
@@ -52,15 +55,9 @@ export function buildRegisterApi (agentRef, target) {
 
   /** @type {RegisterAPI} */
   const api = {
-    addPageAction: (name, attributes = {}) => {
-      report(addPageAction, [name, { ...attrs, ...attributes }, agentRef], target)
-    },
-    log: (message, options = {}) => {
-      report(log, [message, { ...options, customAttributes: { ...attrs, ...(options.customAttributes || {}) } }, agentRef], target)
-    },
-    noticeError: (error, attributes = {}) => {
-      report(noticeError, [error, { ...attrs, ...attributes }, agentRef], target)
-    },
+    addPageAction: (name, attributes = {}) => report(addPageAction, [name, { ...attrs, ...attributes }, agentRef], target),
+    log: (message, options = {}) => report(log, [message, { ...options, customAttributes: { ...attrs, ...(options.customAttributes || {}) } }, agentRef], target),
+    noticeError: (error, attributes = {}) => report(noticeError, [error, { ...attrs, ...attributes }, agentRef], target),
     setApplicationVersion: (value) => {
       attrs['application.version'] = value
     },
@@ -87,21 +84,19 @@ export function buildRegisterApi (agentRef, target) {
      * @param {string} target the target to report the data to. If undefined, will report to the container agent's target.
      * @returns
      */
-  // const report = async (methodToCall, args, target) => {
   const report = (methodToCall, args, target) => {
+    // console.log('REPORT!', methodToCall.name, invalidApiResponse)
     if (invalidApiResponse) return invalidApiResponse()
     /** set the timestamp before the async part of waiting for the rum response for better accuracy */
     const timestamp = now()
     handle(SUPPORTABILITY_METRIC_CHANNEL, [`API/register/${methodToCall.name}/called`], undefined, FEATURE_NAMES.metrics, agentRef.ee)
     try {
-      // await _connected
-      // target should be decorated with entityGuid by the rum resp at this point
       const shouldDuplicate = agentRef.init.api.duplicate_registered_data
       if (shouldDuplicate === true || Array.isArray(shouldDuplicate)) {
         // also report to container by providing undefined target
         methodToCall(...args, undefined, timestamp)
       }
-      methodToCall(...args, target, timestamp) // always report to target
+      return methodToCall(...args, target, timestamp) // always report to target
     } catch (err) {
       warn(50, err)
     }

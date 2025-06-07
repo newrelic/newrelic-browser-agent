@@ -23,7 +23,6 @@ test('PageViewEvent does not throw on Harvester driven processes', () => {
 
   expect(mainAgent.runtime.harvester.triggerHarvestFor(pveAggregate, {
     directSend: {
-      targetApp: 'someApp',
       payload: 'blah'
     },
     needResponse: true,

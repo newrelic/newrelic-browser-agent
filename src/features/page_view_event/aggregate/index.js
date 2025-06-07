@@ -52,7 +52,7 @@ export class Aggregate extends AggregateBase {
    *
    * @param {Function} cb A function to run once the RUM call has finished - Defaults to activateFeatures
    * @param {*} customAttributes custom attributes to attach to the RUM call - Defaults to info.js
-   * @param {*} target The target to harvest to - Since we will not know the entityGuid before harvesting, this must be an object directly supplied from the info object or API, not an entityGuid string for lookup with the entityManager - Defaults to { licenseKey: this.agentRef.info.licenseKey, applicationID: this.agentRef.info.applicationID }
+   * @param {*} target The target to harvest to
    */
   sendRum (customAttributes = this.agentRef.info.jsAttributes, target = { licenseKey: this.agentRef.info.licenseKey, applicationID: this.agentRef.info.applicationID }) {
     const info = this.agentRef.info

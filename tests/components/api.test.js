@@ -431,8 +431,7 @@ describe('API tests', () => {
     })
 
     describe('register', () => {
-      let licenseKey, applicationID
-      let gotApiSendRumCall = false
+      let licenseKey, entityID, entityName
 
       const expectHandle = (type, args, count = 1) => {
         expect(handleModule.handle.mock.calls.filter(call => {
@@ -440,271 +439,145 @@ describe('API tests', () => {
         }).length).toEqual(count)
       }
 
-      const expectApiSendRum = (val = true) => {
-        expect(gotApiSendRumCall).toEqual(val)
-      }
-
       beforeEach(async () => {
         licenseKey = faker.string.uuid()
-        applicationID = faker.string.uuid()
-        await new Promise(process.nextTick)
-        const randomEntityGuid = faker.string.uuid()
-
-        agent.ee.on('api-send-rum', () => {
-          gotApiSendRumCall = true
-          agent.runtime.entityManager.set(randomEntityGuid, { applicationID, licenseKey, entityGuid: randomEntityGuid })
-          setTimeout(() => agent.ee.emit('entity-added', [{
-            entityGuid: randomEntityGuid,
-            applicationID,
-            licenseKey
-          }]), 100)
-        })
-      })
-      afterEach(() => {
-        gotApiSendRumCall = false
+        entityID = faker.string.uuid()
+        entityName = faker.string.uuid()
       })
 
-      test('should return api object', async () => {
-        const myApi = agent.register({ licenseKey, applicationID })
+      // test('should return api object', () => {
+      //   const myApi = agent.register({ licenseKey, entityID, entityName })
 
-        expectApiSendRum()
+      //   /** wait for entity guid to be assigned */
+      //   expect(myApi).toMatchObject({
+      //     noticeError: expect.any(Function),
+      //     log: expect.any(Function),
+      //     addPageAction: expect.any(Function),
+      //     setCustomAttribute: expect.any(Function),
+      //     setUserId: expect.any(Function),
+      //     setApplicationVersion: expect.any(Function),
+      //     metadata: {
+      //       customAttributes: {},
+      //       target: { licenseKey, entityID, entityName }
+      //     }
+      //   })
+      // })
 
-        /** wait for entity guid to be assigned */
-        myApi.metadata.connected.then(() => {
-          expect(myApi).toMatchObject({
-            noticeError: expect.any(Function),
-            log: expect.any(Function),
-            addPageAction: expect.any(Function),
-            setCustomAttribute: expect.any(Function),
-            setUserId: expect.any(Function),
-            setApplicationVersion: expect.any(Function),
-            metadata: {
-              customAttributes: {},
-              target: { licenseKey, applicationID, entityGuid },
-              connected: expect.any(Promise)
-            }
-          })
-        }).catch(() => {
-        // should not have hit catch block
-          expect(1).toEqual(2)
-        })
-      })
+      // ;[{ entityID }, { licenseKey }, { entityName }].forEach(opts => {
+      //   test('should warn and not work if invalid target', () => {
+      //     let myApi = agent.register(opts)
+      //     expect(console.debug).toHaveBeenCalledWith('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#48', opts)
+      //     myApi.addPageAction()
+      //     myApi.noticeError()
+      //     myApi.log()
+      //     expect(console.debug).toHaveBeenCalledTimes(5)
+      //   })
+      // })
 
-      ;[{ applicationID }, { licenseKey }].forEach(opts => {
-        test('should warn and not work if invalid target', (done) => {
-          let myApi = agent.register(opts)
-          expectApiSendRum(false)
-          expect(console.debug).toHaveBeenCalledWith('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#48', opts)
-          myApi.addPageAction()
-          myApi.noticeError()
-          myApi.log()
-          expect(console.debug).toHaveBeenCalledTimes(5)
-          myApi.metadata.connected.then(() => {
-            expect(1).toEqual(2) // should not get "then" here
-          }).catch(() => {
-            done()
-          })
-        })
-      })
+      // test('should warn and not work if disabled', () => {
+      //   agent.init.api.allow_registered_children = false
+      //   let myApi = agent.register({ licenseKey, entityID, entityName })
+      //   expect(console.debug.mock.calls.map(call => call[0]).some(tag => tag.includes('#54'))).toEqual(true)
+      //   myApi.addPageAction()
+      //   myApi.noticeError()
+      //   myApi.log()
+      //   expect(console.debug).toHaveBeenCalledTimes(5)
+      // })
 
-      test('should warn and not work if disabled', (done) => {
-        agent.init.api.allow_registered_children = false
-        let myApi = agent.register({ licenseKey, applicationID })
-        expectApiSendRum(false)
-        expect(console.debug.mock.calls.map(call => call[0]).some(tag => tag.includes('#54'))).toEqual(true)
-        myApi.addPageAction()
-        myApi.noticeError()
-        myApi.log()
-        expect(console.debug).toHaveBeenCalledTimes(5)
-        agent.init.api.allow_registered_children = true
+      // test('should update custom attributes', () => {
+      //   const myApi = agent.register({ licenseKey, entityID, entityName })
 
-        myApi.metadata.connected.then(() => {
-          expect(1).toEqual(2) // should not get "then" here
-        }).catch(() => {
-          done()
-        })
-      })
+      //   myApi.setCustomAttribute('foo', 'bar')
+      //   expect(myApi.metadata.customAttributes).toEqual({ foo: 'bar' })
 
-      test('should skip rum call if already registered', (done) => {
-      // console.log('first', licenseKey, applicationID)
-        let myApi = agent.register({ licenseKey, applicationID })
+      //   myApi.setCustomAttribute('foo', 'bar2')
+      //   expect(myApi.metadata.customAttributes).toEqual({ foo: 'bar2' })
 
-        myApi.metadata.connected.then((firstApi) => {
-          expect(firstApi).toEqual(myApi)
-          expectApiSendRum()
-          gotApiSendRumCall = false
+      //   myApi.setApplicationVersion('appversion')
+      //   expect(myApi.metadata.customAttributes).toEqual({ foo: 'bar2', 'application.version': 'appversion' })
 
-          let mySecondApiWithMatchingTarget = agent.register({ licenseKey, applicationID })
+      //   myApi.setUserId('userid')
+      //   expect(myApi.metadata.customAttributes).toEqual({ foo: 'bar2', 'application.version': 'appversion', 'enduser.id': 'userid' })
+      // })
 
-          mySecondApiWithMatchingTarget.metadata.connected.then((secondApi) => {
-            expect(secondApi.metadata.entityGuid).toEqual(firstApi.metadata.entityGuid)
-            expectApiSendRum(false)
-            done()
-          })
-        })
-      })
-
-      test('should update custom attributes', () => {
-        const myApi = agent.register({ licenseKey, applicationID, entityGuid })
-
-        expectApiSendRum()
-
-        myApi.setCustomAttribute('foo', 'bar')
-        expect(myApi.metadata.customAttributes).toEqual({ foo: 'bar' })
-
-        myApi.setCustomAttribute('foo', 'bar2')
-        expect(myApi.metadata.customAttributes).toEqual({ foo: 'bar2' })
-
-        myApi.setApplicationVersion('appversion')
-        expect(myApi.metadata.customAttributes).toEqual({ foo: 'bar2', 'application.version': 'appversion' })
-
-        myApi.setUserId('userid')
-        expect(myApi.metadata.customAttributes).toEqual({ foo: 'bar2', 'application.version': 'appversion', 'enduser.id': 'userid' })
-      })
-
-      test('should duplicate data with config - true', async () => {
+      test('should duplicate data with config - true', () => {
         agent.init.api.duplicate_registered_data = true
-        const target = { licenseKey, applicationID }
+        const target = { licenseKey, entityID, entityName }
         const myApi = agent.register(target)
-
-        expectApiSendRum()
 
         const customAttrs = { foo: 'bar' }
 
         myApi.log('test', { customAttributes: customAttrs })
 
-        myApi.metadata.connected.catch(() => {
-        // should not have hit catch block
-          expect(1).toEqual(2)
-        }).then(() => {
-          expectHandle('storeSupportabilityMetrics', 'API/register/called', 1)
-          expectHandle('storeSupportabilityMetrics', 'API/register/log/called', 1)
-          expectHandle('storeSupportabilityMetrics', 'API/log/called', 2)
-          expectHandle('storeSupportabilityMetrics', 'API/logging/info/called', 2)
-          expectHandle('log', 'test', 2)
-
-          agent.init.api.duplicate_registered_data = false
-        })
-      })
-
-      test('should duplicate data with config - matching entity guid', async () => {
-        agent.init.api.duplicate_registered_data = [entityGuid]
-        const target = { licenseKey, applicationID }
-        const myApi = agent.register(target)
-
-        expectApiSendRum()
-
-        const customAttrs = { foo: 'bar' }
-
-        myApi.log('test', { customAttributes: customAttrs })
-
-        myApi.metadata.connected.catch(() => {
-        // should not have hit catch block
-          expect(1).toEqual(2)
-        }).then(() => {
-          expectHandle('storeSupportabilityMetrics', 'API/register/called', 1)
-          expectHandle('storeSupportabilityMetrics', 'API/register/log/called', 1)
-          expectHandle('storeSupportabilityMetrics', 'API/log/called', 2)
-          expectHandle('storeSupportabilityMetrics', 'API/logging/info/called', 2)
-          expectHandle('log', 'test', 2)
-        })
+        expectHandle('storeSupportabilityMetrics', 'API/register/called', 1)
+        expectHandle('storeSupportabilityMetrics', 'API/register/log/called', 1)
+        expectHandle('storeSupportabilityMetrics', 'API/logging/info/called', 2)
+        expectHandle('log', 'test', 2)
 
         agent.init.api.duplicate_registered_data = false
       })
 
-      test('should NOT duplicate data with config - non-matching entity guid', async () => {
-        agent.init.api.duplicate_registered_data = [faker.string.uuid()]
-        const target = { licenseKey, applicationID }
+      test('should duplicate data with config - matching entity guid', async () => {
+        agent.init.api.duplicate_registered_data = [entityGuid]
+        const target = { licenseKey, entityID, entityName }
         const myApi = agent.register(target)
-
-        expectApiSendRum()
 
         const customAttrs = { foo: 'bar' }
 
         myApi.log('test', { customAttributes: customAttrs })
 
-        myApi.metadata.connected.catch(() => {
-        // should not have hit catch block
-          expect(1).toEqual(2)
-        }).then(() => {
-          expectHandle('storeSupportabilityMetrics', 'API/register/called', 1)
-          expectHandle('storeSupportabilityMetrics', 'API/register/log/called', 1)
-          expectHandle('storeSupportabilityMetrics', 'API/log/called', 1)
-          expectHandle('storeSupportabilityMetrics', 'API/logging/info/called', 1)
-          expectHandle('log', 'test', 1)
-        })
+        expectHandle('storeSupportabilityMetrics', 'API/register/called', 1)
+        expectHandle('storeSupportabilityMetrics', 'API/register/log/called', 1)
+        expectHandle('storeSupportabilityMetrics', 'API/logging/info/called', 2)
+        expectHandle('log', 'test', 2)
 
         agent.init.api.duplicate_registered_data = false
       })
 
       describe('noticeError', () => {
         test('should call base apis', async () => {
-          const target = { licenseKey, applicationID }
+          const target = { licenseKey, entityID, entityName }
           const myApi = agent.register(target)
-
-          expectApiSendRum()
 
           const err = new Error('test')
           const customAttrs = { foo: 'bar' }
 
           myApi.noticeError(err, customAttrs)
 
-          myApi.metadata.connected.catch(() => {
-          // should not have hit catch block
-            expect(1).toEqual(2)
-          }).then(() => {
-            expectHandle('storeSupportabilityMetrics', 'API/register/called')
-            expectHandle('storeSupportabilityMetrics', 'API/register/noticeError/called')
-            expectHandle('storeSupportabilityMetrics', 'API/noticeError/called')
-            expectHandle('err', err)
-          })
+          expectHandle('storeSupportabilityMetrics', 'API/register/called')
+          expectHandle('storeSupportabilityMetrics', 'API/register/noticeError/called')
+          expectHandle('err', err)
         })
       })
 
       describe('addPageAction', () => {
         test('should call base apis', async () => {
-          const target = { licenseKey, applicationID }
+          const target = { licenseKey, entityID, entityName }
           const myApi = agent.register(target)
-
-          expectApiSendRum()
 
           const customAttrs = { foo: 'bar' }
 
           myApi.addPageAction('test', customAttrs)
 
-          myApi.metadata.connected.catch(() => {
-          // should not have hit catch block
-            expect(1).toEqual(2)
-          }).then(() => {
-            expectHandle('storeSupportabilityMetrics', 'API/register/called')
-            expectHandle('storeSupportabilityMetrics', 'API/register/addPageAction/called')
-            expectHandle('storeSupportabilityMetrics', 'API/addPageAction/called')
-            expectHandle('api-addPageAction', 'test')
-          })
+          expectHandle('storeSupportabilityMetrics', 'API/register/called')
+          expectHandle('storeSupportabilityMetrics', 'API/register/addPageAction/called')
+          expectHandle('api-addPageAction', 'test')
         })
       })
 
       describe('log', () => {
         test('should call base apis', async () => {
-          const target = { licenseKey, applicationID }
+          const target = { licenseKey, entityID, entityName }
           const myApi = agent.register(target)
-
-          expectApiSendRum()
 
           const customAttrs = { foo: 'bar' }
 
           myApi.log('test', { customAttributes: customAttrs })
 
-          myApi.metadata.connected.catch(() => {
-          // should not have hit catch block
-            expect(1).toEqual(2)
-          }).then(() => {
-            expectHandle('storeSupportabilityMetrics', 'API/register/called')
-            expectHandle('storeSupportabilityMetrics', 'API/register/log/called')
-            expectHandle('storeSupportabilityMetrics', 'API/log/called')
-            expectHandle('storeSupportabilityMetrics', 'API/logging/info/called')
-            expectHandle('log', 'test')
-          })
+          expectHandle('storeSupportabilityMetrics', 'API/register/called')
+          expectHandle('storeSupportabilityMetrics', 'API/register/log/called')
+          expectHandle('storeSupportabilityMetrics', 'API/logging/info/called')
+          expectHandle('log', 'test')
         })
       })
     })

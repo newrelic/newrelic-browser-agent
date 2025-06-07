@@ -100,7 +100,7 @@ describe('sub-features', () => {
 
     genericEventsAggregate.ee.emit('api-addPageAction', [relativeTimestamp, name, { foo: 'bar' }])
 
-    expect(genericEventsAggregate.events.get()[0].data[0]).toMatchObject({
+    expect(genericEventsAggregate.events.get()[0]).toMatchObject({
       eventType: 'PageAction',
       timestamp: Math.floor(timeKeeper.correctAbsoluteTimestamp(
         timeKeeper.convertRelativeTimestamp(relativeTimestamp)
@@ -124,7 +124,7 @@ describe('sub-features', () => {
 
     genericEventsAggregate.ee.emit('api-addPageAction', [relativeTimestamp, name, { eventType: 'BetterPageAction', timestamp: 'BetterTimestamp' }])
 
-    expect(genericEventsAggregate.events.get()[0].data[0]).toMatchObject({
+    expect(genericEventsAggregate.events.get()[0]).toMatchObject({
       eventType: 'PageAction',
       timestamp: expect.any(Number)
     })
@@ -138,7 +138,7 @@ describe('sub-features', () => {
 
     genericEventsAggregate.ee.emit('api-addPageAction', [relativeTimestamp, name, {}])
 
-    expect(genericEventsAggregate.events.get()[0].data[0]).toMatchObject({
+    expect(genericEventsAggregate.events.get()[0]).toMatchObject({
       eventType: 'PageAction',
       timestamp: expect.any(Number)
     })
@@ -164,7 +164,7 @@ describe('sub-features', () => {
     // blur event to trigger aggregation to stop and add to harvest buffer
     genericEventsAggregate.ee.emit('ua', [{ timeStamp: 234567, type: 'blur', target: window }])
 
-    const [{ payload: harvest }] = genericEventsAggregate.makeHarvestPayload() // force it to put the aggregation into the event buffer
+    const harvest = genericEventsAggregate.makeHarvestPayload() // force it to put the aggregation into the event buffer
     expect(harvest.body.ins[0]).toMatchObject({
       eventType: 'UserAction',
       timestamp: expect.any(Number),
@@ -191,7 +191,7 @@ describe('sub-features', () => {
     // blur event to trigger aggregation to stop and add to harvest buffer
     genericEventsAggregate.ee.emit('ua', [{ timeStamp: 234567, type: 'blur', target: window }])
 
-    const [{ payload: harvest }] = genericEventsAggregate.makeHarvestPayload() // force it to put the aggregation into the event buffer
+    const harvest = genericEventsAggregate.makeHarvestPayload() // force it to put the aggregation into the event buffer
     expect(harvest.body.ins[0]).toMatchObject({
       eventType: 'UserAction',
       timestamp: expect.any(Number),
@@ -218,7 +218,7 @@ describe('sub-features', () => {
     // blur event to trigger aggregation to stop and add to harvest buffer
     genericEventsAggregate.ee.emit('ua', [{ timeStamp: 234567, type: 'blur', target: window }])
 
-    const [{ payload: harvest }] = genericEventsAggregate.makeHarvestPayload() // force it to put the aggregation into the event buffer
+    const harvest = genericEventsAggregate.makeHarvestPayload() // force it to put the aggregation into the event buffer
     expect(harvest.body.ins[0]).toMatchObject({
       eventType: 'UserAction',
       timestamp: expect.any(Number),
@@ -262,7 +262,7 @@ describe('sub-features', () => {
     genericEventsAggregate.ee.emit('rumresp', [{ ins: 1 }])
     await new Promise(process.nextTick)
 
-    expect(genericEventsAggregate.events.get()[0].data[0]).toMatchObject({
+    expect(genericEventsAggregate.events.get()[0]).toMatchObject({
       eventType: 'BrowserPerformance',
       timestamp: expect.any(Number),
       entryName: 'test',
@@ -302,7 +302,7 @@ describe('sub-features', () => {
     genericEventsAggregate.ee.emit('rumresp', [{ ins: 1 }])
     await new Promise(process.nextTick)
 
-    expect(genericEventsAggregate.events.get()[0].data[0]).toMatchObject({
+    expect(genericEventsAggregate.events.get()[0]).toMatchObject({
       eventType: 'BrowserPerformance',
       timestamp: expect.any(Number),
       entryName: 'test',

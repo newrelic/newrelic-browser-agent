@@ -12,11 +12,6 @@ let mainAgent
 
 beforeAll(async () => {
   mainAgent = setupAgent()
-  /** mock response from PVE that assigns an entityGuid to the entity manager */
-  mainAgent.runtime.entityManager.set(
-    mainAgent.runtime.appMetadata.agents[0].entityGuid,
-    { licenseKey: mainAgent.info.licenseKey, applicationID: mainAgent.info.applicationID, entityGuid: mainAgent.runtime.appMetadata.agents[0].entityGuid }
-  )
 })
 
 let loggingAggregate
@@ -94,9 +89,9 @@ describe('payloads', () => {
       { myAttributes: 1 },
       'error'
     )
-    expect(loggingAggregate.events.get()[0].data[0]).toEqual(expectedLog)
+    expect(loggingAggregate.events.get()[0]).toEqual(expectedLog)
 
-    expect(loggingAggregate.makeHarvestPayload()[0].payload).toEqual({
+    expect(loggingAggregate.makeHarvestPayload()).toEqual({
       qs: { browser_monitoring_key: mainAgent.info.licenseKey },
       body: [{
         common: {
@@ -122,7 +117,7 @@ describe('payloads', () => {
   test('prepares payload as expected', async () => {
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', { myAttributes: 1 }, 'error'])
 
-    expect(loggingAggregate.events.get()[0].data[0]).toEqual(new Log(
+    expect(loggingAggregate.events.get()[0]).toEqual(new Log(
       Math.floor(mainAgent.runtime.timeKeeper.correctAbsoluteTimestamp(
         mainAgent.runtime.timeKeeper.convertRelativeTimestamp(1234)
       )),
@@ -167,7 +162,7 @@ describe('payloads', () => {
       'error'
     )
 
-    const logs = loggingAggregate.events.get()[0].data
+    const logs = loggingAggregate.events.get()
 
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', [], 'ERROR'])
     expect(logs.pop()).toEqual(expected)
@@ -193,11 +188,11 @@ describe('payloads', () => {
     )
 
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', {}, 'ErRoR'])
-    expect(loggingAggregate.events.get()[0].data[0]).toEqual(expected)
+    expect(loggingAggregate.events.get()[0]).toEqual(expected)
   })
 
   test('should buffer logs with non-stringify-able message', async () => {
-    const logs = loggingAggregate.events.get()[0].data
+    const logs = loggingAggregate.events.get()
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, new Error('test'), {}, 'error'])
     expect(logs.pop().message).toEqual('Error: test')
 
@@ -235,7 +230,7 @@ test.each(Object.keys(LOGGING_MODE))('payloads - log events are emitted (or not)
   loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [SOME_TIMESTAMP, LOG_LEVELS.DEBUG, { myAttributes: 1 }, LOG_LEVELS.DEBUG])
   loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [SOME_TIMESTAMP, LOG_LEVELS.TRACE, { myAttributes: 1 }, LOG_LEVELS.TRACE])
 
-  expect(loggingAggregate.events.get()[0].data.length).toEqual(LOGGING_MODE[logLevel])
+  expect(loggingAggregate.events.get().length).toEqual(LOGGING_MODE[logLevel])
   loggingAggregate.events.clear()
 })
 

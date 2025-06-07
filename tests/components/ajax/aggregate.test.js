@@ -61,7 +61,7 @@ test('on interactionDiscarded, saved (old) SPA events are put back in ajaxEvents
   ajaxAggregate.ee.emit('interactionDone', [interaction, false])
 
   expect(ajaxAggregate.underSpaEvents[interaction.id]).toBeUndefined() // no interactions in SPA under interaction 0
-  expect(ajaxAggregate.events.get()[0].data.length).toEqual(1)
+  expect(ajaxAggregate.events.get().length).toEqual(1)
 })
 
 test('on returnAjax from soft nav, event is re-routed back into ajaxEvents', () => {
@@ -73,18 +73,18 @@ test('on returnAjax from soft nav, event is re-routed back into ajaxEvents', () 
   const event = jest.mocked(handleModule.handle).mock.lastCall[1][0]
   ajaxAggregate.ee.emit('returnAjax', [event], context)
 
-  expect(ajaxAggregate.events.get()[0].data.length).toEqual(1)
-  expect(ajaxAggregate.events.get()[0].data[0]).toEqual(expect.objectContaining({ startTime: 0, path: '/pathname' }))
+  expect(ajaxAggregate.events.get().length).toEqual(1)
+  expect(ajaxAggregate.events.get()[0]).toEqual(expect.objectContaining({ startTime: 0, path: '/pathname' }))
 })
 
 describe('storeXhr', () => {
   test('for a plain ajax request buffers in ajaxEvents', () => {
     ajaxAggregate.ee.emit('xhr', ajaxArguments, context)
 
-    expect(ajaxAggregate.events.get()[0].data.length).toEqual(1) // non-SPA ajax requests are buffered in ajaxEvents
+    expect(ajaxAggregate.events.get().length).toEqual(1) // non-SPA ajax requests are buffered in ajaxEvents
     expect(Object.keys(ajaxAggregate.underSpaEvents).length).toEqual(0)
 
-    const ajaxEvent = ajaxAggregate.events.get()[0].data[0]
+    const ajaxEvent = ajaxAggregate.events.get()[0]
     expect(ajaxEvent).toEqual(expect.objectContaining({ startTime: 0, path: '/pathname' }))
   })
 
@@ -96,7 +96,7 @@ describe('storeXhr', () => {
 
     const interactionAjaxEvents = ajaxAggregate.underSpaEvents[interaction.id]
     expect(interactionAjaxEvents.length).toEqual(1) // SPA ajax requests are buffered in underSpaEvents and under its interaction id
-    expect(ajaxAggregate.events.get()[0].data.length).toEqual(0)
+    expect(ajaxAggregate.events.get().length).toEqual(0)
 
     const spaAjaxEvent = interactionAjaxEvents[0]
     expect(spaAjaxEvent).toEqual(expect.objectContaining({ startTime: 0, path: '/pathname' }))
@@ -109,7 +109,7 @@ describe('storeXhr', () => {
 
     ajaxAggregate.ee.emit('xhr', ajaxArguments, context)
 
-    expect(ajaxAggregate.events.get()[0].data.length).toEqual(0)
+    expect(ajaxAggregate.events.get().length).toEqual(0)
     expect(Object.keys(ajaxAggregate.underSpaEvents).length).toEqual(0)
     expect(handleModule.handle).toHaveBeenLastCalledWith(
       'ajax',
@@ -152,7 +152,7 @@ describe('prepareHarvest', () => {
     }
     fakeAgent.info.jsAttributes = expectedCustomAttributes
 
-    const [{ payload: serializedPayload }] = ajaxAggregate.makeHarvestPayload(false)
+    const serializedPayload = ajaxAggregate.makeHarvestPayload(false)
     // serializedPayload from ajax comes back as an array of bodies now, so we just need to decode each one and flatten
     // this decoding does not happen elsewhere in the app so this only needs to happen here in this specific test
     const decodedEvents = qp.decode(serializedPayload.body)

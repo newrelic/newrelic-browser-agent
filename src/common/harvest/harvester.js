@@ -55,32 +55,29 @@ export class Harvester {
    * @returns {boolean} True if 1+ network call was made. Note that this does not mean or guarantee that it was successful (or that all were in the case of more than 1).
    */
   triggerHarvestFor (aggregateInst, localOpts = {}) {
-    if (aggregateInst.blocked) return false
+    const output = { ranSend: false, payload: undefined }
+    if (aggregateInst.blocked) return output
 
     const submitMethod = getSubmitMethod(localOpts)
-    if (!submitMethod) return false
+    if (!submitMethod) return output
 
     const shouldRetryOnFail = !localOpts.isFinalHarvest && submitMethod === xhrMethod // always retry all features harvests except for final
-    let payload; let ranSend = false
-    if (!localOpts.directSend) { // primarily used by rum call to bypass makeHarvestPayload by providing payload directly
-      payload = aggregateInst.makeHarvestPayload(shouldRetryOnFail, localOpts) // be sure the 'this' of makeHarvestPayload is the aggregate w/ access to its harvestOpts
-      if (!payload) return false // can be undefined if storage is empty or preharvest checks failed
-    } else payload = localOpts.directSend
+    output.payload = !localOpts.directSend ? aggregateInst.makeHarvestPayload(shouldRetryOnFail, localOpts) : localOpts.directSend?.payload // features like PVE can define the payload directly, bypassing the makeHarvestPayload logic
 
-    if (!payload) return
+    if (!output.payload) return output
 
     send(this.agentRef, {
       endpoint: FEATURE_TO_ENDPOINT[aggregateInst.featureName],
-      payload,
+      payload: output.payload,
       localOpts,
       submitMethod,
       cbFinished,
       raw: aggregateInst.harvestOpts.raw,
       featureName: aggregateInst.featureName
     })
-    ranSend = true
+    output.ranSend = true
 
-    return ranSend
+    return output
 
     /**
      * This is executed immediately after harvest sends the data via XHR, or if there's nothing to send. Note that this excludes on unloading / sendBeacon.

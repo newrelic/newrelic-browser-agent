@@ -18,8 +18,8 @@ test('PageViewEvent does not throw on Harvester driven processes', () => {
   expect(() => pveAggregate.makeHarvestPayload(true)).not.toThrow()
 
   // The following both don't send anything since PVE buffer is meant to stay empty, so they return false.
-  expect(mainAgent.runtime.harvester.triggerHarvestFor(pveAggregate)).toEqual(false) // mimics what the harvester does on interval
-  expect(mainAgent.runtime.harvester.triggerHarvestFor(pveAggregate, { isFinalHarvest: true })).toEqual(false) // mimics what the harvester does on EoL
+  expect(mainAgent.runtime.harvester.triggerHarvestFor(pveAggregate).ranSend).toEqual(false) // mimics what the harvester does on interval
+  expect(mainAgent.runtime.harvester.triggerHarvestFor(pveAggregate, { isFinalHarvest: true }).ranSend).toEqual(false) // mimics what the harvester does on EoL
 
   expect(mainAgent.runtime.harvester.triggerHarvestFor(pveAggregate, {
     directSend: {
@@ -27,5 +27,5 @@ test('PageViewEvent does not throw on Harvester driven processes', () => {
     },
     needResponse: true,
     sendEmptyBody: true
-  })).toEqual(true) // mimics the manual trigger in PVE `sendRum`; this should return true as it actually tries to "send"
+  }).ranSend).toEqual(true) // mimics the manual trigger in PVE `sendRum`; this should return true as it actually tries to "send"
 })

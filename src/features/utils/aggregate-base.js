@@ -31,6 +31,8 @@ export class AggregateBase extends FeatureBase {
     this.harvestOpts = {} // features aggregate classes can define custom opts for when their harvest is called
 
     this.#setupEventStore()
+
+    this.waitForDrain()
   }
 
   /**
@@ -57,6 +59,15 @@ export class AggregateBase extends FeatureBase {
         this.events = new EventBuffer()
         break
     }
+  }
+
+  waitForDrain () {
+    /** emitted when the feature successfully drains */
+    this.ee.on('drain-' + this.featureName, () => {
+      /** make an immediate harvest for all the features to help with harvestability for pre-load dervied data on short lived pages */
+      if (!this.drained) this.agentRef.runtime.harvester.triggerHarvestFor(this)
+      this.drained = true
+    })
   }
 
   /**
@@ -92,7 +103,6 @@ export class AggregateBase extends FeatureBase {
    */
   drain () {
     drain(this.agentIdentifier, this.featureName)
-    this.drained = true
   }
 
   preHarvestChecks (opts) {

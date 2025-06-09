@@ -123,8 +123,8 @@ test('Metrics does not harvest on interval, only on EoL', () => {
   expect(metricsAggregate.events.isEmpty(metricsAggregate.harvestOpts)).toEqual(false) // double check so that harvest should proceed
   metricsAggregate.drained = true // this is a requisite for harvest in preHarvestChecks
 
-  expect(mainAgent.runtime.harvester.triggerHarvestFor(metricsAggregate)).toEqual(false) // mimics what the harveseter does on interval
-  expect(mainAgent.runtime.harvester.triggerHarvestFor(metricsAggregate, { isFinalHarvest: true })).toEqual(true) // mimics what the harveseter does on EoL
+  expect(mainAgent.runtime.harvester.triggerHarvestFor(metricsAggregate).ranSend).toEqual(false) // mimics what the harveseter does on interval
+  expect(mainAgent.runtime.harvester.triggerHarvestFor(metricsAggregate, { isFinalHarvest: true }).ranSend).toEqual(true) // mimics what the harveseter does on EoL
 })
 
 function createAndStoreMetric (value, isSupportability) {

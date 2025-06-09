@@ -115,7 +115,7 @@ function drainGroup (agentIdentifier, group, activateGroup = true) {
 
   if (!baseEE.isolatedBacklog) delete handlers[group]
   baseEE.backlog[group] = null
-  baseEE.emit('drain-' + group, []) // TODO: Code exists purely for a unit test and needs to be refined
+  baseEE.emit('drain-' + group, []) // Informs the feature that it has drained its backlog of events, this kicks off an immediate harvest to capture any load-driven events that were buffered.
 }
 
 /**

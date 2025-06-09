@@ -7,6 +7,7 @@ import { resetAgent, setupAgent } from '../setup-agent'
 import { Instrument as SessionReplay } from '../../../src/features/session_replay/instrument'
 import * as consoleModule from '../../../src/common/util/console'
 import { MAX_PAYLOAD_SIZE } from '../../../src/common/constants/agent-constants'
+import { expectHarvests } from '../../util/basic-checks'
 
 let mainAgent
 
@@ -51,7 +52,7 @@ describe('Session Replay Session Behavior', () => {
     sessionReplayAggregate.ee.emit(SESSION_EVENTS.RESET)
     await new Promise(process.nextTick)
 
-    expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalled()
+    expectHarvests(mainAgent, FEATURE_NAMES.sessionReplay, { harvestsCount: 1 })
     expect(mainAgent.runtime.isRecording).toBeFalsy()
     expect(sessionReplayAggregate.blocked).toBeTruthy()
   })
@@ -197,7 +198,7 @@ describe('Session Replay Payload Validation', () => {
 
     sessionReplayAggregate.ee.emit('rumresp', [{ sr: 1, srs: MODE.FULL }])
     await new Promise(process.nextTick)
-    expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledTimes(1)
+    expectHarvests(mainAgent, FEATURE_NAMES.sessionReplay, { harvestsCount: 1 })
 
     const harvestContents = jest.mocked(sessionReplayAggregate.getHarvestContents).mock.results[0].value
     expect(harvestContents.qs).toMatchObject(createAnyQueryMatcher())
@@ -220,7 +221,7 @@ describe('Session Replay Payload Validation', () => {
 
     sessionReplayAggregate.ee.emit('rumresp', [{ sr: 1, srs: MODE.FULL }])
     await new Promise(process.nextTick)
-    expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledTimes(1)
+    expectHarvests(mainAgent, FEATURE_NAMES.sessionReplay, { harvestsCount: 1 })
 
     const harvestContents = jest.mocked(sessionReplayAggregate.getHarvestContents).mock.results[0].value
     expect(harvestContents.qs).toMatchObject(createAnyQueryMatcher())
@@ -250,7 +251,7 @@ describe('Session Replay Harvest Behaviors', () => {
 
     sessionReplayAggregate.ee.emit('rumresp', [{ sr: 1, srs: MODE.FULL }])
     await new Promise(process.nextTick)
-    expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledTimes(1)
+    expectHarvests(mainAgent, FEATURE_NAMES.sessionReplay, { harvestsCount: 1 })
 
     const harvestContents = jest.mocked(sessionReplayAggregate.getHarvestContents).mock.results[0].value
     expect(harvestContents.qs).toMatchObject(createAnyQueryMatcher())
@@ -266,7 +267,7 @@ describe('Session Replay Harvest Behaviors', () => {
 
     sessionReplayAggregate.ee.emit('rumresp', [{ sr: 1, srs: MODE.FULL }])
     await new Promise(process.nextTick)
-    expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledTimes(1)
+    expectHarvests(mainAgent, FEATURE_NAMES.sessionReplay, { harvestsCount: 1 })
 
     const harvestContents = jest.mocked(sessionReplayAggregate.getHarvestContents).mock.results[0].value
     expect(harvestContents.qs).toMatchObject({
@@ -289,7 +290,8 @@ describe('Session Replay Harvest Behaviors', () => {
     const before = Date.now()
     sessionReplayAggregate.ee.emit('rumresp', [{ sr: 1, srs: MODE.FULL }])
     await new Promise(process.nextTick)
-    expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledTimes(1)
+
+    expectHarvests(mainAgent, FEATURE_NAMES.sessionReplay, { harvestsCount: 1 })
 
     document.body.innerHTML = `<span>${faker.lorem.words(IDEAL_PAYLOAD_SIZE)}</span>`
     await new Promise(process.nextTick)
@@ -303,7 +305,8 @@ describe('Session Replay Harvest Behaviors', () => {
 
     sessionReplayAggregate.ee.emit('rumresp', [{ sr: 1, srs: MODE.FULL }])
     await new Promise(process.nextTick)
-    expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledTimes(1)
+
+    expectHarvests(mainAgent, FEATURE_NAMES.sessionReplay, { harvestsCount: 1 })
 
     document.body.innerHTML = `<span>${faker.lorem.words(MAX_PAYLOAD_SIZE)}</span>`
     await new Promise(process.nextTick)

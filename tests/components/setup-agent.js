@@ -59,6 +59,8 @@ export function setupAgent ({ agentOverrides = {}, info = {}, init = {}, loaderC
   if (!fakeAgent.runtime.harvester) fakeAgent.runtime.harvester = new Harvester(fakeAgent)
   fakeAgent.sharedAggregator = new EventAggregator()
 
+  jest.spyOn(fakeAgent.runtime.harvester, 'triggerHarvestFor')
+
   return fakeAgent
 }
 

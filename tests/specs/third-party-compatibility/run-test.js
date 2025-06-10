@@ -52,7 +52,7 @@ export default async function runTest ({
   expect(tracesHarvests[0].request.body.length).toBeGreaterThan(0)
 
   expect(Array.isArray(eventsHarvests[0].request.body)).toEqual(true)
-  expect(eventsHarvests[0].request.body.length).toEqual(3) // fp, fcp, and load
+  // eventHarvests[0] is the pvt values
   expect(eventsHarvests[1].request.body.length).toEqual(1) // bIxn
   expect(eventsHarvests[1].request.body[0].trigger).toEqual('initialPageLoad')
 

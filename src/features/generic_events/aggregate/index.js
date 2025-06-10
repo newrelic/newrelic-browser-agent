@@ -30,6 +30,8 @@ export class Aggregate extends AggregateBase {
         return
       }
 
+      this.reportSupportabilityMetric('test')
+
       this.trackSupportabilityMetrics()
 
       registerHandler('api-recordCustomEvent', (timestamp, eventType, attributes) => {

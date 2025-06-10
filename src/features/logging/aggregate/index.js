@@ -14,6 +14,7 @@ import { MAX_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
 import { SESSION_EVENT_TYPES, SESSION_EVENTS } from '../../../common/session/constants'
 import { ABORT_REASONS } from '../../session_replay/constants'
 import { canEnableSessionTracking } from '../../utils/feature-gates'
+import { isValidMFETarget } from '../../../common/util/target'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -65,6 +66,7 @@ export class Aggregate extends AggregateBase {
     if (this.blocked || !this.loggingMode) return
 
     if (!attributes || typeof attributes !== 'object') attributes = {}
+    if (isValidMFETarget(target)) attributes = { ...attributes, licenseKey: target.licenseKey, entityID: target.entityID, entityName: target.entityName }
     if (typeof level === 'string') level = level.toUpperCase()
     if (!isValidLogLevel(level)) return warn(30, level)
     if (this.loggingMode < (LOGGING_MODE[level] || Infinity)) {
@@ -94,8 +96,7 @@ export class Aggregate extends AggregateBase {
       Math.floor(this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(timestamp)),
       message,
       attributes,
-      level,
-      target
+      level
     )
 
     const logBytes = log.message.length + stringify(log.attributes).length + log.level.length + 10 // timestamp == 10 chars

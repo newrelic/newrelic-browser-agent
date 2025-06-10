@@ -15,11 +15,13 @@ describe('registered-entity', () => {
     await browser.execute(function () {
       window.agent1 = new RegisteredEntity({
         licenseKey: window.NREUM.info.licenseKey,
-        applicationID: 1
+        entityID: 1,
+        entityName: 'agent1'
       })
       window.agent2 = new RegisteredEntity({
         licenseKey: window.NREUM.info.licenseKey,
-        applicationID: 2
+        entityID: 2,
+        entityName: 'agent2'
       })
 
       // each payload in this test is decorated with data that matches its appId for ease of testing
@@ -39,14 +41,14 @@ describe('registered-entity', () => {
 
       // each payload in this test is decorated with data that matches its appId for ease of testing
       window.newrelic.log('42')
-      window.agent1.log('1')
-      window.agent2.log('2')
+      window.agent1.log('1', { level: 'error' })
+      window.agent2.log('2', { level: 'error' })
     })
     const [rumHarvests, errorsHarvests, insightsHarvests, logsHarvest] = await Promise.all([
-      rumCapture.waitForResult({ totalCount: 3 }),
-      errorsCapture.waitForResult({ totalCount: 3 }),
-      insightsCapture.waitForResult({ totalCount: 3 }),
-      logsCapture.waitForResult({ totalCount: 3 })
+      rumCapture.waitForResult({ totalCount: 1 }),
+      errorsCapture.waitForResult({ totalCount: 1 }),
+      insightsCapture.waitForResult({ totalCount: 1 }),
+      logsCapture.waitForResult({ totalCount: 1 })
     ])
 
     // these props will get set to true once a test has matched it
@@ -54,8 +56,8 @@ describe('registered-entity', () => {
     // only have one distinct matching payload
     const tests = {
       42: { rum: false, err: false, pa: false, log: false }, // container agent defaults to appId 42
-      1: { rum: false, err: false, pa: false, log: false }, // agent1 instance
-      2: { rum: false, err: false, pa: false, log: false } // agent2 instance
+      1: { err: false, pa: false, log: false }, // agent1 instance
+      2: { err: false, pa: false, log: false } // agent2 instance
     }
 
     // each type of test should check that:
@@ -66,26 +68,33 @@ describe('registered-entity', () => {
     })
 
     errorsHarvests.forEach(({ request: { query, body } }) => {
-      expect(ranOnce(query.a, 'err')).toEqual(true)
-      expect(payloadMatchesAppId(query.a, body.err[0].params.message)).toEqual(true)
+      const data = body.err
+      data.forEach(err => {
+        const id = err.custom.entityID || query.a // MFEs use entityID, regular agents use appId
+        expect(ranOnce(id, 'err')).toEqual(true)
+        expect(Number(id)).toEqual(Number(err.params.message))
+      })
     })
 
     insightsHarvests.forEach(({ request: { query, body } }) => {
-      expect(ranOnce(query.a, 'pa')).toEqual(true)
-      const data = body.ins[0]
-      expect(payloadMatchesAppId(query.a, data.val, data.actionName, data.customAttr)).toEqual(true)
+      const data = body.ins
+      data.forEach(ins => {
+        if (ins.eventType === 'PageAction') {
+          const id = ins.entityID || query.a // MFEs use entityID, regular agents use appId
+          expect(ranOnce(id, 'pa')).toEqual(true)
+          expect(Number(id)).toEqual(Number(ins.val))
+        }
+      })
     })
 
     logsHarvest.forEach(({ request: { query, body } }) => {
       const data = JSON.parse(body)[0]
-      expect(ranOnce(data.common.attributes.appId, 'log')).toEqual(true)
-      expect(payloadMatchesAppId(data.common.attributes.appId, data.logs[0].message)).toEqual(true)
+      data.logs.forEach(log => {
+        const id = log.attributes.entityID || data.common.attributes.appId // MFEs use entityID, regular agents use appId
+        expect(ranOnce(id, 'log')).toEqual(true)
+        expect(Number(id)).toEqual(Number(log.message))
+      })
     })
-
-    function payloadMatchesAppId (appId, ...props) {
-      // each payload in this test is decorated with data that matches its appId for ease of testing
-      return props.every(p => Number(appId) === Number(p))
-    }
 
     function ranOnce (appId, type) {
       if (tests[appId][type]) return false

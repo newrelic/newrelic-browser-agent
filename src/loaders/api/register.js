@@ -85,7 +85,6 @@ export function buildRegisterApi (agentRef, target) {
      * @returns
      */
   const report = (methodToCall, args, target) => {
-    // console.log('REPORT!', methodToCall.name, invalidApiResponse)
     if (invalidApiResponse) return invalidApiResponse()
     /** set the timestamp before the async part of waiting for the rum response for better accuracy */
     const timestamp = now()

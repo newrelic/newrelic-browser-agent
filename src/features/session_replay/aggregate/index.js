@@ -38,6 +38,8 @@ export class Aggregate extends AggregateBase {
     this.gzipper = undefined
     /** populated with the u8 string lib async */
     this.u8 = undefined
+    /** flips to false if the compressor libraries cannot import */
+    this.shouldCompress = true
 
     /** set by BCS response */
     this.entitled = false
@@ -208,13 +210,15 @@ export class Aggregate extends AggregateBase {
       this.gzipper = gzipSync
       this.u8 = strToU8
     } catch (err) {
-      // compressor failed to load, but we can still record without compression as a last ditch effort
+      this.shouldCompress = false
+      // compressor failed to load, but we can still try to record without compression as a last ditch effort
     }
   }
 
   makeHarvestPayload (shouldRetryOnFail) {
-    if (this.mode !== MODE.FULL || this.blocked) return
-    if (!this.recorder || !this.timeKeeper?.ready || !this.recorder.hasSeenSnapshot) return
+    if (this.mode !== MODE.FULL || this.blocked) return // harvests should only be made in FULL mode, and not if the feature is blocked
+    if (this.shouldCompress && (!this.gzipper || !this.u8)) return // if compression is enabled, but the libraries have not loaded, wait for them to load
+    if (!this.recorder || !this.timeKeeper?.ready || !this.recorder.hasSeenSnapshot) return // if the recorder or the timekeeper is not ready, or the recorder has not yet seen a snapshot, do not harvest
 
     const recorderEvents = this.recorder.getEvents()
     // get the event type and use that to trigger another harvest if needed

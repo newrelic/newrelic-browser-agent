@@ -15,6 +15,7 @@ import { EventBuffer } from './event-buffer'
 import { handle } from '../../common/event-emitter/handle'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../metrics/constants'
 import { EventAggregator } from '../../common/aggregate/event-aggregator'
+import { MAX_PAYLOAD_SIZE } from '../../common/constants/agent-constants'
 
 export class AggregateBase extends FeatureBase {
   /**
@@ -50,13 +51,13 @@ export class AggregateBase extends FeatureBase {
         // Jserror and Metric features uses a singleton EventAggregator instead of a regular EventBuffer.
       case FEATURE_NAMES.jserrors:
       case FEATURE_NAMES.metrics:
-        this.events = this.agentRef.sharedAggregator ??= new EventAggregator()
+        this.events = this.agentRef.sharedAggregator ??= new EventAggregator(MAX_PAYLOAD_SIZE, this.featureName)
         break
         /** All other features get EventBuffer by default. Note: PVE is included here, but event buffer will always be empty so future harvests will still not happen by interval or EOL.
     This was necessary to prevent race cond. issues where the event buffer was checked before the feature could "block" itself.
     Its easier to just keep an empty event buffer in place. */
       default:
-        this.events = new EventBuffer()
+        this.events = new EventBuffer(MAX_PAYLOAD_SIZE, this.featureName)
         break
     }
   }
@@ -65,7 +66,7 @@ export class AggregateBase extends FeatureBase {
     /** emitted when the feature successfully drains */
     this.ee.on('drain-' + this.featureName, () => {
       /** make an immediate harvest for all the features to help with harvestability for pre-load dervied data on short lived pages */
-      if (!this.drained) this.agentRef.runtime.harvester.triggerHarvestFor(this)
+      if (!this.drained) setTimeout(() => this.agentRef.runtime.harvester.triggerHarvestFor(this), 1)
       this.drained = true
     })
   }

@@ -44,7 +44,6 @@ export class Aggregate extends AggregateBase {
     this.waitForFlags(['spa']).then(([spaOn]) => {
       if (spaOn) {
         this.drain()
-        setTimeout(() => agentRef.runtime.harvester.triggerHarvestFor(this), 0) // send the IPL ixn on next tick, giving some time for any ajax to finish; we may want to just remove this?
       } else {
         this.blocked = true // if rum response determines that customer lacks entitlements for spa endpoint, this feature shouldn't harvest
         this.deregisterDrain()

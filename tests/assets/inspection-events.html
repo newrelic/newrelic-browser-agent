@@ -4,81 +4,49 @@
   PDX-License-Identifier: Apache-2.0
 -->
 <html>
+  <head>
+    <title>Inspection events</title>
+    <script>
+      window.inspectionEvents = {
+        initialize: false,
+        load: false,
+        buffer: false,
+        harvest: false,
+        api: false,
+      };
+      window.addEventListener("newrelic", ({ detail }) => {
+        if (!detail) return;
+        const { name, drained, type, feature, data } = detail;
 
-<head>
-  <title>Inspection events</title>
-  <script>
-    window.inspectionEvents = {
-      initialize: false,
-      load: false,
-      buffer: false,
-      harvest: false,
-      api: false,
-    }
-    window.addEventListener('newrelic', ({ detail }) => {
-      if (!detail || !detail.agentIdentifier) return
-      const { name, drained, type, feature, data } = detail
+        if (name == "initialize" && drained == false && type == "lifecycle" && feature == undefined && !!data) {
+          window.inspectionEvents.initialize = true;
+        }
 
-      if (
-        name == 'initialize' &&
-        drained == false &&
-        type == 'lifecycle' &&
-        feature == undefined &&
-        data
-      ) {
-        window.inspectionEvents.initialize = true
-      }
+        if (name === "load" && drained === true && type === "lifecycle" && feature === undefined && !!data) {
+          window.inspectionEvents.load = true;
+        }
 
-      if (
-        name === 'load' &&
-        drained === true &&
-        type === 'lifecycle' &&
-        feature === undefined &&
-        data
-      ) {
-        window.inspectionEvents.load = true
-      }
+        if (name === "buffer" && drained === true && type === "data" && !!feature && !!data) {
+          window.inspectionEvents.buffer = true;
+        }
 
-      if (
-        name === 'buffer' &&
-        drained === true &&
-        type === 'data' &&
-        feature &&
-        data
-      ) {
-        window.inspectionEvents.buffer = true
-      }
+        if (name === "harvest" && drained === true && type === "data" && !!feature && !!data) {
+          window.inspectionEvents.harvest = true;
+        }
 
-      if (
-        name === 'harvest' &&
-        drained === true &&
-        type === 'data' &&
-        feature &&
-        data
-      ) {
-        window.inspectionEvents.harvest = true
-      }
+        // The API call in this test is called before the agent is loaded, so loaded should be false
+        if (name === "api" && drained === false && type === "data" && feature && data) {
+          window.inspectionEvents.api = true;
+        }
+      });
+    </script>
+    {init} {config} {loader}
+  </head>
 
-      // The API call in this test is called before the agent is loaded, so loaded should be false
-      if (
-        name === 'api' &&
-        drained === false &&
-        type === 'data' &&
-        feature &&
-        data
-      ) {
-        window.inspectionEvents.api = true
-      }
-    })
-  </script>
-  {init} {config} {loader}
-</head>
-
-<body>
-  This page is used to monitor and record events from agent-specific event listeners.
-  <script>
-    newrelic.finished()
-  </script>
-</body>
-
+  <body>
+    This page is used to monitor and record events from agent-specific event listeners.
+    <script>
+      newrelic.finished();
+    </script>
+  </body>
 </html>

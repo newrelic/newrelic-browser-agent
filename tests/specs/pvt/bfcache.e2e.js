@@ -39,21 +39,20 @@ describe('Back/forward cache', () => {
     ).then(() => browser.waitForAgentLoad())
 
     // 1) Make an interaction and simulate visibilitychange to trigger our "pagehide" logic after loading, after which we expect "final" harvest to occur.
-    const [firstTimingsHarvests] = await Promise.all([
-      timingsCapture.waitForResult({ totalCount: 1 }),
+    const [[initialLoadHarvest, firstIntervalHarvest]] = await Promise.all([ // eslint-disable-line no-unused-vars
+      timingsCapture.waitForResult({ totalCount: 2 }),
       $('#btn1').click()
     ])
 
     // 2) Verify PageViewTimings sent sufficient expected timing events, then trigger our "unload" logic.
-    expect(firstTimingsHarvests[0].request.body.length).toBeGreaterThan(1) // should be more timings than "pagehide" at min -- this can increase for confidence when CLS & INP are added
+    expect(firstIntervalHarvest.request.body.length).toBeGreaterThan(1) // should be more timings than "pagehide" at min -- this can increase for confidence when CLS & INP are added
 
-    let phNode = firstTimingsHarvests
-      .find(harvest => harvest.request.body.some(timing => timing.name === 'pageHide'))
-      .request.body
+    let phNode = firstIntervalHarvest.request.body
       .find(timing => timing.name === 'pageHide')
     expect(phNode.value).toBeGreaterThan(0) // vis hidden emits the pageHide event
-    let ulNode = firstTimingsHarvests
-      .find(harvest => harvest.request.body.some(timing => timing.name === 'unload'))
+
+    let ulNode = firstIntervalHarvest.request.body
+      .find(timing => timing.name === 'unload')
     expect(ulNode).toBeUndefined() // vis hidden doesn't emit unload event
 
     const [secondTimingsHarvests] = await Promise.all([
@@ -62,16 +61,15 @@ describe('Back/forward cache', () => {
     ])
 
     // 3) Verify PVTs aren't sent again but unload event is; (TEMPORARY) pageHide event should not be sent again
-    const ulTimings = secondTimingsHarvests.slice(1)
+    const ulTimings = secondTimingsHarvests.slice(2).flatMap(harvest => harvest.request.body)
     expect(ulTimings.length).toBeGreaterThan(0) // "unload" & ongoing CWV lib metrics like INP--if supported--should be harvested here
 
     ulNode = ulTimings
-      .find(harvest => harvest.request.body.some(timing => timing.name === 'unload'))
-      .request.body
       .find(timing => timing.name === 'unload')
     expect(ulNode.value).toBeGreaterThan(0) // window pagehide emits the unload event
+
     phNode = ulTimings
-      .find(harvest => harvest.request.body.some(timing => timing.name === 'pageHide'))
+      .find(timing => timing.name === 'pageHide')
     expect(phNode).toBeUndefined() // but pageHide is not emitted again (capped at one)
   })
 })

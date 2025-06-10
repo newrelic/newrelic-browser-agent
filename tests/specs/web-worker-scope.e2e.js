@@ -65,7 +65,7 @@ describe('web worker scope', () => {
     const ajaxMetricsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testAjaxTimeSlicesRequest })
 
     const [metrics] = await Promise.all([
-      ajaxMetricsCapture.waitForResult({ totalCount: 2 }),
+      ajaxMetricsCapture.waitForResult({ timeout: 10000 }),
       browser.url(
         await browser.testHandle.assetURL(
           'test-builds/browser-agent-wrapper/worker-agent.html',
@@ -82,7 +82,8 @@ describe('web worker scope', () => {
       )
     ])
 
-    expect(metrics.some(payload => payload.request.body.err.find(x => x.params.message === 'taco party'))).toBe(true)
+    const errorTimeslices = metrics.filter(payload => !!payload.request.body.err)
+    expect(errorTimeslices.some(payload => payload.request.body.err.find(x => x.params.message === 'taco party'))).toBe(true)
   })
 
   it('should capture page action events', async () => {

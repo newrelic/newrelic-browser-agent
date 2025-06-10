@@ -10,8 +10,18 @@ const opts = {
 new BrowserAgent(opts)
 
 const client = new ApolloClient({
-  uri: 'https://flyby-router-demo.herokuapp.com/',
-  cache: new InMemoryCache()
+  uri: '/gql',
+  cache: new InMemoryCache(),
+  defaultOptions: {
+    watchQuery: {
+      fetchPolicy: 'no-cache',
+      errorPolicy: 'ignore'
+    },
+    query: {
+      fetchPolicy: 'no-cache',
+      errorPolicy: 'all'
+    }
+  }
 })
 var locations = ['id', 'name', 'description']
 window.sendGQL = function (operationName = 'standalone') {

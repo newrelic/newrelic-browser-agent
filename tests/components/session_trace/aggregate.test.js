@@ -104,7 +104,7 @@ test('when max nodes per harvest is reached, no node is further added in FULL mo
   sessionTraceAggregate.events.nodeCount = MAX_NODES_PER_HARVEST
   sessionTraceAggregate.mode = MODE.FULL
 
-  sessionTraceAggregate.events.storeSTN({ n: 'someNode', s: 123 })
+  sessionTraceAggregate.events.storeNode({ n: 'someNode', s: 123 })
   expect(sessionTraceAggregate.events.nodeCount).toEqual(MAX_NODES_PER_HARVEST)
   expect(Object.keys(sessionTraceAggregate.events.trace).length).toEqual(0)
 })
@@ -114,7 +114,19 @@ test('when max nodes per harvest is reached, node is still added in ERROR mode',
   sessionTraceAggregate.mode = MODE.ERROR
   jest.spyOn(sessionTraceAggregate.events, 'trimSTNs').mockReturnValue(MAX_NODES_PER_HARVEST)
 
-  sessionTraceAggregate.events.storeSTN({ n: 'someNode', s: 123 })
+  sessionTraceAggregate.events.storeNode({ n: 'someNode', s: 123 })
   expect(sessionTraceAggregate.events.nodeCount).toEqual(MAX_NODES_PER_HARVEST + 1)
   expect(Object.keys(sessionTraceAggregate.events.trace).length).toEqual(1)
+})
+
+test('aborted ST feat does not continue to hog event ref in memory from storeEvent', () => {
+  sessionTraceAggregate.blocked = true // simulate aborted condition
+  sessionTraceAggregate.events.clear()
+  expect(sessionTraceAggregate.events.prevStoredEvents.size).toEqual(0)
+
+  const someClick = new Event('click')
+  sessionTraceAggregate.events.storeEvent(someClick, 'document', 0, 100)
+  expect(sessionTraceAggregate.events.prevStoredEvents.size).toEqual(0)
+
+  sessionTraceAggregate.blocked = false // reset blocked state
 })

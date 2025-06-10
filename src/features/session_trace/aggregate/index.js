@@ -86,7 +86,7 @@ export class Aggregate extends AggregateBase {
     registerHandler('bstResource', (...args) => this.events.storeResources(...args), this.featureName, this.ee)
     registerHandler('bstHist', (...args) => this.events.storeHist(...args), this.featureName, this.ee)
     registerHandler('bstXhrAgg', (...args) => this.events.storeXhrAgg(...args), this.featureName, this.ee)
-    registerHandler('bstApi', (...args) => this.events.storeSTN(...args), this.featureName, this.ee)
+    registerHandler('bstApi', (...args) => this.events.storeNode(...args), this.featureName, this.ee)
     registerHandler('trace-jserror', (...args) => this.events.storeErrorAgg(...args), this.featureName, this.ee)
     registerHandler('pvtAdded', (...args) => this.events.processPVT(...args), this.featureName, this.ee)
 

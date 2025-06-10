@@ -143,7 +143,7 @@ export class Aggregate extends AggregateBase {
                       ...detailObj,
                       eventType: 'BrowserPerformance',
                       timestamp: this.toEpoch(entry.startTime),
-                      entryName: cleanURL(entry.name),
+                      entryName: entry.name,
                       entryDuration: entry.duration,
                       entryType: type
                     })
@@ -208,7 +208,7 @@ export class Aggregate extends AggregateBase {
               ...entryObject,
               eventType: 'BrowserPerformance',
               timestamp: Math.floor(agentRef.runtime.timeKeeper.correctRelativeTimestamp(entryObject.startTime)),
-              entryName: name,
+              entryName: cleanURL(name),
               entryDuration: duration,
               firstParty
             }

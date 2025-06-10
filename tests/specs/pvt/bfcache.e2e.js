@@ -39,19 +39,20 @@ describe('Back/forward cache', () => {
     ).then(() => browser.waitForAgentLoad())
 
     // 1) Make an interaction and simulate visibilitychange to trigger our "pagehide" logic after loading, after which we expect "final" harvest to occur.
-    const [[initialLoadHarvest, firstIntervalHarvest]] = await Promise.all([ // eslint-disable-line no-unused-vars
+    const [harvests] = await Promise.all([ // eslint-disable-line no-unused-vars
       timingsCapture.waitForResult({ totalCount: 2 }),
       $('#btn1').click()
     ])
 
+    const harvestedTimings = harvests.flatMap(harvest => harvest.request.body)
     // 2) Verify PageViewTimings sent sufficient expected timing events, then trigger our "unload" logic.
-    expect(firstIntervalHarvest.request.body.length).toBeGreaterThan(1) // should be more timings than "pagehide" at min -- this can increase for confidence when CLS & INP are added
+    expect(harvestedTimings.length).toBeGreaterThan(1) // should be more timings than "pagehide" at min -- this can increase for confidence when CLS & INP are added
 
-    let phNode = firstIntervalHarvest.request.body
+    let phNode = harvestedTimings
       .find(timing => timing.name === 'pageHide')
     expect(phNode.value).toBeGreaterThan(0) // vis hidden emits the pageHide event
 
-    let ulNode = firstIntervalHarvest.request.body
+    let ulNode = harvestedTimings
       .find(timing => timing.name === 'unload')
     expect(ulNode).toBeUndefined() // vis hidden doesn't emit unload event
 

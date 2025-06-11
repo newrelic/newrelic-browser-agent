@@ -12,6 +12,7 @@ import { ee as baseEE, contextId } from '../event-emitter/contextual-ee'
 import { createWrapperWithEmitter as wfn } from './wrap-function'
 import { getOrSet } from '../util/get-or-set'
 import { globalScope, isBrowserScope } from '../constants/runtime'
+import { interactiveElems } from '../../features/generic_events/aggregate/user-actions/interactive-elements'
 
 const wrapped = {}
 const XHR = globalScope.XMLHttpRequest
@@ -65,10 +66,18 @@ export function wrapEvents (sharedEE) {
     })
 
     this.wrapped = args[1] = wrapped
+
+    if (Array.isArray(args) && args.length && args[0] === 'click') {
+      interactiveElems.add(target, wrapped)
+    }
   })
 
-  ee.on(REMOVE_EVENT_LISTENER + '-start', function (args) {
+  ee.on(REMOVE_EVENT_LISTENER + '-start', function (args, target) {
     args[1] = this.wrapped || args[1]
+
+    if (args[0] === 'click') {
+      interactiveElems.remove(target, args[1])
+    }
   })
 
   function wrapNode (node) {

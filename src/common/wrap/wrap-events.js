@@ -67,7 +67,7 @@ export function wrapEvents (sharedEE) {
 
     this.wrapped = args[1] = wrapped
 
-    if (Array.isArray(args) && args.length && args[0] === 'click') {
+    if (args[0] === 'click') {
       interactiveElems.add(target, wrapped)
     }
   })

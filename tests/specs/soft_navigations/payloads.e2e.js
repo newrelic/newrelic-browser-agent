@@ -27,11 +27,12 @@ describe('attribution tests', () => {
           await browser.testHandle.assetURL('soft_navigations/action-text.html', configWithDenyList)
         ).then(() => browser.waitForAgentLoad())
       ])
+      const documentReferrer = await browser.execute(() => document.referrer)
       const ipl = interactionHarvests[0].request.body[0]
 
       expect(ipl.trigger).toEqual('initialPageLoad')
-      expect(ipl.children.length).toEqual(0)
       expect(ipl.isRouteChange).not.toBeTruthy()
+      expect(ipl.oldURL).toEqual(documentReferrer)
 
       ;[interactionHarvests] = await Promise.all([
         interactionsCapture.waitForResult({ totalCount: 2 }),
@@ -54,11 +55,13 @@ describe('attribution tests', () => {
           await browser.testHandle.assetURL('soft_navigations/action-text.html', configWithDenyList)
         ).then(() => browser.waitForAgentLoad())
       ])
+      const documentReferrer = await browser.execute(() => document.referrer)
       const ipl = interactionHarvests[0].request.body[0]
 
       expect(ipl.trigger).toEqual('initialPageLoad')
       expect(ipl.children.length).toEqual(0)
       expect(ipl.isRouteChange).not.toBeTruthy()
+      expect(ipl.oldURL).toEqual(documentReferrer)
 
       ;[interactionHarvests] = await Promise.all([
         interactionsCapture.waitForResult({ totalCount: 2 }),
@@ -81,11 +84,13 @@ describe('attribution tests', () => {
           await browser.testHandle.assetURL('soft_navigations/action-text.html', configWithDenyList)
         ).then(() => browser.waitForAgentLoad())
       ])
+      const documentReferrer = await browser.execute(() => document.referrer)
       const ipl = interactionHarvests[0].request.body[0]
 
       expect(ipl.trigger).toEqual('initialPageLoad')
       expect(ipl.children.length).toEqual(0)
       expect(ipl.isRouteChange).not.toBeTruthy()
+      expect(ipl.oldURL).toEqual(documentReferrer)
 
       ;[interactionHarvests] = await Promise.all([
         interactionsCapture.waitForResult({ totalCount: 2 }),
@@ -108,11 +113,13 @@ describe('attribution tests', () => {
           await browser.testHandle.assetURL('soft_navigations/action-text.html', configWithDenyList)
         ).then(() => browser.waitForAgentLoad())
       ])
+      const documentReferrer = await browser.execute(() => document.referrer)
       const ipl = interactionHarvests[0].request.body[0]
 
       expect(ipl.trigger).toEqual('initialPageLoad')
       expect(ipl.children.length).toEqual(0)
       expect(ipl.isRouteChange).not.toBeTruthy()
+      expect(ipl.oldURL).toEqual(documentReferrer)
 
       ;[interactionHarvests] = await Promise.all([
         interactionsCapture.waitForResult({ totalCount: 2 }),
@@ -136,10 +143,13 @@ describe('attribution tests', () => {
           .then(() => $('body').click())
       ])
 
+      const documentReferrer = await browser.execute(() => document.referrer)
+
       const [{ request: { body: [ipl] } }, { request: { body: [rc] } }] = interactionHarvests
 
       expect(ipl.trigger).toEqual('initialPageLoad')
       expect(ipl.navTiming).toEqual(expect.any(Object))
+      expect(ipl.oldURL).toEqual(documentReferrer)
       if (browserMatch(supportsFirstPaint)) expect(ipl.firstPaint).toBeGreaterThan(0)
       else expect(ipl.firstPaint).toBeNull()
       expect(ipl.firstContentfulPaint).toBeGreaterThan(0)
@@ -148,6 +158,7 @@ describe('attribution tests', () => {
       expect(rc.navTiming).toBeNull()
       expect(rc.firstPaint).toBeNull()
       expect(rc.firstContentfulPaint).toBeNull()
+      expect(rc.oldURL).toEqual(ipl.newURL)
     })
   })
 

@@ -34,14 +34,14 @@ describe('Interactive Elements', () => {
     expect(lookup.has(span)).toBeFalse()
   })
 
-  it('should remove entry when listener is removed', async () => {
+  it('should delete entry when listener is deleted', async () => {
     const button = document.createElement('button')
     const listener = () => {}
     lookup.add(button, listener)
     expect(lookup.has(button)).toBeTrue()
     expect(lookup.get(button).size).toBe(1)
 
-    lookup.remove(button, listener)
+    lookup.delete(button, listener)
     expect(lookup.has(button)).toBeFalse()
   })
 })

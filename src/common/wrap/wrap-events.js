@@ -76,7 +76,7 @@ export function wrapEvents (sharedEE) {
     args[1] = this.wrapped || args[1]
 
     if (args[0] === 'click') {
-      interactiveElems.remove(target, args[1])
+      interactiveElems.delete(target, args[1])
     }
   })
 

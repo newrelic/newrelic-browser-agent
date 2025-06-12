@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { dispatchGlobalEvent } from '../../common/dispatch/global-event'
 import { ee } from '../event-emitter/contextual-ee'
 import { registerHandler as defaultRegister } from '../event-emitter/register-handler'
 import { featurePriority } from '../../loaders/features/features'
@@ -91,6 +92,13 @@ function drainGroup (agentIdentifier, group, activateGroup = true) {
   const baseEE = agentIdentifier ? ee.get(agentIdentifier) : ee
   const handlers = defaultRegister.handlers // other storage in registerHandler
   if (baseEE.aborted || !baseEE.backlog || !handlers) return
+
+  dispatchGlobalEvent({
+    agentIdentifier,
+    type: 'lifecycle',
+    name: 'drain',
+    feature: group
+  })
 
   // Only activated features being drained should run queued listeners on buffered events. Deactivated features only need to release memory.
   if (activateGroup) {

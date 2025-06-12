@@ -72,6 +72,9 @@ beforeEach(async () => {
   await new Promise(process.nextTick)
   timingsAggregate = timingsInstrument.featAggregate
   timingsAggregate.ee.emit('rumresp', {})
+  await new Promise((resolve, reject) => {
+    setTimeout(resolve, 100) // wait for the feature to initialize
+  })
 })
 
 afterEach(() => {

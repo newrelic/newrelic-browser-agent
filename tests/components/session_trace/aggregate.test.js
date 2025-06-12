@@ -17,7 +17,9 @@ beforeEach(async () => {
   sessionTraceAggregate = sessionTraceInstrument.featAggregate
 
   sessionTraceAggregate.ee.emit('rumresp', [{ st: 1, sts: MODE.FULL }])
-  await new Promise(process.nextTick)
+  await new Promise((resolve, reject) => {
+    setTimeout(resolve, 100) // wait for the feature to initialize
+  })
 })
 
 test('creates right nodes', async () => {

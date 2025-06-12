@@ -306,10 +306,12 @@ describe('Session Replay Harvest Behaviors', () => {
     sessionReplayAggregate.ee.emit('rumresp', [{ sr: 1, srs: MODE.FULL }])
     await new Promise(process.nextTick)
 
-    expectHarvests(mainAgent, FEATURE_NAMES.sessionReplay, { harvestsCount: 1 })
+    expectHarvests(mainAgent, FEATURE_NAMES.sessionReplay, { callCount: 1, harvestsCount: 1 }) // initial snapshot harvest
 
     document.body.innerHTML = `<span>${faker.lorem.words(MAX_PAYLOAD_SIZE)}</span>`
     await new Promise(process.nextTick)
+
+    expectHarvests(mainAgent, FEATURE_NAMES.sessionReplay, { harvestsCount: 1 }) // should not have harvested (2), span was too large
 
     expect(sessionReplayAggregate.blocked).toEqual(true)
     expect(sessionReplayAggregate.mode).toEqual(MODE.OFF)

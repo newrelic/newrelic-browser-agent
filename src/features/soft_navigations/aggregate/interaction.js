@@ -122,7 +122,7 @@ export class Interaction extends BelNode {
     const nodeList = []
     let ixnType
     if (this.trigger === IPL_TRIGGER_NAME) ixnType = INTERACTION_TYPE.INITIAL_PAGE_LOAD
-    else if (this.newURL !== this.oldURL && this.oldURL !== document.referrer) ixnType = INTERACTION_TYPE.ROUTE_CHANGE
+    else if (this.newURL !== this.oldURL) ixnType = INTERACTION_TYPE.ROUTE_CHANGE
     else ixnType = INTERACTION_TYPE.UNSPECIFIED
 
     // IMPORTANT: The order in which addString is called matters and correlates to the order in which string shows up in the harvest payload. Do not re-order the following code.

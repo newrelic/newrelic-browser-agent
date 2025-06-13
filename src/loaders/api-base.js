@@ -144,7 +144,7 @@ export class ApiBase {
   /**
    * Records an additional time point as "finished" in a session trace and adds a page action.
    * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/finished/}
-   * @param {number} [timeStamp] Defaults to the current time of the call. If used, this marks the time that the page is "finished" according to your own criteria.
+   * @param {number} [timeStamp] integer (UNIX time) - Defaults to the current time of the call. If used, this marks the time that the page is "finished" according to your own criteria.
    */
   finished (timeStamp) {
     return this.#callMethod(FINISHED, timeStamp)

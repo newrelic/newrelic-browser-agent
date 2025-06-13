@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { stringify } from '../../common/util/stringify'
-import { MAX_PAYLOAD_SIZE } from '../../common/constants/agent-constants'
+import { dispatchGlobalEvent } from '../../common/dispatch/global-event'
 
 export class EventBuffer {
   #buffer = []
@@ -14,8 +14,9 @@ export class EventBuffer {
   /**
    * @param {number} maxPayloadSize
    */
-  constructor (maxPayloadSize = MAX_PAYLOAD_SIZE) {
+  constructor (maxPayloadSize, featureName) {
     this.maxPayloadSize = maxPayloadSize
+    this.featureName = featureName
   }
 
   isEmpty () {
@@ -44,6 +45,15 @@ export class EventBuffer {
     if (this.#rawBytes + addSize > this.maxPayloadSize) return false
     this.#buffer.push(event)
     this.#rawBytes += addSize
+
+    dispatchGlobalEvent({
+      drained: true,
+      type: 'data',
+      name: 'buffer',
+      feature: this.featureName,
+      data: event
+    })
+
     return true
   }
 

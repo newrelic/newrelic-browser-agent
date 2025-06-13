@@ -27,7 +27,7 @@ class InteractiveElements extends WeakMap {
 export const interactiveElems = new InteractiveElements()
 
 function isInteractiveElement (target) {
-  const tagName = (target && target.nodeType === 1 && target.tagName?.toLowerCase()) ?? ''
+  const tagName = (target && target.nodeType === Node.ELEMENT_NODE && target.tagName?.toLowerCase()) ?? ''
   return tagName !== '' &&
     (tagName === 'button' ||
       tagName === 'a' ||

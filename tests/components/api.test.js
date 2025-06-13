@@ -132,14 +132,13 @@ describe('API tests', () => {
 
     describe('finished', () => {
       test('should execute as expected', async () => {
-        const time = Date.now()
         const n = now()
         agent.finished()
         expectHandled('storeSupportabilityMetrics', ['API/finished/called'])
 
         expectHandled('storeEventMetrics', ['finished', { time: expect.any(Number) }])
         const storeEventMetricsCall = handleModule.handle.mock.calls.find(callArr => callArr[0] === 'storeEventMetrics')
-        expect(Math.abs(storeEventMetricsCall[1][1].time - time)).toBeLessThanOrEqual(1) // should be unix timestamp
+        expect(Math.abs(storeEventMetricsCall[1][1].time - n)).toBeLessThanOrEqual(1) // should be unix timestamp
 
         expectHandled('storeSupportabilityMetrics', ['API/addToTrace/called'])
 
@@ -162,7 +161,7 @@ describe('API tests', () => {
 
         expectHandled('storeEventMetrics', ['finished', { time: expect.any(Number) }])
         const storeEventMetricsCall = handleModule.handle.mock.calls.find(callArr => callArr[0] === 'storeEventMetrics')
-        expect(Math.abs(storeEventMetricsCall[1][1].time - time)).toBeLessThanOrEqual(1) // should be unix timestamp
+        expect(Math.abs(storeEventMetricsCall[1][1].time - (n + 1000))).toBeLessThanOrEqual(1) // should be unix timestamp
 
         expectHandled('storeSupportabilityMetrics', ['API/addToTrace/called'])
 

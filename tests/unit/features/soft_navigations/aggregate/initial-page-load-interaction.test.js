@@ -28,5 +28,16 @@ test('InitialPageLoad serialized output is correct', () => {
   ipl.end = 123.45
 
   expect(ipl.navTiming).toBe('b,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1')
-  expect(ipl.serialize(0)).toBe("1,,,3f,,,'initialPageLoad,'http://localhost/,1,1,,,cc,!!!'static-id,'1,33,66;b,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1")
+  expect(ipl.serialize(0)).toBe("1,,,3f,,,'initialPageLoad,'http://localhost/,,1,,,cc,!!!'static-id,'4,33,66;b,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1")
+})
+
+test('InitialPageLoad has correct oldURL', () => {
+  const ipl = new InitialPageLoadInteraction({
+    agentIdentifier: 'abc',
+    info: { queueTime: 444, appTime: 888 },
+    runtime: { obfuscator: new Obfuscator({ init: { obfuscate: [] } }) }
+  })
+
+  expect(ipl.oldURL).toBe(document.referrer || '')
+  expect(ipl.oldURL).not.toEqual(ipl.newURL)
 })

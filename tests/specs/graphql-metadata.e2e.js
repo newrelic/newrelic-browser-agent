@@ -28,7 +28,7 @@ describe('GraphQL metadata is appended to relevant ajax calls', () => {
       trigger: 'initialPageLoad',
       children: expect.arrayContaining([expect.objectContaining({
         type: 'ajax',
-        domain: 'flyby-router-demo.herokuapp.com:443',
+        domain: expect.stringMatching(/bam-test-1\.nr-local\.net/),
         children: expect.arrayContaining([
           {
             type: 'stringAttribute',
@@ -47,7 +47,7 @@ describe('GraphQL metadata is appended to relevant ajax calls', () => {
     )
     expect(gqlHarvest.request.body).toEqual(expect.arrayContaining([expect.objectContaining({
       type: 'ajax',
-      domain: 'flyby-router-demo.herokuapp.com:443',
+      domain: expect.stringMatching(/bam-test-1\.nr-local\.net/),
       children: expect.arrayContaining([
         {
           type: 'stringAttribute',

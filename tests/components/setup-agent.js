@@ -101,5 +101,4 @@ function resetAggregator (agentIdentifier) {
 function resetSession (agentIdentifier) {
   const agent = getNREUMInitializedAgent(agentIdentifier)
   agent.runtime.session.reset()
-  agent.runtime.session.state.numOfResets = 0 // avoid stopping harvests for session resets
 }

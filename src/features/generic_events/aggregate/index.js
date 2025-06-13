@@ -143,7 +143,7 @@ export class Aggregate extends AggregateBase {
                       ...detailObj,
                       eventType: 'BrowserPerformance',
                       timestamp: this.toEpoch(entry.startTime),
-                      entryName: cleanURL(entry.name),
+                      entryName: entry.name,
                       entryDuration: entry.duration,
                       entryType: type
                     })
@@ -208,7 +208,7 @@ export class Aggregate extends AggregateBase {
               ...entryObject,
               eventType: 'BrowserPerformance',
               timestamp: Math.floor(agentRef.runtime.timeKeeper.correctRelativeTimestamp(entryObject.startTime)),
-              entryName: name,
+              entryName: cleanURL(name),
               entryDuration: duration,
               firstParty
             }
@@ -219,6 +219,21 @@ export class Aggregate extends AggregateBase {
           }
         }, this.featureName, this.ee)
       }
+
+      registerHandler('api-measure', (args, n) => {
+        const { start, duration, customAttributes } = args
+
+        const event = {
+          ...customAttributes,
+          eventType: 'BrowserPerformance',
+          timestamp: Math.floor(agentRef.runtime.timeKeeper.correctRelativeTimestamp(start)),
+          entryName: n,
+          entryDuration: duration,
+          entryType: 'measure'
+        }
+
+        this.addEvent(event)
+      }, this.featureName, this.ee)
 
       agentRef.runtime.harvester.triggerHarvestFor(this)
       this.drain()

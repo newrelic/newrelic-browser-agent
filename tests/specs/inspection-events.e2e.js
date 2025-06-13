@@ -8,7 +8,8 @@ describe('inspection events', () => {
         () => browser.execute(function () {
           return window?.inspectionEvents?.buffer &&
             window.inspectionEvents.harvest &&
-            window.inspectionEvents.api
+            window.inspectionEvents.api &&
+            window.inspectionEvents.navigate
         }),
         {
           timeout: 30000,
@@ -26,5 +27,10 @@ describe('inspection events', () => {
     expect(inspectionEvents.buffer).toBe(true)
     expect(inspectionEvents.harvest).toBe(true)
     expect(inspectionEvents.api).toBe(true)
+    expect(inspectionEvents.drain).toBe(true)
+    expect(inspectionEvents.navigate).toBe(true)
+    expect(inspectionEvents.windowLoad).toBe(true)
+    expect(inspectionEvents.domLoad).toBe(true)
+    expect(inspectionEvents.session).toBe(true)
   })
 })

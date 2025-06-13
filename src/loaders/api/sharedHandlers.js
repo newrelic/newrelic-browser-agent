@@ -57,7 +57,7 @@ export function appendJsAttribute (agent, key, value, apiName, addToBrowserStora
   if (value === null) {
     delete currentInfo.jsAttributes[key]
   } else {
-    agent.info = { ...agent.info, jsAttributes: { ...currentInfo.jsAttributes, [key]: value } }
+    currentInfo.jsAttributes[key] = value
   }
   if (addToBrowserStorage || value === null) handle(prefix + apiName, [now(), key, value], undefined, 'session', agent.ee)
 }

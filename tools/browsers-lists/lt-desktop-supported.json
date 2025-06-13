@@ -40,15 +40,15 @@
   "safari": [
     {
       "browserName": "Safari",
-      "platformName": "macOS Sonoma",
+      "platformName": "macOS Sequoia",
       "browserVersion": "latest",
-			"comment": "mOS version 14 aka Sonoma will only have safari 17 on LT"
+			"comment": "mOS version 15 aka Sequoia will only have safari 18 on LT"
     },
     {
       "browserName": "Safari",
-      "platformName": "macOS Ventura",
+      "platformName": "macOS Sonoma",
       "browserVersion": "latest",
-			"comment": "mOS version 13 aka Ventura will only have safari 16 on LT"
+			"comment": "mOS version 14 aka Sonoma will only have safari 17 on LT"
     }
   ]
 }

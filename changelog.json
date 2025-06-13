@@ -4,6 +4,89 @@
     {
       "changes": [
         {
+          "type": "fix",
+          "sha": "a1d15cb9d972a2fa421a648b83e150489799d437",
+          "message": "Prevent ST from holding onto Event refs in memory when aborted",
+          "issues": [
+            "1491"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "09ff0adb27c12e99c02c81462aeb921af8686ce8",
+          "message": "Clean BrowserPerformance entryName for resources",
+          "issues": [
+            "1493"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "e94a36efaf37f69dfdb8134bc27ee0df0a734e83",
+          "message": "Add safeguards for addToTrace",
+          "issues": [
+            "1490"
+          ]
+        }
+      ],
+      "version": "1.291.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "8cb34289-0fca-4b7a-910e-fad0e91d6021",
+      "createTime": "2025-06-06T23:27:36.674Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
+          "sha": "531f8d4228f6c7ead8e2342c8a8dd25c651e9ec6",
+          "message": "Fix race between end of session and features aborting",
+          "issues": [
+            "1487"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "50f4acea3e27c6b5e65d02ffb46af02b351e4500",
+          "message": "Harvest first session trace payload immediately",
+          "issues": [
+            "1483"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "f944b76c2137e6d75e47e692ded4ba5f04bb4b6d",
+          "message": "Create the measure API",
+          "issues": [
+            "1476"
+          ]
+        }
+      ],
+      "version": "1.291.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "0bb8f400-8ef6-451b-a1db-81b07d668993",
+      "createTime": "2025-05-30T01:48:15.628Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
+          "sha": "98b1ab69c8a03a41f0cdccf27e410728f389bebb",
+          "message": "Silence setting getter only harvestCount message",
+          "issues": [
+            "1480"
+          ]
+        }
+      ],
+      "version": "1.290.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "9177d7a6-aea8-4c0d-b562-aad5431d370e",
+      "createTime": "2025-05-21T22:25:38.591Z"
+    },
+    {
+      "changes": [
+        {
           "type": "feat",
           "sha": "c11b6de857f42b4e2315012a897ac6693c67cd04",
           "message": "bundler tools exports",
@@ -2883,5 +2966,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2025-05-02T19:25:35.786Z"
+  "updateTime": "2025-06-06T23:27:36.674Z"
 }

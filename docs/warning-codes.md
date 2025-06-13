@@ -4,7 +4,7 @@
 ### 1
 `An error occurred while setting a property of a Configurable`
 ### 2
-`An error occured while setting a Configurable`
+`An error occurred while setting a Configurable`
 ### 3
 `Setting a Configurable requires an object as input`
 ### 4
@@ -74,7 +74,7 @@
 ### 36
 `A feature is enabled but one or more dependent features have not been initialized. This may cause unintended consequences or missing data...`
 ### 37
-`Invalid feature name supplie.`
+`Invalid feature name supplied.`
 ### 38
 `Call to api was made before agent fully initialized.`
 ### 39
@@ -106,10 +106,22 @@
 ### 52
 `Unexpected problem encountered. There should be at least one app for harvest!`
 ### 53
-`Did not recieve a valid entityGuid from connection response`
+`Did not receive a valid entityGuid from connection response`
 ### 54
 `An experimental feature is being used. Support can not be offered for issues`
 ### 55
 `Register API has been disabled on the container agent`
 ### 56
 `Could not find a matching entity to store data`
+### 57
+`Failed to execute measure. Arguments must have valid types.`
+### 58
+`Failed to execute measure. Resulting duration must be non-negative.`
+### 59
+`Session replay harvested before a session trace payload could be sent. This could be problematic for replays that rely on a trace`
+### 60
+`Session trace aborted`
+### 61
+`Timestamps must be non-negative and end time cannot be before start time.`
+### 62 
+`Timestamp must be a unix timestamp greater than the page origin time`

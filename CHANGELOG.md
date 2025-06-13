@@ -3,6 +3,35 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.291.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.291.0...v1.291.1) (2025-06-06)
+
+
+### Bug Fixes
+
+* Add safeguards for addToTrace ([#1490](https://github.com/newrelic/newrelic-browser-agent/issues/1490)) ([e94a36e](https://github.com/newrelic/newrelic-browser-agent/commit/e94a36efaf37f69dfdb8134bc27ee0df0a734e83))
+* Clean BrowserPerformance entryName for resources ([#1493](https://github.com/newrelic/newrelic-browser-agent/issues/1493)) ([09ff0ad](https://github.com/newrelic/newrelic-browser-agent/commit/09ff0adb27c12e99c02c81462aeb921af8686ce8))
+* Prevent ST from holding onto Event refs in memory when aborted ([#1491](https://github.com/newrelic/newrelic-browser-agent/issues/1491)) ([a1d15cb](https://github.com/newrelic/newrelic-browser-agent/commit/a1d15cb9d972a2fa421a648b83e150489799d437))
+
+## [1.291.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.290.1...v1.291.0) (2025-05-30)
+
+
+### Features
+
+* Create the measure API ([#1476](https://github.com/newrelic/newrelic-browser-agent/issues/1476)) ([f944b76](https://github.com/newrelic/newrelic-browser-agent/commit/f944b76c2137e6d75e47e692ded4ba5f04bb4b6d))
+
+
+### Bug Fixes
+
+* Fix race between end of session and features aborting ([#1487](https://github.com/newrelic/newrelic-browser-agent/issues/1487)) ([531f8d4](https://github.com/newrelic/newrelic-browser-agent/commit/531f8d4228f6c7ead8e2342c8a8dd25c651e9ec6))
+* Harvest first session trace payload immediately ([#1483](https://github.com/newrelic/newrelic-browser-agent/issues/1483)) ([50f4ace](https://github.com/newrelic/newrelic-browser-agent/commit/50f4acea3e27c6b5e65d02ffb46af02b351e4500))
+
+## [1.290.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.290.0...v1.290.1) (2025-05-21)
+
+
+### Bug Fixes
+
+* Silence setting getter only harvestCount message ([#1480](https://github.com/newrelic/newrelic-browser-agent/issues/1480)) ([98b1ab6](https://github.com/newrelic/newrelic-browser-agent/commit/98b1ab69c8a03a41f0cdccf27e410728f389bebb))
+
 ## [1.290.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.289.0...v1.290.0) (2025-05-02)
 
 

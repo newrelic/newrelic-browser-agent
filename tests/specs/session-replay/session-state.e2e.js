@@ -48,8 +48,9 @@ describe('session manager state behavior', () => {
 
   describe('when session ends', () => {
     it('should end recording and clear the buffer', async () => {
+      const sessionReplayCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testBlobReplayRequest })
       await browser.enableSessionReplay()
-      await browser.url(await browser.testHandle.assetURL('rrweb-record.html', { init: { session: { expiresMs: 7500 }, session_replay: { enabled: true } } }))
+      await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', { init: { session: { expiresMs: 7500 }, session_replay: { enabled: true } } }))
         .then(() => browser.waitForSessionReplayRecording())
 
       // session has started, replay should have set mode to "FULL"
@@ -57,7 +58,6 @@ describe('session manager state behavior', () => {
       const oldSessionClass = Object.values(oldSession)[0]
       expect(oldSessionClass.sessionReplayMode).toEqual(MODE.FULL)
 
-      const sessionReplayCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testBlobReplayRequest })
       const [sessionReplayHarvests] = await Promise.all([
         sessionReplayCapture.waitForResult({ timeout: 10000 }),
         browser.execute(function () {

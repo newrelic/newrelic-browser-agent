@@ -9,6 +9,7 @@
     "@aws-sdk/client-s3": "^3.476.0",
     "@aws-sdk/client-sts": "^3.476.0",
     "@aws-sdk/lib-storage": "^3.476.0",
+    "@octokit/rest": "^21.1.1",
     "chalk": "^5.3.0",
     "console-table-printer": "^2.11.2",
     "fastly": "^7.0.0",

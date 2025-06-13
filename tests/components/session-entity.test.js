@@ -295,28 +295,3 @@ describe('syncCustomAttribute()', () => {
     expect(session.read().custom?.test).toEqual(undefined)
   })
 })
-
-describe('isAfterSessionExpiry', () => {
-  test('returns true if session has expired before', () => {
-    const now = Date.now()
-    jest.setSystemTime(now)
-    const session = new SessionEntity({ agentIdentifier, key, storage, expiresMs: 10 })
-    jest.advanceTimersByTime(11)
-    expect(session.state.numOfResets).toEqual(1)
-    expect(session.isAfterSessionExpiry()).toEqual(true)
-  })
-
-  test('returns true if event timestamp is equal to session expiry', () => {
-    const now = Date.now()
-    jest.setSystemTime(now)
-    const session = new SessionEntity({ agentIdentifier, key, storage, expiresMs: 10 })
-    expect(session.isAfterSessionExpiry(now + 10)).toEqual(true)
-  })
-
-  test('returns false if session has never expired AND event timestamp occurs before session expiry', () => {
-    const now = Date.now()
-    jest.setSystemTime(now)
-    const session = new SessionEntity({ agentIdentifier, key, storage, expiresMs: 10 })
-    expect(session.isAfterSessionExpiry(now + 9)).toEqual(false)
-  })
-})

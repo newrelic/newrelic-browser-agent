@@ -41,23 +41,18 @@ export class TraceStorage {
     this.parent = parent
   }
 
-  isAfterSessionExpiry (entryTimestamp) {
-    return this.parent.agentRef.runtime?.session?.isAfterSessionExpiry((this.parent.timeKeeper?.ready && this.parent.timeKeeper.convertRelativeTimestamp(entryTimestamp)) ?? undefined)
+  #canStoreNewNode () {
+    if (this.parent.blocked) return false
+    if (this.nodeCount >= MAX_NODES_PER_HARVEST) { // limit the amount of pending data awaiting next harvest
+      if (this.parent.mode !== MODE.ERROR) return false
+      const openedSpace = this.trimSTNs(ERROR_MODE_SECONDS_WINDOW) // but maybe we could make some space by discarding irrelevant nodes if we're in sessioned Error mode
+      if (openedSpace === 0) return false
+    }
+    return true
   }
 
-  /** Central function called by all the other store__ & addToTrace API to append a trace node. */
-  storeSTN (stn) {
-    if (this.parent.blocked) return
-    if (this.nodeCount >= MAX_NODES_PER_HARVEST) { // limit the amount of pending data awaiting next harvest
-      if (this.parent.mode !== MODE.ERROR) return
-      const openedSpace = this.trimSTNs(ERROR_MODE_SECONDS_WINDOW) // but maybe we could make some space by discarding irrelevant nodes if we're in sessioned Error mode
-      if (openedSpace === 0) return
-    }
-    if (this.isAfterSessionExpiry(stn.s)) {
-      this.parent.reportSupportabilityMetric('Session/Expired/SessionTrace/Seen')
-      return
-    }
-
+  /** Central internal function called by all the other store__ & addToTrace API to append a trace node. They MUST all have checked #canStoreNewNode before calling this func!! */
+  #storeSTN (stn) {
     if (this.trace[stn.n]) this.trace[stn.n].push(stn)
     else this.trace[stn.n] = [stn]
 
@@ -143,6 +138,11 @@ export class TraceStorage {
     }
   }
 
+  storeNode (node) {
+    if (!this.#canStoreNewNode()) return
+    this.#storeSTN(node)
+  }
+
   processPVT (name, value, attrs) {
     this.storeTiming({ [name]: value })
   }
@@ -168,13 +168,16 @@ export class TraceStorage {
           Math.floor(this.parent.timeKeeper.correctAbsoluteTimestamp(val))
         )
       }
-      this.storeSTN(new TraceNode(key, val, val, 'document', 'timing'))
+      if (!this.#canStoreNewNode()) return // at any point when no new nodes can be stored, there's no point in processing the rest of the timing entries
+      this.#storeSTN(new TraceNode(key, val, val, 'document', 'timing'))
     }
   }
 
   // Tracks the events and their listener's duration on objects wrapped by wrap-events.
   storeEvent (currentEvent, target, start, end) {
     if (this.shouldIgnoreEvent(currentEvent, target)) return
+    if (!this.#canStoreNewNode()) return // need to check if adding node will succeed BEFORE storing event ref below (*cli Jun'25 - addressing memory leak in aborted ST issue #NR-420780)
+
     if (this.prevStoredEvents.has(currentEvent)) return // prevent multiple listeners of an event from creating duplicate trace nodes per occurrence. Cleared every harvest. near-zero chance for re-duplication after clearing per harvest since the timestamps of the event are considered for uniqueness.
     this.prevStoredEvents.add(currentEvent)
 
@@ -186,7 +189,7 @@ export class TraceStorage {
     } catch (e) {
       evt.o = eventOrigin(null, target, this.parent.ee)
     }
-    this.storeSTN(evt)
+    this.#storeSTN(evt)
   }
 
   shouldIgnoreEvent (event, target) {
@@ -224,7 +227,8 @@ export class TraceStorage {
 
   // Tracks when the window history API specified by wrap-history is used.
   storeHist (path, old, time) {
-    this.storeSTN(new TraceNode('history.pushState', time, time, path, old))
+    if (!this.#canStoreNewNode()) return
+    this.#storeSTN(new TraceNode('history.pushState', time, time, path, old))
   }
 
   #laststart = 0
@@ -232,14 +236,17 @@ export class TraceStorage {
   storeResources (resources) {
     if (!resources || resources.length === 0) return
 
-    resources.forEach((currentResource) => {
-      if ((currentResource.fetchStart | 0) <= this.#laststart) return // don't recollect already-seen resources
+    for (let i = 0; i < resources.length; i++) {
+      const currentResource = resources[i]
+      if ((currentResource.fetchStart | 0) <= this.#laststart) continue // don't recollect already-seen resources
+      if (!this.#canStoreNewNode()) break // stop processing if we can't store any more resource nodes anyways
 
       const { initiatorType, fetchStart, responseEnd, entryType } = currentResource
       const { protocol, hostname, port, pathname } = parseUrl(currentResource.name)
       const res = new TraceNode(initiatorType, fetchStart | 0, responseEnd | 0, `${protocol}://${hostname}:${port}${pathname}`, entryType)
-      this.storeSTN(res)
-    })
+
+      this.#storeSTN(res)
+    }
 
     this.#laststart = resources[resources.length - 1].fetchStart | 0
   }
@@ -247,13 +254,15 @@ export class TraceStorage {
   // JavascriptError (FEATURE) events pipes into ST here.
   storeErrorAgg (type, name, params, metrics) {
     if (type !== 'err') return // internal errors are purposefully ignored
-    this.storeSTN(new TraceNode('error', metrics.time, metrics.time, params.message, params.stackHash))
+    if (!this.#canStoreNewNode()) return
+    this.#storeSTN(new TraceNode('error', metrics.time, metrics.time, params.message, params.stackHash))
   }
 
   // Ajax (FEATURE) events--XML & fetches--pipes into ST here.
   storeXhrAgg (type, name, params, metrics) {
     if (type !== 'xhr') return
-    this.storeSTN(new TraceNode('Ajax', metrics.time, metrics.time + metrics.duration, `${params.status} ${params.method}: ${params.host}${params.pathname}`, 'ajax'))
+    if (!this.#canStoreNewNode()) return
+    this.#storeSTN(new TraceNode('Ajax', metrics.time, metrics.time + metrics.duration, `${params.status} ${params.method}: ${params.host}${params.pathname}`, 'ajax'))
   }
 
   /* Below are the interface expected & required of whatever storage is used across all features on an individual basis. This allows a common `.events` property on Trace shared with AggregateBase.
@@ -279,7 +288,12 @@ export class TraceStorage {
   }
 
   reloadSave () {
-    Object.values(this.#backupTrace).forEach(stnsArray => stnsArray.forEach(stn => this.storeSTN(stn)))
+    for (const stnsArray of Object.values(this.#backupTrace)) {
+      for (const stn of stnsArray) {
+        if (!this.#canStoreNewNode()) return // stop attempting to re-store nodes
+        this.#storeSTN(stn)
+      }
+    }
   }
 
   clearSave () {

@@ -6,15 +6,17 @@ import { RAGE_CLICK_THRESHOLD_EVENTS, RAGE_CLICK_THRESHOLD_MS } from '../../cons
 import { cleanURL } from '../../../../common/url/clean-url'
 
 export class AggregatedUserAction {
-  constructor (evt, selectorPath, nearestTargetFields) {
+  constructor (evt, selectorInfo) {
     this.event = evt
     this.count = 1
     this.originMs = Math.floor(evt.timeStamp)
     this.relativeMs = [0]
-    this.selectorPath = selectorPath
+    this.selectorPath = selectorInfo.selectorPath
     this.rageClick = undefined
-    this.nearestTargetFields = nearestTargetFields
+    this.nearestTargetFields = selectorInfo.nearestTargetFields
     this.currentUrl = cleanURL('' + location)
+    this.hasActLink = selectorInfo.hasActLink
+    this.deadClick = this.isDeadClick()
   }
 
   /**
@@ -36,5 +38,9 @@ export class AggregatedUserAction {
   isRageClick () {
     const len = this.relativeMs.length
     return (this.event.type === 'click' && len >= RAGE_CLICK_THRESHOLD_EVENTS && this.relativeMs[len - 1] - this.relativeMs[len - RAGE_CLICK_THRESHOLD_EVENTS] < RAGE_CLICK_THRESHOLD_MS)
+  }
+
+  isDeadClick () {
+    return this.event.type === 'click' && this.hasActLink === false
   }
 }

@@ -3,14 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { interactiveElems } from '../../features/generic_events/aggregate/user-actions/interactive-elements'
+import { warn } from '../util/console'
+
 /**
  * Generates a CSS selector path for the given element, if possible
+ * Also gather metadata about the element's nearest fields, and whether there are any interactive links in the path.
  * @param {HTMLElement} elem
- * @param {boolean} includeId
- * @param {boolean} includeClass
- * @returns {string|undefined}
+ * @param {Array<string>} [targetFields=[]] specifies which fields to gather from the nearest element in the path
+ * @returns {{path: undefined, nearestFields: {}}|{path: (string|string), nearestFields: {}, hasActLink: boolean}}
  */
-export const generateSelectorPath = (elem, targetFields = []) => {
+export const gatherSelectorPathInfo = (elem, targetFields = []) => {
   if (!elem) return { path: undefined, nearestFields: {} }
 
   const getNthOfTypeIndex = (node) => {
@@ -29,6 +32,7 @@ export const generateSelectorPath = (elem, targetFields = []) => {
 
   let pathSelector = ''
   let index = getNthOfTypeIndex(elem)
+  let hasActLink
 
   const nearestFields = {}
   try {
@@ -41,6 +45,10 @@ export const generateSelectorPath = (elem, targetFields = []) => {
         pathSelector ? `>${pathSelector}` : ''
       ].join('')
 
+      if (hasActLink === undefined) {
+        hasActLink = isInteractiveLink(elem)
+      }
+
       pathSelector = selector
       elem = elem.parentNode
     }
@@ -49,12 +57,46 @@ export const generateSelectorPath = (elem, targetFields = []) => {
   }
 
   const path = pathSelector ? index ? `${pathSelector}:nth-of-type(${index})` : pathSelector : undefined
-  return { path, nearestFields }
+  return { path, nearestFields, hasActLink }
 
   function nearestAttrName (originalFieldName) {
     /** preserve original renaming structure for pre-existing field maps */
     if (originalFieldName === 'tagName') originalFieldName = 'tag'
     if (originalFieldName === 'className') originalFieldName = 'class'
     return `nearest${originalFieldName.charAt(0).toUpperCase() + originalFieldName.slice(1)}`
+  }
+
+  /**
+   * Checks if the element is an interactive link. Elements that are not visible will not be checked for interactivity.
+   * A link is considered interactive if it has an `href` attribute, an `onclick` handler, or any click event listener(s).
+   * @param elem
+   * @returns {boolean|undefined} undefined if not a visible link, false if the link is not interactive, true if it is interactive.
+   */
+  function isInteractiveLink (elem) {
+    try {
+      if (!elem ||
+        elem.nodeType !== Node.ELEMENT_NODE ||
+        elem.tagName?.toLowerCase() !== 'a' ||
+        !isVisible(elem)) return undefined
+      return typeof elem.onclick === 'function' || interactiveElems.has(elem) || elem.hasAttribute('href')
+    } catch (err) {
+      warn(63, {
+        element: elem?.tagName,
+        error: err.message
+      })
+    }
+    return undefined
+  }
+
+  function isVisible (elem) {
+    return (typeof elem.checkVisibility === 'function')
+      ? elem.checkVisibility()
+      : !(elem.style.display === 'none' ||
+      elem.style.visibility === 'hidden' ||
+      elem.style.contentVisibility === 'hidden' ||
+      elem.style.opacity === '0' ||
+      elem.style.visibility === 'collapse' ||
+      (elem.offsetWidth <= 0 && elem.offsetHeight <= 0) ||
+      (elem.getBoundingClientRect && (elem.getBoundingClientRect().width <= 0 && elem.getBoundingClientRect().height <= 0)))
   }
 }

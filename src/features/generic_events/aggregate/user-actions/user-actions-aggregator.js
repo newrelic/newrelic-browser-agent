@@ -2,7 +2,7 @@
  * Copyright 2020-2025 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { generateSelectorPath } from '../../../../common/dom/selector-path'
+import { gatherSelectorPathInfo } from '../../../../common/dom/selector-path'
 import { OBSERVED_WINDOW_EVENTS } from '../../constants'
 import { AggregatedUserAction } from './aggregated-user-action'
 
@@ -28,8 +28,8 @@ export class UserActionsAggregator {
    */
   process (evt, targetFields) {
     if (!evt) return
-    const { selectorPath, nearestTargetFields } = getSelectorPath(evt, targetFields)
-    const aggregationKey = getAggregationKey(evt, selectorPath)
+    const selectorInfo = getSelectorPath(evt, targetFields)
+    const aggregationKey = getAggregationKey(evt, selectorInfo.selectorPath)
     if (!!aggregationKey && aggregationKey === this.#aggregationKey) {
       // an aggregation exists already, so lets just continue to increment
       this.#aggregationEvent.aggregate(evt)
@@ -38,7 +38,7 @@ export class UserActionsAggregator {
       const finishedEvent = this.#aggregationEvent
       // then set as this new event aggregation
       this.#aggregationKey = aggregationKey
-      this.#aggregationEvent = new AggregatedUserAction(evt, selectorPath, nearestTargetFields)
+      this.#aggregationEvent = new AggregatedUserAction(evt, selectorInfo)
       return finishedEvent
     }
   }
@@ -48,20 +48,18 @@ export class UserActionsAggregator {
  * Generates a selector path for the event, starting with simple cases like window or document and getting more complex for dom-tree traversals as needed.
  * Will return a random selector path value if no other path can be determined, to force the aggregator to skip aggregation for this event.
  * @param {Event} evt
- * @returns {string}
+ * @param targetFields
+ * @returns {{ path: (undefined|string), nearestTargetFields: {}, hasActLink: boolean}}
  */
 function getSelectorPath (evt, targetFields) {
-  let selectorPath; let nearestTargetFields = {}
-  if (OBSERVED_WINDOW_EVENTS.includes(evt.type) || evt.target === window) selectorPath = 'window'
-  else if (evt.target === document) selectorPath = 'document'
-  // if still no selectorPath, generate one from target tree that includes elem ids
-  else {
-    const { path, nearestFields } = generateSelectorPath(evt.target, targetFields)
-    selectorPath = path
-    nearestTargetFields = nearestFields
-  }
+  const result = { path: undefined, nearestTargetFields: {}, hasActLink: false }
+  if (OBSERVED_WINDOW_EVENTS.includes(evt.type) || evt.target === window) return { ...result, selectorPath: 'window' }
+  if (evt.target === document) return { ...result, selectorPath: 'document' }
+
+  // Generate one from target tree that includes elem ids
   // if STILL no selectorPath, it will return undefined which will skip aggregation for this event
-  return { selectorPath, nearestTargetFields }
+  const { path, nearestFields, hasActLink } = gatherSelectorPathInfo(evt.target, targetFields)
+  return { selectorPath: path, nearestTargetFields: nearestFields, hasActLink }
 }
 
 /**

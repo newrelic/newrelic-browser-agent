@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2025 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>RUM - Dead Clicks</title>
+    {init} {config} {loader}
+    <script>
+      const doNothingFn = function() { console.log('This will never be logged.') }
+    </script>
+    <style>
+      a {
+        color: blue;
+        cursor: pointer;
+        text-decoration: underline;
+      }
+      .non-interactive-element {
+        color: red;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="test-area">
+      <h1>RUM - Dead Clicks</h1>
+      <p>This page is used to test dead clicks instrumentation.</p>
+      <h2>Links</h2>
+      <div>
+        <p>Link with a click event handler, added via `addEventListener`=>
+        <a id="test-link-with-listener">Link</a>
+        </p>
+        <script>
+          document.getElementById('test-link-with-listener').addEventListener('click', function() {
+            console.log('Link clicked, no dead click event should be recorded.');
+          });
+        </script>
+
+        <p>Link with a click event handler, added via `onclick` =>
+        <a id="test-link-with-onclick" onclick="console.log('Click')">Link</a>
+        </p>
+
+        <p>Link that has a click event handler added, then removed. =>
+          <a id="do-nothing-link">Link</a>
+        </p>
+        <script>
+          document.getElementById("do-nothing-link").addEventListener("click", doNothingFn)
+          document.getElementById("do-nothing-link").removeEventListener("click", doNothingFn)
+        </script>
+
+        <p>Link with href =>
+          <a id="test-link-with-href" href="https://www.example.com">Go to Example.com</a>
+        </p>
+
+        <p>Dead link => <a id="dead-link">Link</a>
+        </p>
+
+        <p>Link with a click event handler +  span child =>
+          <a id="link-with-listener-and-span-child">
+            <span id="span-inside-link-with-listener">Link</span>
+          </a>
+          <script>
+            document.getElementById('link-with-listener-and-span-child').addEventListener('click', function() {
+              console.log('Link clicked, no dead click event should be recorded.');
+            });
+          </script>
+        </p>
+        <p>Link with a click event handler +  span child =>
+          <a id="dead-link-with-span-child">
+            <span id="span-inside-dead-link">Link</span>
+          </a>
+        </p>
+      </div>
+
+      <h2>Other Elements</h2>
+      <div>
+        <p>Span with a click event handler, added via `addEventListener` =>
+          <!-- should not be added to listener map -->
+          <span id="span-with-listener" class="non-interactive-element">Span</span>
+          <script>
+            document.getElementById("span-with-listener").addEventListener('click', function() {
+              console.log('Span clicked')
+            })
+          </script>
+        </p>
+        <p>Span with a click event handler, added via `onclick` =>
+          <!-- should not be added to listener map -->
+          <span id="span-with-onclick" onclick="spanClick('span1')" class="non-interactive-element">Span </span>
+        </p>
+        <p>Span with no handlers =>
+          <span id="do-nothing-span" class="non-interactive-element">Span</span>
+        </p>
+      </div>
+    </div>
+  </body>
+
+</html>

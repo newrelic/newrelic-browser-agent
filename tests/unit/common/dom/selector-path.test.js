@@ -1,8 +1,9 @@
-import { generateSelectorPath } from '../../../../src/common/dom/selector-path'
+import { gatherSelectorPathInfo } from '../../../../src/common/dom/selector-path'
+import { interactiveElems } from '../../../../src/features/generic_events/aggregate/user-actions/interactive-elements'
 
 const targetFields = ['id', 'className', 'tagName', 'type']
 
-describe('generateSelectorPath', () => {
+describe('gatherSelectorPathInfo', () => {
   let span, p
 
   beforeEach(() => {
@@ -26,31 +27,31 @@ describe('generateSelectorPath', () => {
   })
 
   test('should generate selector path including id', () => {
-    const { path: selectorWithId } = generateSelectorPath(p, targetFields)
+    const { path: selectorWithId } = gatherSelectorPathInfo(p, targetFields)
     expect(selectorWithId).toBe('html>body>div#container>div>p#target:nth-of-type(1)')
 
-    const { path: selectorWithoutId } = generateSelectorPath(span)
+    const { path: selectorWithoutId } = gatherSelectorPathInfo(span)
     expect(selectorWithoutId).toBe('html>body>div#container>div>span:nth-of-type(1)')
   })
 
   test('should generate nearestFields', () => {
     // should get the id from <p>, tagName from <p> and class from <div>
-    const { nearestFields } = generateSelectorPath(p, targetFields)
+    const { nearestFields } = gatherSelectorPathInfo(p, targetFields)
     expect(nearestFields).toMatchObject({ nearestId: 'target', nearestTag: 'P', nearestClass: 'container' })
 
-    const { path: selectorWithoutId } = generateSelectorPath(span)
+    const { path: selectorWithoutId } = gatherSelectorPathInfo(span)
     expect(selectorWithoutId).toBe('html>body>div#container>div>span:nth-of-type(1)')
   })
 
   test('should return undefined for null element', () => {
-    const { path: selector } = generateSelectorPath(null)
+    const { path: selector } = gatherSelectorPathInfo(null)
     expect(selector).toBeUndefined()
   })
 
   test('should handle elements with siblings', () => {
     const sibling = document.createElement('div')
     document.body.appendChild(sibling)
-    const { path: selector } = generateSelectorPath(sibling, targetFields)
+    const { path: selector } = gatherSelectorPathInfo(sibling, targetFields)
     expect(selector).toBe('html>body>div:nth-of-type(2)')
     document.body.removeChild(sibling)
   })
@@ -58,9 +59,136 @@ describe('generateSelectorPath', () => {
   test('should handle elements without siblings', () => {
     const singleTable = document.createElement('table')
     document.body.appendChild(singleTable)
-    const { path: selector, nearestFields } = generateSelectorPath(singleTable)
+    const { path: selector, nearestFields } = gatherSelectorPathInfo(singleTable)
     expect(selector).toBe('html>body>table:nth-of-type(1)')
     expect(nearestFields).toEqual({})
     document.body.removeChild(singleTable)
+  })
+})
+
+describe('gatherSelectorPathInfo - links', () => {
+  let link
+  beforeEach(() => {
+    link = createLink()
+  })
+  afterEach(() => {
+    if (link && link.parentNode) {
+      document.body.removeChild(link)
+    }
+  })
+
+  function simulateWidthAndHeight (elem, width = 100, height = 100) {
+    Object.defineProperty(elem, 'offsetWidth', {
+      get: () => width
+    })
+    Object.defineProperty(elem, 'offsetHeight', {
+      get: () => height
+    })
+    Object.defineProperty(elem, 'getBoundingClientRect', {
+      value: () => ({
+        width,
+        height,
+        top: 0,
+        left: 0,
+        bottom: 100,
+        right: 100
+      }),
+      configurable: true
+    })
+  }
+
+  function createLink () {
+    const link = document.createElement('a')
+    link.innerHTML = 'Example Link'
+
+    simulateWidthAndHeight(link)
+    return link
+  }
+
+  test('should detect link is interactive if it has an href', () => {
+    link.href = 'https://example.com'
+    document.body.appendChild(link)
+
+    const { hasActLink } = gatherSelectorPathInfo(link)
+    expect(hasActLink).toBe(true)
+  })
+
+  test('should detect interactive link if link has onclick handler', () => {
+    link.onclick = () => {}
+    document.body.appendChild(link)
+
+    const { hasActLink } = gatherSelectorPathInfo(link)
+    expect(hasActLink).toBe(true)
+  })
+
+  test('should detect link as interactive if it has click handler', () => {
+    document.body.appendChild(link)
+    // Simulate link has a click handler
+    const listener = () => {}
+    interactiveElems.add(link, listener)
+
+    const { hasActLink } = gatherSelectorPathInfo(link)
+    expect(hasActLink).toBe(true)
+
+    interactiveElems.delete(link, listener)
+  })
+
+  test('should return hasActLink = true if any element ancestor is an interactive link', () => {
+    link.href = 'https://example.com'
+    const childSpan = document.createElement('span')
+    link.appendChild(childSpan)
+    document.body.appendChild(link)
+
+    const { hasActLink } = gatherSelectorPathInfo(childSpan)
+    expect(hasActLink).toBe(true)
+  })
+
+  test('should return hasActLink = false if any element ancestor is a non-interactive link', () => {
+    const childSpan = document.createElement('span')
+    link.appendChild(childSpan)
+    document.body.appendChild(link)
+
+    const { hasActLink } = gatherSelectorPathInfo(childSpan)
+    expect(hasActLink).toBe(false) // is a dead click
+  })
+
+  test('should return hasActLink = undefined if no links detected in selector path', () => {
+    const childSpan = document.createElement('span')
+    link.appendChild(childSpan)
+    document.body.appendChild(childSpan)
+
+    const { hasActLink } = gatherSelectorPathInfo(childSpan)
+    expect(hasActLink).toBe(undefined) // not a dead click
+  })
+
+  test('should not detect link as interactive if it has no href, onclick, or click handlers', () => {
+    document.body.appendChild(link)
+
+    const { hasActLink } = gatherSelectorPathInfo(link)
+    expect(hasActLink).toBe(false) // is a dead click
+  })
+
+  test('should not detect link as interactive if not visible', () => {
+    link.style.display = 'none'
+    document.body.appendChild(link)
+
+    const { hasActLink } = gatherSelectorPathInfo(link)
+    expect(hasActLink).toBe(undefined) // ignored, not visible
+  })
+
+  test('should not detect link as interactive if transparent', () => {
+    link.style.opacity = '0'
+    document.body.appendChild(link)
+
+    const { hasActLink } = gatherSelectorPathInfo(link)
+    expect(hasActLink).toBe(undefined) // ignored, not visible
+  })
+
+  test('should not detect link as interactive if collapsed', () => {
+    link.style.visibility = 'collapse'
+    document.body.appendChild(link)
+
+    const { hasActLink } = gatherSelectorPathInfo(link)
+    expect(hasActLink).toBe(undefined) // ignored, not visible
   })
 })

@@ -411,24 +411,74 @@ describe(' ', () => {
       expect(handlerCallCount).toEqual(3) // should have seen handler calls for neither element
     })
   })
-
-  class ClickerNoHandle {
-    constructor (el) {
-      this.handlerCallCount = 0
-    }
-  }
-  class Clicker extends ClickerNoHandle {
-    handleEvent (event) {
-      this.handlerCallCount++
-    }
-  }
-  function triggerEvent (el, eventName) {
-    const evt = new Event(eventName, { bubbles: true })
-    el.dispatchEvent(evt)
-  }
-  function createAndAddDomElement (tagName = 'div') {
-    var el = document.createElement(tagName)
-    document.body.appendChild(el)
-    return el
-  }
 })
+
+describe('wrap-events', () => {
+  let interactiveElemsAddSpy
+  let interactiveElemsDeleteSpy
+
+  beforeEach(async () => {
+    // import order is important
+    const { interactiveElems } = await import('../../../src/features/generic_events/aggregate/user-actions/interactive-elements')
+    interactiveElemsAddSpy = jest.spyOn(interactiveElems, 'add')
+    interactiveElemsDeleteSpy = jest.spyOn(interactiveElems, 'delete')
+    const { wrapEvents } = await import('../../../src/common/wrap/wrap-events')
+    wrapEvents()
+  })
+
+  afterEach(() => {
+    jest.restoreAllMocks()
+    jest.resetModules()
+  })
+
+  describe('interactiveElems', () => {
+    test('should track when click handling is added via addEventListener', async () => {
+      const elem = createAndAddDomElement('button')
+      elem.addEventListener('click', () => {})
+      expect(interactiveElemsAddSpy).toHaveBeenCalledWith(elem, expect.any(Function))
+    })
+
+    test('should track when click handling is deleted via removeEventListener', async () => {
+      const elem = createAndAddDomElement('button')
+      const handler = () => {}
+      elem.addEventListener('click', handler)
+      elem.removeEventListener('click', handler)
+      expect(interactiveElemsDeleteSpy).toHaveBeenCalledWith(elem, expect.any(Function))
+    })
+
+    test('should not track when non-click handling is added', async () => {
+      const elem = createAndAddDomElement('button')
+      const handler = () => {}
+      elem.addEventListener('mouseover', handler)
+      expect(interactiveElemsAddSpy).not.toHaveBeenCalledWith(elem, handler)
+    })
+
+    test('should not track when non-click handling is deleted', async () => {
+      const elem = createAndAddDomElement('button')
+      const handler = () => {}
+      elem.addEventListener('mouseover', handler)
+      elem.removeEventListener('mouseover', handler)
+      expect(interactiveElemsDeleteSpy).not.toHaveBeenCalledWith(elem, handler)
+    })
+  })
+})
+
+class ClickerNoHandle {
+  constructor (el) {
+    this.handlerCallCount = 0
+  }
+}
+class Clicker extends ClickerNoHandle {
+  handleEvent (event) {
+    this.handlerCallCount++
+  }
+}
+function triggerEvent (el, eventName) {
+  const evt = new Event(eventName, { bubbles: true })
+  el.dispatchEvent(evt)
+}
+function createAndAddDomElement (tagName = 'div') {
+  var el = document.createElement(tagName)
+  document.body.appendChild(el)
+  return el
+}

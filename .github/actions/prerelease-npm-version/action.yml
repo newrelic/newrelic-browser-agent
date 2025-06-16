@@ -3,34 +3,20 @@
 name: Prerelease NPM Version
 
 inputs:
-  version-type:
-    description: "The type of version bump to make. One of: major, minor, patch, premajor, preminor, prepatch, or prerelease."
-    type: choice
-    required: true
-    default: preminor
-    options:
-      - major
-      - minor
-      - patch
-      - premajor
-      - preminor
-      - prepatch
-      - prerelease
-      - from-git
   preid:
     description: "The prerelease identifier to use for the version number when bumping a prerelease version."
     type: string
     required: true
     default: rc
-  tag:
-    description: "The NPM package distribution tag to use when publishing the prerelease."
+  version-override:
+    description: "If not supplied, the version in package.json will be used. Whichever version is greater between local and NPM will take precedence -- we can only create prerelease versions *ahead* of the current version in NPM."
     type: string
-    required: true
-    default: rc
+    required: false
   dry_run:
     description: "Indicates whether to dry run the npm publish command."
     type: boolean
-    required: true
+    required: false
+    default: 'false'
 
 outputs:
   version:
@@ -40,6 +26,9 @@ outputs:
 runs:
   using: "composite"
   steps:
+    - name: Install dependencies
+      run: npm install --silent --no-progress --prefix $GITHUB_ACTION_PATH/..
+      shell: bash
     - name: Get version number
       id: agent-loader-version
       shell: bash
@@ -48,12 +37,9 @@ runs:
       id: bump-prerelease
       shell: bash
       run: |
-        pattern=".*-rc\.[0-9]+$"
-        if [[ ${{ steps.agent-loader-version.outputs.results }} =~ $pattern ]]; then
-          echo "results=$(npm version prerelease --preid=${{ inputs.preid }})" >> $GITHUB_OUTPUT
-        else
-          echo "results=$(npm version ${{ inputs.version-type }} --preid=${{ inputs.preid }})" >> $GITHUB_OUTPUT
-        fi
+        node $GITHUB_ACTION_PATH/index.cjs \
+          --version-override ${{ inputs.version-override }} \
+          --preid ${{ inputs.preid }}
     - name: Install project dependencies
       shell: bash
       run: npm ci
@@ -62,4 +48,4 @@ runs:
       run: npm run build:npm
     - name: Publish npm package
       shell: bash
-      run: npm publish ${{ inputs.dry_run && '--dry-run' || '' }} --tag=${{ inputs.tag }}
+      run: npm publish ${{ ((inputs.dry_run == true || inputs.dry_run == 'true') && '--dry-run') || '' }} --tag=${{ inputs.preid }}

@@ -4,6 +4,39 @@
     {
       "changes": [
         {
+          "type": "feat",
+          "sha": "93f0fd0076e1e1fcc2b353d766a7a95c0f524e76",
+          "message": "Update BrowserInteraction previousUrl definition",
+          "issues": [
+            "1499"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "363a898fce43c9c53a881f1d3b4a16ca7ced70f8",
+          "message": "Fix .finished API timeSinceLoad value",
+          "issues": [
+            "1503"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "def89c4ab5850a3d8f8dc03b424a473bd5eb4bb5",
+          "message": "Add more inspection events",
+          "issues": [
+            "1494"
+          ]
+        }
+      ],
+      "version": "1.292.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "1be74a5b-c68d-4023-af92-4c5d0974574e",
+      "createTime": "2025-06-16T15:32:12.554Z"
+    },
+    {
+      "changes": [
+        {
           "type": "fix",
           "sha": "a1d15cb9d972a2fa421a648b83e150489799d437",
           "message": "Prevent ST from holding onto Event refs in memory when aborted",
@@ -2966,5 +2999,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2025-06-06T23:27:36.674Z"
+  "updateTime": "2025-06-16T15:32:12.554Z"
 }

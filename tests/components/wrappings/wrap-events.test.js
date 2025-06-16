@@ -434,13 +434,13 @@ describe('wrap-events', () => {
   describe('interactiveElems', () => {
     test('should track when click handling is added via addEventListener', async () => {
       const elem = createAndAddDomElement('button')
-      elem.addEventListener('click', () => { })
+      elem.addEventListener('click', () => {})
       expect(interactiveElemsAddSpy).toHaveBeenCalledWith(elem, expect.any(Function))
     })
 
     test('should track when click handling is deleted via removeEventListener', async () => {
       const elem = createAndAddDomElement('button')
-      const handler = () => { }
+      const handler = () => {}
       elem.addEventListener('click', handler)
       elem.removeEventListener('click', handler)
       expect(interactiveElemsDeleteSpy).toHaveBeenCalledWith(elem, expect.any(Function))
@@ -448,14 +448,14 @@ describe('wrap-events', () => {
 
     test('should not track when non-click handling is added', async () => {
       const elem = createAndAddDomElement('button')
-      const handler = () => { }
+      const handler = () => {}
       elem.addEventListener('mouseover', handler)
       expect(interactiveElemsAddSpy).not.toHaveBeenCalledWith(elem, handler)
     })
 
     test('should not track when non-click handling is deleted', async () => {
       const elem = createAndAddDomElement('button')
-      const handler = () => { }
+      const handler = () => {}
       elem.addEventListener('mouseover', handler)
       elem.removeEventListener('mouseover', handler)
       expect(interactiveElemsDeleteSpy).not.toHaveBeenCalledWith(elem, handler)

@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.292.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.291.1...v1.292.0) (2025-06-16)
+
+
+### Features
+
+* Add more inspection events ([#1494](https://github.com/newrelic/newrelic-browser-agent/issues/1494)) ([def89c4](https://github.com/newrelic/newrelic-browser-agent/commit/def89c4ab5850a3d8f8dc03b424a473bd5eb4bb5))
+* Update BrowserInteraction previousUrl definition ([#1499](https://github.com/newrelic/newrelic-browser-agent/issues/1499)) ([93f0fd0](https://github.com/newrelic/newrelic-browser-agent/commit/93f0fd0076e1e1fcc2b353d766a7a95c0f524e76))
+
+
+### Bug Fixes
+
+* Fix .finished API timeSinceLoad value ([#1503](https://github.com/newrelic/newrelic-browser-agent/issues/1503)) ([363a898](https://github.com/newrelic/newrelic-browser-agent/commit/363a898fce43c9c53a881f1d3b4a16ca7ced70f8))
+
 ## [1.291.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.291.0...v1.291.1) (2025-06-06)
 
 

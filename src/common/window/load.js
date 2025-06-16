@@ -17,3 +17,8 @@ export function onDOMContentLoaded (cb) {
   if (checkState()) return cb()
   documentAddEventListener('DOMContentLoaded', cb)
 }
+
+export function onPopstateChange (cb) {
+  if (checkState()) return cb()
+  windowAddEventListener('popstate', cb)
+}

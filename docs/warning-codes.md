@@ -123,3 +123,5 @@
 `Session trace aborted`
 ### 61
 `Timestamps must be non-negative and end time cannot be before start time.`
+### 62 
+`Timestamp must be a unix timestamp greater than the page origin time`

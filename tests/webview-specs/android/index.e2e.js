@@ -32,6 +32,7 @@ describe.withBrowsersMatching(onlyAndroid)('android webview', () => {
       ref: url.slice(0, url.indexOf('?')),
       t: 'Unnamed Transaction'
     }))
+
     expect(interactionHarvests[0].request.body).toEqual(expect.arrayContaining([
       expect.objectContaining({
         category: 'Initial page load',
@@ -39,7 +40,7 @@ describe.withBrowsersMatching(onlyAndroid)('android webview', () => {
         trigger: 'initialPageLoad',
         initialPageURL: url.slice(0, url.indexOf('?')),
         newURL: url.slice(0, url.indexOf('?')),
-        oldURL: url.slice(0, url.indexOf('?'))
+        oldURL: '' // referrer is empty since this is a hard direct page load
       })
     ]))
   })

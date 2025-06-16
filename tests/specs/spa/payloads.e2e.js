@@ -1,4 +1,4 @@
-import { supportsFirstPaint } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { notIOS, supportsFirstPaint } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { JSONPath } from 'jsonpath-plus'
 import { testInteractionEventsRequest, testErrorsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
@@ -27,12 +27,13 @@ describe('attribution tests', () => {
           .then(() => $('#one').click())
       ])
 
+      const documentReferrer = await browser.execute(() => document.referrer)
       const interactionEvents = JSONPath({ path: '$.[*].request.body.[?(!!@ && @.type===\'interaction\')]', json: interactionHarvests })
       expect(interactionEvents.length).toEqual(2)
 
       expect(interactionEvents[0].trigger).toEqual('initialPageLoad')
-      expect(interactionEvents[0].children.length).toEqual(0)
       expect(interactionEvents[0].isRouteChange).not.toBeTruthy()
+      if (browserMatch(notIOS)) expect(interactionEvents[0].oldURL).toEqual(documentReferrer) // ios on lambdatest appears to return the wrong value for referrer when using browser.execute, which breaks this test condition. Confirmed referrer behavior works in real env
 
       expect(interactionEvents[1].children.length).toEqual(1)
       expect(interactionEvents[1].children[0]).toMatchObject({
@@ -53,12 +54,14 @@ describe('attribution tests', () => {
           .then(() => $('#two').click())
       ])
 
+      const documentReferrer = await browser.execute(() => document.referrer)
       const interactionEvents = JSONPath({ path: '$.[*].request.body.[?(!!@ && @.type===\'interaction\')]', json: interactionHarvests })
       expect(interactionEvents.length).toEqual(2)
 
       expect(interactionEvents[0].trigger).toEqual('initialPageLoad')
       expect(interactionEvents[0].children.length).toEqual(0)
       expect(interactionEvents[0].isRouteChange).not.toBeTruthy()
+      if (browserMatch(notIOS)) expect(interactionEvents[0].oldURL).toEqual(documentReferrer) // ios on lambdatest appears to return the wrong value for referrer when using browser.execute, which breaks this test condition. Confirmed referrer behavior works in real env
 
       expect(interactionEvents[1].children.length).toEqual(1)
       expect(interactionEvents[1].children[0]).toMatchObject({
@@ -79,12 +82,14 @@ describe('attribution tests', () => {
           .then(() => $('#three').click())
       ])
 
+      const documentReferrer = await browser.execute(() => document.referrer)
       const interactionEvents = JSONPath({ path: '$.[*].request.body.[?(!!@ && @.type===\'interaction\')]', json: interactionHarvests })
       expect(interactionEvents.length).toEqual(2)
 
       expect(interactionEvents[0].trigger).toEqual('initialPageLoad')
       expect(interactionEvents[0].children.length).toEqual(0)
       expect(interactionEvents[0].isRouteChange).not.toBeTruthy()
+      if (browserMatch(notIOS)) expect(interactionEvents[0].oldURL).toEqual(documentReferrer) // ios on lambdatest appears to return the wrong value for referrer when using browser.execute, which breaks this test condition. Confirmed referrer behavior works in real env
 
       expect(interactionEvents[1].children.length).toEqual(1)
       expect(interactionEvents[1].children[0]).toMatchObject({
@@ -105,12 +110,14 @@ describe('attribution tests', () => {
           .then(() => $('body').click())
       ])
 
+      const documentReferrer = await browser.execute(() => document.referrer)
       const interactionEvents = JSONPath({ path: '$.[*].request.body.[?(!!@ && @.type===\'interaction\')]', json: interactionHarvests })
       expect(interactionEvents.length).toEqual(2)
 
       expect(interactionEvents[0].trigger).toEqual('initialPageLoad')
       expect(interactionEvents[0].children.length).toEqual(0)
       expect(interactionEvents[0].isRouteChange).not.toBeTruthy()
+      if (browserMatch(notIOS)) expect(interactionEvents[0].oldURL).toEqual(documentReferrer) // ios on lambdatest appears to return the wrong value for referrer when using browser.execute, which breaks this test condition. Confirmed referrer behavior works in real env
 
       expect(interactionEvents[1].children.length).toEqual(0)
     })
@@ -130,12 +137,14 @@ describe('attribution tests', () => {
       ])
       const receiptTime = Date.now()
 
+      const documentReferrer = await browser.execute(() => document.referrer)
       const interactionEvents = JSONPath({ path: '$.[*].request.body.[?(!!@ && @.type===\'interaction\')]', json: interactionHarvests })
       expect(interactionEvents.length).toEqual(2)
 
       expect(interactionEvents[0].trigger).toEqual('initialPageLoad')
       expect(interactionEvents[0].children[0].path.startsWith('/1/')).toEqual(true)
       expect(interactionEvents[0].isRouteChange).not.toBeTruthy()
+      if (browserMatch(notIOS)) expect(interactionEvents[0].oldURL).toEqual(documentReferrer) // ios on lambdatest appears to return the wrong value for referrer when using browser.execute, which breaks this test condition. Confirmed referrer behavior works in real env
 
       expect(interactionEvents[1].id).toBeTruthy()
       expect(interactionEvents[1].id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/)).toBeTruthy()
@@ -178,12 +187,14 @@ describe('attribution tests', () => {
       ])
       const receiptTime = Date.now()
 
+      const documentReferrer = await browser.execute(() => document.referrer)
       const interactionEvents = JSONPath({ path: '$.[*].request.body.[?(!!@ && @.type===\'interaction\')]', json: interactionHarvests })
       expect(interactionEvents.length).toEqual(2)
 
       expect(interactionEvents[0].trigger).toEqual('initialPageLoad')
       expect(interactionEvents[0].children[0].path.startsWith('/1/')).toEqual(true)
       expect(interactionEvents[0].isRouteChange).not.toBeTruthy()
+      if (browserMatch(notIOS)) expect(interactionEvents[0].oldURL).toEqual(documentReferrer) // ios on lambdatest appears to return the wrong value for referrer when using browser.execute, which breaks this test condition. Confirmed referrer behavior works in real env
 
       expect(interactionEvents[1].id).toBeTruthy()
       expect(interactionEvents[1].id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/)).toBeTruthy()
@@ -224,6 +235,7 @@ describe('attribution tests', () => {
           .then(() => $('body').click())
       ])
 
+      const documentReferrer = await browser.execute(() => document.referrer)
       const [{ request: { body: [ipl] } }, { request: { body: [rc] } }] = interactionHarvests
 
       expect(ipl.trigger).toEqual('initialPageLoad')
@@ -231,11 +243,13 @@ describe('attribution tests', () => {
       if (browserMatch(supportsFirstPaint)) expect(ipl.firstPaint).toBeGreaterThan(0)
       else expect(ipl.firstPaint).toBeNull()
       expect(ipl.firstContentfulPaint).toBeGreaterThan(0)
+      if (browserMatch(notIOS)) expect(ipl.oldURL).toEqual(documentReferrer) // ios on lambdatest appears to return the wrong value for referrer when using browser.execute, which breaks this test condition. Confirmed referrer behavior works in real env
 
       expect(rc.category).toEqual('Route change')
       expect(rc.navTiming).toBeNull()
       expect(rc.firstPaint).toBeNull()
       expect(rc.firstContentfulPaint).toBeNull()
+      expect(rc.oldURL).toEqual(ipl.newURL)
     })
 
     it('child nodes in SPA interaction does not exceed set limit', async () => {

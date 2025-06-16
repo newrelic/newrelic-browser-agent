@@ -51,13 +51,13 @@ export class AggregateBase extends FeatureBase {
         // Jserror and Metric features uses a singleton EventAggregator instead of a regular EventBuffer.
       case FEATURE_NAMES.jserrors:
       case FEATURE_NAMES.metrics:
-        this.events = this.agentRef.sharedAggregator ??= new EventAggregator(MAX_PAYLOAD_SIZE, this.featureName)
+        this.events = this.agentRef.sharedAggregator ??= new EventAggregator()
         break
         /** All other features get EventBuffer by default. Note: PVE is included here, but event buffer will always be empty so future harvests will still not happen by interval or EOL.
     This was necessary to prevent race cond. issues where the event buffer was checked before the feature could "block" itself.
     Its easier to just keep an empty event buffer in place. */
       default:
-        this.events = new EventBuffer(MAX_PAYLOAD_SIZE, this.featureName)
+        this.events = new EventBuffer(MAX_PAYLOAD_SIZE, this)
         break
     }
   }

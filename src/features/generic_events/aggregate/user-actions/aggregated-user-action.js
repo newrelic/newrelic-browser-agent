@@ -41,6 +41,10 @@ export class AggregatedUserAction {
     return (this.event.type === 'click' && len >= RAGE_CLICK_THRESHOLD_EVENTS && this.relativeMs[len - 1] - this.relativeMs[len - RAGE_CLICK_THRESHOLD_EVENTS] < RAGE_CLICK_THRESHOLD_MS)
   }
 
+  /**
+   * Determines if the click is a dead click, which is defined as a click on an element that is not interactive.
+   * @returns {boolean}
+   */
   isDeadClick () {
     return this.event.type === 'click' && (this.hasActLink === false ||
       (this.event.target && this.event.target.nodeType === Node.ELEMENT_NODE && isVisible(this.event.target) &&

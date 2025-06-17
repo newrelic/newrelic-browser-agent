@@ -24,6 +24,7 @@ export class UserActionsAggregator {
   /**
    * Process the event and determine if a new aggregation set should be made or if it should increment the current aggregation
    * @param {Event} evt The event supplied by the addEventListener callback
+   * @param {Array<string>} [targetFields=[]] specifies which fields to gather from the nearest element in the path
    * @returns {AggregatedUserAction|undefined} The previous aggregation set if it has been completed by processing the current event
    */
   process (evt, targetFields) {
@@ -48,7 +49,7 @@ export class UserActionsAggregator {
  * Generates a selector path for the event, starting with simple cases like window or document and getting more complex for dom-tree traversals as needed.
  * Will return a random selector path value if no other path can be determined, to force the aggregator to skip aggregation for this event.
  * @param {Event} evt
- * @param targetFields
+ * @param {Array<string>} [targetFields=[]] specifies which fields to gather from the nearest element in the path
  * @returns {{ path: (undefined|string), nearestTargetFields: {}, hasActLink: boolean}}
  */
 function getSelectorPath (evt, targetFields) {

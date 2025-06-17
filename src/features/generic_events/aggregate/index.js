@@ -87,7 +87,7 @@ export class Aggregate extends AggregateBase {
                   return acc
                 }, {})),
                 ...aggregatedUserAction.nearestTargetFields,
-                ...(aggregatedUserAction.deadClick && { deadClick: aggregatedUserAction.deadClick })
+                ...(agentRef.runUserFrustrations && aggregatedUserAction.deadClick && { deadClick: aggregatedUserAction.deadClick })
               })
 
               /**

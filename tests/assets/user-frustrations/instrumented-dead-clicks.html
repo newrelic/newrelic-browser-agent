@@ -6,7 +6,11 @@
 <html lang="en">
   <head>
     <title>RUM - Dead Clicks</title>
-    {init} {config} {loader}
+    {init} {config}
+    <script>
+      NREUM.init.feature_flags = ['user_frustrations']
+    </script>
+    {loader}
     <script>
       const doNothingFn = function() { console.log('This will never be logged.') }
     </script>

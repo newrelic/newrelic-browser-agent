@@ -5,6 +5,7 @@
 
 import { interactiveElems } from '../../features/generic_events/aggregate/user-actions/interactive-elements'
 import { warn } from '../util/console'
+import { isVisible } from '../../features/generic_events/aggregate/user-actions/utils'
 
 /**
  * Generates a CSS selector path for the given element, if possible
@@ -86,17 +87,5 @@ export const gatherSelectorPathInfo = (elem, targetFields = []) => {
       })
     }
     return undefined
-  }
-
-  function isVisible (elem) {
-    return (typeof elem.checkVisibility === 'function')
-      ? elem.checkVisibility()
-      : !(elem.style.display === 'none' ||
-      elem.style.visibility === 'hidden' ||
-      elem.style.contentVisibility === 'hidden' ||
-      elem.style.opacity === '0' ||
-      elem.style.visibility === 'collapse' ||
-      (elem.offsetWidth <= 0 && elem.offsetHeight <= 0) ||
-      (elem.getBoundingClientRect && (elem.getBoundingClientRect().width <= 0 && elem.getBoundingClientRect().height <= 0)))
   }
 }

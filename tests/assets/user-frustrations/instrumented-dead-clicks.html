@@ -3,7 +3,7 @@
   Copyright 2025 New Relic Corporation.
   PDX-License-Identifier: Apache-2.0
 -->
-<html>
+<html lang="en">
   <head>
     <title>RUM - Dead Clicks</title>
     {init} {config} {loader}
@@ -69,6 +69,18 @@
           <a id="dead-link-with-span-child">
             <span id="span-inside-dead-link">Link</span>
           </a>
+        </p>
+      </div>
+
+      <h2>Textboxes</h2>
+      <div>
+        <p>
+          <label for="normal-textbox">Normal textbox =></label>
+          <input type="text" id="normal-textbox" name="normal-textbox" value="Normal Textbox"/>
+        </p>
+        <p>
+          <label for="readonly-textbox">Readonly textbox =></label>
+          <input type="text" id="readonly-textbox" name="readonly-textbox" value="Readonly Textbox" readonly/>
         </p>
       </div>
 

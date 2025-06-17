@@ -117,4 +117,40 @@ describe('User Frustrations - Dead Clicks', () => {
       deadClick: true
     }))
   })
+  it('should correctly assess dead clicks on textboxes', async () => {
+    const [insightsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+      { test: testInsRequest }
+    ])
+    await browser.url(await browser.testHandle.assetURL('user-frustrations/instrumented-dead-clicks.html'))
+      .then(() => browser.waitForAgentLoad())
+
+    await browser.execute(function () {
+      // [0] - normal textbox
+      document.getElementById('normal-textbox').click()
+      // [1] - readonly textbox
+      document.getElementById('readonly-textbox').click()
+
+      // end previous user action
+      document.getElementById('test-area').click()
+    })
+
+    const [insightsHarvest] = await insightsCapture.waitForResult({ timeout: 10000 })
+    const insHarvest0 = insightsHarvest.request.body.ins[0]
+    expect(insHarvest0).toMatchObject(expect.objectContaining({
+      eventType: 'UserAction',
+      targetTag: 'INPUT',
+      targetId: 'normal-textbox',
+      targetType: 'text'
+    }))
+    expect(insHarvest0).not.toHaveProperty('deadClick')
+
+    const insHarvest1 = insightsHarvest.request.body.ins[1]
+    expect(insHarvest1).toMatchObject(expect.objectContaining({
+      eventType: 'UserAction',
+      targetTag: 'INPUT',
+      targetId: 'readonly-textbox',
+      targetType: 'text',
+      deadClick: true
+    }))
+  })
 })

@@ -4,6 +4,7 @@
  */
 import { RAGE_CLICK_THRESHOLD_EVENTS, RAGE_CLICK_THRESHOLD_MS } from '../../constants'
 import { cleanURL } from '../../../../common/url/clean-url'
+import { isVisible } from './utils'
 
 export class AggregatedUserAction {
   constructor (evt, selectorInfo) {
@@ -41,6 +42,8 @@ export class AggregatedUserAction {
   }
 
   isDeadClick () {
-    return this.event.type === 'click' && this.hasActLink === false
+    return this.event.type === 'click' && (this.hasActLink === false ||
+      (this.event.target && this.event.target.nodeType === Node.ELEMENT_NODE && isVisible(this.event.target) &&
+        this.event.target.tagName === 'INPUT' && this.event.target.type === 'text' && this.event.target.readOnly))
   }
 }

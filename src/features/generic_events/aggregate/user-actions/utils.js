@@ -17,5 +17,5 @@ export function isVisible (elem) {
       elem.style.opacity === '0' ||
       elem.style.visibility === 'collapse' ||
       (elem.offsetWidth <= 0 && elem.offsetHeight <= 0) ||
-      (elem.getBoundingClientRect && (elem.getBoundingClientRect().width <= 0 && elem.getBoundingClientRect().height <= 0)))
+      (typeof elem.getBoundingClientRect === 'function' && (elem.getBoundingClientRect().width <= 0 && elem.getBoundingClientRect().height <= 0)))
 }

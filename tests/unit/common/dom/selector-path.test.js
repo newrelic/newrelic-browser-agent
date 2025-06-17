@@ -66,6 +66,24 @@ describe('gatherSelectorPathInfo', () => {
   })
 })
 
+describe('gatherSelectorPathInfo - interactive elements', () => {
+  it('correctly raises internal error', () => {
+    const debugSpy = jest.spyOn(console, 'debug')
+    const link = document.createElement('a')
+    simulateWidthAndHeight(link, undefined, undefined, () => {
+      throw new Error('Simulated error')
+    })
+    document.body.appendChild(link)
+
+    const { hasActLink } = gatherSelectorPathInfo(link)
+    expect(hasActLink).toBe(undefined)
+    expect(debugSpy).toHaveBeenCalledWith(expect.stringContaining('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#63'), {
+      element: 'A',
+      error: 'Simulated error'
+    })
+  })
+})
+
 describe('gatherSelectorPathInfo - links', () => {
   let link
   beforeEach(() => {
@@ -76,26 +94,6 @@ describe('gatherSelectorPathInfo - links', () => {
       document.body.removeChild(link)
     }
   })
-
-  function simulateWidthAndHeight (elem, width = 100, height = 100) {
-    Object.defineProperty(elem, 'offsetWidth', {
-      get: () => width
-    })
-    Object.defineProperty(elem, 'offsetHeight', {
-      get: () => height
-    })
-    Object.defineProperty(elem, 'getBoundingClientRect', {
-      value: () => ({
-        width,
-        height,
-        top: 0,
-        left: 0,
-        bottom: 100,
-        right: 100
-      }),
-      configurable: true
-    })
-  }
 
   function createLink () {
     const link = document.createElement('a')
@@ -192,3 +190,25 @@ describe('gatherSelectorPathInfo - links', () => {
     expect(hasActLink).toBe(undefined) // ignored, not visible
   })
 })
+
+function simulateWidthAndHeight (elem, width = 100, height = 100, getBoundingClientRect = () => {
+  return {
+    width,
+    height,
+    top: 0,
+    left: 0,
+    bottom: 100,
+    right: 100
+  }
+}) {
+  Object.defineProperty(elem, 'offsetWidth', {
+    get: () => width
+  })
+  Object.defineProperty(elem, 'offsetHeight', {
+    get: () => height
+  })
+  Object.defineProperty(elem, 'getBoundingClientRect', {
+    value: getBoundingClientRect,
+    configurable: true
+  })
+}

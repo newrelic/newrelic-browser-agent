@@ -46,8 +46,13 @@ export class AggregatedUserAction {
    * @returns {boolean}
    */
   isDeadClick () {
-    return this.event.type === 'click' && (this.hasActLink === false ||
-      (this.event.target && this.event.target.nodeType === Node.ELEMENT_NODE && isVisible(this.event.target) &&
-        this.event.target.tagName === 'INPUT' && this.event.target.type === 'text' && this.event.target.readOnly))
+    try {
+      return this.event.type === 'click' && (this.hasActLink === false ||
+        (this.event.target && this.event.target.nodeType === Node.ELEMENT_NODE && isVisible(this.event.target) &&
+          this.event.target.tagName === 'INPUT' && this.event.target.type === 'text' && this.event.target.readOnly))
+    } catch {
+      // do nothing, just return false
+      return false
+    }
   }
 }

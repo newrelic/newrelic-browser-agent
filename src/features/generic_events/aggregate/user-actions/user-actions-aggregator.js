@@ -50,10 +50,10 @@ export class UserActionsAggregator {
  * Will return a random selector path value if no other path can be determined, to force the aggregator to skip aggregation for this event.
  * @param {Event} evt
  * @param {Array<string>} [targetFields=[]] specifies which fields to gather from the nearest element in the path
- * @returns {{ path: (undefined|string), nearestTargetFields: {}, hasActLink: boolean}}
+ * @returns {{ selectorPath: (undefined|string), nearestTargetFields: {}, hasActLink: boolean}}
  */
 function getSelectorPath (evt, targetFields) {
-  const result = { path: undefined, nearestTargetFields: {}, hasActLink: false }
+  const result = { selectorPath: undefined, nearestTargetFields: {}, hasActLink: false }
   if (OBSERVED_WINDOW_EVENTS.includes(evt.type) || evt.target === window) return { ...result, selectorPath: 'window' }
   if (evt.target === document) return { ...result, selectorPath: 'document' }
 

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>setCustomAttribute API Test</title>
+    {init}
+    {config}
+    {loader}
+  </head>
+  <body>
+    <script>
+        // should change persistent value both locallly and in LS
+        window.value = Math.random()
+        newrelic.setCustomAttribute('testing', window.value, true)
+        window.addEventListener('load', function() {
+          newrelic.setCustomAttribute('testing-load', window.value, true)
+        })
+    </script>
+  </body>
+</html>

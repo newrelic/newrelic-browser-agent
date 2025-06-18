@@ -14,7 +14,8 @@ import { isVisible } from '../../features/generic_events/aggregate/user-actions/
  * @returns {{path: (undefined|string), nearestFields: {}, hasInteractiveElems: boolean, hasVisibleLink: boolean, hasVisibleTextbox: boolean}}
  */
 export const analyzeElemPath = (elem, targetFields = []) => {
-  if (!elem) return { path: undefined, nearestFields: {}, hasInteractiveElems: false, hasVisibleLink: false, hasVisibleTextbox: false }
+  const result = { path: undefined, nearestFields: {}, hasInteractiveElems: false, hasVisibleLink: false, hasVisibleTextbox: false }
+  if (!elem) return result
 
   const getNthOfTypeIndex = (node) => {
     try {
@@ -33,9 +34,6 @@ export const analyzeElemPath = (elem, targetFields = []) => {
   let pathSelector = ''
   let index = getNthOfTypeIndex(elem)
   let visible = false
-  let hasVisibleLink = false
-  let hasVisibleTextbox = false
-  let hasInteractiveElems = false
 
   const nearestFields = {}
   try {
@@ -49,10 +47,10 @@ export const analyzeElemPath = (elem, targetFields = []) => {
       ].join('')
 
       visible = isVisibleElem(elem)
-      hasVisibleLink ||= visible && elem.tagName.toLowerCase() === 'a'
-      hasVisibleTextbox ||= visible && elem.tagName.toLowerCase() === 'input' && elem.type.toLowerCase() === 'text'
+      result.hasVisibleLink ||= visible && elem.tagName.toLowerCase() === 'a'
+      result.hasVisibleTextbox ||= visible && elem.tagName.toLowerCase() === 'input' && elem.type.toLowerCase() === 'text'
 
-      hasInteractiveElems ||= isInteractiveLink(elem, visible) || isInteractiveTextbox(elem, visible)
+      result.hasInteractiveElems ||= isInteractiveLink(elem, visible) || isInteractiveTextbox(elem, visible)
       pathSelector = selector
       elem = elem.parentNode
     }
@@ -61,7 +59,7 @@ export const analyzeElemPath = (elem, targetFields = []) => {
   }
 
   const path = pathSelector ? index ? `${pathSelector}:nth-of-type(${index})` : pathSelector : undefined
-  return { path, nearestFields, hasInteractiveElems, hasVisibleLink, hasVisibleTextbox }
+  return { ...result, path, nearestFields }
 
   function nearestAttrName (originalFieldName) {
     /** preserve original renaming structure for pre-existing field maps */

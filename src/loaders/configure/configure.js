@@ -56,8 +56,6 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
 
     // Update if soft_navigations is allowed to run AND part of this agent build, used to override old spa functions.
     agent.runSoftNavOverSpa &&= (updatedInit.soft_navigations.enabled === true && updatedInit.feature_flags.includes('soft_nav'))
-
-    agent.runUserFrustrations ||= updatedInit.feature_flags.includes('user_frustrations')
   }
 
   runtime.denyList = [

@@ -24,7 +24,7 @@ describe('UserActionsAggregator', () => {
     expect(output.count).toEqual(1)
   })
 
-  test('getSelectorPath should return correct selector path', () => {
+  test('should process events and return correct selector path', () => {
     const button = document.createElement('button')
     button.id = 'my-button'
     document.body.appendChild(button)

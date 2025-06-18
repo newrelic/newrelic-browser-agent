@@ -9,7 +9,7 @@ describe('AggregatedUserAction', () => {
   beforeEach(() => {
     evt = { type: 'click', timeStamp: 1000 }
     selectorPath = 'body > div'
-    aggregatedUserAction = new AggregatedUserAction(evt, selectorPath)
+    aggregatedUserAction = new AggregatedUserAction(evt, { path: selectorPath })
   })
 
   test('should initialize with correct values', () => {

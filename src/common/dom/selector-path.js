@@ -14,7 +14,7 @@ import { isVisible } from '../../features/generic_events/aggregate/user-actions/
  * @param {Array<string>} [targetFields=[]] specifies which fields to gather from the nearest element in the path
  * @returns {{path: undefined, nearestFields: {}}|{path: (string|string), nearestFields: {}, hasActLink: boolean}}
  */
-export const gatherSelectorPathInfo = (elem, targetFields = []) => {
+export const analyzeElemPath = (elem, targetFields = []) => {
   if (!elem) return { path: undefined, nearestFields: {} }
 
   const getNthOfTypeIndex = (node) => {

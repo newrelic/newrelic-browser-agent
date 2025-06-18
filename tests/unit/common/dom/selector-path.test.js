@@ -1,9 +1,9 @@
-import { gatherSelectorPathInfo } from '../../../../src/common/dom/selector-path'
+import { analyzeElemPath } from '../../../../src/common/dom/selector-path'
 import { interactiveElems } from '../../../../src/features/generic_events/aggregate/user-actions/interactive-elements'
 
 const targetFields = ['id', 'className', 'tagName', 'type']
 
-describe('gatherSelectorPathInfo', () => {
+describe('analyzeElemPath', () => {
   let span, p
 
   beforeEach(() => {
@@ -27,31 +27,31 @@ describe('gatherSelectorPathInfo', () => {
   })
 
   test('should generate selector path including id', () => {
-    const { path: selectorWithId } = gatherSelectorPathInfo(p, targetFields)
+    const { path: selectorWithId } = analyzeElemPath(p, targetFields)
     expect(selectorWithId).toBe('html>body>div#container>div>p#target:nth-of-type(1)')
 
-    const { path: selectorWithoutId } = gatherSelectorPathInfo(span)
+    const { path: selectorWithoutId } = analyzeElemPath(span)
     expect(selectorWithoutId).toBe('html>body>div#container>div>span:nth-of-type(1)')
   })
 
   test('should generate nearestFields', () => {
     // should get the id from <p>, tagName from <p> and class from <div>
-    const { nearestFields } = gatherSelectorPathInfo(p, targetFields)
+    const { nearestFields } = analyzeElemPath(p, targetFields)
     expect(nearestFields).toMatchObject({ nearestId: 'target', nearestTag: 'P', nearestClass: 'container' })
 
-    const { path: selectorWithoutId } = gatherSelectorPathInfo(span)
+    const { path: selectorWithoutId } = analyzeElemPath(span)
     expect(selectorWithoutId).toBe('html>body>div#container>div>span:nth-of-type(1)')
   })
 
   test('should return undefined for null element', () => {
-    const { path: selector } = gatherSelectorPathInfo(null)
+    const { path: selector } = analyzeElemPath(null)
     expect(selector).toBeUndefined()
   })
 
   test('should handle elements with siblings', () => {
     const sibling = document.createElement('div')
     document.body.appendChild(sibling)
-    const { path: selector } = gatherSelectorPathInfo(sibling, targetFields)
+    const { path: selector } = analyzeElemPath(sibling, targetFields)
     expect(selector).toBe('html>body>div:nth-of-type(2)')
     document.body.removeChild(sibling)
   })
@@ -59,14 +59,14 @@ describe('gatherSelectorPathInfo', () => {
   test('should handle elements without siblings', () => {
     const singleTable = document.createElement('table')
     document.body.appendChild(singleTable)
-    const { path: selector, nearestFields } = gatherSelectorPathInfo(singleTable)
+    const { path: selector, nearestFields } = analyzeElemPath(singleTable)
     expect(selector).toBe('html>body>table:nth-of-type(1)')
     expect(nearestFields).toEqual({})
     document.body.removeChild(singleTable)
   })
 })
 
-describe('gatherSelectorPathInfo - interactive elements', () => {
+describe('analyzeElemPath - interactive elements', () => {
   it('correctly raises internal error', () => {
     const debugSpy = jest.spyOn(console, 'debug')
     const link = document.createElement('a')
@@ -75,7 +75,7 @@ describe('gatherSelectorPathInfo - interactive elements', () => {
     })
     document.body.appendChild(link)
 
-    const { hasActLink } = gatherSelectorPathInfo(link)
+    const { hasActLink } = analyzeElemPath(link)
     expect(hasActLink).toBe(undefined)
     expect(debugSpy).toHaveBeenCalledWith(expect.stringContaining('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#63'), {
       element: 'A',
@@ -84,7 +84,7 @@ describe('gatherSelectorPathInfo - interactive elements', () => {
   })
 })
 
-describe('gatherSelectorPathInfo - links', () => {
+describe('analyzeElemPath - links', () => {
   let link
   beforeEach(() => {
     link = createLink()
@@ -107,7 +107,7 @@ describe('gatherSelectorPathInfo - links', () => {
     link.href = 'https://example.com'
     document.body.appendChild(link)
 
-    const { hasActLink } = gatherSelectorPathInfo(link)
+    const { hasActLink } = analyzeElemPath(link)
     expect(hasActLink).toBe(true)
   })
 
@@ -115,7 +115,7 @@ describe('gatherSelectorPathInfo - links', () => {
     link.onclick = () => {}
     document.body.appendChild(link)
 
-    const { hasActLink } = gatherSelectorPathInfo(link)
+    const { hasActLink } = analyzeElemPath(link)
     expect(hasActLink).toBe(true)
   })
 
@@ -125,7 +125,7 @@ describe('gatherSelectorPathInfo - links', () => {
     const listener = () => {}
     interactiveElems.add(link, listener)
 
-    const { hasActLink } = gatherSelectorPathInfo(link)
+    const { hasActLink } = analyzeElemPath(link)
     expect(hasActLink).toBe(true)
 
     interactiveElems.delete(link, listener)
@@ -137,7 +137,7 @@ describe('gatherSelectorPathInfo - links', () => {
     link.appendChild(childSpan)
     document.body.appendChild(link)
 
-    const { hasActLink } = gatherSelectorPathInfo(childSpan)
+    const { hasActLink } = analyzeElemPath(childSpan)
     expect(hasActLink).toBe(true)
   })
 
@@ -146,7 +146,7 @@ describe('gatherSelectorPathInfo - links', () => {
     link.appendChild(childSpan)
     document.body.appendChild(link)
 
-    const { hasActLink } = gatherSelectorPathInfo(childSpan)
+    const { hasActLink } = analyzeElemPath(childSpan)
     expect(hasActLink).toBe(false) // is a dead click
   })
 
@@ -155,14 +155,14 @@ describe('gatherSelectorPathInfo - links', () => {
     link.appendChild(childSpan)
     document.body.appendChild(childSpan)
 
-    const { hasActLink } = gatherSelectorPathInfo(childSpan)
+    const { hasActLink } = analyzeElemPath(childSpan)
     expect(hasActLink).toBe(undefined) // not a dead click
   })
 
   test('should not detect link as interactive if it has no href, onclick, or click handlers', () => {
     document.body.appendChild(link)
 
-    const { hasActLink } = gatherSelectorPathInfo(link)
+    const { hasActLink } = analyzeElemPath(link)
     expect(hasActLink).toBe(false) // is a dead click
   })
 
@@ -170,7 +170,7 @@ describe('gatherSelectorPathInfo - links', () => {
     link.style.display = 'none'
     document.body.appendChild(link)
 
-    const { hasActLink } = gatherSelectorPathInfo(link)
+    const { hasActLink } = analyzeElemPath(link)
     expect(hasActLink).toBe(undefined) // ignored, not visible
   })
 
@@ -178,7 +178,7 @@ describe('gatherSelectorPathInfo - links', () => {
     link.style.opacity = '0'
     document.body.appendChild(link)
 
-    const { hasActLink } = gatherSelectorPathInfo(link)
+    const { hasActLink } = analyzeElemPath(link)
     expect(hasActLink).toBe(undefined) // ignored, not visible
   })
 
@@ -186,7 +186,7 @@ describe('gatherSelectorPathInfo - links', () => {
     link.style.visibility = 'collapse'
     document.body.appendChild(link)
 
-    const { hasActLink } = gatherSelectorPathInfo(link)
+    const { hasActLink } = analyzeElemPath(link)
     expect(hasActLink).toBe(undefined) // ignored, not visible
   })
 })

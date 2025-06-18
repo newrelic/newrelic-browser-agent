@@ -4,7 +4,6 @@
  */
 
 import { interactiveElems } from '../../features/generic_events/aggregate/user-actions/interactive-elements'
-import { warn } from '../util/console'
 import { isVisible } from '../../features/generic_events/aggregate/user-actions/utils'
 
 /**
@@ -12,10 +11,10 @@ import { isVisible } from '../../features/generic_events/aggregate/user-actions/
  * Also gather metadata about the element's nearest fields, and whether there are any interactive links in the path.
  * @param {HTMLElement} elem
  * @param {Array<string>} [targetFields=[]] specifies which fields to gather from the nearest element in the path
- * @returns {{path: undefined, nearestFields: {}}|{path: (string|string), nearestFields: {}, hasActLink: boolean}}
+ * @returns {{path: (undefined|string), nearestFields: {}, hasInteractiveElems: boolean, hasVisibleLink: boolean, hasVisibleTextbox: boolean}}
  */
 export const analyzeElemPath = (elem, targetFields = []) => {
-  if (!elem) return { path: undefined, nearestFields: {} }
+  if (!elem) return { path: undefined, nearestFields: {}, hasInteractiveElems: false, hasVisibleLink: false, hasVisibleTextbox: false }
 
   const getNthOfTypeIndex = (node) => {
     try {
@@ -33,7 +32,10 @@ export const analyzeElemPath = (elem, targetFields = []) => {
 
   let pathSelector = ''
   let index = getNthOfTypeIndex(elem)
-  let hasActLink
+  let visible = false
+  let hasVisibleLink = false
+  let hasVisibleTextbox = false
+  let hasInteractiveElems = false
 
   const nearestFields = {}
   try {
@@ -46,10 +48,11 @@ export const analyzeElemPath = (elem, targetFields = []) => {
         pathSelector ? `>${pathSelector}` : ''
       ].join('')
 
-      if (hasActLink === undefined) {
-        hasActLink = isInteractiveLink(elem)
-      }
+      visible = isVisibleElem(elem)
+      hasVisibleLink ||= visible && elem.tagName.toLowerCase() === 'a'
+      hasVisibleTextbox ||= visible && elem.tagName.toLowerCase() === 'input' && elem.type.toLowerCase() === 'text'
 
+      hasInteractiveElems ||= isInteractiveLink(elem, visible) || isInteractiveTextbox(elem, visible)
       pathSelector = selector
       elem = elem.parentNode
     }
@@ -58,7 +61,7 @@ export const analyzeElemPath = (elem, targetFields = []) => {
   }
 
   const path = pathSelector ? index ? `${pathSelector}:nth-of-type(${index})` : pathSelector : undefined
-  return { path, nearestFields, hasActLink }
+  return { path, nearestFields, hasInteractiveElems, hasVisibleLink, hasVisibleTextbox }
 
   function nearestAttrName (originalFieldName) {
     /** preserve original renaming structure for pre-existing field maps */
@@ -67,25 +70,32 @@ export const analyzeElemPath = (elem, targetFields = []) => {
     return `nearest${originalFieldName.charAt(0).toUpperCase() + originalFieldName.slice(1)}`
   }
 
+  function isVisibleElem (elem) {
+    return elem &&
+      elem.nodeType === Node.ELEMENT_NODE &&
+      isVisible(elem)
+  }
+
   /**
-   * Checks if the element is an interactive link. Elements that are not visible will not be checked for interactivity.
-   * A link is considered interactive if it has an `href` attribute, an `onclick` handler, or any click event listener(s).
-   * @param elem
-   * @returns {boolean|undefined} undefined if not a visible link, false if the link is not interactive, true if it is interactive.
+   * Checks if the element is an interactive link.
+   * A link is considered interactive if it is visible and has an `href` attribute, an `onclick` handler, or any click event listener(s).
+   * @param {HTMLElement} elem
+   * @param {boolean} visible
+   * @returns {boolean} true only if the element is an interactive link
    */
-  function isInteractiveLink (elem) {
-    try {
-      if (!elem ||
-        elem.nodeType !== Node.ELEMENT_NODE ||
-        elem.tagName?.toLowerCase() !== 'a' ||
-        !isVisible(elem)) return undefined
-      return typeof elem.onclick === 'function' || interactiveElems.has(elem) || elem.hasAttribute('href')
-    } catch (err) {
-      warn(63, {
-        element: elem?.tagName,
-        error: err.message
-      })
-    }
-    return undefined
+  function isInteractiveLink (elem, visible) {
+    return visible && elem.tagName.toLowerCase() === 'a' &&
+      (interactiveElems.has(elem) || typeof elem.onclick === 'function' || elem.hasAttribute('href'))
+  }
+
+  /**
+   * Checks if the element is an interactive textbox.
+   * A textbox is considered interactive if it is visible and is not read-only.
+   * @param {HTMLElement} elem
+   * @param {boolean} visible
+   * @returns {boolean} true only if the element is an interactive textbox
+   */
+  function isInteractiveTextbox (elem, visible) {
+    return visible && elem.tagName.toLowerCase() === 'input' && elem.type.toLowerCase() === 'text' && !elem.readOnly
   }
 }

@@ -9,13 +9,17 @@
  * @returns {boolean|boolean}
  */
 export function isVisible (elem) {
-  return (typeof elem.checkVisibility === 'function')
-    ? elem.checkVisibility()
-    : !(elem.style.display === 'none' ||
-      elem.style.visibility === 'hidden' ||
-      elem.style.contentVisibility === 'hidden' ||
-      elem.style.opacity === '0' ||
-      elem.style.visibility === 'collapse' ||
-      (elem.offsetWidth <= 0 && elem.offsetHeight <= 0) ||
-      (typeof elem.getBoundingClientRect === 'function' && (elem.getBoundingClientRect().width <= 0 && elem.getBoundingClientRect().height <= 0)))
+  if (!elem || !elem.nodeType || elem.nodeType !== Node.ELEMENT_NODE) return false
+  return (typeof elem.checkVisibility === 'function' && elem.checkVisibility()) || checkVisibility(elem)
+}
+
+function checkVisibility (elem) {
+  const style = (typeof window.getComputedStyle === 'function' && window.getComputedStyle(elem)) ?? {}
+  return !(style.display === 'none' ||
+    style.visibility === 'hidden' ||
+    style.contentVisibility === 'hidden' ||
+    style.opacity === '0' ||
+    style.visibility === 'collapse' ||
+    (elem.offsetWidth <= 0 && elem.offsetHeight <= 0) ||
+    (typeof elem.getBoundingClientRect === 'function' && (elem.getBoundingClientRect().width <= 0 && elem.getBoundingClientRect().height <= 0)))
 }

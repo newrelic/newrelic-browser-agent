@@ -4,7 +4,6 @@
  */
 import { RAGE_CLICK_THRESHOLD_EVENTS, RAGE_CLICK_THRESHOLD_MS } from '../../constants'
 import { cleanURL } from '../../../../common/url/clean-url'
-import { isVisible } from './utils'
 
 export class AggregatedUserAction {
   constructor (evt, selectorInfo) {
@@ -12,12 +11,11 @@ export class AggregatedUserAction {
     this.count = 1
     this.originMs = Math.floor(evt.timeStamp)
     this.relativeMs = [0]
-    this.selectorPath = selectorInfo.selectorPath
+    this.selectorPath = selectorInfo.path
     this.rageClick = undefined
-    this.nearestTargetFields = selectorInfo.nearestTargetFields
+    this.nearestTargetFields = selectorInfo.nearestFields
     this.currentUrl = cleanURL('' + location)
-    this.hasActLink = selectorInfo.hasActLink
-    this.deadClick = this.isDeadClick()
+    this.deadClick = this.isDeadClick(selectorInfo)
   }
 
   /**
@@ -42,17 +40,16 @@ export class AggregatedUserAction {
   }
 
   /**
-   * Determines if the click is a dead click, which is defined as a click on an element that is not interactive.
+   * Determines if the click is a dead click, which is defined as a click on an element that is itself not interactive or is a child of a non-interactive element.
+   *
+   * For example,
+   * - clicking on a link that is not interactive = a dead click.
+   * - clicking on a span inside a non-interactive link = a dead click.
+   * - clicking on a standalone span = not a dead click.
    * @returns {boolean}
    */
-  isDeadClick () {
-    try {
-      return this.event.type === 'click' && (this.hasActLink === false ||
-        (this.event.target && this.event.target.nodeType === Node.ELEMENT_NODE && isVisible(this.event.target) &&
-          this.event.target.tagName === 'INPUT' && this.event.target.type === 'text' && this.event.target.readOnly))
-    } catch {
-      // do nothing, just return false
-      return false
-    }
+  isDeadClick (selectorInfo) {
+    const { hasInteractiveElems, hasVisibleLink, hasVisibleTextbox } = selectorInfo
+    return this.event.type === 'click' && !hasInteractiveElems && (hasVisibleLink || hasVisibleTextbox)
   }
 }

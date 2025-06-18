@@ -30,7 +30,7 @@ export class UserActionsAggregator {
   process (evt, targetFields) {
     if (!evt) return
     const selectorInfo = gatherSelectorPathInfo(evt, targetFields)
-    const aggregationKey = getAggregationKey(evt, selectorInfo.selectorPath)
+    const aggregationKey = getAggregationKey(evt, selectorInfo.path)
     if (!!aggregationKey && aggregationKey === this.#aggregationKey) {
       // an aggregation exists already, so lets just continue to increment
       this.#aggregationEvent.aggregate(evt)
@@ -49,20 +49,18 @@ export class UserActionsAggregator {
  * Given an event, generates a CSS selector path along with other metadata info about the path.
  *
  * Starts with simple cases like window or document and progresses to more complex dom-tree traversals as needed.
- * Will return a random selector path value if no other path can be determined, to force the aggregator to skip aggregation for this event.
+ * Will return selectorPath: undefined if no other path can be determined, to force the aggregator to skip aggregation for this event.
  * @param {Event} evt
  * @param {Array<string>} [targetFields=[]] specifies which fields to gather from the nearest element in the path
- * @returns {{ selectorPath: (undefined|string), nearestTargetFields: {}, hasActLink: boolean}}
+ * @returns {{ path: (undefined|string), nearestFields: {}, hasInteractiveElems: boolean, hasVisibleLink: boolean, hasVisibleTextbox: boolean }}
  */
 function gatherSelectorPathInfo (evt, targetFields) {
-  const result = { selectorPath: undefined, nearestTargetFields: {}, hasActLink: false }
-  if (OBSERVED_WINDOW_EVENTS.includes(evt.type) || evt.target === window) return { ...result, selectorPath: 'window' }
-  if (evt.target === document) return { ...result, selectorPath: 'document' }
+  const result = { path: undefined, nearestFields: {}, hasInteractiveElems: false, hasVisibleLink: false, hasVisibleTextbox: false }
+  if (OBSERVED_WINDOW_EVENTS.includes(evt.type) || evt.target === window) return { ...result, path: 'window' }
+  if (evt.target === document) return { ...result, path: 'document' }
 
-  // Generate one from target tree that includes elem ids
-  // if STILL no selectorPath, it will return undefined which will skip aggregation for this event
-  const { path, nearestFields, hasActLink } = analyzeElemPath(evt.target, targetFields)
-  return { selectorPath: path, nearestTargetFields: nearestFields, hasActLink }
+  // Note: if selectorPath is undefined, aggregation will be skipped for this event
+  return analyzeElemPath(evt.target, targetFields)
 }
 
 /**

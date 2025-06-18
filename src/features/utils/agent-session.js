@@ -25,7 +25,8 @@ export function setupAgentSession (agentRef) {
   // Retrieve & re-add all of the persisted setCustomAttribute|setUserId k-v from previous page load(s), if any was stored.
   const customSessionData = agentRef.runtime.session.state.custom
   if (customSessionData) {
-    agentRef.info.jsAttributes = { ...agentRef.info.jsAttributes, ...customSessionData }
+    /** stored attributes from previous page should not take precedence over attributes stored on this page via API before the page load */
+    agentRef.info.jsAttributes = { ...customSessionData, ...agentRef.info.jsAttributes }
   }
 
   const sharedEE = ee.get(agentRef.agentIdentifier)

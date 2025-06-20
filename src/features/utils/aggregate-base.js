@@ -18,6 +18,8 @@ import { EventBuffer } from './event-buffer'
 import { handle } from '../../common/event-emitter/handle'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../metrics/constants'
 import { EventAggregator } from '../../common/aggregate/event-aggregator'
+import { IDEAL_PAYLOAD_SIZE } from '../../common/constants/agent-constants'
+import { stringify } from '../../common/util/stringify'
 
 export class AggregateBase extends FeatureBase {
   /**
@@ -68,6 +70,40 @@ export class AggregateBase extends FeatureBase {
       default:
         this.events = new EventStoreManager(this.agentRef, EventBuffer, entityGuid, this)
         break
+    }
+  }
+
+  handleData (data, customAttributesAreSeparate = false) {
+    /** aggregated timeslice metrics dont support byte counting at the moment */
+    if (this.events.StorageClass === EventAggregator) return this.events.add(data)
+
+    const getBytesEstimate = () => {
+      return this.events.byteSize() + (customAttributesAreSeparate ? this.agentRef.info.jsAttributesBytes : 0)
+    }
+
+    const getSMTag = (type) => {
+      return `${this.featureName}/Harvest/${type}/Seen`
+    }
+    // this will be false when the event was dropped due to exceeding max size
+    if (!this.events.add(data)) {
+      if (!this.events.isEmpty()) {
+        // if the buffer is not empty, we can try to harvest what's in there before trying to add the new event again
+        this.reportSupportabilityMetric(getSMTag('Max'), getBytesEstimate())
+        this.agentRef.runtime.harvester.triggerHarvestFor(this)
+        this.handleData(data) // try to add the event again after harvest
+      } else {
+        // was too big, even for a single event
+        warn(63, this.featureName)
+        this.reportSupportabilityMetric(getSMTag('Failed'), stringify(data).length)
+      }
+    } else {
+      // events were successfully added to the buffer
+      const combinedBytes = getBytesEstimate()
+      if (getBytesEstimate() > IDEAL_PAYLOAD_SIZE) {
+        // events in the buffer have exceeded the ideal payload size, so we trigger a harvest
+        this.agentRef.runtime.harvester.triggerHarvestFor(this)
+        this.reportSupportabilityMetric(getSMTag('Early'), combinedBytes)
+      }
     }
   }
 

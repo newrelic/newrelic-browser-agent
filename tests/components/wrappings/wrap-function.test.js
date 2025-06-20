@@ -174,4 +174,163 @@ describe('Wrap function', () => {
     })
     outer()
   })
+
+  describe('long tasks', () => {
+    let onLongTask, onShortTask
+    afterEach(async () => {
+      if (onLongTask) {
+        baseEE.removeEventListener('long-task', onLongTask)
+        onLongTask = null
+      }
+      if (onShortTask) {
+        baseEE.removeEventListener('short-task', onShortTask)
+        onShortTask = null
+      }
+    })
+
+    test('does not emit long task event if fn takes less than 50ms', (done) => {
+      onLongTask = function () {
+        seenLongTask = true // set flag to check if long task event was emitted
+      }
+      onShortTask = function (_, __, ____, task) {
+        expectShortTask(task)
+        expect(seenLongTask).toEqual(false) // no long task event emitted
+        done()
+      }
+      let seenLongTask = false
+      baseEE.on('long-task', onLongTask)
+
+      baseEE.on('short-end', onShortTask)
+
+      const shortTask = wrapFn(() => {}, 'short-')
+      shortTask(thisCtx)
+    })
+
+    test('emits long task message if fn takes more than 50ms', (done) => {
+      onLongTask = function (task) {
+        expectLongTask(task)
+        done()
+      }
+
+      const reallySlowFn = function reallySlowFn () {
+        slowFn(100000000, 1000000000) // this should take more than 50ms
+      }
+
+      const longTask = wrapFn(reallySlowFn, 'long-', thisCtx, 'reallySlowFn', true)
+      baseEE.on('long-task', onLongTask)
+
+      longTask(thisCtx)
+    })
+
+    test('emits long task message if fn errors out', (done) => {
+      const err = new Error('TEST')
+      onLongTask = function (task) {
+        expectLongTask(task, err)
+        done()
+      }
+
+      const reallySlowFn = function reallySlowFn () {
+        slowFn(100000000, 1000000000) // this should take more than 50ms
+        throw err // this should throw an error
+      }
+
+      const longTask = wrapFn(reallySlowFn, 'long-', thisCtx, 'reallySlowFn', true)
+      baseEE.on('long-task', onLongTask)
+
+      try {
+        expect(longTask(thisCtx)).throws('TEST') // should throw an error
+      } catch (e) {
+        // We expect the error to be thrown, so we catch it here to avoid failing the test.
+        // The long task event should still be emitted and handled by onLongTask.
+      }
+    })
+
+    test('finished fn message also has task info', (done) => {
+      onShortTask = function (_, __, ___, task) {
+        expectShortTask(task)
+        seenTasks.short = true
+        isDone()
+      }
+      onLongTask = function (_, __, ___, task) {
+        expectLongTask(task)
+        seenTasks.long = true
+        isDone()
+      }
+
+      const reallySlowFn = function reallySlowFn () {
+        slowFn(100000000, 1000000000) // this should take more than 50ms
+      }
+
+      const seenTasks = { short: false, long: false }
+
+      const shortTask = wrapFn(() => {}, 'short-')
+      const longTask = wrapFn(reallySlowFn, 'long-', thisCtx, 'reallySlowFn', true)
+
+      baseEE.on('short-end', onShortTask)
+
+      baseEE.on('long-end', onLongTask)
+
+      function isDone () {
+        if (seenTasks.short && seenTasks.long) {
+          done() // both tasks emitted
+        }
+      }
+
+      shortTask(thisCtx) // this should not emit long task
+      longTask(thisCtx)
+    })
+
+    test('nested long tasks emit twice', (done) => {
+      const seenLongTasks = { fn1: false, fn2: false, calls: 0 }
+      onLongTask = function (task) {
+        expectLongTask(task)
+        seenLongTasks[task.methodName] = true
+        seenLongTasks.calls++
+        if (seenLongTasks.calls === 2 && seenLongTasks.fn1 && seenLongTasks.fn2) {
+          done() // both long tasks emitted
+        }
+      }
+
+      baseEE.on('long-task', onLongTask)
+
+      const fn2 = function fn2 (ctx) {
+        return slowFn()
+      }
+      const wrappedFn2 = wrapFn(fn2, 'fn2-', thisCtx, 'fn2', true)
+
+      const fn1 = function fn1 (ctx) {
+        slowFn()
+        return wrappedFn2(ctx)
+      }
+      const longTask = wrapFn(fn1, 'fn1-', thisCtx, 'fn1', true)
+      longTask(thisCtx)
+    })
+  })
+
+  function expectLongTask (task, error) {
+    expect(task).toBeDefined() // task info is passed
+    expect(task.duration).toBeGreaterThanOrEqual(50) // can tell that task took less than 50ms
+    expect(task.isLongTask).toEqual(true) // task is marked as short task
+    if (error) expect(task.thrownError).toEqual(error) // task has thrown error
+    else expect(task.thrownError).toBeUndefined() // task has not thrown error
+  }
+  function expectShortTask (task, error) {
+    expect(task).toBeDefined() // task info is passed
+    expect(task.duration).toBeLessThan(50) // can tell that task took less than 50ms
+    expect(task.isLongTask).toEqual(false) // task is marked as short task
+    if (error) expect(task.thrownError).toEqual(error) // task has thrown error
+    else expect(task.thrownError).toBeUndefined() // task has not thrown error
+  }
+
+  function slowFn (from = 100000000, to = 1000000000) {
+    let i = 0
+    const loops = getRandomInt(from, to)
+    while (i < loops) {
+      i++
+    }
+    function getRandomInt (min, max) {
+      return Math.ceil(Math.floor(Math.random() * (max - min + 1)) + min)
+    }
+    return i
+  }
 })

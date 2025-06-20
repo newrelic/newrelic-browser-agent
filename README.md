@@ -86,13 +86,61 @@ The following features may be disabled by adding `init` entries as shown above. 
 - `ajax`
 - `generic_events`
 - `jserrors`
+- `logging`
 - `metrics`
 - `page_view_timing`
 - `session_replay`
 - `session_trace`
 - `spa`
 
+***Individual event types within the `generic_events` feature can also be disabled. See [Disabling Individual Generic Events](#disabling-individual-generic-events)***
+
 See the [New Relic documentation site](https://docs.newrelic.com/docs/browser/browser-monitoring/getting-started/introduction-browser-monitoring/) for information on the above features.
+
+### Disabling Individual Generic Events
+The following event types reported by the `generic_events` feature can be individually disabled in the `init` configuration.
+
+#### Page Actions
+```javascript
+const options = {
+  info: { ... },
+  loader_config: { ... },
+  init: {
+    page_action: {enabled: false}
+    ...
+  }
+}
+```
+
+#### User Actions
+```javascript
+const options = {
+  info: { ... },
+  loader_config: { ... },
+  init: {
+    user_actions: {enabled: false}
+    ...
+  }
+}
+```
+
+#### Performance (Marks, Measures, Resources)
+```javascript
+const options = {
+  info: { ... },
+  loader_config: { ... },
+  init: {
+    performance: {
+      capture_marks: false, // disable performance mark collection
+      capture_measures: false, // disable performance measure collection
+      resources: {
+        enabled: false // disable performance resource collection
+      }
+    }
+    ...
+  }
+}
+```
 
 ## Options Parameter
 

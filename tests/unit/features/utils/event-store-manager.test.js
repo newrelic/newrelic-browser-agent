@@ -35,9 +35,9 @@ describe('EventStoreManager', () => {
   })
 
   test('has agentIdentifier and featureName defined', () => {
-    const store = new EventStoreManager(mockAgentRef, EventBuffer, mockAgentRef.runtime.appMetadata.agents[0].entityGuid, 'test')
+    const store = new EventStoreManager(mockAgentRef, EventBuffer, mockAgentRef.runtime.appMetadata.agents[0].entityGuid, { featureName: 'test' })
     expect(store.agentIdentifier).toEqual(mockAgentRef.agentIdentifier)
-    expect(store.featureName).toEqual('test')
+    expect(store.featureAgg.featureName).toEqual('test')
   })
 
   test('calls the underlying StorgeClass add, get, isEmpty methods', () => {

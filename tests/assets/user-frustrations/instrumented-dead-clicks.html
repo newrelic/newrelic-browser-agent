@@ -9,6 +9,9 @@
     {init} {config}
     <script>
       NREUM.init.feature_flags = ['user_frustrations']
+      // disable cookies to help e2e test events are wrapped in generic events instrument phase
+      NREUM.init.privacy.cookies_enabled = false
+      localStorage.clear()
     </script>
     {loader}
     <script>

@@ -86,13 +86,62 @@ The following features may be disabled by adding `init` entries as shown above. 
 - `ajax`
 - `generic_events`
 - `jserrors`
+- `logging`
 - `metrics`
 - `page_view_timing`
 - `session_replay`
 - `session_trace`
+- `soft_navigations`
 - `spa`
 
+***Individual event types within the `generic_events` feature can also be disabled. See [Disabling Individual Generic Events](#disabling-individual-generic-events)***
+
 See the [New Relic documentation site](https://docs.newrelic.com/docs/browser/browser-monitoring/getting-started/introduction-browser-monitoring/) for information on the above features.
+
+### Disabling Individual Generic Events
+The following event types reported by the `generic_events` feature can be individually disabled in the `init` configuration.
+
+#### Page Actions
+```javascript
+const options = {
+  info: { ... },
+  loader_config: { ... },
+  init: {
+    page_action: {enabled: false}
+    ...
+  }
+}
+```
+
+#### User Actions
+```javascript
+const options = {
+  info: { ... },
+  loader_config: { ... },
+  init: {
+    user_actions: {enabled: false}
+    ...
+  }
+}
+```
+
+#### Performance (Marks, Measures, Resources)
+```javascript
+const options = {
+  info: { ... },
+  loader_config: { ... },
+  init: {
+    performance: {
+      capture_marks: false, // disable performance mark collection
+      capture_measures: false, // disable performance measure collection
+      resources: {
+        enabled: false // disable performance resource collection
+      }
+    }
+    ...
+  }
+}
+```
 
 ## Options Parameter
 
@@ -118,6 +167,23 @@ The examples above use the `BrowserAgent` class, which is the best option for mo
 
 Using the base `Agent` class, it is also possible to compose a custom agent by passing an array called `features` in the `options` object, containing only the desired feature modules. Depending on which features are included, this may yield a smaller loader script and improved performance.
 
+The following feature modules are available for inclusion in the `features` array:
+
+```javascript
+import { Ajax } from '@newrelic/browser-agent/features/ajax';
+import { GenericEvents } from '@newrelic/browser-agent/features/generic_events';
+import { JSErrors } from '@newrelic/browser-agent/features/jserrors';
+import { Logging } from '@newrelic/browser-agent/features/logging';
+import { Metrics } from '@newrelic/browser-agent/features/metrics';
+import { PageViewEvent } from '@newrelic/browser-agent/features/page_view_event';
+import { PageViewTiming } from '@newrelic/browser-agent/features/page_view_timing';
+import { SessionReplay } from '@newrelic/browser-agent/features/session_replay';
+import { SessionTrace } from '@newrelic/browser-agent/features/session_trace';
+import { SoftNav } from '@newrelic/browser-agent/features/soft_navigations';
+import { Spa } from '@newrelic/browser-agent/features/spa';
+```
+
+### Example 1 - "Page Load Agent"
 The example below includes three feature modules: `Metrics`, `PageViewEvent`, and `PageViewTiming`.
 
 ```javascript
@@ -142,17 +208,39 @@ new Agent({
 })
 ```
 
-The following feature modules are available for inclusion in the `features` array:
+### Example 2: "Custom Events Agent"
+The example below builds an agent that only allows custom events (`.recordCustomEvent(...)`) and does not automatically detect any other event types besides a PageView event (required). It also [disables the automatic collection of certain generic events](#disabling-individual-generic-events) to ensure only manual events are captured.
 
 ```javascript
-import { Ajax } from '@newrelic/browser-agent/features/ajax';
-import { JSErrors } from '@newrelic/browser-agent/features/jserrors';
-import { Metrics } from '@newrelic/browser-agent/features/metrics';
+import { Agent } from '@newrelic/browser-agent/loaders/agent'
 import { GenericEvents } from '@newrelic/browser-agent/features/generic_events';
-import { PageViewEvent } from '@newrelic/browser-agent/features/page_view_event';
-import { PageViewTiming } from '@newrelic/browser-agent/features/page_view_timing';
-import { SessionTrace } from '@newrelic/browser-agent/features/session_trace';
-import { Spa } from '@newrelic/browser-agent/features/spa';
+
+const options = {
+  info: { ... },
+  loader_config: { ... },
+  init: { 
+    // disable the automatic collection of UserAction events
+    user_actions: {enabled: false},
+    // disable the automatic collection of BrowserPerformance events
+    performance: {
+      capture_marks: false,
+      capture_measures: false,
+      resources: {enabled: false}
+    }
+  }
+}
+
+const browserAgent = new Agent({
+  ...options,
+  features: [
+    GenericEvents
+  ]
+})
+
+// manually capture page actions
+browserAgent.addPageAction(...)
+// manually capture custom events
+browserAgent.recordCustomEvent(...)
 ```
 
 ## Deploying one or more "micro" agents per page

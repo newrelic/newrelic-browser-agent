@@ -1,5 +1,5 @@
-import { analyzeElemPath } from '../../../../src/common/dom/selector-path'
-import { interactiveElems } from '../../../../src/features/generic_events/aggregate/user-actions/interactive-elements'
+import { analyzeElemPath } from '../../../../../../src/features/generic_events/aggregate/user-actions/selector-path'
+import { interactiveElems } from '../../../../../../src/features/generic_events/aggregate/user-actions/interactive-elements'
 
 const targetFields = ['id', 'className', 'tagName', 'type']
 

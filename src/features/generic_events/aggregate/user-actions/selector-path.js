@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { interactiveElems } from '../../features/generic_events/aggregate/user-actions/interactive-elements'
+import { interactiveElems } from './interactive-elements'
 
 /**
  * Generates a CSS selector path for the given element, if possible

@@ -2,9 +2,9 @@
  * Copyright 2020-2025 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { analyzeElemPath } from '../../../../common/dom/selector-path'
 import { OBSERVED_WINDOW_EVENTS } from '../../constants'
 import { AggregatedUserAction } from './aggregated-user-action'
+import { analyzeElemPath } from './selector-path'
 
 export class UserActionsAggregator {
   /** @type {AggregatedUserAction=} */

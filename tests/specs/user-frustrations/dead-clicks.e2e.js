@@ -56,19 +56,19 @@ describe('User Frustrations - Dead Clicks', () => {
         .then(() => browser.waitForAgentLoad())
 
       await browser.execute(function () {
-      // [0] - link with no href or any handlers
+        // [0] - link with no href or any handlers
         document.getElementById('dead-link').click()
         // [1] - link with a handler that was added and removed
         document.getElementById('do-nothing-link').click()
         // [2] - link with listener
         document.getElementById('test-link-with-listener').click()
-        // // [3] - link with onclick
+        // [3] - link with onclick
         document.getElementById('test-link-with-onclick').click()
-        // // [4] - link with href but no click handler
+        // [4] - link with href but no click handler
         document.getElementById('test-link-with-href').click()
-        // // [5] - span inside link with listener
+        // [5] - span inside link with listener
         document.getElementById('span-inside-link-with-listener').click()
-        // // [6] - span inside dead link
+        // [6] - span inside dead link
         document.getElementById('span-inside-dead-link').click()
         // end previous user action
         document.getElementById('test-area').click()

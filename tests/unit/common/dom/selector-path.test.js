@@ -81,7 +81,6 @@ describe('analyzeElemPath - links', () => {
     const link = document.createElement('a')
     link.innerHTML = 'Example Link'
 
-    simulateWidthAndHeight(link)
     return link
   }
 
@@ -89,8 +88,8 @@ describe('analyzeElemPath - links', () => {
     link.href = 'https://example.com'
     document.body.appendChild(link)
 
-    const { hasVisibleLink, hasInteractiveElems } = analyzeElemPath(link)
-    expect(hasVisibleLink).toBe(true)
+    const { hasLink, hasInteractiveElems } = analyzeElemPath(link)
+    expect(hasLink).toBe(true)
     expect(hasInteractiveElems).toBe(true)
   })
 
@@ -98,8 +97,8 @@ describe('analyzeElemPath - links', () => {
     link.onclick = () => {}
     document.body.appendChild(link)
 
-    const { hasVisibleLink, hasInteractiveElems } = analyzeElemPath(link)
-    expect(hasVisibleLink).toBe(true)
+    const { hasLink, hasInteractiveElems } = analyzeElemPath(link)
+    expect(hasLink).toBe(true)
     expect(hasInteractiveElems).toBe(true)
   })
 
@@ -109,98 +108,48 @@ describe('analyzeElemPath - links', () => {
     const listener = () => {}
     interactiveElems.add(link, listener)
 
-    const { hasVisibleLink, hasInteractiveElems } = analyzeElemPath(link)
-    expect(hasVisibleLink).toBe(true)
+    const { hasLink, hasInteractiveElems } = analyzeElemPath(link)
+    expect(hasLink).toBe(true)
     expect(hasInteractiveElems).toBe(true)
 
     interactiveElems.delete(link, listener)
   })
 
-  test('should return hasActLink = true if any element ancestor is an interactive link', () => {
+  test('should return hasInteractiveElems = true if any element ancestor is an interactive link', () => {
     link.href = 'https://example.com'
     const childSpan = document.createElement('span')
     link.appendChild(childSpan)
     document.body.appendChild(link)
 
-    const { hasVisibleLink, hasInteractiveElems } = analyzeElemPath(childSpan)
-    expect(hasVisibleLink).toBe(true)
+    const { hasLink, hasInteractiveElems } = analyzeElemPath(childSpan)
+    expect(hasLink).toBe(true)
     expect(hasInteractiveElems).toBe(true)
   })
 
-  test('should return hasActLink = false if any element ancestor is a non-interactive link', () => {
+  test('should return hasInteractiveElems = false if any element ancestor is a non-interactive link', () => {
     const childSpan = document.createElement('span')
     link.appendChild(childSpan)
     document.body.appendChild(link)
 
-    const { hasVisibleLink, hasInteractiveElems } = analyzeElemPath(childSpan)
-    expect(hasVisibleLink).toBe(true)
-    expect(hasInteractiveElems).toBe(false) // is a dead click
+    const { hasLink, hasInteractiveElems } = analyzeElemPath(childSpan)
+    expect(hasLink).toBe(true)
+    expect(hasInteractiveElems).toBe(false)
   })
 
-  test('should return hasActLink = undefined if no links detected in selector path', () => {
+  test('should return hasInteractiveElems = false if no links detected in selector path', () => {
     const childSpan = document.createElement('span')
-    link.appendChild(childSpan)
     document.body.appendChild(childSpan)
 
-    const { hasVisibleLink, hasInteractiveElems } = analyzeElemPath(childSpan)
-    expect(hasVisibleLink).toBe(false)
-    expect(hasInteractiveElems).toBe(false) // not a dead click
+    const { hasLink, hasInteractiveElems } = analyzeElemPath(childSpan)
+    expect(hasLink).toBe(false)
+    expect(hasInteractiveElems).toBe(false)
   })
 
   test('should not detect link as interactive if it has no href, onclick, or click handlers', () => {
     document.body.appendChild(link)
 
-    const { hasVisibleLink, hasInteractiveElems } = analyzeElemPath(link)
-    expect(hasVisibleLink).toBe(true)
-    expect(hasInteractiveElems).toBe(false) // is a dead click
-  })
-
-  test('should not detect link as interactive if not visible', () => {
-    link.style.display = 'none'
-    document.body.appendChild(link)
-
-    const { hasVisibleLink, hasInteractiveElems } = analyzeElemPath(link)
-    expect(hasVisibleLink).toBe(false)
-    expect(hasInteractiveElems).toBe(false) // ignored, not visible
-  })
-
-  test('should not detect link as interactive if transparent', () => {
-    link.style.opacity = '0'
-    document.body.appendChild(link)
-
-    const { hasVisibleLink, hasInteractiveElems } = analyzeElemPath(link)
-    expect(hasVisibleLink).toBe(false)
-    expect(hasInteractiveElems).toBe(false) // ignored, not visible
-  })
-
-  test('should not detect link as interactive if collapsed', () => {
-    link.style.visibility = 'collapse'
-    document.body.appendChild(link)
-
-    const { hasVisibleLink, hasInteractiveElems } = analyzeElemPath(link)
-    expect(hasVisibleLink).toBe(false)
-    expect(hasInteractiveElems).toBe(false) // ignored, not visible
+    const { hasLink, hasInteractiveElems } = analyzeElemPath(link)
+    expect(hasLink).toBe(true)
+    expect(hasInteractiveElems).toBe(false)
   })
 })
-
-function simulateWidthAndHeight (elem, width = 100, height = 100, getBoundingClientRect = () => {
-  return {
-    width,
-    height,
-    top: 0,
-    left: 0,
-    bottom: 100,
-    right: 100
-  }
-}) {
-  Object.defineProperty(elem, 'offsetWidth', {
-    get: () => width
-  })
-  Object.defineProperty(elem, 'offsetHeight', {
-    get: () => height
-  })
-  Object.defineProperty(elem, 'getBoundingClientRect', {
-    value: getBoundingClientRect,
-    configurable: true
-  })
-}

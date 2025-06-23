@@ -49,7 +49,7 @@ export class AggregatedUserAction {
    * @returns {boolean}
    */
   isDeadClick (selectorInfo) {
-    const { hasInteractiveElems, hasVisibleLink, hasVisibleTextbox } = selectorInfo
-    return this.event.type === 'click' && !hasInteractiveElems && (hasVisibleLink || hasVisibleTextbox)
+    const { hasInteractiveElems, hasLink, hasTextbox } = selectorInfo
+    return this.event.type === 'click' && !hasInteractiveElems && (hasLink || hasTextbox)
   }
 }

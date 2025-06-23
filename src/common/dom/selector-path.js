@@ -4,17 +4,16 @@
  */
 
 import { interactiveElems } from '../../features/generic_events/aggregate/user-actions/interactive-elements'
-import { isVisible } from '../../features/generic_events/aggregate/user-actions/utils'
 
 /**
  * Generates a CSS selector path for the given element, if possible
  * Also gather metadata about the element's nearest fields, and whether there are any interactive links in the path.
  * @param {HTMLElement} elem
  * @param {Array<string>} [targetFields=[]] specifies which fields to gather from the nearest element in the path
- * @returns {{path: (undefined|string), nearestFields: {}, hasInteractiveElems: boolean, hasVisibleLink: boolean, hasVisibleTextbox: boolean}}
+ * @returns {{path: (undefined|string), nearestFields: {}, hasInteractiveElems: boolean, hasLink: boolean, hasTextbox: boolean}}
  */
 export const analyzeElemPath = (elem, targetFields = []) => {
-  const result = { path: undefined, nearestFields: {}, hasInteractiveElems: false, hasVisibleLink: false, hasVisibleTextbox: false }
+  const result = { path: undefined, nearestFields: {}, hasInteractiveElems: false, hasLink: false, hasTextbox: false }
   if (!elem) return result
 
   const getNthOfTypeIndex = (node) => {
@@ -33,7 +32,6 @@ export const analyzeElemPath = (elem, targetFields = []) => {
 
   let pathSelector = ''
   let index = getNthOfTypeIndex(elem)
-  let visible = false
 
   const nearestFields = {}
   try {
@@ -46,11 +44,10 @@ export const analyzeElemPath = (elem, targetFields = []) => {
         pathSelector ? `>${pathSelector}` : ''
       ].join('')
 
-      visible = isVisibleElem(elem)
-      result.hasVisibleLink ||= visible && elem.tagName.toLowerCase() === 'a'
-      result.hasVisibleTextbox ||= visible && elem.tagName.toLowerCase() === 'input' && elem.type.toLowerCase() === 'text'
+      result.hasLink ||= elem.tagName.toLowerCase() === 'a'
+      result.hasTextbox ||= elem.tagName.toLowerCase() === 'input' && elem.type.toLowerCase() === 'text'
 
-      result.hasInteractiveElems ||= isInteractiveLink(elem, visible) || isInteractiveTextbox(elem, visible)
+      result.hasInteractiveElems ||= isInteractiveLink(elem) || isInteractiveTextbox(elem)
       pathSelector = selector
       elem = elem.parentNode
     }
@@ -68,21 +65,14 @@ export const analyzeElemPath = (elem, targetFields = []) => {
     return `nearest${originalFieldName.charAt(0).toUpperCase() + originalFieldName.slice(1)}`
   }
 
-  function isVisibleElem (elem) {
-    return elem &&
-      elem.nodeType === Node.ELEMENT_NODE &&
-      isVisible(elem)
-  }
-
   /**
    * Checks if the element is an interactive link.
    * A link is considered interactive if it is visible and has an `href` attribute, an `onclick` handler, or any click event listener(s).
    * @param {HTMLElement} elem
-   * @param {boolean} visible
    * @returns {boolean} true only if the element is an interactive link
    */
-  function isInteractiveLink (elem, visible) {
-    return visible && elem.tagName.toLowerCase() === 'a' &&
+  function isInteractiveLink (elem) {
+    return elem.tagName.toLowerCase() === 'a' &&
       (interactiveElems.has(elem) || typeof elem.onclick === 'function' || elem.hasAttribute('href'))
   }
 
@@ -90,10 +80,9 @@ export const analyzeElemPath = (elem, targetFields = []) => {
    * Checks if the element is an interactive textbox.
    * A textbox is considered interactive if it is visible and is not read-only.
    * @param {HTMLElement} elem
-   * @param {boolean} visible
    * @returns {boolean} true only if the element is an interactive textbox
    */
-  function isInteractiveTextbox (elem, visible) {
-    return visible && elem.tagName.toLowerCase() === 'input' && elem.type.toLowerCase() === 'text' && !elem.readOnly
+  function isInteractiveTextbox (elem) {
+    return elem.tagName.toLowerCase() === 'input' && elem.type.toLowerCase() === 'text' && !elem.readOnly
   }
 }

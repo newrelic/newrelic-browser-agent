@@ -69,20 +69,14 @@ describe('analyzeElemPath', () => {
 describe('analyzeElemPath - links', () => {
   let link
   beforeEach(() => {
-    link = createLink()
+    link = document.createElement('a')
+    link.innerHTML = 'Example Link'
   })
   afterEach(() => {
     if (link && link.parentNode) {
       document.body.removeChild(link)
     }
   })
-
-  function createLink () {
-    const link = document.createElement('a')
-    link.innerHTML = 'Example Link'
-
-    return link
-  }
 
   test('should detect link is interactive if it has an href', () => {
     link.href = 'https://example.com'
@@ -150,6 +144,54 @@ describe('analyzeElemPath - links', () => {
 
     const { hasLink, hasInteractiveElems } = analyzeElemPath(link)
     expect(hasLink).toBe(true)
+    expect(hasInteractiveElems).toBe(false)
+  })
+})
+
+describe('analyzeElemPath - textboxes', () => {
+  let textbox
+  beforeEach(() => {
+    textbox = document.createElement('input')
+    textbox.type = 'text'
+  })
+  afterEach(() => {
+    if (textbox && textbox.parentNode) {
+      document.body.removeChild(textbox)
+    }
+  })
+
+  test('should detect textbox as interactive if it is not read-only', () => {
+    document.body.appendChild(textbox)
+
+    const {
+      hasTextbox,
+      hasInteractiveElems
+    } = analyzeElemPath(textbox)
+    expect(hasTextbox).toBe(true)
+    expect(hasInteractiveElems).toBe(true)
+  })
+
+  test('should not detect textbox as interactive if it is read-only', () => {
+    textbox.readOnly = true
+    document.body.appendChild(textbox)
+
+    const {
+      hasTextbox,
+      hasInteractiveElems
+    } = analyzeElemPath(textbox)
+    expect(hasTextbox).toBe(true)
+    expect(hasInteractiveElems).toBe(false)
+  })
+
+  test('should return hasInteractiveElems = false if no textboxes detected in selector path', () => {
+    const childSpan = document.createElement('span')
+    document.body.appendChild(childSpan)
+
+    const {
+      hasTextbox,
+      hasInteractiveElems
+    } = analyzeElemPath(childSpan)
+    expect(hasTextbox).toBe(false)
     expect(hasInteractiveElems).toBe(false)
   })
 })

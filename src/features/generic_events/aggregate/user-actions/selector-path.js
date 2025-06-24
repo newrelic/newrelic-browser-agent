@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { interactiveElems } from './interactive-elements'
+import { isInteractiveElement } from './interactive-elements'
 
 /**
  * Generates a CSS selector path for the given element, if possible
@@ -47,7 +47,7 @@ export const analyzeElemPath = (elem, targetFields = []) => {
       result.hasLink ||= elem.tagName.toLowerCase() === 'a'
       result.hasTextbox ||= elem.tagName.toLowerCase() === 'input' && elem.type.toLowerCase() === 'text'
 
-      result.hasInteractiveElems ||= isInteractiveLink(elem) || isInteractiveTextbox(elem)
+      result.hasInteractiveElems ||= isInteractiveElement(elem)
       pathSelector = selector
       elem = elem.parentNode
     }
@@ -63,26 +63,5 @@ export const analyzeElemPath = (elem, targetFields = []) => {
     if (originalFieldName === 'tagName') originalFieldName = 'tag'
     if (originalFieldName === 'className') originalFieldName = 'class'
     return `nearest${originalFieldName.charAt(0).toUpperCase() + originalFieldName.slice(1)}`
-  }
-
-  /**
-   * Checks if the element is an interactive link.
-   * A link is considered interactive if it is visible and has an `href` attribute, an `onclick` handler, or any click event listener(s).
-   * @param {HTMLElement} elem
-   * @returns {boolean} true only if the element is an interactive link
-   */
-  function isInteractiveLink (elem) {
-    return elem.tagName.toLowerCase() === 'a' &&
-      (interactiveElems.has(elem) || typeof elem.onclick === 'function' || elem.hasAttribute('href'))
-  }
-
-  /**
-   * Checks if the element is an interactive textbox.
-   * A textbox is considered interactive if it is visible and is not read-only.
-   * @param {HTMLElement} elem
-   * @returns {boolean} true only if the element is an interactive textbox
-   */
-  function isInteractiveTextbox (elem) {
-    return elem.tagName.toLowerCase() === 'input' && elem.type.toLowerCase() === 'text' && !elem.readOnly
   }
 }

@@ -1,8 +1,8 @@
 import { interactiveElems } from '../../../../../../src/features/generic_events/aggregate/user-actions/interactive-elements'
 
-describe('Interactive Elements', () => {
+describe('Interactive Elements - lookup for elem click event listeners', () => {
   const lookup = interactiveElems
-  it('should keep references for button', async () => {
+  it('should keep entry for button', async () => {
     const button = document.createElement('button')
     const listener = () => {}
     lookup.add(button, listener)
@@ -10,7 +10,7 @@ describe('Interactive Elements', () => {
     expect(lookup.get(button).size).toBe(1)
   })
 
-  it('should keep references for input, type=button', async () => {
+  it('should keep entry for input, type=button', async () => {
     const button = document.createElement('input')
     button.type = 'button'
     const listener = () => {}
@@ -19,7 +19,7 @@ describe('Interactive Elements', () => {
     expect(lookup.get(button).size).toBe(1)
   })
 
-  it('should keep references for a', async () => {
+  it('should keep entry for link', async () => {
     const link = document.createElement('a')
     const listener = () => {}
     lookup.add(link, listener)
@@ -27,7 +27,8 @@ describe('Interactive Elements', () => {
     expect(lookup.get(link).size).toBe(1)
   })
 
-  it('should not keep references for non-interactive elements', async () => {
+  // only buttons and links are considered interactive
+  it('should not keep entry for non-interactive elements', async () => {
     const span = document.createElement('span')
     const listener = () => {}
     lookup.add(span, listener)

@@ -42,7 +42,7 @@ export class EventStoreManager {
     /** if the target is the container agent, SHARE the default storage -- otherwise create a new event store */
     const eventStorage = (isContainerAgentTarget(this.entityManager.get(targetEntityGuid), this.agentRef))
       ? this.appStorageMap.get(DEFAULT_KEY)
-      : new this.StorageClass(MAX_PAYLOAD_SIZE, this.featureAgg.featureAgg)
+      : new this.StorageClass(MAX_PAYLOAD_SIZE, this.featureAgg)
     this.appStorageMap.set(targetEntityGuid, eventStorage)
   }
 

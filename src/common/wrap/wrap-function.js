@@ -95,16 +95,19 @@ export function createWrapperWithEmitter (emitter, always) {
       safeEmit(prefix + 'start', [args, originalThis, methodName], ctx, bubble)
 
       const fnStartTime = performance.now()
+      let fnEndTime = fnStartTime
       try {
         result = fn.apply(originalThis, args)
+        fnEndTime = performance.now()
         return result
       } catch (err) {
+        fnEndTime = performance.now()
         safeEmit(prefix + 'err', [args, originalThis, err], ctx, bubble)
         // rethrow error so we don't effect execution by observing.
         thrownError = err
         throw thrownError
       } finally {
-        const duration = performance.now() - fnStartTime
+        const duration = fnEndTime - fnStartTime
         const task = {
           duration,
           isLongTask: duration >= 50,

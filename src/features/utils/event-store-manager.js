@@ -2,7 +2,7 @@
  * Copyright 2020-2025 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { DEFAULT_KEY } from '../../common/constants/agent-constants'
+import { DEFAULT_KEY, MAX_PAYLOAD_SIZE } from '../../common/constants/agent-constants'
 import { dispatchGlobalEvent } from '../../common/dispatch/global-event'
 import { activatedFeatures } from '../../common/util/feature-flags'
 import { isContainerAgentTarget } from '../../common/util/target'
@@ -15,14 +15,14 @@ export class EventStoreManager {
    * @param {object} agentRef - reference to base agent class
    * @param {EventBuffer|EventAggregator} storageClass - the type of storage to use in this manager; 'EventBuffer' (1), 'EventAggregator' (2)
    * @param {string} [defaultEntityGuid] - the entity guid to use as the default storage instance; if not provided, a new one is created
-   * @param {string} featureName - the name of the feature this manager is for; used for event dispatching
+   * @param {Object} featureAgg - the feature aggregate instance that initialized this manager
    */
-  constructor (agentRef, storageClass, defaultEntityGuid, featureName) {
+  constructor (agentRef, storageClass, defaultEntityGuid, featureAgg) {
     this.agentRef = agentRef
     this.entityManager = agentRef.runtime.entityManager
     this.StorageClass = storageClass
-    this.appStorageMap = new Map([[DEFAULT_KEY, new this.StorageClass()]])
-    this.featureName = featureName
+    this.appStorageMap = new Map([[DEFAULT_KEY, new this.StorageClass(MAX_PAYLOAD_SIZE, featureAgg)]])
+    this.featureAgg = featureAgg
     this.setEventStore(defaultEntityGuid)
   }
 
@@ -42,7 +42,7 @@ export class EventStoreManager {
     /** if the target is the container agent, SHARE the default storage -- otherwise create a new event store */
     const eventStorage = (isContainerAgentTarget(this.entityManager.get(targetEntityGuid), this.agentRef))
       ? this.appStorageMap.get(DEFAULT_KEY)
-      : new this.StorageClass()
+      : new this.StorageClass(MAX_PAYLOAD_SIZE, this.featureAgg)
     this.appStorageMap.set(targetEntityGuid, eventStorage)
   }
 
@@ -75,7 +75,7 @@ export class EventStoreManager {
       drained: !!activatedFeatures?.[this.agentRef.agentIdentifier],
       type: 'data',
       name: 'buffer',
-      feature: this.featureName,
+      feature: this.featureAgg.featureName,
       data: event
     })
     return this.#getEventStore(targetEntityGuid).add(event)

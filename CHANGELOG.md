@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.292.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.292.0...v1.292.1) (2025-06-26)
+
+
+### Bug Fixes
+
+* fix custom attribute race condition precedence ([#1507](https://github.com/newrelic/newrelic-browser-agent/issues/1507)) ([969f634](https://github.com/newrelic/newrelic-browser-agent/commit/969f634f4d22f112f3aba2fc2e74d6959dafbae5))
+
 ## [1.292.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.291.1...v1.292.0) (2025-06-16)
 
 

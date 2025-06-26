@@ -1,0 +1,32 @@
+ame: 'Consumer Load Test'
+
+on:
+  workflow_dispatch:
+    inputs:
+      runner_count:
+        description: 'Number of parallel runners'
+        required: false
+        default: '5'
+
+jobs:
+  generate-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - id: set-matrix
+        run: |
+          COUNT=${{ github.event.inputs.runner_count || 5 }}
+          MATRIX=$(seq 1 $COUNT | jq -R . | jq -s .)
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+
+  consumer-load-test:
+    needs: generate-matrix
+    strategy:
+      matrix:
+        runner: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
+    name: 'WDIO: Smoke Test - Instance ${{ matrix.runner }}'
+    uses: ./.github/workflows/wdio-single-browser.yml
+    with:
+      browser-target: chrome@latest
+    secrets: inherit

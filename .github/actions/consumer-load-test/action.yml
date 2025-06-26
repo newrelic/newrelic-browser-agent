@@ -1,0 +1,16 @@
+# This composite action is used to upload all loaders of a specific
+# version to the internal NR.
+
+name: 'Consumer Load Test'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install dependencies
+      run: npm install --silent --no-progress --prefix $GITHUB_ACTION_PATH/..
+      shell: bash
+    - name: Run action script
+      id: action-script
+      run: |
+        node $GITHUB_ACTION_PATH/index.js
+      shell: bash

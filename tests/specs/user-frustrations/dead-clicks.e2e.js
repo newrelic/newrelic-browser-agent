@@ -22,32 +22,22 @@ describe('User Frustrations - Dead Clicks', () => {
       })
 
       const [insightsHarvest] = await insightsCapture.waitForResult({ timeout: 10000 })
-      expect(insightsHarvest.request.body.ins).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            eventType: 'UserAction',
-            targetTag: 'DIV',
-            targetId: 'test-area'
-          }),
-          expect.not.objectContaining({
-            eventType: 'UserAction',
-            targetTag: 'DIV',
-            targetId: 'test-area',
-            deadClick: true
-          }),
-          expect.objectContaining({
-            eventType: 'UserAction',
-            targetTag: 'SPAN',
-            targetId: 'do-nothing-span'
-          }),
-          expect.not.objectContaining({
-            eventType: 'UserAction',
-            targetTag: 'SPAN',
-            targetId: 'do-nothing-span',
-            deadClick: true
-          })
-        ]))
+      const actuals = insightsHarvest.request.body.ins.filter(x => x.action === 'click')
+      expect(actuals[0]).toMatchObject(expect.objectContaining({
+        eventType: 'UserAction',
+        targetTag: 'DIV',
+        targetId: 'test-area'
+      }))
+      expect(actuals[0]).not.toHaveProperty('deadClick')
+
+      expect(actuals[1]).toMatchObject(expect.objectContaining({
+        eventType: 'UserAction',
+        targetTag: 'SPAN',
+        targetId: 'do-nothing-span'
+      }))
+      expect(actuals[1]).not.toHaveProperty('deadClick')
     })
+
     it(`should correctly assess dead clicks on links for ${loaderType} loader`, async () => {
       const [insightsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
         { test: testInsRequest }
@@ -76,71 +66,54 @@ describe('User Frustrations - Dead Clicks', () => {
 
       const [insightsHarvest] = await insightsCapture.waitForResult({ timeout: 10000 })
 
-      expect(insightsHarvest.request.body.ins).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            eventType: 'UserAction',
-            targetTag: 'A',
-            targetId: 'dead-link',
-            deadClick: true
-          }),
-          expect.objectContaining({
-            eventType: 'UserAction',
-            targetTag: 'A',
-            targetId: 'do-nothing-link',
-            deadClick: true
-          }),
-          expect.objectContaining({
-            eventType: 'UserAction',
-            targetTag: 'A',
-            targetId: 'test-link-with-listener'
-          }),
-          expect.not.objectContaining({
-            eventType: 'UserAction',
-            targetTag: 'A',
-            targetId: 'test-link-with-listener',
-            deadClick: true
-          }),
-          expect.objectContaining({
-            eventType: 'UserAction',
-            targetTag: 'A',
-            targetId: 'test-link-with-onclick'
-          }),
-          expect.not.objectContaining({
-            eventType: 'UserAction',
-            targetTag: 'A',
-            targetId: 'test-link-with-onclick',
-            deadClick: true
-          }),
-          expect.objectContaining({
-            eventType: 'UserAction',
-            targetTag: 'A',
-            targetId: 'test-link-with-href'
-          }),
-          expect.not.objectContaining({
-            eventType: 'UserAction',
-            targetTag: 'A',
-            targetId: 'test-link-with-href',
-            deadClick: true
-          }),
-          expect.objectContaining({
-            eventType: 'UserAction',
-            targetTag: 'SPAN',
-            targetId: 'span-inside-link-with-listener'
-          }),
-          expect.not.objectContaining({
-            eventType: 'UserAction',
-            targetTag: 'SPAN',
-            targetId: 'span-inside-link-with-listener',
-            deadClick: true
-          }),
-          expect.objectContaining({
-            eventType: 'UserAction',
-            targetTag: 'SPAN',
-            targetId: 'span-inside-dead-link',
-            deadClick: true
-          })
-        ]))
+      const actuals = insightsHarvest.request.body.ins.filter(x => x.action === 'click')
+      expect(actuals[0]).toMatchObject(expect.objectContaining({
+        eventType: 'UserAction',
+        targetTag: 'A',
+        targetId: 'dead-link',
+        deadClick: true
+      }))
+      expect(actuals[1]).toMatchObject(expect.objectContaining({
+        eventType: 'UserAction',
+        targetTag: 'A',
+        targetId: 'do-nothing-link',
+        deadClick: true
+      }))
+
+      expect(actuals[2]).toMatchObject(expect.objectContaining({
+        eventType: 'UserAction',
+        targetTag: 'A',
+        targetId: 'test-link-with-listener'
+      }))
+      expect(actuals[2]).not.toHaveProperty('deadClick')
+
+      expect(actuals[3]).toMatchObject(expect.objectContaining({
+        eventType: 'UserAction',
+        targetTag: 'A',
+        targetId: 'test-link-with-onclick'
+      }))
+      expect(actuals[3]).not.toHaveProperty('deadClick')
+
+      expect(actuals[4]).toMatchObject(expect.objectContaining({
+        eventType: 'UserAction',
+        targetTag: 'A',
+        targetId: 'test-link-with-href'
+      }))
+      expect(actuals[4]).not.toHaveProperty('deadClick')
+
+      expect(actuals[5]).toMatchObject(expect.objectContaining({
+        eventType: 'UserAction',
+        targetTag: 'SPAN',
+        targetId: 'span-inside-link-with-listener'
+      }))
+      expect(actuals[5]).not.toHaveProperty('deadClick')
+
+      expect(actuals[6]).toMatchObject(expect.objectContaining({
+        eventType: 'UserAction',
+        targetTag: 'SPAN',
+        targetId: 'span-inside-dead-link',
+        deadClick: true
+      }))
     })
   })
 
@@ -162,28 +135,20 @@ describe('User Frustrations - Dead Clicks', () => {
     })
 
     const [insightsHarvest] = await insightsCapture.waitForResult({ timeout: 10000 })
-    expect(insightsHarvest.request.body.ins).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          eventType: 'UserAction',
-          targetTag: 'INPUT',
-          targetId: 'normal-textbox',
-          targetType: 'text'
-        }),
-        expect.not.objectContaining({
-          eventType: 'UserAction',
-          targetTag: 'INPUT',
-          targetId: 'normal-textbox',
-          targetType: 'text',
-          deadClick: true
-        }),
-        expect.objectContaining({
-          eventType: 'UserAction',
-          targetTag: 'INPUT',
-          targetId: 'readonly-textbox',
-          targetType: 'text',
-          deadClick: true
-        })
-      ]))
+    const actuals = insightsHarvest.request.body.ins.filter(x => x.action === 'click')
+    expect(actuals[0]).toMatchObject(expect.objectContaining({
+      eventType: 'UserAction',
+      targetTag: 'INPUT',
+      targetId: 'normal-textbox',
+      targetType: 'text'
+    }))
+    expect(actuals[0]).not.toHaveProperty('deadClick')
+    expect(actuals[1]).toMatchObject(expect.objectContaining({
+      eventType: 'UserAction',
+      targetTag: 'INPUT',
+      targetId: 'readonly-textbox',
+      targetType: 'text',
+      deadClick: true
+    }))
   })
 })

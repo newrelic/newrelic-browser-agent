@@ -33,7 +33,7 @@ export class UserActionsAggregator {
     const aggregationKey = getAggregationKey(evt, selectorInfo.path)
     if (!!aggregationKey && aggregationKey === this.#aggregationKey) {
       // an aggregation exists already, so lets just continue to increment
-      this.#aggregationEvent.aggregate(evt)
+      this.#aggregationEvent.aggregate(evt, selectorInfo)
     } else {
       // return the prev existing one (if there is one)
       const finishedEvent = this.#aggregationEvent

@@ -19,15 +19,19 @@ export class AggregatedUserAction {
   }
 
   /**
-   * Aggregates the count and maintains the relative MS array for matching events
-   * Will determine if a rage click was observed as part of the aggregation
+   * Update current user action based on new event + selector info.
+   *  - Aggregates the count and maintains the relative MS array for matching events
+   *  - Will determine if a rage click was observed as part of the aggregation
+   *  - Will determine if a dead click has occurred
    * @param {Event} evt
+   * @param {Object} selectorInfo
    * @returns {void}
    */
-  aggregate (evt) {
+  aggregate (evt, selectorInfo = {}) {
     this.count++
     this.relativeMs.push(Math.floor(evt.timeStamp - this.originMs))
     if (this.isRageClick()) this.rageClick = true
+    this.deadClick ||= this.isDeadClick(selectorInfo)
   }
 
   /**
@@ -46,10 +50,11 @@ export class AggregatedUserAction {
    * - clicking on a link that is not interactive = a dead click.
    * - clicking on a span inside a non-interactive link = a dead click.
    * - clicking on a standalone span = not a dead click.
+   * @param {Object} selectorInfo
    * @returns {boolean}
    */
-  isDeadClick (selectorInfo) {
-    const { hasInteractiveElems, hasLink, hasTextbox } = selectorInfo
-    return this.event.type === 'click' && !hasInteractiveElems && (hasLink || hasTextbox)
+  isDeadClick (selectorInfo = {}) {
+    const { hasInteractiveElems, hasButton, hasLink, hasTextbox, ignoreDeadClick } = selectorInfo
+    return this.event.type === 'click' && !hasInteractiveElems && (hasButton || hasLink || hasTextbox) && !ignoreDeadClick
   }
 }

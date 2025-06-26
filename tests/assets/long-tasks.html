@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {init}{config}
+    <script>
+      NREUM.init.harvest.interval = 30;
+      NREUM.init.logging.enabled = false;
+    </script>
+    {loader}
+  </head>
+  <body>
+    <div>This page executes lots of different FNs that take a short or long amount of syncronous time to execute</div>
+    <pre>
+  The operations behave like this:
+
+    click (anywhere)!
+
+    document.addEventListener (click)
+    ---- SHORT TASK
+    ---- LONG TASK (with setTimeout -- should resolve after short tasks but still be detected!)
+    ---- SHORT TASK (x3)
+    ---- XHR send
+    ---- XHR load callback (Should have an error tied to the long task)
+    ------- SHORT TASK
+    ------- LONG TASK
+    ------- SHORT TASK
+    ------- Promise constructor
+    ----------- LONG TASK
+    ----------- SHORT TASK
+    ------- Promise then callback (async)
+    ----------- SHORT TASK
+    ----------- LONG TASK
+
+    Due to the way syncronous tasks block each other in JS, you may see no activity and then
+     multiple long tasks resolving at the "same time", since they cascade like dominoes when syncronous
+    </pre>
+    <hr />
+    <div id="content"></div>
+    <script type="text/javascript">
+      document.addEventListener(
+        "click",
+        function test () {
+          const contents = document.querySelector("#content");
+          updateDOM("Document Clicked!", true);
+          simulatedShortTask("document addEventListener");
+
+          var xhr = new XMLHttpRequest();
+          xhr.open("POST", "/echo");
+          xhr.send("123");
+
+          simulatedLongTask("document addEventListener", true); // LONG TASK AFFECTING DOC AEL CB
+
+          simulatedShortTask("document addEventListener");
+          simulatedShortTask("document addEventListener");
+          simulatedShortTask("document addEventListener");
+
+          xhr.addEventListener(
+            "load",
+            function () {
+              simulatedShortTask("xhr addEventListener");
+              simulatedLongTask("xhr addEventListener"); // LONG TASK AFFECTING XHR LOAD CB
+              simulatedShortTask("xhr addEventListener");
+
+              a = new Promise((resolve, reject) => {
+                simulatedLongTask("promise constructor"); // LONG TASK AFFECTING PROMISE CONSTRUCTOR
+                simulatedShortTask("promise constructor");
+                resolve();
+              });
+
+              a.then(() => {
+                simulatedShortTask("promise.then");
+                simulatedLongTask("promise.then"); // LONG TASK AFFECTING PROMISE THEN CB
+              });
+
+              throw new Error("I threw an error in the XHR load callback! Fix ME!");
+            },
+            true
+          );
+
+          function simulatedShortTask(name) {
+            const start = performance.now();
+            updateDOM(name + " task started");
+            let i = 0;
+            const loops = getRandomInt(10000, 1000000);
+            while (i < loops) {
+              i++;
+            }
+            const end  = performance.now()
+            updateDOM(name + " duration: " + (end-start).toFixed(4), "green");
+          }
+
+          function simulatedLongTask(name, useSetTimeout) {
+            const start = performance.now();
+            updateDOM(name + " task started");
+            // so as to not let the slow task block rendering for demo purposes
+
+            const executor = useSetTimeout
+              ? (fn) => setTimeout(fn, 0)
+              : function slowHandler(fn) {
+                  fn();
+                };
+
+            executor(reallySlowFn);
+
+            function reallySlowFn() {
+              let i = 0;
+              const loops = getRandomInt(100000000, 5000000000);
+              while (i < loops) {
+                i++;
+              }
+              const end = performance.now()
+              updateDOM("Long task (" + name + ") duration: " + (end-start).toFixed(4), "red");
+            }
+          }
+
+          window.location.hash = Math.random();
+
+          function updateDOM(text, color) {
+            const elem = document.createElement("div");
+            elem.innerHTML = text;
+            elem.style.color = color || "black";
+            contents.appendChild(elem);
+          }
+          function getRandomInt(min, max) {
+            return Math.ceil(Math.floor(Math.random() * (max - min + 1)) + min);
+          }
+        },
+        false
+      );
+    </script>
+  </body>
+</html>

@@ -159,6 +159,8 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 * Generic/WebDriver/Detected
 <!--- A CSP violation was detected --->
 * Generic/CSPViolation/Detected
+<!-- Invalid timestamp seen in processing RUM response -->
+* Generic/TimeKeeper/InvalidTimestamp/Seen
 
 ### Frameworks
 <!--- React was Detected --->

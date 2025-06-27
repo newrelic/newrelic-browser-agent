@@ -152,9 +152,17 @@ export class Aggregate extends AggregateBase {
     }
 
     try {
+      const wasReady = this.agentRef.runtime.timeKeeper.ready
+
       // will do nothing if already done
       this.agentRef.runtime.timeKeeper.processRumRequest(xhr, this.rumStartTime, rumEndTime, app.nrServerTime)
       if (!this.agentRef.runtime.timeKeeper.ready) throw new Error('TimeKeeper not ready')
+
+      // If timeKeeper's origin time is ahead of nrServerTime, then the timestamp is invalid. Report a supportability metric.
+      const timeDiff = this.agentRef.runtime.timeKeeper.correctedOriginTime - app.nrServerTime
+      if (wasReady && timeDiff > 0) {
+        this.reportSupportabilityMetric('Generic/TimeKeeper/InvalidTimestamp/Seen', timeDiff)
+      }
     } catch (error) {
       this.ee.abort()
       warn(17, error)

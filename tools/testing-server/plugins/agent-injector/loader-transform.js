@@ -23,11 +23,15 @@ async function getLoaderContent (loaderFilePath) {
 }
 
 function getLoaderFilePath (request, testServer, webpath) {
-  const loader = request.query.loader || testServer.config.loader
+  const validLoaders = ['default', 'custom']; // Define an allowlist of valid loader names
+  const loader = request.query.loader || testServer.config.loader;
+  if (!validLoaders.includes(loader)) {
+    throw new Error(`Invalid loader specified: ${loader}`);
+  }
   return path.join(
     webpath ? '/build/' : paths.builtAssetsDir,
     `nr-loader-${loader}.min.js`
-  )
+  );
 }
 
 async function getLoaderScript (scriptType, loaderFilePath, nonce, injectionDelay) {

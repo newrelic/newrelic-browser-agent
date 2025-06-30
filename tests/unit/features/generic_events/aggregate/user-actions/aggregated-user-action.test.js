@@ -57,24 +57,40 @@ describe('AggregatedUserAction - Dead Click Detection', () => {
   beforeEach(() => {
     evt = { type: 'click', timeStamp: 1000 }
   })
+
+  function generateAggregatedUserAction (evt, selectorInfo = {
+    path: 'dummy value',
+    hasInteractiveElems: false,
+    hasLink: false,
+    hasTextbox: false,
+    hasButton: false,
+    ignoreDeadClick: false
+  }) {
+    return new AggregatedUserAction(evt, selectorInfo)
+  }
+
   test('should correctly assess not a dead click - no interactive elems', () => {
-    const userClickOnDeadlink = new AggregatedUserAction(evt, { path: 'dummy value', hasInteractiveElems: false, hasLink: false, hasTextbox: false })
+    const userClickOnDeadlink = generateAggregatedUserAction(evt, undefined)
     expect(userClickOnDeadlink.deadClick).toBe(false)
   })
   test('should correctly assess not a dead click - no link, no textbox', () => {
-    const userClickOnDeadlink = new AggregatedUserAction(evt, { path: 'dummy value', hasInteractiveElems: true, hasLink: false, hasTextbox: false })
+    const userClickOnDeadlink = generateAggregatedUserAction(evt, { hasInteractiveElems: true })
     expect(userClickOnDeadlink.deadClick).toBe(false)
   })
   test('should correctly assess not a dead click - has interactive link', () => {
-    const userClickOnDeadlink = new AggregatedUserAction(evt, { path: 'dummy value', hasInteractiveElems: true, hasLink: true, hasTextbox: false })
+    const userClickOnDeadlink = generateAggregatedUserAction(evt, { hasInteractiveElems: true, hasLink: true })
     expect(userClickOnDeadlink.deadClick).toBe(false)
   })
   test('should correctly detect dead click - link', () => {
-    const userClickOnDeadlink = new AggregatedUserAction(evt, { path: 'dummy value', hasInteractiveElems: false, hasLink: true, hasTextbox: false })
+    const userClickOnDeadlink = generateAggregatedUserAction(evt, { hasLink: true })
     expect(userClickOnDeadlink.deadClick).toBe(true)
   })
   test('should correctly detect dead click - textbox', () => {
-    const userClickOnDeadlink = new AggregatedUserAction(evt, { path: 'dummy value', hasInteractiveElems: false, hasLink: false, hasTextbox: true })
+    const userClickOnDeadlink = generateAggregatedUserAction(evt, { hasTextbox: true })
+    expect(userClickOnDeadlink.deadClick).toBe(true)
+  })
+  test('should correctly detect dead click - button', () => {
+    const userClickOnDeadlink = generateAggregatedUserAction(evt, { hasButton: true })
     expect(userClickOnDeadlink.deadClick).toBe(true)
   })
 })

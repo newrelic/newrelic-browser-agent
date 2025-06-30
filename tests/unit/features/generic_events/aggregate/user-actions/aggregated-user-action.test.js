@@ -93,4 +93,8 @@ describe('AggregatedUserAction - Dead Click Detection', () => {
     const userClickOnDeadlink = generateAggregatedUserAction(evt, { hasButton: true })
     expect(userClickOnDeadlink.deadClick).toBe(true)
   })
+  test('should not detect dead click if ignoreDeadClick is true', () => {
+    const userClickOnDeadlink = generateAggregatedUserAction(evt, { hasLink: true, ignoreDeadClick: true })
+    expect(userClickOnDeadlink.deadClick).toBe(false)
+  })
 })

@@ -6,7 +6,9 @@
 <html>
   <head>
     <title>RUM Unit Test</title>
-    {init} {config} {loader}
+    {init} {config}
+    <script>NREUM.init.feature_flags = ['soft_nav']</script>
+    {loader}
   </head>
   <body>Instrumented</body>
 </html>

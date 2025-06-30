@@ -18,7 +18,7 @@ describe('spa interactions with zonejs', () => {
         .then(() => $('body').click())
     ])
 
-    const referrer = await browser.execute(() => document.referrer)
+    const referrer = await browser.execute(() => document.referrer || null)
 
     expect(interactionHarvests[0].request.body).toEqual(expect.arrayContaining([
       expect.objectContaining({
@@ -50,7 +50,7 @@ describe('spa interactions with zonejs', () => {
       await browser.url(url).then(() => browser.waitForAgentLoad())
     ])
 
-    const referrer = await browser.execute(() => document.referrer)
+    const referrer = await browser.execute(() => document.referrer || null)
 
     const event = interactionHarvests[0].request.body
       .find(ev => ev.type === 'interaction' && ev.trigger === 'initialPageLoad')

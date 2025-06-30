@@ -14,7 +14,7 @@ export class InitialPageLoadInteraction extends Interaction {
     super(agentRef, IPL_TRIGGER_NAME, 0, null)
     this.queueTime = agentRef.info.queueTime
     this.appTime = agentRef.info.applicationTime
-    this.oldURL = document.referrer
+    this.oldURL = document.referrer || null
   }
 
   get firstPaint () { return firstPaint.current.value }

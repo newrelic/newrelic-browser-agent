@@ -125,6 +125,8 @@ export class Interaction extends BelNode {
     else if (this.newURL !== this.oldURL) ixnType = INTERACTION_TYPE.ROUTE_CHANGE
     else ixnType = INTERACTION_TYPE.UNSPECIFIED
 
+    console.log('old url is ', this.oldURL)
+
     // IMPORTANT: The order in which addString is called matters and correlates to the order in which string shows up in the harvest payload. Do not re-order the following code.
     const fields = [
       numeric(this.belType),
@@ -135,7 +137,9 @@ export class Interaction extends BelNode {
       numeric(this.callbackDuration), // not relative
       addString(this.trigger),
       addString(cleanURL(this.initialPageURL, true)),
-      addString(cleanURL(this.oldURL, true)),
+      // addString(cleanURL(this.oldURL, true)),
+      ...(this.oldURL === null ? ['!'] : [addString(cleanURL(this.oldURL, true))]),
+      // nullable(this.oldURL, () => addString(cleanURL(this.oldURL, true)), true),
       addString(cleanURL(this.newURL, true)),
       addString(this.customName),
       ixnType,
@@ -145,6 +149,7 @@ export class Interaction extends BelNode {
       addString(this.nodeId),
       nullable(this.firstPaint, numeric, true) + nullable(this.firstContentfulPaint, numeric)
     ]
+    console.log('fields', fields)
     const allAttachedNodes = addCustomAttributes(this.customAttributes || {}, addString) // start with all custom attributes
     if (this.info.atts) allAttachedNodes.push('a,' + addString(this.info.atts)) // add apm provided attributes
     /* Querypack encoder+decoder quirkiness:

@@ -94,7 +94,7 @@ export class DT {
   // return true if DT is enabled and the origin is allowed, either by being
   // same-origin, or included in the allowed list
   shouldGenerateTrace (parsedOrigin) {
-    return this.agentRef.init?.distributed_tracing && this.isAllowedOrigin(parsedOrigin)
+    return this.agentRef.init?.distributed_tracing?.enabled && this.isAllowedOrigin(parsedOrigin)
   }
 
   isAllowedOrigin (parsedOrigin) {

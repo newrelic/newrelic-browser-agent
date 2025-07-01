@@ -1,0 +1,46 @@
+name: 'Consumer Load Test'
+
+permissions:
+  contents: read
+
+on:
+  workflow_dispatch:
+    inputs:
+      minutes:
+        description: 'Timeout in minutes'
+        required: false
+        default: '60'
+      license-key:
+        description: 'License key for the test'
+        required: true
+      app-id:
+        description: 'App ID for the test'
+        required: true
+      entity-guid:
+        description: 'Entity GUID for the test'
+        required: true
+
+jobs:
+  generate-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - id: set-matrix
+        run: |
+          MATRIX=$(seq 1 256 | jq -R . | jq -s .)
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+
+  consumer-load-test:
+    needs: generate-matrix
+    strategy:
+      matrix:
+        runner: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
+    name: 'WDIO: Smoke Test - Instance ${{ matrix.runner }}'
+    uses: ./.github/actions/consumer-load-test
+    with:
+      license-key: ${{ github.event.inputs.license-key }}
+      app-id: ${{ github.event.inputs.app-id }}
+      entity-guid: ${{ github.event.inputs.entity-guid }}
+    secrets: inherit
+    timeout-minutes: ${{ github.event.inputs.minutes }}

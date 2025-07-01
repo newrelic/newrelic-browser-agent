@@ -32,12 +32,12 @@ jobs:
           echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
 
   consumer-load-test:
+    runs-on: ubuntu-latest
     needs: generate-matrix
     strategy:
       matrix:
         runner: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
-    secrets: inherit
-    timeout-minutes: ${{ github.event.inputs.minutes }}
+    timeout-minutes: ${{ fromJSON(github.event.inputs.minutes) }}
     steps:
       - name: 'Load test - Instance ${{ matrix.runner }}'
         uses: ./.github/actions/consumer-load-test

@@ -334,3 +334,56 @@ describe('Wrap function', () => {
     return i
   }
 })
+
+describe('Wrap function - User Actions error clicks', () => {
+  let emitSpy
+  beforeEach(() => {
+    emitSpy = jest.spyOn(baseEE, 'emit')
+  })
+  afterEach(() => {
+    emitSpy.mockRestore()
+  })
+  test('emits ua-click-err when error is detected from a click event listener added via addEventListener', () => {
+    const origFn = function (evt) {
+      throw new Error('This is an error from an event listener')
+    }
+    const mockClickEvent = new Event('click')
+
+    try {
+      wrapFn(origFn)(mockClickEvent)
+    } catch {
+      // We expect an error to be thrown, but we also expect the ua-click-err event to be emitted.
+      expect(emitSpy.mock.calls).toEqual(
+        expect.arrayContaining([
+          expect.arrayContaining([
+            'ua-click-err',
+            expect.anything(),
+            undefined,
+            expect.anything()
+          ])
+        ])
+      )
+    }
+  })
+
+  test('does not emit ua-click-err when error is not from a click event listener', () => {
+    const origFn = makeError('This is an error from a non-click event')
+    const mockNonClickEvent = new Event('non-click-event')
+
+    try {
+      wrapFn(origFn)(mockNonClickEvent)
+    } catch {
+      // We expect an error to be thrown, but we do not expect the ua-click-err event to be emitted.
+      expect(emitSpy.mock.calls).toEqual(
+        expect.not.arrayContaining([
+          expect.arrayContaining([
+            'ua-click-err',
+            expect.anything(),
+            undefined,
+            expect.anything()
+          ])
+        ])
+      )
+    }
+  })
+})

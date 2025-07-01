@@ -7,7 +7,7 @@ import { cleanURL } from '../../../../common/url/clean-url'
 
 export class AggregatedUserAction {
   constructor (evt, selectorInfo) {
-    this.event = evt
+    this.events = [evt]
     this.count = 1
     this.originMs = Math.floor(evt.timeStamp)
     this.relativeMs = [0]
@@ -16,6 +16,7 @@ export class AggregatedUserAction {
     this.nearestTargetFields = selectorInfo.nearestFields
     this.currentUrl = cleanURL('' + location)
     this.deadClick = this.isDeadClick(selectorInfo)
+    this.hasInteractiveElems = selectorInfo.hasInteractiveElems
   }
 
   /**
@@ -29,6 +30,7 @@ export class AggregatedUserAction {
    */
   aggregate (evt, selectorInfo = {}) {
     this.count++
+    this.events.push(evt)
     this.relativeMs.push(Math.floor(evt.timeStamp - this.originMs))
     if (this.isRageClick()) this.rageClick = true
     this.deadClick ||= this.isDeadClick(selectorInfo)
@@ -40,7 +42,7 @@ export class AggregatedUserAction {
    */
   isRageClick () {
     const len = this.relativeMs.length
-    return (this.event.type === 'click' && len >= RAGE_CLICK_THRESHOLD_EVENTS && this.relativeMs[len - 1] - this.relativeMs[len - RAGE_CLICK_THRESHOLD_EVENTS] < RAGE_CLICK_THRESHOLD_MS)
+    return (this.events[0]?.type === 'click' && len >= RAGE_CLICK_THRESHOLD_EVENTS && this.relativeMs[len - 1] - this.relativeMs[len - RAGE_CLICK_THRESHOLD_EVENTS] < RAGE_CLICK_THRESHOLD_MS)
   }
 
   /**
@@ -55,6 +57,10 @@ export class AggregatedUserAction {
    */
   isDeadClick (selectorInfo = {}) {
     const { hasInteractiveElems, hasButton, hasLink, hasTextbox, ignoreDeadClick } = selectorInfo
-    return this.event.type === 'click' && !hasInteractiveElems && (hasButton || hasLink || hasTextbox) && !ignoreDeadClick
+    return this.events[0]?.type === 'click' && !hasInteractiveElems && (hasButton || hasLink || hasTextbox) && !ignoreDeadClick
+  }
+
+  isErrorClick (clickErrorEvents = new Set()) {
+    return this.hasInteractiveElems && this.events.some(evt => clickErrorEvents.has(evt))
   }
 }

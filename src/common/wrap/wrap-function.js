@@ -103,6 +103,9 @@ export function createWrapperWithEmitter (emitter, always) {
       } catch (err) {
         fnEndTime = performance.now()
         safeEmit(prefix + 'err', [args, originalThis, err], ctx, bubble)
+        if (args[0]?.type === 'click') {
+          safeEmit('ua-click-err', [args, originalThis, err], ctx, bubble)
+        }
         // rethrow error so we don't effect execution by observing.
         thrownError = err
         throw thrownError

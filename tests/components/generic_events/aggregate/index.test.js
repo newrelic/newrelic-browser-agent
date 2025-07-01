@@ -311,4 +311,27 @@ describe('sub-features', () => {
       'entryDetail.foo': 'bar'
     })
   })
+
+  test('should remove stale errors after user action is buffered', () => {
+    const removeStaleErrorSpy = jest.spyOn(genericEventsAggregate, 'removeStaleErrors')
+    const target = document.createElement('button')
+    target.id = 'myBtn'
+    const clickEvent1 = { timeStamp: 100, type: 'click', target }
+    const clickEvent2 = { timeStamp: 200, type: 'click', target }
+    const clickEvent3 = { timeStamp: 300, type: 'click', target }
+    genericEventsAggregate.ee.emit('ua', [clickEvent1])
+    genericEventsAggregate.ee.emit('ua-click-err', [clickEvent1])
+    genericEventsAggregate.ee.emit('ua', [clickEvent2])
+    genericEventsAggregate.ee.emit('ua-click-err', [clickEvent2])
+    genericEventsAggregate.ee.emit('ua', [clickEvent3])
+    genericEventsAggregate.ee.emit('ua-click-err', [clickEvent3])
+
+    // blur event to trigger aggregation to stop and add to harvest buffer
+    genericEventsAggregate.ee.emit('ua', [{ timeStamp: 1000, type: 'blur', target: window }])
+
+    genericEventsAggregate.makeHarvestPayload() // force it to put the aggregation into the event buffer
+
+    expect(removeStaleErrorSpy).toHaveBeenCalledWith(300)
+    removeStaleErrorSpy.mockRestore()
+  })
 })

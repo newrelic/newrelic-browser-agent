@@ -1,5 +1,4 @@
-# This composite action is used to upload all loaders of a specific
-# version to the internal NR.
+# This composite action is used to load test DEM Consumers and NR1 UIs
 
 name: 'Consumer Load Test'
 

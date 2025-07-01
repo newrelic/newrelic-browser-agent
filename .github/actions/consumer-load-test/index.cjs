@@ -3,7 +3,7 @@ const harvestSessionReplay = require('./session-replay/session-replay-payload.cj
 const harvestPageView = require('./page-view/page-view-payload.cjs');
 
 let payloadsSent = 0
-let concurrent = 0 // increments to 30
+let concurrent = 0 // increments to 5
 
 const start = performance.now()
 

@@ -39,9 +39,9 @@ jobs:
     secrets: inherit
     timeout-minutes: ${{ github.event.inputs.minutes }}
     steps:
-      name: 'Load test - Instance ${{ matrix.runner }}'
-      uses: ./.github/actions/consumer-load-test
-      with:
-        license-key: ${{ github.event.inputs.license-key }}
-        app-id: ${{ github.event.inputs.app-id }}
-        entity-guid: ${{ github.event.inputs.entity-guid }}
+      - name: 'Load test - Instance ${{ matrix.runner }}'
+        uses: ./.github/actions/consumer-load-test
+        with:
+          license-key: ${{ github.event.inputs.license-key }}
+          app-id: ${{ github.event.inputs.app-id }}
+          entity-guid: ${{ github.event.inputs.entity-guid }}

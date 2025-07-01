@@ -4,6 +4,23 @@
     {
       "changes": [
         {
+          "type": "fix",
+          "sha": "969f634f4d22f112f3aba2fc2e74d6959dafbae5",
+          "message": "fix custom attribute race condition precedence",
+          "issues": [
+            "1507"
+          ]
+        }
+      ],
+      "version": "1.292.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "b0b14720-8265-4152-889f-6b45e68d6b7f",
+      "createTime": "2025-06-26T13:30:07.324Z"
+    },
+    {
+      "changes": [
+        {
           "type": "feat",
           "sha": "93f0fd0076e1e1fcc2b353d766a7a95c0f524e76",
           "message": "Update BrowserInteraction previousUrl definition",
@@ -2999,5 +3016,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2025-06-16T15:32:12.554Z"
+  "updateTime": "2025-06-26T13:30:07.324Z"
 }

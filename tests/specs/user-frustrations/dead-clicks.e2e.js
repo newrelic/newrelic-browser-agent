@@ -37,7 +37,6 @@ describe('User Frustrations - Dead Clicks', () => {
       }))
       expect(actuals[1]).not.toHaveProperty('deadClick')
     })
-
     it(`should correctly assess dead clicks on links for ${loaderType} loader`, async () => {
       const [insightsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
         { test: testInsRequest }

@@ -36,7 +36,7 @@ window.NREUM={
       }
     },
     proxy: {},
-    user_actions: {elementAttributes: ['id', 'className', 'tagName', 'type', 'innerText', 'textContent', 'ariaLabel', 'alt', 'title']}
+    user_actions: {elementAttributes: ['id', 'className', 'tagName', 'type', 'ariaLabel', 'alt', 'title']}
   },
   loader_config: {
     accountID: '1',

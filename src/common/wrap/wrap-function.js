@@ -76,6 +76,7 @@ export function createWrapperWithEmitter (emitter, always) {
       var originalThis
       var ctx
       var result
+      let thrownError
 
       try {
         originalThis = this
@@ -93,17 +94,31 @@ export function createWrapperWithEmitter (emitter, always) {
       // Warning: start events may mutate args!
       safeEmit(prefix + 'start', [args, originalThis, methodName], ctx, bubble)
 
+      const fnStartTime = performance.now()
+      let fnEndTime = fnStartTime
       try {
         result = fn.apply(originalThis, args)
+        fnEndTime = performance.now()
         return result
       } catch (err) {
+        fnEndTime = performance.now()
         safeEmit(prefix + 'err', [args, originalThis, err], ctx, bubble)
-
         // rethrow error so we don't effect execution by observing.
-        throw err
+        thrownError = err
+        throw thrownError
       } finally {
-        // happens no matter what.
-        safeEmit(prefix + 'end', [args, originalThis, result], ctx, bubble)
+        const duration = fnEndTime - fnStartTime
+        const task = {
+          duration,
+          isLongTask: duration >= 50,
+          methodName,
+          thrownError
+          // could add more properties here later if needed by downstream features
+        }
+        // standalone long task message
+        if (task.isLongTask) safeEmit('long-task', [task], ctx, bubble)
+        // -end message also includes the task execution info
+        safeEmit(prefix + 'end', [args, originalThis, result, task], ctx, bubble)
       }
     }
   }

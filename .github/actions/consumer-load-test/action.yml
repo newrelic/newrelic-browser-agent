@@ -3,6 +3,17 @@
 
 name: 'Consumer Load Test'
 
+inputs:
+  license-key:
+    description: 'License key for the test'
+    required: true
+  app-id:
+    description: 'App ID for the test'
+    required: true
+  entity-guid:
+    description: 'Entity GUID for the test'
+    required: true
+
 runs:
   using: "composite"
   steps:
@@ -12,5 +23,8 @@ runs:
     - name: Run action script
       id: action-script
       run: |
-        node $GITHUB_ACTION_PATH/index.js
+        node $GITHUB_ACTION_PATH/index.js \
+          --license-key ${{ inputs.license-key }} \
+          --app-id ${{ inputs.app-id }} \
+          --entity-guid ${{ inputs.entity-guid }}
       shell: bash

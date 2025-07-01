@@ -9,7 +9,7 @@ describe('AggregatedUserAction', () => {
   beforeEach(() => {
     evt = { type: 'click', timeStamp: 1000 }
     selectorPath = 'body > div'
-    aggregatedUserAction = new AggregatedUserAction(evt, selectorPath)
+    aggregatedUserAction = new AggregatedUserAction(evt, { path: selectorPath })
   })
 
   test('should initialize with correct values', () => {
@@ -48,5 +48,33 @@ describe('AggregatedUserAction', () => {
     expect(aggregatedUserAction.count).toBe(RAGE_CLICK_THRESHOLD_EVENTS)
     expect(aggregatedUserAction.isRageClick()).toBe(false)
     expect(aggregatedUserAction.rageClick).toBeUndefined()
+  })
+})
+
+describe('AggregatedUserAction - Dead Click Detection', () => {
+  let evt
+
+  beforeEach(() => {
+    evt = { type: 'click', timeStamp: 1000 }
+  })
+  test('should correctly assess not a dead click - no interactive elems', () => {
+    const userClickOnDeadlink = new AggregatedUserAction(evt, { path: 'dummy value', hasInteractiveElems: false, hasLink: false, hasTextbox: false })
+    expect(userClickOnDeadlink.deadClick).toBe(false)
+  })
+  test('should correctly assess not a dead click - no link, no textbox', () => {
+    const userClickOnDeadlink = new AggregatedUserAction(evt, { path: 'dummy value', hasInteractiveElems: true, hasLink: false, hasTextbox: false })
+    expect(userClickOnDeadlink.deadClick).toBe(false)
+  })
+  test('should correctly assess not a dead click - has interactive link', () => {
+    const userClickOnDeadlink = new AggregatedUserAction(evt, { path: 'dummy value', hasInteractiveElems: true, hasLink: true, hasTextbox: false })
+    expect(userClickOnDeadlink.deadClick).toBe(false)
+  })
+  test('should correctly detect dead click - link', () => {
+    const userClickOnDeadlink = new AggregatedUserAction(evt, { path: 'dummy value', hasInteractiveElems: false, hasLink: true, hasTextbox: false })
+    expect(userClickOnDeadlink.deadClick).toBe(true)
+  })
+  test('should correctly detect dead click - textbox', () => {
+    const userClickOnDeadlink = new AggregatedUserAction(evt, { path: 'dummy value', hasInteractiveElems: false, hasLink: false, hasTextbox: true })
+    expect(userClickOnDeadlink.deadClick).toBe(true)
   })
 })

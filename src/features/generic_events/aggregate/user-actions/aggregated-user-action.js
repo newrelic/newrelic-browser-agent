@@ -6,15 +6,16 @@ import { RAGE_CLICK_THRESHOLD_EVENTS, RAGE_CLICK_THRESHOLD_MS } from '../../cons
 import { cleanURL } from '../../../../common/url/clean-url'
 
 export class AggregatedUserAction {
-  constructor (evt, selectorPath, nearestTargetFields) {
+  constructor (evt, selectorInfo) {
     this.event = evt
     this.count = 1
     this.originMs = Math.floor(evt.timeStamp)
     this.relativeMs = [0]
-    this.selectorPath = selectorPath
+    this.selectorPath = selectorInfo.path
     this.rageClick = undefined
-    this.nearestTargetFields = nearestTargetFields
+    this.nearestTargetFields = selectorInfo.nearestFields
     this.currentUrl = cleanURL('' + location)
+    this.deadClick = this.isDeadClick(selectorInfo)
   }
 
   /**
@@ -36,5 +37,19 @@ export class AggregatedUserAction {
   isRageClick () {
     const len = this.relativeMs.length
     return (this.event.type === 'click' && len >= RAGE_CLICK_THRESHOLD_EVENTS && this.relativeMs[len - 1] - this.relativeMs[len - RAGE_CLICK_THRESHOLD_EVENTS] < RAGE_CLICK_THRESHOLD_MS)
+  }
+
+  /**
+   * Determines if the click is a dead click, which is defined as a click on an element that is itself not interactive or is a child of a non-interactive element.
+   *
+   * For example,
+   * - clicking on a link that is not interactive = a dead click.
+   * - clicking on a span inside a non-interactive link = a dead click.
+   * - clicking on a standalone span = not a dead click.
+   * @returns {boolean}
+   */
+  isDeadClick (selectorInfo) {
+    const { hasInteractiveElems, hasLink, hasTextbox } = selectorInfo
+    return this.event.type === 'click' && !hasInteractiveElems && (hasLink || hasTextbox)
   }
 }

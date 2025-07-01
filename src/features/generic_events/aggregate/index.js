@@ -86,7 +86,8 @@ export class Aggregate extends AggregateBase {
                   if (canTrustTargetAttribute(field)) acc[targetAttrName(field)] = String(target[field]).trim().slice(0, 128)
                   return acc
                 }, {})),
-                ...aggregatedUserAction.nearestTargetFields
+                ...aggregatedUserAction.nearestTargetFields,
+                ...(agentRef.init.feature_flags.includes('user_frustrations') && aggregatedUserAction.deadClick && { deadClick: aggregatedUserAction.deadClick })
               })
 
               /**

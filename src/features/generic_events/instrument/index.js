@@ -14,6 +14,7 @@ import { setupRegisterAPI } from '../../../loaders/api/register'
 import { setupMeasureAPI } from '../../../loaders/api/measure'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME, OBSERVED_EVENTS, OBSERVED_WINDOW_EVENTS } from '../constants'
+import { wrapEvents } from '../../../common/wrap/wrap-events'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
@@ -46,6 +47,7 @@ export class Instrument extends InstrumentBase {
         }
         // Capture is not used here so that we don't get element focus/blur events, only the window's as they do not bubble. They are also not cancellable, so no worries about being front of line.
         )
+        wrapEvents(this.ee) // needed for adding user frustration signal to user actions
       }
       if (agentRef.init.performance.resources.enabled && globalScope.PerformanceObserver?.supportedEntryTypes.includes('resource')) {
         const observer = new PerformanceObserver((list) => {

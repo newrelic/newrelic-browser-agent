@@ -17,7 +17,9 @@ beforeEach(async () => {
   sessionTraceAggregate = sessionTraceInstrument.featAggregate
 
   sessionTraceAggregate.ee.emit('rumresp', [{ st: 1, sts: MODE.FULL }])
-  await new Promise(process.nextTick)
+  await new Promise((resolve, reject) => {
+    setTimeout(resolve, 100) // wait for the feature to initialize
+  })
 })
 
 test('creates right nodes', async () => {
@@ -32,7 +34,7 @@ test('creates right nodes', async () => {
   sessionTraceAggregate.events.storeXhrAgg('xhr', '[200,null,null]', { method: 'GET', status: 200 }, { rxSize: 770, duration: 99, cbTime: 0, time: 217 }) // fake ajax data
   sessionTraceAggregate.events.processPVT('fi', 30) // fake pvt data
 
-  const [{ payload }] = sessionTraceAggregate.makeHarvestPayload()
+  const payload = sessionTraceAggregate.makeHarvestPayload()
   let res = payload.body
 
   let node = res.filter(node => node.n === 'DOMContentLoaded')[0]

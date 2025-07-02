@@ -266,7 +266,7 @@ export class TraceStorage {
   }
 
   /* Below are the interface expected & required of whatever storage is used across all features on an individual basis. This allows a common `.events` property on Trace shared with AggregateBase.
-    Note that the usage must be in sync with the EventStoreManager class such that AggregateBase.makeHarvestPayload can run the same regardless of which storage class a feature is using. */
+    Note that the usage must be in sync with the event storage class such that AggregateBase.makeHarvestPayload can run the same regardless of which storage class a feature is using. */
   isEmpty () {
     return this.nodeCount === 0
   }
@@ -276,7 +276,7 @@ export class TraceStorage {
   }
 
   get () {
-    return [{ targetApp: this.parent.agentRef.runtime.entityManager.get(), data: this.takeSTNs() }]
+    return this.takeSTNs()
   }
 
   clear () {

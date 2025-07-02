@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { stringify } from '../../common/util/stringify'
-import { MAX_PAYLOAD_SIZE } from '../../common/constants/agent-constants'
+import { dispatchGlobalEvent } from '../../common/dispatch/global-event'
 
 export class EventBuffer {
   #buffer = []
@@ -12,10 +12,13 @@ export class EventBuffer {
   #rawBytesBackup
 
   /**
-   * @param {number} maxPayloadSize
+   * Creates an event buffer that can hold feature-processed events.
+   * @param {Number} maxPayloadSize The maximum size of the payload that can be stored in this buffer.
+   * @param {Object} [featureAgg] - the feature aggregate instance
    */
-  constructor (maxPayloadSize = MAX_PAYLOAD_SIZE) {
+  constructor (maxPayloadSize, featureAgg) {
     this.maxPayloadSize = maxPayloadSize
+    this.featureAgg = featureAgg
   }
 
   isEmpty () {
@@ -41,9 +44,23 @@ export class EventBuffer {
    */
   add (event) {
     const addSize = stringify(event)?.length || 0 // (estimate) # of bytes a directly stringified event it would take to send
-    if (this.#rawBytes + addSize > this.maxPayloadSize) return false
+    if (this.#rawBytes + addSize > this.maxPayloadSize) {
+      const smTag = inject => `EventBuffer/${inject}/Dropped/Bytes`
+      this.featureAgg?.reportSupportabilityMetric(smTag(this.featureAgg.featureName), addSize) // bytes dropped for this feature will aggregate with this metric tag
+      this.featureAgg?.reportSupportabilityMetric(smTag('Combined'), addSize) // all bytes dropped across all features will aggregate with this metric tag
+      return false
+    }
     this.#buffer.push(event)
     this.#rawBytes += addSize
+
+    dispatchGlobalEvent({
+      drained: true,
+      type: 'data',
+      name: 'buffer',
+      feature: this.featureAgg?.featureName,
+      data: event
+    })
+
     return true
   }
 

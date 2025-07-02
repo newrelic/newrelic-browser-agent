@@ -1,4 +1,5 @@
-import { interactiveElems, isInteractiveElement } from '../../../../../../src/features/generic_events/aggregate/user-actions/interactive-elements'
+import { interactiveElems } from '../../../../../../src/features/generic_events/aggregate/user-actions/interactive-elements'
+import { isInteractiveElement } from '../../../../../../src/features/generic_events/aggregate/user-actions/interactive-utils'
 
 describe('Interactive Elements - lookup for elem click event listeners', () => {
   const lookup = interactiveElems

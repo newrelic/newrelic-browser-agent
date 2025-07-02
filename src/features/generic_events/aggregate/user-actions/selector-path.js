@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { isInteractiveElement } from './interactive-elements'
+import { isInteractiveElement } from './interactive-utils'
 
 /**
  * Generates a CSS selector path for the given element, if possible

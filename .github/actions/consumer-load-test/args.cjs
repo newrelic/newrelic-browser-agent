@@ -14,6 +14,14 @@ const args = yargs(hideBin(process.argv))
   .string('entity-guid')
   .describe('entity-guid', 'Entity GUID for the load test')
 
+  .boolean('page-view')
+  .describe('page-view', 'harvest a page view event for every iteration')
+  .default('page-view', false)
+
+  .boolean('session-replay')
+  .describe('session-replay', 'harvest (2) session events for every iteration')
+  .default('session-replay', false)
+
   .demandOption(['license-key', 'app-id', 'entity-guid'], 'Please provide the required options: license-key, app-id, and entity-guid')
   .argv
 

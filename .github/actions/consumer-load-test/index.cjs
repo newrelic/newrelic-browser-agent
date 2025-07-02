@@ -23,7 +23,7 @@ async function sendRequest(instanceMarker, payloadsSentInJob = 0) {
 
     try {
       /** PAGEVIEW HARVEST */
-      await harvestPageView({
+      if (args.pageView) await harvestPageView({
         licenseKey,
         appId,
         agentVersion,
@@ -35,7 +35,7 @@ async function sendRequest(instanceMarker, payloadsSentInJob = 0) {
       })
 
       /** SNAPSHOT HARVEST */
-      await harvestSessionReplay({
+      if (args.sessionReplay) await harvestSessionReplay({
         licenseKey,
         appId,
         timeNow,
@@ -50,7 +50,7 @@ async function sendRequest(instanceMarker, payloadsSentInJob = 0) {
       })
 
       /** MUTATION HARVEST */
-      await harvestSessionReplay({
+      if (args.sessionReplay) await harvestSessionReplay({
         licenseKey,
         appId,
         timeNow,
@@ -63,6 +63,7 @@ async function sendRequest(instanceMarker, payloadsSentInJob = 0) {
         ptid,
         enduserId
       })
+      
       console.log("payloads (1 PVE + 2 SR) sent: ", ++payloadsSent, ' ||| payloads per second: ', (payloadsSent / ((performance.now() - start) / 1000)).toFixed(2));
     } catch (err) {
       console.error(`Error in instance ${instanceMarker}:`, err);

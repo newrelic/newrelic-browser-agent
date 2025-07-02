@@ -29,7 +29,7 @@ jobs:
       - id: set-matrix
         run: |
           MATRIX=$(seq 1 256 | jq -R . | jq -s .)
-          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+          echo matrix=$MATRIX >> $GITHUB_OUTPUT
 
   consumer-load-test:
     runs-on: ubuntu-latest

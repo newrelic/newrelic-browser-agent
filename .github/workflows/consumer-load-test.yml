@@ -22,9 +22,11 @@ on:
       page-view:
         description: 'Capture PageView events'
         required: false
+        type: boolean
       session-replay:
         description: 'Capture SessionReplay events'
         required: false
+        type: boolean
 
 jobs:
   generate-matrix:

@@ -12,6 +12,14 @@ inputs:
   entity-guid:
     description: 'Entity GUID for the test'
     required: true
+  page-view:
+    description: 'Capture PageView events'
+    required: false
+    type: boolean
+  session-replay:
+    description: 'Capture SessionReplay events'
+    required: false
+    type: boolean
 
 runs:
   using: "composite"
@@ -25,5 +33,7 @@ runs:
         node $GITHUB_ACTION_PATH/index.cjs \
           --license-key ${{ inputs.license-key }} \
           --app-id ${{ inputs.app-id }} \
-          --entity-guid ${{ inputs.entity-guid }}
+          --entity-guid ${{ inputs.entity-guid }} \
+          --page-view ${{ inputs.page-view }} \
+          --session-replay ${{ inputs.session-replay }}
       shell: bash

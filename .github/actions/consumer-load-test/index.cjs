@@ -62,8 +62,8 @@ async function sendRequest(instanceMarker, payloadsSentInJob = 0) {
         agentVersion,
         ptid,
         enduserId
-      })
-      
+      })      
+
       console.log("payloads (1 PVE + 2 SR) sent: ", ++payloadsSent, ' ||| payloads per second: ', (payloadsSent / ((performance.now() - start) / 1000)).toFixed(2));
     } catch (err) {
       console.error(`Error in instance ${instanceMarker}:`, err);

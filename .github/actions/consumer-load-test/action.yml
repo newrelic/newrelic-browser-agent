@@ -22,7 +22,7 @@ runs:
     - name: Run action script
       id: action-script
       run: |
-        node $GITHUB_ACTION_PATH/index.js \
+        node $GITHUB_ACTION_PATH/index.cjs \
           --license-key ${{ inputs.license-key }} \
           --app-id ${{ inputs.app-id }} \
           --entity-guid ${{ inputs.entity-guid }}

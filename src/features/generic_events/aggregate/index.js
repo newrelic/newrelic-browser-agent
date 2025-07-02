@@ -75,8 +75,8 @@ export class Aggregate extends AggregateBase {
              * so we still need to validate that an event was given to this method before we try to add */
             if (aggregatedUserAction?.events[0]) {
               const { target, timeStamp, type } = aggregatedUserAction.events[0]
-              const { timeStamp: lastTimestamp } = aggregatedUserAction.events[aggregatedUserAction.events.length - 1]
-              this.addEvent({
+              const { timeStamp: lastTimestamp } = aggregatedUserAction.events.at(-1)
+              const userActionEvent = {
                 eventType: 'UserAction',
                 timestamp: this.toEpoch(timeStamp),
                 action: type,
@@ -95,8 +95,10 @@ export class Aggregate extends AggregateBase {
                 ...aggregatedUserAction.nearestTargetFields,
                 ...(this.#runUserFrustrations && aggregatedUserAction.deadClick && { deadClick: aggregatedUserAction.deadClick }),
                 ...(this.#runUserFrustrations && aggregatedUserAction.isErrorClick(this.#clickErrorEvents) && { errorClick: true })
-              })
+              }
+              this.addEvent(userActionEvent)
               this.removeStaleErrors(lastTimestamp)
+              this.trackUserActionSupportabilityMetrics(userActionEvent)
 
               /**
                * Returns the original target field name with `target` prepended and camelCased
@@ -328,6 +330,12 @@ export class Aggregate extends AggregateBase {
     if (this.agentRef.init.performance.resources.asset_types?.length !== 0) this.reportSupportabilityMetric(configPerfTag + 'Resources/AssetTypes/Changed')
     if (this.agentRef.init.performance.resources.first_party_domains?.length !== 0) this.reportSupportabilityMetric(configPerfTag + 'Resources/FirstPartyDomains/Changed')
     if (this.agentRef.init.performance.resources.ignore_newrelic === false) this.reportSupportabilityMetric(configPerfTag + 'Resources/IgnoreNewrelic/Changed')
+  }
+
+  trackUserActionSupportabilityMetrics (ua) {
+    if (ua.rageClick) this.reportSupportabilityMetric('UserAction/RageClick/Seen')
+    if (ua.deadClick) this.reportSupportabilityMetric('UserAction/DeadClick/Seen')
+    if (ua.errorClick) this.reportSupportabilityMetric('UserAction/ErrorClick/Seen')
   }
 
   removeStaleErrors (timestamp) {

@@ -46,15 +46,12 @@ export const analyzeElemPath = (elem, targetFields = []) => {
 
       const tagName = elem.tagName.toLowerCase()
       result.hasLink ||= tagName === 'a'
-      result.hasTextbox ||= tagName === 'input' && elem.type.toLowerCase() === 'text'
-      result.hasButton ||= tagName === 'button' || (tagName === 'input' && elem.type.toLowerCase() === 'button')
-
+      result.hasTextbox ||= tagName === 'input' && elem.type?.toLowerCase() === 'text'
+      result.hasButton ||= tagName === 'button' || (tagName === 'input' && elem.type?.toLowerCase() === 'button')
       // Evaluation of buttons used for commands is not yet supported and will be ignored for dead click detection
-      if (tagName === 'button') {
-        result.ignoreDeadClick ||= Object.values(elem.attributes).some(x => x.nodeName === 'command')
-      }
-
+      result.ignoreDeadClick ||= tagName === 'button' && Object.values(elem.attributes).some(x => x.nodeName === 'command')
       result.hasInteractiveElems ||= isInteractiveElement(elem)
+
       pathSelector = selector
       elem = elem.parentNode
     }

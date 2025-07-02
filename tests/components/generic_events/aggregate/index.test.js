@@ -316,15 +316,15 @@ describe('sub-features', () => {
     const removeStaleErrorSpy = jest.spyOn(genericEventsAggregate, 'removeStaleErrors')
     const target = document.createElement('button')
     target.id = 'myBtn'
-    const clickEvent1 = { timeStamp: 100, type: 'click', target }
-    const clickEvent2 = { timeStamp: 200, type: 'click', target }
-    const clickEvent3 = { timeStamp: 300, type: 'click', target }
-    genericEventsAggregate.ee.emit('ua', [clickEvent1])
-    genericEventsAggregate.ee.emit('ua-click-err', [clickEvent1])
-    genericEventsAggregate.ee.emit('ua', [clickEvent2])
-    genericEventsAggregate.ee.emit('ua-click-err', [clickEvent2])
-    genericEventsAggregate.ee.emit('ua', [clickEvent3])
-    genericEventsAggregate.ee.emit('ua-click-err', [clickEvent3])
+
+    Array.of(
+      { timeStamp: 100, type: 'click', target },
+      { timeStamp: 200, type: 'click', target },
+      { timeStamp: 300, type: 'click', target }
+    ).forEach(event => {
+      genericEventsAggregate.ee.emit('ua', [event])
+      genericEventsAggregate.ee.emit('ua-click-err', [event])
+    })
 
     // blur event to trigger aggregation to stop and add to harvest buffer
     genericEventsAggregate.ee.emit('ua', [{ timeStamp: 1000, type: 'blur', target: window }])

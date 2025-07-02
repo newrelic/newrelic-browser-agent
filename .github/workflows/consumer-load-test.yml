@@ -6,10 +6,6 @@ permissions:
 on:
   workflow_dispatch:
     inputs:
-      minutes:
-        description: 'Timeout in minutes'
-        required: false
-        default: '60'
       license-key:
         description: 'License key for the test'
         required: true
@@ -19,6 +15,16 @@ on:
       entity-guid:
         description: 'Entity GUID for the test'
         required: true
+      minutes:
+        description: 'Minutes to Run'
+        required: false
+        default: '60'
+      page-view:
+        description: 'Capture PageView events'
+        required: false
+      session-replay:
+        description: 'Capture SessionReplay events'
+        required: false
 
 jobs:
   generate-matrix:
@@ -49,3 +55,5 @@ jobs:
           license-key: ${{ github.event.inputs.license-key }}
           app-id: ${{ github.event.inputs.app-id }}
           entity-guid: ${{ github.event.inputs.entity-guid }}
+          page-view: ${{ github.event.inputs.page-view }}
+          session-replay: ${{ github.event.inputs.session-replay }}

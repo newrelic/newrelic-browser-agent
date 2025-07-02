@@ -13,7 +13,7 @@ export function isInteractiveElement (elem) {
  * Checks if the element is an interactive link.
  * A link is considered interactive if it has an `href` attribute, an `onclick` handler, or any click event listener(s).
  * @param {HTMLElement} elem
- * @param {tagName} string
+ * @param {string} tagName
  * @returns {boolean} true only if the element is an interactive link
  */
 function isInteractiveLink (elem, tagName) {
@@ -25,7 +25,7 @@ function isInteractiveLink (elem, tagName) {
  * Checks if the element is an interactive textbox.
  * A textbox is considered interactive if it is not read-only.
  * @param {HTMLElement} elem
- * @param {tagName} string
+ * @param {string} tagName
  * @returns {boolean} true only if the element is an interactive textbox
  */
 function isInteractiveTextbox (elem, tagName) {
@@ -40,7 +40,7 @@ function isInteractiveTextbox (elem, tagName) {
  * - has any click event listener(s)
  *
  * @param {HTMLElement} elem
- * @param {tagName} string
+ * @param {string} tagName
  * @returns {boolean} true only if the element is an interactive button
  */
 function isInteractiveButton (elem, tagName) {

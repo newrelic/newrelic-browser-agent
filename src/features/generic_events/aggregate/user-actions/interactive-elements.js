@@ -64,7 +64,10 @@ function isInteractiveTextbox (elem, tagName) {
 
 /**
  * Checks if the element is an interactive button.
- * A link is considered interactive if it is part of a form or popover, has an `onclick` handler, or any click event listener(s).
+ * A link is considered interactive if
+ * - it is part of a form or popover,
+ * - has an `onclick` handler, or
+ * - has any click event listener(s)
  *
  * @param {HTMLElement} elem
  * @param {tagName} string

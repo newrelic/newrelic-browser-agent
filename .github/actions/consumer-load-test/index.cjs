@@ -21,49 +21,52 @@ async function sendRequest(instanceMarker, payloadsSentInJob = 0) {
     const enduserId = 'faker-' + timeNow + '@newrelic.com';
     const offset = Math.floor(Math.random() * 10000) + 40000; // random offset between 40s and 50s
 
-    /** PAGEVIEW HARVEST */
-    await harvestPageView({
-      licenseKey,
-      appId,
-      agentVersion,
-      session,
-      ptid,
-      timeNow,
-      offset,
-      enduserId
-    })
-    
-    /** SNAPSHOT HARVEST */
-    await harvestSessionReplay({
-      licenseKey,
-      appId,
-      timeNow,
-      offset,
-      harvestCount,
-      isSnapshot: true,
-      entityGuid,
-      session,
-      agentVersion,
-      ptid,
-      enduserId
-    })
+    try {
+      /** PAGEVIEW HARVEST */
+      await harvestPageView({
+        licenseKey,
+        appId,
+        agentVersion,
+        session,
+        ptid,
+        timeNow,
+        offset,
+        enduserId
+      })
 
-    /** MUTATION HARVEST */
-    await harvestSessionReplay({
-      licenseKey,
-      appId,
-      timeNow,
-      offset,
-      harvestCount: ++harvestCount,
-      isSnapshot: false,
-      entityGuid,
-      session,
-      agentVersion,
-      ptid,
-      enduserId
-    })
-    
-    console.log("payloads (1 PVE + 2 SR) sent: ", ++payloadsSent, ' ||| payloads per second: ', (payloadsSent / ((performance.now() - start) / 1000)).toFixed(2));
+      /** SNAPSHOT HARVEST */
+      await harvestSessionReplay({
+        licenseKey,
+        appId,
+        timeNow,
+        offset,
+        harvestCount,
+        isSnapshot: true,
+        entityGuid,
+        session,
+        agentVersion,
+        ptid,
+        enduserId
+      })
+
+      /** MUTATION HARVEST */
+      await harvestSessionReplay({
+        licenseKey,
+        appId,
+        timeNow,
+        offset,
+        harvestCount: ++harvestCount,
+        isSnapshot: false,
+        entityGuid,
+        session,
+        agentVersion,
+        ptid,
+        enduserId
+      })
+      console.log("payloads (1 PVE + 2 SR) sent: ", ++payloadsSent, ' ||| payloads per second: ', (payloadsSent / ((performance.now() - start) / 1000)).toFixed(2));
+    } catch (err) {
+      console.error(`Error in instance ${instanceMarker}:`, err);
+    }
 
     // stage with a timeout to avoid blocking the event loop and creating a memory leak
     setTimeout(async () => {

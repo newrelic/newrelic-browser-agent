@@ -20,6 +20,9 @@ inputs:
     description: 'Capture SessionReplay events'
     required: false
     type: boolean
+  minutes:
+    description: 'Minutes to Run'
+    required: false
 
 runs:
   using: "composite"
@@ -36,4 +39,5 @@ runs:
           --entity-guid ${{ inputs.entity-guid }} \
           --page-view ${{ inputs.page-view }} \
           --session-replay ${{ inputs.session-replay }}
+          --minutes ${{ inputs.minutes }}
       shell: bash

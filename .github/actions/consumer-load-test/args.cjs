@@ -22,6 +22,10 @@ const args = yargs(hideBin(process.argv))
   .describe('session-replay', 'harvest (2) session events for every iteration')
   .default('session-replay', false)
 
+  .number('minutes')
+  .describe('minutes', 'Number of minutes to run the load test')
+  .default('minutes', 60)
+
   .demandOption(['license-key', 'app-id', 'entity-guid'], 'Please provide the required options: license-key, app-id, and entity-guid')
   .argv
 

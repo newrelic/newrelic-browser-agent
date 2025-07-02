@@ -19,7 +19,8 @@ module.exports = async function ({
     entityGuid,
     session,
     ptid,
-    agentVersion
+    agentVersion,
+    payloadMetadata = { payloadsSentInJob: 0 }
 }) {
     const payloadBodyPath = path.resolve(__dirname, (isSnapshot ? './snapshot-body.txt' : './mutation-body.txt'));
     const body = await fs.promises.readFile(payloadBodyPath, 'utf8')
@@ -63,6 +64,9 @@ module.exports = async function ({
         body
     });
     if (!response.ok) console.log('harvest failed', response.status, response.statusText);
+    else {
+    payloadMetadata.payloadsSentInJob++
+  }
 
     return response
 }

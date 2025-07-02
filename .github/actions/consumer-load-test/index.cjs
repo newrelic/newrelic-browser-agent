@@ -7,7 +7,7 @@ let concurrent = 0 // increments to 5
 
 const start = performance.now()
 
-async function sendRequest(instanceMarker, payloadsSentInJob = 0) {
+async function sendRequest(instanceMarker, payloadMetadata = {payloadsSentInJob: 0}) {
   return new Promise(async (resolve, reject) => {
     const appId = args.appId
     const agentVersion = '0.0.1'
@@ -31,7 +31,8 @@ async function sendRequest(instanceMarker, payloadsSentInJob = 0) {
         ptid,
         timeNow,
         offset,
-        enduserId
+        enduserId,
+        payloadMetadata
       })
 
       /** SNAPSHOT HARVEST */
@@ -46,7 +47,8 @@ async function sendRequest(instanceMarker, payloadsSentInJob = 0) {
         session,
         agentVersion,
         ptid,
-        enduserId
+        enduserId,
+        payloadMetadata
       })
 
       /** MUTATION HARVEST */
@@ -61,17 +63,24 @@ async function sendRequest(instanceMarker, payloadsSentInJob = 0) {
         session,
         agentVersion,
         ptid,
-        enduserId
-      })      
+        enduserId,
+        payloadMetadata
+      }) 
+      
+      if (!payloadMetadata.payloadsSentInJob) throw 'No payloads sent in this job, something went wrong! Check the feature settings'
 
-      console.log("payloads (1 PVE + 2 SR) sent: ", ++payloadsSent, ' ||| payloads per second: ', (payloadsSent / ((performance.now() - start) / 1000)).toFixed(2));
+      console.log("payloads sent: ", ++payloadsSent, ' ||| payloads per second: ', (payloadsSent / ((performance.now() - start) / 1000)).toFixed(3));
     } catch (err) {
       console.error(`Error in instance ${instanceMarker}:`, err);
     }
 
     // stage with a timeout to avoid blocking the event loop and creating a memory leak
     setTimeout(async () => {
-      await sendRequest(instanceMarker, payloadsSentInJob)
+      if (!payloadMetadata.payloadsSentInJob || performance.now() - start > (args.minutes * 60 * 1000)) {
+        console.log(`Instance ${instanceMarker} completed after ${((performance.now() - start) / 1000).toFixed(3)} seconds`);
+        return resolve();
+      }
+      await sendRequest(instanceMarker, payloadMetadata)
       resolve()
     }, 1)
 
@@ -79,16 +88,16 @@ async function sendRequest(instanceMarker, payloadsSentInJob = 0) {
 }
 
 const fetches = []
-while (++concurrent < 5) fetches.push(
+while (concurrent++ < 5) fetches.push(
   sendRequest(concurrent).catch(err => {
     console.error(err);
   })
 )
 
-console.log(`Spawned ${concurrent} concurrent threads`);
+console.log(`Spawned ${concurrent} concurrent threads. Running for ${args.minutes} minutes.`);
 Promise.all(fetches).then(() => {
   const end = performance.now()
-  const seconds = ((end - start) / 1000).toFixed(2);
+  const seconds = ((end - start) / 1000).toFixed(3);
   console.log(`All requests completed in ${seconds} seconds.`);
   console.log(payloadsSent / seconds + ' payloads per second');
 }).catch(err => {

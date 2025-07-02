@@ -59,3 +59,4 @@ jobs:
           entity-guid: ${{ github.event.inputs.entity-guid }}
           page-view: ${{ github.event.inputs.page-view }}
           session-replay: ${{ github.event.inputs.session-replay }}
+          minutes: ${{ fromJSON(github.event.inputs.minutes) }}

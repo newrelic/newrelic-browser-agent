@@ -13,7 +13,8 @@ module.exports = async function ({
   ptid,
   timeNow,
   offset,
-  enduserId
+  enduserId,
+  payloadMetadata = { payloadsSentInJob: 0 }
 }) {
   const request = new URL(`https://staging-bam.nr-data.net/1/${licenseKey}`); // parameterize this later
   request.searchParams.set('a', appId);
@@ -43,6 +44,9 @@ module.exports = async function ({
     body: JSON.stringify({ ja: { 'enduser.id': enduserId } })
   });
   if (!response.ok) console.log('harvest failed', response.status, response.statusText);
+  else {
+    payloadMetadata.payloadsSentInJob++
+  }
 
   return response
 }

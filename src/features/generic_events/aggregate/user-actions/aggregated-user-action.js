@@ -24,7 +24,7 @@ export class AggregatedUserAction {
    *  - Will determine if a rage click was observed as part of the aggregation
    *  - Will determine if a dead click has occurred
    * @param {Event} evt
-   * @param {Object} selectorInfo
+   * @param {SelectorInfo} selectorInfo
    * @returns {void}
    */
   aggregate (evt, selectorInfo = {}) {
@@ -50,7 +50,7 @@ export class AggregatedUserAction {
    * - clicking on a link that is not interactive = a dead click.
    * - clicking on a span inside a non-interactive link = a dead click.
    * - clicking on a standalone span = not a dead click.
-   * @param {Object} selectorInfo
+   * @param {SelectorInfo} selectorInfo
    * @returns {boolean}
    */
   isDeadClick (selectorInfo = {}) {

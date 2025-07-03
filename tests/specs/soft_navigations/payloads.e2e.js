@@ -27,7 +27,7 @@ describe('attribution tests', () => {
           await browser.testHandle.assetURL('soft_navigations/action-text.html', configWithDenyList)
         ).then(() => browser.waitForAgentLoad())
       ])
-      const documentReferrer = await browser.execute(() => document.referrer || null)
+      const documentReferrer = await browser.execute(() => document.referrer || undefined)
       const ipl = interactionHarvests[0].request.body[0]
 
       expect(ipl.trigger).toEqual('initialPageLoad')
@@ -55,7 +55,7 @@ describe('attribution tests', () => {
           await browser.testHandle.assetURL('soft_navigations/action-text.html', configWithDenyList)
         ).then(() => browser.waitForAgentLoad())
       ])
-      const documentReferrer = await browser.execute(() => document.referrer || null)
+      const documentReferrer = await browser.execute(() => document.referrer || undefined)
       const ipl = interactionHarvests[0].request.body[0]
 
       expect(ipl.trigger).toEqual('initialPageLoad')
@@ -84,7 +84,7 @@ describe('attribution tests', () => {
           await browser.testHandle.assetURL('soft_navigations/action-text.html', configWithDenyList)
         ).then(() => browser.waitForAgentLoad())
       ])
-      const documentReferrer = await browser.execute(() => document.referrer || null)
+      const documentReferrer = await browser.execute(() => document.referrer || undefined)
       const ipl = interactionHarvests[0].request.body[0]
 
       expect(ipl.trigger).toEqual('initialPageLoad')
@@ -113,7 +113,7 @@ describe('attribution tests', () => {
           await browser.testHandle.assetURL('soft_navigations/action-text.html', configWithDenyList)
         ).then(() => browser.waitForAgentLoad())
       ])
-      const documentReferrer = await browser.execute(() => document.referrer || null)
+      const documentReferrer = await browser.execute(() => document.referrer || undefined)
       const ipl = interactionHarvests[0].request.body[0]
 
       expect(ipl.trigger).toEqual('initialPageLoad')
@@ -143,7 +143,7 @@ describe('attribution tests', () => {
           .then(() => $('body').click())
       ])
 
-      const documentReferrer = await browser.execute(() => document.referrer || null)
+      const documentReferrer = await browser.execute(() => document.referrer || undefined)
 
       const [{ request: { body: [ipl] } }, { request: { body: [rc] } }] = interactionHarvests
 

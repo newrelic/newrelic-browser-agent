@@ -27,7 +27,7 @@ describe('attribution tests', () => {
           .then(() => $('#one').click())
       ])
 
-      const documentReferrer = await browser.execute(() => document.referrer || null)
+      const documentReferrer = await browser.execute(() => document.referrer || undefined)
       const interactionEvents = JSONPath({ path: '$.[*].request.body.[?(!!@ && @.type===\'interaction\')]', json: interactionHarvests })
       expect(interactionEvents.length).toEqual(2)
 
@@ -54,7 +54,7 @@ describe('attribution tests', () => {
           .then(() => $('#two').click())
       ])
 
-      const documentReferrer = await browser.execute(() => document.referrer || null)
+      const documentReferrer = await browser.execute(() => document.referrer || undefined)
       const interactionEvents = JSONPath({ path: '$.[*].request.body.[?(!!@ && @.type===\'interaction\')]', json: interactionHarvests })
       expect(interactionEvents.length).toEqual(2)
 
@@ -82,7 +82,7 @@ describe('attribution tests', () => {
           .then(() => $('#three').click())
       ])
 
-      const documentReferrer = await browser.execute(() => document.referrer || null)
+      const documentReferrer = await browser.execute(() => document.referrer || undefined)
       const interactionEvents = JSONPath({ path: '$.[*].request.body.[?(!!@ && @.type===\'interaction\')]', json: interactionHarvests })
       expect(interactionEvents.length).toEqual(2)
 
@@ -110,7 +110,7 @@ describe('attribution tests', () => {
           .then(() => $('body').click())
       ])
 
-      const documentReferrer = await browser.execute(() => document.referrer || null)
+      const documentReferrer = await browser.execute(() => document.referrer || undefined)
       const interactionEvents = JSONPath({ path: '$.[*].request.body.[?(!!@ && @.type===\'interaction\')]', json: interactionHarvests })
       expect(interactionEvents.length).toEqual(2)
 
@@ -137,7 +137,7 @@ describe('attribution tests', () => {
       ])
       const receiptTime = Date.now()
 
-      const documentReferrer = await browser.execute(() => document.referrer || null)
+      const documentReferrer = await browser.execute(() => document.referrer || undefined)
       const interactionEvents = JSONPath({ path: '$.[*].request.body.[?(!!@ && @.type===\'interaction\')]', json: interactionHarvests })
       expect(interactionEvents.length).toEqual(2)
 
@@ -187,7 +187,7 @@ describe('attribution tests', () => {
       ])
       const receiptTime = Date.now()
 
-      const documentReferrer = await browser.execute(() => document.referrer || null)
+      const documentReferrer = await browser.execute(() => document.referrer || undefined)
       const interactionEvents = JSONPath({ path: '$.[*].request.body.[?(!!@ && @.type===\'interaction\')]', json: interactionHarvests })
       expect(interactionEvents.length).toEqual(2)
 
@@ -235,7 +235,7 @@ describe('attribution tests', () => {
           .then(() => $('body').click())
       ])
 
-      const documentReferrer = await browser.execute(() => document.referrer || null)
+      const documentReferrer = await browser.execute(() => document.referrer || undefined)
       const [{ request: { body: [ipl] } }, { request: { body: [rc] } }] = interactionHarvests
 
       expect(ipl.trigger).toEqual('initialPageLoad')

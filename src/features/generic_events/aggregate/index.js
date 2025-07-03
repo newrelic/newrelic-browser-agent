@@ -93,7 +93,7 @@ export class Aggregate extends AggregateBase {
                   return acc
                 }, {})),
                 ...aggregatedUserAction.nearestTargetFields,
-                ...(this.#runUserFrustrations && aggregatedUserAction.deadClick && { deadClick: aggregatedUserAction.deadClick }),
+                ...(this.#runUserFrustrations && aggregatedUserAction.deadClick && { deadClick: true }),
                 ...(this.#runUserFrustrations && aggregatedUserAction.isErrorClick(this.#clickErrorEvents) && { errorClick: true })
               }
               this.addEvent(userActionEvent)

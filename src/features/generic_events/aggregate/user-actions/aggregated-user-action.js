@@ -30,7 +30,7 @@ export class AggregatedUserAction {
    */
   aggregate (evt, selectorInfo = {}) {
     this.count++
-    this.events.push(evt)
+    if (this.hasInteractiveElems && evt.type === 'click') this.events.push(evt)
     this.relativeMs.push(Math.floor(evt.timeStamp - this.originMs))
     if (this.isRageClick()) this.rageClick = true
     this.deadClick ||= this.isDeadClick(selectorInfo)
@@ -42,7 +42,7 @@ export class AggregatedUserAction {
    */
   isRageClick () {
     const len = this.relativeMs.length
-    return (this.events[0]?.type === 'click' && len >= RAGE_CLICK_THRESHOLD_EVENTS && this.relativeMs[len - 1] - this.relativeMs[len - RAGE_CLICK_THRESHOLD_EVENTS] < RAGE_CLICK_THRESHOLD_MS)
+    return (this.events[0].type === 'click' && len >= RAGE_CLICK_THRESHOLD_EVENTS && this.relativeMs[len - 1] - this.relativeMs[len - RAGE_CLICK_THRESHOLD_EVENTS] < RAGE_CLICK_THRESHOLD_MS)
   }
 
   /**
@@ -57,7 +57,7 @@ export class AggregatedUserAction {
    */
   isDeadClick (selectorInfo = {}) {
     const { hasInteractiveElems, hasButton, hasLink, hasTextbox, ignoreDeadClick } = selectorInfo
-    return this.events[0]?.type === 'click' && !hasInteractiveElems && (hasButton || hasLink || hasTextbox) && !ignoreDeadClick
+    return this.events[0].type === 'click' && !hasInteractiveElems && (hasButton || hasLink || hasTextbox) && !ignoreDeadClick
   }
 
   isErrorClick (clickErrorEvents = new Set()) {

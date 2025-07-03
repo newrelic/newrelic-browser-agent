@@ -315,6 +315,8 @@ describe('sub-features', () => {
   test('should remove stale errors after user action is buffered', () => {
     const removeStaleErrorSpy = jest.spyOn(genericEventsAggregate, 'removeStaleErrors')
     const target = document.createElement('button')
+    const someForm = document.createElement('form')
+    someForm.appendChild(target)
     target.id = 'myBtn'
 
     Array.of(

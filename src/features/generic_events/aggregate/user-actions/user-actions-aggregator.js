@@ -52,10 +52,10 @@ export class UserActionsAggregator {
  * Will return selectorPath: undefined if no other path can be determined, to force the aggregator to skip aggregation for this event.
  * @param {Event} evt
  * @param {Array<string>} [targetFields=[]] specifies which fields to gather from the nearest element in the path
- * @returns {{ path: (undefined|string), nearestFields: {}, hasInteractiveElems: boolean, hasLink: boolean, hasTextbox: boolean }}
+ * @returns {SelectorInfo}
  */
 function gatherSelectorPathInfo (evt, targetFields) {
-  const result = { path: undefined, nearestFields: {}, hasInteractiveElems: false, hasLink: false, hasTextbox: false }
+  const result = { path: undefined, nearestFields: {}, hasInteractiveElems: false, hasButton: false, hasLink: false, hasTextbox: false }
   if (OBSERVED_WINDOW_EVENTS.includes(evt.type) || evt.target === window) return { ...result, path: 'window' }
   if (evt.target === document) return { ...result, path: 'document' }
 

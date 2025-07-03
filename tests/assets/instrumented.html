@@ -7,8 +7,15 @@
   <head>
     <title>RUM Unit Test</title>
     {init} {config}
-    <script>NREUM.init.feature_flags = ['soft_nav']</script>
+    <script>
+      NREUM.init.feature_flags = ["soft_nav"];
+      NREUM.info.licenseKey = "NRBR-2863e835bc2f644947b";
+      NREUM.info.applicationID = "241614193";
+      NREUM.info.errorBeacon = "staging-bam.nr-data.net";
+    </script>
     {loader}
   </head>
-  <body>Instrumented</body>
+  <body>
+    Instrumented
+  </body>
 </html>

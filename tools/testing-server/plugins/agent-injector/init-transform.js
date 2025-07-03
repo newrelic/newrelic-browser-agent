@@ -35,7 +35,7 @@ function getInitContent (request, reply, testServer) {
 
   initJSON = initJSON.replace(/"new RegExp\((.*?)\)"/g, 'new RegExp($1)')
 
-  return `window.NREUM||(NREUM={});NREUM.init=${initJSON};NREUM.init.ssl=false;`
+  return `window.NREUM||(NREUM={});NREUM.init=${initJSON};NREUM.init.ssl=true;`
 }
 
 /**

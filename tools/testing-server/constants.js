@@ -80,7 +80,7 @@ module.exports.defaultInitBlock = {
   session: { expiresMs: 14400000, inactiveMs: 1800000 },
   session_replay: { enabled: false, sampling_rate: 0, error_sampling_rate: 0, autoStart },
   session_trace: enabledFeature,
-  ssl: false,
+  ssl: true,
   soft_navigations: enabledFeature,
   spa: enabledFeature,
   user_actions: { enabled: true, elementAttributes: ['id', 'className', 'tagName', 'type'] }

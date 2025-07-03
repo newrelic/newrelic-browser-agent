@@ -4,6 +4,39 @@
     {
       "changes": [
         {
+          "type": "feat",
+          "sha": "c1d0a564e645dcc02b747cd0b9035084b665747f",
+          "message": "Add \"long tasks\" internal message",
+          "issues": [
+            "1506"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "f4733508dc9911dff890f0f535f5eef0c2641fd1",
+          "message": "Address issue keeping distributed traces from being disabled",
+          "issues": [
+            "1520"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "8413c59fedc2d1505056787dd0ac9149ca46991d",
+          "message": "Emit SM on rum response invalid timestamps",
+          "issues": [
+            "1518"
+          ]
+        }
+      ],
+      "version": "1.293.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "4af4aef3-1fa0-43a1-8ba0-289e21341419",
+      "createTime": "2025-07-01T15:41:26.362Z"
+    },
+    {
+      "changes": [
+        {
           "type": "fix",
           "sha": "969f634f4d22f112f3aba2fc2e74d6959dafbae5",
           "message": "fix custom attribute race condition precedence",
@@ -3016,5 +3049,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2025-06-26T13:30:07.324Z"
+  "updateTime": "2025-07-01T15:41:26.362Z"
 }

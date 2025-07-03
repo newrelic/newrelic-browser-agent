@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.293.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.292.1...v1.293.0) (2025-07-01)
+
+
+### Features
+
+* Add "long tasks" internal message ([#1506](https://github.com/newrelic/newrelic-browser-agent/issues/1506)) ([c1d0a56](https://github.com/newrelic/newrelic-browser-agent/commit/c1d0a564e645dcc02b747cd0b9035084b665747f))
+* Emit SM on rum response invalid timestamps ([#1518](https://github.com/newrelic/newrelic-browser-agent/issues/1518)) ([8413c59](https://github.com/newrelic/newrelic-browser-agent/commit/8413c59fedc2d1505056787dd0ac9149ca46991d))
+
+
+### Bug Fixes
+
+* Address issue keeping distributed traces from being disabled ([#1520](https://github.com/newrelic/newrelic-browser-agent/issues/1520)) ([f473350](https://github.com/newrelic/newrelic-browser-agent/commit/f4733508dc9911dff890f0f535f5eef0c2641fd1))
+
 ## [1.292.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.292.0...v1.292.1) (2025-06-26)
 
 

@@ -38,6 +38,6 @@ test('InitialPageLoad has correct oldURL', () => {
     runtime: { obfuscator: new Obfuscator({ init: { obfuscate: [] } }) }
   })
 
-  expect(ipl.oldURL).toBe(document.referrer || '')
+  expect(ipl.oldURL).toBe(document.referrer || undefined)
   expect(ipl.oldURL).not.toEqual(ipl.newURL)
 })

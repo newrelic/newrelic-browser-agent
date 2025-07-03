@@ -4,39 +4,6 @@ const loaderTypes = ['full', 'spa'] // 'rum' is excluded as UserActions is not s
 
 describe('User Frustrations - Dead Clicks', () => {
   loaderTypes.forEach(loaderType => {
-    it(`should not decorate dead clicks on non-interactive elements for ${loaderType} loader`, async () => {
-      const [insightsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
-        { test: testInsRequest }
-      ])
-      await browser.url(await browser.testHandle.assetURL('user-frustrations/instrumented-dead-clicks.html', { loader: loaderType }))
-        .then(() => browser.waitForAgentLoad())
-
-      await browser.execute(function () {
-        // [0] - div
-        document.getElementById('test-area').click()
-        // [1] - span with no click handler
-        document.getElementById('do-nothing-span').click()
-
-        // end previous user action
-        document.getElementById('test-area').click()
-      })
-
-      const [insightsHarvest] = await insightsCapture.waitForResult({ timeout: 10000 })
-      const actuals = insightsHarvest.request.body.ins.filter(x => x.action === 'click')
-      expect(actuals[0]).toMatchObject(expect.objectContaining({
-        eventType: 'UserAction',
-        targetTag: 'DIV',
-        targetId: 'test-area'
-      }))
-      expect(actuals[0]).not.toHaveProperty('deadClick')
-
-      expect(actuals[1]).toMatchObject(expect.objectContaining({
-        eventType: 'UserAction',
-        targetTag: 'SPAN',
-        targetId: 'do-nothing-span'
-      }))
-      expect(actuals[1]).not.toHaveProperty('deadClick')
-    })
     it(`should correctly assess dead clicks on links for ${loaderType} loader`, async () => {
       const [insightsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
         { test: testInsRequest }
@@ -114,6 +81,40 @@ describe('User Frustrations - Dead Clicks', () => {
         deadClick: true
       }))
     })
+  })
+
+  it('should not decorate dead clicks on non-interactive elements', async () => {
+    const [insightsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+      { test: testInsRequest }
+    ])
+    await browser.url(await browser.testHandle.assetURL('user-frustrations/instrumented-dead-clicks.html'))
+      .then(() => browser.waitForAgentLoad())
+
+    await browser.execute(function () {
+      // [0] - div
+      document.getElementById('test-area').click()
+      // [1] - span with no click handler
+      document.getElementById('do-nothing-span').click()
+
+      // end previous user action
+      document.getElementById('test-area').click()
+    })
+
+    const [insightsHarvest] = await insightsCapture.waitForResult({ timeout: 10000 })
+    const actuals = insightsHarvest.request.body.ins.filter(x => x.action === 'click')
+    expect(actuals[0]).toMatchObject(expect.objectContaining({
+      eventType: 'UserAction',
+      targetTag: 'DIV',
+      targetId: 'test-area'
+    }))
+    expect(actuals[0]).not.toHaveProperty('deadClick')
+
+    expect(actuals[1]).toMatchObject(expect.objectContaining({
+      eventType: 'UserAction',
+      targetTag: 'SPAN',
+      targetId: 'do-nothing-span'
+    }))
+    expect(actuals[1]).not.toHaveProperty('deadClick')
   })
 
   it('should correctly assess dead clicks on textboxes', async () => {

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2025 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html lang="en">
+  <head>
+    <title>RUM - Dead Clicks</title>
+    {init} {config}
+    <script>
+      NREUM.init.feature_flags = ['user_frustrations']
+      // disable cookies to help e2e test events are wrapped in generic events instrument phase
+      NREUM.init.privacy.cookies_enabled = false
+      localStorage.clear()
+    </script>
+    {loader}
+    <style>
+      a {
+        color: blue;
+        cursor: pointer;
+        text-decoration: underline;
+      }
+      .non-interactive-element {
+        color: red;
+      }
+      .example-container {
+        border: 10px solid black;
+        border-radius: 2em;
+        padding: 10px;
+        margin-bottom: 1em;
+        background-color: #BDF7D7;
+
+        h2 {
+          margin-top: 0.5em;
+        }
+      }
+      .link-examples {
+        display: flex;
+        gap: 0.5em;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="test-area">
+      <h1>RUM - Error Clicks</h1>
+      <p>This page is used to test error clicks instrumentation.</p>
+      <div class="example-container">
+        <h2>Buttons</h2>
+        <div>
+          <p>Button with a click event handler, added via `addEventListener`.
+            <button id="button-with-listener">Button</button>
+            <button id="button-with-listener-error">Button w/ error</button>
+            <script>
+              document.getElementById('button-with-listener').addEventListener('click', function() {
+                console.log('Button clicked, no dead click event should be recorded.');
+              });
+              document.getElementById('button-with-listener-error').addEventListener('click', function() {
+                console.log('Button clicked, no dead click event should be recorded.');
+                throw new Error('This is a test error');
+              });
+            </script>
+          </p>
+
+          <p>Button with a click event handler, added via `onclick`.
+            <button id="button-with-onclick" onclick="console.log('Button clicked, no dead click event should be recorded.')">Button</button>
+            <button id="button-with-onclick-error" onclick="console.log('Button clicked, no dead click event should be recorded.'); throw new Error('Test error')">Button w/ onclick error</button>
+          </p>
+
+          <p>Button with listener + span child
+            <button id="button-with-listener-and-span-child">
+              <span id="span-inside-button-with-listener">Button</span>
+            </button>
+            <button id="button-with-listener-error-and-span-child">
+              <span id="span-inside-button-with-listener-error">Button w/ error</span>
+            </button>
+            <script>
+              document.getElementById('button-with-listener-and-span-child').addEventListener('click', function() {
+                console.log('button clicked, no dead click event should be recorded.');
+              });
+              document.getElementById('button-with-listener-error-and-span-child').addEventListener('click', function() {
+                console.log('button clicked, no dead click event should be recorded.');
+                throw new Error('This is a test error');
+              });
+            </script>
+          </p>
+
+          <p>Button with onclick listener + span child
+            <button id="button-with-onclick-and-span-child" onclick="console.log('Button clicked, no dead click event should be recorded.')">
+              <span id="span-inside-button-with-onclick">Button</span>
+            </button>
+            <button id="button-with-onclick-error-and-span-child" onclick="console.log('Button clicked, no dead click event should be recorded.'); throw new Error('Test error')">
+              <span id="span-inside-button-with-onclick-error">Button w/ onclick error</span>
+            </button>
+          </p>
+        </div>
+      </div>
+
+      <div class="example-container">
+        <h2>Input, type = "button"</h2>
+        <div>
+          <p>Input button with a click event handler, added via `addEventListener`.
+            <input type="button" id="input-button-with-listener" value="Button"/>
+            <input type="button" id="input-button-with-listener-error" value="Button w/ error"/>
+            <script>
+              document.getElementById('input-button-with-listener').addEventListener('click', function() {
+                console.log('Button clicked, no dead click event should be recorded.');
+              });
+              document.getElementById('input-button-with-listener-error').addEventListener('click', function() {
+                console.log('Button clicked, no dead click event should be recorded.');
+                throw new Error('This is a test error');
+              });
+            </script>
+          </p>
+
+          <p>Input button with a click event handler, added via `onclick`.
+            <input type="button" id="input-button-with-onclick" onclick="console.log('Button clicked, no dead click event should be recorded.')" value = "Button"/>
+            <input type="button" id="input-button-with-onclick-error" onclick="console.log('Button clicked, no dead click event should be recorded.'); throw new Error('Test error')" value = "Button w/ onclick error"/>
+          </p>
+        </div>
+      </div>
+
+      <div class="example-container">
+        <h2>Links</h2>
+        <div>
+          <p class="link-examples">Link with a click event handler, added via `addEventListener`=>
+            <a id="link-with-listener">Link,</a>
+            <a id="link-with-listener-error">Link w/ error</a>
+            <script>
+              document.getElementById('link-with-listener').addEventListener('click', function() {
+                console.log('Link clicked, no dead click event should be recorded.');
+              });
+              document.getElementById('link-with-listener-error').addEventListener('click', function() {
+                console.log('Link clicked, no dead click event should be recorded.');
+                throw new Error('This is a test error');
+              });
+            </script>
+          </p>
+
+          <p class="link-examples">Link with a click event handler, added via `onclick` =>
+            <a id="link-with-onclick" onclick="console.log('Click')">Link,</a>
+            <a id="link-with-onclick-error" onclick="console.log('Click'); throw new Error('Test error')">Link w/ error</a>
+          </p>
+
+          <p class="link-examples">Link with a click event handler +  span child =>
+            <a id="link-with-listener-and-span-child">
+              <span id="span-inside-link-with-listener">Link</span>,
+            </a>
+            <a id="link-with-listener-error-and-span-child">
+              <span id="span-inside-link-with-listener-error">Link w/ error</span>
+            </a>
+            <script>
+              document.getElementById('link-with-listener-and-span-child').addEventListener('click', function() {
+                console.log('Link clicked, no dead click event should be recorded.');
+              });
+              document.getElementById('link-with-listener-error-and-span-child').addEventListener('click', function() {
+                console.log('Link clicked, no dead click event should be recorded.');
+                throw new Error('This is a test error');
+              });
+            </script>
+          </p>
+        </div>
+      </div>
+
+      <div class="example-container">
+        <h2>Other Elements</h2>
+        <div>
+          <p>Span with a click event handler, added via `addEventListener` =>
+            <!-- should not be added to listener map -->
+            <span id="span-with-listener-error" class="non-interactive-element">Span w/ error</span>
+            <script>
+              document.getElementById("span-with-listener-error").addEventListener('click', function() {
+                console.log('Span clicked')
+                throw new Error('This is a test error');
+              })
+            </script>
+          </p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

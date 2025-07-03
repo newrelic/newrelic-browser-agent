@@ -20,7 +20,7 @@ describe('UserActionsAggregator', () => {
 
     const output = aggregator.process(evt2)
     expect(output).toBeInstanceOf(AggregatedUserAction)
-    expect(output.event).toEqual(evt) // not evt2, it returns the processed event (evt)
+    expect(output.events[0]).toEqual(evt) // not evt2, it returns the processed event (evt)
     expect(output.count).toEqual(1)
   })
 

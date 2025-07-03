@@ -18,10 +18,15 @@ import { isPureObject } from '../../../common/util/type-check'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
+  #clickErrorEvents
+  #runUserFrustrations
+
   constructor (agentRef) {
     super(agentRef, FEATURE_NAME)
     this.eventsPerHarvest = 1000
     this.referrerUrl = (isBrowserScope && document.referrer) ? cleanURL(document.referrer) : undefined
+    this.#clickErrorEvents = new Set()
+    this.#runUserFrustrations = agentRef.init.feature_flags.includes('user_frustrations')
 
     this.waitForFlags(['ins']).then(([ins]) => {
       if (!ins) {
@@ -68,9 +73,10 @@ export class Aggregate extends AggregateBase {
           try {
             /** The aggregator process only returns an event when it is "done" aggregating -
              * so we still need to validate that an event was given to this method before we try to add */
-            if (aggregatedUserAction?.event) {
-              const { target, timeStamp, type } = aggregatedUserAction.event
-              this.addEvent({
+            if (aggregatedUserAction?.events[0]) {
+              const { target, timeStamp, type } = aggregatedUserAction.events[0]
+              const { timeStamp: lastTimestamp } = aggregatedUserAction.events.at(-1)
+              const userActionEvent = {
                 eventType: 'UserAction',
                 timestamp: this.toEpoch(timeStamp),
                 action: type,
@@ -87,8 +93,12 @@ export class Aggregate extends AggregateBase {
                   return acc
                 }, {})),
                 ...aggregatedUserAction.nearestTargetFields,
-                ...(agentRef.init.feature_flags.includes('user_frustrations') && aggregatedUserAction.deadClick && { deadClick: aggregatedUserAction.deadClick })
-              })
+                ...(this.#runUserFrustrations && aggregatedUserAction.deadClick && { deadClick: true }),
+                ...(this.#runUserFrustrations && aggregatedUserAction.isErrorClick(this.#clickErrorEvents) && { errorClick: true })
+              }
+              this.addEvent(userActionEvent)
+              this.removeStaleErrors(lastTimestamp)
+              this.trackUserActionSupportabilityMetrics(userActionEvent)
 
               /**
                * Returns the original target field name with `target` prepended and camelCased
@@ -120,6 +130,9 @@ export class Aggregate extends AggregateBase {
         registerHandler('ua', (evt) => {
           /** the processor will return the previously aggregated event if it has been completed by processing the current event */
           addUserAction(this.userActionAggregator.process(evt, this.agentRef.init.user_actions.elementAttributes))
+        }, this.featureName, this.ee)
+        registerHandler('ua-click-err', (evt) => {
+          this.#clickErrorEvents.add(evt[0])
         }, this.featureName, this.ee)
       }
 
@@ -317,5 +330,22 @@ export class Aggregate extends AggregateBase {
     if (this.agentRef.init.performance.resources.asset_types?.length !== 0) this.reportSupportabilityMetric(configPerfTag + 'Resources/AssetTypes/Changed')
     if (this.agentRef.init.performance.resources.first_party_domains?.length !== 0) this.reportSupportabilityMetric(configPerfTag + 'Resources/FirstPartyDomains/Changed')
     if (this.agentRef.init.performance.resources.ignore_newrelic === false) this.reportSupportabilityMetric(configPerfTag + 'Resources/IgnoreNewrelic/Changed')
+  }
+
+  trackUserActionSupportabilityMetrics (ua) {
+    if (ua.rageClick) this.reportSupportabilityMetric('UserAction/RageClick/Seen')
+    if (ua.deadClick) this.reportSupportabilityMetric('UserAction/DeadClick/Seen')
+    if (ua.errorClick) this.reportSupportabilityMetric('UserAction/ErrorClick/Seen')
+  }
+
+  removeStaleErrors (timestamp) {
+    if (this.#clickErrorEvents.size === 0 || typeof timestamp !== 'number') return
+    for (const evt of this.#clickErrorEvents) {
+      if (timestamp >= evt.timeStamp) {
+        this.#clickErrorEvents.delete(evt)
+      } else {
+        break
+      }
+    }
   }
 }

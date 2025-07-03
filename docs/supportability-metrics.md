@@ -64,6 +64,11 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 <!--- GenericEvents harvest had too many nodes and sent early --->
 * GenericEvents/Harvest/Max/Seen
 
+### User Actions
+* UserAction/RageClick/Seen
+* UserAction/DeadClick/Seen
+* UserAction/ErrorClick/Seen
+
 ### Session
 <!--- Session has ended due to max time limit reached --->
 * Session/Expired/Seen

@@ -1,0 +1,2952 @@
+[
+  {
+    "type": 3,
+    "data": {
+      "source": 0,
+      "adds": [],
+      "removes": [],
+      "texts": [],
+      "attributes": [
+        {
+          "id": 405,
+          "attributes": {
+            "crossorigin": "anonymous",
+            "_cssText": ".nr1-shared-component-keyboard-shortcuts { outline: var(--nr1--color--interactive--error); }"
+          }
+        }
+      ]
+    },
+    "timestamp": 1750954919590,
+    "__newrelic": {
+      "originalTimestamp": 1750954919494,
+      "correctedTimestamp": 1750954919590,
+      "timestampDiff": -96,
+      "originTime": 1750954917218,
+      "correctedOriginTime": 1750954917314,
+      "originTimeDiff": -96
+    }
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 0,
+      "texts": [],
+      "attributes": [],
+      "removes": [],
+      "adds": [
+        {
+          "parentId": 239,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "data-layer-name": "MODAL",
+              "style": "isolation: isolate; z-index: 10011;"
+            },
+            "childNodes": [],
+            "id": 409
+          }
+        },
+        {
+          "parentId": 409,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {},
+            "childNodes": [],
+            "id": 410
+          }
+        },
+        {
+          "parentId": 111,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-AppLayout"
+            },
+            "childNodes": [],
+            "id": 411
+          }
+        },
+        {
+          "parentId": 411,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "data-layer-name": "GLOBAL_SEARCH",
+              "style": "isolation: isolate; z-index: 40000;"
+            },
+            "childNodes": [],
+            "id": 412
+          }
+        },
+        {
+          "parentId": 412,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {},
+            "childNodes": [],
+            "id": 413
+          }
+        },
+        {
+          "parentId": 4,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "script",
+            "attributes": {
+              "async": "",
+              "crossorigin": "anonymous",
+              "src": "https://staging-one.nr-assets.net/nerdpacks/0594cd56-5d38-441b-87c0-16f39a62292c/det/shared-component-announcements--component~e4bbc2f0.js"
+            },
+            "childNodes": [],
+            "id": 414
+          }
+        },
+        {
+          "parentId": 409,
+          "nextId": 410,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-OuterModal closed hidden"
+            },
+            "childNodes": [],
+            "id": 415
+          }
+        },
+        {
+          "parentId": 415,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-OuterModal-card",
+              "aria-modal": "true",
+              "role": "dialog",
+              "tabindex": "-1"
+            },
+            "childNodes": [],
+            "id": 416
+          }
+        },
+        {
+          "parentId": 415,
+          "nextId": 416,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-OuterModal-overlay"
+            },
+            "childNodes": [],
+            "id": 417
+          }
+        },
+        {
+          "parentId": 416,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "button",
+            "attributes": {
+              "class": "wnd-Button wnd-Spacing wnd-OuterModal-closeButton wnd-Button--small wnd-Button--tertiary wnd-Button--variant-tertiary wnd-Button--icon",
+              "aria-label": "Close modal",
+              "type": "button"
+            },
+            "childNodes": [],
+            "id": 418
+          }
+        },
+        {
+          "parentId": 416,
+          "nextId": 418,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-Modal"
+            },
+            "childNodes": [],
+            "id": 419
+          }
+        },
+        {
+          "parentId": 419,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-InnerModal",
+              "data-boundary-container": "true"
+            },
+            "childNodes": [],
+            "id": 420
+          }
+        },
+        {
+          "parentId": 420,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-InnerModal-content"
+            },
+            "childNodes": [],
+            "id": 421
+          }
+        },
+        {
+          "parentId": 421,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "role": "progressbar",
+              "aria-busy": "true",
+              "aria-label": "Loading",
+              "class": "wnd-Spinner wnd-Spinner--typeCircle wnd-Spacing"
+            },
+            "childNodes": [],
+            "id": 422
+          }
+        },
+        {
+          "parentId": 418,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "span",
+            "attributes": {
+              "class": "wnd-Button-content"
+            },
+            "childNodes": [],
+            "id": 423
+          }
+        },
+        {
+          "parentId": 418,
+          "nextId": 423,
+          "node": {
+            "type": 2,
+            "tagName": "span",
+            "attributes": {
+              "class": "wnd-Icon wnd-Spacing wnd-Button-icon ic-Icon",
+              "style": "font-size: 16px;"
+            },
+            "childNodes": [],
+            "id": 424
+          }
+        },
+        {
+          "parentId": 424,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "svg",
+            "attributes": {
+              "xmlns": "http://www.w3.org/2000/svg",
+              "viewBox": "0 0 16 16",
+              "focusable": "false"
+            },
+            "childNodes": [],
+            "isSVG": true,
+            "id": 425
+          }
+        },
+        {
+          "parentId": 425,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "path",
+            "attributes": {
+              "fill-rule": "evenodd",
+              "d": "M15 1.95L14.05 1 8 7.17 1.95 1 1 1.95 7.17 8 1 14.05l.95.95L8 8.83 14.05 15l.95-.95L8.83 8 15 1.95z",
+              "clip-rule": "evenodd"
+            },
+            "childNodes": [],
+            "isSVG": true,
+            "id": 426
+          }
+        },
+        {
+          "parentId": 111,
+          "nextId": 411,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-BannerManagerTarget wnd-AppLayout-bannerTarget"
+            },
+            "childNodes": [],
+            "id": 427
+          }
+        },
+        {
+          "parentId": 411,
+          "nextId": 412,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-AppLayout-container"
+            },
+            "childNodes": [],
+            "id": 428
+          }
+        },
+        {
+          "parentId": 428,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-AppLayout-main",
+              "data-boundary-container": "true"
+            },
+            "childNodes": [],
+            "id": 429
+          }
+        },
+        {
+          "parentId": 429,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-AppLayout-content",
+              "data-placeholder": "loading attribution info"
+            },
+            "childNodes": [],
+            "id": 430
+          }
+        },
+        {
+          "parentId": 429,
+          "nextId": 430,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-AppLayout-navigation"
+            },
+            "childNodes": [],
+            "id": 431
+          }
+        },
+        {
+          "parentId": 431,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "data-layer-name": "SECOND_NAVIGATION",
+              "style": "isolation: isolate; z-index: 4;"
+            },
+            "childNodes": [],
+            "id": 432
+          }
+        },
+        {
+          "parentId": 431,
+          "nextId": 432,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "data-layer-name": "MAIN_NAVIGATION",
+              "style": "isolation: isolate; z-index: 5;"
+            },
+            "childNodes": [],
+            "id": 433
+          }
+        },
+        {
+          "parentId": 433,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {},
+            "childNodes": [],
+            "id": 434
+          }
+        },
+        {
+          "parentId": 433,
+          "nextId": 434,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "id": "wnd-MainNavigation",
+              "class": "wnd-MainNavigation"
+            },
+            "childNodes": [],
+            "id": 435
+          }
+        },
+        {
+          "parentId": 435,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-MainNavigation-bottom-area"
+            },
+            "childNodes": [],
+            "id": 436
+          }
+        },
+        {
+          "parentId": 435,
+          "nextId": 436,
+          "node": {
+            "type": 2,
+            "tagName": "nav",
+            "attributes": {
+              "class": "wnd-MainNavigationMenu"
+            },
+            "childNodes": [],
+            "id": 437
+          }
+        },
+        {
+          "parentId": 435,
+          "nextId": 437,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-MainNavigation-logo-wrapper"
+            },
+            "childNodes": [],
+            "id": 438
+          }
+        },
+        {
+          "parentId": 438,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "a",
+            "attributes": {
+              "aria-label": "Home",
+              "class": "wnd-Link wnd-Spacing u-unstyledLink wnd-MainNavigation-logo",
+              "href": "https://staging-one.newrelic.com/experience-switch?state=792ba59b-9ee1-2028-c44a-0115fd2148ac"
+            },
+            "childNodes": [],
+            "id": 439
+          }
+        },
+        {
+          "parentId": 439,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "svg",
+            "attributes": {
+              "width": "83",
+              "height": "16",
+              "viewBox": "0 0 83 16",
+              "fill": "none",
+              "xmlns": "http://www.w3.org/2000/svg",
+              "role": "img",
+              "aria-label": "New Relic logo",
+              "class": "wnd-Logo"
+            },
+            "childNodes": [],
+            "isSVG": true,
+            "id": 440
+          }
+        },
+        {
+          "parentId": 440,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "path",
+            "attributes": {
+              "class": "wnd-Logo-text",
+              "d": "M82.01 11.234a.266.266 0 0 0-.284-.263h-.336v.789h.116v-.274h.105l.273.274h.144l-.273-.274a.255.255 0 0 0 .255-.252Zm-.503.136v-.284h.22a.149.149 0 0 1 .117.037.152.152 0 0 1 .051.111c0 .084-.053.136-.169.136h-.22Z"
+            },
+            "childNodes": [],
+            "isSVG": true,
+            "id": 441
+          }
+        },
+        {
+          "parentId": 440,
+          "nextId": 441,
+          "node": {
+            "type": 2,
+            "tagName": "path",
+            "attributes": {
+              "class": "wnd-Logo-text",
+              "d": "M23.367 3.989c-1.491 0-2.198.942-2.198.942h-.078l-.156-.785h-1.807v8.007h1.963v-4.63c0-1.02.704-1.727 1.727-1.727 1.022 0 1.727.705 1.727 1.727v4.63h1.963V7.364c0-2.04-1.335-3.375-3.14-3.375ZM44.534 9.406h-.113l-1.335-5.26H41.09l-1.335 5.26h-.112l-1.335-5.26h-2.041l2.04 8.007h2.391l1.334-5.181h.112l1.335 5.181h2.39l2.04-8.007h-2.04l-1.335 5.26ZM53.92 4.852h-.08l-.156-.704h-1.649v8.006h1.963v-4.63c0-1.02.47-1.491 1.491-1.491h1.007V4.147h-1.168a1.767 1.767 0 0 0-1.409.705ZM60.839 3.989c-2.355 0-4.082 1.727-4.082 4.16 0 2.434 1.63 4.161 4.082 4.161 1.985 0 3.181-1.168 3.68-2.028l-1.802-.642c-.178.326-.897.953-1.878.953-1.145 0-1.962-.716-2.119-1.811h5.965c.056-.258.082-.522.079-.786 0-2.28-1.727-4.007-3.925-4.007ZM58.72 7.443c.236-1.02.942-1.806 2.119-1.806 1.1 0 1.805.785 1.962 1.806H58.72ZM31.845 3.989c-2.355 0-4.082 1.727-4.082 4.16 0 2.434 1.626 4.161 4.082 4.161 1.986 0 3.18-1.168 3.679-2.028l-1.802-.642c-.178.326-.896.953-1.877.953-1.144 0-1.963-.716-2.12-1.811h5.967c.055-.258.081-.522.078-.786 0-2.28-1.727-4.007-3.925-4.007Zm-2.12 3.454c.236-1.02.942-1.806 2.12-1.806 1.1 0 1.806.785 1.963 1.806h-4.083ZM71.625.984h-1.963v1.963h1.963V.984ZM77.041 10.505c-1.178 0-2.12-.942-2.12-2.356 0-1.413.942-2.355 2.12-2.355 1.178 0 1.649.785 1.806 1.256l1.777-.632c-.43-1.118-1.488-2.43-3.583-2.43-2.355 0-4.082 1.728-4.082 4.161 0 2.434 1.727 4.161 4.082 4.161 2.114 0 3.17-1.332 3.593-2.504l-1.787-.636c-.157.55-.628 1.335-1.806 1.335ZM64.981 2.729h1.115v9.424h1.962V.984h-3.077V2.73ZM71.625 4.146h-1.963v8.007h1.963V4.146ZM81.685 10.617a.758.758 0 1 0 .746.757.732.732 0 0 0-.746-.757Zm0 1.398a.641.641 0 1 1 .63-.64.617.617 0 0 1-.63.636v.004Z"
+            },
+            "childNodes": [],
+            "isSVG": true,
+            "id": 442
+          }
+        },
+        {
+          "parentId": 440,
+          "nextId": 442,
+          "node": {
+            "type": 2,
+            "tagName": "path",
+            "attributes": {
+              "class": "wnd-Logo-pathC",
+              "d": "M4.263 9.54v4.922L6.93 16V8L0 4v3.078l4.263 2.461Z"
+            },
+            "childNodes": [],
+            "isSVG": true,
+            "id": 443
+          }
+        },
+        {
+          "parentId": 440,
+          "nextId": 443,
+          "node": {
+            "type": 2,
+            "tagName": "path",
+            "attributes": {
+              "class": "wnd-Logo-pathB",
+              "d": "M11.191 5.539v4.922l-4.262 2.462V16l6.928-4V4l-2.666 1.539Z"
+            },
+            "childNodes": [],
+            "isSVG": true,
+            "id": 444
+          }
+        },
+        {
+          "parentId": 440,
+          "nextId": 444,
+          "node": {
+            "type": 2,
+            "tagName": "path",
+            "attributes": {
+              "class": "wnd-Logo-pathA",
+              "d": "m6.929 3.078 4.262 2.46L13.857 4 6.93 0 0 4l2.665 1.539L6.93 3.078Z"
+            },
+            "childNodes": [],
+            "isSVG": true,
+            "id": 445
+          }
+        },
+        {
+          "parentId": 437,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-Sortable wnd-Sortable--idle"
+            },
+            "childNodes": [],
+            "id": 446
+          }
+        },
+        {
+          "parentId": 436,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-Navigation-toggle-wrapper"
+            },
+            "childNodes": [],
+            "id": 447
+          }
+        },
+        {
+          "parentId": 436,
+          "nextId": 447,
+          "node": {
+            "type": 2,
+            "tagName": "nav",
+            "attributes": {
+              "class": "wnd-UserArea"
+            },
+            "childNodes": [],
+            "id": 448
+          }
+        },
+        {
+          "parentId": 436,
+          "nextId": 448,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-DeleteDropArea",
+              "id": "wnd-DeleteDropArea"
+            },
+            "childNodes": [],
+            "id": 449
+          }
+        },
+        {
+          "parentId": 449,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-DeleteDropArea-border"
+            },
+            "childNodes": [],
+            "id": 450
+          }
+        },
+        {
+          "parentId": 450,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-DeleteDropArea-content"
+            },
+            "childNodes": [],
+            "id": 451
+          }
+        },
+        {
+          "parentId": 451,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-Text wnd-BlockText wnd-BlockText--type-normal wnd-Spacing wnd-DeleteDropArea-text"
+            },
+            "childNodes": [],
+            "id": 452
+          }
+        },
+        {
+          "parentId": 451,
+          "nextId": 452,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-DeleteDropArea-iconCircle"
+            },
+            "childNodes": [],
+            "id": 453
+          }
+        },
+        {
+          "parentId": 453,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "span",
+            "attributes": {
+              "class": "wnd-Icon wnd-Spacing wnd-DeleteDropArea-icon ic-Icon",
+              "style": "font-size: 16px;"
+            },
+            "childNodes": [],
+            "id": 454
+          }
+        },
+        {
+          "parentId": 454,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "svg",
+            "attributes": {
+              "xmlns": "http://www.w3.org/2000/svg",
+              "viewBox": "0 0 16 16",
+              "focusable": "false"
+            },
+            "childNodes": [],
+            "isSVG": true,
+            "id": 455
+          }
+        },
+        {
+          "parentId": 455,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "path",
+            "attributes": {
+              "fill-rule": "evenodd",
+              "d": "M12.492 9h-1.044v-.6l-2.09-2V1H4.134v5.4l-2.09 2V10h6.27v1H7.268v5l-1.045-1v-4H1V8l2.09-2V0h7.313v6l2.09 2v1zm1.672 1.6l.836.8-1.776 1.6L15 14.6l-.836.8-1.671-1.7-1.672 1.7-.836-.8 1.776-1.6-1.776-1.6.836-.8 1.671 1.7 1.672-1.7z",
+              "clip-rule": "evenodd"
+            },
+            "childNodes": [],
+            "isSVG": true,
+            "id": 456
+          }
+        },
+        {
+          "parentId": 452,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "Drop to unpin this capability from the side menu",
+            "id": 457
+          }
+        },
+        {
+          "parentId": 447,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "button",
+            "attributes": {
+              "class": "wnd-Button wnd-Spacing wnd-Navigation-toggle wnd-Button--small wnd-Button--tertiary wnd-Button--variant-secondary wnd-Button--icon",
+              "aria-label": "Collapse Navigation",
+              "aria-controls": "wnd-Navigation",
+              "aria-expanded": "true",
+              "type": "button",
+              "aria-describedby": "tooltip-1"
+            },
+            "childNodes": [],
+            "id": 458
+          }
+        },
+        {
+          "parentId": 458,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "span",
+            "attributes": {
+              "class": "wnd-Button-content"
+            },
+            "childNodes": [],
+            "id": 459
+          }
+        },
+        {
+          "parentId": 458,
+          "nextId": 459,
+          "node": {
+            "type": 2,
+            "tagName": "span",
+            "attributes": {
+              "class": "wnd-Icon wnd-Spacing wnd-Button-icon ic-Icon",
+              "style": "font-size: 16px;"
+            },
+            "childNodes": [],
+            "id": 460
+          }
+        },
+        {
+          "parentId": 460,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "svg",
+            "attributes": {
+              "xmlns": "http://www.w3.org/2000/svg",
+              "viewBox": "0 0 16 16",
+              "focusable": "false"
+            },
+            "childNodes": [],
+            "isSVG": true,
+            "id": 461
+          }
+        },
+        {
+          "parentId": 461,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "path",
+            "attributes": {
+              "fill-rule": "evenodd",
+              "d": "M9.6 13.4L3.8 7.5l5.8-5.9.8.8-5.2 5.1 5.2 5.1-.8.8z",
+              "clip-rule": "evenodd"
+            },
+            "childNodes": [],
+            "isSVG": true,
+            "id": 462
+          }
+        },
+        {
+          "parentId": 432,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {},
+            "childNodes": [],
+            "id": 463
+          }
+        }
+      ]
+    },
+    "timestamp": 1750954919658,
+    "__newrelic": {
+      "originalTimestamp": 1750954919562,
+      "correctedTimestamp": 1750954919658,
+      "timestampDiff": -96,
+      "originTime": 1750954917218,
+      "correctedOriginTime": 1750954917314,
+      "originTimeDiff": -96
+    }
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 0,
+      "texts": [],
+      "attributes": [],
+      "removes": [
+        {
+          "parentId": 447,
+          "id": 458
+        }
+      ],
+      "adds": [
+        {
+          "parentId": 447,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "button",
+            "attributes": {
+              "class": "wnd-Button wnd-Spacing wnd-Navigation-toggle wnd-Button--small wnd-Button--tertiary wnd-Button--variant-secondary wnd-Button--icon",
+              "aria-label": "Collapse Navigation",
+              "aria-controls": "wnd-Navigation",
+              "aria-expanded": "true",
+              "type": "button",
+              "aria-describedby": "tooltip-2"
+            },
+            "childNodes": [],
+            "id": 464
+          }
+        },
+        {
+          "parentId": 464,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "span",
+            "attributes": {
+              "class": "wnd-Button-content"
+            },
+            "childNodes": [],
+            "id": 465
+          }
+        },
+        {
+          "parentId": 464,
+          "nextId": 465,
+          "node": {
+            "type": 2,
+            "tagName": "span",
+            "attributes": {
+              "class": "wnd-Icon wnd-Spacing wnd-Button-icon ic-Icon",
+              "style": "font-size: 16px;"
+            },
+            "childNodes": [],
+            "id": 466
+          }
+        },
+        {
+          "parentId": 466,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "svg",
+            "attributes": {
+              "xmlns": "http://www.w3.org/2000/svg",
+              "viewBox": "0 0 16 16",
+              "focusable": "false"
+            },
+            "childNodes": [],
+            "isSVG": true,
+            "id": 467
+          }
+        },
+        {
+          "parentId": 467,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "path",
+            "attributes": {
+              "fill-rule": "evenodd",
+              "d": "M9.6 13.4L3.8 7.5l5.8-5.9.8.8-5.2 5.1 5.2 5.1-.8.8z",
+              "clip-rule": "evenodd"
+            },
+            "childNodes": [],
+            "isSVG": true,
+            "id": 468
+          }
+        }
+      ]
+    },
+    "timestamp": 1750954919672,
+    "__newrelic": {
+      "originalTimestamp": 1750954919576,
+      "correctedTimestamp": 1750954919672,
+      "timestampDiff": -96,
+      "originTime": 1750954917218,
+      "correctedOriginTime": 1750954917314,
+      "originTimeDiff": -96
+    }
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 0,
+      "texts": [],
+      "attributes": [],
+      "removes": [
+        {
+          "parentId": 421,
+          "id": 422
+        },
+        {
+          "parentId": 447,
+          "id": 464
+        }
+      ],
+      "adds": [
+        {
+          "parentId": 421,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-Stack wnd-Stack--directionVertical wnd-Stack--gapExtraLarge wnd-Stack--horizontalFill wnd-Stack--verticalTop wnd-Stack--fullWidth wnd-Stack--fullHeight wnd-Spacing"
+            },
+            "childNodes": [],
+            "id": 469
+          }
+        },
+        {
+          "parentId": 469,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-StackItem"
+            },
+            "childNodes": [],
+            "id": 470
+          }
+        },
+        {
+          "parentId": 470,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-Stack wnd-Stack--directionVertical wnd-Stack--gapLarge wnd-Stack--horizontalFill wnd-Stack--verticalTop wnd-Stack--fullWidth wnd-Spacing"
+            },
+            "childNodes": [],
+            "id": 471
+          }
+        },
+        {
+          "parentId": 471,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-StackItem"
+            },
+            "childNodes": [],
+            "id": 472
+          }
+        },
+        {
+          "parentId": 472,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-Stack wnd-Stack--directionHorizontal wnd-Stack--gapMedium wnd-Stack--horizontalLeft wnd-Stack--verticalTop wnd-Stack--fullWidth wnd-Spacing"
+            },
+            "childNodes": [],
+            "id": 473
+          }
+        },
+        {
+          "parentId": 473,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-StackItem"
+            },
+            "childNodes": [],
+            "id": 474
+          }
+        },
+        {
+          "parentId": 474,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "span",
+            "attributes": {
+              "class": "wnd-Shortcut"
+            },
+            "childNodes": [],
+            "id": 475
+          }
+        },
+        {
+          "parentId": 475,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "kbd",
+            "attributes": {
+              "class": "wnd-ShortcutKey"
+            },
+            "childNodes": [],
+            "id": 476
+          }
+        },
+        {
+          "parentId": 476,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "1-9",
+            "id": 477
+          }
+        },
+        {
+          "parentId": 447,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "button",
+            "attributes": {
+              "class": "wnd-Button wnd-Spacing wnd-Navigation-toggle wnd-Button--small wnd-Button--tertiary wnd-Button--variant-secondary wnd-Button--icon",
+              "aria-label": "Collapse Navigation",
+              "aria-controls": "wnd-Navigation",
+              "aria-expanded": "true",
+              "type": "button",
+              "aria-describedby": "tooltip-3"
+            },
+            "childNodes": [],
+            "id": 478
+          }
+        },
+        {
+          "parentId": 478,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "span",
+            "attributes": {
+              "class": "wnd-Button-content"
+            },
+            "childNodes": [],
+            "id": 479
+          }
+        },
+        {
+          "parentId": 469,
+          "nextId": 470,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-StackItem"
+            },
+            "childNodes": [],
+            "id": 480
+          }
+        },
+        {
+          "parentId": 469,
+          "nextId": 480,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-StackItem"
+            },
+            "childNodes": [],
+            "id": 481
+          }
+        },
+        {
+          "parentId": 481,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "h3",
+            "attributes": {
+              "class": "wnd-Text wnd-HeadingText wnd-HeadingText--type-heading-3 wnd-Spacing wnd-Spacing--topLarge wnd-Spacing--bottomLarge"
+            },
+            "childNodes": [],
+            "id": 482
+          }
+        },
+        {
+          "parentId": 482,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "Keyboard shortcuts",
+            "id": 483
+          }
+        },
+        {
+          "parentId": 480,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-Stack wnd-Stack--directionVertical wnd-Stack--gapLarge wnd-Stack--horizontalFill wnd-Stack--verticalTop wnd-Stack--fullWidth wnd-Spacing"
+            },
+            "childNodes": [],
+            "id": 484
+          }
+        },
+        {
+          "parentId": 480,
+          "nextId": 484,
+          "node": {
+            "type": 2,
+            "tagName": "h5",
+            "attributes": {
+              "class": "wnd-Text wnd-HeadingText wnd-HeadingText--type-heading-5 wnd-Spacing wnd-Spacing--topLarge wnd-Spacing--bottomLarge"
+            },
+            "childNodes": [],
+            "id": 485
+          }
+        },
+        {
+          "parentId": 485,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "Essentials",
+            "id": 486
+          }
+        },
+        {
+          "parentId": 484,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-StackItem"
+            },
+            "childNodes": [],
+            "id": 487
+          }
+        },
+        {
+          "parentId": 484,
+          "nextId": 487,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-StackItem"
+            },
+            "childNodes": [],
+            "id": 488
+          }
+        },
+        {
+          "parentId": 484,
+          "nextId": 488,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-StackItem"
+            },
+            "childNodes": [],
+            "id": 489
+          }
+        },
+        {
+          "parentId": 484,
+          "nextId": 489,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-StackItem"
+            },
+            "childNodes": [],
+            "id": 490
+          }
+        },
+        {
+          "parentId": 484,
+          "nextId": 490,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-StackItem"
+            },
+            "childNodes": [],
+            "id": 491
+          }
+        },
+        {
+          "parentId": 484,
+          "nextId": 491,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-StackItem"
+            },
+            "childNodes": [],
+            "id": 492
+          }
+        },
+        {
+          "parentId": 484,
+          "nextId": 492,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-StackItem"
+            },
+            "childNodes": [],
+            "id": 493
+          }
+        },
+        {
+          "parentId": 484,
+          "nextId": 493,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-StackItem"
+            },
+            "childNodes": [],
+            "id": 494
+          }
+        },
+        {
+          "parentId": 494,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-Stack wnd-Stack--directionHorizontal wnd-Stack--gapMedium wnd-Stack--horizontalLeft wnd-Stack--verticalTop wnd-Stack--fullWidth wnd-Spacing"
+            },
+            "childNodes": [],
+            "id": 495
+          }
+        },
+        {
+          "parentId": 495,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-StackItem"
+            },
+            "childNodes": [],
+            "id": 496
+          }
+        },
+        {
+          "parentId": 495,
+          "nextId": 496,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-StackItem wnd-StackItem--grow"
+            },
+            "childNodes": [],
+            "id": 497
+          }
+        },
+        {
+          "parentId": 497,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-Text wnd-BlockText wnd-BlockText--type-normal wnd-Spacing"
+            },
+            "childNodes": [],
+            "id": 498
+          }
+        },
+        {
+          "parentId": 498,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "Open keyboard shortcuts cheat sheet",
+            "id": 499
+          }
+        },
+        {
+          "parentId": 496,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "span",
+            "attributes": {
+              "class": "wnd-Shortcut"
+            },
+            "childNodes": [],
+            "id": 500
+          }
+        },
+        {
+          "parentId": 500,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "kbd",
+            "attributes": {
+              "class": "wnd-ShortcutKey wnd-ShortcutKey--squared"
+            },
+            "childNodes": [],
+            "id": 501
+          }
+        },
+        {
+          "parentId": 501,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "?",
+            "id": 502
+          }
+        },
+        {
+          "parentId": 493,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-Stack wnd-Stack--directionHorizontal wnd-Stack--gapMedium wnd-Stack--horizontalLeft wnd-Stack--verticalTop wnd-Stack--fullWidth wnd-Spacing"
+            },
+            "childNodes": [],
+            "id": 503
+          }
+        },
+        {
+          "parentId": 503,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-StackItem"
+            },
+            "childNodes": [],
+            "id": 504
+          }
+        },
+        {
+          "parentId": 503,
+          "nextId": 504,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-StackItem wnd-StackItem--grow"
+            },
+            "childNodes": [],
+            "id": 505
+          }
+        },
+        {
+          "parentId": 505,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-Text wnd-BlockText wnd-BlockText--type-normal wnd-Spacing"
+            },
+            "childNodes": [],
+            "id": 506
+          }
+        },
+        {
+          "parentId": 506,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "Collapse/expand the side menu",
+            "id": 507
+          }
+        },
+        {
+          "parentId": 504,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "span",
+            "attributes": {
+              "class": "wnd-Shortcut"
+            },
+            "childNodes": [],
+            "id": 508
+          }
+        },
+        {
+          "parentId": 508,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "kbd",
+            "attributes": {
+              "class": "wnd-ShortcutKey wnd-ShortcutKey--squared"
+            },
+            "childNodes": [],
+            "id": 509
+          }
+        },
+        {
+          "parentId": 509,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "[",
+            "id": 510
+          }
+        },
+        {
+          "parentId": 492,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-Stack wnd-Stack--directionHorizontal wnd-Stack--gapMedium wnd-Stack--horizontalLeft wnd-Stack--verticalTop wnd-Stack--fullWidth wnd-Spacing"
+            },
+            "childNodes": [],
+            "id": 511
+          }
+        },
+        {
+          "parentId": 511,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-StackItem"
+            },
+            "childNodes": [],
+            "id": 512
+          }
+        },
+        {
+          "parentId": 511,
+          "nextId": 512,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-StackItem wnd-StackItem--grow"
+            },
+            "childNodes": [],
+            "id": 513
+          }
+        },
+        {
+          "parentId": 513,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-Text wnd-BlockText wnd-BlockText--type-normal wnd-Spacing"
+            },
+            "childNodes": [],
+            "id": 514
+          }
+        },
+        {
+          "parentId": 514,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "Open quick find",
+            "id": 515
+          }
+        },
+        {
+          "parentId": 512,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "span",
+            "attributes": {
+              "class": "wnd-Shortcut"
+            },
+            "childNodes": [],
+            "id": 516
+          }
+        },
+        {
+          "parentId": 516,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "kbd",
+            "attributes": {
+              "class": "wnd-ShortcutKey wnd-ShortcutKey--squared"
+            },
+            "childNodes": [],
+            "id": 517
+          }
+        },
+        {
+          "parentId": 516,
+          "nextId": 517,
+          "node": {
+            "type": 2,
+            "tagName": "kbd",
+            "attributes": {
+              "class": "wnd-ShortcutKey wnd-ShortcutKey--squared"
+            },
+            "childNodes": [],
+            "id": 518
+          }
+        },
+        {
+          "parentId": 518,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "⌘",
+            "id": 519
+          }
+        },
+        {
+          "parentId": 517,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "K",
+            "id": 520
+          }
+        },
+        {
+          "parentId": 491,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-Stack wnd-Stack--directionHorizontal wnd-Stack--gapMedium wnd-Stack--horizontalLeft wnd-Stack--verticalTop wnd-Stack--fullWidth wnd-Spacing"
+            },
+            "childNodes": [],
+            "id": 521
+          }
+        },
+        {
+          "parentId": 521,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-StackItem"
+            },
+            "childNodes": [],
+            "id": 522
+          }
+        },
+        {
+          "parentId": 521,
+          "nextId": 522,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-StackItem wnd-StackItem--grow"
+            },
+            "childNodes": [],
+            "id": 523
+          }
+        },
+        {
+          "parentId": 523,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-Text wnd-BlockText wnd-BlockText--type-normal wnd-Spacing"
+            },
+            "childNodes": [],
+            "id": 524
+          }
+        },
+        {
+          "parentId": 524,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "Start querying your data",
+            "id": 525
+          }
+        },
+        {
+          "parentId": 522,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "span",
+            "attributes": {
+              "class": "wnd-Shortcut"
+            },
+            "childNodes": [],
+            "id": 526
+          }
+        },
+        {
+          "parentId": 526,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "kbd",
+            "attributes": {
+              "class": "wnd-ShortcutKey wnd-ShortcutKey--squared"
+            },
+            "childNodes": [],
+            "id": 527
+          }
+        },
+        {
+          "parentId": 526,
+          "nextId": 527,
+          "node": {
+            "type": 2,
+            "tagName": "kbd",
+            "attributes": {
+              "class": "wnd-ShortcutKey"
+            },
+            "childNodes": [],
+            "id": 528
+          }
+        },
+        {
+          "parentId": 526,
+          "nextId": 528,
+          "node": {
+            "type": 2,
+            "tagName": "kbd",
+            "attributes": {
+              "class": "wnd-ShortcutKey"
+            },
+            "childNodes": [],
+            "id": 529
+          }
+        },
+        {
+          "parentId": 529,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "Ctrl",
+            "id": 530
+          }
+        },
+        {
+          "parentId": 528,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "Shift",
+            "id": 531
+          }
+        },
+        {
+          "parentId": 527,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "O",
+            "id": 532
+          }
+        },
+        {
+          "parentId": 490,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-Stack wnd-Stack--directionHorizontal wnd-Stack--gapMedium wnd-Stack--horizontalLeft wnd-Stack--verticalTop wnd-Stack--fullWidth wnd-Spacing"
+            },
+            "childNodes": [],
+            "id": 533
+          }
+        },
+        {
+          "parentId": 533,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-StackItem"
+            },
+            "childNodes": [],
+            "id": 534
+          }
+        },
+        {
+          "parentId": 533,
+          "nextId": 534,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-StackItem wnd-StackItem--grow"
+            },
+            "childNodes": [],
+            "id": 535
+          }
+        },
+        {
+          "parentId": 535,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-Text wnd-BlockText wnd-BlockText--type-normal wnd-Spacing"
+            },
+            "childNodes": [],
+            "id": 536
+          }
+        },
+        {
+          "parentId": 536,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "Minimize console",
+            "id": 537
+          }
+        },
+        {
+          "parentId": 534,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "span",
+            "attributes": {
+              "class": "wnd-Shortcut"
+            },
+            "childNodes": [],
+            "id": 538
+          }
+        },
+        {
+          "parentId": 538,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "kbd",
+            "attributes": {
+              "class": "wnd-ShortcutKey wnd-ShortcutKey--squared"
+            },
+            "childNodes": [],
+            "id": 539
+          }
+        },
+        {
+          "parentId": 538,
+          "nextId": 539,
+          "node": {
+            "type": 2,
+            "tagName": "kbd",
+            "attributes": {
+              "class": "wnd-ShortcutKey"
+            },
+            "childNodes": [],
+            "id": 540
+          }
+        },
+        {
+          "parentId": 538,
+          "nextId": 540,
+          "node": {
+            "type": 2,
+            "tagName": "kbd",
+            "attributes": {
+              "class": "wnd-ShortcutKey"
+            },
+            "childNodes": [],
+            "id": 541
+          }
+        },
+        {
+          "parentId": 541,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "Ctrl",
+            "id": 542
+          }
+        },
+        {
+          "parentId": 540,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "Shift",
+            "id": 543
+          }
+        },
+        {
+          "parentId": 539,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "M",
+            "id": 544
+          }
+        },
+        {
+          "parentId": 489,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-Stack wnd-Stack--directionHorizontal wnd-Stack--gapMedium wnd-Stack--horizontalLeft wnd-Stack--verticalTop wnd-Stack--fullWidth wnd-Spacing"
+            },
+            "childNodes": [],
+            "id": 545
+          }
+        },
+        {
+          "parentId": 545,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-StackItem"
+            },
+            "childNodes": [],
+            "id": 546
+          }
+        },
+        {
+          "parentId": 545,
+          "nextId": 546,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-StackItem wnd-StackItem--grow"
+            },
+            "childNodes": [],
+            "id": 547
+          }
+        },
+        {
+          "parentId": 547,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-Text wnd-BlockText wnd-BlockText--type-normal wnd-Spacing"
+            },
+            "childNodes": [],
+            "id": 548
+          }
+        },
+        {
+          "parentId": 548,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "Focus the filter bar",
+            "id": 549
+          }
+        },
+        {
+          "parentId": 546,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "span",
+            "attributes": {
+              "class": "wnd-Shortcut"
+            },
+            "childNodes": [],
+            "id": 550
+          }
+        },
+        {
+          "parentId": 550,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "kbd",
+            "attributes": {
+              "class": "wnd-ShortcutKey wnd-ShortcutKey--squared"
+            },
+            "childNodes": [],
+            "id": 551
+          }
+        },
+        {
+          "parentId": 551,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "F",
+            "id": 552
+          }
+        },
+        {
+          "parentId": 488,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-Stack wnd-Stack--directionHorizontal wnd-Stack--gapMedium wnd-Stack--horizontalLeft wnd-Stack--verticalTop wnd-Stack--fullWidth wnd-Spacing"
+            },
+            "childNodes": [],
+            "id": 553
+          }
+        },
+        {
+          "parentId": 553,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-StackItem"
+            },
+            "childNodes": [],
+            "id": 554
+          }
+        },
+        {
+          "parentId": 553,
+          "nextId": 554,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-StackItem wnd-StackItem--grow"
+            },
+            "childNodes": [],
+            "id": 555
+          }
+        },
+        {
+          "parentId": 555,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-Text wnd-BlockText wnd-BlockText--type-normal wnd-Spacing"
+            },
+            "childNodes": [],
+            "id": 556
+          }
+        },
+        {
+          "parentId": 556,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "Copy permalink",
+            "id": 557
+          }
+        },
+        {
+          "parentId": 554,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "span",
+            "attributes": {
+              "class": "wnd-Shortcut"
+            },
+            "childNodes": [],
+            "id": 558
+          }
+        },
+        {
+          "parentId": 558,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "kbd",
+            "attributes": {
+              "class": "wnd-ShortcutKey wnd-ShortcutKey--squared"
+            },
+            "childNodes": [],
+            "id": 559
+          }
+        },
+        {
+          "parentId": 558,
+          "nextId": 559,
+          "node": {
+            "type": 2,
+            "tagName": "kbd",
+            "attributes": {
+              "class": "wnd-ShortcutKey wnd-ShortcutKey--squared"
+            },
+            "childNodes": [],
+            "id": 560
+          }
+        },
+        {
+          "parentId": 560,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "⌘",
+            "id": 561
+          }
+        },
+        {
+          "parentId": 559,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": ".",
+            "id": 562
+          }
+        },
+        {
+          "parentId": 487,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-Stack wnd-Stack--directionHorizontal wnd-Stack--gapMedium wnd-Stack--horizontalLeft wnd-Stack--verticalTop wnd-Stack--fullWidth wnd-Spacing"
+            },
+            "childNodes": [],
+            "id": 563
+          }
+        },
+        {
+          "parentId": 563,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-StackItem"
+            },
+            "childNodes": [],
+            "id": 564
+          }
+        },
+        {
+          "parentId": 563,
+          "nextId": 564,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-StackItem wnd-StackItem--grow"
+            },
+            "childNodes": [],
+            "id": 565
+          }
+        },
+        {
+          "parentId": 565,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-Text wnd-BlockText wnd-BlockText--type-normal wnd-Spacing"
+            },
+            "childNodes": [],
+            "id": 566
+          }
+        },
+        {
+          "parentId": 566,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "Add a new user",
+            "id": 567
+          }
+        },
+        {
+          "parentId": 564,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "span",
+            "attributes": {
+              "class": "wnd-Shortcut"
+            },
+            "childNodes": [],
+            "id": 568
+          }
+        },
+        {
+          "parentId": 568,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "kbd",
+            "attributes": {
+              "class": "wnd-ShortcutKey wnd-ShortcutKey--squared"
+            },
+            "childNodes": [],
+            "id": 569
+          }
+        },
+        {
+          "parentId": 568,
+          "nextId": 569,
+          "node": {
+            "type": 2,
+            "tagName": "kbd",
+            "attributes": {
+              "class": "wnd-ShortcutKey wnd-ShortcutKey--squared"
+            },
+            "childNodes": [],
+            "id": 570
+          }
+        },
+        {
+          "parentId": 570,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "A",
+            "id": 571
+          }
+        },
+        {
+          "parentId": 569,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "U",
+            "id": 572
+          }
+        },
+        {
+          "parentId": 470,
+          "nextId": 471,
+          "node": {
+            "type": 2,
+            "tagName": "h5",
+            "attributes": {
+              "class": "wnd-Text wnd-HeadingText wnd-HeadingText--type-heading-5 wnd-Spacing wnd-Spacing--topLarge wnd-Spacing--bottomLarge"
+            },
+            "childNodes": [],
+            "id": 573
+          }
+        },
+        {
+          "parentId": 573,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "Navigation",
+            "id": 574
+          }
+        },
+        {
+          "parentId": 471,
+          "nextId": 472,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-StackItem"
+            },
+            "childNodes": [],
+            "id": 575
+          }
+        },
+        {
+          "parentId": 471,
+          "nextId": 575,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-StackItem"
+            },
+            "childNodes": [],
+            "id": 576
+          }
+        },
+        {
+          "parentId": 471,
+          "nextId": 576,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-StackItem"
+            },
+            "childNodes": [],
+            "id": 577
+          }
+        },
+        {
+          "parentId": 471,
+          "nextId": 577,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-StackItem"
+            },
+            "childNodes": [],
+            "id": 578
+          }
+        },
+        {
+          "parentId": 578,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-Stack wnd-Stack--directionHorizontal wnd-Stack--gapMedium wnd-Stack--horizontalLeft wnd-Stack--verticalTop wnd-Stack--fullWidth wnd-Spacing"
+            },
+            "childNodes": [],
+            "id": 579
+          }
+        },
+        {
+          "parentId": 579,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-StackItem"
+            },
+            "childNodes": [],
+            "id": 580
+          }
+        },
+        {
+          "parentId": 579,
+          "nextId": 580,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-StackItem wnd-StackItem--grow"
+            },
+            "childNodes": [],
+            "id": 581
+          }
+        },
+        {
+          "parentId": 581,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-Text wnd-BlockText wnd-BlockText--type-normal wnd-Spacing"
+            },
+            "childNodes": [],
+            "id": 582
+          }
+        },
+        {
+          "parentId": 582,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "Go to Integrations & Agents",
+            "id": 583
+          }
+        },
+        {
+          "parentId": 580,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "span",
+            "attributes": {
+              "class": "wnd-Shortcut"
+            },
+            "childNodes": [],
+            "id": 584
+          }
+        },
+        {
+          "parentId": 584,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "kbd",
+            "attributes": {
+              "class": "wnd-ShortcutKey wnd-ShortcutKey--squared"
+            },
+            "childNodes": [],
+            "id": 585
+          }
+        },
+        {
+          "parentId": 584,
+          "nextId": 585,
+          "node": {
+            "type": 2,
+            "tagName": "kbd",
+            "attributes": {
+              "class": "wnd-ShortcutKey wnd-ShortcutKey--squared"
+            },
+            "childNodes": [],
+            "id": 586
+          }
+        },
+        {
+          "parentId": 586,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "G",
+            "id": 587
+          }
+        },
+        {
+          "parentId": 585,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "I",
+            "id": 588
+          }
+        },
+        {
+          "parentId": 577,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-Stack wnd-Stack--directionHorizontal wnd-Stack--gapMedium wnd-Stack--horizontalLeft wnd-Stack--verticalTop wnd-Stack--fullWidth wnd-Spacing"
+            },
+            "childNodes": [],
+            "id": 589
+          }
+        },
+        {
+          "parentId": 589,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-StackItem"
+            },
+            "childNodes": [],
+            "id": 590
+          }
+        },
+        {
+          "parentId": 589,
+          "nextId": 590,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-StackItem wnd-StackItem--grow"
+            },
+            "childNodes": [],
+            "id": 591
+          }
+        },
+        {
+          "parentId": 591,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-Text wnd-BlockText wnd-BlockText--type-normal wnd-Spacing"
+            },
+            "childNodes": [],
+            "id": 592
+          }
+        },
+        {
+          "parentId": 592,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "Go to all entities",
+            "id": 593
+          }
+        },
+        {
+          "parentId": 590,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "span",
+            "attributes": {
+              "class": "wnd-Shortcut"
+            },
+            "childNodes": [],
+            "id": 594
+          }
+        },
+        {
+          "parentId": 594,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "kbd",
+            "attributes": {
+              "class": "wnd-ShortcutKey wnd-ShortcutKey--squared"
+            },
+            "childNodes": [],
+            "id": 595
+          }
+        },
+        {
+          "parentId": 594,
+          "nextId": 595,
+          "node": {
+            "type": 2,
+            "tagName": "kbd",
+            "attributes": {
+              "class": "wnd-ShortcutKey wnd-ShortcutKey--squared"
+            },
+            "childNodes": [],
+            "id": 596
+          }
+        },
+        {
+          "parentId": 596,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "G",
+            "id": 597
+          }
+        },
+        {
+          "parentId": 595,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "E",
+            "id": 598
+          }
+        },
+        {
+          "parentId": 576,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-Stack wnd-Stack--directionHorizontal wnd-Stack--gapMedium wnd-Stack--horizontalLeft wnd-Stack--verticalTop wnd-Stack--fullWidth wnd-Spacing"
+            },
+            "childNodes": [],
+            "id": 599
+          }
+        },
+        {
+          "parentId": 599,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-StackItem"
+            },
+            "childNodes": [],
+            "id": 600
+          }
+        },
+        {
+          "parentId": 599,
+          "nextId": 600,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-StackItem wnd-StackItem--grow"
+            },
+            "childNodes": [],
+            "id": 601
+          }
+        },
+        {
+          "parentId": 601,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-Text wnd-BlockText wnd-BlockText--type-normal wnd-Spacing"
+            },
+            "childNodes": [],
+            "id": 602
+          }
+        },
+        {
+          "parentId": 602,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "Go to all capabilities",
+            "id": 603
+          }
+        },
+        {
+          "parentId": 600,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "span",
+            "attributes": {
+              "class": "wnd-Shortcut"
+            },
+            "childNodes": [],
+            "id": 604
+          }
+        },
+        {
+          "parentId": 604,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "kbd",
+            "attributes": {
+              "class": "wnd-ShortcutKey wnd-ShortcutKey--squared"
+            },
+            "childNodes": [],
+            "id": 605
+          }
+        },
+        {
+          "parentId": 604,
+          "nextId": 605,
+          "node": {
+            "type": 2,
+            "tagName": "kbd",
+            "attributes": {
+              "class": "wnd-ShortcutKey wnd-ShortcutKey--squared"
+            },
+            "childNodes": [],
+            "id": 606
+          }
+        },
+        {
+          "parentId": 606,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "G",
+            "id": 607
+          }
+        },
+        {
+          "parentId": 605,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "C",
+            "id": 608
+          }
+        },
+        {
+          "parentId": 575,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-Stack wnd-Stack--directionHorizontal wnd-Stack--gapMedium wnd-Stack--horizontalLeft wnd-Stack--verticalTop wnd-Stack--fullWidth wnd-Spacing"
+            },
+            "childNodes": [],
+            "id": 609
+          }
+        },
+        {
+          "parentId": 609,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-StackItem"
+            },
+            "childNodes": [],
+            "id": 610
+          }
+        },
+        {
+          "parentId": 609,
+          "nextId": 610,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-StackItem wnd-StackItem--grow"
+            },
+            "childNodes": [],
+            "id": 611
+          }
+        },
+        {
+          "parentId": 611,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-Text wnd-BlockText wnd-BlockText--type-normal wnd-Spacing"
+            },
+            "childNodes": [],
+            "id": 612
+          }
+        },
+        {
+          "parentId": 612,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "Go to help & support",
+            "id": 613
+          }
+        },
+        {
+          "parentId": 610,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "span",
+            "attributes": {
+              "class": "wnd-Shortcut"
+            },
+            "childNodes": [],
+            "id": 614
+          }
+        },
+        {
+          "parentId": 614,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "kbd",
+            "attributes": {
+              "class": "wnd-ShortcutKey wnd-ShortcutKey--squared"
+            },
+            "childNodes": [],
+            "id": 615
+          }
+        },
+        {
+          "parentId": 614,
+          "nextId": 615,
+          "node": {
+            "type": 2,
+            "tagName": "kbd",
+            "attributes": {
+              "class": "wnd-ShortcutKey wnd-ShortcutKey--squared"
+            },
+            "childNodes": [],
+            "id": 616
+          }
+        },
+        {
+          "parentId": 616,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "G",
+            "id": 617
+          }
+        },
+        {
+          "parentId": 615,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "?",
+            "id": 618
+          }
+        },
+        {
+          "parentId": 473,
+          "nextId": 474,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-StackItem wnd-StackItem--grow"
+            },
+            "childNodes": [],
+            "id": 619
+          }
+        },
+        {
+          "parentId": 619,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "wnd-Text wnd-BlockText wnd-BlockText--type-normal wnd-Spacing"
+            },
+            "childNodes": [],
+            "id": 620
+          }
+        },
+        {
+          "parentId": 620,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "Go to pinned capabilities (the top 9)",
+            "id": 621
+          }
+        },
+        {
+          "parentId": 475,
+          "nextId": 476,
+          "node": {
+            "type": 2,
+            "tagName": "kbd",
+            "attributes": {
+              "class": "wnd-ShortcutKey wnd-ShortcutKey--squared"
+            },
+            "childNodes": [],
+            "id": 622
+          }
+        },
+        {
+          "parentId": 622,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "G",
+            "id": 623
+          }
+        },
+        {
+          "parentId": 478,
+          "nextId": 479,
+          "node": {
+            "type": 2,
+            "tagName": "span",
+            "attributes": {
+              "class": "wnd-Icon wnd-Spacing wnd-Button-icon ic-Icon",
+              "style": "font-size: 16px;"
+            },
+            "childNodes": [],
+            "id": 624
+          }
+        },
+        {
+          "parentId": 624,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "svg",
+            "attributes": {
+              "xmlns": "http://www.w3.org/2000/svg",
+              "viewBox": "0 0 16 16",
+              "focusable": "false"
+            },
+            "childNodes": [],
+            "isSVG": true,
+            "id": 625
+          }
+        },
+        {
+          "parentId": 625,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "path",
+            "attributes": {
+              "fill-rule": "evenodd",
+              "d": "M9.6 13.4L3.8 7.5l5.8-5.9.8.8-5.2 5.1 5.2 5.1-.8.8z",
+              "clip-rule": "evenodd"
+            },
+            "childNodes": [],
+            "isSVG": true,
+            "id": 626
+          }
+        }
+      ]
+    },
+    "timestamp": 1750954919707,
+    "__newrelic": {
+      "originalTimestamp": 1750954919611,
+      "correctedTimestamp": 1750954919707,
+      "timestampDiff": -96,
+      "originTime": 1750954917218,
+      "correctedOriginTime": 1750954917314,
+      "originTimeDiff": -96
+    }
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 0,
+      "texts": [],
+      "attributes": [],
+      "removes": [
+        {
+          "parentId": 447,
+          "id": 478
+        }
+      ],
+      "adds": [
+        {
+          "parentId": 447,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "button",
+            "attributes": {
+              "class": "wnd-Button wnd-Spacing wnd-Navigation-toggle wnd-Button--small wnd-Button--tertiary wnd-Button--variant-secondary wnd-Button--icon",
+              "aria-label": "Collapse Navigation",
+              "aria-controls": "wnd-Navigation",
+              "aria-expanded": "true",
+              "type": "button",
+              "aria-describedby": "tooltip-4"
+            },
+            "childNodes": [],
+            "id": 627
+          }
+        },
+        {
+          "parentId": 627,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "span",
+            "attributes": {
+              "class": "wnd-Button-content"
+            },
+            "childNodes": [],
+            "id": 628
+          }
+        },
+        {
+          "parentId": 627,
+          "nextId": 628,
+          "node": {
+            "type": 2,
+            "tagName": "span",
+            "attributes": {
+              "class": "wnd-Icon wnd-Spacing wnd-Button-icon ic-Icon",
+              "style": "font-size: 16px;"
+            },
+            "childNodes": [],
+            "id": 629
+          }
+        },
+        {
+          "parentId": 629,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "svg",
+            "attributes": {
+              "xmlns": "http://www.w3.org/2000/svg",
+              "viewBox": "0 0 16 16",
+              "focusable": "false"
+            },
+            "childNodes": [],
+            "isSVG": true,
+            "id": 630
+          }
+        },
+        {
+          "parentId": 630,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "path",
+            "attributes": {
+              "fill-rule": "evenodd",
+              "d": "M9.6 13.4L3.8 7.5l5.8-5.9.8.8-5.2 5.1 5.2 5.1-.8.8z",
+              "clip-rule": "evenodd"
+            },
+            "childNodes": [],
+            "isSVG": true,
+            "id": 631
+          }
+        }
+      ]
+    },
+    "timestamp": 1750954919726,
+    "__newrelic": {
+      "originalTimestamp": 1750954919630,
+      "correctedTimestamp": 1750954919726,
+      "timestampDiff": -96,
+      "originTime": 1750954917218,
+      "correctedOriginTime": 1750954917314,
+      "originTimeDiff": -96
+    }
+  }
+]

@@ -1,0 +1,62 @@
+name: 'Consumer Load Test'
+
+permissions:
+  contents: read
+
+on:
+  workflow_dispatch:
+    inputs:
+      license-key:
+        description: 'License key for the test'
+        required: true
+      app-id:
+        description: 'App ID for the test'
+        required: true
+      entity-guid:
+        description: 'Entity GUID for the test'
+        required: true
+      minutes:
+        description: 'Minutes to Run'
+        required: false
+        default: '60'
+      page-view:
+        description: 'Capture PageView events'
+        required: false
+        type: boolean
+      session-replay:
+        description: 'Capture SessionReplay events'
+        required: false
+        type: boolean
+
+jobs:
+  generate-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - id: set-matrix
+        run: |
+          MATRIX=$(seq 1 20 | jq -R . | jq -s .)
+          echo matrix=$MATRIX >> $GITHUB_OUTPUT
+
+  consumer-load-test:
+    runs-on: ubuntu-latest
+    needs: generate-matrix
+    strategy:
+      matrix:
+        runner: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
+      - name: 'Load test - Instance ${{ matrix.runner }}'
+        uses: ./.github/actions/consumer-load-test
+        with:
+          license-key: ${{ github.event.inputs.license-key }}
+          app-id: ${{ github.event.inputs.app-id }}
+          entity-guid: ${{ github.event.inputs.entity-guid }}
+          page-view: ${{ github.event.inputs.page-view }}
+          session-replay: ${{ github.event.inputs.session-replay }}
+          minutes: ${{ fromJSON(github.event.inputs.minutes) }}
+        timeout-minutes: ${{ fromJSON(github.event.inputs.minutes) }}

@@ -8,6 +8,9 @@ const headers = {
     "sec-ch-ua-platform": "\"macOS\""
 };
 
+const snapshotBody = fs.readFileSync(path.resolve(__dirname, './snapshot-body.txt'), 'utf8') 
+const mutationBody = fs.readFileSync(path.resolve(__dirname, './mutation-body.txt'), 'utf8') 
+
 module.exports = async function ({
     licenseKey,
     appId,
@@ -22,11 +25,6 @@ module.exports = async function ({
     agentVersion,
     payloadMetadata = { payloadsSentInJob: 0 }
 }) {
-    const payloadBodyPath = path.resolve(__dirname, (isSnapshot ? './snapshot-body.txt' : './mutation-body.txt'));
-    const body = await fs.promises.readFile(payloadBodyPath, 'utf8')
-
-    const payloadJSON = JSON.parse(body)
-
     const request = new URL('https://staging-bam.nr-data.net/browser/blobs'); // parameterize this later
     request.searchParams.set('browser_monitoring_key', licenseKey);
     request.searchParams.set('type', 'SessionReplay');
@@ -38,12 +36,12 @@ module.exports = async function ({
         harvestId: `${session}_${ptid}_${harvestCount}`,
         'replay.firstTimestamp': (isSnapshot ? timeNow - (offset * 2) : timeNow - offset + 100).toString(),
         'replay.lastTimestamp': (isSnapshot ? timeNow - offset : timeNow - 100).toString(),
-        'replay.nodes': payloadJSON.length,
+        'replay.nodes': isSnapshot ? 2 : 5,
         'session.durationMs': offset,
         agentVersion,
         session,
         rst: 46330,
-        decompressedBytes: body.length,
+        decompressedBytes: isSnapshot ? snapshotBody.length : mutationBody.length,
         hasMeta: isSnapshot,
         hasSnapshot: isSnapshot,
         hasError: false,
@@ -61,12 +59,13 @@ module.exports = async function ({
         method: 'POST',
         headers,
         referrer: "https://staging-one.newrelic.com/",
-        body
+        body: isSnapshot ? snapshotBody : mutationBody
     });
     if (!response.ok) console.log('harvest failed', response.status, response.statusText);
     else {
-    payloadMetadata.payloadsSentInJob++
-  }
+        payloadMetadata.payloadsSentInJob++
+        payloadMetadata.harvestCount++
+    }
 
     return response
 }

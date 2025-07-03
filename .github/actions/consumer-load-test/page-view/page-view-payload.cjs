@@ -46,6 +46,7 @@ module.exports = async function ({
   if (!response.ok) console.log('harvest failed', response.status, response.statusText);
   else {
     payloadMetadata.payloadsSentInJob++
+    payloadMetadata.harvestCount++
   }
 
   return response

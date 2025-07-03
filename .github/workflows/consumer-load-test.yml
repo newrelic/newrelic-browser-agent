@@ -36,7 +36,7 @@ jobs:
     steps:
       - id: set-matrix
         run: |
-          MATRIX=$(seq 1 256 | jq -R . | jq -s .)
+          MATRIX=$(seq 1 20 | jq -R . | jq -s .)
           echo matrix=$MATRIX >> $GITHUB_OUTPUT
 
   consumer-load-test:
@@ -45,7 +45,6 @@ jobs:
     strategy:
       matrix:
         runner: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
-    timeout-minutes: ${{ fromJSON(github.event.inputs.minutes) }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -60,3 +59,4 @@ jobs:
           page-view: ${{ github.event.inputs.page-view }}
           session-replay: ${{ github.event.inputs.session-replay }}
           minutes: ${{ fromJSON(github.event.inputs.minutes) }}
+        timeout-minutes: ${{ fromJSON(github.event.inputs.minutes) }}

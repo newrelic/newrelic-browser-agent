@@ -16,11 +16,12 @@ async function sendRequest(instanceMarker, payloadMetadata = {payloadsSentInJob:
     const session = Array.from({ length: 16 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
 
     const ptid = Array.from({ length: 16 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
-    let harvestCount = 0;
     const timeNow = Math.floor(Date.now());
     const enduserId = 'faker-' + timeNow + '@newrelic.com';
     const offset = Math.floor(Math.random() * 10000) + 40000; // random offset between 40s and 50s
 
+    payloadMetadata.harvestCount = 0
+    
     try {
       /** PAGEVIEW HARVEST */
       if (args.pageView) await harvestPageView({
@@ -32,7 +33,7 @@ async function sendRequest(instanceMarker, payloadMetadata = {payloadsSentInJob:
         timeNow,
         offset,
         enduserId,
-        payloadMetadata
+        payloadMetadata,
       })
 
       /** SNAPSHOT HARVEST */
@@ -41,7 +42,6 @@ async function sendRequest(instanceMarker, payloadMetadata = {payloadsSentInJob:
         appId,
         timeNow,
         offset,
-        harvestCount,
         isSnapshot: true,
         entityGuid,
         session,
@@ -57,7 +57,6 @@ async function sendRequest(instanceMarker, payloadMetadata = {payloadsSentInJob:
         appId,
         timeNow,
         offset,
-        harvestCount: ++harvestCount,
         isSnapshot: false,
         entityGuid,
         session,

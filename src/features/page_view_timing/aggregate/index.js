@@ -89,7 +89,7 @@ export class Aggregate extends AggregateBase {
       value,
       attrs
     }
-    this.events.add(timing)
+    this.handleData(timing, true)
 
     handle('pvtAdded', [name, value, attrs], undefined, FEATURE_NAMES.sessionTrace, this.ee)
 

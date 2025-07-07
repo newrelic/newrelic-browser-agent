@@ -19,14 +19,12 @@ import { isPureObject } from '../../../common/util/type-check'
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   #clickErrorEvents
-  #runUserFrustrations
 
   constructor (agentRef) {
     super(agentRef, FEATURE_NAME)
     this.eventsPerHarvest = 1000
     this.referrerUrl = (isBrowserScope && document.referrer) ? cleanURL(document.referrer) : undefined
     this.#clickErrorEvents = new Set()
-    this.#runUserFrustrations = agentRef.init.feature_flags.includes('user_frustrations')
 
     this.waitForFlags(['ins']).then(([ins]) => {
       if (!ins) {
@@ -76,6 +74,7 @@ export class Aggregate extends AggregateBase {
             if (aggregatedUserAction?.events[0]) {
               const { target, timeStamp, type } = aggregatedUserAction.events[0]
               const { timeStamp: lastTimestamp } = aggregatedUserAction.events.at(-1)
+              const runUserFrustrations = this.agentRef.init.feature_flags.includes('user_frustrations')
               const userActionEvent = {
                 eventType: 'UserAction',
                 timestamp: this.toEpoch(timeStamp),
@@ -93,8 +92,8 @@ export class Aggregate extends AggregateBase {
                   return acc
                 }, {})),
                 ...aggregatedUserAction.nearestTargetFields,
-                ...(this.#runUserFrustrations && aggregatedUserAction.deadClick && { deadClick: true }),
-                ...(this.#runUserFrustrations && aggregatedUserAction.isErrorClick(this.#clickErrorEvents) && { errorClick: true })
+                ...(runUserFrustrations && aggregatedUserAction.deadClick && { deadClick: true }),
+                ...(runUserFrustrations && aggregatedUserAction.isErrorClick(this.#clickErrorEvents) && { errorClick: true })
               }
               this.addEvent(userActionEvent)
               this.removeStaleErrors(lastTimestamp)

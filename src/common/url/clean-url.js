@@ -8,10 +8,11 @@ var patternWithoutHash = /([^?#]*)().*/
 
 /**
  * Cleans a URL by removing the query string and fragment (hash portion).
- * @param {string} url - The original URL to be cleaned.
+ * @param {string} [url] - The original URL to be cleaned.
  * @param {boolean} [keepHash=false] - Whether to preserve the hash portion of the URL.
  * @returns {string} The cleaned URL.
  */
 export function cleanURL (url, keepHash) {
+  if (!url) return url
   return url.replace(keepHash ? patternWithHash : patternWithoutHash, '$1$2')
 }

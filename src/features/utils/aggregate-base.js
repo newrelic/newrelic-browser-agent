@@ -81,6 +81,7 @@ export class AggregateBase extends FeatureBase {
    * @returns {void}
    */
   handleData (data, customAttributesAreSeparate = false, targetEntityGuid) {
+    if (this.blocked) return
     /** aggregated timeslice metrics dont support byte counting at the moment */
     if (this.events.StorageClass === EventAggregator) return this.events.add(data, targetEntityGuid)
 

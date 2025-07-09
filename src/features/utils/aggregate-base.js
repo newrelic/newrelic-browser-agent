@@ -18,6 +18,8 @@ import { EventBuffer } from './event-buffer'
 import { handle } from '../../common/event-emitter/handle'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../metrics/constants'
 import { EventAggregator } from '../../common/aggregate/event-aggregator'
+import { IDEAL_PAYLOAD_SIZE } from '../../common/constants/agent-constants'
+import { stringify } from '../../common/util/stringify'
 
 export class AggregateBase extends FeatureBase {
   /**
@@ -60,15 +62,63 @@ export class AggregateBase extends FeatureBase {
         // Jserror and Metric features uses a singleton EventAggregator instead of a regular EventBuffer.
       case FEATURE_NAMES.jserrors:
       case FEATURE_NAMES.metrics:
-        this.events = this.agentRef.sharedAggregator ??= new EventStoreManager(this.agentRef, EventAggregator, entityGuid, 'shared_aggregator')
+        this.events = this.agentRef.sharedAggregator ??= new EventStoreManager(this.agentRef, EventAggregator, entityGuid, { featureName: 'shared_aggregator' })
         break
         /** All other features get EventBuffer in the ESM by default. Note: PVE is included here, but event buffer will always be empty so future harvests will still not happen by interval or EOL.
     This was necessary to prevent race cond. issues where the event buffer was checked before the feature could "block" itself.
     Its easier to just keep an empty event buffer in place. */
       default:
-        this.events = new EventStoreManager(this.agentRef, EventBuffer, entityGuid, this.featureName)
+        this.events = new EventStoreManager(this.agentRef, EventBuffer, entityGuid, this)
         break
     }
+  }
+
+  /**
+   * Handles incoming data for aggregation.
+   * @param {*} data - The data to be handled.
+   * @param {boolean} [customAttributesAreSeparate=false] - Flag indicating if global custom attributes are separate from the event payload.
+   * @param {string} [targetEntityGuid] - The entity guid of the target app, if applicable.
+   * @returns {void}
+   */
+  handleData (data, customAttributesAreSeparate = false, targetEntityGuid) {
+    if (this.blocked) return
+    /** aggregated timeslice metrics dont support byte counting at the moment */
+    if (this.events.StorageClass === EventAggregator) return this.events.add(data, targetEntityGuid)
+
+    const getBytesEstimate = () => {
+      return this.events.byteSize() + (customAttributesAreSeparate ? this.agentRef.info.jsAttributesBytes : 0)
+    }
+
+    const getSMTag = (type) => {
+      return `${this.featureName}/Harvest/${type}/Seen`
+    }
+
+    const onAdded = () => {
+      // events were successfully added to the buffer
+      const combinedBytes = getBytesEstimate()
+      if (combinedBytes > IDEAL_PAYLOAD_SIZE) {
+        // events in the buffer have exceeded the ideal payload size, so we trigger a harvest
+        this.agentRef.runtime.harvester.triggerHarvestFor(this)
+        this.reportSupportabilityMetric(getSMTag('Early'), combinedBytes)
+      }
+    }
+    const onFailed = () => {
+      // event was too big, even for a single event
+      warn(63, this.featureName)
+      this.reportSupportabilityMetric(getSMTag('Failed'), stringify(data).length)
+    }
+
+    // this will be false when the event was dropped due to exceeding max size
+    if (!this.events.add(data, targetEntityGuid)) {
+      if (!this.events.isEmpty(undefined, targetEntityGuid)) {
+        // if the buffer is not empty, we can try to harvest what's in there before trying to add the new event again
+        this.reportSupportabilityMetric(getSMTag('Max'), getBytesEstimate())
+        this.agentRef.runtime.harvester.triggerHarvestFor(this)
+        // try to add the event again after harvest
+        if (!this.events.add(data, targetEntityGuid)) onFailed()
+        else onAdded()
+      } else onFailed()
+    } else onAdded()
   }
 
   /**

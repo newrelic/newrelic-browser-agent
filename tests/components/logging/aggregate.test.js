@@ -135,14 +135,12 @@ describe('payloads', () => {
   test('short circuits if log is too big', async () => {
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'x'.repeat(1024 * 1024), { myAttributes: 1 }, 'ERROR'])
 
-    expect(handleModule.handle).toHaveBeenCalledWith('storeSupportabilityMetrics', ['Logging/Harvest/Failed/Seen', expect.any(Number)], undefined, 'metrics', loggingAggregate.ee)
-    expect(handleModule.handle).toHaveBeenCalledTimes(1)
-    expect(consoleModule.warn).toHaveBeenCalledWith(31, 'xxxxxxxxxxxxxxxxxxxxxxxxx...')
+    expect(handleModule.handle).toHaveBeenCalledWith('storeSupportabilityMetrics', ['logging/Harvest/Failed/Seen', expect.any(Number)], undefined, 'metrics', loggingAggregate.ee)
+    expect(consoleModule.warn).toHaveBeenCalledWith(63, 'logging')
 
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'short message, long attrs', { myAttributes: 'x'.repeat(1024 * 1024) }, 'ERROR'])
-    expect(handleModule.handle).toHaveBeenCalledWith('storeSupportabilityMetrics', ['Logging/Harvest/Failed/Seen', expect.any(Number)], undefined, 'metrics', loggingAggregate.ee)
-    expect(handleModule.handle).toHaveBeenCalledTimes(2)
-    expect(consoleModule.warn).toHaveBeenCalledWith(31, 'short message, long attrs...')
+    expect(handleModule.handle).toHaveBeenCalledWith('storeSupportabilityMetrics', ['logging/Harvest/Failed/Seen', expect.any(Number)], undefined, 'metrics', loggingAggregate.ee)
+    expect(consoleModule.warn).toHaveBeenCalledWith(63, 'logging')
   })
 
   test('should short circuit if message is falsy', async () => {
@@ -244,11 +242,11 @@ test('can harvest early', async () => {
 
   jest.spyOn(mainAgent.runtime.harvester, 'triggerHarvestFor')
 
-  const harvestEarlySm = ['storeSupportabilityMetrics', ['Logging/Harvest/Early/Seen', expect.any(Number)], undefined, 'metrics', loggingAggregate.ee]
+  const harvestEarlySm = ['storeSupportabilityMetrics', ['logging/Harvest/Early/Seen', expect.any(Number)], undefined, 'metrics', loggingAggregate.ee]
 
-  loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'x'.repeat(800 * 800), { myAttributes: 1 }, 'ERROR']) // almost too big
+  loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'x'.repeat(15000), { myAttributes: 1 }, 'ERROR']) // almost too big (15000<16000)
   expect(handleModule.handle).not.toHaveBeenCalledWith(...harvestEarlySm)
-  loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'x'.repeat(800 * 800), { myAttributes: 1 }, 'ERROR']) // almost too big
+  loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'x'.repeat(15000), { myAttributes: 1 }, 'ERROR']) // more than too big when combined (30000)
   expect(handleModule.handle).toHaveBeenCalledWith(...harvestEarlySm)
   expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalled()
 })

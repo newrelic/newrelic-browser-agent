@@ -11,7 +11,7 @@ import { IPL_TRIGGER_NAME } from '../constants'
 
 export class InitialPageLoadInteraction extends Interaction {
   constructor (agentRef) {
-    super(agentRef, IPL_TRIGGER_NAME, 0, null)
+    super(IPL_TRIGGER_NAME, 0, null)
     this.queueTime = agentRef.info.queueTime
     this.appTime = agentRef.info.applicationTime
     this.oldURL = document.referrer

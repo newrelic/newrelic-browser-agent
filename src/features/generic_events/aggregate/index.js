@@ -281,7 +281,7 @@ export class Aggregate extends AggregateBase {
       ...obj
     }
 
-    this.handleData(eventAttributes)
+    this.handleData(eventAttributes, false, targetEntityGuid)
   }
 
   serializer (eventBuffer) {

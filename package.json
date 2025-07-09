@@ -189,6 +189,7 @@
     "test:component": "jest --selectProjects component",
     "test:types": "tsd -f ./tests/dts/**/*.ts",
     "wdio": "node --max-old-space-size=8192 tools/wdio/bin/cli.js",
+    "wdio:smoke": "node --max-old-space-size=8192 tools/wdio/bin/cli.js -T --concurrent=30",
     "build:all": "npm run cdn:build:local && npm run build:npm && npm run tools:test-builds",
     "build:browser-agent-wrapper": "npm run cdn:build:local && npm run build:npm && npm --prefix tools/test-builds/browser-agent-wrapper run build",
     "build:npm": "npm run npm:build:esm && npm run npm:build:cjs && npm run npm:build:types && npm run npm:pack",

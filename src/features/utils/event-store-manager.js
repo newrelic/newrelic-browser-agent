@@ -101,6 +101,8 @@ export class EventStoreManager {
       // should be the key that is honored to get the event store to ensure a valid connection was made.
       if (targetEntityGuid === DEFAULT_KEY) return
       const targetApp = this.entityManager.get(targetEntityGuid)
+      // const data = eventStore.get(opts)
+      // if (targetApp && (data.length || Object.keys(data).some(key => data[key].length))) allPayloads.push({ targetApp, data })
       if (targetApp) allPayloads.push({ targetApp, data: eventStore.get(opts) })
     })
     return allPayloads

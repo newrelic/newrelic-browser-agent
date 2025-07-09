@@ -65,14 +65,13 @@ export const mergeInfo = (info) => {
   const originalJsAttributes = modeledObject.jsAttributes
   modeledObject.jsAttributes = new Proxy(originalJsAttributes, {
     set (target, prop, value) {
+      modeledObject.jsAttributesBytes += prop.length + stringify(value).length
       target[prop] = value
-      modeledObject.jsAttributesBytes = stringify(target).length
       return true
     },
     deleteProperty (target, prop) {
-      const deleted = delete target[prop]
-      modeledObject.jsAttributesBytes = stringify(target).length
-      return deleted
+      modeledObject.jsAttributesBytes -= prop.length + stringify(target[prop]).length
+      return delete target[prop]
     }
   })
 

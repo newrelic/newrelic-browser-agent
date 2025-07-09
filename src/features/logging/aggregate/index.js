@@ -98,7 +98,7 @@ export class Aggregate extends AggregateBase {
       level
     )
 
-    this.handleData(log, true)
+    this.handleData(log, true, targetEntityGuid)
   }
 
   serializer (eventBuffer, targetEntityGuid) {

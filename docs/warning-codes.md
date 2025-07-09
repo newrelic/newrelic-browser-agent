@@ -126,4 +126,4 @@
 ### 62 
 `Timestamp must be a unix timestamp greater than the page origin time`
 ### 63
-`Single event was larger than the maximum allowed payload size`
+`A single event was larger than the maximum allowed payload size`

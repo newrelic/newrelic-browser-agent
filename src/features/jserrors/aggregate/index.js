@@ -239,7 +239,7 @@ export class Aggregate extends AggregateBase {
     const jsAttributesHash = stringHashCode(stringify(allCustomAttrs))
     const aggregateHash = bucketHash + ':' + jsAttributesHash
 
-    this.handleData([type, aggregateHash, params, newMetrics, allCustomAttrs], targetEntityGuid)
+    this.handleData([type, aggregateHash, params, newMetrics, allCustomAttrs], false, targetEntityGuid)
 
     function setCustom (key, val) {
       allCustomAttrs[key] = (val && typeof val === 'object' ? stringify(val) : val)
@@ -279,7 +279,9 @@ export class Aggregate extends AggregateBase {
       var jsAttributesHash = stringHashCode(stringify(allCustomAttrs))
       var aggregateHash = hash + ':' + jsAttributesHash
 
-      this.handleData([item[0], aggregateHash, params, item[3], allCustomAttrs], item[5])
+      const targetEntityGuid = item[5]
+
+      this.handleData([item[0], aggregateHash, params, item[3], allCustomAttrs], false, targetEntityGuid)
 
       function setCustom ([key, val]) {
         allCustomAttrs[key] = (val && typeof val === 'object' ? stringify(val) : val)

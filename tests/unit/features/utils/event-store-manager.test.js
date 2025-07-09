@@ -58,7 +58,7 @@ describe('EventStoreManager', () => {
   test('add uses default target when target is not provided', () => {
     const store = new EventStoreManager(mockAgentRef, EventBuffer, mockAgentRef.runtime.appMetadata.agents[0].entityGuid, 'test')
     const myEventBuffer = store.appStorageMap.get(mockAgentRef.runtime.appMetadata.agents[0].entityGuid)
-
+    myEventBuffer.add('myEvent')
     expect(store.get()[0].data).toEqual(myEventBuffer.get())
   })
 

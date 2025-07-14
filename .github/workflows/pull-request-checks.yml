@@ -223,7 +223,7 @@ jobs:
 
   pending-comment-pull-request:
     name: Pending comment pull request
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' && needs.find-pull-request.result == 'success'
     needs: find-pull-request
     runs-on: ubuntu-latest
     defaults:
@@ -255,7 +255,7 @@ jobs:
 
   # wdio-coverage:
   #   name: WDIO coverage
-  #   if: github.event_name == 'workflow_dispatch'
+  #   if: github.event_name == 'workflow_dispatch' && needs.find-pull-request.result == 'success'
   #   needs: find-pull-request
   #   uses: ./.github/workflows/wdio-single-browser.yml
   #   with:
@@ -266,7 +266,7 @@ jobs:
 
   wdio:
     name: WDIO
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' && needs.find-pull-request.result == 'success'
     needs: find-pull-request
     uses: ./.github/workflows/wdio-all-browsers.yml
     with:

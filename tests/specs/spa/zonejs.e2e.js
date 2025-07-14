@@ -50,8 +50,6 @@ describe('spa interactions with zonejs', () => {
       await browser.url(url).then(() => browser.waitForAgentLoad())
     ])
 
-    const referrer = await browser.execute(() => document.referrer)
-
     const event = interactionHarvests[0].request.body
       .find(ev => ev.type === 'interaction' && ev.trigger === 'initialPageLoad')
     expect(event).toEqual(expect.objectContaining({
@@ -60,7 +58,7 @@ describe('spa interactions with zonejs', () => {
       trigger: 'initialPageLoad',
       initialPageURL: url.slice(0, url.indexOf('?')),
       newURL: url.slice(0, url.indexOf('?')),
-      ...(browserMatch(notIOS) ? { oldURL: referrer } : {}), // ios on lambdatest appears to return the wrong value for referrer when using browser.execute, which breaks this test condition. Confirmed referrer behavior works in real env
+      ...(browserMatch(notIOS) ? { oldURL: '' } : {}), // ios on lambdatest appears to return the wrong value for referrer when using browser.execute, which breaks this test condition. Confirmed referrer behavior works in real env
       children: expect.arrayContaining([
         expect.objectContaining({
           domain: expect.stringContaining('bam-test-1.nr-local.net'),

@@ -68,7 +68,7 @@ const args = yargs(hideBin(process.argv))
   .describe('l', 'default loader to inject into test pages')
 
   .boolean('T')
-  .default('T', false)
+  .default('T', true)
   .alias('T', 'tunnel')
   .describe('T', 'Launch LambdaTest tunnel for this test run using process.env credentials')
 

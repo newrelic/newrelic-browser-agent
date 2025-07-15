@@ -17,8 +17,6 @@ import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
 import { now } from '../../../common/timing/now'
 import { TimeKeeper } from '../../../common/timing/time-keeper'
 import { applyFnToProps } from '../../../common/util/traverse'
-import { registerHandler } from '../../../common/event-emitter/register-handler'
-import { isContainerAgentTarget } from '../../../common/util/target'
 
 export class Aggregate extends AggregateBase {
   static featureName = CONSTANTS.FEATURE_NAME
@@ -28,10 +26,6 @@ export class Aggregate extends AggregateBase {
     this.timeToFirstByte = 0
     this.firstByteToWindowLoad = 0 // our "frontend" duration
     this.firstByteToDomContent = 0 // our "dom processing" duration
-
-    registerHandler('send-rum', (customAttibutes, target) => {
-      this.sendRum(customAttibutes, target)
-    }, this.featureName, this.ee)
 
     if (!isValid(agentRef.info)) {
       this.ee.abort()
@@ -58,7 +52,7 @@ export class Aggregate extends AggregateBase {
    *
    * @param {Function} cb A function to run once the RUM call has finished - Defaults to activateFeatures
    * @param {*} customAttributes custom attributes to attach to the RUM call - Defaults to info.js
-   * @param {*} target The target to harvest to - Since we will not know the entityGuid before harvesting, this must be an object directly supplied from the info object or API, not an entityGuid string for lookup with the entityManager - Defaults to { licenseKey: this.agentRef.info.licenseKey, applicationID: this.agentRef.info.applicationID }
+   * @param {*} target The target to harvest to
    */
   sendRum (customAttributes = this.agentRef.info.jsAttributes, target = { licenseKey: this.agentRef.info.licenseKey, applicationID: this.agentRef.info.applicationID }) {
     const info = this.agentRef.info
@@ -122,7 +116,7 @@ export class Aggregate extends AggregateBase {
 
     this.agentRef.runtime.harvester.triggerHarvestFor(this, {
       directSend: {
-        targetApp: target,
+        target,
         payload: { qs: queryParameters, body }
       },
       needResponse: true,
@@ -130,19 +124,15 @@ export class Aggregate extends AggregateBase {
     })
   }
 
-  postHarvestCleanup ({ status, responseText, xhr, targetApp }) {
+  postHarvestCleanup ({ status, responseText, xhr }) {
     const rumEndTime = now()
     let app, flags
     try {
       ({ app, ...flags } = JSON.parse(responseText))
-      this.processEntities(app.agents, targetApp)
     } catch (error) {
       // wont set entity stuff here, if main agent will later abort, if registered agent, nothing will happen
       warn(53, error)
     }
-
-    /** Only run agent-wide side-effects if the harvest was for the main agent */
-    if (!isContainerAgentTarget(targetApp, this.agentRef)) return
 
     if (status >= 400 || status === 0) {
       warn(18, status)
@@ -175,20 +165,5 @@ export class Aggregate extends AggregateBase {
     this.drain()
     this.agentRef.runtime.harvester.startTimer()
     activateFeatures(flags, this.agentRef)
-  }
-
-  processEntities (entities, targetApp) {
-    if (!entities || !targetApp) return
-    entities.forEach(agent => {
-      const entityManager = this.agentRef.runtime.entityManager
-      const entityGuid = agent.entityGuid
-      const entity = entityManager.get(entityGuid)
-      if (entity) return // already processed
-
-      if (isContainerAgentTarget(targetApp, this.agentRef)) {
-        entityManager.setDefaultEntity({ ...targetApp, entityGuid })
-      }
-      entityManager.set(agent.entityGuid, { ...targetApp, entityGuid })
-    })
   }
 }

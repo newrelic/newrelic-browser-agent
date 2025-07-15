@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { originTime } from '../constants/runtime'
+import { isNative } from '../util/monkey-patched'
 
 /**
  * Class used to adjust the timestamp of harvested data to New Relic server time. This
@@ -39,6 +40,7 @@ export class TimeKeeper {
   constructor (sessionObj) {
     this.#session = sessionObj
     this.processStoredDiff()
+    isNative(performance.now, Date.now) // will warn the user if these are not native functions.  We need these to be native for time in the agent to be accurate in general.
   }
 
   get ready () {

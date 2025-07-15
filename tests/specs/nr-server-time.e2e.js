@@ -418,6 +418,21 @@ describe('NR Server Time', () => {
       expect(subsequentServerTimeDiff).toEqual(initialServerTimeDiff)
       expect(subsequentSession.localStorage.serverTimeDiff).toEqual(initialSession.localStorage.serverTimeDiff)
     })
+
+    it('should warn if the time globals are monkey-patched', async () => {
+      const url = await browser.testHandle.assetURL('monkey-patched.html')
+      await browser.url(url).then(() => browser.waitForAgentLoad())
+
+      const logs = await browser.execute(function () {
+        return window.logs
+      })
+
+      expect(logs[0][0].includes('New Relic Warning') && logs[0][0].includes('63')).toEqual(true) // 63 is the warning code for monkey-patched globals
+      expect(logs[0][1]).toEqual('debug')
+
+      expect(logs[1][0].includes('New Relic Warning') && logs[1][0].includes('63')).toEqual(true) // 63 is the warning code for monkey-patched globals
+      expect(logs[1][1]).toEqual('function (){ \n        return origPerformanceNow.apply(performance, arguments);}')
+    })
   })
 })
 

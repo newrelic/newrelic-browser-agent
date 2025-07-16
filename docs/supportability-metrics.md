@@ -65,8 +65,11 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 * GenericEvents/Harvest/Max/Seen
 
 ### User Actions
+<!-- A user action has been detected as a rage click --->
 * UserAction/RageClick/Seen
+<!-- A user action has been detected as a dead click --->
 * UserAction/DeadClick/Seen
+<!-- A user action has been detected as an error click --->
 * UserAction/ErrorClick/Seen
 
 ### Session

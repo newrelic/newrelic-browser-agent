@@ -24,14 +24,22 @@ beforeAll(() => {
 let softNavAggregate
 
 beforeEach(async () => {
+  // to prevent xmlhttprequest errors in jest
+  const xhrMockClass = () => ({
+    open: jest.fn(),
+    send: jest.fn(),
+    setRequestHeader: jest.fn(),
+    addEventListener: jest.fn()
+  })
+
+  global.XMLHttpRequest = jest.fn().mockImplementation(xhrMockClass)
+
   const softNavInstrument = new SoftNav(mainAgent)
   await new Promise(process.nextTick)
   softNavAggregate = softNavInstrument.featAggregate
 
   softNavAggregate.ee.emit('rumresp', [{ spa: 1 }])
   await new Promise(process.nextTick)
-  // to prevent xmlhttprequest errors in jest
-  global.XMLHttpRequest = jest.fn()
 
   softNavAggregate.initialPageLoadInteraction = null
   softNavAggregate.interactionInProgress = null

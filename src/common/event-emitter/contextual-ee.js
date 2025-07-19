@@ -93,12 +93,13 @@ function ee (old, debugId) {
 
     var ctx = context(contextOrStore)
     var handlersArray = listeners(type)
-    var len = handlersArray.length
 
     // Apply each handler function in the order they were added
     // to the context with the arguments
 
-    for (var i = 0; i < len; i++) handlersArray[i].apply(ctx, args)
+    handlersArray.forEach((handler) => {
+      handler.apply(ctx, args)
+    })
 
     // Buffer after emitting for consistent ordering
     var bufferGroup = getBuffer()[bufferGroupMap[type]]

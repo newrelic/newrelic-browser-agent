@@ -159,7 +159,7 @@ describe('logging harvesting', () => {
         }
         const logs = [...expectedLogs(type, loggingModes), {
           level: 'DEBUG',
-          message: 'New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#31',
+          message: 'New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#63',
           timestamp: expect.any(Number),
           attributes: {
             pageUrl: expect.any(String)

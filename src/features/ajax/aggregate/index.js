@@ -21,6 +21,8 @@ export class Aggregate extends AggregateBase {
     this.underSpaEvents = {}
     const classThis = this
 
+    super.customAttributesAreSeparate = true
+
     // --- v Used by old spa feature
     this.ee.on('interactionDone', (interaction, wasSaved) => {
       if (!this.underSpaEvents[interaction.id]) return

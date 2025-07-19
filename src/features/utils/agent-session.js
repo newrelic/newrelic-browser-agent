@@ -8,6 +8,7 @@ import { registerHandler } from '../../common/event-emitter/register-handler'
 import { SessionEntity } from '../../common/session/session-entity'
 import { LocalStorage } from '../../common/storage/local-storage.js'
 import { DEFAULT_KEY } from '../../common/session/constants'
+import { mergeInfo } from '../../common/config/info'
 
 export function setupAgentSession (agentRef) {
   if (agentRef.runtime.session) return agentRef.runtime.session // already setup
@@ -24,9 +25,15 @@ export function setupAgentSession (agentRef) {
 
   // Retrieve & re-add all of the persisted setCustomAttribute|setUserId k-v from previous page load(s), if any was stored.
   const customSessionData = agentRef.runtime.session.state.custom
-  if (customSessionData) {
+  if (customSessionData && Object.keys(customSessionData).length) {
     /** stored attributes from previous page should not take precedence over attributes stored on this page via API before the page load */
-    agentRef.info.jsAttributes = { ...customSessionData, ...agentRef.info.jsAttributes }
+    agentRef.info = mergeInfo({
+      ...agentRef.info,
+      jsAttributes: {
+        ...customSessionData,
+        ...agentRef.info.jsAttributes
+      }
+    })
   }
 
   const sharedEE = ee.get(agentRef.agentIdentifier)

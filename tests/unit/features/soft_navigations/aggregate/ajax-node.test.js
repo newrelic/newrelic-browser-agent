@@ -40,9 +40,8 @@ beforeEach(() => {
 })
 
 test('Ajax node creation is correct', () => {
-  const ajn = new AjaxNode(someAgent, someAjaxEvent)
+  const ajn = new AjaxNode(someAjaxEvent)
 
-  expect(ajn.info).toEqual({})
   expect(ajn.belType).toEqual(2)
   expect(ajn.nodeId).toEqual(1)
   expect(ajn.callbackDuration === 0 && ajn.callbackEnd === 0).toBeTruthy()
@@ -64,10 +63,10 @@ test('Ajax node creation is correct', () => {
 })
 
 test('Ajax serialize output is correct', () => {
-  const ajn = new AjaxNode(someAgent, someAjaxEvent)
+  const ajn = new AjaxNode(someAjaxEvent)
 
   expect(ajn.nodeId).toEqual(1)
-  expect(ajn.serialize(0)).toEqual("2,3,sg,sg,,,'POST,5p,'google.com,'/,3f,co,1,'1,'some_span_id,'some_trace_id,lx;5,'operationName,'Anonymous;5,'operationType,'QUERY;5,'operationFramework,'GraphQL")
+  expect(ajn.serialize(0, someAgent)).toEqual("2,3,sg,sg,,,'POST,5p,'google.com,'/,3f,co,1,'1,'some_span_id,'some_trace_id,lx;5,'operationName,'Anonymous;5,'operationType,'QUERY;5,'operationFramework,'GraphQL")
   // The start (and end) timestamp should translate based on "parent" timestamp passed in:
-  expect(ajn.serialize(512)).toEqual("2,3,e8,sg,,,'POST,5p,'google.com,'/,3f,co,1,'1,'some_span_id,'some_trace_id,lx;5,'operationName,'Anonymous;5,'operationType,'QUERY;5,'operationFramework,'GraphQL")
+  expect(ajn.serialize(512, someAgent)).toEqual("2,3,e8,sg,,,'POST,5p,'google.com,'/,3f,co,1,'1,'some_span_id,'some_trace_id,lx;5,'operationName,'Anonymous;5,'operationType,'QUERY;5,'operationFramework,'GraphQL")
 })

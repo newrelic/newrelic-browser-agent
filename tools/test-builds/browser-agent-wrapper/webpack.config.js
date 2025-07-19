@@ -43,6 +43,14 @@ const registeredEntityHtmlTemplate = (script) => `<html>
     <title>RUM Unit Test</title>
     {init}
     {config}
+    <script>
+      localStorage.clear()
+      NREUM.init.ajax.enabled = false
+      NREUM.init.page_view_timing.enabled = false
+      NREUM.init.session_replay.enabled = false
+      NREUM.init.session_trace.enabled = false
+      NREUM.init.spa.enabled = false
+    </script>
     {loader}
     <script src="${script}.js"></script>
   </head>

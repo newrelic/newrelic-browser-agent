@@ -19,7 +19,6 @@ import { handle } from '../../common/event-emitter/handle'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../metrics/constants'
 import { EventAggregator } from '../../common/aggregate/event-aggregator'
 import { IDEAL_PAYLOAD_SIZE } from '../../common/constants/agent-constants'
-import { stringify } from '../../common/util/stringify'
 
 export class AggregateBase extends FeatureBase {
   /**
@@ -32,6 +31,9 @@ export class AggregateBase extends FeatureBase {
     this.agentRef = agentRef
     this.checkConfiguration(agentRef)
     this.doOnceForAllAggregate(agentRef)
+
+    /** @type {Boolean} indicates if custom attributes are combined in each event payload for size estimation purposes. this is set to true in derived classes that need to evaluate custom attributes separately from the event payload */
+    this.customAttributesAreSeparate = false
 
     this.harvestOpts = {} // features aggregate classes can define custom opts for when their harvest is called
 
@@ -73,52 +75,10 @@ export class AggregateBase extends FeatureBase {
     }
   }
 
-  /**
-   * Handles incoming data for aggregation.
-   * @param {*} data - The data to be handled.
-   * @param {boolean} [customAttributesAreSeparate=false] - Flag indicating if global custom attributes are separate from the event payload.
-   * @param {string} [targetEntityGuid] - The entity guid of the target app, if applicable.
-   * @returns {void}
-   */
-  handleData (data, customAttributesAreSeparate = false, targetEntityGuid) {
-    if (this.blocked) return
-    /** aggregated timeslice metrics dont support byte counting at the moment */
-    if (this.events.StorageClass === EventAggregator) return this.events.add(data, targetEntityGuid)
-
-    const getBytesEstimate = () => {
-      return this.events.byteSize() + (customAttributesAreSeparate ? this.agentRef.info.jsAttributesBytes : 0)
-    }
-
-    const getSMTag = (type) => {
-      return `${this.featureName}/Harvest/${type}/Seen`
-    }
-
-    const onAdded = () => {
-      // events were successfully added to the buffer
-      const combinedBytes = getBytesEstimate()
-      if (combinedBytes > IDEAL_PAYLOAD_SIZE) {
-        // events in the buffer have exceeded the ideal payload size, so we trigger a harvest
-        this.agentRef.runtime.harvester.triggerHarvestFor(this)
-        this.reportSupportabilityMetric(getSMTag('Early'), combinedBytes)
-      }
-    }
-    const onFailed = () => {
-      // event was too big, even for a single event
-      warn(63, this.featureName)
-      this.reportSupportabilityMetric(getSMTag('Failed'), stringify(data).length)
-    }
-
-    // this will be false when the event was dropped due to exceeding max size
-    if (!this.events.add(data, targetEntityGuid)) {
-      if (!this.events.isEmpty(undefined, targetEntityGuid)) {
-        // if the buffer is not empty, we can try to harvest what's in there before trying to add the new event again
-        this.reportSupportabilityMetric(getSMTag('Max'), getBytesEstimate())
-        this.agentRef.runtime.harvester.triggerHarvestFor(this)
-        // try to add the event again after harvest
-        if (!this.events.add(data, targetEntityGuid)) onFailed()
-        else onAdded()
-      } else onFailed()
-    } else onAdded()
+  evaluateHarvest () {
+    if (!this.events || this.events.StorageClass === EventAggregator) return false
+    const estimatedSize = this.events.byteSize() + (this.customAttributesAreSeparate ? this.agentRef.info.jsAttributesBytes : 0)
+    return { shouldHarvestEarly: estimatedSize > IDEAL_PAYLOAD_SIZE, estimatedSize }
   }
 
   /**

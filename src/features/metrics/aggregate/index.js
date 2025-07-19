@@ -54,7 +54,7 @@ export class Aggregate extends AggregateBase {
     if (this.blocked) return
     const type = CUSTOM_METRIC
     const params = { name }
-    this.handleData([type, name, params, metrics])
+    this.events.add([type, name, params, metrics])
   }
 
   singleChecks () {

@@ -52,6 +52,7 @@ export class EventBuffer {
     }
     this.#buffer.push(event)
     this.#rawBytes += addSize
+    this.featureAgg?.ee.emit('event-buffered', [this.featureAgg])
     return true
   }
 

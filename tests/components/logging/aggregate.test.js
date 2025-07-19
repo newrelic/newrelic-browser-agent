@@ -135,12 +135,10 @@ describe('payloads', () => {
   test('short circuits if log is too big', async () => {
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'x'.repeat(1024 * 1024), { myAttributes: 1 }, 'ERROR'])
 
-    expect(handleModule.handle).toHaveBeenCalledWith('storeSupportabilityMetrics', ['logging/Harvest/Failed/Seen', expect.any(Number)], undefined, 'metrics', loggingAggregate.ee)
-    expect(consoleModule.warn).toHaveBeenCalledWith(63, 'logging')
+    expect(handleModule.handle).toHaveBeenCalledWith('storeSupportabilityMetrics', ['EventBuffer/logging/Dropped/Bytes', expect.any(Number)], undefined, 'metrics', loggingAggregate.ee)
 
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'short message, long attrs', { myAttributes: 'x'.repeat(1024 * 1024) }, 'ERROR'])
-    expect(handleModule.handle).toHaveBeenCalledWith('storeSupportabilityMetrics', ['logging/Harvest/Failed/Seen', expect.any(Number)], undefined, 'metrics', loggingAggregate.ee)
-    expect(consoleModule.warn).toHaveBeenCalledWith(63, 'logging')
+    expect(handleModule.handle).toHaveBeenCalledWith('storeSupportabilityMetrics', ['EventBuffer/logging/Dropped/Bytes', expect.any(Number)], undefined, 'metrics', loggingAggregate.ee)
   })
 
   test('should short circuit if message is falsy', async () => {

@@ -21,6 +21,8 @@ export class Aggregate extends AggregateBase {
     super(agentRef, FEATURE_NAME)
     this.isSessionTrackingEnabled = canEnableSessionTracking(agentRef.init) && agentRef.runtime.session
 
+    super.customAttributesAreSeparate = true
+
     // The SessionEntity class can emit a message indicating the session was cleared and reset (expiry, inactivity). This feature must abort and never resume if that occurs.
     this.ee.on(SESSION_EVENTS.RESET, () => {
       this.abort(ABORT_REASONS.RESET)
@@ -98,7 +100,7 @@ export class Aggregate extends AggregateBase {
       level
     )
 
-    this.handleData(log, true, targetEntityGuid)
+    this.events.add(log, targetEntityGuid)
   }
 
   serializer (eventBuffer, targetEntityGuid) {

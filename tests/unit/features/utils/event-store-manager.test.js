@@ -10,18 +10,19 @@ const entityManager = new EntityManager({ info, ee: { emit: jest.fn() } })
 entityManager.setDefaultEntity(entity)
 entityManager.set(entityGuid, entity)
 const mockAgentRef = { info, runtime: { entityManager, appMetadata: { agents: [{ entityGuid }] } } }
+const mockFeatureAgg = { featureName: 'testFeature', ee: { emit: jest.fn() }, reportSupportabilityMetric: jest.fn() }
 describe('EventStoreManager', () => {
   test('uses EventBuffer class when storageChoice is EventBuffer', () => {
-    const store = new EventStoreManager(mockAgentRef, EventBuffer, mockAgentRef.runtime.appMetadata.agents[0].entityGuid, 'test')
+    const store = new EventStoreManager(mockAgentRef, EventBuffer, mockAgentRef.runtime.appMetadata.agents[0].entityGuid, mockFeatureAgg)
     expect(store.StorageClass.name).toEqual('EventBuffer')
   })
   test('uses EventAggregator class when storageChoice is EventAggregator', () => {
-    const store = new EventStoreManager(mockAgentRef, EventAggregator, mockAgentRef.runtime.appMetadata.agents[0].entityGuid, 'test')
+    const store = new EventStoreManager(mockAgentRef, EventAggregator, mockAgentRef.runtime.appMetadata.agents[0].entityGuid, mockFeatureAgg)
     expect(store.StorageClass.name).toEqual('EventAggregator')
   })
 
   test('has the required common methods defined', () => {
-    const store = new EventStoreManager(mockAgentRef, EventBuffer, mockAgentRef.runtime.appMetadata.agents[0].entityGuid, 'test')
+    const store = new EventStoreManager(mockAgentRef, EventBuffer, mockAgentRef.runtime.appMetadata.agents[0].entityGuid, mockFeatureAgg)
     expect(store.isEmpty).toBeDefined()
     expect(store.add).toBeDefined()
     expect(store.addMetric).toBeDefined()
@@ -35,14 +36,14 @@ describe('EventStoreManager', () => {
   })
 
   test('has agentIdentifier and featureName defined', () => {
-    const store = new EventStoreManager(mockAgentRef, EventBuffer, mockAgentRef.runtime.appMetadata.agents[0].entityGuid, { featureName: 'test' })
+    const store = new EventStoreManager(mockAgentRef, EventBuffer, mockAgentRef.runtime.appMetadata.agents[0].entityGuid, { featureName: mockFeatureAgg })
     expect(store.agentIdentifier).toEqual(mockAgentRef.agentIdentifier)
-    expect(store.featureAgg.featureName).toEqual('test')
+    expect(store.featureAgg.featureName).toEqual(mockFeatureAgg)
   })
 
   test('calls the underlying StorgeClass add, get, isEmpty methods', () => {
     const myTarget = 'abcd1234'
-    const store = new EventStoreManager(mockAgentRef, EventBuffer, mockAgentRef.runtime.appMetadata.agents[0].entityGuid, 'test')
+    const store = new EventStoreManager(mockAgentRef, EventBuffer, mockAgentRef.runtime.appMetadata.agents[0].entityGuid, mockFeatureAgg)
 
     let myEventBuffer = store.appStorageMap.get(myTarget)
     expect(myEventBuffer).toBeUndefined() // has never had a read or write from the ESM
@@ -56,14 +57,14 @@ describe('EventStoreManager', () => {
   })
 
   test('add uses default target when target is not provided', () => {
-    const store = new EventStoreManager(mockAgentRef, EventBuffer, mockAgentRef.runtime.appMetadata.agents[0].entityGuid, 'test')
+    const store = new EventStoreManager(mockAgentRef, EventBuffer, mockAgentRef.runtime.appMetadata.agents[0].entityGuid, mockFeatureAgg)
     const myEventBuffer = store.appStorageMap.get(mockAgentRef.runtime.appMetadata.agents[0].entityGuid)
     myEventBuffer.add('myEvent')
     expect(store.get()[0].data).toEqual(myEventBuffer.get())
   })
 
   test('add does not error when target does not exist', () => {
-    const store = new EventStoreManager(mockAgentRef, EventBuffer, mockAgentRef.runtime.appMetadata.agents[0].entityGuid, 'test')
+    const store = new EventStoreManager(mockAgentRef, EventBuffer, mockAgentRef.runtime.appMetadata.agents[0].entityGuid, mockFeatureAgg)
     expect(() => store.add('myEvent', 'DNE')).not.toThrow()
   })
 
@@ -73,7 +74,7 @@ describe('EventStoreManager', () => {
     const tgt2 = 'otherTarget'
     const tgt2Meta = { licenseKey: '2', applicationID: '2' }
 
-    const store = new EventStoreManager(mockAgentRef, EventBuffer, mockAgentRef.runtime.appMetadata.agents[0].entityGuid, 'test')
+    const store = new EventStoreManager(mockAgentRef, EventBuffer, mockAgentRef.runtime.appMetadata.agents[0].entityGuid, mockFeatureAgg)
     store.entityManager.set(tgt1, tgt1Meta)
     store.entityManager.set(tgt2, tgt2Meta)
 
@@ -86,7 +87,7 @@ describe('EventStoreManager', () => {
 
   test('get does not error when target does not exist', () => {
     const myTarget = 'abcd1234'
-    const store = new EventStoreManager(mockAgentRef, EventBuffer, mockAgentRef.runtime.appMetadata.agents[0].entityGuid, 'test')
+    const store = new EventStoreManager(mockAgentRef, EventBuffer, mockAgentRef.runtime.appMetadata.agents[0].entityGuid, mockFeatureAgg)
     expect(() => store.get(undefined, myTarget)).not.toThrow()
     expect(store.get(undefined, myTarget)).toEqual([{ targetApp: undefined, data: [] }])
 
@@ -96,7 +97,7 @@ describe('EventStoreManager', () => {
 
   test('isEmpty checks ALL storages when target is not provided', () => {
     const tgt1 = 'myTarget'
-    const store = new EventStoreManager(mockAgentRef, EventBuffer, mockAgentRef.runtime.appMetadata.agents[0].entityGuid, 'test')
+    const store = new EventStoreManager(mockAgentRef, EventBuffer, mockAgentRef.runtime.appMetadata.agents[0].entityGuid, mockFeatureAgg)
     expect(store.isEmpty()).toBeTruthy()
     store.add('myEvent', tgt1)
     expect(store.isEmpty()).toBeFalsy()
@@ -114,7 +115,7 @@ describe('EventStoreManager', () => {
   })
 
   test('isEmpty returns true when the target does not exist', () => {
-    const store = new EventStoreManager(mockAgentRef, EventBuffer, mockAgentRef.runtime.appMetadata.agents[0].entityGuid, 'test')
+    const store = new EventStoreManager(mockAgentRef, EventBuffer, mockAgentRef.runtime.appMetadata.agents[0].entityGuid, mockFeatureAgg)
     expect(store.isEmpty(undefined, { name: 'DNE' })).toEqual(true)
   })
 })

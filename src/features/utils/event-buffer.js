@@ -52,7 +52,7 @@ export class EventBuffer {
     }
     this.#buffer.push(event)
     this.#rawBytes += addSize
-    this.featureAgg?.ee.emit('event-buffered', [this.featureAgg])
+    this.featureAgg?.decideEarlyHarvest() // check if we should harvest early with new data
     return true
   }
 

@@ -10,7 +10,7 @@ const entityManager = new EntityManager({ info, ee: { emit: jest.fn() } })
 entityManager.setDefaultEntity(entity)
 entityManager.set(entityGuid, entity)
 const mockAgentRef = { info, runtime: { entityManager, appMetadata: { agents: [{ entityGuid }] } } }
-const mockFeatureAgg = { featureName: 'testFeature', ee: { emit: jest.fn() }, reportSupportabilityMetric: jest.fn() }
+const mockFeatureAgg = { featureName: 'testFeature', ee: { emit: jest.fn() }, reportSupportabilityMetric: jest.fn(), decideEarlyHarvest: jest.fn() }
 describe('EventStoreManager', () => {
   test('uses EventBuffer class when storageChoice is EventBuffer', () => {
     const store = new EventStoreManager(mockAgentRef, EventBuffer, mockAgentRef.runtime.appMetadata.agents[0].entityGuid, mockFeatureAgg)

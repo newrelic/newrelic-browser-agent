@@ -34,6 +34,8 @@ export class AggregateBase extends FeatureBase {
 
     /** @type {Boolean} indicates if custom attributes are combined in each event payload for size estimation purposes. this is set to true in derived classes that need to evaluate custom attributes separately from the event payload */
     this.customAttributesAreSeparate = false
+    /** @type {Boolean} indicates if the feature can harvest early. This is set to false in derived classes that need to block early harvests, like ajax under certain conditions */
+    this.canHarvestEarly = true // this is set to false in derived classes that need to block early harvests, like ajax under certain conditions
 
     this.harvestOpts = {} // features aggregate classes can define custom opts for when their harvest is called
 
@@ -76,15 +78,17 @@ export class AggregateBase extends FeatureBase {
   }
 
   /**
-   * Evaluates whether the harvest should be made early by estimating the size of the payload.
-   * @returns {{ shouldHarvestEarly: boolean, estimatedSize: number }} - Returns an object indicating whether the harvest should be done early and the estimated size of the payload.
+   * Evaluates whether a harvest should be made early by estimating the size of the current payload.  Currently, this only happens if the event storage is EventBuffer, since that triggers this method directly.
+   * If conditions are met, a new harvest will be triggered immediately.
+   * @returns void
    */
-  evaluateHarvest () {
-    const output = { shouldHarvestEarly: false, estimatedSize: 0 }
-    if (!this.events || this.events.StorageClass !== EventBuffer) return output
-    output.estimatedSize = this.events.byteSize() + (this.customAttributesAreSeparate ? this.agentRef.runtime.jsAttributesMetadata.bytes : 0)
-    output.shouldHarvestEarly = output.estimatedSize > IDEAL_PAYLOAD_SIZE
-    return output
+  decideEarlyHarvest () {
+    if (!this.canHarvestEarly) return
+    const estimatedSize = this.events.byteSize() + (this.customAttributesAreSeparate ? this.agentRef.runtime.jsAttributesMetadata.bytes : 0)
+    if (estimatedSize > IDEAL_PAYLOAD_SIZE) {
+      this.agentRef.runtime.harvester.triggerHarvestFor(this)
+      this.reportSupportabilityMetric(`${this.featureName}/Harvest/Early/Seen`, estimatedSize)
+    }
   }
 
   /**

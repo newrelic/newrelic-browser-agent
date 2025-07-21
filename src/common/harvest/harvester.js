@@ -35,14 +35,6 @@ export class Harvester {
       this.initializedAggregates.forEach(aggregateInst => this.triggerHarvestFor(aggregateInst, { isFinalHarvest: true }))
       /* This callback should run in bubble phase, so that that CWV api, like "onLCP", is called before the final harvest so that emitted timings are part of last outgoing. */
     }, false)
-
-    this.agentRef.ee.on('event-buffered', (featureAgg) => {
-      const { shouldHarvestEarly, estimatedSize } = featureAgg.evaluateHarvest()
-      if (shouldHarvestEarly) {
-        this.triggerHarvestFor(featureAgg)
-        featureAgg.reportSupportabilityMetric(`${featureAgg.featureName}/Harvest/Early/Seen`, estimatedSize)
-      }
-    })
   }
 
   startTimer (harvestInterval = this.agentRef.init.harvest.interval) {

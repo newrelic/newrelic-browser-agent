@@ -9,6 +9,7 @@ import { SessionEntity } from '../../common/session/session-entity'
 import { LocalStorage } from '../../common/storage/local-storage.js'
 import { DEFAULT_KEY } from '../../common/session/constants'
 import { mergeInfo } from '../../common/config/info'
+import { trackObjectAttributeSize } from '../../common/util/attribute-size'
 
 export function setupAgentSession (agentRef) {
   if (agentRef.runtime.session) return agentRef.runtime.session // already setup
@@ -35,6 +36,9 @@ export function setupAgentSession (agentRef) {
       }
     })
   }
+
+  /** track changes to the jsAttributes field over time for aiding with harvest mechanics */
+  agentRef.runtime.jsAttributesMetadata = trackObjectAttributeSize(agentRef.info, 'jsAttributes')
 
   const sharedEE = ee.get(agentRef.agentIdentifier)
 

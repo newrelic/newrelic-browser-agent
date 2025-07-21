@@ -2,7 +2,6 @@
  * Copyright 2020-2025 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { stringify } from '../util/stringify'
 import { defaults as nrDefaults } from '../window/nreum'
 import { getModeledObject } from './configurable'
 
@@ -43,7 +42,6 @@ const InfoModel = {
   product: undefined,
   extra: undefined,
   jsAttributes: {},
-  jsAttributesBytes: 0,
   userAttributes: undefined,
   atts: undefined,
   transactionName: undefined,
@@ -59,21 +57,5 @@ export function isValid (info) {
 }
 
 export const mergeInfo = (info) => {
-  const modeledObject = getModeledObject(info, InfoModel)
-
-  // proxy jsAttributes to calculate its size when changed
-  const originalJsAttributes = modeledObject.jsAttributes
-  modeledObject.jsAttributes = new Proxy(originalJsAttributes, {
-    set (target, prop, value) {
-      modeledObject.jsAttributesBytes += prop.length + stringify(value).length
-      target[prop] = value
-      return true
-    },
-    deleteProperty (target, prop) {
-      modeledObject.jsAttributesBytes -= prop.length + stringify(target[prop]).length
-      return delete target[prop]
-    }
-  })
-
-  return modeledObject
+  return getModeledObject(info, InfoModel)
 }

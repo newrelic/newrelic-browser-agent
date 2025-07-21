@@ -75,10 +75,16 @@ export class AggregateBase extends FeatureBase {
     }
   }
 
+  /**
+   * Evaluates whether the harvest should be made early by estimating the size of the payload.
+   * @returns {{ shouldHarvestEarly: boolean, estimatedSize: number }} - Returns an object indicating whether the harvest should be done early and the estimated size of the payload.
+   */
   evaluateHarvest () {
-    if (!this.events || this.events.StorageClass === EventAggregator) return false
-    const estimatedSize = this.events.byteSize() + (this.customAttributesAreSeparate ? this.agentRef.info.jsAttributesBytes : 0)
-    return { shouldHarvestEarly: estimatedSize > IDEAL_PAYLOAD_SIZE, estimatedSize }
+    const output = { shouldHarvestEarly: false, estimatedSize: 0 }
+    if (!this.events || this.events.StorageClass !== EventBuffer) return output
+    output.estimatedSize = this.events.byteSize() + (this.customAttributesAreSeparate ? this.agentRef.runtime.jsAttributesMetadata.bytes : 0)
+    output.shouldHarvestEarly = output.estimatedSize > IDEAL_PAYLOAD_SIZE
+    return output
   }
 
   /**

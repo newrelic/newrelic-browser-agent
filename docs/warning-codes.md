@@ -125,3 +125,5 @@
 `Timestamps must be non-negative and end time cannot be before start time.`
 ### 62 
 `Timestamp must be a unix timestamp greater than the page origin time`
+### 63
+`A single event was larger than the maximum allowed payload size`

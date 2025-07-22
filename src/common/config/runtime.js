@@ -37,6 +37,8 @@ const RuntimeModel = {
   releaseIds: {},
   session: undefined,
   timeKeeper: undefined,
+  /** a proxy is set in agent-session to track jsAttributes changes for harvesting mechanics */
+  jsAttributesMetadata: { bytes: 0 },
   get harvestCount () { return ++_harvestCount }
 }
 

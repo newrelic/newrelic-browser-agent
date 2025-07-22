@@ -359,3 +359,35 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 * Internal/Error/Rrweb-Security-Policy
 <!--- an uncategorized internal error was observed -->
 * Internal/Error/Other
+
+### Event Buffer
+<!-- The number of bytes dropped across all features because an event buffer reached its cap -->
+EventBuffer/Combined/Dropped/Bytes
+<!-- The number of bytes dropped for ajax feature because an event buffer reached its cap -->
+EventBuffer/ajax/Dropped/Bytes
+<!-- The number of bytes dropped for generic events feature because an event buffer reached its cap -->
+EventBuffer/generic_events/Dropped/Bytes
+<!-- The number of bytes dropped for logging feature because an event buffer reached its cap -->
+EventBuffer/logging/Dropped/Bytes
+<!-- The number of bytes dropped for PVE feature because an event buffer reached its cap -->
+EventBuffer/page_view_event/Dropped/Bytes
+<!-- The number of bytes dropped for PVT feature because an event buffer reached its cap -->
+EventBuffer/page_view_timing/Dropped/Bytes
+<!-- The number of bytes dropped for spa feature because an event buffer reached its cap -->
+EventBuffer/spa/Dropped/Bytes
+<!-- The number of bytes dropped for soft_nav feature because an event buffer reached its cap -->
+EventBuffer/soft_navigations/Dropped/Bytes
+
+### Harvest
+<!--- Ajax harvest was sent before the interval elapsed (bytes captured) --->
+* ajax/Harvest/Early/Seen
+<!--- Generic events harvest was sent before the interval elapsed (bytes captured) --->
+* generic_events/Harvest/Early/Seen
+<!--- Logging harvest was sent before the interval elapsed (bytes captured) --->
+* logging/Harvest/Early/Seen
+<!--- Page view timing harvest was sent before the interval elapsed (bytes captured) --->
+* page_view_timing/Harvest/Early/Seen
+<!--- Soft nav harvest was sent before the interval elapsed (bytes captured) --->
+* soft_navigations/Harvest/Early/Seen
+<!--- Logging harvest was sent before the interval elapsed (bytes captured) --->
+* spa/Harvest/Early/Seen

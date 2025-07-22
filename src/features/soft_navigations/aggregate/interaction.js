@@ -31,8 +31,8 @@ export class Interaction extends BelNode {
   onDone = []
   cancellationTimer
 
-  constructor (agentRef, uiEvent, uiEventTimestamp, currentRouteKnown, currentUrl) {
-    super(agentRef)
+  constructor (uiEvent, uiEventTimestamp, currentRouteKnown, currentUrl) {
+    super()
     this.belType = NODE_TYPE.INTERACTION
     this.trigger = uiEvent
     this.start = uiEventTimestamp
@@ -83,7 +83,6 @@ export class Interaction extends BelNode {
   #finish (customEndTime = 0) {
     clearTimeout(this.cancellationTimer)
     this.end = Math.max(this.domTimestamp, this.historyTimestamp, customEndTime)
-    this.customAttributes = { ...this.info.jsAttributes, ...this.customAttributes } // attrs specific to this interaction should have precedence over the general custom attrs
     this.status = INTERACTION_STATUS.FIN
 
     // Run all the callbacks awaiting this interaction to finish.
@@ -116,9 +115,15 @@ export class Interaction extends BelNode {
   get firstContentfulPaint () {}
   get navTiming () {}
 
-  serialize (firstStartTimeOfPayload) {
+  /**
+   * Serializes (BEL) the interaction data for transmission.
+   * @param {Number} firstStartTimeOfPayload timestamp
+   * @param {Agent} agentRef Pass in the agent reference directly so that the event itself doesnt need to store the pointers and ruin the evaluation of the event size by including unused object references.
+   * @returns {String} A string that is the serialized representation of this interaction.
+   */
+  serialize (firstStartTimeOfPayload, agentRef) {
     const isFirstIxnOfPayload = firstStartTimeOfPayload === undefined
-    const addString = getAddStringContext(this.obfuscator)
+    const addString = getAddStringContext(agentRef.runtime.obfuscator)
     const nodeList = []
     let ixnType
     if (this.trigger === IPL_TRIGGER_NAME) ixnType = INTERACTION_TYPE.INITIAL_PAGE_LOAD
@@ -145,12 +150,13 @@ export class Interaction extends BelNode {
       addString(this.nodeId),
       nullable(this.firstPaint, numeric, true) + nullable(this.firstContentfulPaint, numeric)
     ]
-    const allAttachedNodes = addCustomAttributes(this.customAttributes || {}, addString) // start with all custom attributes
-    if (this.info.atts) allAttachedNodes.push('a,' + addString(this.info.atts)) // add apm provided attributes
+    const customAttributes = { ...agentRef.info.jsAttributes, ...this.customAttributes } // attrs specific to this interaction should have precedence over the general custom attrs
+    const allAttachedNodes = addCustomAttributes(customAttributes || {}, addString) // start with all custom attributes
+    if (agentRef.info.atts) allAttachedNodes.push('a,' + addString(agentRef.info.atts)) // add apm provided attributes
     /* Querypack encoder+decoder quirkiness:
        - If first ixn node of payload is being processed, its children's start time must be offset by this node's start. (firstStartTime should be undefined.)
        - Else for subsequent ixns in the same payload, we go back to using that first ixn node's start to offset their children's start. */
-    this.children.forEach(node => allAttachedNodes.push(node.serialize(isFirstIxnOfPayload ? this.start : firstStartTimeOfPayload))) // recursively add the serialized string of every child of this (ixn) bel node
+    this.children.forEach(node => allAttachedNodes.push(node.serialize(isFirstIxnOfPayload ? this.start : firstStartTimeOfPayload, agentRef))) // recursively add the serialized string of every child of this (ixn) bel node
 
     fields[1] = numeric(allAttachedNodes.length)
     nodeList.push(fields)

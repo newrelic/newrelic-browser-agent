@@ -18,6 +18,7 @@ import { EventBuffer } from './event-buffer'
 import { handle } from '../../common/event-emitter/handle'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../metrics/constants'
 import { EventAggregator } from '../../common/aggregate/event-aggregator'
+import { IDEAL_PAYLOAD_SIZE } from '../../common/constants/agent-constants'
 
 export class AggregateBase extends FeatureBase {
   /**
@@ -30,6 +31,11 @@ export class AggregateBase extends FeatureBase {
     this.agentRef = agentRef
     this.checkConfiguration(agentRef)
     this.doOnceForAllAggregate(agentRef)
+
+    /** @type {Boolean} indicates if custom attributes are combined in each event payload for size estimation purposes. this is set to true in derived classes that need to evaluate custom attributes separately from the event payload */
+    this.customAttributesAreSeparate = false
+    /** @type {Boolean} indicates if the feature can harvest early. This is set to false in derived classes that need to block early harvests, like ajax under certain conditions */
+    this.canHarvestEarly = true // this is set to false in derived classes that need to block early harvests, like ajax under certain conditions
 
     this.harvestOpts = {} // features aggregate classes can define custom opts for when their harvest is called
 
@@ -60,14 +66,28 @@ export class AggregateBase extends FeatureBase {
         // Jserror and Metric features uses a singleton EventAggregator instead of a regular EventBuffer.
       case FEATURE_NAMES.jserrors:
       case FEATURE_NAMES.metrics:
-        this.events = this.agentRef.sharedAggregator ??= new EventStoreManager(this.agentRef, EventAggregator, entityGuid, 'shared_aggregator')
+        this.events = this.agentRef.sharedAggregator ??= new EventStoreManager(this.agentRef, EventAggregator, entityGuid, { featureName: 'shared_aggregator' })
         break
         /** All other features get EventBuffer in the ESM by default. Note: PVE is included here, but event buffer will always be empty so future harvests will still not happen by interval or EOL.
     This was necessary to prevent race cond. issues where the event buffer was checked before the feature could "block" itself.
     Its easier to just keep an empty event buffer in place. */
       default:
-        this.events = new EventStoreManager(this.agentRef, EventBuffer, entityGuid, this.featureName)
+        this.events = new EventStoreManager(this.agentRef, EventBuffer, entityGuid, this)
         break
+    }
+  }
+
+  /**
+   * Evaluates whether a harvest should be made early by estimating the size of the current payload.  Currently, this only happens if the event storage is EventBuffer, since that triggers this method directly.
+   * If conditions are met, a new harvest will be triggered immediately.
+   * @returns void
+   */
+  decideEarlyHarvest () {
+    if (!this.canHarvestEarly) return
+    const estimatedSize = this.events.byteSize() + (this.customAttributesAreSeparate ? this.agentRef.runtime.jsAttributesMetadata.bytes : 0)
+    if (estimatedSize > IDEAL_PAYLOAD_SIZE) {
+      this.agentRef.runtime.harvester.triggerHarvestFor(this)
+      this.reportSupportabilityMetric(`${this.featureName}/Harvest/Early/Seen`, estimatedSize)
     }
   }
 

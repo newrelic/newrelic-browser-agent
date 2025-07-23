@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.294.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.293.0...v1.294.0) (2025-07-23)
+
+
+### Features
+
+* Harvest early ([#1513](https://github.com/newrelic/newrelic-browser-agent/issues/1513)) ([d347eaa](https://github.com/newrelic/newrelic-browser-agent/commit/d347eaa76e26a9a4fc8e5c191de6a3c737712c68))
+
+
+### Bug Fixes
+
+* report empty previousUrl as undefined ([#1526](https://github.com/newrelic/newrelic-browser-agent/issues/1526)) ([e3ca824](https://github.com/newrelic/newrelic-browser-agent/commit/e3ca824847e8f91a5da8cca8bf7717001c16929b))
+
 ## [1.293.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.292.1...v1.293.0) (2025-07-01)
 
 

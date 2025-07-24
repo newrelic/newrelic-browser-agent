@@ -140,10 +140,22 @@ export class Aggregate extends AggregateBase {
 
     var canonicalStackString = this.buildCanonicalStackString(stackInfo)
 
+    let causeStackString = ''
+    if (err.cause) {
+      if (err.cause instanceof Error) {
+        const causeStack = computeStackTrace(err.cause)
+        // canonicalCauseString = err.message + ' ' + this.buildCanonicalStackString(causeStack)
+        causeStackString = causeStack.stackString
+      } else {
+        causeStackString = typeof err.cause === 'string' ? err.cause : stringify(err.cause)
+      }
+    }
+
     const params = {
       stackHash: stringHashCode(canonicalStackString),
       exceptionClass: stackInfo.name,
-      request_uri: globalScope?.location.pathname
+      request_uri: globalScope?.location.pathname,
+      ...(causeStackString && { cause: causeStackString })
     }
     if (stackInfo.message) params.message = '' + stackInfo.message
     // Notice if filterOutput isn't false|undefined OR our specified object, this func would've returned already (so it's unnecessary to req-check group).

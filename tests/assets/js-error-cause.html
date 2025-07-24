@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+<head>
+  <title>RUM Unit Test</title>
+  {init} {config} {loader}
+</head>
+<body>
+This page throws an error with a cause
+
+<!-- error with error cause -->
+<script>
+  throw new Error('error with error cause', {
+    cause: new Error('This is the cause of the test error')
+  })
+</script>
+
+<!-- error with string cause -->
+<script>
+  throw new Error('error with string cause', {
+    cause: 'This is the cause of the test error'
+  })
+</script>
+
+<!-- error with non-string cause -->
+<script>
+  throw new Error('error with non-string cause', {
+    cause: 123
+  })
+</script>
+</body>
+</html>

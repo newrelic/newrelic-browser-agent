@@ -128,4 +128,18 @@ describe('error payloads', () => {
 
     expect(errorResults).toEqual([])
   })
+
+  it('cause is captured when present', async () => {
+    const [errorResults] = await Promise.all([
+      errorsCapture.waitForResult({ totalCount: 1 }), // should not harvest an error (neither the noticeError call or an error from calling the API with no arg)
+      browser.url(await browser.testHandle.assetURL('js-error-cause.html')) // Setup expects before loading the page
+    ])
+
+    // error cause is captured in the params
+    expect(errorResults[0].request.body.err[0].params.cause).toEqual('Error: This is the cause of the test error\n    at <inline>:18:12')
+    // string cause is captured in the params
+    expect(errorResults[0].request.body.err[1].params.cause).toEqual('This is the cause of the test error')
+    // non-string cause is captured in the params
+    expect(errorResults[0].request.body.err[2].params.cause).toEqual('123')
+  })
 })

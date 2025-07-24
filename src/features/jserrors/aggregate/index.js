@@ -21,6 +21,7 @@ import { applyFnToProps } from '../../../common/util/traverse'
 import { evaluateInternalError } from './internal-errors'
 import { isContainerAgentTarget } from '../../../common/util/target'
 import { warn } from '../../../common/util/console'
+import { buildCauseString } from './cause-string'
 
 /**
  * @typedef {import('./compute-stack-trace.js').StackInfo} StackInfo
@@ -140,19 +141,7 @@ export class Aggregate extends AggregateBase {
 
     var canonicalStackString = this.buildCanonicalStackString(stackInfo)
 
-    let causeStackString = ''
-    if (err.cause) {
-      if (err.cause instanceof Error) {
-        try {
-          causeStackString = computeStackTrace(err.cause).stackString
-        } catch (e) {
-          // If we can't compute the stack trace for the cause, try to capture the string output
-          causeStackString = err.cause.toString()
-        }
-      } else {
-        causeStackString = typeof err.cause === 'string' ? err.cause : stringify(err.cause)
-      }
-    }
+    const causeStackString = buildCauseString(err)
 
     const params = {
       stackHash: stringHashCode(canonicalStackString),

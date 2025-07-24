@@ -1,5 +1,6 @@
-/* globals errorFn, noticeErrorFn */
+/* globals errorFn, noticeErrorFn, browserMatch */
 const { testErrorsRequest } = require('../../../tools/testing-server/utils/expect-tests')
+const { onlySafari, onlyFirefox } = require('../../../tools/browser-matcher/common-matchers.mjs')
 
 describe('error payloads', () => {
   let errorsCapture
@@ -130,16 +131,25 @@ describe('error payloads', () => {
   })
 
   it('cause is captured when present', async () => {
-    const [errorResults] = await Promise.all([
+    const [errorResults, errorCauseMessage] = await Promise.all([
       errorsCapture.waitForResult({ totalCount: 1 }), // should not harvest an error (neither the noticeError call or an error from calling the API with no arg)
       browser.url(await browser.testHandle.assetURL('js-error-cause.html')) // Setup expects before loading the page
+        .then(() => browser.execute(function () { return window.errorCauseMessage }))
     ])
 
-    // error cause is captured in the params
-    expect(errorResults[0].request.body.err[0].params.cause).toEqual('Error: This is the cause of the test error\n    at <inline>:18:12')
-    // string cause is captured in the params
-    expect(errorResults[0].request.body.err[1].params.cause).toEqual('This is the cause of the test error')
-    // non-string cause is captured in the params
-    expect(errorResults[0].request.body.err[2].params.cause).toEqual('123')
+    const errorCause = errorResults[0].request.body.err.find(x => x.params.message === 'error with error cause').params.cause
+    expect(errorCause.match(/<inline>:[0-9]+:[0-9]+/).length).toEqual(1)
+    if (browserMatch(onlyFirefox)) expect(errorCause).toContain('@<inline>')
+    else if (browserMatch(onlySafari)) expect(errorCause).toContain('global code')
+    else expect(errorCause).toContain(errorCauseMessage)
+
+    const stringCause = errorResults[0].request.body.err.find(x => x.params.message === 'error with string cause').params.cause
+    expect(stringCause).toContain(errorCauseMessage)
+
+    const nonStringCause = errorResults[0].request.body.err.find(x => x.params.message === 'error with non-string cause').params.cause
+    expect(nonStringCause).toContain(errorCauseMessage)
+
+    const nonStringifiedCause = errorResults[0].request.body.err.find(x => x.params.message === 'error with cause that can\'t be stringified').params.cause
+    expect(nonStringifiedCause).toContain(errorCauseMessage)
   })
 })

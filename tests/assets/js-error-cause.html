@@ -11,25 +11,37 @@
 <body>
 This page throws an error with a cause
 
+<script>
+  window.errorCauseMessage = 'This is the cause of the test error';
+</script>
+
 <!-- error with error cause -->
 <script>
   throw new Error('error with error cause', {
-    cause: new Error('This is the cause of the test error')
+    cause: new Error(window.errorCauseMessage)
   })
 </script>
 
 <!-- error with string cause -->
 <script>
   throw new Error('error with string cause', {
-    cause: 'This is the cause of the test error'
+    cause: window.errorCauseMessage
   })
 </script>
 
 <!-- error with non-string cause -->
 <script>
   throw new Error('error with non-string cause', {
-    cause: 123
+    cause: { toJSON: function(){ return window.errorCauseMessage; } }
   })
 </script>
+
+<!-- error with cause that can't be stringified -->
+<script>
+  throw new Error('error with cause that can\'t be stringified', {
+    cause: { toString: function(){ return window.errorCauseMessage; }, toJSON: function(){ throw new Error('cannot stringify cause'); } }
+  })
+</script>
+
 </body>
 </html>

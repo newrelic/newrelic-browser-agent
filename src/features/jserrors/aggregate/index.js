@@ -143,9 +143,12 @@ export class Aggregate extends AggregateBase {
     let causeStackString = ''
     if (err.cause) {
       if (err.cause instanceof Error) {
-        const causeStack = computeStackTrace(err.cause)
-        // canonicalCauseString = err.message + ' ' + this.buildCanonicalStackString(causeStack)
-        causeStackString = causeStack.stackString
+        try {
+          causeStackString = computeStackTrace(err.cause).stackString
+        } catch (e) {
+          // If we can't compute the stack trace for the cause, try to capture the string output
+          causeStackString = err.cause.toString()
+        }
       } else {
         causeStackString = typeof err.cause === 'string' ? err.cause : stringify(err.cause)
       }

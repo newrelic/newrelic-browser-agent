@@ -39,7 +39,7 @@ const LENGTHS = {
   [SMEARABLES.touching]: 2000 // 2 seconds max length for touching events
 }
 
-/** The purpose of this class is to manage, normalize, and retrieve ST nodes as needed without polluting the main ST modules */
+/** The purpose of this class is to manage, normalize, and drop various ST nodes as needed without polluting the main ST modules */
 export class TraceStorage {
   #laststart = 0
 
@@ -101,6 +101,7 @@ export class TraceStorage {
 
   /** Central internal function called by all the other store__ & addToTrace API to append a trace node. They MUST all have checked #canStoreNewNode before calling this func!! */
   #storeSTN (stn) {
+    if (this.#shouldIgnoreEvent(stn)) return
     if (!this.#canStoreNewNode()) return
     if (this.#isSmearable(stn)) this.#smear(stn)
     else {

@@ -198,8 +198,8 @@ export class Aggregate extends AggregateBase {
     this.events.clear()
   }
 
-  postHarvestCleanup () {
+  postHarvestCleanup (result) {
     this.traceStorage.clear() // clear the trace storage state
-    super.postHarvestCleanup()
+    super.postHarvestCleanup(result)
   }
 }

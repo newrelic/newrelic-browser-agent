@@ -143,5 +143,5 @@ describe('Trace nodes', () => {
 })
 
 function getEventsSetSize () {
-  return Object.values(newrelic.initializedAgents)[0].features.session_trace.featAggregate.events.prevStoredEvents.size
+  return Object.values(newrelic.initializedAgents)[0].features.session_trace.featAggregate.traceStorage.prevStoredEvents.size
 }

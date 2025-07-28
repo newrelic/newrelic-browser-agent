@@ -13,7 +13,7 @@ import { applyFnToProps } from '../../../common/util/traverse'
 import { cleanURL } from '../../../common/url/clean-url'
 import { warn } from '../../../common/util/console'
 
-const ERROR_MODE_SECONDS_WINDOW = 30 * 1000 // sliding window of nodes to track when simply monitoring (but not harvesting) in error mode
+const SUPPORTS_PERFORMANCE_OBSERVER = typeof globalScope.PerformanceObserver === 'function'
 /** Reserved room for query param attrs */
 const QUERY_PARAM_PADDING = 5000
 export class Aggregate extends AggregateBase {
@@ -29,8 +29,8 @@ export class Aggregate extends AggregateBase {
     this.everHarvested = false
     /** If the harvest module is harvesting */
     this.harvesting = false
-    /** TraceStorage is the mechanism that holds, normalizes and aggregates ST nodes.  It will be accessed and purged when harvests occur */
-    this.events = new TraceStorage(this)
+    /** TraceStorage is a middleware that decides how to format data before passing events to `this.events` */
+    this.traceStorage = new TraceStorage(this)
 
     /* This agg needs information about sampling (sts) and entitlements (st) to make the appropriate decisions on running */
     this.waitForFlags(['sts', 'st'])
@@ -64,9 +64,9 @@ export class Aggregate extends AggregateBase {
       })
 
       if (typeof PerformanceNavigationTiming !== 'undefined') {
-        this.events.storeTiming(globalScope.performance?.getEntriesByType?.('navigation')[0])
+        this.traceStorage.storeTiming(globalScope.performance?.getEntriesByType?.('navigation')[0])
       } else {
-        this.events.storeTiming(globalScope.performance?.timing, true)
+        this.traceStorage.storeTiming(globalScope.performance?.timing, true)
       }
     }
 
@@ -82,13 +82,13 @@ export class Aggregate extends AggregateBase {
     this.timeKeeper ??= this.agentRef.runtime.timeKeeper
 
     /** The handlers set up by the Inst file */
-    registerHandler('bst', (...args) => this.events.storeEvent(...args), this.featureName, this.ee)
-    registerHandler('bstResource', (...args) => this.events.storeResources(...args), this.featureName, this.ee)
-    registerHandler('bstHist', (...args) => this.events.storeHist(...args), this.featureName, this.ee)
-    registerHandler('bstXhrAgg', (...args) => this.events.storeXhrAgg(...args), this.featureName, this.ee)
-    registerHandler('bstApi', (...args) => this.events.storeNode(...args), this.featureName, this.ee)
-    registerHandler('trace-jserror', (...args) => this.events.storeErrorAgg(...args), this.featureName, this.ee)
-    registerHandler('pvtAdded', (...args) => this.events.processPVT(...args), this.featureName, this.ee)
+    registerHandler('bst', (...args) => this.traceStorage.storeEvent(...args), this.featureName, this.ee)
+    registerHandler('bstResource', (...args) => this.traceStorage.storeResources(...args), this.featureName, this.ee)
+    registerHandler('bstHist', (...args) => this.traceStorage.storeHist(...args), this.featureName, this.ee)
+    registerHandler('bstXhrAgg', (...args) => this.traceStorage.storeXhrAgg(...args), this.featureName, this.ee)
+    registerHandler('bstApi', (...args) => this.traceStorage.storeNode(...args), this.featureName, this.ee)
+    registerHandler('trace-jserror', (...args) => this.traceStorage.storeErrorAgg(...args), this.featureName, this.ee)
+    registerHandler('pvtAdded', (...args) => this.traceStorage.processPVT(...args), this.featureName, this.ee)
 
     if (this.mode !== MODE.FULL) {
       /** A separate handler for noticing errors, and switching to "full" mode if running in "error" mode */
@@ -111,21 +111,30 @@ export class Aggregate extends AggregateBase {
       this.abort(3)
       return
     }
+
+    // stage timings if PO isn't supported, this checks resourcetiming buffer every harvest.
+    if (!SUPPORTS_PERFORMANCE_OBSERVER) {
+      this.traceStorage.storeResources(globalScope.performance?.getEntriesByType?.('resource'))
+    }
+
     return true
   }
 
-  serializer ({ stns }) {
+  serializer (stns) {
     if (!stns.length) return // there are no processed nodes
     this.everHarvested = true
     return applyFnToProps(stns, this.obfuscator.obfuscateString.bind(this.obfuscator), 'string')
   }
 
-  queryStringsBuilder ({ stns, earliestTimeStamp, latestTimeStamp }) {
+  queryStringsBuilder (stns) {
     const firstSessionHarvest = !this.agentRef.runtime.session.state.traceHarvestStarted
     if (firstSessionHarvest) this.agentRef.runtime.session.write({ traceHarvestStarted: true })
     const hasReplay = this.agentRef.runtime.session.state.sessionReplayMode === 1
     const endUserId = this.agentRef.info.jsAttributes['enduser.id']
     const entityGuid = this.agentRef.runtime.appMetadata.agents?.[0]?.entityGuid
+
+    const earliestTimeStamp = stns.reduce((earliest, stn) => Math.min(earliest, stn.s), Infinity)
+    const latestTimeStamp = stns.reduce((latest, stn) => Math.max(latest, stn.s), -Infinity)
 
     /* The blob consumer expects the following and will reject if not supplied:
      * browser_monitoring_key
@@ -175,7 +184,7 @@ export class Aggregate extends AggregateBase {
     this.agentRef.runtime.session.write({ sessionTraceMode: this.mode })
     if (prevMode === MODE.OFF || !this.initialized) return this.initialize(this.mode, this.entitled)
     if (this.initialized) {
-      this.events.trimSTNs(ERROR_MODE_SECONDS_WINDOW) // up until now, Trace would've been just buffering nodes up to max, which needs to be trimmed to last X seconds
+      this.traceStorage.trimSTNsByTime() // up until now, Trace would've been just buffering nodes up to max, which needs to be trimmed to last X seconds
       this.agentRef.runtime.harvester.triggerHarvestFor(this)
     }
   }
@@ -187,5 +196,10 @@ export class Aggregate extends AggregateBase {
     this.mode = MODE.OFF
     this.agentRef.runtime.session.write({ sessionTraceMode: this.mode })
     this.events.clear()
+  }
+
+  postHarvestCleanup () {
+    this.traceStorage.clear() // clear the trace storage state
+    super.postHarvestCleanup()
   }
 }

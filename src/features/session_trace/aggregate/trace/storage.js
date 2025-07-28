@@ -2,16 +2,12 @@
  * Copyright 2020-2025 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { globalScope } from '../../../../common/constants/runtime'
 import { MODE } from '../../../../common/session/constants'
 import { now } from '../../../../common/timing/now'
 import { parseUrl } from '../../../../common/url/parse-url'
 import { eventOrigin } from '../../../../common/util/event-origin'
-import { MAX_NODES_PER_HARVEST } from '../../constants'
+import { ERROR_MODE_SECONDS_WINDOW, MAX_NODES_PER_HARVEST } from '../../constants'
 import { TraceNode } from './node'
-
-const ERROR_MODE_SECONDS_WINDOW = 30 * 1000 // sliding window of nodes to track when simply monitoring (but not harvesting) in error mode
-const SUPPORTS_PERFORMANCE_OBSERVER = typeof globalScope.PerformanceObserver === 'function'
 
 const ignoredEvents = {
   // we find that certain events make the data too noisy to be useful
@@ -21,125 +17,98 @@ const ignoredEvents = {
   // when ajax instrumentation is disabled, all XMLHttpRequest events will return with origin = xhrOriginMissing and should be ignored
   xhrOriginMissing: { ignoreAll: true }
 }
-const toAggregate = {
-  typing: [1000, 2000],
-  scrolling: [100, 1000],
-  mousing: [1000, 2000],
-  touching: [1000, 2000]
+
+const SMEARABLES = {
+  typing: 'typing',
+  scroll: 'scroll',
+  mousing: 'mousing',
+  touching: 'touching'
+}
+
+const GAPS = {
+  [SMEARABLES.typing]: 1000, // 1 second gap between typing events
+  [SMEARABLES.scrolling]: 100, // 100ms gap between scrolling events
+  [SMEARABLES.mousing]: 1000, // 1 second gap between mousing events
+  [SMEARABLES.touching]: 1000 // 1 second gap between touching events
+}
+
+const LENGTHS = {
+  [SMEARABLES.typing]: 2000, // 2 seconds max length for typing events
+  [SMEARABLES.scrolling]: 1000, // 1 second max length for scrolling events
+  [SMEARABLES.mousing]: 2000, // 2 seconds max length for mousing events
+  [SMEARABLES.touching]: 2000 // 2 seconds max length for touching events
 }
 
 /** The purpose of this class is to manage, normalize, and retrieve ST nodes as needed without polluting the main ST modules */
 export class TraceStorage {
-  nodeCount = 0
-  trace = {}
-  earliestTimeStamp = Infinity
-  latestTimeStamp = 0
+  #laststart = 0
+
   prevStoredEvents = new Set()
-  #backupTrace
 
   constructor (parent) {
     this.parent = parent
   }
 
+  #isSmearable (stn) {
+    return stn.n in SMEARABLES
+  }
+
+  #smear (stn) {
+    // abort if its a trivial scroll event
+    const isTrivialScroll = stn.n === SMEARABLES.scrolling && isTrivial(stn)
+    if (isTrivialScroll) return
+
+    /**
+     * must be the same origin and node type, and the start time of the new node must be within a certain length of the last seen node's start time,
+     * and the end time of the last seen node must be within a certain gap of the new node's start time.
+     * If all these conditions are met, we can merge the last seen node's end time with the new one.
+     * @param {TraceNode} storedEvent - the event already stored in the event buffer to potentially be merged with
+     */
+    const matcher = (storedEvent) => {
+      return !(storedEvent.o !== stn.o || storedEvent.n !== stn.n || (stn.s - storedEvent.s) < LENGTHS[stn.o] || (storedEvent.e > (stn.s - GAPS[stn.o])))
+    }
+
+    // try to merge the last seen node with this one, if it fails it will return false, and we can add the event directly
+    if (!this.parent.events.merge(matcher, { e: stn.e })) {
+      this.parent.events.add(stn) // add the new node directly if it can't be smeared
+    }
+
+    // Helper to check if an event is trivial (very short duration)
+    function isTrivial (node) {
+      const limit = 4
+      return !!(node && typeof node.e === 'number' && typeof node.s === 'number' && (node.e - node.s) < limit)
+    }
+  }
+
+  #shouldIgnoreEvent (event, target) {
+    if (event.type in ignoredEvents.global) return true
+    const origin = eventOrigin(event.target, target, this.parent.ee)
+    if (!!ignoredEvents[origin] && ignoredEvents[origin].ignoreAll) return true
+    if (this.prevStoredEvents.has(event)) return true // prevent multiple listeners of an event from creating duplicate trace nodes per occurrence. Cleared every harvest. near-zero chance for re-duplication after clearing per harvest since the timestamps of the event are considered for uniqueness.
+    return !!(!!ignoredEvents[origin] && event.type in ignoredEvents[origin])
+  }
+
   #canStoreNewNode () {
     if (this.parent.blocked) return false
-    if (this.nodeCount >= MAX_NODES_PER_HARVEST) { // limit the amount of pending data awaiting next harvest
+    if (this.parent.events.length >= MAX_NODES_PER_HARVEST) { // limit the amount of pending data awaiting next harvest
       if (this.parent.mode !== MODE.ERROR) return false
-      const openedSpace = this.trimSTNs(ERROR_MODE_SECONDS_WINDOW) // but maybe we could make some space by discarding irrelevant nodes if we're in sessioned Error mode
-      if (openedSpace === 0) return false
+      this.trimSTNsByTime() // if we're in error mode, we can try to clear the trace storage to make room for new nodes
+      if (this.parent.events.length >= MAX_NODES_PER_HARVEST) this.trimSTNsByIndex(1) // if we still can't store new nodes, trim before index 1 to make room for new nodes
+      return true
     }
     return true
   }
 
   /** Central internal function called by all the other store__ & addToTrace API to append a trace node. They MUST all have checked #canStoreNewNode before calling this func!! */
   #storeSTN (stn) {
-    if (this.trace[stn.n]) this.trace[stn.n].push(stn)
-    else this.trace[stn.n] = [stn]
-
-    if (stn.s < this.earliestTimeStamp) this.earliestTimeStamp = stn.s
-    if (stn.s > this.latestTimeStamp) this.latestTimeStamp = stn.s
-    this.nodeCount++
-  }
-
-  /**
-   * Trim the collection of nodes awaiting harvest such that those seen outside a certain span of time are discarded.
-   * @param {number} lookbackDuration Past length of time until now for which we care about nodes, in milliseconds
-   * @returns {number} However many nodes were discarded after trimming.
-   */
-  trimSTNs (lookbackDuration) {
-    let prunedNodes = 0
-    const cutoffHighResTime = Math.max(now() - lookbackDuration, 0)
-    Object.keys(this.trace).forEach(nameCategory => {
-      const nodeList = this.trace[nameCategory]
-      /* Notice nodes are appending under their name's list as they end and are stored. This means each list is already (roughly) sorted in chronological order by end time.
-         * This isn't exact since nodes go through some processing & EE handlers chain, but it's close enough as we still capture nodes whose duration overlaps the lookback window.
-         * ASSUMPTION: all 'end' timings stored are relative to timeOrigin (DOMHighResTimeStamp) and not Unix epoch based. */
-      let cutoffIdx = nodeList.findIndex(node => cutoffHighResTime <= node.e)
-
-      if (cutoffIdx === 0) return
-      else if (cutoffIdx < 0) { // whole list falls outside lookback window and is irrelevant
-        cutoffIdx = nodeList.length
-        delete this.trace[nameCategory]
-      } else nodeList.splice(0, cutoffIdx) // chop off everything outside our window i.e. before the last <lookbackDuration> timeframe
-
-      this.nodeCount -= cutoffIdx
-      prunedNodes += cutoffIdx
-    })
-    return prunedNodes
-  }
-
-  /** Used by session trace's harvester to create the payload body. */
-  takeSTNs () {
-    if (!SUPPORTS_PERFORMANCE_OBSERVER) { // if PO isn't supported, this checks resourcetiming buffer every harvest.
-      this.storeResources(globalScope.performance?.getEntriesByType?.('resource'))
-    }
-
-    const stns = Object.entries(this.trace).flatMap(([name, listOfSTNodes]) => { // basically take the "this.trace" map-obj and concat all the list-type values
-      if (!(name in toAggregate)) return listOfSTNodes
-      // Special processing for event nodes dealing with user inputs:
-      const reindexByOriginFn = this.smearEvtsByOrigin(name)
-      const partitionListByOriginMap = listOfSTNodes.sort((a, b) => a.s - b.s).reduce(reindexByOriginFn, {})
-      return Object.values(partitionListByOriginMap).flat() // join the partitions back into 1-D, now ordered by origin then start time
-    }, this)
-
-    const earliestTimeStamp = this.earliestTimeStamp
-    const latestTimeStamp = this.latestTimeStamp
-    return { stns, earliestTimeStamp, latestTimeStamp }
-  }
-
-  smearEvtsByOrigin (name) {
-    const maxGap = toAggregate[name][0]
-    const maxLen = toAggregate[name][1]
-    const lastO = {}
-
-    return (byOrigin, evtNode) => {
-      let lastArr = byOrigin[evtNode.o]
-      if (!lastArr) lastArr = byOrigin[evtNode.o] = []
-
-      const last = lastO[evtNode.o]
-
-      if (name === 'scrolling' && !trivial(evtNode)) {
-        lastO[evtNode.o] = null
-        evtNode.n = 'scroll'
-        lastArr.push(evtNode)
-      } else if (last && (evtNode.s - last.s) < maxLen && last.e > (evtNode.s - maxGap)) {
-        last.e = evtNode.e
-      } else {
-        lastO[evtNode.o] = evtNode
-        lastArr.push(evtNode)
-      }
-
-      return byOrigin
-    }
-
-    function trivial (node) {
-      const limit = 4
-      return !!(node && typeof node.e === 'number' && typeof node.s === 'number' && (node.e - node.s) < limit)
+    if (!this.#canStoreNewNode()) return
+    if (this.#isSmearable(stn)) this.#smear(stn)
+    else {
+      this.parent.events.add(stn)
     }
   }
 
   storeNode (node) {
-    if (!this.#canStoreNewNode()) return
     this.#storeSTN(node)
   }
 
@@ -175,13 +144,12 @@ export class TraceStorage {
 
   // Tracks the events and their listener's duration on objects wrapped by wrap-events.
   storeEvent (currentEvent, target, start, end) {
-    if (this.shouldIgnoreEvent(currentEvent, target)) return
+    if (this.#shouldIgnoreEvent(currentEvent, target)) return
     if (!this.#canStoreNewNode()) return // need to check if adding node will succeed BEFORE storing event ref below (*cli Jun'25 - addressing memory leak in aborted ST issue #NR-420780)
 
-    if (this.prevStoredEvents.has(currentEvent)) return // prevent multiple listeners of an event from creating duplicate trace nodes per occurrence. Cleared every harvest. near-zero chance for re-duplication after clearing per harvest since the timestamps of the event are considered for uniqueness.
     this.prevStoredEvents.add(currentEvent)
 
-    const evt = new TraceNode(this.evtName(currentEvent.type), start, end, undefined, 'event')
+    const evt = new TraceNode(evtName(currentEvent.type), start, end, undefined, 'event')
     try {
       // webcomponents-lite.js can trigger an exception on currentEvent.target getter because
       // it does not check currentEvent.currentTarget before calling getRootNode() on it
@@ -192,46 +160,12 @@ export class TraceStorage {
     this.#storeSTN(evt)
   }
 
-  shouldIgnoreEvent (event, target) {
-    if (event.type in ignoredEvents.global) return true
-    const origin = eventOrigin(event.target, target, this.parent.ee)
-    if (!!ignoredEvents[origin] && ignoredEvents[origin].ignoreAll) return true
-    return !!(!!ignoredEvents[origin] && event.type in ignoredEvents[origin])
-  }
-
-  evtName (type) {
-    switch (type) {
-      case 'keydown':
-      case 'keyup':
-      case 'keypress':
-        return 'typing'
-      case 'mousemove':
-      case 'mouseenter':
-      case 'mouseleave':
-      case 'mouseover':
-      case 'mouseout':
-        return 'mousing'
-      case 'scroll':
-        return 'scrolling'
-      case 'touchstart':
-      case 'touchmove':
-      case 'touchend':
-      case 'touchcancel':
-      case 'touchenter':
-      case 'touchleave':
-        return 'touching'
-      default:
-        return type
-    }
-  }
-
   // Tracks when the window history API specified by wrap-history is used.
   storeHist (path, old, time) {
     if (!this.#canStoreNewNode()) return
     this.#storeSTN(new TraceNode('history.pushState', time, time, path, old))
   }
 
-  #laststart = 0
   // Processes all the PerformanceResourceTiming entries captured (by observer).
   storeResources (resources) {
     if (!resources || resources.length === 0) return
@@ -265,38 +199,44 @@ export class TraceStorage {
     this.#storeSTN(new TraceNode('Ajax', metrics.time, metrics.time + metrics.duration, `${params.status} ${params.method}: ${params.host}${params.pathname}`, 'ajax'))
   }
 
-  /* Below are the interface expected & required of whatever storage is used across all features on an individual basis. This allows a common `.events` property on Trace shared with AggregateBase.
-    Note that the usage must be in sync with the EventStoreManager class such that AggregateBase.makeHarvestPayload can run the same regardless of which storage class a feature is using. */
-  isEmpty () {
-    return this.nodeCount === 0
+  trimSTNsByTime (lookbackDuration = ERROR_MODE_SECONDS_WINDOW) {
+    this.parent.events.clear({
+      clearBeforeTime: Math.max(now - lookbackDuration, 0),
+      timestampKey: 'e'
+    })
   }
 
-  save () {
-    this.#backupTrace = this.trace
-  }
-
-  get () {
-    return [{ targetApp: this.parent.agentRef.runtime.entityManager.get(), data: this.takeSTNs() }]
+  trimSTNsByIndex (index = 0) {
+    this.parent.events.clear({
+      clearBeforeIndex: index // trims before index value
+    })
   }
 
   clear () {
-    this.trace = {}
-    this.nodeCount = 0
     this.prevStoredEvents.clear() // release references to past events for GC
-    this.earliestTimeStamp = Infinity
-    this.latestTimeStamp = 0
   }
+}
 
-  reloadSave () {
-    for (const stnsArray of Object.values(this.#backupTrace)) {
-      for (const stn of stnsArray) {
-        if (!this.#canStoreNewNode()) return // stop attempting to re-store nodes
-        this.#storeSTN(stn)
-      }
-    }
-  }
-
-  clearSave () {
-    this.#backupTrace = undefined
+function evtName (type) {
+  switch (type) {
+    case 'keydown':
+    case 'keyup':
+    case 'keypress':
+      return 'typing'
+    case 'mousemove':
+    case 'mouseenter':
+    case 'mouseleave':
+    case 'mouseover':
+    case 'mouseout':
+      return 'mousing'
+    case 'touchstart':
+    case 'touchmove':
+    case 'touchend':
+    case 'touchcancel':
+    case 'touchenter':
+    case 'touchleave':
+      return 'touching'
+    default:
+      return type
   }
 }

@@ -136,6 +136,7 @@ const InitModelFn = () => {
     soft_navigations: { enabled: true, autoStart: true },
     spa: { enabled: true, autoStart: true },
     ssl: undefined,
+    useConsentModel: false,
     user_actions: { enabled: true, elementAttributes: ['id', 'className', 'tagName', 'type'] }
   }
 }

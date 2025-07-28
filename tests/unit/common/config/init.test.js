@@ -4,7 +4,7 @@ jest.mock('../../../../src/common/util/console.js')
 
 test('init props exist and return expected defaults', () => {
   const config = mergeInit({})
-  expect(Object.keys(config).length).toEqual(23)
+  expect(Object.keys(config).length).toEqual(24)
   expect(config.ajax).toEqual({
     autoStart: true,
     block_internal: true,
@@ -131,6 +131,7 @@ test('init props exist and return expected defaults', () => {
     enabled: true,
     elementAttributes: ['id', 'className', 'tagName', 'type']
   })
+  expect(config.useConsentModel).toEqual(false)
 })
 
 describe('property getters/setters used for validation', () => {

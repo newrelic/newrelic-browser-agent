@@ -26,7 +26,7 @@ describe('Trace nodes', () => {
     const [sessionTraceHarvests] = await Promise.all([
       sessionTraceCapture.waitForResult({ timeout: 10000 }),
       browser.execute(function () {
-        const storedEvents = Object.values(newrelic.initializedAgents)[0].features.session_trace.featAggregate.events.prevStoredEvents
+        const storedEvents = Object.values(newrelic.initializedAgents)[0].features.session_trace.featAggregate.traceStorage.prevStoredEvents
         for (let i = 0; i < 10; i++) storedEvents.add(i) // artificially add "events" since the counter is otherwise unreliable
       }).then(() =>
         $('#btn1').click() // since the agent has multiple listeners on vischange, this is a good example of often duplicated event

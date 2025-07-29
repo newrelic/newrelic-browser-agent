@@ -56,7 +56,7 @@ export class Harvester {
    */
   triggerHarvestFor (aggregateInst, localOpts = {}) {
     if (aggregateInst.blocked) return false
-    if (this.agentRef.init.useConsentModel === true && localStorage.getItem('NrBrowserAgentConsent') !== 'true') return false
+    if (this.agentRef.init.useConsentModel && !this.agentRef.runtime.session.state.consent) return false
 
     const submitMethod = getSubmitMethod(localOpts)
     if (!submitMethod) return false

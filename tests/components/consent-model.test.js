@@ -27,6 +27,7 @@ describe('Consent model', () => {
       postHarvestCleanup: () => {},
       harvestOpts: {}
     }
+    mainAgent.runtime.session.state.consent = false
 
     mainAgent.runtime.harvester.triggerHarvestFor(fakeAggregate, { })
 
@@ -40,7 +41,7 @@ describe('Consent model', () => {
       postHarvestCleanup: () => {},
       harvestOpts: {}
     }
-    localStorage.setItem('NrBrowserAgentConsent', 'true')
+    mainAgent.runtime.session.state.consent = true
 
     mainAgent.runtime.harvester.triggerHarvestFor(fakeAggregate, { })
 

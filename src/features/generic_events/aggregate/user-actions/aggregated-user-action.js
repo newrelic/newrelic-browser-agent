@@ -15,6 +15,7 @@ export class AggregatedUserAction {
     this.rageClick = undefined
     this.nearestTargetFields = nearestTargetFields
     this.currentUrl = cleanURL('' + location)
+    this.deadClick = false
   }
 
   /**

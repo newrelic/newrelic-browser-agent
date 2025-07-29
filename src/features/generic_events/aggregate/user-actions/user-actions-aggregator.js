@@ -3,13 +3,27 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { generateSelectorPath } from '../../../../common/dom/selector-path'
-import { OBSERVED_WINDOW_EVENTS } from '../../constants'
+import { FRUSTRATION_TIMEOUT_MS, OBSERVED_WINDOW_EVENTS } from '../../constants'
 import { AggregatedUserAction } from './aggregated-user-action'
+import { Timer } from '../../../../common/timer/timer'
 
 export class UserActionsAggregator {
   /** @type {AggregatedUserAction=} */
   #aggregationEvent = undefined
   #aggregationKey = ''
+  #deadClickTimer = undefined
+  #domObserver = {
+    running: false,
+    instance: undefined
+  }
+
+  constructor () {
+    if (MutationObserver) {
+      this.#domObserver.instance = new MutationObserver(() => {
+        this.#deadClickTimer?.clear()
+      })
+    }
+  }
 
   get aggregationEvent () {
     // if this is accessed externally, we need to be done aggregating on it
@@ -36,10 +50,45 @@ export class UserActionsAggregator {
     } else {
       // return the prev existing one (if there is one)
       const finishedEvent = this.#aggregationEvent
-      // then set as this new event aggregation
+      this.#deadClickCleanup()
+
+      // then start new event aggregation
       this.#aggregationKey = aggregationKey
       this.#aggregationEvent = new AggregatedUserAction(evt, selectorPath, nearestTargetFields)
+      if (evt.type === 'click') {
+        this.#deadClickSetup(this.#aggregationEvent)
+      }
       return finishedEvent
+    }
+  }
+
+  #deadClickSetup (userAction) {
+    if (this.#startObserver()) {
+      this.#deadClickTimer = new Timer({
+        onEnd: () => {
+          userAction.deadClick = true
+          this.#deadClickCleanup()
+        }
+      }, FRUSTRATION_TIMEOUT_MS)
+    }
+  }
+
+  #deadClickCleanup () {
+    this.#domObserver.instance?.disconnect()
+    this.#domObserver.running = false
+    this.#deadClickTimer?.clear()
+  }
+
+  #startObserver () {
+    if (!this.#domObserver.running && this.#domObserver.instance) {
+      this.#domObserver.running = true
+      this.#domObserver.instance.observe(document, {
+        attributes: true,
+        characterData: true,
+        childList: true,
+        subtree: true
+      })
+      return true
     }
   }
 }

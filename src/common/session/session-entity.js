@@ -32,7 +32,8 @@ const model = {
   loggingMode: LOGGING_MODE.OFF,
   serverTimeDiff: null, // set by TimeKeeper; "undefined" value will not be stringified and stored but "null" will
   custom: {},
-  numOfResets: 0
+  numOfResets: 0,
+  consent: false
 }
 
 export class SessionEntity {

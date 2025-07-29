@@ -6,10 +6,22 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     {init}
     {config}
+    <script>
+      NREUM.init.feature_flags = ['user_frustrations']
+      NREUM.init.harvest.interval = 5
+    </script>
     <title>Vite Template</title>
+    <style>
+      .popover-content {
+        background-color: #fff;
+        border: 2px solid #00f;
+        padding: .5em;
+      }
+    </style>
   </head>
   <body>
-    <div id="app"></div>
-    <script type="module" src="src/main.tsx"></script>
+    {loader}
+    <div id="app">App</div>
+    <script type="module" src="%VITE_SCRIPT_SRC%"></script>
   </body>
 </html>

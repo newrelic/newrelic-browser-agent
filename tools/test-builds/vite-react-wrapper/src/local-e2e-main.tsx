@@ -1,6 +1,3 @@
-// Make sure newrelic is the first thing imported
-import "./newrelic";
-
 import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './App';

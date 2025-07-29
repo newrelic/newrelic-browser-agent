@@ -75,3 +75,56 @@ describe('UserActionsAggregator', () => {
     expect(aggregator.process(undefinedEvt)).toBeUndefined()
   })
 })
+
+describe('UserActionsAggregator - Dead Clicks', () => {
+  let aggregator
+  beforeEach(() => {
+    jest.useFakeTimers()
+    aggregator = new UserActionsAggregator()
+  })
+  afterEach(() => {
+    jest.useRealTimers()
+  })
+  test('should set deadClick to true after 2 seconds', () => {
+    const evt = { type: 'click', target: document.body }
+    aggregator.process(evt)
+
+    // Fast-forward time
+    jest.advanceTimersByTime(2000)
+
+    const userAction = aggregator.aggregationEvent
+    expect(userAction.deadClick).toBe(true)
+  })
+
+  test('should NOT set deadClick if DOM mutation occurs within 2 seconds', () => {
+    const btn = document.createElement('button')
+    document.body.appendChild(btn)
+    const evt = { type: 'click', target: btn }
+    aggregator.process(evt)
+
+    // Simulate a DOM mutation before the timer ends
+    btn.setAttribute('data-test', 'mutated')
+    // MutationObserver callback is async, so flush microtasks
+    return Promise.resolve().then(() => {
+      jest.advanceTimersByTime(2000)
+      const userAction = aggregator.aggregationEvent
+      expect(userAction.deadClick).not.toBe(true)
+    })
+  })
+
+  test('should NOT set deadClick if another user action occurs before 2 seconds', () => {
+    const btn = document.createElement('button')
+    document.body.appendChild(btn)
+    const clickEvt = { type: 'click', target: btn }
+    const keydownEvt = { type: 'keydown', target: btn }
+
+    aggregator.process(clickEvt) // Start dead click timer
+    const finishedEvent = aggregator.process(keydownEvt) // Ends aggregation before timer
+
+    // Fast-forward time
+    jest.advanceTimersByTime(2000)
+
+    // The finishedEvent should be the click event, and deadClick should not be set
+    expect(finishedEvent.deadClick).not.toBe(true)
+  })
+})

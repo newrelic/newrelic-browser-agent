@@ -1,11 +1,9 @@
 // Make sure newrelic is the first thing imported
 import "./newrelic";
 
-import React from 'react';
-import ReactDOM from 'react-dom';
-import App from './App';
+import { createRoot } from "react-dom/client";
+import { App } from "./App";
 
-ReactDOM.render(
-  <App />,
-  document.getElementById('app')
-);
+const root = createRoot(document.getElementById("app") as HTMLElement);
+
+root.render(<App />);

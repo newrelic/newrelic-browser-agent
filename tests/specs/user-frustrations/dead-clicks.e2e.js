@@ -8,7 +8,7 @@ describe('User Frustrations - Dead Clicks', () => {
       const [insightsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
         { test: testInsRequest }
       ])
-      await browser.url(await browser.testHandle.assetURL('test-builds/vite-react-wrapper/index.html'))
+      await browser.url(await browser.testHandle.assetURL('test-builds/vite-react-17-wrapper/index.html'))
         .then(() => browser.waitForAgentLoad())
 
       await browser.execute(function () {

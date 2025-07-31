@@ -6,14 +6,14 @@ import { RAGE_CLICK_THRESHOLD_EVENTS, RAGE_CLICK_THRESHOLD_MS } from '../../cons
 import { cleanURL } from '../../../../common/url/clean-url'
 
 export class AggregatedUserAction {
-  constructor (evt, selectorPath, nearestTargetFields) {
+  constructor (evt, selectorInfo) {
     this.event = evt
     this.count = 1
     this.originMs = Math.floor(evt.timeStamp)
     this.relativeMs = [0]
-    this.selectorPath = selectorPath
+    this.selectorPath = selectorInfo.path
     this.rageClick = undefined
-    this.nearestTargetFields = nearestTargetFields
+    this.nearestTargetFields = selectorInfo.nearestFields
     this.currentUrl = cleanURL('' + location)
     this.deadClick = false
   }

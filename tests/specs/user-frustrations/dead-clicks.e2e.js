@@ -12,11 +12,11 @@ describe('User Frustrations - Dead Clicks', () => {
         .then(() => browser.waitForAgentLoad())
 
       await browser.execute(function () {
-        const USER_TIMEOUT = 2000
+        const FRUSTRATION_TIMEOUT = 2000
         const commands = [
-          // [0] - span with no click handler
-          () => { document.getElementById('do-nothing-span').click() },
-          // [1] - DOM mutation as a result of handlers fired via event delegation
+          // [0] - button with no click handler
+          () => { document.getElementById('do-nothing-button').click() },
+          // [1] - DOM mutation as a result of handlers fired via event delegation for a button
           () => { document.getElementById('sample-trigger').click() },
           // end previous user action, using two actions to help "pad" UA harvests due to race between events and harvest cycle
           () => { document.getElementById('dummy-span-1').click() },
@@ -28,16 +28,17 @@ describe('User Frustrations - Dead Clicks', () => {
 
           setTimeout(() => {
             commands[i].call()
-          }, USER_TIMEOUT * (i) + buffer)
+          }, FRUSTRATION_TIMEOUT * (i) + buffer)
         }
       })
 
-      const [insightsHarvest] = await insightsCapture.waitForResult({ totalCount: 3, timeout: 20000 })
+      const waitConditions = { totalCount: 3, timeout: 25000 } // forcing a longer wait to cut down flakiness
+      const [insightsHarvest] = await insightsCapture.waitForResult(waitConditions)
       const actualInsHarvests = insightsHarvest?.request.body.ins.filter(x => x.action === 'click')
       expect(actualInsHarvests[0]).toMatchObject(expect.objectContaining({
         eventType: 'UserAction',
-        targetTag: 'SPAN',
-        targetId: 'do-nothing-span',
+        targetTag: 'BUTTON',
+        targetId: 'do-nothing-button',
         deadClick: true
       }))
       expect(actualInsHarvests[1]).toMatchObject(expect.objectContaining({

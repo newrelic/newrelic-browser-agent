@@ -1,8 +1,41 @@
 html {
-  color-scheme: light dark;
   font-family: system-ui;
   display: flex;
   align-items: center;
   justify-content: center;
   height: 100%;
+}
+
+.popover-content {
+  background-color: #fff;
+  color: #000;
+  border: 2px solid #00f;
+  padding: .5em;
+}
+
+a {
+ color: blue;
+ cursor: pointer;
+ text-decoration: underline;
+}
+
+.non-interactive-element {
+  color: red;
+}
+
+.example-container {
+  border: 10px solid black;
+  border-radius: 2em;
+  padding: 10px;
+  margin-bottom: 1em;
+  background-color: #BDF7D7;
+
+  & h2 {
+    margin-top: 0.5em;
+  }
+}
+
+.link-examples {
+  display: flex;
+  gap: 0.5em;
 }

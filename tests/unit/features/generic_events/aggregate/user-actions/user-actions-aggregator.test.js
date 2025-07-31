@@ -85,8 +85,10 @@ describe('UserActionsAggregator - Dead Clicks', () => {
   afterEach(() => {
     jest.useRealTimers()
   })
-  test('should set deadClick to true after 2 seconds', () => {
-    const evt = { type: 'click', target: document.body }
+  test('should set deadClick to true if no change detected after 2 seconds - buttons', () => {
+    const btn = document.createElement('button')
+    document.body.appendChild(btn)
+    const evt = { type: 'click', target: btn }
     aggregator.process(evt)
 
     // Fast-forward time
@@ -94,6 +96,32 @@ describe('UserActionsAggregator - Dead Clicks', () => {
 
     const userAction = aggregator.aggregationEvent
     expect(userAction.deadClick).toBe(true)
+  })
+
+  test('should set deadClick to true if no change detected after 2 seconds - links', () => {
+    const link = document.createElement('a')
+    document.body.appendChild(link)
+    const evt = { type: 'click', target: link }
+    aggregator.process(evt)
+
+    // Fast-forward time
+    jest.advanceTimersByTime(2000)
+
+    const userAction = aggregator.aggregationEvent
+    expect(userAction.deadClick).toBe(true)
+  })
+
+  test('should NOT set deadClick to true if no change detected after 2 seconds - not button or link', () => {
+    const span = document.createElement('span')
+    document.body.appendChild(span)
+    const evt = { type: 'click', target: span }
+    aggregator.process(evt)
+
+    // Fast-forward time
+    jest.advanceTimersByTime(2000)
+
+    const userAction = aggregator.aggregationEvent
+    expect(userAction.deadClick).not.toBe(true)
   })
 
   test('should NOT set deadClick if DOM mutation occurs within 2 seconds', () => {

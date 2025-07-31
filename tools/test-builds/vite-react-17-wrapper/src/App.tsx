@@ -1,26 +1,18 @@
 import React from 'react';
 import './App.css';
-import SampleTrigger from './SampleTrigger';
-import Popover from './Popover';
-import PopoverTrigger from './PopoverTrigger';
-import PopoverBody from './PopoverBody';
+import Popover from "./components/dropdown/Popover";
+import PopoverTrigger from "./components/dropdown/PopoverTrigger";
+import PopoverBody from "./components/dropdown/PopoverBody";
+import SampleTrigger from "./components/dropdown/SampleTrigger";
+import SpanExample from "./components/SpanExample";
+import ButtonExample from "./components/ButtonExample";
 
 export default function App() {
-  const [clickCount, updateClickCount] = React.useState(0);
   return (
     <>
       <h1>Vite React</h1>
-      <div>
-        <span id={"dummy-span-1"}></span>
-        <span id={"dummy-span-2"}></span>
-        <p><strong>Click count: { clickCount } </strong></p>
-        <p>Span with a click event handler, added via `onclick` ={'>'}
-          <span id="span-with-onclick" onClick={() => { updateClickCount(clickCount + 1)}} className="non-interactive-element">Span </span>
-        </p>
-        <p>Span with no handlers ={'>'}
-          <span id="do-nothing-span" className="non-interactive-element">Span</span>
-        </p>
-      </div>
+      <ButtonExample />
+      <SpanExample />
       <hr/>
       <Popover>
         <PopoverTrigger>

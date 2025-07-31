@@ -278,7 +278,7 @@ export class Aggregate extends AggregateBase {
   /**
    * returns the timestamps for the earliest and latest nodes in the provided array, even if out of order
    * @param {Object[]} [nodes] - the nodes to evaluate
-   * @returns {{ firstEventTimestamp: number|undefined, lastEventTimestamp: number|undefined }} - the corrected timestamps for the earliest and latest nodes
+   * @returns {{ firstEvent: number|undefined, lastEvent: number|undefined }} - the earliest and latest nodes. Defaults to undefined if no nodes are provided or if no timestamps are found in the nodes.
    */
   getFirstAndLastNodes (nodes = []) {
     const output = { firstEvent: nodes[0], lastEvent: nodes[nodes.length - 1] }

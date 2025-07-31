@@ -14,11 +14,6 @@ export class BelNode {
   callbackDuration = 0
   nodeId = ++nodesSeen
 
-  constructor (agentRef) {
-    this.obfuscator = agentRef.runtime.obfuscator
-    this.info = agentRef.info
-  }
-
   addChild (child) {
     this.children.push(child)
   }

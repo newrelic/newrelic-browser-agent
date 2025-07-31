@@ -12,6 +12,10 @@ export class EventAggregator {
   #aggregator = new Aggregator()
   #savedNamesToBuckets = {}
 
+  byteSize () {
+    return 0 // EventAggregator does not currently track byte size like EventBuffer does, but will in a future update. This is a placeholder to maintain interface consistency.
+  }
+
   isEmpty ({ aggregatorTypes }) {
     if (!aggregatorTypes) return Object.keys(this.#aggregator.aggregatedData).length === 0
     return aggregatorTypes.every(type => !this.#aggregator.aggregatedData[type]) // no bucket exist for any of the types we're looking for

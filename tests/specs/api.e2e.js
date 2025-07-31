@@ -334,6 +334,32 @@ describe('newrelic api', () => {
   })
 
   describe('setCustomAttribute()', () => {
+    it('tallies metadata for jsAttributes', async () => {
+      const testUrl = await browser.testHandle.assetURL('instrumented.html')
+      await browser.url(testUrl)
+        .then(() => browser.waitForAgentLoad())
+
+      expect(await browser.execute(function () {
+        return Object.values(newrelic.initializedAgents)[0].runtime.jsAttributesMetadata.bytes
+      })).toEqual(0) // no attributes set yet
+
+      await browser.execute(function () {
+        newrelic.setCustomAttribute('testing', 123)
+      })
+
+      expect(await browser.execute(function () {
+        return Object.values(newrelic.initializedAgents)[0].runtime.jsAttributesMetadata.bytes
+      })).toEqual(10) // testing (7) + 123 (3) = 10
+
+      await browser.execute(function () {
+        newrelic.setCustomAttribute('testing', null)
+      })
+
+      expect(await browser.execute(function () {
+        return Object.values(newrelic.initializedAgents)[0].runtime.jsAttributesMetadata.bytes
+      })).toEqual(0)
+    })
+
     it('persists attribute onto subsequent page loads until unset', async () => {
       const rumCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testRumRequest })
       const testUrl = await browser.testHandle.assetURL('api/custom-attribute.html', {

@@ -16,7 +16,7 @@ export function isNative (...fns) {
     if (checked.has(fn)) return checked.get(fn)
     const isNative = typeof fn === 'function' && fn.toString().includes('[native code]')
     if (!isNative) {
-      warn(63, fn?.name || fn?.toString())
+      warn(64, fn?.name || fn?.toString())
     }
     checked.set(fn, isNative)
     return isNative

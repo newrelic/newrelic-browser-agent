@@ -5,6 +5,23 @@
       "changes": [
         {
           "type": "feat",
+          "sha": "3e6bda74bfd19d4379a41d357c800eebc5d28ed5",
+          "message": "Add error cause detection",
+          "issues": [
+            "1531"
+          ]
+        }
+      ],
+      "version": "1.295.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "d78de2dc-5d35-4199-b75a-34382b12c9c0",
+      "createTime": "2025-08-01T18:34:33.311Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
           "sha": "d347eaa76e26a9a4fc8e5c191de6a3c737712c68",
           "message": "Harvest early",
           "issues": [
@@ -3074,5 +3091,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2025-07-23T16:30:07.752Z"
+  "updateTime": "2025-08-01T18:34:33.311Z"
 }

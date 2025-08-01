@@ -21,6 +21,7 @@ import { applyFnToProps } from '../../../common/util/traverse'
 import { evaluateInternalError } from './internal-errors'
 import { isContainerAgentTarget } from '../../../common/util/target'
 import { warn } from '../../../common/util/console'
+import { buildCauseString } from './cause-string'
 
 /**
  * @typedef {import('./compute-stack-trace.js').StackInfo} StackInfo
@@ -140,10 +141,13 @@ export class Aggregate extends AggregateBase {
 
     var canonicalStackString = this.buildCanonicalStackString(stackInfo)
 
+    const causeStackString = buildCauseString(err)
+
     const params = {
       stackHash: stringHashCode(canonicalStackString),
       exceptionClass: stackInfo.name,
-      request_uri: globalScope?.location.pathname
+      request_uri: globalScope?.location.pathname,
+      ...(causeStackString && { cause: causeStackString })
     }
     if (stackInfo.message) params.message = '' + stackInfo.message
     // Notice if filterOutput isn't false|undefined OR our specified object, this func would've returned already (so it's unnecessary to req-check group).

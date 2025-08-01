@@ -8,6 +8,7 @@ describe('cast-error', () => {
     err.filename = 'filename'
     err.lineno = 'lineno'
     err.colno = 'colno'
+    err.cause = 'cause'
   })
 
   describe('castError', () => {
@@ -114,7 +115,7 @@ describe('cast-error', () => {
       const castedError = castPromiseRejectionEvent({ reason: err })
       expect(castedError).toMatchObject({
         name: 'UncaughtError',
-        message: 'Unhandled Promise Rejection: {"filename":"filename","lineno":"lineno","colno":"colno"}',
+        message: 'Unhandled Promise Rejection: {"filename":"filename","lineno":"lineno","colno":"colno","cause":"cause"}',
         sourceURL: 'filename',
         line: 'lineno',
         column: 'colno'

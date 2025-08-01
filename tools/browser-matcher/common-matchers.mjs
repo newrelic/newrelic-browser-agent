@@ -62,6 +62,10 @@ export const onlyChromium = new SpecMatcher()
 export const onlyFirefox = new SpecMatcher()
   .include('firefox')
 
+export const onlySafari = new SpecMatcher()
+  .include('safari')
+  .include('ios')
+
 export const supportsFirstPaint = new SpecMatcher()
   .include('android')
   .include('chrome')

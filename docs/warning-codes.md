@@ -127,3 +127,5 @@
 `Timestamp must be a unix timestamp greater than the page origin time`
 ### 63
 `A single event was larger than the maximum allowed payload size`
+### 65
+`Consent API argument must be boolean or undefined`

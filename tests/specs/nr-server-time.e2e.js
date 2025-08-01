@@ -419,7 +419,7 @@ describe('NR Server Time', () => {
       expect(subsequentSession.localStorage.serverTimeDiff).toEqual(initialSession.localStorage.serverTimeDiff)
     })
 
-    it('should warn if the time globals are monkey-patched', async () => {
+    it('should warn if the performance.now globals are monkey-patched (NR-435349)', async () => {
       const url = await browser.testHandle.assetURL('monkey-patched.html')
       await browser.url(url).then(() => browser.waitForAgentLoad())
 
@@ -427,10 +427,10 @@ describe('NR Server Time', () => {
         return window.logs
       })
 
-      expect(logs[0][0].includes('New Relic Warning') && logs[0][0].includes('63')).toEqual(true) // 63 is the warning code for monkey-patched globals
+      expect(logs[0][0].includes('New Relic Warning') && logs[0][0].includes('64')).toEqual(true) // 64 is the warning code for monkey-patched globals
       expect(logs[0][1]).toEqual('debug')
 
-      expect(logs[1][0].includes('New Relic Warning') && logs[1][0].includes('63')).toEqual(true) // 63 is the warning code for monkey-patched globals
+      expect(logs[1][0].includes('New Relic Warning') && logs[1][0].includes('64')).toEqual(true) // 64 is the warning code for monkey-patched globals
       expect(logs[1][1]).toEqual('function (){ \n        return origPerformanceNow.apply(performance, arguments);}')
     })
   })

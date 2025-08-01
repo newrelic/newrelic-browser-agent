@@ -15,8 +15,12 @@ import { computeStackTrace } from './compute-stack-trace'
 export function buildCauseString (err) {
   let causeStackString = ''
   if (!err?.cause) return causeStackString
-  if (err.cause instanceof Error) causeStackString = computeStackTrace(err.cause).stackString || err.cause.stack
-  else causeStackString = typeof err.cause === 'string' ? err.cause : stringify(err.cause)
+  if (err.cause instanceof Error) {
+    const stackInfo = computeStackTrace(err.cause)
+    causeStackString = stackInfo.stackString || err.cause.stack
+    if (stackInfo.message && !causeStackString.includes(stackInfo.message)) causeStackString = stackInfo.message + '\n' + causeStackString
+    if (stackInfo.name && !causeStackString.includes(stackInfo.name)) causeStackString = stackInfo.name + ': ' + causeStackString
+  } else causeStackString = typeof err.cause === 'string' ? err.cause : stringify(err.cause)
   causeStackString ||= err.cause.toString() // fallback to try the string representation if all else fails
   return causeStackString
 }

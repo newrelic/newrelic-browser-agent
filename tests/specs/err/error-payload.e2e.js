@@ -1,6 +1,5 @@
-/* globals errorFn, noticeErrorFn, browserMatch */
+/* globals errorFn, noticeErrorFn */
 const { testErrorsRequest } = require('../../../tools/testing-server/utils/expect-tests')
-const { onlySafari, onlyFirefox } = require('../../../tools/browser-matcher/common-matchers.mjs')
 
 describe('error payloads', () => {
   let errorsCapture
@@ -139,9 +138,8 @@ describe('error payloads', () => {
 
     const errorCause = errorResults[0].request.body.err.find(x => x.params.message === 'error with error cause').params.cause
     expect(errorCause.match(/<inline>:[0-9]+:[0-9]+/).length).toEqual(1)
-    if (browserMatch(onlyFirefox)) expect(errorCause).toContain('@<inline>')
-    else if (browserMatch(onlySafari)) expect(errorCause).toContain('global code')
-    else expect(errorCause).toContain(errorCauseMessage)
+    expect(errorCause).toContain(errorCauseMessage)
+    expect(errorCause).toContain('Error: ')
 
     const stringCause = errorResults[0].request.body.err.find(x => x.params.message === 'error with string cause').params.cause
     expect(stringCause).toContain(errorCauseMessage)

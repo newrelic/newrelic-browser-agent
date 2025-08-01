@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.295.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.294.0...v1.295.0) (2025-08-01)
+
+
+### Features
+
+* Add error cause detection ([#1531](https://github.com/newrelic/newrelic-browser-agent/issues/1531)) ([3e6bda7](https://github.com/newrelic/newrelic-browser-agent/commit/3e6bda74bfd19d4379a41d357c800eebc5d28ed5))
+
 ## [1.294.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.293.0...v1.294.0) (2025-07-23)
 
 

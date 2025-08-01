@@ -14,6 +14,7 @@ export const API_TRIGGER_NAME = 'api'
 export const IPL_TRIGGER_NAME = 'initialPageLoad'
 
 export const FEATURE_NAME = FEATURE_NAMES.softNav
+export const NO_LONG_TASK_WINDOW = 5000 // purpose is to wait 5 seconds wherein no long task is detected
 
 export const INTERACTION_TYPE = {
   INITIAL_PAGE_LOAD: '',
@@ -30,6 +31,7 @@ export const NODE_TYPE = {
 
 export const INTERACTION_STATUS = {
   IP: 'in progress',
+  PF: 'pending finish', // interaction meets the hard criteria but is awaiting flexible conditions to fully finish
   FIN: 'finished',
   CAN: 'cancelled'
 }

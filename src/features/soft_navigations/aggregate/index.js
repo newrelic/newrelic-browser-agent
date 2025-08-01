@@ -8,7 +8,7 @@ import { single } from '../../../common/util/invoke'
 import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
-import { API_TRIGGER_NAME, FEATURE_NAME, INTERACTION_STATUS, INTERACTION_TRIGGERS, IPL_TRIGGER_NAME } from '../constants'
+import { API_TRIGGER_NAME, FEATURE_NAME, INTERACTION_STATUS, INTERACTION_TRIGGERS, IPL_TRIGGER_NAME, NO_LONG_TASK_WINDOW } from '../constants'
 import { AjaxNode } from './ajax-node'
 import { InitialPageLoadInteraction } from './initial-page-load-interaction'
 import { Interaction } from './interaction'
@@ -62,8 +62,20 @@ export class Aggregate extends AggregateBase {
     }, this.featureName, this.ee)
     registerHandler('newDom', timestamp => {
       this.interactionInProgress?.updateDom(timestamp)
-      if (this.interactionInProgress?.seenHistoryAndDomChange()) this.interactionInProgress.done()
+      if (this.interactionInProgress?.seenHistoryAndDomChange()) {
+        // Once the fixed reqs for a nav has been met, start a X countdown timer that watches for any long task, if it doesn't already exist, before completing the interaction.
+        clearTimeout(this.interactionInProgress.cancellationTimer) // "pending-finish" ixns cannot be auto cancelled anymore
+        this.interactionInProgress.watchLongtaskTimer ??= setTimeout(() => this.interactionInProgress.done(), NO_LONG_TASK_WINDOW)
+        // Notice that by not providing a specific end time to `.done()`, the ixn will use the original end in the event of no long task, which is what we want.
+      }
     }, this.featureName, this.ee)
+    this.ee.on('long-task', (task) => {
+      if (!this.interactionInProgress?.watchLongtaskTimer) return // no ixn in progress or it's not yet in a pending-finish state, as indicated by the lack of a watchLongtask timeout
+      clearTimeout(this.interactionInProgress.watchLongtaskTimer)
+      // Provided there isn't another long task, the ixn span will be extended to include this long task that would finish the interaction.
+      this.interactionInProgress.customEnd = task.end
+      this.interactionInProgress.watchLongtaskTimer = setTimeout(() => this.interactionInProgress.done(), NO_LONG_TASK_WINDOW)
+    })
 
     this.#registerApiHandlers()
 
@@ -212,9 +224,12 @@ export class Aggregate extends AggregateBase {
         thisClass.domObserver.observe(document.body, { attributes: true, childList: true, subtree: true, characterData: true }) // start observing for DOM changes like a regular UI-driven interaction
         thisClass.setClosureHandlers()
       }
-      if (waitForEnd === true) this.associatedInteraction.keepOpenUntilEndApi = true
+      if (waitForEnd === true) {
+        this.associatedInteraction.keepOpenUntilEndApi = true
+        clearTimeout(this.associatedInteraction.cancellationTimer) // get rid of the auto-cancel 30s timer for UI ixns when users specify waitForEnd manual override
+      }
     }, thisClass.featureName, thisClass.ee)
-    registerHandler(INTERACTION_API + 'end', function (timeNow) { this.associatedInteraction.done(timeNow) }, thisClass.featureName, thisClass.ee)
+    registerHandler(INTERACTION_API + 'end', function (timeNow) { this.associatedInteraction.done(timeNow, true) }, thisClass.featureName, thisClass.ee)
     registerHandler(INTERACTION_API + 'save', function () { this.associatedInteraction.forceSave = true }, thisClass.featureName, thisClass.ee)
     registerHandler(INTERACTION_API + 'ignore', function () { this.associatedInteraction.forceIgnore = true }, thisClass.featureName, thisClass.ee)
 

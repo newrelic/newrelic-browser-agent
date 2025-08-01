@@ -22,6 +22,7 @@ describe('Fetch SPA Interaction Tracking', () => {
       })
     ])
 
+    interactionHarvests.forEach(harvest => console.log(harvest.request.body))
     checkSpa(interactionHarvests[1].request, { trigger: 'click' })
     expect(
       JSONPath({ path: '$.[*].request.body.[?(!!@ && @.path===\'/echo\')]', json: interactionHarvests })

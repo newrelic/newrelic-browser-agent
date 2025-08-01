@@ -81,7 +81,7 @@ describe('Interaction when done', () => {
     ixn.keepOpenUntilEndApi = true // with this flag, ixn should stay open until a custom end time is provided
     expect(ixn.done()).toBe(false)
     expect(ixn.status).toEqual(INTERACTION_STATUS.IP)
-    expect(ixn.done(123)).toBe(true)
+    expect(ixn.done(123, true)).toBe(true)
   })
   test('runs onDone handlers and returns the correct boolean value on finish', () => {
     const ixn = new Interaction()
@@ -150,16 +150,16 @@ describe('Interaction when done', () => {
     expect(ixn.end).toBe(500)
 
     ixn.updateDom(750) // now the conditions for seenHistoryAndDomChange() is met
-    ixn.status = INTERACTION_STATUS.IP
+    ixn.status = INTERACTION_STATUS.PF
     ixn.done()
     expect(ixn.end).toBe(750)
 
     ixn.forceSave = false; ixn.end = 0
-    ixn.status = INTERACTION_STATUS.IP
+    ixn.status = INTERACTION_STATUS.PF
     ixn.done() // double checking the behavior is still the same without save flag (default conditions)
     expect(ixn.end).toBe(750)
 
-    ixn.status = INTERACTION_STATUS.IP
+    ixn.status = INTERACTION_STATUS.PF
     ixn.done(1000) // double checking the custom end is still respected even with seenHistoryAndDom -- example case: ixn is kept open past it and only closed by .end
     expect(ixn.end).toBe(1000)
   })

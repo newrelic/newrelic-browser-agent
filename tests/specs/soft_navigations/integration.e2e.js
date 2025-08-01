@@ -88,15 +88,15 @@ describe('Soft navigations', () => {
 
     const [interactionHarvests, errorsHarvests, ajaxEventsHarvests] = await Promise.all([
       interactionsCapture.waitForResult({ totalCount: 2 }),
-      errorsCapture.waitForResult({ timeout: 5000 }),
-      ajaxEventsCapture.waitForResult({ timeout: 5000 }),
+      errorsCapture.waitForResult({ totalCount: 1 }),
+      ajaxEventsCapture.waitForResult({ timeout: 5000 }), // needed for Safari case wherein /echo and /json are in 1st ajax payload
       $('body').click()
     ])
 
     expect(interactionHarvests[1].request.body.length).toEqual(1)
     const rcIxn = interactionHarvests[1].request.body[0]
     const ixnAjaxArr = rcIxn.children
-    const errorsArr = errorsHarvests[errorsHarvests.length - 1].request.body.err
+    const errorsArr = errorsHarvests[0].request.body.err
 
     const expectedAjax = expect.arrayContaining([
       expect.objectContaining({ path: '/echo', requestedWith: 'XMLHttpRequest' }),
@@ -111,7 +111,7 @@ describe('Soft navigations', () => {
       expect(ixnAjaxArr).toEqual(expectedAjax)
       expect(errorsArr[0].params.browserInteractionId).toEqual(rcIxn.id)
     } else {
-      expect(ajaxEventsHarvests[ajaxEventsHarvests.length - 1].request.body).toEqual(expectedAjax)
+      expect(ajaxEventsHarvests[0].request.body).toEqual(expectedAjax)
       expect(errorsArr[0].params.browserInteractionId).toBeUndefined()
     }
     expect(errorsArr[0].params.message).toEqual('boogie')

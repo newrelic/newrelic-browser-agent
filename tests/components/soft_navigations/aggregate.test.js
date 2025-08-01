@@ -1,11 +1,12 @@
 import { resetAgent, setupAgent } from '../setup-agent'
 import { Instrument as SoftNav } from '../../../src/features/soft_navigations/instrument'
 import * as ttfbModule from '../../../src/common/vitals/time-to-first-byte'
-import { INTERACTION_STATUS } from '../../../src/features/soft_navigations/constants'
+import { INTERACTION_STATUS, NO_LONG_TASK_WINDOW } from '../../../src/features/soft_navigations/constants'
 
 let mainAgent
 
 beforeAll(() => {
+  jest.useFakeTimers({ doNotFake: ['nextTick', 'performance'] }) // to aid new long task window heuristics as default ixn will need to wait additional 5s to finish
   mainAgent = setupAgent({
     agentOverrides: {
       runSoftNavOverSpa: true
@@ -28,6 +29,7 @@ beforeEach(async () => {
 
   softNavAggregate.ee.emit('rumresp', [{ spa: 1 }])
   await new Promise(process.nextTick)
+  jest.clearAllTimers() // prevents the IPL harvest after RUM flags w/ setTimeout of 0; this is for better test consistency
 })
 
 afterEach(() => {
@@ -35,7 +37,7 @@ afterEach(() => {
   jest.clearAllMocks()
 })
 
-test('processes regular interactions', () => {
+test('processes interaction heuristics', () => {
   expect(softNavAggregate.domObserver).toBeTruthy()
   expect(softNavAggregate.initialPageLoadInteraction).toBeTruthy()
 
@@ -47,8 +49,10 @@ test('processes regular interactions', () => {
   softNavAggregate.ee.emit('newURL', [234, '' + window.location])
   softNavAggregate.ee.emit('newDom', [235])
   expect(softNavAggregate.interactionInProgress).toBeNull() // neither history or dom should initiate an interaction
+
   softNavAggregate.ee.emit('newUIEvent', [{ type: 'keydown', timeStamp: 345 }])
   expect(softNavAggregate.interactionInProgress).toBeTruthy()
+  expect(softNavAggregate.interactionInProgress.status).toEqual(INTERACTION_STATUS.IP)
   softNavAggregate.ee.emit('newDom', [346])
   expect(softNavAggregate.interactionInProgress).toBeTruthy()
   softNavAggregate.ee.emit('newURL', [347, '' + window.location])
@@ -56,15 +60,18 @@ test('processes regular interactions', () => {
   softNavAggregate.ee.emit('newDom', [345])
   expect(softNavAggregate.interactionInProgress).toBeTruthy() // dom has to be aka fired after history
   softNavAggregate.ee.emit('newDom', [348.5])
+  jest.advanceTimersByTime(1)
+  expect(softNavAggregate.interactionInProgress).toBeTruthy()
+  expect(softNavAggregate.interactionInProgress.status).toEqual(INTERACTION_STATUS.PF)
+
+  jest.advanceTimersByTime(NO_LONG_TASK_WINDOW) // advance time to allow the pending-finish ixn to close, simulating no long task
   expect(softNavAggregate.interactionInProgress).toBeNull()
   expect(softNavAggregate.domObserver.cb).toBeUndefined() // observer should be disconnected after ixn done
   expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(2)
   expect(softNavAggregate.interactionsToHarvest.get()[0].data[1].end).toEqual(348.5) // check end time for the ixn is as expected
 })
 
-test('regular interactions have applicable timeouts', async () => {
-  jest.useFakeTimers()
-
+test('UI driven interactions have an auto cancel timeout', async () => {
   expect(softNavAggregate.initialPageLoadInteraction.cancellationTimer).toBeUndefined()
 
   softNavAggregate.ee.emit('newUIEvent', [{ type: 'keydown', timeStamp: 100 }])
@@ -73,16 +80,103 @@ test('regular interactions have applicable timeouts', async () => {
 
   expect(softNavAggregate.interactionInProgress).toBeNull()
   expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(0) // since initialPageLoad ixn hasn't closed, and we expect that UI ixn to have been cancelled
-
-  jest.useRealTimers()
 })
 
-test('interactions are replaced by new UI events', async () => {
+test('existing UI triggered interaction is cancelled & replaced on a new UI event', async () => {
   softNavAggregate.ee.emit('newUIEvent', [{ type: 'click', timeStamp: 100, target: { tagName: 'a' } }])
   const currentIxn = softNavAggregate.interactionInProgress
   softNavAggregate.ee.emit('newUIEvent', [{ type: 'keydown', timeStamp: 110 }]) // keep in mind: debounce logic is in the instrument part
   expect(softNavAggregate.interactionInProgress).not.toBe(currentIxn)
   expect(softNavAggregate.interactionInProgress.trigger).toEqual('keydown')
+  expect(currentIxn.status).toEqual(INTERACTION_STATUS.CAN) // previous ixn should be cancelled
+})
+
+describe('long task considerations', () => {
+  test('pending-finish interaction clears auto cancellation timer', () => {
+    softNavAggregate.ee.emit('newUIEvent', [{ type: 'keydown', timeStamp: 100 }])
+    expect(jest.getTimerCount()).toEqual(1) // the ixn cancellationTimer
+    expect(softNavAggregate.interactionInProgress.cancellationTimer).toBeTruthy()
+    expect(softNavAggregate.interactionInProgress.watchLongtaskTimer).toBeUndefined()
+
+    softNavAggregate.ee.emit('newURL', [101, '' + window.location])
+    softNavAggregate.ee.emit('newDom', [102])
+    expect(softNavAggregate.interactionInProgress).toBeTruthy()
+    expect(softNavAggregate.interactionInProgress.status).toEqual(INTERACTION_STATUS.PF)
+    expect(jest.getTimerCount()).toEqual(1) // cancellationTimer should be cleared, watchLongtaskTimer is set
+    expect(softNavAggregate.interactionInProgress.watchLongtaskTimer).toBeTruthy()
+  })
+
+  test('watchLongtaskTimer is not duplicated on back-to-back newDom events', () => {
+    softNavAggregate.ee.emit('newUIEvent', [{ type: 'keydown', timeStamp: 100 }])
+    clearTimeout(softNavAggregate.interactionInProgress.cancellationTimer)
+    expect(jest.getTimerCount()).toEqual(0)
+
+    softNavAggregate.ee.emit('newURL', [101])
+    softNavAggregate.ee.emit('newDom', [102])
+    expect(jest.getTimerCount()).toEqual(1)
+    const firstTimerId = softNavAggregate.interactionInProgress.watchLongtaskTimer
+    softNavAggregate.ee.emit('newDom', [103])
+    expect(jest.getTimerCount()).toEqual(1)
+    expect(softNavAggregate.interactionInProgress.watchLongtaskTimer).toEqual(firstTimerId) // timer should not be reset
+
+    const ixn = softNavAggregate.interactionInProgress
+    jest.runAllTimers()
+    expect(ixn.end).toEqual(103) // but end time should still be latest newDom time
+  })
+
+  test('lt extends interaction duration', () => {
+    softNavAggregate.ee.emit('newUIEvent', [{ type: 'keydown', timeStamp: 100 }])
+    softNavAggregate.ee.emit('newURL', [500, '' + window.location])
+    softNavAggregate.ee.emit('newDom', [1000]) // if ixn naturally ended here, it would have end time of 1000
+
+    jest.advanceTimersByTime(1000)
+    softNavAggregate.ee.emit('long-task', [{ start: 1500, end: 2000 }]) // at T=1000, the 5s watch window started; at T=2000, a long task is reported
+    jest.advanceTimersByTime(NO_LONG_TASK_WINDOW - 1000) // this is the time at which the ixn should have ended IF there were no long task; we're checking that the timeout was reset
+    expect(softNavAggregate.interactionInProgress).toBeTruthy()
+    expect(softNavAggregate.interactionInProgress.status).toEqual(INTERACTION_STATUS.PF) // ixn is still pending
+
+    const ixn = softNavAggregate.interactionInProgress
+    jest.advanceTimersByTime(1000) // T=6000, the ixn should end as there were no more long tasks
+    expect(softNavAggregate.interactionInProgress).toBeNull()
+    expect(ixn.status).toEqual(INTERACTION_STATUS.FIN)
+    expect(ixn.end).toEqual(2000) // the ixn end time is set to the long task end time rather than the earlier newDom time
+  })
+
+  test('multiple lt extend interaction duration correctly', () => {
+    softNavAggregate.ee.emit('newUIEvent', [{ type: 'keydown', timeStamp: 100 }])
+    softNavAggregate.ee.emit('newURL', [500, '' + window.location])
+    softNavAggregate.ee.emit('newDom', [1000])
+
+    jest.advanceTimersByTime(2000)
+    softNavAggregate.ee.emit('long-task', [{ end: 3000 }])
+    jest.advanceTimersByTime(500)
+    softNavAggregate.ee.emit('long-task', [{ end: 3500 }])
+    jest.advanceTimersByTime(3500)
+    softNavAggregate.ee.emit('long-task', [{ end: 7000 }])
+    expect(softNavAggregate.interactionInProgress).toBeTruthy()
+
+    const ixn = softNavAggregate.interactionInProgress
+    jest.advanceTimersByTime(NO_LONG_TASK_WINDOW)
+    expect(ixn.end).toEqual(7000) // the ixn end time is set to the last long task end time
+  })
+
+  test('pending-finish interaction is finished on a new UI event', () => {
+    softNavAggregate.ee.emit('newUIEvent', [{ type: 'keydown', timeStamp: 100 }])
+    softNavAggregate.ee.emit('newURL', [500, '' + window.location])
+    softNavAggregate.ee.emit('newDom', [1000])
+    expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(0)
+
+    jest.advanceTimersByTime(2000)
+    const prevIxn = softNavAggregate.interactionInProgress
+    expect(prevIxn).toBeTruthy()
+
+    softNavAggregate.ee.emit('newUIEvent', [{ type: 'submit', timeStamp: 3000 }])
+    expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(1) // the previous ixn should be buffered for harvest
+    expect(prevIxn.status).toEqual(INTERACTION_STATUS.FIN) // the previous ixn should be marked as finished
+    expect(prevIxn.end).toEqual(1000)
+    expect(softNavAggregate.interactionInProgress).toBeTruthy() // a new ixn should be created
+    expect(softNavAggregate.interactionInProgress).not.toEqual(prevIxn)
+  })
 })
 
 test('double precision Event DOMHighResTimestamp (microsec) is floored to ms and isActiveDuring with now() works', () => {

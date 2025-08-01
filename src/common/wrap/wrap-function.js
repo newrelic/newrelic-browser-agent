@@ -11,6 +11,7 @@ import { ee } from '../event-emitter/contextual-ee'
 import { bundleId } from '../ids/bundle-id'
 
 export const flag = `nr@original:${bundleId}`
+const LONG_TASK_THRESHOLD = 50
 
 /**
  * A convenience alias of `hasOwnProperty`.
@@ -95,7 +96,7 @@ export function createWrapperWithEmitter (emitter, always) {
       safeEmit(prefix + 'start', [args, originalThis, methodName], ctx, bubble)
 
       const fnStartTime = performance.now()
-      let fnEndTime = fnStartTime
+      let fnEndTime
       try {
         result = fn.apply(originalThis, args)
         fnEndTime = performance.now()
@@ -109,8 +110,10 @@ export function createWrapperWithEmitter (emitter, always) {
       } finally {
         const duration = fnEndTime - fnStartTime
         const task = {
+          start: fnStartTime,
+          end: fnEndTime,
           duration,
-          isLongTask: duration >= 50,
+          isLongTask: duration >= LONG_TASK_THRESHOLD,
           methodName,
           thrownError
           // could add more properties here later if needed by downstream features

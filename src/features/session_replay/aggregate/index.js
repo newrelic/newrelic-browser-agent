@@ -278,14 +278,14 @@ export class Aggregate extends AggregateBase {
   /**
    * returns the timestamps for the earliest and latest nodes in the provided array, even if out of order
    * @param {Object[]} [nodes] - the nodes to evaluate
-   * @returns {{ firstEvent: number|undefined, lastEvent: number|undefined }} - the earliest and latest nodes. Defaults to undefined if no nodes are provided or if no timestamps are found in the nodes.
+   * @returns {{ firstEvent: Object|undefined, lastEvent: Object|undefined }} - the earliest and latest nodes. Defaults to undefined if no nodes are provided or if no timestamps are found in the nodes.
    */
   getFirstAndLastNodes (nodes = []) {
     const output = { firstEvent: nodes[0], lastEvent: nodes[nodes.length - 1] }
     nodes.forEach(node => {
       const timestamp = node?.timestamp
-      if (!output.firstEvent?.timestamp || (timestamp || Infinity) < output.firstEvent.timestamp) output.firstEvent.timestamp = timestamp
-      if (!output.lastEvent?.timestamp || (timestamp || -Infinity) > output.lastEvent.timestamp) output.lastEvent.timestamp = timestamp
+      if (!output.firstEvent?.timestamp || (timestamp || Infinity) < output.firstEvent.timestamp) output.firstEvent = node
+      if (!output.lastEvent?.timestamp || (timestamp || -Infinity) > output.lastEvent.timestamp) output.lastEvent = node
     })
     return output
   }

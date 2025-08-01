@@ -8,7 +8,7 @@ import { single } from '../../../common/util/invoke'
 import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
-import { API_TRIGGER_NAME, FEATURE_NAME, INTERACTION_STATUS, INTERACTION_TRIGGERS, IPL_TRIGGER_NAME, NO_LONG_TASK_WINDOW } from '../constants'
+import { API_TRIGGER_NAME, FEATURE_NAME, INTERACTION_STATUS, INTERACTION_TRIGGERS, IPL_TRIGGER_NAME, NO_LONG_TASK_WINDOW, POPSTATE_TRIGGER } from '../constants'
 import { AjaxNode } from './ajax-node'
 import { InitialPageLoadInteraction } from './initial-page-load-interaction'
 import { Interaction } from './interaction'
@@ -56,18 +56,14 @@ export class Aggregate extends AggregateBase {
     // By default, a complete UI driven interaction requires event -> URL change -> DOM mod in that exact order.
     registerHandler('newUIEvent', (event) => this.startUIInteraction(event.type, Math.floor(event.timeStamp), event.target), this.featureName, this.ee)
     registerHandler('newURL', (timestamp, url) => {
-      // In the case of 'popstate' trigger, by the time the event fires, the URL has already changed, so we need to store what-will-be the *previous* URL for oldURL of next popstate ixn.
+      // The newURL always need to be tracked such that it becomes the oldURL of the next potential popstate ixn.
+      // Because for 'popstate' triggered newUIEVent, by the time the event fires, the page URL has already changed so the previous URL is lost if not recorded.
       this.latestHistoryUrl = url
       this.interactionInProgress?.updateHistory(timestamp, url)
     }, this.featureName, this.ee)
     registerHandler('newDom', timestamp => {
       this.interactionInProgress?.updateDom(timestamp)
-      if (this.interactionInProgress?.seenHistoryAndDomChange()) {
-        // Once the fixed reqs for a nav has been met, start a X countdown timer that watches for any long task, if it doesn't already exist, before completing the interaction.
-        clearTimeout(this.interactionInProgress.cancellationTimer) // "pending-finish" ixns cannot be auto cancelled anymore
-        this.interactionInProgress.watchLongtaskTimer ??= setTimeout(() => this.interactionInProgress.done(), NO_LONG_TASK_WINDOW)
-        // Notice that by not providing a specific end time to `.done()`, the ixn will use the original end in the event of no long task, which is what we want.
-      }
+      this.interactionInProgress?.checkHistoryAndDomChange()
     }, this.featureName, this.ee)
     this.ee.on('long-task', (task) => {
       if (!this.interactionInProgress?.watchLongtaskTimer) return // no ixn in progress or it's not yet in a pending-finish state, as indicated by the lack of a watchLongtask timeout
@@ -99,7 +95,7 @@ export class Aggregate extends AggregateBase {
     if (this.interactionInProgress?.createdByApi) return // api-started interactions cannot be disrupted aka cancelled by UI events (and the vice versa applies as well)
     if (this.interactionInProgress?.done() === false) return // current in-progress is blocked from closing, e.g. by 'waitForEnd' api option
 
-    const oldURL = eventName === INTERACTION_TRIGGERS[3] ? this.latestHistoryUrl : undefined // see related comment in 'newURL' handler above, 'popstate'
+    const oldURL = eventName === POPSTATE_TRIGGER ? this.latestHistoryUrl : undefined // see related comment in 'newURL' handler above, 'popstate'
     this.interactionInProgress = new Interaction(eventName, startedAt, this.latestRouteSetByApi, oldURL)
 
     if (eventName === INTERACTION_TRIGGERS[0]) { // 'click'
@@ -219,7 +215,7 @@ export class Aggregate extends AggregateBase {
       this.associatedInteraction = thisClass.getInteractionFor(time)
       if (this.associatedInteraction?.trigger === IPL_TRIGGER_NAME) this.associatedInteraction = null // the api get-interaction method cannot target IPL
       if (!this.associatedInteraction) {
-        // This new api-driven interaction will be the target of any subsequent .interaction() call, until it is closed by EITHER .end() OR the regular seenHistoryAndDomChange process.
+        // This new api-driven interaction will be the target of any subsequent .interaction() call, until it is closed by EITHER .end() OR the regular url>dom change process.
         this.associatedInteraction = thisClass.interactionInProgress = new Interaction(API_TRIGGER_NAME, time, thisClass.latestRouteSetByApi)
         thisClass.domObserver.observe(document.body, { attributes: true, childList: true, subtree: true, characterData: true }) // start observing for DOM changes like a regular UI-driven interaction
         thisClass.setClosureHandlers()

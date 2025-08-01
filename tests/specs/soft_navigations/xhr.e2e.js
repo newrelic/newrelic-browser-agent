@@ -53,7 +53,7 @@ describe('XHR SPA Interaction Tracking', () => {
     ).then(() => browser.waitForAgentLoad())
 
     const [interactionHarvests] = await Promise.all([
-      interactionsCapture.waitForResult({ timeout: 10000 }),
+      interactionsCapture.waitForResult({ totalCount: 2 }),
       browser.execute(function () {
         document.getElementById('sendAjax').click()
       })
@@ -225,7 +225,7 @@ describe('XHR SPA Interaction Tracking', () => {
       .then(() => browser.waitForAgentLoad())
 
     const [interactionHarvests] = await Promise.all([
-      interactionsCapture.waitForResult({ timeout: 10000 }),
+      interactionsCapture.waitForResult({ totalCount: 2 }),
       browser.execute(function () {
         document.getElementById('sendAjax').click()
       })

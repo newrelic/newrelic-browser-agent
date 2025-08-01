@@ -7,9 +7,9 @@ import { FEATURE_NAMES } from '../../loaders/features/features'
 export const INTERACTION_TRIGGERS = [
   'click', // e.g. user clicks link or the page back/forward buttons
   'keydown', // e.g. user presses left and right arrow key to switch between displayed photo gallery
-  'submit', // e.g. user clicks submit butotn or presses enter while editing a form field
-  'popstate' // history api is used to navigate back and forward
+  'submit' // e.g. user clicks submit butotn or presses enter while editing a form field
 ]
+export const POPSTATE_TRIGGER = 'popstate' // e.g. user clicks browser back/forward button or history API is used programmatically
 export const API_TRIGGER_NAME = 'api'
 export const IPL_TRIGGER_NAME = 'initialPageLoad'
 

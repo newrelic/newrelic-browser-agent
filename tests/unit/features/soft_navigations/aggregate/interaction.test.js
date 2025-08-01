@@ -41,15 +41,19 @@ test('Interaction node creation is correct', () => {
 
 test('History and DOM timestamps fn updates', () => {
   const ixn = new Interaction()
-  ixn.updateDom(5812)
-  expect(ixn.domTimestamp).toBe(5812)
-  expect(ixn.seenHistoryAndDomChange()).toBeFalsy()
-  ixn.updateHistory(6134)
+  ixn.updateDom(3812)
+  expect(ixn.domTimestamp).toBe(0)
+  expect(ixn.checkHistoryAndDomChange()).toBeFalsy()
+  ixn.updateHistory(4951)
+  expect(ixn.historyTimestamp).toBe(0)
   expect(ixn.newURL).toBe(location.href)
-  expect(ixn.seenHistoryAndDomChange()).toBeFalsy()
-  ixn.updateHistory(4951, 'some_new_url')
+  expect(ixn.checkHistoryAndDomChange()).toBeFalsy()
+
+  ixn.updateHistory(5871, 'some_new_url')
+  expect(ixn.historyTimestamp).toBe(5871)
+  ixn.updateDom(7812)
   expect(ixn.newURL).toBe('some_new_url')
-  expect(ixn.seenHistoryAndDomChange()).toBeTruthy()
+  expect(ixn.checkHistoryAndDomChange()).toBeTruthy()
 })
 
 test('Can subscribe to interaction events', () => {
@@ -143,13 +147,13 @@ describe('Interaction when done', () => {
     expect(serialized.includes('\'key1,\'higher_precedence_value')).toEqual(true)
     expect(serialized.includes('\'key2,\'value2')).toEqual(true)
 
-    ixn.updateHistory(250)
+    ixn.updateHistory(250, 'some_new_url')
     ixn.status = INTERACTION_STATUS.IP
     ixn.done(500) // when ixn end time is specified -- example case: calling the .end api ; end time should consider this value
     expect(ixn.status).toBe(INTERACTION_STATUS.FIN)
     expect(ixn.end).toBe(500)
 
-    ixn.updateDom(750) // now the conditions for seenHistoryAndDomChange() is met
+    ixn.updateDom(750)
     ixn.status = INTERACTION_STATUS.PF
     ixn.done()
     expect(ixn.end).toBe(750)

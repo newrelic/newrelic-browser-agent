@@ -1,7 +1,7 @@
 import { resetAgent, setupAgent } from '../setup-agent'
 import { Instrument as SoftNav } from '../../../src/features/soft_navigations/instrument'
 import * as ttfbModule from '../../../src/common/vitals/time-to-first-byte'
-import { INTERACTION_STATUS, NO_LONG_TASK_WINDOW } from '../../../src/features/soft_navigations/constants'
+import { INTERACTION_STATUS, NO_LONG_TASK_WINDOW, POPSTATE_TRIGGER } from '../../../src/features/soft_navigations/constants'
 
 let mainAgent
 
@@ -46,7 +46,7 @@ test('processes interaction heuristics', () => {
   expect(softNavAggregate.initialPageLoadInteraction).toBeNull()
   expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(1)
 
-  softNavAggregate.ee.emit('newURL', [234, '' + window.location])
+  softNavAggregate.ee.emit('newURL', [234, 'new_location'])
   softNavAggregate.ee.emit('newDom', [235])
   expect(softNavAggregate.interactionInProgress).toBeNull() // neither history or dom should initiate an interaction
 
@@ -55,13 +55,22 @@ test('processes interaction heuristics', () => {
   expect(softNavAggregate.interactionInProgress.status).toEqual(INTERACTION_STATUS.IP)
   softNavAggregate.ee.emit('newDom', [346])
   expect(softNavAggregate.interactionInProgress).toBeTruthy()
+  expect(softNavAggregate.interactionInProgress.domTimestamp).toEqual(0)
+
   softNavAggregate.ee.emit('newURL', [347, '' + window.location])
+  expect(softNavAggregate.interactionInProgress.historyTimestamp).toEqual(0) // new url cannot be the same as current
+  softNavAggregate.ee.emit('newURL', [347, 'some_new_url'])
   expect(softNavAggregate.interactionInProgress).toBeTruthy() // history doesn't call 'done' on the ixn (chronological order enforcement)
+  expect(softNavAggregate.interactionInProgress.historyTimestamp).toEqual(347)
+
   softNavAggregate.ee.emit('newDom', [345])
   expect(softNavAggregate.interactionInProgress).toBeTruthy() // dom has to be aka fired after history
+  expect(softNavAggregate.interactionInProgress.domTimestamp).toEqual(0)
+
   softNavAggregate.ee.emit('newDom', [348.5])
   jest.advanceTimersByTime(1)
   expect(softNavAggregate.interactionInProgress).toBeTruthy()
+  expect(softNavAggregate.interactionInProgress.domTimestamp).toEqual(348.5)
   expect(softNavAggregate.interactionInProgress.status).toEqual(INTERACTION_STATUS.PF)
 
   jest.advanceTimersByTime(NO_LONG_TASK_WINDOW) // advance time to allow the pending-finish ixn to close, simulating no long task
@@ -98,7 +107,7 @@ describe('long task considerations', () => {
     expect(softNavAggregate.interactionInProgress.cancellationTimer).toBeTruthy()
     expect(softNavAggregate.interactionInProgress.watchLongtaskTimer).toBeUndefined()
 
-    softNavAggregate.ee.emit('newURL', [101, '' + window.location])
+    softNavAggregate.ee.emit('newURL', [101, 'new_location'])
     softNavAggregate.ee.emit('newDom', [102])
     expect(softNavAggregate.interactionInProgress).toBeTruthy()
     expect(softNavAggregate.interactionInProgress.status).toEqual(INTERACTION_STATUS.PF)
@@ -111,7 +120,7 @@ describe('long task considerations', () => {
     clearTimeout(softNavAggregate.interactionInProgress.cancellationTimer)
     expect(jest.getTimerCount()).toEqual(0)
 
-    softNavAggregate.ee.emit('newURL', [101])
+    softNavAggregate.ee.emit('newURL', [101, 'new_location'])
     softNavAggregate.ee.emit('newDom', [102])
     expect(jest.getTimerCount()).toEqual(1)
     const firstTimerId = softNavAggregate.interactionInProgress.watchLongtaskTimer
@@ -126,7 +135,7 @@ describe('long task considerations', () => {
 
   test('lt extends interaction duration', () => {
     softNavAggregate.ee.emit('newUIEvent', [{ type: 'keydown', timeStamp: 100 }])
-    softNavAggregate.ee.emit('newURL', [500, '' + window.location])
+    softNavAggregate.ee.emit('newURL', [500, 'new_location'])
     softNavAggregate.ee.emit('newDom', [1000]) // if ixn naturally ended here, it would have end time of 1000
 
     jest.advanceTimersByTime(1000)
@@ -144,7 +153,7 @@ describe('long task considerations', () => {
 
   test('multiple lt extend interaction duration correctly', () => {
     softNavAggregate.ee.emit('newUIEvent', [{ type: 'keydown', timeStamp: 100 }])
-    softNavAggregate.ee.emit('newURL', [500, '' + window.location])
+    softNavAggregate.ee.emit('newURL', [500, 'new_location'])
     softNavAggregate.ee.emit('newDom', [1000])
 
     jest.advanceTimersByTime(2000)
@@ -162,7 +171,7 @@ describe('long task considerations', () => {
 
   test('pending-finish interaction is finished on a new UI event', () => {
     softNavAggregate.ee.emit('newUIEvent', [{ type: 'keydown', timeStamp: 100 }])
-    softNavAggregate.ee.emit('newURL', [500, '' + window.location])
+    softNavAggregate.ee.emit('newURL', [500, 'new_location'])
     softNavAggregate.ee.emit('newDom', [1000])
     expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(0)
 
@@ -188,30 +197,109 @@ test('double precision Event DOMHighResTimestamp (microsec) is floored to ms and
   expect(Number.isInteger(softNavAggregate.interactionInProgress.start)).toBeTruthy()
 })
 
-test('getInteractionFor grabs the right active interaction for a timestamp', () => {
+describe('getInteractionFor', () => {
+  test('grabs the right active interaction for a timestamp', () => {
   // initial page load ixn is ongoing at this point
-  expect(softNavAggregate.getInteractionFor(performance.now())).toBe(softNavAggregate.initialPageLoadInteraction)
+    expect(softNavAggregate.getInteractionFor(performance.now())).toBe(softNavAggregate.initialPageLoadInteraction)
 
-  softNavAggregate.ee.emit('newUIEvent', [{ type: 'keydown', timeStamp: performance.now() }])
-  const currentTime = performance.now()
-  expect(softNavAggregate.getInteractionFor(currentTime)).toBe(softNavAggregate.interactionInProgress) // UI interaction is chosen over initialPageLoad
+    softNavAggregate.ee.emit('newUIEvent', [{ type: 'keydown', timeStamp: performance.now() }])
+    const currentTime = performance.now()
+    expect(softNavAggregate.getInteractionFor(currentTime)).toBe(softNavAggregate.interactionInProgress) // UI interaction is chosen over initialPageLoad
 
-  softNavAggregate.interactionInProgress.forceSave = true
-  expect(softNavAggregate.interactionInProgress.done()).toEqual(true) // this would mark the ixn as finished and queued for harvest
-  expect(softNavAggregate.getInteractionFor(currentTime)).toBe(softNavAggregate.interactionsToHarvest.get()[0].data[0]) // queued+completed UI interaction is STILL chosen over initialPageLoad
+    softNavAggregate.interactionInProgress.forceSave = true
+    expect(softNavAggregate.interactionInProgress.done()).toEqual(true) // this would mark the ixn as finished and queued for harvest
+    expect(softNavAggregate.getInteractionFor(currentTime)).toBe(softNavAggregate.interactionsToHarvest.get()[0].data[0]) // queued+completed UI interaction is STILL chosen over initialPageLoad
+    expect(softNavAggregate.interactionsToHarvest.get()[0].data[0].status).toEqual(INTERACTION_STATUS.FIN)
 
-  softNavAggregate.interactionsToHarvest.get()[0].data[0].status = 'cancelled'
-  expect(softNavAggregate.getInteractionFor(currentTime)).toBe(softNavAggregate.initialPageLoadInteraction) // cancelled ixn not considered (even if queued--not possible atm)
-  const holdIxn = softNavAggregate.interactionsToHarvest.get()[0].data[softNavAggregate.interactionsToHarvest.get()[0].data.length - 1]
-  expect(softNavAggregate.getInteractionFor(currentTime)).toBe(softNavAggregate.initialPageLoadInteraction) // cancelled (untracked) ixn not considered; falls back to iPL
+    softNavAggregate.interactionsToHarvest.get()[0].data[0].status = 'cancelled'
+    expect(softNavAggregate.getInteractionFor(currentTime)).toBe(softNavAggregate.initialPageLoadInteraction) // cancelled ixn not considered (even if queued--not possible atm)
+    const holdIxn = softNavAggregate.interactionsToHarvest.get()[0].data[softNavAggregate.interactionsToHarvest.get()[0].data.length - 1]
+    expect(softNavAggregate.getInteractionFor(currentTime)).toBe(softNavAggregate.initialPageLoadInteraction) // cancelled (untracked) ixn not considered; falls back to iPL
 
-  const ttfbSubscriber = jest.mocked(ttfbModule.timeToFirstByte.subscribe).mock.calls[0][0]
-  ttfbSubscriber({ attrs: { navigationEntry: { loadEventEnd: performance.now() } } })
-  expect(softNavAggregate.getInteractionFor(performance.now())).toBeUndefined() // no in progress ixn and iPL has already closed
+    const ttfbSubscriber = jest.mocked(ttfbModule.timeToFirstByte.subscribe).mock.calls[0][0]
+    ttfbSubscriber({ attrs: { navigationEntry: { loadEventEnd: performance.now() } } })
+    expect(softNavAggregate.getInteractionFor(performance.now())).toBeUndefined() // no in progress ixn and iPL has already closed
 
-  holdIxn.status = 'finished'
-  // now we have an array of 2: [completed route-change, completed iPL] wherein the route-change duration is wholly within the iPL duration
-  expect(softNavAggregate.getInteractionFor(currentTime)).toBe(softNavAggregate.interactionsToHarvest.get()[0].data[0])
+    holdIxn.status = 'finished'
+    // now we have an array of 2: [completed route-change, completed iPL] wherein the route-change duration is wholly within the iPL duration
+    expect(softNavAggregate.getInteractionFor(currentTime)).toBe(softNavAggregate.interactionsToHarvest.get()[0].data[0])
+  })
+
+  test('does not consider long task window after hard conditions are met', () => {
+    const ipl = softNavAggregate.initialPageLoadInteraction
+    softNavAggregate.initialPageLoadInteraction.done(100)
+
+    softNavAggregate.ee.emit('newUIEvent', [{ type: 'keydown', timeStamp: 100 }])
+    const ixn = softNavAggregate.interactionInProgress
+    softNavAggregate.ee.emit('newURL', [200, 'new_location'])
+    expect(ixn.status).toEqual(INTERACTION_STATUS.IP)
+    softNavAggregate.ee.emit('newDom', [300])
+    expect(ixn.status).toEqual(INTERACTION_STATUS.PF)
+
+    expect(softNavAggregate.interactionInProgress).toBe(ixn)
+    expect(softNavAggregate.getInteractionFor(250)).toBe(ixn)
+    expect(softNavAggregate.getInteractionFor(50)).toBe(ipl)
+    expect(softNavAggregate.getInteractionFor(350)).toBeUndefined()
+
+    softNavAggregate.ee.emit('long-task', [{ end: 500 }])
+    expect(softNavAggregate.getInteractionFor(400)).toBeUndefined()
+    expect(softNavAggregate.getInteractionFor(600)).toBeUndefined()
+  })
+})
+
+describe('popstate interactions', () => {
+  test('do become route change if first interaction on page', () => {
+    softNavAggregate.ee.emit('newUIEvent', [{ type: POPSTATE_TRIGGER, timeStamp: 100 }])
+    const ixn = softNavAggregate.interactionInProgress
+    expect(ixn).toBeTruthy()
+    expect(ixn.trigger).toEqual(POPSTATE_TRIGGER)
+
+    const newUrl = 'http://myurl.com'
+    softNavAggregate.ee.emit('newURL', [101, newUrl])
+    expect(ixn.newURL).toEqual(newUrl)
+    expect(ixn.oldURL).not.toEqual(newUrl)
+    expect(softNavAggregate.latestHistoryUrl).toEqual(newUrl)
+
+    const origUrl = ixn.oldURL
+    const newUrl2 = 'http://myurl2.com'
+    softNavAggregate.ee.emit('newURL', [102, newUrl2]) // back to back url changes should update the newURL
+    expect(ixn.newURL).toEqual(newUrl2)
+    expect(ixn.oldURL).toEqual(origUrl)
+    expect(softNavAggregate.latestHistoryUrl).toEqual(newUrl2)
+  })
+
+  test('do not affect each other', () => {
+    softNavAggregate.ee.emit('newUIEvent', [{ type: POPSTATE_TRIGGER, timeStamp: 100 }])
+    const firstUrl = 'http://myurl.com'
+    softNavAggregate.ee.emit('newURL', [101, firstUrl])
+    softNavAggregate.ee.emit('newUIEvent', [{ type: POPSTATE_TRIGGER, timeStamp: 105 }])
+    const secondUrl = 'http://myotherurl.com'
+    softNavAggregate.ee.emit('newURL', [106, secondUrl])
+
+    expect(softNavAggregate.interactionInProgress.oldURL).toEqual(firstUrl)
+    expect(softNavAggregate.interactionInProgress.newURL).toEqual(secondUrl)
+    expect(softNavAggregate.latestHistoryUrl).toEqual(secondUrl)
+  })
+
+  test('are not affected by an immediately preceding click', () => {
+    softNavAggregate.ee.emit('newUIEvent', [{ type: 'click', timeStamp: 100, target: { tagName: 'a' } }])
+    softNavAggregate.ee.emit('newUIEvent', [{ type: POPSTATE_TRIGGER, timeStamp: 105 }])
+    softNavAggregate.ee.emit('newURL', [110, 'myurl.com'])
+
+    expect(softNavAggregate.interactionInProgress.trigger).toEqual(POPSTATE_TRIGGER)
+    expect(softNavAggregate.interactionInProgress.oldURL).toEqual(window.location.href)
+    expect(softNavAggregate.interactionInProgress.newURL).toEqual('myurl.com')
+  })
+
+  test('are not affected by an immediately preceding history change', () => {
+    softNavAggregate.ee.emit('newURL', [100, 'myfirsturl.com'])
+    softNavAggregate.ee.emit('newUIEvent', [{ type: POPSTATE_TRIGGER, timeStamp: 105 }])
+    softNavAggregate.ee.emit('newURL', [110, 'mysecondurl.com'])
+
+    expect(softNavAggregate.interactionInProgress.trigger).toEqual(POPSTATE_TRIGGER)
+    expect(softNavAggregate.interactionInProgress.oldURL).toEqual('myfirsturl.com')
+    expect(softNavAggregate.interactionInProgress.newURL).toEqual('mysecondurl.com')
+  })
 })
 
 test('interactions are backed up when pre harvesting', () => {

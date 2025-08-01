@@ -165,15 +165,16 @@ describe('attribution tests', () => {
     })
 
     it('captures error in xhr', async () => {
+      await Promise.all([
+        interactionsCapture.waitForResult({ totalCount: 1 }),
+        browser.url(await browser.testHandle.assetURL('soft_navigations/errors/captured-xhr.html', config))
+          .then(() => browser.waitForAgentLoad())
+      ])
+
       const [ixns, [{ request: { body: errorBody } }]] = await Promise.all([
         interactionsCapture.waitForResult({ totalCount: 2 }),
         errorMetricsCapture.waitForResult({ totalCount: 1 }),
-        await browser.url(
-          await browser.testHandle.assetURL('soft_navigations/errors/captured-xhr.html', config)
-        )
-          .then(() => browser.waitForAgentLoad())
-          .then(() => browser.pause(1000))
-          .then(() => $('body').click())
+        $('body').click()
       ])
 
       const interactionTree = ixns.find(x => x.request.body[0].trigger !== 'initialPageLoad').request.body[0]

@@ -7,7 +7,7 @@ import { generateUuid } from '../../../common/ids/unique-id'
 import { addCustomAttributes, getAddStringContext, nullable, numeric } from '../../../common/serialize/bel-serializer'
 import { now } from '../../../common/timing/now'
 import { cleanURL } from '../../../common/url/clean-url'
-import { NODE_TYPE, INTERACTION_STATUS, INTERACTION_TYPE, API_TRIGGER_NAME, IPL_TRIGGER_NAME } from '../constants'
+import { NODE_TYPE, INTERACTION_STATUS, INTERACTION_TYPE, API_TRIGGER_NAME, IPL_TRIGGER_NAME, NO_LONG_TASK_WINDOW } from '../constants'
 import { BelNode } from './bel-node'
 
 /**
@@ -48,19 +48,28 @@ export class Interaction extends BelNode {
     this.newURL = this.oldURL = (currentUrl || globalScope?.location.href)
   }
 
-  updateDom (timestamp) {
-    this.domTimestamp = (timestamp || now()) // default timestamp should be precise for accurate isActiveDuring calculations
-  }
-
   updateHistory (timestamp, newUrl) {
-    this.newURL = newUrl || '' + globalScope?.location
+    if (this.domTimestamp > 0) return // url is locked once ui>url>dom change sequence is seen
+    if (!newUrl || newUrl === this.oldURL) return // url must be different for interaction heuristic to proceed
+    this.newURL = newUrl || globalScope?.location.href
     this.historyTimestamp = (timestamp || now())
   }
 
-  seenHistoryAndDomChange () {
-    const answer = this.historyTimestamp > 0 && this.domTimestamp > this.historyTimestamp // URL must change before DOM does
-    if (answer) this.status = INTERACTION_STATUS.PF // set for eventual harvest
-    return answer
+  updateDom (timestamp) {
+    if (!this.historyTimestamp || timestamp < this.historyTimestamp) return // dom change must come after (any) url change, though this can be updated multiple times, taking the last dom timestamp
+    this.domTimestamp = (timestamp || now()) // default timestamp should be precise for accurate isActiveDuring calculations
+  }
+
+  checkHistoryAndDomChange () {
+    if (!(this.historyTimestamp > 0 && this.domTimestamp > this.historyTimestamp)) return false
+    if (this.status === INTERACTION_STATUS.PF) return true // indicate the finishing process has already started for this interaction
+    this.status = INTERACTION_STATUS.PF // set for eventual harvest
+
+    // Once the fixed reqs for a nav has been met, start a X countdown timer that watches for any long task, if it doesn't already exist, before completing the interaction.
+    clearTimeout(this.cancellationTimer) // "pending-finish" ixns cannot be auto cancelled anymore
+    this.watchLongtaskTimer ??= setTimeout(() => this.done(), NO_LONG_TASK_WINDOW)
+    // Notice that by not providing a specific end time to `.done()`, the ixn will use the dom timestamp in the event of no long task, which is what we want.
+    return true
   }
 
   on (event, cb) {

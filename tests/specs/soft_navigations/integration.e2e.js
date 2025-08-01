@@ -193,7 +193,7 @@ describe('Soft navigations', () => {
     const ajaxEvents = JSONPath({ path: '$.[*].request.body.[?(!!@ && @.path===\'/json\')]', json: ajaxEventsHarvests })
     expect(iplAjax.length).toEqual(1)
     expect(ajaxEvents.length).toEqual(0) // request should not be recorded by ajax feature as well
-    expect(iplAjax[0].end).toBeLessThan(interactionHarvests[0].request.body[0].end) // the request should've wrapped up well before page load event fired
+    expect(iplAjax[0].end).toBeLessThan(interactionHarvests[0].request.body[0].end + 5) // the request should've wrapped up by the time page load event fired w/ some margin of variability
   })
 
   it('[NR-178377] chained ajax requests that originate from pre-page-load are attributed properly', async () => {

@@ -8,21 +8,23 @@
     <title>RUM Unit Test</title>
     {init} {config}
     <script>
-      NREUM.init.harvest.interval = 30
+      NREUM.init.harvest.interval = 30;
       NREUM.init.ajax.block_internal = true; // Enable blocking of internal AJAX requests
     </script>
     {loader}
   </head>
-  <body>Instrumented
+  <body>
     <script>
-      // make all events harvest early by setting a jsAttributes size that exceeds the ideal payload size
-      newrelic.setCustomAttribute('foo', 'bar'.repeat(16000))
+      // make all compatible events harvest early by setting a jsAttributes size that exceeds the ideal payload size
+      newrelic.setCustomAttribute("foo", "bar".repeat(16000));
+      newrelic.addPageAction("test");
+      newrelic.log("test");
+      document.addEventListener("click", function () {
+        fetch("https://pokeapi.co/api/v2/pokemon/moltres");
+      });
 
-      newrelic.addPageAction('test')
-      newrelic.log('test')
-      document.addEventListener('click', function () {
-        fetch('https://pokeapi.co/api/v2/pokemon/moltres')
-      })
+      // This will create a trace node with a long name, which should be harvested early
+      newrelic.addToTrace({ name: "foo".repeat(16000), start: Date.now() });
     </script>
   </body>
 </html>

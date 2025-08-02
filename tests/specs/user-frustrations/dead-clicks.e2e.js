@@ -32,7 +32,7 @@ describe('User Frustrations - Dead Clicks', () => {
         }
       })
 
-      const waitConditions = { totalCount: 3, timeout: 25000 } // forcing a longer wait to cut down flakiness
+      const waitConditions = { totalCount: 2, timeout: 10000 } // forcing a longer wait to cut down flakiness
       const [insightsHarvest] = await insightsCapture.waitForResult(waitConditions)
       const actualInsHarvests = insightsHarvest?.request.body.ins.filter(x => x.action === 'click')
       expect(actualInsHarvests[0]).toMatchObject(expect.objectContaining({

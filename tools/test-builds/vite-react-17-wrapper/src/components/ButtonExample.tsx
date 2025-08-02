@@ -14,6 +14,9 @@ const ButtonExample = () => {
         <p>Button with no handlers ={'>'}
           <button id="do-nothing-button">Do nothing</button>
         </p>
+        <p>Button with error ={'>'}
+          <button id="button-with-error" onClick={() => {throw new Error('This button throws an error' )}}> Button w/ error </button>
+        </p>
       </div>
     </div>
   )

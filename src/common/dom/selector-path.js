@@ -5,13 +5,14 @@
 
 /**
  * Generates a CSS selector path for the given element, if possible
+ * Also gather metadata about the element's nearest fields, and whether there are any links or buttons in the path.
  * @param {HTMLElement} elem
- * @param {boolean} includeId
- * @param {boolean} includeClass
- * @returns {string|undefined}
+ * @param {Array<string>} [targetFields=[]] specifies which fields to gather from the nearest element in the path
+ * @returns {{path: (undefined|string), nearestFields: {}, hasButton: boolean, hasLink: boolean}}
  */
-export const generateSelectorPath = (elem, targetFields = []) => {
-  if (!elem) return { path: undefined, nearestFields: {} }
+export const analyzeElemPath = (elem, targetFields = []) => {
+  const result = { path: undefined, nearestFields: {}, hasButton: false, hasLink: false }
+  if (!elem) return result
 
   const getNthOfTypeIndex = (node) => {
     try {
@@ -41,6 +42,10 @@ export const generateSelectorPath = (elem, targetFields = []) => {
         pathSelector ? `>${pathSelector}` : ''
       ].join('')
 
+      const tagName = elem.tagName.toLowerCase()
+      result.hasLink ||= tagName === 'a'
+      result.hasButton ||= tagName === 'button' || (tagName === 'input' && elem.type.toLowerCase() === 'button')
+
       pathSelector = selector
       elem = elem.parentNode
     }
@@ -49,7 +54,7 @@ export const generateSelectorPath = (elem, targetFields = []) => {
   }
 
   const path = pathSelector ? index ? `${pathSelector}:nth-of-type(${index})` : pathSelector : undefined
-  return { path, nearestFields }
+  return { ...result, path, nearestFields }
 
   function nearestAttrName (originalFieldName) {
     /** preserve original renaming structure for pre-existing field maps */

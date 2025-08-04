@@ -4,7 +4,7 @@ import path from 'node:path'
 import child_process from 'node:child_process'
 import browsersList from '../../browsers-lists/lt-browsers-list.mjs'
 import args from '../args.mjs'
-import { getBrowserName } from '../../browsers-lists/utils.mjs'
+import { getBrowserName, getDeviceName } from '../../browsers-lists/utils.mjs'
 import webviewAssetIds from '../../lambda-test/webview-asset-ids.mjs'
 
 const require = module.createRequire(import.meta.url)
@@ -54,7 +54,7 @@ function lambdaTestCapabilities () {
         capabilities.browserVersion = testBrowser.browserVersion
         capabilities['LT:Options'].selenium_version = '4.22.0'
       } else {
-        capabilities['LT:Options'].deviceName = testBrowser.device_name
+        capabilities['LT:Options'].deviceName = getDeviceName(testBrowser)
         capabilities['LT:Options'].platformVersion = testBrowser.version
         if (args.webview) { // btw, LT has different capabilities array for mobile app automation!
           // Note: Since their available devices for app differs, we'll let default pick apply.

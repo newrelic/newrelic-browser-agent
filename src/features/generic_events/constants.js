@@ -12,6 +12,8 @@ export const OBSERVED_WINDOW_EVENTS = ['focus', 'blur']
 export const RAGE_CLICK_THRESHOLD_EVENTS = 4
 export const RAGE_CLICK_THRESHOLD_MS = 1000
 
+export const FRUSTRATION_TIMEOUT_MS = 2000
+
 export const RESERVED_EVENT_TYPES = ['PageAction', 'UserAction', 'BrowserPerformance']
 
 export const FEATURE_FLAGS = {

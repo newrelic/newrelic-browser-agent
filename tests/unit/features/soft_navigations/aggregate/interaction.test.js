@@ -52,6 +52,7 @@ test('History and DOM timestamps fn updates', () => {
   ixn.updateHistory(5871, 'some_new_url')
   expect(ixn.historyTimestamp).toBe(5871)
   ixn.updateDom(7812)
+  expect(ixn.domTimestamp).toBe(7812)
   expect(ixn.newURL).toBe('some_new_url')
   expect(ixn.checkHistoryAndDomChange()).toBeTruthy()
 })

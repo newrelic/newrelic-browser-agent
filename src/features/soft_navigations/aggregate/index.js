@@ -71,6 +71,9 @@ export class Aggregate extends AggregateBase {
       // Provided there isn't another long task, the ixn span will be extended to include this long task that would finish the interaction.
       this.interactionInProgress.customEnd = task.end
       this.interactionInProgress.watchLongtaskTimer = setTimeout(() => this.interactionInProgress.done(), NO_LONG_TASK_WINDOW)
+
+      // Report metric on frequency of ixn extension due to long task
+      this.reportSupportabilityMetric('SoftNav/Interaction/Extended')
     })
 
     this.#registerApiHandlers()

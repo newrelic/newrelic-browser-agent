@@ -10,6 +10,7 @@ const INTERACTION_API = 'api-ixn'
 let mainAgent
 
 beforeAll(() => {
+  jest.useFakeTimers({ doNotFake: ['nextTick', 'performance'] }) // to aid new long task window heuristics as default ixn will need to wait additional 5s to finish
   mainAgent = setupAgent({
     agentOverrides: {
       runSoftNavOverSpa: true
@@ -40,10 +41,9 @@ beforeEach(async () => {
 
   softNavAggregate.ee.emit('rumresp', [{ spa: 1 }])
   await new Promise(process.nextTick)
+  jest.clearAllTimers() // prevents the IPL harvest after RUM flags w/ setTimeout of 0; this is for better test consistency
 
   softNavAggregate.initialPageLoadInteraction = null
-  softNavAggregate.interactionInProgress = null
-  delete softNavAggregate.latestRouteSetByApi
 })
 
 afterEach(() => {
@@ -71,7 +71,7 @@ test('.interaction gets current or creates new api ixn', () => {
   expect(softNavAggregate.interactionInProgress.cancellationTimer).toBeUndefined()
 })
 
-test('.interaction returns a different new context for every call', async () => {
+test('.interaction returns a different new context for every call', () => {
   const ixn1 = mainAgent.interaction()
   const ixn2 = mainAgent.interaction()
   expect(ixn1).not.toBe(ixn2)
@@ -92,6 +92,7 @@ test('open api ixn ignores UI events and auto closes after history & dom change'
 
   softNavAggregate.ee.emit('newURL', [23, 'example.com'])
   softNavAggregate.ee.emit('newDom', [34])
+  jest.runOnlyPendingTimers() // simulate no long task timeout so the ixn can close
   expect(softNavAggregate.interactionInProgress).toBeNull()
   expect(ixnContext.associatedInteraction.status).toEqual('finished')
 })
@@ -133,8 +134,9 @@ test('.interaction with waitForEnd flag keeps ixn open until .end', () => {
   let ixnContext = getIxnContext(ixn)
   softNavAggregate.ee.emit('newURL', [23, 'example.com'])
   softNavAggregate.ee.emit('newDom', [34])
+  jest.runOnlyPendingTimers() // even after no long task window, the ixn should remain open
 
-  expect(softNavAggregate.interactionInProgress.status).toEqual('in progress')
+  expect(softNavAggregate.interactionInProgress.status).toEqual('pending finish')
   softNavAggregate.ee.emit(`${INTERACTION_API}-end`, [45], ixnContext)
   expect(softNavAggregate.interactionInProgress).toBeNull()
   expect(ixnContext.associatedInteraction.end).toEqual(45)
@@ -143,14 +145,15 @@ test('.interaction with waitForEnd flag keeps ixn open until .end', () => {
   ixnContext = getIxnContext(ixn)
   softNavAggregate.ee.emit('newURL', [70, 'example.com'])
   softNavAggregate.ee.emit('newDom', [80])
+  jest.runOnlyPendingTimers()
 
-  expect(softNavAggregate.interactionInProgress.status).toEqual('in progress')
+  expect(softNavAggregate.interactionInProgress.status).toEqual('pending finish')
   softNavAggregate.ee.emit(`${INTERACTION_API}-end`, [90], ixnContext)
   expect(softNavAggregate.interactionInProgress).toBeNull()
   expect(ixnContext.associatedInteraction.end).toEqual(90)
 })
 
-test('.save forcibly harvest any would-be cancelled ixns', async () => {
+test('.save forcibly harvest any would-be cancelled ixns', () => {
   let ixn = mainAgent.interaction().save()
   let ixnContext = getIxnContext(ixn)
   softNavAggregate.ee.emit(`${INTERACTION_API}-end`, [100], ixnContext)
@@ -165,7 +168,6 @@ test('.save forcibly harvest any would-be cancelled ixns', async () => {
   expect(ixnContext.associatedInteraction.end).toBeGreaterThan(ixnContext.associatedInteraction.start) // thisCtx is still referencing the first keydown ixn
 
   mainAgent.interaction().save().end()
-  await new Promise(process.nextTick)
   expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(3)
 })
 
@@ -174,6 +176,7 @@ test('.ignore forcibly discard any would-be harvested ixns', () => {
   mainAgent.interaction().ignore()
   softNavAggregate.ee.emit('newURL', [23, 'example.com'])
   softNavAggregate.ee.emit('newDom', [34])
+  jest.runOnlyPendingTimers()
   expect(softNavAggregate.interactionInProgress).toBeNull()
   expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(0)
 
@@ -183,7 +186,7 @@ test('.ignore forcibly discard any would-be harvested ixns', () => {
   expect(getIxnContext(ixn).associatedInteraction.status).toEqual('cancelled')
 })
 
-test('.getContext stores values scoped to each ixn', async () => {
+test('.getContext stores values scoped to each ixn', () => {
   let hasRan = false
   mainAgent.interaction().getContext(privCtx => { privCtx.someVar = true })
   mainAgent.interaction().getContext(privCtx => {
@@ -191,7 +194,7 @@ test('.getContext stores values scoped to each ixn', async () => {
     hasRan = true
   })
 
-  await new Promise(resolve => setTimeout(resolve, 100))
+  jest.runOnlyPendingTimers() // execute the setTimeout used by getContext internally
   expect(hasRan).toEqual(true)
   mainAgent.interaction().end()
 
@@ -200,14 +203,14 @@ test('.getContext stores values scoped to each ixn', async () => {
     expect(privCtx.someVar).toBeUndefined() // two separate interactions should not share the same data store
     hasRan = true
   })
-  await new Promise(resolve => setTimeout(resolve, 100))
+  jest.runOnlyPendingTimers()
   expect(hasRan).toEqual(true)
 })
 
-test('.onEnd queues callbacks for right before ixn is done', async () => {
+test('.onEnd queues callbacks for right before ixn is done', () => {
   let hasRan = false
   const ixn1 = mainAgent.interaction().getContext(privCtx => { privCtx.someVar = true })
-  await new Promise(resolve => setTimeout(resolve, 100))
+  jest.runOnlyPendingTimers()
   ixn1.onEnd(privCtx => {
     expect(privCtx.someVar).toEqual(true) // should have access to the same data store as getContext
     hasRan = true
@@ -233,7 +236,7 @@ test('.setCurrentRouteName updates the targetRouteName of current ixn and is tra
   let ixn = mainAgent.interaction() // a new ixn would start with undefined old & new routes
   let ixnContext = getIxnContext(ixn)
   mainAgent.setCurrentRouteName(firstRoute)
-  expect(ixnContext.associatedInteraction.oldRoute).toBeUndefined()
+  expect(ixnContext.associatedInteraction.oldRoute).toBeNull()
   expect(ixnContext.associatedInteraction.newRoute).toEqual(firstRoute)
   ixn.end()
 

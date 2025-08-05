@@ -165,15 +165,16 @@ describe('attribution tests', () => {
     })
 
     it('captures error in xhr', async () => {
+      await Promise.all([
+        interactionsCapture.waitForResult({ totalCount: 1 }),
+        browser.url(await browser.testHandle.assetURL('soft_navigations/errors/captured-xhr.html', config))
+          .then(() => browser.waitForAgentLoad())
+      ])
+
       const [ixns, [{ request: { body: errorBody } }]] = await Promise.all([
         interactionsCapture.waitForResult({ totalCount: 2 }),
         errorMetricsCapture.waitForResult({ totalCount: 1 }),
-        await browser.url(
-          await browser.testHandle.assetURL('soft_navigations/errors/captured-xhr.html', config)
-        )
-          .then(() => browser.waitForAgentLoad())
-          .then(() => browser.pause(1000))
-          .then(() => $('body').click())
+        $('body').click()
       ])
 
       const interactionTree = ixns.find(x => x.request.body[0].trigger !== 'initialPageLoad').request.body[0]
@@ -192,31 +193,32 @@ describe('attribution tests', () => {
       expect(error.metrics.count).toEqual(1)
     })
 
-    it('captures same error in multiple interactions', async () => {
-      const [ixns, [{ request: { body: errorBody } }]] = await Promise.all([
-        interactionsCapture.waitForResult({ totalCount: 2 }),
-        errorMetricsCapture.waitForResult({ totalCount: 1 }),
-        browser.url(
-          await browser.testHandle.assetURL('soft_navigations/errors/captured-custom.html', config)
-        ).then(() => browser.waitForAgentLoad())
-          .then(() => $('body').click())
-          .then(() => browser.pause(1000))
+    it('captures same error in different interactions', async () => {
+      await Promise.all([
+        interactionsCapture.waitForResult({ totalCount: 1 }),
+        browser.url(await browser.testHandle.assetURL('soft_navigations/errors/captured-custom.html', config))
+          .then(() => browser.waitForAgentLoad())
+      ])
+
+      const [ixns, errs] = await Promise.all([
+        interactionsCapture.waitForResult({ totalCount: 3 }),
+        errorMetricsCapture.waitForResult({ totalCount: 2 }),
+        $('body').click().then(() => browser.pause(1000))
           .then(() => $('body').click())
       ])
 
       const interactionTrees = ixns.filter(x => x.request.body[0].trigger !== 'initialPageLoad')
 
       const ixn1 = interactionTrees[0].request.body[0]
-      const ixn2 = interactionTrees[0].request.body[1] // there should be 2 interactions in the 2nd payload
+      const ixn2 = interactionTrees[1].request.body[0] // there should be 1 ixn per harvest since it takes 2nd ixn 5 seconds to close when the interval is also 5s
 
       const interactionId = ixn1.id
       expect(interactionId).not.toEqual(null)
       const interactionId2 = ixn2.id
       expect(interactionId2).not.toEqual(null)
 
-      expect(errorBody.err.length).toEqual(2)
-      var error1 = errorBody.err[0]
-      var error2 = errorBody.err[1]
+      var error1 = errs[0].request.body.err[0]
+      var error2 = errs[1].request.body.err[0]
       expect(error1.params.browserInteractionId).toEqual(interactionId) // 'should have the correct interaction id'
       expect(error2.params.browserInteractionId).toEqual(interactionId2) // 'should have the correct interaction id'
     })

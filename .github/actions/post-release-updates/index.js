@@ -70,7 +70,7 @@ await spawnAsync(
 console.log('\nUpdating browserslist database')
 await spawnAsync(
   `npx${os.platform() === 'win32' ? '.cmd' : ''}`,
-  [ '--yes', 'browserslist@latest', '--update-db' ],
+  [ '--yes', 'update-browserslist-db@latest' ],
   DEFAULT_SPAWN_OPTIONS
 )
 

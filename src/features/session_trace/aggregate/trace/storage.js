@@ -93,7 +93,7 @@ export class TraceStorage {
    * @returns {boolean} true if the event should be ignored, false otherwise
    */
   #shouldIgnoreEvent (stn) {
-    if (stn.n in ignoredEvents.global || stn.n in ignoredEvents.window) return true // ignore noisy global events or window events that are already captured by PVT metrics
+    if (stn.n in ignoredEvents.global) return true // ignore noisy global events or window events that are already captured by PVT metrics
     const origin = stn.o
     if (ignoredEvents[origin]?.ignoreAll || ignoredEvents[origin]?.[stn.n]) return true
     return (origin === 'xhrOriginMissing' && stn.n === 'Ajax') // ignore XHR events when the origin is missing

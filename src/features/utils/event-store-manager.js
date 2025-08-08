@@ -3,8 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { DEFAULT_KEY, MAX_PAYLOAD_SIZE } from '../../common/constants/agent-constants'
-import { dispatchGlobalEvent } from '../../common/dispatch/global-event'
-import { activatedFeatures } from '../../common/util/feature-flags'
 import { isContainerAgentTarget } from '../../common/util/target'
 /**
  * This layer allows multiple browser entity apps, or "target", to each have their own segregated storage instance.
@@ -70,14 +68,6 @@ export class EventStoreManager {
    * @returns {boolean} True if the event was successfully added
    */
   add (event, targetEntityGuid) {
-    dispatchGlobalEvent({
-      agentIdentifier: this.agentRef.agentIdentifier,
-      drained: !!activatedFeatures?.[this.agentRef.agentIdentifier],
-      type: 'data',
-      name: 'buffer',
-      feature: this.featureAgg.featureName,
-      data: event
-    })
     return this.#getEventStore(targetEntityGuid).add(event)
   }
 

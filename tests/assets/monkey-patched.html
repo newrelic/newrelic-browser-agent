@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    <script>
+      var logs = []
+      // monkey patch the performance API to trigger warnings in the agent
+      var origPerformanceNow = performance.now;
+      performance.now = function (){ 
+        return origPerformanceNow.apply(performance, arguments);}
+
+      // debug will capture the warn() calls for tests
+      var origConsoleDebug = console.debug;
+      console.debug = function debug () {
+        logs.push(arguments)
+        origConsoleDebug.apply(console, arguments);
+      }
+    </script>
+    {init} {config} {loader}
+  </head>
+  <body>Instrumented</body>
+</html>

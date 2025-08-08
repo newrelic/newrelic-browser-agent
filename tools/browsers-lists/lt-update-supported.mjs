@@ -47,6 +47,7 @@ function updateLatestVersions (deskPlatforms) {
  */
 function updateMobileVersions (mobilePlatforms) {
   const MIN_SUPPORTED_IOS = Math.floor(browserslistMinVersion('last 10 iOS versions')) // LT ios versions don't align exactly with browserlist
+  const STABLE_FULL_IOS = browserslistMaxVersion('last 10 iOS versions') // get the latest stable full release (not beta)
   const testedMobileVersionsJson = {}
 
   const iosDevices = mobilePlatforms.find(p => p.platform === 'ios')?.devices
@@ -62,9 +63,8 @@ function updateMobileVersions (mobilePlatforms) {
   if (!iosDevices || !androidDevices) throw new Error('iOS or Android mobile could not be found in API response.')
 
   // iOS versions should already be sorted in descending; the built list should also be in desc order.
-  const latestiOSVersion = Number(iosDevices[0].version)
   const testediOSVersions = [
-    iosDevices.find(spec => Number(spec.version) === latestiOSVersion),
+    iosDevices.find(spec => Number(spec.version) <= STABLE_FULL_IOS),
     iosDevices.findLast(spec => Number(spec.version) >= MIN_SUPPORTED_IOS)
   ]
   testediOSVersions.forEach(ltFormatSpec => { ltFormatSpec.platformName = 'ios' })
@@ -94,4 +94,10 @@ const browserslistMinVersion = query => {
   const list = browserslist(query)
   const version = list[list.length - 1].split(' ')[1] // browserslist returns id version pairs like 'ios_saf 16.1'
   return Number(version.split('-')[0]) // versions might be a range (e.g. 14.0-14.4), and we want the low end.
+}
+
+const browserslistMaxVersion = query => {
+  const list = browserslist(query)
+  const version = list[0].split(' ')[1] // browserslist returns id version pairs like 'ios_saf 16.1'
+  return Number(version.split('-')[0])
 }

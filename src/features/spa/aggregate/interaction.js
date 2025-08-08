@@ -32,7 +32,8 @@ export function Interaction (eventName, timestamp, url, routeName, onFinished, a
   attrs.trigger = eventName
   attrs.initialPageURL = initialLocation
   attrs.oldRoute = routeName
-  attrs.newURL = attrs.oldURL = url
+  attrs.newURL = url
+  attrs.oldURL = eventName === 'initialPageLoad' ? document.referrer || undefined : url // document referrer can return '' and flipper url grouping gets weird with empty strings. Pass undefined to skip flipper.
   attrs.custom = {}
   attrs.store = {}
 }

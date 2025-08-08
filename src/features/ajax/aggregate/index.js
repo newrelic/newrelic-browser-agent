@@ -21,6 +21,13 @@ export class Aggregate extends AggregateBase {
     this.underSpaEvents = {}
     const classThis = this
 
+    if (!agentRef.init.ajax.block_internal) {
+      // if the agent is tracking ITSELF, it can spawn endless ajax requests early if they are large from custom attributes, so we just disable early harvest for ajax in this case.
+      super.canHarvestEarly = false
+    } else {
+      super.customAttributesAreSeparate = true
+    }
+
     // --- v Used by old spa feature
     this.ee.on('interactionDone', (interaction, wasSaved) => {
       if (!this.underSpaEvents[interaction.id]) return

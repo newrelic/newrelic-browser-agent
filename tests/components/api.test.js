@@ -22,6 +22,7 @@ import { setupSetApplicationVersionAPI } from '../../src/loaders/api/setApplicat
 import { setupStartAPI } from '../../src/loaders/api/start'
 import { setTopLevelCallers } from '../../src/loaders/api/topLevelCallers'
 import { gosCDN } from '../../src/common/window/nreum'
+import { now } from '../../src/common/timing/now'
 
 jest.retryTimes(0)
 
@@ -64,7 +65,8 @@ describe('API tests', () => {
         'pauseReplay',
         'log',
         'wrapLogger',
-        'register'
+        'register',
+        'measure'
       ]
       apiNames.forEach(apiName => checkApiExists(apiName, false))
 
@@ -111,7 +113,7 @@ describe('API tests', () => {
 
       delete agent.register
       await initializeFeature(GenericEvents, agent)
-      ;['addPageAction', 'recordCustomEvent', 'finished', 'register'].forEach(apiName => checkApiExists(apiName, true))
+      ;['addPageAction', 'recordCustomEvent', 'finished', 'register', 'measure'].forEach(apiName => checkApiExists(apiName, true))
 
       function checkApiExists (apiName, shouldBeDefined = false) {
         if (shouldBeDefined) expect(agent[apiName]).toBeDefined()
@@ -130,12 +132,55 @@ describe('API tests', () => {
 
     describe('finished', () => {
       test('should execute as expected', async () => {
+        const n = now()
         agent.finished()
         expectHandled('storeSupportabilityMetrics', ['API/finished/called'])
-        expectHandled('storeEventMetrics', ['finished', { time: expect.toBeNumber() }])
+
+        expectHandled('storeEventMetrics', ['finished', { time: expect.any(Number) }])
+        const storeEventMetricsCall = handleModule.handle.mock.calls.find(callArr => callArr[0] === 'storeEventMetrics')
+        expect(Math.abs(storeEventMetricsCall[1][1].time - n)).toBeLessThanOrEqual(1) // should be unix timestamp
+
         expectHandled('storeSupportabilityMetrics', ['API/addToTrace/called'])
+
         expectHandled('bstApi', [{ e: expect.toBeNumber(), n: 'finished', o: 'nr', s: expect.toBeNumber(), t: 'api' }])
-        expectHandled('api-addPageAction', [expect.toBeNumber(), 'finished'])
+        const bstApiCall = handleModule.handle.mock.calls.find(callArr => callArr[0] === 'bstApi')
+        expect(Math.abs(bstApiCall[1][0].s - (n))).toBeLessThanOrEqual(1) // should be unix timestamp
+        expect(Math.abs(bstApiCall[1][0].e - (n))).toBeLessThanOrEqual(1) // should be unix timestamp
+
+        expectHandled('api-addPageAction', [expect.any(Number), 'finished']) // unix timestamp
+        const addPageActionCall = handleModule.handle.mock.calls.find(callArr => callArr[0] === 'api-addPageAction')
+        expect(addPageActionCall[1][0]).toBeLessThan(10000) // should be relative timestamp
+        expect(Math.abs(addPageActionCall[1][0] - n)).toBeLessThanOrEqual(1) // should be relative timestamp, account for rounding errors
+      })
+
+      test('should allow argument as expected', async () => {
+        const time = Date.now() + 1000
+        const n = now()
+        agent.finished(time)
+        expectHandled('storeSupportabilityMetrics', ['API/finished/called'])
+
+        expectHandled('storeEventMetrics', ['finished', { time: expect.any(Number) }])
+        const storeEventMetricsCall = handleModule.handle.mock.calls.find(callArr => callArr[0] === 'storeEventMetrics')
+        expect(Math.abs(storeEventMetricsCall[1][1].time - (n + 1000))).toBeLessThanOrEqual(1) // should be unix timestamp
+
+        expectHandled('storeSupportabilityMetrics', ['API/addToTrace/called'])
+
+        expectHandled('bstApi', [{ e: expect.toBeNumber(), n: 'finished', o: 'nr', s: expect.toBeNumber(), t: 'api' }])
+        const bstApiCall = handleModule.handle.mock.calls.find(callArr => callArr[0] === 'bstApi')
+        expect(Math.abs(bstApiCall[1][0].s - (n + 1000))).toBeLessThanOrEqual(1) // should be unix timestamp
+        expect(Math.abs(bstApiCall[1][0].e - (n + 1000))).toBeLessThanOrEqual(1) // should be unix timestamp
+
+        expectHandled('api-addPageAction', [expect.any(Number), 'finished']) // unix timestamp
+        const addPageActionCall = handleModule.handle.mock.calls.find(callArr => callArr[0] === 'api-addPageAction')
+        expect(addPageActionCall[1][0]).toBeLessThan(10000) // should be relative timestamp
+        expect(Math.abs(addPageActionCall[1][0] - (n + 1000))).toBeLessThanOrEqual(1) // should be relative timestamp, account for rounding errors
+      })
+
+      test('should warn for bad arg', async () => {
+        const debugSpy = jest.spyOn(console, 'debug')
+        const n = now()
+        agent.finished(n)
+        expect(debugSpy).toHaveBeenCalledWith(expect.stringContaining('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#62'), n)
       })
     })
 
@@ -152,6 +197,40 @@ describe('API tests', () => {
 
         const payload = handleModule.handle.mock.calls.find(callArr => callArr[0] === 'bstApi')[1][0]
         expect(payload.e - payload.s).toEqual(1000) // end - start was 1000ms apart in API call
+      })
+
+      test('should return error code for negative timestamps', () => {
+        agent.addToTrace({
+          name: 'Event Name',
+          start: Date.now(),
+          end: -1000,
+          origin: 'Origin of event'
+        })
+
+        expect(console.debug).toHaveBeenCalledTimes(1)
+        expect(console.debug).toHaveBeenLastCalledWith(expect.stringContaining('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#61'), expect.any(Object))
+
+        agent.addToTrace({
+          name: 'Event Name',
+          start: -1234,
+          end: Date.now() + 1000,
+          origin: 'Origin of event'
+        })
+
+        expect(console.debug).toHaveBeenCalledTimes(2)
+        expect(console.debug).toHaveBeenLastCalledWith(expect.stringContaining('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#61'), expect.any(Object))
+      })
+
+      test('should return error code for end time before start time', () => {
+        agent.addToTrace({
+          name: 'Event Name',
+          start: Date.now() + 2000,
+          end: Date.now() + 1000,
+          origin: 'Origin of event'
+        })
+
+        expect(console.debug).toHaveBeenCalled()
+        expect(console.debug).toHaveBeenLastCalledWith(expect.stringContaining('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#61'), expect.any(Object))
       })
     })
 
@@ -725,7 +804,12 @@ describe('API tests', () => {
           expectHandled(SUPPORTABILITY_METRIC_CHANNEL, ['API/wrapLogger/called'])
 
           expectEmitted('wrap-logger-start', [expect.any(Array), expect.any(Object), 'myObservedLogger'])
-          expectEmitted('wrap-logger-end', [['test1'], expect.any(Object), undefined])
+          expectEmitted('wrap-logger-end', [['test1'], expect.any(Object), undefined, expect.objectContaining({
+            duration: expect.any(Number),
+            isLongTask: false,
+            methodName: 'myObservedLogger',
+            thrownError: undefined
+          })])
 
           expectHandled(SUPPORTABILITY_METRIC_CHANNEL, ['API/logging/info/called'])
           expectHandled('log', [expect.any(Number), 'test1', {}, 'INFO', true, undefined])
@@ -753,7 +837,12 @@ describe('API tests', () => {
           expectHandled(SUPPORTABILITY_METRIC_CHANNEL, ['API/wrapLogger/called'])
 
           expectEmitted('wrap-logger-start', [expect.any(Array), expect.any(Object), randomMethodName])
-          expectEmitted('wrap-logger-end', [['test1'], expect.any(Object), undefined])
+          expectEmitted('wrap-logger-end', [['test1'], expect.any(Object), undefined, expect.objectContaining({
+            duration: expect.any(Number),
+            isLongTask: false,
+            methodName: randomMethodName,
+            thrownError: undefined
+          })])
 
           expectHandled(SUPPORTABILITY_METRIC_CHANNEL, ['API/logging/warn/called'])
           expectHandled('log', [expect.any(Number), 'test1', {}, 'warn', true, undefined])
@@ -774,7 +863,12 @@ describe('API tests', () => {
           expectHandled(SUPPORTABILITY_METRIC_CHANNEL, ['API/wrapLogger/called'])
 
           expectEmitted('wrap-logger-start', [expect.any(Array), expect.any(Object), randomMethodName])
-          expectEmitted('wrap-logger-end', [['test1', { test2: 2 }, ['test3'], true, 1], expect.any(Object), undefined])
+          expectEmitted('wrap-logger-end', [['test1', { test2: 2 }, ['test3'], true, 1], expect.any(Object), undefined, expect.objectContaining({
+            duration: expect.any(Number),
+            isLongTask: false,
+            methodName: randomMethodName,
+            thrownError: undefined
+          })])
         })
 
         test('wrapped function should still behave as intended', () => {
@@ -915,6 +1009,188 @@ describe('API tests', () => {
         })
       })
     })
+
+    describe('measure', () => {
+      beforeAll(() => {
+        global.PerformanceMark = function (name, options) {
+          this.name = name
+          this.startTime = options.startTime
+        }
+      })
+      test('should create event emitter event for calls to API', () => {
+        agent.measure('testMeasure')
+
+        expectHandled(SUPPORTABILITY_METRIC_CHANNEL, ['API/measure/called'])
+        expectHandled('api-measure', [expect.any(Object), 'testMeasure'])
+      })
+
+      test('should pass in expected attributes into the event emitter call', () => {
+        agent.measure('testMeasure', { start: 5, end: 20, customAttributes: { foo: 'bar' } })
+
+        expectHandled(SUPPORTABILITY_METRIC_CHANNEL, ['API/measure/called'])
+        const args = { start: 5, end: 20, duration: 15, customAttributes: { foo: 'bar' } }
+        expectHandled('api-measure', [args, 'testMeasure'])
+      })
+
+      test('should return an object containing measurement details', () => {
+        const measurements = agent.measure('testMeasure')
+        expect(measurements).toEqual({
+          start: expect.any(Number),
+          end: expect.any(Number),
+          duration: expect.any(Number),
+          customAttributes: expect.any(Object)
+        })
+      })
+
+      test.each([null, undefined, {}, [], 123])('should return early and warn when name is not a string (%s)', (name) => {
+        agent.measure(name)
+
+        expect(console.debug).toHaveBeenCalledTimes(1)
+        expect(console.debug).toHaveBeenCalledWith(expect.stringContaining('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#57'), undefined)
+      })
+
+      test.each(['start', 'end', 'customAttributes'])('should return early and warn when options argument has invalid types', (param) => {
+        agent.measure('testMeasure', { [param]: faker.string.uuid() })
+
+        expect(console.debug).toHaveBeenCalledTimes(1)
+        expect(console.debug).toHaveBeenCalledWith(expect.stringContaining('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#57'), undefined)
+      })
+
+      test('should return early and warn when duration is negative', () => {
+        agent.measure('testMeasure', { start: 100, end: 50 })
+
+        expect(console.debug).toHaveBeenCalledTimes(1)
+        expect(console.debug).toHaveBeenCalledWith(expect.stringContaining('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#58'), undefined)
+      })
+
+      describe('should create correct output', () => {
+        let dummyMark
+        beforeAll(() => {
+          dummyMark = (name, startTime) => new PerformanceMark(name, { startTime })
+        })
+        test('no arguments', () => {
+          jest.spyOn(global.performance, 'now').mockReturnValue(12345)
+
+          const measurements = agent.measure('testMeasure')
+          expect(measurements).toEqual({
+            start: 0,
+            end: 12345,
+            duration: 12345 - 0,
+            customAttributes: {}
+          })
+        })
+
+        test('start - number, end undefined', () => {
+          jest.spyOn(global.performance, 'now').mockReturnValue(12345)
+          const measurements = agent.measure('testMeasure', { start: 1000 })
+          expect(measurements).toEqual({
+            start: 1000,
+            end: 12345,
+            duration: 12345 - 1000,
+            customAttributes: {}
+          })
+        })
+
+        test('start - number, end - null', () => {
+          jest.spyOn(global.performance, 'now').mockReturnValue(12345)
+          const measurements = agent.measure('testMeasure', { start: 1000, end: null })
+          expect(measurements).toEqual({
+            start: 1000,
+            end: 12345,
+            duration: 12345 - 1000,
+            customAttributes: {}
+          })
+        })
+
+        test('start - PerformanceMark, end - undefined', () => {
+          jest.spyOn(global.performance, 'now').mockReturnValue(12345)
+
+          const measurements = agent.measure('testMeasure', { start: dummyMark('startMark', 1000) })
+          expect(measurements).toEqual({
+            start: 1000,
+            end: 12345,
+            duration: 12345 - 1000,
+            customAttributes: {}
+          })
+        })
+
+        test('start - undefined, end - number', () => {
+          const measurements = agent.measure('testMeasure', { end: 1000 })
+          expect(measurements).toEqual({
+            start: 0,
+            end: 1000,
+            duration: 1000 - 0,
+            customAttributes: {}
+          })
+        })
+
+        test('start - null, end - number', () => {
+          const measurements = agent.measure('testMeasure', { start: null, end: 1000 })
+          expect(measurements).toEqual({
+            start: 0,
+            end: 1000,
+            duration: 1000 - 0,
+            customAttributes: {}
+          })
+        })
+
+        test('start - undefined, end - PerformanceMark', () => {
+          const measurements = agent.measure('testMeasure', { end: dummyMark('endMark', 1000) })
+          expect(measurements).toEqual({
+            start: 0,
+            end: 1000,
+            duration: 1000 - 0,
+            customAttributes: {}
+          })
+        })
+
+        test('start - undefined, end - number', () => {
+          const measurements = agent.measure('testMeasure', { end: 1000 })
+          expect(measurements).toEqual({
+            start: 0,
+            end: 1000,
+            duration: 1000 - 0,
+            customAttributes: {}
+          })
+        })
+
+        test('start - PerformanceMark, end - PerformanceMark', () => {
+          const measurements = agent.measure('testMeasure', { start: dummyMark('startMark', 1000), end: dummyMark('endMark', 2000) })
+          expect(measurements).toEqual({
+            start: 1000,
+            end: 2000,
+            duration: 2000 - 1000,
+            customAttributes: {}
+          })
+        })
+
+        test('start - number, end - PerformanceMark', () => {
+          const measurements = agent.measure('testMeasure', { start: 1000, end: dummyMark('endMark', 2000) })
+          expect(measurements).toEqual({
+            start: 1000,
+            end: 2000,
+            duration: 2000 - 1000,
+            customAttributes: {}
+          })
+        })
+
+        test('start - PerformanceMark, end - number', () => {
+          const measurements = agent.measure('testMeasure', { start: dummyMark('startMark', 1000), end: 2000 })
+          expect(measurements).toEqual({
+            start: 1000,
+            end: 2000,
+            duration: 2000 - 1000,
+            customAttributes: {}
+          })
+        })
+
+        test('custom attributes', () => {
+          const measurements = agent.measure('testMeasure', { customAttributes: { foo: 'bar' } })
+          expect(measurements.customAttributes).toEqual({ foo: 'bar' }
+          )
+        })
+      })
+    })
   })
 
   describe('setTopLevelCallers', () => {
@@ -946,7 +1222,8 @@ describe('API tests', () => {
         pauseReplay: jest.fn(),
         log: jest.fn(),
         wrapLogger: jest.fn(),
-        register: jest.fn()
+        register: jest.fn(),
+        measure: jest.fn()
       }
       setTopLevelCallers(mockAgent)
       const nreum = gosCDN()
@@ -977,6 +1254,7 @@ describe('API tests', () => {
       expect(typeof nreum.log).toEqual('function')
       expect(typeof nreum.wrapLogger).toEqual('function')
       expect(typeof nreum.register).toEqual('function')
+      expect(typeof nreum.measure).toEqual('function')
     })
 
     test('should forward calls to the first initialized and exposed agent that is not a micro-agent', () => {

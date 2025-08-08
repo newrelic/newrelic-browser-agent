@@ -5,8 +5,6 @@
 export const prefix = 'api-'
 export const spaPrefix = prefix + 'ixn-'
 
-export const replayRunning = {}
-
 export const ADD_PAGE_ACTION = 'addPageAction'
 export const ADD_TO_TRACE = 'addToTrace'
 export const ADD_RELEASE = 'addRelease'
@@ -26,3 +24,4 @@ export const SET_PAGE_VIEW_NAME = 'setPageViewName'
 export const SET_USER_ID = 'setUserId'
 export const START = 'start'
 export const WRAP_LOGGER = 'wrapLogger'
+export const MEASURE = 'measure'

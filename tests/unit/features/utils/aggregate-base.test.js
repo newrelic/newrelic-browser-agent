@@ -160,18 +160,18 @@ test('does not initialized Aggregator more than once with multiple features', as
   pveAgg.processEntities(mockRumResp1.app.agents, { licenseKey: '1', applicationID: '1' })
 
   expect(EventStoreManager).toHaveBeenCalledTimes(1)
-  expect(EventStoreManager).toHaveBeenCalledWith(mainAgent, EventBuffer, '12345', FEATURE_NAMES.pageViewEvent) // 2 = initialize EventAggregator
+  expect(EventStoreManager).toHaveBeenCalledWith(mainAgent, EventBuffer, '12345', pveAgg) // 2 = initialize EventAggregator
   expect(mainAgent.runtime.entityManager).toBeTruthy()
   expect(mainAgent.sharedAggregator).toBeUndefined()
 
   new AggregateBase(mainAgent, FEATURE_NAMES.jserrors) // this feature should be using the shared aggregator, so it will set it now
   expect(EventStoreManager).toHaveBeenCalledTimes(2)
-  expect(EventStoreManager).toHaveBeenCalledWith(mainAgent, EventAggregator, '12345', 'shared_aggregator') // 2 = initialize EventAggregator
+  expect(EventStoreManager).toHaveBeenCalledWith(mainAgent, EventAggregator, '12345', { featureName: 'shared_aggregator' }) // 2 = initialize EventAggregator
   expect(mainAgent.sharedAggregator).toBeTruthy()
 
-  new AggregateBase(mainAgent, FEATURE_NAMES.pageViewTiming) // PVT should use its own EventStoreManager
+  const pvtAgg = new AggregateBase(mainAgent, FEATURE_NAMES.pageViewTiming) // PVT should use its own EventStoreManager
   expect(EventStoreManager).toHaveBeenCalledTimes(3)
-  expect(EventStoreManager).toHaveBeenCalledWith(mainAgent, EventBuffer, '12345', FEATURE_NAMES.pageViewTiming) // 1 = initialize EventBuffer
+  expect(EventStoreManager).toHaveBeenCalledWith(mainAgent, EventBuffer, '12345', pvtAgg) // 1 = initialize EventBuffer
 })
 
 test('does initialize separate Aggregators with multiple agents', async () => {

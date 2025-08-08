@@ -25,7 +25,6 @@ test('Harvester does not start timer loop on initialization', () => {
 
   const harvester = new Harvester(fakeAgent)
   expect(mockEolCb).not.toBeUndefined()
-  expect(fakeAgent.ee.on).toHaveBeenCalledTimes(1)
   expect(harvester.agentRef).toEqual(fakeAgent)
   expect(global.setTimeout).not.toHaveBeenCalled()
 })

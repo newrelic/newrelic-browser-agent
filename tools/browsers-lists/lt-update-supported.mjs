@@ -25,16 +25,16 @@ const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
 function updateLatestVersions (deskPlatforms) {
   const latestVersionsJson = {}
 
-  const win11 = deskPlatforms.find(p => p.platform === 'Windows 11')
+  const win11 = deskPlatforms.find(p => p.platform.toLowerCase() === 'windows 11')
   if (!win11) throw new Error('Windows 11 could not be found in API response.')
   // Assume: json returned by API lists in descending version order for each browser (string comparison).
-  const findLatestStableFor = (browserName) => Number(win11.browsers.find(spec => spec.type === 'stable' && spec.browser_name === browserName).version)
+  const findLatestStableFor = (browserName) => Number(win11.browsers.find(spec => spec.type === 'stable' && spec.browser_name.toLowerCase() === browserName.toLowerCase()).version)
   latestVersionsJson.chrome = findLatestStableFor('Chrome')
   latestVersionsJson.edge = findLatestStableFor('MicrosoftEdge')
   latestVersionsJson.firefox = findLatestStableFor('Firefox')
 
-  const macOSes = deskPlatforms.filter(p => p.platform.startsWith('macOS'))
-  const safaris = macOSes.map(p => p.browsers.find(spec => spec.browser_name === 'Safari'))
+  const macOSes = deskPlatforms.filter(p => p.platform.toLowerCase().startsWith('macos'))
+  const safaris = macOSes.map(p => p.browsers.find(spec => spec.browser_name.toLowerCase() === 'safari'))
   safaris.sort((a, b) => Number(a.version) - Number(b.version))
   latestVersionsJson.safari = Number(safaris.pop().version)
   latestVersionsJson.safari_min = Math.floor(browserslistMinVersion('last 10 Safari versions'))
@@ -47,6 +47,7 @@ function updateLatestVersions (deskPlatforms) {
  */
 function updateMobileVersions (mobilePlatforms) {
   const MIN_SUPPORTED_IOS = Math.floor(browserslistMinVersion('last 10 iOS versions')) // LT ios versions don't align exactly with browserlist
+  const STABLE_FULL_IOS = browserslistMaxVersion('last 10 iOS versions') // get the latest stable full release (not beta)
   const testedMobileVersionsJson = {}
 
   const iosDevices = mobilePlatforms.find(p => p.platform === 'ios')?.devices
@@ -62,9 +63,8 @@ function updateMobileVersions (mobilePlatforms) {
   if (!iosDevices || !androidDevices) throw new Error('iOS or Android mobile could not be found in API response.')
 
   // iOS versions should already be sorted in descending; the built list should also be in desc order.
-  const latestiOSVersion = Number(iosDevices[0].version)
   const testediOSVersions = [
-    iosDevices.find(spec => Number(spec.version) === latestiOSVersion),
+    iosDevices.find(spec => Number(spec.version) <= STABLE_FULL_IOS),
     iosDevices.findLast(spec => Number(spec.version) >= MIN_SUPPORTED_IOS)
   ]
   testediOSVersions.forEach(ltFormatSpec => { ltFormatSpec.platformName = 'ios' })
@@ -94,4 +94,10 @@ const browserslistMinVersion = query => {
   const list = browserslist(query)
   const version = list[list.length - 1].split(' ')[1] // browserslist returns id version pairs like 'ios_saf 16.1'
   return Number(version.split('-')[0]) // versions might be a range (e.g. 14.0-14.4), and we want the low end.
+}
+
+const browserslistMaxVersion = query => {
+  const list = browserslist(query)
+  const version = list[0].split(' ')[1] // browserslist returns id version pairs like 'ios_saf 16.1'
+  return Number(version.split('-')[0])
 }

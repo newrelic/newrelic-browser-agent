@@ -228,7 +228,10 @@ export class SessionEntity {
     // * stop recording (stn and sr)...
     // * delete the session and start over
     try {
-      if (this.initialized) this.ee.emit(SESSION_EVENTS.RESET)
+      if (this.initialized) {
+        this.ee.emit(SESSION_EVENTS.RESET)
+        this.state.numOfResets++
+      }
       this.storage.remove(this.lookupKey)
       this.inactiveTimer?.abort?.()
       this.expiresTimer?.clear?.()
@@ -240,7 +243,7 @@ export class SessionEntity {
         storage: this.storage,
         expiresMs: this.expiresMs,
         inactiveMs: this.inactiveMs,
-        numOfResets: ++this.state.numOfResets
+        numOfResets: this.state.numOfResets
       })
       return this.read()
     } catch (e) {
@@ -255,10 +258,6 @@ export class SessionEntity {
     // read here & invalidate
     const existingData = this.read()
     this.write({ ...existingData, inactiveAt: this.getFutureTimestamp(this.inactiveMs) })
-  }
-
-  isAfterSessionExpiry (timestamp) {
-    return this.state.numOfResets > 0 || (typeof timestamp === 'number' && typeof this.state.expiresAt === 'number' && timestamp >= this.state.expiresAt)
   }
 
   /**

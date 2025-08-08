@@ -7,7 +7,7 @@ window.NREUM.info.licenseKey = '{{{args.licenseKey}}}'
 window.NREUM.init.proxy = {}
 window.NREUM.init.session_replay.enabled = true
 window.NREUM.init.session_trace.enabled = true
-window.NREUM.init.user_actions = { elementAttributes: ['id', 'className', 'tagName', 'type', 'innerText', 'textContent', 'ariaLabel', 'alt', 'title'] }
+window.NREUM.init.user_actions = { elementAttributes: ['id', 'className', 'tagName', 'type', 'ariaLabel', 'alt', 'title'] }
 
 // Session replay entitlements check
 try {
@@ -63,6 +63,53 @@ if (!!newrelic && !!newrelic.log) {
   newrelic.log('NRBA log API - debug', { level: 'debug' })
 }
 
+// Browser AI-Hackthon POC Prep
+try{
+  const automatedHints = ['Headless', 'PhantomJS', 'Selenium', 'WebDriver', 'Puppeteer', 'Playwright']
+  const botHints = ['bot', 'spider', 'crawler', 'scraper', 'robot', 'Googlebot', 'Bingbot', 'Slurp', 'DuckDuckBot', 'Baiduspider', 'YandexBot', 'AhrefsBot', 'SemrushBot', 'Exabot', 'facebot', 'ia_archiver', 'facebookexternalhit', 'Twitterbot', 'LinkedInBot', 'Slackbot', 'Discordbot', 'Pinterestbot', 'WhatsApp', 'TelegramBot', 'GoogleAdsBot', 'BingPreview']
+  
+  const automatedMatches = []
+  const botMatches = []
+
+  if (window.navigator.webdriver) {
+    automatedMatches.push('webdriver')
+  }
+
+  if (window.outerWidth === 0 || window.outerHeight === 0) {
+    automatedMatches.push('invalid window size')
+  }
+
+  const userAgentString = window.navigator.userAgent
+
+  if (userAgentString){  
+    automatedHints.map(x => x.toLowerCase()).forEach((hint) => {
+      if (userAgentString.toLowerCase().includes(hint)) {
+        automatedMatches.push(hint);
+      }
+    })
+
+    botHints.map(x => x.toLowerCase()).forEach((hint) => {
+      if (userAgentString.toLowerCase().includes(hint)) {
+        botMatches.push(hint);
+      }
+    })
+  }
+
+  if (automatedMatches.length) {
+    newrelic.setCustomAttribute("automated", true);
+    newrelic.setCustomAttribute('automated-hints', automatedMatches.join(','));
+    newrelic.setCustomAttribute('userAgent', window.navigator.userAgent);
+  }
+
+  if (botMatches.length) {
+    newrelic.setCustomAttribute("bot", true);
+    newrelic.setCustomAttribute('bot-hints', botMatches.join(','));
+    newrelic.setCustomAttribute('userAgent', window.navigator.userAgent);
+  }
+} catch (e) {
+  newrelic.noticeError(new Error("NRBA: swallowed preamble error", {cause: e}));
+}
+
 try {
   // Browser Pressure POC
   if (typeof window.PressureObserver === "function") {
@@ -93,5 +140,5 @@ try {
     pressureObserver.observe("cpu", { sampleInterval: 1000 });
   }
 } catch (e) {
-  newrelic.noticeError("swallowed preamble error: " + e);
+  newrelic.noticeError(new Error("NRBA: swallowed preamble error", {cause: e}));
 }

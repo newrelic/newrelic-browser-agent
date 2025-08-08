@@ -10,7 +10,7 @@ import { BUILD_ENV, DIST_METHOD, VERSION } from '../constants/env'
  * Module level count of harvests. This property will auto-increment each time it is accessed.
  * @type {number}
  */
-let harvestCount = 0
+let _harvestCount = 0
 
 const ReadOnly = {
   buildEnv: BUILD_ENV,
@@ -28,6 +28,7 @@ const RuntimeModel = {
   entityManager: undefined,
   harvester: undefined,
   isolatedBacklog: false,
+  isRecording: false, // true when actively recording, false when paused or stopped
   loaderType: undefined,
   maxBytes: 30000,
   obfuscator: undefined,
@@ -36,7 +37,9 @@ const RuntimeModel = {
   releaseIds: {},
   session: undefined,
   timeKeeper: undefined,
-  get harvestCount () { return ++harvestCount }
+  /** a proxy is set in agent-session to track jsAttributes changes for harvesting mechanics */
+  jsAttributesMetadata: { bytes: 0 },
+  get harvestCount () { return ++_harvestCount }
 }
 
 export const mergeRuntime = (runtime) => {

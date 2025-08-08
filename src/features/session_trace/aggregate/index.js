@@ -11,6 +11,7 @@ import { globalScope } from '../../../common/constants/runtime'
 import { MODE, SESSION_EVENTS } from '../../../common/session/constants'
 import { applyFnToProps } from '../../../common/util/traverse'
 import { cleanURL } from '../../../common/url/clean-url'
+import { warn } from '../../../common/util/console'
 
 const ERROR_MODE_SECONDS_WINDOW = 30 * 1000 // sliding window of nodes to track when simply monitoring (but not harvesting) in error mode
 /** Reserved room for query param attrs */
@@ -85,7 +86,7 @@ export class Aggregate extends AggregateBase {
     registerHandler('bstResource', (...args) => this.events.storeResources(...args), this.featureName, this.ee)
     registerHandler('bstHist', (...args) => this.events.storeHist(...args), this.featureName, this.ee)
     registerHandler('bstXhrAgg', (...args) => this.events.storeXhrAgg(...args), this.featureName, this.ee)
-    registerHandler('bstApi', (...args) => this.events.storeSTN(...args), this.featureName, this.ee)
+    registerHandler('bstApi', (...args) => this.events.storeNode(...args), this.featureName, this.ee)
     registerHandler('trace-jserror', (...args) => this.events.storeErrorAgg(...args), this.featureName, this.ee)
     registerHandler('pvtAdded', (...args) => this.events.processPVT(...args), this.featureName, this.ee)
 
@@ -97,10 +98,12 @@ export class Aggregate extends AggregateBase {
     }
     this.agentRef.runtime.session.write({ sessionTraceMode: this.mode })
     this.drain()
+    /** try to harvest immediately. This will not send if the trace is not running in FULL mode due to the pre-harvest checks. */
+    this.agentRef.runtime.harvester.triggerHarvestFor(this)
   }
 
   preHarvestChecks () {
-    if (this.mode !== MODE.FULL) return // only allow harvest if running in full mode
+    if (this.blocked || this.mode !== MODE.FULL) return // only allow harvest if running in full mode
     if (!this.timeKeeper?.ready) return // this should likely never happen, but just to be safe, we should never harvest if we cant correct time
     if (!this.agentRef.runtime.session) return // session entity is required for trace to run and continue running
     if (this.sessionId !== this.agentRef.runtime.session.state.value || this.ptid !== this.agentRef.runtime.ptid) {
@@ -178,7 +181,8 @@ export class Aggregate extends AggregateBase {
   }
 
   /** Stop running for the remainder of the page lifecycle */
-  abort () {
+  abort (code) {
+    warn(60, code)
     this.blocked = true
     this.mode = MODE.OFF
     this.agentRef.runtime.session.write({ sessionTraceMode: this.mode })

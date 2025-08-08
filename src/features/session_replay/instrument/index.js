@@ -27,7 +27,6 @@ export class Instrument extends InstrumentBase {
     setupPauseReplayAPI(agentRef)
 
     let session
-    this.replayRunning = false
     this.#agentRef = agentRef
     try {
       session = JSON.parse(localStorage.getItem(`${PREFIX}_${DEFAULT_KEY}`))
@@ -46,15 +45,10 @@ export class Instrument extends InstrumentBase {
 
     /** If the recorder is running, we can pass error events on to the agg to help it switch to full mode later */
     this.ee.on('err', (e) => {
-      if (this.replayRunning) {
+      if (this.#agentRef.runtime.isRecording) {
         this.errorNoticed = true
         handle(SR_EVENT_EMITTER_TYPES.ERROR_DURING_REPLAY, [e], undefined, this.featureName, this.ee)
       }
-    })
-
-    /** Emitted by the recorder when it starts capturing data, used to determine if we should pass errors on to the agg */
-    this.ee.on(SR_EVENT_EMITTER_TYPES.REPLAY_RUNNING, (isRunning) => {
-      this.replayRunning = isRunning
     })
   }
 
@@ -87,7 +81,9 @@ export class Instrument extends InstrumentBase {
       this.recorder ??= new Recorder({ mode: this.#mode, agentIdentifier: this.agentIdentifier, trigger, ee: this.ee, agentRef: this.#agentRef })
       this.recorder.startRecording()
       this.abortHandler = this.recorder.stopRecording
-    } catch (e) {} // TODO add internal error handling
+    } catch (err) {
+      this.parent.ee.emit('internal-error', [err])
+    }
     this.importAggregator(this.#agentRef, () => import(/* webpackChunkName: "session_replay-aggregate" */ '../aggregate'), { recorder: this.recorder, errorNoticed: this.errorNoticed })
   }
 

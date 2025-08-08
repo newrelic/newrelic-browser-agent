@@ -4,6 +4,271 @@
     {
       "changes": [
         {
+          "type": "fix",
+          "sha": "412d4690f4d8df59c3b6fb14ec8e6910e84db5b4",
+          "message": "Add monkey-patching warnings",
+          "issues": [
+            "1527"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "1ead794106af6160fd26c1c2036d59a3b2718bf0",
+          "message": "Calculate first and last timestamps from raw data",
+          "issues": [
+            "1535"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "3e6bda74bfd19d4379a41d357c800eebc5d28ed5",
+          "message": "Add error cause detection",
+          "issues": [
+            "1531"
+          ]
+        }
+      ],
+      "version": "1.295.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "f70fdbcc-c695-4098-9a4a-a3c660ee2aaf",
+      "createTime": "2025-08-04T18:18:14.079Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
+          "sha": "d347eaa76e26a9a4fc8e5c191de6a3c737712c68",
+          "message": "Harvest early",
+          "issues": [
+            "1513"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "e3ca824847e8f91a5da8cca8bf7717001c16929b",
+          "message": "report empty previousUrl as undefined",
+          "issues": [
+            "1526"
+          ]
+        }
+      ],
+      "version": "1.294.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "ba53a1d3-0018-48ad-86b1-81ec45c9e8bd",
+      "createTime": "2025-07-23T16:30:07.752Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
+          "sha": "c1d0a564e645dcc02b747cd0b9035084b665747f",
+          "message": "Add \"long tasks\" internal message",
+          "issues": [
+            "1506"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "f4733508dc9911dff890f0f535f5eef0c2641fd1",
+          "message": "Address issue keeping distributed traces from being disabled",
+          "issues": [
+            "1520"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "8413c59fedc2d1505056787dd0ac9149ca46991d",
+          "message": "Emit SM on rum response invalid timestamps",
+          "issues": [
+            "1518"
+          ]
+        }
+      ],
+      "version": "1.293.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "4af4aef3-1fa0-43a1-8ba0-289e21341419",
+      "createTime": "2025-07-01T15:41:26.362Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
+          "sha": "969f634f4d22f112f3aba2fc2e74d6959dafbae5",
+          "message": "fix custom attribute race condition precedence",
+          "issues": [
+            "1507"
+          ]
+        }
+      ],
+      "version": "1.292.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "b0b14720-8265-4152-889f-6b45e68d6b7f",
+      "createTime": "2025-06-26T13:30:07.324Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
+          "sha": "93f0fd0076e1e1fcc2b353d766a7a95c0f524e76",
+          "message": "Update BrowserInteraction previousUrl definition",
+          "issues": [
+            "1499"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "363a898fce43c9c53a881f1d3b4a16ca7ced70f8",
+          "message": "Fix .finished API timeSinceLoad value",
+          "issues": [
+            "1503"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "def89c4ab5850a3d8f8dc03b424a473bd5eb4bb5",
+          "message": "Add more inspection events",
+          "issues": [
+            "1494"
+          ]
+        }
+      ],
+      "version": "1.292.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "1be74a5b-c68d-4023-af92-4c5d0974574e",
+      "createTime": "2025-06-16T15:32:12.554Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
+          "sha": "a1d15cb9d972a2fa421a648b83e150489799d437",
+          "message": "Prevent ST from holding onto Event refs in memory when aborted",
+          "issues": [
+            "1491"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "09ff0adb27c12e99c02c81462aeb921af8686ce8",
+          "message": "Clean BrowserPerformance entryName for resources",
+          "issues": [
+            "1493"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "e94a36efaf37f69dfdb8134bc27ee0df0a734e83",
+          "message": "Add safeguards for addToTrace",
+          "issues": [
+            "1490"
+          ]
+        }
+      ],
+      "version": "1.291.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "8cb34289-0fca-4b7a-910e-fad0e91d6021",
+      "createTime": "2025-06-06T23:27:36.674Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
+          "sha": "531f8d4228f6c7ead8e2342c8a8dd25c651e9ec6",
+          "message": "Fix race between end of session and features aborting",
+          "issues": [
+            "1487"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "50f4acea3e27c6b5e65d02ffb46af02b351e4500",
+          "message": "Harvest first session trace payload immediately",
+          "issues": [
+            "1483"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "f944b76c2137e6d75e47e692ded4ba5f04bb4b6d",
+          "message": "Create the measure API",
+          "issues": [
+            "1476"
+          ]
+        }
+      ],
+      "version": "1.291.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "0bb8f400-8ef6-451b-a1db-81b07d668993",
+      "createTime": "2025-05-30T01:48:15.628Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
+          "sha": "98b1ab69c8a03a41f0cdccf27e410728f389bebb",
+          "message": "Silence setting getter only harvestCount message",
+          "issues": [
+            "1480"
+          ]
+        }
+      ],
+      "version": "1.290.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "9177d7a6-aea8-4c0d-b562-aad5431d370e",
+      "createTime": "2025-05-21T22:25:38.591Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
+          "sha": "c11b6de857f42b4e2315012a897ac6693c67cd04",
+          "message": "bundler tools exports",
+          "issues": [
+            "1447"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "177316b8527ab158868da8ad9677c96fc60d08ea",
+          "message": "Set UserAction currentUrl before aggregation end",
+          "issues": [
+            "1463"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "56688831ed8fbf512dc70f1ebf37e648e498ece9",
+          "message": "Improve lazy-loading optimization",
+          "issues": [
+            "1443"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "8e7498e47a4666996f4837a53b02e8c313a48380",
+          "message": "API Code Splitting",
+          "issues": [
+            "1433"
+          ]
+        }
+      ],
+      "version": "1.290.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "183b38c4-d139-4689-b3b1-6797b9f5ea59",
+      "createTime": "2025-05-02T19:25:35.786Z"
+    },
+    {
+      "changes": [
+        {
           "type": "feat",
           "sha": "6c3d7166e6a7014e1ae453801a9da875d311a3e1",
           "message": "Remove agent config cache and getters/setters",
@@ -2842,5 +3107,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2025-04-24T22:49:38.121Z"
+  "updateTime": "2025-08-04T18:18:14.079Z"
 }

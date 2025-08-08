@@ -11,9 +11,11 @@ import { IPL_TRIGGER_NAME } from '../constants'
 
 export class InitialPageLoadInteraction extends Interaction {
   constructor (agentRef) {
-    super(agentRef, IPL_TRIGGER_NAME, 0, null)
+    super(IPL_TRIGGER_NAME, 0, null)
     this.queueTime = agentRef.info.queueTime
     this.appTime = agentRef.info.applicationTime
+    /** @type {string|undefined} we assign as undefined if no referrer value is available so that URL grouping is not applied to an empty string at ingest */
+    this.oldURL = document.referrer || undefined
   }
 
   get firstPaint () { return firstPaint.current.value }

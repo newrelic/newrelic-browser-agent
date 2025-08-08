@@ -10,7 +10,6 @@ import { FEATURE_NAME, LOGGING_EVENT_EMITTER_CHANNEL, LOG_LEVELS, LOGGING_MODE }
 import { Log } from '../shared/log'
 import { isValidLogLevel } from '../shared/utils'
 import { applyFnToProps } from '../../../common/util/traverse'
-import { MAX_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
 import { isContainerAgentTarget } from '../../../common/util/target'
 import { SESSION_EVENT_TYPES, SESSION_EVENTS } from '../../../common/session/constants'
 import { ABORT_REASONS } from '../../session_replay/constants'
@@ -25,6 +24,8 @@ export class Aggregate extends AggregateBase {
       // In agent v1.290.0 & under, the logApiMode prop did not yet exist, so need to account for old session state being in-use.
       if (api === undefined) this.loggingMode.api = auto
     }
+
+    super.customAttributesAreSeparate = true
 
     // The SessionEntity class can emit a message indicating the session was cleared and reset (expiry, inactivity). This feature must abort and never resume if that occurs.
     this.ee.on(SESSION_EVENTS.RESET, () => {
@@ -100,26 +101,8 @@ export class Aggregate extends AggregateBase {
       attributes,
       level
     )
-    const logBytes = log.message.length + stringify(log.attributes).length + log.level.length + 10 // timestamp == 10 chars
 
-    const failToHarvestMessage = 'Logging/Harvest/Failed/Seen'
-    if (logBytes > MAX_PAYLOAD_SIZE) { // cannot possibly send this, even with an empty buffer
-      this.reportSupportabilityMetric(failToHarvestMessage, logBytes)
-      warn(31, log.message.slice(0, 25) + '...')
-      return
-    }
-
-    if (this.events.wouldExceedMaxSize(logBytes, targetEntityGuid)) {
-      this.reportSupportabilityMetric('Logging/Harvest/Early/Seen', this.events.byteSize() + logBytes)
-      this.agentRef.runtime.harvester.triggerHarvestFor(this, { targetEntityGuid }) // force a harvest synchronously to try adding again
-    }
-
-    if (!this.events.add(log, targetEntityGuid)) { // still failed after a harvest attempt despite not being too large would mean harvest failed with options.retry
-      this.reportSupportabilityMetric(failToHarvestMessage, logBytes)
-      warn(31, log.message.slice(0, 25) + '...')
-    } else {
-      this.reportSupportabilityMetric('Logging/Event/Added/Seen')
-    }
+    this.events.add(log, targetEntityGuid)
   }
 
   serializer (eventBuffer, targetEntityGuid) {

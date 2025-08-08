@@ -11,13 +11,12 @@
     window.inspectionEvents = {
       initialize: false,
       load: false,
-      buffer: false,
       harvest: false,
       api: false,
     }
     window.addEventListener('newrelic', ({ detail }) => {
       if (!detail || !detail.agentIdentifier) return
-      const { name, drained, type, feature, data } = detail
+      const { name, drained, type, feature, loaded, timeStamp, data } = detail
 
       if (
         name == 'initialize' &&
@@ -40,16 +39,6 @@
       }
 
       if (
-        name === 'buffer' &&
-        drained === true &&
-        type === 'data' &&
-        feature &&
-        data
-      ) {
-        window.inspectionEvents.buffer = true
-      }
-
-      if (
         name === 'harvest' &&
         drained === true &&
         type === 'data' &&
@@ -59,7 +48,7 @@
         window.inspectionEvents.harvest = true
       }
 
-      // The API call in this test is called before the agent is loaded, so loaded should be false
+      // The API call in this test is called before the agent is loaded, so drained should be false
       if (
         name === 'api' &&
         drained === false &&
@@ -69,7 +58,63 @@
       ) {
         window.inspectionEvents.api = true
       }
+
+      if (
+        name === 'drain' &&
+        type === 'lifecycle' &&
+        feature
+      ) {
+        window.inspectionEvents.drain = true
+      }
+
+      if (
+        name === 'navigate' &&
+        type === 'window' &&
+        loaded == false &&
+        feature === undefined &&
+        timeStamp &&
+        data
+      ) {
+        window.inspectionEvents.navigate = true
+      }
+
+      if (
+        name === 'load' &&
+        type === 'window' &&
+        loaded == true &&
+        feature === undefined &&
+        timeStamp &&
+        data
+      ) {
+        window.inspectionEvents.windowLoad = true
+      }
+
+      if (
+        name === 'DOMContentLoaded' &&
+        type === 'window' &&
+        loaded == false &&
+        feature === undefined &&
+        timeStamp &&
+        data
+      ) {
+        window.inspectionEvents.domLoad = true
+      }
+
+      if (
+        name === 'session' &&
+        type === 'lifecycle' &&
+        feature === undefined &&
+        data
+      ) {
+        window.inspectionEvents.session = true
+      }
     })
+    window.setTimeout(() => {
+      // Trigger the session event
+      newrelic.setUserId('1')
+      // Trigger the navigation event
+      window.location += '#a=1'
+    }, 2000)
   </script>
   {init} {config} {loader}
 </head>

@@ -10,7 +10,6 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { warn } from '../../../common/util/console'
 import { now } from '../../../common/timing/now'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
-import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { applyFnToProps } from '../../../common/util/traverse'
 import { UserActionsAggregator } from './user-actions/user-actions-aggregator'
 import { isIFrameWindow } from '../../../common/dom/iframe'
@@ -20,7 +19,6 @@ export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor (agentRef) {
     super(agentRef, FEATURE_NAME)
-    this.eventsPerHarvest = 1000
     this.referrerUrl = (isBrowserScope && document.referrer) ? cleanURL(document.referrer) : undefined
 
     this.waitForFlags(['ins']).then(([ins]) => {
@@ -143,7 +141,7 @@ export class Aggregate extends AggregateBase {
                       ...detailObj,
                       eventType: 'BrowserPerformance',
                       timestamp: this.toEpoch(entry.startTime),
-                      entryName: cleanURL(entry.name),
+                      entryName: entry.name,
                       entryDuration: entry.duration,
                       entryType: type
                     })
@@ -208,7 +206,7 @@ export class Aggregate extends AggregateBase {
               ...entryObject,
               eventType: 'BrowserPerformance',
               timestamp: Math.floor(agentRef.runtime.timeKeeper.correctRelativeTimestamp(entryObject.startTime)),
-              entryName: name,
+              entryName: cleanURL(name),
               entryDuration: duration,
               firstParty
             }
@@ -219,6 +217,21 @@ export class Aggregate extends AggregateBase {
           }
         }, this.featureName, this.ee)
       }
+
+      registerHandler('api-measure', (args, n) => {
+        const { start, duration, customAttributes } = args
+
+        const event = {
+          ...customAttributes,
+          eventType: 'BrowserPerformance',
+          timestamp: Math.floor(agentRef.runtime.timeKeeper.correctRelativeTimestamp(start)),
+          entryName: n,
+          entryDuration: duration,
+          entryType: 'measure'
+        }
+
+        this.addEvent(event)
+      }, this.featureName, this.ee)
 
       agentRef.runtime.harvester.triggerHarvestFor(this)
       this.drain()
@@ -268,16 +281,7 @@ export class Aggregate extends AggregateBase {
       ...obj
     }
 
-    const addedEvent = this.events.add(eventAttributes, targetEntityGuid)
-    if (!addedEvent && !this.events.isEmpty(undefined, targetEntityGuid)) {
-      /** could not add the event because it pushed the buffer over the limit
-       * so we harvest early, and try to add it again now that the buffer is cleared
-       * if it fails again, we do nothing
-       */
-      this.ee.emit(SUPPORTABILITY_METRIC_CHANNEL, ['GenericEvents/Harvest/Max/Seen'])
-      this.agentRef.runtime.harvester.triggerHarvestFor(this, { targetEntityGuid })
-      this.events.add(eventAttributes)
-    }
+    this.events.add(eventAttributes, targetEntityGuid)
   }
 
   serializer (eventBuffer) {

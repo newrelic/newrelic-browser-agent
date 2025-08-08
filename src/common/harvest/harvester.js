@@ -8,7 +8,6 @@ import { VERSION } from '../constants/env'
 import { globalScope, isWorkerScope } from '../constants/runtime'
 import { handle } from '../event-emitter/handle'
 import { eventListenerOpts } from '../event-listener/event-listener-opts'
-import { SESSION_EVENTS } from '../session/constants'
 import { now } from '../timing/now'
 import { subscribeToEOL } from '../unload/eol'
 import { cleanURL } from '../url/clean-url'
@@ -36,10 +35,6 @@ export class Harvester {
       this.initializedAggregates.forEach(aggregateInst => this.triggerHarvestFor(aggregateInst, { isFinalHarvest: true }))
       /* This callback should run in bubble phase, so that that CWV api, like "onLCP", is called before the final harvest so that emitted timings are part of last outgoing. */
     }, false)
-
-    /* Flush all buffered data if session resets and give up retries. This should be synchronous to ensure that the correct `session` value is sent.
-      Since session-reset generates a new session ID and the ID is grabbed at send-time, any delays or retries would cause the payload to be sent under the wrong session ID. */
-    agentRef.ee.on(SESSION_EVENTS.RESET, () => this.initializedAggregates.forEach(aggregateInst => this.triggerHarvestFor(aggregateInst, { forceNoRetry: true })))
   }
 
   startTimer (harvestInterval = this.agentRef.init.harvest.interval) {

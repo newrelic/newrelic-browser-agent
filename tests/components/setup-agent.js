@@ -72,6 +72,7 @@ export function resetAgent (agentIdentifier) {
   resetAggregator(agentIdentifier)
   resetSession(agentIdentifier)
   resetEntityManager(agentIdentifier)
+  getNREUMInitializedAgent(agentIdentifier).runtime.isRecording = false
 }
 
 function resetEntityManager (agentIdentifier) {
@@ -100,5 +101,4 @@ function resetAggregator (agentIdentifier) {
 function resetSession (agentIdentifier) {
   const agent = getNREUMInitializedAgent(agentIdentifier)
   agent.runtime.session.reset()
-  agent.runtime.session.state.numOfResets = 0 // avoid stopping harvests for session resets
 }

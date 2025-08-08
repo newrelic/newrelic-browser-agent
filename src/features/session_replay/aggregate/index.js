@@ -88,7 +88,7 @@ export class Aggregate extends AggregateBase {
       this.entitled = !!entitled
       if (!this.entitled) {
         this.deregisterDrain()
-        if (this.recorder?.recording) {
+        if (this.agentRef.runtime.isRecording) {
           this.abort(ABORT_REASONS.ENTITLEMENTS)
           this.reportSupportabilityMetric('SessionReplay/EnabledNotEntitled/Detected')
         }
@@ -133,7 +133,7 @@ export class Aggregate extends AggregateBase {
     this.mode = MODE.FULL
     // if the error was noticed AFTER the recorder was already imported....
     if (this.recorder && this.initialized) {
-      if (!this.recorder.recording) this.recorder.startRecording()
+      if (!this.agentRef.runtime.isRecording) this.recorder.startRecording()
       this.syncWithSessionManager({ sessionReplayMode: this.mode })
     } else {
       this.initializeRecording(MODE.FULL, true)
@@ -158,7 +158,7 @@ export class Aggregate extends AggregateBase {
     // session replays can continue if already in progress
     const { session, timeKeeper } = this.agentRef.runtime
     this.timeKeeper = timeKeeper
-    if (this.recorder?.parent.trigger === TRIGGERS.API && this.recorder?.recording) {
+    if (this.recorder?.parent.trigger === TRIGGERS.API && this.agentRef.runtime.isRecording) {
       this.mode = MODE.FULL
     } else if (!session.isNew && !ignoreSession) { // inherit the mode of the existing session
       this.mode = session.state.sessionReplayMode
@@ -196,7 +196,7 @@ export class Aggregate extends AggregateBase {
 
     await this.prepUtils()
 
-    if (!this.recorder.recording) this.recorder.startRecording()
+    if (!this.agentRef.runtime.isRecording) this.recorder.startRecording()
 
     this.syncWithSessionManager({ sessionReplayMode: this.mode })
   }
@@ -262,6 +262,10 @@ export class Aggregate extends AggregateBase {
     if (recorderEvents.type === 'preloaded') this.agentRef.runtime.harvester.triggerHarvestFor(this)
     payloadOutput.payload = payload
 
+    if (!this.agentRef.runtime.session.state.traceHarvestStarted) {
+      warn(59, JSON.stringify(this.agentRef.runtime.session.state))
+    }
+
     return [payloadOutput]
   }
 
@@ -269,6 +273,21 @@ export class Aggregate extends AggregateBase {
     if (!node?.timestamp) return
     if (node.__newrelic) return node.timestamp
     return this.timeKeeper.correctAbsoluteTimestamp(node.timestamp)
+  }
+
+  /**
+   * returns the timestamps for the earliest and latest nodes in the provided array, even if out of order
+   * @param {Object[]} [nodes] - the nodes to evaluate
+   * @returns {{ firstEvent: Object|undefined, lastEvent: Object|undefined }} - the earliest and latest nodes. Defaults to undefined if no nodes are provided or if no timestamps are found in the nodes.
+   */
+  getFirstAndLastNodes (nodes = []) {
+    const output = { firstEvent: nodes[0], lastEvent: nodes[nodes.length - 1] }
+    nodes.forEach(node => {
+      const timestamp = node?.timestamp
+      if (!output.firstEvent?.timestamp || (timestamp || Infinity) < output.firstEvent.timestamp) output.firstEvent = node
+      if (!output.lastEvent?.timestamp || (timestamp || -Infinity) > output.lastEvent.timestamp) output.lastEvent = node
+    })
+    return output
   }
 
   getHarvestContents (recorderEvents) {
@@ -297,11 +316,10 @@ export class Aggregate extends AggregateBase {
 
     const relativeNow = now()
 
-    const firstEventTimestamp = this.getCorrectedTimestamp(events[0]) // from rrweb node
-    const lastEventTimestamp = this.getCorrectedTimestamp(events[events.length - 1]) // from rrweb node
+    const { firstEvent, lastEvent } = this.getFirstAndLastNodes(events)
     // from rrweb node || from when the harvest cycle started
-    const firstTimestamp = firstEventTimestamp || Math.floor(this.timeKeeper.correctAbsoluteTimestamp(recorderEvents.cycleTimestamp))
-    const lastTimestamp = lastEventTimestamp || Math.floor(this.timeKeeper.correctRelativeTimestamp(relativeNow))
+    const firstTimestamp = this.getCorrectedTimestamp(firstEvent) || Math.floor(this.timeKeeper.correctAbsoluteTimestamp(recorderEvents.cycleTimestamp))
+    const lastTimestamp = this.getCorrectedTimestamp(lastEvent) || Math.floor(this.timeKeeper.correctRelativeTimestamp(relativeNow))
 
     const agentMetadata = agentRuntime.appMetadata?.agents?.[0] || {}
 

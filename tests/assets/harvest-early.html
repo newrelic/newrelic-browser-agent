@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {init} {config}
+    <script>
+      NREUM.init.harvest.interval = 30
+    </script>
+    {loader}
+  </head>
+  <body>Instrumented
+    <script>
+      // make all events harvest early by setting a jsAttributes size that exceeds the ideal payload size
+      newrelic.setCustomAttribute('foo', 'bar'.repeat(16000))
+
+      newrelic.addPageAction('test')
+      newrelic.log('test')
+      document.addEventListener('click', function () {
+        fetch('https://pokeapi.co/api/v2/pokemon/moltres')
+      })
+    </script>
+  </body>
+</html>

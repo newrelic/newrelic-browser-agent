@@ -12,14 +12,14 @@ window.NREUM={
         'bam-cell.nr-data.net'
       ]
     },
-    harvest: {interval: 5},
     session_replay: {
       enabled: true,
-      autoStart: false,
       fix_stylesheets: false,
       {{#if (isEnvironment args.environment 'dev' 'staging')}}
       mask_all_inputs: false,
       mask_text_selector: null,
+      {{else}}
+      autoStart: false,
       {{/if}}
     },
     session_trace: {
@@ -35,7 +35,7 @@ window.NREUM={
       }
     },
     proxy: {},
-    user_actions: {elementAttributes: ['id', 'className', 'tagName', 'type', 'innerText', 'textContent', 'ariaLabel', 'alt', 'title']}
+    user_actions: {elementAttributes: ['id', 'className', 'tagName', 'type', 'ariaLabel', 'alt', 'title']}
   },
   loader_config: {
     accountID: '1',

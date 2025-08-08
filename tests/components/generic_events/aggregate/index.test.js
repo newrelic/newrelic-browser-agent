@@ -23,7 +23,6 @@ afterEach(() => {
 
 test('should use default values', () => {
   expect(genericEventsAggregate).toMatchObject({
-    eventsPerHarvest: 1000,
     referrerUrl: 'https://test.com'
   })
 })
@@ -63,7 +62,7 @@ test('should harvest early if will exceed 1mb', async () => {
   await new Promise(process.nextTick)
   expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledTimes(1)
 
-  genericEventsAggregate.addEvent({ name: 'test', eventType: 'x'.repeat(900000) })
+  genericEventsAggregate.addEvent({ name: 'test', eventType: 'x'.repeat(15000) })
 
   expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledTimes(1)
   genericEventsAggregate.addEvent({ name: 1000, eventType: 'x'.repeat(100000) })

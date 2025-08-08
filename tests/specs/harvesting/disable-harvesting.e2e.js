@@ -68,7 +68,7 @@ describe('disable harvesting', () => {
     const logsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testLogsRequest })
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      body: JSON.stringify(rumFlags({ log: LOGGING_MODE.OFF }))
+      body: JSON.stringify(rumFlags({ log: LOGGING_MODE.OFF, logapi: LOGGING_MODE.OFF }))
     })
 
     const [logsHarvests] = await Promise.all([

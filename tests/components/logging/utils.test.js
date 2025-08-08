@@ -22,7 +22,7 @@ describe('bufferLog', () => {
     expect(handleModule.handle.mock.calls[0][0]).toEqual('storeSupportabilityMetrics')
     expect(handleModule.handle.mock.calls[0][1]).toEqual(['API/logging/info/called'])
     expect(handleModule.handle.mock.calls[1][0]).toEqual('log')
-    expect(handleModule.handle.mock.calls[1][1]).toEqual([expect.any(Number), message, {}, 'INFO'])
+    expect(handleModule.handle.mock.calls[1][1]).toEqual([expect.any(Number), message, {}, 'INFO', true])
 
     // method should not cast to '' or '{}'
     expect(handleModule.handle.mock.calls[1][1][1]).not.toEqual('')
@@ -37,7 +37,7 @@ describe('bufferLog', () => {
     expect(handleModule.handle.mock.calls[0][0]).toEqual('storeSupportabilityMetrics')
     expect(handleModule.handle.mock.calls[0][1]).toEqual(['API/logging/info/called'])
     expect(handleModule.handle.mock.calls[1][0]).toEqual('log')
-    expect(handleModule.handle.mock.calls[1][1]).toEqual([expect.any(Number), message, {}, 'INFO'])
+    expect(handleModule.handle.mock.calls[1][1]).toEqual([expect.any(Number), message, {}, 'INFO', true])
   })
 
   test('should buffer logs with message and custom attributes', () => {
@@ -48,7 +48,7 @@ describe('bufferLog', () => {
     expect(handleModule.handle.mock.calls[0][0]).toEqual('storeSupportabilityMetrics')
     expect(handleModule.handle.mock.calls[0][1]).toEqual(['API/logging/info/called'])
     expect(handleModule.handle.mock.calls[1][0]).toEqual('log')
-    expect(handleModule.handle.mock.calls[1][1]).toEqual([expect.any(Number), message, customAttributes, 'INFO'])
+    expect(handleModule.handle.mock.calls[1][1]).toEqual([expect.any(Number), message, customAttributes, 'INFO', true])
   })
 
   test('should buffer logs with message, custom attributes, and custom level', () => {
@@ -59,7 +59,7 @@ describe('bufferLog', () => {
     expect(handleModule.handle.mock.calls[0][0]).toEqual('storeSupportabilityMetrics')
     expect(handleModule.handle.mock.calls[0][1]).toEqual(['API/logging/error/called'])
     expect(handleModule.handle.mock.calls[1][0]).toEqual('log')
-    expect(handleModule.handle.mock.calls[1][1]).toEqual([expect.any(Number), message, customAttributes, 'ERROR'])
+    expect(handleModule.handle.mock.calls[1][1]).toEqual([expect.any(Number), message, customAttributes, 'ERROR', true])
   })
 })
 

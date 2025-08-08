@@ -23,14 +23,9 @@ describe('Trace nodes', () => {
     const url = await browser.testHandle.assetURL('pagehide.html', stConfig())
     await browser.url(url).then(() => browser.waitForAgentLoad())
 
-    const [sessionTraceHarvests] = await Promise.all([
+    const [sessionTraceHarvests, eventRefsStoredCount] = await Promise.all([
       sessionTraceCapture.waitForResult({ timeout: 10000 }),
-      browser.execute(function () {
-        const storedEvents = Object.values(newrelic.initializedAgents)[0].features.session_trace.featAggregate.traceStorage.prevStoredEvents
-        for (let i = 0; i < 10; i++) storedEvents.add(i) // artificially add "events" since the counter is otherwise unreliable
-      }).then(() =>
-        $('#btn1').click() // since the agent has multiple listeners on vischange, this is a good example of often duplicated event
-      )
+      $('#btn1').click().then(() => browser.execute(getEventsSetSize))
     ])
 
     sessionTraceHarvests.forEach(harvest => {
@@ -40,7 +35,7 @@ describe('Trace nodes', () => {
 
     // In addition, our Set keeping track of stored Events should have reset during harvest to prevent mem leak.
     const trackedEventsPostHarvest = await browser.execute(getEventsSetSize)
-    expect(trackedEventsPostHarvest).toBeLessThan(10)
+    expect(trackedEventsPostHarvest).toBeLessThan(eventRefsStoredCount)
   })
 
   it('are not stored for events when trace is not on', async () => {
@@ -127,17 +122,26 @@ describe('Trace nodes', () => {
     expect(Object.values(eventCounts).some(count => count > 1)).toBeFalsy()
   })
 
-  it('are not created for mouseover events', async () => {
-    const url = await browser.testHandle.assetURL('event-listener-mousemove.html', stConfig())
-    await browser.url(url).then(() => browser.waitForAgentLoad())
+  describe('smearable nodes', () => {
+    it('mousing, scrolling, and typing nodes are smeared', async () => {
+      const url = await browser.testHandle.assetURL('smearables.html', stConfig())
+      let [sessionTraceHarvests] = await Promise.all([
+        sessionTraceCapture.waitForResult({ totalCount: 2, timeout: 10000 }),
+        browser.url(url)
+          .then(() => browser.waitForAgentLoad())
+          .then(() => browser.execute(function () {
+            window.simulateSmearableEvents()
+          }))
+      ])
 
-    const [sessionTraceHarvests] = await Promise.all([
-      sessionTraceCapture.waitForResult({ timeout: 10000 })
-    ])
+      const body = sessionTraceHarvests[1].request.body
+      const mousingNode = body.find(node => node.t === 'event' && node.n === 'mousing' && node.e > node.s)
+      const scrollingNode = body.find(node => node.t === 'event' && node.n === 'scrolling' && node.e > node.s)
+      const typingNode = body.find(node => node.t === 'event' && node.n === 'typing' && node.e > node.s)
 
-    sessionTraceHarvests.forEach(harvest => {
-      const foobarMousemoveEvts = JSONPath({ path: '$.request.body.[?(!!@ && @.t===\'event\' && @.n===\'mousing\' && @.o===\'div#foobar\')]', json: harvest })
-      expect(foobarMousemoveEvts.length).toEqual(0)
+      expect(mousingNode).toBeDefined()
+      expect(scrollingNode).toBeDefined()
+      expect(typingNode).toBeDefined()
     })
   })
 })

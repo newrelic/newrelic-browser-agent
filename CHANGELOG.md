@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.295.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.295.0...v1.295.1) (2025-08-08)
+
+
+### Bug Fixes
+
+* Remove event buffer inspection event ([#1540](https://github.com/newrelic/newrelic-browser-agent/issues/1540)) ([3e3ca33](https://github.com/newrelic/newrelic-browser-agent/commit/3e3ca330a719dc1312019f5d1970c11dff4c6edf))
+
 ## [1.295.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.294.0...v1.295.0) (2025-08-04)
 
 

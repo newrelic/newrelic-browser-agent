@@ -15,7 +15,10 @@ const ButtonExample = () => {
           <button id="do-nothing-button">Do nothing</button>
         </p>
         <p>Button with error ={'>'}
-          <button id="button-with-error" onClick={() => {throw new Error('This button throws an error' )}}> Button w/ error </button>
+          <button id="button-with-error" onClick={() => { throw new Error('This button throws an error' )}}> Button w/ error </button>
+        </p>
+        <p>Button with noticeError ={'>'}
+          <input type="button" id="input-button-with-notice-error" value="Button with noticeError" onClick={() => { NREUM?.noticeError(new Error('Report caught error to New Relic'))}} />
         </p>
       </div>
     </div>

@@ -16,7 +16,9 @@ describe('User Frustrations - Error Clicks', () => {
         const commands = [
           // [0] - button with error
           () => { document.getElementById('button-with-error').click() },
-          // [1] - span with error
+          // [1] - input button with noticeError
+          () => { document.getElementById('input-button-with-notice-error').click() },
+          // [2] - span with error
           () => { document.getElementById('span-with-error').click() },
           // end previous user action, using two actions to help "pad" UA harvests due to race between events and harvest cycle
           () => { document.getElementById('dummy-span-1').click() },
@@ -43,10 +45,17 @@ describe('User Frustrations - Error Clicks', () => {
       }))
       expect(actualInsHarvests[1]).toMatchObject(expect.objectContaining({
         eventType: 'UserAction',
+        targetTag: 'INPUT',
+        targetType: 'button',
+        targetId: 'input-button-with-notice-error',
+        errorClick: true
+      }))
+      expect(actualInsHarvests[2]).toMatchObject(expect.objectContaining({
+        eventType: 'UserAction',
         targetTag: 'SPAN',
         targetId: 'span-with-error'
       }))
-      expect(actualInsHarvests[1]).not.toHaveProperty('errorClick')
+      expect(actualInsHarvests[2]).not.toHaveProperty('errorClick')
     })
   })
 })

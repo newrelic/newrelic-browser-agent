@@ -66,6 +66,25 @@ describe('basic npm agent', () => {
     })
   })
 
+  it('vite-react-wrapper sends basic calls', async () => {
+    const [rumHarvests] = await Promise.all([
+      rumCapture.waitForResult({ totalCount: 1 }),
+      browser.url(await browser.testHandle.assetURL('test-builds/vite-react-wrapper/index.html'))
+    ])
+    expect(rumHarvests[0]).toBeDefined()
+
+    const [errorsHarvests, insightsHarvests] = await Promise.all([
+      errorsCapture.waitForResult({ totalCount: 1 }),
+      insightsCapture.waitForResult({ totalCount: 1 }),
+      browser.execute(function () {
+        window.agent.noticeError('test')
+        newrelic.addPageAction('test')
+      })
+    ])
+    expect(errorsHarvests[0]).toBeDefined()
+    expect(insightsHarvests[0]).toBeDefined()
+  })
+
   it('vite-react-wrapper should not break agent when session manager cannot be imported', async () => {
     await browser.destroyAgentSession()
     await browser.testHandle.scheduleReply('assetServer', {
@@ -93,24 +112,5 @@ describe('basic npm agent', () => {
       expect(val).toEqual({})
     )
     expect(agentSession.localStorage).toEqual({})
-  })
-
-  it('vite-react-wrapper sends basic calls', async () => {
-    const [rumHarvests] = await Promise.all([
-      rumCapture.waitForResult({ totalCount: 1 }),
-      browser.url(await browser.testHandle.assetURL('test-builds/vite-react-wrapper/index.html'))
-    ])
-    expect(rumHarvests[0]).toBeDefined()
-
-    const [errorsHarvests, insightsHarvests] = await Promise.all([
-      errorsCapture.waitForResult({ totalCount: 1 }),
-      insightsCapture.waitForResult({ totalCount: 1 }),
-      browser.execute(function () {
-        window.agent.noticeError('test')
-        newrelic.addPageAction('test')
-      })
-    ])
-    expect(errorsHarvests[0]).toBeDefined()
-    expect(insightsHarvests[0]).toBeDefined()
   })
 })

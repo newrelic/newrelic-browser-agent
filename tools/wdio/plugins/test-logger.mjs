@@ -19,7 +19,7 @@ export default class TestLogger {
         // iOS Webview
         log.info(`Executing in: iOS ${capabilities['LT:Options'].platformVersion}`)
       } else {
-        log.info(`Executing in: ${capabilities['appium:platformName']} ${capabilities['LT:Options'].platformVersion}`)
+        log.info(`Executing in: ${capabilities['LT:Options'].deviceName} ${capabilities['LT:Options'].platformVersion}`)
       }
     } else {
       // Desktop execution

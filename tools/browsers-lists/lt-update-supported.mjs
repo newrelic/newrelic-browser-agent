@@ -67,7 +67,7 @@ function updateMobileVersions (mobilePlatforms) {
     iosDevices.find(spec => Number(spec.version) <= STABLE_FULL_IOS),
     iosDevices.findLast(spec => Number(spec.version) >= MIN_SUPPORTED_IOS)
   ]
-  testediOSVersions.forEach(ltFormatSpec => { ltFormatSpec.platformName = 'ios' })
+  testediOSVersions.forEach(ltFormatSpec => { ltFormatSpec.platformName = 'ios'; ltFormatSpec.browserName = 'Safari' })
   testedMobileVersionsJson.ios = testediOSVersions
 
   const versionIndexedSpecs = {}
@@ -79,7 +79,7 @@ function updateMobileVersions (mobilePlatforms) {
   const testedAndroidVersions = [
     versionIndexedSpecs[ascOrderVersions.pop()][0] // grab first device spec off latest version
   ]
-  testedAndroidVersions.forEach(ltFormatSpec => { ltFormatSpec.platformName = 'android' })
+  testedAndroidVersions.forEach(ltFormatSpec => { ltFormatSpec.platformName = 'android'; ltFormatSpec.browserName = 'Chrome' })
   testedMobileVersionsJson.android = testedAndroidVersions
 
   return testedMobileVersionsJson

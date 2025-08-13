@@ -1,21 +1,24 @@
 {
   "ios": [
     {
-      "device_name": "iPhone 16 Pro",
-      "version": "26.0",
-      "platformName": "ios"
+      "device_name": "iPhone 16",
+      "version": "18.1",
+      "platformName": "ios",
+      "browserName": "Safari"
     },
     {
       "device_name": "iPhone 11",
       "version": "17.0",
-      "platformName": "ios"
+      "platformName": "ios",
+      "browserName": "Safari"
     }
   ],
   "android": [
     {
       "device_name": "Pixel 7",
       "version": "16",
-      "platformName": "android"
+      "platformName": "android",
+      "browserName": "Chrome"
     }
   ]
 }

@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.295.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.294.0...v1.295.0) (2025-08-04)
+
+
+### Features
+
+* Add error cause detection ([#1531](https://github.com/newrelic/newrelic-browser-agent/issues/1531)) ([3e6bda7](https://github.com/newrelic/newrelic-browser-agent/commit/3e6bda74bfd19d4379a41d357c800eebc5d28ed5))
+
+
+### Bug Fixes
+
+* Add monkey-patching warnings ([#1527](https://github.com/newrelic/newrelic-browser-agent/issues/1527)) ([412d469](https://github.com/newrelic/newrelic-browser-agent/commit/412d4690f4d8df59c3b6fb14ec8e6910e84db5b4))
+* Calculate first and last timestamps from raw data ([#1535](https://github.com/newrelic/newrelic-browser-agent/issues/1535)) ([1ead794](https://github.com/newrelic/newrelic-browser-agent/commit/1ead794106af6160fd26c1c2036d59a3b2718bf0))
+
 ## [1.294.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.293.0...v1.294.0) (2025-07-23)
 
 

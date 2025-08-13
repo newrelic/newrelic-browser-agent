@@ -63,4 +63,35 @@ describe('analyzeElemPath', () => {
     expect(nearestFields).toEqual({})
     document.body.removeChild(singleTable)
   })
+
+  test('should return hasLink = true if an <a> element is in the path', () => {
+    const link = document.createElement('A')
+    const childSpan = document.createElement('SPAN')
+    document.body.appendChild(link)
+    link.appendChild(childSpan)
+    const { hasLink } = analyzeElemPath(childSpan, targetFields)
+    expect(hasLink).toBe(true)
+    document.body.removeChild(link)
+  })
+
+  test('should return hasButton = true if a <button> element is in the path', () => {
+    const button = document.createElement('BUTTON')
+    const childSpan = document.createElement('SPAN')
+    document.body.appendChild(button)
+    button.appendChild(childSpan)
+    const { hasButton } = analyzeElemPath(childSpan, targetFields)
+    expect(hasButton).toBe(true)
+    document.body.removeChild(button)
+  })
+
+  test('should return hasButton = true if an <input type="button"> element is in the path', () => {
+    const inputButton = document.createElement('INPUT')
+    inputButton.type = 'button'
+    const childSpan = document.createElement('SPAN')
+    document.body.appendChild(inputButton)
+    inputButton.appendChild(childSpan)
+    const { hasButton } = analyzeElemPath(childSpan, targetFields)
+    expect(hasButton).toBe(true)
+    document.body.removeChild(inputButton)
+  })
 })

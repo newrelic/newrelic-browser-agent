@@ -34,7 +34,6 @@ describe('User Frustrations - Error Clicks', () => {
 
       const waitConditions = { totalCount: 3, timeout: 10000 }
       const [insightsHarvest] = await insightsCapture.waitForResult(waitConditions)
-      console.log(insightsHarvest?.request.body.ins)
       const actualInsHarvests = insightsHarvest?.request.body.ins.filter(x => x.action === 'click')
       expect(actualInsHarvests[0]).toMatchObject(expect.objectContaining({
         eventType: 'UserAction',

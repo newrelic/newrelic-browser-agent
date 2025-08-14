@@ -91,7 +91,6 @@ describe('UserActionsAggregator - Dead Clicks', () => {
     const evt = { type: 'click', target: btn }
     aggregator.process(evt)
 
-    // Fast-forward time
     jest.advanceTimersByTime(2000)
 
     const userAction = aggregator.aggregationEvent
@@ -104,7 +103,6 @@ describe('UserActionsAggregator - Dead Clicks', () => {
     const evt = { type: 'click', target: link }
     aggregator.process(evt)
 
-    // Fast-forward time
     jest.advanceTimersByTime(2000)
 
     const userAction = aggregator.aggregationEvent
@@ -117,7 +115,6 @@ describe('UserActionsAggregator - Dead Clicks', () => {
     const evt = { type: 'click', target: span }
     aggregator.process(evt)
 
-    // Fast-forward time
     jest.advanceTimersByTime(2000)
 
     const userAction = aggregator.aggregationEvent
@@ -146,13 +143,11 @@ describe('UserActionsAggregator - Dead Clicks', () => {
     const clickEvt = { type: 'click', target: btn }
     const keydownEvt = { type: 'keydown', target: btn }
 
-    aggregator.process(clickEvt) // Start dead click timer
+    aggregator.process(clickEvt)
     const finishedEvent = aggregator.process(keydownEvt) // Ends aggregation before timer
 
-    // Fast-forward time
     jest.advanceTimersByTime(2000)
 
-    // The finishedEvent should be the click event, and deadClick should not be set
     expect(finishedEvent.deadClick).toBe(false)
   })
 })
@@ -179,10 +174,9 @@ describe('UserActionsAggregator - Error Clicks', () => {
     }
     aggregator.process(evt)
 
-    // Simulate the error click
-    aggregator.markAsErrorClick()
-    // Fast-forward time
-    jest.advanceTimersByTime(2000)
+    jest.advanceTimersByTime(1999)
+    aggregator.markAsErrorClick() // Simulate the error click
+    jest.advanceTimersByTime(1)
 
     const userAction = aggregator.aggregationEvent
     expect(userAction.errorClick).toBe(true)
@@ -200,10 +194,9 @@ describe('UserActionsAggregator - Error Clicks', () => {
     }
     aggregator.process(evt)
 
-    // Simulate the error click
-    aggregator.markAsErrorClick()
-    // Fast-forward time
-    jest.advanceTimersByTime(2000)
+    jest.advanceTimersByTime(1999)
+    aggregator.markAsErrorClick() // Simulate the error click
+    jest.advanceTimersByTime(1)
 
     const userAction = aggregator.aggregationEvent
     expect(userAction.errorClick).toBe(true)
@@ -218,10 +211,9 @@ describe('UserActionsAggregator - Error Clicks', () => {
     }
     aggregator.process(evt)
 
-    // Simulate the error click
-    aggregator.markAsErrorClick()
-    // Fast-forward time
-    jest.advanceTimersByTime(2000)
+    jest.advanceTimersByTime(1999)
+    aggregator.markAsErrorClick() // Simulate the error click
+    jest.advanceTimersByTime(1)
 
     const userAction = aggregator.aggregationEvent
     expect(userAction.errorClick).toBe(false)
@@ -241,10 +233,8 @@ describe('UserActionsAggregator - Error Clicks', () => {
     }
     aggregator.process(evt)
 
-    // Fast-forward time
     jest.advanceTimersByTime(2000)
-    // Simulate the error click
-    aggregator.markAsErrorClick()
+    aggregator.markAsErrorClick() // Simulate the error click
 
     const userAction = aggregator.aggregationEvent
     expect(userAction.errorClick).toBe(false)

@@ -18,7 +18,12 @@ describe('User Frustrations - Error Clicks', () => {
           () => { document.getElementById('button-with-error').click() },
           // [1] - input button with noticeError
           () => { document.getElementById('input-button-with-notice-error').click() },
-          // [2] - span with error
+          // [2] - link with error
+          () => { document.getElementById('link-with-error').click() },
+          // [3] - link with noticeError
+          () => { document.getElementById('link-with-notice-error').click() },
+
+          // [4] - span with error
           () => { document.getElementById('span-with-error').click() },
           // end previous user action, using two actions to help "pad" UA harvests due to race between events and harvest cycle
           () => { document.getElementById('dummy-span-1').click() },
@@ -52,10 +57,22 @@ describe('User Frustrations - Error Clicks', () => {
       }))
       expect(actualInsHarvests[2]).toMatchObject(expect.objectContaining({
         eventType: 'UserAction',
+        targetTag: 'A',
+        targetId: 'link-with-error',
+        errorClick: true
+      }))
+      expect(actualInsHarvests[3]).toMatchObject(expect.objectContaining({
+        eventType: 'UserAction',
+        targetTag: 'A',
+        targetId: 'link-with-notice-error',
+        errorClick: true
+      }))
+      expect(actualInsHarvests[4]).toMatchObject(expect.objectContaining({
+        eventType: 'UserAction',
         targetTag: 'SPAN',
         targetId: 'span-with-error'
       }))
-      expect(actualInsHarvests[2]).not.toHaveProperty('errorClick')
+      expect(actualInsHarvests[4]).not.toHaveProperty('errorClick')
     })
   })
 })

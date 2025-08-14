@@ -70,6 +70,12 @@ export function castErrorEvent (errorEvent) {
     error.name = SyntaxError.name
     return error
   }
+  /** SecurityPolicyViolationEvent does not exist in safari workers */
+  if (typeof SecurityPolicyViolationEvent !== 'undefined' && errorEvent instanceof SecurityPolicyViolationEvent) {
+    const error = new UncaughtError(errorEvent.violatedDirective, errorEvent.sourceFile, errorEvent.lineNumber, errorEvent.columnNumber, undefined, `violation of disposition: "${errorEvent.disposition}" of original policy: "${errorEvent.originalPolicy}"`)
+    error.name = 'ContentSecurityPolicyViolation'
+    return error
+  }
   if (canTrustError(errorEvent.error)) return errorEvent.error
   return castError(errorEvent)
 }

@@ -47,6 +47,11 @@ export class Instrument extends InstrumentBase {
       handle('err', [castErrorEvent(errorEvent), now(), false, {}, agentRef.runtime.isRecording], undefined, this.featureName, this.ee)
     }, eventListenerOpts(false, this.removeOnAbort?.signal))
 
+    globalScope.addEventListener('securitypolicyviolation', (violationEvent) => {
+      if (!this.abortHandler) return
+      handle('err', [castErrorEvent(violationEvent), now(), false, { cspViolation: 1 }, agentRef.runtime.isRecording], undefined, this.featureName, this.ee)
+    })
+
     this.abortHandler = this.#abort // we also use this as a flag to denote that the feature is active or on and handling errors
     this.importAggregator(agentRef, () => import(/* webpackChunkName: "jserrors-aggregate" */ '../aggregate'))
   }

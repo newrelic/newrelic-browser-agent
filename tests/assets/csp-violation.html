@@ -6,15 +6,25 @@
 <html>
   <head>
     <title>RUM Unit Test</title>
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline'; connect-src *;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline'; connect-src *;" />
     {init} {config} {loader}
   </head>
-  <body>Instrumented
+  <body>
+    Instrumented
     <script>
+      document.addEventListener("securitypolicyviolation", function (event) {
+        console.log("CSP Violation:", event);
+
+        // Use event metadata to form a "stack trace"-like string
+        const stackTrace = [`Blocked URI: ${event.blockedURI}`, `Violated Directive: ${event.violatedDirective}`, `Source File: ${event.sourceFile}`, `Line: ${event.lineNumber}`, `Column: ${event.columnNumber}`, `Disposition: ${event.disposition}`].join("\n");
+        console.log("CSP Violation metadata as stack trace:\n" + stackTrace);
+      });
+
       // This script will trigger a CSP violation
-      var script = document.createElement('script');
-      script.src = 'https://example.com';
+      var script = document.createElement("script");
+      script.src = "https://example.com";
       document.body.appendChild(script);
     </script>
+    <script src="./js/csp.js"></script>
   </body>
 </html>

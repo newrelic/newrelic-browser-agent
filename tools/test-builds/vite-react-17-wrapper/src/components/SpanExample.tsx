@@ -10,10 +10,10 @@ const SpanExample = () => {
         <span id={"dummy-span-1"}></span>
         <span id={"dummy-span-2"}></span>
         <p><strong>Click count: { clickCount } </strong></p>
-        <p>Span with a click event handler, added via `onclick` ={'>'}
+        <p>Span with a click event handler ={'> '}
           <span id="span-with-onclick" onClick={() => { updateClickCount(clickCount + 1)}} className="non-interactive-element">Span </span>
         </p>
-        <p>Span with no handlers ={'>'}
+        <p>Span with no handlers ={'> '}
           <span id="do-nothing-span" className="non-interactive-element">Span</span>
         </p>
         <p>Span with error ={'>'}

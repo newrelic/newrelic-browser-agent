@@ -6,14 +6,12 @@ import PopoverBody from "./components/dropdown/PopoverBody";
 import SampleTrigger from "./components/dropdown/SampleTrigger";
 import SpanExample from "./components/SpanExample";
 import ButtonExample from "./components/ButtonExample";
+import LinkExample from "./components/LinkExample";
 
 export default function App() {
   return (
     <>
       <h1>Vite React</h1>
-      <ButtonExample />
-      <SpanExample />
-      <hr/>
       <Popover>
         <PopoverTrigger>
           <SampleTrigger id="sample-trigger" title="Sample Trigger"/>
@@ -25,6 +23,10 @@ export default function App() {
           </div>
         </PopoverBody>
       </Popover>
+      <hr/>
+      <ButtonExample />
+      <LinkExample />
+      <SpanExample />
     </>
   );
 }

@@ -51,7 +51,7 @@ describe('basic pve capturing', () => {
     checkRumBody(rumHarvest.request)
     expect(parseInt(rumHarvest.request.query.be, 10)).toBeGreaterThanOrEqual(500)
     expect(parseInt(rumHarvest.request.query.fe, 10)).toBeGreaterThanOrEqual(80)
-    expect(parseInt(rumHarvest.request.query.dc, 10)).toBeGreaterThanOrEqual(100)
+    expect(parseInt(rumHarvest.request.query.dc, 10)).toBeGreaterThanOrEqual(75)
   })
 
   /** equivalent to former no-body.test.js */

@@ -72,7 +72,7 @@ export function castErrorEvent (errorEvent) {
   }
   /** SecurityPolicyViolationEvent does not exist in safari workers */
   if (typeof SecurityPolicyViolationEvent !== 'undefined' && errorEvent instanceof SecurityPolicyViolationEvent) {
-    const error = new UncaughtError(errorEvent.violatedDirective, errorEvent.sourceFile, errorEvent.lineNumber, errorEvent.columnNumber, undefined, `violation of disposition: "${errorEvent.disposition}" of original policy: "${errorEvent.originalPolicy}"`)
+    const error = new UncaughtError(`URI ${errorEvent.blockedURI} violated directive ${errorEvent.violatedDirective}`, errorEvent.sourceFile, errorEvent.lineNumber, errorEvent.columnNumber, undefined, `${errorEvent.sample || 'Unknown sample'} violated original policy: "${errorEvent.originalPolicy}"`)
     error.name = 'ContentSecurityPolicyViolation'
     return error
   }

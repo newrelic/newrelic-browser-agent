@@ -6,13 +6,13 @@ name: Delete Experiment
 on:
   workflow_dispatch:
     inputs:
-    nr_environment:
-      description: 'Target New Relic environment'
-      required: true
-      type: choice
-      options:
-      - dev
-      - staging
+      nr_environment:
+        description: 'Target New Relic environment'
+        required: true
+        type: choice
+        options:
+          - dev
+          - staging
 
 jobs:
   delete-experiment-on-s3:
@@ -37,4 +37,4 @@ jobs:
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws_role: ${{ secrets.AWS_ROLE_ARN }}
           aws_bucket_name: ${{ secrets.AWS_BUCKET }}
-          bucket_dir: experiments/${{ inputs.nr_environment }}/${{ steps.clean-branch-name.outputs.results }}
+          bucket_dir: experiments/${{ github.event.inputs.nr_environment }}/${{ steps.clean-branch-name.outputs.results }}

@@ -43,8 +43,6 @@ const LENGTHS = {
 
 /** The purpose of this class is to manage, normalize, and drop various ST nodes as needed without polluting the main ST modules */
 export class TraceStorage {
-  #laststart = 0
-
   /** prevents duplication of event nodes by keeping a reference of each one seen per harvest cycle */
   prevStoredEvents = new Set()
 
@@ -229,7 +227,6 @@ export class TraceStorage {
     let allStored = true
     for (let i = 0; i < resources.length; i++) {
       const currentResource = resources[i]
-      if ((currentResource.fetchStart | 0) <= this.#laststart) continue // don't recollect already-seen resources
       if (!this.#canStoreNewNode()) break // stop processing if we can't store any more resource nodes anyways
 
       const { initiatorType, fetchStart, responseEnd, entryType } = currentResource
@@ -239,7 +236,6 @@ export class TraceStorage {
       if (!this.#storeSTN(res)) allStored = false
     }
 
-    this.#laststart = resources[resources.length - 1].fetchStart | 0
     return allStored
   }
 

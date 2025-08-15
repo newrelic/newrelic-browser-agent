@@ -13,7 +13,6 @@ import { applyFnToProps } from '../../../common/util/traverse'
 import { cleanURL } from '../../../common/url/clean-url'
 import { warn } from '../../../common/util/console'
 
-const SUPPORTS_PERFORMANCE_OBSERVER = typeof globalScope.PerformanceObserver === 'function'
 /** Reserved room for query param attrs */
 const QUERY_PARAM_PADDING = 5000
 export class Aggregate extends AggregateBase {
@@ -110,11 +109,6 @@ export class Aggregate extends AggregateBase {
       // If something unexpected happened and we somehow still got to harvesting after a session identifier changed, we should force-exit instead of harvesting:
       this.abort(3)
       return
-    }
-
-    // stage timings if PO isn't supported, this checks resourcetiming buffer every harvest.
-    if (!SUPPORTS_PERFORMANCE_OBSERVER) {
-      this.traceStorage.storeResources(globalScope.performance?.getEntriesByType?.('resource'))
     }
 
     return true

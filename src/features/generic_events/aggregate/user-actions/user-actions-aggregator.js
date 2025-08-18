@@ -19,9 +19,11 @@ export class UserActionsAggregator {
 
   constructor () {
     if (MutationObserver) {
-      this.#domObserver.instance = new MutationObserver(() => {
-        this.#deadClickCleanup()
-      })
+      setTimeout(() => {
+        this.#domObserver.instance = new MutationObserver(() => {
+          this.#deadClickCleanup()
+        })
+      }, 30000)
     }
   }
 

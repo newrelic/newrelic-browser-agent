@@ -20,7 +20,6 @@ export class UserActionsAggregator {
   constructor () {
     if (MutationObserver) {
       this.#domObserver.instance = new MutationObserver(() => {
-        if (newrelic && typeof newrelic?.log === 'function') newrelic.log('Observed mutation', { level: 'warn' })
         this.#deadClickCleanup()
       })
     }
@@ -75,11 +74,9 @@ export class UserActionsAggregator {
   }
 
   #deadClickCleanup () {
-    if (newrelic && typeof newrelic?.log === 'function') newrelic.log('Dead click cleanup - start', { level: 'warn' })
-    this.#domObserver.instance?.disconnect()
-    this.#domObserver.running = false
+    // this.#domObserver.instance?.disconnect()
+    // this.#domObserver.running = false
     this.#deadClickTimer?.clear()
-    if (newrelic && typeof newrelic?.log === 'function') newrelic.log('Dead click cleanup - end', { level: 'warn' })
   }
 
   #startObserver () {
@@ -93,6 +90,7 @@ export class UserActionsAggregator {
       })
       return true
     }
+    return true
   }
 }
 

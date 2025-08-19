@@ -19,11 +19,9 @@ export class UserActionsAggregator {
 
   constructor () {
     if (MutationObserver) {
-      setTimeout(() => {
-        this.#domObserver.instance = new MutationObserver(() => {
-          this.#deadClickCleanup()
-        })
-      }, 30000)
+      this.#domObserver.instance = new MutationObserver(() => {
+        this.#deadClickCleanup()
+      })
     }
   }
 
@@ -84,7 +82,7 @@ export class UserActionsAggregator {
   #startObserver () {
     if (!this.#domObserver.running && this.#domObserver.instance) {
       this.#domObserver.running = true
-      this.#domObserver.instance.observe(document, {
+      this.#domObserver.instance.observe(document.body, {
         attributes: true,
         characterData: true,
         childList: true,

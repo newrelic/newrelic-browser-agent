@@ -20,6 +20,7 @@ export class UserActionsAggregator {
   constructor () {
     if (MutationObserver) {
       this.#domObserver.instance = new MutationObserver(() => {
+        if (newrelic && typeof newrelic?.log === 'function') newrelic.log('Change detected in DOM, clearing timer', { level: 'warn' })
         this.#deadClickCleanup()
       })
     }
@@ -50,6 +51,7 @@ export class UserActionsAggregator {
     } else {
       // return the prev existing one (if there is one)
       const finishedEvent = this.#aggregationEvent
+      if (newrelic && typeof newrelic?.log === 'function') newrelic.log('Start new aggregation and cleanup timer', { level: 'warn' })
       this.#deadClickCleanup()
 
       // then start new event aggregation
@@ -64,6 +66,7 @@ export class UserActionsAggregator {
 
   #deadClickSetup (userAction) {
     if (this.#startObserver()) {
+      if (newrelic && typeof newrelic?.log === 'function') newrelic.log('Dead click setup, creating timer', { level: 'warn' })
       this.#deadClickTimer = new Timer({
         onEnd: () => {
           userAction.deadClick = true
@@ -81,14 +84,19 @@ export class UserActionsAggregator {
 
   #startObserver () {
     if (!this.#domObserver.running && this.#domObserver.instance) {
-      this.#domObserver.running = true
-      this.#domObserver.instance.observe(document.body, {
-        attributes: true,
-        characterData: true,
-        childList: true,
-        subtree: true
-      })
-      return true
+      const observedNode = document.querySelector('.nr1-browser-entity-preview.vizco-anchor-point')
+      if (observedNode) {
+        this.#domObserver.running = true
+        this.#domObserver.instance.observe(observedNode, {
+          attributes: true,
+          characterData: true,
+          childList: true,
+          subtree: true
+        })
+        return true
+      } else {
+        return false
+      }
     }
     return true
   }

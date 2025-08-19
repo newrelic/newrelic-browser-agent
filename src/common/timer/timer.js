@@ -19,6 +19,7 @@ export class Timer {
   }
 
   clear () {
+    if (newrelic && typeof newrelic?.log === 'function') newrelic.log('Clearing timer, is timer defined? ' + this.timer, { level: 'warn' })
     clearTimeout(this.timer)
     this.timer = null
   }

@@ -4,6 +4,7 @@
  */
 import { globalScope } from '../constants/runtime'
 import { now } from '../timing/now'
+import { isNative } from '../util/monkey-patched'
 
 export const defaults = {
   beacon: 'bam.nr-data.net',
@@ -58,7 +59,7 @@ export function gosNREUMOriginals () {
   if (!nr.o) {
     nr.o = {
       ST: globalScope.setTimeout,
-      SI: globalScope.setImmediate,
+      SI: globalScope.setImmediate || globalScope.setInterval,
       CT: globalScope.clearTimeout,
       XHR: globalScope.XMLHttpRequest,
       REQ: globalScope.Request,
@@ -68,6 +69,7 @@ export function gosNREUMOriginals () {
       FETCH: globalScope.fetch,
       WS: globalScope.WebSocket
     }
+    isNative(...Object.values(nr.o)) // Warns if the originals are not native, which is typically required for the agent to work properly
   }
   return nr
 }

@@ -4,6 +4,39 @@
     {
       "changes": [
         {
+          "type": "fix",
+          "sha": "412d4690f4d8df59c3b6fb14ec8e6910e84db5b4",
+          "message": "Add monkey-patching warnings",
+          "issues": [
+            "1527"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "1ead794106af6160fd26c1c2036d59a3b2718bf0",
+          "message": "Calculate first and last timestamps from raw data",
+          "issues": [
+            "1535"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "3e6bda74bfd19d4379a41d357c800eebc5d28ed5",
+          "message": "Add error cause detection",
+          "issues": [
+            "1531"
+          ]
+        }
+      ],
+      "version": "1.295.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "f70fdbcc-c695-4098-9a4a-a3c660ee2aaf",
+      "createTime": "2025-08-04T18:18:14.079Z"
+    },
+    {
+      "changes": [
+        {
           "type": "feat",
           "sha": "d347eaa76e26a9a4fc8e5c191de6a3c737712c68",
           "message": "Harvest early",
@@ -3074,5 +3107,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2025-07-23T16:30:07.752Z"
+  "updateTime": "2025-08-04T18:18:14.079Z"
 }

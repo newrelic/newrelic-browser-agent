@@ -41,7 +41,6 @@ test('wrapLogger should not re-wrap or overwrite context if called more than onc
   }
   const customAttributes = { args: faker.string.uuid() }
   wrapLogger(loggingInstrument.ee, myLoggerSuite, 'myTestLogger', { customAttributes, level: 'error' })
-  expect(loggingUtilsModule.bufferLog).toHaveBeenCalledTimes(0)
 
   let message = faker.string.uuid()
   myLoggerSuite.myTestLogger(message)

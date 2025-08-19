@@ -8,7 +8,7 @@ import { single } from '../../../common/util/invoke'
 import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
-import { API_TRIGGER_NAME, FEATURE_NAME, INTERACTION_STATUS, INTERACTION_TRIGGERS, IPL_TRIGGER_NAME, NO_LONG_TASK_WINDOW, POPSTATE_TRIGGER } from '../constants'
+import { API_TRIGGER_NAME, FEATURE_NAME, INTERACTION_STATUS, INTERACTION_TRIGGERS, IPL_TRIGGER_NAME, NO_LONG_TASK_WINDOW, POPSTATE_MERGE_WINDOW, POPSTATE_TRIGGER } from '../constants'
 import { AjaxNode } from './ajax-node'
 import { InitialPageLoadInteraction } from './initial-page-load-interaction'
 import { Interaction } from './interaction'
@@ -40,7 +40,7 @@ export class Aggregate extends AggregateBase {
 
     this.latestRouteSetByApi = null
     this.interactionInProgress = null // aside from the "page load" interaction, there can only ever be 1 ongoing at a time
-    this.latestHistoryUrl = null
+    this.latestHistoryUrl = window.location.href // the initial url is needed to get a correct oldURL in the case that the first nav is triggered by 'popstate'
     this.harvestOpts.beforeUnload = () => this.interactionInProgress?.done() // return any withheld ajax or jserr events so they can be sent with EoL harvest
 
     this.waitForFlags(['spa']).then(([spaOn]) => {
@@ -65,6 +65,7 @@ export class Aggregate extends AggregateBase {
       this.interactionInProgress?.updateDom(timestamp)
       this.interactionInProgress?.checkHistoryAndDomChange()
     }, this.featureName, this.ee)
+
     this.ee.on('long-task', (task) => {
       if (!this.interactionInProgress?.watchLongtaskTimer) return // no ixn in progress or it's not yet in a pending-finish state, as indicated by the lack of a watchLongtask timeout
       clearTimeout(this.interactionInProgress.watchLongtaskTimer)
@@ -96,7 +97,9 @@ export class Aggregate extends AggregateBase {
 
   startUIInteraction (eventName, startedAt, sourceElem) { // this is throttled by instrumentation so that it isn't excessively called
     if (this.interactionInProgress?.createdByApi) return // api-started interactions cannot be disrupted aka cancelled by UI events (and the vice versa applies as well)
-    if (this.interactionInProgress?.done() === false) return // current in-progress is blocked from closing, e.g. by 'waitForEnd' api option
+    // Navs from interacting with the document will emit the UI event like click, followed by a popstate which should be squashed given some margin of time. This prevents it from cancelling the first UI ixn.
+    if (eventName === POPSTATE_TRIGGER && this.interactionInProgress?.trigger !== POPSTATE_TRIGGER && startedAt - this.interactionInProgress?.start <= POPSTATE_MERGE_WINDOW) return
+    if (this.interactionInProgress?.done() === false) return // current in-progress is blocked from closing if true, e.g. by 'waitForEnd' api option; notice this cancels/finishes existing in-progress ixn
 
     const oldURL = eventName === POPSTATE_TRIGGER ? this.latestHistoryUrl : undefined // see related comment in 'newURL' handler above, 'popstate'
     this.interactionInProgress = new Interaction(eventName, startedAt, this.latestRouteSetByApi, oldURL)
@@ -164,21 +167,23 @@ export class Aggregate extends AggregateBase {
   /**
    * Handles or redirect ajax event based on the interaction, if any, that it's tied to.
    * @param {Object} event see Ajax feature's storeXhr function for object definition
+   * @param {Object} metadata reference to the ajax context, used to pass long task info
    */
-  #handleAjaxEvent (event) {
+  #handleAjaxEvent (event, metadata) {
     const associatedInteraction = this.getInteractionFor(event.startTime)
     if (!associatedInteraction) { // no interaction was happening when this ajax started, so give it back to Ajax feature for processing
       handle('returnAjax', [event], undefined, FEATURE_NAMES.ajax, this.ee)
     } else {
-      if (associatedInteraction.status === INTERACTION_STATUS.FIN) processAjax(event, associatedInteraction) // tack ajax onto the ixn object awaiting harvest
+      if (associatedInteraction.status === INTERACTION_STATUS.FIN) processAjax(event, metadata, associatedInteraction) // tack ajax onto the ixn object awaiting harvest
       else { // same thing as above, just at a later time -- if the interaction in progress is cancelled, just send the event back to ajax feat unmodified
-        associatedInteraction.on('finished', () => processAjax(event, associatedInteraction))
+        associatedInteraction.on('finished', () => processAjax(event, metadata, associatedInteraction))
         associatedInteraction.on('cancelled', () => handle('returnAjax', [event], undefined, FEATURE_NAMES.ajax, this.ee))
       }
     }
 
-    function processAjax (event, parentInteraction) {
-      const newNode = new AjaxNode(event)
+    function processAjax (event, metadata, parentInteraction) {
+      // Metadata(ctx) should contain any long task end time associated with this XHR which should be up-to-date by the time the in-progress ixn & ajax children are being finalized for harvest.
+      const newNode = new AjaxNode(event, metadata)
       parentInteraction.addChild(newNode)
     }
   }

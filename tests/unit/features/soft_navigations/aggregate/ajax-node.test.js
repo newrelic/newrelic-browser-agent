@@ -40,11 +40,12 @@ beforeEach(() => {
 })
 
 test('Ajax node creation is correct', () => {
-  const ajn = new AjaxNode(someAjaxEvent)
+  let ajn = new AjaxNode(someAjaxEvent, { latestLongtaskEnd: 0 })
 
   expect(ajn.belType).toEqual(2)
   expect(ajn.nodeId).toEqual(1)
-  expect(ajn.callbackDuration === 0 && ajn.callbackEnd === 0).toBeTruthy()
+  expect(ajn.callbackEnd).toEqual(ajn.end) // no long task was observed, so callbackEnd is the same as endTime && callbackDuration is 0
+  expect(ajn.callbackDuration).toEqual(0)
   expect(ajn.requestedWith).toEqual(1) // fetch
   expect(someAjaxEvent).toEqual(expect.objectContaining({
     startTime: ajn.start,
@@ -60,6 +61,17 @@ test('Ajax node creation is correct', () => {
     spanTimestamp: ajn.spanTimestamp,
     gql: ajn.gql
   }))
+
+  ajn = new AjaxNode(someAjaxEvent, { latestLongtaskEnd: 4096 })
+  expect(ajn.nodeId).toEqual(2)
+  expect(ajn.end).toEqual(2048)
+  expect(ajn.callbackEnd).toEqual(4096) // long task was observed, so callbackEnd is set to that
+  expect(ajn.callbackDuration).toEqual(4096 - 2048)
+
+  ajn = new AjaxNode(someAjaxEvent, { latestLongtaskEnd: 2000 })
+  expect(ajn.end).toEqual(2048)
+  expect(ajn.callbackEnd).toEqual(2048) // long task was observed but its end is before the ajax end, so callbackEnd falls back to ajax end
+  expect(ajn.callbackDuration).toEqual(0)
 })
 
 test('Ajax serialize output is correct', () => {

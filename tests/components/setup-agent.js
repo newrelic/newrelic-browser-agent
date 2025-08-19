@@ -41,6 +41,7 @@ export function setupAgent ({ agentOverrides = {}, info = {}, init = {}, loaderC
   if (!runtime.entityManager) runtime.entityManager = new EntityManager({ info, ee })
 
   runtime.entityManager.setDefaultEntity({ entityGuid, ...info })
+  runtime.entityManager.set(entityGuid, { entityGuid, ...info })
 
   const fakeAgent = {
     agentIdentifier,

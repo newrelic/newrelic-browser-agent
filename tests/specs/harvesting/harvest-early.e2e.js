@@ -1,17 +1,19 @@
-import { testAjaxEventsRequest, testInsRequest, testInteractionEventsRequest, testLogsRequest } from '../../../tools/testing-server/utils/expect-tests'
+import { testAjaxEventsRequest, testInsRequest, testInteractionEventsRequest, testLogsRequest, testBlobTraceRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 describe('should harvest early', () => {
   let ajaxEventsCapture
   let insightsCapture
   let interactionEventsCapture
   let loggingEventsCapture
+  let testBlobTraceCapture
 
   beforeEach(async () => {
-    [ajaxEventsCapture, insightsCapture, interactionEventsCapture, loggingEventsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+    ;[ajaxEventsCapture, insightsCapture, interactionEventsCapture, loggingEventsCapture, testBlobTraceCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
       { test: testAjaxEventsRequest },
       { test: testInsRequest },
       { test: testInteractionEventsRequest },
-      { test: testLogsRequest }
+      { test: testLogsRequest },
+      { test: testBlobTraceRequest }
     ])
   })
 
@@ -24,6 +26,7 @@ describe('should harvest early', () => {
       insightsCapture.waitForResult({ totalCount: 1 }),
       interactionEventsCapture.waitForResult({ totalCount: 1 }),
       loggingEventsCapture.waitForResult({ totalCount: 1 }),
+      testBlobTraceCapture.waitForResult({ totalCount: 2 }), // the initial trace ALWAYS harvests immediately, but the second one should be tested for early harvest
       browser.execute(function () {
         document.querySelector('body').click()
       })

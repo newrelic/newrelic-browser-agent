@@ -19,7 +19,7 @@ export class UserActionsAggregator {
 
   constructor () {
     if (MutationObserver) {
-      this.#domObserver.instance = new MutationObserver(() => {
+      this.#domObserver.instance = new MutationObserver((mutations) => {
         if (newrelic && typeof newrelic?.log === 'function') newrelic.log('Change detected in DOM, clearing timer', { level: 'warn' })
         this.#deadClickCleanup()
       })

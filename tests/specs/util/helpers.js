@@ -24,6 +24,7 @@ export function buildExpectedSessionState (additionalExpectations) {
     sessionReplaySentFirstChunk: expect.any(Boolean),
     sessionTraceMode: expect.any(Number),
     loggingMode: expect.any(Number),
+    logApiMode: expect.any(Number),
     numOfResets: expect.any(Number)
   }, additionalExpectations)
 }
@@ -200,7 +201,7 @@ export async function getLogs () {
       return {
         events: logs.events.get(),
         blocked: logs.blocked,
-        loggingMode: logs.loggingMode
+        loggingMode: logs.loggingMode.auto
       }
     } catch (err) {
       return {

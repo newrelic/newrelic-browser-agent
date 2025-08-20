@@ -61,8 +61,7 @@ export class AggregateBase extends FeatureBase {
   #setupEventStore (entityGuid) {
     if (this.events) return
     switch (this.featureName) {
-    // SessionTrace + Replay have their own storage mechanisms.
-      case FEATURE_NAMES.sessionTrace:
+    // SessionReplay has its own storage mechanisms.
       case FEATURE_NAMES.sessionReplay:
         break
         // Jserror and Metric features uses a singleton EventAggregator instead of a regular EventBuffer.

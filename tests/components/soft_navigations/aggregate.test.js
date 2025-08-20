@@ -252,6 +252,7 @@ describe('popstate interactions', () => {
     const origUrl = window.location.href
     const newUrl = 'http://myurl.com'
     window.location.href = newUrl // location is normally updated by the time popstate event occurs
+
     softNavAggregate.ee.emit('newUIEvent', [{ type: POPSTATE_TRIGGER, timeStamp: 100 }])
     const ixn = softNavAggregate.interactionInProgress
     expect(ixn).toBeTruthy()
@@ -278,7 +279,6 @@ describe('popstate interactions', () => {
     softNavAggregate.ee.emit('newUIEvent', [{ type: POPSTATE_TRIGGER, timeStamp: 105 }])
     softNavAggregate.ee.emit('newURL', [106, secondUrl])
 
-    console.log(softNavAggregate.interactionInProgress)
     expect(softNavAggregate.interactionInProgress.oldURL).toEqual(firstUrl)
     expect(softNavAggregate.interactionInProgress.newURL).toEqual(secondUrl)
     expect(softNavAggregate.latestHistoryUrl).toEqual(secondUrl)
@@ -293,6 +293,7 @@ describe('popstate interactions', () => {
     expect(softNavAggregate.interactionInProgress.oldURL).toEqual(window.location.href)
     expect(softNavAggregate.interactionInProgress.newURL).toEqual('myurl.com')
   })
+
 
   test('are NOT merged into a preceeding click if click happened some time ago', () => {
     softNavAggregate.ee.emit('newUIEvent', [{ type: 'click', timeStamp: 100, target: { tagName: 'a' } }])

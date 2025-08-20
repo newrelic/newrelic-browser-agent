@@ -51,7 +51,7 @@ export class Interaction extends BelNode {
   updateHistory (timestamp, newUrl) {
     if (this.domTimestamp > 0) return // url is locked once ui>url>dom change sequence is seen
     if (!newUrl || newUrl === this.oldURL) return // url must be different for interaction heuristic to proceed
-    this.newURL = newUrl || globalScope?.location.href
+    this.newURL = newUrl
     this.historyTimestamp = (timestamp || now())
   }
 

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Long Task XHR</title>
+    {init}
+    {config}
+    <script>
+      NREUM.init.feature_flags.push('soft_nav')
+    </script>
+    {loader}  
+</head>
+<body>
+<div>
+  This page uses a button to initiate an XHR post with long load & loadend listeners.
+</div>
+<div><button id="sendXhr">Send XHR</button></div>
+<script>
+  let i = 0
+	const runLongTask = () => {
+		// simulate a long task code
+		const start = performance.now();
+		while (performance.now() - start < 1000) {
+			for (let j = 0; j < 10000; j++) {} // smaller loop, less intensive
+		}
+	}
+
+  document.getElementById('sendXhr').addEventListener('click', function () {
+    const xhr = new XMLHttpRequest()
+		xhr.addEventListener('load', function () {
+      window.location.hash = Math.random()
+
+      const elem = document.createElement('div')
+      elem.innerHTML = 'TEST' + i++
+      document.body.appendChild(elem)
+		})
+    xhr.addEventListener('loadend', runLongTask);
+
+		xhr.open('POST', '/echo');
+		xhr.send('123');
+  });
+</script>
+</body>
+</html>

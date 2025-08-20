@@ -15,6 +15,7 @@ export const IPL_TRIGGER_NAME = 'initialPageLoad'
 
 export const FEATURE_NAME = FEATURE_NAMES.softNav
 export const NO_LONG_TASK_WINDOW = 5000 // purpose is to wait 5 seconds wherein no long task is detected
+export const POPSTATE_MERGE_WINDOW = 500 // "coalesce" (discard) a popstate that happen within this period following an INTERACTION_TRIGGER opening ixn, e.g. click->popstate
 
 export const INTERACTION_TYPE = {
   INITIAL_PAGE_LOAD: '',

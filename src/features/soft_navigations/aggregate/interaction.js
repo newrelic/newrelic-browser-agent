@@ -150,8 +150,8 @@ export class Interaction extends BelNode {
       0, // this will be overwritten below with number of attached nodes
       numeric(this.start - (isFirstIxnOfPayload ? 0 : firstStartTimeOfPayload)), // the very 1st ixn does not require offset so it should fallback to a 0 while rest is offset by the very 1st ixn's start
       numeric(this.end - this.start), // end -- relative to start
-      numeric(this.callbackEnd), // cbEnd -- relative to start; not used by BrowserInteraction events
-      numeric(this.callbackDuration), // not relative
+      numeric(0), // callbackEnd -- relative to start; not used by BrowserInteraction events so these are always 0
+      numeric(0), // not relative; always 0 for BrowserInteraction
       addString(this.trigger),
       addString(cleanURL(this.initialPageURL, true)),
       addString(cleanURL(this.oldURL, true)),

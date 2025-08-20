@@ -119,9 +119,11 @@ export function createWrapperWithEmitter (emitter, always) {
           // could add more properties here later if needed by downstream features
         }
         // standalone long task message
-        if (task.isLongTask) safeEmit('long-task', [task], ctx, bubble)
+        if (task.isLongTask) {
+          safeEmit('long-task', [task, originalThis], ctx, bubble)
+        }
         // -end message also includes the task execution info
-        safeEmit(prefix + 'end', [args, originalThis, result, task], ctx, bubble)
+        safeEmit(prefix + 'end', [args, originalThis, result], ctx, bubble)
       }
     }
   }

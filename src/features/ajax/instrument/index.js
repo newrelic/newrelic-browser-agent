@@ -96,6 +96,7 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
     ctx.loadCaptureCalled = false
     ctx.params = this.params || {}
     ctx.metrics = this.metrics || {}
+    ctx.latestLongtaskEnd = 0
 
     xhr.addEventListener('load', function (event) {
       captureXhrData(ctx, xhr)

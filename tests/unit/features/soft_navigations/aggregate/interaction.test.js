@@ -195,6 +195,9 @@ test('Interaction serialize output is correct', () => {
   ixn.customName = 'my_custom_name'
   ixn.done(5678)
 
+  ixn.callbackEnd = 12345 // ensure that these properties are indeed ignored in interaction serialization
+  ixn.callbackDuration = 12345 - 5678
+
   expect(ixn.nodeId).toEqual(1)
   expect(ixn.serialize(0, fakeAgent)).toBe("1,3,ya,3fg,,,'submit,'http://localhost/,1,1,'my_custom_name,2,!!'this_route,!'static-id,'1,!!;5,'key1,'value1;5,'key2,'value2;a,'apm_attributes_string;")
 

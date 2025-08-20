@@ -77,6 +77,14 @@ test('on returnAjax from soft nav, event is re-routed back into ajaxEvents', () 
   expect(ajaxAggregate.events.get()[0].data[0]).toEqual(expect.objectContaining({ startTime: 0, path: '/pathname' }))
 })
 
+test('on long task emitted under ajax, its context is set with latestLongtaskEnd', () => {
+  const xhr = new XMLHttpRequest()
+  const ctx = ajaxAggregate.ee.context(xhr)
+  expect(ctx.latestLongtaskEnd).toEqual(0)
+  ajaxAggregate.ee.emit('long-task', [{ end: 150.15 }, xhr])
+  expect(ctx.latestLongtaskEnd).toEqual(150.15)
+})
+
 describe('storeXhr', () => {
   test('for a plain ajax request buffers in ajaxEvents', () => {
     ajaxAggregate.ee.emit('xhr', ajaxArguments, context)
@@ -113,7 +121,7 @@ describe('storeXhr', () => {
     expect(Object.keys(ajaxAggregate.underSpaEvents).length).toEqual(0)
     expect(handleModule.handle).toHaveBeenLastCalledWith(
       'ajax',
-      [expect.objectContaining({ startTime: 0, path: '/pathname' })],
+      [expect.objectContaining({ startTime: 0, path: '/pathname' }), expect.any(EventContext)],
       undefined,
       FEATURE_NAMES.softNav,
       expect.any(Object)

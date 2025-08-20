@@ -11,6 +11,7 @@ import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { parseGQL } from './gql'
 import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../../../common/serialize/bel-serializer'
+import { gosNREUMOriginals } from '../../../common/window/nreum'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -44,6 +45,13 @@ export class Aggregate extends AggregateBase {
     registerHandler('xhr', function () { // the EE-drain system not only switches "this" but also passes a new EventContext with info. Should consider platform refactor to another system which passes a mutable context around separately and predictably to avoid problems like this.
       classThis.storeXhr(...arguments, this) // this switches the context back to the class instance while passing the NR context as an argument -- see "ctx" in storeXhr
     }, this.featureName, this.ee)
+
+    this.ee.on('long-task', (task, originator) => {
+      if (originator instanceof gosNREUMOriginals().o.XHR) { // any time a long task from XHR callback is observed, update the end time for soft nav use
+        const xhrMetadata = this.ee.context(originator)
+        xhrMetadata.latestLongtaskEnd = task.end
+      }
+    })
 
     this.waitForFlags(([])).then(() => this.drain())
   }
@@ -113,8 +121,8 @@ export class Aggregate extends AggregateBase {
     if (event.gql) this.reportSupportabilityMetric('Ajax/Events/GraphQL/Bytes-Added', stringify(event.gql).length)
 
     const softNavInUse = Boolean(this.agentRef.features?.[FEATURE_NAMES.softNav])
-    if (softNavInUse) { // For newer soft nav (when running), pass the event to it for evaluation -- either part of an interaction or is given back
-      handle('ajax', [event], undefined, FEATURE_NAMES.softNav, this.ee)
+    if (softNavInUse) { // For newer soft nav (when running), pass the event w/ info to it for evaluation -- either part of an interaction or is given back
+      handle('ajax', [event, ctx], undefined, FEATURE_NAMES.softNav, this.ee)
     } else if (ctx.spaNode) { // For old spa (when running), if the ajax happened inside an interaction, hold it until the interaction finishes
       const interactionId = ctx.spaNode.interaction.id
       this.underSpaEvents[interactionId] ??= []

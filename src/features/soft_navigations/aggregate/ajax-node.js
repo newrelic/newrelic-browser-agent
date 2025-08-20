@@ -7,7 +7,7 @@ import { NODE_TYPE } from '../constants'
 import { BelNode } from './bel-node'
 
 export class AjaxNode extends BelNode {
-  constructor (ajaxEvent) {
+  constructor (ajaxEvent, ajaxContext) {
     super()
     this.belType = NODE_TYPE.AJAX
     this.method = ajaxEvent.method
@@ -22,8 +22,12 @@ export class AjaxNode extends BelNode {
     this.spanTimestamp = ajaxEvent.spanTimestamp
     this.gql = ajaxEvent.gql
 
-    this.start = ajaxEvent.startTime // 5000 --- 5500 --> 10500
+    this.start = ajaxEvent.startTime
     this.end = ajaxEvent.endTime
+    if (ajaxContext?.latestLongtaskEnd) {
+      this.callbackEnd = Math.max(ajaxContext.latestLongtaskEnd, this.end) // typically lt end if non-zero, but added clamping to end just in case
+      this.callbackDuration = this.callbackEnd - this.end // callbackDuration is the time from ajax loaded to last long task observed from it
+    } else this.callbackEnd = this.end // if no long task was observed, callbackEnd is the same as end
   }
 
   serialize (parentStartTimestamp, agentRef) {
@@ -36,8 +40,8 @@ export class AjaxNode extends BelNode {
       0, // this will be overwritten below with number of attached nodes
       numeric(this.start - parentStartTimestamp), // start relative to parent start (if part of first node in payload) or first parent start
       numeric(this.end - this.start), // end is relative to start
-      numeric(this.callbackEnd),
-      numeric(this.callbackDuration),
+      numeric(this.callbackEnd - this.end), // callbackEnd is relative to end
+      numeric(this.callbackDuration), // not relative
       addString(this.method),
       numeric(this.status),
       addString(this.domain),

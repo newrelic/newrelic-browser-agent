@@ -10,6 +10,7 @@ import { globalScope } from '../../../common/constants/runtime'
 import { setupLogAPI } from '../../../loaders/api/log'
 import { setupWrapLoggerAPI } from '../../../loaders/api/wrapLogger'
 import { setupRegisterAPI } from '../../../loaders/api/register'
+import { isNative } from '../../../common/util/monkey-patched'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
@@ -22,12 +23,13 @@ export class Instrument extends InstrumentBase {
     setupRegisterAPI(agentRef)
 
     const instanceEE = this.ee
-    wrapLogger(instanceEE, globalScope.console, 'log', { level: 'info' })
-    wrapLogger(instanceEE, globalScope.console, 'error', { level: 'error' })
-    wrapLogger(instanceEE, globalScope.console, 'warn', { level: 'warn' })
-    wrapLogger(instanceEE, globalScope.console, 'info', { level: 'info' })
-    wrapLogger(instanceEE, globalScope.console, 'debug', { level: 'debug' })
-    wrapLogger(instanceEE, globalScope.console, 'trace', { level: 'trace' })
+    const globals = ['log', 'error', 'warn', 'info', 'debug', 'trace']
+
+    globals.forEach((method) => {
+      isNative(globalScope.console[method])
+      wrapLogger(instanceEE, globalScope.console, method, { level: method === 'log' ? 'info' : method })
+    })
+
     /** emitted by wrap-logger function */
     this.ee.on('wrap-logger-end', function handleLog ([message]) {
       const { level, customAttributes } = this

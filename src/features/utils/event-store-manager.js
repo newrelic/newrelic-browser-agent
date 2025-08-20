@@ -3,8 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { DEFAULT_KEY, MAX_PAYLOAD_SIZE } from '../../common/constants/agent-constants'
-import { dispatchGlobalEvent } from '../../common/dispatch/global-event'
-import { activatedFeatures } from '../../common/util/feature-flags'
 import { isContainerAgentTarget } from '../../common/util/target'
 /**
  * This layer allows multiple browser entity apps, or "target", to each have their own segregated storage instance.
@@ -46,7 +44,24 @@ export class EventStoreManager {
     this.appStorageMap.set(targetEntityGuid, eventStorage)
   }
 
-  // This class must contain an union of all methods from all supported storage classes and conceptualize away the target app argument.
+  /** IMPORTANT
+   * This class must contain an union of all methods from all supported storage classes and conceptualize away the target app argument.
+   */
+
+  get length () {
+    return this.#getEventStore().length
+  }
+
+  /**
+   * Calls the merge method on the underlying storage class.
+   * @param {*} matcher
+   * @param {*} data
+   * @param {*} targetEntityGuid
+   * @returns {boolean} True if the merge was successful
+   */
+  merge (matcher, data, targetEntityGuid) {
+    return this.#getEventStore(targetEntityGuid).merge(matcher, data)
+  }
 
   /**
    * Calls the isEmpty method on the underlying storage class. If target is provided, runs just for the target, otherwise runs for all apps.
@@ -70,14 +85,6 @@ export class EventStoreManager {
    * @returns {boolean} True if the event was successfully added
    */
   add (event, targetEntityGuid) {
-    dispatchGlobalEvent({
-      agentIdentifier: this.agentRef.agentIdentifier,
-      drained: !!activatedFeatures?.[this.agentRef.agentIdentifier],
-      type: 'data',
-      name: 'buffer',
-      feature: this.featureAgg.featureName,
-      data: event
-    })
     return this.#getEventStore(targetEntityGuid).add(event)
   }
 

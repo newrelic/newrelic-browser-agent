@@ -14,7 +14,6 @@ import { setupRegisterAPI } from '../../../loaders/api/register'
 import { setupMeasureAPI } from '../../../loaders/api/measure'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME, OBSERVED_EVENTS, OBSERVED_WINDOW_EVENTS } from '../constants'
-import { wrapEvents } from '../../../common/wrap/wrap-events'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
@@ -36,25 +35,17 @@ export class Instrument extends InstrumentBase {
     setupRegisterAPI(agentRef)
     setupMeasureAPI(agentRef)
 
-    this.eventsEE = wrapEvents(this.ee)
-
-    this.eventsEE.on('fn-start', (args, target) => {
-      if (args[0] && args[0].type === 'click') {
-        handle('ua', [args[0]], undefined, this.featureName, this.ee)
-      }
-    })
-
     if (isBrowserScope) {
       if (agentRef.init.user_actions.enabled) {
-        // OBSERVED_EVENTS.forEach(eventType =>
-        //   windowAddEventListener(eventType, (evt) => handle('ua', [evt], undefined, this.featureName, this.ee), true)
-        // )
-        // OBSERVED_WINDOW_EVENTS.forEach(eventType => {
-        //   const debounceHandler = debounce((evt) => { handle('ua', [evt], undefined, this.featureName, this.ee) }, 500, { leading: true })
-        //   windowAddEventListener(eventType, debounceHandler)
-        // }
+        OBSERVED_EVENTS.forEach(eventType =>
+          windowAddEventListener(eventType, (evt) => handle('ua', [evt], undefined, this.featureName, this.ee), true)
+        )
+        OBSERVED_WINDOW_EVENTS.forEach(eventType => {
+          const debounceHandler = debounce((evt) => { handle('ua', [evt], undefined, this.featureName, this.ee) }, 500, { leading: true })
+          windowAddEventListener(eventType, debounceHandler)
+        }
         // Capture is not used here so that we don't get element focus/blur events, only the window's as they do not bubble. They are also not cancellable, so no worries about being front of line.
-        // )
+        )
       }
       if (agentRef.init.performance.resources.enabled && globalScope.PerformanceObserver?.supportedEntryTypes.includes('resource')) {
         const observer = new PerformanceObserver((list) => {

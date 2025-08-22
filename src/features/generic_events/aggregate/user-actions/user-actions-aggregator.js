@@ -20,7 +20,7 @@ export class UserActionsAggregator {
   constructor () {
     if (MutationObserver) {
       this.#domObserver.instance = new MutationObserver((mutations) => {
-        setTimeout(() => this.#deadClickCleanup(), 100)
+        this.#deadClickCleanup()
       })
     }
   }
@@ -74,8 +74,8 @@ export class UserActionsAggregator {
   }
 
   #deadClickCleanup () {
-    // this.#domObserver.instance?.disconnect()
-    // this.#domObserver.running = false
+    this.#domObserver.instance?.disconnect()
+    this.#domObserver.running = false
     this.#deadClickTimer?.clear()
   }
 
@@ -90,7 +90,6 @@ export class UserActionsAggregator {
       })
       return true
     }
-    return true
   }
 }
 

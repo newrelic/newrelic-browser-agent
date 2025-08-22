@@ -78,7 +78,7 @@ export class Instrument extends InstrumentBase {
 
       // If startReplay() has been used by this point, we must record in full mode regardless of session preload:
       // Note: recorder starts here with w/e the mode is at this time, but this may be changed later (see #apiStartOrRestartReplay else-case)
-      this.recorder ??= new Recorder({ mode: this.#mode, agentIdentifier: this.agentIdentifier, trigger, ee: this.ee, agentRef: this.#agentRef })
+      this.recorder ??= new Recorder({ ...this, mode: this.#mode, trigger, agentRef: this.#agentRef, timeKeeper: this.#agentRef.runtime.timeKeeper }) // if TK exists due to deferred state, pass it
       this.recorder.startRecording()
       this.abortHandler = this.recorder.stopRecording
     } catch (err) {

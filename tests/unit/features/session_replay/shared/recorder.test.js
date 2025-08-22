@@ -13,6 +13,9 @@ describe('recorder', () => {
         },
         runtime: {}
       },
+      timeKeeper: {
+        correctAbsoluteTimestamp: jest.fn(x => x)
+      },
       ee: {
         emit: () => {}
       }

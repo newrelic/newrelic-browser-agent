@@ -22,6 +22,7 @@ describe('should harvest early', () => {
   it('should harvest early when exceeding ideal size', async () => {
     const timeStart = Date.now()
     await browser.url(await browser.testHandle.assetURL('harvest-early-block-internal.html'))
+      .then(() => browser.waitForAgentLoad())
 
     await Promise.all([
       ajaxEventsCapture.waitForResult({ totalCount: 1 }),
@@ -30,7 +31,7 @@ describe('should harvest early', () => {
       loggingEventsCapture.waitForResult({ totalCount: 1 }),
       testBlobTraceCapture.waitForResult({ totalCount: 2 }), // the initial trace ALWAYS harvests immediately, but the second one should be tested for early harvest
       browser.execute(function () {
-        document.querySelector('body').click()
+        document.querySelector('button').click()
       })
     ])
 
@@ -49,7 +50,7 @@ describe('should harvest early', () => {
     /** not harvesting early in retry mode */
     const [smHarvest] = await Promise.all([
       metricsCapture.waitForResult({ totalCount: 1 }),
-      $('body').click()
+      $('button').click()
         .then(() => browser.pause(10000))
         .then(() => browser.refresh())
     ])

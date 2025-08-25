@@ -66,6 +66,7 @@ describe('User Frustrations - Dead Clicks', () => {
     expect(actualInsHarvests[0]).not.toHaveProperty('deadClick')
   })
 
+  /* BA loaded after customer scripts can cause this scenario */
   it('should decorate as dead click if DOM mutation happened prior to start of UA processing', async () => {
     const [insightsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
       { test: testInsRequest }

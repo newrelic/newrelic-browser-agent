@@ -91,7 +91,6 @@ describe('UserActionsAggregator - Dead Clicks', () => {
     const evt = { type: 'click', target: btn }
     aggregator.process(evt)
 
-    // Fast-forward time
     jest.advanceTimersByTime(2000)
 
     const userAction = aggregator.aggregationEvent
@@ -104,7 +103,6 @@ describe('UserActionsAggregator - Dead Clicks', () => {
     const evt = { type: 'click', target: link }
     aggregator.process(evt)
 
-    // Fast-forward time
     jest.advanceTimersByTime(2000)
 
     const userAction = aggregator.aggregationEvent
@@ -117,7 +115,6 @@ describe('UserActionsAggregator - Dead Clicks', () => {
     const evt = { type: 'click', target: span }
     aggregator.process(evt)
 
-    // Fast-forward time
     jest.advanceTimersByTime(2000)
 
     const userAction = aggregator.aggregationEvent
@@ -135,6 +132,7 @@ describe('UserActionsAggregator - Dead Clicks', () => {
     // MutationObserver callback is async, so flush microtasks
     return Promise.resolve().then(() => {
       jest.advanceTimersByTime(2000)
+      expect(aggregator.isEvaluatingDeadClick()).toBe(false)
       const userAction = aggregator.aggregationEvent
       expect(userAction.deadClick).not.toBe(true)
     })
@@ -146,13 +144,11 @@ describe('UserActionsAggregator - Dead Clicks', () => {
     const clickEvt = { type: 'click', target: btn }
     const keydownEvt = { type: 'keydown', target: btn }
 
-    aggregator.process(clickEvt) // Start dead click timer
+    aggregator.process(clickEvt)
     const finishedEvent = aggregator.process(keydownEvt) // Ends aggregation before timer
 
-    // Fast-forward time
     jest.advanceTimersByTime(2000)
 
-    // The finishedEvent should be the click event, and deadClick should not be set
-    expect(finishedEvent.deadClick).not.toBe(true)
+    expect(finishedEvent.deadClick).toBe(false)
   })
 })

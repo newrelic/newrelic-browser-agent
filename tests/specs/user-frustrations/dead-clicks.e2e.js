@@ -65,4 +65,32 @@ describe('User Frustrations - Dead Clicks', () => {
     }))
     expect(actualInsHarvests[0]).not.toHaveProperty('deadClick')
   })
+
+  it('should decorate as dead click if DOM mutation happened prior to start of UA processing', async () => {
+    const [insightsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+      { test: testInsRequest }
+    ])
+    await browser.url(await browser.testHandle.assetURL('user-frustrations/dead-clicks-before-agent-load.html'))
+      .then(() => browser.waitForAgentLoad())
+
+    await browser.execute(function () {
+      document.getElementById('test-button-with-listener').click()
+    })
+
+    await browser.pause(FRUSTRATION_TIMEOUT)
+    await browser.execute(function () {
+      document.getElementById('dummy-span').click()
+    })
+
+    const waitConditions = { timeout: HARVEST_TIMEOUT }
+    const [insightsHarvest] = await insightsCapture.waitForResult(waitConditions)
+    const actualInsHarvests = insightsHarvest?.request.body.ins.filter(x => x.action === 'click')
+    expect(actualInsHarvests.length > 0).toBeTruthy()
+    expect(actualInsHarvests[0]).toMatchObject(expect.objectContaining({
+      eventType: 'UserAction',
+      targetTag: 'BUTTON',
+      targetId: 'test-button-with-listener',
+      deadClick: true
+    }))
+  })
 })

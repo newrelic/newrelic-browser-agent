@@ -13,7 +13,6 @@ export class UserActionsAggregator {
   #aggregationKey = ''
   #deadClickTimer = undefined
   #domObserver = {
-    running: false,
     instance: undefined
   }
 
@@ -97,14 +96,12 @@ export class UserActionsAggregator {
 
   #deadClickCleanup () {
     this.#domObserver.instance?.disconnect()
-    this.#domObserver.running = false
     this.#deadClickTimer?.clear()
     this.#deadClickTimer = undefined
   }
 
   #startObserver () {
-    if (!this.#domObserver.running && this.#domObserver.instance) {
-      this.#domObserver.running = true
+    if (!this.isEvaluatingDeadClick() && this.#domObserver.instance) {
       this.#domObserver.instance.observe(document, {
         attributes: true,
         characterData: true,
@@ -113,6 +110,10 @@ export class UserActionsAggregator {
       })
       return true
     }
+  }
+
+  isEvaluatingDeadClick () {
+    return this.#deadClickTimer !== undefined
   }
 }
 

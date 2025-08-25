@@ -132,6 +132,7 @@ describe('UserActionsAggregator - Dead Clicks', () => {
     // MutationObserver callback is async, so flush microtasks
     return Promise.resolve().then(() => {
       jest.advanceTimersByTime(2000)
+      expect(aggregator.isEvaluatingDeadClick()).toBe(false)
       const userAction = aggregator.aggregationEvent
       expect(userAction.deadClick).toBe(false)
     })

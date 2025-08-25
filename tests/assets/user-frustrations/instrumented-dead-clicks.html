@@ -20,7 +20,7 @@
       let clickCount = 0;
 
       function updateClickCount(elemId) {
-        console.log('No dead click event should be recorded.');
+        console.log('Custom event handler called.');
         clickCount++;
         document.getElementById(elemId).textContent = ''+clickCount;
       }

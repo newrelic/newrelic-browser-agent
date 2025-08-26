@@ -56,6 +56,18 @@ export function setupAgentSession (agentRef) {
     agentRef.runtime.session.syncCustomAttribute(key, value)
   }, 'session', sharedEE)
 
+  registerHandler('api-consent', (accept) => {
+    agentRef.runtime.session.write({ consent: accept === undefined ? true : accept })
+
+    // call sendRum if it wasn't called yet
+    const target = { licenseKey: agentRef.info.licenseKey, applicationID: agentRef.info.applicationID }
+    agentRef.features.page_view_event.onAggregateImported.then((loaded) => {
+      if (loaded) {
+        agentRef.features.page_view_event.featAggregate.sendRum(agentRef.info.jsAttributes, target)
+      }
+    })
+  }, 'session', sharedEE)
+
   drain(agentRef.agentIdentifier, 'session')
 
   return agentRef.runtime.session

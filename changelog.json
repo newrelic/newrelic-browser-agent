@@ -4,6 +4,31 @@
     {
       "changes": [
         {
+          "type": "feat",
+          "sha": "58f3c52db5b57dcb41876792f2a1a14fa907d66d",
+          "message": "Harvest traces early",
+          "issues": [
+            "1532"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "3e3ca330a719dc1312019f5d1970c11dff4c6edf",
+          "message": "Remove event buffer inspection event",
+          "issues": [
+            "1540"
+          ]
+        }
+      ],
+      "version": "1.296.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "4df80f61-aa97-444e-a813-9734ece9a145",
+      "createTime": "2025-08-19T21:32:44.379Z"
+    },
+    {
+      "changes": [
+        {
           "type": "fix",
           "sha": "412d4690f4d8df59c3b6fb14ec8e6910e84db5b4",
           "message": "Add monkey-patching warnings",
@@ -3107,5 +3132,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2025-08-04T18:18:14.079Z"
+  "updateTime": "2025-08-19T21:32:44.379Z"
 }

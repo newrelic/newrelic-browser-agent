@@ -49,7 +49,10 @@ export class InstrumentBase extends FeatureBase {
      * @type {Promise} Assigned immediately after @see importAggregator runs. Serves as a signal for when the inner async fn finishes execution. Useful for features to await
      * one another if there are inter-features dependencies.
     */
-    this.onAggregateImported = undefined
+    this.loadedSuccessfully = undefined
+    this.onAggregateImported = new Promise(resolve => {
+      this.loadedSuccessfully = resolve
+    })
 
     /**
      * used in conjunction with newrelic.start() to defer harvesting in features
@@ -83,11 +86,6 @@ export class InstrumentBase extends FeatureBase {
   importAggregator (agentRef, fetchAggregator, argsObjFromInstrument = {}) {
     if (this.featAggregate) return
 
-    let loadedSuccessfully
-    this.onAggregateImported = new Promise(resolve => {
-      loadedSuccessfully = resolve
-    })
-
     const importLater = async () => {
       // wait for the deferred promise to resolve before proceeding
       // this will resolve immediately if the feature is auto-started,
@@ -113,20 +111,20 @@ export class InstrumentBase extends FeatureBase {
       try {
         if (!this.#shouldImportAgg(this.featureName, session, agentRef.init)) {
           drain(this.agentIdentifier, this.featureName)
-          loadedSuccessfully(false) // aggregate module isn't loaded at all
+          this.loadedSuccessfully(false) // aggregate module isn't loaded at all
           return
         }
         const { Aggregate } = await fetchAggregator()
         this.featAggregate = new Aggregate(agentRef, argsObjFromInstrument)
 
         agentRef.runtime.harvester.initializedAggregates.push(this.featAggregate) // "subscribe" the feature to future harvest intervals (PVE will start the timer)
-        loadedSuccessfully(true)
+        this.loadedSuccessfully(true)
       } catch (e) {
         warn(34, e)
         this.abortHandler?.() // undo any important alterations made to the page
         // not supported yet but nice to do: "abort" this agent's EE for this feature specifically
         drain(this.agentIdentifier, this.featureName, true)
-        loadedSuccessfully(false)
+        this.loadedSuccessfully(false)
         if (this.ee) this.ee.abort()
       }
     }

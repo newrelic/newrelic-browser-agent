@@ -76,3 +76,37 @@ describe('User Frustrations - Error Clicks', () => {
     })
   })
 })
+
+describe('User Frustrations - Error Clicks - special cases', () => {
+  const FRUSTRATION_TIMEOUT = 2000
+  const HARVEST_TIMEOUT = 5000
+
+  /* BA loaded after customer scripts can cause this scenario */
+  it('should not decorate error clicks if error happened prior to start of UA processing', async () => {
+    const [insightsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+      { test: testInsRequest }
+    ])
+    await browser.url(await browser.testHandle.assetURL('user-frustrations/error-clicks-before-agent-load.html'))
+      .then(() => browser.waitForAgentLoad())
+
+    await browser.execute(function () {
+      document.getElementById('test-button-with-listener').click()
+    })
+
+    await browser.pause(FRUSTRATION_TIMEOUT)
+    await browser.execute(function () {
+      document.getElementById('dummy-span').click()
+    })
+
+    const waitConditions = { timeout: HARVEST_TIMEOUT }
+    const [insightsHarvest] = await insightsCapture.waitForResult(waitConditions)
+    const actualInsHarvests = insightsHarvest?.request.body.ins.filter(x => x.action === 'click')
+    expect(actualInsHarvests.length > 0).toBeTruthy()
+    expect(actualInsHarvests[0]).toMatchObject(expect.objectContaining({
+      eventType: 'UserAction',
+      targetTag: 'BUTTON',
+      targetId: 'test-button-with-listener'
+    }))
+    expect(actualInsHarvests[0]).not.toHaveProperty('errorClick')
+  })
+})

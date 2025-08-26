@@ -21,6 +21,13 @@ const LinkExample = () => {
             <a id="dead-link">Link</a>
           </p>
 
+          <p>Link with error ={'> '}
+            <a id="link-with-error" onClick={() => { throw new Error('This link throws an error' )}}>Link w/ error</a>
+          </p>
+          <p>Link with noticeError ={'> '}
+            <a id="link-with-notice-error" onClick={() => { NREUM?.noticeError(new Error('Report caught error to New Relic')) }}>Link w/ noticeError</a>
+          </p>
+
           <p>Link with a click event handler + span child ={'> '}
             <a id="link-with-listener-and-span-child">
               <span id="span-inside-link-with-listener" onClick={() => { updateClickCount(clickCount + 1)}}>Link</span>

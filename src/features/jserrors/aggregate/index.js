@@ -43,8 +43,8 @@ export class Aggregate extends AggregateBase {
 
     register('err', (...args) => this.storeError(...args), this.featureName, this.ee)
     register('ierr', (...args) => this.storeError(...args), this.featureName, this.ee)
-    register('softNavFlush', (interactionId, wasFinished, softNavAttrs) =>
-      this.onSoftNavNotification(interactionId, wasFinished, softNavAttrs), this.featureName, this.ee) // when an ixn is done or cancelled
+    register('softNavFlush', (interactionId, wasFinished, softNavAttrs, interactionEndTime) =>
+      this.onSoftNavNotification(interactionId, wasFinished, softNavAttrs, interactionEndTime), this.featureName, this.ee) // when an ixn is done or cancelled
 
     this.harvestOpts.aggregatorTypes = ['err', 'ierr', 'xhr'] // the types in EventAggregator this feature cares about
 
@@ -292,12 +292,16 @@ export class Aggregate extends AggregateBase {
     delete this.bufferedErrorsUnderSpa[interaction.id]
   }
 
-  onSoftNavNotification (interactionId, wasFinished, softNavAttrs) {
+  onSoftNavNotification (interactionId, wasFinished, softNavAttrs, interactionEndTime) {
     if (this.blocked) return
 
-    this.bufferedErrorsUnderSpa[interactionId]?.forEach(jsErrorEvent =>
-      this.#storeJserrorForHarvest(jsErrorEvent, wasFinished, softNavAttrs) // this should not modify the re-used softNavAttrs contents
-    )
+    this.bufferedErrorsUnderSpa[interactionId]?.forEach(jsErrorEvent => { // this should not modify the re-used softNavAttrs contents
+      if (!wasFinished) return this.#storeJserrorForHarvest(jsErrorEvent, false, softNavAttrs)
+
+      const startTime = jsErrorEvent[3].time // in storeError fn, the newMetrics obj contains the time passed to & used by SN to seek the ixn
+      if (startTime > interactionEndTime) return this.#storeJserrorForHarvest(jsErrorEvent, false, softNavAttrs) // disassociate any error that ultimately falls outside the final ixn span
+      return this.#storeJserrorForHarvest(jsErrorEvent, true, softNavAttrs)
+    })
     delete this.bufferedErrorsUnderSpa[interactionId] // wipe the list of jserrors so they aren't duplicated by another call to the same id
   }
 }

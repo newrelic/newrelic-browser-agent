@@ -115,12 +115,12 @@ export class Interaction extends BelNode {
   /**
    * Given a timestamp, determine if it falls within this interaction's span, i.e. if this was the active interaction during that time.
    * For in-progress interactions, this only compares the time with the start of span. Cancelled interactions are not considered active at all.
+   * Pending-finish interactions are also considered still active wrt assigning ajax or jserrors to them during the wait period.
    * @param {DOMHighResTimeStamp} timestamp
    * @returns True or false boolean.
    */
   isActiveDuring (timestamp) {
-    if (this.status === INTERACTION_STATUS.IP) return this.start <= timestamp
-    if (this.status === INTERACTION_STATUS.PF) return this.start <= timestamp && timestamp < this.domTimestamp // for now, ajax & jserror that occurs during long task & pending-finish ixn await periods will not be tied to the ixn
+    if (this.status === INTERACTION_STATUS.IP || this.status === INTERACTION_STATUS.PF) return this.start <= timestamp
     return (this.status === INTERACTION_STATUS.FIN && this.start <= timestamp && timestamp < this.end)
   }
 

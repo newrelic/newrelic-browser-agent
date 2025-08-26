@@ -225,7 +225,7 @@ describe('getInteractionFor', () => {
     expect(softNavAggregate.getInteractionFor(currentTime)).toBe(softNavAggregate.interactionsToHarvest.get()[0].data[0])
   })
 
-  test('does not consider long task window after hard conditions are met', () => {
+  test('does consider long task window after hard conditions are met, prior to finish', () => {
     const ipl = softNavAggregate.initialPageLoadInteraction
     softNavAggregate.initialPageLoadInteraction.done(100)
 
@@ -239,10 +239,26 @@ describe('getInteractionFor', () => {
     expect(softNavAggregate.interactionInProgress).toBe(ixn)
     expect(softNavAggregate.getInteractionFor(250)).toBe(ixn)
     expect(softNavAggregate.getInteractionFor(50)).toBe(ipl)
-    expect(softNavAggregate.getInteractionFor(350)).toBeUndefined()
+    expect(softNavAggregate.getInteractionFor(350)).toBe(ixn)
 
     softNavAggregate.ee.emit('long-task', [{ end: 500 }])
-    expect(softNavAggregate.getInteractionFor(400)).toBeUndefined()
+    expect(softNavAggregate.getInteractionFor(400)).toBe(ixn)
+    expect(softNavAggregate.getInteractionFor(600)).toBe(ixn)
+  })
+
+  test('does not consider long task window after interaction is finished', () => {
+    softNavAggregate.initialPageLoadInteraction.done(100)
+    softNavAggregate.ee.emit('newUIEvent', [{ type: 'keydown', timeStamp: 100 }])
+    const ixn = softNavAggregate.interactionInProgress
+    softNavAggregate.ee.emit('newURL', [200, 'new_location'])
+    softNavAggregate.ee.emit('newDom', [300])
+
+    expect(softNavAggregate.interactionInProgress).toBe(ixn)
+    expect(softNavAggregate.getInteractionFor(250)).toBe(ixn)
+    softNavAggregate.ee.emit('long-task', [{ end: 500 }])
+    softNavAggregate.interactionInProgress.done(500)
+
+    expect(softNavAggregate.getInteractionFor(400)).toBe(ixn)
     expect(softNavAggregate.getInteractionFor(600)).toBeUndefined()
   })
 })
@@ -293,7 +309,6 @@ describe('popstate interactions', () => {
     expect(softNavAggregate.interactionInProgress.oldURL).toEqual(window.location.href)
     expect(softNavAggregate.interactionInProgress.newURL).toEqual('myurl.com')
   })
-
 
   test('are NOT merged into a preceeding click if click happened some time ago', () => {
     softNavAggregate.ee.emit('newUIEvent', [{ type: 'click', timeStamp: 100, target: { tagName: 'a' } }])

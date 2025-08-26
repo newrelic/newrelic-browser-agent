@@ -163,7 +163,8 @@ export class Recorder {
     // snapshot event
     this.events.hasSnapshot ||= this.hasSeenSnapshot ||= event.type === RRWEB_EVENT_TYPES.FullSnapshot
 
-    this.events.add(event)
+    //* dont let the EventBuffer class double evaluate the event data size, it's a performance burden and we have special reasons to do it outside the event buffer */
+    this.events.add(event, eventBytes)
 
     // We are making an effort to try to keep payloads manageable for unloading.  If they reach the unload limit before their interval,
     // it will send immediately.  This often happens on the first snapshot, which can be significantly larger than the other payloads.

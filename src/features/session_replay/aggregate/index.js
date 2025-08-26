@@ -227,7 +227,7 @@ export class Aggregate extends AggregateBase {
       payload.body = this.gzipper(this.u8(`[${payload.body.map(({ __serialized }) => (__serialized)).join(',')}]`))
       len = payload.body.length
     } else {
-      payload.body = payload.body.map(({ __serialized, ...node }) => ({ ...node }))
+      for (let idx in payload.body) delete payload.body[idx].__serialized
       len = stringify(payload.body).length
     }
 

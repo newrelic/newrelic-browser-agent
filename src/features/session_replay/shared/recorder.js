@@ -150,7 +150,7 @@ export class Recorder {
     /** The estimated size of the payload after compression */
     const payloadSize = this.getPayloadSize(eventBytes)
     // Checkout events are flags by the recording lib that indicate a fullsnapshot was taken every n ms. These are important
-    // to help reconstruct the100 replay later and must be included.  While waiting and buffering for errors to come through,
+    // to help reconstruct the replay later and must be included.  While waiting and buffering for errors to come through,
     // each time we see a new checkout, we can drop the old data.
     // we need to check for meta because rrweb will flag it as checkout twice, once for meta, then once for snapshot
     if (this.parent.mode === MODE.ERROR && isCheckout && event.type === RRWEB_EVENT_TYPES.Meta) {

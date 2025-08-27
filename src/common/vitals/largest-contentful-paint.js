@@ -31,7 +31,8 @@ if (isBrowserScope) {
       if (attribution.url) attrs.elUrl = cleanURL(attribution.url)
       if (lcpEntry.element?.tagName) attrs.elTag = lcpEntry.element.tagName
     }
+    const navigationEntry = attribution.navigationEntry
 
-    largestContentfulPaint.update({ value, attrs })
+    largestContentfulPaint.update({ value, attrs, navigationEntry })
   })
 }

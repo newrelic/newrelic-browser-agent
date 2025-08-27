@@ -24,7 +24,7 @@ describe('User Frustrations - Dead Clicks', () => {
         document.getElementById('dummy-span-1').click()
       })
 
-      const waitConditions = { timeout: 5000 }
+      const waitConditions = { timeout: HARVEST_TIMEOUT }
       const [insightsHarvest] = await insightsCapture.waitForResult(waitConditions)
       const actualInsHarvests = insightsHarvest?.request.body.ins.filter(x => x.action === 'click')
       expect(actualInsHarvests.length > 0).toBeTruthy()
@@ -62,6 +62,62 @@ describe('User Frustrations - Dead Clicks', () => {
       eventType: 'UserAction',
       targetTag: 'BUTTON',
       targetId: 'sample-trigger'
+    }))
+    expect(actualInsHarvests[0]).not.toHaveProperty('deadClick')
+  })
+
+  it('should not decorate dead clicks when non-agent xhr is present', async () => {
+    const [insightsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+      { test: testInsRequest }
+    ])
+    await browser.url(await browser.testHandle.assetURL('user-frustrations/instrumented-dead-clicks.html'))
+      .then(() => browser.waitForAgentLoad())
+
+    await browser.execute(function () {
+      document.getElementById('button-send-xhr').click()
+    })
+
+    await browser.pause(FRUSTRATION_TIMEOUT)
+    await browser.execute(function () {
+      document.getElementById('dummy-span').click()
+    })
+
+    const waitConditions = { timeout: HARVEST_TIMEOUT }
+    const [insightsHarvest] = await insightsCapture.waitForResult(waitConditions)
+    const actualInsHarvests = insightsHarvest?.request.body.ins.filter(x => x.action === 'click')
+    expect(actualInsHarvests.length > 0).toBeTruthy()
+    expect(actualInsHarvests[0]).toMatchObject(expect.objectContaining({
+      eventType: 'UserAction',
+      targetTag: 'BUTTON',
+      targetId: 'button-send-xhr'
+    }))
+    expect(actualInsHarvests[0]).not.toHaveProperty('deadClick')
+  })
+
+  it('should not decorate dead clicks when non-agent fetch is present', async () => {
+    const [insightsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+      { test: testInsRequest }
+    ])
+    await browser.url(await browser.testHandle.assetURL('user-frustrations/instrumented-dead-clicks.html'))
+      .then(() => browser.waitForAgentLoad())
+
+    await browser.execute(function () {
+      document.getElementById('link-fetch').click()
+    })
+
+    await browser.pause(FRUSTRATION_TIMEOUT)
+    await browser.execute(function () {
+      document.getElementById('dummy-span').click()
+    })
+
+    const waitConditions = { timeout: HARVEST_TIMEOUT }
+    const [insightsHarvest] = await insightsCapture.waitForResult(waitConditions)
+    const actualInsHarvests = insightsHarvest?.request.body.ins.filter(x => x.action === 'click')
+    expect(actualInsHarvests.length > 0).toBeTruthy()
+    expect(actualInsHarvests[0]).toMatchObject(expect.objectContaining({
+      eventType: 'UserAction',
+      targetTag: 'A',
+      targetId: 'link-fetch'
     }))
     expect(actualInsHarvests[0]).not.toHaveProperty('deadClick')
   })

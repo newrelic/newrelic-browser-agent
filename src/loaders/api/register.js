@@ -4,7 +4,7 @@
  */
 import { handle } from '../../common/event-emitter/handle'
 import { warn } from '../../common/util/console'
-import { isValidMFETarget } from '../../common/util/target'
+import { isValidMFETarget } from '../../common/util/mfe'
 import { FEATURE_NAMES } from '../features/features'
 import { now } from '../../common/timing/now'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
@@ -35,9 +35,9 @@ export function setupRegisterAPI (agent) {
  * @param {Object} agentRef the reference to the base agent instance
  * @param {Object} handlers the shared handlers to be used by both the base agent's API and the external target's API
  * @param {Object} target the target information to be used by the external target's API to send data to the correct location
- * @param {string} target.licenseKey the license key of the target to report data to
- * @param {string} target.entityID the entity ID of the target to report data to
- * @param {string} target.entityName the entity name of the target to report data to
+ * @param {string} [target.licenseKey] the license key of the target to report data to
+ * @param {string} target.id the entity ID of the target to report data to
+ * @param {string} target.name the entity name of the target to report data to
  * @returns {RegisterAPI} the api object to be returned from the register api method
  */
 export function buildRegisterApi (agentRef, target) {

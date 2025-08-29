@@ -14,14 +14,12 @@ describe('registered-entity', () => {
 
     await browser.execute(function () {
       window.agent1 = new RegisteredEntity({
-        licenseKey: window.NREUM.info.licenseKey,
-        entityID: 1,
-        entityName: 'agent1'
+        id: 1,
+        name: 'agent1'
       })
       window.agent2 = new RegisteredEntity({
-        licenseKey: window.NREUM.info.licenseKey,
-        entityID: 2,
-        entityName: 'agent2'
+        id: 2,
+        name: 'agent2'
       })
 
       // each payload in this test is decorated with data that matches its appId for ease of testing
@@ -51,6 +49,10 @@ describe('registered-entity', () => {
       logsCapture.waitForResult({ totalCount: 1 })
     ])
 
+    const containerAgentEntityGuid = await browser.execute(function () {
+      return Object.values(newrelic.initializedAgents)[0].runtime.appMetadata.agents[0].entityGuid
+    })
+
     // these props will get set to true once a test has matched it
     // if it gets tried again, the test will fail, since these should all
     // only have one distinct matching payload
@@ -70,7 +72,12 @@ describe('registered-entity', () => {
     errorsHarvests.forEach(({ request: { query, body } }) => {
       const data = body.err
       data.forEach(err => {
-        const id = err.custom.entityID || query.a // MFEs use entityID, regular agents use appId
+        const id = err.custom['mfe.id'] || query.a // MFEs use mfe.id, regular agents use appId
+        if (Number(id) !== 42) {
+          expect(err.custom['mfe.name']).toEqual('agent' + id)
+          expect(err.custom.eventSource).toEqual('MicroFrontendBrowserAgent')
+          expect(err.custom['container.id']).toEqual(containerAgentEntityGuid)
+        }
         expect(ranOnce(id, 'err')).toEqual(true)
         expect(Number(id)).toEqual(Number(err.params.message))
       })
@@ -80,7 +87,12 @@ describe('registered-entity', () => {
       const data = body.ins
       data.forEach(ins => {
         if (ins.eventType === 'PageAction') {
-          const id = ins.entityID || query.a // MFEs use entityID, regular agents use appId
+          const id = ins['mfe.id'] || query.a // MFEs use mfe.id, regular agents use appId
+          if (Number(id) !== 42) {
+            expect(ins['mfe.name']).toEqual('agent' + id)
+            expect(ins.eventSource).toEqual('MicroFrontendBrowserAgent')
+            expect(ins['container.id']).toEqual(containerAgentEntityGuid)
+          }
           expect(ranOnce(id, 'pa')).toEqual(true)
           expect(Number(id)).toEqual(Number(ins.val))
         }
@@ -90,7 +102,12 @@ describe('registered-entity', () => {
     logsHarvest.forEach(({ request: { query, body } }) => {
       const data = JSON.parse(body)[0]
       data.logs.forEach(log => {
-        const id = log.attributes.entityID || data.common.attributes.appId // MFEs use entityID, regular agents use appId
+        const id = log.attributes['mfe.id'] || log.attributes.appId // MFEs use mfe.id, regular agents use appId
+        if (Number(id) !== 42) {
+          expect(log.attributes['mfe.name']).toEqual('agent' + id)
+          expect(log.attributes.eventSource).toEqual('MicroFrontendBrowserAgent')
+          expect(log.attributes['container.id']).toEqual(containerAgentEntityGuid)
+        }
         expect(ranOnce(id, 'log')).toEqual(true)
         expect(Number(id)).toEqual(Number(log.message))
       })

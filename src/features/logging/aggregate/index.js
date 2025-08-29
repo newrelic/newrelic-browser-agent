@@ -13,7 +13,7 @@ import { applyFnToProps } from '../../../common/util/traverse'
 import { SESSION_EVENT_TYPES, SESSION_EVENTS } from '../../../common/session/constants'
 import { ABORT_REASONS } from '../../session_replay/constants'
 import { canEnableSessionTracking } from '../../utils/feature-gates'
-import { isValidMFETarget } from '../../../common/util/target'
+import { getMFEPayloadAttributes, isValidMFETarget } from '../../../common/util/mfe'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -67,7 +67,16 @@ export class Aggregate extends AggregateBase {
     if (this.blocked || !this.loggingMode) return
 
     if (!attributes || typeof attributes !== 'object') attributes = {}
-    if (isValidMFETarget(target)) attributes = { ...attributes, licenseKey: target.licenseKey, entityID: target.entityID, entityName: target.entityName }
+
+    if (isValidMFETarget(target)) attributes = { ...attributes, ...getMFEPayloadAttributes(target, this.agentRef) }
+    else {
+      attributes = {
+        ...attributes,
+        'entity.guid': this.agentRef.runtime.appMetadata.agents[0].entityGuid,
+        appId: this.agentRef.info.applicationID
+      }
+    }
+
     if (typeof level === 'string') level = level.toUpperCase()
     if (!isValidLogLevel(level)) return warn(30, level)
     if (this.loggingMode < (LOGGING_MODE[level] || Infinity)) {
@@ -109,14 +118,12 @@ export class Aggregate extends AggregateBase {
       common: {
         /** Attributes in the `common` section are added to `all` logs generated in the payload */
         attributes: {
-          'entity.guid': this.agentRef.runtime.appMetadata.agents[0].entityGuid, // default from RUM response if no target is provided
           ...(sessionEntity && {
             session: sessionEntity.state.value || '0', // The session ID that we generate and keep across page loads
             hasReplay: sessionEntity.state.sessionReplayMode === 1, // True if a session replay recording is running
             hasTrace: sessionEntity.state.sessionTraceMode === 1 // True if a session trace recording is running
           }),
           ptid: this.agentRef.runtime.ptid, // page trace id
-          appId: this.agentRef.info.applicationID, // Application ID from info object,
           standalone: Boolean(this.agentRef.info.sa), // copy paste (true) vs APM (false)
           agentVersion: this.agentRef.runtime.version, // browser agent version
           // The following 3 attributes are evaluated and dropped at ingest processing time and do not get stored on NRDB:

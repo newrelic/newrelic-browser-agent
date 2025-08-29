@@ -19,7 +19,7 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { now } from '../../../common/timing/now'
 import { applyFnToProps } from '../../../common/util/traverse'
 import { evaluateInternalError } from './internal-errors'
-import { isValidMFETarget } from '../../../common/util/target'
+import { getMFEPayloadAttributes } from '../../../common/util/mfe'
 import { buildCauseString } from './cause-string'
 
 /**
@@ -223,7 +223,10 @@ export class Aggregate extends AggregateBase {
 
   #storeJserrorForHarvest (errorInfoArr, softNavOccurredFinished, softNavCustomAttrs = {}) {
     let [type, bucketHash, params, newMetrics, localAttrs, target] = errorInfoArr
-    const allCustomAttrs = {}
+    const allCustomAttrs = {
+      /** MFE specific attributes for registered children. Empty if not a valid MFE target */
+      ...getMFEPayloadAttributes(target, this.agentRef)
+    }
 
     if (softNavOccurredFinished) {
       Object.entries(softNavCustomAttrs).forEach(([k, v]) => setCustom(k, v)) // when an ixn finishes, it'll include stuff in jsAttributes + attrs specific to the ixn
@@ -239,12 +242,6 @@ export class Aggregate extends AggregateBase {
 
     const jsAttributesHash = stringHashCode(stringify(allCustomAttrs))
     const aggregateHash = bucketHash + ':' + jsAttributesHash
-
-    if (isValidMFETarget(target)) {
-      allCustomAttrs.licenseKey = target.licenseKey
-      allCustomAttrs.entityID = target.entityID
-      allCustomAttrs.entityName = target.entityName
-    }
 
     this.events.add([type, aggregateHash, params, newMetrics, allCustomAttrs])
 

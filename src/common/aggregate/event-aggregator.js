@@ -2,7 +2,6 @@
  * Copyright 2020-2025 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { dispatchGlobalEvent } from '../dispatch/global-event'
 import { Aggregator } from './aggregator'
 
 /**
@@ -25,15 +24,6 @@ export class EventAggregator {
   add ([type, name, params, newMetrics, customParams]) {
     // Do we need to track byte size here like EventBuffer?
     this.#aggregator.store(type, name, params, newMetrics, customParams)
-
-    dispatchGlobalEvent({
-      drained: true,
-      type: 'data',
-      name: 'buffer',
-      feature: 'shared_aggregator',
-      data: [type, name, params, newMetrics, customParams]
-    })
-
     return true
   }
 

@@ -14,7 +14,7 @@ import { applyFnToProps } from '../../../common/util/traverse'
 import { UserActionsAggregator } from './user-actions/user-actions-aggregator'
 import { isIFrameWindow } from '../../../common/dom/iframe'
 import { isPureObject } from '../../../common/util/type-check'
-import { isValidMFETarget } from '../../../common/util/target'
+import { getMFEPayloadAttributes } from '../../../common/util/mfe'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -278,14 +278,11 @@ export class Aggregate extends AggregateBase {
       /** Fallbacks for required properties in-case the event did not supply them, should take precedence over agent-level custom attrs */
       ...defaultEventAttributes,
       /** Event-specific attributes take precedence over agent-level custom attributes and fallbacks */
-      ...obj
+      ...obj,
+      /** MFE specific attributes for registered children. Empty if not a valid MFE target */
+      ...getMFEPayloadAttributes(target, this.agentRef)
     }
 
-    if (isValidMFETarget(target)) {
-      eventAttributes.licenseKey = target.licenseKey
-      eventAttributes.entityID = target.entityID
-      eventAttributes.entityName = target.entityName
-    }
     this.events.add(eventAttributes)
   }
 

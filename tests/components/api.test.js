@@ -509,7 +509,7 @@ describe('API tests', () => {
     })
 
     describe('register', () => {
-      let licenseKey, entityID, entityName
+      let id, name
 
       const expectHandle = (type, args, count = 1) => {
         expect(handleModule.handle.mock.calls.filter(call => {
@@ -518,69 +518,69 @@ describe('API tests', () => {
       }
 
       beforeEach(async () => {
-        licenseKey = faker.string.uuid()
-        entityID = faker.string.uuid()
-        entityName = faker.string.uuid()
+        agent.init.api.allow_registered_children = true
+        id = faker.string.uuid()
+        name = faker.string.uuid()
       })
 
-      // test('should return api object', () => {
-      //   const myApi = agent.register({ licenseKey, entityID, entityName })
+      test('should return api object', () => {
+        const myApi = agent.register({ id, name })
 
-      //   /** wait for entity guid to be assigned */
-      //   expect(myApi).toMatchObject({
-      //     noticeError: expect.any(Function),
-      //     log: expect.any(Function),
-      //     addPageAction: expect.any(Function),
-      //     setCustomAttribute: expect.any(Function),
-      //     setUserId: expect.any(Function),
-      //     setApplicationVersion: expect.any(Function),
-      //     metadata: {
-      //       customAttributes: {},
-      //       target: { licenseKey, entityID, entityName }
-      //     }
-      //   })
-      // })
+        /** wait for entity guid to be assigned */
+        expect(myApi).toMatchObject({
+          noticeError: expect.any(Function),
+          log: expect.any(Function),
+          addPageAction: expect.any(Function),
+          setCustomAttribute: expect.any(Function),
+          setUserId: expect.any(Function),
+          setApplicationVersion: expect.any(Function),
+          metadata: {
+            customAttributes: {},
+            target: { licenseKey: expect.any(String), id, name }
+          }
+        })
+      })
 
-      // ;[{ entityID }, { licenseKey }, { entityName }].forEach(opts => {
-      //   test('should warn and not work if invalid target', () => {
-      //     let myApi = agent.register(opts)
-      //     expect(console.debug).toHaveBeenCalledWith('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#48', opts)
-      //     myApi.addPageAction()
-      //     myApi.noticeError()
-      //     myApi.log()
-      //     expect(console.debug).toHaveBeenCalledTimes(5)
-      //   })
-      // })
+      ;[{ id }, { name }].forEach(opts => {
+        test('should warn and not work if invalid target', () => {
+          let myApi = agent.register(opts)
+          expect(console.debug).toHaveBeenCalledWith('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#48', opts)
+          myApi.addPageAction()
+          myApi.noticeError()
+          myApi.log()
+          expect(console.debug).toHaveBeenCalledTimes(5)
+        })
+      })
 
-      // test('should warn and not work if disabled', () => {
-      //   agent.init.api.allow_registered_children = false
-      //   let myApi = agent.register({ licenseKey, entityID, entityName })
-      //   expect(console.debug.mock.calls.map(call => call[0]).some(tag => tag.includes('#54'))).toEqual(true)
-      //   myApi.addPageAction()
-      //   myApi.noticeError()
-      //   myApi.log()
-      //   expect(console.debug).toHaveBeenCalledTimes(5)
-      // })
+      test('should warn and not work if disabled', () => {
+        agent.init.api.allow_registered_children = false
+        let myApi = agent.register({ id, name })
+        expect(console.debug.mock.calls.map(call => call[0]).some(tag => tag.includes('#54'))).toEqual(true)
+        myApi.addPageAction()
+        myApi.noticeError()
+        myApi.log()
+        expect(console.debug).toHaveBeenCalledTimes(5)
+      })
 
-      // test('should update custom attributes', () => {
-      //   const myApi = agent.register({ licenseKey, entityID, entityName })
+      test('should update custom attributes', () => {
+        const myApi = agent.register({ id, name })
 
-      //   myApi.setCustomAttribute('foo', 'bar')
-      //   expect(myApi.metadata.customAttributes).toEqual({ foo: 'bar' })
+        myApi.setCustomAttribute('foo', 'bar')
+        expect(myApi.metadata.customAttributes).toEqual({ foo: 'bar' })
 
-      //   myApi.setCustomAttribute('foo', 'bar2')
-      //   expect(myApi.metadata.customAttributes).toEqual({ foo: 'bar2' })
+        myApi.setCustomAttribute('foo', 'bar2')
+        expect(myApi.metadata.customAttributes).toEqual({ foo: 'bar2' })
 
-      //   myApi.setApplicationVersion('appversion')
-      //   expect(myApi.metadata.customAttributes).toEqual({ foo: 'bar2', 'application.version': 'appversion' })
+        myApi.setApplicationVersion('appversion')
+        expect(myApi.metadata.customAttributes).toEqual({ foo: 'bar2', 'application.version': 'appversion' })
 
-      //   myApi.setUserId('userid')
-      //   expect(myApi.metadata.customAttributes).toEqual({ foo: 'bar2', 'application.version': 'appversion', 'enduser.id': 'userid' })
-      // })
+        myApi.setUserId('userid')
+        expect(myApi.metadata.customAttributes).toEqual({ foo: 'bar2', 'application.version': 'appversion', 'enduser.id': 'userid' })
+      })
 
       test('should duplicate data with config - true', () => {
         agent.init.api.duplicate_registered_data = true
-        const target = { licenseKey, entityID, entityName }
+        const target = { id, name }
         const myApi = agent.register(target)
 
         const customAttrs = { foo: 'bar' }
@@ -597,7 +597,7 @@ describe('API tests', () => {
 
       test('should duplicate data with config - matching entity guid', async () => {
         agent.init.api.duplicate_registered_data = [entityGuid]
-        const target = { licenseKey, entityID, entityName }
+        const target = { id, name }
         const myApi = agent.register(target)
 
         const customAttrs = { foo: 'bar' }
@@ -614,7 +614,7 @@ describe('API tests', () => {
 
       describe('noticeError', () => {
         test('should call base apis', async () => {
-          const target = { licenseKey, entityID, entityName }
+          const target = { id, name }
           const myApi = agent.register(target)
 
           const err = new Error('test')
@@ -630,7 +630,7 @@ describe('API tests', () => {
 
       describe('addPageAction', () => {
         test('should call base apis', async () => {
-          const target = { licenseKey, entityID, entityName }
+          const target = { id, name }
           const myApi = agent.register(target)
 
           const customAttrs = { foo: 'bar' }
@@ -645,7 +645,7 @@ describe('API tests', () => {
 
       describe('log', () => {
         test('should call base apis', async () => {
-          const target = { licenseKey, entityID, entityName }
+          const target = { id, name }
           const myApi = agent.register(target)
 
           const customAttrs = { foo: 'bar' }
@@ -654,7 +654,6 @@ describe('API tests', () => {
 
           expectHandle('storeSupportabilityMetrics', 'API/register/called')
           expectHandle('storeSupportabilityMetrics', 'API/register/log/called')
-          expectHandle('storeSupportabilityMetrics', 'API/logging/info/called')
           expectHandle('log', 'test')
         })
       })

@@ -86,7 +86,11 @@ describe('payloads', () => {
         timeKeeper.convertRelativeTimestamp(1234)
       )),
       'test message',
-      { myAttributes: 1 },
+      {
+        myAttributes: 1,
+        appId: mainAgent.info.applicationID,
+        'entity.guid': mainAgent.runtime.appMetadata.agents[0].entityGuid
+      },
       'error'
     )
     expect(loggingAggregate.events.get()[0]).toEqual(expectedLog)
@@ -99,12 +103,10 @@ describe('payloads', () => {
             'instrumentation.name': 'browser-test',
             'instrumentation.provider': 'browser',
             'instrumentation.version': expect.any(String),
-            'entity.guid': mainAgent.runtime.appMetadata.agents[0].entityGuid,
             session: mainAgent.runtime.session.state.value,
             hasReplay: false,
             hasTrace: false,
             ptid: mainAgent.agentIdentifier,
-            appId: mainAgent.info.applicationID,
             standalone: false,
             agentVersion: expect.any(String)
           }
@@ -122,7 +124,11 @@ describe('payloads', () => {
         mainAgent.runtime.timeKeeper.convertRelativeTimestamp(1234)
       )),
       'test message',
-      { myAttributes: 1 },
+      {
+        myAttributes: 1,
+        appId: mainAgent.info.applicationID,
+        'entity.guid': mainAgent.runtime.appMetadata.agents[0].entityGuid
+      },
       'error'
     ))
   })
@@ -154,7 +160,10 @@ describe('payloads', () => {
         mainAgent.runtime.timeKeeper.convertRelativeTimestamp(1234)
       )),
       'test message',
-      { },
+      {
+        appId: mainAgent.info.applicationID,
+        'entity.guid': mainAgent.runtime.appMetadata.agents[0].entityGuid
+      },
       'error'
     )
 
@@ -179,7 +188,10 @@ describe('payloads', () => {
         mainAgent.runtime.timeKeeper.convertRelativeTimestamp(1234)
       )),
       'test message',
-      { },
+      {
+        appId: mainAgent.info.applicationID,
+        'entity.guid': mainAgent.runtime.appMetadata.agents[0].entityGuid
+      },
       'error'
     )
 
@@ -208,7 +220,10 @@ describe('payloads', () => {
         mainAgent.runtime.timeKeeper.convertRelativeTimestamp(1234)
       )),
       'test message',
-      { },
+      {
+        appId: mainAgent.info.applicationID,
+        'entity.guid': mainAgent.runtime.appMetadata.agents[0].entityGuid
+      },
       'error'
     )
     const expected = initialLocation.toString()

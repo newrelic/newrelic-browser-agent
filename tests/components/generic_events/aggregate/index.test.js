@@ -60,32 +60,29 @@ test('should warn if invalid event is provide', async () => {
 })
 
 test('should harvest early if will exceed 1mb', async () => {
-  mainAgent.runtime.harvester.triggerHarvestFor = jest.fn()
-  expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledTimes(0)
+  const triggerHarvestSpy = jest.spyOn(mainAgent.runtime.harvester, 'triggerHarvestFor').mockImplementation(() => {})
+  expect(triggerHarvestSpy).toHaveBeenCalledTimes(0)
   genericEventsAggregate.ee.emit('rumresp', [{ ins: 1 }])
   await new Promise(process.nextTick)
-  expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledTimes(1)
+  expect(triggerHarvestSpy).toHaveBeenCalledTimes(1)
 
   genericEventsAggregate.addEvent({ name: 'test', eventType: 'x'.repeat(15000) })
 
-  expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledTimes(1)
+  expect(triggerHarvestSpy).toHaveBeenCalledTimes(1)
   genericEventsAggregate.addEvent({ name: 1000, eventType: 'x'.repeat(100000) })
-  expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalledTimes(2)
-
-  mainAgent.runtime.harvester.triggerHarvestFor.mockRestore()
+  expect(triggerHarvestSpy).toHaveBeenCalledTimes(2)
+  triggerHarvestSpy.mockRestore()
 })
 
 test('should not harvest if single event will exceed 1mb', async () => {
   genericEventsAggregate.ee.emit('rumresp', [{ ins: 1 }])
-
   await new Promise(process.nextTick)
+  const triggerHarvestSpy = jest.spyOn(mainAgent.runtime.harvester, 'triggerHarvestFor').mockImplementation(() => {})
 
-  mainAgent.runtime.harvester.triggerHarvestFor = jest.fn()
   genericEventsAggregate.addEvent({ name: 'test', eventType: 'x'.repeat(1000000) })
 
-  expect(mainAgent.runtime.harvester.triggerHarvestFor).not.toHaveBeenCalled()
-
-  mainAgent.runtime.harvester.triggerHarvestFor.mockRestore()
+  expect(triggerHarvestSpy).toHaveBeenCalledTimes(0)
+  triggerHarvestSpy.mockRestore()
 })
 
 describe('sub-features', () => {
@@ -238,7 +235,8 @@ describe('sub-features', () => {
   test('should record marks when enabled', async () => {
     mainAgent.init.performance.capture_marks = true
     mainAgent.info.jsAttributes = { globalFoo: 'globalBar' }
-    const mockPerformanceObserver = jest.fn(cb => ({
+    const origGlobalPO = global.PerformanceObserver
+    global.PerformanceObserver = jest.fn(cb => ({
       observe: () => {
         const callCb = () => {
           // eslint-disable-next-line
@@ -255,12 +253,14 @@ describe('sub-features', () => {
       disconnect: jest.fn()
     }))
 
-    global.PerformanceObserver = mockPerformanceObserver
     global.PerformanceObserver.supportedEntryTypes = ['mark']
 
     const { Aggregate } = await import('../../../../src/features/generic_events/aggregate')
     genericEventsAggregate = new Aggregate(mainAgent)
     expect(genericEventsAggregate.events?.[0]).toBeUndefined()
+
+    // temporarily swap out triggerHarvestFor so the buffer doesn't get emptied before we can check
+    const triggerHarvestSpy = jest.spyOn(mainAgent.runtime.harvester, 'triggerHarvestFor').mockImplementation(() => {})
 
     genericEventsAggregate.ee.emit('rumresp', [{ ins: 1 }])
     await new Promise(process.nextTick)
@@ -273,12 +273,16 @@ describe('sub-features', () => {
       entryType: 'mark',
       entryDetail: JSON.stringify({ foo: 'bar' })
     })
+
+    triggerHarvestSpy.mockRestore()
+    global.PerformanceObserver = origGlobalPO
   })
 
   test('should record measures when enabled', async () => {
     mainAgent.init.performance = { capture_measures: true, capture_detail: true, resources: { enabled: false, asset_types: [], first_party_domains: [], ignore_newrelic: true } }
     mainAgent.info.jsAttributes = { globalFoo: 'globalBar' }
-    const mockPerformanceObserver = jest.fn(cb => ({
+    const origGlobalPO = global.PerformanceObserver
+    global.PerformanceObserver = jest.fn(cb => ({
       observe: () => {
         const callCb = () => {
           // eslint-disable-next-line
@@ -295,12 +299,14 @@ describe('sub-features', () => {
       disconnect: jest.fn()
     }))
 
-    global.PerformanceObserver = mockPerformanceObserver
     global.PerformanceObserver.supportedEntryTypes = ['measure']
 
     const { Aggregate } = await import('../../../../src/features/generic_events/aggregate')
     genericEventsAggregate = new Aggregate(mainAgent)
     expect(genericEventsAggregate.events?.[0]).toBeUndefined()
+
+    // temporarily swap out triggerHarvestFor so the buffer doesn't get emptied before we can check
+    const triggerHarvestSpy = jest.spyOn(mainAgent.runtime.harvester, 'triggerHarvestFor').mockImplementation(() => {})
 
     genericEventsAggregate.ee.emit('rumresp', [{ ins: 1 }])
     await new Promise(process.nextTick)
@@ -313,6 +319,9 @@ describe('sub-features', () => {
       entryType: 'measure',
       'entryDetail.foo': 'bar'
     })
+
+    triggerHarvestSpy.mockRestore()
+    global.PerformanceObserver = origGlobalPO
   })
 })
 

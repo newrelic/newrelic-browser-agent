@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { FEATURE_NAMES } from '../../loaders/features/features'
+
 /**
  * @param {Object} [target] - the target to be validated
  * @returns {boolean}
@@ -24,4 +26,13 @@ export function getMFEPayloadAttributes (target, agent) {
     eventSource: 'MicroFrontendBrowserAgent',
     'container.id': agent.runtime.appMetadata.agents[0].entityGuid
   }
+}
+
+/**
+ * Indicates whether a feature supports harvesting requirements for registered entities.
+ * @param {String} featureName
+ * @returns {Boolean}
+ */
+export function supportsRegisteredEntities (featureName) {
+  return [FEATURE_NAMES.logging, FEATURE_NAMES.genericEvents, FEATURE_NAMES.jserrors].includes(featureName)
 }

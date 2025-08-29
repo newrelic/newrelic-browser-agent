@@ -49,6 +49,11 @@ export function buildRegisterApi (agentRef, target) {
 
   /** @type {Function|undefined} a function that is set and reports when APIs are triggered -- warns the customer of the invalid state  */
   let invalidApiResponse
+  const registeredEntities = agentRef.runtime.registeredEntities
+
+  /** if we have already registered this target, go ahead and re-use it */
+  const preregisteredEntity = registeredEntities.find(({ metadata: { target: { id, name } } }) => id === target.id && name === target.name)
+  if (preregisteredEntity) return preregisteredEntity
 
   if (!agentRef.init.api.allow_registered_children) invalidApiResponse = () => warn(55)
   if (!isValidMFETarget(target)) invalidApiResponse = () => warn(48, target)
@@ -75,6 +80,7 @@ export function buildRegisterApi (agentRef, target) {
   }
 
   if (invalidApiResponse) invalidApiResponse()
+  else registeredEntities.push(api)
 
   /**
      * The reporter method that will be used to report the data to the container agent's API method. If invalid, will log a warning and not execute.

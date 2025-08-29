@@ -17,6 +17,7 @@ import { stringify } from '../util/stringify'
 import { getSubmitMethod, xhr as xhrMethod, xhrFetch as fetchMethod } from '../util/submit-data'
 import { activatedFeatures } from '../util/feature-flags'
 import { dispatchGlobalEvent } from '../dispatch/global-event'
+import { supportsRegisteredEntities } from '../util/mfe'
 
 const RETRY_FAILED = 'Harvester/Retry/Failed/'
 const RETRY_SUCCEEDED = 'Harvester/Retry/Succeeded/'
@@ -66,6 +67,8 @@ export class Harvester {
 
     if (!output.payload) return output
 
+    const endpointVersion = !!aggregateInst.agentRef.runtime.registeredEntities.length && supportsRegisteredEntities(aggregateInst.featureName) ? 2 : 1
+
     send(this.agentRef, {
       endpoint: FEATURE_TO_ENDPOINT[aggregateInst.featureName],
       payload: output.payload,
@@ -73,7 +76,8 @@ export class Harvester {
       submitMethod,
       cbFinished,
       raw: aggregateInst.harvestOpts.raw,
-      featureName: aggregateInst.featureName
+      featureName: aggregateInst.featureName,
+      endpointVersion
     })
     output.ranSend = true
 
@@ -107,7 +111,7 @@ const warnings = {}
   * @param {NetworkSendSpec} param0 Specification for sending data
   * @returns {boolean} True if a network call was made. Note that this does not mean or guarantee that it was successful.
   */
-export function send (agentRef, { endpoint, payload, localOpts = {}, submitMethod, cbFinished, raw, featureName }) {
+export function send (agentRef, { endpoint, payload, localOpts = {}, submitMethod, cbFinished, raw, featureName, endpointVersion = 1 }) {
   if (!agentRef.info.errorBeacon) return false
 
   let { body, qs } = cleanPayload(payload)
@@ -121,7 +125,7 @@ export function send (agentRef, { endpoint, payload, localOpts = {}, submitMetho
   const perceivedBeacon = agentRef.init.proxy.beacon || agentRef.info.errorBeacon
   const url = raw
     ? `${protocol}://${perceivedBeacon}/${endpoint}`
-    : `${protocol}://${perceivedBeacon}${endpoint !== RUM ? '/' + endpoint : ''}/1/${agentRef.info.licenseKey}`
+    : `${protocol}://${perceivedBeacon}${endpoint !== RUM ? '/' + endpoint : ''}/${endpointVersion}/${agentRef.info.licenseKey}`
   const baseParams = !raw ? baseQueryString(agentRef, qs, endpoint) : ''
   let payloadParams = obj(qs, agentRef.runtime.maxBytes)
   if (baseParams === '' && payloadParams.startsWith('&')) {

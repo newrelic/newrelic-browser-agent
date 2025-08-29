@@ -109,26 +109,31 @@ describe('send', () => {
 })
 
 describe('triggerHarvestFor', () => {
+  beforeAll(() => {
+    fakeAgent.runtime = {
+      registeredEntities: []
+    }
+  })
   const harvester = new Harvester(fakeAgent)
   test('fails if aggregate is blocked', () => {
     expect(harvester.triggerHarvestFor({ blocked: true })).toEqual({ payload: undefined, ranSend: false })
   })
   test('does nothing if no payload is returned from makeHarvestPayload if directSend unspecified', () => {
-    const fakeAggregate = { makeHarvestPayload: jest.fn() }
+    const fakeAggregate = { makeHarvestPayload: jest.fn(), agentRef: fakeAgent }
     expect(harvester.triggerHarvestFor(fakeAggregate, { directSend: undefined })).toEqual({ payload: undefined, ranSend: false })
     expect(fakeAggregate.makeHarvestPayload).toHaveBeenCalledTimes(1)
   })
   test('allows directSend to provide the payload without makeHarvestPayload', () => {
-    const fakeAggregate = { makeHarvestPayload: jest.fn(), harvestOpts: {} }
+    const fakeAggregate = { makeHarvestPayload: jest.fn(), harvestOpts: {}, agentRef: fakeAgent }
     expect(harvester.triggerHarvestFor(fakeAggregate, { directSend: { payload: 'fakePayload' } })).toEqual({ payload: 'fakePayload', ranSend: true })
     expect(fakeAggregate.makeHarvestPayload).not.toHaveBeenCalled()
   })
   test('disallow directSend to send if no payload is defined', () => {
-    const fakeAggregate = { makeHarvestPayload: jest.fn(), harvestOpts: {} }
+    const fakeAggregate = { makeHarvestPayload: jest.fn(), harvestOpts: {}, agentRef: fakeAgent }
     expect(harvester.triggerHarvestFor(fakeAggregate, { directSend: { payload: undefined } })).toEqual({ payload: undefined, ranSend: false })
   })
   test('sends if payload is returned from makeHarvestPayload', () => {
-    const fakeAggregate = { makeHarvestPayload: jest.fn().mockReturnValue('fakePayload'), harvestOpts: {} }
+    const fakeAggregate = { makeHarvestPayload: jest.fn().mockReturnValue('fakePayload'), harvestOpts: {}, agentRef: fakeAgent }
     expect(harvester.triggerHarvestFor(fakeAggregate, { })).toEqual({ payload: 'fakePayload', ranSend: true })
   })
 })

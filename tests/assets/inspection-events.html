@@ -10,7 +10,6 @@
     window.inspectionEvents = {
       initialize: false,
       load: false,
-      buffer: false,
       harvest: false,
       api: false,
     }
@@ -36,16 +35,6 @@
         data
       ) {
         window.inspectionEvents.load = true
-      }
-
-      if (
-        name === 'buffer' &&
-        drained === true &&
-        type === 'data' &&
-        feature &&
-        data
-      ) {
-        window.inspectionEvents.buffer = true
       }
 
       if (

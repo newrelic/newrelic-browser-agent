@@ -128,4 +128,26 @@ describe('error payloads', () => {
 
     expect(errorResults).toEqual([])
   })
+
+  it('cause is captured when present', async () => {
+    const [errorResults, errorCauseMessage] = await Promise.all([
+      errorsCapture.waitForResult({ totalCount: 1 }), // should not harvest an error (neither the noticeError call or an error from calling the API with no arg)
+      browser.url(await browser.testHandle.assetURL('js-error-cause.html')) // Setup expects before loading the page
+        .then(() => browser.execute(function () { return window.errorCauseMessage }))
+    ])
+
+    const errorCause = errorResults[0].request.body.err.find(x => x.params.message === 'error with error cause').params.cause
+    expect(errorCause.match(/<inline>:[0-9]+:[0-9]+/).length).toEqual(1)
+    expect(errorCause).toContain(errorCauseMessage)
+    expect(errorCause).toContain('Error: ')
+
+    const stringCause = errorResults[0].request.body.err.find(x => x.params.message === 'error with string cause').params.cause
+    expect(stringCause).toContain(errorCauseMessage)
+
+    const nonStringCause = errorResults[0].request.body.err.find(x => x.params.message === 'error with non-string cause').params.cause
+    expect(nonStringCause).toContain(errorCauseMessage)
+
+    const nonStringifiedCause = errorResults[0].request.body.err.find(x => x.params.message === 'error with cause that can\'t be stringified').params.cause
+    expect(nonStringifiedCause).toContain(errorCauseMessage)
+  })
 })

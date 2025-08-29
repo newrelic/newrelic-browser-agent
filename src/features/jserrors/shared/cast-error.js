@@ -25,7 +25,8 @@ export function castError (error) {
     error?.filename || error?.sourceURL,
     error?.lineno || error?.line,
     error?.colno || error?.col,
-    error?.__newrelic
+    error?.__newrelic,
+    error?.cause
   )
 }
 
@@ -65,7 +66,7 @@ export function castPromiseRejectionEvent (promiseRejectionEvent) {
    */
 export function castErrorEvent (errorEvent) {
   if (errorEvent.error instanceof SyntaxError && !/:\d+$/.test(errorEvent.error.stack?.trim())) {
-    const error = new UncaughtError(errorEvent.message, errorEvent.filename, errorEvent.lineno, errorEvent.colno, errorEvent.error.__newrelic)
+    const error = new UncaughtError(errorEvent.message, errorEvent.filename, errorEvent.lineno, errorEvent.colno, errorEvent.error.__newrelic, errorEvent.cause)
     error.name = SyntaxError.name
     return error
   }

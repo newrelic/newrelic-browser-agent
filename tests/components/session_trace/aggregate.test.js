@@ -1,9 +1,12 @@
 import { Instrument as SessionTrace } from '../../../src/features/session_trace/instrument'
-import { setupAgent } from '../setup-agent'
+import { resetAgent, setupAgent } from '../setup-agent'
 import { MODE } from '../../../src/common/session/constants'
-import { MAX_NODES_PER_HARVEST } from '../../../src/features/session_trace/constants'
+import { ERROR_MODE_SECONDS_WINDOW, MAX_NODES_PER_HARVEST } from '../../../src/features/session_trace/constants'
+import { EventBuffer } from '../../../src/features/utils/event-buffer'
 
 let mainAgent
+
+jest.retryTimes(0)
 
 beforeAll(() => {
   mainAgent = setupAgent()
@@ -22,6 +25,16 @@ beforeEach(async () => {
   })
 })
 
+afterEach(() => {
+  resetAgent(mainAgent.agentIdentifier)
+  jest.clearAllMocks()
+})
+
+test('has event buffer storage', () => {
+  expect(sessionTraceAggregate.traceStorage).toBeDefined()
+  expect(sessionTraceAggregate.events).toBeInstanceOf(EventBuffer)
+})
+
 test('creates right nodes', async () => {
   // create session trace nodes for load events
   document.addEventListener('DOMContentLoaded', () => null)
@@ -31,8 +44,8 @@ test('creates right nodes', async () => {
 
   document.dispatchEvent(new CustomEvent('DOMContentLoaded')) // simulate natural browser event
   window.dispatchEvent(new CustomEvent('load')) // load is actually ignored by Trace as it should be passed by the PVT feature, so it should not be in payload
-  sessionTraceAggregate.events.storeXhrAgg('xhr', '[200,null,null]', { method: 'GET', status: 200 }, { rxSize: 770, duration: 99, cbTime: 0, time: 217 }) // fake ajax data
-  sessionTraceAggregate.events.processPVT('fi', 30) // fake pvt data
+  sessionTraceAggregate.traceStorage.storeXhrAgg('xhr', '[200,null,null]', { method: 'GET', status: 200 }, { rxSize: 770, duration: 99, cbTime: 0, time: 217 }) // fake ajax data
+  sessionTraceAggregate.traceStorage.processPVT('fi', 30) // fake pvt data
 
   const payload = sessionTraceAggregate.makeHarvestPayload()
   let res = payload.body
@@ -66,15 +79,12 @@ test('creates right nodes', async () => {
 })
 
 test('prepareHarvest returns undefined if there are no trace nodes', () => {
-  jest.spyOn(sessionTraceAggregate.events, 'takeSTNs')
-
   let payload = sessionTraceAggregate.makeHarvestPayload()
   expect(payload).toBeUndefined()
-  expect(sessionTraceAggregate.events.takeSTNs).not.toHaveBeenCalled()
 })
 
 test('initialize only ever stores timings once', () => {
-  const storeTimingSpy = jest.spyOn(sessionTraceAggregate.events, 'storeTiming')
+  const storeTimingSpy = jest.spyOn(sessionTraceAggregate.traceStorage, 'storeTiming')
   /** initialize was already called in setup, so we should not see a new call */
   sessionTraceAggregate.initialize()
   expect(storeTimingSpy).toHaveBeenCalledTimes(0)
@@ -86,49 +96,69 @@ test('tracks previously stored events and processes them once per occurrence', d
   document.addEventListener('visibilitychange', () => 3) // additional listeners should not generate additional nodes
 
   document.dispatchEvent(new Event('visibilitychange'))
-  expect(sessionTraceAggregate.events.trace.visibilitychange[0]).toEqual(expect.objectContaining({
-    n: 'visibilitychange',
-    t: 'event',
-    o: 'document'
-  }))
-  expect(sessionTraceAggregate.events.prevStoredEvents.size).toEqual(1)
+
+  expect(sessionTraceAggregate.traceStorage.prevStoredEvents.size).toEqual(1)
 
   setTimeout(() => { // some time gap
     document.dispatchEvent(new Event('visibilitychange'))
-    expect(sessionTraceAggregate.events.trace.visibilitychange.length).toEqual(2)
-    expect(sessionTraceAggregate.events.trace.visibilitychange[0].s).not.toEqual(sessionTraceAggregate.events.trace.visibilitychange[1].s) // should not have same start times
-    expect(sessionTraceAggregate.events.prevStoredEvents.size).toEqual(2)
+
+    const bufferedEvents = sessionTraceAggregate.events.get()
+
+    expect(bufferedEvents[0]).toEqual(expect.objectContaining({
+      n: 'visibilitychange',
+      t: 'event',
+      o: 'document'
+    }))
+
+    expect(bufferedEvents.length).toEqual(2)
+    expect(bufferedEvents[0].s).not.toEqual(bufferedEvents[1].s) // should not have same start times
+    expect(sessionTraceAggregate.traceStorage.prevStoredEvents.size).toEqual(2)
     done()
   }, 100)
 })
 
 test('when max nodes per harvest is reached, no node is further added in FULL mode', () => {
-  sessionTraceAggregate.events.nodeCount = MAX_NODES_PER_HARVEST
+  Object.defineProperty(sessionTraceAggregate.events, 'length', { value: MAX_NODES_PER_HARVEST })
   sessionTraceAggregate.mode = MODE.FULL
 
-  sessionTraceAggregate.events.storeNode({ n: 'someNode', s: 123 })
-  expect(sessionTraceAggregate.events.nodeCount).toEqual(MAX_NODES_PER_HARVEST)
-  expect(Object.keys(sessionTraceAggregate.events.trace).length).toEqual(0)
+  sessionTraceAggregate.traceStorage.storeNode({ n: 'someNode', s: 123 })
+  expect(sessionTraceAggregate.events.length).toEqual(MAX_NODES_PER_HARVEST) // remains at 1000
 })
 
-test('when max nodes per harvest is reached, node is still added in ERROR mode', () => {
-  sessionTraceAggregate.events.nodeCount = MAX_NODES_PER_HARVEST
+test('when max nodes per harvest is reached, node is still added in ERROR mode by clearing', () => {
+  // Mock performance.now so it can be controlled in tests
+  let now = 0
+  jest.spyOn(performance, 'now').mockImplementation(() => now)
   sessionTraceAggregate.mode = MODE.ERROR
-  jest.spyOn(sessionTraceAggregate.events, 'trimSTNs').mockReturnValue(MAX_NODES_PER_HARVEST)
+  for (let i = 0; i < MAX_NODES_PER_HARVEST; i++) {
+    sessionTraceAggregate.traceStorage.storeNode({ n: 'someNode', s: 0 })
+  }
+  now = ERROR_MODE_SECONDS_WINDOW + 1 // simulate time passing
+  sessionTraceAggregate.traceStorage.storeNode({ n: 'someNode', s: ERROR_MODE_SECONDS_WINDOW + 1 })
+  expect(sessionTraceAggregate.events.length).toEqual(1) // should have cleared the trace storage and added the new node
+  performance.now.mockRestore()
+})
 
-  sessionTraceAggregate.events.storeNode({ n: 'someNode', s: 123 })
-  expect(sessionTraceAggregate.events.nodeCount).toEqual(MAX_NODES_PER_HARVEST + 1)
-  expect(Object.keys(sessionTraceAggregate.events.trace).length).toEqual(1)
+test('when max nodes per harvest is reached, node is still added by dropping the oldest node', () => {
+  sessionTraceAggregate.mode = MODE.ERROR
+  for (let i = 0; i < MAX_NODES_PER_HARVEST; i++) {
+    sessionTraceAggregate.traceStorage.storeNode({ n: 'someNode', s: performance.now(), e: performance.now() })
+  }
+
+  const newEvt = { n: 'someNode', s: performance.now(), e: performance.now() }
+  sessionTraceAggregate.traceStorage.storeNode(newEvt)
+  expect(sessionTraceAggregate.events.length).toBeLessThanOrEqual(MAX_NODES_PER_HARVEST)
+  expect(sessionTraceAggregate.events.get().at(-1)).toEqual(newEvt)
 })
 
 test('aborted ST feat does not continue to hog event ref in memory from storeEvent', () => {
   sessionTraceAggregate.blocked = true // simulate aborted condition
-  sessionTraceAggregate.events.clear()
-  expect(sessionTraceAggregate.events.prevStoredEvents.size).toEqual(0)
+  sessionTraceAggregate.traceStorage.clear()
+  expect(sessionTraceAggregate.traceStorage.prevStoredEvents.size).toEqual(0)
 
   const someClick = new Event('click')
-  sessionTraceAggregate.events.storeEvent(someClick, 'document', 0, 100)
-  expect(sessionTraceAggregate.events.prevStoredEvents.size).toEqual(0)
+  sessionTraceAggregate.traceStorage.storeEvent(someClick, 'document', 0, 100)
+  expect(sessionTraceAggregate.traceStorage.prevStoredEvents.size).toEqual(0)
 
   sessionTraceAggregate.blocked = false // reset blocked state
 })

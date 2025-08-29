@@ -107,7 +107,7 @@ const warnings = {}
   * @param {NetworkSendSpec} param0 Specification for sending data
   * @returns {boolean} True if a network call was made. Note that this does not mean or guarantee that it was successful.
   */
-function send (agentRef, { endpoint, payload, localOpts = {}, submitMethod, cbFinished, raw, featureName }) {
+export function send (agentRef, { endpoint, payload, localOpts = {}, submitMethod, cbFinished, raw, featureName }) {
   if (!agentRef.info.errorBeacon) return false
 
   let { body, qs } = cleanPayload(payload)
@@ -212,7 +212,7 @@ function send (agentRef, { endpoint, payload, localOpts = {}, submitMethod, cbFi
 function cleanPayload (payload = {}) {
   const clean = (input) => {
     if ((typeof Uint8Array !== 'undefined' && input instanceof Uint8Array) || Array.isArray(input)) return input
-    if (typeof input === 'string') return input.length > 0 ? input : null
+    if (typeof input === 'string') return input
     return Object.entries(input || {}).reduce((accumulator, [key, value]) => {
       if ((typeof value === 'number') ||
           (typeof value === 'string' && value.length > 0) ||

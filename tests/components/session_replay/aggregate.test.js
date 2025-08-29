@@ -326,6 +326,74 @@ describe('Session Replay Harvest Behaviors', () => {
     expect(sessionReplayAggregate.blocked).toEqual(true)
     expect(sessionReplayAggregate.mode).toEqual(MODE.OFF)
   })
+
+  test('provides correct first and last timestamps, even when out of order', async () => {
+    const now = performance.now()
+    sessionReplayAggregate.timeKeeper = {
+      correctAbsoluteTimestamp: jest.fn().mockImplementation(timestamp => timestamp),
+      correctRelativeTimestamp: jest.fn().mockImplementation(timestamp => timestamp)
+    }
+
+    const newrelic_events = [
+      { __newrelic: true, timestamp: 500 },
+      { __newrelic: true, timestamp: 1500 },
+      { __newrelic: true, timestamp: 1000 }
+    ]
+
+    const stock_events = [
+      { timestamp: 500 },
+      { timestamp: 1500 },
+      { timestamp: 1000 }
+    ]
+
+    const undefined_events = [
+      { },
+      { },
+      { }
+    ]
+
+    const newrelic_recorderEvents = {
+      cycleTimestamp: 2000,
+      events: newrelic_events
+    }
+
+    const stock_recorderEvents = {
+      cycleTimestamp: 2000,
+      events: stock_events
+    }
+
+    const undefined_recorderEvents = {
+      cycleTimestamp: 2000,
+      events: undefined_events
+    }
+
+    const newrelicTimestamps = sessionReplayAggregate.getFirstAndLastNodes(newrelic_events)
+    expect(newrelicTimestamps.firstEvent.timestamp).toEqual(500)
+    expect(newrelicTimestamps.lastEvent.timestamp).toEqual(1500)
+
+    const newrelicHarvestContents = sessionReplayAggregate.getHarvestContents(newrelic_recorderEvents)
+    expect(newrelicHarvestContents.qs.attributes.includes('replay.firstTimestamp=500')).toEqual(true)
+    expect(newrelicHarvestContents.qs.attributes.includes('replay.lastTimestamp=1500')).toEqual(true)
+
+    const stockTimestamps = sessionReplayAggregate.getFirstAndLastNodes(stock_events)
+    expect(stockTimestamps.firstEvent.timestamp).toEqual(500)
+    expect(stockTimestamps.lastEvent.timestamp).toEqual(1500)
+
+    const stockHarvestContents = sessionReplayAggregate.getHarvestContents(stock_recorderEvents)
+    expect(stockHarvestContents.qs.attributes.includes('replay.firstTimestamp=500')).toEqual(true)
+    expect(stockHarvestContents.qs.attributes.includes('replay.lastTimestamp=1500')).toEqual(true)
+
+    const undefinedTimestamps = sessionReplayAggregate.getFirstAndLastNodes(undefined_events)
+    expect(undefinedTimestamps.firstEvent.timestamp).toEqual(undefined)
+    expect(undefinedTimestamps.lastEvent.timestamp).toEqual(undefined)
+
+    const undefinedHarvestContents = sessionReplayAggregate.getHarvestContents(undefined_recorderEvents)
+
+    const attrs = Object.fromEntries(new URLSearchParams(undefinedHarvestContents.qs.attributes))
+    expect(attrs['replay.firstTimestamp']).toEqual('2000') // cycleTimestamp is used as first timestamp
+    expect(Number(attrs['replay.lastTimestamp'])).toEqual(expect.any(Number))
+    expect(Number(attrs['replay.lastTimestamp'])).toBeGreaterThan(now) // last timestamp should be greater than the start time of this test
+  })
 })
 
 function createAnyQueryMatcher () {

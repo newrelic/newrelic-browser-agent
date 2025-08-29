@@ -8,8 +8,18 @@ const assetServerTraceTest = function (request) {
 
 const testCases = [
   {
-    name: 'no headers added when feature is not enabled',
+    name: 'no headers added when configuration is null',
     configuration: null,
+    sameOrigin: true,
+    addRouterToAllowedOrigins: false,
+    newrelicHeader: false,
+    traceContextHeaders: false
+  },
+  {
+    name: 'no headers added when configuration exists but is not enabled',
+    configuration: {
+      enabled: false
+    },
     sameOrigin: true,
     addRouterToAllowedOrigins: false,
     newrelicHeader: false,

@@ -1,4 +1,4 @@
-import { notSafari, supportsFirstPaint } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { notIOS, notSafari, supportsFirstPaint } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { testInteractionEventsRequest, testErrorsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 describe('attribution tests', () => {
@@ -30,8 +30,8 @@ describe('attribution tests', () => {
       const ipl = interactionHarvests[0].request.body[0]
 
       expect(ipl.trigger).toEqual('initialPageLoad')
-      expect(ipl.children.length).toEqual(0)
       expect(ipl.isRouteChange).not.toBeTruthy()
+      if (browserMatch(notIOS)) expect(ipl.oldURL).toEqual('') // ios on lambdatest appears to return the wrong value for referrer when using browser.execute, which breaks this test condition. Confirmed referrer behavior works in real env
 
       ;[interactionHarvests] = await Promise.all([
         interactionsCapture.waitForResult({ totalCount: 2 }),
@@ -59,6 +59,7 @@ describe('attribution tests', () => {
       expect(ipl.trigger).toEqual('initialPageLoad')
       expect(ipl.children.length).toEqual(0)
       expect(ipl.isRouteChange).not.toBeTruthy()
+      if (browserMatch(notIOS)) expect(ipl.oldURL).toEqual('') // ios on lambdatest appears to return the wrong value for referrer when using browser.execute, which breaks this test condition. Confirmed referrer behavior works in real env
 
       ;[interactionHarvests] = await Promise.all([
         interactionsCapture.waitForResult({ totalCount: 2 }),
@@ -86,6 +87,7 @@ describe('attribution tests', () => {
       expect(ipl.trigger).toEqual('initialPageLoad')
       expect(ipl.children.length).toEqual(0)
       expect(ipl.isRouteChange).not.toBeTruthy()
+      if (browserMatch(notIOS)) expect(ipl.oldURL).toEqual('') // ios on lambdatest appears to return the wrong value for referrer when using browser.execute, which breaks this test condition. Confirmed referrer behavior works in real env
 
       ;[interactionHarvests] = await Promise.all([
         interactionsCapture.waitForResult({ totalCount: 2 }),
@@ -113,6 +115,7 @@ describe('attribution tests', () => {
       expect(ipl.trigger).toEqual('initialPageLoad')
       expect(ipl.children.length).toEqual(0)
       expect(ipl.isRouteChange).not.toBeTruthy()
+      if (browserMatch(notIOS)) expect(ipl.oldURL).toEqual('') // ios on lambdatest appears to return the wrong value for referrer when using browser.execute, which breaks this test condition. Confirmed referrer behavior works in real env
 
       ;[interactionHarvests] = await Promise.all([
         interactionsCapture.waitForResult({ totalCount: 2 }),
@@ -140,6 +143,7 @@ describe('attribution tests', () => {
 
       expect(ipl.trigger).toEqual('initialPageLoad')
       expect(ipl.navTiming).toEqual(expect.any(Object))
+      if (browserMatch(notIOS)) expect(ipl.oldURL).toEqual('') // ios on lambdatest appears to return the wrong value for referrer when using browser.execute, which breaks this test condition. Confirmed referrer behavior works in real env
       if (browserMatch(supportsFirstPaint)) expect(ipl.firstPaint).toBeGreaterThan(0)
       else expect(ipl.firstPaint).toBeNull()
       expect(ipl.firstContentfulPaint).toBeGreaterThan(0)
@@ -148,6 +152,7 @@ describe('attribution tests', () => {
       expect(rc.navTiming).toBeNull()
       expect(rc.firstPaint).toBeNull()
       expect(rc.firstContentfulPaint).toBeNull()
+      expect(rc.oldURL).toEqual(ipl.newURL)
     })
   })
 

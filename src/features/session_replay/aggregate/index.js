@@ -278,6 +278,21 @@ export class Aggregate extends AggregateBase {
     return this.timeKeeper.correctAbsoluteTimestamp(node.timestamp)
   }
 
+  /**
+   * returns the timestamps for the earliest and latest nodes in the provided array, even if out of order
+   * @param {Object[]} [nodes] - the nodes to evaluate
+   * @returns {{ firstEvent: Object|undefined, lastEvent: Object|undefined }} - the earliest and latest nodes. Defaults to undefined if no nodes are provided or if no timestamps are found in the nodes.
+   */
+  getFirstAndLastNodes (nodes = []) {
+    const output = { firstEvent: nodes[0], lastEvent: nodes[nodes.length - 1] }
+    nodes.forEach(node => {
+      const timestamp = node?.timestamp
+      if (!output.firstEvent?.timestamp || (timestamp || Infinity) < output.firstEvent.timestamp) output.firstEvent = node
+      if (!output.lastEvent?.timestamp || (timestamp || -Infinity) > output.lastEvent.timestamp) output.lastEvent = node
+    })
+    return output
+  }
+
   getHarvestContents (recorderEvents) {
     recorderEvents ??= this.recorder.getEvents()
     let events = recorderEvents.events
@@ -304,11 +319,10 @@ export class Aggregate extends AggregateBase {
 
     const relativeNow = now()
 
-    const firstEventTimestamp = this.getCorrectedTimestamp(events[0]) // from rrweb node
-    const lastEventTimestamp = this.getCorrectedTimestamp(events[events.length - 1]) // from rrweb node
+    const { firstEvent, lastEvent } = this.getFirstAndLastNodes(events)
     // from rrweb node || from when the harvest cycle started
-    const firstTimestamp = firstEventTimestamp || Math.floor(this.timeKeeper.correctAbsoluteTimestamp(recorderEvents.cycleTimestamp))
-    const lastTimestamp = lastEventTimestamp || Math.floor(this.timeKeeper.correctRelativeTimestamp(relativeNow))
+    const firstTimestamp = this.getCorrectedTimestamp(firstEvent) || Math.floor(this.timeKeeper.correctAbsoluteTimestamp(recorderEvents.cycleTimestamp))
+    const lastTimestamp = this.getCorrectedTimestamp(lastEvent) || Math.floor(this.timeKeeper.correctRelativeTimestamp(relativeNow))
 
     const agentMetadata = agentRuntime.appMetadata?.agents?.[0] || {}
 

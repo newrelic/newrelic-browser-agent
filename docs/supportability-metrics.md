@@ -159,6 +159,8 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 * Generic/WebDriver/Detected
 <!--- A CSP violation was detected --->
 * Generic/CSPViolation/Detected
+<!-- Invalid timestamp seen in processing RUM response -->
+* Generic/TimeKeeper/InvalidTimestamp/Seen
 
 ### Frameworks
 <!--- React was Detected --->
@@ -375,3 +377,17 @@ EventBuffer/page_view_timing/Dropped/Bytes
 EventBuffer/spa/Dropped/Bytes
 <!-- The number of bytes dropped for soft_nav feature because an event buffer reached its cap -->
 EventBuffer/soft_navigations/Dropped/Bytes
+
+### Harvest
+<!--- Ajax harvest was sent before the interval elapsed (bytes captured) --->
+* ajax/Harvest/Early/Seen
+<!--- Generic events harvest was sent before the interval elapsed (bytes captured) --->
+* generic_events/Harvest/Early/Seen
+<!--- Logging harvest was sent before the interval elapsed (bytes captured) --->
+* logging/Harvest/Early/Seen
+<!--- Page view timing harvest was sent before the interval elapsed (bytes captured) --->
+* page_view_timing/Harvest/Early/Seen
+<!--- Soft nav harvest was sent before the interval elapsed (bytes captured) --->
+* soft_navigations/Harvest/Early/Seen
+<!--- Logging harvest was sent before the interval elapsed (bytes captured) --->
+* spa/Harvest/Early/Seen

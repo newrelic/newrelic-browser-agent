@@ -6,8 +6,7 @@ describe('inspection events', () => {
       .then(() => browser.waitForAgentLoad())
       .then(() => browser.waitUntil(
         () => browser.execute(function () {
-          return window?.inspectionEvents?.buffer &&
-            window.inspectionEvents.harvest &&
+          return window.inspectionEvents.harvest &&
             window.inspectionEvents.api &&
             window.inspectionEvents.navigate
         }),
@@ -24,7 +23,6 @@ describe('inspection events', () => {
 
     expect(inspectionEvents.initialize).toBe(true)
     expect(inspectionEvents.load).toBe(true)
-    expect(inspectionEvents.buffer).toBe(true)
     expect(inspectionEvents.harvest).toBe(true)
     expect(inspectionEvents.api).toBe(true)
     expect(inspectionEvents.drain).toBe(true)

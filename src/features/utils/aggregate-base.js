@@ -15,7 +15,7 @@ import { EventBuffer } from './event-buffer'
 import { handle } from '../../common/event-emitter/handle'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../metrics/constants'
 import { EventAggregator } from '../../common/aggregate/event-aggregator'
-import { MAX_PAYLOAD_SIZE } from '../../common/constants/agent-constants'
+import { MAX_PAYLOAD_SIZE, IDEAL_PAYLOAD_SIZE } from '../../common/constants/agent-constants'
 
 export class AggregateBase extends FeatureBase {
   /**
@@ -28,6 +28,11 @@ export class AggregateBase extends FeatureBase {
     this.agentRef = agentRef
     this.checkConfiguration(agentRef)
     this.doOnceForAllAggregate(agentRef)
+
+    /** @type {Boolean} indicates if custom attributes are combined in each event payload for size estimation purposes. this is set to true in derived classes that need to evaluate custom attributes separately from the event payload */
+    this.customAttributesAreSeparate = false
+    /** @type {Boolean} indicates if the feature can harvest early. This is set to false in derived classes that need to block early harvests, like ajax under certain conditions */
+    this.canHarvestEarly = true // this is set to false in derived classes that need to block early harvests, like ajax under certain conditions
 
     this.harvestOpts = {} // features aggregate classes can define custom opts for when their harvest is called
 
@@ -44,8 +49,7 @@ export class AggregateBase extends FeatureBase {
   #setupEventStore () {
     if (this.events) return
     switch (this.featureName) {
-    // SessionTrace + Replay have their own storage mechanisms.
-      case FEATURE_NAMES.sessionTrace:
+    // SessionReplay has its own storage mechanisms.
       case FEATURE_NAMES.sessionReplay:
         break
         // Jserror and Metric features uses a singleton EventAggregator instead of a regular EventBuffer.
@@ -69,6 +73,20 @@ export class AggregateBase extends FeatureBase {
       if (!this.drained) setTimeout(() => this.agentRef.runtime.harvester.triggerHarvestFor(this), 1)
       this.drained = true
     })
+  }
+
+  /**
+   * Evaluates whether a harvest should be made early by estimating the size of the current payload.  Currently, this only happens if the event storage is EventBuffer, since that triggers this method directly.
+   * If conditions are met, a new harvest will be triggered immediately.
+   * @returns void
+   */
+  decideEarlyHarvest () {
+    if (!this.canHarvestEarly) return
+    const estimatedSize = this.events.byteSize() + (this.customAttributesAreSeparate ? this.agentRef.runtime.jsAttributesMetadata.bytes : 0)
+    if (estimatedSize > IDEAL_PAYLOAD_SIZE) {
+      this.agentRef.runtime.harvester.triggerHarvestFor(this)
+      this.reportSupportabilityMetric(`${this.featureName}/Harvest/Early/Seen`, estimatedSize)
+    }
   }
 
   /**

@@ -32,6 +32,8 @@ export class Aggregate extends AggregateBase {
     this.curSessEndRecorded = false
     this.firstIxnRecorded = false
 
+    super.customAttributesAreSeparate = true
+
     registerHandler('docHidden', msTimestamp => this.endCurrentSession(msTimestamp), this.featureName, this.ee)
     // Add the time of _window pagehide event_ firing to the next PVT harvest == NRDB windowUnload attr:
     registerHandler('winPagehide', msTimestamp => this.addTiming('unload', msTimestamp, null), this.featureName, this.ee)
@@ -135,6 +137,7 @@ export class Aggregate extends AggregateBase {
 
   // serialize array of timing data
   serializer (eventBuffer) {
+    if (!eventBuffer?.length) return ''
     var addString = getAddStringContext(this.agentRef.runtime.obfuscator)
 
     var payload = 'bel.6;'

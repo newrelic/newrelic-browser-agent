@@ -1,0 +1,43 @@
+# This composite action is used to load test DEM Consumers and NR1 UIs
+
+name: 'Consumer Load Test'
+
+inputs:
+  license-key:
+    description: 'License key for the test'
+    required: true
+  app-id:
+    description: 'App ID for the test'
+    required: true
+  entity-guid:
+    description: 'Entity GUID for the test'
+    required: true
+  page-view:
+    description: 'Capture PageView events'
+    required: false
+    type: boolean
+  session-replay:
+    description: 'Capture SessionReplay events'
+    required: false
+    type: boolean
+  minutes:
+    description: 'Minutes to Run'
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install dependencies
+      run: npm install --silent --no-progress --prefix $GITHUB_ACTION_PATH/..
+      shell: bash
+    - name: Run action script
+      id: action-script
+      run: |
+        node $GITHUB_ACTION_PATH/index.cjs \
+          --license-key ${{ inputs.license-key }} \
+          --app-id ${{ inputs.app-id }} \
+          --entity-guid ${{ inputs.entity-guid }} \
+          --page-view ${{ inputs.page-view }} \
+          --session-replay ${{ inputs.session-replay }}
+          --minutes ${{ inputs.minutes }}
+      shell: bash

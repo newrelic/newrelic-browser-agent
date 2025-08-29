@@ -3,6 +3,76 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.296.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.295.0...v1.296.0) (2025-08-19)
+
+
+### Features
+
+* Harvest traces early ([#1532](https://github.com/newrelic/newrelic-browser-agent/issues/1532)) ([58f3c52](https://github.com/newrelic/newrelic-browser-agent/commit/58f3c52db5b57dcb41876792f2a1a14fa907d66d))
+
+
+### Bug Fixes
+
+* Remove event buffer inspection event ([#1540](https://github.com/newrelic/newrelic-browser-agent/issues/1540)) ([3e3ca33](https://github.com/newrelic/newrelic-browser-agent/commit/3e3ca330a719dc1312019f5d1970c11dff4c6edf))
+
+## [1.295.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.294.0...v1.295.0) (2025-08-04)
+
+
+### Features
+
+* Add error cause detection ([#1531](https://github.com/newrelic/newrelic-browser-agent/issues/1531)) ([3e6bda7](https://github.com/newrelic/newrelic-browser-agent/commit/3e6bda74bfd19d4379a41d357c800eebc5d28ed5))
+
+
+### Bug Fixes
+
+* Add monkey-patching warnings ([#1527](https://github.com/newrelic/newrelic-browser-agent/issues/1527)) ([412d469](https://github.com/newrelic/newrelic-browser-agent/commit/412d4690f4d8df59c3b6fb14ec8e6910e84db5b4))
+* Calculate first and last timestamps from raw data ([#1535](https://github.com/newrelic/newrelic-browser-agent/issues/1535)) ([1ead794](https://github.com/newrelic/newrelic-browser-agent/commit/1ead794106af6160fd26c1c2036d59a3b2718bf0))
+
+## [1.294.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.293.0...v1.294.0) (2025-07-23)
+
+
+### Features
+
+* Harvest early ([#1513](https://github.com/newrelic/newrelic-browser-agent/issues/1513)) ([d347eaa](https://github.com/newrelic/newrelic-browser-agent/commit/d347eaa76e26a9a4fc8e5c191de6a3c737712c68))
+
+
+### Bug Fixes
+
+* report empty previousUrl as undefined ([#1526](https://github.com/newrelic/newrelic-browser-agent/issues/1526)) ([e3ca824](https://github.com/newrelic/newrelic-browser-agent/commit/e3ca824847e8f91a5da8cca8bf7717001c16929b))
+
+## [1.293.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.292.1...v1.293.0) (2025-07-01)
+
+
+### Features
+
+* Add "long tasks" internal message ([#1506](https://github.com/newrelic/newrelic-browser-agent/issues/1506)) ([c1d0a56](https://github.com/newrelic/newrelic-browser-agent/commit/c1d0a564e645dcc02b747cd0b9035084b665747f))
+* Emit SM on rum response invalid timestamps ([#1518](https://github.com/newrelic/newrelic-browser-agent/issues/1518)) ([8413c59](https://github.com/newrelic/newrelic-browser-agent/commit/8413c59fedc2d1505056787dd0ac9149ca46991d))
+
+
+### Bug Fixes
+
+* Address issue keeping distributed traces from being disabled ([#1520](https://github.com/newrelic/newrelic-browser-agent/issues/1520)) ([f473350](https://github.com/newrelic/newrelic-browser-agent/commit/f4733508dc9911dff890f0f535f5eef0c2641fd1))
+
+## [1.292.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.292.0...v1.292.1) (2025-06-26)
+
+
+### Bug Fixes
+
+* fix custom attribute race condition precedence ([#1507](https://github.com/newrelic/newrelic-browser-agent/issues/1507)) ([969f634](https://github.com/newrelic/newrelic-browser-agent/commit/969f634f4d22f112f3aba2fc2e74d6959dafbae5))
+
+## [1.292.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.291.1...v1.292.0) (2025-06-16)
+
+
+### Features
+
+* Add more inspection events ([#1494](https://github.com/newrelic/newrelic-browser-agent/issues/1494)) ([def89c4](https://github.com/newrelic/newrelic-browser-agent/commit/def89c4ab5850a3d8f8dc03b424a473bd5eb4bb5))
+* Update BrowserInteraction previousUrl definition ([#1499](https://github.com/newrelic/newrelic-browser-agent/issues/1499)) ([93f0fd0](https://github.com/newrelic/newrelic-browser-agent/commit/93f0fd0076e1e1fcc2b353d766a7a95c0f524e76))
+
+
+### Bug Fixes
+
+* Fix .finished API timeSinceLoad value ([#1503](https://github.com/newrelic/newrelic-browser-agent/issues/1503)) ([363a898](https://github.com/newrelic/newrelic-browser-agent/commit/363a898fce43c9c53a881f1d3b4a16ca7ced70f8))
+
 ## [1.291.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.291.0...v1.291.1) (2025-06-06)
 
 

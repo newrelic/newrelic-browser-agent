@@ -160,7 +160,8 @@ test('handles events storage correctly across multiple features', async () => {
     new AggregateBase(mainAgent, FEATURE_NAMES.pageViewTiming),
     new AggregateBase(mainAgent, FEATURE_NAMES.ajax),
     new AggregateBase(mainAgent, FEATURE_NAMES.genericEvents),
-    new AggregateBase(mainAgent, FEATURE_NAMES.logging)
+    new AggregateBase(mainAgent, FEATURE_NAMES.logging),
+    new AggregateBase(mainAgent, FEATURE_NAMES.sessionTrace)
   ]
   eventBufferAggs.forEach(agg => {
     expect(agg.events instanceof EventBuffer).toEqual(true)
@@ -178,7 +179,7 @@ test('handles events storage correctly across multiple features', async () => {
   })
 
   /** neither users */
-  const neitherAggs = [new AggregateBase(mainAgent, FEATURE_NAMES.sessionReplay), new AggregateBase(mainAgent, FEATURE_NAMES.sessionTrace)]
+  const neitherAggs = [new AggregateBase(mainAgent, FEATURE_NAMES.sessionReplay)]
 
   neitherAggs.forEach((agg, i) => {
     expect(agg.events === mainAgent.sharedAggregator).toEqual(false) // should not be the same instance as the shared aggregator

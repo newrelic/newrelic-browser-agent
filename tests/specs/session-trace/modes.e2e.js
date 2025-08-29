@@ -130,7 +130,7 @@ describe('respects feature flags', () => {
 
     const nodeCount = await browser.execute(function () {
       try {
-        return Object.values(newrelic.initializedAgents)[0].features.session_trace.featAggregate.events.nodeCount
+        return Object.values(newrelic.initializedAgents)[0].features.session_trace.featAggregate.events.length
       } catch (err) {
         return 0
       }
@@ -166,7 +166,7 @@ describe('respects feature flags', () => {
 
     const nodeCount = await browser.execute(function () {
       try {
-        return Object.values(newrelic.initializedAgents)[0].features.session_trace.featAggregate.events.nodeCount
+        return Object.values(newrelic.initializedAgents)[0].features.session_trace.featAggregate.events.length
       } catch (err) {
         return 0
       }

@@ -6,34 +6,20 @@ name: Prerelease NPM Version
 on:
   workflow_dispatch:
     inputs:
-      version-type:
-        description: "The type of version bump to make. One of: major, minor, patch, premajor, preminor, prepatch, or prerelease."
-        type: choice
-        required: true
-        default: preminor
-        options:
-          - major
-          - minor
-          - patch
-          - premajor
-          - preminor
-          - prepatch
-          - prerelease
-          - from-git
       preid:
         description: "The prerelease identifier to use when bumping a prerelease version."
         type: string
         required: true
         default: rc
-      tag:
-        description: "The NPM package distribution tag to use when publishing the prerelease."
+      version-override:
+        description: "If not supplied, the version in package.json will be used. Whichever version is greater between local and NPM will take precedence -- we can only create prerelease versions *ahead* of the current version in NPM."
         type: string
-        required: true
-        default: rc
+        required: false
       dry_run:
         description: "Indicates whether to dry run the npm publish command."
         type: boolean
-        required: true
+        required: false
+        default: "false"
 
 jobs:
   prerelease-npm-version:
@@ -61,7 +47,6 @@ jobs:
       - uses: ./.github/actions/prerelease-npm-version
         id: prerelease-npm-version
         with:
-          version-type: ${{ github.event.inputs.version-type }}
+          version-override: ${{ github.event.inputs.version-override }}
           preid: ${{ github.event.inputs.preid }}
-          tag: ${{ github.event.inputs.tag }}
           dry_run: ${{ github.event.inputs.dry_run }}

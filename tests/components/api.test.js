@@ -22,6 +22,7 @@ import { setupSetApplicationVersionAPI } from '../../src/loaders/api/setApplicat
 import { setupStartAPI } from '../../src/loaders/api/start'
 import { setTopLevelCallers } from '../../src/loaders/api/topLevelCallers'
 import { gosCDN } from '../../src/common/window/nreum'
+import { now } from '../../src/common/timing/now'
 
 jest.retryTimes(0)
 
@@ -131,12 +132,55 @@ describe('API tests', () => {
 
     describe('finished', () => {
       test('should execute as expected', async () => {
+        const n = now()
         agent.finished()
         expectHandled('storeSupportabilityMetrics', ['API/finished/called'])
-        expectHandled('storeEventMetrics', ['finished', { time: expect.toBeNumber() }])
+
+        expectHandled('storeEventMetrics', ['finished', { time: expect.any(Number) }])
+        const storeEventMetricsCall = handleModule.handle.mock.calls.find(callArr => callArr[0] === 'storeEventMetrics')
+        expect(Math.abs(storeEventMetricsCall[1][1].time - n)).toBeLessThanOrEqual(1) // should be unix timestamp
+
         expectHandled('storeSupportabilityMetrics', ['API/addToTrace/called'])
+
         expectHandled('bstApi', [{ e: expect.toBeNumber(), n: 'finished', o: 'nr', s: expect.toBeNumber(), t: 'api' }])
-        expectHandled('api-addPageAction', [expect.toBeNumber(), 'finished'])
+        const bstApiCall = handleModule.handle.mock.calls.find(callArr => callArr[0] === 'bstApi')
+        expect(Math.abs(bstApiCall[1][0].s - (n))).toBeLessThanOrEqual(1) // should be unix timestamp
+        expect(Math.abs(bstApiCall[1][0].e - (n))).toBeLessThanOrEqual(1) // should be unix timestamp
+
+        expectHandled('api-addPageAction', [expect.any(Number), 'finished']) // unix timestamp
+        const addPageActionCall = handleModule.handle.mock.calls.find(callArr => callArr[0] === 'api-addPageAction')
+        expect(addPageActionCall[1][0]).toBeLessThan(10000) // should be relative timestamp
+        expect(Math.abs(addPageActionCall[1][0] - n)).toBeLessThanOrEqual(1) // should be relative timestamp, account for rounding errors
+      })
+
+      test('should allow argument as expected', async () => {
+        const time = Date.now() + 1000
+        const n = now()
+        agent.finished(time)
+        expectHandled('storeSupportabilityMetrics', ['API/finished/called'])
+
+        expectHandled('storeEventMetrics', ['finished', { time: expect.any(Number) }])
+        const storeEventMetricsCall = handleModule.handle.mock.calls.find(callArr => callArr[0] === 'storeEventMetrics')
+        expect(Math.abs(storeEventMetricsCall[1][1].time - (n + 1000))).toBeLessThanOrEqual(1) // should be unix timestamp
+
+        expectHandled('storeSupportabilityMetrics', ['API/addToTrace/called'])
+
+        expectHandled('bstApi', [{ e: expect.toBeNumber(), n: 'finished', o: 'nr', s: expect.toBeNumber(), t: 'api' }])
+        const bstApiCall = handleModule.handle.mock.calls.find(callArr => callArr[0] === 'bstApi')
+        expect(Math.abs(bstApiCall[1][0].s - (n + 1000))).toBeLessThanOrEqual(1) // should be unix timestamp
+        expect(Math.abs(bstApiCall[1][0].e - (n + 1000))).toBeLessThanOrEqual(1) // should be unix timestamp
+
+        expectHandled('api-addPageAction', [expect.any(Number), 'finished']) // unix timestamp
+        const addPageActionCall = handleModule.handle.mock.calls.find(callArr => callArr[0] === 'api-addPageAction')
+        expect(addPageActionCall[1][0]).toBeLessThan(10000) // should be relative timestamp
+        expect(Math.abs(addPageActionCall[1][0] - (n + 1000))).toBeLessThanOrEqual(1) // should be relative timestamp, account for rounding errors
+      })
+
+      test('should warn for bad arg', async () => {
+        const debugSpy = jest.spyOn(console, 'debug')
+        const n = now()
+        agent.finished(n)
+        expect(debugSpy).toHaveBeenCalledWith(expect.stringContaining('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#62'), n)
       })
     })
 
@@ -633,7 +677,12 @@ describe('API tests', () => {
           expectHandled(SUPPORTABILITY_METRIC_CHANNEL, ['API/wrapLogger/called'])
 
           expectEmitted('wrap-logger-start', [expect.any(Array), expect.any(Object), 'myObservedLogger'])
-          expectEmitted('wrap-logger-end', [['test1'], expect.any(Object), undefined])
+          expectEmitted('wrap-logger-end', [['test1'], expect.any(Object), undefined, expect.objectContaining({
+            duration: expect.any(Number),
+            isLongTask: false,
+            methodName: 'myObservedLogger',
+            thrownError: undefined
+          })])
 
           expectHandled(SUPPORTABILITY_METRIC_CHANNEL, ['API/logging/info/called'])
           expectHandled('log', [expect.any(Number), 'test1', {}, 'INFO', undefined])
@@ -661,7 +710,12 @@ describe('API tests', () => {
           expectHandled(SUPPORTABILITY_METRIC_CHANNEL, ['API/wrapLogger/called'])
 
           expectEmitted('wrap-logger-start', [expect.any(Array), expect.any(Object), randomMethodName])
-          expectEmitted('wrap-logger-end', [['test1'], expect.any(Object), undefined])
+          expectEmitted('wrap-logger-end', [['test1'], expect.any(Object), undefined, expect.objectContaining({
+            duration: expect.any(Number),
+            isLongTask: false,
+            methodName: randomMethodName,
+            thrownError: undefined
+          })])
 
           expectHandled(SUPPORTABILITY_METRIC_CHANNEL, ['API/logging/warn/called'])
           expectHandled('log', [expect.any(Number), 'test1', {}, 'warn', undefined])
@@ -682,7 +736,12 @@ describe('API tests', () => {
           expectHandled(SUPPORTABILITY_METRIC_CHANNEL, ['API/wrapLogger/called'])
 
           expectEmitted('wrap-logger-start', [expect.any(Array), expect.any(Object), randomMethodName])
-          expectEmitted('wrap-logger-end', [['test1', { test2: 2 }, ['test3'], true, 1], expect.any(Object), undefined])
+          expectEmitted('wrap-logger-end', [['test1', { test2: 2 }, ['test3'], true, 1], expect.any(Object), undefined, expect.objectContaining({
+            duration: expect.any(Number),
+            isLongTask: false,
+            methodName: randomMethodName,
+            thrownError: undefined
+          })])
         })
 
         test('wrapped function should still behave as intended', () => {

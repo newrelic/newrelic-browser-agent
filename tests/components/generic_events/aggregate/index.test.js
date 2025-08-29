@@ -25,7 +25,6 @@ afterEach(() => {
 
 test('should use default values', () => {
   expect(genericEventsAggregate).toMatchObject({
-    eventsPerHarvest: 1000,
     referrerUrl: 'https://test.com'
   })
 })
@@ -66,7 +65,7 @@ test('should harvest early if will exceed 1mb', async () => {
   // hasnt got any data yet -- no harvest
   expectHarvests(mainAgent, FEATURE_NAMES.genericEvents, { harvestsCount: 0 })
 
-  genericEventsAggregate.addEvent({ name: 'test', eventType: 'x'.repeat(900000) })
+  genericEventsAggregate.addEvent({ name: 'test', eventType: 'x'.repeat(15000) })
   // has data, but not enough to trigger harvest
   expectHarvests(mainAgent, FEATURE_NAMES.genericEvents, { harvestsCount: 0 })
   genericEventsAggregate.addEvent({ name: 1000, eventType: 'x'.repeat(100000) })

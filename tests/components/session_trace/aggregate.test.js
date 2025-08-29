@@ -2,7 +2,6 @@ import { Instrument as SessionTrace } from '../../../src/features/session_trace/
 import { resetAgent, setupAgent } from '../setup-agent'
 import { MODE } from '../../../src/common/session/constants'
 import { ERROR_MODE_SECONDS_WINDOW, MAX_NODES_PER_HARVEST } from '../../../src/features/session_trace/constants'
-import { EventStoreManager } from '../../../src/features/utils/event-store-manager'
 import { EventBuffer } from '../../../src/features/utils/event-buffer'
 
 let mainAgent
@@ -21,7 +20,9 @@ beforeEach(async () => {
   sessionTraceAggregate = sessionTraceInstrument.featAggregate
 
   sessionTraceAggregate.ee.emit('rumresp', [{ st: 1, sts: MODE.FULL }])
-  await new Promise(process.nextTick)
+  await new Promise((resolve, reject) => {
+    setTimeout(resolve, 100) // wait for the feature to initialize
+  })
 })
 
 afterEach(() => {
@@ -31,8 +32,7 @@ afterEach(() => {
 
 test('has event buffer storage', () => {
   expect(sessionTraceAggregate.traceStorage).toBeDefined()
-  expect(sessionTraceAggregate.events).toBeInstanceOf(EventStoreManager)
-  expect(sessionTraceAggregate.events.StorageClass).toEqual(EventBuffer)
+  expect(sessionTraceAggregate.events).toBeInstanceOf(EventBuffer)
 })
 
 test('creates right nodes', async () => {
@@ -47,7 +47,7 @@ test('creates right nodes', async () => {
   sessionTraceAggregate.traceStorage.storeXhrAgg('xhr', '[200,null,null]', { method: 'GET', status: 200 }, { rxSize: 770, duration: 99, cbTime: 0, time: 217 }) // fake ajax data
   sessionTraceAggregate.traceStorage.processPVT('fi', 30) // fake pvt data
 
-  const [{ payload }] = sessionTraceAggregate.makeHarvestPayload()
+  const payload = sessionTraceAggregate.makeHarvestPayload()
   let res = payload.body
 
   let node = res.filter(node => node.n === 'DOMContentLoaded')[0]
@@ -102,7 +102,7 @@ test('tracks previously stored events and processes them once per occurrence', d
   setTimeout(() => { // some time gap
     document.dispatchEvent(new Event('visibilitychange'))
 
-    const [{ data: bufferedEvents }] = sessionTraceAggregate.events.get()
+    const bufferedEvents = sessionTraceAggregate.events.get()
 
     expect(bufferedEvents[0]).toEqual(expect.objectContaining({
       n: 'visibilitychange',
@@ -148,7 +148,7 @@ test('when max nodes per harvest is reached, node is still added by dropping the
   const newEvt = { n: 'someNode', s: performance.now(), e: performance.now() }
   sessionTraceAggregate.traceStorage.storeNode(newEvt)
   expect(sessionTraceAggregate.events.length).toBeLessThanOrEqual(MAX_NODES_PER_HARVEST)
-  expect(sessionTraceAggregate.events.get()[0].data.at(-1)).toEqual(newEvt)
+  expect(sessionTraceAggregate.events.get().at(-1)).toEqual(newEvt)
 })
 
 test('aborted ST feat does not continue to hog event ref in memory from storeEvent', () => {

@@ -14,6 +14,7 @@ import { applyFnToProps } from '../../../common/util/traverse'
 import { UserActionsAggregator } from './user-actions/user-actions-aggregator'
 import { isIFrameWindow } from '../../../common/dom/iframe'
 import { isPureObject } from '../../../common/util/type-check'
+import { getMFEPayloadAttributes } from '../../../common/util/mfe'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -40,8 +41,7 @@ export class Aggregate extends AggregateBase {
       }, this.featureName, this.ee)
 
       if (agentRef.init.page_action.enabled) {
-        registerHandler('api-addPageAction', (timestamp, name, attributes, targetEntityGuid) => {
-          if (!this.agentRef.runtime.entityManager.get(targetEntityGuid)) return warn(56, this.featureName)
+        registerHandler('api-addPageAction', (timestamp, name, attributes, target) => {
           this.addEvent({
             ...attributes,
             eventType: 'PageAction',
@@ -53,7 +53,7 @@ export class Aggregate extends AggregateBase {
               browserWidth: window.document.documentElement?.clientWidth,
               browserHeight: window.document.documentElement?.clientHeight
             })
-          }, targetEntityGuid)
+          }, target)
         }, this.featureName, this.ee)
       }
 
@@ -249,10 +249,10 @@ export class Aggregate extends AggregateBase {
    * * sessionTraceId: set by the `ptid=` query param
    * * userAgent*: set by the userAgent header
    * @param {object=} obj the event object for storing in the event buffer
-   * @param {string=} targetEntityGuid the target entity guid for the event to scope buffering and harvesting. Defaults to agent config if undefined
+   * @param {string=} target the target metadata for the event to scope buffering and harvesting. Defaults to container agent config if undefined
    * @returns void
    */
-  addEvent (obj = {}, targetEntityGuid) {
+  addEvent (obj = {}, target) {
     if (!obj || !Object.keys(obj).length) return
     if (!obj.eventType) {
       warn(44)
@@ -278,10 +278,12 @@ export class Aggregate extends AggregateBase {
       /** Fallbacks for required properties in-case the event did not supply them, should take precedence over agent-level custom attrs */
       ...defaultEventAttributes,
       /** Event-specific attributes take precedence over agent-level custom attributes and fallbacks */
-      ...obj
+      ...obj,
+      /** MFE specific attributes for registered children. Empty if not a valid MFE target */
+      ...getMFEPayloadAttributes(target, this.agentRef)
     }
 
-    this.events.add(eventAttributes, targetEntityGuid)
+    this.events.add(eventAttributes)
   }
 
   serializer (eventBuffer) {

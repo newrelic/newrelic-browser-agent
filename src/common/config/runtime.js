@@ -25,7 +25,6 @@ const RuntimeModel = {
   customTransaction: undefined,
   denyList: undefined,
   disabled: false,
-  entityManager: undefined,
   harvester: undefined,
   isolatedBacklog: false,
   isRecording: false, // true when actively recording, false when paused or stopped

@@ -18,7 +18,6 @@ import { MODE, SESSION_EVENTS, SESSION_EVENT_TYPES } from '../../../common/sessi
 import { stringify } from '../../../common/util/stringify'
 import { stylesheetEvaluator } from '../shared/stylesheet-evaluator'
 import { now } from '../../../common/timing/now'
-import { buildNRMetaNode } from '../shared/utils'
 import { MAX_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
 import { cleanURL } from '../../../common/url/clean-url'
 import { canEnableSessionTracking } from '../../utils/feature-gates'
@@ -94,8 +93,7 @@ export class Aggregate extends AggregateBase {
         }
         return
       }
-      this.drain()
-      this.initializeRecording(srMode)
+      this.initializeRecording(srMode).then(() => { this.drain() })
     }).then(() => {
       if (this.mode === MODE.OFF) {
         this.recorder?.stopRecording() // stop any conservative preload recording launched by instrument
@@ -121,7 +119,7 @@ export class Aggregate extends AggregateBase {
   }
 
   handleError (e) {
-    if (this.recorder) this.recorder.currentBufferTarget.hasError = true
+    if (this.recorder) this.recorder.events.hasError = true
     // run once
     if (this.mode === MODE.ERROR && globalScope?.document.visibilityState === 'visible') {
       this.switchToFull()
@@ -171,10 +169,10 @@ export class Aggregate extends AggregateBase {
 
     if (!this.recorder) {
       try {
-      // Do not change the webpackChunkName or it will break the webpack nrba-chunking plugin
+        // Do not change the webpackChunkName or it will break the webpack nrba-chunking plugin
         const { Recorder } = (await import(/* webpackChunkName: "recorder" */'../shared/recorder'))
         this.recorder = new Recorder(this)
-        this.recorder.currentBufferTarget.hasError = this.errorNoticed
+        this.recorder.events.hasError = this.errorNoticed
       } catch (err) {
         return this.abort(ABORT_REASONS.IMPORT)
       }
@@ -188,11 +186,6 @@ export class Aggregate extends AggregateBase {
     // FULL mode records AND reports from the beginning, while ERROR mode only records (but does not report).
     // ERROR mode will do this until an error is thrown, and then switch into FULL mode.
     // The makeHarvestPayload should ensure that no payload is returned if we're not in FULL mode...
-
-    // If theres preloaded events and we are in full mode, just harvest immediately to clear up space and for consistency
-    if (this.mode === MODE.FULL && this.recorder?.getEvents().type === 'preloaded') {
-      this.prepUtils().then(() => this.agentRef.runtime.harvester.triggerHarvestFor(this))
-    }
 
     await this.prepUtils()
 
@@ -231,24 +224,10 @@ export class Aggregate extends AggregateBase {
 
     let len = 0
     if (!!this.gzipper && !!this.u8) {
-      payload.body = this.gzipper(this.u8(`[${payload.body.map(({ __serialized, ...e }) => {
-        if (e.__newrelic && __serialized) return __serialized
-        const output = { ...e }
-        if (!output.__newrelic) {
-          output.__newrelic = buildNRMetaNode(e.timestamp, this.timeKeeper)
-          output.timestamp = this.timeKeeper.correctAbsoluteTimestamp(e.timestamp)
-        }
-        return stringify(output)
-      }).join(',')}]`))
+      payload.body = this.gzipper(this.u8(`[${payload.body.map(({ __serialized }) => (__serialized)).join(',')}]`))
       len = payload.body.length
     } else {
-      payload.body = payload.body.map(({ __serialized, ...node }) => {
-        if (node.__newrelic) return node
-        const output = { ...node }
-        output.__newrelic = buildNRMetaNode(node.timestamp, this.timeKeeper)
-        output.timestamp = this.timeKeeper.correctAbsoluteTimestamp(node.timestamp)
-        return output
-      })
+      for (let idx in payload.body) delete payload.body[idx].__serialized
       len = stringify(payload.body).length
     }
 
@@ -267,12 +246,6 @@ export class Aggregate extends AggregateBase {
     }
 
     return [payloadOutput]
-  }
-
-  getCorrectedTimestamp (node) {
-    if (!node?.timestamp) return
-    if (node.__newrelic) return node.timestamp
-    return this.timeKeeper.correctAbsoluteTimestamp(node.timestamp)
   }
 
   /**
@@ -318,8 +291,8 @@ export class Aggregate extends AggregateBase {
 
     const { firstEvent, lastEvent } = this.getFirstAndLastNodes(events)
     // from rrweb node || from when the harvest cycle started
-    const firstTimestamp = this.getCorrectedTimestamp(firstEvent) || Math.floor(this.timeKeeper.correctAbsoluteTimestamp(recorderEvents.cycleTimestamp))
-    const lastTimestamp = this.getCorrectedTimestamp(lastEvent) || Math.floor(this.timeKeeper.correctRelativeTimestamp(relativeNow))
+    const firstTimestamp = firstEvent?.timestamp || Math.floor(this.timeKeeper.correctAbsoluteTimestamp(recorderEvents.cycleTimestamp))
+    const lastTimestamp = lastEvent?.timestamp || Math.floor(this.timeKeeper.correctRelativeTimestamp(relativeNow))
 
     const agentMetadata = agentRuntime.appMetadata?.agents?.[0] || {}
 

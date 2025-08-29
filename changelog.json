@@ -5,6 +5,31 @@
       "changes": [
         {
           "type": "feat",
+          "sha": "f165b3e877fc4fc4c8b2b77c942b791a25d58705",
+          "message": "remove newrelic meta attribute",
+          "issues": [
+            "1550"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "b763d03215f043e5be555e2dfe2fba85351d672f",
+          "message": "Fix exceptions for null bodies arising from empty harvests",
+          "issues": [
+            "1553"
+          ]
+        }
+      ],
+      "version": "1.297.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "25bd1496-fe32-4ca9-aeb6-84ab6e14d70e",
+      "createTime": "2025-08-29T18:32:15.272Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
           "sha": "58f3c52db5b57dcb41876792f2a1a14fa907d66d",
           "message": "Harvest traces early",
           "issues": [
@@ -3132,5 +3157,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2025-08-19T21:32:44.379Z"
+  "updateTime": "2025-08-29T18:32:15.272Z"
 }

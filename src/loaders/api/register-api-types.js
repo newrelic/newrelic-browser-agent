@@ -17,17 +17,17 @@
 /**
  * @typedef {Object} RegisterAPIConstructor
  * @property {Object} opts - The options for the registered entity.
- * @property {string} opts.licenseKey - The license key for the registered entity.
- * @property {string} opts.applicationID - The application ID for the registered entity.
+ * @property {string} opts.id - The unique id for the registered entity. This will be assigned to any synthesized entities.
+ * @property {string} opts.name - The readable name for the registered entity. This will be assigned to any synthesized entities.
  */
 
 /**
  * @typedef {Object} RegisterAPIMetadata
  * @property {Object} customAttributes - The custom attributes for the registered entity.
  * @property {Object} target - The options for the registered entity.
- * @property {string} target.licenseKey - The license key for the registered entity.
- * @property {string} target.applicationID - The application ID for the registered entity.
- * @property {string} target.entityGuid - The entity guid returned for the registered entity.
+ * @property {string} target.licenseKey - The license key for the registered entity. If none was supplied, it will assume the license key from the main agent.
+ * @property {string} target.id - The ID for the registered entity.
+ * @property {string} target.name - The name returned for the registered entity.
  */
 
 export default {}

@@ -1,7 +1,7 @@
 const fp = require('fastify-plugin')
 const querypack = require('@newrelic/nr-querypack')
 
-const beaconRequestsRegex = /^((\/((events)|(jserrors)|(ins)|(resources)))?\/1\/)|(\/browser\/blobs)/i
+const beaconRequestsRegex = /^((\/((events)|(jserrors)|(ins)|(resources)))?\/(1|2)\/)|(\/browser\/blobs)/i
 
 /**
  * Fastify plugin to add a custom text/plain content parser that uses querypack.

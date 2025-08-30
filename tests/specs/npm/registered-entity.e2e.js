@@ -1,13 +1,13 @@
 /* globals RegisteredEntity */
 
-import { testErrorsRequest, testInsRequest, testLogsRequest, testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
+import { testMFEErrorsRequest, testMFEInsRequest, testLogsRequest, testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 describe('registered-entity', () => {
   it('Smoke Test - Can send distinct payloads of all relevant data types to multiple app IDs', async () => {
-    const [rumCapture, errorsCapture, insightsCapture, logsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+    const [rumCapture, mfeErrorsCapture, mfeInsightsCapture, logsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
       { test: testRumRequest },
-      { test: testErrorsRequest },
-      { test: testInsRequest },
+      { test: testMFEErrorsRequest },
+      { test: testMFEInsRequest },
       { test: testLogsRequest }
     ])
     await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html'))
@@ -44,8 +44,8 @@ describe('registered-entity', () => {
     })
     const [rumHarvests, errorsHarvests, insightsHarvests, logsHarvest] = await Promise.all([
       rumCapture.waitForResult({ totalCount: 1 }),
-      errorsCapture.waitForResult({ totalCount: 1 }),
-      insightsCapture.waitForResult({ totalCount: 1 }),
+      mfeErrorsCapture.waitForResult({ totalCount: 1 }),
+      mfeInsightsCapture.waitForResult({ totalCount: 1 }),
       logsCapture.waitForResult({ totalCount: 1 })
     ])
 

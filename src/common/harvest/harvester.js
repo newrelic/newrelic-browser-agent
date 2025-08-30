@@ -56,7 +56,7 @@ export class Harvester {
    * @returns {boolean} True if 1+ network call was made. Note that this does not mean or guarantee that it was successful (or that all were in the case of more than 1).
    */
   triggerHarvestFor (aggregateInst, localOpts = {}) {
-    const output = { ranSend: false, payload: undefined }
+    const output = { ranSend: false, payload: undefined, endpointVersion: 1 }
     if (aggregateInst.blocked) return output
 
     const submitMethod = getSubmitMethod(localOpts)
@@ -67,7 +67,7 @@ export class Harvester {
 
     if (!output.payload) return output
 
-    const endpointVersion = !!aggregateInst.agentRef.runtime.registeredEntities.length && supportsRegisteredEntities(aggregateInst.featureName) ? 2 : 1
+    output.endpointVersion = !!this.agentRef.runtime.registeredEntities.length && supportsRegisteredEntities(aggregateInst.featureName) ? 2 : 1
 
     send(this.agentRef, {
       endpoint: FEATURE_TO_ENDPOINT[aggregateInst.featureName],
@@ -77,7 +77,7 @@ export class Harvester {
       cbFinished,
       raw: aggregateInst.harvestOpts.raw,
       featureName: aggregateInst.featureName,
-      endpointVersion
+      endpointVersion: output.endpointVersion
     })
     output.ranSend = true
 

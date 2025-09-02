@@ -1,12 +1,12 @@
 import { faker } from '@faker-js/faker'
-import { IDEAL_PAYLOAD_SIZE, SR_EVENT_EMITTER_TYPES } from '../../../src/features/session_replay/constants'
+import { SR_EVENT_EMITTER_TYPES } from '../../../src/features/session_replay/constants'
+import { IDEAL_PAYLOAD_SIZE, MAX_PAYLOAD_SIZE } from '../../../src/common/constants/agent-constants'
 import { MODE, SESSION_EVENTS } from '../../../src/common/session/constants'
 import { FEATURE_NAMES } from '../../../src/loaders/features/features'
 import { ee } from '../../../src/common/event-emitter/contextual-ee'
 import { resetAgent, setupAgent } from '../setup-agent'
 import { Instrument as SessionReplay } from '../../../src/features/session_replay/instrument'
 import * as consoleModule from '../../../src/common/util/console'
-import { MAX_PAYLOAD_SIZE } from '../../../src/common/constants/agent-constants'
 import { expectHarvests } from '../../util/basic-checks'
 
 let mainAgent
@@ -296,6 +296,7 @@ describe('Session Replay Harvest Behaviors', () => {
     document.body.innerHTML = `<span>${faker.lorem.words(IDEAL_PAYLOAD_SIZE)}</span>`
     await new Promise(process.nextTick)
     const after = Date.now()
+    expect(mainAgent.runtime.harvester.triggerHarvestFor.mock.calls.length).toBeGreaterThanOrEqual(2)
 
     expect(after - before).toBeLessThan(mainAgent.init.harvest.interval * 1000)
   })
@@ -328,7 +329,7 @@ describe('Session Replay Harvest Behaviors', () => {
   })
 
   test('provides correct first and last timestamps, even when out of order', async () => {
-    const now = performance.now()
+    const now = Math.floor(performance.now())
     sessionReplayAggregate.timeKeeper = {
       correctAbsoluteTimestamp: jest.fn().mockImplementation(timestamp => timestamp),
       correctRelativeTimestamp: jest.fn().mockImplementation(timestamp => timestamp)

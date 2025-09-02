@@ -8,6 +8,8 @@ import { resetAgent, setupAgent } from '../setup-agent'
 
 import { faker } from '@faker-js/faker'
 
+jest.retryTimes(0)
+
 let mainAgent
 
 beforeAll(async () => {
@@ -46,8 +48,10 @@ describe('class setup', () => {
       'blocked',
       'agentRef',
       'obfuscator',
-      'harvestOpts'
+      'harvestOpts',
+      'supportsRegisteredEntities'
     ]))
+    expect(loggingAggregate.supportsRegisteredEntities).toBe(true)
   })
 
   test('should wait for flags - log flag is missing', async () => {
@@ -87,9 +91,7 @@ describe('payloads', () => {
       )),
       'test message',
       {
-        myAttributes: 1,
-        appId: mainAgent.info.applicationID,
-        'entity.guid': mainAgent.runtime.appMetadata.agents[0].entityGuid
+        myAttributes: 1
       },
       'error'
     )
@@ -100,6 +102,8 @@ describe('payloads', () => {
       body: [{
         common: {
           attributes: {
+            appId: mainAgent.info.applicationID,
+            'entity.guid': mainAgent.runtime.appMetadata.agents[0].entityGuid,
             'instrumentation.name': 'browser-test',
             'instrumentation.provider': 'browser',
             'instrumentation.version': expect.any(String),
@@ -114,23 +118,6 @@ describe('payloads', () => {
         logs: [expectedLog]
       }]
     })
-  })
-
-  test('prepares payload as expected', async () => {
-    loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', { myAttributes: 1 }, 'error'])
-
-    expect(loggingAggregate.events.get()[0]).toEqual(new Log(
-      Math.floor(mainAgent.runtime.timeKeeper.correctAbsoluteTimestamp(
-        mainAgent.runtime.timeKeeper.convertRelativeTimestamp(1234)
-      )),
-      'test message',
-      {
-        myAttributes: 1,
-        appId: mainAgent.info.applicationID,
-        'entity.guid': mainAgent.runtime.appMetadata.agents[0].entityGuid
-      },
-      'error'
-    ))
   })
 
   test('short circuits if log is too big', async () => {
@@ -160,10 +147,7 @@ describe('payloads', () => {
         mainAgent.runtime.timeKeeper.convertRelativeTimestamp(1234)
       )),
       'test message',
-      {
-        appId: mainAgent.info.applicationID,
-        'entity.guid': mainAgent.runtime.appMetadata.agents[0].entityGuid
-      },
+      { },
       'error'
     )
 
@@ -188,10 +172,7 @@ describe('payloads', () => {
         mainAgent.runtime.timeKeeper.convertRelativeTimestamp(1234)
       )),
       'test message',
-      {
-        appId: mainAgent.info.applicationID,
-        'entity.guid': mainAgent.runtime.appMetadata.agents[0].entityGuid
-      },
+      { },
       'error'
     )
 
@@ -220,15 +201,79 @@ describe('payloads', () => {
         mainAgent.runtime.timeKeeper.convertRelativeTimestamp(1234)
       )),
       'test message',
-      {
-        appId: mainAgent.info.applicationID,
-        'entity.guid': mainAgent.runtime.appMetadata.agents[0].entityGuid
-      },
+      { },
       'error'
     )
     const expected = initialLocation.toString()
 
     expect(log.attributes.pageUrl).toEqual(expected)
+  })
+
+  describe('prepares payload as expected', () => {
+    beforeEach(() => {
+      mainAgent.runtime.registeredEntities = []
+    })
+    afterEach(() => {
+      mainAgent.runtime.registeredEntities = []
+    })
+
+    test('No registered entities', async () => {
+      loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', { myAttributes: 1 }, 'error'])
+
+      expect(loggingAggregate.events.get()[0]).toEqual(new Log(
+        Math.floor(mainAgent.runtime.timeKeeper.correctAbsoluteTimestamp(
+          mainAgent.runtime.timeKeeper.convertRelativeTimestamp(1234)
+        )),
+        'test message',
+        {
+          myAttributes: 1
+        },
+        'error'
+      ))
+    })
+
+    test('registered entities, container agent', async () => {
+      mainAgent.runtime.registeredEntities.push(true) // mock that an entity is registered
+      loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', { myAttributes: 1 }, 'error'])
+
+      expect(loggingAggregate.events.get()[0]).toEqual(new Log(
+        Math.floor(mainAgent.runtime.timeKeeper.correctAbsoluteTimestamp(
+          mainAgent.runtime.timeKeeper.convertRelativeTimestamp(1234)
+        )),
+        'test message',
+        {
+          myAttributes: 1,
+          'entity.guid': mainAgent.runtime.appMetadata.agents[0].entityGuid
+        },
+        'error'
+      ))
+    })
+
+    test('registered entities, mfe', async () => {
+      const registeredTarget = {
+        id: 1,
+        name: 'test',
+        eventSource: 'MicroFrontendBrowserAgent',
+        containerId: mainAgent.runtime.appMetadata.agents[0].entityGuid
+      }
+      mainAgent.runtime.registeredEntities.push(registeredTarget) // mock that an entity is registered
+      loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', { myAttributes: 1 }, 'error', registeredTarget]) // supply an api "target" to mock a registered entity API call
+
+      expect(loggingAggregate.events.get()[0]).toEqual(new Log(
+        Math.floor(mainAgent.runtime.timeKeeper.correctAbsoluteTimestamp(
+          mainAgent.runtime.timeKeeper.convertRelativeTimestamp(1234)
+        )),
+        'test message',
+        {
+          myAttributes: 1,
+          'mfe.id': registeredTarget.id,
+          'mfe.name': registeredTarget.name,
+          eventSource: registeredTarget.eventSource,
+          'container.id': registeredTarget.containerId
+        },
+        'error'
+      ))
+    })
   })
 })
 

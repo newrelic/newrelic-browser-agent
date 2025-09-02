@@ -14,13 +14,16 @@ import { applyFnToProps } from '../../../common/util/traverse'
 import { UserActionsAggregator } from './user-actions/user-actions-aggregator'
 import { isIFrameWindow } from '../../../common/dom/iframe'
 import { isPureObject } from '../../../common/util/type-check'
-import { getMFEPayloadAttributes } from '../../../common/util/mfe'
+import { getVersion2Attributes } from '../../../common/util/mfe'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor (agentRef) {
     super(agentRef, FEATURE_NAME)
     this.referrerUrl = (isBrowserScope && document.referrer) ? cleanURL(document.referrer) : undefined
+
+    /** set up agg-level behaviors specific to this feature */
+    super.supportsRegisteredEntities = true
 
     this.waitForFlags(['ins']).then(([ins]) => {
       if (!ins) {
@@ -233,7 +236,6 @@ export class Aggregate extends AggregateBase {
         this.addEvent(event)
       }, this.featureName, this.ee)
 
-      agentRef.runtime.harvester.triggerHarvestFor(this)
       this.drain()
     })
   }
@@ -269,7 +271,9 @@ export class Aggregate extends AggregateBase {
       timestamp: Math.floor(this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(now())),
       /** all generic events require pageUrl(s) */
       pageUrl: cleanURL('' + initialLocation),
-      currentUrl: cleanURL('' + location)
+      currentUrl: cleanURL('' + location),
+      /** Specific attributes only supplied if harvesting to endpoint version 2 */
+      ...(getVersion2Attributes(target, this))
     }
 
     const eventAttributes = {
@@ -278,9 +282,7 @@ export class Aggregate extends AggregateBase {
       /** Fallbacks for required properties in-case the event did not supply them, should take precedence over agent-level custom attrs */
       ...defaultEventAttributes,
       /** Event-specific attributes take precedence over agent-level custom attributes and fallbacks */
-      ...obj,
-      /** MFE specific attributes for registered children. Empty if not a valid MFE target */
-      ...getMFEPayloadAttributes(target, this.agentRef)
+      ...obj
     }
 
     this.events.add(eventAttributes)

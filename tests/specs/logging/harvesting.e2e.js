@@ -50,8 +50,6 @@ describe('logging harvesting', () => {
         timestamp: expect.any(Number),
         attributes: {
           pageUrl,
-          appId: 42,
-          'entity.guid': expect.any(String),
           ...(type === 'api' || type === 'api-wrap-logger' ? customAttributes : {})
         }
       }))
@@ -61,6 +59,8 @@ describe('logging harvesting', () => {
       common: {
         attributes: {
           agentVersion: expect.any(String),
+          appId: 42,
+          'entity.guid': expect.any(String),
           'instrumentation.provider': 'browser',
           'instrumentation.version': expect.any(String),
           'instrumentation.name': 'spa',

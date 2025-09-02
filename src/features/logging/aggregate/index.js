@@ -13,7 +13,7 @@ import { applyFnToProps } from '../../../common/util/traverse'
 import { SESSION_EVENT_TYPES, SESSION_EVENTS } from '../../../common/session/constants'
 import { ABORT_REASONS } from '../../session_replay/constants'
 import { canEnableSessionTracking } from '../../utils/feature-gates'
-import { getMFEPayloadAttributes, isValidMFETarget } from '../../../common/util/mfe'
+import { getVersion2Attributes } from '../../../common/util/mfe'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -21,6 +21,9 @@ export class Aggregate extends AggregateBase {
     super(agentRef, FEATURE_NAME)
     this.isSessionTrackingEnabled = canEnableSessionTracking(agentRef.init) && agentRef.runtime.session
 
+    /** set up agg-level behaviors specific to this feature */
+    this.harvestOpts.raw = true
+    super.supportsRegisteredEntities = true
     super.customAttributesAreSeparate = true
 
     // The SessionEntity class can emit a message indicating the session was cleared and reset (expiry, inactivity). This feature must abort and never resume if that occurs.
@@ -34,7 +37,6 @@ export class Aggregate extends AggregateBase {
       else this.loggingMode = data.loggingMode
     })
 
-    this.harvestOpts.raw = true
     this.waitForFlags(['log']).then(([loggingMode]) => {
       const session = this.agentRef.runtime.session ?? {}
       if (this.loggingMode === LOGGING_MODE.OFF || (session.isNew && loggingMode === LOGGING_MODE.OFF)) {
@@ -68,13 +70,10 @@ export class Aggregate extends AggregateBase {
 
     if (!attributes || typeof attributes !== 'object') attributes = {}
 
-    if (isValidMFETarget(target)) attributes = { ...attributes, ...getMFEPayloadAttributes(target, this.agentRef) }
-    else {
-      attributes = {
-        ...attributes,
-        'entity.guid': this.agentRef.runtime.appMetadata.agents[0].entityGuid,
-        appId: this.agentRef.info.applicationID
-      }
+    attributes = {
+      ...attributes,
+      /** Specific attributes only supplied if harvesting to endpoint version 2 */
+      ...(getVersion2Attributes(target, this))
     }
 
     if (typeof level === 'string') level = level.toUpperCase()
@@ -118,6 +117,10 @@ export class Aggregate extends AggregateBase {
       common: {
         /** Attributes in the `common` section are added to `all` logs generated in the payload */
         attributes: {
+          ...(!this.agentRef.runtime.registeredEntities.length && {
+            'entity.guid': this.agentRef.runtime.appMetadata.agents[0].entityGuid,
+            appId: this.agentRef.info.applicationID
+          }),
           ...(sessionEntity && {
             session: sessionEntity.state.value || '0', // The session ID that we generate and keep across page loads
             hasReplay: sessionEntity.state.sessionReplayMode === 1, // True if a session replay recording is running

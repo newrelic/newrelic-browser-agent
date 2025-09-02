@@ -18,6 +18,7 @@ import { EventAggregator } from '../../common/aggregate/event-aggregator'
 import { MAX_PAYLOAD_SIZE, IDEAL_PAYLOAD_SIZE } from '../../common/constants/agent-constants'
 
 export class AggregateBase extends FeatureBase {
+  supportsRegisteredEntities = false // overridden by feature aggregates if true
   /**
    * Create an AggregateBase instance.
    * @param {Object} agentRef The reference to the agent instance.
@@ -64,6 +65,15 @@ export class AggregateBase extends FeatureBase {
         this.events = new EventBuffer(MAX_PAYLOAD_SIZE, this)
         break
     }
+  }
+
+  /**
+   * the endpoint version the feature uses during harvests
+   * @type {number}
+   * @returns {boolean}
+   */
+  get harvestEndpointVersion () {
+    return this.supportsRegisteredEntities && !!this.agentRef.runtime.registeredEntities.length ? 2 : 1
   }
 
   waitForDrain () {

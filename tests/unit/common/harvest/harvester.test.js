@@ -143,18 +143,13 @@ describe('triggerHarvestFor', () => {
     const fakeAggregate = { makeHarvestPayload: jest.fn().mockReturnValue('fakePayload'), harvestOpts: {}, agentRef: fakeAgent }
     expect(harvester.triggerHarvestFor(fakeAggregate, { })).toEqual({ payload: 'fakePayload', ranSend: true, endpointVersion: 1 })
   })
-  test('uses version 2 if registeredEntities are present and featureName is supported', () => {
-    fakeAgent.runtime.registeredEntities.push({ id: 'test-entity' })
-    const fakeAggregate = { makeHarvestPayload: jest.fn().mockReturnValue('fakePayload'), harvestOpts: {}, agentRef: fakeAgent, featureName: 'jserrors' }
+  test('uses aggregate harvest endpoint version for harvests - v1', () => {
+    const fakeAggregate = { makeHarvestPayload: jest.fn().mockReturnValue('fakePayload'), harvestOpts: {}, agentRef: fakeAgent, featureName: 'jserrors', harvestEndpointVersion: 1 }
+    expect(harvester.triggerHarvestFor(fakeAggregate, { })).toEqual({ payload: 'fakePayload', ranSend: true, endpointVersion: 1 })
+  })
+
+  test('uses aggregate harvest endpoint version for harvests - v2', () => {
+    const fakeAggregate = { makeHarvestPayload: jest.fn().mockReturnValue('fakePayload'), harvestOpts: {}, agentRef: fakeAgent, featureName: 'jserrors', harvestEndpointVersion: 2 }
     expect(harvester.triggerHarvestFor(fakeAggregate, { })).toEqual({ payload: 'fakePayload', ranSend: true, endpointVersion: 2 })
-  })
-  test('uses version 1 if registeredEntities are present but featureName is not supported', () => {
-    fakeAgent.runtime.registeredEntities.push({ id: 'test-entity' })
-    const fakeAggregate = { makeHarvestPayload: jest.fn().mockReturnValue('fakePayload'), harvestOpts: {}, agentRef: fakeAgent, featureName: 'unsupportedFeature' }
-    expect(harvester.triggerHarvestFor(fakeAggregate, { })).toEqual({ payload: 'fakePayload', ranSend: true, endpointVersion: 1 })
-  })
-  test('uses version 1 if registeredEntities are not present, even when featureName is supported', () => {
-    const fakeAggregate = { makeHarvestPayload: jest.fn().mockReturnValue('fakePayload'), harvestOpts: {}, agentRef: fakeAgent, featureName: 'jserrors' }
-    expect(harvester.triggerHarvestFor(fakeAggregate, { })).toEqual({ payload: 'fakePayload', ranSend: true, endpointVersion: 1 })
   })
 })

@@ -129,4 +129,3 @@
 `A single event was larger than the maximum allowed payload size`
 ### 64
 `Required globals have been mutated before being accessed by the browser agent. This can cause issues and should be avoided.`
-

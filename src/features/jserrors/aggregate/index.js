@@ -19,7 +19,7 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { now } from '../../../common/timing/now'
 import { applyFnToProps } from '../../../common/util/traverse'
 import { evaluateInternalError } from './internal-errors'
-import { getMFEPayloadAttributes } from '../../../common/util/mfe'
+import { getVersion2Attributes } from '../../../common/util/mfe'
 import { buildCauseString } from './cause-string'
 
 /**
@@ -30,6 +30,10 @@ export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor (agentRef) {
     super(agentRef, FEATURE_NAME)
+
+    /** set up agg-level behaviors specific to this feature */
+    this.harvestOpts.aggregatorTypes = ['err', 'ierr', 'xhr'] // the types in EventAggregator this feature cares about
+    super.supportsRegisteredEntities = true
 
     this.stackReported = {}
     this.observedAt = {}
@@ -44,8 +48,6 @@ export class Aggregate extends AggregateBase {
     register('ierr', (...args) => this.storeError(...args), this.featureName, this.ee)
     register('softNavFlush', (interactionId, wasFinished, softNavAttrs) =>
       this.onSoftNavNotification(interactionId, wasFinished, softNavAttrs), this.featureName, this.ee) // when an ixn is done or cancelled
-
-    this.harvestOpts.aggregatorTypes = ['err', 'ierr', 'xhr'] // the types in EventAggregator this feature cares about
 
     // 0 == off, 1 == on
     this.waitForFlags(['err']).then(([errFlag]) => {
@@ -224,8 +226,8 @@ export class Aggregate extends AggregateBase {
   #storeJserrorForHarvest (errorInfoArr, softNavOccurredFinished, softNavCustomAttrs = {}) {
     let [type, bucketHash, params, newMetrics, localAttrs, target] = errorInfoArr
     const allCustomAttrs = {
-      /** MFE specific attributes for registered children. Empty if not a valid MFE target */
-      ...getMFEPayloadAttributes(target, this.agentRef)
+      /** MFE specific attributes if in "multiple" mode (ie consumer version 2) */
+      ...getVersion2Attributes(target, this)
     }
 
     if (softNavOccurredFinished) {

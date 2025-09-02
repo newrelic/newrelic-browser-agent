@@ -45,33 +45,39 @@ export function buildRegisterApi (agentRef, target) {
   warn(54, 'newrelic.register')
 
   target ||= {}
-  target.licenseKey ||= agentRef.info.licenseKey // will inherit the license key from the container agent if not provided
+  target.licenseKey ||= agentRef.info.licenseKey // will inherit the license key from the container agent if not provided for brevity. A future state may dictate that we need different license keys to do different things.
+  target.blocked = false
 
-  /** @type {Function|undefined} a function that is set and reports when APIs are triggered -- warns the customer of the invalid state  */
-  let invalidApiResponse
+  /** @type {Function} a function that is set and reports when APIs are triggered -- warns the customer of the invalid state  */
+  let invalidApiResponse = () => {}
+  /** @type {Array} the array of registered target APIs */
   const registeredEntities = agentRef.runtime.registeredEntities
 
   /** if we have already registered this target, go ahead and re-use it */
   const preregisteredEntity = registeredEntities.find(({ metadata: { target: { id, name } } }) => id === target.id && name === target.name)
   if (preregisteredEntity) return preregisteredEntity
 
-  if (!agentRef.init.api.allow_registered_children) invalidApiResponse = () => warn(55)
-  if (!isValidMFETarget(target)) invalidApiResponse = () => warn(48, target)
+  /**
+   * Block the API, and supply a warning function to display a message to end users
+   * @param {Function} warning
+   */
+  const block = (warning) => {
+    target.blocked = true
+    invalidApiResponse = warning
+  }
+
+  /** primary cases that can block the register API from working at init time */
+  if (!agentRef.init.api.allow_registered_children) block(() => warn(55))
+  if (!isValidMFETarget(target)) block(() => warn(48, target))
 
   /** @type {RegisterAPI} */
   const api = {
     addPageAction: (name, attributes = {}) => report(addPageAction, [name, { ...attrs, ...attributes }, agentRef], target),
     log: (message, options = {}) => report(log, [message, { ...options, customAttributes: { ...attrs, ...(options.customAttributes || {}) } }, agentRef], target),
     noticeError: (error, attributes = {}) => report(noticeError, [error, { ...attrs, ...attributes }, agentRef], target),
-    setApplicationVersion: (value) => {
-      attrs['application.version'] = value
-    },
-    setCustomAttribute: (key, value) => {
-      attrs[key] = value
-    },
-    setUserId: (value) => {
-      attrs['enduser.id'] = value
-    },
+    setApplicationVersion: (value) => setLocalValue('application.version', value),
+    setCustomAttribute: (key, value) => setLocalValue(key, value),
+    setUserId: (value) => setLocalValue('enduser.id', value),
     /** metadata */
     metadata: {
       customAttributes: attrs,
@@ -79,8 +85,28 @@ export function buildRegisterApi (agentRef, target) {
     }
   }
 
-  if (invalidApiResponse) invalidApiResponse()
-  else registeredEntities.push(api)
+  /**
+   * Check if the API is blocked and emit a warning message describing the blockage
+   * @returns {boolean}
+   */
+  const isBlocked = () => {
+    if (target.blocked) invalidApiResponse()
+    return target.blocked
+  }
+
+  /** only allow registered APIs to be tracked in the agent runtime */
+  if (!isBlocked()) registeredEntities.push(api)
+
+  /**
+   * Sets a value local to the registered API attrs. Will do nothing if APIs are deregistered.
+   * @param {string} key The attribute key
+   * @param {*} value the attribute value
+   * @returns {void}
+   */
+  const setLocalValue = (key, value) => {
+    if (isBlocked()) return
+    attrs[key] = value
+  }
 
   /**
      * The reporter method that will be used to report the data to the container agent's API method. If invalid, will log a warning and not execute.
@@ -91,7 +117,7 @@ export function buildRegisterApi (agentRef, target) {
      * @returns
      */
   const report = (methodToCall, args, target) => {
-    if (invalidApiResponse) return invalidApiResponse()
+    if (isBlocked()) return
     /** set the timestamp before the async part of waiting for the rum response for better accuracy */
     const timestamp = now()
     handle(SUPPORTABILITY_METRIC_CHANNEL, [`API/register/${methodToCall.name}/called`], undefined, FEATURE_NAMES.metrics, agentRef.ee)

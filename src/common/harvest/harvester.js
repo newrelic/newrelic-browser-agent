@@ -17,7 +17,6 @@ import { stringify } from '../util/stringify'
 import { getSubmitMethod, xhr as xhrMethod, xhrFetch as fetchMethod } from '../util/submit-data'
 import { activatedFeatures } from '../util/feature-flags'
 import { dispatchGlobalEvent } from '../dispatch/global-event'
-import { supportsRegisteredEntities } from '../util/mfe'
 
 const RETRY_FAILED = 'Harvester/Retry/Failed/'
 const RETRY_SUCCEEDED = 'Harvester/Retry/Succeeded/'
@@ -56,7 +55,7 @@ export class Harvester {
    * @returns {boolean} True if 1+ network call was made. Note that this does not mean or guarantee that it was successful (or that all were in the case of more than 1).
    */
   triggerHarvestFor (aggregateInst, localOpts = {}) {
-    const output = { ranSend: false, payload: undefined, endpointVersion: 1 }
+    const output = { ranSend: false, payload: undefined, endpointVersion: aggregateInst.harvestEndpointVersion || 1 }
     if (aggregateInst.blocked) return output
 
     const submitMethod = getSubmitMethod(localOpts)
@@ -66,8 +65,6 @@ export class Harvester {
     output.payload = !localOpts.directSend ? aggregateInst.makeHarvestPayload(shouldRetryOnFail, localOpts) : localOpts.directSend?.payload // features like PVE can define the payload directly, bypassing the makeHarvestPayload logic
 
     if (!output.payload) return output
-
-    output.endpointVersion = !!this.agentRef.runtime.registeredEntities.length && supportsRegisteredEntities(aggregateInst.featureName) ? 2 : 1
 
     send(this.agentRef, {
       endpoint: FEATURE_TO_ENDPOINT[aggregateInst.featureName],

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {init} {config} {loader}
+  </head>
+  <body>
+    <h1>Smearables Test</h1>
+    <textarea placeholder="Type here..."></textarea>
+    <div style="width: 100%; height: 2000px; background: #f0f0f0; overflow: auto; margin-top: 20px"></div>
+    <script>
+      // setup relevant event listeners
+      document.addEventListener("keydown", () => {
+        /** no op */
+        // console.log("keydown event captured");
+      });
+      document.addEventListener("scroll", () => {
+        /** no op */
+        // console.log("scroll event captured");
+      });
+      document.addEventListener("mousemove", () => {
+        /** no op */
+        // console.log("mousemove event captured");
+      });
+      for (let i = 0; i < 100; i++) {
+        const contents = new Array(10).fill("scrollable div content \n");
+        document.querySelector("div").innerText += contents.join(" ");
+      }
+
+      window.simulateMouseMove = function () {
+        const mouseMoveEvent = new MouseEvent("mousemove", {
+          clientX: 100, // X coordinate relative to the viewport
+          clientY: 200, // Y coordinate relative to the viewport
+          bubbles: true, // Allow the event to bubble up the DOM tree
+          cancelable: true, // Allow the event to be canceled
+        });
+
+        // Dispatch the event on the document body
+        document.body.dispatchEvent(mouseMoveEvent);
+      };
+
+      window.simulateScroll = function () {
+        const scrollEvent = new Event("scrollend", {
+          bubbles: true,
+          cancelable: true,
+        });
+
+        // Dispatch the event on the scrollable div
+        document.querySelector("div").dispatchEvent(scrollEvent);
+      };
+
+      window.simulateKeydown = function () {
+        const keydownEvent = new KeyboardEvent("keydown", {
+          key: "Enter",
+          bubbles: true,
+          cancelable: true,
+        });
+
+        // Dispatch the event on the textarea
+        document.querySelector("textarea").dispatchEvent(keydownEvent);
+      };
+
+      window.simulateSmearableEvents = function () {
+        let loops = 1;
+        while (loops++ % 500 !== 0) window.simulateMouseMove();
+        while (loops++ % 500 !== 0) window.simulateScroll();
+        while (loops++ % 500 !== 0) window.simulateKeydown();
+      };
+    </script>
+  </body>
+</html>

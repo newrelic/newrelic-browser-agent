@@ -16,6 +16,9 @@ const SpanExample = () => {
         <p>Span with no handlers ={'> '}
           <span id="do-nothing-span" className="non-interactive-element">Span</span>
         </p>
+        <p>Span with error ={'>'}
+          <span id="span-with-error" onClick={() => {throw new Error('This span throws an error' )}}> Span w/ error </span>
+        </p>
       </div>
     </div>
   )

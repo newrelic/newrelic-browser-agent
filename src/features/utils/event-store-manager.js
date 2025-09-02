@@ -44,7 +44,24 @@ export class EventStoreManager {
     this.appStorageMap.set(targetEntityGuid, eventStorage)
   }
 
-  // This class must contain an union of all methods from all supported storage classes and conceptualize away the target app argument.
+  /** IMPORTANT
+   * This class must contain an union of all methods from all supported storage classes and conceptualize away the target app argument.
+   */
+
+  get length () {
+    return this.#getEventStore().length
+  }
+
+  /**
+   * Calls the merge method on the underlying storage class.
+   * @param {*} matcher
+   * @param {*} data
+   * @param {*} targetEntityGuid
+   * @returns {boolean} True if the merge was successful
+   */
+  merge (matcher, data, targetEntityGuid) {
+    return this.#getEventStore(targetEntityGuid).merge(matcher, data)
+  }
 
   /**
    * Calls the isEmpty method on the underlying storage class. If target is provided, runs just for the target, otherwise runs for all apps.

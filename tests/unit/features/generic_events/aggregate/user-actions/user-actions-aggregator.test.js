@@ -91,7 +91,6 @@ describe('UserActionsAggregator - Dead Clicks', () => {
     const evt = { type: 'click', target: btn }
     aggregator.process(evt)
 
-    // Fast-forward time
     jest.advanceTimersByTime(2000)
 
     const userAction = aggregator.aggregationEvent
@@ -104,7 +103,6 @@ describe('UserActionsAggregator - Dead Clicks', () => {
     const evt = { type: 'click', target: link }
     aggregator.process(evt)
 
-    // Fast-forward time
     jest.advanceTimersByTime(2000)
 
     const userAction = aggregator.aggregationEvent
@@ -117,11 +115,10 @@ describe('UserActionsAggregator - Dead Clicks', () => {
     const evt = { type: 'click', target: span }
     aggregator.process(evt)
 
-    // Fast-forward time
     jest.advanceTimersByTime(2000)
 
     const userAction = aggregator.aggregationEvent
-    expect(userAction.deadClick).not.toBe(true)
+    expect(userAction.deadClick).toBe(false)
   })
 
   test('should NOT set deadClick if DOM mutation occurs within 2 seconds', () => {
@@ -135,8 +132,9 @@ describe('UserActionsAggregator - Dead Clicks', () => {
     // MutationObserver callback is async, so flush microtasks
     return Promise.resolve().then(() => {
       jest.advanceTimersByTime(2000)
+      expect(aggregator.isEvaluatingDeadClick()).toBe(false)
       const userAction = aggregator.aggregationEvent
-      expect(userAction.deadClick).not.toBe(true)
+      expect(userAction.deadClick).toBe(false)
     })
   })
 
@@ -146,13 +144,100 @@ describe('UserActionsAggregator - Dead Clicks', () => {
     const clickEvt = { type: 'click', target: btn }
     const keydownEvt = { type: 'keydown', target: btn }
 
-    aggregator.process(clickEvt) // Start dead click timer
+    aggregator.process(clickEvt)
     const finishedEvent = aggregator.process(keydownEvt) // Ends aggregation before timer
 
-    // Fast-forward time
     jest.advanceTimersByTime(2000)
 
-    // The finishedEvent should be the click event, and deadClick should not be set
-    expect(finishedEvent.deadClick).not.toBe(true)
+    expect(finishedEvent.deadClick).toBe(false)
+  })
+})
+
+describe('UserActionsAggregator - Error Clicks', () => {
+  let aggregator
+  beforeEach(() => {
+    jest.useFakeTimers()
+    aggregator = new UserActionsAggregator()
+  })
+  afterEach(() => {
+    jest.useRealTimers()
+  })
+  test('should set errorClick to true if an error is detected within 2 seconds - buttons', () => {
+    const btn = document.createElement('button')
+    btn.onclick = () => {
+      console.log('Simulating an error')
+      throw new Error('Simulated error')
+    }
+    document.body.appendChild(btn)
+    const evt = {
+      type: 'click',
+      target: btn
+    }
+    aggregator.process(evt)
+
+    jest.advanceTimersByTime(1999)
+    aggregator.markAsErrorClick() // Simulate the error click
+    jest.advanceTimersByTime(1)
+
+    const userAction = aggregator.aggregationEvent
+    expect(userAction.errorClick).toBe(true)
+  })
+
+  test('should set errorClick to true if an error is detected within 2 seconds - links', () => {
+    const link = document.createElement('a')
+    link.onclick = () => {
+      throw new Error('Simulated error')
+    }
+    document.body.appendChild(link)
+    const evt = {
+      type: 'click',
+      target: link
+    }
+    aggregator.process(evt)
+
+    jest.advanceTimersByTime(1999)
+    aggregator.markAsErrorClick() // Simulate the error click
+    jest.advanceTimersByTime(1)
+
+    const userAction = aggregator.aggregationEvent
+    expect(userAction.errorClick).toBe(true)
+  })
+
+  test('should NOT set errorClick to true if an error is detected within 2 seconds - not button or link', () => {
+    const span = document.createElement('span')
+    document.body.appendChild(span)
+    const evt = {
+      type: 'click',
+      target: span
+    }
+    aggregator.process(evt)
+
+    jest.advanceTimersByTime(1999)
+    aggregator.markAsErrorClick() // Simulate the error click
+    jest.advanceTimersByTime(1)
+
+    const userAction = aggregator.aggregationEvent
+    expect(userAction.errorClick).toBe(false)
+  })
+
+  test('should NOT set errorClick to true if an error happens after 2 seconds', () => {
+    const span = document.createElement('span')
+    span.onclick = () => {
+      setTimeout(() => {
+        throw new Error('Simulated error')
+      }, 2000)
+    }
+    document.body.appendChild(span)
+    const evt = {
+      type: 'click',
+      target: span
+    }
+    aggregator.process(evt)
+
+    jest.advanceTimersByTime(2000)
+    aggregator.markAsErrorClick() // Simulate the error click
+
+    const userAction = aggregator.aggregationEvent
+    expect(userAction.errorClick).toBe(false)
   })
 })

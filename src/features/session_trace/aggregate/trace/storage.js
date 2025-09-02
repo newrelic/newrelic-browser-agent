@@ -2,154 +2,159 @@
  * Copyright 2020-2025 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { globalScope } from '../../../../common/constants/runtime'
 import { MODE } from '../../../../common/session/constants'
 import { now } from '../../../../common/timing/now'
 import { parseUrl } from '../../../../common/url/parse-url'
 import { eventOrigin } from '../../../../common/util/event-origin'
-import { MAX_NODES_PER_HARVEST } from '../../constants'
+import { ERROR_MODE_SECONDS_WINDOW, MAX_NODES_PER_HARVEST } from '../../constants'
 import { TraceNode } from './node'
-
-const ERROR_MODE_SECONDS_WINDOW = 30 * 1000 // sliding window of nodes to track when simply monitoring (but not harvesting) in error mode
-const SUPPORTS_PERFORMANCE_OBSERVER = typeof globalScope.PerformanceObserver === 'function'
+import { evtName } from './utils'
 
 const ignoredEvents = {
-  // we find that certain events make the data too noisy to be useful
-  global: { mouseup: true, mousedown: true, mousemove: true },
+  // we find that certain events are noisy (and not easily smearable like mousemove) and/or duplicative (like with click vs mousedown/mouseup).
+  // These would ONLY ever be tracked in ST if the application has event listeners defined for these events... however, just in case - ignore these anyway.
+  global: { mouseup: true, mousedown: true },
   // certain events are present both in the window and in PVT metrics.  PVT metrics are prefered so the window events should be ignored
   window: { load: true, pagehide: true },
   // when ajax instrumentation is disabled, all XMLHttpRequest events will return with origin = xhrOriginMissing and should be ignored
   xhrOriginMissing: { ignoreAll: true }
 }
-const toAggregate = {
-  typing: [1000, 2000],
-  scrolling: [100, 1000],
-  mousing: [1000, 2000],
-  touching: [1000, 2000]
+
+const SMEARABLES = {
+  typing: 'typing',
+  scrolling: 'scrolling',
+  mousing: 'mousing',
+  touching: 'touching'
 }
 
-/** The purpose of this class is to manage, normalize, and retrieve ST nodes as needed without polluting the main ST modules */
+const GAPS = {
+  [SMEARABLES.typing]: 1000, // 1 second gap between typing events
+  [SMEARABLES.scrolling]: 100, // 100ms gap between scrolling events
+  [SMEARABLES.mousing]: 1000, // 1 second gap between mousing events
+  [SMEARABLES.touching]: 1000 // 1 second gap between touching events
+}
+
+const LENGTHS = {
+  [SMEARABLES.typing]: 2000, // 2 seconds max length for typing events
+  [SMEARABLES.scrolling]: 1000, // 1 second max length for scrolling events
+  [SMEARABLES.mousing]: 2000, // 2 seconds max length for mousing events
+  [SMEARABLES.touching]: 2000 // 2 seconds max length for touching events
+}
+
+/** The purpose of this class is to manage, normalize, and drop various ST nodes as needed without polluting the main ST modules */
 export class TraceStorage {
-  nodeCount = 0
-  trace = {}
-  earliestTimeStamp = Infinity
-  latestTimeStamp = 0
+  /** prevents duplication of event nodes by keeping a reference of each one seen per harvest cycle */
   prevStoredEvents = new Set()
-  #backupTrace
 
   constructor (parent) {
     this.parent = parent
   }
 
+  /**
+   * Checks if a trace node is smearable with previously stored nodes.
+   * @param {TraceNode} stn
+   * @returns {boolean} true if the node is smearable, false otherwise
+   */
+  #isSmearable (stn) {
+    return stn.n in SMEARABLES
+  }
+
+  /**
+   * Attempts to smear the current trace node with the last stored event in the event buffer.
+   * If the last stored event is smearable and matches the current node's origin and type, it will merge the two nodes and return true.
+   * If not, it will return false.
+   * This is used to reduce the number of smearable trace nodes created for events that occur in quick succession.
+   * @param {TraceNode} stn
+   * @returns {boolean} true if the node was successfully smeared, false otherwise
+   */
+  #smear (stn) {
+    /**
+     * The matcher function to be executed by the event buffer merge method. It must be the same origin and node type,
+     * the start time of the new node must be within a certain length of the last seen node's start time,
+     * and the end time of the last seen node must be within a certain gap of the new node's start time.
+     * If all these conditions are met, we can merge the last seen node's end time with the new one.
+     * @param {TraceNode} storedEvent - the event already stored in the event buffer to potentially be merged with
+     */
+    const matcher = (storedEvent) => {
+      return !(storedEvent.o !== stn.o || storedEvent.n !== stn.n || (stn.s - storedEvent.s) < LENGTHS[stn.o] || (storedEvent.e > (stn.s - GAPS[stn.o])))
+    }
+
+    /** the data to be smeared together with a matching event -- if one is found in the event buffer using the matcher defined above */
+    const smearableData = { e: stn.e }
+
+    return this.parent.events.merge(matcher, smearableData)
+  }
+
+  /**
+   * Checks if the event should be ignored based on rules around its type and/or origin.
+   * @param {TraceNode} stn
+   * @returns {boolean} true if the event should be ignored, false otherwise
+   */
+  #shouldIgnoreEvent (stn) {
+    if (stn.n in ignoredEvents.global) return true // ignore noisy global events or window events that are already captured by PVT metrics
+    const origin = stn.o
+    if (ignoredEvents[origin]?.ignoreAll || ignoredEvents[origin]?.[stn.n]) return true
+    return (origin === 'xhrOriginMissing' && stn.n === 'Ajax') // ignore XHR events when the origin is missing
+  }
+
+  /**
+   * Checks if a new node can be stored based on the current state of the trace storage class itself as well as the parent class.
+   * @returns {boolean} true if a new node can be stored, false otherwise
+   */
   #canStoreNewNode () {
     if (this.parent.blocked) return false
-    if (this.nodeCount >= MAX_NODES_PER_HARVEST) { // limit the amount of pending data awaiting next harvest
+    if (this.parent.events.length >= MAX_NODES_PER_HARVEST) { // limit the amount of pending data awaiting next harvest
       if (this.parent.mode !== MODE.ERROR) return false
-      const openedSpace = this.trimSTNs(ERROR_MODE_SECONDS_WINDOW) // but maybe we could make some space by discarding irrelevant nodes if we're in sessioned Error mode
-      if (openedSpace === 0) return false
+      this.trimSTNsByTime() // if we're in error mode, we can try to clear the trace storage to make room for new nodes
+      if (this.parent.events.length >= MAX_NODES_PER_HARVEST) this.trimSTNsByIndex(1) // if we still can't store new nodes, trim before index 1 to make room for new nodes
     }
     return true
   }
 
-  /** Central internal function called by all the other store__ & addToTrace API to append a trace node. They MUST all have checked #canStoreNewNode before calling this func!! */
+  /**
+ * Attempts to store a new trace node in the event buffer.
+ * @param {TraceNode} stn
+ * @returns {boolean} true if the node was successfully stored, false otherwise
+ */
   #storeSTN (stn) {
-    if (this.trace[stn.n]) this.trace[stn.n].push(stn)
-    else this.trace[stn.n] = [stn]
+    if (this.#shouldIgnoreEvent(stn) || !this.#canStoreNewNode()) return false
 
-    if (stn.s < this.earliestTimeStamp) this.earliestTimeStamp = stn.s
-    if (stn.s > this.latestTimeStamp) this.latestTimeStamp = stn.s
-    this.nodeCount++
+    /** attempt to smear -- if not possible or it doesnt find a match -- just add it directly to the event buffer */
+    if (!this.#isSmearable(stn) || !this.#smear(stn)) this.parent.events.add(stn)
+
+    return true
   }
 
   /**
-   * Trim the collection of nodes awaiting harvest such that those seen outside a certain span of time are discarded.
-   * @param {number} lookbackDuration Past length of time until now for which we care about nodes, in milliseconds
-   * @returns {number} However many nodes were discarded after trimming.
+   * Stores a new trace node in the event buffer.
+   * @param {TraceNode} node
+   * @returns {boolean} true if the node was successfully stored, false otherwise
    */
-  trimSTNs (lookbackDuration) {
-    let prunedNodes = 0
-    const cutoffHighResTime = Math.max(now() - lookbackDuration, 0)
-    Object.keys(this.trace).forEach(nameCategory => {
-      const nodeList = this.trace[nameCategory]
-      /* Notice nodes are appending under their name's list as they end and are stored. This means each list is already (roughly) sorted in chronological order by end time.
-         * This isn't exact since nodes go through some processing & EE handlers chain, but it's close enough as we still capture nodes whose duration overlaps the lookback window.
-         * ASSUMPTION: all 'end' timings stored are relative to timeOrigin (DOMHighResTimeStamp) and not Unix epoch based. */
-      let cutoffIdx = nodeList.findIndex(node => cutoffHighResTime <= node.e)
-
-      if (cutoffIdx === 0) return
-      else if (cutoffIdx < 0) { // whole list falls outside lookback window and is irrelevant
-        cutoffIdx = nodeList.length
-        delete this.trace[nameCategory]
-      } else nodeList.splice(0, cutoffIdx) // chop off everything outside our window i.e. before the last <lookbackDuration> timeframe
-
-      this.nodeCount -= cutoffIdx
-      prunedNodes += cutoffIdx
-    })
-    return prunedNodes
-  }
-
-  /** Used by session trace's harvester to create the payload body. */
-  takeSTNs () {
-    if (!SUPPORTS_PERFORMANCE_OBSERVER) { // if PO isn't supported, this checks resourcetiming buffer every harvest.
-      this.storeResources(globalScope.performance?.getEntriesByType?.('resource'))
-    }
-
-    const stns = Object.entries(this.trace).flatMap(([name, listOfSTNodes]) => { // basically take the "this.trace" map-obj and concat all the list-type values
-      if (!(name in toAggregate)) return listOfSTNodes
-      // Special processing for event nodes dealing with user inputs:
-      const reindexByOriginFn = this.smearEvtsByOrigin(name)
-      const partitionListByOriginMap = listOfSTNodes.sort((a, b) => a.s - b.s).reduce(reindexByOriginFn, {})
-      return Object.values(partitionListByOriginMap).flat() // join the partitions back into 1-D, now ordered by origin then start time
-    }, this)
-
-    const earliestTimeStamp = this.earliestTimeStamp
-    const latestTimeStamp = this.latestTimeStamp
-    return { stns, earliestTimeStamp, latestTimeStamp }
-  }
-
-  smearEvtsByOrigin (name) {
-    const maxGap = toAggregate[name][0]
-    const maxLen = toAggregate[name][1]
-    const lastO = {}
-
-    return (byOrigin, evtNode) => {
-      let lastArr = byOrigin[evtNode.o]
-      if (!lastArr) lastArr = byOrigin[evtNode.o] = []
-
-      const last = lastO[evtNode.o]
-
-      if (name === 'scrolling' && !trivial(evtNode)) {
-        lastO[evtNode.o] = null
-        evtNode.n = 'scroll'
-        lastArr.push(evtNode)
-      } else if (last && (evtNode.s - last.s) < maxLen && last.e > (evtNode.s - maxGap)) {
-        last.e = evtNode.e
-      } else {
-        lastO[evtNode.o] = evtNode
-        lastArr.push(evtNode)
-      }
-
-      return byOrigin
-    }
-
-    function trivial (node) {
-      const limit = 4
-      return !!(node && typeof node.e === 'number' && typeof node.s === 'number' && (node.e - node.s) < limit)
-    }
-  }
-
   storeNode (node) {
-    if (!this.#canStoreNewNode()) return
-    this.#storeSTN(node)
+    return this.#storeSTN(node)
   }
 
+  /**
+   * Processes a PVT (Page Visibility Timing) entry.
+   * @param {*} name
+   * @param {*} value
+   * @param {*} attrs
+   * @returns {boolean} true if the node was successfully stored, false otherwise
+   */
   processPVT (name, value, attrs) {
-    this.storeTiming({ [name]: value })
+    return this.storeTiming({ [name]: value })
   }
 
+  /**
+   * Stores a timing entry in the event buffer.
+   * @param {*} timingEntry
+   * @param {*} isAbsoluteTimestamp
+   * @returns {boolean} true if ALL possible nodes were successfully stored, false otherwise
+   */
   storeTiming (timingEntry, isAbsoluteTimestamp = false) {
-    if (!timingEntry) return
+    if (!timingEntry) return false
 
+    let allStored = true
     // loop iterates through prototype also (for FF)
     for (let key in timingEntry) {
       let val = timingEntry[key]
@@ -168,20 +173,28 @@ export class TraceStorage {
           Math.floor(this.parent.timeKeeper.correctAbsoluteTimestamp(val))
         )
       }
-      if (!this.#canStoreNewNode()) return // at any point when no new nodes can be stored, there's no point in processing the rest of the timing entries
-      this.#storeSTN(new TraceNode(key, val, val, 'document', 'timing'))
+      if (!this.#storeSTN(new TraceNode(key, val, val, 'document', 'timing'))) allStored = false
     }
+    return allStored
   }
 
-  // Tracks the events and their listener's duration on objects wrapped by wrap-events.
+  /**
+   * Tracks the events and their listener's duration on objects wrapped by wrap-events.
+   * @param {*} currentEvent - the event to be stored
+   * @param {*} target - the target of the event
+   * @param {*} start - the start time of the event
+   * @param {*} end - the end time of the event
+   * @returns {boolean} true if the event was successfully stored, false otherwise
+   */
   storeEvent (currentEvent, target, start, end) {
-    if (this.shouldIgnoreEvent(currentEvent, target)) return
-    if (!this.#canStoreNewNode()) return // need to check if adding node will succeed BEFORE storing event ref below (*cli Jun'25 - addressing memory leak in aborted ST issue #NR-420780)
-
-    if (this.prevStoredEvents.has(currentEvent)) return // prevent multiple listeners of an event from creating duplicate trace nodes per occurrence. Cleared every harvest. near-zero chance for re-duplication after clearing per harvest since the timestamps of the event are considered for uniqueness.
+    /**
+     * Important! -- This check NEEDS to be done directly in this handler, before converting to a TraceNode so that the
+     * reference pointer to the Event node itself is the object being checked for duplication
+     * **/
+    if (this.prevStoredEvents.has(currentEvent) || !this.#canStoreNewNode()) return false
     this.prevStoredEvents.add(currentEvent)
 
-    const evt = new TraceNode(this.evtName(currentEvent.type), start, end, undefined, 'event')
+    const evt = new TraceNode(evtName(currentEvent.type), start, end, undefined, 'event')
     try {
       // webcomponents-lite.js can trigger an exception on currentEvent.target getter because
       // it does not check currentEvent.currentTarget before calling getRootNode() on it
@@ -189,114 +202,98 @@ export class TraceStorage {
     } catch (e) {
       evt.o = eventOrigin(null, target, this.parent.ee)
     }
-    this.#storeSTN(evt)
+    return this.#storeSTN(evt)
   }
 
-  shouldIgnoreEvent (event, target) {
-    if (event.type in ignoredEvents.global) return true
-    const origin = eventOrigin(event.target, target, this.parent.ee)
-    if (!!ignoredEvents[origin] && ignoredEvents[origin].ignoreAll) return true
-    return !!(!!ignoredEvents[origin] && event.type in ignoredEvents[origin])
-  }
-
-  evtName (type) {
-    switch (type) {
-      case 'keydown':
-      case 'keyup':
-      case 'keypress':
-        return 'typing'
-      case 'mousemove':
-      case 'mouseenter':
-      case 'mouseleave':
-      case 'mouseover':
-      case 'mouseout':
-        return 'mousing'
-      case 'scroll':
-        return 'scrolling'
-      case 'touchstart':
-      case 'touchmove':
-      case 'touchend':
-      case 'touchcancel':
-      case 'touchenter':
-      case 'touchleave':
-        return 'touching'
-      default:
-        return type
-    }
-  }
-
-  // Tracks when the window history API specified by wrap-history is used.
+  /**
+   * Tracks when the window history API specified by wrap-history is used.
+   * @param {*} path
+   * @param {*} old
+   * @param {*} time
+   * @returns {boolean} true if the history node was successfully stored, false otherwise
+   */
   storeHist (path, old, time) {
-    if (!this.#canStoreNewNode()) return
-    this.#storeSTN(new TraceNode('history.pushState', time, time, path, old))
+    return this.#storeSTN(new TraceNode('history.pushState', time, time, path, old))
   }
 
-  #laststart = 0
-  // Processes all the PerformanceResourceTiming entries captured (by observer).
+  /**
+   * Processes all the PerformanceResourceTiming entries captured (by observer).
+   * @param {*[]} resources
+   * @returns {boolean} true if all resource nodes were successfully stored, false otherwise
+   */
   storeResources (resources) {
-    if (!resources || resources.length === 0) return
+    if (!resources || resources.length === 0) return false
 
+    let allStored = true
     for (let i = 0; i < resources.length; i++) {
       const currentResource = resources[i]
-      if ((currentResource.fetchStart | 0) <= this.#laststart) continue // don't recollect already-seen resources
       if (!this.#canStoreNewNode()) break // stop processing if we can't store any more resource nodes anyways
 
       const { initiatorType, fetchStart, responseEnd, entryType } = currentResource
       const { protocol, hostname, port, pathname } = parseUrl(currentResource.name)
       const res = new TraceNode(initiatorType, fetchStart | 0, responseEnd | 0, `${protocol}://${hostname}:${port}${pathname}`, entryType)
 
-      this.#storeSTN(res)
+      if (!this.#storeSTN(res)) allStored = false
     }
 
-    this.#laststart = resources[resources.length - 1].fetchStart | 0
+    return allStored
   }
 
-  // JavascriptError (FEATURE) events pipes into ST here.
+  /**
+   * JavascriptError (FEATURE) events pipes into ST here.
+   * @param {*} type
+   * @param {*} name
+   * @param {*} params
+   * @param {*} metrics
+   * @returns {boolean} true if the error node was successfully stored, false otherwise
+   */
   storeErrorAgg (type, name, params, metrics) {
-    if (type !== 'err') return // internal errors are purposefully ignored
-    if (!this.#canStoreNewNode()) return
-    this.#storeSTN(new TraceNode('error', metrics.time, metrics.time, params.message, params.stackHash))
+    if (type !== 'err') return false // internal errors are purposefully ignored
+    return this.#storeSTN(new TraceNode('error', metrics.time, metrics.time, params.message, params.stackHash))
   }
 
-  // Ajax (FEATURE) events--XML & fetches--pipes into ST here.
+  /**
+   * Ajax (FEATURE) events--XML & fetches--pipes into ST here.
+   * @param {*} type
+   * @param {*} name
+   * @param {*} params
+   * @param {*} metrics
+   * @returns {boolean} true if the Ajax node was successfully stored, false otherwise
+   */
   storeXhrAgg (type, name, params, metrics) {
-    if (type !== 'xhr') return
-    if (!this.#canStoreNewNode()) return
-    this.#storeSTN(new TraceNode('Ajax', metrics.time, metrics.time + metrics.duration, `${params.status} ${params.method}: ${params.host}${params.pathname}`, 'ajax'))
+    if (type !== 'xhr') return false
+    return this.#storeSTN(new TraceNode('Ajax', metrics.time, metrics.time + metrics.duration, `${params.status} ${params.method}: ${params.host}${params.pathname}`, 'ajax'))
   }
 
-  /* Below are the interface expected & required of whatever storage is used across all features on an individual basis. This allows a common `.events` property on Trace shared with AggregateBase.
-    Note that the usage must be in sync with the EventStoreManager class such that AggregateBase.makeHarvestPayload can run the same regardless of which storage class a feature is using. */
-  isEmpty () {
-    return this.nodeCount === 0
+  /**
+   * Trims stored trace nodes in the event buffer by start time.
+   * @param {number} lookbackDuration
+   * @returns {void}
+   */
+  trimSTNsByTime (lookbackDuration = ERROR_MODE_SECONDS_WINDOW) {
+    this.parent.events.clear({
+      clearBeforeTime: Math.max(now - lookbackDuration, 0),
+      timestampKey: 'e'
+    })
   }
 
-  save () {
-    this.#backupTrace = this.trace
+  /**
+   * Trims stored trace nodes in the event buffer before a given index value.
+   * @param {number} index
+   * @returns {void}
+   */
+  trimSTNsByIndex (index = 0) {
+    this.parent.events.clear({
+      clearBeforeIndex: index // trims before index value
+    })
   }
 
-  get () {
-    return [{ targetApp: this.parent.agentRef.runtime.entityManager.get(), data: this.takeSTNs() }]
-  }
-
+  /**
+   * clears the stored events in the event buffer.
+   * This is used to release references to past events for garbage collection.
+   * @returns {void}
+   */
   clear () {
-    this.trace = {}
-    this.nodeCount = 0
     this.prevStoredEvents.clear() // release references to past events for GC
-    this.earliestTimeStamp = Infinity
-    this.latestTimeStamp = 0
-  }
-
-  reloadSave () {
-    for (const stnsArray of Object.values(this.#backupTrace)) {
-      for (const stn of stnsArray) {
-        if (!this.#canStoreNewNode()) return // stop attempting to re-store nodes
-        this.#storeSTN(stn)
-      }
-    }
-  }
-
-  clearSave () {
-    this.#backupTrace = undefined
   }
 }

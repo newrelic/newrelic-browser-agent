@@ -71,7 +71,7 @@ function lambdaTestCapabilities () {
             capabilities['LT:Options'].app = webviewAssetIds.iosID
           }
         } else {
-          capabilities['appium:platformName'] = testBrowser.device_name
+          capabilities['LT:Options'].browserName = testBrowser.browserName
         }
       }
       return capabilities

@@ -12,7 +12,7 @@
     <script>
       addEventListener("newrelic", (evt) => {
         window.newrelicEventTime = Date.now()
-        if (evt.detail.loaded) {
+        if (evt?.detail?.type === "lifecycle" && evt.detail.name === "load") {
           // ensure API works as expected when listening to `newrelic` event
           newrelic.setPageViewName('some-page');
           newrelic.setApplicationVersion('1.0.0');

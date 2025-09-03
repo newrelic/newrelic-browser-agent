@@ -21,6 +21,10 @@ export class EventBuffer {
     this.featureAgg = featureAgg
   }
 
+  get length () {
+    return this.#buffer.length
+  }
+
   isEmpty () {
     return this.#buffer.length === 0
   }
@@ -40,10 +44,11 @@ export class EventBuffer {
   /**
    * Add feature-processed event to our buffer. If this event would cause our total raw size to exceed the set max payload size, it is dropped.
    * @param {any} event - any primitive type or object
+   * @param {number} [evaluatedSize] - the evalated size of the event, if already done so before storing in the event buffer
    * @returns {Boolean} true if successfully added; false otherwise
    */
-  add (event) {
-    const addSize = stringify(event)?.length || 0 // (estimate) # of bytes a directly stringified event it would take to send
+  add (event, evaluatedSize) {
+    const addSize = evaluatedSize || stringify(event)?.length || 0 // (estimate) # of bytes a directly stringified event it would take to send
     if (this.#rawBytes + addSize > this.maxPayloadSize) {
       const smTag = inject => `EventBuffer/${inject}/Dropped/Bytes`
       this.featureAgg?.reportSupportabilityMetric(smTag(this.featureAgg.featureName), addSize) // bytes dropped for this feature will aggregate with this metric tag
@@ -57,11 +62,39 @@ export class EventBuffer {
   }
 
   /**
+ * Merges events in the buffer that match the given criteria.
+ * @param {Function} matcher - A function that takes an event and returns true if it should be merged.
+ * @param {Object} data - The data to merge into the matching events.
+ * @returns {boolean} true if a match was found and merged; false otherwise.
+ */
+  merge (matcher, data) {
+    if (this.isEmpty() || !matcher) return false
+    const matchIdx = this.#buffer.findIndex(matcher)
+    if (matchIdx < 0) return false
+    this.#buffer[matchIdx] = {
+      ...this.#buffer[matchIdx],
+      ...data
+    }
+    return true
+  }
+
+  /**
    * Wipes the main buffer
+   * @param {Object} [opts] - options for clearing the buffer
+   * @param {Number} [opts.clearBeforeTime] - timestamp before which all events should be cleared
+   * @param {String} [opts.timestampKey] - the key in the event object that contains the timestamp to compare against `clearBefore`
+   * @param {Number} [opts.clearBeforeIndex] - index before which all events should be cleared
+   * @returns {void}
    */
-  clear () {
-    this.#buffer = []
-    this.#rawBytes = 0
+  clear (opts = {}) {
+    if (opts.clearBeforeTime !== undefined && opts.timestampKey) {
+      this.#buffer = this.#buffer.filter(event => event[opts.timestampKey] >= opts.clearBeforeTime)
+    } else if (opts.clearBeforeIndex !== undefined) {
+      this.#buffer = this.#buffer.slice(opts.clearBeforeIndex)
+    } else {
+      this.#buffer = []
+    }
+    this.#rawBytes = this.#buffer.length ? stringify(this.#buffer)?.length || 0 : 0 // recalculate raw bytes after clearing
   }
 
   /**

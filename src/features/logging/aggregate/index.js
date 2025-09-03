@@ -117,7 +117,7 @@ export class Aggregate extends AggregateBase {
       common: {
         /** Attributes in the `common` section are added to `all` logs generated in the payload */
         attributes: {
-          ...(!this.agentRef.runtime.registeredEntities.length && {
+          ...(this.harvestEndpointVersion === 1 && {
             'entity.guid': this.agentRef.runtime.appMetadata.agents[0].entityGuid,
             appId: this.agentRef.info.applicationID
           }),

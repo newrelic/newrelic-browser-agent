@@ -138,12 +138,6 @@ try {
     };
     const pressureObserver = new window.PressureObserver(pressureObserverCallback);
     pressureObserver.observe("cpu", { sampleInterval: 1000 });
-
-    const mfe = Object.values(newrelic.initializedAgents).find(x => x.runtime.buildEnv === 'staging/mfe-refactor').register({
-      id: 1234,
-      name: 'JP_EXP_MFE_TEST'
-    })
-    mfe.log('MFE log message')
   }
 } catch (e) {
   newrelic.noticeError(new Error("NRBA: swallowed preamble error", { cause: e }));

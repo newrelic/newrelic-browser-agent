@@ -28,7 +28,6 @@ export class Aggregate extends AggregateBase {
 
   // pass the recorder into the aggregator
   constructor (agentRef, args) {
-    console.log('SR AGG constructor!')
     super(agentRef, FEATURE_NAME)
     /** Set once the recorder has fully initialized after flag checks and sampling */
     this.initialized = false
@@ -84,9 +83,7 @@ export class Aggregate extends AggregateBase {
 
     const { error_sampling_rate, sampling_rate, autoStart, block_selector, mask_text_selector, mask_all_inputs, inline_images, collect_fonts } = agentRef.init.session_replay
 
-    console.log('wait for flags...')
     this.waitForFlags(['srs', 'sr']).then(([srMode, entitled]) => {
-      console.log('got flags!', srMode, entitled)
       this.entitled = !!entitled
       if (!this.entitled) {
         this.deregisterDrain()
@@ -96,11 +93,7 @@ export class Aggregate extends AggregateBase {
         }
         return
       }
-      this.ee.on('drain-' + this.featureName, () => {
-        console.log('GOT DRAIN EVENT')
-      })
-      console.log('CALL initializeRecording... has drained?', this.drained)
-      this.initializeRecording(srMode).then(() => { console.log('start draining'); this.drain(); console.log('drained') })
+      this.initializeRecording(srMode).then(() => { this.drain() })
     }).then(() => {
       if (this.mode === MODE.OFF) {
         this.recorder?.stopRecording() // stop any conservative preload recording launched by instrument
@@ -141,7 +134,6 @@ export class Aggregate extends AggregateBase {
       if (!this.agentRef.runtime.isRecording) this.recorder.startRecording()
       this.syncWithSessionManager({ sessionReplayMode: this.mode })
     } else {
-      console.log('switching to full by calling initializeRecording')
       this.initializeRecording(MODE.FULL, true)
     }
   }
@@ -153,7 +145,6 @@ export class Aggregate extends AggregateBase {
    * @returns {void}
    */
   async initializeRecording (srMode, ignoreSession) {
-    console.log('initialize recording!', this.initialized, this.entitled)
     this.initialized = true
     if (!this.entitled) return
 

@@ -42,11 +42,7 @@ export class Recorder {
     /** The method to stop recording. This defaults to a noop, but is overwritten once the recording library is imported and initialized */
     this.stopRecording = () => { this.parent.agentRef.runtime.isRecording = false }
 
-    console.log('setting up register handler for', this.parent.featureName)
-    registerHandler(RRWEB_DATA_CHANNEL, (event, isCheckout) => {
-      console.log('got data from rrweb register handler...', this.parent)
-      this.audit(event, isCheckout)
-    }, this.parent.featureName, this.parent.ee)
+    registerHandler(RRWEB_DATA_CHANNEL, (event, isCheckout) => { this.audit(event, isCheckout) }, this.parent.featureName, this.parent.ee)
   }
 
   getEvents () {
@@ -78,10 +74,7 @@ export class Recorder {
     let stop
     try {
       stop = recorder({
-        emit: (event, isCheckout) => {
-          console.log('EMIT! --- goes to handle for', this.parent.featureName)
-          handle(RRWEB_DATA_CHANNEL, [event, isCheckout], undefined, this.parent.featureName, this.parent.ee)
-        },
+        emit: (event, isCheckout) => { handle(RRWEB_DATA_CHANNEL, [event, isCheckout], undefined, this.parent.featureName, this.parent.ee) },
         blockClass: block_class,
         ignoreClass: ignore_class,
         maskTextClass: mask_text_class,

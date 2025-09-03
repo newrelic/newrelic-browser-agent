@@ -19,6 +19,8 @@ export class Instrument extends InstrumentBase {
 
   #mode
   #agentRef
+  #importAbortController
+
   constructor (agentRef) {
     super(agentRef, FEATURE_NAME)
 
@@ -40,7 +42,7 @@ export class Instrument extends InstrumentBase {
       this.#mode = session?.sessionReplayMode
       this.#preloadStartRecording()
     } else {
-      this.importAggregator(this.#agentRef, () => import(/* webpackChunkName: "session_replay-aggregate" */ '../aggregate'))
+      this.#importAbortController = this.importAggregator(this.#agentRef, () => import(/* webpackChunkName: "session_replay-aggregate" */ '../aggregate'))
     }
 
     /** If the recorder is running, we can pass error events on to the agg to help it switch to full mode later */
@@ -84,6 +86,8 @@ export class Instrument extends InstrumentBase {
     } catch (err) {
       this.parent.ee.emit('internal-error', [err])
     }
+    /** cancel the original import before preloading the agg if it's already been staged */
+    this.#importAbortController?.abort()
     this.importAggregator(this.#agentRef, () => import(/* webpackChunkName: "session_replay-aggregate" */ '../aggregate'), { recorder: this.recorder, errorNoticed: this.errorNoticed })
   }
 

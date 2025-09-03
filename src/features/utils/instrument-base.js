@@ -74,10 +74,11 @@ export class InstrumentBase extends FeatureBase {
    * @param {Object} agentRef - reference to the base agent ancestor that this feature belongs to
    * @param {Function} fetchAggregator - a function that returns a promise that resolves to the aggregate module
    * @param {Object} [argsObjFromInstrument] - any values or references to pass down to aggregate
-   * @returns void
+   * @returns {AbortController} returns an AbortController instance to handle cancellation of the deferred import
    */
   importAggregator (agentRef, fetchAggregator, argsObjFromInstrument = {}) {
-    if (this.featAggregate) return
+    const abortController = new AbortController()
+    if (this.featAggregate) return abortController
 
     let loadedSuccessfully
     this.onAggregateImported = new Promise(resolve => {
@@ -130,7 +131,9 @@ export class InstrumentBase extends FeatureBase {
     // For regular web pages, we want to wait and lazy-load the aggregator only after all page resources are loaded.
     // Non-browser scopes (i.e. workers) have no `window.load` event, so the aggregator can be lazy-loaded immediately.
     if (!isBrowserScope) importLater()
-    else onWindowLoad(() => importLater(), true)
+    else onWindowLoad(() => importLater(), true, abortController.signal)
+
+    return abortController
   }
 
   /**

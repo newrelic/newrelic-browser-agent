@@ -35,6 +35,7 @@ const defaultFlagValue = (flag) => {
   return 1
 }
 module.exports.rumFlags = (flags = {}, app = {}) => ({
+  test: 1,
   loaded: defaultFlagValue(flags.loaded), // Used internally to signal the tests that the agent has loaded
   st: defaultFlagValue(flags.st), // session trace entitlements 0|1
   err: defaultFlagValue(flags.err), // err entitlements 0|1
@@ -42,7 +43,7 @@ module.exports.rumFlags = (flags = {}, app = {}) => ({
   spa: defaultFlagValue(flags.spa), // spa entitlements 0|1
   sr: defaultFlagValue(flags.sr), // session replay entitlements 0|1
   sts: defaultFlagValue(flags.sts), // session trace sampling 0|1|2 - off full error
-  srs: defaultFlagValue(flags.srs), // session replay sampling 0|1|2 - off full error
+  srs: 0, // session replay sampling 0|1|2 - off full error
   log: flags.log ?? 3, // logging sampling 0|1|2|3|4|5 - off error warn info debug trace
   app: {
     agents: app.agents || [

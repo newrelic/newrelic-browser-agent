@@ -1,7 +1,7 @@
 import { resetAgent, setupAgent } from '../setup-agent'
 import { Instrument as SoftNav } from '../../../src/features/soft_navigations/instrument'
 import * as ttfbModule from '../../../src/common/vitals/time-to-first-byte'
-import { INTERACTION_STATUS, NO_LONG_TASK_WINDOW, POPSTATE_TRIGGER } from '../../../src/features/soft_navigations/constants'
+import { INTERACTION_STATUS, NO_LONG_TASK_WINDOW, POPSTATE_MERGE_WINDOW, POPSTATE_TRIGGER } from '../../../src/features/soft_navigations/constants'
 
 let mainAgent
 
@@ -225,7 +225,7 @@ describe('getInteractionFor', () => {
     expect(softNavAggregate.getInteractionFor(currentTime)).toBe(softNavAggregate.interactionsToHarvest.get()[0].data[0])
   })
 
-  test('does not consider long task window after hard conditions are met', () => {
+  test('does consider long task window after hard conditions are met, prior to finish', () => {
     const ipl = softNavAggregate.initialPageLoadInteraction
     softNavAggregate.initialPageLoadInteraction.done(100)
 
@@ -239,28 +239,46 @@ describe('getInteractionFor', () => {
     expect(softNavAggregate.interactionInProgress).toBe(ixn)
     expect(softNavAggregate.getInteractionFor(250)).toBe(ixn)
     expect(softNavAggregate.getInteractionFor(50)).toBe(ipl)
-    expect(softNavAggregate.getInteractionFor(350)).toBeUndefined()
+    expect(softNavAggregate.getInteractionFor(350)).toBe(ixn)
 
     softNavAggregate.ee.emit('long-task', [{ end: 500 }])
-    expect(softNavAggregate.getInteractionFor(400)).toBeUndefined()
+    expect(softNavAggregate.getInteractionFor(400)).toBe(ixn)
+    expect(softNavAggregate.getInteractionFor(600)).toBe(ixn)
+  })
+
+  test('does not consider long task window after interaction is finished', () => {
+    softNavAggregate.initialPageLoadInteraction.done(100)
+    softNavAggregate.ee.emit('newUIEvent', [{ type: 'keydown', timeStamp: 100 }])
+    const ixn = softNavAggregate.interactionInProgress
+    softNavAggregate.ee.emit('newURL', [200, 'new_location'])
+    softNavAggregate.ee.emit('newDom', [300])
+
+    expect(softNavAggregate.interactionInProgress).toBe(ixn)
+    expect(softNavAggregate.getInteractionFor(250)).toBe(ixn)
+    softNavAggregate.ee.emit('long-task', [{ end: 500 }])
+    softNavAggregate.interactionInProgress.done(500)
+
+    expect(softNavAggregate.getInteractionFor(400)).toBe(ixn)
     expect(softNavAggregate.getInteractionFor(600)).toBeUndefined()
   })
 })
 
 describe('popstate interactions', () => {
   test('do become route change if first interaction on page', () => {
+    const origUrl = window.location.href
+    const newUrl = 'http://myurl.com'
+    window.location.href = newUrl // location is normally updated by the time popstate event occurs
+
     softNavAggregate.ee.emit('newUIEvent', [{ type: POPSTATE_TRIGGER, timeStamp: 100 }])
     const ixn = softNavAggregate.interactionInProgress
     expect(ixn).toBeTruthy()
     expect(ixn.trigger).toEqual(POPSTATE_TRIGGER)
 
-    const newUrl = 'http://myurl.com'
     softNavAggregate.ee.emit('newURL', [101, newUrl])
     expect(ixn.newURL).toEqual(newUrl)
-    expect(ixn.oldURL).not.toEqual(newUrl)
+    expect(ixn.oldURL).toEqual(origUrl)
     expect(softNavAggregate.latestHistoryUrl).toEqual(newUrl)
 
-    const origUrl = ixn.oldURL
     const newUrl2 = 'http://myurl2.com'
     softNavAggregate.ee.emit('newURL', [102, newUrl2]) // back to back url changes should update the newURL
     expect(ixn.newURL).toEqual(newUrl2)
@@ -268,12 +286,13 @@ describe('popstate interactions', () => {
     expect(softNavAggregate.latestHistoryUrl).toEqual(newUrl2)
   })
 
-  test('do not affect each other', () => {
-    softNavAggregate.ee.emit('newUIEvent', [{ type: POPSTATE_TRIGGER, timeStamp: 100 }])
+  test('do not affect each other when emitted back-to-back', () => {
     const firstUrl = 'http://myurl.com'
+    softNavAggregate.ee.emit('newUIEvent', [{ type: POPSTATE_TRIGGER, timeStamp: 100 }])
     softNavAggregate.ee.emit('newURL', [101, firstUrl])
-    softNavAggregate.ee.emit('newUIEvent', [{ type: POPSTATE_TRIGGER, timeStamp: 105 }])
+
     const secondUrl = 'http://myotherurl.com'
+    softNavAggregate.ee.emit('newUIEvent', [{ type: POPSTATE_TRIGGER, timeStamp: 105 }])
     softNavAggregate.ee.emit('newURL', [106, secondUrl])
 
     expect(softNavAggregate.interactionInProgress.oldURL).toEqual(firstUrl)
@@ -281,14 +300,21 @@ describe('popstate interactions', () => {
     expect(softNavAggregate.latestHistoryUrl).toEqual(secondUrl)
   })
 
-  test('are not affected by an immediately preceding click', () => {
+  test('are merged into an immediately preceding click', () => {
     softNavAggregate.ee.emit('newUIEvent', [{ type: 'click', timeStamp: 100, target: { tagName: 'a' } }])
     softNavAggregate.ee.emit('newUIEvent', [{ type: POPSTATE_TRIGGER, timeStamp: 105 }])
     softNavAggregate.ee.emit('newURL', [110, 'myurl.com'])
 
-    expect(softNavAggregate.interactionInProgress.trigger).toEqual(POPSTATE_TRIGGER)
+    expect(softNavAggregate.interactionInProgress.trigger).toEqual('click')
     expect(softNavAggregate.interactionInProgress.oldURL).toEqual(window.location.href)
     expect(softNavAggregate.interactionInProgress.newURL).toEqual('myurl.com')
+  })
+
+  test('are NOT merged into a preceeding click if click happened some time ago', () => {
+    softNavAggregate.ee.emit('newUIEvent', [{ type: 'click', timeStamp: 100, target: { tagName: 'a' } }])
+    softNavAggregate.ee.emit('newUIEvent', [{ type: POPSTATE_TRIGGER, timeStamp: 101 + POPSTATE_MERGE_WINDOW }])
+
+    expect(softNavAggregate.interactionInProgress.trigger).toEqual(POPSTATE_TRIGGER)
   })
 
   test('are not affected by an immediately preceding history change', () => {

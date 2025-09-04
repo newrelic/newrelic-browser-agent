@@ -27,6 +27,11 @@ describe('logging mode from RUM flags', () => {
         console.log("It's a-me, Mario")
         console.debug('Mamma mia')
         newrelic.log('Here we go')
+        const printer = {
+          log: function (message) {} // other args are ignored
+        }
+        newrelic.wrapLogger(printer, 'log', { level: 'info' })
+        printer.log('Wahoo!')
       })
     ])
 
@@ -35,6 +40,7 @@ describe('logging mode from RUM flags', () => {
     expect(logPayload.logs[0].message).toEqual("It's a-me, Mario")
     // The console.debug should not be captured because it's above verbosity level.
     // The newrelic.log should not be captured because logapi flag is set to OFF.
+    // The printer.log should not be captured because logapi flag is set to OFF.
   })
 
   it('only captures api logs when log flag is 0', async () => {
@@ -47,13 +53,19 @@ describe('logging mode from RUM flags', () => {
         console.log("It's a-me, Mario")
         newrelic.log('Mamma mia')
         newrelic.log('Here we go', { level: 'trace' })
+        const printer = {
+          log: function (message) {} // other args are ignored
+        }
+        newrelic.wrapLogger(printer, 'log', { level: 'info' })
+        printer.log('Wahoo!')
       })
     ])
 
     const logPayload = JSON.parse(logsHarvests[0].request.body)[0]
-    expect(logPayload.logs.length).toEqual(1)
+    expect(logPayload.logs.length).toEqual(2)
     // The console.log should not be captured because log flag is set to OFF.
     expect(logPayload.logs[0].message).toEqual('Mamma mia')
     // The second newrelic.log should not be captured because the level is above INFO flag.
+    expect(logPayload.logs[1].message).toEqual('Wahoo!')
   })
 })

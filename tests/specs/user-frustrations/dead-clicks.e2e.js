@@ -242,6 +242,32 @@ describe('User Frustrations - Dead Clicks', () => {
     expect(actualInsHarvests[3]).not.toHaveProperty('deadClick')
   })
 
+  it('should not decorate dead clicks when hashChange detected', async () => {
+    const [insightsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+      { test: testInsRequest }
+    ])
+    await browser.url(await browser.testHandle.assetURL('user-frustrations/instrumented-dead-clicks.html'))
+      .then(() => browser.waitForAgentLoad())
+
+    await browser.execute(function () {
+      document.getElementById('go-to-buttons').click()
+    })
+
+    await browser.pause(FRUSTRATION_TIMEOUT)
+    await browser.execute(function () {
+      document.getElementById('dummy-span').click()
+    })
+
+    const [insightsHarvest] = await insightsCapture.waitForResult({ totalCount: 1, timeout: HARVEST_TIMEOUT })
+    const actualInsHarvests = insightsHarvest?.request.body.ins.filter(x => x.action === 'click')
+    expect(actualInsHarvests[0]).toMatchObject(expect.objectContaining({
+      eventType: 'UserAction',
+      targetTag: 'A',
+      targetId: 'go-to-buttons'
+    }))
+    expect(actualInsHarvests[0]).not.toHaveProperty('deadClick')
+  })
+
   /* BA loaded after customer scripts can cause this scenario */
   it('should decorate as dead click if DOM mutation happened prior to start of UA processing', async () => {
     const [insightsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [

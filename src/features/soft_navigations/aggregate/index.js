@@ -184,14 +184,20 @@ export class Aggregate extends AggregateBase {
     if (!associatedInteraction) { // no interaction was happening when this ajax started, so give it back to Ajax feature for processing
       handle('returnAjax', [event], undefined, FEATURE_NAMES.ajax, this.ee)
     } else {
-      if (associatedInteraction.status === INTERACTION_STATUS.FIN) processAjax(event, metadata, associatedInteraction) // tack ajax onto the ixn object awaiting harvest
+      if (associatedInteraction.status === INTERACTION_STATUS.FIN) processAjax.call(this, event, metadata, associatedInteraction) // tack ajax onto the ixn object awaiting harvest
       else { // same thing as above, just at a later time -- if the interaction in progress is cancelled, just send the event back to ajax feat unmodified
-        associatedInteraction.on('finished', () => processAjax(event, metadata, associatedInteraction))
+        associatedInteraction.on('finished', () => processAjax.call(this, event, metadata, associatedInteraction))
         associatedInteraction.on('cancelled', () => handle('returnAjax', [event], undefined, FEATURE_NAMES.ajax, this.ee))
       }
     }
 
     function processAjax (event, metadata, parentInteraction) {
+      const finalEnd = parentInteraction.end // assume: by the time the 'finished' event occurs & this executes, the ixn end time accounts for any long task extension + lookback window exclusion
+      if (event.startTime > finalEnd) {
+        handle('returnAjax', [event], undefined, FEATURE_NAMES.ajax, this.ee) // falling outside the final span, returned as standalone
+        return
+      }
+
       // Metadata(ctx) should contain any long task end time associated with this XHR which should be up-to-date by the time the in-progress ixn & ajax children are being finalized for harvest.
       const newNode = new AjaxNode(event, metadata)
       parentInteraction.addChild(newNode)
@@ -217,7 +223,7 @@ export class Aggregate extends AggregateBase {
       // These callbacks may be added multiple times for an ixn, but just a single run will deal with all jserrors associated with the interaction.
       // As such, be cautious not to use the params object since that's tied to one specific jserror and won't affect the rest of them.
       associatedInteraction.on('finished', single(() =>
-        handle('softNavFlush', [associatedInteraction.id, true, associatedInteraction.customAttributes], undefined, FEATURE_NAMES.jserrors, this.ee)))
+        handle('softNavFlush', [associatedInteraction.id, true, associatedInteraction.customAttributes, associatedInteraction.end], undefined, FEATURE_NAMES.jserrors, this.ee)))
       associatedInteraction.on('cancelled', single(() =>
         handle('softNavFlush', [associatedInteraction.id, false, undefined], undefined, FEATURE_NAMES.jserrors, this.ee))) // don't take custom attrs from cancelled ixns
     }

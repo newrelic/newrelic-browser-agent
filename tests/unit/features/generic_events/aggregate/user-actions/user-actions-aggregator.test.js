@@ -138,6 +138,20 @@ describe('UserActionsAggregator - Dead Clicks', () => {
     })
   })
 
+  test('should NOT set deadClick if a change is detected within 2 seconds', () => {
+    const btn = document.createElement('button')
+    document.body.appendChild(btn)
+    const evt = { type: 'click', target: btn }
+    aggregator.process(evt)
+
+    jest.advanceTimersByTime(1999)
+    aggregator.treatAsLiveClick() // Simulate a nav change or network request
+    jest.advanceTimersByTime(1)
+
+    const userAction = aggregator.aggregationEvent
+    expect(userAction.deadClick).toBe(false)
+  })
+
   test('should NOT set deadClick if another user action occurs before 2 seconds', () => {
     const btn = document.createElement('button')
     document.body.appendChild(btn)

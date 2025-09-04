@@ -219,7 +219,7 @@ describe('User Frustrations - Dead Clicks', () => {
     })
 
     const insightsHarvests = await insightsCapture.waitForResult({ totalCount: 2, timeout: HARVEST_TIMEOUT * 2 })
-    const actualInsHarvests = insightsHarvests.map(harvest => harvest.request.body.ins).flat().filter(x => x.action === 'click')
+    const actualInsHarvests = insightsHarvests.flatMap(harvest => harvest.request.body.ins).filter(x => x.action === 'click')
 
     expect(actualInsHarvests.length).toBeGreaterThanOrEqual(4)
     expect(actualInsHarvests[0]).toMatchObject(expect.objectContaining({

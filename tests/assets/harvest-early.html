@@ -19,9 +19,9 @@
 
       newrelic.addPageAction('test')
       newrelic.log('test')
-      document.addEventListener('click', function () {
+      window.sendAjax = function(){
         fetch('https://pokeapi.co/api/v2/pokemon/moltres')
-      })
+      }
     </script>
   </body>
 </html>

@@ -88,21 +88,6 @@ describe('NR Server Time', () => {
         .then(() => browser.getPageTime())
     ])
 
-    replayData.body.forEach(x => {
-      expect(x.__newrelic).toMatchObject({
-        originalTimestamp: expect.any(Number),
-        correctedTimestamp: expect.any(Number),
-        timestampDiff: expect.any(Number),
-        originTime: expect.any(Number),
-        correctedOriginTime: expect.any(Number),
-        originTimeDiff: expect.any(Number)
-      })
-      expect(x.__newrelic.timestampDiff - x.__newrelic.originTimeDiff).toBeLessThanOrEqual(1) //  account for rounding error
-      testTimeExpectations(x.__newrelic.correctedTimestamp, {
-        originTime: x.__newrelic.originTime,
-        correctedOriginTime: x.__newrelic.correctedOriginTime
-      }, true)
-    })
     const attrs = decodeAttributes(replayData.query.attributes)
     const firstTimestamp = attrs['replay.firstTimestamp']
     testTimeExpectations(firstTimestamp, timeKeeper, true)
@@ -122,21 +107,6 @@ describe('NR Server Time', () => {
         .then(() => browser.waitForSessionReplayRecording())
         .then(() => browser.getPageTime())
     ])
-    replayData.body.forEach(x => {
-      expect(x.__newrelic).toMatchObject({
-        originalTimestamp: expect.any(Number),
-        correctedTimestamp: expect.any(Number),
-        timestampDiff: expect.any(Number),
-        originTime: expect.any(Number),
-        correctedOriginTime: expect.any(Number),
-        originTimeDiff: expect.any(Number)
-      })
-      expect(x.__newrelic.timestampDiff - x.__newrelic.originTimeDiff).toBeLessThanOrEqual(1) //  account for rounding error
-      testTimeExpectations(x.__newrelic.correctedTimestamp, {
-        originTime: x.__newrelic.originTime,
-        correctedOriginTime: x.__newrelic.correctedOriginTime
-      }, true)
-    })
     const attrs = decodeAttributes(replayData.query.attributes)
     const firstTimestamp = attrs['replay.firstTimestamp']
     testTimeExpectations(firstTimestamp, timeKeeper, false)

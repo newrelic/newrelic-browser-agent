@@ -20,6 +20,7 @@ describe('should harvest early', () => {
   it('should harvest early when exceeding ideal size', async () => {
     const timeStart = Date.now()
     await browser.url(await browser.testHandle.assetURL('harvest-early-block-internal.html'))
+      .then(() => browser.waitForAgentLoad())
 
     await Promise.all([
       ajaxEventsCapture.waitForResult({ totalCount: 1 }),
@@ -28,7 +29,7 @@ describe('should harvest early', () => {
       loggingEventsCapture.waitForResult({ totalCount: 1 }),
       testBlobTraceCapture.waitForResult({ totalCount: 2 }), // the initial trace ALWAYS harvests immediately, but the second one should be tested for early harvest
       browser.execute(function () {
-        document.querySelector('body').click()
+        window.sendAjax()
       })
     ])
 
@@ -38,11 +39,12 @@ describe('should harvest early', () => {
   /** if we track internal and spawn early requests, we can potentially create a feedback loop that goes on forever with large ajax requests describing themselves */
   it('should not harvest AJAX early when agent is tracking internal calls', async () => {
     await browser.url(await browser.testHandle.assetURL('harvest-early.html'))
+      .then(() => browser.waitForAgentLoad())
 
     const [ajaxResults] = await Promise.all([
       ajaxEventsCapture.waitForResult({ timeout: 10000 }),
       browser.execute(function () {
-        document.querySelector('body').click()
+        window.sendAjax()
       })
     ])
 

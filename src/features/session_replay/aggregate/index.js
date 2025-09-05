@@ -43,8 +43,10 @@ export class Aggregate extends AggregateBase {
     /** set at BCS response, stored in runtime */
     this.timeKeeper = undefined
 
-    this.recorder = args?.recorder
-    this.errorNoticed = args?.errorNoticed || false
+    this.instrumentClass = args
+    // point this var here just in case it already exists and can be used by APIs (session pause, resume, etc.) before handling rum flags
+    this.recorder = this.instrumentClass?.recorder
+
     this.harvestOpts.raw = true
 
     this.isSessionTrackingEnabled = canEnableSessionTracking(agentRef.init) && !!agentRef.runtime.session
@@ -157,10 +159,7 @@ export class Aggregate extends AggregateBase {
     const { session, timeKeeper } = this.agentRef.runtime
     this.timeKeeper = timeKeeper
 
-    /** if recorder already exists, it could have been initialized by the inst. class.  Ensure its parent is always the agg class at this stage */
-    if (this.recorder) this.recorder.parent = this
-
-    if (this.recorder?.parent.trigger === TRIGGERS.API && this.agentRef.runtime.isRecording) {
+    if (this.recorder?.trigger === TRIGGERS.API && this.agentRef.runtime.isRecording) {
       this.mode = MODE.FULL
     } else if (!session.isNew && !ignoreSession) { // inherit the mode of the existing session
       this.mode = session.state.sessionReplayMode
@@ -171,19 +170,11 @@ export class Aggregate extends AggregateBase {
     // If off, then don't record (early return)
     if (this.mode === MODE.OFF) return
 
-    if (!this.recorder) {
-      try {
-        // Do not change the webpackChunkName or it will break the webpack nrba-chunking plugin
-        const { Recorder } = (await import(/* webpackChunkName: "recorder" */'../shared/recorder'))
-        this.recorder = new Recorder(this)
-        this.recorder.events.hasError = this.errorNoticed
-      } catch (err) {
-        return this.abort(ABORT_REASONS.IMPORT)
-      }
-    }
+    /** will return a recorder instance if already imported, otherwise, will fetch the recorder and initialize it */
+    this.recorder = await this.instrumentClass.importRecorder()
 
     // If an error was noticed before the mode could be set (like in the early lifecycle of the page), immediately set to FULL mode
-    if (this.mode === MODE.ERROR && this.errorNoticed) this.mode = MODE.FULL
+    if (this.mode === MODE.ERROR && this.instrumentClass.errorNoticed) { this.mode = MODE.FULL }
 
     // FULL mode records AND reports from the beginning, while ERROR mode only records (but does not report).
     // ERROR mode will do this until an error is thrown, and then switch into FULL mode.

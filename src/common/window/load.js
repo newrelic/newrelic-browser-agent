@@ -8,16 +8,9 @@ export function checkState () {
   return (typeof document === 'undefined' || document.readyState === 'complete')
 }
 
-/**
- * Add a callback to be invoked when the window has finished loading. Also fires the callback if the window has already loaded at setup time.
- * @param {*} cb The callback to be invoked
- * @param {*} useCapture whether to fire the callback in the capture phase
- * @param {*} abortSignal An abort controller signal to control the listener
- * @returns {void}
- */
-export function onWindowLoad (cb, useCapture, abortSignal) {
+export function onWindowLoad (cb, useCapture) {
   if (checkState()) return cb()
-  windowAddEventListener('load', cb, useCapture, abortSignal)
+  windowAddEventListener('load', cb, useCapture)
 }
 
 export function onDOMContentLoaded (cb) {

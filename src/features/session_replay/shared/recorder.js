@@ -4,7 +4,7 @@
  */
 import { record as recorder } from 'rrweb'
 import { stringify } from '../../../common/util/stringify'
-import { AVG_COMPRESSION, CHECKOUT_MS, QUERY_PARAM_PADDING, RRWEB_EVENT_TYPES } from '../constants'
+import { AVG_COMPRESSION, CHECKOUT_MS, QUERY_PARAM_PADDING, RRWEB_EVENT_TYPES, SR_EVENT_EMITTER_TYPES } from '../constants'
 import { RecorderEvents } from './recorder-events'
 import { MODE } from '../../../common/session/constants'
 import { stylesheetEvaluator } from './stylesheet-evaluator'
@@ -25,11 +25,21 @@ export class Recorder {
 
   #warnCSSOnce = single(() => warn(47)) // notifies user of potential replayer issue if fix_stylesheets is off
 
-  constructor (parent) {
-    /** The parent class that instantiated the recorder */
-    this.parent = parent
+  #canRecord = true
+
+  constructor (srInstrument) {
+    /** The parent classes that share the recorder */
+    this.srInstrument = srInstrument
+    this.srAggregate = srInstrument.featAggregate
+    // --- shortcuts
+    this.ee = srInstrument.ee
+    this.srFeatureName = srInstrument.featureName
+    this.agentRef = srInstrument.agentRef
+    this.initializedMode = srInstrument.mode
+
+    this.trigger = undefined
     /** A flag that can be set to false by failing conversions to stop the fetching process */
-    this.shouldFix = this.parent.agentRef.init.session_replay.fix_stylesheets
+    this.shouldFix = this.agentRef.init.session_replay.fix_stylesheets
 
     /** Each page mutation or event will be stored (raw) in this array. This array will be cleared on each harvest */
     this.events = new RecorderEvents(this.shouldFix)
@@ -40,9 +50,23 @@ export class Recorder {
     /** Hold on to the last meta node, so that it can be re-inserted if the meta and snapshot nodes are broken up due to harvesting */
     this.lastMeta = false
     /** The method to stop recording. This defaults to a noop, but is overwritten once the recording library is imported and initialized */
-    this.stopRecording = () => { this.parent.agentRef.runtime.isRecording = false }
+    this.stopRecording = () => { this.agentRef.runtime.isRecording = false }
 
-    registerHandler(RRWEB_DATA_CHANNEL, (event, isCheckout) => { this.audit(event, isCheckout) }, this.parent.featureName, this.parent.ee)
+    registerHandler(SR_EVENT_EMITTER_TYPES.SESSION_ERROR, () => {
+      this.#canRecord = false
+      this.stopRecording()
+    }, this.srFeatureName, this.ee)
+    registerHandler(RRWEB_DATA_CHANNEL, (event, isCheckout) => { this.audit(event, isCheckout) }, this.srFeatureName, this.ee)
+  }
+
+  /**
+   * The current recording mode. Prefers the aggregate module's mode if it has been managed yet.
+   * For preloaded data, the recorder will be initialized with a mode and use that until such a
+   * time that the aggregate exists and is managing the "real" mode.
+   * @type {MODE}
+   */
+  get mode () {
+    return this.srAggregate?.mode || this.initializedMode
   }
 
   getEvents () {
@@ -60,21 +84,23 @@ export class Recorder {
 
   /** Clears the buffer (this.events), and resets all payload metadata properties */
   clearBuffer () {
-    this.backloggedEvents = (this.parent.mode === MODE.ERROR) ? this.events : new RecorderEvents(this.shouldFix)
+    this.backloggedEvents = (this.mode === MODE.ERROR) ? this.events : new RecorderEvents(this.shouldFix)
     this.events = new RecorderEvents(this.shouldFix)
   }
 
   /** Begin recording using configured recording lib */
-  startRecording () {
-    this.parent.agentRef.runtime.isRecording = true
-    const { block_class, ignore_class, mask_text_class, block_selector, mask_input_options, mask_text_selector, mask_all_inputs, inline_images, collect_fonts } = this.parent.agentRef.init.session_replay
+  startRecording (trigger) {
+    if (!this.#canRecord) return
+    this.trigger = trigger
+    this.agentRef.runtime.isRecording = true
+    const { block_class, ignore_class, mask_text_class, block_selector, mask_input_options, mask_text_selector, mask_all_inputs, inline_images, collect_fonts } = this.agentRef.init.session_replay
 
     // set up rrweb configurations for maximum privacy --
     // https://newrelic.atlassian.net/wiki/spaces/O11Y/pages/2792293280/2023+02+28+Browser+-+Session+Replay#Configuration-options
     let stop
     try {
       stop = recorder({
-        emit: (event, isCheckout) => { handle(RRWEB_DATA_CHANNEL, [event, isCheckout], undefined, this.parent.featureName, this.parent.ee) },
+        emit: (event, isCheckout) => { handle(RRWEB_DATA_CHANNEL, [event, isCheckout], undefined, this.srFeatureName, this.ee) },
         blockClass: block_class,
         ignoreClass: ignore_class,
         maskTextClass: mask_text_class,
@@ -87,15 +113,15 @@ export class Recorder {
         inlineStylesheet: true,
         inlineImages: inline_images,
         collectFonts: collect_fonts,
-        checkoutEveryNms: CHECKOUT_MS[this.parent.mode],
+        checkoutEveryNms: CHECKOUT_MS[this.mode],
         recordAfter: 'DOMContentLoaded'
       })
     } catch (err) {
-      this.parent.ee.emit('internal-error', [err])
+      this.ee.emit('internal-error', [err])
     }
 
     this.stopRecording = () => {
-      this.parent.agentRef.runtime.isRecording = false
+      this.agentRef.runtime.isRecording = false
       stop?.()
     }
   }
@@ -108,14 +134,14 @@ export class Recorder {
    */
   audit (event, isCheckout) {
     /** An count of stylesheet objects that were blocked from accessing contents via JS */
-    const incompletes = this.parent.agentRef.init.session_replay.fix_stylesheets ? stylesheetEvaluator.evaluate() : 0
+    const incompletes = this.agentRef.init.session_replay.fix_stylesheets ? stylesheetEvaluator.evaluate() : 0
     const missingInlineSMTag = 'SessionReplay/Payload/Missing-Inline-Css/'
     /** only run the full fixing behavior (more costly) if fix_stylesheets is configured as on (default behavior) */
     if (!this.shouldFix) {
       if (incompletes > 0) {
         this.events.inlinedAllStylesheets = false
         this.#warnCSSOnce()
-        handle(SUPPORTABILITY_METRIC_CHANNEL, [missingInlineSMTag + 'Skipped', incompletes], undefined, FEATURE_NAMES.metrics, this.parent.ee)
+        handle(SUPPORTABILITY_METRIC_CHANNEL, [missingInlineSMTag + 'Skipped', incompletes], undefined, FEATURE_NAMES.metrics, this.ee)
       }
       return this.store(event, isCheckout)
     }
@@ -128,8 +154,8 @@ export class Recorder {
           this.events.inlinedAllStylesheets = false
           this.shouldFix = false
         }
-        handle(SUPPORTABILITY_METRIC_CHANNEL, [missingInlineSMTag + 'Failed', failedToFix], undefined, FEATURE_NAMES.metrics, this.parent.ee)
-        handle(SUPPORTABILITY_METRIC_CHANNEL, [missingInlineSMTag + 'Fixed', incompletes - failedToFix], undefined, FEATURE_NAMES.metrics, this.parent.ee)
+        handle(SUPPORTABILITY_METRIC_CHANNEL, [missingInlineSMTag + 'Failed', failedToFix], undefined, FEATURE_NAMES.metrics, this.ee)
+        handle(SUPPORTABILITY_METRIC_CHANNEL, [missingInlineSMTag + 'Fixed', incompletes - failedToFix], undefined, FEATURE_NAMES.metrics, this.ee)
         this.takeFullSnapshot()
       })
       /** Only start ignoring data if got a faulty snapshot */
@@ -141,10 +167,10 @@ export class Recorder {
 
   /** Store a payload in the buffer (this.events).  This should be the callback to the recording lib noticing a mutation */
   store (event, isCheckout) {
-    if (!event || this.parent.blocked) return
+    if (!event || this.srAggregate?.blocked) return
 
     /** because we've waited until draining to process the buffered rrweb events, we can guarantee the timekeeper exists */
-    event.timestamp = this.parent.agentRef.runtime.timeKeeper.correctAbsoluteTimestamp(event.timestamp)
+    event.timestamp = this.agentRef.runtime.timeKeeper.correctAbsoluteTimestamp(event.timestamp)
     event.__serialized = stringify(event)
     const eventBytes = event.__serialized.length
     /** The estimated size of the payload after compression */
@@ -153,7 +179,7 @@ export class Recorder {
     // to help reconstruct the replay later and must be included.  While waiting and buffering for errors to come through,
     // each time we see a new checkout, we can drop the old data.
     // we need to check for meta because rrweb will flag it as checkout twice, once for meta, then once for snapshot
-    if (this.parent.mode === MODE.ERROR && isCheckout && event.type === RRWEB_EVENT_TYPES.Meta) {
+    if (this.mode === MODE.ERROR && isCheckout && event.type === RRWEB_EVENT_TYPES.Meta) {
       // we are still waiting for an error to throw, so keep wiping the buffer over time
       this.clearBuffer()
     }
@@ -168,16 +194,16 @@ export class Recorder {
 
     // We are making an effort to try to keep payloads manageable for unloading.  If they reach the unload limit before their interval,
     // it will send immediately.  This often happens on the first snapshot, which can be significantly larger than the other payloads.
-    if (((this.events.hasSnapshot && this.events.hasMeta) || payloadSize > IDEAL_PAYLOAD_SIZE) && this.parent.mode === MODE.FULL) {
+    if (((this.events.hasSnapshot && this.events.hasMeta) || payloadSize > IDEAL_PAYLOAD_SIZE) && this.mode === MODE.FULL) {
       // if we've made it to the ideal size of ~16kb before the interval timer, we should send early.
-      this.parent.agentRef.runtime.harvester.triggerHarvestFor(this.parent)
+      this.agentRef.runtime.harvester.triggerHarvestFor(this.srAggregate)
     }
   }
 
   /** force the recording lib to take a full DOM snapshot.  This needs to occur in certain cases, like visibility changes */
   takeFullSnapshot () {
     try {
-      if (!this.parent.agentRef.runtime.isRecording) return
+      if (!this.agentRef.runtime.isRecording) return
       recorder.takeFullSnapshot()
     } catch (err) {
       // in the off chance we think we are recording, but rrweb does not, rrweb's lib will throw an error.  This catch is just a precaution
@@ -199,7 +225,7 @@ export class Recorder {
    * https://staging.onenr.io/037jbJWxbjy
    * */
   estimateCompression (data) {
-    if (!!this.parent.gzipper && !!this.parent.u8) return data * AVG_COMPRESSION
+    if (!!this.srAggregate?.gzipper && !!this.srAggregate?.u8) return data * AVG_COMPRESSION
     return data
   }
 }

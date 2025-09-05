@@ -74,7 +74,7 @@ test('should import aggregator on window load', async () => {
   const windowLoadCallback = jest.mocked(onWindowLoad).mock.calls[0][0]
   await windowLoadCallback()
 
-  expect(onWindowLoad).toHaveBeenCalledWith(expect.any(Function), true, expect.any(Object))
+  expect(onWindowLoad).toHaveBeenCalledWith(expect.any(Function), true)
   expect(mockAggregate).toHaveBeenCalledWith(agentBase, aggregateArgs)
 })
 

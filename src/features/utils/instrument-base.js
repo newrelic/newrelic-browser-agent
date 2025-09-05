@@ -32,6 +32,8 @@ export class InstrumentBase extends FeatureBase {
   constructor (agentRef, featureName) {
     super(agentRef.agentIdentifier, featureName)
 
+    this.agentRef = agentRef
+
     /** @type {Function | undefined} This should be set by any derived Instrument class if it has things to do when feature fails or is killed. */
     this.abortHandler = undefined
 
@@ -77,8 +79,7 @@ export class InstrumentBase extends FeatureBase {
    * @returns {AbortController} returns an AbortController instance to handle cancellation of the deferred import
    */
   importAggregator (agentRef, fetchAggregator, argsObjFromInstrument = {}) {
-    const abortController = new AbortController()
-    if (this.featAggregate) return abortController
+    if (this.featAggregate) return
 
     let loadedSuccessfully
     this.onAggregateImported = new Promise(resolve => {
@@ -100,7 +101,7 @@ export class InstrumentBase extends FeatureBase {
       } catch (e) {
         warn(20, e)
         this.ee.emit('internal-error', [e])
-        if (this.featureName === FEATURE_NAMES.sessionReplay) this.abortHandler?.() // SR should stop recording if session DNE
+        this.ee.emit('session-error')
       }
 
       /**
@@ -131,9 +132,7 @@ export class InstrumentBase extends FeatureBase {
     // For regular web pages, we want to wait and lazy-load the aggregator only after all page resources are loaded.
     // Non-browser scopes (i.e. workers) have no `window.load` event, so the aggregator can be lazy-loaded immediately.
     if (!isBrowserScope) importLater()
-    else onWindowLoad(() => importLater(), true, abortController.signal)
-
-    return abortController
+    else onWindowLoad(() => importLater(), true)
   }
 
   /**

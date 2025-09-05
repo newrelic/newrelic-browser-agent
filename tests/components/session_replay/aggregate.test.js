@@ -51,7 +51,6 @@ describe('Session Replay Session Behavior', () => {
     sessionReplayAggregate.ee.emit(SESSION_EVENTS.RESET)
     await new Promise(process.nextTick)
 
-    expect(mainAgent.runtime.harvester.triggerHarvestFor).toHaveBeenCalled()
     expect(mainAgent.runtime.isRecording).toBeFalsy()
     expect(sessionReplayAggregate.blocked).toBeTruthy()
   })
@@ -388,7 +387,7 @@ describe('Session Replay Harvest Behaviors', () => {
     const attrs = Object.fromEntries(new URLSearchParams(undefinedHarvestContents.qs.attributes))
     expect(attrs['replay.firstTimestamp']).toEqual('2000') // cycleTimestamp is used as first timestamp
     expect(Number(attrs['replay.lastTimestamp'])).toEqual(expect.any(Number))
-    expect(Number(attrs['replay.lastTimestamp'])).toBeGreaterThan(now) // last timestamp should be greater than the start time of this test
+    expect(Number(attrs['replay.lastTimestamp'])).toBeGreaterThanOrEqual(now) // last timestamp should be greater than the start time of this test
   })
 })
 

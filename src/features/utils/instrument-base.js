@@ -76,7 +76,7 @@ export class InstrumentBase extends FeatureBase {
    * @param {Object} agentRef - reference to the base agent ancestor that this feature belongs to
    * @param {Function} fetchAggregator - a function that returns a promise that resolves to the aggregate module
    * @param {Object} [argsObjFromInstrument] - any values or references to pass down to aggregate
-   * @returns {AbortController} returns an AbortController instance to handle cancellation of the deferred import
+   * @returns
    */
   importAggregator (agentRef, fetchAggregator, argsObjFromInstrument = {}) {
     if (this.featAggregate) return

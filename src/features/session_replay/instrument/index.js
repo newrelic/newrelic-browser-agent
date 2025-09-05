@@ -17,7 +17,6 @@ import { setupPauseReplayAPI } from '../../../loaders/api/pauseReplay'
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
 
-  #mode
   #agentRef
 
   /** a promise either resolving immediately, or resolving when the staged import of the recorder module downloads */
@@ -44,10 +43,9 @@ export class Instrument extends InstrumentBase {
       this.ee.on('session-error', () => { handle(SR_EVENT_EMITTER_TYPES.SESSION_ERROR, [], undefined, this.featureName, this.ee) })
     }
 
-    if (this.#canPreloadRecorder(session)) {
-      this.#mode = session?.sessionReplayMode
+    if (this.canPreloadRecorder(session)) {
       this.importRecorder().then(() => {
-        this.recorder.startRecording()
+        this.recorder.startRecording(TRIGGERS.PRELOAD, session?.sessionReplayMode)
       })
     }
 
@@ -108,18 +106,9 @@ export class Instrument extends InstrumentBase {
   async #apiStartOrRestartReplay () {
     if (this.featAggregate) { // post-load; there's possibly already an ongoing recording
       if (this.featAggregate.mode !== MODE.FULL) this.featAggregate.initializeRecording(MODE.FULL, true)
-    } else { // pre-load
-      this.#mode = MODE.FULL
+    } else {
       await this.importRecorder()
-      this.recorder.startRecording(TRIGGERS.API)
-      // There's a race here wherein either:
-      // a. Recorder has not been initialized, and we've set the enforced mode, so we're good, or;
-      // b. Record has been initialized, possibly with the "wrong" mode, so we have to correct that + restart.
-      if (this.recorder && this.recorder.mode !== MODE.FULL) {
-        this.recorder.initializedMode = MODE.FULL
-        this.recorder.stopRecording()
-        this.recorder.startRecording(TRIGGERS.API)
-      }
+      this.recorder.startRecording(TRIGGERS.API, MODE.FULL)
     }
   }
 }

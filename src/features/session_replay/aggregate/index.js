@@ -66,7 +66,7 @@ export class Aggregate extends AggregateBase {
       // if the mode changed on a different tab, it needs to update this instance to match
       this.mode = agentRef.runtime.session.state.sessionReplayMode
       if (!this.initialized || this.mode === MODE.OFF) return
-      this.recorder?.startRecording()
+      this.recorder?.startRecording(TRIGGERS.RESUME, this.mode)
     })
 
     this.ee.on(SESSION_EVENTS.UPDATE, (type, data) => {
@@ -133,7 +133,7 @@ export class Aggregate extends AggregateBase {
     this.mode = MODE.FULL
     // if the error was noticed AFTER the recorder was already imported....
     if (this.recorder && this.initialized) {
-      if (!this.agentRef.runtime.isRecording) this.recorder.startRecording()
+      if (!this.agentRef.runtime.isRecording) this.recorder.startRecording(TRIGGERS.SWITCH_TO_FULL, this.mode) // off --> full
       this.syncWithSessionManager({ sessionReplayMode: this.mode })
     } else {
       this.initializeRecording(MODE.FULL, true)
@@ -171,7 +171,7 @@ export class Aggregate extends AggregateBase {
     if (this.mode === MODE.OFF) return
 
     /** will return a recorder instance if already imported, otherwise, will fetch the recorder and initialize it */
-    this.recorder = await this.instrumentClass.importRecorder()
+    this.recorder ??= await this.instrumentClass.importRecorder()
 
     // If an error was noticed before the mode could be set (like in the early lifecycle of the page), immediately set to FULL mode
     if (this.mode === MODE.ERROR && this.instrumentClass.errorNoticed) { this.mode = MODE.FULL }
@@ -182,7 +182,7 @@ export class Aggregate extends AggregateBase {
 
     await this.prepUtils()
 
-    if (!this.agentRef.runtime.isRecording) this.recorder.startRecording()
+    if (!this.agentRef.runtime.isRecording) this.recorder.startRecording(TRIGGERS.INITIALIZE, this.mode)
 
     this.syncWithSessionManager({ sessionReplayMode: this.mode })
   }

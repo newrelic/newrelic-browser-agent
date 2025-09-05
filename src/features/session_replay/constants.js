@@ -55,5 +55,9 @@ export const ABORT_REASONS = {
 export const QUERY_PARAM_PADDING = 5000
 
 export const TRIGGERS = {
-  API: 'api'
+  API: 'api',
+  RESUME: 'resume',
+  SWITCH_TO_FULL: 'switchToFull',
+  INITIALIZE: 'initialize',
+  PRELOAD: 'preload'
 }

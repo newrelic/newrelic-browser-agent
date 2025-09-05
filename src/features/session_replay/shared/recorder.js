@@ -30,13 +30,12 @@ export class Recorder {
   constructor (srInstrument) {
     /** The parent classes that share the recorder */
     this.srInstrument = srInstrument
-    this.srAggregate = srInstrument.featAggregate
     // --- shortcuts
     this.ee = srInstrument.ee
     this.srFeatureName = srInstrument.featureName
     this.agentRef = srInstrument.agentRef
-    this.initializedMode = srInstrument.mode
 
+    this.isErrorMode = false
     this.trigger = undefined
     /** A flag that can be set to false by failing conversions to stop the fetching process */
     this.shouldFix = this.agentRef.init.session_replay.fix_stylesheets
@@ -59,16 +58,6 @@ export class Recorder {
     registerHandler(RRWEB_DATA_CHANNEL, (event, isCheckout) => { this.audit(event, isCheckout) }, this.srFeatureName, this.ee)
   }
 
-  /**
-   * The current recording mode. Prefers the aggregate module's mode if it has been managed yet.
-   * For preloaded data, the recorder will be initialized with a mode and use that until such a
-   * time that the aggregate exists and is managing the "real" mode.
-   * @type {MODE}
-   */
-  get mode () {
-    return this.srAggregate?.mode || this.initializedMode
-  }
-
   getEvents () {
     return {
       events: [...this.backloggedEvents.events, ...this.events.events].filter(x => x),
@@ -84,14 +73,19 @@ export class Recorder {
 
   /** Clears the buffer (this.events), and resets all payload metadata properties */
   clearBuffer () {
-    this.backloggedEvents = (this.mode === MODE.ERROR) ? this.events : new RecorderEvents(this.shouldFix)
+    this.backloggedEvents = (this.isErrorMode) ? this.events : new RecorderEvents(this.shouldFix)
     this.events = new RecorderEvents(this.shouldFix)
   }
 
   /** Begin recording using configured recording lib */
-  startRecording (trigger) {
+  startRecording (trigger, mode) {
     if (!this.#canRecord) return
     this.trigger = trigger
+    this.isErrorMode = mode === MODE.ERROR
+
+    /** if the recorder is already recording... lets stop it before starting a new one */
+    this.stopRecording()
+
     this.agentRef.runtime.isRecording = true
     const { block_class, ignore_class, mask_text_class, block_selector, mask_input_options, mask_text_selector, mask_all_inputs, inline_images, collect_fonts } = this.agentRef.init.session_replay
 
@@ -113,7 +107,7 @@ export class Recorder {
         inlineStylesheet: true,
         inlineImages: inline_images,
         collectFonts: collect_fonts,
-        checkoutEveryNms: CHECKOUT_MS[this.mode],
+        checkoutEveryNms: CHECKOUT_MS[mode],
         recordAfter: 'DOMContentLoaded'
       })
     } catch (err) {
@@ -167,7 +161,7 @@ export class Recorder {
 
   /** Store a payload in the buffer (this.events).  This should be the callback to the recording lib noticing a mutation */
   store (event, isCheckout) {
-    if (!event || this.srAggregate?.blocked) return
+    if (!event || this.srInstrument.featAggregate?.blocked) return
 
     /** because we've waited until draining to process the buffered rrweb events, we can guarantee the timekeeper exists */
     event.timestamp = this.agentRef.runtime.timeKeeper.correctAbsoluteTimestamp(event.timestamp)
@@ -179,7 +173,7 @@ export class Recorder {
     // to help reconstruct the replay later and must be included.  While waiting and buffering for errors to come through,
     // each time we see a new checkout, we can drop the old data.
     // we need to check for meta because rrweb will flag it as checkout twice, once for meta, then once for snapshot
-    if (this.mode === MODE.ERROR && isCheckout && event.type === RRWEB_EVENT_TYPES.Meta) {
+    if (this.isErrorMode && isCheckout && event.type === RRWEB_EVENT_TYPES.Meta) {
       // we are still waiting for an error to throw, so keep wiping the buffer over time
       this.clearBuffer()
     }
@@ -194,9 +188,9 @@ export class Recorder {
 
     // We are making an effort to try to keep payloads manageable for unloading.  If they reach the unload limit before their interval,
     // it will send immediately.  This often happens on the first snapshot, which can be significantly larger than the other payloads.
-    if (((this.events.hasSnapshot && this.events.hasMeta) || payloadSize > IDEAL_PAYLOAD_SIZE) && this.mode === MODE.FULL) {
+    if (((this.events.hasSnapshot && this.events.hasMeta) || payloadSize > IDEAL_PAYLOAD_SIZE) && !this.isErrorMode) {
       // if we've made it to the ideal size of ~16kb before the interval timer, we should send early.
-      this.agentRef.runtime.harvester.triggerHarvestFor(this.srAggregate)
+      this.agentRef.runtime.harvester.triggerHarvestFor(this.srInstrument.featAggregate)
     }
   }
 
@@ -225,7 +219,7 @@ export class Recorder {
    * https://staging.onenr.io/037jbJWxbjy
    * */
   estimateCompression (data) {
-    if (!!this.srAggregate?.gzipper && !!this.srAggregate?.u8) return data * AVG_COMPRESSION
+    if (!!this.srInstrument.featAggregate?.gzipper && !!this.srInstrument.featAggregate?.u8) return data * AVG_COMPRESSION
     return data
   }
 }

@@ -1,4 +1,3 @@
-import { faker } from '@faker-js/faker'
 import * as sessionReplaySharedUtils from '../../../../../src/features/session_replay/shared/utils'
 import * as runtimeConstantsModule from '../../../../../src/common/constants/runtime'
 import * as featureGatesModule from '../../../../../src/features/utils/feature-gates'
@@ -40,27 +39,6 @@ test('hasReplayPrerequisite should return false when replay prerequisites are no
   jest.mocked(nreumModule.gosNREUMOriginals).mockReturnValue({ o: { } })
 
   expect(sessionReplaySharedUtils.hasReplayPrerequisite({ session_trace: { enabled: true }, privacy: { cookies_enabled: true } })).toEqual(false)
-})
-
-describe('buildNRMetaNode', () => {
-  let timekeeper
-
-  beforeEach(() => {
-    timekeeper = {
-      correctAbsoluteTimestamp: jest.fn()
-    }
-  })
-
-  test('should use the timekeeper to correct the timestamp', async () => {
-    const timestamp = faker.date.anytime().getTime()
-    const expected = faker.date.anytime().getTime()
-    jest.spyOn(timekeeper, 'correctAbsoluteTimestamp').mockReturnValue(expected)
-
-    const metadata = sessionReplaySharedUtils.buildNRMetaNode(timestamp, timekeeper)
-
-    expect(metadata.originalTimestamp).toEqual(timestamp)
-    expect(metadata.correctedTimestamp).toEqual(expected)
-  })
 })
 
 describe('customMasker', () => {

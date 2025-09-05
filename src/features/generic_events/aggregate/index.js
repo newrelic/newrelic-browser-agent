@@ -134,6 +134,7 @@ export class Aggregate extends AggregateBase {
         }, this.featureName, this.ee)
         registerHandler('err', () => this.userActionAggregator.markAsErrorClick(), this.featureName, this.ee)
         registerHandler('xhr', (params) => evalNetworkRequest.call(this, params.host), this.featureName, this.ee)
+        registerHandler('navChange', () => this.userActionAggregator.treatAsLiveClick(), this.featureName, this.ee)
       }
 
       /**

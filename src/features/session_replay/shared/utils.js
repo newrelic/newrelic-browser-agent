@@ -4,7 +4,6 @@
  */
 import { gosNREUMOriginals } from '../../../common/window/nreum'
 import { canEnableSessionTracking } from '../../utils/feature-gates'
-import { originTime } from '../../../common/constants/runtime'
 
 export function hasReplayPrerequisite (agentInit) {
   return !!gosNREUMOriginals().o.MO && // Session Replay cannot work without Mutation Observer
@@ -14,18 +13,6 @@ export function hasReplayPrerequisite (agentInit) {
 
 export function isPreloadAllowed (agentInit) {
   return agentInit?.session_replay.preload === true && hasReplayPrerequisite(agentInit)
-}
-
-export function buildNRMetaNode (timestamp, timeKeeper) {
-  const correctedTimestamp = timeKeeper.correctAbsoluteTimestamp(timestamp)
-  return {
-    originalTimestamp: timestamp,
-    correctedTimestamp,
-    timestampDiff: timestamp - correctedTimestamp,
-    originTime,
-    correctedOriginTime: timeKeeper.correctedOriginTime,
-    originTimeDiff: Math.floor(originTime - timeKeeper.correctedOriginTime)
-  }
 }
 
 export function customMasker (text, element) {

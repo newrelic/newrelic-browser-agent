@@ -92,6 +92,8 @@ function resetAgentEventEmitter (agentIdentifier) {
   ]
 
   listeners.forEach(([type, fn]) => eventEmitter.removeEventListener(type, fn))
+
+  eventEmitter.backlog = {}
 }
 
 function resetAggregator (agentIdentifier) {

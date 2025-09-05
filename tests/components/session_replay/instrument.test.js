@@ -9,8 +9,14 @@ beforeAll(() => {
   mainAgent = setupAgent({
     init: {
       session_replay: { preload: false, enabled: true }
+    },
+    runtime: {
+      timeKeeper: {
+        correctAbsoluteTimestamp: jest.fn(x => x)
+      }
     }
   })
+  jest.spyOn(mainAgent.runtime.harvester, 'triggerHarvestFor').mockImplementation(() => Promise.resolve())
   savedInitialSession = mainAgent.runtime.session
 })
 

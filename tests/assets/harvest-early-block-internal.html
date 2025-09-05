@@ -19,9 +19,10 @@
       newrelic.setCustomAttribute("foo", "bar".repeat(16000));
       newrelic.addPageAction("test");
       newrelic.log("test");
-      document.addEventListener("click", function () {
+
+      window.sendAjax = function () {
         fetch("https://pokeapi.co/api/v2/pokemon/moltres");
-      });
+      };
 
       // This will create a trace node with a long name, which should be harvested early
       newrelic.addToTrace({ name: "foo".repeat(16000), start: Date.now() });

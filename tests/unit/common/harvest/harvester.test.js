@@ -1,4 +1,4 @@
-import { Harvester } from '../../../../src/common/harvest/harvester'
+import { Harvester, send } from '../../../../src/common/harvest/harvester'
 
 let mockEolCb
 jest.mock('../../../../src/common/unload/eol', () => ({
@@ -78,6 +78,33 @@ describe('On EOL harvest', () => {
     const secondAggregateFinalHarvestRun = harvester.triggerHarvestFor.mock.results[1].value
     expect(firstAggregateFinalHarvestRun).toBeLessThan(secondAggregateFinalHarvestRun) // the aggregates are harvested in add-order
     expect(secondAggregateBeforeUnloadRun).toBeLessThan(firstAggregateFinalHarvestRun) // but even the latest beforeUnload runs prior any final harvest
+  })
+})
+
+describe('send', () => {
+  beforeAll(() => {
+    fakeAgent.info.errorBeacon = 'test'
+    fakeAgent.init.proxy = {}
+    fakeAgent.runtime = { obfuscator: { obfuscateString: jest.fn() } }
+  })
+  afterAll(() => {
+    delete fakeAgent.info.errorBeacon
+  })
+
+  test('does not send if cleaned payload is null', () => {
+    expect(send(fakeAgent, { endpoint: 'someEndpoint', targetApp: 'someApp', payload: { body: null }, localOpts: {} })).toEqual(false)
+  })
+  test('does not send if cleaned payload is empty string', () => {
+    expect(send(fakeAgent, { endpoint: 'someEndpoint', targetApp: 'someApp', payload: { body: '' }, localOpts: {} })).toEqual(false)
+  })
+  test('does send if cleaned payload is string', () => {
+    expect(send(fakeAgent, { endpoint: 'someEndpoint', targetApp: 'someApp', payload: { body: 'valid string' }, localOpts: {}, submitMethod: jest.fn() })).toEqual(true)
+  })
+  test('does send if cleaned payload is object', () => {
+    expect(send(fakeAgent, { endpoint: 'someEndpoint', targetApp: 'someApp', payload: { body: { key: 'value' } }, localOpts: {}, submitMethod: jest.fn() })).toEqual(true)
+  })
+  test('does send if sendEmptyBody', () => {
+    expect(send(fakeAgent, { endpoint: 'someEndpoint', targetApp: 'someApp', payload: { body: '' }, localOpts: { sendEmptyBody: true }, submitMethod: jest.fn() })).toEqual(true)
   })
 })
 

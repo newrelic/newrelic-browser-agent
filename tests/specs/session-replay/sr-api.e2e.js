@@ -20,10 +20,11 @@ describe('Replay API', () => {
   it('pauseReplay called before page load stops the replay', async () => {
     await browser.enableSessionReplay(100, 0)
     await browser.url(await browser.testHandle.assetURL('rrweb-api-pause-before-load.html', srConfig()))
-      .then(() => browser.waitForSessionReplayRecording())
+      .then(() => browser.waitForFeatureAggregate('session_replay'))
 
+    await browser.pause(1000) // give time for the features to drain fully
     await expect(getSR()).resolves.toMatchObject({
-      recording: true,
+      recording: false,
       initialized: true,
       events: expect.any(Array),
       mode: 0

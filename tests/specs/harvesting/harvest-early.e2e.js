@@ -50,7 +50,9 @@ describe('should harvest early', () => {
     /** not harvesting early in retry mode */
     const [smHarvest] = await Promise.all([
       metricsCapture.waitForResult({ totalCount: 1 }),
-      $('button').click()
+      browser.execute(function () {
+        newrelic.addPageAction('test')
+      })
         .then(() => browser.pause(10000))
         .then(() => browser.refresh())
     ])

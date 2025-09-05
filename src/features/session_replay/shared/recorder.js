@@ -27,6 +27,8 @@ export class Recorder {
 
   #canRecord = true
 
+  triggerHistory = [] // useful for debugging
+
   constructor (srInstrument) {
     /** The parent classes that share the recorder */
     this.srInstrument = srInstrument
@@ -36,7 +38,6 @@ export class Recorder {
     this.agentRef = srInstrument.agentRef
 
     this.isErrorMode = false
-    this.trigger = undefined
     /** A flag that can be set to false by failing conversions to stop the fetching process */
     this.shouldFix = this.agentRef.init.session_replay.fix_stylesheets
 
@@ -56,6 +57,10 @@ export class Recorder {
       this.stopRecording()
     }, this.srFeatureName, this.ee)
     registerHandler(RRWEB_DATA_CHANNEL, (event, isCheckout) => { this.audit(event, isCheckout) }, this.srFeatureName, this.ee)
+  }
+
+  get trigger () {
+    return this.triggerHistory[this.triggerHistory.length - 1]
   }
 
   getEvents () {
@@ -80,7 +85,8 @@ export class Recorder {
   /** Begin recording using configured recording lib */
   startRecording (trigger, mode) {
     if (!this.#canRecord) return
-    this.trigger = trigger
+    this.triggerHistory.push(trigger) // keep track of all triggers, useful for lifecycle debugging.  "this.trigger" returns the latest entry
+
     this.isErrorMode = mode === MODE.ERROR
 
     /** if the recorder is already recording... lets stop it before starting a new one */

@@ -16,12 +16,8 @@ import { setupPauseReplayAPI } from '../../../loaders/api/pauseReplay'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
-
-  #agentRef
-
   /** a promise either resolving immediately, or resolving when the staged import of the recorder module downloads */
   #stagedImport = Promise.resolve()
-
   /** The RRWEB recorder instance, if imported */
   recorder
 
@@ -33,7 +29,6 @@ export class Instrument extends InstrumentBase {
     setupPauseReplayAPI(agentRef)
 
     let session
-    this.#agentRef = agentRef
     try {
       session = JSON.parse(localStorage.getItem(`${PREFIX}_${DEFAULT_KEY}`))
     } catch (err) { }
@@ -43,17 +38,17 @@ export class Instrument extends InstrumentBase {
       this.ee.on('session-error', () => { handle(SR_EVENT_EMITTER_TYPES.SESSION_ERROR, [], undefined, this.featureName, this.ee) })
     }
 
-    if (this.canPreloadRecorder(session)) {
+    if (this.#canPreloadRecorder(session)) {
       this.importRecorder().then(() => {
         this.recorder.startRecording(TRIGGERS.PRELOAD, session?.sessionReplayMode)
       })
     }
 
-    this.importAggregator(this.#agentRef, () => import(/* webpackChunkName: "session_replay-aggregate" */ '../aggregate'), this)
+    this.importAggregator(this.agentRef, () => import(/* webpackChunkName: "session_replay-aggregate" */ '../aggregate'), this)
 
     /** If the recorder is running, we can pass error events on to the agg to help it switch to full mode later */
     this.ee.on('err', (e) => {
-      if (this.#agentRef.runtime.isRecording) {
+      if (this.agentRef.runtime.isRecording) {
         this.errorNoticed = true
         handle(SR_EVENT_EMITTER_TYPES.ERROR_DURING_REPLAY, [e], undefined, this.featureName, this.ee)
       }
@@ -65,11 +60,11 @@ export class Instrument extends InstrumentBase {
     if (!session) { // this might be a new session if entity initializes: conservatively start recording if first-time config allows
       // Note: users with SR enabled, as well as these other configs enabled by-default, will be penalized by the recorder overhead EVEN IF they don't actually have or get
       // entitlement or sampling decision, or otherwise intentionally opted-in for the feature.
-      return isPreloadAllowed(this.#agentRef.init)
+      return isPreloadAllowed(this.agentRef.init)
     } else if (session.sessionReplayMode === MODE.FULL || session.sessionReplayMode === MODE.ERROR) {
       return true // existing sessions get to continue recording, regardless of this page's configs or if it has expired (conservatively)
     } else { // SR mode was OFF but may potentially be turned on if session resets and configs allows the new session to have replay...
-      return isPreloadAllowed(this.#agentRef.init)
+      return isPreloadAllowed(this.agentRef.init)
     }
   }
 

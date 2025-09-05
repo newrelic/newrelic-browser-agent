@@ -100,7 +100,7 @@ export class Instrument extends InstrumentBase {
    */
   async #apiStartOrRestartReplay () {
     if (this.featAggregate) { // post-load; there's possibly already an ongoing recording
-      if (this.featAggregate.mode !== MODE.FULL) this.featAggregate.initializeRecording(MODE.FULL, true)
+      if (this.featAggregate.mode !== MODE.FULL) this.featAggregate.initializeRecording(MODE.FULL, true, TRIGGERS.API)
     } else {
       await this.importRecorder()
       this.recorder.startRecording(TRIGGERS.API, MODE.FULL)

@@ -144,9 +144,10 @@ export class Aggregate extends AggregateBase {
    * Evaluate entitlements and sampling before starting feature mechanics, importing and configuring recording library, and setting storage state
    * @param {boolean} srMode - the true/false state of the "sr" flag (aka. entitlements) from RUM response
    * @param {boolean} ignoreSession - whether to force the method to ignore the session state and use just the sample flags
+   * @param {TRIGGERS} [trigger=TRIGGERS.INITIALIZE] - the trigger that initiated the recording.  Usually TRIGGERS.INITIALIZE, but could be TRIGGERS.API since in certain cases that trigger calls this method
    * @returns {void}
    */
-  async initializeRecording (srMode, ignoreSession) {
+  async initializeRecording (srMode, ignoreSession, trigger = TRIGGERS.INITIALIZE) {
     this.initialized = true
     if (!this.entitled) return
 
@@ -182,7 +183,7 @@ export class Aggregate extends AggregateBase {
 
     await this.prepUtils()
 
-    if (!this.agentRef.runtime.isRecording) this.recorder.startRecording(TRIGGERS.INITIALIZE, this.mode)
+    if (!this.agentRef.runtime.isRecording) this.recorder.startRecording(trigger, this.mode)
 
     this.syncWithSessionManager({ sessionReplayMode: this.mode })
   }

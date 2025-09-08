@@ -41,15 +41,20 @@ test('Interaction node creation is correct', () => {
 
 test('History and DOM timestamps fn updates', () => {
   const ixn = new Interaction()
-  ixn.updateDom(5812)
-  expect(ixn.domTimestamp).toBe(5812)
-  expect(ixn.seenHistoryAndDomChange()).toBeFalsy()
-  ixn.updateHistory(6134)
+  ixn.updateDom(3812)
+  expect(ixn.domTimestamp).toBe(0)
+  expect(ixn.checkHistoryAndDomChange()).toBeFalsy()
+  ixn.updateHistory(4951)
+  expect(ixn.historyTimestamp).toBe(0)
   expect(ixn.newURL).toBe(location.href)
-  expect(ixn.seenHistoryAndDomChange()).toBeFalsy()
-  ixn.updateHistory(4951, 'some_new_url')
+  expect(ixn.checkHistoryAndDomChange()).toBeFalsy()
+
+  ixn.updateHistory(5871, 'some_new_url')
+  expect(ixn.historyTimestamp).toBe(5871)
+  ixn.updateDom(7812)
+  expect(ixn.domTimestamp).toBe(7812)
   expect(ixn.newURL).toBe('some_new_url')
-  expect(ixn.seenHistoryAndDomChange()).toBeTruthy()
+  expect(ixn.checkHistoryAndDomChange()).toBeTruthy()
 })
 
 test('Can subscribe to interaction events', () => {
@@ -81,7 +86,7 @@ describe('Interaction when done', () => {
     ixn.keepOpenUntilEndApi = true // with this flag, ixn should stay open until a custom end time is provided
     expect(ixn.done()).toBe(false)
     expect(ixn.status).toEqual(INTERACTION_STATUS.IP)
-    expect(ixn.done(123)).toBe(true)
+    expect(ixn.done(123, true)).toBe(true)
   })
   test('runs onDone handlers and returns the correct boolean value on finish', () => {
     const ixn = new Interaction()
@@ -143,23 +148,23 @@ describe('Interaction when done', () => {
     expect(serialized.includes('\'key1,\'higher_precedence_value')).toEqual(true)
     expect(serialized.includes('\'key2,\'value2')).toEqual(true)
 
-    ixn.updateHistory(250)
+    ixn.updateHistory(250, 'some_new_url')
     ixn.status = INTERACTION_STATUS.IP
     ixn.done(500) // when ixn end time is specified -- example case: calling the .end api ; end time should consider this value
     expect(ixn.status).toBe(INTERACTION_STATUS.FIN)
     expect(ixn.end).toBe(500)
 
-    ixn.updateDom(750) // now the conditions for seenHistoryAndDomChange() is met
-    ixn.status = INTERACTION_STATUS.IP
+    ixn.updateDom(750)
+    ixn.status = INTERACTION_STATUS.PF
     ixn.done()
     expect(ixn.end).toBe(750)
 
     ixn.forceSave = false; ixn.end = 0
-    ixn.status = INTERACTION_STATUS.IP
+    ixn.status = INTERACTION_STATUS.PF
     ixn.done() // double checking the behavior is still the same without save flag (default conditions)
     expect(ixn.end).toBe(750)
 
-    ixn.status = INTERACTION_STATUS.IP
+    ixn.status = INTERACTION_STATUS.PF
     ixn.done(1000) // double checking the custom end is still respected even with seenHistoryAndDom -- example case: ixn is kept open past it and only closed by .end
     expect(ixn.end).toBe(1000)
   })
@@ -189,6 +194,9 @@ test('Interaction serialize output is correct', () => {
   ixn.forceSave = true
   ixn.customName = 'my_custom_name'
   ixn.done(5678)
+
+  ixn.callbackEnd = 12345 // ensure that these properties are indeed ignored in interaction serialization
+  ixn.callbackDuration = 12345 - 5678
 
   expect(ixn.nodeId).toEqual(1)
   expect(ixn.serialize(0, fakeAgent)).toBe("1,3,ya,3fg,,,'submit,'http://localhost/,1,1,'my_custom_name,2,!!'this_route,!'static-id,'1,!!;5,'key1,'value1;5,'key2,'value2;a,'apm_attributes_string;")

@@ -7,7 +7,7 @@ import { generateUuid } from '../../../common/ids/unique-id'
 import { addCustomAttributes, getAddStringContext, nullable, numeric } from '../../../common/serialize/bel-serializer'
 import { now } from '../../../common/timing/now'
 import { cleanURL } from '../../../common/url/clean-url'
-import { NODE_TYPE, INTERACTION_STATUS, INTERACTION_TYPE, API_TRIGGER_NAME, IPL_TRIGGER_NAME } from '../constants'
+import { NODE_TYPE, INTERACTION_STATUS, INTERACTION_TYPE, API_TRIGGER_NAME, IPL_TRIGGER_NAME, NO_LONG_TASK_WINDOW } from '../constants'
 import { BelNode } from './bel-node'
 
 /**
@@ -29,7 +29,9 @@ export class Interaction extends BelNode {
   createdByApi = false
   keepOpenUntilEndApi = false
   onDone = []
+  customEnd = 0
   cancellationTimer
+  watchLongtaskTimer
 
   constructor (uiEvent, uiEventTimestamp, currentRouteKnown, currentUrl) {
     super()
@@ -46,17 +48,28 @@ export class Interaction extends BelNode {
     this.newURL = this.oldURL = (currentUrl || globalScope?.location.href)
   }
 
-  updateDom (timestamp) {
-    this.domTimestamp = (timestamp || now()) // default timestamp should be precise for accurate isActiveDuring calculations
-  }
-
   updateHistory (timestamp, newUrl) {
-    this.newURL = newUrl || '' + globalScope?.location
+    if (this.domTimestamp > 0) return // url is locked once ui>url>dom change sequence is seen
+    if (!newUrl || newUrl === this.oldURL) return // url must be different for interaction heuristic to proceed
+    this.newURL = newUrl
     this.historyTimestamp = (timestamp || now())
   }
 
-  seenHistoryAndDomChange () {
-    return this.historyTimestamp > 0 && this.domTimestamp > this.historyTimestamp // URL must change before DOM does
+  updateDom (timestamp) {
+    if (!this.historyTimestamp || timestamp < this.historyTimestamp) return // dom change must come after (any) url change, though this can be updated multiple times, taking the last dom timestamp
+    this.domTimestamp = (timestamp || now()) // default timestamp should be precise for accurate isActiveDuring calculations
+  }
+
+  checkHistoryAndDomChange () {
+    if (!(this.historyTimestamp > 0 && this.domTimestamp > this.historyTimestamp)) return false
+    if (this.status === INTERACTION_STATUS.PF) return true // indicate the finishing process has already started for this interaction
+    this.status = INTERACTION_STATUS.PF // set for eventual harvest
+
+    // Once the fixed reqs for a nav has been met, start a X countdown timer that watches for any long task, if it doesn't already exist, before completing the interaction.
+    clearTimeout(this.cancellationTimer) // "pending-finish" ixns cannot be auto cancelled anymore
+    this.watchLongtaskTimer ??= setTimeout(() => this.done(), NO_LONG_TASK_WINDOW)
+    // Notice that by not providing a specific end time to `.done()`, the ixn will use the dom timestamp in the event of no long task, which is what we want.
+    return true
   }
 
   on (event, cb) {
@@ -65,23 +78,24 @@ export class Interaction extends BelNode {
     this.eventSubscription.get(event).push(cb)
   }
 
-  done (customEndTime) {
-    // User could've mark this interaction--regardless UI or api started--as "don't close until .end() is called on it". Only .end provides a timestamp; the default flows do not.
-    if (this.keepOpenUntilEndApi && customEndTime === undefined) return false
+  done (customEndTime = this.customEnd, calledByApi = false) {
+    // User could've mark this interaction--regardless UI or api started--as "don't close until .end() is called on it".
+    if (this.keepOpenUntilEndApi && !calledByApi) return false
     // If interaction is already closed, this is a no-op. However, returning true lets startUIInteraction know that it CAN start a new interaction, as this one is done.
-    if (this.status !== INTERACTION_STATUS.IP) return true
+    if (this.status === INTERACTION_STATUS.FIN || this.status === INTERACTION_STATUS.CAN) return true
 
+    clearTimeout(this.cancellationTimer) // clean up timers in case this is called by any flow that doesn't already do so
+    clearTimeout(this.watchLongtaskTimer)
     this.onDone.forEach(apiProvidedCb => apiProvidedCb(this.customDataByApi)) // this interaction's .save or .ignore can still be set by these user provided callbacks for example
 
     if (this.forceIgnore) this.#cancel() // .ignore() always has precedence over save actions
-    else if (this.seenHistoryAndDomChange()) this.#finish(customEndTime) // then this should've already finished while it was the interactionInProgress, with a natural end time
+    else if (this.status === INTERACTION_STATUS.PF) this.#finish(customEndTime) // then this should've already finished while it was the interactionInProgress, with a natural end time
     else if (this.forceSave) this.#finish(customEndTime || performance.now()) // a manually saved ixn (did not fulfill conditions) must have a specified end time, if one wasn't provided
     else this.#cancel()
     return true
   }
 
-  #finish (customEndTime = 0) {
-    clearTimeout(this.cancellationTimer)
+  #finish (customEndTime) {
     this.end = Math.max(this.domTimestamp, this.historyTimestamp, customEndTime)
     this.status = INTERACTION_STATUS.FIN
 
@@ -91,7 +105,6 @@ export class Interaction extends BelNode {
   }
 
   #cancel () {
-    clearTimeout(this.cancellationTimer)
     this.status = INTERACTION_STATUS.CAN
 
     // Run all the callbacks listening to this interaction's potential cancellation.
@@ -102,12 +115,13 @@ export class Interaction extends BelNode {
   /**
    * Given a timestamp, determine if it falls within this interaction's span, i.e. if this was the active interaction during that time.
    * For in-progress interactions, this only compares the time with the start of span. Cancelled interactions are not considered active at all.
+   * Pending-finish interactions are also considered still active wrt assigning ajax or jserrors to them during the wait period.
    * @param {DOMHighResTimeStamp} timestamp
    * @returns True or false boolean.
    */
   isActiveDuring (timestamp) {
-    if (this.status === INTERACTION_STATUS.IP) return this.start <= timestamp
-    return (this.status === INTERACTION_STATUS.FIN && this.start <= timestamp && this.end > timestamp)
+    if (this.status === INTERACTION_STATUS.IP || this.status === INTERACTION_STATUS.PF) return this.start <= timestamp
+    return (this.status === INTERACTION_STATUS.FIN && this.start <= timestamp && timestamp < this.end)
   }
 
   // Following are virtual properties overridden by a subclass:
@@ -136,8 +150,8 @@ export class Interaction extends BelNode {
       0, // this will be overwritten below with number of attached nodes
       numeric(this.start - (isFirstIxnOfPayload ? 0 : firstStartTimeOfPayload)), // the very 1st ixn does not require offset so it should fallback to a 0 while rest is offset by the very 1st ixn's start
       numeric(this.end - this.start), // end -- relative to start
-      numeric(this.callbackEnd), // cbEnd -- relative to start; not used by BrowserInteraction events
-      numeric(this.callbackDuration), // not relative
+      numeric(0), // callbackEnd -- relative to start; not used by BrowserInteraction events so these are always 0
+      numeric(0), // not relative; always 0 for BrowserInteraction
       addString(this.trigger),
       addString(cleanURL(this.initialPageURL, true)),
       addString(cleanURL(this.oldURL, true)),

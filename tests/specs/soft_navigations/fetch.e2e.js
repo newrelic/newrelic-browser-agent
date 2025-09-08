@@ -11,9 +11,11 @@ describe('Fetch SPA Interaction Tracking', () => {
   })
 
   it('should capture the ajax request and response size', async () => {
-    await browser.url(
-      await browser.testHandle.assetURL('soft_navigations/ajax/fetch-post.html', config)
-    ).then(() => browser.waitForAgentLoad())
+    await Promise.all([
+      interactionsCapture.waitForResult({ totalCount: 1 }),
+      browser.url(await browser.testHandle.assetURL('soft_navigations/ajax/fetch-post.html', config))
+        .then(() => browser.waitForAgentLoad())
+    ])
 
     const [interactionHarvests] = await Promise.all([
       interactionsCapture.waitForResult({ totalCount: 2 }),
@@ -160,8 +162,11 @@ describe('Fetch SPA Interaction Tracking', () => {
   })
 
   it('creates interaction event data for erred fetch', async () => {
-    await browser.url(await browser.testHandle.assetURL('soft_navigations/ajax/fetch-404.html', config))
-      .then(() => browser.waitForAgentLoad())
+    await Promise.all([
+      interactionsCapture.waitForResult({ totalCount: 1 }),
+      browser.url(await browser.testHandle.assetURL('soft_navigations/ajax/fetch-404.html', config))
+        .then(() => browser.waitForAgentLoad())
+    ])
 
     const [interactionHarvests] = await Promise.all([
       interactionsCapture.waitForResult({ totalCount: 2 }),

@@ -53,7 +53,7 @@ describe('XHR SPA Interaction Tracking', () => {
     ).then(() => browser.waitForAgentLoad())
 
     const [interactionHarvests] = await Promise.all([
-      interactionsCapture.waitForResult({ timeout: 10000 }),
+      interactionsCapture.waitForResult({ totalCount: 2 }),
       browser.execute(function () {
         document.getElementById('sendAjax').click()
       })
@@ -204,11 +204,14 @@ describe('XHR SPA Interaction Tracking', () => {
   })
 
   it('creates interaction event data for erred xhr', async () => {
-    await browser.url(await browser.testHandle.assetURL('soft_navigations/ajax/xhr-404.html', config))
-      .then(() => browser.waitForAgentLoad())
+    await Promise.all([
+      interactionsCapture.waitForResult({ totalCount: 1 }),
+      await browser.url(await browser.testHandle.assetURL('soft_navigations/ajax/xhr-404.html', config))
+        .then(() => browser.waitForAgentLoad())
+    ])
 
     const [interactionHarvests] = await Promise.all([
-      interactionsCapture.waitForResult({ timeout: 10000 }),
+      interactionsCapture.waitForResult({ totalCount: 2 }),
       browser.execute(function () {
         document.getElementById('sendAjax').click()
       })
@@ -225,7 +228,7 @@ describe('XHR SPA Interaction Tracking', () => {
       .then(() => browser.waitForAgentLoad())
 
     const [interactionHarvests] = await Promise.all([
-      interactionsCapture.waitForResult({ timeout: 10000 }),
+      interactionsCapture.waitForResult({ totalCount: 2 }),
       browser.execute(function () {
         document.getElementById('sendAjax').click()
       })
@@ -254,5 +257,33 @@ describe('XHR SPA Interaction Tracking', () => {
     await expect(browser.execute(function () {
       return window.wrapperInvoked
     })).resolves.toEqual(true)
+  })
+
+  it('accounts for long tasks in XHR listeners after soft navigations', async () => {
+    await Promise.all([
+      interactionsCapture.waitForResult({ totalCount: 1 }),
+      await browser.url(
+        await browser.testHandle.assetURL('soft_navigations/ajax/xhr-long-task.html', config)
+      ).then(() => browser.waitForAgentLoad())
+    ])
+
+    const [interactionHarvests] = await Promise.all([
+      interactionsCapture.waitForResult({ totalCount: 2 }),
+      browser.execute(function () {
+        document.getElementById('sendXhr').click()
+      })
+    ])
+
+    const clickIxn = interactionHarvests[1].request.body[0]
+    expect(clickIxn).toEqual(expect.objectContaining({
+      category: 'Route change',
+      type: 'interaction',
+      trigger: 'click'
+    }))
+    const ajaxEvents = clickIxn.children.filter(e => e.type === 'ajax')
+    expect(ajaxEvents.length).toEqual(1)
+    expect(ajaxEvents[0].callbackDuration).toBeGreaterThanOrEqual(1000) // this is the task duration on that html
+    expect(ajaxEvents[0].callbackEnd).toBeGreaterThanOrEqual(ajaxEvents[0].end + 1000) // callbackEnd ~= end + lt duration
+    expect(clickIxn.end).toBeLessThan(ajaxEvents[0].callbackEnd + 3) // interaction end should be about the same as XHR cb end with some tolerance for rounding errors & cycle delays
   })
 })

@@ -230,7 +230,7 @@ export class ApiBase {
   }
 
   /**
-   * Accepts or rejects consent when the agent is configured to enable its consent model.
+   * Accepts or rejects consent when the agent is configured to require consent before harvesting.
    * The consent state is stored in session storage inside the NRBA_SESSION object.
    * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/consent/}
    * @param {boolean?} accept Whether to accept or reject consent. Defaults to true (accept) if left undefined.

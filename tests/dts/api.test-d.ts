@@ -43,6 +43,7 @@ expectType<MicroAgent>(microAgent)
   expectType<() => any>(agent.pauseReplay)
   expectType<(message: string, options?: { customAttributes?: object, level?: 'ERROR' | 'TRACE' | 'DEBUG' | 'INFO' | 'WARN'}) => any>(agent.log)
   expectType<(parent: object, functionName: string, options?: { customAttributes?: object, level?: 'ERROR' | 'TRACE' | 'DEBUG' | 'INFO' | 'WARN'}) => any>(agent.wrapLogger)
+  expectType<(accept: boolean | null) => any>(agent.consent)
   
   // SPA APIs
   expectType<(opts?: { waitForEnd?: boolean }) => InteractionInstance>(agent.interaction)

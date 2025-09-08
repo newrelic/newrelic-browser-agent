@@ -19,7 +19,6 @@
       newrelic.setCustomAttribute("foo", "bar".repeat(16000));
       newrelic.addPageAction("test");
       newrelic.log("test");
-
       window.sendAjax = function () {
         fetch("https://pokeapi.co/api/v2/pokemon/moltres");
       };

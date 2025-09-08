@@ -95,6 +95,7 @@ describe('basic npm agent', () => {
     expect(agentSession.localStorage).toEqual({})
   })
 
+  // Note: the order of this test and the "session manager cannot be imported" test is important
   it('vite-react-wrapper sends basic calls', async () => {
     const [rumHarvests] = await Promise.all([
       rumCapture.waitForResult({ totalCount: 1 }),

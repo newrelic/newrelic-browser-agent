@@ -171,8 +171,13 @@ export class Aggregate extends AggregateBase {
     // If off, then don't record (early return)
     if (this.mode === MODE.OFF) return
 
-    /** will return a recorder instance if already imported, otherwise, will fetch the recorder and initialize it */
-    this.recorder ??= await this.instrumentClass.importRecorder()
+    try {
+      /** will return a recorder instance if already imported, otherwise, will fetch the recorder and initialize it */
+      this.recorder ??= await this.instrumentClass.importRecorder()
+    } catch (err) {
+      /** if the recorder fails to import, abort the feature */
+      return this.abort(ABORT_REASONS.IMPORT, err)
+    }
 
     // If an error was noticed before the mode could be set (like in the early lifecycle of the page), immediately set to FULL mode
     if (this.mode === MODE.ERROR && this.instrumentClass.errorNoticed) { this.mode = MODE.FULL }

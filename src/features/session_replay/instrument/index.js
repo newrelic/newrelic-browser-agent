@@ -16,8 +16,8 @@ import { setupPauseReplayAPI } from '../../../loaders/api/pauseReplay'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
-  /** a promise either resolving immediately, or resolving when the staged import of the recorder module downloads */
-  #stagedImport = Promise.resolve()
+  /** @type {Promise|undefined} A promise that resolves when the recorder module is imported and added to the class. Undefined if the recorder has never been staged to import with `importRecorder`. */
+  #stagedImport
   /** The RRWEB recorder instance, if imported */
   recorder
 
@@ -35,19 +35,19 @@ export class Instrument extends InstrumentBase {
 
     if (hasReplayPrerequisite(agentRef.init)) {
       this.ee.on(SR_EVENT_EMITTER_TYPES.RECORD, () => this.#apiStartOrRestartReplay())
-      this.ee.on('session-error', () => { handle(SR_EVENT_EMITTER_TYPES.SESSION_ERROR, [], undefined, this.featureName, this.ee) })
     }
 
     if (this.#canPreloadRecorder(session)) {
-      this.importRecorder().then(() => {
-        this.recorder.startRecording(TRIGGERS.PRELOAD, session?.sessionReplayMode)
-      })
+      this.importRecorder().then(recorder => {
+        recorder.startRecording(TRIGGERS.PRELOAD, session?.sessionReplayMode)
+      }) // could handle specific fail-state behaviors with a .catch block here
     }
 
     this.importAggregator(this.agentRef, () => import(/* webpackChunkName: "session_replay-aggregate" */ '../aggregate'), this)
 
     /** If the recorder is running, we can pass error events on to the agg to help it switch to full mode later */
     this.ee.on('err', (e) => {
+      if (this.blocked) return
       if (this.agentRef.runtime.isRecording) {
         this.errorNoticed = true
         handle(SR_EVENT_EMITTER_TYPES.ERROR_DURING_REPLAY, [e], undefined, this.featureName, this.ee)
@@ -69,41 +69,41 @@ export class Instrument extends InstrumentBase {
   }
 
   /**
-   * Imports the recorder module.  Returns the existing instance if already imported. Only ever allows a single download to occur.
-   * @param {string} [trigger] a reason that import recorder was called
-   * @returns {Recorder}
+   * Returns a promise that imports the recorder module. Only lets the recorder module be imported and instantiated once. Rejects if failed to import/instantiate.
+   * @returns {Promise}
    */
-  async importRecorder () {
-    /** if the import has never been staged, it will just resolve immediately.
-     * Once it has, it will be assigned as the actual import promise.
-     * This is to prevent multiple imports from being triggered before the previous has had a chance to resolve */
-    await this.#stagedImport
-    /** if the recorder has already been imported, return it */
-    if (this.recorder) return this.recorder
+  importRecorder () {
+    /** if we already have a recorder fully set up, just return it */
+    if (this.recorder) return Promise.resolve(this.recorder)
+    /** conditional -- if we have never started importing, stage the import and store it in state */
+    this.#stagedImport ??= import(/* webpackChunkName: "recorder" */'../shared/recorder')
+      .then(({ Recorder }) => {
+        this.recorder = new Recorder(this)
+        /** return the recorder for promise chaining */
+        return this.recorder
+      })
+      .catch(err => {
+        this.ee.emit('internal-error', [err])
+        this.blocked = true
+        /** return the err for promise chaining */
+        throw err
+      })
 
-    try {
-      this.#stagedImport = import(/* webpackChunkName: "recorder" */'../shared/recorder')
-      const { Recorder } = await this.#stagedImport
-
-      // If startReplay() has been used by this point, we must record in full mode regardless of session preload:
-      // Note: recorder starts here with w/e the mode is at this time, but this may be changed later (see #apiStartOrRestartReplay else-case)
-      this.recorder = new Recorder(this) // if TK exists due to deferred state, pass it
-    } catch (err) {
-      this.ee.emit('internal-error', [err])
-    }
-
-    return this.recorder
+    return this.#stagedImport
   }
 
   /**
    * Called whenever startReplay API is used. That could occur any time, pre or post load.
    */
-  async #apiStartOrRestartReplay () {
+  #apiStartOrRestartReplay () {
+    if (this.blocked) return
     if (this.featAggregate) { // post-load; there's possibly already an ongoing recording
       if (this.featAggregate.mode !== MODE.FULL) this.featAggregate.initializeRecording(MODE.FULL, true, TRIGGERS.API)
     } else {
-      await this.importRecorder()
-      this.recorder.startRecording(TRIGGERS.API, MODE.FULL)
+      this.importRecorder()
+        .then(() => {
+          this.recorder.startRecording(TRIGGERS.API, MODE.FULL)
+        }) // could handle specific fail-state behaviors with a .catch block here
     }
   }
 }

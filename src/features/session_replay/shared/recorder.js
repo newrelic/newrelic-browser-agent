@@ -4,7 +4,7 @@
  */
 import { record as recorder } from 'rrweb'
 import { stringify } from '../../../common/util/stringify'
-import { AVG_COMPRESSION, CHECKOUT_MS, QUERY_PARAM_PADDING, RRWEB_EVENT_TYPES, SR_EVENT_EMITTER_TYPES } from '../constants'
+import { AVG_COMPRESSION, CHECKOUT_MS, QUERY_PARAM_PADDING, RRWEB_EVENT_TYPES } from '../constants'
 import { RecorderEvents } from './recorder-events'
 import { MODE } from '../../../common/session/constants'
 import { stylesheetEvaluator } from './stylesheet-evaluator'
@@ -12,7 +12,7 @@ import { handle } from '../../../common/event-emitter/handle'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { customMasker } from './utils'
-import { IDEAL_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
+import { IDEAL_PAYLOAD_SIZE, SESSION_ERROR } from '../../../common/constants/agent-constants'
 import { warn } from '../../../common/util/console'
 import { single } from '../../../common/util/invoke'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
@@ -52,10 +52,11 @@ export class Recorder {
     /** The method to stop recording. This defaults to a noop, but is overwritten once the recording library is imported and initialized */
     this.stopRecording = () => { this.agentRef.runtime.isRecording = false }
 
-    registerHandler(SR_EVENT_EMITTER_TYPES.SESSION_ERROR, () => {
+    registerHandler(SESSION_ERROR, () => {
       this.#canRecord = false
       this.stopRecording()
     }, this.srFeatureName, this.ee)
+
     registerHandler(RRWEB_DATA_CHANNEL, (event, isCheckout) => { this.audit(event, isCheckout) }, this.srFeatureName, this.ee)
   }
 

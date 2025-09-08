@@ -18,6 +18,8 @@ import { FEATURE_NAMES } from '../../loaders/features/features'
 import { hasReplayPrerequisite } from '../session_replay/shared/utils'
 import { canEnableSessionTracking } from './feature-gates'
 import { single } from '../../common/util/invoke'
+import { SESSION_ERROR } from '../../common/constants/agent-constants'
+import { handle } from '../../common/event-emitter/handle'
 
 /**
  * Base class for instrumenting a feature.
@@ -101,7 +103,7 @@ export class InstrumentBase extends FeatureBase {
       } catch (e) {
         warn(20, e)
         this.ee.emit('internal-error', [e])
-        this.ee.emit('session-error')
+        handle(SESSION_ERROR, [e], undefined, this.featureName, this.ee)
       }
 
       /**
@@ -142,6 +144,7 @@ export class InstrumentBase extends FeatureBase {
  * @returns
  */
   #shouldImportAgg (featureName, session, agentInit) {
+    if (this.blocked) return false
     switch (featureName) {
       case FEATURE_NAMES.sessionReplay: // the session manager must be initialized successfully for Replay & Trace features
         return hasReplayPrerequisite(agentInit) && !!session

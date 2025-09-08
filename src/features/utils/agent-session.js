@@ -60,10 +60,9 @@ export function setupAgentSession (agentRef) {
     agentRef.runtime.session.write({ consent: accept === undefined ? true : accept })
 
     // call sendRum if it wasn't called yet
-    const target = { licenseKey: agentRef.info.licenseKey, applicationID: agentRef.info.applicationID }
     agentRef.features.page_view_event.onAggregateImported.then((loaded) => {
       if (loaded) {
-        agentRef.features.page_view_event.featAggregate.sendRum(agentRef.info.jsAttributes, target)
+        agentRef.features.page_view_event.featAggregate.sendRum()
       }
     })
   }, 'session', sharedEE)

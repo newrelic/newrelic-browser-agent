@@ -13,15 +13,13 @@ export class UserActionsAggregator {
   #aggregationKey = ''
   #ufEnabled = false
   #deadClickTimer = undefined
-  #domObserver = {
-    instance: undefined
-  }
+  #domObserver = undefined
 
   #errorClickTimer = undefined
 
   constructor (userFrustrationsEnabled) {
     if (userFrustrationsEnabled && MutationObserver) {
-      this.#domObserver.instance = new MutationObserver(this.treatAsLiveClick.bind(this))
+      this.#domObserver = new MutationObserver(this.treatAsLiveClick.bind(this))
       this.#ufEnabled = true
     }
   }
@@ -97,14 +95,14 @@ export class UserActionsAggregator {
   }
 
   #deadClickCleanup () {
-    this.#domObserver.instance?.disconnect()
+    this.#domObserver?.disconnect()
     this.#deadClickTimer?.clear()
     this.#deadClickTimer = undefined
   }
 
   #startObserver () {
-    if (!this.isEvaluatingDeadClick() && this.#domObserver.instance) {
-      this.#domObserver.instance.observe(document, {
+    if (!this.isEvaluatingDeadClick() && this.#domObserver) {
+      this.#domObserver.observe(document, {
         attributes: true,
         characterData: true,
         childList: true,

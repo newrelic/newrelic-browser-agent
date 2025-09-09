@@ -18,7 +18,6 @@ import { EventAggregator } from '../../common/aggregate/event-aggregator'
 import { MAX_PAYLOAD_SIZE, IDEAL_PAYLOAD_SIZE } from '../../common/constants/agent-constants'
 
 export class AggregateBase extends FeatureBase {
-  supportsRegisteredEntities = false // overridden by feature aggregates if true
   /**
    * Create an AggregateBase instance.
    * @param {Object} agentRef The reference to the agent instance.
@@ -36,6 +35,9 @@ export class AggregateBase extends FeatureBase {
     this.canHarvestEarly = true // this is set to false in derived classes that need to block early harvests, like ajax under certain conditions
 
     this.harvestOpts = {} // features aggregate classes can define custom opts for when their harvest is called
+
+    /** @type {Boolean} indicates if the feature supports registered entities and the harvest requirements therein. Also read by getter "harvestEndpointVersion" */
+    this.supportsRegisteredEntities = false // overridden by feature aggregates if true. WARNING - features should only set this to true once the CONSUMER is created. If it is set before the consumers are ready, registering can break the normal agent functions for this feature
 
     this.#setupEventStore()
 

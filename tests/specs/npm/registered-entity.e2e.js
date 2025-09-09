@@ -13,6 +13,11 @@ describe('registered-entity', () => {
     await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html'))
 
     await browser.execute(function () {
+      var features = Object.values(newrelic.initializedAgents)[0].features
+      features.jserrors.featAggregate.supportsRegisteredEntities = true
+      features.generic_events.featAggregate.supportsRegisteredEntities = true
+      features.logging.featAggregate.supportsRegisteredEntities = true
+
       window.agent1 = new RegisteredEntity({
         id: 1,
         name: 'agent1'
@@ -102,7 +107,7 @@ describe('registered-entity', () => {
     logsHarvest.forEach(({ request: { query, body } }) => {
       const data = JSON.parse(body)[0]
       data.logs.forEach(log => {
-        const id = log.attributes['mfe.id'] || log.attributes.appId // MFEs use mfe.id, regular agents use appId
+        const id = log.attributes['mfe.id'] || 42 // MFEs use mfe.id, regular agents supply entity guid so just force it to 42 here if mfe id is not present
         if (Number(id) !== 42) {
           expect(log.attributes['mfe.name']).toEqual('agent' + id)
           expect(log.attributes.eventSource).toEqual('MicroFrontendBrowserAgent')

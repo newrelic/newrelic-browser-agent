@@ -23,7 +23,7 @@ export class Aggregate extends AggregateBase {
 
     /** set up agg-level behaviors specific to this feature */
     this.harvestOpts.raw = true
-    super.supportsRegisteredEntities = true
+    super.supportsRegisteredEntities = true // WARNING - only set this to true once the CONSUMER is created. If it is set before the consumers are ready, registering can break the normal agent functions for this feature
     super.customAttributesAreSeparate = true
 
     // The SessionEntity class can emit a message indicating the session was cleared and reset (expiry, inactivity). This feature must abort and never resume if that occurs.

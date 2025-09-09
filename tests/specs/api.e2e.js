@@ -215,7 +215,8 @@ describe('newrelic api', () => {
       pauseReplay: false,
       log: false,
       wrapLogger: false,
-      register: false
+      register: false,
+      consent: false
     }
     globalApiMethods.forEach(keyName => {
       if (apiSeen[keyName] !== undefined) apiSeen[keyName] = true

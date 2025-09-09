@@ -23,7 +23,12 @@ async function getLoaderContent (loaderFilePath) {
 }
 
 function getLoaderFilePath (request, testServer, webpath) {
-  const loader = request.query.loader || testServer.config.loader
+  // Define the set of valid loader identifiers
+  const VALID_LOADERS = ['full', 'lite', 'legacy']; // <-- Update according to actual valid loaders
+  const loaderInput = request.query.loader;
+  const loader = VALID_LOADERS.includes(loaderInput)
+    ? loaderInput
+    : testServer.config.loader;
   return path.join(
     webpath ? '/build/' : paths.builtAssetsDir,
     `nr-loader-${loader}.min.js`

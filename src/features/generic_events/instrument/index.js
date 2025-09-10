@@ -70,17 +70,15 @@ export class Instrument extends InstrumentBase {
       historyEE.on('replaceState-end', navigationChange)
       window.addEventListener('hashchange', navigationChange, eventListenerOpts(true, this.removeOnAbort?.signal))
       window.addEventListener('popstate', navigationChange, eventListenerOpts(true, this.removeOnAbort?.signal))
-    }
 
-    this.abortHandler = this.#abort
+      this.abortHandler = () => {
+        this.removeOnAbort?.abort()
+        this.abortHandler = undefined // weakly allow this abort op to run only once
+      }
+    }
     /** If any of the sources are active, import the aggregator. otherwise deregister */
     if (genericEventSourceConfigs.some(x => x)) this.importAggregator(agentRef, () => import(/* webpackChunkName: "generic_events-aggregate" */ '../aggregate'))
     else this.deregisterDrain()
-  }
-
-  #abort () {
-    this.removeOnAbort?.abort()
-    this.abortHandler = undefined // weakly allow this abort op to run only once
   }
 }
 

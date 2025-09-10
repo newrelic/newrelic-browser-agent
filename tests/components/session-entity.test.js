@@ -5,6 +5,7 @@ import * as runtimeModule from '../../src/common/constants/runtime'
 import { buildExpectedSessionState } from '../specs/util/helpers'
 
 jest.useFakeTimers()
+jest.retryTimes(0)
 
 const agentIdentifier = 'test_agent_identifier'
 const key = 'test_key'
@@ -148,6 +149,13 @@ describe('reset()', () => {
     session.reset()
     expect(session.state.numOfResets).toEqual(1)
   })
+
+  test('should flag interim', () => {
+    const session = new SessionEntity({ agentIdentifier, key, storage, expiresMs: 10 })
+    expect(session.state.interim).toEqual(false)
+    session.reset(true)
+    expect(session.state.interim).toEqual(true)
+  })
 })
 
 describe('isNew', () => {
@@ -173,6 +181,19 @@ describe('isNew', () => {
     storage.set(`${PREFIX}_${key}`, { ...model, value, expiresAt: Date.now() + 100000, inactiveAt: Date.now() - 1, updatedAt: Date.now() })
     const sessionInstance = new SessionEntity({ agentIdentifier, key, storage })
     expect(sessionInstance.isNew).toEqual(true)
+  })
+
+  test('is true if existing session is interim', () => {
+    storage.set(`${PREFIX}_${key}`, { ...model, interim: true, value, expiresAt: Date.now() + 100000, inactiveAt: Date.now() + 100000, updatedAt: Date.now() })
+    const sessionInstance = new SessionEntity({ agentIdentifier, key, storage })
+    expect(sessionInstance.isNew).toEqual(true)
+    expect(sessionInstance.value).not.toEqual(value)
+  })
+
+  test('is true if existing session is not interim', () => {
+    storage.set(`${PREFIX}_${key}`, { ...model, interim: false, value, expiresAt: Date.now() + 100000, inactiveAt: Date.now() + 100000, updatedAt: Date.now() })
+    const sessionInstance = new SessionEntity({ agentIdentifier, key, storage })
+    expect(sessionInstance.isNew).toEqual(false)
   })
 })
 

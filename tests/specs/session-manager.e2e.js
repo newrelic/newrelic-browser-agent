@@ -118,6 +118,7 @@ describe('newrelic session ID', () => {
       expect(agentSessionInfo.localStorage).toEqual(Object.values(agentSessionInfo.agentSessions)[0])
       expect(agentSessionInfo.localStorage.value).toEqual(expect.stringMatching(/^[a-zA-Z0-9]{16,}$/))
       expect(agentSessionInfo.localStorage.inactiveAt).toEqual(expect.any(Number))
+      expect(agentSessionInfo.localStorage.interim).toEqual(false)
 
       // wait longer than the session expiration time
       await browser.pause(sessionExpiresMs + 1000)
@@ -126,6 +127,7 @@ describe('newrelic session ID', () => {
       expect(resetAgentSessionInfo.localStorage).toEqual(Object.values(resetAgentSessionInfo.agentSessions)[0])
       expect(resetAgentSessionInfo.localStorage.value).not.toEqual(agentSessionInfo.localStorage.value)
       expect(resetAgentSessionInfo.localStorage.value).toEqual(expect.stringMatching(/^[a-zA-Z0-9]{16,}$/))
+      expect(resetAgentSessionInfo.localStorage.interim).toEqual(true)
     })
 
     it('should start a new session after inactivity', async () => {
@@ -146,6 +148,7 @@ describe('newrelic session ID', () => {
       expect(agentSessionInfo.localStorage).toEqual(Object.values(agentSessionInfo.agentSessions)[0])
       expect(agentSessionInfo.localStorage.value).toEqual(expect.stringMatching(/^[a-zA-Z0-9]{16,}$/))
       expect(agentSessionInfo.localStorage.inactiveAt).toEqual(expect.any(Number))
+      expect(agentSessionInfo.localStorage.interim).toEqual(false)
 
       // wait longer than the session inactivity time
       await browser.pause(sessionInactivityMs + 1000)
@@ -154,6 +157,48 @@ describe('newrelic session ID', () => {
       expect(resetAgentSessionInfo.localStorage).toEqual(Object.values(resetAgentSessionInfo.agentSessions)[0])
       expect(resetAgentSessionInfo.localStorage.value).not.toEqual(agentSessionInfo.localStorage.value)
       expect(resetAgentSessionInfo.localStorage.value).toEqual(expect.stringMatching(/^[a-zA-Z0-9]{16,}$/))
+      expect(resetAgentSessionInfo.localStorage.interim).toEqual(true)
+    })
+
+    it('should start a new session for interim state on hard reload', async () => {
+      const sessionInactivityMs = 5000
+      await browser.url(await browser.testHandle.assetURL('instrumented.html', {
+        init: {
+          privacy: { cookies_enabled: true },
+          session: {
+            inactiveMs: sessionInactivityMs
+          }
+        }
+      }))
+        .then(() => browser.waitForAgentLoad())
+
+      await browser.resetAgentSession()
+      const agentSessionInfo = await browser.getAgentSessionInfo()
+
+      expect(agentSessionInfo.localStorage).toEqual(Object.values(agentSessionInfo.agentSessions)[0])
+      expect(agentSessionInfo.localStorage.value).toEqual(expect.stringMatching(/^[a-zA-Z0-9]{16,}$/))
+      expect(agentSessionInfo.localStorage.inactiveAt).toEqual(expect.any(Number))
+      expect(agentSessionInfo.localStorage.interim).toEqual(false)
+
+      // wait longer than the session inactivity time
+      await browser.pause(sessionInactivityMs + 1000)
+      const resetAgentSessionInfo = await browser.getAgentSessionInfo()
+
+      expect(resetAgentSessionInfo.localStorage).toEqual(Object.values(resetAgentSessionInfo.agentSessions)[0])
+      expect(resetAgentSessionInfo.localStorage.value).not.toEqual(agentSessionInfo.localStorage.value)
+      expect(resetAgentSessionInfo.localStorage.value).toEqual(expect.stringMatching(/^[a-zA-Z0-9]{16,}$/))
+      expect(resetAgentSessionInfo.localStorage.interim).toEqual(true)
+
+      await browser.refresh()
+        .then(() => browser.waitForAgentLoad())
+
+      const refreshedAgentSessionInfo = await browser.getAgentSessionInfo()
+
+      expect(refreshedAgentSessionInfo.localStorage).toEqual(Object.values(refreshedAgentSessionInfo.agentSessions)[0])
+      expect(refreshedAgentSessionInfo.localStorage.value).not.toEqual(resetAgentSessionInfo.localStorage.value)
+      expect(refreshedAgentSessionInfo.localStorage.value).toEqual(expect.stringMatching(/^[a-zA-Z0-9]{16,}$/))
+      expect(refreshedAgentSessionInfo.localStorage.interim).toEqual(false)
+      expect(Object.values(refreshedAgentSessionInfo.agentSessionInstances)[0].isNew).toEqual(true)
     })
   })
 

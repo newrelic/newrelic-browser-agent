@@ -190,7 +190,7 @@ describe('isNew', () => {
     expect(sessionInstance.value).not.toEqual(value)
   })
 
-  test('is true if existing session is not interim', () => {
+  test('is false if existing session is not interim', () => {
     storage.set(`${PREFIX}_${key}`, { ...model, interim: false, value, expiresAt: Date.now() + 100000, inactiveAt: Date.now() + 100000, updatedAt: Date.now() })
     const sessionInstance = new SessionEntity({ agentIdentifier, key, storage })
     expect(sessionInstance.isNew).toEqual(false)

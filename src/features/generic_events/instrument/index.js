@@ -69,7 +69,6 @@ export class Instrument extends InstrumentBase {
       historyEE.on('pushState-end', navigationChange)
       historyEE.on('replaceState-end', navigationChange)
       window.addEventListener('hashchange', navigationChange, eventListenerOpts(true, this.removeOnAbort?.signal))
-      window.addEventListener('load', navigationChange, eventListenerOpts(true, this.removeOnAbort?.signal))
       window.addEventListener('popstate', navigationChange, eventListenerOpts(true, this.removeOnAbort?.signal))
     }
 

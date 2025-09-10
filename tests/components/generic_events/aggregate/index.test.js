@@ -10,6 +10,9 @@ beforeAll(() => {
   mainAgent = setupAgent({
     init: {
       feature_flags: ['user_frustrations']
+    },
+    info: {
+      beacon: 'some-agent-endpoint'
     }
   })
 })
@@ -400,7 +403,7 @@ describe('user frustrations', () => {
     target.id = 'myBtn'
     genericEventsAggregate.ee.emit('ua', [{ timeStamp: 100, type: 'click', target }])
     jest.advanceTimersByTime(1999)
-    genericEventsAggregate.ee.emit('xhr', [{ host: 'bam.nr-data.net' }])
+    genericEventsAggregate.ee.emit('xhr', [{ host: 'some-agent-endpoint' }])
     jest.advanceTimersByTime(1)
 
     // blur event to trigger aggregation to stop and add to harvest buffer

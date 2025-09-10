@@ -118,11 +118,8 @@ export class Aggregate extends AggregateBase {
           }
         }
 
-        const internalTraffic = [this.agentRef.info.errorBeacon]
-        if (this.agentRef.info.beacon) internalTraffic.push(this.agentRef.info.beacon)
-        if (this.agentRef.init.proxy?.beacon) internalTraffic.push(this.agentRef.init.proxy.beacon)
         function evalNetworkRequest (host) {
-          if (host && !internalTraffic.includes(host)) this.userActionAggregator.treatAsLiveClick()
+          if (host && !this.agentRef.beacons.includes(host)) this.userActionAggregator.treatAsLiveClick()
         }
 
         registerHandler('ua', (evt) => {

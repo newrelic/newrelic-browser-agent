@@ -10,6 +10,9 @@ beforeAll(() => {
   mainAgent = setupAgent({
     init: {
       feature_flags: ['user_frustrations']
+    },
+    info: {
+      beacon: 'some-agent-endpoint'
     }
   })
 })
@@ -385,7 +388,7 @@ describe('user frustrations', () => {
     target.id = 'myBtn'
     genericEventsAggregate.ee.emit('ua', [{ timeStamp: 100, type: 'click', target }])
     jest.advanceTimersByTime(1999)
-    genericEventsAggregate.ee.emit('xhr', [{ host: 'example.com' }])
+    genericEventsAggregate.ee.emit('netReq', [{ host: 'example.com' }])
     jest.advanceTimersByTime(1)
 
     // blur event to trigger aggregation to stop and add to harvest buffer
@@ -393,22 +396,6 @@ describe('user frustrations', () => {
     const [{ payload: harvest }] = genericEventsAggregate.makeHarvestPayload() // force it to put the aggregation into the event buffer
     expect(harvest.body.ins[0]).toMatchObject(genDefaultUserAction())
     expect(harvest.body.ins[0].deadClick).toBeUndefined()
-  })
-
-  test('should mark as dead click if no non-agent network request occurred within 2 seconds of user action', () => {
-    const target = document.createElement('button')
-    target.id = 'myBtn'
-    genericEventsAggregate.ee.emit('ua', [{ timeStamp: 100, type: 'click', target }])
-    jest.advanceTimersByTime(1999)
-    genericEventsAggregate.ee.emit('xhr', [{ host: 'bam.nr-data.net' }])
-    jest.advanceTimersByTime(1)
-
-    // blur event to trigger aggregation to stop and add to harvest buffer
-    genericEventsAggregate.ee.emit('ua', [{ timeStamp: 234567, type: 'blur', target: window }])
-    const [{ payload: harvest }] = genericEventsAggregate.makeHarvestPayload() // force it to put the aggregation into the event buffer
-    expect(harvest.body.ins[0]).toMatchObject(createExpectedObject({
-      deadClick: true
-    }))
   })
 
   test('should not mark as dead click if navigational change occurred within 2 seconds of user action', () => {

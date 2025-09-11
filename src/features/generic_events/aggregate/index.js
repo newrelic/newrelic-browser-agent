@@ -118,19 +118,12 @@ export class Aggregate extends AggregateBase {
           }
         }
 
-        const internalTraffic = [this.agentRef.info.errorBeacon]
-        if (this.agentRef.info.beacon) internalTraffic.push(this.agentRef.info.beacon)
-        if (this.agentRef.init.proxy?.beacon) internalTraffic.push(this.agentRef.init.proxy.beacon)
-        function evalNetworkRequest (host) {
-          if (host && !internalTraffic.includes(host)) this.userActionAggregator.treatAsLiveClick()
-        }
-
         registerHandler('ua', (evt) => {
           /** the processor will return the previously aggregated event if it has been completed by processing the current event */
           addUserAction(this.userActionAggregator.process(evt, this.agentRef.init.user_actions.elementAttributes))
         }, this.featureName, this.ee)
         registerHandler('err', () => this.userActionAggregator.markAsErrorClick(), this.featureName, this.ee)
-        registerHandler('xhr', (params) => { if (this.userActionAggregator.isEvaluatingDeadClick()) evalNetworkRequest.call(this, params.host) }, this.featureName, this.ee)
+        registerHandler('netReq', () => { if (this.userActionAggregator.isEvaluatingDeadClick()) this.userActionAggregator.treatAsLiveClick() }, this.featureName, this.ee)
         registerHandler('navChange', () => { if (this.userActionAggregator.isEvaluatingDeadClick()) this.userActionAggregator.treatAsLiveClick() }, this.featureName, this.ee)
       }
 

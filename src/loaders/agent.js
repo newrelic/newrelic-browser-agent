@@ -91,7 +91,7 @@ export class Agent extends AgentBase {
   get beacons () {
     if (!this.#beacons) {
       const beacons = new Set([this.info.beacon, this.info.errorBeacon])
-      if (this.init.proxy.beacon) beacons.add(this.init.proxy.beacon)
+      if (this.init.proxy?.beacon) beacons.add(this.init.proxy.beacon)
       this.#beacons = [...beacons]
     }
     return this.#beacons

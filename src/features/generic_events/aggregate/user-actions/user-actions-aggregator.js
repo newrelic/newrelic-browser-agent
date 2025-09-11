@@ -19,7 +19,7 @@ export class UserActionsAggregator {
 
   constructor (userFrustrationsEnabled) {
     if (userFrustrationsEnabled && MutationObserver) {
-      this.#domObserver = new MutationObserver(this.treatAsLiveClick.bind(this))
+      this.#domObserver = new MutationObserver(this.isLiveClick.bind(this))
       this.#ufEnabled = true
     }
   }
@@ -101,7 +101,7 @@ export class UserActionsAggregator {
   }
 
   #startObserver () {
-    if (!this.isEvaluatingDeadClick() && this.#domObserver) {
+    if (!this.#isEvaluatingDeadClick() && this.#domObserver) {
       this.#domObserver.observe(document, {
         attributes: true,
         characterData: true,
@@ -112,12 +112,12 @@ export class UserActionsAggregator {
     }
   }
 
-  isEvaluatingDeadClick () {
+  #isEvaluatingDeadClick () {
     return this.#deadClickTimer !== undefined
   }
 
-  treatAsLiveClick () {
-    this.#deadClickCleanup()
+  isLiveClick () {
+    if (this.#isEvaluatingDeadClick()) this.#deadClickCleanup()
   }
 }
 

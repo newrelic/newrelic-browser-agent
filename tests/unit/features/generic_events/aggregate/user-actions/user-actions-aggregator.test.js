@@ -92,7 +92,6 @@ describe('UserActionsAggregator - Dead Clicks', () => {
     document.body.appendChild(link)
     const evt = { type: 'click', target: link }
     aggregator.process(evt)
-    expect(aggregator.isEvaluatingDeadClick()).toBe(false)
 
     jest.advanceTimersByTime(2000)
 
@@ -105,7 +104,6 @@ describe('UserActionsAggregator - Dead Clicks', () => {
     document.body.appendChild(btn)
     const evt = { type: 'click', target: btn }
     aggregator.process(evt)
-    expect(aggregator.isEvaluatingDeadClick()).toBe(true)
 
     jest.advanceTimersByTime(2000)
 
@@ -118,7 +116,6 @@ describe('UserActionsAggregator - Dead Clicks', () => {
     document.body.appendChild(link)
     const evt = { type: 'click', target: link }
     aggregator.process(evt)
-    expect(aggregator.isEvaluatingDeadClick()).toBe(true)
 
     jest.advanceTimersByTime(2000)
 
@@ -131,7 +128,6 @@ describe('UserActionsAggregator - Dead Clicks', () => {
     document.body.appendChild(span)
     const evt = { type: 'click', target: span }
     aggregator.process(evt)
-    expect(aggregator.isEvaluatingDeadClick()).toBe(false)
 
     jest.advanceTimersByTime(2000)
 
@@ -144,14 +140,12 @@ describe('UserActionsAggregator - Dead Clicks', () => {
     document.body.appendChild(btn)
     const evt = { type: 'click', target: btn }
     aggregator.process(evt)
-    expect(aggregator.isEvaluatingDeadClick()).toBe(true)
 
     // Simulate a DOM mutation before the timer ends
     btn.setAttribute('data-test', 'mutated')
     // MutationObserver callback is async, so flush microtasks
     return Promise.resolve().then(() => {
       jest.advanceTimersByTime(2000)
-      expect(aggregator.isEvaluatingDeadClick()).toBe(false)
       const userAction = aggregator.aggregationEvent
       expect(userAction.deadClick).toBe(false)
     })
@@ -164,7 +158,7 @@ describe('UserActionsAggregator - Dead Clicks', () => {
     aggregator.process(evt)
 
     jest.advanceTimersByTime(1999)
-    aggregator.treatAsLiveClick() // Simulate a nav change or network request
+    aggregator.isLiveClick() // Simulate a nav change or network request
     jest.advanceTimersByTime(1)
 
     const userAction = aggregator.aggregationEvent
@@ -178,7 +172,6 @@ describe('UserActionsAggregator - Dead Clicks', () => {
     const keydownEvt = { type: 'keydown', target: btn }
 
     aggregator.process(clickEvt)
-    expect(aggregator.isEvaluatingDeadClick()).toBe(true)
     const finishedEvent = aggregator.process(keydownEvt) // Ends aggregation before timer
 
     jest.advanceTimersByTime(2000)

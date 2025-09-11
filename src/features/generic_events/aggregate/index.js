@@ -118,16 +118,14 @@ export class Aggregate extends AggregateBase {
           }
         }
 
-        function evalNetworkRequest (host) {
-          if (host && !this.agentRef.beacons.includes(host)) this.userActionAggregator.treatAsLiveClick()
-        }
-
         registerHandler('ua', (evt) => {
           /** the processor will return the previously aggregated event if it has been completed by processing the current event */
           addUserAction(this.userActionAggregator.process(evt, this.agentRef.init.user_actions.elementAttributes))
         }, this.featureName, this.ee)
         registerHandler('err', () => this.userActionAggregator.markAsErrorClick(), this.featureName, this.ee)
-        registerHandler('xhr', (params) => { if (this.userActionAggregator.isEvaluatingDeadClick()) evalNetworkRequest.call(this, params.host) }, this.featureName, this.ee)
+        registerHandler('netReq', () => {
+          if (this.userActionAggregator.isEvaluatingDeadClick()) this.userActionAggregator.treatAsLiveClick()
+        }, this.featureName, this.ee)
       }
 
       /**

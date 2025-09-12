@@ -14,11 +14,9 @@ const checked = new Map()
 export function isNative (...fns) {
   return fns.every(fn => {
     if (checked.has(fn)) return checked.get(fn)
-    const fnString = typeof fn === 'function' ? fn.toString() : ''
-    const isNative = fnString.includes('[native code]')
-    const isNr = fnString.includes('nrWrapper')
-    if (!isNative && !isNr) {
-      warn(64, fn?.name || fnString)
+    const isNative = typeof fn === 'function' && fn.toString().includes('[native code]')
+    if (!isNative) {
+      warn(64, fn?.name || fn?.toString())
     }
     checked.set(fn, isNative)
     return isNative

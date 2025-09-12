@@ -6,6 +6,7 @@ import { analyzeElemPath } from '../../../../common/dom/selector-path'
 import { FRUSTRATION_TIMEOUT_MS, OBSERVED_WINDOW_EVENTS } from '../../constants'
 import { AggregatedUserAction } from './aggregated-user-action'
 import { Timer } from '../../../../common/timer/timer'
+import { gosNREUMOriginals } from '../../../../common/window/nreum'
 
 export class UserActionsAggregator {
   /** @type {AggregatedUserAction=} */
@@ -18,7 +19,7 @@ export class UserActionsAggregator {
   }
 
   constructor (userFrustrationsEnabled) {
-    if (userFrustrationsEnabled && MutationObserver) {
+    if (userFrustrationsEnabled && gosNREUMOriginals().o.MO) {
       this.#domObserver.instance = new MutationObserver(this.#deadClickCleanup.bind(this))
       this.#ufEnabled = true
     }

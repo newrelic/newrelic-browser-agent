@@ -109,35 +109,47 @@ describe('send', () => {
 })
 
 describe('triggerHarvestFor', () => {
-  const harvester = new Harvester(fakeAgent)
+  beforeAll(() => {
+    fakeAgent.runtime = {
+      registeredEntities: []
+    }
+  })
+  let harvester
+  beforeEach(() => {
+    harvester = new Harvester(fakeAgent)
+  })
+  afterEach(() => {
+    jest.clearAllMocks()
+    fakeAgent.runtime.registeredEntities = []
+  })
   test('fails if aggregate is blocked', () => {
-    expect(harvester.triggerHarvestFor({ blocked: true })).toEqual(false)
+    expect(harvester.triggerHarvestFor({ blocked: true })).toEqual({ payload: undefined, ranSend: false, endpointVersion: 1 })
   })
   test('does nothing if no payload is returned from makeHarvestPayload if directSend unspecified', () => {
-    const fakeAggregate = { makeHarvestPayload: jest.fn() }
-    expect(harvester.triggerHarvestFor(fakeAggregate, { directSend: undefined })).toEqual(false)
+    const fakeAggregate = { makeHarvestPayload: jest.fn(), agentRef: fakeAgent }
+    expect(harvester.triggerHarvestFor(fakeAggregate, { directSend: undefined })).toEqual({ payload: undefined, ranSend: false, endpointVersion: 1 })
     expect(fakeAggregate.makeHarvestPayload).toHaveBeenCalledTimes(1)
   })
   test('allows directSend to provide the payload without makeHarvestPayload', () => {
-    const fakeAggregate = { makeHarvestPayload: jest.fn(), harvestOpts: {} }
-    expect(harvester.triggerHarvestFor(fakeAggregate, { directSend: { targetApp: 'someApp', payload: 'fakePayload' } })).toEqual(true)
+    const fakeAggregate = { makeHarvestPayload: jest.fn(), harvestOpts: {}, agentRef: fakeAgent }
+    expect(harvester.triggerHarvestFor(fakeAggregate, { directSend: { payload: 'fakePayload' } })).toEqual({ payload: 'fakePayload', ranSend: true, endpointVersion: 1 })
     expect(fakeAggregate.makeHarvestPayload).not.toHaveBeenCalled()
   })
   test('disallow directSend to send if no payload is defined', () => {
-    expect(harvester.triggerHarvestFor({}, { directSend: { targetApp: 'someApp', payload: undefined } })).toEqual(false)
+    const fakeAggregate = { makeHarvestPayload: jest.fn(), harvestOpts: {}, agentRef: fakeAgent }
+    expect(harvester.triggerHarvestFor(fakeAggregate, { directSend: { payload: undefined } })).toEqual({ payload: undefined, ranSend: false, endpointVersion: 1 })
   })
   test('sends if payload is returned from makeHarvestPayload', () => {
-    const fakeAggregate = { makeHarvestPayload: jest.fn().mockReturnValue([{ targetApp: 'someApp', payload: 'fakePayload' }]), harvestOpts: {} }
-    expect(harvester.triggerHarvestFor(fakeAggregate, { })).toEqual(true)
+    const fakeAggregate = { makeHarvestPayload: jest.fn().mockReturnValue('fakePayload'), harvestOpts: {}, agentRef: fakeAgent }
+    expect(harvester.triggerHarvestFor(fakeAggregate, { })).toEqual({ payload: 'fakePayload', ranSend: true, endpointVersion: 1 })
   })
-  test('sends if makeHarvestPayload returns payload for at least one app', () => {
-    const fakeAggregate = {
-      makeHarvestPayload: jest.fn().mockReturnValue([
-        { targetApp: 'someApp1', payload: undefined },
-        { targetApp: 'someApp2', payload: 'fakePayload' }
-      ]),
-      harvestOpts: {}
-    }
-    expect(harvester.triggerHarvestFor(fakeAggregate, { })).toEqual(true)
+  test('uses aggregate harvest endpoint version for harvests - v1', () => {
+    const fakeAggregate = { makeHarvestPayload: jest.fn().mockReturnValue('fakePayload'), harvestOpts: {}, agentRef: fakeAgent, featureName: 'jserrors', harvestEndpointVersion: 1 }
+    expect(harvester.triggerHarvestFor(fakeAggregate, { })).toEqual({ payload: 'fakePayload', ranSend: true, endpointVersion: 1 })
+  })
+
+  test('uses aggregate harvest endpoint version for harvests - v2', () => {
+    const fakeAggregate = { makeHarvestPayload: jest.fn().mockReturnValue('fakePayload'), harvestOpts: {}, agentRef: fakeAgent, featureName: 'jserrors', harvestEndpointVersion: 2 }
+    expect(harvester.triggerHarvestFor(fakeAggregate, { })).toEqual({ payload: 'fakePayload', ranSend: true, endpointVersion: 2 })
   })
 })

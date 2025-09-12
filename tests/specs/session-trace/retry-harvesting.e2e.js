@@ -12,26 +12,31 @@ describe('stn retry harvesting', () => {
     it(`should send the session trace on the next harvest when the first harvest statusCode is ${statusCode}`, async () => {
       await browser.testHandle.scheduleReply('bamServer', {
         test: testBlobRequest,
-        permanent: true,
+        permanent: false,
         statusCode
       })
 
       let [sessionTraceHarvests] = await Promise.all([
-        sessionTraceCapture.waitForResult({ timeout: 10000 }),
+        sessionTraceCapture.waitForResult({ totalCount: 1 }),
         browser.url(await browser.testHandle.assetURL('stn/instrumented.html', stConfig()))
       ])
 
-      sessionTraceHarvests.forEach(harvest => expect(harvest.reply.statusCode).toEqual(statusCode))
-
-      // Pause a bit for browsers built-in automated retry logic crap
       await browser.pause(500)
       await browser.testHandle.clearScheduledReplies('bamServer')
 
-      sessionTraceHarvests = await sessionTraceCapture.waitForResult({ timeout: 10000 })
+      sessionTraceHarvests = await sessionTraceCapture.waitForResult({ timeout: 6000 })
+      const failureSessionTraceHarvests = sessionTraceHarvests.filter(harvest => harvest.reply.statusCode === statusCode)
       const successSessionTraceHarvests = sessionTraceHarvests.filter(harvest => harvest.reply.statusCode !== statusCode)
 
-      expect(successSessionTraceHarvests.length).toBeGreaterThan(0)
-      expect(successSessionTraceHarvests[0].request.body).toEqual(expect.arrayContaining(sessionTraceHarvests[0].request.body))
+      expect(failureSessionTraceHarvests.length).toBeGreaterThan(0)
+      expect(successSessionTraceHarvests.length).toBeGreaterThanOrEqual(failureSessionTraceHarvests.length)
+
+      expect(failureSessionTraceHarvests[0].request.body.every(failedNode => {
+        return !!successSessionTraceHarvests.find(successHarvest => successHarvest.request.body.find(successNode => {
+          return successNode.n === failedNode.n && successNode.t === failedNode.t
+        }))
+      })).toBe(true)
+
       successSessionTraceHarvests.forEach(harvest => testExpectedTrace({ data: harvest.request }))
     })
   )

@@ -58,12 +58,12 @@ describe('logging harvesting', () => {
     const commonAttributes = (customAttrs = {}) => ({
       common: {
         attributes: {
-          appId: 42,
           agentVersion: expect.any(String),
+          appId: 42,
+          'entity.guid': expect.any(String),
           'instrumentation.provider': 'browser',
           'instrumentation.version': expect.any(String),
           'instrumentation.name': 'spa',
-          'entity.guid': expect.any(String),
           hasReplay: false,
           hasTrace: true,
           standalone: false,

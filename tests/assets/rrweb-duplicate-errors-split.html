@@ -27,7 +27,7 @@
         if (++pre >= 500 && post >= 500) clearInterval(inv)
         newrelic.noticeError(new Error('test'))
         if ( document.readyState === 'complete') post++
-      }, 5)
+      }, 1)
     </script>
   </head>
   <body>

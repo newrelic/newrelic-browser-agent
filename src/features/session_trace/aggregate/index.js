@@ -97,8 +97,6 @@ export class Aggregate extends AggregateBase {
     }
     this.agentRef.runtime.session.write({ sessionTraceMode: this.mode })
     this.drain()
-    /** try to harvest immediately. This will not send if the trace is not running in FULL mode due to the pre-harvest checks. */
-    this.agentRef.runtime.harvester.triggerHarvestFor(this)
   }
 
   preHarvestChecks () {

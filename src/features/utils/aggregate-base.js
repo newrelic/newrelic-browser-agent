@@ -32,7 +32,9 @@ export class AggregateBase extends FeatureBase {
     /** @type {Boolean} indicates if custom attributes are combined in each event payload for size estimation purposes. this is set to true in derived classes that need to evaluate custom attributes separately from the event payload */
     this.customAttributesAreSeparate = false
     /** @type {Boolean} indicates if the feature can harvest early. This is set to false in derived classes that need to block early harvests, like ajax under certain conditions */
-    this.canHarvestEarly = true // this is set to false in derived classes that need to block early harvests, like ajax under certain conditions
+    this.canHarvestEarly = true
+    /** @type {Boolean} indicates if the feature is actively in a retry deferral period */
+    this.isRetrying = false
 
     this.harvestOpts = {} // features aggregate classes can define custom opts for when their harvest is called
 
@@ -93,7 +95,7 @@ export class AggregateBase extends FeatureBase {
    * @returns void
    */
   decideEarlyHarvest () {
-    if (!this.canHarvestEarly) return
+    if (!this.canHarvestEarly || this.blocked || this.isRetrying) return
     const estimatedSize = this.events.byteSize() + (this.customAttributesAreSeparate ? this.agentRef.runtime.jsAttributesMetadata.bytes : 0)
     if (estimatedSize > IDEAL_PAYLOAD_SIZE) {
       this.agentRef.runtime.harvester.triggerHarvestFor(this)

@@ -2,6 +2,7 @@ const { Transform } = require('stream')
 const { defaultInitBlock } = require('../../constants')
 const { deepmerge } = require('deepmerge-ts')
 const { deserialize } = require('../../../shared/serializer.js')
+const sslShim = require('./ssl-shim.js')
 
 /**
  * Constructs the agent init script block based on the init query.
@@ -35,7 +36,7 @@ function getInitContent (request, reply, testServer) {
 
   initJSON = initJSON.replace(/"new RegExp\((.*?)\)"/g, 'new RegExp($1)')
 
-  return `window.NREUM||(NREUM={});NREUM.init=${initJSON};NREUM.init.ssl=false;`
+  return sslShim(initJSON)
 }
 
 /**

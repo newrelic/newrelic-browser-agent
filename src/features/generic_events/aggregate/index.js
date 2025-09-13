@@ -59,7 +59,7 @@ export class Aggregate extends AggregateBase {
 
       let addUserAction = () => { /** no-op */ }
       if (isBrowserScope && agentRef.init.user_actions.enabled) {
-        this.userActionAggregator = new UserActionsAggregator()
+        this.userActionAggregator = new UserActionsAggregator(agentRef.init.feature_flags.includes('user_frustrations'))
         this.harvestOpts.beforeUnload = () => addUserAction?.(this.userActionAggregator.aggregationEvent)
 
         addUserAction = (aggregatedUserAction) => {
@@ -84,7 +84,8 @@ export class Aggregate extends AggregateBase {
                   if (canTrustTargetAttribute(field)) acc[targetAttrName(field)] = String(target[field]).trim().slice(0, 128)
                   return acc
                 }, {})),
-                ...aggregatedUserAction.nearestTargetFields
+                ...aggregatedUserAction.nearestTargetFields,
+                ...(agentRef.init.feature_flags.includes('user_frustrations') && aggregatedUserAction.deadClick && { deadClick: true })
               })
 
               /**

@@ -85,7 +85,7 @@ export class Aggregate extends AggregateBase {
                   return acc
                 }, {})),
                 ...aggregatedUserAction.nearestTargetFields,
-                ...(agentRef.init.feature_flags.includes('user_frustrations') && aggregatedUserAction.deadClick && { deadClick: true })
+                ...(aggregatedUserAction.deadClick && { deadClick: true })
               })
 
               /**

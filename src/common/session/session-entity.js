@@ -32,7 +32,8 @@ const model = {
   loggingMode: LOGGING_MODE.OFF,
   serverTimeDiff: null, // set by TimeKeeper; "undefined" value will not be stringified and stored but "null" will
   custom: {},
-  numOfResets: 0
+  numOfResets: 0,
+  interim: false
 }
 
 export class SessionEntity {
@@ -57,7 +58,7 @@ export class SessionEntity {
 
     this.ee = ee.get(agentIdentifier)
     wrapEvents(this.ee)
-    this.setup(opts)
+    this.setup({ ...opts, isInitialRead: true })
 
     /**
      * Do not emit session storage events for IE11, because IE11 is unable to determine
@@ -75,9 +76,12 @@ export class SessionEntity {
     }
   }
 
-  setup ({ value = generateRandomHexString(16), expiresMs = DEFAULT_EXPIRES_MS, inactiveMs = DEFAULT_INACTIVE_MS, numOfResets = 0 }) {
+  setup ({ value = generateRandomHexString(16), expiresMs = DEFAULT_EXPIRES_MS, inactiveMs = DEFAULT_INACTIVE_MS, numOfResets = 0, isInitialRead }) {
     /** Ensure that certain properties are preserved across a reset if already set */
-    const persistentAttributes = { serverTimeDiff: this.state.serverTimeDiff || model.serverTimeDiff }
+    const persistentAttributes = {
+      serverTimeDiff: this.state.serverTimeDiff || model.serverTimeDiff,
+      interim: this.state.interim || model.interim
+    }
     this.state = {}
     this.sync({ ...model, ...persistentAttributes })
 
@@ -93,7 +97,7 @@ export class SessionEntity {
     // the local timers are used after the session is running to "expire" the session, allowing for pausing timers etc.
     // the timestamps stored in the storage API can be checked at initial run, and when the page is restored, otherwise we lean
     // on the local timers to expire the session
-    const initialRead = this.read()
+    const initialRead = this.read(isInitialRead)
 
     // the set-up of the timer used to expire the session "naturally" at a certain time
     // this gets ignored if the value is falsy, allowing for session entities that do not expire
@@ -105,7 +109,7 @@ export class SessionEntity {
         onEnd: () => {
           this.collectSM('expired')
           this.collectSM('duration')
-          this.reset()
+          this.reset(true)
         }
       }, this.state.expiresAt - Date.now())
     } else {
@@ -122,7 +126,7 @@ export class SessionEntity {
         onEnd: () => {
           this.collectSM('inactive')
           this.collectSM('duration')
-          this.reset()
+          this.reset(true)
         },
         // When the inactive timer refreshes, it will update the storage values with an update timestamp
         onRefresh: this.refresh.bind(this),
@@ -165,15 +169,18 @@ export class SessionEntity {
 
   /**
    * Fetch the stored values from the storage API tied to this entity
+   * @param {boolean} [isInitialRead] indicative of whether this is the first time the LS obj has been accessed on this page
    * @returns {Object}
    */
-  read () {
+  read (isInitialRead) {
     try {
       const val = this.storage.get(this.lookupKey)
       if (!val) return {}
       // TODO - decompression would need to happen here if we decide to do it
       const obj = typeof val === 'string' ? JSON.parse(val) : val
       if (this.isInvalid(obj)) return {}
+      // if the session was an interim session, reset it
+      if (isInitialRead && obj.interim) return this.reset()
       // if the session expires, collect a SM count before resetting
       if (this.isExpired(obj.expiresAt)) {
         this.collectSM('expired')
@@ -221,7 +228,12 @@ export class SessionEntity {
     }
   }
 
-  reset () {
+  /**
+   *
+   * @param {boolean} [interim] indicative of whether the next reset should be flagged as an interim session. Interim sessions will be reset on the next hard page load.
+   * @returns
+   */
+  reset (interim) {
     // this method should set off a chain of actions across the features by emitting 'new-session'
     // * send off pending payloads
     // * stop recording (stn and sr)...
@@ -231,6 +243,10 @@ export class SessionEntity {
         this.ee.emit(SESSION_EVENTS.RESET)
         this.state.numOfResets++
       }
+
+      /** flag the state as interim to allow the reset to be flagged as interim */
+      if (interim) this.state.interim = true
+
       this.storage.remove(this.lookupKey)
       this.inactiveTimer?.abort?.()
       this.expiresTimer?.clear?.()

@@ -88,15 +88,6 @@ export class Agent extends AgentBase {
     return this
   }
 
-  get beacons () {
-    if (!this.#beacons) {
-      const beacons = new Set([this.info.beacon, this.info.errorBeacon])
-      if (this.init.proxy?.beacon) beacons.add(this.init.proxy.beacon)
-      this.#beacons = [...beacons]
-    }
-    return this.#beacons
-  }
-
   run () {
     // Attempt to initialize all the requested features (sequentially in prio order & synchronously), with any failure aborting the whole process.
     try {

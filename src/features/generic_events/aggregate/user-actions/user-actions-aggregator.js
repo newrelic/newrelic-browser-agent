@@ -42,7 +42,10 @@ export class UserActionsAggregator {
    */
   process (evt, targetFields) {
     if (!evt) return
-    const selectorInfo = gatherSelectorPathInfo(evt, targetFields)
+    const targetElem = OBSERVED_WINDOW_EVENTS.includes(evt.type) ? window : evt.target
+    const selectorInfo = analyzeElemPath(targetElem, targetFields)
+
+    // if selectorInfo.path is undefined, aggregation will be skipped for this event
     const aggregationKey = getAggregationKey(evt, selectorInfo.path)
     if (!!aggregationKey && aggregationKey === this.#aggregationKey) {
       // an aggregation exists already, so lets just continue to increment
@@ -94,24 +97,6 @@ export class UserActionsAggregator {
   isEvaluatingDeadClick () {
     return this.#deadClickTimer !== undefined
   }
-}
-
-/**
- * Given an event, generates a CSS selector path along with other metadata info about the path.
- *
- * Starts with simple cases like window or document and progresses to more complex dom-tree traversals as needed.
- * Will return selectorPath: undefined if no other path can be determined, to force the aggregator to skip aggregation for this event.
- * @param {Event} evt
- * @param {Array<string>} [targetFields=[]] specifies which fields to gather from the nearest element in the path
- * @returns {{ path: (undefined|string), nearestFields: {}, hasButton: boolean, hasLink: boolean }}
- */
-function gatherSelectorPathInfo (evt, targetFields) {
-  const result = { path: undefined, nearestFields: {}, hasButton: false, hasLink: false }
-  if (OBSERVED_WINDOW_EVENTS.includes(evt.type) || evt.target === window) return { ...result, path: 'window' }
-  if (evt.target === document) return { ...result, path: 'document' }
-
-  // Note: if selectorPath is undefined, aggregation will be skipped for this event
-  return analyzeElemPath(evt.target, targetFields)
 }
 
 /**

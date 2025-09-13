@@ -123,6 +123,9 @@ export class Aggregate extends AggregateBase {
           addUserAction(this.userActionAggregator.process(evt, this.agentRef.init.user_actions.elementAttributes))
         }, this.featureName, this.ee)
         registerHandler('err', () => this.userActionAggregator.markAsErrorClick(), this.featureName, this.ee)
+        registerHandler('netReq', () => {
+          if (this.userActionAggregator.isEvaluatingDeadClick()) this.userActionAggregator.treatAsLiveClick()
+        }, this.featureName, this.ee)
       }
 
       /**

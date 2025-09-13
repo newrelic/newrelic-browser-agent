@@ -21,7 +21,7 @@ export class UserActionsAggregator {
 
   constructor (userFrustrationsEnabled) {
     if (userFrustrationsEnabled && MutationObserver) {
-      this.#domObserver.instance = new MutationObserver(this.#deadClickCleanup.bind(this))
+      this.#domObserver.instance = new MutationObserver(this.treatAsLiveClick.bind(this))
       this.#ufEnabled = true
     }
   }
@@ -118,6 +118,10 @@ export class UserActionsAggregator {
 
   isEvaluatingDeadClick () {
     return this.#deadClickTimer !== undefined
+  }
+
+  treatAsLiveClick () {
+    this.#deadClickCleanup()
   }
 }
 

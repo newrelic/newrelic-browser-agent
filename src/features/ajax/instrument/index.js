@@ -146,6 +146,7 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
   }
 
   function onSendXhrStart (args, xhr) {
+    evalIfNonAgentTraffic(this.params.host)
     var metrics = this.metrics
     var data = args[0]
     var context = this
@@ -327,6 +328,7 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
       url = target.href
     }
     addUrl(this, url)
+    evalIfNonAgentTraffic(this.params.host)
 
     var method = ('' + ((target && target instanceof origRequest && target.method) ||
       opts.method || 'GET')).toUpperCase()
@@ -402,6 +404,12 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
     }
 
     ctx.loadCaptureCalled = true
+  }
+
+  function evalIfNonAgentTraffic (host) {
+    try {
+      if (host && !agentRef.beacons.includes(host)) handle('netReq', [], undefined, FEATURE_NAMES.genericEvents, ee)
+    } catch {}
   }
 }
 

@@ -51,8 +51,10 @@ export class UserActionsAggregator {
     } else {
       // return the prev existing one (if there is one)
       const finishedEvent = this.#aggregationEvent
-      this.#ufEnabled && this.#deadClickCleanup()
-      this.#ufEnabled && this.#errorClickCleanup()
+      if (this.#ufEnabled) {
+        this.#deadClickCleanup()
+        this.#errorClickCleanup()
+      }
 
       // then start new event aggregation
       this.#aggregationKey = aggregationKey

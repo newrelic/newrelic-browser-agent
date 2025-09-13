@@ -31,11 +31,10 @@ export const analyzeElemPath = (elem, targetFields = []) => {
   let pathSelector = ''
   let index = getNthOfTypeIndex(elem)
 
-  const nearestFields = {}
   try {
     while (elem?.tagName) {
       const { id, localName } = elem
-      targetFields.forEach(field => { nearestFields[nearestAttrName(field)] ||= (elem[field]?.baseVal || elem[field]) })
+      targetFields.forEach(field => { result.nearestFields[nearestAttrName(field)] ||= (elem[field]?.baseVal || elem[field]) })
       const selector = [
         localName,
         id ? `#${id}` : '',
@@ -53,8 +52,8 @@ export const analyzeElemPath = (elem, targetFields = []) => {
   // do nothing for now
   }
 
-  const path = pathSelector ? index ? `${pathSelector}:nth-of-type(${index})` : pathSelector : undefined
-  return { ...result, path, nearestFields }
+  result.path = pathSelector ? index ? `${pathSelector}:nth-of-type(${index})` : pathSelector : undefined
+  return result
 
   function nearestAttrName (originalFieldName) {
     /** preserve original renaming structure for pre-existing field maps */

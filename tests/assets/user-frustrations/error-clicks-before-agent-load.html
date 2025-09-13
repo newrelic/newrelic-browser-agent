@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2025 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html lang="en">
+<head>
+  <title>RUM - Error Clicks</title>
+  <style>
+    a {
+      color: blue;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+  <body>
+    <span id="dummy-span"></span> <!-- another element for e2e to click -->
+    <div id="test-area">
+      <h1>RUM - Error Clicks</h1>
+      <p>This page is used to demo error clicks instrumentation, where agent code runs after customer code.</p>
+      <h2>Buttons</h2>
+      <div>
+        <p><strong>Click count: <span id="numBtnClicks"></span></strong></p>
+        <p>Button with error, thrown from a window click event handler, capture = true.
+          <button id="test-button-with-listener">Click Me</button>
+          <script>
+            /*
+              Simulate a customer script running before any agent + cwv click handlers.
+              Replicates the situation where a click
+               - is marked as a dead click, since the mutation happened before the new UA is processed.
+               - is NOT marked as an error click, because the error happens before the new UA is processed.
+            */
+            window.addEventListener('click', () => { updateClickCount('numBtnClicks')}, true);
+          </script>
+        </p>
+
+        <p>Button with a click event handler
+          <button id="test-button-with-onclick" onclick="
+            const div = document.createElement('div')
+            div.innerText = Date.now() + ''
+            document.body.appendChild(div)
+          ">Click Me</button>
+          <div id="output"></div>
+        </p>
+      </div>
+    </div>
+    <!-- Simulate agent loading after customer scripts -->
+    {init} {config}
+    <script>
+      NREUM.init.feature_flags = ['user_frustrations']
+      NREUM.init.harvest.interval = 5
+      // disable cookies to help e2e test events are wrapped in generic events instrument phase
+      NREUM.init.privacy.cookies_enabled = false
+      localStorage.clear()
+    </script>
+    <script>
+      let clickCount = 0;
+
+      function updateClickCount(elemId) {
+        console.log('Custom event handler called.');
+        clickCount++;
+        document.getElementById(elemId).textContent = ''+clickCount;
+        throw new Error('Error thrown from custom click handler');
+      }
+    </script>
+    {loader}
+  </body>
+</html>

@@ -14,12 +14,16 @@ import { applyFnToProps } from '../../../common/util/traverse'
 import { UserActionsAggregator } from './user-actions/user-actions-aggregator'
 import { isIFrameWindow } from '../../../common/dom/iframe'
 import { isPureObject } from '../../../common/util/type-check'
+import { getVersion2Attributes } from '../../../common/util/mfe'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor (agentRef) {
     super(agentRef, FEATURE_NAME)
     this.referrerUrl = (isBrowserScope && document.referrer) ? cleanURL(document.referrer) : undefined
+
+    /** set up agg-level behaviors specific to this feature */
+    // super.supportsRegisteredEntities = true // WARNING - only set this to true once the CONSUMER is created. If it is set before the consumers are ready, registering can break the normal agent functions for this feature
 
     this.waitForFlags(['ins']).then(([ins]) => {
       if (!ins) {
@@ -40,8 +44,7 @@ export class Aggregate extends AggregateBase {
       }, this.featureName, this.ee)
 
       if (agentRef.init.page_action.enabled) {
-        registerHandler('api-addPageAction', (timestamp, name, attributes, targetEntityGuid) => {
-          if (!this.agentRef.runtime.entityManager.get(targetEntityGuid)) return warn(56, this.featureName)
+        registerHandler('api-addPageAction', (timestamp, name, attributes, target) => {
           this.addEvent({
             ...attributes,
             eventType: 'PageAction',
@@ -53,7 +56,7 @@ export class Aggregate extends AggregateBase {
               browserWidth: window.document.documentElement?.clientWidth,
               browserHeight: window.document.documentElement?.clientHeight
             })
-          }, targetEntityGuid)
+          }, target)
         }, this.featureName, this.ee)
       }
 
@@ -233,7 +236,6 @@ export class Aggregate extends AggregateBase {
         this.addEvent(event)
       }, this.featureName, this.ee)
 
-      agentRef.runtime.harvester.triggerHarvestFor(this)
       this.drain()
     })
   }
@@ -249,10 +251,10 @@ export class Aggregate extends AggregateBase {
    * * sessionTraceId: set by the `ptid=` query param
    * * userAgent*: set by the userAgent header
    * @param {object=} obj the event object for storing in the event buffer
-   * @param {string=} targetEntityGuid the target entity guid for the event to scope buffering and harvesting. Defaults to agent config if undefined
+   * @param {string=} target the target metadata for the event to scope buffering and harvesting. Defaults to container agent config if undefined
    * @returns void
    */
-  addEvent (obj = {}, targetEntityGuid) {
+  addEvent (obj = {}, target) {
     if (!obj || !Object.keys(obj).length) return
     if (!obj.eventType) {
       warn(44)
@@ -269,7 +271,9 @@ export class Aggregate extends AggregateBase {
       timestamp: Math.floor(this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(now())),
       /** all generic events require pageUrl(s) */
       pageUrl: cleanURL('' + initialLocation),
-      currentUrl: cleanURL('' + location)
+      currentUrl: cleanURL('' + location),
+      /** Specific attributes only supplied if harvesting to endpoint version 2 */
+      ...(getVersion2Attributes(target, this))
     }
 
     const eventAttributes = {
@@ -281,7 +285,7 @@ export class Aggregate extends AggregateBase {
       ...obj
     }
 
-    this.events.add(eventAttributes, targetEntityGuid)
+    this.events.add(eventAttributes)
   }
 
   serializer (eventBuffer) {

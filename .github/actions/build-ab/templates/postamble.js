@@ -64,10 +64,10 @@ if (!!newrelic && !!newrelic.log) {
 }
 
 // Browser AI-Hackthon POC Prep
-try{
+try {
   const automatedHints = ['Headless', 'PhantomJS', 'Selenium', 'WebDriver', 'Puppeteer', 'Playwright']
   const botHints = ['bot', 'spider', 'crawler', 'scraper', 'robot', 'Googlebot', 'Bingbot', 'Slurp', 'DuckDuckBot', 'Baiduspider', 'YandexBot', 'AhrefsBot', 'SemrushBot', 'Exabot', 'facebot', 'ia_archiver', 'facebookexternalhit', 'Twitterbot', 'LinkedInBot', 'Slackbot', 'Discordbot', 'Pinterestbot', 'WhatsApp', 'TelegramBot', 'GoogleAdsBot', 'BingPreview']
-  
+
   const automatedMatches = []
   const botMatches = []
 
@@ -81,7 +81,7 @@ try{
 
   const userAgentString = window.navigator.userAgent
 
-  if (userAgentString){  
+  if (userAgentString) {
     automatedHints.map(x => x.toLowerCase()).forEach((hint) => {
       if (userAgentString.toLowerCase().includes(hint)) {
         automatedMatches.push(hint);
@@ -107,7 +107,7 @@ try{
     newrelic.setCustomAttribute('userAgent', window.navigator.userAgent);
   }
 } catch (e) {
-  newrelic.noticeError(new Error("NRBA: swallowed preamble error", {cause: e}));
+  newrelic.noticeError(new Error("NRBA: swallowed preamble error", { cause: e }));
 }
 
 try {
@@ -140,5 +140,5 @@ try {
     pressureObserver.observe("cpu", { sampleInterval: 1000 });
   }
 } catch (e) {
-  newrelic.noticeError(new Error("NRBA: swallowed preamble error", {cause: e}));
+  newrelic.noticeError(new Error("NRBA: swallowed preamble error", { cause: e }));
 }

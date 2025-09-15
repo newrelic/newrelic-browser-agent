@@ -45,8 +45,10 @@ export class Aggregate extends AggregateBase {
     /** set at BCS response, stored in runtime */
     this.timeKeeper = undefined
 
-    this.recorder = args?.recorder
-    this.errorNoticed = args?.errorNoticed || false
+    this.instrumentClass = args
+    // point this var here just in case it already exists and can be used by APIs (session pause, resume, etc.) before handling rum flags
+    this.recorder = this.instrumentClass?.recorder
+
     this.harvestOpts.raw = true
 
     this.isSessionTrackingEnabled = canEnableSessionTracking(agentRef.init) && !!agentRef.runtime.session
@@ -66,7 +68,7 @@ export class Aggregate extends AggregateBase {
       // if the mode changed on a different tab, it needs to update this instance to match
       this.mode = agentRef.runtime.session.state.sessionReplayMode
       if (!this.initialized || this.mode === MODE.OFF) return
-      this.recorder?.startRecording()
+      this.recorder?.startRecording(TRIGGERS.RESUME, this.mode)
     })
 
     this.ee.on(SESSION_EVENTS.UPDATE, (type, data) => {
@@ -133,7 +135,7 @@ export class Aggregate extends AggregateBase {
     this.mode = MODE.FULL
     // if the error was noticed AFTER the recorder was already imported....
     if (this.recorder && this.initialized) {
-      if (!this.agentRef.runtime.isRecording) this.recorder.startRecording()
+      if (!this.agentRef.runtime.isRecording) this.recorder.startRecording(TRIGGERS.SWITCH_TO_FULL, this.mode) // off --> full
       this.syncWithSessionManager({ sessionReplayMode: this.mode })
     } else {
       this.initializeRecording(MODE.FULL, true)
@@ -144,9 +146,10 @@ export class Aggregate extends AggregateBase {
    * Evaluate entitlements and sampling before starting feature mechanics, importing and configuring recording library, and setting storage state
    * @param {boolean} srMode - the true/false state of the "sr" flag (aka. entitlements) from RUM response
    * @param {boolean} ignoreSession - whether to force the method to ignore the session state and use just the sample flags
+   * @param {TRIGGERS} [trigger=TRIGGERS.INITIALIZE] - the trigger that initiated the recording.  Usually TRIGGERS.INITIALIZE, but could be TRIGGERS.API since in certain cases that trigger calls this method
    * @returns {void}
    */
-  async initializeRecording (srMode, ignoreSession) {
+  async initializeRecording (srMode, ignoreSession, trigger = TRIGGERS.INITIALIZE) {
     this.initialized = true
     if (!this.entitled) return
 
@@ -158,7 +161,8 @@ export class Aggregate extends AggregateBase {
     // session replays can continue if already in progress
     const { session, timeKeeper } = this.agentRef.runtime
     this.timeKeeper = timeKeeper
-    if (this.recorder?.parent.trigger === TRIGGERS.API && this.agentRef.runtime.isRecording) {
+
+    if (this.recorder?.trigger === TRIGGERS.API && this.agentRef.runtime.isRecording) {
       this.mode = MODE.FULL
     } else if (!session.isNew && !ignoreSession) { // inherit the mode of the existing session
       this.mode = session.state.sessionReplayMode
@@ -169,21 +173,16 @@ export class Aggregate extends AggregateBase {
     // If off, then don't record (early return)
     if (this.mode === MODE.OFF) return
 
-    if (!this.recorder) {
-      try {
-        // Do not change the webpackChunkName or it will break the webpack nrba-chunking plugin
-        const { Recorder } = (await import(/* webpackChunkName: "recorder" */'../shared/recorder'))
-        this.recorder = new Recorder(this)
-        this.recorder.events.hasError = this.errorNoticed
-      } catch (err) {
-        return this.abort(ABORT_REASONS.IMPORT)
-      }
-    } else {
-      this.recorder.parent = this
+    try {
+      /** will return a recorder instance if already imported, otherwise, will fetch the recorder and initialize it */
+      this.recorder ??= await this.instrumentClass.importRecorder()
+    } catch (err) {
+      /** if the recorder fails to import, abort the feature */
+      return this.abort(ABORT_REASONS.IMPORT, err)
     }
 
     // If an error was noticed before the mode could be set (like in the early lifecycle of the page), immediately set to FULL mode
-    if (this.mode === MODE.ERROR && this.errorNoticed) this.mode = MODE.FULL
+    if (this.mode === MODE.ERROR && this.instrumentClass.errorNoticed) { this.mode = MODE.FULL }
 
     // FULL mode records AND reports from the beginning, while ERROR mode only records (but does not report).
     // ERROR mode will do this until an error is thrown, and then switch into FULL mode.
@@ -191,7 +190,7 @@ export class Aggregate extends AggregateBase {
 
     await this.prepUtils()
 
-    if (!this.agentRef.runtime.isRecording) this.recorder.startRecording()
+    if (!this.agentRef.runtime.isRecording) this.recorder.startRecording(trigger, this.mode)
 
     this.syncWithSessionManager({ sessionReplayMode: this.mode })
   }

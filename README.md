@@ -245,6 +245,9 @@ browserAgent.recordCustomEvent(...)
 
 ## Deploying one or more "micro" agents per page
 
+> **ℹ️ Note:**  
+> This loader strategy is slated to be deprecated and eventually removed in a future product release. For better memory usage, build size impacts, entity management and relationships -- a new strategy focused around using a single centralized browser agent instance is actively being worked on. Reach out by email to browser-agent@newrelic.com for more information or if you would like to participate in a limited preview when the feature is ready for early adoption.
+
 The examples above use the `Agent` class at their core, which is ideal for most cases as it will automatically detect page-level events across your web application.
 
 Using the `MicroAgent` class, it is possible to skip the "auto" instrumentation phases of the other loader types, and provide a *very small* agent designed for capturing data in a controlled manner via the API interfaces. The `MicroAgent` captures a distinct `PageView` event when instantiated, and additional `PageAction` and `JavaScriptError` events may be captured by calling the `noticeError` and `addPageAction` methods.

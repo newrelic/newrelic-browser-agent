@@ -40,7 +40,6 @@ import { setupStartAPI } from './api/start'
  * sensitive to network load, this may result in smaller builds with slightly lower performance impact.
  */
 export class Agent extends AgentBase {
-  #beacons
   /**
    * @param {AgentOptions} options
    */

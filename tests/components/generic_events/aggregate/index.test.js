@@ -388,7 +388,7 @@ describe('user frustrations', () => {
     target.id = 'myBtn'
     genericEventsAggregate.ee.emit('ua', [{ timeStamp: 100, type: 'click', target }])
     jest.advanceTimersByTime(1999)
-    genericEventsAggregate.ee.emit('netReq', [{ host: 'example.com' }])
+    genericEventsAggregate.ee.emit('uaXhr', [{ host: 'example.com' }])
     jest.advanceTimersByTime(1)
 
     // blur event to trigger aggregation to stop and add to harvest buffer

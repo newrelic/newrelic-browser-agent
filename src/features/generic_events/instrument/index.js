@@ -5,7 +5,7 @@
 
 import { globalScope, isBrowserScope } from '../../../common/constants/runtime'
 import { handle } from '../../../common/event-emitter/handle'
-import { windowAddEventListener } from '../../../common/event-listener/event-listener-opts'
+import { eventListenerOpts, windowAddEventListener } from '../../../common/event-listener/event-listener-opts'
 import { debounce } from '../../../common/util/invoke'
 import { setupAddPageActionAPI } from '../../../loaders/api/addPageAction'
 import { setupFinishedAPI } from '../../../loaders/api/finished'
@@ -14,6 +14,7 @@ import { setupRegisterAPI } from '../../../loaders/api/register'
 import { setupMeasureAPI } from '../../../loaders/api/measure'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME, OBSERVED_EVENTS, OBSERVED_WINDOW_EVENTS } from '../constants'
+import { FEATURE_NAMES } from '../../../loaders/features/features'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
@@ -56,6 +57,19 @@ export class Instrument extends InstrumentBase {
         observer.observe({ type: 'resource', buffered: true })
       }
     }
+
+    try {
+      this.removeOnAbort = new AbortController()
+    } catch (e) {}
+
+    this.abortHandler = () => {
+      this.removeOnAbort?.abort()
+      this.abortHandler = undefined // weakly allow this abort op to run only once
+    }
+
+    globalScope.addEventListener('error', () => {
+      handle('uaErr', [], undefined, FEATURE_NAMES.genericEvents, this.ee)
+    }, eventListenerOpts(false, this.removeOnAbort?.signal))
 
     /** If any of the sources are active, import the aggregator. otherwise deregister */
     if (genericEventSourceConfigs.some(x => x)) this.importAggregator(agentRef, () => import(/* webpackChunkName: "generic_events-aggregate" */ '../aggregate'))

@@ -40,7 +40,6 @@ import { setupStartAPI } from './api/start'
  * sensitive to network load, this may result in smaller builds with slightly lower performance impact.
  */
 export class Agent extends AgentBase {
-  #beacons
   /**
    * @param {AgentOptions} options
    */
@@ -86,15 +85,6 @@ export class Agent extends AgentBase {
 
   get api () {
     return this
-  }
-
-  get beacons () {
-    if (!this.#beacons) {
-      const beacons = new Set([this.info.beacon, this.info.errorBeacon])
-      if (this.init.proxy?.beacon) beacons.add(this.init.proxy.beacon)
-      this.#beacons = [...beacons]
-    }
-    return this.#beacons
   }
 
   run () {

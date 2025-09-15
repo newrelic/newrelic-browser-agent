@@ -87,8 +87,8 @@ export class Aggregate extends AggregateBase {
                   return acc
                 }, {})),
                 ...aggregatedUserAction.nearestTargetFields,
-                ...(agentRef.init.feature_flags.includes('user_frustrations') && aggregatedUserAction.deadClick && { deadClick: true }),
-                ...(agentRef.init.feature_flags.includes('user_frustrations') && aggregatedUserAction.errorClick && { errorClick: true })
+                ...(aggregatedUserAction.deadClick && { deadClick: true }),
+                ...(aggregatedUserAction.errorClick && { errorClick: true })
               }
               this.addEvent(userActionEvent)
               this.#trackUserActionSM(userActionEvent)
@@ -124,9 +124,9 @@ export class Aggregate extends AggregateBase {
           /** the processor will return the previously aggregated event if it has been completed by processing the current event */
           addUserAction(this.#userActionAggregator.process(evt, this.agentRef.init.user_actions.elementAttributes))
         }, this.featureName, this.ee)
-        registerHandler('err', () => this.#userActionAggregator.markAsErrorClick(), this.featureName, this.ee)
-        registerHandler('netReq', () => { this.#userActionAggregator.isLiveClick() }, this.featureName, this.ee)
         registerHandler('navChange', () => { this.#userActionAggregator.isLiveClick() }, this.featureName, this.ee)
+        registerHandler('uaXhr', () => { this.#userActionAggregator.isLiveClick() }, this.featureName, this.ee)
+        registerHandler('uaErr', () => this.#userActionAggregator.markAsErrorClick(), this.featureName, this.ee)
       }
 
       /**

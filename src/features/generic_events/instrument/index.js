@@ -14,7 +14,12 @@ import { setupRegisterAPI } from '../../../loaders/api/register'
 import { setupMeasureAPI } from '../../../loaders/api/measure'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME, OBSERVED_EVENTS, OBSERVED_WINDOW_EVENTS } from '../constants'
+import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { wrapHistory } from '../../../common/wrap/wrap-history'
+import { wrapFetch } from '../../../common/wrap/wrap-fetch'
+import { wrapXhr } from '../../../common/wrap/wrap-xhr'
+import { parseUrl } from '../../../common/url/parse-url'
+import { extractUrl } from '../../../common/url/extract-url'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
@@ -57,25 +62,51 @@ export class Instrument extends InstrumentBase {
         observer.observe({ type: 'resource', buffered: true })
       }
 
-      try {
-        this.removeOnAbort = new AbortController()
-      } catch (e) {}
-
-      function navigationChange () {
-        historyEE.emit('navChange')
-      }
-
       const historyEE = wrapHistory(this.ee)
       historyEE.on('pushState-end', navigationChange)
       historyEE.on('replaceState-end', navigationChange)
       window.addEventListener('hashchange', navigationChange, eventListenerOpts(true, this.removeOnAbort?.signal))
       window.addEventListener('popstate', navigationChange, eventListenerOpts(true, this.removeOnAbort?.signal))
-
-      this.abortHandler = () => {
-        this.removeOnAbort?.abort()
-        this.abortHandler = undefined // weakly allow this abort op to run only once
+      function navigationChange () {
+        historyEE.emit('navChange')
       }
     }
+
+    try {
+      this.removeOnAbort = new AbortController()
+    } catch (e) {}
+
+    this.abortHandler = () => {
+      this.removeOnAbort?.abort()
+      this.abortHandler = undefined // weakly allow this abort op to run only once
+    }
+
+    globalScope.addEventListener('error', () => {
+      handle('uaErr', [], undefined, FEATURE_NAMES.genericEvents, this.ee)
+    }, eventListenerOpts(false, this.removeOnAbort?.signal))
+
+    wrapFetch(this.ee)
+    wrapXhr(this.ee)
+    this.ee.on('open-xhr-start', (args) => {
+      this.parsedUrl = parseUrl(args[1])
+    })
+    this.ee.on('send-xhr-start', () => {
+      emitIfNonAgentTraffic.call(this, this.parsedUrl)
+    })
+    this.ee.on('fetch-start', (fetchArguments) => {
+      if (fetchArguments.length >= 1) { emitIfNonAgentTraffic.call(this, parseUrl(extractUrl(fetchArguments[0]))) }
+    })
+
+    function emitIfNonAgentTraffic (parsedUrl) {
+      try {
+        let host
+        if (parsedUrl) host = parsedUrl.hostname + ':' + parsedUrl.port
+        if (host && !agentRef.beacons.includes(host)) {
+          handle('uaXhr', [], undefined, FEATURE_NAMES.genericEvents, this.ee)
+        }
+      } catch {}
+    }
+
     /** If any of the sources are active, import the aggregator. otherwise deregister */
     if (genericEventSourceConfigs.some(x => x)) this.importAggregator(agentRef, () => import(/* webpackChunkName: "generic_events-aggregate" */ '../aggregate'))
     else this.deregisterDrain()

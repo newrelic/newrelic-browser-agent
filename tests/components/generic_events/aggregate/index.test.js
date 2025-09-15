@@ -349,10 +349,6 @@ describe('user frustrations', () => {
     }
   }
 
-  const createExpectedObject = (expectedValues) => {
-    return Object.assign(genDefaultUserAction(), expectedValues)
-  }
-
   test('should mark as dead click if no change occurs within 2 seconds of user action', () => {
     const target = document.createElement('button')
     target.id = 'myBtn'
@@ -364,9 +360,10 @@ describe('user frustrations', () => {
     // blur event to trigger aggregation to stop and add to harvest buffer
     genericEventsAggregate.ee.emit('ua', [{ timeStamp: 2102, type: 'blur', target: window }])
     const [{ payload: harvest }] = genericEventsAggregate.makeHarvestPayload() // force it to put the aggregation into the event buffer
-    expect(harvest.body.ins[0]).toMatchObject(createExpectedObject({
+    expect(harvest.body.ins[0]).toMatchObject({
+      ...genDefaultUserAction(),
       deadClick: true
-    }))
+    })
   })
 
   test('should not mark as dead click if another action occurs before frustration eval window ends', () => {
@@ -403,7 +400,7 @@ describe('user frustrations', () => {
     target.id = 'myBtn'
     genericEventsAggregate.ee.emit('ua', [{ timeStamp: 100, type: 'click', target }])
     jest.advanceTimersByTime(2000)
-    genericEventsAggregate.ee.emit('err')
+    genericEventsAggregate.ee.emit('uaErr')
 
     // blur event to trigger aggregation to stop and add to harvest buffer
     genericEventsAggregate.ee.emit('ua', [{ timeStamp: 234567, type: 'blur', target: window }])
@@ -417,13 +414,14 @@ describe('user frustrations', () => {
     target.id = 'myBtn'
     genericEventsAggregate.ee.emit('ua', [{ timeStamp: 100, type: 'click', target }])
     jest.advanceTimersByTime(1999)
-    genericEventsAggregate.ee.emit('err')
+    genericEventsAggregate.ee.emit('uaErr')
     jest.advanceTimersByTime(1)
 
     // blur event to trigger aggregation to stop and add to harvest buffer
     genericEventsAggregate.ee.emit('ua', [{ timeStamp: 234567, type: 'blur', target: window }])
     const [{ payload: harvest }] = genericEventsAggregate.makeHarvestPayload() // force it to put the aggregation into the event buffer
-    expect(harvest.body.ins[0]).toMatchObject(genDefaultUserAction(), {
+    expect(harvest.body.ins[0]).toMatchObject({
+      ...genDefaultUserAction(),
       errorClick: true
     })
   })

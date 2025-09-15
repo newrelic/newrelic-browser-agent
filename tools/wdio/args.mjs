@@ -87,7 +87,7 @@ const args = yargs(hideBin(process.argv))
 
   .string('B')
   .alias('B', 'report-to-bam')
-  .describe('B', 'Supply a file path with BAM configs to send agent traffic to BAM instead of local service')
+  .describe('B', 'Supply a JSON string or file path with expected BAM configs to send agent traffic to BAM instead of local service')
 
   .middleware(argv => {
     if (argv.webview && (!argv.browsers || argv.browsers === 'chrome@latest')) {

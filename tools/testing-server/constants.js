@@ -6,10 +6,20 @@ const args = yargs(hideBin(process.argv)).argv
 
 let agentConfig
 if (args.B) {
-  const agentConfigData = fs.readFileSync(args.B, 'utf-8')
-  agentConfig = module.exports.agentConfig = JSON.parse(agentConfigData)
-} else {
-  agentConfig = module.exports.agentConfig = {
+  try {
+    agentConfig = JSON.parse(args.B)
+  } catch (err) {
+    try {
+      agentConfig = JSON.parse(fs.readFileSync(args.B, 'utf-8'))
+    } catch (err) {
+      console.error('Failed to parse BAM config:', err)
+    }
+  }
+}
+
+/** fallback if no override was provided or override outright failed to parse correctly */
+if (!agentConfig) {
+  agentConfig = {
     licenseKey: 'asdf',
     applicationID: 42,
     accountID: 123,
@@ -17,6 +27,8 @@ if (args.B) {
     trustKey: 789
   }
 }
+
+module.exports.agentConfig = agentConfig
 
 console.log('Starting service using agent config -- ', agentConfig)
 

@@ -77,11 +77,4 @@ export default async (env) => {
   // These values are used in babel to replace ENV variables in src/common/constants/env.cdn.js
   process.env.BUILD_VERSION = VERSION
   process.env.BUILD_ENV = SUBVERSION
-
-  if ((process.env.COVERAGE || 'false').toLowerCase() === 'true' || env.coverage === true || (env.coverage || 'false').toLowerCase() === 'true') {
-    console.log('Enabling istanbul instrumentation')
-    env.coverage = process.env.COVERAGE = true
-  } else {
-    env.coverage = process.env.COVERAGE = false
-  }
 }

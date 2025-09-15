@@ -10,8 +10,6 @@ beforeEach(async () => {
 })
 
 afterEach(async () => {
-  await browser.collectCoverage()
-
   if (browser.testHandle) {
     browser.testHandle.destroy()
   }

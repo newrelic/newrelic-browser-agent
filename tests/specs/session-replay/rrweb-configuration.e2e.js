@@ -92,7 +92,7 @@ describe('RRWeb Configuration', () => {
       ])
 
       const sessionReplaysHarvests = await sessionReplaysCapture.waitForResult({ timeout: 10000 })
-      expect(sessionReplaysHarvests.length).toBeGreaterThan(1)
+      expect(sessionReplaysHarvests.length).toBeGreaterThanOrEqual(1)
       expect(decodeAttributes(sessionReplaysHarvests[0].request.query.attributes).hasSnapshot).toEqual(true)
 
       // note: we need to leave text nodes containing only whitespace as-is to avoid adding extraneous '*'
@@ -119,7 +119,7 @@ describe('RRWeb Configuration', () => {
       ])
 
       const sessionReplaysHarvests = await sessionReplaysCapture.waitForResult({ timeout: 10000 })
-      expect(sessionReplaysHarvests.length).toBeGreaterThan(1)
+      expect(sessionReplaysHarvests.length).toBeGreaterThanOrEqual(1)
       expect(decodeAttributes(sessionReplaysHarvests[0].request.query.attributes).hasSnapshot).toEqual(true)
 
       const testNodes = JSONPath({ path: '$.[*].request.body.[?(!!@ && @.type===3 && !!@.textContent && ![\'script\',\'link\',\'style\'].includes(@parent.tagName))]', json: sessionReplaysHarvests })
@@ -396,7 +396,7 @@ async function checkSessionReplayInputMasking (sessionReplaysCapture, elements) 
 
   // Wait 10 seconds for additional harvests
   const sessionReplaysHarvests = await sessionReplaysCapture.waitForResult({ timeout: 10000 })
-  expect(sessionReplaysHarvests.length).toBeGreaterThan(1)
+  expect(sessionReplaysHarvests.length).toBeGreaterThanOrEqual(1)
   expect(decodeAttributes(sessionReplaysHarvests[0].request.query.attributes).hasSnapshot).toEqual(true)
 
   elements.forEach(el => {

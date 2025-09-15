@@ -8,7 +8,7 @@
  * Also gather metadata about the element's nearest fields, and whether there are any links or buttons in the path.
  *
  * Starts with simple cases like window or document and progresses to more complex dom-tree traversals as needed.
- * Will return selectorPath: undefined if no other path can be determined.
+ * Will return path: undefined if no other path can be determined.
  *
  * @param {HTMLElement} elem
  * @param {Array<string>} [targetFields=[]] specifies which fields to gather from the nearest element in the path

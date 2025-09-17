@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.297.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.297.0...v1.297.1) (2025-09-17)
+
+
+### Bug Fixes
+
+* Prevent double import of Session Replay aggregate class ([#1558](https://github.com/newrelic/newrelic-browser-agent/issues/1558)) ([ffc647c](https://github.com/newrelic/newrelic-browser-agent/commit/ffc647c2c757034b14d56bac9b0103b2016c5fbb))
+
 ## [1.297.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.296.0...v1.297.0) (2025-09-10)
 
 

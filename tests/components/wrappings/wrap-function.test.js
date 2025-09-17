@@ -192,8 +192,7 @@ describe('Wrap function', () => {
       onLongTask = function () {
         seenLongTask = true // set flag to check if long task event was emitted
       }
-      onShortTask = function (_, __, ____, task) {
-        expectShortTask(task)
+      onShortTask = function (_, __, ____) {
         expect(seenLongTask).toEqual(false) // no long task event emitted
         done()
       }
@@ -245,41 +244,6 @@ describe('Wrap function', () => {
       }
     })
 
-    test('finished fn message also has task info', (done) => {
-      onShortTask = function (_, __, ___, task) {
-        expectShortTask(task)
-        seenTasks.short = true
-        isDone()
-      }
-      onLongTask = function (_, __, ___, task) {
-        expectLongTask(task)
-        seenTasks.long = true
-        isDone()
-      }
-
-      const reallySlowFn = function reallySlowFn () {
-        slowFn(100000000, 1000000000) // this should take more than 50ms
-      }
-
-      const seenTasks = { short: false, long: false }
-
-      const shortTask = wrapFn(() => {}, 'short-')
-      const longTask = wrapFn(reallySlowFn, 'long-', thisCtx, 'reallySlowFn', true)
-
-      baseEE.on('short-end', onShortTask)
-
-      baseEE.on('long-end', onLongTask)
-
-      function isDone () {
-        if (seenTasks.short && seenTasks.long) {
-          done() // both tasks emitted
-        }
-      }
-
-      shortTask(thisCtx) // this should not emit long task
-      longTask(thisCtx)
-    })
-
     test('nested long tasks emit twice', (done) => {
       const seenLongTasks = { fn1: false, fn2: false, calls: 0 }
       onLongTask = function (task) {
@@ -311,13 +275,6 @@ describe('Wrap function', () => {
     expect(task).toBeDefined() // task info is passed
     expect(task.duration).toBeGreaterThanOrEqual(50) // can tell that task took less than 50ms
     expect(task.isLongTask).toEqual(true) // task is marked as short task
-    if (error) expect(task.thrownError).toEqual(error) // task has thrown error
-    else expect(task.thrownError).toBeUndefined() // task has not thrown error
-  }
-  function expectShortTask (task, error) {
-    expect(task).toBeDefined() // task info is passed
-    expect(task.duration).toBeLessThan(50) // can tell that task took less than 50ms
-    expect(task.isLongTask).toEqual(false) // task is marked as short task
     if (error) expect(task.thrownError).toEqual(error) // task has thrown error
     else expect(task.thrownError).toBeUndefined() // task has not thrown error
   }

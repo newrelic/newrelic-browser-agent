@@ -34,10 +34,13 @@ const nonAutoFeatures = [
 ]
 
 /**
- * @deprecated This feature has been deprecated and will be removed in a future release. A future product centralizing around a single agent instance will be released as a replacement, at which time this loader will be removed.
- * --- A minimal agent class designed to only respond to manual user input. As such, this class does not
+ * A minimal agent class designed to only respond to manual user input. As such, this class does not
  * automatically instrument. Instead, each MicroAgent instance will lazy load the required features and can support loading multiple instances on one page.
  * Out of the box, it can manually handle and report Page View, Page Action, and Error events.
+ *
+ * @note This loader strategy is slated to be deprecated and eventually removed in a future product release. For better memory usage, build size impacts, entity management and relationships -- a new strategy focused around using a single centralized browser agent instance is actively being worked on. Reach out by email to browser-agent@newrelic.com for more information or if you would like to participate in a limited preview when the feature is ready for early adoption.
+ *
+ * @see {@link https://www.npmjs.com/package/@newrelic/browser-agent#deploying-one-or-more-micro-agents-per-page} for more information in the documentation.
  */
 export class MicroAgent extends MicroAgentBase {
   /**

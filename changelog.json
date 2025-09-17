@@ -5,6 +5,39 @@
       "changes": [
         {
           "type": "feat",
+          "sha": "5ce9e705c2d8e55d4f3f93bd704ad78707aa3c84",
+          "message": "Prevent early harvests when in retry period",
+          "issues": [
+            "1548"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "f165b3e877fc4fc4c8b2b77c942b791a25d58705",
+          "message": "remove newrelic meta attribute",
+          "issues": [
+            "1550"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "b763d03215f043e5be555e2dfe2fba85351d672f",
+          "message": "Fix exceptions for null bodies arising from empty harvests",
+          "issues": [
+            "1553"
+          ]
+        }
+      ],
+      "version": "1.297.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "929351c8-1b39-4255-bbc8-c935c1f27c32",
+      "createTime": "2025-09-10T21:46:13.910Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
           "sha": "58f3c52db5b57dcb41876792f2a1a14fa907d66d",
           "message": "Harvest traces early",
           "issues": [
@@ -3132,5 +3165,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2025-08-19T21:32:44.379Z"
+  "updateTime": "2025-09-10T21:46:13.910Z"
 }

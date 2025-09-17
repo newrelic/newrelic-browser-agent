@@ -15,6 +15,8 @@ import { SESSION_EVENT_TYPES, SESSION_EVENTS } from '../../../common/session/con
 import { ABORT_REASONS } from '../../session_replay/constants'
 import { canEnableSessionTracking } from '../../utils/feature-gates'
 
+const LOGGING_EVENT = 'Logging/Event/'
+
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor (agentRef) {
@@ -73,7 +75,7 @@ export class Aggregate extends AggregateBase {
     if (typeof level === 'string') level = level.toUpperCase()
     if (!isValidLogLevel(level)) return warn(30, level)
     if (modeForThisLog < (LOGGING_MODE[level] || Infinity)) {
-      this.reportSupportabilityMetric('Logging/Event/Dropped/Sampling')
+      this.reportSupportabilityMetric(LOGGING_EVENT + 'Dropped/Sampling')
       return
     }
 
@@ -90,7 +92,7 @@ export class Aggregate extends AggregateBase {
       }
     } catch (err) {
       warn(16, message)
-      this.reportSupportabilityMetric('Logging/Event/Dropped/Casting')
+      this.reportSupportabilityMetric(LOGGING_EVENT + 'Dropped/Casting')
       return
     }
     if (typeof message !== 'string' || !message) return warn(32)
@@ -102,7 +104,7 @@ export class Aggregate extends AggregateBase {
       level
     )
 
-    this.events.add(log, targetEntityGuid)
+    if (this.events.add(log, targetEntityGuid)) this.reportSupportabilityMetric(LOGGING_EVENT + (autoCaptured ? 'Auto' : 'API') + '/Added')
   }
 
   serializer (eventBuffer, targetEntityGuid) {

@@ -86,5 +86,4 @@
  * @returns {InteractionInstance} Returns the same interaction object allowing method chaining.
  */
 
-/* istanbul ignore next */
 export const unused = {}

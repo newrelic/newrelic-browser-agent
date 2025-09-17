@@ -25,15 +25,6 @@ jobs:
     with:
       coverage: true
 
-  # wdio-coverage:
-  #   if: github.ref == 'refs/heads/main'
-  #   name: WDIO coverage
-  #   uses: ./.github/workflows/wdio-single-browser.yml
-  #   with:
-  #     browser-target: chrome@latest
-  #     coverage: true
-  #   secrets: inherit
-
   # Build and publish the latest code from the main branch
   publish-dev-to-s3:
     needs: [jest-tests]

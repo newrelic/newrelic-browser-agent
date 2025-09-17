@@ -253,17 +253,6 @@ jobs:
             Checking merge of (${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).head_sha }}) into [${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).base_ref }}](https://github.com/newrelic/newrelic-browser-agent/compare/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).head_sha }}..${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).base_sha }}) (${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).base_sha }})
           comment_tag: <!-- browser_agent pull request checks -->
 
-  # wdio-coverage:
-  #   name: WDIO coverage
-  #   if: github.event_name == 'workflow_dispatch'
-  #   needs: find-pull-request
-  #   uses: ./.github/workflows/wdio-single-browser.yml
-  #   with:
-  #     ref: 'refs/pull/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}/merge'
-  #     browser-target: chrome@latest
-  #     coverage: true
-  #   secrets: inherit
-
   wdio:
     name: WDIO
     if: github.event_name == 'workflow_dispatch'
@@ -277,7 +266,6 @@ jobs:
   complete-status-comment-pull-request:
     name: Comment pull request
     if: always() && github.event_name == 'workflow_dispatch' && needs.find-pull-request.result == 'success'
-    # needs: [find-pull-request,wdio-coverage,wdio]
     needs: [find-pull-request,wdio]
     runs-on: ubuntu-latest
     defaults:

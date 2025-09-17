@@ -77,11 +77,8 @@ export class Instrument extends InstrumentBase {
 
     wrapFetch(this.ee)
     wrapXhr(this.ee)
-    this.ee.on('open-xhr-start', (args) => {
-      this.parsedUrl = parseUrl(args[1])
-    })
-    this.ee.on('send-xhr-start', () => {
-      emitIfNonAgentTraffic.call(this, this.parsedUrl)
+    this.ee.on('send-xhr-start', (_, xhr) => {
+      emitIfNonAgentTraffic.call(this, parseUrl(xhr.responseURL))
     })
     this.ee.on('fetch-start', (fetchArguments) => {
       if (fetchArguments.length >= 1) { emitIfNonAgentTraffic.call(this, parseUrl(extractUrl(fetchArguments[0]))) }

@@ -2,7 +2,7 @@
   "ios": [
     {
       "device_name": "iPhone 16",
-      "version": "18.1",
+      "version": "26.0",
       "platformName": "ios",
       "browserName": "Safari"
     },
@@ -15,7 +15,7 @@
   ],
   "android": [
     {
-      "device_name": "Pixel 7",
+      "device_name": "Pixel 10",
       "version": "16",
       "platformName": "android",
       "browserName": "Chrome"

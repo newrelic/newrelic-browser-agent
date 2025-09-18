@@ -73,5 +73,4 @@ export default async function runTest ({
       ajaxMetricsHarvests
     }
   )
-  await browser.collectCoverage()
 }

@@ -4,6 +4,23 @@
     {
       "changes": [
         {
+          "type": "fix",
+          "sha": "ffc647c2c757034b14d56bac9b0103b2016c5fbb",
+          "message": "Prevent double import of Session Replay aggregate class",
+          "issues": [
+            "1558"
+          ]
+        }
+      ],
+      "version": "1.297.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "1fb522d1-9248-4e6a-9dc3-b6f46061eb72",
+      "createTime": "2025-09-17T19:41:05.967Z"
+    },
+    {
+      "changes": [
+        {
           "type": "feat",
           "sha": "5ce9e705c2d8e55d4f3f93bd704ad78707aa3c84",
           "message": "Prevent early harvests when in retry period",
@@ -3165,5 +3182,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2025-09-10T21:46:13.910Z"
+  "updateTime": "2025-09-17T19:41:05.967Z"
 }

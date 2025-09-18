@@ -18,6 +18,8 @@ import { FEATURE_NAMES } from '../../loaders/features/features'
 import { hasReplayPrerequisite } from '../session_replay/shared/utils'
 import { canEnableSessionTracking } from './feature-gates'
 import { single } from '../../common/util/invoke'
+import { SESSION_ERROR } from '../../common/constants/agent-constants'
+import { handle } from '../../common/event-emitter/handle'
 
 /**
  * Base class for instrumenting a feature.
@@ -31,6 +33,8 @@ export class InstrumentBase extends FeatureBase {
    */
   constructor (agentRef, featureName) {
     super(agentRef.agentIdentifier, featureName)
+
+    this.agentRef = agentRef
 
     /** @type {Function | undefined} This should be set by any derived Instrument class if it has things to do when feature fails or is killed. */
     this.abortHandler = undefined
@@ -74,7 +78,7 @@ export class InstrumentBase extends FeatureBase {
    * @param {Object} agentRef - reference to the base agent ancestor that this feature belongs to
    * @param {Function} fetchAggregator - a function that returns a promise that resolves to the aggregate module
    * @param {Object} [argsObjFromInstrument] - any values or references to pass down to aggregate
-   * @returns void
+   * @returns
    */
   importAggregator (agentRef, fetchAggregator, argsObjFromInstrument = {}) {
     if (this.featAggregate) return
@@ -99,7 +103,7 @@ export class InstrumentBase extends FeatureBase {
       } catch (e) {
         warn(20, e)
         this.ee.emit('internal-error', [e])
-        if (this.featureName === FEATURE_NAMES.sessionReplay) this.abortHandler?.() // SR should stop recording if session DNE
+        handle(SESSION_ERROR, [e], undefined, this.featureName, this.ee)
       }
 
       /**
@@ -140,6 +144,7 @@ export class InstrumentBase extends FeatureBase {
  * @returns
  */
   #shouldImportAgg (featureName, session, agentInit) {
+    if (this.blocked) return false
     switch (featureName) {
       case FEATURE_NAMES.sessionReplay: // the session manager must be initialized successfully for Replay & Trace features
         return hasReplayPrerequisite(agentInit) && !!session

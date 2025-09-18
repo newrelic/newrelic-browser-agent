@@ -91,24 +91,14 @@ export default (env) => {
           {
             test: /\.js$/,
             exclude: /(node_modules)/,
-            use: env.coverage
-              ? [
-                  { loader: './tools/webpack/loaders/istanbul/index.mjs' },
-                  {
-                    loader: 'babel-loader',
-                    options: {
-                      envName: 'webpack'
-                    }
-                  }
-                ]
-              : [
-                  {
-                    loader: 'babel-loader',
-                    options: {
-                      envName: 'webpack'
-                    }
-                  }
-                ]
+            use: [
+              {
+                loader: 'babel-loader',
+                options: {
+                  envName: 'webpack'
+                }
+              }
+            ]
           }
         ]
       },

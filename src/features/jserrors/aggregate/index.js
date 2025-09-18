@@ -59,6 +59,11 @@ export class Aggregate extends AggregateBase {
     })
   }
 
+  postHarvestCleanup (result) {
+    super.postHarvestCleanup(result)
+    if (!this.isRetrying && this.errorOnPage) this.agentRef.runtime.pageMetadata.hasErrors = true
+  }
+
   serializer (aggregatorTypeToBucketsMap) {
     return applyFnToProps(aggregatorTypeToBucketsMap, this.obfuscator.obfuscateString.bind(this.obfuscator), 'string')
   }

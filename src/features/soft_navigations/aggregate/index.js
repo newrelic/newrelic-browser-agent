@@ -23,6 +23,8 @@ export class Aggregate extends AggregateBase {
     this.interactionsToHarvest = this.events
     this.domObserver = domObserver
 
+    this.harvestingIds = []
+
     this.initialPageLoadInteraction = new InitialPageLoadInteraction(agentRef)
     this.initialPageLoadInteraction.onDone.push(() => { // this ensures the .end() method also works with iPL
       if (agentRef.runtime.session?.isNew) this.initialPageLoadInteraction.customAttributes.isFirstOfSession = true // mark the hard page load as first of its session
@@ -77,10 +79,19 @@ export class Aggregate extends AggregateBase {
     let firstIxnStartTime
     const serializedIxnList = []
     for (const interaction of eventBuffer) {
+      this.harvestingIds.push(interaction.id)
       serializedIxnList.push(interaction.serialize(firstIxnStartTime, this.agentRef))
       if (firstIxnStartTime === undefined) firstIxnStartTime = Math.floor(interaction.start) // careful not to match or overwrite on 0 value!
     }
     return `bel.7;${serializedIxnList.join(';')}`
+  }
+
+  postHarvestCleanup (result) {
+    super.postHarvestCleanup(result)
+    if (!this.isRetrying) {
+      this.harvestingIds.forEach(id => this.agentRef.runtime.pageMetadata.browserInteractions.push(id))
+    }
+    this.harvestingIds = []
   }
 
   startUIInteraction (eventName, startedAt, sourceElem) { // this is throttled by instrumentation so that it isn't excessively called

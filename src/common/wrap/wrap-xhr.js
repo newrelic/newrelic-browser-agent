@@ -76,6 +76,7 @@ export function wrapXhr (sharedEE) {
   wrapFn.inPlace(XHR.prototype, XHR_PROPS, '-xhr-', getObject)
 
   ee.on('send-xhr-start', function (args, xhr) {
+    console.log('send-xhr-start...', 'args', args, 'xhr', xhr)
     wrapOnreadystatechange(args, xhr)
     enqueuePendingXhr(xhr)
   })

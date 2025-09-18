@@ -8,6 +8,9 @@
     <title>RUM inline hit test</title>
     {init}
     {config}
+    <script>
+      NREUM.init.feature_flags = ['soft_nav']
+    </script>
     {loader}
   </head>
   <body>
@@ -17,7 +20,7 @@
     <a id="three" title="#3">decoy</a>
     <script type="text/javascript">
     document.addEventListener('click', function () {
-      window.location.hash = Math.random()
+      window.history.pushState({},"title1","1")
     }, false)
     </script>
   </body>

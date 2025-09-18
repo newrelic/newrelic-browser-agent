@@ -14,12 +14,24 @@ import { applyFnToProps } from '../../../common/util/traverse'
 import { UserActionsAggregator } from './user-actions/user-actions-aggregator'
 import { isIFrameWindow } from '../../../common/dom/iframe'
 import { isPureObject } from '../../../common/util/type-check'
+import { PageMetadata } from '../../../common/session/page-metadata'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor (agentRef) {
     super(agentRef, FEATURE_NAME)
     this.referrerUrl = (isBrowserScope && document.referrer) ? cleanURL(document.referrer) : undefined
+
+    this.unloadFns = [
+      () => {
+        console.log('add session metadata!', this.agentRef.runtime.pageMetadata.asEvent())
+        this.addEvent(this.agentRef.runtime.pageMetadata.asEvent())
+        this.agentRef.runtime.pageMetadata = new PageMetadata(this.agentRef.runtime.pageMetadata)
+      }
+    ]
+    this.harvestOpts.beforeUnload = () => {
+      this.unloadFns.forEach(fn => fn())
+    }
 
     this.waitForFlags(['ins']).then(([ins]) => {
       if (!ins) {
@@ -60,7 +72,7 @@ export class Aggregate extends AggregateBase {
       let addUserAction = () => { /** no-op */ }
       if (isBrowserScope && agentRef.init.user_actions.enabled) {
         this.userActionAggregator = new UserActionsAggregator()
-        this.harvestOpts.beforeUnload = () => addUserAction?.(this.userActionAggregator.aggregationEvent)
+        this.unloadFns.push(() => addUserAction?.(this.userActionAggregator.aggregationEvent))
 
         addUserAction = (aggregatedUserAction) => {
           try {

@@ -195,5 +195,6 @@ export class Aggregate extends AggregateBase {
   postHarvestCleanup (result) {
     this.traceStorage.clear() // clear the trace storage state
     super.postHarvestCleanup(result)
+    if (!this.isRetrying) this.agentRef.runtime.pageMetadata.hasTrace = true
   }
 }

@@ -339,6 +339,8 @@ export class Aggregate extends AggregateBase {
     if (result.status === 429) {
       this.abort(ABORT_REASONS.TOO_MANY)
     }
+    // this means a replay harvested, track it
+    this.agentRef.runtime.pageMetadata.hasReplay = true
   }
 
   /**

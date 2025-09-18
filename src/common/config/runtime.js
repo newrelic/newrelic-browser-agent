@@ -5,6 +5,7 @@
 import { getModeledObject } from './configurable'
 import { originTime } from '../constants/runtime'
 import { BUILD_ENV, DIST_METHOD, VERSION } from '../constants/env'
+import { PageMetadata } from '../session/page-metadata'
 
 /**
  * Module level count of harvests. This property will auto-increment each time it is accessed.
@@ -39,7 +40,8 @@ const RuntimeModel = {
   timeKeeper: undefined,
   /** a proxy is set in agent-session to track jsAttributes changes for harvesting mechanics */
   jsAttributesMetadata: { bytes: 0 },
-  get harvestCount () { return ++_harvestCount }
+  get harvestCount () { return ++_harvestCount },
+  pageMetadata: new PageMetadata()
 }
 
 export const mergeRuntime = (runtime) => {

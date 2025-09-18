@@ -11,6 +11,7 @@ import { windowAddEventListener } from '../../../common/event-listener/event-lis
 import { isBrowserScope, isWorkerScope } from '../../../common/constants/runtime'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { isIFrameWindow } from '../../../common/dom/iframe'
+import { evaluatePageMetadata } from './page-metadata'
 // import { WEBSOCKET_TAG } from '../../../common/wrap/wrap-websocket'
 // import { handleWebsocketEvents } from './websocket-detection'
 
@@ -19,6 +20,15 @@ export class Aggregate extends AggregateBase {
   constructor (agentRef) {
     super(agentRef, FEATURE_NAME)
     this.harvestOpts.aggregatorTypes = ['cm', 'sm'] // the types in EventAggregator this feature cares about
+
+    this.pageMetadata = {}
+    this.harvestOpts.beforeUnload = () => {
+      // evaluate the pageMetadata and create SMs from it
+      evaluatePageMetadata(this.pageMetadata).forEach(smTag => {
+        this.storeSupportabilityMetrics(smTag)
+      })
+    }
+
     // This feature only harvests once per potential EoL of the page, which is handled by the central harvester.
 
     // this must be read/stored synchronously, as the currentScript is removed from the DOM after this script is executed and this lookup will be void
@@ -126,6 +136,16 @@ export class Aggregate extends AggregateBase {
     //     handleWebsocketEvents(this.storeSupportabilityMetrics.bind(this), tag, ...args)
     //   }, this.featureName, this.ee)
     // })
+
+    registerHandler('page-metadata', (pageMetadataObject = {}) => {
+      try {
+        Object.keys(pageMetadataObject).forEach(key => {
+          Object.assign(this.pageMetadata[key] ??= {}, pageMetadataObject[key])
+        })
+      } catch (e) {
+      // failed to merge page metadata... ignore
+      }
+    }, this.featureName, this.ee)
   }
 
   eachSessionChecks () {

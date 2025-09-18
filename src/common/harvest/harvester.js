@@ -162,19 +162,7 @@ export function send (agentRef, { endpoint, targetApp, payload, localOpts = {}, 
         cbFinished(cbResult)
 
         /** temporary audit of consistency of page metadata flags */
-        if (!shouldRetry(this.status)) {
-          const hasReplay = baseParams.includes('hr=1')
-          const hasTrace = baseParams.includes('ht=1')
-          const hasError = qs?.attributes?.includes('hasError=true')
-
-          handle('page-metadata', [{
-            [featureName]: {
-              ...(hasReplay && { hasReplay }),
-              ...(hasTrace && { hasTrace }),
-              ...(hasError && { hasError })
-            }
-          }], undefined, FEATURE_NAMES.metrics, agentRef.ee)
-        }
+        if (!shouldRetry(this.status)) trackPageMetadata()
       }, eventListenerOpts(false))
     } else if (submitMethod === fetchMethod) {
       result.then(async function (response) {
@@ -182,7 +170,22 @@ export function send (agentRef, { endpoint, targetApp, payload, localOpts = {}, 
         const cbResult = { sent: true, status, retry: shouldRetry(status), fullUrl, fetchResponse: response, targetApp }
         if (localOpts.needResponse) cbResult.responseText = await response.text()
         cbFinished(cbResult)
+        if (!shouldRetry(status)) trackPageMetadata()
       })
+    }
+
+    function trackPageMetadata () {
+      const hasReplay = baseParams.includes('hr=1')
+      const hasTrace = baseParams.includes('ht=1')
+      const hasError = qs?.attributes?.includes('hasError=true')
+
+      handle('page-metadata', [{
+        [featureName]: {
+          ...(hasReplay && { hasReplay }),
+          ...(hasTrace && { hasTrace }),
+          ...(hasError && { hasError })
+        }
+      }], undefined, FEATURE_NAMES.metrics, agentRef.ee)
     }
   }
 

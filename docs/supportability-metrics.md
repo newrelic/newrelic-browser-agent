@@ -391,3 +391,31 @@ EventBuffer/soft_navigations/Dropped/Bytes
 * soft_navigations/Harvest/Early/Seen
 <!--- Logging harvest was sent before the interval elapsed (bytes captured) --->
 * spa/Harvest/Early/Seen
+
+### Audit
+<!--- Page view event had hasReplay true but no session replay harvest (false positive) --->
+* audit/page_view/hasReplay/false/positive
+<!--- Page view event had hasReplay false but a session replay harvest occurred (false negative) --->
+* audit/page_view/hasReplay/false/negative
+<!--- Page view event had hasReplay true and a session replay harvest occurred (true positive) --->
+* audit/page_view/hasReplay/true/positive
+<!--- Page view event had hasReplay false and no session replay harvest occurred (true negative) --->
+* audit/page_view/hasReplay/true/negative
+
+<!--- Page view event had hasTrace true but no session trace harvest (false positive) --->
+* audit/page_view/hasTrace/false/positive
+<!--- Page view event had hasTrace false but a session trace harvest occurred (false negative) --->
+* audit/page_view/hasTrace/false/negative
+<!--- Page view event had hasTrace true and a session trace harvest occurred (true positive) --->
+* audit/page_view/hasTrace/true/positive
+<!--- Page view event had hasTrace false and no session trace harvest occurred (true negative) --->
+* audit/page_view/hasTrace/true/negative
+
+<!--- Session replay had hasError true but no js error harvest occurred (false positive) --->
+* audit/session_replay/hasError/false/positive
+<!--- Session replay had hasError false but a js error harvest occurred (false negative) --->
+* audit/session_replay/hasError/false/negative
+<!--- Session replay had hasError true and a js error harvest occurred (true positive) --->
+* audit/session_replay/hasError/true/positive
+<!--- Session replay had hasError false and no js error harvest occurred (true negative) --->
+* audit/session_replay/hasError/true/negative

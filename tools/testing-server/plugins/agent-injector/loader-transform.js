@@ -70,7 +70,7 @@ module.exports = function (request, reply, testServer) {
       function replaceLoaderPlaceholder (chunkString, loaderScript) {
         return chunkString.replace(
           '{loader}',
-          `<script type="text/javascript" ${nonce}>${sslShim}</script>${loaderScript}`
+          `<script type="text/javascript" ${nonce}>${sslShim()}</script>${loaderScript}`
         )
       }
       while (chunkString.indexOf('{loader}') > -1) {

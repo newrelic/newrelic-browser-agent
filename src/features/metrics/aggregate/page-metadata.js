@@ -7,42 +7,32 @@ export function evaluatePageMetadata (pageMetadata) {
   try {
     const supportabilityTags = []
 
-    // Track if replay/trace/error harvests actually occurred (key only exists when harvested)
-    const AUDIT = 'audit'
-    const FALSE = 'false'
-    const TRUE = 'true'
-    const NEGATIVE = 'negative'
-    const POSITIVE = 'positive'
-    const PAGE_VIEW = 'page_view'
-    const SESSION_REPLAY = 'session_replay'
-    const HAS_REPLAY = 'hasReplay'
-    const HAS_TRACE = 'hasTrace'
-    const HAS_ERROR = 'hasError'
-
     // Report SM like... audit/<feature_name>/<hasReplay|hasTrace|hasError>/<true|false>/<negative|positive>
     const formTag = (...strings) => strings.join('/')
 
+    // Track if replay/trace/error harvests actually occurred (key only exists when harvested)
     function evaluateTag (feature, flag, hasFlag, hasHarvest) {
+      const AUDIT = 'audit'
       if (hasFlag) {
       // False positive: flag true, but no harvest
-        if (!hasHarvest) supportabilityTags.push(formTag(AUDIT, feature, flag, FALSE, POSITIVE))
+        if (!hasHarvest) supportabilityTags.push(formTag(AUDIT, feature, flag, 'false', 'positive'))
         // True positive (correct)
-        else supportabilityTags.push(formTag(AUDIT, feature, flag, TRUE, POSITIVE))
+        else supportabilityTags.push(formTag(AUDIT, feature, flag, 'true', 'positive'))
       } else {
       // False negative: flag false, but harvest occurred
-        if (hasHarvest) supportabilityTags.push(formTag(AUDIT, feature, flag, FALSE, NEGATIVE))
+        if (hasHarvest) supportabilityTags.push(formTag(AUDIT, feature, flag, 'false', 'negative'))
         // True negative (correct)
-        else supportabilityTags.push(formTag(AUDIT, feature, flag, TRUE, NEGATIVE))
+        else supportabilityTags.push(formTag(AUDIT, feature, flag, 'true', 'negative'))
       }
     }
 
     if (pageMetadata.page_view_event) {
-      evaluateTag(PAGE_VIEW, HAS_REPLAY, pageMetadata.page_view_event.hasReplay, !!pageMetadata.session_replay)
-      evaluateTag(PAGE_VIEW, HAS_TRACE, pageMetadata.page_view_event.hasTrace, !!pageMetadata.session_trace)
+      evaluateTag('page_view', 'hasReplay', pageMetadata.page_view_event.hasReplay, !!pageMetadata.session_replay)
+      evaluateTag('page_view', 'hasTrace', pageMetadata.page_view_event.hasTrace, !!pageMetadata.session_trace)
     }
 
     if (pageMetadata.session_replay) {
-      evaluateTag(SESSION_REPLAY, HAS_ERROR, pageMetadata.session_replay.hasError, !!pageMetadata.jserrors)
+      evaluateTag('session_replay', 'hasError', pageMetadata.session_replay.hasError, !!pageMetadata.jserrors)
     }
 
     return supportabilityTags

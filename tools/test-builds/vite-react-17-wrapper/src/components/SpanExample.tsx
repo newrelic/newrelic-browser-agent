@@ -4,7 +4,7 @@ const SpanExample = () => {
   const [clickCount, updateClickCount] = React.useState(0);
 
   return (
-    <div className={"example-container"}>
+    <div className={"examples"}>
       <h2>Other Elements</h2>
       <div>
         <span id={"dummy-span-1"}></span>

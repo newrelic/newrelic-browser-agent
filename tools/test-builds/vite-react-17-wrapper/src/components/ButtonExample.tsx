@@ -5,7 +5,7 @@ const ButtonExample = () => {
 
   return (
     <>
-      <div className={"example-container"}>
+      <div className={"examples"}>
         <h2>Buttons</h2>
         <div>
           <p><strong>Click count: { clickCount } </strong></p>
@@ -30,7 +30,7 @@ const ButtonExample = () => {
           </p>
         </div>
       </div>
-      <div className={"example-container"}>
+      <div className={"examples"}>
         <h2>Buttons and forms</h2>
         <p>Button with a form ancestor
           <form id="form-with-button-child">

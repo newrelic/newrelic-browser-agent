@@ -5,7 +5,7 @@ const LinkExample = () => {
 
   return (
     <>
-      <div className={"example-container"}>
+      <div className={"examples"}>
         <h2>Links</h2>
         <div>
           <p><strong>Click count: { clickCount } </strong></p>

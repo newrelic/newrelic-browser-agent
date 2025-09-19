@@ -12,21 +12,25 @@ export default function App() {
   return (
     <>
       <h1>Vite React</h1>
-      <Popover>
-        <PopoverTrigger>
-          <SampleTrigger id="sample-trigger" title="Sample Trigger"/>
-        </PopoverTrigger>
-        <PopoverBody>
-          <div className="popover-content">
-            <p>This is the content of the popover.</p>
-            <p>You can add more elements here.</p>
-          </div>
-        </PopoverBody>
-      </Popover>
+      <div className='example-container'>
+        <Popover>
+          <PopoverTrigger>
+            <SampleTrigger id="sample-trigger" title="Sample Trigger"/>
+          </PopoverTrigger>
+          <PopoverBody>
+            <div className="popover-content">
+              <p>This is the content of the popover.</p>
+              <p>You can add more elements here.</p>
+            </div>
+          </PopoverBody>
+        </Popover>
+      </div>
       <hr/>
-      <ButtonExample />
-      <LinkExample />
-      <SpanExample />
+      <div className='example-container'>
+        <ButtonExample />
+        <LinkExample />
+        <SpanExample />
+      </div>
     </>
   );
 }

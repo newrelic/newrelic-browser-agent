@@ -24,6 +24,12 @@ a {
 }
 
 .example-container {
+  display: flex;
+  justify-content: space-between;
+}
+
+.examples {
+  width: 32%;
   border: 10px solid black;
   border-radius: 2em;
   padding: 10px;

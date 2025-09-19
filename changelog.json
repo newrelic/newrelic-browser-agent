@@ -4,6 +4,23 @@
     {
       "changes": [
         {
+          "type": "feat",
+          "sha": "b1e03e216ec4eedb77cbb49241d51b5526b97997",
+          "message": "Evaluate the accuracy of cross-feature attribution",
+          "issues": [
+            "1573"
+          ]
+        }
+      ],
+      "version": "1.299.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "995b40b2-faf3-457f-8396-ec43ca40e362",
+      "createTime": "2025-09-19T18:54:38.658Z"
+    },
+    {
+      "changes": [
+        {
           "type": "fix",
           "sha": "04eb09fb27fb9d49dcb4a37cc503619217e9fafd",
           "message": "Force LCP to report the original page URL",
@@ -3207,5 +3224,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2025-09-19T15:59:34.820Z"
+  "updateTime": "2025-09-19T18:54:38.658Z"
 }

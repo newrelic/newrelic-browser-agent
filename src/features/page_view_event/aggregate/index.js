@@ -22,15 +22,18 @@ import { isContainerAgentTarget } from '../../../common/util/target'
 
 export class Aggregate extends AggregateBase {
   static featureName = CONSTANTS.FEATURE_NAME
+
   constructor (agentRef) {
     super(agentRef, CONSTANTS.FEATURE_NAME)
+
+    this.sentRum = {} // flag to only call sendRum() once if successful, properties are by applicationID
 
     this.timeToFirstByte = 0
     this.firstByteToWindowLoad = 0 // our "frontend" duration
     this.firstByteToDomContent = 0 // our "dom processing" duration
 
-    registerHandler('send-rum', (customAttibutes, target) => {
-      this.sendRum(customAttibutes, target)
+    registerHandler('send-rum', (customAttributes, target) => {
+      this.sendRum(customAttributes, target)
     }, this.featureName, this.ee)
 
     if (!isValid(agentRef.info)) {
@@ -61,6 +64,8 @@ export class Aggregate extends AggregateBase {
    * @param {*} target The target to harvest to - Since we will not know the entityGuid before harvesting, this must be an object directly supplied from the info object or API, not an entityGuid string for lookup with the entityManager - Defaults to { licenseKey: this.agentRef.info.licenseKey, applicationID: this.agentRef.info.applicationID }
    */
   sendRum (customAttributes = this.agentRef.info.jsAttributes, target = { licenseKey: this.agentRef.info.licenseKey, applicationID: this.agentRef.info.applicationID }) {
+    if (this.sentRum[target.applicationID]) return
+
     const info = this.agentRef.info
     const measures = {}
 
@@ -120,14 +125,17 @@ export class Aggregate extends AggregateBase {
 
     this.rumStartTime = now()
 
-    this.agentRef.runtime.harvester.triggerHarvestFor(this, {
+    const localOpts = {
       directSend: {
         targetApp: target,
         payload: { qs: queryParameters, body }
       },
       needResponse: true,
       sendEmptyBody: true
-    })
+    }
+    if (this.agentRef.runtime.harvester.triggerHarvestFor(this, localOpts)) {
+      this.sentRum[target.applicationID] = true
+    }
   }
 
   postHarvestCleanup ({ status, responseText, xhr, targetApp }) {

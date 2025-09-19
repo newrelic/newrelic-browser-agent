@@ -122,6 +122,9 @@ export class Aggregate extends AggregateBase {
           /** the processor will return the previously aggregated event if it has been completed by processing the current event */
           addUserAction(this.userActionAggregator.process(evt, this.agentRef.init.user_actions.elementAttributes))
         }, this.featureName, this.ee)
+        registerHandler('uaXhr', () => {
+          if (this.userActionAggregator.isEvaluatingDeadClick()) this.userActionAggregator.treatAsLiveClick()
+        }, this.featureName, this.ee)
         registerHandler('uaErr', () => this.userActionAggregator.markAsErrorClick(), this.featureName, this.ee)
       }
 

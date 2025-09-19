@@ -14,8 +14,6 @@ beforeAll(async () => {
 let ajaxInstrument
 
 beforeEach(async () => {
-  jest.spyOn(handleModule, 'handle')
-
   ajaxInstrument = new Ajax(mainAgent)
   jest.spyOn(ajaxInstrument.ee, 'emit')
 })

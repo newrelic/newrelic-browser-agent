@@ -82,6 +82,18 @@
           </button>
         </p>
 
+        <p>Send XHR =>
+          <button id="button-send-xhr" onclick="
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', '/json')
+            xhr.send();
+          "> Send XHR </button>
+        </p>
+
+        <p>Fetch =>
+          <button id="button-fetch" onclick="fetch('/json')">Fetch!</button>
+        </p>
+
         <fieldset>
           <legend>Buttons and forms</legend>
           <p>Button with a form ancestor
@@ -216,6 +228,18 @@
           <a id="dead-link-with-span-child">
             <span id="span-inside-dead-link">Link</span>
           </a>
+        </p>
+
+        <p>Send XHR =>
+          <a id="link-send-xhr" onclick="
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', '/json')
+            xhr.send();
+          "> Send XHR </a>
+        </p>
+
+        <p>Fetch =>
+          <a id="link-fetch" onclick="fetch('/json')">Fetch!</a>
         </p>
       </div>
 

@@ -19,6 +19,7 @@ import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { SUPPORTABILITY_METRIC } from '../../metrics/constants'
 import { now } from '../../../common/timing/now'
 import { hasUndefinedHostname } from '../../../common/deny-list/deny-list'
+import { extractUrl } from '../../../common/url/extract-url'
 
 var handlers = ['load', 'error', 'abort', 'timeout']
 var handlersLen = handlers.length
@@ -317,16 +318,7 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
 
     var opts = this.opts || {}
     var target = this.target
-
-    var url
-    if (typeof target === 'string') {
-      url = target
-    } else if (typeof target === 'object' && target instanceof origRequest) {
-      url = target.url
-    } else if (globalScope?.URL && typeof target === 'object' && target instanceof URL) {
-      url = target.href
-    }
-    addUrl(this, url)
+    addUrl(this, extractUrl(target))
 
     var method = ('' + ((target && target instanceof origRequest && target.method) ||
       opts.method || 'GET')).toUpperCase()

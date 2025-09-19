@@ -15,6 +15,7 @@ import { setupMeasureAPI } from '../../../loaders/api/measure'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME, OBSERVED_EVENTS, OBSERVED_WINDOW_EVENTS } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
+import { wrapHistory } from '../../../common/wrap/wrap-history'
 import { wrapFetch } from '../../../common/wrap/wrap-fetch'
 import { wrapXhr } from '../../../common/wrap/wrap-xhr'
 import { parseUrl } from '../../../common/url/parse-url'
@@ -59,6 +60,15 @@ export class Instrument extends InstrumentBase {
           })
         })
         observer.observe({ type: 'resource', buffered: true })
+      }
+
+      const historyEE = wrapHistory(this.ee)
+      historyEE.on('pushState-end', navigationChange)
+      historyEE.on('replaceState-end', navigationChange)
+      window.addEventListener('hashchange', navigationChange, eventListenerOpts(true, this.removeOnAbort?.signal))
+      window.addEventListener('popstate', navigationChange, eventListenerOpts(true, this.removeOnAbort?.signal))
+      function navigationChange () {
+        historyEE.emit('navChange')
       }
     }
 

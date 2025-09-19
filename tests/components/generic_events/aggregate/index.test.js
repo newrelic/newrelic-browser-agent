@@ -395,6 +395,21 @@ describe('user frustrations', () => {
     expect(harvest.body.ins[0].deadClick).toBeUndefined()
   })
 
+  test('should not mark as dead click if navigational change occurred within 2 seconds of user action', () => {
+    const target = document.createElement('button')
+    target.id = 'myBtn'
+    genericEventsAggregate.ee.emit('ua', [{ timeStamp: 100, type: 'click', target }])
+    jest.advanceTimersByTime(1999)
+    genericEventsAggregate.ee.emit('navChange')
+    jest.advanceTimersByTime(1)
+
+    // blur event to trigger aggregation to stop and add to harvest buffer
+    genericEventsAggregate.ee.emit('ua', [{ timeStamp: 234567, type: 'blur', target: window }])
+    const [{ payload: harvest }] = genericEventsAggregate.makeHarvestPayload() // force it to put the aggregation into the event buffer
+    expect(harvest.body.ins[0]).toMatchObject(genDefaultUserAction())
+    expect(harvest.body.ins[0].deadClick).toBeUndefined()
+  })
+
   test('should not mark as error click if no error occurs within 2 seconds of user action', () => {
     const target = document.createElement('button')
     target.id = 'myBtn'

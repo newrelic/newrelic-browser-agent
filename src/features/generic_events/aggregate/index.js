@@ -17,6 +17,8 @@ import { isPureObject } from '../../../common/util/type-check'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
+  #userActionAggregator
+
   constructor (agentRef) {
     super(agentRef, FEATURE_NAME)
     this.referrerUrl = (isBrowserScope && document.referrer) ? cleanURL(document.referrer) : undefined
@@ -28,7 +30,7 @@ export class Aggregate extends AggregateBase {
         return
       }
 
-      this.trackSupportabilityMetrics()
+      this.#trackSupportabilityMetrics()
 
       registerHandler('api-recordCustomEvent', (timestamp, eventType, attributes) => {
         if (RESERVED_EVENT_TYPES.includes(eventType)) return warn(46)
@@ -59,8 +61,8 @@ export class Aggregate extends AggregateBase {
 
       let addUserAction = () => { /** no-op */ }
       if (isBrowserScope && agentRef.init.user_actions.enabled) {
-        this.userActionAggregator = new UserActionsAggregator(agentRef.init.feature_flags.includes('user_frustrations'))
-        this.harvestOpts.beforeUnload = () => addUserAction?.(this.userActionAggregator.aggregationEvent)
+        this.#userActionAggregator = new UserActionsAggregator(agentRef.init.feature_flags.includes('user_frustrations'))
+        this.harvestOpts.beforeUnload = () => addUserAction?.(this.#userActionAggregator.aggregationEvent)
 
         addUserAction = (aggregatedUserAction) => {
           try {
@@ -89,7 +91,7 @@ export class Aggregate extends AggregateBase {
                 ...(aggregatedUserAction.errorClick && { errorClick: true })
               }
               this.addEvent(userActionEvent)
-              this.trackUserActionSupportabilityMetrics(userActionEvent)
+              this.#trackUserActionSM(userActionEvent)
 
               /**
                * Returns the original target field name with `target` prepended and camelCased
@@ -120,12 +122,11 @@ export class Aggregate extends AggregateBase {
 
         registerHandler('ua', (evt) => {
           /** the processor will return the previously aggregated event if it has been completed by processing the current event */
-          addUserAction(this.userActionAggregator.process(evt, this.agentRef.init.user_actions.elementAttributes))
+          addUserAction(this.#userActionAggregator.process(evt, this.agentRef.init.user_actions.elementAttributes))
         }, this.featureName, this.ee)
-        registerHandler('uaXhr', () => {
-          if (this.userActionAggregator.isEvaluatingDeadClick()) this.userActionAggregator.treatAsLiveClick()
-        }, this.featureName, this.ee)
-        registerHandler('uaErr', () => this.userActionAggregator.markAsErrorClick(), this.featureName, this.ee)
+        registerHandler('navChange', () => { this.#userActionAggregator.isLiveClick() }, this.featureName, this.ee)
+        registerHandler('uaXhr', () => { this.#userActionAggregator.isLiveClick() }, this.featureName, this.ee)
+        registerHandler('uaErr', () => this.#userActionAggregator.markAsErrorClick(), this.featureName, this.ee)
       }
 
       /**
@@ -304,7 +305,7 @@ export class Aggregate extends AggregateBase {
     return Math.floor(this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(timestamp))
   }
 
-  trackSupportabilityMetrics () {
+  #trackSupportabilityMetrics () {
     /** track usage SMs to improve these experimental features */
     const configPerfTag = 'Config/Performance/'
     if (this.agentRef.init.performance.capture_marks) this.reportSupportabilityMetric(configPerfTag + 'CaptureMarks/Enabled')
@@ -315,7 +316,7 @@ export class Aggregate extends AggregateBase {
     if (this.agentRef.init.performance.resources.ignore_newrelic === false) this.reportSupportabilityMetric(configPerfTag + 'Resources/IgnoreNewrelic/Changed')
   }
 
-  trackUserActionSupportabilityMetrics (ua) {
+  #trackUserActionSM (ua) {
     if (ua.rageClick) this.reportSupportabilityMetric('UserAction/RageClick/Seen')
     if (ua.deadClick) this.reportSupportabilityMetric('UserAction/DeadClick/Seen')
     if (ua.errorClick) this.reportSupportabilityMetric('UserAction/ErrorClick/Seen')

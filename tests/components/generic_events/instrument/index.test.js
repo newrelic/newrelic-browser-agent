@@ -100,6 +100,7 @@ describe('generic events sub-features', () => {
     })
   })
 })
+
 describe('User frustrations - fetch', () => {
   let eeEmitSpy
   let handleSpy

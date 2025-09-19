@@ -176,17 +176,23 @@ export function send (agentRef, { endpoint, targetApp, payload, localOpts = {}, 
     }
 
     function trackHarvestMetadata () {
-      const hasReplay = baseParams.includes('hr=1')
-      const hasTrace = baseParams.includes('ht=1')
-      const hasError = qs?.attributes?.includes('hasError=true')
+      try {
+        if (featureName === FEATURE_NAMES.jserrors && !(JSON.parse(body)?.err)) return
 
-      handle('harvest-metadata', [{
-        [featureName]: {
-          ...(hasReplay && { hasReplay }),
-          ...(hasTrace && { hasTrace }),
-          ...(hasError && { hasError })
-        }
-      }], undefined, FEATURE_NAMES.metrics, agentRef.ee)
+        const hasReplay = baseParams.includes('hr=1')
+        const hasTrace = baseParams.includes('ht=1')
+        const hasError = qs?.attributes?.includes('hasError=true')
+
+        handle('harvest-metadata', [{
+          [featureName]: {
+            ...(hasReplay && { hasReplay }),
+            ...(hasTrace && { hasTrace }),
+            ...(hasError && { hasError })
+          }
+        }], undefined, FEATURE_NAMES.metrics, agentRef.ee)
+      } catch (err) {
+      // do nothing
+      }
     }
   }
 

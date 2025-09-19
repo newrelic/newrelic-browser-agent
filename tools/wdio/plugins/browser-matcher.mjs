@@ -7,14 +7,10 @@ import { getBrowserName, getBrowserVersion } from '../../browsers-lists/utils.mj
 export default class BrowserMatcher {
   #browserName
   #browserVersion
-  #collectCoverage
 
   async beforeSession (_, capabilities) {
     this.#browserName = getBrowserName(capabilities)
     this.#browserVersion = getBrowserVersion(capabilities)
-
-    this.#collectCoverage = capabilities.collectCoverage
-    delete capabilities.collectCoverage
 
     this.#setupMochaGlobals()
   }
@@ -55,32 +51,6 @@ export default class BrowserMatcher {
         return this.#wrapFnWithBrowserMatcher(matcher, originalGlobal)
       }
     })
-
-    Object.defineProperty(originalGlobal, 'withoutCoverage', {
-      value: () => {
-        return this.#wrapFnWithCoverageCheck(originalGlobal)
-      }
-    })
-  }
-
-  #wrapFnWithCoverageCheck (originalGlobal) {
-    const skip = !!this.#collectCoverage
-
-    return function (...args) {
-      /*
-        We only call global.it for tests that are not skipped.
-        The test will skip if coverage flag is passed is on and the test is marked as 'withoutCoverage'. This registers the test
-        with the mocha engine. When all tests in a file are skipped, WDIO will not launch
-        a browser in LambdaTest.
-
-        Do not use global.it.skip. This still registers the test with mocha and will cause
-        WDIO to launch a browser in LambdaTest. If all the tests are skipped in a file, this
-        is a waste of time.
-      */
-      if (!skip) {
-        originalGlobal.apply(this, args)
-      }
-    }
   }
 
   #wrapFnWithBrowserMatcher (matcher, originalGlobal) {

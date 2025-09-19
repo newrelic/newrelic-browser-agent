@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "Wed Sep 10 2025 21:56:46 GMT+0000 (Coordinated Universal Time)",
+  "lastUpdated": "Fri Sep 19 2025 17:51:36 GMT+0000 (Coordinated Universal Time)",
   "projectName": "New Relic Browser Agent",
   "projectUrl": "https://github.com/newrelic/newrelic-browser-agent",
   "includeOptDeps": true,
@@ -545,58 +545,6 @@
       "licenseTextSource": "file",
       "publisher": "Typicode",
       "email": "typicode@gmail.com"
-    },
-    "istanbul-lib-coverage@3.2.2": {
-      "name": "istanbul-lib-coverage",
-      "version": "3.2.2",
-      "range": "^3.2.2",
-      "licenses": "BSD-3-Clause",
-      "repoUrl": "https://github.com/istanbuljs/istanbuljs",
-      "versionedRepoUrl": "https://github.com/istanbuljs/istanbuljs/tree/v3.2.2",
-      "licenseFile": "node_modules/istanbul-lib-coverage/LICENSE",
-      "licenseUrl": "https://github.com/istanbuljs/istanbuljs/blob/v3.2.2/LICENSE",
-      "licenseTextSource": "file",
-      "publisher": "Krishnan Anantheswaran",
-      "email": "kananthmail-github@yahoo.com"
-    },
-    "istanbul-lib-instrument@6.0.3": {
-      "name": "istanbul-lib-instrument",
-      "version": "6.0.3",
-      "range": "^6.0.1",
-      "licenses": "BSD-3-Clause",
-      "repoUrl": "https://github.com/istanbuljs/istanbuljs",
-      "versionedRepoUrl": "https://github.com/istanbuljs/istanbuljs/tree/v6.0.3",
-      "licenseFile": "node_modules/istanbul-lib-instrument/LICENSE",
-      "licenseUrl": "https://github.com/istanbuljs/istanbuljs/blob/v6.0.3/LICENSE",
-      "licenseTextSource": "file",
-      "publisher": "Krishnan Anantheswaran",
-      "email": "kananthmail-github@yahoo.com"
-    },
-    "istanbul-lib-report@3.0.1": {
-      "name": "istanbul-lib-report",
-      "version": "3.0.1",
-      "range": "^3.0.1",
-      "licenses": "BSD-3-Clause",
-      "repoUrl": "https://github.com/istanbuljs/istanbuljs",
-      "versionedRepoUrl": "https://github.com/istanbuljs/istanbuljs/tree/v3.0.1",
-      "licenseFile": "node_modules/istanbul-lib-report/LICENSE",
-      "licenseUrl": "https://github.com/istanbuljs/istanbuljs/blob/v3.0.1/LICENSE",
-      "licenseTextSource": "file",
-      "publisher": "Krishnan Anantheswaran",
-      "email": "kananthmail-github@yahoo.com"
-    },
-    "istanbul-reports@3.1.7": {
-      "name": "istanbul-reports",
-      "version": "3.1.7",
-      "range": "^3.1.6",
-      "licenses": "BSD-3-Clause",
-      "repoUrl": "https://github.com/istanbuljs/istanbuljs",
-      "versionedRepoUrl": "https://github.com/istanbuljs/istanbuljs/tree/v3.1.7",
-      "licenseFile": "node_modules/istanbul-reports/LICENSE",
-      "licenseUrl": "https://github.com/istanbuljs/istanbuljs/blob/v3.1.7/LICENSE",
-      "licenseTextSource": "file",
-      "publisher": "Krishnan Anantheswaran",
-      "email": "kananthmail-github@yahoo.com"
     },
     "jest-environment-jsdom@29.7.0": {
       "name": "jest-environment-jsdom",

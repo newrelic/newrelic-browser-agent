@@ -11,11 +11,6 @@ on:
         description: 'Additional flags to pass to the wdio cli'
         required: false
         type: string
-      coverage:
-        description: 'Enable code coverage'
-        required: false
-        type: boolean
-        default: false
       concurrency:
         description: 'The number of test runner threads to spawn for a run'
         required: false
@@ -31,11 +26,6 @@ on:
         description: 'Additional flags to pass to the wdio cli'
         required: false
         type: string
-      coverage:
-        description: 'Enable code coverage'
-        required: false
-        type: boolean
-        default: false
       ref:
         description: 'Github branch ref to checkout and run tests on'
         required: false
@@ -73,7 +63,6 @@ jobs:
         run: npm ci
       - name: Build agent
         run: |
-          ${{ inputs.coverage && 'COVERAGE=true' || '' }} \
           npm run build:all
       - name: Run WDIO Tests
         run: |
@@ -82,43 +71,13 @@ jobs:
             -b '${{ inputs.browser-target }}' \
             --concurrent ${{ inputs.concurrency }} \
             ${{ runner.debug && '-v -L -D -d' || '' }} \
-            ${{ inputs.coverage && '--coverage' || '' }} \
             ${{ inputs.additional-flags || '' }}
-      - name: Find pull request
-        id: pull-request-target
-        if: ${{ !cancelled() && inputs.coverage }}
-        uses: ./.github/actions/find-pull-request
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Upload pr code coverage
-        if: ${{ !cancelled() && inputs.coverage && steps.pull-request-target.outputs.results }}
-        uses: codecov/codecov-action@v4
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          override_commit: ${{ fromJSON(steps.pull-request-target.outputs.results).head_sha }}
-          override_branch: refs/pull/${{ fromJSON(steps.pull-request-target.outputs.results).pr_number }}/merge
-          override_pr: ${{ fromJSON(steps.pull-request-target.outputs.results).pr_number }}
-          flags: integration-tests
-          verbose: true
-      - name: Upload branch code coverage
-        if: ${{ !cancelled() && inputs.coverage && !steps.pull-request-target.outputs.results }}
-        uses: codecov/codecov-action@v4
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          flags: integration-tests
-          verbose: true
-      - name: Archive code coverage results
-        if: ${{ !cancelled() && inputs.coverage }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: integration-code-coverage-report
-          path: coverage-e2e/
       - name: Generate wdio tunnel log archive name
         if: ${{ always() }}
         id: wdio-tunnel-log-archive-name
         run: |
           browser=${{ inputs.browser-target }}
-          echo "results=${browser/\*/all}${{ inputs.coverage && '-coverage' || '' }}${{ contains(inputs.additional-flags, '--webview') && '-webview' || '' }}-wdio-tunnel-logs" >> "$GITHUB_OUTPUT"
+          echo "results=${browser/\*/all}${{ contains(inputs.additional-flags, '--webview') && '-webview' || '' }}-wdio-tunnel-logs" >> "$GITHUB_OUTPUT"
       - name: Archive wdio tunnel logs
         if: ${{ always() }}
         uses: actions/upload-artifact@v4

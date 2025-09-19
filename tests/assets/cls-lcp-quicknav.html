@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {init}
+    {config}
+    {loader}
+  </head>
+  <body>
+    <div id="initial">initial content (32 characters)</div>
+
+    <!-- this is clicked by the test to stop collecting LCP and trigger harvest -->
+    <button id="btn1">finish</button>
+
+    <script>
+      window.addEventListener('load', run)
+
+      function run() {
+
+        // this quickly navigates after loading the page to simulate the issue described in NR-450725
+        // the LCP should be able to be attributed to the original page load, even if the navigation history has changed before the feature can report its data
+        window.history.pushState({},"title1","1")
+
+        setTimeout(triggerCls, 600)
+      }
+
+      function triggerCls() {
+        var newDiv = document.createElement("div")
+        newDiv.id = 'clsText'
+        newDiv.innerText = 'inserted text (29 characters)'
+        document.body.insertBefore(newDiv, document.body.firstChild)
+
+        // delay to simulate different parts of content loading independently
+        setTimeout(triggerLcp, 100)
+      }
+
+      function triggerLcp() {
+        var newDiv = document.createElement("div");
+        newDiv.id = 'lcpText'
+        newDiv.innerText = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.'
+        document.body.appendChild(newDiv)
+        window.contentAdded = true
+      }
+    </script>
+  </body>
+</html>

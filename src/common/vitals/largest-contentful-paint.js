@@ -26,7 +26,8 @@ if (isBrowserScope) {
         resourceLoadDelay: attribution.resourceLoadDelay,
         resourceLoadDuration: attribution.resourceLoadDuration,
         resourceLoadTime: attribution.resourceLoadDuration, // kept for NR backwards compatibility, deprecated in v3->v4
-        elementRenderDelay: attribution.elementRenderDelay
+        elementRenderDelay: attribution.elementRenderDelay,
+        ...(attribution.navigationEntry && { pageUrl: cleanURL(attribution.navigationEntry.name) }) // used to ensure the LCP gets the correct URL at harvest time if a soft nav has occurred before page load
       }
       if (attribution.url) attrs.elUrl = cleanURL(attribution.url)
       if (lcpEntry.element?.tagName) attrs.elTag = lcpEntry.element.tagName

@@ -4,6 +4,48 @@
     {
       "changes": [
         {
+          "type": "fix",
+          "sha": "04eb09fb27fb9d49dcb4a37cc503619217e9fafd",
+          "message": "Force LCP to report the original page URL",
+          "issues": [
+            "1566"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "99b4c9f2a083438607557a2139192e5d280f7273",
+          "message": "Factor long tasks into soft nav base interaction span",
+          "issues": [
+            "1537"
+          ]
+        }
+      ],
+      "version": "1.298.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "c7ab2f6f-8bae-4ca3-b7eb-5dbf4da17357",
+      "createTime": "2025-09-19T15:59:34.820Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
+          "sha": "ffc647c2c757034b14d56bac9b0103b2016c5fbb",
+          "message": "Prevent double import of Session Replay aggregate class",
+          "issues": [
+            "1558"
+          ]
+        }
+      ],
+      "version": "1.297.1",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "1fb522d1-9248-4e6a-9dc3-b6f46061eb72",
+      "createTime": "2025-09-17T19:41:05.967Z"
+    },
+    {
+      "changes": [
+        {
           "type": "feat",
           "sha": "5ce9e705c2d8e55d4f3f93bd704ad78707aa3c84",
           "message": "Prevent early harvests when in retry period",
@@ -3165,5 +3207,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2025-09-10T21:46:13.910Z"
+  "updateTime": "2025-09-19T15:59:34.820Z"
 }

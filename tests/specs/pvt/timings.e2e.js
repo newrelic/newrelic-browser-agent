@@ -122,6 +122,29 @@ describe('pvt timings tests', () => {
         }
       })
     })
+
+    it.withBrowsersMatching(supportsLargestContentfulPaint)('LCP on a page with a preload navigation supplies the correct pageUrl', async () => {
+      await browser.url(
+        await browser.testHandle.assetURL('cls-lcp-quicknav.html')
+      ).then(() => browser.waitForAgentLoad())
+
+      await browser.pause(1000) // wait for the async shenanigans on that test page to wrap up
+
+      const [timingsResult] = await Promise.all([
+        timingsCapture.waitForResult({ timeout: 15000 }),
+        $('body').click()
+      ])
+
+      /** Find the LCP node which could be reported once but be unpredictably reported among potentially many timings harvests */
+      const lcpNode = timingsResult
+        .map(harvest => harvest.request.body.find(timing => timing.name === 'lcp'))
+        .find(timing => !!timing)
+      expect(lcpNode).toBeDefined()
+      /** Find the page URL attribute in the LCP node and return its value */
+      const lcpPageUrl = lcpNode.attributes.find(attr => attr.key === 'pageUrl').value
+      /** expect that the pageUrl attribute reflects the original page url and NOT the quick soft nav page url */
+      expect(lcpPageUrl).toContain('cls-lcp-quicknav.html')
+    })
   })
 
   describe('layout shift related timings', () => {

@@ -6,14 +6,14 @@ import { FEATURE_NAMES } from '../../../src/loaders/features/features'
 let mainAgent
 
 beforeAll(async () => {
-  jest.spyOn(handleModule, 'handle')
-
   mainAgent = setupAgent()
 })
 
 let ajaxInstrument
 
 beforeEach(async () => {
+  jest.spyOn(handleModule, 'handle')
+
   ajaxInstrument = new Ajax(mainAgent)
   jest.spyOn(ajaxInstrument.ee, 'emit')
 })

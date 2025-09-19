@@ -4,57 +4,69 @@
  */
 
 /**
- * Generates a CSS selector path for the given element, if possible
+ * Generates a CSS selector path for the given element, if possible.
+ * Also gather metadata about the element's nearest fields, and whether there are any links or buttons in the path.
+ *
+ * Starts with simple cases like window or document and progresses to more complex dom-tree traversals as needed.
+ * Will return path: undefined if no other path can be determined.
+ *
  * @param {HTMLElement} elem
- * @param {boolean} includeId
- * @param {boolean} includeClass
- * @returns {string|undefined}
+ * @param {Array<string>} [targetFields=[]] specifies which fields to gather from the nearest element in the path
+ * @returns {{path: (undefined|string), nearestFields: {}, hasButton: boolean, hasLink: boolean}}
  */
-export const generateSelectorPath = (elem, targetFields = []) => {
-  if (!elem) return { path: undefined, nearestFields: {} }
-
-  const getNthOfTypeIndex = (node) => {
-    try {
-      let i = 1
-      const { tagName } = node
-      while (node.previousElementSibling) {
-        if (node.previousElementSibling.tagName === tagName) i++
-        node = node.previousElementSibling
-      }
-      return i
-    } catch (err) {
-    // do nothing for now.  An invalid child count will make the path selector not return a nth-of-type selector statement
-    }
-  }
+export const analyzeElemPath = (elem, targetFields = []) => {
+  const result = { path: undefined, nearestFields: {}, hasButton: false, hasLink: false }
+  if (!elem) return result
+  if (elem === window) { result.path = 'window'; return result }
+  if (elem === document) { result.path = 'document'; return result }
 
   let pathSelector = ''
-  let index = getNthOfTypeIndex(elem)
+  const index = getNthOfTypeIndex(elem)
 
-  const nearestFields = {}
   try {
     while (elem?.tagName) {
-      const { id, localName } = elem
-      targetFields.forEach(field => { nearestFields[nearestAttrName(field)] ||= (elem[field]?.baseVal || elem[field]) })
-      const selector = [
-        localName,
-        id ? `#${id}` : '',
-        pathSelector ? `>${pathSelector}` : ''
-      ].join('')
+      const tagName = elem.tagName.toLowerCase()
+      result.hasLink ||= tagName === 'a'
+      result.hasButton ||= tagName === 'button' || (tagName === 'input' && elem.type.toLowerCase() === 'button')
 
-      pathSelector = selector
+      targetFields.forEach(field => { result.nearestFields[nearestAttrName(field)] ||= (elem[field]?.baseVal || elem[field]) })
+      pathSelector = buildPathSelector(elem, pathSelector)
       elem = elem.parentNode
     }
   } catch (err) {
-  // do nothing for now
+    // do nothing for now
   }
 
-  const path = pathSelector ? index ? `${pathSelector}:nth-of-type(${index})` : pathSelector : undefined
-  return { path, nearestFields }
+  result.path = pathSelector ? index ? `${pathSelector}:nth-of-type(${index})` : pathSelector : undefined
+  return result
+}
 
-  function nearestAttrName (originalFieldName) {
-    /** preserve original renaming structure for pre-existing field maps */
-    if (originalFieldName === 'tagName') originalFieldName = 'tag'
-    if (originalFieldName === 'className') originalFieldName = 'class'
-    return `nearest${originalFieldName.charAt(0).toUpperCase() + originalFieldName.slice(1)}`
+function buildPathSelector (elem, pathSelector) {
+  const { id, localName } = elem
+  return [
+    localName,
+    id ? `#${id}` : '',
+    pathSelector ? `>${pathSelector}` : ''
+  ].join('')
+}
+
+function getNthOfTypeIndex (node) {
+  try {
+    let i = 1
+    const { tagName } = node
+    while (node.previousElementSibling) {
+      if (node.previousElementSibling.tagName === tagName) i++
+      node = node.previousElementSibling
+    }
+    return i
+  } catch (err) {
+    // do nothing for now.  An invalid child count will make the path selector not return a nth-of-type selector statement
   }
+}
+
+function nearestAttrName (originalFieldName) {
+  /** preserve original renaming structure for pre-existing field maps */
+  if (originalFieldName === 'tagName') originalFieldName = 'tag'
+  if (originalFieldName === 'className') originalFieldName = 'class'
+  return `nearest${originalFieldName.charAt(0).toUpperCase() + originalFieldName.slice(1)}`
 }

@@ -2,14 +2,27 @@
  * Copyright 2020-2025 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { generateSelectorPath } from '../../../../common/dom/selector-path'
-import { OBSERVED_WINDOW_EVENTS } from '../../constants'
+import { analyzeElemPath } from '../../../../common/dom/selector-path'
+import { FRUSTRATION_TIMEOUT_MS, OBSERVED_WINDOW_EVENTS } from '../../constants'
 import { AggregatedUserAction } from './aggregated-user-action'
+import { Timer } from '../../../../common/timer/timer'
+import { gosNREUMOriginals } from '../../../../common/window/nreum'
 
 export class UserActionsAggregator {
   /** @type {AggregatedUserAction=} */
   #aggregationEvent = undefined
   #aggregationKey = ''
+  #ufEnabled = false
+  #deadClickTimer = undefined
+  #domObserver = undefined
+  #errorClickTimer = undefined
+
+  constructor (userFrustrationsEnabled) {
+    if (userFrustrationsEnabled && gosNREUMOriginals().o.MO) {
+      this.#domObserver = new MutationObserver(this.isLiveClick.bind(this))
+      this.#ufEnabled = true
+    }
+  }
 
   get aggregationEvent () {
     // if this is accessed externally, we need to be done aggregating on it
@@ -28,40 +41,83 @@ export class UserActionsAggregator {
    */
   process (evt, targetFields) {
     if (!evt) return
-    const { selectorPath, nearestTargetFields } = getSelectorPath(evt, targetFields)
-    const aggregationKey = getAggregationKey(evt, selectorPath)
+    const targetElem = OBSERVED_WINDOW_EVENTS.includes(evt.type) ? window : evt.target
+    const selectorInfo = analyzeElemPath(targetElem, targetFields)
+
+    // if selectorInfo.path is undefined, aggregation will be skipped for this event
+    const aggregationKey = getAggregationKey(evt, selectorInfo.path)
     if (!!aggregationKey && aggregationKey === this.#aggregationKey) {
       // an aggregation exists already, so lets just continue to increment
       this.#aggregationEvent.aggregate(evt)
     } else {
       // return the prev existing one (if there is one)
       const finishedEvent = this.#aggregationEvent
-      // then set as this new event aggregation
+      if (this.#ufEnabled) {
+        this.#deadClickCleanup()
+        this.#errorClickCleanup()
+      }
+
+      // then start new event aggregation
       this.#aggregationKey = aggregationKey
-      this.#aggregationEvent = new AggregatedUserAction(evt, selectorPath, nearestTargetFields)
+      this.#aggregationEvent = new AggregatedUserAction(evt, selectorInfo)
+      if (this.#ufEnabled && evt.type === 'click' && (selectorInfo.hasButton || selectorInfo.hasLink)) {
+        this.#deadClickSetup(this.#aggregationEvent)
+        this.#errorClickSetup()
+      }
       return finishedEvent
     }
   }
-}
 
-/**
- * Generates a selector path for the event, starting with simple cases like window or document and getting more complex for dom-tree traversals as needed.
- * Will return a random selector path value if no other path can be determined, to force the aggregator to skip aggregation for this event.
- * @param {Event} evt
- * @returns {string}
- */
-function getSelectorPath (evt, targetFields) {
-  let selectorPath; let nearestTargetFields = {}
-  if (OBSERVED_WINDOW_EVENTS.includes(evt.type) || evt.target === window) selectorPath = 'window'
-  else if (evt.target === document) selectorPath = 'document'
-  // if still no selectorPath, generate one from target tree that includes elem ids
-  else {
-    const { path, nearestFields } = generateSelectorPath(evt.target, targetFields)
-    selectorPath = path
-    nearestTargetFields = nearestFields
+  markAsErrorClick () {
+    if (this.#aggregationEvent && this.#errorClickTimer) {
+      this.#aggregationEvent.errorClick = true
+      this.#errorClickCleanup()
+    }
   }
-  // if STILL no selectorPath, it will return undefined which will skip aggregation for this event
-  return { selectorPath, nearestTargetFields }
+
+  #errorClickSetup () {
+    this.#errorClickTimer = new Timer({
+      onEnd: () => {
+        this.#errorClickCleanup()
+      }
+    }, FRUSTRATION_TIMEOUT_MS)
+  }
+
+  #errorClickCleanup () {
+    this.#errorClickTimer?.clear()
+    this.#errorClickTimer = undefined
+  }
+
+  #deadClickSetup (userAction) {
+    if (this.#isEvaluatingDeadClick() || !this.#domObserver) return
+
+    this.#domObserver.observe(document, {
+      attributes: true,
+      characterData: true,
+      childList: true,
+      subtree: true
+    })
+    this.#deadClickTimer = new Timer({
+      onEnd: () => {
+        userAction.deadClick = true
+        this.#deadClickCleanup()
+      }
+    }, FRUSTRATION_TIMEOUT_MS)
+  }
+
+  #deadClickCleanup () {
+    this.#domObserver?.disconnect()
+    this.#deadClickTimer?.clear()
+    this.#deadClickTimer = undefined
+  }
+
+  #isEvaluatingDeadClick () {
+    return this.#deadClickTimer !== undefined
+  }
+
+  isLiveClick () {
+    if (this.#isEvaluatingDeadClick()) this.#deadClickCleanup()
+  }
 }
 
 /**

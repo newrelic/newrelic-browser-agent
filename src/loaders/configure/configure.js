@@ -50,6 +50,7 @@ export function configure (agent, opts = {}, loaderType, forceDrain) {
       internalTrafficList.push(updatedInit.proxy.assets)
     }
     if (updatedInit.proxy.beacon) internalTrafficList.push(updatedInit.proxy.beacon)
+    agent.beacons = [...internalTrafficList]
 
     setTopLevelCallers(agent) // no need to set global APIs on newrelic obj more than once
     addToNREUM('activatedFeatures', activatedFeatures)

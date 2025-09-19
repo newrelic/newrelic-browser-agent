@@ -15,7 +15,6 @@ export class UserActionsAggregator {
   #ufEnabled = false
   #deadClickTimer = undefined
   #domObserver = undefined
-
   #errorClickTimer = undefined
 
   constructor (userFrustrationsEnabled) {
@@ -90,32 +89,26 @@ export class UserActionsAggregator {
   }
 
   #deadClickSetup (userAction) {
-    if (this.#startObserver()) {
-      this.#deadClickTimer = new Timer({
-        onEnd: () => {
-          userAction.deadClick = true
-          this.#deadClickCleanup()
-        }
-      }, FRUSTRATION_TIMEOUT_MS)
-    }
+    if (this.#isEvaluatingDeadClick() || !this.#domObserver) return
+
+    this.#domObserver.observe(document, {
+      attributes: true,
+      characterData: true,
+      childList: true,
+      subtree: true
+    })
+    this.#deadClickTimer = new Timer({
+      onEnd: () => {
+        userAction.deadClick = true
+        this.#deadClickCleanup()
+      }
+    }, FRUSTRATION_TIMEOUT_MS)
   }
 
   #deadClickCleanup () {
     this.#domObserver?.disconnect()
     this.#deadClickTimer?.clear()
     this.#deadClickTimer = undefined
-  }
-
-  #startObserver () {
-    if (!this.#isEvaluatingDeadClick() && this.#domObserver) {
-      this.#domObserver.observe(document, {
-        attributes: true,
-        characterData: true,
-        childList: true,
-        subtree: true
-      })
-      return true
-    }
   }
 
   #isEvaluatingDeadClick () {

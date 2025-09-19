@@ -55,6 +55,12 @@ const ButtonExample = () => {
             <button id="button-with-invalid-form" form="does-not-exist">Button w/ non-existent form</button>
           </form>
         </p>
+        <p>Button with error ={'>'}
+          <button id="button-with-error" onClick={() => { throw new Error('This button throws an error' )}}> Button w/ error </button>
+        </p>
+        <p>Button with noticeError ={'>'}
+          <input type="button" id="input-button-with-notice-error" value="Button with noticeError" onClick={() => { NREUM?.noticeError(new Error('Report caught error to New Relic'))}} />
+        </p>
       </div>
     </>
   )

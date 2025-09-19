@@ -68,7 +68,7 @@ export class Aggregate extends AggregateBase {
              * so we still need to validate that an event was given to this method before we try to add */
             if (aggregatedUserAction?.event) {
               const { target, timeStamp, type } = aggregatedUserAction.event
-              this.addEvent({
+              const userActionEvent = {
                 eventType: 'UserAction',
                 timestamp: this.toEpoch(timeStamp),
                 action: type,
@@ -85,8 +85,11 @@ export class Aggregate extends AggregateBase {
                   return acc
                 }, {})),
                 ...aggregatedUserAction.nearestTargetFields,
-                ...(aggregatedUserAction.deadClick && { deadClick: true })
-              })
+                ...(aggregatedUserAction.deadClick && { deadClick: true }),
+                ...(aggregatedUserAction.errorClick && { errorClick: true })
+              }
+              this.addEvent(userActionEvent)
+              this.trackUserActionSupportabilityMetrics(userActionEvent)
 
               /**
                * Returns the original target field name with `target` prepended and camelCased
@@ -119,6 +122,7 @@ export class Aggregate extends AggregateBase {
           /** the processor will return the previously aggregated event if it has been completed by processing the current event */
           addUserAction(this.userActionAggregator.process(evt, this.agentRef.init.user_actions.elementAttributes))
         }, this.featureName, this.ee)
+        registerHandler('uaErr', () => this.userActionAggregator.markAsErrorClick(), this.featureName, this.ee)
       }
 
       /**
@@ -306,5 +310,11 @@ export class Aggregate extends AggregateBase {
     if (this.agentRef.init.performance.resources.asset_types?.length !== 0) this.reportSupportabilityMetric(configPerfTag + 'Resources/AssetTypes/Changed')
     if (this.agentRef.init.performance.resources.first_party_domains?.length !== 0) this.reportSupportabilityMetric(configPerfTag + 'Resources/FirstPartyDomains/Changed')
     if (this.agentRef.init.performance.resources.ignore_newrelic === false) this.reportSupportabilityMetric(configPerfTag + 'Resources/IgnoreNewrelic/Changed')
+  }
+
+  trackUserActionSupportabilityMetrics (ua) {
+    if (ua.rageClick) this.reportSupportabilityMetric('UserAction/RageClick/Seen')
+    if (ua.deadClick) this.reportSupportabilityMetric('UserAction/DeadClick/Seen')
+    if (ua.errorClick) this.reportSupportabilityMetric('UserAction/ErrorClick/Seen')
   }
 }

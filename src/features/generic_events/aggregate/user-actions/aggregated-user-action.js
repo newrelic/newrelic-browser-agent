@@ -16,6 +16,7 @@ export class AggregatedUserAction {
     this.nearestTargetFields = selectorInfo.nearestFields
     this.currentUrl = cleanURL('' + location)
     this.deadClick = false
+    this.errorClick = false
   }
 
   /**

@@ -161,8 +161,8 @@ export function send (agentRef, { endpoint, targetApp, payload, localOpts = {}, 
         if (localOpts.needResponse) cbResult.responseText = this.responseText
         cbFinished(cbResult)
 
-        /** temporary audit of consistency of page metadata flags */
-        if (!shouldRetry(this.status)) trackPageMetadata()
+        /** temporary audit of consistency of harvest metadata flags */
+        if (!shouldRetry(this.status)) trackHarvestMetadata()
       }, eventListenerOpts(false))
     } else if (submitMethod === fetchMethod) {
       result.then(async function (response) {
@@ -170,16 +170,17 @@ export function send (agentRef, { endpoint, targetApp, payload, localOpts = {}, 
         const cbResult = { sent: true, status, retry: shouldRetry(status), fullUrl, fetchResponse: response, targetApp }
         if (localOpts.needResponse) cbResult.responseText = await response.text()
         cbFinished(cbResult)
-        if (!shouldRetry(status)) trackPageMetadata()
+        /** temporary audit of consistency of harvest metadata flags */
+        if (!shouldRetry(status)) trackHarvestMetadata()
       })
     }
 
-    function trackPageMetadata () {
+    function trackHarvestMetadata () {
       const hasReplay = baseParams.includes('hr=1')
       const hasTrace = baseParams.includes('ht=1')
       const hasError = qs?.attributes?.includes('hasError=true')
 
-      handle('page-metadata', [{
+      handle('harvest-metadata', [{
         [featureName]: {
           ...(hasReplay && { hasReplay }),
           ...(hasTrace && { hasTrace }),

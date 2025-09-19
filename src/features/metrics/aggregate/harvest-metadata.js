@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export function evaluatePageMetadata (pageMetadata) {
+export function evaluateHarvestMetadata (pageMetadata) {
   try {
     const supportabilityTags = []
 

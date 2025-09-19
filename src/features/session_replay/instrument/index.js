@@ -16,9 +16,11 @@ import { setupPauseReplayAPI } from '../../../loaders/api/pauseReplay'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
+  /** @type {Promise|undefined} A promise that resolves when the recorder module is imported and added to the class. Undefined if the recorder has never been staged to import with `importRecorder`. */
+  #stagedImport
+  /** The RRWEB recorder instance, if imported */
+  recorder
 
-  #mode
-  #agentRef
   constructor (agentRef) {
     super(agentRef, FEATURE_NAME)
 
@@ -27,7 +29,6 @@ export class Instrument extends InstrumentBase {
     setupPauseReplayAPI(agentRef)
 
     let session
-    this.#agentRef = agentRef
     try {
       session = JSON.parse(localStorage.getItem(`${PREFIX}_${DEFAULT_KEY}`))
     } catch (err) { }
@@ -37,15 +38,17 @@ export class Instrument extends InstrumentBase {
     }
 
     if (this.#canPreloadRecorder(session)) {
-      this.#mode = session?.sessionReplayMode
-      this.#preloadStartRecording()
-    } else {
-      this.importAggregator(this.#agentRef, () => import(/* webpackChunkName: "session_replay-aggregate" */ '../aggregate'))
+      this.importRecorder().then(recorder => {
+        recorder.startRecording(TRIGGERS.PRELOAD, session?.sessionReplayMode)
+      }) // could handle specific fail-state behaviors with a .catch block here
     }
+
+    this.importAggregator(this.agentRef, () => import(/* webpackChunkName: "session_replay-aggregate" */ '../aggregate'), this)
 
     /** If the recorder is running, we can pass error events on to the agg to help it switch to full mode later */
     this.ee.on('err', (e) => {
-      if (this.#agentRef.runtime.isRecording) {
+      if (this.blocked) return
+      if (this.agentRef.runtime.isRecording) {
         this.errorNoticed = true
         handle(SR_EVENT_EMITTER_TYPES.ERROR_DURING_REPLAY, [e], undefined, this.featureName, this.ee)
       }
@@ -57,54 +60,50 @@ export class Instrument extends InstrumentBase {
     if (!session) { // this might be a new session if entity initializes: conservatively start recording if first-time config allows
       // Note: users with SR enabled, as well as these other configs enabled by-default, will be penalized by the recorder overhead EVEN IF they don't actually have or get
       // entitlement or sampling decision, or otherwise intentionally opted-in for the feature.
-      return isPreloadAllowed(this.#agentRef.init)
+      return isPreloadAllowed(this.agentRef.init)
     } else if (session.sessionReplayMode === MODE.FULL || session.sessionReplayMode === MODE.ERROR) {
       return true // existing sessions get to continue recording, regardless of this page's configs or if it has expired (conservatively)
     } else { // SR mode was OFF but may potentially be turned on if session resets and configs allows the new session to have replay...
-      return isPreloadAllowed(this.#agentRef.init)
+      return isPreloadAllowed(this.agentRef.init)
     }
   }
 
-  #alreadyStarted = false
   /**
-   * This func is use for early pre-load recording prior to replay feature (agg) being loaded onto the page. It should only setup once, including if already called and in-progress.
+   * Returns a promise that imports the recorder module. Only lets the recorder module be imported and instantiated once. Rejects if failed to import/instantiate.
+   * @returns {Promise}
    */
-  async #preloadStartRecording (trigger) {
-    if (this.#alreadyStarted) return
-    this.#alreadyStarted = true
+  importRecorder () {
+    /** if we already have a recorder fully set up, just return it */
+    if (this.recorder) return Promise.resolve(this.recorder)
+    /** conditional -- if we have never started importing, stage the import and store it in state */
+    this.#stagedImport ??= import(/* webpackChunkName: "recorder" */'../shared/recorder')
+      .then(({ Recorder }) => {
+        this.recorder = new Recorder(this)
+        /** return the recorder for promise chaining */
+        return this.recorder
+      })
+      .catch(err => {
+        this.ee.emit('internal-error', [err])
+        this.blocked = true
+        /** return the err for promise chaining */
+        throw err
+      })
 
-    try {
-      const { Recorder } = (await import(/* webpackChunkName: "recorder" */'../shared/recorder'))
-
-      // If startReplay() has been used by this point, we must record in full mode regardless of session preload:
-      // Note: recorder starts here with w/e the mode is at this time, but this may be changed later (see #apiStartOrRestartReplay else-case)
-      this.recorder ??= new Recorder({ ...this, mode: this.#mode, agentRef: this.#agentRef, trigger, timeKeeper: this.#agentRef.runtime.timeKeeper }) // if TK exists due to deferred state, pass it
-      this.recorder.startRecording()
-      this.abortHandler = this.recorder.stopRecording
-    } catch (err) {
-      this.parent.ee.emit('internal-error', [err])
-    }
-    this.importAggregator(this.#agentRef, () => import(/* webpackChunkName: "session_replay-aggregate" */ '../aggregate'), { recorder: this.recorder, errorNoticed: this.errorNoticed })
+    return this.#stagedImport
   }
 
   /**
    * Called whenever startReplay API is used. That could occur any time, pre or post load.
    */
   #apiStartOrRestartReplay () {
+    if (this.blocked) return
     if (this.featAggregate) { // post-load; there's possibly already an ongoing recording
-      if (this.featAggregate.mode !== MODE.FULL) this.featAggregate.initializeRecording(MODE.FULL, true)
-    } else { // pre-load
-      this.#mode = MODE.FULL
-      this.#preloadStartRecording(TRIGGERS.API)
-      // There's a race here wherein either:
-      // a. Recorder has not been initialized, and we've set the enforced mode, so we're good, or;
-      // b. Record has been initialized, possibly with the "wrong" mode, so we have to correct that + restart.
-      if (this.recorder && this.recorder.parent.mode !== MODE.FULL) {
-        this.recorder.parent.mode = MODE.FULL
-        this.recorder.stopRecording()
-        this.recorder.startRecording()
-        this.abortHandler = this.recorder.stopRecording
-      }
+      if (this.featAggregate.mode !== MODE.FULL) this.featAggregate.initializeRecording(MODE.FULL, true, TRIGGERS.API)
+    } else {
+      this.importRecorder()
+        .then(() => {
+          this.recorder.startRecording(TRIGGERS.API, MODE.FULL)
+        }) // could handle specific fail-state behaviors with a .catch block here
     }
   }
 }

@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.297.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.296.0...v1.297.0) (2025-09-10)
+
+
+### Features
+
+* Prevent early harvests when in retry period ([#1548](https://github.com/newrelic/newrelic-browser-agent/issues/1548)) ([5ce9e70](https://github.com/newrelic/newrelic-browser-agent/commit/5ce9e705c2d8e55d4f3f93bd704ad78707aa3c84))
+* remove newrelic meta attribute ([#1550](https://github.com/newrelic/newrelic-browser-agent/issues/1550)) ([f165b3e](https://github.com/newrelic/newrelic-browser-agent/commit/f165b3e877fc4fc4c8b2b77c942b791a25d58705))
+
+
+### Bug Fixes
+
+* Fix exceptions for null bodies arising from empty harvests ([#1553](https://github.com/newrelic/newrelic-browser-agent/issues/1553)) ([b763d03](https://github.com/newrelic/newrelic-browser-agent/commit/b763d03215f043e5be555e2dfe2fba85351d672f))
+
 ## [1.296.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.295.0...v1.296.0) (2025-08-19)
 
 

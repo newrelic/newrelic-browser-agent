@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.299.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.298.0...v1.299.0) (2025-09-19)
+
+
+### Features
+
+* Evaluate the accuracy of cross-feature attribution ([#1573](https://github.com/newrelic/newrelic-browser-agent/issues/1573)) ([b1e03e2](https://github.com/newrelic/newrelic-browser-agent/commit/b1e03e216ec4eedb77cbb49241d51b5526b97997))
+
 ## [1.298.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.297.1...v1.298.0) (2025-09-19)
 
 

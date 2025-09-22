@@ -135,14 +135,18 @@ export function send (agentRef, { endpoint, targetApp, payload, localOpts = {}, 
 
   const fullUrl = `${url}?${baseParams}${payloadParams}`
   const gzip = !!qs?.attributes?.includes('gzip')
+
+  let stringBody = ''
   if (!gzip) {
-    if (endpoint !== EVENTS) body = stringify(body) // all features going to 'events' endpoint should already be serialized & stringified
+    if (endpoint !== EVENTS) stringBody = stringify(body) // all features going to 'events' endpoint should already be serialized & stringified
     // Warn--once per endpoint--if the agent tries to send large payloads
-    if (body.length > 750000 && (warnings[endpoint] = (warnings[endpoint] || 0) + 1) === 1) warn(28, endpoint)
+    if (stringBody.length > 750000 && (warnings[endpoint] = (warnings[endpoint] || 0) + 1) === 1) warn(28, endpoint)
+  } else {
+    stringBody = body
   }
 
   // If body is null, undefined, or an empty object or array after stringifying, send an empty string instead.
-  if (!body || body.length === 0 || body === '{}' || body === '[]') body = ''
+  if (!stringBody || stringBody.length === 0 || stringBody === '{}' || stringBody === '[]') stringBody = ''
 
   const headers = [{ key: 'content-type', value: 'text/plain' }]
 
@@ -150,7 +154,7 @@ export function send (agentRef, { endpoint, targetApp, payload, localOpts = {}, 
       Because they still do permit synch XHR, the idea is that at final harvest time (worker is closing),
       we just make a BLOCKING request--trivial impact--with the remaining data as a temp fill-in for sendBeacon.
      Following the removal of img-element method. */
-  let result = submitMethod({ url: fullUrl, body, sync: localOpts.isFinalHarvest && isWorkerScope, headers })
+  let result = submitMethod({ url: fullUrl, body: stringBody, sync: localOpts.isFinalHarvest && isWorkerScope, headers })
 
   if (!localOpts.isFinalHarvest && cbFinished) { // final harvests don't hold onto buffer data (shouldRetryOnFail is false), so cleanup isn't needed
     if (submitMethod === xhrMethod) {
@@ -177,7 +181,7 @@ export function send (agentRef, { endpoint, targetApp, payload, localOpts = {}, 
 
     function trackHarvestMetadata () {
       try {
-        if (featureName === FEATURE_NAMES.jserrors && !(JSON.parse(body)?.err)) return
+        if (featureName === FEATURE_NAMES.jserrors && !body?.err) return
 
         const hasReplay = baseParams.includes('hr=1')
         const hasTrace = baseParams.includes('ht=1')

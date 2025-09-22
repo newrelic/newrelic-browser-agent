@@ -140,11 +140,11 @@ export function send (agentRef, { endpoint, targetApp, payload, localOpts = {}, 
   // all features going to 'events' endpoint should already be serialized & stringified
   let stringBody = gzip || endpoint === EVENTS ? body : stringify(body)
 
-  // Warn--once per endpoint--if the agent tries to send large payloads
-  if (endpoint !== BLOBS && stringBody.length > 750000 && (warnings[endpoint] = (warnings[endpoint] || 0) + 1) === 1) warn(28, endpoint)
-
   // If body is null, undefined, or an empty object or array after stringifying, send an empty string instead.
   if (!stringBody || stringBody.length === 0 || stringBody === '{}' || stringBody === '[]') stringBody = ''
+
+  // Warn--once per endpoint--if the agent tries to send large payloads
+  if (endpoint !== BLOBS && stringBody.length > 750000 && (warnings[endpoint] = (warnings[endpoint] || 0) + 1) === 1) warn(28, endpoint)
 
   const headers = [{ key: 'content-type', value: 'text/plain' }]
 

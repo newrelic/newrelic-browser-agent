@@ -57,7 +57,7 @@ describe('PVT aggregate', () => {
     })
     global.navigator.connection = {}
     pvtAgg.addTiming('abc', 1)
-    expect(pvtAgg.events.get(undefined, 'NR_CONTAINER_AGENT')[0].data[0].attrs).toEqual(expect.objectContaining({}))
+    expect(pvtAgg.events.get()[0].attrs).toEqual(expect.objectContaining({}))
 
     global.navigator.connection.type = 'type'
     let timing = pvtAgg.addTiming('abc', 1)

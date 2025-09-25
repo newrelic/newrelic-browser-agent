@@ -153,7 +153,7 @@ test('.interaction with waitForEnd flag keeps ixn open until .end', () => {
   expect(ixnContext.associatedInteraction.end).toEqual(90)
 })
 
-test('.save forcibly harvest any would-be cancelled ixns', () => {
+test('.save forcibly harvest any would-be cancelled ixns', async () => {
   let ixn = mainAgent.interaction().save()
   let ixnContext = getIxnContext(ixn)
   softNavAggregate.ee.emit(`${INTERACTION_API}-end`, [100], ixnContext)
@@ -279,7 +279,7 @@ test('.actionText and .setAttribute add attributes to ixn specifically', () => {
 })
 
 // This isn't just an API test; it double serves as data validation on the querypack payload output.
-test('multiple finished ixns retain the correct start/end timestamps in payload', () => {
+test('multiple finished ixns retain the correct start/end timestamps in payload', async () => {
   softNavAggregate.ee.emit(`${INTERACTION_API}-get`, [0])
   let ixnContext = getIxnContext(mainAgent.interaction())
   ixnContext.associatedInteraction.nodeId = 1
@@ -300,6 +300,8 @@ test('multiple finished ixns retain the correct start/end timestamps in payload'
   ixnContext.associatedInteraction.id = 'some_another_id'
   ixnContext.associatedInteraction.forceSave = true
   softNavAggregate.ee.emit(`${INTERACTION_API}-end`, [1000], ixnContext)
+
+  await new Promise(process.nextTick)
 
   expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(3)
   // WARN: Double check decoded output & behavior or any introduced bugs before changing the follow line's static string.

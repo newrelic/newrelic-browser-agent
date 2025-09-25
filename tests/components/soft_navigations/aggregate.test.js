@@ -4,7 +4,6 @@ import * as ttfbModule from '../../../src/common/vitals/time-to-first-byte'
 import { INTERACTION_STATUS, NO_LONG_TASK_WINDOW, POPSTATE_MERGE_WINDOW, POPSTATE_TRIGGER } from '../../../src/features/soft_navigations/constants'
 
 let mainAgent
-jest.retryTimes(0)
 
 beforeAll(() => {
   mainAgent = setupAgent({

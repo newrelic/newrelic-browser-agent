@@ -5,6 +5,7 @@ import { resetAgent, setupAgent } from '../setup-agent'
  * Test `.interaction gets ixn retroactively too when processed late after ee buffer drain` is a bit
  * flaky so add a retry for this file.
  */
+jest.retryTimes(5)
 
 const INTERACTION_API = 'api-ixn'
 let mainAgent

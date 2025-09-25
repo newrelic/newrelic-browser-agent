@@ -81,6 +81,10 @@ const args = yargs(hideBin(process.argv))
   .default('webview', false)
   .describe('webview', 'Run webview tests')
 
+  .string('B')
+  .alias('B', 'report-to-bam')
+  .describe('B', 'Supply a JSON string or file path with expected BAM configs to send agent traffic to BAM instead of local service')
+
   .middleware(argv => {
     if (argv.webview && (!argv.browsers || argv.browsers === 'chrome@latest')) {
       argv.browsers = argv.b = 'ios@latest,android@latest'

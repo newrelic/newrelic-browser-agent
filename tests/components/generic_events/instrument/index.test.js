@@ -179,25 +179,37 @@ describe('User frustrations - XMLHttpRequest', () => {
 class MockXMLHttpRequest {
   constructor () {
     this.readyState = 0
-    this.status = 200
+    this.status = 0
     this.responseText = ''
     this.responseURL = ''
-    this.onreadystatechange = null
+    this._url = ''
+  }
+
+  onreadystatechange (url) {
+    if (this.readyState === 1) {
+      this._url = url
+    } else if (this.readyState === 2) {
+      this.responseURL = this._url
+    }
+    if (this._onreadystatechange) this._onreadystatechange()
   }
 
   open (method, url) {
     this.method = method
-    this.responseURL = url
     this.readyState = 1
+    this.onreadystatechange(url)
   }
 
   send () {
-    this.readyState = 4
+    this.readyState = 2
     this.responseText = 'Mock response'
-    if (this.onreadystatechange) {
-      this.onreadystatechange()
-    }
+    this.status = 200
+    this.onreadystatechange()
   }
 
-  addEventListener = jest.fn()
+  addEventListener = (event, handler) => {
+    if (event === 'readystatechange' && typeof handler === 'function') {
+      this._onreadystatechange = handler
+    }
+  }
 }

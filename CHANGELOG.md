@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.298.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.297.1...v1.298.0) (2025-09-19)
+
+
+### Features
+
+* Factor long tasks into soft nav base interaction span ([#1537](https://github.com/newrelic/newrelic-browser-agent/issues/1537)) ([99b4c9f](https://github.com/newrelic/newrelic-browser-agent/commit/99b4c9f2a083438607557a2139192e5d280f7273))
+
+
+### Bug Fixes
+
+* Force LCP to report the original page URL ([#1566](https://github.com/newrelic/newrelic-browser-agent/issues/1566)) ([04eb09f](https://github.com/newrelic/newrelic-browser-agent/commit/04eb09fb27fb9d49dcb4a37cc503619217e9fafd))
+
+## [1.297.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.297.0...v1.297.1) (2025-09-17)
+
+
+### Bug Fixes
+
+* Prevent double import of Session Replay aggregate class ([#1558](https://github.com/newrelic/newrelic-browser-agent/issues/1558)) ([ffc647c](https://github.com/newrelic/newrelic-browser-agent/commit/ffc647c2c757034b14d56bac9b0103b2016c5fbb))
+
 ## [1.297.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.296.0...v1.297.0) (2025-09-10)
 
 

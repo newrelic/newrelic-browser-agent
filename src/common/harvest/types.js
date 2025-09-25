@@ -31,5 +31,4 @@
  * @property {import('../util/submit-data.js').NetworkMethods} submitMethod The network method to use {@link ../util/submit-data.js}
  */
 
-/* istanbul ignore next */
 export const unused = {}

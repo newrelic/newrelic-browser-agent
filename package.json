@@ -1,6 +1,6 @@
 {
   "name": "@newrelic/browser-agent",
-  "version": "1.297.0",
+  "version": "1.298.0",
   "private": false,
   "author": "New Relic Browser Agent Team <browser-agent@newrelic.com>",
   "description": "New Relic Browser Agent",
@@ -264,10 +264,6 @@
     "glob": "^11.0.0",
     "html-webpack-plugin": "^5.6.0",
     "husky": "^8.0.3",
-    "istanbul-lib-coverage": "^3.2.2",
-    "istanbul-lib-instrument": "^6.0.1",
-    "istanbul-lib-report": "^3.0.1",
-    "istanbul-reports": "^3.1.6",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "29.7.0",
     "jest-extended": "^4.0.2",

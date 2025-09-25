@@ -131,14 +131,16 @@ export function send (agentRef, { endpoint, payload, localOpts = {}, submitMetho
 
   const fullUrl = `${url}?${baseParams}${payloadParams}`
   const gzip = !!qs?.attributes?.includes('gzip')
-  if (!gzip) {
-    if (endpoint !== EVENTS) body = stringify(body) // all features going to 'events' endpoint should already be serialized & stringified
-    // Warn--once per endpoint--if the agent tries to send large payloads
-    if (body.length > 750000 && (warnings[endpoint] = (warnings[endpoint] || 0) + 1) === 1) warn(28, endpoint)
-  }
+
+  // all gzipped data is already in the correct format and needs no transformation
+  // all features going to 'events' endpoint should already be serialized & stringified
+  let stringBody = gzip || endpoint === EVENTS ? body : stringify(body)
 
   // If body is null, undefined, or an empty object or array after stringifying, send an empty string instead.
-  if (!body || body.length === 0 || body === '{}' || body === '[]') body = ''
+  if (!stringBody || stringBody.length === 0 || stringBody === '{}' || stringBody === '[]') stringBody = ''
+
+  // Warn--once per endpoint--if the agent tries to send large payloads
+  if (endpoint !== BLOBS && stringBody.length > 750000 && (warnings[endpoint] = (warnings[endpoint] || 0) + 1) === 1) warn(28, endpoint)
 
   const headers = [{ key: 'content-type', value: 'text/plain' }]
 
@@ -146,7 +148,7 @@ export function send (agentRef, { endpoint, payload, localOpts = {}, submitMetho
       Because they still do permit synch XHR, the idea is that at final harvest time (worker is closing),
       we just make a BLOCKING request--trivial impact--with the remaining data as a temp fill-in for sendBeacon.
      Following the removal of img-element method. */
-  let result = submitMethod({ url: fullUrl, body, sync: localOpts.isFinalHarvest && isWorkerScope, headers })
+  let result = submitMethod({ url: fullUrl, body: stringBody, sync: localOpts.isFinalHarvest && isWorkerScope, headers })
 
   if (!localOpts.isFinalHarvest && cbFinished) { // final harvests don't hold onto buffer data (shouldRetryOnFail is false), so cleanup isn't needed
     if (submitMethod === xhrMethod) {
@@ -156,6 +158,9 @@ export function send (agentRef, { endpoint, payload, localOpts = {}, submitMetho
         const cbResult = { sent: this.status !== 0, status: this.status, retry: shouldRetry(this.status), fullUrl, xhr: this }
         if (localOpts.needResponse) cbResult.responseText = this.responseText
         cbFinished(cbResult)
+
+        /** temporary audit of consistency of harvest metadata flags */
+        if (!shouldRetry(this.status)) trackHarvestMetadata()
       }, eventListenerOpts(false))
     } else if (submitMethod === fetchMethod) {
       result.then(async function (response) {
@@ -163,7 +168,29 @@ export function send (agentRef, { endpoint, payload, localOpts = {}, submitMetho
         const cbResult = { sent: true, status, retry: shouldRetry(status), fullUrl, fetchResponse: response }
         if (localOpts.needResponse) cbResult.responseText = await response.text()
         cbFinished(cbResult)
+        /** temporary audit of consistency of harvest metadata flags */
+        if (!shouldRetry(status)) trackHarvestMetadata()
       })
+    }
+
+    function trackHarvestMetadata () {
+      try {
+        if (featureName === FEATURE_NAMES.jserrors && !body?.err) return
+
+        const hasReplay = baseParams.includes('hr=1')
+        const hasTrace = baseParams.includes('ht=1')
+        const hasError = qs?.attributes?.includes('hasError=true')
+
+        handle('harvest-metadata', [{
+          [featureName]: {
+            ...(hasReplay && { hasReplay }),
+            ...(hasTrace && { hasTrace }),
+            ...(hasError && { hasError })
+          }
+        }], undefined, FEATURE_NAMES.metrics, agentRef.ee)
+      } catch (err) {
+      // do nothing
+      }
     }
   }
 

@@ -1,6 +1,7 @@
 // config
 window.NREUM={
   init: {
+    feature_flags: ['soft_nav'],
     distributed_tracing: {
       enabled: true
     },

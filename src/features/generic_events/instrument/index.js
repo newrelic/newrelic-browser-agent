@@ -87,21 +87,24 @@ export class Instrument extends InstrumentBase {
 
     wrapFetch(this.ee)
     wrapXhr(this.ee)
-    this.ee.on('send-xhr-start', (_, xhr) => {
-      emitIfNonAgentTraffic.call(this, parseUrl(xhr.responseURL))
+    this.ee.on('open-xhr-start', (args, xhr) => {
+      if (!isInternalTraffic(args[1])) {
+        xhr.addEventListener('readystatechange', () => {
+          if (xhr.readyState === 2) { // HEADERS_RECEIVED
+            handle('uaXhr', [], undefined, FEATURE_NAMES.genericEvents, this.ee)
+          }
+        })
+      }
     })
     this.ee.on('fetch-start', (fetchArguments) => {
-      if (fetchArguments.length >= 1) { emitIfNonAgentTraffic.call(this, parseUrl(extractUrl(fetchArguments[0]))) }
+      if (fetchArguments.length >= 1 && !isInternalTraffic(extractUrl(fetchArguments[0]))) {
+        handle('uaXhr', [], undefined, FEATURE_NAMES.genericEvents, this.ee)
+      }
     })
 
-    function emitIfNonAgentTraffic (parsedUrl) {
-      try {
-        let host
-        if (parsedUrl) host = parsedUrl.hostname + ':' + parsedUrl.port
-        if (host && !agentRef.beacons.includes(host)) {
-          handle('uaXhr', [], undefined, FEATURE_NAMES.genericEvents, this.ee)
-        }
-      } catch {}
+    function isInternalTraffic (url) {
+      const parsedUrl = parseUrl(url)
+      return agentRef.beacons.includes(parsedUrl.hostname + ':' + parsedUrl.port)
     }
 
     /** If any of the sources are active, import the aggregator. otherwise deregister */

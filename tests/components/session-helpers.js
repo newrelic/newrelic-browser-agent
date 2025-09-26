@@ -41,5 +41,6 @@ export const model = {
   loggingMode: 0,
   serverTimeDiff: null,
   custom: {},
-  numOfResets: 0
+  numOfResets: 0,
+  consent: false
 }

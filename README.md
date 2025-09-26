@@ -389,9 +389,19 @@ A lot of new frameworks support the concept of server-side rendering the pages o
 
 ## Support
 
-New Relic hosts and moderates an online forum where customers can interact with New Relic employees as well as other customers to get help and share best practices. Like all official New Relic open source projects, there's a related Community topic in the New Relic Explorers Hub. You can find this project's topic/threads here:
+Should you need assistance with New Relic products, you are in good hands with several support channels.
 
-https://discuss.newrelic.com/c/full-stack-observability/browser
+If the issue has been confirmed as a bug or is a feature request, please file a GitHub issue.
+
+### Support Channels
+
+- [New Relic Documentation](https://docs.newrelic.com/docs/browser/browser-monitoring/getting-started/introduction-browser-monitoring/): Comprehensive guidance for using our platform
+
+- [New Relic Community](https://support.newrelic.com/s/category/Category__c/Default): The best place to engage in troubleshooting questions
+
+- [New Relic University](https://learn.newrelic.com/): A range of online training for New Relic users of every level
+
+- [New Relic Technical Support](https://support.newrelic.com/s/#): 24/7/365 ticketed support. Read more about our [Technical Support Offerings](https://docs.newrelic.com/docs/licenses/license-information/general-usage-licenses/global-technical-support-offerings/).
 
 ## Contribute
 

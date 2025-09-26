@@ -209,6 +209,8 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 * Framework/Qwik/Detected
 <!--- Electron was Detected --->
 * Framework/Electron/Detected
+<!--- Flutter was Detected --->
+* Framework/Flutter/Detected
 
 ### Configuration
 <!--- init.privacy.cookies_Enabled was Disabled --->

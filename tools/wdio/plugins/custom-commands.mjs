@@ -185,6 +185,25 @@ export default class CustomCommands {
     })
 
     /**
+     * Waits for window object to be loaded.
+     */
+    browser.addCommand('waitForWindowLoad', async function (feature, timeout) {
+      await browser.waitUntil(
+        () => browser.execute(function () {
+          try {
+            return document.readyState === 'complete'
+          } catch (err) {
+            console.error(err)
+            return false
+          }
+        }, feature),
+        {
+          timeout: timeout || 30000,
+          timeoutMsg: 'Window never loaded'
+        })
+    })
+
+    /**
      * Waits for the session replay feature to initialize and start recording.
      */
     browser.addCommand('waitForSessionReplayRecording', async function () {

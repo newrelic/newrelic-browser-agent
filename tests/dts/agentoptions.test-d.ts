@@ -117,6 +117,7 @@ const validOptions: AgentOptions = {
       autoStart: false
     },
     ssl: true,
+    useConsentModel: false,
     user_actions: {
       enabled: true,
       elementAttributes: ['id', 'className', 'tagName', 'type']
@@ -197,4 +198,8 @@ expectError<AgentOptions>({
 
 expectError<AgentOptions>({
   loaderType: 123 // should be a string
+})
+
+expectError<AgentOptions>({
+  useConsentModel: 'false' // should be a boolean
 })

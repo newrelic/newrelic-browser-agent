@@ -47,6 +47,7 @@ export class Recorder {
     this.backloggedEvents = new RecorderEvents(this.shouldFix)
     /** Only set to true once a snapshot node has been processed.  Used to block harvests from sending before we know we have a snapshot */
     this.hasSeenSnapshot = false
+    this.hasSeenMeta = false
     /** Hold on to the last meta node, so that it can be re-inserted if the meta and snapshot nodes are broken up due to harvesting */
     this.lastMeta = false
     /** The method to stop recording. This defaults to a noop, but is overwritten once the recording library is imported and initialized */
@@ -186,9 +187,9 @@ export class Recorder {
     }
 
     // meta event
-    this.events.hasMeta ||= event.type === RRWEB_EVENT_TYPES.Meta
+    this.hasSeenMeta ||= this.events.hasMeta ||= event.type === RRWEB_EVENT_TYPES.Meta
     // snapshot event
-    this.events.hasSnapshot ||= this.hasSeenSnapshot ||= event.type === RRWEB_EVENT_TYPES.FullSnapshot
+    this.hasSeenSnapshot ||= this.events.hasSnapshot ||= event.type === RRWEB_EVENT_TYPES.FullSnapshot
 
     //* dont let the EventBuffer class double evaluate the event data size, it's a performance burden and we have special reasons to do it outside the event buffer */
     this.events.add(event, eventBytes)

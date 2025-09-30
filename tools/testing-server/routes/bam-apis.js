@@ -36,6 +36,13 @@ module.exports = fp(async function (fastify) {
     }
   })
   fastify.route({
+    method: ['GET', 'POST'],
+    url: '/events/2/:testId',
+    handler: async function (request, reply) {
+      return reply.code(200).send('')
+    }
+  })
+  fastify.route({
     method: ['POST'],
     url: '/browser/blobs',
     handler: async function (request, reply) {
@@ -64,7 +71,21 @@ module.exports = fp(async function (fastify) {
   })
   fastify.route({
     method: ['GET', 'POST'],
+    url: '/jserrors/2/:testId',
+    handler: async function (request, reply) {
+      return reply.code(200).send('')
+    }
+  })
+  fastify.route({
+    method: ['GET', 'POST'],
     url: '/ins/1/:testId',
+    handler: async function (request, reply) {
+      return reply.code(200).send('')
+    }
+  })
+  fastify.route({
+    method: ['GET', 'POST'],
+    url: '/ins/2/:testId',
     handler: async function (request, reply) {
       return reply.code(200).send('')
     }

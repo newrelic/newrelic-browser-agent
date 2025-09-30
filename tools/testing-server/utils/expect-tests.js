@@ -42,6 +42,26 @@ module.exports.testEventsRequest = function testEventsRequest (request) {
   }
 }
 
+module.exports.testMFEEventsRequest = function testEventsRequest (request) {
+  const url = new URL(request.url, 'resolve://')
+  if (url.pathname !== `/events/2/${this.testId}`) {
+    return false
+  }
+
+  if (Array.isArray(request.body) && request.body.length > 0) {
+    return true
+  }
+
+  if (request?.query?.e) {
+    try {
+      const events = require('@newrelic/nr-querypack').decode(request.query.e)
+      return Array.isArray(events) && events.length > 0
+    } catch (error) {
+      return false
+    }
+  }
+}
+
 module.exports.testTimingEventsRequest = function testTimingEventsRequest (request) {
   const url = new URL(request.url, 'resolve://')
   if (url.pathname !== `/events/1/${this.testId}`) {
@@ -71,6 +91,32 @@ module.exports.testTimingEventsRequest = function testTimingEventsRequest (reque
 module.exports.testAjaxEventsRequest = function testAjaxEventsRequest (request) {
   const url = new URL(request.url, 'resolve://')
   if (url.pathname !== `/events/1/${this.testId}`) {
+    return false
+  }
+
+  if (
+    Array.isArray(request.body) &&
+    request.body.findIndex((qpData) => qpData.type === 'ajax') > -1
+  ) {
+    return true
+  }
+
+  if (request?.query?.e) {
+    try {
+      const events = require('@newrelic/nr-querypack').decode(request.query.e)
+      return (
+        Array.isArray(events) &&
+        events.findIndex((qpData) => qpData.type === 'ajax') > -1
+      )
+    } catch (error) {
+      return false
+    }
+  }
+}
+
+module.exports.testMFEAjaxEventsRequest = function testAjaxEventsRequest (request) {
+  const url = new URL(request.url, 'resolve://')
+  if (url.pathname !== `/events/2/${this.testId}`) {
     return false
   }
 
@@ -213,6 +259,26 @@ module.exports.testErrorsRequest = function testErrorsRequest (request) {
   }
 }
 
+module.exports.testMFEErrorsRequest = function testErrorsRequest (request) {
+  const url = new URL(request.url, 'resolve://')
+  if (url.pathname !== `/jserrors/2/${this.testId}`) {
+    return false
+  }
+
+  if (Array.isArray(request?.body?.err) && request.body.err.length > 0) {
+    return true
+  }
+
+  if (request?.query?.err) {
+    try {
+      const jserrors = JSON.parse(request.query.err)
+      return Array.isArray(jserrors) && jserrors.length > 0
+    } catch (error) {
+      return false
+    }
+  }
+}
+
 module.exports.testInternalErrorsRequest = function testInternalErrorsRequest (request) {
   const url = new URL(request.url, 'resolve://')
   if (url.pathname !== `/jserrors/1/${this.testId}`) {
@@ -233,9 +299,39 @@ module.exports.testInternalErrorsRequest = function testInternalErrorsRequest (r
   }
 }
 
+module.exports.testMFEInternalErrorsRequest = function testInternalErrorsRequest (request) {
+  const url = new URL(request.url, 'resolve://')
+  if (url.pathname !== `/jserrors/2/${this.testId}`) {
+    return false
+  }
+
+  if (Array.isArray(request?.body?.ierr) && request.body.ierr.length > 0) {
+    return true
+  }
+
+  if (request?.query?.ierr) {
+    try {
+      const internalErrors = JSON.parse(request.query.ierr)
+      return Array.isArray(internalErrors) && internalErrors.length > 0
+    } catch (error) {
+      return false
+    }
+  }
+}
+
 module.exports.testAnyJseXhrRequest = function testErrorsRequest (request) {
   const url = new URL(request.url, 'resolve://')
   if (url.pathname !== `/jserrors/1/${this.testId}`) {
+    return false
+  }
+
+  const bodyKeys = Object.keys(request?.body || {})
+  if (bodyKeys.some(k => request.body[k]?.length > 0)) return true
+}
+
+module.exports.testAnyMFEJseXhrRequest = function testErrorsRequest (request) {
+  const url = new URL(request.url, 'resolve://')
+  if (url.pathname !== `/jserrors/2/${this.testId}`) {
     return false
   }
 
@@ -266,6 +362,26 @@ module.exports.testAjaxTimeSlicesRequest = function testAjaxTimeSlicesRequest (r
 module.exports.testInsRequest = function testInsRequest (request) {
   const url = new URL(request.url, 'resolve://')
   if (url.pathname !== `/ins/1/${this.testId}`) {
+    return false
+  }
+
+  if (Array.isArray(request?.body?.ins) && request.body.ins.length > 0) {
+    return true
+  }
+
+  if (request?.query?.ins) {
+    try {
+      const ins = JSON.parse(request.query.ins)
+      return Array.isArray(ins) && ins.length > 0
+    } catch (error) {
+      return false
+    }
+  }
+}
+
+module.exports.testMFEInsRequest = function testInsRequest (request) {
+  const url = new URL(request.url, 'resolve://')
+  if (url.pathname !== `/ins/2/${this.testId}`) {
     return false
   }
 

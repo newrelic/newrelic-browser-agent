@@ -37,6 +37,8 @@ export class Aggregate extends AggregateBase {
     this.gzipper = undefined
     /** populated with the u8 string lib async */
     this.u8 = undefined
+    /** flips to false if the compressor libraries cannot import */
+    this.shouldCompress = true
 
     /** set by BCS response */
     this.entitled = false
@@ -200,14 +202,15 @@ export class Aggregate extends AggregateBase {
       this.gzipper = gzipSync
       this.u8 = strToU8
     } catch (err) {
-      // compressor failed to load, but we can still record without compression as a last ditch effort
+      this.shouldCompress = false
+      // compressor failed to load, but we can still try to record without compression as a last ditch effort
     }
   }
 
-  makeHarvestPayload (shouldRetryOnFail) {
-    const payloadOutput = { targetApp: undefined, payload: undefined }
-    if (this.mode !== MODE.FULL || this.blocked) return
-    if (!this.recorder || !this.timeKeeper?.ready || !this.recorder.hasSeenSnapshot) return
+  makeHarvestPayload () {
+    if (this.mode !== MODE.FULL || this.blocked) return // harvests should only be made in FULL mode, and not if the feature is blocked
+    if (this.shouldCompress && !this.gzipper) return // if compression is enabled, but the libraries have not loaded, wait for them to load
+    if (!this.recorder || !this.timeKeeper?.ready || !(this.recorder.hasSeenSnapshot && this.recorder.hasSeenMeta)) return // if the recorder or the timekeeper is not ready, or the recorder has not yet seen a snapshot, do not harvest
 
     const recorderEvents = this.recorder.getEvents()
     // get the event type and use that to trigger another harvest if needed
@@ -216,7 +219,7 @@ export class Aggregate extends AggregateBase {
     const payload = this.getHarvestContents(recorderEvents)
     if (!payload.body.length) {
       this.recorder.clearBuffer()
-      return [payloadOutput]
+      return
     }
 
     this.reportSupportabilityMetric('SessionReplay/Harvest/Attempts')
@@ -232,19 +235,18 @@ export class Aggregate extends AggregateBase {
 
     if (len > MAX_PAYLOAD_SIZE) {
       this.abort(ABORT_REASONS.TOO_BIG, len)
-      return [payloadOutput]
+      return
     }
+
     // TODO -- Gracefully handle the buffer for retries.
     if (!this.agentRef.runtime.session.state.sessionReplaySentFirstChunk) this.syncWithSessionManager({ sessionReplaySentFirstChunk: true })
     this.recorder.clearBuffer()
-    if (recorderEvents.type === 'preloaded') this.agentRef.runtime.harvester.triggerHarvestFor(this)
-    payloadOutput.payload = payload
 
     if (!this.agentRef.runtime.session.state.traceHarvestStarted) {
       warn(59, JSON.stringify(this.agentRef.runtime.session.state))
     }
 
-    return [payloadOutput]
+    return payload
   }
 
   /**

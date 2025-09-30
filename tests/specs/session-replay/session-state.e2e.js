@@ -50,7 +50,7 @@ describe('session manager state behavior', () => {
     it('should end recording and clear the buffer', async () => {
       const sessionReplayCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testBlobReplayRequest })
       await browser.enableSessionReplay()
-      await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', { init: { session: { expiresMs: 7500 }, session_replay: { enabled: true } } }))
+      await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', { init: { session_replay: { enabled: true } } }))
         .then(() => browser.waitForSessionReplayRecording())
 
       // session has started, replay should have set mode to "FULL"
@@ -66,7 +66,8 @@ describe('session manager state behavior', () => {
         })
       ])
 
-      expect(sessionReplayHarvests.length).toEqual(1)
+      // Shouldnt find the click because the session reset and doesnt force a harvest
+      expect(sessionReplayHarvests.find(x => x.request.body.find(y => y.type === RRWEB_EVENT_TYPES.IncrementalSnapshot && y.data.x === 0 && y.data.y === 0))).not.toBeTruthy()
     })
   })
 

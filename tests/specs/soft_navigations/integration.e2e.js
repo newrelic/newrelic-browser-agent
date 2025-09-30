@@ -225,7 +225,7 @@ describe('Soft navigations', () => {
 
   it('multiple finished ixns retain the correct start/end timestamps and sequence in payload', async () => {
     await Promise.all([
-      interactionsCapture.waitForResult({ totalCount: 1 }),
+      interactionsCapture.waitForResult({ totalCount: 2 }),
       browser.url(await browser.testHandle.assetURL('soft_navigations/sequential-api.html', config))
         .then(() => browser.waitForAgentLoad())
     ])
@@ -237,7 +237,7 @@ describe('Soft navigations', () => {
     body.forEach((ixn, i) => {
       if (ixn.start > ixn.end) sequentialMet = false
       if (ixn.end > (body[i + 1]?.start || Infinity)) sequentialMet = false
-      if (ixn.nodeId > (body[i + 1]?.nodeId || Infinity)) sequentialMet = false
+      if (Number(ixn.nodeId) > Number(body[i + 1]?.nodeId || Infinity)) sequentialMet = false
     })
 
     expect(interactionHarvests[1].request.body.map(ixn => ([ixn.trigger, ixn.customName]))).toEqual([

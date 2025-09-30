@@ -56,7 +56,7 @@ const validOptions: AgentOptions = {
       enabled: true,
       autoStart: false
     },
-    obfuscate: [{ pattern: /sensitive/, replacement: '****' }],
+    obfuscate: [{ regex: /sensitive/, replacement: '****' }],
     page_action: {
       enabled: true
     },

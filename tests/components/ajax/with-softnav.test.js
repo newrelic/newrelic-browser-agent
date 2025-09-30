@@ -59,15 +59,15 @@ test('on interaction finish, ajax within time span are associated, others standa
 
   ajaxAggregate.storeXhr(params, metrics, 250, 350, 'fetch', context) // ensure xhr happening during wait window for actualized long tasks are associated
   ajaxAggregate.storeXhr(params, metrics, 325, 400, 'XMLHttpRequest', context) // this one should fall outside the final interaction span and be standalone
-  expect(ajaxAggregate.events.get()[0].data.length).toEqual(0)
+  expect(ajaxAggregate.events.get().length).toEqual(0)
 
   softNavAggregate.interactionInProgress.customEnd = 300 // simulate a long task extending the interaction end time (pretend there's some delay (waiting window) before ixn gets finalized)
   softNavAggregate.interactionInProgress.done()
-  expect(ajaxAggregate.events.get()[0].data.length).toEqual(1)
-  expect(ajaxAggregate.events.get()[0].data[0]).toEqual(expect.objectContaining({ startTime: 325, endTime: 400 })) // the 3rd one that falls outside ixn span
+  expect(ajaxAggregate.events.get().length).toEqual(1)
+  expect(ajaxAggregate.events.get()[0]).toEqual(expect.objectContaining({ startTime: 325, endTime: 400 })) // the 3rd one that falls outside ixn span
 
-  expect(softNavAggregate.events.get()[0].data.length).toEqual(1)
-  const ixn = softNavAggregate.events.get()[0].data[0]
+  expect(softNavAggregate.events.get().length).toEqual(1)
+  const ixn = softNavAggregate.events.get()[0]
   expect(ixn.end).toEqual(300)
   expect(ixn.children.length).toEqual(2)
   expect(ixn.children[0]).toEqual(expect.objectContaining({ start: 175, end: 225 }))
@@ -83,8 +83,8 @@ test('on spa API .end(), ajax prior to call is associated and post-call is stand
   softNavAggregate.interactionInProgress.done(300, true) // simulate API call to .end() at 300, this would occur in order
   ajaxAggregate.storeXhr(params, metrics, 301, 350, 'fetch', context)
 
-  expect(ajaxAggregate.events.get()[0].data.length).toEqual(1)
-  const ixn = softNavAggregate.events.get()[0].data[0]
+  expect(ajaxAggregate.events.get().length).toEqual(1)
+  const ixn = softNavAggregate.events.get()[0]
   expect(ixn.end).toEqual(300)
   expect(ixn.children.length).toEqual(1)
 })

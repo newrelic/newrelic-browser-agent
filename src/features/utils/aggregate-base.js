@@ -176,8 +176,8 @@ export class AggregateBase extends FeatureBase {
    * @param {boolean=} result.retry - whether the harvest should be retried
    */
   postHarvestCleanup (result = {}) {
-    const harvestFailed = result.sent && result.retry
-    if (harvestFailed) this.events.reloadSave(this.harvestOpts)
+    this.isRetrying = result.sent && result.retry
+    if (this.isRetrying) this.events.reloadSave(this.harvestOpts)
     this.events.clearSave(this.harvestOpts)
   }
 

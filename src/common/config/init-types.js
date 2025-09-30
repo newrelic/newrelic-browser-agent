@@ -35,7 +35,7 @@
  * @property {Object} [metrics]
  * @property {boolean} [metrics.enabled] - Turn on/off the metrics feature (on by default).
  * @property {boolean} [metrics.autoStart] - If true, the agent will automatically start the metrics feature. Otherwise, it will be in a deferred state until the `start` API method is called.
- * @property {Array<Object>} [obfuscate] - Array of regexp and corresponding replacement patterns for obfuscating data.
+ * @property {{regex: regex | string, replacement: string}} [obfuscate] - Array of regexp and corresponding replacement patterns for obfuscating data.
  * @property {Object} [page_action]
  * @property {boolean} [page_action.enabled] - Must be true to allow PageAction events to be captured.
  * @property {Object} [page_view_event]

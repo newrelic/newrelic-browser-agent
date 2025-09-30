@@ -15,4 +15,5 @@ export function setupNoticeErrorAPI (agent) {
 export function noticeError (err, customAttributes, agentRef, target, timestamp = now()) {
   if (typeof err === 'string') err = new Error(err)
   handle('err', [err, timestamp, false, customAttributes, agentRef.runtime.isRecording, undefined, target], undefined, FEATURE_NAMES.jserrors, agentRef.ee)
+  handle('uaErr', [], undefined, FEATURE_NAMES.genericEvents, agentRef.ee)
 }

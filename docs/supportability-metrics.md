@@ -64,6 +64,14 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 <!--- GenericEvents harvest had too many nodes and sent early --->
 * GenericEvents/Harvest/Max/Seen
 
+### User Actions
+<!-- A user action has been detected as a rage click --->
+* UserAction/RageClick/Seen
+<!-- A user action has been detected as a dead click --->
+* UserAction/DeadClick/Seen
+<!-- A user action has been detected as an error click --->
+* UserAction/ErrorClick/Seen
+
 ### Session
 <!--- Session has ended due to max time limit reached --->
 * Session/Expired/Seen
@@ -201,6 +209,8 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 * Framework/Qwik/Detected
 <!--- Electron was Detected --->
 * Framework/Electron/Detected
+<!--- Flutter was Detected --->
+* Framework/Flutter/Detected
 
 ### Configuration
 <!--- init.privacy.cookies_Enabled was Disabled --->

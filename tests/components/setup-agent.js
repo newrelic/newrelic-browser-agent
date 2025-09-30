@@ -42,6 +42,7 @@ export function setupAgent ({ agentOverrides = {}, info = {}, init = {}, loaderC
     ee: eventEmitter,
     ...agentOverrides
   }
+  fakeAgent.beacons = setBeacons(info, init)
   setNREUMInitializedAgent(agentIdentifier, fakeAgent)
   configure(
     fakeAgent,
@@ -69,6 +70,12 @@ export function resetAgent (agentIdentifier) {
   resetAggregator(agentIdentifier)
   resetSession(agentIdentifier)
   getNREUMInitializedAgent(agentIdentifier).runtime.isRecording = false
+}
+
+function setBeacons (info, init) {
+  const beacons = new Set([info.beacon, info.errorBeacon])
+  if (init.proxy?.beacon) beacons.add(init.proxy.beacon)
+  return [...beacons]
 }
 
 function resetAgentEventEmitter (agentIdentifier) {

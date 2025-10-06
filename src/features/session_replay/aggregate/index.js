@@ -136,7 +136,7 @@ export class Aggregate extends AggregateBase {
       if (!this.agentRef.runtime.isRecording) this.recorder.startRecording(TRIGGERS.SWITCH_TO_FULL, this.mode) // off --> full
       this.syncWithSessionManager({ sessionReplayMode: this.mode })
     } else {
-      this.initializeRecording(MODE.FULL, true)
+      this.initializeRecording(MODE.FULL, true, TRIGGERS.SWITCH_TO_FULL)
     }
   }
 

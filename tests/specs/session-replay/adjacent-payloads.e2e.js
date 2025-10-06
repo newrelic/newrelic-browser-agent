@@ -20,7 +20,7 @@ describe('Adjacent Payloads', () => {
 
     it('error timestamp should be contained within replay timestamp', async () => {
       await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
-        .then(() => browser.waitForAgentLoad())
+        .then(() => browser.waitForSessionReplayRecording())
 
       // this issue was seen when some time had passed from agg load time and was running in error mode
       await browser.pause(5000)
@@ -32,7 +32,6 @@ describe('Adjacent Payloads', () => {
           newrelic.noticeError(new Error('test'))
         })
       ])
-
       expect(errorsHarvests.length).toEqual(1)
 
       const errorTimestamp = errorsHarvests[0].request.body.err[0].params.firstOccurrenceTimestamp

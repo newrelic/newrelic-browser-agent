@@ -27,7 +27,9 @@ const model = {
   updatedAt: Date.now(),
   sessionReplayMode: MODE.OFF,
   sessionReplaySentFirstChunk: false,
+  sessionReplaySuccessfulHarvest: false,
   sessionTraceMode: MODE.OFF,
+  sessionTraceSuccessfulHarvest: false,
   traceHarvestStarted: false,
   loggingMode: LOGGING_MODE.OFF,
   serverTimeDiff: null, // set by TimeKeeper; "undefined" value will not be stringified and stored but "null" will

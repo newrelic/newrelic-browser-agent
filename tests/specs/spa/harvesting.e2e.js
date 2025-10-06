@@ -59,7 +59,16 @@ describe('spa harvesting', () => {
     ])
 
     const [interactionHarvests] = await Promise.all([
-      interactionsCapture.waitForResult({ timeout: 20000 }), // It can take a bit of time to get all the XHRs resolved
+      interactionsCapture.waitForResult({ totalCount: 2 }),
+      browser.waitUntil(
+        () => browser.execute(function () {
+          return window.done >= 130
+        }),
+        {
+          timeout: 30000,
+          timeoutMsg: 'Every XHR did not complete in time'
+        }
+      ),
       $('#sendAjax').click()
     ])
 

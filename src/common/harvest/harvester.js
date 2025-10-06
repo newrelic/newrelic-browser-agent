@@ -266,8 +266,9 @@ function cleanPayload (payload = {}) {
 // The stuff that gets sent every time.
 function baseQueryString (agentRef, qs, endpoint, applicationID) {
   const ref = agentRef.runtime.obfuscator.obfuscateString(cleanURL('' + globalScope.location))
-  const hr = agentRef.runtime.session?.state.sessionReplayMode === 1 && endpoint !== JSERRORS
-  const ht = agentRef.runtime.session?.state.sessionTraceMode === 1 && ![LOGS, BLOBS].includes(endpoint)
+  const sessionState = agentRef.runtime.session?.state
+  const hr = sessionState?.sessionReplayMode === 1 && !!sessionState?.sessionReplaySuccessfulHarvest && endpoint !== JSERRORS
+  const ht = sessionState?.sessionTraceMode === 1 && !!sessionState?.sessionTraceSuccessfulHarvest && ![LOGS, BLOBS].includes(endpoint)
 
   const qps = [
     'a=' + applicationID,
@@ -277,7 +278,7 @@ function baseQueryString (agentRef, qs, endpoint, applicationID) {
     param('ct', agentRef.runtime.customTransaction),
     '&rst=' + now(),
     '&ck=0', // ck param DEPRECATED - still expected by backend
-    '&s=' + (agentRef.runtime.session?.state.value || '0'), // the 0 id encaps all untrackable and default traffic
+    '&s=' + (sessionState?.value || '0'), // the 0 id encaps all untrackable and default traffic
     param('ref', ref),
     param('ptid', (agentRef.runtime.ptid ? '' + agentRef.runtime.ptid : ''))
   ]

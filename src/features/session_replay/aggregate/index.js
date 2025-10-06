@@ -338,6 +338,10 @@ export class Aggregate extends AggregateBase {
     // The mutual decision for now is to stop recording and clear buffers if ingest is experiencing 429 rate limiting
     if (result.status === 429) {
       this.abort(ABORT_REASONS.TOO_MANY)
+    } else {
+      if (result.sent && !result.retry && !this.agentRef.runtime.session.state.sessionReplaySuccessfulHarvest) {
+        this.syncWithSessionManager({ sessionReplaySuccessfulHarvest: true })
+      }
     }
   }
 

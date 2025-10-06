@@ -11,10 +11,13 @@
 </div>
 <div><button id="sendAjax">Send Ajax</button></div>
 <script>
+  window.done = 0
   document.getElementById('sendAjax').addEventListener('click', function () {
     for (var i = 0; i < 130; i++) {
       var xhr = new XMLHttpRequest()
-      xhr.addEventListener('load', function () {}, true)
+      xhr.addEventListener('load', function () {
+        window.done++
+      }, true)
       xhr.open('GET', '/json')
       xhr.send()
     }

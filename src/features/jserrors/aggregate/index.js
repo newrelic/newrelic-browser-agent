@@ -60,6 +60,19 @@ export class Aggregate extends AggregateBase {
   }
 
   serializer (aggregatorTypeToBucketsMap) {
+    aggregatorTypeToBucketsMap.err = aggregatorTypeToBucketsMap.err.filter(error => {
+      if (error.params.hasReplay && !this.agentRef.runtime.session.state.sessionReplaySuccessfulHarvest) {
+        // the error is marked as having a replay, but it never harvested and isnt running in full mode. Cant be right, delete the attr, but its safe for harvesting
+        if (!this.agentRef.features?.[FEATURE_NAMES.sessionReplay]?.featAggregate?.replayIsActive()) {
+          delete error.params.hasReplay
+        } else {
+          // Put error back in the aggregator for later harvesting, we are still waiting for a successful SR harvest
+          this.events.add(['err', error.bucketHash, error.params, error.metrics, error.customAttributes], error.targetEntityGuid)
+          return false
+        }
+      }
+      return true
+    })
     return applyFnToProps(aggregatorTypeToBucketsMap, this.obfuscator.obfuscateString.bind(this.obfuscator), 'string')
   }
 
@@ -68,13 +81,9 @@ export class Aggregate extends AggregateBase {
     const releaseIds = stringify(this.agentRef.runtime.releaseIds)
     if (releaseIds !== '{}') qs.ri = releaseIds
 
-    if (aggregatorTakeReturnedData?.err?.length) {
-      if (!this.errorOnPage) {
-        qs.pve = '1'
-        this.errorOnPage = true
-      }
-      // For assurance, erase any `hasReplay` flag from all errors if replay is not recording, not-yet imported, or not running at all.
-      if (!this.agentRef.features?.[FEATURE_NAMES.sessionReplay]?.featAggregate?.replayIsActive()) aggregatorTakeReturnedData.err.forEach(error => delete error.params.hasReplay)
+    if (aggregatorTakeReturnedData?.err?.length && !this.errorOnPage) {
+      qs.pve = '1'
+      this.errorOnPage = true
     }
     return qs
   }

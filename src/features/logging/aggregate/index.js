@@ -113,8 +113,8 @@ export class Aggregate extends AggregateBase {
           'entity.guid': target.entityGuid, // browser entity guid as provided API target OR the default from RUM response if not supplied
           ...(sessionEntity && {
             session: sessionEntity.state.value || '0', // The session ID that we generate and keep across page loads
-            hasReplay: sessionEntity.state.sessionReplayMode === 1 && isContainerAgentTarget(target, this.agentRef), // True if a session replay recording is running
-            hasTrace: sessionEntity.state.sessionTraceMode === 1 // True if a session trace recording is running
+            hasReplay: sessionEntity.state.sessionReplayMode === 1 && !!sessionEntity.state.sessionReplaySuccessfulHarvest && isContainerAgentTarget(target, this.agentRef), // True if a session replay has successfully harvested before this point
+            hasTrace: sessionEntity.state.sessionTraceMode === 1 && !!sessionEntity.state.sessionTraceSuccessfulHarvest // True if a session trace has successfully harvested before this point
           }),
           ptid: this.agentRef.runtime.ptid, // page trace id
           appId: target.applicationID || this.agentRef.info.applicationID, // Application ID from info object,

@@ -121,9 +121,10 @@ export class Aggregate extends AggregateBase {
   }
 
   queryStringsBuilder (stns) {
-    const firstSessionHarvest = !this.agentRef.runtime.session.state.traceHarvestStarted
+    const sessionState = this.agentRef.runtime.session?.state
+    const firstSessionHarvest = !sessionState?.traceHarvestStarted
     if (firstSessionHarvest) this.agentRef.runtime.session.write({ traceHarvestStarted: true })
-    const hasReplay = this.agentRef.runtime.session.state.sessionReplayMode === 1
+    const hasReplay = sessionState?.sessionReplayMode === 1 && !!sessionState?.sessionReplaySuccessfulHarvest
     const endUserId = this.agentRef.info.jsAttributes['enduser.id']
     const entityGuid = this.agentRef.runtime.appMetadata.agents?.[0]?.entityGuid
 
@@ -148,7 +149,7 @@ export class Aggregate extends AggregateBase {
       timestamp: Math.floor(this.timeKeeper.correctRelativeTimestamp(earliestTimeStamp)),
       attributes: encodeObj({
         ...(entityGuid && { entityGuid }),
-        harvestId: `${this.agentRef.runtime.session.state.value}_${this.agentRef.runtime.ptid}_${this.agentRef.runtime.harvestCount}`,
+        harvestId: `${sessionState?.value}_${this.agentRef.runtime.ptid}_${this.agentRef.runtime.harvestCount}`,
         // this section of attributes must be controllable and stay below the query param padding limit -- see QUERY_PARAM_PADDING
         // if not, data could be lost to truncation at time of sending, potentially breaking parsing / API behavior in NR1
         // trace payload metadata
@@ -193,7 +194,8 @@ export class Aggregate extends AggregateBase {
   }
 
   postHarvestCleanup (result) {
-    this.traceStorage.clear() // clear the trace storage state
     super.postHarvestCleanup(result)
+    this.traceStorage.clear() // clear the trace storage state
+    if (!this.retrying && !this.agentRef.runtime.session.state.sessionTraceSuccessfulHarvest) this.agentRef.runtime.session.write({ sessionTraceSuccessfulHarvest: true })
   }
 }

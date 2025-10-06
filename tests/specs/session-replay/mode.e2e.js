@@ -1,5 +1,5 @@
 import { srConfig, getSR } from '../util/helpers'
-import { testErrorsRequest } from '../../../tools/testing-server/utils/expect-tests'
+import { testErrorsRequest, testBlobReplayRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 describe('Session Replay Sample Mode Validation', () => {
   afterEach(async () => {
@@ -161,18 +161,23 @@ describe('Session Replay Sample Mode Validation', () => {
   })
 
   it('ERROR (seen before init) --> PRELOAD => (hasReplay)', async () => {
-    const errorsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testErrorsRequest })
+    const [errorsCapture, srCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [{ test: testErrorsRequest }, { test: testBlobReplayRequest }])
     await browser.enableSessionReplay(0, 100)
     const [errorsHarvests] = await Promise.all([
-      errorsCapture.waitForResult({ totalCount: 1 }),
+      errorsCapture.waitForResult({ totalCount: 2 }),
       browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig({ session_replay: { preload: true } })))
         .then(() => browser.waitForPreloadRecorder())
         .then(() => browser.execute(function () {
-          newrelic.noticeError(new Error('test'))
+          newrelic.noticeError(new Error('before sr harvest'))
+        }))
+        .then(() => srCapture.waitForResult({ totalCount: 1 }))
+        .then(() => browser.execute(function () {
+          newrelic.noticeError(new Error('after sr harvest'))
         }))
     ])
 
-    expect(errorsHarvests[0].request.body.err[0].params.hasReplay).toEqual(true)
+    expect(errorsHarvests[0].request.body.err[0].params.hasReplay).toEqual(undefined)
+    expect(errorsHarvests[1].request.body.err[0].params.hasReplay).toEqual(true)
   })
 
   it('ERROR (seen before init) --> PRELOAD but ABORTS => (!hasReplay)', async () => {
@@ -188,11 +193,11 @@ describe('Session Replay Sample Mode Validation', () => {
   })
 
   it('ERROR (seen before and after init) -- noticeError => FULL (split)', async () => {
-    const errorsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testErrorsRequest })
-    await browser.enableSessionReplay(0, 100)
+    const [errorsCapture, srCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [{ test: testErrorsRequest }, { test: testBlobReplayRequest }])
+    await browser.enableSessionReplay(100, 100)
     let [errorsHarvests] = await Promise.all([
       errorsCapture.waitForResult({ totalCount: 1 }),
-      browser.url(await browser.testHandle.assetURL('rrweb-split-errors.html', srConfig()))
+      browser.url(await browser.testHandle.assetURL('rrweb-split-errors.html', srConfig({ session_replay: { preload: true } })))
         .then(() => browser.waitForSessionReplayRecording())
     ])
 
@@ -200,17 +205,17 @@ describe('Session Replay Sample Mode Validation', () => {
 
     ;[errorsHarvests] = await Promise.all([
       errorsCapture.waitForResult({ timeout: 10000 }),
-      browser.execute(function () {
+      srCapture.waitForResult({ totalCount: 1 }).then(() => browser.execute(function () {
         newrelic.noticeError(new Error('after load'))
-      })
+      }))
     ])
 
     expect(errorsHarvests[errorsHarvests.length - 1].request.body.err[0].params.hasReplay).toEqual(true)
   })
 
   it('ERROR (seen before and after init) -- thrown error => FULL (split)', async () => {
-    const errorsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testErrorsRequest })
-    await browser.enableSessionReplay(0, 100)
+    const [errorsCapture, srCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [{ test: testErrorsRequest }, { test: testBlobReplayRequest }])
+    await browser.enableSessionReplay(100, 100)
     let [errorsHarvests] = await Promise.all([
       errorsCapture.waitForResult({ totalCount: 1 }),
       browser.url(await browser.testHandle.assetURL('rrweb-split-errors.html', srConfig()))
@@ -221,11 +226,12 @@ describe('Session Replay Sample Mode Validation', () => {
 
     ;[errorsHarvests] = await Promise.all([
       errorsCapture.waitForResult({ timeout: 10000 }),
-      browser.execute(function () {
+      srCapture.waitForResult({ totalCount: 1 }).then(() => browser.execute(function () {
         var scr = document.createElement('script')
         scr.innerHTML = 'eval(\'1=2\')'
         document.body.appendChild(scr)
       })
+      )
     ])
 
     expect(errorsHarvests[errorsHarvests.length - 1].request.body.err[0].params.hasReplay).toEqual(true)

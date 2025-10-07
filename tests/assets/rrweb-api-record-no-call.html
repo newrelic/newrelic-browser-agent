@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+<head>
+  <title>RUM Unit Test</title>
+  <style>
+    .left{
+      position: absolute; left: 50px; top: 200px;
+    }
+    .right {
+      position: absolute; right: 50px; top: 200px;
+    }
+  </style>
+  <link rel="stylesheet" type="text/css" href="style.css">
+  {init}
+  {config}
+  <script>
+    localStorage.clear()
+    NREUM.init.privacy.cookies_enabled = true
+    NREUM.init.session_replay.enabled = true
+    window.addEventListener('load', () => {console.log("loaded")})
+  </script>
+  {loader}
+</head>
+<body>
+  this is a page that provides several types of elements with selectors that session_replay can interact with based on how it is configured
+  <hr />
+  <hr />
+  <textarea id="plain"></textarea>
+  <textarea id="ignore" class="nr-ignore"></textarea>
+  <textarea id="block" class="nr-block"></textarea>
+  <textarea id="mask" class="nr-mask"></textarea>
+  <textarea id="nr-block" data-nr-block></textarea>
+  <textarea id="other-block" data-other-block></textarea>
+  <input type="password" id="pass-input">
+  <input type="text" id="text-input">
+  <hr />
+  <button onclick="moveImage()">Click</button>
+  <img src="https://upload.wikimedia.org/wikipedia/commons/d/d7/House_of_Commons_Chamber_1.png" />
+  <a href="./rrweb-instrumented.html" target="_blank">New Tab</a>
+  <script>
+    function moveImage(){
+      document.querySelector("img").classList.toggle("left")
+      document.querySelector("img").classList.toggle("right")
+    }
+  </script>
+</body>
+</html>

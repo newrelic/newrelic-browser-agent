@@ -266,7 +266,6 @@ function cleanPayload (payload = {}) {
 // The stuff that gets sent every time.
 function baseQueryString (agentRef, qs, endpoint, applicationID) {
   const ref = agentRef.runtime.obfuscator.obfuscateString(cleanURL('' + globalScope.location))
-  const hr = agentRef.runtime.session?.state.sessionReplayMode === 1 && endpoint !== JSERRORS
   const ht = agentRef.runtime.session?.state.sessionTraceMode === 1 && ![LOGS, BLOBS].includes(endpoint)
 
   const qps = [
@@ -281,7 +280,6 @@ function baseQueryString (agentRef, qs, endpoint, applicationID) {
     param('ref', ref),
     param('ptid', (agentRef.runtime.ptid ? '' + agentRef.runtime.ptid : ''))
   ]
-  if (hr) qps.push(param('hr', '1', qs))
   if (ht) qps.push(param('ht', '1', qs))
 
   return qps.join('')

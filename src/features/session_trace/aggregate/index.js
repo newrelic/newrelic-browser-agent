@@ -103,7 +103,7 @@ export class Aggregate extends AggregateBase {
     this.agentRef.runtime.harvester.triggerHarvestFor(this)
   }
 
-  preHarvestChecks () {
+  preHarvestChecks (opts) {
     if (this.blocked || this.mode !== MODE.FULL) return // only allow harvest if running in full mode
     if (!this.timeKeeper?.ready) return // this should likely never happen, but just to be safe, we should never harvest if we cant correct time
     if (!this.agentRef.runtime.session) return // session entity is required for trace to run and continue running
@@ -113,6 +113,9 @@ export class Aggregate extends AggregateBase {
       return
     }
 
+    const { shouldHold } = hasReplayValidator(this.agentRef, this.agentRef.runtime.timeKeeper.convertRelativeTimestamp(now()), opts)
+    if (shouldHold) return // we are suspecting that ST should be decorated with hasReplay, but are waiting for SR to harvest still, since hasReplay applies to everything in the payload for this feature its all or nothing.
+
     return true
   }
 
@@ -120,25 +123,13 @@ export class Aggregate extends AggregateBase {
     if (!stns.length) return // there are no processed nodes
     this.everHarvested = true
 
-    const eventsToHarvest = stns.filter(event => {
-      const { shouldHold } = hasReplayValidator(this.agentRef, this.agentRef.runtime.timeKeeper.convertRelativeTimestamp(now()))
-      if (shouldHold) {
-        this.events.add(event)
-        return false
-      }
-      return true
-    })
-
-    if (!eventsToHarvest.length) return
-
-    return applyFnToProps(eventsToHarvest, this.obfuscator.obfuscateString.bind(this.obfuscator), 'string')
+    return applyFnToProps(stns, this.obfuscator.obfuscateString.bind(this.obfuscator), 'string')
   }
 
   queryStringsBuilder (stns) {
     const firstSessionHarvest = !this.agentRef.runtime.session.state.traceHarvestStarted
     if (firstSessionHarvest) this.agentRef.runtime.session.write({ traceHarvestStarted: true })
-    const { shouldHold, shouldAdd } = hasReplayValidator(this.agentRef, now())
-    const hasReplay = !shouldHold && shouldAdd
+    const { shouldAdd: hasReplay } = hasReplayValidator(this.agentRef, this.agentRef.runtime.timeKeeper.convertRelativeTimestamp(now()))
     const endUserId = this.agentRef.info.jsAttributes['enduser.id']
     const entityGuid = this.agentRef.runtime.appMetadata.agents?.[0]?.entityGuid
 

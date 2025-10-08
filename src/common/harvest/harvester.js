@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
-import { FEATURE_TO_ENDPOINT, JSERRORS, RUM, EVENTS, FEATURE_NAMES, BLOBS, LOGS } from '../../loaders/features/features'
+import { FEATURE_TO_ENDPOINT, RUM, EVENTS, FEATURE_NAMES, BLOBS, LOGS } from '../../loaders/features/features'
 import { VERSION } from '../constants/env'
 import { globalScope, isWorkerScope } from '../constants/runtime'
 import { handle } from '../event-emitter/handle'

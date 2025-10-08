@@ -22,6 +22,7 @@ import { evaluateInternalError } from './internal-errors'
 import { isContainerAgentTarget } from '../../../common/util/target'
 import { warn } from '../../../common/util/console'
 import { buildCauseString } from './cause-string'
+import { hasReplayValidator } from '../../../common/util/has-replay-validator'
 
 /**
  * @typedef {import('./compute-stack-trace.js').StackInfo} StackInfo
@@ -59,8 +60,18 @@ export class Aggregate extends AggregateBase {
     })
   }
 
-  serializer (aggregatorTypeToBucketsMap) {
-    return applyFnToProps(aggregatorTypeToBucketsMap, this.obfuscator.obfuscateString.bind(this.obfuscator), 'string')
+  serializer (aggregatorTypeToBucketsMap, targetEntityGuid, opts = {}) {
+    const filteredErrs = (aggregatorTypeToBucketsMap.err || []).filter(error => {
+      const { shouldAdd, shouldHold } = hasReplayValidator(this.agentRef, error.params.timestamp, opts)
+      if (shouldAdd) error.params.hasReplay = true
+      if (shouldHold) {
+        this.events.add(['err', error.bucketHash, error.params, error.metrics, error.customAttributes], error.targetEntityGuid)
+        return false
+      }
+
+      return true
+    })
+    return applyFnToProps({ ...aggregatorTypeToBucketsMap, err: filteredErrs }, this.obfuscator.obfuscateString.bind(this.obfuscator), 'string')
   }
 
   queryStringsBuilder (aggregatorTakeReturnedData) {

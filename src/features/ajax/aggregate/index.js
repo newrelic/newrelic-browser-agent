@@ -12,6 +12,7 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { parseGQL } from './gql'
 import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../../../common/serialize/bel-serializer'
 import { gosNREUMOriginals } from '../../../common/window/nreum'
+import { hasReplayValidator } from '../../../common/util/has-replay-validator'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -132,13 +133,23 @@ export class Aggregate extends AggregateBase {
     }
   }
 
-  serializer (eventBuffer) {
+  serializer (eventBuffer, entityGuid, opts = {}) {
     if (!eventBuffer.length) return
     const addString = getAddStringContext(this.agentRef.runtime.obfuscator)
     let payload = 'bel.7;'
 
     for (let i = 0; i < eventBuffer.length; i++) {
       const event = eventBuffer[i]
+
+      /** --- Apply conditional holding logic for hasReplay events --- */
+      const realTimestamp = this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(event.timestamp)
+      const { shouldAdd, shouldHold } = hasReplayValidator(this.agentRef, realTimestamp, opts)
+      if (shouldAdd) event.hasReplay = true
+      if (shouldHold) {
+        this.events.add(event)
+        continue
+      }
+      /** --- ---------------------------------------------------- --- */
       const fields = [
         numeric(event.startTime),
         numeric(event.endTime - event.startTime),
@@ -164,7 +175,7 @@ export class Aggregate extends AggregateBase {
 
       // add custom attributes
       // gql decorators are added as custom attributes to alleviate need for new BEL schema
-      const attrParts = addCustomAttributes({ ...(jsAttributes || {}), ...(event.gql || {}) }, addString)
+      const attrParts = addCustomAttributes({ ...(jsAttributes || {}), ...(event.gql || {}), ...(event.hasReplay ? { hasReplay: event.hasReplay } : {}) }, addString)
       fields.unshift(numeric(attrParts.length))
 
       insert += fields.join(',')

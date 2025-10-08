@@ -20,7 +20,7 @@ export class AjaxNode extends BelNode {
     this.spanId = ajaxEvent.spanId
     this.traceId = ajaxEvent.traceId
     this.spanTimestamp = ajaxEvent.spanTimestamp
-    this.gql = ajaxEvent.gql
+    this.gql = ajaxEvent.gql || {}
 
     this.start = ajaxEvent.startTime
     this.end = ajaxEvent.endTime
@@ -30,7 +30,14 @@ export class AjaxNode extends BelNode {
     } else this.callbackEnd = this.end // if no long task was observed, callbackEnd is the same as end
   }
 
-  serialize (parentStartTimestamp, agentRef) {
+  /**
+   * Serializes the AjaxNode instance into bel string format for transmission.
+   * @param {number} parentStartTimestamp The start timestamp of the parent interaction
+   * @param {*} agentRef The reference to the agent base class
+   * @param {boolean} hasReplay For simplicity, the AjaxNode will inherit the hasReplay state of its parent interaction
+   * @returns
+   */
+  serialize (parentStartTimestamp, agentRef, hasReplay) {
     const addString = getAddStringContext(agentRef.runtime.obfuscator)
     const nodeList = []
 
@@ -52,8 +59,7 @@ export class AjaxNode extends BelNode {
       addString(this.nodeId),
       nullable(this.spanId, addString, true) + nullable(this.traceId, addString, true) + nullable(this.spanTimestamp, numeric)
     ]
-    let allAttachedNodes = []
-    if (typeof this.gql === 'object') allAttachedNodes = addCustomAttributes(this.gql, addString)
+    let allAttachedNodes = addCustomAttributes({ ...(hasReplay && { hasReplay }), ...this.gql }, addString)
     this.children.forEach(node => allAttachedNodes.push(node.serialize())) // no children is expected under ajax nodes at this time
 
     fields[1] = numeric(allAttachedNodes.length)

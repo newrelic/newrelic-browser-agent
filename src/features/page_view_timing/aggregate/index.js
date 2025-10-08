@@ -19,6 +19,7 @@ import { subscribeToVisibilityChange } from '../../../common/window/page-visibil
 import { VITAL_NAMES } from '../../../common/vitals/constants'
 import { initiallyHidden } from '../../../common/constants/runtime'
 import { eventOrigin } from '../../../common/util/event-origin'
+import { hasReplayValidator } from '../../../common/util/has-replay-validator'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -136,7 +137,7 @@ export class Aggregate extends AggregateBase {
   }
 
   // serialize array of timing data
-  serializer (eventBuffer) {
+  serializer (eventBuffer, targetEntityGuid, opts = {}) {
     if (!eventBuffer?.length) return ''
     var addString = getAddStringContext(this.agentRef.runtime.obfuscator)
 
@@ -144,6 +145,13 @@ export class Aggregate extends AggregateBase {
 
     for (var i = 0; i < eventBuffer.length; i++) {
       var timing = eventBuffer[i]
+
+      const { shouldHold, shouldAdd } = hasReplayValidator(this.agentRef, this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(timing.value), opts)
+      if (shouldAdd) timing.attrs.hasReplay = true
+      if (shouldHold) {
+        this.events.add(timing, targetEntityGuid)
+        continue
+      }
 
       payload += 'e,'
       payload += addString(timing.name) + ','

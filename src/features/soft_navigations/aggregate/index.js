@@ -4,6 +4,7 @@
  */
 import { handle } from '../../../common/event-emitter/handle'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
+import { hasReplayValidator } from '../../../common/util/has-replay-validator'
 import { single } from '../../../common/util/invoke'
 import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
@@ -88,6 +89,15 @@ export class Aggregate extends AggregateBase {
     let firstIxnStartTime
     const serializedIxnList = []
     for (const interaction of eventBuffer) {
+      const timeKeeper = this.agentRef.runtime.timeKeeper
+      const realTimestamp = timeKeeper.correctRelativeTimestamp(interaction.start)
+      const { shouldHold, shouldAdd } = hasReplayValidator(this.agentRef, realTimestamp)
+      if (shouldAdd) interaction.hasReplay = true
+      if (shouldHold) {
+        this.events.add(interaction)
+        continue
+      }
+
       serializedIxnList.push(interaction.serialize(firstIxnStartTime, this.agentRef))
       if (firstIxnStartTime === undefined) firstIxnStartTime = Math.floor(interaction.start) // careful not to match or overwrite on 0 value!
     }

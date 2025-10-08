@@ -29,6 +29,10 @@ export class Recorder {
 
   triggerHistory = [] // useful for debugging
 
+  get isErrorMode () {
+    return this.srInstrument.featAggregate?.mode === MODE.ERROR
+  }
+
   constructor (srInstrument) {
     /** The parent classes that share the recorder */
     this.srInstrument = srInstrument
@@ -36,8 +40,6 @@ export class Recorder {
     this.ee = srInstrument.ee
     this.srFeatureName = srInstrument.featureName
     this.agentRef = srInstrument.agentRef
-
-    this.isErrorMode = false
     /** A flag that can be set to false by failing conversions to stop the fetching process */
     this.shouldFix = this.agentRef.init.session_replay.fix_stylesheets
 
@@ -81,6 +83,15 @@ export class Recorder {
   clearBuffer () {
     this.backloggedEvents = (this.isErrorMode) ? this.events : new RecorderEvents(this.shouldFix)
     this.events = new RecorderEvents(this.shouldFix)
+
+    // if sr is in error mode, and we are resetting, that means anything that was already
+    // flagged should be "released" for harvest since it can no longer be represented by
+    // a valid replay
+
+    if (this.isErrorMode) {
+      const timeKeeper = this.agentRef.runtime.timeKeeper
+      this.agentRef.runtime.earliestViableSR = timeKeeper.correctAbsoluteTimestamp(this.backloggedEvents.cycleTimestamp)
+    }
   }
 
   /** Begin recording using configured recording lib */
@@ -88,12 +99,9 @@ export class Recorder {
     if (!this.#canRecord) return
     this.triggerHistory.push(trigger) // keep track of all triggers, useful for lifecycle debugging.  "this.trigger" returns the latest entry
 
-    this.isErrorMode = mode === MODE.ERROR
-
     /** if the recorder is already recording... lets stop it before starting a new one */
     this.stopRecording()
 
-    this.agentRef.runtime.isRecording = true
     const { block_class, ignore_class, mask_text_class, block_selector, mask_input_options, mask_text_selector, mask_all_inputs, inline_images, collect_fonts } = this.agentRef.init.session_replay
 
     // set up rrweb configurations for maximum privacy --
@@ -120,6 +128,9 @@ export class Recorder {
     } catch (err) {
       this.ee.emit('internal-error', [err])
     }
+
+    this.agentRef.runtime.isRecording = true
+    this.agentRef.runtime.earliestViableSR ||= this.agentRef.runtime.timeKeeper.correctAbsoluteTimestamp(Date.now())
 
     this.stopRecording = () => {
       this.agentRef.runtime.isRecording = false

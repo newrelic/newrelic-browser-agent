@@ -22,6 +22,7 @@ import { initialLocation, loadedAsDeferredBrowserScript } from '../../../common/
 import { handle } from '../../../common/event-emitter/handle'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { warn } from '../../../common/util/console'
+import { hasReplayValidator } from '../../../common/util/has-replay-validator'
 
 const {
   FEATURE_NAME, INTERACTION_EVENTS, MAX_TIMER_BUDGET, FN_START, FN_END, CB_START, INTERACTION_API, REMAINING,
@@ -729,6 +730,12 @@ export class Aggregate extends AggregateBase {
   }
 
   serializer (eventBuffer) {
-    return this.spaSerializerClass.serializeMultiple(eventBuffer, 0, navTiming)
+    const ixnToHarvest = eventBuffer[0]
+    if (!ixnToHarvest) return
+    const realTimestamp = this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(eventBuffer[0].root.start)
+    const { shouldHold, shouldAdd } = hasReplayValidator(this.agentRef, realTimestamp)
+    if (shouldAdd) ixnToHarvest.root.attrs.hasReplay = true
+    if (shouldHold) return
+    return this.spaSerializerClass.serializeMultiple([ixnToHarvest], 0, navTiming)
   }
 }

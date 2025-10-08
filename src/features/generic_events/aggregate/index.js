@@ -14,6 +14,7 @@ import { applyFnToProps } from '../../../common/util/traverse'
 import { UserActionsAggregator } from './user-actions/user-actions-aggregator'
 import { isIFrameWindow } from '../../../common/dom/iframe'
 import { isPureObject } from '../../../common/util/type-check'
+import { hasReplayValidator } from '../../../common/util/has-replay-validator'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -227,14 +228,14 @@ export class Aggregate extends AggregateBase {
         }, this.featureName, this.ee)
       }
 
-      registerHandler('api-measure', (args, n) => {
+      registerHandler('api-measure', (args, name) => {
         const { start, duration, customAttributes } = args
 
         const event = {
           ...customAttributes,
           eventType: 'BrowserPerformance',
           timestamp: Math.floor(agentRef.runtime.timeKeeper.correctRelativeTimestamp(start)),
-          entryName: n,
+          entryName: name,
           entryDuration: duration,
           entryType: 'measure'
         }
@@ -293,8 +294,18 @@ export class Aggregate extends AggregateBase {
     this.events.add(eventAttributes, targetEntityGuid)
   }
 
-  serializer (eventBuffer) {
-    return applyFnToProps({ ins: eventBuffer }, this.obfuscator.obfuscateString.bind(this.obfuscator), 'string')
+  serializer (eventBuffer, targetEntityGuid, opts) {
+    const eventsToHarvest = eventBuffer.filter(event => {
+      const { shouldAdd, shouldHold } = hasReplayValidator(this.agentRef, event.timestamp, opts)
+      if (shouldAdd) event.hasReplay = true
+      if (shouldHold) {
+        this.events.add(event, targetEntityGuid)
+        return false
+      }
+      return true
+    })
+
+    return applyFnToProps({ ins: eventsToHarvest }, this.obfuscator.obfuscateString.bind(this.obfuscator), 'string')
   }
 
   queryStringsBuilder () {

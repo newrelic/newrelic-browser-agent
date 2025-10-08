@@ -10,10 +10,10 @@ import { FEATURE_NAME, LOGGING_EVENT_EMITTER_CHANNEL, LOG_LEVELS, LOGGING_MODE }
 import { Log } from '../shared/log'
 import { isValidLogLevel } from '../shared/utils'
 import { applyFnToProps } from '../../../common/util/traverse'
-import { isContainerAgentTarget } from '../../../common/util/target'
 import { SESSION_EVENT_TYPES, SESSION_EVENTS } from '../../../common/session/constants'
 import { ABORT_REASONS } from '../../session_replay/constants'
 import { canEnableSessionTracking } from '../../utils/feature-gates'
+import { hasReplayValidator } from '../../../common/util/has-replay-validator'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -103,9 +103,20 @@ export class Aggregate extends AggregateBase {
     this.events.add(log, targetEntityGuid)
   }
 
-  serializer (eventBuffer, targetEntityGuid) {
+  serializer (eventBuffer, targetEntityGuid, opts = {}) {
     const target = this.agentRef.runtime.entityManager.get(targetEntityGuid)
     const sessionEntity = this.agentRef.runtime.session
+
+    const eventsToHarvest = eventBuffer.filter(event => {
+      const { shouldAdd, shouldHold } = hasReplayValidator(this.agentRef, event.timestamp, opts)
+      if (shouldAdd) event.attributes.hasReplay = true
+      if (shouldHold) {
+        this.events.add(event, targetEntityGuid)
+        return false
+      }
+      return true
+    })
+
     return [{
       common: {
         /** Attributes in the `common` section are added to `all` logs generated in the payload */
@@ -113,7 +124,6 @@ export class Aggregate extends AggregateBase {
           'entity.guid': target.entityGuid, // browser entity guid as provided API target OR the default from RUM response if not supplied
           ...(sessionEntity && {
             session: sessionEntity.state.value || '0', // The session ID that we generate and keep across page loads
-            hasReplay: sessionEntity.state.sessionReplayMode === 1 && isContainerAgentTarget(target, this.agentRef), // True if a session replay recording is running
             hasTrace: sessionEntity.state.sessionTraceMode === 1 // True if a session trace recording is running
           }),
           ptid: this.agentRef.runtime.ptid, // page trace id
@@ -130,7 +140,7 @@ export class Aggregate extends AggregateBase {
       },
       /** logs section contains individual unique log entries */
       logs: applyFnToProps(
-        eventBuffer,
+        eventsToHarvest,
         this.obfuscator.obfuscateString.bind(this.obfuscator), 'string'
       )
     }]

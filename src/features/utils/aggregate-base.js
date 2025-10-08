@@ -151,7 +151,7 @@ export class AggregateBase extends FeatureBase {
 
     return returnedDataArr.map(({ targetApp, data }) => {
       // A serializer or formatter assists in creating the payload `body` from stored events on harvest when defined by derived feature class.
-      const body = this.serializer ? this.serializer(data, targetApp?.entityGuid) : data
+      const body = this.serializer ? this.serializer(data, targetApp?.entityGuid, opts) : data
       const payload = {
         body
       }

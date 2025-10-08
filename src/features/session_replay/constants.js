@@ -48,6 +48,10 @@ export const ABORT_REASONS = {
   ENTITLEMENTS: {
     message: 'Session Replay is not allowed and will not be started',
     sm: 'Entitlement'
+  },
+  TIMEOUT: {
+    message: 'Hit the safety timeout',
+    sm: 'Timeout'
   }
 }
 /** Reserved room for query param attrs */

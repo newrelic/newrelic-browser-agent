@@ -29,6 +29,8 @@ const RuntimeModel = {
   harvester: undefined,
   isolatedBacklog: false,
   isRecording: false, // true when actively recording, false when paused or stopped
+  earliestViableSR: 0, // relative timestamp of the earliest viable session replay data buffered
+  srHarvestedAt: undefined, // absolute timestamp of the FIRST SR harvest success time
   loaderType: undefined,
   maxBytes: 30000,
   obfuscator: undefined,

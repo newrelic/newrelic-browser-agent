@@ -32,6 +32,7 @@ export class Interaction extends BelNode {
   customEnd = 0
   cancellationTimer
   watchLongtaskTimer
+  hasReplay = false // will be set to true at serialization time if validated correctly
 
   constructor (uiEvent, uiEventTimestamp, currentRouteKnown, currentUrl) {
     super()
@@ -164,13 +165,13 @@ export class Interaction extends BelNode {
       addString(this.nodeId),
       nullable(this.firstPaint, numeric, true) + nullable(this.firstContentfulPaint, numeric)
     ]
-    const customAttributes = { ...agentRef.info.jsAttributes, ...this.customAttributes } // attrs specific to this interaction should have precedence over the general custom attrs
+    const customAttributes = { ...agentRef.info.jsAttributes, ...this.customAttributes, ...(!!this.hasReplay && { hasReplay: this.hasReplay }) } // attrs specific to this interaction should have precedence over the general custom attrs
     const allAttachedNodes = addCustomAttributes(customAttributes || {}, addString) // start with all custom attributes
     if (agentRef.info.atts) allAttachedNodes.push('a,' + addString(agentRef.info.atts)) // add apm provided attributes
     /* Querypack encoder+decoder quirkiness:
        - If first ixn node of payload is being processed, its children's start time must be offset by this node's start. (firstStartTime should be undefined.)
        - Else for subsequent ixns in the same payload, we go back to using that first ixn node's start to offset their children's start. */
-    this.children.forEach(node => allAttachedNodes.push(node.serialize(isFirstIxnOfPayload ? this.start : firstStartTimeOfPayload, agentRef))) // recursively add the serialized string of every child of this (ixn) bel node
+    this.children.forEach(node => allAttachedNodes.push(node.serialize(isFirstIxnOfPayload ? this.start : firstStartTimeOfPayload, agentRef, this.hasReplay))) // recursively add the serialized string of every child of this (ixn) bel node
 
     fields[1] = numeric(allAttachedNodes.length)
     nodeList.push(fields)

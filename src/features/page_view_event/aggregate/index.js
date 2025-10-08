@@ -90,7 +90,11 @@ export class Aggregate extends AggregateBase {
 
     let body
     if (typeof customAttributes === 'object' && Object.keys(customAttributes).length > 0) {
-      body = applyFnToProps({ ja: customAttributes }, this.obfuscator.obfuscateString.bind(this.obfuscator), 'string')
+      // since replay data is buffered and drained by the page view event, we cant actually use
+      // replay to inform this feature.  The only thing we can do is check if a previous page has
+      // already sent a replay and the current page is in "full" mode (risk of false positives/negatives still -- this is under active debate by leadership about next steps)
+      const hasReplay = !!this.agentRef.runtime.session?.state.sessionReplaySentFirstChunk && this.agentRef.runtime.session?.state.sessionReplayMode === 1
+      body = applyFnToProps({ ja: customAttributes, ...(!!hasReplay && { hasReplay }) }, this.obfuscator.obfuscateString.bind(this.obfuscator), 'string')
     }
 
     if (globalScope.performance) {

@@ -22,7 +22,24 @@
     localStorage.clear()
     NREUM.init.session_replay = {enabled: true, collect_fonts: true}
     NREUM.init.privacy.cookies_enabled = true
+    // NREUM.init.feature_flags = ['soft_nav'] // uncomment to enable soft navigation feature
   </script>
+   <script type="text/javascript">
+			let i = 0
+			document.addEventListener('click', function () {
+				window.location.hash = Math.random()
+
+        const xhr = new XMLHttpRequest()
+        xhr.open('POST', '/echo')
+        xhr.send()
+        fetch('/json')
+        newrelic.noticeError('boogie')
+
+				const elem = document.createElement('div')
+				elem.innerHTML = 'TEST' + i++
+				document.body.appendChild(elem)
+			})
+    </script>
   {loader}
 </head>
 <body>

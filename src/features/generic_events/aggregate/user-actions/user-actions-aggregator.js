@@ -37,6 +37,7 @@ export class UserActionsAggregator {
   /**
    * Process the event and determine if a new aggregation set should be made or if it should increment the current aggregation
    * @param {Event} evt The event supplied by the addEventListener callback
+   * @param {string[]} targetFields The fields to consider when analyzing the element's selector path
    * @returns {AggregatedUserAction|undefined} The previous aggregation set if it has been completed by processing the current event
    */
   process (evt, targetFields) {

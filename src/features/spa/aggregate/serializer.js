@@ -98,7 +98,7 @@ export class Serializer {
             nullable(attrs.firstPaint, numeric, true) +
             nullable(attrs.firstContentfulPaint, numeric, false)
           )
-          var attrParts = addCustomAttributes(attrs.custom, addString)
+          var attrParts = addCustomAttributes({ ...attrs.custom, ...(!!attrs.hasReplay && { hasReplay: attrs.hasReplay }) }, addString)
           children = children.concat(attrParts)
           attrCount = attrParts.length
 
@@ -125,11 +125,10 @@ export class Serializer {
           )
 
           // add params.gql here
-          if (Object.keys(params?.gql || {}).length) {
-            var ajaxAttrParts = addCustomAttributes(params.gql, addString)
-            children = children.concat(ajaxAttrParts)
-            attrCount = ajaxAttrParts.length
-          }
+          var ajaxAttrParts = addCustomAttributes({ ...(!!params.gql && params.gql), ...(!!attrs.hasReplay && { hasReplay: attrs.hasReplay }) }, addString)
+          children = children.concat(ajaxAttrParts)
+          attrCount = ajaxAttrParts.length
+
           break
 
         case 4:

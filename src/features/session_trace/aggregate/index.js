@@ -12,6 +12,8 @@ import { MODE, SESSION_EVENTS } from '../../../common/session/constants'
 import { applyFnToProps } from '../../../common/util/traverse'
 import { cleanURL } from '../../../common/url/clean-url'
 import { warn } from '../../../common/util/console'
+import { now } from '../../../common/timing/now'
+import { hasReplayValidator } from '../../../common/util/has-replay-validator'
 
 /** Reserved room for query param attrs */
 const QUERY_PARAM_PADDING = 5000
@@ -117,13 +119,26 @@ export class Aggregate extends AggregateBase {
   serializer (stns) {
     if (!stns.length) return // there are no processed nodes
     this.everHarvested = true
-    return applyFnToProps(stns, this.obfuscator.obfuscateString.bind(this.obfuscator), 'string')
+
+    const eventsToHarvest = stns.filter(event => {
+      const { shouldHold } = hasReplayValidator(this.agentRef, this.agentRef.runtime.timeKeeper.convertRelativeTimestamp(now()))
+      if (shouldHold) {
+        this.events.add(event)
+        return false
+      }
+      return true
+    })
+
+    if (!eventsToHarvest.length) return
+
+    return applyFnToProps(eventsToHarvest, this.obfuscator.obfuscateString.bind(this.obfuscator), 'string')
   }
 
   queryStringsBuilder (stns) {
     const firstSessionHarvest = !this.agentRef.runtime.session.state.traceHarvestStarted
     if (firstSessionHarvest) this.agentRef.runtime.session.write({ traceHarvestStarted: true })
-    const hasReplay = this.agentRef.runtime.session.state.sessionReplayMode === 1
+    const { shouldHold, shouldAdd } = hasReplayValidator(this.agentRef, now())
+    const hasReplay = !shouldHold && shouldAdd
     const endUserId = this.agentRef.info.jsAttributes['enduser.id']
     const entityGuid = this.agentRef.runtime.appMetadata.agents?.[0]?.entityGuid
 

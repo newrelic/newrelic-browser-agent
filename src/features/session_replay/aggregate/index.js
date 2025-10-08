@@ -49,6 +49,8 @@ export class Aggregate extends AggregateBase {
 
     this.harvestOpts.raw = true
 
+    this.safetyTimeout = undefined
+
     this.isSessionTrackingEnabled = canEnableSessionTracking(agentRef.init) && !!agentRef.runtime.session
 
     this.reportSupportabilityMetric('Config/SessionReplay/Enabled')
@@ -59,7 +61,13 @@ export class Aggregate extends AggregateBase {
     })
 
     // The SessionEntity class can emit a message indicating the session was paused (visibility change). This feature must stop recording if that occurs.
-    this.ee.on(SESSION_EVENTS.PAUSE, () => { this.recorder?.stopRecording() })
+    this.ee.on(SESSION_EVENTS.PAUSE, () => {
+      // give it a chance to harvest first
+      setTimeout(() => {
+        clearTimeout(this.safetyTimeout)
+        this.recorder?.stopRecording()
+      }, 1)
+    })
     // The SessionEntity class can emit a message indicating the session was resumed (visibility change). This feature must start running again (if already running) if that occurs.
     this.ee.on(SESSION_EVENTS.RESUME, () => {
       if (!this.recorder) return
@@ -209,6 +217,13 @@ export class Aggregate extends AggregateBase {
     if (this.mode !== MODE.FULL || this.blocked) return
     if (!this.recorder || !this.timeKeeper?.ready || !this.recorder.hasSeenSnapshot) return
 
+    /** we are in full mode and have never harvested yet -- we should get a harvest triggered within a reasonable time limit */
+    if (!this.agentRef.runtime.srHarvestedAt) {
+      this.safetyTimeout ??= setTimeout(() => {
+        this.abort(ABORT_REASONS.TIMEOUT)
+      }, 10000)
+    }
+
     const recorderEvents = this.recorder.getEvents()
     // get the event type and use that to trigger another harvest if needed
     if (!recorderEvents.events.length) return
@@ -235,7 +250,6 @@ export class Aggregate extends AggregateBase {
       return [payloadOutput]
     }
     // TODO -- Gracefully handle the buffer for retries.
-    if (!this.agentRef.runtime.session.state.sessionReplaySentFirstChunk) this.syncWithSessionManager({ sessionReplaySentFirstChunk: true })
     this.recorder.clearBuffer()
     if (recorderEvents.type === 'preloaded') this.agentRef.runtime.harvester.triggerHarvestFor(this)
     payloadOutput.payload = payload
@@ -243,6 +257,8 @@ export class Aggregate extends AggregateBase {
     if (!this.agentRef.runtime.session.state.traceHarvestStarted) {
       warn(59, JSON.stringify(this.agentRef.runtime.session.state))
     }
+
+    clearTimeout(this.safetyTimeout)
 
     return [payloadOutput]
   }
@@ -339,6 +355,10 @@ export class Aggregate extends AggregateBase {
     if (result.status === 429) {
       this.abort(ABORT_REASONS.TOO_MANY)
     }
+    if (result.sent && !result.retry) {
+      this.agentRef.runtime.srHarvestedAt ??= this.agentRef.runtime.timeKeeper.correctAbsoluteTimestamp(Date.now())
+      if (!this.agentRef.runtime.session.state.sessionReplaySentFirstChunk) this.syncWithSessionManager({ sessionReplaySentFirstChunk: true })
+    }
   }
 
   /**
@@ -351,6 +371,7 @@ export class Aggregate extends AggregateBase {
     this.mode = MODE.OFF
     this.recorder?.stopRecording?.()
     this.syncWithSessionManager({ sessionReplayMode: this.mode })
+    clearTimeout(this.safetyTimeout)
   }
 
   /** Abort the feature, once aborted it will not resume */
@@ -360,6 +381,8 @@ export class Aggregate extends AggregateBase {
     this.blocked = true
     this.mode = MODE.OFF
     this.recorder?.stopRecording?.()
+    clearTimeout(this.safetyTimeout)
+    this.recorder?.clearBuffer?.()
     this.syncWithSessionManager({ sessionReplayMode: this.mode })
     this.recorder?.clearTimestamps?.()
     while (this.recorder?.getEvents().events.length) this.recorder?.clearBuffer?.()

@@ -17,7 +17,5 @@ export const FRUSTRATION_TIMEOUT_MS = 2000
 export const RESERVED_EVENT_TYPES = ['PageAction', 'UserAction', 'BrowserPerformance']
 
 export const FEATURE_FLAGS = {
-  MARKS: 'experimental.marks',
-  MEASURES: 'experimental.measures',
   RESOURCES: 'experimental.resources'
 }

@@ -58,7 +58,11 @@ export class Recorder {
       this.stopRecording()
     }, this.srFeatureName, this.ee)
 
-    registerHandler(RRWEB_DATA_CHANNEL, (event, isCheckout) => { this.audit(event, isCheckout) }, this.srFeatureName, this.ee)
+    /** If Agg is already drained before importing the recorder (likely deferred API call pattern),
+     * registerHandler wont do anything. Just set up the on listener directly */
+    const processReplayNode = (event, isCheckout) => { this.audit(event, isCheckout) }
+    if (this.srInstrument.featAggregate?.drained) this.ee.on(RRWEB_DATA_CHANNEL, processReplayNode)
+    else registerHandler(RRWEB_DATA_CHANNEL, processReplayNode, this.srFeatureName, this.ee)
   }
 
   get trigger () {

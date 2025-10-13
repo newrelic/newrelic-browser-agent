@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.299.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.298.0...v1.299.0) (2025-10-07)
+
+
+### Features
+
+* Add Flutter supportability metric ([#1580](https://github.com/newrelic/newrelic-browser-agent/issues/1580)) ([5083067](https://github.com/newrelic/newrelic-browser-agent/commit/5083067e1dab2fed972af8010d95c07ba11ec436))
+* Add user frustration signals to UserAction ([#1534](https://github.com/newrelic/newrelic-browser-agent/issues/1534)) ([4d654c3](https://github.com/newrelic/newrelic-browser-agent/commit/4d654c3e4cef906885545b36142fc03da34d525c))
+* Evaluate the accuracy of cross-feature attribution ([#1573](https://github.com/newrelic/newrelic-browser-agent/issues/1573)) ([b1e03e2](https://github.com/newrelic/newrelic-browser-agent/commit/b1e03e216ec4eedb77cbb49241d51b5526b97997))
+
+
+### Bug Fixes
+
+* Fix recordReplay API inconsistencies ([#1582](https://github.com/newrelic/newrelic-browser-agent/issues/1582)) ([e4465c1](https://github.com/newrelic/newrelic-browser-agent/commit/e4465c1ebfd6f50d3fce99074ae190ce3bc2f4e4))
+
 ## [1.298.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.297.1...v1.298.0) (2025-09-19)
 
 

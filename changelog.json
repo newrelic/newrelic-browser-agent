@@ -5,6 +5,47 @@
       "changes": [
         {
           "type": "fix",
+          "sha": "e4465c1ebfd6f50d3fce99074ae190ce3bc2f4e4",
+          "message": "Fix recordReplay API inconsistencies",
+          "issues": [
+            "1582"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "5083067e1dab2fed972af8010d95c07ba11ec436",
+          "message": "Add Flutter supportability metric",
+          "issues": [
+            "1580"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "4d654c3e4cef906885545b36142fc03da34d525c",
+          "message": "Add user frustration signals to UserAction",
+          "issues": [
+            "1534"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "b1e03e216ec4eedb77cbb49241d51b5526b97997",
+          "message": "Evaluate the accuracy of cross-feature attribution",
+          "issues": [
+            "1573"
+          ]
+        }
+      ],
+      "version": "1.299.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "919e51e5-0281-4bd8-a8e9-be21240424d7",
+      "createTime": "2025-10-07T19:16:04.454Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
           "sha": "04eb09fb27fb9d49dcb4a37cc503619217e9fafd",
           "message": "Force LCP to report the original page URL",
           "issues": [
@@ -3207,5 +3248,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2025-09-19T15:59:34.820Z"
+  "updateTime": "2025-10-07T19:16:04.454Z"
 }

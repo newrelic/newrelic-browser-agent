@@ -25,7 +25,7 @@ expectType<MicroAgent>(microAgent)
     type?: string;
   }) => any>(agent.addToTrace)
   expectType<(name: string) => any>(agent.setCurrentRouteName)
-  expectType<() => InteractionInstance>(agent.interaction)
+  expectType<(waitForEnd?: boolean) => InteractionInstance>(agent.interaction)
   
   // Base Agent APIs
   expectType<(name: string, attributes?: object) => any>(agent.addPageAction)
@@ -45,7 +45,7 @@ expectType<MicroAgent>(microAgent)
   expectType<(parent: object, functionName: string, options?: { customAttributes?: object, level?: 'ERROR' | 'TRACE' | 'DEBUG' | 'INFO' | 'WARN'}) => any>(agent.wrapLogger)
   
   // SPA APIs
-  expectType<() => InteractionInstance>(agent.interaction)
+  expectType<(waitForEnd?: boolean) => InteractionInstance>(agent.interaction)
   expectType<(value: string) => InteractionInstance>(agent.interaction().actionText)
   expectType<(name: string, callback?: ((...args: any[]) => any)) => (...args: any) => any>(agent.interaction().createTracer)
   expectType<() => InteractionInstance>(agent.interaction().end)

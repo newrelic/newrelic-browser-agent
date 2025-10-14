@@ -197,13 +197,14 @@ export class ApiBase {
   /**
    * Returns a new API object that is bound to the current SPA interaction.
    * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/interaction/}
-   * @param {boolean} [waitForEnd=false] To forcibly keep the interaction open until the `.end` method is called on its handle, set to true. Defaults to false. After an interaction is earmarked with this, it cannot be undone.
+   * @param {Object} [opts] The options to apply when creating the interaction
+   * @param {boolean} [opts.waitForEnd=false] To forcibly keep the interaction open until the `.end` method is called on its handle, set to true. Defaults to false. After an interaction is earmarked with this, it cannot be undone.
    * @returns {InteractionInstance} An API object that is bound to a specific BrowserInteraction event. Each time this method is called for the same BrowserInteraction, a new object is created, but it still references the same interaction.
    *  - Note: Does not apply to MicroAgent
    *  - Deprecation Notice: interaction.createTracer is deprecated.  See https://docs.newrelic.com/eol/2024/04/eol-04-24-24-createtracer/ for more information.
   */
-  interaction (waitForEnd) {
-    return this.#callMethod(INTERACTION, waitForEnd)
+  interaction (opts) {
+    return this.#callMethod(INTERACTION, opts)
   }
 
   /**

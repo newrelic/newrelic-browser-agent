@@ -21,8 +21,6 @@ const InitModelFn = () => {
   const hiddenState = {
     feature_flags: [],
     experimental: {
-      marks: false,
-      measures: false,
       resources: false
     },
     mask_selector: '*',
@@ -72,10 +70,8 @@ const InitModelFn = () => {
     page_view_event: { enabled: true, autoStart: true },
     page_view_timing: { enabled: true, autoStart: true },
     performance: {
-      get capture_marks () { return hiddenState.feature_flags.includes(FEATURE_FLAGS.MARKS) || hiddenState.experimental.marks },
-      set capture_marks (val) { hiddenState.experimental.marks = val },
-      get capture_measures () { return hiddenState.feature_flags.includes(FEATURE_FLAGS.MEASURES) || hiddenState.experimental.measures },
-      set capture_measures (val) { hiddenState.experimental.measures = val },
+      capture_marks: false,
+      capture_measures: false,
       capture_detail: true,
       resources: {
         get enabled () { return hiddenState.feature_flags.includes(FEATURE_FLAGS.RESOURCES) || hiddenState.experimental.resources },

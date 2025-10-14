@@ -15,7 +15,7 @@ import { EventBuffer } from './event-buffer'
 import { handle } from '../../common/event-emitter/handle'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../metrics/constants'
 import { EventAggregator } from '../../common/aggregate/event-aggregator'
-import { MAX_PAYLOAD_SIZE, IDEAL_PAYLOAD_SIZE } from '../../common/constants/agent-constants'
+import { MAX_PAYLOAD_SIZE, IDEAL_PAYLOAD_SIZE, SUPPORTS_REGISTERED_ENTITIES } from '../../common/constants/agent-constants'
 
 export class AggregateBase extends FeatureBase {
   /**
@@ -37,9 +37,6 @@ export class AggregateBase extends FeatureBase {
     this.isRetrying = false
 
     this.harvestOpts = {} // features aggregate classes can define custom opts for when their harvest is called
-
-    /** @type {Boolean} indicates if the feature supports registered entities and the harvest requirements therein. Also read by getter "harvestEndpointVersion" */
-    this.supportsRegisteredEntities = false // overridden by feature aggregates if true. WARNING - features should only set this to true once the CONSUMER is created. If it is set before the consumers are ready, registering can break the normal agent functions for this feature
 
     this.#setupEventStore()
 
@@ -71,13 +68,18 @@ export class AggregateBase extends FeatureBase {
     }
   }
 
+  /** @type {Boolean} indicates if the feature supports registered entities and the harvest requirements therein. Also read by getter "harvestEndpointVersion". Controlled by feature flag in pre-release phase. */
+  get supportsRegisteredEntities () {
+    return SUPPORTS_REGISTERED_ENTITIES[this.featureName] || this.agentRef.init.feature_flags.includes('register-' + this.featureName)
+  }
+
   /**
    * the endpoint version the feature uses during harvests
    * @type {number}
    * @returns {boolean}
    */
   get harvestEndpointVersion () {
-    return this.supportsRegisteredEntities && !!this.agentRef.runtime.registeredEntities.length ? 2 : 1
+    return (this.supportsRegisteredEntities && !!this.agentRef.runtime.registeredEntities.length) ? 2 : 1
   }
 
   waitForDrain () {

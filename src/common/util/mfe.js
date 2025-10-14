@@ -26,9 +26,9 @@ export function getVersion2Attributes (target, aggregateInstance) {
     }
   }
   return {
-    'mfe.id': target.id,
-    'mfe.name': target.name,
-    eventSource: 'MicroFrontendBrowserAgent',
-    'container.id': containerAgentEntityGuid
+    'mfe.id': target.id, // these field names may change as the schema is finalized
+    'mfe.name': target.name, // these field names may change as the schema is finalized
+    eventSource: 'MicroFrontendBrowserAgent', // these field names may change as the schema is finalized
+    'parent.id': containerAgentEntityGuid
   }
 }

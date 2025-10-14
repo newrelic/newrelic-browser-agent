@@ -10,7 +10,7 @@ describe('registered-entity', () => {
       { test: testMFEInsRequest },
       { test: testLogsRequest }
     ])
-    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html'))
+    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register-jserrors'] } }))
 
     await browser.execute(function () {
       var features = Object.values(newrelic.initializedAgents)[0].features
@@ -81,7 +81,7 @@ describe('registered-entity', () => {
         if (Number(id) !== 42) {
           expect(err.custom['mfe.name']).toEqual('agent' + id)
           expect(err.custom.eventSource).toEqual('MicroFrontendBrowserAgent')
-          expect(err.custom['container.id']).toEqual(containerAgentEntityGuid)
+          expect(err.custom['parent.id']).toEqual(containerAgentEntityGuid)
         }
         expect(ranOnce(id, 'err')).toEqual(true)
         expect(Number(id)).toEqual(Number(err.params.message))
@@ -96,7 +96,7 @@ describe('registered-entity', () => {
           if (Number(id) !== 42) {
             expect(ins['mfe.name']).toEqual('agent' + id)
             expect(ins.eventSource).toEqual('MicroFrontendBrowserAgent')
-            expect(ins['container.id']).toEqual(containerAgentEntityGuid)
+            expect(ins['parent.id']).toEqual(containerAgentEntityGuid)
           }
           expect(ranOnce(id, 'pa')).toEqual(true)
           expect(Number(id)).toEqual(Number(ins.val))
@@ -111,7 +111,7 @@ describe('registered-entity', () => {
         if (Number(id) !== 42) {
           expect(log.attributes['mfe.name']).toEqual('agent' + id)
           expect(log.attributes.eventSource).toEqual('MicroFrontendBrowserAgent')
-          expect(log.attributes['container.id']).toEqual(containerAgentEntityGuid)
+          expect(log.attributes['parent.id']).toEqual(containerAgentEntityGuid)
         }
         expect(ranOnce(id, 'log')).toEqual(true)
         expect(Number(id)).toEqual(Number(log.message))

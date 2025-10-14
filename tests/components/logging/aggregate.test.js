@@ -48,8 +48,7 @@ describe('class setup', () => {
       'blocked',
       'agentRef',
       'obfuscator',
-      'harvestOpts',
-      'supportsRegisteredEntities'
+      'harvestOpts'
     ]))
     expect(loggingAggregate.supportsRegisteredEntities).toBe(true)
   })
@@ -269,7 +268,7 @@ describe('payloads', () => {
           'mfe.id': registeredTarget.id,
           'mfe.name': registeredTarget.name,
           eventSource: registeredTarget.eventSource,
-          'container.id': registeredTarget.containerId
+          'parent.id': registeredTarget.containerId
         },
         'error'
       ))

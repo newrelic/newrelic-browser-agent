@@ -33,7 +33,6 @@ export class Aggregate extends AggregateBase {
 
     /** set up agg-level behaviors specific to this feature */
     this.harvestOpts.aggregatorTypes = ['err', 'ierr', 'xhr'] // the types in EventAggregator this feature cares about
-    // super.supportsRegisteredEntities = true // WARNING - only set this to true once the CONSUMER is created. If it is set before the consumers are ready, registering can break the normal agent functions for this feature
     this.stackReported = {}
     this.observedAt = {}
     this.pageviewReported = {}

@@ -13,6 +13,10 @@ on:
         description: 'Run the latest version of browsers only instead of all versions'
         default: true
         type: boolean
+      boosted:
+        description: 'Enable boosted testing (uses more resources)'
+        default: false
+        type: boolean
   pull_request:
 
 jobs:
@@ -261,6 +265,7 @@ jobs:
     with:
       ref: 'refs/pull/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}/merge'
       latest-only: ${{ inputs.latest-only }}
+      boosted: ${{ inputs.boosted }}
     secrets: inherit
 
   complete-status-comment-pull-request:

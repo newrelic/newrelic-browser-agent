@@ -76,8 +76,7 @@ describe('ins harvesting', () => {
   })
 
   ;[
-    [getInsInit({ performance: { capture_marks: true } }), 'enabled'],
-    [getInsInit({ performance: { capture_marks: false }, feature_flags: [FEATURE_FLAGS.MARKS] }), 'feature flag']
+    [getInsInit({ performance: { capture_marks: true } }), 'enabled']
   ].forEach(([insInit, type]) => {
     it('should submit Marks - ' + type, async () => {
       const testUrl = await browser.testHandle.assetURL('marks-and-measures.html', insInit)
@@ -108,8 +107,7 @@ describe('ins harvesting', () => {
   })
 
   ;[
-    [getInsInit({ performance: { capture_measures: true } }), 'enabled'],
-    [getInsInit({ performance: { capture_measures: false }, feature_flags: [FEATURE_FLAGS.MEASURES] }), 'feature flag']
+    [getInsInit({ performance: { capture_measures: true } }), 'enabled']
   ].forEach(([insInit, type]) => {
     it('should submit Measures - ' + type, async () => {
       const testUrl = await browser.testHandle.assetURL('marks-and-measures.html', insInit)

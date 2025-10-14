@@ -197,7 +197,7 @@ export class ApiBase {
   /**
    * Returns a new API object that is bound to the current SPA interaction.
    * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/interaction/}
-   * @param {Object} [opts] The options to apply when creating the interaction
+   * @param {Object} [opts] Options to configure the new or existing interaction with
    * @param {boolean} [opts.waitForEnd=false] To forcibly keep the interaction open until the `.end` method is called on its handle, set to true. Defaults to false. After an interaction is earmarked with this, it cannot be undone.
    * @returns {InteractionInstance} An API object that is bound to a specific BrowserInteraction event. Each time this method is called for the same BrowserInteraction, a new object is created, but it still references the same interaction.
    *  - Note: Does not apply to MicroAgent

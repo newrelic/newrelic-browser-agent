@@ -67,7 +67,7 @@ export function buildRegisterApi (agentRef, target) {
   }
 
   /** primary cases that can block the register API from working at init time */
-  if (!agentRef.init.api.allow_registered_children) block(() => warn(55))
+  if (!agentRef.init.api.allow_registered_children && !agentRef.init.feature_flags.includes('register')) block(() => warn(55))
   if (!isValidMFETarget(target)) block(() => warn(48, target))
 
   /** @type {RegisterAPI} */

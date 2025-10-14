@@ -48,7 +48,7 @@ const InitModelFn = () => {
   return {
     ajax: { deny_list: undefined, block_internal: true, enabled: true, autoStart: true },
     api: {
-      allow_registered_children: true,
+      allow_registered_children: false,
       duplicate_registered_data: false
     },
     distributed_tracing: {

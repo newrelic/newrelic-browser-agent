@@ -70,7 +70,7 @@ export class AggregateBase extends FeatureBase {
 
   /** @type {Boolean} indicates if the feature supports registered entities and the harvest requirements therein. Also read by getter "harvestEndpointVersion". Controlled by feature flag in pre-release phase. */
   get supportsRegisteredEntities () {
-    return SUPPORTS_REGISTERED_ENTITIES[this.featureName] || this.agentRef.init.feature_flags.includes('register-' + this.featureName)
+    return this.featureName in SUPPORTS_REGISTERED_ENTITIES && (SUPPORTS_REGISTERED_ENTITIES[this.featureName] || this.agentRef.init.feature_flags.includes('register.' + this.featureName))
   }
 
   /**

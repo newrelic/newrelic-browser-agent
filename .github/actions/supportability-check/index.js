@@ -45,6 +45,10 @@ async function main() {
     `;
   });
 
+  console.log('***** DEBUG *****');
+  console.log(diffLines)
+  console.log('*****************');
+
   // Find if the file was changed (look for diff headers)
   const foundFile = diffLines
     .filter(line => line.startsWith('+++ b/'))

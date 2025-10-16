@@ -181,9 +181,7 @@ export class Recorder {
     const eventBytes = event.__serialized.length
     /** The estimated size of the payload after compression */
     const payloadSize = this.getPayloadSize(eventBytes)
-    if (event.type < 5 && event.type > 0) {
-      handle(SUPPORTABILITY_METRIC_CHANNEL, [payloadSizeSMTag[event.type], eventBytes], undefined, FEATURE_NAMES.metrics, this.ee)
-    }
+    handle(SUPPORTABILITY_METRIC_CHANNEL, [payloadSizeSMTag[event.type], eventBytes], undefined, FEATURE_NAMES.metrics, this.ee)
     // Checkout events are flags by the recording lib that indicate a fullsnapshot was taken every n ms. These are important
     // to help reconstruct the replay later and must be included.  While waiting and buffering for errors to come through,
     // each time we see a new checkout, we can drop the old data.

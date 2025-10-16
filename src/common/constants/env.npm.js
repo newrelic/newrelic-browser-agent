@@ -24,8 +24,3 @@ export const BUILD_ENV = 'NPM'
  * Valid valuse are CDN, NPM
  */
 export const DIST_METHOD = 'NPM'
-
-/**
- * Exposes the lib version of rrweb
- */
-export const RRWEB_VERSION = process.env.RRWEB_VERSION

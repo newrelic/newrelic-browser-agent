@@ -110,6 +110,8 @@ export class Aggregate extends AggregateBase {
       common: {
         /** Attributes in the `common` section are added to `all` logs generated in the payload */
         attributes: {
+          // User-provided custom attributes
+          ...this.agentRef.info.jsAttributes,
           'entity.guid': target.entityGuid, // browser entity guid as provided API target OR the default from RUM response if not supplied
           ...(sessionEntity && {
             session: sessionEntity.state.value || '0', // The session ID that we generate and keep across page loads
@@ -123,9 +125,7 @@ export class Aggregate extends AggregateBase {
           // The following 3 attributes are evaluated and dropped at ingest processing time and do not get stored on NRDB:
           'instrumentation.provider': 'browser',
           'instrumentation.version': this.agentRef.runtime.version,
-          'instrumentation.name': this.agentRef.runtime.loaderType,
-          // Custom attributes
-          ...this.agentRef.info.jsAttributes
+          'instrumentation.name': this.agentRef.runtime.loaderType
         }
       },
       /** logs section contains individual unique log entries */

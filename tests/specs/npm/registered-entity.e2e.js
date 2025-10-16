@@ -84,6 +84,7 @@ describe('registered-entity', () => {
       // each payload exists once per appId
       // each payload should have internal attributes matching it to the right appId
       rumHarvests.forEach(({ request: { query, body } }) => {
+        countRuns(query.a, 'rum')
         expect(ranOnce(query.a, 'rum')).toEqual(true)
       })
 
@@ -138,15 +139,14 @@ describe('registered-entity', () => {
             expect(log.attributes.eventSource).toEqual('MicroFrontendBrowserAgent')
             expect(log.attributes['parent.id']).toEqual(containerAgentEntityGuid)
           }
+          countRuns(id, 'log')
           expect(ranOnce(id, 'log')).toEqual(true)
           expect(Number(id)).toEqual(Number(log.message))
         })
       })
 
       function ranOnce (appId, type) {
-        if (tests[appId][type] > 1) return false
-        countRuns(appId, type)
-        return true
+        return tests[appId][type] === 1
       }
 
       function countRuns (appId, type) {

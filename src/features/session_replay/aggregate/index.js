@@ -13,7 +13,7 @@ import { sharedChannel } from '../../../common/constants/shared-channel'
 import { obj as encodeObj } from '../../../common/url/encode'
 import { warn } from '../../../common/util/console'
 import { globalScope } from '../../../common/constants/runtime'
-import { RRWEB_VERSION } from '../../../common/constants/env'
+import { RRWEB_VERSION, RRWEB_PACKAGE_NAME } from '../../../common/constants/env'
 import { MODE, SESSION_EVENTS, SESSION_EVENT_TYPES } from '../../../common/session/constants'
 import { stringify } from '../../../common/util/stringify'
 import { stylesheetEvaluator } from '../shared/stylesheet-evaluator'
@@ -322,7 +322,7 @@ export class Aggregate extends AggregateBase {
           decompressedBytes: recorderEvents.payloadBytesEstimation,
           invalidStylesheetsDetected: stylesheetEvaluator.invalidStylesheetsDetected,
           inlinedAllStylesheets: recorderEvents.inlinedAllStylesheets,
-          'rrweb.version': RRWEB_VERSION,
+          'rrweb.version': RRWEB_PACKAGE_NAME + '@' + RRWEB_VERSION,
           'payload.type': recorderEvents.type,
           // customer-defined data should go last so that if it exceeds the query param padding limit it will be truncated instead of important attrs
           ...(endUserId && { 'enduser.id': this.obfuscator.obfuscateString(endUserId) }),

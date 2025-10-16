@@ -27,7 +27,8 @@ export const BUILD_ENV = 'NPM'
  */
 export const DIST_METHOD = 'NPM'
 
+export const RRWEB_PACKAGE_NAME = '@newrelic/rrweb'
 /**
  * Exposes the lib version of rrweb
  */
-export const RRWEB_VERSION = pkgJSON.dependencies.rrweb
+export const RRWEB_VERSION = pkgJSON.dependencies[RRWEB_PACKAGE_NAME]

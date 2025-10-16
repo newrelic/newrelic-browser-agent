@@ -11,7 +11,7 @@ module.exports = function (api, ...args) {
     process.env.BUILD_ENV = 'CDN'
   }
 
-  process.env.RRWEB_VERSION = pkg.dependencies.rrweb
+  process.env.RRWEB_VERSION = pkg.dependencies['@newrelic/rrweb']
 
   const ignore = [
     '**/__mocks__/*.js'

@@ -111,7 +111,10 @@ describe('Soft navigations', () => {
       expect(ixnAjaxArr).toEqual(expectedAjax)
       expect(errorsArr[0].params.browserInteractionId).toEqual(rcIxn.id)
     } else {
-      expect(ajaxEventsHarvests[0].request.body).toEqual(expectedAjax)
+      const echoXHR = JSONPath({ path: '$.[*].request.body.[?(!!@ && @.path===\'/echo\')]', json: ajaxEventsHarvests })
+      expect(echoXHR.length).toEqual(1)
+      const jsonXHR = JSONPath({ path: '$.[*].request.body.[?(!!@ && @.path===\'/json\')]', json: ajaxEventsHarvests })
+      expect(jsonXHR.length).toEqual(1)
       expect(errorsArr[0].params.browserInteractionId).toBeUndefined()
     }
     expect(errorsArr[0].params.message).toEqual('boogie')

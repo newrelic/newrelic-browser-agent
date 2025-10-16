@@ -14,4 +14,8 @@ export const RRWEB_PACKAGE_NAME = '@newrelic/rrweb'
 // the distributed ESM free of deep relative path resolution that might fail in consumer
 // bundlers. The actual version is sourced centrally in babel.config.js so both CDN and
 // NPM builds receive the installed package's concrete version string.
-export const RRWEB_VERSION = (typeof process !== 'undefined' && process.env && process.env.RRWEB_VERSION) || '0.0.0'
+// The Babel inline env plugin replaces process.env.RRWEB_VERSION with the concrete version string at build time.
+// NOTE: In distributed artifacts the literal version should appear; if not, check babel.config.js include list.
+// After Babel inline substitution this becomes: export const RRWEB_VERSION = "<resolved-version>" || '0.0.0'
+// which evaluates to the concrete version string.
+export const RRWEB_VERSION = process.env.RRWEB_VERSION || '0.0.0'

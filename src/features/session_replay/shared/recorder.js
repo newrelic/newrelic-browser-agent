@@ -18,7 +18,6 @@ import { single } from '../../../common/util/invoke'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 
 const RRWEB_DATA_CHANNEL = 'rrweb-data'
-const payloadSizeSMTag = ['', 'rrweb/node/1/bytes', 'rrweb/node/2/bytes', 'rrweb/node/3/bytes', 'rrweb/node/4/bytes']
 
 export class Recorder {
   /** flag that if true, blocks events from being "stored".  Only set to true when a full snapshot has incomplete nodes (only stylesheets ATM) */

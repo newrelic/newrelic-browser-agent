@@ -21,6 +21,10 @@ export const BUILD_ENV = 'NPM'
 
 /**
  * Exposes the distribution method of the agent
- * Valid valuse are CDN, NPM
+ * Valid values are CDN, NPM
  */
 export const DIST_METHOD = 'NPM'
+
+export const RRWEB_PACKAGE_NAME = '@newrelic/rrweb'
+// Babel will inline this with the rrweb (fork) version on NPM dist esm/cjs builds.
+export const RRWEB_VERSION = process.env.RRWEB_VERSION

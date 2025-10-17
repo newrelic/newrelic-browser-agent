@@ -26,3 +26,7 @@ export const BUILD_ENV = 'NPM'
  * Exposes the distribution method of the agent
  */
 export const DIST_METHOD = 'NPM'
+
+export const RRWEB_PACKAGE_NAME = '@newrelic/rrweb'
+// For raw source consumers (no Babel inline), use the dependency string in package.json to get rrweb (fork) version.
+export const RRWEB_VERSION = pkgJSON.dependencies[RRWEB_PACKAGE_NAME] || '0.0.0'

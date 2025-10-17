@@ -1,6 +1,6 @@
 import { deepmerge } from 'deepmerge-ts'
 // Import rrweb fork constants to build deterministic expectation for rrweb.version
-import { RRWEB_PACKAGE_NAME, RRWEB_VERSION } from '../../../src/common/constants/rrweb'
+import { RRWEB_PACKAGE_NAME, RRWEB_VERSION } from '../../../src/common/constants/env'
 
 export const MODE = {
   OFF: 0,

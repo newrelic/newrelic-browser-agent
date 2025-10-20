@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker'
+import { testAjaxEventsRequest, testInteractionEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 const assetServerTraceTest = function (request) {
   if (request.method !== 'GET') return
@@ -149,6 +150,8 @@ describe('xhr distributed tracing', () => {
         targetServer = 'bamServer'
       }
       const ajaxCapture = await browser.testHandle.createNetworkCaptures(targetServer, { test: assetServerTraceTest })
+      const ajaxEventCapture = await browser.testHandle.createNetworkCaptures(targetServer, { test: testAjaxEventsRequest })
+      const interactionsCapture = await browser.testHandle.createNetworkCaptures(targetServer, { test: testInteractionEventsRequest })
 
       if (testCase.addRouterToAllowedOrigins) {
         testCase.configuration.allowed_origins.push(
@@ -166,6 +169,12 @@ describe('xhr distributed tracing', () => {
           }
         }))
       ])
+
+      const ajaxEvents = await ajaxEventCapture.waitForResult({ timeout: 10000 })
+      const ixnEvents = await interactionsCapture.waitForResult({ timeout: 10000 })
+
+      console.log('ajaxEvents', ajaxEvents[0]?.request.body)
+      console.log('ixnEvents', ixnEvents[0]?.request.body)
 
       const ajaxRequestHeaders = ajaxRequest[0].request.headers
       validateTraceHeaders(ajaxRequestHeaders, config, testCase.newrelicHeader, testCase.traceContextHeaders)

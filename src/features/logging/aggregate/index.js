@@ -116,6 +116,7 @@ export class Aggregate extends AggregateBase {
       common: {
         /** Attributes in the `common` section are added to `all` logs generated in the payload */
         attributes: {
+          ...this.agentRef.info.jsAttributes, // user-provided custom attributes
           ...(this.harvestEndpointVersion === 1 && {
             'entity.guid': this.agentRef.runtime.appMetadata.agents[0].entityGuid,
             appId: this.agentRef.info.applicationID
@@ -131,9 +132,7 @@ export class Aggregate extends AggregateBase {
           // The following 3 attributes are evaluated and dropped at ingest processing time and do not get stored on NRDB:
           'instrumentation.provider': 'browser',
           'instrumentation.version': this.agentRef.runtime.version,
-          'instrumentation.name': this.agentRef.runtime.loaderType,
-          // Custom attributes
-          ...this.agentRef.info.jsAttributes
+          'instrumentation.name': this.agentRef.runtime.loaderType
         }
       },
       /** logs section contains individual unique log entries */

@@ -1,6 +1,6 @@
 {
   "name": "@newrelic/browser-agent",
-  "version": "1.299.0",
+  "version": "1.300.0",
   "private": false,
   "author": "New Relic Browser Agent Team <browser-agent@newrelic.com>",
   "description": "New Relic Browser Agent",
@@ -221,7 +221,7 @@
   },
   "dependencies": {
     "fflate": "0.8.2",
-    "rrweb": "^2.0.0-alpha.18",
+    "@newrelic/rrweb": "1.0.1",
     "web-vitals": "4.2.4"
   },
   "devDependencies": {

@@ -5,6 +5,47 @@
       "changes": [
         {
           "type": "fix",
+          "sha": "c930208c0e8e9cb9affa9e6f664d3a28b132b66c",
+          "message": "Update typings for interaction API to reflect waitForEnd",
+          "issues": [
+            "1591"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "cefd898a8e8ab35004f29e42236f096f3e6e220b",
+          "message": "Remove usage of the marks and measures feature flag",
+          "issues": [
+            "1589"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "91fd4b946f8db4fd939abd95706e2cc60c1c170b",
+          "message": "Address issues with dynamic require and Rollup.js",
+          "issues": [
+            "1584"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "82f1d55c8a008c3219132afe471acf05b7783743",
+          "message": "Reduce hasReplay attribute false positive rate",
+          "issues": [
+            "1586"
+          ]
+        }
+      ],
+      "version": "1.300.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "57fe7e2f-1d79-4af7-9a58-25bc70d7ef67",
+      "createTime": "2025-10-14T17:49:09.902Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "fix",
           "sha": "e4465c1ebfd6f50d3fce99074ae190ce3bc2f4e4",
           "message": "Fix recordReplay API inconsistencies",
           "issues": [
@@ -3248,5 +3289,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2025-10-07T19:16:04.454Z"
+  "updateTime": "2025-10-14T17:49:09.902Z"
 }

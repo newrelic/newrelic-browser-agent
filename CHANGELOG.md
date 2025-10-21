@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.300.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.299.0...v1.300.0) (2025-10-14)
+
+
+### Features
+
+* Reduce hasReplay attribute false positive rate ([#1586](https://github.com/newrelic/newrelic-browser-agent/issues/1586)) ([82f1d55](https://github.com/newrelic/newrelic-browser-agent/commit/82f1d55c8a008c3219132afe471acf05b7783743))
+* Remove usage of the marks and measures feature flag ([#1589](https://github.com/newrelic/newrelic-browser-agent/issues/1589)) ([cefd898](https://github.com/newrelic/newrelic-browser-agent/commit/cefd898a8e8ab35004f29e42236f096f3e6e220b))
+
+
+### Bug Fixes
+
+* Address issues with dynamic require and Rollup.js ([#1584](https://github.com/newrelic/newrelic-browser-agent/issues/1584)) ([91fd4b9](https://github.com/newrelic/newrelic-browser-agent/commit/91fd4b946f8db4fd939abd95706e2cc60c1c170b))
+* Update typings for interaction API to reflect waitForEnd ([#1591](https://github.com/newrelic/newrelic-browser-agent/issues/1591)) ([c930208](https://github.com/newrelic/newrelic-browser-agent/commit/c930208c0e8e9cb9affa9e6f664d3a28b132b66c))
+
 ## [1.299.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.298.0...v1.299.0) (2025-10-07)
 
 

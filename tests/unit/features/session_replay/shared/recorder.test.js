@@ -18,7 +18,8 @@ describe('recorder', () => {
         }
       },
       ee: {
-        emit: () => {}
+        emit: () => {},
+        buffer: () => {}
       },
       featAggregate: {
         gzipper: jest.fn(),

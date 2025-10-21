@@ -7,7 +7,7 @@ const REPO = 'newrelic-browser-agent';
 const PULL_NUMBER = process.env.PR_NUMBER;
 
 const SEARCH_STRINGS = ['SUPPORTABILITY_METRIC_CHANNEL', '.reportSupportabilityMetric', 'storeSupportabilityMetrics'];
-const SEARCH_FILE = 'supportability_metrics.md';
+const SEARCH_FILE = 'docs/supportability-metrics.md';
 const SEARCH_DIR = 'src/'; // Change this to your target directory
 
 const octokit = new Octokit({ auth: GITHUB_TOKEN });

@@ -1,4 +1,6 @@
 import { deepmerge } from 'deepmerge-ts'
+// Import rrweb fork constants to build deterministic expectation for rrweb.version
+import { RRWEB_PACKAGE_NAME, RRWEB_VERSION } from '../../../src/common/constants/env'
 
 export const MODE = {
   OFF: 0,
@@ -54,7 +56,7 @@ export function testExpectedReplay ({ data, session, hasMeta, hasSnapshot, hasEr
     agentVersion: expect.any(String),
     isFirstChunk: isFirstChunk || expect.any(Boolean),
     decompressedBytes: decompressedBytes || expect.any(Number),
-    'rrweb.version': expect.any(String),
+    'rrweb.version': `${RRWEB_PACKAGE_NAME}@${RRWEB_VERSION}`, // assert exact rrweb version string
     inlinedAllStylesheets: expect.any(Boolean),
     ...(currentUrl && { currentUrl })
   })

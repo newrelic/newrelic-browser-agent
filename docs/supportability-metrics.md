@@ -429,3 +429,13 @@ EventBuffer/soft_navigations/Dropped/Bytes
 * audit/session_replay/hasError/true/positive
 <!--- Session replay had hasError false and no js error harvest occurred (true negative) --->
 * audit/session_replay/hasError/true/negative
+
+### Session Replay
+<!-- node type 1 = Preload -->
+* rrweb/node/1/bytes
+<!-- node type 2 = Full snapshot -->
+* rrweb/node/2/bytes
+<!-- node type 3 = Incremental snapshot -->
+* rrweb/node/3/bytes
+<!-- node type 4 = Meta -->
+* rrweb/node/4/bytes

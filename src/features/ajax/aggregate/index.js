@@ -137,13 +137,13 @@ export class Aggregate extends AggregateBase {
     const addString = getAddStringContext(this.agentRef.runtime.obfuscator)
     let payload = 'bel.7;'
 
-    let firstTimestamp
+    let firstTimestamp = 0
 
     for (let i = 0; i < eventBuffer.length; i++) {
       const event = eventBuffer[i]
-      firstTimestamp ??= event.startTime
       // ajax nodes are relative to the first node (or page origin if no previous node), so we need to calculate the relative start time
       const relativeStartTime = event.startTime - firstTimestamp
+      firstTimestamp ||= event.startTime
 
       const fields = [
         numeric(relativeStartTime),

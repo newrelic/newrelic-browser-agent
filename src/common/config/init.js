@@ -21,6 +21,7 @@ const InitModelFn = () => {
   const hiddenState = {
     feature_flags: [],
     experimental: {
+      allow_registered_children: false,
       resources: false
     },
     mask_selector: '*',
@@ -48,7 +49,8 @@ const InitModelFn = () => {
   return {
     ajax: { deny_list: undefined, block_internal: true, enabled: true, autoStart: true },
     api: {
-      allow_registered_children: false,
+      get allow_registered_children () { return hiddenState.feature_flags.includes(FEATURE_FLAGS.REGISTER) || hiddenState.experimental.allow_registered_children },
+      set allow_registered_children (val) { hiddenState.experimental.allow_registered_children = val },
       duplicate_registered_data: false
     },
     distributed_tracing: {

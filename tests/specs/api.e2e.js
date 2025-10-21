@@ -63,8 +63,8 @@ describe('newrelic api', () => {
         })
         const [rumHarvests, errorsHarvests, insightsHarvests, logsHarvest] = await Promise.all([
           rumCapture.waitForResult({ totalCount: 1, timeout: 10000 }),
-          (testSet.includes('register.jserrors') ? mfeErrorsCapture : regularErrorsCapture).waitForResult({ totalCount: 1, timeout: 10000 }),
-          (testSet.includes('register.generic_events') ? mfeInsightsCapture : regularInsightsCapture).waitForResult({ totalCount: 1, timeout: 10000 }),
+          ((testSet.includes('register') && testSet.includes('register.jserrors')) ? mfeErrorsCapture : regularErrorsCapture).waitForResult({ totalCount: 1, timeout: 10000 }),
+          ((testSet.includes('register') && testSet.includes('register.generic_events')) ? mfeInsightsCapture : regularInsightsCapture).waitForResult({ totalCount: 1, timeout: 10000 }),
           logsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
         ])
 
@@ -101,6 +101,10 @@ describe('newrelic api', () => {
               expect(err.custom['mfe.name']).toEqual('agent' + id)
               expect(err.custom.eventSource).toEqual('MicroFrontendBrowserAgent')
               expect(err.custom['parent.id']).toEqual(containerAgentEntityGuid)
+            } else {
+              if (testSet.includes('register') && testSet.includes('register.jserrors')) {
+                expect(err.custom.appId).toEqual(42)
+              }
             }
             countRuns(id, 'err')
             if (testSet.includes('register.jserrors')) {
@@ -122,6 +126,10 @@ describe('newrelic api', () => {
                 expect(ins['mfe.name']).toEqual('agent' + id)
                 expect(ins.eventSource).toEqual('MicroFrontendBrowserAgent')
                 expect(ins['parent.id']).toEqual(containerAgentEntityGuid)
+              } else {
+                if (testSet.includes('register') && testSet.includes('register.generic_events')) {
+                  expect(ins.appId).toEqual(42)
+                }
               }
               countRuns(id, 'pa')
               if (testSet.includes('register.generic_events')) {
@@ -143,6 +151,10 @@ describe('newrelic api', () => {
               expect(log.attributes['mfe.name']).toEqual('agent' + id)
               expect(log.attributes.eventSource).toEqual('MicroFrontendBrowserAgent')
               expect(log.attributes['parent.id']).toEqual(containerAgentEntityGuid)
+            } else {
+              if (testSet.includes('register')) {
+                expect(log.attributes.appId).toEqual(42)
+              }
             }
             expect(ranOnce(id, 'log')).toEqual(true)
             expect(Number(id)).toEqual(Number(log.message))

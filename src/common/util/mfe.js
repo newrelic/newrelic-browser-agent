@@ -22,7 +22,8 @@ export function getVersion2Attributes (target, aggregateInstance) {
   const containerAgentEntityGuid = aggregateInstance.agentRef.runtime.appMetadata.agents[0].entityGuid
   if (!isValidMFETarget(target)) {
     return {
-      'entity.guid': containerAgentEntityGuid
+      'entity.guid': containerAgentEntityGuid,
+      appId: aggregateInstance.agentRef.info.applicationID
     }
   }
   return {

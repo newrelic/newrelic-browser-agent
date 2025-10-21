@@ -2,7 +2,19 @@
 
 import { testMFEErrorsRequest, testMFEInsRequest, testLogsRequest, testRumRequest, testErrorsRequest, testInsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
+let rumCapture, mfeErrorsCapture, mfeInsightsCapture, regularErrorsCapture, regularInsightsCapture, logsCapture
 describe('registered-entity', () => {
+  beforeEach(async () => {
+    [rumCapture, mfeErrorsCapture, mfeInsightsCapture, regularErrorsCapture, regularInsightsCapture, logsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+      { test: testRumRequest },
+      { test: testMFEErrorsRequest },
+      { test: testMFEInsRequest },
+      { test: testErrorsRequest },
+      { test: testInsRequest },
+      { test: testLogsRequest }
+    ])
+  })
+
   const featureFlags = [
     [],
     ['register'],
@@ -15,14 +27,6 @@ describe('registered-entity', () => {
   ]
   featureFlags.forEach((testSet) => {
     it(`RegisteredEntity -- ${testSet.join(' | ') || 'no flags'}`, async () => {
-      const [rumCapture, mfeErrorsCapture, mfeInsightsCapture, regularErrorsCapture, regularInsightsCapture, logsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
-        { test: testRumRequest },
-        { test: testMFEErrorsRequest },
-        { test: testMFEInsRequest },
-        { test: testErrorsRequest },
-        { test: testInsRequest },
-        { test: testLogsRequest }
-      ])
       await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: testSet } }))
 
       await browser.execute(function () {
@@ -57,8 +61,8 @@ describe('registered-entity', () => {
       })
       const [rumHarvests, errorsHarvests, insightsHarvests, logsHarvest] = await Promise.all([
         rumCapture.waitForResult({ totalCount: 1, timeout: 10000 }),
-        (testSet.includes('register.jserrors') ? mfeErrorsCapture : regularErrorsCapture).waitForResult({ totalCount: 1, timeout: 10000 }),
-        (testSet.includes('register.generic_events') ? mfeInsightsCapture : regularInsightsCapture).waitForResult({ totalCount: 1, timeout: 10000 }),
+        ((testSet.includes('register') && testSet.includes('register.jserrors')) ? mfeErrorsCapture : regularErrorsCapture).waitForResult({ totalCount: 1, timeout: 10000 }),
+        ((testSet.includes('register') && testSet.includes('register.generic_events')) ? mfeInsightsCapture : regularInsightsCapture).waitForResult({ totalCount: 1, timeout: 10000 }),
         logsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
       ])
 
@@ -96,6 +100,10 @@ describe('registered-entity', () => {
             expect(err.custom['mfe.name']).toEqual('agent' + id)
             expect(err.custom.eventSource).toEqual('MicroFrontendBrowserAgent')
             expect(err.custom['parent.id']).toEqual(containerAgentEntityGuid)
+          } else {
+            if (testSet.includes('register') && testSet.includes('register.jserrors')) {
+              expect(err.custom.appId).toEqual(42)
+            }
           }
           countRuns(id, 'err')
           if (testSet.includes('register.jserrors')) {
@@ -117,6 +125,10 @@ describe('registered-entity', () => {
               expect(ins['mfe.name']).toEqual('agent' + id)
               expect(ins.eventSource).toEqual('MicroFrontendBrowserAgent')
               expect(ins['parent.id']).toEqual(containerAgentEntityGuid)
+            } else {
+              if (testSet.includes('register') && testSet.includes('register.generic_events')) {
+                expect(ins.appId).toEqual(42)
+              }
             }
             countRuns(id, 'pa')
             if (testSet.includes('register.generic_events')) {
@@ -138,6 +150,10 @@ describe('registered-entity', () => {
             expect(log.attributes['mfe.name']).toEqual('agent' + id)
             expect(log.attributes.eventSource).toEqual('MicroFrontendBrowserAgent')
             expect(log.attributes['parent.id']).toEqual(containerAgentEntityGuid)
+          } else {
+            if (testSet.includes('register')) {
+              expect(log.attributes.appId).toEqual(42)
+            }
           }
           countRuns(id, 'log')
           expect(ranOnce(id, 'log')).toEqual(true)
@@ -153,6 +169,34 @@ describe('registered-entity', () => {
         tests[appId][type] ??= 0
         tests[appId][type]++
       }
+    })
+  })
+
+  it('should use newest name of matching register', async () => {
+    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+
+    await browser.execute(function () {
+      window.agent1 = new RegisteredEntity({
+        id: 1,
+        name: 'agent1'
+      })
+      window.agent2 = new RegisteredEntity({
+        id: 1,
+        name: 'agent2'
+      })
+      // should get data as "agent2"
+      window.agent1.noticeError('1')
+      window.agent2.noticeError('2')
+    })
+
+    const errorsHarvests = await mfeErrorsCapture.waitForResult({ totalCount: 1 })
+
+    // should get ALL data as "agent2" since it replaced the name of agent 1 of the same id
+    errorsHarvests.forEach(({ request: { query, body } }) => {
+      const data = body.err
+      data.forEach(err => {
+        expect(err.custom['mfe.name']).toEqual('agent2')
+      })
     })
   })
 })

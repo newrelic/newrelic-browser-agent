@@ -548,7 +548,7 @@ describe('API tests', () => {
           myApi.addPageAction()
           myApi.noticeError()
           myApi.log()
-          expect(console.debug).toHaveBeenCalledTimes(5)
+          expect(console.debug).toHaveBeenCalledTimes(2)
         })
       })
 
@@ -559,7 +559,7 @@ describe('API tests', () => {
         myApi.addPageAction()
         myApi.noticeError()
         myApi.log()
-        expect(console.debug).toHaveBeenCalledTimes(5)
+        expect(console.debug).toHaveBeenCalledTimes(2)
       })
 
       test('should update custom attributes', () => {

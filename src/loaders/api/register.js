@@ -13,6 +13,7 @@ import { REGISTER } from './constants'
 import { log } from './log'
 import { addPageAction } from './addPageAction'
 import { noticeError } from './noticeError'
+import { single } from '../../common/util/invoke'
 
 /**
  * @typedef {import('./register-api-types').RegisterAPI} RegisterAPI
@@ -54,8 +55,11 @@ export function buildRegisterApi (agentRef, target) {
   const registeredEntities = agentRef.runtime.registeredEntities
 
   /** if we have already registered this target, go ahead and re-use it */
-  const preregisteredEntity = registeredEntities.find(({ metadata: { target: { id, name } } }) => id === target.id && name === target.name)
-  if (preregisteredEntity) return preregisteredEntity
+  const preregisteredEntity = registeredEntities.find(({ metadata: { target: { id, name } } }) => id === target.id)
+  if (preregisteredEntity) {
+    if (preregisteredEntity.metadata.target.name !== target.name) preregisteredEntity.metadata.target.name = target.name
+    return preregisteredEntity
+  }
 
   /**
    * Block the API, and supply a warning function to display a message to end users
@@ -67,8 +71,8 @@ export function buildRegisterApi (agentRef, target) {
   }
 
   /** primary cases that can block the register API from working at init time */
-  if (!agentRef.init.api.allow_registered_children && !agentRef.init.feature_flags.includes('register')) block(() => warn(55))
-  if (!isValidMFETarget(target)) block(() => warn(48, target))
+  if (!agentRef.init.api.allow_registered_children) block(single(() => warn(55)))
+  if (!isValidMFETarget(target)) block(single(() => warn(48, target)))
 
   /** @type {RegisterAPI} */
   const api = {

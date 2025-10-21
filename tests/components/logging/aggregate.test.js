@@ -242,7 +242,8 @@ describe('payloads', () => {
         'test message',
         {
           myAttributes: 1,
-          'entity.guid': mainAgent.runtime.appMetadata.agents[0].entityGuid
+          'entity.guid': mainAgent.runtime.appMetadata.agents[0].entityGuid,
+          appId: mainAgent.info.applicationID
         },
         'error'
       ))

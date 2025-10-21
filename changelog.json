@@ -4,6 +4,31 @@
     {
       "changes": [
         {
+          "type": "feat",
+          "sha": "d29dc35bc87a6e35b615917e42f2fc37106aad7f",
+          "message": "Switch to using NR fork of rrweb",
+          "issues": [
+            "1593"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "fae739a72205fe4322ede834fefc1cbc8c31812e",
+          "message": "Preserve agent attributes for log payloads",
+          "issues": [
+            "1594"
+          ]
+        }
+      ],
+      "version": "1.301.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "9bc50f0a-9112-4552-9da4-a4bd05acbcc5",
+      "createTime": "2025-10-21T16:38:01.496Z"
+    },
+    {
+      "changes": [
+        {
           "type": "fix",
           "sha": "c930208c0e8e9cb9affa9e6f664d3a28b132b66c",
           "message": "Update typings for interaction API to reflect waitForEnd",
@@ -3289,5 +3314,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2025-10-14T17:49:09.902Z"
+  "updateTime": "2025-10-21T16:38:01.496Z"
 }

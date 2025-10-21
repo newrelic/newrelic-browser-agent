@@ -140,13 +140,23 @@ export function wrapPromise (sharedEE) {
 
     promiseEE.on('propagate', function (val, overwrite, trigger) {
       if (!this.getCtx || overwrite) {
-        this.getCtx = function () {
-          // eslint-disable-next-line
-          if (val instanceof Promise) {
-            var store = promiseEE.context(val)
-          }
+        const selfStore = this
+        const parentStore =
+          val instanceof Promise ? promiseEE.context(val) : null
+        let cachedCtx
 
-          return store && store.getCtx ? store.getCtx() : this
+        this.getCtx = function getCtx () {
+          if (cachedCtx) return cachedCtx
+
+          if (parentStore && parentStore !== selfStore) {
+            cachedCtx =
+              typeof parentStore.getCtx === 'function'
+                ? parentStore.getCtx()
+                : parentStore
+          } else {
+            cachedCtx = selfStore
+          }
+          return cachedCtx
         }
       }
     })

@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.301.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.300.0...v1.301.0) (2025-10-21)
+
+
+### Features
+
+* Switch to using NR fork of rrweb ([#1593](https://github.com/newrelic/newrelic-browser-agent/issues/1593)) ([d29dc35](https://github.com/newrelic/newrelic-browser-agent/commit/d29dc35bc87a6e35b615917e42f2fc37106aad7f))
+
+
+### Bug Fixes
+
+* Preserve agent attributes for log payloads ([#1594](https://github.com/newrelic/newrelic-browser-agent/issues/1594)) ([fae739a](https://github.com/newrelic/newrelic-browser-agent/commit/fae739a72205fe4322ede834fefc1cbc8c31812e))
+
 ## [1.300.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.299.0...v1.300.0) (2025-10-14)
 
 

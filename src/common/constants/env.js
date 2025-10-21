@@ -27,7 +27,6 @@ export const BUILD_ENV = 'NPM'
  */
 export const DIST_METHOD = 'NPM'
 
-/**
- * Exposes the lib version of rrweb
- */
-export const RRWEB_VERSION = pkgJSON.dependencies.rrweb
+export const RRWEB_PACKAGE_NAME = '@newrelic/rrweb'
+// For raw source consumers (no Babel inline), use the dependency string in package.json to get rrweb (fork) version.
+export const RRWEB_VERSION = pkgJSON.dependencies[RRWEB_PACKAGE_NAME] || '0.0.0'

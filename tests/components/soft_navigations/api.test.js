@@ -7,7 +7,7 @@ import querypack from '@newrelic/nr-querypack'
  * Test `.interaction gets ixn retroactively too when processed late after ee buffer drain` is a bit
  * flaky so add a retry for this file.
  */
-jest.retryTimes(5)
+jest.retryTimes(0)
 
 const INTERACTION_API = 'api-ixn'
 let mainAgent
@@ -283,26 +283,34 @@ test('.actionText and .setAttribute add attributes to ixn specifically', () => {
 
 // This isn't just an API test; it double serves as data validation on the querypack payload output.
 test('multiple finished ixns retain the correct start/end timestamps in payload', async () => {
-  softNavAggregate.ee.emit(`${INTERACTION_API}-get`, [0])
+  jest.useFakeTimers({ now: 0 })
+  softNavAggregate.ee.emit(`${INTERACTION_API}-get`, [jest.now()])
   let ixnContext = getIxnContext(mainAgent.interaction())
   ixnContext.associatedInteraction.nodeId = 1
   ixnContext.associatedInteraction.id = 'some_id'
   ixnContext.associatedInteraction.forceSave = true
-  softNavAggregate.ee.emit(`${INTERACTION_API}-end`, [200], ixnContext)
+  jest.advanceTimersByTime(200)
+  softNavAggregate.ee.emit(`${INTERACTION_API}-end`, [jest.now()], ixnContext)
 
-  softNavAggregate.ee.emit(`${INTERACTION_API}-get`, [300])
+  jest.advanceTimersByTime(100)
+  softNavAggregate.ee.emit(`${INTERACTION_API}-get`, [jest.now()])
   ixnContext = getIxnContext(mainAgent.interaction())
   ixnContext.associatedInteraction.nodeId = 2
   ixnContext.associatedInteraction.id = 'some_other_id'
   ixnContext.associatedInteraction.forceSave = true
-  softNavAggregate.ee.emit(`${INTERACTION_API}-end`, [500], ixnContext)
+  jest.advanceTimersByTime(200)
+  softNavAggregate.ee.emit(`${INTERACTION_API}-end`, [jest.now()], ixnContext)
 
-  softNavAggregate.ee.emit(`${INTERACTION_API}-get`, [700])
+  jest.advanceTimersByTime(200)
+  softNavAggregate.ee.emit(`${INTERACTION_API}-get`, [jest.now()])
   ixnContext = getIxnContext(mainAgent.interaction())
   ixnContext.associatedInteraction.nodeId = 3
   ixnContext.associatedInteraction.id = 'some_another_id'
   ixnContext.associatedInteraction.forceSave = true
-  softNavAggregate.ee.emit(`${INTERACTION_API}-end`, [1000], ixnContext)
+  jest.advanceTimersByTime(300)
+  softNavAggregate.ee.emit(`${INTERACTION_API}-end`, [jest.now()], ixnContext)
+  jest.useRealTimers()
+  jest.clearAllTimers()
 
   await new Promise(process.nextTick)
 
@@ -316,7 +324,7 @@ test('multiple finished ixns retain the correct start/end timestamps in payload'
   })
   // WARN: Double check decoded output & behavior or any introduced bugs before changing the follow line's static string.
   expect(harvestPayloadBody).toEqual("bel.7;1,,,5k,,,'api,'http://localhost/,1,1,,2,!!!!'some_id,'1,!!;;1,,8c,5k,,,'api,'http://localhost/,1,1,,2,!!!!'some_other_id,'2,!!;;1,,jg,8c,,,'api,'http://localhost/,1,1,,2,!!!!'some_another_id,'3,!!;")
-})
+}, 30000)
 
 // This isn't just an API test; it double serves as data validation on the querypack payload output.
 test('multiple finished ixns with ajax have correct start/end timestamps (in ajax nodes)', () => {

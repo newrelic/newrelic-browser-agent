@@ -75,42 +75,53 @@ describe('Session Replay Payload Validation', () => {
   })
 
   it('should match expected payload - standard', async () => {
-    const [[sessionReplayHarvest], { localStorage: { value: session } }] = await Promise.all([
-      sessionReplaysCapture.waitForResult({ totalCount: 1 }),
+    const [sessionReplayHarvests, { localStorage: { value: session } }] = await Promise.all([
+      sessionReplaysCapture.waitForResult({ totalCount: 2 }),
       browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
         .then(() => browser.waitForAgentLoad())
         .then(() => browser.getAgentSessionInfo())
     ])
 
+    const firstChunk = sessionReplayHarvests.find(x => x.request.query.attributes.includes('isFirstChunk=true'))
+
     testExpectedReplay({
-      data: sessionReplayHarvest.request,
+      data: firstChunk.request,
       session,
       hasError: false,
       hasMeta: true,
       hasSnapshot: true,
       isFirstChunk: true,
-      currentUrl: sessionReplayHarvest.request.headers.origin + '/tests/assets/rrweb-instrumented.html'
+      currentUrl: firstChunk.request.headers.origin + '/tests/assets/rrweb-instrumented.html'
     })
   })
 
   it('should match expected payload - error', async () => {
-    const [[sessionReplayHarvest], { localStorage: { value: session } }] = await Promise.all([
-      sessionReplaysCapture.waitForResult({ totalCount: 1 }),
+    const [sessionReplayHarvests, { localStorage: { value: session } }] = await Promise.all([
+      sessionReplaysCapture.waitForResult({ totalCount: 2 }),
       browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
         .then(() => browser.waitForAgentLoad())
         .then(() => browser.getAgentSessionInfo())
     ])
 
-    testExpectedReplay({ data: sessionReplayHarvest.request, session, hasError: false, hasMeta: true, hasSnapshot: true, isFirstChunk: true })
+    const firstChunk = sessionReplayHarvests.find(x => x.request.query.attributes.includes('isFirstChunk=true'))
 
-    const [sessionReplayHarvests] = await Promise.all([
+    testExpectedReplay({
+      data: firstChunk.request,
+      session,
+      hasError: false,
+      hasMeta: true,
+      hasSnapshot: true,
+      isFirstChunk: true
+    })
+
+    const [errorHarvest] = await Promise.all([
       sessionReplaysCapture.waitForResult({ timeout: 10000 }),
       browser.execute(function () {
-        newrelic.noticeError(new Error('test'))
+        document.querySelector('#error-click').click()
       })
     ])
 
-    const errorSessionReplayHarvest = sessionReplayHarvests.find(harvest => harvest.request.query.attributes.indexOf('hasError=true') !== -1)
+    const errorSessionReplayHarvest = errorHarvest.find(harvest => harvest.request.query.attributes.indexOf('hasError=true') !== -1)
     testExpectedReplay({ data: errorSessionReplayHarvest.request, session, hasError: true, isFirstChunk: false })
   })
 

@@ -12,6 +12,6 @@ export function setupAddPageActionAPI (agent) {
   setupAPI(ADD_PAGE_ACTION, (name, attributes) => addPageAction(name, attributes, agent), agent)
 }
 
-export function addPageAction (name, attributes, agentRef, targetEntityGuid, timestamp = now()) {
-  handle(prefix + ADD_PAGE_ACTION, [timestamp, name, attributes, targetEntityGuid], undefined, FEATURE_NAMES.genericEvents, agentRef.ee)
+export function addPageAction (name, attributes, agentRef, target, timestamp = now()) {
+  handle(prefix + ADD_PAGE_ACTION, [timestamp, name, attributes, target], undefined, FEATURE_NAMES.genericEvents, agentRef.ee)
 }

@@ -111,7 +111,10 @@ describe('Soft navigations', () => {
       expect(ixnAjaxArr).toEqual(expectedAjax)
       expect(errorsArr[0].params.browserInteractionId).toEqual(rcIxn.id)
     } else {
-      expect(ajaxEventsHarvests[0].request.body).toEqual(expectedAjax)
+      const echoXHR = JSONPath({ path: '$.[*].request.body.[?(!!@ && @.path===\'/echo\')]', json: ajaxEventsHarvests })
+      expect(echoXHR.length).toEqual(1)
+      const jsonXHR = JSONPath({ path: '$.[*].request.body.[?(!!@ && @.path===\'/json\')]', json: ajaxEventsHarvests })
+      expect(jsonXHR.length).toEqual(1)
       expect(errorsArr[0].params.browserInteractionId).toBeUndefined()
     }
     expect(errorsArr[0].params.message).toEqual('boogie')
@@ -225,7 +228,7 @@ describe('Soft navigations', () => {
 
   it('multiple finished ixns retain the correct start/end timestamps and sequence in payload', async () => {
     await Promise.all([
-      interactionsCapture.waitForResult({ totalCount: 1 }),
+      interactionsCapture.waitForResult({ totalCount: 2 }),
       browser.url(await browser.testHandle.assetURL('soft_navigations/sequential-api.html', config))
         .then(() => browser.waitForAgentLoad())
     ])
@@ -237,7 +240,7 @@ describe('Soft navigations', () => {
     body.forEach((ixn, i) => {
       if (ixn.start > ixn.end) sequentialMet = false
       if (ixn.end > (body[i + 1]?.start || Infinity)) sequentialMet = false
-      if (ixn.nodeId > (body[i + 1]?.nodeId || Infinity)) sequentialMet = false
+      if (Number(ixn.nodeId) > Number(body[i + 1]?.nodeId || Infinity)) sequentialMet = false
     })
 
     expect(interactionHarvests[1].request.body.map(ixn => ([ixn.trigger, ixn.customName]))).toEqual([

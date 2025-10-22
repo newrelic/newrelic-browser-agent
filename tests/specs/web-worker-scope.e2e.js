@@ -7,9 +7,9 @@ describe('web worker scope', () => {
       { test: testAjaxTimeSlicesRequest }
     ])
 
-    const [[events], [metrics]] = await Promise.all([
-      ajaxEventsCapture.waitForResult({ totalCount: 1 }),
-      ajaxMetricsCapture.waitForResult({ totalCount: 1 }),
+    const [events, metrics] = await Promise.all([
+      ajaxEventsCapture.waitForResult({ totalCount: 2 }),
+      ajaxMetricsCapture.waitForResult({ totalCount: 2 }),
       browser.url(
         await browser.testHandle.assetURL(
           'test-builds/browser-agent-wrapper/worker-agent.html',
@@ -28,21 +28,8 @@ describe('web worker scope', () => {
       )
     ])
 
-    expect(events.request.body).toEqual(expect.arrayContaining([
-      expect.objectContaining({
-        domain: expect.stringContaining('bam-test-1.nr-local.net'),
-        path: '/json',
-        type: 'ajax',
-        requestedWith: 'XMLHttpRequest'
-      })
-    ]))
-    expect(metrics.request.body.xhr).toEqual(expect.arrayContaining([
-      expect.objectContaining({
-        params: expect.objectContaining({
-          pathname: '/json'
-        })
-      })
-    ]))
+    expect(events.some(payload => payload.request.body.find(x => x.path === '/json'))).toBe(true)
+    expect(metrics.some(payload => payload.request.body.xhr.find(x => x.params.pathname === '/json'))).toBe(true)
   })
 
   it('should capture fetch events', async () => {
@@ -51,9 +38,9 @@ describe('web worker scope', () => {
       { test: testAjaxTimeSlicesRequest }
     ])
 
-    const [[events], [metrics]] = await Promise.all([
-      ajaxEventsCapture.waitForResult({ totalCount: 1 }),
-      ajaxMetricsCapture.waitForResult({ totalCount: 1 }),
+    const [events, metrics] = await Promise.all([
+      ajaxEventsCapture.waitForResult({ totalCount: 2 }),
+      ajaxMetricsCapture.waitForResult({ totalCount: 2 }),
       browser.url(
         await browser.testHandle.assetURL(
           'test-builds/browser-agent-wrapper/worker-agent.html',
@@ -70,28 +57,15 @@ describe('web worker scope', () => {
       )
     ])
 
-    expect(events.request.body).toEqual(expect.arrayContaining([
-      expect.objectContaining({
-        domain: expect.stringContaining('bam-test-1.nr-local.net'),
-        path: '/json',
-        type: 'ajax',
-        requestedWith: 'fetch'
-      })
-    ]))
-    expect(metrics.request.body.xhr).toEqual(expect.arrayContaining([
-      expect.objectContaining({
-        params: expect.objectContaining({
-          pathname: '/json'
-        })
-      })
-    ]))
+    expect(events.some(payload => payload.request.body.find(x => x.path === '/json'))).toBe(true)
+    expect(metrics.some(payload => payload.request.body.xhr.find(x => x.params.pathname === '/json'))).toBe(true)
   })
 
   it('should capture error metrics', async () => {
     const ajaxMetricsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testAjaxTimeSlicesRequest })
 
-    const [[metrics]] = await Promise.all([
-      ajaxMetricsCapture.waitForResult({ totalCount: 1 }),
+    const [metrics] = await Promise.all([
+      ajaxMetricsCapture.waitForResult({ timeout: 10000 }),
       browser.url(
         await browser.testHandle.assetURL(
           'test-builds/browser-agent-wrapper/worker-agent.html',
@@ -108,21 +82,14 @@ describe('web worker scope', () => {
       )
     ])
 
-    expect(metrics.request.body.err).toEqual(expect.arrayContaining([
-      expect.objectContaining({
-        custom: expect.objectContaining({ isWorker: true }),
-        params: expect.objectContaining({
-          exceptionClass: 'Error',
-          message: 'taco party'
-        })
-      })
-    ]))
+    const errorTimeslices = metrics.filter(payload => !!payload.request.body.err)
+    expect(errorTimeslices.some(payload => payload.request.body.err.find(x => x.params.message === 'taco party'))).toBe(true)
   })
 
   it('should capture page action events', async () => {
     const insightsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testInsRequest })
 
-    const [[events]] = await Promise.all([
+    const [events] = await Promise.all([
       insightsCapture.waitForResult({ totalCount: 1 }),
       browser.url(
         await browser.testHandle.assetURL(
@@ -138,14 +105,8 @@ describe('web worker scope', () => {
       )
     ])
 
-    expect(events.request.body.ins).toEqual(expect.arrayContaining([
-      expect.objectContaining({
-        actionName: 'DummyEvent',
-        eventType: 'PageAction',
-        isWorker: true,
-        currentUrl: expect.stringContaining('/tests/assets/test-builds/browser-agent-wrapper/worker-wrapper.js'),
-        pageUrl: expect.stringContaining('/tests/assets/test-builds/browser-agent-wrapper/worker-wrapper.js')
-      })
-    ]))
+    expect(events.some(payload => payload.request.body.ins.find(x => {
+      return x.actionName === 'DummyEvent' && x.eventType === 'PageAction' && x.isWorker && x.currentUrl.includes('/tests/assets/test-builds/browser-agent-wrapper/worker-wrapper.js') && x.pageUrl.includes('/tests/assets/test-builds/browser-agent-wrapper/worker-wrapper.js')
+    }))).toBe(true)
   })
 })

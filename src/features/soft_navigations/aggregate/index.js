@@ -46,7 +46,6 @@ export class Aggregate extends AggregateBase {
     this.waitForFlags(['spa']).then(([spaOn]) => {
       if (spaOn) {
         this.drain()
-        setTimeout(() => agentRef.runtime.harvester.triggerHarvestFor(this), 0) // send the IPL ixn on next tick, giving some time for any ajax to finish; we may want to just remove this?
       } else {
         this.blocked = true // if rum response determines that customer lacks entitlements for spa endpoint, this feature shouldn't harvest
         this.deregisterDrain()
@@ -148,7 +147,7 @@ export class Aggregate extends AggregateBase {
     */
     if (this.interactionInProgress?.isActiveDuring(timestamp)) return this.interactionInProgress
     let saveIxn
-    const interactionsBuffer = this.interactionsToHarvest.get()?.[0]?.data
+    const interactionsBuffer = this.interactionsToHarvest.get()
     if (!interactionsBuffer) return undefined // no interactions have been staged yet, so nothing to search through)
     for (let idx = interactionsBuffer.length - 1; idx >= 0; idx--) { // reverse search for the latest completed interaction for efficiency
       const finishedInteraction = interactionsBuffer[idx]

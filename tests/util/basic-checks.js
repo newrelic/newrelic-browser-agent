@@ -326,3 +326,36 @@ export function checkSpa ({ query, body }, { trigger } = {}) {
     }))
   }
 }
+
+/**
+ * gets the harvest trigger calls from the agent mock harvester
+ * @param {Agent} fakeAgent the agent mock from setupAgent
+ * @returns {Object}
+ */
+export function getHarvestCalls(fakeAgent){
+  return fakeAgent.runtime.harvester.triggerHarvestFor.mock.calls.map((call, i) => {
+    return {
+      featureName: call[0].featureName,
+      results: fakeAgent.runtime.harvester.triggerHarvestFor.mock.results[i]
+    }
+  })
+}
+
+/**
+ * expects the harvests for a specific feature to have been called
+ * @param {Agent} agentMock the agent mock from setupAgent
+ * @param {String} featureName the name of the feature to check in the harvest log
+ * @param {Object} opts how many times the harvest should have successfully "sent" data
+ * @param {Number} [opts.callCount] how many times the harvest was called
+ * @param {Number} [opts.harvestsCount=1] how many times the harvest was successful
+ * @returns {void}
+ */
+export function expectHarvests (agentMock, featureName, {callCount, harvestsCount = 1}) {
+  if (callCount !== undefined && callCount < harvestsCount) {
+    throw new Error(`Expected at least ${harvestsCount} harvests for feature "${featureName}" but only ${callCount} were called.`)
+  }
+  
+  const harvestCalls = getHarvestCalls(agentMock)
+  if (callCount !== undefined) expect(harvestCalls.filter(x => x.featureName === featureName).length).toEqual(callCount)
+  expect(harvestCalls.filter(x => x.featureName === featureName && x.results.type === 'return' && x.results.value.ranSend === true).length).toEqual(harvestsCount)
+}

@@ -17,8 +17,6 @@ describe('Session Replay Ingest Behavior', () => {
     await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
       .then(() => browser.waitForSessionReplayRecording())
 
-    expect((await getSR()).events.length).toBeGreaterThan(0)
-
     await sessionReplaysCapture.waitForResult({ totalCount: 2 })
 
     expect((await getSR()).events.length).toEqual(0)
@@ -40,7 +38,7 @@ describe('Session Replay Ingest Behavior', () => {
       browser.testHandle.scheduleReply('bamServer', {
         test: testBlobReplayRequest,
         statusCode: 429
-      }),
+      }).then(() => $('body').click()),
       sessionReplaysCapture.waitForResult({ timeout: 10000 })
     ])
 

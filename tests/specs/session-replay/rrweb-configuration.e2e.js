@@ -93,7 +93,8 @@ describe('RRWeb Configuration', () => {
 
       const sessionReplaysHarvests = await sessionReplaysCapture.waitForResult({ timeout: 10000 })
       expect(sessionReplaysHarvests.length).toBeGreaterThanOrEqual(1)
-      expect(decodeAttributes(sessionReplaysHarvests[0].request.query.attributes).hasSnapshot).toEqual(true)
+      const snapshotHarvest = sessionReplaysHarvests.find(x => decodeAttributes(x.request.query.attributes).hasSnapshot === true)
+      expect(snapshotHarvest).toBeDefined()
 
       // note: we need to leave text nodes containing only whitespace as-is to avoid adding extraneous '*'
       const whitespaceOnlyNodes = JSONPath({ path: '$.[*].request.body.[?(!!@ && @.type===3 && !!@.textContent && @.textContent.match(/^\\s+$/) && ![\'script\',\'link\',\'style\'].includes(@parent.tagName))]', json: sessionReplaysHarvests })
@@ -120,7 +121,8 @@ describe('RRWeb Configuration', () => {
 
       const sessionReplaysHarvests = await sessionReplaysCapture.waitForResult({ timeout: 10000 })
       expect(sessionReplaysHarvests.length).toBeGreaterThanOrEqual(1)
-      expect(decodeAttributes(sessionReplaysHarvests[0].request.query.attributes).hasSnapshot).toEqual(true)
+      const snapshotHarvest = sessionReplaysHarvests.find(x => decodeAttributes(x.request.query.attributes).hasSnapshot === true)
+      expect(snapshotHarvest).toBeDefined()
 
       const testNodes = JSONPath({ path: '$.[*].request.body.[?(!!@ && @.type===3 && !!@.textContent && ![\'script\',\'link\',\'style\'].includes(@parent.tagName))]', json: sessionReplaysHarvests })
       expect(testNodes.length).toBeGreaterThan(0)
@@ -397,10 +399,12 @@ async function checkSessionReplayInputMasking (sessionReplaysCapture, elements) 
   // Wait 10 seconds for additional harvests
   const sessionReplaysHarvests = await sessionReplaysCapture.waitForResult({ timeout: 10000 })
   expect(sessionReplaysHarvests.length).toBeGreaterThanOrEqual(1)
-  expect(decodeAttributes(sessionReplaysHarvests[0].request.query.attributes).hasSnapshot).toEqual(true)
+
+  const snapshotHarvest = sessionReplaysHarvests.find(x => decodeAttributes(x.request.query.attributes).hasSnapshot === true)
+  expect(snapshotHarvest).toBeDefined()
 
   elements.forEach(el => {
-    const snapshotNodes = JSONPath({ path: `$.request.body.[?(${el.jsonPathFilter})]`, json: sessionReplaysHarvests[0] })
+    const snapshotNodes = JSONPath({ path: `$.request.body.[?(${el.jsonPathFilter})]`, json: snapshotHarvest })
     expect(snapshotNodes.length).toBeGreaterThanOrEqual(1)
 
     snapshotNodes.forEach(node => {

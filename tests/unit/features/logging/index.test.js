@@ -40,6 +40,12 @@ describe('Logging aggregate', () => {
             sessionReplayMode: 1,
             sessionTraceMode: 1
           }
+        },
+        registeredEntities: [],
+        appMetadata: {
+          agents: [
+            { entityGuid: 'foobar' }
+          ]
         }
       }
     }
@@ -60,7 +66,7 @@ describe('Logging aggregate', () => {
       attributes: {
         agentVersion: '1.0.0',
         appId: '123',
-        'entity.guid': undefined,
+        'entity.guid': 'foobar',
         hasReplay: true,
         hasTrace: true,
         'instrumentation.name': 'loaderTypeX',

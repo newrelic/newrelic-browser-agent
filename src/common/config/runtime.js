@@ -25,7 +25,6 @@ const RuntimeModel = {
   customTransaction: undefined,
   denyList: undefined,
   disabled: false,
-  entityManager: undefined,
   harvester: undefined,
   isolatedBacklog: false,
   isRecording: false, // true when actively recording, false when paused or stopped
@@ -37,6 +36,7 @@ const RuntimeModel = {
   releaseIds: {},
   session: undefined,
   timeKeeper: undefined,
+  registeredEntities: [],
   /** a proxy is set in agent-session to track jsAttributes changes for harvesting mechanics */
   jsAttributesMetadata: { bytes: 0 },
   get harvestCount () { return ++_harvestCount }

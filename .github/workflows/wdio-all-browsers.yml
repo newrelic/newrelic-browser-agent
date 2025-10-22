@@ -12,6 +12,10 @@ on:
         description: 'Run the latest version of browsers only instead of all versions'
         default: true
         type: boolean
+      boosted:
+        description: 'Enable boosted testing (uses more resources)'
+        default: false
+        type: boolean
     secrets:
       LAMBDA_USERNAME:
         required: true
@@ -24,6 +28,7 @@ jobs:
     with:
       ref: ${{ inputs.ref || github.ref }}
       browser-target: ${{ inputs.latest-only == true && 'chrome@latest' || 'chrome@*' }}
+      concurrency: ${{ inputs.boosted == true && 20 || 10 }}
     secrets: inherit
 
   firefox:
@@ -31,6 +36,7 @@ jobs:
     with:
       ref: ${{ inputs.ref || github.ref }}
       browser-target: ${{ inputs.latest-only == true && 'firefox@latest' || 'firefox@*' }}
+      concurrency: ${{ inputs.boosted == true && 20 || 10 }}
     secrets: inherit
 
   safari:
@@ -38,6 +44,7 @@ jobs:
     with:
       ref: ${{ inputs.ref || github.ref }}
       browser-target: ${{ inputs.latest-only == true && 'safari@latest' || 'safari@*' }}
+      concurrency: ${{ inputs.boosted == true && 20 || 10 }}
     secrets: inherit
 
   edge:
@@ -45,6 +52,7 @@ jobs:
     with:
       ref: ${{ inputs.ref || github.ref }}
       browser-target: ${{ inputs.latest-only == true && 'edge@latest' || 'edge@*' }}
+      concurrency: ${{ inputs.boosted == true && 20 || 10 }}
     secrets: inherit
 
   ios:
@@ -53,6 +61,7 @@ jobs:
       ref: ${{ inputs.ref || github.ref }}
       browser-target: ${{ inputs.latest-only == true && 'ios@latest' || 'ios@*' }}
       additional-flags: --timeout 120000 --session-timeout 240000
+      concurrency: ${{ inputs.boosted == true && 20 || 10 }}
     secrets: inherit
 
   android:
@@ -61,6 +70,7 @@ jobs:
       ref: ${{ inputs.ref || github.ref }}
       browser-target: ${{ inputs.latest-only == true && 'android@latest' || 'android@*' }}
       additional-flags: --timeout 120000 --session-timeout 240000
+      concurrency: ${{ inputs.boosted == true && 20 || 10 }}
     secrets: inherit
 
   ios-webview:

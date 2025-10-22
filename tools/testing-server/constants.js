@@ -57,7 +57,7 @@ const enabledFeature = { enabled, autoStart }
 module.exports.defaultInitBlock = {
   ajax: { deny_list: [], block_internal: false, ...enabledFeature },
   api: {
-    allow_registered_children: true,
+    allow_registered_children: false,
     duplicate_registered_data: false // if an array of entity guids are supplied, can be more granular - true|false will be all or nothing
   },
   distributed_tracing: {},

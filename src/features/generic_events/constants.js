@@ -17,5 +17,7 @@ export const FRUSTRATION_TIMEOUT_MS = 2000
 export const RESERVED_EVENT_TYPES = ['PageAction', 'UserAction', 'BrowserPerformance']
 
 export const FEATURE_FLAGS = {
-  RESOURCES: 'experimental.resources'
+  RESOURCES: 'experimental.resources',
+  REGISTER: 'register'
+  // register.jserrors and register.generic_events are also used, but not referenced directly so no need to represent here
 }

@@ -10,10 +10,10 @@ import { FEATURE_NAME, LOGGING_EVENT_EMITTER_CHANNEL, LOG_LEVELS, LOGGING_MODE }
 import { Log } from '../shared/log'
 import { isValidLogLevel } from '../shared/utils'
 import { applyFnToProps } from '../../../common/util/traverse'
-import { isContainerAgentTarget } from '../../../common/util/target'
 import { SESSION_EVENT_TYPES, SESSION_EVENTS } from '../../../common/session/constants'
 import { ABORT_REASONS } from '../../session_replay/constants'
 import { canEnableSessionTracking } from '../../utils/feature-gates'
+import { getVersion2Attributes } from '../../../common/util/mfe'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -21,6 +21,8 @@ export class Aggregate extends AggregateBase {
     super(agentRef, FEATURE_NAME)
     this.isSessionTrackingEnabled = canEnableSessionTracking(agentRef.init) && agentRef.runtime.session
 
+    /** set up agg-level behaviors specific to this feature */
+    this.harvestOpts.raw = true
     super.customAttributesAreSeparate = true
 
     // The SessionEntity class can emit a message indicating the session was cleared and reset (expiry, inactivity). This feature must abort and never resume if that occurs.
@@ -34,7 +36,6 @@ export class Aggregate extends AggregateBase {
       else this.loggingMode = data.loggingMode
     })
 
-    this.harvestOpts.raw = true
     this.waitForFlags(['log']).then(([loggingMode]) => {
       const session = this.agentRef.runtime.session ?? {}
       if (this.loggingMode === LOGGING_MODE.OFF || (session.isNew && loggingMode === LOGGING_MODE.OFF)) {
@@ -63,11 +64,17 @@ export class Aggregate extends AggregateBase {
     })
   }
 
-  handleLog (timestamp, message, attributes = {}, level = LOG_LEVELS.INFO, targetEntityGuid) {
-    if (!this.agentRef.runtime.entityManager.get(targetEntityGuid)) return warn(56, this.featureName)
+  handleLog (timestamp, message, attributes = {}, level = LOG_LEVELS.INFO, target) {
     if (this.blocked || !this.loggingMode) return
 
     if (!attributes || typeof attributes !== 'object') attributes = {}
+
+    attributes = {
+      ...attributes,
+      /** Specific attributes only supplied if harvesting to endpoint version 2 */
+      ...(getVersion2Attributes(target, this))
+    }
+
     if (typeof level === 'string') level = level.toUpperCase()
     if (!isValidLogLevel(level)) return warn(30, level)
     if (this.loggingMode < (LOGGING_MODE[level] || Infinity)) {
@@ -100,25 +107,26 @@ export class Aggregate extends AggregateBase {
       level
     )
 
-    this.events.add(log, targetEntityGuid)
+    this.events.add(log)
   }
 
-  serializer (eventBuffer, targetEntityGuid) {
-    const target = this.agentRef.runtime.entityManager.get(targetEntityGuid)
+  serializer (eventBuffer) {
     const sessionEntity = this.agentRef.runtime.session
     return [{
       common: {
         /** Attributes in the `common` section are added to `all` logs generated in the payload */
         attributes: {
           ...this.agentRef.info.jsAttributes, // user-provided custom attributes
-          'entity.guid': target.entityGuid, // browser entity guid as provided API target OR the default from RUM response if not supplied
+          ...(this.harvestEndpointVersion === 1 && {
+            'entity.guid': this.agentRef.runtime.appMetadata.agents[0].entityGuid,
+            appId: this.agentRef.info.applicationID
+          }),
           ...(sessionEntity && {
             session: sessionEntity.state.value || '0', // The session ID that we generate and keep across page loads
-            hasReplay: sessionEntity.state.sessionReplayMode === 1 && isContainerAgentTarget(target, this.agentRef), // True if a session replay recording is running
+            hasReplay: sessionEntity.state.sessionReplayMode === 1, // True if a session replay recording is running
             hasTrace: sessionEntity.state.sessionTraceMode === 1 // True if a session trace recording is running
           }),
           ptid: this.agentRef.runtime.ptid, // page trace id
-          appId: target.applicationID || this.agentRef.info.applicationID, // Application ID from info object,
           standalone: Boolean(this.agentRef.info.sa), // copy paste (true) vs APM (false)
           agentVersion: this.agentRef.runtime.version, // browser agent version
           // The following 3 attributes are evaluated and dropped at ingest processing time and do not get stored on NRDB:
@@ -135,9 +143,8 @@ export class Aggregate extends AggregateBase {
     }]
   }
 
-  queryStringsBuilder (_, targetEntityGuid) {
-    const target = this.agentRef.runtime.entityManager.get(targetEntityGuid)
-    return { browser_monitoring_key: target.licenseKey }
+  queryStringsBuilder () {
+    return { browser_monitoring_key: this.agentRef.info.licenseKey }
   }
 
   /** Abort the feature, once aborted it will not resume */

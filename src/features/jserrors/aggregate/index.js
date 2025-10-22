@@ -19,8 +19,7 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { now } from '../../../common/timing/now'
 import { applyFnToProps } from '../../../common/util/traverse'
 import { evaluateInternalError } from './internal-errors'
-import { isContainerAgentTarget } from '../../../common/util/target'
-import { warn } from '../../../common/util/console'
+import { getVersion2Attributes } from '../../../common/util/mfe'
 import { buildCauseString } from './cause-string'
 
 /**
@@ -32,6 +31,8 @@ export class Aggregate extends AggregateBase {
   constructor (agentRef) {
     super(agentRef, FEATURE_NAME)
 
+    /** set up agg-level behaviors specific to this feature */
+    this.harvestOpts.aggregatorTypes = ['err', 'ierr', 'xhr'] // the types in EventAggregator this feature cares about
     this.stackReported = {}
     this.observedAt = {}
     this.pageviewReported = {}
@@ -45,8 +46,6 @@ export class Aggregate extends AggregateBase {
     register('ierr', (...args) => this.storeError(...args), this.featureName, this.ee)
     register('softNavFlush', (interactionId, wasFinished, softNavAttrs, interactionEndTime) =>
       this.onSoftNavNotification(interactionId, wasFinished, softNavAttrs, interactionEndTime), this.featureName, this.ee) // when an ixn is done or cancelled
-
-    this.harvestOpts.aggregatorTypes = ['err', 'ierr', 'xhr'] // the types in EventAggregator this feature cares about
 
     // 0 == off, 1 == on
     this.waitForFlags(['err']).then(([errFlag]) => {
@@ -113,10 +112,8 @@ export class Aggregate extends AggregateBase {
    * @param {object=} target the target to buffer and harvest to, if undefined the default configuration target is used
    * @returns
    */
-  storeError (err, time, internal, customAttributes, hasReplay, swallowReason, targetEntityGuid) {
+  storeError (err, time, internal, customAttributes, hasReplay, swallowReason, target) {
     if (!err) return
-    const target = this.agentRef.runtime.entityManager.get(targetEntityGuid)
-    if (!target) return warn(56, this.featureName)
     // are we in an interaction
     time = time || now()
     let filterOutput
@@ -155,7 +152,7 @@ export class Aggregate extends AggregateBase {
     if (filterOutput?.group) params.errorGroup = filterOutput.group
 
     // Should only decorate "hasReplay" for the container agent, so check if the target matches the config
-    if (hasReplay && isContainerAgentTarget(target, this.agentRef)) params.hasReplay = hasReplay
+    if (hasReplay && !target) params.hasReplay = hasReplay
     /**
      * The bucketHash is different from the params.stackHash because the params.stackHash is based on the canonicalized
      * stack trace and is used downstream in NR1 to attempt to group the same errors across different browsers. However,
@@ -191,7 +188,7 @@ export class Aggregate extends AggregateBase {
 
     // Trace sends the error in its payload, and both trace & replay simply listens for any error to occur.
     const jsErrorEvent = [type, bucketHash, params, newMetrics, customAttributes]
-    if (this.shouldAllowMainAgentToCapture(targetEntityGuid)) handle('trace-jserror', jsErrorEvent, undefined, FEATURE_NAMES.sessionTrace, this.ee)
+    if (this.shouldAllowMainAgentToCapture(target)) handle('trace-jserror', jsErrorEvent, undefined, FEATURE_NAMES.sessionTrace, this.ee)
     // still send EE events for other features such as above, but stop this one from aggregating internal data
     if (this.blocked) return
 
@@ -200,7 +197,7 @@ export class Aggregate extends AggregateBase {
       params._interactionNodeId = err.__newrelic[this.agentIdentifier].interactionNodeId
     }
 
-    if (this.shouldAllowMainAgentToCapture(targetEntityGuid)) {
+    if (this.shouldAllowMainAgentToCapture(target)) {
       const softNavInUse = Boolean(this.agentRef.features?.[FEATURE_NAMES.softNav])
       // Note: the following are subject to potential race cond wherein if the other feature aren't fully initialized, it'll be treated as there being no associated interaction.
       // They each will also tack on their respective properties to the params object as part of the decision flow.
@@ -221,12 +218,15 @@ export class Aggregate extends AggregateBase {
     }
 
     // always add directly if scoped to a sub-entity, the other pathways above will be deterministic if the main agent should procede
-    if (targetEntityGuid) this.#storeJserrorForHarvest([...jsErrorEvent, targetEntityGuid], false, params._softNavAttributes)
+    if (target) this.#storeJserrorForHarvest([...jsErrorEvent, target], false, params._softNavAttributes)
   }
 
   #storeJserrorForHarvest (errorInfoArr, softNavOccurredFinished, softNavCustomAttrs = {}) {
-    let [type, bucketHash, params, newMetrics, localAttrs, targetEntityGuid] = errorInfoArr
-    const allCustomAttrs = {}
+    let [type, bucketHash, params, newMetrics, localAttrs, target] = errorInfoArr
+    const allCustomAttrs = {
+      /** MFE specific attributes if in "multiple" mode (ie consumer version 2) */
+      ...getVersion2Attributes(target, this)
+    }
 
     if (softNavOccurredFinished) {
       Object.entries(softNavCustomAttrs).forEach(([k, v]) => setCustom(k, v)) // when an ixn finishes, it'll include stuff in jsAttributes + attrs specific to the ixn
@@ -243,7 +243,7 @@ export class Aggregate extends AggregateBase {
     const jsAttributesHash = stringHashCode(stringify(allCustomAttrs))
     const aggregateHash = bucketHash + ':' + jsAttributesHash
 
-    this.events.add([type, aggregateHash, params, newMetrics, allCustomAttrs], targetEntityGuid)
+    this.events.add([type, aggregateHash, params, newMetrics, allCustomAttrs])
 
     function setCustom (key, val) {
       allCustomAttrs[key] = (val && typeof val === 'object' ? stringify(val) : val)
@@ -253,11 +253,11 @@ export class Aggregate extends AggregateBase {
   /**
   * If the event lacks an entityGuid (the default behavior), the main agent should capture the data. If the data is assigned to a sub-entity target
   * the main agent should not capture events unless it is configured to do so.
-  * @param {string} entityGuid - the context object for the event
+  * @param {string} target - the context object for the event
   * @returns {boolean} - whether the main agent should capture the event to its internal target
   */
-  shouldAllowMainAgentToCapture (entityGuid) {
-    return (!entityGuid || this.agentRef.init.api.duplicate_registered_data)
+  shouldAllowMainAgentToCapture (target) {
+    return (!target || this.agentRef.init.api.duplicate_registered_data)
   }
 
   // TO-DO: Remove this function when old spa is taken out. #storeJserrorForHarvest handles the work with the softnav feature.

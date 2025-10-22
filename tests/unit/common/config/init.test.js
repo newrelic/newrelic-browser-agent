@@ -131,7 +131,7 @@ test('init props exist and return expected defaults', () => {
     enabled: true,
     elementAttributes: ['id', 'className', 'tagName', 'type']
   })
-  expect(config.useConsentModel).toEqual(false)
+  expect(config.browserConsentMode.enabled).toEqual(false)
 })
 
 describe('property getters/setters used for validation', () => {

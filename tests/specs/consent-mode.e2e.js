@@ -1,19 +1,19 @@
 import { testRumRequest, testTimingEventsRequest } from '../../tools/testing-server/utils/expect-tests'
 import { FEATURE_NAMES } from '../../src/loaders/features/features'
 
-describe('consent model', () => {
+describe('consent mode', () => {
   let rumCapture, pvtCapture
 
   const HARVEST_TIMEOUT = 10000
 
   const consentModeConfig = {
     init: {
-      useConsentModel: true
+      browserConsentMode: { enabled: true }
     }
   }
   const manualStartConfig = {
     init: {
-      useConsentModel: true,
+      browserConsentMode: { enabled: true },
       [FEATURE_NAMES.pageViewTiming]: { autoStart: false }
     }
   }
@@ -32,7 +32,7 @@ describe('consent model', () => {
     it('should harvest data for PVE feature if consent is given', async () => {
       const [rumHarvests] = await Promise.all([
         rumCapture.waitForResult({ totalCount: 1 }),
-        browser.url(await browser.testHandle.assetURL('consent-model-accept.html', consentModeConfig))
+        browser.url(await browser.testHandle.assetURL('consent-mode-accept.html', consentModeConfig))
       ])
 
       expect(rumHarvests.length).toBeGreaterThan(0)
@@ -41,7 +41,7 @@ describe('consent model', () => {
     it('should not harvest data if consent is not given', async () => {
       const [rumHarvests] = await Promise.all([
         rumCapture.waitForResult({ timeout: HARVEST_TIMEOUT }),
-        browser.url(await browser.testHandle.assetURL('consent-model-reject.html', consentModeConfig))
+        browser.url(await browser.testHandle.assetURL('consent-mode-reject.html', consentModeConfig))
       ])
 
       expect(rumHarvests.length).toEqual(0)

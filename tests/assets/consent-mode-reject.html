@@ -5,14 +5,14 @@
 -->
 <html>
   <head>
-    <title>Consent Model Test</title>
+    <title>Consent Mode Test</title>
     {init} {config} {loader}
     <script>
-      newrelic.consent(true)
+      newrelic.consent(false)
     </script>
   </head>
   <body>
-    This page calls the consent API with true before a delayed page load.
+    This page calls the consent API with false before a delayed page load.
     <script type="text/javascript">
       // Delay DOMContentLoaded event by 3 seconds
       var start = new Date()

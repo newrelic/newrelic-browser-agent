@@ -22,13 +22,17 @@
       window.rawTimes.push(Math.floor(performance.now()))
       xhr.send()
 
-      for (var i = 0; i < 10; i++) {
-        var xhr = new XMLHttpRequest()
+      let offset = 100
+      for (var i = 0; i < 3; i++) {
+        setTimeout(function () {
+          var xhr = new XMLHttpRequest()
 
-        var url = '/json'
-        xhr.open('GET', url)
-        window.rawTimes.push(Math.floor(performance.now()))
-        xhr.send()
+          var url = '/json'
+          xhr.open('GET', url)
+          window.rawTimes.push(Math.floor(performance.now()))
+          xhr.send()
+        }, offset)
+        offset += 100
       }
     </script>
   </body>

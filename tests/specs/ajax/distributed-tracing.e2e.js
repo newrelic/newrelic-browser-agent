@@ -275,7 +275,7 @@ function validateTraceTime (harvest = {}, rawTimes = []) {
     expect(event.end).toBeGreaterThan(event.start)
     // For all but the first event, validate the time difference is in rawTimes
     // Example: event[1].start - event[0].start should be in rawTimes
-    if (idx !== 0) validateRawTimes(event.start - events[0].start)
+    if (idx !== 0) validateRawTimes(event.start)
 
     // For each child of type 'ajax', validate its timing
     // Example: child = { type: 'ajax', start: 110, end: 120, timestamp: 23456789, ... }

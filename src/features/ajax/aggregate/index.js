@@ -143,7 +143,7 @@ export class Aggregate extends AggregateBase {
       const event = eventBuffer[i]
       // ajax nodes are relative to the first node (or page origin if no previous node), so we need to calculate the relative start time
       const relativeStartTime = event.startTime - firstTimestamp
-      firstTimestamp ||= event.startTime
+      if (i === 0) firstTimestamp = event.startTime
 
       const fields = [
         numeric(relativeStartTime),

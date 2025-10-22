@@ -52,7 +52,46 @@ export class Instrument extends InstrumentBase {
         }
         // Capture is not used here so that we don't get element focus/blur events, only the window's as they do not bubble. They are also not cancellable, so no worries about being front of line.
         )
+
+        if (agentRef.init.feature_flags.includes('user_frustrations')) {
+          globalScope.addEventListener('error', () => {
+            handle('uaErr', [], undefined, FEATURE_NAMES.genericEvents, this.ee)
+          }, eventListenerOpts(false, this.removeOnAbort?.signal))
+
+          wrapFetch(this.ee)
+          wrapXhr(this.ee)
+          this.ee.on('open-xhr-start', (args, xhr) => {
+            if (!isInternalTraffic(args[1])) {
+              xhr.addEventListener('readystatechange', () => {
+                if (xhr.readyState === 2) { // HEADERS_RECEIVED
+                  handle('uaXhr', [], undefined, FEATURE_NAMES.genericEvents, this.ee)
+                }
+              })
+            }
+          })
+          this.ee.on('fetch-start', (fetchArguments) => {
+            if (fetchArguments.length >= 1 && !isInternalTraffic(extractUrl(fetchArguments[0]))) {
+              handle('uaXhr', [], undefined, FEATURE_NAMES.genericEvents, this.ee)
+            }
+          })
+
+          function isInternalTraffic (url) {
+            const parsedUrl = parseUrl(url)
+            return agentRef.beacons.includes(parsedUrl.hostname + ':' + parsedUrl.port)
+          }
+
+          const historyEE = wrapHistory(this.ee)
+          historyEE.on('pushState-end', navigationChange)
+          historyEE.on('replaceState-end', navigationChange)
+          window.addEventListener('hashchange', navigationChange, eventListenerOpts(true, this.removeOnAbort?.signal))
+          window.addEventListener('popstate', navigationChange, eventListenerOpts(true, this.removeOnAbort?.signal))
+
+          function navigationChange () {
+            historyEE.emit('navChange')
+          }
+        }
       }
+
       if (agentRef.init.performance.resources.enabled && globalScope.PerformanceObserver?.supportedEntryTypes.includes('resource')) {
         const observer = new PerformanceObserver((list) => {
           list.getEntries().forEach(entry => {
@@ -60,15 +99,6 @@ export class Instrument extends InstrumentBase {
           })
         })
         observer.observe({ type: 'resource', buffered: true })
-      }
-
-      const historyEE = wrapHistory(this.ee)
-      historyEE.on('pushState-end', navigationChange)
-      historyEE.on('replaceState-end', navigationChange)
-      window.addEventListener('hashchange', navigationChange, eventListenerOpts(true, this.removeOnAbort?.signal))
-      window.addEventListener('popstate', navigationChange, eventListenerOpts(true, this.removeOnAbort?.signal))
-      function navigationChange () {
-        historyEE.emit('navChange')
       }
     }
 
@@ -79,32 +109,6 @@ export class Instrument extends InstrumentBase {
     this.abortHandler = () => {
       this.removeOnAbort?.abort()
       this.abortHandler = undefined // weakly allow this abort op to run only once
-    }
-
-    globalScope.addEventListener('error', () => {
-      handle('uaErr', [], undefined, FEATURE_NAMES.genericEvents, this.ee)
-    }, eventListenerOpts(false, this.removeOnAbort?.signal))
-
-    wrapFetch(this.ee)
-    wrapXhr(this.ee)
-    this.ee.on('open-xhr-start', (args, xhr) => {
-      if (!isInternalTraffic(args[1])) {
-        xhr.addEventListener('readystatechange', () => {
-          if (xhr.readyState === 2) { // HEADERS_RECEIVED
-            handle('uaXhr', [], undefined, FEATURE_NAMES.genericEvents, this.ee)
-          }
-        })
-      }
-    })
-    this.ee.on('fetch-start', (fetchArguments) => {
-      if (fetchArguments.length >= 1 && !isInternalTraffic(extractUrl(fetchArguments[0]))) {
-        handle('uaXhr', [], undefined, FEATURE_NAMES.genericEvents, this.ee)
-      }
-    })
-
-    function isInternalTraffic (url) {
-      const parsedUrl = parseUrl(url)
-      return agentRef.beacons.includes(parsedUrl.hostname + ':' + parsedUrl.port)
     }
 
     /** If any of the sources are active, import the aggregator. otherwise deregister */

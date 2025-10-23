@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker'
+import { testAjaxEventsRequest, testInteractionEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 const assetServerTraceTest = function (request) {
   if (request.method !== 'GET') return
@@ -149,6 +150,8 @@ describe('xhr distributed tracing', () => {
         targetServer = 'bamServer'
       }
       const ajaxCapture = await browser.testHandle.createNetworkCaptures(targetServer, { test: assetServerTraceTest })
+      const ajaxEventCapture = await browser.testHandle.createNetworkCaptures(targetServer, { test: testAjaxEventsRequest })
+      const interactionsCapture = await browser.testHandle.createNetworkCaptures(targetServer, { test: testInteractionEventsRequest })
 
       if (testCase.addRouterToAllowedOrigins) {
         testCase.configuration.allowed_origins.push(
@@ -156,8 +159,10 @@ describe('xhr distributed tracing', () => {
         )
       }
 
-      const [ajaxRequest] = await Promise.all([
+      const [ajaxRequest, ajaxEventResults, interactionsResults] = await Promise.all([
         ajaxCapture.waitForResult({ totalCount: 1 }),
+        ajaxEventCapture.waitForResult({ totalCount: 1, timeout: 10000 }),
+        interactionsCapture.waitForResult({ totalCount: 1, timeout: 10000 }),
         browser.url(await browser.testHandle.assetURL(targetAsset, {
           config,
           injectUpdatedLoaderConfig: true,
@@ -169,6 +174,13 @@ describe('xhr distributed tracing', () => {
 
       const ajaxRequestHeaders = ajaxRequest[0].request.headers
       validateTraceHeaders(ajaxRequestHeaders, config, testCase.newrelicHeader, testCase.traceContextHeaders)
+
+      const rawTimes = await browser.execute(function () {
+        return window.rawTimes
+      })
+
+      ajaxEventResults.forEach((harvest) => validateTraceTime(harvest, rawTimes))
+      interactionsResults.forEach((harvest) => validateTraceTime(harvest, rawTimes))
     })
   })
 
@@ -183,6 +195,8 @@ describe('xhr distributed tracing', () => {
             targetServer = 'bamServer'
           }
           const ajaxCapture = await browser.testHandle.createNetworkCaptures(targetServer, { test: assetServerTraceTest })
+          const ajaxEventCapture = await browser.testHandle.createNetworkCaptures(targetServer, { test: testAjaxEventsRequest })
+          const interactionsCapture = await browser.testHandle.createNetworkCaptures(targetServer, { test: testInteractionEventsRequest })
 
           if (testCase.addRouterToAllowedOrigins) {
             testCase.configuration.allowed_origins.push(
@@ -190,8 +204,10 @@ describe('xhr distributed tracing', () => {
             )
           }
 
-          const [ajaxRequest] = await Promise.all([
+          const [ajaxRequest, ajaxEventResults, interactionsResults] = await Promise.all([
             ajaxCapture.waitForResult({ totalCount: 1 }),
+            ajaxEventCapture.waitForResult({ totalCount: 1, timeout: 10000 }),
+            interactionsCapture.waitForResult({ totalCount: 1, timeout: 10000 }),
             browser.url(await browser.testHandle.assetURL(targetAsset, {
               config,
               injectUpdatedLoaderConfig: true,
@@ -203,6 +219,13 @@ describe('xhr distributed tracing', () => {
 
           const ajaxRequestHeaders = ajaxRequest[0].request.headers
           validateTraceHeaders(ajaxRequestHeaders, config, testCase.newrelicHeader, testCase.traceContextHeaders)
+
+          const rawTimes = await browser.execute(function () {
+            return window.rawTimes
+          })
+
+          ajaxEventResults.forEach((harvest) => validateTraceTime(harvest, rawTimes))
+          interactionsResults.forEach((harvest) => validateTraceTime(harvest, rawTimes))
         })
       })
     })
@@ -239,6 +262,60 @@ describe('xhr distributed tracing', () => {
     })
   })
 })
+
+function validateTraceTime (harvest = {}, rawTimes = []) {
+  // harvest.request.body is expected to be an array of event objects
+  const events = harvest.request.body
+
+  // Iterate over each event in the harvest
+  events.forEach((event, idx) => {
+    // Validate event start is non-negative and end is after start
+    // Example: event = { start: 100, end: 150, timestamp: 12345678 ... }
+    expect(event.start).toBeGreaterThanOrEqual(0)
+    expect(event.end).toBeGreaterThan(event.start)
+    // For all but the first event, validate the time difference is in rawTimes
+    // Example: event[1].start - event[0].start should be in rawTimes
+    if (idx !== 0) validateRawTimes(event.start)
+
+    // For each child of type 'ajax', validate its timing
+    // Example: child = { type: 'ajax', start: 110, end: 120, timestamp: 23456789, ... }
+    event.children.filter(x => x.type === 'ajax').forEach(child => {
+      validateTiming(child, events[0])
+      // If child and root event have timestamps, validate child's start is in rawTimes
+      if (child.timestamp && events[0].timestamp) {
+        validateRawTimes(child.start)
+      }
+    })
+
+    // If event and root event have timestamps, validate event timing
+    if (event.timestamp && events[0].timestamp) {
+      validateTiming(event, events[0])
+    }
+  })
+
+  // Validates that timing properties are present and consistent
+  function validateTiming (currentEvent, firstEvent) {
+    // Ensure 'start' exists and is positive
+    expect(currentEvent.start).toBeGreaterThan(0)
+    // Ensure 'end' exists and is after 'start'
+    expect(currentEvent.end).toBeGreaterThan(currentEvent.start)
+    // If both objects have 'timestamp', check expected relative timing is represented by absolute timings
+    if (currentEvent.timestamp && firstEvent.timestamp) {
+      // 'start' should not be before reference 'start'
+      expect(currentEvent.start).toBeGreaterThanOrEqual(firstEvent.start)
+      // 'timestamp' should not be before reference 'timestamp'
+      expect(currentEvent.timestamp).toBeGreaterThanOrEqual(firstEvent.timestamp)
+      // The difference between starts should match the difference between timestamps
+      expect(currentEvent.start - firstEvent.start).toEqual(currentEvent.timestamp - firstEvent.timestamp)
+    }
+  }
+
+  // Validates that the expected time difference exists in the rawTimes array
+  // Example: diff = 10, rawTimes = [10, 20, 30]
+  function validateRawTimes (diff) {
+    expect(rawTimes.includes(diff)).toBeTrue()
+  }
+}
 
 function validateTraceHeaders (headers, config, expectNewrelicHeader, expectTraceContextHeaders) {
   if (expectNewrelicHeader) {

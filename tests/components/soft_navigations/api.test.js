@@ -1,6 +1,8 @@
 import { Instrument as SoftNav } from '../../../src/features/soft_navigations/instrument'
 import { resetAgent, setupAgent } from '../setup-agent'
 
+import querypack from '@newrelic/nr-querypack'
+
 /**
  * Test `.interaction gets ixn retroactively too when processed late after ee buffer drain` is a bit
  * flaky so add a retry for this file.
@@ -281,32 +283,46 @@ test('.actionText and .setAttribute add attributes to ixn specifically', () => {
 
 // This isn't just an API test; it double serves as data validation on the querypack payload output.
 test('multiple finished ixns retain the correct start/end timestamps in payload', async () => {
-  softNavAggregate.ee.emit(`${INTERACTION_API}-get`, [0])
+  const performanceNowSpy = jest.spyOn(performance, 'now')
+
+  performanceNowSpy.mockReturnValue(0)
   let ixnContext = getIxnContext(mainAgent.interaction())
   ixnContext.associatedInteraction.nodeId = 1
   ixnContext.associatedInteraction.id = 'some_id'
   ixnContext.associatedInteraction.forceSave = true
-  softNavAggregate.ee.emit(`${INTERACTION_API}-end`, [200], ixnContext)
+  performanceNowSpy.mockReturnValue(200)
+  mainAgent.interaction().end()
 
-  softNavAggregate.ee.emit(`${INTERACTION_API}-get`, [300])
+  performanceNowSpy.mockReturnValue(300)
   ixnContext = getIxnContext(mainAgent.interaction())
   ixnContext.associatedInteraction.nodeId = 2
   ixnContext.associatedInteraction.id = 'some_other_id'
   ixnContext.associatedInteraction.forceSave = true
-  softNavAggregate.ee.emit(`${INTERACTION_API}-end`, [500], ixnContext)
+  performanceNowSpy.mockReturnValue(500)
+  mainAgent.interaction().end()
 
-  softNavAggregate.ee.emit(`${INTERACTION_API}-get`, [700])
+  performanceNowSpy.mockReturnValue(700)
   ixnContext = getIxnContext(mainAgent.interaction())
   ixnContext.associatedInteraction.nodeId = 3
   ixnContext.associatedInteraction.id = 'some_another_id'
   ixnContext.associatedInteraction.forceSave = true
-  softNavAggregate.ee.emit(`${INTERACTION_API}-end`, [1000], ixnContext)
+  performanceNowSpy.mockReturnValue(1000)
+  mainAgent.interaction().end()
 
   await new Promise(process.nextTick)
 
   expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(3)
+
+  const harvestPayloadBody = softNavAggregate.makeHarvestPayload().body
+  const deserializedPayload = querypack.decode(harvestPayloadBody)
+  const starts = [0, 300, 700]
+  deserializedPayload.forEach(payload => {
+    expect(payload.start).toEqual(starts.shift())
+  })
   // WARN: Double check decoded output & behavior or any introduced bugs before changing the follow line's static string.
-  expect(softNavAggregate.makeHarvestPayload().body).toEqual("bel.7;1,,,5k,,,'api,'http://localhost/,1,1,,2,!!!!'some_id,'1,!!;;1,,8c,5k,,,'api,'http://localhost/,1,1,,2,!!!!'some_other_id,'2,!!;;1,,jg,8c,,,'api,'http://localhost/,1,1,,2,!!!!'some_another_id,'3,!!;")
+  expect(harvestPayloadBody).toEqual("bel.7;1,,,5k,,,'api,'http://localhost/,1,1,,2,!!!!'some_id,'1,!!;;1,,8c,5k,,,'api,'http://localhost/,1,1,,2,!!!!'some_other_id,'2,!!;;1,,jg,8c,,,'api,'http://localhost/,1,1,,2,!!!!'some_another_id,'3,!!;")
+
+  performanceNowSpy.mockRestore()
 })
 
 // This isn't just an API test; it double serves as data validation on the querypack payload output.

@@ -222,13 +222,15 @@ jobs:
   #         environment: stage
 
   # Publish the agent to npmjs.org
-  publish-npm:
-    needs: [publish-prod-to-s3]
+  call-npm-operations:
+    name: Call NPM Operations
     uses: ./.github/workflows/npm-operations.yml
     with:
-      operation: publish-release
+      action: publish-release
     secrets:
-      NPM_TOKEN: ${{ secrets.BROWSER_NPM_TOKEN }}
+      GITHUB_LOGIN: ${{ secrets.BROWSER_GITHUB_BOT_NAME }}
+      GITHUB_EMAIL: ${{ secrets.BROWSER_GITHUB_BOT_EMAIL }}
+      NR_API_KEY_PRODUCTION: ${{ secrets.NR_API_KEY_PRODUCTION }}
 
   # Raise the release notes pr on the docs website repo
   raise-release-notes-pr:

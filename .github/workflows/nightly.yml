@@ -91,7 +91,6 @@ jobs:
     with:
       operation: deprecate-old-versions
     secrets:
-      NPM_TOKEN: ${{ secrets.BROWSER_NPM_TOKEN }}
       NR_API_KEY_PRODUCTION: ${{ secrets.NR_API_KEY_PRODUCTION }}
 
   # TODO: Need to add a job for cleaning up experiments to run nightly

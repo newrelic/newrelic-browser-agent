@@ -30,8 +30,6 @@ on:
         type: boolean
         default: false
     secrets:
-      NPM_TOKEN:
-        required: true
       GITHUB_LOGIN:
         required: false
       GITHUB_EMAIL:
@@ -80,9 +78,8 @@ jobs:
       run:
         shell: bash
     env:
-      NPM_TOKEN: ${{ secrets.BROWSER_NPM_TOKEN }}
-      GITHUB_LOGIN: ${{ secrets.BROWSER_GITHUB_BOT_NAME }}
-      GITHUB_EMAIL: ${{ secrets.BROWSER_GITHUB_BOT_EMAIL }}
+      GITHUB_LOGIN: ${{ secrets.GITHUB_LOGIN || secrets.BROWSER_GITHUB_BOT_NAME }}
+      GITHUB_EMAIL: ${{ secrets.GITHUB_EMAIL || secrets.BROWSER_GITHUB_BOT_EMAIL }}
     
     steps:
       - uses: actions/checkout@v5
@@ -98,11 +95,6 @@ jobs:
           # This is important. The OIDC exchange requires that the registry
           # URL matches on both ends.
           registry-url: https://registry.npmjs.org
-      
-      # Single NPM authentication step
-      - name: Authenticate npm
-        run: |
-          npm config set '//registry.npmjs.org/:_authToken' "${NPM_TOKEN}"
       
       # Setup Git for prerelease operations
       - name: Set up git

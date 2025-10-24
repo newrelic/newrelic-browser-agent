@@ -39,6 +39,5 @@ jobs:
       operation: publish-prerelease
       preid: rc
     secrets:
-      NPM_TOKEN: ${{ secrets.BROWSER_NPM_TOKEN }}
       GITHUB_LOGIN: ${{ secrets.BROWSER_GITHUB_BOT_NAME }}
       GITHUB_EMAIL: ${{ secrets.BROWSER_GITHUB_BOT_EMAIL }}

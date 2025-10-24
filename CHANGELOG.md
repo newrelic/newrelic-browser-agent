@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.302.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.301.0...v1.302.0) (2025-10-24)
+
+
+### Features
+
+* Prepare agent to utilize v2 harvests for MFE registrations ([#1495](https://github.com/newrelic/newrelic-browser-agent/issues/1495)) ([a7ac827](https://github.com/newrelic/newrelic-browser-agent/commit/a7ac82751dd8dade8294a66a7894c1295679265b))
+
+
+### Bug Fixes
+
+* Improve accuracy in standalone AjaxRequest event start times ([#1598](https://github.com/newrelic/newrelic-browser-agent/issues/1598)) ([b41de5c](https://github.com/newrelic/newrelic-browser-agent/commit/b41de5cbcd9d75fa8bd3c67ad1270fde4f788733))
+* User frustrations logic should be gated ([#1600](https://github.com/newrelic/newrelic-browser-agent/issues/1600)) ([984b05e](https://github.com/newrelic/newrelic-browser-agent/commit/984b05e8920be79d7c3d1c3d7d56c75fa2cfe253))
+
 ## [1.301.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.300.0...v1.301.0) (2025-10-21)
 
 

@@ -1,0 +1,179 @@
+name: NPM Operations
+
+permissions:
+  # In order to create the git tag, we must have write permissions.
+  contents: write
+  # This is important. Trusted Publishing requires this for the OIDC exchange.
+  id-token: write
+
+on:
+  # Triggered by other workflows for specific NPM operations
+  workflow_call:
+    inputs:
+      operation:
+        description: 'NPM operation to perform'
+        required: true
+        type: string
+        # Valid values: publish-release, publish-prerelease, deprecate-old-versions
+      preid:
+        description: 'Prerelease identifier (e.g., rc, alpha, beta)'
+        required: false
+        type: string
+        default: 'rc'
+      version-override:
+        description: 'Override version for prerelease operations'
+        required: false
+        type: string
+      dry_run:
+        description: 'Dry run mode for testing'
+        required: false
+        type: boolean
+        default: false
+    secrets:
+      NPM_TOKEN:
+        required: true
+      GITHUB_LOGIN:
+        required: false
+      GITHUB_EMAIL:
+        required: false
+      NR_API_KEY_PRODUCTION:
+        required: false
+    outputs:
+      operation:
+        description: 'The operation that was performed'
+        value: ${{ jobs.npm-operations.outputs.operation }}
+      success:
+        description: 'Whether the operation was successful'
+        value: ${{ jobs.npm-operations.outputs.success }}
+
+  # Manual trigger for testing/emergency operations
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: 'NPM operation to perform'
+        required: true
+        type: choice
+        options:
+          - publish-release
+          - publish-prerelease
+          - deprecate-old-versions
+      preid:
+        description: 'Prerelease identifier (e.g., rc, alpha, beta)'
+        required: false
+        type: string
+        default: 'rc'
+      version-override:
+        description: 'Override version for prerelease operations'
+        required: false
+        type: string
+      dry_run:
+        description: 'Dry run mode for testing'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  npm-operations:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    env:
+      NPM_TOKEN: ${{ secrets.BROWSER_NPM_TOKEN }}
+      GITHUB_LOGIN: ${{ secrets.BROWSER_GITHUB_BOT_NAME }}
+      GITHUB_EMAIL: ${{ secrets.BROWSER_GITHUB_BOT_EMAIL }}
+    
+    steps:
+      - uses: actions/checkout@v5
+      
+      - uses: actions/setup-node@v5
+        with:
+          # Trusted Publishing requires `npm@11.5.1` or later. Compatible
+          # versions of `npm` started shipping with Node.js v24.5.0.
+          # If, for some odd reason, you need to use an earlier Node.js release,
+          # you _must_ add another step subsequent to this one that performs:
+          # `npm install -g npm@latest`.
+          node-version: 24.x
+          # This is important. The OIDC exchange requires that the registry
+          # URL matches on both ends.
+          registry-url: https://registry.npmjs.org
+      
+      # Single NPM authentication step
+      - name: Authenticate npm
+        run: |
+          npm config set '//registry.npmjs.org/:_authToken' "${NPM_TOKEN}"
+      
+      # Setup Git for prerelease operations
+      - name: Set up git
+        if: inputs.operation == 'publish-prerelease'
+        run: |
+          git config --global user.name "${GITHUB_LOGIN}"
+          git config --global user.email "${GITHUB_EMAIL}"
+      
+      # Install dependencies for publish operations
+      - name: Install project dependencies
+        if: inputs.operation == 'publish-release' || inputs.operation == 'publish-prerelease'
+        run: npm ci
+      
+      # Build NPM package for release
+      - name: Build npm package
+        if: inputs.operation == 'publish-release'
+        run: npm run build:npm
+      
+      # Publish release version
+      - name: Publish npm package (release)
+        if: inputs.operation == 'publish-release'
+        run: npm publish
+      
+      # Publish prerelease version
+      - name: Publish prerelease version
+        if: inputs.operation == 'publish-prerelease'
+        uses: ./.github/actions/prerelease-npm-version
+        with:
+          version-override: ${{ inputs.version-override }}
+          preid: ${{ inputs.preid }}
+          dry_run: ${{ inputs.dry_run }}
+      
+      # Deprecate old versions
+      - name: Deprecate old versions
+        if: inputs.operation == 'deprecate-old-versions'
+        run: |
+          # Get agent EoL table from NRQL
+          response=$(curl -X POST https://api.newrelic.com/graphql \
+            -H 'Content-Type: application/json' \
+            -H 'API-Key: ${{ secrets.NR_API_KEY_PRODUCTION }}' \
+            -d '{ "query":  "{\n  docs {\n    agentReleases(agentName: BROWSER) {\n      eolDate\n      version\n    }\n  }\n}" }')
+          eol_table=$(echo "$response" | jq -r '.data.docs.agentReleases | map({(.version): .eolDate}) | add')
+          echo "Fetched EoL table from NRDB."
+
+          # Fetch package metadata from npm registry
+          package_name="@newrelic/browser-agent"
+          metadata=$(curl -s "https://registry.npmjs.org/$package_name")
+          echo "Fetched agent releases metadata from NPM."
+
+          # Parse versions and their publication dates
+          today=$(date +%Y-%m-%d)
+          versions=$(echo "$metadata" | jq -r '.versions | keys[]')
+          for version in $versions; do
+            eol_date=$(echo "$eol_table" | jq -r --arg version "$version" '.[$version]')
+            if [ "$eol_date" = "null" ]; then
+              echo "No EoL date found for version $version. Skipping..."
+              continue
+            fi
+            deprecation_message=$(echo "$metadata" | jq -r ".versions[\"$version\"].deprecated")
+            if [[ "$eol_date" < "$today" || "$eol_date" == "$today" ]]; then
+              if [ "$deprecation_message" = "null" ]; then
+                echo "Deprecating version $version no longer supported as of $eol_date..."
+                npm deprecate "$package_name@$version" "This version is no longer supported."
+              else
+                echo "Version $version is already deprecated."
+              fi
+            else
+              break
+            fi
+          done
+
+    outputs:
+      operation: ${{ inputs.operation }}
+      success: ${{ job.status == 'success' }}

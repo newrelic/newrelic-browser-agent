@@ -77,7 +77,7 @@ test('multiple calls to setupAgentSession for same agent does not re-execute it'
 
   expect(result1).toEqual(expect.objectContaining(agentSession))
   expect(result2).toEqual(expect.objectContaining(agentSession))
-  expect(registerHandler).toHaveBeenCalledTimes(2)
+  expect(registerHandler).toHaveBeenCalledTimes(3)
   expect(drain).toHaveBeenCalledTimes(1)
 })
 
@@ -95,7 +95,7 @@ test('calls to setupAgentSession for different agents executes separately', asyn
 
   expect(result1.agentIdentifier).toEqual(agentId1)
   expect(result2.agentIdentifier).toEqual(agentId2)
-  expect(registerHandler).toHaveBeenCalledTimes(4)
+  expect(registerHandler).toHaveBeenCalledTimes(6)
   expect(drain).toHaveBeenCalledTimes(2)
 })
 

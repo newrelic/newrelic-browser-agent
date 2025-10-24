@@ -17,15 +17,23 @@ import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
 import { now } from '../../../common/timing/now'
 import { TimeKeeper } from '../../../common/timing/time-keeper'
 import { applyFnToProps } from '../../../common/util/traverse'
+import { registerHandler } from '../../../common/event-emitter/register-handler'
 
 export class Aggregate extends AggregateBase {
   static featureName = CONSTANTS.FEATURE_NAME
+
   constructor (agentRef) {
     super(agentRef, CONSTANTS.FEATURE_NAME)
+
+    this.sentRum = {} // flag to only call sendRum() once if successful, properties are by applicationID
 
     this.timeToFirstByte = 0
     this.firstByteToWindowLoad = 0 // our "frontend" duration
     this.firstByteToDomContent = 0 // our "dom processing" duration
+
+    registerHandler('send-rum', (customAttributes, target) => {
+      this.sendRum(customAttributes, target)
+    }, this.featureName, this.ee)
 
     if (!isValid(agentRef.info)) {
       this.ee.abort()
@@ -55,6 +63,8 @@ export class Aggregate extends AggregateBase {
    * @param {*} target The target to harvest to
    */
   sendRum (customAttributes = this.agentRef.info.jsAttributes, target = { licenseKey: this.agentRef.info.licenseKey, applicationID: this.agentRef.info.applicationID }) {
+    if (this.sentRum[target.applicationID]) return
+
     const info = this.agentRef.info
     const measures = {}
 
@@ -114,14 +124,17 @@ export class Aggregate extends AggregateBase {
 
     this.rumStartTime = now()
 
-    this.agentRef.runtime.harvester.triggerHarvestFor(this, {
+    const localOpts = {
       directSend: {
         target,
         payload: { qs: queryParameters, body }
       },
       needResponse: true,
       sendEmptyBody: true
-    })
+    }
+    if (this.agentRef.runtime.harvester.triggerHarvestFor(this, localOpts).ranSend) {
+      this.sentRum[target.applicationID] = true
+    }
   }
 
   postHarvestCleanup ({ status, responseText, xhr }) {

@@ -17,6 +17,7 @@ import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
 import { now } from '../../../common/timing/now'
 import { TimeKeeper } from '../../../common/timing/time-keeper'
 import { applyFnToProps } from '../../../common/util/traverse'
+import { registerHandler } from '../../../common/event-emitter/register-handler'
 
 export class Aggregate extends AggregateBase {
   static featureName = CONSTANTS.FEATURE_NAME
@@ -131,7 +132,7 @@ export class Aggregate extends AggregateBase {
       needResponse: true,
       sendEmptyBody: true
     }
-    if (this.agentRef.runtime.harvester.triggerHarvestFor(this, localOpts)) {
+    if (this.agentRef.runtime.harvester.triggerHarvestFor(this, localOpts).ranSend) {
       this.sentRum[target.applicationID] = true
     }
   }

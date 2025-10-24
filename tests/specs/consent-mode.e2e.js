@@ -8,12 +8,12 @@ describe('consent mode', () => {
 
   const consentModeConfig = {
     init: {
-      browserConsentMode: { enabled: true }
+      browser_consent_mode: { enabled: true }
     }
   }
   const manualStartConfig = {
     init: {
-      browserConsentMode: { enabled: true },
+      browser_consent_mode: { enabled: true },
       [FEATURE_NAMES.pageViewTiming]: { autoStart: false }
     }
   }

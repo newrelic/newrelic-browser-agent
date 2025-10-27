@@ -124,8 +124,6 @@ describe('newrelic api', () => {
 
         insightsHarvests.forEach(({ request: { query, body } }) => {
           const data = body.ins
-          const seen = { pa: 0, rce: 0 }
-
           data.forEach((ins, idx) => {
             if (ins.eventType === 'PageAction' || ins.eventType === 'CustomEvent') {
               const id = ins['mfe.id'] || query.a // MFEs use mfe.id, regular agents use appId
@@ -140,8 +138,6 @@ describe('newrelic api', () => {
               }
 
               const countType = ins.eventType === 'PageAction' ? 'pa' : 'rce'
-              seen[countType]++
-
               countRuns(id, countType)
             }
           })

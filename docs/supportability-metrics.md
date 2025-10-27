@@ -442,7 +442,7 @@ EventBuffer/soft_navigations/Dropped/Bytes
 
 ### Harvester
 <!-- Harvester retried a harvest -->
-* 'Harvester/Retry/<feature_name>/Attempted'
+* 'Harvester/Retry/Attempted/<feature_name>'
 <!-- Retry failed codes (dynamic) -->
 * 'Harvester/Retry/Failed/<code>'
 <!-- Retry succeeded codes (dynamic) -->

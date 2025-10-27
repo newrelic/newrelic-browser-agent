@@ -27,6 +27,9 @@ export class Aggregate extends AggregateBase {
     this.firstByteToWindowLoad = 0 // our "frontend" duration
     this.firstByteToDomContent = 0 // our "dom processing" duration
 
+    this.payload = undefined // buffer this at harvest time to allow for an easy retry if the request fails
+    this.retries = 0
+
     if (!isValid(agentRef.info)) {
       this.ee.abort()
       return warn(43)
@@ -52,9 +55,14 @@ export class Aggregate extends AggregateBase {
    *
    * @param {Function} cb A function to run once the RUM call has finished - Defaults to activateFeatures
    * @param {*} customAttributes custom attributes to attach to the RUM call - Defaults to info.js
-   * @param {*} target The target to harvest to
    */
-  sendRum (customAttributes = this.agentRef.info.jsAttributes, target = { licenseKey: this.agentRef.info.licenseKey, applicationID: this.agentRef.info.applicationID }) {
+  sendRum (customAttributes = this.agentRef.info.jsAttributes) {
+    if (this.blocked) return
+    /** if we are "retrying", this is the state the feature will be in */
+    if (this.payload) {
+      this.triggerHarvestFor(this.payload)
+      return
+    }
     const info = this.agentRef.info
     const measures = {}
 
@@ -107,24 +115,30 @@ export class Aggregate extends AggregateBase {
     queryParameters.fp = firstPaint.current.value
     queryParameters.fcp = firstContentfulPaint.current.value
 
+    this.rumStartTime = now()
     const timeKeeper = this.agentRef.runtime.timeKeeper
     if (timeKeeper?.ready) {
-      queryParameters.timestamp = Math.floor(timeKeeper.correctRelativeTimestamp(now()))
+      queryParameters.timestamp = Math.floor(timeKeeper.correctRelativeTimestamp(this.rumStartTime))
+    } else {
+      queryParameters.rst = this.rumStartTime // we set this here in the feature instead of in the harvester to allow for a future retry to use the original RST
     }
 
-    this.rumStartTime = now()
+    this.payload ??= { qs: queryParameters, body }
 
+    this.triggerHarvestFor(this.payload)
+  }
+
+  triggerHarvestFor (payload) {
     this.agentRef.runtime.harvester.triggerHarvestFor(this, {
       directSend: {
-        target,
-        payload: { qs: queryParameters, body }
+        payload
       },
       needResponse: true,
       sendEmptyBody: true
     })
   }
 
-  postHarvestCleanup ({ status, responseText, xhr }) {
+  postHarvestCleanup ({ status, responseText, xhr, retry }) {
     const rumEndTime = now()
     let app, flags
     try {
@@ -135,9 +149,13 @@ export class Aggregate extends AggregateBase {
     }
 
     if (status >= 400 || status === 0) {
-      warn(18, status)
-      // Adding retry logic for the rum call will be a separate change; this.blocked will need to be changed since that prevents another triggerHarvestFor()
-      this.ee.abort()
+      if (retry && this.retries++ < 1) { // Only retry once
+        setTimeout(() => this.sendRum(), 5000) // Retry sending the RUM event after 5 seconds
+      } else {
+        warn(18, status)
+        this.blocked = true
+        this.ee.abort()
+      }
       return
     }
 
@@ -155,6 +173,7 @@ export class Aggregate extends AggregateBase {
       }
     } catch (error) {
       this.ee.abort()
+      this.blocked = true
       warn(17, error)
       return
     }

@@ -439,3 +439,11 @@ EventBuffer/soft_navigations/Dropped/Bytes
 * rrweb/node/3/bytes
 <!-- node type 4 = Meta -->
 * rrweb/node/4/bytes
+
+### Harvester
+<!-- Harvester retried a harvest -->
+* 'Harvester/Retry/<feature_name>/Attempted'
+<!-- Retry failed codes (dynamic) -->
+* 'Harvester/Retry/Failed/<code>'
+<!-- Retry succeeded codes (dynamic) -->
+* 'Harvester/Retry/Succeeded/<code>'

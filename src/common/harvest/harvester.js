@@ -18,8 +18,9 @@ import { getSubmitMethod, xhr as xhrMethod, xhrFetch as fetchMethod } from '../u
 import { activatedFeatures } from '../util/feature-flags'
 import { dispatchGlobalEvent } from '../dispatch/global-event'
 
-const RETRY_FAILED = 'Harvester/Retry/Failed/'
-const RETRY_SUCCEEDED = 'Harvester/Retry/Succeeded/'
+const RETRY = 'Harvester/Retry/'
+const RETRY_FAILED = RETRY + 'Failed/'
+const RETRY_SUCCEEDED = RETRY + 'Succeeded/'
 
 export class Harvester {
   #started = false
@@ -86,7 +87,9 @@ export class Harvester {
      */
     function cbFinished (result) {
       if (aggregateInst.harvestOpts.prevAttemptCode) { // this means we just retried a harvest that last failed
-        handle(SUPPORTABILITY_METRIC_CHANNEL, [(result.retry ? RETRY_FAILED : RETRY_SUCCEEDED) + aggregateInst.harvestOpts.prevAttemptCode], undefined, FEATURE_NAMES.metrics, aggregateInst.ee)
+        const reportSM = (message) => handle(SUPPORTABILITY_METRIC_CHANNEL, [message], undefined, FEATURE_NAMES.metrics, aggregateInst.ee)
+        reportSM(RETRY + aggregateInst.featureName + '/Attempted')
+        reportSM((result.retry ? RETRY_FAILED : RETRY_SUCCEEDED) + aggregateInst.harvestOpts.prevAttemptCode)
         delete aggregateInst.harvestOpts.prevAttemptCode // always reset last observation so we don't falsely report again next harvest
         // In case this re-attempt failed again, that'll be handled (re-marked again) next.
       }
@@ -271,7 +274,7 @@ function baseQueryString (agentRef, qs, endpoint) {
     param('v', VERSION),
     transactionNameParam(),
     param('ct', agentRef.runtime.customTransaction),
-    '&rst=' + now(),
+    param('rst', now(), qs),
     '&ck=0', // ck param DEPRECATED - still expected by backend
     '&s=' + (session?.state.value || '0'), // the 0 id encaps all untrackable and default traffic
     param('ref', ref),

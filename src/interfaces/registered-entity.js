@@ -52,7 +52,7 @@ export class RegisteredEntity {
      * Records a custom event with a specified eventType and attributes.
      * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/recordCustomEvent/}
      * @param {string} eventType The eventType to store the event as.
-     * @param {object} [attributes] JSON object with one or more key/value pairs. For example: {key:"value"}.
+     * @param {Object} [attributes] JSON object with one or more key/value pairs. For example: {key:"value"}.
      */
   recordCustomEvent (eventType, attributes) {
     warn(35, 'recordCustomEvent')

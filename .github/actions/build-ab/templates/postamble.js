@@ -142,3 +142,37 @@ try {
 } catch (e) {
   newrelic.noticeError(new Error("NRBA: swallowed preamble error", { cause: e }));
 }
+
+// MFE API Registration Testing
+try {
+  if (!!newrelic && !!newrelic.register) {
+    // Generate random ID between 1-3
+    const randomId = Math.floor(Math.random() * 3) + 1;
+    const mfeName = `MOCK_MFE_${randomId}`;
+    
+    // Register the MFE API
+    const mfeApi = newrelic.register({ id: randomId, name: mfeName });
+    
+    // Generate a random sentence for logging
+    const randomSentences = [
+      'This is a test log message from the registered MFE',
+      'MFE logging functionality is working correctly',
+      'Random simulation for testing purposes',
+      'Demonstrating registered entity log capabilities',
+      'Testing MFE API integration with New Relic',
+      'Sample log from micro frontend',
+      'Validating registered entity reporting',
+      'MFE diagnostic message for debugging',
+      'Testing cross-entity logging functionality',
+      'Random MFE log event for validation'
+    ];
+    const randomSentence = randomSentences[Math.floor(Math.random() * randomSentences.length)];
+    
+    // Call log with error level
+    mfeApi.log(randomSentence, { level: 'error' });
+  }
+} catch (e) {
+  if (!!newrelic && !!newrelic.noticeError) {
+    newrelic.noticeError(new Error("NRBA: MFE registration error", { cause: e }));
+  }
+}

@@ -64,7 +64,7 @@ export class Harvester {
     if (!submitMethod) return output
 
     const shouldRetryOnFail = !localOpts.isFinalHarvest && submitMethod === xhrMethod // always retry all features harvests except for final
-    output.payload = !localOpts.directSend ? aggregateInst.makeHarvestPayload(shouldRetryOnFail, localOpts) : localOpts.directSend?.payload // features like PVE can define the payload directly, bypassing the makeHarvestPayload logic
+    output.payload = aggregateInst.makeHarvestPayload(shouldRetryOnFail, localOpts)
 
     if (!output.payload) return output
 

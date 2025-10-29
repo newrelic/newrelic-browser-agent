@@ -183,17 +183,16 @@ describe('Session Replay Payload Validation', () => {
     })
   })
 
-  // disabled while on rrweb v2.0.0-alpha.18
-  // it('should process large css within timeout threshold', async () => {
-  //   const sessionReplaySnapshotCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testSessionReplaySnapshotRequest })
-  //
-  //   let [sessionReplaySnapshotHarvests] = await Promise.all([
-  //     sessionReplaySnapshotCapture.waitForResult({ timeout: 10000 }),
-  //     browser.url(await browser.testHandle.assetURL('rrweb-record-large-style-with-textnodes.html', srConfig()))
-  //       .then(() => browser.waitForFeatureAggregate('session_replay'))
-  //   ])
-  //
-  //   expect(sessionReplaySnapshotHarvests.length).toEqual(1)
-  //   console.log(sessionReplaySnapshotHarvests[0].request.body)
-  // })
+  it('should process large css within timeout threshold', async () => {
+    const sessionReplaySnapshotCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testSessionReplaySnapshotRequest })
+
+    let [sessionReplaySnapshotHarvests] = await Promise.all([
+      sessionReplaySnapshotCapture.waitForResult({ timeout: 10000 }), // 10 secs is just a "good enough" threshold to ensure the processing didn't hang or take too long
+      browser.url(await browser.testHandle.assetURL('rrweb-record-large-style-with-textnodes.html', srConfig()))
+        .then(() => browser.waitForFeatureAggregate('session_replay'))
+    ])
+
+    expect(sessionReplaySnapshotHarvests.length).toEqual(1)
+    console.log(sessionReplaySnapshotHarvests[0].request.body)
+  })
 })

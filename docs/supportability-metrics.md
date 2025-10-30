@@ -439,3 +439,11 @@ EventBuffer/soft_navigations/Dropped/Bytes
 * rrweb/node/3/bytes
 <!-- node type 4 = Meta -->
 * rrweb/node/4/bytes
+
+### Browser Connect Response Metrics
+<!--- HTTP status code of failed browser connect response --->
+* Browser/Supportability/BCS/Error/StatusCode
+<!--- Total dropped payload size of failed browser connect response --->
+* Browser/Supportability/BCS/Error/Dropped/Bytes
+<!--- Response time of failed browser connect response --->
+* Browser/Supportability/BCS/Error/Duration/Ms

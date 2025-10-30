@@ -2,6 +2,7 @@ import { BrowserAgent } from '../../dist/types/loaders/browser-agent'
 import { MicroAgent } from '../../dist/types/loaders/micro-agent'
 import { InteractionInstance, getContext, onEnd } from '../../dist/types/loaders/api/interaction-types'
 import { expectType } from 'tsd'
+import { RegisterAPI, RegisterAPIMetadata } from '../../dist/types/interfaces/registered-entity'
 
 const validOptions = {
   info: {
@@ -37,6 +38,7 @@ expectType<MicroAgent>(microAgent)
   expectType<(callback: (error: Error | string) => boolean | { group: string; }) => any>(agent.setErrorHandler)
   expectType<(timeStamp?: number) => any>(agent.finished)
   expectType<(name: string, id: string) => any>(agent.addRelease)
+  expectType<(eventType: string, attributes?: Object) => any>(agent.recordCustomEvent)
   /** micro agent has a different implementation of start api we are stuck with until that entry point is removed */
   expectType<(() => any) | ((featureNames?: string | string[] | undefined) => boolean)>(agent.start)
   expectType<() => any>(agent.recordReplay)
@@ -54,6 +56,18 @@ expectType<MicroAgent>(microAgent)
   expectType<onEnd>(agent.interaction().onEnd)
   expectType<(key: string, value: any) => InteractionInstance>(agent.interaction().setAttribute)
   expectType<(name: string, trigger?: string) => InteractionInstance>(agent.interaction().setName)
+
+  // register APIs
+  expectType<(target: {id: string|number, name: string}) => RegisterAPI>(agent.register)
+  const registeredEntity = agent.register({ id: 123, name: 'hello' })
+  expectType<(name: string, attributes?: object) => void>(registeredEntity.addPageAction)
+  expectType<(message: string, options?: { customAttributes?: object, level?: 'ERROR' | 'TRACE' | 'DEBUG' | 'INFO' | 'WARN'}) => void>(registeredEntity.log)
+  expectType<(error: Error | string, customAttributes?: object) => void>(registeredEntity.noticeError)
+  expectType<(eventType: string, attributes?: Object) => void>(registeredEntity.recordCustomEvent)
+  expectType<(value: string | null) => void>(registeredEntity.setApplicationVersion)
+  expectType<(name: string, value: string | number | boolean | null, persist?: boolean) => void>(registeredEntity.setCustomAttribute)
+  expectType<(value: string | null) => void>(registeredEntity.setUserId)
+  expectType<RegisterAPIMetadata>(registeredEntity.metadata)
 })
 
 

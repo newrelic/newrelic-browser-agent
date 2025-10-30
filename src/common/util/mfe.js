@@ -12,6 +12,18 @@ export function isValidMFETarget (target = {}) {
 }
 
 /**
+ * Returns the MFE target associated with a given ID. Returns undefined if not found.
+ * @param {string|number} id
+ * @param {*} aggregateInstance
+ * @returns {import("../../interfaces/registered-entity").RegisterAPIMetadataTarget | undefined}
+ */
+export function getMFETargetFromId (id, aggregateInstance) {
+  if (!id) return
+  const registeredEntities = aggregateInstance?.agentRef.runtime.registeredEntities
+  return registeredEntities?.find(entity => String(entity.metadata.target.id) === String(id))?.metadata.target
+}
+
+/**
  * When given a valid target, returns an object with the MFE payload attributes.  Returns an empty object otherwise.
  * @param {Object} [target] the registered target
  * @param {AggregateInstance} [aggregateInstance] the aggregate instance calling the method

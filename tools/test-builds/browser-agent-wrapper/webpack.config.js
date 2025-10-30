@@ -45,14 +45,53 @@ const registeredEntityHtmlTemplate = (script) => `<html>
     {config}
     <script>
       localStorage.clear()
-      NREUM.init.ajax.enabled = false
       NREUM.init.page_view_timing.enabled = false
       NREUM.init.session_replay.enabled = false
       NREUM.init.session_trace.enabled = false
-      NREUM.init.spa.enabled = false
     </script>
     {loader}
     <script src="${script}.js"></script>
+    <script>
+      // set up generic MFEs expected by tests
+      window.agent1 = new RegisteredEntity({
+        id: 1,
+        name: 'agent1'
+      })
+      window.agent2 = new RegisteredEntity({
+        id: 2,
+        name: 'agent2'
+      })
+
+      // preload ajax calls
+      const CONTAINER_XHR = new XMLHttpRequest()
+      CONTAINER_XHR.open('GET', '/mock/pre/42')
+      CONTAINER_XHR.send()
+
+      const MFE_XHR_1 = new XMLHttpRequest()
+      MFE_XHR_1.open('GET', '/mock/pre/1')
+      MFE_XHR_1.setRequestHeader('newrelic-mfe-id', 1)
+      MFE_XHR_1.send()
+
+      const MFE_XHR_2 = new XMLHttpRequest()
+      MFE_XHR_2.open('GET', '/mock/pre/2')
+      MFE_XHR_2.setRequestHeader('newrelic-mfe-id', 2)
+      MFE_XHR_2.send()
+
+      fetch('/mock/pre/42')
+
+      fetch('/mock/pre/1', {
+        headers: {
+          'newrelic-mfe-id': 1
+        }
+      })
+
+      fetch('/mock/pre/2', {
+        headers: {
+          'newrelic-mfe-id': 2
+        }
+      })
+
+    </script>
   </head>
   <body>
     <h1>This is a generic page that is instrumented by the NPM agent</h1>

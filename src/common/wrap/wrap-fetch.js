@@ -9,6 +9,8 @@
  */
 import { ee as baseEE, contextId } from '../event-emitter/contextual-ee'
 import { globalScope } from '../constants/runtime'
+import { NEW_RELIC_MFE_ID_HEADER } from '../constants/agent-constants'
+import { stringify } from '../util/stringify'
 
 var prefix = 'fetch-'
 var bodyPrefix = prefix + 'body-'
@@ -72,6 +74,27 @@ export function wrapFetch (sharedEE) {
         var args = [...arguments]
 
         var ctx = {}
+
+        let mfeId
+        try {
+          const headers = args?.[0]?.headers || args?.[1]?.headers
+          if (headers) {
+            const isHeaderInstance = headers instanceof Headers
+            const entries = isHeaderInstance ? Array.from(headers.entries()) : Object.entries(headers)
+            for (const [key, val] of entries) {
+              if (String(key).toLowerCase() === NEW_RELIC_MFE_ID_HEADER) {
+                const stringVal = stringify(val)
+                if (stringVal) mfeId ??= stringVal // only supports the first value found
+                try {
+                  if (isHeaderInstance) headers.delete(key)
+                  else delete headers[key]
+                } catch {}
+                if (mfeId) break // Stop processing once we have a valid MFE ID
+              }
+            }
+          }
+        } catch {}
+
         // we are wrapping args in an array so we can preserve the reference
         ee.emit(prefix + 'before-start', [args], ctx)
         var dtPayload
@@ -79,7 +102,7 @@ export function wrapFetch (sharedEE) {
 
         var origPromiseFromFetch = fn.apply(this, args)
 
-        ee.emit(prefix + 'start', [args, dtPayload], origPromiseFromFetch)
+        ee.emit(prefix + 'start', [args, dtPayload, mfeId], origPromiseFromFetch)
 
         // Note we need to cast the returned (orig) Promise from native APIs into the current global Promise, which may or may not be our WrappedPromise.
         return origPromiseFromFetch.then(function (val) {

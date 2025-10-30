@@ -153,11 +153,10 @@ export class Aggregate extends AggregateBase {
       const body = {
         sm: [{
           params: {
-            name: 'Browser/Supportability/BCS/Error/StatusCode'
+            name: `Browser/Supportability/BCS/Error/${status}`
           },
           stats: {
-            c: 1,
-            t: status
+            c: 1
           }
         },
         {

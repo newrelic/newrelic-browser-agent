@@ -442,7 +442,7 @@ EventBuffer/soft_navigations/Dropped/Bytes
 
 ### Browser Connect Response Metrics
 <!--- HTTP status code of failed browser connect response --->
-* Browser/Supportability/BCS/Error/StatusCode
+* 'Browser/Supportability/BCS/Error/<code>'
 <!--- Total dropped payload size of failed browser connect response --->
 * Browser/Supportability/BCS/Error/Dropped/Bytes
 <!--- Response time of failed browser connect response --->

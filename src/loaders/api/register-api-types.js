@@ -24,10 +24,14 @@
 /**
  * @typedef {Object} RegisterAPIMetadata
  * @property {Object} customAttributes - The custom attributes for the registered entity.
- * @property {Object} target - The options for the registered entity.
- * @property {string} target.licenseKey - The license key for the registered entity. If none was supplied, it will assume the license key from the main agent.
- * @property {string} target.id - The ID for the registered entity.
- * @property {string} target.name - The name returned for the registered entity.
+ * @property {RegisterAPIMetadataTarget} target - The options for the registered entity.
+ */
+
+/**
+ * @typedef {Object} RegisterAPIMetadataTarget
+ * @property {string} licenseKey - The license key for the registered entity.
+ * @property {string} id - The ID for the registered entity.
+ * @property {string} name - The name returned for the registered entity.
  */
 
 export default {}

@@ -56,16 +56,16 @@ on:
           - publish-prerelease
           - deprecate-old-versions
       preid:
-        description: 'Prerelease identifier (e.g., rc, alpha, beta)'
+        description: '(publish-prerelease) identifier (e.g., rc, alpha, beta)'
         required: false
         type: string
         default: 'rc'
       version-override:
-        description: 'Override version for prerelease operations'
+        description: '(publish-prerelease) Override version'
         required: false
         type: string
       dry_run:
-        description: 'Dry run mode for testing'
+        description: '(publish-prerelease) Dry run mode for testing'
         required: false
         type: boolean
         default: false
@@ -131,6 +131,10 @@ jobs:
       - name: Deprecate old versions
         if: inputs.operation == 'deprecate-old-versions'
         run: |
+          # Verify npm authentication is working
+          echo "Checking npm authentication..."
+          npm whoami
+          
           # Get agent EoL table from NRQL
           response=$(curl -X POST https://api.newrelic.com/graphql \
             -H 'Content-Type: application/json' \

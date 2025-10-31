@@ -98,7 +98,6 @@ jobs:
       
       # Setup Git for prerelease operations
       - name: Set up git
-        if: inputs.operation == 'publish-prerelease'
         run: |
           git config --global user.name "${GITHUB_LOGIN}"
           git config --global user.email "${GITHUB_EMAIL}"

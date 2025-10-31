@@ -7,7 +7,7 @@
  */
 
 import { registerHandler } from '../../../common/event-emitter/register-handler'
-import { ABORT_REASONS, FEATURE_NAME, QUERY_PARAM_PADDING, RRWEB_EVENT_TYPES, SR_EVENT_EMITTER_TYPES, TRIGGERS } from '../constants'
+import { ABORT_REASONS, ERROR_DURING_REPLAY, FEATURE_NAME, QUERY_PARAM_PADDING, RRWEB_EVENT_TYPES, TRIGGERS } from '../constants'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { sharedChannel } from '../../../common/constants/shared-channel'
 import { obj as encodeObj } from '../../../common/url/encode'
@@ -21,6 +21,7 @@ import { now } from '../../../common/timing/now'
 import { MAX_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
 import { cleanURL } from '../../../common/url/clean-url'
 import { canEnableSessionTracking } from '../../utils/feature-gates'
+import { PAUSE_REPLAY } from '../../../loaders/api/constants'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -77,11 +78,11 @@ export class Aggregate extends AggregateBase {
       this.mode = data.sessionReplayMode
     })
 
-    registerHandler(SR_EVENT_EMITTER_TYPES.PAUSE, () => {
+    registerHandler(PAUSE_REPLAY, () => {
       this.forceStop(this.mode === MODE.FULL)
     }, this.featureName, this.ee)
 
-    registerHandler(SR_EVENT_EMITTER_TYPES.ERROR_DURING_REPLAY, e => {
+    registerHandler(ERROR_DURING_REPLAY, e => {
       this.handleError(e)
     }, this.featureName, this.ee)
 

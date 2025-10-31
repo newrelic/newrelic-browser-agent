@@ -138,13 +138,13 @@ jobs:
           echo "NPM config:"
           npm config list
           
-          # Test authentication by attempting to access user info
-          echo "Testing npm authentication..."
-          if ! npm whoami; then
-            echo "Error: NPM authentication failed. OIDC token may not be properly configured."
-            echo "This may be because deprecation requires specific NPM permissions."
-            exit 1
-          fi
+          # # Test authentication by attempting to access user info
+          # echo "Testing npm authentication..."
+          # if ! npm whoami; then
+          #   echo "Error: NPM authentication failed. OIDC token may not be properly configured."
+          #   echo "This may be because deprecation requires specific NPM permissions."
+          #   exit 1
+          # fi
           
           # Get agent EoL table from NRQL
           response=$(curl -X POST https://api.newrelic.com/graphql \

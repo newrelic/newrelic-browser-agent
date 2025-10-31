@@ -129,23 +129,7 @@ jobs:
       # Deprecate old versions
       - name: Deprecate old versions
         if: inputs.operation == 'deprecate-old-versions'
-        env:
-          # Ensure npm uses the registry URL for authentication
-          NPM_CONFIG_REGISTRY: https://registry.npmjs.org/
         run: |
-          # Verify npm registry configuration
-          echo "NPM registry: $(npm config get registry)"
-          echo "NPM config:"
-          npm config list
-          
-          # # Test authentication by attempting to access user info
-          # echo "Testing npm authentication..."
-          # if ! npm whoami; then
-          #   echo "Error: NPM authentication failed. OIDC token may not be properly configured."
-          #   echo "This may be because deprecation requires specific NPM permissions."
-          #   exit 1
-          # fi
-          
           # Get agent EoL table from NRQL
           response=$(curl -X POST https://api.newrelic.com/graphql \
             -H 'Content-Type: application/json' \

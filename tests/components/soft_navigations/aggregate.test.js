@@ -272,7 +272,9 @@ describe('popstate interactions', () => {
   test('do become route change if first interaction on page', () => {
     const origUrl = window.location.href
     const newUrl = 'http://myurl.com'
-    window.location.href = newUrl // location is normally updated by the time popstate event occurs
+    // Because JSDOM doesn't support modifying the location directly, we need to do this:
+    delete window.location
+    window.location = new URL(newUrl) // location is normally updated by the time popstate event occurs
 
     softNavAggregate.ee.emit('newUIEvent', [{ type: POPSTATE_TRIGGER, timeStamp: 100 }])
     const ixn = softNavAggregate.interactionInProgress

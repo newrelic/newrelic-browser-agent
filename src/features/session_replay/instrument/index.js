@@ -10,9 +10,10 @@ import { handle } from '../../../common/event-emitter/handle'
 import { DEFAULT_KEY, MODE, PREFIX } from '../../../common/session/constants'
 import { InstrumentBase } from '../../utils/instrument-base'
 import { hasReplayPrerequisite, isPreloadAllowed } from '../shared/utils'
-import { FEATURE_NAME, SR_EVENT_EMITTER_TYPES, TRIGGERS } from '../constants'
+import { ERROR_DURING_REPLAY, FEATURE_NAME, TRIGGERS } from '../constants'
 import { setupRecordReplayAPI } from '../../../loaders/api/recordReplay'
 import { setupPauseReplayAPI } from '../../../loaders/api/pauseReplay'
+import { RECORD_REPLAY } from '../../../loaders/api/constants'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
@@ -34,7 +35,7 @@ export class Instrument extends InstrumentBase {
     } catch (err) { }
 
     if (hasReplayPrerequisite(agentRef.init)) {
-      this.ee.on(SR_EVENT_EMITTER_TYPES.RECORD, () => this.#apiStartOrRestartReplay())
+      this.ee.on(RECORD_REPLAY, () => this.#apiStartOrRestartReplay())
     }
 
     if (this.#canPreloadRecorder(session)) {
@@ -50,7 +51,7 @@ export class Instrument extends InstrumentBase {
       if (this.blocked) return
       if (this.agentRef.runtime.isRecording) {
         this.errorNoticed = true
-        handle(SR_EVENT_EMITTER_TYPES.ERROR_DURING_REPLAY, [e], undefined, this.featureName, this.ee)
+        handle(ERROR_DURING_REPLAY, [e], undefined, this.featureName, this.ee)
       }
     })
   }

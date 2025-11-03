@@ -167,7 +167,7 @@ describe('final harvesting', () => {
     expect(pageHideTimingEvents.length).toEqual(1)
   })
 
-  it('should not send any final harvest when RUM fails, e.g. 400 code', async () => {
+  it.only('should only send browser connect response metrics on final harvest when RUM fails, e.g. 400 code', async () => {
     // Capture all BAM requests
     const bamCapture = await browser.testHandle.createNetworkCaptures('bamServer', {
       test: function () {
@@ -194,10 +194,14 @@ describe('final harvesting', () => {
         .then(async () => browser.url(await browser.testHandle.assetURL('/')))
     ])
 
-    expect(bamHarvests.length).toEqual(1)
+    expect(bamHarvests.length).toEqual(2)
     expect(bamHarvests[0].reply).toEqual(expect.objectContaining({
       statusCode: 400,
       body: ''
     }))
+
+    // browser connect response metrics
+    expect(bamHarvests[1].reply.statusCode).toEqual(200)
+    expect(bamHarvests[1].request.body.sm.length).toBeGreaterThan(0)
   })
 })

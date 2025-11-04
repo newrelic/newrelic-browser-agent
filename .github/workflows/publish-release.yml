@@ -11,6 +11,10 @@ on:
   release:
     types: [published]
 
+permissions:
+  id-token: write
+  contents: write
+
 jobs:
   # Build and publish the github release to S3
   publish-prod-to-s3:

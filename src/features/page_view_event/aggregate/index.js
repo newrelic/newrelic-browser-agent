@@ -151,7 +151,7 @@ export class Aggregate extends AggregateBase {
     if (status >= 400 || status === 0) {
       warn(18, status)
       this.blocked = true
-      
+
       // Get estimated payload size of our backlog
       const textEncoder = new TextEncoder()
       const payloadSize = Object.values(newrelic.ee.backlog).reduce((acc, value) => {

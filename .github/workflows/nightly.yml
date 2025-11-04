@@ -6,6 +6,10 @@ on:
     - cron: '0 4 * * *'
   workflow_dispatch:
 
+permissions:
+  id-token: write
+  contents: write
+
 jobs:
   wdio-smoke:
     name: 'WDIO: Smoke Test'

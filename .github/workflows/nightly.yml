@@ -89,12 +89,7 @@ jobs:
             internal/eu-prod-released.js \
             internal/eu-prod-postamble.js
 
-  deprecate-old-versions:
-    name: Deprecate Unsupported Versions
-    uses: ./.github/workflows/npm-operations.yml
-    with:
-      operation: deprecate-old-versions
-    secrets:
-      NR_API_KEY_PRODUCTION: ${{ secrets.NR_API_KEY_PRODUCTION }}
+  # Note: NPM deprecation of old versions is now handled by npm-operations.yml
+  # on its own schedule (daily at 4AM)
 
   # TODO: Need to add a job for cleaning up experiments to run nightly

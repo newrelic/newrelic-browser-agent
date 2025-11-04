@@ -21,6 +21,10 @@ on:
         required: false
         default: "false"
 
+permissions:
+  id-token: write
+  contents: write
+
 jobs:
   prerelease-npm-version:
     uses: ./.github/workflows/npm-operations.yml

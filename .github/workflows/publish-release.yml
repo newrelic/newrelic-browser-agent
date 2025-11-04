@@ -8,6 +8,10 @@ on:
   release:
     types: [published]
 
+permissions:
+  id-token: write
+  contents: write
+
 jobs:
   # Build and publish the github release to S3
   publish-prod-to-s3:
@@ -258,7 +262,7 @@ jobs:
 
   # Notify the release repo of the new release
   notify-release-repo:
-    needs: [publish-to-nr-prod, publish-npm]
+    needs: [publish-to-nr-prod, call-npm-operations]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     defaults:

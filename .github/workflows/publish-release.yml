@@ -1,12 +1,19 @@
 # This workflow is used to build and publish a github release
 # to all platforms. This workflow cannot be manually ran to
 # prevent the same release from being published more than once.
+#
+# Note: NPM publishing and deprecation are now handled automatically by npm-operations.yml
+# when a GitHub release is published
 
 name: Publish Release
 
 on:
   release:
     types: [published]
+
+permissions:
+  id-token: write
+  contents: write
 
 jobs:
   # Build and publish the github release to S3
@@ -221,17 +228,6 @@ jobs:
   #         loader_version: ${{ steps.agent-loader-version.outputs.results }}
   #         environment: stage
 
-  # Publish the agent to npmjs.org
-  call-npm-operations:
-    name: Call NPM Operations
-    uses: ./.github/workflows/npm-operations.yml
-    with:
-      action: publish-release
-    secrets:
-      GITHUB_LOGIN: ${{ secrets.BROWSER_GITHUB_BOT_NAME }}
-      GITHUB_EMAIL: ${{ secrets.BROWSER_GITHUB_BOT_EMAIL }}
-      NR_API_KEY_PRODUCTION: ${{ secrets.NR_API_KEY_PRODUCTION }}
-
   # Raise the release notes pr on the docs website repo
   raise-release-notes-pr:
     needs: [publish-prod-to-s3]
@@ -258,7 +254,7 @@ jobs:
 
   # Notify the release repo of the new release
   notify-release-repo:
-    needs: [publish-to-nr-prod, publish-npm]
+    needs: [publish-to-nr-prod]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     defaults:

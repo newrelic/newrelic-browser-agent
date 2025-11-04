@@ -39,6 +39,7 @@ export function setupRegisterAPI (agent) {
  * @param {string} [target.licenseKey] the license key of the target to report data to
  * @param {string} target.id the entity ID of the target to report data to
  * @param {string} target.name the entity name of the target to report data to
+ * @param {string} [target.parentId] the ID of the parent target to report data to
  * @returns {RegisterAPI} the api object to be returned from the register api method
  */
 export function buildRegisterApi (agentRef, target) {
@@ -46,8 +47,14 @@ export function buildRegisterApi (agentRef, target) {
   warn(54, 'newrelic.register')
 
   target ||= {}
+  target.eventSource = 'MicroFrontendBrowserAgent'
   target.licenseKey ||= agentRef.info.licenseKey // will inherit the license key from the container agent if not provided for brevity. A future state may dictate that we need different license keys to do different things.
   target.blocked = false
+  if (!target.parentId) {
+    Object.defineProperty(target, 'parentId', {
+      get: () => agentRef.runtime.appMetadata.agents?.[0]?.entityGuid // this is async so must be a getter
+    })
+  }
 
   /** @type {Function} a function that is set and reports when APIs are triggered -- warns the customer of the invalid state  */
   let invalidApiResponse = () => {}
@@ -79,6 +86,7 @@ export function buildRegisterApi (agentRef, target) {
     addPageAction: (name, attributes = {}) => report(addPageAction, [name, { ...attrs, ...attributes }, agentRef], target),
     log: (message, options = {}) => report(log, [message, { ...options, customAttributes: { ...attrs, ...(options.customAttributes || {}) } }, agentRef], target),
     noticeError: (error, attributes = {}) => report(noticeError, [error, { ...attrs, ...attributes }, agentRef], target),
+    register: (target = {}) => agentRef.register({ ...target, parentId: api.metadata.target.id }),
     setApplicationVersion: (value) => setLocalValue('application.version', value),
     setCustomAttribute: (key, value) => setLocalValue(key, value),
     setUserId: (value) => setLocalValue('enduser.id', value),

@@ -275,7 +275,7 @@ function baseQueryString (agentRef, qs, endpoint) {
     param('v', VERSION),
     transactionNameParam(),
     param('ct', agentRef.runtime.customTransaction),
-    param('rst', now(), qs),
+    '&rst=' + now(),
     '&ck=0', // ck param DEPRECATED - still expected by backend
     '&s=' + (session?.state.value || '0'), // the 0 id encaps all untrackable and default traffic
     param('ref', ref),

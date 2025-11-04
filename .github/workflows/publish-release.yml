@@ -262,7 +262,7 @@ jobs:
 
   # Notify the release repo of the new release
   notify-release-repo:
-    needs: [publish-to-nr-prod, publish-npm]
+    needs: [publish-to-nr-prod, call-npm-operations]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     defaults:

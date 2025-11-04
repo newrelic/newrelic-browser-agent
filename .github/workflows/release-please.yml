@@ -3,6 +3,9 @@
 # When the release PR is merged, this action will create a Github release. Our docs-site PR workflow will use the
 # contents of the changelog.json file and PR headers to generate release notes for the public docs website.
 # See https://github.com/google-github-actions/release-please-action
+#
+# Note: NPM prerelease publishing is now handled automatically by npm-operations.yml when this workflow
+# pushes to the main branch (triggering automatic RC version publishing)
 
 on:
   push:
@@ -32,13 +35,3 @@ jobs:
               {"type":"fix","section":"Bug Fixes"},
               {"type":"security","section":"Security Fixes"}
             ]
-    # Bump a new prerelease version and publish to NPM.
-  prerelease-npm-version:
-    needs: release-please
-    uses: ./.github/workflows/npm-operations.yml
-    with:
-      operation: publish-prerelease
-      preid: rc
-    secrets:
-      GITHUB_LOGIN: ${{ secrets.BROWSER_GITHUB_BOT_NAME }}
-      GITHUB_EMAIL: ${{ secrets.BROWSER_GITHUB_BOT_EMAIL }}

@@ -17,6 +17,9 @@ import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
 import { now } from '../../../common/timing/now'
 import { TimeKeeper } from '../../../common/timing/time-keeper'
 import { applyFnToProps } from '../../../common/util/traverse'
+import { send } from '../../../common/harvest/harvester'
+import { FEATURE_NAMES, FEATURE_TO_ENDPOINT } from '../../../loaders/features/features'
+import { getSubmitMethod } from '../../../common/util/submit-data'
 
 export class Aggregate extends AggregateBase {
   static featureName = CONSTANTS.FEATURE_NAME
@@ -136,6 +139,53 @@ export class Aggregate extends AggregateBase {
 
     if (status >= 400 || status === 0) {
       warn(18, status)
+
+      // Get estimated payload size of our backlog
+      const textEncoder = new TextEncoder()
+      const payloadSize = Object.values(newrelic.ee.backlog).reduce((acc, value) => {
+        if (!value) return acc
+
+        const encoded = textEncoder.encode(value)
+        return acc + encoded.byteLength
+      }, 0)
+
+      // Send SMs about failed RUM request
+      const body = {
+        sm: [{
+          params: {
+            name: `Browser/Supportability/BCS/Error/${status}`
+          },
+          stats: {
+            c: 1
+          }
+        },
+        {
+          params: {
+            name: 'Browser/Supportability/BCS/Error/Dropped/Bytes'
+          },
+          stats: {
+            c: 1,
+            t: payloadSize
+          }
+        },
+        {
+          params: {
+            name: 'Browser/Supportability/BCS/Error/Duration/Ms'
+          },
+          stats: {
+            c: 1,
+            t: rumEndTime - this.rumStartTime
+          }
+        }]
+      }
+
+      send(this.agentRef, {
+        endpoint: FEATURE_TO_ENDPOINT[FEATURE_NAMES.metrics],
+        payload: { body },
+        submitMethod: getSubmitMethod(),
+        featureName: FEATURE_NAMES.metrics
+      })
+
       // Adding retry logic for the rum call will be a separate change; this.blocked will need to be changed since that prevents another triggerHarvestFor()
       this.ee.abort()
       return

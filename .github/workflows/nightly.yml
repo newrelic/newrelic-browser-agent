@@ -5,7 +5,7 @@ on:
     # Runs every day at 4AM
     - cron: '0 4 * * *'
   workflow_dispatch:
-
+  
 jobs:
   wdio-smoke:
     name: 'WDIO: Smoke Test'
@@ -85,52 +85,7 @@ jobs:
             internal/eu-prod-released.js \
             internal/eu-prod-postamble.js
 
-  deprecate-old-versions:
-    name: Deprecate Unsupported Versions
-    runs-on: ubuntu-latest
-    steps:
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
-      - name: Authenticate with npm
-        run: npm config set "//registry.npmjs.org/:_authToken" "${{ secrets.BROWSER_NPM_TOKEN }}"
-      - name: Deprecate old versions
-        shell: bash
-        run: |
-          # Get agent EoL table from NRQL
-          response=$(curl -X POST https://api.newrelic.com/graphql \
-            -H 'Content-Type: application/json' \
-            -H 'API-Key: ${{ secrets.NR_API_KEY_PRODUCTION }}' \
-            -d '{ "query":  "{\n  docs {\n    agentReleases(agentName: BROWSER) {\n      eolDate\n      version\n    }\n  }\n}" }')
-          eol_table=$(echo "$response" | jq -r '.data.docs.agentReleases | map({(.version): .eolDate}) | add') # this is a map of version string to EoL date in yyyy-mm-dd format
-          echo "Fetched EoL table from NRDB."
-
-          # Fetch package metadata from npm registry
-          package_name="@newrelic/browser-agent"
-          metadata=$(curl -s "https://registry.npmjs.org/$package_name")
-          echo "Fetched agent releases metadata from NPM."
-
-          # Parse versions and their publication dates
-          today=$(date +%Y-%m-%d)
-          versions=$(echo "$metadata" | jq -r '.versions | keys[]') # this list is pre-sorted from oldest to newest
-          for version in $versions; do
-            eol_date=$(echo "$eol_table" | jq -r --arg version "$version" '.[$version]')
-            if [ "$eol_date" = "null" ]; then
-              echo "No EoL date found for version $version. Skipping..."
-              continue
-            fi
-            deprecation_message=$(echo "$metadata" | jq -r ".versions[\"$version\"].deprecated")
-            if [[ "$eol_date" < "$today" || "$eol_date" == "$today" ]]; then
-              if [ "$deprecation_message" = "null" ]; then
-                echo "Deprecating version $version no longer supported as of $eol_date..."
-                npm deprecate "$package_name@$version" "This version is no longer supported."
-              else
-                echo "Version $version is already deprecated."
-              fi
-            else
-              break # rest of the ascending versions should be within their support window
-            fi
-          done
+  # Note: NPM deprecation of old versions is now handled by npm-operations.yml
+  # on its own schedule (daily at 4AM)
 
   # TODO: Need to add a job for cleaning up experiments to run nightly

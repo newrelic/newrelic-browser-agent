@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker'
-import { SR_EVENT_EMITTER_TYPES } from '../../../src/features/session_replay/constants'
+import { ERROR_DURING_REPLAY } from '../../../src/features/session_replay/constants'
 import { IDEAL_PAYLOAD_SIZE, MAX_PAYLOAD_SIZE } from '../../../src/common/constants/agent-constants'
 import { MODE, SESSION_EVENTS } from '../../../src/common/session/constants'
 import { FEATURE_NAMES } from '../../../src/loaders/features/features'
@@ -166,7 +166,7 @@ describe('Session Replay Sample -> Mode Behaviors', () => {
 
 describe('Session Replay Error Mode Behaviors', () => {
   test('an error BEFORE rrweb import starts running in ERROR from beginning (when not preloaded)', async () => {
-    ee.get(mainAgent.agentIdentifier).emit(SR_EVENT_EMITTER_TYPES.ERROR_DURING_REPLAY, ['test1'], undefined, FEATURE_NAMES.sessionReplay, ee.get(mainAgent.agentIdentifier))
+    ee.get(mainAgent.agentIdentifier).emit(ERROR_DURING_REPLAY, ['test1'], undefined, FEATURE_NAMES.sessionReplay, ee.get(mainAgent.agentIdentifier))
 
     const sessionReplayInstrument = new SessionReplay(mainAgent)
     await new Promise(process.nextTick)
@@ -184,7 +184,7 @@ describe('Session Replay Error Mode Behaviors', () => {
 
     expect(sessionReplayAggregate.mode).toEqual(MODE.ERROR)
 
-    ee.get(mainAgent.agentIdentifier).emit(SR_EVENT_EMITTER_TYPES.ERROR_DURING_REPLAY, ['test1'], undefined, FEATURE_NAMES.sessionReplay, ee.get(mainAgent.agentIdentifier))
+    ee.get(mainAgent.agentIdentifier).emit(ERROR_DURING_REPLAY, ['test1'], undefined, FEATURE_NAMES.sessionReplay, ee.get(mainAgent.agentIdentifier))
 
     expect(sessionReplayAggregate.mode).toEqual(MODE.FULL)
   })

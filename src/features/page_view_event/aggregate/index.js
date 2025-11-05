@@ -121,7 +121,6 @@ export class Aggregate extends AggregateBase {
     this.events.add(body)
 
     this.agentRef.runtime.harvester.triggerHarvestFor(this, {
-      needResponse: true,
       sendEmptyBody: true
     })
   }
@@ -143,7 +142,6 @@ export class Aggregate extends AggregateBase {
     super.postHarvestCleanup({ sent, retry }) // this will set isRetrying & re-buffer the body if request is to be retried
     if (this.isRetrying && this.retries++ < 1) { // Only retry once
       setTimeout(() => this.agentRef.runtime.harvester.triggerHarvestFor(this, {
-        needResponse: true,
         sendEmptyBody: true
       }), 5000) // Retry sending the RUM event after 5 seconds
       return

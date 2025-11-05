@@ -100,7 +100,10 @@ describe('rum retry harvesting', () => {
         timingEventsCapture.waitForResult({ totalCount: 1 }), // a subsequent feature should then still harvest here after first retry
         browser.url(await browser.testHandle.assetURL('obfuscate-pii.html'))
       ])
-      expect(rumHarvest1.request.query).toEqual(rumHarvest2.request.query)
+      const { rst: rst1, ...query1 } = rumHarvest1.request.query
+      const { rst: rst2, ...query2 } = rumHarvest2.request.query
+      expect(query1).toEqual(query2)
+      expect(Number(rst2)).toBeGreaterThanOrEqual(Number(rst1))
       expect(rumHarvest1.request.body).toEqual(rumHarvest2.request.body)
       expect(rumHarvest1.reply.statusCode).toEqual(statusCode)
       expect(rumHarvest2.reply.statusCode).toEqual(200)

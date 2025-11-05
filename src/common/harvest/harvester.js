@@ -159,8 +159,7 @@ export function send (agentRef, { endpoint, payload, localOpts = {}, submitMetho
       result.addEventListener('loadend', function () {
         // `this` here in block refers to the XHR object in this scope, do not change the anon function to an arrow function
         // status 0 refers to a local error, such as CORS or network failure, or a blocked request by the browser (e.g. adblocker)
-        const cbResult = { sent: this.status !== 0, status: this.status, retry: shouldRetry(this.status), fullUrl, xhr: this }
-        if (localOpts.needResponse) cbResult.responseText = this.responseText
+        const cbResult = { sent: this.status !== 0, status: this.status, retry: shouldRetry(this.status), fullUrl, xhr: this, responseText: this.responseText }
         cbFinished(cbResult)
 
         /** temporary audit of consistency of harvest metadata flags */
@@ -169,8 +168,7 @@ export function send (agentRef, { endpoint, payload, localOpts = {}, submitMetho
     } else if (submitMethod === fetchMethod) {
       result.then(async function (response) {
         const status = response.status
-        const cbResult = { sent: true, status, retry: shouldRetry(status), fullUrl, fetchResponse: response }
-        if (localOpts.needResponse) cbResult.responseText = await response.text()
+        const cbResult = { sent: true, status, retry: shouldRetry(status), fullUrl, fetchResponse: response, responseText: await response.text() }
         cbFinished(cbResult)
         /** temporary audit of consistency of harvest metadata flags */
         if (!shouldRetry(status)) trackHarvestMetadata()

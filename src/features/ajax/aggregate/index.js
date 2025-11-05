@@ -60,14 +60,12 @@ export class Aggregate extends AggregateBase {
   storeXhr (params, metrics, startTime, endTime, type, ctx) {
     metrics.time = startTime
 
-    const mfeTarget = this.harvestEndpointVersion === 2 ? getMFETargetFromId(ctx.mfeId, this) : undefined
-
     // send to session traces
     let hash
     if (params.cat) {
-      hash = stringify([params.status, params.cat, mfeTarget])
+      hash = stringify([params.status, params.cat])
     } else {
-      hash = stringify([params.status, params.host, params.pathname, mfeTarget])
+      hash = stringify([params.status, params.host, params.pathname])
     }
 
     const shouldCollect = shouldCollectEvent(params)
@@ -76,8 +74,7 @@ export class Aggregate extends AggregateBase {
 
     // Report ajax timeslice metric (to be harvested by jserrors feature, but only if it's running).
     if (jserrorsInUse && (shouldCollect || !shouldOmitAjaxMetrics)) {
-      this.agentRef.sharedAggregator?.add(['xhr', hash, params, metrics, getVersion2Attributes(undefined, this)]) // always make a copy to the container target
-      if (mfeTarget) this.agentRef.sharedAggregator?.add(['xhr', hash, params, metrics, getVersion2Attributes(mfeTarget, this)]) // make a copy to the MFE target if it exists
+      this.agentRef.sharedAggregator?.add(['xhr', hash, params, metrics, getVersion2Attributes(undefined, this)]) // only ever send XHR timeslices to the container target, since timeslices are not supported by MFE
     }
 
     if (!shouldCollect) {
@@ -125,6 +122,7 @@ export class Aggregate extends AggregateBase {
     })
     if (event.gql) this.reportSupportabilityMetric('Ajax/Events/GraphQL/Bytes-Added', stringify(event.gql).length)
 
+    const mfeTarget = this.harvestEndpointVersion === 2 ? getMFETargetFromId(ctx.mfeId, this) : undefined
     /** always make a copy of the event for the container agent */
     const containerAgentEvent = {
       ...event,

@@ -12,6 +12,7 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { parseGQL } from './gql'
 import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../../../common/serialize/bel-serializer'
 import { gosNREUMOriginals } from '../../../common/window/nreum'
+import { getMFETargetFromId, getVersion2Attributes } from '../../../common/util/mfe'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -73,7 +74,7 @@ export class Aggregate extends AggregateBase {
 
     // Report ajax timeslice metric (to be harvested by jserrors feature, but only if it's running).
     if (jserrorsInUse && (shouldCollect || !shouldOmitAjaxMetrics)) {
-      this.agentRef.sharedAggregator?.add(['xhr', hash, params, metrics])
+      this.agentRef.sharedAggregator?.add(['xhr', hash, params, metrics, getVersion2Attributes(undefined, this)]) // only ever send XHR timeslices to the container target, since timeslices are not supported by MFE
     }
 
     if (!shouldCollect) {
@@ -90,6 +91,7 @@ export class Aggregate extends AggregateBase {
       return // do not send this ajax as an event
     }
 
+    // TODO, does product want to note that an AJAX is tied to a MFE in the session trace waterfall?
     handle('bstXhrAgg', ['xhr', hash, params, metrics], undefined, FEATURE_NAMES.sessionTrace, this.ee) // have trace feature harvest AjaxNode
 
     const event = {
@@ -120,15 +122,29 @@ export class Aggregate extends AggregateBase {
     })
     if (event.gql) this.reportSupportabilityMetric('Ajax/Events/GraphQL/Bytes-Added', stringify(event.gql).length)
 
+    const mfeTarget = this.harvestEndpointVersion === 2 ? getMFETargetFromId(ctx.mfeId, this) : undefined
+    /** always make a copy of the event for the container agent */
+    const containerAgentEvent = {
+      ...event,
+      ...(!!mfeTarget && { 'child.id': mfeTarget.id })
+    }
     const softNavInUse = Boolean(this.agentRef.features?.[FEATURE_NAMES.softNav])
     if (softNavInUse) { // For newer soft nav (when running), pass the event w/ info to it for evaluation -- either part of an interaction or is given back
-      handle('ajax', [event, ctx], undefined, FEATURE_NAMES.softNav, this.ee)
+      handle('ajax', [containerAgentEvent, ctx], undefined, FEATURE_NAMES.softNav, this.ee)
     } else if (ctx.spaNode) { // For old spa (when running), if the ajax happened inside an interaction, hold it until the interaction finishes
       const interactionId = ctx.spaNode.interaction.id
       this.underSpaEvents[interactionId] ??= []
-      this.underSpaEvents[interactionId].push(event)
+      this.underSpaEvents[interactionId].push(containerAgentEvent)
     } else {
-      this.events.add(event)
+      this.events.add(containerAgentEvent)
+    }
+
+    /** make a copy of the event for the MFE target if it exists */
+    if (mfeTarget) {
+      this.events.add({
+        ...event,
+        target: mfeTarget // custom attrs are calculated later at serialization time, so just tack the target metadata on the event as is and let the serializer handle the v2 attributes
+      })
     }
   }
 
@@ -170,7 +186,11 @@ export class Aggregate extends AggregateBase {
 
       // add custom attributes
       // gql decorators are added as custom attributes to alleviate need for new BEL schema
-      const attrParts = addCustomAttributes({ ...(jsAttributes || {}), ...(event.gql || {}) }, addString)
+      const attrParts = addCustomAttributes({
+        ...(jsAttributes || {}),
+        ...(event.gql || {}),
+        ...(getVersion2Attributes(event.target, this)) // event.target only exists if we saw the right headers on the request.  The helper will know what to do with that
+      }, addString)
       fields.unshift(numeric(attrParts.length))
 
       insert += fields.join(',')

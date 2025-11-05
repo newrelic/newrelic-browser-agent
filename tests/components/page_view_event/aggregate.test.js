@@ -23,7 +23,6 @@ test('PageViewEvent does not throw on Harvester driven processes', () => {
 
   pveAggregate.events.add(undefined) // ensure request even if sendRum() puts empty body into buffer
   expect(mainAgent.runtime.harvester.triggerHarvestFor(pveAggregate, {
-    needResponse: true,
     sendEmptyBody: true
   }).ranSend).toEqual(true) // mimics the manual trigger in PVE `sendRum`; this should return true as it actually tries to "send"
 })

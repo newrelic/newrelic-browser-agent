@@ -12,11 +12,7 @@ export function isValidMFETarget (target = {}) {
 }
 
 export function hasValidValue (val) {
-  if (typeof val === 'string') {
-    const valLen = val.trim().length
-    return valLen > 0 && valLen < 501
-  }
-  return true
+  return (typeof val === 'string' && val.trim().length < 501) || true
 }
 
 /**

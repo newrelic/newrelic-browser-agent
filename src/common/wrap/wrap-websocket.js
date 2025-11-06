@@ -7,9 +7,11 @@ import { handle } from '../event-emitter/handle'
 import { generateRandomHexString } from '../ids/unique-id'
 import { now } from '../timing/now'
 import { gosNREUMOriginals } from '../window/nreum'
+import { subscribeToPageUnload } from '../window/page-visibility'
 
 const wrapped = {}
 const subscribedFeatures = []
+const openWebSockets = new Set() // track all instances to close out metrics on page unload
 
 export function wrapWebSocket (sharedEE, callerFeature) {
   const originals = gosNREUMOriginals().o
@@ -19,6 +21,22 @@ export function wrapWebSocket (sharedEE, callerFeature) {
   const wsEE = sharedEE.get('websockets')
   if (wrapped[wsEE.debugId]++) return wsEE
   wrapped[wsEE.debugId] = 1 // otherwise, first feature to wrap events
+
+  // This handles page navigation scenarios where the browser closes WebSockets after pagehide fires
+  subscribeToPageUnload(() => {
+    const unloadTime = now()
+    openWebSockets.forEach(ws => {
+      ws.nrData.closedAt = unloadTime
+      ws.nrData.closeCode = 1001 // Going Away - standard code for page navigation
+      ws.nrData.closeReason = 'Page navigating away'
+      ws.nrData.closeWasClean = false
+      if (ws.nrData.openedAt) {
+        ws.nrData.connectedDuration = unloadTime - ws.nrData.openedAt
+      }
+
+      subscribedFeatures.forEach(featureName => handle('ws-complete', [ws.nrData], ws, featureName, wsEE))
+    })
+  })
 
   class WrappedWebSocket extends WebSocket {
     static name = 'WebSocket'
@@ -56,6 +74,7 @@ export function wrapWebSocket (sharedEE, callerFeature) {
         ;['protocol', 'extensions', 'binaryType'].forEach(prop => {
           this.nrData[prop] = this[prop]
         })
+        openWebSockets.add(this)
       })
 
       this.addEventListener('message', (event) => {
@@ -77,6 +96,7 @@ export function wrapWebSocket (sharedEE, callerFeature) {
         this.nrData.closeWasClean = event.wasClean
         this.nrData.connectedDuration = this.nrData.closedAt - this.nrData.openedAt
 
+        openWebSockets.delete(this) // remove from tracking set since it's now closed
         subscribedFeatures.forEach(featureName => handle('ws-complete', [this.nrData], this, featureName, wsEE))
       })
     }

@@ -266,4 +266,67 @@ describe('wrap-websocket', () => {
     expect(ws.nrData.messageBytes).toBe(33) // 29 + 4 bytes for 'test'
     expect(ws.nrData.messageTypes).toEqual('string,ArrayBuffer,Blob') // still only 3 unique types
   })
+
+  describe('pagehide event handling', () => {
+    let emitSpy
+
+    beforeEach(() => {
+      emitSpy = jest.spyOn(agentEE.get('websockets'), 'emit')
+    })
+
+    it('emits ws-complete for OPEN or CLOSING WebSocket when pagehide event fires', async () => {
+      ws.dispatchEvent(new Event('open'))
+      Object.defineProperty(ws, 'readyState', { value: WebSocket.OPEN, writable: true })
+
+      const socketId = ws.nrData.socketId
+      const openedAt = ws.nrData.openedAt
+
+      // Dispatch a pagehide event on the window
+      window.dispatchEvent(new Event('pagehide'))
+
+      // Verify ws-complete was emitted
+      expect(emitSpy).toHaveBeenCalledTimes(1)
+      expect(emitSpy).toHaveBeenCalledWith('ws-complete', [expect.objectContaining({
+        socketId,
+        closedAt: expect.any(Number),
+        closeCode: 1001,
+        closeReason: 'Page navigating away',
+        closeWasClean: false
+      })], ws)
+
+      const emittedData = emitSpy.mock.calls[0][1][0]
+      expect(emittedData.connectedDuration).toBeDefined()
+      expect(openedAt).toBeDefined()
+      expect(emittedData.closedAt).toBeGreaterThanOrEqual(openedAt)
+      expect(emittedData.connectedDuration).toBe(emittedData.closedAt - openedAt)
+    })
+
+    const noEmitTestCases = [
+      {
+        state: 'CONNECTING',
+        readyState: WebSocket.CONNECTING
+      },
+      {
+        state: 'CLOSED',
+        readyState: WebSocket.CLOSED
+      }
+    ]
+
+    noEmitTestCases.forEach(({ state, readyState }) => {
+      it(`does NOT emit ws-complete for ${state} WebSocket when pagehide event fires`, async () => {
+        if (state === 'CLOSED') {
+          ws.dispatchEvent(new Event('open'))
+          ws.dispatchEvent(new CloseEvent('close', { code: 1000, reason: 'Normal closure', wasClean: true }))
+          emitSpy.mockClear() // Clear previous emit from close event
+        }
+        Object.defineProperty(ws, 'readyState', { value: readyState, writable: true })
+
+        // Dispatch a pagehide event on the window
+        window.dispatchEvent(new Event('pagehide'))
+
+        // Verify ws-complete was NOT emitted
+        expect(emitSpy).not.toHaveBeenCalled()
+      })
+    })
+  })
 })

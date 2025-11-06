@@ -4,19 +4,15 @@
  */
 
 import { testInsRequest, testErrorsRequest } from '../../../tools/testing-server/utils/expect-tests'
-import { notIOS, notSafari } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { onlyFirefox, onlySafari, supportsWebSocketsTesting } from '../../../tools/browser-matcher/common-matchers.mjs'
 
-/** NOTE: Safari and iOS safari are blocked from connecting to the websocket protocol (on LambdaTest),
- *  which throws socket errors instead of connecting and capturing the expected payloads.
- *  Validated that this works locally for these envs. Any websocket changes must be validated manually for these envs. */
-describe.withBrowsersMatching([notSafari, notIOS])('WebSocket wrapper', () => {
+describe.withBrowsersMatching(supportsWebSocketsTesting)('WebSocket wrapper', () => {
   it('should capture and harvest WebSocket events', async () => {
     // Set up network capture for INS endpoint
     const insCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testInsRequest })
 
-    const url = await browser.testHandle.assetURL('websockets.html', { loader: 'spa' })
-    await browser.url(url)
-      .then(() => browser.waitForAgentLoad())
+    const url = await browser.testHandle.assetURL('websockets.html')
+    await browser.url(url).then(() => browser.waitForAgentLoad())
 
     // Wait for the INS harvest with WebSocket events
     const [insHarvest] = await insCapture.waitForResult({ totalCount: 1 })
@@ -46,7 +42,13 @@ describe.withBrowsersMatching([notSafari, notIOS])('WebSocket wrapper', () => {
       expect(event.connectedDuration).toBeGreaterThanOrEqual(0)
       expect(event.closeCode).toBeDefined()
       expect(event.closeReason).toBeDefined() // can be empty string
-      expect(event.closeWasClean).toBe(true)
+
+      // Safari may have a false wasClean property on close events
+      if (browserMatch(onlySafari)) {
+        expect(typeof event.closeWasClean).toBe('boolean')
+      } else {
+        expect(event.closeWasClean).toBe(true)
+      }
       expect(event.sendCount).toBe(1)
       expect(event.sendBytes).toBeGreaterThan(0)
       expect(event.sendBytesMin).toBeGreaterThan(0)
@@ -65,8 +67,9 @@ describe.withBrowsersMatching([notSafari, notIOS])('WebSocket wrapper', () => {
     const postLoadEvent = wsEvents.find(e => e.requestedUrl.includes('loaded=post'))
     expect(preLoadEvent).toBeTruthy()
     expect(postLoadEvent).toBeTruthy()
-    // PostLoad event should close with explicit code 1000
-    expect(postLoadEvent.closeCode).toBe(1000)
+    // All browsers, either natively or via Lambdatest, are super fickle and can have close codes of 1005 for preLoad WS, so it's unasserted.
+    // Additionally, Safari can have close code of 1006 for postLoad WS.
+    if (!browserMatch(onlySafari)) expect(postLoadEvent.closeCode).toBe(1000)
 
     // Verify session id (s) and trace id (ptid) query params are present and valid
     const { s: sessionId, ptid: traceId } = insHarvest.request.query
@@ -80,7 +83,7 @@ describe.withBrowsersMatching([notSafari, notIOS])('WebSocket wrapper', () => {
   it('should track all WebSocket data types for send and message', async () => {
     const insCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testInsRequest })
 
-    const url = await browser.testHandle.assetURL('websocket-multi-send-msg.html', { loader: 'spa' })
+    const url = await browser.testHandle.assetURL('websocket-multi-send-msg.html')
     await browser.url(url)
       .then(() => browser.waitForAgentLoad())
 
@@ -94,7 +97,7 @@ describe.withBrowsersMatching([notSafari, notIOS])('WebSocket wrapper', () => {
     )
 
     // Wait for the INS harvest with WebSocket event
-    const [insHarvest] = await insCapture.waitForResult({ totalCount: 1 })
+    const [insHarvest] = await insCapture.waitForResult({ totalCount: 1, timeout: 10000 })
     const insPayload = insHarvest.request?.body?.ins
     expect(Array.isArray(insPayload)).toBe(true)
     const wsEvents = insPayload.filter(event => event.eventType === 'WebSocket')
@@ -145,7 +148,7 @@ describe.withBrowsersMatching([notSafari, notIOS])('WebSocket wrapper', () => {
     const insCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testInsRequest })
     const errorsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testErrorsRequest })
 
-    const url = await browser.testHandle.assetURL('websocket-error.html', { loader: 'spa' })
+    const url = await browser.testHandle.assetURL('websocket-error.html')
     await browser.url(url)
       .then(() => browser.waitForAgentLoad())
     await browser.waitUntil(
@@ -156,8 +159,8 @@ describe.withBrowsersMatching([notSafari, notIOS])('WebSocket wrapper', () => {
       }
     )
 
-    const [insHarvest] = await insCapture.waitForResult({ totalCount: 1 })
-    const [errorsHarvest] = await errorsCapture.waitForResult({ totalCount: 1 })
+    const [insHarvest] = await insCapture.waitForResult({ totalCount: 1, timeout: 10000 })
+    const [errorsHarvest] = await errorsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
 
     const insPayload = insHarvest.request?.body?.ins
     const wsEvents = insPayload.filter(event => event.eventType === 'WebSocket')
@@ -188,7 +191,7 @@ describe.withBrowsersMatching([notSafari, notIOS])('WebSocket wrapper', () => {
       await browser.url(url)
         .then(() => browser.waitForAgentLoad())
 
-      const [insHarvest] = await insCapture.waitForResult({ totalCount: 1 })
+      const [insHarvest] = await insCapture.waitForResult({ totalCount: 1, timeout: 10000 })
       const insPayload = insHarvest.request?.body?.ins
       expect(Array.isArray(insPayload)).toBe(true)
 
@@ -204,5 +207,66 @@ describe.withBrowsersMatching([notSafari, notIOS])('WebSocket wrapper', () => {
       expect(wsEvent.sendCount).toBeGreaterThanOrEqual(1)
       expect(wsEvent.messageCount).toBeGreaterThanOrEqual(1)
     })
+  })
+
+  it('should capture WebSocket event when page navigates away with open connection', async () => {
+    const insCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testInsRequest })
+
+    // Load a simple instrumented page with websockets feature enabled
+    const url = await browser.testHandle.assetURL('instrumented.html', {
+      loader: 'spa',
+      init: { feature_flags: ['websockets'] }
+    })
+    await browser.url(url).then(() => browser.waitForAgentLoad())
+
+    // Create a WebSocket connection but don't close it - just let it stay open
+    await browser.execute(() => {
+      window.testWs = new WebSocket(`ws://${window.NREUM.info.beacon}/websocket`)
+      window.wsOpened = false
+
+      window.testWs.addEventListener('open', () => {
+        window.wsOpened = true
+        window.testWs.send('Hello from open connection!')
+      })
+    })
+
+    // Wait for the WebSocket to actually open
+    await browser.waitUntil(
+      () => browser.execute(() => window.wsOpened === true),
+      {
+        timeout: 5000,
+        timeoutMsg: 'WebSocket did not open within 5 seconds'
+      }
+    )
+
+    // Navigate to a different page - the pagehide handler in wrap-websocket should emit ws-complete
+    const rootUrl = await browser.testHandle.assetURL('/')
+    await browser.url(rootUrl)
+
+    // Wait for the harvest from the previous page (which should include the auto-closed WebSocket)
+    const [insHarvest] = await insCapture.waitForResult({ totalCount: 1, timeout: 10000 })
+    const insPayload = insHarvest.request?.body?.ins
+    expect(Array.isArray(insPayload)).toBe(true)
+
+    const wsEvents = insPayload.filter(event => event.eventType === 'WebSocket')
+    expect(wsEvents.length).toBe(1)
+
+    const wsEvent = wsEvents[0]
+    expect(wsEvent.eventType).toBe('WebSocket')
+    expect(wsEvent.openedAt).toBeGreaterThan(0)
+    expect(wsEvent.closedAt).toBeGreaterThan(0)
+    expect(wsEvent.closeCode).toBe(1001) // Going Away - set by wrap-websocket pagehide handler
+
+    // Firefox's close event fires after pagehide and overwrites closeReason with empty string
+    // Other browsers preserve the pagehide-set closeReason
+    if (browserMatch(onlyFirefox)) {
+      expect(wsEvent.closeReason).toBe('')
+      expect(wsEvent.closeWasClean).toBe(true)
+    } else {
+      expect(wsEvent.closeReason).toBe('Page navigating away')
+      expect(wsEvent.closeWasClean).toBe(false)
+    }
+    expect(wsEvent.connectedDuration).toBeGreaterThan(0)
+    expect(wsEvent.sendCount).toBe(1) // We sent one message
   })
 })

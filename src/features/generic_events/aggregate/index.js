@@ -33,13 +33,13 @@ export class Aggregate extends AggregateBase {
 
       this.#trackSupportabilityMetrics()
 
-      registerHandler('api-recordCustomEvent', (timestamp, eventType, attributes) => {
+      registerHandler('api-recordCustomEvent', (timestamp, eventType, attributes, target) => {
         if (RESERVED_EVENT_TYPES.includes(eventType)) return warn(46)
         this.addEvent({
           eventType,
           timestamp: this.toEpoch(timestamp),
           ...attributes
-        })
+        }, target)
       }, this.featureName, this.ee)
 
       if (agentRef.init.page_action.enabled) {

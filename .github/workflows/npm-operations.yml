@@ -1,50 +1,25 @@
 name: NPM Operations
 
 permissions:
-  # In order to create the git tag, we must have write permissions.
-  contents: write
-  # This is important. Trusted Publishing requires this for the OIDC exchange.
   id-token: write
+  contents: write
 
 on:
-  # Triggered by other workflows for specific NPM operations
-  workflow_call:
-    inputs:
-      operation:
-        description: 'NPM operation to perform'
-        required: true
-        type: string
-        # Valid values: publish-release, publish-prerelease, deprecate-old-versions
-      preid:
-        description: 'Prerelease identifier (e.g., rc, alpha, beta)'
-        required: false
-        type: string
-        default: 'rc'
-      version-override:
-        description: 'Override version for prerelease operations'
-        required: false
-        type: string
-      dry_run:
-        description: 'Dry run mode for testing'
-        required: false
-        type: boolean
-        default: false
-    secrets:
-      GITHUB_LOGIN:
-        required: false
-      GITHUB_EMAIL:
-        required: false
-      NR_API_KEY_PRODUCTION:
-        required: false
-    outputs:
-      operation:
-        description: 'The operation that was performed'
-        value: ${{ jobs.npm-operations.outputs.operation }}
-      success:
-        description: 'Whether the operation was successful'
-        value: ${{ jobs.npm-operations.outputs.success }}
+  # 1. Pull request merge - triggers prerelease operation
+  push:
+    branches:
+      - main
 
-  # Manual trigger for testing/emergency operations
+  # 2. Release - triggers release operations
+  release:
+    types: [published]
+
+  # 3. Scheduled deprecation (keeping existing nightly schedule)
+  schedule:
+    # Runs every day at 4AM
+    - cron: '0 4 * * *'
+
+  # 4. Manual trigger for testing/manual/emergency operations
   workflow_dispatch:
     inputs:
       operation:
@@ -71,7 +46,37 @@ on:
         default: false
 
 jobs:
+  # Determine which operations to run based on trigger
+  determine-operations:
+    runs-on: ubuntu-latest
+    outputs:
+      operations: ${{ steps.determine.outputs.operations }}
+    steps:
+      - name: Determine operations based on trigger
+        id: determine
+        run: |
+          case "${{ github.event_name }}" in
+            "push")
+              echo "operations=[\"publish-prerelease\"]" >> $GITHUB_OUTPUT
+              ;;
+            "release")
+              echo "operations=[\"publish-release\"]" >> $GITHUB_OUTPUT
+              ;;
+            "schedule")
+              echo "operations=[\"deprecate-old-versions\"]" >> $GITHUB_OUTPUT
+              ;;
+            "workflow_dispatch")
+              echo "operations=[\"${{ inputs.operation }}\"]" >> $GITHUB_OUTPUT
+              ;;
+            *)
+              echo "operations=[]" >> $GITHUB_OUTPUT
+              ;;
+          esac
+
+  # Execute NPM operations based on determined operations
   npm-operations:
+    needs: determine-operations
+    if: needs.determine-operations.outputs.operations != '[]'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     defaults:
@@ -80,6 +85,7 @@ jobs:
     env:
       GITHUB_LOGIN: ${{ secrets.GITHUB_LOGIN || secrets.BROWSER_GITHUB_BOT_NAME }}
       GITHUB_EMAIL: ${{ secrets.GITHUB_EMAIL || secrets.BROWSER_GITHUB_BOT_EMAIL }}
+      OPERATION: ${{ fromJson(needs.determine-operations.outputs.operations)[0] }}
     
     steps:
       - uses: actions/checkout@v5
@@ -104,31 +110,34 @@ jobs:
       
       # Install dependencies for publish operations
       - name: Install project dependencies
-        if: inputs.operation == 'publish-release' || inputs.operation == 'publish-prerelease'
+        if: env.OPERATION == 'publish-release' || env.OPERATION == 'publish-prerelease'
         run: npm ci
       
       # Build NPM package for release
       - name: Build npm package
-        if: inputs.operation == 'publish-release'
+        if: env.OPERATION == 'publish-release'
         run: npm run build:npm
       
       # Publish release version
       - name: Publish npm package (release)
-        if: inputs.operation == 'publish-release'
+        if: env.OPERATION == 'publish-release'
         run: npm publish
       
       # Publish prerelease version
       - name: Publish prerelease version
-        if: inputs.operation == 'publish-prerelease'
+        if: env.OPERATION == 'publish-prerelease'
         uses: ./.github/actions/prerelease-npm-version
         with:
           version-override: ${{ inputs.version-override }}
-          preid: ${{ inputs.preid }}
-          dry_run: ${{ inputs.dry_run }}
+          preid: ${{ inputs.preid || 'rc' }}
+          dry_run: ${{ inputs.dry_run || false }}
       
       # Deprecate old versions
       - name: Deprecate old versions
-        if: inputs.operation == 'deprecate-old-versions'
+        if: env.OPERATION == 'deprecate-old-versions'
+        env:
+          # Ensure npm uses the registry URL for authentication
+          NPM_CONFIG_REGISTRY: https://registry.npmjs.org/
         run: |
           # Get agent EoL table from NRQL
           response=$(curl -X POST https://api.newrelic.com/graphql \
@@ -166,5 +175,5 @@ jobs:
           done
 
     outputs:
-      operation: ${{ inputs.operation }}
+      operation: ${{ env.OPERATION }}
       success: ${{ job.status == 'success' }}

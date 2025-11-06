@@ -14,6 +14,7 @@ import { log } from './log'
 import { addPageAction } from './addPageAction'
 import { noticeError } from './noticeError'
 import { single } from '../../common/util/invoke'
+import { recordCustomEvent } from './recordCustomEvent'
 
 /**
  * @typedef {import('./register-api-types').RegisterAPI} RegisterAPI
@@ -87,6 +88,7 @@ export function buildRegisterApi (agentRef, target) {
     log: (message, options = {}) => report(log, [message, { ...options, customAttributes: { ...attrs, ...(options.customAttributes || {}) } }, agentRef], target),
     noticeError: (error, attributes = {}) => report(noticeError, [error, { ...attrs, ...attributes }, agentRef], target),
     register: (target = {}) => agentRef.register({ ...target, parentId: api.metadata.target.id }),
+    recordCustomEvent: (eventType, attributes = {}) => report(recordCustomEvent, [eventType, { ...attrs, ...attributes }, agentRef], target),
     setApplicationVersion: (value) => setLocalValue('application.version', value),
     setCustomAttribute: (key, value) => setLocalValue(key, value),
     setUserId: (value) => setLocalValue('enduser.id', value),

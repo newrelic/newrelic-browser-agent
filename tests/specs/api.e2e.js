@@ -65,6 +65,11 @@ describe('newrelic api', () => {
           window.newrelic.recordCustomEvent('CustomEvent', { val: 42 })
           window.agent1.recordCustomEvent('CustomEvent', { val: 1 })
           window.agent2.recordCustomEvent('CustomEvent', { val: 2 })
+
+          // each payload in this test is decorated with data that matches its appId for ease of testing
+          window.newrelic.measure('42')
+          window.agent1.measure('1')
+          window.agent2.measure('2')
         })
         const [rumHarvests, errorsHarvests, insightsHarvests, logsHarvest] = await Promise.all([
           rumCapture.waitForResult({ totalCount: 1, timeout: 10000 }),
@@ -81,9 +86,9 @@ describe('newrelic api', () => {
         // if it gets tried again, the test will fail, since these should all
         // only have one distinct matching payload
         const tests = {
-          42: { rum: false, err: false, pa: false, log: false, rce: false }, // container agent defaults to appId 42
-          1: { err: false, pa: false, log: false, rce: false }, // agent1 instance
-          2: { err: false, pa: false, log: false, rce: false } // agent2 instance
+          42: { rum: false, err: false, pa: false, log: false, rce: false, measure: false }, // container agent defaults to appId 42
+          1: { err: false, pa: false, log: false, rce: false, measure: false }, // agent1 instance
+          2: { err: false, pa: false, log: false, rce: false, measure: false } // agent2 instance
         }
 
         expect(rumHarvests).toHaveLength(1)
@@ -125,7 +130,7 @@ describe('newrelic api', () => {
         insightsHarvests.forEach(({ request: { query, body } }) => {
           const data = body.ins
           data.forEach((ins, idx) => {
-            if (ins.eventType === 'PageAction' || ins.eventType === 'CustomEvent') {
+            if (ins.eventType === 'PageAction' || ins.eventType === 'CustomEvent' || (ins.eventType === 'BrowserPerformance' && ins.entryType === 'measure')) {
               const id = ins['mfe.id'] || query.a // MFEs use mfe.id, regular agents use appId
               if (Number(id) !== 42 && testSet.includes('register.generic_events')) {
                 expect(ins['mfe.name']).toEqual('agent' + id)
@@ -137,7 +142,14 @@ describe('newrelic api', () => {
                 }
               }
 
-              const countType = ins.eventType === 'PageAction' ? 'pa' : 'rce'
+              let countType
+              if (ins.eventType === 'PageAction') {
+                countType = 'pa'
+              } else if (ins.eventType === 'CustomEvent') {
+                countType = 'rce'
+              } else if (ins.eventType === 'BrowserPerformance') {
+                countType = 'measure'
+              }
               countRuns(id, countType)
             }
           })
@@ -147,14 +159,18 @@ describe('newrelic api', () => {
         // each item gets lumped together under the same id without the feature flags
           expect(tests['42'].pa).toEqual(testSet.includes('register') ? 3 : 1)
           expect(tests['42'].rce).toEqual(testSet.includes('register') ? 3 : 1)
+          expect(tests['42'].measure).toEqual(testSet.includes('register') ? 3 : 1)
         } else {
           if (testSet.includes('register')) {
             expect(ranOnce('42', 'pa')).toEqual(true)
             expect(ranOnce('42', 'rce')).toEqual(true)
+            expect(ranOnce('42', 'measure')).toEqual(true)
             expect(ranOnce('1', 'pa')).toEqual(true)
             expect(ranOnce('1', 'rce')).toEqual(true)
+            expect(ranOnce('1', 'measure')).toEqual(true)
             expect(ranOnce('2', 'pa')).toEqual(true)
             expect(ranOnce('2', 'rce')).toEqual(true)
+            expect(ranOnce('2', 'measure')).toEqual(true)
           }
         }
 

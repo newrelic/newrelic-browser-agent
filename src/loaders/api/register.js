@@ -14,6 +14,7 @@ import { log } from './log'
 import { addPageAction } from './addPageAction'
 import { noticeError } from './noticeError'
 import { single } from '../../common/util/invoke'
+import { measure } from './measure'
 
 /**
  * @typedef {import('./register-api-types').RegisterAPI} RegisterAPI
@@ -78,6 +79,7 @@ export function buildRegisterApi (agentRef, target) {
   const api = {
     addPageAction: (name, attributes = {}) => report(addPageAction, [name, { ...attrs, ...attributes }, agentRef], target),
     log: (message, options = {}) => report(log, [message, { ...options, customAttributes: { ...attrs, ...(options.customAttributes || {}) } }, agentRef], target),
+    measure: (name, options = {}) => report(measure, [name, { ...options, customAttributes: { ...attrs, ...(options.customAttributes || {}) } }, agentRef], target),
     noticeError: (error, attributes = {}) => report(noticeError, [error, { ...attrs, ...attributes }, agentRef], target),
     setApplicationVersion: (value) => setLocalValue('application.version', value),
     setCustomAttribute: (key, value) => setLocalValue(key, value),

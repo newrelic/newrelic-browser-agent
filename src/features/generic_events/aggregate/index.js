@@ -243,7 +243,6 @@ export class Aggregate extends AggregateBase {
       }, this.featureName, this.ee)
 
       if (agentRef.init.feature_flags.includes('websockets')) {
-        const wsEE = this.ee.get('websockets')
         registerHandler('ws-complete', (nrData) => {
           this.addEvent({
             ...nrData,
@@ -252,7 +251,7 @@ export class Aggregate extends AggregateBase {
             openedAt: this.#toEpoch(nrData.openedAt),
             closedAt: this.#toEpoch(nrData.closedAt)
           })
-        }, this.featureName, wsEE)
+        }, this.featureName, this.ee)
       }
 
       this.drain()

@@ -46,13 +46,13 @@ export class Instrument extends InstrumentBase {
     setupRegisterAPI(agentRef)
     setupMeasureAPI(agentRef)
 
-    let historyEE
+    let historyEE, websocketsEE
     if (isBrowserScope && ufEnabled) {
       wrapFetch(this.ee)
       wrapXhr(this.ee)
       historyEE = wrapHistory(this.ee)
     }
-    if (websocketsEnabled) wrapWebSocket(this.ee, this.featureName)
+    if (websocketsEnabled) websocketsEE = wrapWebSocket(this.ee)
 
     if (isBrowserScope) {
       if (agentRef.init.user_actions.enabled) {
@@ -110,6 +110,11 @@ export class Instrument extends InstrumentBase {
         })
         observer.observe({ type: 'resource', buffered: true })
       }
+    }
+    if (websocketsEnabled) { // this can apply outside browser scope such as in worker
+      websocketsEE.on('ws', (nrData) => {
+        handle('ws-complete', [nrData], undefined, this.featureName, this.ee)
+      })
     }
 
     try {

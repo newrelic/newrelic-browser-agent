@@ -129,7 +129,7 @@ describe('wrap-websocket', () => {
     })
     expect(ws.nrData.closedAt).toBeGreaterThanOrEqual(ws.nrData.openedAt)
 
-    expect(emitSpy).toHaveBeenCalledWith('ws-complete', [expectNrData], ws)
+    expect(emitSpy).toHaveBeenCalledWith('ws', [expectNrData], ws)
   })
 
   it('tracks send metrics for multiple calls with all 5 data types', () => {
@@ -286,7 +286,7 @@ describe('wrap-websocket', () => {
 
       // Verify ws-complete was emitted
       expect(emitSpy).toHaveBeenCalledTimes(1)
-      expect(emitSpy).toHaveBeenCalledWith('ws-complete', [expect.objectContaining({
+      expect(emitSpy).toHaveBeenCalledWith('ws', [expect.objectContaining({
         socketId,
         closedAt: expect.any(Number),
         closeCode: 1001,

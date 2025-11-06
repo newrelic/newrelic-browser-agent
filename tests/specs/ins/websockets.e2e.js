@@ -15,7 +15,7 @@ describe.withBrowsersMatching(supportsWebSocketsTesting)('WebSocket wrapper', ()
     await browser.url(url).then(() => browser.waitForAgentLoad())
 
     // Wait for the INS harvest with WebSocket events
-    const [insHarvest] = await insCapture.waitForResult({ totalCount: 1 })
+    const [insHarvest] = await insCapture.waitForResult({ totalCount: 1, timeout: 15000 })
     const insPayload = insHarvest.request?.body?.ins
     expect(Array.isArray(insPayload)).toBe(true)
 

@@ -3,21 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { globalScope } from '../constants/runtime'
-import { handle } from '../event-emitter/handle'
 import { generateRandomHexString } from '../ids/unique-id'
 import { now } from '../timing/now'
 import { gosNREUMOriginals } from '../window/nreum'
 import { subscribeToPageUnload } from '../window/page-visibility'
 
 const wrapped = {}
-const subscribedFeatures = []
 const openWebSockets = new Set() // track all instances to close out metrics on page unload
 
-export function wrapWebSocket (sharedEE, callerFeature) {
+export function wrapWebSocket (sharedEE) {
   const originals = gosNREUMOriginals().o
   if (!originals.WS) return sharedEE
 
-  if (callerFeature) subscribedFeatures.push(callerFeature) // regardless if WS is already wrapped or not, set feat up for future event from this wrapping
   const wsEE = sharedEE.get('websockets')
   if (wrapped[wsEE.debugId]++) return wsEE
   wrapped[wsEE.debugId] = 1 // otherwise, first feature to wrap events
@@ -34,7 +31,7 @@ export function wrapWebSocket (sharedEE, callerFeature) {
         ws.nrData.connectedDuration = unloadTime - ws.nrData.openedAt
       }
 
-      subscribedFeatures.forEach(featureName => handle('ws-complete', [ws.nrData], ws, featureName, wsEE))
+      wsEE.emit('ws', [ws.nrData], ws)
     })
   })
 
@@ -97,7 +94,7 @@ export function wrapWebSocket (sharedEE, callerFeature) {
         this.nrData.connectedDuration = this.nrData.closedAt - this.nrData.openedAt
 
         openWebSockets.delete(this) // remove from tracking set since it's now closed
-        subscribedFeatures.forEach(featureName => handle('ws-complete', [this.nrData], this, featureName, wsEE))
+        wsEE.emit('ws', [this.nrData], this)
       })
     }
 

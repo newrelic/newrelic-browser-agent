@@ -248,7 +248,6 @@ describe('registered-entity', () => {
       const data = body.err
       data.forEach((err, idx) => {
         expect(err.custom['mfe.name']).toEqual('agent' + (idx + 1))
-        expect(err.custom['container.id']).toEqual(containerAgentEntityGuid) // all apps should have the same container
         if (idx === 0) expect(err.custom['parent.id']).toEqual(containerAgentEntityGuid) // first app should have container as its parent
         if (idx === 1) expect(err.custom['parent.id']).toEqual(1) // second app should have first app as its parent
         if (idx === 2) expect(err.custom['parent.id']).toEqual(2) // third app should have second app as its parent

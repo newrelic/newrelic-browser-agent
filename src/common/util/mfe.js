@@ -30,7 +30,6 @@ export function getVersion2Attributes (target, aggregateInstance) {
     'mfe.id': target.id, // these field names may change as the schema is finalized
     'mfe.name': target.name, // these field names may change as the schema is finalized
     eventSource: target.eventSource, // these field names may change as the schema is finalized
-    'parent.id': target.parentId || containerAgentEntityGuid,
-    'container.id': containerAgentEntityGuid
+    'parent.id': target.parentId || containerAgentEntityGuid
   }
 }

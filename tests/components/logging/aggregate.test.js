@@ -269,8 +269,7 @@ describe('payloads', () => {
           'mfe.id': registeredTarget.id,
           'mfe.name': registeredTarget.name,
           eventSource: registeredTarget.eventSource,
-          'parent.id': registeredTarget.containerId,
-          'container.id': registeredTarget.containerId
+          'parent.id': registeredTarget.containerId
         },
         'error'
       ))

@@ -49,6 +49,16 @@ export class RegisteredEntity {
   }
 
   /**
+     * Records a custom event with a specified eventType and attributes.
+     * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/recordCustomEvent/}
+     * @param {string} eventType The eventType to store the event as.
+     * @param {Object} [attributes] JSON object with one or more key/value pairs. For example: {key:"value"}.
+     */
+  recordCustomEvent (eventType, attributes) {
+    warn(35, 'recordCustomEvent')
+  }
+
+  /**
    * Adds a user-defined attribute name and value to subsequent events on the page for the registered target. Note -- the persist flag does not work with the register API.
    * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/setcustomattribute/}
    * @param {string} name Name of the attribute. Appears as column in the PageView event. It will also appear as a column in the PageAction event if you are using it.

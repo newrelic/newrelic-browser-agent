@@ -77,6 +77,22 @@ test('Promise then chains are kept separate and distinct', async () => {
   await promise
 })
 
+test('Propagation caches resolved parent context once per chain', async () => {
+  const sentinelCtx = {}
+  const parentPromise = new Promise(resolve => resolve('parent'))
+  const parentStore = promiseEE.context(parentPromise)
+  parentStore.getCtx = jest.fn(() => sentinelCtx)
+
+  const childPromise = parentPromise.then(() => {})
+  const childStore = promiseEE.context(childPromise)
+
+  expect(childStore.getCtx()).toBe(sentinelCtx)
+  expect(childStore.getCtx()).toBe(sentinelCtx)
+  expect(parentStore.getCtx).toHaveBeenCalledTimes(1)
+
+  await childPromise
+})
+
 const thrownError = new Error('123')
 test('A promise constructor exception can be caught', async () => {
   await new Promise(function (resolve, reject) {

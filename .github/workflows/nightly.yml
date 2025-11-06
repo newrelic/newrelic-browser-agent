@@ -5,7 +5,7 @@ on:
     # Runs every day at 4AM
     - cron: '0 4 * * *'
   workflow_dispatch:
-
+  
 jobs:
   wdio-smoke:
     name: 'WDIO: Smoke Test'
@@ -27,6 +27,7 @@ jobs:
       - name: Install project dependencies
         run: npm ci
       - name: Report lite size to NR
+        continue-on-error: true    
         uses: newrelic-apps/capture-build-size@v1.0.1
         with:
           nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
@@ -36,6 +37,7 @@ jobs:
           file-name-filter: '.min.js'
           trigger: 'nightly'
       - name: Report pro size to NR
+        continue-on-error: true
         uses: newrelic-apps/capture-build-size@v1.0.1
         with:
           nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
@@ -45,6 +47,7 @@ jobs:
           file-name-filter: '.min.js'
           trigger: 'nightly'
       - name: Report spa size to NR
+        continue-on-error: true
         uses: newrelic-apps/capture-build-size@v1.0.1
         with:
           nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
@@ -85,12 +88,7 @@ jobs:
             internal/eu-prod-released.js \
             internal/eu-prod-postamble.js
 
-  deprecate-old-versions:
-    name: Deprecate Unsupported Versions
-    uses: ./.github/workflows/npm-operations.yml
-    with:
-      operation: deprecate-old-versions
-    secrets:
-      NR_API_KEY_PRODUCTION: ${{ secrets.NR_API_KEY_PRODUCTION }}
+  # Note: NPM deprecation of old versions is now handled by npm-operations.yml
+  # on its own schedule (daily at 4AM)
 
   # TODO: Need to add a job for cleaning up experiments to run nightly

@@ -4,7 +4,7 @@
  */
 import { handle } from '../../common/event-emitter/handle'
 import { warn } from '../../common/util/console'
-import { isValidMFETarget } from '../../common/util/mfe'
+import { hasValidValue, isValidMFETarget } from '../../common/util/mfe'
 import { FEATURE_NAMES } from '../features/features'
 import { now } from '../../common/timing/now'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
@@ -74,6 +74,9 @@ export function buildRegisterApi (agentRef, target) {
   /** primary cases that can block the register API from working at init time */
   if (!agentRef.init.api.allow_registered_children) block(single(() => warn(55)))
   if (!isValidMFETarget(target)) block(single(() => warn(48, target)))
+  if (!hasValidValue(target.id) || !hasValidValue(target.name)) {
+    block(single(() => warn(48, target)))
+  }
 
   /** @type {RegisterAPI} */
   const api = {

@@ -47,6 +47,13 @@ describe('obfuscate rules', () => {
   })
 
   it('should apply to all payloads', async () => {
+    await browser.url(await browser.testHandle.assetURL('obfuscate-pii.html', config))
+      .then(() => browser.waitForAgentLoad())
+    await browser.execute(function () {
+      // test log custom attributes added after PVE
+      newrelic.setCustomAttribute('foo', 'foo pii')
+      console.log('Test')
+    })
     const [rumHarvests, timingEventsHarvests, ajaxEventsHarvests, errorsHarvests, insightsHarvests, tracesHarvests, interactionEventsHarvests, logsHarvests] = await Promise.all([
       rumCapture.waitForResult({ timeout: 10000 }),
       timingEventsCapture.waitForResult({ timeout: 10000 }),
@@ -55,9 +62,7 @@ describe('obfuscate rules', () => {
       insightsCapture.waitForResult({ timeout: 10000 }),
       tracesCapture.waitForResult({ timeout: 10000 }),
       interactionEventsCapture.waitForResult({ timeout: 10000 }),
-      logsCapture.waitForResult({ timeout: 10000 }),
-      browser.url(await browser.testHandle.assetURL('obfuscate-pii.html', config))
-        .then(() => browser.waitForAgentLoad())
+      logsCapture.waitForResult({ timeout: 10000 })
     ])
 
     expect(rumHarvests.length).toBeGreaterThan(0)
@@ -89,7 +94,7 @@ describe('obfuscate rules', () => {
       checkPayload(harvest.request.body)
       checkPayload(harvest.request.query)
     })
-    expect(logsHarvests.length).toBeGreaterThan(0)
+    expect(logsHarvests.length).toBe(2)
     logsHarvests.forEach(harvest => {
       checkPayload(harvest.request.body)
       checkPayload(harvest.request.query)

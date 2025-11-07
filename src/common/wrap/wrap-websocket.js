@@ -57,14 +57,8 @@ export function wrapWebSocket (sharedEE) {
 
     constructor (...args) {
       super(...args)
-      this.nrData = {
-        timestamp: now(), // this will be time corrected later when timeKeeper is avail
-        currentUrl: window.location.href,
-        socketId: generateRandomHexString(8),
-        requestedUrl: args[0],
-        requestedProtocols: Array.isArray(args[1]) ? args[1].join(',') : (args[1] || '')
-        // pageUrl will be set by addEvent later; unlike timestamp and currentUrl, it's not sensitive to *when* it is set
-      }
+      /** @type {WebSocketData} */
+      this.nrData = new WebSocketData(args[0], args[1])
 
       this.addEventListener('open', () => {
         this.nrData.openedAt = now()
@@ -183,4 +177,103 @@ function getDataInfo (data) {
     return { type: 'TypedArray', size: data.byteLength }
   }
   return { type: 'unknown', size: 0 }
+}
+
+/**
+ * WebSocket instrumentation data model
+ */
+class WebSocketData {
+  /**
+   * @param {string} requestedUrl - The URL passed to WebSocket constructor
+   * @param {string|string[]} [requestedProtocols] - The protocols passed to WebSocket constructor
+   */
+  constructor (requestedUrl, requestedProtocols) {
+    /** @type {number} Timestamp when the WebSocket was constructed (relative time); will be time corrected later when timeKeeper is available */
+    this.timestamp = now()
+
+    /** @type {string} Most current URL when WebSocket was created; relevant for SPA */
+    this.currentUrl = window.location.href
+
+    /*
+     * pageUrl will be set by addEvent later; unlike timestamp and currentUrl, it's not sensitive to *when* it is set.
+     * It should not be explicitly defined here as it will overwrite the default provided by Generic Events later.
+    */
+
+    /** @type {string} Unique identifier for this WebSocket connection */
+    this.socketId = generateRandomHexString(8)
+
+    /** @type {string} The URL requested for the WebSocket connection */
+    this.requestedUrl = requestedUrl
+
+    /** @type {string} Comma-separated list of requested protocols */
+    this.requestedProtocols = Array.isArray(requestedProtocols) ? requestedProtocols.join(',') : (requestedProtocols || '')
+
+    // Properties set when connection opens
+    /** @type {number} [openedAt] Timestamp when connection opened */
+    this.openedAt = undefined
+
+    /** @type {string} [protocol] The sub-protocol selected by the server */
+    this.protocol = undefined
+
+    /** @type {string} [extensions] The extensions selected by the server */
+    this.extensions = undefined
+
+    /** @type {string} [binaryType] The binary type ('blob' or 'arraybuffer') */
+    this.binaryType = undefined
+
+    // Message received metrics
+    /** @type {string} [messageOrigin] Origin of messages (set once) */
+    this.messageOrigin = undefined
+
+    /** @type {number} [messageCount] Total number of messages received */
+    this.messageCount = undefined
+
+    /** @type {number} [messageBytes] Total bytes received */
+    this.messageBytes = undefined
+
+    /** @type {number} [messageBytesMin] Minimum message size received */
+    this.messageBytesMin = undefined
+
+    /** @type {number} [messageBytesMax] Maximum message size received */
+    this.messageBytesMax = undefined
+
+    /** @type {string} [messageTypes] Comma-separated list of message types received */
+    this.messageTypes = undefined
+
+    // Send metrics
+    /** @type {number} [sendCount] Total number of messages sent */
+    this.sendCount = undefined
+
+    /** @type {number} [sendBytes] Total bytes sent */
+    this.sendBytes = undefined
+
+    /** @type {number} [sendBytesMin] Minimum message size sent */
+    this.sendBytesMin = undefined
+
+    /** @type {number} [sendBytesMax] Maximum message size sent */
+    this.sendBytesMax = undefined
+
+    /** @type {string} [sendTypes] Comma-separated list of message types sent */
+    this.sendTypes = undefined
+
+    // Close metrics
+    /** @type {number} [closedAt] Timestamp when connection closed */
+    this.closedAt = undefined
+
+    /** @type {number} [closeCode] WebSocket close code */
+    this.closeCode = undefined
+
+    /** @type {string} [closeReason] WebSocket close reason */
+    this.closeReason = undefined
+
+    /** @type {boolean} [closeWasClean] Whether the connection closed cleanly */
+    this.closeWasClean = undefined
+
+    /** @type {number} [connectedDuration] Duration of the connection in milliseconds */
+    this.connectedDuration = undefined
+
+    // Error tracking
+    /** @type {boolean} [hasErrors] Whether any errors occurred */
+    this.hasErrors = undefined
+  }
 }

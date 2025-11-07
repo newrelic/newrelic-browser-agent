@@ -32,6 +32,7 @@ describe.withBrowsersMatching(supportsWebSocketsTesting)('WebSocket wrapper', ()
       expect(event.requestedProtocols).toBeDefined() // can be empty string
       expect(event.timestamp).toBeGreaterThan(0)
       expect(event.currentUrl).toContain('/websockets.html')
+      expect(event.pageUrl).toEndWith('/websockets.html')
       expect(event.openedAt).toBeGreaterThan(0)
       expect(event.openedAt).toBeGreaterThanOrEqual(event.timestamp)
       expect(event.protocol).toBeDefined() // negotiated protocol (can be empty string)
@@ -112,6 +113,7 @@ describe.withBrowsersMatching(supportsWebSocketsTesting)('WebSocket wrapper', ()
     // 3. Blob(["Hello Blob!"]) = 11 bytes
     // 4. Uint8Array([72, 101, 108, 108, 111]) = 5 bytes
     // 5. DataView with ArrayBuffer(16) = 16 bytes
+    expect(wsEvent.pageUrl).toEndWith('/websocket-multi-send-msg.html')
     expect(wsEvent.sendCount).toBe(5)
     expect(wsEvent.sendBytes).toBe(53) // 13 + 8 + 11 + 5 + 16
     expect(wsEvent.sendBytesMin).toBe(5) // Uint8Array
@@ -169,6 +171,7 @@ describe.withBrowsersMatching(supportsWebSocketsTesting)('WebSocket wrapper', ()
     const wsEvent = wsEvents[0]
     expect(wsEvent.hasErrors).toBe(true)
     expect(wsEvent.socketId).toBeTruthy()
+    expect(wsEvent.pageUrl).toEndWith('/websocket-error.html')
 
     const errors = errorsHarvest.request?.body?.err
     expect(Array.isArray(errors)).toBe(true)
@@ -255,6 +258,7 @@ describe.withBrowsersMatching(supportsWebSocketsTesting)('WebSocket wrapper', ()
     expect(wsEvent.eventType).toBe('WebSocket')
     expect(wsEvent.openedAt).toBeGreaterThan(0)
     expect(wsEvent.closedAt).toBeGreaterThan(0)
+    expect(wsEvent.pageUrl).toEndWith('/instrumented.html')
     expect(wsEvent.closeCode).toBe(1001) // Going Away - set by wrap-websocket pagehide handler
 
     // Firefox's close event fires after pagehide and overwrites closeReason with empty string

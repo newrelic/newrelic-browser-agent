@@ -18,8 +18,10 @@ import { getSubmitMethod, xhr as xhrMethod, xhrFetch as fetchMethod } from '../u
 import { activatedFeatures } from '../util/feature-flags'
 import { dispatchGlobalEvent } from '../dispatch/global-event'
 
-const RETRY_FAILED = 'Harvester/Retry/Failed/'
-const RETRY_SUCCEEDED = 'Harvester/Retry/Succeeded/'
+const RETRY = 'Harvester/Retry/'
+const RETRY_ATTEMPTED = RETRY + 'Attempted/'
+const RETRY_FAILED = RETRY + 'Failed/'
+const RETRY_SUCCEEDED = RETRY + 'Succeeded/'
 
 export class Harvester {
   #started = false
@@ -62,7 +64,7 @@ export class Harvester {
     if (!submitMethod) return output
 
     const shouldRetryOnFail = !localOpts.isFinalHarvest && submitMethod === xhrMethod // always retry all features harvests except for final
-    output.payload = !localOpts.directSend ? aggregateInst.makeHarvestPayload(shouldRetryOnFail, localOpts) : localOpts.directSend?.payload // features like PVE can define the payload directly, bypassing the makeHarvestPayload logic
+    output.payload = aggregateInst.makeHarvestPayload(shouldRetryOnFail, localOpts)
 
     if (!output.payload) return output
 
@@ -86,7 +88,9 @@ export class Harvester {
      */
     function cbFinished (result) {
       if (aggregateInst.harvestOpts.prevAttemptCode) { // this means we just retried a harvest that last failed
-        handle(SUPPORTABILITY_METRIC_CHANNEL, [(result.retry ? RETRY_FAILED : RETRY_SUCCEEDED) + aggregateInst.harvestOpts.prevAttemptCode], undefined, FEATURE_NAMES.metrics, aggregateInst.ee)
+        const reportSM = (message) => handle(SUPPORTABILITY_METRIC_CHANNEL, [message], undefined, FEATURE_NAMES.metrics, aggregateInst.ee)
+        reportSM(RETRY_ATTEMPTED + aggregateInst.featureName)
+        reportSM((result.retry ? RETRY_FAILED : RETRY_SUCCEEDED) + aggregateInst.harvestOpts.prevAttemptCode)
         delete aggregateInst.harvestOpts.prevAttemptCode // always reset last observation so we don't falsely report again next harvest
         // In case this re-attempt failed again, that'll be handled (re-marked again) next.
       }
@@ -155,8 +159,7 @@ export function send (agentRef, { endpoint, payload, localOpts = {}, submitMetho
       result.addEventListener('loadend', function () {
         // `this` here in block refers to the XHR object in this scope, do not change the anon function to an arrow function
         // status 0 refers to a local error, such as CORS or network failure, or a blocked request by the browser (e.g. adblocker)
-        const cbResult = { sent: this.status !== 0, status: this.status, retry: shouldRetry(this.status), fullUrl, xhr: this }
-        if (localOpts.needResponse) cbResult.responseText = this.responseText
+        const cbResult = { sent: this.status !== 0, status: this.status, retry: shouldRetry(this.status), fullUrl, xhr: this, responseText: this.responseText }
         cbFinished(cbResult)
 
         /** temporary audit of consistency of harvest metadata flags */
@@ -165,8 +168,7 @@ export function send (agentRef, { endpoint, payload, localOpts = {}, submitMetho
     } else if (submitMethod === fetchMethod) {
       result.then(async function (response) {
         const status = response.status
-        const cbResult = { sent: true, status, retry: shouldRetry(status), fullUrl, fetchResponse: response }
-        if (localOpts.needResponse) cbResult.responseText = await response.text()
+        const cbResult = { sent: true, status, retry: shouldRetry(status), fullUrl, fetchResponse: response, responseText: await response.text() }
         cbFinished(cbResult)
         /** temporary audit of consistency of harvest metadata flags */
         if (!shouldRetry(status)) trackHarvestMetadata()

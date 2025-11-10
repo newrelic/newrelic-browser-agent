@@ -15,6 +15,8 @@ import { addPageAction } from './addPageAction'
 import { noticeError } from './noticeError'
 import { single } from '../../common/util/invoke'
 import { recordCustomEvent } from './recordCustomEvent'
+import { extractUrlsFromStack, normalizeUrl, scripts } from '../../common/util/script-tracker'
+import { Timing } from '../../interfaces/timing'
 
 /**
  * @typedef {import('./register-api-types').RegisterAPI} RegisterAPI
@@ -50,6 +52,35 @@ export function buildRegisterApi (agentRef, target) {
   target.licenseKey ||= agentRef.info.licenseKey // will inherit the license key from the container agent if not provided for brevity. A future state may dictate that we need different license keys to do different things.
   target.blocked = false
 
+  const timings = new Timing()
+
+  if (scripts.size > 0) {
+    try {
+      const stack = new Error().stack
+      if (stack) {
+        const stackUrls = extractUrlsFromStack(stack)
+        const match = [...scripts].find(script => {
+          const scriptUrl = normalizeUrl(script.name)
+          return stackUrls.some(stackUrl => {
+            const normalizedStackUrl = normalizeUrl(stackUrl)
+            // Try exact match, then partial matches for different URL formats
+            return normalizedStackUrl === scriptUrl ||
+                 normalizedStackUrl.endsWith(scriptUrl) ||
+                 scriptUrl.endsWith(normalizedStackUrl)
+          })
+        })
+
+        if (match) {
+          timings.fetchStart = match.startTime
+          timings.fetchEnd = match.responseEnd
+        }
+      }
+    } catch (error) {
+      // Don't let stack parsing errors break the registration
+      // Silently continue without timing correlation
+    }
+  }
+
   /** @type {Function} a function that is set and reports when APIs are triggered -- warns the customer of the invalid state  */
   let invalidApiResponse = () => {}
   /** @type {Array} the array of registered target APIs */
@@ -84,9 +115,12 @@ export function buildRegisterApi (agentRef, target) {
     setApplicationVersion: (value) => setLocalValue('application.version', value),
     setCustomAttribute: (key, value) => setLocalValue(key, value),
     setUserId: (value) => setLocalValue('enduser.id', value),
+    markLoaded: () => { timings.loadedAt ??= now() },
+    markUnloaded: () => { timings.unloadedAt ??= now() },
     /** metadata */
     metadata: {
       customAttributes: attrs,
+      timings,
       target
     }
   }

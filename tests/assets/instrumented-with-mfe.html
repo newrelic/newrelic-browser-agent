@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {init} {config}
+    <script>
+      NREUM.init.feature_flags = ["register"];
+    </script>
+    {loader}
+  </head>
+  <body>
+    Instrumented
+    <script>
+      mainApi = newrelic.register({
+        id: 9999,
+        name: "main",
+      });
+      let iterations = 0;
+      while (iterations++ < 5000) {
+        const div = document.createElement("div");
+        div.textContent = "Inline DIV " + Math.random().toString(36).substring(7);
+        div.id = "mfe9999-div-" + iterations;
+        document.body.appendChild(div);
+      }
+      // mainApi.markLoaded();
+
+      while (iterations-- > 0) {
+        const divToRemove = document.getElementById("mfe9999-div-" + iterations);
+        if (divToRemove) {
+          divToRemove.remove();
+        }
+      }
+
+      const div = document.createElement("div");
+      div.textContent = "Added and removed lots of nodes across scripts";
+      document.body.appendChild(div);
+
+      // mainApi.markUnloaded();
+
+      setTimeout(() => {
+        console.log("SIMULATED TIMINGS!");
+        Object.values(newrelic.initializedAgents)[0].runtime.registeredEntities.forEach((re) => {
+          console.log('MFE', re.metadata.target.id, re.metadata.timings);
+        });
+      }, 3000);
+    </script>
+
+    <script src="./js/mfe.js"></script>
+  </body>
+</html>

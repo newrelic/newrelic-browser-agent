@@ -27,7 +27,7 @@ export class Aggregate extends AggregateBase {
   constructor (agentRef) {
     super(agentRef, CONSTANTS.FEATURE_NAME)
 
-    this.sentRum = false // flag to only call sendRum() once if successful, properties are by applicationID
+    this.sentRum = false // flag to facilitate calling sendRum() once externally (by the consent API in agent-session.js)
 
     this.timeToFirstByte = 0
     this.firstByteToWindowLoad = 0 // our "frontend" duration

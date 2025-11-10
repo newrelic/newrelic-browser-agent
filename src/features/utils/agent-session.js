@@ -61,8 +61,9 @@ export function setupAgentSession (agentRef) {
 
     // call sendRum if it wasn't called yet
     agentRef.features.page_view_event.onAggregateImported.then((loaded) => {
-      if (loaded) {
-        agentRef.features.page_view_event.featAggregate.sendRum()
+      const pveAgg = agentRef.features.page_view_event.featAggregate
+      if (loaded && !pveAgg.sentRum) {
+        pveAgg.sendRum()
       }
     })
   }, 'session', sharedEE)

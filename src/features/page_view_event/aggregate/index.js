@@ -32,6 +32,7 @@ export class Aggregate extends AggregateBase {
     this.timeToFirstByte = 0
     this.firstByteToWindowLoad = 0 // our "frontend" duration
     this.firstByteToDomContent = 0 // our "dom processing" duration
+    this.retries = 0
 
     if (!isValid(agentRef.info)) {
       this.ee.abort()
@@ -58,11 +59,8 @@ export class Aggregate extends AggregateBase {
    *
    * @param {Function} cb A function to run once the RUM call has finished - Defaults to activateFeatures
    * @param {*} customAttributes custom attributes to attach to the RUM call - Defaults to info.js
-   * @param {*} target The target to harvest to
    */
-  sendRum (customAttributes = this.agentRef.info.jsAttributes, target = { licenseKey: this.agentRef.info.licenseKey, applicationID: this.agentRef.info.applicationID }) {
-    if (this.sentRum) return
-
+  sendRum (customAttributes = this.agentRef.info.jsAttributes) {
     const info = this.agentRef.info
     const measures = {}
 
@@ -115,27 +113,26 @@ export class Aggregate extends AggregateBase {
     queryParameters.fp = firstPaint.current.value
     queryParameters.fcp = firstContentfulPaint.current.value
 
-    const timeKeeper = this.agentRef.runtime.timeKeeper
-    if (timeKeeper?.ready) {
-      queryParameters.timestamp = Math.floor(timeKeeper.correctRelativeTimestamp(now()))
+    this.queryStringsBuilder = () => { // this will be called by AggregateBase.makeHarvestPayload every time harvest is triggered to be qs
+      this.rumStartTime = now() // this should be reset at the beginning of each RUM call for proper timeKeeper calculation in coordination with postHarvestCleanup
+      const timeKeeper = this.agentRef.runtime.timeKeeper
+      if (timeKeeper?.ready) {
+        queryParameters.timestamp = Math.floor(timeKeeper.correctRelativeTimestamp(this.rumStartTime))
+      }
+      return queryParameters
     }
+    this.events.add(body)
 
-    this.rumStartTime = now()
-
-    const localOpts = {
-      directSend: {
-        target,
-        payload: { qs: queryParameters, body }
-      },
-      needResponse: true,
+    if (this.agentRef.runtime.harvester.triggerHarvestFor(this, {
       sendEmptyBody: true
-    }
-    if (this.agentRef.runtime.harvester.triggerHarvestFor(this, localOpts).ranSend) {
-      this.sentRum = true
-    }
+    }).ranSend) this.sentRum = true
   }
 
-  postHarvestCleanup ({ status, responseText, xhr }) {
+  serializer (eventBuffer) { // this is necessary because PVE sends a single item rather than an array; in the case of undefined, this prevents sending [null] as body
+    return eventBuffer[0]
+  }
+
+  postHarvestCleanup ({ sent, status, responseText, xhr, retry }) {
     const rumEndTime = now()
     let app, flags
     try {
@@ -145,8 +142,16 @@ export class Aggregate extends AggregateBase {
       warn(53, error)
     }
 
+    super.postHarvestCleanup({ sent, retry }) // this will set isRetrying & re-buffer the body if request is to be retried
+    if (this.isRetrying && this.retries++ < 1) { // Only retry once
+      setTimeout(() => this.agentRef.runtime.harvester.triggerHarvestFor(this, {
+        sendEmptyBody: true
+      }), 5000) // Retry sending the RUM event after 5 seconds
+      return
+    }
     if (status >= 400 || status === 0) {
       warn(18, status)
+      this.blocked = true
 
       // Get estimated payload size of our backlog
       const textEncoder = new TextEncoder()
@@ -213,6 +218,7 @@ export class Aggregate extends AggregateBase {
       }
     } catch (error) {
       this.ee.abort()
+      this.blocked = true
       warn(17, error)
       return
     }

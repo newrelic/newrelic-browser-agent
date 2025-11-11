@@ -23,8 +23,11 @@ import { getSubmitMethod } from '../../../common/util/submit-data'
 
 export class Aggregate extends AggregateBase {
   static featureName = CONSTANTS.FEATURE_NAME
+
   constructor (agentRef) {
     super(agentRef, CONSTANTS.FEATURE_NAME)
+
+    this.sentRum = false // flag to facilitate calling sendRum() once externally (by the consent API in agent-session.js)
 
     this.timeToFirstByte = 0
     this.firstByteToWindowLoad = 0 // our "frontend" duration
@@ -120,9 +123,9 @@ export class Aggregate extends AggregateBase {
     }
     this.events.add(body)
 
-    this.agentRef.runtime.harvester.triggerHarvestFor(this, {
+    if (this.agentRef.runtime.harvester.triggerHarvestFor(this, {
       sendEmptyBody: true
-    })
+    }).ranSend) this.sentRum = true
   }
 
   serializer (eventBuffer) { // this is necessary because PVE sends a single item rather than an array; in the case of undefined, this prevents sending [null] as body

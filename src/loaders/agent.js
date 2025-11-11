@@ -23,6 +23,7 @@ import { setupSetCustomAttributeAPI } from './api/setCustomAttribute'
 import { setupSetUserIdAPI } from './api/setUserId'
 import { setupSetApplicationVersionAPI } from './api/setApplicationVersion'
 import { setupStartAPI } from './api/start'
+import { setupConsentAPI } from './api/consent'
 
 /**
  * @typedef {Object} AgentOptions
@@ -70,6 +71,7 @@ export class Agent extends AgentBase {
     setupSetUserIdAPI(this)
     setupSetApplicationVersionAPI(this)
     setupStartAPI(this)
+    setupConsentAPI(this)
 
     this.run()
   }

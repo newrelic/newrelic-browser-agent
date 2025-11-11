@@ -236,5 +236,24 @@ describe('consent mode', () => {
 
       expect(rumHarvests.length).toEqual(0)
     })
+
+    it('should harvest data only on the first hard page load', async () => {
+      // First page load
+      await browser.url(await browser.testHandle.assetURL('instrumented.html', cookiesDisabledConfig))
+        .then(() => browser.waitForWindowLoad())
+        .then(() => browser.execute(function () {
+          newrelic.consent()
+        }))
+
+      const rumHarvests1 = await rumCapture.waitForResult({ totalCount: 1 })
+      expect(rumHarvests1.length).toBeGreaterThan(0)
+
+      // Second page load
+      await browser.url(await browser.testHandle.assetURL('instrumented.html', cookiesDisabledConfig))
+        .then(() => browser.waitForWindowLoad())
+
+      const rumHarvests2 = await rumCapture.waitForResult({ timeout: HARVEST_TIMEOUT })
+      expect(rumHarvests2.length).toEqual(rumHarvests1.length)
+    })
   })
 })

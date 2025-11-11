@@ -58,14 +58,6 @@ export function setupAgentSession (agentRef) {
 
   registerHandler('api-consent', (accept) => {
     agentRef.runtime.session.write({ consent: accept === undefined ? true : accept })
-
-    // call sendRum if it wasn't called yet
-    agentRef.features.page_view_event.onAggregateImported.then((loaded) => {
-      const pveAgg = agentRef.features.page_view_event.featAggregate
-      if (loaded && !pveAgg.sentRum) {
-        pveAgg.sendRum()
-      }
-    })
   }, 'session', sharedEE)
 
   drain(agentRef.agentIdentifier, 'session')

@@ -237,7 +237,7 @@ describe('consent mode', () => {
       expect(rumHarvests.length).toEqual(0)
     })
 
-    it('should harvest data only on the first hard page load', async () => {
+    it('Consent is not carried across page loads without localStorage access', async () => {
       // First page load
       await browser.url(await browser.testHandle.assetURL('instrumented.html', cookiesDisabledConfig))
         .then(() => browser.waitForWindowLoad())

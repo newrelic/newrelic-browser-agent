@@ -13,16 +13,19 @@ export function setupConsentAPI (agent) {
       warn(65, typeof accept)
       return
     }
-    handle(prefix + CONSENT, [accept], undefined, 'session', agent.ee) // sets session data if available
+    /** harvester, by way of "consented" getter, checks session state first, and falls back on runtime state if not available. Set both here */
+    handle(prefix + CONSENT, [accept], undefined, 'session', agent.ee) // sets session state (if available)
+    agent.runtime.consented = accept // sets runtime state
 
-    agent.runtime.blocked = accept
-
-    const pveInst = agent.features.page_view_event
-    pveInst.onAggregateImported.then((loaded) => {
-      const pveAgg = pveInst.featAggregate
-      if (loaded && !pveAgg.sentRum) {
-        pveAgg.sendRum()
-      }
-    })
+    /** if consent is granted, attempt to make a PageView event harvest if one has not already been made */
+    if (accept) {
+      const pveInst = agent.features.page_view_event
+      pveInst.onAggregateImported.then((loaded) => {
+        const pveAgg = pveInst.featAggregate
+        if (loaded && !pveAgg.sentRum) {
+          pveAgg.sendRum()
+        }
+      })
+    }
   }, agent)
 }

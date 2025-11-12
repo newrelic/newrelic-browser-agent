@@ -20,17 +20,17 @@ const ReadOnly = {
 }
 
 const hiddenState = {
-  blocked: false
+  consented: false
 }
 
 const RuntimeModel = {
   /** Agent-specific metadata found in the RUM call response. ex. entityGuid */
   appMetadata: {},
-  get blocked () {
-    return this.session?.state?.consent || hiddenState.blocked
+  get consented () {
+    return this.session?.state?.consent || hiddenState.consented
   },
-  set blocked (value) {
-    hiddenState.blocked = value
+  set consented (value) {
+    hiddenState.consented = value
   },
   customTransaction: undefined,
   denyList: undefined,

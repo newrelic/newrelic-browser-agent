@@ -11,6 +11,10 @@ export function isValidMFETarget (target = {}) {
   return !!(target.id && target.name)
 }
 
+export function hasValidValue (val) {
+  return (typeof val === 'string' && val.trim().length < 501) || (typeof val === 'number')
+}
+
 /**
  * When given a valid target, returns an object with the MFE payload attributes.  Returns an empty object otherwise.
  * @note Field names may change as the schema is finalized

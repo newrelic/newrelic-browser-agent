@@ -39,6 +39,7 @@ expectType<MicroAgent>(microAgent)
   expectType<(timeStamp?: number) => any>(agent.finished)
   expectType<(name: string, id: string) => any>(agent.addRelease)
   expectType<(eventType: string, attributes?: Object) => any>(agent.recordCustomEvent)
+  expectType<(name: string, options?: {start: number, end: number, duration: number, customAttributes: object}) => ({start: number, end: number, duration: number, customAttributes: object})>(agent.measure)
   /** micro agent has a different implementation of start api we are stuck with until that entry point is removed */
   expectType<(() => any) | ((featureNames?: string | string[] | undefined) => boolean)>(agent.start)
   expectType<() => any>(agent.recordReplay)

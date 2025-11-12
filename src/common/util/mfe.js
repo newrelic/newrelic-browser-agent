@@ -36,6 +36,6 @@ export function getVersion2Attributes (target, aggregateInstance) {
     'mfe.id': target.id,
     'mfe.name': target.name,
     eventSource: target.eventSource,
-    'parent.id': target.parentId || containerAgentEntityGuid
+    'parent.id': target.parent?.id || containerAgentEntityGuid
   }
 }

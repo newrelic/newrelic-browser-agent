@@ -28,7 +28,7 @@ import { recordCustomEvent } from './recordCustomEvent'
  */
 export function setupRegisterAPI (agent) {
   setupAPI(REGISTER, function (target) {
-    return buildRegisterApi(agent, target)
+    return register(agent, target)
   }, agent)
 }
 
@@ -36,15 +36,11 @@ export function setupRegisterAPI (agent) {
  * Builds the api object that will be returned from the register api method.
  * Also conducts certain side-effects, such as harvesting a PageView event when triggered and gathering metadata for the registered entity.
  * @param {Object} agentRef the reference to the base agent instance
- * @param {Object} handlers the shared handlers to be used by both the base agent's API and the external target's API
- * @param {Object} target the target information to be used by the external target's API to send data to the correct location
- * @param {string} [target.licenseKey] the license key of the target to report data to
- * @param {string} target.id the entity ID of the target to report data to
- * @param {string} target.name the entity name of the target to report data to
- * @param {string} [target.parentId] the ID of the parent target to report data to
+ * @param {import('./register-api-types').RegisterAPIConstructor} target
+ * @param {import('./register-api-types').RegisterAPIConstructor} [parent]
  * @returns {RegisterAPI} the api object to be returned from the register api method
  */
-export function buildRegisterApi (agentRef, target) {
+function register (agentRef, target, parent) {
   const attrs = {}
   warn(54, 'newrelic.register')
 
@@ -52,6 +48,7 @@ export function buildRegisterApi (agentRef, target) {
   target.eventSource = 'MicroFrontendBrowserAgent'
   target.licenseKey ||= agentRef.info.licenseKey // will inherit the license key from the container agent if not provided for brevity. A future state may dictate that we need different license keys to do different things.
   target.blocked = false
+  target.parent = parent || {}
 
   /** @type {Function} a function that is set and reports when APIs are triggered -- warns the customer of the invalid state  */
   let invalidApiResponse = () => {}
@@ -87,7 +84,7 @@ export function buildRegisterApi (agentRef, target) {
     log: (message, options = {}) => report(log, [message, { ...options, customAttributes: { ...attrs, ...(options.customAttributes || {}) } }, agentRef], target),
     measure: (name, options = {}) => report(measure, [name, { ...options, customAttributes: { ...attrs, ...(options.customAttributes || {}) } }, agentRef], target),
     noticeError: (error, attributes = {}) => report(noticeError, [error, { ...attrs, ...attributes }, agentRef], target),
-    register: (target = {}) => !isBlocked() && agentRef.register({ ...target, parentId: api.metadata.target.id }),
+    register: (target = {}) => report(register, [agentRef, target], api.metadata.target),
     recordCustomEvent: (eventType, attributes = {}) => report(recordCustomEvent, [eventType, { ...attrs, ...attributes }, agentRef], target),
     setApplicationVersion: (value) => setLocalValue('application.version', value),
     setCustomAttribute: (key, value) => setLocalValue(key, value),
@@ -136,8 +133,8 @@ export function buildRegisterApi (agentRef, target) {
     const timestamp = now()
     handle(SUPPORTABILITY_METRIC_CHANNEL, [`API/register/${methodToCall.name}/called`], undefined, FEATURE_NAMES.metrics, agentRef.ee)
     try {
-      const shouldDuplicate = agentRef.init.api.duplicate_registered_data
-      if (shouldDuplicate === true || Array.isArray(shouldDuplicate)) {
+      const shouldDuplicate = agentRef.init.api.duplicate_registered_data && methodToCall.name !== 'register'
+      if (shouldDuplicate) {
         // also report to container by providing undefined target
         methodToCall(...args, undefined, timestamp)
       }

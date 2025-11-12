@@ -51,11 +51,6 @@ export function buildRegisterApi (agentRef, target) {
   target.eventSource = 'MicroFrontendBrowserAgent'
   target.licenseKey ||= agentRef.info.licenseKey // will inherit the license key from the container agent if not provided for brevity. A future state may dictate that we need different license keys to do different things.
   target.blocked = false
-  if (!target.parentId) {
-    Object.defineProperty(target, 'parentId', {
-      get: () => agentRef.runtime.appMetadata.agents?.[0]?.entityGuid // this is async so must be a getter
-    })
-  }
 
   /** @type {Function} a function that is set and reports when APIs are triggered -- warns the customer of the invalid state  */
   let invalidApiResponse = () => {}
@@ -87,7 +82,7 @@ export function buildRegisterApi (agentRef, target) {
     addPageAction: (name, attributes = {}) => report(addPageAction, [name, { ...attrs, ...attributes }, agentRef], target),
     log: (message, options = {}) => report(log, [message, { ...options, customAttributes: { ...attrs, ...(options.customAttributes || {}) } }, agentRef], target),
     noticeError: (error, attributes = {}) => report(noticeError, [error, { ...attrs, ...attributes }, agentRef], target),
-    register: (target = {}) => agentRef.register({ ...target, parentId: api.metadata.target.id }),
+    register: (target = {}) => !isBlocked() && agentRef.register({ ...target, parentId: api.metadata.target.id }),
     recordCustomEvent: (eventType, attributes = {}) => report(recordCustomEvent, [eventType, { ...attrs, ...attributes }, agentRef], target),
     setApplicationVersion: (value) => setLocalValue('application.version', value),
     setCustomAttribute: (key, value) => setLocalValue(key, value),

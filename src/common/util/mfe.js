@@ -13,6 +13,8 @@ export function isValidMFETarget (target = {}) {
 
 /**
  * When given a valid target, returns an object with the MFE payload attributes.  Returns an empty object otherwise.
+ * @note Field names may change as the schema is finalized
+ *
  * @param {Object} [target] the registered target
  * @param {AggregateInstance} [aggregateInstance] the aggregate instance calling the method
  * @returns {{'mfe.id': *, 'mfe.name': String}|{}} returns an empty object if args are not supplied or the aggregate instance is not supporting version 2
@@ -27,9 +29,9 @@ export function getVersion2Attributes (target, aggregateInstance) {
     }
   }
   return {
-    'mfe.id': target.id, // these field names may change as the schema is finalized
-    'mfe.name': target.name, // these field names may change as the schema is finalized
-    eventSource: target.eventSource, // these field names may change as the schema is finalized
+    'mfe.id': target.id,
+    'mfe.name': target.name,
+    eventSource: target.eventSource,
     'parent.id': target.parentId || containerAgentEntityGuid
   }
 }

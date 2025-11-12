@@ -2,7 +2,7 @@ import { BrowserAgent } from '../../dist/types/loaders/browser-agent'
 import { MicroAgent } from '../../dist/types/loaders/micro-agent'
 import { InteractionInstance, getContext, onEnd } from '../../dist/types/loaders/api/interaction-types'
 import { expectType } from 'tsd'
-import { RegisterAPI, RegisterAPIMetadata } from '../../dist/types/interfaces/registered-entity'
+import { RegisterAPI, RegisterAPIConstructor, RegisterAPIMetadata } from '../../dist/types/interfaces/registered-entity'
 
 const validOptions = {
   info: {
@@ -60,7 +60,7 @@ expectType<MicroAgent>(microAgent)
   expectType<(name: string, trigger?: string) => InteractionInstance>(agent.interaction().setName)
 
   // register APIs
-  expectType<(target: {id: string|number, name: string}) => RegisterAPI>(agent.register)
+  expectType<(target: {id: string|number, name: string, parentId?: string}) => RegisterAPI>(agent.register)
   const registeredEntity = agent.register({ id: 123, name: 'hello' })
   expectType<(name: string, attributes?: object) => void>(registeredEntity.addPageAction)
   expectType<(message: string, options?: { customAttributes?: object, level?: 'ERROR' | 'TRACE' | 'DEBUG' | 'INFO' | 'WARN'}) => void>(registeredEntity.log)
@@ -69,6 +69,7 @@ expectType<MicroAgent>(microAgent)
   expectType<(value: string | null) => void>(registeredEntity.setApplicationVersion)
   expectType<(name: string, value: string | number | boolean | null, persist?: boolean) => void>(registeredEntity.setCustomAttribute)
   expectType<(value: string | null) => void>(registeredEntity.setUserId)
+  expectType<(target: RegisterAPIConstructor) => RegisterAPI>(registeredEntity.register)
   expectType<RegisterAPIMetadata>(registeredEntity.metadata)
 })
 

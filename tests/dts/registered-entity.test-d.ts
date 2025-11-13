@@ -15,9 +15,7 @@ const registeredEntityWithNumber = new RegisteredEntity(entityOptsWithNumber)
 const registeredEntityWithString = new RegisteredEntity(entityOptsWithString)
 
 // fits the definition of both the RegisterAPI and RegisteredEntity because RegisteredEntity object assigns from RegisterAPI here
-expectType<RegisterAPI>(registeredEntityWithNumber) 
-expectType<RegisteredEntity>(registeredEntityWithNumber) 
-expectType<RegisterAPI>(registeredEntityWithString) 
+expectType<RegisteredEntity>(registeredEntityWithNumber)
 expectType<RegisteredEntity>(registeredEntityWithString) 
 
 // Test all registered entity methods for each variant
@@ -28,6 +26,7 @@ expectType<RegisteredEntity>(registeredEntityWithString)
   expectType<(eventType: string, attributes?: Object) => void>(registeredEntity.recordCustomEvent)
   expectType<(value: string | null) => void>(registeredEntity.setApplicationVersion)
   expectType<(name: string, value: string | number | boolean | null, persist?: boolean) => void>(registeredEntity.setCustomAttribute)
+  expectType<(name: string, options?: {start: number, end: number, duration: number, customAttributes: object}) => ({start: number, end: number, duration: number, customAttributes: object})>(registeredEntity.measure)
   expectType<(value: string | null) => void>(registeredEntity.setUserId)
   expectType<RegisterAPIMetadata>(registeredEntity.metadata)
 })

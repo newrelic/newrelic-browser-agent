@@ -20,6 +20,7 @@ import { setupSetCustomAttributeAPI } from '../../src/loaders/api/setCustomAttri
 import { setupSetUserIdAPI } from '../../src/loaders/api/setUserId'
 import { setupSetApplicationVersionAPI } from '../../src/loaders/api/setApplicationVersion'
 import { setupStartAPI } from '../../src/loaders/api/start'
+import { setupConsentAPI } from '../../src/loaders/api/consent'
 import { setTopLevelCallers } from '../../src/loaders/api/topLevelCallers'
 import { gosCDN } from '../../src/common/window/nreum'
 import { now } from '../../src/common/timing/now'
@@ -66,7 +67,8 @@ describe('API tests', () => {
         'log',
         'wrapLogger',
         'register',
-        'measure'
+        'measure',
+        'consent'
       ]
       apiNames.forEach(apiName => checkApiExists(apiName, false))
 
@@ -81,6 +83,9 @@ describe('API tests', () => {
 
       setupStartAPI(agent)
       checkApiExists('start', true)
+
+      setupConsentAPI(agent)
+      checkApiExists('consent', true)
 
       const agentKeyCount = Object.keys(agent).length
       await initializeFeature(AJAX, agent)
@@ -478,6 +483,35 @@ describe('API tests', () => {
         expectEmitted('manual-start-all')
         expect(agent.ee.emit).not.toHaveBeenCalledWith(badFeatureName)
         expect(console.debug).not.toHaveBeenCalled()
+      })
+    })
+
+    describe('consent', () => {
+      test('should create SM event emitter event for calls to API', () => {
+        agent.consent()
+        expectHandled('storeSupportabilityMetrics', ['API/consent/called'])
+      })
+
+      test('should set consent session state to true without arguments', () => {
+        agent.consent()
+        expect(agent.runtime.session.state.consent).toEqual(true)
+      })
+
+      test('should set consent session state to true if argument is true', () => {
+        agent.consent(true)
+        expect(agent.runtime.session.state.consent).toEqual(true)
+      })
+
+      test('should set consent session state to false if argument is false', () => {
+        agent.consent(false)
+        expect(agent.runtime.session.state.consent).toEqual(false)
+      })
+
+      test('should warn if argument is not undefined and not a boolean', () => {
+        agent.consent('invalid')
+
+        expect(console.debug).toHaveBeenCalledTimes(1)
+        expect(console.debug).toHaveBeenCalledWith(expect.stringContaining('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#65'), typeof 'invalid')
       })
     })
 

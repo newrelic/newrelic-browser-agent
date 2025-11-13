@@ -208,4 +208,52 @@ describe('consent mode', () => {
       expect(rumHarvests.length).toBeGreaterThan(0)
     })
   })
+
+  describe('consent mode works when cookies_enabled is disabled', () => {
+    let cookiesDisabledConfig
+    beforeEach(() => {
+      cookiesDisabledConfig = {
+        init: {
+          ...consentModeConfig.init,
+          privacy: { cookies_enabled: false }
+        }
+      }
+    })
+    it('should harvest data for PVE feature if consent is given', async () => {
+      const [rumHarvests] = await Promise.all([
+        rumCapture.waitForResult({ totalCount: 1 }),
+        browser.url(await browser.testHandle.assetURL('consent-mode-accept.html', cookiesDisabledConfig))
+      ])
+
+      expect(rumHarvests.length).toBeGreaterThan(0)
+    })
+
+    it('should not harvest data if consent is not given', async () => {
+      const [rumHarvests] = await Promise.all([
+        rumCapture.waitForResult({ timeout: HARVEST_TIMEOUT }),
+        browser.url(await browser.testHandle.assetURL('consent-mode-reject.html', cookiesDisabledConfig))
+      ])
+
+      expect(rumHarvests.length).toEqual(0)
+    })
+
+    it('Consent is not carried across page loads without localStorage access', async () => {
+      // First page load
+      await browser.url(await browser.testHandle.assetURL('instrumented.html', cookiesDisabledConfig))
+        .then(() => browser.waitForWindowLoad())
+        .then(() => browser.execute(function () {
+          newrelic.consent()
+        }))
+
+      const rumHarvests1 = await rumCapture.waitForResult({ totalCount: 1 })
+      expect(rumHarvests1.length).toBeGreaterThan(0)
+
+      // Second page load
+      await browser.url(await browser.testHandle.assetURL('instrumented.html', cookiesDisabledConfig))
+        .then(() => browser.waitForWindowLoad())
+
+      const rumHarvests2 = await rumCapture.waitForResult({ timeout: HARVEST_TIMEOUT })
+      expect(rumHarvests2.length).toEqual(rumHarvests1.length)
+    })
+  })
 })

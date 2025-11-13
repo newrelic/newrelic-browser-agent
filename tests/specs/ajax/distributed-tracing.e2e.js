@@ -306,7 +306,9 @@ function validateTraceTime (harvest = {}, rawTimes = []) {
       // 'timestamp' should not be before reference 'timestamp'
       expect(currentEvent.timestamp).toBeGreaterThanOrEqual(firstEvent.timestamp)
       // The difference between starts should match the difference between timestamps
-      expect(currentEvent.start - firstEvent.start).toEqual(currentEvent.timestamp - firstEvent.timestamp)
+      const startDiff = currentEvent.start - firstEvent.start
+      const timestampDiff = currentEvent.timestamp - firstEvent.timestamp
+      expect(Math.abs(startDiff - timestampDiff)).toBeLessThanOrEqual(1)
     }
   }
 

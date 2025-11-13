@@ -4,6 +4,95 @@
     {
       "changes": [
         {
+          "type": "feat",
+          "sha": "0690a65bcfa35eabe0e83b13c058398746e924b8",
+          "message": "Allow consent API to be invoked without localStorage access",
+          "issues": [
+            "1627"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "74a8d4ac745cff33eb15f9469775f85fd2641097",
+          "message": "Allow nested registrations",
+          "issues": [
+            "1616"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "aa8c02f966e9c7df5c4e83c911f9342b2183447f",
+          "message": "Additional validation to prepare agent for MFE registrations",
+          "issues": [
+            "1625"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "c2785f39ca9ea1f5b87f3e2cf4fc7e462d6084e7",
+          "message": "Add measure support to register API ",
+          "issues": [
+            "1623"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "4e8ad2a6aea34bbaa39b6beb67c3947feee3c01d",
+          "message": "Add useConsentModel functionality",
+          "issues": [
+            "1533"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "9770132209b9fb1320b3f60eedfa932b0fcfa3a4",
+          "message": "Retry initial connect call",
+          "issues": [
+            "1605"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "f648e3f1f843913d4c9be6534b0d1e3ba47eb260",
+          "message": "Obfuscate custom attributes for logs added after PVE",
+          "issues": [
+            "1622"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "4137dcbb339642219164d68695b84a8e48fa9b6f",
+          "message": "Add custom event support to register API",
+          "issues": [
+            "1606"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "23cb55993add2eb7e7b14b0d77c6fa3bbb9abcf1",
+          "message": "memoize promise context propagation to avoid safari hangs",
+          "issues": [
+            "1597"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "29f5bdf6fa36020a87e5c0aa443d64ce55722c85",
+          "message": "SMs for browser connect response",
+          "issues": [
+            "1611"
+          ]
+        }
+      ],
+      "version": "1.303.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "440f3a01-fcff-4acd-9509-c1952ffa10b4",
+      "createTime": "2025-11-13T20:00:46.293Z"
+    },
+    {
+      "changes": [
+        {
           "type": "fix",
           "sha": "984b05e8920be79d7c3d1c3d7d56c75fa2cfe253",
           "message": "User frustrations logic should be gated",
@@ -3347,5 +3436,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2025-10-24T17:19:48.828Z"
+  "updateTime": "2025-11-13T20:00:46.293Z"
 }

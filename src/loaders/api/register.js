@@ -71,8 +71,9 @@ function register (agentRef, target, parent) {
         })
 
         if (match) {
-          timings.fetchStart = match.startTime
-          timings.fetchEnd = match.responseEnd
+          timings.update({ fetchStart: match.startTime, fetchEnd: match.responseEnd })
+          // timings.fetchStart = match.startTime
+          // timings.fetchEnd = match.responseEnd
         }
       }
     } catch (error) {
@@ -83,15 +84,8 @@ function register (agentRef, target, parent) {
 
   /** @type {Function} a function that is set and reports when APIs are triggered -- warns the customer of the invalid state  */
   let invalidApiResponse = () => {}
-  /** @type {Array} the array of registered target APIs */
+  /** @type {Set} the array of registered target APIs */
   const registeredEntities = agentRef.runtime.registeredEntities
-
-  /** if we have already registered this target, go ahead and re-use it */
-  const preregisteredEntity = registeredEntities.find(({ metadata: { target: { id, name } } }) => id === target.id)
-  if (preregisteredEntity) {
-    if (preregisteredEntity.metadata.target.name !== target.name) preregisteredEntity.metadata.target.name = target.name
-    return preregisteredEntity
-  }
 
   /**
    * Block the API, and supply a warning function to display a message to end users
@@ -112,6 +106,24 @@ function register (agentRef, target, parent) {
   /** @type {RegisterAPI} */
   const api = {
     addPageAction: (name, attributes = {}) => report(addPageAction, [name, { ...attrs, ...attributes }, agentRef], target),
+
+    deregister: () => {
+      timings.update({ deregisteredAt: now() })
+      api.recordCustomEvent('MicroFrontEndTiming', {
+        timeToBeRequested: timings.timeToBeRequested,
+        timeToFetch: timings.timeToFetch,
+        timeToRegister: timings.timeToRegister,
+        duration: timings.duration
+      })
+      console.log(target.id, 'reporting', {
+        timeToBeRequested: timings.timeToBeRequested,
+        timeToFetch: timings.timeToFetch,
+        timeToRegister: timings.timeToRegister,
+        duration: timings.duration
+      })
+      registeredEntities.delete(api)
+    },
+
     log: (message, options = {}) => report(log, [message, { ...options, customAttributes: { ...attrs, ...(options.customAttributes || {}) } }, agentRef], target),
     measure: (name, options = {}) => report(measure, [name, { ...options, customAttributes: { ...attrs, ...(options.customAttributes || {}) } }, agentRef], target),
     noticeError: (error, attributes = {}) => report(noticeError, [error, { ...attrs, ...attributes }, agentRef], target),
@@ -120,8 +132,33 @@ function register (agentRef, target, parent) {
     setApplicationVersion: (value) => setLocalValue('application.version', value),
     setCustomAttribute: (key, value) => setLocalValue(key, value),
     setUserId: (value) => setLocalValue('enduser.id', value),
-    markLoaded: () => { timings.loadedAt ??= now() },
-    markUnloaded: () => { timings.unloadedAt ??= now() },
+
+    /**
+     * @param {'READY'|'HIDDEN'} type the type of lifecycle to record
+     */
+    // lifecycle: (type) => {
+    //   const typeToProp = {
+    //     'BEFORE_MOUNT': timings.timeToHidden,
+    //     'MOUNT': timings.timeToMount,
+    //     'BEFORE_UNMOUNT': timings.timeToReady,
+    //     'UNMOUNT': timings.timeToUnmount
+    //   }
+
+    //   api.recordCustomEvent('MFELifecycle', {
+    //     type,
+    //     timeToBeRequested: timings.timeToBeRequested,
+    //     timeToFetch: timings.timeToFetch,
+    //     timeToRegister: timings.timeToRegister,
+    //     duration: type === 'HIDDEN' ? timings.timeToHidden : timings.timeToReady
+    //   })
+    //   console.log(target.id, 'reporting', {
+    //     type,
+    //     timeToBeRequested: timings.timeToBeRequested,
+    //     timeToFetch: timings.timeToFetch,
+    //     timeToRegister: timings.timeToRegister,
+    //     duration: type === 'HIDDEN' ? timings.timeToHidden : timings.timeToReady
+    //   })
+    // },
     /** metadata */
     metadata: {
       customAttributes: attrs,
@@ -140,7 +177,7 @@ function register (agentRef, target, parent) {
   }
 
   /** only allow registered APIs to be tracked in the agent runtime */
-  if (!isBlocked()) registeredEntities.push(api)
+  if (!isBlocked()) registeredEntities.add(api)
 
   /**
    * Sets a value local to the registered API attrs. Will do nothing if APIs are deregistered.

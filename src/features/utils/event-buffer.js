@@ -8,8 +8,11 @@ import { MAX_PAYLOAD_SIZE } from '../../common/constants/agent-constants'
 export class EventBuffer {
   #buffer = []
   #rawBytes = 0
+  #hasV2Data = false
+
   #bufferBackup
   #rawBytesBackup
+  #hasV2DataBackup
 
   /**
    * Creates an event buffer that can hold feature-processed events.
@@ -23,6 +26,10 @@ export class EventBuffer {
 
   get length () {
     return this.#buffer.length
+  }
+
+  get requiredVersion () {
+    return this.#hasV2Data ? 2 : 1
   }
 
   isEmpty () {
@@ -47,7 +54,7 @@ export class EventBuffer {
    * @param {number} [evaluatedSize] - the evalated size of the event, if already done so before storing in the event buffer
    * @returns {Boolean} true if successfully added; false otherwise
    */
-  add (event, evaluatedSize) {
+  add (event, evaluatedSize, hasV2Data = false) {
     const addSize = evaluatedSize || stringify(event)?.length || 0 // (estimate) # of bytes a directly stringified event it would take to send
     if (this.#rawBytes + addSize > this.maxPayloadSize) {
       const smTag = inject => `EventBuffer/${inject}/Dropped/Bytes`
@@ -58,6 +65,7 @@ export class EventBuffer {
     this.#buffer.push(event)
     this.#rawBytes += addSize
     this.featureAgg?.decideEarlyHarvest() // check if we should harvest early with new data
+    this.#hasV2Data ||= hasV2Data
     return true
   }
 
@@ -67,7 +75,7 @@ export class EventBuffer {
  * @param {Object} data - The data to merge into the matching events.
  * @returns {boolean} true if a match was found and merged; false otherwise.
  */
-  merge (matcher, data) {
+  merge (matcher, data, hasV2Data = false) {
     if (this.isEmpty() || !matcher) return false
     const matchIdx = this.#buffer.findIndex(matcher)
     if (matchIdx < 0) return false
@@ -75,6 +83,7 @@ export class EventBuffer {
       ...this.#buffer[matchIdx],
       ...data
     }
+    this.#hasV2Data ||= hasV2Data
     return true
   }
 
@@ -95,6 +104,7 @@ export class EventBuffer {
       this.#buffer = []
     }
     this.#rawBytes = this.#buffer.length ? stringify(this.#buffer)?.length || 0 : 0 // recalculate raw bytes after clearing
+    this.#hasV2Data = false
   }
 
   /**
@@ -103,6 +113,7 @@ export class EventBuffer {
   save () {
     this.#bufferBackup = this.#buffer
     this.#rawBytesBackup = this.#rawBytes
+    this.#hasV2DataBackup = this.#hasV2Data
   }
 
   /**
@@ -111,6 +122,7 @@ export class EventBuffer {
   clearSave () {
     this.#bufferBackup = undefined
     this.#rawBytesBackup = undefined
+    this.#hasV2DataBackup = undefined
   }
 
   /**
@@ -121,5 +133,6 @@ export class EventBuffer {
     if (this.#rawBytesBackup + this.#rawBytes > this.maxPayloadSize) return
     this.#buffer = [...this.#bufferBackup, ...this.#buffer]
     this.#rawBytes = this.#rawBytesBackup + this.#rawBytes
+    this.#hasV2Data = this.#hasV2DataBackup || this.#hasV2Data
   }
 }

@@ -14,7 +14,7 @@ while (iterations2++ < 5000) {
   div.id = 'mfe2-div-' + iterations2
   document.body.appendChild(div)
 }
-api2.markLoaded()
+// api2.lifecycle('READY')
 
 while (iterations2-- > 0) {
   const divToRemove = document.getElementById('mfe2-div-' + iterations2)
@@ -23,4 +23,6 @@ while (iterations2-- > 0) {
   }
 }
 
-api2.markUnloaded()
+// api2.lifecycle('HIDDEN')
+api2.deregister()
+console.log(api2)

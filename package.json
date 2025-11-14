@@ -181,6 +181,7 @@
     "node": ">=12.17.0 < 13.0.0 || >=13.7.0"
   },
   "scripts": {
+    "git:prune-and-sync": "git fetch --prune && git branch -vv | grep 'gone]' | awk '{print $1}' | grep -v '^\\*' | grep -v '^main$' | xargs -r git branch -D",
     "start": "npm-run-all --parallel cdn:watch test-server",
     "lint": "eslint -c .eslintrc.js --ext .js,.cjs,.mjs .",
     "lint:fix": "npm run lint -- --fix",

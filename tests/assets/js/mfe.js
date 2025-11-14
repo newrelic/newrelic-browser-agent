@@ -14,7 +14,7 @@ while (iterations1++ < 5000) {
   div.id = 'mfe1-div-' + iterations1
   document.body.appendChild(div)
 }
-api.markLoaded()
+// api.lifecycle('READY')
 
 const script = document.createElement('script')
 script.src = './js/mfe2.min.js'
@@ -27,4 +27,6 @@ while (iterations1-- > 0) {
   }
 }
 
-api.markUnloaded()
+// api.lifecycle('HIDDEN')
+api.deregister()
+console.log(api)

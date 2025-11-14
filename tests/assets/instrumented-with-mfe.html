@@ -8,7 +8,8 @@
     <title>RUM Unit Test</title>
     {init} {config}
     <script>
-      NREUM.init.feature_flags = ["register"];
+      NREUM.init.feature_flags = ["register", 'register.generic_events'];
+      NREUM.init.performance = {capture_marks: false, capture_measures: false, resources: {enabled: false}}
     </script>
     {loader}
   </head>
@@ -27,6 +28,7 @@
         document.body.appendChild(div);
       }
       // mainApi.markLoaded();
+      // mainApi.lifecycle('READY');
 
       while (iterations-- > 0) {
         const divToRemove = document.getElementById("mfe9999-div-" + iterations);
@@ -40,6 +42,9 @@
       document.body.appendChild(div);
 
       // mainApi.markUnloaded();
+      // mainApi.lifecycle('HIDDEN');
+      mainApi.deregister()
+      console.log(mainApi)
 
       setTimeout(() => {
         console.log("SIMULATED TIMINGS!");

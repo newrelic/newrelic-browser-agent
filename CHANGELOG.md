@@ -10,7 +10,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 * Add custom event support to register API ([#1606](https://github.com/newrelic/newrelic-browser-agent/issues/1606)) ([4137dcb](https://github.com/newrelic/newrelic-browser-agent/commit/4137dcbb339642219164d68695b84a8e48fa9b6f))
 * Add measure support to register API  ([#1623](https://github.com/newrelic/newrelic-browser-agent/issues/1623)) ([c2785f3](https://github.com/newrelic/newrelic-browser-agent/commit/c2785f39ca9ea1f5b87f3e2cf4fc7e462d6084e7))
-* Add useConsentModel functionality ([#1533](https://github.com/newrelic/newrelic-browser-agent/issues/1533)) ([4e8ad2a](https://github.com/newrelic/newrelic-browser-agent/commit/4e8ad2a6aea34bbaa39b6beb67c3947feee3c01d))
+* Add consent API ([#1533](https://github.com/newrelic/newrelic-browser-agent/issues/1533)) ([4e8ad2a](https://github.com/newrelic/newrelic-browser-agent/commit/4e8ad2a6aea34bbaa39b6beb67c3947feee3c01d))
 * Additional validation to prepare agent for MFE registrations ([#1625](https://github.com/newrelic/newrelic-browser-agent/issues/1625)) ([aa8c02f](https://github.com/newrelic/newrelic-browser-agent/commit/aa8c02f966e9c7df5c4e83c911f9342b2183447f))
 * Allow consent API to be invoked without localStorage access ([#1627](https://github.com/newrelic/newrelic-browser-agent/issues/1627)) ([0690a65](https://github.com/newrelic/newrelic-browser-agent/commit/0690a65bcfa35eabe0e83b13c058398746e924b8))
 * Allow nested registrations ([#1616](https://github.com/newrelic/newrelic-browser-agent/issues/1616)) ([74a8d4a](https://github.com/newrelic/newrelic-browser-agent/commit/74a8d4ac745cff33eb15f9469775f85fd2641097))

@@ -38,7 +38,7 @@
         {
           "type": "feat",
           "sha": "4e8ad2a6aea34bbaa39b6beb67c3947feee3c01d",
-          "message": "Add useConsentModel functionality",
+          "message": "Add consent API",
           "issues": [
             "1533"
           ]

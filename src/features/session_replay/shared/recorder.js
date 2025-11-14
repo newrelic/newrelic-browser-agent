@@ -99,7 +99,7 @@ export class Recorder {
     this.stopRecording()
 
     this.agentRef.runtime.isRecording = true
-    const { block_class, ignore_class, mask_text_class, block_selector, mask_input_options, mask_text_selector, mask_all_inputs, inline_images, collect_fonts } = this.agentRef.init.session_replay
+    const { block_class, ignore_class, mask_text_class, block_selector, mask_input_options, mask_text_selector, mask_all_inputs, inline_images, collect_fonts, optimize_recording } = this.agentRef.init.session_replay
 
     // set up rrweb configurations for maximum privacy --
     // https://newrelic.atlassian.net/wiki/spaces/O11Y/pages/2792293280/2023+02+28+Browser+-+Session+Replay#Configuration-options
@@ -120,7 +120,10 @@ export class Recorder {
         inlineImages: inline_images,
         collectFonts: collect_fonts,
         checkoutEveryNms: CHECKOUT_MS[mode],
-        recordAfter: 'DOMContentLoaded'
+        recordAfter: 'DOMContentLoaded',
+        ...(optimize_recording && {
+          slimDOMOptions: 'all'
+        })
       })
     } catch (err) {
       this.ee.emit('internal-error', [err])

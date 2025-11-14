@@ -101,8 +101,8 @@ const InitModelFn = () => {
       collect_fonts: false,
       inline_images: false,
       fix_stylesheets: true,
-      // recording config settings
       mask_all_inputs: true,
+      optimize_recording: false,
       // this has a getter/setter to facilitate validation of the selectors
       get mask_text_selector () { return hiddenState.mask_selector },
       set mask_text_selector (val) {

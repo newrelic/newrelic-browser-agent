@@ -15,7 +15,8 @@ describe('basic pve capturing', () => {
     // will reply with http status 500 to fake error response from browser connect service
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      statusCode: 500
+      statusCode: 500,
+      permanent: true
     })
 
     // visit the webpage, not waiting for agent load since we don't expect the rum feature to load properly

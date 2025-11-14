@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { warn } from '../common/util/console'
-import { ADD_PAGE_ACTION, ADD_RELEASE, ADD_TO_TRACE, FINISHED, INTERACTION, LOG, NOTICE_ERROR, PAUSE_REPLAY, RECORD_CUSTOM_EVENT, RECORD_REPLAY, REGISTER, SET_APPLICATION_VERSION, SET_CURRENT_ROUTE_NAME, SET_CUSTOM_ATTRIBUTE, SET_ERROR_HANDLER, SET_PAGE_VIEW_NAME, SET_USER_ID, START, WRAP_LOGGER, MEASURE } from './api/constants'
+import { ADD_PAGE_ACTION, ADD_RELEASE, ADD_TO_TRACE, CONSENT, FINISHED, INTERACTION, LOG, NOTICE_ERROR, PAUSE_REPLAY, RECORD_CUSTOM_EVENT, RECORD_REPLAY, REGISTER, SET_APPLICATION_VERSION, SET_CURRENT_ROUTE_NAME, SET_CUSTOM_ATTRIBUTE, SET_ERROR_HANDLER, SET_PAGE_VIEW_NAME, SET_USER_ID, START, WRAP_LOGGER, MEASURE } from './api/constants'
 
 /**
  * @typedef {import('./api/interaction-types').InteractionInstance} InteractionInstance
@@ -219,10 +219,20 @@ export class ApiBase {
    * Measures a task that is recorded as a BrowserPerformance event.
    * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/measure/}
    * @param {string} name The name of the task
-   * @param {object?} options An object used to control the way the measure API operates
+   * @param {{start: number, end: number, duration: number, customAttributes: object}} [options] An object used to control the way the measure API operates
    * @returns {{start: number, end: number, duration: number, customAttributes: object}} Measurement details
    */
   measure (name, options) {
     return this.#callMethod(MEASURE, name, options)
+  }
+
+  /**
+   * Accepts or rejects consent when the agent is configured to require consent before harvesting.
+   * The consent state is stored in session storage inside the NRBA_SESSION object.
+   * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/consent/}
+   * @param {boolean?} accept Whether to accept or reject consent. Defaults to true (accept) if left undefined.
+   */
+  consent (accept) {
+    return this.#callMethod(CONSENT, accept)
   }
 }

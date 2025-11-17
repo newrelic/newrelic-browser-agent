@@ -17,7 +17,6 @@ import { single } from '../../common/util/invoke'
 import { measure } from './measure'
 import { recordCustomEvent } from './recordCustomEvent'
 import { extractUrlsFromStack, normalizeUrl, scripts } from '../../common/util/script-tracker'
-import { Timing } from '../../interfaces/timing'
 
 /**
  * @typedef {import('./register-api-types').RegisterAPI} RegisterAPI
@@ -52,7 +51,12 @@ function register (agentRef, target, parent) {
   target.blocked = false
   target.parent = parent || {}
 
-  const timings = new Timing()
+  const timings = {
+    registeredAt: now(),
+    deregisteredAt: undefined,
+    fetchStart: 0,
+    fetchEnd: 0
+  }
 
   if (scripts.size > 0) {
     try {
@@ -71,9 +75,9 @@ function register (agentRef, target, parent) {
         })
 
         if (match) {
-          timings.update({ fetchStart: match.startTime, fetchEnd: match.responseEnd })
-          // timings.fetchStart = match.startTime
-          // timings.fetchEnd = match.responseEnd
+          // timings.update({ fetchStart: match.startTime, fetchEnd: match.responseEnd })
+          timings.fetchStart = match.startTime
+          timings.fetchEnd = match.responseEnd
         }
       }
     } catch (error) {
@@ -108,20 +112,25 @@ function register (agentRef, target, parent) {
     addPageAction: (name, attributes = {}) => report(addPageAction, [name, { ...attrs, ...attributes }, agentRef], target),
 
     deregister: () => {
-      timings.update({ deregisteredAt: now() })
-      api.recordCustomEvent('MicroFrontEndTiming', {
-        timeToBeRequested: timings.timeToBeRequested,
-        timeToFetch: timings.timeToFetch,
-        timeToRegister: timings.timeToRegister,
-        duration: timings.duration
+      // timings.update({ deregisteredAt: now() })
+      timings.deregisteredAt = now()
+      // api.recordCustomEvent('MicroFrontEndTiming', {
+      //   timeToBeRequested: timings.timeToBeRequested,
+      //   timeToFetch: timings.timeToFetch,
+      //   timeToRegister: timings.timeToRegister,
+      //   duration: timings.duration
+      // })
+      api.measure('timeAlive', {
+        start: timings.registeredAt,
+        end: timings.deregisteredAt
       })
-      console.log(target.id, 'reporting', {
-        timeToBeRequested: timings.timeToBeRequested,
-        timeToFetch: timings.timeToFetch,
-        timeToRegister: timings.timeToRegister,
-        duration: timings.duration
+      console.log(target.id, 'reporting timeAlive', {
+        start: timings.registeredAt,
+        end: timings.deregisteredAt,
+        duration: timings.deregisteredAt - timings.registeredAt
       })
       registeredEntities.delete(api)
+      block(single(() => warn(66, target)))
     },
 
     log: (message, options = {}) => report(log, [message, { ...options, customAttributes: { ...attrs, ...(options.customAttributes || {}) } }, agentRef], target),
@@ -136,29 +145,6 @@ function register (agentRef, target, parent) {
     /**
      * @param {'READY'|'HIDDEN'} type the type of lifecycle to record
      */
-    // lifecycle: (type) => {
-    //   const typeToProp = {
-    //     'BEFORE_MOUNT': timings.timeToHidden,
-    //     'MOUNT': timings.timeToMount,
-    //     'BEFORE_UNMOUNT': timings.timeToReady,
-    //     'UNMOUNT': timings.timeToUnmount
-    //   }
-
-    //   api.recordCustomEvent('MFELifecycle', {
-    //     type,
-    //     timeToBeRequested: timings.timeToBeRequested,
-    //     timeToFetch: timings.timeToFetch,
-    //     timeToRegister: timings.timeToRegister,
-    //     duration: type === 'HIDDEN' ? timings.timeToHidden : timings.timeToReady
-    //   })
-    //   console.log(target.id, 'reporting', {
-    //     type,
-    //     timeToBeRequested: timings.timeToBeRequested,
-    //     timeToFetch: timings.timeToFetch,
-    //     timeToRegister: timings.timeToRegister,
-    //     duration: type === 'HIDDEN' ? timings.timeToHidden : timings.timeToReady
-    //   })
-    // },
     /** metadata */
     metadata: {
       customAttributes: attrs,
@@ -175,9 +161,6 @@ function register (agentRef, target, parent) {
     if (target.blocked) invalidApiResponse()
     return target.blocked
   }
-
-  /** only allow registered APIs to be tracked in the agent runtime */
-  if (!isBlocked()) registeredEntities.add(api)
 
   /**
    * Sets a value local to the registered API attrs. Will do nothing if APIs are deregistered.
@@ -213,6 +196,43 @@ function register (agentRef, target, parent) {
     } catch (err) {
       warn(50, err)
     }
+  }
+
+  /** only allow registered APIs to be tracked in the agent runtime */
+  if (!isBlocked()) {
+    registeredEntities.add(api)
+    // report initial timings timeToBeRequested, timeToFetch, timeToRegister
+    // if (timings.fetchStart) {
+    api.measure('timeToBeRequested', {
+      start: 0,
+      end: timings.fetchStart
+    })
+    console.log(target.id, 'reporting timeToBeRequested', {
+      start: 0,
+      end: timings.fetchStart,
+      duration: timings.fetchStart - 0
+    })
+
+    api.measure('timeToFetch', {
+      start: timings.fetchStart,
+      end: timings.fetchEnd
+    })
+    console.log(target.id, 'reporting timeToFetch', {
+      start: timings.fetchStart,
+      end: timings.fetchEnd,
+      duration: timings.fetchEnd - timings.fetchStart
+    })
+    // }
+
+    api.measure('timeToRegister', {
+      start: timings.fetchEnd,
+      end: timings.registeredAt
+    })
+    console.log(target.id, 'reporting timeToRegister', {
+      start: timings.fetchEnd,
+      end: timings.registeredAt,
+      duration: timings.registeredAt - timings.fetchEnd
+    })
   }
 
   return api

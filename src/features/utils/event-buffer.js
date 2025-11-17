@@ -28,7 +28,7 @@ export class EventBuffer {
     return this.#buffer.length
   }
 
-  get requiredVersion () {
+  getRequiredVersion () {
     return this.#hasV2Data ? 2 : 1
   }
 

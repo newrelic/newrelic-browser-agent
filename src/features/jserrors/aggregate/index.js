@@ -19,7 +19,7 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { now } from '../../../common/timing/now'
 import { applyFnToProps } from '../../../common/util/traverse'
 import { evaluateInternalError } from './internal-errors'
-import { getVersion2Attributes } from '../../../common/util/mfe'
+import { getVersion2Attributes, isValidMFETarget } from '../../../common/util/mfe'
 import { buildCauseString } from './cause-string'
 
 /**
@@ -243,7 +243,7 @@ export class Aggregate extends AggregateBase {
     const jsAttributesHash = stringHashCode(stringify(allCustomAttrs))
     const aggregateHash = bucketHash + ':' + jsAttributesHash
 
-    this.events.add([type, aggregateHash, params, newMetrics, allCustomAttrs])
+    this.events.add([type, aggregateHash, params, newMetrics, allCustomAttrs, isValidMFETarget(target)])
 
     function setCustom (key, val) {
       allCustomAttrs[key] = (val && typeof val === 'object' ? stringify(val) : val)

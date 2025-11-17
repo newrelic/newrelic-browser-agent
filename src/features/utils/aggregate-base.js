@@ -79,7 +79,7 @@ export class AggregateBase extends FeatureBase {
    * @returns {boolean}
    */
   get harvestEndpointVersion () {
-    return (this.supportsRegisteredEntities && this.events.requiredVersion) || 1
+    return (this.supportsRegisteredEntities && this.events.getRequiredVersion(this.harvestOpts)) || 1
   }
 
   waitForDrain () {

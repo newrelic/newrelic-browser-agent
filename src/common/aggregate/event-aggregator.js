@@ -21,9 +21,9 @@ export class EventAggregator {
     return aggregatorTypes.every(type => !this.#aggregator.aggregatedData[type]) // no bucket exist for any of the types we're looking for
   }
 
-  add ([type, name, params, newMetrics, customParams]) {
+  add ([type, name, params, newMetrics, customParams, hasV2Data]) {
     // Do we need to track byte size here like EventBuffer?
-    this.#aggregator.store(type, name, params, newMetrics, customParams)
+    this.#aggregator.store(type, name, params, newMetrics, customParams, hasV2Data)
     return true
   }
 
@@ -48,6 +48,11 @@ export class EventAggregator {
       }
     }
     */
+  }
+
+  getRequiredVersion (opts) {
+    const aggregatorTypes = Array.isArray(opts) ? opts : opts.aggregatorTypes
+    return this.#aggregator.getRequiredVersion(aggregatorTypes)
   }
 
   get (opts) {

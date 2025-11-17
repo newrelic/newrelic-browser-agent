@@ -245,6 +245,9 @@ browserAgent.recordCustomEvent(...)
 
 ## Deploying one or more "micro" agents per page
 
+> **ℹ️ Note:**  
+> This loader strategy is slated to be deprecated and eventually removed in a future product release. For better memory usage, build size impacts, entity management and relationships -- a new strategy focused around using a single centralized browser agent instance is actively being worked on. Reach out by email to browser-agent@newrelic.com for more information or if you would like to participate in a limited preview when the feature is ready for early adoption.
+
 The examples above use the `Agent` class at their core, which is ideal for most cases as it will automatically detect page-level events across your web application.
 
 Using the `MicroAgent` class, it is possible to skip the "auto" instrumentation phases of the other loader types, and provide a *very small* agent designed for capturing data in a controlled manner via the API interfaces. The `MicroAgent` captures a distinct `PageView` event when instantiated, and additional `PageAction` and `JavaScriptError` events may be captured by calling the `noticeError` and `addPageAction` methods.
@@ -386,9 +389,19 @@ A lot of new frameworks support the concept of server-side rendering the pages o
 
 ## Support
 
-New Relic hosts and moderates an online forum where customers can interact with New Relic employees as well as other customers to get help and share best practices. Like all official New Relic open source projects, there's a related Community topic in the New Relic Explorers Hub. You can find this project's topic/threads here:
+Should you need assistance with New Relic products, you are in good hands with several support channels.
 
-https://discuss.newrelic.com/c/full-stack-observability/browser
+If the issue has been confirmed as a bug or is a feature request, please file a GitHub issue.
+
+### Support Channels
+
+- [New Relic Documentation](https://docs.newrelic.com/docs/browser/browser-monitoring/getting-started/introduction-browser-monitoring/): Comprehensive guidance for using our platform
+
+- [New Relic Community](https://support.newrelic.com/s/category/Category__c/Default): The best place to engage in troubleshooting questions
+
+- [New Relic University](https://learn.newrelic.com/): A range of online training for New Relic users of every level
+
+- [New Relic Technical Support](https://support.newrelic.com/s/#): 24/7/365 ticketed support. Read more about our [Technical Support Offerings](https://docs.newrelic.com/docs/licenses/license-information/general-usage-licenses/global-technical-support-offerings/).
 
 ## Contribute
 

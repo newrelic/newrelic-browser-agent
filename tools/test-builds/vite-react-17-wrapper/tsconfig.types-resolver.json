@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "isolatedModules": true,
+    "outDir": "./node_module/.type-check"
+  },
+  "include": [
+    "./types-resolver/**/*.ts"
+  ]
+}

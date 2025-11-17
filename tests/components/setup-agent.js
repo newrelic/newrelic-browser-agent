@@ -5,8 +5,6 @@ import { ee } from '../../src/common/event-emitter/contextual-ee'
 import { TimeKeeper } from '../../src/common/timing/time-keeper'
 import { setupAgentSession } from '../../src/features/utils/agent-session'
 import { Harvester } from '../../src/common/harvest/harvester'
-import { EntityManager } from '../../src/features/utils/entity-manager'
-import { EventStoreManager } from '../../src/features/utils/event-store-manager'
 import { EventAggregator } from '../../src/common/aggregate/event-aggregator'
 
 const entityGuid = faker.string.uuid()
@@ -38,16 +36,13 @@ export function setupAgent ({ agentOverrides = {}, info = {}, init = {}, loaderC
   if (!loaderConfig.agentID) loaderConfig.agentID = info.applicationID
   if (!loaderConfig.agentID) loaderConfig.licenseKey = info.licenseKey
   if (!runtime.appMetadata) runtime.appMetadata = { agents: [{ entityGuid }] }
-  if (!runtime.entityManager) runtime.entityManager = new EntityManager({ info, ee })
-
-  runtime.entityManager.setDefaultEntity({ entityGuid, ...info })
-  runtime.entityManager.set(entityGuid, { entityGuid, ...info })
 
   const fakeAgent = {
     agentIdentifier,
     ee: eventEmitter,
     ...agentOverrides
   }
+  fakeAgent.beacons = setBeacons(info, init)
   setNREUMInitializedAgent(agentIdentifier, fakeAgent)
   configure(
     fakeAgent,
@@ -63,7 +58,9 @@ export function setupAgent ({ agentOverrides = {}, info = {}, init = {}, loaderC
   }
   fakeAgent.features = {}
   if (!fakeAgent.runtime.harvester) fakeAgent.runtime.harvester = new Harvester(fakeAgent)
-  fakeAgent.sharedAggregator = new EventStoreManager(fakeAgent, EventAggregator, fakeAgent.runtime.appMetadata.agents[0].entityGuid, 'shared_aggregator')
+  fakeAgent.sharedAggregator = new EventAggregator()
+
+  jest.spyOn(fakeAgent.runtime.harvester, 'triggerHarvestFor')
 
   return fakeAgent
 }
@@ -72,16 +69,13 @@ export function resetAgent (agentIdentifier) {
   resetAgentEventEmitter(agentIdentifier)
   resetAggregator(agentIdentifier)
   resetSession(agentIdentifier)
-  resetEntityManager(agentIdentifier)
   getNREUMInitializedAgent(agentIdentifier).runtime.isRecording = false
 }
 
-function resetEntityManager (agentIdentifier) {
-  const agent = getNREUMInitializedAgent(agentIdentifier)
-  const entityManager = agent.runtime.entityManager
-  entityManager.clear()
-  entityManager.setDefaultEntity({ entityGuid, ...agent.info })
-  entityManager.set(entityGuid, { entityGuid, ...agent.info })
+function setBeacons (info, init) {
+  const beacons = new Set([info.beacon, info.errorBeacon])
+  if (init.proxy?.beacon) beacons.add(init.proxy.beacon)
+  return [...beacons]
 }
 
 function resetAgentEventEmitter (agentIdentifier) {

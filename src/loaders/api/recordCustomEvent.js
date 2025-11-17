@@ -9,7 +9,9 @@ import { prefix, RECORD_CUSTOM_EVENT } from './constants'
 import { setupAPI } from './sharedHandlers'
 
 export function setupRecordCustomEventAPI (agent) {
-  setupAPI(RECORD_CUSTOM_EVENT, function () {
-    handle(prefix + RECORD_CUSTOM_EVENT, [now(), ...arguments], undefined, FEATURE_NAMES.genericEvents, agent.ee)
-  }, agent)
+  setupAPI(RECORD_CUSTOM_EVENT, (eventType, attributes) => recordCustomEvent(eventType, attributes, agent), agent)
+}
+
+export function recordCustomEvent (eventType, attributes = {}, agentRef, target, timestamp = now()) {
+  handle(prefix + RECORD_CUSTOM_EVENT, [timestamp, eventType, attributes, target], undefined, FEATURE_NAMES.genericEvents, agentRef.ee)
 }

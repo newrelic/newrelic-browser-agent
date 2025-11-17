@@ -10,15 +10,12 @@ import { drain } from '../../common/drain/drain'
 import { activatedFeatures } from '../../common/util/feature-flags'
 import { Obfuscator } from '../../common/util/obfuscate'
 import { FEATURE_NAMES } from '../../loaders/features/features'
-import { EventStoreManager } from './event-store-manager'
 import { Harvester } from '../../common/harvest/harvester'
-import { warn } from '../../common/util/console'
-import { EntityManager } from './entity-manager'
 import { EventBuffer } from './event-buffer'
 import { handle } from '../../common/event-emitter/handle'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../metrics/constants'
 import { EventAggregator } from '../../common/aggregate/event-aggregator'
-import { IDEAL_PAYLOAD_SIZE } from '../../common/constants/agent-constants'
+import { MAX_PAYLOAD_SIZE, IDEAL_PAYLOAD_SIZE, SUPPORTS_REGISTERED_ENTITIES } from '../../common/constants/agent-constants'
 
 export class AggregateBase extends FeatureBase {
   /**
@@ -41,16 +38,9 @@ export class AggregateBase extends FeatureBase {
 
     this.harvestOpts = {} // features aggregate classes can define custom opts for when their harvest is called
 
-    const agentEntityGuid = this.agentRef?.runtime?.appMetadata?.agents?.[0]?.entityGuid
-    this.#setupEventStore(agentEntityGuid)
-    if (!agentEntityGuid) {
-      /** wait for the entity guid from the rum response and use to it to further configure things to set the default entity to share an indexed entity with entityGuid */
-      this.ee.on('entity-added', entity => {
-        // not all event managers have this fn, like ST and SR
-        // this allows the lookup to work for the default and an entityGuid without creating two separate buffers
-        this.events?.setEventStore?.(entity.entityGuid)
-      })
-    }
+    this.#setupEventStore()
+
+    this.waitForDrain()
   }
 
   /**
@@ -58,7 +48,7 @@ export class AggregateBase extends FeatureBase {
    * @param {string} entityGuid
    * @returns {void}
    */
-  #setupEventStore (entityGuid) {
+  #setupEventStore () {
     if (this.events) return
     switch (this.featureName) {
     // SessionReplay has its own storage mechanisms.
@@ -67,15 +57,38 @@ export class AggregateBase extends FeatureBase {
         // Jserror and Metric features uses a singleton EventAggregator instead of a regular EventBuffer.
       case FEATURE_NAMES.jserrors:
       case FEATURE_NAMES.metrics:
-        this.events = this.agentRef.sharedAggregator ??= new EventStoreManager(this.agentRef, EventAggregator, entityGuid, { featureName: 'shared_aggregator' })
+        this.events = this.agentRef.sharedAggregator ??= new EventAggregator()
         break
-        /** All other features get EventBuffer in the ESM by default. Note: PVE is included here, but event buffer will always be empty so future harvests will still not happen by interval or EOL.
+        /** All other features get EventBuffer by default. Note: PVE is included here, but event buffer will always be empty so future harvests will still not happen by interval or EOL.
     This was necessary to prevent race cond. issues where the event buffer was checked before the feature could "block" itself.
     Its easier to just keep an empty event buffer in place. */
       default:
-        this.events = new EventStoreManager(this.agentRef, EventBuffer, entityGuid, this)
+        this.events = new EventBuffer(MAX_PAYLOAD_SIZE, this)
         break
     }
+  }
+
+  /** @type {Boolean} indicates if the feature supports registered entities and the harvest requirements therein. Also read by getter "harvestEndpointVersion". Controlled by feature flag in pre-release phase. */
+  get supportsRegisteredEntities () {
+    return this.featureName in SUPPORTS_REGISTERED_ENTITIES && (SUPPORTS_REGISTERED_ENTITIES[this.featureName] || this.agentRef.init.feature_flags.includes('register.' + this.featureName))
+  }
+
+  /**
+   * the endpoint version the feature uses during harvests
+   * @type {number}
+   * @returns {boolean}
+   */
+  get harvestEndpointVersion () {
+    return (this.supportsRegisteredEntities && !!this.agentRef.runtime.registeredEntities.length) ? 2 : 1
+  }
+
+  waitForDrain () {
+    /** emitted when the feature successfully drains */
+    this.ee.on('drain-' + this.featureName, () => {
+      /** make an immediate harvest for all the features to help with harvestability for pre-load dervied data on short lived pages */
+      if (!this.drained) setTimeout(() => this.agentRef.runtime.harvester.triggerHarvestFor(this), 1)
+      this.drained = true
+    })
   }
 
   /**
@@ -125,7 +138,6 @@ export class AggregateBase extends FeatureBase {
    */
   drain () {
     drain(this.agentIdentifier, this.featureName)
-    this.drained = true
   }
 
   preHarvestChecks (opts) {
@@ -136,44 +148,39 @@ export class AggregateBase extends FeatureBase {
    * Return harvest payload. A "serializer" function can be defined on a derived class to format the payload.
    * @param {Boolean} shouldRetryOnFail - harvester flag to backup payload for retry later if harvest request fails; this should be moved to harvester logic
    * @param {object|undefined} opts - opts passed from the harvester to help form the payload
-   * @param {string} opts.targetEntityGuid - the entity guid of the target app
+   * @param {string} opts.target - the target app metadata
    * @returns {Array} Final payload tagged with their targeting browser app. The value of `payload` can be undefined if there are no pending events for an app. This should be a minimum length of 1.
    */
   makeHarvestPayload (shouldRetryOnFail = false, opts = {}) {
-    if (!this.events || this.events.isEmpty(this.harvestOpts, opts.targetEntityGuid)) return
+    if (!this.events || this.events.isEmpty(this.harvestOpts)) return
     // Other conditions and things to do when preparing harvest that is required.
     if (this.preHarvestChecks && !this.preHarvestChecks(opts)) return
 
-    if (shouldRetryOnFail) this.events.save(this.harvestOpts, opts.targetEntityGuid)
-    const returnedDataArr = this.events.get(this.harvestOpts, opts.targetEntityGuid)
-    if (!returnedDataArr.length) return warn(52)
-    this.events.clear(this.harvestOpts, opts.targetEntityGuid)
+    if (shouldRetryOnFail) this.events.save(this.harvestOpts)
+    const data = this.events.get(this.harvestOpts)
+    if (!data) return
+    this.events.clear(this.harvestOpts)
 
-    return returnedDataArr.map(({ targetApp, data }) => {
-      // A serializer or formatter assists in creating the payload `body` from stored events on harvest when defined by derived feature class.
-      const body = this.serializer ? this.serializer(data, targetApp?.entityGuid) : data
-      const payload = {
-        body
-      }
-      // Constructs the payload `qs` for relevant features on harvest.
-      if (this.queryStringsBuilder) payload.qs = this.queryStringsBuilder(data, targetApp?.entityGuid)
-
-      return { targetApp, payload }
-    })
+    // A serializer or formatter assists in creating the payload `body` from stored events on harvest when defined by derived feature class.
+    const body = this.serializer ? this.serializer(data) : data
+    const payload = {
+      body
+    }
+    // Constructs the payload `qs` for relevant features on harvest.
+    if (this.queryStringsBuilder) payload.qs = this.queryStringsBuilder(data)
+    return payload
   }
 
   /**
    * Cleanup task after a harvest.
    * @param {object} result - the cbResult object from the harvester's send method
-   * @param {object=} result.targetApp - the target app object that was used to point the harvest to the correct app
-   * @param {string=} result.targetApp.entityGuid - the entity guid of the target app
    * @param {boolean=} result.sent - whether the harvest was sent successfully
    * @param {boolean=} result.retry - whether the harvest should be retried
    */
   postHarvestCleanup (result = {}) {
     this.isRetrying = result.sent && result.retry
-    if (this.isRetrying) this.events.reloadSave(this.harvestOpts, result.targetApp?.entityGuid)
-    this.events.clearSave(this.harvestOpts, result.targetApp?.entityGuid)
+    if (this.isRetrying) this.events.reloadSave(this.harvestOpts)
+    this.events.clearSave(this.harvestOpts)
   }
 
   /**
@@ -211,8 +218,6 @@ export class AggregateBase extends FeatureBase {
   doOnceForAllAggregate (agentRef) {
     if (!agentRef.runtime.obfuscator) agentRef.runtime.obfuscator = new Obfuscator(agentRef)
     this.obfuscator = agentRef.runtime.obfuscator
-
-    if (!agentRef.runtime.entityManager) agentRef.runtime.entityManager = new EntityManager(this.agentRef)
 
     if (!agentRef.runtime.harvester) agentRef.runtime.harvester = new Harvester(agentRef)
   }

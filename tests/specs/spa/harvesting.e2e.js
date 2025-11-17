@@ -2,7 +2,7 @@ import { checkSpa } from '../../util/basic-checks'
 import { testInteractionEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
 import { JSONPath } from 'jsonpath-plus'
 
-describe.withoutCoverage()('spa harvesting', () => {
+describe('spa harvesting', () => {
   let interactionsCapture
 
   beforeEach(async () => {

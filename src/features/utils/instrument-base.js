@@ -18,6 +18,8 @@ import { FEATURE_NAMES } from '../../loaders/features/features'
 import { hasReplayPrerequisite } from '../session_replay/shared/utils'
 import { canEnableSessionTracking } from './feature-gates'
 import { single } from '../../common/util/invoke'
+import { SESSION_ERROR } from '../../common/constants/agent-constants'
+import { handle } from '../../common/event-emitter/handle'
 
 /**
  * Base class for instrumenting a feature.
@@ -32,6 +34,8 @@ export class InstrumentBase extends FeatureBase {
   constructor (agentRef, featureName) {
     super(agentRef.agentIdentifier, featureName)
 
+    this.agentRef = agentRef
+
     /** @type {Function | undefined} This should be set by any derived Instrument class if it has things to do when feature fails or is killed. */
     this.abortHandler = undefined
 
@@ -45,7 +49,10 @@ export class InstrumentBase extends FeatureBase {
      * @type {Promise} Assigned immediately after @see importAggregator runs. Serves as a signal for when the inner async fn finishes execution. Useful for features to await
      * one another if there are inter-features dependencies.
     */
-    this.onAggregateImported = undefined
+    this.loadedSuccessfully = undefined
+    this.onAggregateImported = new Promise(resolve => {
+      this.loadedSuccessfully = resolve
+    })
 
     /**
      * used in conjunction with newrelic.start() to defer harvesting in features
@@ -74,15 +81,10 @@ export class InstrumentBase extends FeatureBase {
    * @param {Object} agentRef - reference to the base agent ancestor that this feature belongs to
    * @param {Function} fetchAggregator - a function that returns a promise that resolves to the aggregate module
    * @param {Object} [argsObjFromInstrument] - any values or references to pass down to aggregate
-   * @returns void
+   * @returns
    */
   importAggregator (agentRef, fetchAggregator, argsObjFromInstrument = {}) {
     if (this.featAggregate) return
-
-    let loadedSuccessfully
-    this.onAggregateImported = new Promise(resolve => {
-      loadedSuccessfully = resolve
-    })
 
     const importLater = async () => {
       // wait for the deferred promise to resolve before proceeding
@@ -99,7 +101,7 @@ export class InstrumentBase extends FeatureBase {
       } catch (e) {
         warn(20, e)
         this.ee.emit('internal-error', [e])
-        if (this.featureName === FEATURE_NAMES.sessionReplay) this.abortHandler?.() // SR should stop recording if session DNE
+        handle(SESSION_ERROR, [e], undefined, this.featureName, this.ee)
       }
 
       /**
@@ -109,20 +111,20 @@ export class InstrumentBase extends FeatureBase {
       try {
         if (!this.#shouldImportAgg(this.featureName, session, agentRef.init)) {
           drain(this.agentIdentifier, this.featureName)
-          loadedSuccessfully(false) // aggregate module isn't loaded at all
+          this.loadedSuccessfully(false) // aggregate module isn't loaded at all
           return
         }
         const { Aggregate } = await fetchAggregator()
         this.featAggregate = new Aggregate(agentRef, argsObjFromInstrument)
 
         agentRef.runtime.harvester.initializedAggregates.push(this.featAggregate) // "subscribe" the feature to future harvest intervals (PVE will start the timer)
-        loadedSuccessfully(true)
+        this.loadedSuccessfully(true)
       } catch (e) {
         warn(34, e)
         this.abortHandler?.() // undo any important alterations made to the page
         // not supported yet but nice to do: "abort" this agent's EE for this feature specifically
         drain(this.agentIdentifier, this.featureName, true)
-        loadedSuccessfully(false)
+        this.loadedSuccessfully(false)
         if (this.ee) this.ee.abort()
       }
     }
@@ -140,6 +142,7 @@ export class InstrumentBase extends FeatureBase {
  * @returns
  */
   #shouldImportAgg (featureName, session, agentInit) {
+    if (this.blocked) return false
     switch (featureName) {
       case FEATURE_NAMES.sessionReplay: // the session manager must be initialized successfully for Replay & Trace features
         return hasReplayPrerequisite(agentInit) && !!session

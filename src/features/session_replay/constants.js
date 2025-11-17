@@ -7,11 +7,7 @@ import { FEATURE_NAMES } from '../../loaders/features/features'
 
 export const FEATURE_NAME = FEATURE_NAMES.sessionReplay
 
-export const SR_EVENT_EMITTER_TYPES = {
-  RECORD: 'recordReplay',
-  PAUSE: 'pauseReplay',
-  ERROR_DURING_REPLAY: 'errorDuringReplay'
-}
+export const ERROR_DURING_REPLAY = 'errorDuringReplay'
 
 export const AVG_COMPRESSION = 0.12
 export const RRWEB_EVENT_TYPES = {
@@ -54,5 +50,9 @@ export const ABORT_REASONS = {
 export const QUERY_PARAM_PADDING = 5000
 
 export const TRIGGERS = {
-  API: 'api'
+  API: 'api',
+  RESUME: 'resume',
+  SWITCH_TO_FULL: 'switchToFull',
+  INITIALIZE: 'initialize',
+  PRELOAD: 'preload'
 }

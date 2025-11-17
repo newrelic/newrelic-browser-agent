@@ -32,7 +32,8 @@ const model = {
   loggingMode: LOGGING_MODE.OFF,
   serverTimeDiff: null, // set by TimeKeeper; "undefined" value will not be stringified and stored but "null" will
   custom: {},
-  numOfResets: 0
+  numOfResets: 0,
+  consent: false // set by consent() API call
 }
 
 export class SessionEntity {
@@ -77,7 +78,10 @@ export class SessionEntity {
 
   setup ({ value = generateRandomHexString(16), expiresMs = DEFAULT_EXPIRES_MS, inactiveMs = DEFAULT_INACTIVE_MS, numOfResets = 0 }) {
     /** Ensure that certain properties are preserved across a reset if already set */
-    const persistentAttributes = { serverTimeDiff: this.state.serverTimeDiff || model.serverTimeDiff }
+    const persistentAttributes = {
+      serverTimeDiff: this.state.serverTimeDiff || model.serverTimeDiff,
+      consent: this.state.consent || model.consent
+    }
     this.state = {}
     this.sync({ ...model, ...persistentAttributes })
 

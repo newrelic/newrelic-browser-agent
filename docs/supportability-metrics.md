@@ -64,6 +64,14 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 <!--- GenericEvents harvest had too many nodes and sent early --->
 * GenericEvents/Harvest/Max/Seen
 
+### User Actions
+<!-- A user action has been detected as a rage click --->
+* UserAction/RageClick/Seen
+<!-- A user action has been detected as a dead click --->
+* UserAction/DeadClick/Seen
+<!-- A user action has been detected as an error click --->
+* UserAction/ErrorClick/Seen
+
 ### Session
 <!--- Session has ended due to max time limit reached --->
 * Session/Expired/Seen
@@ -201,6 +209,8 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 * Framework/Qwik/Detected
 <!--- Electron was Detected --->
 * Framework/Electron/Detected
+<!--- Flutter was Detected --->
+* Framework/Flutter/Detected
 
 ### Configuration
 <!--- init.privacy.cookies_Enabled was Disabled --->
@@ -391,3 +401,57 @@ EventBuffer/soft_navigations/Dropped/Bytes
 * soft_navigations/Harvest/Early/Seen
 <!--- Logging harvest was sent before the interval elapsed (bytes captured) --->
 * spa/Harvest/Early/Seen
+
+### Audit
+<!--- Page view event had hasReplay true but no session replay harvest (false positive) --->
+* audit/page_view/hasReplay/false/positive
+<!--- Page view event had hasReplay false but a session replay harvest occurred (false negative) --->
+* audit/page_view/hasReplay/false/negative
+<!--- Page view event had hasReplay true and a session replay harvest occurred (true positive) --->
+* audit/page_view/hasReplay/true/positive
+<!--- Page view event had hasReplay false and no session replay harvest occurred (true negative) --->
+* audit/page_view/hasReplay/true/negative
+
+<!--- Page view event had hasTrace true but no session trace harvest (false positive) --->
+* audit/page_view/hasTrace/false/positive
+<!--- Page view event had hasTrace false but a session trace harvest occurred (false negative) --->
+* audit/page_view/hasTrace/false/negative
+<!--- Page view event had hasTrace true and a session trace harvest occurred (true positive) --->
+* audit/page_view/hasTrace/true/positive
+<!--- Page view event had hasTrace false and no session trace harvest occurred (true negative) --->
+* audit/page_view/hasTrace/true/negative
+
+<!--- Session replay had hasError true but no js error harvest occurred (false positive) --->
+* audit/session_replay/hasError/false/positive
+<!--- Session replay had hasError false but a js error harvest occurred (false negative) --->
+* audit/session_replay/hasError/false/negative
+<!--- Session replay had hasError true and a js error harvest occurred (true positive) --->
+* audit/session_replay/hasError/true/positive
+<!--- Session replay had hasError false and no js error harvest occurred (true negative) --->
+* audit/session_replay/hasError/true/negative
+
+### Session Replay
+<!-- node type 1 = Preload -->
+* rrweb/node/1/bytes
+<!-- node type 2 = Full snapshot -->
+* rrweb/node/2/bytes
+<!-- node type 3 = Incremental snapshot -->
+* rrweb/node/3/bytes
+<!-- node type 4 = Meta -->
+* rrweb/node/4/bytes
+
+### Harvester
+<!-- Harvester retried a harvest -->
+* 'Harvester/Retry/Attempted/<feature_name>'
+<!-- Retry failed codes (dynamic) -->
+* 'Harvester/Retry/Failed/<code>'
+<!-- Retry succeeded codes (dynamic) -->
+* 'Harvester/Retry/Succeeded/<code>'
+  
+### Browser Connect Response Metrics
+<!--- HTTP status code of failed browser connect response --->
+* 'Browser/Supportability/BCS/Error/<code>'
+<!--- Total dropped payload size of failed browser connect response --->
+* Browser/Supportability/BCS/Error/Dropped/Bytes
+<!--- Response time of failed browser connect response --->
+* Browser/Supportability/BCS/Error/Duration/Ms

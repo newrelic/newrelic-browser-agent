@@ -9,7 +9,7 @@ import { windowAddEventListener } from '../../../common/event-listener/event-lis
 import { debounce } from '../../../common/util/invoke'
 import { wrapHistory } from '../../../common/wrap/wrap-history'
 import { InstrumentBase } from '../../utils/instrument-base'
-import { FEATURE_NAME, INTERACTION_TRIGGERS } from '../constants'
+import { FEATURE_NAME, INTERACTION_TRIGGERS, POPSTATE_TRIGGER } from '../constants'
 import { now } from '../../../common/timing/now'
 import { setupInteractionAPI } from '../../../loaders/api/interaction'
 
@@ -31,22 +31,23 @@ export class Instrument extends InstrumentBase {
     if (!isBrowserScope || !gosNREUMOriginals().o.MO) return // soft navigations is not supported outside web env or browsers without the mutation observer API
 
     const historyEE = wrapHistory(this.ee)
+    try {
+      this.removeOnAbort = new AbortController()
+    } catch (e) {}
 
     INTERACTION_TRIGGERS.forEach((trigger) => {
       windowAddEventListener(trigger, (evt) => {
         processUserInteraction(evt)
-      }, true)
+      }, true, this.removeOnAbort?.signal)
     })
 
     const trackURLChange = () => handle('newURL', [now(), '' + window.location], undefined, this.featureName, this.ee)
     historyEE.on('pushState-end', trackURLChange)
     historyEE.on('replaceState-end', trackURLChange)
-
-    try {
-      this.removeOnAbort = new AbortController()
-    } catch (e) {}
-    const trackURLChangeEvent = (evt) => handle('newURL', [evt.timeStamp, '' + window.location], undefined, this.featureName, this.ee)
-    windowAddEventListener('popstate', trackURLChangeEvent, true, this.removeOnAbort?.signal)
+    windowAddEventListener(POPSTATE_TRIGGER, (evt) => { // popstate is unique in that it serves as BOTH a UI event and a notification of URL change
+      processUserInteraction(evt)
+      handle('newURL', [evt.timeStamp, '' + window.location], undefined, this.featureName, this.ee)
+    }, true, this.removeOnAbort?.signal)
 
     let oncePerFrame = false // attempt to reduce dom noice since the observer runs very frequently with below options
     const domObserver = new (gosNREUMOriginals().o).MO((domChanges, observer) => {

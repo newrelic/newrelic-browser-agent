@@ -11,13 +11,19 @@ describe('recorder', () => {
             stylesheets: true
           }
         },
-        runtime: {}
-      },
-      timeKeeper: {
-        correctAbsoluteTimestamp: jest.fn(x => x)
+        runtime: {
+          timeKeeper: {
+            correctAbsoluteTimestamp: jest.fn(x => x)
+          }
+        }
       },
       ee: {
-        emit: () => {}
+        emit: () => {},
+        buffer: () => {}
+      },
+      featAggregate: {
+        gzipper: jest.fn(),
+        u8: jest.fn()
       }
     })
 

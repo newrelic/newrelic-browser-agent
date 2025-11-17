@@ -2,11 +2,29 @@ import { Instrument as GenericEvents } from '../../../../src/features/generic_ev
 import * as handleModule from '../../../../src/common/event-emitter/handle'
 import { setupAgent } from '../../setup-agent'
 import { OBSERVED_EVENTS } from '../../../../src/features/generic_events/constants'
+import { FEATURE_NAMES } from '../../../../src/loaders/features/features'
 
 let mainAgent
+let genericEventsInstrument
+let origXhr
 
 beforeAll(() => {
-  mainAgent = setupAgent()
+  origXhr = global.XMLHttpRequest
+  global.XMLHttpRequest = MockXMLHttpRequest
+
+  mainAgent = setupAgent({
+    info: {
+      beacon: 'some-agent-endpoint.com:1234'
+    },
+    init: {
+      feature_flags: ['user_frustrations']
+    }
+  })
+  genericEventsInstrument = new GenericEvents(mainAgent)
+})
+
+afterAll(() => {
+  global.XMLHttpRequest = origXhr
 })
 
 describe('generic events sub-features', () => {
@@ -85,3 +103,116 @@ describe('generic events sub-features', () => {
     })
   })
 })
+
+describe('User frustrations - fetch', () => {
+  let eeEmitSpy
+  let handleSpy
+  beforeEach(() => {
+    handleSpy = jest.spyOn(handleModule, 'handle')
+    eeEmitSpy = jest.spyOn(genericEventsInstrument.ee, 'emit')
+  })
+
+  afterEach(() => {
+    jest.clearAllMocks()
+    jest.restoreAllMocks()
+  })
+
+  test('non-agent calls emit "uaXhr" events', async () => {
+    await fetch('data:,dataUrl')
+
+    expect(handleSpy).toHaveBeenCalledWith('uaXhr', [], undefined, FEATURE_NAMES.genericEvents, expect.any(Object))
+    expect(eeEmitSpy).toHaveBeenCalledWith('uaXhr', [], undefined)
+  })
+  test('agent xhr/fetch calls do not emit "uaXhr" events', async () => {
+    await fetch('https://some-agent-endpoint.com:1234')
+
+    expect(handleSpy).not.toHaveBeenCalledWith('uaXhr', [], undefined, FEATURE_NAMES.genericEvents, expect.any(Object))
+    expect(eeEmitSpy).not.toHaveBeenCalledWith('uaXhr', [], undefined)
+  })
+})
+
+describe('User frustrations - XMLHttpRequest', () => {
+  let eeEmitSpy
+  let handleSpy
+  beforeEach(() => {
+    handleSpy = jest.spyOn(handleModule, 'handle')
+    eeEmitSpy = jest.spyOn(genericEventsInstrument.ee, 'emit')
+  })
+
+  afterEach(() => {
+    jest.clearAllMocks()
+    jest.restoreAllMocks()
+  })
+
+  test('non-agent calls emit "uaXhr" events', () => {
+    const xhr = new XMLHttpRequest()
+    xhr.open('GET', 'data:,dataUrl')
+    xhr.send()
+
+    expect(handleSpy).toHaveBeenCalledWith('uaXhr', [], undefined, FEATURE_NAMES.genericEvents, expect.any(Object))
+    expect(eeEmitSpy).toHaveBeenCalledWith('uaXhr', [], undefined)
+  })
+  test('agent xhr/fetch calls do not emit "uaXhr" events', () => {
+    const xhr = new XMLHttpRequest()
+    xhr.open('GET', 'https://some-agent-endpoint.com:1234')
+    xhr.send()
+
+    expect(handleSpy).not.toHaveBeenCalledWith('uaXhr', [], undefined, FEATURE_NAMES.genericEvents, expect.any(Object))
+    expect(eeEmitSpy).not.toHaveBeenCalledWith('uaXhr', [], undefined)
+  })
+
+  test('urls are not mixed between interlaced xhr open and send calls', () => {
+    const xhr1 = new XMLHttpRequest()
+    xhr1.open('GET', 'https://some-agent-endpoint.com:1234')
+    const xhr2 = new XMLHttpRequest()
+    xhr2.open('GET', 'data:,dataUrl')
+
+    // ensure agent call's url is not overridden by the second call
+    xhr1.send()
+    expect(handleSpy).not.toHaveBeenCalledWith('uaXhr', [], undefined, FEATURE_NAMES.genericEvents, expect.any(Object))
+    expect(eeEmitSpy).not.toHaveBeenCalledWith('uaXhr', [], undefined)
+
+    xhr2.send()
+    expect(handleSpy).toHaveBeenCalledWith('uaXhr', [], undefined, FEATURE_NAMES.genericEvents, expect.any(Object))
+    expect(eeEmitSpy).toHaveBeenCalledWith('uaXhr', [], undefined)
+  })
+})
+
+// JSDom does not provide responseURL so we mock XHR to add it
+class MockXMLHttpRequest {
+  constructor () {
+    this.readyState = 0
+    this.status = 0
+    this.responseText = ''
+    this.responseURL = ''
+    this._url = ''
+  }
+
+  onreadystatechange (url) {
+    if (this.readyState === 1) {
+      this._url = url
+    } else if (this.readyState === 2) {
+      this.responseURL = this._url
+    }
+    if (this._onreadystatechange) this._onreadystatechange()
+  }
+
+  open (method, url) {
+    this.method = method
+    this.readyState = 1
+    this.onreadystatechange(url)
+  }
+
+  send () {
+    this.readyState = 2
+    this.responseText = 'Mock response'
+    this.status = 200
+    this.onreadystatechange()
+  }
+
+  addEventListener = (event, handler) => {
+    if (event === 'readystatechange' && typeof handler === 'function') {
+      this._onreadystatechange = handler
+    }
+  }
+}

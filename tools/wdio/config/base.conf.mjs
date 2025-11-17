@@ -36,8 +36,7 @@ export default function config () {
       path.resolve(__dirname, '../plugins/mocha-globals/index.mjs'),
       path.resolve(__dirname, '../plugins/browser-matcher.mjs'),
       path.resolve(__dirname, '../plugins/custom-commands.mjs'),
-      [path.resolve(__dirname, '../plugins/testing-server/index.mjs'), args],
-      [path.resolve(__dirname, '../plugins/istanbul.mjs'), args]
+      [path.resolve(__dirname, '../plugins/testing-server/index.mjs'), args]
     ],
     reporters: [['spec', { onlyFailures: true }]],
     specFileRetries: args.retry ? 1 : 0,

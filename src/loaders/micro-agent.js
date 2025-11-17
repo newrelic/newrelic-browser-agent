@@ -34,10 +34,13 @@ const nonAutoFeatures = [
 ]
 
 /**
- * @deprecated This feature has been deprecated and will be removed in a future release. A future product centralizing around a single agent instance will be released as a replacement, at which time this loader will be removed.
- * --- A minimal agent class designed to only respond to manual user input. As such, this class does not
+ * A minimal agent class designed to only respond to manual user input. As such, this class does not
  * automatically instrument. Instead, each MicroAgent instance will lazy load the required features and can support loading multiple instances on one page.
  * Out of the box, it can manually handle and report Page View, Page Action, and Error events.
+ *
+ * @note This loader strategy is slated to be deprecated and eventually removed in a future product release. For better memory usage, build size impacts, entity management and relationships -- a new strategy focused around using a single centralized browser agent instance is actively being worked on. Reach out by email to browser-agent@newrelic.com for more information or if you would like to participate in a limited preview when the feature is ready for early adoption.
+ *
+ * @see {@link https://www.npmjs.com/package/@newrelic/browser-agent#deploying-one-or-more-micro-agents-per-page} for more information in the documentation.
  */
 export class MicroAgent extends MicroAgentBase {
   /**
@@ -96,7 +99,23 @@ export class MicroAgent extends MicroAgentBase {
           so as to avoid the race condition of things like session and sharedAggregator not being ready by features that uses them right away. */
           nonAutoFeatures.forEach(f => {
             if (enabledFeatures[f] && featureNames.includes(f)) {
-              import(`../features/${f}/aggregate`).then(({ Aggregate }) => {
+              let lazyImport
+              /** Define these imports with static strings to not break tools like roll-up */
+              switch (f) {
+                case 'jserrors':
+                  lazyImport = import('../features/jserrors/aggregate')
+                  break
+                case 'generic_events':
+                  lazyImport = import('../features/generic_events/aggregate')
+                  break
+                case 'metrics':
+                  lazyImport = import('../features/metrics/aggregate')
+                  break
+                case 'logging':
+                  lazyImport = import('../features/logging/aggregate')
+                  break
+              }
+              lazyImport.then(({ Aggregate }) => {
                 this.features[f] = new Aggregate(this)
                 this.runtime.harvester.initializedAggregates.push(this.features[f]) // so that harvester will poll this feature agg on interval
               }).catch(err => warn(25, err))

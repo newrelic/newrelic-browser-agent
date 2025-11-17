@@ -28,6 +28,7 @@ const FRAMEWORKS = {
   JQUERY: 'Jquery',
   MOOTOOLS: 'MooTools',
   QWIK: 'Qwik',
+  FLUTTER: 'Flutter',
 
   ELECTRON: 'Electron'
 }
@@ -71,6 +72,7 @@ export function getFrameworks () {
     if (Object.prototype.hasOwnProperty.call(window, 'jQuery')) frameworks.push(FRAMEWORKS.JQUERY)
     if (Object.prototype.hasOwnProperty.call(window, 'MooTools')) frameworks.push(FRAMEWORKS.MOOTOOLS)
     if (Object.prototype.hasOwnProperty.call(window, 'qwikevents')) frameworks.push(FRAMEWORKS.QWIK)
+    if (Object.hasOwn(window, '_flutter')) frameworks.push(FRAMEWORKS.FLUTTER)
 
     if (detectElectron()) frameworks.push(FRAMEWORKS.ELECTRON)
   } catch (err) {

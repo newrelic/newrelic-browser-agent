@@ -24,7 +24,6 @@ export const BUILD_ENV = process.env.BUILD_ENV
  */
 export const DIST_METHOD = 'CDN'
 
-/**
- * Exposes the lib version of rrweb
- */
+export const RRWEB_PACKAGE_NAME = '@newrelic/rrweb'
+// Babel will inline this with the rrweb (fork) version on CDN builds.
 export const RRWEB_VERSION = process.env.RRWEB_VERSION

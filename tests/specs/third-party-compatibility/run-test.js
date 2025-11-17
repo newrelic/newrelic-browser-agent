@@ -38,7 +38,7 @@ export default async function runTest ({
   const [rumHarvests, tracesHarvests, eventsHarvests, ajaxMetricsHarvests] = await Promise.all([
     rumCapture.waitForResult({ totalCount: 1 }),
     tracesCapture.waitForResult({ totalCount: 1 }),
-    eventsCapture.waitForResult({ totalCount: 1 }),
+    eventsCapture.waitForResult({ totalCount: 2 }),
     ajaxMetricsCapture.waitForResult({ totalCount: 1 }),
     browser.url(url)
       .then(() => browser.waitForAgentLoad())
@@ -52,8 +52,9 @@ export default async function runTest ({
   expect(tracesHarvests[0].request.body.length).toBeGreaterThan(0)
 
   expect(Array.isArray(eventsHarvests[0].request.body)).toEqual(true)
-  expect(eventsHarvests[0].request.body.length).toEqual(1)
-  expect(eventsHarvests[0].request.body[0].trigger).toEqual('initialPageLoad')
+  // eventHarvests[0] is the pvt values
+  expect(eventsHarvests[1].request.body.length).toEqual(1) // bIxn
+  expect(eventsHarvests[1].request.body[0].trigger).toEqual('initialPageLoad')
 
   expect(Array.isArray(ajaxMetricsHarvests[0].request.body.xhr)).toEqual(true)
   expect(Array.isArray(ajaxMetricsHarvests[0].request.body.err)).toEqual(false)
@@ -73,5 +74,4 @@ export default async function runTest ({
       ajaxMetricsHarvests
     }
   )
-  await browser.collectCoverage()
 }

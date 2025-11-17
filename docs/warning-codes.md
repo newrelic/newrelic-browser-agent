@@ -96,7 +96,7 @@
 ### 47
 `We tried to access a stylesheet's contents but failed due to browser security. For best results, ensure that cross-domain CSS assets are decorated with "crossorigin='anonymous'" attribution or are otherwise publicly accessible.`
 ### 48
-`Supplied an invalid API target. Must be an <Object> that contains licenseKey and applicationID properties.`
+`Supplied an invalid API target. Must be an <Object> that contains valid id and name properties.`
 ### 49
 `Supplied API target is missing an entityGuid. Some APIs may not behave correctly without a valid entityGuid (ex. logs).`
 ### 50
@@ -129,4 +129,5 @@
 `A single event was larger than the maximum allowed payload size`
 ### 64
 `Required globals have been mutated before being accessed by the browser agent. This can cause issues and should be avoided.`
-
+### 65
+`Consent API argument must be boolean or undefined`

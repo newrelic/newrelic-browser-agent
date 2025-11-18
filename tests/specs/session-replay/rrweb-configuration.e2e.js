@@ -410,8 +410,8 @@ async function checkSessionReplayInputMasking (sessionReplaysCapture, elements) 
     ]).then(done)
   }, elements, faker.string.uuid())
 
-  // Wait 10 seconds for additional harvests
-  const sessionReplaysHarvests = await sessionReplaysCapture.waitForResult({ timeout: 10000 })
+  // initial snapshot + 1 additional harvest
+  const sessionReplaysHarvests = await sessionReplaysCapture.waitForResult({ totalCount: 2, timeout: 10000 })
   expect(sessionReplaysHarvests.length).toBeGreaterThanOrEqual(1)
 
   const snapshotHarvest = sessionReplaysHarvests.find(x => decodeAttributes(x.request.query.attributes).hasSnapshot === true)

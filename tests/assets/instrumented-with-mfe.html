@@ -41,19 +41,21 @@
       div.textContent = "Added and removed lots of nodes across scripts";
       document.body.appendChild(div);
 
+      document.addEventListener('click', () => {
+        const script = document.createElement('script');
+        script.src = './js/mfe.js';
+        document.head.appendChild(script);
+      })
+
       // mainApi.markUnloaded();
       // mainApi.lifecycle('HIDDEN');
-      mainApi.deregister()
-      console.log(mainApi)
+      // console.log(mainApi)
 
       setTimeout(() => {
-        console.log("SIMULATED TIMINGS!");
-        Object.values(newrelic.initializedAgents)[0].runtime.registeredEntities.forEach((re) => {
-          console.log('MFE', re.metadata.target.id, re.metadata.timings);
-        });
+        // simulate taking ~3s to deregister
+        mainApi.deregister()
       }, 3000);
     </script>
 
-    <script src="./js/mfe.js"></script>
   </body>
 </html>

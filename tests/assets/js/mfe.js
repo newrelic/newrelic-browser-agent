@@ -1,11 +1,11 @@
-console.log('in mfe.js')
+// console.log('in mfe.js')
 
 const api = newrelic.register({
   id: 1,
   name: 'test'
 })
 
-console.log('mfe api', api)
+// console.log('mfe api', api)
 
 let iterations1 = 0
 while (iterations1++ < 5000) {
@@ -29,4 +29,4 @@ while (iterations1-- > 0) {
 
 // api.lifecycle('HIDDEN')
 api.deregister()
-console.log(api)
+// console.log(api)

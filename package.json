@@ -220,8 +220,8 @@
     "url": "https://github.com/newrelic/newrelic-browser-agent.git"
   },
   "dependencies": {
-    "fflate": "0.8.2",
     "@newrelic/rrweb": "1.0.1",
+    "fflate": "0.8.2",
     "web-vitals": "4.2.4"
   },
   "devDependencies": {

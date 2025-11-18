@@ -382,7 +382,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### @babel/core
 
-This product includes source derived from [@babel/core](https://github.com/babel/babel) ([v7.28.4](https://github.com/babel/babel/tree/v7.28.4)), distributed under the [MIT License](https://github.com/babel/babel/blob/v7.28.4/LICENSE):
+This product includes source derived from [@babel/core](https://github.com/babel/babel) ([v7.28.5](https://github.com/babel/babel/tree/v7.28.5)), distributed under the [MIT License](https://github.com/babel/babel/blob/v7.28.5/LICENSE):
 
 ```
 MIT License
@@ -412,7 +412,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### @babel/eslint-parser
 
-This product includes source derived from [@babel/eslint-parser](https://github.com/babel/babel) ([v7.28.4](https://github.com/babel/babel/tree/v7.28.4)), distributed under the [MIT License](https://github.com/babel/babel/blob/v7.28.4/LICENSE):
+This product includes source derived from [@babel/eslint-parser](https://github.com/babel/babel) ([v7.28.5](https://github.com/babel/babel/tree/v7.28.5)), distributed under the [MIT License](https://github.com/babel/babel/blob/v7.28.5/LICENSE):
 
 ```
 MIT License
@@ -502,7 +502,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### @babel/preset-env
 
-This product includes source derived from [@babel/preset-env](https://github.com/babel/babel) ([v7.28.3](https://github.com/babel/babel/tree/v7.28.3)), distributed under the [MIT License](https://github.com/babel/babel/blob/v7.28.3/LICENSE):
+This product includes source derived from [@babel/preset-env](https://github.com/babel/babel) ([v7.28.5](https://github.com/babel/babel/tree/v7.28.5)), distributed under the [MIT License](https://github.com/babel/babel/blob/v7.28.5/LICENSE):
 
 ```
 MIT License
@@ -2377,7 +2377,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ### wdio-lambdatest-service
 
-This product includes source derived from [wdio-lambdatest-service](https://github.com/LambdaTest/wdio-lambdatest-service) ([v4.0.0](https://github.com/LambdaTest/wdio-lambdatest-service/tree/v4.0.0)), distributed under the [MIT License](https://github.com/LambdaTest/wdio-lambdatest-service/blob/v4.0.0/LICENSE):
+This product includes source derived from [wdio-lambdatest-service](https://github.com/LambdaTest/wdio-lambdatest-service) ([v4.0.1](https://github.com/LambdaTest/wdio-lambdatest-service/tree/v4.0.1)), distributed under the [MIT License](https://github.com/LambdaTest/wdio-lambdatest-service/blob/v4.0.1/LICENSE):
 
 ```
                                  Apache License

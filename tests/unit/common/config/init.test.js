@@ -111,7 +111,6 @@ test('init props exist and return expected defaults', () => {
     },
     mask_text_class: 'nr-mask',
     mask_text_selector: '*',
-    optimize_recording: false,
     preload: false,
     sampling_rate: 10
   })

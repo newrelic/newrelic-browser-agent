@@ -348,32 +348,10 @@ describe('RRWeb Configuration', () => {
     })
   })
 
-  describe('optimize_recording', () => {
-    it('optimize_recording: false should continue to collect script nodes', async () => {
-      await browser.url(await browser.testHandle.assetURL('rrweb-record.html', srConfig({ session_replay: { optimize_recording: false } })))
+  describe('slimDOMOptions', () => {
+    it('should NOT collect script nodes by default', async () => {
+      await browser.url(await browser.testHandle.assetURL('rrweb-record.html'))
         .then(() => browser.waitForAgentLoad())
-
-      const srConf = await browser.execute(() => {
-        return NREUM.init.session_replay
-      })
-      expect(srConf.optimize_recording).toBe(false)
-
-      const sessionReplaysHarvests = await sessionReplaysCapture.waitForResult({ totalCount: 1 })
-      const snapshotHarvest = sessionReplaysHarvests.find(x => decodeAttributes(x.request.query.attributes).hasSnapshot === true)
-      expect(snapshotHarvest).toBeDefined()
-
-      const scriptNodes = JSONPath({ path: '$.request.body.[?(@.type===2 && @.tagName==="html")].childNodes.[?(@.tagName==="head")].childNodes.[?(@.tagName==="script")]', json: snapshotHarvest })
-      expect(scriptNodes.length).toBeGreaterThan(0)
-    })
-
-    it('optimize_recording: true should NOT collect script nodes', async () => {
-      await browser.url(await browser.testHandle.assetURL('rrweb-record.html', srConfig({ session_replay: { optimize_recording: true } })))
-        .then(() => browser.waitForAgentLoad())
-
-      const srConf = await browser.execute(() => {
-        return NREUM.init.session_replay
-      })
-      expect(srConf.optimize_recording).toBe(true)
 
       const sessionReplaysHarvests = await sessionReplaysCapture.waitForResult({ totalCount: 1 })
       const snapshotHarvest = sessionReplaysHarvests.find(x => decodeAttributes(x.request.query.attributes).hasSnapshot === true)

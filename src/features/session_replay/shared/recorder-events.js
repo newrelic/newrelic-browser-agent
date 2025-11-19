@@ -26,8 +26,8 @@ export class RecorderEvents {
     this.inlinedAllStylesheets = shouldInlineStylesheets
   }
 
-  add (event, evaluatedSize) {
-    this.#events.add(event, evaluatedSize)
+  add (event) {
+    this.#events.add(event)
   }
 
   get events () {

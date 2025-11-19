@@ -90,7 +90,9 @@ describe('payloads', () => {
       )),
       'test message',
       {
-        myAttributes: 1
+        myAttributes: 1,
+        appId: mainAgent.info.applicationID,
+        'entity.guid': mainAgent.runtime.appMetadata.agents[0].entityGuid
       },
       'error'
     )
@@ -146,23 +148,24 @@ describe('payloads', () => {
         mainAgent.runtime.timeKeeper.convertRelativeTimestamp(1234)
       )),
       'test message',
-      { },
+      {
+        appId: mainAgent.info.applicationID,
+        'entity.guid': mainAgent.runtime.appMetadata.agents[0].entityGuid
+      },
       'error'
     )
 
-    const logs = loggingAggregate.events.get()
-
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', [], 'ERROR'])
-    expect(logs.pop()).toEqual(expected)
+    expect(loggingAggregate.events.get().pop()).toEqual(expected)
 
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', true, 'ERROR'])
-    expect(logs.pop()).toEqual(expected)
+    expect(loggingAggregate.events.get().pop()).toEqual(expected)
 
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', 1, 'ERROR'])
-    expect(logs.pop()).toEqual(expected)
+    expect(loggingAggregate.events.get().pop()).toEqual(expected)
 
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', 'string', 'ERROR'])
-    expect(logs.pop()).toEqual(expected)
+    expect(loggingAggregate.events.get().pop()).toEqual(expected)
   })
 
   test('should work if log level is valid but wrong case', async () => {
@@ -171,7 +174,10 @@ describe('payloads', () => {
         mainAgent.runtime.timeKeeper.convertRelativeTimestamp(1234)
       )),
       'test message',
-      { },
+      {
+        appId: mainAgent.info.applicationID,
+        'entity.guid': mainAgent.runtime.appMetadata.agents[0].entityGuid
+      },
       'error'
     )
 
@@ -180,15 +186,14 @@ describe('payloads', () => {
   })
 
   test('should buffer logs with non-stringify-able message', async () => {
-    const logs = loggingAggregate.events.get()
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, new Error('test'), {}, 'error'])
-    expect(logs.pop().message).toEqual('Error: test')
+    expect(loggingAggregate.events.get().pop().message).toEqual('Error: test')
 
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, new SyntaxError('test'), {}, 'error'])
-    expect(logs.pop().message).toEqual('SyntaxError: test')
+    expect(loggingAggregate.events.get().pop().message).toEqual('SyntaxError: test')
 
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, Symbol('test'), {}, 'error'])
-    expect(logs.pop().message).toEqual('Symbol(test)')
+    expect(loggingAggregate.events.get().pop().message).toEqual('Symbol(test)')
   })
 
   test('initialLocation should be in pageUrl of log object attributes', async () => {
@@ -225,7 +230,9 @@ describe('payloads', () => {
         )),
         'test message',
         {
-          myAttributes: 1
+          myAttributes: 1,
+          appId: mainAgent.info.applicationID,
+          'entity.guid': mainAgent.runtime.appMetadata.agents[0].entityGuid
         },
         'error'
       ))

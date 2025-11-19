@@ -13,7 +13,7 @@ import { applyFnToProps } from '../../../common/util/traverse'
 import { SESSION_EVENT_TYPES, SESSION_EVENTS } from '../../../common/session/constants'
 import { ABORT_REASONS } from '../../session_replay/constants'
 import { canEnableSessionTracking } from '../../utils/feature-gates'
-import { getVersion2Attributes } from '../../../common/util/mfe'
+import { getVersion2Attributes, isValidMFETarget } from '../../../common/util/mfe'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -100,14 +100,14 @@ export class Aggregate extends AggregateBase {
     }
     if (typeof message !== 'string' || !message) return warn(32)
 
-    const log = new Log(
+    const event = new Log(
       Math.floor(this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(timestamp)),
       message,
       attributes,
       level
     )
 
-    this.events.add(log)
+    this.events.add({ event, hasV2Data: isValidMFETarget(target) })
   }
 
   serializer (eventBuffer) {

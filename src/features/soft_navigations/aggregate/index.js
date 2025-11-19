@@ -27,8 +27,8 @@ export class Aggregate extends AggregateBase {
     this.initialPageLoadInteraction.onDone.push(() => { // this ensures the .end() method also works with iPL
       if (agentRef.runtime.session?.isNew) this.initialPageLoadInteraction.customAttributes.isFirstOfSession = true // mark the hard page load as first of its session
       this.initialPageLoadInteraction.forceSave = true // unless forcibly ignored, iPL always finish by default
-      const ixn = this.initialPageLoadInteraction
-      this.events.add(ixn) // add the iPL ixn to the buffer for harvest
+      const event = this.initialPageLoadInteraction
+      this.events.add({ event }) // add the iPL ixn to the buffer for harvest
       this.initialPageLoadInteraction = null
     })
     timeToFirstByte.subscribe(({ attrs }) => {
@@ -117,7 +117,7 @@ export class Aggregate extends AggregateBase {
   setClosureHandlers () {
     this.interactionInProgress.on('finished', () => {
       const ref = this.interactionInProgress
-      this.events.add(this.interactionInProgress) // add the ixn to the buffer for harvest
+      this.events.add({ event: this.interactionInProgress }) // add the ixn to the buffer for harvest
       this.interactionInProgress = null
       this.domObserver.disconnect() // can stop observing whenever our interaction logic completes a cycle
 

@@ -86,19 +86,19 @@ export class Aggregate extends AggregateBase {
       attrs.cls = cumulativeLayoutShift.current.value
     }
 
-    const timing = {
+    const event = {
       name,
       value,
       attrs
     }
-    this.events.add(timing)
+    this.events.add({ event })
 
     handle('pvtAdded', [name, value, attrs], undefined, FEATURE_NAMES.sessionTrace, this.ee)
 
     this.checkForFirstInteraction()
 
     // makes testing easier
-    return timing
+    return event
   }
 
   /**

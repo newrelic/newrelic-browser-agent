@@ -11,8 +11,8 @@ export class Aggregator {
   // params are example data from the aggregated items
   // metrics are the numeric values to be aggregated
 
-  store (type, name, params, newMetrics, customParams) {
-    var bucket = this.#getBucket(type, name, params, customParams)
+  store (type, name, params, newMetrics, customParams, hasV2Data) {
+    var bucket = this.#getBucket(type, name, params, customParams, hasV2Data)
     bucket.metrics = aggregateMetrics(newMetrics, bucket.metrics)
     return bucket
   }
@@ -67,7 +67,17 @@ export class Aggregator {
     return hasData ? results : null
   }
 
-  #getBucket (type, name, params, customParams) {
+  /**
+   * Returns the required harvesting version for the given dataset. If ANY piece of the payload has V2 data, returns 2, otherwise 1.
+   * @param {*} aggregatorTypes
+   * @returns {1|2}
+   */
+  getRequiredVersion (aggregatorTypes) {
+    if (Object.values((this.take(aggregatorTypes, false) || {})).some(arrayOfPayloads => arrayOfPayloads.some(payload => payload.hasV2Data === true))) return 2
+    return 1
+  }
+
+  #getBucket (type, name, params, customParams, hasV2Data) {
     if (!this.aggregatedData[type]) this.aggregatedData[type] = {}
     var bucket = this.aggregatedData[type][name]
     if (!bucket) {
@@ -76,6 +86,7 @@ export class Aggregator {
         bucket.custom = customParams
       }
     }
+    if (hasV2Data) bucket.hasV2Data = true
     return bucket
   }
 }

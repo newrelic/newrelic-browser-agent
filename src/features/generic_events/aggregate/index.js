@@ -14,7 +14,7 @@ import { applyFnToProps } from '../../../common/util/traverse'
 import { UserActionsAggregator } from './user-actions/user-actions-aggregator'
 import { isIFrameWindow } from '../../../common/dom/iframe'
 import { isPureObject } from '../../../common/util/type-check'
-import { getVersion2Attributes } from '../../../common/util/mfe'
+import { getVersion2Attributes, isValidMFETarget } from '../../../common/util/mfe'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -282,7 +282,7 @@ export class Aggregate extends AggregateBase {
       ...(getVersion2Attributes(target, this))
     }
 
-    const eventAttributes = {
+    const event = {
       /** Agent-level custom attributes */
       ...(this.agentRef.info.jsAttributes || {}),
       /** Fallbacks for required properties in-case the event did not supply them, should take precedence over agent-level custom attrs */
@@ -291,7 +291,7 @@ export class Aggregate extends AggregateBase {
       ...obj
     }
 
-    this.events.add(eventAttributes)
+    this.events.add({ event, hasV2Data: isValidMFETarget(target) })
   }
 
   serializer (eventBuffer) {

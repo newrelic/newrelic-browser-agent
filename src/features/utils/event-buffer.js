@@ -25,12 +25,16 @@ export class EventBuffer {
     return this.#buffer.length
   }
 
+  getRequiredVersion () {
+    return this.#buffer.some(({ hasV2Data }) => hasV2Data) ? 2 : 1
+  }
+
   isEmpty () {
     return this.#buffer.length === 0
   }
 
   get () {
-    return this.#buffer
+    return this.#buffer.map(({ event }) => event)
   }
 
   byteSize () {
@@ -43,11 +47,13 @@ export class EventBuffer {
 
   /**
    * Add feature-processed event to our buffer. If this event would cause our total raw size to exceed the set max payload size, it is dropped.
-   * @param {any} event - any primitive type or object
-   * @param {number} [evaluatedSize] - the evalated size of the event, if already done so before storing in the event buffer
+   * @param {Object} opts
+   * @param {any} opts.event - any primitive type or object
+   * @param {number} [opts.evaluatedSize] - the evalated size of the event, if already done so before storing in the event buffer
+   * @param {boolean} [opts.hasV2Data] - indicates if the event is formatted as version 2 data
    * @returns {Boolean} true if successfully added; false otherwise
    */
-  add (event, evaluatedSize) {
+  add ({ event, evaluatedSize, hasV2Data } = {}) {
     const addSize = evaluatedSize || stringify(event)?.length || 0 // (estimate) # of bytes a directly stringified event it would take to send
     if (this.#rawBytes + addSize > this.maxPayloadSize) {
       const smTag = inject => `EventBuffer/${inject}/Dropped/Bytes`
@@ -55,7 +61,7 @@ export class EventBuffer {
       this.featureAgg?.reportSupportabilityMetric(smTag('Combined'), addSize) // all bytes dropped across all features will aggregate with this metric tag
       return false
     }
-    this.#buffer.push(event)
+    this.#buffer.push({ event, hasV2Data })
     this.#rawBytes += addSize
     this.featureAgg?.decideEarlyHarvest() // check if we should harvest early with new data
     return true
@@ -69,10 +75,10 @@ export class EventBuffer {
  */
   merge (matcher, data) {
     if (this.isEmpty() || !matcher) return false
-    const matchIdx = this.#buffer.findIndex(matcher)
+    const matchIdx = this.#buffer.findIndex(({ event }) => matcher(event))
     if (matchIdx < 0) return false
-    this.#buffer[matchIdx] = {
-      ...this.#buffer[matchIdx],
+    this.#buffer[matchIdx].event = {
+      ...this.#buffer[matchIdx].event,
       ...data
     }
     return true
@@ -88,13 +94,13 @@ export class EventBuffer {
    */
   clear (opts = {}) {
     if (opts.clearBeforeTime !== undefined && opts.timestampKey) {
-      this.#buffer = this.#buffer.filter(event => event[opts.timestampKey] >= opts.clearBeforeTime)
+      this.#buffer = this.#buffer.filter(({ event }) => event[opts.timestampKey] >= opts.clearBeforeTime)
     } else if (opts.clearBeforeIndex !== undefined) {
       this.#buffer = this.#buffer.slice(opts.clearBeforeIndex)
     } else {
       this.#buffer = []
     }
-    this.#rawBytes = this.#buffer.length ? stringify(this.#buffer)?.length || 0 : 0 // recalculate raw bytes after clearing
+    this.#rawBytes = this.#buffer.length ? stringify(this.#buffer.map(({ event }) => event))?.length || 0 : 0 // recalculate raw bytes after clearing
   }
 
   /**

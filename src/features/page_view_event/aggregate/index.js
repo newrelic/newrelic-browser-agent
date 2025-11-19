@@ -88,9 +88,9 @@ export class Aggregate extends AggregateBase {
 
     if (this.agentRef.runtime.session) queryParameters.fsh = Number(this.agentRef.runtime.session.isNew) // "first session harvest" aka RUM request or PageView event of a session
 
-    let body
+    let event
     if (typeof customAttributes === 'object' && Object.keys(customAttributes).length > 0) {
-      body = applyFnToProps({ ja: customAttributes }, this.obfuscator.obfuscateString.bind(this.obfuscator), 'string')
+      event = applyFnToProps({ ja: customAttributes }, this.obfuscator.obfuscateString.bind(this.obfuscator), 'string')
     }
 
     if (globalScope.performance) {
@@ -121,7 +121,7 @@ export class Aggregate extends AggregateBase {
       }
       return queryParameters
     }
-    this.events.add(body)
+    this.events.add({ event })
 
     if (this.agentRef.runtime.harvester.triggerHarvestFor(this, {
       sendEmptyBody: true

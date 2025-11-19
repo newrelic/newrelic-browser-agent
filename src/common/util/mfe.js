@@ -24,14 +24,17 @@ export function hasValidValue (val) {
  * @returns {{'mfe.id': *, 'mfe.name': String}|{}} returns an empty object if args are not supplied or the aggregate instance is not supporting version 2
  */
 export function getVersion2Attributes (target, aggregateInstance) {
-  if (aggregateInstance?.harvestEndpointVersion !== 2) return {}
-  const containerAgentEntityGuid = aggregateInstance.agentRef.runtime.appMetadata.agents[0].entityGuid
-  if (!isValidMFETarget(target)) {
+  /** If the feature doesnt support registered entities (V2), no need to add any attributes at all */
+  if (!aggregateInstance.supportsRegisteredEntities) return {}
+  const containerAgentEntityGuid = aggregateInstance?.agentRef.runtime.appMetadata.agents[0].entityGuid
+  /** If the target in question is not an MFE (container), or its "blocked" (feature flag or register issue), just report it to the container */
+  if (!isValidMFETarget(target) || target.blocked) {
     return {
       'entity.guid': containerAgentEntityGuid,
       appId: aggregateInstance.agentRef.info.applicationID
     }
   }
+  /** decorate for MFE */
   return {
     'mfe.id': target.id,
     'mfe.name': target.name,

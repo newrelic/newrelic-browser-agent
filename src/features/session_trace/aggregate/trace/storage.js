@@ -113,15 +113,14 @@ export class TraceStorage {
 
   /**
  * Attempts to store a new trace node in the event buffer.
- * @param {TraceNode} stn
+ * @param {TraceNode} event
  * @returns {boolean} true if the node was successfully stored, false otherwise
  */
-  #storeSTN (stn) {
-    if (this.#shouldIgnoreEvent(stn) || !this.#canStoreNewNode()) return false
+  #storeSTN (event) {
+    if (this.#shouldIgnoreEvent(event) || !this.#canStoreNewNode()) return false
 
     /** attempt to smear -- if not possible or it doesnt find a match -- just add it directly to the event buffer */
-    if (!this.#isSmearable(stn) || !this.#smear(stn)) this.parent.events.add(stn)
-
+    if (!this.#isSmearable(event) || !this.#smear(event)) this.parent.events.add({ event })
     return true
   }
 

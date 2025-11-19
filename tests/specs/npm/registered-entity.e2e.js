@@ -202,7 +202,35 @@ describe('registered-entity', () => {
     })
   })
 
-  it('should use newest name of matching register', async () => {
+  it('should still harvest scoped data after deregistering', async () => {
+    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+
+    await browser.execute(function () {
+      window.agent1 = new RegisteredEntity({
+        id: 1,
+        name: 'agent1'
+      })
+      window.agent1.noticeError('1')
+      window.agent1.deregister()
+    })
+
+    const errorsHarvests = await mfeErrorsCapture.waitForResult({ totalCount: 1 })
+
+    // should still get a harvest even tho the MFE was deregistered
+    expect(errorsHarvests.length).toEqual(1)
+
+    // should not get future data now that the MFE was deregistered
+    await browser.execute(function () {
+      window.agent1.noticeError('2')
+    })
+
+    const errorsHarvests2 = await mfeErrorsCapture.waitForResult({ timeout: 10000 })
+
+    // should not have gotten more data
+    expect(errorsHarvests2.length).toEqual(errorsHarvests.length)
+  })
+
+  it('should allow multiple registers with same id', async () => {
     await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
 
     await browser.execute(function () {
@@ -224,8 +252,9 @@ describe('registered-entity', () => {
     // should get ALL data as "agent2" since it replaced the name of agent 1 of the same id
     errorsHarvests.forEach(({ request: { query, body } }) => {
       const data = body.err
-      data.forEach(err => {
-        expect(err.custom['mfe.name']).toEqual('agent2')
+      data.forEach((err, idx) => {
+        expect(Number(err.params.message)).toEqual(idx + 1)
+        expect(err.custom['mfe.name']).toEqual('agent' + (idx + 1))
       })
     })
   })

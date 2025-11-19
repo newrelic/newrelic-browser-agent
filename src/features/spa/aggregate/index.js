@@ -712,7 +712,7 @@ export class Aggregate extends AggregateBase {
         interaction.root.attrs.firstContentfulPaint = firstContentfulPaint.current.value
       }
       baseEE.emit('interactionDone', [interaction, true])
-      classThis.events.add(interaction)
+      classThis.events.add({ event: interaction })
 
       let smCategory
       if (interaction.root?.attrs?.trigger === 'initialPageLoad') smCategory = 'InitialPageLoad'

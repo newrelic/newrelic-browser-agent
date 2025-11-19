@@ -52,15 +52,8 @@ function register (agentRef, target, parent) {
 
   /** @type {Function} a function that is set and reports when APIs are triggered -- warns the customer of the invalid state  */
   let invalidApiResponse = () => {}
-  /** @type {Array} the array of registered target APIs */
+  /** @type {Set} the array of registered target APIs */
   const registeredEntities = agentRef.runtime.registeredEntities
-
-  /** if we have already registered this target, go ahead and re-use it */
-  const preregisteredEntity = registeredEntities.find(({ metadata: { target: { id, name } } }) => id === target.id)
-  if (preregisteredEntity) {
-    if (preregisteredEntity.metadata.target.name !== target.name) preregisteredEntity.metadata.target.name = target.name
-    return preregisteredEntity
-  }
 
   /**
    * Block the API, and supply a warning function to display a message to end users
@@ -81,6 +74,10 @@ function register (agentRef, target, parent) {
   /** @type {RegisterAPI} */
   const api = {
     addPageAction: (name, attributes = {}) => report(addPageAction, [name, { ...attrs, ...attributes }, agentRef], target),
+    deregister: () => {
+      registeredEntities.delete(api)
+      block(single(() => warn(66)))
+    },
     log: (message, options = {}) => report(log, [message, { ...options, customAttributes: { ...attrs, ...(options.customAttributes || {}) } }, agentRef], target),
     measure: (name, options = {}) => report(measure, [name, { ...options, customAttributes: { ...attrs, ...(options.customAttributes || {}) } }, agentRef], target),
     noticeError: (error, attributes = {}) => report(noticeError, [error, { ...attrs, ...attributes }, agentRef], target),
@@ -106,7 +103,7 @@ function register (agentRef, target, parent) {
   }
 
   /** only allow registered APIs to be tracked in the agent runtime */
-  if (!isBlocked()) registeredEntities.push(api)
+  if (!isBlocked()) registeredEntities.add(api)
 
   /**
    * Sets a value local to the registered API attrs. Will do nothing if APIs are deregistered.

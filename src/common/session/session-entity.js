@@ -231,6 +231,7 @@ export class SessionEntity {
     // * stop recording (stn and sr)...
     // * delete the session and start over
     try {
+      warn(66)
       if (this.initialized) {
         this.ee.emit(SESSION_EVENTS.RESET)
         this.state.numOfResets++

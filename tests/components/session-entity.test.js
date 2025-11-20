@@ -148,6 +148,18 @@ describe('reset()', () => {
     session.reset()
     expect(session.state.numOfResets).toEqual(1)
   })
+
+  test('should emit warning code on reset', () => {
+    const spy = jest.spyOn(console, 'debug')
+
+    const session = new SessionEntity({ agentIdentifier, key, storage, expiresMs: 10 })
+    expect(spy).not.toHaveBeenCalled()
+
+    session.reset()
+    expect(spy).toHaveBeenCalledWith('New Relic Warning: https://github.com/newrelic/newrelic-browser-agent/blob/main/docs/warning-codes.md#66', undefined)
+
+    spy.mockRestore()
+  })
 })
 
 describe('isNew', () => {

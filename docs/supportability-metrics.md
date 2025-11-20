@@ -258,6 +258,8 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 * Config/SessionReplay/SamplingRate/Value
 <!--- init.Session_replay.error_sampling_rate  --->
 * Config/SessionReplay/ErrorSamplingRate/Value
+<!--- init.Session_replay.fix_stylesheets was modified  --->
+* Config/SessionReplay/InlineStylesheet/Modified
 
 ### Features
 <!--- SessionReplay was Enabled but the RUM response indicated it was not entitled to run --->
@@ -378,7 +380,7 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 * API/measure/called
 <!--- newrelic.consent() was called --->
 * API/consent/called
-<!--- newrelic.consent() was called --->
+<!--- newrelic.recordCustomEvent() was called --->
 * API/recordCustomEvent/called
 <!--- newrelic.register() was called --->
 * API/register/called

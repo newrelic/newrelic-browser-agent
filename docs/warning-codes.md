@@ -131,3 +131,5 @@
 `Required globals have been mutated before being accessed by the browser agent. This can cause issues and should be avoided.`
 ### 65
 `Consent API argument must be boolean or undefined`
+### 66
+`Agent session reset`

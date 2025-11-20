@@ -15,8 +15,17 @@ export const timeToFirstByte = new VitalMetric(VITAL_NAMES.TIME_TO_FIRST_BYTE)
  * - in browsers that do not support PerformanceNavigationTiming API
  * - in an iOS browser
  * - cross-origin iframes specifically in firefox and safari
+ * - onTTFB relies on a truthy `responseStart` value, should ensure that exists before relying on it (seen to be falsy in certain Electron.js cases for instance)
  */
-if (isBrowserScope && typeof PerformanceNavigationTiming !== 'undefined' && !isiOS && window === window.parent) {
+
+let navResponseStartIsValid
+try {
+  navResponseStartIsValid = globalScope?.performance?.getEntriesByType('navigation')?.[0]?.responseStart
+} catch (err) {
+  // do nothing
+}
+
+if (isBrowserScope && typeof PerformanceNavigationTiming !== 'undefined' && !!navResponseStartIsValid && !isiOS && window === window.parent) {
   onTTFB(({ value, attribution }) => {
     if (timeToFirstByte.isValid) return
     timeToFirstByte.update({ value, attrs: { navigationEntry: attribution.navigationEntry } })

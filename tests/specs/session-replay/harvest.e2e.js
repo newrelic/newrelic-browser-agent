@@ -46,9 +46,17 @@ describe('Session Replay Harvest Behavior', () => {
   })
 
   it.withBrowsersMatching(notIOS)('should set timestamps on each payload', async () => {
-    const [sessionReplayHarvests] = await Promise.all([
-      sessionReplaysCapture.waitForResult({ totalCount: 2 }),
+    await Promise.all([
+      sessionReplaysCapture.waitForResult({ totalCount: 1, timeout: 10000 }), // snapshot, type = 2
       browser.url(await browser.testHandle.assetURL('64kb-dom.html', srConfig()))
+    ])
+
+    // generate a second payload by clicking on an element
+    const [sessionReplayHarvests] = await Promise.all([
+      sessionReplaysCapture.waitForResult({ totalCount: 2, timeout: 10000 }), // mutation, type = 3
+      browser.execute(function () {
+        document.getElementById('foobar').click()
+      })
     ])
 
     expect(sessionReplayHarvests[0].request.body.length).toBeGreaterThan(0)

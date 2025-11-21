@@ -18,20 +18,20 @@ describe('EventBuffer', () => {
 
       const mockEvent = { test: 1 }
 
-      eventBuffer.add({ event: mockEvent })
+      eventBuffer.add(mockEvent)
       expect([eventBuffer.get(), eventBuffer.byteSize()]).toEqual([[mockEvent], JSON.stringify(mockEvent).length])
     })
 
     it('should not add if one event is too large', () => {
-      expect(eventBuffer.add({ event: { test: 'x'.repeat(MAX_PAYLOAD_SIZE) } })).toEqual(false) // exceeds because of quote chars
+      expect(eventBuffer.add({ test: 'x'.repeat(MAX_PAYLOAD_SIZE) })).toEqual(false) // exceeds because of quote chars
       expect(eventBuffer.isEmpty()).toEqual(true)
     })
 
     it('should not add if existing buffer would become too large', () => {
-      eventBuffer.add({ event: { test: 'x'.repeat(999988) } })
+      eventBuffer.add({ test: 'x'.repeat(999988) })
       expect(eventBuffer.isEmpty()).toEqual(false)
       expect(eventBuffer.byteSize()).toEqual(999999)
-      eventBuffer.add({ event: { test2: 'testing' } })
+      eventBuffer.add({ test2: 'testing' })
       expect(eventBuffer.byteSize()).toEqual(999999)
       expect(eventBuffer.get().length).toEqual(1)
     })
@@ -40,7 +40,7 @@ describe('EventBuffer', () => {
   describe('merge', () => {
     it('should merge data if matcher is satisfied', () => {
       const alwaysPositiveMatcher = () => true
-      eventBuffer.add({ event: { foo: 'bar', target: 1 } })
+      eventBuffer.add({ foo: 'bar', target: 1 })
       expect(eventBuffer.merge(alwaysPositiveMatcher, { target: 2 })).toEqual(true)
 
       expect(eventBuffer.get()[0]).toEqual({ foo: 'bar', target: 2 })
@@ -48,7 +48,7 @@ describe('EventBuffer', () => {
 
     it('should merge data if matcher is not satisfied', () => {
       const alwaysNegativeMatcher = () => false
-      eventBuffer.add({ event: { foo: 'bar', target: 1 } })
+      eventBuffer.add({ foo: 'bar', target: 1 })
       expect(eventBuffer.merge(alwaysNegativeMatcher, { target: 2 })).toEqual(false)
 
       expect(eventBuffer.get()[0]).toEqual({ foo: 'bar', target: 1 })
@@ -56,7 +56,7 @@ describe('EventBuffer', () => {
 
     it('matcher should be able to match data inside the buffer', () => {
       const matcher = (d) => d.foo === 'bar'
-      eventBuffer.add({ event: { foo: 'bar', target: 1 } })
+      eventBuffer.add({ foo: 'bar', target: 1 })
       expect(eventBuffer.merge(matcher, { target: 2 })).toEqual(true)
 
       expect(eventBuffer.get()[0]).toEqual({ foo: 'bar', target: 2 })
@@ -64,8 +64,8 @@ describe('EventBuffer', () => {
 
     it('merges only with first match', () => {
       const matcher = (d) => d.foo === 'bar'
-      eventBuffer.add({ event: { foo: 'bar', target: 1 } })
-      eventBuffer.add({ event: { foo: 'bar', target: 3 } })
+      eventBuffer.add({ foo: 'bar', target: 1 })
+      eventBuffer.add({ foo: 'bar', target: 3 })
       expect(eventBuffer.merge(matcher, { target: 2 })).toEqual(true)
 
       expect(eventBuffer.get()[0]).toEqual({ foo: 'bar', target: 2 })
@@ -89,7 +89,7 @@ describe('EventBuffer', () => {
 
     it('returns true if match was found and merged', () => {
       const matcher = () => true
-      eventBuffer.add({ event: { foo: 'bar', target: 1 } })
+      eventBuffer.add({ foo: 'bar', target: 1 })
       const returnValue = eventBuffer.merge(matcher, { target: 2 })
 
       expect(eventBuffer.get()[0]).toEqual({ foo: 'bar', target: 2 })
@@ -98,7 +98,7 @@ describe('EventBuffer', () => {
 
     it('returns false if match was not found', () => {
       const matcher = () => false
-      eventBuffer.add({ event: { foo: 'bar', target: 1 } })
+      eventBuffer.add({ foo: 'bar', target: 1 })
       const returnValue = eventBuffer.merge(matcher, { target: 2 })
 
       expect(eventBuffer.get()[0]).toEqual({ foo: 'bar', target: 1 })
@@ -109,7 +109,7 @@ describe('EventBuffer', () => {
   describe('length', () => {
     test('length getter is equivalent to buffer get length', () => {
       expect(eventBuffer.length).toEqual(eventBuffer.get().length)
-      eventBuffer.add({ event: { foo: 'bar' } })
+      eventBuffer.add({ foo: 'bar' })
       expect(eventBuffer.length).toEqual(eventBuffer.get().length)
     })
   })
@@ -117,9 +117,9 @@ describe('EventBuffer', () => {
   describe('clear', () => {
     test('clearBeforeTime removes events before a certain time', () => {
       const now = Date.now()
-      eventBuffer.add({ event: { foo: 'bar', timestamp: now - 1000 } })
-      eventBuffer.add({ event: { foo: 'baz', timestamp: now - 500 } })
-      eventBuffer.add({ event: { foo: 'qux', timestamp: now } })
+      eventBuffer.add({ foo: 'bar', timestamp: now - 1000 })
+      eventBuffer.add({ foo: 'baz', timestamp: now - 500 })
+      eventBuffer.add({ foo: 'qux', timestamp: now })
 
       eventBuffer.clear({ clearBeforeTime: now - 250, timestampKey: 'timestamp' })
 
@@ -130,9 +130,9 @@ describe('EventBuffer', () => {
     })
 
     test('clearBeforeIndex removes events before a certain index', () => {
-      eventBuffer.add({ event: { foo: 'bar', index: 0 } })
-      eventBuffer.add({ event: { foo: 'baz', index: 1 } })
-      eventBuffer.add({ event: { foo: 'qux', index: 2 } })
+      eventBuffer.add({ foo: 'bar', index: 0 })
+      eventBuffer.add({ foo: 'baz', index: 1 })
+      eventBuffer.add({ foo: 'qux', index: 2 })
 
       eventBuffer.clear({ clearBeforeIndex: 1 })
 
@@ -143,7 +143,7 @@ describe('EventBuffer', () => {
     })
 
     test('clear wipes the buffer', () => {
-      eventBuffer.add({ event: 'test' })
+      eventBuffer.add('test')
       expect(eventBuffer.isEmpty()).toEqual(false)
       expect(eventBuffer.byteSize()).toBeGreaterThan(0)
       eventBuffer.clear()
@@ -157,20 +157,20 @@ describe('EventBuffer', () => {
     expect(eventBuffer.wouldExceedMaxSize(MAX_PAYLOAD_SIZE)).toEqual(false)
     expect(eventBuffer.isEmpty()).toEqual(true)
 
-    expect(eventBuffer.add({ event: 'x'.repeat(MAX_PAYLOAD_SIZE - 2) })).toEqual(true) // the 2 bytes are for the quotes
+    expect(eventBuffer.add('x'.repeat(MAX_PAYLOAD_SIZE - 2))).toEqual(true) // the 2 bytes are for the quotes
     expect(eventBuffer.wouldExceedMaxSize(1)).toEqual(true)
     expect(eventBuffer.byteSize()).toEqual(MAX_PAYLOAD_SIZE)
   })
 
   describe('save', () => {
     test('does not clear the buffer on its own', () => {
-      eventBuffer.add({ event: 'test' })
+      eventBuffer.add('test')
       eventBuffer.save()
       expect(eventBuffer.isEmpty()).toEqual(false)
     })
 
     test('can be reloaded after clearing', () => {
-      eventBuffer.add({ event: 'test' })
+      eventBuffer.add('test')
       eventBuffer.save()
       eventBuffer.clear()
       expect(eventBuffer.isEmpty()).toEqual(true)
@@ -181,7 +181,7 @@ describe('EventBuffer', () => {
     })
 
     test('can be reloaded without clearing (doubled data)', () => {
-      eventBuffer.add({ event: 'test' })
+      eventBuffer.add('test')
       eventBuffer.save()
       eventBuffer.reloadSave()
       expect(eventBuffer.get().length).toEqual(2)
@@ -190,7 +190,7 @@ describe('EventBuffer', () => {
   })
 
   test('clearSave will clear previous save calls', () => {
-    eventBuffer.add({ event: 'test' })
+    eventBuffer.add('test')
     eventBuffer.save()
     eventBuffer.clearSave() // should nullify previous step
     eventBuffer.reloadSave()
@@ -199,10 +199,10 @@ describe('EventBuffer', () => {
   })
 
   test('reloadSave will not reload if final size exceeds limit', () => {
-    expect(eventBuffer.add({ event: 'x'.repeat(MAX_PAYLOAD_SIZE - 2) })).toEqual(true)
+    expect(eventBuffer.add('x'.repeat(MAX_PAYLOAD_SIZE - 2))).toEqual(true)
     eventBuffer.save()
     eventBuffer.clear()
-    expect(eventBuffer.add({ event: 'x' })).toEqual(true)
+    expect(eventBuffer.add('x')).toEqual(true)
     expect(eventBuffer.get()).toEqual(['x'])
     eventBuffer.reloadSave()
     expect(eventBuffer.get()).toEqual(['x']) // should not have reloaded because combined would exceed max

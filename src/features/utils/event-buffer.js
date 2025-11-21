@@ -4,6 +4,7 @@
  */
 import { stringify } from '../../common/util/stringify'
 import { MAX_PAYLOAD_SIZE } from '../../common/constants/agent-constants'
+import { isValidMFETarget } from '../../common/util/mfe'
 
 export class EventBuffer {
   #buffer = []
@@ -47,13 +48,12 @@ export class EventBuffer {
 
   /**
    * Add feature-processed event to our buffer. If this event would cause our total raw size to exceed the set max payload size, it is dropped.
-   * @param {Object} opts
-   * @param {any} opts.event - any primitive type or object
-   * @param {number} [opts.evaluatedSize] - the evalated size of the event, if already done so before storing in the event buffer
-   * @param {boolean} [opts.hasV2Data] - indicates if the event is formatted as version 2 data
+   * @param {any} event - any primitive type or object
+   * @param {boolean} [target] - target info if present
+   * @param {number} [evaluatedSize] - the evalated size of the event, if already done so before storing in the event buffer
    * @returns {Boolean} true if successfully added; false otherwise
    */
-  add ({ event, evaluatedSize, hasV2Data } = {}) {
+  add (event, target, evaluatedSize) {
     const addSize = evaluatedSize || stringify(event)?.length || 0 // (estimate) # of bytes a directly stringified event it would take to send
     if (this.#rawBytes + addSize > this.maxPayloadSize) {
       const smTag = inject => `EventBuffer/${inject}/Dropped/Bytes`
@@ -61,6 +61,7 @@ export class EventBuffer {
       this.featureAgg?.reportSupportabilityMetric(smTag('Combined'), addSize) // all bytes dropped across all features will aggregate with this metric tag
       return false
     }
+    const hasV2Data = isValidMFETarget(target)
     this.#buffer.push({ event, hasV2Data })
     this.#rawBytes += addSize
     this.featureAgg?.decideEarlyHarvest() // check if we should harvest early with new data

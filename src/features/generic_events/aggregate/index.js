@@ -14,7 +14,7 @@ import { applyFnToProps } from '../../../common/util/traverse'
 import { UserActionsAggregator } from './user-actions/user-actions-aggregator'
 import { isIFrameWindow } from '../../../common/dom/iframe'
 import { isPureObject } from '../../../common/util/type-check'
-import { getVersion2Attributes, isValidMFETarget } from '../../../common/util/mfe'
+import { getVersion2Attributes } from '../../../common/util/mfe'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -291,7 +291,7 @@ export class Aggregate extends AggregateBase {
       ...obj
     }
 
-    this.events.add({ event, hasV2Data: isValidMFETarget(target) })
+    this.events.add(event, target)
   }
 
   serializer (eventBuffer) {

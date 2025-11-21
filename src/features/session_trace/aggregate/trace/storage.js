@@ -121,6 +121,7 @@ export class TraceStorage {
 
     /** attempt to smear -- if not possible or it doesnt find a match -- just add it directly to the event buffer */
     if (!this.#isSmearable(stn) || !this.#smear(stn)) this.parent.events.add(stn)
+
     return true
   }
 

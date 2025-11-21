@@ -131,12 +131,6 @@ export class Aggregate extends AggregateBase {
     // webdriver detection
     if (navigator.webdriver) this.storeSupportabilityMetrics('Generic/WebDriver/Detected')
 
-    // WATCHABLE_WEB_SOCKET_EVENTS.forEach(tag => {
-    //   registerHandler('buffered-' + WEBSOCKET_TAG + tag, (...args) => {
-    //     handleWebsocketEvents(this.storeSupportabilityMetrics.bind(this), tag, ...args)
-    //   }, this.featureName, this.ee)
-    // })
-
     /** all the harvest metadata metrics need to be evaluated simulataneously at unload time so just temporarily buffer them and dont make SMs immediately from the data */
     registerHandler('harvest-metadata', (harvestMetadataObject = {}) => {
       try {

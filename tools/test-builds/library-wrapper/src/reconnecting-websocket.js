@@ -4,7 +4,10 @@ import ReconnectingWebSocket from 'reconnecting-websocket'
 
 const opts = {
   info: NREUM.info,
-  init: NREUM.init
+  init: {
+    ...NREUM.init,
+    feature_flags: ['websockets']
+  }
 }
 
 new BrowserAgent(opts)
@@ -20,6 +23,9 @@ rws.addEventListener('open', () => {
   })
 
   rws.addEventListener('close', function () {
-    window.location.reload()
+    // Add delay before reload to allow agent to harvest WebSocket event
+    setTimeout(() => {
+      window.location.reload()
+    }, 1000)
   })
 })

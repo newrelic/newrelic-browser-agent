@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>WebSocket Multi-Type Send/Receive Test</title>
+    {init} {config}
+    <script>
+      NREUM.init.feature_flags = ['websockets']
+    </script>
+    {loader}
+    <script>
+      window.bamServer = NREUM.info.beacon
+      window.testComplete = false
+      window.receivedTypes = []
+
+      window.addEventListener('load', () => {
+        const ws = new WebSocket(`ws://${bamServer}/websocket-echo`)
+        
+        // Start with arraybuffer binary type
+        ws.binaryType = 'arraybuffer'
+
+        let messagesReceived = 0
+        const expectedMessages = 5 // string, ArrayBuffer, Blob, TypedArray, DataView
+
+        ws.addEventListener("open", (event) => {
+          console.log("WebSocket opened, sending all data types...")
+          
+          // 1. Send string (will be received as string)
+          ws.send("Hello string!")
+          
+          // 2. Send ArrayBuffer directly (will be received as ArrayBuffer with binaryType='arraybuffer')
+          const arrayBuffer = new ArrayBuffer(8)
+          new Uint8Array(arrayBuffer).set([65, 66, 67, 68, 69, 70, 71, 72]) // Fill with "ABCDEFGH"
+          ws.send(arrayBuffer)
+          
+          // 3. Send Blob (will be received as ArrayBuffer with binaryType='arraybuffer')
+          const blob = new Blob(["Hello Blob!"], { type: "text/plain" })
+          ws.send(blob)
+          
+          // 4. Send TypedArray (Uint8Array) - will be received as Blob after binaryType switches
+          const uint8Array = new Uint8Array([72, 101, 108, 108, 111]) // "Hello"
+          ws.send(uint8Array)
+          
+          // 5. Send DataView - will be received as Blob after binaryType switches
+          const dataViewBuffer = new ArrayBuffer(16)
+          const dataView = new DataView(dataViewBuffer)
+          dataView.setFloat64(0, 3.14159)
+          ws.send(dataView)
+          
+          console.log("All data types sent!")
+        })
+
+        ws.addEventListener("message", async (event) => {
+          messagesReceived++
+          console.log(`Message ${messagesReceived} received:`, event.data)
+          
+          // Track the type of data received
+          if (typeof event.data === 'string') {
+            window.receivedTypes.push('string')
+          } else if (event.data instanceof Blob) {
+            window.receivedTypes.push('Blob')
+          } else if (event.data instanceof ArrayBuffer) {
+            window.receivedTypes.push('ArrayBuffer')
+          }
+          
+          // Switch binaryType after receiving the 3rd message
+          // This will affect messages 4 and 5
+          if (messagesReceived === 3) {
+            ws.binaryType = 'blob'
+            console.log('Switched binaryType to blob after message 3')
+          }
+          
+          // Close after receiving all expected messages
+          if (messagesReceived === expectedMessages) {
+            console.log("All messages received, closing connection")
+            console.log("Received types:", window.receivedTypes)
+            window.testComplete = true
+            ws.close(1000)
+          }
+        })
+
+        ws.addEventListener("error", (event) => {
+          console.error("WebSocket error:", event)
+        })
+
+        ws.addEventListener("close", (event) => {
+          console.log("WebSocket closed:", event.code, event.reason)
+        })
+      })
+    </script>
+  </head>
+  <body>WebSocket Multi-Type Send/Receive Test</body>
+</html>

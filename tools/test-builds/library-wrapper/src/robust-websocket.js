@@ -4,7 +4,10 @@ import * as RobustWebSocket from 'robust-websocket'
 
 const opts = {
   info: NREUM.info,
-  init: NREUM.init
+  init: {
+    ...NREUM.init,
+    feature_flags: ['websockets']
+  }
 }
 
 new BrowserAgent(opts)
@@ -22,5 +25,8 @@ ws.addEventListener('message', function (event) {
 })
 
 ws.addEventListener('close', function () {
-  window.location.reload()
+  // Add delay before reload to allow agent to harvest WebSocket event
+  setTimeout(() => {
+    window.location.reload()
+  }, 1000)
 })

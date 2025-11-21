@@ -24,6 +24,18 @@ export const supportsInliningCrossOriginStylesheets = new SpecMatcher()
   .include('ios>=16.3')
   .include('safari>=16.3')
 
+/**
+   * Only the latest iOS version (26.0 as of current), at least on Lambdatest, appears to be working for the tests below.
+   * The older spec (iPhone 11, v17.0) just fails.
+   */
+export const supportsWebSocketsTesting = new SpecMatcher()
+  .include('android')
+  .include('chrome')
+  .include('edge')
+  .include('firefox')
+  .include('safari')
+  .include('ios>=26.0')
+
 export const notIOS = new SpecMatcher()
   .include('android')
   .include('chrome')

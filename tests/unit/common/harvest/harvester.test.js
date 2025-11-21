@@ -125,19 +125,10 @@ describe('triggerHarvestFor', () => {
   test('fails if aggregate is blocked', () => {
     expect(harvester.triggerHarvestFor({ blocked: true })).toEqual({ payload: undefined, ranSend: false, endpointVersion: 1 })
   })
-  test('does nothing if no payload is returned from makeHarvestPayload if directSend unspecified', () => {
+  test('does nothing if no payload is returned from makeHarvestPayload (without sendEmptyBody)', () => {
     const fakeAggregate = { makeHarvestPayload: jest.fn(), agentRef: fakeAgent }
-    expect(harvester.triggerHarvestFor(fakeAggregate, { directSend: undefined })).toEqual({ payload: undefined, ranSend: false, endpointVersion: 1 })
+    expect(harvester.triggerHarvestFor(fakeAggregate)).toEqual({ payload: undefined, ranSend: false, endpointVersion: 1 })
     expect(fakeAggregate.makeHarvestPayload).toHaveBeenCalledTimes(1)
-  })
-  test('allows directSend to provide the payload without makeHarvestPayload', () => {
-    const fakeAggregate = { makeHarvestPayload: jest.fn(), harvestOpts: {}, agentRef: fakeAgent }
-    expect(harvester.triggerHarvestFor(fakeAggregate, { directSend: { payload: 'fakePayload' } })).toEqual({ payload: 'fakePayload', ranSend: true, endpointVersion: 1 })
-    expect(fakeAggregate.makeHarvestPayload).not.toHaveBeenCalled()
-  })
-  test('disallow directSend to send if no payload is defined', () => {
-    const fakeAggregate = { makeHarvestPayload: jest.fn(), harvestOpts: {}, agentRef: fakeAgent }
-    expect(harvester.triggerHarvestFor(fakeAggregate, { directSend: { payload: undefined } })).toEqual({ payload: undefined, ranSend: false, endpointVersion: 1 })
   })
   test('sends if payload is returned from makeHarvestPayload', () => {
     const fakeAggregate = { makeHarvestPayload: jest.fn().mockReturnValue('fakePayload'), harvestOpts: {}, agentRef: fakeAgent }

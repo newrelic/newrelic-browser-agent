@@ -440,6 +440,14 @@ EventBuffer/soft_navigations/Dropped/Bytes
 <!-- node type 4 = Meta -->
 * rrweb/node/4/bytes
 
+### Harvester
+<!-- Harvester retried a harvest -->
+* 'Harvester/Retry/Attempted/<feature_name>'
+<!-- Retry failed codes (dynamic) -->
+* 'Harvester/Retry/Failed/<code>'
+<!-- Retry succeeded codes (dynamic) -->
+* 'Harvester/Retry/Succeeded/<code>'
+  
 ### Browser Connect Response Metrics
 <!--- HTTP status code of failed browser connect response --->
 * 'Browser/Supportability/BCS/Error/<code>'

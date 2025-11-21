@@ -53,6 +53,7 @@ const InitModelFn = () => {
       set allow_registered_children (val) { hiddenState.experimental.allow_registered_children = val },
       duplicate_registered_data: false
     },
+    browser_consent_mode: { enabled: false },
     distributed_tracing: {
       enabled: undefined,
       exclude_newrelic_header: undefined,

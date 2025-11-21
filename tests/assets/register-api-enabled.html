@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>RUM Unit Test</title>
+    {init} {config}
+    <script>
+      NREUM.init.feature_flags = ['register', 'register.jserrors', 'register.generic_events', 'register.ajax']
+    </script>
+    {loader}
+  </head>
+  <body>Instrumented</body>
+</html>

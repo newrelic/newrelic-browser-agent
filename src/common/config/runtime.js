@@ -19,9 +19,19 @@ const ReadOnly = {
   originTime
 }
 
+const hiddenState = {
+  consented: false
+}
+
 const RuntimeModel = {
   /** Agent-specific metadata found in the RUM call response. ex. entityGuid */
   appMetadata: {},
+  get consented () {
+    return this.session?.state?.consent || hiddenState.consented
+  },
+  set consented (value) {
+    hiddenState.consented = value
+  },
   customTransaction: undefined,
   denyList: undefined,
   disabled: false,

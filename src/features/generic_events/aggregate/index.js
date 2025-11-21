@@ -227,7 +227,7 @@ export class Aggregate extends AggregateBase {
         }, this.featureName, this.ee)
       }
 
-      registerHandler('api-measure', (args, n) => {
+      registerHandler('api-measure', (args, n, target) => {
         const { start, duration, customAttributes } = args
 
         const event = {
@@ -239,7 +239,7 @@ export class Aggregate extends AggregateBase {
           entryType: 'measure'
         }
 
-        this.addEvent(event)
+        this.addEvent(event, target)
       }, this.featureName, this.ee)
 
       if (agentRef.init.feature_flags.includes('websockets')) {

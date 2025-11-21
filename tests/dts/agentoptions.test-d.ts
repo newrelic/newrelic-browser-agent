@@ -117,6 +117,7 @@ const validOptions: AgentOptions = {
       autoStart: false
     },
     ssl: true,
+    browser_consent_mode: { enabled: false },
     user_actions: {
       enabled: true,
       elementAttributes: ['id', 'className', 'tagName', 'type']

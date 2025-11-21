@@ -3,6 +3,26 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.303.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.302.0...v1.303.0) (2025-11-13)
+
+
+### Features
+
+* Add custom event support to register API ([#1606](https://github.com/newrelic/newrelic-browser-agent/issues/1606)) ([4137dcb](https://github.com/newrelic/newrelic-browser-agent/commit/4137dcbb339642219164d68695b84a8e48fa9b6f))
+* Add measure support to register API  ([#1623](https://github.com/newrelic/newrelic-browser-agent/issues/1623)) ([c2785f3](https://github.com/newrelic/newrelic-browser-agent/commit/c2785f39ca9ea1f5b87f3e2cf4fc7e462d6084e7))
+* Add consent API ([#1533](https://github.com/newrelic/newrelic-browser-agent/issues/1533)) ([4e8ad2a](https://github.com/newrelic/newrelic-browser-agent/commit/4e8ad2a6aea34bbaa39b6beb67c3947feee3c01d))
+* Additional validation to prepare agent for MFE registrations ([#1625](https://github.com/newrelic/newrelic-browser-agent/issues/1625)) ([aa8c02f](https://github.com/newrelic/newrelic-browser-agent/commit/aa8c02f966e9c7df5c4e83c911f9342b2183447f))
+* Allow consent API to be invoked without localStorage access ([#1627](https://github.com/newrelic/newrelic-browser-agent/issues/1627)) ([0690a65](https://github.com/newrelic/newrelic-browser-agent/commit/0690a65bcfa35eabe0e83b13c058398746e924b8))
+* Allow nested registrations ([#1616](https://github.com/newrelic/newrelic-browser-agent/issues/1616)) ([74a8d4a](https://github.com/newrelic/newrelic-browser-agent/commit/74a8d4ac745cff33eb15f9469775f85fd2641097))
+* Retry initial connect call ([#1605](https://github.com/newrelic/newrelic-browser-agent/issues/1605)) ([9770132](https://github.com/newrelic/newrelic-browser-agent/commit/9770132209b9fb1320b3f60eedfa932b0fcfa3a4))
+* SMs for browser connect response ([#1611](https://github.com/newrelic/newrelic-browser-agent/issues/1611)) ([29f5bdf](https://github.com/newrelic/newrelic-browser-agent/commit/29f5bdf6fa36020a87e5c0aa443d64ce55722c85))
+
+
+### Bug Fixes
+
+* memoize promise context propagation to avoid safari hangs ([#1597](https://github.com/newrelic/newrelic-browser-agent/issues/1597)) ([23cb559](https://github.com/newrelic/newrelic-browser-agent/commit/23cb55993add2eb7e7b14b0d77c6fa3bbb9abcf1))
+* Obfuscate custom attributes for logs added after PVE ([#1622](https://github.com/newrelic/newrelic-browser-agent/issues/1622)) ([f648e3f](https://github.com/newrelic/newrelic-browser-agent/commit/f648e3f1f843913d4c9be6534b0d1e3ba47eb260))
+
 ## [1.302.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.301.0...v1.302.0) (2025-10-24)
 
 

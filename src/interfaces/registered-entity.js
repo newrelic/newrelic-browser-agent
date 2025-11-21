@@ -49,6 +49,31 @@ export class RegisteredEntity {
   }
 
   /**
+   * @experimental
+   * IMPORTANT: This feature is being developed for use internally and is not in a public-facing production-ready state.
+   * It is not recommended for use in production environments and will not receive support for issues.
+   *
+   * Registers an external caller to report through the base agent to a different target than the base agent. Will be related to this registered entity when called through this access point.
+   * @param {import('../loaders/api/register-api-types').RegisterAPIConstructor} target the target object to report data to
+    @returns {import('../loaders/api/register-api-types').RegisterAPI} Returns an object that contains the available API methods and configurations to use with the external caller. See loaders/api/api.js for more information.
+   */
+  register (target) {
+    warn(35, 'register')
+  }
+
+  /**
+   * @experimental
+   * IMPORTANT: This feature is being developed for use internally and is not in a public-facing production-ready state.
+   * It is not recommended for use in production environments and will not receive support for issues.
+   *
+   * Deregister the registered entity (this), which blocks its use and captures end of life timings.
+   * @returns {void}
+   */
+  deregister () {
+    warn(35, 'deregister')
+  }
+
+  /**
      * Records a custom event with a specified eventType and attributes.
      * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/recordCustomEvent/}
      * @param {string} eventType The eventType to store the event as.

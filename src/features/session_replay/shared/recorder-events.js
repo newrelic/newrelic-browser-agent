@@ -27,7 +27,7 @@ export class RecorderEvents {
   }
 
   add (event, evaluatedSize) {
-    this.#events.add(event, evaluatedSize)
+    this.#events.add(event, undefined, evaluatedSize)
   }
 
   get events () {

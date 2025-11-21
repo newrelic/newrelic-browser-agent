@@ -24,8 +24,9 @@ export function hasValidValue (val) {
  * @returns {{'mfe.id': *, 'mfe.name': String}|{}} returns an empty object if args are not supplied or the aggregate instance is not supporting version 2
  */
 export function getVersion2Attributes (target, aggregateInstance) {
-  if (aggregateInstance?.harvestEndpointVersion !== 2) return {}
-  const containerAgentEntityGuid = aggregateInstance.agentRef.runtime.appMetadata.agents[0].entityGuid
+  const runtime = aggregateInstance?.agentRef.runtime
+  if (!runtime.registeredEntities.size) return {}
+  const containerAgentEntityGuid = runtime.appMetadata.agents[0].entityGuid
   if (!isValidMFETarget(target)) {
     return {
       'entity.guid': containerAgentEntityGuid,

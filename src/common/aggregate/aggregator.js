@@ -11,8 +11,8 @@ export class Aggregator {
   // params are example data from the aggregated items
   // metrics are the numeric values to be aggregated
 
-  store (type, name, params, newMetrics, customParams) {
-    var bucket = this.#getBucket(type, name, params, customParams)
+  store (type, name, params, newMetrics, customParams, hasV2Data) {
+    var bucket = this.#getBucket(type, name, params, customParams, hasV2Data)
     bucket.metrics = aggregateMetrics(newMetrics, bucket.metrics)
     return bucket
   }
@@ -67,15 +67,31 @@ export class Aggregator {
     return hasData ? results : null
   }
 
-  #getBucket (type, name, params, customParams) {
+  getRequiredVersion (aggregatorTypes) {
+    const results = this.take(aggregatorTypes, false)
+
+    // Check if ANY payload in ANY array has hasV2Data === true
+    if (results) {
+      for (const arrayOfPayloads of Object.values(results)) {
+        if (arrayOfPayloads.some(payload => payload.hasV2Data === true)) {
+          return 2
+        }
+      }
+    }
+
+    return 1
+  }
+
+  #getBucket (type, name, params, customParams, hasV2Data) {
     if (!this.aggregatedData[type]) this.aggregatedData[type] = {}
     var bucket = this.aggregatedData[type][name]
     if (!bucket) {
-      bucket = this.aggregatedData[type][name] = { params: params || {} }
+      bucket = this.aggregatedData[type][name] = { params: params || {}, hasV2Data: hasV2Data || false }
       if (customParams) {
         bucket.custom = customParams
       }
     }
+    if (hasV2Data) bucket.hasV2Data = true
     return bucket
   }
 }

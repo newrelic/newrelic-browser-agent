@@ -3,7 +3,7 @@
  * Tests that WebSocket lifecycle events are captured and sent to the /ins endpoint
  */
 
-import { testInsRequest, testErrorsRequest } from '../../../tools/testing-server/utils/expect-tests'
+import { testInsRequest, testErrorsRequest, testSupportMetricsRequest } from '../../../tools/testing-server/utils/expect-tests'
 import { onlyFirefox, onlySafari, supportsWebSocketsTesting } from '../../../tools/browser-matcher/common-matchers.mjs'
 
 describe.withBrowsersMatching(supportsWebSocketsTesting)('WebSocket wrapper', () => {
@@ -272,5 +272,43 @@ describe.withBrowsersMatching(supportsWebSocketsTesting)('WebSocket wrapper', ()
     }
     expect(wsEvent.connectedDuration).toBeGreaterThan(0)
     expect(wsEvent.sendCount).toBe(1) // We sent one message
+  })
+
+  it('should report supportability metrics for completed WebSocket connections', async () => {
+    const [insCapture, metricsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+      { test: testInsRequest },
+      { test: testSupportMetricsRequest }
+    ])
+
+    const url = await browser.testHandle.assetURL('websockets.html')
+    await browser.url(url).then(() => browser.waitForAgentLoad())
+
+    // Navigate away to trigger final harvest with supportability metrics
+    await browser.url(await browser.testHandle.assetURL('/'))
+
+    const [insHarvests, metricsHarvests] = await Promise.all([
+      insCapture.waitForResult({ totalCount: 1, timeout: 15000 }),
+      metricsCapture.waitForResult({ totalCount: 1, timeout: 15000 })
+    ])
+
+    const insPayload = insHarvests[0].request?.body?.ins
+    const wsEvents = insPayload.filter(event => event.eventType === 'WebSocket')
+    expect(wsEvents.length).toBeGreaterThan(0)
+
+    const supportabilityMetrics = metricsHarvests[0].request.body.sm
+    const completedSeenMetric = supportabilityMetrics.find(sm => sm.params.name === 'WebSocket/Completed/Seen')
+    expect(completedSeenMetric).toBeDefined()
+    expect(completedSeenMetric.stats).toBeDefined()
+    expect(completedSeenMetric.stats.c).toBe(wsEvents.length) // Count should match number of completed WebSocket events
+
+    const completedBytesMetric = supportabilityMetrics.find(sm => sm.params.name === 'WebSocket/Completed/Bytes')
+    expect(completedBytesMetric).toBeDefined()
+    expect(completedBytesMetric.stats).toBeDefined()
+    expect(completedBytesMetric.stats.c).toBe(wsEvents.length)
+    expect(completedBytesMetric.stats.t).toBeGreaterThan(0) // Total bytes should be greater than 0
+
+    // Verify the average bytes per event is reasonable
+    const avgBytesPerEvent = completedBytesMetric.stats.t / completedBytesMetric.stats.c
+    expect(avgBytesPerEvent).toBeGreaterThan(50) // Each event should be at least 50 bytes when stringified
   })
 })

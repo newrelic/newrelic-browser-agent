@@ -229,7 +229,7 @@ export class Aggregate extends AggregateBase {
       if (!this.associatedInteraction) {
         // This new api-driven interaction will be the target of any subsequent .interaction() call, until it is closed by EITHER .end() OR the regular url>dom change process.
         this.associatedInteraction = thisClass.interactionInProgress = new Interaction(API_TRIGGER_NAME, time, thisClass.latestRouteSetByApi)
-        thisClass.domObserver.observe(document.body, { attributes: true, childList: true, subtree: true, characterData: true }) // start observing for DOM changes like a regular UI-driven interaction
+        thisClass.domObserver.observe(document.documentElement, { attributes: true, childList: true, subtree: true, characterData: true }) // start observing for DOM changes like a regular UI-driven interaction
         thisClass.setClosureHandlers()
       }
       if (waitForEnd === true) {
@@ -267,7 +267,7 @@ export class Aggregate extends AggregateBase {
 }
 
 function getActionText (elem) {
-  const tagName = elem.tagName.toLowerCase()
+  const tagName = elem.tagName?.toLowerCase()
   const elementsOfInterest = ['a', 'button', 'input']
   if (elementsOfInterest.includes(tagName)) {
     return elem.title || elem.value || elem.innerText

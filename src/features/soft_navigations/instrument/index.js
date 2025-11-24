@@ -12,7 +12,6 @@ import { InstrumentBase } from '../../utils/instrument-base'
 import { FEATURE_NAME, INTERACTION_TRIGGERS, POPSTATE_TRIGGER } from '../constants'
 import { now } from '../../../common/timing/now'
 import { setupInteractionAPI } from '../../../loaders/api/interaction'
-import { onDOMContentLoaded } from '../../../common/window/load'
 
 /**
  * The minimal time after a UI event for which no further events will be processed - i.e. a throttling rate to reduce spam.
@@ -63,10 +62,9 @@ export class Instrument extends InstrumentBase {
     const processUserInteraction = debounce((event) => {
       handle('newUIEvent', [event], undefined, this.featureName, this.ee)
 
-      const startObserving = () => {
+      if (document.readyState !== 'loading') { // i.e. is "interactive" or "complete", "legit" user interaction
         domObserver.observe(document.body, { attributes: true, childList: true, subtree: true, characterData: true })
       }
-      document.body ? startObserving() : onDOMContentLoaded(startObserving)
     }, UI_WAIT_INTERVAL, { leading: true })
 
     this.abortHandler = abort

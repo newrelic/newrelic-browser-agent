@@ -12,6 +12,7 @@ import { API_TRIGGER_NAME, FEATURE_NAME, INTERACTION_STATUS, INTERACTION_TRIGGER
 import { AjaxNode } from './ajax-node'
 import { InitialPageLoadInteraction } from './initial-page-load-interaction'
 import { Interaction } from './interaction'
+import { onDOMContentLoaded } from '../../../common/window/load'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -229,11 +230,10 @@ export class Aggregate extends AggregateBase {
       if (!this.associatedInteraction) {
         // This new api-driven interaction will be the target of any subsequent .interaction() call, until it is closed by EITHER .end() OR the regular url>dom change process.
         this.associatedInteraction = thisClass.interactionInProgress = new Interaction(API_TRIGGER_NAME, time, thisClass.latestRouteSetByApi)
-        try {
+        const startObserving = () => {
           thisClass.domObserver.observe(document.body, { attributes: true, childList: true, subtree: true, characterData: true }) // start observing for DOM changes like a regular UI-driven interaction
-        } catch (e) {
-          // do nothing
         }
+        document.body ? startObserving() : onDOMContentLoaded(startObserving)
         thisClass.setClosureHandlers()
       }
       if (waitForEnd === true) {

@@ -61,7 +61,11 @@ export class Instrument extends InstrumentBase {
 
     const processUserInteraction = debounce((event) => {
       handle('newUIEvent', [event], undefined, this.featureName, this.ee)
-      domObserver.observe(document.documentElement, { attributes: true, childList: true, subtree: true, characterData: true })
+      try {
+        domObserver.observe(document.body, { attributes: true, childList: true, subtree: true, characterData: true })
+      } catch (e) {
+        // do nothing
+      }
     }, UI_WAIT_INTERVAL, { leading: true })
 
     this.abortHandler = abort

@@ -21,11 +21,11 @@ export class RegisteredEntity {
   /** @type {RegisterAPIMetadata} */
   metadata = {
     target: {},
+    timings: {},
     customAttributes: {}
   }
 
   /**
-   *
    * @param {RegisterAPIConstructor} opts The options for setting up the registered entity.
    */
   constructor (opts) {

@@ -28,6 +28,7 @@
 /**
  * @typedef {Object} RegisterAPIMetadata
  * @property {Object} customAttributes - The custom attributes for the registered entity.
+ * @property {Object} timings - The timing information for the registered entity.
  * @property {Object} target - The options for the registered entity.
  * @property {string} [target.licenseKey] - The license key for the registered entity. If none was supplied, it will assume the license key from the main agent.
  * @property {string} target.id - The ID for the registered entity.

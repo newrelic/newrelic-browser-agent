@@ -16,6 +16,8 @@ import { noticeError } from './noticeError'
 import { single } from '../../common/util/invoke'
 import { measure } from './measure'
 import { recordCustomEvent } from './recordCustomEvent'
+import { findScriptTimingsFromStack } from '../../common/util/script-tracker'
+import { windowAddEventListener } from '../../common/event-listener/event-listener-opts'
 
 /**
  * @typedef {import('./register-api-types').RegisterAPI} RegisterAPI
@@ -50,6 +52,12 @@ function register (agentRef, target, parent) {
   target.blocked = false
   target.parent = parent || {}
 
+  const timings = {
+    registeredAt: now(),
+    deregisteredAt: undefined,
+    ...(findScriptTimingsFromStack(new Error().stack)) // 0 or a real time if found
+  }
+
   /** @type {Function} a function that is set and reports when APIs are triggered -- warns the customer of the invalid state  */
   let invalidApiResponse = () => {}
   /** @type {Set} the array of registered target APIs */
@@ -75,6 +83,8 @@ function register (agentRef, target, parent) {
   const api = {
     addPageAction: (name, attributes = {}) => report(addPageAction, [name, { ...attrs, ...attributes }, agentRef], target),
     deregister: () => {
+      // capture deregistration timing
+      reportTimeAlive()
       registeredEntities.delete(api)
       block(single(() => warn(66)))
     },
@@ -89,7 +99,8 @@ function register (agentRef, target, parent) {
     /** metadata */
     metadata: {
       customAttributes: attrs,
-      target
+      target,
+      timings
     }
   }
 
@@ -103,7 +114,23 @@ function register (agentRef, target, parent) {
   }
 
   /** only allow registered APIs to be tracked in the agent runtime */
-  if (!isBlocked()) registeredEntities.add(api)
+  if (!isBlocked()) {
+    registeredEntities.add(api)
+    // capture initial registration timings
+    // timeToBeRequested -- could be a custom event or a BrowserPerformance event -- TBD
+    // timeToFetch -- could be a custom event or a BrowserPerformance event -- TBD
+    // timeToRegister -- could be a custom event or a BrowserPerformance event -- TBD
+    // timeAlive -- could be a custom event or a BrowserPerformance event -- TBD
+    windowAddEventListener('pagehide', reportTimeAlive)
+  }
+
+  function reportTimeAlive () {
+    // only report it the first time this is called
+    if (timings.deregisteredAt) return
+    timings.deregisteredAt = now()
+    // report the timing here! now - registeredAt
+    // could be a custom event or a BrowserPerformance event -- TBD
+  }
 
   /**
    * Sets a value local to the registered API attrs. Will do nothing if APIs are deregistered.

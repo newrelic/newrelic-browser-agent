@@ -35,7 +35,7 @@
  * @property {Object} [metrics]
  * @property {boolean} [metrics.enabled] - Turn on/off the metrics feature (on by default).
  * @property {boolean} [metrics.autoStart] - If true, the agent will automatically start the metrics feature. Otherwise, it will be in a deferred state until the `start` API method is called.
- * @property {Array<Object>} [obfuscate] - Array of regexp and corresponding replacement patterns for obfuscating data.
+ * @property {{regex: RegExp | string, replacement: string}[]} [obfuscate] - Array of regexp and corresponding replacement patterns for obfuscating data.
  * @property {Object} [page_action]
  * @property {boolean} [page_action.enabled] - Must be true to allow PageAction events to be captured.
  * @property {Object} [page_view_event]
@@ -84,6 +84,8 @@
  * @property {boolean} [spa.enabled] - Turn on/off the single page application feature (on by default). NOTE: the SPA feature is deprecated and under removal procedure.
  * @property {boolean} [spa.autoStart] - If true, the agent will automatically start the single page application feature. Otherwise, it will be in a deferred state until the `start` API method is called.
  * @property {boolean} [ssl] - If explicitly false, the agent will use HTTP instead of HTTPS. This setting should NOT be used.
+ * @property {Object} [browser_consent_mode]
+ * @property {boolean} [browser_consent_mode.enabled] - If true, the agent will use consent mode for whether to allow or disallow data harvest.
  * @property {Object} [user_actions]
  * @property {boolean} [user_actions.enabled] - Must be true to allow UserAction events to be captured.
  * @property {Array<string>} [user_actions.elementAttributes] - List of HTML Element properties to be captured with UserAction events' target elements. This may help to identify the source element being interacted with in the UI.

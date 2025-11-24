@@ -1,6 +1,7 @@
 // config
 window.NREUM={
   init: {
+    feature_flags: ['soft_nav', 'user_frustrations', 'register'], // add jserrors and generic events once the consumer(s) support it
     distributed_tracing: {
       enabled: true
     },
@@ -26,9 +27,9 @@ window.NREUM={
       enabled: true
     },
     performance: {
-      capture_marks: false, 
+      capture_marks: false,
       capture_measures: true,
-      resources: { 
+      resources: {
         enabled: true,
         ignore_newrelic: false,
         first_party_domains: ['dev-one.nr-assets.net', 'staging-one.nr-assets.net', 'one.nr-assets.net', 'nr-assets.net']

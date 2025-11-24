@@ -18,8 +18,10 @@ import { getSubmitMethod, xhr as xhrMethod, xhrFetch as fetchMethod } from '../u
 import { activatedFeatures } from '../util/feature-flags'
 import { dispatchGlobalEvent } from '../dispatch/global-event'
 
-const RETRY_FAILED = 'Harvester/Retry/Failed/'
-const RETRY_SUCCEEDED = 'Harvester/Retry/Succeeded/'
+const RETRY = 'Harvester/Retry/'
+const RETRY_ATTEMPTED = RETRY + 'Attempted/'
+const RETRY_FAILED = RETRY + 'Failed/'
+const RETRY_SUCCEEDED = RETRY + 'Succeeded/'
 
 export class Harvester {
   #started = false
@@ -55,34 +57,31 @@ export class Harvester {
    * @returns {boolean} True if 1+ network call was made. Note that this does not mean or guarantee that it was successful (or that all were in the case of more than 1).
    */
   triggerHarvestFor (aggregateInst, localOpts = {}) {
-    if (aggregateInst.blocked) return false
+    const output = { ranSend: false, payload: undefined, endpointVersion: aggregateInst.harvestEndpointVersion || 1 }
+    if (aggregateInst.blocked) return output
+    if (this.agentRef.init?.browser_consent_mode?.enabled && !this.agentRef.runtime.consented) return output
 
     const submitMethod = getSubmitMethod(localOpts)
-    if (!submitMethod) return false
+    if (!submitMethod) return output
 
     const shouldRetryOnFail = !localOpts.isFinalHarvest && submitMethod === xhrMethod // always retry all features harvests except for final
-    let dataToSendArr; let ranSend = false
-    if (!localOpts.directSend) { // primarily used by rum call to bypass makeHarvestPayload by providing payload directly
-      dataToSendArr = aggregateInst.makeHarvestPayload(shouldRetryOnFail, localOpts) // be sure the 'this' of makeHarvestPayload is the aggregate w/ access to its harvestOpts
-      if (!dataToSendArr) return false // can be undefined if storage is empty or preharvest checks failed
-    } else dataToSendArr = [localOpts.directSend]
+    output.payload = aggregateInst.makeHarvestPayload(shouldRetryOnFail, localOpts)
 
-    dataToSendArr.forEach(({ targetApp, payload }) => {
-      if (!payload) return
+    if (!output.payload) return output
 
-      send(this.agentRef, {
-        endpoint: FEATURE_TO_ENDPOINT[aggregateInst.featureName],
-        targetApp,
-        payload,
-        localOpts,
-        submitMethod,
-        cbFinished,
-        raw: aggregateInst.harvestOpts.raw,
-        featureName: aggregateInst.featureName
-      })
-      ranSend = true
+    send(this.agentRef, {
+      endpoint: FEATURE_TO_ENDPOINT[aggregateInst.featureName],
+      payload: output.payload,
+      localOpts,
+      submitMethod,
+      cbFinished,
+      raw: aggregateInst.harvestOpts.raw,
+      featureName: aggregateInst.featureName,
+      endpointVersion: output.endpointVersion
     })
-    return ranSend
+    output.ranSend = true
+
+    return output
 
     /**
      * This is executed immediately after harvest sends the data via XHR, or if there's nothing to send. Note that this excludes on unloading / sendBeacon.
@@ -90,7 +89,9 @@ export class Harvester {
      */
     function cbFinished (result) {
       if (aggregateInst.harvestOpts.prevAttemptCode) { // this means we just retried a harvest that last failed
-        handle(SUPPORTABILITY_METRIC_CHANNEL, [(result.retry ? RETRY_FAILED : RETRY_SUCCEEDED) + aggregateInst.harvestOpts.prevAttemptCode], undefined, FEATURE_NAMES.metrics, aggregateInst.ee)
+        const reportSM = (message) => handle(SUPPORTABILITY_METRIC_CHANNEL, [message], undefined, FEATURE_NAMES.metrics, aggregateInst.ee)
+        reportSM(RETRY_ATTEMPTED + aggregateInst.featureName)
+        reportSM((result.retry ? RETRY_FAILED : RETRY_SUCCEEDED) + aggregateInst.harvestOpts.prevAttemptCode)
         delete aggregateInst.harvestOpts.prevAttemptCode // always reset last observation so we don't falsely report again next harvest
         // In case this re-attempt failed again, that'll be handled (re-marked again) next.
       }
@@ -112,13 +113,13 @@ const warnings = {}
   * @param {NetworkSendSpec} param0 Specification for sending data
   * @returns {boolean} True if a network call was made. Note that this does not mean or guarantee that it was successful.
   */
-export function send (agentRef, { endpoint, targetApp, payload, localOpts = {}, submitMethod, cbFinished, raw, featureName }) {
+export function send (agentRef, { endpoint, payload, localOpts = {}, submitMethod, cbFinished, raw, featureName, endpointVersion = 1 }) {
   if (!agentRef.info.errorBeacon) return false
 
   let { body, qs } = cleanPayload(payload)
 
   if (Object.keys(body).length === 0 && !localOpts.sendEmptyBody) { // if there's no body to send, just run onfinish stuff and return
-    if (cbFinished) cbFinished({ sent: false, targetApp })
+    if (cbFinished) cbFinished({ sent: false })
     return false
   }
 
@@ -126,8 +127,8 @@ export function send (agentRef, { endpoint, targetApp, payload, localOpts = {}, 
   const perceivedBeacon = agentRef.init.proxy.beacon || agentRef.info.errorBeacon
   const url = raw
     ? `${protocol}://${perceivedBeacon}/${endpoint}`
-    : `${protocol}://${perceivedBeacon}${endpoint !== RUM ? '/' + endpoint : ''}/1/${targetApp.licenseKey}`
-  const baseParams = !raw ? baseQueryString(agentRef, qs, endpoint, targetApp.applicationID) : ''
+    : `${protocol}://${perceivedBeacon}${endpoint !== RUM ? '/' + endpoint : ''}/${endpointVersion}/${agentRef.info.licenseKey}`
+  const baseParams = !raw ? baseQueryString(agentRef, qs, endpoint) : ''
   let payloadParams = obj(qs, agentRef.runtime.maxBytes)
   if (baseParams === '' && payloadParams.startsWith('&')) {
     payloadParams = payloadParams.substring(1)
@@ -135,14 +136,16 @@ export function send (agentRef, { endpoint, targetApp, payload, localOpts = {}, 
 
   const fullUrl = `${url}?${baseParams}${payloadParams}`
   const gzip = !!qs?.attributes?.includes('gzip')
-  if (!gzip) {
-    if (endpoint !== EVENTS) body = stringify(body) // all features going to 'events' endpoint should already be serialized & stringified
-    // Warn--once per endpoint--if the agent tries to send large payloads
-    if (body.length > 750000 && (warnings[endpoint] = (warnings[endpoint] || 0) + 1) === 1) warn(28, endpoint)
-  }
+
+  // all gzipped data is already in the correct format and needs no transformation
+  // all features going to 'events' endpoint should already be serialized & stringified
+  let stringBody = gzip || endpoint === EVENTS ? body : stringify(body)
 
   // If body is null, undefined, or an empty object or array after stringifying, send an empty string instead.
-  if (!body || body.length === 0 || body === '{}' || body === '[]') body = ''
+  if (!stringBody || stringBody.length === 0 || stringBody === '{}' || stringBody === '[]') stringBody = ''
+
+  // Warn--once per endpoint--if the agent tries to send large payloads
+  if (endpoint !== BLOBS && stringBody.length > 750000 && (warnings[endpoint] = (warnings[endpoint] || 0) + 1) === 1) warn(28, endpoint)
 
   const headers = [{ key: 'content-type', value: 'text/plain' }]
 
@@ -150,24 +153,47 @@ export function send (agentRef, { endpoint, targetApp, payload, localOpts = {}, 
       Because they still do permit synch XHR, the idea is that at final harvest time (worker is closing),
       we just make a BLOCKING request--trivial impact--with the remaining data as a temp fill-in for sendBeacon.
      Following the removal of img-element method. */
-  let result = submitMethod({ url: fullUrl, body, sync: localOpts.isFinalHarvest && isWorkerScope, headers })
+  let result = submitMethod({ url: fullUrl, body: stringBody, sync: localOpts.isFinalHarvest && isWorkerScope, headers })
 
   if (!localOpts.isFinalHarvest && cbFinished) { // final harvests don't hold onto buffer data (shouldRetryOnFail is false), so cleanup isn't needed
     if (submitMethod === xhrMethod) {
       result.addEventListener('loadend', function () {
         // `this` here in block refers to the XHR object in this scope, do not change the anon function to an arrow function
         // status 0 refers to a local error, such as CORS or network failure, or a blocked request by the browser (e.g. adblocker)
-        const cbResult = { sent: this.status !== 0, status: this.status, retry: shouldRetry(this.status), fullUrl, xhr: this, targetApp }
-        if (localOpts.needResponse) cbResult.responseText = this.responseText
+        const cbResult = { sent: this.status !== 0, status: this.status, retry: shouldRetry(this.status), fullUrl, xhr: this, responseText: this.responseText }
         cbFinished(cbResult)
+
+        /** temporary audit of consistency of harvest metadata flags */
+        if (!shouldRetry(this.status)) trackHarvestMetadata()
       }, eventListenerOpts(false))
     } else if (submitMethod === fetchMethod) {
       result.then(async function (response) {
         const status = response.status
-        const cbResult = { sent: true, status, retry: shouldRetry(status), fullUrl, fetchResponse: response, targetApp }
-        if (localOpts.needResponse) cbResult.responseText = await response.text()
+        const cbResult = { sent: true, status, retry: shouldRetry(status), fullUrl, fetchResponse: response, responseText: await response.text() }
         cbFinished(cbResult)
+        /** temporary audit of consistency of harvest metadata flags */
+        if (!shouldRetry(status)) trackHarvestMetadata()
       })
+    }
+
+    function trackHarvestMetadata () {
+      try {
+        if (featureName === FEATURE_NAMES.jserrors && !body?.err) return
+
+        const hasReplay = baseParams.includes('hr=1')
+        const hasTrace = baseParams.includes('ht=1')
+        const hasError = qs?.attributes?.includes('hasError=true')
+
+        handle('harvest-metadata', [{
+          [featureName]: {
+            ...(hasReplay && { hasReplay }),
+            ...(hasTrace && { hasTrace }),
+            ...(hasError && { hasError })
+          }
+        }], undefined, FEATURE_NAMES.metrics, agentRef.ee)
+      } catch (err) {
+      // do nothing
+      }
     }
   }
 
@@ -180,7 +206,6 @@ export function send (agentRef, { endpoint, targetApp, payload, localOpts = {}, 
     data: {
       endpoint,
       headers,
-      targetApp,
       payload,
       submitMethod: getSubmitMethodName(),
       raw,
@@ -237,20 +262,21 @@ function cleanPayload (payload = {}) {
 }
 
 // The stuff that gets sent every time.
-function baseQueryString (agentRef, qs, endpoint, applicationID) {
+function baseQueryString (agentRef, qs, endpoint) {
   const ref = agentRef.runtime.obfuscator.obfuscateString(cleanURL('' + globalScope.location))
-  const hr = agentRef.runtime.session?.state.sessionReplayMode === 1 && endpoint !== JSERRORS
-  const ht = agentRef.runtime.session?.state.sessionTraceMode === 1 && ![LOGS, BLOBS].includes(endpoint)
+  const session = agentRef.runtime.session
+  const hr = !!session?.state.sessionReplaySentFirstChunk && session?.state.sessionReplayMode === 1 && endpoint !== JSERRORS
+  const ht = !!session?.state.traceHarvestStarted && session?.state.sessionTraceMode === 1 && ![LOGS, BLOBS].includes(endpoint)
 
   const qps = [
-    'a=' + applicationID,
+    'a=' + agentRef.info.applicationID,
     param('sa', (agentRef.info.sa ? '' + agentRef.info.sa : '')),
     param('v', VERSION),
     transactionNameParam(),
     param('ct', agentRef.runtime.customTransaction),
     '&rst=' + now(),
     '&ck=0', // ck param DEPRECATED - still expected by backend
-    '&s=' + (agentRef.runtime.session?.state.value || '0'), // the 0 id encaps all untrackable and default traffic
+    '&s=' + (session?.state.value || '0'), // the 0 id encaps all untrackable and default traffic
     param('ref', ref),
     param('ptid', (agentRef.runtime.ptid ? '' + agentRef.runtime.ptid : ''))
   ]

@@ -99,7 +99,23 @@ export class MicroAgent extends MicroAgentBase {
           so as to avoid the race condition of things like session and sharedAggregator not being ready by features that uses them right away. */
           nonAutoFeatures.forEach(f => {
             if (enabledFeatures[f] && featureNames.includes(f)) {
-              import(`../features/${f}/aggregate`).then(({ Aggregate }) => {
+              let lazyImport
+              /** Define these imports with static strings to not break tools like roll-up */
+              switch (f) {
+                case 'jserrors':
+                  lazyImport = import('../features/jserrors/aggregate')
+                  break
+                case 'generic_events':
+                  lazyImport = import('../features/generic_events/aggregate')
+                  break
+                case 'metrics':
+                  lazyImport = import('../features/metrics/aggregate')
+                  break
+                case 'logging':
+                  lazyImport = import('../features/logging/aggregate')
+                  break
+              }
+              lazyImport.then(({ Aggregate }) => {
                 this.features[f] = new Aggregate(this)
                 this.runtime.harvester.initializedAggregates.push(this.features[f]) // so that harvester will poll this feature agg on interval
               }).catch(err => warn(25, err))

@@ -10,8 +10,22 @@ module.exports = function (api, ...args) {
   if (!process.env.BUILD_ENV) {
     process.env.BUILD_ENV = 'CDN'
   }
-
-  process.env.RRWEB_VERSION = pkg.dependencies.rrweb
+  if (!process.env.RRWEB_VERSION) {
+    // Prefer the installed package's actual version (node_modules/@newrelic/rrweb/package.json)
+    // rather than the semver range declared in this repo's package.json.
+    try {
+      // eslint-disable-next-line n/no-missing-require
+      const rrwebPkg = require('@newrelic/rrweb/package.json')
+      if (rrwebPkg && rrwebPkg.version) {
+        process.env.RRWEB_VERSION = rrwebPkg.version
+      } else {
+        process.env.RRWEB_VERSION = pkg.dependencies['@newrelic/rrweb'] || '0.0.0'
+      }
+    } catch (e) {
+      // Fallback to the semver declaration if the installed package cannot be resolved yet
+      process.env.RRWEB_VERSION = pkg.dependencies['@newrelic/rrweb'] || '0.0.0'
+    }
+  }
 
   const ignore = [
     '**/__mocks__/*.js'

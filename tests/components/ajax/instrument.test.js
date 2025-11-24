@@ -6,8 +6,6 @@ import { FEATURE_NAMES } from '../../../src/loaders/features/features'
 let mainAgent
 
 beforeAll(async () => {
-  jest.spyOn(handleModule, 'handle')
-
   mainAgent = setupAgent()
 })
 

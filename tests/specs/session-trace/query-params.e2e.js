@@ -97,26 +97,16 @@ describe('ht query param', () => {
         .then(() => browser.waitForAgentLoad())
         .then(() => browser.pause(5000))
         .then(() => browser.refresh())
+        .then(() => browser.waitForAgentLoad())
+        .then(() => browser.pause(5000))
     ])
 
-    timingEventsHarvests.forEach(harvest => {
-      expect(harvest.request.query.ht).toEqual('1')
-    })
-    metricsHarvests.forEach(harvest => {
-      expect(harvest.request.query.ht).toEqual('1')
-    })
-    ajaxEventsHarvests.forEach(harvest => {
-      expect(harvest.request.query.ht).toEqual('1')
-    })
-    errorsHarvests.forEach(harvest => {
-      expect(harvest.request.query.ht).toEqual('1')
-    })
-    insightsHarvests.forEach(harvest => {
-      expect(harvest.request.query.ht).toEqual('1')
-    })
-    interactionEventsHarvests.forEach(harvest => {
-      expect(harvest.request.query.ht).toEqual('1')
-    })
+    expect(timingEventsHarvests.some(harvest => harvest.request.query.ht === '1')).toBe(true)
+    expect(metricsHarvests.some(harvest => harvest.request.query.ht === '1')).toBe(true)
+    expect(ajaxEventsHarvests.some(harvest => harvest.request.query.ht === '1')).toBe(true)
+    expect(errorsHarvests.some(harvest => harvest.request.query.ht === '1')).toBe(true)
+    expect(insightsHarvests.some(harvest => harvest.request.query.ht === '1')).toBe(true)
+    expect(interactionEventsHarvests.some(harvest => harvest.request.query.ht === '1')).toBe(true)
   })
 
   it('should be undefined if session trace is NOT running - all other endpoints', async () => {

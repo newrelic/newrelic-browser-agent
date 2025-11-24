@@ -44,7 +44,7 @@ test('on interaction cancel, buffered jserrors are flushed as standalone', () =>
   softNavAggregate.interactionInProgress.done()
   expect(softNavAggregate.interactionInProgress).toBeNull()
   expect(jserrorsAggregate.bufferedErrorsUnderSpa[ixnId]).toBeUndefined()
-  expect(jserrorsAggregate.events.get(jserrorsAggregate.harvestOpts)[0].data?.err.length).toEqual(1)
+  expect(jserrorsAggregate.events.get(jserrorsAggregate.harvestOpts).err.length).toEqual(1)
 })
 
 test('on interaction finish, jserrors within time span are associated, others standalone', () => {
@@ -61,7 +61,7 @@ test('on interaction finish, jserrors within time span are associated, others st
   expect(jserrorsAggregate.bufferedErrorsUnderSpa[ixnId].length).toEqual(3)
 
   softNavAggregate.interactionInProgress.done()
-  const errsHarvested = jserrorsAggregate.events.get(jserrorsAggregate.harvestOpts)[0].data?.err.map(jseEvent => jseEvent.params)
+  const errsHarvested = jserrorsAggregate.events.get(jserrorsAggregate.harvestOpts).err.map(jseEvent => jseEvent.params)
   expect(errsHarvested[0]).toEqual(expect.objectContaining({ message: 'test1', browserInteractionId: ixnId }))
   expect(errsHarvested[1]).toEqual(expect.objectContaining({ message: 'test2', browserInteractionId: ixnId }))
   expect(errsHarvested[2].message).toEqual('test3')

@@ -9,6 +9,37 @@ describe('newrelic api', () => {
   })
 
   describe('registered-entity', () => {
+    it('should still harvest scoped data after deregistering', async () => {
+      const [mfeErrorsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+        { test: testMFEErrorsRequest }
+      ])
+      await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+
+      await browser.execute(function () {
+        window.agent1 = newrelic.register({
+          id: 1,
+          name: 'agent1'
+        })
+        window.agent1.noticeError('1')
+        window.agent1.deregister()
+      })
+
+      const errorsHarvests = await mfeErrorsCapture.waitForResult({ totalCount: 1 })
+
+      // should still get a harvest even tho the MFE was deregistered
+      expect(errorsHarvests.length).toEqual(1)
+
+      // should not get future data now that the MFE was deregistered
+      await browser.execute(function () {
+        window.agent1.noticeError('2')
+      })
+
+      const errorsHarvests2 = await mfeErrorsCapture.waitForResult({ timeout: 10000 })
+
+      // should not have gotten more data
+      expect(errorsHarvests2.length).toEqual(errorsHarvests.length)
+    })
+
     it('should allow a nested register', async () => {
       const [mfeErrorsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
         { test: testMFEErrorsRequest }

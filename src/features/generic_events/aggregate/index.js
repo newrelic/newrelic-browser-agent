@@ -282,7 +282,7 @@ export class Aggregate extends AggregateBase {
       ...(getVersion2Attributes(target, this))
     }
 
-    const eventAttributes = {
+    const event = {
       /** Agent-level custom attributes */
       ...(this.agentRef.info.jsAttributes || {}),
       /** Fallbacks for required properties in-case the event did not supply them, should take precedence over agent-level custom attrs */
@@ -291,7 +291,7 @@ export class Aggregate extends AggregateBase {
       ...obj
     }
 
-    this.events.add(eventAttributes)
+    this.events.add(event, target)
   }
 
   serializer (eventBuffer) {

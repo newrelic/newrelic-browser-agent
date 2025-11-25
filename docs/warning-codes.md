@@ -132,4 +132,4 @@
 ### 65
 `Consent API argument must be boolean or undefined`
 ### 66
-`Agent session reset`
+`A new agent session has started`

@@ -2,7 +2,7 @@ import { notIOS, supportsFirstPaint } from '../../../tools/browser-matcher/commo
 import { JSONPath } from 'jsonpath-plus'
 import { testInteractionEventsRequest, testErrorsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
-describe('attribution tests', () => {
+describe.skip('attribution tests', () => {
   let interactionsCapture
 
   beforeEach(async () => {

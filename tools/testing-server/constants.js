@@ -1,16 +1,39 @@
 const path = require('path')
+const yargs = require('yargs/yargs')
+const { hideBin } = require('yargs/helpers')
+const fs = require('fs')
+const args = yargs(hideBin(process.argv)).argv
 
-const defaultAgentConfig = {
-  licenseKey: 'asdf',
-  applicationID: 42,
-  accountID: 123,
-  agentID: 456,
-  trustKey: 789
+let agentConfig
+if (args.B) {
+  try {
+    agentConfig = JSON.parse(args.B)
+  } catch (err) {
+    try {
+      agentConfig = JSON.parse(fs.readFileSync(args.B, 'utf-8'))
+    } catch (err) {
+      console.error('Failed to parse BAM config:', err)
+    }
+  }
 }
-module.exports.defaultAgentConfig = defaultAgentConfig
+
+/** fallback if no override was provided or override outright failed to parse correctly */
+if (!agentConfig) {
+  agentConfig = {
+    licenseKey: 'asdf',
+    applicationID: 42,
+    accountID: 123,
+    agentID: 456,
+    trustKey: 789
+  }
+}
+
+module.exports.agentConfig = agentConfig
+
+console.log('Starting service using agent config -- ', agentConfig)
 
 const mockEntityGuid = () => {
-  return btoa(`${defaultAgentConfig.accountID}|BROWSER|APPLICATION|${Math.floor(Math.random() * 1000000)}`).replace(/=/g, '')
+  return btoa(`${agentConfig.accountID}|BROWSER|APPLICATION|${Math.floor(Math.random() * 1000000)}`).replace(/=/g, '')
 }
 
 module.exports.paths = {

@@ -2,7 +2,7 @@ const { Transform } = require('stream')
 const debugShim = require('./debug-shim')
 const sslShim = require('./ssl-shim')
 const {
-  defaultAgentConfig,
+  agentConfig,
   loaderConfigKeys,
   loaderOnlyConfigKeys
 } = require('../../constants')
@@ -33,9 +33,9 @@ function getConfigContent (request, reply, testServer) {
 
   const config = {
     agent: `${testServer.assetServer.host}:${testServer.assetServer.port}/build/nr.js`,
-    beacon: `${testServer.bamServer.host}:${testServer.bamServer.port}`,
-    errorBeacon: `${testServer.bamServer.host}:${testServer.bamServer.port}`,
-    ...defaultAgentConfig,
+    beacon: `${testServer.bamServer.host}:${testServer.bamServer.port}`, // these will be overridden by agentConfig if supplied
+    errorBeacon: `${testServer.bamServer.host}:${testServer.bamServer.port}`, // these will be overridden by agentConfig if supplied
+    ...agentConfig,
     ...queryConfig
   }
 
@@ -67,7 +67,7 @@ function getConfigContent (request, reply, testServer) {
     ? `NREUM.loader_config=${loaderConfigJSON};`
     : ''
 
-  return `${sslShim}window.NREUM||(NREUM={});NREUM.info=${infoJSON};${loaderConfigAssignment}${
+  return `${sslShim()}window.NREUM||(NREUM={});NREUM.info=${infoJSON};${loaderConfigAssignment}${
     testServer.config.debugShim ? debugShim : ''
   }`
 }

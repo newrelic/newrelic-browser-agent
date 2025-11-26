@@ -60,9 +60,8 @@ export class Instrument extends InstrumentBase {
     })
 
     const processUserInteraction = debounce((event) => {
-      handle('newUIEvent', [event], undefined, this.featureName, this.ee)
-
-      if (document.readyState !== 'loading') { // i.e. is "interactive" or "complete", "legit" user interaction
+      if (document.readyState !== 'loading') { // i.e. is "interactive" or "complete" == "legit" user interaction
+        handle('newUIEvent', [event], undefined, this.featureName, this.ee)
         domObserver.observe(document.body, { attributes: true, childList: true, subtree: true, characterData: true })
       }
     }, UI_WAIT_INTERVAL, { leading: true })

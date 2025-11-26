@@ -60,10 +60,9 @@ export class Instrument extends InstrumentBase {
     })
 
     const processUserInteraction = debounce((event) => {
-      if (document.readyState !== 'loading') { // i.e. is "interactive" or "complete" == "legit" user interaction
-        handle('newUIEvent', [event], undefined, this.featureName, this.ee)
-        domObserver.observe(document.body, { attributes: true, childList: true, subtree: true, characterData: true })
-      }
+      if (document.readyState === 'loading') return // document.body is not expected to be defined yet during loading, so only "interactive" or "complete" is considered "legit" user interaction
+      handle('newUIEvent', [event], undefined, this.featureName, this.ee)
+      domObserver.observe(document.body, { attributes: true, childList: true, subtree: true, characterData: true })
     }, UI_WAIT_INTERVAL, { leading: true })
 
     this.abortHandler = abort

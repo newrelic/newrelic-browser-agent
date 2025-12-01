@@ -44,7 +44,7 @@ test('processes interaction heuristics', async () => {
   expect(softNavAggregate.initialPageLoadInteraction).toBeTruthy()
 
   const loadTimeSubscriber = jest.mocked(loadTimeModule.loadTime.subscribe).mock.calls[0][0]
-  loadTimeSubscriber({ attrs: { navigationEntry: { loadEventEnd: 123 } } })
+  loadTimeSubscriber({ value: 123 })
   expect(softNavAggregate.initialPageLoadInteraction).toBeNull()
   expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(1)
 
@@ -222,7 +222,7 @@ describe('getInteractionFor', () => {
     expect(softNavAggregate.getInteractionFor(currentTime)).toBe(softNavAggregate.initialPageLoadInteraction) // cancelled (untracked) ixn not considered; falls back to iPL
 
     const loadTimeSubscriber = jest.mocked(loadTimeModule.loadTime.subscribe).mock.calls[0][0]
-    loadTimeSubscriber({ attrs: { navigationEntry: { loadEventEnd: performance.now() } } })
+    loadTimeSubscriber({ value: performance.now() })
     expect(softNavAggregate.getInteractionFor(performance.now())).toBeUndefined() // no in progress ixn and iPL has already closed
 
     holdIxn.status = 'finished'
@@ -337,7 +337,7 @@ describe('popstate interactions', () => {
 
 test('interactions are backed up when pre harvesting', () => {
   const loadTimeSubscriber = jest.mocked(loadTimeModule.loadTime.subscribe).mock.calls[0][0]
-  loadTimeSubscriber({ attrs: { navigationEntry: { loadEventEnd: performance.now() } } })
+  loadTimeSubscriber({ value: performance.now() })
   softNavAggregate.makeHarvestPayload(true) // this flag is on during typical interval harvests except for unload
 
   expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(0)
@@ -359,7 +359,7 @@ test('calling done on the initialPageLoad actually closes it correctly', () => {
 describe('back up buffer is cleared when', () => { // prevent mem leak
   beforeEach(() => {
     const loadTimeSubscriber = jest.mocked(loadTimeModule.loadTime.subscribe).mock.calls[0][0]
-    loadTimeSubscriber({ attrs: { navigationEntry: { loadEventEnd: performance.now() } } })
+    loadTimeSubscriber({ value: performance.now() })
     softNavAggregate.makeHarvestPayload(true)
   })
 

@@ -167,7 +167,7 @@ export class Aggregate extends AggregateBase {
       var evName = ev.type
       var eventNode = ev[`__nrNode:${bundleId}`]
 
-      if (!state.pageLoaded && ((evName === 'load' && eventSource === window) || loadedAsDeferredBrowserScript)) {
+      if (!state.pageLoaded && ((evName === 'readystatechange' && eventSource === window.document) || (evName === 'load' && eventSource === window) || loadedAsDeferredBrowserScript)) {
         state.pageLoaded = true
         // set to null so prevNode is set correctly
         this.prevNode = state.currentNode = null

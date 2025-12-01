@@ -2,7 +2,7 @@
  * Copyright 2020-2025 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { globalScope, isBrowserScope, originTime } from '../../../common/constants/runtime'
+import { globalScope, isBrowserScope, originTime, supportsNavTimingL2 } from '../../../common/constants/runtime'
 import { addPT, addPN } from '../../../common/timing/nav-timing'
 import { stringify } from '../../../common/util/stringify'
 import { isValid } from '../../../common/config/info'
@@ -94,7 +94,7 @@ export class Aggregate extends AggregateBase {
     }
 
     if (globalScope.performance) {
-      if (typeof PerformanceNavigationTiming !== 'undefined' && globalScope?.performance?.getEntriesByType('navigation')?.length > 0) { // Navigation Timing level 2 API that replaced PerformanceTiming & PerformanceNavigation
+      if (supportsNavTimingL2()) { // Navigation Timing level 2 API that replaced PerformanceTiming & PerformanceNavigation
         const navTimingEntry = globalScope?.performance?.getEntriesByType('navigation')?.[0]
         const perf = ({
           timing: addPT(originTime, navTimingEntry, {}),

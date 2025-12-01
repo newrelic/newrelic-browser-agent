@@ -13,6 +13,16 @@ export function onWindowLoad (cb, useCapture) {
   windowAddEventListener('load', cb, useCapture)
 }
 
+export function onDocumentReady (cb) {
+  if (checkState()) return cb()
+  documentAddEventListener('readystatechange', function readyStateCheck () {
+    if (checkState()) {
+      document.removeEventListener('readystatechange', readyStateCheck)
+      cb()
+    }
+  })
+}
+
 export function onDOMContentLoaded (cb) {
   if (checkState()) return cb()
   documentAddEventListener('DOMContentLoaded', cb)

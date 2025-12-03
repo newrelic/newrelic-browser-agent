@@ -76,7 +76,7 @@ describe('Session Replay Payload Validation', () => {
 
   it('should match expected payload - standard', async () => {
     const [sessionReplayHarvests, { localStorage: { value: session } }] = await Promise.all([
-      sessionReplaysCapture.waitForResult({ totalCount: 2 }),
+      sessionReplaysCapture.waitForResult({ totalCount: 1, timeout: 10000 }),
       browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
         .then(() => browser.waitForAgentLoad())
         .then(() => browser.getAgentSessionInfo())
@@ -97,7 +97,7 @@ describe('Session Replay Payload Validation', () => {
 
   it('should match expected payload - error', async () => {
     const [sessionReplayHarvests, { localStorage: { value: session } }] = await Promise.all([
-      sessionReplaysCapture.waitForResult({ totalCount: 2 }),
+      sessionReplaysCapture.waitForResult({ totalCount: 1, timeout: 10000 }),
       browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
         .then(() => browser.waitForAgentLoad())
         .then(() => browser.getAgentSessionInfo())

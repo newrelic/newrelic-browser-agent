@@ -21,12 +21,11 @@
           window.location.hash = Math.random()
         }), 500)
       }
-      window.addEventListener('load', function () {
+
         var el = document.createElement('script')
         el.src = '/jsonp?cb=foo'
         window.location.hash = Math.random()
         window.document.body.appendChild(el)
-      }, false)
     </script>
     <p>Click me!</p>
   </body>

@@ -18,7 +18,12 @@ describe('ttfb', () => {
     jest.doMock('../../../../src/common/constants/runtime', () => ({
       __esModule: true,
       isiOS: false,
-      isBrowserScope: true
+      isBrowserScope: true,
+      globalScope: {
+        performance: {
+          getEntriesByType: jest.fn().mockReturnValue([{ responseStart: 100 }])
+        }
+      }
     }))
     global.PerformanceNavigationTiming = jest.fn()
 
@@ -105,7 +110,12 @@ describe('ttfb', () => {
     jest.doMock('../../../../src/common/constants/runtime', () => ({
       __esModule: true,
       isBrowserScope: true,
-      isiOS: false
+      isiOS: false,
+      globalScope: {
+        performance: {
+          getEntriesByType: jest.fn().mockReturnValue([{ responseStart: 100 }])
+        }
+      }
     }))
     global.PerformanceNavigationTiming = jest.fn()
     let witness = 0
@@ -130,7 +140,8 @@ describe('ttfb', () => {
         performance: {
           timing: {
             responseStart: 2
-          }
+          },
+          getEntriesByType: jest.fn().mockReturnValue([{ responseStart: 0 }]) // Invalid responseStart
         }
       },
       originTime: 1,
@@ -146,6 +157,138 @@ describe('ttfb', () => {
       triggeronTTFBCallback({ value: 'notequal1' })
       expect(triggered).toEqual(1)
       done()
+    })
+  })
+
+  test('does NOT report ttfb from web-vitals if responseStart is falsy (0)', (done) => {
+    jest.doMock('../../../../src/common/constants/runtime', () => ({
+      __esModule: true,
+      isiOS: false,
+      isBrowserScope: true,
+      globalScope: {
+        performance: {
+          getEntriesByType: jest.fn().mockReturnValue([{ responseStart: 0 }]),
+          timing: {
+            responseStart: 150
+          }
+        }
+      },
+      originTime: 100
+    }))
+    global.PerformanceNavigationTiming = jest.fn()
+
+    getFreshTTFBImport(metric => {
+      metric.subscribe(({ value }) => {
+        // Should fall back to performance.timing since web-vitals onTTFB is skipped
+        expect(value).toEqual(50) // timing.responseStart (150) - originTime (100)
+        done()
+      })
+    })
+  })
+
+  test('does NOT report ttfb from web-vitals if responseStart is undefined', (done) => {
+    jest.doMock('../../../../src/common/constants/runtime', () => ({
+      __esModule: true,
+      isiOS: false,
+      isBrowserScope: true,
+      globalScope: {
+        performance: {
+          getEntriesByType: jest.fn().mockReturnValue([{ responseStart: undefined }]),
+          timing: {
+            responseStart: 250
+          }
+        }
+      },
+      originTime: 200
+    }))
+    global.PerformanceNavigationTiming = jest.fn()
+
+    getFreshTTFBImport(metric => {
+      metric.subscribe(({ value }) => {
+        // Should fall back to performance.timing since web-vitals onTTFB is skipped
+        expect(value).toEqual(50) // timing.responseStart (250) - originTime (200)
+        done()
+      })
+    })
+  })
+
+  test('does NOT report ttfb from web-vitals if responseStart is null', (done) => {
+    jest.doMock('../../../../src/common/constants/runtime', () => ({
+      __esModule: true,
+      isiOS: false,
+      isBrowserScope: true,
+      globalScope: {
+        performance: {
+          getEntriesByType: jest.fn().mockReturnValue([{ responseStart: null }]),
+          timing: {
+            responseStart: 350
+          }
+        }
+      },
+      originTime: 300
+    }))
+    global.PerformanceNavigationTiming = jest.fn()
+
+    getFreshTTFBImport(metric => {
+      metric.subscribe(({ value }) => {
+        // Should fall back to performance.timing since web-vitals onTTFB is skipped
+        expect(value).toEqual(50) // timing.responseStart (350) - originTime (300)
+        done()
+      })
+    })
+  })
+
+  test('does NOT report ttfb from web-vitals if navigation entry array is empty', (done) => {
+    jest.doMock('../../../../src/common/constants/runtime', () => ({
+      __esModule: true,
+      isiOS: false,
+      isBrowserScope: true,
+      globalScope: {
+        performance: {
+          getEntriesByType: jest.fn().mockReturnValue([]), // Empty array
+          timing: {
+            responseStart: 450
+          }
+        }
+      },
+      originTime: 400
+    }))
+    global.PerformanceNavigationTiming = jest.fn()
+
+    getFreshTTFBImport(metric => {
+      metric.subscribe(({ value }) => {
+        // Should fall back to performance.timing since web-vitals onTTFB is skipped
+        expect(value).toEqual(50) // timing.responseStart (450) - originTime (400)
+        done()
+      })
+    })
+  })
+
+  test('does NOT report ttfb from web-vitals if getEntriesByType throws error', (done) => {
+    jest.doMock('../../../../src/common/constants/runtime', () => ({
+      __esModule: true,
+      isiOS: false,
+      isBrowserScope: true,
+      globalScope: {
+        performance: {
+          getEntriesByType: jest.fn().mockImplementation(() => {
+            throw new Error('Navigation timing access error')
+          }),
+          timing: {
+            responseStart: 550
+          }
+        }
+      },
+      originTime: 500
+    }))
+    global.PerformanceNavigationTiming = jest.fn()
+
+    getFreshTTFBImport(metric => {
+      metric.subscribe(({ value }) => {
+        // Should fall back to performance.timing since web-vitals onTTFB is skipped due to error
+        expect(value).toEqual(50) // timing.responseStart (550) - originTime (500)
+        done()
+      })
     })
   })
 })

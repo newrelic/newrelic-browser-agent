@@ -1,6 +1,5 @@
 const { Transform } = require('stream')
 const debugShim = require('./debug-shim')
-const sslShim = require('./ssl-shim')
 const {
   agentConfig,
   loaderConfigKeys,
@@ -67,7 +66,7 @@ function getConfigContent (request, reply, testServer) {
     ? `NREUM.loader_config=${loaderConfigJSON};`
     : ''
 
-  return `${sslShim()}window.NREUM||(NREUM={});NREUM.info=${infoJSON};${loaderConfigAssignment}${
+  return `window.NREUM||(NREUM={});NREUM.info=${infoJSON};${loaderConfigAssignment}${
     testServer.config.debugShim ? debugShim : ''
   }`
 }

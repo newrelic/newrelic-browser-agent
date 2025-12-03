@@ -168,6 +168,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
+      - name: Build Agent2Query assets
+        uses: ./.github/actions/build-agent2query
+        with:
+          released_license_key: ${{ secrets.A2Q_RELEASED_LICENSE_KEY }}
+          latest_license_key: ${{ secrets.A2Q_LATEST_LICENSE_KEY }}
       - name: Upload Agent2Query assets to S3
         id: s3-upload-agent2query
         uses: ./.github/actions/s3-upload
@@ -176,7 +181,7 @@ jobs:
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws_role: ${{ secrets.AWS_ROLE_ARN }}
           aws_bucket_name: ${{ secrets.AWS_BUCKET }}
-          local_dir: $GITHUB_WORKSPACE/agent-2-query
+          local_dir: $GITHUB_WORKSPACE/temp/agent-2-query
           bucket_dir: agent-2-query/
       - name: Gather agent-2-query purge paths
         id: dev-purge-paths-agent2query

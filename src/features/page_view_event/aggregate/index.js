@@ -46,9 +46,8 @@ export class Aggregate extends AggregateBase {
         this.timeToFirstByte = Math.max(value, this.timeToFirstByte)
         this.firstByteToWindowLoad = Math.max(Math.round(navEntry.loadEventEnd - this.timeToFirstByte), this.firstByteToWindowLoad) // our "frontend" duration
         this.firstByteToDomContent = Math.max(Math.round(navEntry.domContentLoadedEventEnd - this.timeToFirstByte), this.firstByteToDomContent) // our "dom processing" duration
-
-        this.sendRum()
       })
+      setTimeout(this.sendRum.bind(this), 0) // we want to sendRum after ttfb has reported something, but we dont want to wait forever incase TTFB fails to report in niche environments.
     } else {
       // worker agent build does not get TTFB values, use default 0 values
       this.sendRum()

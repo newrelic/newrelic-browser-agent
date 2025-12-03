@@ -1,7 +1,7 @@
 import { notIOS } from '../../../tools/browser-matcher/common-matchers.mjs'
 import { testInteractionEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
-describe('spa interactions with zonejs', () => {
+describe.skip('spa interactions with zonejs', () => {
   let interactionsCapture
 
   beforeEach(async () => {

@@ -3,7 +3,7 @@ import { InstrumentBase } from '../../../../src/features/utils/instrument-base'
 import { FeatureBase } from '../../../../src/features/utils/feature-base'
 import { FEATURE_NAMES } from '../../../../src/loaders/features/features'
 import { drain, registerDrain } from '../../../../src/common/drain/drain'
-import { onWindowLoad, onDocumentReady } from '../../../../src/common/window/load'
+import { onWindowLoad } from '../../../../src/common/window/load'
 import { setupAgentSession } from '../../../../src/features/utils/agent-session'
 import { warn } from '../../../../src/common/util/console'
 import * as runtimeConstantsModule from '../../../../src/common/constants/runtime'
@@ -75,18 +75,6 @@ test('should import aggregator on window load', async () => {
   await windowLoadCallback()
 
   expect(onWindowLoad).toHaveBeenCalledWith(expect.any(Function), true)
-  expect(mockAggregate).toHaveBeenCalledWith(agentBase, aggregateArgs)
-})
-
-test('should import aggregator on document ready', async () => {
-  const instrument = new InstrumentBase(agentBase, featureName)
-  const aggregateArgs = { [faker.string.uuid()]: faker.lorem.sentence() }
-  instrument.importAggregator(agentBase, () => importPromise, aggregateArgs)
-
-  const documentReadyCallback = jest.mocked(onDocumentReady).mock.calls[0][0]
-  await documentReadyCallback()
-
-  expect(onDocumentReady).toHaveBeenCalledWith(expect.any(Function))
   expect(mockAggregate).toHaveBeenCalledWith(agentBase, aggregateArgs)
 })
 

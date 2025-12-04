@@ -18,10 +18,11 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { firstContentfulPaint } from '../../../common/vitals/first-contentful-paint'
 import { firstPaint } from '../../../common/vitals/first-paint'
 import { bundleId } from '../../../common/ids/bundle-id'
-import { initialLocation, loadedAsDeferredBrowserScript } from '../../../common/constants/runtime'
+import { initialLocation } from '../../../common/constants/runtime'
 import { handle } from '../../../common/event-emitter/handle'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../metrics/constants'
 import { warn } from '../../../common/util/console'
+import { checkState } from '../../../common/window/load'
 
 const {
   FEATURE_NAME, INTERACTION_EVENTS, MAX_TIMER_BUDGET, FN_START, FN_END, CB_START, INTERACTION_API, REMAINING,
@@ -167,7 +168,7 @@ export class Aggregate extends AggregateBase {
       var evName = ev.type
       var eventNode = ev[`__nrNode:${bundleId}`]
 
-      if (!state.pageLoaded && ((evName === 'readystatechange' && eventSource === window.document) || (evName === 'load' && eventSource === window) || loadedAsDeferredBrowserScript)) {
+      if (!state.pageLoaded && checkState()) {
         state.pageLoaded = true
         // set to null so prevNode is set correctly
         this.prevNode = state.currentNode = null

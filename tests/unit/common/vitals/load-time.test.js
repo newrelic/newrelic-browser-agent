@@ -5,12 +5,10 @@ beforeEach(() => {
 })
 
 let windowLoadCallback
-let documentReadyCallback
 
 const getFreshLoadTimeImport = async (codeToRun) => {
   jest.doMock('../../../../src/common/window/load', () => ({
-    onWindowLoad: jest.fn(cb => { windowLoadCallback = cb }),
-    onDocumentReady: jest.fn(cb => { documentReadyCallback = cb })
+    onWindowLoad: jest.fn((cb, useCapture) => { windowLoadCallback = cb })
   }))
   const { loadTime } = await import('../../../../src/common/vitals/load-time')
   codeToRun(loadTime)
@@ -60,7 +58,7 @@ describe('load-time', () => {
         expect(value).toEqual(1500) // 2000 - 500
         done()
       })
-      documentReadyCallback()
+      windowLoadCallback()
     })
   })
 
@@ -94,12 +92,11 @@ describe('load-time', () => {
         expect(1).toEqual(2)
       })
       if (windowLoadCallback) windowLoadCallback()
-      if (documentReadyCallback) documentReadyCallback()
       setTimeout(done, 1000)
     })
   })
 
-  test('reports from whichever listener fires first - window load', (done) => {
+  test('reports from window load listener', (done) => {
     jest.doMock('../../../../src/common/constants/runtime', () => ({
       __esModule: true,
       isBrowserScope: true,
@@ -120,8 +117,7 @@ describe('load-time', () => {
         expect(value).toEqual(1200)
         expect(callCount).toEqual(1) // Should only be called once
       })
-      windowLoadCallback() // Fire window load first
-      documentReadyCallback() // Fire document ready second - should not trigger
+      windowLoadCallback()
       setTimeout(() => {
         expect(callCount).toEqual(1)
         done()
@@ -129,7 +125,7 @@ describe('load-time', () => {
     })
   })
 
-  test('reports from whichever listener fires first - document ready', (done) => {
+  test('reports only once even if callback fires multiple times', (done) => {
     jest.doMock('../../../../src/common/constants/runtime', () => ({
       __esModule: true,
       isBrowserScope: true,
@@ -151,8 +147,8 @@ describe('load-time', () => {
         expect(value).toEqual(2000)
         expect(callCount).toEqual(1) // Should only be called once
       })
-      documentReadyCallback() // Fire document ready first
-      windowLoadCallback() // Fire window load second - should not trigger
+      windowLoadCallback() // Fire first time
+      windowLoadCallback() // Fire second time - should not trigger due to isValid check
       setTimeout(() => {
         expect(callCount).toEqual(1)
         done()
@@ -211,8 +207,7 @@ describe('load-time', () => {
         expect(triggered).toEqual(1)
       })
       windowLoadCallback()
-      documentReadyCallback() // Should not trigger again
-      windowLoadCallback() // Should not trigger again
+      windowLoadCallback() // Should not trigger again due to isValid check
       expect(triggered).toEqual(1)
       done()
     })

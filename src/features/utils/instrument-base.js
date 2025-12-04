@@ -11,7 +11,7 @@
 
 import { drain, registerDrain } from '../../common/drain/drain'
 import { FeatureBase } from './feature-base'
-import { onDocumentReady, onWindowLoad } from '../../common/window/load'
+import { onWindowLoad } from '../../common/window/load'
 import { isBrowserScope } from '../../common/constants/runtime'
 import { warn } from '../../common/util/console'
 import { FEATURE_NAMES } from '../../loaders/features/features'
@@ -87,7 +87,7 @@ export class InstrumentBase extends FeatureBase {
     if (this.featAggregate) return
 
     // ensure this only ever imports a single time
-    const importLater = single(async () => {
+    const importLater = async () => {
       // wait for the deferred promise to resolve before proceeding
       // this will resolve immediately if the feature is auto-started,
       // or otherwise when the manual-start-all event is emitted by the start API
@@ -128,16 +128,12 @@ export class InstrumentBase extends FeatureBase {
         this.loadedSuccessfully(false)
         if (this.ee) this.ee.abort()
       }
-    })
-
-    // For regular web pages, we want to wait and lazy-load the aggregator only after all page resources are loaded (document "ready").
-    // Non-browser scopes (i.e. workers) have no document or window load event to wait on, so the aggregator can be lazy-loaded immediately.
-    if (!isBrowserScope) importLater()
-    else {
-      //  importLater will only run once no matter who calls it first
-      onDocumentReady(() => importLater()) // document ready __should__ fire first, before window load but...
-      onWindowLoad(() => importLater(), true) // in case document ready failed for some reason (iframe shenanigans), also hook into window load.
     }
+
+    // For regular web pages, we want to wait and lazy-load the aggregator only after all page resources are loaded.
+    // Non-browser scopes (i.e. workers) have no `window.load` event, so the aggregator can be lazy-loaded immediately.
+    if (!isBrowserScope) importLater()
+    else onWindowLoad(() => importLater(), true) // in case document ready failed for some reason (iframe shenanigans), also hook into window load.
   }
 
   /**

@@ -266,7 +266,7 @@ export class Aggregate extends AggregateBase {
 }
 
 function getActionText (elem) {
-  const tagName = elem.tagName.toLowerCase()
+  const tagName = elem.tagName?.toLowerCase()
   const elementsOfInterest = ['a', 'button', 'input']
   if (elementsOfInterest.includes(tagName)) {
     return elem.title || elem.value || elem.innerText

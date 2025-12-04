@@ -1,0 +1,23 @@
+name: 'Build Agent2Query Assets'
+description: 'Builds Agent2Query test assets with templated license keys'
+
+inputs:
+  released_license_key:
+    description: 'License key for the released version'
+    required: true
+  latest_license_key:
+    description: 'License key for the latest version'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install dependencies
+      run: npm install --silent --no-progress --prefix $GITHUB_ACTION_PATH/..
+      shell: bash
+    - name: Build Agent2Query assets
+      run: |
+        node $GITHUB_ACTION_PATH/index.js \
+          --released-license-key "${{ inputs.released_license_key }}" \
+          --latest-license-key "${{ inputs.latest_license_key }}"
+      shell: bash

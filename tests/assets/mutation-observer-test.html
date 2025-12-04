@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>MutationObserver Test</title>
+  {init}
+  <script>
+    NREUM.init.feature_flags = ['soft_nav']
+  </script>
+  {config} {loader}
+  <script>
+    // Dispatch click event synchronously before body element exists
+    // This should trigger the soft navigations feature to try to observe document.body
+    // which will be null at this point, causing the error:
+    // "Failed to execute 'observe' on 'MutationObserver': parameter 1 is not of type 'Node'"
+    document.dispatchEvent(new Event('click', { bubbles: true }));
+  </script>
+</head>
+<body>
+</body>
+</html>

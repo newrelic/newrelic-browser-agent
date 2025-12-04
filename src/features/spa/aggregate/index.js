@@ -684,7 +684,7 @@ export class Aggregate extends AggregateBase {
     baseEE.on('interaction', saveInteraction)
 
     function getActionText (node) {
-      var nodeType = node.tagName.toLowerCase()
+      var nodeType = node.tagName?.toLowerCase()
       var goodNodeTypes = ['a', 'button', 'input']
       var isGoodNode = goodNodeTypes.indexOf(nodeType) !== -1
       if (isGoodNode) {

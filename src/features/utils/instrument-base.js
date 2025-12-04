@@ -86,7 +86,6 @@ export class InstrumentBase extends FeatureBase {
   importAggregator (agentRef, fetchAggregator, argsObjFromInstrument = {}) {
     if (this.featAggregate) return
 
-    // ensure this only ever imports a single time
     const importLater = async () => {
       // wait for the deferred promise to resolve before proceeding
       // this will resolve immediately if the feature is auto-started,
@@ -133,7 +132,7 @@ export class InstrumentBase extends FeatureBase {
     // For regular web pages, we want to wait and lazy-load the aggregator only after all page resources are loaded.
     // Non-browser scopes (i.e. workers) have no `window.load` event, so the aggregator can be lazy-loaded immediately.
     if (!isBrowserScope) importLater()
-    else onWindowLoad(() => importLater(), true) // in case document ready failed for some reason (iframe shenanigans), also hook into window load.
+    else onWindowLoad(() => importLater(), true)
   }
 
   /**

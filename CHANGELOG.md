@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.304.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.303.0...v1.304.0) (2025-12-03)
+
+
+### Features
+
+* Reduce Session Replay snapshot sizes ([#1630](https://github.com/newrelic/newrelic-browser-agent/issues/1630)) ([7d3edc8](https://github.com/newrelic/newrelic-browser-agent/commit/7d3edc80edd421d4960b95c5d84ca5eef7fca6a4))
+* Warn message on session reset ([#1635](https://github.com/newrelic/newrelic-browser-agent/issues/1635)) ([6e2110f](https://github.com/newrelic/newrelic-browser-agent/commit/6e2110f129ad682444203a9aa65b4a4955bf7636))
+
+
+### Bug Fixes
+
+* Observe document.body after document is interactive ([#1636](https://github.com/newrelic/newrelic-browser-agent/issues/1636)) ([34c7db3](https://github.com/newrelic/newrelic-browser-agent/commit/34c7db3c695b1950e63970d0a22a2ddacd0481aa))
+
 ## [1.303.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.302.0...v1.303.0) (2025-11-13)
 
 

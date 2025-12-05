@@ -273,7 +273,7 @@ describe('payloads', () => {
         containerId: mainAgent.runtime.appMetadata.agents[0].entityGuid
       }
       mainAgent.runtime.registeredEntities.push(registeredTarget) // mock that an entity is registered
-      loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', { myAttributes: 1 }, 'error', registeredTarget]) // supply an api "target" to mock a registered entity API call
+      loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', { myAttributes: 1 }, 'error', false, registeredTarget]) // supply an api "target" to mock a registered entity API call
 
       expect(loggingAggregate.events.get()[0]).toEqual(new Log(
         Math.floor(mainAgent.runtime.timeKeeper.correctAbsoluteTimestamp(

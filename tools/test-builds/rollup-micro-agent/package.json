@@ -12,7 +12,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "@newrelic/browser-agent": "file:../../../temp/newrelic-browser-agent-1.303.0.tgz"
+    "@newrelic/browser-agent": "file:../../../temp/newrelic-browser-agent-1.304.0.tgz"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^28.0.6",

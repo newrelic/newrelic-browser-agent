@@ -6,7 +6,11 @@
 <html>
   <head>
     <title>RUM Unit Test</title>
-    {init} {config} {loader}
+    {init} {config}
+    <script>
+      NREUM.init.feature_flags = ['websockets']
+    </script>
+    {loader}
     <script>
       // preload socket
       window.bamServer = NREUM.info.beacon

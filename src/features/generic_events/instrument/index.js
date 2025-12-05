@@ -20,18 +20,22 @@ import { wrapFetch } from '../../../common/wrap/wrap-fetch'
 import { wrapXhr } from '../../../common/wrap/wrap-xhr'
 import { parseUrl } from '../../../common/url/parse-url'
 import { extractUrl } from '../../../common/url/extract-url'
+import { wrapWebSocket } from '../../../common/wrap/wrap-websocket'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
   constructor (agentRef) {
     super(agentRef, FEATURE_NAME)
+    const websocketsEnabled = agentRef.init.feature_flags.includes('websockets')
+
     /** config values that gate whether the generic events aggregator should be imported at all */
     const genericEventSourceConfigs = [
       agentRef.init.page_action.enabled,
       agentRef.init.performance.capture_marks,
       agentRef.init.performance.capture_measures,
+      agentRef.init.performance.resources.enabled,
       agentRef.init.user_actions.enabled,
-      agentRef.init.performance.resources.enabled
+      websocketsEnabled
     ]
 
     /** feature specific APIs */
@@ -41,7 +45,8 @@ export class Instrument extends InstrumentBase {
     setupRegisterAPI(agentRef)
     setupMeasureAPI(agentRef)
 
-    let historyEE
+    let historyEE, websocketsEE
+    if (websocketsEnabled) websocketsEE = wrapWebSocket(this.ee)
     if (isBrowserScope) {
       wrapFetch(this.ee)
       wrapXhr(this.ee)
@@ -103,6 +108,11 @@ export class Instrument extends InstrumentBase {
           buffered: true
         })
       }
+    }
+    if (websocketsEnabled) { // this can apply outside browser scope such as in worker
+      websocketsEE.on('ws', (nrData) => {
+        handle('ws-complete', [nrData], undefined, this.featureName, this.ee)
+      })
     }
 
     try {

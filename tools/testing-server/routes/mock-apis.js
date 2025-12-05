@@ -286,4 +286,16 @@ module.exports = fp(async function (fastify, testServer) {
       socket.send(`hi - ${message} - We saw you on the server`)
     })
   })
+
+  // WebSocket endpoint that echoes back all data types for testing
+  fastify.get('/websocket-echo', {
+    websocket: true
+  }, (socket, req) => {
+    socket.on('message', (message, isBinary) => {
+      // Echo back the message exactly as received
+      // For binary data (ArrayBuffer, Blob, TypedArray, DataView), send as binary
+      // For text data (string), send as text
+      socket.send(message, { binary: isBinary })
+    })
+  })
 })

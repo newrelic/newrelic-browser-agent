@@ -12,15 +12,13 @@ export class UserActionsAggregator {
   /** @type {AggregatedUserAction=} */
   #aggregationEvent = undefined
   #aggregationKey = ''
-  #ufEnabled = false
   #deadClickTimer = undefined
   #domObserver = undefined
   #errorClickTimer = undefined
 
-  constructor (userFrustrationsEnabled) {
-    if (userFrustrationsEnabled && gosNREUMOriginals().o.MO) {
+  constructor () {
+    if (gosNREUMOriginals().o.MO) {
       this.#domObserver = new MutationObserver(this.isLiveClick.bind(this))
-      this.#ufEnabled = true
     }
   }
 
@@ -52,15 +50,13 @@ export class UserActionsAggregator {
     } else {
       // return the prev existing one (if there is one)
       const finishedEvent = this.#aggregationEvent
-      if (this.#ufEnabled) {
-        this.#deadClickCleanup()
-        this.#errorClickCleanup()
-      }
+      this.#deadClickCleanup()
+      this.#errorClickCleanup()
 
       // then start new event aggregation
       this.#aggregationKey = aggregationKey
       this.#aggregationEvent = new AggregatedUserAction(evt, selectorInfo)
-      if (this.#ufEnabled && evt.type === 'click' && (selectorInfo.hasButton || selectorInfo.hasLink)) {
+      if (evt.type === 'click' && (selectorInfo.hasButton || selectorInfo.hasLink)) {
         this.#deadClickSetup(this.#aggregationEvent)
         this.#errorClickSetup()
       }

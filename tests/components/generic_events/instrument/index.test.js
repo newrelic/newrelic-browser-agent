@@ -15,9 +15,6 @@ beforeAll(() => {
   mainAgent = setupAgent({
     info: {
       beacon: 'some-agent-endpoint.com:1234'
-    },
-    init: {
-      feature_flags: ['user_frustrations']
     }
   })
   genericEventsInstrument = new GenericEvents(mainAgent)

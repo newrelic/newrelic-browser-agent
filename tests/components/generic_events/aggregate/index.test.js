@@ -10,9 +10,6 @@ let mainAgent, genericEventsAggregate
 
 beforeAll(() => {
   mainAgent = setupAgent({
-    init: {
-      feature_flags: ['user_frustrations']
-    },
     info: {
       beacon: 'some-agent-endpoint'
     }

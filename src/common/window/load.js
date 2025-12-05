@@ -26,7 +26,7 @@ export function onWindowLoad (cb, useCapture) {
       clearInterval(poll)
       singleCb()
     }
-  }, 100)
+  }, 500)
   windowAddEventListener('load', singleCb, useCapture)
 }
 

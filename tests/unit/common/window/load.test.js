@@ -132,7 +132,7 @@ describe('load.js', () => {
       readyState = 'complete'
 
       // Advance timer to trigger poll
-      jest.advanceTimersByTime(100)
+      jest.advanceTimersByTime(500)
 
       expect(cb).toHaveBeenCalledTimes(1)
     })
@@ -198,7 +198,7 @@ describe('load.js', () => {
       readyState = 'complete'
 
       // Advance timer to trigger poll
-      jest.advanceTimersByTime(100)
+      jest.advanceTimersByTime(500)
       expect(cb).toHaveBeenCalledTimes(1)
 
       // Advance many more intervals - poll should be cleared

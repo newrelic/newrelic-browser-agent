@@ -45,7 +45,7 @@ function register (agentRef, target, parent) {
   warn(54, 'newrelic.register')
 
   target ||= {}
-  target.eventSource = 'MicroFrontendBrowserAgent'
+  target.type = 'MFE'
   target.licenseKey ||= agentRef.info.licenseKey // will inherit the license key from the container agent if not provided for brevity. A future state may dictate that we need different license keys to do different things.
   target.blocked = false
   target.parent = parent || {}

@@ -44,7 +44,7 @@ describe('newrelic api', () => {
       errorsHarvests.forEach(({ request: { query, body } }) => {
         const data = body.err
         data.forEach((err, idx) => {
-          expect(err.custom['mfe.name']).toEqual('agent' + (idx + 1))
+          expect(err.custom['source.name']).toEqual('agent' + (idx + 1))
           if (idx === 0) expect(err.custom['parent.id']).toEqual(containerAgentEntityGuid) // first app should have container as its parent
           if (idx === 1) expect(err.custom['parent.id']).toEqual(1) // second app should have first app as its parent
           if (idx === 2) expect(err.custom['parent.id']).toEqual(2) // third app should have second app as its parent
@@ -149,10 +149,10 @@ describe('newrelic api', () => {
         errorsHarvests.forEach(({ request: { query, body } }) => {
           const data = body.err
           data.forEach((err, idx) => {
-            const id = err.custom['mfe.id'] || query.a // MFEs use mfe.id, regular agents use appId
+            const id = err.custom['source.id'] || query.a // MFEs use source.id, regular agents use appId
             if (Number(id) !== 42 && testSet.includes('register.jserrors')) {
-              expect(err.custom['mfe.name']).toEqual('agent' + id)
-              expect(err.custom.eventSource).toEqual('MicroFrontendBrowserAgent')
+              expect(err.custom['source.name']).toEqual('agent' + id)
+              expect(err.custom['source.type']).toEqual('MFE')
               expect(err.custom['parent.id']).toEqual(containerAgentEntityGuid)
             } else {
               if (testSet.includes('register') && testSet.includes('register.jserrors')) {
@@ -174,10 +174,10 @@ describe('newrelic api', () => {
           const data = body.ins
           data.forEach((ins, idx) => {
             if (ins.eventType === 'PageAction' || ins.eventType === 'CustomEvent' || (ins.eventType === 'BrowserPerformance' && ins.entryType === 'measure')) {
-              const id = ins['mfe.id'] || query.a // MFEs use mfe.id, regular agents use appId
+              const id = ins['source.id'] || query.a // MFEs use source.id, regular agents use appId
               if (Number(id) !== 42 && testSet.includes('register.generic_events')) {
-                expect(ins['mfe.name']).toEqual('agent' + id)
-                expect(ins.eventSource).toEqual('MicroFrontendBrowserAgent')
+                expect(ins['source.name']).toEqual('agent' + id)
+                expect(ins['source.type']).toEqual('MFE')
                 expect(ins['parent.id']).toEqual(containerAgentEntityGuid)
               } else {
                 if (testSet.includes('register') && testSet.includes('register.generic_events')) {
@@ -220,10 +220,10 @@ describe('newrelic api', () => {
         logsHarvest.forEach(({ request: { query, body } }) => {
           const data = JSON.parse(body)[0]
           data.logs.forEach(log => {
-            const id = log.attributes['mfe.id'] || 42 // MFEs use mfe.id, regular agents supply entity guid so just force it to 42 here if mfe id is not present
+            const id = log.attributes['source.id'] || 42 // MFEs use source.id, regular agents supply entity guid so just force it to 42 here if source id is not present
             if (Number(id) !== 42 && testSet.includes('register')) {
-              expect(log.attributes['mfe.name']).toEqual('agent' + id)
-              expect(log.attributes.eventSource).toEqual('MicroFrontendBrowserAgent')
+              expect(log.attributes['source.name']).toEqual('agent' + id)
+              expect(log.attributes['source.type']).toEqual('MFE')
               expect(log.attributes['parent.id']).toEqual(containerAgentEntityGuid)
             } else {
               if (testSet.includes('register')) {

@@ -14,9 +14,12 @@ import { applyFnToProps } from '../../../common/util/traverse'
 import { UserActionsAggregator } from './user-actions/user-actions-aggregator'
 import { isIFrameWindow } from '../../../common/dom/iframe'
 import { isPureObject } from '../../../common/util/type-check'
+import { getVersion2Attributes } from '../../../common/util/mfe'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
+  #userActionAggregator
+
   constructor (agentRef) {
     super(agentRef, FEATURE_NAME)
     this.referrerUrl = (isBrowserScope && document.referrer) ? cleanURL(document.referrer) : undefined
@@ -28,24 +31,23 @@ export class Aggregate extends AggregateBase {
         return
       }
 
-      this.trackSupportabilityMetrics()
+      this.#trackSupportabilityMetrics()
 
-      registerHandler('api-recordCustomEvent', (timestamp, eventType, attributes) => {
+      registerHandler('api-recordCustomEvent', (timestamp, eventType, attributes, target) => {
         if (RESERVED_EVENT_TYPES.includes(eventType)) return warn(46)
         this.addEvent({
           eventType,
-          timestamp: this.toEpoch(timestamp),
+          timestamp: this.#toEpoch(timestamp),
           ...attributes
-        })
+        }, target)
       }, this.featureName, this.ee)
 
       if (agentRef.init.page_action.enabled) {
-        registerHandler('api-addPageAction', (timestamp, name, attributes, targetEntityGuid) => {
-          if (!this.agentRef.runtime.entityManager.get(targetEntityGuid)) return warn(56, this.featureName)
+        registerHandler('api-addPageAction', (timestamp, name, attributes, target) => {
           this.addEvent({
             ...attributes,
             eventType: 'PageAction',
-            timestamp: this.toEpoch(timestamp),
+            timestamp: this.#toEpoch(timestamp),
             timeSinceLoad: timestamp / 1000,
             actionName: name,
             referrerUrl: this.referrerUrl,
@@ -53,14 +55,14 @@ export class Aggregate extends AggregateBase {
               browserWidth: window.document.documentElement?.clientWidth,
               browserHeight: window.document.documentElement?.clientHeight
             })
-          }, targetEntityGuid)
+          }, target)
         }, this.featureName, this.ee)
       }
 
       let addUserAction = () => { /** no-op */ }
       if (isBrowserScope && agentRef.init.user_actions.enabled) {
-        this.userActionAggregator = new UserActionsAggregator()
-        this.harvestOpts.beforeUnload = () => addUserAction?.(this.userActionAggregator.aggregationEvent)
+        this.#userActionAggregator = new UserActionsAggregator(agentRef.init.feature_flags.includes('user_frustrations'))
+        this.harvestOpts.beforeUnload = () => addUserAction?.(this.#userActionAggregator.aggregationEvent)
 
         addUserAction = (aggregatedUserAction) => {
           try {
@@ -68,9 +70,9 @@ export class Aggregate extends AggregateBase {
              * so we still need to validate that an event was given to this method before we try to add */
             if (aggregatedUserAction?.event) {
               const { target, timeStamp, type } = aggregatedUserAction.event
-              this.addEvent({
+              const userActionEvent = {
                 eventType: 'UserAction',
-                timestamp: this.toEpoch(timeStamp),
+                timestamp: this.#toEpoch(timeStamp),
                 action: type,
                 actionCount: aggregatedUserAction.count,
                 actionDuration: aggregatedUserAction.relativeMs[aggregatedUserAction.relativeMs.length - 1],
@@ -84,8 +86,12 @@ export class Aggregate extends AggregateBase {
                   if (canTrustTargetAttribute(field)) acc[targetAttrName(field)] = String(target[field]).trim().slice(0, 128)
                   return acc
                 }, {})),
-                ...aggregatedUserAction.nearestTargetFields
-              })
+                ...aggregatedUserAction.nearestTargetFields,
+                ...(aggregatedUserAction.deadClick && { deadClick: true }),
+                ...(aggregatedUserAction.errorClick && { errorClick: true })
+              }
+              this.addEvent(userActionEvent)
+              this.#trackUserActionSM(userActionEvent)
 
               /**
                * Returns the original target field name with `target` prepended and camelCased
@@ -116,8 +122,11 @@ export class Aggregate extends AggregateBase {
 
         registerHandler('ua', (evt) => {
           /** the processor will return the previously aggregated event if it has been completed by processing the current event */
-          addUserAction(this.userActionAggregator.process(evt, this.agentRef.init.user_actions.elementAttributes))
+          addUserAction(this.#userActionAggregator.process(evt, this.agentRef.init.user_actions.elementAttributes))
         }, this.featureName, this.ee)
+        registerHandler('navChange', () => { this.#userActionAggregator.isLiveClick() }, this.featureName, this.ee)
+        registerHandler('uaXhr', () => { this.#userActionAggregator.isLiveClick() }, this.featureName, this.ee)
+        registerHandler('uaErr', () => this.#userActionAggregator.markAsErrorClick(), this.featureName, this.ee)
       }
 
       /**
@@ -140,7 +149,7 @@ export class Aggregate extends AggregateBase {
                     this.addEvent({
                       ...detailObj,
                       eventType: 'BrowserPerformance',
-                      timestamp: this.toEpoch(entry.startTime),
+                      timestamp: this.#toEpoch(entry.startTime),
                       entryName: entry.name,
                       entryDuration: entry.duration,
                       entryType: type
@@ -205,7 +214,7 @@ export class Aggregate extends AggregateBase {
             const event = {
               ...entryObject,
               eventType: 'BrowserPerformance',
-              timestamp: Math.floor(agentRef.runtime.timeKeeper.correctRelativeTimestamp(entryObject.startTime)),
+              timestamp: this.#toEpoch(entryObject.startTime),
               entryName: cleanURL(name),
               entryDuration: duration,
               firstParty
@@ -218,22 +227,39 @@ export class Aggregate extends AggregateBase {
         }, this.featureName, this.ee)
       }
 
-      registerHandler('api-measure', (args, n) => {
+      registerHandler('api-measure', (args, n, target) => {
         const { start, duration, customAttributes } = args
 
         const event = {
           ...customAttributes,
           eventType: 'BrowserPerformance',
-          timestamp: Math.floor(agentRef.runtime.timeKeeper.correctRelativeTimestamp(start)),
+          timestamp: this.#toEpoch(start),
           entryName: n,
           entryDuration: duration,
           entryType: 'measure'
         }
 
-        this.addEvent(event)
+        this.addEvent(event, target)
       }, this.featureName, this.ee)
 
-      agentRef.runtime.harvester.triggerHarvestFor(this)
+      if (agentRef.init.feature_flags.includes('websockets')) {
+        registerHandler('ws-complete', (nrData) => {
+          const event = {
+            ...nrData,
+            eventType: 'WebSocket',
+            timestamp: this.#toEpoch(nrData.timestamp),
+            openedAt: this.#toEpoch(nrData.openedAt),
+            closedAt: this.#toEpoch(nrData.closedAt)
+          }
+
+          // Report supportability metrics for WebSocket completion
+          this.reportSupportabilityMetric('WebSocket/Completed/Seen')
+          this.reportSupportabilityMetric('WebSocket/Completed/Bytes', stringify(event).length)
+
+          this.addEvent(event)
+        }, this.featureName, this.ee)
+      }
+
       this.drain()
     })
   }
@@ -249,10 +275,10 @@ export class Aggregate extends AggregateBase {
    * * sessionTraceId: set by the `ptid=` query param
    * * userAgent*: set by the userAgent header
    * @param {object=} obj the event object for storing in the event buffer
-   * @param {string=} targetEntityGuid the target entity guid for the event to scope buffering and harvesting. Defaults to agent config if undefined
+   * @param {string=} target the target metadata for the event to scope buffering and harvesting. Defaults to container agent config if undefined
    * @returns void
    */
-  addEvent (obj = {}, targetEntityGuid) {
+  addEvent (obj = {}, target) {
     if (!obj || !Object.keys(obj).length) return
     if (!obj.eventType) {
       warn(44)
@@ -266,10 +292,12 @@ export class Aggregate extends AggregateBase {
 
     const defaultEventAttributes = {
       /** should be overridden by the event-specific attributes, but just in case -- set it to now() */
-      timestamp: Math.floor(this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(now())),
+      timestamp: this.#toEpoch(now()),
       /** all generic events require pageUrl(s) */
       pageUrl: cleanURL('' + initialLocation),
-      currentUrl: cleanURL('' + location)
+      currentUrl: cleanURL('' + location),
+      /** Specific attributes only supplied if harvesting to endpoint version 2 */
+      ...(getVersion2Attributes(target, this))
     }
 
     const eventAttributes = {
@@ -281,7 +309,7 @@ export class Aggregate extends AggregateBase {
       ...obj
     }
 
-    this.events.add(eventAttributes, targetEntityGuid)
+    this.events.add(eventAttributes)
   }
 
   serializer (eventBuffer) {
@@ -292,11 +320,11 @@ export class Aggregate extends AggregateBase {
     return { ua: this.agentRef.info.userAttributes, at: this.agentRef.info.atts }
   }
 
-  toEpoch (timestamp) {
+  #toEpoch (timestamp) {
     return Math.floor(this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(timestamp))
   }
 
-  trackSupportabilityMetrics () {
+  #trackSupportabilityMetrics () {
     /** track usage SMs to improve these experimental features */
     const configPerfTag = 'Config/Performance/'
     if (this.agentRef.init.performance.capture_marks) this.reportSupportabilityMetric(configPerfTag + 'CaptureMarks/Enabled')
@@ -305,5 +333,11 @@ export class Aggregate extends AggregateBase {
     if (this.agentRef.init.performance.resources.asset_types?.length !== 0) this.reportSupportabilityMetric(configPerfTag + 'Resources/AssetTypes/Changed')
     if (this.agentRef.init.performance.resources.first_party_domains?.length !== 0) this.reportSupportabilityMetric(configPerfTag + 'Resources/FirstPartyDomains/Changed')
     if (this.agentRef.init.performance.resources.ignore_newrelic === false) this.reportSupportabilityMetric(configPerfTag + 'Resources/IgnoreNewrelic/Changed')
+  }
+
+  #trackUserActionSM (ua) {
+    if (ua.rageClick) this.reportSupportabilityMetric('UserAction/RageClick/Seen')
+    if (ua.deadClick) this.reportSupportabilityMetric('UserAction/DeadClick/Seen')
+    if (ua.errorClick) this.reportSupportabilityMetric('UserAction/ErrorClick/Seen')
   }
 }

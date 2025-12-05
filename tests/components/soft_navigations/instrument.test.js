@@ -33,7 +33,8 @@ test('instrument detects heuristic steps', async () => {
   expect(handleModule.handle).toHaveBeenLastCalledWith('newURL', [expect.any(Number), window.location.href], undefined, FEATURE_NAME, expect.any(Object))
   history.replaceState({}, '')
   expect(handleModule.handle).toHaveBeenLastCalledWith('newURL', [expect.any(Number), window.location.href], undefined, FEATURE_NAME, expect.any(Object))
-  window.dispatchEvent(new Event('popstate')) // this results in both a 'newUIEvent' and 'newURL' internal events
+  window.dispatchEvent(new Event('popstate')) // this results in both a 'newUIEvent' and 'newURL' internal
+  expect(handleModule.handle).toHaveBeenNthCalledWith(3, 'newUIEvent', [expect.any(Event)], undefined, FEATURE_NAME, expect.any(Object))
   expect(handleModule.handle).toHaveBeenLastCalledWith('newURL', [expect.any(Number), window.location.href], undefined, FEATURE_NAME, expect.any(Object))
   expect(handleModule.handle).toHaveBeenCalledTimes(4)
 

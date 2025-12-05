@@ -42,5 +42,6 @@ export const model = {
   logApiMode: 0,
   serverTimeDiff: null,
   custom: {},
-  numOfResets: 0
+  numOfResets: 0,
+  consent: false
 }

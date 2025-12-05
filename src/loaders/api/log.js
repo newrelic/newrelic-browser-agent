@@ -13,6 +13,6 @@ export function setupLogAPI (agent) {
   setupAPI(LOG, (message, options) => log(message, options, agent), agent)
 }
 
-export function log (message, { customAttributes = {}, level = LOG_LEVELS.INFO } = {}, agentRef, targetEntityGuid, timestamp = now()) {
-  bufferLog(agentRef.ee, message, customAttributes, level, false, targetEntityGuid, timestamp)
+export function log (message, { customAttributes = {}, level = LOG_LEVELS.INFO } = {}, agentRef, target, timestamp = now()) {
+  bufferLog(agentRef.ee, message, customAttributes, level, false, target, timestamp)
 }

@@ -10,8 +10,6 @@ const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
  * @typedef {object} WebpackBuildOptions
  * @property {string} [mode] Indicates which mode to run the webpack
  * build in. This is not the same as the --mode CLI option.
- * @property {boolean} [coverage] Indicates if the build should include
- * the istanbul loader to instrument the agent for code coverage.
  * @property {string} [branchName] Name of the branch being built
  * and that should be included in the version string.
  * @property {string} [pathVersion] Override the default PATH_VERSION

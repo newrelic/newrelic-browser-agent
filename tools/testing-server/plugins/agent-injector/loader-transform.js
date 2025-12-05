@@ -1,7 +1,6 @@
 const { Transform } = require('stream')
 const path = require('path')
 const fs = require('fs')
-const sslShim = require('./ssl-shim')
 const { paths } = require('../../constants')
 
 /**
@@ -64,22 +63,21 @@ async function getLoaderScript (scriptType, loaderFilePath, nonce, injectionDela
 module.exports = function (request, reply, testServer) {
   return new Transform({
     async transform (chunk, encoding, done) {
-      const chunkString = chunk.toString()
+      let chunkString = chunk.toString()
       const nonce = request.query.nonce ? `nonce="${request.query.nonce}"` : ''
 
-      if (chunkString.indexOf('{loader}') > -1) {
+      function replaceLoaderPlaceholder (chunkString, loaderScript) {
+        return chunkString.replace(
+          '{loader}',
+          `${loaderScript}`
+        )
+      }
+      while (chunkString.indexOf('{loader}') > -1) {
         const loaderFilePath = getLoaderFilePath(request, testServer, ['defer', 'async', 'injection', 'scriptTag'].includes(request.query?.script))
         const loaderScript = await getLoaderScript(request.query?.script, loaderFilePath, nonce, request.query?.injectionDelay)
-        done(
-          null,
-          chunkString.replace(
-            '{loader}',
-            `<script type="text/javascript" ${nonce}>${sslShim}</script>${loaderScript}`
-          )
-        )
-      } else {
-        done(null, chunkString)
+        chunkString = replaceLoaderPlaceholder(chunkString, loaderScript)
       }
+      done(null, chunkString)
     }
   })
 }

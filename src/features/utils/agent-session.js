@@ -56,6 +56,10 @@ export function setupAgentSession (agentRef) {
     agentRef.runtime.session.syncCustomAttribute(key, value)
   }, 'session', sharedEE)
 
+  registerHandler('api-consent', (accept) => {
+    agentRef.runtime.session.write({ consent: accept === undefined ? true : accept })
+  }, 'session', sharedEE)
+
   drain(agentRef.agentIdentifier, 'session')
 
   return agentRef.runtime.session

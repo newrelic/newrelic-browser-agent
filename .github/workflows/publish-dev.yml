@@ -25,15 +25,6 @@ jobs:
     with:
       coverage: true
 
-  # wdio-coverage:
-  #   if: github.ref == 'refs/heads/main'
-  #   name: WDIO coverage
-  #   uses: ./.github/workflows/wdio-single-browser.yml
-  #   with:
-  #     browser-target: chrome@latest
-  #     coverage: true
-  #   secrets: inherit
-
   # Build and publish the latest code from the main branch
   publish-dev-to-s3:
     needs: [jest-tests]
@@ -53,7 +44,7 @@ jobs:
         run: npm ci
       - name: Build dev
         run: npm run cdn:build:dev
-      - name: Upload dev
+      - name: Upload dev assets to S3
         id: s3-upload
         uses: ./.github/actions/s3-upload
         with:
@@ -63,7 +54,7 @@ jobs:
           aws_bucket_name: ${{ secrets.AWS_BUCKET }}
           local_dir: $GITHUB_WORKSPACE/build
           bucket_dir: dev/
-      - name: Gather cdn purge paths
+      - name: Gather dev purge paths
         id: dev-purge-paths
         run: echo "results=$(echo '${{ steps.s3-upload.outputs.results }}' | jq -j '.[].Key + " "')" >> $GITHUB_OUTPUT
       - name: Purge production cdn
@@ -92,6 +83,7 @@ jobs:
           asset_path: ${{ join(fromJson(steps.s3-upload.outputs.results).*.Key, ' ') }}
         # This step creates a new Change Tracking Marker
       - name: New Relic Application Deployment Marker
+        continue-on-error: true    
         uses: newrelic/deployment-marker-action@v2.3.0
         with:
           apiKey: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
@@ -100,6 +92,7 @@ jobs:
           version: "${{ github.ref_name }}"
           user: "${{ github.actor }}"
       - name: Get local stats
+        continue-on-error: true    
         id: get-stats
         shell: bash
         run: |
@@ -107,6 +100,7 @@ jobs:
           full=$(cat ./build/nr-full-standard.stats.json); echo "full=$full" >> $GITHUB_OUTPUT;
           spa=$(cat ./build/nr-spa-standard.stats.json); echo "spa=$spa" >> $GITHUB_OUTPUT;
       - name: Report lite size to NR
+        continue-on-error: true    
         uses: newrelic-apps/capture-build-size@v1.0.1
         with:
           nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
@@ -117,6 +111,7 @@ jobs:
           trigger: 'publish-dev'
           traverse: true
       - name: Report pro size to NR
+        continue-on-error: true
         uses: newrelic-apps/capture-build-size@v1.0.1
         with:
           nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
@@ -127,6 +122,7 @@ jobs:
           trigger: 'publish-dev'
           traverse: true
       - name: Report spa size to NR
+        continue-on-error: true    
         uses: newrelic-apps/capture-build-size@v1.0.1
         with:
           nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
@@ -156,6 +152,64 @@ jobs:
   #       uses: ./.github/actions/nr-upload-dev
   #       with:
   #         nr_stage_api_key: ${{ secrets.NR_API_KEY_STAGING }}
+
+  # Publish Agent2Query assets
+  publish-agent2query:
+    needs: [jest-tests]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.11.0 # See package.json for the stable node version that works with our testing.  Do not change this unless you know what you are doing as some node versions do not play nicely with our testing server.
+      - name: Build Agent2Query assets
+        uses: ./.github/actions/build-agent2query
+        with:
+          released_license_key: ${{ secrets.A2Q_RELEASED_LICENSE_KEY }}
+          latest_license_key: ${{ secrets.A2Q_LATEST_LICENSE_KEY }}
+      - name: Upload Agent2Query assets to S3
+        id: s3-upload-agent2query
+        uses: ./.github/actions/s3-upload
+        with:
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_role: ${{ secrets.AWS_ROLE_ARN }}
+          aws_bucket_name: ${{ secrets.AWS_BUCKET }}
+          local_dir: $GITHUB_WORKSPACE/temp/agent-2-query
+          bucket_dir: agent-2-query/
+      - name: Gather agent-2-query purge paths
+        id: dev-purge-paths-agent2query
+        run: echo "results=$(echo '${{ steps.s3-upload-agent2query.outputs.results }}' | jq -j '.[].Key + " "')" >> $GITHUB_OUTPUT
+      - name: Purge production cdn - agent2query
+        uses: ./.github/actions/fastly-purge
+        with:
+          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
+          fastly_service: js-agent.newrelic.com
+          purge_path: ${{ steps.dev-purge-paths-agent2query.outputs.results }}
+      - name: Purge staging cdn - agent2query
+        uses: ./.github/actions/fastly-purge
+        with:
+          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
+          fastly_service: staging-js-agent.newrelic.com
+          purge_path: ${{ steps.dev-purge-paths-agent2query.outputs.results }}
+      - name: Verify production cdn assets - agent2query
+        uses: ./.github/actions/fastly-verify
+        with:
+          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
+          fastly_service: js-agent.newrelic.com
+          asset_path: ${{ join(fromJson(steps.s3-upload-agent2query.outputs.results).*.Key, ' ') }}
+      - name: Verify staging cdn assets - agent2query
+        uses: ./.github/actions/fastly-verify
+        with:
+          fastly_key: ${{ secrets.FASTLY_PURGE_KEY }}
+          fastly_service: staging-js-agent.newrelic.com
+          asset_path: ${{ join(fromJson(steps.s3-upload-agent2query.outputs.results).*.Key, ' ') }}
 
   # Rebuild and publish the dev environment A/B script
   publish-dev-ab:

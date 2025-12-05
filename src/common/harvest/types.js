@@ -24,12 +24,10 @@
  * @property {HarvestEndpointIdentifier} endpoint The endpoint to use (jserrors, events, resources etc.)
  * @property {HarvestPayload} payload Object representing payload.
  * @property {object} localOpts Additional options for sending data
- * @property {boolean} localOpts.needResponse Specify whether the caller expects a response data.
  * @property {boolean} localOpts.isFinalHarvest Specify whether the call is a final harvest during page unload.
  * @property {boolean} localOpts.sendEmptyBody Specify whether the call should be made even if the body is empty. Useful for rum calls.
  * @property {boolean} localOpts.forceNoRetry Don't save the buffered data in the case of a need to retry the transmission.
  * @property {import('../util/submit-data.js').NetworkMethods} submitMethod The network method to use {@link ../util/submit-data.js}
  */
 
-/* istanbul ignore next */
 export const unused = {}

@@ -1,16 +1,39 @@
 const path = require('path')
+const yargs = require('yargs/yargs')
+const { hideBin } = require('yargs/helpers')
+const fs = require('fs')
+const args = yargs(hideBin(process.argv)).argv
 
-const defaultAgentConfig = {
-  licenseKey: 'asdf',
-  applicationID: 42,
-  accountID: 123,
-  agentID: 456,
-  trustKey: 789
+let agentConfig
+if (args.B) {
+  try {
+    agentConfig = JSON.parse(args.B)
+  } catch (err) {
+    try {
+      agentConfig = JSON.parse(fs.readFileSync(args.B, 'utf-8'))
+    } catch (err) {
+      console.error('Failed to parse BAM config:', err)
+    }
+  }
 }
-module.exports.defaultAgentConfig = defaultAgentConfig
+
+/** fallback if no override was provided or override outright failed to parse correctly */
+if (!agentConfig) {
+  agentConfig = {
+    licenseKey: 'asdf',
+    applicationID: 42,
+    accountID: 123,
+    agentID: 456,
+    trustKey: 789
+  }
+}
+
+module.exports.agentConfig = agentConfig
+
+console.log('Starting service using agent config -- ', agentConfig)
 
 const mockEntityGuid = () => {
-  return btoa(`${defaultAgentConfig.accountID}|BROWSER|APPLICATION|${Math.floor(Math.random() * 1000000)}`).replace(/=/g, '')
+  return btoa(`${agentConfig.accountID}|BROWSER|APPLICATION|${Math.floor(Math.random() * 1000000)}`).replace(/=/g, '')
 }
 
 module.exports.paths = {
@@ -58,7 +81,7 @@ const enabledFeature = { enabled, autoStart }
 module.exports.defaultInitBlock = {
   ajax: { deny_list: [], block_internal: false, ...enabledFeature },
   api: {
-    allow_registered_children: true,
+    allow_registered_children: false,
     duplicate_registered_data: false // if an array of entity guids are supplied, can be more granular - true|false will be all or nothing
   },
   distributed_tracing: {},
@@ -81,7 +104,7 @@ module.exports.defaultInitBlock = {
   session: { expiresMs: 14400000, inactiveMs: 1800000 },
   session_replay: { enabled: false, sampling_rate: 0, error_sampling_rate: 0, autoStart },
   session_trace: enabledFeature,
-  ssl: false,
+  ssl: !!args.B,
   soft_navigations: enabledFeature,
   spa: enabledFeature,
   user_actions: { enabled: true, elementAttributes: ['id', 'className', 'tagName', 'type'] }

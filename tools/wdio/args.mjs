@@ -77,26 +77,18 @@ const args = yargs(hideBin(process.argv))
   .alias('D', 'extended-debugging')
   .describe('D', 'Run tests with LambdaTest extended debugging enabled')
 
-  .boolean('coverage')
-  .default('coverage', false)
-  .describe('coverage', 'Collect coverage from test runs')
-
   .boolean('webview')
   .default('webview', false)
   .describe('webview', 'Run webview tests')
+
+  .string('B')
+  .alias('B', 'report-to-bam')
+  .describe('B', 'Supply a JSON string or file path with expected BAM configs to send agent traffic to BAM instead of local service')
 
   .middleware(argv => {
     if (argv.webview && (!argv.browsers || argv.browsers === 'chrome@latest')) {
       argv.browsers = argv.b = 'ios@latest,android@latest'
     }
-  })
-
-  .check(argv => {
-    if (argv.webview && argv.coverage) {
-      return 'Arguments webview and coverage are mutually exclusive'
-    }
-
-    return true
   })
 
   .help('h')

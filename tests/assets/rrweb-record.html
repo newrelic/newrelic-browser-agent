@@ -3,7 +3,7 @@
   Copyright 2020 New Relic Corporation.
   PDX-License-Identifier: Apache-2.0
 -->
-<html>
+<html lang="en">
 <head>
   <title>RUM Unit Test</title>
   <style>
@@ -20,7 +20,7 @@
   {config}
   <script>
     localStorage.clear()
-    NREUM.init.session_replay = {enabled: true, collect_fonts: true}
+    NREUM.init.session_replay = { ...NREUM.init.session_replay, enabled: true, collect_fonts: true}
     NREUM.init.privacy.cookies_enabled = true
   </script>
   {loader}

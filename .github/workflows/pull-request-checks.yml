@@ -13,6 +13,10 @@ on:
         description: 'Run the latest version of browsers only instead of all versions'
         default: true
         type: boolean
+      boosted:
+        description: 'Enable boosted testing (uses more resources)'
+        default: false
+        type: boolean
   pull_request:
 
 jobs:
@@ -141,6 +145,7 @@ jobs:
           full=$(cat ./build/nr-full-standard.stats.json); echo "full=$full" >> $GITHUB_OUTPUT;
           spa=$(cat ./build/nr-spa-standard.stats.json); echo "spa=$spa" >> $GITHUB_OUTPUT;
       - name: Report lite size to NR
+        continue-on-error: true
         uses: newrelic-apps/capture-build-size@v1.0.1
         with:
           nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
@@ -150,6 +155,7 @@ jobs:
           file-name-filter: '.min.js'
           trigger: 'pull-request-checks'
       - name: Report pro size to NR
+        continue-on-error: true
         uses: newrelic-apps/capture-build-size@v1.0.1
         with:
           nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
@@ -159,6 +165,7 @@ jobs:
           file-name-filter: '.min.js'
           trigger: 'pull-request-checks'
       - name: Report spa size to NR
+        continue-on-error: true
         uses: newrelic-apps/capture-build-size@v1.0.1
         with:
           nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
@@ -168,6 +175,7 @@ jobs:
           file-name-filter: '.min.js'
           trigger: 'pull-request-checks'
       - name: Report dev lite size to NR
+        continue-on-error: true
         uses: newrelic-apps/capture-build-size@v1.0.1
         with:
           nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
@@ -178,6 +186,7 @@ jobs:
           trigger: 'pull-request-checks'
           version: 'main'
       - name: Report dev pro size to NR
+        continue-on-error: true
         uses: newrelic-apps/capture-build-size@v1.0.1
         with:
           nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
@@ -188,6 +197,7 @@ jobs:
           trigger: 'pull-request-checks'
           version: 'main'
       - name: Report dev spa size to NR
+        continue-on-error: true
         uses: newrelic-apps/capture-build-size@v1.0.1
         with:
           nr-api-key: ${{ secrets.INTERNAL_STAGING_INGEST_LICENSE_KEY }}
@@ -253,17 +263,6 @@ jobs:
             Checking merge of (${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).head_sha }}) into [${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).base_ref }}](https://github.com/newrelic/newrelic-browser-agent/compare/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).head_sha }}..${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).base_sha }}) (${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).base_sha }})
           comment_tag: <!-- browser_agent pull request checks -->
 
-  # wdio-coverage:
-  #   name: WDIO coverage
-  #   if: github.event_name == 'workflow_dispatch'
-  #   needs: find-pull-request
-  #   uses: ./.github/workflows/wdio-single-browser.yml
-  #   with:
-  #     ref: 'refs/pull/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}/merge'
-  #     browser-target: chrome@latest
-  #     coverage: true
-  #   secrets: inherit
-
   wdio:
     name: WDIO
     if: github.event_name == 'workflow_dispatch'
@@ -272,12 +271,12 @@ jobs:
     with:
       ref: 'refs/pull/${{ fromJSON(needs.find-pull-request.outputs.pull-request-target).pr_number }}/merge'
       latest-only: ${{ inputs.latest-only }}
+      boosted: ${{ inputs.boosted }}
     secrets: inherit
 
   complete-status-comment-pull-request:
     name: Comment pull request
     if: always() && github.event_name == 'workflow_dispatch' && needs.find-pull-request.result == 'success'
-    # needs: [find-pull-request,wdio-coverage,wdio]
     needs: [find-pull-request,wdio]
     runs-on: ubuntu-latest
     defaults:

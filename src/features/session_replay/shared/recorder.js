@@ -2,7 +2,7 @@
  * Copyright 2020-2025 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { record as recorder } from 'rrweb'
+import { record as recorder } from '@newrelic/rrweb'
 import { stringify } from '../../../common/util/stringify'
 import { AVG_COMPRESSION, CHECKOUT_MS, QUERY_PARAM_PADDING, RRWEB_EVENT_TYPES } from '../constants'
 import { RecorderEvents } from './recorder-events'
@@ -47,6 +47,7 @@ export class Recorder {
     this.backloggedEvents = new RecorderEvents(this.shouldFix)
     /** Only set to true once a snapshot node has been processed.  Used to block harvests from sending before we know we have a snapshot */
     this.hasSeenSnapshot = false
+    this.hasSeenMeta = false
     /** Hold on to the last meta node, so that it can be re-inserted if the meta and snapshot nodes are broken up due to harvesting */
     this.lastMeta = false
     /** The method to stop recording. This defaults to a noop, but is overwritten once the recording library is imported and initialized */
@@ -57,7 +58,11 @@ export class Recorder {
       this.stopRecording()
     }, this.srFeatureName, this.ee)
 
-    registerHandler(RRWEB_DATA_CHANNEL, (event, isCheckout) => { this.audit(event, isCheckout) }, this.srFeatureName, this.ee)
+    /** If Agg is already drained before importing the recorder (likely deferred API call pattern),
+     * registerHandler wont do anything. Just set up the on listener directly */
+    const processReplayNode = (event, isCheckout) => { this.audit(event, isCheckout) }
+    if (this.srInstrument.featAggregate?.drained) this.ee.on(RRWEB_DATA_CHANNEL, processReplayNode)
+    else registerHandler(RRWEB_DATA_CHANNEL, processReplayNode, this.srFeatureName, this.ee)
   }
 
   get trigger () {
@@ -115,7 +120,8 @@ export class Recorder {
         inlineImages: inline_images,
         collectFonts: collect_fonts,
         checkoutEveryNms: CHECKOUT_MS[mode],
-        recordAfter: 'DOMContentLoaded'
+        recordAfter: 'DOMContentLoaded',
+        slimDOMOptions: 'all'
       })
     } catch (err) {
       this.ee.emit('internal-error', [err])
@@ -176,6 +182,7 @@ export class Recorder {
     const eventBytes = event.__serialized.length
     /** The estimated size of the payload after compression */
     const payloadSize = this.getPayloadSize(eventBytes)
+    handle(SUPPORTABILITY_METRIC_CHANNEL, ['rrweb/node/' + event.type + '/bytes', eventBytes], undefined, FEATURE_NAMES.metrics, this.ee)
     // Checkout events are flags by the recording lib that indicate a fullsnapshot was taken every n ms. These are important
     // to help reconstruct the replay later and must be included.  While waiting and buffering for errors to come through,
     // each time we see a new checkout, we can drop the old data.
@@ -186,9 +193,9 @@ export class Recorder {
     }
 
     // meta event
-    this.events.hasMeta ||= event.type === RRWEB_EVENT_TYPES.Meta
+    this.hasSeenMeta ||= this.events.hasMeta ||= event.type === RRWEB_EVENT_TYPES.Meta
     // snapshot event
-    this.events.hasSnapshot ||= this.hasSeenSnapshot ||= event.type === RRWEB_EVENT_TYPES.FullSnapshot
+    this.hasSeenSnapshot ||= this.events.hasSnapshot ||= event.type === RRWEB_EVENT_TYPES.FullSnapshot
 
     //* dont let the EventBuffer class double evaluate the event data size, it's a performance burden and we have special reasons to do it outside the event buffer */
     this.events.add(event, eventBytes)

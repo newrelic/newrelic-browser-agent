@@ -3,6 +3,111 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.304.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.303.0...v1.304.0) (2025-12-03)
+
+
+### Features
+
+* Reduce Session Replay snapshot sizes ([#1630](https://github.com/newrelic/newrelic-browser-agent/issues/1630)) ([7d3edc8](https://github.com/newrelic/newrelic-browser-agent/commit/7d3edc80edd421d4960b95c5d84ca5eef7fca6a4))
+* Warn message on session reset ([#1635](https://github.com/newrelic/newrelic-browser-agent/issues/1635)) ([6e2110f](https://github.com/newrelic/newrelic-browser-agent/commit/6e2110f129ad682444203a9aa65b4a4955bf7636))
+
+
+### Bug Fixes
+
+* Observe document.body after document is interactive ([#1636](https://github.com/newrelic/newrelic-browser-agent/issues/1636)) ([34c7db3](https://github.com/newrelic/newrelic-browser-agent/commit/34c7db3c695b1950e63970d0a22a2ddacd0481aa))
+
+## [1.303.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.302.0...v1.303.0) (2025-11-13)
+
+
+### Features
+
+* Add custom event support to register API ([#1606](https://github.com/newrelic/newrelic-browser-agent/issues/1606)) ([4137dcb](https://github.com/newrelic/newrelic-browser-agent/commit/4137dcbb339642219164d68695b84a8e48fa9b6f))
+* Add measure support to register API  ([#1623](https://github.com/newrelic/newrelic-browser-agent/issues/1623)) ([c2785f3](https://github.com/newrelic/newrelic-browser-agent/commit/c2785f39ca9ea1f5b87f3e2cf4fc7e462d6084e7))
+* Add consent API ([#1533](https://github.com/newrelic/newrelic-browser-agent/issues/1533)) ([4e8ad2a](https://github.com/newrelic/newrelic-browser-agent/commit/4e8ad2a6aea34bbaa39b6beb67c3947feee3c01d))
+* Additional validation to prepare agent for MFE registrations ([#1625](https://github.com/newrelic/newrelic-browser-agent/issues/1625)) ([aa8c02f](https://github.com/newrelic/newrelic-browser-agent/commit/aa8c02f966e9c7df5c4e83c911f9342b2183447f))
+* Allow consent API to be invoked without localStorage access ([#1627](https://github.com/newrelic/newrelic-browser-agent/issues/1627)) ([0690a65](https://github.com/newrelic/newrelic-browser-agent/commit/0690a65bcfa35eabe0e83b13c058398746e924b8))
+* Allow nested registrations ([#1616](https://github.com/newrelic/newrelic-browser-agent/issues/1616)) ([74a8d4a](https://github.com/newrelic/newrelic-browser-agent/commit/74a8d4ac745cff33eb15f9469775f85fd2641097))
+* Retry initial connect call ([#1605](https://github.com/newrelic/newrelic-browser-agent/issues/1605)) ([9770132](https://github.com/newrelic/newrelic-browser-agent/commit/9770132209b9fb1320b3f60eedfa932b0fcfa3a4))
+* SMs for browser connect response ([#1611](https://github.com/newrelic/newrelic-browser-agent/issues/1611)) ([29f5bdf](https://github.com/newrelic/newrelic-browser-agent/commit/29f5bdf6fa36020a87e5c0aa443d64ce55722c85))
+
+
+### Bug Fixes
+
+* memoize promise context propagation to avoid safari hangs ([#1597](https://github.com/newrelic/newrelic-browser-agent/issues/1597)) ([23cb559](https://github.com/newrelic/newrelic-browser-agent/commit/23cb55993add2eb7e7b14b0d77c6fa3bbb9abcf1))
+* Obfuscate custom attributes for logs added after PVE ([#1622](https://github.com/newrelic/newrelic-browser-agent/issues/1622)) ([f648e3f](https://github.com/newrelic/newrelic-browser-agent/commit/f648e3f1f843913d4c9be6534b0d1e3ba47eb260))
+
+## [1.302.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.301.0...v1.302.0) (2025-10-24)
+
+
+### Features
+
+* Prepare agent to utilize v2 harvests for MFE registrations ([#1495](https://github.com/newrelic/newrelic-browser-agent/issues/1495)) ([a7ac827](https://github.com/newrelic/newrelic-browser-agent/commit/a7ac82751dd8dade8294a66a7894c1295679265b))
+
+
+### Bug Fixes
+
+* Improve accuracy in standalone AjaxRequest event start times ([#1598](https://github.com/newrelic/newrelic-browser-agent/issues/1598)) ([b41de5c](https://github.com/newrelic/newrelic-browser-agent/commit/b41de5cbcd9d75fa8bd3c67ad1270fde4f788733))
+* User frustrations logic should be gated ([#1600](https://github.com/newrelic/newrelic-browser-agent/issues/1600)) ([984b05e](https://github.com/newrelic/newrelic-browser-agent/commit/984b05e8920be79d7c3d1c3d7d56c75fa2cfe253))
+
+## [1.301.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.300.0...v1.301.0) (2025-10-21)
+
+
+### Features
+
+* Switch to using NR fork of rrweb ([#1593](https://github.com/newrelic/newrelic-browser-agent/issues/1593)) ([d29dc35](https://github.com/newrelic/newrelic-browser-agent/commit/d29dc35bc87a6e35b615917e42f2fc37106aad7f))
+
+
+### Bug Fixes
+
+* Preserve agent attributes for log payloads ([#1594](https://github.com/newrelic/newrelic-browser-agent/issues/1594)) ([fae739a](https://github.com/newrelic/newrelic-browser-agent/commit/fae739a72205fe4322ede834fefc1cbc8c31812e))
+
+## [1.300.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.299.0...v1.300.0) (2025-10-14)
+
+
+### Features
+
+* Reduce hasReplay attribute false positive rate ([#1586](https://github.com/newrelic/newrelic-browser-agent/issues/1586)) ([82f1d55](https://github.com/newrelic/newrelic-browser-agent/commit/82f1d55c8a008c3219132afe471acf05b7783743))
+* Remove usage of the marks and measures feature flag ([#1589](https://github.com/newrelic/newrelic-browser-agent/issues/1589)) ([cefd898](https://github.com/newrelic/newrelic-browser-agent/commit/cefd898a8e8ab35004f29e42236f096f3e6e220b))
+
+
+### Bug Fixes
+
+* Address issues with dynamic require and Rollup.js ([#1584](https://github.com/newrelic/newrelic-browser-agent/issues/1584)) ([91fd4b9](https://github.com/newrelic/newrelic-browser-agent/commit/91fd4b946f8db4fd939abd95706e2cc60c1c170b))
+* Update typings for interaction API to reflect waitForEnd ([#1591](https://github.com/newrelic/newrelic-browser-agent/issues/1591)) ([c930208](https://github.com/newrelic/newrelic-browser-agent/commit/c930208c0e8e9cb9affa9e6f664d3a28b132b66c))
+
+## [1.299.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.298.0...v1.299.0) (2025-10-07)
+
+
+### Features
+
+* Add Flutter supportability metric ([#1580](https://github.com/newrelic/newrelic-browser-agent/issues/1580)) ([5083067](https://github.com/newrelic/newrelic-browser-agent/commit/5083067e1dab2fed972af8010d95c07ba11ec436))
+* Add user frustration signals to UserAction ([#1534](https://github.com/newrelic/newrelic-browser-agent/issues/1534)) ([4d654c3](https://github.com/newrelic/newrelic-browser-agent/commit/4d654c3e4cef906885545b36142fc03da34d525c))
+* Evaluate the accuracy of cross-feature attribution ([#1573](https://github.com/newrelic/newrelic-browser-agent/issues/1573)) ([b1e03e2](https://github.com/newrelic/newrelic-browser-agent/commit/b1e03e216ec4eedb77cbb49241d51b5526b97997))
+
+
+### Bug Fixes
+
+* Fix recordReplay API inconsistencies ([#1582](https://github.com/newrelic/newrelic-browser-agent/issues/1582)) ([e4465c1](https://github.com/newrelic/newrelic-browser-agent/commit/e4465c1ebfd6f50d3fce99074ae190ce3bc2f4e4))
+
+## [1.298.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.297.1...v1.298.0) (2025-09-19)
+
+
+### Features
+
+* Factor long tasks into soft nav base interaction span ([#1537](https://github.com/newrelic/newrelic-browser-agent/issues/1537)) ([99b4c9f](https://github.com/newrelic/newrelic-browser-agent/commit/99b4c9f2a083438607557a2139192e5d280f7273))
+
+
+### Bug Fixes
+
+* Force LCP to report the original page URL ([#1566](https://github.com/newrelic/newrelic-browser-agent/issues/1566)) ([04eb09f](https://github.com/newrelic/newrelic-browser-agent/commit/04eb09fb27fb9d49dcb4a37cc503619217e9fafd))
+
+## [1.297.1](https://github.com/newrelic/newrelic-browser-agent/compare/v1.297.0...v1.297.1) (2025-09-17)
+
+
+### Bug Fixes
+
+* Prevent double import of Session Replay aggregate class ([#1558](https://github.com/newrelic/newrelic-browser-agent/issues/1558)) ([ffc647c](https://github.com/newrelic/newrelic-browser-agent/commit/ffc647c2c757034b14d56bac9b0103b2016c5fbb))
+
 ## [1.297.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.296.0...v1.297.0) (2025-09-10)
 
 

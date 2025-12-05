@@ -1,6 +1,6 @@
 {
   "name": "@newrelic/browser-agent",
-  "version": "1.297.0",
+  "version": "1.304.0",
   "private": false,
   "author": "New Relic Browser Agent Team <browser-agent@newrelic.com>",
   "description": "New Relic Browser Agent",
@@ -170,7 +170,7 @@
     "runtime": {
       "name": "node",
       "onFail": "error",
-      "version": "22.11.0"
+      "version": ">=22.11.0"
     },
     "packageManager": {
       "name": "npm",
@@ -187,7 +187,7 @@
     "test": " NODE_OPTIONS=--max-old-space-size=8192 jest",
     "test:unit": "jest --selectProjects unit",
     "test:component": "jest --selectProjects component",
-    "test:types": "tsd -f ./tests/dts/**/*.ts",
+    "test:types": "npm run npm:build:types && tsd -f ./tests/dts/**/*.ts",
     "wdio": "node --max-old-space-size=8192 tools/wdio/bin/cli.js",
     "wdio:smoke": "node --max-old-space-size=8192 tools/wdio/bin/cli.js -T --concurrent=30",
     "build:all": "npm run cdn:build:local && npm run build:npm && npm run tools:test-builds",
@@ -220,8 +220,8 @@
     "url": "https://github.com/newrelic/newrelic-browser-agent.git"
   },
   "dependencies": {
+    "@newrelic/rrweb": "1.0.1",
     "fflate": "0.8.2",
-    "rrweb": "^2.0.0-alpha.18",
     "web-vitals": "4.2.4"
   },
   "devDependencies": {
@@ -264,10 +264,6 @@
     "glob": "^11.0.0",
     "html-webpack-plugin": "^5.6.0",
     "husky": "^8.0.3",
-    "istanbul-lib-coverage": "^3.2.2",
-    "istanbul-lib-instrument": "^6.0.1",
-    "istanbul-lib-report": "^3.0.1",
-    "istanbul-reports": "^3.1.6",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "29.7.0",
     "jest-extended": "^4.0.2",

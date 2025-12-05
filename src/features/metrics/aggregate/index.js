@@ -11,6 +11,7 @@ import { windowAddEventListener } from '../../../common/event-listener/event-lis
 import { isBrowserScope, isWorkerScope } from '../../../common/constants/runtime'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { isIFrameWindow } from '../../../common/dom/iframe'
+import { evaluateHarvestMetadata } from './harvest-metadata'
 // import { WEBSOCKET_TAG } from '../../../common/wrap/wrap-websocket'
 // import { handleWebsocketEvents } from './websocket-detection'
 
@@ -19,6 +20,15 @@ export class Aggregate extends AggregateBase {
   constructor (agentRef) {
     super(agentRef, FEATURE_NAME)
     this.harvestOpts.aggregatorTypes = ['cm', 'sm'] // the types in EventAggregator this feature cares about
+
+    /** all the harvest metadata metrics need to be evaluated simulataneously at unload time so just temporarily buffer them and dont make SMs immediately from the data */
+    this.harvestMetadata = {}
+    this.harvestOpts.beforeUnload = () => {
+      evaluateHarvestMetadata(this.harvestMetadata).forEach(smTag => {
+        this.storeSupportabilityMetrics(smTag)
+      })
+    }
+
     // This feature only harvests once per potential EoL of the page, which is handled by the central harvester.
 
     // this must be read/stored synchronously, as the currentScript is removed from the DOM after this script is executed and this lookup will be void
@@ -121,11 +131,16 @@ export class Aggregate extends AggregateBase {
     // webdriver detection
     if (navigator.webdriver) this.storeSupportabilityMetrics('Generic/WebDriver/Detected')
 
-    // WATCHABLE_WEB_SOCKET_EVENTS.forEach(tag => {
-    //   registerHandler('buffered-' + WEBSOCKET_TAG + tag, (...args) => {
-    //     handleWebsocketEvents(this.storeSupportabilityMetrics.bind(this), tag, ...args)
-    //   }, this.featureName, this.ee)
-    // })
+    /** all the harvest metadata metrics need to be evaluated simulataneously at unload time so just temporarily buffer them and dont make SMs immediately from the data */
+    registerHandler('harvest-metadata', (harvestMetadataObject = {}) => {
+      try {
+        Object.keys(harvestMetadataObject).forEach(key => {
+          Object.assign(this.harvestMetadata[key] ??= {}, harvestMetadataObject[key])
+        })
+      } catch (e) {
+      // failed to merge harvest metadata... ignore
+      }
+    }, this.featureName, this.ee)
   }
 
   eachSessionChecks () {

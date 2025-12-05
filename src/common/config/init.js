@@ -21,8 +21,7 @@ const InitModelFn = () => {
   const hiddenState = {
     feature_flags: [],
     experimental: {
-      marks: false,
-      measures: false,
+      allow_registered_children: false,
       resources: false
     },
     mask_selector: '*',
@@ -50,9 +49,11 @@ const InitModelFn = () => {
   return {
     ajax: { deny_list: undefined, block_internal: true, enabled: true, autoStart: true },
     api: {
-      allow_registered_children: true,
+      get allow_registered_children () { return hiddenState.feature_flags.includes(FEATURE_FLAGS.REGISTER) || hiddenState.experimental.allow_registered_children },
+      set allow_registered_children (val) { hiddenState.experimental.allow_registered_children = val },
       duplicate_registered_data: false
     },
+    browser_consent_mode: { enabled: false },
     distributed_tracing: {
       enabled: undefined,
       exclude_newrelic_header: undefined,
@@ -72,10 +73,8 @@ const InitModelFn = () => {
     page_view_event: { enabled: true, autoStart: true },
     page_view_timing: { enabled: true, autoStart: true },
     performance: {
-      get capture_marks () { return hiddenState.feature_flags.includes(FEATURE_FLAGS.MARKS) || hiddenState.experimental.marks },
-      set capture_marks (val) { hiddenState.experimental.marks = val },
-      get capture_measures () { return hiddenState.feature_flags.includes(FEATURE_FLAGS.MEASURES) || hiddenState.experimental.measures },
-      set capture_measures (val) { hiddenState.experimental.measures = val },
+      capture_marks: false,
+      capture_measures: false,
       capture_detail: true,
       resources: {
         get enabled () { return hiddenState.feature_flags.includes(FEATURE_FLAGS.RESOURCES) || hiddenState.experimental.resources },
@@ -103,7 +102,6 @@ const InitModelFn = () => {
       collect_fonts: false,
       inline_images: false,
       fix_stylesheets: true,
-      // recording config settings
       mask_all_inputs: true,
       // this has a getter/setter to facilitate validation of the selectors
       get mask_text_selector () { return hiddenState.mask_selector },

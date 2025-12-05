@@ -85,6 +85,7 @@ describe('spa harvesting', () => {
     await browser.execute(function (hashFragment) {
       window.location.hash = hashFragment
     }, hashFragment)
+    await browser.pause(500) // this ensure the window location or url has actually changed first before next browser.execute
 
     const [interactionHarvests] = await Promise.all([
       interactionsCapture.waitForResult({ totalCount: 2 }),

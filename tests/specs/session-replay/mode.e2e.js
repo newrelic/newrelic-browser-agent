@@ -233,16 +233,18 @@ describe('Session Replay Sample Mode Validation', () => {
 
   it('Duplicate errors before and after init are decorated with hasReplay and timestamps correctly - FULL', async () => {
     const errorsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testErrorsRequest })
-    const [[errors]] = await Promise.all([
-      errorsCapture.waitForResult({ totalCount: 1 }),
+    const [errorsHarvests] = await Promise.all([
+      errorsCapture.waitForResult({ totalCount: 2 }),
       browser.url(await browser.testHandle.assetURL('rrweb-duplicate-errors-split.html', srConfig({ session_replay: { preload: false, sampling_rate: 100 } })))
         .then(() => browser.waitForSessionReplayRecording())
     ])
-
+    const errorQueries = errorsHarvests.flatMap(harvest => harvest.request.query)
+    const errorBodies = errorsHarvests.flatMap(harvest => harvest.request.body.err)
     /** should not have hr param on jserror payloads */
-    expect(errors.request.query.hr).toEqual(undefined)
-    const hasReplaySet = errors.request.body.err.find(x => x.params.hasReplay)
-    const preReplaySet = errors.request.body.err.find(x => !x.params.hasReplay)
+    expect(errorQueries.every(query => !query.hr)).toBe(true)
+    const hasReplaySet = errorBodies.filter(x => x.params.hasReplay).reduce(collect)
+    const preReplaySet = errorBodies.filter(x => !x.params.hasReplay).reduce(collect)
+
     /** pre-replay init data should not have the hasReplay flag */
     expect(preReplaySet.params.hasReplay).toEqual(undefined)
     /** pre-replay should contain an aggregated set instead of a single value */
@@ -263,16 +265,19 @@ describe('Session Replay Sample Mode Validation', () => {
 
   it('Duplicate errors before and after init are decorated with hasReplay and timestamps correctly - ERROR', async () => {
     const errorsCapture = await browser.testHandle.createNetworkCaptures('bamServer', { test: testErrorsRequest })
-    const [[errors]] = await Promise.all([
-      errorsCapture.waitForResult({ totalCount: 1 }),
+    const [errorsHarvests] = await Promise.all([
+      errorsCapture.waitForResult({ totalCount: 2 }),
       browser.url(await browser.testHandle.assetURL('rrweb-duplicate-errors-split.html', srConfig({ session_replay: { preload: false, sampling_rate: 0, error_sampling_rate: 100 } })))
         .then(() => browser.waitForSessionReplayRecording())
     ])
 
+    const errorQueries = errorsHarvests.flatMap(harvest => harvest.request.query)
+    const errorBodies = errorsHarvests.flatMap(harvest => harvest.request.body.err)
     /** should not have hr param on jserror payloads */
-    expect(errors.request.query.hr).toEqual(undefined)
-    const hasReplaySet = errors.request.body.err.find(x => x.params.hasReplay)
-    const preReplaySet = errors.request.body.err.find(x => !x.params.hasReplay)
+    expect(errorQueries.every(query => !query.hr)).toBe(true)
+    const hasReplaySet = errorBodies.filter(x => x.params.hasReplay).reduce(collect)
+    const preReplaySet = errorBodies.filter(x => !x.params.hasReplay).reduce(collect)
+
     /** pre-replay init data should not have the hasReplay flag */
     expect(preReplaySet.params.hasReplay).toEqual(undefined)
     /** pre-replay should contain an aggregated set instead of a single value */
@@ -358,3 +363,14 @@ describe('Session Replay Sample Mode Validation', () => {
     })
   })
 })
+
+function collect (acc, x) {
+  if (x.params.message === 'test') {
+    if (acc) {
+      acc.metrics.count += x.metrics.count
+      acc.metrics.time.min = Math.min(acc.metrics.time.min || Infinity, x.metrics.time.min || Infinity)
+      acc.metrics.time.max = Math.max(acc.metrics.time.max || 0, x.metrics.time.max || 0)
+    } else acc = x
+  }
+  return acc
+}

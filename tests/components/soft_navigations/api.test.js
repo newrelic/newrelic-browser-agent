@@ -1,15 +1,19 @@
 import { Instrument as SoftNav } from '../../../src/features/soft_navigations/instrument'
 import { resetAgent, setupAgent } from '../setup-agent'
 
+import querypack from '@newrelic/nr-querypack'
+
 /**
  * Test `.interaction gets ixn retroactively too when processed late after ee buffer drain` is a bit
  * flaky so add a retry for this file.
  */
+jest.retryTimes(5)
 
 const INTERACTION_API = 'api-ixn'
 let mainAgent
 
 beforeAll(() => {
+  jest.useFakeTimers({ doNotFake: ['nextTick', 'performance'] }) // to aid new long task window heuristics as default ixn will need to wait additional 5s to finish
   mainAgent = setupAgent({
     agentOverrides: {
       runSoftNavOverSpa: true
@@ -40,10 +44,9 @@ beforeEach(async () => {
 
   softNavAggregate.ee.emit('rumresp', [{ spa: 1 }])
   await new Promise(process.nextTick)
+  jest.clearAllTimers() // prevents the IPL harvest after RUM flags w/ setTimeout of 0; this is for better test consistency
 
   softNavAggregate.initialPageLoadInteraction = null
-  softNavAggregate.interactionInProgress = null
-  delete softNavAggregate.latestRouteSetByApi
 })
 
 afterEach(() => {
@@ -71,7 +74,7 @@ test('.interaction gets current or creates new api ixn', () => {
   expect(softNavAggregate.interactionInProgress.cancellationTimer).toBeUndefined()
 })
 
-test('.interaction returns a different new context for every call', async () => {
+test('.interaction returns a different new context for every call', () => {
   const ixn1 = mainAgent.interaction()
   const ixn2 = mainAgent.interaction()
   expect(ixn1).not.toBe(ixn2)
@@ -92,6 +95,7 @@ test('open api ixn ignores UI events and auto closes after history & dom change'
 
   softNavAggregate.ee.emit('newURL', [23, 'example.com'])
   softNavAggregate.ee.emit('newDom', [34])
+  jest.runOnlyPendingTimers() // simulate no long task timeout so the ixn can close
   expect(softNavAggregate.interactionInProgress).toBeNull()
   expect(ixnContext.associatedInteraction.status).toEqual('finished')
 })
@@ -133,8 +137,9 @@ test('.interaction with waitForEnd flag keeps ixn open until .end', () => {
   let ixnContext = getIxnContext(ixn)
   softNavAggregate.ee.emit('newURL', [23, 'example.com'])
   softNavAggregate.ee.emit('newDom', [34])
+  jest.runOnlyPendingTimers() // even after no long task window, the ixn should remain open
 
-  expect(softNavAggregate.interactionInProgress.status).toEqual('in progress')
+  expect(softNavAggregate.interactionInProgress.status).toEqual('pending finish')
   softNavAggregate.ee.emit(`${INTERACTION_API}-end`, [45], ixnContext)
   expect(softNavAggregate.interactionInProgress).toBeNull()
   expect(ixnContext.associatedInteraction.end).toEqual(45)
@@ -143,8 +148,9 @@ test('.interaction with waitForEnd flag keeps ixn open until .end', () => {
   ixnContext = getIxnContext(ixn)
   softNavAggregate.ee.emit('newURL', [70, 'example.com'])
   softNavAggregate.ee.emit('newDom', [80])
+  jest.runOnlyPendingTimers()
 
-  expect(softNavAggregate.interactionInProgress.status).toEqual('in progress')
+  expect(softNavAggregate.interactionInProgress.status).toEqual('pending finish')
   softNavAggregate.ee.emit(`${INTERACTION_API}-end`, [90], ixnContext)
   expect(softNavAggregate.interactionInProgress).toBeNull()
   expect(ixnContext.associatedInteraction.end).toEqual(90)
@@ -154,19 +160,19 @@ test('.save forcibly harvest any would-be cancelled ixns', async () => {
   let ixn = mainAgent.interaction().save()
   let ixnContext = getIxnContext(ixn)
   softNavAggregate.ee.emit(`${INTERACTION_API}-end`, [100], ixnContext)
-  expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(1)
+  expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(1)
   expect(ixnContext.associatedInteraction.end).toEqual(100)
 
   softNavAggregate.ee.emit('newUIEvent', [{ type: 'keydown', timeStamp: 200 }])
   ixn = mainAgent.interaction().save()
   ixnContext = getIxnContext(ixn)
   softNavAggregate.ee.emit('newUIEvent', [{ type: 'keydown', timeStamp: 210 }])
-  expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(2)
+  expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(2)
   expect(ixnContext.associatedInteraction.end).toBeGreaterThan(ixnContext.associatedInteraction.start) // thisCtx is still referencing the first keydown ixn
 
   mainAgent.interaction().save().end()
   await new Promise(process.nextTick)
-  expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(3)
+  expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(3)
 })
 
 test('.ignore forcibly discard any would-be harvested ixns', () => {
@@ -174,16 +180,17 @@ test('.ignore forcibly discard any would-be harvested ixns', () => {
   mainAgent.interaction().ignore()
   softNavAggregate.ee.emit('newURL', [23, 'example.com'])
   softNavAggregate.ee.emit('newDom', [34])
+  jest.runOnlyPendingTimers()
   expect(softNavAggregate.interactionInProgress).toBeNull()
-  expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(0)
+  expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(0)
 
   const ixn = mainAgent.interaction({ waitForEnd: true }).ignore().save() // ignore ought to override this
   ixn.end()
-  expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(0)
+  expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(0)
   expect(getIxnContext(ixn).associatedInteraction.status).toEqual('cancelled')
 })
 
-test('.getContext stores values scoped to each ixn', async () => {
+test('.getContext stores values scoped to each ixn', () => {
   let hasRan = false
   mainAgent.interaction().getContext(privCtx => { privCtx.someVar = true })
   mainAgent.interaction().getContext(privCtx => {
@@ -191,7 +198,7 @@ test('.getContext stores values scoped to each ixn', async () => {
     hasRan = true
   })
 
-  await new Promise(resolve => setTimeout(resolve, 100))
+  jest.runOnlyPendingTimers() // execute the setTimeout used by getContext internally
   expect(hasRan).toEqual(true)
   mainAgent.interaction().end()
 
@@ -200,21 +207,21 @@ test('.getContext stores values scoped to each ixn', async () => {
     expect(privCtx.someVar).toBeUndefined() // two separate interactions should not share the same data store
     hasRan = true
   })
-  await new Promise(resolve => setTimeout(resolve, 100))
+  jest.runOnlyPendingTimers()
   expect(hasRan).toEqual(true)
 })
 
-test('.onEnd queues callbacks for right before ixn is done', async () => {
+test('.onEnd queues callbacks for right before ixn is done', () => {
   let hasRan = false
   const ixn1 = mainAgent.interaction().getContext(privCtx => { privCtx.someVar = true })
-  await new Promise(resolve => setTimeout(resolve, 100))
+  jest.runOnlyPendingTimers()
   ixn1.onEnd(privCtx => {
     expect(privCtx.someVar).toEqual(true) // should have access to the same data store as getContext
     hasRan = true
     ixn1.save() // should be able to force save this would-be discarded ixn
   }).end()
   expect(hasRan).toEqual(true)
-  expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(1)
+  expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(1)
 
   hasRan = false
   const ixn2 = mainAgent.interaction().save()
@@ -223,7 +230,7 @@ test('.onEnd queues callbacks for right before ixn is done', async () => {
     ixn2.ignore()
   }).end()
   expect(hasRan).toEqual(true)
-  expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(1) // ixn was discarded
+  expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(1) // ixn was discarded
 })
 
 test('.setCurrentRouteName updates the targetRouteName of current ixn and is tracked for new ixn', () => {
@@ -233,7 +240,7 @@ test('.setCurrentRouteName updates the targetRouteName of current ixn and is tra
   let ixn = mainAgent.interaction() // a new ixn would start with undefined old & new routes
   let ixnContext = getIxnContext(ixn)
   mainAgent.setCurrentRouteName(firstRoute)
-  expect(ixnContext.associatedInteraction.oldRoute).toBeUndefined()
+  expect(ixnContext.associatedInteraction.oldRoute).toBeNull()
   expect(ixnContext.associatedInteraction.newRoute).toEqual(firstRoute)
   ixn.end()
 
@@ -275,31 +282,47 @@ test('.actionText and .setAttribute add attributes to ixn specifically', () => {
 })
 
 // This isn't just an API test; it double serves as data validation on the querypack payload output.
-test('multiple finished ixns retain the correct start/end timestamps in payload', () => {
-  softNavAggregate.ee.emit(`${INTERACTION_API}-get`, [0])
+test('multiple finished ixns retain the correct start/end timestamps in payload', async () => {
+  const performanceNowSpy = jest.spyOn(performance, 'now')
+
+  performanceNowSpy.mockReturnValue(0)
   let ixnContext = getIxnContext(mainAgent.interaction())
   ixnContext.associatedInteraction.nodeId = 1
   ixnContext.associatedInteraction.id = 'some_id'
   ixnContext.associatedInteraction.forceSave = true
-  softNavAggregate.ee.emit(`${INTERACTION_API}-end`, [200], ixnContext)
+  performanceNowSpy.mockReturnValue(200)
+  mainAgent.interaction().end()
 
-  softNavAggregate.ee.emit(`${INTERACTION_API}-get`, [300])
+  performanceNowSpy.mockReturnValue(300)
   ixnContext = getIxnContext(mainAgent.interaction())
   ixnContext.associatedInteraction.nodeId = 2
   ixnContext.associatedInteraction.id = 'some_other_id'
   ixnContext.associatedInteraction.forceSave = true
-  softNavAggregate.ee.emit(`${INTERACTION_API}-end`, [500], ixnContext)
+  performanceNowSpy.mockReturnValue(500)
+  mainAgent.interaction().end()
 
-  softNavAggregate.ee.emit(`${INTERACTION_API}-get`, [700])
+  performanceNowSpy.mockReturnValue(700)
   ixnContext = getIxnContext(mainAgent.interaction())
   ixnContext.associatedInteraction.nodeId = 3
   ixnContext.associatedInteraction.id = 'some_another_id'
   ixnContext.associatedInteraction.forceSave = true
-  softNavAggregate.ee.emit(`${INTERACTION_API}-end`, [1000], ixnContext)
+  performanceNowSpy.mockReturnValue(1000)
+  mainAgent.interaction().end()
 
-  expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(3)
+  await new Promise(process.nextTick)
+
+  expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(3)
+
+  const harvestPayloadBody = softNavAggregate.makeHarvestPayload().body
+  const deserializedPayload = querypack.decode(harvestPayloadBody)
+  const starts = [0, 300, 700]
+  deserializedPayload.forEach(payload => {
+    expect(payload.start).toEqual(starts.shift())
+  })
   // WARN: Double check decoded output & behavior or any introduced bugs before changing the follow line's static string.
-  expect(softNavAggregate.makeHarvestPayload()[0].payload.body).toEqual("bel.7;1,,,5k,,,'api,'http://localhost/,1,1,,2,!!!!'some_id,'1,!!;;1,,8c,5k,,,'api,'http://localhost/,1,1,,2,!!!!'some_other_id,'2,!!;;1,,jg,8c,,,'api,'http://localhost/,1,1,,2,!!!!'some_another_id,'3,!!;")
+  expect(harvestPayloadBody).toEqual("bel.7;1,,,5k,,,'api,'http://localhost/,1,1,,2,!!!!'some_id,'1,!!;;1,,8c,5k,,,'api,'http://localhost/,1,1,,2,!!!!'some_other_id,'2,!!;;1,,jg,8c,,,'api,'http://localhost/,1,1,,2,!!!!'some_another_id,'3,!!;")
+
+  performanceNowSpy.mockRestore()
 })
 
 // This isn't just an API test; it double serves as data validation on the querypack payload output.
@@ -328,9 +351,9 @@ test('multiple finished ixns with ajax have correct start/end timestamps (in aja
   softNavAggregate.ee.emit('ajax', [{ startTime: 12, endTime: 13 }])
   ixnContext.associatedInteraction.children[1].nodeId = 6
 
-  expect(softNavAggregate.interactionsToHarvest.get()[0].data.length).toEqual(2)
+  expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(2)
   // WARN: Double check decoded output & behavior or any introduced bugs before changing the follow line's static string.
-  expect(softNavAggregate.makeHarvestPayload()[0].payload.body).toEqual("bel.7;1,2,1,3,,,'api,'http://localhost/,1,1,,2,!!!!'some_id,'1,!!;2,,1,3,,,,,,,,,,'2,!!!;2,,2,3,,,,,,,,,,'3,!!!;;1,2,9,4,,,'api,'http://localhost/,1,1,,2,!!!!'some_other_id,'4,!!;2,,a,1,,,,,,,,,,'5,!!!;2,,b,1,,,,,,,,,,'6,!!!;")
+  expect(softNavAggregate.makeHarvestPayload().body).toEqual("bel.7;1,2,1,3,,,'api,'http://localhost/,1,1,,2,!!!!'some_id,'1,!!;2,,1,3,,,,,,,,,,'2,!!!;2,,2,3,,,,,,,,,,'3,!!!;;1,2,9,4,,,'api,'http://localhost/,1,1,,2,!!!!'some_other_id,'4,!!;2,,a,1,,,,,,,,,,'5,!!!;2,,b,1,,,,,,,,,,'6,!!!;")
 })
 
 function getIxnContext (ixn) {

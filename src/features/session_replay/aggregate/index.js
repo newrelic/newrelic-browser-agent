@@ -7,13 +7,13 @@
  */
 
 import { registerHandler } from '../../../common/event-emitter/register-handler'
-import { ABORT_REASONS, FEATURE_NAME, QUERY_PARAM_PADDING, RRWEB_EVENT_TYPES, SR_EVENT_EMITTER_TYPES, TRIGGERS } from '../constants'
+import { ABORT_REASONS, ERROR_DURING_REPLAY, FEATURE_NAME, QUERY_PARAM_PADDING, RRWEB_EVENT_TYPES, TRIGGERS } from '../constants'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { sharedChannel } from '../../../common/constants/shared-channel'
 import { obj as encodeObj } from '../../../common/url/encode'
 import { warn } from '../../../common/util/console'
 import { globalScope } from '../../../common/constants/runtime'
-import { RRWEB_VERSION } from '../../../common/constants/env'
+import { RRWEB_VERSION, RRWEB_PACKAGE_NAME } from '../../../common/constants/env'
 import { MODE, SESSION_EVENTS, SESSION_EVENT_TYPES } from '../../../common/session/constants'
 import { stringify } from '../../../common/util/stringify'
 import { stylesheetEvaluator } from '../shared/stylesheet-evaluator'
@@ -21,6 +21,7 @@ import { now } from '../../../common/timing/now'
 import { MAX_PAYLOAD_SIZE } from '../../../common/constants/agent-constants'
 import { cleanURL } from '../../../common/url/clean-url'
 import { canEnableSessionTracking } from '../../utils/feature-gates'
+import { PAUSE_REPLAY } from '../../../loaders/api/constants'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -37,6 +38,8 @@ export class Aggregate extends AggregateBase {
     this.gzipper = undefined
     /** populated with the u8 string lib async */
     this.u8 = undefined
+    /** flips to false if the compressor libraries cannot import */
+    this.shouldCompress = true
 
     /** set by BCS response */
     this.entitled = false
@@ -75,11 +78,11 @@ export class Aggregate extends AggregateBase {
       this.mode = data.sessionReplayMode
     })
 
-    registerHandler(SR_EVENT_EMITTER_TYPES.PAUSE, () => {
+    registerHandler(PAUSE_REPLAY, () => {
       this.forceStop(this.mode === MODE.FULL)
     }, this.featureName, this.ee)
 
-    registerHandler(SR_EVENT_EMITTER_TYPES.ERROR_DURING_REPLAY, e => {
+    registerHandler(ERROR_DURING_REPLAY, e => {
       this.handleError(e)
     }, this.featureName, this.ee)
 
@@ -136,7 +139,7 @@ export class Aggregate extends AggregateBase {
       if (!this.agentRef.runtime.isRecording) this.recorder.startRecording(TRIGGERS.SWITCH_TO_FULL, this.mode) // off --> full
       this.syncWithSessionManager({ sessionReplayMode: this.mode })
     } else {
-      this.initializeRecording(MODE.FULL, true)
+      this.initializeRecording(MODE.FULL, true, TRIGGERS.SWITCH_TO_FULL)
     }
   }
 
@@ -200,14 +203,15 @@ export class Aggregate extends AggregateBase {
       this.gzipper = gzipSync
       this.u8 = strToU8
     } catch (err) {
-      // compressor failed to load, but we can still record without compression as a last ditch effort
+      this.shouldCompress = false
+      // compressor failed to load, but we can still try to record without compression as a last ditch effort
     }
   }
 
-  makeHarvestPayload (shouldRetryOnFail) {
-    const payloadOutput = { targetApp: undefined, payload: undefined }
-    if (this.mode !== MODE.FULL || this.blocked) return
-    if (!this.recorder || !this.timeKeeper?.ready || !this.recorder.hasSeenSnapshot) return
+  makeHarvestPayload () {
+    if (this.mode !== MODE.FULL || this.blocked) return // harvests should only be made in FULL mode, and not if the feature is blocked
+    if (this.shouldCompress && !this.gzipper) return // if compression is enabled, but the libraries have not loaded, wait for them to load
+    if (!this.recorder || !this.timeKeeper?.ready || !(this.recorder.hasSeenSnapshot && this.recorder.hasSeenMeta)) return // if the recorder or the timekeeper is not ready, or the recorder has not yet seen a snapshot, do not harvest
 
     const recorderEvents = this.recorder.getEvents()
     // get the event type and use that to trigger another harvest if needed
@@ -216,7 +220,7 @@ export class Aggregate extends AggregateBase {
     const payload = this.getHarvestContents(recorderEvents)
     if (!payload.body.length) {
       this.recorder.clearBuffer()
-      return [payloadOutput]
+      return
     }
 
     this.reportSupportabilityMetric('SessionReplay/Harvest/Attempts')
@@ -232,19 +236,18 @@ export class Aggregate extends AggregateBase {
 
     if (len > MAX_PAYLOAD_SIZE) {
       this.abort(ABORT_REASONS.TOO_BIG, len)
-      return [payloadOutput]
+      return
     }
+
     // TODO -- Gracefully handle the buffer for retries.
     if (!this.agentRef.runtime.session.state.sessionReplaySentFirstChunk) this.syncWithSessionManager({ sessionReplaySentFirstChunk: true })
     this.recorder.clearBuffer()
-    if (recorderEvents.type === 'preloaded') this.agentRef.runtime.harvester.triggerHarvestFor(this)
-    payloadOutput.payload = payload
 
     if (!this.agentRef.runtime.session.state.traceHarvestStarted) {
       warn(59, JSON.stringify(this.agentRef.runtime.session.state))
     }
 
-    return [payloadOutput]
+    return payload
   }
 
   /**
@@ -322,7 +325,7 @@ export class Aggregate extends AggregateBase {
           decompressedBytes: recorderEvents.payloadBytesEstimation,
           invalidStylesheetsDetected: stylesheetEvaluator.invalidStylesheetsDetected,
           inlinedAllStylesheets: recorderEvents.inlinedAllStylesheets,
-          'rrweb.version': RRWEB_VERSION,
+          'rrweb.version': RRWEB_PACKAGE_NAME + '@' + RRWEB_VERSION,
           'payload.type': recorderEvents.type,
           // customer-defined data should go last so that if it exceeds the query param padding limit it will be truncated instead of important attrs
           ...(endUserId && { 'enduser.id': this.obfuscator.obfuscateString(endUserId) }),

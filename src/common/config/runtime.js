@@ -19,13 +19,22 @@ const ReadOnly = {
   originTime
 }
 
+const hiddenState = {
+  consented: false
+}
+
 const RuntimeModel = {
   /** Agent-specific metadata found in the RUM call response. ex. entityGuid */
   appMetadata: {},
+  get consented () {
+    return this.session?.state?.consent || hiddenState.consented
+  },
+  set consented (value) {
+    hiddenState.consented = value
+  },
   customTransaction: undefined,
   denyList: undefined,
   disabled: false,
-  entityManager: undefined,
   harvester: undefined,
   isolatedBacklog: false,
   isRecording: false, // true when actively recording, false when paused or stopped
@@ -37,6 +46,7 @@ const RuntimeModel = {
   releaseIds: {},
   session: undefined,
   timeKeeper: undefined,
+  registeredEntities: [],
   /** a proxy is set in agent-session to track jsAttributes changes for harvesting mechanics */
   jsAttributesMetadata: { bytes: 0 },
   get harvestCount () { return ++_harvestCount }

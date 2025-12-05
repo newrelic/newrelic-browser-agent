@@ -6,19 +6,34 @@
 <html>
   <head>
     <title>RUM Unit Test</title>
-    {config}
     {init}
+    {config}
     {loader}
   </head>
   <body>
     <div>This page makes a cross-origin XHR call when loading.</div>
     <script type="text/javascript">
+      window.rawTimes = []
       var xhr = new XMLHttpRequest()
 
       var url = 'http://' + NREUM.info.beacon + '/dt/' + NREUM.info.licenseKey
 
       xhr.open('GET', url)
+      window.rawTimes.push(Math.floor(performance.now()))
       xhr.send()
+
+      let offset = 100
+      for (var i = 0; i < 3; i++) {
+        setTimeout(function () {
+          var xhr = new XMLHttpRequest()
+
+          var url = '/json'
+          xhr.open('GET', url)
+          window.rawTimes.push(Math.floor(performance.now()))
+          xhr.send()
+        }, offset)
+        offset += 100
+      }
     </script>
   </body>
 </html>

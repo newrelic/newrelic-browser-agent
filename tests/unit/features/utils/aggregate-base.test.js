@@ -49,6 +49,18 @@ jest.mock('../../../../src/common/util/feature-flags', () => ({
   }
 }))
 
+jest.mock('../../../../src/common/constants/runtime', () => ({
+  ...jest.requireActual('../../../../src/common/constants/runtime'),
+  supportsNavTimingL2: () => true,
+  isiOS: false,
+  isBrowserScope: true,
+  globalScope: {
+    window: {
+      parent: {}
+    }
+  }
+}))
+
 let agentIdentifier
 let featureName
 let mainAgent

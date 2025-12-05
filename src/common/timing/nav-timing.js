@@ -67,8 +67,13 @@ export function addPT (offset, pt, v = {}, isL1Api = false) {
 
 // Add Performance Navigation values to the given object
 export function addPN (pn, v) {
-  handleValue(getPntType(pn.type), v, 'ty')
-  handleValue(pn.redirectCount, v, 'rc')
+  try {
+    handleValue(getPntType(pn.type), v, 'ty')
+    handleValue(pn.redirectCount, v, 'rc')
+  } catch (e) {
+    v.py = 0
+    v.rc = 0
+  }
   return v
 }
 

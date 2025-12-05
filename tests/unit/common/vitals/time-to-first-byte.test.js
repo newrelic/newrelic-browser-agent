@@ -18,7 +18,8 @@ describe('ttfb', () => {
     jest.doMock('../../../../src/common/constants/runtime', () => ({
       __esModule: true,
       isiOS: false,
-      isBrowserScope: true
+      isBrowserScope: true,
+      supportsNavTimingL2: () => true
     }))
     global.PerformanceNavigationTiming = jest.fn()
 
@@ -31,7 +32,8 @@ describe('ttfb', () => {
   test('does NOT report if not browser scoped', (done) => {
     jest.doMock('../../../../src/common/constants/runtime', () => ({
       __esModule: true,
-      isBrowserScope: false
+      isBrowserScope: false,
+      supportsNavTimingL2: () => true
     }))
 
     getFreshTTFBImport(metric => {
@@ -47,7 +49,8 @@ describe('ttfb', () => {
     jest.doMock('../../../../src/common/constants/runtime', () => ({
       __esModule: true,
       isiOS: false,
-      isBrowserScope: true
+      isBrowserScope: true,
+      supportsNavTimingL2: jest.requireActual('../../../../src/common/constants/runtime').supportsNavTimingL2
     }))
     global.PerformanceNavigationTiming = undefined
 
@@ -64,9 +67,9 @@ describe('ttfb', () => {
     jest.doMock('../../../../src/common/constants/runtime', () => ({
       __esModule: true,
       isiOS: true,
-      isBrowserScope: true
+      isBrowserScope: true,
+      supportsNavTimingL2: () => true
     }))
-    global.PerformanceNavigationTiming = jest.fn()
 
     getFreshTTFBImport(metric => {
       metric.subscribe(() => {
@@ -89,9 +92,9 @@ describe('ttfb', () => {
         }
       },
       originTime: 1,
-      isBrowserScope: true
+      isBrowserScope: true,
+      supportsNavTimingL2: () => false
     }))
-    global.PerformanceNavigationTiming = undefined
 
     getFreshTTFBImport(metric => {
       metric.subscribe(({ value }) => {
@@ -105,7 +108,8 @@ describe('ttfb', () => {
     jest.doMock('../../../../src/common/constants/runtime', () => ({
       __esModule: true,
       isBrowserScope: true,
-      isiOS: false
+      isiOS: false,
+      supportsNavTimingL2: () => true
     }))
     global.PerformanceNavigationTiming = jest.fn()
     let witness = 0
@@ -134,7 +138,8 @@ describe('ttfb', () => {
         }
       },
       originTime: 1,
-      isBrowserScope: true
+      isBrowserScope: true,
+      supportsNavTimingL2: () => true
     }))
     let triggered = 0
     getFreshTTFBImport(metric => {

@@ -83,8 +83,7 @@ function register (agentRef, target, parent) {
   const api = {
     addPageAction: (name, attributes = {}) => report(addPageAction, [name, { ...attrs, ...attributes }, agentRef], target),
     deregister: () => {
-      // capture deregistration timing
-      reportTimeAlive()
+      reportTimings()
       registeredEntities.delete(api)
       block(single(() => warn(66)))
     },
@@ -116,20 +115,21 @@ function register (agentRef, target, parent) {
   /** only allow registered APIs to be tracked in the agent runtime */
   if (!isBlocked()) {
     registeredEntities.add(api)
-    // capture initial registration timings
-    // timeToBeRequested -- could be a custom event or a BrowserPerformance event -- TBD
-    // timeToFetch -- could be a custom event or a BrowserPerformance event -- TBD
-    // timeToRegister -- could be a custom event or a BrowserPerformance event -- TBD
-    // timeAlive -- could be a custom event or a BrowserPerformance event -- TBD
-    windowAddEventListener('pagehide', reportTimeAlive)
+    windowAddEventListener('pagehide', reportTimings)
   }
 
-  function reportTimeAlive () {
-    // only report it the first time this is called
+  function reportTimings () {
+    // only ever report the timings the first time this is called
     if (timings.deregisteredAt) return
     timings.deregisteredAt = now()
-    // report the timing here! now - registeredAt
-    // could be a custom event or a BrowserPerformance event -- TBD
+    api.recordCustomEvent('MicroFrontEndTiming', {
+      duration: timings.deregisteredAt, // origin to deregisteredAt
+      timeToLoad: timings.registeredAt - timings.fetchStart, // fetchStart to registeredAt
+      timeToBeRequested: timings.fetchStart, // origin to fetchStart
+      timeToFetch: timings.fetchEnd - timings.fetchStart, // fetchStart to fetchEnd
+      timeToRegister: timings.registeredAt - timings.fetchEnd, // fetchEnd to registeredAt
+      timeAlive: timings.deregisteredAt - timings.registeredAt // registeredAt to deregisteredAt
+    })
   }
 
   /**

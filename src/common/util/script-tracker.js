@@ -57,8 +57,8 @@ export function findScriptTimingsFromStack (stack) {
     })
 
     if (match) {
-      timings.fetchStart = match.startTime
-      timings.fetchEnd = match.responseEnd
+      timings.fetchStart = Math.floor(match.startTime)
+      timings.fetchEnd = Math.floor(match.responseEnd)
     }
   } catch (error) {
     // Don't let stack parsing errors break anything

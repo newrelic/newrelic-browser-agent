@@ -160,12 +160,12 @@ export class Aggregate extends AggregateBase {
         const encoded = textEncoder.encode(value)
         return acc + encoded.byteLength
       }, 0)
-
+      const BCSError = 'BCS/Error/'
       // Send SMs about failed RUM request
       const body = {
         sm: [{
           params: {
-            name: `Browser/Supportability/BCS/Error/${status}`
+            name: BCSError + status
           },
           stats: {
             c: 1
@@ -173,7 +173,7 @@ export class Aggregate extends AggregateBase {
         },
         {
           params: {
-            name: 'Browser/Supportability/BCS/Error/Dropped/Bytes'
+            name: BCSError + 'Dropped/Bytes'
           },
           stats: {
             c: 1,
@@ -182,7 +182,7 @@ export class Aggregate extends AggregateBase {
         },
         {
           params: {
-            name: 'Browser/Supportability/BCS/Error/Duration/Ms'
+            name: BCSError + 'Duration/Ms'
           },
           stats: {
             c: 1,

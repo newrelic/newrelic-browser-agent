@@ -192,9 +192,12 @@ export class Aggregate extends AggregateBase {
     // still send EE events for other features such as above, but stop this one from aggregating internal data
     if (this.blocked) return
 
-    if (err?.__newrelic?.[this.agentIdentifier]) {
+    if (err.__newrelic?.[this.agentIdentifier]) {
       params._interactionId = err.__newrelic[this.agentIdentifier].interactionId
       params._interactionNodeId = err.__newrelic[this.agentIdentifier].interactionNodeId
+    }
+    if (err.__newrelic?.socketId) {
+      customAttributes.socketId = err.__newrelic.socketId
     }
 
     if (this.shouldAllowMainAgentToCapture(target)) {

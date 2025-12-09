@@ -71,7 +71,7 @@ export function addPN (pn, v) {
     handleValue(getPntType(pn.type), v, 'ty')
     handleValue(pn.redirectCount, v, 'rc')
   } catch (e) {
-    v.py = 0
+    v.ty = 0
     v.rc = 0
   }
   return v

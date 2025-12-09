@@ -120,7 +120,8 @@ export class Recorder {
         inlineImages: inline_images,
         collectFonts: collect_fonts,
         checkoutEveryNms: CHECKOUT_MS[mode],
-        recordAfter: 'DOMContentLoaded'
+        recordAfter: 'DOMContentLoaded',
+        slimDOMOptions: 'all'
       })
     } catch (err) {
       this.ee.emit('internal-error', [err])

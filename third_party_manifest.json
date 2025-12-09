@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "Tue Oct 28 2025 17:27:05 GMT+0000 (Coordinated Universal Time)",
+  "lastUpdated": "Fri Dec 05 2025 18:35:26 GMT+0000 (Coordinated Universal Time)",
   "projectName": "New Relic Browser Agent",
   "projectUrl": "https://github.com/newrelic/newrelic-browser-agent",
   "includeOptDeps": true,
@@ -60,28 +60,28 @@
       "publisher": "The Babel Team",
       "url": "https://babel.dev/team"
     },
-    "@babel/core@7.28.4": {
+    "@babel/core@7.28.5": {
       "name": "@babel/core",
-      "version": "7.28.4",
+      "version": "7.28.5",
       "range": "^7.23.7",
       "licenses": "MIT",
       "repoUrl": "https://github.com/babel/babel",
-      "versionedRepoUrl": "https://github.com/babel/babel/tree/v7.28.4",
+      "versionedRepoUrl": "https://github.com/babel/babel/tree/v7.28.5",
       "licenseFile": "node_modules/@babel/core/LICENSE",
-      "licenseUrl": "https://github.com/babel/babel/blob/v7.28.4/LICENSE",
+      "licenseUrl": "https://github.com/babel/babel/blob/v7.28.5/LICENSE",
       "licenseTextSource": "file",
       "publisher": "The Babel Team",
       "url": "https://babel.dev/team"
     },
-    "@babel/eslint-parser@7.28.4": {
+    "@babel/eslint-parser@7.28.5": {
       "name": "@babel/eslint-parser",
-      "version": "7.28.4",
+      "version": "7.28.5",
       "range": "^7.25.9",
       "licenses": "MIT",
       "repoUrl": "https://github.com/babel/babel",
-      "versionedRepoUrl": "https://github.com/babel/babel/tree/v7.28.4",
+      "versionedRepoUrl": "https://github.com/babel/babel/tree/v7.28.5",
       "licenseFile": "node_modules/@babel/eslint-parser/LICENSE",
-      "licenseUrl": "https://github.com/babel/babel/blob/v7.28.4/LICENSE",
+      "licenseUrl": "https://github.com/babel/babel/blob/v7.28.5/LICENSE",
       "licenseTextSource": "file",
       "publisher": "The Babel Team",
       "url": "https://babel.dev/team"
@@ -112,15 +112,15 @@
       "publisher": "The Babel Team",
       "url": "https://babel.dev/team"
     },
-    "@babel/preset-env@7.28.3": {
+    "@babel/preset-env@7.28.5": {
       "name": "@babel/preset-env",
-      "version": "7.28.3",
+      "version": "7.28.5",
       "range": "^7.23.8",
       "licenses": "MIT",
       "repoUrl": "https://github.com/babel/babel",
-      "versionedRepoUrl": "https://github.com/babel/babel/tree/v7.28.3",
+      "versionedRepoUrl": "https://github.com/babel/babel/tree/v7.28.5",
       "licenseFile": "node_modules/@babel/preset-env/LICENSE",
-      "licenseUrl": "https://github.com/babel/babel/blob/v7.28.3/LICENSE",
+      "licenseUrl": "https://github.com/babel/babel/blob/v7.28.5/LICENSE",
       "licenseTextSource": "file",
       "publisher": "The Babel Team",
       "url": "https://babel.dev/team"
@@ -704,15 +704,15 @@
       "publisher": "Jeff Barczewski",
       "email": "info@codewinds.com"
     },
-    "wdio-lambdatest-service@4.0.0": {
+    "wdio-lambdatest-service@4.0.1": {
       "name": "wdio-lambdatest-service",
-      "version": "4.0.0",
+      "version": "4.0.1",
       "range": "^4.0.0",
       "licenses": "MIT",
       "repoUrl": "https://github.com/LambdaTest/wdio-lambdatest-service",
-      "versionedRepoUrl": "https://github.com/LambdaTest/wdio-lambdatest-service/tree/v4.0.0",
+      "versionedRepoUrl": "https://github.com/LambdaTest/wdio-lambdatest-service/tree/v4.0.1",
       "licenseFile": "node_modules/wdio-lambdatest-service/LICENSE",
-      "licenseUrl": "https://github.com/LambdaTest/wdio-lambdatest-service/blob/v4.0.0/LICENSE",
+      "licenseUrl": "https://github.com/LambdaTest/wdio-lambdatest-service/blob/v4.0.1/LICENSE",
       "licenseTextSource": "file",
       "publisher": "LambdaTest",
       "email": "keys@lambdatest.com"

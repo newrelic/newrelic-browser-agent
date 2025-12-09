@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2020 New Relic Corporation.
+  PDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>WebSocket Error Linkage Test</title>
+    {init} {config}
+    <script>
+      NREUM.init.feature_flags = ['websockets']
+    </script>
+    {loader}
+    <script>
+      window.bamServer = NREUM.info.beacon
+      window.testComplete = false
+      window.errorsCaught = []
+
+      window.addEventListener('load', () => {
+        const ws = new WebSocket(`ws://${bamServer}/websocket`)
+
+        let messageCount = 0
+
+        ws.addEventListener("open", (event) => {
+          console.log("WebSocket opened, sending valid message...")
+          
+          // Send a valid message (this will trigger an error in the message handler)
+          ws.send("trigger error in handler")
+        })
+
+        // Message handler that throws an error on first message
+        ws.addEventListener("message", (event) => {
+          messageCount++
+          console.log(`Message ${messageCount} received:`, event.data)
+          
+          if (messageCount === 1) {
+            // First message: throw error
+            const error = new Error("Error in message handler")
+            window.errorsCaught.push({ type: 'message', message: error.message })
+            throw error
+          }
+        })
+
+        // Second message handler that closes the WebSocket after the first handler throws
+        ws.addEventListener("message", (event) => {
+          // This runs after the first handler throws, but still executes
+          console.log("Second message handler: closing WebSocket...")
+          ws.close(1000)
+        })
+
+        ws.addEventListener("close", (event) => {
+          console.log("WebSocket closed:", event.code, event.reason)
+          window.testComplete = true
+        })
+
+        ws.addEventListener("error", (event) => {
+          console.error("WebSocket error event:", event)
+        })
+      })
+    </script>
+  </head>
+  <body>WebSocket Error Linkage Test</body>
+</html>

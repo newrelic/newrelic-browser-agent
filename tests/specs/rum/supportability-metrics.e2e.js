@@ -15,7 +15,8 @@ describe('basic pve capturing', () => {
     // will reply with http status 500 to fake error response from browser connect service
     await browser.testHandle.scheduleReply('bamServer', {
       test: testRumRequest,
-      statusCode: 500
+      statusCode: 500,
+      permanent: true
     })
 
     // visit the webpage, not waiting for agent load since we don't expect the rum feature to load properly
@@ -31,20 +32,20 @@ describe('basic pve capturing', () => {
     const smHarvest = await metricsCapture.waitForResult({ totalCount: 1 })
 
     // check for expected properties on status code supportability metric
-    const smHarvestStatusCode = smHarvest[0].request.body.sm.find(sm => sm.params.name === 'Browser/Supportability/BCS/Error/500')
+    const smHarvestStatusCode = smHarvest[0].request.body.sm.find(sm => sm.params.name === 'BCS/Error/500')
     expect(smHarvestStatusCode).toBeDefined()
     expect(smHarvestStatusCode.stats).toBeDefined()
     expect(smHarvestStatusCode.stats.c).toBe(1)
 
     // check for expected properties on dropped bytes supportability metric
-    const smHarvestDroppedBytes = smHarvest[0].request.body.sm.find(sm => sm.params.name === 'Browser/Supportability/BCS/Error/Dropped/Bytes')
+    const smHarvestDroppedBytes = smHarvest[0].request.body.sm.find(sm => sm.params.name === 'BCS/Error/Dropped/Bytes')
     expect(smHarvestDroppedBytes).toBeDefined()
     expect(smHarvestDroppedBytes.stats).toBeDefined()
     expect(smHarvestDroppedBytes.stats.c).toBe(1)
     expect(smHarvestDroppedBytes.stats.t).toBeGreaterThan(0)
 
     // check for expected properties on response time supportability metric
-    const smHarvestResponseTime = smHarvest[0].request.body.sm.find(sm => sm.params.name === 'Browser/Supportability/BCS/Error/Duration/Ms')
+    const smHarvestResponseTime = smHarvest[0].request.body.sm.find(sm => sm.params.name === 'BCS/Error/Duration/Ms')
     expect(smHarvestResponseTime).toBeDefined()
     expect(smHarvestResponseTime.stats).toBeDefined()
     expect(smHarvestResponseTime.stats.c).toBe(1)

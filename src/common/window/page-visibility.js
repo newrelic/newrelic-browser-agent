@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { documentAddEventListener } from '../event-listener/event-listener-opts'
+import { documentAddEventListener, windowAddEventListener } from '../event-listener/event-listener-opts'
 
 /**
  * @param {function} cb - called when a visibility change occurs with the vis state at that time
@@ -20,4 +20,8 @@ export function subscribeToVisibilityChange (cb, toHiddenOnly = false, capture, 
     }
     cb(document.visibilityState)
   }
+}
+
+export function subscribeToPageUnload (cb, capture, abortSignal) {
+  windowAddEventListener('pagehide', cb, capture, abortSignal)
 }

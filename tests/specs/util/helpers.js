@@ -26,7 +26,8 @@ export function buildExpectedSessionState (additionalExpectations) {
     sessionReplaySentFirstChunk: expect.any(Boolean),
     sessionTraceMode: expect.any(Number),
     loggingMode: expect.any(Number),
-    numOfResets: expect.any(Number)
+    numOfResets: expect.any(Number),
+    consent: expect.any(Boolean)
   }, additionalExpectations)
 }
 

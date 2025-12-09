@@ -11,6 +11,10 @@ export function isValidMFETarget (target = {}) {
   return !!(target.id && target.name)
 }
 
+export function hasValidValue (val) {
+  return (typeof val === 'string' && val.trim().length < 501) || (typeof val === 'number')
+}
+
 /**
  * Returns the MFE target associated with a given ID. Returns undefined if not found.
  * @param {string|number} id
@@ -25,9 +29,11 @@ export function getMFETargetFromId (id, aggregateInstance) {
 
 /**
  * When given a valid target, returns an object with the MFE payload attributes.  Returns an empty object otherwise.
+ * @note Field names may change as the schema is finalized
+ *
  * @param {Object} [target] the registered target
  * @param {AggregateInstance} [aggregateInstance] the aggregate instance calling the method
- * @returns {{'mfe.id': *, 'mfe.name': String}|{}} returns an empty object if args are not supplied or the aggregate instance is not supporting version 2
+ * @returns {Object} returns an empty object if args are not supplied or the aggregate instance is not supporting version 2
  */
 export function getVersion2Attributes (target, aggregateInstance) {
   if (aggregateInstance?.harvestEndpointVersion !== 2) return {}
@@ -39,9 +45,9 @@ export function getVersion2Attributes (target, aggregateInstance) {
     }
   }
   return {
-    'mfe.id': target.id, // these field names may change as the schema is finalized
-    'mfe.name': target.name, // these field names may change as the schema is finalized
-    eventSource: 'MicroFrontendBrowserAgent', // these field names may change as the schema is finalized
-    'parent.id': containerAgentEntityGuid
+    'source.id': target.id,
+    'source.name': target.name,
+    'source.type': target.type,
+    'parent.id': target.parent?.id || containerAgentEntityGuid
   }
 }

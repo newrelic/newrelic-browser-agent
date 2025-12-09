@@ -29,7 +29,8 @@ let mockVisChanges = []
 jest.mock('../../../src/common/window/page-visibility', () => ({
   subscribeToVisibilityChange: jest.fn(cb => {
     mockVisChanges.push(cb)
-  })
+  }),
+  subscribeToPageUnload: jest.fn()
 }))
 jest.mock('../../../src/common/harvest/harvester')
 

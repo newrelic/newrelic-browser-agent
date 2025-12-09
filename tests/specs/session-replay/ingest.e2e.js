@@ -17,7 +17,7 @@ describe('Session Replay Ingest Behavior', () => {
     await browser.url(await browser.testHandle.assetURL('rrweb-instrumented.html', srConfig()))
       .then(() => browser.waitForSessionReplayRecording())
 
-    await sessionReplaysCapture.waitForResult({ totalCount: 2 })
+    await sessionReplaysCapture.waitForResult({ totalCount: 1 }) // snapshot
 
     expect((await getSR()).events.length).toEqual(0)
   })

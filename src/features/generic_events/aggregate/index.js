@@ -33,13 +33,13 @@ export class Aggregate extends AggregateBase {
 
       this.#trackSupportabilityMetrics()
 
-      registerHandler('api-recordCustomEvent', (timestamp, eventType, attributes) => {
+      registerHandler('api-recordCustomEvent', (timestamp, eventType, attributes, target) => {
         if (RESERVED_EVENT_TYPES.includes(eventType)) return warn(46)
         this.addEvent({
           eventType,
-          timestamp: this.toEpoch(timestamp),
+          timestamp: this.#toEpoch(timestamp),
           ...attributes
-        })
+        }, target)
       }, this.featureName, this.ee)
 
       if (agentRef.init.page_action.enabled) {
@@ -47,7 +47,7 @@ export class Aggregate extends AggregateBase {
           this.addEvent({
             ...attributes,
             eventType: 'PageAction',
-            timestamp: this.toEpoch(timestamp),
+            timestamp: this.#toEpoch(timestamp),
             timeSinceLoad: timestamp / 1000,
             actionName: name,
             referrerUrl: this.referrerUrl,
@@ -61,7 +61,7 @@ export class Aggregate extends AggregateBase {
 
       let addUserAction = () => { /** no-op */ }
       if (isBrowserScope && agentRef.init.user_actions.enabled) {
-        this.#userActionAggregator = new UserActionsAggregator(agentRef.init.feature_flags.includes('user_frustrations'))
+        this.#userActionAggregator = new UserActionsAggregator()
         this.harvestOpts.beforeUnload = () => addUserAction?.(this.#userActionAggregator.aggregationEvent)
 
         addUserAction = (aggregatedUserAction) => {
@@ -72,7 +72,7 @@ export class Aggregate extends AggregateBase {
               const { target, timeStamp, type } = aggregatedUserAction.event
               const userActionEvent = {
                 eventType: 'UserAction',
-                timestamp: this.toEpoch(timeStamp),
+                timestamp: this.#toEpoch(timeStamp),
                 action: type,
                 actionCount: aggregatedUserAction.count,
                 actionDuration: aggregatedUserAction.relativeMs[aggregatedUserAction.relativeMs.length - 1],
@@ -149,7 +149,7 @@ export class Aggregate extends AggregateBase {
                     this.addEvent({
                       ...detailObj,
                       eventType: 'BrowserPerformance',
-                      timestamp: this.toEpoch(entry.startTime),
+                      timestamp: this.#toEpoch(entry.startTime),
                       entryName: entry.name,
                       entryDuration: entry.duration,
                       entryType: type
@@ -214,7 +214,7 @@ export class Aggregate extends AggregateBase {
             const event = {
               ...entryObject,
               eventType: 'BrowserPerformance',
-              timestamp: Math.floor(agentRef.runtime.timeKeeper.correctRelativeTimestamp(entryObject.startTime)),
+              timestamp: this.#toEpoch(entryObject.startTime),
               entryName: cleanURL(name),
               entryDuration: duration,
               firstParty
@@ -227,20 +227,38 @@ export class Aggregate extends AggregateBase {
         }, this.featureName, this.ee)
       }
 
-      registerHandler('api-measure', (args, n) => {
+      registerHandler('api-measure', (args, n, target) => {
         const { start, duration, customAttributes } = args
 
         const event = {
           ...customAttributes,
           eventType: 'BrowserPerformance',
-          timestamp: Math.floor(agentRef.runtime.timeKeeper.correctRelativeTimestamp(start)),
+          timestamp: this.#toEpoch(start),
           entryName: n,
           entryDuration: duration,
           entryType: 'measure'
         }
 
-        this.addEvent(event)
+        this.addEvent(event, target)
       }, this.featureName, this.ee)
+
+      if (agentRef.init.feature_flags.includes('websockets')) {
+        registerHandler('ws-complete', (nrData) => {
+          const event = {
+            ...nrData,
+            eventType: 'WebSocket',
+            timestamp: this.#toEpoch(nrData.timestamp),
+            openedAt: this.#toEpoch(nrData.openedAt),
+            closedAt: this.#toEpoch(nrData.closedAt)
+          }
+
+          // Report supportability metrics for WebSocket completion
+          this.reportSupportabilityMetric('WebSocket/Completed/Seen')
+          this.reportSupportabilityMetric('WebSocket/Completed/Bytes', stringify(event).length)
+
+          this.addEvent(event)
+        }, this.featureName, this.ee)
+      }
 
       this.drain()
     })
@@ -274,7 +292,7 @@ export class Aggregate extends AggregateBase {
 
     const defaultEventAttributes = {
       /** should be overridden by the event-specific attributes, but just in case -- set it to now() */
-      timestamp: Math.floor(this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(now())),
+      timestamp: this.#toEpoch(now()),
       /** all generic events require pageUrl(s) */
       pageUrl: cleanURL('' + initialLocation),
       currentUrl: cleanURL('' + location),
@@ -302,7 +320,7 @@ export class Aggregate extends AggregateBase {
     return { ua: this.agentRef.info.userAttributes, at: this.agentRef.info.atts }
   }
 
-  toEpoch (timestamp) {
+  #toEpoch (timestamp) {
     return Math.floor(this.agentRef.runtime.timeKeeper.correctRelativeTimestamp(timestamp))
   }
 

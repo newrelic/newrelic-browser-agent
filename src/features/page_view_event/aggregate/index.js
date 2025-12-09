@@ -2,7 +2,7 @@
  * Copyright 2020-2025 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { globalScope, isBrowserScope, originTime } from '../../../common/constants/runtime'
+import { globalScope, isBrowserScope, originTime, supportsNavTimingL2 } from '../../../common/constants/runtime'
 import { addPT, addPN } from '../../../common/timing/nav-timing'
 import { stringify } from '../../../common/util/stringify'
 import { isValid } from '../../../common/config/info'
@@ -46,9 +46,8 @@ export class Aggregate extends AggregateBase {
         this.timeToFirstByte = Math.max(value, this.timeToFirstByte)
         this.firstByteToWindowLoad = Math.max(Math.round(navEntry.loadEventEnd - this.timeToFirstByte), this.firstByteToWindowLoad) // our "frontend" duration
         this.firstByteToDomContent = Math.max(Math.round(navEntry.domContentLoadedEventEnd - this.timeToFirstByte), this.firstByteToDomContent) // our "dom processing" duration
-
-        this.sendRum()
       })
+      setTimeout(this.sendRum.bind(this), 0) // we want to sendRum after ttfb has reported something, but we dont want to wait forever incase TTFB fails to report in niche environments.
     } else {
       // worker agent build does not get TTFB values, use default 0 values
       this.sendRum()
@@ -94,14 +93,14 @@ export class Aggregate extends AggregateBase {
     }
 
     if (globalScope.performance) {
-      if (typeof PerformanceNavigationTiming !== 'undefined') { // Navigation Timing level 2 API that replaced PerformanceTiming & PerformanceNavigation
+      if (supportsNavTimingL2()) { // Navigation Timing level 2 API that replaced PerformanceTiming & PerformanceNavigation
         const navTimingEntry = globalScope?.performance?.getEntriesByType('navigation')?.[0]
         const perf = ({
           timing: addPT(originTime, navTimingEntry, {}),
           navigation: addPN(navTimingEntry, {})
         })
         queryParameters.perf = stringify(perf)
-      } else if (typeof PerformanceTiming !== 'undefined') { // Safari pre-15 did not support level 2 timing
+      } else if (typeof PerformanceTiming !== 'undefined') { // Modern Safari iFrames and Safari pre-15 do not support level 2 timing.
         const perf = ({
           timing: addPT(originTime, globalScope.performance.timing, {}, true),
           navigation: addPN(globalScope.performance.navigation, {})

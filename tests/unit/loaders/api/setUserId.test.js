@@ -17,7 +17,10 @@ beforeEach(() => {
       jsAttributes: {}
     },
     runtime: {},
-    ee: {}
+    ee: {
+      buffer: jest.fn(),
+      emit: jest.fn()
+    }
   }
 
   mockWarn = jest.fn()

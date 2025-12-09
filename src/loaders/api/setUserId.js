@@ -5,6 +5,9 @@
 import { warn } from '../../common/util/console'
 import { SET_USER_ID } from './constants'
 import { appendJsAttribute, setupAPI } from './sharedHandlers'
+import { handle } from '../../common/event-emitter/handle'
+import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
+import { FEATURE_NAMES } from '../features/features'
 
 export function setupSetUserIdAPI (agent) {
   /**
@@ -25,6 +28,7 @@ export function setupSetUserIdAPI (agent) {
     const shouldReset = resetSession && agent.runtime.session && currUser !== undefined && currUser !== null && currUser !== value
     if (shouldReset) {
       agent.runtime.session.reset()
+      handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/' + SET_USER_ID + '/resetSession/called'], undefined, FEATURE_NAMES.metrics, agent.ee)
     }
     appendJsAttribute(agent, 'enduser.id', value, SET_USER_ID, true)
   }, agent)

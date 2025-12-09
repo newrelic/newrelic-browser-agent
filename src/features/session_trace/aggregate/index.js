@@ -7,7 +7,7 @@ import { FEATURE_NAME } from '../constants'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { TraceStorage } from './trace/storage'
 import { obj as encodeObj } from '../../../common/url/encode'
-import { globalScope } from '../../../common/constants/runtime'
+import { globalScope, supportsNavTimingL2 } from '../../../common/constants/runtime'
 import { MODE, SESSION_EVENTS } from '../../../common/session/constants'
 import { applyFnToProps } from '../../../common/util/traverse'
 import { cleanURL } from '../../../common/url/clean-url'
@@ -62,7 +62,7 @@ export class Aggregate extends AggregateBase {
         if (this.sessionId !== sessionState.value || (eventType === 'cross-tab' && sessionState.sessionTraceMode === MODE.OFF)) this.abort(2)
       })
 
-      if (typeof PerformanceNavigationTiming !== 'undefined') {
+      if (supportsNavTimingL2()) {
         this.traceStorage.storeTiming(globalScope.performance?.getEntriesByType?.('navigation')[0])
       } else {
         this.traceStorage.storeTiming(globalScope.performance?.timing, true)

@@ -21,8 +21,8 @@ export function setupSetUserIdAPI (agent) {
 
     const currUser = agent.info.jsAttributes['enduser.id']
 
-    // only reset session if we are not setting the userid for the first time
-    const shouldReset = resetSession && agent.runtime.session && currUser != null && currUser !== value
+    // reset session ONLY if we are updating the userid (from one value to another, or from a value to null/undefined)
+    const shouldReset = resetSession && agent.runtime.session && currUser !== undefined && currUser !== null && currUser !== value
     if (shouldReset) {
       agent.runtime.session.reset()
     }

@@ -142,7 +142,7 @@ describe('registered-entity', () => {
       * handling nested 'interaction' nodes recursively.
       * * @param {Array<Object>} payload - The root payload array (containing objects with 'request.body').
       * @param {string} targetPathEnd - The path segment to match (e.g., "/42").
-      * @param {string} targetKey - The attribute key to look for (e.g., "appId", "mfe.id").
+      * @param {string} targetKey - The attribute key to look for (e.g., "appId", "source.id").
       * @param {number|string} targetValue - The value to match (e.g., 42, 1, 2).
       * @param {string} matchType - 'or', 'and', or 'any'.
       * @returns {Array<Object>} An array of matching AJAX request objects.
@@ -179,12 +179,12 @@ describe('registered-entity', () => {
       }
 
       const containerAjax = findAjaxRequests(ajaxHarvest, '/42', 'appId', 42, 'any')
-      const mfe1Ajax = findAjaxRequests(ajaxHarvest, '/1', 'mfe.id', 1, 'and')
-      const mfe2Ajax = findAjaxRequests(ajaxHarvest, '/2', 'mfe.id', 2, 'and')
+      const mfe1Ajax = findAjaxRequests(ajaxHarvest, '/1', 'source.id', 1, 'and')
+      const mfe2Ajax = findAjaxRequests(ajaxHarvest, '/2', 'source.id', 2, 'and')
 
       const containerSpa = findAjaxRequests(spaHarvest, '/42', 'appId', 42, 'any')
-      const mfe1Spa = findAjaxRequests(spaHarvest, '/1', 'mfe.id', 1, 'and')
-      const mfe2Spa = findAjaxRequests(spaHarvest, '/2', 'mfe.id', 2, 'and')
+      const mfe1Spa = findAjaxRequests(spaHarvest, '/1', 'source.id', 1, 'and')
+      const mfe2Spa = findAjaxRequests(spaHarvest, '/2', 'source.id', 2, 'and')
 
       // 3 pre, 3 post for each of fetch and xhr = 12 total requests made
       const expectMFEdata = testSet.includes('register') && testSet.includes('register.ajax')
@@ -211,11 +211,11 @@ describe('registered-entity', () => {
       expect(mfe2Ajax.length).toEqual(expectMFEdata ? 4 : 0) // should have detected the 4 targeted at mfe 2
       mfe1Ajax.forEach(event => {
         expect(event.path.includes('/mock/pre/1') || event.path.includes('/mock/post/1')).toBeTrue()
-        expect(event.children.find(child => child.key === 'mfe.id' && child.value === 1)).toBeDefined()
+        expect(event.children.find(child => child.key === 'source.id' && child.value === 1)).toBeDefined()
       })
       mfe2Ajax.forEach(event => {
         expect(event.path.includes('/mock/pre/2') || event.path.includes('/mock/post/2')).toBeTrue()
-        expect(event.children.find(child => child.key === 'mfe.id' && child.value === 2)).toBeDefined()
+        expect(event.children.find(child => child.key === 'source.id' && child.value === 2)).toBeDefined()
       })
 
       errorsHarvests.forEach(({ request: { query, body } }) => {

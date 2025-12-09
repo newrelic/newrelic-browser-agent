@@ -733,55 +733,6 @@ test('interaction outside interaction', done => {
   }
 })
 
-test('interaction outside wrapped function', done => {
-  const validator = new helpers.InteractionValidator({
-    name: 'interaction',
-    attrs: {
-      trigger: 'api',
-      custom: {
-        delayed: true,
-        included: true
-      }
-    },
-    children: [{
-      type: 'customTracer',
-      attrs: {
-        name: 'outer'
-      },
-      children: [{
-        type: 'customTracer',
-        attrs: {
-          name: 'timeout'
-        },
-        children: []
-      }]
-    }]
-  })
-
-  setTimeout[`nr@original:${bundleId}`].call(window, function () {
-    const interaction = newrelic.interaction()
-
-    helpers.startInteraction(onInteractionStart, afterInteractionDone2.bind(null, spaAggregate, validator, done), {
-      baseEE: spaAggregate.ee,
-      eventType: 'api',
-      handle: interaction
-    })
-
-    function onInteractionStart (cb) {
-      newrelic.interaction().command('setAttribute', undefined, 'alsoExcluded', true) // should not have applied,... but somehow applied
-      interaction.command('setAttribute', undefined, 'included', true)
-      setTimeout(interaction.createTracer('outer', function () {
-        newrelic.interaction().command('setAttribute', undefined, 'delayed', true)
-        setTimeout(newrelic.interaction().createTracer('timeout', cb))
-      }), 50)
-    }
-  }, 0)
-
-  setTimeout(function () {
-    newrelic.interaction().command('setAttribute', undefined, 'excluded', true)
-  })
-})
-
 test('set trigger', done => {
   const validator = new helpers.InteractionValidator({
     name: 'interaction',

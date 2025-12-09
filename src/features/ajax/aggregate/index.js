@@ -91,7 +91,6 @@ export class Aggregate extends AggregateBase {
       return // do not send this ajax as an event
     }
 
-    // TODO, does product want to note that an AJAX is tied to a MFE in the session trace waterfall?
     handle('bstXhrAgg', ['xhr', hash, params, metrics], undefined, FEATURE_NAMES.sessionTrace, this.ee) // have trace feature harvest AjaxNode
 
     const event = {
@@ -141,10 +140,8 @@ export class Aggregate extends AggregateBase {
 
     /** make a copy of the event for the MFE target if it exists */
     if (mfeTarget) {
-      this.events.add({
-        ...event,
-        target: mfeTarget // custom attrs are calculated later at serialization time, so just tack the target metadata on the event as is and let the serializer handle the v2 attributes
-      })
+      event.target = mfeTarget
+      this.events.add(event)
     }
   }
 

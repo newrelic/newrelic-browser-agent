@@ -27,13 +27,13 @@ expectType<MicroAgent>(microAgent)
   }) => any>(agent.addToTrace)
   expectType<(name: string) => any>(agent.setCurrentRouteName)
   expectType<(opts?: { waitForEnd?: boolean }) => InteractionInstance>(agent.interaction)
-  
+
   // Base Agent APIs
   expectType<(name: string, attributes?: object) => any>(agent.addPageAction)
   expectType<(name: string, host?: string) => any>(agent.setPageViewName)
   expectType<(name: string, value: string | number | boolean | null, persist?: boolean) => any>(agent.setCustomAttribute)
   expectType<(error: Error | string, customAttributes?: object) => any>(agent.noticeError)
-  expectType<(value: string | null) => any>(agent.setUserId)
+  expectType<(value: string | null, resetSession?: boolean) => any>(agent.setUserId)
   expectType<(value: string | null) => any>(agent.setApplicationVersion)
   expectType<(callback: (error: Error | string) => boolean | { group: string; }) => any>(agent.setErrorHandler)
   expectType<(timeStamp?: number) => any>(agent.finished)
@@ -47,7 +47,7 @@ expectType<MicroAgent>(microAgent)
   expectType<(message: string, options?: { customAttributes?: object, level?: 'ERROR' | 'TRACE' | 'DEBUG' | 'INFO' | 'WARN'}) => any>(agent.log)
   expectType<(parent: object, functionName: string, options?: { customAttributes?: object, level?: 'ERROR' | 'TRACE' | 'DEBUG' | 'INFO' | 'WARN'}) => any>(agent.wrapLogger)
   expectType<(accept: boolean | null) => any>(agent.consent)
-  
+
   // SPA APIs
   expectType<(opts?: { waitForEnd?: boolean }) => InteractionInstance>(agent.interaction)
   expectType<(value: string) => InteractionInstance>(agent.interaction().actionText)

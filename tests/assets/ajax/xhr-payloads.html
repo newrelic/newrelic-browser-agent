@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>XHR with Payloads</title>
+  {init} {config} {loader}
+</head>
+<body>
+<div>
+  Test page for XHR with payload capture in different modes
+</div>
+<div><button id="sendSuccess">Send Success</button></div>
+<div><button id="sendError">Send Error</button></div>
+<div><button id="sendGqlError">Send GQL Error</button></div>
+<div><button id="sendWithQuery">Send With Query</button></div>
+<div><button id="sendWithHeaders">Send With Headers</button></div>
+<script>
+  window.disableAjaxHashChange = false
+
+  document.getElementById('sendSuccess').addEventListener('click', function () {
+    var xhr = new XMLHttpRequest()
+    xhr.addEventListener('loadend', function () {
+      if (!window.disableAjaxHashChange) window.location.hash = Math.random()
+    })
+    xhr.open('POST', '/echo-body')
+    xhr.setRequestHeader('Content-Type', 'application/json')
+    xhr.setRequestHeader('X-Test-Header', 'test-value')
+    xhr.send(JSON.stringify({ message: 'success request' }))
+  })
+
+  document.getElementById('sendError').addEventListener('click', function () {
+    var xhr = new XMLHttpRequest()
+    xhr.addEventListener('loadend', function () {
+      if (!window.disableAjaxHashChange) window.location.hash = Math.random()
+    })
+    xhr.open('POST', '/status/500')
+    xhr.setRequestHeader('Content-Type', 'application/json')
+    xhr.send(JSON.stringify({ message: 'error request' }))
+  })
+
+  document.getElementById('sendGqlError').addEventListener('click', function () {
+    var xhr = new XMLHttpRequest()
+    xhr.addEventListener('loadend', function () {
+      if (!window.disableAjaxHashChange) window.location.hash = Math.random()
+    })
+    xhr.open('POST', '/gql-error')
+    xhr.setRequestHeader('Content-Type', 'application/json')
+    xhr.send(JSON.stringify({ 
+      query: 'query { unknownField }',
+      operationName: 'TestQuery'
+    }))
+  })
+
+  document.getElementById('sendWithQuery').addEventListener('click', function () {
+    var xhr = new XMLHttpRequest()
+    xhr.addEventListener('loadend', function () {
+      if (!window.disableAjaxHashChange) window.location.hash = Math.random()
+    })
+    xhr.open('GET', '/json-with-query?param1=value1&param2=value2')
+    xhr.send()
+  })
+
+  document.getElementById('sendWithHeaders').addEventListener('click', function () {
+    var xhr = new XMLHttpRequest()
+    xhr.addEventListener('loadend', function () {
+      if (!window.disableAjaxHashChange) window.location.hash = Math.random()
+    })
+    xhr.open('POST', '/json-with-headers')
+    xhr.setRequestHeader('Content-Type', 'application/json')
+    xhr.setRequestHeader('X-Test-Header', 'custom-test-value')
+    xhr.send(JSON.stringify({ data: 'test' }))
+  })
+</script>
+</body>
+</html>

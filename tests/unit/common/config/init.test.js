@@ -9,7 +9,8 @@ test('init props exist and return expected defaults', () => {
     autoStart: true,
     block_internal: true,
     deny_list: undefined,
-    enabled: true
+    enabled: true,
+    capture_payloads: 'failures'
   })
   expect(config.api).toEqual({
     allow_registered_children: false,

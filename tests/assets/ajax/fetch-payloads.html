@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Fetch with Payloads</title>
+  {init} {config} {loader}
+</head>
+<body>
+<div>
+  Test page for fetch with payload capture in different modes
+</div>
+<div><button id="sendSuccess">Send Success</button></div>
+<div><button id="sendError">Send Error</button></div>
+<div><button id="sendGqlError">Send GQL Error</button></div>
+<div><button id="sendWithQuery">Send With Query</button></div>
+<div><button id="sendWithHeaders">Send With Headers</button></div>
+<script>
+  window.disableAjaxHashChange = false
+
+  document.getElementById('sendSuccess').addEventListener('click', function () {
+    fetch('/echo-body', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Test-Header': 'test-value'
+      },
+      body: JSON.stringify({ message: 'success request' })
+    }).then(() => {
+      if (!window.disableAjaxHashChange) window.location.hash = Math.random()
+    })
+  })
+
+  document.getElementById('sendError').addEventListener('click', function () {
+    fetch('/status/500', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ message: 'error request' })
+    }).then(() => {
+      if (!window.disableAjaxHashChange) window.location.hash = Math.random()
+    })
+  })
+
+  document.getElementById('sendGqlError').addEventListener('click', function () {
+    fetch('/gql-error', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ 
+        query: 'query { unknownField }',
+        operationName: 'TestQuery'
+      })
+    }).then(() => {
+      if (!window.disableAjaxHashChange) window.location.hash = Math.random()
+    })
+  })
+
+  document.getElementById('sendWithQuery').addEventListener('click', function () {
+    fetch('/json-with-query?param1=value1&param2=value2')
+      .then(() => {
+        if (!window.disableAjaxHashChange) window.location.hash = Math.random()
+      })
+  })
+
+  document.getElementById('sendWithHeaders').addEventListener('click', function () {
+    fetch('/json-with-headers', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Test-Header': 'custom-test-value'
+      },
+      body: JSON.stringify({ data: 'test' })
+    }).then(() => {
+      if (!window.disableAjaxHashChange) window.location.hash = Math.random()
+    })
+  })
+</script>
+</body>
+</html>

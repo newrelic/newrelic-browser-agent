@@ -63,7 +63,7 @@ export class Instrument extends InstrumentBase {
     }
 
     const canCapturePayload = (statusCode, responseBody) => {
-      if (!agentRef.init.ajax.capture_payloads || agentRef.init.ajax.capture_payloads === 'off') return false
+      if (agentRef.init.ajax.capture_payloads === 'off') return false
       if (agentRef.init.ajax.capture_payloads === 'all') return true
       const isHttpError = statusCode === 0 || statusCode > 400
       return isHttpError || hasGQLErrors(responseBody)

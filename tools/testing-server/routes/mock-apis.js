@@ -188,6 +188,11 @@ module.exports = fp(async function (fastify, testServer) {
   }, (request, reply) => {
     reply.send({ text: 'hi!' })
   })
+  fastify.post('/json', {
+    compress: false
+  }, (request, reply) => {
+    reply.code(500).send({ text: 'hi!' })
+  })
   fastify.post('/gql', {
     compress: false
   }, (request, reply) => {

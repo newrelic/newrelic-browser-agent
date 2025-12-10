@@ -20,6 +20,8 @@ import { SUPPORTABILITY_METRIC } from '../../metrics/constants'
 import { now } from '../../../common/timing/now'
 import { hasUndefinedHostname } from '../../../common/deny-list/deny-list'
 import { extractUrl } from '../../../common/url/extract-url'
+import { parseQueryString, parseResponseHeaders, isHumanReadableContentType } from './payloads'
+import { hasGQLErrors } from '../aggregate/gql'
 
 var handlers = ['load', 'error', 'abort', 'timeout']
 var handlersLen = handlers.length
@@ -27,6 +29,7 @@ var handlersLen = handlers.length
 var origRequest = gosNREUMOriginals().o.REQ
 var origXHR = gosNREUMOriginals().o.XHR
 const NR_CAT_HEADER = 'X-NewRelic-App-Data'
+const CONTENT_TYPE = 'content-type'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
@@ -59,19 +62,27 @@ export class Instrument extends InstrumentBase {
       // do nothing
     }
 
+    const canCapturePayload = (statusCode, responseBody) => {
+      if (!agentRef.init.ajax.capture_payloads || agentRef.init.ajax.capture_payloads === 'off') return false
+      if (agentRef.init.ajax.capture_payloads === 'all') return true
+      const isHttpError = statusCode === 0 || statusCode > 400
+      return isHttpError || hasGQLErrors(responseBody)
+    }
+
     wrapFetch(this.ee)
     wrapXhr(this.ee)
-    subscribeToEvents(agentRef, this.ee, this.handler, this.dt)
+    subscribeToEvents(agentRef, this.ee, this.handler, this.dt, canCapturePayload)
 
     this.importAggregator(agentRef, () => import(/* webpackChunkName: "ajax-aggregate" */ '../aggregate/index.js'))
   }
 }
 
-function subscribeToEvents (agentRef, ee, handler, dt) {
+function subscribeToEvents (agentRef, ee, handler, dt, canCapturePayload) {
   ee.on('new-xhr', onNewXhr)
   ee.on('open-xhr-start', onOpenXhrStart)
   ee.on('open-xhr-end', onOpenXhrEnd)
   ee.on('send-xhr-start', onSendXhrStart)
+  ee.on('setRequestHeader-xhr-start', onSetRequestHeader)
   ee.on('xhr-cb-time', onXhrCbTime)
   ee.on('xhr-load-added', onXhrLoadAdded)
   ee.on('xhr-load-removed', onXhrLoadRemoved)
@@ -120,6 +131,11 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
     this.params = { method: args[0] }
     addUrl(this, args[1])
     this.metrics = {}
+
+    // Extract query parameters from URL
+    if (this.parsedOrigin && this.parsedOrigin.search) {
+      this.params.requestQuery = parseQueryString(this.parsedOrigin.search)
+    }
   }
 
   function onOpenXhrEnd (args, xhr) {
@@ -147,6 +163,14 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
     }
   }
 
+  function onSetRequestHeader (args, xhr) {
+    // args[0] = header name, args[1] = header value
+    if (args.length >= 2) {
+      this.params.requestHeaders ??= {}
+      this.params.requestHeaders[args[0]] = args[1]
+    }
+  }
+
   function onSendXhrStart (args, xhr) {
     var metrics = this.metrics
     var data = args[0]
@@ -159,7 +183,13 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
 
     this.startTime = now()
 
-    this.body = data
+    // Store request body only if content-type is human-readable
+    if (data) {
+      var contentType = this.params.requestHeaders[CONTENT_TYPE] || this.params.requestHeaders['Content-Type']
+      if (isHumanReadableContentType(contentType)) {
+        this.params.requestBody = data
+      }
+    }
 
     this.listener = function (evt) {
       try {
@@ -321,12 +351,43 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
     var target = this.target
     addUrl(this, extractUrl(target))
 
+    // Extract query parameters from URL
+    if (this.parsedOrigin && this.parsedOrigin.search) {
+      this.params.requestQuery = parseQueryString(this.parsedOrigin.search)
+    }
+
     var method = ('' + ((target && target instanceof origRequest && target.method) ||
       opts.method || 'GET')).toUpperCase()
     this.params.method = method
-    this.body = opts.body
 
     this.txSize = dataSize(opts.body) || 0
+
+    // Capture request headers
+    try {
+      var headers = opts.headers || (target && target.headers)
+      if (headers) {
+        this.params.requestHeaders ??= {}
+        if (headers instanceof Headers) {
+          headers.forEach(function (value, key) {
+            this.params.requestHeaders[key] = value
+          }.bind(this))
+        } else if (typeof headers === 'object') {
+          for (var key in headers) {
+            this.params.requestHeaders[key] = headers[key]
+          }
+        }
+      }
+    } catch (e) {
+      // Silently fail if we can't access headers
+    }
+
+    // Store request body only if content-type is human-readable
+    if (opts.body) {
+      var contentType = this.params.requestHeaders[CONTENT_TYPE] || this.params.requestHeaders['Content-Type']
+      if (isHumanReadableContentType(contentType)) {
+        this.params.requestBody = opts.body
+      }
+    }
   }
 
   // we capture failed call as status 0, the actual error is ignored
@@ -337,6 +398,47 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
     if (hasUndefinedHostname(this.params)) return // don't bother with fetch to url with no hostname
 
     this.params.status = res ? res.status : 0
+
+    let responseBody = null
+    // Clone the response to read the body without consuming the original
+    res?.clone().text().then(function (text) {
+      responseBody = text
+    }).catch(function () {
+      // Silently fail if we can't read the body
+    })
+
+    /**
+     * its very important that we drop the data before buffering
+     * if it is not allowed to be captured. This will prevent unnecessary data
+     * leakage in cases where the fetch response is large.  Up to this point
+     * we have needed to store the response attributes as they occurred, but they
+     * can be deleted now if we can't capture the payload due to decision tree.
+     */
+    if (!canCapturePayload(this.params.status, responseBody)) {
+      this.params.requestBody = undefined
+      this.params.requestHeaders = undefined
+      this.params.requestQuery = undefined
+      this.params.responseBody = undefined
+      this.params.responseHeaders = undefined
+    } else if (res) {
+      try {
+        // Capture response headers
+        if (res.headers) {
+          res.headers.forEach(function (value, key) {
+            this.params.responseHeaders ??= {}
+            this.params.responseHeaders[key] = value
+          }.bind(this))
+        }
+
+        // Only capture response body if content-type is human-readable
+        var contentType = res.headers ? res.headers.get(CONTENT_TYPE) : null
+        if (isHumanReadableContentType(contentType)) {
+          this.params.responseBody = responseBody
+        }
+      } catch (e) {
+        // Silently fail if we can't access response data
+      }
+    }
 
     // convert rxSize to a number
     let responseSize
@@ -376,6 +478,41 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
 
     // Always send cbTime, even if no noticeable time was taken.
     metrics.cbTime = this.cbTime
+
+    let responseBody
+    try {
+      responseBody = xhr.responseText
+    } catch (e) {
+      responseBody = xhr.response
+    }
+
+    /**
+     * its very important that we drop the data before buffering
+     * if it is not allowed to be captured. This will prevent unnecessary data
+     * leakage in cases where the fetch response is large.  Up to this point
+     * we have needed to store the response attributes as they occurred, but they
+     * can be deleted now if we can't capture the payload due to decision tree.
+     */
+    if (!canCapturePayload(this.params.status, responseBody)) {
+      this.params.requestBody = undefined
+      this.params.requestHeaders = undefined
+      this.params.requestQuery = undefined
+      this.params.responseBody = undefined
+      this.params.responseHeaders = undefined
+    } else {
+    // Capture response headers and (maybe) body when XHR completes
+      try {
+        this.params.responseHeaders = parseResponseHeaders(xhr.getAllResponseHeaders())
+
+        // Only capture response body if content-type is human-readable
+        var contentType = xhr.getResponseHeader(CONTENT_TYPE)
+        if (isHumanReadableContentType(contentType)) {
+          this.params.responseBody = responseBody
+        }
+      } catch (e) {
+      // Silently fail if we failed to access response data
+      }
+    }
 
     handler('xhr', [params, metrics, this.startTime, this.endTime, 'xhr'], this, FEATURE_NAMES.ajax)
   }

@@ -16,7 +16,7 @@ import { globalScope } from '../constants/runtime'
 import { warn } from '../util/console'
 
 const wrapped = {}
-const XHR_PROPS = ['open', 'send'] // these are the specific funcs being wrapped on all XMLHttpRequests(.prototype)
+const XHR_PROPS = ['open', 'send', 'setRequestHeader'] // these are the specific funcs being wrapped on all XMLHttpRequests(.prototype)
 
 /**
  * Wraps the native XMLHttpRequest (XHR) object to emit custom events to its readystatechange event and an assortment

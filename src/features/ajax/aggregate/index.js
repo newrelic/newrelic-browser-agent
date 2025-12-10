@@ -102,7 +102,13 @@ export class Aggregate extends AggregateBase {
       type,
       startTime,
       endTime,
-      callbackDuration: metrics.cbTime
+      callbackDuration: metrics.cbTime,
+      // optional payload metadata fields
+      requestBody: params.requestBody,
+      requestHeaders: params.requestHeaders,
+      requestQuery: params.requestQuery,
+      responseBody: params.responseBody,
+      responseHeaders: params.responseHeaders
     }
 
     if (ctx.dt) {
@@ -115,7 +121,7 @@ export class Aggregate extends AggregateBase {
 
     // parsed from the AJAX body, looking for operationName param & parsing query for operationType
     event.gql = params.gql = parseGQL({
-      body: ctx.body,
+      body: params.requestBody,
       query: ctx.parsedOrigin?.search
     })
     if (event.gql) this.reportSupportabilityMetric('Ajax/Events/GraphQL/Bytes-Added', stringify(event.gql).length)
@@ -170,7 +176,17 @@ export class Aggregate extends AggregateBase {
 
       // add custom attributes
       // gql decorators are added as custom attributes to alleviate need for new BEL schema
-      const attrParts = addCustomAttributes({ ...(jsAttributes || {}), ...(event.gql || {}) }, addString)
+      const customAttrs = {
+        ...(jsAttributes || {}),
+        ...(event.gql || {})
+      }
+      // do these checks to avoid adding undefined values which serializer will translate into `"nullAttribute"` nodes and waste space
+      if (event.requestBody) customAttrs.requestBody = event.requestBody
+      if (event.requestHeaders) customAttrs.requestHeaders = event.requestHeaders
+      if (event.requestQuery) customAttrs.requestQuery = event.requestQuery
+      if (event.responseBody) customAttrs.responseBody = event.responseBody
+      if (event.responseHeaders) customAttrs.responseHeaders = event.responseHeaders
+      const attrParts = addCustomAttributes(customAttrs, addString)
       fields.unshift(numeric(attrParts.length))
 
       insert += fields.join(',')

@@ -2,7 +2,20 @@
 <html>
   <head>
     <title>Fetch with Payloads</title>
-    {init} {config} {loader}
+    {init} {config}
+    <script>
+      NREUM.init.obfuscate = [
+        {
+          regex: /text\/plain/g,
+          replacement: 'HEADER REDACTED'
+        },
+        {
+          regex: /plain text/g,
+          replacement: 'BODY REDACTED'
+        }
+      ]
+    </script>
+    {loader}
   </head>
   <body>
     <div>Test page for Fetch with payload capture in different modes</div>

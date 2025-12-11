@@ -236,7 +236,7 @@ module.exports = fp(async function (fastify, testServer) {
       }
     })
   })
-  fastify.get('/json-with-query', {
+  fastify.post('/json-with-query', {
     compress: false
   }, (request, reply) => {
     reply.send({
@@ -258,18 +258,18 @@ module.exports = fp(async function (fastify, testServer) {
         }
       })
   })
-  fastify.get('/xml', {
+  fastify.post('/xml', {
     compress: false
   }, (request, reply) => {
     reply.type('application/xml').send('<?xml version="1.0"?><root><message>Hello XML</message></root>')
   })
-  fastify.get('/binary', {
+  fastify.post('/binary', {
     compress: false
   }, (request, reply) => {
     const buffer = Buffer.from([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A])
     reply.type('application/octet-stream').send(buffer)
   })
-  fastify.get('/text-plain', {
+  fastify.post('/text-plain', {
     compress: false
   }, (request, reply) => {
     reply.type('text/plain').send('Plain text response')
@@ -281,12 +281,6 @@ module.exports = fp(async function (fastify, testServer) {
       receivedBody: request.body,
       bodyType: typeof request.body
     })
-  })
-  fastify.get('/status/:code', {
-    compress: false
-  }, (request, reply) => {
-    const statusCode = parseInt(request.params.code, 10)
-    reply.code(statusCode).send({ status: statusCode, message: 'Custom status code' })
   })
   fastify.post('/status/:code', {
     compress: false

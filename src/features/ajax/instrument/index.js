@@ -65,7 +65,7 @@ export class Instrument extends InstrumentBase {
     const canCapturePayload = (statusCode, responseBody) => {
       if (agentRef.init.ajax.capture_payloads === 'off') return false
       if (agentRef.init.ajax.capture_payloads === 'all') return true
-      const isHttpError = statusCode === 0 || statusCode > 400
+      const isHttpError = statusCode === 0 || statusCode >= 400
       return isHttpError || hasGQLErrors(responseBody)
     }
 
@@ -399,60 +399,67 @@ function subscribeToEvents (agentRef, ee, handler, dt, canCapturePayload) {
 
     this.params.status = res ? res.status : 0
 
+    const finishAndReport = () => {
+      // convert rxSize to a number
+      let responseSize
+      if (typeof this.rxSize === 'string' && this.rxSize.length > 0) {
+        responseSize = +this.rxSize
+      }
+
+      const metrics = {
+        txSize: this.txSize,
+        rxSize: responseSize,
+        duration: now() - this.startTime
+      }
+
+      handler('xhr', [this.params, metrics, this.startTime, this.endTime, 'fetch'], this, FEATURE_NAMES.ajax)
+    }
+
+    /** Since accessing fetch bodies is an async process, these are
+     * reasonable conditions to check to not do needless extra work */
+    if (!res || agentRef.init.ajax.capture_payloads === 'off') {
+      clearPayloads(this.params)
+      finishAndReport()
+      return
+    }
+
     let responseBody = null
     // Clone the response to read the body without consuming the original
-    res?.clone().text().then(function (text) {
+    res.clone().text().then((text) => {
       responseBody = text
-    }).catch(function () {
-      // Silently fail if we can't read the body
-    })
-
-    /**
+      /**
      * its very important that we drop the data before buffering
      * if it is not allowed to be captured. This will prevent unnecessary data
      * leakage in cases where the fetch response is large.  Up to this point
      * we have needed to store the response attributes as they occurred, but they
      * can be deleted now if we can't capture the payload due to decision tree.
      */
-    if (!canCapturePayload(this.params.status, responseBody)) {
-      this.params.requestBody = undefined
-      this.params.requestHeaders = undefined
-      this.params.requestQuery = undefined
-      this.params.responseBody = undefined
-      this.params.responseHeaders = undefined
-    } else if (res) {
-      try {
+      if (!canCapturePayload(this.params.status, responseBody)) {
+        clearPayloads(this.params)
+      } else {
+        try {
         // Capture response headers
-        if (res.headers) {
-          res.headers.forEach(function (value, key) {
-            this.params.responseHeaders ??= {}
-            this.params.responseHeaders[key] = value
-          }.bind(this))
-        }
+          if (res?.headers) {
+            res.headers.forEach(function (value, key) {
+              this.params.responseHeaders ??= {}
+              this.params.responseHeaders[key] = value
+            }.bind(this))
+          }
 
-        // Only capture response body if content-type is human-readable
-        var contentType = res.headers ? res.headers.get(CONTENT_TYPE) : null
-        if (isHumanReadableContentType(contentType)) {
-          this.params.responseBody = responseBody
-        }
-      } catch (e) {
+          // Only capture response body if content-type is human-readable
+          var contentType = res?.headers ? res.headers.get(CONTENT_TYPE) : null
+          if (isHumanReadableContentType(contentType)) {
+            this.params.responseBody = responseBody
+          }
+        } catch (e) {
         // Silently fail if we can't access response data
+        }
       }
-    }
-
-    // convert rxSize to a number
-    let responseSize
-    if (typeof this.rxSize === 'string' && this.rxSize.length > 0) {
-      responseSize = +this.rxSize
-    }
-
-    const metrics = {
-      txSize: this.txSize,
-      rxSize: responseSize,
-      duration: now() - this.startTime
-    }
-
-    handler('xhr', [this.params, metrics, this.startTime, this.endTime, 'fetch'], this, FEATURE_NAMES.ajax)
+    }).catch(() => {
+      if (!canCapturePayload(this.params.status)) clearPayloads(this.params)
+    }).finally(() => {
+      finishAndReport()
+    })
   }
 
   // Create report for XHR request that has finished
@@ -493,21 +500,17 @@ function subscribeToEvents (agentRef, ee, handler, dt, canCapturePayload) {
      * we have needed to store the response attributes as they occurred, but they
      * can be deleted now if we can't capture the payload due to decision tree.
      */
-    if (!canCapturePayload(this.params.status, responseBody)) {
-      this.params.requestBody = undefined
-      this.params.requestHeaders = undefined
-      this.params.requestQuery = undefined
-      this.params.responseBody = undefined
-      this.params.responseHeaders = undefined
+    if (!canCapturePayload(params.status, responseBody)) {
+      clearPayloads(params)
     } else {
-    // Capture response headers and (maybe) body when XHR completes
+      // Capture response headers and (maybe) body when XHR completes
       try {
-        this.params.responseHeaders = parseResponseHeaders(xhr.getAllResponseHeaders())
+        params.responseHeaders = parseResponseHeaders(xhr.getAllResponseHeaders())
 
         // Only capture response body if content-type is human-readable
         var contentType = xhr.getResponseHeader(CONTENT_TYPE)
         if (isHumanReadableContentType(contentType)) {
-          this.params.responseBody = responseBody
+          params.responseBody = responseBody
         }
       } catch (e) {
       // Silently fail if we failed to access response data
@@ -546,6 +549,18 @@ function addUrl (ctx, url) {
   params.pathname = parsed.pathname
   ctx.parsedOrigin = parsed
   ctx.sameOrigin = parsed.sameOrigin
+}
+
+/**
+ * MUTATES the params object to clear out payload data
+ * @param {Object} params The ajax params object
+ */
+function clearPayloads (params) {
+  params.requestBody = undefined
+  params.requestHeaders = undefined
+  params.requestQuery = undefined
+  params.responseBody = undefined
+  params.responseHeaders = undefined
 }
 
 export const Ajax = Instrument

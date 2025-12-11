@@ -185,7 +185,7 @@ function subscribeToEvents (agentRef, ee, handler, dt, canCapturePayload) {
 
     // Store request body only if content-type is human-readable
     if (data) {
-      var contentType = this.params.requestHeaders[CONTENT_TYPE] || this.params.requestHeaders['Content-Type']
+      var contentType = this.params.requestHeaders?.[CONTENT_TYPE] || this.params.requestHeaders?.['Content-Type']
       if (isHumanReadableContentType(contentType)) {
         this.params.requestBody = data
       }
@@ -383,7 +383,7 @@ function subscribeToEvents (agentRef, ee, handler, dt, canCapturePayload) {
 
     // Store request body only if content-type is human-readable
     if (opts.body) {
-      var contentType = this.params.requestHeaders[CONTENT_TYPE] || this.params.requestHeaders['Content-Type']
+      var contentType = this.params.requestHeaders?.[CONTENT_TYPE] || this.params.requestHeaders?.['Content-Type']
       if (isHumanReadableContentType(contentType)) {
         this.params.requestBody = opts.body
       }

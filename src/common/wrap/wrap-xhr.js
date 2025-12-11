@@ -14,6 +14,7 @@ import { eventListenerOpts } from '../event-listener/event-listener-opts'
 import { createWrapperWithEmitter as wfn } from './wrap-function'
 import { globalScope } from '../constants/runtime'
 import { warn } from '../util/console'
+import { NEW_RELIC_MFE_ID_HEADER } from '../constants/agent-constants'
 
 const wrapped = {}
 const XHR_PROPS = ['open', 'send'] // these are the specific funcs being wrapped on all XMLHttpRequests(.prototype)
@@ -40,6 +41,7 @@ export function wrapXhr (sharedEE) {
   var wrapFn = wfn(ee)
 
   var OrigXHR = globalScope.XMLHttpRequest
+  const originalSetRequestHeader = OrigXHR.prototype.setRequestHeader
   var MutationObserver = globalScope.MutationObserver
   var Promise = globalScope.Promise
   var setImmediate = globalScope.setInterval
@@ -74,6 +76,17 @@ export function wrapXhr (sharedEE) {
   XHR.prototype = OrigXHR.prototype
 
   wrapFn.inPlace(XHR.prototype, XHR_PROPS, '-xhr-', getObject)
+
+  /** detect the new relic entity guid header, if found - pass it on to be handled and delete
+   * from the actual xhr before sending so as not to interfere with the request/service */
+  XHR.prototype.setRequestHeader = function setRequestHeader (header, value) {
+    if (header.toLowerCase() === NEW_RELIC_MFE_ID_HEADER) {
+      const context = ee.context(this)
+      context.mfeId ??= value // only supports the first header found
+      return // do not allow the newrelic mfe id header to be assigned to the request, just use it for context later
+    }
+    return originalSetRequestHeader.apply(this, arguments)
+  }
 
   ee.on('send-xhr-start', function (args, xhr) {
     wrapOnreadystatechange(args, xhr)

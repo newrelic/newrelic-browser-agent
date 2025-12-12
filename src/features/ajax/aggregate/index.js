@@ -9,7 +9,6 @@ import { setDenyList, shouldCollectEvent } from '../../../common/deny-list/deny-
 import { FEATURE_NAME } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
-import { parseGQL } from './gql'
 import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../../../common/serialize/bel-serializer'
 import { gosNREUMOriginals } from '../../../common/window/nreum'
 
@@ -103,6 +102,7 @@ export class Aggregate extends AggregateBase {
       startTime,
       endTime,
       callbackDuration: metrics.cbTime,
+      gql: params.gql,
       // optional payload metadata fields
       requestBody: params.requestBody,
       requestHeaders: params.requestHeaders,
@@ -119,11 +119,6 @@ export class Aggregate extends AggregateBase {
       )
     }
 
-    // parsed from the AJAX body, looking for operationName param & parsing query for operationType
-    event.gql = params.gql = parseGQL({
-      body: params.requestBody,
-      query: ctx.parsedOrigin?.search
-    })
     if (event.gql) this.reportSupportabilityMetric('Ajax/Events/GraphQL/Bytes-Added', stringify(event.gql).length)
 
     const softNavInUse = Boolean(this.agentRef.features?.[FEATURE_NAMES.softNav])

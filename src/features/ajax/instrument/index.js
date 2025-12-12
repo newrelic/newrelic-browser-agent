@@ -21,7 +21,7 @@ import { now } from '../../../common/timing/now'
 import { hasUndefinedHostname } from '../../../common/deny-list/deny-list'
 import { extractUrl } from '../../../common/url/extract-url'
 import { parseQueryString, parseResponseHeaders, isHumanReadableContentType } from './payloads'
-import { hasGQLErrors } from '../aggregate/gql'
+import { hasGQLErrors, parseGQL } from './gql'
 
 var handlers = ['load', 'error', 'abort', 'timeout']
 var handlersLen = handlers.length
@@ -62,11 +62,11 @@ export class Instrument extends InstrumentBase {
       // do nothing
     }
 
-    const canCapturePayload = (statusCode, responseBody) => {
+    const canCapturePayload = (statusCode, hasGQLErrors) => {
       if (agentRef.init.ajax.capture_payloads === 'off') return false
       if (agentRef.init.ajax.capture_payloads === 'all') return true
       const isHttpError = statusCode === 0 || statusCode >= 400
-      return isHttpError || hasGQLErrors(responseBody)
+      return isHttpError || hasGQLErrors
     }
 
     wrapFetch(this.ee)
@@ -188,6 +188,10 @@ function subscribeToEvents (agentRef, ee, handler, dt, canCapturePayload) {
       var contentType = this.params.requestHeaders?.[CONTENT_TYPE] || this.params.requestHeaders?.['Content-Type']
       if (isHumanReadableContentType(contentType)) {
         this.params.requestBody = data
+        this.params.gql = parseGQL({
+          body: data,
+          query: this.parsedOrigin?.search
+        })
       }
     }
 
@@ -381,6 +385,11 @@ function subscribeToEvents (agentRef, ee, handler, dt, canCapturePayload) {
       // Silently fail if we can't access headers
     }
 
+    this.params.gql = parseGQL({
+      body: opts.body,
+      query: this.parsedOrigin?.search
+    })
+
     // Store request body only if content-type is human-readable
     if (opts.body) {
       var contentType = this.params.requestHeaders?.[CONTENT_TYPE] || this.params.requestHeaders?.['Content-Type']
@@ -427,6 +436,7 @@ function subscribeToEvents (agentRef, ee, handler, dt, canCapturePayload) {
     // Clone the response to read the body without consuming the original
     res.clone().text().then((text) => {
       responseBody = text
+      if (this.params.gql) this.params.gql.operationHasErrors = hasGQLErrors(responseBody)
       /**
      * its very important that we drop the data before buffering
      * if it is not allowed to be captured. This will prevent unnecessary data
@@ -434,7 +444,7 @@ function subscribeToEvents (agentRef, ee, handler, dt, canCapturePayload) {
      * we have needed to store the response attributes as they occurred, but they
      * can be deleted now if we can't capture the payload due to decision tree.
      */
-      if (!canCapturePayload(this.params.status, responseBody)) {
+      if (!canCapturePayload(this.params.status, this.params.gql?.operationHasErrors)) {
         clearPayloads(this.params)
       } else {
         try {
@@ -492,6 +502,7 @@ function subscribeToEvents (agentRef, ee, handler, dt, canCapturePayload) {
     } catch (e) {
       responseBody = xhr.response
     }
+    if (params.gql) params.gql.operationHasErrors = hasGQLErrors(responseBody)
 
     /**
      * its very important that we drop the data before buffering
@@ -500,7 +511,7 @@ function subscribeToEvents (agentRef, ee, handler, dt, canCapturePayload) {
      * we have needed to store the response attributes as they occurred, but they
      * can be deleted now if we can't capture the payload due to decision tree.
      */
-    if (!canCapturePayload(params.status, responseBody)) {
+    if (!canCapturePayload(params.status, params.gql?.operationHasErrors)) {
       clearPayloads(params)
     } else {
       // Capture response headers and (maybe) body when XHR completes

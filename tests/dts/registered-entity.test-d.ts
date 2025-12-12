@@ -1,13 +1,13 @@
 import { expectType, expectError } from 'tsd'
-import { RegisteredEntity, RegisterAPIMetadata, RegisterAPIConstructor, RegisterAPI } from '../../dist/types/interfaces/registered-entity'
+import { RegisteredEntity, RegisterAPIMetadata, RegisterAPIConstructor } from '../../dist/types/interfaces/registered-entity'
 
 // Test RegisteredEntity constructor with different parameter combinations
 const entityOptsWithNumber: RegisterAPIConstructor = {
-  id: 123, name: 'test-entity' 
+  id: 123, name: 'test-entity'
 }
 
 const entityOptsWithString: RegisterAPIConstructor = {
-  id: 'app-123', name: 'test-entity' 
+  id: 'app-123', name: 'test-entity'
 }
 
 // Create RegisteredEntity instances
@@ -16,7 +16,7 @@ const registeredEntityWithString = new RegisteredEntity(entityOptsWithString)
 
 // fits the definition of both the RegisterAPI and RegisteredEntity because RegisteredEntity object assigns from RegisterAPI here
 expectType<RegisteredEntity>(registeredEntityWithNumber)
-expectType<RegisteredEntity>(registeredEntityWithString) 
+expectType<RegisteredEntity>(registeredEntityWithString)
 
 // Test all registered entity methods for each variant
 ;[registeredEntityWithNumber, registeredEntityWithString].forEach((registeredEntity) => {
@@ -27,7 +27,7 @@ expectType<RegisteredEntity>(registeredEntityWithString)
   expectType<(value: string | null) => void>(registeredEntity.setApplicationVersion)
   expectType<(name: string, value: string | number | boolean | null, persist?: boolean) => void>(registeredEntity.setCustomAttribute)
   expectType<(name: string, options?: {start: number, end: number, duration: number, customAttributes: object}) => ({start: number, end: number, duration: number, customAttributes: object})>(registeredEntity.measure)
-  expectType<(value: string | null) => void>(registeredEntity.setUserId)
+  expectType<(value: string | null, resetSession?: boolean) => void>(registeredEntity.setUserId)
   expectType<RegisterAPIMetadata>(registeredEntity.metadata)
 })
 

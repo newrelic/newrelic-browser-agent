@@ -20,7 +20,7 @@ import { SUPPORTABILITY_METRIC } from '../../metrics/constants'
 import { now } from '../../../common/timing/now'
 import { hasUndefinedHostname } from '../../../common/deny-list/deny-list'
 import { extractUrl } from '../../../common/url/extract-url'
-import { parseQueryString, parseResponseHeaders, isHumanReadableContentType } from './payloads'
+import { parseQueryString, parseResponseHeaders, isLikelyHumanReadable, truncatePayloads, clearPayloads } from './payloads'
 import { hasGQLErrors, parseGQL } from './gql'
 import { warn } from '../../../common/util/console'
 import { single } from '../../../common/util/invoke'
@@ -191,10 +191,10 @@ function subscribeToEvents (agentRef, ee, handler, dt, canCapturePayload) {
     // Store request body only if content-type is human-readable
     if (data) {
       var contentType = this.params.requestHeaders?.[CONTENT_TYPE] || this.params.requestHeaders?.['Content-Type']
-      if (isHumanReadableContentType(contentType)) {
+      if (isLikelyHumanReadable(contentType, data)) {
         this.params.requestBody = data
         this.params.gql = parseGQL({
-          body: data,
+          body: this.params.requestBody,
           query: this.parsedOrigin?.search
         })
       }
@@ -398,7 +398,7 @@ function subscribeToEvents (agentRef, ee, handler, dt, canCapturePayload) {
     // Store request body only if content-type is human-readable
     if (opts.body) {
       var contentType = this.params.requestHeaders?.[CONTENT_TYPE] || this.params.requestHeaders?.['Content-Type']
-      if (isHumanReadableContentType(contentType)) {
+      if (isLikelyHumanReadable(contentType, opts.body)) {
         this.params.requestBody = opts.body
       }
     }
@@ -425,6 +425,8 @@ function subscribeToEvents (agentRef, ee, handler, dt, canCapturePayload) {
         rxSize: responseSize,
         duration: now() - this.startTime
       }
+
+      truncatePayloads(this.params)
 
       handler('xhr', [this.params, metrics, this.startTime, this.endTime, 'fetch'], this, FEATURE_NAMES.ajax)
     }
@@ -463,7 +465,7 @@ function subscribeToEvents (agentRef, ee, handler, dt, canCapturePayload) {
 
           // Only capture response body if content-type is human-readable
           var contentType = res?.headers ? res.headers.get(CONTENT_TYPE) : null
-          if (isHumanReadableContentType(contentType)) {
+          if (isLikelyHumanReadable(contentType, responseBody)) {
             this.params.responseBody = responseBody
           }
         } catch (e) {
@@ -525,13 +527,15 @@ function subscribeToEvents (agentRef, ee, handler, dt, canCapturePayload) {
 
         // Only capture response body if content-type is human-readable
         var contentType = xhr.getResponseHeader(CONTENT_TYPE)
-        if (isHumanReadableContentType(contentType)) {
+        if (isLikelyHumanReadable(contentType, responseBody)) {
           params.responseBody = responseBody
         }
       } catch (e) {
       // Silently fail if we failed to access response data
       }
     }
+
+    truncatePayloads(params)
 
     handler('xhr', [params, metrics, this.startTime, this.endTime, 'xhr'], this, FEATURE_NAMES.ajax)
   }
@@ -565,18 +569,6 @@ function addUrl (ctx, url) {
   params.pathname = parsed.pathname
   ctx.parsedOrigin = parsed
   ctx.sameOrigin = parsed.sameOrigin
-}
-
-/**
- * MUTATES the params object to clear out payload data
- * @param {Object} params The ajax params object
- */
-function clearPayloads (params) {
-  params.requestBody = undefined
-  params.requestHeaders = undefined
-  params.requestQuery = undefined
-  params.responseBody = undefined
-  params.responseHeaders = undefined
 }
 
 export const Ajax = Instrument

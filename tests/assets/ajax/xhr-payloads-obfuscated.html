@@ -72,6 +72,13 @@
           operationName: "TestQuery",
         })
       );
+
+      // large payload that should be truncated
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", "/echo-large");
+      xhr.setRequestHeader("Content-Type", "application/json");
+      var largeData = { data: "x".repeat(5000) };
+      xhr.send(JSON.stringify(largeData));
     </script>
   </body>
 </html>

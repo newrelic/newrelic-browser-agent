@@ -108,6 +108,15 @@ describe('capture_payloads', () => {
         requestQuery: undefined,
         responseBody: undefined
       }
+    },
+    '/echo-large': {
+      capturedWith: ['all'],
+      values: {
+        requestBody: '{"data":"' + 'x'.repeat(4077) + ' ...',
+        requestHeaders: '{"Content-Type":"application/json"}',
+        requestQuery: undefined,
+        responseBody: '{"receivedBody":{"data":"' + 'x'.repeat(4055) + ' ...'
+      }
     }
   }
 

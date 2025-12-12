@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { parseQueryString, parseResponseHeaders, isHumanReadableContentType } from '../../../../../src/features/ajax/instrument/payloads'
+import { parseQueryString, parseResponseHeaders, isLikelyHumanReadable } from '../../../../../src/features/ajax/instrument/payloads'
 import { hasGQLErrors } from '../../../../../src/features/ajax/instrument/gql'
 
 describe('parseQueryString', () => {
@@ -79,54 +79,61 @@ describe('parseResponseHeaders', () => {
   })
 })
 
-describe('isHumanReadableContentType', () => {
+describe('isLikelyHumanReadable', () => {
   test('returns true for text/* types', () => {
-    expect(isHumanReadableContentType('text/plain')).toBe(true)
-    expect(isHumanReadableContentType('text/html')).toBe(true)
-    expect(isHumanReadableContentType('text/css')).toBe(true)
-    expect(isHumanReadableContentType('text/javascript')).toBe(true)
-    expect(isHumanReadableContentType('text/csv')).toBe(true)
+    expect(isLikelyHumanReadable('text/plain')).toBe(true)
+    expect(isLikelyHumanReadable('text/html')).toBe(true)
+    expect(isLikelyHumanReadable('text/css')).toBe(true)
+    expect(isLikelyHumanReadable('text/javascript')).toBe(true)
+    expect(isLikelyHumanReadable('text/csv')).toBe(true)
   })
 
   test('returns true for readable application/* types', () => {
-    expect(isHumanReadableContentType('application/json')).toBe(true)
-    expect(isHumanReadableContentType('application/xml')).toBe(true)
-    expect(isHumanReadableContentType('application/xhtml+xml')).toBe(true)
-    expect(isHumanReadableContentType('application/ld+json')).toBe(true)
-    expect(isHumanReadableContentType('application/yaml')).toBe(true)
-    expect(isHumanReadableContentType('application/x-www-form-urlencoded')).toBe(true)
+    expect(isLikelyHumanReadable('application/json')).toBe(true)
+    expect(isLikelyHumanReadable('application/xml')).toBe(true)
+    expect(isLikelyHumanReadable('application/xhtml+xml')).toBe(true)
+    expect(isLikelyHumanReadable('application/ld+json')).toBe(true)
+    expect(isLikelyHumanReadable('application/yaml')).toBe(true)
+    expect(isLikelyHumanReadable('application/x-www-form-urlencoded')).toBe(true)
   })
 
   test('returns false for binary types', () => {
-    expect(isHumanReadableContentType('application/octet-stream')).toBe(false)
-    expect(isHumanReadableContentType('application/pdf')).toBe(false)
-    expect(isHumanReadableContentType('image/png')).toBe(false)
-    expect(isHumanReadableContentType('image/jpeg')).toBe(false)
-    expect(isHumanReadableContentType('video/mp4')).toBe(false)
-    expect(isHumanReadableContentType('audio/mpeg')).toBe(false)
+    expect(isLikelyHumanReadable('application/octet-stream')).toBe(false)
+    expect(isLikelyHumanReadable('application/pdf')).toBe(false)
+    expect(isLikelyHumanReadable('image/png')).toBe(false)
+    expect(isLikelyHumanReadable('image/jpeg')).toBe(false)
+    expect(isLikelyHumanReadable('video/mp4')).toBe(false)
+    expect(isLikelyHumanReadable('audio/mpeg')).toBe(false)
   })
 
   test('handles content-type with charset', () => {
-    expect(isHumanReadableContentType('text/html; charset=utf-8')).toBe(true)
-    expect(isHumanReadableContentType('application/json; charset=UTF-8')).toBe(true)
-    expect(isHumanReadableContentType('application/xml;charset=ISO-8859-1')).toBe(true)
+    expect(isLikelyHumanReadable('text/html; charset=utf-8')).toBe(true)
+    expect(isLikelyHumanReadable('application/json; charset=UTF-8')).toBe(true)
+    expect(isLikelyHumanReadable('application/xml;charset=ISO-8859-1')).toBe(true)
   })
 
   test('handles case insensitivity', () => {
-    expect(isHumanReadableContentType('TEXT/PLAIN')).toBe(true)
-    expect(isHumanReadableContentType('Application/JSON')).toBe(true)
-    expect(isHumanReadableContentType('TeXt/HtMl')).toBe(true)
-  })
-
-  test('returns false for null, undefined, or empty strings', () => {
-    expect(isHumanReadableContentType(null)).toBe(false)
-    expect(isHumanReadableContentType(undefined)).toBe(false)
-    expect(isHumanReadableContentType('')).toBe(false)
+    expect(isLikelyHumanReadable('TEXT/PLAIN')).toBe(true)
+    expect(isLikelyHumanReadable('Application/JSON')).toBe(true)
+    expect(isLikelyHumanReadable('TeXt/HtMl')).toBe(true)
   })
 
   test('handles content-type with extra whitespace', () => {
-    expect(isHumanReadableContentType('text/plain ; charset=utf-8')).toBe(true)
-    expect(isHumanReadableContentType('  application/json  ')).toBe(true)
+    expect(isLikelyHumanReadable('text/plain ; charset=utf-8')).toBe(true)
+    expect(isLikelyHumanReadable('  application/json  ')).toBe(true)
+  })
+
+  test('returns true for string data when contentType is null or undefined', () => {
+    expect(isLikelyHumanReadable(null, 'string data')).toBe(true)
+    expect(isLikelyHumanReadable(undefined, 'string data')).toBe(true)
+    expect(isLikelyHumanReadable('', 'string data')).toBe(true)
+  })
+
+  test('returns false for non-string data when contentType is null or undefined', () => {
+    expect(isLikelyHumanReadable(null, { obj: 'data' })).toBe(false)
+    expect(isLikelyHumanReadable(undefined, 123)).toBe(false)
+    expect(isLikelyHumanReadable('', null)).toBe(false)
+    expect(isLikelyHumanReadable(null, undefined)).toBe(false)
   })
 })
 

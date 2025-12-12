@@ -282,6 +282,14 @@ module.exports = fp(async function (fastify, testServer) {
       bodyType: typeof request.body
     })
   })
+  fastify.post('/echo-large', {
+    compress: false
+  }, (request, reply) => {
+    reply.send({
+      receivedBody: request.body,
+      bodyType: typeof request.body
+    })
+  })
   fastify.post('/status/:code', {
     compress: false
   }, (request, reply) => {

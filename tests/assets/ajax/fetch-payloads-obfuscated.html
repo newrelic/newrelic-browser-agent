@@ -91,6 +91,15 @@
           operationName: "TestQuery"
         })
       });
+
+      // large payload that should be truncated
+      fetch("/echo-large", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ data: "x".repeat(5000) })
+      });
     </script>
   </body>
 </html>

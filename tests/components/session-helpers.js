@@ -39,6 +39,7 @@ export const model = {
   sessionTraceMode: 0,
   traceHarvestStarted: false,
   loggingMode: 0,
+  logApiMode: 0,
   serverTimeDiff: null,
   custom: {},
   numOfResets: 0,

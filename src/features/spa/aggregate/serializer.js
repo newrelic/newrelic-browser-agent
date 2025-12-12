@@ -61,7 +61,7 @@ export class Serializer {
       var children = []
       var attrs = node.attrs
       var metrics = attrs.metrics
-      var params = attrs.params
+      var params = attrs.params || {}
       var queueTime = info.queueTime
       var appTime = info.applicationTime
 
@@ -78,6 +78,8 @@ export class Serializer {
         numeric(node.jsEnd - node.end),
         numeric(node.jsTime)
       ]
+
+      const { requestBody, requestHeaders, requestQuery, responseBody, responseHeaders } = params
 
       switch (typeId) {
         case 1:
@@ -124,12 +126,15 @@ export class Serializer {
             nullable(node.dt && node.dt.timestamp, numeric, false)
           )
 
-          // add params.gql here
-          if (Object.keys(params?.gql || {}).length) {
-            var ajaxAttrParts = addCustomAttributes(params.gql, addString)
-            children = children.concat(ajaxAttrParts)
-            attrCount = ajaxAttrParts.length
-          }
+          if (Object.keys(params?.gql || {}).length) children = children.concat(addCustomAttributes(params.gql, addString))
+          if (requestBody) children = children.concat(addCustomAttributes({ requestBody }, addString))
+          if (requestHeaders) children = children.concat(addCustomAttributes({ requestHeaders }, addString))
+          if (requestQuery) children = children.concat(addCustomAttributes({ requestQuery }, addString))
+          if (responseBody) children = children.concat(addCustomAttributes({ responseBody }, addString))
+          if (responseHeaders) children = children.concat(addCustomAttributes({ responseHeaders }, addString))
+
+          attrCount = children.length
+
           break
 
         case 4:

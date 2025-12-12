@@ -12,8 +12,7 @@
     <script>
       function triggerError() {
         NREUM.noticeError(new Error("My error"), {custom1: 'val1'})
-        newrelic.interaction().setAttribute('custom1', 'val2')
-        // not changing the URL means that the interaction will be discarded
+        newrelic.interaction().setAttribute('custom1', 'val2').ignore().end()
       }
     </script>
 

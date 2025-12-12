@@ -47,7 +47,7 @@ export function setupInteractionAPI (agent) {
 
   ;['actionText', 'setName', 'setAttribute', 'save', 'ignore', 'onEnd', 'getContext', 'end', 'get'].forEach((name) => {
     setupAPI.apply(this, [name, function () {
-      handle(spaPrefix + name, [now(), ...arguments], this, FEATURE_NAMES.softNav, agent.ee)
+      handle(spaPrefix + name, [performance.now(), ...arguments], this, FEATURE_NAMES.softNav, agent.ee)
       return this
     }, agent, InteractionApiProto])
   })

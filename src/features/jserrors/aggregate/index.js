@@ -36,16 +36,11 @@ export class Aggregate extends AggregateBase {
     this.stackReported = {}
     this.observedAt = {}
     this.pageviewReported = {}
-    this.bufferedErrorsUnderSpa = {}
     this.errorOnPage = false
-
-    // this will need to change to match whatever ee we use in the instrument
-    this.ee.on('interactionDone', (interaction, wasSaved) => this.onInteractionDone(interaction, wasSaved))
 
     register('err', (...args) => this.storeError(...args), this.featureName, this.ee)
     register('ierr', (...args) => this.storeError(...args), this.featureName, this.ee)
-    register('softNavFlush', (interactionId, wasFinished, softNavAttrs, interactionEndTime) =>
-      this.onSoftNavNotification(interactionId, wasFinished, softNavAttrs, interactionEndTime), this.featureName, this.ee) // when an ixn is done or cancelled
+    register('returnJserror', (jsErrorEvent, softNavAttrs) => this.#storeJserrorForHarvest(jsErrorEvent, softNavAttrs), this.featureName, this.ee)
 
     // 0 == off, 1 == on
     this.waitForFlags(['err']).then(([errFlag]) => {
@@ -202,16 +197,10 @@ export class Aggregate extends AggregateBase {
 
     if (this.shouldAllowMainAgentToCapture(target)) {
       const softNavInUse = Boolean(this.agentRef.features?.[FEATURE_NAMES.softNav])
-      // Note: the following is subject to potential race cond wherein if spa isn't fully initialized, it'll be treated as there being no associated interaction.
-      if (softNavInUse) handle('jserror', [params, time], undefined, FEATURE_NAMES.softNav, this.ee)
-
-      if (params.browserInteractionId && !params._softNavFinished) { // hold onto the error until the in-progress interaction is done, eithered saved or discarded
-        this.bufferedErrorsUnderSpa[params.browserInteractionId] ??= []
-        this.bufferedErrorsUnderSpa[params.browserInteractionId].push(jsErrorEvent)
+      if (softNavInUse) { // pass the error to soft nav for evaluation - it will return it via 'returnJserror' when interaction is resolved
+        handle('jserror', [jsErrorEvent], undefined, FEATURE_NAMES.softNav, this.ee)
       } else {
-      // Either there is no interaction (then all these params properties will be undefined) OR there's a related soft navigation that's already completed.
-      // The old spa does not look up completed interactions at all, so there's no need to consider it.
-        this.#storeJserrorForHarvest(jsErrorEvent, params.browserInteractionId !== undefined, params._softNavAttributes)
+        this.#storeJserrorForHarvest(jsErrorEvent, false)
       }
     }
 
@@ -219,23 +208,16 @@ export class Aggregate extends AggregateBase {
     if (target) this.#storeJserrorForHarvest([...jsErrorEvent, target], false, params._softNavAttributes)
   }
 
-  #storeJserrorForHarvest (errorInfoArr, softNavOccurredFinished, softNavCustomAttrs = {}) {
+  #storeJserrorForHarvest (errorInfoArr, softNavCustomAttrs = {}) {
     let [type, bucketHash, params, newMetrics, localAttrs, target] = errorInfoArr
     const allCustomAttrs = {
       /** MFE specific attributes if in "multiple" mode (ie consumer version 2) */
       ...getVersion2Attributes(target, this)
     }
 
-    if (softNavOccurredFinished) {
-      Object.entries(softNavCustomAttrs).forEach(([k, v]) => setCustom(k, v)) // when an ixn finishes, it'll include stuff in jsAttributes + attrs specific to the ixn
-      bucketHash += params.browserInteractionId
-
-      delete params._softNavAttributes // cleanup temp properties from synchronous evaluation; this is harmless when async from soft nav (properties DNE)
-      delete params._softNavFinished
-    } else { // interaction was cancelled -> error should not be associated OR there was no interaction
-      Object.entries(this.agentRef.info.jsAttributes).forEach(([k, v]) => setCustom(k, v))
-      delete params.browserInteractionId
-    }
+    Object.entries(this.agentRef.info.jsAttributes).forEach(([k, v]) => setCustom(k, v))
+    Object.entries(softNavCustomAttrs).forEach(([k, v]) => setCustom(k, v)) // when an ixn finishes, it'll pass attrs specific to the ixn; if no associated ixn, this defaults to empty
+    if (params.browserInteractionId) bucketHash += params.browserInteractionId
     if (localAttrs) Object.entries(localAttrs).forEach(([k, v]) => setCustom(k, v)) // local custom attrs are applied in either case with the highest precedence
 
     const jsAttributesHash = stringHashCode(stringify(allCustomAttrs))
@@ -256,18 +238,5 @@ export class Aggregate extends AggregateBase {
   */
   shouldAllowMainAgentToCapture (target) {
     return (!target || this.agentRef.init.api.duplicate_registered_data)
-  }
-
-  onSoftNavNotification (interactionId, wasFinished, softNavAttrs, interactionEndTime) {
-    if (this.blocked) return
-
-    this.bufferedErrorsUnderSpa[interactionId]?.forEach(jsErrorEvent => { // this should not modify the re-used softNavAttrs contents
-      if (!wasFinished) return this.#storeJserrorForHarvest(jsErrorEvent, false, softNavAttrs)
-
-      const startTime = jsErrorEvent[3].time // in storeError fn, the newMetrics obj contains the time passed to & used by SN to seek the ixn
-      if (startTime > interactionEndTime) return this.#storeJserrorForHarvest(jsErrorEvent, false, softNavAttrs) // disassociate any error that ultimately falls outside the final ixn span
-      return this.#storeJserrorForHarvest(jsErrorEvent, true, softNavAttrs)
-    })
-    delete this.bufferedErrorsUnderSpa[interactionId] // wipe the list of jserrors so they aren't duplicated by another call to the same id
   }
 }

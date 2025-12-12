@@ -34,15 +34,20 @@ afterEach(() => {
 test('on interaction cancel, buffered jserrors are flushed as standalone', () => {
   softNavAggregate.ee.emit('newUIEvent', [{ type: 'keydown', timeStamp: 100 }])
   expect(softNavAggregate.interactionInProgress).toBeTruthy()
-  const ixnId = softNavAggregate.interactionInProgress.id
+  // const ixnId = softNavAggregate.interactionInProgress.id
 
   jserrorsAggregate.storeError(new Error('test error'), 200)
-  expect(jserrorsAggregate.bufferedErrorsUnderSpa[ixnId].length).toEqual(1)
+  // Error should not be in jserrors events yet, waiting for soft nav to return it
+  expect(jserrorsAggregate.events.get(jserrorsAggregate.harvestOpts)).toBeNull()
 
   softNavAggregate.interactionInProgress.done()
   expect(softNavAggregate.interactionInProgress).toBeNull()
-  expect(jserrorsAggregate.bufferedErrorsUnderSpa[ixnId]).toBeUndefined()
-  expect(jserrorsAggregate.events.get(jserrorsAggregate.harvestOpts).err.length).toEqual(1)
+  // After cancellation, error should be returned as standalone
+  const harvestedData = jserrorsAggregate.events.get(jserrorsAggregate.harvestOpts)
+  expect(harvestedData).toBeTruthy()
+  expect(harvestedData.err.length).toEqual(1)
+  const errsHarvested = harvestedData.err.map(jseEvent => jseEvent.params)
+  expect(errsHarvested[0].browserInteractionId).toBeUndefined()
 })
 
 test('on interaction finish, jserrors within time span are associated, others standalone', () => {
@@ -56,10 +61,15 @@ test('on interaction finish, jserrors within time span are associated, others st
   jserrorsAggregate.storeError(new Error('test2'), 250) // ensure errors happening during wait window for actualized long tasks are associated
   softNavAggregate.interactionInProgress.customEnd = 300 // simulate a long task extending the interaction end time
   jserrorsAggregate.storeError(new Error('test3'), 350) // this one should fall outside the final interaction span and be standalone
-  expect(jserrorsAggregate.bufferedErrorsUnderSpa[ixnId].length).toEqual(3)
+  // Errors should not be in jserrors events yet, waiting for soft nav to return them
+  expect(jserrorsAggregate.events.get(jserrorsAggregate.harvestOpts)).toBeNull()
 
   softNavAggregate.interactionInProgress.done()
-  const errsHarvested = jserrorsAggregate.events.get(jserrorsAggregate.harvestOpts).err.map(jseEvent => jseEvent.params)
+  // After interaction finishes, all errors should be returned and stored
+  const harvestedData = jserrorsAggregate.events.get(jserrorsAggregate.harvestOpts)
+  expect(harvestedData).toBeTruthy()
+  const errsHarvested = harvestedData.err.map(jseEvent => jseEvent.params)
+  expect(errsHarvested.length).toEqual(3)
   expect(errsHarvested[0]).toEqual(expect.objectContaining({ message: 'test1', browserInteractionId: ixnId }))
   expect(errsHarvested[1]).toEqual(expect.objectContaining({ message: 'test2', browserInteractionId: ixnId }))
   expect(errsHarvested[2].message).toEqual('test3')

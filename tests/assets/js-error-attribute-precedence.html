@@ -13,6 +13,7 @@
       newrelic.setCustomAttribute('localKey', 1)
       newrelic.interaction().setAttribute('localKey', 2)
       newrelic.noticeError(new Error("My error"))
+      newrelic.interaction().save().end()
     </script>
     <title>RUM Unit Test</title>
   </head>

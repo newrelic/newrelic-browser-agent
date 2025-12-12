@@ -11,12 +11,13 @@
 
     <script>
       newrelic.setCustomAttribute('globalKey', 1)
+      newrelic.interaction().setAttribute('localKey', 2)
       try {
         throw new Error("My error")
       } catch (e) {
         NREUM.noticeError(e)
       }
-      newrelic.interaction().setAttribute('localKey', 2)
+      newrelic.interaction().save().end()
     </script>
     <title>RUM Unit Test</title>
   </head>

@@ -3,7 +3,6 @@ import { checkAjaxEvents, checkSpa } from '../../util/basic-checks'
 import { testInteractionEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 describe('Fetch SPA Interaction Tracking', () => {
-  const config = { loader: 'spa', init: { feature_flags: ['soft_nav'] } }
   let interactionsCapture
 
   beforeEach(async () => {
@@ -13,7 +12,7 @@ describe('Fetch SPA Interaction Tracking', () => {
   it('should capture the ajax request and response size', async () => {
     await Promise.all([
       interactionsCapture.waitForResult({ totalCount: 1 }),
-      browser.url(await browser.testHandle.assetURL('soft_navigations/ajax/fetch-post.html', config))
+      browser.url(await browser.testHandle.assetURL('soft_navigations/ajax/fetch-post.html'))
         .then(() => browser.waitForAgentLoad())
     ])
 
@@ -34,7 +33,7 @@ describe('Fetch SPA Interaction Tracking', () => {
 
   it('should not break the agent when fetch called with no params', async () => {
     await browser.url(
-      await browser.testHandle.assetURL('soft_navigations/ajax/fetch-empty.html', config)
+      await browser.testHandle.assetURL('soft_navigations/ajax/fetch-empty.html')
     ).then(() => browser.waitForAgentLoad())
 
     const [interactionHarvests] = await Promise.all([
@@ -51,7 +50,7 @@ describe('Fetch SPA Interaction Tracking', () => {
 
   it('should not modify the response object when wrapping', async () => {
     await browser.url(
-      await browser.testHandle.assetURL('soft_navigations/ajax/fetch-response-object-check.html', config)
+      await browser.testHandle.assetURL('soft_navigations/ajax/fetch-response-object-check.html')
     ).then(() => browser.waitForAgentLoad())
 
     await browser.waitUntil(
@@ -92,7 +91,7 @@ describe('Fetch SPA Interaction Tracking', () => {
 
   it('should not modify the response object when wrapping and response is form data', async () => {
     await browser.url(
-      await browser.testHandle.assetURL('soft_navigations/ajax/fetch-response-form-data-check.html', config)
+      await browser.testHandle.assetURL('soft_navigations/ajax/fetch-response-form-data-check.html')
     ).then(() => browser.waitForAgentLoad())
 
     await browser.waitUntil(
@@ -139,7 +138,7 @@ describe('Fetch SPA Interaction Tracking', () => {
           loader: 'spa',
           init: {
             distributed_tracing: { enabled: true },
-            feature_flags: ['soft_nav']
+            feature_flags: []
           },
           injectUpdatedLoaderConfig: true
         })
@@ -164,7 +163,7 @@ describe('Fetch SPA Interaction Tracking', () => {
   it('creates interaction event data for erred fetch', async () => {
     await Promise.all([
       interactionsCapture.waitForResult({ totalCount: 1 }),
-      browser.url(await browser.testHandle.assetURL('soft_navigations/ajax/fetch-404.html', config))
+      browser.url(await browser.testHandle.assetURL('soft_navigations/ajax/fetch-404.html'))
         .then(() => browser.waitForAgentLoad())
     ])
 

@@ -42,10 +42,6 @@ beforeEach(async () => {
   ajaxAggregate.drain()
 
   context = new EventContext()
-
-  getNREUMInitializedAgent(fakeAgent.agentIdentifier).features = {
-    [FEATURE_NAMES.softNav]: false
-  }
 })
 
 afterEach(() => {
@@ -53,20 +49,9 @@ afterEach(() => {
   jest.clearAllMocks()
 })
 
-test('on interactionDiscarded, saved (old) SPA events are put back in ajaxEvents', () => {
-  const interaction = { id: 0 }
-  context.spaNode = { interaction }
-
-  ajaxAggregate.ee.emit('xhr', ajaxArguments, context)
-  ajaxAggregate.ee.emit('interactionDone', [interaction, false])
-
-  expect(ajaxAggregate.underSpaEvents[interaction.id]).toBeUndefined() // no interactions in SPA under interaction 0
-  expect(ajaxAggregate.events.get().length).toEqual(1)
-})
-
 test('on returnAjax from soft nav, event is re-routed back into ajaxEvents', () => {
   getNREUMInitializedAgent(fakeAgent.agentIdentifier).features = {
-    [FEATURE_NAMES.softNav]: true
+    [FEATURE_NAMES.softNav]: {} // Set to truthy object to simulate soft nav being present
   }
 
   ajaxAggregate.ee.emit('xhr', ajaxArguments, context)
@@ -87,38 +72,25 @@ test('on long task emitted under ajax, its context is set with latestLongtaskEnd
 
 describe('storeXhr', () => {
   test('for a plain ajax request buffers in ajaxEvents', () => {
+    // Ensure soft nav is NOT present to test plain ajax behavior
+    delete getNREUMInitializedAgent(fakeAgent.agentIdentifier).features
+
     ajaxAggregate.ee.emit('xhr', ajaxArguments, context)
 
     expect(ajaxAggregate.events.get().length).toEqual(1) // non-SPA ajax requests are buffered in ajaxEvents
-    expect(Object.keys(ajaxAggregate.underSpaEvents).length).toEqual(0)
 
     const ajaxEvent = ajaxAggregate.events.get()[0]
     expect(ajaxEvent).toEqual(expect.objectContaining({ startTime: 0, path: '/pathname' }))
   })
 
-  test('for a (old) SPA ajax request buffers in underSpaEvents', () => {
-    const interaction = { id: 0 }
-    context.spaNode = { interaction }
-
-    ajaxAggregate.ee.emit('xhr', ajaxArguments, context)
-
-    const interactionAjaxEvents = ajaxAggregate.underSpaEvents[interaction.id]
-    expect(interactionAjaxEvents.length).toEqual(1) // SPA ajax requests are buffered in underSpaEvents and under its interaction id
-    expect(ajaxAggregate.events.get().length).toEqual(0)
-
-    const spaAjaxEvent = interactionAjaxEvents[0]
-    expect(spaAjaxEvent).toEqual(expect.objectContaining({ startTime: 0, path: '/pathname' }))
-  })
-
   test('for ajax under soft nav does not buffer and instead pipes it', () => {
     getNREUMInitializedAgent(fakeAgent.agentIdentifier).features = {
-      [FEATURE_NAMES.softNav]: true
+      [FEATURE_NAMES.softNav]: {} // Set to truthy object to simulate soft nav being present
     }
 
     ajaxAggregate.ee.emit('xhr', ajaxArguments, context)
 
     expect(ajaxAggregate.events.get().length).toEqual(0)
-    expect(Object.keys(ajaxAggregate.underSpaEvents).length).toEqual(0)
     expect(handleModule.handle).toHaveBeenLastCalledWith(
       'ajax',
       [expect.objectContaining({ startTime: 0, path: '/pathname' }), expect.any(EventContext)],
@@ -131,6 +103,9 @@ describe('storeXhr', () => {
 
 describe('prepareHarvest', () => {
   test('correctly serializes an AjaxRequest events payload', () => {
+    // Ensure soft nav is NOT present so events buffer in ajaxEvents
+    delete getNREUMInitializedAgent(fakeAgent.agentIdentifier).features
+
     const expected = {
       type: 'ajax',
       start: 0,
@@ -174,6 +149,9 @@ describe('prepareHarvest', () => {
   })
 
   test('correctly exits if maxPayload is too small', async () => {
+    // Ensure soft nav is NOT present so events buffer in ajaxEvents
+    delete getNREUMInitializedAgent(fakeAgent.agentIdentifier).features
+
     for (let callNo = 0; callNo < 10; callNo++) {
       ajaxAggregate.ee.emit('xhr', [{ ...ajaxArguments[0], pathname: 'x'.repeat(1000000) }, ...ajaxArguments], context)
     }

@@ -14,11 +14,8 @@ describe('XHR Ajax', () => {
   })
 
   it('creates event and metric data for xhr', async () => {
-    await browser.url(await browser.testHandle.assetURL('ajax/xhr-simple.html'))
+    await browser.url(await browser.testHandle.assetURL('ajax/xhr-simple.html', { loader: 'full' }))
       .then(() => browser.waitForAgentLoad())
-      .then(() => browser.execute(function () {
-        window.disableAjaxHashChange = true
-      }))
 
     const [ajaxEventsHarvest, ajaxMetricsHarvest] = await Promise.all([
       ajaxEventsCapture.waitForResult({ timeout: 10000 }),
@@ -49,7 +46,7 @@ describe('XHR Ajax', () => {
   })
 
   it('creates event and metric data for erred xhr', async () => {
-    await browser.url(await browser.testHandle.assetURL('ajax/xhr-404.html'))
+    await browser.url(await browser.testHandle.assetURL('ajax/xhr-404.html', { loader: 'full' }))
       .then(() => browser.waitForAgentLoad())
       .then(() => browser.execute(function () {
         window.disableAjaxHashChange = true
@@ -80,7 +77,7 @@ describe('XHR Ajax', () => {
   })
 
   it('creates event and metric data for xhr with network error', async () => {
-    await browser.url(await browser.testHandle.assetURL('ajax/xhr-network-error.html'))
+    await browser.url(await browser.testHandle.assetURL('ajax/xhr-network-error.html', { loader: 'full' }))
       .then(() => browser.waitForAgentLoad())
       .then(() => browser.execute(function () {
         window.disableAjaxHashChange = true
@@ -111,7 +108,7 @@ describe('XHR Ajax', () => {
   })
 
   it('only includes load handlers in metric timings', async () => {
-    await browser.url(await browser.testHandle.assetURL('ajax/xhr-callback-duration.html'))
+    await browser.url(await browser.testHandle.assetURL('ajax/xhr-callback-duration.html', { loader: 'full' }))
       .then(() => browser.waitForAgentLoad())
       .then(() => browser.execute(function () {
         window.disableAjaxHashChange = true
@@ -144,7 +141,7 @@ describe('XHR Ajax', () => {
   })
 
   it('produces the correct event and metric timings when xhr times out', async () => {
-    await browser.url(await browser.testHandle.assetURL('ajax/xhr-timeout.html'))
+    await browser.url(await browser.testHandle.assetURL('ajax/xhr-timeout.html', { loader: 'full' }))
       .then(() => browser.waitForAgentLoad())
       .then(() => browser.execute(function () {
         window.disableAjaxHashChange = true
@@ -174,7 +171,7 @@ describe('XHR Ajax', () => {
   })
 
   it('produces event and metric with correct transmit and receive size calculated', async () => {
-    await browser.url(await browser.testHandle.assetURL('instrumented.html'))
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', { loader: 'full' }))
       .then(() => browser.waitForAgentLoad())
 
     const [ajaxEventsHarvest, ajaxMetricsHarvest] = await Promise.all([
@@ -208,7 +205,7 @@ describe('XHR Ajax', () => {
   })
 
   it('captures cats header in metric for same-origin xhr', async () => {
-    await browser.url(await browser.testHandle.assetURL('instrumented.html'))
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', { loader: 'full' }))
       .then(() => browser.waitForAgentLoad())
 
     const [ajaxMetricsHarvest] = await Promise.all([
@@ -227,7 +224,7 @@ describe('XHR Ajax', () => {
   })
 
   it('does not capture cats header in metric for cross-origin xhr', async () => {
-    await browser.url(await browser.testHandle.assetURL('instrumented.html'))
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', { loader: 'full' }))
       .then(() => browser.waitForAgentLoad())
 
     const [ajaxMetricsHarvest] = await Promise.all([
@@ -246,7 +243,7 @@ describe('XHR Ajax', () => {
   })
 
   it('does not capture cats header in metric for same-origin xhr when header does not exist', async () => {
-    await browser.url(await browser.testHandle.assetURL('instrumented.html'))
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', { loader: 'full' }))
       .then(() => browser.waitForAgentLoad())
 
     const [ajaxMetricsHarvest] = await Promise.all([
@@ -265,7 +262,7 @@ describe('XHR Ajax', () => {
   })
 
   it('produces event and metric with correct transmit and receive size calculated when using array buffer', async () => {
-    await browser.url(await browser.testHandle.assetURL('instrumented.html'))
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', { loader: 'full' }))
       .then(() => browser.waitForAgentLoad())
 
     const [ajaxEventsHarvest, ajaxMetricsHarvest] = await Promise.all([
@@ -304,7 +301,7 @@ describe('XHR Ajax', () => {
   })
 
   it('produces event and metric with correct transmit and receive size calculated when using blob', async () => {
-    await browser.url(await browser.testHandle.assetURL('instrumented.html'))
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', { loader: 'full' }))
       .then(() => browser.waitForAgentLoad())
 
     const [ajaxEventsHarvest, ajaxMetricsHarvest] = await Promise.all([
@@ -333,7 +330,7 @@ describe('XHR Ajax', () => {
   })
 
   it('produces event and metric with correct transmit and receive size calculated when using form data', async () => {
-    await browser.url(await browser.testHandle.assetURL('instrumented.html'))
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', { loader: 'full' }))
       .then(() => browser.waitForAgentLoad())
 
     const [ajaxEventsHarvest, ajaxMetricsHarvest] = await Promise.all([
@@ -366,7 +363,7 @@ describe('XHR Ajax', () => {
   })
 
   it('produces event and metric with receive size calculated from the decompressed payload', async () => {
-    await browser.url(await browser.testHandle.assetURL('instrumented.html'))
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', { loader: 'full' }))
       .then(() => browser.waitForAgentLoad())
 
     const [ajaxEventsHarvest, ajaxMetricsHarvest] = await Promise.all([
@@ -391,7 +388,7 @@ describe('XHR Ajax', () => {
   })
 
   it('produces event and metric with receive size calculated from the complete chunked payload', async () => {
-    await browser.url(await browser.testHandle.assetURL('instrumented.html'))
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', { loader: 'full' }))
       .then(() => browser.waitForAgentLoad())
 
     const [ajaxEventsHarvest, ajaxMetricsHarvest] = await Promise.all([
@@ -416,7 +413,7 @@ describe('XHR Ajax', () => {
   })
 
   it('properly wraps onreadystatechange function added before send call', async () => {
-    await browser.url(await browser.testHandle.assetURL('ajax/xhr-readystate-before-send.html'))
+    await browser.url(await browser.testHandle.assetURL('ajax/xhr-readystate-before-send.html', { loader: 'full' }))
       .then(() => browser.waitForAgentLoad())
       .then(() => browser.execute(function () {
         window.disableAjaxHashChange = true
@@ -440,7 +437,7 @@ describe('XHR Ajax', () => {
   })
 
   it('properly wraps onreadystatechange function added after send call', async () => {
-    await browser.url(await browser.testHandle.assetURL('ajax/xhr-readystate-after-send.html'))
+    await browser.url(await browser.testHandle.assetURL('ajax/xhr-readystate-after-send.html', { loader: 'full' }))
       .then(() => browser.waitForAgentLoad())
       .then(() => browser.execute(function () {
         window.disableAjaxHashChange = true
@@ -463,7 +460,7 @@ describe('XHR Ajax', () => {
   })
 
   it('creates event and metric data for xhr with bad 3rd party wrapping after agent', async () => {
-    await browser.url(await browser.testHandle.assetURL('ajax/xhr-bad-wrapper-after.html'))
+    await browser.url(await browser.testHandle.assetURL('ajax/xhr-bad-wrapper-after.html', { loader: 'full' }))
       .then(() => browser.waitForAgentLoad())
       .then(() => browser.execute(function () {
         window.disableAjaxHashChange = true
@@ -497,7 +494,7 @@ describe('XHR Ajax', () => {
   })
 
   it('creates event and metric data for xhr with 3rd party listener patch after agent', async () => {
-    await browser.url(await browser.testHandle.assetURL('ajax/xhr-patch-listener-after.html'))
+    await browser.url(await browser.testHandle.assetURL('ajax/xhr-patch-listener-after.html', { loader: 'full' }))
       .then(() => browser.waitForAgentLoad())
       .then(() => browser.execute(function () {
         window.disableAjaxHashChange = true
@@ -535,7 +532,7 @@ describe('XHR Ajax', () => {
   })
 
   it('produces no event and metric data when xhr is aborted', async () => {
-    await browser.url(await browser.testHandle.assetURL('ajax/xhr-abort.html'))
+    await browser.url(await browser.testHandle.assetURL('ajax/xhr-abort.html', { loader: 'full' }))
       .then(() => browser.waitForAgentLoad())
       .then(() => browser.execute(function () {
         window.disableAjaxHashChange = true

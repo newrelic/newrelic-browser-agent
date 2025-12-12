@@ -30,8 +30,6 @@ if (!agentConfig) {
 
 module.exports.agentConfig = agentConfig
 
-console.log('Starting service using agent config -- ', agentConfig)
-
 const mockEntityGuid = () => {
   return btoa(`${agentConfig.accountID}|BROWSER|APPLICATION|${Math.floor(Math.random() * 1000000)}`).replace(/=/g, '')
 }

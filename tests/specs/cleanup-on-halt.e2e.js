@@ -28,7 +28,7 @@ describe('Memory leaks', () => {
       page_view_event: 0, // no handler
       page_view_timing: 0, // does not rely on any flags
       session_trace: 0,
-      spa: 0
+      soft_navigations: 0
     }))
   })
 })

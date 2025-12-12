@@ -5,6 +5,31 @@
       "changes": [
         {
           "type": "feat",
+          "sha": "da2ef2f50af05085dc5806d422d411deec2d2ba5",
+          "message": "Improve agent compatibility with ChatGPT connector apps",
+          "issues": [
+            "1640"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "5f7faf3112823d242cc7d05069e0080ca8e1f403",
+          "message": "Enable user frustrations for Pro/SPA agents",
+          "issues": [
+            "1641"
+          ]
+        }
+      ],
+      "version": "1.305.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "044b82e9-a5f1-4d1e-893b-dbd481a95034",
+      "createTime": "2025-12-10T22:26:59.854Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
           "sha": "6e2110f129ad682444203a9aa65b4a4955bf7636",
           "message": "Warn message on session reset",
           "issues": [
@@ -3469,5 +3494,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2025-12-03T19:58:37.085Z"
+  "updateTime": "2025-12-10T22:26:59.854Z"
 }

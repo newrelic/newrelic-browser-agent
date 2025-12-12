@@ -1,5 +1,6 @@
 import webpack from 'webpack'
 import TerserPlugin from 'terser-webpack-plugin'
+import NRBAReplaceRegexPlugin from '../plugins/replace-regex.mjs'
 import NRBAPrependSemicolonPlugin from '../plugins/prepend-semicolon.mjs'
 import NRBARemoveNonAsciiPlugin from '../plugins/remove-non-ascii.mjs'
 import NRBASubresourceIntegrityPlugin from '../plugins/sri-plugin.mjs'
@@ -71,6 +72,16 @@ export default (env, asyncChunkName) => {
         moduleFilenameTemplate: 'nr-browser-agent://[namespace]/[resource-path]?[loaders]',
         publicPath: env.PUBLIC_PATH,
         append: env.SUBVERSION === 'PROD' ? false : '//# sourceMappingURL=[url]'
+      }),
+      new NRBAReplaceRegexPlugin({
+        test: /(['"] failed)\.\\n(\(["'])/g,
+        replace: '$1: $2',
+        include: /\.js$/
+      }),
+      new NRBAReplaceRegexPlugin({
+        test: /(['"] failed)\.\\\\n(\(["'])/g,
+        replace: '$1: $2',
+        include: /\.js.map$/
       }),
       new NRBAPrependSemicolonPlugin(),
       new NRBARemoveNonAsciiPlugin(),

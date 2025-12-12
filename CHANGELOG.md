@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.305.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.304.0...v1.305.0) (2025-12-10)
+
+
+### Features
+
+* Enable user frustrations for Pro/SPA agents ([#1641](https://github.com/newrelic/newrelic-browser-agent/issues/1641)) ([5f7faf3](https://github.com/newrelic/newrelic-browser-agent/commit/5f7faf3112823d242cc7d05069e0080ca8e1f403))
+* Improve agent compatibility with ChatGPT connector apps ([#1640](https://github.com/newrelic/newrelic-browser-agent/issues/1640)) ([da2ef2f](https://github.com/newrelic/newrelic-browser-agent/commit/da2ef2f50af05085dc5806d422d411deec2d2ba5))
+
 ## [1.304.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.303.0...v1.304.0) (2025-12-03)
 
 

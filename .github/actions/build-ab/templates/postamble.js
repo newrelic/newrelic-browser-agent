@@ -151,6 +151,14 @@ try {
     const mfeName = `MOCK_MFE_${randomId}`;
 
     for (let agentIdentifier in newrelic.initializedAgents) {
+      const jseOnlyMfe = newrelic.initializedAgents[agentIdentifier].register({
+        id: 'jse-only-mfe',
+        name: 'JSE_ONLY_MFE',
+      })
+
+      jseOnlyMfe.noticeError(new Error('NRBA: This is a test error from JSE_ONLY_MFE'));
+
+
       // Register the MFE API
       const mfeApi = newrelic.initializedAgents[agentIdentifier].register({ id: randomId, name: mfeName });
       

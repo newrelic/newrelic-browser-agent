@@ -202,17 +202,12 @@ export class Aggregate extends AggregateBase {
 
     if (this.shouldAllowMainAgentToCapture(target)) {
       const softNavInUse = Boolean(this.agentRef.features?.[FEATURE_NAMES.softNav])
-      // Note: the following are subject to potential race cond wherein if the other feature aren't fully initialized, it'll be treated as there being no associated interaction.
-      // They each will also tack on their respective properties to the params object as part of the decision flow.
+      // Note: the following is subject to potential race cond wherein if spa isn't fully initialized, it'll be treated as there being no associated interaction.
       if (softNavInUse) handle('jserror', [params, time], undefined, FEATURE_NAMES.softNav, this.ee)
-      else handle('spa-jserror', jsErrorEvent, undefined, FEATURE_NAMES.spa, this.ee)
 
       if (params.browserInteractionId && !params._softNavFinished) { // hold onto the error until the in-progress interaction is done, eithered saved or discarded
         this.bufferedErrorsUnderSpa[params.browserInteractionId] ??= []
         this.bufferedErrorsUnderSpa[params.browserInteractionId].push(jsErrorEvent)
-      } else if (params._interactionId != null) { // same as above, except tailored for the way old spa does it
-        this.bufferedErrorsUnderSpa[params._interactionId] = this.bufferedErrorsUnderSpa[params._interactionId] || []
-        this.bufferedErrorsUnderSpa[params._interactionId].push(jsErrorEvent)
       } else {
       // Either there is no interaction (then all these params properties will be undefined) OR there's a related soft navigation that's already completed.
       // The old spa does not look up completed interactions at all, so there's no need to consider it.
@@ -261,38 +256,6 @@ export class Aggregate extends AggregateBase {
   */
   shouldAllowMainAgentToCapture (target) {
     return (!target || this.agentRef.init.api.duplicate_registered_data)
-  }
-
-  // TO-DO: Remove this function when old spa is taken out. #storeJserrorForHarvest handles the work with the softnav feature.
-  onInteractionDone (interaction, wasSaved) {
-    if (!this.bufferedErrorsUnderSpa[interaction.id] || this.blocked) return
-
-    this.bufferedErrorsUnderSpa[interaction.id].forEach((item) => {
-      var allCustomAttrs = {}
-      const localCustomAttrs = item[4]
-
-      Object.entries(interaction.root.attrs.custom || {}).forEach(setCustom) // tack on custom attrs from the interaction
-      Object.entries(localCustomAttrs || {}).forEach(setCustom)
-
-      var params = item[2]
-      if (wasSaved) {
-        params.browserInteractionId = interaction.root.attrs.id
-        if (params._interactionNodeId) params.parentNodeId = params._interactionNodeId.toString()
-      }
-      delete params._interactionId
-      delete params._interactionNodeId
-
-      var hash = wasSaved ? item[1] + interaction.root.attrs.id : item[1]
-      var jsAttributesHash = stringHashCode(stringify(allCustomAttrs))
-      var aggregateHash = hash + ':' + jsAttributesHash
-
-      this.events.add([item[0], aggregateHash, params, item[3], allCustomAttrs], item[5])
-
-      function setCustom ([key, val]) {
-        allCustomAttrs[key] = (val && typeof val === 'object' ? stringify(val) : val)
-      }
-    })
-    delete this.bufferedErrorsUnderSpa[interaction.id]
   }
 
   onSoftNavNotification (interactionId, wasFinished, softNavAttrs, interactionEndTime) {

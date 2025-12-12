@@ -63,7 +63,6 @@ export class Agent extends AgentBase {
     // Future work is being planned to evaluate removing this behavior from the backend, but for now we must ensure this call is made
     this.desiredFeatures.add(PageViewEvent)
 
-    this.runSoftNavOverSpa = [...this.desiredFeatures].some(instr => instr.featureName === FEATURE_NAMES.softNav)
     configure(this, options, options.loaderType || 'agent') // add api, exposed, and other config properties
 
     /** assign base agent-level API definitions, feature-level APIs will be handled by the features to allow better code-splitting */
@@ -98,8 +97,7 @@ export class Agent extends AgentBase {
       featuresToStart.sort((a, b) => featurePriority[a.featureName] - featurePriority[b.featureName])
       featuresToStart.forEach(InstrumentCtor => {
         if (!enabledFeatures[InstrumentCtor.featureName] && InstrumentCtor.featureName !== FEATURE_NAMES.pageViewEvent) return // PVE is required to run even if it's marked disabled
-        if (this.runSoftNavOverSpa && InstrumentCtor.featureName === FEATURE_NAMES.spa) return
-        if (!this.runSoftNavOverSpa && InstrumentCtor.featureName === FEATURE_NAMES.softNav) return
+        if (InstrumentCtor.featureName === FEATURE_NAMES.spa) return // Skip old SPA
 
         const dependencies = getFeatureDependencyNames(InstrumentCtor.featureName)
         const missingDependencies = dependencies.filter(featName => !(featName in this.features)) // any other feature(s) this depends on should've been initialized on prior iterations by priority order

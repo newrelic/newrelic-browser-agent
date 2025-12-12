@@ -6,11 +6,7 @@ import { resetAgent, setupAgent } from '../setup-agent'
 let mainAgent
 beforeAll(() => {
   mainAgent = setupAgent({
-    agentOverrides: {
-      runSoftNavOverSpa: true
-    },
     init: {
-      feature_flags: ['soft_nav'],
       jserrors: { enabled: true },
       soft_navigations: { enabled: true }
     }
@@ -24,9 +20,11 @@ beforeEach(async () => {
   jserrorsAggregate = jserrorsInstrument.featAggregate
   softNavAggregate = softNavInstrument.featAggregate
 
+  // Register soft nav feature so jserrors aggregate can detect it
+  mainAgent.features[FEATURE_NAMES.softNav] = softNavInstrument
+
   jserrorsAggregate.ee.emit('rumresp', [{ err: 1, spa: 1 }]) // both features share the same ee event so this activate & drain both
   await new Promise(process.nextTick)
-  jserrorsAggregate.agentRef.features[FEATURE_NAMES.softNav] = true // currently this is required for jserrors to switch to softnav behavior
   softNavAggregate.initialPageLoadInteraction.done(1) // so that IPL doesn't muddy the ixn seeking logic
 })
 afterEach(() => {

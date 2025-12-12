@@ -23,12 +23,8 @@ export function shouldCollectEvent (params) {
   for (var i = 0; i < denyList.length; i++) {
     var parsed = denyList[i]
 
-    if (parsed.hostname === '*') {
-      return false
-    }
-
-    if (domainMatchesPattern(parsed.hostname, params.hostname) &&
-      comparePath(parsed.pathname, params.pathname)) {
+    if (parsed.hostname.test(params.hostname) &&
+      parsed.pathname.test(params.pathname)) {
       return false
     }
   }
@@ -68,46 +64,25 @@ export function setDenyList (denyListConfig) {
       pathname = url.substring(firstSlash)
     } else {
       host = url
-      pathname = ''
+      pathname = '*'
     }
     let [hostname] = host.split(':')
 
-    denyList.push({ hostname, pathname })
+    denyList.push({
+      hostname: convertToRegularExpression(hostname),
+      pathname: convertToRegularExpression(pathname)
+    })
   }
-}
-/**
- * Returns true if the right side of `domain` (end of string) matches `pattern`.
- * @param {string} pattern - a string to be matched against the end of `domain` string
- * @param {string} domain - a domain string with no protocol or path (e.g., app1.example.com)
- * @returns {boolean} `true` if domain matches pattern; else `false`
- */
-function domainMatchesPattern (pattern, domain) {
-  if (pattern.length > domain.length) {
-    return false
-  }
-
-  return domain.indexOf(pattern) === (domain.length - pattern.length)
 }
 
 /**
- * Returns true if a URL path matches a pattern string, disregarding leading slashes.
- * @param {string} pattern - a string to compare with path (e.g., api/v1)
- * @param {string} path - a string representing a URL path (e.g., /api/v1)
- * @returns {boolean} `true` if path and pattern are an exact string match (except for leading slashes); else `false`
+ * Converts a deny list filter string into a regular expression object with wildcard support
+ * @param {string} filter - deny list filter to convert
+ * @returns {RegExp} - regular expression object built from the input string
  */
-function comparePath (pattern, path) {
-  if (pattern.indexOf('/') === 0) {
-    pattern = pattern.substring(1)
-  }
-
-  if (path.indexOf('/') === 0) {
-    path = path.substring(1)
-  }
-
-  // No path in pattern means match all paths.
-  if (pattern === '') {
-    return true
-  }
-
-  return pattern === path
+function convertToRegularExpression (filter) {
+  const newFilter = filter
+    .replace(/[.+?^${}()|[\]\\]/g, (m) => '\\' + m) // use a replacer function to not break apm injection
+    .replace(/\*/g, '.*?') // use lazy matching instead of greedy
+  return new RegExp(newFilter)
 }

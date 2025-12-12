@@ -1,5 +1,5 @@
 import { checkAjaxEvents, checkSpa } from '../../util/basic-checks'
-import { testInteractionEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
+import { testAjaxEventsRequest, testInteractionEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
 import { JSONPath } from 'jsonpath-plus'
 
 describe.skip('XHR SPA Interaction Tracking', () => {

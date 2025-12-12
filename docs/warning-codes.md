@@ -133,3 +133,5 @@
 `Consent API argument must be boolean or undefined`
 ### 66
 `A new agent session has started`
+### 67
+`An invalid capture_payload settings value was supplied. Must be one of "off", "all", or "failures"`

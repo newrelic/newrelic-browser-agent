@@ -14,7 +14,7 @@ import { parseUrl } from '../../../common/url/parse-url'
 import { DT } from './distributed-tracing'
 import { responseSizeFromXhr } from './response-size'
 import { InstrumentBase } from '../../utils/instrument-base'
-import { FEATURE_NAME } from '../constants'
+import { CAPTURE_PAYLOAD_SETTINGS, FEATURE_NAME } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { SUPPORTABILITY_METRIC } from '../../metrics/constants'
 import { now } from '../../../common/timing/now'
@@ -22,6 +22,8 @@ import { hasUndefinedHostname } from '../../../common/deny-list/deny-list'
 import { extractUrl } from '../../../common/url/extract-url'
 import { parseQueryString, parseResponseHeaders, isHumanReadableContentType } from './payloads'
 import { hasGQLErrors, parseGQL } from './gql'
+import { warn } from '../../../common/util/console'
+import { single } from '../../../common/util/invoke'
 
 var handlers = ['load', 'error', 'abort', 'timeout']
 var handlersLen = handlers.length
@@ -62,9 +64,12 @@ export class Instrument extends InstrumentBase {
       // do nothing
     }
 
+    const warnInvalid = single(warn(67))
     const canCapturePayload = (statusCode, hasGQLErrors) => {
-      if (agentRef.init.ajax.capture_payloads === 'off') return false
-      if (agentRef.init.ajax.capture_payloads === 'all') return true
+      const capturePayloadsSetting = agentRef.init.ajax?.capture_payloads
+      if (capturePayloadsSetting === CAPTURE_PAYLOAD_SETTINGS.OFF) return false
+      if (capturePayloadsSetting === CAPTURE_PAYLOAD_SETTINGS.ALL) return true
+      if (capturePayloadsSetting !== CAPTURE_PAYLOAD_SETTINGS.FAILURES) warnInvalid()
       const isHttpError = statusCode === 0 || statusCode >= 400
       return isHttpError || hasGQLErrors
     }
@@ -426,7 +431,7 @@ function subscribeToEvents (agentRef, ee, handler, dt, canCapturePayload) {
 
     /** Since accessing fetch bodies is an async process, these are
      * reasonable conditions to check to not do needless extra work */
-    if (!res || agentRef.init.ajax.capture_payloads === 'off') {
+    if (!res || agentRef.init.ajax.capture_payloads === CAPTURE_PAYLOAD_SETTINGS.OFF) {
       clearPayloads(this.params)
       finishAndReport()
       return

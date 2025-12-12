@@ -4,7 +4,7 @@
  */
 
 import { parseQueryString, parseResponseHeaders, isHumanReadableContentType } from '../../../../../src/features/ajax/instrument/payloads'
-import { hasGQLErrors } from '../../../../../src/features/ajax/aggregate/gql'
+import { hasGQLErrors } from '../../../../../src/features/ajax/instrument/gql'
 
 describe('parseQueryString', () => {
   test('parses simple query strings', () => {

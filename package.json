@@ -195,6 +195,7 @@
     "build:npm": "npm run npm:build:esm && npm run npm:build:cjs && npm run npm:build:types && npm run npm:pack",
     "cdn:build": "npm run cdn:build:prod",
     "cdn:build:local": "npm run cdn:webpack",
+    "cdn:build:local-external": "npm run cdn:webpack -- --env mode=local-external",
     "cdn:build:prod": "npm run cdn:webpack -- --env mode=prod",
     "cdn:build:dev": "npm run cdn:webpack -- --env mode=dev",
     "cdn:build:experiment": "npm run cdn:webpack -- --env mode=experiment",

@@ -80,23 +80,10 @@ describe('UserActionsAggregator - Dead Clicks', () => {
   let aggregator
   beforeEach(() => {
     jest.useFakeTimers()
-    aggregator = new UserActionsAggregator(true)
+    aggregator = new UserActionsAggregator()
   })
   afterEach(() => {
     jest.useRealTimers()
-  })
-
-  test('should NOT set deadClick if user frustrations is disabled', () => {
-    aggregator = new UserActionsAggregator(false)
-    const link = document.createElement('a')
-    document.body.appendChild(link)
-    const evt = { type: 'click', target: link }
-    aggregator.process(evt)
-
-    jest.advanceTimersByTime(2000)
-
-    const userAction = aggregator.aggregationEvent
-    expect(userAction.deadClick).toBe(false)
   })
 
   test('should set deadClick to true if no change detected after 2 seconds - buttons', () => {
@@ -184,30 +171,10 @@ describe('UserActionsAggregator - Error Clicks', () => {
   let aggregator
   beforeEach(() => {
     jest.useFakeTimers()
-    aggregator = new UserActionsAggregator(true)
+    aggregator = new UserActionsAggregator()
   })
   afterEach(() => {
     jest.useRealTimers()
-  })
-  test('should NOT set errorClick if user frustrations is disabled', () => {
-    aggregator = new UserActionsAggregator(false)
-    const btn = document.createElement('button')
-    btn.onclick = () => {
-      console.log('Simulating an error')
-      throw new Error('Simulated error')
-    }
-    document.body.appendChild(btn)
-    const evt = {
-      type: 'click',
-      target: btn
-    }
-    aggregator.process(evt, ['id', 'className', 'tagName', 'type'])
-    jest.advanceTimersByTime(1999)
-    aggregator.markAsErrorClick() // Simulate the error click
-    jest.advanceTimersByTime(1)
-
-    const userAction = aggregator.aggregationEvent
-    expect(userAction.errorClick).toBe(false)
   })
   test('should set errorClick to true if an error is detected within 2 seconds - buttons', () => {
     const btn = document.createElement('button')

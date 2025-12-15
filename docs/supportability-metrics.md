@@ -7,43 +7,10 @@ Supportability metrics are intended to be used to give internal value through an
 A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service called Angler aggregates metrics against known labels once per hour and reports a new event with the aggregation findings to a dedicated account.
 
 ### WebSockets
-<!--- WebSocket new class was made, ms from page origin --->
-* WebSocket/New/Ms
-<!--- WebSocket new class was made, ms from class init --->
-* WebSocket/New/MsSinceClassInit
-
-<!--- WebSocket send method was called, ms from page origin --->
-* WebSocket/Send/Ms
-<!--- WebSocket send method was called, ms from class init --->
-* WebSocket/Send/MsSinceClassInit
-<!--- WebSocket send method was called, bytes from args --->
-* WebSocket/Send/Bytes
-
-<!--- WebSocket was cleanly closed, ms from page origin --->
-* WebSocket/Close-Clean/Ms
-<!--- WebSocket was cleanly closed, ms from class init --->
-* WebSocket/Close-Clean/MsSinceClassInit
-<!--- WebSocket was uncleanly closed, ms from page origin --->
-* WebSocket/Close-Dirty/Ms
-<!--- WebSocket was uncleanly closed, ms from class init --->
-* WebSocket/Close-Dirty/MsSinceClassInit
-  
-<!--- WebSocket message event was received, ms from page origin --->
-* WebSocket/Message/Ms
-<!--- WebSocket message event was received, ms from class init --->
-* WebSocket/Message/MsSinceClassInit
-<!--- WebSocket message event was received, bytes from args --->
-* WebSocket/Message/Bytes
-  
-<!--- WebSocket error event was received, ms from page origin --->
-* WebSocket/Error/Ms
-<!--- WebSocket error event was received, ms from class init --->
-* WebSocket/Error/MsSinceClassInit
-  
-<!--- WebSocket open event was received, ms from page origin --->
-* WebSocket/Open/Ms
-<!--- WebSocket open event was received, ms from class init --->
-* WebSocket/Open/MsSinceClassInit
+<!--- WebSocket completed event was received (count) --->
+* WebSocket/Completed/Seen
+<!--- WebSocket completed event payload size in bytes --->
+* WebSocket/Completed/Bytes
 
 ### Logging
 <!--- Logging harvest was too big to send --->
@@ -56,6 +23,10 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 * Logging/Event/Dropped/Casting
 <!--- Logging event added to the buffer --->
 * Logging/Event/Added/Seen
+<!--- Logging event added to the buffer via API --->
+* Logging/Event/API/Added
+<!--- Logging event added to the buffer via auto-instrumentation --->
+* Logging/Event/Auto/Added
 <!--- Logging feature was aborted due to reset -->
 * Logging/Abort/Reset
 <!--- Logging harvest was sent before the interval elapsed --->
@@ -85,6 +56,7 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 * Session/Expired/SessionReplay/Seen
 <!--- A Session Trace was discard due to session expiration --->
 * Session/Expired/SessionTrace/Seen
+* Session/Disabled/MissingPerformanceNavigationTiming/Seen
 
 ### AJAX
 <!--- Ajax Events were Excluded because they matched the Agent beacon --->
@@ -119,6 +91,8 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 * Generic/LoaderType/pro-polyfills/Detected
 <!--- Spa (Polyfilled) Agent Loader Was Initialized --->
 * Generic/LoaderType/spa-polyfills/Detected
+<!--- MicroAgent Loader Was Initialized --->
+* Generic/LoaderType/micro-agent/Detected
 <!--- CDN Distribution Method was Ininitialized --->
 * Generic/DistMethod/CDN/Detected
 <!--- NPM Distribution Method was Ininitialized --->
@@ -247,10 +221,12 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 * Config/SessionReplay/BlockSelector/Modified
 <!--- init.Session_replay.mask_text_selector was Changed from the default --->
 * Config/SessionReplay/MaskTextSelector/Modified
-<!--- init.Session_replay.sampling_rate was Changed from the default --->
-* Config/SessionReplay/SamplingRate/Modified
-<!--- init.Session_replay.error_sampling_rate was Changed from the default --->
-* Config/SessionReplay/ErrorSamplingRate/Modified
+<!--- init.Session_replay.sampling_rate --->
+* Config/SessionReplay/SamplingRate/Value
+<!--- init.Session_replay.error_sampling_rate  --->
+* Config/SessionReplay/ErrorSamplingRate/Value
+<!--- init.Session_replay.fix_stylesheets was modified  --->
+* Config/SessionReplay/InlineStylesheet/Modified
 
 ### Features
 <!--- SessionReplay was Enabled but the RUM response indicated it was not entitled to run --->
@@ -269,6 +245,8 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 * SessionReplay/Abort/Cross-Tab
 <!--- SessionReplay Aborted because the App was not entitled to record --->
 * SessionReplay/Abort/Entitlement
+<!--- SessionReplay Aborted for unspecified reason --->
+* SessionReplay/Abort/undefined
 <!--- SessionReplay Detected missing inline CSS contents and could not fix them --->
 * SessionReplay/Payload/Missing-Inline-Css/Failed
 <!--- SessionReplay Detected missing inline CSS contents but was able to fix them --->
@@ -279,6 +257,8 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 ### Soft Nav
 <!--- Soft Nav initial page load Interaction Duration in Ms --->
 * SoftNav/Interaction/InitialPageLoad/Duration/Ms
+<!--- Soft Nav interaction was extended by long task --->
+* SoftNav/Interaction/Extended
 <!--- Soft nav Interaction was cancelled due to timing out --->
 * SoftNav/Interaction/TimeOut
 <!--- Soft nav route change Interaction Duration in Ms --->
@@ -293,6 +273,8 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 * Spa/Interaction/Custom/Duration/Ms
 
 ### API
+<!--- newrelic.start() was called --->
+* API/start/called
 <!--- newrelic.start() was called with no arguments --->
 * API/start/undefined/called
 <!--- newrelic.start() was called with arguments --->
@@ -345,6 +327,8 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 * API/end/called
 <!--- newrelic.Interaction.get() was called --->
 * API/get/called
+<!--- newrelic.inlineHit was called --->
+* API/inlineHit/called
 <!--- Logging level error was observed --->
 * API/logging/error/called
 <!--- Logging level trace was observed --->
@@ -361,6 +345,32 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 * API/wrapLogger/called
 <!--- newrelic.measure() was called --->
 * API/measure/called
+<!--- newrelic.consent() was called --->
+* API/consent/called
+<!--- newrelic.recordCustomEvent() was called --->
+* API/recordCustomEvent/called
+<!--- newrelic.register() was called --->
+* API/register/called
+<!--- newrelic.register.addPageAction() was called --->
+* API/register/addPageAction/called
+<!--- newrelic.register.deregister() was called --->
+* API/register/deregister/called
+<!--- newrelic.register.log() was called --->
+* API/register/log/called
+<!--- newrelic.register.measure() was called --->
+* API/register/measure/called
+<!--- newrelic.register.noticeError() was called --->
+* API/register/noticeError/called
+<!--- newrelic.register.register() was called --->
+* API/register/register/called
+<!--- newrelic.register.recordCustomEvent() was called --->
+* API/register/recordCustomEvent/called
+<!--- newrelic.register.setApplicationVersion() was called --->
+* API/register/setApplicationVersion/called
+<!--- newrelic.register.setCustomAttribute() was called --->
+* API/register/setCustomAttribute/called
+<!--- newrelic.register.setUserId() was called --->
+* API/register/setUserId/called
 
 ### INTERNAL ERRORS
 <!--- an generalized internal error relating to rrweb processing was observed, typically thrown by rrweb's error handler -->
@@ -369,6 +379,8 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 * Internal/Error/Rrweb-Security-Policy
 <!--- an uncategorized internal error was observed -->
 * Internal/Error/Other
+<!--- an uncategorized internal error was observed -->
+* Internal/Error/GenericEvents-Resource
 
 ### Event Buffer
 <!-- The number of bytes dropped across all features because an event buffer reached its cap -->

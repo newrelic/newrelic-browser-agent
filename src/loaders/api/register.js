@@ -16,6 +16,8 @@ import { noticeError } from './noticeError'
 import { single } from '../../common/util/invoke'
 import { measure } from './measure'
 import { recordCustomEvent } from './recordCustomEvent'
+import { findScriptTimingsFromStack } from '../../common/util/script-tracker'
+import { windowAddEventListener } from '../../common/event-listener/event-listener-opts'
 
 /**
  * @typedef {import('./register-api-types').RegisterAPI} RegisterAPI
@@ -50,6 +52,12 @@ function register (agentRef, target, parent) {
   target.blocked = false
   target.parent = parent || {}
 
+  const timings = {
+    registeredAt: now(),
+    deregisteredAt: undefined,
+    ...(findScriptTimingsFromStack(new Error().stack)) // 0 or a real time if found
+  }
+
   /** @type {Function} a function that is set and reports when APIs are triggered -- warns the customer of the invalid state  */
   let invalidApiResponse = () => {}
   /** @type {Set} the array of registered target APIs */
@@ -75,6 +83,7 @@ function register (agentRef, target, parent) {
   const api = {
     addPageAction: (name, attributes = {}) => report(addPageAction, [name, { ...attrs, ...attributes }, agentRef], target),
     deregister: () => {
+      reportTimings()
       registeredEntities.delete(api)
       block(single(() => warn(67)))
     },
@@ -89,7 +98,8 @@ function register (agentRef, target, parent) {
     /** metadata */
     metadata: {
       customAttributes: attrs,
-      target
+      target,
+      timings
     }
   }
 
@@ -103,7 +113,24 @@ function register (agentRef, target, parent) {
   }
 
   /** only allow registered APIs to be tracked in the agent runtime */
-  if (!isBlocked()) registeredEntities.add(api)
+  if (!isBlocked()) {
+    registeredEntities.add(api)
+    windowAddEventListener('pagehide', reportTimings)
+  }
+
+  function reportTimings () {
+    // only ever report the timings the first time this is called
+    if (timings.deregisteredAt) return
+    timings.deregisteredAt = now()
+    api.recordCustomEvent('MicroFrontEndTiming', {
+      duration: timings.deregisteredAt, // origin to deregisteredAt
+      timeToLoad: timings.registeredAt - timings.fetchStart, // fetchStart to registeredAt
+      timeToBeRequested: timings.fetchStart, // origin to fetchStart
+      timeToFetch: timings.fetchEnd - timings.fetchStart, // fetchStart to fetchEnd
+      timeToRegister: timings.registeredAt - timings.fetchEnd, // fetchEnd to registeredAt
+      timeAlive: timings.deregisteredAt - timings.registeredAt // registeredAt to deregisteredAt
+    })
+  }
 
   /**
    * Sets a value local to the registered API attrs. Will do nothing if APIs are deregistered.

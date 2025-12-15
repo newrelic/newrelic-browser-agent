@@ -25,6 +25,11 @@ import { setTopLevelCallers } from '../../src/loaders/api/topLevelCallers'
 import { gosCDN } from '../../src/common/window/nreum'
 import { now } from '../../src/common/timing/now'
 
+// Mock script-tracker to avoid PerformanceObserver requirement
+jest.mock('../../src/common/util/script-tracker', () => ({
+  findScriptTimingsFromStack: jest.fn(() => ({ fetchStart: 0, fetchEnd: 0 }))
+}))
+
 jest.retryTimes(0)
 
 let entityGuid, agent
@@ -691,6 +696,145 @@ describe('API tests', () => {
           expectHandle('log', 'test')
         })
       })
+
+      describe('timing tracking', () => {
+        test('should record MicroFrontEndTiming event on deregister', () => {
+          const myApi = agent.register({ id, name })
+
+          // Simulate some work
+          const start = Date.now()
+          while (Date.now() - start < 10) {
+            // busy wait
+          }
+
+          myApi.deregister()
+
+          expectHandle('storeSupportabilityMetrics', 'API/register/called')
+          expectHandle('api-recordCustomEvent', 'MicroFrontEndTiming')
+        })
+
+        test('should include all timing attributes in MicroFrontEndTiming event', () => {
+          const myApi = agent.register({ id, name })
+
+          const deregisteredAt = now()
+          myApi.deregister()
+
+          const customEventCall = handleModule.handle.mock.calls.find(call =>
+            call[0] === 'api-recordCustomEvent' && call[1][1] === 'MicroFrontEndTiming'
+          )
+
+          expect(customEventCall).toBeDefined()
+          const [timestamp, eventType, attrs] = customEventCall[1]
+
+          expect(timestamp).toEqual(deregisteredAt)
+
+          expect(eventType).toBe('MicroFrontEndTiming')
+          expect(attrs).toHaveProperty('duration')
+          expect(attrs).toHaveProperty('timeToLoad')
+          expect(attrs).toHaveProperty('timeToBeRequested')
+          expect(attrs).toHaveProperty('timeToFetch')
+          expect(attrs).toHaveProperty('timeToRegister')
+          expect(attrs).toHaveProperty('timeAlive')
+
+          // All values should be numbers
+          expect(typeof attrs.duration).toBe('number')
+          expect(typeof attrs.timeToLoad).toBe('number')
+          expect(typeof attrs.timeToBeRequested).toBe('number')
+          expect(typeof attrs.timeToFetch).toBe('number')
+          expect(typeof attrs.timeToRegister).toBe('number')
+          expect(typeof attrs.timeAlive).toBe('number')
+        })
+
+        test('should not report timing twice on multiple deregister calls', () => {
+          const myApi = agent.register({ id, name })
+
+          myApi.deregister()
+          myApi.deregister()
+          myApi.deregister()
+
+          const timingCalls = handleModule.handle.mock.calls.filter(call =>
+            call[0] === 'api-recordCustomEvent' && call[1][1] === 'MicroFrontEndTiming'
+          )
+
+          expect(timingCalls.length).toBe(1)
+        })
+
+        test('should calculate timeAlive correctly', () => {
+          const beforeRegister = now()
+          const myApi = agent.register({ id, name })
+
+          // Do some work
+          const start = Date.now()
+          while (Date.now() - start < 20) {
+            // busy wait
+          }
+
+          const beforeDeregister = now()
+          myApi.deregister()
+
+          const customEventCall = handleModule.handle.mock.calls.find(call =>
+            call[0] === 'api-recordCustomEvent' && call[1][1] === 'MicroFrontEndTiming'
+          )
+
+          const attrs = customEventCall[1][2]
+
+          // timeAlive should be positive
+          expect(attrs.timeAlive).toBeGreaterThan(0)
+          // timeAlive should be approximately the time between register and deregister
+          expect(attrs.timeAlive).toBeLessThanOrEqual(beforeDeregister - beforeRegister + 10)
+        })
+
+        test('should handle nested MFE timings independently', () => {
+          const parent = agent.register({ id: 'parent-id', name: 'parent-mfe' })
+
+          // Wait a bit before creating child
+          wait(5)
+
+          const child = agent.register({ id: 'child-id', name: 'child-mfe' }, parent)
+          wait(5)
+
+          child.deregister()
+          parent.deregister()
+
+          const timingCalls = handleModule.handle.mock.calls.filter(call =>
+            call[0] === 'api-recordCustomEvent' && call[1][1] === 'MicroFrontEndTiming'
+          )
+
+          // Should get timing events for both parent and child
+          expect(timingCalls.length).toBe(2)
+
+          // Each should have positive timeAlive
+          const aliveTimes = [
+            5, // child wait before deregister
+            10 // parent total wait before deregister
+          ]
+          timingCalls.forEach(call => {
+            const attrs = call[1][2]
+            expect(attrs.timeAlive).toBeGreaterThan(0)
+            expect(attrs.duration).toBeGreaterThan(0)
+            expect(attrs.timeAlive - aliveTimes.shift()).toBeLessThanOrEqual(0) // rounding error allowance
+          })
+        })
+
+        test('should report all timing metrics with non-negative values', () => {
+          const myApi = agent.register({ id, name })
+
+          myApi.deregister()
+
+          const customEventCall = handleModule.handle.mock.calls.find(call =>
+            call[0] === 'api-recordCustomEvent' && call[1][1] === 'MicroFrontEndTiming'
+          )
+
+          const attrs = customEventCall[1][2]
+
+          expect(attrs.duration).toBeGreaterThanOrEqual(0)
+          expect(attrs.timeToLoad).toBeGreaterThanOrEqual(0)
+          expect(attrs.timeToBeRequested).toBeGreaterThanOrEqual(0)
+          expect(attrs.timeToFetch).toBeGreaterThanOrEqual(0)
+          expect(attrs.timeToRegister).toBeGreaterThanOrEqual(0)
+          expect(attrs.timeAlive).toBeGreaterThanOrEqual(0)
+        })
+      })
     })
 
     describe('logging', () => {
@@ -1259,4 +1403,11 @@ function expectMessage (calls, tag, args, shouldBeEmitted = true) {
   if (!match) return
   match.checked = true
   if (args) expect(match[1]).toEqual(args)
+}
+
+function wait (ms) {
+  const start = Date.now()
+  while (Date.now() - start < ms) {
+    // busy wait
+  }
 }

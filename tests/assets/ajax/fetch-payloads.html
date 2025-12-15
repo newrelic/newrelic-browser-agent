@@ -87,6 +87,15 @@
         },
         body: JSON.stringify({ data: "x".repeat(5000) })
       });
+
+      // large payload with non-ASCII characters that should be truncated
+      fetch("/echo-large-unicode", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ message: "Hello 世界 🌍 ".repeat(500) })
+      });
     </script>
   </body>
 </html>

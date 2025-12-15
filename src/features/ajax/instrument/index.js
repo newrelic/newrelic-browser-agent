@@ -64,12 +64,12 @@ export class Instrument extends InstrumentBase {
       // do nothing
     }
 
-    const warnInvalid = single(warn(67))
+    const warnInvalid = single(capturePayloadSetting => warn(67, capturePayloadSetting))
     const canCapturePayload = (statusCode, hasGQLErrors) => {
       const capturePayloadsSetting = agentRef.init.ajax?.capture_payloads
       if (capturePayloadsSetting === CAPTURE_PAYLOAD_SETTINGS.OFF) return false
       if (capturePayloadsSetting === CAPTURE_PAYLOAD_SETTINGS.ALL) return true
-      if (capturePayloadsSetting !== CAPTURE_PAYLOAD_SETTINGS.FAILURES) warnInvalid()
+      if (capturePayloadsSetting !== CAPTURE_PAYLOAD_SETTINGS.FAILURES) warnInvalid(capturePayloadsSetting)
       const isHttpError = statusCode === 0 || statusCode >= 400
       return isHttpError || hasGQLErrors
     }

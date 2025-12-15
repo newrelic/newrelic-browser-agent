@@ -112,10 +112,19 @@ describe('capture_payloads', () => {
     '/echo-large': {
       capturedWith: ['all'],
       values: {
-        requestBody: '{"data":"' + 'x'.repeat(4077) + ' ...',
+        requestBody: '{"data":"' + 'x'.repeat(4083) + ' ...',
         requestHeaders: '{"Content-Type":"application/json"}',
         requestQuery: undefined,
         responseBody: '{"receivedBody":{"data":"' + 'x'.repeat(4055) + ' ...'
+      }
+    },
+    '/echo-large-unicode': {
+      capturedWith: ['all'],
+      values: {
+        requestBody: '{"message":"' + 'Hello 世界 🌍 '.repeat(253) + 'Hello 世界 🌍' + ' ...',
+        requestHeaders: '{"Content-Type":"application/json"}',
+        requestQuery: undefined,
+        responseBody: '{"receivedBody":{"message":"' + 'Hello 世界 🌍 '.repeat(249) + 'Hello 世界 🌍' + ' ...'
       }
     }
   }

@@ -134,4 +134,4 @@
 ### 66
 `A new agent session has started`
 ### 67
-`An invalid capture_payload settings value was supplied. Must be one of "off", "all", or "failures"`
+`An invalid capture_payload settings value was supplied. Must be one of "off", "all", or "failures". Agent default value will take effect.`

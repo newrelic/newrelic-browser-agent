@@ -29,3 +29,4 @@ packages/browser-agent-core/cjs
 tests/assets/test-builds/**/*
 tests/assets/scripts/**/*
 /.lambdatest
+bam.json

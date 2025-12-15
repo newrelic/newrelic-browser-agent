@@ -79,6 +79,13 @@
       xhr.setRequestHeader("Content-Type", "application/json");
       var largeData = { data: "x".repeat(5000) };
       xhr.send(JSON.stringify(largeData));
+
+      // large payload with non-ASCII characters that should be truncated
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", "/echo-large-unicode");
+      xhr.setRequestHeader("Content-Type", "application/json");
+      var largeUnicodeData = { message: "Hello 世界 🌍 ".repeat(500) };
+      xhr.send(JSON.stringify(largeUnicodeData));
     </script>
   </body>
 </html>

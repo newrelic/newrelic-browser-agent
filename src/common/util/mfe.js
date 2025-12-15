@@ -21,7 +21,7 @@ export function hasValidValue (val) {
  *
  * @param {Object} [target] the registered target
  * @param {AggregateInstance} [aggregateInstance] the aggregate instance calling the method
- * @returns {{'mfe.id': *, 'mfe.name': String}|{}} returns an empty object if args are not supplied or the aggregate instance is not supporting version 2
+ * @returns {Object} returns an empty object if args are not supplied or the aggregate instance is not supporting version 2
  */
 export function getVersion2Attributes (target, aggregateInstance) {
   /** If the feature doesnt support registered entities (V2), no need to add any attributes at all */
@@ -36,9 +36,9 @@ export function getVersion2Attributes (target, aggregateInstance) {
   }
   /** decorate for MFE */
   return {
-    'mfe.id': target.id,
-    'mfe.name': target.name,
-    eventSource: target.eventSource,
+    'source.id': target.id,
+    'source.name': target.name,
+    'source.type': target.type,
     'parent.id': target.parent?.id || containerAgentEntityGuid
   }
 }

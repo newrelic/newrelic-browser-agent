@@ -16,6 +16,7 @@ import { wrapFetch } from '../../../common/wrap/wrap-fetch'
 import { wrapHistory } from '../../../common/wrap/wrap-history'
 import { wrapMutation } from '../../../common/wrap/wrap-mutation'
 import { setupInteractionAPI } from '../../../loaders/api/interaction'
+import { onWindowLoad } from '../../../common/window/load'
 
 const {
   FEATURE_NAME, START, END, BODY, CB_END, JS_TIME, FETCH, FN_START, CB_START, FN_END
@@ -80,6 +81,11 @@ export class Instrument extends InstrumentBase {
 
     historyEE.on('pushState-end', trackURLChange)
     historyEE.on('replaceState-end', trackURLChange)
+
+    /** niche cases like GPT apps cause no window.load event to fire - which breaks IPLs - so manually force one through the pipe */
+    onWindowLoad(() => {
+      eventsEE.emit(FN_START, [[{ type: 'load' }], window], undefined, true)
+    })
 
     window.addEventListener('hashchange', trackURLChange, eventListenerOpts(true, this.removeOnAbort?.signal))
     window.addEventListener('load', trackURLChange, eventListenerOpts(true, this.removeOnAbort?.signal))

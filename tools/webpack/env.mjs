@@ -41,6 +41,12 @@ export default async (env) => {
       PUBLIC_PATH = `https://js-agent.newrelic.com/experiments/${branchName}/`
       VERSION = `${VERSION}-${branchName.toLowerCase()}`
       break
+    case 'local-external':
+      env.mode = 'local'
+      PATH_VERSION = ''
+      SUBVERSION = 'LOCAL'
+      PUBLIC_PATH = 'http://localhost:3333/build/'
+      break
     default:
       env.mode = 'local'
       PATH_VERSION = ''

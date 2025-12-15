@@ -132,4 +132,6 @@
 ### 65
 `Consent API argument must be boolean or undefined`
 ### 66
+`A new agent session has started`
+### 67
 `API has been deregistered and can no longer be used. Call "register" API again with credentials to start over.`

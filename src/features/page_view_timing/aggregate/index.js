@@ -14,11 +14,11 @@ import { firstContentfulPaint } from '../../../common/vitals/first-contentful-pa
 import { firstPaint } from '../../../common/vitals/first-paint'
 import { interactionToNextPaint } from '../../../common/vitals/interaction-to-next-paint'
 import { largestContentfulPaint } from '../../../common/vitals/largest-contentful-paint'
-import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
 import { subscribeToVisibilityChange } from '../../../common/window/page-visibility'
 import { VITAL_NAMES } from '../../../common/vitals/constants'
 import { initiallyHidden } from '../../../common/constants/runtime'
 import { eventOrigin } from '../../../common/util/event-origin'
+import { loadTime } from '../../../common/vitals/load-time'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -43,9 +43,7 @@ export class Aggregate extends AggregateBase {
       firstContentfulPaint.subscribe(this.#handleVitalMetric)
       largestContentfulPaint.subscribe(this.#handleVitalMetric)
       interactionToNextPaint.subscribe(this.#handleVitalMetric)
-      timeToFirstByte.subscribe(({ attrs }) => {
-        this.addTiming('load', Math.round(attrs.navigationEntry.loadEventEnd))
-      })
+      loadTime.subscribe(({ name, value }) => { this.addTiming(name, Math.round(value)) })
       subscribeToVisibilityChange(() => {
         /* Downstream, the event consumer interprets all timing node value as ms-unit and converts it to seconds via division by 1000. CLS is unitless so this normally is a problem.
           bel.6 schema also doesn't support decimal values, of which cls within [0,1). However, the two nicely cancels out, and we can multiply cls by 1000 to both negate the division

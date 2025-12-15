@@ -260,7 +260,7 @@ describe('payloads', () => {
       const registeredTarget = {
         id: 1,
         name: 'test',
-        eventSource: 'MicroFrontendBrowserAgent',
+        type: 'MFE',
         containerId: mainAgent.runtime.appMetadata.agents[0].entityGuid
       }
       mainAgent.runtime.registeredEntities.push(registeredTarget) // mock that an entity is registered
@@ -273,9 +273,9 @@ describe('payloads', () => {
         'test message',
         {
           myAttributes: 1,
-          'mfe.id': registeredTarget.id,
-          'mfe.name': registeredTarget.name,
-          eventSource: registeredTarget.eventSource,
+          'source.id': registeredTarget.id,
+          'source.name': registeredTarget.name,
+          'source.type': registeredTarget.type,
           'parent.id': registeredTarget.containerId
         },
         'error'

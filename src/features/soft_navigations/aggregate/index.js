@@ -5,7 +5,7 @@
 import { handle } from '../../../common/event-emitter/handle'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { single } from '../../../common/util/invoke'
-import { timeToFirstByte } from '../../../common/vitals/time-to-first-byte'
+import { loadTime } from '../../../common/vitals/load-time'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { API_TRIGGER_NAME, FEATURE_NAME, INTERACTION_STATUS, INTERACTION_TRIGGERS, IPL_TRIGGER_NAME, NO_LONG_TASK_WINDOW, POPSTATE_MERGE_WINDOW, POPSTATE_TRIGGER } from '../constants'
@@ -31,10 +31,9 @@ export class Aggregate extends AggregateBase {
       this.events.add(ixn) // add the iPL ixn to the buffer for harvest
       this.initialPageLoadInteraction = null
     })
-    timeToFirstByte.subscribe(({ attrs }) => {
-      const loadEventTime = attrs.navigationEntry.loadEventEnd
+
+    loadTime.subscribe(({ value: loadEventTime }) => {
       this.initialPageLoadInteraction.done(loadEventTime)
-      // Report metric on the initial page load time
       this.reportSupportabilityMetric('SoftNav/Interaction/InitialPageLoad/Duration/Ms', Math.round(loadEventTime))
     })
 
@@ -267,7 +266,7 @@ export class Aggregate extends AggregateBase {
 }
 
 function getActionText (elem) {
-  const tagName = elem.tagName.toLowerCase()
+  const tagName = elem.tagName?.toLowerCase()
   const elementsOfInterest = ['a', 'button', 'input']
   if (elementsOfInterest.includes(tagName)) {
     return elem.title || elem.value || elem.innerText

@@ -13,7 +13,8 @@
       newrelic.setCustomAttribute('localKey', 1)
       newrelic.interaction().setAttribute('localKey', 2)
       newrelic.noticeError(new Error("My error"))
-      newrelic.interaction().save().end()
+      setTimeout(() => newrelic.interaction().save().end(), 1) // this delay is needed because Safari's performance.now() is still a rounded number rather than precise decimal
+      // That means it's highly likely here the ixn start & end time would be the same if we didn't delay the .end, leading to jserror not being associated with the ixn.
     </script>
     <title>RUM Unit Test</title>
   </head>

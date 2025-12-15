@@ -84,4 +84,4 @@ export const ffVersion = (() => {
  */
 export const originTime = Date.now() - now()
 
-export const supportsNavTimingL2 = () => typeof PerformanceNavigationTiming !== 'undefined' && globalScope?.performance?.getEntriesByType('navigation')?.length > 0
+export const supportsNavTimingL2 = () => typeof PerformanceNavigationTiming !== 'undefined' && globalScope?.performance?.getEntriesByType('navigation')?.[0]?.responseStart

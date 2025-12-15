@@ -24,6 +24,7 @@ test('domain-only blocks all subdomains and all paths', () => {
 
   expect(denyListModule.shouldCollectEvent({ hostname: 'oo.com', pathname: '/' })).toBeTruthy()
   expect(denyListModule.shouldCollectEvent({ hostname: 'bar.com', pathname: '/' })).toBeTruthy()
+  expect(denyListModule.shouldCollectEvent({ hostname: 'foo.com.net', pathname: '/' })).toBeTruthy()
 })
 
 test('subdomain blocks further subdomains, but not parent domain', () => {
@@ -53,17 +54,19 @@ test('can block IP addresses', () => {
   expect(denyListModule.shouldCollectEvent({ hostname: '127.0.0.1', pathname: '/' })).toBeTruthy()
 })
 
-test('* by itself blocks all domains', () => {
+test('* by itself blocks all domains and all paths', () => {
   denyListModule.setDenyList(['*'])
 
   expect(denyListModule.shouldCollectEvent({ hostname: 'foo.com', pathname: '/' })).toBeFalsy()
+  expect(denyListModule.shouldCollectEvent({ hostname: 'foo.com', pathname: '/a' })).toBeFalsy()
+  expect(denyListModule.shouldCollectEvent({ hostname: 'foo.com', pathname: '/a/b' })).toBeFalsy()
   expect(denyListModule.shouldCollectEvent({ hostname: 'www.foo.com', pathname: '/' })).toBeFalsy()
   expect(denyListModule.shouldCollectEvent({ hostname: 'bar.com', pathname: '/' })).toBeFalsy()
   expect(denyListModule.shouldCollectEvent({ hostname: 'www.bar.com', pathname: '/' })).toBeFalsy()
 })
 
 test('blocks domains based on wildcard', () => {
-  denyListModule.setDenyList(['*.foo.com', 'bar.*', '**world*', '127.*.0.1'])
+  denyListModule.setDenyList(['*.foo.com', 'bar.*', '*world**', '127.*.0.1'])
 
   expect(denyListModule.shouldCollectEvent({ hostname: 'www.subdomain.foo.com', pathname: '/' })).toBeFalsy()
   expect(denyListModule.shouldCollectEvent({ hostname: 'www.foo.com', pathname: '/' })).toBeFalsy()
@@ -71,6 +74,8 @@ test('blocks domains based on wildcard', () => {
 
   expect(denyListModule.shouldCollectEvent({ hostname: 'bar.com', pathname: '/' })).toBeFalsy()
   expect(denyListModule.shouldCollectEvent({ hostname: 'bar.cat.com', pathname: '/' })).toBeFalsy()
+  expect(denyListModule.shouldCollectEvent({ hostname: 'foobar.com', pathname: '/' })).toBeFalsy()
+  expect(denyListModule.shouldCollectEvent({ hostname: 'foo.bar.com', pathname: '/' })).toBeFalsy()
   expect(denyListModule.shouldCollectEvent({ hostname: 'bar.org', pathname: '/' })).toBeFalsy()
 
   expect(denyListModule.shouldCollectEvent({ hostname: 'helloworld.com', pathname: '/' })).toBeFalsy()
@@ -80,7 +85,7 @@ test('blocks domains based on wildcard', () => {
 })
 
 test('blocks paths based on wildcard', () => {
-  denyListModule.setDenyList(['foo.com/*', 'bar.com/a/*', 'bar.com/c*'])
+  denyListModule.setDenyList(['foo.com/*', 'bar.com/a/*', 'bar.com/c*', 'example.com/api/v1'])
 
   expect(denyListModule.shouldCollectEvent({ hostname: 'foo.com', pathname: '/' })).toBeFalsy()
   expect(denyListModule.shouldCollectEvent({ hostname: 'foo.com', pathname: '/a' })).toBeFalsy()
@@ -92,6 +97,9 @@ test('blocks paths based on wildcard', () => {
 
   expect(denyListModule.shouldCollectEvent({ hostname: 'bar.com', pathname: '/c' })).toBeFalsy()
   expect(denyListModule.shouldCollectEvent({ hostname: 'bar.com', pathname: '/c/d' })).toBeFalsy()
+
+  expect(denyListModule.shouldCollectEvent({ hostname: 'example.com', pathname: '/api/v1' })).toBeFalsy()
+  expect(denyListModule.shouldCollectEvent({ hostname: 'example.com', pathname: '/api/v1-deprecated' })).toBeTruthy()
 })
 
 test('respects path', () => {

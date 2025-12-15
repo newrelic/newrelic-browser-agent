@@ -20,6 +20,9 @@ export function shouldCollectEvent (params) {
 
   if (denyList.length === 0) return true
 
+  // short circuit if deny list contains just a wildcard
+  if (denyList[0].hostname === '*') return false
+
   for (var i = 0; i < denyList.length; i++) {
     var parsed = denyList[i]
 
@@ -51,6 +54,12 @@ export function setDenyList (denyListConfig) {
     let url = denyListConfig[i]
     if (!url) continue // ignore bad values like undefined or empty strings
 
+    // short circuit if deny list entry is just a wildcard
+    if (url === '*') {
+      denyList = [{ hostname: '*' }]
+      return
+    }
+
     if (url.indexOf('http://') === 0) {
       url = url.substring(7)
     } else if (url.indexOf('https://') === 0) {
@@ -70,7 +79,7 @@ export function setDenyList (denyListConfig) {
 
     denyList.push({
       hostname: convertToRegularExpression(hostname),
-      pathname: convertToRegularExpression(pathname)
+      pathname: convertToRegularExpression(pathname, true)
     })
   }
 }
@@ -78,11 +87,12 @@ export function setDenyList (denyListConfig) {
 /**
  * Converts a deny list filter string into a regular expression object with wildcard support
  * @param {string} filter - deny list filter to convert
+ * @param {boolean} [isPathname=false] - indicates if the filter is a pathname
  * @returns {RegExp} - regular expression object built from the input string
  */
-function convertToRegularExpression (filter) {
+function convertToRegularExpression (filter, isPathname = false) {
   const newFilter = filter
     .replace(/[.+?^${}()|[\]\\]/g, (m) => '\\' + m) // use a replacer function to not break apm injection
     .replace(/\*/g, '.*?') // use lazy matching instead of greedy
-  return new RegExp(newFilter)
+  return new RegExp((isPathname ? '^' : '') + newFilter + '$')
 }

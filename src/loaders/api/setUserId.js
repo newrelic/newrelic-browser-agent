@@ -3,11 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { warn } from '../../common/util/console'
-import { SET_USER_ID } from './constants'
+import { prefix, SET_USER_ID } from './constants'
 import { appendJsAttribute, setupAPI } from './sharedHandlers'
 import { handle } from '../../common/event-emitter/handle'
-import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
-import { FEATURE_NAMES } from '../features/features'
 
 export function setupSetUserIdAPI (agent) {
   /**
@@ -25,11 +23,11 @@ export function setupSetUserIdAPI (agent) {
     const currUser = agent.info.jsAttributes['enduser.id']
 
     // reset session ONLY if we are updating the userid (from one value to another, or from a value to null/undefined)
-    const shouldReset = resetSession && agent.runtime.session && currUser !== undefined && currUser !== null && currUser !== value
-    if (shouldReset) {
-      agent.runtime.session.reset()
-      handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/' + SET_USER_ID + '/resetSession/called'], undefined, FEATURE_NAMES.metrics, agent.ee)
+    const shouldAttemptReset = resetSession && currUser !== undefined && currUser !== null && currUser !== value
+    if (shouldAttemptReset) {
+      handle(prefix + 'setUserIdAndResetSession', [value], undefined, 'session', agent.ee)
+    } else {
+      appendJsAttribute(agent, 'enduser.id', value, SET_USER_ID, true)
     }
-    appendJsAttribute(agent, 'enduser.id', value, SET_USER_ID, true)
   }, agent)
 }

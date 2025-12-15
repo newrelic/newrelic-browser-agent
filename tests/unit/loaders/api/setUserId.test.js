@@ -9,7 +9,7 @@ let mockWarn
 let mockAppendJsAttribute
 let mockSetupAPI
 
-beforeEach(() => {
+beforeEach(async () => {
   mockAgent = {
     agentIdentifier: faker.string.uuid(),
     init: {},
@@ -37,6 +37,9 @@ beforeEach(() => {
     appendJsAttribute: mockAppendJsAttribute,
     setupAPI: mockSetupAPI
   }))
+
+  const { setupSetUserIdAPI } = await import('../../../../src/loaders/api/setUserId')
+  setupSetUserIdAPI(mockAgent)
 })
 
 afterEach(() => {
@@ -45,24 +48,9 @@ afterEach(() => {
 })
 
 describe('setupSetUserIdAPI', () => {
-  test('should call setupAPI with correct parameters', async () => {
-    const { setupSetUserIdAPI } = await import('../../../../src/loaders/api/setUserId')
-    const { SET_USER_ID } = await import('../../../../src/loaders/api/constants')
-
-    setupSetUserIdAPI(mockAgent)
-
-    expect(mockSetupAPI).toHaveBeenCalledWith(SET_USER_ID, expect.any(Function), mockAgent)
-  })
-
   test('should warn and return early if value is not a string or null', async () => {
-    const { setupSetUserIdAPI } = await import('../../../../src/loaders/api/setUserId')
-
-    setupSetUserIdAPI(mockAgent)
-
-    // Get the handler function that was passed to setupAPI
     const handler = mockSetupAPI.mock.calls[0][1]
 
-    // Call with invalid types
     handler(123)
     expect(mockWarn).toHaveBeenCalledWith(41, 'number')
 
@@ -80,10 +68,7 @@ describe('setupSetUserIdAPI', () => {
   })
 
   test('should accept string value and call appendJsAttribute', async () => {
-    const { setupSetUserIdAPI } = await import('../../../../src/loaders/api/setUserId')
     const { SET_USER_ID } = await import('../../../../src/loaders/api/constants')
-
-    setupSetUserIdAPI(mockAgent)
 
     const handler = mockSetupAPI.mock.calls[0][1]
     const userId = 'user123'
@@ -101,13 +86,9 @@ describe('setupSetUserIdAPI', () => {
   })
 
   test('should accept null value and call appendJsAttribute', async () => {
-    const { setupSetUserIdAPI } = await import('../../../../src/loaders/api/setUserId')
     const { SET_USER_ID } = await import('../../../../src/loaders/api/constants')
 
-    setupSetUserIdAPI(mockAgent)
-
     const handler = mockSetupAPI.mock.calls[0][1]
-
     handler(null)
 
     expect(mockWarn).not.toHaveBeenCalled()
@@ -121,178 +102,107 @@ describe('setupSetUserIdAPI', () => {
   })
 
   test('should NOT reset session when resetSession is false (default)', async () => {
-    const mockReset = jest.fn()
     mockAgent.info.jsAttributes['enduser.id'] = 'existingUser'
-    mockAgent.runtime.session = {
-      reset: mockReset
-    }
-
-    const { setupSetUserIdAPI } = await import('../../../../src/loaders/api/setUserId')
-
-    setupSetUserIdAPI(mockAgent)
 
     const handler = mockSetupAPI.mock.calls[0][1]
 
-    // Call with new user id but resetSession = false
     handler('newUser', false)
 
-    expect(mockReset).not.toHaveBeenCalled()
     expect(mockAppendJsAttribute).toHaveBeenCalled()
+    expect(mockAgent.ee.emit).not.toHaveBeenCalled()
   })
 
   test('should NOT reset session when resetSession is undefined', async () => {
-    const mockReset = jest.fn()
     mockAgent.info.jsAttributes['enduser.id'] = 'existingUser'
-    mockAgent.runtime.session = {
-      reset: mockReset
-    }
-
-    const { setupSetUserIdAPI } = await import('../../../../src/loaders/api/setUserId')
-
-    setupSetUserIdAPI(mockAgent)
 
     const handler = mockSetupAPI.mock.calls[0][1]
-
-    // Call with new user id but resetSession not provided (defaults to false)
     handler('newUser')
 
-    expect(mockReset).not.toHaveBeenCalled()
     expect(mockAppendJsAttribute).toHaveBeenCalled()
+    expect(mockAgent.ee.emit).not.toHaveBeenCalled()
   })
 
   test('should reset session when user id changes and resetSession is true', async () => {
-    const mockReset = jest.fn()
     mockAgent.info.jsAttributes['enduser.id'] = 'existingUser'
-    mockAgent.runtime.session = {
-      reset: mockReset
-    }
-
-    const { setupSetUserIdAPI } = await import('../../../../src/loaders/api/setUserId')
-
-    setupSetUserIdAPI(mockAgent)
 
     const handler = mockSetupAPI.mock.calls[0][1]
-
-    // Call with new user id and resetSession = true
     handler('newUser', true)
 
-    expect(mockReset).toHaveBeenCalledTimes(1)
-    expect(mockAppendJsAttribute).toHaveBeenCalled()
+    expect(mockAppendJsAttribute).not.toHaveBeenCalled()
+    expect(mockAgent.ee.emit).toHaveBeenCalledWith('api-setUserIdAndResetSession', expect.arrayContaining(['newUser']), undefined)
   })
 
   test('should NOT reset session when setting user id for the first time (existing user id is undefined) and resetSession=true', async () => {
-    const mockReset = jest.fn()
     mockAgent.info.jsAttributes = {} // No existing user id
-    mockAgent.runtime.session = {
-      reset: mockReset
-    }
-
-    const { setupSetUserIdAPI } = await import('../../../../src/loaders/api/setUserId')
-
-    setupSetUserIdAPI(mockAgent)
 
     const handler = mockSetupAPI.mock.calls[0][1]
 
     // Call with user id for the first time with resetSession = true
     handler('newUser', true)
 
-    expect(mockReset).not.toHaveBeenCalled()
     expect(mockAppendJsAttribute).toHaveBeenCalled()
+    expect(mockAgent.ee.emit).not.toHaveBeenCalled()
   })
 
   test('should NOT reset session when existing user id is null and resetSession=true', async () => {
-    const mockReset = jest.fn()
     mockAgent.info.jsAttributes['enduser.id'] = null
-    mockAgent.runtime.session = {
-      reset: mockReset
-    }
-
-    const { setupSetUserIdAPI } = await import('../../../../src/loaders/api/setUserId')
-
-    setupSetUserIdAPI(mockAgent)
 
     const handler = mockSetupAPI.mock.calls[0][1]
 
     // Call with new user id when existing is null
     handler('newUser', true)
 
-    expect(mockReset).not.toHaveBeenCalled()
     expect(mockAppendJsAttribute).toHaveBeenCalled()
+    expect(mockAgent.ee.emit).not.toHaveBeenCalled()
   })
 
   test('should NOT reset session when setting same user id with resetSession=true', async () => {
-    const mockReset = jest.fn()
     const userId = 'sameUser'
     mockAgent.info.jsAttributes['enduser.id'] = userId
-    mockAgent.runtime.session = {
-      reset: mockReset
-    }
-
-    const { setupSetUserIdAPI } = await import('../../../../src/loaders/api/setUserId')
-
-    setupSetUserIdAPI(mockAgent)
 
     const handler = mockSetupAPI.mock.calls[0][1]
 
     // Call with same user id and resetSession = true
     handler(userId, true)
 
-    expect(mockReset).not.toHaveBeenCalled()
     expect(mockAppendJsAttribute).toHaveBeenCalled()
-  })
-
-  test('should NOT reset session when runtime.session does not exist', async () => {
-    mockAgent.info.jsAttributes['enduser.id'] = 'existingUser'
-    mockAgent.runtime = {} // No session object
-
-    const { setupSetUserIdAPI } = await import('../../../../src/loaders/api/setUserId')
-
-    setupSetUserIdAPI(mockAgent)
-
-    const handler = mockSetupAPI.mock.calls[0][1]
-
-    // Should not throw error when session doesn't exist
-    expect(() => handler('newUser', true)).not.toThrow()
-    expect(mockAppendJsAttribute).toHaveBeenCalled()
+    expect(mockAgent.ee.emit).not.toHaveBeenCalled()
   })
 
   test('should reset session when changing from one user to another with resetSession=true', async () => {
-    const mockReset = jest.fn()
     mockAgent.info.jsAttributes['enduser.id'] = 'user1'
-    mockAgent.runtime.session = {
-      reset: mockReset
-    }
-
-    const { setupSetUserIdAPI } = await import('../../../../src/loaders/api/setUserId')
-
-    setupSetUserIdAPI(mockAgent)
 
     const handler = mockSetupAPI.mock.calls[0][1]
 
     // Call with different user id and resetSession = true
     handler('user2', true)
 
-    expect(mockReset).toHaveBeenCalledTimes(1)
-    expect(mockAppendJsAttribute).toHaveBeenCalled()
+    expect(mockAppendJsAttribute).not.toHaveBeenCalled()
+    expect(mockAgent.ee.emit).toHaveBeenCalledWith('api-setUserIdAndResetSession', expect.arrayContaining(['user2']), undefined)
   })
 
   test('should reset session when setting user id to null from existing user with resetSession=true', async () => {
-    const mockReset = jest.fn()
     mockAgent.info.jsAttributes['enduser.id'] = 'existingUser'
-    mockAgent.runtime.session = {
-      reset: mockReset
-    }
-
-    const { setupSetUserIdAPI } = await import('../../../../src/loaders/api/setUserId')
-
-    setupSetUserIdAPI(mockAgent)
 
     const handler = mockSetupAPI.mock.calls[0][1]
 
     // Call with null to clear user id with resetSession = true
     handler(null, true)
 
-    expect(mockReset).toHaveBeenCalledTimes(1)
-    expect(mockAppendJsAttribute).toHaveBeenCalled()
+    expect(mockAppendJsAttribute).not.toHaveBeenCalled()
+    expect(mockAgent.ee.emit).toHaveBeenCalledWith('api-setUserIdAndResetSession', expect.arrayContaining([null]), undefined)
+  })
+
+  test('should buffer session reset when runtime.session does not exist (yet)', async () => {
+    mockAgent.info.jsAttributes['enduser.id'] = 'existingUser'
+    mockAgent.runtime = {} // No session object
+
+    const handler = mockSetupAPI.mock.calls[0][1]
+
+    // Should not throw error when session doesn't exist
+    expect(() => handler('newUser', true)).not.toThrow()
+
+    expect(mockAppendJsAttribute).not.toHaveBeenCalled()
+    expect(mockAgent.ee.emit).toHaveBeenCalledWith('api-setUserIdAndResetSession', expect.arrayContaining(['newUser']), undefined)
   })
 })

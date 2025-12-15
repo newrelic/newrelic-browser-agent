@@ -802,7 +802,7 @@ describe('newrelic api', () => {
 
       expect(rumResultAfterRefresh[1].request.body.ja).toEqual({ [ERRORS_INBOX_UID]: 'user222' }) // setUserId affects subsequent page loads in the same storage session
     })
-    it('should NOT reset session if user id is set for the first time + resetSession param = true', async () => {
+    it('should NOT reset session if user id is changed from falsy -> defined value + resetSession param = true', async () => {
       const [errorsCapture] =
         await browser.testHandle.createNetworkCaptures('bamServer', [
           { test: testErrorsRequest }
@@ -810,7 +810,7 @@ describe('newrelic api', () => {
       await browser.url(await browser.testHandle.assetURL('instrumented.html'))
         .then(() => browser.waitForAgentLoad())
 
-      const firstSession = await browser.execute(function () {
+      const initialSession = await browser.execute(function () {
         return Object.values(newrelic.initializedAgents)[0].runtime.session.state.value
       })
 
@@ -827,7 +827,7 @@ describe('newrelic api', () => {
       const firstSessionAfterSetUserId = await browser.execute(function () {
         return Object.values(newrelic.initializedAgents)[0].runtime.session.state.value
       })
-      expect(firstSessionAfterSetUserId).toEqual(firstSession)
+      expect(firstSessionAfterSetUserId).toEqual(initialSession)
     })
     it('should NOT reset session if userid is the same + resetSession param = true', async () => {
       const [errorsCapture] =

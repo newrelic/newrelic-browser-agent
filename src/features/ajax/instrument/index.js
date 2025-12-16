@@ -65,13 +65,24 @@ export class Instrument extends InstrumentBase {
     }
 
     const warnInvalid = single(capturePayloadSetting => warn(67, capturePayloadSetting))
+    /**
+     * Determines whether payload metadata can be captured based on agent settings and request results. This can only be determined after the request has responded.
+     * @param {number} statusCode The HTTP status code of the response
+     * @param {boolean} hasGQLErrors Whether the response body contains GraphQL errors
+     * @returns
+     */
     const canCapturePayload = (statusCode, hasGQLErrors) => {
-      const capturePayloadsSetting = agentRef.init.ajax?.capture_payloads
-      if (capturePayloadsSetting === CAPTURE_PAYLOAD_SETTINGS.OFF) return false
-      if (capturePayloadsSetting === CAPTURE_PAYLOAD_SETTINGS.ALL) return true
-      if (capturePayloadsSetting !== CAPTURE_PAYLOAD_SETTINGS.FAILURES) warnInvalid(capturePayloadsSetting)
-      const isHttpError = statusCode === 0 || statusCode >= 400
-      return isHttpError || hasGQLErrors
+      switch (agentRef.init.ajax?.capture_payloads) {
+        case CAPTURE_PAYLOAD_SETTINGS.OFF:
+          return false
+        case CAPTURE_PAYLOAD_SETTINGS.ALL:
+          return true
+        case CAPTURE_PAYLOAD_SETTINGS.FAILURES:
+          return statusCode === 0 || statusCode >= 400 || hasGQLErrors
+        default:
+          warnInvalid(agentRef.init.ajax?.capture_payloads)
+          return false
+      }
     }
 
     wrapFetch(this.ee)
@@ -172,7 +183,7 @@ function subscribeToEvents (agentRef, ee, handler, dt, canCapturePayload) {
     // args[0] = header name, args[1] = header value
     if (args.length >= 2) {
       this.params.requestHeaders ??= {}
-      this.params.requestHeaders[args[0]] = args[1]
+      this.params.requestHeaders[args[0].toLowerCase()] = args[1]
     }
   }
 
@@ -190,7 +201,7 @@ function subscribeToEvents (agentRef, ee, handler, dt, canCapturePayload) {
 
     // Store request body only if content-type is human-readable
     if (data) {
-      var contentType = this.params.requestHeaders?.[CONTENT_TYPE] || this.params.requestHeaders?.['Content-Type']
+      var contentType = this.params.requestHeaders?.[CONTENT_TYPE]
       if (isLikelyHumanReadable(contentType, data)) {
         this.params.requestBody = data
         this.params.gql = parseGQL({
@@ -378,11 +389,11 @@ function subscribeToEvents (agentRef, ee, handler, dt, canCapturePayload) {
         this.params.requestHeaders ??= {}
         if (headers instanceof Headers) {
           headers.forEach(function (value, key) {
-            this.params.requestHeaders[key] = value
+            this.params.requestHeaders[key.toLowerCase()] = value
           }.bind(this))
         } else if (typeof headers === 'object') {
           for (var key in headers) {
-            this.params.requestHeaders[key] = headers[key]
+            this.params.requestHeaders[key.toLowerCase()] = headers[key]
           }
         }
       }
@@ -397,7 +408,7 @@ function subscribeToEvents (agentRef, ee, handler, dt, canCapturePayload) {
 
     // Store request body only if content-type is human-readable
     if (opts.body) {
-      var contentType = this.params.requestHeaders?.[CONTENT_TYPE] || this.params.requestHeaders?.['Content-Type']
+      var contentType = this.params.requestHeaders?.[CONTENT_TYPE]
       if (isLikelyHumanReadable(contentType, opts.body)) {
         this.params.requestBody = opts.body
       }

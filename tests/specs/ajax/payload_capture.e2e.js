@@ -41,7 +41,7 @@ describe('capture_payloads', () => {
       capturedWith: ['all'],
       values: {
         requestBody: '{"message":"success request"}',
-        requestHeaders: '{"Content-Type":"application/json","X-Test-Header":"test-value"}',
+        requestHeaders: '{"content-type":"application/json","x-test-header":"test-value"}',
         requestQuery: undefined,
         responseBody: '{"receivedBody":{"message":"success request"},"bodyType":"object"}'
       }
@@ -50,7 +50,7 @@ describe('capture_payloads', () => {
       capturedWith: ['all'],
       values: {
         requestBody: 'just some plain text',
-        requestHeaders: '{"Content-Type":"text/plain"}',
+        requestHeaders: '{"content-type":"text/plain"}',
         requestQuery: undefined,
         responseBody: 'Plain text response'
       }
@@ -59,7 +59,7 @@ describe('capture_payloads', () => {
       capturedWith: ['all'],
       values: {
         requestBody: '<note><body>This is a test</body></note>',
-        requestHeaders: '{"Content-Type":"text/plain"}',
+        requestHeaders: '{"content-type":"text/plain"}',
         requestQuery: undefined,
         responseBody: '<?xml version="1.0"?><root><message>Hello XML</message></root>'
       }
@@ -68,7 +68,7 @@ describe('capture_payloads', () => {
       capturedWith: ['all', 'failures'],
       values: {
         requestBody: '{"message":"error request"}',
-        requestHeaders: '{"Content-Type":"application/json"}',
+        requestHeaders: '{"content-type":"application/json"}',
         requestQuery: undefined,
         responseBody: '{"status":400,"message":"Custom status code","body":{"message":"error request"}}'
       }
@@ -77,7 +77,7 @@ describe('capture_payloads', () => {
       capturedWith: ['all', 'failures'],
       values: {
         requestBody: '{"message":"error request"}',
-        requestHeaders: '{"Content-Type":"application/json"}',
+        requestHeaders: '{"content-type":"application/json"}',
         requestQuery: undefined,
         responseBody: '{"status":500,"message":"Custom status code","body":{"message":"error request"}}'
       }
@@ -95,7 +95,7 @@ describe('capture_payloads', () => {
       capturedWith: ['all', 'failures'],
       values: {
         requestBody: '{"query":"query { unknownField }","operationName":"TestQuery"}',
-        requestHeaders: '{"Content-Type":"application/json"}',
+        requestHeaders: '{"content-type":"application/json"}',
         requestQuery: undefined,
         responseBody: '{"errors":[{"message":"Field \\"unknownField\\" not found on type \\"Query\\"","locations":[{"line":2,"column":3}],"path":["unknownField"]}],"data":null}'
       }
@@ -104,7 +104,7 @@ describe('capture_payloads', () => {
       capturedWith: ['all'],
       values: {
         requestBody: 'send me back some binary',
-        requestHeaders: '{"Content-Type":"text/plain"}',
+        requestHeaders: '{"content-type":"text/plain"}',
         requestQuery: undefined,
         responseBody: undefined
       }
@@ -113,18 +113,18 @@ describe('capture_payloads', () => {
       capturedWith: ['all'],
       values: {
         requestBody: '{"data":"' + 'x'.repeat(4083) + ' ...',
-        requestHeaders: '{"Content-Type":"application/json"}',
+        requestHeaders: '{"content-type":"application/json"}',
         requestQuery: undefined,
-        responseBody: '{"receivedBody":{"data":"' + 'x'.repeat(4055) + ' ...'
+        responseBody: '{"receivedBody":{"data":"' + 'x'.repeat(4067) + ' ...'
       }
     },
     '/echo-large-unicode': {
       capturedWith: ['all'],
       values: {
-        requestBody: '{"message":"' + 'Hello 世界 🌍 '.repeat(253) + 'Hello 世界 🌍' + ' ...',
-        requestHeaders: '{"Content-Type":"application/json"}',
+        requestBody: '{"message":"' + 'Hello 世界 🌍 '.repeat(226) + 'Hello 世界' + ' ...', // should get truncated right there
+        requestHeaders: '{"content-type":"application/json"}',
         requestQuery: undefined,
-        responseBody: '{"receivedBody":{"message":"' + 'Hello 世界 🌍 '.repeat(249) + 'Hello 世界 🌍' + ' ...'
+        responseBody: '{"receivedBody":{"message":"' + 'Hello 世界 🌍 '.repeat(225) + 'Hello 世界 ' + ' ...'
       }
     }
   }
@@ -136,12 +136,18 @@ describe('capture_payloads', () => {
       .replace(/plain text/g, 'BODY REDACTED')
   }
 
+  const expectBytes = (attr) => {
+    if (typeof attr !== 'string') attr = JSON.stringify(attr)
+    expect(new TextEncoder().encode(attr).length).toBeLessThanOrEqual(4096)
+  }
+
   const expectResponseHeaders = (event, expectExists = true) => {
     let responseHeaders = event.children.find(x => x.key === 'responseHeaders')?.value
     if (!expectExists) {
       expect(responseHeaders).toBeUndefined()
       return
     }
+    expectBytes(responseHeaders)
     if (typeof responseHeaders === 'string') {
       responseHeaders = JSON.parse(responseHeaders)
     }
@@ -198,6 +204,7 @@ describe('capture_payloads', () => {
                     if (expectedVal === undefined) {
                       expect(eventAttr).toBeUndefined()
                     } else {
+                      expectBytes(eventAttr.value)
                       if (obfuscate) expect(eventAttr.value).toEqual(obfuscatedValue(expectedVal))
                       else expect(eventAttr.value).toEqual(expectedVal)
                     }

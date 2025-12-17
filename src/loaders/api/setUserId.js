@@ -11,7 +11,7 @@ export function setupSetUserIdAPI (agent) {
   /**
     * Attach the 'enduser.id' attribute onto agent payloads. This may be used in NR queries to group all browser events by specific users.
     * @param {string|null} value - unique user identifier; a null user id suggests none should exist
-   *  @param {boolean} [resetSession=false] - Optional param. When true, resets the current session (if any) when changing user id. Note: if setting user id for the first time, session will not be reset.
+   *  @param {boolean} [resetSession=false] - Optional param. When true, resets the current session ONLY when changing user id from an existing value to another value or null. If the current user id is null when calling the API, the session cannot be reset.
     * @returns @see apiCall
     */
   setupAPI(SET_USER_ID, function (value, resetSession = false) {

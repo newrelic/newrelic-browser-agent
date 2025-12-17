@@ -32,8 +32,8 @@ export class Instrument extends InstrumentBase {
 
     /** emitted by wrap-logger function */
     this.ee.on('wrap-logger-end', function handleLog ([message]) {
-      const { level, customAttributes } = this
-      bufferLog(instanceEE, message, customAttributes, level)
+      const { level, customAttributes, autoCaptured } = this
+      bufferLog(instanceEE, message, customAttributes, level, autoCaptured)
     })
     this.importAggregator(agentRef, () => import(/* webpackChunkName: "logging-aggregate" */ '../aggregate'))
   }

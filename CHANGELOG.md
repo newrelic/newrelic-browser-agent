@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.306.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.305.0...v1.306.0) (2025-12-16)
+
+
+### Features
+
+* Control log API through separate RUM flag ([#1467](https://github.com/newrelic/newrelic-browser-agent/issues/1467)) ([f9f1639](https://github.com/newrelic/newrelic-browser-agent/commit/f9f1639504a32b0f24baa117d287c47e209cc818))
+* Ensure responseStart is valid before relying on onTTFB ([#1634](https://github.com/newrelic/newrelic-browser-agent/issues/1634)) ([cd83f60](https://github.com/newrelic/newrelic-browser-agent/commit/cd83f605087a79cbc4817ddfb82d48c18eae8474))
+
+
+### Bug Fixes
+
+* Remove linebreak syntax from webpack output ([#1649](https://github.com/newrelic/newrelic-browser-agent/issues/1649)) ([f741585](https://github.com/newrelic/newrelic-browser-agent/commit/f74158516ec251ced26a56f65c145a48b938e79f))
+
 ## [1.305.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.304.0...v1.305.0) (2025-12-10)
 
 

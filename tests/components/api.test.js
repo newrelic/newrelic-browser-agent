@@ -793,7 +793,7 @@ describe('API tests', () => {
           expectEmitted('wrap-logger-end', [['test1'], expect.any(Object), undefined])
 
           expectHandled(SUPPORTABILITY_METRIC_CHANNEL, ['API/logging/info/called'])
-          expectHandled('log', [expect.any(Number), 'test1', {}, 'INFO', undefined])
+          expectHandled('log', [expect.any(Number), 'test1', {}, 'INFO', false, undefined])
 
           const callCount = agent.ee.emit.mock.calls.length
           /** does NOT emit data for observed fn */
@@ -821,7 +821,7 @@ describe('API tests', () => {
           expectEmitted('wrap-logger-end', [['test1'], expect.any(Object), undefined])
 
           expectHandled(SUPPORTABILITY_METRIC_CHANNEL, ['API/logging/warn/called'])
-          expectHandled('log', [expect.any(Number), 'test1', {}, 'warn', undefined])
+          expectHandled('log', [expect.any(Number), 'test1', {}, 'warn', false, undefined])
         })
 
         test('should emit events with concat string for multiple args', () => {
@@ -880,7 +880,7 @@ describe('API tests', () => {
 
             expectHandled(SUPPORTABILITY_METRIC_CHANNEL, ['API/log/called'])
             expectHandled(SUPPORTABILITY_METRIC_CHANNEL, [`API/logging/${logMethod.toLowerCase().replace('log', '')}/called`])
-            expectHandled('log', [expect.any(Number), args[0], args[1].customAttributes, logMethod.replace('log', '')])
+            expectHandled('log', [expect.any(Number), args[0], args[1].customAttributes, logMethod.replace('log', ''), false])
           })
         })
       })

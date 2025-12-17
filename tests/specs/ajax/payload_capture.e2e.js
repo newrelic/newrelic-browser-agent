@@ -124,7 +124,7 @@ describe('capture_payloads', () => {
         requestBody: '{"message":"' + 'Hello 世界 🌍 '.repeat(226) + 'Hello 世界' + ' ...', // should get truncated right there
         requestHeaders: '{"content-type":"application/json"}',
         requestQuery: undefined,
-        responseBody: '{"receivedBody":{"message":"' + 'Hello 世界 🌍 '.repeat(225) + 'Hello 世界 ' + ' ...'
+        responseBody: '{"receivedBody":{"message":"' + 'Hello 世界 🌍 '.repeat(225) + 'Hello 世界 ' + ' ...' // should get truncated right there
       }
     }
   }

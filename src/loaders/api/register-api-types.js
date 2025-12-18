@@ -22,6 +22,7 @@
  * @typedef {Object} RegisterAPIConstructor
  * @property {string|number} id - The unique id for the registered entity. This will be assigned to any synthesized entities.
  * @property {string} name - The readable name for the registered entity. This will be assigned to any synthesized entities.
+ * @property {boolean} [shared] - Whether the registered entity is intended to be shared. Subsequent registrations with the same id will return the same registration instance.
  * @property {string} [parentId] - The parentId for the registered entity. If none was supplied, it will assume the entity guid from the main agent.
  */
 
@@ -33,6 +34,7 @@
  * @property {string} target.id - The ID for the registered entity.
  * @property {string} target.name - The name returned for the registered entity.
  * @property {string} [target.parentId] - The parentId for the registered entity. If none was supplied, it will assume the entity guid from the main agent.
+ * @property {boolean} [target.shared] - Whether the registered entity is intended to be shared.
  */
 
 export default {}

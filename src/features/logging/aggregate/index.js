@@ -38,23 +38,51 @@ export class Aggregate extends AggregateBase {
 
     this.waitForFlags(['log']).then(([loggingMode]) => {
       const session = this.agentRef.runtime.session ?? {}
-      if (this.loggingMode === LOGGING_MODE.OFF || (session.isNew && loggingMode === LOGGING_MODE.OFF)) {
-        this.blocked = true
-        this.deregisterDrain()
-        return
+      if (this.loggingMode === LOGGING_MODE.OFF) {
+        return this.#abort()
       }
-      if (session.isNew || !this.isSessionTrackingEnabled) {
+      if (!this.isSessionTrackingEnabled) {
         this.updateLoggingMode(loggingMode)
+        this.#completeInitialization(agentRef)
       } else {
-        this.loggingMode = session.state.loggingMode
-      }
+        const currentState = session.read()
 
-      /** emitted by instrument class (wrapped loggers) or the api methods directly */
-      registerHandler(LOGGING_EVENT_EMITTER_CHANNEL, this.handleLog.bind(this), this.featureName, this.ee)
-      this.drain()
-      /** harvest immediately once started to purge pre-load logs collected */
-      agentRef.runtime.harvester.triggerHarvestFor(this)
+        if (currentState.loggingMode !== LOGGING_MODE.NOT_SET) {
+          // Already set, so use existing value
+          this.loggingMode = currentState.loggingMode
+          this.#completeInitialization(agentRef)
+        } else {
+          // Write our value immediately (race to be first)
+          this.updateLoggingMode(loggingMode)
+
+          // Verify after short delay in case another agent also wrote
+          setTimeout(() => {
+            const latestState = session.read()
+            if (latestState.loggingMode !== this.loggingMode) {
+              this.loggingMode = latestState.loggingMode
+            }
+          }, 10)
+
+          if (this.loggingMode === LOGGING_MODE.OFF) {
+            return this.#abort()
+          }
+          this.#completeInitialization(agentRef)
+        }
+      }
     })
+  }
+
+  #abort () {
+    this.blocked = true
+    this.deregisterDrain()
+  }
+
+  #completeInitialization (agentRef) {
+    /** emitted by instrument class (wrapped loggers) or the api methods directly */
+    registerHandler(LOGGING_EVENT_EMITTER_CHANNEL, this.handleLog.bind(this), this.featureName, this.ee)
+    this.drain()
+    /** harvest immediately once started to purge pre-load logs collected */
+    agentRef.runtime.harvester.triggerHarvestFor(this)
   }
 
   updateLoggingMode (loggingMode) {

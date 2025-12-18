@@ -277,7 +277,7 @@ describe('payloads', () => {
   })
 })
 
-test.each(Object.keys(LOGGING_MODE))('payloads - log events are emitted (or not) according to flag from rum response - %s', async (logLevel) => {
+test.each(Object.keys(LOGGING_MODE).filter(x => x !== 'NOT_SET'))('payloads - log events are emitted (or not) according to flag from rum response - %s', async (logLevel) => {
   const SOME_TIMESTAMP = 1234
   await mockLoggingRumResponse(LOGGING_MODE[logLevel])
   loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [SOME_TIMESTAMP, LOG_LEVELS.ERROR, { myAttributes: 1 }, LOG_LEVELS.ERROR])

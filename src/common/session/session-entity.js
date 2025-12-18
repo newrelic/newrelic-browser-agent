@@ -29,7 +29,7 @@ const model = {
   sessionReplaySentFirstChunk: false,
   sessionTraceMode: MODE.OFF,
   traceHarvestStarted: false,
-  loggingMode: LOGGING_MODE.OFF,
+  loggingMode: LOGGING_MODE.NOT_SET,
   serverTimeDiff: null, // set by TimeKeeper; "undefined" value will not be stringified and stored but "null" will
   custom: {},
   numOfResets: 0,

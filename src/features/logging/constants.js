@@ -13,6 +13,7 @@ export const LOG_LEVELS = {
 }
 
 export const LOGGING_MODE = {
+  NOT_SET: -1,
   OFF: 0,
   ERROR: 1,
   WARN: 2,

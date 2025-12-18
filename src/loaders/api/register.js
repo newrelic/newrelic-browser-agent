@@ -49,11 +49,18 @@ function register (agentRef, target, parent) {
   target.licenseKey ||= agentRef.info.licenseKey // will inherit the license key from the container agent if not provided for brevity. A future state may dictate that we need different license keys to do different things.
   target.blocked = false
   target.parent = parent || {}
+  target.shared ??= false
 
   /** @type {Function} a function that is set and reports when APIs are triggered -- warns the customer of the invalid state  */
   let invalidApiResponse = () => {}
   /** @type {Set} the array of registered target APIs */
   const registeredEntities = agentRef.runtime.registeredEntities
+
+  if (target.shared) {
+  /** if we have already registered this shared target, go ahead and re-use it */
+    const sharedEntity = registeredEntities.find(({ metadata: { target: { id, name } } }) => id === target.id && !!target.shared)
+    if (sharedEntity) return sharedEntity
+  }
 
   /**
    * Block the API, and supply a warning function to display a message to end users
@@ -75,7 +82,7 @@ function register (agentRef, target, parent) {
   const api = {
     addPageAction: (name, attributes = {}) => report(addPageAction, [name, { ...attrs, ...attributes }, agentRef], target),
     deregister: () => {
-      registeredEntities.delete(api)
+      /** note: blocking this instance will also disable shared registrations, and will invalidate it from the v2 checks */
       block(single(() => warn(67)))
     },
     log: (message, options = {}) => report(log, [message, { ...options, customAttributes: { ...attrs, ...(options.customAttributes || {}) } }, agentRef], target),
@@ -103,7 +110,7 @@ function register (agentRef, target, parent) {
   }
 
   /** only allow registered APIs to be tracked in the agent runtime */
-  if (!isBlocked()) registeredEntities.add(api)
+  if (!isBlocked()) registeredEntities.push(api)
 
   /**
    * Sets a value local to the registered API attrs. Will do nothing if APIs are deregistered.

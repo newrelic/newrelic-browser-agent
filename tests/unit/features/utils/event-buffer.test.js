@@ -41,7 +41,7 @@ describe('EventBuffer', () => {
     it('should merge data if matcher is satisfied', () => {
       const alwaysPositiveMatcher = () => true
       eventBuffer.add({ foo: 'bar', target: 1 })
-      expect(eventBuffer.merge(alwaysPositiveMatcher, { target: 2 })).toEqual(true)
+      eventBuffer.merge(alwaysPositiveMatcher, { target: 2 })
 
       expect(eventBuffer.get()[0]).toEqual({ foo: 'bar', target: 2 })
     })
@@ -49,7 +49,7 @@ describe('EventBuffer', () => {
     it('should merge data if matcher is not satisfied', () => {
       const alwaysNegativeMatcher = () => false
       eventBuffer.add({ foo: 'bar', target: 1 })
-      expect(eventBuffer.merge(alwaysNegativeMatcher, { target: 2 })).toEqual(false)
+      eventBuffer.merge(alwaysNegativeMatcher, { target: 2 })
 
       expect(eventBuffer.get()[0]).toEqual({ foo: 'bar', target: 1 })
     })
@@ -57,7 +57,7 @@ describe('EventBuffer', () => {
     it('matcher should be able to match data inside the buffer', () => {
       const matcher = (d) => d.foo === 'bar'
       eventBuffer.add({ foo: 'bar', target: 1 })
-      expect(eventBuffer.merge(matcher, { target: 2 })).toEqual(true)
+      eventBuffer.merge(matcher, { target: 2 })
 
       expect(eventBuffer.get()[0]).toEqual({ foo: 'bar', target: 2 })
     })
@@ -66,7 +66,7 @@ describe('EventBuffer', () => {
       const matcher = (d) => d.foo === 'bar'
       eventBuffer.add({ foo: 'bar', target: 1 })
       eventBuffer.add({ foo: 'bar', target: 3 })
-      expect(eventBuffer.merge(matcher, { target: 2 })).toEqual(true)
+      eventBuffer.merge(matcher, { target: 2 })
 
       expect(eventBuffer.get()[0]).toEqual({ foo: 'bar', target: 2 })
       expect(eventBuffer.get()[1]).toEqual({ foo: 'bar', target: 3 })

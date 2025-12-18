@@ -107,7 +107,7 @@ export class Aggregate extends AggregateBase {
       level
     )
 
-    this.events.add(log, target)
+    this.events.add(log)
   }
 
   serializer (eventBuffer) {

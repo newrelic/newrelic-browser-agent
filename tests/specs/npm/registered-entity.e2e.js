@@ -258,6 +258,38 @@ describe('registered-entity', () => {
     })
   })
 
+  it('should allow to share a registration', async () => {
+    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+
+    await browser.execute(function () {
+      window.agent1 = new RegisteredEntity({
+        id: 1,
+        name: 'my agent',
+        shared: true
+      })
+      window.agent2 = new RegisteredEntity({
+        id: 1,
+        shared: true
+      })
+      // should get data as "agent2"
+      window.agent1.setCustomAttribute('sharedAttr', 'shared for both instances')
+      window.agent1.noticeError('1')
+      window.agent2.noticeError('2')
+    })
+
+    const errorsHarvests = await mfeErrorsCapture.waitForResult({ totalCount: 1 })
+
+    errorsHarvests.forEach(({ request: { query, body } }) => {
+      const data = body.err
+      data.forEach((err, idx) => {
+        expect(Number(err.params.message)).toEqual(idx + 1)
+        expect(err.custom['source.id']).toEqual(1)
+        expect(err.custom['source.name']).toEqual('my agent')
+        expect(err.custom.sharedAttr).toEqual('shared for both instances')
+      })
+    })
+  })
+
   it('should allow a nested register', async () => {
     await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
 

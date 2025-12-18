@@ -90,9 +90,7 @@ describe('payloads', () => {
       )),
       'test message',
       {
-        myAttributes: 1,
-        appId: mainAgent.info.applicationID,
-        'entity.guid': mainAgent.runtime.appMetadata.agents[0].entityGuid
+        myAttributes: 1
       },
       'error'
     )
@@ -148,24 +146,23 @@ describe('payloads', () => {
         mainAgent.runtime.timeKeeper.convertRelativeTimestamp(1234)
       )),
       'test message',
-      {
-        appId: mainAgent.info.applicationID,
-        'entity.guid': mainAgent.runtime.appMetadata.agents[0].entityGuid
-      },
+      { },
       'error'
     )
 
+    const logs = loggingAggregate.events.get()
+
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', [], 'ERROR'])
-    expect(loggingAggregate.events.get().pop()).toEqual(expected)
+    expect(logs.pop()).toEqual(expected)
 
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', true, 'ERROR'])
-    expect(loggingAggregate.events.get().pop()).toEqual(expected)
+    expect(logs.pop()).toEqual(expected)
 
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', 1, 'ERROR'])
-    expect(loggingAggregate.events.get().pop()).toEqual(expected)
+    expect(logs.pop()).toEqual(expected)
 
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', 'string', 'ERROR'])
-    expect(loggingAggregate.events.get().pop()).toEqual(expected)
+    expect(logs.pop()).toEqual(expected)
   })
 
   test('should work if log level is valid but wrong case', async () => {
@@ -174,10 +171,7 @@ describe('payloads', () => {
         mainAgent.runtime.timeKeeper.convertRelativeTimestamp(1234)
       )),
       'test message',
-      {
-        appId: mainAgent.info.applicationID,
-        'entity.guid': mainAgent.runtime.appMetadata.agents[0].entityGuid
-      },
+      { },
       'error'
     )
 
@@ -186,14 +180,15 @@ describe('payloads', () => {
   })
 
   test('should buffer logs with non-stringify-able message', async () => {
+    const logs = loggingAggregate.events.get()
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, new Error('test'), {}, 'error'])
-    expect(loggingAggregate.events.get().pop().message).toEqual('Error: test')
+    expect(logs.pop().message).toEqual('Error: test')
 
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, new SyntaxError('test'), {}, 'error'])
-    expect(loggingAggregate.events.get().pop().message).toEqual('SyntaxError: test')
+    expect(logs.pop().message).toEqual('SyntaxError: test')
 
     loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, Symbol('test'), {}, 'error'])
-    expect(loggingAggregate.events.get().pop().message).toEqual('Symbol(test)')
+    expect(logs.pop().message).toEqual('Symbol(test)')
   })
 
   test('initialLocation should be in pageUrl of log object attributes', async () => {
@@ -230,16 +225,22 @@ describe('payloads', () => {
         )),
         'test message',
         {
-          myAttributes: 1,
-          appId: mainAgent.info.applicationID,
-          'entity.guid': mainAgent.runtime.appMetadata.agents[0].entityGuid
+          myAttributes: 1
         },
         'error'
       ))
     })
 
     test('registered entities, container agent', async () => {
-      mainAgent.runtime.registeredEntities.push(true) // mock that an entity is registered
+      // mock that an entity is registered
+      mainAgent.runtime.registeredEntities.push({
+        metadata: {
+          target: {
+            id: 1234,
+            name: 'test'
+          }
+        }
+      })
       loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', { myAttributes: 1 }, 'error'])
 
       expect(loggingAggregate.events.get()[0]).toEqual(new Log(
@@ -263,7 +264,7 @@ describe('payloads', () => {
         type: 'MFE',
         containerId: mainAgent.runtime.appMetadata.agents[0].entityGuid
       }
-      mainAgent.runtime.registeredEntities.push(registeredTarget) // mock that an entity is registered
+      mainAgent.runtime.registeredEntities.push({ metadata: { target: registeredTarget } }) // mock that an entity is registered
       loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', { myAttributes: 1 }, 'error', registeredTarget]) // supply an api "target" to mock a registered entity API call
 
       expect(loggingAggregate.events.get()[0]).toEqual(new Log(

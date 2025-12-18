@@ -34,7 +34,7 @@ export class Aggregate extends AggregateBase {
       if (!this.underSpaEvents[interaction.id]) return
 
       if (!wasSaved) { // if the ixn was saved, then its ajax reqs are part of the payload whereas if it was discarded, it should still be harvested in the ajax feature itself
-        this.underSpaEvents[interaction.id].forEach((event) => this.events.add(event))
+        this.underSpaEvents[interaction.id].forEach((item) => this.events.add(item))
       }
       delete this.underSpaEvents[interaction.id]
     })

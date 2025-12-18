@@ -2,7 +2,6 @@
  * Copyright 2020-2025 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { isValidMFETarget } from '../util/mfe'
 import { Aggregator } from './aggregator'
 
 /**
@@ -22,9 +21,9 @@ export class EventAggregator {
     return aggregatorTypes.every(type => !this.#aggregator.aggregatedData[type]) // no bucket exist for any of the types we're looking for
   }
 
-  add ([type, name, params, newMetrics, customParams, target]) {
+  add ([type, name, params, newMetrics, customParams]) {
     // Do we need to track byte size here like EventBuffer?
-    this.#aggregator.store(type, name, params, newMetrics, customParams, isValidMFETarget(target))
+    this.#aggregator.store(type, name, params, newMetrics, customParams)
     return true
   }
 
@@ -49,11 +48,6 @@ export class EventAggregator {
       }
     }
     */
-  }
-
-  getRequiredVersion (opts) {
-    const aggregatorTypes = Array.isArray(opts) ? opts : opts.aggregatorTypes
-    return this.#aggregator.getRequiredVersion(aggregatorTypes)
   }
 
   get (opts) {

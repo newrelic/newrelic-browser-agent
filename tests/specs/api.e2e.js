@@ -40,6 +40,41 @@ describe('newrelic api', () => {
       expect(errorsHarvests2.length).toEqual(errorsHarvests.length)
     })
 
+    it('should allow to share a registration', async () => {
+      const [mfeErrorsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+        { test: testMFEErrorsRequest }
+      ])
+      await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+
+      await browser.execute(function () {
+        window.agent1 = newrelic.register({
+          id: 1,
+          name: 'my agent',
+          shared: true
+        })
+        window.agent2 = newrelic.register({
+          id: 1,
+          shared: true
+        })
+        // should get data as "agent2"
+        window.agent1.setCustomAttribute('sharedAttr', 'shared for both instances')
+        window.agent1.noticeError('1')
+        window.agent2.noticeError('2')
+      })
+
+      const errorsHarvests = await mfeErrorsCapture.waitForResult({ totalCount: 1 })
+
+      errorsHarvests.forEach(({ request: { query, body } }) => {
+        const data = body.err
+        data.forEach((err, idx) => {
+          expect(Number(err.params.message)).toEqual(idx + 1)
+          expect(err.custom['source.id']).toEqual(1)
+          expect(err.custom['source.name']).toEqual('my agent')
+          expect(err.custom.sharedAttr).toEqual('shared for both instances')
+        })
+      })
+    })
+
     it('should allow a nested register', async () => {
       const [mfeErrorsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
         { test: testMFEErrorsRequest }

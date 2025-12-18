@@ -53,7 +53,7 @@ function register (agentRef, target, parent) {
 
   /** @type {Function} a function that is set and reports when APIs are triggered -- warns the customer of the invalid state  */
   let invalidApiResponse = () => {}
-  /** @type {Set} the array of registered target APIs */
+  /** @type {Array} the array of registered target APIs */
   const registeredEntities = agentRef.runtime.registeredEntities
 
   if (target.shared) {

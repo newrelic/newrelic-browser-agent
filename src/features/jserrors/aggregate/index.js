@@ -286,7 +286,7 @@ export class Aggregate extends AggregateBase {
       var jsAttributesHash = stringHashCode(stringify(allCustomAttrs))
       var aggregateHash = hash + ':' + jsAttributesHash
 
-      this.events.add([item[0], aggregateHash, params, item[3], allCustomAttrs])
+      this.events.add([item[0], aggregateHash, params, item[3], allCustomAttrs], item[5])
 
       function setCustom ([key, val]) {
         allCustomAttrs[key] = (val && typeof val === 'object' ? stringify(val) : val)

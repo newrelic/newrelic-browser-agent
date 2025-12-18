@@ -25,15 +25,13 @@ export function hasValidValue (val) {
  */
 export function getVersion2Attributes (target, aggregateInstance) {
   if (aggregateInstance?.harvestEndpointVersion !== 2) return {}
-
   const containerAgentEntityGuid = aggregateInstance.agentRef.runtime.appMetadata.agents[0].entityGuid
-  if (!isValidMFETarget(target) || target.blocked) {
+  if (!isValidMFETarget(target)) {
     return {
       'entity.guid': containerAgentEntityGuid,
       appId: aggregateInstance.agentRef.info.applicationID
     }
   }
-  /** decorate for MFE */
   return {
     'source.id': target.id,
     'source.name': target.name,

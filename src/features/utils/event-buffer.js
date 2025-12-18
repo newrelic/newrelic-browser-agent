@@ -44,7 +44,6 @@ export class EventBuffer {
   /**
    * Add feature-processed event to our buffer. If this event would cause our total raw size to exceed the set max payload size, it is dropped.
    * @param {any} event - any primitive type or object
-   * @param {boolean} [target] - target info if present
    * @param {number} [evaluatedSize] - the evalated size of the event, if already done so before storing in the event buffer
    * @returns {Boolean} true if successfully added; false otherwise
    */

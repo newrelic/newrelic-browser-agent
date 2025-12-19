@@ -4,7 +4,7 @@ import { testErrorsRequest, testInsRequest, testLogsRequest, testRumRequest } fr
 import { LOGGING_MODE } from '../../../src/features/logging/constants'
 
 describe('micro-agent', () => {
-  it('Multi-micro agents - all agents correctly shuts down if first agent receives LOGGING_MODE.OFF', async () => {
+  it('all agents correctly shuts down logging if first agent receives LOGGING_MODE.OFF', async () => {
     await browser.enableLogging({
       logMode: LOGGING_MODE.OFF,
       secondLogMode: LOGGING_MODE.DEBUG
@@ -82,8 +82,8 @@ describe('micro-agent', () => {
     expect(logsHarvest.length).toEqual(0)
 
     // check to ensure both agents have the same logging mode (shared session)
-    expect(result.agent1.loggingMode).toEqual(LOGGING_MODE.OFF)
-    expect(result.agent1.loggingMode).toEqual(result.agent2.loggingMode)
+    expect(result.agent1.loggingMode).toEqual({ auto: LOGGING_MODE.OFF, api: LOGGING_MODE.OFF })
+    expect(result.agent2.loggingMode).toEqual(result.agent1.loggingMode)
     expect(tests[1]).toEqual({ rum: true, err: true, pa: true, log: false })
     expect(tests[2]).toEqual({ rum: true, err: true, pa: true, log: false })
   })
@@ -163,19 +163,17 @@ describe('micro-agent', () => {
       expect(payloadMatchesAppId(query.a, data.val, data.actionName, data.customAttr)).toEqual(true)
     })
 
+    // check to ensure both agents have the same logging mode (shared session)
+    expect(result.agent1.loggingMode).toEqual({ auto: LOGGING_MODE.INFO, api: LOGGING_MODE.INFO })
+    expect(result.agent2.loggingMode).toEqual(result.agent1.loggingMode)
     expect(logsHarvest.length).toEqual(2)
+
     logsHarvest.forEach(({ request: { query, body } }) => {
       const data = JSON.parse(body)[0]
       expect(data.logs.length).toEqual(1) // ensure only one log per appId
       expect(ranOnce(data.common.attributes.appId, 'log')).toEqual(true)
       expect(payloadMatchesAppId(data.common.attributes.appId, data.logs[0].message)).toEqual(true)
     })
-
-    // check to ensure both agents have the same logging mode (shared session)
-    expect(result.agent1.loggingMode).toEqual(LOGGING_MODE.INFO)
-    expect(result.agent1.loggingMode).toEqual(result.agent2.loggingMode)
-    expect(tests[1]).toEqual({ rum: true, err: true, pa: true, log: true })
-    expect(tests[2]).toEqual({ rum: true, err: true, pa: true, log: true })
   })
 
   // https://new-relic.atlassian.net/browse/NR-453240 <-- issue with rollup seen here around dynamic imports
@@ -256,6 +254,10 @@ describe('micro-agent', () => {
       expect(payloadMatchesAppId(query.a, data.val, data.actionName, data.customAttr)).toEqual(true)
     })
 
+    // check to ensure both agents have the same logging mode (shared session)
+    expect(result.agent1.loggingMode).toEqual({ auto: LOGGING_MODE.INFO, api: LOGGING_MODE.INFO })
+    expect(result.agent2.loggingMode).toEqual(result.agent1.loggingMode)
+
     expect(logsHarvest.length).toEqual(2)
     logsHarvest.forEach(({ request: { query, body } }) => {
       const data = JSON.parse(body)[0]
@@ -263,12 +265,6 @@ describe('micro-agent', () => {
       expect(ranOnce(data.common.attributes.appId, 'log')).toEqual(true)
       expect(payloadMatchesAppId(data.common.attributes.appId, data.logs[0].message)).toEqual(true)
     })
-
-    // check to ensure both agents have the same logging mode (shared session)
-    expect(result.agent1.loggingMode).toEqual(LOGGING_MODE.INFO)
-    expect(result.agent1.loggingMode).toEqual(result.agent2.loggingMode)
-    expect(tests[1]).toEqual({ rum: true, err: true, pa: true, log: true })
-    expect(tests[2]).toEqual({ rum: true, err: true, pa: true, log: true })
   })
 
   it('returns null on top-level spa api interaction call', async () => {

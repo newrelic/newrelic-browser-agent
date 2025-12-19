@@ -15,11 +15,17 @@ import { ABORT_REASONS } from '../../session_replay/constants'
 import { canEnableSessionTracking } from '../../utils/feature-gates'
 import { getVersion2Attributes } from '../../../common/util/mfe'
 
+const LOGGING_EVENT = 'Logging/Event/'
+
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
   constructor (agentRef) {
     super(agentRef, FEATURE_NAME)
-    this.isSessionTrackingEnabled = canEnableSessionTracking(agentRef.init) && agentRef.runtime.session
+    const updateLocalLoggingMode = (auto, api) => {
+      this.loggingMode = { auto, api }
+      // In agent v1.290.0 & under, the logApiMode prop did not yet exist, so need to account for old session state being in-use.
+      if (api === undefined) this.loggingMode.api = auto
+    }
 
     /** set up agg-level behaviors specific to this feature */
     this.harvestOpts.raw = true
@@ -29,55 +35,52 @@ export class Aggregate extends AggregateBase {
     this.ee.on(SESSION_EVENTS.RESET, () => {
       this.abort(ABORT_REASONS.RESET)
     })
-
     this.ee.on(SESSION_EVENTS.UPDATE, (type, data) => {
       if (this.blocked || type !== SESSION_EVENT_TYPES.CROSS_TAB) return
-      if (this.loggingMode !== LOGGING_MODE.OFF && data.loggingMode === LOGGING_MODE.OFF) this.abort(ABORT_REASONS.CROSS_TAB)
-      else this.loggingMode = data.loggingMode
+      // In agent v1.290.0 & under, the logApiMode prop did not yet exist, so need to account for old session state being in-use with just loggingMode off == feature off.
+      if (data.loggingMode === LOGGING_MODE.OFF && (!data.logApiMode || data.logApiMode === LOGGING_MODE.OFF)) this.abort(ABORT_REASONS.CROSS_TAB)
+      else updateLocalLoggingMode(data.loggingMode, data.logApiMode)
     })
 
-    this.waitForFlags(['log']).then(([loggingMode]) => {
-      const session = this.agentRef.runtime.session ?? {}
-      if (this.loggingMode === LOGGING_MODE.OFF) {
-        return this.#abort()
-      }
-      if (!this.isSessionTrackingEnabled) {
-        this.updateLoggingMode(loggingMode)
-        this.#completeInitialization(agentRef)
-      } else {
+    this.waitForFlags(['log', 'logapi']).then(([auto, api]) => {
+      if (this.blocked) return // means abort already happened before this, likely from session reset or update; abort would've set mode off + deregistered drain
+      const session = this.agentRef.runtime.session
+      this.loggingMode ??= {
+        auto,
+        api
+      } // likewise, don't want to overwrite the mode if it was set already
+      if (canEnableSessionTracking(agentRef.init) && session) {
         const currentState = session.read()
 
-        if (currentState.loggingMode !== LOGGING_MODE.NOT_SET) {
-          // Already set, so use existing value
-          this.loggingMode = currentState.loggingMode
-          this.#completeInitialization(agentRef)
-        } else {
-          // Write our value immediately (race to be first)
-          this.updateLoggingMode(loggingMode)
+        if (currentState.loggingMode === LOGGING_MODE.NOT_SET) {
+          // Write immediately, race to be first
+          this.#syncWithSessionManager()
 
           // Verify after short delay in case another agent also wrote
           setTimeout(() => {
             const latestState = session.read()
-            if (latestState.loggingMode !== this.loggingMode) {
-              this.loggingMode = latestState.loggingMode
+            if (latestState.loggingMode !== this.loggingMode.auto) {
+              this.loggingMode.auto = latestState.loggingMode
             }
+            if (latestState.logApiMode !== this.loggingMode.api) {
+              this.loggingMode.api = latestState.logApiMode
+            }
+            this.#completeInitialization(agentRef)
           }, 10)
-
-          if (this.loggingMode === LOGGING_MODE.OFF) {
-            return this.#abort()
-          }
-          this.#completeInitialization(agentRef)
+          return
         }
+        updateLocalLoggingMode(currentState.loggingMode, currentState.logApiMode)
       }
+      this.#completeInitialization(agentRef)
     })
   }
 
-  #abort () {
-    this.blocked = true
-    this.deregisterDrain()
-  }
-
   #completeInitialization (agentRef) {
+    if (this.loggingMode.auto < LOGGING_MODE.ERROR && this.loggingMode.api < LOGGING_MODE.ERROR) {
+      this.blocked = true
+      this.deregisterDrain()
+      return
+    }
     /** emitted by instrument class (wrapped loggers) or the api methods directly */
     registerHandler(LOGGING_EVENT_EMITTER_CHANNEL, this.handleLog.bind(this), this.featureName, this.ee)
     this.drain()
@@ -85,15 +88,11 @@ export class Aggregate extends AggregateBase {
     agentRef.runtime.harvester.triggerHarvestFor(this)
   }
 
-  updateLoggingMode (loggingMode) {
-    this.loggingMode = loggingMode
-    this.syncWithSessionManager({
-      loggingMode: this.loggingMode
-    })
-  }
-
-  handleLog (timestamp, message, attributes = {}, level = LOG_LEVELS.INFO, target) {
-    if (this.blocked || !this.loggingMode) return
+  handleLog (timestamp, message, attributes = {}, level = LOG_LEVELS.INFO, autoCaptured, target) {
+    if (this.blocked) return
+    // Check respective logging mode depending on whether this log is from auto wrapped instrumentation or manual API that it's not turned off.
+    const modeForThisLog = autoCaptured ? this.loggingMode.auto : this.loggingMode.api
+    if (!modeForThisLog) return
 
     if (!attributes || typeof attributes !== 'object') attributes = {}
 
@@ -105,8 +104,8 @@ export class Aggregate extends AggregateBase {
 
     if (typeof level === 'string') level = level.toUpperCase()
     if (!isValidLogLevel(level)) return warn(30, level)
-    if (this.loggingMode < (LOGGING_MODE[level] || Infinity)) {
-      this.reportSupportabilityMetric('Logging/Event/Dropped/Sampling')
+    if (modeForThisLog < (LOGGING_MODE[level] || Infinity)) {
+      this.reportSupportabilityMetric(LOGGING_EVENT + 'Dropped/Sampling')
       return
     }
 
@@ -123,7 +122,7 @@ export class Aggregate extends AggregateBase {
       }
     } catch (err) {
       warn(16, message)
-      this.reportSupportabilityMetric('Logging/Event/Dropped/Casting')
+      this.reportSupportabilityMetric(LOGGING_EVENT + 'Dropped/Casting')
       return
     }
     if (typeof message !== 'string' || !message) return warn(32)
@@ -135,7 +134,7 @@ export class Aggregate extends AggregateBase {
       level
     )
 
-    this.events.add(log)
+    if (this.events.add(log)) this.reportSupportabilityMetric(LOGGING_EVENT + (autoCaptured ? 'Auto' : 'API') + '/Added')
   }
 
   serializer (eventBuffer) {
@@ -183,13 +182,18 @@ export class Aggregate extends AggregateBase {
       this.events.clear()
       this.events.clearSave()
     }
-    this.updateLoggingMode(LOGGING_MODE.OFF)
+    this.loggingMode = {
+      auto: LOGGING_MODE.OFF,
+      api: LOGGING_MODE.OFF
+    }
+    this.#syncWithSessionManager()
     this.deregisterDrain()
   }
 
-  syncWithSessionManager (state = {}) {
-    if (this.isSessionTrackingEnabled) {
-      this.agentRef.runtime.session.write(state)
-    }
+  #syncWithSessionManager () {
+    this.agentRef.runtime.session?.write({
+      loggingMode: this.loggingMode.auto,
+      logApiMode: this.loggingMode.api
+    })
   }
 }

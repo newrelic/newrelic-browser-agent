@@ -126,19 +126,19 @@ export default class CustomCommands {
       await browser.testHandle.scheduleReply('bamServer', {
         test: testRumRequest,
         permanent: false,
-        body: JSON.stringify(rumFlags({ log: loggingMode }))
+        body: JSON.stringify(rumFlags({ log: loggingMode, logapi: loggingMode }))
       })
       if (secondLogMode !== null) {
         await browser.testHandle.scheduleReply('bamServer', {
           test: testRumRequest,
           permanent: false,
-          body: JSON.stringify(rumFlags({ log: secondLogMode }))
+          body: JSON.stringify(rumFlags({ log: secondLogMode, logapi: secondLogMode }))
         })
       } else {
         await browser.testHandle.scheduleReply('bamServer', {
           test: testRumRequest,
           permanent: true,
-          body: JSON.stringify(rumFlags({ log: loggingMode }))
+          body: JSON.stringify(rumFlags({ log: loggingMode, logapi: loggingMode }))
         })
       }
     })

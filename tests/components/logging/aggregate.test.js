@@ -32,11 +32,16 @@ afterEach(() => {
   jest.clearAllMocks()
 })
 
-const mockLoggingRumResponse = async (mode) => {
+const INIT_TIMEOUT = 20
+const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms))
+
+const mockLoggingRumResponse = async (mode, apiMode) => {
   loggingAggregate.ee.emit('rumresp', [{
-    log: mode
+    log: mode,
+    logapi: apiMode
   }])
-  return await new Promise(process.nextTick)
+  return await wait(INIT_TIMEOUT)
+  // return await new Promise(process.nextTick)
 }
 
 describe('class setup', () => {
@@ -56,28 +61,41 @@ describe('class setup', () => {
   test('should wait for flags - log flag is missing', async () => {
     expect(loggingAggregate.drained).toBeUndefined()
     loggingAggregate.ee.emit('rumresp', [{}])
-    await new Promise(process.nextTick)
+    await wait(INIT_TIMEOUT)
     expect(loggingAggregate.blocked).toEqual(true)
   })
 
   test('should wait for flags - 0 = OFF', async () => {
     expect(loggingAggregate.drained).toBeUndefined()
-    await mockLoggingRumResponse(LOGGING_MODE.OFF)
-
+    await mockLoggingRumResponse(LOGGING_MODE.OFF, LOGGING_MODE.OFF)
     expect(loggingAggregate.blocked).toEqual(true)
   })
 
   test('should wait for flags - 1 = ERROR', async () => {
     expect(loggingAggregate.drained).toBeUndefined()
-    await mockLoggingRumResponse(LOGGING_MODE.ERROR)
-
+    await mockLoggingRumResponse(LOGGING_MODE.ERROR, LOGGING_MODE.OFF)
+    await wait(INIT_TIMEOUT)
     expect(loggingAggregate.drained).toEqual(true)
+  })
+
+  test('is not blocked if just logapi is on while log is flagged off', async () => {
+    expect(loggingAggregate.drained).toBeUndefined()
+    await mockLoggingRumResponse(LOGGING_MODE.OFF, LOGGING_MODE.INFO)
+    expect(loggingAggregate.drained).toEqual(true)
+  })
+
+  test('does not overwrite logging modes if set prior to rum response', async () => {
+    loggingAggregate.loggingMode = { auto: LOGGING_MODE.WARN, api: LOGGING_MODE.TRACE }
+    await mockLoggingRumResponse(LOGGING_MODE.OFF, LOGGING_MODE.OFF)
+
+    expect(loggingAggregate.loggingMode).toEqual({ auto: LOGGING_MODE.WARN, api: LOGGING_MODE.TRACE })
+    expect(loggingAggregate.blocked).toEqual(false)
   })
 })
 
 describe('payloads', () => {
-  beforeEach(() => {
-    mockLoggingRumResponse(LOGGING_MODE.INFO)
+  beforeEach(async () => {
+    await mockLoggingRumResponse(LOGGING_MODE.INFO, LOGGING_MODE.INFO)
   })
 
   test('fills buffered logs with event emitter messages and prepares matching payload', async () => {
@@ -257,7 +275,7 @@ describe('payloads', () => {
         containerId: mainAgent.runtime.appMetadata.agents[0].entityGuid
       }
       mainAgent.runtime.registeredEntities.push(registeredTarget) // mock that an entity is registered
-      loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', { myAttributes: 1 }, 'error', registeredTarget]) // supply an api "target" to mock a registered entity API call
+      loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', { myAttributes: 1 }, 'error', false, registeredTarget]) // supply an api "target" to mock a registered entity API call
 
       expect(loggingAggregate.events.get()[0]).toEqual(new Log(
         Math.floor(mainAgent.runtime.timeKeeper.correctAbsoluteTimestamp(
@@ -279,7 +297,7 @@ describe('payloads', () => {
 
 test.each(Object.keys(LOGGING_MODE).filter(x => x !== 'NOT_SET'))('payloads - log events are emitted (or not) according to flag from rum response - %s', async (logLevel) => {
   const SOME_TIMESTAMP = 1234
-  await mockLoggingRumResponse(LOGGING_MODE[logLevel])
+  await mockLoggingRumResponse(LOGGING_MODE[logLevel], LOGGING_MODE[logLevel])
   loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [SOME_TIMESTAMP, LOG_LEVELS.ERROR, { myAttributes: 1 }, LOG_LEVELS.ERROR])
   loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [SOME_TIMESTAMP, LOG_LEVELS.WARN, { myAttributes: 1 }, LOG_LEVELS.WARN])
   loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [SOME_TIMESTAMP, LOG_LEVELS.INFO, { myAttributes: 1 }, LOG_LEVELS.INFO])
@@ -291,7 +309,7 @@ test.each(Object.keys(LOGGING_MODE).filter(x => x !== 'NOT_SET'))('payloads - lo
 })
 
 test('can harvest early', async () => {
-  await mockLoggingRumResponse(LOGGING_MODE.INFO)
+  await mockLoggingRumResponse(LOGGING_MODE.INFO, LOGGING_MODE.INFO)
 
   jest.spyOn(mainAgent.runtime.harvester, 'triggerHarvestFor')
 

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { parseQueryString, parseResponseHeaders, isLikelyHumanReadable } from '../../../../../src/features/ajax/instrument/payloads'
+import { parseQueryString, isLikelyHumanReadable } from '../../../../../src/features/ajax/instrument/payloads'
 import { hasGQLErrors } from '../../../../../src/features/ajax/instrument/gql'
 
 describe('parseQueryString', () => {
@@ -13,10 +13,10 @@ describe('parseQueryString', () => {
   })
 
   test('handles empty query strings', () => {
-    expect(parseQueryString('')).toEqual({})
+    expect(parseQueryString('')).toBeUndefined()
     expect(parseQueryString('?')).toEqual({})
-    expect(parseQueryString(null)).toEqual({})
-    expect(parseQueryString(undefined)).toEqual({})
+    expect(parseQueryString(null)).toBeUndefined()
+    expect(parseQueryString(undefined)).toBeUndefined()
   })
 
   test('handles encoded values', () => {
@@ -40,87 +40,48 @@ describe('parseQueryString', () => {
   })
 })
 
-describe('parseResponseHeaders', () => {
-  test('parses standard headers', () => {
-    const headerStr = 'content-type: application/json\r\ncontent-length: 123\r\ndate: Mon, 10 Dec 2025 12:00:00 GMT'
-    expect(parseResponseHeaders(headerStr)).toEqual({
-      'content-type': 'application/json',
-      'content-length': '123',
-      date: 'Mon, 10 Dec 2025 12:00:00 GMT'
-    })
-  })
-
-  test('handles empty header strings', () => {
-    expect(parseResponseHeaders('')).toEqual({})
-    expect(parseResponseHeaders(null)).toEqual({})
-    expect(parseResponseHeaders(undefined)).toEqual({})
-  })
-
-  test('handles headers with colons in values', () => {
-    const headerStr = 'date: Mon, 10 Dec 2025 12:00:00 GMT\r\ncustom-header: value:with:colons'
-    expect(parseResponseHeaders(headerStr)).toEqual({
-      date: 'Mon, 10 Dec 2025 12:00:00 GMT',
-      'custom-header': 'value:with:colons'
-    })
-  })
-
-  test('ignores malformed headers', () => {
-    const headerStr = 'content-type: application/json\r\nmalformed\r\ncontent-length: 123'
-    expect(parseResponseHeaders(headerStr)).toEqual({
-      'content-type': 'application/json',
-      'content-length': '123'
-    })
-  })
-
-  test('handles single header', () => {
-    expect(parseResponseHeaders('content-type: text/plain')).toEqual({
-      'content-type': 'text/plain'
-    })
-  })
-})
-
 describe('isLikelyHumanReadable', () => {
   test('returns true for text/* types', () => {
-    expect(isLikelyHumanReadable('text/plain')).toBe(true)
-    expect(isLikelyHumanReadable('text/html')).toBe(true)
-    expect(isLikelyHumanReadable('text/css')).toBe(true)
-    expect(isLikelyHumanReadable('text/javascript')).toBe(true)
-    expect(isLikelyHumanReadable('text/csv')).toBe(true)
+    expect(isLikelyHumanReadable({ 'content-type': 'text/plain' }, 'data')).toBe(true)
+    expect(isLikelyHumanReadable({ 'content-type': 'text/html' }, 'data')).toBe(true)
+    expect(isLikelyHumanReadable({ 'content-type': 'text/css' }, 'data')).toBe(true)
+    expect(isLikelyHumanReadable({ 'content-type': 'text/javascript' }, 'data')).toBe(true)
+    expect(isLikelyHumanReadable({ 'content-type': 'text/csv' }, 'data')).toBe(true)
   })
 
   test('returns true for readable application/* types', () => {
-    expect(isLikelyHumanReadable('application/json')).toBe(true)
-    expect(isLikelyHumanReadable('application/xml')).toBe(true)
-    expect(isLikelyHumanReadable('application/xhtml+xml')).toBe(true)
-    expect(isLikelyHumanReadable('application/ld+json')).toBe(true)
-    expect(isLikelyHumanReadable('application/yaml')).toBe(true)
-    expect(isLikelyHumanReadable('application/x-www-form-urlencoded')).toBe(true)
+    expect(isLikelyHumanReadable({ 'content-type': 'application/json' }, 'data')).toBe(true)
+    expect(isLikelyHumanReadable({ 'content-type': 'application/xml' }, 'data')).toBe(true)
+    expect(isLikelyHumanReadable({ 'content-type': 'application/xhtml+xml' }, 'data')).toBe(true)
+    expect(isLikelyHumanReadable({ 'content-type': 'application/ld+json' }, 'data')).toBe(true)
+    expect(isLikelyHumanReadable({ 'content-type': 'application/yaml' }, 'data')).toBe(true)
+    expect(isLikelyHumanReadable({ 'content-type': 'application/x-www-form-urlencoded' }, 'data')).toBe(true)
   })
 
   test('returns false for binary types', () => {
-    expect(isLikelyHumanReadable('application/octet-stream')).toBe(false)
-    expect(isLikelyHumanReadable('application/pdf')).toBe(false)
-    expect(isLikelyHumanReadable('image/png')).toBe(false)
-    expect(isLikelyHumanReadable('image/jpeg')).toBe(false)
-    expect(isLikelyHumanReadable('video/mp4')).toBe(false)
-    expect(isLikelyHumanReadable('audio/mpeg')).toBe(false)
+    expect(isLikelyHumanReadable({ 'content-type': 'application/octet-stream' }, 'data')).toBe(false)
+    expect(isLikelyHumanReadable({ 'content-type': 'application/pdf' }, 'data')).toBe(false)
+    expect(isLikelyHumanReadable({ 'content-type': 'image/png' }, 'data')).toBe(false)
+    expect(isLikelyHumanReadable({ 'content-type': 'image/jpeg' }, 'data')).toBe(false)
+    expect(isLikelyHumanReadable({ 'content-type': 'video/mp4' }, 'data')).toBe(false)
+    expect(isLikelyHumanReadable({ 'content-type': 'audio/mpeg' }, 'data')).toBe(false)
   })
 
   test('handles content-type with charset', () => {
-    expect(isLikelyHumanReadable('text/html; charset=utf-8')).toBe(true)
-    expect(isLikelyHumanReadable('application/json; charset=UTF-8')).toBe(true)
-    expect(isLikelyHumanReadable('application/xml;charset=ISO-8859-1')).toBe(true)
+    expect(isLikelyHumanReadable({ 'content-type': 'text/html; charset=utf-8' }, 'data')).toBe(true)
+    expect(isLikelyHumanReadable({ 'content-type': 'application/json; charset=UTF-8' }, 'data')).toBe(true)
+    expect(isLikelyHumanReadable({ 'content-type': 'application/xml;charset=ISO-8859-1' }, 'data')).toBe(true)
   })
 
   test('handles case insensitivity', () => {
-    expect(isLikelyHumanReadable('TEXT/PLAIN')).toBe(true)
-    expect(isLikelyHumanReadable('Application/JSON')).toBe(true)
-    expect(isLikelyHumanReadable('TeXt/HtMl')).toBe(true)
+    expect(isLikelyHumanReadable({ 'content-type': 'TEXT/PLAIN' }, 'data')).toBe(true)
+    expect(isLikelyHumanReadable({ 'content-type': 'Application/JSON' }, 'data')).toBe(true)
+    expect(isLikelyHumanReadable({ 'content-type': 'TeXt/HtMl' }, 'data')).toBe(true)
   })
 
   test('handles content-type with extra whitespace', () => {
-    expect(isLikelyHumanReadable('text/plain ; charset=utf-8')).toBe(true)
-    expect(isLikelyHumanReadable('  application/json  ')).toBe(true)
+    expect(isLikelyHumanReadable({ 'content-type': 'text/plain ; charset=utf-8' }, 'data')).toBe(true)
+    expect(isLikelyHumanReadable({ 'content-type': '  application/json  ' }, 'data')).toBe(true)
   })
 
   test('returns true for string data when contentType is null or undefined', () => {

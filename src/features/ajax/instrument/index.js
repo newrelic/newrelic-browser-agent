@@ -20,10 +20,6 @@ import { SUPPORTABILITY_METRIC } from '../../metrics/constants'
 import { now } from '../../../common/timing/now'
 import { hasUndefinedHostname } from '../../../common/deny-list/deny-list'
 import { extractUrl } from '../../../common/url/extract-url'
-import { parseQueryString, parseResponseHeaders, isLikelyHumanReadable, truncatePayloads, clearPayloads } from './payloads'
-import { hasGQLErrors, parseGQL } from './gql'
-import { warn } from '../../../common/util/console'
-import { single } from '../../../common/util/invoke'
 
 var handlers = ['load', 'error', 'abort', 'timeout']
 var handlersLen = handlers.length
@@ -31,7 +27,7 @@ var handlersLen = handlers.length
 var origRequest = gosNREUMOriginals().o.REQ
 var origXHR = gosNREUMOriginals().o.XHR
 const NR_CAT_HEADER = 'X-NewRelic-App-Data'
-const CONTENT_TYPE = 'content-type'
+const INTERNAL_ERROR = 'internal-error'
 
 export class Instrument extends InstrumentBase {
   static featureName = FEATURE_NAME
@@ -64,36 +60,16 @@ export class Instrument extends InstrumentBase {
       // do nothing
     }
 
-    const warnInvalid = single(capturePayloadSetting => warn(67, capturePayloadSetting))
-    /**
-     * Determines whether payload metadata can be captured based on agent settings and request results. This can only be determined after the request has responded.
-     * @param {number} statusCode The HTTP status code of the response
-     * @param {boolean} hasGQLErrors Whether the response body contains GraphQL errors
-     * @returns
-     */
-    const canCapturePayload = (statusCode, hasGQLErrors) => {
-      switch (agentRef.init.ajax?.capture_payloads) {
-        case CAPTURE_PAYLOAD_SETTINGS.OFF:
-          return false
-        case CAPTURE_PAYLOAD_SETTINGS.ALL:
-          return true
-        case CAPTURE_PAYLOAD_SETTINGS.FAILURES:
-          return statusCode === 0 || statusCode >= 400 || hasGQLErrors
-        default:
-          warnInvalid(agentRef.init.ajax?.capture_payloads)
-          return false
-      }
-    }
-
     wrapFetch(this.ee)
     wrapXhr(this.ee)
-    subscribeToEvents(agentRef, this.ee, this.handler, this.dt, canCapturePayload)
-
+    subscribeToEvents(agentRef, this.ee, this.handler, this.dt)
     this.importAggregator(agentRef, () => import(/* webpackChunkName: "ajax-aggregate" */ '../aggregate/index.js'))
   }
 }
 
-function subscribeToEvents (agentRef, ee, handler, dt, canCapturePayload) {
+function subscribeToEvents (agentRef, ee, handler, dt) {
+  const shouldInterceptPayloads = [CAPTURE_PAYLOAD_SETTINGS.ALL, CAPTURE_PAYLOAD_SETTINGS.FAILURES].includes(agentRef.init.ajax?.capture_payloads)
+
   ee.on('new-xhr', onNewXhr)
   ee.on('open-xhr-start', onOpenXhrStart)
   ee.on('open-xhr-end', onOpenXhrEnd)
@@ -147,11 +123,6 @@ function subscribeToEvents (agentRef, ee, handler, dt, canCapturePayload) {
     this.params = { method: args[0] }
     addUrl(this, args[1])
     this.metrics = {}
-
-    // Extract query parameters from URL
-    if (this.parsedOrigin && this.parsedOrigin.search) {
-      this.params.requestQuery = parseQueryString(this.parsedOrigin.search)
-    }
   }
 
   function onOpenXhrEnd (args, xhr) {
@@ -181,9 +152,9 @@ function subscribeToEvents (agentRef, ee, handler, dt, canCapturePayload) {
 
   function onSetRequestHeader (args, xhr) {
     // args[0] = header name, args[1] = header value
-    if (args.length >= 2) {
-      this.params.requestHeaders ??= {}
-      this.params.requestHeaders[args[0].toLowerCase()] = args[1]
+    if (shouldInterceptPayloads && args.length >= 2) {
+      this.requestHeaders ??= {}
+      this.requestHeaders[args[0].toLowerCase()] = args[1]
     }
   }
 
@@ -199,17 +170,7 @@ function subscribeToEvents (agentRef, ee, handler, dt, canCapturePayload) {
 
     this.startTime = now()
 
-    // Store request body only if content-type is human-readable
-    if (data) {
-      var contentType = this.params.requestHeaders?.[CONTENT_TYPE]
-      if (isLikelyHumanReadable(contentType, data)) {
-        this.params.requestBody = data
-        this.params.gql = parseGQL({
-          body: this.params.requestBody,
-          query: this.parsedOrigin?.search
-        })
-      }
-    }
+    this.requestBody = data
 
     this.listener = function (evt) {
       try {
@@ -219,7 +180,7 @@ function subscribeToEvents (agentRef, ee, handler, dt, canCapturePayload) {
         if (evt.type !== 'load' || ((context.called === context.totalCbs) && (context.onloadCalled || typeof (xhr.onload) !== 'function') && typeof context.end === 'function')) context.end(xhr)
       } catch (e) {
         try {
-          ee.emit('internal-error', [e])
+          ee.emit(INTERNAL_ERROR, [e])
         } catch (err) {
           // do nothing
         }
@@ -371,11 +332,6 @@ function subscribeToEvents (agentRef, ee, handler, dt, canCapturePayload) {
     var target = this.target
     addUrl(this, extractUrl(target))
 
-    // Extract query parameters from URL
-    if (this.parsedOrigin && this.parsedOrigin.search) {
-      this.params.requestQuery = parseQueryString(this.parsedOrigin.search)
-    }
-
     var method = ('' + ((target && target instanceof origRequest && target.method) ||
       opts.method || 'GET')).toUpperCase()
     this.params.method = method
@@ -385,15 +341,15 @@ function subscribeToEvents (agentRef, ee, handler, dt, canCapturePayload) {
     // Capture request headers
     try {
       var headers = opts.headers || (target && target.headers)
-      if (headers) {
-        this.params.requestHeaders ??= {}
+      if (shouldInterceptPayloads && headers) {
+        this.requestHeaders ??= {}
         if (headers instanceof Headers) {
           headers.forEach(function (value, key) {
-            this.params.requestHeaders[key.toLowerCase()] = value
+            this.requestHeaders[key.toLowerCase()] = value
           }.bind(this))
         } else if (typeof headers === 'object') {
           for (var key in headers) {
-            this.params.requestHeaders[key.toLowerCase()] = headers[key]
+            this.requestHeaders[key.toLowerCase()] = headers[key]
           }
         }
       }
@@ -401,18 +357,7 @@ function subscribeToEvents (agentRef, ee, handler, dt, canCapturePayload) {
       // Silently fail if we can't access headers
     }
 
-    this.params.gql = parseGQL({
-      body: opts.body,
-      query: this.parsedOrigin?.search
-    })
-
-    // Store request body only if content-type is human-readable
-    if (opts.body) {
-      var contentType = this.params.requestHeaders?.[CONTENT_TYPE]
-      if (isLikelyHumanReadable(contentType, opts.body)) {
-        this.params.requestBody = opts.body
-      }
-    }
+    this.requestBody = opts.body
   }
 
   // we capture failed call as status 0, the actual error is ignored
@@ -437,54 +382,27 @@ function subscribeToEvents (agentRef, ee, handler, dt, canCapturePayload) {
         duration: now() - this.startTime
       }
 
-      truncatePayloads(this.params)
-
       handler('xhr', [this.params, metrics, this.startTime, this.endTime, 'fetch'], this, FEATURE_NAMES.ajax)
     }
 
     /** Since accessing fetch bodies is an async process, these are
      * reasonable conditions to check to not do needless extra work */
-    if (!res || agentRef.init.ajax.capture_payloads === CAPTURE_PAYLOAD_SETTINGS.OFF) {
-      clearPayloads(this.params)
+    if (!res || !shouldInterceptPayloads) {
       finishAndReport()
       return
     }
 
-    let responseBody = null
     // Clone the response to read the body without consuming the original
     res.clone().text().then((text) => {
-      responseBody = text
-      if (this.params.gql) this.params.gql.operationHasErrors = hasGQLErrors(responseBody)
-      /**
-     * its very important that we drop the data before buffering
-     * if it is not allowed to be captured. This will prevent unnecessary data
-     * leakage in cases where the fetch response is large.  Up to this point
-     * we have needed to store the response attributes as they occurred, but they
-     * can be deleted now if we can't capture the payload due to decision tree.
-     */
-      if (!canCapturePayload(this.params.status, this.params.gql?.operationHasErrors)) {
-        clearPayloads(this.params)
-      } else {
-        try {
-        // Capture response headers
-          if (res?.headers) {
-            res.headers.forEach(function (value, key) {
-              this.params.responseHeaders ??= {}
-              this.params.responseHeaders[key] = value
-            }.bind(this))
-          }
-
-          // Only capture response body if content-type is human-readable
-          var contentType = res?.headers ? res.headers.get(CONTENT_TYPE) : null
-          if (isLikelyHumanReadable(contentType, responseBody)) {
-            this.params.responseBody = responseBody
-          }
-        } catch (e) {
-        // Silently fail if we can't access response data
-        }
+      this.responseBody = text
+      if (res?.headers) {
+        this.responseHeaders = {}
+        res.headers.forEach(function (value, key) {
+          this.responseHeaders[key.toLowerCase()] = value
+        }.bind(this))
       }
-    }).catch(() => {
-      if (!canCapturePayload(this.params.status)) clearPayloads(this.params)
+    }).catch((err) => {
+      this.ee.emit(INTERNAL_ERROR, [err])
     }).finally(() => {
       finishAndReport()
     })
@@ -514,39 +432,17 @@ function subscribeToEvents (agentRef, ee, handler, dt, canCapturePayload) {
     // Always send cbTime, even if no noticeable time was taken.
     metrics.cbTime = this.cbTime
 
-    let responseBody
     try {
-      responseBody = xhr.responseText
+      this.responseBody = xhr.responseText
     } catch (e) {
-      responseBody = xhr.response
-    }
-    if (params.gql) params.gql.operationHasErrors = hasGQLErrors(responseBody)
-
-    /**
-     * its very important that we drop the data before buffering
-     * if it is not allowed to be captured. This will prevent unnecessary data
-     * leakage in cases where the fetch response is large.  Up to this point
-     * we have needed to store the response attributes as they occurred, but they
-     * can be deleted now if we can't capture the payload due to decision tree.
-     */
-    if (!canCapturePayload(params.status, params.gql?.operationHasErrors)) {
-      clearPayloads(params)
-    } else {
-      // Capture response headers and (maybe) body when XHR completes
-      try {
-        params.responseHeaders = parseResponseHeaders(xhr.getAllResponseHeaders())
-
-        // Only capture response body if content-type is human-readable
-        var contentType = xhr.getResponseHeader(CONTENT_TYPE)
-        if (isLikelyHumanReadable(contentType, responseBody)) {
-          params.responseBody = responseBody
-        }
-      } catch (e) {
-      // Silently fail if we failed to access response data
-      }
+      this.responseBody = xhr.response
     }
 
-    truncatePayloads(params)
+    try {
+      this.responseHeaders = parseResponseHeaders(xhr.getAllResponseHeaders())
+    } catch (err) {
+      this.ee.emit(INTERNAL_ERROR, [err])
+    }
 
     handler('xhr', [params, metrics, this.startTime, this.endTime, 'xhr'], this, FEATURE_NAMES.ajax)
   }
@@ -580,6 +476,22 @@ function addUrl (ctx, url) {
   params.pathname = parsed.pathname
   ctx.parsedOrigin = parsed
   ctx.sameOrigin = parsed.sameOrigin
+}
+
+function parseResponseHeaders (headerStr) {
+  const headers = {}
+  if (!headerStr) return headers
+
+  headerStr.split('\r\n').forEach(function (line) {
+    const separatorIndex = line.indexOf(': ')
+    if (separatorIndex > 0) {
+      const name = line.substring(0, separatorIndex)
+      const value = line.substring(separatorIndex + 2)
+      headers[name.toLowerCase()] = value
+    }
+  })
+
+  return headers
 }
 
 export const Ajax = Instrument

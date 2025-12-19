@@ -6,11 +6,13 @@ import { registerHandler } from '../../../common/event-emitter/register-handler'
 import { stringify } from '../../../common/util/stringify'
 import { handle } from '../../../common/event-emitter/handle'
 import { setDenyList, shouldCollectEvent } from '../../../common/deny-list/deny-list'
-import { FEATURE_NAME } from '../constants'
+import { CAPTURE_PAYLOAD_SETTINGS, FEATURE_NAME } from '../constants'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
 import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../../../common/serialize/bel-serializer'
 import { gosNREUMOriginals } from '../../../common/window/nreum'
+import { hasGQLErrors, parseGQL } from '../instrument/gql'
+import { isLikelyHumanReadable, parseQueryString, truncateAsString } from '../instrument/payloads'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -101,14 +103,24 @@ export class Aggregate extends AggregateBase {
       type,
       startTime,
       endTime,
-      callbackDuration: metrics.cbTime,
-      gql: params.gql,
-      // optional payload metadata fields
-      requestBody: params.requestBody,
-      requestHeaders: params.requestHeaders,
-      requestQuery: params.requestQuery,
-      responseBody: params.responseBody,
-      responseHeaders: params.responseHeaders
+      callbackDuration: metrics.cbTime
+    }
+
+    event.gql = params.gql = parseGQL({
+      body: ctx.requestBody,
+      query: ctx.parsedOrigin?.search
+    })
+    if (event.gql) event.gql.operationHasErrors = hasGQLErrors(ctx.responseBody)
+
+    const capturePayloadSetting = this.agentRef.init.ajax.capture_payloads
+    const canCapturePayload = capturePayloadSetting === CAPTURE_PAYLOAD_SETTINGS.ALL || (capturePayloadSetting === CAPTURE_PAYLOAD_SETTINGS.FAILURES && (params.status === 0 || params.status >= 400 || event.gql?.operationHasErrors === true))
+
+    if (canCapturePayload) {
+      params.requestQuery = event.requestQuery = truncateAsString(parseQueryString(ctx.parsedOrigin?.search))
+      params.requestHeaders = event.requestHeaders = truncateAsString(ctx.requestHeaders)
+      params.responseHeaders = event.responseHeaders = truncateAsString(ctx.responseHeaders)
+      if (isLikelyHumanReadable(ctx.requestHeaders, ctx.requestBody)) params.requestBody = event.requestBody = truncateAsString(ctx.requestBody)
+      if (isLikelyHumanReadable(ctx.responseHeaders, ctx.responseBody)) params.responseBody = event.responseBody = truncateAsString(ctx.responseBody)
     }
 
     if (ctx.dt) {

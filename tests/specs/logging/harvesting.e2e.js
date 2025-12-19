@@ -75,7 +75,7 @@ describe('logging harvesting', () => {
     })
 
     ;['api', 'api-wrap-logger', 'console-logger'].forEach(type => {
-      Object.keys(LOGGING_MODE).filter(mode => mode !== 'OFF').forEach(mode => {
+      Object.keys(LOGGING_MODE).filter(mode => mode !== 'OFF' && mode !== 'NOT_SET').forEach(mode => {
         const logLevel = LOGGING_MODE[mode]
         const loggingModes = Object.entries(LOGGING_MODE).filter(entry => entry[1] > LOGGING_MODE.OFF && entry[1] <= logLevel).map(entry => entry[0])
         if (type === 'console-logger' && logLevel >= LOGGING_MODE.INFO) {

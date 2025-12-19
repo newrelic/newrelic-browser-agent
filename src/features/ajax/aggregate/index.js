@@ -110,7 +110,7 @@ export class Aggregate extends AggregateBase {
       body: ctx.requestBody,
       query: ctx.parsedOrigin?.search
     })
-    if (event.gql) event.gql.operationHasErrors = hasGQLErrors(ctx.responseBody)
+    if (event.gql) event.gql.operationHasErrors = params.gql.operationHasErrors = hasGQLErrors(ctx.responseBody)
 
     const capturePayloadSetting = this.agentRef.init.ajax.capture_payloads
     const canCapturePayload = capturePayloadSetting === CAPTURE_PAYLOAD_SETTINGS.ALL || (capturePayloadSetting === CAPTURE_PAYLOAD_SETTINGS.FAILURES && (params.status === 0 || params.status >= 400 || event.gql?.operationHasErrors === true))

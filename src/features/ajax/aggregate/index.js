@@ -12,7 +12,7 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { nullable, numeric, getAddStringContext, addCustomAttributes } from '../../../common/serialize/bel-serializer'
 import { gosNREUMOriginals } from '../../../common/window/nreum'
 import { hasGQLErrors, parseGQL } from '../instrument/gql'
-import { isLikelyHumanReadable, parseQueryString, truncateAsString } from '../instrument/payloads'
+import { isLikelyHumanReadable, parseQueryString, truncateAsString } from './payloads'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME

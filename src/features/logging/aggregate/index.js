@@ -45,10 +45,7 @@ export class Aggregate extends AggregateBase {
     this.waitForFlags(['log', 'logapi']).then(([auto, api]) => {
       if (this.blocked) return // means abort already happened before this, likely from session reset or update; abort would've set mode off + deregistered drain
       const session = this.agentRef.runtime.session
-      this.loggingMode ??= {
-        auto,
-        api
-      } // likewise, don't want to overwrite the mode if it was set already
+      this.loggingMode ??= { auto, api } // likewise, don't want to overwrite the mode if it was set already
       if (canEnableSessionTracking(agentRef.init) && session) {
         const currentState = session.read()
 

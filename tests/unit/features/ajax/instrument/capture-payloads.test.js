@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { hasGQLErrors } from '../../../../../src/features/ajax/instrument/gql'
+import { hasGQLErrors } from '../../../../../src/features/ajax/aggregate/gql'
 
 describe('canCapturePayload logic', () => {
-  // Helper to simulate the canCapturePayload function from instrument/index.js
+  // Helper to simulate the canCapturePayload function from aggregate/index.js
   const createCanCapturePayload = (captureMode) => {
     return (statusCode, responseBody) => {
       if (!captureMode || captureMode === 'off') return false

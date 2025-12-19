@@ -1,4 +1,4 @@
-import { parseGQL } from '../../../../../src/features/ajax/instrument/gql'
+import { parseGQL } from '../../../../../src/features/ajax/aggregate/gql'
 
 const sampleGQLQuery = {
   operationName: 'GetLocations1',

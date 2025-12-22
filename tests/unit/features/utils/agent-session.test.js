@@ -4,6 +4,8 @@ let agentSession
 let mockEE
 let mockAgent
 
+jest.retryTimes(0)
+
 beforeEach(() => {
   mockAgent = {
     agentIdentifier: faker.string.uuid(),
@@ -11,7 +13,11 @@ beforeEach(() => {
     info: {},
     runtime: {}
   }
-  mockEE = { [faker.string.uuid()]: faker.lorem.sentence() }
+  mockEE = {
+    [faker.string.uuid()]: faker.lorem.sentence(),
+    buffer: jest.fn(),
+    emit: jest.fn()
+  }
   agentSession = {
     state: {
       [faker.string.uuid()]: faker.lorem.sentence()
@@ -41,7 +47,8 @@ beforeEach(() => {
     SessionEntity: jest.fn().mockImplementation(({ agentIdentifier }) => ({
       agentIdentifier,
       state: agentSession.state,
-      syncCustomAttribute: jest.fn()
+      syncCustomAttribute: jest.fn(),
+      reset: jest.fn()
     }))
   }))
   jest.doMock('../../../../src/common/storage/local-storage.js', () => ({
@@ -64,6 +71,7 @@ test('should register handlers and drain the session feature', async () => {
   expect(result).toEqual(expect.objectContaining(agentSession))
   expect(registerHandler).toHaveBeenNthCalledWith(1, 'api-setCustomAttribute', expect.any(Function), 'session', mockEE)
   expect(registerHandler).toHaveBeenNthCalledWith(2, 'api-setUserId', expect.any(Function), 'session', mockEE)
+  expect(registerHandler).toHaveBeenNthCalledWith(3, 'api-setUserIdAndResetSession', expect.any(Function), 'session', mockEE)
   expect(drain).toHaveBeenCalledWith(mockAgent.agentIdentifier, 'session')
 })
 
@@ -77,7 +85,7 @@ test('multiple calls to setupAgentSession for same agent does not re-execute it'
 
   expect(result1).toEqual(expect.objectContaining(agentSession))
   expect(result2).toEqual(expect.objectContaining(agentSession))
-  expect(registerHandler).toHaveBeenCalledTimes(3)
+  expect(registerHandler).toHaveBeenCalledTimes(4)
   expect(drain).toHaveBeenCalledTimes(1)
 })
 
@@ -95,7 +103,7 @@ test('calls to setupAgentSession for different agents executes separately', asyn
 
   expect(result1.agentIdentifier).toEqual(agentId1)
   expect(result2.agentIdentifier).toEqual(agentId2)
-  expect(registerHandler).toHaveBeenCalledTimes(6)
+  expect(registerHandler).toHaveBeenCalledTimes(8)
   expect(drain).toHaveBeenCalledTimes(2)
 })
 
@@ -136,4 +144,31 @@ test('should sync custom attributes', async () => {
 
   expect(retVal.syncCustomAttribute).toHaveBeenNthCalledWith(1, customProps[0][1], customProps[0][2])
   expect(retVal.syncCustomAttribute).toHaveBeenNthCalledWith(2, customProps[1][1], customProps[1][2])
+})
+
+test('should reset session on setUserIdAndResetSession', async () => {
+  const mockHandle = jest.fn()
+  const mockAppendJsAttribute = jest.fn()
+
+  jest.doMock('../../../../src/common/event-emitter/handle', () => ({
+    __esModule: true,
+    handle: mockHandle
+  }))
+
+  jest.doMock('../../../../src/loaders/api/sharedHandlers', () => ({
+    __esModule: true,
+    appendJsAttribute: mockAppendJsAttribute
+  }))
+
+  const { registerHandler } = await import('../../../../src/common/event-emitter/register-handler')
+  const { setupAgentSession } = await import('../../../../src/features/utils/agent-session')
+  const retVal = setupAgentSession(mockAgent)
+
+  const setUserIdAndResetSessionHandler = jest.mocked(registerHandler).mock.calls[2][1]
+
+  setUserIdAndResetSessionHandler('someUser')
+
+  expect(retVal.reset).toHaveBeenCalledTimes(1)
+  expect(mockHandle).toHaveBeenCalledWith('storeSupportabilityMetrics', ['API/setUserId/resetSession/called'], undefined, 'metrics', mockEE)
+  expect(mockAppendJsAttribute).toHaveBeenCalledWith(mockAgent, 'enduser.id', 'someUser', 'setUserId', true)
 })

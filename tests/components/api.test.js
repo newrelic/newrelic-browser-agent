@@ -428,6 +428,86 @@ describe('API tests', () => {
 
         expect(agent.info.jsAttributes['enduser.id']).toEqual(undefined)
       })
+
+      test('should not reset session when setUserId is called with reset session true and current user is undefined', () => {
+        const originalSessionId = agent.runtime.session.state.value
+
+        expect(agent.info.jsAttributes['enduser.id']).toEqual(undefined)
+
+        agent.setUserId('user1', true) // simulate trying to reset session when setting userid for first time
+
+        expect(agent.runtime.session.state.value).toEqual(originalSessionId)
+        expect(agent.info.jsAttributes['enduser.id']).toEqual('user1')
+        expect(handleModule.handle).not.toHaveBeenCalledWith('storeSupportabilityMetrics', ['API/setUserId/resetSession/called'], undefined, 'metrics', expect.any(Object))
+      })
+
+      test('should not reset session when setUserId is called with reset session true and current user is null', () => {
+        agent.setUserId(null)
+        expect(agent.info.jsAttributes['enduser.id']).toEqual(undefined)
+
+        const originalSessionId = agent.runtime.session.state.value
+
+        agent.setUserId('user1', true)
+
+        expect(agent.runtime.session.state.value).toEqual(originalSessionId)
+        expect(agent.info.jsAttributes['enduser.id']).toEqual('user1')
+        expect(handleModule.handle).not.toHaveBeenCalledWith('storeSupportabilityMetrics', ['API/setUserId/resetSession/called'], undefined, 'metrics', expect.any(Object))
+      })
+
+      test('should not reset session when setUserId is called with userid and false for reset session argument', () => {
+        agent.setUserId('user1')
+
+        const originalSessionId = agent.runtime.session.state.value
+
+        const secondUserId = 'user2'
+        agent.setUserId(secondUserId, false) // simulate updating user id without resetting session
+
+        expect(agent.runtime.session.state.value).toEqual(originalSessionId)
+        expect(agent.info.jsAttributes['enduser.id']).toEqual('user2')
+        expect(handleModule.handle).not.toHaveBeenCalledWith('storeSupportabilityMetrics', ['API/setUserId/resetSession/called'], undefined, 'metrics', expect.any(Object))
+      })
+
+      test('should not reset session when setUserId is called with reset session true and current user is the same userid', () => {
+        const origUserId = 'user1'
+        agent.setUserId(origUserId)
+        expect(agent.info.jsAttributes['enduser.id']).toEqual(origUserId)
+
+        const originalSessionId = agent.runtime.session.state.value
+
+        agent.setUserId(origUserId, true)
+
+        expect(agent.runtime.session.state.value).toEqual(originalSessionId)
+        expect(agent.info.jsAttributes['enduser.id']).toEqual('user1')
+        expect(handleModule.handle).not.toHaveBeenCalledWith('storeSupportabilityMetrics', ['API/setUserId/resetSession/called'], undefined, 'metrics', expect.any(Object))
+      })
+
+      test('should reset session when setUserId is called with a diff userid and true for reset session argument', () => {
+        agent.setUserId('user1')
+
+        agent.runtime.session.state.value = faker.string.uuid()
+        const originalSessionId = agent.runtime.session.state.value
+
+        const secondUserId = 'user2'
+        agent.setUserId(secondUserId, true)
+
+        expect(agent.runtime.session.state.value).not.toEqual(originalSessionId)
+        expect(agent.info.jsAttributes['enduser.id']).toEqual('user2')
+        expect(handleModule.handle).toHaveBeenCalledWith('storeSupportabilityMetrics', ['API/setUserId/resetSession/called'], undefined, 'metrics', expect.any(Object))
+      })
+
+      test('should reset session when setUserId is called with userId = null, reset session true and currentId is not null', () => {
+        const origUserId = faker.string.uuid()
+        agent.setUserId(origUserId)
+
+        agent.runtime.session.state.value = faker.string.uuid()
+        const originalSessionId = agent.runtime.session.state.value
+
+        agent.setUserId(null, true) // simulate unsetting user id + resetting session
+
+        expect(agent.runtime.session.state.value).not.toEqual(originalSessionId)
+        expect(agent.info.jsAttributes['enduser.id']).toEqual(undefined)
+        expect(handleModule.handle).toHaveBeenCalledWith('storeSupportabilityMetrics', ['API/setUserId/resetSession/called'], undefined, 'metrics', expect.any(Object))
+      })
     })
 
     describe('setApplicationVersion', () => {

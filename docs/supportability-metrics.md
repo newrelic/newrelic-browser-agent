@@ -307,6 +307,8 @@ A timeslice metric is harvested to the JSE/XHR consumer. An aggregation service 
 * API/noticeError/called
 <!--- newrelic.setUserId() was called --->
 * API/setUserId/called
+<!--- newrelic.setUserId() was called with resetSession = true that successfully executed --->
+* API/setUserId/resetSession/called
 <!--- newrelic.setApplicationVersion() was called --->
 * API/setApplicationVersion/called
 <!--- newrelic.Interaction.actionText() was called --->

@@ -5,6 +5,23 @@
       "changes": [
         {
           "type": "feat",
+          "sha": "61fa99ba39334b85f7611a076943f15356f65364",
+          "message": "Ajax deny list wildcard support",
+          "issues": [
+            "1655"
+          ]
+        }
+      ],
+      "version": "1.307.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "d5f2e92b-7753-4944-9f87-96030f1eeaf7",
+      "createTime": "2025-12-22T15:04:52.117Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
           "sha": "f9f1639504a32b0f24baa117d287c47e209cc818",
           "message": "Control log API through separate RUM flag",
           "issues": [
@@ -3527,5 +3544,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2025-12-16T15:22:41.405Z"
+  "updateTime": "2025-12-22T15:04:52.117Z"
 }

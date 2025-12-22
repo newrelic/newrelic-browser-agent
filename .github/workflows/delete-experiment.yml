@@ -1,5 +1,6 @@
 # This workflow can be run on any branch.
 # Given an environment, this workflow will delete the branch's experiment from S3
+# and then republish the A/B scripts to remove the experiment from the environment.
 
 name: Delete Experiment
 
@@ -39,3 +40,11 @@ jobs:
           aws_role: ${{ secrets.AWS_ROLE_ARN }}
           aws_bucket_name: ${{ secrets.AWS_BUCKET }}
           bucket_dir: experiments/${{ github.event.inputs.nr_environment }}/${{ steps.clean-branch-name.outputs.results }}
+
+  # Rebuild and republish dev after deletion
+  # This removes the deleted experiment from the environment
+  republish-dev:
+    if: ${{ inputs.nr_environment != 'standalone' }}
+    needs: [delete-experiment-on-s3]
+    uses: ./.github/workflows/publish-dev.yml
+    secrets: inherit

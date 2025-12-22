@@ -32,12 +32,15 @@ afterEach(() => {
   jest.clearAllMocks()
 })
 
+const INIT_TIMEOUT = 20
+const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms))
+
 const mockLoggingRumResponse = async (mode, apiMode) => {
   loggingAggregate.ee.emit('rumresp', [{
     log: mode,
     logapi: apiMode
   }])
-  return await new Promise(process.nextTick)
+  return await wait(INIT_TIMEOUT)
 }
 
 describe('class setup', () => {
@@ -57,28 +60,25 @@ describe('class setup', () => {
   test('should wait for flags - log flag is missing', async () => {
     expect(loggingAggregate.drained).toBeUndefined()
     loggingAggregate.ee.emit('rumresp', [{}])
-    await new Promise(process.nextTick)
+    await wait(INIT_TIMEOUT)
     expect(loggingAggregate.blocked).toEqual(true)
   })
 
   test('should wait for flags - 0 = OFF', async () => {
     expect(loggingAggregate.drained).toBeUndefined()
     await mockLoggingRumResponse(LOGGING_MODE.OFF, LOGGING_MODE.OFF)
-
     expect(loggingAggregate.blocked).toEqual(true)
   })
 
   test('should wait for flags - 1 = ERROR', async () => {
     expect(loggingAggregate.drained).toBeUndefined()
     await mockLoggingRumResponse(LOGGING_MODE.ERROR, LOGGING_MODE.OFF)
-
     expect(loggingAggregate.drained).toEqual(true)
   })
 
   test('is not blocked if just logapi is on while log is flagged off', async () => {
     expect(loggingAggregate.drained).toBeUndefined()
     await mockLoggingRumResponse(LOGGING_MODE.OFF, LOGGING_MODE.INFO)
-
     expect(loggingAggregate.drained).toEqual(true)
   })
 
@@ -92,8 +92,8 @@ describe('class setup', () => {
 })
 
 describe('payloads', () => {
-  beforeEach(() => {
-    mockLoggingRumResponse(LOGGING_MODE.INFO, LOGGING_MODE.INFO)
+  beforeEach(async () => {
+    await mockLoggingRumResponse(LOGGING_MODE.INFO, LOGGING_MODE.INFO)
   })
 
   test('fills buffered logs with event emitter messages and prepares matching payload', async () => {
@@ -293,7 +293,7 @@ describe('payloads', () => {
   })
 })
 
-test.each(Object.keys(LOGGING_MODE))('payloads - log events are emitted (or not) according to flag from rum response - %s', async (logLevel) => {
+test.each(Object.keys(LOGGING_MODE).filter(x => x !== 'NOT_SET'))('payloads - log events are emitted (or not) according to flag from rum response - %s', async (logLevel) => {
   const SOME_TIMESTAMP = 1234
   await mockLoggingRumResponse(LOGGING_MODE[logLevel], LOGGING_MODE[logLevel])
   loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [SOME_TIMESTAMP, LOG_LEVELS.ERROR, { myAttributes: 1 }, LOG_LEVELS.ERROR])

@@ -4,6 +4,9 @@ import { rumFlags } from '../../tools/testing-server/constants'
 import { LOGGING_MODE } from '../../src/features/logging/constants'
 
 describe('newrelic api', () => {
+  beforeEach(async () => {
+    await browser.enableLogging()
+  })
   afterEach(async () => {
     await browser.destroyAgentSession()
   })

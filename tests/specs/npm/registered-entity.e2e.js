@@ -13,6 +13,7 @@ describe('registered-entity', () => {
       { test: testInsRequest },
       { test: testLogsRequest }
     ])
+    await browser.enableLogging()
   })
 
   const featureFlags = [

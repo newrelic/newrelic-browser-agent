@@ -41,7 +41,6 @@ const mockLoggingRumResponse = async (mode, apiMode) => {
     logapi: apiMode
   }])
   return await wait(INIT_TIMEOUT)
-  // return await new Promise(process.nextTick)
 }
 
 describe('class setup', () => {
@@ -74,7 +73,6 @@ describe('class setup', () => {
   test('should wait for flags - 1 = ERROR', async () => {
     expect(loggingAggregate.drained).toBeUndefined()
     await mockLoggingRumResponse(LOGGING_MODE.ERROR, LOGGING_MODE.OFF)
-    await wait(INIT_TIMEOUT)
     expect(loggingAggregate.drained).toEqual(true)
   })
 

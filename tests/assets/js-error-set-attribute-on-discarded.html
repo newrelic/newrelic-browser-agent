@@ -11,9 +11,9 @@
 
     <script>
       function triggerError() {
-        NREUM.noticeError(new Error("My error"))
         newrelic.interaction().setAttribute('customParamKey', 1)
-        // not changing the URL means that the interaction will be discarded
+        NREUM.noticeError(new Error("My error"))
+        newrelic.interaction().end() // will discard the ixn by default
       }
     </script>
 

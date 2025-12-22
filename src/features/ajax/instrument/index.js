@@ -308,11 +308,12 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
     }
   }
 
-  function onFetchStart (fetchArguments, dtPayload) {
+  function onFetchStart (fetchArguments, dtPayload, mfeId) {
     this.params = {}
     this.metrics = {}
     this.startTime = now()
     this.dt = dtPayload
+    this.mfeId = mfeId
 
     if (fetchArguments.length >= 1) this.target = fetchArguments[0]
     if (fetchArguments.length >= 2) this.opts = fetchArguments[1]

@@ -13,7 +13,7 @@ jest.retryTimes(0)
 let mainAgent
 
 beforeAll(async () => {
-  mainAgent = setupAgent()
+  mainAgent = setupAgent({ init: { api: { allow_registered_children: true } } })
 })
 
 let loggingAggregate

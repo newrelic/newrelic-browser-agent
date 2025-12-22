@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.307.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.306.0...v1.307.0) (2025-12-22)
+
+
+### Features
+
+* Ajax deny list wildcard support ([#1655](https://github.com/newrelic/newrelic-browser-agent/issues/1655)) ([61fa99b](https://github.com/newrelic/newrelic-browser-agent/commit/61fa99ba39334b85f7611a076943f15356f65364))
+
 ## [1.306.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.305.0...v1.306.0) (2025-12-16)
 
 

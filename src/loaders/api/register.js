@@ -82,7 +82,7 @@ function register (agentRef, target, parent) {
   const api = {
     addPageAction: (name, attributes = {}) => report(addPageAction, [name, { ...attrs, ...attributes }, agentRef], target),
     deregister: () => {
-      /** note: blocking this instance will disable all entities using the instance, and will invalidate it from the v2 checks */
+      /** note: blocking this instance will disable access for all entities sharing the instance, and will invalidate it from the v2 checks */
       block(single(() => warn(67)))
     },
     log: (message, options = {}) => report(log, [message, { ...options, customAttributes: { ...attrs, ...(options.customAttributes || {}) } }, agentRef], target),

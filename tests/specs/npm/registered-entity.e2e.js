@@ -265,11 +265,11 @@ describe('registered-entity', () => {
       window.agent1 = new RegisteredEntity({
         id: 1,
         name: 'my agent',
-        shared: true
+        isolated: false
       })
       window.agent2 = new RegisteredEntity({
         id: 1,
-        shared: true
+        isolated: false
       })
       // should get data as "agent2"
       window.agent1.setCustomAttribute('sharedAttr', 'shared for both instances')

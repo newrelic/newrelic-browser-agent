@@ -60,7 +60,7 @@ expectType<MicroAgent>(microAgent)
   expectType<(name: string, trigger?: string) => InteractionInstance>(agent.interaction().setName)
 
   // register APIs
-  expectType<(target: {id: string|number, name: string, parentId?: string}) => RegisterAPI>(agent.register)
+  expectType<(target: {id: string|number, name: string, parentId?: string, isolated?: boolean}) => RegisterAPI>(agent.register)
   const registeredEntity = agent.register({ id: 123, name: 'hello' })
   expectType<(name: string, attributes?: object) => void>(registeredEntity.addPageAction)
   expectType<(message: string, options?: { customAttributes?: object, level?: 'ERROR' | 'TRACE' | 'DEBUG' | 'INFO' | 'WARN'}) => void>(registeredEntity.log)

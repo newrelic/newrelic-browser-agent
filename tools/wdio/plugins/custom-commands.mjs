@@ -116,17 +116,31 @@ export default class CustomCommands {
     })
 
     /**
-     * Sets a permanent scheduled reply for the rum call to include the log flag with sampling rate.
-     * Defaults to 100% sampling rate and log mode = 3/INFO.
+     * Sets a series of logging modes or set one permanent scheduled reply for the rum call to include the log flag with sampling rate.
+     * If secondLogMode is provided, please note all scheduled replies are non-permanent.
+     * Defaults to 100% sampling rate and log mode = 3/INFO (permanent).
      */
-    browser.addCommand('enableLogging', async function ({ sampling_rate = 100, logMode = 3 } = {}) {
+    browser.addCommand('enableLogging', async function ({ sampling_rate = 100, logMode = 3, secondLogMode = null } = {}) {
       const loggingMode = Math.random() * 100 < sampling_rate ? logMode : 0
       await browser.testHandle.clearScheduledReply('bamServer', { test: testRumRequest })
       await browser.testHandle.scheduleReply('bamServer', {
         test: testRumRequest,
-        permanent: true,
-        body: JSON.stringify(rumFlags({ log: loggingMode }))
+        permanent: false,
+        body: JSON.stringify(rumFlags({ log: loggingMode, logapi: loggingMode }))
       })
+      if (secondLogMode !== null) {
+        await browser.testHandle.scheduleReply('bamServer', {
+          test: testRumRequest,
+          permanent: false,
+          body: JSON.stringify(rumFlags({ log: secondLogMode, logapi: secondLogMode }))
+        })
+      } else {
+        await browser.testHandle.scheduleReply('bamServer', {
+          test: testRumRequest,
+          permanent: true,
+          body: JSON.stringify(rumFlags({ log: loggingMode, logapi: loggingMode }))
+        })
+      }
     })
 
     /**

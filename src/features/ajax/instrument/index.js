@@ -402,7 +402,7 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
         }.bind(this))
       }
     }).catch((err) => {
-      this.ee.emit(INTERNAL_ERROR, [err])
+      ee.emit(INTERNAL_ERROR, [err])
     }).finally(() => {
       finishAndReport()
     })
@@ -441,7 +441,7 @@ function subscribeToEvents (agentRef, ee, handler, dt) {
     try {
       this.responseHeaders = parseResponseHeaders(xhr.getAllResponseHeaders())
     } catch (err) {
-      this.ee.emit(INTERNAL_ERROR, [err])
+      ee.emit(INTERNAL_ERROR, [err])
     }
 
     handler('xhr', [params, metrics, this.startTime, this.endTime, 'xhr'], this, FEATURE_NAMES.ajax)

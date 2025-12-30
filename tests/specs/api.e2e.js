@@ -45,9 +45,18 @@ describe('newrelic api', () => {
         const data = body.err
         data.forEach((err, idx) => {
           expect(err.custom['source.name']).toEqual('agent' + (idx + 1))
-          if (idx === 0) expect(err.custom['parent.id']).toEqual(containerAgentEntityGuid) // first app should have container as its parent
-          if (idx === 1) expect(err.custom['parent.id']).toEqual(1) // second app should have first app as its parent
-          if (idx === 2) expect(err.custom['parent.id']).toEqual(2) // third app should have second app as its parent
+          if (idx === 0) {
+            expect(err.custom['parent.id']).toEqual(containerAgentEntityGuid) // first app should have container as its parent
+            expect(err.custom['parent.type']).toEqual('BA') // parent is container (Browser Agent)
+          }
+          if (idx === 1) {
+            expect(err.custom['parent.id']).toEqual(1) // second app should have first app as its parent
+            expect(err.custom['parent.type']).toEqual('MFE') // parent is a registered MFE
+          }
+          if (idx === 2) {
+            expect(err.custom['parent.id']).toEqual(2) // third app should have second app as its parent
+            expect(err.custom['parent.type']).toEqual('MFE') // parent is a registered MFE
+          }
         })
       })
     })
@@ -154,6 +163,7 @@ describe('newrelic api', () => {
               expect(err.custom['source.name']).toEqual('agent' + id)
               expect(err.custom['source.type']).toEqual('MFE')
               expect(err.custom['parent.id']).toEqual(containerAgentEntityGuid)
+              expect(err.custom['parent.type']).toEqual('BA') // parent is container (Browser Agent)
             } else {
               if (testSet.includes('register') && testSet.includes('register.jserrors')) {
                 expect(err.custom.appId).toEqual(42)
@@ -179,6 +189,7 @@ describe('newrelic api', () => {
                 expect(ins['source.name']).toEqual('agent' + id)
                 expect(ins['source.type']).toEqual('MFE')
                 expect(ins['parent.id']).toEqual(containerAgentEntityGuid)
+                expect(ins['parent.type']).toEqual('BA') // parent is container (Browser Agent)
               } else {
                 if (testSet.includes('register') && testSet.includes('register.generic_events')) {
                   expect(ins.appId).toEqual(42)
@@ -225,6 +236,7 @@ describe('newrelic api', () => {
               expect(log.attributes['source.name']).toEqual('agent' + id)
               expect(log.attributes['source.type']).toEqual('MFE')
               expect(log.attributes['parent.id']).toEqual(containerAgentEntityGuid)
+              expect(log.attributes['parent.type']).toEqual('BA') // parent is container (Browser Agent)
             } else {
               if (testSet.includes('register')) {
                 expect(log.attributes.appId).toEqual(42)

@@ -12,7 +12,7 @@ export function isValidMFETarget (target = {}) {
 }
 
 export function hasValidValue (val) {
-  return (typeof val === 'string' && val.trim().length < 501) || (typeof val === 'number')
+  return (typeof val === 'string' && !!val.trim() && val.trim().length < 501) || (typeof val === 'number')
 }
 
 /**
@@ -36,6 +36,7 @@ export function getVersion2Attributes (target, aggregateInstance) {
     'source.id': target.id,
     'source.name': target.name,
     'source.type': target.type,
-    'parent.id': target.parent?.id || containerAgentEntityGuid
+    'parent.id': target.parent?.id || containerAgentEntityGuid,
+    'parent.type': target.parent?.type || 'BA' // if the parent has a type use it ("MFE"), otherwise assume it's "Browser Agent" aka "BA"
   }
 }

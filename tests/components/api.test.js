@@ -691,6 +691,96 @@ describe('API tests', () => {
           expectHandle('log', 'test')
         })
       })
+
+      describe('tags', () => {
+        test('should add tags as source attributes', () => {
+          const target = { id, name, tags: ['tag1', 'tag2', 'tag3'] }
+          const myApi = agent.register(target)
+
+          expect(myApi.metadata.customAttributes).toEqual({
+            'source.tag1': 1,
+            'source.tag2': 1,
+            'source.tag3': 1
+          })
+        })
+
+        test('should handle empty tags array', () => {
+          const target = { id, name, tags: [] }
+          const myApi = agent.register(target)
+
+          expect(myApi.metadata.customAttributes).toEqual({})
+        })
+
+        test('should handle missing tags property', () => {
+          const target = { id, name }
+          const myApi = agent.register(target)
+
+          expect(myApi.metadata.customAttributes).toEqual({})
+        })
+
+        test('should handle non-array tags by defaulting to empty array', () => {
+          const target = { id, name, tags: 'not-an-array' }
+          const myApi = agent.register(target)
+
+          expect(myApi.metadata.customAttributes).toEqual({})
+        })
+
+        test('should include tags in reported data', () => {
+          const target = { id, name, tags: ['frontend', 'checkout'] }
+          const myApi = agent.register(target)
+
+          const err = new Error('test')
+          myApi.noticeError(err)
+
+          const calls = handleModule.handle.mock.calls.filter(call => call[0] === 'err')
+          expect(calls.length).toBeGreaterThan(0)
+
+          const errorCall = calls.find(call => call[1]?.[0] === err)
+          console.log('errorCall:', errorCall)
+          expect(errorCall).toBeDefined()
+          expect(errorCall[1][3]).toMatchObject({
+            'source.frontend': 1,
+            'source.checkout': 1
+          })
+        })
+
+        test('should combine tags with other custom attributes', () => {
+          const target = { id, name, tags: ['module1'] }
+          const myApi = agent.register(target)
+
+          myApi.setCustomAttribute('foo', 'bar')
+          myApi.setApplicationVersion('1.0.0')
+
+          expect(myApi.metadata.customAttributes).toEqual({
+            'source.module1': 1,
+            foo: 'bar',
+            'application.version': '1.0.0'
+          })
+        })
+
+        test('should exclude protected "name" and "id" keys from tags', () => {
+          const target = { id, name, tags: ['name', 'id', 'valid-tag', 'another-tag'] }
+          const myApi = agent.register(target)
+
+          // Should only include valid-tag and another-tag, not name or id
+          expect(myApi.metadata.customAttributes).toEqual({
+            'source.valid-tag': 1,
+            'source.another-tag': 1
+          })
+
+          // Verify source.name and source.id are not created from tags
+          expect(myApi.metadata.customAttributes['source.name']).toBeUndefined()
+          expect(myApi.metadata.customAttributes['source.id']).toBeUndefined()
+        })
+
+        test('should handle tags array with only protected keys', () => {
+          const target = { id, name, tags: ['name', 'id'] }
+          const myApi = agent.register(target)
+
+          // Should result in empty custom attributes since all tags are protected
+          expect(myApi.metadata.customAttributes).toEqual({})
+        })
+      })
     })
 
     describe('logging', () => {

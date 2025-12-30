@@ -135,8 +135,10 @@ function register (agentRef, target, parent) {
     try {
       const shouldDuplicate = agentRef.init.api.duplicate_registered_data && methodToCall.name !== 'register'
       if (shouldDuplicate) {
-        // also report to container by providing undefined target
-        methodToCall(...args, undefined, timestamp)
+        if (args[1] instanceof Object) {
+          if ('customAttributes' in args[1]) methodToCall(args[0], { ...args[1], customAttributes: { ...args[1].customAttributes, 'child.id': target.id, 'child.type': target.type } }, ...args.slice(2), undefined, timestamp)
+          else methodToCall(args[0], { ...args[1], 'child.id': target.id, 'child.type': target.type }, ...args.slice(2), undefined, timestamp)
+        } else methodToCall(...args, undefined, timestamp)
       }
       return methodToCall(...args, target, timestamp) // always report to target
     } catch (err) {

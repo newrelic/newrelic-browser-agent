@@ -6,20 +6,13 @@
 </head>
 <body>
 <div>
-  This page uses a button to initiate an XHR. When running in a spec file, setting
-  `window.disableAjaxHashChange = true` will disable the hash route change so the
-  ajax call is fully processed by the ajax feature instead of the SPA feature.
+  This page uses a button to initiate an XHR.
 </div>
 <div><button id="sendAjax">Send Ajax</button></div>
 <script>
-  window.disableAjaxHashChange = false
   document.getElementById('sendAjax').addEventListener('click', function () {
     var xhr = new XMLHttpRequest()
-    xhr.addEventListener('loadend', function () {
-      if (!disableAjaxHashChange) {
-        window.location.hash = Math.random()
-      }
-    })
+    xhr.addEventListener('loadend', function () {})
     xhr.open('GET', '/json')
     xhr.send()
   })

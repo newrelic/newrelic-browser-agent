@@ -5,7 +5,7 @@ let mainAgent, pveAggregate
 
 beforeAll(async () => {
   mainAgent = setupAgent()
-  mainAgent.info.errorBeacon = undefined // this prevents Harvester from actually running its `send` method
+  mainAgent.info.errorBeacon = 'fake-beacon' // Set a dummy value so send() logic runs (but submitMethod will be mocked to prevent actual network calls)
 })
 beforeEach(async () => {
   const pveInstrument = new PageViewEvent(mainAgent)

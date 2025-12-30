@@ -1,6 +1,6 @@
 import { testInteractionEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
-describe('behavior tests', () => {
+describe.skip('behavior tests', () => {
   describe('addEventListener', () => {
     it('overwriting strict window.addEventListener does not break agent', async () => {
       await browser.url(

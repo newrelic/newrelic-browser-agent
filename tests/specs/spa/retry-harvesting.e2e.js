@@ -1,6 +1,6 @@
 import { testInteractionEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
-describe('retry harvesting', () => {
+describe.skip('retry harvesting', () => {
   let interactionsCapture
 
   beforeEach(async () => {

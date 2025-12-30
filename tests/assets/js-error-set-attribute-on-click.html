@@ -16,8 +16,7 @@
         } catch (e) {
           NREUM.noticeError(e)
         }
-        newrelic.interaction().setAttribute('customParamKey', 1)
-        window.location.hash = Math.random()
+        newrelic.interaction().setAttribute('customParamKey', 1).save().end()
       }
     </script>
 

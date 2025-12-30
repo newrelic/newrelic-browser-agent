@@ -13,7 +13,6 @@ import { Instrument as JSErrors } from '../../src/features/jserrors/instrument'
 import { Instrument as SessionTrace } from '../../src/features/session_trace/instrument'
 import { Instrument as SessionReplay } from '../../src/features/session_replay/instrument'
 import { Instrument as SoftNavigations } from '../../src/features/soft_navigations/instrument'
-import { Instrument as SPA } from '../../src/features/spa/instrument'
 import { Instrument as GenericEvents } from '../../src/features/generic_events/instrument'
 
 import { setupSetCustomAttributeAPI } from '../../src/loaders/api/setCustomAttribute'
@@ -110,10 +109,6 @@ describe('API tests', () => {
       ;['recordReplay', 'pauseReplay'].forEach(apiName => checkApiExists(apiName, true))
 
       await initializeFeature(SoftNavigations, agent)
-      ;['interaction'].forEach(apiName => checkApiExists(apiName, true))
-
-      delete agent.interaction
-      await initializeFeature(SPA, agent)
       ;['interaction'].forEach(apiName => checkApiExists(apiName, true))
 
       delete agent.register
@@ -257,21 +252,12 @@ describe('API tests', () => {
       })
     })
 
-    describe('setCurrentRouteName - SPA', () => {
-      test('should execute as expected', () => {
-        agent.setCurrentRouteName('test')
-
-        expectHandled('storeSupportabilityMetrics', ['API/setCurrentRouteName/called'])
-        expectHandled('api-routeName', [expect.toBeNumber(), 'test'])
-      })
-    })
-
     describe('setCurrentRouteName - SoftNav', () => {
       test('should execute as expected', () => {
         agent.setCurrentRouteName('test')
 
         expectHandled('storeSupportabilityMetrics', ['API/setCurrentRouteName/called'])
-        expectHandled('api-routeName', [expect.toBeNumber(), 'test'])
+        expectHandled('api-ixn-routeName', [expect.toBeNumber(), 'test'])
       })
     })
 

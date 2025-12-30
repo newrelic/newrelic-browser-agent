@@ -23,7 +23,7 @@
         (new jspdf.jsPDF()).html(document.getElementById('content'), {
           callback: function () {
             pdfGenerated = true
-            window.location.hash = Math.random()
+            newrelic.interaction().end()
           }
         })
       })

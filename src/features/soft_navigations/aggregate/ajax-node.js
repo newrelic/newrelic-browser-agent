@@ -22,6 +22,13 @@ export class AjaxNode extends BelNode {
     this.spanTimestamp = ajaxEvent.spanTimestamp
     this.gql = ajaxEvent.gql
 
+    // optional payload metadata attributes
+    this.requestBody = ajaxEvent.requestBody
+    this.requestHeaders = ajaxEvent.requestHeaders
+    this.requestQuery = ajaxEvent.requestQuery
+    this.responseBody = ajaxEvent.responseBody
+    this.responseHeaders = ajaxEvent.responseHeaders
+
     this.start = ajaxEvent.startTime
     this.end = ajaxEvent.endTime
     if (ajaxContext?.latestLongtaskEnd) {
@@ -53,7 +60,13 @@ export class AjaxNode extends BelNode {
       nullable(this.spanId, addString, true) + nullable(this.traceId, addString, true) + nullable(this.spanTimestamp, numeric)
     ]
     let allAttachedNodes = []
+
     if (typeof this.gql === 'object') allAttachedNodes = addCustomAttributes(this.gql, addString)
+    if (this.requestBody) allAttachedNodes.push(addCustomAttributes({ requestBody: this.requestBody }, addString))
+    if (this.requestHeaders) allAttachedNodes.push(addCustomAttributes({ requestHeaders: this.requestHeaders }, addString))
+    if (this.requestQuery) allAttachedNodes.push(addCustomAttributes({ requestQuery: this.requestQuery }, addString))
+    if (this.responseBody) allAttachedNodes.push(addCustomAttributes({ responseBody: this.responseBody }, addString))
+    if (this.responseHeaders) allAttachedNodes.push(addCustomAttributes({ responseHeaders: this.responseHeaders }, addString))
     this.children.forEach(node => allAttachedNodes.push(node.serialize())) // no children is expected under ajax nodes at this time
 
     fields[1] = numeric(allAttachedNodes.length)

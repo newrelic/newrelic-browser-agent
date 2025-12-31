@@ -72,7 +72,16 @@ describe('wrap-websocket', () => {
       currentUrl: expect.any(String),
       socketId: expect.any(String),
       requestedUrl: 'ws://foo.com/websocket',
-      requestedProtocols: ''
+      requestedProtocols: '',
+      messageCount: 0,
+      messageBytes: 0,
+      messageBytesMin: 0,
+      messageBytesMax: 0,
+      sendCount: 0,
+      sendBytes: 0,
+      sendBytesMin: 0,
+      sendBytesMax: 0,
+      connectedDuration: 0
     }
     expect(ws.nrData).toEqual(expectNrData)
     expect(ws.nrData.openedAt).toBeUndefined()
@@ -86,12 +95,12 @@ describe('wrap-websocket', () => {
       protocol: ws.protocol
     })
     expect(ws.nrData.openedAt).toBeGreaterThanOrEqual(ws.nrData.timestamp)
-    expect(ws.nrData.sendCount).toBeUndefined()
+    expect(ws.nrData.sendCount).toBe(0)
 
     expect(origWebSocket.prototype.send).not.toHaveBeenCalled()
     ws.send('abc') // the readystate is still CONNECTING here, so wrapped send should not track and only call original send
     expect(origWebSocket.prototype.send).toHaveBeenCalledTimes(1)
-    expect(ws.nrData.sendCount).toBeUndefined()
+    expect(ws.nrData.sendCount).toBe(0)
 
     Object.defineProperty(ws, 'readyState', { value: WebSocket.OPEN })
     ws.send('abc')
@@ -104,7 +113,7 @@ describe('wrap-websocket', () => {
       sendBytesMax: 3,
       sendTypes: 'string'
     })
-    expect(ws.nrData.messageCount).toBeUndefined()
+    expect(ws.nrData.messageCount).toBe(0)
 
     ws.dispatchEvent(new MessageEvent('message', { data: 'hello world', origin: 'ws://foo.com' }))
     expect(ws.nrData).toEqual(expectNrData = {

@@ -72,7 +72,8 @@ describe('wrap-websocket', () => {
       currentUrl: expect.any(String),
       socketId: expect.any(String),
       requestedUrl: 'ws://foo.com/websocket',
-      requestedProtocols: ''
+      requestedProtocols: '',
+      closeReason: 'unknown'
     }
     expect(ws.nrData).toEqual(expectNrData)
     expect(ws.nrData.openedAt).toBeUndefined()

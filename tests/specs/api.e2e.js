@@ -248,12 +248,10 @@ describe('newrelic api', () => {
       })
     })
 
-    it('should add child.id and child.type to duplicated data', async () => {
-      const [mfeErrorsCapture, regularErrorsCapture, mfeInsightsCapture, regularInsightsCapture, logsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+    it('should add child.* attributes to duplicated data', async () => {
+      const [mfeErrorsCapture, mfeInsightsCapture, logsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
         { test: testMFEErrorsRequest },
-        { test: testErrorsRequest },
         { test: testMFEInsRequest },
-        { test: testInsRequest },
         { test: testLogsRequest }
       ])
 
@@ -299,16 +297,16 @@ describe('newrelic api', () => {
       })
 
       const [errorsHarvests, insightsHarvests, logsHarvests] = await Promise.all([
-        Promise.all([
-          mfeErrorsCapture.waitForResult({ totalCount: 1, timeout: 10000 }),
-          regularErrorsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
-        ]).then(results => results.flat()),
-        Promise.all([
-          mfeInsightsCapture.waitForResult({ totalCount: 1, timeout: 10000 }),
-          regularInsightsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
-        ]).then(results => results.flat()),
+        mfeErrorsCapture.waitForResult({ totalCount: 2, timeout: 10000 }),
+        mfeInsightsCapture.waitForResult({ totalCount: 1, timeout: 10000 }),
         logsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
       ])
+
+      const tested = {
+        errors: { container: false, mfe: false },
+        insights: { container: false, mfe: false },
+        logs: { container: false, mfe: false }
+      }
 
       // Check errors - distinguish by source.id
       errorsHarvests.forEach(({ request: { body } }) => {
@@ -316,11 +314,13 @@ describe('newrelic api', () => {
         data.forEach((err) => {
           const hasSourceId = err.custom['source.id']
           if (hasSourceId) {
+            tested.errors.mfe = true
             // MFE-specific errors should NOT have child.id or child.type
             expect(err.custom['child.id']).toBeUndefined()
             expect(err.custom['child.type']).toBeUndefined()
           } else {
             // Container errors (duplicated) should HAVE child.id and child.type
+            tested.errors.container = true
             expect(err.custom['child.id']).toBeDefined()
             expect([agent1Id, agent2Id]).toContain(err.custom['child.id'])
             expect(err.custom['child.type']).toEqual('MFE')
@@ -328,6 +328,9 @@ describe('newrelic api', () => {
           }
         })
       })
+
+      expect(tested.errors.mfe).toEqual(true)
+      expect(tested.errors.container).toEqual(true)
 
       // Check insights - distinguish by source.id
       insightsHarvests.forEach(({ request: { body } }) => {
@@ -339,16 +342,20 @@ describe('newrelic api', () => {
               // MFE-specific insights should NOT have child.id or child.type
               expect(ins['child.id']).toBeUndefined()
               expect(ins['child.type']).toBeUndefined()
+              tested.insights.mfe = true
             } else {
               // Container insights (duplicated) should HAVE child.id and child.type
               expect(ins['child.id']).toBeDefined()
               expect([agent1Id, agent2Id]).toContain(ins['child.id'])
               expect(ins['child.type']).toEqual('MFE')
               expect(ins.testAttr).toBeDefined()
+              tested.insights.container = true
             }
           }
         })
       })
+      expect(tested.insights.mfe).toEqual(true)
+      expect(tested.insights.container).toEqual(true)
 
       // Check logs - duplicated should have child.id and child.type
       logsHarvests.forEach(({ request: { body } }) => {
@@ -359,15 +366,19 @@ describe('newrelic api', () => {
             // MFE-specific logs should NOT have child.id or child.type
             expect(log.attributes['child.id']).toBeUndefined()
             expect(log.attributes['child.type']).toBeUndefined()
+            tested.logs.mfe = true
           } else {
             // Container logs (duplicated) should HAVE child.id and child.type
             expect(log.attributes['child.id']).toBeDefined()
             expect([agent1Id, agent2Id]).toContain(log.attributes['child.id'])
             expect(log.attributes['child.type']).toEqual('MFE')
             expect(log.attributes.testAttr).toBeDefined()
+            tested.logs.container = true
           }
         })
       })
+      expect(tested.logs.mfe).toEqual(true)
+      expect(tested.logs.container).toEqual(true)
     })
   })
 

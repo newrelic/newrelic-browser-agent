@@ -159,7 +159,7 @@ export class Aggregate extends AggregateBase {
      * the canonical stack trace excludes items like the column number increasing the hit-rate of different errors potentially
      * bucketing and ultimately resulting in the loss of data in NR1.
      */
-    var bucketHash = stringHashCode(`${stackInfo.name}_${stackInfo.message}_${stackInfo.stackString}_${params.hasReplay ? 1 : 0}`)
+    var bucketHash = stringHashCode(`${stackInfo.name}_${stackInfo.message}_${stackInfo.stackString}_${params.hasReplay ? 1 : 0}_${target?.id || 'container'}`)
 
     if (!this.stackReported[bucketHash]) {
       this.stackReported[bucketHash] = true
@@ -188,7 +188,7 @@ export class Aggregate extends AggregateBase {
 
     // Trace sends the error in its payload, and both trace & replay simply listens for any error to occur.
     const jsErrorEvent = [type, bucketHash, params, newMetrics, customAttributes]
-    if (this.shouldAllowMainAgentToCapture(target)) handle('trace-jserror', jsErrorEvent, undefined, FEATURE_NAMES.sessionTrace, this.ee)
+    if (!target) handle('trace-jserror', jsErrorEvent, undefined, FEATURE_NAMES.sessionTrace, this.ee)
     // still send EE events for other features such as above, but stop this one from aggregating internal data
     if (this.blocked) return
 
@@ -200,7 +200,7 @@ export class Aggregate extends AggregateBase {
       customAttributes.socketId = err.__newrelic.socketId
     }
 
-    if (this.shouldAllowMainAgentToCapture(target)) {
+    if (!target) {
       const softNavInUse = Boolean(this.agentRef.features?.[FEATURE_NAMES.softNav])
       // Note: the following are subject to potential race cond wherein if the other feature aren't fully initialized, it'll be treated as there being no associated interaction.
       // They each will also tack on their respective properties to the params object as part of the decision flow.
@@ -251,16 +251,6 @@ export class Aggregate extends AggregateBase {
     function setCustom (key, val) {
       allCustomAttrs[key] = (val && typeof val === 'object' ? stringify(val) : val)
     }
-  }
-
-  /**
-  * If the event lacks an entityGuid (the default behavior), the main agent should capture the data. If the data is assigned to a sub-entity target
-  * the main agent should not capture events unless it is configured to do so.
-  * @param {string} target - the context object for the event
-  * @returns {boolean} - whether the main agent should capture the event to its internal target
-  */
-  shouldAllowMainAgentToCapture (target) {
-    return (!target || this.agentRef.init.api.duplicate_registered_data)
   }
 
   // TO-DO: Remove this function when old spa is taken out. #storeJserrorForHarvest handles the work with the softnav feature.

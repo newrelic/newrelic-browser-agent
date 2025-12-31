@@ -270,10 +270,10 @@ describe.withBrowsersMatching(supportsWebSocketsTesting)('WebSocket wrapper', ()
     expect(wsEvent.pageUrl).toEndWith('/instrumented.html')
     expect(wsEvent.closeCode).toBe(1001) // Going Away - set by wrap-websocket pagehide handler
 
-    // Firefox's close event fires after pagehide and overwrites closeReason with empty string
+    // Firefox's close event fires after pagehide, so it gets the default 'unknown' reason
     // Other browsers preserve the pagehide-set closeReason
     if (browserMatch(onlyFirefox)) {
-      expect(wsEvent.closeReason).toBe('')
+      expect(wsEvent.closeReason).toBe('unknown')
       expect(wsEvent.closeWasClean).toBe(true)
     } else {
       expect(wsEvent.closeReason).toBe('Page navigating away')

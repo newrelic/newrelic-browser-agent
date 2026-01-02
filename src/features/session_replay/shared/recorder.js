@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { record as recorder } from '@newrelic/rrweb'
@@ -45,6 +45,8 @@ export class Recorder {
     this.events = new RecorderEvents(this.shouldFix)
     /** Backlog used for a 2-part sliding window to guarantee a 15-30s buffer window */
     this.backloggedEvents = new RecorderEvents(this.shouldFix)
+    /** Used to hold the harvest contents to facilitate retrying */
+    this.retryPayload = undefined
     /** Only set to true once a snapshot node has been processed.  Used to block harvests from sending before we know we have a snapshot */
     this.hasSeenSnapshot = false
     this.hasSeenMeta = false

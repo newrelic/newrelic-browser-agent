@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 /**
@@ -209,6 +209,7 @@ export class Aggregate extends AggregateBase {
   }
 
   makeHarvestPayload () {
+    if (this.retrying && this.recorder.retryPayload) return this.recorder.retryPayload
     if (this.mode !== MODE.FULL || this.blocked) return // harvests should only be made in FULL mode, and not if the feature is blocked
     if (this.shouldCompress && !this.gzipper) return // if compression is enabled, but the libraries have not loaded, wait for them to load
     if (!this.recorder || !this.timeKeeper?.ready || !(this.recorder.hasSeenSnapshot && this.recorder.hasSeenMeta)) return // if the recorder or the timekeeper is not ready, or the recorder has not yet seen a snapshot, do not harvest
@@ -239,13 +240,14 @@ export class Aggregate extends AggregateBase {
       return
     }
 
-    // TODO -- Gracefully handle the buffer for retries.
     if (!this.agentRef.runtime.session.state.sessionReplaySentFirstChunk) this.syncWithSessionManager({ sessionReplaySentFirstChunk: true })
     this.recorder.clearBuffer()
 
     if (!this.agentRef.runtime.session.state.traceHarvestStarted) {
       warn(59, JSON.stringify(this.agentRef.runtime.session.state))
     }
+
+    this.recorder.retryPayload = payload
 
     return payload
   }
@@ -338,9 +340,17 @@ export class Aggregate extends AggregateBase {
   }
 
   postHarvestCleanup (result) {
-    // The mutual decision for now is to stop recording and clear buffers if ingest is experiencing 429 rate limiting
-    if (result.status === 429) {
-      this.abort(ABORT_REASONS.TOO_MANY)
+    if (result.sent) {
+      if (result.retry) {
+        this.retrying = true
+        this.forceStop()
+      } else {
+        this.recorder.retryPayload = undefined
+        if (this.retrying) {
+          this.retrying = false
+          this.switchToFull()
+        }
+      }
     }
   }
 

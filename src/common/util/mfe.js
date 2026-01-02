@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -8,7 +8,7 @@
  * @returns {boolean}
  */
 export function isValidMFETarget (target = {}) {
-  return !!(target.id && target.name)
+  return hasValidValue(target.id) && hasValidValue(target.name)
 }
 
 export function hasValidValue (val) {

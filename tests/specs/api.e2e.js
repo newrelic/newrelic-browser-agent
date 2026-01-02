@@ -280,12 +280,12 @@ describe('newrelic api', () => {
         const error1 = data.find(err => err.params.message === 'error1')
         const error2 = data.find(err => err.params.message === 'error2')
 
-        expect(error1.custom['source.checkout']).toEqual(1)
-        expect(error1.custom['source.payment']).toEqual(1)
+        expect(error1.custom['source.checkout']).toEqual(true)
+        expect(error1.custom['source.payment']).toEqual(true)
         expect(error1.custom['source.name']).toEqual('frontend-agent')
 
-        expect(error2.custom['source.api']).toEqual(1)
-        expect(error2.custom['source.graphql']).toEqual(1)
+        expect(error2.custom['source.api']).toEqual(true)
+        expect(error2.custom['source.graphql']).toEqual(true)
         expect(error2.custom['source.name']).toEqual('backend-agent')
       })
     })
@@ -347,8 +347,8 @@ describe('newrelic api', () => {
         expect(data).toHaveLength(1)
 
         const error1 = data[0]
-        expect(error1.custom['source.module1']).toEqual(1)
-        expect(error1.custom['source.frontend']).toEqual(1)
+        expect(error1.custom['source.module1']).toEqual(true)
+        expect(error1.custom['source.frontend']).toEqual(true)
         expect(error1.custom.customAttr).toEqual('customValue')
         expect(error1.custom['application.version']).toEqual('1.0.0')
       })
@@ -362,7 +362,7 @@ describe('newrelic api', () => {
 
       await browser.execute(function () {
         window.agent1 = newrelic.register({
-          id: 1,
+          id: 1234,
           name: 'test-agent',
           tags: ['name', 'id', 'valid-tag']
         })
@@ -379,9 +379,9 @@ describe('newrelic api', () => {
         const error1 = data[0]
 
         // Should only have source.valid-tag, not source.name or source.id from tags
-        expect(error1.custom['source.valid-tag']).toEqual(1)
+        expect(error1.custom['source.valid-tag']).toEqual(true)
         expect(error1.custom['source.name']).toEqual('test-agent') // This comes from the name property
-        expect(error1.custom['source.id']).toEqual(1) // This comes from the id property
+        expect(error1.custom['source.id']).toEqual(1234) // This comes from the id property
 
         // Verify there are no duplicate or conflicting attributes
         const sourceNameKeys = Object.keys(error1.custom).filter(k => k === 'source.name')
@@ -399,7 +399,7 @@ describe('newrelic api', () => {
 
       await browser.execute(function () {
         window.agent1 = newrelic.register({
-          id: 1,
+          id: 1234,
           name: 'test-agent',
           tags: ['name', 'id']
         })
@@ -417,7 +417,7 @@ describe('newrelic api', () => {
 
         // Should have source.name and source.id from properties, not from tags
         expect(error1.custom['source.name']).toEqual('test-agent')
-        expect(error1.custom['source.id']).toEqual(1)
+        expect(error1.custom['source.id']).toEqual(1234)
 
         // Should not have any other source.* attributes from tags
         const sourceKeys = Object.keys(error1.custom).filter(k => k.startsWith('source.'))

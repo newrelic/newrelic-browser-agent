@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { handle } from '../../common/event-emitter/handle'
@@ -41,7 +41,6 @@ export function setupRegisterAPI (agent) {
  * @returns {RegisterAPI} the api object to be returned from the register api method
  */
 function register (agentRef, target, parent) {
-  const attrs = {}
   warn(54, 'newrelic.register')
 
   target ||= {}
@@ -49,6 +48,10 @@ function register (agentRef, target, parent) {
   target.licenseKey ||= agentRef.info.licenseKey // will inherit the license key from the container agent if not provided for brevity. A future state may dictate that we need different license keys to do different things.
   target.blocked = false
   target.parent = parent || {}
+  if (!Array.isArray(target.tags)) target.tags = []
+
+  const attrs = {}
+  target.tags.forEach(tag => { if (tag !== 'name' && tag !== 'id') attrs[`source.${tag}`] = true })
 
   /** @type {Function} a function that is set and reports when APIs are triggered -- warns the customer of the invalid state  */
   let invalidApiResponse = () => {}

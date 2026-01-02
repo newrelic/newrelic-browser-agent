@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { RAGE_CLICK_THRESHOLD_EVENTS, RAGE_CLICK_THRESHOLD_MS } from '../../constants'

@@ -698,9 +698,9 @@ describe('API tests', () => {
           const myApi = agent.register(target)
 
           expect(myApi.metadata.customAttributes).toEqual({
-            'source.tag1': 1,
-            'source.tag2': 1,
-            'source.tag3': 1
+            'source.tag1': true,
+            'source.tag2': true,
+            'source.tag3': true
           })
         })
 
@@ -736,11 +736,10 @@ describe('API tests', () => {
           expect(calls.length).toBeGreaterThan(0)
 
           const errorCall = calls.find(call => call[1]?.[0] === err)
-          console.log('errorCall:', errorCall)
           expect(errorCall).toBeDefined()
           expect(errorCall[1][3]).toMatchObject({
-            'source.frontend': 1,
-            'source.checkout': 1
+            'source.frontend': true,
+            'source.checkout': true
           })
         })
 
@@ -752,7 +751,7 @@ describe('API tests', () => {
           myApi.setApplicationVersion('1.0.0')
 
           expect(myApi.metadata.customAttributes).toEqual({
-            'source.module1': 1,
+            'source.module1': true,
             foo: 'bar',
             'application.version': '1.0.0'
           })
@@ -764,8 +763,8 @@ describe('API tests', () => {
 
           // Should only include valid-tag and another-tag, not name or id
           expect(myApi.metadata.customAttributes).toEqual({
-            'source.valid-tag': 1,
-            'source.another-tag': 1
+            'source.valid-tag': true,
+            'source.another-tag': true
           })
 
           // Verify source.name and source.id are not created from tags

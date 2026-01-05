@@ -25,9 +25,8 @@ if [ -n "$STAGED_SRC_FILES" ]; then
       git add "$file"
     fi
   done
-  
-  # Only run npm commands if there are src changes
-  npm run lint
-  npm run test -- --onlyChanged
-  npm run test:types
 fi
+
+npm run lint
+npm run test -- --onlyChanged
+npm run test:types

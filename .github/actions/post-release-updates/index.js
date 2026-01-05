@@ -95,6 +95,13 @@ await spawnAsync(
   DEFAULT_SPAWN_OPTIONS
 )
 
+console.log('Applying lint fixes')
+await spawnAsync(
+  `npm${os.platform() === 'win32' ? '.cmd' : ''}`,
+  [ 'run', 'lint', '--', '--fix' ],
+  DEFAULT_SPAWN_OPTIONS
+)
+
 console.log('#############################')
 console.log('# Rebuilding Test Projects  #')
 console.log('#############################')
@@ -118,7 +125,8 @@ if (args.openPullRequest) {
       'third_party_manifest.json',
       'THIRD_PARTY_NOTICES.md',
       'tools/test-builds/**/package.json',
-      'tools/lambda-test/webview-asset-ids.mjs'
+      'tools/lambda-test/webview-asset-ids.mjs',
+      'src/*'
     ],
     COMMIT_MESSAGE,
     true

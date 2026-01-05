@@ -54,18 +54,7 @@ module.exports = {
       rules: {
         'no-console': ['error'],
         'n/no-callback-literal': 'off', // This is not NodeJS code and should not be forced to adhere to NodeJS callback parameter pattern
-        'n/handle-callback-err': 'off', // eslint interprets our noticeError method as a callback, but it is not
-        'headers/header-format': [
-          'error',
-          {
-            source: 'string',
-            content: `Copyright {year} New Relic, Inc. All rights reserved.
-SPDX-License-Identifier: Apache-2.0`,
-            variables: {
-              year: '2020-' + new Date().getFullYear()
-            }
-          }
-        ]
+        'n/handle-callback-err': 'off' // eslint interprets our noticeError method as a callback, but it is not
       }
     },
     {

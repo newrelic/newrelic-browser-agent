@@ -4,6 +4,30 @@
 # enable colored output in terminal
 export FORCE_COLOR=1
 
-npm run lint
-npm run test -- --onlyChanged
-npm run test:types
+# Update copyright headers in staged src files
+CURRENT_YEAR=$(date +%Y)
+STAGED_SRC_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep '^src/.*\.js$' || true)
+
+if [ -n "$STAGED_SRC_FILES" ]; then
+  for file in $STAGED_SRC_FILES; do
+    if [ -f "$file" ]; then
+      # Check if copyright header exists
+      if grep -q "Copyright 2020-" "$file"; then
+        echo "Updating copyright header in $file to 2020-$CURRENT_YEAR..."
+        # Update existing copyright year
+        sed -i '' "s/Copyright 2020-[0-9]\{4\}/Copyright 2020-$CURRENT_YEAR/" "$file"
+      else
+        echo "Adding copyright header to $file (2020-$CURRENT_YEAR)..."
+        # Add copyright header to files without one
+        { printf "/**\n * Copyright 2020-%s New Relic, Inc. All rights reserved.\n * SPDX-License-Identifier: Apache-2.0\n */\n" "$CURRENT_YEAR"; cat "$file"; } > "$file.tmp" && mv "$file.tmp" "$file"
+      fi
+      # Re-stage the file
+      git add "$file"
+    fi
+  done
+  
+  # Only run npm commands if there are src changes
+  npm run lint
+  npm run test -- --onlyChanged
+  npm run test:types
+fi

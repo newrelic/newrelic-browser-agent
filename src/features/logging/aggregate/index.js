@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { registerHandler } from '../../../common/event-emitter/register-handler'
@@ -22,7 +22,10 @@ export class Aggregate extends AggregateBase {
   constructor (agentRef) {
     super(agentRef, FEATURE_NAME)
     const updateLocalLoggingMode = (auto, api) => {
-      this.loggingMode = { auto, api }
+      this.loggingMode = {
+        auto,
+        api
+      }
       // In agent v1.290.0 & under, the logApiMode prop did not yet exist, so need to account for old session state being in-use.
       if (api === undefined) this.loggingMode.api = auto
     }
@@ -36,7 +39,15 @@ export class Aggregate extends AggregateBase {
       this.abort(ABORT_REASONS.RESET)
     })
     this.ee.on(SESSION_EVENTS.UPDATE, (type, data) => {
-      if (this.blocked || type !== SESSION_EVENT_TYPES.CROSS_TAB) return
+      if (this.blocked) return
+      if (type !== SESSION_EVENT_TYPES.CROSS_TAB) {
+        console.log(agentRef.agentIdentifier + type + ' - logging feature, this.loggingMode:', this.loggingMode, 'data.loggingMode:', data.loggingMode)
+        window.foo.push(agentRef.agentIdentifier + type + ' - logging feature, this.loggingMode: ' + this.loggingMode + ', data.loggingMode: ' + data.loggingMode)
+        // this.loggingMode = data.loggingMode
+        return
+      }
+      console.log(agentRef.agentIdentifier + ' CROSS TAB - logging feature, this.loggingMode:', this.loggingMode, 'data.loggingMode:', data.loggingMode)
+      window.foo.push(agentRef.agentIdentifier + ' CROSS TAB - logging feature, this.loggingMode: ' + this.loggingMode + ', data.loggingMode: ' + data.loggingMode)
       // In agent v1.290.0 & under, the logApiMode prop did not yet exist, so need to account for old session state being in-use with just loggingMode off == feature off.
       if (data.loggingMode === LOGGING_MODE.OFF && (!data.logApiMode || data.logApiMode === LOGGING_MODE.OFF)) this.abort(ABORT_REASONS.CROSS_TAB)
       else updateLocalLoggingMode(data.loggingMode, data.logApiMode)
@@ -45,11 +56,47 @@ export class Aggregate extends AggregateBase {
     this.waitForFlags(['log', 'logapi']).then(([auto, api]) => {
       if (this.blocked) return // means abort already happened before this, likely from session reset or update; abort would've set mode off + deregistered drain
 
+      console.log(agentRef.agentIdentifier + ' - Setting local logging mode ', { auto, api })
+      window.foo.push(agentRef.agentIdentifier + ' - Setting local logging mode ' + JSON.stringify({ auto, api }))
       this.loggingMode ??= { auto, api } // likewise, don't want to overwrite the mode if it was set already
+
       const session = this.agentRef.runtime.session
+      console.log(agentRef.agentIdentifier + ' - session? ', stringify(session))
+      console.log(agentRef.agentIdentifier + ' - session.isNew? ', session.isNew)
+      console.log(agentRef.agentIdentifier + ' - session.state ', {
+        loggingMode: session.state.loggingMode,
+        logApiMode: session.state.logApiMode
+      })
+      window.foo.push(agentRef.agentIdentifier + ' - session.isNew? ' + session.isNew)
+      window.foo.push(agentRef.agentIdentifier + ' - session.state.loggingMode ' + JSON.stringify({
+        loggingMode: session.state.loggingMode,
+        logApiMode: session.state.logApiMode
+      }))
       if (canEnableSessionTracking(agentRef.init) && session) {
-        if (session.isNew) this.#syncWithSessionManager()
-        else updateLocalLoggingMode(session.state.loggingMode, session.state.logApiMode)
+        if (session.isNew) {
+          this.#syncWithSessionManager()
+        } else {
+          updateLocalLoggingMode(session.state.loggingMode, session.state.logApiMode)
+        // } else {
+        //   let retries = 0
+        //   waitForSessionInit.call(this)
+        //
+        //   function waitForSessionInit () {
+        //     //  We know this is not a new session, and there's a chance another agent was first so read the latest session state from local storage
+        //     const currentState = session.read()
+        //     console.log(agentRef.agentIdentifier + ' - reading logging mode from session: ', currentState.loggingMode)
+        //     if (currentState.loggingMode !== LOGGING_MODE.NOT_SET) {
+        //       updateLocalLoggingMode(currentState.loggingMode, currentState.logApiMode)
+        //       this.#completeInitialization()
+        //     } else if (retries < 5) {
+        //       // if the value is still not set yet, wait a bit and try again
+        //       retries++
+        //       setTimeout(waitForSessionInit, 10)
+        //     } else {
+        //       console.log('Give up after waiting 50 ms for localStorage update')
+        //     }
+        //   }
+        }
       }
       if (this.loggingMode.auto === LOGGING_MODE.OFF && this.loggingMode.api === LOGGING_MODE.OFF) {
         this.blocked = true
@@ -64,6 +111,22 @@ export class Aggregate extends AggregateBase {
       agentRef.runtime.harvester.triggerHarvestFor(this)
     })
   }
+
+  // #completeInitialization () {
+  //   if (this.loggingMode.auto <= LOGGING_MODE.OFF && this.loggingMode.api <= LOGGING_MODE.OFF) {
+  //     console.log(this.agentRef.agentIdentifier + ' - Setting to blocked, shutting down logging feature')
+  //     window.foo.push(this.agentRef.agentIdentifier + ' - Setting to blocked, shutting down logging feature')
+  //     this.blocked = true
+  //     this.deregisterDrain()
+  //     return
+  //   }
+  //
+  //   /** emitted by instrument class (wrapped loggers) or the api methods directly */
+  //   registerHandler(LOGGING_EVENT_EMITTER_CHANNEL, this.handleLog.bind(this), this.featureName, this.ee)
+  //   this.drain()
+  //   /** harvest immediately once started to purge pre-load logs collected */
+  //   this.agentRef.runtime.harvester.triggerHarvestFor(this)
+  // }
 
   handleLog (timestamp, message, attributes = {}, level = LOG_LEVELS.INFO, autoCaptured, target) {
     if (this.blocked) return
@@ -168,6 +231,8 @@ export class Aggregate extends AggregateBase {
   }
 
   #syncWithSessionManager () {
+    console.log(this.agentRef.agentIdentifier + ' - Writing logging mode to session: ', this.loggingMode)
+    window.foo.push(this.agentRef.agentIdentifier + ' - Writing logging mode to session: ' + JSON.stringify(this.loggingMode))
     this.agentRef.runtime.session?.write({
       loggingMode: this.loggingMode.auto,
       logApiMode: this.loggingMode.api

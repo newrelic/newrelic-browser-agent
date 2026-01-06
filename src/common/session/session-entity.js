@@ -29,8 +29,8 @@ const model = {
   sessionReplaySentFirstChunk: false,
   sessionTraceMode: MODE.OFF,
   traceHarvestStarted: false,
-  loggingMode: LOGGING_MODE.OFF,
-  logApiMode: LOGGING_MODE.OFF,
+  loggingMode: LOGGING_MODE.NOT_SET,
+  logApiMode: LOGGING_MODE.NOT_SET,
   serverTimeDiff: null, // set by TimeKeeper; "undefined" value will not be stringified and stored but "null" will
   custom: {},
   numOfResets: 0,
@@ -46,6 +46,7 @@ export class SessionEntity {
    */
   constructor (opts) {
     const { agentIdentifier, key, storage } = opts
+    window.foo = []
 
     if (!agentIdentifier || !key || !storage) {
       throw new Error(`Missing required field(s):${!agentIdentifier ? ' agentID' : ''}${!key ? ' key' : ''}${!storage ? ' storage' : ''}`)
@@ -217,6 +218,8 @@ export class SessionEntity {
       //
       // TODO - compression would need happen here if we decide to do it
       this.storage.set(this.lookupKey, stringify(this.state))
+      console.log('Writing data: ', stringify(data))
+      window.foo.push('Writing data: ' + stringify(data))
       this.ee.emit(SESSION_EVENTS.UPDATE, [SESSION_EVENT_TYPES.SAME_TAB, this.state])
       return data
     } catch (e) {

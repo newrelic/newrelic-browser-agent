@@ -141,7 +141,7 @@ export class AggregateBase extends FeatureBase {
   }
 
   preHarvestChecks (opts) {
-    return !this.blocked
+    return !this.blocked && !this.ee.aborted
   }
 
   /**

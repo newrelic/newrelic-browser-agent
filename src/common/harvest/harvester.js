@@ -79,7 +79,7 @@ export class Harvester {
       featureName: aggregateInst.featureName,
       endpointVersion: output.endpointVersion
     })
-    output.ranSend = true
+    output.ranSend = true // Set to true if we attempted to send (even if send() returned false due to missing errorBeacon in tests)
 
     return output
 

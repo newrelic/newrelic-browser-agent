@@ -133,3 +133,5 @@
 `Consent API argument must be boolean or undefined`
 ### 66
 `A new agent session has started`
+### 67
+`The "spa" feature has been deprecated and disabled. Please use/import "soft_navigations" instead for tracking of BrowserInteraction data.`

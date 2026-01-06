@@ -10,7 +10,7 @@
     {loader}
 
     <script>
-      newrelic.interaction().setAttribute('custom1', 'val1')
+      newrelic.interaction().setAttribute('custom1', 'val1').save().end()
       newrelic.noticeError(new Error('my error'), {custom1: 'val2'})
     </script>
 

@@ -5,6 +5,39 @@
       "changes": [
         {
           "type": "feat",
+          "sha": "d93f3f388085b7e76292e79749977db19a10765a",
+          "message": "Make soft navigations feature the default SPA",
+          "issues": [
+            "1638"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "c284cfde4a18fb9afa75c11b181944401a902e13",
+          "message": "Add resetSession option to setUserId() API",
+          "issues": [
+            "1646"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "61fa99ba39334b85f7611a076943f15356f65364",
+          "message": "Ajax deny list wildcard support",
+          "issues": [
+            "1655"
+          ]
+        }
+      ],
+      "version": "1.307.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "ad77e5a2-aa35-454d-98a9-4c91b8674957",
+      "createTime": "2026-01-06T19:11:03.484Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
           "sha": "f9f1639504a32b0f24baa117d287c47e209cc818",
           "message": "Control log API through separate RUM flag",
           "issues": [
@@ -3527,5 +3560,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2025-12-16T15:22:41.405Z"
+  "updateTime": "2026-01-06T19:11:03.484Z"
 }

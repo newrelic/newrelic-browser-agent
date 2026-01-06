@@ -6,6 +6,7 @@
 name: Publish Dev
 
 on:
+  workflow_call:
   workflow_dispatch:
   push:
     branches:
@@ -18,7 +19,7 @@ concurrency:
 
 jobs:
   jest-tests:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && github.event_name != 'workflow_call'
     name: Jest tests
     uses: ./.github/workflows/jest.yml
     secrets: inherit
@@ -27,6 +28,7 @@ jobs:
 
   # Build and publish the latest code from the main branch
   publish-dev-to-s3:
+    if: always() && !cancelled() && !contains(needs.*.result, 'failure')
     needs: [jest-tests]
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -155,6 +157,7 @@ jobs:
 
   # Publish Agent2Query assets
   publish-agent2query:
+    if: github.event_name != 'workflow_call'
     needs: [jest-tests]
     runs-on: ubuntu-latest
     timeout-minutes: 30

@@ -9,6 +9,6 @@ import { setupAPI } from './sharedHandlers'
 
 export function setupWrapLoggerAPI (agent) {
   setupAPI(WRAP_LOGGER, (parent, functionName, { customAttributes = {}, level = LOG_LEVELS.INFO } = {}) => {
-    wrapLogger(agent.ee, parent, functionName, { customAttributes, level })
+    wrapLogger(agent.ee, parent, functionName, { customAttributes, level }, false)
   }, agent)
 }

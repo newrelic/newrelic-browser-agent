@@ -13,7 +13,7 @@
  * @property {(eventType: string, options?: {start: number, end: number, duration: number, customAttributes: object}) => ({start: number, end: number, duration: number, customAttributes: object})} measure - Measures a task that is recorded as a BrowserPerformance event.
  * @property {(value: string | null) => void} setApplicationVersion - Add an application.version attribute to all outgoing data for the registered entity.
  * @property {(name: string, value: string | number | boolean | null, persist?: boolean) => void} setCustomAttribute - Add a custom attribute to outgoing data for the registered entity.
- * @property {(value: string | null) => void} setUserId - Add an enduser.id attribute to all outgoing API data for the registered entity.
+ * @property {(value: string | null, resetSession?: boolean) => void} setUserId - Add an enduser.id attribute to all outgoing API data for the registered entity.  Note: a registered entity will not be able to initiate a session reset.  It must be done from the main agent.
  * @property {RegisterAPIMetadata} metadata - The metadata object containing the custom attributes and target information for the registered entity.
  */
 

@@ -5,6 +5,39 @@
       "changes": [
         {
           "type": "feat",
+          "sha": "f9f1639504a32b0f24baa117d287c47e209cc818",
+          "message": "Control log API through separate RUM flag",
+          "issues": [
+            "1467"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "cd83f605087a79cbc4817ddfb82d48c18eae8474",
+          "message": "Ensure responseStart is valid before relying on onTTFB",
+          "issues": [
+            "1634"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "f74158516ec251ced26a56f65c145a48b938e79f",
+          "message": "Remove linebreak syntax from webpack output",
+          "issues": [
+            "1649"
+          ]
+        }
+      ],
+      "version": "1.306.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "2f4b8879-529e-4f88-84f9-f8c117473df8",
+      "createTime": "2025-12-16T15:22:41.405Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
           "sha": "da2ef2f50af05085dc5806d422d411deec2d2ba5",
           "message": "Improve agent compatibility with ChatGPT connector apps",
           "issues": [
@@ -3494,5 +3527,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2025-12-10T22:26:59.854Z"
+  "updateTime": "2025-12-16T15:22:41.405Z"
 }

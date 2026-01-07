@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
@@ -79,7 +79,7 @@ export class Harvester {
       featureName: aggregateInst.featureName,
       endpointVersion: output.endpointVersion
     })
-    output.ranSend = true
+    output.ranSend = true // Set to true if we attempted to send (even if send() returned false due to missing errorBeacon in tests)
 
     return output
 

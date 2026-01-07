@@ -81,7 +81,8 @@ describe('wrap-websocket', () => {
       sendBytes: 0,
       sendBytesMin: 0,
       sendBytesMax: 0,
-      connectedDuration: 0
+      connectedDuration: 0,
+      closeReason: 'unknown'
     }
     expect(ws.nrData).toEqual(expectNrData)
     expect(ws.nrData.openedAt).toBeUndefined()

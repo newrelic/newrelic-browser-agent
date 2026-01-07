@@ -3,64 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { isValidMFETarget, hasValidValue, getVersion2Attributes } from '../../../../src/common/util/mfe'
+import { getVersion2Attributes } from '../../../../src/common/util/v2'
 
-describe('mfe utilities', () => {
-  describe('isValidMFETarget', () => {
-    test('returns true when target has id and name', () => {
-      expect(isValidMFETarget({ id: 'test-id', name: 'test-name' })).toBe(true)
-    })
-
-    test('returns false when target has id but no name', () => {
-      expect(isValidMFETarget({ id: 'test-id' })).toBe(false)
-    })
-
-    test('returns false when target has name but no id', () => {
-      expect(isValidMFETarget({ name: 'test-name' })).toBe(false)
-    })
-
-    test('returns false when target is empty', () => {
-      expect(isValidMFETarget({})).toBe(false)
-    })
-
-    test('returns false when target is undefined', () => {
-      expect(isValidMFETarget()).toBe(false)
-    })
-  })
-
-  describe('hasValidValue', () => {
-    test('returns true for valid string under 501 characters', () => {
-      expect(hasValidValue('test')).toBe(true)
-      expect(hasValidValue('a'.repeat(500))).toBe(true)
-    })
-
-    test('returns false for string 501 characters or more', () => {
-      expect(hasValidValue('a'.repeat(501))).toBe(false)
-    })
-
-    test('returns false for empty string', () => {
-      expect(hasValidValue('')).toBe(false)
-    })
-
-    test('returns false for whitespace-only string', () => {
-      expect(hasValidValue('   ')).toBe(false)
-    })
-
-    test('returns true for valid numbers', () => {
-      expect(hasValidValue(0)).toBe(true)
-      expect(hasValidValue(123)).toBe(true)
-      expect(hasValidValue(-456)).toBe(true)
-    })
-
-    test('returns false for non-string, non-number values', () => {
-      expect(hasValidValue(null)).toBe(false)
-      expect(hasValidValue(undefined)).toBe(false)
-      expect(hasValidValue(true)).toBe(false)
-      expect(hasValidValue({})).toBe(false)
-      expect(hasValidValue([])).toBe(false)
-    })
-  })
-
+describe('v2 utilities', () => {
   describe('getVersion2Attributes', () => {
     const mockAggregateInstance = {
       harvestEndpointVersion: 2,
@@ -212,8 +157,11 @@ describe('mfe utilities', () => {
         const result = getVersion2Attributes(invalidTarget, mockAggregateInstance)
 
         expect(result).toEqual({
-          'entity.guid': 'container-entity-guid',
-          appId: 'app-123'
+          'source.id': 'mfe-id',
+          'source.name': undefined,
+          'source.type': undefined,
+          'parent.id': 'container-entity-guid',
+          'parent.type': 'BA'
         })
       })
 

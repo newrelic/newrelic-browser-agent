@@ -4,19 +4,18 @@
  */
 
 /**
- * @param {Object} [target] - the target to be validated
- * @returns {boolean}
+ * @enum {string}
+ * @readonly
  */
-export function isValidMFETarget (target = {}) {
-  return hasValidValue(target.id) && hasValidValue(target.name)
-}
-
-export function hasValidValue (val) {
-  return (typeof val === 'string' && !!val.trim() && val.trim().length < 501) || (typeof val === 'number')
+export const V2_TYPES = {
+  /** Micro Frontend */
+  MFE: 'MFE',
+  /** Browser Application */
+  BA: 'BA'
 }
 
 /**
- * When given a valid target, returns an object with the MFE payload attributes.  Returns an empty object otherwise.
+ * When given a valid target, returns an object with the V2 payload attributes.  Returns an empty object otherwise.
  * @note Field names may change as the schema is finalized
  *
  * @param {Object} [target] the registered target
@@ -26,17 +25,19 @@ export function hasValidValue (val) {
 export function getVersion2Attributes (target, aggregateInstance) {
   if (aggregateInstance?.harvestEndpointVersion !== 2) return {}
   const containerAgentEntityGuid = aggregateInstance.agentRef.runtime.appMetadata.agents[0].entityGuid
-  if (!isValidMFETarget(target)) {
+  /** if there's no target, but we are in v2 mode, this means the data belongs to the container agent */
+  if (!target) {
     return {
       'entity.guid': containerAgentEntityGuid,
       appId: aggregateInstance.agentRef.info.applicationID
     }
   }
+  /** otherwise, the data belongs to the target (MFE) and should be attributed as such */
   return {
     'source.id': target.id,
     'source.name': target.name,
     'source.type': target.type,
     'parent.id': target.parent?.id || containerAgentEntityGuid,
-    'parent.type': target.parent?.type || 'BA' // if the parent has a type use it ("MFE"), otherwise assume it's "Browser Agent" aka "BA"
+    'parent.type': target.parent?.type || V2_TYPES.BA
   }
 }

@@ -4,7 +4,7 @@
  */
 import { handle } from '../../common/event-emitter/handle'
 import { warn } from '../../common/util/console'
-import { isValidMFETarget } from '../../common/util/mfe'
+import { V2_TYPES } from '../../common/util/v2'
 import { FEATURE_NAMES } from '../features/features'
 import { now } from '../../common/timing/now'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
@@ -45,7 +45,7 @@ function register (agentRef, target, parent) {
   warn(54, 'newrelic.register')
 
   target ||= {}
-  target.type = 'MFE'
+  target.type = V2_TYPES.MFE
   target.licenseKey ||= agentRef.info.licenseKey // will inherit the license key from the container agent if not provided for brevity. A future state may dictate that we need different license keys to do different things.
   target.blocked = false
   target.parent = parent || {}
@@ -71,9 +71,13 @@ function register (agentRef, target, parent) {
     invalidApiResponse = warning
   }
 
+  function hasValidValue (val) {
+    return (typeof val === 'string' && !!val.trim() && val.trim().length < 501) || (typeof val === 'number')
+  }
+
   /** primary cases that can block the register API from working at init time */
   if (!agentRef.init.api.allow_registered_children) block(single(() => warn(55)))
-  if (!isValidMFETarget(target)) block(single(() => warn(48, target)))
+  if (!hasValidValue(target.id) || !hasValidValue(target.name)) block(single(() => warn(48, target)))
 
   /** @type {RegisterAPI} */
   const api = {

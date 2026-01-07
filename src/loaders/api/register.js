@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { handle } from '../../common/event-emitter/handle'
@@ -83,7 +83,7 @@ function register (agentRef, target, parent) {
     addPageAction: (name, attributes = {}) => report(addPageAction, [name, { ...attrs, ...attributes }, agentRef], target),
     deregister: () => {
       /** note: blocking this instance will disable access for all entities sharing the instance, and will invalidate it from the v2 checks */
-      block(single(() => warn(67)))
+      block(single(() => warn(68)))
     },
     log: (message, options = {}) => report(log, [message, { ...options, customAttributes: { ...attrs, ...(options.customAttributes || {}) } }, agentRef], target),
     measure: (name, options = {}) => report(measure, [name, { ...options, customAttributes: { ...attrs, ...(options.customAttributes || {}) } }, agentRef], target),

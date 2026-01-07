@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { warn } from '../common/util/console'
@@ -121,8 +121,9 @@ export class RegisteredEntity {
    * Adds a user-defined identifier string to subsequent events on the page for the registered taret.
    * {@link https://docs.newrelic.com/docs/browser/new-relic-browser/browser-apis/setuserid/}
    * @param {string|null} value A string identifier for the end-user, useful for tying all browser events to specific users. The value parameter does not have to be unique. If IDs should be unique, the caller is responsible for that validation. Passing a null value unsets any existing user ID.
+   * @param {boolean} [resetSession=false] Optional param. Should not be used from a registered entity context. To reset a session when updating user id, must be initiated by the main agent.
    */
-  setUserId (value) {
+  setUserId (value, resetSession = false) {
     /** this method will be overset once register is successful */
     warn(35, 'setUserId')
   }

@@ -6,7 +6,6 @@ import { Instrument as InstrumentMetrics } from '../../../src/features/metrics/i
 import { Instrument as InstrumentErrors } from '../../../src/features/jserrors/instrument'
 import { Instrument as InstrumentXhr } from '../../../src/features/ajax/instrument'
 import { Instrument as InstrumentSessionTrace } from '../../../src/features/session_trace/instrument'
-import { Instrument as InstrumentSpa } from '../../../src/features/spa/instrument'
 import { Instrument as InstrumentSessionReplay } from '../../../src/features/session_replay/instrument'
 import { Instrument as InstrumentGenericEvents } from '../../../src/features/generic_events/instrument'
 import { Instrument as InstrumentLogs } from '../../../src/features/logging/instrument'
@@ -27,7 +26,6 @@ test('should create a new agent with all features', () => {
       InstrumentSessionTrace,
       InstrumentMetrics,
       InstrumentErrors,
-      InstrumentSpa,
       InstrumentSoftNav,
       InstrumentSessionReplay,
       InstrumentGenericEvents,

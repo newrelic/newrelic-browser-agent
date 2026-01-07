@@ -29,6 +29,7 @@ describe.withBrowsersMatching(supportsWebSocketsTesting)('WebSocket wrapper', ()
       expect(event.socketId).toBeTruthy()
       expect(event.requestedUrl).toContain('ws://')
       expect(event.requestedUrl).toContain('/websocket')
+      expect(event.requestedUrl).not.toContain('param=shouldbedropped')
       expect(event.requestedProtocols).toBeDefined() // can be empty string
       expect(event.timestamp).toBeGreaterThan(0)
       expect(event.currentUrl).toContain('/websockets.html')
@@ -62,11 +63,12 @@ describe.withBrowsersMatching(supportsWebSocketsTesting)('WebSocket wrapper', ()
       expect(event.messageBytesMax).toBeGreaterThan(0)
       expect(event.messageTypes).toContain('string')
       expect(event.messageOrigin).toContain('ws://')
+      expect(event.messageOrigin).not.toContain('param=shouldbedropped')
     })
 
     // Verify one is preload and one is postload based on URL query params
-    const preLoadEvent = wsEvents.find(e => e.requestedUrl.includes('loaded=pre'))
-    const postLoadEvent = wsEvents.find(e => e.requestedUrl.includes('loaded=post'))
+    const preLoadEvent = wsEvents.find(e => e.requestedUrl.includes('/pre'))
+    const postLoadEvent = wsEvents.find(e => e.requestedUrl.includes('/post'))
     expect(preLoadEvent).toBeTruthy()
     expect(postLoadEvent).toBeTruthy()
     // All browsers, either natively or via Lambdatest, are super fickle and can have close codes of 1005 for preLoad WS, so it's unasserted.

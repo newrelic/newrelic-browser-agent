@@ -83,7 +83,7 @@ export function wrapWebSocket (sharedEE) {
       this.addEventListener('close', (event) => {
         this.nrData.closedAt = now()
         this.nrData.closeCode = event.code
-        this.nrData.closeReason = event.reason
+        if (event.reason) this.nrData.closeReason = event.reason
         this.nrData.closeWasClean = event.wasClean
         this.nrData.connectedDuration = this.nrData.closedAt - this.nrData.openedAt
 
@@ -263,8 +263,8 @@ class WebSocketData {
     /** @type {number} [closeCode] WebSocket close code */
     this.closeCode = undefined
 
-    /** @type {string} [closeReason] WebSocket close reason */
-    this.closeReason = undefined
+    /** @type {string} WebSocket close reason */
+    this.closeReason = 'unknown'
 
     /** @type {boolean} [closeWasClean] Whether the connection closed cleanly */
     this.closeWasClean = undefined

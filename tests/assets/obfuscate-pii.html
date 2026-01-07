@@ -46,6 +46,7 @@
     setTimeout(function () {
       fetch('/json')
       document.getElementById("btn").click()
+      newrelic.interaction().end() // this releases the ajax & jserror from being held by soft navigation feat
       throw new Error('example pii')
     }, 100)
   </script>

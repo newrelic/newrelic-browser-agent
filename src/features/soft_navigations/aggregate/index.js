@@ -4,7 +4,6 @@
  */
 import { handle } from '../../../common/event-emitter/handle'
 import { registerHandler } from '../../../common/event-emitter/register-handler'
-import { single } from '../../../common/util/invoke'
 import { loadTime } from '../../../common/vitals/load-time'
 import { FEATURE_NAMES } from '../../../loaders/features/features'
 import { AggregateBase } from '../../utils/aggregate-base'
@@ -192,27 +191,36 @@ export class Aggregate extends AggregateBase {
   }
 
   /**
-   * Decorate the passed-in params obj with properties relating to any associated interaction at the time of the timestamp.
-   * @param {Object} params reference to the local var instance in Jserrors feature's storeError
-   * @param {DOMHighResTimeStamp} timestamp time the jserror occurred
+   * Handles or redirects jserror event based on the interaction, if any, that it's tied to.
+   * @param {Array} jsErrorEvent the error event array from jserrors feature
    */
-  #handleJserror (params, timestamp) {
+  #handleJserror (jsErrorEvent) {
+    const timestamp = jsErrorEvent[3].time // in storeError fn, the newMetrics obj contains the time of the error
     const associatedInteraction = this.getInteractionFor(timestamp)
-    if (!associatedInteraction) return // do not need to decorate this jserror params
+    if (!associatedInteraction) {
+      // No interaction was happening when this error occurred, so give it back to jserrors feature for processing
+      return handle('returnJserror', [jsErrorEvent], undefined, FEATURE_NAMES.jserrors, this.ee)
+    }
 
-    // Whether the interaction is in-progress or already finished, the id will let jserror buffer it under its index, until it gets the next step instruction.
-    params.browserInteractionId = associatedInteraction.id
+    // Store the error info to be returned when interaction finishes
     if (associatedInteraction.status === INTERACTION_STATUS.FIN) {
-      // This information cannot be relayed back via handle() that flushes buffered errs because this is being called by a jserror's handle() per se and before the err is buffered.
-      params._softNavFinished = true // instead, signal that this err can be processed right away without needing to be buffered aka wait for an in-progress ixn
-      params._softNavAttributes = associatedInteraction.customAttributes
+      // Interaction already finished, return immediately with the interaction ID and attributes
+      processJserror.call(this, jsErrorEvent, associatedInteraction)
     } else {
-      // These callbacks may be added multiple times for an ixn, but just a single run will deal with all jserrors associated with the interaction.
-      // As such, be cautious not to use the params object since that's tied to one specific jserror and won't affect the rest of them.
-      associatedInteraction.on('finished', single(() =>
-        handle('softNavFlush', [associatedInteraction.id, true, associatedInteraction.customAttributes, associatedInteraction.end], undefined, FEATURE_NAMES.jserrors, this.ee)))
-      associatedInteraction.on('cancelled', single(() =>
-        handle('softNavFlush', [associatedInteraction.id, false, undefined], undefined, FEATURE_NAMES.jserrors, this.ee))) // don't take custom attrs from cancelled ixns
+      // Interaction still in progress, wait for it to finish or be cancelled
+      associatedInteraction.on('finished', () => processJserror.call(this, jsErrorEvent, associatedInteraction))
+      associatedInteraction.on('cancelled', () => handle('returnJserror', [jsErrorEvent], undefined, FEATURE_NAMES.jserrors, this.ee))
+    }
+
+    function processJserror (jsErrorEvent, parentInteraction) {
+      const finalEnd = parentInteraction.end
+      if (timestamp > finalEnd) { // check if error falls within the final interaction span, after any & all long task extension(s) are considered
+        return handle('returnJserror', [jsErrorEvent], undefined, FEATURE_NAMES.jserrors, this.ee)
+      }
+      // Error is within the interaction span, return with the correct interaction ID set, plus any custom attributes from the interaction
+      const params = jsErrorEvent[2]
+      params.browserInteractionId = parentInteraction.id
+      handle('returnJserror', [jsErrorEvent, parentInteraction.customAttributes], undefined, FEATURE_NAMES.jserrors, this.ee)
     }
   }
 
@@ -227,7 +235,7 @@ export class Aggregate extends AggregateBase {
       if (this.associatedInteraction?.trigger === IPL_TRIGGER_NAME) this.associatedInteraction = null // the api get-interaction method cannot target IPL
       if (!this.associatedInteraction) {
         // This new api-driven interaction will be the target of any subsequent .interaction() call, until it is closed by EITHER .end() OR the regular url>dom change process.
-        this.associatedInteraction = thisClass.interactionInProgress = new Interaction(API_TRIGGER_NAME, time, thisClass.latestRouteSetByApi)
+        this.associatedInteraction = thisClass.interactionInProgress = new Interaction(API_TRIGGER_NAME, Math.floor(time), thisClass.latestRouteSetByApi)
         thisClass.domObserver.observe(document.body, { attributes: true, childList: true, subtree: true, characterData: true }) // start observing for DOM changes like a regular UI-driven interaction
         thisClass.setClosureHandlers()
       }

@@ -20,11 +20,7 @@ const metrics = {
 
 beforeAll(() => {
   mainAgent = setupAgent({
-    agentOverrides: {
-      runSoftNavOverSpa: true
-    },
     init: {
-      feature_flags: ['soft_nav'],
       ajax: { enabled: true },
       soft_navigations: { enabled: true }
     }
@@ -38,10 +34,12 @@ beforeEach(async () => {
   ajaxAggregate = ajaxInstrument.featAggregate
   softNavAggregate = softNavInstrument.featAggregate
 
+  // Register soft nav feature so ajax aggregate can detect it
+  mainAgent.features[FEATURE_NAMES.softNav] = softNavInstrument
+
   context = new EventContext()
   ajaxAggregate.ee.emit('rumresp', [{ spa: 1 }]) // both features share the same ee event so this activate & drain both; ajax needs no flag
   await new Promise(process.nextTick)
-  ajaxAggregate.agentRef.features[FEATURE_NAMES.softNav] = true // currently this is required for ajax to switch to softnav behavior
 
   softNavAggregate.initialPageLoadInteraction.done(1) // so that IPL doesn't muddy the ixn seeking logic
   softNavAggregate.events.clear()

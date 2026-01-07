@@ -19,7 +19,7 @@ describe('Fetch Ajax', () => {
     { title: 'fetch with request param', url: 'ajax/fetch-request-param.html' }
   ].forEach(({ title, url }) => {
     it(`creates event and metric data for ${title}`, async () => {
-      await browser.url(await browser.testHandle.assetURL(url))
+      await browser.url(await browser.testHandle.assetURL(url, { loader: 'full' }))
         .then(() => browser.waitForAgentLoad())
         .then(() => browser.execute(function () {
           window.disableAjaxHashChange = true
@@ -55,7 +55,7 @@ describe('Fetch Ajax', () => {
   })
 
   it('creates event and metric data for erred fetch', async () => {
-    await browser.url(await browser.testHandle.assetURL('ajax/fetch-404.html'))
+    await browser.url(await browser.testHandle.assetURL('ajax/fetch-404.html', { loader: 'full' }))
       .then(() => browser.waitForAgentLoad())
       .then(() => browser.execute(function () {
         window.disableAjaxHashChange = true
@@ -86,7 +86,7 @@ describe('Fetch Ajax', () => {
   })
 
   it('creates event and metric data for fetch with network error', async () => {
-    await browser.url(await browser.testHandle.assetURL('ajax/fetch-network-error.html'))
+    await browser.url(await browser.testHandle.assetURL('ajax/fetch-network-error.html', { loader: 'full' }))
       .then(() => browser.waitForAgentLoad())
       .then(() => browser.execute(function () {
         window.disableAjaxHashChange = true
@@ -123,7 +123,7 @@ describe('Fetch Ajax', () => {
     { title: 'async rejected callbacks', url: 'ajax/fetch-async-reject.html' }
   ].forEach(({ title, url }) => {
     it(`does not capture fetch ${title} in metric timings`, async () => {
-      await browser.url(await browser.testHandle.assetURL(url))
+      await browser.url(await browser.testHandle.assetURL(url, { loader: 'full' }))
         .then(() => browser.waitForAgentLoad())
         .then(() => browser.execute(function () {
           window.disableAjaxHashChange = true
@@ -157,7 +157,7 @@ describe('Fetch Ajax', () => {
   })
 
   it('produces the correct event and metric status when fetch times out or is aborted', async () => {
-    await browser.url(await browser.testHandle.assetURL('ajax/fetch-timeout.html'))
+    await browser.url(await browser.testHandle.assetURL('ajax/fetch-timeout.html', { loader: 'full' }))
       .then(() => browser.waitForAgentLoad())
       .then(() => browser.execute(function () {
         window.disableAjaxHashChange = true
@@ -190,7 +190,7 @@ describe('Fetch Ajax', () => {
   })
 
   it('produces event and metric with correct transmit size calculated', async () => {
-    await browser.url(await browser.testHandle.assetURL('instrumented.html'))
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', { loader: 'full' }))
       .then(() => browser.waitForAgentLoad())
 
     const [ajaxEventsHarvest, ajaxMetricsHarvest] = await Promise.all([
@@ -225,7 +225,7 @@ describe('Fetch Ajax', () => {
   })
 
   it('produces event and metric with correct transmit and receive size calculated when using array buffer', async () => {
-    await browser.url(await browser.testHandle.assetURL('instrumented.html'))
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', { loader: 'full' }))
       .then(() => browser.waitForAgentLoad())
 
     const [ajaxEventsHarvest, ajaxMetricsHarvest] = await Promise.all([
@@ -266,7 +266,7 @@ describe('Fetch Ajax', () => {
   })
 
   it('produces event and metric with correct transmit and receive size calculated when using blob', async () => {
-    await browser.url(await browser.testHandle.assetURL('instrumented.html'))
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', { loader: 'full' }))
       .then(() => browser.waitForAgentLoad())
 
     const [ajaxEventsHarvest, ajaxMetricsHarvest] = await Promise.all([
@@ -297,7 +297,7 @@ describe('Fetch Ajax', () => {
   })
 
   it('produces event and metric with correct transmit and receive size calculated when using form data', async () => {
-    await browser.url(await browser.testHandle.assetURL('instrumented.html'))
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', { loader: 'full' }))
       .then(() => browser.waitForAgentLoad())
 
     const [ajaxEventsHarvest, ajaxMetricsHarvest] = await Promise.all([
@@ -331,7 +331,7 @@ describe('Fetch Ajax', () => {
   })
 
   it('produces event and metric with zero receive size due to the use of compression', async () => {
-    await browser.url(await browser.testHandle.assetURL('instrumented.html'))
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', { loader: 'full' }))
       .then(() => browser.waitForAgentLoad())
 
     const [ajaxEventsHarvest, ajaxMetricsHarvest] = await Promise.all([
@@ -355,7 +355,7 @@ describe('Fetch Ajax', () => {
   })
 
   it('produces event and metric with zero receive size due to the use of chunked payload', async () => {
-    await browser.url(await browser.testHandle.assetURL('instrumented.html'))
+    await browser.url(await browser.testHandle.assetURL('instrumented.html', { loader: 'full' }))
       .then(() => browser.waitForAgentLoad())
 
     const [ajaxEventsHarvest, ajaxMetricsHarvest] = await Promise.all([

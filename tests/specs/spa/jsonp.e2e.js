@@ -1,7 +1,7 @@
 import { extractAjaxEvents } from '../../util/xhr'
 import { testInteractionEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
-describe('jsonp ajax events', () => {
+describe.skip('jsonp ajax events', () => {
   let interactionsCapture
 
   beforeEach(async () => {

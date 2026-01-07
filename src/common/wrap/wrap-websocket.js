@@ -5,6 +5,7 @@
 import { globalScope } from '../constants/runtime'
 import { generateRandomHexString } from '../ids/unique-id'
 import { now } from '../timing/now'
+import { cleanURL } from '../url/clean-url'
 import { gosNREUMOriginals } from '../window/nreum'
 import { subscribeToPageUnload } from '../window/page-visibility'
 
@@ -70,7 +71,7 @@ export function wrapWebSocket (sharedEE) {
 
       this.addEventListener('message', (event) => {
         const { type, size } = getDataInfo(event.data)
-        this.nrData.messageOrigin ??= event.origin // the origin of messages thru WS lifetime cannot be changed, so set once is sufficient
+        this.nrData.messageOrigin ??= cleanURL(event.origin) // the origin of messages thru WS lifetime cannot be changed, so set once is sufficient
         this.nrData.messageCount = (this.nrData.messageCount ?? 0) + 1
         this.nrData.messageBytes = (this.nrData.messageBytes ?? 0) + size
         this.nrData.messageBytesMin = Math.min(this.nrData.messageBytesMin ?? Infinity, size)
@@ -83,7 +84,7 @@ export function wrapWebSocket (sharedEE) {
       this.addEventListener('close', (event) => {
         this.nrData.closedAt = now()
         this.nrData.closeCode = event.code
-        this.nrData.closeReason = event.reason
+        if (event.reason) this.nrData.closeReason = event.reason
         this.nrData.closeWasClean = event.wasClean
         this.nrData.connectedDuration = this.nrData.closedAt - this.nrData.openedAt
 
@@ -192,7 +193,7 @@ class WebSocketData {
     this.timestamp = now()
 
     /** @type {string} Most current URL when WebSocket was created; relevant for SPA */
-    this.currentUrl = window.location.href
+    this.currentUrl = cleanURL(window.location.href)
 
     /*
      * pageUrl will be set by addEvent later; unlike timestamp and currentUrl, it's not sensitive to *when* it is set.
@@ -203,7 +204,7 @@ class WebSocketData {
     this.socketId = generateRandomHexString(8)
 
     /** @type {string} The URL requested for the WebSocket connection */
-    this.requestedUrl = requestedUrl
+    this.requestedUrl = cleanURL(requestedUrl)
 
     /** @type {string} Comma-separated list of requested protocols */
     this.requestedProtocols = Array.isArray(requestedProtocols) ? requestedProtocols.join(',') : (requestedProtocols || '')
@@ -263,8 +264,8 @@ class WebSocketData {
     /** @type {number} [closeCode] WebSocket close code */
     this.closeCode = undefined
 
-    /** @type {string} [closeReason] WebSocket close reason */
-    this.closeReason = undefined
+    /** @type {string} WebSocket close reason */
+    this.closeReason = 'unknown'
 
     /** @type {boolean} [closeWasClean] Whether the connection closed cleanly */
     this.closeWasClean = undefined

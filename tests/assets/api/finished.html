@@ -13,7 +13,7 @@
   <body>
     Api test!
     <script>
-      window.calledAt = performance.now();
+      Math.floor(window.calledAt = performance.now()) // this is floored by the .now() helper
       newrelic.finished()
     </script>
   </body>

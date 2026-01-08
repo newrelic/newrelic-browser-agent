@@ -151,6 +151,21 @@ try {
     const mfeName = `MOCK_MFE_${randomId}`;
 
     for (let agentIdentifier in newrelic.initializedAgents) {
+      const MfeToMfeParent = newrelic.initializedAgents[agentIdentifier].register({
+        id: 'mfe-to-mfe-parent',
+        name: 'MFE_TEST_PARENT',
+      })
+
+      const MfeToMfeChild = MfeToMfeParent.register({
+        id: 'mfe-to-mfe-child',
+        name: 'MFE_TEST_CHILD',
+      })
+
+      const MfeToMfeGrandchild = MfeToMfeChild.register({
+        id: 'mfe-to-mfe-grandchild',
+        name: 'MFE_TEST_GRANDCHILD',
+      })
+
       const jseOnlyMfe = newrelic.initializedAgents[agentIdentifier].register({
         id: 'jse-only-mfe',
         name: 'JSE_ONLY_MFE',
@@ -181,6 +196,14 @@ try {
       mfeApi.log(randomSentence, { level: 'error' });
 
       mfeApi.noticeError(new Error(`NRBA: This is a test error from ${mfeName}`));
+
+      MfeToMfeParent.log('This is a test log from MFE_TO_MFE_PARENT', { level: 'error' });
+      MfeToMfeChild.log('This is a test log from MFE_TO_MFE_CHILD', { level: 'error' });
+      MfeToMfeGrandchild.log('This is a test log from MFE_TO_MFE_GRANDCHILD', { level: 'error' });
+
+      MfeToMfeParent.noticeError(new Error('NRBA: This is a test error from MFE_TO_MFE_PARENT'));
+      MfeToMfeChild.noticeError(new Error('NRBA: This is a test error from MFE_TO_MFE_CHILD'));
+      MfeToMfeGrandchild.noticeError(new Error('NRBA: This is a test error from MFE_TO_MFE_GRANDCHILD'));
     }
   }
 } catch (e) {

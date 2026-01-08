@@ -229,49 +229,4 @@ export class Aggregate extends AggregateBase {
       allCustomAttrs[key] = (val && typeof val === 'object' ? stringify(val) : val)
     }
   }
-
-  // TO-DO: Remove this function when old spa is taken out. #storeJserrorForHarvest handles the work with the softnav feature.
-  onInteractionDone (interaction, wasSaved) {
-    if (!this.bufferedErrorsUnderSpa[interaction.id] || this.blocked) return
-
-    this.bufferedErrorsUnderSpa[interaction.id].forEach((item) => {
-      var allCustomAttrs = {}
-      const localCustomAttrs = item[4]
-
-      Object.entries(interaction.root.attrs.custom || {}).forEach(setCustom) // tack on custom attrs from the interaction
-      Object.entries(localCustomAttrs || {}).forEach(setCustom)
-
-      var params = item[2]
-      if (wasSaved) {
-        params.browserInteractionId = interaction.root.attrs.id
-        if (params._interactionNodeId) params.parentNodeId = params._interactionNodeId.toString()
-      }
-      delete params._interactionId
-      delete params._interactionNodeId
-
-      var hash = wasSaved ? item[1] + interaction.root.attrs.id : item[1]
-      var jsAttributesHash = stringHashCode(stringify(allCustomAttrs))
-      var aggregateHash = hash + ':' + jsAttributesHash
-
-      this.events.add([item[0], aggregateHash, params, item[3], allCustomAttrs], item[5])
-
-      function setCustom ([key, val]) {
-        allCustomAttrs[key] = (val && typeof val === 'object' ? stringify(val) : val)
-      }
-    })
-    delete this.bufferedErrorsUnderSpa[interaction.id]
-  }
-
-  onSoftNavNotification (interactionId, wasFinished, softNavAttrs, interactionEndTime) {
-    if (this.blocked) return
-
-    this.bufferedErrorsUnderSpa[interactionId]?.forEach(jsErrorEvent => { // this should not modify the re-used softNavAttrs contents
-      if (!wasFinished) return this.#storeJserrorForHarvest(jsErrorEvent, false, softNavAttrs)
-
-      const startTime = jsErrorEvent[3].time // in storeError fn, the newMetrics obj contains the time passed to & used by SN to seek the ixn
-      if (startTime > interactionEndTime) return this.#storeJserrorForHarvest(jsErrorEvent, false, softNavAttrs) // disassociate any error that ultimately falls outside the final ixn span
-      return this.#storeJserrorForHarvest(jsErrorEvent, true, softNavAttrs)
-    })
-    delete this.bufferedErrorsUnderSpa[interactionId] // wipe the list of jserrors so they aren't duplicated by another call to the same id
-  }
 }

@@ -135,3 +135,5 @@
 `A new agent session has started`
 ### 67
 `The "spa" feature has been deprecated and disabled. Please use/import "soft_navigations" instead for tracking of BrowserInteraction data.`
+### 68
+`API has been deregistered and can no longer be used. Call "register" API again with credentials to start over.`

@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { warn } from '../common/util/console'
@@ -46,6 +46,31 @@ export class RegisteredEntity {
   addPageAction (name, attributes) {
     /** this method will be overset once register is successful */
     warn(35, 'addPageAction')
+  }
+
+  /**
+   * @experimental
+   * IMPORTANT: This feature is being developed for use internally and is not in a public-facing production-ready state.
+   * It is not recommended for use in production environments and will not receive support for issues.
+   *
+   * Registers an external caller to report through the base agent to a different target than the base agent. Will be related to this registered entity when called through this access point.
+   * @param {import('../loaders/api/register-api-types').RegisterAPIConstructor} target the target object to report data to
+    @returns {import('../loaders/api/register-api-types').RegisterAPI} Returns an object that contains the available API methods and configurations to use with the external caller. See loaders/api/api.js for more information.
+   */
+  register (target) {
+    warn(35, 'register')
+  }
+
+  /**
+   * @experimental
+   * IMPORTANT: This feature is being developed for use internally and is not in a public-facing production-ready state.
+   * It is not recommended for use in production environments and will not receive support for issues.
+   *
+   * Deregister the registered entity (this), which blocks its use and captures end of life timings.
+   * @returns {void}
+   */
+  deregister () {
+    warn(35, 'deregister')
   }
 
   /**

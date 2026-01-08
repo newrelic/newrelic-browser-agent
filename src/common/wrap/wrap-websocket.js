@@ -1,10 +1,11 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { globalScope } from '../constants/runtime'
 import { generateRandomHexString } from '../ids/unique-id'
 import { now } from '../timing/now'
+import { cleanURL } from '../url/clean-url'
 import { gosNREUMOriginals } from '../window/nreum'
 import { subscribeToPageUnload } from '../window/page-visibility'
 
@@ -70,11 +71,11 @@ export function wrapWebSocket (sharedEE) {
 
       this.addEventListener('message', (event) => {
         const { type, size } = getDataInfo(event.data)
-        this.nrData.messageOrigin ??= event.origin // the origin of messages thru WS lifetime cannot be changed, so set once is sufficient
-        this.nrData.messageCount = (this.nrData.messageCount ?? 0) + 1
-        this.nrData.messageBytes = (this.nrData.messageBytes ?? 0) + size
-        this.nrData.messageBytesMin = Math.min(this.nrData.messageBytesMin ?? Infinity, size)
-        this.nrData.messageBytesMax = Math.max(this.nrData.messageBytesMax ?? 0, size)
+        this.nrData.messageOrigin ??= cleanURL(event.origin) // the origin of messages thru WS lifetime cannot be changed, so set once is sufficient
+        this.nrData.messageCount++
+        this.nrData.messageBytes += size
+        this.nrData.messageBytesMin = Math.min(this.nrData.messageBytesMin || Infinity, size)
+        this.nrData.messageBytesMax = Math.max(this.nrData.messageBytesMax, size)
         if (!(this.nrData.messageTypes ?? '').includes(type)) {
           this.nrData.messageTypes = this.nrData.messageTypes ? `${this.nrData.messageTypes},${type}` : type
         }
@@ -83,7 +84,7 @@ export function wrapWebSocket (sharedEE) {
       this.addEventListener('close', (event) => {
         this.nrData.closedAt = now()
         this.nrData.closeCode = event.code
-        this.nrData.closeReason = event.reason
+        if (event.reason) this.nrData.closeReason = event.reason
         this.nrData.closeWasClean = event.wasClean
         this.nrData.connectedDuration = this.nrData.closedAt - this.nrData.openedAt
 
@@ -122,10 +123,10 @@ export function wrapWebSocket (sharedEE) {
       // Only track metrics if the connection is OPEN; data sent in CONNECTING state throws, and data sent in CLOSING/CLOSED states is silently discarded
       if (this.readyState === WebSocket.OPEN) {
         const { type, size } = getDataInfo(data)
-        this.nrData.sendCount = (this.nrData.sendCount ?? 0) + 1
-        this.nrData.sendBytes = (this.nrData.sendBytes ?? 0) + size
-        this.nrData.sendBytesMin = Math.min(this.nrData.sendBytesMin ?? Infinity, size)
-        this.nrData.sendBytesMax = Math.max(this.nrData.sendBytesMax ?? 0, size)
+        this.nrData.sendCount++
+        this.nrData.sendBytes += size
+        this.nrData.sendBytesMin = Math.min(this.nrData.sendBytesMin || Infinity, size)
+        this.nrData.sendBytesMax = Math.max(this.nrData.sendBytesMax, size)
         if (!(this.nrData.sendTypes ?? '').includes(type)) {
           this.nrData.sendTypes = this.nrData.sendTypes ? `${this.nrData.sendTypes},${type}` : type
         }
@@ -192,7 +193,7 @@ class WebSocketData {
     this.timestamp = now()
 
     /** @type {string} Most current URL when WebSocket was created; relevant for SPA */
-    this.currentUrl = window.location.href
+    this.currentUrl = cleanURL(window.location.href)
 
     /*
      * pageUrl will be set by addEvent later; unlike timestamp and currentUrl, it's not sensitive to *when* it is set.
@@ -203,7 +204,7 @@ class WebSocketData {
     this.socketId = generateRandomHexString(8)
 
     /** @type {string} The URL requested for the WebSocket connection */
-    this.requestedUrl = requestedUrl
+    this.requestedUrl = cleanURL(requestedUrl)
 
     /** @type {string} Comma-separated list of requested protocols */
     this.requestedProtocols = Array.isArray(requestedProtocols) ? requestedProtocols.join(',') : (requestedProtocols || '')
@@ -225,33 +226,33 @@ class WebSocketData {
     /** @type {string} [messageOrigin] Origin of messages (set once) */
     this.messageOrigin = undefined
 
-    /** @type {number} [messageCount] Total number of messages received */
-    this.messageCount = undefined
+    /** @type {number} Total number of messages received */
+    this.messageCount = 0
 
-    /** @type {number} [messageBytes] Total bytes received */
-    this.messageBytes = undefined
+    /** @type {number} Total bytes received */
+    this.messageBytes = 0
 
-    /** @type {number} [messageBytesMin] Minimum message size received */
-    this.messageBytesMin = undefined
+    /** @type {number} Minimum message size received */
+    this.messageBytesMin = 0
 
-    /** @type {number} [messageBytesMax] Maximum message size received */
-    this.messageBytesMax = undefined
+    /** @type {number} Maximum message size received */
+    this.messageBytesMax = 0
 
     /** @type {string} [messageTypes] Comma-separated list of message types received */
     this.messageTypes = undefined
 
     // Send metrics
-    /** @type {number} [sendCount] Total number of messages sent */
-    this.sendCount = undefined
+    /** @type {number} Total number of messages sent */
+    this.sendCount = 0
 
-    /** @type {number} [sendBytes] Total bytes sent */
-    this.sendBytes = undefined
+    /** @type {number} Total bytes sent */
+    this.sendBytes = 0
 
-    /** @type {number} [sendBytesMin] Minimum message size sent */
-    this.sendBytesMin = undefined
+    /** @type {number} Minimum message size sent */
+    this.sendBytesMin = 0
 
-    /** @type {number} [sendBytesMax] Maximum message size sent */
-    this.sendBytesMax = undefined
+    /** @type {number} Maximum message size sent */
+    this.sendBytesMax = 0
 
     /** @type {string} [sendTypes] Comma-separated list of message types sent */
     this.sendTypes = undefined
@@ -263,14 +264,14 @@ class WebSocketData {
     /** @type {number} [closeCode] WebSocket close code */
     this.closeCode = undefined
 
-    /** @type {string} [closeReason] WebSocket close reason */
-    this.closeReason = undefined
+    /** @type {string} WebSocket close reason */
+    this.closeReason = 'unknown'
 
     /** @type {boolean} [closeWasClean] Whether the connection closed cleanly */
     this.closeWasClean = undefined
 
-    /** @type {number} [connectedDuration] Duration of the connection in milliseconds */
-    this.connectedDuration = undefined
+    /** @type {number} Duration of the connection in milliseconds */
+    this.connectedDuration = 0
 
     // Error tracking
     /** @type {boolean} [hasErrors] Whether any errors occurred */

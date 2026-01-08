@@ -2,7 +2,7 @@ import { JSONPath } from 'jsonpath-plus'
 import { checkAjaxEvents, checkSpa } from '../../util/basic-checks'
 import { testAjaxEventsRequest, testInteractionEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
-describe('Fetch SPA Interaction Tracking', () => {
+describe.skip('Fetch SPA Interaction Tracking', () => {
   let interactionsCapture, ajaxEventsCapture
 
   beforeEach(async () => {

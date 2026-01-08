@@ -248,7 +248,15 @@ describe('payloads', () => {
     })
 
     test('registered entities, container agent', async () => {
-      mainAgent.runtime.registeredEntities.push(true) // mock that an entity is registered
+      // mock that an entity is registered
+      mainAgent.runtime.registeredEntities.push({
+        metadata: {
+          target: {
+            id: 1234,
+            name: 'test'
+          }
+        }
+      })
       loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', { myAttributes: 1 }, 'error'])
 
       expect(loggingAggregate.events.get()[0]).toEqual(new Log(
@@ -272,7 +280,7 @@ describe('payloads', () => {
         type: 'MFE',
         containerId: mainAgent.runtime.appMetadata.agents[0].entityGuid
       }
-      mainAgent.runtime.registeredEntities.push(registeredTarget) // mock that an entity is registered
+      mainAgent.runtime.registeredEntities.push({ metadata: { target: registeredTarget } }) // mock that an entity is registered
       loggingAggregate.ee.emit(LOGGING_EVENT_EMITTER_CHANNEL, [1234, 'test message', { myAttributes: 1 }, 'error', false, registeredTarget]) // supply an api "target" to mock a registered entity API call
 
       expect(loggingAggregate.events.get()[0]).toEqual(new Log(
@@ -285,7 +293,8 @@ describe('payloads', () => {
           'source.id': registeredTarget.id,
           'source.name': registeredTarget.name,
           'source.type': registeredTarget.type,
-          'parent.id': registeredTarget.containerId
+          'parent.id': registeredTarget.containerId,
+          'parent.type': 'BA'
         },
         'error'
       ))

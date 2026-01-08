@@ -4,7 +4,7 @@
  */
 import { handle } from '../../common/event-emitter/handle'
 import { warn } from '../../common/util/console'
-import { hasValidValue, isValidMFETarget } from '../../common/util/mfe'
+import { V2_TYPES } from '../../common/util/v2'
 import { FEATURE_NAMES } from '../features/features'
 import { now } from '../../common/timing/now'
 import { SUPPORTABILITY_METRIC_CHANNEL } from '../../features/metrics/constants'
@@ -44,7 +44,7 @@ function register (agentRef, target, parent) {
   warn(54, 'newrelic.register')
 
   target ||= {}
-  target.type = 'MFE'
+  target.type = V2_TYPES.MFE
   target.licenseKey ||= agentRef.info.licenseKey // will inherit the license key from the container agent if not provided for brevity. A future state may dictate that we need different license keys to do different things.
   target.blocked = false
   target.parent = parent || {}
@@ -52,17 +52,17 @@ function register (agentRef, target, parent) {
 
   const attrs = {}
   target.tags.forEach(tag => { if (tag !== 'name' && tag !== 'id') attrs[`source.${tag}`] = true })
+  target.isolated ??= true
 
   /** @type {Function} a function that is set and reports when APIs are triggered -- warns the customer of the invalid state  */
   let invalidApiResponse = () => {}
   /** @type {Array} the array of registered target APIs */
   const registeredEntities = agentRef.runtime.registeredEntities
 
-  /** if we have already registered this target, go ahead and re-use it */
-  const preregisteredEntity = registeredEntities.find(({ metadata: { target: { id, name } } }) => id === target.id)
-  if (preregisteredEntity) {
-    if (preregisteredEntity.metadata.target.name !== target.name) preregisteredEntity.metadata.target.name = target.name
-    return preregisteredEntity
+  if (!target.isolated) {
+  /** if we have already registered this non-isolated target, go ahead and re-use it */
+    const sharedEntity = registeredEntities.find(({ metadata: { target: { id } } }) => id === target.id && !target.isolated)
+    if (sharedEntity) return sharedEntity
   }
 
   /**
@@ -74,16 +74,21 @@ function register (agentRef, target, parent) {
     invalidApiResponse = warning
   }
 
+  function hasValidValue (val) {
+    return (typeof val === 'string' && !!val.trim() && val.trim().length < 501) || (typeof val === 'number')
+  }
+
   /** primary cases that can block the register API from working at init time */
   if (!agentRef.init.api.allow_registered_children) block(single(() => warn(55)))
-  if (!isValidMFETarget(target)) block(single(() => warn(48, target)))
-  if (!hasValidValue(target.id) || !hasValidValue(target.name)) {
-    block(single(() => warn(48, target)))
-  }
+  if (!hasValidValue(target.id) || !hasValidValue(target.name)) block(single(() => warn(48, target)))
 
   /** @type {RegisterAPI} */
   const api = {
     addPageAction: (name, attributes = {}) => report(addPageAction, [name, { ...attrs, ...attributes }, agentRef], target),
+    deregister: () => {
+      /** note: blocking this instance will disable access for all entities sharing the instance, and will invalidate it from the v2 checks */
+      block(single(() => warn(68)))
+    },
     log: (message, options = {}) => report(log, [message, { ...options, customAttributes: { ...attrs, ...(options.customAttributes || {}) } }, agentRef], target),
     measure: (name, options = {}) => report(measure, [name, { ...options, customAttributes: { ...attrs, ...(options.customAttributes || {}) } }, agentRef], target),
     noticeError: (error, attributes = {}) => report(noticeError, [error, { ...attrs, ...attributes }, agentRef], target),

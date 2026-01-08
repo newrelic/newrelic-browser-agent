@@ -200,8 +200,8 @@ describe('NR Server Time', () => {
       .then(() => browser.waitForAgentLoad())
       .then(() => browser.getPageTime())
 
-    const [[ajaxEventsHarvest]] = await Promise.all([
-      ajaxEventsCapture.waitForResult({ totalCount: 1 }),
+    const [ajaxEventsHarvests] = await Promise.all([
+      ajaxEventsCapture.waitForResult({ totalCount: 2 }), // first is on page load, 2nd is from our test
       browser.execute(function () {
         var xhr = new XMLHttpRequest()
         xhr.open('GET', '/json')
@@ -213,10 +213,10 @@ describe('NR Server Time', () => {
       })
     ])
 
-    const ajaxEvent = ajaxEventsHarvest.request.body.find(r => r.path === '/json' && r.requestedWith === 'XMLHttpRequest')
+    const ajaxEvent = ajaxEventsHarvests[1].request.body.find(r => r.path === '/json' && r.requestedWith === 'XMLHttpRequest')
     testTimeExpectations(ajaxEvent.timestamp, timeKeeper, false)
 
-    const fetchEvent = ajaxEventsHarvest.request.body.find(r => r.path === '/json' && r.requestedWith === 'fetch')
+    const fetchEvent = ajaxEventsHarvests[1].request.body.find(r => r.path === '/json' && r.requestedWith === 'fetch')
     testTimeExpectations(fetchEvent.timestamp, timeKeeper, false)
   })
 

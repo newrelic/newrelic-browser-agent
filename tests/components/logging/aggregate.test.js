@@ -285,7 +285,8 @@ describe('payloads', () => {
           'source.id': registeredTarget.id,
           'source.name': registeredTarget.name,
           'source.type': registeredTarget.type,
-          'parent.id': registeredTarget.containerId
+          'parent.id': registeredTarget.containerId,
+          'parent.type': 'BA'
         },
         'error'
       ))

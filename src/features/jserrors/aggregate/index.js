@@ -19,7 +19,7 @@ import { AggregateBase } from '../../utils/aggregate-base'
 import { now } from '../../../common/timing/now'
 import { applyFnToProps } from '../../../common/util/traverse'
 import { evaluateInternalError } from './internal-errors'
-import { getVersion2Attributes } from '../../../common/util/mfe'
+import { getVersion2Attributes } from '../../../common/util/v2'
 import { buildCauseString } from './cause-string'
 
 /**

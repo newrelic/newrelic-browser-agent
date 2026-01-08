@@ -15,11 +15,7 @@ let mainAgent
 beforeAll(() => {
   jest.useFakeTimers({ doNotFake: ['nextTick', 'performance'] }) // to aid new long task window heuristics as default ixn will need to wait additional 5s to finish
   mainAgent = setupAgent({
-    agentOverrides: {
-      runSoftNavOverSpa: true
-    },
     init: {
-      feature_flags: ['soft_nav'],
       soft_navigations: { enabled: true }
     }
   })

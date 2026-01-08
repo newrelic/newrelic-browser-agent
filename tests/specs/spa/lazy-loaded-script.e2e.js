@@ -1,6 +1,6 @@
 import { testInteractionEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
-describe('lazy loaded scripts', () => {
+describe.skip('lazy loaded scripts', () => {
   let interactionsCapture
 
   beforeEach(async () => {

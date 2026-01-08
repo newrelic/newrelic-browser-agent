@@ -110,6 +110,7 @@ describe('registered-entity', () => {
             expect(err.custom['source.name']).toEqual('agent' + id)
             expect(err.custom['source.type']).toEqual('MFE')
             expect(err.custom['parent.id']).toEqual(containerAgentEntityGuid)
+            expect(err.custom['parent.type']).toEqual('BA') // parent is container (Browser Agent)
           } else {
             if (testSet.includes('register') && testSet.includes('register.jserrors')) {
               expect(err.custom.appId).toEqual(42)
@@ -135,6 +136,7 @@ describe('registered-entity', () => {
               expect(ins['source.name']).toEqual('agent' + id)
               expect(ins['source.type']).toEqual('MFE')
               expect(ins['parent.id']).toEqual(containerAgentEntityGuid)
+              expect(ins['parent.type']).toEqual('BA') // parent is container (Browser Agent)
             } else {
               if (testSet.includes('register') && testSet.includes('register.generic_events')) {
                 expect(ins.appId).toEqual(42)
@@ -180,6 +182,7 @@ describe('registered-entity', () => {
             expect(log.attributes['source.name']).toEqual('agent' + id)
             expect(log.attributes['source.type']).toEqual('MFE')
             expect(log.attributes['parent.id']).toEqual(containerAgentEntityGuid)
+            expect(log.attributes['parent.type']).toEqual('BA') // parent is container (Browser Agent)
           } else {
             if (testSet.includes('register')) {
               expect(log.attributes.appId).toEqual(42)
@@ -202,7 +205,35 @@ describe('registered-entity', () => {
     })
   })
 
-  it('should use newest name of matching register', async () => {
+  it('should still harvest scoped data after deregistering', async () => {
+    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+
+    await browser.execute(function () {
+      window.agent1 = new RegisteredEntity({
+        id: 1,
+        name: 'agent1'
+      })
+      window.agent1.noticeError('1')
+      window.agent1.deregister()
+    })
+
+    const errorsHarvests = await mfeErrorsCapture.waitForResult({ totalCount: 1 })
+
+    // should still get a harvest even tho the MFE was deregistered
+    expect(errorsHarvests.length).toEqual(1)
+
+    // should not get future data now that the MFE was deregistered
+    await browser.execute(function () {
+      window.agent1.noticeError('2')
+    })
+
+    const errorsHarvests2 = await mfeErrorsCapture.waitForResult({ timeout: 10000 })
+
+    // should not have gotten more data
+    expect(errorsHarvests2.length).toEqual(errorsHarvests.length)
+  })
+
+  it('should allow multiple registers with same id', async () => {
     await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
 
     await browser.execute(function () {
@@ -221,11 +252,43 @@ describe('registered-entity', () => {
 
     const errorsHarvests = await mfeErrorsCapture.waitForResult({ totalCount: 1 })
 
-    // should get ALL data as "agent2" since it replaced the name of agent 1 of the same id
     errorsHarvests.forEach(({ request: { query, body } }) => {
       const data = body.err
-      data.forEach(err => {
-        expect(err.custom['source.name']).toEqual('agent2')
+      data.forEach((err, idx) => {
+        expect(Number(err.params.message)).toEqual(idx + 1)
+        expect(err.custom['source.name']).toEqual('agent' + (idx + 1))
+      })
+    })
+  })
+
+  it('should allow to share a registration', async () => {
+    await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+
+    await browser.execute(function () {
+      window.agent1 = new RegisteredEntity({
+        id: 1,
+        name: 'my agent',
+        isolated: false
+      })
+      window.agent2 = new RegisteredEntity({
+        id: 1,
+        isolated: false
+      })
+      // should get data as "agent2"
+      window.agent1.setCustomAttribute('sharedAttr', 'shared for both instances')
+      window.agent1.noticeError('1')
+      window.agent2.noticeError('2')
+    })
+
+    const errorsHarvests = await mfeErrorsCapture.waitForResult({ totalCount: 1 })
+
+    errorsHarvests.forEach(({ request: { query, body } }) => {
+      const data = body.err
+      data.forEach((err, idx) => {
+        expect(Number(err.params.message)).toEqual(idx + 1)
+        expect(err.custom['source.id']).toEqual(1)
+        expect(err.custom['source.name']).toEqual('my agent')
+        expect(err.custom.sharedAttr).toEqual('shared for both instances')
       })
     })
   })
@@ -263,9 +326,18 @@ describe('registered-entity', () => {
       const data = body.err
       data.forEach((err, idx) => {
         expect(err.custom['source.name']).toEqual('agent' + (idx + 1))
-        if (idx === 0) expect(err.custom['parent.id']).toEqual(containerAgentEntityGuid) // first app should have container as its parent
-        if (idx === 1) expect(err.custom['parent.id']).toEqual(1) // second app should have first app as its parent
-        if (idx === 2) expect(err.custom['parent.id']).toEqual(2) // third app should have second app as its parent
+        if (idx === 0) {
+          expect(err.custom['parent.id']).toEqual(containerAgentEntityGuid) // first app should have container as its parent
+          expect(err.custom['parent.type']).toEqual('BA') // parent is container (Browser Agent)
+        }
+        if (idx === 1) {
+          expect(err.custom['parent.id']).toEqual(1) // second app should have first app as its parent
+          expect(err.custom['parent.type']).toEqual('MFE') // parent is a registered MFE
+        }
+        if (idx === 2) {
+          expect(err.custom['parent.id']).toEqual(2) // third app should have second app as its parent
+          expect(err.custom['parent.type']).toEqual('MFE') // parent is a registered MFE
+        }
       })
     })
   })

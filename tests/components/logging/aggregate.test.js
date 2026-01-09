@@ -32,15 +32,12 @@ afterEach(() => {
   jest.clearAllMocks()
 })
 
-const INIT_TIMEOUT = 20
-const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms))
-
 const mockLoggingRumResponse = async (mode, apiMode) => {
   loggingAggregate.ee.emit('rumresp', [{
     log: mode,
     logapi: apiMode
   }])
-  return await wait(INIT_TIMEOUT)
+  return await new Promise(process.nextTick)
 }
 
 describe('class setup', () => {
@@ -60,25 +57,28 @@ describe('class setup', () => {
   test('should wait for flags - log flag is missing', async () => {
     expect(loggingAggregate.drained).toBeUndefined()
     loggingAggregate.ee.emit('rumresp', [{}])
-    await wait(INIT_TIMEOUT)
+    await new Promise(process.nextTick)
     expect(loggingAggregate.blocked).toEqual(true)
   })
 
   test('should wait for flags - 0 = OFF', async () => {
     expect(loggingAggregate.drained).toBeUndefined()
     await mockLoggingRumResponse(LOGGING_MODE.OFF, LOGGING_MODE.OFF)
+
     expect(loggingAggregate.blocked).toEqual(true)
   })
 
   test('should wait for flags - 1 = ERROR', async () => {
     expect(loggingAggregate.drained).toBeUndefined()
     await mockLoggingRumResponse(LOGGING_MODE.ERROR, LOGGING_MODE.OFF)
+
     expect(loggingAggregate.drained).toEqual(true)
   })
 
   test('is not blocked if just logapi is on while log is flagged off', async () => {
     expect(loggingAggregate.drained).toBeUndefined()
     await mockLoggingRumResponse(LOGGING_MODE.OFF, LOGGING_MODE.INFO)
+
     expect(loggingAggregate.drained).toEqual(true)
   })
 

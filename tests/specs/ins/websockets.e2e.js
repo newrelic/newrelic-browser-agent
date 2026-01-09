@@ -29,6 +29,7 @@ describe.withBrowsersMatching(supportsWebSocketsTesting)('WebSocket wrapper', ()
       expect(event.socketId).toBeTruthy()
       expect(event.requestedUrl).toContain('ws://')
       expect(event.requestedUrl).toContain('/websocket')
+      expect(event.requestedUrl).not.toContain('param=shouldbedropped')
       expect(event.requestedProtocols).toBeDefined() // can be empty string
       expect(event.timestamp).toBeGreaterThan(0)
       expect(event.currentUrl).toContain('/websockets.html')
@@ -42,7 +43,8 @@ describe.withBrowsersMatching(supportsWebSocketsTesting)('WebSocket wrapper', ()
       expect(event.closedAt).toBeGreaterThanOrEqual(event.openedAt)
       expect(event.connectedDuration).toBeGreaterThanOrEqual(0)
       expect(event.closeCode).toBeDefined()
-      expect(event.closeReason).toBeDefined() // can be empty string
+      expect(event.closeReason).toBeDefined() // should always have a value (defaults to 'unknown')
+      expect(typeof event.closeReason).toBe('string')
 
       // Safari may have a false wasClean property on close events
       if (browserMatch(onlySafari)) {
@@ -61,16 +63,19 @@ describe.withBrowsersMatching(supportsWebSocketsTesting)('WebSocket wrapper', ()
       expect(event.messageBytesMax).toBeGreaterThan(0)
       expect(event.messageTypes).toContain('string')
       expect(event.messageOrigin).toContain('ws://')
+      expect(event.messageOrigin).not.toContain('param=shouldbedropped')
     })
 
     // Verify one is preload and one is postload based on URL query params
-    const preLoadEvent = wsEvents.find(e => e.requestedUrl.includes('loaded=pre'))
-    const postLoadEvent = wsEvents.find(e => e.requestedUrl.includes('loaded=post'))
+    const preLoadEvent = wsEvents.find(e => e.requestedUrl.includes('/pre'))
+    const postLoadEvent = wsEvents.find(e => e.requestedUrl.includes('/post'))
     expect(preLoadEvent).toBeTruthy()
     expect(postLoadEvent).toBeTruthy()
     // All browsers, either natively or via Lambdatest, are super fickle and can have close codes of 1005 for preLoad WS, so it's unasserted.
     // Additionally, Safari can have close code of 1006 for postLoad WS.
     if (!browserMatch(onlySafari)) expect(postLoadEvent.closeCode).toBe(1000)
+    expect(postLoadEvent.closeReason).toBeDefined()
+    expect(typeof postLoadEvent.closeReason).toBe('string')
 
     // Verify session id (s) and trace id (ptid) query params are present and valid
     const { s: sessionId, ptid: traceId } = insHarvest.request.query
@@ -144,6 +149,8 @@ describe.withBrowsersMatching(supportsWebSocketsTesting)('WebSocket wrapper', ()
     expect(messageTypes).toContain('string')
     expect(messageTypes).toContain('ArrayBuffer')
     expect(messageTypes).toContain('Blob')
+    expect(wsEvent.closeReason).toBeDefined()
+    expect(typeof wsEvent.closeReason).toBe('string')
   })
 
   it('should link WebSocket errors to JavaScriptError payloads via socketId', async () => {
@@ -172,6 +179,8 @@ describe.withBrowsersMatching(supportsWebSocketsTesting)('WebSocket wrapper', ()
     expect(wsEvent.hasErrors).toBe(true)
     expect(wsEvent.socketId).toBeTruthy()
     expect(wsEvent.pageUrl).toEndWith('/websocket-error.html')
+    expect(wsEvent.closeReason).toBeDefined()
+    expect(typeof wsEvent.closeReason).toBe('string')
 
     const errors = errorsHarvest.request?.body?.err
     expect(Array.isArray(errors)).toBe(true)
@@ -209,6 +218,8 @@ describe.withBrowsersMatching(supportsWebSocketsTesting)('WebSocket wrapper', ()
       expect(wsEvent.closedAt).toBeGreaterThan(0)
       expect(wsEvent.sendCount).toBeGreaterThanOrEqual(1)
       expect(wsEvent.messageCount).toBeGreaterThanOrEqual(1)
+      expect(wsEvent.closeReason).toBeDefined()
+      expect(typeof wsEvent.closeReason).toBe('string')
     })
   })
 
@@ -261,10 +272,10 @@ describe.withBrowsersMatching(supportsWebSocketsTesting)('WebSocket wrapper', ()
     expect(wsEvent.pageUrl).toEndWith('/instrumented.html')
     expect(wsEvent.closeCode).toBe(1001) // Going Away - set by wrap-websocket pagehide handler
 
-    // Firefox's close event fires after pagehide and overwrites closeReason with empty string
+    // Firefox's close event fires after pagehide, so it gets the default 'unknown' reason
     // Other browsers preserve the pagehide-set closeReason
     if (browserMatch(onlyFirefox)) {
-      expect(wsEvent.closeReason).toBe('')
+      expect(wsEvent.closeReason).toBe('unknown')
       expect(wsEvent.closeWasClean).toBe(true)
     } else {
       expect(wsEvent.closeReason).toBe('Page navigating away')

@@ -22,11 +22,11 @@ describe('should harvest early', () => {
   })
 
   it('should harvest early when exceeding ideal size', async () => {
-    const timeStart = Date.now()
     await browser.url(await browser.testHandle.assetURL('harvest-early-block-internal.html'))
       .then(() => browser.waitForAgentLoad())
 
-    await Promise.all([
+    const timeStart = Date.now()
+    const [ajaxResults] = await Promise.all([
       ajaxEventsCapture.waitForResult({ totalCount: 1 }),
       insightsCapture.waitForResult({ totalCount: 1 }),
       interactionEventsCapture.waitForResult({ totalCount: 1 }),
@@ -38,6 +38,15 @@ describe('should harvest early', () => {
     ])
 
     expect(Date.now() - timeStart).toBeLessThan(30000) // should have harvested early before 30 seconds
+
+    // Verify that the non-internal AJAX event was captured for the pokemon API request
+    const ajaxBody = ajaxResults[0].request.body
+    expect(ajaxBody).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        domain: 'pokeapi.co:443',
+        path: '/api/v2/pokemon/moltres'
+      })
+    ]))
   })
 
   it('should NOT re-attempt to harvest early when rate limited', async () => {
@@ -76,6 +85,14 @@ describe('should harvest early', () => {
       })
     ])
 
-    expect(ajaxResults.length).toBeFalsy()
+    expect(ajaxResults.length).toEqual(1) // this is the on-page-load harvest; it should not have a 2nd or more harvest within 10s
+    const ajaxBody = ajaxResults[0].request.body
+
+    // Verify that the AJAX event is an internal call to the BAM server
+    expect(ajaxBody).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        domain: expect.stringContaining('bam-test-1.nr-local.net')
+      })
+    ]))
   })
 })

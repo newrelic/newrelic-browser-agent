@@ -7,11 +7,7 @@ let mainAgent
 
 beforeAll(() => {
   mainAgent = setupAgent({
-    agentOverrides: {
-      runSoftNavOverSpa: true
-    },
     init: {
-      feature_flags: ['soft_nav'],
       soft_navigations: { enabled: true }
     }
   })

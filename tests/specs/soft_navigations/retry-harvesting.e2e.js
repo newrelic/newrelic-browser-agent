@@ -1,7 +1,6 @@
 import { testInteractionEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 describe('retry harvesting', () => {
-  const config = { loader: 'spa', init: { feature_flags: ['soft_nav'] } }
   let interactionsCapture
 
   beforeEach(async () => {
@@ -18,7 +17,7 @@ describe('retry harvesting', () => {
 
       const [firstInteractionEventHarvest] = await Promise.all([
         interactionsCapture.waitForResult({ totalCount: 1 }),
-        browser.url(await browser.testHandle.assetURL('instrumented.html', config))
+        browser.url(await browser.testHandle.assetURL('instrumented.html'))
           .then(() => browser.waitForAgentLoad())
       ])
 
@@ -48,7 +47,7 @@ describe('retry harvesting', () => {
 
       const [firstInteractionEventHarvest] = await Promise.all([
         interactionsCapture.waitForResult({ totalCount: 1 }),
-        browser.url(await browser.testHandle.assetURL('instrumented.html', config))
+        browser.url(await browser.testHandle.assetURL('instrumented.html'))
           .then(() => browser.waitForAgentLoad())
       ])
 

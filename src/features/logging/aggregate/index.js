@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { registerHandler } from '../../../common/event-emitter/register-handler'
@@ -13,7 +13,7 @@ import { applyFnToProps } from '../../../common/util/traverse'
 import { SESSION_EVENT_TYPES, SESSION_EVENTS } from '../../../common/session/constants'
 import { ABORT_REASONS } from '../../session_replay/constants'
 import { canEnableSessionTracking } from '../../utils/feature-gates'
-import { getVersion2Attributes } from '../../../common/util/mfe'
+import { getVersion2Attributes } from '../../../common/util/v2'
 
 const LOGGING_EVENT = 'Logging/Event/'
 

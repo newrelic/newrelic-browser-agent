@@ -12,6 +12,72 @@ describe('newrelic api', () => {
   })
 
   describe('registered-entity', () => {
+    it('should still harvest scoped data after deregistering', async () => {
+      const [mfeErrorsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+        { test: testMFEErrorsRequest }
+      ])
+      await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+
+      await browser.execute(function () {
+        window.agent1 = newrelic.register({
+          id: 1,
+          name: 'agent1'
+        })
+        window.agent1.noticeError('1')
+        window.agent1.deregister()
+      })
+
+      const errorsHarvests = await mfeErrorsCapture.waitForResult({ totalCount: 1 })
+
+      // should still get a harvest even tho the MFE was deregistered
+      expect(errorsHarvests.length).toEqual(1)
+
+      // should not get future data now that the MFE was deregistered
+      await browser.execute(function () {
+        window.agent1.noticeError('2')
+      })
+
+      const errorsHarvests2 = await mfeErrorsCapture.waitForResult({ timeout: 10000 })
+
+      // should not have gotten more data
+      expect(errorsHarvests2.length).toEqual(errorsHarvests.length)
+    })
+
+    it('should allow to share a registration', async () => {
+      const [mfeErrorsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+        { test: testMFEErrorsRequest }
+      ])
+      await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+
+      await browser.execute(function () {
+        window.agent1 = newrelic.register({
+          id: 1,
+          name: 'my agent',
+          isolated: false
+        })
+        window.agent2 = newrelic.register({
+          id: 1,
+          isolated: false
+        })
+        // should get data as "agent2"
+        window.agent1.setCustomAttribute('sharedAttr', 'shared for both instances')
+        window.agent1.noticeError('1')
+        window.agent2.noticeError('2')
+      })
+
+      const errorsHarvests = await mfeErrorsCapture.waitForResult({ totalCount: 1 })
+
+      errorsHarvests.forEach(({ request: { query, body } }) => {
+        const data = body.err
+        data.forEach((err, idx) => {
+          expect(Number(err.params.message)).toEqual(idx + 1)
+          expect(err.custom['source.id']).toEqual(1)
+          expect(err.custom['source.name']).toEqual('my agent')
+          expect(err.custom.sharedAttr).toEqual('shared for both instances')
+        })
+      })
+    })
+
     it('should allow a nested register', async () => {
       const [mfeErrorsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
         { test: testMFEErrorsRequest }
@@ -48,9 +114,18 @@ describe('newrelic api', () => {
         const data = body.err
         data.forEach((err, idx) => {
           expect(err.custom['source.name']).toEqual('agent' + (idx + 1))
-          if (idx === 0) expect(err.custom['parent.id']).toEqual(containerAgentEntityGuid) // first app should have container as its parent
-          if (idx === 1) expect(err.custom['parent.id']).toEqual(1) // second app should have first app as its parent
-          if (idx === 2) expect(err.custom['parent.id']).toEqual(2) // third app should have second app as its parent
+          if (idx === 0) {
+            expect(err.custom['parent.id']).toEqual(containerAgentEntityGuid) // first app should have container as its parent
+            expect(err.custom['parent.type']).toEqual('BA') // parent is container (Browser Agent)
+          }
+          if (idx === 1) {
+            expect(err.custom['parent.id']).toEqual(1) // second app should have first app as its parent
+            expect(err.custom['parent.type']).toEqual('MFE') // parent is a registered MFE
+          }
+          if (idx === 2) {
+            expect(err.custom['parent.id']).toEqual(2) // third app should have second app as its parent
+            expect(err.custom['parent.type']).toEqual('MFE') // parent is a registered MFE
+          }
         })
       })
     })
@@ -157,6 +232,7 @@ describe('newrelic api', () => {
               expect(err.custom['source.name']).toEqual('agent' + id)
               expect(err.custom['source.type']).toEqual('MFE')
               expect(err.custom['parent.id']).toEqual(containerAgentEntityGuid)
+              expect(err.custom['parent.type']).toEqual('BA') // parent is container (Browser Agent)
             } else {
               if (testSet.includes('register') && testSet.includes('register.jserrors')) {
                 expect(err.custom.appId).toEqual(42)
@@ -182,6 +258,7 @@ describe('newrelic api', () => {
                 expect(ins['source.name']).toEqual('agent' + id)
                 expect(ins['source.type']).toEqual('MFE')
                 expect(ins['parent.id']).toEqual(containerAgentEntityGuid)
+                expect(ins['parent.type']).toEqual('BA') // parent is container (Browser Agent)
               } else {
                 if (testSet.includes('register') && testSet.includes('register.generic_events')) {
                   expect(ins.appId).toEqual(42)
@@ -228,6 +305,7 @@ describe('newrelic api', () => {
               expect(log.attributes['source.name']).toEqual('agent' + id)
               expect(log.attributes['source.type']).toEqual('MFE')
               expect(log.attributes['parent.id']).toEqual(containerAgentEntityGuid)
+              expect(log.attributes['parent.type']).toEqual('BA') // parent is container (Browser Agent)
             } else {
               if (testSet.includes('register')) {
                 expect(log.attributes.appId).toEqual(42)
@@ -249,6 +327,317 @@ describe('newrelic api', () => {
           tests[appId][type]++
         }
       })
+    })
+
+    it('should include tags as source attributes', async () => {
+      const [mfeErrorsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+        { test: testMFEErrorsRequest }
+      ])
+      await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+
+      await browser.execute(function () {
+        window.agent1 = newrelic.register({
+          id: 1,
+          name: 'frontend-agent',
+          tags: ['checkout', 'payment']
+        })
+
+        window.agent2 = newrelic.register({
+          id: 2,
+          name: 'backend-agent',
+          tags: ['api', 'graphql']
+        })
+
+        window.agent1.noticeError('error1')
+        window.agent2.noticeError('error2')
+      })
+
+      const errorsHarvests = await mfeErrorsCapture.waitForResult({ totalCount: 1 })
+
+      errorsHarvests.forEach(({ request: { query, body } }) => {
+        const data = body.err
+        expect(data).toHaveLength(2)
+
+        const error1 = data.find(err => err.params.message === 'error1')
+        const error2 = data.find(err => err.params.message === 'error2')
+
+        expect(error1.custom['source.checkout']).toEqual(true)
+        expect(error1.custom['source.payment']).toEqual(true)
+        expect(error1.custom['source.name']).toEqual('frontend-agent')
+
+        expect(error2.custom['source.api']).toEqual(true)
+        expect(error2.custom['source.graphql']).toEqual(true)
+        expect(error2.custom['source.name']).toEqual('backend-agent')
+      })
+    })
+
+    it('should handle empty tags array', async () => {
+      const [mfeErrorsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+        { test: testMFEErrorsRequest }
+      ])
+      await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+
+      await browser.execute(function () {
+        window.agent1 = newrelic.register({
+          id: 1,
+          name: 'test-agent',
+          tags: []
+        })
+
+        window.agent1.noticeError('error1')
+      })
+
+      const errorsHarvests = await mfeErrorsCapture.waitForResult({ totalCount: 1 })
+
+      errorsHarvests.forEach(({ request: { query, body } }) => {
+        const data = body.err
+        expect(data).toHaveLength(1)
+
+        const error1 = data[0]
+        expect(error1.custom['source.name']).toEqual('test-agent')
+
+        // Should not have any source.* attributes except source.name, source.id, source.type
+        const sourceKeys = Object.keys(error1.custom).filter(k => k.startsWith('source.'))
+        expect(sourceKeys).toEqual(expect.arrayContaining(['source.name', 'source.id', 'source.type']))
+        expect(sourceKeys.length).toBe(3)
+      })
+    })
+
+    it('should combine tags with custom attributes', async () => {
+      const [mfeErrorsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+        { test: testMFEErrorsRequest }
+      ])
+      await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+
+      await browser.execute(function () {
+        window.agent1 = newrelic.register({
+          id: 1,
+          name: 'test-agent',
+          tags: ['module1', 'frontend']
+        })
+
+        window.agent1.setCustomAttribute('customAttr', 'customValue')
+        window.agent1.setApplicationVersion('1.0.0')
+        window.agent1.noticeError('error1')
+      })
+
+      const errorsHarvests = await mfeErrorsCapture.waitForResult({ totalCount: 1 })
+
+      errorsHarvests.forEach(({ request: { query, body } }) => {
+        const data = body.err
+        expect(data).toHaveLength(1)
+
+        const error1 = data[0]
+        expect(error1.custom['source.module1']).toEqual(true)
+        expect(error1.custom['source.frontend']).toEqual(true)
+        expect(error1.custom.customAttr).toEqual('customValue')
+        expect(error1.custom['application.version']).toEqual('1.0.0')
+      })
+    })
+
+    it('should exclude protected "name" and "id" keys from tags', async () => {
+      const [mfeErrorsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+        { test: testMFEErrorsRequest }
+      ])
+      await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+
+      await browser.execute(function () {
+        window.agent1 = newrelic.register({
+          id: 1234,
+          name: 'test-agent',
+          tags: ['name', 'id', 'valid-tag']
+        })
+
+        window.agent1.noticeError('error1')
+      })
+
+      const errorsHarvests = await mfeErrorsCapture.waitForResult({ totalCount: 1 })
+
+      errorsHarvests.forEach(({ request: { query, body } }) => {
+        const data = body.err
+        expect(data).toHaveLength(1)
+
+        const error1 = data[0]
+
+        // Should only have source.valid-tag, not source.name or source.id from tags
+        expect(error1.custom['source.valid-tag']).toEqual(true)
+        expect(error1.custom['source.name']).toEqual('test-agent') // This comes from the name property
+        expect(error1.custom['source.id']).toEqual(1234) // This comes from the id property
+
+        // Verify there are no duplicate or conflicting attributes
+        const sourceNameKeys = Object.keys(error1.custom).filter(k => k === 'source.name')
+        const sourceIdKeys = Object.keys(error1.custom).filter(k => k === 'source.id')
+        expect(sourceNameKeys.length).toBe(1)
+        expect(sourceIdKeys.length).toBe(1)
+      })
+    })
+
+    it('should handle tags with only protected keys', async () => {
+      const [mfeErrorsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+        { test: testMFEErrorsRequest }
+      ])
+      await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+
+      await browser.execute(function () {
+        window.agent1 = newrelic.register({
+          id: 1234,
+          name: 'test-agent',
+          tags: ['name', 'id']
+        })
+
+        window.agent1.noticeError('error1')
+      })
+
+      const errorsHarvests = await mfeErrorsCapture.waitForResult({ totalCount: 1 })
+
+      errorsHarvests.forEach(({ request: { query, body } }) => {
+        const data = body.err
+        expect(data).toHaveLength(1)
+
+        const error1 = data[0]
+
+        // Should have source.name and source.id from properties, not from tags
+        expect(error1.custom['source.name']).toEqual('test-agent')
+        expect(error1.custom['source.id']).toEqual(1234)
+
+        // Should not have any other source.* attributes from tags
+        const sourceKeys = Object.keys(error1.custom).filter(k => k.startsWith('source.'))
+        expect(sourceKeys).toEqual(expect.arrayContaining(['source.name', 'source.id', 'source.type']))
+        expect(sourceKeys.length).toBe(3)
+      })
+    })
+
+    it('should add child.* attributes to duplicated data', async () => {
+      const [mfeErrorsCapture, mfeInsightsCapture, logsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+        { test: testMFEErrorsRequest },
+        { test: testMFEInsRequest },
+        { test: testLogsRequest }
+      ])
+
+      await browser.url(await browser.testHandle.assetURL('instrumented.html', {
+        init: {
+          feature_flags: ['register', 'register.jserrors', 'register.generic_events'],
+          api: {
+            duplicate_registered_data: true
+          }
+        }
+      }))
+
+      const { agent1Id, agent2Id } = await browser.execute(function () {
+        window.agent1 = newrelic.register({
+          id: 'test-agent-1',
+          name: 'agent1'
+        })
+        window.agent2 = newrelic.register({
+          id: 'test-agent-2',
+          name: 'agent2'
+        })
+
+        // Test all API methods
+        window.agent1.noticeError(new Error('error-from-agent1'), { testAttr: 'value1' })
+        window.agent2.noticeError(new Error('error-from-agent2'), { testAttr: 'value2' })
+
+        window.agent1.addPageAction('action1', { testAttr: 'value1' })
+        window.agent2.addPageAction('action2', { testAttr: 'value2' })
+
+        window.agent1.log('log1', { customAttributes: { testAttr: 'value1' } })
+        window.agent2.log('log2', { customAttributes: { testAttr: 'value2' } })
+
+        window.agent1.recordCustomEvent('Event1', { testAttr: 'value1' })
+        window.agent2.recordCustomEvent('Event2', { testAttr: 'value2' })
+
+        window.agent1.measure('measure1', { customAttributes: { testAttr: 'value1' } })
+        window.agent2.measure('measure2', { customAttributes: { testAttr: 'value2' } })
+
+        return {
+          agent1Id: window.agent1.metadata.target.id,
+          agent2Id: window.agent2.metadata.target.id
+        }
+      })
+
+      const [errorsHarvests, insightsHarvests, logsHarvests] = await Promise.all([
+        mfeErrorsCapture.waitForResult({ totalCount: 2, timeout: 10000 }),
+        mfeInsightsCapture.waitForResult({ totalCount: 1, timeout: 10000 }),
+        logsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
+      ])
+
+      const tested = {
+        errors: { container: false, mfe: false },
+        insights: { container: false, mfe: false },
+        logs: { container: false, mfe: false }
+      }
+
+      // Check errors - distinguish by source.id
+      errorsHarvests.forEach(({ request: { body } }) => {
+        const data = body.err
+        data.forEach((err) => {
+          const hasSourceId = err.custom['source.id']
+          if (hasSourceId) {
+            tested.errors.mfe = true
+            // MFE-specific errors should NOT have child.id or child.type
+            expect(err.custom['child.id']).toBeUndefined()
+            expect(err.custom['child.type']).toBeUndefined()
+          } else {
+            // Container errors (duplicated) should HAVE child.id and child.type
+            tested.errors.container = true
+            expect(err.custom['child.id']).toBeDefined()
+            expect([agent1Id, agent2Id]).toContain(err.custom['child.id'])
+            expect(err.custom['child.type']).toEqual('MFE')
+            expect(err.custom.testAttr).toBeDefined()
+          }
+        })
+      })
+
+      expect(tested.errors.mfe).toEqual(true)
+      expect(tested.errors.container).toEqual(true)
+
+      // Check insights - distinguish by source.id
+      insightsHarvests.forEach(({ request: { body } }) => {
+        const data = body.ins
+        data.forEach((ins) => {
+          if (ins.eventType === 'PageAction' || ins.eventType === 'CustomEvent' || (ins.eventType === 'BrowserPerformance' && ins.entryType === 'measure')) {
+            const hasSourceId = ins['source.id']
+            if (hasSourceId) {
+              // MFE-specific insights should NOT have child.id or child.type
+              expect(ins['child.id']).toBeUndefined()
+              expect(ins['child.type']).toBeUndefined()
+              tested.insights.mfe = true
+            } else {
+              // Container insights (duplicated) should HAVE child.id and child.type
+              expect(ins['child.id']).toBeDefined()
+              expect([agent1Id, agent2Id]).toContain(ins['child.id'])
+              expect(ins['child.type']).toEqual('MFE')
+              expect(ins.testAttr).toBeDefined()
+              tested.insights.container = true
+            }
+          }
+        })
+      })
+      expect(tested.insights.mfe).toEqual(true)
+      expect(tested.insights.container).toEqual(true)
+
+      // Check logs - duplicated should have child.id and child.type
+      logsHarvests.forEach(({ request: { body } }) => {
+        const data = JSON.parse(body)[0]
+        data.logs.forEach(log => {
+          const hasSourceId = log.attributes['source.id']
+          if (hasSourceId) {
+            // MFE-specific logs should NOT have child.id or child.type
+            expect(log.attributes['child.id']).toBeUndefined()
+            expect(log.attributes['child.type']).toBeUndefined()
+            tested.logs.mfe = true
+          } else {
+            // Container logs (duplicated) should HAVE child.id and child.type
+            expect(log.attributes['child.id']).toBeDefined()
+            expect([agent1Id, agent2Id]).toContain(log.attributes['child.id'])
+            expect(log.attributes['child.type']).toEqual('MFE')
+            expect(log.attributes.testAttr).toBeDefined()
+            tested.logs.container = true
+          }
+        })
+      })
+      expect(tested.logs.mfe).toEqual(true)
+      expect(tested.logs.container).toEqual(true)
     })
   })
 
@@ -758,6 +1147,232 @@ describe('newrelic api', () => {
 
       // We expect setUserId's attribute to be stored by the browser tab session, and retrieved on the next page load & agent init
       expect(rumResultAfterRefresh[1].request.body.ja).toEqual({ [ERRORS_INBOX_UID]: 'user123' }) // setUserId affects subsequent page loads in the same storage session
+    })
+
+    it('should NOT reset session if user id is changed + resetSession param = false/undefined', async () => {
+      const [rumCapture, errorsCapture] =
+      await browser.testHandle.createNetworkCaptures('bamServer', [
+        { test: testRumRequest },
+        { test: testErrorsRequest }
+      ])
+      await browser.url(await browser.testHandle.assetURL('instrumented.html'))
+        .then(() => browser.waitForAgentLoad())
+
+      const [firstErrorsResult] = await Promise.all([
+        errorsCapture.waitForResult({ totalCount: 1 }),
+        browser.execute(function () {
+          newrelic.setUserId('user111')
+          newrelic.noticeError('fake1')
+        })
+      ])
+      expect(firstErrorsResult[0].request.body.err[0]).toHaveProperty('custom')
+      expect(firstErrorsResult[0].request.body.err[0].custom[ERRORS_INBOX_UID]).toBe('user111')
+
+      const firstSession = await browser.execute(function () {
+        return Object.values(newrelic.initializedAgents)[0].runtime.session.state.value
+      })
+
+      const [secondErrorsResult] = await Promise.all([
+        errorsCapture.waitForResult({ totalCount: 2 }),
+        browser.execute(function () {
+          newrelic.setUserId('user222', false)
+          newrelic.noticeError('fake2')
+        })
+      ])
+      expect(secondErrorsResult[1].request.body.err[0]).toHaveProperty('custom')
+      expect(secondErrorsResult[1].request.body.err[0].custom[ERRORS_INBOX_UID]).toBe('user222')
+
+      const secondSession = await browser.execute(function () {
+        return Object.values(newrelic.initializedAgents)[0].runtime.session.state.value
+      })
+      expect(secondSession).toEqual(firstSession)
+
+      const [rumResultAfterRefresh] = await Promise.all([
+        rumCapture.waitForResult({ totalCount: 2 }),
+        browser.refresh()
+      ])
+
+      expect(rumResultAfterRefresh[1].request.body.ja).toEqual({ [ERRORS_INBOX_UID]: 'user222' }) // setUserId affects subsequent page loads in the same storage session
+    })
+    it('should NOT reset session if user id is changed from falsy -> defined value + resetSession param = true', async () => {
+      const [errorsCapture] =
+        await browser.testHandle.createNetworkCaptures('bamServer', [
+          { test: testErrorsRequest }
+        ])
+      await browser.url(await browser.testHandle.assetURL('instrumented.html'))
+        .then(() => browser.waitForAgentLoad())
+
+      const initialSession = await browser.execute(function () {
+        return Object.values(newrelic.initializedAgents)[0].runtime.session.state.value
+      })
+
+      const [firstErrorsResult] = await Promise.all([
+        errorsCapture.waitForResult({ totalCount: 1 }),
+        browser.execute(function () {
+          newrelic.setUserId('user111', true)
+          newrelic.noticeError('fake1')
+        })
+      ])
+      expect(firstErrorsResult[0].request.body.err[0]).toHaveProperty('custom')
+      expect(firstErrorsResult[0].request.body.err[0].custom[ERRORS_INBOX_UID]).toBe('user111')
+
+      const firstSessionAfterSetUserId = await browser.execute(function () {
+        return Object.values(newrelic.initializedAgents)[0].runtime.session.state.value
+      })
+      expect(firstSessionAfterSetUserId).toEqual(initialSession)
+    })
+    it('should NOT reset session if userid is the same + resetSession param = true', async () => {
+      const [errorsCapture] =
+      await browser.testHandle.createNetworkCaptures('bamServer', [
+        { test: testErrorsRequest }
+      ])
+      await browser.url(await browser.testHandle.assetURL('instrumented.html'))
+        .then(() => browser.waitForAgentLoad())
+
+      const [firstErrorsResult] = await Promise.all([
+        errorsCapture.waitForResult({ totalCount: 1 }),
+        browser.execute(function () {
+          newrelic.setUserId('user111')
+          newrelic.noticeError('fake1')
+        })
+      ])
+      expect(firstErrorsResult[0].request.body.err[0]).toHaveProperty('custom')
+      expect(firstErrorsResult[0].request.body.err[0].custom[ERRORS_INBOX_UID]).toBe('user111')
+
+      const firstSession = await browser.execute(function () {
+        return Object.values(newrelic.initializedAgents)[0].runtime.session.state.value
+      })
+
+      const [secondErrorsResult] = await Promise.all([
+        errorsCapture.waitForResult({ totalCount: 2 }),
+        browser.execute(function () {
+          newrelic.setUserId('user111', true)
+          newrelic.noticeError('fake2')
+        })
+      ])
+      expect(secondErrorsResult[1].request.body.err[0]).toHaveProperty('custom')
+      expect(secondErrorsResult[1].request.body.err[0].custom[ERRORS_INBOX_UID]).toBe('user111')
+
+      const sessionAfterSetUserId = await browser.execute(function () {
+        return Object.values(newrelic.initializedAgents)[0].runtime.session.state.value
+      })
+      expect(sessionAfterSetUserId).toEqual(firstSession)
+    })
+    it('should reset session if user id is changed + resetSession param = true, but should NOT persist userid across session expiration', async () => {
+      const [errorsCapture] = await browser.testHandle.createNetworkCaptures('bamServer', [
+        { test: testErrorsRequest }
+      ])
+      await browser.url(await browser.testHandle.assetURL('instrumented.html', {
+        init: {
+          session: { expiresMs: 10000 }
+        }
+      })).then(() => browser.waitForAgentLoad())
+
+      // #1 - arrange userid = 'user111' to create baseline
+      const [firstErrorsResult] = await Promise.all([
+        errorsCapture.waitForResult({ totalCount: 1 }),
+        browser.execute(function () {
+          newrelic.setUserId('user111')
+          newrelic.noticeError('fake1')
+        })
+      ])
+      expect(firstErrorsResult[0].request.body.err[0]).toHaveProperty('custom')
+      expect(firstErrorsResult[0].request.body.err[0].custom[ERRORS_INBOX_UID]).toBe('user111')
+
+      const firstSession = await browser.execute(function () {
+        return {
+          value: Object.values(newrelic.initializedAgents)[0].runtime.session.state.value
+        }
+      })
+
+      // #2 - update userid = 'user222' and reset session
+      // expected: new session created with new userid, new user id is stored in LS and used in payloads
+      await browser.execute(() => newrelic.setCustomAttribute('foo', 'bar', true))
+      await browser.execute(() => newrelic.setUserId('user222', true))
+      const [secondErrorsResult] = await Promise.all([
+        errorsCapture.waitForResult({ totalCount: 2 }),
+        browser.execute(function () {
+          newrelic.noticeError('fake2')
+        })
+      ])
+      expect(secondErrorsResult[1].request.body.err[0]).toHaveProperty('custom')
+      expect(secondErrorsResult[1].request.body.err[0].custom[ERRORS_INBOX_UID]).toBe('user222')
+      expect(secondErrorsResult[1].request.body.err[0].params.message).toEqual('fake2')
+
+      let agentSession = await browser.getAgentSessionInfo()
+      const sessionAfterSetUserId = Object.values(agentSession.agentSessions)[0]
+      expect(sessionAfterSetUserId.value).not.toEqual(firstSession.value)
+      expect(sessionAfterSetUserId.custom).toEqual({
+        [ERRORS_INBOX_UID]: 'user222'
+      })
+      await browser.pause(1000) // wait for any async storage operations to complete
+      agentSession = await browser.getAgentSessionInfo()
+      expect(agentSession.localStorage.custom).toEqual({
+        [ERRORS_INBOX_UID]: 'user222'
+      })
+
+      // #3 - simulate session expiration while on page
+      // expected: new session created with no userid, custom attributes cleared from local storage but remains in payloads due to agent.info retention
+      await browser.pause(10000)
+      const [thirdErrorsResult] = await Promise.all([
+        errorsCapture.waitForResult({ totalCount: 3 }),
+        browser.execute(function () {
+          newrelic.noticeError('fake3')
+        })
+      ])
+      const agentAfterExpiration = await browser.execute(function () {
+        return {
+          jsAttributes: Object.values(newrelic.initializedAgents)[0].info.jsAttributes
+        }
+      })
+
+      await browser.pause(1000) // wait for any async storage operations to complete
+      agentSession = await browser.getAgentSessionInfo()
+      expect(agentSession.localStorage.custom).toEqual({})
+
+      const sessionAfterExpiration = Object.values(agentSession.agentSessions)[0]
+      expect(sessionAfterExpiration.value).not.toEqual(sessionAfterSetUserId.value)
+      expect(sessionAfterExpiration.custom).toEqual({}) // session custom attributes should be cleared on expiration
+      expect(agentAfterExpiration.jsAttributes).toEqual({
+        foo: 'bar',
+        [ERRORS_INBOX_UID]: 'user222'
+      })
+
+      // since the session expired while still on the page, current behavior holds onto custom attributes in memory via agent.info
+      expect(thirdErrorsResult[2].request.body.err[0]).toHaveProperty('custom')
+      expect(thirdErrorsResult[2].request.body.err[0].custom[ERRORS_INBOX_UID]).toBe('user222')
+      expect(thirdErrorsResult[2].request.body.err[0].custom.foo).toEqual('bar')
+      expect(thirdErrorsResult[2].request.body.err[0].params.message).toEqual('fake3')
+
+      // #4 - revisit page for a final check
+      // expected: same session, custom attributes (including userid) are cleared in LS and payloads
+      await browser.refresh()
+      await browser.waitForAgentLoad()
+
+      const [fourthErrorsResult] = await Promise.all([
+        errorsCapture.waitForResult({ totalCount: 4 }),
+        browser.execute(function () {
+          newrelic.noticeError('fake4')
+        })
+      ])
+
+      // on a fresh visit, userid along with other custom attributes should be cleared from agent.info + subsequent payloads
+      const agentAfterReload = await browser.execute(function () {
+        return {
+          jsAttributes: Object.values(newrelic.initializedAgents)[0].info.jsAttributes
+        }
+      })
+      agentSession = await browser.getAgentSessionInfo()
+      expect(agentSession.localStorage.custom).toEqual({})
+
+      const sessionAfterReload = Object.values(agentSession.agentSessions)[0]
+      expect(sessionAfterReload.value).toEqual(sessionAfterExpiration.value) // same session
+      expect(sessionAfterReload.custom).toEqual({})
+      expect(agentAfterReload.jsAttributes).toEqual({})
+
+      expect(fourthErrorsResult[3].request.body.err[0]).toHaveProperty('custom')
+      expect(fourthErrorsResult[3].request.body.err[0].custom).toEqual({})
+      expect(fourthErrorsResult[3].request.body.err[0].params.message).toEqual('fake4')
     })
   })
 

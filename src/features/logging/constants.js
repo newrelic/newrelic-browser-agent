@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { FEATURE_NAMES } from '../../loaders/features/features'
@@ -13,7 +13,6 @@ export const LOG_LEVELS = {
 }
 
 export const LOGGING_MODE = {
-  NOT_SET: -1,
   OFF: 0,
   ERROR: 1,
   WARN: 2,

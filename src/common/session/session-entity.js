@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { generateRandomHexString } from '../ids/unique-id'
@@ -29,8 +29,8 @@ const model = {
   sessionReplaySentFirstChunk: false,
   sessionTraceMode: MODE.OFF,
   traceHarvestStarted: false,
-  loggingMode: LOGGING_MODE.NOT_SET,
-  logApiMode: LOGGING_MODE.NOT_SET,
+  loggingMode: LOGGING_MODE.OFF,
+  logApiMode: LOGGING_MODE.OFF,
   serverTimeDiff: null, // set by TimeKeeper; "undefined" value will not be stringified and stored but "null" will
   custom: {},
   numOfResets: 0,

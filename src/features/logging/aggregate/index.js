@@ -44,45 +44,25 @@ export class Aggregate extends AggregateBase {
 
     this.waitForFlags(['log', 'logapi']).then(([auto, api]) => {
       if (this.blocked) return // means abort already happened before this, likely from session reset or update; abort would've set mode off + deregistered drain
-      const session = this.agentRef.runtime.session
+
       this.loggingMode ??= { auto, api } // likewise, don't want to overwrite the mode if it was set already
+      const session = this.agentRef.runtime.session
       if (canEnableSessionTracking(agentRef.init) && session) {
-        const currentState = session.read()
-
-        if (currentState.loggingMode === LOGGING_MODE.NOT_SET) {
-          // Write immediately, race to be first
-          this.#syncWithSessionManager()
-
-          // Verify after short delay in case another agent also wrote
-          setTimeout(() => {
-            const latestState = session.read()
-            if (latestState.loggingMode !== this.loggingMode.auto) {
-              this.loggingMode.auto = latestState.loggingMode
-            }
-            if (latestState.logApiMode !== this.loggingMode.api) {
-              this.loggingMode.api = latestState.logApiMode
-            }
-            this.#completeInitialization(agentRef)
-          }, 10)
-          return
-        }
-        updateLocalLoggingMode(currentState.loggingMode, currentState.logApiMode)
+        if (session.isNew) this.#syncWithSessionManager()
+        else updateLocalLoggingMode(session.state.loggingMode, session.state.logApiMode)
       }
-      this.#completeInitialization(agentRef)
-    })
-  }
+      if (this.loggingMode.auto === LOGGING_MODE.OFF && this.loggingMode.api === LOGGING_MODE.OFF) {
+        this.blocked = true
+        this.deregisterDrain()
+        return
+      }
 
-  #completeInitialization (agentRef) {
-    if (this.loggingMode.auto < LOGGING_MODE.ERROR && this.loggingMode.api < LOGGING_MODE.ERROR) {
-      this.blocked = true
-      this.deregisterDrain()
-      return
-    }
-    /** emitted by instrument class (wrapped loggers) or the api methods directly */
-    registerHandler(LOGGING_EVENT_EMITTER_CHANNEL, this.handleLog.bind(this), this.featureName, this.ee)
-    this.drain()
-    /** harvest immediately once started to purge pre-load logs collected */
-    agentRef.runtime.harvester.triggerHarvestFor(this)
+      /** emitted by instrument class (wrapped loggers) or the api methods directly */
+      registerHandler(LOGGING_EVENT_EMITTER_CHANNEL, this.handleLog.bind(this), this.featureName, this.ee)
+      this.drain()
+      /** harvest immediately once started to purge pre-load logs collected */
+      agentRef.runtime.harvester.triggerHarvestFor(this)
+    })
   }
 
   handleLog (timestamp, message, attributes = {}, level = LOG_LEVELS.INFO, autoCaptured, target) {

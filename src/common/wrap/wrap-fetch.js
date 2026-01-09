@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -84,7 +84,7 @@ export function wrapFetch (sharedEE) {
             for (const [key, val] of entries) {
               if (String(key).toLowerCase() === NEW_RELIC_MFE_ID_HEADER) {
                 const stringVal = stringify(val)
-                if (stringVal) mfeId ??= stringVal // only supports the first value found
+                if (stringVal) mfeId = stringVal
                 try {
                   if (isHeaderInstance) headers.delete(key)
                   else delete headers[key]

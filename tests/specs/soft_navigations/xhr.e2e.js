@@ -2,7 +2,6 @@ import { checkAjaxEvents, checkSpa } from '../../util/basic-checks'
 import { testInteractionEventsRequest } from '../../../tools/testing-server/utils/expect-tests'
 
 describe('XHR SPA Interaction Tracking', () => {
-  const config = { loader: 'spa', init: { feature_flags: ['soft_nav'] } }
   let interactionsCapture
 
   beforeEach(async () => {
@@ -13,7 +12,7 @@ describe('XHR SPA Interaction Tracking', () => {
     const [interactionHarvests] = await Promise.all([
       interactionsCapture.waitForResult({ totalCount: 1 }),
       await browser.url(
-        await browser.testHandle.assetURL('soft_navigations/ajax/xhr-before-load.html', config)
+        await browser.testHandle.assetURL('soft_navigations/ajax/xhr-before-load.html')
       ).then(() => browser.waitForAgentLoad())
     ])
 
@@ -49,7 +48,7 @@ describe('XHR SPA Interaction Tracking', () => {
 
   it('should capture the ajax in the click interaction', async () => {
     await browser.url(
-      await browser.testHandle.assetURL('soft_navigations/ajax/xhr-simple.html', config)
+      await browser.testHandle.assetURL('soft_navigations/ajax/xhr-simple.html')
     ).then(() => browser.waitForAgentLoad())
 
     const [interactionHarvests] = await Promise.all([
@@ -93,7 +92,7 @@ describe('XHR SPA Interaction Tracking', () => {
     const [interactionHarvests] = await Promise.all([
       interactionsCapture.waitForResult({ totalCount: 1 }),
       await browser.url(
-        await browser.testHandle.assetURL('soft_navigations/ajax/xhr-after-load.html', config)
+        await browser.testHandle.assetURL('soft_navigations/ajax/xhr-after-load.html')
       ).then(() => browser.waitForAgentLoad())
     ])
 
@@ -111,7 +110,7 @@ describe('XHR SPA Interaction Tracking', () => {
 
   it('should capture the ajax request and response size', async () => {
     await browser.url(
-      await browser.testHandle.assetURL('soft_navigations/ajax/xhr-post.html', config)
+      await browser.testHandle.assetURL('soft_navigations/ajax/xhr-post.html')
     ).then(() => browser.waitForAgentLoad())
 
     const [interactionHarvests] = await Promise.all([
@@ -142,7 +141,7 @@ describe('XHR SPA Interaction Tracking', () => {
 
   it('should not create an interaction node for a xhr that never sends', async () => {
     await browser.url(
-      await browser.testHandle.assetURL('soft_navigations/ajax/xhr-no-send.html', config)
+      await browser.testHandle.assetURL('soft_navigations/ajax/xhr-no-send.html')
     ).then(() => browser.waitForAgentLoad())
 
     const [interactionHarvests] = await Promise.all([
@@ -175,7 +174,7 @@ describe('XHR SPA Interaction Tracking', () => {
         await browser.testHandle.assetURL('soft_navigations/distributed_tracing/xhr-sameorigin.html', {
           loader: 'spa',
           init: {
-            feature_flags: ['soft_nav'],
+            feature_flags: [],
             distributed_tracing: { enabled: true }
           },
           injectUpdatedLoaderConfig: true
@@ -206,7 +205,7 @@ describe('XHR SPA Interaction Tracking', () => {
   it('creates interaction event data for erred xhr', async () => {
     await Promise.all([
       interactionsCapture.waitForResult({ totalCount: 1 }),
-      await browser.url(await browser.testHandle.assetURL('soft_navigations/ajax/xhr-404.html', config))
+      await browser.url(await browser.testHandle.assetURL('soft_navigations/ajax/xhr-404.html'))
         .then(() => browser.waitForAgentLoad())
     ])
 
@@ -224,7 +223,7 @@ describe('XHR SPA Interaction Tracking', () => {
   })
 
   it('creates interaction event data for xhr with network error', async () => {
-    await browser.url(await browser.testHandle.assetURL('soft_navigations/ajax/xhr-network-error.html', config))
+    await browser.url(await browser.testHandle.assetURL('soft_navigations/ajax/xhr-network-error.html'))
       .then(() => browser.waitForAgentLoad())
 
     const [interactionHarvests] = await Promise.all([
@@ -241,7 +240,7 @@ describe('XHR SPA Interaction Tracking', () => {
   })
 
   it('produces interaction event data when xhr is 3rd party listener patched after agent', async () => {
-    await browser.url(await browser.testHandle.assetURL('soft_navigations/ajax/xhr-patch-listener-after.html', config))
+    await browser.url(await browser.testHandle.assetURL('soft_navigations/ajax/xhr-patch-listener-after.html'))
       .then(() => browser.waitForAgentLoad())
 
     const [interactionHarvests] = await Promise.all([
@@ -263,7 +262,7 @@ describe('XHR SPA Interaction Tracking', () => {
     await Promise.all([
       interactionsCapture.waitForResult({ totalCount: 1 }),
       await browser.url(
-        await browser.testHandle.assetURL('soft_navigations/ajax/xhr-long-task.html', config)
+        await browser.testHandle.assetURL('soft_navigations/ajax/xhr-long-task.html')
       ).then(() => browser.waitForAgentLoad())
     ])
 

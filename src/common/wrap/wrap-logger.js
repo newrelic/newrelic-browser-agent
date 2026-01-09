@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -20,10 +20,11 @@ const contextMap = new Map()
  * @param {Object} sharedEE - The shared event emitter on which a new scoped event emitter will be based.
  * @param {Object} parent - The parent object housing the logger function
  * @param {string} loggerFn - The name of the function in the parent object to wrap
+ * @param {boolean} [autoCaptured=true] - True if log was captured from auto wrapping. False if it was captured from the API manual usage.
  * @returns {Object} Scoped event emitter with a debug ID of `logger`.
  */
 // eslint-disable-next-line
-export function wrapLogger(sharedEE, parent, loggerFn, context) {
+export function wrapLogger(sharedEE, parent, loggerFn, context, autoCaptured = true) {
   if (!(typeof parent === 'object' && !!parent && typeof loggerFn === 'string' && !!loggerFn && typeof parent[loggerFn] === 'function')) return warn(29)
   const ee = scopedEE(sharedEE)
   const wrapFn = wfn(ee)
@@ -35,6 +36,7 @@ export function wrapLogger(sharedEE, parent, loggerFn, context) {
   const ctx = new EventContext(contextId)
   ctx.level = context.level
   ctx.customAttributes = context.customAttributes
+  ctx.autoCaptured = autoCaptured
 
   const contextLookupKey = parent[loggerFn]?.[flag] || parent[loggerFn]
   contextMap.set(contextLookupKey, ctx)

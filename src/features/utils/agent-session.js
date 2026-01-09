@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { drain } from '../../common/drain/drain'
@@ -10,6 +10,11 @@ import { LocalStorage } from '../../common/storage/local-storage.js'
 import { DEFAULT_KEY } from '../../common/session/constants'
 import { mergeInfo } from '../../common/config/info'
 import { trackObjectAttributeSize } from '../../common/util/attribute-size'
+import { handle } from '../../common/event-emitter/handle'
+import { SET_USER_ID } from '../../loaders/api/constants'
+import { SUPPORTABILITY_METRIC_CHANNEL } from '../metrics/constants'
+import { FEATURE_NAMES } from '../../loaders/features/features'
+import { appendJsAttribute } from '../../loaders/api/sharedHandlers'
 
 export function setupAgentSession (agentRef) {
   if (agentRef.runtime.session) return agentRef.runtime.session // already setup
@@ -54,6 +59,12 @@ export function setupAgentSession (agentRef) {
   // the session's storage API
   registerHandler('api-setUserId', (time, key, value) => {
     agentRef.runtime.session.syncCustomAttribute(key, value)
+  }, 'session', sharedEE)
+
+  registerHandler('api-setUserIdAndResetSession', (value) => {
+    agentRef.runtime.session.reset()
+    handle(SUPPORTABILITY_METRIC_CHANNEL, ['API/' + SET_USER_ID + '/resetSession/called'], undefined, FEATURE_NAMES.metrics, sharedEE)
+    appendJsAttribute(agentRef, 'enduser.id', value, SET_USER_ID, true)
   }, 'session', sharedEE)
 
   registerHandler('api-consent', (accept) => {

@@ -5,6 +5,97 @@
       "changes": [
         {
           "type": "feat",
+          "sha": "d93f3f388085b7e76292e79749977db19a10765a",
+          "message": "Make soft navigations feature the default SPA",
+          "issues": [
+            "1638"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "c284cfde4a18fb9afa75c11b181944401a902e13",
+          "message": "Add resetSession option to setUserId() API",
+          "issues": [
+            "1646"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "61fa99ba39334b85f7611a076943f15356f65364",
+          "message": "Ajax deny list wildcard support",
+          "issues": [
+            "1655"
+          ]
+        }
+      ],
+      "version": "1.307.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "ad77e5a2-aa35-454d-98a9-4c91b8674957",
+      "createTime": "2026-01-06T19:11:03.484Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
+          "sha": "f9f1639504a32b0f24baa117d287c47e209cc818",
+          "message": "Control log API through separate RUM flag",
+          "issues": [
+            "1467"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "cd83f605087a79cbc4817ddfb82d48c18eae8474",
+          "message": "Ensure responseStart is valid before relying on onTTFB",
+          "issues": [
+            "1634"
+          ]
+        },
+        {
+          "type": "fix",
+          "sha": "f74158516ec251ced26a56f65c145a48b938e79f",
+          "message": "Remove linebreak syntax from webpack output",
+          "issues": [
+            "1649"
+          ]
+        }
+      ],
+      "version": "1.306.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "2f4b8879-529e-4f88-84f9-f8c117473df8",
+      "createTime": "2025-12-16T15:22:41.405Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
+          "sha": "da2ef2f50af05085dc5806d422d411deec2d2ba5",
+          "message": "Improve agent compatibility with ChatGPT connector apps",
+          "issues": [
+            "1640"
+          ]
+        },
+        {
+          "type": "feat",
+          "sha": "5f7faf3112823d242cc7d05069e0080ca8e1f403",
+          "message": "Enable user frustrations for Pro/SPA agents",
+          "issues": [
+            "1641"
+          ]
+        }
+      ],
+      "version": "1.305.0",
+      "language": "JAVASCRIPT",
+      "artifactName": "@newrelic/browser-agent",
+      "id": "044b82e9-a5f1-4d1e-893b-dbd481a95034",
+      "createTime": "2025-12-10T22:26:59.854Z"
+    },
+    {
+      "changes": [
+        {
+          "type": "feat",
           "sha": "6e2110f129ad682444203a9aa65b4a4955bf7636",
           "message": "Warn message on session reset",
           "issues": [
@@ -3469,5 +3560,5 @@
       "createTime": "2023-05-08T21:11:35.144Z"
     }
   ],
-  "updateTime": "2025-12-03T19:58:37.085Z"
+  "updateTime": "2026-01-06T19:11:03.484Z"
 }

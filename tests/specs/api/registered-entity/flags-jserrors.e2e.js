@@ -19,6 +19,7 @@ describe('JS Errors', () => {
       { test: testMFEErrorsRequest }
     ])
     await browser.url(await browser.testHandle.assetURL('register-api.html', { init: { feature_flags: ['register', 'register.jserrors'] } }))
+      .then(() => browser.waitForAgentLoad())
 
     await browser.execute(function () {
       const nestedAgent1 = window.agent1.register({
@@ -48,6 +49,7 @@ describe('JS Errors', () => {
       data.forEach((err) => {
         if (err.custom['source.id'] === 'nested1') expect(err.custom['parent.id']).toEqual(1)
         else if (err.custom['source.id'] === 'nested2') expect(err.custom['parent.id']).toEqual(2)
+        else if (!err.custom['source.id']) expect(err.custom['parent.id']).toBeUndefined() // container agent
         else expect(err.custom['parent.id']).toEqual(containerAgentEntityGuid)
       })
     })

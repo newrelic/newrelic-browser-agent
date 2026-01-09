@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 import { InstrumentBase } from '../../utils/instrument-base'
@@ -32,8 +32,8 @@ export class Instrument extends InstrumentBase {
 
     /** emitted by wrap-logger function */
     this.ee.on('wrap-logger-end', function handleLog ([message]) {
-      const { level, customAttributes } = this
-      bufferLog(instanceEE, message, customAttributes, level)
+      const { level, customAttributes, autoCaptured } = this
+      bufferLog(instanceEE, message, customAttributes, level, autoCaptured)
     })
     this.importAggregator(agentRef, () => import(/* webpackChunkName: "logging-aggregate" */ '../aggregate'))
   }

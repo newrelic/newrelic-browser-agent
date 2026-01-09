@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -14,5 +14,5 @@ export function setupLogAPI (agent) {
 }
 
 export function log (message, { customAttributes = {}, level = LOG_LEVELS.INFO } = {}, agentRef, target, timestamp = now()) {
-  bufferLog(agentRef.ee, message, customAttributes, level, target, timestamp)
+  bufferLog(agentRef.ee, message, customAttributes, level, false, target, timestamp)
 }

@@ -206,7 +206,7 @@ describe('xhr distributed tracing', () => {
 
           const [ajaxRequest, ajaxEventResults, interactionsResults] = await Promise.all([
             ajaxCapture.waitForResult({ totalCount: 1 }),
-            ajaxEventCapture.waitForResult({ totalCount: 1, timeout: 10000 }),
+            ajaxEventCapture.waitForResult({ totalCount: 2, timeout: 10000 }),
             interactionsCapture.waitForResult({ totalCount: 1, timeout: 10000 }),
             browser.url(await browser.testHandle.assetURL(targetAsset, {
               config,
@@ -269,17 +269,16 @@ function validateTraceTime (harvest = {}, rawTimes = []) {
 
   // Iterate over each event in the harvest
   events.forEach((event, idx) => {
+    if (!event.path?.startsWith('/dt/') && !event.path?.startsWith('/json')) return
     // Validate event start is non-negative and end is after start
     // Example: event = { start: 100, end: 150, timestamp: 12345678 ... }
     expect(event.start).toBeGreaterThanOrEqual(0)
     expect(event.end).toBeGreaterThan(event.start)
-    // For all but the first event, validate the time difference is in rawTimes
-    // Example: event[1].start - event[0].start should be in rawTimes
-    if (idx !== 0) validateRawTimes(event.start)
+    validateRawTimes(event.start) // validate the start time matches what is in rawTimes
 
     // For each child of type 'ajax', validate its timing
     // Example: child = { type: 'ajax', start: 110, end: 120, timestamp: 23456789, ... }
-    event.children.filter(x => x.type === 'ajax').forEach(child => {
+    event.children.filter(x => x.type === 'ajax' && (x.path.startsWith('/dt/') || x.path.startsWith('/json'))).forEach(child => {
       validateTiming(child, events[0])
       // If child and root event have timestamps, validate child's start is in rawTimes
       if (child.timestamp && events[0].timestamp) {

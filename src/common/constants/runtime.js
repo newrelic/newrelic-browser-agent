@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -83,3 +83,5 @@ export const ffVersion = (() => {
  * @type {number}
  */
 export const originTime = Date.now() - now()
+
+export const supportsNavTimingL2 = () => typeof PerformanceNavigationTiming !== 'undefined' && globalScope?.performance?.getEntriesByType('navigation')?.[0]?.responseStart

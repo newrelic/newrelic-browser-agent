@@ -1,17 +1,13 @@
 import { resetAgent, setupAgent } from '../setup-agent'
 import { Instrument as SoftNav } from '../../../src/features/soft_navigations/instrument'
-import * as ttfbModule from '../../../src/common/vitals/time-to-first-byte'
+import * as loadTimeModule from '../../../src/common/vitals/load-time'
 import { INTERACTION_STATUS, NO_LONG_TASK_WINDOW, POPSTATE_MERGE_WINDOW, POPSTATE_TRIGGER } from '../../../src/features/soft_navigations/constants'
 
 let mainAgent
 
 beforeAll(() => {
   mainAgent = setupAgent({
-    agentOverrides: {
-      runSoftNavOverSpa: true
-    },
     init: {
-      feature_flags: ['soft_nav'],
       soft_navigations: { enabled: true }
     }
   })
@@ -24,7 +20,7 @@ beforeAll(() => {
 let softNavAggregate
 
 beforeEach(async () => {
-  jest.spyOn(ttfbModule.timeToFirstByte, 'subscribe')
+  jest.spyOn(loadTimeModule.loadTime, 'subscribe')
 
   const softNavInstrument = new SoftNav(mainAgent)
   await softNavInstrument.onAggregateImported
@@ -43,8 +39,8 @@ test('processes interaction heuristics', async () => {
   expect(softNavAggregate.domObserver).toBeTruthy()
   expect(softNavAggregate.initialPageLoadInteraction).toBeTruthy()
 
-  const ttfbSubscriber = jest.mocked(ttfbModule.timeToFirstByte.subscribe).mock.calls[0][0]
-  ttfbSubscriber({ attrs: { navigationEntry: { loadEventEnd: 123 } } })
+  const loadTimeSubscriber = jest.mocked(loadTimeModule.loadTime.subscribe).mock.calls[0][0]
+  loadTimeSubscriber({ value: 123 })
   expect(softNavAggregate.initialPageLoadInteraction).toBeNull()
   expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(1)
 
@@ -221,8 +217,8 @@ describe('getInteractionFor', () => {
     const holdIxn = softNavAggregate.interactionsToHarvest.get()[softNavAggregate.interactionsToHarvest.get().length - 1]
     expect(softNavAggregate.getInteractionFor(currentTime)).toBe(softNavAggregate.initialPageLoadInteraction) // cancelled (untracked) ixn not considered; falls back to iPL
 
-    const ttfbSubscriber = jest.mocked(ttfbModule.timeToFirstByte.subscribe).mock.calls[0][0]
-    ttfbSubscriber({ attrs: { navigationEntry: { loadEventEnd: performance.now() } } })
+    const loadTimeSubscriber = jest.mocked(loadTimeModule.loadTime.subscribe).mock.calls[0][0]
+    loadTimeSubscriber({ value: performance.now() })
     expect(softNavAggregate.getInteractionFor(performance.now())).toBeUndefined() // no in progress ixn and iPL has already closed
 
     holdIxn.status = 'finished'
@@ -336,8 +332,8 @@ describe('popstate interactions', () => {
 })
 
 test('interactions are backed up when pre harvesting', () => {
-  const ttfbSubscriber = jest.mocked(ttfbModule.timeToFirstByte.subscribe).mock.calls[0][0]
-  ttfbSubscriber({ attrs: { navigationEntry: { loadEventEnd: performance.now() } } })
+  const loadTimeSubscriber = jest.mocked(loadTimeModule.loadTime.subscribe).mock.calls[0][0]
+  loadTimeSubscriber({ value: performance.now() })
   softNavAggregate.makeHarvestPayload(true) // this flag is on during typical interval harvests except for unload
 
   expect(softNavAggregate.interactionsToHarvest.get().length).toEqual(0)
@@ -358,8 +354,8 @@ test('calling done on the initialPageLoad actually closes it correctly', () => {
 
 describe('back up buffer is cleared when', () => { // prevent mem leak
   beforeEach(() => {
-    const ttfbSubscriber = jest.mocked(ttfbModule.timeToFirstByte.subscribe).mock.calls[0][0]
-    ttfbSubscriber({ attrs: { navigationEntry: { loadEventEnd: performance.now() } } })
+    const loadTimeSubscriber = jest.mocked(loadTimeModule.loadTime.subscribe).mock.calls[0][0]
+    loadTimeSubscriber({ value: performance.now() })
     softNavAggregate.makeHarvestPayload(true)
   })
 

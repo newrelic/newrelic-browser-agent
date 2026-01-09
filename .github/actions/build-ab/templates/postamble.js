@@ -149,27 +149,62 @@ try {
     // Generate random ID between 1-3
     const randomId = Math.floor(Math.random() * 3) + 1;
     const mfeName = `MOCK_MFE_${randomId}`;
-    
-    // Register the MFE API
-    const mfeApi = newrelic.register({ id: randomId, name: mfeName });
-    
-    // Generate a random sentence for logging
-    const randomSentences = [
-      'This is a test log message from the registered MFE',
-      'MFE logging functionality is working correctly',
-      'Random simulation for testing purposes',
-      'Demonstrating registered entity log capabilities',
-      'Testing MFE API integration with New Relic',
-      'Sample log from micro frontend',
-      'Validating registered entity reporting',
-      'MFE diagnostic message for debugging',
-      'Testing cross-entity logging functionality',
-      'Random MFE log event for validation'
-    ];
-    const randomSentence = randomSentences[Math.floor(Math.random() * randomSentences.length)];
-    
-    // Call log with error level
-    mfeApi.log(randomSentence, { level: 'error' });
+
+    for (let agentIdentifier in newrelic.initializedAgents) {
+      const MfeToMfeParent = newrelic.initializedAgents[agentIdentifier].register({
+        id: 'mfe-to-mfe-parent',
+        name: 'MFE_TEST_PARENT',
+      })
+
+      const MfeToMfeChild = MfeToMfeParent.register({
+        id: 'mfe-to-mfe-child',
+        name: 'MFE_TEST_CHILD',
+      })
+
+      const MfeToMfeGrandchild = MfeToMfeChild.register({
+        id: 'mfe-to-mfe-grandchild',
+        name: 'MFE_TEST_GRANDCHILD',
+      })
+
+      const jseOnlyMfe = newrelic.initializedAgents[agentIdentifier].register({
+        id: 'jse-only-mfe',
+        name: 'JSE_ONLY_MFE',
+      })
+
+      jseOnlyMfe.noticeError(new Error('NRBA: This is a test error from JSE_ONLY_MFE'));
+
+
+      // Register the MFE API
+      const mfeApi = newrelic.initializedAgents[agentIdentifier].register({ id: randomId, name: mfeName });
+      
+      // Generate a random sentence for logging
+      const randomSentences = [
+        'This is a test log message from the registered MFE',
+        'MFE logging functionality is working correctly',
+        'Random simulation for testing purposes',
+        'Demonstrating registered entity log capabilities',
+        'Testing MFE API integration with New Relic',
+        'Sample log from micro frontend',
+        'Validating registered entity reporting',
+        'MFE diagnostic message for debugging',
+        'Testing cross-entity logging functionality',
+        'Random MFE log event for validation'
+      ];
+      const randomSentence = randomSentences[Math.floor(Math.random() * randomSentences.length)];
+      
+      // Call log with error level
+      mfeApi.log(randomSentence, { level: 'error' });
+
+      mfeApi.noticeError(new Error(`NRBA: This is a test error from ${mfeName}`));
+
+      MfeToMfeParent.log('This is a test log from MFE_TO_MFE_PARENT', { level: 'error' });
+      MfeToMfeChild.log('This is a test log from MFE_TO_MFE_CHILD', { level: 'error' });
+      MfeToMfeGrandchild.log('This is a test log from MFE_TO_MFE_GRANDCHILD', { level: 'error' });
+
+      MfeToMfeParent.noticeError(new Error('NRBA: This is a test error from MFE_TO_MFE_PARENT'));
+      MfeToMfeChild.noticeError(new Error('NRBA: This is a test error from MFE_TO_MFE_CHILD'));
+      MfeToMfeGrandchild.noticeError(new Error('NRBA: This is a test error from MFE_TO_MFE_GRANDCHILD'));
+    }
   }
 } catch (e) {
   if (!!newrelic && !!newrelic.noticeError) {

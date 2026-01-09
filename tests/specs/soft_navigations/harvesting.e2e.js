@@ -2,7 +2,6 @@ import { testInteractionEventsRequest } from '../../../tools/testing-server/util
 import { JSONPath } from 'jsonpath-plus'
 
 describe('spa harvesting', () => {
-  const config = { loader: 'spa', init: { feature_flags: ['soft_nav'] } }
   let interactionsCapture
 
   beforeEach(async () => {
@@ -12,7 +11,7 @@ describe('spa harvesting', () => {
   it('should set correct start and end values on multiple custom interactions', async () => {
     const [interactionHarvests] = await Promise.all([
       interactionsCapture.waitForResult({ timeout: 10000 }),
-      browser.url(await browser.testHandle.assetURL('soft_navigations/multiple-custom-interactions.html', config))
+      browser.url(await browser.testHandle.assetURL('soft_navigations/multiple-custom-interactions.html'))
     ])
 
     const customInteractions = JSONPath({ path: '$.[*].request.body.[?(!!@ && @.customName)]', json: interactionHarvests })
@@ -43,7 +42,7 @@ describe('spa harvesting', () => {
   })
 
   it('pushstate is followed by a popstate', async () => {
-    const url = await browser.testHandle.assetURL('instrumented.html', config)
+    const url = await browser.testHandle.assetURL('instrumented.html')
     await Promise.all([
       interactionsCapture.waitForResult({ totalCount: 1 }),
       browser.url(url).then(() => browser.waitForAgentLoad())
@@ -75,7 +74,7 @@ describe('spa harvesting', () => {
   })
 
   it('hashchange is followed by a popstate', async () => {
-    const url = await browser.testHandle.assetURL('instrumented.html', config)
+    const url = await browser.testHandle.assetURL('instrumented.html')
     await Promise.all([
       interactionsCapture.waitForResult({ totalCount: 1 }),
       browser.url(url).then(() => browser.waitForAgentLoad())
@@ -114,7 +113,7 @@ describe('spa harvesting', () => {
   it('sends interactions even if end() is called before the window load event', async () => {
     const [interactionHarvests] = await Promise.all([
       interactionsCapture.waitForResult({ totalCount: 1 }),
-      browser.url(await browser.testHandle.assetURL('soft_navigations/initial-page-load-with-end-interaction.html', config))
+      browser.url(await browser.testHandle.assetURL('soft_navigations/initial-page-load-with-end-interaction.html'))
         .then(() => browser.waitForAgentLoad())
     ])
 

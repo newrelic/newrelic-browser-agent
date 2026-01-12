@@ -8,7 +8,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@newrelic/browser-agent": "file:../../../temp/newrelic-browser-agent-1.307.0.tgz",
+    "@newrelic/browser-agent": "file:../../../temp/newrelic-browser-agent-1.308.0.tgz",
     "buffer": "6.0.3",
     "html2pdf.js": "0.12.1",
     "react": "18.3.1",

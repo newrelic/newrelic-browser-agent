@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.308.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.307.0...v1.308.0) (2026-01-08)
+
+
+### Features
+
+* Add "deregister" API ([#1632](https://github.com/newrelic/newrelic-browser-agent/issues/1632)) ([6338f04](https://github.com/newrelic/newrelic-browser-agent/commit/6338f04a2ec09ce0cbfa34e5878e14bfa5637a02))
+* add child.id attribute to facilitate MFE cross-linking ([#1662](https://github.com/newrelic/newrelic-browser-agent/issues/1662)) ([71fb23f](https://github.com/newrelic/newrelic-browser-agent/commit/71fb23f75f903f32ab07c09622692dab757ce274))
+* Add default close reason ([#1665](https://github.com/newrelic/newrelic-browser-agent/issues/1665)) ([6ff6d39](https://github.com/newrelic/newrelic-browser-agent/commit/6ff6d39cf2b3584de7b6b9a75fbceffd7bce00de))
+* add parent.type attribute to facilitate relationship synthesis ([#1661](https://github.com/newrelic/newrelic-browser-agent/issues/1661)) ([b2d3965](https://github.com/newrelic/newrelic-browser-agent/commit/b2d39659a17e1472e5b60baed04fbd0390267d95))
+* add support for mfe tags with the register API ([#1660](https://github.com/newrelic/newrelic-browser-agent/issues/1660)) ([8a835b3](https://github.com/newrelic/newrelic-browser-agent/commit/8a835b39ea62389d5922d4fedb3b55b4479dd523))
+
+
+### Bug Fixes
+
+* Clean WebSocket URLs ([#1663](https://github.com/newrelic/newrelic-browser-agent/issues/1663)) ([a381a16](https://github.com/newrelic/newrelic-browser-agent/commit/a381a16cc6d1eabb5998188f69bb744525db3464))
+* enforce non-null values on the numeric fields ([#1664](https://github.com/newrelic/newrelic-browser-agent/issues/1664)) ([78da14b](https://github.com/newrelic/newrelic-browser-agent/commit/78da14b5b5a5fcc54edfbca5284d57a3c816dd9c))
+
 ## [1.307.0](https://github.com/newrelic/newrelic-browser-agent/compare/v1.306.0...v1.307.0) (2026-01-06)
 
 

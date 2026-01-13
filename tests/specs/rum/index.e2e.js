@@ -62,7 +62,7 @@ describe('basic pve capturing', () => {
     ])
 
     checkRumQuery(rumHarvest.request)
-    detailedCheckRum(rumHarvest.request, { query: { ac: 'test_account' }, body: { ja: { no: 'body' } } })
+    detailedCheckRum(rumHarvest.request, { query: { ac: 'test_account' }, body: { ja: { no: 'body', webdriverDetected: false } } })
   })
 
   /** equivalent to former paint-timing.test.js */
@@ -101,7 +101,7 @@ describe('basic pve capturing', () => {
         ua: String(loader_config.userAttributes),
         at: String(loader_config.atts)
       },
-      body: { ja: { foo: 'bar' } }
+      body: { ja: { foo: 'bar', webdriverDetected: false } }
     }
 
     const [[rumHarvest]] = await Promise.all([

@@ -105,7 +105,7 @@ describe('XHR SPA Interaction Tracking', () => {
         children: expect.any(Array)
       })
     ])
-    expect(interactionHarvests[0].request.body[0].children).toBeEmpty()
+    expect(interactionHarvests[0].request.body[0].children).toEqual([{ key: 'webdriverDetected', type: 'falseAttribute' }])
   })
 
   it('should capture the ajax request and response size', async () => {

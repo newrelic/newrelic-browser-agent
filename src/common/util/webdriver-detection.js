@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { isBrowserScope } from '../constants/runtime'
+
 /**
  * Detects if the page is being controlled by WebDriver or automation tools derived from it.
  * Checks for common indicators including:
@@ -27,7 +29,7 @@ export const webdriverDetected = (() => {
     }
 
     // Check for various automation-related properties
-    if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+    if (isBrowserScope) {
       // WebDriver internal properties
       if (document.__webdriver_evaluate ||
           document.__selenium_unwrapped ||

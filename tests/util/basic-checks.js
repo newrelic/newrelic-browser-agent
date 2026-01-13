@@ -53,7 +53,7 @@ export function checkRumQuery ({ query }, { liteAgent } = {}) {
 }
 
 export function checkRumBody({body}){
-  expect(body).toEqual('')
+  expect(body).toEqual({"ja": {"webdriverDetected": false}}) // LambdaTest intentionally sets this to false
 }
 
 export function checkRumPerf({ query, body }) {

@@ -44,8 +44,8 @@ describe('webdriverDetected', () => {
 
   it('should detect when document.__webdriver_evaluate exists', async () => {
     global.navigator = {}
-    global.window = {}
     global.document = { __webdriver_evaluate: true }
+    global.window = { document: global.document }
 
     const { webdriverDetected } = await import('../../../../src/common/util/webdriver-detection')
 
@@ -54,8 +54,8 @@ describe('webdriverDetected', () => {
 
   it('should detect when document.__selenium_unwrapped exists', async () => {
     global.navigator = {}
-    global.window = {}
     global.document = { __selenium_unwrapped: {} }
+    global.window = { document: global.document }
 
     const { webdriverDetected } = await import('../../../../src/common/util/webdriver-detection')
 
@@ -64,8 +64,8 @@ describe('webdriverDetected', () => {
 
   it('should detect when document.__driver_evaluate exists', async () => {
     global.navigator = {}
-    global.window = {}
     global.document = { __driver_evaluate: {} }
+    global.window = { document: global.document }
 
     const { webdriverDetected } = await import('../../../../src/common/util/webdriver-detection')
 
@@ -74,8 +74,8 @@ describe('webdriverDetected', () => {
 
   it('should detect when document.__webdriver_script_function exists', async () => {
     global.navigator = {}
-    global.window = {}
     global.document = { __webdriver_script_function: {} }
+    global.window = { document: global.document }
 
     const { webdriverDetected } = await import('../../../../src/common/util/webdriver-detection')
 
@@ -84,8 +84,8 @@ describe('webdriverDetected', () => {
 
   it('should detect when window.callPhantom exists (PhantomJS)', async () => {
     global.navigator = {}
-    global.window = { callPhantom: {} }
     global.document = {}
+    global.window = { callPhantom: {}, document: global.document }
 
     const { webdriverDetected } = await import('../../../../src/common/util/webdriver-detection')
 
@@ -94,8 +94,8 @@ describe('webdriverDetected', () => {
 
   it('should detect when window._phantom exists (PhantomJS)', async () => {
     global.navigator = {}
-    global.window = { _phantom: {} }
     global.document = {}
+    global.window = { _phantom: {}, document: global.document }
 
     const { webdriverDetected } = await import('../../../../src/common/util/webdriver-detection')
 
@@ -104,8 +104,8 @@ describe('webdriverDetected', () => {
 
   it('should detect when window.__nightmare exists (Nightmare.js)', async () => {
     global.navigator = {}
-    global.window = { __nightmare: {} }
     global.document = {}
+    global.window = { __nightmare: {}, document: global.document }
 
     const { webdriverDetected } = await import('../../../../src/common/util/webdriver-detection')
 
@@ -114,8 +114,8 @@ describe('webdriverDetected', () => {
 
   it('should not detect webdriver in a clean environment', async () => {
     global.navigator = {}
-    global.window = {}
     global.document = {}
+    global.window = { document: global.document }
 
     const { webdriverDetected } = await import('../../../../src/common/util/webdriver-detection')
 
@@ -166,11 +166,11 @@ describe('webdriverDetected', () => {
 
   it('should detect multiple webdriver indicators', async () => {
     global.navigator = { webdriver: true }
-    global.window = { callPhantom: {}, _phantom: {} }
     global.document = {
       __webdriver_evaluate: true,
       __selenium_unwrapped: {}
     }
+    global.window = { callPhantom: {}, _phantom: {}, document: global.document }
 
     const { webdriverDetected } = await import('../../../../src/common/util/webdriver-detection')
 

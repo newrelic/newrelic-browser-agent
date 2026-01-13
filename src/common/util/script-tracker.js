@@ -3,9 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { chrome, gecko } from '../../features/jserrors/aggregate/compute-stack-trace'
 import { globalScope } from '../constants/runtime'
 import { cleanURL } from '../url/clean-url'
+
+const chrome = /^\s*at (?:((?:\[object object\])?(?:[^(]*\([^)]*\))*[^()]*(?: \[as \S+\])?) )?\(?((?:file|http|https|chrome-extension):.*?)?:(\d+)(?::(\d+))?\)?\s*$/i
+const gecko = /^\s*(?:(\S*|global code)(?:\(.*?\))?@)?((?:file|http|https|chrome|safari-extension).*?):(\d+)(?::(\d+))?\s*$/i
 
 const scripts = new Set()
 
@@ -16,11 +18,19 @@ if (globalScope.PerformanceObserver?.supportedEntryTypes.includes('resource')) {
   scriptTracker.observe({ type: 'resource', buffered: true, filter: { initiatorType: 'script' } })
 }
 
-/**
- * Extracts URLs from stack traces using the same logic as compute-stack-trace.js
- * @param {string} stack The error stack trace
- * @returns {string[]} Array of cleaned URLs found in the stack trace
- */
+// function extractUrlsFromStack (stack) {
+//   if (!stack) return []
+
+//   const stackInfo = computeStackTrace({ stack, message: '', name: '' })
+
+//   return [...new Set(stackInfo.frames.map(frame => cleanURL(frame.url)).filter(Boolean))]
+// }
+
+// /**
+//  * Extracts URLs from stack traces using the same logic as compute-stack-trace.js
+//  * @param {string} stack The error stack trace
+//  * @returns {string[]} Array of cleaned URLs found in the stack trace
+//  */
 function extractUrlsFromStack (stack) {
   if (!stack) return []
 

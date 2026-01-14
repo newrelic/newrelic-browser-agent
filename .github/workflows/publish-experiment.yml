@@ -58,6 +58,7 @@ jobs:
           window.NREUM.init.session_trace.enabled = true
           window.NREUM.init.feature_flags = ['ajax_metrics_deny_list']
           window.NREUM.init.user_actions = {elementAttributes: ['id', 'className', 'tagName', 'type', 'ariaLabel', 'alt', 'title']}
+          window.NREUM.init.ajax.capture_payloads = 'failures'
           EOF
       - name: Upload experiment
         id: s3-upload

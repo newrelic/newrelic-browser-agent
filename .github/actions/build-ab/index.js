@@ -115,7 +115,7 @@ if (['dev', 'staging'].includes(args.environment)) {
         const configContent = (await configRequest.text()).replace(/\/\/# sourceMappingURL=.*?\.map/, '')
         const loaderContent = (await loaderRequest.text()).replace(/\/\/# sourceMappingURL=.*?\.map/, '')
         experimentScripts.push(configContent)
-        experimentsScripts.push(loaderContent)
+        experimentScripts.push(loaderContent)
       }
     }
 

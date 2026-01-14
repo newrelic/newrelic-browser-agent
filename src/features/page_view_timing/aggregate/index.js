@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2025 New Relic, Inc. All rights reserved.
+ * Copyright 2020-2026 New Relic, Inc. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -19,6 +19,7 @@ import { VITAL_NAMES } from '../../../common/vitals/constants'
 import { initiallyHidden } from '../../../common/constants/runtime'
 import { eventOrigin } from '../../../common/util/event-origin'
 import { loadTime } from '../../../common/vitals/load-time'
+import { webdriverDetected } from '../../../common/util/webdriver-detection'
 
 export class Aggregate extends AggregateBase {
   static featureName = FEATURE_NAME
@@ -126,6 +127,7 @@ export class Aggregate extends AggregateBase {
         timingAttributes[key] = val
       }
     })
+    timingAttributes.webdriverDetected = webdriverDetected
   }
 
   preHarvestChecks () {

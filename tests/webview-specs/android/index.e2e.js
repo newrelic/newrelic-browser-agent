@@ -22,7 +22,7 @@ describe.withBrowsersMatching(onlyAndroid)('android webview', () => {
       addressBar.setValue(url)
     ])
 
-    expect(rumHarvests[0].request.body).toEqual('')
+    expect(rumHarvests[0].request.body).toEqual({ ja: { webdriverDetected: false } })
     expect(rumHarvests[0].request.query).toEqual(expect.objectContaining({
       ref: url.slice(0, url.indexOf('?')),
       t: 'Unnamed Transaction'

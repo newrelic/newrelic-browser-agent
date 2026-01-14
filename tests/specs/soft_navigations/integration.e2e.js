@@ -65,7 +65,7 @@ describe('Soft navigations', () => {
         .then(() => browser.waitForAgentLoad())
     ])
     const iplIxn = interactionHarvests[0].request.body[0]
-    const ajaxArr = iplIxn.children
+    const ajaxArr = iplIxn.children.filter(child => child.type === 'ajax')
     const errorsArr = errorsHarvests[0].request.body.err
 
     expect(ajaxArr.length).toEqual(2)

@@ -71,6 +71,11 @@ export const onlyChromium = new SpecMatcher()
   .include('chrome')
   .include('edge')
 
+export const lambdaTestWebdriverFalse = new SpecMatcher()
+  .include('chrome')
+  .include('edge')
+  .include('ios')
+
 export const onlyFirefox = new SpecMatcher()
   .include('firefox')
 

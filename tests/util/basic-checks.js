@@ -1,5 +1,5 @@
 /* eslint-disable */
-import {onlyAndroid, supportsFirstPaint} from "../../tools/browser-matcher/common-matchers.mjs";
+import {onlyAndroid, lambdaTestWebdriverFalse, supportsFirstPaint} from "../../tools/browser-matcher/common-matchers.mjs";
 
 expect.extend({
   toBeOneOfTypes(received, types) {
@@ -53,7 +53,8 @@ export function checkRumQuery ({ query }, { liteAgent } = {}) {
 }
 
 export function checkRumBody({body}){
-  expect(body).toEqual('')
+  const expectedWebdriverDetected = browserMatch(lambdaTestWebdriverFalse) ? false : true
+  expect(body).toEqual({"ja": {"webdriverDetected": expectedWebdriverDetected}})
 }
 
 export function checkRumPerf({ query, body }) {

@@ -55,7 +55,7 @@ describe('attribution tests', () => {
       const ipl = interactionHarvests[0].request.body[0]
 
       expect(ipl.trigger).toEqual('initialPageLoad')
-      expect(ipl.children.length).toEqual(0)
+      expect(ipl.children.length).toEqual(1)
       expect(ipl.isRouteChange).not.toBeTruthy()
       if (browserMatch(notIOS)) expect(ipl.oldURL).toEqual('') // ios on lambdatest appears to return the wrong value for referrer when using browser.execute, which breaks this test condition. Confirmed referrer behavior works in real env
 
@@ -83,7 +83,7 @@ describe('attribution tests', () => {
       const ipl = interactionHarvests[0].request.body[0]
 
       expect(ipl.trigger).toEqual('initialPageLoad')
-      expect(ipl.children.length).toEqual(0)
+      expect(ipl.children.length).toEqual(1)
       expect(ipl.isRouteChange).not.toBeTruthy()
       if (browserMatch(notIOS)) expect(ipl.oldURL).toEqual('') // ios on lambdatest appears to return the wrong value for referrer when using browser.execute, which breaks this test condition. Confirmed referrer behavior works in real env
 
@@ -111,7 +111,7 @@ describe('attribution tests', () => {
       const ipl = interactionHarvests[0].request.body[0]
 
       expect(ipl.trigger).toEqual('initialPageLoad')
-      expect(ipl.children.length).toEqual(0)
+      expect(ipl.children.length).toEqual(1)
       expect(ipl.isRouteChange).not.toBeTruthy()
       if (browserMatch(notIOS)) expect(ipl.oldURL).toEqual('') // ios on lambdatest appears to return the wrong value for referrer when using browser.execute, which breaks this test condition. Confirmed referrer behavior works in real env
 

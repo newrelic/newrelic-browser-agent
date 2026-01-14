@@ -2,6 +2,7 @@ import { checkAjaxEvents, checkJsErrors, checkMetrics, checkGenericEvents, check
 import { testAjaxEventsRequest, testAjaxTimeSlicesRequest, testBlobTraceRequest, testCustomMetricsRequest, testErrorsRequest, testEventsRequest, testInsRequest, testInteractionEventsRequest, testLogsRequest, testMetricsRequest, testMFEErrorsRequest, testMFEInsRequest, testRumRequest, testTimingEventsRequest } from '../../tools/testing-server/utils/expect-tests'
 import { rumFlags } from '../../tools/testing-server/constants'
 import { LOGGING_MODE } from '../../src/features/logging/constants'
+import { lambdaTestWebdriverFalse } from '../../tools/browser-matcher/common-matchers.mjs'
 
 describe('newrelic api', () => {
   afterEach(async () => {
@@ -1005,7 +1006,8 @@ describe('newrelic api', () => {
           .then(() => browser.waitForAgentLoad())
       ])
 
-      expect(rumResult[0].request.body.ja).toEqual({ testing: 123 }) // initial page load has custom attribute
+      const expectedWebdriverDetected = !browserMatch(lambdaTestWebdriverFalse)
+      expect(rumResult[0].request.body.ja).toEqual({ testing: 123, webdriverDetected: expectedWebdriverDetected }) // initial page load has custom attribute
 
       const subsequentTestUrl = await browser.testHandle.assetURL('instrumented.html', {
         init: {
@@ -1019,7 +1021,7 @@ describe('newrelic api', () => {
           .then(() => browser.waitForAgentLoad())
       ])
 
-      expect(rumResultAfterNavigate[1].request.body.ja).toEqual({ testing: 123 }) // 2nd page load still has custom attribute from storage
+      expect(rumResultAfterNavigate[1].request.body.ja).toEqual({ testing: 123, webdriverDetected: expectedWebdriverDetected }) // 2nd page load still has custom attribute from storage
 
       await browser.execute(function () {
         newrelic.setCustomAttribute('testing', null)
@@ -1031,7 +1033,7 @@ describe('newrelic api', () => {
           .then(() => browser.waitForAgentLoad())
       ])
 
-      expect(rumResultAfterUnset[2].request.body).not.toHaveProperty('ja') // 3rd page load does not retain custom attribute after unsetting (set to null)
+      expect(rumResultAfterUnset[2].request.body.ja).toEqual({ webdriverDetected: expectedWebdriverDetected }) // 3rd page load does not retain custom attribute after unsetting (set to null)
     })
 
     it('can change persisted attribute during load race, page memory and LS', async () => {
@@ -1049,7 +1051,8 @@ describe('newrelic api', () => {
           .then(() => browser.execute(function () { return window.value }))
       ])
 
-      expect(rumResult[0].request.body.ja).toEqual({ testing: randomValue, 'testing-load': randomValue }) // initial page load has custom attribute
+      const expectedWebdriverDetected = !browserMatch(lambdaTestWebdriverFalse)
+      expect(rumResult[0].request.body.ja).toEqual({ testing: randomValue, 'testing-load': randomValue, webdriverDetected: expectedWebdriverDetected }) // initial page load has custom attribute
 
       const session = await browser.execute(function () {
         return localStorage.getItem('NRBA_SESSION')
@@ -1078,8 +1081,8 @@ describe('newrelic api', () => {
           .then(() => browser.execute(function () { return window.value }))
       ])
 
-      expect(rumResultAfterNavigate[1].request.body.ja).toEqual({ testing: randomValueAfterNavigate, 'testing-load': randomValueAfterNavigate }) // 2nd page load has new random value
-      expect(rumResultAfterNavigate[1].request.body.ja).not.toEqual({ testing: randomValue, 'testing-load': randomValueAfterNavigate }) // 2nd page load value is not first load value
+      expect(rumResultAfterNavigate[1].request.body.ja).toEqual({ testing: randomValueAfterNavigate, 'testing-load': randomValueAfterNavigate, webdriverDetected: expectedWebdriverDetected }) // 2nd page load has new random value
+      expect(rumResultAfterNavigate[1].request.body.ja).not.toEqual({ testing: randomValue, 'testing-load': randomValueAfterNavigate, webdriverDetected: expectedWebdriverDetected }) // 2nd page load value is not first load value
 
       const sessionAfterNavigate = await browser.execute(function () {
         return localStorage.getItem('NRBA_SESSION')
@@ -1143,7 +1146,8 @@ describe('newrelic api', () => {
       ])
 
       // We expect setUserId's attribute to be stored by the browser tab session, and retrieved on the next page load & agent init
-      expect(rumResultAfterRefresh[1].request.body.ja).toEqual({ [ERRORS_INBOX_UID]: 'user123' }) // setUserId affects subsequent page loads in the same storage session
+      const expectedWebdriverDetected = !browserMatch(lambdaTestWebdriverFalse)
+      expect(rumResultAfterRefresh[1].request.body.ja).toEqual({ [ERRORS_INBOX_UID]: 'user123', webdriverDetected: expectedWebdriverDetected }) // setUserId affects subsequent page loads in the same storage session
     })
 
     it('should NOT reset session if user id is changed + resetSession param = false/undefined', async () => {
@@ -1189,7 +1193,8 @@ describe('newrelic api', () => {
         browser.refresh()
       ])
 
-      expect(rumResultAfterRefresh[1].request.body.ja).toEqual({ [ERRORS_INBOX_UID]: 'user222' }) // setUserId affects subsequent page loads in the same storage session
+      const expectedWebdriverDetected = !browserMatch(lambdaTestWebdriverFalse)
+      expect(rumResultAfterRefresh[1].request.body.ja).toEqual({ [ERRORS_INBOX_UID]: 'user222', webdriverDetected: expectedWebdriverDetected }) // setUserId affects subsequent page loads in the same storage session
     })
     it('should NOT reset session if user id is changed from falsy -> defined value + resetSession param = true', async () => {
       const [errorsCapture] =

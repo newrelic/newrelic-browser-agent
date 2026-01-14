@@ -2,6 +2,9 @@ import * as qp from '@newrelic/nr-querypack'
 import { Aggregate } from '../../../../../src/features/page_view_timing/aggregate'
 
 jest.mock('../../../../../src/common/harvest/harvester')
+jest.mock('../../../../../src/common/util/webdriver-detection', () => ({
+  webdriverDetected: false
+}))
 
 const agentInst = {
   agentIdentifier: 'abcd',
@@ -12,6 +15,11 @@ const agentInst = {
 const pvtAgg = new Aggregate(agentInst)
 
 describe('PVT aggregate', () => {
+  beforeEach(() => {
+    // Clear jsAttributes before each test to ensure clean state
+    pvtAgg.agentRef.info.jsAttributes = {}
+  })
+
   test('serializer default attributes', () => {
     const schema = qp.schemas['bel.6']
 
@@ -116,7 +124,12 @@ function testCases () {
           type: 'timing',
           name: 'fp',
           value: 123,
-          attributes: []
+          attributes: [
+            {
+              type: 'falseAttribute',
+              key: 'webdriverDetected'
+            }
+          ]
         }
       ]
     },
@@ -132,6 +145,10 @@ function testCases () {
               type: 'stringAttribute',
               key: 'eventType',
               value: 'click'
+            },
+            {
+              type: 'falseAttribute',
+              key: 'webdriverDetected'
             }
           ]
         }
@@ -154,6 +171,10 @@ function testCases () {
               type: 'stringAttribute',
               key: 'eid',
               value: 'header-image'
+            },
+            {
+              type: 'falseAttribute',
+              key: 'webdriverDetected'
             }
           ]
         }
@@ -176,6 +197,10 @@ function testCases () {
               type: 'doubleAttribute',
               key: 'foo',
               value: 12.34
+            },
+            {
+              type: 'falseAttribute',
+              key: 'webdriverDetected'
             }
           ]
         }
@@ -188,13 +213,23 @@ function testCases () {
           type: 'timing',
           name: 'fp',
           value: 35,
-          attributes: []
+          attributes: [
+            {
+              type: 'falseAttribute',
+              key: 'webdriverDetected'
+            }
+          ]
         },
         {
           type: 'timing',
           name: 'fcp',
           value: 305,
-          attributes: []
+          attributes: [
+            {
+              type: 'falseAttribute',
+              key: 'webdriverDetected'
+            }
+          ]
         }
       ]
     },
@@ -215,6 +250,10 @@ function testCases () {
               type: 'doubleAttribute',
               key: 'foo',
               value: 12.34
+            },
+            {
+              type: 'falseAttribute',
+              key: 'webdriverDetected'
             }
           ]
         },
@@ -232,6 +271,10 @@ function testCases () {
               type: 'doubleAttribute',
               key: 'foo',
               value: 12.34
+            },
+            {
+              type: 'falseAttribute',
+              key: 'webdriverDetected'
             }
           ]
         }
@@ -294,6 +337,10 @@ function testCases () {
               type: 'stringAttribute',
               key: 'attr10',
               value: '1'
+            },
+            {
+              type: 'falseAttribute',
+              key: 'webdriverDetected'
             }
           ]
         }

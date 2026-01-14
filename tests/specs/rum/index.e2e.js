@@ -1,7 +1,7 @@
 import { checkRumBody, checkRumPerf, checkRumQuery } from '../../util/basic-checks'
 import { testAssetRequest, testRumRequest } from '../../../tools/testing-server/utils/expect-tests'
 import { detailedCheckRum } from '../../util/detailed-checks'
-import { supportsFirstPaint } from '../../../tools/browser-matcher/common-matchers.mjs'
+import { lambdaTestWebdriverFalse, supportsFirstPaint } from '../../../tools/browser-matcher/common-matchers.mjs'
 
 const loader_config = {
   applicationTime: 382,
@@ -62,7 +62,8 @@ describe('basic pve capturing', () => {
     ])
 
     checkRumQuery(rumHarvest.request)
-    detailedCheckRum(rumHarvest.request, { query: { ac: 'test_account' }, body: { ja: { no: 'body' } } })
+    const expectedWebdriverDetected = !browserMatch(lambdaTestWebdriverFalse)
+    detailedCheckRum(rumHarvest.request, { query: { ac: 'test_account' }, body: { ja: { no: 'body', webdriverDetected: expectedWebdriverDetected } } })
   })
 
   /** equivalent to former paint-timing.test.js */
@@ -88,6 +89,7 @@ describe('basic pve capturing', () => {
 
   // equivalent to former data.test.js
   it('should capture detailed APM decorations', async () => {
+    const expectedWebdriverDetected = !browserMatch(lambdaTestWebdriverFalse)
     const expected = {
       query: {
         ap: String(loader_config.applicationTime),
@@ -101,7 +103,7 @@ describe('basic pve capturing', () => {
         ua: String(loader_config.userAttributes),
         at: String(loader_config.atts)
       },
-      body: { ja: { foo: 'bar' } }
+      body: { ja: { foo: 'bar', webdriverDetected: expectedWebdriverDetected } }
     }
 
     const [[rumHarvest]] = await Promise.all([

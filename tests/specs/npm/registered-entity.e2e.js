@@ -503,6 +503,70 @@ describe('registered-entity', () => {
       expect(sourceKeys).toEqual(expect.arrayContaining(['source.name', 'source.id', 'source.type']))
       expect(sourceKeys.length).toBe(3)
     })
+
+    it('should not throw errors when parent is blocked; children still record data', async () => {
+      await browser.url(await browser.testHandle.assetURL('test-builds/browser-agent-wrapper/registered-entity.html', { init: { feature_flags: ['register', 'register.jserrors', 'register.generic_events'] } }))
+
+      const { hasErrors } = await browser.execute(function () {
+        let hasErrors = false
+        try {
+        // Blocked parent (invalid id)
+          window.blockedParent = new RegisteredEntity({ id: '', name: 'blocked-parent' })
+
+          // Parent API calls should not throw but should NOT be recorded
+          window.blockedParent.noticeError('PARENT_SHOULD_NOT_RECORD')
+          window.blockedParent.addPageAction('PARENT_SHOULD_NOT_RECORD')
+          window.blockedParent.log('PARENT_SHOULD_NOT_RECORD', { level: 'error' })
+          window.blockedParent.recordCustomEvent('CustomEvent', { val: 'PARENT_SHOULD_NOT_RECORD' })
+
+          // Children should be allowed and record data
+          window.child = window.blockedParent.register({ id: 101, name: 'child' })
+          window.grandchild = window.child.register({ id: 102, name: 'grandchild' })
+
+          window.child.noticeError('CHILD_SHOULD_RECORD')
+          window.child.addPageAction('CHILD_SHOULD_RECORD')
+          window.child.log('CHILD_SHOULD_RECORD', { level: 'error' })
+          window.child.recordCustomEvent('CustomEvent', { val: 'CHILD_SHOULD_RECORD' })
+
+          window.grandchild.noticeError('GRANDCHILD_SHOULD_RECORD')
+          window.grandchild.addPageAction('GRANDCHILD_SHOULD_RECORD')
+          window.grandchild.log('GRANDCHILD_SHOULD_RECORD', { level: 'error' })
+          window.grandchild.recordCustomEvent('CustomEvent', { val: 'GRANDCHILD_SHOULD_RECORD' })
+        } catch (err) {
+          hasErrors = true
+        }
+        return { hasErrors }
+      })
+
+      // No errors thrown creating/using blocked parent and children
+      expect(hasErrors).toBe(false)
+
+      // Errors: children recorded, parent not recorded
+      const errorsHarvests = await mfeErrorsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
+      const errorData = errorsHarvests.flatMap(h => h.request.body.err || [])
+      const messages = errorData.map(err => String(err.params.message || ''))
+      expect(messages.some(m => m.includes('PARENT_SHOULD_NOT_RECORD'))).toBe(false)
+      expect(messages.some(m => m.includes('CHILD_SHOULD_RECORD'))).toBe(true)
+      expect(messages.some(m => m.includes('GRANDCHILD_SHOULD_RECORD'))).toBe(true)
+
+      // Insights (PageAction/CustomEvent/Measures): children recorded, parent not recorded
+      const insightsHarvests = await mfeInsightsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
+      const insightsData = insightsHarvests.flatMap(h => h.request.body.ins || [])
+      const insightValues = insightsData.map(ins => (ins.val || ins.actionName || ''))
+      expect(insightValues.some(v => v.includes('PARENT_SHOULD_NOT_RECORD'))).toBe(false)
+      expect(insightValues.some(v => v.includes('CHILD_SHOULD_RECORD'))).toBe(true)
+      expect(insightValues.some(v => v.includes('GRANDCHILD_SHOULD_RECORD'))).toBe(true)
+
+      // Logs: children recorded, parent not recorded
+      const logsHarvests = await logsCapture.waitForResult({ totalCount: 1, timeout: 10000 })
+      const logsData = logsHarvests.flatMap(h => {
+        try { return JSON.parse(h.request.body)[0]?.logs || [] } catch { return [] }
+      })
+      const logMessages = logsData.map(l => l.message || '')
+      expect(logMessages.some(m => m.includes('PARENT_SHOULD_NOT_RECORD'))).toBe(false)
+      expect(logMessages.some(m => m.includes('CHILD_SHOULD_RECORD'))).toBe(true)
+      expect(logMessages.some(m => m.includes('GRANDCHILD_SHOULD_RECORD'))).toBe(true)
+    })
   })
 
   describe('MFE timing tracking', () => {

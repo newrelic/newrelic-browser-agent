@@ -168,12 +168,13 @@ function register (agentRef, target, parent) {
      * @returns
      */
   const report = (methodToCall, args, target) => {
-    if (isBlocked()) return
+    /** Even if we are blocked, if registering we should still return a child register API so nested API calls do not throw errors */
+    if (isBlocked() && methodToCall !== register) return
     /** set the timestamp before the async part of waiting for the rum response for better accuracy */
     const timestamp = now()
     handle(SUPPORTABILITY_METRIC_CHANNEL, [`API/register/${methodToCall.name}/called`], undefined, FEATURE_NAMES.metrics, agentRef.ee)
     try {
-      const shouldDuplicate = agentRef.init.api.duplicate_registered_data && methodToCall.name !== 'register'
+      const shouldDuplicate = agentRef.init.api.duplicate_registered_data && methodToCall !== register
       if (shouldDuplicate) {
         let duplicatedArgs = args
         if (args[1] instanceof Object) {
